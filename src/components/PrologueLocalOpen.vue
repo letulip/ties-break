@@ -275,8 +275,11 @@ function next(): void {
       <PrimaryPill variant="cta" class="plo-go" @click="watch()">{{ copy.watchMatch }}</PrimaryPill>
     </section>
 
-    <!-- The shipped viewer, with nothing new asked of it. `mode="live"` is the truth here: the match
-         is simulated at the moment this screen opens and is written to no save. -->
+    <!-- The shipped viewer, with one new thing asked of it since round 39 #15a: the parent's own
+         line for the moment she cannot continue (`hurt-note`), because a prologue weekend stores no
+         injury and nothing after this screen would otherwise say she is alright. The sentence is
+         the copy table's, like every other word here. `mode="live"` is the truth: the match is
+         simulated at the moment this screen opens and is written to no save. -->
     <MatchViewer
       v-else-if="annotated && sides"
       :key="at"
@@ -287,6 +290,7 @@ function next(): void {
       :final-match="isFinal"
       mode="live"
       :proceed-label="copy.proceed"
+      :hurt-note="copy.hurtNote"
       @finish="next()"
     />
   </div>

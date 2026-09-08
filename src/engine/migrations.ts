@@ -2362,6 +2362,36 @@ export function migrateSave(raw: unknown): WorldState {
     v = 70
   }
 
+  // ⭐⭐⭐ v70 -> v71 – ROUND 39 #5 (REOPENED): A REPEAT BRAND FOUNDING COSTS WHAT A BRAND IS WORTH,
+  // AND THE WORLD HAS TO REMEMBER A FOUNDING TO KNOW A REPEAT.
+  //
+  // The owner, 08.09: «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его
+  // продал. Потом купил новый за 250к, а он снова за несколько недель уже 30+ стоит.» A sold
+  // brand's row is deleted, so «this career founded one once» survives nowhere – `world.brandFounded`
+  // is where it lives now (see the field and `assetEntryPriceCents` for the pricing it feeds).
+  //
+  // ⚠⚠ THE BACK-FILL IS THE PROOF STANDARD, NOT A GUESS, and both directions are deliberate. A save
+  // that OWNS a merch brand has certainly founded one – and his own live career is exactly this
+  // save, so leaving it unflagged would leave the $250k re-buy open for the one player the fix is
+  // for. A save that owns NO brand may have founded and sold one, but the record of that is a
+  // ledger sentence at best; re-deriving a fact from prose is what this repo calls a guess, so the
+  // flag stays unwritten and the career keeps the FIRST-founding price – the benefit of the doubt,
+  // priced at one catalogue purchase and nothing else.
+  //
+  // ⚠ `'merch-brand'` IS A LITERAL, NOT A CATALOGUE READ, for the v67 step's own stated reason: a
+  // migration must keep meaning what it meant on the day it shipped. The business family holds
+  // exactly one rung today; if a second one ever ships, ITS founding is written by `buyAsset` from
+  // its first day and this step still describes the world as it stood at v70.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE: a `some()` over the assets and at most one literal write, gated on
+  // `v === 70`; no stream is touched on any key, so the frozen MAIN capture (41550 / e6b0c709)
+  // cannot move.
+  if (v === 70) {
+    const assets = (Array.isArray(save.assets) ? save.assets : []) as { id?: unknown }[]
+    if (assets.some((a) => a?.id === 'merch-brand')) save.brandFounded = true
+    v = 71
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

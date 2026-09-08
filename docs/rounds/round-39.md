@@ -1,0 +1,1545 @@
+---
+type: round
+status: current
+area: rounds
+canonical: false
+last-reviewed: 2026-09-08
+---
+
+# Round 39 – Ines's career on the merged round-38 build, 15 items (08.09.2026)
+
+Save under analysis: `~/Downloads/tennis-sim_ines-xgv7_w832.tsave` – **read-only, never committed,
+never a fixture.**
+
+Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]` in flight, agent named
+· `[ ]` open · `[?]` waiting on the owner's answer · `[!]` REOPENED (was reported done, was not)
+
+Class: **build** · **answer** · **measure** · **ask** · **already-works**
+
+---
+
+- [x] **1. «A spare key on her own ring... В 35 лет звучит уже довольно странно. Давай проведём
+  общее ревью этих фразочек на home с целью максимально убрать вот такие вот несоответствия»** –
+  **build.** Home's flavour lines are written for a child and are still printed at 35. This is not
+  one string: he is asking for a SWEEP of the home copy against the age it is shown at. Done means
+  every home line has an age (or life-stage) gate that a mounted test can fail on.
+
+  **SHIPPED (wave A).** The pool is `DIARY_POOL` (`src/engine/diary/pool.ts`) – Home's `photoLine`
+  and `conditionNote`, 105 entries. Every entry now has a declared age/life-stage gate:
+  `tests/r39-home-age-gates.test.ts` carries a per-line gate map (also a verbatim pin on every
+  string, invariant 4's friend), fails any entry with no declaration, licenses the whole pool
+  against a stage x age x scenario grid (school 13/16, after-school 19/21, college 20, independent
+  22/24/29/35) and fails any line selectable outside its window. Mutation-verified: un-gating the
+  spare-key line went red on two arms, restored green. The spare key itself: `freshlyIndependent`
+  (independent AND under 25 – `SETTLED_ADULT_AGE` in `diary/words.ts`), so it prints in her first
+  flat years and never at 29/35. 17 further licence-only edits (no wording touched): witness lines
+  («She hummed in the car…», «She fell asleep holding the draw sheet.», «A finalist. We let that
+  word sit at dinner.», «An early bus home…», «She didn't say much on the way home.», «She slammed
+  the car door…», «The racquet stayed by the door all weekend.») gated `underOneRoof`; the
+  phone-register lines (both away birthday captions, voice note, trophy photo, «home safe», car-park
+  call, nineteen-second call, ice-pack photo, slow replies, changed-subject, money-after-call)
+  widened `independentVoice` → `awayVoice` so COLLEGE stops borrowing family-home lines and gets its
+  own voice (a college birthday licensed NO caption at all before this). Two NEW lines for his
+  review (the gated ones' age-appropriate siblings): «An early exit. She was fine on the evening
+  call.» (away softened loss) and «The Sunday call ran long. Nobody minded.» (settled-adult quiet
+  week, the spare key's counterweight). A pool-did-not-thin arm pins that college/20 and
+  independent/35 still license a photo line for won/sad/angry/tired/quiet/birthday weeks. Left
+  alone deliberately: the vacation captions (they describe the booked package, not her age) and the
+  Calendar fridge note (not Home; already stage-switched). Observed, not fixed (no ask): college has
+  no off-season condition line – falls back to «The week went by.»
+
+- [x] **2a. «„Past her peak – down 57 places on the year, and her body has about 6 more seasons in
+  it." – вот это как раз можно на карточку тренера в списке тренеров перенести, много текста»** –
+  **build.** The long decline sentence moves off Home and onto the coach card in the coach list.
+
+  **SHIPPED (wave A).** The whole engine sentence renders on the CURRENT coach's card in the market
+  list (`.cm-row.current .cm-decline`, CoachMarketScreen – beside his plaque, `.cm-plaque`'s own
+  treatment) and Home renders it nowhere: the round-38 `.coach-decline` paragraph is gone and the
+  card text carries no body clause. The headroom hint above the list – which has fallen through to
+  the decline read since round 38 #7b – stands down while his card carries the sentence (one screen
+  may not say one sentence twice); a SELF-COACHED career keeps the fallthrough, since there is no
+  card to carry it. Mounted evidence: `tests/component/r39-decline-surfaces.test.ts` (card carries
+  the exact engine string; hint absent beside it; self-coached fallthrough; growing career still
+  reads a headroom band) – mutation-verified by deleting the card line (2 arms red, restored).
+  `r38-decline-voice.test.ts`'s Home arms re-aimed with ⚠ notes.
+
+- [x] **2b. (REOPENED TWICE 08.09) «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
+  было до этого про потолок и прочее»** – **build.** Home keeps a SHORT, coloured read. ⚠ The old
+  ceiling plate is the shape he is naming; match its length and its colour treatment, not its words.
+
+  **SHIPPED (wave A), wording = DRAFT FOR HIS REVIEW.** New engine field `Snapshot.coachDeclineShort`
+  (one derivation, `declineRead` in `world/coachMarket.ts`, feeds both the long card and this – the
+  two surfaces cannot disagree; '' on every growing career, the round-34 child guarantee held in the
+  data). Home renders it as `.coach-decline-short` in the OLD CEILING PLATE'S OWN treatment – round
+  24's `.coach-room` rule revived for the new line: 11px / weight 600 / `var(--accent)`, under the
+  coach quote. ⚠ The three draft strings, each the long sentence's own clause compressed, no new
+  vocabulary – say the word and any of them moves:
+  «Past her peak – down 57 places on the year» · «Past her peak – 48 places below her best» ·
+  «Past her peak – about 4 seasons left» (fallback when the table shows no fall; singular-safe).
+  Mounted evidence: the plate renders the exact engine string, starts with the label, carries no
+  body clause, and its COLOUR is asserted through the real cascade (`getComputedStyle` = `--accent`,
+  weight 600, attachTo per birthday-dialog's rule) – mutation-verified by de-accenting the CSS rule
+  (red, restored). A growing fourteen-year-old still sees no plate of either length.
+
+  **SHIPPED (wave A2, 08.09) on his ruling over wave A's drafts – band shorts = DRAFT FOR HIS
+  REVIEW.** The ruling, verbatim: «Past her peak хорошо и коротко, остальное всё пусть на карточке
+  тренера живет, может быть разве что – about 4 seasons left еще можно оставить. И до этого были
+  фразочки про то, что ей недалеко до потолка, что потолок достигнут и прочее, вот это тоже
+  всё-таки можно показывать буквально в 3-5 слов на home». Built in his words' order:
+
+  1. The decline plate says only «Past her peak – about N seasons left» – 13c's singular care
+     carried to the surviving clause («about 1 season left» on the 0.70 tail) – and the two rank
+     clauses live on the coach card's long sentence ALONE (#2a's card untouched, its arms still
+     pinning «down 57 places» there).
+  2. A GROWING career's plate RETURNS, in the same plate and treatment: the ceiling read in 3-5
+     words, derived from the SAME `ROOM_BANDS` row the market's long note reads (`roomBandRow` –
+     one lookup under both surfaces, the `declineRead` pattern applied to the growing half).
+     ⚠ The four band shorts, drafted for his review – three are the band labels verbatim, band 0
+     is its own sentence compressed because «Huge potential» is two words and he sized 3-5:
+     «Most of her game ahead» · «Still room to grow» · «Close to her ceiling» · «At her ceiling».
+     No digit in any of them (the fog rule crosses to Home with the read).
+  3. Exactly one read at a time, structurally: ONE snapshot field – `coachRoomShort`, wave A's
+     `coachDeclineShort` renamed, since it carries either read now and a decline-only name would
+     lie half the career – with `coachRoomNote`'s own fallthrough, and '' where the engine says
+     nothing (the round-34 child guarantee at its data-level core; «Past her peak» still gated on
+     her own `declineStart`). Home's plate is `.coach-room-short`, same 11px/600/accent rule.
+
+  Evidence: `tests/r39-coach-short.test.ts` (engine – walk the four bands and the long note and
+  short move together off one row; shorts are 3-5 digitless words of the bands' own vocabulary; the
+  seasons N equals the long sentence's own on all three of wave A's worlds; partition + '' arms)
+  plus the re-aimed mounted arms, ⚠-noted where the reopen legitimately moved a pin, none deleted:
+  r39-decline-surfaces (plate = exact seasons string past peak, exact band short on a growing
+  world, no rank clause anywhere on Home, colour through the real cascade on BOTH reads),
+  round24-coach-card (Home's short = the same row the market's bold label names, swept over six
+  realisations – the mounted band-mutation evidence – and the argument sentence never on Home; the
+  retired `.coach-room` selector still absent), r38-decline-voice (no verdict and no digit at
+  fourteen, the rank subtraction re-pinned on the engine string whose rendered home is the card).
+  Mutation-verified six ways, each red on its own arms alone, restored green: de-accented CSS rule /
+  short forced to row 0 / fallthrough removed / wave A's rank arms restored / plate line deleted /
+  ''-guarantee broken. Final: unit 215/215, component 41/41, `vue-tsc -b --force` clean,
+  pins:check ok (the round24 sweep cuts the note with the ONE splitter, not a raw indexOf).
+
+  **SHIPPED (wave A3, 08.09) on his ruling over A2's static plate – the three new strings = DRAFT
+  FOR HIS REVIEW.** The ruling, verbatim: «слушай, а можно же чередовать как раз на спаде эти
+  фразочки. давай оставим и «Past her peak – about N seasons left», и «she's down N places» в начале
+  сезона, например или в конце наоборот, «she's below her best» или «she's way below her best» или
+  «she's far below her best», это даст живости и вариативности, уберет статичность». Only the
+  DECLINE half rotates; the four band shorts he approved in A2 are untouched, and so is the coach
+  card's long sentence.
+
+  1. THE DRIVER IS THE SEASON'S OWN PHASE – deterministic, and ZERO draws on any stream (invariant
+     2: no MAIN tap, no new sub-stream). The only new input is `world.week`, read through the
+     ledger's own `seasonStartWeek` – the one clock the banked rows, the wrap and the money windows
+     already key on, so this is a subtraction on the existing calendar and not a second one.
+     `declinePhaseOf` cuts the season into thirds, written as `round(WEEKS_PER_YEAR / 3)` so a
+     season that ever changes length still has three: **early 0-16 · mid 17-34 · late 35-51**.
+     ⚠ WHY THOSE EDGES, beyond his own placement: the season's row is BANKED at week 49
+     (`milestones.ts`, the wrap) – inside the LATE third – so «below her best», the career-spanning
+     comparison, lands exactly as a season closes; by EARLY that freshly-banked row is a whole
+     finished year, which is when the year-on-year move is news; and MID holds the body read, which
+     is also the only variant that is true every week. Against the round-5 real-dates epoch the
+     thirds read Jan-Apr / May-Aug / Sep-Dec, which is how a tennis year is spoken about.
+
+  2. THE STRINGS, his own words (⚠ DRAFT – say the word and any of them moves). Early:
+     «she's down 57 places» – #13c's singular rides it, «she's down 1 place». Mid: «Past her peak –
+     about 4 seasons left», byte-identical to A2's. Late, the ladder: «she's below her best» /
+     «she's far below her best» / «she's way below her best». ⚠ The lower-case «she's» is HIS
+     casing, quoted rather than corrected (invariant 4 – wording is not an agent's to change); a
+     capital is a one-word ask. All four new strings are 4-5 words, inside the 3-5 he sized, and the
+     late ones carry no digit at all.
+
+  3. A VARIANT ONLY SHOWS WHEN IT IS TRUE, and the fallthrough order is ONE table:
+     **early = fell → below → seasons · mid = seasons · late = below → fell → seasons.** Every row
+     ends at the seasons clause – `declineRead` guarantees it past the gate – so the plate can never
+     empty and never prints a number the history cannot stand behind (`yearMove` is null across a
+     season gap, `belowBest` is 0 on a career sitting on its own best).
+
+  4. THE INTENSITY LADDER IS MEASURED, NOT CHOSEN (invariant 5). `tools/r39-decline-rotation.ts`
+     walks 27 REAL careers – econ-bench's nine presets x three seeds on the 'player' policy, to the
+     endings horizon – and records the `belowBest` every past-peak week would have rendered:
+     **21,843 past-peak weeks, 21,196 of them with a true below-best, min 1, max 738 places.**
+
+     | places behind her best | 1-4 | 5-9 | 10-19 | 20-39 | 40-79 | 80-149 | 150-299 | 300-599 | 600+ |
+     | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+     | share of past-peak weeks | 4.2% | 6.0% | 8.9% | 3.7% | 10.9% | 12.4% | 28.2% | 24.9% | 0.8% |
+
+     The two cuts are that distribution's own TERCILES – **p33 = 79 places, p67 = 257** – and they
+     are the pair that makes all three rungs genuinely occur: **33.1% / 33.5% / 33.4%** of past-peak
+     weeks. Every round-numbered pair collapses a rung instead: 10/40 → 10.1 / 12.6 / 77.3,
+     20/80 → 19.0 / 14.6 / 66.4, 25/100 → 20.0 / 19.4 / 60.6, 50/150 → 23.7 / 22.3 / 54.0. The
+     per-BANKED-SEASON view (one row per career-season, n 445, so a long career cannot outvote a
+     short one) puts its own terciles at 79 and 273 – the same answer from the unit that weights
+     differently. `--dump` writes the sample, so the pair can be re-cut without walking again.
+
+  Evidence. `tests/r39-coach-short.test.ts` gained a rotation describe and a ladder describe: the
+  CLOCK (thirds pinned as literals, the phase repeating every season, the off-season inside LATE,
+  17/18/17 weeks); the MAPPING, swept over all 52 weeks of a world where all three variants are
+  true; the FALLTHROUGH walked row by row by removing the fact each phase would rather have; «a
+  variant is never shown without its number», swept over six history shapes x 52 weeks; STABILITY
+  (two calls agree, 100 calls leave `rngMain` byte-identical, and a re-derived `toSnapshot` says the
+  same thing); HIS ASK AS A MEASUREMENT – the set of distinct sentences one career's plate shows
+  across a season is 3, and the GROWING plate's set over the same walk is exactly 1, so the rotation
+  cannot leak into the band read; and the ladder's two edges from both sides plus a monotone walk
+  over 1..800 places that also proves all three rungs occur. Mounted: r39-decline-surfaces renders
+  all three phases off one career (3 distinct strings, each equal to the snapshot's own field, with
+  the long clauses still barred from Home in every phase), its colour arm now measures accent/600
+  through the real cascade on all THREE decline phases as well as the growing read, and #13c's
+  singular is pinned on the RENDERED plate; r38-decline-voice pins the rank subtraction on Home
+  again («she's down 50 places») beside the long sentence's own. Every A2 arm whose expected string
+  legitimately moved carries a ⚠ note naming its week – none deleted, and two grew: the partition
+  arm now sweeps all 52 weeks and bars «she's» as well as «Past her peak» from a growing plate, and
+  the #13c year arm pins both lengths instead of one. Mutation-verified four ways, each red on its
+  own arms alone and restored byte-exact: early/late rows swapped (2 unit + 3 mounted arms red);
+  the early row cut to `['fell']` (the fallthrough-order arm red); the year clause made
+  unconditional (the truth sweep red); the measured 79 moved to 5 (the ladder-edge arm red).
+  Final: unit green (bulk 4,424 + heavy 498), component 1651/1651, `vue-tsc -b --force` clean,
+  `check:tools` clean, pins:check ok (3/3 baseline), engine-purity ok, tools registry regenerated.
+  ⚠ The first full unit run was red on 12 files and only FIVE of them were real – the template-copy
+  rule, because a draft of Home's template comment quoted him in Cyrillic and Cyrillic is
+  script-block-only there (fixed; the quote lives on the computed). The other seven were 20 s
+  timeouts at load 20, and re-run on a quiet machine the same shard was green in 160 s – the
+  contention hazard CLAUDE.md records, caught by its own tell (the failing set was assertion-free).
+
+- [x] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
+  года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
+  выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и
+  пожизненно»** – **measure then build.** First measure the actual term distribution by rank on his
+  save; then make term scale with standing. His examples set the ceiling: 5 and 10 years exist, and
+  a lifetime deal exists at the very top.
+
+  **MEASURED on his save (`tools/r39-save-read.ts --report`) – he is right, and the ceiling is
+  harder than he thinks: NOTHING above 3 years exists in the game at all.** Every signed deal of the
+  career, term in years:
+
+  | | 1y | 2y | 3y | 4y+ |
+  | --- | --- | --- | --- | --- |
+  | kit (7 signed) | 1 | 3 | 3 | **0** |
+  | ad (15 signed) | 5 | 6 | 4 | **0** |
+
+  ⚠ And the term does NOT track standing today. At wta#5 she signed a 3-season kit; at wta#91 she
+  signed a 2-season one; the 3-year ad deals land at wta#7 and wta#16 alike. So this is not «all
+  contracts became 12 months» – it is a flat 1-3 ladder with no top end.
+
+  **OWNER (08.09):** «ну давай тоже какой-то ресерч проведем может быть на эту тему, чтобы было на
+  что опираться? я бы сказал, что для растущей карьеры не больше, чем на 12 месяцев, для топ-100 до
+  1-2 года, топ-50 1-3 года, для топ-20 и выше до 10 лет. Но может у тебя есть предложения лучше.»
+  → research on real endorsement terms is MINE, then the ladder proposal comes back to him.
+
+  **RESEARCHED (08.09):** real anchors – Sharapova-Nike 8y, Federer-Uniqlo 10y/$300M,
+  Djokovic-Lacoste 5y, McIlroy-Nike 10y; lifetime deals exist (Messi, Ronaldo, LeBron) but are the
+  icon exception, mostly outside tennis. The game ALREADY holds an 8-year capstone gated on four
+  top-10 seasons – the long top end half-exists. Proposed ladder is in the report of 08.09; ordinary
+  letters stay churnable (max 5y at the top), the 8y capstone stands, and a once-per-career LIFETIME
+  letter is proposed at legend status. `[?]` waiting on his word.
+
+  **OWNER (08.09): «давай так попробуем, как ты предложил» → wave EF builds the ladder.**
+
+  ⚠⚠ **MEASURED AFTER THE BUILD, AND IT REOPENS THE THRESHOLD (`--tenure`, 08.09).** Wave EF
+  reported the lifetime letter never fired on any walked career. It does not fire on his own best
+  career either, and neither does the SHIPPED capstone:
+
+  | | seasons ended wta top-10 | slams | capstone (needs 4) | lifetime (needs 4 + slam) |
+  | --- | ---: | ---: | --- | --- |
+  | **Ines** w832 | **3** (#10, #5, #7) | 1 | **short by 1** | **short by 1** |
+  | Alice w1115 | 0 (best #20) | 0 | short by 4 | short by 4 + a slam |
+
+  Her end-ranks: 91, 151, 86, 86, 121, **10**, **5**, 14, **7**, 16, 14, 15 – four more seasons
+  ended 11-20, just outside. **Capstone letters actually received across her 16 seasons: 0.** So the
+  8-year capstone, shipped rounds ago, has never been reachable by the best career he has played,
+  and the lifetime letter inherits that gate. ⚠ At a threshold of **3** both gates fire for Ines and
+  neither fires for Alice, which is the discrimination the feature wants. Owner's word needed:
+  lifetime at 3 top-10 seasons + a slam, capstone left at 4? Recorded, not changed.
+
+  ⭐⭐ **AND HIS THREE QUESTIONS ANSWERED BY MEASUREMENT, NOT BY OPINION** («не будет ли это большим
+  облегчением? … сколько реально игроков в % … какая ценность будет?»). `tools/r39-tenure-reach.ts`,
+  the round-29 corpus shape exactly – 9 presets x 2 policies x 6 seeds = **108 careers, 900 weeks**:
+
+  | gate | careers | share |
+  | --- | ---: | ---: |
+  | >= 4 top-10 seasons (capstone, shipped) | 18 of 108 | 16.7% |
+  | >= 3 top-10 seasons | 20 of 108 | 18.5% |
+  | >= 1 slam title | 16 of 108 | 14.8% |
+  | **>= 4 top-10 AND a slam (lifetime as built)** | **11 of 108** | **10.2%** |
+  | **>= 3 top-10 AND a slam (the proposal)** | **11 of 108** | **10.2%** |
+  | >= 2 top-10 AND a slam | 12 of 108 | 11.1% |
+
+  ⚠⚠ **LOWERING THE TENURE FROM 4 TO 3 IS A NO-OP IN THE CORPUS – the same 11 careers, the same
+  10.2%.** Both careers that hold exactly three top-10 seasons hold **zero slams**, so the slam is
+  the binding gate and the tenure number is not doing the work it looks like it is doing. It is
+  therefore not a loosening: it costs nothing measurable and it converts the ONE real career we have
+  (Ines: 3 seasons + a slam) from «never learns the mechanic exists» to «earns it».
+
+  ⚠ Two further findings, recorded rather than acted on. (1) The corpus puts >= 4 top-10 seasons at
+  **16.7%**, where round 29 shipped the capstone against **8% (9 of 108)** – the same corpus shape,
+  double the reach; the capstone was priced as a top-decile deal and is not one any more. (2) The
+  bench's 'player' policy careers OUT-PERFORM his actual play: corpus careers whose best rank is #5
+  bank 6-9 top-10 seasons, while his own #5 career banked 3. So a real player meets these gates LESS
+  often than 10.2%, and the corpus is the optimistic bound, not the expected one.
+
+  **SHIPPED (wave EF, `r39/wave-ef`, 08.09) – the approved ladder, exactly, plus the lifetime
+  letter.** The term moved onto the BAND (`AdBandDef.termYearsMin`/`termYearsMax`; the flat
+  `termYearsMax: 3` is gone): 1y at ≤400 and ≤200, 1–2 at ≤100, 1–3 at ≤50, 2–5 at ≤10; the 8-year
+  capstone untouched (its «longer than every term» pin now reads every band's own max). ⚠ RNG: the
+  term is still ONE draw on the letter's own sub-stream – the band changes the MAPPING of the
+  uniform, never the draw count (a 1-year band still spends its uniform onto {1}) – proved by
+  stream replay in `tests/r39-term-ladder.test.ts` §2, and made VISIBLE in the measurement: the
+  ≤50 band's distribution is numerically identical before/after because its mapping equals the old
+  flat one. MAIN untouched; `tests/condition.test.ts` green, capture 41550/`e6b0c709` unchanged.
+
+  **The LIFETIME letter («А некоторые и пожизненно»):** category `lifetime` above the capstone,
+  once per career. Gate = a Slam title AND four seasons ended in the top 10 – `capstoneSeasonsOf`
+  REUSED, never a second derivation (`ECONOMY.advertising.lifetime`). Fee $2,500,000/yr – the icon
+  band's own biggest trade cheque (fragrance's ≤10 cell) made permanent, the Messi/Ronaldo shape
+  (a peak year-fee that never expires) at the game's own scale; NOT a second capstone, which would
+  have doubled the top of the economy. Zero shoot weeks by construction (weeks are named across a
+  term; this paper has none). «Once per career» is `adSpokenFor` doing what it always does: a
+  signed lifetime deal has NO `untilWeek` and never lapses, so the slot never re-opens – and a
+  REFUSED letter shuts nothing (a mis-tap must not cost the career its one lifetime deal).
+  `payAdAnniversaries` pays it every year for ever through the same splitter. It SURVIVES
+  retirement into the epilogue as the smallest honest hook: an ended world no longer ticks (nothing
+  banks post-ending for ANY source, the academy included), so what survives is the FACT –
+  `EndingView.lifetimeDeal` off the signed paper's frozen terms, one `ending-note` line on
+  EndingScreen. ⚠ All new sentences (letter body, confirm, portfolio row, epilogue line) are DRAFT
+  for his review.
+
+  **MEASURED (`tools/r39-terms-walk.ts`).** Walked 9 presets x 2 seeds x 832 weeks (his save's own
+  length): the default bench-policy careers only ever reach the ≤200 band – 30 letters, before
+  11/10/9 across 1–3y → after 30 x 1y. Per-band probes (the engine's own letter path, 40 drinks
+  letters per band, before recovered from the SAME uniform under the old mapping):
+
+  | band | before 1y/2y/3y/4y/5y | after 1y/2y/3y/4y/5y |
+  | --- | --- | --- |
+  | ≤400 | 11/15/14/–/– | **40/–/–/–/–** |
+  | ≤200 | 9/10/21/–/– | **40/–/–/–/–** |
+  | ≤100 | 14/11/15/–/– | **22/18/–/–/–** |
+  | ≤50 | 13/10/17/–/– | 13/10/17/–/– (byte-identical – the one-draw proof) |
+  | ≤10 | 13/17/10/–/– | **–/10/11/12/7** |
+
+  ⚠ **The lifetime letter NEVER fired on the walked set** – reported, not hidden: no walked career
+  banked a single top-10 season or slam (best live rank seen wta#265; most careers end bankrupt
+  under the default bench policy – the wrong instrument for legend careers, said plainly). The
+  gate's reach anchor stands elsewhere: round 29 measured 4+ top-10 seasons at 7 of 72 careers,
+  and the Slam requirement narrows that further – the letter is deliberately the icon exception.
+  The gate itself is exercised deterministically in `tests/r39-term-ladder.test.ts` §3 (arrives
+  past both halves, refused-re-arrives, pays at +1/+2/+10/+25 years, never between, epilogue fact)
+  and `tests/component/r39-lifetime-letter.test.ts` (the letter, the signed record, the epilogue
+  line, with an ordinary-letter CONTROL per absence claim). Re-aimed with ⚠ notes, none deleted:
+  `ad-offer.test.ts` (the replay helper maps per band), `round29p4-ad-portfolio` (the term sweep
+  reads the ladder's two ends), `round29p2-ad-ladder` (per-band bounds), `round29p2-ladder-monotone`
+  (the clamp sweep + the capstone-outlasts arm), `round32-brand-inertia`/`sponsor-ladder-reach`
+  (`AdTradeCategory` – the trade catalogue's own index type, so 'lifetime' cannot index a row that
+  is not there). Kit deals untouched – out of scope by his approval.
+
+- [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
+
+  „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
+  assumes planes have it too – verify rather than assume, and fix every shelf rung that shows it.
+
+  **SHIPPED on `r39/wave-b` (08.09).** Verified – planes DID have it. The mechanism is round 36's
+  own: `SHELF_NO_PAID_META` in MoneyScreen.vue grows `boat` and `plane`, the meta stops being
+  passed, nothing on the card re-worded or moved. Shelf census (the caption has exactly two
+  sources, both MoneyScreen): on OWNED cards it now remains only on `investment` and `business` –
+  the two families no round has named, reported rather than touched (invariant 4; the brand's
+  witness arm in round35-shop.test.ts still asserts it). And the `On order` card (water and air
+  build to order) keeps its own `paid $N` untouched: that card has no «Worth now» and no gain line,
+  so the paid figure is the ONLY money on it and removing it would LOSE the number – the exact
+  check rounds 35/36 ran before the caption could go from an owned card, where «Worth now» minus
+  the gain still states it. Evidence: `tests/component/r39-owned-shelf-paid.test.ts` mounts a
+  delivered yacht and a delivered small plane (caption absent, worth + gain still on the card) and
+  holds two PRESENT arms (ordered boat, merch brand). Mutation-verified: `'boat'` removed from the
+  array -> the yacht arm red alone; `'plane'` removed -> the plane arm red alone; restored -> 57/57
+  green across the five shelf files (r39-owned-shelf-paid, round35-shop, round29-shop-elite,
+  shop-tab, round36-review).
+
+- [x] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
+  купил новый за 250к, а он снова за несколько недель уже 30+ стоит. Кажется надо ещё что-то с этой
+  механикой подумать»** – **REOPENED against round 38 #15/#16.**
+
+  ⚠ **Why the first fix missed, precisely.** Round 38 reported «the ramp closed every sell-and-rebuy
+  loop: merch-brand $0» – and that measurement was taken **at `weeksHeld = 0`**, where
+  `rampedWorthCents` returns the paid price *by construction*. So the $0 was true and meaningless:
+  it proved the loop is shut on the day of the trade and never tested it OVER TIME, which is the
+  only place the money was. His cycle is sell at the ramped 22M, re-buy at the catalogue's flat
+  250k, wait for the ramp to climb back. The re-buy price is the hole, not the sale.
+
+  **measure then ask.** Measure the cycle's true yield per week on his save, then put the shape to
+  him – the catalogue price is his own 07.09 ruling («неизменно для первого открытия стоит 250к»),
+  so what changes is what a RE-purchase costs or what a sale pays.
+
+  ⭐⭐ **MEASURED, and it is worse than he reported.** Her fame is at the cap (100.0), which puts the
+  ramp's half-life at its **13.3-week floor**. A brand bought TODAY for $250,000 is worth:
+
+  | after | worth |
+  | --- | ---: |
+  | **1 week** | **$1,844,174** |
+  | 5 weeks | $8,243,530 |
+  | 13 weeks | $17,658,878 |
+  | 26 weeks | $26,620,223 |
+  | 52 weeks | $33,488,605 |
+
+  **One week turns $250,000 into $1.84 million** – 7.4x, and the cycle restarts the moment it is
+  sold. His own brand: paid $250,000 at week 597, held 235 weeks, now $35,879,827.
+
+  **OWNER (08.09):** «мне сложно проверить, но кажется что у меня свежекупленный бренд возвращался к
+  своей стоимости уже в течение 5 недель… Мне кажется, что нам надо как-то вообще более вариативно
+  смотреть на цену бренда с точки зрения развития карьеры. Но и с продажей надо что-то тоже подумать
+  как быть. Надо подумать хорошенько. У тебя какие мысли?» → the measured 5-week point is $8,243,530
+  (23% of derived) – his feel is right in kind. Design proposal is MINE, back to him before any build.
+
+  **PROPOSED (08.09):** A+C – a REPEAT founding is priced at the market's current derived worth
+  (the $250k garage price is a one-time story; his first-purchase law untouched), and the ramp's
+  half-life floor rises 13 -> ~52 weeks so even a first brand is «процесс»: week-1 worth $723k
+  instead of $1,844,174, half-value at a year. Alternative D (the sold brand keeps living and eats
+  the new one's reach) named as the richer, heavier road. `[?]` waiting on his choice.
+
+  **OWNER (08.09): «давай попробуем, а D можно в беклог развернуто записать» → wave EF builds A+C;
+  D is written out in docs/now-next-later.md's Later.** He also refined the observation: «кажется
+  что у меня свежекупленный бренд возвращался к своей стоимости уже в течение 5 недель» – at the
+  13.3-week floor the 5-week point is $8.2M of $35.9M, so the feel was right in kind.
+
+  **SHIPPED (wave EF, `r39/wave-ef`, 08.09) – A+C, both prongs.** **C:**
+  `worthRamp.minHalfLifeWeeks` 13 → 52. His round-38 law stands – 104/52 = 2x faster at the cap is
+  still «кратно быстрее» – where the old floor allowed 8x, which is «за несколько недель». **A:** a
+  REPEAT founding of `merch-brand` is priced at the market's current derived worth
+  (`assetEntryPriceCents`, world/assets.ts); the FIRST founding of a career stays the flat catalogue
+  $250,000, pinned – his «неизменно для первого открытия стоит 250к» untouched. ⭐ The sticker is
+  honest BY CONSTRUCTION: `buyAsset`'s charge and `shopView`'s `entryCents`/`affordable` are one
+  function, so a card can never show a price the door does not take (round 38 #14's lesson, kept
+  structurally). Schema move, all three parts: `SAVE_SCHEMA_VERSION` 70 → 71 + `world.brandFounded`
+  (a founding survives the sold row nowhere else), append-only v70→v71 migration – a save OWNING a
+  merch brand back-fills `true` (his live career must not keep the $250k re-buy), a save owning
+  none keeps the benefit of the doubt = first-founding price – and golden fixture
+  `tests/fixtures/saves/v71.json` (goldenSaves one-per-version law green).
+
+  **MEASURED (`tools/r39-brand-loop.ts`, synthetic cap-fame world – his saves stay read-only, never
+  fixtures).** Re-buy curve of a fresh $250,000 brand at fame 100, derived worth $25,116,000 on the
+  synthetic state:
+
+  | after | before (13w floor) | after (52w floor) |
+  | --- | ---: | ---: |
+  | 1 week | $1,511,625 | **$579,258** |
+  | 5 weeks | $5,949,678 | $1,853,267 |
+  | 13 weeks | $12,479,368 | $4,206,270 |
+  | 26 weeks | $18,694,201 | $7,533,083 |
+  | 52 weeks | $23,457,530 | $12,683,000 |
+
+  Predicted before measuring: w1 = paid + gap x (1 − 0.5^(1/52)) = $579,353; measured $579,258. On
+  HIS save's derived ($35.9M) the same arithmetic gives ~$723k at week 1 – the proposal's own
+  figure, confirmed. Full cycle (sell a converged brand, re-found the same week): before
+  **+$24,768,867** a cycle; after **−$97,133** – the ramp's own unconverged 0.4%, the loop closed
+  to ≤ $0. ⚠ RNG: zero draws on any stream; `tests/condition.test.ts` green, capture
+  41550/`e6b0c709` unchanged. Re-aimed guards, none deleted: `r38-worth-ramp`'s «кратно» arm (3x
+  median now rides the floor; proportionality asserted at 1.5x, the floor pinned at 3x) and
+  `round30-brand-value`'s falls fixture (one more settling season – the turn measured at season 3
+  under the 52w floor; claim and band untouched at 0.40–0.60, hold 0.5385). New pins:
+  `tests/r39-brand-rebuy.test.ts` – the first-founding law, sticker = door on a repeat, the
+  quiet-career floor, `affordable` at the true price, the 52w floor at the cap, both migration arms.
+  ⚠ The schema byte's full blast radius, surfaced by the units gate and closed in the wave's second
+  commit: the three FROZEN career hashes re-cut (per-key diff against a control worktree at the
+  wave base = **1 of 74 keys, `schemaVersion` alone**, on all three; `PRE_V71` rollback rung
+  appended, every older rung untouched), the e2e fixtures regenerated at v71, and the migrations
+  suite's schema-head pin moved with the ladder (its sixth re-aim, claim unchanged).
+
+- [~] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
+  absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw
+  luck? Measure the arrival rate before touching anything.
+
+  **ANSWERED – a rank gate working exactly as designed, not luck.** `fragrance` is the icon-band
+  category and `ECONOMY` gates it at the **top 10** («watches early, cars at top-100, fragrance at
+  top-10»). She signed it twice – Blanche & Noir $2,500,000 (w573) and Rivelle $2,500,000 (w683) –
+  and her WTA end-rank since is **#16, #14, #15**. Three seasons out of the top ten, so the most
+  valuable category in the game stopped writing. ⚠ Worth telling him plainly: the perfume deal IS
+  the top-10 bonus, and it is what sliding to #15 costs.
+
+  **OWNER (08.09), REOPENING THE ANSWER:** «я это помню, но кажется, что 2 сезона в топ-10 прошли без
+  него.» → so the question is now the offer CADENCE, not the gate: when did she hold a top-10 rank,
+  when did fragrance offers arrive, and what cooldown sits between ad offers of one category. MINE.
+
+  **MEASURED (08.09):** `reviewAdOffer` rolls weekly per category at `offerChance = 0.05`, gate
+  band 4 = LIVE wta <= 10, and `adSpokenFor` silences a category while its deal runs. A fully
+  top-10 season with the slot open still goes dry with P = 0.95^44 ≈ 10% – his two dry seasons are
+  either that die or weeks where her live rank sat 11-15 (the save keeps no live-rank history, so
+  the two cannot be told apart retrospectively). Remedy options in the report: a pity timer
+  (guaranteed letter within 26 weeks of entering the band), a wider gate, or leave it. `[?]`.
+
+  **OWNER (08.09): «окей, пусть пока без изменений останется, я еще понаблюдаю» → closed, observed.**
+
+- [~] **7. «Странно, что после шлема в 40м году она не смогла взять больше ни одного»** –
+  **measure.** One Slam in season 40 and never again. Read her actual title history and the field
+  she met off the save; a single Slam followed by nothing may be correct for her level, or may be a
+  ceiling in the draw model.
+
+  **MEASURED, and it is not the slam alone – she cannot get PAST the fourth round.** Since week 634
+  she has played **11 slams, 40 matches, best result the Round of 16 three times, ZERO
+  quarterfinals.** Over the same window she won **6 WTA1000 titles** (weeks 551, 629, 642, 684, 785,
+  825) and 10 WTA500s. One extra round cannot explain it: at her observed 70.4% match rate a slam QF
+  is p^4 = 24%, so eleven attempts should have produced two or three. ⚠ A real asymmetry between the
+  slam draw and every other tier, and it needs its own measurement before any fix.
+
+  **OWNER (08.09), REFRAMING:** «вот у меня и вопрос тогда, а корректно ли работает наша формула по
+  скиллам и прочему, тут даже не совсем в ранге и позиции в таблице вопрос, сколько в её скиллах и
+  тому, как они относятся к остальным соперникам, особенно ниже 50» → #7 and #10 merge into ONE
+  audit: her skills against the field's, expected win probabilities from the match model, actual
+  results over them – slams and sub-top-50 opponents as the two lenses. MINE.
+
+  ⭐⭐ **MEASURED (08.09, `--audit`): THE FORMULA IS CONSISTENT – she slightly OVER-performs it.**
+  Closed-form p(win) over her 247 logged matches, current skills/ranks (stated caveat):
+
+  | window | n | model expects | actual |
+  | --- | --- | --- | --- |
+  | 198 weeks, all | 247 | 64.6% | 70.4% |
+  | 42 weeks, all | 58 | 66.4% | 69.0% |
+  | 42 weeks, vs outside top 50 | 34 | 71.9% | 73.5% |
+  | 198 weeks, slams only | 40 | 63.1% | 62.5% |
+  | 198 weeks, wta1000 only | 98 | 59.9% | **74.5%** |
+
+  The sub-50 losses are ON MODEL: her build is lopsided – serve **53.1** and composure **50.6**
+  against a 26-50-band average of 56.3/57.7 (composure is below even the 51-100 band's 55.7), while
+  ret 69.0 and groundstrokes 70.6 are top-10 class. The model prices ~25-28% loss risk per sub-50
+  match and she plays dozens. Slam exits are exactly on model; the single slam (w494) was won at her
+  peak. The one anomaly is the OLD window's wta1000 over-performance (+14.3 wins), which the neutral
+  probe (max condition, hard, today's skills) cannot attribute – flagged, not diagnosed.
+
+  **OWNER (08.09):** «хорошо, что формула работает как задумано… Разве что можно в беклог отношений
+  записать, что-то вроде возможности работать с психологом в плане хладнокровия (тот же Федерер…
+  поработал над собой, стал лучше), как раз можно будет у психолога делать выбор над чем работать в
+  ближайший год» → recorded in the Later backlog beside the morale/relationship layer. And on the
+  slam itself: «мне просто было странно, что Шлем случился на пике топовой спортсменки всего 1 раз,
+  но может быть это окей для спорта».
+
+  **RESEARCHED on his follow-up («мне вот и интересна статистика в миру: там много тех, у кого
+  повторного Шлема не случилось ни одного?»):** in the whole Open Era there have been **96 different
+  Grand Slam singles champions, and ~42.7% of them are one-slam winners** – 41 champions across both
+  tours who never won a second (men alone: 26). Winning exactly one major and never another is the
+  MODAL outcome for a major champion, not an anomaly – Pennetta, Ostapenko, Raducanu, Vondrousova,
+  Sloane Stephens, Barbara Jordan, Kerry Melville Reid. ⭐ So Ines's single slam at her peak is the
+  sport's own most common shape, and the model reproducing it is a point in its favour.
+
+- [~] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
+  offered $300k reads as insulting. Measure the offer curve against rank and check whether the top
+  of the ladder is being underpaid.
+
+  ⚠⚠ **CONFIRMED, and the defect is bigger than the one offer.** Meridian Sport's clothing deal was
+  **$300,000** at w697 and again at w720. The same brand and the same category paid her
+  **$1,000,000** at w575 – when she was ranked LOWER (wta#14 against wta#7). And it is every
+  category, not just clothing:
+
+  | category | season 11 | season 14-16 |
+  | --- | ---: | ---: |
+  | fragrance | $2,500,000 | – (gated out, see #6) |
+  | cars | $2,000,000 | **$800,000** |
+  | airline | $1,500,000 | **$600,000** |
+  | watches | $1,200,000 | **$500,000** |
+  | clothing | $1,000,000 | **$300,000** |
+
+  Every ad category roughly HALVED between season 11 and season 14 while she stayed top-20. That is
+  the item; the $300k offer is one symptom of it.
+
+  **ANSWERED (08.09):** the halving is the band ladder he approved in round 34 – bands maxWtaRank
+  [400, 200, 100, 50, 10]; clothing pays $1M at band 4 (live top-10) and $300k at band 3 (11-50).
+  The $300,000 letters landed when her LIVE rank had slipped out of the top ten; «для #7» was the
+  end-of-PREVIOUS-season rank. Working as ruled; the felt defect is the 3.3x cliff at the 10/11
+  boundary. Remedy options in the report (tenure-buffered band, an 11-25 half-band, or leave). `[?]`.
+
+  **OWNER (08.09): «может сделать более плавные ступеньки всё-таки? хотя возможно наша новая система
+  контрактов и подправит ситуацию, давай так пока оставим, как есть» → closed for now; re-read after
+  the term ladder ships.**
+
+- [x] **9. «Опять just one day (REOPENED against round 26 #9). Я просил сделать много вариантов подарков для разных возрастных
+
+  групп. Мне кажется, что вполне допустимо чтобы что-то повторялось, но не больше 2-3 раз за всю
+  карьеру и с разницей не меньше 5 лет»** – **REOPENED against round 26 #9.**
+
+  ⚠ **What round 26 aimed at and why it missed this.** It measured the pool (29 gifts, 9 bands),
+  found four bands holding exactly three gifts – C(3,3) = 1, one possible dialog – and built
+  repetition control over CONSECUTIVE birthdays. His complaint now is not about consecutive years:
+  it is about a gift's TOTAL count across a whole career and the gap between its appearances. Round
+  26's guard cannot see either, so it is green while he sees the same gift again.
+
+  **build, and now he has given the number:** at most 2-3 appearances per career, never closer than
+  5 years apart.
+
+  **CONFIRMED on his save.** Her 13 birthdays: trip(18), home(19), car(20), deposit(21),
+  **day(22)**, familyweek(23), **day(24)**, dog(24), **day(25)**, jewellery(26), **day(27)**,
+  oldclub(28), album(29). ⭐ **`day` four times – at 22, 24, 25 and 27, gaps of 2, 1 and 2 years.**
+  Against his rule (at most 2-3 a career, never under 5 years apart) that is double the count at a
+  third of the spacing. Every other gift appears exactly once.
+
+  **R39-C, `r39/wave-c` – BUILT, his sentence as constants.** `GIFT_CAREER_CAP = 3` appearances per
+  career, `GIFT_REPEAT_GAP_WEEKS = 260`, in `src/engine/world/birthday.ts`. An appearance = a
+  birthday row that ASKED for the gift or GAVE it; **the day counts as an ASK only** – its presence
+  on every card is the untouched 11.08 ruling, and freely GIVING the day stays unlimited. The ask
+  now walks a four-rung ladder: strict (cap + gap + the round-27 cooldown) → gap relaxed → cap
+  relaxed → `options`, never a crash, and **within a rung the least-used gift wins** (a third
+  appearance only when nothing fresher qualifies). Relaxations are reported (`eased`) and the ORDER
+  is pinned in `tests/birthday-career.test.ts`. The OFFER (which four rows print) is untouched by
+  the record – reload-immutability and every round-26 pin stand; the record only shapes the voice.
+
+  **Four NEW gifts** (band pools were too thin to seat the rule – the round-26 finding says why):
+  peak 22-28 gets `recipes` («The family recipes, bound into one book») and `guitar` («A guitar to
+  travel with»); the late 29+ band gets `olives` («Olive trees, planted in her name») and
+  `firstracquet` («Her first racquet, restrung and framed»). Catalogue 33 → **37**; peak C(7,3)=35
+  dialogs for 7 birthdays, late C(10,3)=120 for 13.
+
+  **MEASURED before/after** (`tools/birthday-pool.ts` §5, 12 granting careers = 190 birthdays –
+  his own shape, asked === given):
+
+  | granting walk | before | after |
+  | --- | --- | --- |
+  | gifts over 3 appearances in one career | **10** | **0** |
+  | gifts repeated inside 260 weeks | **15** | **0** |
+  | `day` worst career count | **7** | **2** |
+  | `day` tightest gap | **103 weeks** | **365 weeks** |
+  | top repeats after | – | recipes 2x/260w · oldclub 2x/363w · day 2x/365w |
+
+  The ids[0] walk (a player who hoards the first row regardless of the ask) still shows given-driven
+  repeats – the player's hand is his own – but its ASKS obey the rule too: 3 relaxations over 194
+  birthdays, all `gap`, all reported. ⚠ **RNG: zero MAIN draws added or moved** – the ask is still
+  the fourth draw on `seed:birthday:<age>`; `tests/condition.test.ts` green on **41550 /
+  `e6b0c709`**, unchanged, and **not one existing guard test needed re-aiming** (the ladder
+  degenerates to the round-27 chain, pool for pool, for every caller without a record). Spec:
+  `docs/specs/birthday-and-gifts.md` §12. No schema move – the rule reads rows v48 already persists.
+
+- [x] **9c. NOT RAISED BY HIM, found in the same log: two birthdays one week apart.** Week 569
+  `day` at age 24 and week 570 `dog` at age 24. Folded in because it lives in the same file.
+
+  **R39-C – DIAGNOSED (read-only off his save), REPRODUCED, FIXED, PINNED.** She is born **21
+  December**. Round 34 #3 moved the marked birthday week from «the week CONTAINING her date» to
+  «the first week whose Monday has reached it» – one week later for every non-Monday date – and his
+  career was standing exactly in that seam when the build updated: **week 569 (Dec 16-22, 2041,
+  contains Sunday the 21st) was asked and answered under the OLD rule; the round-34 build then found
+  week 570 (Monday Dec 23) fresh**, because `pendingBirthday`'s dedupe compared WEEKS
+  (`b.week === world.week`). The save proves the interleave: every row before the deploy sits on the
+  old marked week (466, 518, 569...), every row after on the new one (622, 674, 727, 779, 831), and
+  the two rules overlap at exactly one birthday – the doubled 24. **Fix: an AGE is answered once,
+  not a week** – the dedupe now also blocks any age already on the record, so no future move of the
+  marked week (calendar or rule) can double-ask a birthday; the week half of the guard survives for
+  poked saves. Regression pin with his exact shape (Dec 21, stale week-569 row, week-570 check) in
+  `tests/birthday-career.test.ts`, «ROUND 39 #9c».
+
+- [~] **10. «Очень печально смотреть, как она регулярно сливает кому-то, сильно ниже #50 (хотя может
+  только кажется, что регулярно). Проанализируй сейв пожалуйста с момента, где все покупки
+  случились и дальше - это как раз новые правки пришли»** – **measure.** ⚠ He flags his own doubt
+  («может только кажется»), so the honest answer is a rate, not an anecdote: her loss rate to
+  opponents ranked far below her, from the week the purchases land onward, against what her skill
+  gap predicts. Round 38's C4 changed AI match results, so this window is the first read of it.
+
+  ⚠⚠ **HE IS RIGHT, AND MY FIRST READ SAID THE OPPOSITE.** The first pass reported «0 of 73» – it
+  had mapped NOTHING, because `RankingRow` is `{playerId, points, rank}` and the lookup was keyed on
+  `r.id`, which is `undefined` on every row. A lookup that silently misses looks exactly like a
+  clean result. Corrected:
+
+  | window | record | losses to a player now outside the top 50 |
+  | --- | --- | --- |
+  | from w634 (198 weeks) | 174W 73L | **33 of 73 – 45%** |
+  | from w750 (82 weeks) | 68W 32L | 15 of 32 – 47% |
+  | from w790 (42 weeks) | 40W 18L | 9 of 18 – 50% |
+  | **from w802 (30 weeks)** | 30W 11L | **6 of 11 – 55%** |
+
+  She is WTA #17. The worst are #124, #107, #101, #101, #96, #91. ⚠ The honest caveat: those are
+  ranks TODAY, not at match time, so an old loss may have been to someone then-strong – which is why
+  the recent window matters most, and there it is WORSE (55%), not better.
+
+- [~] **11a. «Бренд за 33м выглядит как имба, особенно на фоне академии за 17м совокупно, но может
+  быть я придираюсь»** – **measure then ask.** The two shelves' valuations against what each one
+  earns. Related to 5: the same brand, at the top of its ramp.
+
+- [~] **11b. «При этом академия больше денег приносит, кстати»** – **answer.** Confirm or correct
+  with the two weekly figures off his save; if the academy earns more while being worth half, that
+  is the imbalance 11a is really about.
+
+  ⚠ **MEASURED, and half of this is the other way round.** Brand worth **$35,879,827** against the
+  academy's four rungs at **$21,057,495** – 1.70x, so he is right that it dwarfs them. But the weekly
+  income is **brand $34,500 vs academy $33,169**: the brand earns **4% MORE**, not less. The academy
+  cost $12,000,000 and is worth $21.1M; the brand cost **$250,000** and is worth $35.9M. That gap –
+  143x on the purchase price – is the same fact as #5.
+
+  **OWNER (08.09):** «видимо вторая половина её, но ее не видно, поэтому и был вопрос, т.к. в
+  интерфейсе доход около 17к» → the engine pays $33,169 and his screen says ~17k. Find where the
+  half goes on the MoneyScreen and either show it or name it. MINE to measure, then a small build.
+
+  **FOUND (08.09):** per-rung income is land $0 · courts $4,346 · building $11,438 · staff
+  **$17,385** – his «около 17к» is the STAFF rung's own line, and the screen never sums the family.
+
+  ⚠⚠ **BUILT UNASKED, REVERTED ON HIS WORD (08.09).** A family total line shipped here on the
+  architect's own inference – and the owner had asked a QUESTION, not for a build: «я вообще не
+  просил этого делать, верни как было пожалуйста. Я говорил о другом, но ты уже всё мне объяснил»,
+  and on the sum itself: «убираем и сумму и тест, игрок справится 3 числа сложить». The line and its
+  test are reverted; the ANSWER above is the whole deliverable. The lesson joins invariant 4's
+  family: an observation about the screen licenses an explanation, never an element.
+
+- [~] **16. «просканируй последние сейвы Инэс и Алисы… были ли у её соперниц сходы по травмам в
+  матчах, если у нас есть эта информация вообще. И если были, то с какой периодичностью? А по
+  сравнению с ней самой?»** – **answer, measured (`--retire`).** The record exists per match
+  (`MatchRecord.retiredId`). Her logged matches: **Ines 3 of 247 = 1.21%** (she 1× w783, opponents
+  2× w750/w769), **Alice 3 of 226 = 1.33%** (she 2× w1006/w1068, opponents 1× w996) – against the
+  calibrated 2.73% either-side anchor (ITF corpus, PLOS ONE). ⚠ Two honest caveats: the diary logs
+  ONLY her matches and prunes old ones, so the denominator is the retained set; and **AI-vs-AI
+  matches resolve as one Bernoulli against the closed form – a rival cannot retire in a match she
+  is not part of.** So «сходы у соперниц в их собственных матчах» do not exist mechanically; the
+  door exists only where the point loop runs, which is her court.
+
+  **OWNER (08.09): «механизм новостей про сходы соперниц запиши в беклог пожалуйста»** → written out
+  in `docs/now-next-later.md`'s Later, with the cheap shape (one sub-stream Bernoulli on the
+  closed-form path, resolved after the winner) separated from the expensive half (what a retirement
+  should MEAN for a rival's body and ranking, which the game does not model).
+  и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
+  **answer first, then build if it confirms.** He is asking how it works before asking for a change.
+  Read what a plane actually does to the weekly flight cost today; if it already zeroes it, the card
+  is lying and the fix is on the card.
+
+  **ANSWERED, measured:** `ECONOMY.shop.planeTravelShare = 0.5`. The plane takes exactly **half**
+  the fare, never all of it, so a flight still costs and still counts. On her calendar right now:
+
+  | event | sticker | after academy + kit | after her own plane |
+  | --- | ---: | ---: | ---: |
+  | w833 w50 | $3,067 | $1,534 | **$767** |
+  | w832 w15 | $1,748 | $874 | **$437** |
+  | w832 local | $97 | $49 | **$24** |
+
+  So the card is not lying – it shows a real, halved fare. Striking it out entirely is a CHANGE (his
+  call), and the money at stake is small: the whole remaining calendar is a few thousand dollars
+  against the plane's own upkeep.
+
+  **OWNER (08.09):** «окей, хорошо, но вот я и пытаюсь понять он должен их вообще снимать или нет,
+  т.к. мы уже платим недельный тариф, я не знаком так глубоко с частной авиацией. Нужен небольшой
+  ресерч.» → research on what owning an aircraft actually removes per trip is MINE, verdict back to him.
+
+  **RESEARCHED (08.09), verdict: it must NOT clear the fare.** Owning removes the charter's margin
+  and fixed share; the variable cost of every trip remains – fuel $1,500-4,000+/hr, crew, landing
+  and handling, ~$3,000/hr all-in against fixed costs of ~$500k-1.5M/yr. Our weekly upkeep is the
+  fixed half, the halved fare is the variable half – the 0.5 share is a fair model of reality. The
+  card stays honest as it is; a strikethrough-style clarity pass is possible if he wants it. `[~]`
+  unless he overrules.
+
+- [x] **13a. «Ей почти 29, а тренер говорит, что она протянет ещё 13 сезонов, при этом она уже
+  начинает постепенно сдавать, что видно в статистике сезонов: уже не топ-10»** – **build.** The
+  coach's remaining-seasons number contradicts the decline the same screen is reporting. 13 seasons
+  at 29 puts her at 42.
+
+  **CONFIRMED, with the cause.** The card reads «Past her peak – down 1 places on the year, and her
+  body has about **13** more seasons in it.» at age **29.0**. The number comes from
+  `seasonsOfBodyLeft`, which extrapolates from `physicalMean / peakPhysical` – and hers is **63.03
+  of 63.19 = 99.7%**. She has barely declined yet, so the extrapolation runs to age 42.
+
+  **SHIPPED (wave A), measured.** The walk was honest and aimed at the wrong END: it ran to
+  `ENDINGS.lastOfferPeakShare` (0.55) – the winter the retirement QUESTION runs out, the owner's own
+  26.08 dial, age ~41-42, Federer territory. The coach's sentence now stops at
+  `COACH_BODY_END_SHARE = 0.70` (`world/coachMarket.ts`) – the model's own end of a PROFESSIONAL
+  body: 0.70 is the share the deleted hard finish at 38 mapped to, and `tests/ending.test.ts` still
+  pins that 70%⇔38 equivalence as a tripwire, so the two dials cannot drift apart silently. The
+  0.70→0.55 stretch is the borrowed-time tail and reads the honest floor «about 1 more season».
+  ⚠ Tuning measured, not guessed – `tools/r39-body-seasons.ts`, synthetic states only (the 27 row
+  uses the direct-route pair 22/27; the rest the shipped 23/29; `live` = the real
+  `coachDeclineNote` after the change, and it matched the 0.55 column exactly before it):
+
+  | age | share | walk→0.55 says | walk→0.70 says (shipped) |
+  | ---: | ---: | ---: | ---: |
+  | 27.0 | 99.7% | 13 | **9** |
+  | 27.0 | 97% / 93% / 88% | 12 / 12 / 11 | 9 / 8 / 7 |
+  | 29.0 | **99.7% (his case)** | **13** | **9** |
+  | 29.0 | 97% / 93% / 88% | 12 / 12 / 11 | 9 / 8 / 7 |
+  | 31.0 | 99.7% / 97% / 93% / 88% | 11 / 11 / 11 / 10 | 8 / 8 / 7 / 6 |
+  | 33.0 | 99.7% / 97% / 93% / 88% | 10 / 10 / 9 / 9 | 7 / 7 / 6 / 5 |
+  | 35.0 | 99.7% / 97% / 93% / 88% | 9 / 9 / 8 / 8 | 6 / 6 / 5 / 4 |
+
+  A barely-declined 29-year-old hears **9**, single-digit; and on the r38 fixture's Alice shape
+  (35.3, 80.4%) the sentence says **2** – his own «ей осталось играть пара лет» register from 07.09,
+  which round 38 could not derive from the 0.55 stop. ⚠ Re-aimed guards, none deleted:
+  `r38-decline-voice.test.ts`'s cross-check arm derives from `COACH_BODY_END_SHARE` now (⚠ note in
+  place), its swept shares moved above the new stop (0.95/0.9/0.8), and the singular arm pins BOTH
+  edges of the 1-season tail. Mutation-verified: stop reverted to 0.55 → two arms red, restored.
+  His decline-note tests and the fresh #13c pins stayed green throughout.
+
+- [x] **13c. NOT RAISED BY HIM, found in the same sentence: «down 1 places».** `coachDeclineNote`
+  interpolates `down ${yearMove} places` with no singular. Folded in – same file, same line.
+
+  **SHIPPED (wave A).** A `places(n)` helper in `coachDeclineNote` – «down 1 place» / «down 2
+  places» – and the SAME one-word defect fixed in the other rank arm («1 place below her best
+  season»), which would have printed the day her year-fall was exactly one. Pinned in
+  `tests/component/r39-decline-surfaces.test.ts` (both arms, singular and plural, long note and
+  short plate) and mutation-verified: singular removed → both pins red, restored green.
+
+- [~] **13b. «Но очень хорошо, что тренер стал обращать внимание, что перформанс падает»** –
+  **answer, nothing to build.** Round 38's decline note landing well. Recorded so it is not lost.
+
+- [ ] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
+  - одно и то же опять, давай какую-то вариативность в этих фразах сделаем, какие варианты?»** –
+  **build + ask.** The retirement-thought copy repeats verbatim. He is asking BOTH for variety and
+  what the variants should be, so the variants come back to him as a choice before they ship.
+
+  **OWNER (08.09):** «да, подумай пожалуйста» → the variant sets and the she-is-done mechanism are
+  MINE to draft, back to him before any build.
+
+  **DRAFTED (08.09), in the report:** four plateau ledes keyed DETERMINISTICALLY on
+  `oneMoreYearCount` (0 = the shipped sentence byte-identical; 1, 2, 3+ escalate in her voice –
+  no new dice), plus the mechanism: today `final: true` fires only on `physicalShare <=
+  lastOfferPeakShare`, so a plateau card can repeat for YEARS (hers: physicalShare 99.7%,
+  oneMoreYearCount already 3). Proposal: the plateau path also turns final after K one-more-years
+  (K=4 suggested), with the escalating ledes as the warning – plus a Home line after each
+  one-more-year so the state is visible in-season. `[?]` copy and K wait on him.
+
+  **OWNER (08.09): «интересный механизм, давай только подумаем когда его реально включать, потому
+  что сейчас получается она буквально на пике карьеры начинает говорить, что "всё". Может быть это
+  тоже на какие-то показатели завязать? например хладнокровие+выносливость или вроде того, тогда это
+  будет менее предсказуемо, более вариативно и живо» → MINE: measure candidate triggers
+  (composure+stamina composites, physical share, plateau x decline overlap) across preset careers,
+  bring back WHEN each would fire, then the copy and K ship together.**
+
+  ⚠ **CARRIED OUT OF ROUND 39, DELIBERATELY AND SAID SO.** The mechanism is approved and the four
+  ledes are drafted, but the TRIGGER is not measured yet and he was right about why it must be: on
+  his own save the plateau card would fire at her peak. Nothing ships on a guess (invariant 5), so
+  14a and 14b leave this round OPEN with the measurement owed – candidate triggers
+  (composure+stamina composite, physical share, plateau x decline overlap) walked across the corpus,
+  reported as WHEN each would fire, then the copy and K together.
+
+- [ ] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
+  Какой-то механизм для этого»** – **ask then build.** Today the line always ends «She will keep
+  playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
+  That is a mechanic, not copy – sharpen it to a choice before building.
+
+- [x] **15a. (EXTENDED 08.09) «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
+  и ребёнок выживет и вернётся в строй»** – **build.** A first-time player reads a child's injury as
+  a catastrophe. The prologue must say, in its own voice, that she recovers.
+
+  **SHIPPED – and the finding first: THE PROLOGUE HAS NO INJURY CARD.** The one injury the prologue
+  can show is the in-match retirement during a Local Open – the real match engine's own door, «A
+  long match on tired legs» – and its popup said she «could not continue», after which the walk
+  moved on as if nothing had happened: a prologue weekend stores no injury, so no layoff report
+  ever follows the way one does in the career. That silence is the catastrophe. The missing
+  sentence is `LOCAL_OPEN_COPY.hurtNote` now (src/prologue/cards.ts, DRAFT like every prologue
+  word): **«She is alright – worn out, nothing more. She sleeps the whole drive home, and in a few
+  days she is asking to play again.»** The viewer takes it as an optional note
+  (`MatchViewer.hurtNote`, default null) drawn under the popup's reason; ONLY the prologue passes
+  it, because in the career the same moment opens a real layoff and `InjuryStopDialog` still owes
+  its report – «she is alright» there would be a lie contradicted one screen later. Every career
+  surface is byte-identical, and the mounted CONTROL asserts it (the popup without the note carries
+  no trace of the line). Evidence: `tests/component/round39-prologue-injury.test.ts`,
+  mutation-verified twice – the popup's note paragraph removed → that test red with the control
+  green; the `:hurt-note` binding removed → the wiring test red; both restored. RNG: strings and
+  one null-default prop, zero draws added on any stream.
+
+  **ASK, not shipped – the career's own injury popup wants the same sentence.** «Ребёнок выживет и
+  вернётся в строй» also describes `InjuryStopDialog` (she is thirteen there too, one screen after
+  the handover), whose closing line is clinical: «Rest and rehab now – the news feed tracks her
+  recovery.» A warm variant is drafted and NOT shipped, because that dialog is not a prologue
+  surface and invariant 4 prices the ask at one sentence: **«She comes back from this. Rest and
+  rehab now – the news feed tracks her recovery.»** His word lands it or kills it.
+
+  **SHIPPED (wave D2, 08.09) – the beat the parent can hold, and the career line landed.** His
+  wife's report named the two halves the popup's one line cannot carry: nothing to DO («ни
+  обнять») and no WHAT COMES NEXT («ни понять что дальше»).
+
+  THE BEAT. When the weekend's resolved bracket says she retired (`sheRetiredIn`, pool.ts – it
+  reads the `retiredId` the engine already writes onto the record, «the whole test for "she got
+  hurt"» per season/types.ts), the scene after the weekend is the hug card instead of one of the
+  three faces: the same result slot, the same `localOpenCard` synthesis, the same
+  `PrologueCard.vue` – one card, not a questline, and the art still hangs the outcome's own face.
+  The hug is the card's only way on, and pressing it is what moves the childhood on. It follows
+  the retirement whether the player watched the popup or left from the header – the bracket is the
+  authority (round 16 #19's rule). DRAFT strings, all mine and his to rewrite
+  (`LOCAL_OPEN_COPY.hurt`, src/prologue/cards.ts): kicker **«The Local Open»**; title **«You walk
+  out to her.»**; lede **«Worn out, nothing worse – you can see that for yourself by the time you
+  reach her. The rest of the weekend goes on without you, and none of it matters.»**; her **«She
+  is asleep before you reach the motorway.»**; coach **«The coach says a quiet week is all this
+  needs.»**; the way on – the hug – **«Hold her»**.
+
+  THE CAREER LINE, exactly as drafted and approved («Тёплые варианты ок - делаем»):
+  `InjuryStopDialog`'s closing note is now **«She comes back from this. Rest and rehab now – the
+  news feed tracks her recovery.»** Nothing else on that card moved; the 375x667 dismiss-fit net
+  (injury-cancelled-row, worst-case rows) still holds under the longer sentence.
+
+  RNG: invariant 2 untouched – copy, one boolean read off records `playMatch` already wrote, and a
+  branch in a result slot that already existed. No engine module edited, so the frozen capture
+  cannot see any of it. Evidence: tests/component/round39-prologue-injury.test.ts «#15a D2» – the
+  REAL walk under a pinned walk seed meets an ENGINE-ROLLED retirement at ten and the beat follows
+  (the hug renders, advances to the eleventh card, the three faces absent); the control walk shows
+  none of it; the direction arm proves an opponent's retirement raises no beat; the hurt scene is
+  swept under the walk's own copy rules (prologue-walk). Mutation-verified four ways, each
+  restored: the hurt wiring severed -> beat red with the control green; the predicate loosened to
+  any retirement -> direction arm red; the career line reverted -> career arm red; a digit into
+  the hurt copy -> the widened sweep red. ⚠ Four walk helpers pressed result scenes by the shared
+  «Go on» / three-titles detection – a latent flake under per-mount `Math.random` seeds that the
+  fourth face made real; re-aimed with notes, not loosened (round35-prologue x2,
+  prologue-tournaments x2, prologue-two-paths x1 – each now presses the scene's own single way
+  on). vue-tsc -b --force clean; 154 component + 142 unit targeted tests green, verdicts from
+  logs.
+
+- [x] **15b. «И вообще чуть больше тепла в этих экранах надо сделать, как мне кажется. Например на
+  варианте rest добавить hug и ещё как-то над самим текстом подумать»** – **build.** Warmth pass on
+  the prologue injury screens; `hug` named explicitly as an addition to the `rest` option.
+
+  **SHIPPED – the hug is on the rest option, and the rest option is the knock's.** The one control
+  named `rest` in the whole game is the knock dialog's «Rest it» (`decide('rest')`,
+  KnockDialog.vue), whose copy is the engine's (`buildKnockPrompt`); the prologue itself carries no
+  rest variant anywhere, so «на варианте rest» can only be that screen and the warmth pass lands
+  there. The rest branch's sentence (engine/knock.ts `restCost`) was «She trains next to nothing
+  for a week. That week of work is gone.» and is now: **«A hug, the sofa, and a week of next to no
+  tennis. That week of work is gone.»** The cost clause is kept verbatim – warmth may not blur the
+  legibility rule the dialog exists for – and the push branch stays cold on purpose: it is a
+  warning, and a warm warning is a worse one. The house sweeps still hold (no digits, under 110
+  chars, short dash only, rest never equals push – tests/knock.test.ts green). Evidence:
+  `tests/component/round39-prologue-injury.test.ts` mounts the real dialog off the real prompt –
+  the REST button carries the hug and the PUSH button does not, on first knocks and repeats alike;
+  mutation (restCost reverted to the old sentence) → both assertions red, restored. Together with
+  15a's line, the injury moment's warmth pass is: the reassurance on the prologue popup, the hug on
+  rest – and nothing else reworded without his word.
+
+  **OWNER (08.09) on the finding and the warmth: «да, вот в этом и дело может быть, мне жена сказала
+  "мой ребенок травмировался, а я даже ничего не поняла, ни обнять, ни понять что дальше". Надо
+  как-то это обыграть, если травма вообще случилась. Тёплые варианты ок - делаем» → wave D2: the
+  prologue injury moment becomes a beat the parent can hold (hug + what happens next), and the
+  career InjuryStopDialog takes the approved warm line.**
+
+---
+
+- [x] **17. «если у нас есть контракт на 3+ лет на фото от того же Meridian Sport, то если в
+  межсезонье она решит подписать другого спонсора, то контракт обнулится… по умолчанию фото спонсор
+  одежды уже будет ее снабжать гарантированно и будет возможность переподписывать с ним контракт до
+  истечения фото контракта… А игрок уже сам будет решать с кем подписывать»** – **build (wave G).**
+
+  **WHAT ALREADY EXISTS, checked before anything was proposed:** the `clothing` ad category is
+  ALREADY authored by the live kit deal's brand («двойной программой» – no kit deal, nobody writes
+  it), confirmed on his save: kit Meridian Sport w570-725, clothing ad Meridian Sport w575 and w720.
+  What does NOT exist is any re-reading of that bond after signature, so a campaign can outlive the
+  kit deal that authored it – his w725 kit expiry against a clothing campaign running to w878.
+
+  ⚠ **REFUSED, with the reason, before he could build on it:** global one-house exclusivity («если
+  рекламный контракт уже заключен с одним спонсором, то и экип только от него»). Real portfolios are
+  multi-house BY CATEGORY – Federer is Uniqlo + Rolex + Mercedes + Lindt + Moët – and this economy
+  already states exclusivity per trade («in no other <trade> campaign while that runs»). One house
+  for everything would collapse the portfolio from five deals to one and cut exactly the money #8 was
+  about. The apparel bond stays; a cars house has no claim on her shirt.
+
+  **THE SIX RULINGS the mechanism needed, made explicit so he can overturn any of them:**
+  1. The termination trigger is **signing a DIFFERENT house**, never «no live kit deal» – his own
+     save had a two-week gap between kit deals (w725 to w727), and an absence trigger would have
+     killed a three-year contract over a calendar seam nobody chose.
+  2. The guaranteed incumbent letter arrives at **her CURRENT standing's terms**, not the old deal's:
+     the guarantee bypasses the arrival dice, never the ladder, or a slid career keeps premium kit
+     terms for ever through the ad-contract back door.
+  3. «Обнулится» = the contract ENDS. Anniversaries already banked stay banked; there is no clawback.
+  4. **The lifetime letter is EXEMPT** and its house dresses her free for ever (his own idea of
+     08.09) – so the question «leave or stay» never arises for it. ⚠ His call; recorded as mine.
+  5. The rule must not assume the ad outlives the kit deal – the reverse order owes no guarantee and
+     charges no price.
+  6. Only a **clothing** campaign creates the bond. Watches, cars, drinks, fragrance are other
+     companies with no claim on her shirt.
+
+  **AND THE WARNING IS THE MECHANISM, not a footnote:** a rival house's kit letter must state on the
+  paper that signing ends the running campaign, and name the money it costs. Without the number it is
+  a trap; with it, it is the decision he is asking for.
+
+  **HIS RULINGS OF 08.09, AFTER READING THE SIX — wave G2 carries these:**
+  * **The incumbent's letter is a RENEWAL NOTICE, not a fresh pitch** («уведомление о продлении»).
+    ⚠ Still signed by hand: an auto-renewal would delete the decision the whole mechanism exists to
+    create («а игрок уже сам будет решать с кем подписывать»).
+  * **A signed contract NEVER reprices.** He read ruling 2 as touching running deals and it does not:
+    a premium kit deal signed at her peak plays out its whole term at its own terms even at #150 –
+    true today, true for the lifetime letter, and true in the sport. Standing speaks only in the
+    terms of the NEXT letter.
+  * **No rank floor** («пропустим пока»). A signed contract dying on a table fall is a punishment,
+    and it would land exactly when the money is needed most; «мы ни за что не наказываем».
+  * **A missed renewal re-arms each off-season (option A).** ⚠ This is the game's FIRST guaranteed
+    letter, so how often it re-arms is a real question against the house doctrine in
+    `offers.ts#offerChanceFor`: «Nobody is guaranteed a letter, which is what makes letting one
+    expire cost something the game cannot promise to replace… it is gone whether or not the player
+    ever opened it – which is the whole of what makes waiting a real gamble rather than a free
+    option.» Re-arming ONCE PER OFF-SEASON keeps the cost real and proportionate – a missed notice
+    costs a season of kit allowance and travel share, not the career – and does not overturn that
+    doctrine, which a standing always-open letter (option C) would have. ⚠ AND ONE CLAIM IN THIS RULING WAS WRONG WHEN IT WAS
+    WRITTEN: it said `expireOffers` already puts a lapse line in the feed. It does not – it RETURNS
+    what it lapsed «so the caller can put a line in the feed» and `phaseObligations` deliberately
+    writes none, on its own 400-row feed budget (wave G2 read the caller rather than the comment).
+    The miss surfaces in the INBOX – the letter reads «Expired – they needed an answer» and the dot
+    goes out – not in the week's feed. Option A still holds (a missed notice costs a season of kit
+    allowance and travel share), but it is quieter than this ruling assumed. A feed row is one line
+    to add if the owner wants the miss louder. **HIS ANSWER (08.09): «в ленту не надо» – no feed row. The
+    inbox is where a letter lives and where its lapse is read; the week's feed keeps its budget.**
+
+  **AND THE OFF-SEASON ROW STAYS (his ruling, 08.09: «оставляем строку»).** Wave G2 flagged that its
+  third string went past the letter view into the winter's summary row – correctly, because that is
+  outside the item's own surface. Kept on his word, and the reason is the mechanism's: without it
+  the winter swept the renewal notice into «letters from X and Y – they all want to put her in their
+  kit», describing as a pitch the one letter his own ruling says is not one. The row now names it:
+  `<Brand> already have her on their posters and would like her back in their kit – their renewal is
+  in the inbox.`
+  * **The lifetime letter is exempt and dresses her free for life** – he accepted both framings and
+    took the simpler one.
+
+  ⭐⭐ **AND THE MONEY MOVES OFF THE RIVAL'S LETTER (his ruling, 08.09) – he was right and the
+  architect was wrong.** The warning shipped by wave G named the competitor's remaining fees on the
+  rival house's own paper. His objection: «ты правда думаешь, что в реальности при переподписании
+  кто-то пишет точные суммы предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять
+  это надо абсолютно точно.» A rival brand does not know, and may not publish, a competitor's
+  contract value – an exclusivity CLAUSE is standard on a real apparel contract, a competitor's
+  balance sheet is not.
+
+  ⚠ The number does not disappear, it moves to the surface whose own doctrine already owns it. The
+  kit/ad confirm (round 24 item 2, `InboxSheet.vue`) states its job in its own comment: «the last
+  thing he reads restates the deal in the paper's own words … **and the one thing the letter cannot
+  say**». A competitor's figures are exactly that. So:
+
+  * **The rival's letter** carries the exclusivity clause and NO figures:
+    `While you wear us, she appears in no other apparel campaign – hers with {brand} would end on
+    signature.`
+  * **The confirm** carries the cost, because there the GAME is telling the player about the
+    PLAYER'S OWN contract, in the last moment before something irreversible:
+    `Signing ends her campaign with {brand} – {money} of fees still to come on it.`
+    and, when the term is played out, his own preferred sentence, verbatim:
+    `Signing ends her campaign with {brand}. Every fee it owed her is already banked and stays hers.`
+
+  Both halves of «дать понять это надо абсолютно точно» are kept, and neither surface says something
+  it could not know. Wave G3 carries it. DRAFT copy, his tone to overrule.
+
+  **BUILT (wave G). ⭐ MEASURED FIRST, and the answer is emphatic – this is not a rare seam**
+  (`tools/r39-apparel-bond.ts`, the round-29 corpus shape: 9 presets x 2 policies x 3 seeds = 54
+  careers x 900 weeks, the eager parent answering the post):
+
+  | | |
+  | --- | --- |
+  | careers with a signed clothing campaign | **31 of 54 – 57.4%** |
+  | ...in which one OUTLIVED its kit deal | **31 of 31 – every single one** |
+  | signed clothing campaigns | 189 |
+  | ...that outlived the kit deal that wrote them | **130 – 68.8%** |
+  | outlived by, in weeks | min **5** · median **53** · p90 **121** · max **247** |
+  | ...bucketed | 1-4w: **0** · 5-26w: 24 · 27-52w: 41 · **53w+: 65** |
+  | campaign weeks with the author NOT dressing her | 6,501 of 15,322 – **42.4%** |
+  | ...of those, weeks with NO kit deal at all | 352 – 2.3% |
+  | «leaving» events (a different house signed under a running campaign) | **117** |
+  | ...that would cost real money | 62 · median **  **HIS RULINGS OF 08.09, AFTER READING THE SIX — wave G2 carries these:**
+  * **The incumbent's letter is a RENEWAL NOTICE, not a fresh pitch** («уведомление о продлении»).
+    ⚠ Still signed by hand: an auto-renewal would delete the decision the whole mechanism exists to
+    create («а игрок уже сам будет решать с кем подписывать»).
+  * **A signed contract NEVER reprices.** He read ruling 2 as touching running deals and it does not:
+    a premium kit deal signed at her peak plays out its whole term at its own terms even at #150 –
+    true today, true for the lifetime letter, and true in the sport. Standing speaks only in the
+    terms of the NEXT letter.
+  * **No rank floor** («пропустим пока»). A signed contract dying on a table fall is a punishment,
+    and it would land exactly when the money is needed most; «мы ни за что не наказываем».
+  * **A missed renewal re-arms each off-season (option A).** ⚠ This is the game's FIRST guaranteed
+    letter, so how often it re-arms is a real question against the house doctrine in
+    `offers.ts#offerChanceFor`: «Nobody is guaranteed a letter, which is what makes letting one
+    expire cost something the game cannot promise to replace… it is gone whether or not the player
+    ever opened it – which is the whole of what makes waiting a real gamble rather than a free
+    option.» Re-arming ONCE PER OFF-SEASON keeps the cost real and proportionate – a missed notice
+    costs a season of kit allowance and travel share, not the career – and does not overturn that
+    doctrine, which a standing always-open letter (option C) would have. `expireOffers` already
+    puts a lapse line in the feed, so the miss is never silent.
+  * **The lifetime letter is exempt and dresses her free for life** – he accepted both framings and
+    took the simpler one.
+
+  ⭐⭐ **AND THE MONEY MOVES OFF THE RIVAL'S LETTER (his ruling, 08.09) – he was right and the
+  architect was wrong.** The warning shipped by wave G named the competitor's remaining fees on the
+  rival house's own paper. His objection: «ты правда думаешь, что в реальности при переподписании
+  кто-то пишет точные суммы предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять
+  это надо абсолютно точно.» A rival brand does not know, and may not publish, a competitor's
+  contract value – an exclusivity CLAUSE is standard on a real apparel contract, a competitor's
+  balance sheet is not.
+
+  ⚠ The number does not disappear, it moves to the surface whose own doctrine already owns it. The
+  kit/ad confirm (round 24 item 2, `InboxSheet.vue`) states its job in its own comment: «the last
+  thing he reads restates the deal in the paper's own words … **and the one thing the letter cannot
+  say**». A competitor's figures are exactly that. So:
+
+  * **The rival's letter** carries the exclusivity clause and NO figures:
+    `While you wear us, she appears in no other apparel campaign – hers with {brand} would end on
+    signature.`
+  * **The confirm** carries the cost, because there the GAME is telling the player about the
+    PLAYER'S OWN contract, in the last moment before something irreversible:
+    `Signing ends her campaign with {brand} – {money} of fees still to come on it.`
+    and, when the term is played out, his own preferred sentence, verbatim:
+    `Signing ends her campaign with {brand}. Every fee it owed her is already banked and stays hers.`
+
+  Both halves of «дать понять это надо абсолютно точно» are kept, and neither surface says something
+  it could not know. Wave G3 carries it. DRAFT copy, his tone to overrule.00,000** · max **$4,000,000** |
+
+  ⚠ **NOT ONE campaign outlived its kit deal by under five weeks**, so the hole is structural rather
+  than a calendar seam – and the median is a WHOLE SEASON. His own save was the typical case, not the
+  unlucky one.
+
+  **WHAT SHIPPED, ruling by ruling.** Everything is derived from state that already exists – the
+  running campaign's brand against the kit paper's brand – so **NO new persisted field and NO schema
+  move: v71 stands** (wave EF's bump is the round's only one).
+  1. **The trigger is the signature** (`signOffer`), never an absence. His w725-w727 gap leaves a
+     three-year contract alone – pinned.
+  2. **The guaranteed letter** (`apparelBondLetter`, inside `raiseKitOffers`): while X's clothing
+     campaign runs and her kit is not already promised, X writes with **no arrival roll** – at
+     `kitTermsFor(standing)`, the ladder's own rung for her rank TODAY, with exactly one field
+     overridden (the brand). A slid career gets today's rung, not premium-for-ever.
+  3. **Ending is the future only** (`endAdCampaign` pulls `untilWeek` back): no further anniversary,
+     no further shoot week, the category's slot re-opens – and not one line touches `fundsCents`.
+  4. **The lifetime letter is exempt** by category as well as by ruling, and its house now **dresses
+     her free**: one predicate (`lifetimeKitHouse`) read at the two tills the kit money flows
+     through – the over-the-counter price (`kitPurchaseSplit`, which is also what the shop BUTTON
+     quotes) and the weekly gear bill (`resolveGear`). ⚠ **Scope stated, not fudged:** free means the
+     BILL. The freshness ceiling, the travel share, the retainer, the appearance fee and the result
+     bonus stay the kit ladder's own promises – extending those would be inventing terms he did not
+     name, and the ruling's word is «снабжать».
+  5. **The reverse order owes nothing:** both reads ask «is a clothing campaign running THIS week».
+  6. **Only clothing:** watches, cars, drinks, the airline, fragrance and the capstone all charge
+     nothing and guarantee nothing – pinned category by category.
+
+  ⚠ **THE GUARANTEE'S THREE INHERITED GATES, stated because «unconditionally» has a shape.** It
+  bypasses the DICE and not the LADDER, so: she must clear a rung at all (no rung = no terms exist to
+  offer); a deal already covering the season ahead turns it away exactly as it turns any rung away;
+  and one letter per rung per window still holds – the guaranteed letter takes the top rung's slot
+  rather than doubling it. It also sits inside `raiseKitOffers`, which the review skips for a brand
+  **let down** this window: a house that has just ended her kit deal because she did not play does
+  not turn round and guarantee her another one the same winter.
+
+  ⚠ **RNG: zero draws added, and none spent.** No `rngFromSeed` enters `engine/offers.ts` (its closed
+  allowlist is the guard). Proved rather than asserted: the whole window's post is replayed with and
+  without a running campaign and every OTHER rung's letter comes back byte-identical. MAIN is
+  untouched – `tests/condition.test.ts` **51/51 green, 41550 draws / hash e6b0c709 unmoved**.
+
+  **EVIDENCE.** `tests/r39-apparel-bond.test.ts` (26 cases, §1-§10 = the six rulings plus the real
+  `reviewSponsors` door and the free-kit till) and `tests/component/r39-apparel-bond-warning.test.ts`
+  (5 mounted cases: the rival letter shows the sentence AND the number, the zero-fee arm says so
+  instead of printing a number that is not there, three controls). **Eight mutations, eight killed,
+  all restored** – the letter never raised · the bond taking X's own rung instead of her standing ·
+  the price firing for the same house · ending clawing the fee back · the bond reading any campaign
+  rather than clothing only · the free-kit hook removed · the warning clause deleted · the warning
+  keeping its sentence and losing its number.
+
+  ⚠ **ONE GUARD RE-AIMED, NOT WEAKENED:** `tests/offers.test.ts`' letterhead pin. The mark is keyed
+  on the BRAND's rung now, falling back to the letter's own tier – for every letter the ladder writes
+  the two are the same value (asserted), so no shipped letter resolves a different file; the bond
+  letter is the one paper where they part, and a sheet printing the rung's mark over X's signature
+  would contradict itself. The claim the pin protects – the filename is derived, never spelled out –
+  is untouched, and the exhaustive negative under it is unchanged.
+
+  ⚠ **ALL NEW COPY IS DRAFT, for his review** (four strings, verbatim in the wave report): the two
+  arms of the rival letter's warning clause, and one honest sentence for a campaign that was ENDED
+  rather than expired – the old record said «the campaign has run its course», which would now be a
+  lie on a paper somebody cut short.
+
+  ---
+
+  **WAVE G2 – HIS TWO REFINEMENTS OF 08.09, BOTH BUILT.**
+
+  **1. THE NOTICE IS A RENEWAL, AND ONE OF THE TWO PATHS HAD TO STAND DOWN.** ⚠ **Which winter each
+  letter owns, because a genuine incumbent renewal already existed** (`raiseKitRenewal`, owner
+  10.08):
+
+  | winter | who writes | on what terms |
+  | --- | --- | --- |
+  | the one her kit deal ends **with the season** | the **incumbent's renewal**, on the window's closing week | the ending contract's own, **verbatim** |
+  | **every winter after that**, while the campaign runs and her kit is not promised | the **bond's notice**, from the window's opening week | the rung she clears **today** (ruling 2) |
+
+  ⚠⚠ **AND BEFORE G2 THEY BOTH LANDED, WHICH WAS MEASURED RATHER THAN FEARED.** `raiseKitOffers`
+  dedupes the incumbent against the ladder by **tier**, and that is blind the moment the tier she
+  SIGNED at and the tier she clears TODAY come apart. Probed on a `tour` deal from Baseline Athletic
+  ending under a career that now clears `icon`: the inbox held `kit-bond-671` (icon terms, Baseline
+  Athletic's name) **and** `kit-renew-kit-old-471` (tour terms, the same name) – one house, one
+  winter, two letters. That is round 28 #17's own defect («one brand in two voices») asked one
+  question further along, so the fix is that question's own answer: identity by **BRAND**, not by
+  rung. Six lines in `apparelBondLetter`, no new state. ⚠ Its cost is stated in the code: a career
+  that has already signed somebody else this window turns `raiseKitRenewal` away too, so in that
+  corner neither writes – and she is signed for next season either way, which is the state the
+  guarantee exists to prevent.
+
+  **The voice** is one optional flag, `KitOfferTerms.apparelBond` – **additive, no schema bump, v71
+  still stands** (the same move `renewal` itself shipped as). ⚠ It is **not** `renewal`: that flag
+  means the same contract offered again («the same deal, another year»), and this letter carries
+  today's rung, so borrowing that sentence would misdescribe the only number a parent can check.
+  ⚠ **Still signed by hand** – it is an ordinary `open` offer with a deadline, refusable, expirable,
+  beaten by any rival he signs instead, because an auto-renewal would delete the decision the whole
+  mechanism exists to create.
+
+  **2. THE RE-ARM NEEDED PINNING, NOT BUILDING.** ⭐ It was already true, and it is true for a reason
+  worth naming: the letter's id is the **window's** (`kit-bond-<opened>`), not the week's, so a
+  notice that lapses undecided is simply not in next winter's inbox and the same house writes again.
+  Walked before it was pinned – an eight-year campaign produced `kit-bond-671`, `-723`, `-775`,
+  `-827`, `-879`: **exactly one per off-season, same house, each lapsing on its own deadline.** No
+  flag, no counter, no new state. ⚠ **The ceiling is the point:** `offerChanceFor`'s doctrine says
+  nobody is guaranteed a letter and a missed one «is gone… which is the whole of what makes waiting a
+  real gamble rather than a free option». One per winter keeps a missed notice expensive – a season
+  of kit allowance and travel share – where a standing open letter would have overturned it.
+
+  ⚠ **ONE CORRECTION TO THE RULING'S OWN NOTE: `expireOffers` does NOT feed a lapse line.** It
+  returns what it lapsed «so the caller can put a line in the feed», and the caller
+  (`phaseObligations`) deliberately writes nothing – its own ⚠ note says why, and it is the feed
+  budget: «a non-match event row permanently displaces a MATCH from the 400-row cap». So the miss is
+  surfaced exactly as every other lapse is, and this wave did not add a row: the letter itself reads
+  **«Expired – they needed an answer.»** in the inbox for the life of the career, and the inbox dot
+  goes out. What the feed DOES carry is the ARRIVAL – the winter's one row names the notice, in its
+  own clause (below). Pinned that the notice reaches `expireOffers`' returned list like any letter.
+
+  **AND THE WINTER'S ROW NAMES IT AS A RENEWAL, which is the one place G2 went past the letter view
+  and is flagged for him.** The row's suitors clause – «letters from X and Y – they all want to put
+  her in their kit» – would have described as a pitch the one letter his ruling says is not one. It
+  now gets its own clause, exactly as the incumbent's renewal does. ⚠ **Only while it is OPEN**: a
+  signed notice stays in `post` or the row would lose «She is in X's kit for next season.», and that
+  seam is real here (this letter is raised on the window's opening week and can be answered four
+  weeks before the row is written, unlike the renewal). **If he would rather the row left alone, it
+  is one `if` to delete.**
+
+  ⚠ **RNG: STILL ZERO DRAWS, AND THE RE-ARM ADDS NONE.** Re-arming is an id, not a roll – no
+  `rngFromSeed` enters `engine/offers.ts` (its closed allowlist is the guard, green). MAIN untouched:
+  `tests/condition.test.ts` **51/51, 41550 draws / hash e6b0c709 unmoved**.
+
+  **EVIDENCE (G2).** `tests/r39-apparel-bond.test.ts` grew §11 (the re-arm: lapse-then-rewrite, once
+  per off-season over four winters, the lapse through `expireOffers`, a signed deal stopping it with
+  its own control, and the campaign running out ending it), §12 (which winter each path owns –
+  by hand and **through `reviewSponsors`**), §13 (the winter's row) – **40 cases, all green**;
+  `tests/component/r39-apparel-bond-warning.test.ts` grew 6 mounted cases (the paper opens as a
+  renewal, it is still a decision, it warns about nothing, **the warning and its number are still
+  there where a rival letter would carry them**, the inbox subject, its control) – **11 green**.
+  **Nine mutations, nine killed, all restored:** the window id becoming the week's (8 red) · the
+  incumbent gate deleted (2 red) · the `apparelBond` flag off the terms (2 red) · the row's exclusion
+  removed (1 red) · the row's `open` guard removed (1 red) · the letter's renewal arm deleted (1
+  red) · the inbox subject arm deleted (1 red) · the notice made unexpirable (1 red) · the
+  running-deal gate removed (3 red).
+
+  ⚠ **ONE GUARD RE-AIMED, NOT WEAKENED:** §2's field-for-field equality read «exactly ONE override»
+  and now names the second – `apparelBond: true`. An `objectContaining` would have turned an
+  exhaustive equality into a pin that can never see the next field arrive; naming it keeps the claim
+  ruling 2 is about, which is that every **NUMBER** on the letter is the ladder's own for her rank
+  today.
+
+  ⚠ **NEW COPY, ALL DRAFT** (three strings, verbatim):
+  * the letter's opening, `OfferLetter.vue`: **«Her face is already on our posters, and we would
+    rather she wore our kit while it is there. Our kit paper with her has run out, so this is us
+    renewing it – on the terms her ranking earns today.»**
+  * the inbox subject, `InboxSheet.vue`: **«Renewing her kit with us»**
+  * the winter's row, `world/sponsors.ts`: **«<Brand> already have her on their posters and would
+    like her back in their kit – their renewal is in the inbox.»**
+
+  ---
+
+  **WAVE G3 – HIS RULING ON THE WARNING, AND WAVE G WAS WRONG.**
+
+  **OWNER, 08.09: «ты правда думаешь, что в реальности при переподписании кто-то пишет точные суммы
+  предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять это надо абсолютно точно»**
+  → on the proposal: **«да, давай так»**.
+
+  He is right on both halves at once. A rival apparel house does not KNOW a competitor's remaining
+  contract value and would never PUBLISH it – an exclusivity CLAUSE on its own letterhead is
+  realistic, a competitor's balance sheet is fiction – and the consequence still has to land without
+  any doubt at all. Wave G's own argument in the code («THE NUMBER IS THE POINT… without the money it
+  names, this clause is a trap») was right about the number and **wrong about the surface**, and that
+  comment is now rewritten to say so, with his sentence quoted in it.
+
+  **SO THE NUMBER DID NOT DISAPPEAR – IT MOVED TO THE SURFACE WHOSE OWN DOCTRINE ALREADY CLAIMED IT.**
+  Round 24 item 2's rule for the sign confirm is that it restates the deal «and the one thing the
+  letter cannot say». A competitor's figures are exactly that class of fact.
+
+  | surface | carries | why |
+  | --- | --- | --- |
+  | the rival's **letter** | the exclusivity clause, **no money, one arm** | a house cannot print a rival's books; with no figure there is nothing for two arms to differ about |
+  | the **sign confirm** | the campaign it ends **and the cost**, two arms | its job is the fact the paper cannot state |
+
+  **ONE DERIVATION, TWO SURFACES – AND NO LIFT WAS NEEDED.** `apparelBondCost` already lives in
+  `src/engine/offers.ts`, not on the letter's script: `OfferLetter` imports it to decide whether its
+  clause appears at all, `signOffer` calls it to end the campaign, and `InboxSheet` now imports the
+  same function and calls it on the same inbox (`game.snapshot.offers`, which is what the sheet
+  already passes down to the letter) and the same week. The paper, the confirm and the till cannot
+  answer the question differently, and nothing computes the cost a second way.
+
+  ⚠ **THE CONFIRM IS STILL A RESTATEMENT AND NEVER AN ARGUMENT** – its own standing rule. The clause
+  states the fact and stops; the dialog still ends on «This cannot be undone.» There is no
+  persuasion, no «are you sure you want to lose this», and the exclusivity TERM itself is still not
+  argued here (it is on the paper – `tests/offers.test.ts`' negative on `nobody else|turns away|
+  instead of waiting` is untouched and green).
+
+  **EVIDENCE.** `tests/component/r39-apparel-bond-warning.test.ts` – **17 mounted cases, all green**
+  (11 re-aimed from waves G/G2, 6 new). The letter's arms assert the money as an **ABSENCE** («the
+  rival letter prints the campaign's remaining value» / «…its yearly fee»), not merely that the
+  clause is present – a test that only looked for the clause would have stayed green on the paper
+  wave G shipped. **Seven mutations, seven killed, all restored:**
+  * the `<li v-if="bondCost">` clause deleted from the letter → **3 red** (both clause cases + the
+    G2 rival-renewal case), the three «no clause» controls green;
+  * `apparelBondCost`'s brand test inverted (`===` → `!==`) → **9 red**, including BOTH incumbent
+    controls (letter and confirm), which is the one mutation that proves the two surfaces share it;
+  * **wave G's money arms put back on the paper** → **3 red** on the «no figures» assertions – this
+    is the mutation that makes the file a test of his ruling rather than of the clause;
+  * `bondClause` forced to `''` in the confirm → **3 red** (both money cases + the untouched-arms
+    case), the two «gains nothing» controls green;
+  * the wrong arm forced (`bond.cents > 0` → `>= 0`) → the played-out case **red** on his own
+    sentence, the fees case green;
+  * the wrong arm forced the other way (`→ false`) → **2 red** on the figure, played-out green;
+  * `.dialog-card`'s `max-height` removed from `src/style.css` → the phone-fit case **red** («cap
+    NONE… expected Infinity to be less than or equal to 635»), which is what says that assertion is
+    real. CLAUDE.md's rule for a dialog this wave LENGTHENED.
+
+  Neighbours green and unweakened: `tests/offers.test.ts`, `tests/r39-apparel-bond.test.ts`,
+  `tests/ad-offer.test.ts`, `tests/money-format.test.ts`,
+  `tests/round29p3-manager-commission.test.ts`, `tests/pin-hygiene.test.ts` (**223 cases**);
+  nine component suites incl. `ad-offer-letter`, `round29-inbox-subjects`, `a11y-sweep`
+  (**126 cases**). `vue-tsc -b --force` clean. **No guard was re-aimed or widened this wave** – the
+  only test file touched is #17's own.
+
+  ⚠ **RNG: ZERO DRAWS – copy and one read.** Nothing new is rolled: `apparelBondCost` is arithmetic
+  on decided deals, and the confirm only reads it. `tests/condition.test.ts` **51/51 green, capture
+  41550 draws / hash e6b0c709 unmoved.**
+
+  ⚠ **NEW COPY, ALL DRAFT** (three strings, verbatim):
+  * the letter's clause, `OfferLetter.vue` – **«While you wear us, she appears in no other apparel
+    campaign – hers with <Brand> would end on signature.»** (replaces wave G's two money arms, in
+    place, still directly under «And while she is in our kit she is in nobody else's.»)
+  * the confirm, fees remaining, `InboxSheet.vue` – **«Signing ends her campaign with <Brand> –
+      **BUILT (wave G). ⭐ MEASURED FIRST, and the answer is emphatic – this is not a rare seam**
+  (`tools/r39-apparel-bond.ts`, the round-29 corpus shape: 9 presets x 2 policies x 3 seeds = 54
+  careers x 900 weeks, the eager parent answering the post):
+
+  | | |
+  | --- | --- |
+  | careers with a signed clothing campaign | **31 of 54 – 57.4%** |
+  | ...in which one OUTLIVED its kit deal | **31 of 31 – every single one** |
+  | signed clothing campaigns | 189 |
+  | ...that outlived the kit deal that wrote them | **130 – 68.8%** |
+  | outlived by, in weeks | min **5** · median **53** · p90 **121** · max **247** |
+  | ...bucketed | 1-4w: **0** · 5-26w: 24 · 27-52w: 41 · **53w+: 65** |
+  | campaign weeks with the author NOT dressing her | 6,501 of 15,322 – **42.4%** |
+  | ...of those, weeks with NO kit deal at all | 352 – 2.3% |
+  | «leaving» events (a different house signed under a running campaign) | **117** |
+  | ...that would cost real money | 62 · median **$100,000** · max **$4,000,000** |
+
+  ⚠ **NOT ONE campaign outlived its kit deal by under five weeks**, so the hole is structural rather
+  than a calendar seam – and the median is a WHOLE SEASON. His own save was the typical case, not the
+  unlucky one.
+
+  **WHAT SHIPPED, ruling by ruling.** Everything is derived from state that already exists – the
+  running campaign's brand against the kit paper's brand – so **NO new persisted field and NO schema
+  move: v71 stands** (wave EF's bump is the round's only one).
+  1. **The trigger is the signature** (`signOffer`), never an absence. His w725-w727 gap leaves a
+     three-year contract alone – pinned.
+  2. **The guaranteed letter** (`apparelBondLetter`, inside `raiseKitOffers`): while X's clothing
+     campaign runs and her kit is not already promised, X writes with **no arrival roll** – at
+     `kitTermsFor(standing)`, the ladder's own rung for her rank TODAY, with exactly one field
+     overridden (the brand). A slid career gets today's rung, not premium-for-ever.
+  3. **Ending is the future only** (`endAdCampaign` pulls `untilWeek` back): no further anniversary,
+     no further shoot week, the category's slot re-opens – and not one line touches `fundsCents`.
+  4. **The lifetime letter is exempt** by category as well as by ruling, and its house now **dresses
+     her free**: one predicate (`lifetimeKitHouse`) read at the two tills the kit money flows
+     through – the over-the-counter price (`kitPurchaseSplit`, which is also what the shop BUTTON
+     quotes) and the weekly gear bill (`resolveGear`). ⚠ **Scope stated, not fudged:** free means the
+     BILL. The freshness ceiling, the travel share, the retainer, the appearance fee and the result
+     bonus stay the kit ladder's own promises – extending those would be inventing terms he did not
+     name, and the ruling's word is «снабжать».
+  5. **The reverse order owes nothing:** both reads ask «is a clothing campaign running THIS week».
+  6. **Only clothing:** watches, cars, drinks, the airline, fragrance and the capstone all charge
+     nothing and guarantee nothing – pinned category by category.
+
+  ⚠ **THE GUARANTEE'S THREE INHERITED GATES, stated because «unconditionally» has a shape.** It
+  bypasses the DICE and not the LADDER, so: she must clear a rung at all (no rung = no terms exist to
+  offer); a deal already covering the season ahead turns it away exactly as it turns any rung away;
+  and one letter per rung per window still holds – the guaranteed letter takes the top rung's slot
+  rather than doubling it. It also sits inside `raiseKitOffers`, which the review skips for a brand
+  **let down** this window: a house that has just ended her kit deal because she did not play does
+  not turn round and guarantee her another one the same winter.
+
+  ⚠ **RNG: zero draws added, and none spent.** No `rngFromSeed` enters `engine/offers.ts` (its closed
+  allowlist is the guard). Proved rather than asserted: the whole window's post is replayed with and
+  without a running campaign and every OTHER rung's letter comes back byte-identical. MAIN is
+  untouched – `tests/condition.test.ts` **51/51 green, 41550 draws / hash e6b0c709 unmoved**.
+
+  **EVIDENCE.** `tests/r39-apparel-bond.test.ts` (26 cases, §1-§10 = the six rulings plus the real
+  `reviewSponsors` door and the free-kit till) and `tests/component/r39-apparel-bond-warning.test.ts`
+  (5 mounted cases: the rival letter shows the sentence AND the number, the zero-fee arm says so
+  instead of printing a number that is not there, three controls). **Eight mutations, eight killed,
+  all restored** – the letter never raised · the bond taking X's own rung instead of her standing ·
+  the price firing for the same house · ending clawing the fee back · the bond reading any campaign
+  rather than clothing only · the free-kit hook removed · the warning clause deleted · the warning
+  keeping its sentence and losing its number.
+
+  ⚠ **ONE GUARD RE-AIMED, NOT WEAKENED:** `tests/offers.test.ts`' letterhead pin. The mark is keyed
+  on the BRAND's rung now, falling back to the letter's own tier – for every letter the ladder writes
+  the two are the same value (asserted), so no shipped letter resolves a different file; the bond
+  letter is the one paper where they part, and a sheet printing the rung's mark over X's signature
+  would contradict itself. The claim the pin protects – the filename is derived, never spelled out –
+  is untouched, and the exhaustive negative under it is unchanged.
+
+  ⚠ **ALL NEW COPY IS DRAFT, for his review** (four strings, verbatim in the wave report): the two
+  arms of the rival letter's warning clause, and one honest sentence for a campaign that was ENDED
+  rather than expired – the old record said «the campaign has run its course», which would now be a
+  lie on a paper somebody cut short.
+
+  ---
+
+  **WAVE G2 – HIS TWO REFINEMENTS OF 08.09, BOTH BUILT.**
+
+  **1. THE NOTICE IS A RENEWAL, AND ONE OF THE TWO PATHS HAD TO STAND DOWN.** ⚠ **Which winter each
+  letter owns, because a genuine incumbent renewal already existed** (`raiseKitRenewal`, owner
+  10.08):
+
+  | winter | who writes | on what terms |
+  | --- | --- | --- |
+  | the one her kit deal ends **with the season** | the **incumbent's renewal**, on the window's closing week | the ending contract's own, **verbatim** |
+  | **every winter after that**, while the campaign runs and her kit is not promised | the **bond's notice**, from the window's opening week | the rung she clears **today** (ruling 2) |
+
+  ⚠⚠ **AND BEFORE G2 THEY BOTH LANDED, WHICH WAS MEASURED RATHER THAN FEARED.** `raiseKitOffers`
+  dedupes the incumbent against the ladder by **tier**, and that is blind the moment the tier she
+  SIGNED at and the tier she clears TODAY come apart. Probed on a `tour` deal from Baseline Athletic
+  ending under a career that now clears `icon`: the inbox held `kit-bond-671` (icon terms, Baseline
+  Athletic's name) **and** `kit-renew-kit-old-471` (tour terms, the same name) – one house, one
+  winter, two letters. That is round 28 #17's own defect («one brand in two voices») asked one
+  question further along, so the fix is that question's own answer: identity by **BRAND**, not by
+  rung. Six lines in `apparelBondLetter`, no new state. ⚠ Its cost is stated in the code: a career
+  that has already signed somebody else this window turns `raiseKitRenewal` away too, so in that
+  corner neither writes – and she is signed for next season either way, which is the state the
+  guarantee exists to prevent.
+
+  **The voice** is one optional flag, `KitOfferTerms.apparelBond` – **additive, no schema bump, v71
+  still stands** (the same move `renewal` itself shipped as). ⚠ It is **not** `renewal`: that flag
+  means the same contract offered again («the same deal, another year»), and this letter carries
+  today's rung, so borrowing that sentence would misdescribe the only number a parent can check.
+  ⚠ **Still signed by hand** – it is an ordinary `open` offer with a deadline, refusable, expirable,
+  beaten by any rival he signs instead, because an auto-renewal would delete the decision the whole
+  mechanism exists to create.
+
+  **2. THE RE-ARM NEEDED PINNING, NOT BUILDING.** ⭐ It was already true, and it is true for a reason
+  worth naming: the letter's id is the **window's** (`kit-bond-<opened>`), not the week's, so a
+  notice that lapses undecided is simply not in next winter's inbox and the same house writes again.
+  Walked before it was pinned – an eight-year campaign produced `kit-bond-671`, `-723`, `-775`,
+  `-827`, `-879`: **exactly one per off-season, same house, each lapsing on its own deadline.** No
+  flag, no counter, no new state. ⚠ **The ceiling is the point:** `offerChanceFor`'s doctrine says
+  nobody is guaranteed a letter and a missed one «is gone… which is the whole of what makes waiting a
+  real gamble rather than a free option». One per winter keeps a missed notice expensive – a season
+  of kit allowance and travel share – where a standing open letter would have overturned it.
+
+  ⚠ **ONE CORRECTION TO THE RULING'S OWN NOTE: `expireOffers` does NOT feed a lapse line.** It
+  returns what it lapsed «so the caller can put a line in the feed», and the caller
+  (`phaseObligations`) deliberately writes nothing – its own ⚠ note says why, and it is the feed
+  budget: «a non-match event row permanently displaces a MATCH from the 400-row cap». So the miss is
+  surfaced exactly as every other lapse is, and this wave did not add a row: the letter itself reads
+  **«Expired – they needed an answer.»** in the inbox for the life of the career, and the inbox dot
+  goes out. What the feed DOES carry is the ARRIVAL – the winter's one row names the notice, in its
+  own clause (below). Pinned that the notice reaches `expireOffers`' returned list like any letter.
+
+  **AND THE WINTER'S ROW NAMES IT AS A RENEWAL, which is the one place G2 went past the letter view
+  and is flagged for him.** The row's suitors clause – «letters from X and Y – they all want to put
+  her in their kit» – would have described as a pitch the one letter his ruling says is not one. It
+  now gets its own clause, exactly as the incumbent's renewal does. ⚠ **Only while it is OPEN**: a
+  signed notice stays in `post` or the row would lose «She is in X's kit for next season.», and that
+  seam is real here (this letter is raised on the window's opening week and can be answered four
+  weeks before the row is written, unlike the renewal). **If he would rather the row left alone, it
+  is one `if` to delete.**
+
+  ⚠ **RNG: STILL ZERO DRAWS, AND THE RE-ARM ADDS NONE.** Re-arming is an id, not a roll – no
+  `rngFromSeed` enters `engine/offers.ts` (its closed allowlist is the guard, green). MAIN untouched:
+  `tests/condition.test.ts` **51/51, 41550 draws / hash e6b0c709 unmoved**.
+
+  **EVIDENCE (G2).** `tests/r39-apparel-bond.test.ts` grew §11 (the re-arm: lapse-then-rewrite, once
+  per off-season over four winters, the lapse through `expireOffers`, a signed deal stopping it with
+  its own control, and the campaign running out ending it), §12 (which winter each path owns –
+  by hand and **through `reviewSponsors`**), §13 (the winter's row) – **40 cases, all green**;
+  `tests/component/r39-apparel-bond-warning.test.ts` grew 6 mounted cases (the paper opens as a
+  renewal, it is still a decision, it warns about nothing, **the warning and its number are still
+  there where a rival letter would carry them**, the inbox subject, its control) – **11 green**.
+  **Nine mutations, nine killed, all restored:** the window id becoming the week's (8 red) · the
+  incumbent gate deleted (2 red) · the `apparelBond` flag off the terms (2 red) · the row's exclusion
+  removed (1 red) · the row's `open` guard removed (1 red) · the letter's renewal arm deleted (1
+  red) · the inbox subject arm deleted (1 red) · the notice made unexpirable (1 red) · the
+  running-deal gate removed (3 red).
+
+  ⚠ **ONE GUARD RE-AIMED, NOT WEAKENED:** §2's field-for-field equality read «exactly ONE override»
+  and now names the second – `apparelBond: true`. An `objectContaining` would have turned an
+  exhaustive equality into a pin that can never see the next field arrive; naming it keeps the claim
+  ruling 2 is about, which is that every **NUMBER** on the letter is the ladder's own for her rank
+  today.
+
+  ⚠ **NEW COPY, ALL DRAFT** (three strings, verbatim):
+  * the letter's opening, `OfferLetter.vue`: **«Her face is already on our posters, and we would
+    rather she wore our kit while it is there. Our kit paper with her has run out, so this is us
+    renewing it – on the terms her ranking earns today.»**
+  * the inbox subject, `InboxSheet.vue`: **«Renewing her kit with us»**
+  * the winter's row, `world/sponsors.ts`: **«<Brand> already have her on their posters and would
+    like her back in their kit – their renewal is in the inbox.»**
+
+  ---
+
+  **WAVE G3 – HIS RULING ON THE WARNING, AND WAVE G WAS WRONG.**
+
+  **OWNER, 08.09: «ты правда думаешь, что в реальности при переподписании кто-то пишет точные суммы
+  предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять это надо абсолютно точно»**
+  → on the proposal: **«да, давай так»**.
+
+  He is right on both halves at once. A rival apparel house does not KNOW a competitor's remaining
+  contract value and would never PUBLISH it – an exclusivity CLAUSE on its own letterhead is
+  realistic, a competitor's balance sheet is fiction – and the consequence still has to land without
+  any doubt at all. Wave G's own argument in the code («THE NUMBER IS THE POINT… without the money it
+  names, this clause is a trap») was right about the number and **wrong about the surface**, and that
+  comment is now rewritten to say so, with his sentence quoted in it.
+
+  **SO THE NUMBER DID NOT DISAPPEAR – IT MOVED TO THE SURFACE WHOSE OWN DOCTRINE ALREADY CLAIMED IT.**
+  Round 24 item 2's rule for the sign confirm is that it restates the deal «and the one thing the
+  letter cannot say». A competitor's figures are exactly that class of fact.
+
+  | surface | carries | why |
+  | --- | --- | --- |
+  | the rival's **letter** | the exclusivity clause, **no money, one arm** | a house cannot print a rival's books; with no figure there is nothing for two arms to differ about |
+  | the **sign confirm** | the campaign it ends **and the cost**, two arms | its job is the fact the paper cannot state |
+
+  **ONE DERIVATION, TWO SURFACES – AND NO LIFT WAS NEEDED.** `apparelBondCost` already lives in
+  `src/engine/offers.ts`, not on the letter's script: `OfferLetter` imports it to decide whether its
+  clause appears at all, `signOffer` calls it to end the campaign, and `InboxSheet` now imports the
+  same function and calls it on the same inbox (`game.snapshot.offers`, which is what the sheet
+  already passes down to the letter) and the same week. The paper, the confirm and the till cannot
+  answer the question differently, and nothing computes the cost a second way.
+
+  ⚠ **THE CONFIRM IS STILL A RESTATEMENT AND NEVER AN ARGUMENT** – its own standing rule. The clause
+  states the fact and stops; the dialog still ends on «This cannot be undone.» There is no
+  persuasion, no «are you sure you want to lose this», and the exclusivity TERM itself is still not
+  argued here (it is on the paper – `tests/offers.test.ts`' negative on `nobody else|turns away|
+  instead of waiting` is untouched and green).
+
+  **EVIDENCE.** `tests/component/r39-apparel-bond-warning.test.ts` – **17 mounted cases, all green**
+  (11 re-aimed from waves G/G2, 6 new). The letter's arms assert the money as an **ABSENCE** («the
+  rival letter prints the campaign's remaining value» / «…its yearly fee»), not merely that the
+  clause is present – a test that only looked for the clause would have stayed green on the paper
+  wave G shipped. **Seven mutations, seven killed, all restored:**
+  * the `<li v-if="bondCost">` clause deleted from the letter → **3 red** (both clause cases + the
+    G2 rival-renewal case), the three «no clause» controls green;
+  * `apparelBondCost`'s brand test inverted (`===` → `!==`) → **9 red**, including BOTH incumbent
+    controls (letter and confirm), which is the one mutation that proves the two surfaces share it;
+  * **wave G's money arms put back on the paper** → **3 red** on the «no figures» assertions – this
+    is the mutation that makes the file a test of his ruling rather than of the clause;
+  * `bondClause` forced to `''` in the confirm → **3 red** (both money cases + the untouched-arms
+    case), the two «gains nothing» controls green;
+  * the wrong arm forced (`bond.cents > 0` → `>= 0`) → the played-out case **red** on his own
+    sentence, the fees case green;
+  * the wrong arm forced the other way (`→ false`) → **2 red** on the figure, played-out green;
+  * `.dialog-card`'s `max-height` removed from `src/style.css` → the phone-fit case **red** («cap
+    NONE… expected Infinity to be less than or equal to 635»), which is what says that assertion is
+    real. CLAUDE.md's rule for a dialog this wave LENGTHENED.
+
+  Neighbours green and unweakened: `tests/offers.test.ts`, `tests/r39-apparel-bond.test.ts`,
+  `tests/ad-offer.test.ts`, `tests/money-format.test.ts`,
+  `tests/round29p3-manager-commission.test.ts`, `tests/pin-hygiene.test.ts` (**223 cases**);
+  nine component suites incl. `ad-offer-letter`, `round29-inbox-subjects`, `a11y-sweep`
+  (**126 cases**). `vue-tsc -b --force` clean. **No guard was re-aimed or widened this wave** – the
+  only test file touched is #17's own.
+
+  ⚠ **RNG: ZERO DRAWS – copy and one read.** Nothing new is rolled: `apparelBondCost` is arithmetic
+  on decided deals, and the confirm only reads it. `tests/condition.test.ts` **51/51 green, capture
+  41550 draws / hash e6b0c709 unmoved.**
+
+  ⚠ **NEW COPY, ALL DRAFT** (three strings, verbatim):
+  * the letter's clause, `OfferLetter.vue` – **«While you wear us, she appears in no other apparel
+    campaign – hers with <Brand> would end on signature.»** (replaces wave G's two money arms, in
+    place, still directly under «And while she is in our kit she is in nobody else's.»)
+  * the confirm, fees remaining, `InboxSheet.vue` – **«Signing ends her campaign with <Brand> –
+    $200,000 of fees still to come on it.»**
+  * the confirm, term played out, `InboxSheet.vue` – **«Signing ends her campaign with <Brand>.
+    Every fee it owed her is already banked and stays hers.»** ⚠ his own preferred wording,
+    carried over verbatim from wave G's letter arm rather than rewritten.00,000 of fees still to come on it.»**
+  * the confirm, term played out, `InboxSheet.vue` – **«Signing ends her campaign with <Brand>.
+    Every fee it owed her is already banked and stays hers.»** ⚠ his own preferred wording,
+    carried over verbatim from wave G's letter arm rather than rewritten.
+
+## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
+
+No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
+branch, and reports per item number.
+
+| wave | branch | items | surface |
+| --- | --- | --- | --- |
+| A | `r39/wave-a` | 1, 2a, 2b, 13a, 13c | Home's flavour + coach voice: HomeScreen.vue, coachMarket.ts, the coach list card |
+| B | `r39/wave-b` | 4 | the shelf's owned-asset cards (yacht, plane) |
+| C | `r39/wave-c` | 9, 9c | birthday.ts and its tests |
+| D | `r39/wave-d` | 15a, 15b | the prologue injury screens |
+
+MINE, not waved: 3 + 12 (research), 5 (design), 6 + 8 (sponsor economy measure), 7 + 10 (the skill
+formula audit), 11 (the invisible half of the academy's income), 14 (variants + the mechanism).

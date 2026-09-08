@@ -58,7 +58,7 @@ import { KID_ID } from '../engine/world'
 // an age. So the container reads the clock, the speller turns it into a word, and the copy table
 // puts the word in its own sentence.
 import { ageInWords } from '../engine/world/age'
-import { localOpensAt, outcomeOf, playLocalOpen, prologueEntrant, type LocalOpen } from '../prologue/pool'
+import { localOpensAt, outcomeOf, playLocalOpen, prologueEntrant, sheRetiredIn, type LocalOpen } from '../prologue/pool'
 import type { MatchPlayer } from '../engine/match/types'
 import {
   EMPTY_RUN,
@@ -137,8 +137,12 @@ const queue = ref<{ age: number; index: number }[]>([])
  *  bound to a function call is a NEW object on every render of this component, which invalidates
  *  `PrologueLocalOpen`'s `annotated` computed and re-runs a whole `simulateMatch` for nothing. */
 const openNow = ref<{ age: number; open: LocalOpen; kid: MatchPlayer } | null>(null)
-/** ...and its result scene, once the player has left the court. */
-const resultNow = ref<{ age: number; outcome: ReturnType<typeof outcomeOf> } | null>(null)
+/** ...and its result scene, once the player has left the court. ⭐ ROUND 39 #15a D2 – `hurt` says
+ *  she retired in this weekend's bracket, and the scene is the beat the parent can hold (the hug,
+ *  the drive home, the quiet week) instead of one of the three faces. The owner, 08.09: «мой
+ *  ребенок травмировался, а я даже ничего не поняла, ни обнять, ни понять что дальше. Надо как-то
+ *  это обыграть, если травма вообще случилась.» */
+const resultNow = ref<{ age: number; outcome: ReturnType<typeof outcomeOf>; hurt: boolean } | null>(null)
 
 /** ⭐ HER, AS THE DRAW MEETS HER – the ninth child, drawn on the game's own band by `prologueEntrant`
  *  and named by whatever the age-5 card was told. `KID_ID` is what makes the viewer point at the
@@ -186,19 +190,26 @@ function playNext(): boolean {
   return true
 }
 
-/** The weekend is over – watched or left, the result is the same one the bracket decided. */
+/** The weekend is over – watched or left, the result is the same one the bracket decided.
+ *  ⚠ AND SO IS `hurt` (round 39 #15a D2): `sheRetiredIn` reads the bracket that was resolved before
+ *  the screen opened, so the beat follows a retirement whether the player sat through the popup or
+ *  left from the header – it happened to her either way. Deterministic, zero draws on any stream. */
 function closeOpen(): void {
   const playing = openNow.value
   if (!playing) return
   openNow.value = null
-  resultNow.value = { age: playing.age, outcome: outcomeOf(playing.open) }
+  resultNow.value = {
+    age: playing.age,
+    outcome: outcomeOf(playing.open),
+    hurt: sheRetiredIn(playing.open, playing.kid.id),
+  }
 }
 
 /** ⭐ THE SCENE ON SCREEN. A weekend's result scene is a card row like any other, so this one
  *  computed is the whole of the branch and `PrologueCard.vue` gets no `v-if` of its own. */
 const card = computed(() =>
   resultNow.value
-    ? localOpenCard(resultNow.value.age, resultNow.value.outcome)
+    ? localOpenCard(resultNow.value.age, resultNow.value.outcome, resultNow.value.hurt)
     : cardFor(CARD_AGES[at.value], run.value),
 )
 const warmth = computed(() => warmthAt(card.value.age, run.value))

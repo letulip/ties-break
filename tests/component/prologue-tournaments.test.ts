@@ -167,7 +167,13 @@ async function walkCounting(
         continue
       }
       if (wrapper.text().includes(LOCAL_OPEN_COPY.kicker)) {
-        await click(wrapper, '.prologue-answer', LOCAL_OPEN_COPY.result.won.continueLabel)
+        // ⚠ RE-AIMED BY ROUND 39 #15a D2, NOT LOOSENED: a weekend she leaves hurt draws the hug
+        // scene («Hold her») instead of a three-faces card, and the walk's seed is Math.random per
+        // mount – so pressing by the shared «Go on» label was a latent flake the fourth face made
+        // real. The claim is unchanged and now asserted: a result scene has EXACTLY ONE way on, and
+        // pressing it is what continues the walk, whichever of the four scenes it is.
+        expect(wrapper.findAll('.prologue-answer')).toHaveLength(1)
+        await click(wrapper, '.prologue-answer')
         continue
       }
       break

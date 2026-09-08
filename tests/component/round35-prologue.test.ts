@@ -159,11 +159,16 @@ async function walkChildhood(
         await press(wrapper, LOCAL_OPEN_COPY.skipRest)
         continue
       }
-      const result = [LOCAL_OPEN_COPY.result.won, LOCAL_OPEN_COPY.result.final, LOCAL_OPEN_COPY.result.lost]
+      // ⚠ RE-AIMED BY ROUND 39 #15a D2, NOT LOOSENED: the weekend has a FOURTH scene now – she left
+      // it hurt, and the card is the hug («Hold her») – and the walk's seed is Math.random per
+      // mount, so a detector that knew three titles and a press that knew one label were a latent
+      // flake the fourth face made real. Same detection idiom, all four scenes, each pressed by ITS
+      // OWN way on.
+      const result = [LOCAL_OPEN_COPY.result.won, LOCAL_OPEN_COPY.result.final, LOCAL_OPEN_COPY.result.lost, LOCAL_OPEN_COPY.hurt]
         .find((r) => wrapper.text().includes(r.title))
       if (result) {
         opts.onScene?.('result', age === CARD_AGES[CARD_AGES.length - 1])
-        await press(wrapper, LOCAL_OPEN_COPY.proceed)
+        await press(wrapper, result.continueLabel)
         continue
       }
       break
@@ -587,13 +592,17 @@ describe('⭐⭐⭐ item 1 – the tournament`s own screen, the matches, and the
 
     // 3. THE RESULT, on one of the owner's own three faces – and it is a prologue card, which is
     //    where «а потом уже продолжаем наши прологовые карточки» starts.
-    const result = [LOCAL_OPEN_COPY.result.won, LOCAL_OPEN_COPY.result.final, LOCAL_OPEN_COPY.result.lost]
+    //    ⚠ RE-AIMED BY ROUND 39 #15a D2, NOT LOOSENED: the seed is Math.random per mount, and on a
+    //    weekend she leaves hurt the scene is the hug card («Hold her») – the beat the owner asked
+    //    for, drawn in the same slot as the same prologue card. The claim survives whole: a result
+    //    scene follows the weekend, it is a prologue card, and its own way on continues the walk.
+    const result = [LOCAL_OPEN_COPY.result.won, LOCAL_OPEN_COPY.result.final, LOCAL_OPEN_COPY.result.lost, LOCAL_OPEN_COPY.hurt]
       .find((r) => wrapper.text().includes(r.title))
     expect(result, `no result scene after the weekend: ${wrapper.text().slice(0, 140)}`).toBeTruthy()
     expect(wrapper.find('.prologue-card').exists(), 'the result is not drawn as a prologue card').toBe(true)
 
     // 4. ...and the cards continue: the eleventh is next.
-    await press(wrapper, LOCAL_OPEN_COPY.proceed)
+    await press(wrapper, result!.continueLabel)
     expect(wrapper.find('.prologue-title').text(), 'the walk did not go on to the next card').toBe(
       PROLOGUE_CARDS.find((c) => c.age === 11)!.title,
     )

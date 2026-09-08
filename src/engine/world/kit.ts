@@ -32,8 +32,8 @@ import {
   kitLinePriceCents,
   kitWearAt,
 } from '../equipment'
-import { activeKitDeal, kitFreshCap } from '../offers'
-import type { KitDealView, KitGrade, KitLine, KitLineView, KitOfferTerms } from '../../shared/protocol'
+import { activeKitDeal, kitFreshCap, lifetimeKitHouse } from '../offers'
+import type { AdOfferTerms, KitDealView, KitGrade, KitLine, KitLineView, KitOfferTerms } from '../../shared/protocol'
 import { vacationForWeek } from './bookings'
 import { addEvent } from './ledger'
 import type { WorldState } from '../world'
@@ -248,13 +248,33 @@ export function kitPurchaseSplit(
   world: WorldState,
   line: KitLine,
   costCents: number,
-): { paidCents: number; coveredCents: number; brand: string } {
+): { paidCents: number; coveredCents: number; brand: string; forLife: boolean } {
+  // ⭐⭐⭐ ROUND 39 #17 RULING 4 – THE LIFETIME HOUSE DRESSES HER FREE, AND IT COMES FIRST. His own
+  // idea of 08.09: while a lifetime deal from X is live, her kit is supplied at no cost. So it is
+  // every line, at any rung, with no allowance to run out and no season to reset – which is what
+  // «for life» has to mean if it means anything.
+  //
+  // ⚠ IT IS THE BILL AND NOT THE CONTRACT. `activeKitDeal` is untouched above and below this line,
+  // so a kit deal running alongside keeps its retainer, its bonuses, its travel share and its
+  // freshness ceiling, and its allowance simply goes unspent – the lifetime house paid, so nothing
+  // is banked against a pot the brand did not open. `forLife` is what tells the till not to bank it.
+  const forLife = lifetimeKitHouse(world.offers ?? [], world.week)
+  if (forLife) {
+    return {
+      paidCents: 0,
+      coveredCents: costCents,
+      brand: (forLife.terms as AdOfferTerms).brand,
+      forLife: true,
+    }
+  }
   const deal = activeKitDeal(world.offers ?? [], world.week)
   const terms = deal ? (deal.terms as KitOfferTerms) : null
-  if (!deal || !terms || !terms.covers.includes(line)) return { paidCents: costCents, coveredCents: 0, brand: '' }
+  if (!deal || !terms || !terms.covers.includes(line)) {
+    return { paidCents: costCents, coveredCents: 0, brand: '', forLife: false }
+  }
   const remaining = kitAllowanceRemainingCents(terms, deal.coveredCents ?? 0)
   const coveredCents = Math.min(costCents, remaining)
-  return { paidCents: costCents - coveredCents, coveredCents, brand: terms.brand }
+  return { paidCents: costCents - coveredCents, coveredCents, brand: terms.brand, forLife: false }
 }
 
 /** WHAT IS LEFT OF THE SEASON'S ALLOWANCE, in cents - the one number the Bills page never had.
@@ -299,9 +319,13 @@ function chargeKitPurchase(
   world: WorldState,
   line: KitLine,
   costCents: number,
-): { paidCents: number; coveredCents: number; brand: string } {
+): { paidCents: number; coveredCents: number; brand: string; forLife: boolean } {
   const split = kitPurchaseSplit(world, line, costCents)
-  if (split.coveredCents > 0) {
+  // ⚠ ONLY A KIT DEAL'S OWN COVER IS BANKED AGAINST ITS ALLOWANCE (round 39 #17 ruling 4). The
+  // lifetime house pays from outside the ladder – there may be no kit deal at all – so `forLife`
+  // spend must not be added to a pot it did not come out of, and the `!` below stays sound only
+  // because of this guard.
+  if (split.coveredCents > 0 && !split.forLife) {
     const deal = activeKitDeal(world.offers ?? [], world.week)!
     deal.coveredCents = (deal.coveredCents ?? 0) + split.coveredCents
   }

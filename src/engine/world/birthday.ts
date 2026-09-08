@@ -219,6 +219,30 @@ const PEAK_GIFTS: BirthdayGift[] = [
     ask: 'She drove past her first club in the spring and talked about the lines for an hour.',
     short: 'the club court',
   },
+  // ⭐⭐ ROUND 39 #9 – TWO MORE ROWS, AND THE ARITHMETIC IS THE SAME AS ROUND 26 #9b's, ONE RULE UP.
+  // The career-scope rule (at most 3 appearances, never twice inside 260 weeks – see `giftUse`)
+  // budgets the ASK, and a band of five material gifts cannot seat seven birthdays of asks without
+  // leaning on the relaxations. Seven gifts seat them with room, and C(7,3) = 35 dialogs makes the
+  // walk's cards richer at the same time. His standing ask, verbatim: «Я просил сделать много
+  // вариантов подарков для разных возрастных групп.»
+  {
+    id: 'recipes',
+    label: 'The family recipes, bound into one book',
+    note: 'Three generations of them, written out in one hand, hers to keep.',
+    again: 'She has the book from us already, and it is stained from actual use.',
+    repeat: 'durable',
+    ask: 'She has started asking for the old recipes one dish at a time, from three time zones away.',
+    short: 'the recipe book',
+  },
+  {
+    id: 'guitar',
+    label: 'A guitar to travel with',
+    note: 'Half-size, hard case, fits an overhead locker. She hums more than she admits.',
+    again: 'She has a guitar from us already. This would be the one that stays in tune.',
+    repeat: 'durable',
+    ask: 'All season there has been somebody\'s borrowed guitar backstage, and her hands keep finding it.',
+    short: 'the guitar',
+  },
 ]
 
 const BANDS: Band[] = [
@@ -556,6 +580,29 @@ const BANDS: Band[] = [
         ask: 'Did anybody keep the photographs and old draw sheets? She thinks not. The album would prove her wrong.',
         short: 'the album',
       },
+      // ⭐⭐ ROUND 39 #9 – TWO ROWS OF THE LATE BAND'S OWN, because it is the longest band in the
+      // game: up to thirteen birthdays (29 to the last age anybody asks her to go on) against one
+      // gift of its own plus the peak's re-offers – and under the career-scope rule most of those
+      // re-offers arrive already counted. A late career needs late wants, which is his standing ask
+      // («много вариантов подарков для разных возрастных групп») for the age group he is actually in.
+      {
+        id: 'olives',
+        label: 'Olive trees, planted in her name',
+        note: 'A slope of them somewhere warm, getting on with it whether anybody watches or not.',
+        again: 'There is a grove with her name on it already. This would be the next terrace of trees.',
+        repeat: 'durable',
+        ask: 'She read that olive trees outlive everybody who plants them, and went quiet.',
+        short: 'the olive trees',
+      },
+      {
+        id: 'firstracquet',
+        label: 'Her first racquet, restrung and framed',
+        note: 'The one with the taped handle, back from the loft, behind glass.',
+        again: 'The first racquet is already behind glass from us. This would be the case for the rest of them.',
+        repeat: 'durable',
+        ask: 'She asked, out of nowhere, whether we still had the racquet with the taped handle.',
+        short: 'the framed racquet',
+      },
       ...PEAK_GIFTS,
     ],
   },
@@ -862,6 +909,80 @@ function shuffled<T>(items: readonly T[], rng: () => number): T[] {
   return out
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 39 #9 – THE CAREER-SCOPE RULE: AT MOST THREE, NEVER TWICE INSIDE FIVE YEARS
+// =================================================================================================
+//
+// The owner, 08.09, REOPENING round 26 #9: «Опять just one day. Я просил сделать много вариантов
+// подарков для разных возрастных групп. Мне кажется, что вполне допустимо чтобы что-то повторялось,
+// но не больше 2-3 раз за всю карьеру и с разницей не меньше 5 лет.»
+//
+// ⚠⚠ WHY TWO SHIPPED FIXES COULD NOT SEE THIS, measured on his own save. Round 26 #9b stopped the
+// same DIALOG printing twice running and round 27 #7 stopped the day being VOICED twice running –
+// both are windows of ONE. His save obeys both and still reads: `day` asked-and-given at 22, 24, 25
+// and 27 – four times, gaps of 2, 1 and 2 years – because nothing anywhere counted a career or
+// measured a gap. His sentence above is the missing rule, stated with numbers, so it is built
+// exactly as given: a gift may appear as the ask at most `GIFT_CAREER_CAP` times per career, and
+// never twice inside `GIFT_REPEAT_GAP_WEEKS`.
+//
+// ⚠ WHAT COUNTS AS AN APPEARANCE, and the day's asymmetry is his own 11.08 ruling. A material gift
+// appears when a birthday row ASKED for it or GAVE it (once per row when both): either way the
+// player met it in the scene, and either way a second arrival inside five years is the repeat he is
+// pointing at. THE DAY IS COUNTED AS AN ASK ONLY – «This includes day as an ASK» – because its
+// PRESENCE on every card is the 11.08 ruling this rule must not touch, and a parent who freely
+// CHOOSES the day every year is exercising a right, not writing the sentence she says.
+//
+// ⚠ THE RULE SHAPES THE ASK AND NEVER THE OFFER. The four rows, their order and their draws are
+// byte-identical with and without a record – the walk in `materialFor` stays a pure function of
+// (seed, band, index), which is what keeps every reload-immutability pin true. Reading the record
+// here is the same licence round-17 #18 established for `alreadyGiven`: player-driven input may
+// filter the POOL of a sub-stream draw, may never touch MAIN, and may never change how many times
+// the sub-stream is drawn. The ask is still the fourth draw on `seed:birthday:<age>`, always.
+//
+// ⚠⚠ AND WHEN THE RULE EMPTIES THE POOL IT RELAXES IN A PINNED ORDER RATHER THAN CRASHING:
+// the 260-week gap goes first, the career cap second, and the final `options` guard is the same
+// insurance the round-27 chain carried. `tests/birthday-career.test.ts` pins the order.
+/** The owner's «не больше 2-3 раз за всю карьеру», built at the top of his range. */
+export const GIFT_CAREER_CAP = 3
+/** The owner's «с разницей не меньше 5 лет», in the engine's own unit: 5 x 52 career weeks. */
+export const GIFT_REPEAT_GAP_WEEKS = 260
+
+/** One gift's standing in the record: how often it has appeared, and when it last did. */
+interface GiftUse {
+  count: number
+  lastWeek: number | null
+}
+
+const FRESH_USE: GiftUse = { count: 0, lastWeek: null }
+
+/** The rows the rule reads – the persisted `BirthdayRecord` minus the age, which it never needs. */
+export type BirthdayGiven = Pick<BirthdayRecord, 'week' | 'asked' | 'given'>
+
+/** Appearance counts off the record, or – for a caller with no record (every catalogue sweep and
+ *  every historical call site) – synthesised from `alreadyGiven` so the OLD contract holds exactly:
+ *  an owned gift reads as one recent appearance, i.e. blocked, which is the round-17 #18 spent
+ *  filter in the new rule's vocabulary. The day is never synthesised because the day is never spent. */
+function giftUse(record: readonly BirthdayGiven[] | null, alreadyGiven: readonly string[]): Map<string, GiftUse> {
+  const out = new Map<string, GiftUse>()
+  if (record === null) {
+    for (const id of alreadyGiven) if (id !== DAY_TOGETHER.id) out.set(id, { count: 1, lastWeek: 0 })
+    return out
+  }
+  const bump = (id: string, week: number): void => {
+    const u = out.get(id)
+    if (u === undefined) out.set(id, { count: 1, lastWeek: week })
+    else {
+      u.count++
+      u.lastWeek = u.lastWeek === null || week > u.lastWeek ? week : u.lastWeek
+    }
+  }
+  for (const r of record) {
+    bump(r.asked, r.week)
+    if (r.given !== null && r.given !== r.asked && r.given !== DAY_TOGETHER.id) bump(r.given, r.week)
+  }
+  return out
+}
+
 /** ⭐ WHAT SHE IS OFFERED AND WHAT SHE ASKED FOR – the one derivation, read by both the prompt and
  *  the record so they cannot disagree about which birthday this was.
  *
@@ -925,7 +1046,18 @@ export function birthdayOffer(
    *  one yet (and for every catalogue sweep, which is why it defaults to null: a caller with no
    *  world asks exactly the question it always did). See the cooldown below. */
   lastAsked: string | null = null,
-): { options: BirthdayGift[]; askedId: string } {
+  /** ⭐⭐⭐ ROUND 39 #9 – THE BIRTHDAY RECORD ITSELF, for the career-scope rule (see the block over
+   *  `GIFT_CAREER_CAP`). `null` – not `[]` – means "no record was offered": the counts are then
+   *  synthesised from `alreadyGiven` so every historical caller and every catalogue sweep keeps the
+   *  exact round-27 behaviour, pool for pool. The engine's one seam (`birthdayOfferFor`) always
+   *  passes the real rows, and `alreadyGiven` beside them is derived from the same rows, so the two
+   *  cannot disagree. */
+  record: readonly BirthdayGiven[] | null = null,
+  /** ...and the CURRENT week, which the 260-week gap is measured against. Never part of any RNG key
+   *  (the stream stays `seed:birthday:<age>`); it is an input to a pool filter, exactly as
+   *  `alreadyGiven` has been since round-17 #18. */
+  week: number | null = null,
+): { options: BirthdayGift[]; askedId: string; eased: 'gap' | 'cap' | null } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
   // shuffle that used to stand here drew (n-1) times on the age stream; it does not any more, so
@@ -942,68 +1074,72 @@ export function birthdayOffer(
   // her life. Excluding it here would also make the best case the scene has (§2ab) unreachable for
   // any career that ever chose it.
   const spent = new Set(alreadyGiven)
-  const canAsk = options.filter((g) => g.id === DAY_TOGETHER.id || !spent.has(g.id))
   // ===============================================================================================
-  // ⭐⭐⭐ ROUND 27 #7 – THE COOLDOWN IS ON THE VOICE, NEVER ON THE OPTION
+  // ⭐⭐⭐ ROUND 39 #9 – THE CAREER-SCOPE LADDER (and inside it, round 27's cooldown and round 17's
+  // memory, each demoted from an absolute to the preference it always really was)
   // ===============================================================================================
   //
-  // The owner, 27.08, for the second round running: «И снова она просит "One day, not a week, not a
-  // trip"» · «3 раза подряд» · «я просил это исправить».
+  // The owner, 08.09: «вполне допустимо чтобы что-то повторялось, но не больше 2-3 раз за всю
+  // карьеру и с разницей не меньше 5 лет.» See the block over `GIFT_CAREER_CAP` for the measurement
+  // and the counting rule. Four layers, applied to the POOL and never to the draw:
   //
-  // ⚠⚠ AND HE IS RIGHT TWICE OVER, because round 26 answered his complaint with a measurement of
-  // something else. He said THE DAY; #9a measured the whole DIALOG repeating (53% of consecutive
-  // birthdays printed the identical four rows, worst run eight), fixed exactly that – the walk above,
-  // and it held: 0% of 189 consecutive pairs on the re-measurement – and recorded «the day was never
-  // the problem». The thing he pointed at was never touched.
+  //   1. STRICT – on the card, under the career cap, outside the 260-week gap, and not the day
+  //      voiced twice running (round 27 #7, the owner for the second round running: «И снова она
+  //      просит "One day, not a week, not a trip"» · «3 раза подряд» · «я просил это исправить» –
+  //      the cooldown is on the VOICE, never on the option, and his 11.08 ruling keeps the day ON
+  //      the card every single year).
+  //   2. GAP EASED – a pool the gap emptied relaxes the gap first: a repeat closer than five years
+  //      is better than no ask at all, and the cap still holds.
+  //   3. CAP EASED – then the cap: a fourth appearance is better than a crash. Reported, like the
+  //      gap, in `eased`, so the instrument and the tests can see every time reality needed it.
+  //   4. `options` – the same last-resort insurance the round-27 chain carried: a future catalogue
+  //      that somehow printed a card of nothing but the day still prints a scene.
   //
-  // ⚠ IT IS A GUARANTEE AND NOT LUCK, which is why widening the bands could not have reached it.
-  // #9b grew the bands from three material gifts to five; that fixes the ROWS, which are drawn fresh
-  // every year, and it cannot touch the ASK, which filters on WHAT SHE OWNS. The filter above keeps
-  // the day and drops every material gift already in the house, so the day's share of the pool rises
-  // monotonically across a career: one of three owned and the pool is 3, two and it is 2, all three
-  // and the pool is a SINGLE ELEMENT and the day is certain.
+  // ⚠ WITHIN A LAYER, THE LEAST-USED GIFT WINS – «prefer the least-used; a third appearance only
+  // when nothing else qualifies» is exactly a min-count restriction. And when even the least-used
+  // candidates are REPEATS (count > 0), round 17 #18 and round 27 #7 order them: a want she LACKS
+  // first (an ask for a thing she owns risks a false sentence), then a repeatable row («She had one
+  // of these last time» reads true), then – last – a durable one, whose `again` note at least says
+  // out loud that she has one. That tiering IS the old wanted -> askAgain -> onCard chain, which is
+  // why a caller with no record walks the identical pools element for element (pinned in
+  // tests/birthday-ask.test.ts, «THE ASK IS STILL THE FOURTH DRAW»).
   //
-  // MEASURED, before the fix, over 12 careers and 201 tour birthdays (tools/birthday-pool.ts):
-  //   * the day was the ask 30% overall – and 34% from twenty-two on, which is why the round-26
-  //     average could not see this. The mechanism is monotonic; a career mean is the one statistic
-  //     that hides it.
-  //   * the longest run of consecutive day-asks was FOUR, and 4 careers of 12 ran three or more.
-  //     His «3 раза подряд» is not an unlucky career, it is the distribution.
-  //   * the extreme case – all three material rows already hers – was 8 birthdays of 201, and she
-  //     asked for the day on 8 of 8. 100%, exactly as predicted.
+  // ⭐ A LICENSED REPEAT IS STILL A SCENE AND NOT AN APOLOGY – round-18 #10c is the owner ruling
+  // that admits repeats at all: «чтобы мы новую машину не раз в год покупали (хотя почему и нет, с
+  // другой стороны, но если так, то надо как-то обыграть)». The career-scope rule is that «как-то
+  // обыграть» finally given numbers: allowed, at most three times, five years apart, and the row's
+  // `again` wording still says out loud that this would be the second one.
   //
-  // ⭐ THE DAY STAYS ON THE CARD EVERY YEAR. His 11.08 ruling is untouched and so is the argument
-  // above it: a day with her parents is not a possession. What it cannot do is be VOICED twice
-  // running, which is a property of the ASK and costs the OFFER nothing.
-  const wanted = lastAsked === DAY_TOGETHER.id ? canAsk.filter((g) => g.id !== DAY_TOGETHER.id) : canAsk
-  // ⚠⚠ AND THE EMPTY POOL IS DECIDED HERE RATHER THAN INHERITED – THIS IS THE TRAP.
-  //
-  // The fallback that used to stand here was `canAsk.length ? canAsk : options`, and it was dead
-  // code: the day is never spent, so `canAsk` could not empty. A cooldown layered on top makes it
-  // LIVE, and live in exactly the case that matters – all three material rows owned and the day on
-  // cooldown – where restoring `options` would put the day straight back and the cooldown would
-  // achieve nothing in the only place it was needed.
-  //
-  // ⭐ SO WHEN THERE IS NOTHING NEW TO WANT, SHE ASKS FOR ONE OF THESE AGAIN. «She has one of these
-  // from us already, this would be the second» is a human thing to want, and round-18 #10c is the
-  // owner ruling that already licensed it: «чтобы мы новую машину не раз в год покупали (хотя почему
-  // и нет, с другой стороны, но если так, то надо как-то обыграть)». The row's `again` wording is
-  // written for precisely this and `birthdayOptions` prints it, so the scene gets richer rather than
-  // thinner – the dialog says out loud that this would be the second one.
-  //
-  // ⚠⚠ REPEATABLE FIRST, AND IT IS NOT A PREFERENCE – IT IS THE ONLY THING KEEPING A FALSE SENTENCE
-  // OFF THE SCREEN. This is the first ask in the game that can name a possession she already has, so
-  // the ask's own words have to survive being read a second time. `repeat` is exactly that
-  // distinction and it was written for it: a repeatable row's ask is a want that recurs («not a day
-  // at home, not a week there – a trip, with a flight in it»), while a durable row's ask is written
-  // as a want for a thing she LACKS – `campusbike` asks «Everyone there has a bicycle. She walks»,
-  // which is false the moment one is chained up outside. So the repeatable rows on this card are
-  // preferred, and the durable ones are the step below them.
-  const onCard = options.filter((g) => g.id !== DAY_TOGETHER.id)
-  const askAgain = onCard.filter((g) => g.repeat === 'repeatable')
+  // ⚠⚠ ROUND 27's OWN MEASUREMENT STANDS AND IS WORTH KEEPING HERE: before any cooldown, the day was
+  // the ask on 8 of 8 birthdays whose three material rows were all already hers – the pool collapsed
+  // to one element by monotonic arithmetic, 30% of asks overall and 34% from twenty-two on. The
+  // career-scope rule is the third statute on the same defect, and the first that can see a GAP.
+  const use = giftUse(record, alreadyGiven)
+  const useOf = (id: string): GiftUse => use.get(id) ?? FRESH_USE
+  const gapOk = (u: GiftUse): boolean =>
+    u.lastWeek === null || (week !== null && week - u.lastWeek >= GIFT_REPEAT_GAP_WEEKS)
+  const cooldownOk = (g: BirthdayGift): boolean => g.id !== DAY_TOGETHER.id || lastAsked !== DAY_TOGETHER.id
+  const leastUsed = (cands: BirthdayGift[]): BirthdayGift[] => {
+    if (cands.length === 0) return cands
+    const min = Math.min(...cands.map((g) => useOf(g.id).count))
+    const least = cands.filter((g) => useOf(g.id).count === min)
+    if (min === 0) return least
+    const lacks = least.filter((g) => g.id === DAY_TOGETHER.id || !spent.has(g.id))
+    if (lacks.length) return lacks
+    const repeatable = least.filter((g) => g.repeat === 'repeatable')
+    return repeatable.length ? repeatable : least
+  }
+  const strict = leastUsed(
+    options.filter((g) => cooldownOk(g) && useOf(g.id).count < GIFT_CAREER_CAP && gapOk(useOf(g.id))),
+  )
+  const gapEased = strict.length
+    ? strict
+    : leastUsed(options.filter((g) => cooldownOk(g) && useOf(g.id).count < GIFT_CAREER_CAP))
+  const capEased = gapEased.length ? gapEased : leastUsed(options.filter(cooldownOk))
   // Total: `options` last, so a future catalogue that somehow printed a card of nothing but the day
   // still prints a scene rather than crashing – the same insurance the old fallback carried.
-  const pool = wanted.length ? wanted : askAgain.length ? askAgain : onCard.length ? onCard : options
+  const pool = capEased.length ? capEased : options
+  const eased: 'gap' | 'cap' | null = strict.length ? null : gapEased.length ? 'gap' : 'cap'
   // ⚠⚠ THE DRAW HAPPENS EITHER WAY, AND THAT IS DELIBERATE. `seed:birthday:<age>` is drawn exactly
   // four times for every birthday in the game, first-college-birthday included – the identical
   // reason the `alreadyGiven` filter is applied to the POOL and never to the draw. A branch that
@@ -1024,7 +1160,7 @@ export function birthdayOffer(
     band === COLLEGE_BAND && collegeIndex === 0
       ? (pool.find((g) => g.id === FIRST_COLLEGE_ASK_ID)?.id ?? null)
       : null
-  return { options, askedId: first ?? drawn }
+  return { options, askedId: first ?? drawn, eased }
 }
 
 /** What she has already been given, across every birthday on the record – the input to the ask above.
@@ -1094,7 +1230,10 @@ export function collegeBirthdayIndexOf(world: WorldState): number | null {
  *  reading and a validation run against another would reject every option the player was shown. That
  *  was a comment holding three call sites in line; it is one function now, and the tool that measures
  *  the ask reads it too instead of re-typing the arguments. */
-export function birthdayOfferFor(world: WorldState, age: number): { options: BirthdayGift[]; askedId: string } {
+export function birthdayOfferFor(
+  world: WorldState,
+  age: number,
+): { options: BirthdayGift[]; askedId: string; eased: 'gap' | 'cap' | null } {
   return birthdayOffer(
     world.seed,
     age,
@@ -1105,6 +1244,11 @@ export function birthdayOfferFor(world: WorldState, age: number): { options: Bir
     // call sites that re-type the arguments are two call sites that can disagree about which dialog
     // this is, and `chooseGift` re-derives the offer to validate the answer.
     lastAskedGift(world),
+    // ⭐⭐⭐ ROUND 39 #9 – the record itself and the current week, for the career-scope rule. Read
+    // BEFORE `chooseGift` pushes this birthday's own row (both callers come through here first), so
+    // the ask stays immutable once the dialog is on screen, exactly as `giftsAlreadyGiven` above.
+    world.birthdays ?? [],
+    world.week,
   )
 }
 
@@ -1146,7 +1290,16 @@ export function pendingBirthday(world: WorldState): number | null {
   }
   const age = birthdayTurning(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (age === null) return null
-  return world.birthdays.some((b) => b.week === world.week) ? null : age
+  // ⭐⭐⭐ ROUND 39 #9c – AN AGE IS ANSWERED ONCE, NOT A WEEK. The owner's save holds `day` at week
+  // 569 and `dog` at week 570, BOTH age 24, born 21 December. Round 34 #3 moved the marked week for
+  // every non-Monday date from "the week containing her date" to "the first week whose Monday has
+  // reached it" – one week later – and his career was standing exactly in that seam when the build
+  // updated: week 569 was answered under the old rule, and the new rule then found week 570 fresh,
+  // because this guard compared WEEKS. A week-keyed dedupe survives every calendar change except
+  // the one that moves the marked week itself; the age cannot move, because she turns 24 once.
+  // The week half of the guard stays for the poked-save case (a row this week under a wrong age
+  // must still block re-asking this week).
+  return world.birthdays.some((b) => b.week === world.week || b.age === age) ? null : age
 }
 
 /** The title is flavour, so it gets a dedicated sub-stream and cannot move the gift offer or MAIN.

@@ -105,7 +105,7 @@ import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medic
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
+import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
@@ -1530,15 +1530,41 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         const deal = activeAdDealIn(world.offers, category, world.week)
         if (deal) {
           const t = deal.terms as AdOfferTerms
+          // ⭐ ROUND 39 #3 – a filled LIFETIME row carries the flag instead of a years-and-runs-to
+          // pair the paper does not have; the screen branches on it and says «for life».
           rows.push({
             category,
-            label: category === 'capstone' ? 'The capstone' : ECONOMY.advertising.categories[category].label,
+            label:
+              category === 'capstone' ? 'The capstone' : category === 'lifetime' ? 'The lifetime deal' : ECONOMY.advertising.categories[category].label,
             state: 'filled',
             brand: t.brand,
             cashCents: t.cashCents,
-            termYears: Math.max(1, t.termYears ?? 1),
-            untilWeek: deal.untilWeek ?? deal.week,
+            ...(t.lifetime === true
+              ? { lifetime: true as const }
+              : { termYears: Math.max(1, t.termYears ?? 1), untilWeek: deal.untilWeek ?? deal.week }),
           })
+          continue
+        }
+        // ⭐ ROUND 39 #3 – the crown above the crown: once the shelf exists for her, the lifetime
+        // row shows its two-part gate the way the capstone row shows its tenure – held and needed,
+        // counted plainly, so the ladder's true end is visible from the first professional rung.
+        if (category === 'lifetime') {
+          if (band === null) continue
+          const l = ECONOMY.advertising.lifetime
+          const seasonsHeld = capstoneSeasonsOf(world)
+          const slamsHeld = world.trophiesByTier?.slam?.titles?.length ?? 0
+          rows.push(
+            seasonsHeld >= l.seasonsInTop10 && slamsHeld >= l.slamTitles
+              ? { category, label: 'The lifetime deal', state: 'open', lifetime: true, openCashCents: l.cashCents }
+              : {
+                  category,
+                  label: 'The lifetime deal',
+                  state: 'closed',
+                  lifetime: true,
+                  seasonsInTop10: { held: seasonsHeld, needed: l.seasonsInTop10 },
+                  slamTitles: { held: slamsHeld, needed: l.slamTitles },
+                },
+          )
           continue
         }
         if (category === 'capstone') {
@@ -1788,6 +1814,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // Home reads this and never `coachRoomNote`: see the field's note for why the guarantee lives
     // here rather than in a `v-if` on the screen.
     coachDeclineNote: coachDeclineNote(world),
+    // ⭐ ROUND 39 #2b (REOPENED 08.09) – the ONE short read Home renders: past her peak the seasons
+    // clause the owner kept, on a growing career her headroom band in the 3-5 words he sized. The
+    // long sentence above renders on the coach card in the market list (#2a); each half shares its
+    // derivation with the long form (`declineRead` / `roomBandRow`), so no two surfaces can disagree.
+    coachRoomShort: coachRoomShort(world),
     // ⚠ WEEK 0 ONLY – see the field's own note. The handover is the one screen that reads it and it
     // exists for one week; a career past its first tick must not carry a reading of her true ceiling.
     handoverBand: world.week === 0 ? handoverRoomBand(world) : '',

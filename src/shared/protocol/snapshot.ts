@@ -445,6 +445,26 @@ export interface Snapshot {
    *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote`: it persists nothing, owes no
    *  migration and does not move `SAVE_SCHEMA_VERSION`. */
   coachDeclineNote: string
+  /** ⭐⭐ ROUND 39 #2a/#2b (REOPENED 08.09) – HOME'S SHORT PLATE, either read, exactly one at a time.
+   *  The short sibling of `coachRoomNote` above, with the same fallthrough: past her peak it is the
+   *  decline read in 3-5 words, and on a growing career it is her headroom band compressed to the
+   *  3-5 words he sized («вот это тоже всё-таки можно показывать буквально в 3-5 слов на home») –
+   *  the round-34 removal reversed by his own word, with the child guarantee narrowed to its
+   *  data-level core: '' where the engine has nothing to say, no digit in any growing read, and
+   *  «Past her peak» still unreachable before her own `declineStart`.
+   *
+   *  ⚠⚠ THE DECLINE HALF ROTATES WITH THE SEASON (the 08.09 re-reopen: «можно же чередовать как раз
+   *  на спаде эти фразочки … это даст живости и вариативности, уберет статичность»). Early in the
+   *  season it is «she's down N places», late it is the below-her-best ladder, and the middle – plus
+   *  every week neither rank fact is true on – is «Past her peak – about N seasons left». The driver
+   *  is `declinePhaseOf(world.week)` off the ledger's own season clock: deterministic, drawless, and
+   *  the same string on the same week for ever. See `world/coachMarket.ts` for the table.
+   *
+   *  ⚠ ONE FIELD, so Home cannot render both reads however the template is later edited; one
+   *  derivation per half (`declineRead` / `roomBandRow` in `world/coachMarket.ts`), shared with the
+   *  long forms, so the plate and the coach card can never disagree. Replaces wave A's
+   *  `coachDeclineShort`, whose two rank arms moved to the card on the same ruling. */
+  coachRoomShort: string
   /** ⭐⭐ THE HANDOVER'S READ, AND IT IS EMPTY ON EVERY WEEK BUT THE FIRST (childhood prologue §5).
    *
    *  One of the three words this game already grades remaining room in – `Huge potential` /

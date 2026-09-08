@@ -103,8 +103,16 @@ async function clearWeekends(wrapper: ReturnType<typeof mount>): Promise<number>
       continue
     }
     // The result scene, which is a card row with exactly one way on.
+    // ⚠ RE-AIMED BY ROUND 39 #15a D2, NOT LOOSENED: a weekend she leaves hurt draws the hug scene
+    // («Hold her») instead of a three-faces card, and the seed is Math.random per mount – so the
+    // shared «Go on» label was a latent flake. «Exactly one way on» is the comment's own claim and
+    // is asserted now; pressing that one control is what the loop always meant.
     if (wrapper.text().includes(LOCAL_OPEN_COPY.kicker)) {
-      await answer(wrapper, LOCAL_OPEN_COPY.result.won.continueLabel)
+      const ways = wrapper.findAll('.prologue-answer')
+      expect(ways).toHaveLength(1)
+      await ways[0].trigger('click')
+      await Promise.resolve()
+      await wrapper.vm.$nextTick()
       continue
     }
     return weekends

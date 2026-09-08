@@ -89,7 +89,7 @@ import type { TierId } from './season/types'
 import type {
   // ⚠ `AdTier` left this list with `AD_TIERS` (E-08) – the type is still live and still exported by
   // shared/protocol; this module simply has nothing left that names it.
-  AcademyLetterTerms, AdCategory, AdOfferTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
+  AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
   KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
@@ -917,6 +917,17 @@ export function raiseKitOffers(args: {
   const incumbent = dealEndingWithSeason(offers, week)
   const incumbentTier = (incumbent?.terms as { tier?: SponsorTier } | undefined)?.tier
   if (incumbentTier) alreadyWritten.add(incumbentTier)
+  // ⭐⭐⭐ ROUND 39 #17 – AND THE HOUSE SHOOTING HER CAMPAIGN WRITES WITHOUT ROLLING, which is the
+  // whole guarantee. It is raised BEFORE the slot walk and counted into `alreadyWritten` for the
+  // same reason the incumbent is: one letter per rung per window, so the ladder cannot post a second
+  // paper at the same rung one week later. See `apparelBondLetter` for the terms, the gates and the
+  // dice it does not roll.
+  const hadBond = offers.some((o) => o.id === `kit-bond-${opened}`)
+  const bond = apparelBondLetter(offers, week, standing, opened, alreadyWritten)
+  if (bond) {
+    if (!hadBond) raised.push(bond)
+    alreadyWritten.add((bond.terms as KitOfferTerms).tier)
+  }
   // Every rung whose turn has come by this week - which for a career that has been here all along is
   // "the one whose turn is today", because the earlier ones have already written or already missed.
   const dueThrough = Math.min(sponsorWindowSlot(week), SPONSOR_LETTER_WEEKS - 1)
@@ -1128,6 +1139,16 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
   // of rival letters to close (`reviewAdOffer` raises at most one at a time by construction). The
   // fee itself is paid by `acceptOffer` – the world owns the wallet, this file owns the paper.
   if (offer.kind === 'ad') {
+    // ⭐ ROUND 39 #3 – a LIFETIME paper gets NO `untilWeek`, deliberately: writing any finite week
+    // would be a lie the window reads would then honour, and writing a sentinel would be a lie the
+    // save carries. Absent is the honest value, and `activeAdDeals`/`adSpokenFor` branch on the
+    // flag the paper itself states.
+    if ((offer.terms as AdOfferTerms).lifetime === true) {
+      offer.state = 'signed'
+      offer.decidedWeek = week
+      offer.fromWeek = week
+      return offer
+    }
     const termWeeks = Math.max(1, (offer.terms as AdOfferTerms).termWeeks)
     offer.state = 'signed'
     offer.decidedWeek = week
@@ -1166,6 +1187,20 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
     endDealWithSeason(old, week)
     raiseKitEndLetter(offers, week, old, 'stepped', old.eventsPlayed)
   }
+  // ⭐⭐⭐ ROUND 39 #17 – AND THE PRICE OF LEAVING, which is the owner's own «контракт обнулится».
+  // A clothing campaign is written by the house that dresses her; sign a DIFFERENT house and that
+  // campaign ends here (`endAdCampaign` – no further anniversaries, nothing clawed back).
+  //
+  // ⚠ THE TRIGGER IS THIS SIGNATURE AND NEVER «no live kit deal» (his ruling 1). His own save had a
+  // two-week gap between kit deals, w725 to w727, and an absence trigger would have killed a
+  // three-year contract over a calendar seam nobody chose.
+  //
+  // ⚠ AND HE WAS TOLD THE NUMBER BEFORE HE PRESSED. `OfferLetter` prints `apparelBondCost` on the
+  // rival's own paper – the same function this line reads – so the consequence on the letter and the
+  // consequence in the engine are one fact. Without the number it is a trap; with it, it is the
+  // decision he asked for.
+  const leaving = apparelBondCost(offers, week, (offer.terms as KitOfferTerms).brand)
+  if (leaving) endAdCampaign(leaving.campaign, week)
   // Read the start BEFORE the state moves: `dealStartsAt` walks the signed deals, and this one is
   // about to become one of them (with no `untilWeek` yet, so it could not move the answer - but the
   // order is written to be true rather than merely harmless). ⚠ AND IT IS READ AFTER THE STEP-UP
@@ -1764,7 +1799,10 @@ export function isWinterShootWeek(week: number): boolean {
  *  portfolio surface lists them and the order `reviewAdOffer` walks them, weakest gate first so the
  *  shelf reads as a climb. The capstone is deliberately LAST: it is not a trade, it is the one
  *  kit-shaped deal on top of the whole shelf. */
-export const AD_CATEGORIES: readonly AdCategory[] = ['watches', 'cars', 'drinks', 'clothing', 'airline', 'fragrance', 'capstone']
+export const AD_CATEGORIES: readonly AdCategory[] = ['watches', 'cars', 'drinks', 'clothing', 'airline', 'fragrance', 'capstone', 'lifetime']
+// ⭐ ROUND 39 #3 – 'lifetime' is APPENDED, above even the capstone, and appending is the safe move
+// by construction: every category's dice ride its own purpose scope (`seed:ad:<category>:<week>`),
+// so a new name at the end shifts nobody's stream and every recorded derivation replays unchanged.
 
 /** WHICH CATEGORY A LETTER'S PAPER FILLS – the one mapping that makes the portfolio rule reach
  *  every letter ever written, new or old. A new letter names its category; an old one is mapped
@@ -1844,7 +1882,9 @@ export function adBandFor(standing: SponsorStanding): number | null {
 export function adBandOfTerms(terms: AdOfferTerms): number {
   const bands = ECONOMY.advertising.bands
   const category = adCategoryOf(terms)
-  if (category === 'capstone') return bands.length - 1
+  // ⚠ the lifetime letter is the top band for the same reason the capstone is: its money is its own
+  // constant, no category row prices it, and «глобальный дом» describes nothing better.
+  if (category === 'capstone' || category === 'lifetime') return bands.length - 1
   const ladder = ECONOMY.advertising.categories[category].feeCentsByBand
   // the cell this cheque IS, strongest first – the letter landing on its own rung
   for (let i = bands.length - 1; i >= 0; i--) {
@@ -1862,7 +1902,7 @@ export function adBandOfTerms(terms: AdOfferTerms): number {
 /** THE CHEQUE ONE CATEGORY WRITES AT ONE BAND, in cents per contract year – or null where the
  *  category has not opened (`feeCentsByBand`'s own nulls, so the gate and the price are one fact).
  *  The capstone is not a category row and never reaches this: its money is its own constant. */
-export function adFeeFor(category: Exclude<AdCategory, 'capstone'>, band: number): number | null {
+export function adFeeFor(category: AdTradeCategory, band: number): number | null {
   return ECONOMY.advertising.categories[category].feeCentsByBand[band] ?? null
 }
 
@@ -1895,7 +1935,7 @@ export function pickAdHouse(
  *  letter's own purpose-scoped stream. `brand` is required for clothing (the live kit deal's own
  *  name – the «двойной программой» ruling) and defaults to the category's first house otherwise. */
 export function adTermsForCategory(
-  category: Exclude<AdCategory, 'capstone'>,
+  category: AdTradeCategory,
   band: number,
   termYears: number,
   brand?: string,
@@ -1905,7 +1945,12 @@ export function adTermsForCategory(
   if (fee === null) return null
   const author = brand ?? def.houses[0]
   if (!author) return null
-  const years = Math.max(1, Math.min(ECONOMY.advertising.termYearsMax, Math.round(termYears)))
+  // ⭐ ROUND 39 #3 – the clamp is the BAND'S OWN LADDER now (1y for the rising career, up to 5y at
+  // the top), never a flat constant: a caller handing this function a term the band does not write
+  // gets the band's honest edge, exactly as an out-of-band fee request gets null two lines up. The
+  // band index is valid whenever the fee was – `adFeeFor` has already refused everything else.
+  const ladder2 = ECONOMY.advertising.bands[band]
+  const years = Math.max(ladder2.termYearsMin, Math.min(ladder2.termYearsMax, Math.round(termYears)))
   return {
     category,
     brand: author,
@@ -1931,6 +1976,27 @@ export function adCapstoneTerms(brand: string): AdOfferTerms {
     termYears: c.termYears,
     termWeeks: c.termYears * WEEKS_PER_YEAR,
     shootCount: c.shootWeeksPerYear,
+  }
+}
+
+/** ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER'S PAPER («А некоторые и пожизненно» – the Messi/Ronaldo/
+ *  LeBron shape, the icon exception). Once per career, written by the same author rule as the
+ *  capstone (the kit house that dresses her is who signs faces for life), and the terms say three
+ *  things the shape of the fields can carry exactly: `lifetime: true` is the predicate every
+ *  window read branches on, `termWeeks: 0` is the declared «no finite span» convention (the flag's
+ *  own doc in shared/protocol/offers.ts), and `shootCount: 0` because weeks are named across a
+ *  term and this paper has none. The fee is the icon band's own biggest trade cheque, made
+ *  permanent – see `ECONOMY.advertising.lifetime` for the sizing argument. */
+export function adLifetimeTerms(brand: string): AdOfferTerms {
+  const l = ECONOMY.advertising.lifetime
+  return {
+    category: 'lifetime',
+    brand,
+    trade: 'We make her kit',
+    cashCents: l.cashCents,
+    lifetime: true,
+    termWeeks: 0,
+    shootCount: 0,
   }
 }
 
@@ -2069,11 +2135,14 @@ export function adDealShootingAt(offers: Offer[], week: number): Offer | null {
  *  `activeKitDeal`: honoured from `fromWeek` to `untilWeek` and not a week further, off each
  *  offer's own frozen terms. */
 export function activeAdDeals(offers: Offer[], week: number): Offer[] {
+  // ⭐ ROUND 39 #3 – a signed LIFETIME paper is in force from `fromWeek` for ever: it has no
+  // `untilWeek` at all (`signOffer` writes none), and the flag on its own frozen terms is the
+  // predicate. Every finite deal reads exactly as it always did.
   return offers.filter(
     (o) =>
       o.kind === 'ad' &&
       o.state === 'signed' &&
-      week <= (o.untilWeek ?? -1) &&
+      ((o.terms as AdOfferTerms).lifetime === true || week <= (o.untilWeek ?? -1)) &&
       week >= (o.fromWeek ?? o.decidedWeek ?? 0),
   )
 }
@@ -2096,11 +2165,17 @@ export function activeAdDealIn(offers: Offer[], category: AdCategory, week: numb
  *  letter states is «in no other <trade> campaign while that runs», which is how the real shelf
  *  works (§7 – no portfolio read for the research holds two brands of one trade at once). */
 export function adSpokenFor(offers: Offer[], week: number, category: AdCategory): boolean {
+  // ⭐ ROUND 39 #3 – a signed lifetime deal holds its slot for ever, which is precisely how «once
+  // per career» is enforced: no second letter can be raised into a slot that never re-opens. A
+  // REFUSED or EXPIRED lifetime letter shuts nothing – the house may write again – because a
+  // mis-tap that cost the career its one lifetime deal would be «мы ни за что не наказываем» broken
+  // on the biggest paper in the game.
   return offers.some(
     (o) =>
       o.kind === 'ad' &&
       adCategoryOf(o.terms as AdOfferTerms) === category &&
-      (isOfferLive(o, week) || (o.state === 'signed' && week <= (o.untilWeek ?? -1))),
+      (isOfferLive(o, week) ||
+        (o.state === 'signed' && ((o.terms as AdOfferTerms).lifetime === true || week <= (o.untilWeek ?? -1)))),
   )
 }
 
@@ -2114,6 +2189,267 @@ export function lastSignedAdBrand(offers: Offer[], category: AdCategory): string
     if (best === null || (o.decidedWeek ?? o.week) > (best.decidedWeek ?? best.week)) best = o
   }
   return best ? (best.terms as AdOfferTerms).brand : null
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 39 #17 – THE APPAREL BOND: the house that dresses her is the house that shoots her
+// =================================================================================================
+//
+// THE OWNER, 08.09: «если у нас есть контракт на 3+ лет на фото от того же Meridian Sport, то если в
+// межсезонье она решит подписать другого спонсора, то контракт обнулится… по умолчанию фото спонсор
+// одежды уже будет ее снабжать гарантированно и будет возможность переподписывать с ним контракт до
+// истечения фото контракта… А игрок уже сам будет решать с кем подписывать.»
+//
+// WHAT ALREADY EXISTED: `reviewAdOffer` authors a `clothing` campaign with the LIVE KIT DEAL'S BRAND
+// («двойной программой» – no kit deal, nobody writes it). What did not exist is any re-reading of
+// that bond after signature, so a campaign could outlive the kit deal that authored it – his own
+// save: kit Meridian Sport to w725, clothing campaign Meridian Sport running to w878.
+//
+// SO THE BOND IS READ EVERY WEEK NOW, IN TWO DIRECTIONS, and both of them are derived from state
+// that already exists – the running campaign's brand against the kit paper's brand. NO new persisted
+// field, no schema move (v71 stands):
+//
+//   * THE GUARANTEE (`apparelBondLetter`): while X's clothing campaign runs and her kit is not
+//     already promised, X writes a kit letter with NO ARRIVAL ROLL. ⚠ AT HER CURRENT STANDING'S
+//     TERMS – `kitTermsFor(standing)`, the ladder's own rung for her rank TODAY – because the
+//     guarantee bypasses the DICE and never the LADDER: terms carried over from the expired deal
+//     would let a slid career hold premium kit for ever through the ad-contract back door.
+//   * THE PRICE (`apparelBondCost` + `endAdCampaign`): signing a kit deal with a DIFFERENT house
+//     ends the campaign. ⚠ THE TRIGGER IS THE SIGNATURE AND NEVER «no live kit deal» – his own save
+//     had a two-week gap between kit deals (w725 to w727), and an absence trigger would have killed
+//     a three-year contract over a calendar seam nobody chose.
+//
+// ⚠ ONLY `clothing` CREATES THE BOND (his ruling 6). Watches, cars, drinks, fragrance and the
+// capstone are other companies with no claim on her shirt, and the LIFETIME letter is exempt by
+// construction as well as by ruling: it is its own category, so neither read below can ever see it.
+//
+// ⚠ AND THE REVERSE ORDER OWES NOTHING (his ruling 5). Both reads ask «is a clothing campaign
+// running THIS week» – a campaign that ended before the kit deal did is not running, so no guarantee
+// is owed and no price is charged. Nothing here assumes the ad outlives the kit paper.
+//
+// ⚠ RNG: ZERO DRAWS, on any stream. The guarantee BYPASSES the arrival roll rather than adding one,
+// the price is arithmetic on a decided deal, and no `rngFromSeed` appears anywhere in this section.
+
+/** THE CLOTHING CAMPAIGN RUNNING THIS WEEK, or null – `activeAdDealIn` asked the bond's question, so
+ *  the two directions above and the letter that warns about them cannot disagree about who X is. */
+export function runningClothingCampaign(offers: Offer[], week: number): Offer | null {
+  return activeAdDealIn(offers, 'clothing', week)
+}
+
+/** ⭐⭐⭐ RULING 4 – THE HOUSE THAT DRESSES HER FREE FOR LIFE, or null (his own idea of 08.09: while
+ *  a lifetime deal from X is live, her kit is supplied at no cost). Read at the till –
+ *  `kitPurchaseSplit` and `resolveGear` – so the shop's button and the weekly bill quote one answer.
+ *
+ *  ⚠ IT IS NOT A KIT DEAL AND MUST NOT BECOME ONE. `activeKitDeal` is untouched, so the retainer,
+ *  the appearance fee, the result bonus, the travel share and the freshness ceiling all stay the kit
+ *  ladder's own money and the kit ladder's own promises. What this buys is the BILL, which is what
+ *  «снабжать» means and all it means. */
+export function lifetimeKitHouse(offers: Offer[], week: number): Offer | null {
+  return activeAdDealIn(offers, 'lifetime', week)
+}
+
+/** HOW MANY ANNIVERSARY FEES A RUNNING CAMPAIGN HAS STILL TO PAY after `week` – the count
+ *  `payAdAnniversaries` would reach if the term were served in full.
+ *
+ *  ⚠ IT IS THAT FUNCTION'S OWN ARITHMETIC, ASKED FORWARD. Year one is banked at the signature and
+ *  each remaining year on its anniversary while the deal is live (`untilWeek = fromWeek + years×52
+ *  − 1`), so the payable anniversaries are exactly `k` in `1…years−1`, and the ones still to come
+ *  are those whose week is strictly past today: an anniversary landing on THIS week has already been
+ *  paid by the tick before the parent can act on it. A lifetime paper answers 0 because it is never
+ *  asked – it is exempt from the bond, and «for ever» is not a count. */
+export function adAnniversariesLeft(deal: Offer, week: number): number {
+  const t = deal.terms as AdOfferTerms
+  if (t.lifetime === true) return 0
+  const years = Math.max(1, t.termYears ?? 1)
+  const from = deal.fromWeek ?? deal.decidedWeek ?? deal.week
+  let left = 0
+  for (let k = 1; k < years; k++) if (from + k * WEEKS_PER_YEAR > week) left++
+  return left
+}
+
+/** ⭐⭐ WHAT SIGNING WITH `brand` WOULD COST HER – the campaign that signature would end and the
+ *  money left on it, or null when nothing would end.
+ *
+ *  ⚠ THIS IS THE MECHANISM AND NOT A FOOTNOTE (his own emphasis): a rival house's letter has to say
+ *  on the paper that signing ends the running campaign AND name the money, because without the
+ *  number it is a trap and with it, it is a decision. `OfferLetter` reads exactly this, so the
+ *  warning on the paper and the consequence in `signOffer` are one function.
+ *
+ *  Null in the three cases that owe nothing: no campaign running, the campaign is X's own (signing
+ *  the house she is already shooting for ends nothing), and – by `runningClothingCampaign`'s
+ *  category read – any campaign that is not clothing. */
+export function apparelBondCost(
+  offers: Offer[],
+  week: number,
+  brand: string,
+): { campaign: Offer; anniversariesLeft: number; cents: number } | null {
+  const campaign = runningClothingCampaign(offers, week)
+  if (!campaign) return null
+  const t = campaign.terms as AdOfferTerms
+  if (t.brand === brand) return null
+  const anniversariesLeft = adAnniversariesLeft(campaign, week)
+  return { campaign, anniversariesLeft, cents: anniversariesLeft * t.cashCents }
+}
+
+/** ⭐⭐ «ОБНУЛИТСЯ» – THE CAMPAIGN ENDS (his ruling 3), and ending is `untilWeek` and nothing else.
+ *
+ *  ⚠ NOTHING IS CLAWED BACK AND NOT ONE LINE HERE TOUCHES `world.fundsCents`: every fee already
+ *  banked stays banked, exactly as a failed kit deal keeps the kit it bought. What stops is the
+ *  FUTURE – `activeAdDeals` no longer holds it, so no further anniversary is paid, no further shoot
+ *  week is booked, and the category's slot re-opens for the house that now dresses her.
+ *
+ *  ⚠ `week − 1` AND NOT `week`: the campaign is over from the week the rival paper is signed. And it
+ *  needs no new field to be legible afterwards – `adCampaignCutShort` reads the shortened span back
+ *  off the paper's own frozen `termWeeks`. */
+export function endAdCampaign(campaign: Offer, week: number): void {
+  campaign.untilWeek = week - 1
+}
+
+/** DID THIS CAMPAIGN STOP BEFORE ITS PAPER SAID IT WOULD – the derived fact that lets the letter
+ *  report an ENDED campaign honestly instead of calling it «run its course».
+ *
+ *  ⚠ DERIVED, NEVER STORED. `termWeeks` is frozen on the paper at arrival and `fromWeek`/`untilWeek`
+ *  are written by the signature, so a span shorter than the promise is proof the deal was cut short
+ *  and there is nothing to migrate. A lifetime paper has no span to fall short of. */
+export function adCampaignCutShort(offer: Offer): boolean {
+  if (offer.kind !== 'ad' || offer.state !== 'signed') return false
+  const t = offer.terms as AdOfferTerms
+  if (t.lifetime === true) return false
+  const from = offer.fromWeek ?? offer.decidedWeek ?? offer.week
+  return (offer.untilWeek ?? -1) < from + Math.max(1, t.termWeeks) - 1
+}
+
+/** ⭐⭐⭐ THE GUARANTEED LETTER – X writes because its campaign is running, not because its dice came
+ *  up. Returns the letter it raised (or the one already in the inbox), or null when nothing is owed.
+ *
+ *  ⚠ NO ARRIVAL ROLL, AND THAT IS THE WHOLE OF WHAT «гарантированно» BUYS. `shopWritesAt` is not
+ *  consulted and no sub-stream is opened – the same shape `raiseKitRenewal` already has, and for the
+ *  same reason: a house that is paying to put her face on a poster does not roll to decide whether it
+ *  has noticed her. So this adds ZERO draws to any stream. It does not SPEND one either: the roll it
+ *  bypasses is `seed:offer:<opened+slot>`, a sub-stream re-derived at the call site and read once,
+ *  so a slot that never asks its question leaves every other stream exactly where it was.
+ *
+ *  ⚠ THE TERMS ARE HER STANDING'S, NEVER THE EXPIRED DEAL'S (his ruling 2). `kitTermsFor(standing)`
+ *  is the ladder's own rung for her rank today, with ONE field overridden – the brand, because the
+ *  letter is X's. Copying the old contract's terms would let a slid career hold premium kit for ever
+ *  through the ad-contract back door, which is the one thing the ruling names.
+ *
+ *  ⚠ IT BYPASSES THE DICE AND NOT THE LADDER, so the three gates that are about WHETHER SHE IS
+ *  SOMEBODY ALL HOLD, and each is the ladder's own rather than a new rule:
+ *    * she must clear a rung at all (`rungFor` null = nobody on the ladder would write to her, and
+ *      there are no terms in the game to offer);
+ *    * a deal already covering the season ahead turns it away exactly as it turns any rung away
+ *      (`rungTurnedAway`) – a guarantee is owed when her kit expires, not on top of a live contract;
+ *    * one letter per rung per window (`alreadyWritten`) – which is also what keeps the incumbent's
+ *      renewal from being shadowed by a second paper in the same voice.
+ *  And the whole call sits inside `raiseKitOffers`, which `reviewSponsors` skips for a brand that was
+ *  let down this window: a house that has just ended her kit deal because she did not play does not
+ *  turn round and guarantee her another one the same winter.
+ *
+ *  ⚠ THE ID IS THE WINDOW'S, NOT THE WEEK'S (`kit-bond-<opened>`) – the same identity rule every
+ *  letter in this file keeps since fix/sponsor-catchup, so a career that reaches the window late
+ *  finds one guaranteed letter waiting rather than one per week it was away.
+ *
+ *  ⭐⭐⭐ WAVE G2, HIS RULING OF 08.09 – IT IS A RENEWAL NOTICE AND IT SAYS SO: «мы можем прислать не
+ *  просто новое письмо Meridian Sport с целью "подпиши, если пропустишь, то без формы", а уведомление
+ *  о продлении». The house that is already paying to put her face on a poster is CONTINUING, not
+ *  competing, and the paper has to be in that voice – `terms.apparelBond` carries it to
+ *  `OfferLetter` / `InboxSheet` / the winter's feed row. ⚠ NOTHING ELSE MOVES: it is still an `open`
+ *  offer with a deadline, still refusable, still beaten by a rival letter he signs instead, because
+ *  an auto-renewal would delete the decision the whole mechanism exists to create («а игрок уже сам
+ *  будет решать с кем подписывать»).
+ *
+ *  ⭐⭐⭐ ...AND A MISSED ONE RE-ARMS ONCE PER OFF-SEASON (his option A, 08.09). ⚠ THAT IS THE ID
+ *  ABOVE AND NOT A SECOND MECHANISM – no flag, no counter, no new state: `kit-bond-<opened>` is the
+ *  WINDOW's identity, so a notice that lapses undecided is simply not in next winter's inbox and the
+ *  same house writes again, for as long as its campaign runs and her kit is not promised. Measured
+ *  before it was pinned rather than assumed: an eight-year campaign walked week by week produced
+ *  `kit-bond-671`, `-723`, `-775`, `-827`, `-879` – exactly one per off-season, all from the same
+ *  house, each lapsing on its own deadline. `tests/r39-apparel-bond.test.ts` §11 is the guard.
+ *
+ *  ⚠ ONCE PER OFF-SEASON IS THE CEILING, AND IT IS WEIGHED AGAINST THIS FILE'S OWN DOCTRINE.
+ *  `offerChanceFor` says nobody is guaranteed a letter, and `expireOffers` says a letter left too
+ *  long «is gone whether or not the player ever opened it – which is the whole of what makes waiting
+ *  a real gamble rather than a free option». This is the game's FIRST guaranteed letter, so the
+ *  cadence is what keeps that true: a missed notice costs a SEASON of kit allowance and travel share,
+ *  which is real money at every rung, and never the career. A standing always-open letter would have
+ *  overturned the doctrine; one per winter does not. */
+export function apparelBondLetter(
+  offers: Offer[],
+  week: number,
+  standing: SponsorStanding,
+  opened: number,
+  alreadyWritten: ReadonlySet<SponsorTier>,
+): Offer | null {
+  const id = `kit-bond-${opened}`
+  // ⚠ IT RETURNS THE LETTER ALREADY IN THE INBOX RATHER THAN NULL, which is `raiseKitRenewal`'s own
+  // idiom and is load-bearing here: the caller counts the guarantee's RUNG into `alreadyWritten`
+  // every week of the window, and a null on the second week would let the ladder post a second paper
+  // at the same rung one week later. Measured, not reasoned about – the first draft returned null and
+  // the window produced both letters.
+  const already = offers.find((o) => o.id === id)
+  if (already) return already
+  const campaign = runningClothingCampaign(offers, week)
+  if (!campaign) return null
+  // ⭐⭐⭐ WAVE G2 – AND THE WINTER THE INCUMBENT'S OWN RENEWAL OWNS IS NOT THIS LETTER'S. The house
+  // whose contract is finishing WITH this season already writes to her – `raiseKitRenewal`, on the
+  // window's closing week, on the same paper – so when that house is X, the winter is spoken for and
+  // the guarantee stands down.
+  //
+  // ⚠ IT IS NOT BELT AND BRACES; IT WAS MEASURED FAILING. `raiseKitOffers` seeds `alreadyWritten`
+  // with the incumbent's TIER, which dedupes the two letters only while the tier she clears today is
+  // the tier she signed at. Probed on a career whose kit was `tour` and whose standing now clears
+  // `icon`: the inbox held `kit-bond-671` (icon terms, Baseline Athletic's name) AND
+  // `kit-renew-kit-old-471` (tour terms, Baseline Athletic's name) – one house, one winter, two
+  // letters. That is round 28 #17's own defect wearing a new hat («one brand in two voices»), and
+  // this is the same fix asked one question further along: identity by BRAND, not by rung.
+  //
+  // ⚠ THE BRAND IS THE TEST AND THE RUNG IS NOT. A DIFFERENT house's deal ending the same winter is
+  // two houses writing, which is the ordinary competitive post and is exactly what the inbox is for.
+  //
+  // ⚠ WHAT IT COSTS, STATED: a career that has already signed somebody else this window turns
+  // `raiseKitRenewal` away (`seasonSpokenFor`), so in that corner the incumbent writes nothing and
+  // this letter stands down too. She is signed for next season either way – which is the state the
+  // guarantee exists to prevent – and the guarantee re-arms the next off-season (see the header).
+  const ending = dealEndingWithSeason(offers, week)
+  if (ending && (ending.terms as KitOfferTerms).brand === (campaign.terms as AdOfferTerms).brand) return null
+  const tier = rungFor(standing)
+  if (!tier || alreadyWritten.has(tier)) return null
+  if (rungTurnedAway(offers, week, tier)) return null
+  const base = kitTermsFor(standing, tier)
+  if (!base) return null
+  const offer: Offer = {
+    id,
+    kind: 'kit',
+    week,
+    deadlineWeek: kitOfferDeadline(week),
+    // ⚠ TWO FIELDS OVERRIDDEN AND NOTHING ELSE. The allowance, the covers, the freshness, the events
+    // she owes, the travel share and the term are the ladder's own for her rank today; only the name
+    // on the paper is X's, because X is who is writing – and `apparelBond` is the VOICE it writes in
+    // (wave G2). Neither is a number: the deal this letter offers is the ladder's own, unchanged.
+    terms: { ...base, brand: (campaign.terms as AdOfferTerms).brand, apparelBond: true },
+    state: 'open',
+  }
+  offers.push(offer)
+  return offer
+}
+
+/** WHICH RUNG OF THE KIT LADDER A BRAND IS, or null for a name that is on no rung.
+ *
+ *  ⚠ IT EXISTS FOR THE LETTERHEAD, and only the bond letter can ever need it: every letter the
+ *  ladder writes carries its own rung's brand, so `tierOf(brand) === terms.tier` for all of them and
+ *  the mark they print is byte-identical either way. The guaranteed letter is the one paper where
+ *  the two come apart – X's name on the terms of the rung she clears today – and a sheet that
+ *  printed the RUNG's mark over X's name would be a letterhead that contradicts its own signature. */
+export function sponsorTierOfBrand(brand: string): SponsorTier | null {
+  const s = ECONOMY.sponsorship
+  if (brand === s.localBrand) return 'local'
+  if (brand === s.national.brand) return 'national'
+  if (brand === s.tour.brand) return 'tour'
+  if (brand === s.global.brand) return 'global'
+  if (brand === s.premium.brand) return 'premium'
+  if (brand === s.icon.brand) return 'icon'
+  return null
 }
 
 /** THE HOUSE WRITES. An `open` letter with a real deadline – refusable and expirable like the kit

@@ -44,7 +44,7 @@ import type {
   Offer,
   TourLetterTerms,
 } from '../shared/protocol'
-import { SPONSOR_TIERS, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
+import { SPONSOR_TIERS, apparelBondCost, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -167,6 +167,12 @@ function subjectOf(o: Offer): string {
   if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE APPAREL BOND'S LETTER IS A RENEWAL NOTICE (his ruling of
+  // 08.09), so the subject line has to say so: the house is already dressing her and already paying
+  // for the posters. It is NOT `renewal` – that one is the same contract offered again, and this one
+  // is the ladder's rung for her rank today – so it gets its own subject rather than borrowing one
+  // that would misdescribe the terms inside. DRAFT copy.
+  if (t.apparelBond) return 'Renewing her kit with us'
   return t.renewal ? 'Another year in our kit' : 'A kit deal for your daughter'
 }
 
@@ -264,6 +270,12 @@ const confirmMessage = computed(() => {
   // them, starting now.
   if (pendingSign.value.kind === 'ad') {
     const t = pendingSign.value.terms as AdOfferTerms
+    // ⭐ ROUND 39 #3 – the lifetime letter's confirm: no until-week exists to quote (the paper has
+    // no end) and no shoot weeks exist to preview (it names none), so the sentence carries the two
+    // facts that ARE the deal – the yearly fee and that it never stops. DRAFT copy.
+    if (t.lifetime === true) {
+      return `Sign with ${t.brand}? ${formatCents(t.cashCents)} a year, paid to her every year for life – no shoot weeks, no end date. This cannot be undone.`
+    }
     const until = weekLabel(week.value + Math.max(1, t.termWeeks) - 1)
     const years = Math.max(1, t.termYears ?? 1)
     // ⭐ P6 – the fee is PER CONTRACT YEAR on a multi-year paper, and the confirm says when the
@@ -310,11 +322,40 @@ const confirmMessage = computed(() => {
   // is the engine function `signOffer` is about to write onto the offer - so the confirm quotes the
   // week the contract will actually carry rather than a number this sheet worked out.
   const until = weekLabel(dealUntilWeek(pendingSign.value))
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G3 – AND THE OTHER THING THE LETTER CANNOT SAY: WHAT THIS SIGNATURE
+  // COSTS HER SOMEWHERE ELSE, WITH THE MONEY ON IT. A clothing campaign is written by the house that
+  // dresses her, so signing a different house ends it – and wave G printed the remaining fees on the
+  // rival's own paper until the owner overturned that on 08.09: «ты правда думаешь, что в реальности
+  // при переподписании кто-то пишет точные суммы предыдущих контрактов конкурентов? я сомневаюсь в
+  // этом. Но дать понять это надо абсолютно точно». A rival apparel house does not know and would
+  // never publish a competitor's remaining contract value; the letter therefore states the exclusivity
+  // CLAUSE and no figures, and the figures land HERE, on the surface whose round-24 doctrine (item 2,
+  // above) is exactly «the one thing the letter cannot say».
+  //
+  // ⚠ IT IS STILL A RESTATEMENT AND NOT AN ARGUMENT, which is this dialog's own standing rule and the
+  // reason the sentence stops where it does: the fact, and nothing after it. No «are you sure», no
+  // weighing of one deal against the other, no mention of the exclusivity term itself – that IS on the
+  // paper, and repeating it here would be counselling (`tests/offers.test.ts` guards that negative).
+  //
+  // ⚠ ONE DERIVATION, TWO SURFACES. `apparelBondCost` is the engine's own – the very function
+  // `signOffer` reads to end the campaign and `OfferLetter` reads to decide whether the clause is on
+  // the paper at all – called here on the same inbox and the same week the letter is handed
+  // (`game.snapshot.offers` is what the sheet passes it), so the paper, this confirm and the till
+  // cannot answer the question differently. Null on every letter that costs nothing.
+  const bond = apparelBondCost(game.snapshot?.offers ?? [], week.value, t.brand)
+  const bondBrand = bond ? (bond.campaign.terms as AdOfferTerms).brand : ''
+  // Two arms, and the second is the owner's own wording: a term played out owes nothing, and saying
+  // so is not consolation, it is the accurate half of the same fact. DRAFT copy.
+  const bondClause = !bond
+    ? ''
+    : bond.cents > 0
+      ? ` Signing ends her campaign with ${bondBrand} – ${formatCents(bond.cents)} of fees still to come on it.`
+      : ` Signing ends her campaign with ${bondBrand}. Every fee it owed her is already banked and stays hers.`
   // The deal, restated, and the one thing the letter cannot say for itself: that this cannot be
   // undone. No editorialising beyond that – the game does not tell him whether it is a good idea,
   // and in particular it does not mention that signing turns other brands away. That is a term, it
   // is on the paper, and a confirm that argued the case would be counselling rather than confirming.
-  return `Sign with ${t.brand}? They cover her ${covered} for ${seasons} – up to ${value}, to ${until} – and she must enter at least ${t.minEventsPerSeason} tournaments a season. This cannot be undone.`
+  return `Sign with ${t.brand}? They cover her ${covered} for ${seasons} – up to ${value}, to ${until} – and she must enter at least ${t.minEventsPerSeason} tournaments a season.${bondClause} This cannot be undone.`
 })
 
 function askSign(id: string): void {
@@ -370,7 +411,18 @@ async function doRefuse(id: string): Promise<void> {
         <!-- The app has ONE back control and this is it (IconButton, bare) – see its own header for
              why the hand-written arrow character was retired everywhere. -->
         <IconButton class="inbox-back" icon="back" label="Back to all letters" variant="bare" @click="backToList" />
-        <OfferLetter class="inbox-letter" :offer="openLetter" :week="week" @sign="askSign" @refuse="doRefuse" />
+        <!-- ⭐ ROUND 39 #17 – the whole inbox goes with the letter, because one clause on a rival
+             house's kit paper is about a CAMPAIGN that is not on that paper: signing ends it, and
+             the letter has to name the money. The sheet derives nothing – `OfferLetter` asks the
+             engine (`apparelBondCost`), the same function `signOffer` reads. -->
+        <OfferLetter
+          class="inbox-letter"
+          :offer="openLetter"
+          :week="week"
+          :offers="game.snapshot?.offers ?? []"
+          @sign="askSign"
+          @refuse="doRefuse"
+        />
       </template>
 
       <!-- ══ THE LIST ══ -->

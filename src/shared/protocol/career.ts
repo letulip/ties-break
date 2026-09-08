@@ -511,6 +511,12 @@ export interface EndingView {
   oneMoreYearCount: number
   /** ⭐ round 29 part two #10 – the academy line, or null if no stage was ever built */
   academy: AcademyEpilogue | null
+  /** ⭐ ROUND 39 #3 – the lifetime deal, or null if none was ever signed. The smallest honest hook
+   *  for «пожизненный контракт переживает карьеру»: an ended world no longer ticks, so nothing can
+   *  BANK after the ending – what survives is the FACT, stated the way the academy line states its
+   *  income, off the signed paper's own frozen terms (`AdOfferTerms.lifetime`). Facts, never
+   *  adjectives – the epilogue's own rule one field up. */
+  lifetimeDeal: { brand: string; cashCents: number } | null
   /** ⭐ P5: the college years, while she is living them. Null on every other ending and on college
    *  itself once she has left – it is the state of an OPEN question, and there is exactly one screen
    *  allowed to ask it. */

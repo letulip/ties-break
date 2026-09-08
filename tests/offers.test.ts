@@ -811,7 +811,19 @@ describe('the letter states its terms in words the player can act on', () => {
     // shipped the missing three, the redirect was deleted (engine/offers.ts records why an identity
     // function was not left behind), and the tier is the key again. The property this test protects
     // is untouched: no call site spells out a letterhead's filename.
-    expect(codeOf(letter)).toContain('images/sponsors/${terms.value.tier}.webp')
+    //
+    // ⚠⚠ RE-AIMED A THIRD TIME BY ROUND 39 #17, AND WIDENED RATHER THAN WEAKENED. The apparel bond
+    // raises ONE letter whose brand and rung deliberately come apart – the house shooting her
+    // clothing campaign writes at the terms of the rung she clears TODAY – so a lookup keyed on the
+    // tier alone would print the rung's mark over that house's signature. The key is now the
+    // BRAND's rung, falling back to the letter's own tier, and for every letter the ladder writes
+    // the two are the same value (`sponsorTierOfBrand(terms.brand) === terms.tier`, asserted in
+    // tests/r39-apparel-bond.test.ts §2), so no shipped letter resolves a different file.
+    //
+    // THE CLAIM IS UNCHANGED AND IS STILL THE WHOLE POINT: the filename is DERIVED, never spelled
+    // out at a call site. The line below still says so, and the exhaustive negative under it – no
+    // rung's filename literal anywhere in this component – is untouched and is the half that bites.
+    expect(codeOf(letter)).toContain('images/sponsors/${sponsorTierOfBrand(terms.value.brand) ?? terms.value.tier}.webp')
     for (const t of SPONSOR_TIERS) expect(codeOf(letter)).not.toContain(`sponsors/${t}.webp`)
     // ...and every rung really does resolve to a mark that exists on disk. Asserted against the
     // FILESYSTEM rather than against a hand-kept list of three keys, which is what the old arm did

@@ -21,7 +21,8 @@ import { ageCurveOf, ageFactor, declineFactor, physicalMean, reachableHeadroomSh
 import type { AgeCurveBounds } from '../development'
 // ⚠ `ending.ts` IMPORTS ONLY `./kidLife` AND THE PROTOCOL'S TYPES, so this runs one way exactly as
 // `./masseur` and `./business` above do. `world/college.ts` reads the same constants the same way.
-import { ENDINGS } from '../ending'
+// ⚠ ROUND 39 #13a – `ENDINGS` left this file with the 0.55 stop: the coach's sentence now ends at
+// `COACH_BODY_END_SHARE` (see the constant), and nothing else here reads the endings config.
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -1130,10 +1131,21 @@ export function coachRoomNote(world: WorldState): string {
   // below is not wrong – it is measuring something that has stopped being the subject.
   const decline = coachDeclineNote(world)
   if (decline) return decline
-  const realised = realisedShare(world)
-  if (realised === null) return ''
-  const band = ROOM_BANDS[coachRoomBandIndex(realised)]
+  const band = roomBandRow(world)
+  if (band === null) return ''
   return `${band.label}${ROOM_NOTE_SEP}${band.note}`
+}
+
+/** ⭐ ROUND 39 #2b (REOPENED 08.09) – ONE BAND READ UNDER TWO SENTENCES, the `declineRead` pattern
+ *  applied to the growing half. The long room note (the market list, above) and the short plate
+ *  (Home, `coachRoomShort` below) both resolve her band through this one lookup – one realisation,
+ *  one threshold walk, one table row – so the two surfaces can never disagree about which rung she
+ *  is on: mutate the band and both sentences move together, which is exactly what
+ *  `tests/r39-coach-short.test.ts` walks. Null where there is nothing to say (no room at all),
+ *  which both callers already treat as «say nothing» – the round-34 child guarantee, in the data. */
+function roomBandRow(world: WorldState): { label: string; note: string; short: string } | null {
+  const realised = realisedShare(world)
+  return realised === null ? null : ROOM_BANDS[coachRoomBandIndex(realised)]
 }
 
 // =================================================================================================
@@ -1176,6 +1188,15 @@ export function coachRoomNote(world: WorldState): string {
 // makes the winter question final, and on his save that is 6.45 years, not two. So the sentence says
 // six. A prose figure that cannot move with its constant is the R2-02 hazard, and a prose figure
 // that contradicts the constant is worse.
+//
+// ⭐⭐ ROUND 39 #13a AMENDS THE PARAGRAPH ABOVE – the 0.55 stop was the wrong END for this sentence,
+// and the owner met the proof at 29.0: «Ей почти 29, а тренер говорит, что она протянет ещё 13
+// сезонов, при этом она уже начинает постепенно сдавать». Both sides were right: 13 IS the walk to
+// 0.55 (age ~41-42, the winter the QUESTION runs out – Federer territory, reachable and earned), and
+// 13 is absurd as a coach's read on a body that is already sliding. The sentence now walks to
+// `COACH_BODY_END_SHARE` below – the model's own end of a professional body – and his «пара лет»
+// register lands on its own: measured on the #7b fixture's shape (35.3, 80.4%), the sentence says
+// two. The full before/after table is in `tools/r39-body-seasons.ts`'s output, in the round ledger.
 
 /** ⭐ THE LABEL, and it is deliberately NOT one of `ROOM_BANDS`'. Those four are a headroom ladder
  *  and this is not a rung of it; reusing «Close to her ceiling» here would say the one thing that is
@@ -1184,19 +1205,42 @@ export function coachRoomNote(world: WorldState): string {
  *  the round-34 complaint on a fourteen-year-old's screen. */
 const DECLINE_LABEL = 'Past her peak'
 
+/** ⭐⭐ ROUND 39 #13a – WHERE A PROFESSIONAL BODY ENDS, for the coach's sentence and nothing else.
+ *
+ *  ⚠ IT IS 0.70 AND NOT `ENDINGS.lastOfferPeakShare`, AND THE DIFFERENCE IS TWO DIFFERENT ENDS.
+ *  0.55 is where the retirement QUESTION runs out (`ending.ts`, the owner's own 26.08 dial: age
+ *  ~41.2, «Federer's age, reachable only on a body kept well») – the borrowed-time tail a career may
+ *  choose to play. 0.70 is the model's own end of a professional body: it is the share the DELETED
+ *  hard finish mapped to, and `tests/ending.test.ts` still pins the equivalence – the off-season her
+ *  body first reads 70% is the off-season she is first 38, which is exactly the claim
+ *  `stopAskingAgeYears: 38` was deleted and replaced on. A coach saying «her body has about N more
+ *  seasons in it» is talking about seasons of PROFESSIONAL TENNIS, not about the last winter anybody
+ *  asks – walked to 0.55 the sentence told a barely-declined 29-year-old «about 13 more seasons»
+ *  (age 42) in the same breath as «down 1 place on the year», which is the contradiction the owner
+ *  reported. Measured across the decline (tools/r39-body-seasons.ts, table in the round-39 ledger):
+ *  29.0/99.7% says 9 instead of 13, and the #7b fixture's shape (35.3, 80.4%) says 2 – his own
+ *  «ей осталось играть пара лет» register from 07.09.
+ *
+ *  ⚠ A DIAL, LIKE THE 0.55 IT SITS BESIDE – if the pinned 70%⇔38 equivalence ever moves, this is
+ *  the constant that has to move with it, and the tripwire in ending.test.ts is what makes that a
+ *  loud event instead of a silent drift. */
+export const COACH_BODY_END_SHARE = 0.7
+
 /** HOW MANY MORE SEASONS THE BODY HAS, walked forward off her CURRENT share at her OWN curve.
  *
- *  ⚠ THE STOP IS `ENDINGS.lastOfferPeakShare` BECAUSE THAT IS WHERE THE GAME ITSELF STOPS ASKING –
- *  `ending.ts` marks the off-season offer `final` at `physicalShare <= ENDINGS.lastOfferPeakShare`.
- *  So this is not a mood about ageing, it is the engine's own rule read forward, and it moves the
- *  day the owner moves the dial.
+ *  ⚠ THE STOP WAS `ENDINGS.lastOfferPeakShare` FROM ROUND 38 #6d TO ROUND 39 #13a and is
+ *  `COACH_BODY_END_SHARE` now – see that constant for the two ends and the owner's report that
+ *  forced the split. Still not a mood about ageing: it is the engine's own (pinned) equivalence
+ *  read forward, and it moves the day the owner moves the dial.
  *
  *  ⚠ A LOOP AND NOT A FORMULA, for `ageAtPhysicalShare`'s own reason one file over: the loss
  *  compounds against a factor that rises every WEEK, and a once-a-year evaluation is 2-3 points out.
  *  ⚠ AND IT WALKS HER MEASURED SHARE RATHER THAN HER AGE, so a save whose peak was frozen anywhere
  *  but on the shipped curve still reads its own body. The cap is a guard against a `declineFactor`
  *  of 0 (impossible past `declineStart`, which is this function's only caller's gate) and never a
- *  balance number: forty seasons is longer than any career the model can produce.
+ *  balance number: forty seasons is longer than any career the model can produce. A body already at
+ *  or under the stop walks zero weeks and the callers' `max(1, …)` says «about 1 more season» for
+ *  the whole 0.70-0.55 tail, which is the honest floor: the question is still being asked there.
  *
  *  Returns null when the save carries no peak to measure against. */
 function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: number): number | null {
@@ -1204,7 +1248,7 @@ function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: numbe
   if (!peak || peak <= 0) return null
   let share = physicalMean(world.skills) / peak
   if (!Number.isFinite(share)) return null
-  const stop = ENDINGS.lastOfferPeakShare
+  const stop = COACH_BODY_END_SHARE
   let walked = age
   let weeks = 0
   while (share > stop && weeks < 40 * WEEKS_PER_YEAR) {
@@ -1226,7 +1270,7 @@ function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: numbe
  *  ⚠ THE YEAR-ON-YEAR MOVE IS ONLY A YEAR WHEN THE TWO SEASONS ARE ADJACENT. Alice's history skips
  *  s6-s8 (a college fork, then seasons with no counting professional result), and «she fell N places
  *  in a year» across a three-season gap is a false sentence with a true number in it. */
-function seasonRankRead(world: WorldState): { yearMove: number | null; belowBest: number | null } {
+export function seasonRankRead(world: WorldState): { yearMove: number | null; belowBest: number | null } {
   const rows: { seasonIndex: number; rank: number }[] = []
   for (const season of world.seasonHistory ?? []) {
     const rank = season.byTrack?.wta?.endRank
@@ -1265,22 +1309,215 @@ function seasonRankRead(world: WorldState): { yearMove: number | null; belowBest
  *  no rung of the market adds a point to her) rather than a consolation.
  *
  *  Pure, zero draws, derived at snapshot time – exactly like `coachRoomNote` above. */
-export function coachDeclineNote(world: WorldState): string {
+/** ⭐ ROUND 39 #2a/#2b – ONE DERIVATION UNDER TWO SENTENCES. The long note (the coach card in the
+ *  market list) and the short plate (Home) read the same three numbers from the same gate, so the
+ *  two surfaces can never disagree about whether she is past her peak or by how much – the "two
+ *  sides asking different functions about one question" defect, prevented structurally. Null while
+ *  she is still growing, which is the '' guarantee both formatters inherit. */
+function declineRead(world: WorldState): { seasons: number; yearMove: number | null; belowBest: number | null } | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
-  if (age < bounds.declineStart) return ''
+  if (age < bounds.declineStart) return null
   const years = seasonsOfBodyLeft(world, bounds, age)
-  if (years === null) return ''
-  const seasons = Math.max(1, Math.round(years))
+  if (years === null) return null
+  return { seasons: Math.max(1, Math.round(years)), ...seasonRankRead(world) }
+}
+
+/** ⚠ ROUND 39 #13c – «down 1 places» had no singular. The seasons clause next to it always had one
+ *  (`season/seasons`), so the defect was one word wide and lived in both rank arms. */
+const places = (n: number): string => `${n} ${n === 1 ? 'place' : 'places'}`
+
+export function coachDeclineNote(world: WorldState): string {
+  const read = declineRead(world)
+  if (read === null) return ''
+  const { seasons, yearMove, belowBest } = read
   const left = `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
-  const { yearMove, belowBest } = seasonRankRead(world)
   const note =
     yearMove !== null && yearMove > 0
-      ? `down ${yearMove} places on the year, and ${left}.`
+      ? `down ${places(yearMove)} on the year, and ${left}.`
       : belowBest !== null && belowBest > 0
-        ? `${belowBest} places below her best season, and ${left}.`
+        ? `${places(belowBest)} below her best season, and ${left}.`
         : `${left}, and no coach buys that back.`
   return `${DECLINE_LABEL}${ROOM_NOTE_SEP}${note}`
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 39 #2b (REOPENED A SECOND TIME, 08.09) – THE DECLINE PLATE ROTATES WITH THE SEASON
+// =================================================================================================
+//
+// The owner, on wave A2's single static sentence:
+//
+//     «слушай, а можно же чередовать как раз на спаде эти фразочки. давай оставим и «Past her peak
+//      – about N seasons left», и «she's down N places» в начале сезона, например или в конце
+//      наоборот, «she's below her best» или «she's way below her best» или «she's far below her
+//      best», это даст живости и вариативности, уберет статичность.»
+//
+// ⚠⚠ THE DRIVER IS THE SEASON'S OWN CLOCK AND IT ADDS NO DRAW (invariant 2). He named the axis
+// himself – «в начале сезона … или в конце наоборот» – and the week already knows where it sits:
+// `seasonStartWeek` (world/ledger.ts) is THE definition of "this season" in this engine, the one
+// every money window and every banked row keys on, so the offset below is a subtraction on the
+// clock the game already has and not a second one. Nothing is persisted, nothing is rolled, and the
+// same world at the same week produces the same sentence for ever – which is what makes this
+// rotation and not randomness.
+//
+// ⚠ WHY THIS MAPPING, AND WHY THE THIRDS FALL WHERE THEY DO. The season is `WEEKS_PER_YEAR` long
+// with its last `OFF_SEASON_WEEKS` the off-season, and the year's row is BANKED at week 49
+// (`milestones.ts`, the wrap) – the first off-season week. So:
+//
+//   * EARLY (season weeks 0-16) – the row banked six weeks ago is a whole finished year, and the
+//     year-on-year move is at its freshest. His «she's down N places» goes here, his own placement.
+//   * LATE (35-51) – the wrap happens INSIDE this third, so the season she has just played becomes
+//     the row the comparison reads. «below her best» is the career-spanning measure and it lands
+//     exactly as a season closes. His «или в конце наоборот».
+//   * MID (17-34) – neither rank fact is news, so the middle holds the body read, «Past her peak –
+//     about N seasons left», which is also the one that is always true past this gate.
+//
+// Thirds of `WEEKS_PER_YEAR` rather than written weeks, so a season that ever changes length keeps
+// three phases. Against the round-5 real-dates epoch (week 0 = early January) they read as
+// Jan-Apr / May-Aug / Sep-Dec, which is how a tennis year is actually spoken about.
+
+/** WHERE A WEEK SITS IN ITS OWN SEASON. Exported for the pins – the rotation is a claim about the
+ *  calendar and a test that cannot name the phase can only re-derive it. */
+export type DeclinePhase = 'early' | 'mid' | 'late'
+
+/** The two cuts, as thirds of the season rather than as written week numbers. */
+const PHASE_EARLY_END = Math.round(WEEKS_PER_YEAR / 3)
+const PHASE_MID_END = Math.round((2 * WEEKS_PER_YEAR) / 3)
+
+export function declinePhaseOf(week: number): DeclinePhase {
+  // ⚠ `seasonStartWeek` AND NOT A SECOND MODULO. Same clock as the banked rows, the money windows
+  // and the wrap – one definition of "this season" is a standing rule here, and it is correct for
+  // negative weeks too because `seasonIndexOf` floors.
+  const offset = week - seasonStartWeek(week)
+  if (offset < PHASE_EARLY_END) return 'early'
+  if (offset < PHASE_MID_END) return 'mid'
+  return 'late'
+}
+
+/** The three things the plate can say. `seasons` is the FLOOR – `declineRead` guarantees it past
+ *  the gate – and the two rank arms exist only when the history supports them. */
+type DeclineVariant = 'fell' | 'below' | 'seasons'
+
+/** ⭐⭐ THE ROTATION, AND THE FALLTHROUGH ORDER, IN ONE TABLE. Every row is a preference order and
+ *  every row ENDS AT `seasons`, so a phase whose own variant has no true sentence degrades to one
+ *  that does rather than to silence: «a variant may only show when it is TRUE» is enforced by the
+ *  order, not by a condition on the screen. The two rank arms are each other's second choice, which
+ *  keeps the liveliness he asked for on a career where one of them never becomes true. */
+const DECLINE_ROTATION: Record<DeclinePhase, readonly DeclineVariant[]> = {
+  early: ['fell', 'below', 'seasons'],
+  mid: ['seasons'],
+  late: ['below', 'fell', 'seasons'],
+}
+
+/** ⭐⭐⭐ THE INTENSITY LADDER – MEASURED, NOT PICKED (invariant 5). `tools/r39-decline-rotation.ts`
+ *  walks 27 real careers (econ-bench's nine presets x three seeds, the 'player' policy) to the
+ *  endings horizon and records the `belowBest` every past-peak week would have rendered: 21,843
+ *  past-peak weeks, 21,196 of them with a true below-best (min 1, max 738 places).
+ *
+ *      1-4    4.2% | 5-9    6.0% | 10-19  8.9% | 20-39   3.7% | 40-79 10.9%
+ *      80-149 12.4% | 150-299 28.2% | 300-599 24.9% | 600+   0.8%
+ *
+ *  ⚠⚠ THE TWO CUTS ARE THAT DISTRIBUTION'S OWN TERCILES – p33 = 79 places, p67 = 257 – so all three
+ *  rungs genuinely occur (measured: 33.1% / 33.5% / 33.4% of past-peak weeks) instead of one of them
+ *  being decoration. That is the failure mode every round-numbered pair walks into and it is not a
+ *  small one: 10/40 puts 77.3% of weeks on «way below» and 10.1% on «below», 25/100 still leaves
+ *  60.6% on the top rung, 50/150 leaves 54.0%. The per-BANKED-SEASON view (one row per career-season,
+ *  n 445) puts its own terciles at 79 and 273, which is the same answer from a unit that cannot be
+ *  outvoted by a long career. The full table is in the round-39 ledger; the tool's `--dump` writes
+ *  the sample so the pair can be re-cut without walking 27 careers again.
+ *
+ *  ⚠ THEY ARE ODD-LOOKING NUMBERS BECAUSE THEY ARE MEASURED ONES. A round pair here would be the
+ *  guess invariant 5 exists to stop, and this is copy rather than balance: nothing else reads them.
+ *
+ *  ⚠ ORDERED LOWEST-FIRST and scanned from the top with `>=`, so the table IS the thresholds: an
+ *  edit here is the whole change, and `tests/r39-coach-short.test.ts` pins both edges on both sides. */
+const BELOW_BEST_LADDER: readonly { from: number; text: string }[] = [
+  { from: 1, text: "She's below her best" },
+  { from: 79, text: "She's far below her best" },
+  { from: 257, text: "She's way below her best" },
+]
+
+function belowBestShort(behind: number): string {
+  for (let i = BELOW_BEST_LADDER.length - 1; i >= 0; i--) {
+    if (behind >= BELOW_BEST_LADDER[i]!.from) return BELOW_BEST_LADDER[i]!.text
+  }
+  return BELOW_BEST_LADDER[0]!.text
+}
+
+/** ONE VARIANT'S SENTENCE, or null when the history cannot stand behind it.
+ *
+ *  ⚠⚠ THE WORDS ARE HIS, VERBATIM (invariant 4). «she's down N places» / «she's below her best» /
+ *  «she's far below her best» / «she's way below her best» are quoted out of his 08.09 message,
+ *  and CAPITALISED on his word of 08.09 («поправь пожалуйста») – the plate opens a line, so the
+ *  sentence case is his own second ruling on the same copy. «Past her peak – about N seasons left» is byte-identical to
+ *  the string wave A2 shipped. #13c's singular care rides on `places`. */
+function declineVariantText(
+  variant: DeclineVariant,
+  read: { seasons: number; yearMove: number | null; belowBest: number | null },
+): string | null {
+  switch (variant) {
+    case 'fell':
+      return read.yearMove !== null && read.yearMove > 0 ? `She's down ${places(read.yearMove)}` : null
+    case 'below':
+      return read.belowBest !== null && read.belowBest > 0 ? belowBestShort(read.belowBest) : null
+    case 'seasons':
+      return `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${read.seasons} ${read.seasons === 1 ? 'season' : 'seasons'} left`
+  }
+}
+
+/** ⭐⭐ ROUND 39 #2b – THE DECLINE HALF OF HOME'S SHORT PLATE: the same state, one clause, in the old
+ *  ceiling plate's shape (owner: «на home хотелось бы увидеть что-то короткое, емкое и яркое (в
+ *  плане цвета), как было до этого про потолок»). The LONG sentence moved to the coach card in the
+ *  market list (#2a: «много текста» for Home), and this is what Home keeps.
+ *
+ *  ⚠⚠ RE-AIMED BY THE FIRST REOPEN (owner, 08.09), which ruled on wave A's three draft arms: «Past
+ *  her peak хорошо и коротко, остальное всё пусть на карточке тренера живет, может быть разве что –
+ *  about 4 seasons left еще можно оставить». That made the plate ONE sentence – and he read the
+ *  result and asked for the opposite of static: see the rotation block above for his words. So the
+ *  clause he kept is now the MIDDLE of a three-way rotation on the season's own phase, still the
+ *  floor every phase falls back to, and the two rank arms return to Home in his own shorter
+ *  phrasings while keeping their long forms on the coach's card.
+ *
+ *  ⚠ SAME GATE, SAME DERIVATION as `coachDeclineNote` – `declineRead` is the one source, so the
+ *  plate and the card always describe the same week, and the seasons figure is the long sentence's
+ *  own («her body has about N more seasons in it», compressed). '' while she is growing: round 34
+ *  #2a's guarantee (no ageing verdict on a child's Home) holds for this field exactly as it holds
+ *  for the long one, in the data rather than in a template condition. #13c's singular care carries
+ *  to both surviving digits; `ROOM_NOTE_SEP` keeps the seasons label splittable by the one splitter.
+ *
+ *  ⚠ PURE AND DRAWLESS. The only new input is `world.week`, read through the ledger's own season
+ *  clock – no stream is touched, nothing is persisted, and calling it twice on one world is the
+ *  same string twice. */
+export function coachDeclineShort(world: WorldState): string {
+  const read = declineRead(world)
+  if (read === null) return ''
+  for (const variant of DECLINE_ROTATION[declinePhaseOf(world.week)]) {
+    const text = declineVariantText(variant, read)
+    if (text !== null) return text
+  }
+  // Unreachable while every row above ends at `seasons`; the floor is spelled out rather than
+  // thrown so a future row edit degrades to the body read instead of emptying Home's plate.
+  return declineVariantText('seasons', read)!
+}
+
+/** ⭐⭐⭐ ROUND 39 #2b (REOPENED 08.09) – THE ONE SHORT READ HOME RENDERS, either half. The owner: «И
+ *  до этого были фразочки про то, что ей недалеко до потолка, что потолок достигнут и прочее, вот
+ *  это тоже всё-таки можно показывать буквально в 3-5 слов на home». So a GROWING career's plate
+ *  says its headroom band again – compressed to the 3-5 words he sized – and a declining one says
+ *  the seasons read above. `coachRoomNote`'s own fallthrough shape one function up: past the peak
+ *  the question changes, and exactly one of the two reads can ever be in the string, so Home
+ *  renders one field and the exclusivity lives here rather than in a template condition.
+ *
+ *  ⚠ THE BAND COMES THROUGH `roomBandRow`, THE SAME LOOKUP THE LONG NOTE READS – so the market's
+ *  sentence and Home's plate cannot disagree about her rung, exactly as `declineRead` already
+ *  guarantees for the ageing half. And the round-34 child guarantee narrows, on his 08.09 word,
+ *  from «no band on Home» to its data-level core: '' where the engine has nothing to say (no room
+ *  at all), no digit in any growing read (the fog rule), and «Past her peak» still unreachable
+ *  before her own `declineStart` (`declineRead`'s gate). */
+export function coachRoomShort(world: WorldState): string {
+  const decline = coachDeclineShort(world)
+  if (decline) return decline
+  return roomBandRow(world)?.short ?? ''
 }
 
 /** ⭐⭐ ROUND 34 #2b – HOW MUCH OF WHAT SHE COULD BECOME SHE HAS ACTUALLY BECOME. One definition,
@@ -1554,23 +1791,35 @@ export function handoverBaseBand(world: WorldState): HandoverBaseBand {
  *
  *  ⚠ AND NOT ONE OF THEM CONTAINS A DIGIT. That is the fog-of-war rule restated as a property a test
  *  can check on the RENDERED line, and it is why the labels are words ("Huge potential") rather than
- *  the obvious grades ("Band 1 of 4"), which would be the percentage wearing a hat. */
-const ROOM_BANDS: { label: string; note: string }[] = [
+ *  the obvious grades ("Band 1 of 4"), which would be the percentage wearing a hat.
+ *
+ *  ⭐ ROUND 39 #2b (REOPENED 08.09) – `short` IS HOME'S 3-5 WORD COMPRESSION OF THE SAME ROW («вот
+ *  это тоже всё-таки можно показывать буквально в 3-5 слов на home»), drafted for the owner's
+ *  review in the round ledger. Three are the labels verbatim – already inside the window he sized,
+ *  inventing nothing – and band 0's is its own note's first clause compressed («most of her game is
+ *  still ahead of her»), because «Huge potential» is two words. No digit in any of them: the fog
+ *  rule holds on Home exactly as it holds here, and the row is ONE row, so the market's long
+ *  sentence and Home's short can only ever describe the same rung. */
+const ROOM_BANDS: { label: string; note: string; short: string }[] = [
   {
     label: 'Huge potential',
     note: 'most of her game is still ahead of her, and this is where a coach buys the most.',
+    short: 'Most of her game ahead',
   },
   {
     label: 'Still room to grow',
     note: 'there is real room left in her game, and a coach is what buys it.',
+    short: 'Still room to grow',
   },
   {
     label: 'Close to her ceiling',
     note: 'she is running out of room, and every rung is worth less than it was.',
+    short: 'Close to her ceiling',
   },
   {
     label: 'At her ceiling',
     note: 'no coach can add much more now, whatever the price.',
+    short: 'At her ceiling',
   },
 ]
 
@@ -1659,6 +1908,12 @@ export function coachRoomBandOf(world: WorldState): number | null {
 /** The label of one band, for a test that wants the words without re-deriving them from a sentence. */
 export function coachRoomBandLabel(index: number): string {
   return ROOM_BANDS[index].label
+}
+
+/** The short of one band, for the same kind of test – Home's 3-5 word form (round 39 #2b reopen)
+ *  without re-deriving it from the plate. */
+export function coachRoomBandShort(index: number): string {
+  return ROOM_BANDS[index].short
 }
 
 /** WHAT EACH RUNG DOES ABOUT HER BODY, for the market card - the load wave's two new differences said

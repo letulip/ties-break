@@ -24,7 +24,7 @@ import {
   retirementDue,
   debtWeeks,
 } from '../ending'
-import type { AcademyEpilogue, CareerEnding, CollegeTier, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
+import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView, EndingView, ForkAnswer } from '../../shared/protocol'
 // ⭐ ROUND 29 PART TWO #10 – the epilogue's academy line reads the LEAVES, never `world/shop.ts`
 // (shop imports THIS file, so the leaf split in `world/assets.ts`' header is what makes this legal):
 // the delivered stages off `./assets`, the income off `./business` (assets + fame, both leaves).
@@ -710,10 +710,28 @@ export function buildEndingView(world: WorldState): EndingView | null {
     // cannot quote two figures. Null when nothing was ever built: the epilogue says nothing rather
     // than naming an absence, which is also why 0-of-N is not a state this field can carry.
     academy: academyEpilogueOf(world),
+    // ⭐ ROUND 39 #3 – the lifetime deal SURVIVES the retirement, and this line is the whole of the
+    // survival: an ended world no longer ticks, so nothing banks after the ending for ANY source –
+    // the academy included, whose line above states income the same way. What outlives the career
+    // is the fact on the signed paper, read off its own frozen terms. Null when none was signed.
+    lifetimeDeal: lifetimeDealOf(world),
     // ⭐ P5: null on every ending but the college one, and null on that one the moment she leaves.
     // It is the state of an OPEN question – see `collegeProgressOf`.
     college: collegeProgressOf(world),
   }
+}
+
+/** ⭐ ROUND 39 #3 – the signed lifetime deal's epilogue facts, or null. One read of the paper
+ *  trail (offers are never pruned), off the frozen terms – the same honesty contract as
+ *  `academyEpilogueOf` beside it: the screen quotes what the paper says, never what a template
+ *  remembers. Pure read, zero draws. */
+export function lifetimeDealOf(world: WorldState): { brand: string; cashCents: number } | null {
+  const deal = world.offers.find(
+    (o) => o.kind === 'ad' && o.state === 'signed' && (o.terms as AdOfferTerms).lifetime === true,
+  )
+  if (!deal) return null
+  const t = deal.terms as AdOfferTerms
+  return { brand: t.brand, cashCents: t.cashCents }
 }
 
 /** ⚠ THE HOOK, AND IT IS SUPPOSED TO RETURN FALSE. Pregnancy is post-v1 (§5.4) so nothing on a v1

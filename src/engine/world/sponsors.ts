@@ -20,7 +20,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
@@ -510,8 +510,22 @@ export function reviewSponsors(world: WorldState): void {
   // this window, so it would otherwise be swept into "letters from X and Y – they all want to put her
   // in their kit", which is the one thing a renewal is not: they already have her, and the row would
   // name the same brand twice in two different voices one sentence apart.
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – AND THE APPAREL BOND'S NOTICE IS EXCLUDED FOR THE RENEWAL'S OWN
+  // REASON. His ruling of 08.09 makes that letter «уведомление о продлении»: the house is already
+  // dressing her and already paying for the posters, so sweeping it into «letters from X and Y –
+  // they all want to put her in their kit» would describe a relationship as a pitch, which is the
+  // one thing the ruling says it is not. It gets its own clause below, in its own voice, exactly as
+  // the incumbent's renewal does.
+  //
+  // ⚠ ONLY WHILE IT IS STILL OPEN, and that is load-bearing rather than tidy. A SIGNED bond letter
+  // must stay in `post` or `signedNow` below would miss it and the row would not report the news it
+  // exists to report – «She is in X's kit for next season.» The renewal cannot hit that seam (it is
+  // raised on this very week and cannot have been answered yet); this letter can, because it is
+  // raised on the window's opening week and he has four more to sign it in.
+  const bondNotice =
+    world.offers.find((o) => o.id === `kit-bond-${opened}` && o.state === 'open') ?? null
   const post = world.offers.filter(
-    (o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info' && o !== renewal,
+    (o) => o.kind === 'kit' && o.week >= opened && o.state !== 'info' && o !== renewal && o !== bondNotice,
   )
   const signedNow = post.find((o) => o.state === 'signed')
   if (signedNow) {
@@ -528,6 +542,16 @@ export function reviewSponsors(world: WorldState): void {
         ? `A letter from ${brands} – they want to put her in their kit (${gate}). It is in the inbox.`
         : `Letters from ${brands} – they all want to put her in their kit (${gate}). They are in the inbox.`,
     )
+  }
+  // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE BOND'S NOTICE IN ITS OWN VOICE: a house that has her on its
+  //   posters asking for her back in its kit is not one of the winter's suitors, and the row would
+  //   be naming a relationship as a stranger if it said otherwise. It sits ABOVE the incumbent's
+  //   clause because the incumbent's is always last – it is the last letter of the winter. The two
+  //   can never both appear (`apparelBondLetter` stands down for the winter its own house renews in),
+  //   which is why neither clause has to know about the other. DRAFT copy.
+  if (bondNotice) {
+    const t = bondNotice.terms as KitOfferTerms
+    parts.push(`${t.brand} already have her on their posters and would like her back in their kit – their renewal is in the inbox.`)
   }
   // ⚠ AND THE INCUMBENT GETS ITS OWN SENTENCE, in its own voice. It is the last clause because it is
   //   the last letter: by the time the parent reads this line every rung that would have her has
@@ -631,6 +655,26 @@ export function reviewAdOffer(world: WorldState): void {
       const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
       if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
       terms = adCapstoneTerms(author)
+    } else if (category === 'lifetime') {
+      // ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»), once per career. The
+      // gate is the capstone's own tenure read – `capstoneSeasonsOf`, the SAME fold, never a second
+      // derivation – plus the one thing the capstone never asks: a Slam title on the ledger. A
+      // legend without a Slam is not one, in this sport.
+      //
+      // ⚠ «ONCE PER CAREER» IS NOT A COUNTER, it is `adSpokenFor` above doing what it always does:
+      // a signed lifetime deal never lapses, so its slot never re-opens and no second letter can
+      // ever be raised. A refused or expired letter shuts nothing – the house may notice her again
+      // («мы ни за что не наказываем» priced against a mis-tap on the biggest paper in the game).
+      //
+      // ⚠ RNG: the arrival roll on `seed:ad:lifetime:<week>` is the category's own purpose scope,
+      // the same shape every category rolls; NO letter rng and NO term draw – the term is «for
+      // ever» and the author is the rule, so this letter, like the capstone, draws exactly once.
+      if ((world.trophiesByTier?.slam?.titles?.length ?? 0) < s.lifetime.slamTitles) continue
+      if (capstoneSeasonsOf(world) < s.lifetime.seasonsInTop10) continue
+      const kit = activeKitDeal(world.offers, world.week)
+      const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
+      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      terms = adLifetimeTerms(author)
     } else {
       // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from
       // the first professional cash, the airline from the top 100, fragrance at the top 10 (§7).
@@ -657,7 +701,13 @@ export function reviewAdOffer(world: WorldState): void {
           rng(),
         )
       }
-      const years = 1 + Math.floor(rng() * s.termYearsMax)
+      // ⭐⭐ ROUND 39 #3 – ONE DRAW, A BAND-DEPENDENT MAPPING (owner 08.09: «давай так попробуем,
+      // как ты предложил»). The rising career signs a year, the top 10 signs two to five – the
+      // band's own `termYearsMin`/`termYearsMax` – and the DRAW COUNT IS UNCHANGED at every band:
+      // a 1-year band still spends its uniform (mapping it onto {1}), so the letter rng's draw
+      // order is byte-identical to the flat-1–3 code and no recorded stream shifts by one.
+      const ladder = s.bands[band]
+      const years = ladder.termYearsMin + Math.floor(rng() * (ladder.termYearsMax - ladder.termYearsMin + 1))
       terms = adTermsForCategory(category, band, years, author)
     }
     if (!terms) continue
@@ -1279,6 +1329,16 @@ export function payAdAnniversaries(world: WorldState): void {
     const t = deal.terms as AdOfferTerms
     const years = Math.max(1, t.termYears ?? 1)
     const yearIndex = at / WEEKS_PER_YEAR + 1
+    // ⭐ ROUND 39 #3 – the lifetime deal's anniversary arrives through the SAME window and the same
+    // splitter for ever (`activeAdDeals` holds it live with no untilWeek to stop at); only the
+    // ledger sentence differs, because «year N of 1» would be a lie on a paper with no term.
+    if (t.lifetime === true) {
+      bankSponsorCheque(world, t.cashCents, {
+        category: 'sponsor',
+        text: `${t.brand} endorsement – year ${yearIndex}, for life`,
+      })
+      continue
+    }
     // ⚠ NO `yearIndex > years` GUARD, AND ITS ABSENCE IS A MEASURED FACT, NOT AN OVERSIGHT. The
     // first draft carried one and the mutation log killed it as a dead guard: `activeAdDeals`'
     // own window is the stop – untilWeek = fromWeek + years×52 − 1, so the year-(years+1)

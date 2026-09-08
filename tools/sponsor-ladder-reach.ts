@@ -52,7 +52,7 @@ import { assetUpkeepCents, shopCatalogue } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { START_AGE_YEARS } from '../src/engine/world/age'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { AdCategory, AdOfferTerms, KitOfferTerms, SponsorTier, WorldEventCategory } from '../src/shared/protocol'
+import type { AdOfferTerms, AdTradeCategory, KitOfferTerms, SponsorTier, WorldEventCategory } from '../src/shared/protocol'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, type Preset, type Policy } from './econ-bench'
 
 /** Fifteen seasons – the length of the owner's own save (`w780`), and the first horizon on which the
@@ -299,7 +299,7 @@ function adCellOf(terms: AdOfferTerms): string {
   if (category === 'capstone') return 'capstone'
   if (!terms.category) return `${category}@legacy`
   const bands = ECONOMY.advertising.bands
-  const fees = ECONOMY.advertising.categories[category as Exclude<AdCategory, 'capstone'>].feeCentsByBand
+  const fees = ECONOMY.advertising.categories[category as AdTradeCategory].feeCentsByBand
   const at = fees.findIndex((f) => f === terms.cashCents)
   return `${category}@${at >= 0 ? bands[at].maxWtaRank : '?'}`
 }
@@ -810,7 +810,8 @@ export function main(argv: string[] = process.argv.slice(2)): void {
   console.log('\n  ⭐ THE ADVERTISING PORTFOLIO – fee per cell, and how often each cell is actually seen:')
   {
     const bands = ECONOMY.advertising.bands
-    const catKeys = AD_CATEGORIES.filter((c): c is Exclude<AdCategory, 'capstone'> => c !== 'capstone')
+    // ⚠ round 39 #3 – 'lifetime' joined the category union beside 'capstone'; neither is a trade row.
+    const catKeys = AD_CATEGORIES.filter((c): c is AdTradeCategory => c !== 'capstone' && c !== 'lifetime')
     console.log(`    category    houses${' '.repeat(30)}${bands.map((b) => `<=${String(b.maxWtaRank).padEnd(10)}`).join('')}`)
     for (const c of catKeys) {
       const def = ECONOMY.advertising.categories[c]

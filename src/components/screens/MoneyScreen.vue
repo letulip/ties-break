@@ -1721,14 +1721,25 @@ function shopRowArtWide(row: ShopRowView): boolean {
 // what was paid is X - Y, exactly as on a house. ⭐ Nothing is re-worded: the meta simply stops
 // being passed, which is the round 35 mechanism on two more families.
 //
-// ⚠ WATER AND AIR KEEP THEIRS. He named cars and the academy; boats and aeroplanes are not in
-// either sentence, and invariant 4 does not let a proportion spread on its own any more than a word
-// does. That leaves `paid $N` on `investment`, `business`, `boat` and `plane`.
-const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy']
+// ⚠ WATER AND AIR KEPT THEIRS UNTIL ROUND 39 #4. Round 36 could not take them – he had named cars
+// and the academy, boats and aeroplanes were in neither sentence, and invariant 4 does not let a
+// proportion spread on its own any more than a word does. Then he named them, 08.09: «В яхтах и
+// (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись „paid ..."» – the
+// «тоже» is round 36's own change asked for on the two families it deliberately left. The figure
+// survives the same way it did there: an OWNED boat or plane prints «Worth now $X» and the gain
+// line, so what was paid is still X - Y.
+//
+// ⚠ THAT LEAVES `paid $N` ON `investment` AND `business` ONLY – still unnamed, still kept. And the
+// `On order` row (water and air are BUILT to order) keeps its own `paid $N` untouched, as it was
+// under round 36: on that card there is no `Worth now` and no gain line, so the paid figure is the
+// ONLY money on it – removing it there fails the very check that let it go here, and «Ordered, not
+// bought» is the shelf's own word for a rung that is not yet an owned one.
+const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy', 'boat', 'plane']
 /** ⚙ ROUND 35 #7, HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки
  *  убрать совсем, раз прибавка и так видна. – верно.» The `Worth now` row's VALUE has always been
  *  the current price; what goes is the `paid $N` beside it. Round 36 review #12 and #13 add the
- *  cars and the academy to the house he said it of – see the note above. */
+ *  cars and the academy to the house he said it of; round 39 #4 adds the boats and the planes –
+ *  see the note above. */
 function shopRowPaidMeta(row: ShopRowView): string | undefined {
   return SHELF_NO_PAID_META.includes(row.family) ? undefined : `paid ${formatCents(row.paidCents ?? 0)}`
 }
@@ -2182,14 +2193,23 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             <span v-if="row.state === 'filled'" class="ad-slot-brand">{{ row.brand }}</span>
             <span v-else-if="row.state === 'open'" class="ad-slot-state">Open – nobody signed</span>
             <span v-else class="ad-slot-state">
-              {{ row.seasonsInTop10
-                ? `${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
-                : row.opensAtRank
-                  ? `Opens inside WTA #${row.opensAtRank}`
-                  : 'Not open yet' }}
+              <!-- ⭐ ROUND 39 #3 – the lifetime row's gate has two halves (the capstone's own tenure
+                   read PLUS a Slam), so its closed line names both, counted plainly. DRAFT copy. -->
+              {{ row.slamTitles && row.seasonsInTop10
+                ? `${row.slamTitles.held} of ${row.slamTitles.needed} Slams · ${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                : row.seasonsInTop10
+                  ? `${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                  : row.opensAtRank
+                    ? `Opens inside WTA #${row.opensAtRank}`
+                    : 'Not open yet' }}
             </span>
           </div>
-          <p v-if="row.state === 'filled'" class="ad-slot-note">
+          <!-- ⭐ ROUND 39 #3 – a filled lifetime row says «for life» where the years-and-runs-to
+               clause would be a lie: the paper has no term and no untilWeek at all. DRAFT copy. -->
+          <p v-if="row.state === 'filled' && row.lifetime" class="ad-slot-note">
+            {{ formatCents(row.cashCents ?? 0) }} a year · for life
+          </p>
+          <p v-else-if="row.state === 'filled'" class="ad-slot-note">
             {{ formatCents(row.cashCents ?? 0) }} a year ·
             {{ (row.termYears ?? 1) === 1 ? 'one year' : `${row.termYears} years` }} · runs to
             {{ weekLabel(row.untilWeek ?? 0) }}

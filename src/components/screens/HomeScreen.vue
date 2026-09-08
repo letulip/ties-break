@@ -506,9 +506,35 @@ const COACH_QUOTES: Record<PlayStyle, [string, string, string, string, string]> 
 const coachQuote = computed(() =>
   game.snapshot ? COACH_QUOTES[game.snapshot.profile.playStyle][Math.floor(week.value / 4) % 5] : '',
 )
-/** ROUND 38 #6d – the engine's decline read, printed and not derived. '' on a growing career, which
- *  is the guarantee described above; this screen adds no condition of its own to it. */
-const coachDecline = computed(() => game.snapshot?.coachDeclineNote ?? '')
+/** ROUND 38 #6d – the engine's read, printed and not derived; this screen adds no condition of its
+ *  own to it.
+ *
+ *  ⭐⭐ ROUND 39 #2a/#2b – THE SHORT FIELD NOW, NOT THE LONG ONE. The owner, 08.09, on the shipped
+ *  sentence: «вот это как раз можно на карточку тренера в списке тренеров перенести, много текста.
+ *  А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как было до
+ *  этого про потолок и прочее». So the long `coachDeclineNote` renders on the current coach's card
+ *  in the market LIST, and Home keeps the short read – same engine derivations as the long forms –
+ *  dressed in the old ceiling plate's own treatment (accent, a step smaller than the quote), which
+ *  is the shape he named.
+ *
+ *  ⭐⭐ AND THE REOPEN (owner, 08.09) MADE IT EITHER READ, ONE AT A TIME. On wave A's three decline
+ *  drafts: «Past her peak хорошо и коротко, остальное всё пусть на карточке тренера живет, может
+ *  быть разве что – about 4 seasons left еще можно оставить. И до этого были фразочки про то, что
+ *  ей недалеко до потолка, что потолок достигнут и прочее, вот это тоже всё-таки можно показывать
+ *  буквально в 3-5 слов на home». So `Snapshot.coachRoomShort` carries the decline read past her
+ *  peak and her headroom band – compressed to 3-5 words – while she grows; ONE field, so this
+ *  template cannot show both reads or invent one, and '' where the engine says nothing (the
+ *  round-34 child guarantee at its data-level core).
+ *
+ *  ⭐⭐ AND THE DECLINE HALF ROTATES WITH THE SEASON (owner again, 08.09, on the single static
+ *  sentence A2 shipped: «можно же чередовать как раз на спаде эти фразочки … это даст живости и
+ *  вариативности, уберет статичность»). Early in the season the plate says «she's down N places»,
+ *  late in it the below-her-best ladder, and the middle keeps «Past her peak – about N seasons
+ *  left», which is also what every week neither rank fact is true on falls back to. The whole
+ *  rotation is the ENGINE's (`declinePhaseOf`, off the ledger's season clock – deterministic and
+ *  drawless): this screen still prints one field and adds no condition of its own, so which
+ *  sentence appears is not a thing the template can get wrong. */
+const coachRoomShort = computed(() => game.snapshot?.coachRoomShort ?? '')
 
 // ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
 // fed it is gone with it. It lived here from round 24 to round 34: round 23 asked for «подсказки про
@@ -525,6 +551,13 @@ const coachDecline = computed(() => game.snapshot?.coachDeclineNote ?? '')
 // there.
 // ⚠ Round 34 #2b re-cut the bands themselves so the verdict cannot arrive at fourteen again – see
 // `coachRoomBandIndex`. The two fixes are independent and both were asked for.
+//
+// ⭐⭐ ROUND 39 #2b (REOPENED 08.09) PART-REVERSED THE REMOVAL, BY HIS OWN WORD: a 3-5 word SHORT of
+// the same band returns to the plate below («вот это тоже всё-таки можно показывать буквально в
+// 3-5 слов на home» – quoted in full on the computed above). What does NOT return is the round-24
+// plate itself: the LONG sentence (label + argument) still renders only above the market list, the
+// `.coach-room` selector stays retired, and the round-24 mounted pin was re-aimed rather than
+// deleted – the long form still absent here, the short present, both surfaces on the same band row.
 //
 // ⚠⚠ AND DO NOT WRITE THAT PIN'S FILENAME OUT IN FULL ANYWHERE ABOVE THE CARD. It contains the
 // string `coach` + `-card`, and `tests/coach-market.test.ts` cuts the card's region with that as its
@@ -548,6 +581,12 @@ const coachDecline = computed(() => game.snapshot?.coachDeclineNote ?? '')
 // bucketed reading of her CEILING and the fog-of-war rule forbids quoting that. This one reads her
 // RANK and how many seasons her body has left – see `coachDeclineNote` in engine/world/coachMarket.ts
 // for the derivation and for the three examples of his own the wording follows.
+//
+// ⭐ THE #2b REOPEN (08.09) THEN DID BRING A CEILING READ BACK – the 3-5 word band short, by the
+// owner's own word (see the computed above) – and the paragraph above keeps its force on the half
+// it was written about: the DECLINE verdict still cannot reach a growing career (the `declineRead`
+// gate), the digits still belong to the decline half alone (the band shorts carry none, the fog
+// rule), and the guarantee still lives in the data – one field, '' where the engine says nothing.
 
 
 // --- Season strip: REAL tier progress. Reads the kid's best finish per tier off the snapshot: a
@@ -1497,14 +1536,21 @@ async function leaveCollege(): Promise<void> {
                  because Cyrillic inside a <template> is forbidden (tests/round13-nav.test.ts).
                  ⚠ WHAT STAYS IS HIS COACH'S VOICE. The quote above is owner-approved copy from round
                  7 #5d - five lines per play style, settling every four weeks - and it was never part
-                 of the complaint. Nothing replaced the band: an invented filler line here would be
-                 exactly the wording change invariant 4 forbids. -->
-            <!-- ⭐⭐⭐ ROUND 38 #6d – THE DECLINE READ, AND ONLY EVER THAT ONE. This is a different
-                 snapshot field from the one round 34 sent away: it is the empty string on every
-                 career that has not passed its own decline age, so a child's screen has nothing to
-                 render here and cannot acquire one by an edit to this template. His words are in the
-                 script block above, where Cyrillic is allowed. -->
-            <p v-if="coachDecline" class="coach-decline">{{ coachDecline }}</p>
+                 of the complaint. Nothing replaced the band THEN (an invented filler line would be
+                 exactly the wording change invariant 4 forbids); what sits below since round 39 #2b
+                 is there by the owner's own 08.09 word, not by a filler. -->
+            <!-- ⭐⭐ ROUND 39 #2b (REOPENED 08.09) – THE SHORT PLATE, EITHER READ, ONE AT A TIME, in
+                 the old ceiling plate's place and treatment. Past her peak it is the decline read,
+                 which ROTATES with the season on his second 08.09 word (quoted in full on the
+                 computed in the script block, where Cyrillic is allowed – the ask was for liveliness
+                 instead of one static sentence); on a growing career it is her headroom band in the
+                 3-5 words he sized – the ceiling read returned to this exact slot by his own word.
+                 The LONG sentences render elsewhere: the decline sentence on the current coach's
+                 card in the market list (#2a), the band's argument above that list. ONE field carries
+                 whichever read exists and '' where the engine says nothing, so an edit to this
+                 template can neither show both nor put a verdict on a child – round 38 #6d's
+                 data-level guarantee, inherited unchanged. -->
+            <p v-if="coachRoomShort" class="coach-room-short">{{ coachRoomShort }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
             <p v-if="coachSignature" class="coach-sign">{{ coachSignature }}</p>
@@ -2574,12 +2620,27 @@ button.note-card:active:not(:disabled) {
    was deleted with the line it dressed and is not being quietly revived under a new name.
    ⚠ NO HEIGHT AND NO CLAMP. `.note-card.card-short` declares a min-height, not a max, so the card
    grows by exactly the lines this paragraph needs and the signature keeps its own 6px above it. A
-   clamp here would hide the half of the sentence carrying the number. */
-.coach-decline {
+   clamp here would hide the half of the sentence carrying the number.
+
+   ⭐⭐ ROUND 39 #2b – THE PARAGRAPH ABOVE BECAME A PLATE. The long sentence moved to the current
+   coach's card in the market list («много текста» for Home), and what stays is the SHORT read in
+   the old ceiling plate's exact treatment – `.coach-room`'s own 11px / 600 / accent, round 24's
+   measured quiet-but-found register («Accent-toned because it is the one thing on this card the
+   player came looking for»). This is a REVIVAL of that treatment for a NEW line, not of the
+   round-34 selector: the class is its own name, and what it dresses is the state the owner asked
+   to keep on Home in exactly this shape («яркое (в плане цвета), как было до этого про потолок»).
+
+   ⭐ THE REOPEN (08.09) MADE THE PLATE TWO-READ – the seasons clause past her peak, the band short
+   while she grows – so the class follows the field it dresses (`coachRoomShort`, wave A's
+   `coach-decline-short` renamed): a name about decline would lie half the career. One rule, both
+   reads, the same treatment either way – «яркое» is about the plate, not about which read is in
+   it. */
+.coach-room-short {
   margin: 6px 0 0;
-  font-size: 11.5px;
-  line-height: 1.4;
-  color: var(--ink-dim);
+  font-size: 11px;
+  line-height: 1.36;
+  font-weight: 600;
+  color: var(--accent);
   text-wrap: pretty;
 }
 
@@ -2734,9 +2795,10 @@ button.note-card:active:not(:disabled) {
   }
 
   /* One rung up with the line it follows, in the family it was already set in – the same rule #7
-     applied to the quote above it, and for the same reason. */
-  .coach-decline {
-    font-size: 13px;
+     applied to the quote above it, and for the same reason. Round 39 #2b: the long paragraph became
+     the short plate; the +1.5px step of this block is kept (11px base, as the old ceiling plate). */
+  .coach-room-short {
+    font-size: 12.5px;
   }
 
   .coach-sign {

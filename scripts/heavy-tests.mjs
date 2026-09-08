@@ -171,6 +171,18 @@ export const HEAVY_SIM_FILES = [
  *  file family the exclusion was written about. endings-bench is the only file clearing both: 12.2 s
  *  local is ~23 s on CI, about a third of the window, and it can triple before it is near it. */
 export const HEAVY_UNIT_FILES = [
+  // ⚠ ADDED 08.09 (round 39 #9) AFTER A QUIET-MACHINE TIMEOUT, and the reading matters more than
+  // the entry. This file timed out at 20 s in the bulk pool with ZERO assertion failures - twice
+  // dismissed as contention by the waves that saw it, and twice that was the right call under load.
+  // The final gate ran it on an idle machine and it timed out anyway, so contention was never the
+  // whole story: it walks careers (his own «не больше 2-3 раз за всю карьеру и с разницей не меньше
+  // 5 лет» cannot be asserted without walking them) and it needs 9.2 s SOLO. In the bulk pool it
+  // shares workers with 235 other files and the collect alone runs 137 s, which is how a 9-second
+  // file crosses a 20-second budget. Same remedy as every entry below: one process each. ⚠ The tell
+  // that stops the next reader dismissing it a third time: a timeout with no failing assertion is an
+  // INFRASTRUCTURE outcome, and the honest fix is a process, never a raised per-test timeout that
+  // hides how long the file really is.
+  'tests/birthday-career.test.ts',
   'tests/economy.test.ts',
   'tests/radar.test.ts',
   'tests/radar-read.test.ts',

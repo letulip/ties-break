@@ -98,7 +98,11 @@ const anyAdPost = (world: WorldState): Offer[] => world.offers.filter((o) => o.k
 function expectedWatchLetter(seed: string, week: number): { brand: string; years: number } {
   const rng = adLetterRng(seed, week, 'watches')
   const brand = pickAdHouse(WATCHES.houses, null, false, rng())
-  const years = 1 + Math.floor(rng() * ECONOMY.advertising.termYearsMax)
+  // ⚠ RE-AIMED, ROUND 39 #3 – the term draw maps into the BAND's own ladder now (this fixture's
+  // ≤200 band writes one year only), on the SAME single uniform in the SAME order, so the brand
+  // pick above and every later draw are byte-identical to the flat-1–3 code.
+  const b = ECONOMY.advertising.bands[BAND]
+  const years = b.termYearsMin + Math.floor(rng() * (b.termYearsMax - b.termYearsMin + 1))
   return { brand, years }
 }
 
