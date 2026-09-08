@@ -893,6 +893,43 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 
 ---
 
+- [>] **17. «если у нас есть контракт на 3+ лет на фото от того же Meridian Sport, то если в
+  межсезонье она решит подписать другого спонсора, то контракт обнулится… по умолчанию фото спонсор
+  одежды уже будет ее снабжать гарантированно и будет возможность переподписывать с ним контракт до
+  истечения фото контракта… А игрок уже сам будет решать с кем подписывать»** – **build (wave G).**
+
+  **WHAT ALREADY EXISTS, checked before anything was proposed:** the `clothing` ad category is
+  ALREADY authored by the live kit deal's brand («двойной программой» – no kit deal, nobody writes
+  it), confirmed on his save: kit Meridian Sport w570-725, clothing ad Meridian Sport w575 and w720.
+  What does NOT exist is any re-reading of that bond after signature, so a campaign can outlive the
+  kit deal that authored it – his w725 kit expiry against a clothing campaign running to w878.
+
+  ⚠ **REFUSED, with the reason, before he could build on it:** global one-house exclusivity («если
+  рекламный контракт уже заключен с одним спонсором, то и экип только от него»). Real portfolios are
+  multi-house BY CATEGORY – Federer is Uniqlo + Rolex + Mercedes + Lindt + Moët – and this economy
+  already states exclusivity per trade («in no other <trade> campaign while that runs»). One house
+  for everything would collapse the portfolio from five deals to one and cut exactly the money #8 was
+  about. The apparel bond stays; a cars house has no claim on her shirt.
+
+  **THE SIX RULINGS the mechanism needed, made explicit so he can overturn any of them:**
+  1. The termination trigger is **signing a DIFFERENT house**, never «no live kit deal» – his own
+     save had a two-week gap between kit deals (w725 to w727), and an absence trigger would have
+     killed a three-year contract over a calendar seam nobody chose.
+  2. The guaranteed incumbent letter arrives at **her CURRENT standing's terms**, not the old deal's:
+     the guarantee bypasses the arrival dice, never the ladder, or a slid career keeps premium kit
+     terms for ever through the ad-contract back door.
+  3. «Обнулится» = the contract ENDS. Anniversaries already banked stay banked; there is no clawback.
+  4. **The lifetime letter is EXEMPT** and its house dresses her free for ever (his own idea of
+     08.09) – so the question «leave or stay» never arises for it. ⚠ His call; recorded as mine.
+  5. The rule must not assume the ad outlives the kit deal – the reverse order owes no guarantee and
+     charges no price.
+  6. Only a **clothing** campaign creates the bond. Watches, cars, drinks, fragrance are other
+     companies with no claim on her shirt.
+
+  **AND THE WARNING IS THE MECHANISM, not a footnote:** a rival house's kit letter must state on the
+  paper that signing ends the running campaign, and name the money it costs. Without the number it is
+  a trap; with it, it is the decision he is asking for.
+
 ## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
 No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
