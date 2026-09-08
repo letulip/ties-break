@@ -24,6 +24,16 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   like selecting. His own steer: radio-like, not a checkbox, and visually apart from an ordinary
   button. ⚠ «точно не только эти две» – the census is part of the work, not an afterthought.
 
+  ⭐ **HIS VISUAL (08.09): the selected radio IS the ball.** «можно кастомный радио-батон построить в
+  виде теннисного мячика (я имею в виду нашу желтую точку с логотипа в стиле минимализм без лишних
+  элементов) мне кажется, может получиться вполне мило.» Both facts the build needs: the mark exists
+  as `public/ball.svg` (fill `#C6E12B`, white seam), and the palette already carries its sibling
+  `--accent` = `#cfe152`. ⚠ The control uses the TOKEN, never a hard-coded hex – the app is
+  themed and a literal would go wrong in one of them. ⚠ Minimal is read strictly: a filled dot in the
+  accent, no seam curve, no gloss, no ring beyond what the UNSELECTED state needs to be visible at
+  all. The ball is used nowhere in the UI today (asset only), so this is its first appearance
+  in-product: it should read as the product's own dot, not as a picture of a ball.
+
 - [>] **2. «когда есть 2 группы кнопок, пока верхние не нажаты нижние ничего не делают, может быть
   сделать, чтобы человек сначала делал верхний выбор, а потом на этом же экране появлялись следующие
   кнопки, чтобы флоу был более явным?»** – **build.** Progressive disclosure on the same screen: the
