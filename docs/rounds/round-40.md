@@ -221,6 +221,21 @@ real questions at the moment they hurt most. He answered all four.
   did, and it is a harsh sentence to put on a screen that also says «This is the girl you raised».
   ⚠ That is the owner's call and it is the only thing blocking the rewrite: the number says do it.
 
+  **HIS RULING (08.09): «давай смягчим формулировку нижней банды» → variant B, «B, запускай».** The
+  softening is not a euphemism, and that is what makes it shippable: the engine's fact is that she
+  arrives BELOW her birth build, and the honest reading of that is not «she got worse» – a
+  fourteen-year-old does not lose talent – it is that **the nine years did not add to what she came
+  with**. Variant B says exactly that, keeps the door open («not reached it yet» rather than «will
+  not»), and does not bill the parent for it:
+
+  * `Most of what she has, she was born with. The years added little to it.`
+  * `She comes with what she started with – the work has not reached it yet.`
+
+  ⚠ **And the reason the wording mattered more than it looks:** the bottom band is 20% of seeds BY
+  CONSTRUCTION (a p20 cut), so after the rewrite roughly one player in five with a quiet childhood
+  reads this line, on the screen that also says «This is the girl you raised». A sentence that is
+  read that often has to be one worth reading five times.
+
 - [ ] **5. Verify the span: the film measured 2.49 where the enumeration says 1.87.** `coachMarket.ts`
   records «enumerating all 32 runs through the SHIPPED CARD TABLE gives a span of 1.87 (mean arrival
   47.48 at the cheapest, 49.35 at the dearest)». The recorder measured its two paths 2.49 apart.
