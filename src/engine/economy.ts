@@ -5020,10 +5020,19 @@ export const ECONOMY = {
        *  driver at or near zero; without this the half-life is infinite and the rung would be frozen
        *  at what was paid for ever, which is not «медленно» but «никогда». Eight years is slow. */
       maxHalfLifeWeeks: 416,
-      /** ...and the other end: a driver this far above the median stops buying more speed. Four
-       *  weeks is one month, and below that the ramp stops being a process at all – which is the one
-       *  thing his ruling is about. */
-      minHalfLifeWeeks: 13,
+      /** ...and the other end: a driver this far above the median stops buying more speed.
+       *
+       *  ⭐⭐ ROUND 39 #5 (REOPENED, owner 08.09 «давай попробуем») – 13 → 52, AND THE OLD FLOOR IS
+       *  WHY THE LOOP SURVIVED ROUND 38. At the fame cap the pace ratio is 100/12.8 ≈ 7.8, so the
+       *  half-life ran all the way down to ~13.3 weeks and a $250,000 brand was worth $1,844,174
+       *  ONE WEEK after purchase (his own report: «свежекупленный бренд возвращался к своей
+       *  стоимости уже в течение 5 недель» – measured, the 5-week point was $8.2M of $35.9M).
+       *  His round-38 law stands unmoved – «полураспад 2 года при средней славе, кратно быстрее
+       *  при высокой» – because 104/52 = 2x faster at the cap is still «кратно»; what the old
+       *  floor allowed was 8x, which is «за несколько недель», the exact complaint. At 52 the
+       *  week-1 worth of a fresh cap-fame brand is ~$723k and half the derived value takes a full
+       *  year: «это процесс» at every level of fame. Measured in tools/r39-brand-loop.ts. */
+      minHalfLifeWeeks: 52,
     },
   },
 } as const

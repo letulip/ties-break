@@ -61,9 +61,16 @@ describe('round 38 #16 – the pace is the driver, and it is his sentence', () =
     expect(R.halfLifeWeeks).toBe(104)
   })
 
-  it('⭐ high fame is «кратно быстрее» – three times the median closes the gap three times faster', () => {
-    expect(worthRampHalfLife(R.medianFame * 3, R.medianFame)).toBeCloseTo(R.halfLifeWeeks / 3, 6)
-    expect(worthRampHalfLife(R.medianFame * 3, R.medianFame)).toBeLessThan(R.halfLifeWeeks)
+  it('⭐ high fame is «кратно быстрее» – above the median the gap closes proportionally faster', () => {
+    // ⚠ RE-AIMED, ROUND 39 #5 (owner 08.09 «давай попробуем» on A+C) – WAS «three times the median
+    // closes the gap three times faster», and the 52-week floor now stands exactly where that arm
+    // measured (104/3 ≈ 34.7 < 52). «Кратно» survives at the ratio the floor still admits – 1.5x
+    // the median is 1.5x the speed – and everything past DOUBLE the median rides the floor: at the
+    // fame cap the half-life is 52, one year, where the old 13-week floor let it reach ~13.3 and
+    // handed a fresh $250k brand $1.84M in its first week (the reopened item's own measurement).
+    expect(worthRampHalfLife(R.medianFame * 1.5, R.medianFame)).toBeCloseTo(R.halfLifeWeeks / 1.5, 6)
+    expect(worthRampHalfLife(R.medianFame * 1.5, R.medianFame)).toBeLessThan(R.halfLifeWeeks)
+    expect(worthRampHalfLife(R.medianFame * 3, R.medianFame), 'past 2x the floor holds').toBe(R.minHalfLifeWeeks)
   })
 
   it('a career the world has never heard of takes years, but not for ever', () => {

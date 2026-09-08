@@ -311,7 +311,29 @@ import type { AcademySupport } from '../academy'
 // ⚠ IDEMPOTENT and DRAW-FREE: `save.drawnFirstRounds ??= {}` touches no stream, so the frozen MAIN
 // capture (41550 / e6b0c709) cannot move. Full move: this constant, the v69 -> v70 step in
 // migrations.ts, tests/fixtures/saves/v70.json and tests/round35-draw-fact.test.ts.
-export const SAVE_SCHEMA_VERSION = 70
+//
+// ⭐⭐⭐ v71 (round 39 #5, REOPENED – A REPEAT BRAND COSTS WHAT A BRAND IS WORTH). World
+// `+brandFounded`, optional boolean: has this career EVER founded a merch brand?
+//
+// HIS COMPLAINT, 08.09: «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его
+// продал. Потом купил новый за 250к, а он снова за несколько недель уже 30+ стоит.» The cycle is
+// sell at the (ramped) worth, re-buy at the flat catalogue price, wait for the ramp – and the
+// re-buy price is the hole. His round-38 law «неизменно для первого открытия стоит 250к» binds the
+// FIRST founding only, so the fix prices a REPEAT founding at the market's current derived worth
+// (`assetEntryPriceCents`) – and «repeat» is a fact the world has to REMEMBER, because the sold
+// brand's row is gone. One flag, written by `buyAsset`, read by the pricing.
+//
+// ⚠ THE MIGRATION GIVES THE BENEFIT OF THE DOUBT, both ways stated: a save that OWNS a merch brand
+// has founded one (his own live career must not re-buy at $250k after the update – the exploit is
+// exactly there), and a save that owns none carries no record of a founding that may or may not
+// have happened, so it keeps the first-founding price. Guessing «founded» from a ledger row would
+// be re-deriving a fact from prose; the flag starts where the facts are.
+//
+// ⚠ IDEMPOTENT and DRAW-FREE: one `some()` over `save.assets` and at most one literal write; no
+// stream is touched, so the frozen MAIN capture (41550 / e6b0c709) cannot move. Full move: this
+// constant, the v70 -> v71 step in migrations.ts, tests/fixtures/saves/v71.json and
+// tests/r39-brand-rebuy.test.ts.
+export const SAVE_SCHEMA_VERSION = 71
 
 
 
@@ -850,6 +872,19 @@ export interface WorldState {
    *
    *  Required rather than optional – `createWorld` writes `[]` and the v63 migration seeds it. */
   assets: OwnedAsset[]
+  /** ⭐⭐ ROUND 39 #5 (v71) – HAS THIS CAREER EVER FOUNDED A MERCH BRAND? The one fact the
+   *  sell-and-rebuy fix needs and the rows cannot carry: a sold brand's row is DELETED
+   *  (`sellAsset` filters it out), so «the family founded one once» survives nowhere else.
+   *  Written `true` by `buyAsset` on every business-family purchase, never unset – founding is a
+   *  thing that happened. Read by `assetEntryPriceCents`: the FIRST founding costs the flat
+   *  catalogue price (his law, «неизменно для первого открытия стоит 250к»), a REPEAT founding
+   *  costs the market's current derived worth of the brand.
+   *
+   *  ⚠ OPTIONAL, AND ABSENT MEANS «NO FOUNDING ON RECORD», which is exactly true of a new career
+   *  and of every pre-v71 save that owns no brand (the v71 migration back-fills `true` only where
+   *  a brand is OWNED – owning one proves founding one; anything less keeps the benefit of the
+   *  doubt). */
+  brandFounded?: boolean
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

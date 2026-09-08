@@ -321,7 +321,14 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     // under the old arithmetic. ⭐ AND THE FALL ITSELF DID NOT MOVE, which is the check that says the
     // settling walk is the only thing that changed here: the pre-#16 arithmetic read 0.53190 at this
     // same two-season settle (measured by reverting `rampedWorthCents` to the derived value).
-    walk(w, WEEKS_PER_YEAR, true)
+    // ⚠ RE-AIMED AGAIN, ROUND 39 #5 (08.09, «давай попробуем» on A+C) – ONE MORE SETTLING SEASON,
+    // SAME PRESCRIPTION, SAME BAND. The ramp floor rose 13 → 52 weeks (a fresh brand at the cap was
+    // reaching its worth «за несколько недель», his reopened complaint), so this fixture's turn
+    // moved past the old two-season settle: MEASURED per season held – $5,739,498 / $6,181,444 /
+    // $5,230,865 / $3,956,418 – the peak is season 2 and the falling side starts at 3. The first
+    // reading settles two seasons, the second reads the third; the hold band is untouched at
+    // (0.40, 0.60) and the measured hold is 0.5385.
+    walk(w, 2 * WEEKS_PER_YEAR, true)
     const climbing = ownedOf(w, MERCH)!.valueCents
     walk(w, WEEKS_PER_YEAR, true)
     const atPeak = ownedOf(w, MERCH)!.valueCents

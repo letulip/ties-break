@@ -136,7 +136,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   green across the five shelf files (r39-owned-shelf-paid, round35-shop, round29-shop-elite,
   shop-tab, round36-review).
 
-- [>] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
+- [x] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
   купил новый за 250к, а он снова за несколько недель уже 30+ стоит. Кажется надо ещё что-то с этой
   механикой подумать»** – **REOPENED against round 38 #15/#16.**
 
@@ -181,6 +181,44 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   D is written out in docs/now-next-later.md's Later.** He also refined the observation: «кажется
   что у меня свежекупленный бренд возвращался к своей стоимости уже в течение 5 недель» – at the
   13.3-week floor the 5-week point is $8.2M of $35.9M, so the feel was right in kind.
+
+  **SHIPPED (wave EF, `r39/wave-ef`, 08.09) – A+C, both prongs.** **C:**
+  `worthRamp.minHalfLifeWeeks` 13 → 52. His round-38 law stands – 104/52 = 2x faster at the cap is
+  still «кратно быстрее» – where the old floor allowed 8x, which is «за несколько недель». **A:** a
+  REPEAT founding of `merch-brand` is priced at the market's current derived worth
+  (`assetEntryPriceCents`, world/assets.ts); the FIRST founding of a career stays the flat catalogue
+  $250,000, pinned – his «неизменно для первого открытия стоит 250к» untouched. ⭐ The sticker is
+  honest BY CONSTRUCTION: `buyAsset`'s charge and `shopView`'s `entryCents`/`affordable` are one
+  function, so a card can never show a price the door does not take (round 38 #14's lesson, kept
+  structurally). Schema move, all three parts: `SAVE_SCHEMA_VERSION` 70 → 71 + `world.brandFounded`
+  (a founding survives the sold row nowhere else), append-only v70→v71 migration – a save OWNING a
+  merch brand back-fills `true` (his live career must not keep the $250k re-buy), a save owning
+  none keeps the benefit of the doubt = first-founding price – and golden fixture
+  `tests/fixtures/saves/v71.json` (goldenSaves one-per-version law green).
+
+  **MEASURED (`tools/r39-brand-loop.ts`, synthetic cap-fame world – his saves stay read-only, never
+  fixtures).** Re-buy curve of a fresh $250,000 brand at fame 100, derived worth $25,116,000 on the
+  synthetic state:
+
+  | after | before (13w floor) | after (52w floor) |
+  | --- | ---: | ---: |
+  | 1 week | $1,511,625 | **$579,258** |
+  | 5 weeks | $5,949,678 | $1,853,267 |
+  | 13 weeks | $12,479,368 | $4,206,270 |
+  | 26 weeks | $18,694,201 | $7,533,083 |
+  | 52 weeks | $23,457,530 | $12,683,000 |
+
+  Predicted before measuring: w1 = paid + gap x (1 − 0.5^(1/52)) = $579,353; measured $579,258. On
+  HIS save's derived ($35.9M) the same arithmetic gives ~$723k at week 1 – the proposal's own
+  figure, confirmed. Full cycle (sell a converged brand, re-found the same week): before
+  **+$24,768,867** a cycle; after **−$97,133** – the ramp's own unconverged 0.4%, the loop closed
+  to ≤ $0. ⚠ RNG: zero draws on any stream; `tests/condition.test.ts` green, capture
+  41550/`e6b0c709` unchanged. Re-aimed guards, none deleted: `r38-worth-ramp`'s «кратно» arm (3x
+  median now rides the floor; proportionality asserted at 1.5x, the floor pinned at 3x) and
+  `round30-brand-value`'s falls fixture (one more settling season – the turn measured at season 3
+  under the 52w floor; claim and band untouched at 0.40–0.60, hold 0.5385). New pins:
+  `tests/r39-brand-rebuy.test.ts` – the first-founding law, sticker = door on a repeat, the
+  quiet-career floor, `affordable` at the true price, the 52w floor at the cap, both migration arms.
 
 - [~] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw
