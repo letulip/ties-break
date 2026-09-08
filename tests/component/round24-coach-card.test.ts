@@ -34,6 +34,15 @@
 // ⚠ The BAND EDGES moved in the same wave (round 34 #2b, `coachRoomBandIndex`) and for the other half
 // of the same complaint. That is pinned in tests/round23-coach-copy.test.ts and tests/coachTiers.ts;
 // nothing here depends on which band a given share falls in, only on there being one.
+//
+// ⚠⚠ AND ROUND 39 #2b (REOPENED 08.09) PART-REVERSED ROUND 34, BY THE OWNER'S OWN WORD – «И до этого
+// были фразочки про то, что ей недалеко до потолка, что потолок достигнут и прочее, вот это тоже
+// всё-таки можно показывать буквально в 3-5 слов на home». So the Home arms below re-aimed a second
+// time, narrower rather than looser: the round-24 PLATE (label + argument, `.coach-room`) stays off
+// Home and the market card keeps the full sentence – that half of round 34 stands – while Home's r39
+// plate (`.coach-room-short`) carries the 3-5 word SHORT of the same band row. What was «absent on
+// Home» is now «only ever the short, of exactly the band the market names» – both halves still in
+// one breath, so a deleted feature still cannot pass.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -44,6 +53,7 @@ import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vu
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { startingSkills } from '../../src/engine/world/player'
+import { ROOM_NOTE_SEP, coachRoomBand, coachRoomBandLabel, coachRoomBandOf, coachRoomBandShort, coachRoomNote } from '../../src/engine/world/coachMarket'
 import { reachableHeadroomShare, SKILL_KEYS } from '../../src/engine/development'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 
@@ -84,23 +94,31 @@ Object.defineProperty(globalThis, 'localStorage', {
  *  ⚠ BUNDLE I THEN CORRECTED WHAT «REACHABLE» MEANS – the best coaching money can buy (0.9766), not
  *  the bare `ageFactor` curve H walked (0.8668). ⭐ THIS HELPER DID NOT HAVE TO MOVE FOR IT: derived,
  *  so the approved curve wave and a coach-ladder retune both move it with the code. */
-function snapshotAt(shown: number): Snapshot {
+function worldAtShown(shown: number) {
   const world = createWorld(`r24-card-${shown}`, { ...DEFAULT_PROFILE, coachTier: 'middle' })
   const born = startingSkills(world.seed, world.profile)
   for (const k of SKILL_KEYS) {
     world.potential[k] = born[k] + 20
     world.skills[k] = born[k] + 20 * shown * reachableHeadroomShare()
   }
-  return toSnapshot(world)
+  return world
 }
 
-/** Home, with a real snapshot behind it. Reads the two things the coach card can say about her. */
-function homeCoachCard(realised: number): { band: string; quote: string; card: string } {
+function snapshotAt(shown: number): Snapshot {
+  return toSnapshot(worldAtShown(shown))
+}
+
+/** Home, with a real snapshot behind it. Reads the things the coach card can say about her.
+ *  ⚠ `short` JOINED ON THE #2b REOPEN (08.09): the 3-5 word band read the owner asked back onto
+ *  Home (`.coach-room-short`); `band` still reads the RETIRED round-24 selector (`.coach-room`),
+ *  which stays empty – the old plate itself did not come back, only the short did. */
+function homeCoachCard(realised: number): { band: string; short: string; quote: string; card: string } {
   const store = useGameStore()
   store.snapshot = snapshotAt(realised)
   const wrapper = mount(HomeScreen, { global: { stubs: { teleport: true } } })
   const out = {
     band: wrapper.find('.coach-room').exists() ? wrapper.get('.coach-room').text() : '',
+    short: wrapper.find('.coach-room-short').exists() ? wrapper.get('.coach-room-short').text() : '',
     quote: wrapper.find('.coach-line').exists() ? wrapper.get('.coach-line').text() : '',
     card: wrapper.find('.coach-card').exists() ? wrapper.get('.coach-card').text() : '',
   }
@@ -124,34 +142,54 @@ async function marketCoachCard(realised: number): Promise<{ band: string; line: 
   return out
 }
 
-describe('round 34 #2a – the ceiling read is on the coach card, and not on Home', () => {
+describe('round 34 #2a – the long ceiling read is on the coach card; Home carries only the 3-5 word short', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐ THE ITEM: Home does not render it, and the coach card does – both halves, one test', async () => {
+  it('⭐ THE ITEM: the round-24 plate stays retired, the coach card keeps the sentence – and the short is back by his word', async () => {
     // ⚠ ONE WRAPPER AT A TIME. There is one Pinia store per test, so assigning a second snapshot
     // re-renders the first wrapper too – `round23-coach-card` records that trap catching it live,
     // with both arms answering "At her ceiling". Each helper reads while mounted, then unmounts.
+    // ⚠⚠ RE-AIMED BY ROUND 39 #2b (REOPENED 08.09). The owner reversed the growing half of round 34
+    // himself: «И до этого были фразочки про то, что ей недалеко до потолка, что потолок достигнут
+    // и прочее, вот это тоже всё-таки можно показывать буквально в 3-5 слов на home». So what this
+    // arm now holds: the OLD plate (`.coach-room`, label + argument) is still gone from Home, the
+    // market card still carries the full sentence, and Home's r39 plate says the SHORT of the very
+    // same band row – two surfaces, one derivation, pinned against each other below.
     const home = homeCoachCard(0.8)
     const market = await marketCoachCard(0.8)
-    expect(home.band, 'the read is back on Home').toBe('')
+    expect(home.band, 'the round-24 plate itself is back on Home').toBe('')
+    expect(home.short, 'the 3-5 word short the owner asked back is not rendered').toBe(coachRoomBandShort(coachRoomBandOf(worldAtShown(0.8))!))
     // ⚠ NON-VACUITY, AND IT IS THE HALF THAT MAKES THE LINE ABOVE MEAN ANYTHING. Deleting the feature
     // outright would satisfy "not on Home" perfectly; it must be somewhere, and this is where he
     // asked for it.
     expect(market.band, 'the read is nowhere at all – it was deleted, not moved').not.toBe('')
     expect(market.line.length, 'and the argument under the label came with it').toBeGreaterThan(20)
+    // ...and the two surfaces sit on the same rung: the market's bold label and Home's short are
+    // the same `ROOM_BANDS` row, which is the "cannot disagree" half of the reopen.
+    expect(market.band).toBe(coachRoomBandLabel(coachRoomBandOf(worldAtShown(0.8))!))
   })
 
-  it('⭐ at every headroom, not just the one – the card he saw at fourteen is quiet now', () => {
-    // He met it on a fourteen-year-old, which under the old measure was already band 2. Swept, so a
-    // `v-if` that merely hid the low end would not pass.
+  it('⭐ at every headroom: Home says the band SHORT of that band, and never the argument sentence', () => {
+    // ⚠ RE-AIMED BY ROUND 39 #2b (REOPENED 08.09): wave A of round 34 swept the four labels off
+    // Home's card entirely; the owner brought them back as 3-5 word shorts, so the sweep now pins
+    // the two things still forbidden – the LONG argument («много текста» is what he sent away) and
+    // any short that is not the row the engine read. Because `realised` is the lever, this sweep is
+    // also the mounted "mutate the band → the plate moves with it" evidence: six realisations, four
+    // rows, the plate following the band index each time.
     for (const realised of [0, 0.2, 0.45, 0.8, 0.95, 1]) {
-      const { band, card } = homeCoachCard(realised)
-      expect(band, `the read is back on Home at realised ${realised}`).toBe('')
-      // ...and it did not come back under another class name. None of the four shipped labels may
-      // appear anywhere in the card's text.
-      for (const label of ['Huge potential', 'Still room to grow', 'Close to her ceiling', 'At her ceiling']) {
-        expect(card, `"${label}" is on Home's coach card at realised ${realised}`).not.toContain(label)
-      }
+      const { short, card } = homeCoachCard(realised)
+      const world = worldAtShown(realised)
+      const band = coachRoomBandOf(world)!
+      expect(short, `the plate is not band ${band}'s short at realised ${realised}`).toBe(coachRoomBandShort(band))
+      // the long note's ARGUMENT (everything after the separator) may not reach Home in any band –
+      // cut with the ONE splitter (`coachRoomBand`), never a raw indexOf: an absent separator makes
+      // the label '' below and the length guard fail loudly, instead of the slice widening.
+      const note = coachRoomNote(world)
+      const label = coachRoomBand(note)
+      expect(label, `no separator in the note at realised ${realised} – the cut would be wrong`).not.toBe('')
+      const argument = note.slice(label.length + ROOM_NOTE_SEP.length)
+      expect(argument.length, `no argument derived at realised ${realised} – the check would be vacuous`).toBeGreaterThan(20)
+      expect(card, `the market's argument sentence is on Home at realised ${realised}`).not.toContain(argument)
     }
   })
 
