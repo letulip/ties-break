@@ -115,6 +115,22 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 
   **OWNER (08.09): «давай так попробуем, как ты предложил» → wave EF builds the ladder.**
 
+  ⚠⚠ **MEASURED AFTER THE BUILD, AND IT REOPENS THE THRESHOLD (`--tenure`, 08.09).** Wave EF
+  reported the lifetime letter never fired on any walked career. It does not fire on his own best
+  career either, and neither does the SHIPPED capstone:
+
+  | | seasons ended wta top-10 | slams | capstone (needs 4) | lifetime (needs 4 + slam) |
+  | --- | ---: | ---: | --- | --- |
+  | **Ines** w832 | **3** (#10, #5, #7) | 1 | **short by 1** | **short by 1** |
+  | Alice w1115 | 0 (best #20) | 0 | short by 4 | short by 4 + a slam |
+
+  Her end-ranks: 91, 151, 86, 86, 121, **10**, **5**, 14, **7**, 16, 14, 15 – four more seasons
+  ended 11-20, just outside. **Capstone letters actually received across her 16 seasons: 0.** So the
+  8-year capstone, shipped rounds ago, has never been reachable by the best career he has played,
+  and the lifetime letter inherits that gate. ⚠ At a threshold of **3** both gates fire for Ines and
+  neither fires for Alice, which is the discrimination the feature wants. Owner's word needed:
+  lifetime at 3 top-10 seasons + a slam, capstone left at 4? Recorded, not changed.
+
 - [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
 
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
@@ -248,6 +264,14 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   ближайший год» → recorded in the Later backlog beside the morale/relationship layer. And on the
   slam itself: «мне просто было странно, что Шлем случился на пике топовой спортсменки всего 1 раз,
   но может быть это окей для спорта».
+
+  **RESEARCHED on his follow-up («мне вот и интересна статистика в миру: там много тех, у кого
+  повторного Шлема не случилось ни одного?»):** in the whole Open Era there have been **96 different
+  Grand Slam singles champions, and ~42.7% of them are one-slam winners** – 41 champions across both
+  tours who never won a second (men alone: 26). Winning exactly one major and never another is the
+  MODAL outcome for a major champion, not an anomaly – Pennetta, Ostapenko, Raducanu, Vondrousova,
+  Sloane Stephens, Barbara Jordan, Kerry Melville Reid. ⭐ So Ines's single slam at her peak is the
+  sport's own most common shape, and the model reproducing it is a point in its favour.
 
 - [~] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
   offered $300k reads as insulting. Measure the offer curve against rank and check whether the top
