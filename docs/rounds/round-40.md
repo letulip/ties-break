@@ -34,8 +34,6 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   all. The ball is used nowhere in the UI today (asset only), so this is its first appearance
   in-product: it should read as the product's own dot, not as a picture of a ball.
 
-- [>] **2. «когда есть 2 группы кнопок, пока верхние не нажаты нижние ничего не делают, может быть
-
   **THE CENSUS – every control in the prologue that sets a value.** Walked off `src/prologue/cards.ts`
   rather than typed, and the count is asserted by `tests/component/round40-prologue-choices.test.ts`
   so a card that grows an answer is covered the day it is added.
@@ -103,7 +101,7 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
 
 ## Carried in from round 39, still open
 
-- [ ] **r39 #14a/#14b – the retirement voice and «she is done» as a state.** The four ledes are
+- [x] **r39 #14a/#14b – the retirement voice and «she is done» as a state.** The four ledes are
   drafted and the mechanism is approved; the TRIGGER is being measured now
   (`tools/r40-retire-trigger.ts`), because the owner named why it cannot be guessed: «она буквально
   на пике карьеры начинает говорить, что "всё"». ⚠ Structural finding while reading the code: the
