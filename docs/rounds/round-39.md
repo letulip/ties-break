@@ -131,6 +131,32 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   neither fires for Alice, which is the discrimination the feature wants. Owner's word needed:
   lifetime at 3 top-10 seasons + a slam, capstone left at 4? Recorded, not changed.
 
+  ⭐⭐ **AND HIS THREE QUESTIONS ANSWERED BY MEASUREMENT, NOT BY OPINION** («не будет ли это большим
+  облегчением? … сколько реально игроков в % … какая ценность будет?»). `tools/r39-tenure-reach.ts`,
+  the round-29 corpus shape exactly – 9 presets x 2 policies x 6 seeds = **108 careers, 900 weeks**:
+
+  | gate | careers | share |
+  | --- | ---: | ---: |
+  | >= 4 top-10 seasons (capstone, shipped) | 18 of 108 | 16.7% |
+  | >= 3 top-10 seasons | 20 of 108 | 18.5% |
+  | >= 1 slam title | 16 of 108 | 14.8% |
+  | **>= 4 top-10 AND a slam (lifetime as built)** | **11 of 108** | **10.2%** |
+  | **>= 3 top-10 AND a slam (the proposal)** | **11 of 108** | **10.2%** |
+  | >= 2 top-10 AND a slam | 12 of 108 | 11.1% |
+
+  ⚠⚠ **LOWERING THE TENURE FROM 4 TO 3 IS A NO-OP IN THE CORPUS – the same 11 careers, the same
+  10.2%.** Both careers that hold exactly three top-10 seasons hold **zero slams**, so the slam is
+  the binding gate and the tenure number is not doing the work it looks like it is doing. It is
+  therefore not a loosening: it costs nothing measurable and it converts the ONE real career we have
+  (Ines: 3 seasons + a slam) from «never learns the mechanic exists» to «earns it».
+
+  ⚠ Two further findings, recorded rather than acted on. (1) The corpus puts >= 4 top-10 seasons at
+  **16.7%**, where round 29 shipped the capstone against **8% (9 of 108)** – the same corpus shape,
+  double the reach; the capstone was priced as a top-decile deal and is not one any more. (2) The
+  bench's 'player' policy careers OUT-PERFORM his actual play: corpus careers whose best rank is #5
+  bank 6-9 top-10 seasons, while his own #5 career banked 3. So a real player meets these gates LESS
+  often than 10.2%, and the corpus is the optimistic bound, not the expected one.
+
 - [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
 
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
