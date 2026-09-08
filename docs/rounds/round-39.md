@@ -49,9 +49,25 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   1-2 года, топ-50 1-3 года, для топ-20 и выше до 10 лет. Но может у тебя есть предложения лучше.»
   → research on real endorsement terms is MINE, then the ladder proposal comes back to him.
 
-- [>] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
+- [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
   assumes planes have it too – verify rather than assume, and fix every shelf rung that shows it.
+
+  **SHIPPED on `r39/wave-b` (08.09).** Verified – planes DID have it. The mechanism is round 36's
+  own: `SHELF_NO_PAID_META` in MoneyScreen.vue grows `boat` and `plane`, the meta stops being
+  passed, nothing on the card re-worded or moved. Shelf census (the caption has exactly two
+  sources, both MoneyScreen): on OWNED cards it now remains only on `investment` and `business` –
+  the two families no round has named, reported rather than touched (invariant 4; the brand's
+  witness arm in round35-shop.test.ts still asserts it). And the `On order` card (water and air
+  build to order) keeps its own `paid $N` untouched: that card has no «Worth now» and no gain line,
+  so the paid figure is the ONLY money on it and removing it would LOSE the number – the exact
+  check rounds 35/36 ran before the caption could go from an owned card, where «Worth now» minus
+  the gain still states it. Evidence: `tests/component/r39-owned-shelf-paid.test.ts` mounts a
+  delivered yacht and a delivered small plane (caption absent, worth + gain still on the card) and
+  holds two PRESENT arms (ordered boat, merch brand). Mutation-verified: `'boat'` removed from the
+  array -> the yacht arm red alone; `'plane'` removed -> the plane arm red alone; restored -> 57/57
+  green across the five shelf files (r39-owned-shelf-paid, round35-shop, round29-shop-elite,
+  shop-tab, round36-review).
 
 - [!] **5. «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
   купил новый за 250к, а он снова за несколько недель уже 30+ стоит. Кажется надо ещё что-то с этой
