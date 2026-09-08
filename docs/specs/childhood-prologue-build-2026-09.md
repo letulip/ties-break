@@ -550,6 +550,16 @@ money and build are perfectly aligned in the table today. That is why the base b
 of seeds for a real player and 89.9% between the model's extremes. **Widening what a card buys is a
 balance change and the owner's**; it is named here, not made.
 
+> ⚠⚠ **THE 44% HAS ROTTED, AND ROUND 40 #6 ANSWERED THE QUESTION IT OPENED.** The balance pass
+> (`childhood-prologue-balance-2026-09.md` §2) already widened the table, so the span is **2.38 points
+> and the cards reach 55.7%** of the model, re-measured 08.09 over the same 32 runs. The owner's
+> answer to this finding was «Вариант B» – make the choices COMPOUND rather than add – and that was
+> measured and **not built**: the fold is exactly linear (worst residual 2e-15 over 32 roads), the
+> direction the item asks for makes the cards reach LESS (49.7% at `coordinationShare` 0.4, because
+> the years the habit carries include the three at 5..7 that no card can change), and 96% of the
+> arrival span is closed by her peak anyway. Full tables in
+> `childhood-growth-2026-09.md` §9, which also names the one-line model change that WOULD compound.
+
 **2. THE FIT MODEL OVER-COUNTS THIS CARD BY MORE THAN DOUBLE, in two named ways.**
 `tests/component/fits.ts` calls itself a floor that «UNDER-COUNTS AND NEVER OVER-COUNTS». On the
 age-5 card that is false, because happy-dom does no layout:

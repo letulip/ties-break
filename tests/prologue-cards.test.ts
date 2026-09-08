@@ -444,12 +444,34 @@ describe('⭐ the years feed engine/childhood.ts, and neither copy may drift', (
     expect(reached, `the table reaches ${(reached * 100).toFixed(1)}% of the model`).toBeLessThan(0.65)
   })
 
+  // ⭐⭐ ROUND 40 #6 – WHAT THE TABLE'S OWN SPAN IS MADE OF, and it is a SUM. The owner asked for the
+  // choices to compound («three years of private coaching after a club year are worth more than the
+  // three years apart»); measured, they do not, and no dial in `CHILDHOOD` can make them – see
+  // docs/specs/childhood-growth-2026-09.md §9 and the engine-side arms in `tests/childhood.test.ts`.
+  // The precondition for that finding is HERE, over the shipped table rather than over synthetic
+  // years: the fold's one nonlinearity is the strain term, and no arm of any card reaches it.
+  // MUTATION: give `sports-school` a share of 1.4 -> red, joy falls below 1 on the eleventh.
+  it('⭐⭐ no card asks for more tennis than a child that age can take – joy is 1 on all 32 runs', () => {
+    for (const run of everyRun()) {
+      for (const row of childhoodWalk(chosenYears(run)).years) {
+        expect(row.joy, `age ${row.age}`).toBe(1)
+        expect(row.coordination, `age ${row.age}`).toBeLessThanOrEqual(1)
+      }
+    }
+  })
+
   // ⭐⭐ ...AND THE WIDTH IS IN THE THREE PAIRS HE NAMED – «widen the gaps between municipal court /
   // club, group / one-to-one, ordinary school / sports school». The band above is a claim about the
-  // WHOLE table and is only sensitive to the whole table: the model's habit and joy terms carry
-  // across the years, so one card's contribution is not separable from the rest and a per-card
-  // measurement cannot be mutation-checked by reverting one card. Measured, not assumed – the first
-  // draft of this block tried exactly that and all three single-pair mutations survived it.
+  // WHOLE table and is only sensitive to the whole table, so a per-card measurement cannot be
+  // mutation-checked by reverting one card – measured, not assumed: the first draft of this block
+  // tried exactly that and all three single-pair mutations survived it.
+  //
+  // ⚠ RE-AIMED, ROUND 40 #6 – THE REASON GIVEN HERE WAS WRONG AND THE ASSERTIONS ARE NOT. This note
+  // used to say a card's contribution «is not separable from the rest» because the habit and joy
+  // terms carry across the years. They carry, but LINEARLY: measured over all 32 runs, every road is
+  // its own single-decision deltas added up, to twelve places (`tools/r40-childhood-compounding.ts`).
+  // The single-pair mutations survived because the BAND above is wide, not because the model mixes
+  // the cards together. Nothing below changes; the explanation does.
   //
   // So the per-pair claim is made where it IS separable: in the table's own two numbers. Each arm is
   // pinned against what it was, in the direction the pass moved it, and reverting either end of any
