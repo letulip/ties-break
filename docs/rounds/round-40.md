@@ -6,7 +6,7 @@ canonical: false
 last-reviewed: 2026-09-08
 ---
 
-# Round 40 – the prologue's choices, 2 items (08.09.2026)
+# Round 40 – the prologue's choices, 3 items (08.09.2026)
 
 Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]` in flight, agent named
 · `[ ]` open · `[?]` waiting on the owner's answer · `[!]` REOPENED (was reported done, was not)
@@ -96,6 +96,72 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   would leave the lower controls live in a state where they cannot work, which is the same defect as
   item 1 wearing different clothes. Unset above -> unavailable below, at any moment, not only on the
   first pass.
+
+- [x] **3. «чтобы он "приземлялся", это одна строка – придержать карточку на ~200 мс после выбора –
+  можно сделать вполне, давай.»** – **build.** Shipped on `r40/wave-d`.
+
+  ⚠ **THE PROMO RECORDER FOUND IT, NOT A TESTER, AND THAT IS THE DIAGNOSIS.** On the eight, the nine
+  and the ten the card's ONE question IS the card, so `cardAnswered` is satisfied by the same press
+  that fills the ball and the walk advances in the same frame. Waves A and A2 gave those controls a
+  real radio affordance and the product's own dot; on those three cards nobody ever saw either.
+
+  **THE CONSTANT: `PROLOGUE_LANDING_MS = 200`**, exported from `ChildhoodPrologue.vue`'s module
+  `<script>` block – the second-block idiom `ConfirmDialog.vue` already uses, because a `const` inside
+  `<script setup>` is a local of the setup function and no test can read it. His «~200 мс» is a
+  starting point rather than a ruling and the number is one edit away from being anything else.
+
+  **WHERE IT LIVES, AND WHY IT IS NOT A SECOND SOURCE OF TRUTH.** The answer is written into the run
+  the instant the control is pressed and `cardAnswered` decides, exactly as before, that the card is
+  finished. What is deferred is the ADVANCE – `advanceYear`, split out of `answer()` for that and no
+  other reason. There is no pending state to be stuck in: a timer that never fired would leave a card
+  that is still fully answerable, still re-choosable, and still showing what the run holds. A second
+  press inside the hold RE-STARTS it rather than queueing a second advance, so a double tap cannot
+  walk the player past a card unread. `onUnmounted` and `startAgain` clear it, so it can never fire
+  into a walk the player has left.
+
+  **WHICH PRESSES HOLD – ONE PREDICATE, NO LIST OF CARDS.** The hold sits behind the same
+  `cardAnswered` guard the advance always sat behind, so «held» and «advances» are the same fact by
+  construction and a card that changes shape changes both together.
+
+  | press | where | held | why |
+  | --- | --- | --- | --- |
+  | the origin | age 5 | ✅ | the five carries no ask, so the origin finishes the card |
+  | the year's own answer | ages 8, 9, 10 | ✅ | the card's one question – the three the recorder named |
+  | the tournament question | ages 11, 12 (both faces), 13 | ✅ | the second of the two, which is what finishes those cards |
+  | the year's own answer | ages 11, 12 | ❌ | it DISCLOSES the ask (item 2) and the screen stays – there is nothing to hold for, and 200 ms before a screen that was never going to move only feels slow |
+  | `continueLabel` | ages 6, 7 | ❌ | the way on emits `null`; it carries no mark, no `aria-checked` and no group, so it has no taken state to show. Item 1's negative arm from the other side |
+  | a weekend's result scene | every Local Open | ❌ | same control, same reason |
+
+  **MEASURED (invariant 5), on all four roads through the table – cheapest and carried, entering and
+  declining.** Eleven presses reach the handover on every one of them: 7 held, 4 not, so the hold
+  adds **1.4 s to a full nine-year walk** and the number does not move with the road. Against round
+  35's own reading of that walk – 7.3 to 8.4 minutes skipping the tennis, 15.6 watching every match –
+  that is about 0.3%, which is not enough to change how the prologue feels. Nothing is being shipped
+  quietly here: if he wants it slower or faster it is one number.
+
+  **EVIDENCE.** Four arms in `tests/component/round40-prologue-choices.test.ts`, all through the real
+  walk, all mutation-verified – four mutations, four reds, all restored:
+
+  | mutation | result |
+  | --- | --- |
+  | the hold removed (`land(...)` -> `await advanceYear(age)`) | RED (3 arms) – «the card left before the answer could be seen» |
+  | `onUnmounted(clearLanding)` deleted | RED – the timer is still pending after the card is gone, and with that assertion lifted the leak CREATES THE CAREER for a childhood the player had left |
+  | the hold applied to a disclosing press too | RED – «the disclosure was put behind a clock» |
+  | the hold applied to the way on as well | RED – a timer on a control with no state to show |
+
+  ⚠ **THE TESTS ARE NOT SLEEP-BASED, AND FIVE SHIPPED SUITES WERE RE-AIMED RATHER THAN LOOSENED.**
+  Every suite that drives the real component (`prologue-tournaments`, `prologue-two-paths`,
+  `round35-prologue`, `round39-prologue-injury`, `round40-prologue-choices`) now steps a fake clock
+  in its own press helper, through the one new helper `tests/component/prologueLanding.ts`. A real
+  wait would add seconds to the component project on every run AND be a race – a machine under load
+  paints late and the walk reads the old card, which is CLAUDE.md's own contention note arriving as a
+  flake. The fake clock is scoped to the PRESS rather than to the suite, because those same walks
+  drive the match viewer and the weekend flow, which run on timers this has no business touching.
+  Not one guard was deleted and not one timeout was raised.
+
+  ⚠ **RNG (invariant 2): ZERO draws on any stream.** Nothing engine-side was touched – the change is
+  one `setTimeout` between an answer that was already recorded and an advance that was already
+  decided – so no capture run was needed and the frozen pin is untouched.
 
 ---
 

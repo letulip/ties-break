@@ -34,6 +34,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { assertDismissReachable, boxOf, measureDialog, setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
+import { landing } from './prologueLanding'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -82,7 +83,11 @@ function stubStore() {
 async function press(wrapper: ReturnType<typeof mount>, label: string): Promise<void> {
   const button = wrapper.findAll('button').find((b) => b.text().startsWith(label))
   expect(button, `no «${label}»: ${wrapper.text().slice(0, 160)}`).toBeTruthy()
-  await button!.trigger('click')
+  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. An answer that FINISHES a card is now held for
+  // `PROLOGUE_LANDING_MS` before the walk advances, so this helper steps that clock instead of
+  // waiting on it – see tests/component/prologueLanding.ts. The no-repeat guard below is
+  // untouched and still reads every scene the walk draws.
+  await landing(() => button!.trigger('click'))
   await Promise.resolve()
   await wrapper.vm.$nextTick()
 }

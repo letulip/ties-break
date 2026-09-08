@@ -38,14 +38,16 @@
 //     answered) -> the re-choosable arm goes red.
 //   * the arrow-key handler deleted -> the keyboard test goes red on the focus arm while the rest
 //     stays green.
-import { describe, expect, it, beforeEach, vi } from 'vitest'
+import { describe, expect, it, afterEach, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { assertLegible, contrastRatio, effectiveBackground, parseColor } from './contrast'
 import { setViewport, PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
-import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
+import ChildhoodPrologue, { PROLOGUE_LANDING_MS } from '../../src/components/ChildhoodPrologue.vue'
+import { landing } from './prologueLanding'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import {
@@ -574,7 +576,10 @@ describe('⭐⭐⭐ item 2 – the second group appears when the first is answer
   async function press(wrapper: ReturnType<typeof mount>, label: string): Promise<void> {
     const button = wrapper.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
     expect(button, `no «${label}»: ${wrapper.text().slice(0, 140)}`).toBeTruthy()
-    await button!.trigger('click')
+    // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED – the item this same file's third block builds.
+    // An answer that FINISHES a card is held for `PROLOGUE_LANDING_MS` before the walk advances, so
+    // this helper steps that clock instead of waiting on it.
+    await landing(() => button!.trigger('click'))
     await Promise.resolve()
     await wrapper.vm.$nextTick()
   }
@@ -687,5 +692,189 @@ describe('⭐⭐⭐ item 2 – the second group appears when the first is answer
     expect(document.querySelectorAll('.prologue-choice').length, 'the thirteenth has nothing to press').toBe(2)
     expect(document.querySelectorAll('[role="radiogroup"]').length, 'the ask has no owner of its own').toBe(1)
     wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ ITEM 3 – THE CARD LANDS BEFORE IT LEAVES
+// =================================================================================================
+//
+// THE OWNER, 08.09, once wave A2 had painted the ball: the card should «land» rather than vanish,
+// and he named the size of the hold himself. His sentence is in docs/rounds/round-40.md, item 3,
+// which is where his Russian is allowed to live.
+//
+// ⚠⚠ AND IT WAS THE PROMO RECORDER WHO MET IT, NOT A TESTER, which is the whole diagnosis. On the
+// eight, the nine and the ten the card's ONE question IS the card, so the answer that fills the ball
+// is the same answer that moves the screen: the affordance the two waves above built was never on
+// screen long enough for a camera – or a player – to see it register.
+//
+// ⚠ THE CLAIMS ARE NARROW ON PURPOSE, because the hold is presentation and nothing else. The answer
+// is written into the run the instant the control is pressed and `cardAnswered` decides on its own
+// that the card is finished; what is deferred is the ADVANCE. So the four arms are: the taken state
+// is on screen while the card has NOT moved; it moves when the hold elapses and not a millisecond
+// before; an unmount mid-hold cancels it and creates nothing; and a press that does not finish a
+// card is not held at all.
+//
+// ⚠ MUTATION-VERIFIED, like everything above it:
+//   * the hold removed (`land(...)` replaced by `await advanceYear(age)`) -> the eight's arm goes
+//     red on «the card left before the answer could be seen», and the eleventh's second half with
+//     it.
+//   * `onUnmounted(clearLanding)` deleted -> the unmount arm goes red twice: the timer is still
+//     pending after the card is gone, and the career gets created for a childhood nobody is in.
+//   * the hold applied to EVERY finished-or-not press (the `cardAnswered` guard moved below `land`)
+//     -> the disclosure arm goes red: the second question waits on a clock.
+//   * the hold applied to the way on as well (the `id === null` arm deleted) -> the quiet-card arm
+//     goes red on a timer that should not exist.
+describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answer to be seen', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+  // ⚠ THE NET UNDER EVERY ARM. An assertion that throws while the clock is faked would leave it
+  // faked for every file sharing this worker, and the failure would land somewhere else entirely.
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  const titleOf = (age: number) => PROLOGUE_CARDS.find((c) => c.age === age)!.title
+  const onScreen = (wrapper: ReturnType<typeof mount>) => wrapper.find('.prologue-title').text()
+  /** ⚠ ONLY `setTimeout` / `clearTimeout` – `vi.useFakeTimers()` with no argument also takes `Date`,
+   *  `performance` and `requestAnimationFrame`, none of which this item touches. */
+  const holdTheClock = () => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+  /** Answer whatever card is up the cheapest way there is, and let it land. ⚠ THE ASK IS ALWAYS
+   *  DECLINED, so this road buys no tennis: a weekend is a takeover with the real match viewer on it
+   *  and none of the arms below is about weekends. */
+  async function answerCurrent(wrapper: ReturnType<typeof mount>): Promise<void> {
+    const groups = wrapper.findAll('[role="radiogroup"]')
+    const target = groups.length
+      ? (() => {
+          const group = groups[groups.length - 1]
+          const radios = group.findAll('[role="radio"]')
+          return group.attributes('aria-labelledby') === 'prologue-ask' ? radios[radios.length - 1] : radios[0]
+        })()
+      : wrapper.findAll('.prologue-answer')[0]
+    expect(target, `nothing to press: ${wrapper.text().slice(0, 140)}`).toBeTruthy()
+    await landing(() => target.trigger('click'))
+    await wrapper.vm.$nextTick()
+  }
+
+  /** The real component, walked to the card at `age` and stopped ON it. */
+  async function walkTo(wrapper: ReturnType<typeof mount>, age: number): Promise<void> {
+    for (let guard = 0; guard < 24; guard++) {
+      if (onScreen(wrapper) === titleOf(age)) return
+      await answerCurrent(wrapper)
+    }
+    throw new Error(`the walk never reached the card at ${age}: ${wrapper.text().slice(0, 140)}`)
+  }
+
+  // ⭐⭐⭐ THE ACCEPTANCE, ON THE FIRST OF THE THREE CARDS THE RECORDER NAMED.
+  it('⭐⭐⭐ the eight shows the answer it took, and only then moves on', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await walkTo(wrapper, 8)
+
+    holdTheClock()
+    await wrapper.findAll('.prologue-choice')[1].trigger('click')
+    await nextTick()
+
+    // 1. THE ANSWER IS TAKEN AND THE CARD IS STILL THERE – which is the defect, stated as a pass.
+    expect(onScreen(wrapper), 'the card left before the answer could be seen').toBe(titleOf(8))
+    expect(
+      wrapper.findAll('.prologue-choice')[1].attributes('aria-checked'),
+      'the card is held, but the ball it is holding is empty',
+    ).toBe('true')
+    // ...and the thing holding it is one timer, so the hold is a hold and not a slow render.
+    expect(vi.getTimerCount(), 'nothing is actually holding the card').toBe(1)
+
+    // 2. AND IT LANDS ON THE NUMBER THE COMPONENT DECLARES, not on a number this file invented.
+    vi.advanceTimersByTime(PROLOGUE_LANDING_MS - 1)
+    await nextTick()
+    expect(onScreen(wrapper), 'the hold is shorter than the constant says it is').toBe(titleOf(8))
+    vi.advanceTimersByTime(1)
+    await nextTick()
+    expect(onScreen(wrapper), 'the card never advanced at all – the hold is a stall').not.toBe(titleOf(8))
+    expect(vi.getTimerCount(), 'the hold did not clean up after itself').toBe(0)
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ ONLY WHERE THERE IS SOMETHING TO HOLD FOR. The eleventh carries two questions, so the year's
+  // own answer leaves the card standing and DISCLOSES the second one (item 2, above): a hold there
+  // would be 200ms of nothing before a screen that was never going to move. The same card's second
+  // answer does finish it, and is held – so this arm is both halves of the rule on one screen.
+  it('⚠⚠ a press that only discloses the second question is not held – and the one that finishes it is', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await walkTo(wrapper, 11)
+
+    holdTheClock()
+    await wrapper.findAll('.prologue-choice')[0].trigger('click')
+    await nextTick()
+    expect(vi.getTimerCount(), 'the disclosure was put behind a clock').toBe(0)
+    expect(wrapper.find('.prologue-ask').exists(), 'the second question is waiting on a timer').toBe(true)
+    expect(onScreen(wrapper), 'answering the year left the card').toBe(titleOf(11))
+
+    // ...and the ask's own answer, which IS the one that finishes this card
+    await wrapper.findAll('.prologue-choice')[3].trigger('click')
+    await nextTick()
+    expect(vi.getTimerCount(), 'the answer that finishes the card is not held').toBe(1)
+    expect(onScreen(wrapper), 'the card left before the answer could be seen').toBe(titleOf(11))
+    expect(
+      wrapper.findAll('.prologue-choice')[3].attributes('aria-checked'),
+      'the card is held with nothing marked on it',
+    ).toBe('true')
+    vi.advanceTimersByTime(PROLOGUE_LANDING_MS)
+    await nextTick()
+    expect(onScreen(wrapper), 'both questions were answered and the card never moved').not.toBe(titleOf(11))
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ AND THE CONTROL THAT ONLY ADVANCES IS NOT HELD EITHER – item 1's negative arm arriving from
+  // the other side. A quiet card's way on carries no `aria-checked`, no mark and no group, so there
+  // is no taken state for a hold to show; delaying it would only make the walk feel slow.
+  it('⚠⚠ the way on off a quiet card is not held – it has no taken state to show', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await walkTo(wrapper, 6)
+    const ways = wrapper.findAll('.prologue-answers button')
+    expect(ways, 'the six is not the quiet card this arm is about').toHaveLength(1)
+    expect(ways[0].attributes('role'), 'the way on is a choice on this card').toBeUndefined()
+
+    holdTheClock()
+    await ways[0].trigger('click')
+    await nextTick()
+    expect(vi.getTimerCount(), 'the way on was put behind a hold it has no state to show').toBe(0)
+    expect(onScreen(wrapper), 'the way on did not advance the walk').not.toBe(titleOf(6))
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ AND IT CANNOT OUTLIVE THE SCREEN IT BELONGS TO. Measured on the LAST card, because that is
+  // where the advance has a consequence outside this component: it creates the career. A hold that
+  // survived its own unmount would make a career for a childhood the player had walked out of.
+  it('⚠⚠ a walk unmounted mid-hold advances nothing, creates nothing and warns about nothing', async () => {
+    const game = stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await walkTo(wrapper, 13)
+    expect(game.newCareer, 'the career exists before the last card is answered').not.toHaveBeenCalled()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    holdTheClock()
+    await wrapper.findAll('.prologue-choice')[1].trigger('click')
+    await nextTick()
+    expect(vi.getTimerCount(), 'the last card is not held like every other').toBe(1)
+    expect(game.newCareer, 'the career was made before the card had even landed').not.toHaveBeenCalled()
+
+    // the player leaves while the card is still landing
+    wrapper.unmount()
+    expect(vi.getTimerCount(), 'the hold outlived its card and will fire into nothing').toBe(0)
+    vi.advanceTimersByTime(PROLOGUE_LANDING_MS * 5)
+    await nextTick()
+    expect(game.newCareer, 'a career was created for a childhood the player had left').not.toHaveBeenCalled()
+    expect(warn.mock.calls, 'the hold warned after its component was gone').toEqual([])
+    expect(error.mock.calls, 'the hold errored after its component was gone').toEqual([])
+    warn.mockRestore()
+    error.mockRestore()
   })
 })

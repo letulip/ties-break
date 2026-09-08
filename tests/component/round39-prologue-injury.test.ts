@@ -39,6 +39,7 @@ import MatchViewer from '../../src/components/MatchViewer.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import KnockDialog from '../../src/components/KnockDialog.vue'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
+import { landing } from './prologueLanding'
 import InjuryStopDialog from '../../src/components/InjuryStopDialog.vue'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
@@ -251,7 +252,11 @@ function midBandKid(): MatchPlayer {
 async function pressAnswer(w: VueWrapper, label: string): Promise<void> {
   const btn = w.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
   expect(btn, `no answer «${label}»: ${w.text().slice(0, 140)}`).toBeTruthy()
-  await btn!.trigger('click')
+  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. An answer that FINISHES a card is now held for
+  // `PROLOGUE_LANDING_MS` before the walk advances, so this helper steps that clock instead of
+  // waiting on it – see tests/component/prologueLanding.ts. The pinned seeds and the brackets
+  // they resolve are untouched: the hold defers the advance and draws nothing.
+  await landing(() => btn!.trigger('click'))
   await Promise.resolve()
   await nextTick()
 }

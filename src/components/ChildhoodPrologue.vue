@@ -1,3 +1,20 @@
+<script lang="ts">
+// ⚠ MODULE SCOPE, AND IT HAS TO BE A SECOND BLOCK – ConfirmDialog.vue's own reason: everything
+// inside `<script setup>` is the setup FUNCTION's body, so a `const` declared there is not a named
+// export and no test can read it. This one has to be readable, because a suite that WAITED 200ms per
+// answer would add real seconds to every walk in tests/component and be timing-flaky besides.
+//
+// ⭐⭐⭐ ROUND 40 #3 – HOW LONG A CARD IS HELD AFTER THE ANSWER THAT FINISHES IT. The owner's word is
+// in docs/rounds/round-40.md, item 3, which is where his Russian is allowed to live; the short of it
+// is that the card should LAND rather than vanish, and that «~200 ms» is his starting point and not
+// a ruling.
+//
+// ⚠ IT IS PRESENTATION AND ONLY PRESENTATION. The card advances because `cardAnswered` says the run
+// is finished with it; this number decides when the player is shown that, and nothing about what is
+// shown or what is spent. Zero draws on any stream – see `answer()`.
+export const PROLOGUE_LANDING_MS = 200
+</script>
+
 <script setup lang="ts">
 // ⭐⭐ THE PROLOGUE, END TO END – phase 4 of docs/specs/childhood-prologue-build-2026-09.md §6.
 // Nine cards, then the career is created with what they came to, then the handover (§5). This
@@ -43,7 +60,7 @@
 // out of the DRAFT copy table, so `PrologueCard.vue` draws it with the nine years' own fit, contrast
 // and painting – and the painting is the owner's three faces, through the `outcome` argument phase 7
 // left the hook for («the wiring, when it comes, is one argument at one call site»).
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import MuteButton from './MuteButton.vue'
 import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
@@ -297,6 +314,58 @@ const coachBase = computed(() =>
  *  handover draws nothing at all then. */
 const played = computed(() => playedLine(run.value.opens))
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 40 #3 – THE CARD LANDS BEFORE IT LEAVES
+// =================================================================================================
+//
+// THE DEFECT, and it was the promo recorder rather than a tester who met it: on the eight, the nine
+// and the ten the card's ONE question is its whole card, so the answer that fills the ball is the
+// answer that moves the screen – the mark wave A built and the ball A2 painted were on screen for
+// less than a frame. His word is in docs/rounds/round-40.md, item 3.
+//
+// ⚠⚠ THE HOLD IS NOT A SECOND SOURCE OF TRUTH, AND THAT IS THE WHOLE DESIGN. The answer is written
+// into the run UNCONDITIONALLY, above, and `cardAnswered` decides on its own that the card is
+// finished – both exactly as they did before. What is deferred is the ADVANCE and nothing else, so
+// there is no «pending» state to get stuck in: a timer that never fired would leave a card that is
+// still fully answerable, still re-choosable, and still showing what the run holds.
+//
+// ⚠ AND A SECOND PRESS INSIDE THE HOLD RE-STARTS IT rather than being swallowed or queueing a
+// second advance. `land` clears whatever was in flight, so exactly one advance ever happens and it
+// is the one the LAST press earned – which is also what stops a double tap walking the player past
+// a card unread.
+
+/** The timer in flight, or null. ⚠ A PLAIN `let` AND NOT A `ref`: nothing renders off it, and a
+ *  reactive flag is precisely the second source of truth the note above refuses. */
+let landing: ReturnType<typeof setTimeout> | null = null
+
+/** ⚠ CLEARED ON UNMOUNT AND ON `startAgain`, because a timer that outlives its card would advance a
+ *  walk the player has left – or create a career for a childhood that was thrown away. */
+function clearLanding(): void {
+  if (landing === null) return
+  clearTimeout(landing)
+  landing = null
+}
+onUnmounted(clearLanding)
+
+function land(go: () => void): void {
+  clearLanding()
+  landing = setTimeout(() => {
+    landing = null
+    go()
+  }, PROLOGUE_LANDING_MS)
+}
+
+/** THE YEAR IS FINISHED – the weekend it just bought, or the next card. Split out of `answer()` so
+ *  that the hold defers exactly this and nothing about how the answer was recorded. */
+async function advanceYear(age: number): Promise<void> {
+  // ⭐⭐ THE WEEKEND THE YEAR JUST BOUGHT – asked of `localOpensAt`, which answers with a count off
+  // the childhood the player has actually chosen. The tournament plays WHERE THE CARD SITS: this
+  // year's answers are all in the run by the time this runs.
+  queue.value = opensForYear(age)
+  if (playNext()) return
+  await step()
+}
+
 /** ⭐ ONE ANSWER, WHATEVER KIND OF CARD IT WAS. An origin, a decision and a quiet year all arrive
  *  here; the table says which of the three it was, so nothing branches on the age. */
 async function answer(id: string | null): Promise<void> {
@@ -339,13 +408,21 @@ async function answer(id: string | null): Promise<void> {
   }
   // ⭐ THE CARD STAYS UNTIL IT IS FINISHED – both of its questions, on the four cards that ask two.
   // Nothing here decides which those are: the table does, and `cardAnswered` is the one reader.
+  //
+  // ⚠⚠ SO THIS ONE PREDICATE IS ALSO WHICH PRESSES ARE HELD, and no card is named anywhere. A press
+  // that leaves the card standing (the year's own answer on the eleventh and the twelfth, where the
+  // tournament question is still open under it) reaches this line and returns – there is nothing to
+  // hold for, and a delay there would only make a screen that stays feel slow.
   if (!cardAnswered(age, run.value)) return
-  // ⭐⭐ AND THEN THE WEEKEND THE YEAR JUST BOUGHT – asked of `localOpensAt`, which answers with a
-  // count off the childhood the player has actually chosen. The tournament plays WHERE THE CARD
-  // SITS: this year's answers are all in the run by the lines above.
-  queue.value = opensForYear(age)
-  if (playNext()) return
-  await step()
+  // ⭐⭐⭐ ROUND 40 #3 – AND A SELECTION IS HELD LONG ENOUGH TO BE SEEN. `null` is the way on off a
+  // card that decides nothing (`wayOn` in PrologueCard.vue, round 40 #1's own split: every control
+  // that SELECTS emits an id, and the one that only ADVANCES emits null). It has no taken state to
+  // show, so it is not held – the negative arm of item 1, from the other side.
+  if (id === null) {
+    await advanceYear(age)
+    return
+  }
+  land(() => void advanceYear(age))
 }
 
 /** How many weekends the year at `age` holds, as `(age, index)` pairs to be played in order. */
@@ -410,6 +487,11 @@ async function begin(): Promise<void> {
 async function startAgain(): Promise<void> {
   const careerId = game.snapshot?.careerId
   if (careerId) await game.deleteCareer(careerId)
+  // ⚠ ROUND 40 #3 – AND ANY CARD STILL LANDING IS DROPPED WITH THE CHILDHOOD IT BELONGED TO. The
+  // handover cannot be reached with one in flight (it is the ninth card's own advance that opens
+  // it), so this is belt and braces rather than a live path – and it is the cheap half of «the timer
+  // must not outlive its walk», the other half being `onUnmounted`.
+  clearLanding()
   handoverOpen.value = false
   run.value = EMPTY_RUN
   // ⚠ AND THE IDENTITY GOES BACK TOO. «Start again» drops the career and starts the childhood over
