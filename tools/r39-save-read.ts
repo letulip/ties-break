@@ -345,3 +345,25 @@ if (args.includes('--retire')) {
   console.log(`    opponents ${theirs}  (${((theirs / Math.max(1, n)) * 100).toFixed(2)}% of matches)`)
   for (const r of rows) console.log(r)
 }
+
+// THE TWO TENURE GATES ON A REAL CAREER (owner, 08.09: «всё именно так и есть» - three of four).
+// Both the shipped 8-year capstone and wave EF's lifetime letter read `capstoneSeasonsOf`, so this
+// prints what his own careers actually banked against them.
+if (args.includes('--tenure')) {
+  const w = world as unknown as WorldState
+  const any = world as Record<string, any>
+  const { capstoneSeasonsOf } = await import('../src/engine/world/sponsors')
+  const seasons = capstoneSeasonsOf(w)
+  const slams = (any.trophiesByTier?.slam?.titles ?? []).length
+  console.log(`  ${any.profile.kidName} ${any.profile.kidLastName}, week ${w.week}`)
+  console.log(`  seasons ENDED in the wta top 10: ${seasons}   slam titles: ${slams}`)
+  const rows = (any.seasonHistory as any[]).map((h) => h.byTrack?.wta?.endRank).filter((r) => r !== undefined)
+  console.log(`  every wta end-rank: ${rows.join(', ')}`)
+  const near = rows.filter((r: number) => r > 10 && r <= 20).length
+  console.log(`  seasons ended 11-20 (just outside): ${near}`)
+  console.log(`  capstone gate  (4 top-10 seasons)            -> ${seasons >= 4 ? 'FIRES' : `SHORT by ${4 - seasons}`}`)
+  console.log(`  lifetime gate  (4 top-10 seasons + 1 slam)   -> ${seasons >= 4 && slams >= 1 ? 'FIRES' : `SHORT by ${Math.max(0, 4 - seasons)} season(s)${slams >= 1 ? '' : ' and a slam'}`}`)
+  console.log(`  at a threshold of 3 seasons: capstone ${seasons >= 3 ? 'FIRES' : 'short'} · lifetime ${seasons >= 3 && slams >= 1 ? 'FIRES' : 'short'}`)
+  const cap = (any.offers as any[]).filter((o) => o.terms?.category === 'capstone')
+  console.log(`  capstone letters actually received in this career: ${cap.length}`)
+}

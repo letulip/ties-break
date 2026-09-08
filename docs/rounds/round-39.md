@@ -63,7 +63,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   reads a headroom band) – mutation-verified by deleting the card line (2 arms red, restored).
   `r38-decline-voice.test.ts`'s Home arms re-aimed with ⚠ notes.
 
-- [>] **2b. (REOPENED 08.09) «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
+- [x] **2b. (REOPENED TWICE 08.09) «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
   было до этого про потолок и прочее»** – **build.** Home keeps a SHORT, coloured read. ⚠ The old
   ceiling plate is the shape he is naming; match its length and its colour treatment, not its words.
 
@@ -763,7 +763,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 - [~] **13b. «Но очень хорошо, что тренер стал обращать внимание, что перформанс падает»** –
   **answer, nothing to build.** Round 38's decline note landing well. Recorded so it is not lost.
 
-- [>] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
+- [ ] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
   - одно и то же опять, давай какую-то вариативность в этих фразах сделаем, какие варианты?»** –
   **build + ask.** The retirement-thought copy repeats verbatim. He is asking BOTH for variety and
   what the variants should be, so the variants come back to him as a choice before they ship.
@@ -786,7 +786,14 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   (composure+stamina composites, physical share, plateau x decline overlap) across preset careers,
   bring back WHEN each would fire, then the copy and K ship together.**
 
-- [>] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
+  ⚠ **CARRIED OUT OF ROUND 39, DELIBERATELY AND SAID SO.** The mechanism is approved and the four
+  ledes are drafted, but the TRIGGER is not measured yet and he was right about why it must be: on
+  his own save the plateau card would fire at her peak. Nothing ships on a guess (invariant 5), so
+  14a and 14b leave this round OPEN with the measurement owed – candidate triggers
+  (composure+stamina composite, physical share, plateau x decline overlap) walked across the corpus,
+  reported as WHEN each would fire, then the copy and K together.
+
+- [ ] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
   Какой-то механизм для этого»** – **ask then build.** Today the line always ends «She will keep
   playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
   That is a mechanic, not copy – sharpen it to a choice before building.
