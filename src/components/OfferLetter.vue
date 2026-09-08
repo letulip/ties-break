@@ -52,10 +52,18 @@ import type {
 } from '../shared/protocol'
 import { formatCents } from '../shared/money'
 import { weekLabel, weekRange } from '../shared/dates'
-import { dealUntilWeek } from '../engine/offers'
+import { adCampaignCutShort, apparelBondCost, dealUntilWeek, sponsorTierOfBrand } from '../engine/offers'
 import PaperNote from './ui/PaperNote.vue'
 
-const props = defineProps<{ offer: Offer; week: number }>()
+// ⭐⭐ ROUND 39 #17 – `offers` IS THE WHOLE INBOX AND IT IS OPTIONAL. One clause on a rival house's
+// kit letter needs a fact that is not on its own paper – whether a clothing campaign is running, and
+// whose – and the engine answers it (`apparelBondCost`) rather than this sheet deriving anything.
+// Optional because every existing caller hands one letter and a week; a caller that does not pass
+// the inbox simply gets the letter it always got, which is what keeps the fixtures and the older
+// mounted tests reading unchanged.
+const props = withDefaults(defineProps<{ offer: Offer; week: number; offers?: Offer[] }>(), {
+  offers: () => [],
+})
 const emit = defineEmits<{ sign: [string]; refuse: [string] }>()
 
 /** Vite's base path, so the letterhead resolves under a sub-path deploy the same way the art does. */
@@ -281,9 +289,17 @@ const adSettled = computed(() => {
       if (adLifetime.value) return 'Signed – the fee is banked, and it comes again every year, for life.'
       const running = props.week <= (o.untilWeek ?? -1)
       const shoots = adShootWeekLine.value
-      return running
-        ? `Signed – the fee is banked, the campaign runs to ${weekLabel(o.untilWeek ?? o.week)}${shoots ? `, and her shoot weeks are ${shoots}` : ''}.`
-        : 'Signed. The fee was banked, and the campaign has run its course.'
+      if (running) {
+        return `Signed – the fee is banked, the campaign runs to ${weekLabel(o.untilWeek ?? o.week)}${shoots ? `, and her shoot weeks are ${shoots}` : ''}.`
+      }
+      // ⭐⭐ ROUND 39 #17 – A CAMPAIGN THAT WAS ENDED DID NOT RUN ITS COURSE, and the record may not
+      // say it did. `adCampaignCutShort` reads the shortened span off the paper's own frozen term –
+      // no new field – so a clothing campaign closed by a signature with another house reports what
+      // actually happened, exactly as the kit goodbye's `stepped` arm does one paper over. DRAFT.
+      if (adCampaignCutShort(o)) {
+        return 'Signed. The fees paid are hers to keep, and the campaign ended when she signed with another house.'
+      }
+      return 'Signed. The fee was banked, and the campaign has run its course.'
     }
     case 'refused':
       return 'Turned down.'
@@ -326,8 +342,49 @@ const endBody = computed(() => {
  *  ship as `tour` / `premium` / `icon`, and the redirect is retired rather than left as an identity
  *  function - `sponsorArtKey`'s own note said that is what shipping the art would mean. All six
  *  rungs print their own mark, and `tests/art-placeholders.test.ts` asserts every rung on the ladder
- *  has a file, so a seventh rung added without art fails there instead of silently borrowing here. */
-const markUrl = computed(() => `${base}images/sponsors/${terms.value.tier}.webp`)
+ *  has a file, so a seventh rung added without art fails there instead of silently borrowing here.
+ *
+ *  ⚠⚠ AND SINCE ROUND 39 #17 IT IS THE BRAND'S RUNG WHEN THE TWO COME APART. Every letter the
+ *  ladder writes carries its own rung's name, so `sponsorTierOfBrand(brand) === tier` for all of
+ *  them and the file resolved is BYTE-IDENTICAL – nothing about a shipped letter moves. The one
+ *  paper where they differ is the guaranteed letter the apparel bond raises: the house shooting her
+ *  campaign writes at the terms of the rung she clears TODAY, so the name is X's and the tier is the
+ *  ladder's, and a sheet that printed the rung's mark over X's signature would contradict itself.
+ *  The fallback is the tier, so a brand on no rung still prints something. */
+const markUrl = computed(
+  () => `${base}images/sponsors/${sponsorTierOfBrand(terms.value.brand) ?? terms.value.tier}.webp`,
+)
+
+/** ⭐⭐⭐ ROUND 39 #17 – WHAT SIGNING THIS LETTER WOULD COST HER SOMEWHERE ELSE, and it is the
+ *  mechanism rather than a footnote: a clothing campaign is written by the house that dresses her,
+ *  so signing a DIFFERENT house ends it. The owner's own words: «если в межсезонье она решит
+ *  подписать другого спонсора, то контракт обнулится».
+ *
+ *  ⚠⚠ WAVE G3 – AND THE MONEY IS NO LONGER ON THIS PAPER. What stood here argued the opposite («THE
+ *  NUMBER IS THE POINT. Without the money it names, this clause is a trap»), and the owner overturned
+ *  that argument on 08.09: «ты правда думаешь, что в реальности при переподписании кто-то пишет
+ *  точные суммы предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять это надо
+ *  абсолютно точно». He is right, and both halves of him are: a rival apparel house does not KNOW a
+ *  competitor's remaining contract value and would never PUBLISH it, so an exclusivity clause on its
+ *  own letterhead is realistic and a competitor's balance sheet is fiction – while the consequence
+ *  itself still has to land without any doubt at all.
+ *
+ *  ⚠ SO THE NUMBER DID NOT DISAPPEAR, IT MOVED to the one surface whose own doctrine already claims
+ *  it: the sign confirm in `InboxSheet.vue`, whose round-24 rule is that it restates the deal «and
+ *  the one thing the letter cannot say». A competitor's figures are exactly that. The two surfaces
+ *  read THIS function – the engine's own, the very one `signOffer` reads to end the campaign – so
+ *  the paper, the confirm and the till can never disagree about which campaign a signature ends.
+ *
+ *  Null on every letter that costs nothing: no campaign running, a campaign from THIS house (signing
+ *  the house already shooting her ends nothing), a non-clothing campaign, and the lifetime paper,
+ *  which is exempt by ruling and by category alike. */
+const bondCost = computed(() =>
+  props.offer.kind === 'kit' && !terms.value.ended
+    ? apparelBondCost(props.offers, props.week, terms.value.brand)
+    : null,
+)
+/** Who the campaign that would end is with – off its own paper, like every other name on this sheet. */
+const bondBrand = computed(() => (bondCost.value?.campaign.terms as AdOfferTerms | undefined)?.brand ?? '')
 
 /** ⚠ WHAT THEY COVER, IN THE BRAND'S OWN WORDS - the sentence the whole ladder exists to make
  *  readable. The rung is COVERAGE, not prestige (see `SponsorTier`), so the line that names the
@@ -772,13 +829,30 @@ const settled = computed(() => {
     <!-- tilt is 0 and STAYS 0 – see the block comment at the top of this file. -->
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <img class="offer-mark" :src="markUrl" :alt="terms.brand" />
+      <!-- ⭐⭐⭐ ROUND 39 #17, WAVE G2 – AND THE HOUSE THAT ALREADY SHOOTS HER CAMPAIGN IS RENEWING,
+           NOT PITCHING. His ruling of 08.09 is a RENEWAL NOTICE rather than a fresh pitch – his own
+           words are quoted in engine/offers.ts (`apparelBondLetter`), because no Cyrillic passes this
+           line (tests/offers.test.ts). So the paper opens in the voice of a relationship being
+           carried on, and it says the ONE thing that makes it different from the incumbent's own
+           renewal one arm down: the terms are the rung her ranking earns TODAY (his ruling 2), not
+           the paper that ran out. A letter that claimed «the same deal, another year» would be lying
+           about the only number a parent could check.
+           ⚠ IT IS ITS OWN ARM AND NOT `renewal`, because those two sentences are not both true of
+           one letter. ⚠ AND IT IS STILL SIGNED BY HAND – nothing below this line changes; the Sign
+           and Refuse controls, the deadline and the exclusivity clause are the ordinary letter's.
+           DRAFT copy. -->
+      <p v-if="terms.apparelBond" class="offer-body">
+        Her face is already on our posters, and we would rather she wore our kit while it is there.
+        Our kit paper with her has run out, so this is us renewing it – on the terms her ranking
+        earns today.
+      </p>
       <!-- ⚠ ONE LINE IS THE WHOLE DIFFERENCE, AND IT HAS TO BE THERE. A renewal (10.08) carries the
            SAME terms as the contract that is ending – `raiseKitRenewal` copies them verbatim, because
            that is what renewing is – so without this arm the incumbent's letter would introduce
            itself to a family it has kitted out all season, in the voice of a stranger. Everything
            below is unchanged and stays true of a second year: the coverage, the freshness, the
            events she owes, the exclusivity and the term. -->
-      <p v-if="terms.renewal" class="offer-body">
+      <p v-else-if="terms.renewal" class="offer-body">
         She has been in our kit all season and we have enjoyed every week of it. We would like to keep
         her in it – the same deal, another year.
       </p>
@@ -809,6 +883,22 @@ const settled = computed(() => {
              a player who cannot read it here would be committing to it blind. In the brand's own
              voice, plainly, the way a commercial term is really written. -->
         <li>And while she is in our kit she is in nobody else's.</li>
+        <!-- ⭐⭐⭐ ROUND 39 #17, WAVE G3 – AND WHAT THAT CLAUSE COSTS HER, WITHOUT A NUMBER THIS
+             HOUSE COULD NOT KNOW. Wave G printed the competitor's remaining fees on this paper and
+             the owner overturned it on 08.09 (his sentence is quoted in the script above – no
+             Cyrillic passes this line, tests/offers.test.ts): nobody re-signing writes out a rival's
+             exact contract sums, and yet the consequence must be understood exactly. So the letter
+             keeps the CLAUSE and loses the figures, and the money is stated on the sign confirm –
+             the surface whose whole job is «the one thing the letter cannot say».
+             It sits directly under the exclusivity clause because it is that clause's consequence,
+             in the same commercial voice and with no scolding. ⚠ ONE ARM, NOT TWO: with no money on
+             it there is nothing left for the fees-remaining and term-served cases to differ about,
+             and a split that renders one sentence twice would be a lie about the paper. DRAFT
+             copy. -->
+        <li v-if="bondCost">
+          While you wear us, she appears in no other apparel campaign – hers with {{ bondBrand }}
+          would end on signature.
+        </li>
         <li>
           <!-- HOW LONG IT RUNS, in seasons AND in weeks. "Three seasons" left the parent counting
                off a calendar he cannot see, and the end week was persisted on the offer all along -
