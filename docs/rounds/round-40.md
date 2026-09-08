@@ -179,7 +179,7 @@ walked ONE seed down two childhoods and the payoff screen said the same thing tw
 (the base band moves on a measured 40.9% of seeds and the film drew one of the other 59%) – but four
 real questions at the moment they hurt most. He answered all four.
 
-- [ ] **4. The handover's base sentence should read REALISATION, not arrival.** Owner: «что если мы
+- [x] **4. The handover's base sentence should read REALISATION, not arrival.** Owner: «что если мы
   здесь как раз будем говорить о той разнице в реализации, которой уже к этому моменту она достигла?
   тогда это не нарушит ничего, но и отразить разный прогресс» → then «делай».
 
@@ -235,6 +235,100 @@ real questions at the moment they hurt most. He answered all four.
   CONSTRUCTION (a p20 cut), so after the rewrite roughly one player in five with a quiet childhood
   reads this line, on the screen that also says «This is the girl you raised». A sentence that is
   read that often has to be one worth reading five times.
+
+  ---
+
+  ⭐⭐⭐ **BUILT ON `r40/wave-f`.** `handoverBaseBand` (`src/engine/world/coachMarket.ts`) reads
+  realisation; `handoverRoomBand` is untouched, no ceiling is drawn and no number is printed. **No
+  save-schema move**: the handover already computes the arrival and the potential is derivable from
+  the seed, so the field is derived at snapshot time exactly as it was.
+
+  **THE DERIVATION – `handoverRealisation(world)`, beside round 34 #2b's own.**
+
+      (world.skills − withHeadStart(startingSkills(seed, profile), birthMonth))  ... summed over the five
+      ────────────────────────────────────────────────────────────────────────
+      (world.potential − startingSkills(seed, profile))
+
+  * **Round 34's fix is inherited, not re-argued:** the numerator SUBTRACTS her birth build and the
+    denominator is the ROOM rather than the asymptote. That is what stopped «the verdict arriving
+    earlier for the less gifted girl», and `tests/prologue-handover.test.ts` now holds it as two arms
+    of its own – same share of her own room reads the same whatever the ceiling is, and a girl born
+    high who gained nothing never out-reads a girl born low who did the work.
+  * ⚠⚠ **`realisedShare` ITSELF COULD NOT BE CALLED, and the reason is fatal rather than untidy: it
+    CLAMPS TO [0, 1].** This reading is signed – the measured range is −22.7% to +22.4% – and the
+    whole bottom band is the negative half. Under the clamp every neglected childhood reads exactly
+    0.0, the p20 cut below zero is unreachable and `behind` becomes a band no career can enter. Two
+    lesser reasons come with it: `realisedShare` divides by `reachableHeadroomShare()` (a career-long
+    yardstick about what coaching can still buy, a constant at week 0) and its birth build is the
+    PRE-head-start one, which would put ~2.2 points of relative-age effect in the numerator against a
+    childhood span of 2.44. So the two live side by side with the divergence written out, the same
+    relationship `coachRoomNote` and `coachRoomShort` have.
+
+  **THE MEASUREMENT (`tools/r40-handover-realisation-cuts.ts`, which walks the SHIPPED function, not a
+  replica).** Population: every childhood the shipped card table can produce – the 32 reachable runs –
+  over 100,000 seeds = **3,200,000 childhoods**.
+
+      min −26.1%   p05 −7.9%   p20 −5.0%   p50 −0.1%   p80 +3.6%   p95 +7.4%   max +24.1%
+
+  | | |
+  | --- | --- |
+  | the cuts, p20/p80 of the above | **−0.050 / +0.036** |
+  | stable across sample sizes | −0.0504/+0.0365 at 64,000 · −0.0504/+0.0364 at 640,000 · −0.0503/+0.0364 at 3,200,000 |
+  | the bands hold | behind 20.0% · level 60.0% · ahead 20.0% – ⚠ the middle holds «most», which is what killed the tertiles for the arrival cuts |
+  | the sentence differs, cheapest vs dearest | **200 of 200 seeds – 100%** (the arrival reading: 52%) |
+
+  ⚠ **The authorising probe's −5.0% / +2.7% reproduces at the bottom and moves 0.9 of a point at the
+  top**, because it measured a slightly different quantity: it applied no head start (numerator and
+  denominator shared a baseline) and doubled its corpus by a Local Open answer that cannot reach the
+  arrival at all – `yearAt` builds a year out of the card's own pick and never reads `run.entries`, so
+  those 32 extra rows were duplicates rather than samples. Item 5's conclusion is unaffected and is
+  now structural rather than measured.
+
+  ⚠ **AND THE BIRTH MONTH NEARLY LEAVES THE READING, which is the right way round and is not a zero.**
+  The head start is applied BEFORE the childhood, so it stands in both terms of the numerator and
+  cancels – except where `childhoodArrival`'s `STARTING_SKILL_BAND` clamp truncates a January girl's
+  gain or a December girl's loss (the clamp binds on a measured **15.0%** of attribute-childhoods at
+  the ends of the table). Measured through the shipped band: **13.5% of seeds**, against the arrival
+  reading's 43.4%.
+
+  ⚠ **A career started through the WIZARD now reads `level`, always** – with no prologue the numerator
+  is 0 by construction. No screen outside the prologue's own handover reads the field, and the two
+  shipped pins that graded the arrival over wizard careers (the fresh-fourteen distribution and its
+  19/62/19 shares) were **re-aimed at the population the sentence is spoken to**, because realisation
+  over careers that had no childhood is a spike at zero with no quantiles to cut.
+
+  **THE COPY, VERBATIM.** `behind` is HIS, replaced rather than added to:
+
+  * `Most of what she has, she was born with. The years added little to it.`
+  * `She comes with what she started with – the work has not reached it yet.`
+
+  ⚠ The two lines that stood there – «She is behind most girls her age. That is the ground she starts
+  from.» / «There is ground to make up on the girls her age.» – claim a COMPARISON AGAINST OTHER
+  GIRLS, which was true of a band that read her arrival against the fresh-fourteen distribution and is
+  not a thing realisation measures. `ahead` and `level` are **byte-identical** and a test now spells
+  all four out. ⚠ **AN ASK RATHER THAN A CHANGE (invariant 4):** those four still speak in the
+  comparative register («most girls her age», «the girls she will be playing») and the new reading
+  does not measure a population either. He ruled on the bottom band and only the bottom band, so
+  nothing else moved – whether the upper two should follow it is his.
+
+  **EVIDENCE.** `tests/prologue-handover.test.ts` (the phase-7 block, re-aimed and grown from 9 arms to 16)
+  and `tests/component/prologue-handover.test.ts` (25 arms, three of them new and mounted), both
+  mutation-verified – six mutations, six reds, all restored:
+
+  | mutation | result |
+  | --- | --- |
+  | the divisor swapped to the ASYMPTOTE (`world.potential[k]`) | **RED, 4 arms** – ⭐ round 34's inversion returns in one line: at −10% of her room the small-ceiling girl reads **−0.010** against the big-ceiling girl's −0.034, i.e. BETTER for identical work. And the acceptance criterion collapses from 150 of 150 seeds to **0** |
+  | the numerator counting her BIRTH BUILD | **RED, 6 arms** – the girl born near the top who gained nothing reads **2.585** against the worker's 2.43, so she out-reads her; that is the defect measured on his own save |
+  | the numerator on the PRE-head-start build | **RED, 5 arms** – the birthday then moves the sentence on **100%** of seeds (it is 13.5% as shipped) |
+  | the upper cut moved from 0.036 to 0.046 | RED – the measured-cuts arm names the quantile it is no longer at |
+  | a `behind` line reverted to the shipped comparison | RED in both files – ⚠ and the MOUNTED arm only caught it after being strengthened: which of his two lines the coach says is drawn off the seed, so a single mount reads one line and the first version of that arm missed a mutation to the other. It now walks seeds until both have rendered |
+  | the base sentence taken off the card (`v-if="false"`) | RED, 5 mounted arms |
+  | (control) `realisedShare`'s OWN numerator mutated instead | RED on the coach-market ladder test and GREEN on all of these – the two functions are separately covered, which is the answer to «are these one thing or two» in test form |
+
+  ⚠ **RNG (invariant 2): ZERO draws on any stream.** The band is DERIVED – a subtraction and a
+  division over state the world already carries – and only WHICH of the two sentences says it is
+  drawn, on the existing `:prologue:base` key. MAIN untouched, `tests/condition.test.ts` green, capture
+  unchanged at **41550 / `e6b0c709`**.
 
 - [ ] **5. Verify the span: the film measured 2.49 where the enumeration says 1.87.** `coachMarket.ts`
   records «enumerating all 32 runs through the SHIPPED CARD TABLE gives a span of 1.87 (mean arrival
