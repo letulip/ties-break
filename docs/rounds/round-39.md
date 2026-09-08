@@ -49,6 +49,13 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   1-2 года, топ-50 1-3 года, для топ-20 и выше до 10 лет. Но может у тебя есть предложения лучше.»
   → research on real endorsement terms is MINE, then the ladder proposal comes back to him.
 
+  **RESEARCHED (08.09):** real anchors – Sharapova-Nike 8y, Federer-Uniqlo 10y/$300M,
+  Djokovic-Lacoste 5y, McIlroy-Nike 10y; lifetime deals exist (Messi, Ronaldo, LeBron) but are the
+  icon exception, mostly outside tennis. The game ALREADY holds an 8-year capstone gated on four
+  top-10 seasons – the long top end half-exists. Proposed ladder is in the report of 08.09; ordinary
+  letters stay churnable (max 5y at the top), the 8y capstone stands, and a once-per-career LIFETIME
+  letter is proposed at legend status. `[?]` waiting on his word.
+
 - [>] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
   assumes planes have it too – verify rather than assume, and fix every shelf rung that shows it.
@@ -88,6 +95,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   как быть. Надо подумать хорошенько. У тебя какие мысли?» → the measured 5-week point is $8,243,530
   (23% of derived) – his feel is right in kind. Design proposal is MINE, back to him before any build.
 
+  **PROPOSED (08.09):** A+C – a REPEAT founding is priced at the market's current derived worth
+  (the $250k garage price is a one-time story; his first-purchase law untouched), and the ramp's
+  half-life floor rises 13 -> ~52 weeks so even a first brand is «процесс»: week-1 worth $723k
+  instead of $1,844,174, half-value at a year. Alternative D (the sold brand keeps living and eats
+  the new one's reach) named as the richer, heavier road. `[?]` waiting on his choice.
+
 - [ ] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw
   luck? Measure the arrival rate before touching anything.
@@ -102,6 +115,13 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   **OWNER (08.09), REOPENING THE ANSWER:** «я это помню, но кажется, что 2 сезона в топ-10 прошли без
   него.» → so the question is now the offer CADENCE, not the gate: when did she hold a top-10 rank,
   when did fragrance offers arrive, and what cooldown sits between ad offers of one category. MINE.
+
+  **MEASURED (08.09):** `reviewAdOffer` rolls weekly per category at `offerChance = 0.05`, gate
+  band 4 = LIVE wta <= 10, and `adSpokenFor` silences a category while its deal runs. A fully
+  top-10 season with the slot open still goes dry with P = 0.95^44 ≈ 10% – his two dry seasons are
+  either that die or weeks where her live rank sat 11-15 (the save keeps no live-rank history, so
+  the two cannot be told apart retrospectively). Remedy options in the report: a pity timer
+  (guaranteed letter within 26 weeks of entering the band), a wider gate, or leave it. `[?]`.
 
 - [ ] **7. «Странно, что после шлема в 40м году она не смогла взять больше ни одного»** –
   **measure.** One Slam in season 40 and never again. Read her actual title history and the field
@@ -120,6 +140,24 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   тому, как они относятся к остальным соперникам, особенно ниже 50» → #7 and #10 merge into ONE
   audit: her skills against the field's, expected win probabilities from the match model, actual
   results over them – slams and sub-top-50 opponents as the two lenses. MINE.
+
+  ⭐⭐ **MEASURED (08.09, `--audit`): THE FORMULA IS CONSISTENT – she slightly OVER-performs it.**
+  Closed-form p(win) over her 247 logged matches, current skills/ranks (stated caveat):
+
+  | window | n | model expects | actual |
+  | --- | --- | --- | --- |
+  | 198 weeks, all | 247 | 64.6% | 70.4% |
+  | 42 weeks, all | 58 | 66.4% | 69.0% |
+  | 42 weeks, vs outside top 50 | 34 | 71.9% | 73.5% |
+  | 198 weeks, slams only | 40 | 63.1% | 62.5% |
+  | 198 weeks, wta1000 only | 98 | 59.9% | **74.5%** |
+
+  The sub-50 losses are ON MODEL: her build is lopsided – serve **53.1** and composure **50.6**
+  against a 26-50-band average of 56.3/57.7 (composure is below even the 51-100 band's 55.7), while
+  ret 69.0 and groundstrokes 70.6 are top-10 class. The model prices ~25-28% loss risk per sub-50
+  match and she plays dozens. Slam exits are exactly on model; the single slam (w494) was won at her
+  peak. The one anomaly is the OLD window's wta1000 over-performance (+14.3 wins), which the neutral
+  probe (max condition, hard, today's skills) cannot attribute – flagged, not diagnosed.
 
 - [ ] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
   offered $300k reads as insulting. Measure the offer curve against rank and check whether the top
@@ -140,6 +178,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 
   Every ad category roughly HALVED between season 11 and season 14 while she stayed top-20. That is
   the item; the $300k offer is one symptom of it.
+
+  **ANSWERED (08.09):** the halving is the band ladder he approved in round 34 – bands maxWtaRank
+  [400, 200, 100, 50, 10]; clothing pays $1M at band 4 (live top-10) and $300k at band 3 (11-50).
+  The $300,000 letters landed when her LIVE rank had slipped out of the top ten; «для #7» was the
+  end-of-PREVIOUS-season rank. Working as ruled; the felt defect is the 3.3x cliff at the 10/11
+  boundary. Remedy options in the report (tenure-buffered band, an 11-25 half-band, or leave). `[?]`.
 
 - [>] **9. «Опять just one day (REOPENED against round 26 #9). Я просил сделать много вариантов подарков для разных возрастных
   групп. Мне кажется, что вполне допустимо чтобы что-то повторялось, но не больше 2-3 раз за всю
@@ -204,6 +248,10 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   интерфейсе доход около 17к» → the engine pays $33,169 and his screen says ~17k. Find where the
   half goes on the MoneyScreen and either show it or name it. MINE to measure, then a small build.
 
+  **FOUND (08.09):** per-rung income is land $0 · courts $4,346 · building $11,438 · staff
+  **$17,385** – his «около 17к» is the STAFF rung's own line, and the screen never sums the family.
+  The build: a family total line on «Her academy». Queued behind wave B (same file, MoneyScreen.vue).
+
 - [ ] **12. «Мне кажется, что когда у нас появляется самолёт можно перелёты зачеркнуть на карточке
   и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
   **answer first, then build if it confirms.** He is asking how it works before asking for a change.
@@ -226,6 +274,13 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   **OWNER (08.09):** «окей, хорошо, но вот я и пытаюсь понять он должен их вообще снимать или нет,
   т.к. мы уже платим недельный тариф, я не знаком так глубоко с частной авиацией. Нужен небольшой
   ресерч.» → research on what owning an aircraft actually removes per trip is MINE, verdict back to him.
+
+  **RESEARCHED (08.09), verdict: it must NOT clear the fare.** Owning removes the charter's margin
+  and fixed share; the variable cost of every trip remains – fuel $1,500-4,000+/hr, crew, landing
+  and handling, ~$3,000/hr all-in against fixed costs of ~$500k-1.5M/yr. Our weekly upkeep is the
+  fixed half, the halved fare is the variable half – the 0.5 share is a fair model of reality. The
+  card stays honest as it is; a strikethrough-style clarity pass is possible if he wants it. `[~]`
+  unless he overrules.
 
 - [>] **13a. «Ей почти 29, а тренер говорит, что она протянет ещё 13 сезонов, при этом она уже
   начинает постепенно сдавать, что видно в статистике сезонов: уже не топ-10»** – **build.** The
@@ -250,6 +305,14 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 
   **OWNER (08.09):** «да, подумай пожалуйста» → the variant sets and the she-is-done mechanism are
   MINE to draft, back to him before any build.
+
+  **DRAFTED (08.09), in the report:** four plateau ledes keyed DETERMINISTICALLY on
+  `oneMoreYearCount` (0 = the shipped sentence byte-identical; 1, 2, 3+ escalate in her voice –
+  no new dice), plus the mechanism: today `final: true` fires only on `physicalShare <=
+  lastOfferPeakShare`, so a plateau card can repeat for YEARS (hers: physicalShare 99.7%,
+  oneMoreYearCount already 3). Proposal: the plateau path also turns final after K one-more-years
+  (K=4 suggested), with the escalating ledes as the warning – plus a Home line after each
+  one-more-year so the state is visible in-season. `[?]` copy and K wait on him.
 
 - [ ] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
   Какой-то механизм для этого»** – **ask then build.** Today the line always ends «She will keep

@@ -238,3 +238,83 @@ if (args.includes('--extra2')) {
     console.log(`  from week ${since} (${w.week - since} weeks): ${won}W ${lost}L · ${lostBelow50} losses to a player now outside the top 50 (${lost ? ((lostBelow50 / lost) * 100).toFixed(0) : 0}% of losses)`)
   }
 }
+
+if (args.includes('--academy')) {
+  const w = world as unknown as WorldState
+  const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
+  const { assetWeeklyIncomeCents } = await import('../src/engine/world/business')
+  for (const id of ['academy-land', 'academy-courts', 'academy-building', 'academy-staff', 'merch-brand']) {
+    console.log(`  ${id.padEnd(17)} ${money(assetWeeklyIncomeCents(w, id)).padStart(10)}/wk`)
+  }
+  console.log(`  academy total     ${money(academyWeeklyIncomeCents(w)).padStart(10)}/wk`)
+}
+
+// #7 + #10 – THE SKILL-FORMULA AUDIT (owner, 08.09: «корректно ли работает наша формула по скиллам…
+// как они относятся к остальным соперникам, особенно ниже 50»). Closed-form p(win) on her logged
+// matches, expected wins against actual. ⚠ Skills and ranks are TODAY's, matches are up to 198
+// weeks old – the headline window is the recent one, where that confound is smallest.
+if (args.includes('--audit')) {
+  const w = world as unknown as WorldState
+  const any = world as Record<string, any>
+  const f1 = (n: number) => n.toFixed(1)
+  const { kidMatchPlayer } = await import('../src/engine/world/player')
+  const { rivalMatchPlayer } = await import('../src/engine/season/rival')
+  const { basePServe } = await import('../src/engine/match/point')
+  const { pMatchBo3 } = await import('../src/engine/match/closedForm')
+  const { fieldProsOf } = await import('../src/engine/world/ladder')
+
+  const pros = new Map(fieldProsOf(w).map((p: any) => [p.id, p]))
+  const cohort = new Map((any.cohort as any[]).map((p) => [p.id, p]))
+  const wta = rankingFor(w, 'wta')
+  const rankOf = new Map(wta.map((r) => [r.playerId, r.rank]))
+  const her = kidMatchPlayer(w as any)
+
+  const tierOf = (seed: string) => (seed.match(/-w\d+-([a-z0-9]+):/) ?? [])[1] ?? '?'
+  type Row = { week: number; opp: any; rank: number | undefined; tier: string; won: boolean; p: number }
+  const rows: Row[] = []
+  for (const e of (any.events as any[]).filter((e) => e.type === 'match' && e.match?.seed)) {
+    const m = e.match
+    const oppId = m.aId === 'kid' ? m.bId : m.aId
+    const opp = pros.get(oppId) ?? cohort.get(oppId)
+    if (!opp) continue
+    const him = rivalMatchPlayer(opp, 'hard', ECONOMY.condition.max)
+    const pA = basePServe(her, him, { surface: 'hard', tour: 'wta', seed: 'audit' } as any)
+    const pB = basePServe(him, her, { surface: 'hard', tour: 'wta', seed: 'audit' } as any)
+    rows.push({ week: e.week, opp, rank: rankOf.get(oppId), tier: tierOf(m.seed), won: m.winnerId === 'kid', p: pMatchBo3(pA, pB) })
+  }
+
+  const agg = (rs: Row[], label: string) => {
+    if (!rs.length) { console.log(`  ${label.padEnd(30)} (none)`); return }
+    const exp = rs.reduce((s, r) => s + r.p, 0)
+    const act = rs.filter((r) => r.won).length
+    console.log(`  ${label.padEnd(30)} n=${String(rs.length).padStart(3)}  model expects ${f1(exp)} wins (${f1((exp / rs.length) * 100)}%)  actual ${act} (${f1((act / rs.length) * 100)}%)  gap ${f1(act - exp)}`)
+  }
+
+  for (const since of [634, 790]) {
+    const win = rows.filter((r) => r.week >= since)
+    console.log(`\nWINDOW from week ${since} (${w.week - since} weeks, ${win.length} matches)`)
+    agg(win, 'ALL')
+    agg(win.filter((r) => (r.rank ?? 999) <= 10), 'vs top 10 (now)')
+    agg(win.filter((r) => (r.rank ?? 999) > 10 && (r.rank ?? 999) <= 50), 'vs 11-50')
+    agg(win.filter((r) => (r.rank ?? 0) > 50), 'vs outside top 50')
+    agg(win.filter((r) => r.tier === 'slam'), 'slams only')
+    agg(win.filter((r) => r.tier === 'wta1000'), 'wta1000 only')
+  }
+
+  console.log('\nHER SKILLS AGAINST THE BANDS (current cohort+field, mean per attribute)')
+  const bands: [string, (r: number) => boolean][] = [['top 10', (r) => r <= 10], ['11-25', (r) => r > 10 && r <= 25], ['26-50', (r) => r > 25 && r <= 50], ['51-100', (r) => r > 50 && r <= 100]]
+  const keys = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes'] as const
+  console.log('  ' + 'band'.padEnd(9) + keys.map((k) => k.padStart(8)).join('') + '  p(win) closed-form vs band-average player')
+  for (const [label, fits] of bands) {
+    const members = wta.filter((r) => fits(r.rank) && r.playerId !== 'kid').map((r) => pros.get(r.playerId) ?? cohort.get(r.playerId)).filter(Boolean)
+    if (!members.length) continue
+    const avg: any = {}
+    for (const k of keys) avg[k] = members.reduce((s: number, m: any) => s + (m[k] ?? 0), 0) / members.length
+    avg.id = 'avg'; avg.name = 'avg'; avg.ageYears = 26; avg.growth = 0
+    const him = rivalMatchPlayer(avg, 'hard', ECONOMY.condition.max)
+    const pA = basePServe(her, him, { surface: 'hard', tour: 'wta', seed: 'audit' } as any)
+    const pB = basePServe(him, her, { surface: 'hard', tour: 'wta', seed: 'audit' } as any)
+    console.log('  ' + label.padEnd(9) + keys.map((k) => avg[k].toFixed(1).padStart(8)).join('') + `  ${ (pMatchBo3(pA, pB) * 100).toFixed(1)}%`)
+  }
+  console.log('  ' + 'HER'.padEnd(9) + keys.map((k) => (w.skills as any)[k].toFixed(1).padStart(8)).join(''))
+}
