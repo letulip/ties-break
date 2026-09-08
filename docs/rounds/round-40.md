@@ -200,6 +200,27 @@ real questions at the moment they hurt most. He answered all four.
   **MINE, in order:** measure how far realisation diverges between the two shipped paths, and only
   then rewrite the sentence. No copy before the number.
 
+  ⭐⭐ **MEASURED, and the answer is emphatic.** Same probe, same corpus, cheapest childhood against
+  dearest on each seed:
+
+  | reading | span between the two childhoods | the SENTENCE differs on |
+  | --- | --- | --- |
+  | arrival (shipped) | 2.44 points | **104 of 200 seeds – 52%** |
+  | realisation | **16.2 percentage points** | **200 of 200 – 100%** |
+
+  Realisation is cut the way the arrival cuts were cut – p20/p80 of its own distribution at fourteen,
+  which lands at **−5.0% / +2.7%**. One seed end to end: the cheapest childhood arrives at 44.72 and
+  −6.6% realised, the dearest at 47.26 and +6.5% – **2.54 points of arrival, 13.1 points of
+  realisation.** ⚠ My 52% for the shipped reading is not the file's recorded 40.9%; different corpus
+  and different extremes, so the two are not the same measurement – but both say «about half», and
+  realisation says «always».
+
+  ⚠⚠ **AND THE FINDING THAT DECIDES THE COPY, NOT THE MECHANIC: realisation goes NEGATIVE.** The
+  range is **−15.8% to +15.0%** – a neglected childhood leaves her BELOW the build she was born with,
+  and the bottom band would have to say so. «She has gone backwards» is true, it is what the engine
+  did, and it is a harsh sentence to put on a screen that also says «This is the girl you raised».
+  ⚠ That is the owner's call and it is the only thing blocking the rewrite: the number says do it.
+
 - [ ] **5. Verify the span: the film measured 2.49 where the enumeration says 1.87.** `coachMarket.ts`
   records «enumerating all 32 runs through the SHIPPED CARD TABLE gives a span of 1.87 (mean arrival
   47.48 at the cheapest, 49.35 at the dearest)». The recorder measured its two paths 2.49 apart.
@@ -207,6 +228,16 @@ real questions at the moment they hurt most. He answered all four.
   enumeration excludes the Local Open entries (path B plays them, path A declines) or the figure has
   rotted. **MINE, and it comes BEFORE item 6** – if the real span is wider, §8c's whole picture
   changes before anything is tuned.
+
+  ⭐ **MEASURED (`tools/r40-span-and-realisation.ts`, 200 seeds x 32 paired runs x {declines,
+  enters}): THE RECORDED FIGURE HAS ROTTED. The real span is 2.44 points, not 1.87** – and the film's
+  2.49 sits right beside it, exactly as one seed above the median should.
+
+  ⚠ **AND MY HYPOTHESIS WAS WRONG, which is the more useful half.** I supposed the enumeration
+  excluded the tournament questions at 11, 12 and 13 – the film's path B says yes to all of them and
+  path A declines. Measured: the span is **2.44 with those questions varied and 2.44 without**. They
+  move the arrival not at all. So nothing was missing from the enumeration; the number simply aged.
+  §8c's picture is 30% wider than the file says, before anything is tuned.
 
 - [ ] **6. §8c – the cards reach only 44% of the model's span. Variant B: compound, not sum.** Owner:
   «по п. 2 давай Вариант B попробуем». The model's extremes span 4.28 points; the shipped table
@@ -219,7 +250,7 @@ real questions at the moment they hurt most. He answered all four.
   it goes last, on purpose. ⚠ `docs/specs/childhood-growth-2026-09.md` §8c is where this question was
   already recorded as his.
 
-- [ ] **7. The two seeds: give the prologue one, and let the career inherit it.** Owner: «Рекомендую
+- [x] **7. The two seeds: give the prologue one, and let the career inherit it.** Owner: «Рекомендую
   B обязательно, C — обсудить… по-моему хорошо звучит».
 
   **The fact that started it:** the promo recorder restored `Math.random` after mount, which pinned
