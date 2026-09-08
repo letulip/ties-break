@@ -38,14 +38,17 @@ vi.mock('../../src/audio/sfx', () => ({
 import MatchViewer from '../../src/components/MatchViewer.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import KnockDialog from '../../src/components/KnockDialog.vue'
+import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
+import InjuryStopDialog from '../../src/components/InjuryStopDialog.vue'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
 import { JUNIOR_TOUR } from '../../src/engine/season/tournament'
-import { KID_ID } from '../../src/engine/world'
+import { KID_ID, type WorldState } from '../../src/engine/world'
+import { buildInjuryReport } from '../../src/engine/world/snapshot'
 import { buildKnockPrompt } from '../../src/engine/knock'
 import { SKILL_KEYS, STARTING_SKILL_BAND } from '../../src/engine/development'
-import { LOCAL_OPEN_COPY } from '../../src/prologue/cards'
-import { playLocalOpen } from '../../src/prologue/pool'
+import { LOCAL_OPEN_COPY, PROLOGUE_CARDS, localOpenCard } from '../../src/prologue/cards'
+import { playLocalOpen, sheRetiredIn } from '../../src/prologue/pool'
 import { useGameStore } from '../../src/stores/game'
 import type { AnnotatedMatch } from '../../src/viz/types'
 import type { MatchOptions, MatchPlayer, Side } from '../../src/engine/match/types'
@@ -197,5 +200,200 @@ describe('#15b – the rest option carries the hug, and the cost is still legibl
       expect(rest.text()).toContain('hug')
       w.unmount()
     }
+  })
+})
+
+// =================================================================================================
+// ROUND 39 #15a, WAVE D2 – THE BEAT THE PARENT CAN HOLD, AND THE CAREER'S APPROVED WARM LINE
+// =================================================================================================
+//
+// THE OWNER, 08.09, on wave D's shipped line: «да, вот в этом и дело может быть, мне жена сказала
+// "мой ребенок травмировался, а я даже ничего не поняла, ни обнять, ни понять что дальше". Надо
+// как-то это обыграть, если травма вообще случилась. Тёплые варианты ок - делаем.»
+//
+// Her report names the two halves the popup's one line cannot carry: nothing to DO («ни обнять»)
+// and no WHAT COMES NEXT («ни понять что дальше»). The build is ONE scene in the weekend's own
+// result slot: when the resolved bracket says she retired (`sheRetiredIn`, pool.ts), the card after
+// the weekend is `LOCAL_OPEN_COPY.hurt` – the hug as the card's only way on, the drive home and the
+// quiet week as its lines – instead of one of the three faces. Same synthesis (`localOpenCard`),
+// same component, zero new dialogs, ZERO draws on any stream: the flag is read off records
+// `playMatch` already wrote. And «Тёплые варианты ок - делаем» lands wave D's drafted sentence on
+// the career's own InjuryStopDialog, verbatim, nothing else on that card moved.
+//
+// ⚠ THE MOUNTED ARMS PIN `Math.random` FOR ONE CALL. `ChildhoodPrologue.freshSeed` is the walk's
+// own idiom (UI-side randomness, outside the engine), so a mounted walk is a different weekend
+// every run – which is exactly how a three-faces press was a latent flake (see the re-aims in
+// round35-prologue / prologue-tournaments / prologue-two-paths). Pinning the one value that seeds
+// the walk makes the ENGINE-ROLLED retirement reproducible: under `HURT_WALK` the real bracket at
+// ten really contains `retiredId === KID_ID`, rolled by the real point engine – nothing is injected
+// and no module is mocked. If a pool or engine draw-order change ever moves these brackets, the
+// premise assertions below go red by name; re-search with the recipe in their comment.
+//
+// MUTATION-VERIFIED, each arm restored:
+//   * `closeOpen`'s `hurt: sheRetiredIn(...)` forced to `false` -> the beat arm goes red (no hug
+//     scene) while the CONTROL arm stays green, which is what says the control is a control;
+//   * `sheRetiredIn` loosened to `m.retiredId !== undefined` -> the opponent-direction arm goes red
+//     (her opponent's retirement would put the hug scene on HER weekend);
+//   * the InjuryStopDialog line reverted to the pre-D2 sentence -> the career arm goes red.
+
+/** The prologue's own girl, mid-band – the same construction the #15a wiring test uses. */
+function midBandKid(): MatchPlayer {
+  const skills = {} as Record<string, number>
+  for (const k of SKILL_KEYS) {
+    const [lo, hi] = STARTING_SKILL_BAND[k]
+    skills[k] = Math.round((lo + hi) / 2)
+  }
+  return { id: KID_ID, name: 'Vera Novak', age: 10, ...skills } as MatchPlayer
+}
+
+/** Press the `.prologue-answer` whose label starts with `label` – origins, options and the way on
+ *  all render in that one control column (PrologueCard.vue `choices`). */
+async function pressAnswer(w: VueWrapper, label: string): Promise<void> {
+  const btn = w.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
+  expect(btn, `no answer «${label}»: ${w.text().slice(0, 140)}`).toBeTruthy()
+  await btn!.trigger('click')
+  await Promise.resolve()
+  await nextTick()
+}
+
+/** ⭐ THE REAL WALK TO THE TENTH WEEKEND, under a pinned seed – origin `middle`, the carried road,
+ *  «Enter her» at ten, then the weekend left from its own header control. The seed value is the ONE
+ *  `Math.random` call `freshSeed` makes at mount; everything after it is the shipped deterministic
+ *  machinery (`rngFromSeed` sub-streams), so the whole walk is a function of `v`.
+ *
+ *  ⚠ RE-SEARCH RECIPE, should a draw-order change ever move the brackets: for candidate `v`, the
+ *  walk's seed is `prologue-${(v.toString(36).slice(2) + '0000').slice(0, 8)}`; build her with
+ *  `prologueEntrant(seed, KID_ID, default name, age, yearsLivedBy(run, age))` on this road and ask
+ *  `sheRetiredIn(playLocalOpen(seed, kid, age, 0), KID_ID)` for ages 10..13. */
+async function walkToTenthWeekend(v: number): Promise<VueWrapper> {
+  const spy = vi.spyOn(Math, 'random').mockReturnValue(v)
+  const w = mount(ChildhoodPrologue, { attachTo: document.body })
+  spy.mockRestore()
+  await pressAnswer(w, 'A city, and the bills are paid.')
+  for (const age of [6, 7]) await pressAnswer(w, PROLOGUE_CARDS.find((c) => c.age === age)!.continueLabel)
+  await pressAnswer(w, 'The club across town')
+  await pressAnswer(w, 'Buy the hour, one to one')
+  await pressAnswer(w, 'Enter her')
+  // The weekend is a takeover now; leave it from its own header control – the beat may not depend
+  // on the popup having been watched (the bracket is the authority, round 16 #19's rule).
+  expect(w.find('.plo').exists(), 'entering her did not produce a weekend').toBe(true)
+  const skip = w.find('.plo-skip')
+  await skip.trigger('click')
+  await Promise.resolve()
+  await nextTick()
+  return w
+}
+
+/** Pinned by the recipe above: under this value the REAL bracket at ten carries her retirement. */
+const HURT_WALK = 0.15352697095435686
+/** ...and under this one, no weekend of the whole carried road carries any retirement at all. */
+const CLEAN_WALK = 0.004149377593360996
+
+describe('#15a D2 – after she goes off hurt, the weekend ends on a beat the parent can hold', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+
+  it('⭐ the engine itself retires her in a real prologue bracket, and `sheRetiredIn` reads it', () => {
+    const open = playLocalOpen('r39-d2-1', midBandKid(), 10)
+    // The premise first, so a drift in the draws names itself: the field the ENGINE wrote.
+    expect(
+      open.result.matches.some((m) => m.retiredId === KID_ID),
+      'seed r39-d2-1 no longer holds her retirement – re-search (see the header)',
+    ).toBe(true)
+    expect(sheRetiredIn(open, KID_ID)).toBe(true)
+    // ...and she left that match a loser, so the weekend's own outcome machinery is untouched.
+    expect(open.finish).toBeGreaterThan(0)
+  })
+
+  it('⚠ the DIRECTION – an opponent`s retirement is not hers, and raises no beat', () => {
+    const open = playLocalOpen('r39-d2-2', midBandKid(), 10)
+    expect(
+      open.result.matches.some((m) => m.retiredId !== undefined && m.retiredId !== KID_ID),
+      'seed r39-d2-2 no longer holds an opponent retirement – re-search (see the header)',
+    ).toBe(true)
+    expect(sheRetiredIn(open, KID_ID)).toBe(false)
+  })
+
+  it('⭐ the scene is a card row like the three faces – hug as the way on, both read arms one voice', () => {
+    const row = localOpenCard(10, 'lost', true)
+    expect(row.title).toBe(LOCAL_OPEN_COPY.hurt.title)
+    expect(row.continueLabel).toBe(LOCAL_OPEN_COPY.hurt.continueLabel)
+    expect(row.options, 'the beat asks nothing – it is a quiet card').toBeUndefined()
+    // The rule cards 5..8 are written under: a scene may not claim to have read a childhood.
+    expect(row.her.cool).toBe(row.her.warm)
+    expect(row.coach.cool).toBe(row.coach.warm)
+    // ...and the flag off is byte-identical to the shipped three faces.
+    expect(localOpenCard(10, 'lost')).toEqual(localOpenCard(10, 'lost', false))
+    expect(localOpenCard(10, 'lost').title).toBe(LOCAL_OPEN_COPY.result.lost.title)
+  })
+
+  it('⭐⭐ the REAL WALK: she retires at the Local Open, and the beat follows – hug, then the walk goes on', async () => {
+    const w = await walkToTenthWeekend(HURT_WALK)
+    expect(w.findComponent(PrologueLocalOpen).exists(), 'the weekend is still up').toBe(false)
+    // The beat: the moment the parent was never given. Her report's two halves, on one card –
+    // something to DO...
+    expect(w.text()).toContain(LOCAL_OPEN_COPY.hurt.title)
+    const hug = w.findAll('.prologue-answer').find((b) => b.text().startsWith(LOCAL_OPEN_COPY.hurt.continueLabel))
+    expect(hug, 'no hug on the card').toBeTruthy()
+    // ...and WHAT COMES NEXT: she recovers, the drive home, the quiet week.
+    expect(w.text()).toContain(LOCAL_OPEN_COPY.hurt.lede)
+    expect(w.text()).toContain(LOCAL_OPEN_COPY.hurt.her)
+    expect(w.text()).toContain(LOCAL_OPEN_COPY.hurt.coach)
+    // It REPLACES the three faces – one card, not a questline...
+    for (const face of ['won', 'final', 'lost'] as const) {
+      expect(w.text()).not.toContain(LOCAL_OPEN_COPY.result[face].title)
+    }
+    // ...and the hug is the only control, and pressing it is what moves the childhood on.
+    expect(w.findAll('.prologue-answer')).toHaveLength(1)
+    await hug!.trigger('click')
+    await Promise.resolve()
+    await nextTick()
+    expect(w.find('.prologue-title').text()).toBe(PROLOGUE_CARDS.find((c) => c.age === 11)!.title)
+    w.unmount()
+  })
+
+  it('⚠ CONTROL – a weekend she walks off ends on the three faces, and no hug anywhere', async () => {
+    const w = await walkToTenthWeekend(CLEAN_WALK)
+    const faces = (['won', 'final', 'lost'] as const).filter((f) =>
+      w.text().includes(LOCAL_OPEN_COPY.result[f].title),
+    )
+    expect(faces, 'no result scene after the clean weekend').toHaveLength(1)
+    expect(w.text()).not.toContain(LOCAL_OPEN_COPY.hurt.title)
+    expect(w.text()).not.toContain(LOCAL_OPEN_COPY.hurt.continueLabel)
+    expect(w.text()).not.toContain(LOCAL_OPEN_COPY.hurt.her)
+    w.unmount()
+  })
+})
+
+describe('#15a D2 – the career`s own injury popup opens warm, as approved', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('⭐ the closing line is wave D`s drafted sentence, verbatim – and only that line moved', () => {
+    // The same fixture shape tests/component/injury-surfacing.test.ts mounts the dialog off.
+    const game = useGameStore()
+    const injury = { kind: 'ankle strain', severity: 'moderate' as const, weeksRemaining: 5, totalWeeks: 5, sinceWeek: 40 }
+    const world = { week: 40, injury: { ...injury }, events: [], entries: [], season: [] } as unknown as WorldState
+    game.$patch({
+      snapshot: {
+        week: 40,
+        ageYears: 16,
+        careerId: 'c1',
+        injury: { ...injury },
+        injuryReport: buildInjuryReport(world),
+        events: [],
+      } as unknown as Snapshot,
+    })
+    const w = mount(InjuryStopDialog)
+    // The approved sentence, whole – «Тёплые варианты ок - делаем» is about THIS literal line, so
+    // the pin is his word and moves only with it (invariant 4).
+    expect(w.text()).toContain('She comes back from this. Rest and rehab now – the news feed tracks her recovery.')
+    // ...and it did not arrive as a rewrite: the clinical half survives inside it verbatim, and the
+    // card around it is the one that shipped.
+    expect(w.text()).toContain('Rest and rehab now – the news feed tracks her recovery.')
+    expect(w.find('#injury-stop-title').text()).toBe("She's hurt.")
+    expect(w.text()).toContain('Only the weeks she is out are cancelled')
+    w.unmount()
   })
 })

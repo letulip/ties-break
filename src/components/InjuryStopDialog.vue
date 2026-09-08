@@ -211,7 +211,12 @@ useDialogFocus(card, () => emit('continue'))
       <p class="hint season-summary-note">
         Only the weeks she is out are cancelled – anything from {{ weekLabel(backWeek) }} on is still booked.
       </p>
-      <p class="hint season-summary-note">Rest and rehab now – the news feed tracks her recovery.</p>
+      <!-- ROUND 39 #15a, wave D2 - the warm opening ON TOP OF the clinical close, exactly as wave D
+           drafted it and the owner approved it (his words are in docs/rounds/round-39.md under 15a;
+           no Cyrillic in a template, comments included). «She comes back from this» is TRUE here in
+           a way the prologue's own reassurance would not be: the layoff above already says how long,
+           so the sentence promises nothing the table contradicts. Nothing else on this card moved. -->
+      <p class="hint season-summary-note">She comes back from this. Rest and rehab now – the news feed tracks her recovery.</p>
       <div class="dialog-actions">
         <button class="primary" @click="$emit('continue')">Continue</button>
       </div>

@@ -520,7 +520,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
   That is a mechanic, not copy – sharpen it to a choice before building.
 
-- [>] **15a. (EXTENDED 08.09) «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
+- [x] **15a. (EXTENDED 08.09) «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
   и ребёнок выживет и вернётся в строй»** – **build.** A first-time player reads a child's injury as
   a catastrophe. The prologue must say, in its own voice, that she recovers.
 
@@ -547,6 +547,45 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   recovery.» A warm variant is drafted and NOT shipped, because that dialog is not a prologue
   surface and invariant 4 prices the ask at one sentence: **«She comes back from this. Rest and
   rehab now – the news feed tracks her recovery.»** His word lands it or kills it.
+
+  **SHIPPED (wave D2, 08.09) – the beat the parent can hold, and the career line landed.** His
+  wife's report named the two halves the popup's one line cannot carry: nothing to DO («ни
+  обнять») and no WHAT COMES NEXT («ни понять что дальше»).
+
+  THE BEAT. When the weekend's resolved bracket says she retired (`sheRetiredIn`, pool.ts – it
+  reads the `retiredId` the engine already writes onto the record, «the whole test for "she got
+  hurt"» per season/types.ts), the scene after the weekend is the hug card instead of one of the
+  three faces: the same result slot, the same `localOpenCard` synthesis, the same
+  `PrologueCard.vue` – one card, not a questline, and the art still hangs the outcome's own face.
+  The hug is the card's only way on, and pressing it is what moves the childhood on. It follows
+  the retirement whether the player watched the popup or left from the header – the bracket is the
+  authority (round 16 #19's rule). DRAFT strings, all mine and his to rewrite
+  (`LOCAL_OPEN_COPY.hurt`, src/prologue/cards.ts): kicker **«The Local Open»**; title **«You walk
+  out to her.»**; lede **«Worn out, nothing worse – you can see that for yourself by the time you
+  reach her. The rest of the weekend goes on without you, and none of it matters.»**; her **«She
+  is asleep before you reach the motorway.»**; coach **«The coach says a quiet week is all this
+  needs.»**; the way on – the hug – **«Hold her»**.
+
+  THE CAREER LINE, exactly as drafted and approved («Тёплые варианты ок - делаем»):
+  `InjuryStopDialog`'s closing note is now **«She comes back from this. Rest and rehab now – the
+  news feed tracks her recovery.»** Nothing else on that card moved; the 375x667 dismiss-fit net
+  (injury-cancelled-row, worst-case rows) still holds under the longer sentence.
+
+  RNG: invariant 2 untouched – copy, one boolean read off records `playMatch` already wrote, and a
+  branch in a result slot that already existed. No engine module edited, so the frozen capture
+  cannot see any of it. Evidence: tests/component/round39-prologue-injury.test.ts «#15a D2» – the
+  REAL walk under a pinned walk seed meets an ENGINE-ROLLED retirement at ten and the beat follows
+  (the hug renders, advances to the eleventh card, the three faces absent); the control walk shows
+  none of it; the direction arm proves an opponent's retirement raises no beat; the hurt scene is
+  swept under the walk's own copy rules (prologue-walk). Mutation-verified four ways, each
+  restored: the hurt wiring severed -> beat red with the control green; the predicate loosened to
+  any retirement -> direction arm red; the career line reverted -> career arm red; a digit into
+  the hurt copy -> the widened sweep red. ⚠ Four walk helpers pressed result scenes by the shared
+  «Go on» / three-titles detection – a latent flake under per-mount `Math.random` seeds that the
+  fourth face made real; re-aimed with notes, not loosened (round35-prologue x2,
+  prologue-tournaments x2, prologue-two-paths x1 – each now presses the scene's own single way
+  on). vue-tsc -b --force clean; 154 component + 142 unit targeted tests green, verdicts from
+  logs.
 
 - [x] **15b. «И вообще чуть больше тепла в этих экранах надо сделать, как мне кажется. Например на
   варианте rest добавить hug и ещё как-то над самим текстом подумать»** – **build.** Warmth pass on
