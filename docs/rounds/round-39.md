@@ -251,7 +251,8 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   end-of-PREVIOUS-season rank. Working as ruled; the felt defect is the 3.3x cliff at the 10/11
   boundary. Remedy options in the report (tenure-buffered band, an 11-25 half-band, or leave). `[?]`.
 
-- [>] **9. «Опять just one day (REOPENED against round 26 #9). Я просил сделать много вариантов подарков для разных возрастных
+- [x] **9. «Опять just one day (REOPENED against round 26 #9). Я просил сделать много вариантов подарков для разных возрастных
+
   групп. Мне кажется, что вполне допустимо чтобы что-то повторялось, но не больше 2-3 раз за всю
   карьеру и с разницей не меньше 5 лет»** – **REOPENED against round 26 #9.**
 
@@ -270,8 +271,57 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   Against his rule (at most 2-3 a career, never under 5 years apart) that is double the count at a
   third of the spacing. Every other gift appears exactly once.
 
-- [>] **9c. NOT RAISED BY HIM, found in the same log: two birthdays one week apart.** Week 569
+  **R39-C, `r39/wave-c` – BUILT, his sentence as constants.** `GIFT_CAREER_CAP = 3` appearances per
+  career, `GIFT_REPEAT_GAP_WEEKS = 260`, in `src/engine/world/birthday.ts`. An appearance = a
+  birthday row that ASKED for the gift or GAVE it; **the day counts as an ASK only** – its presence
+  on every card is the untouched 11.08 ruling, and freely GIVING the day stays unlimited. The ask
+  now walks a four-rung ladder: strict (cap + gap + the round-27 cooldown) → gap relaxed → cap
+  relaxed → `options`, never a crash, and **within a rung the least-used gift wins** (a third
+  appearance only when nothing fresher qualifies). Relaxations are reported (`eased`) and the ORDER
+  is pinned in `tests/birthday-career.test.ts`. The OFFER (which four rows print) is untouched by
+  the record – reload-immutability and every round-26 pin stand; the record only shapes the voice.
+
+  **Four NEW gifts** (band pools were too thin to seat the rule – the round-26 finding says why):
+  peak 22-28 gets `recipes` («The family recipes, bound into one book») and `guitar` («A guitar to
+  travel with»); the late 29+ band gets `olives` («Olive trees, planted in her name») and
+  `firstracquet` («Her first racquet, restrung and framed»). Catalogue 33 → **37**; peak C(7,3)=35
+  dialogs for 7 birthdays, late C(10,3)=120 for 13.
+
+  **MEASURED before/after** (`tools/birthday-pool.ts` §5, 12 granting careers = 190 birthdays –
+  his own shape, asked === given):
+
+  | granting walk | before | after |
+  | --- | --- | --- |
+  | gifts over 3 appearances in one career | **10** | **0** |
+  | gifts repeated inside 260 weeks | **15** | **0** |
+  | `day` worst career count | **7** | **2** |
+  | `day` tightest gap | **103 weeks** | **365 weeks** |
+  | top repeats after | – | recipes 2x/260w · oldclub 2x/363w · day 2x/365w |
+
+  The ids[0] walk (a player who hoards the first row regardless of the ask) still shows given-driven
+  repeats – the player's hand is his own – but its ASKS obey the rule too: 3 relaxations over 194
+  birthdays, all `gap`, all reported. ⚠ **RNG: zero MAIN draws added or moved** – the ask is still
+  the fourth draw on `seed:birthday:<age>`; `tests/condition.test.ts` green on **41550 /
+  `e6b0c709`**, unchanged, and **not one existing guard test needed re-aiming** (the ladder
+  degenerates to the round-27 chain, pool for pool, for every caller without a record). Spec:
+  `docs/specs/birthday-and-gifts.md` §12. No schema move – the rule reads rows v48 already persists.
+
+- [x] **9c. NOT RAISED BY HIM, found in the same log: two birthdays one week apart.** Week 569
   `day` at age 24 and week 570 `dog` at age 24. Folded in because it lives in the same file.
+
+  **R39-C – DIAGNOSED (read-only off his save), REPRODUCED, FIXED, PINNED.** She is born **21
+  December**. Round 34 #3 moved the marked birthday week from «the week CONTAINING her date» to
+  «the first week whose Monday has reached it» – one week later for every non-Monday date – and his
+  career was standing exactly in that seam when the build updated: **week 569 (Dec 16-22, 2041,
+  contains Sunday the 21st) was asked and answered under the OLD rule; the round-34 build then found
+  week 570 (Monday Dec 23) fresh**, because `pendingBirthday`'s dedupe compared WEEKS
+  (`b.week === world.week`). The save proves the interleave: every row before the deploy sits on the
+  old marked week (466, 518, 569...), every row after on the new one (622, 674, 727, 779, 831), and
+  the two rules overlap at exactly one birthday – the doubled 24. **Fix: an AGE is answered once,
+  not a week** – the dedupe now also blocks any age already on the record, so no future move of the
+  marked week (calendar or rule) can double-ask a birthday; the week half of the guard survives for
+  poked saves. Regression pin with his exact shape (Dec 21, stale week-569 row, week-570 check) in
+  `tests/birthday-career.test.ts`, «ROUND 39 #9c».
 
 - [ ] **10. «Очень печально смотреть, как она регулярно сливает кому-то, сильно ниже #50 (хотя может
   только кажется, что регулярно). Проанализируй сейв пожалуйста с момента, где все покупки
