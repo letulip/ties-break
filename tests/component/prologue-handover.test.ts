@@ -40,12 +40,45 @@ import { createWorld, toSnapshot } from '../../src/engine/world'
 import { ageInWords } from '../../src/engine/world/age'
 import { handoverBaseBand, handoverRoomBand } from '../../src/engine/world/coachMarket'
 import { CARD_AGES, PROLOGUE_CARDS, TWELFTH_WANTS_MORE } from '../../src/prologue/cards'
+import { EMPTY_RUN, cardFor, chosenYears, spentCents as runSpentCents, withOrigin, withPick } from '../../src/prologue/run'
+import type { PrologueRun } from '../../src/prologue/run'
 import { WEEKS_IN_SEASON } from '../../src/shared/dates'
-import { DEFAULT_PROFILE, type HandoverBaseBand, type RadarAxis } from '../../src/shared/protocol'
+// ⚠ ALIASED, AND THE ALIAS IS NOT COSMETIC: `PrologueHandover` is already the COMPONENT this file
+// mounts, so the wire type has to arrive under a different name or the two collide at type level
+// while the tests still pass (vitest does not typecheck – `vue-tsc -b` caught it).
+import { DEFAULT_PROFILE, type HandoverBaseBand, type PrologueHandover as PrologueYears, type RadarAxis } from '../../src/shared/protocol'
+
+// ⭐⭐ ROUND 40 #4 – THE SCREEN IS DRIVEN BY REAL CHILDHOODS NOW, AND IT HAS TO BE. The base band reads
+// her REALISATION, so a career with no prologue realises exactly nothing and reads `level` by
+// construction: the arm below that walks fresh careers looking for three bands would find one, and
+// would have been vacuous rather than red if it had been written any more loosely. These are the
+// SHIPPED CARD TABLE's own runs, cheapest and dearest by money and the middle of that ordering –
+// `tests/prologue-handover.test.ts`'s enumeration, because the twelfth's two faces mean the reachable
+// set can only be walked and not listed.
+const EVERY_RUN: PrologueRun[] = (() => {
+  const ages = PROLOGUE_CARDS.filter((c) => c.options).map((c) => c.age)
+  const out: PrologueRun[] = []
+  const step = (i: number, run: PrologueRun): void => {
+    if (i === ages.length - 1) {
+      for (const opt of cardFor(12, run).options ?? []) out.push(withPick(run, 12, opt.id))
+      return
+    }
+    for (const opt of PROLOGUE_CARDS.find((c) => c.age === ages[i])?.options ?? []) {
+      step(i + 1, withPick(run, ages[i], opt.id))
+    }
+  }
+  step(0, withOrigin(EMPTY_RUN, 'middle'))
+  return out
+})()
+const BY_SPEND: PrologueYears[] = EVERY_RUN.map((r) => ({ years: chosenYears(r), spentCents: runSpentCents(r) })).sort(
+  (a, b) => a.spentCents - b.spentCents,
+)
+/** the cheapest nine years the table can sell, the dearest, and the middle of the ordering */
+const CHILDHOODS = [BY_SPEND[0], BY_SPEND[Math.floor(BY_SPEND.length / 2)], BY_SPEND[BY_SPEND.length - 1]]
 
 /** A REAL career's rose, not a hand-built one: the axes the handover draws are exactly what the
  *  worker hands the screen after `newCareer`, fog and all. */
-function realCareer(seed: string): {
+function realCareer(seed: string, prologue?: PrologueYears): {
   axes: RadarAxis[]
   /** ⭐ ROUND 35 #7 – the world's own age for her, in the game's own words. */
   ageWord: string
@@ -54,7 +87,7 @@ function realCareer(seed: string): {
   baseBand: HandoverBaseBand | ''
   base: string
 } {
-  const world = createWorld(seed, DEFAULT_PROFILE, 'c')
+  const world = createWorld(seed, DEFAULT_PROFILE, 'c', prologue)
   const snap = toSnapshot(world)
   return {
     axes: snap.radar,
@@ -97,9 +130,14 @@ function seedForBand(want: string): string {
  *  and the fix is the 09.08 one-clock ruling applied one screen earlier: the caption is spelled off
  *  `Snapshot.ageYears` rather than written down. This helper passes the career's OWN number, off the
  *  same world every assertion below reads, so nothing here is measuring an age this file invented. */
-function mountHandover(seed: string, spentCents: number, vp: { width: number; height: number }) {
+function mountHandover(
+  seed: string,
+  spentCents: number,
+  vp: { width: number; height: number },
+  prologue?: PrologueYears,
+) {
   setViewport(vp)
-  const career = realCareer(seed)
+  const career = realCareer(seed, prologue)
   const wrapper = mount(PrologueHandover, {
     attachTo: document.body,
     props: { axes: career.axes, ageWord: career.ageWord, base: career.base, read: career.read, spentCents },
@@ -253,20 +291,84 @@ describe('⭐⭐ the three things on the screen (§5)', () => {
     wrapper.unmount()
   })
 
+  // ⭐⭐ RE-AIMED BY ROUND 40 #4, AND THE CLAIM IS THE SAME ONE: every band the engine can decide gets
+  // rendered, in its own words, with no digit in it. What moved is what the arm has to WALK – the band
+  // now reads what the nine years added, so the three of them live on three childhoods rather than on
+  // three seeds. ⚠ It walks REAL careers through `createWorld` with a real prologue, which is the same
+  // path the container takes.
   it('⭐ all three base bands reach the screen, and none of them carries a number', () => {
     const seen = new Set<string>()
-    for (let i = 0; i < 60 && seen.size < 3; i++) {
+    for (let i = 0; i < 40 && seen.size < 3; i++) {
       const seed = `base-screen-${i}`
-      const band = handoverBaseBand(createWorld(seed, DEFAULT_PROFILE, 'c'))
-      if (seen.has(band)) continue
-      seen.add(band)
-      const { wrapper } = mountHandover(seed, 18_175_00, PHONE)
-      const line = document.querySelector('.handover-read-base')!.textContent!.trim()
-      expect(COACH_BASE_READS[band], `${band}: ${line}`).toContain(line)
-      expect(/\d|\$|%/.test(line), line).toBe(false)
+      for (const childhood of CHILDHOODS) {
+        const band = handoverBaseBand(createWorld(seed, DEFAULT_PROFILE, 'c', childhood))
+        if (seen.has(band)) continue
+        seen.add(band)
+        const { wrapper } = mountHandover(seed, childhood.spentCents, PHONE, childhood)
+        const line = document.querySelector('.handover-read-base')!.textContent!.trim()
+        expect(COACH_BASE_READS[band], `${band}: ${line}`).toContain(line)
+        expect(/\d|\$|%/.test(line), line).toBe(false)
+        wrapper.unmount()
+      }
+    }
+    expect(seen, 'all three bands are reachable on a childhood the table can sell').toEqual(
+      new Set(['behind', 'level', 'ahead']),
+    )
+  })
+
+  // ⭐⭐⭐ ROUND 40 #4's OWN ARM, MOUNTED: the property the promo film could not get. One seed, two
+  // childhoods, and the two cards say DIFFERENT things about what the years did and the SAME thing
+  // about what she was born with.
+  it('⭐⭐ one seed, two childhoods: the base sentence on the card differs, the room sentence does not', () => {
+    for (const seed of ['film-1', 'film-2', 'film-3']) {
+      const cheap = mountHandover(seed, BY_SPEND[0].spentCents, PHONE, BY_SPEND[0])
+      const cheapBase = document.querySelector('.handover-read-base')!.textContent!.trim()
+      const cheapRoom = roomLine()
+      const cheapBand = cheap.career.baseBand
+      cheap.wrapper.unmount()
+
+      const dear = mountHandover(seed, BY_SPEND[BY_SPEND.length - 1].spentCents, PHONE, BY_SPEND[BY_SPEND.length - 1])
+      const dearBase = document.querySelector('.handover-read-base')!.textContent!.trim()
+      const dearRoom = roomLine()
+      dear.wrapper.unmount()
+
+      expect(cheapBand, `${seed}: the neglected childhood`).toBe('behind')
+      expect(dear.career.baseBand, `${seed}: the devoted one`).toBe('ahead')
+      expect(cheapBase, `${seed}: the card said the same thing twice`).not.toBe(dearBase)
+      expect(COACH_BASE_READS.behind, seed).toContain(cheapBase)
+      expect(COACH_BASE_READS.ahead, seed).toContain(dearBase)
+      // ⚠ AND THE POTENTIAL RULE IS UNTOUCHED ON THE RENDERED CARD, not merely in the engine: the
+      // coach's own approved sentence is the SAME one for both childhoods, because nine years cannot
+      // buy her a point of ceiling. This is the half a reader is most likely to file as a bug.
+      expect(dearRoom, `${seed}: the room sentence moved with the childhood`).toBe(cheapRoom)
+    }
+  })
+
+  // ⭐⭐ HIS TWO SENTENCES, ON THE SCREEN, VERBATIM (round 40 #4, variant B). The band is 20% of the
+  // childhoods the table can produce by construction, so this is the line one player in five with a
+  // quiet childhood reads on the screen that also says «This is the girl you raised».
+  it('⭐⭐ the bottom band renders BOTH of his lines and never the comparison they replaced', () => {
+    // ⚠ BOTH, NOT «one of», AND THE DIFFERENCE IS THE WHOLE ARM. Which of the two the coach says is
+    // drawn off the career's own seed, so a single mount reads ONE line and a mutation to the other
+    // would go unnoticed here – it did, on the first run of this file. Seeds are walked until the
+    // rendered set IS the pair, which is also what proves neither line is dead copy on the screen.
+    const seen = new Set<string>()
+    for (let i = 0; i < 40 && seen.size < 2; i++) {
+      const seed = `bottom-${i}`
+      const { wrapper, career } = mountHandover(seed, BY_SPEND[0].spentCents, PHONE, BY_SPEND[0])
+      if (career.baseBand === 'behind') {
+        const line = document.querySelector('.handover-read-base')!.textContent!.trim()
+        expect(/behind|ground to make up/i.test(line), line).toBe(false)
+        seen.add(line)
+      }
       wrapper.unmount()
     }
-    expect(seen, 'all three bands are reachable on a fresh career').toEqual(new Set(['behind', 'level', 'ahead']))
+    expect([...seen].sort()).toEqual(
+      [
+        'Most of what she has, she was born with. The years added little to it.',
+        'She comes with what she started with – the work has not reached it yet.',
+      ].sort(),
+    )
   })
 
   it('⚠ two sentences still leave both controls on a 375x667 phone', () => {

@@ -43,7 +43,7 @@
 // player must come off this screen understanding «на сколько мощно сейчас (на момент 13-14) и какой
 // запас впереди».
 //
-//     the BASE = WHAT YOU BUILT          where she stands against fourteen-year-olds TODAY
+//     the BASE = WHAT YOU BUILT          how much of her own room the nine years filled
 //     the ROOM = WHAT SHE WAS BORN WITH  how much was in her before anybody did anything
 //
 // ⚠⚠ AND THAT IS WHY ONE OF THEM ANSWERS THE CHILDHOOD AND THE OTHER CANNOT. Read the next
@@ -53,19 +53,24 @@
 //   * `handoverRoomBand` reads her BIRTH build. Nine years of the best decisions a parent can make
 //     do not add a point of potential – §4 – so the room sentence is identical for the neglected
 //     childhood and the devoted one from the same seed. That is the potential rule being kept.
-//   * `handoverBaseBand` reads her ARRIVAL. Phase 1 measured the nine years at ±2.3 points on the
-//     mean attribute, and the cuts sit at 48.50 ± 2.20 of the fourteen-year-old distribution, so the
-//     base sentence MOVES with what the player did – on 40.9% of seeds between the cheapest and the
-//     dearest walk through the shipped card table, and on 89.9% between the model's own extremes.
+//   * `handoverBaseBand` reads her REALISATION – how much of the room she was born with the nine
+//     years actually filled. ⚠⚠ IT READ HER ARRIVAL UNTIL ROUND 40 #4, graded against the
+//     fresh-fourteen distribution at 46.30 / 50.70, and the sentence moved on a measured 52% of seeds
+//     between the cheapest and the dearest walk through the shipped card table – so a promo film that
+//     walked one seed down two childhoods drew the same sentence twice. Divided by HER OWN room
+//     instead of by the population's spread, the same 2.44 points weigh several times more: the
+//     sentence now differs on 200 of 200 seeds. The measurement and the cuts are in
+//     `engine/world/coachMarket.ts`; the owner's word is round 40 #4.
 //
 // So the same seed, walked two ways, comes off this screen with two different base sentences and one
 // room sentence. `tests/prologue-handover.test.ts` asserts exactly that pair, because it is the one
-// property a reader is most likely to mistake for a bug.
+// property a reader is most likely to mistake for a bug – and since round 40 #4 the first half of it
+// is a claim about EVERY seed rather than about most of them.
 //
 // ⚠ NO CEILING CONTOUR ANYWHERE NEAR EITHER OF THEM. §5's rule is untouched: the potential is never
-// DRAWN, the rose shows where she IS, and neither sentence names a number or a ceiling. The base
-// band is a statement about today against girls the same age – it says nothing about how far she can
-// go, which is what leaves the fog doing its job.
+// DRAWN, the rose shows where she IS, and neither sentence names a number or a ceiling. The base band
+// grades a SHARE and buckets it to three words before any of them is written – it says nothing about
+// how far she can go, which is what leaves the fog doing its job.
 import { rngFromSeed } from '../engine/rng'
 import { formatCents } from '../shared/money'
 import { WEEKS_IN_SEASON } from '../shared/dates'
@@ -124,15 +129,16 @@ export function coachReadFor(band: string, seed: string): string {
   return lines[Math.min(lines.length - 1, Math.floor(rng() * lines.length))]
 }
 
-/** ⭐⭐ THE BASE, IN THE SAME VOICE – DRAFTS, EVERY ONE, and the owner has not read them.
+/** ⭐⭐ THE BASE, IN THE SAME VOICE – FOUR DRAFTS AND, SINCE ROUND 40 #4, TWO OF HIS.
  *
- *  ⚠ §8a's three room bands above are transcribed VERBATIM from the spec and are the only copy in
- *  the whole prologue he has approved. NOTHING BELOW IS. These six sentences are new, they are
- *  written in the register of the approved ones – short, declarative, no adjective stacks, no
- *  number, no ceiling – and they are marked as drafts in §8a beside the lines they now stand next
- *  to. ⚠ The approved room lines were NOT rewritten to accommodate them: the base sentence goes
- *  FIRST and his sentence follows unchanged, which is why none of these ends in a clause that
- *  expects a particular continuation.
+ *  ⚠ §8a's three room bands above are transcribed VERBATIM from the spec and were for a long time the
+ *  only copy in the whole prologue he had approved. THE FOUR IN `ahead` AND `level` STILL ARE NOT:
+ *  they are new, written in the register of the approved ones – short, declarative, no adjective
+ *  stacks, no number, no ceiling – and marked as drafts in §8a beside the lines they now stand next
+ *  to. ⚠ The two in `behind` ARE his: round 40 #4, variant B, ruled on 08.09 and transcribed
+ *  verbatim; see the note on that band. ⚠ The approved room lines were NOT rewritten to accommodate
+ *  any of them: the base sentence goes FIRST and his sentence follows unchanged, which is why none of
+ *  these ends in a clause that expects a particular continuation.
  *
  *  ⚠ TOTAL BY CONSTRUCTION. The key is the `HandoverBaseBand` union, so there is no fallback arm
  *  here and none is needed – the compiler will not let a fourth band exist without a fourth set of
@@ -147,9 +153,33 @@ export const COACH_BASE_READS: Readonly<Record<HandoverBaseBand, readonly string
     'She is where most girls her age are.',
     'She is level with the girls she will be playing.',
   ],
+  /** ⭐⭐ HIS, 08.09, AND THE ONLY TWO LINES ON THIS SCREEN HE HAS RULED ON. Round 40 #4 – variant B,
+   *  chosen out of three after «давай смягчим формулировку нижней банды» and shipped verbatim.
+   *
+   *  ⚠⚠ THE TWO LINES THAT STOOD HERE ARE REPLACED AND NOT KEPT BESIDE THEM. They read «She is behind
+   *  most girls her age. That is the ground she starts from.» and «There is ground to make up on the
+   *  girls her age.» – both of which claim a COMPARISON AGAINST OTHER GIRLS, which was true while the
+   *  band read her arrival against the fresh-fourteen distribution and is not a thing realisation
+   *  measures at all. The band now says how much of HER OWN room the nine years filled; leaving those
+   *  two in the array would have put a claim about the population in the mouth of a reading that has
+   *  no population in it.
+   *
+   *  ⚠ AND THE SOFTENING IS NOT A EUPHEMISM, which is what made it shippable. The engine's fact is
+   *  that she arrives BELOW the build she started the childhood with, and the honest reading of that
+   *  is not «she got worse» – a fourteen-year-old does not lose talent – it is that the nine years did
+   *  not add to what she came with. It keeps the door open («not reached it yet» rather than «will
+   *  not») and it does not bill the parent for it. ⚠ The bottom band is 20% of the childhoods the
+   *  table can produce BY CONSTRUCTION (a p20 cut), on the screen that also says «This is the girl you
+   *  raised», so it is a sentence worth reading five times.
+   *
+   *  ⚠ ASK, NOT A CHANGE (invariant 4): `ahead` and `level` above still speak in the COMPARATIVE
+   *  register – «most girls her age», «the girls she will be playing» – which the new reading no
+   *  longer measures either. They are byte-identical to what shipped and were left that way
+   *  deliberately: the owner ruled on the bottom band and only the bottom band. Whether the upper two
+   *  should follow it is his to say. */
   behind: [
-    'She is behind most girls her age. That is the ground she starts from.',
-    'There is ground to make up on the girls her age.',
+    'Most of what she has, she was born with. The years added little to it.',
+    'She comes with what she started with – the work has not reached it yet.',
   ],
 }
 
