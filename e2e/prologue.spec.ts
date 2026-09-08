@@ -186,6 +186,26 @@ async function walkTheChildhood(page: Page): Promise<number> {
       await enter.click()
     }
 
+    // ⚠⚠ ROUND 40 #3 – THE CARD IS HELD BEFORE IT ADVANCES, so nothing after the last press may be
+    // measured until it has actually left. Item 3 holds an answering card ~200 ms so the ball lands;
+    // before it, answering advanced synchronously and the weekend – or the next card – was already
+    // on screen by the next line. Without this wait `clearWeekends` looked while the held card was
+    // still up, found no weekend, returned 0, and the takeover arrived a moment later: the walk then
+    // failed on the NEXT assertion, naming the heading instead of the hold.
+    // ⚠ A CONDITION, NOT A SLEEP. A fixed pause would pass by luck on a fast machine and rot the day
+    // the constant moves; this waits for what the hold is holding – the year's tennis, or the card
+    // after it.
+    if (take !== null || asks) {
+      await expect
+        .poll(
+          async () =>
+            (await page.getByRole('button', { name: 'Skip the rest of the weekend' }).count()) > 0 ||
+            (await page.getByRole('dialog').getByRole('heading').textContent()) !== heading,
+          { message: `card ${index + 1} never left after its answer` },
+        )
+        .toBe(true)
+    }
+
     // ⭐ PHASE 11 – and then whatever tennis the year bought.
     weekends += await clearWeekends(page)
 
