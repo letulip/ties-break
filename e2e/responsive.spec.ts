@@ -907,7 +907,11 @@ for (const vp of [...SHORT, PHONE_TALL]) {
     // The age-6 card: no identity form beside the painting, so past 1024 the painting is what
     // decides where the answers begin. Reached by taking the second control on the five, the way
     // `e2e/prologue.spec.ts` walks it.
-    await page.locator('.prologue-answers').getByRole('button').nth(1).click()
+    // ⚠ ROUND 40 #1 – AN ELEMENT QUERY AND NOT A ROLE. The three origins are radios now
+    // (`role="radio"` in a named group – a control that SELECTS says so), so `getByRole('button')`
+    // finds only the way out of the prologue and «the second one» would be nothing at all. The
+    // claim is unchanged: take the second control on the five, the way e2e/prologue.spec.ts walks it.
+    await page.locator('.prologue-answers button').nth(1).click()
     await expect(card.getByRole('heading').first()).toBeVisible()
     const six = await choiceFit(page)
     expect(six.buttons.length, 'the age-6 card is not the one-answer card any more').toBe(1)
