@@ -338,6 +338,26 @@ export function herMatches(open: LocalOpen, kidId: string): MatchRecord[] {
     .sort((a, b) => a.round - b.round)
 }
 
+/** ⭐⭐ ROUND 39 #15a D2 – DID SHE GO OFF HURT THIS WEEKEND? Read off the RESOLVED bracket, which is
+ *  the same authority every other question about the weekend is asked of: `playMatch` writes
+ *  `retiredId` onto the record of the ~2.7% of played matches that end that way, and season/types.ts
+ *  says in as many words that «`retiredId === KID_ID` is the whole test for "she got hurt"». So this
+ *  is that sentence as a function – one consumer today (the walk's result scene picks its fourth
+ *  face off it), and the popup the viewer raises for the same moment reads the same fact through the
+ *  re-simulated match.
+ *
+ *  ⚠ HERS ONLY, like `herMatches`. An opponent's retirement (`retiredId` set, not hers) is a match
+ *  she ADVANCED from, and nothing happened to her that a parent could hold.
+ *
+ *  ⚠ NO DRAWS AND NO RE-SIMULATION (invariant 2). The bracket was resolved once, in `playLocalOpen`,
+ *  before any screen opened; this reads the answer it already wrote. Whether the player watched the
+ *  match, skipped it or left the weekend from the header changes nothing here – the same rule
+ *  round 16 #19 states about a report being a consequence of what happened, not of a screen having
+ *  been seen. */
+export function sheRetiredIn(open: LocalOpen, kidId: string): boolean {
+  return open.result.matches.some((m) => m.retiredId === kidId)
+}
+
 // =================================================================================================
 // ⭐ THE RHYTHM – 1-2 A YEAR, FROM TEN, AND DERIVED FROM WHAT THE PLAYER BOUGHT
 // =================================================================================================

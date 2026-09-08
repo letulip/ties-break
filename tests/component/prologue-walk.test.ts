@@ -749,9 +749,13 @@ describe('⭐⭐⭐ how long the walk is with the tournaments in it – measured
   })
 
   it('⚠ every result scene and every ask is a card the walk`s own rules already bind', () => {
-    const scenes = [10, 11, 12, 13].flatMap((age) =>
-      (['won', 'final', 'lost'] as const).map((outcome) => ({ age, outcome, row: localOpenCard(age, outcome) })),
-    )
+    const scenes = [10, 11, 12, 13].flatMap((age) => [
+      ...(['won', 'final', 'lost'] as const).map((outcome) => ({ age, outcome: outcome as string, row: localOpenCard(age, outcome) })),
+      // ⚠ ROUND 39 #15a D2 – THE FOURTH SCENE, swept under the same rules: the hug card a weekend
+      // she leaves hurt draws in this same slot. A copy field outside the sweep must not be a copy
+      // field outside the rules (the sweep's own standing argument).
+      { age, outcome: 'hurt', row: localOpenCard(age, 'lost', true) },
+    ])
     for (const { age, outcome, row } of scenes) {
       expect(wordsOn(row, EMPTY_RUN), `age ${age} ${outcome} is a page, not a card`).toBeLessThanOrEqual(170)
       const said = [row.kicker, row.title, row.lede, row.her.cool, row.coach.cool, row.continueLabel].join(' ')

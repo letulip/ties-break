@@ -922,6 +922,38 @@ export const LOCAL_OPEN_COPY = {
       continueLabel: 'Go on',
     },
   } as Readonly<Record<LocalOpenOutcome, LocalOpenResultCopy>>,
+
+  /** ⭐⭐⭐ ROUND 39 #15a, WAVE D2 – THE SCENE AFTER SHE GOES OFF HURT. DRAFT, all of it.
+   *
+   *  THE OWNER, 08.09, on wave D's finding: «да, вот в этом и дело может быть, мне жена сказала "мой
+   *  ребенок травмировался, а я даже ничего не поняла, ни обнять, ни понять что дальше". Надо как-то
+   *  это обыграть, если травма вообще случилась.» Wave D put the reassurance ON the popup
+   *  (`hurtNote` above); her report names the two halves the popup cannot carry – nothing to DO, and
+   *  no sense of WHAT COMES NEXT. This is that beat, and it is ONE scene in the weekend's own slot:
+   *  when the bracket says she retired (`sheRetiredIn`, pool.ts), the weekend's result card is this
+   *  row instead of one of the three faces above. Same synthesis (`localOpenCard`), same component,
+   *  same fit and contrast gates – a fourth face of the same scene, not a new dialog.
+   *
+   *  ⚠ THE HUG IS THE CARD'S ONLY CONTROL. `continueLabel` is the one way on off a quiet card, so
+   *  «Hold her» is a choice with one answer – the thing the parent does before the walk moves – and
+   *  nothing downstream branches on it: a result scene answers nothing, exactly as the three above.
+   *
+   *  ⚠ AND IT STAYS INSIDE WHAT THE MODEL KNOWS, which is the hurtNote's own rule: the engine's
+   *  every retirement is exhaustion in a long match, a prologue weekend stores no injury, and she is
+   *  genuinely playing again next card. So the scene says worn out, the drive home and a quiet week
+   *  – and claims no injury, no weeks out and no rehab, because there are none. The art hangs the
+   *  outcome's own face (`OUTCOME_FACES` is untouched): a weekend she left early is still the
+   *  weekend the bracket says it was. */
+  hurt: {
+    kicker: 'The Local Open',
+    title: 'You walk out to her.',
+    lede:
+      'Worn out, nothing worse – you can see that for yourself by the time you reach her. The ' +
+      'rest of the weekend goes on without you, and none of it matters.',
+    her: 'She is asleep before you reach the motorway.',
+    coach: 'The coach says a quiet week is all this needs.',
+    continueLabel: 'Hold her',
+  } as LocalOpenResultCopy,
 } as const
 
 /** ⭐⭐ ROUND 35 #1 – HOW BIG THE DRAW IS, IN THE TOURNAMENT FLOW'S OWN WORDS. A function beside the
@@ -939,9 +971,14 @@ export function localDrawLine(drawSize: number): string {
 /** ⭐ THE RESULT SCENE AS A CARD ROW, so the shipped card component draws it with no branch of its
  *  own. `her` and `coach` are the same sentence in both arms deliberately, and it is the rule cards
  *  5..8 are written under: a scene may not claim to have read something it cannot have seen, and
- *  what this one has seen is a draw sheet, not nine years. */
-export function localOpenCard(age: number, outcome: LocalOpenOutcome): PrologueCard {
-  const copy = LOCAL_OPEN_COPY.result[outcome]
+ *  what this one has seen is a draw sheet, not nine years.
+ *
+ *  ⚠ ROUND 39 #15a D2 – `hurt` PICKS THE FOURTH FACE and changes nothing else: the age and the
+ *  synthesis are the same, so every caller that never passes it (the three-faces tests, the walk's
+ *  own measurement) is byte-identical. It is a flag and not a fourth `LocalOpenOutcome`, because the
+ *  outcome is the BRACKET's answer and still decides the painting; hurt is HOW she left it. */
+export function localOpenCard(age: number, outcome: LocalOpenOutcome, hurt = false): PrologueCard {
+  const copy = hurt ? LOCAL_OPEN_COPY.hurt : LOCAL_OPEN_COPY.result[outcome]
   return {
     age,
     kicker: copy.kicker,
