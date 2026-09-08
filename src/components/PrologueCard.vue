@@ -228,12 +228,27 @@ function chooseCountry(code: string): void {
  *  ⚠⚠ ROUND 35 #4 – AND A CARD THAT ALSO CARRIES A TOURNAMENT QUESTION SYNTHESISES NONE. The
  *  thirteenth has no decision of its own (`sameAsLastYear`) and would otherwise draw «Wait for the
  *  coach» directly above «Put her name down» / «Not this year» - a third answer to a question that
- *  has two, on the one screen the whole item is about. The ask's own pair IS the way on there. */
-const choices = computed<{ id: string | null; label: string; note: string }[]>(() => {
+ *  has two, on the one screen the whole item is about. The ask's own pair IS the way on there.
+ *
+ *  ⭐⭐⭐ ROUND 40 #1 – AND THE ONE LIST IS TWO LISTS NOW, BECAUSE THE TWO KINDS ARE NOT THE SAME
+ *  CONTROL. His testers: «у нас там есть ряд кнопок, которые ... "не делают ничего", например выбор
+ *  ordinary school/sports school» – and they DO something: they SELECT. What they do not do is move
+ *  the screen, because a card with two questions on it stays until both are answered
+ *  (`cardAnswered`). Drawn as the button that DOES move the screen, a control that sets a value and
+ *  leaves the scene where it is reads as a dead press. So `picks` is the SELECTION – origins and the
+ *  year's options, rendered as a radio group – and `wayOn` is the ADVANCE, which is the synthesised
+ *  control on a card with nothing to decide and looks like what it is. The split is what the two
+ *  treatments in the style block hang off; nothing about which control a card carries moved. */
+const picks = computed<{ id: string; label: string; note: string }[]>(() => {
   const list: readonly PrologueOption[] | undefined = props.card.origins ?? props.card.options
-  if (list) return list.map((o) => ({ id: o.id, label: o.label, note: o.note }))
-  return props.ask ? [] : [{ id: null, label: props.card.continueLabel, note: '' }]
+  return (list ?? []).map((o) => ({ id: o.id, label: o.label, note: o.note }))
 })
+
+/** THE WAY ON, on a card that decides nothing – `continueLabel`, and it emits `null` exactly as it
+ *  always did. Null on a card that carries a decision or an ask, both of which have their own. */
+const wayOn = computed<string | null>(() =>
+  props.card.origins || props.card.options || props.ask ? null : props.card.continueLabel,
+)
 
 /** ⭐ THE TOURNAMENT QUESTION'S OWN TWO ANSWERS, in the same shape and the same markup as the card's,
  *  because they are answers on the same screen and a second treatment would say they were a
@@ -249,10 +264,65 @@ const askChoices = computed<{ id: string; label: string; note: string }[]>(() =>
 
 /** ⭐ WHICH ANSWER IS ALREADY TAKEN. ⚠ NOT A RECOMMENDATION, WHICH IS THE ONE THING THIS CARD MAY
  *  NEVER DRAW - see the `.prologue-answer` note in the style block. It marks what the PLAYER did, on
- *  the only screen where a card can be half-answered, and it is gone one tap later. */
+ *  the only screen where a card can be half-answered, and it is gone one tap later.
+ *
+ *  ⭐ ROUND 40 #1 – IT IS THE RADIO'S `aria-checked` NOW, which is the same fact said where a
+ *  keyboard and a screen reader can hear it. `picked` answers for the card's own question (the
+ *  origin on the five, the option on 8..12) and `entry` for the tournament's. */
 function taken(id: string | null): boolean {
   if (id === null) return false
   return id === props.picked || id === props.entry
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 40 #2 – THE SECOND QUESTION APPEARS WHEN THE FIRST IS ANSWERED, ON THE SAME SCREEN
+// =================================================================================================
+//
+// THE OWNER, 08.09: «когда есть 2 группы кнопок, пока верхние не нажаты нижние ничего не делают,
+// может быть сделать, чтобы человек сначала делал верхний выбор, а потом на этом же экране
+// появлялись следующие кнопки, чтобы флоу был более явным?» (his words are in
+// docs/rounds/round-40.md, where Cyrillic is allowed to live).
+//
+// ⚠⚠ THIS IS NOT ROUND 35 #4 COMING BACK, AND THE DIFFERENCE IS THE WHOLE OF IT. That item was two
+// SCENES on one painting: `answer()` flipped a `beat` ref, the lede was REPLACED by the ask's line
+// and the card's own answers were REPLACED by the ask's two, so the player met the same picture and
+// the same title above a different body and read it as a screen he had already seen. Nothing is
+// replaced here: the scene, the two read lines and the card's own answers all stay exactly where
+// they were, and the ask's line and pair are ADDED under them. The container's own note prefers
+// `askOn` to `askAt` for that reason and still does - the card is handed its question from the
+// moment it arrives, and this decides only WHEN the question is drawn.
+//
+// ⚠ THE FIRST GROUP STAYS AND STAYS RE-CHOOSABLE. It is rendered whether or not the second one is,
+// and pressing it again writes the new pick (`withPick`), so a disclosed step is not a trap.
+//
+// ⚠ AND RE-CHOOSING NEVER INVALIDATES THE SECOND ANSWER, which is why nothing is cleared: the ask
+// belongs to the CARD ROW rather than to the option (see `tournament` in cards.ts), and the
+// twelfth's two faces are chosen off the years 5..11, not off the twelfth's own pick - so no answer
+// to the first question can change which question the second one is.
+/** Is the card's own column a SELECTION? Origins and options are; a synthesised way on is not. */
+const choosing = computed(() => Boolean(props.card.origins ?? props.card.options))
+/** Is this year's tournament question on the screen yet? Immediately on the thirteenth, which has no
+ *  decision of its own for it to wait behind. */
+const askOpen = computed(() => Boolean(props.ask) && (!choosing.value || props.picked !== undefined))
+
+/** ⭐ THE RADIO GROUP'S OWN KEYS – arrows move the focus round the group, as they do in every radio
+ *  group, and the press itself is the button's own (Space and Enter, natively).
+ *
+ *  ⚠ THE ARROWS DO NOT SELECT, WHICH IS THE DOCUMENTED VARIATION AND NOT AN OMISSION. WAI-ARIA's
+ *  radio-group pattern checks the radio the arrow lands on «unless doing so triggers a significant
+ *  change» - and here it does: on the eight, the nine and the ten the card is finished the moment
+ *  its one question is answered, so selecting on focus would walk the player off the screen with an
+ *  arrow key. Focus moves; Space commits. */
+function onGroupKey(event: KeyboardEvent): void {
+  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
+  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
+  if (!forward && !back) return
+  const group = event.currentTarget as HTMLElement
+  const items = [...group.querySelectorAll<HTMLButtonElement>('button')]
+  const at = items.indexOf(document.activeElement as HTMLButtonElement)
+  if (at < 0) return
+  event.preventDefault()
+  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
 }
 
 /** ⭐ THE LINE UNDER THE TITLE, AND IT IS THE CARD'S OWN AGAIN (round 35 #4). It used to be replaced
@@ -467,23 +537,46 @@ useDialogFocus(cardEl)
            where Cyrillic is allowed to live). Immediately above the column and inside nothing, so it
            reads as the last thing said before the choice rather than as a heading over a section.
            Only the five carries one. -->
-      <p v-if="card.question" class="prologue-question">{{ card.question }}</p>
+      <p v-if="card.question" id="prologue-question" class="prologue-question">{{ card.question }}</p>
 
       <!-- THE ANSWERS, LAST IN THE FLOW. One rule for every row: nothing here marks one of them as
-           the one to take, on a card whose whole subject is that the choice is yours. -->
+           the one to take, on a card whose whole subject is that the choice is yours.
+
+           ⭐⭐⭐ ROUND 40 #1 - AND A CONTROL THAT SELECTS IS DRAWN AS A SELECTION. The card's own
+           answers are a real radio group: `role="radiogroup"` named by the question it answers (the
+           five's own line, or the title, which IS the question on 8..12 - see `question` in
+           cards.ts), `role="radio"` and `aria-checked` on each answer, and the mark beside the label
+           that says so on screen. The way on and the way out below carry none of it. -->
       <div class="prologue-answers">
-        <button
-          v-for="control in choices"
-          :key="control.id ?? 'go-on'"
-          class="prologue-answer"
-          :class="{ 'is-taken': taken(control.id) }"
-          type="button"
-          :aria-pressed="ask && control.id !== null ? taken(control.id) : undefined"
-          :disabled="busy"
-          @click="emit('answer', control.id)"
+        <div
+          v-if="choosing"
+          class="prologue-picks"
+          role="radiogroup"
+          :aria-labelledby="card.question ? 'prologue-question' : 'prologue-title'"
+          @keydown="onGroupKey"
         >
-          <span class="prologue-answer-label">{{ control.label }}</span>
-          <span v-if="control.note" class="prologue-answer-note">{{ control.note }}</span>
+          <button
+            v-for="control in picks"
+            :key="control.id"
+            class="prologue-answer prologue-choice"
+            type="button"
+            role="radio"
+            :aria-checked="taken(control.id)"
+            :disabled="busy"
+            @click="emit('answer', control.id)"
+          >
+            <span class="prologue-mark" aria-hidden="true"></span>
+            <span class="prologue-answer-text">
+              <span class="prologue-answer-label">{{ control.label }}</span>
+              <span v-if="control.note" class="prologue-answer-note">{{ control.note }}</span>
+            </span>
+          </button>
+        </div>
+
+        <!-- ...and on a card with nothing to decide, the one control that is not a choice at all.
+             It emits `null` exactly as it always did. -->
+        <button v-if="wayOn" class="prologue-answer" type="button" :disabled="busy" @click="emit('answer', null)">
+          <span class="prologue-answer-label">{{ wayOn }}</span>
         </button>
 
         <!-- ⭐⭐⭐ ROUND 35 #4 - THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN AND NOT ON A
@@ -494,21 +587,33 @@ useDialogFocus(cardEl)
              measurement reads the way out off the CARD'S bottom edge and needs the answers to be the
              card's last element (`measureDialog`'s own docstring, and the walk's own precondition
              test); a question parked between the column and the card's foot would make every fit
-             number on the walk quietly wrong while every one of them stayed green. -->
-        <p v-if="ask" class="prologue-ask">{{ ask.lede }}</p>
-        <button
-          v-for="control in askChoices"
-          :key="control.id"
-          class="prologue-answer"
-          :class="{ 'is-taken': taken(control.id) }"
-          type="button"
-          :aria-pressed="taken(control.id)"
-          :disabled="busy"
-          @click="emit('answer', control.id)"
-        >
-          <span class="prologue-answer-label">{{ control.label }}</span>
-          <span v-if="control.note" class="prologue-answer-note">{{ control.note }}</span>
-        </button>
+             number on the walk quietly wrong while every one of them stayed green.
+
+             ⭐⭐⭐ ROUND 40 #2 - AND IT ARRIVES WHEN THE YEAR IS ANSWERED, ON THIS SAME SCREEN. See
+             `askOpen` in the script for the owner's words and for why this is not the two-beat
+             defect returning: nothing above is replaced, the card's own answers stay and stay
+             re-choosable, and this pair is ADDED under them. -->
+        <template v-if="askOpen && ask">
+          <p id="prologue-ask" class="prologue-ask">{{ ask.lede }}</p>
+          <div class="prologue-picks" role="radiogroup" aria-labelledby="prologue-ask" @keydown="onGroupKey">
+            <button
+              v-for="control in askChoices"
+              :key="control.id"
+              class="prologue-answer prologue-choice"
+              type="button"
+              role="radio"
+              :aria-checked="taken(control.id)"
+              :disabled="busy"
+              @click="emit('answer', control.id)"
+            >
+              <span class="prologue-mark" aria-hidden="true"></span>
+              <span class="prologue-answer-text">
+                <span class="prologue-answer-label">{{ control.label }}</span>
+                <span v-if="control.note" class="prologue-answer-note">{{ control.note }}</span>
+              </span>
+            </button>
+          </div>
+        </template>
 
         <!-- ⭐ PHASE 4, §6 - THE OTHER PATH. Inside `.prologue-answers` and last within it, which is
              what keeps `.prologue-answers` the card's last element: the fit measurement reads the
@@ -926,6 +1031,18 @@ useDialogFocus(cardEl)
   gap: 8px;
 }
 
+/* ⭐⭐⭐ ROUND 40 #1 – THE GROUP A SELECTION IS MADE IN. It is the column's own rhythm restated (the
+   same 8px the answers stack on), so wrapping the choices in a named group costs the card no height
+   at all – which matters more here than usual, because the age-5 card is inside 50px of its ceiling
+   (`prologue-walk.test.ts`). What the element is FOR is `role="radiogroup"`: two radios on one
+   screen answering two different questions need two owners, or a screen reader reads the year's
+   answers and the tournament's as one set of four. */
+.prologue-picks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* ⭐⭐⭐ ROUND 35 #4 – THE TOURNAMENT QUESTION'S OWN LINE, and it is what stops the two questions on
    this screen reading as one list of four buttons. The lede's size and colour, because it is the
    same voice saying the same kind of thing; what marks it is the gap above it and that it is the
@@ -960,18 +1077,92 @@ useDialogFocus(cardEl)
   background: var(--accent-fill);
 }
 
-/* ⭐ ROUND 35 #4 – THE ANSWER THE PLAYER HAS ALREADY TAKEN, on the one screen that can be
-   half-answered: the year's own decision and this year's tournament question sit in one column, and
-   until both are answered the card stays. Without this the first tap looks like it did nothing.
+/* ═════════════════════════════════════════════════════════════════════════════════════════════════
+   ⭐⭐⭐ ROUND 40 #1 – A CONTROL THAT SELECTS DOES NOT LOOK LIKE THE CONTROL THAT ADVANCES
+   ═════════════════════════════════════════════════════════════════════════════════════════════════
+   His testers, through him: «у нас там есть ряд кнопок, которые ... "не делают ничего", например
+   выбор ordinary school/sports school. Надо их найти все там (точно не только это две) и переделать
+   интерфейсно на более явный выбор, не чекбокс, а как радио может, но что-то, что их отличит от
+   обычных кнопок как-то визуально.»
+
+   ⚠⚠ THE DIAGNOSIS IS NOT «THE BUTTON IS BROKEN», AND THE TREATMENT FOLLOWS FROM THAT. Those
+   controls do exactly what they are asked to: they SELECT. What they do not do is move the screen -
+   a card with two questions stays until both are answered (`cardAnswered`) - and they were drawn
+   IDENTICALLY to the control that does move it, down to the token. So the two are told apart the
+   way this app already tells a FIELD from a BUTTON:
+
+     A SELECTION   `--card-top` on a `--line` hairline, with the radio's own mark beside the label.
+                   Those are the two tokens `.prologue-input`, `.prologue-select` and
+                   `.prologue-tile` are painted in, six rows up this same card - a thing you SET.
+     AN ADVANCE    `--accent-wash` on `--accent-soft`, unchanged: `.prologue-answer` above, which is
+                   now the way on and the way out and nothing else.
+
+   ⚠ AND THE CHECKED STATE IS THE MARK AND THE EDGE, NOT A FILL, WHICH IS A CONTRAST DECISION RATHER
+   THAN A TASTE. `is-taken` used to lay `--accent-fill` over the card's `--bg`; over `--card-top` the
+   same wash puts `.prologue-answer-note` at a measured 4.29:1, under AA, and round-17 #3 is what
+   this card's every colour rule is written against. The border and the filled mark carry the state
+   instead, so a chosen answer and an unchosen one are read against the SAME ground.
+
+   ⚠ EVERY SELECTOR BELOW IS PARENTED, AND THAT IS THE SAME HAZARD THE MEDIA BLOCK AT THE FOOT OF
+   THIS FILE NAMES: at EQUAL specificity happy-dom keeps the FIRST matching rule where a browser
+   keeps the last, so a bare `.prologue-choice` overriding a bare `.prologue-answer` would repaint
+   the control in Chromium and silently do nothing in every mounted test. */
+.prologue-answers .prologue-choice {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  border-color: var(--line);
+  background: var(--card-top);
+}
+
+.prologue-answers .prologue-choice:hover:not(:disabled) {
+  border-color: var(--accent-soft);
+  background: var(--card-top);
+}
+
+/* ⭐ ROUND 35 #4'S OWN NOTE, AND IT STILL STANDS – it has moved from a class to the radio's state.
+   The answer the player has already taken is marked on the one screen that can be half-answered:
+   the year's own decision and this year's tournament question sit in one column, and until both are
+   answered the card stays. Without this the first tap looks like it did nothing.
 
    ⚠ IT IS NOT THE MARK THE RULE ABOVE FORBIDS, and the distinction is the whole of it. That rule
-   bans the screen pointing at the answer IT prefers; this points at the answer the PARENT took, it
-   can only ever be on after a press, and it is gone one tap later. It borrows `.prologue-tile.is-on`'s
-   own pair of tokens rather than inventing a third treatment, because a chosen thing looks the same
-   way everywhere on this card. */
-.prologue-answer.is-taken {
-  background: var(--accent-fill);
+   bans the screen pointing at the answer IT prefers; this points at the answer the PARENT took, and
+   it can only ever be on after a press. ⭐ ROUND 40 #1 – IT IS SPELLED ONCE NOW, AS `aria-checked`:
+   a state a screen reader announces and the sheet paints off the same attribute cannot drift into
+   two answers about what is chosen. */
+.prologue-answers .prologue-choice[aria-checked='true'] {
   border-color: var(--accent);
+}
+
+/* THE MARK ITSELF – a ring that fills when the answer is taken, which is what a radio looks like
+   everywhere. `aria-hidden` in the template: the state is on the control, and a decorative circle
+   that announced itself would say it twice.
+   ⚠ IT COSTS THE ROW NO HEIGHT. Every control in a group carries a label AND a note, so the text
+   beside it is at least 15px/1.3 + 2 + 12px/1.35 = 38px against this 20px box – the mark is never
+   the tallest child, which is how the card stays inside the ceiling the walk pins. */
+.prologue-mark {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: var(--stroke-hair) solid var(--line);
+  background: var(--bg);
+}
+
+.prologue-choice[aria-checked='true'] .prologue-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* The label and its note, in a column beside the mark – the stack `.prologue-answer` itself carried
+   before the row it now sits in. `min-width: 0` so a long note wraps inside the box instead of
+   pushing the control wider than the card. */
+.prologue-answer-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .prologue-answer:disabled {

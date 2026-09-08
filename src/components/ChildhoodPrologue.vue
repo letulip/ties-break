@@ -252,8 +252,22 @@ const ask = computed(() => {
 })
 /** ⭐ WHAT THIS YEAR HAS ALREADY ANSWERED, so a card carrying two questions can show which of them is
  *  settled. Read off the run here rather than held on the card, for the same reason `warmth` and
- *  `mood` are: `PrologueCard` reads no run. */
-const picked = computed(() => (resultNow.value ? undefined : run.value.picks[CARD_AGES[at.value]]))
+ *  `mood` are: `PrologueCard` reads no run.
+ *
+ *  ⭐ ROUND 40 #1 – AND IT ANSWERS FOR THE FIVE'S THREE ORIGINS TOO, which it did not need to while
+ *  the answers were plain buttons. They are a radio group now, and a radio that can never report
+ *  itself checked is a radio that lies about its state – so the card is handed whichever answer the
+ *  run holds, and the five's is `origin` rather than a `picks` entry (`withOrigin`). It is the same
+ *  question this computed always asked, asked of the card that is actually on the screen.
+ *
+ *  ⚠ IT IS STILL A READING AND CHANGES NOTHING: the five is finished the moment an origin is taken
+ *  (`cardAnswered` – that card carries no ask), so the mark is on screen for exactly as long as the
+ *  press takes, which is the same life `picks` has on the eight, the nine and the ten. */
+const picked = computed(() => {
+  if (resultNow.value) return undefined
+  const age = CARD_AGES[at.value]
+  return cardFor(age, run.value).origins ? (run.value.origin ?? undefined) : run.value.picks[age]
+})
 const entry = computed(() => (resultNow.value ? undefined : run.value.entries[CARD_AGES[at.value]]))
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))

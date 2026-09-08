@@ -76,15 +76,27 @@ const TYPED_NAME = 'Zenobia'
  *  `take` is which control this walk presses, and it exists because «the second one» stopped being a
  *  single rule: on a card with options it is the second OPTION, and on the thirteenth - which has
  *  none - the question is the only thing to answer and `clearWeekends` answers it. */
-const CARDS: readonly { controls: number; take: number | null; asks: boolean }[] = [
+/** ⚠⚠ RE-AIMED BY ROUND 40 #2, NOT LOOSENED – AND THE COUNT IS NOW TWO COUNTS. The owner asked for
+ *  the second group of buttons to appear once the first is answered, on the same screen («чтобы
+ *  человек сначала делал верхний выбор, а потом на этом же экране появлялись следующие кнопки, чтобы
+ *  флоу был более явным»), so on the eleventh and the twelfth the tournament question is NOT on the
+ *  card when it arrives and IS there one press later:
+ *
+ *    age 11, 12   two options, then two more when the year is answered   4 -> 2 then 4
+ *    age 13       no decision of its own, so nothing to wait behind      2 unchanged
+ *
+ *  `controls` is what the card carries on arrival and `disclosed` what it carries once the year is
+ *  answered – both asserted, which is what makes the disclosure a claim this walk can fail on rather
+ *  than a number it happens to agree with. */
+const CARDS: readonly { controls: number; disclosed?: number; take: number | null; asks: boolean }[] = [
   { controls: 4, take: 1, asks: false }, // 5  – three origins plus the way out; the second is the middle-class house
   { controls: 1, take: 0, asks: false }, // 6
   { controls: 1, take: 0, asks: false }, // 7
   { controls: 2, take: 1, asks: false }, // 8
   { controls: 2, take: 1, asks: false }, // 9
   { controls: 2, take: 1, asks: false }, // 10 – «Enter her», and it is the card's OWN decision
-  { controls: 4, take: 1, asks: true }, // 11 – two options AND this year's question
-  { controls: 4, take: 1, asks: true }, // 12
+  { controls: 2, disclosed: 4, take: 1, asks: true }, // 11 – two options, and then this year's question
+  { controls: 2, disclosed: 4, take: 1, asks: true }, // 12
   { controls: 2, take: null, asks: true }, // 13 – the question is the card's only pair; see `take`
 ]
 
@@ -125,6 +137,9 @@ async function clearWeekends(page: Page): Promise<number> {
     // The result scene: a card row with exactly one way on, and its picture is the outcome's face.
     const result = page.locator('.prologue-card .prologue-kicker', { hasText: 'The Local Open' })
     if (await result.count()) {
+      // ⚠ ROUND 40 #1 – AND THIS ONE IS STILL `getByRole('button')` ON PURPOSE, which is now a
+      // claim rather than a habit: a result scene answers nothing, so its way on is an ADVANCE and
+      // must NOT have become a radio with the answers. If it ever does, this line stops finding it.
       await page.getByRole('dialog').locator('.prologue-answers').getByRole('button').first().click()
       continue
     }
@@ -137,10 +152,15 @@ async function clearWeekends(page: Page): Promise<number> {
  *  tennis each year held. Returns how many weekends the walk actually saw. */
 async function walkTheChildhood(page: Page): Promise<number> {
   let weekends = 0
-  for (const [index, { controls, take, asks }] of CARDS.entries()) {
+  for (const [index, { controls, disclosed, take, asks }] of CARDS.entries()) {
     const card = page.getByRole('dialog')
     const heading = await card.getByRole('heading').textContent()
-    const buttons = card.locator('.prologue-answers').getByRole('button')
+    // ⚠⚠ RE-AIMED BY ROUND 40 #1: `getByRole('button')` NO LONGER FINDS AN ANSWER, and that is the
+    // item rather than a selector that rotted. His testers met controls that select drawn as the
+    // control that advances; the answers are real radios now (`role="radio"` in a named
+    // `radiogroup`), so a role-first locator asking for a button asks for the way ON. The count this
+    // walk rests on is «every control in the column», which is what the element query says.
+    const buttons = card.locator('.prologue-answers button')
     await expect(buttons, `card ${index + 1} does not have the controls it should`).toHaveCount(controls)
 
     // The card's own answer, where it has one. On card 1 that is the second family origin, which is
@@ -149,11 +169,19 @@ async function walkTheChildhood(page: Page): Promise<number> {
     // own, so its tournament question is the way on and `clearWeekends` is what presses it.
     if (take !== null) await buttons.nth(take).click()
 
+    // ⭐⭐⭐ ROUND 40 #2 – AND THE SECOND GROUP IS ON THE SCREEN NOW, on the same card, under the
+    // answer that was just given. Asserted between the two presses, which is the only place the
+    // disclosure can be seen at all.
+    if (disclosed !== undefined) {
+      await expect(buttons, `card ${index + 1} did not disclose its second group`).toHaveCount(disclosed)
+    }
+
     // ⭐⭐ ...AND THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN (round 35 #4). The owner:
     // «Сказали "не в этом году" – значит не в этом году, дальше тоже можно спрашивать.» This walk
     // always says yes, so it takes the busiest road the table can produce.
+    // ⚠ ADDRESSED AS A RADIO SINCE ROUND 40 #1 – the same control, saying what it is.
     if (asks) {
-      const enter = page.getByRole('dialog').getByRole('button').filter({ hasText: 'Put her name down' })
+      const enter = page.getByRole('dialog').getByRole('radio').filter({ hasText: 'Put her name down' })
       await expect(enter, `card ${index + 1} asks no tournament question`).toHaveCount(1)
       await enter.click()
     }
@@ -430,6 +458,9 @@ test('⭐ the first card of the game is a picture and a scene, not a form', asyn
   //    the last control lands inside the viewport once it has.
   const answers = card.locator('.prologue-answers')
   await answers.scrollIntoViewIfNeeded()
-  const last = answers.getByRole('button').last()
+  // ⚠ ROUND 40 #1 – AN ELEMENT QUERY AND NOT A ROLE: the claim is «the LAST control in the column is
+  // reachable», and the column now holds two kinds (three radios and the way out of the story). A
+  // role-first locator would quietly measure the way out alone and still pass.
+  const last = answers.locator('button').last()
   await expect(last).toBeInViewport()
 })
