@@ -105,7 +105,7 @@ import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medic
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
+import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
@@ -1987,6 +1987,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // shared/protocol/snapshot.ts, and the arithmetic is `physicalShareOf`'s – called, not repeated.
     // ⚠ ZERO DRAWS, like everything else in this builder.
     physicalShare: physicalShareOf(world),
+    // ⭐⭐⭐ ROUND 40 #14b – AND WHEN THE QUESTION RUNS OUT, which the share above cannot say. ONE
+    // number on ONE wire for three voices: the coach's card, her own line on the winter card and the
+    // season's wrap-up. Null on every week outside the window, so all three are silent by
+    // construction rather than by three conditions on three screens.
+    lastWinterIn: lastWinterIn(world),
     // ⭐ THE LONG GOODBYE STEP 4 – the one piece of state her last word reads, and the retirement
     // card is drawn long before `buildEndingView` above has anything to return.
     oneMoreYearCount: world.oneMoreYearCount,

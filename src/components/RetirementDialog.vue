@@ -155,7 +155,7 @@ import { activeLadderOfSnapshot } from '../shared/protocol'
 // roster's full string. Two surfaces naming the same person must name him identically.
 import { formatShortName } from '../shared/format'
 import { lastWordLine, plateauLede } from '../engine/ending'
-import { declineRung, pastHerPeak } from '../composables/declineVoice'
+import { declineRung, herLastWinterLine, pastHerPeak } from '../composables/declineVoice'
 import { portraitStage } from '../shared/avatarEmotion'
 import { portraitUrl } from '../art/preload'
 import { facePoint } from '../art/faceRects'
@@ -228,6 +228,17 @@ const coachSeasonWord = computed<string | null>(() => {
   if (!coach) return null
   return `${formatShortName(coach.name)} does not argue with her. The work holds what she has left; it stopped adding to it a while ago.`
 })
+
+/** ⭐⭐⭐ ROUND 40 #14b – HER OWN WARNING, AND IT IS THE ONLY THING ON THIS CARD ABOUT A WINTER THAT
+ *  HAS NOT HAPPENED. See `herLastWinterLine` (composables/declineVoice.ts) for the copy and
+ *  `lastWinterIn` (engine/world/coachMarket.ts) for the one derivation the coach's card and the
+ *  season's wrap-up read too.
+ *
+ *  ⚠ NO GATE IS WRITTEN HERE AND NONE MAY BE. The field is null on every week outside the window and
+ *  on the last winter itself – where `lastWordLine` above is the only voice that should speak – so
+ *  the silence is the engine's, not this template's. A `v-if` on the age or the share would be a
+ *  second gate that could disagree with the first. */
+const lastWinterWord = computed(() => herLastWinterLine(game.snapshot?.lastWinterIn))
 
 const stage = computed(() => portraitStage(age.value))
 const artUrl = computed(() => portraitUrl(stage.value, 'serious'))
@@ -331,6 +342,12 @@ useDialogFocus(card)
           <p class="retire-season">{{ herSeasonWord }}</p>
           <p v-if="coachSeasonWord" class="retire-season-coach">{{ coachSeasonWord }}</p>
         </template>
+        <!-- ⭐⭐⭐ ROUND 40 #14b – HOW MANY OF THESE WINTERS ARE LEFT, in her voice, last on the card
+             because it is the one line about a winter that has not happened yet. It is added under
+             everything that was here and replaces nothing: the lede, the rung, her season word and
+             the coach's are byte-identical. Absent unless the engine's own count is inside the
+             window, which is why there is no condition on the age or the share here. -->
+        <p v-if="lastWinterWord" class="retire-last-winter">{{ lastWinterWord }}</p>
       </template>
 
       <div class="retire-answers">
@@ -420,6 +437,16 @@ useDialogFocus(card)
   font-size: 13px;
   line-height: 1.5;
   color: var(--ink-soft);
+}
+
+/* ROUND 40 #14b – the warning, and it is HER voice, so it takes `.retire-season`'s treatment rather
+   than a fifth one: same measure, same colour, same collapsing 18px. A card that dressed this line
+   louder than the rest would be the game raising its voice about a number it is only projecting. */
+.retire-last-winter {
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink);
 }
 
 .retire-answers {

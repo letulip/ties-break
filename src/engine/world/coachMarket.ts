@@ -23,6 +23,12 @@ import type { AgeCurveBounds } from '../development'
 // `./masseur` and `./business` above do. `world/college.ts` reads the same constants the same way.
 // ⚠ ROUND 39 #13a – `ENDINGS` left this file with the 0.55 stop: the coach's sentence now ends at
 // `COACH_BODY_END_SHARE` (see the constant), and nothing else here reads the endings config.
+// ⚠⚠ ROUND 40 #14b – AND IT IS BACK, FOR THE OTHER END AND FOR NOTHING ELSE. `lastWinterIn` below
+// walks to `ENDINGS.lastOfferPeakShare` and gates on `ENDINGS.askFromAgeYears`: the two numbers that
+// define the winter the question runs out. The coach's own sentence still ends at
+// `COACH_BODY_END_SHARE` – #13a's split is untouched, and the import is a READ of the endings dial,
+// never a second home for it.
+import { ENDINGS } from '../ending'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -1242,13 +1248,24 @@ export const COACH_BODY_END_SHARE = 0.7
  *  or under the stop walks zero weeks and the callers' `max(1, …)` says «about 1 more season» for
  *  the whole 0.70-0.55 tail, which is the honest floor: the question is still being asked there.
  *
+ *  ⭐⭐ ROUND 40 #14b – THE STOP IS A PARAMETER NOW, AND THERE IS STILL EXACTLY ONE WALKER. The
+ *  warning below needs the same forward walk aimed at the OTHER end – `ENDINGS.lastOfferPeakShare`,
+ *  the winter the question runs out – and a second copy of this loop is a loop that can be edited in
+ *  one place and not the other, which is `physicalShareOf`'s own reason for existing one file over.
+ *  The default is `COACH_BODY_END_SHARE`, so every caller that does not pass one is byte-identical
+ *  to what shipped.
+ *
  *  Returns null when the save carries no peak to measure against. */
-function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: number): number | null {
+function seasonsOfBodyLeft(
+  world: WorldState,
+  bounds: AgeCurveBounds,
+  age: number,
+  stop: number = COACH_BODY_END_SHARE,
+): number | null {
   const peak = world.peakPhysical
   if (!peak || peak <= 0) return null
   let share = physicalMean(world.skills) / peak
   if (!Number.isFinite(share)) return null
-  const stop = COACH_BODY_END_SHARE
   let walked = age
   let weeks = 0
   while (share > stop && weeks < 40 * WEEKS_PER_YEAR) {
@@ -1257,6 +1274,102 @@ function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: numbe
     weeks++
   }
   return weeks / WEEKS_PER_YEAR
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 40 #14b – HOW MANY WINTERS BEFORE THE QUESTION RUNS OUT. ONE DERIVATION, THREE VOICES.
+// =================================================================================================
+//
+// THE OWNER, 08.09, on the recommendation that came out of r39 #14b's measurement: «да, это именно
+// то, о чем я и говорил. Где-то тренер может подсветить, где-то она сама, где-то финальный экран
+// сезона. Давай сделаем.» And on when it should speak: «за сезон-два до того».
+//
+// ⚠⚠ THIS ADDS NO BAND AND NO MECHANIC, AND THAT IS THE MEASUREMENT'S OWN VERDICT rather than a
+// scoping decision (both tables are in docs/rounds/round-40.md):
+//
+//   * THE PLATEAU WINDOW CAN CARRY NO TRIGGER. `tools/r40-retire-trigger.ts`, 108 careers x 900
+//     weeks: the card asks on 52 of them and she LATER beat the rank she held that day in 52 of 52.
+//     The body cannot speak there either – `declineStart` IS 29 and the plateau branch cannot fire
+//     past `askFromAgeYears` = 29, so `physicalShare` is exactly 1.000 at every one of those asks.
+//   * AND PAST 29 THE SHIPPED BAND IS ALREADY THE HONEST PLACE. `tools/r40-age-branch.ts`, 108
+//     careers x 1900 weeks: the median number of titles she still wins after a band fires reaches
+//     ZERO only at the shipped 0.55. At 0.70 she still wins a median of 1 and as many as 11; at
+//     0.80, 3 and as many as 17. An earlier «she is done» takes trophies off her.
+//
+// ⭐ So what was missing was never a state – it was WARNING. Nothing on any screen said the last
+// winter was coming until it arrived. This is that number, and the three surfaces that speak it
+// (the coach's card, her own voice on the winter card, the season's wrap-up) all read THIS function.
+//
+// ⚠⚠ IT IS EXACT RATHER THAN ROUNDED, AND THE EXACTNESS IS WHAT LETS THE COPY SAY «the next one».
+// The walk gives the WEEK her share crosses the final band; the question is only ever raised on one
+// week of the year (`resolveEndings` 7d: `week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS`),
+// so the last ask is the first such week at or after the crossing and the count is a subtraction on
+// the calendar, not a rounding of years. `Math.round(years)` would have claimed «next winter is the
+// last» on a career whose crossing lands two off-seasons out.
+//
+// ⚠ WHAT CAN STILL MOVE IT, said out loud because a warning that is quietly wrong is worse than no
+// warning: `ageCurveOf` pulls her `declineStart` EARLIER by the weeks she loses to injury, so a bad
+// layoff inside the window steepens the walk and can bring the last winter forward. It cannot push
+// it back – nothing in the engine returns physical share – so the projection errs on the late side
+// only, which is the honest direction for a warning.
+//
+// ZERO DRAWS, on any stream: a walk over persisted state and two subtractions on the calendar.
+
+/** ⭐ «за сезон-два до того» – HIS WINDOW, AS A CONSTANT. It speaks at this many winters or fewer
+ *  and says nothing before, because a warning that fires for eight seasons is wallpaper (the
+ *  `DRAW_CLAUSES` warning in SeasonScreen.vue, which this project keeps re-learning).
+ *
+ *  ⚠ MEASURED, AND IT IS A COUNT OF ASKS RATHER THAN OF YEARS, so it holds on every career curve
+ *  instead of on the shipped one. `tools/r40-last-winter.ts` walks four of them (a drawn 29, a
+ *  direct-route 27, a late 31, and a 29 with 40 weeks lost to injury): on all four the warning opens
+ *  exactly two off-seasons before the final one, counts 2 then 1, and goes quiet on the winter
+ *  itself. On the drawn-29 career that is the off-seasons at 40.5 and 41.5 against a last word at
+ *  42.5 – 104 weeks on the coach's card, 36 on Home's rotating plate, two cards on each of the two
+ *  surfaces that only exist at the wrap. */
+export const LAST_WINTER_WARN_SEASONS = 2
+
+/** The off-season week the retirement question is raised on – `resolveEndings` 7d's own test, read
+ *  forward instead of re-derived, so this count can never name a week the ask does not use. */
+const RETIRE_ASK_WEEK_OF_YEAR = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+
+/** The first week the question is raised on, at or after `week`. Correct for a negative week too:
+ *  the modulo is normalised rather than assumed positive, which is `seasonIndexOf`'s own care. */
+function askWeekAtOrAfter(week: number): number {
+  const into = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  const delta = RETIRE_ASK_WEEK_OF_YEAR - into
+  return week + (delta >= 0 ? delta : delta + WEEKS_PER_YEAR)
+}
+
+/** ⭐⭐⭐ HOW MANY OFF-SEASONS ARE LEFT BEFORE THE LAST ONE, or null when nothing should be said.
+ *
+ *  1 means the NEXT winter is the one the offer arrives `final` on – exactly, not approximately.
+ *
+ *  ⚠⚠ NOTHING BEFORE `askFromAgeYears`, AND THAT GATE IS NOT REDUNDANT. Before 29 the share is
+ *  exactly 1 by construction (`declineStart` IS 29, and `growWeek` freezes the peak the week the
+ *  decline starts), so a projection off it would be a projection off a constant – which is precisely
+ *  what r39 #14b's plateau measurement proved: a wrecked career reads 100% at 28 as surely as a kept
+ *  one. The winter question itself starts at the same age, so a warning before it would be warning
+ *  about a question nobody has asked yet.
+ *
+ *  ⚠ IT IS SILENT ON THE LAST WINTER ITSELF, structurally rather than by a condition on a screen:
+ *  on that week the final ask IS this week, the count comes out 0, and `lastWordLine` is the only
+ *  thing that should be speaking there.
+ *
+ *  Null while the save carries no peak, while she is further out than the window, and on any world
+ *  whose body never reaches the band inside the walk's forty-year cap. */
+export function lastWinterIn(world: WorldState): number | null {
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  if (age < ENDINGS.askFromAgeYears) return null
+  const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
+  const years = seasonsOfBodyLeft(world, bounds, age, ENDINGS.lastOfferPeakShare)
+  if (years === null) return null
+  // ⚠ BACK TO WEEKS, because the walk counted weeks and only divided to answer its own caller. The
+  // round is the float's rounding and never a semantic one – `weeks / 52 * 52` is the same integer.
+  const crossWeek = world.week + Math.round(years * WEEKS_PER_YEAR)
+  const lastAsk = askWeekAtOrAfter(crossWeek)
+  const nextAsk = askWeekAtOrAfter(world.week + 1)
+  const winters = Math.round((lastAsk - nextAsk) / WEEKS_PER_YEAR) + 1
+  return winters >= 1 && winters <= LAST_WINTER_WARN_SEASONS ? winters : null
 }
 
 /** WHERE THE TABLE HAS TAKEN HER, off the seasons the career actually banked.
@@ -1314,24 +1427,54 @@ export function seasonRankRead(world: WorldState): { yearMove: number | null; be
  *  two surfaces can never disagree about whether she is past her peak or by how much – the "two
  *  sides asking different functions about one question" defect, prevented structurally. Null while
  *  she is still growing, which is the '' guarantee both formatters inherit. */
-function declineRead(world: WorldState): { seasons: number; yearMove: number | null; belowBest: number | null } | null {
+/** ⭐⭐⭐ ROUND 40 #14b – AND THE WARNING JOINS THE ROW RATHER THAN ARRIVING BESIDE IT. The near-final
+ *  case is a fourth field on the SAME read, so the long sentence and the short plate cannot end up
+ *  one warning apart: whichever of them speaks this week is speaking off this row. `lastWinter` is
+ *  null on every week outside his window, which is what keeps both formatters byte-identical to what
+ *  shipped for the whole of the decline before it. */
+type DeclineRead = { seasons: number; yearMove: number | null; belowBest: number | null; lastWinter: number | null }
+
+function declineRead(world: WorldState): DeclineRead | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (age < bounds.declineStart) return null
   const years = seasonsOfBodyLeft(world, bounds, age)
   if (years === null) return null
-  return { seasons: Math.max(1, Math.round(years)), ...seasonRankRead(world) }
+  return { seasons: Math.max(1, Math.round(years)), lastWinter: lastWinterIn(world), ...seasonRankRead(world) }
 }
 
 /** ⚠ ROUND 39 #13c – «down 1 places» had no singular. The seasons clause next to it always had one
  *  (`season/seasons`), so the defect was one word wide and lived in both rank arms. */
 const places = (n: number): string => `${n} ${n === 1 ? 'place' : 'places'}`
 
+/** ⭐⭐⭐ ROUND 40 #14b (DRAFT COPY, AWAITING THE OWNER'S WORD) – HIS VOICE FOR THE NEAR-FINAL CASE.
+ *
+ *  ⚠⚠ IT REPLACES THE `left` CLAUSE RATHER THAN STANDING BESIDE IT, which is the shape the item was
+ *  approved in: «Extend that voice for the near-final case rather than adding a second sentence
+ *  beside it.» All three arms of his sentence keep their grammar and their rank halves; what changes
+ *  is the clause they share, and only on the weeks the warning is on.
+ *
+ *  ⚠ AND THE CLAUSE IT REPLACES IS DEGENERATE EXACTLY THERE, which is why this is information and
+ *  not decoration. `seasonsOfBodyLeft` stops at `COACH_BODY_END_SHARE` and the callers floor it at
+ *  1, so «her body has about 1 more season in it» is what he says for the WHOLE 0.70-to-0.55 tail –
+ *  three and a half years of an unchanging number. The warning is the part of that tail the parent
+ *  can act on.
+ *
+ *  ⚠ DIGITS, because this note is deliberately the one string on the wire that carries them (see
+ *  `Snapshot.coachDeclineNote`). Her own voice spells its counts instead; that split is not an
+ *  accident of two authors. */
+function lastWinterClause(winters: number): string {
+  return winters === 1 ? 'her last winter is the next one' : `her last winter is ${winters} seasons away`
+}
+
 export function coachDeclineNote(world: WorldState): string {
   const read = declineRead(world)
   if (read === null) return ''
   const { seasons, yearMove, belowBest } = read
-  const left = `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
+  const left =
+    read.lastWinter !== null
+      ? lastWinterClause(read.lastWinter)
+      : `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
   const note =
     yearMove !== null && yearMove > 0
       ? `down ${places(yearMove)} on the year, and ${left}.`
@@ -1451,17 +1594,23 @@ function belowBestShort(behind: number): string {
  *  and CAPITALISED on his word of 08.09 («поправь пожалуйста») – the plate opens a line, so the
  *  sentence case is his own second ruling on the same copy. «Past her peak – about N seasons left» is byte-identical to
  *  the string wave A2 shipped. #13c's singular care rides on `places`. */
-function declineVariantText(
-  variant: DeclineVariant,
-  read: { seasons: number; yearMove: number | null; belowBest: number | null },
-): string | null {
+function declineVariantText(variant: DeclineVariant, read: DeclineRead): string | null {
   switch (variant) {
     case 'fell':
       return read.yearMove !== null && read.yearMove > 0 ? `She's down ${places(read.yearMove)}` : null
     case 'below':
       return read.belowBest !== null && read.belowBest > 0 ? belowBestShort(read.belowBest) : null
     case 'seasons':
-      return `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${read.seasons} ${read.seasons === 1 ? 'season' : 'seasons'} left`
+      // ⭐⭐⭐ ROUND 40 #14b (DRAFT COPY) – THE BODY CLAUSE BECOMES THE WARNING INSIDE HIS WINDOW, and
+      // it is the LONG sentence's own clause compressed, exactly as this variant has always been the
+      // compression of «her body has about N more seasons in it». ⚠ IT IS NOT OPTIONAL FOR THE PLATE
+      // TO STAY OUT OF THIS: past 0.70 the shipped clause is pinned at «about 1 season left», so a
+      // plate that kept it while the card said «her last winter is 2 seasons away» would put two
+      // different numbers about her remaining time on two of the coach's own surfaces – which is the
+      // contradiction the owner reported in #13a, arriving from the other side.
+      return read.lastWinter !== null
+        ? `${DECLINE_LABEL}${ROOM_NOTE_SEP}${read.lastWinter === 1 ? 'her last winter is next' : `her last winter is ${read.lastWinter} seasons away`}`
+        : `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${read.seasons} ${read.seasons === 1 ? 'season' : 'seasons'} left`
   }
 }
 

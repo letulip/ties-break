@@ -774,6 +774,24 @@ export interface Snapshot {
    *  stored: this is computed from `world.skills` and `world.peakPhysical`, both of which have been
    *  on the save since v62, so `SAVE_SCHEMA_VERSION` does not move for it. */
   physicalShare: number
+  /** ⭐⭐⭐ ROUND 40 #14b – HOW MANY OFF-SEASONS ARE LEFT BEFORE THE LAST ONE, or null when nothing
+   *  should be said. 1 means the NEXT winter is the one the offer arrives `final` on.
+   *
+   *  ⚠⚠ IT IS THE WARNING THE SHARE ABOVE COULD NOT GIVE. `physicalShare` says how far gone she is;
+   *  it does not say when the question runs out, and nothing on any screen did – «nothing tells the
+   *  parent the last winter is coming until it arrives» is the whole of the item. The owner, 08.09:
+   *  «Где-то тренер может подсветить, где-то она сама, где-то финальный экран сезона.»
+   *
+   *  ⚠ ONE FIELD FOR THREE SURFACES, DELIBERATELY. The coach's card, her own line on the winter card
+   *  and the season's wrap-up all read THIS number, so no two of them can warn about different
+   *  winters – `declineRead`'s own guarantee for the coach's two, widened to the three voices.
+   *  `lastWinterIn` (engine/world/coachMarket.ts) is the derivation and carries the argument, the
+   *  measurement and the two gates: nothing before `ENDINGS.askFromAgeYears`, nothing further out
+   *  than `LAST_WINTER_WARN_SEASONS`, and silence on the last winter itself.
+   *
+   *  DERIVED AT SNAPSHOT TIME – `physicalShare`'s own precedent. Persists nothing, owes no migration
+   *  and does not move `SAVE_SCHEMA_VERSION`. */
+  lastWinterIn: number | null
   /** ⭐⭐ HOW MANY TIMES SHE HAS SAID «one more year» (the long goodbye step 4). On the snapshot
    *  ALWAYS, not only at the end, and that is the change: `EndingView.oneMoreYearCount` has carried
    *  it since the album shipped, but the ending view is null until a career has one – and the

@@ -35,7 +35,7 @@ import HomeScreen from '../../src/components/screens/HomeScreen.vue'
 import RetirementDialog from '../../src/components/RetirementDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
-import { COACH_BODY_END_SHARE, coachDeclineNote, coachRoomNote } from '../../src/engine/world/coachMarket'
+import { COACH_BODY_END_SHARE, coachDeclineNote, coachRoomNote, lastWinterIn } from '../../src/engine/world/coachMarket'
 import { ageAtPhysicalShare, physicalMean } from '../../src/engine/development'
 import { ENDINGS } from '../../src/engine/ending'
 import { kidAgeExact } from '../../src/engine/world/age'
@@ -283,10 +283,26 @@ describe('round 38 #6d – the coach plate on Home, and only past her peak', () 
     // ⚠ RE-AIMED, round 39 #13a: the walk stops at `COACH_BODY_END_SHARE`, so everywhere between it
     // and `ENDINGS.lastOfferPeakShare` (the 38-to-41 tail the QUESTION owns) the honest floor is
     // «about 1 more season» - she is playing on a body the model calls done. Both edges pinned.
-    const tail = pastPeakWorld({ seasons: [season(19, 68), season(20, 125)], share: ENDINGS.lastOfferPeakShare + 0.005, ageYears: 41 })
+    //
+    // ⚠⚠ RE-AIMED AGAIN, ROUND 40 #14b, AND NOTHING IS DROPPED - THE CLAIM SPLITS IN TWO. The floor
+    // is exactly what that item found wrong with this stretch: it is the SAME «about 1 more season»
+    // for three and a half years, so it cannot tell a woman two winters from the last question from
+    // one who is on it. Inside the warning window (`lastWinterIn` non-null, the last two off-seasons)
+    // the shared clause IS the count now; everywhere else in the tail it is still the floor, and both
+    // halves are pinned here rather than one of them being deleted. The old fixture's share sat a
+    // whisker above the band - i.e. squarely in the window - so it moves down the tail and the
+    // window's own edge gets its own assertion underneath.
+    const tail = pastPeakWorld({ seasons: [season(19, 68), season(20, 125)], share: 0.65, ageYears: ageAtPhysicalShare(0.65) })
+    expect(lastWinterIn(tail), 'the tail fixture drifted into round 40s warning window').toBeNull()
     expect(coachDeclineNote(tail)).toContain('about 1 more season in it')
     const atEnd = pastPeakWorld({ seasons: [season(19, 68), season(20, 125)], share: COACH_BODY_END_SHARE - 0.005, ageYears: ageAtPhysicalShare(COACH_BODY_END_SHARE - 0.005) })
     expect(coachDeclineNote(atEnd)).toContain('about 1 more season in it')
+
+    // ...and the edge this arm used to read - a body a whisker above the band - is the warning's now.
+    const nearFinal = pastPeakWorld({ seasons: [season(19, 68), season(20, 125)], share: ENDINGS.lastOfferPeakShare + 0.005, ageYears: 41 })
+    expect(lastWinterIn(nearFinal), 'a body at the band is not inside the warning window').not.toBeNull()
+    expect(coachDeclineNote(nearFinal)).toContain('her last winter is')
+    expect(coachDeclineNote(nearFinal), 'two body clauses in one sentence').not.toContain('more season in it')
   })
 
   it('⚠ a year she IMPROVED falls through to her best season – no invented fall', () => {

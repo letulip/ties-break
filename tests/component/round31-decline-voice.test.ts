@@ -44,6 +44,7 @@ import {
   COACH_WEEK_CHOICE,
   DECLINE_RUNGS,
   HER_DECLINE_LINES,
+  LAST_WINTER_LINES,
   coachDeclineLine,
   coachDeclinePool,
   declineRung,
@@ -505,7 +506,16 @@ describe('round 31 #9 – the nine sentences are his', () => {
     // ⚠ NINE LINES, TEN STRINGS. His nine are three rungs, two pooled coach lines, ONE conditional
     // line, and her three – and the conditional one has two endings, which is what makes it
     // conditional. The count is pinned so a tenth idea cannot be smuggled in as an eleventh string.
-    expect(ALL_DECLINE_LINES).toHaveLength(10)
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 40 #14b, AND THE PIN THAT MATTERS DID NOT MOVE. The four rendered
+    // warnings (`LAST_WINTER_LINES` – her line and the wrap's, at each count the window can
+    // produce) joined `ALL_DECLINE_LINES` because that list exists to be SWEPT: everything this
+    // module can put on a screen has to pass the house law below. So the total is now his ten plus
+    // whatever the new list holds, stated as a sum rather than as a fresh literal – and the
+    // arithmetic pin on the OWNER'S OWN NINE underneath is untouched, still counts exactly the
+    // sentences he approved on 31.08, and still goes red if one of them goes missing.
+    expect(ALL_DECLINE_LINES).toHaveLength(10 + LAST_WINTER_LINES.length)
+    expect(LAST_WINTER_LINES, 'the round 40 warnings left the sweep').toHaveLength(4)
     expect(DECLINE_RUNGS.length + COACH_DECLINE_LINES.length + 1 + HER_DECLINE_LINES.length).toBe(9)
     for (const line of ALL_DECLINE_LINES) {
       expect(CYRILLIC.test(line), `Cyrillic in a rendered line – ${line}`).toBe(false)
