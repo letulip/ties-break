@@ -59,3 +59,42 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   plateau branch of `retirementDue` CANNOT fire past `askFromAgeYears` (29) – the age branch returns
   first – so the card lives in 24-28 by construction, which is exactly her peak. His objection is
   the shape of the mechanism, not its tuning.
+
+  ⭐⭐ **MEASURED (`tools/r40-retire-trigger.ts`, 108 careers x 900 weeks, the engine's own
+  `plateauViewOf`), and the answer is that NO trigger in this window can be right.**
+
+  | | |
+  | --- | --- |
+  | careers the card ever asks | **52 of 108 – 48.1%**, 141 asks, ages 24-28 (median 26) |
+  | careers where she beat that day's rank later | **52 of 52 – 100%** |
+  | careers where the FIRST ask preceded a better rank | **50 of 52 – 96.2%** |
+
+  | candidate trigger | fires on | premature |
+  | --- | --- | --- |
+  | K = 4 one-more-years | 14 of 52 (26.9%) | **14 – 100%** |
+  | K = 3 one-more-years | 22 of 52 (42.3%) | **22 – 100%** |
+  | physical share <= 0.90 | **0** | – |
+  | physical share <= 0.80 | **0** | – |
+  | composure + stamina below their mean | 4 of 52 (7.7%) | **4 – 100%** |
+  | age >= 27 AND K >= 2 | 33 of 52 (63.5%) | **33 – 100%** |
+
+  ⚠ **The body cannot speak here, by construction.** `declineStart` IS 29 and the plateau branch
+  cannot fire past `askFromAgeYears` = 29, so physical share is exactly 1.000 at every ask – a
+  wrecked career reads 100% at 28 as surely as a kept one. That is why both share thresholds fire on
+  zero careers and would on any corpus. His «завязать на хладнокровие+выносливость» meets the same
+  wall from the other side: before 29 those two do not fall, they RISE.
+
+  ⭐ **So the finding is not «which trigger» – it is that the plateau card is her DOUBT and not a
+  prediction.** Read as prognosis it is wrong 96.2% of the time. Read as doubt it is right every
+  time: she says she cannot reach the top, the parent says keep going, and she breaks through. That
+  is the story the numbers actually describe.
+
+  **RECOMMENDATION, for his word:**
+  * **14a ships** – the four escalating ledes keyed on `oneMoreYearCount`, pure copy on a card that
+    already exists, no trigger change. ⚠ They must read as doubt, never as forecast; the shipped
+    lede's «If she cannot reach the top, she would rather go now» is the one line the world
+    contradicts 96% of the time.
+  * **14b moves to the age branch (29+), where the body actually moves** and `physicalShare` is a
+    real signal rather than a constant. His «she is done» becomes an earlier band there, above the
+    existing `lastOfferPeakShare` 0.55. That needs its own measurement – when each candidate band
+    fires past 29, and what she does after – and it is the next probe, not a guess.
