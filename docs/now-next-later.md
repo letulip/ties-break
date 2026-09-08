@@ -29,10 +29,19 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 38 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 39 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 38 is the balance wave** ([round-38.md](rounds/round-38.md), 06.09) – Wave C of
+**Round 39 is the Ines wave** ([round-39.md](rounds/round-39.md), 08.09) – fifteen items off his
+week-832 career on the merged round-38 build, two of them reopens (the brand sell-and-rebuy loop
+against round 38 #15/#16, the birthday gift repetition against round 26 #9). Four disjoint build
+waves (Home's flavour and the coach's voice; the shelf's owned cards; the birthday pool; the
+prologue injury moment) ran in parallel worktrees; the skill-formula audit acquitted the match
+model – her sub-50 losses are priced by her own lopsided build (serve 53.1, composure 50.6 against
+ret 69.0 and groundstrokes 70.6) – and the open rulings on the brand loop, the contract-term
+ladder, the retirement voice and the sponsor-band cliff sit with the owner in the ledger.
+
+**Round 38 was the balance wave** ([round-38.md](rounds/round-38.md), 06.09) – Wave C of
 [next-waves-2026-09](specs/next-waves-2026-09.md), which he deferred to «после мержа 37», plus three
 observations he brought back from the merged build: a travel-class choice from the professional
 rungs ([travel-class-2026-09](specs/travel-class-2026-09.md)), the brand halving while her rank held,
