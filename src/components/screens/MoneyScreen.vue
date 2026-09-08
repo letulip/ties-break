@@ -2193,14 +2193,23 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             <span v-if="row.state === 'filled'" class="ad-slot-brand">{{ row.brand }}</span>
             <span v-else-if="row.state === 'open'" class="ad-slot-state">Open – nobody signed</span>
             <span v-else class="ad-slot-state">
-              {{ row.seasonsInTop10
-                ? `${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
-                : row.opensAtRank
-                  ? `Opens inside WTA #${row.opensAtRank}`
-                  : 'Not open yet' }}
+              <!-- ⭐ ROUND 39 #3 – the lifetime row's gate has two halves (the capstone's own tenure
+                   read PLUS a Slam), so its closed line names both, counted plainly. DRAFT copy. -->
+              {{ row.slamTitles && row.seasonsInTop10
+                ? `${row.slamTitles.held} of ${row.slamTitles.needed} Slams · ${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                : row.seasonsInTop10
+                  ? `${row.seasonsInTop10.held} of ${row.seasonsInTop10.needed} top-10 seasons`
+                  : row.opensAtRank
+                    ? `Opens inside WTA #${row.opensAtRank}`
+                    : 'Not open yet' }}
             </span>
           </div>
-          <p v-if="row.state === 'filled'" class="ad-slot-note">
+          <!-- ⭐ ROUND 39 #3 – a filled lifetime row says «for life» where the years-and-runs-to
+               clause would be a lie: the paper has no term and no untilWeek at all. DRAFT copy. -->
+          <p v-if="row.state === 'filled' && row.lifetime" class="ad-slot-note">
+            {{ formatCents(row.cashCents ?? 0) }} a year · for life
+          </p>
+          <p v-else-if="row.state === 'filled'" class="ad-slot-note">
             {{ formatCents(row.cashCents ?? 0) }} a year ·
             {{ (row.termYears ?? 1) === 1 ? 'one year' : `${row.termYears} years` }} · runs to
             {{ weekLabel(row.untilWeek ?? 0) }}

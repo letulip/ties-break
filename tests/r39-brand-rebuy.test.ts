@@ -48,7 +48,6 @@ import { worthRampHalfLife } from '../src/engine/world/assets'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed } from '../src/engine/rng'
-import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 
 const MERCH = 'merch-brand'
@@ -62,18 +61,6 @@ const FUNDS = 500_000_000_00
 function professional(world: WorldState): WorldState {
   world.bestFinishByTier.wta250 = 3
   return world
-}
-
-function walk(world: WorldState, n: number, keepSolvent = false): void {
-  const rng = rngFromSeed(`${world.seed}:walk`)
-  for (let i = 0; i < n; i++) {
-    tickWeek(world, rng)
-    if (world.pendingTournament) {
-      skipTournament(world)
-      closeTournament(world)
-    }
-    if (keepSolvent) world.fundsCents = FUNDS
-  }
 }
 
 function shopper(seed: string, weeks = 12): WorldState {

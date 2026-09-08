@@ -65,6 +65,37 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⭐⭐ RE-STAMPED FOR v71 (08.09.2026, ROUND 39 #5 – wave EF) – THE SCHEMA NUMBER MOVED AND NOT ONE
+// OTHER BYTE, WHICH IS THE NARROWEST LEGITIMATE RE-FREEZE THIS FILE RECOGNISES (v49's own sense,
+// v66/v67/v68/v69 repeated).
+// =================================================================================================
+//
+// WHAT MOVED THEM. `SAVE_SCHEMA_VERSION` 70 -> 71: round 39 #5 adds `world.brandFounded` so a
+// REPEAT merch-brand founding can be priced at the market (`assetEntryPriceCents`), and the same
+// wave's round 39 #3 moves the ad-contract term onto the band. NEITHER reaches a frozen career:
+// `brandFounded` is written only by `buyAsset` on a business rung (no frozen policy buys the shelf)
+// and never by `createWorld`, and an ad letter cannot arrive before eighteen while the walk stops at
+// week 156 (age ~17).
+//
+// PER-KEY DIFF TAKEN FIRST, AS THE PROTOCOL DEMANDS. Control = a detached worktree at `436f9cac`
+// (this wave's base – provably the tree the constants were last green on), reader-absence checked in
+// the negative direction: `git grep brandFounded -- src` returns 0 files there and 4 on the branch.
+// `tools/frozen-key-diff.ts` on the three frozen careers, control vs branch:
+//
+//     · 5/0 (25k middle, grinder)              **1 of 74 keys: `schemaVersion`**
+//     · 8/0 (120k wealthy, elite, grinder)     **1 of 74 keys: `schemaVersion`**
+//     · 0/1 (8k working, self-coached, PLAYER) **1 of 74 keys: `schemaVersion`**
+//
+// `rngMain` byte-identical on all three (the diff names schemaVersion alone), and the frozen MAIN
+// capture is unmoved and not re-pinned: 41550 / e6b0c709, green on this tree.
+//
+// THE RE-CUT, mechanically: the three live constants and their two transform twins (`PRE_R28B`,
+// `PRE_NAME_VERA`) move to the new stamp; every `PRE_V*` rung below is UNTOUCHED and still
+// reproduces, and the new `PRE_V71` rung holds the v70 stamp so the identity «rolling ONLY the
+// schema number back to 70 reproduces the v70 hashes byte for byte» is asserted rather than
+// remembered. Every value was COMPUTED by running the exported helpers, never copied from a report.
+// =================================================================================================
+// =================================================================================================
 // ⭐⭐ RE-FROZEN FOR ROUND 38 #17 (07.09.2026) – THE FIT SPAN WIDENS, AND ONLY THE COACHED CAREERS
 // FELT IT. FORTY-TWO OF THE SIXTY-THREE CONSTANTS MOVE; NOT ONE `selfTravelling` VALUE IS TOUCHED.
 // =================================================================================================
@@ -1380,7 +1411,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '184e3385563baf0f2f3d5df5ce0dd5c4955a57da142264ecf273a9a9f1578299',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '294a473b91e3ee8a79ab39c56d26c3a0e93ba366470dc6a14d2ba3702bbdbbb1',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1415,7 +1446,7 @@ export const FROZEN = {
    *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
    *  this career carries all three of the day's moves and its constant matches no branch that exists,
    *  which is what a renumbered collision looks like from inside a fixture. */
-  eliteGrinder: 'c155f8b4e571f22b280ee72900bdc08f365d1e32e7e4d08785559f212bea5b3d',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: 'e1ad5f37d51880df3625682d5fbf0e8894cdad0343cfb7916dab6894b877a18d',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1655,7 +1686,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: 'cd5046d20fe36e93447d35484d5e4253a7580747335ab70c07bebc83e27afc66',}
+  selfTravelling: 'b96bf3ba8965c5eafff0f0faeb5ed06cb164cb5884be0059a4316a81414e3287',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -1702,6 +1733,20 @@ export const FROZEN = {
  *  is untouched – count 41550, hash e6b0c709 – and needs no re-pin. `offers` is byte-identical too,
  *  which is the independent confirmation that #5 changed how a signed letter is READ and not whether
  *  one is written. */
+/** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v70 – the identity that proves the v71 re-freeze
+ *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66/v67/v68/v69
+ *  repeated: the narrowest legitimate re-freeze this file recognises.
+ *
+ *  ⚠ v71 DOES ADD A WORLD FIELD – `brandFounded`, round 39 #5's memory of a merch-brand founding –
+ *  AND NO FROZEN CAREER CARRIES IT, the v68 `ageCurve` note's own shape one block down: the field is
+ *  written by `buyAsset` on a business purchase (no frozen policy buys the shelf) and by the v71
+ *  migration only where a merch brand is OWNED, never by `createWorld`. So there is nothing to peel:
+ *  a v70 serialisation of this world is exactly this world with the number moved back. */
+export const PRE_V71 = {
+  middleGrinder: '184e3385563baf0f2f3d5df5ce0dd5c4955a57da142264ecf273a9a9f1578299',
+  eliteGrinder: 'c155f8b4e571f22b280ee72900bdc08f365d1e32e7e4d08785559f212bea5b3d',
+  selfTravelling: 'cd5046d20fe36e93447d35484d5e4253a7580747335ab70c07bebc83e27afc66',}
+
 export const PRE_V69 = {
   middleGrinder: 'eb7463b5cb5bde071ff5cc4649602ed932816a19b944c42a542416d032ef77d5',
   eliteGrinder: '34cb4454c53f16a794445bef390769054a3a78b3afe1d2dedc3a7b74d1fe82ee',
@@ -1717,9 +1762,9 @@ export const PRE_V69 = {
  *  is a VALUE a career carries, not a version number stamped on it. The per-key diff, the two keys
  *  it moved and why the second one is her name being printed are on that function. */
 export const PRE_NAME_VERA = {
-  middleGrinder: '0a2232b34a5d98ea7118b1cd3a42c3ac3c18c04fa5619592bdc5d54ff593eab9',
-  eliteGrinder: '188ea0a02c61fd400020b9dddd0ea484a0a134d127f9f69b12284791e0423120',
-  selfTravelling: '5898fbc90af44a3baea04005287e746757af3b250c78f33754607b942b42386c',}
+  middleGrinder: 'b9792cc031ceee6118a89f912d66f07a735fecfeca8f06cfd25c7fc5f84bc112',
+  eliteGrinder: '2eb4fb321dba1f294e4f5e91f871dfe005c08201af27bac41ec156cf313f9510',
+  selfTravelling: 'e6d98ca320cf468691c084cd3855b8d19fcc923bce4bde5e705eded9be67669b',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -1829,9 +1874,9 @@ export const PRE_V66 = {
  *  three relations still hold: `middleGrinder` and `selfTravelling` equal their `FROZEN` twins and
  *  `eliteGrinder` differs by the one moved letter. The numbers moved together, the argument did not. */
 export const PRE_R28B = {
-  middleGrinder: '184e3385563baf0f2f3d5df5ce0dd5c4955a57da142264ecf273a9a9f1578299',
-  eliteGrinder: 'c155f8b4e571f22b280ee72900bdc08f365d1e32e7e4d08785559f212bea5b3d',
-  selfTravelling: 'cd5046d20fe36e93447d35484d5e4253a7580747335ab70c07bebc83e27afc66',}
+  middleGrinder: '294a473b91e3ee8a79ab39c56d26c3a0e93ba366470dc6a14d2ba3702bbdbbb1',
+  eliteGrinder: 'e1ad5f37d51880df3625682d5fbf0e8894cdad0343cfb7916dab6894b877a18d',
+  selfTravelling: 'b96bf3ba8965c5eafff0f0faeb5ed06cb164cb5884be0059a4316a81414e3287',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.

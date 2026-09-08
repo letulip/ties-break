@@ -49,6 +49,9 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     // ⭐ round 29 part two #10: null unless the fixture built academy stages – the default career
     // never did, so the line's ABSENCE is part of every existing arm for free.
     academy: null,
+    // ⭐ round 39 #3: null unless the fixture signed the lifetime letter – same shape, same free
+    // absence arm on every existing fixture.
+    lifetimeDeal: null,
     // ⭐ P5: null unless the fixture is a career sitting between two college years. The screen's
     // "another year?" question is drawn from this and from nothing else.
     college: null,

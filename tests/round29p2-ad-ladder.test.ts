@@ -121,9 +121,11 @@ describe('⭐⭐ each band ARRIVES at its own gate – the half a constants test
     expect(AD.categories[TRACKED].houses).toContain(t.brand)
     expect(t.trade).toBe(AD.categories[TRACKED].trade)
     expect(t.shootCount).toBe(BANDS[band].shootWeeksPerYear)
-    // Terms churn (P6): one to three years, drawn on the letter's own stream.
-    expect(t.termYears).toBeGreaterThanOrEqual(1)
-    expect(t.termYears).toBeLessThanOrEqual(AD.termYearsMax)
+    // Terms churn, drawn on the letter's own stream – ⚠ RE-AIMED, ROUND 39 #3: the bounds are the
+    // BAND's own ladder now (`termYearsMin`/`termYearsMax`, 1y rising → 2–5y at the top), not the
+    // flat 1–3 this arm was written against; the five fixtures make it a per-band assertion for free.
+    expect(t.termYears).toBeGreaterThanOrEqual(BANDS[band].termYearsMin)
+    expect(t.termYears).toBeLessThanOrEqual(BANDS[band].termYearsMax)
     expect(t.termWeeks).toBe(t.termYears! * 52)
     // ...on the shared clock every letter keeps: five weeks to decide, counted inclusively.
     expect(letters[letters.length - 1].week).toBe(hit)

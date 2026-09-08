@@ -89,7 +89,7 @@ import type { TierId } from './season/types'
 import type {
   // ⚠ `AdTier` left this list with `AD_TIERS` (E-08) – the type is still live and still exported by
   // shared/protocol; this module simply has nothing left that names it.
-  AcademyLetterTerms, AdCategory, AdOfferTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
+  AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
   KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
@@ -1128,6 +1128,16 @@ export function signOffer(offers: Offer[], offerId: string, week: number): Offer
   // of rival letters to close (`reviewAdOffer` raises at most one at a time by construction). The
   // fee itself is paid by `acceptOffer` – the world owns the wallet, this file owns the paper.
   if (offer.kind === 'ad') {
+    // ⭐ ROUND 39 #3 – a LIFETIME paper gets NO `untilWeek`, deliberately: writing any finite week
+    // would be a lie the window reads would then honour, and writing a sentinel would be a lie the
+    // save carries. Absent is the honest value, and `activeAdDeals`/`adSpokenFor` branch on the
+    // flag the paper itself states.
+    if ((offer.terms as AdOfferTerms).lifetime === true) {
+      offer.state = 'signed'
+      offer.decidedWeek = week
+      offer.fromWeek = week
+      return offer
+    }
     const termWeeks = Math.max(1, (offer.terms as AdOfferTerms).termWeeks)
     offer.state = 'signed'
     offer.decidedWeek = week
@@ -1764,7 +1774,10 @@ export function isWinterShootWeek(week: number): boolean {
  *  portfolio surface lists them and the order `reviewAdOffer` walks them, weakest gate first so the
  *  shelf reads as a climb. The capstone is deliberately LAST: it is not a trade, it is the one
  *  kit-shaped deal on top of the whole shelf. */
-export const AD_CATEGORIES: readonly AdCategory[] = ['watches', 'cars', 'drinks', 'clothing', 'airline', 'fragrance', 'capstone']
+export const AD_CATEGORIES: readonly AdCategory[] = ['watches', 'cars', 'drinks', 'clothing', 'airline', 'fragrance', 'capstone', 'lifetime']
+// ⭐ ROUND 39 #3 – 'lifetime' is APPENDED, above even the capstone, and appending is the safe move
+// by construction: every category's dice ride its own purpose scope (`seed:ad:<category>:<week>`),
+// so a new name at the end shifts nobody's stream and every recorded derivation replays unchanged.
 
 /** WHICH CATEGORY A LETTER'S PAPER FILLS – the one mapping that makes the portfolio rule reach
  *  every letter ever written, new or old. A new letter names its category; an old one is mapped
@@ -1844,7 +1857,9 @@ export function adBandFor(standing: SponsorStanding): number | null {
 export function adBandOfTerms(terms: AdOfferTerms): number {
   const bands = ECONOMY.advertising.bands
   const category = adCategoryOf(terms)
-  if (category === 'capstone') return bands.length - 1
+  // ⚠ the lifetime letter is the top band for the same reason the capstone is: its money is its own
+  // constant, no category row prices it, and «глобальный дом» describes nothing better.
+  if (category === 'capstone' || category === 'lifetime') return bands.length - 1
   const ladder = ECONOMY.advertising.categories[category].feeCentsByBand
   // the cell this cheque IS, strongest first – the letter landing on its own rung
   for (let i = bands.length - 1; i >= 0; i--) {
@@ -1862,7 +1877,7 @@ export function adBandOfTerms(terms: AdOfferTerms): number {
 /** THE CHEQUE ONE CATEGORY WRITES AT ONE BAND, in cents per contract year – or null where the
  *  category has not opened (`feeCentsByBand`'s own nulls, so the gate and the price are one fact).
  *  The capstone is not a category row and never reaches this: its money is its own constant. */
-export function adFeeFor(category: Exclude<AdCategory, 'capstone'>, band: number): number | null {
+export function adFeeFor(category: AdTradeCategory, band: number): number | null {
   return ECONOMY.advertising.categories[category].feeCentsByBand[band] ?? null
 }
 
@@ -1895,7 +1910,7 @@ export function pickAdHouse(
  *  letter's own purpose-scoped stream. `brand` is required for clothing (the live kit deal's own
  *  name – the «двойной программой» ruling) and defaults to the category's first house otherwise. */
 export function adTermsForCategory(
-  category: Exclude<AdCategory, 'capstone'>,
+  category: AdTradeCategory,
   band: number,
   termYears: number,
   brand?: string,
@@ -1905,7 +1920,12 @@ export function adTermsForCategory(
   if (fee === null) return null
   const author = brand ?? def.houses[0]
   if (!author) return null
-  const years = Math.max(1, Math.min(ECONOMY.advertising.termYearsMax, Math.round(termYears)))
+  // ⭐ ROUND 39 #3 – the clamp is the BAND'S OWN LADDER now (1y for the rising career, up to 5y at
+  // the top), never a flat constant: a caller handing this function a term the band does not write
+  // gets the band's honest edge, exactly as an out-of-band fee request gets null two lines up. The
+  // band index is valid whenever the fee was – `adFeeFor` has already refused everything else.
+  const ladder2 = ECONOMY.advertising.bands[band]
+  const years = Math.max(ladder2.termYearsMin, Math.min(ladder2.termYearsMax, Math.round(termYears)))
   return {
     category,
     brand: author,
@@ -1931,6 +1951,27 @@ export function adCapstoneTerms(brand: string): AdOfferTerms {
     termYears: c.termYears,
     termWeeks: c.termYears * WEEKS_PER_YEAR,
     shootCount: c.shootWeeksPerYear,
+  }
+}
+
+/** ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER'S PAPER («А некоторые и пожизненно» – the Messi/Ronaldo/
+ *  LeBron shape, the icon exception). Once per career, written by the same author rule as the
+ *  capstone (the kit house that dresses her is who signs faces for life), and the terms say three
+ *  things the shape of the fields can carry exactly: `lifetime: true` is the predicate every
+ *  window read branches on, `termWeeks: 0` is the declared «no finite span» convention (the flag's
+ *  own doc in shared/protocol/offers.ts), and `shootCount: 0` because weeks are named across a
+ *  term and this paper has none. The fee is the icon band's own biggest trade cheque, made
+ *  permanent – see `ECONOMY.advertising.lifetime` for the sizing argument. */
+export function adLifetimeTerms(brand: string): AdOfferTerms {
+  const l = ECONOMY.advertising.lifetime
+  return {
+    category: 'lifetime',
+    brand,
+    trade: 'We make her kit',
+    cashCents: l.cashCents,
+    lifetime: true,
+    termWeeks: 0,
+    shootCount: 0,
   }
 }
 
@@ -2069,11 +2110,14 @@ export function adDealShootingAt(offers: Offer[], week: number): Offer | null {
  *  `activeKitDeal`: honoured from `fromWeek` to `untilWeek` and not a week further, off each
  *  offer's own frozen terms. */
 export function activeAdDeals(offers: Offer[], week: number): Offer[] {
+  // ⭐ ROUND 39 #3 – a signed LIFETIME paper is in force from `fromWeek` for ever: it has no
+  // `untilWeek` at all (`signOffer` writes none), and the flag on its own frozen terms is the
+  // predicate. Every finite deal reads exactly as it always did.
   return offers.filter(
     (o) =>
       o.kind === 'ad' &&
       o.state === 'signed' &&
-      week <= (o.untilWeek ?? -1) &&
+      ((o.terms as AdOfferTerms).lifetime === true || week <= (o.untilWeek ?? -1)) &&
       week >= (o.fromWeek ?? o.decidedWeek ?? 0),
   )
 }
@@ -2096,11 +2140,17 @@ export function activeAdDealIn(offers: Offer[], category: AdCategory, week: numb
  *  letter states is «in no other <trade> campaign while that runs», which is how the real shelf
  *  works (§7 – no portfolio read for the research holds two brands of one trade at once). */
 export function adSpokenFor(offers: Offer[], week: number, category: AdCategory): boolean {
+  // ⭐ ROUND 39 #3 – a signed lifetime deal holds its slot for ever, which is precisely how «once
+  // per career» is enforced: no second letter can be raised into a slot that never re-opens. A
+  // REFUSED or EXPIRED lifetime letter shuts nothing – the house may write again – because a
+  // mis-tap that cost the career its one lifetime deal would be «мы ни за что не наказываем» broken
+  // on the biggest paper in the game.
   return offers.some(
     (o) =>
       o.kind === 'ad' &&
       adCategoryOf(o.terms as AdOfferTerms) === category &&
-      (isOfferLive(o, week) || (o.state === 'signed' && week <= (o.untilWeek ?? -1))),
+      (isOfferLive(o, week) ||
+        (o.state === 'signed' && ((o.terms as AdOfferTerms).lifetime === true || week <= (o.untilWeek ?? -1)))),
   )
 }
 

@@ -20,7 +20,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
@@ -631,6 +631,26 @@ export function reviewAdOffer(world: WorldState): void {
       const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
       if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
       terms = adCapstoneTerms(author)
+    } else if (category === 'lifetime') {
+      // ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»), once per career. The
+      // gate is the capstone's own tenure read – `capstoneSeasonsOf`, the SAME fold, never a second
+      // derivation – plus the one thing the capstone never asks: a Slam title on the ledger. A
+      // legend without a Slam is not one, in this sport.
+      //
+      // ⚠ «ONCE PER CAREER» IS NOT A COUNTER, it is `adSpokenFor` above doing what it always does:
+      // a signed lifetime deal never lapses, so its slot never re-opens and no second letter can
+      // ever be raised. A refused or expired letter shuts nothing – the house may notice her again
+      // («мы ни за что не наказываем» priced against a mis-tap on the biggest paper in the game).
+      //
+      // ⚠ RNG: the arrival roll on `seed:ad:lifetime:<week>` is the category's own purpose scope,
+      // the same shape every category rolls; NO letter rng and NO term draw – the term is «for
+      // ever» and the author is the rule, so this letter, like the capstone, draws exactly once.
+      if ((world.trophiesByTier?.slam?.titles?.length ?? 0) < s.lifetime.slamTitles) continue
+      if (capstoneSeasonsOf(world) < s.lifetime.seasonsInTop10) continue
+      const kit = activeKitDeal(world.offers, world.week)
+      const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
+      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      terms = adLifetimeTerms(author)
     } else {
       // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from
       // the first professional cash, the airline from the top 100, fragrance at the top 10 (§7).
@@ -657,7 +677,13 @@ export function reviewAdOffer(world: WorldState): void {
           rng(),
         )
       }
-      const years = 1 + Math.floor(rng() * s.termYearsMax)
+      // ⭐⭐ ROUND 39 #3 – ONE DRAW, A BAND-DEPENDENT MAPPING (owner 08.09: «давай так попробуем,
+      // как ты предложил»). The rising career signs a year, the top 10 signs two to five – the
+      // band's own `termYearsMin`/`termYearsMax` – and the DRAW COUNT IS UNCHANGED at every band:
+      // a 1-year band still spends its uniform (mapping it onto {1}), so the letter rng's draw
+      // order is byte-identical to the flat-1–3 code and no recorded stream shifts by one.
+      const ladder = s.bands[band]
+      const years = ladder.termYearsMin + Math.floor(rng() * (ladder.termYearsMax - ladder.termYearsMin + 1))
       terms = adTermsForCategory(category, band, years, author)
     }
     if (!terms) continue
@@ -1279,6 +1305,16 @@ export function payAdAnniversaries(world: WorldState): void {
     const t = deal.terms as AdOfferTerms
     const years = Math.max(1, t.termYears ?? 1)
     const yearIndex = at / WEEKS_PER_YEAR + 1
+    // ⭐ ROUND 39 #3 – the lifetime deal's anniversary arrives through the SAME window and the same
+    // splitter for ever (`activeAdDeals` holds it live with no untilWeek to stop at); only the
+    // ledger sentence differs, because «year N of 1» would be a lie on a paper with no term.
+    if (t.lifetime === true) {
+      bankSponsorCheque(world, t.cashCents, {
+        category: 'sponsor',
+        text: `${t.brand} endorsement – year ${yearIndex}, for life`,
+      })
+      continue
+    }
     // ⚠ NO `yearIndex > years` GUARD, AND ITS ABSENCE IS A MEASURED FACT, NOT AN OVERSIGHT. The
     // first draft carried one and the mutation log killed it as a dead guard: `activeAdDeals`'
     // own window is the stop – untilWeek = fromWeek + years×52 − 1, so the year-(years+1)

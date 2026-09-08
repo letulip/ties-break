@@ -246,12 +246,21 @@ export type AdTier = 'watch' | 'campaign' | 'house'
  *    fragrance  Rivelle, the shipped `house` rung's own trade – the icon-band category
  *    capstone   NOT a trade: the one $10M/yr × 8yr kit-shaped deal on top (§8), gated on tenure
  *               (4 seasons ENDED inside the top 10), one at a time by the same one-per-category rule
+ *    lifetime   ⭐ ROUND 39 #3 – NOT a trade either: the once-per-career «пожизненно» letter, gated
+ *               on the capstone's own tenure PLUS a Slam title, paying its year-fee for ever
+ *               (`AdOfferTerms.lifetime` marks the paper; a signed one never lapses, which is
+ *               what makes «once per career» fall out of the one-per-category rule for free)
  *
  *  ⚠ `AdTier` ABOVE IS NOT DELETED AND MUST NOT BE: letters written under the three-rung ladder are
  *  persisted in real saves, and `adCategoryOf` (engine/offers.ts) maps each old tier onto the
  *  category its house always was – watch→watches, campaign→airline, house→fragrance – so an old
  *  signed deal fills its category exactly as a new one would. */
-export type AdCategory = 'watches' | 'cars' | 'drinks' | 'clothing' | 'airline' | 'fragrance' | 'capstone'
+export type AdCategory = 'watches' | 'cars' | 'drinks' | 'clothing' | 'airline' | 'fragrance' | 'capstone' | 'lifetime'
+
+/** The categories that ARE trades – the six the catalogue prices per band. The capstone and the
+ *  lifetime letter sit on top of the shelf with their own constants, so every reader of
+ *  `ECONOMY.advertising.categories` speaks in this type and cannot index a row that is not there. */
+export type AdTradeCategory = Exclude<AdCategory, 'capstone' | 'lifetime'>
 
 /** THE THREE PROFESSIONAL RUNGS (W3-ACT2, act2-pro-tour.md section 7 - the owner's «да, надо
  *  продумать, предложи что-то», built). They are gated on the WTA rank, which is exactly as real as
@@ -945,6 +954,19 @@ export interface AdOfferTerms {
    *  new arithmetic pays. `termWeeks` stays the operative span (= termYears × 52 on new letters), so
    *  nothing that reads the span changes meaning. */
   termYears?: number
+  /** ⭐⭐ ROUND 39 #3 – THE PAPER THAT NEVER RUNS OUT («А некоторые и пожизненно»). `true` on the
+   *  once-per-career lifetime letter and on nothing else; absent on every letter ever written
+   *  before it, which is exactly what absent means. A signed lifetime deal has NO `untilWeek` –
+   *  `signOffer` deliberately writes none – and the three window reads (`activeAdDeals`,
+   *  `adSpokenFor`, and through them `payAdAnniversaries`) treat the flag as «live from `fromWeek`
+   *  for ever»: the anniversary fee arrives every year for as long as the career runs, and the
+   *  deal survives retirement into the epilogue (`EndingView.lifetimeDeal`).
+   *
+   *  ⚠ ON A LIFETIME PAPER `termYears` IS ABSENT AND `termWeeks` IS 0, and the 0 is a declared
+   *  convention rather than a span: «no finite span exists», with THIS flag as the one predicate
+   *  every reader branches on. `shootCount` is 0 by construction – shoot weeks are named at
+   *  signature across a term, and a term with no end has no «across» (the catalogue's own note). */
+  lifetime?: true
   /** who is writing – a FICTIONAL non-endemic house, never a tennis brand and never anything
    *  constructible into a real company. It is on the terms, not derived, for the same reason
    *  `KitOfferTerms.brand` is: the letter is persisted and must keep naming its own author. */
@@ -1009,6 +1031,12 @@ export interface AdPortfolioRow {
   opensAtRank?: number
   /** ...or the capstone's tenure – seasons ended inside the top 10, held and needed */
   seasonsInTop10?: { held: number; needed: number }
+  /** ⭐ ROUND 39 #3 – the lifetime row only: `true` on the crown's own row in every state, so the
+   *  screen can say «for life» instead of a years-and-runs-to clause that would be a lie */
+  lifetime?: true
+  /** ...and the closed lifetime row's OTHER gate half: Slam titles held and needed (the tenure
+   *  half rides in `seasonsInTop10` exactly as the capstone's does) */
+  slamTitles?: { held: number; needed: number }
 }
 
 /** ⭐⭐⭐ ROUND 27 #6 – WHAT THE NATIONAL SQUAD'S INVITATION STATES, WRITTEN BEFORE THE WEEK IT IS

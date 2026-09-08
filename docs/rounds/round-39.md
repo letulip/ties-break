@@ -81,7 +81,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   weight 600, attachTo per birthday-dialog's rule) – mutation-verified by de-accenting the CSS rule
   (red, restored). A growing fourteen-year-old still sees no plate of either length.
 
-- [>] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
+- [x] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
   выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и
   пожизненно»** – **measure then build.** First measure the actual term distribution by rank on his
@@ -114,6 +114,60 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   letter is proposed at legend status. `[?]` waiting on his word.
 
   **OWNER (08.09): «давай так попробуем, как ты предложил» → wave EF builds the ladder.**
+
+  **SHIPPED (wave EF, `r39/wave-ef`, 08.09) – the approved ladder, exactly, plus the lifetime
+  letter.** The term moved onto the BAND (`AdBandDef.termYearsMin`/`termYearsMax`; the flat
+  `termYearsMax: 3` is gone): 1y at ≤400 and ≤200, 1–2 at ≤100, 1–3 at ≤50, 2–5 at ≤10; the 8-year
+  capstone untouched (its «longer than every term» pin now reads every band's own max). ⚠ RNG: the
+  term is still ONE draw on the letter's own sub-stream – the band changes the MAPPING of the
+  uniform, never the draw count (a 1-year band still spends its uniform onto {1}) – proved by
+  stream replay in `tests/r39-term-ladder.test.ts` §2, and made VISIBLE in the measurement: the
+  ≤50 band's distribution is numerically identical before/after because its mapping equals the old
+  flat one. MAIN untouched; `tests/condition.test.ts` green, capture 41550/`e6b0c709` unchanged.
+
+  **The LIFETIME letter («А некоторые и пожизненно»):** category `lifetime` above the capstone,
+  once per career. Gate = a Slam title AND four seasons ended in the top 10 – `capstoneSeasonsOf`
+  REUSED, never a second derivation (`ECONOMY.advertising.lifetime`). Fee $2,500,000/yr – the icon
+  band's own biggest trade cheque (fragrance's ≤10 cell) made permanent, the Messi/Ronaldo shape
+  (a peak year-fee that never expires) at the game's own scale; NOT a second capstone, which would
+  have doubled the top of the economy. Zero shoot weeks by construction (weeks are named across a
+  term; this paper has none). «Once per career» is `adSpokenFor` doing what it always does: a
+  signed lifetime deal has NO `untilWeek` and never lapses, so the slot never re-opens – and a
+  REFUSED letter shuts nothing (a mis-tap must not cost the career its one lifetime deal).
+  `payAdAnniversaries` pays it every year for ever through the same splitter. It SURVIVES
+  retirement into the epilogue as the smallest honest hook: an ended world no longer ticks (nothing
+  banks post-ending for ANY source, the academy included), so what survives is the FACT –
+  `EndingView.lifetimeDeal` off the signed paper's frozen terms, one `ending-note` line on
+  EndingScreen. ⚠ All new sentences (letter body, confirm, portfolio row, epilogue line) are DRAFT
+  for his review.
+
+  **MEASURED (`tools/r39-terms-walk.ts`).** Walked 9 presets x 2 seeds x 832 weeks (his save's own
+  length): the default bench-policy careers only ever reach the ≤200 band – 30 letters, before
+  11/10/9 across 1–3y → after 30 x 1y. Per-band probes (the engine's own letter path, 40 drinks
+  letters per band, before recovered from the SAME uniform under the old mapping):
+
+  | band | before 1y/2y/3y/4y/5y | after 1y/2y/3y/4y/5y |
+  | --- | --- | --- |
+  | ≤400 | 11/15/14/–/– | **40/–/–/–/–** |
+  | ≤200 | 9/10/21/–/– | **40/–/–/–/–** |
+  | ≤100 | 14/11/15/–/– | **22/18/–/–/–** |
+  | ≤50 | 13/10/17/–/– | 13/10/17/–/– (byte-identical – the one-draw proof) |
+  | ≤10 | 13/17/10/–/– | **–/10/11/12/7** |
+
+  ⚠ **The lifetime letter NEVER fired on the walked set** – reported, not hidden: no walked career
+  banked a single top-10 season or slam (best live rank seen wta#265; most careers end bankrupt
+  under the default bench policy – the wrong instrument for legend careers, said plainly). The
+  gate's reach anchor stands elsewhere: round 29 measured 4+ top-10 seasons at 7 of 72 careers,
+  and the Slam requirement narrows that further – the letter is deliberately the icon exception.
+  The gate itself is exercised deterministically in `tests/r39-term-ladder.test.ts` §3 (arrives
+  past both halves, refused-re-arrives, pays at +1/+2/+10/+25 years, never between, epilogue fact)
+  and `tests/component/r39-lifetime-letter.test.ts` (the letter, the signed record, the epilogue
+  line, with an ordinary-letter CONTROL per absence claim). Re-aimed with ⚠ notes, none deleted:
+  `ad-offer.test.ts` (the replay helper maps per band), `round29p4-ad-portfolio` (the term sweep
+  reads the ladder's two ends), `round29p2-ad-ladder` (per-band bounds), `round29p2-ladder-monotone`
+  (the clamp sweep + the capstone-outlasts arm), `round32-brand-inertia`/`sponsor-ladder-reach`
+  (`AdTradeCategory` – the trade catalogue's own index type, so 'lifetime' cannot index a row that
+  is not there). Kit deals untouched – out of scope by his approval.
 
 - [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
 
@@ -219,6 +273,11 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   under the 52w floor; claim and band untouched at 0.40–0.60, hold 0.5385). New pins:
   `tests/r39-brand-rebuy.test.ts` – the first-founding law, sticker = door on a repeat, the
   quiet-career floor, `affordable` at the true price, the 52w floor at the cap, both migration arms.
+  ⚠ The schema byte's full blast radius, surfaced by the units gate and closed in the wave's second
+  commit: the three FROZEN career hashes re-cut (per-key diff against a control worktree at the
+  wave base = **1 of 74 keys, `schemaVersion` alone**, on all three; `PRE_V71` rollback rung
+  appended, every older rung untouched), the e2e fixtures regenerated at v71, and the migrations
+  suite's schema-head pin moved with the ladder (its sixth re-aim, claim unchanged).
 
 - [~] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw

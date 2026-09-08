@@ -1530,15 +1530,41 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         const deal = activeAdDealIn(world.offers, category, world.week)
         if (deal) {
           const t = deal.terms as AdOfferTerms
+          // ⭐ ROUND 39 #3 – a filled LIFETIME row carries the flag instead of a years-and-runs-to
+          // pair the paper does not have; the screen branches on it and says «for life».
           rows.push({
             category,
-            label: category === 'capstone' ? 'The capstone' : ECONOMY.advertising.categories[category].label,
+            label:
+              category === 'capstone' ? 'The capstone' : category === 'lifetime' ? 'The lifetime deal' : ECONOMY.advertising.categories[category].label,
             state: 'filled',
             brand: t.brand,
             cashCents: t.cashCents,
-            termYears: Math.max(1, t.termYears ?? 1),
-            untilWeek: deal.untilWeek ?? deal.week,
+            ...(t.lifetime === true
+              ? { lifetime: true as const }
+              : { termYears: Math.max(1, t.termYears ?? 1), untilWeek: deal.untilWeek ?? deal.week }),
           })
+          continue
+        }
+        // ⭐ ROUND 39 #3 – the crown above the crown: once the shelf exists for her, the lifetime
+        // row shows its two-part gate the way the capstone row shows its tenure – held and needed,
+        // counted plainly, so the ladder's true end is visible from the first professional rung.
+        if (category === 'lifetime') {
+          if (band === null) continue
+          const l = ECONOMY.advertising.lifetime
+          const seasonsHeld = capstoneSeasonsOf(world)
+          const slamsHeld = world.trophiesByTier?.slam?.titles?.length ?? 0
+          rows.push(
+            seasonsHeld >= l.seasonsInTop10 && slamsHeld >= l.slamTitles
+              ? { category, label: 'The lifetime deal', state: 'open', lifetime: true, openCashCents: l.cashCents }
+              : {
+                  category,
+                  label: 'The lifetime deal',
+                  state: 'closed',
+                  lifetime: true,
+                  seasonsInTop10: { held: seasonsHeld, needed: l.seasonsInTop10 },
+                  slamTitles: { held: slamsHeld, needed: l.slamTitles },
+                },
+          )
           continue
         }
         if (category === 'capstone') {
