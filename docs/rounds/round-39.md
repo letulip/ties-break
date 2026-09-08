@@ -490,13 +490,53 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
   That is a mechanic, not copy – sharpen it to a choice before building.
 
-- [>] **15a. «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
+- [x] **15a. «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
   и ребёнок выживет и вернётся в строй»** – **build.** A first-time player reads a child's injury as
   a catastrophe. The prologue must say, in its own voice, that she recovers.
 
-- [>] **15b. «И вообще чуть больше тепла в этих экранах надо сделать, как мне кажется. Например на
+  **SHIPPED – and the finding first: THE PROLOGUE HAS NO INJURY CARD.** The one injury the prologue
+  can show is the in-match retirement during a Local Open – the real match engine's own door, «A
+  long match on tired legs» – and its popup said she «could not continue», after which the walk
+  moved on as if nothing had happened: a prologue weekend stores no injury, so no layoff report
+  ever follows the way one does in the career. That silence is the catastrophe. The missing
+  sentence is `LOCAL_OPEN_COPY.hurtNote` now (src/prologue/cards.ts, DRAFT like every prologue
+  word): **«She is alright – worn out, nothing more. She sleeps the whole drive home, and in a few
+  days she is asking to play again.»** The viewer takes it as an optional note
+  (`MatchViewer.hurtNote`, default null) drawn under the popup's reason; ONLY the prologue passes
+  it, because in the career the same moment opens a real layoff and `InjuryStopDialog` still owes
+  its report – «she is alright» there would be a lie contradicted one screen later. Every career
+  surface is byte-identical, and the mounted CONTROL asserts it (the popup without the note carries
+  no trace of the line). Evidence: `tests/component/round39-prologue-injury.test.ts`,
+  mutation-verified twice – the popup's note paragraph removed → that test red with the control
+  green; the `:hurt-note` binding removed → the wiring test red; both restored. RNG: strings and
+  one null-default prop, zero draws added on any stream.
+
+  **ASK, not shipped – the career's own injury popup wants the same sentence.** «Ребёнок выживет и
+  вернётся в строй» also describes `InjuryStopDialog` (she is thirteen there too, one screen after
+  the handover), whose closing line is clinical: «Rest and rehab now – the news feed tracks her
+  recovery.» A warm variant is drafted and NOT shipped, because that dialog is not a prologue
+  surface and invariant 4 prices the ask at one sentence: **«She comes back from this. Rest and
+  rehab now – the news feed tracks her recovery.»** His word lands it or kills it.
+
+- [x] **15b. «И вообще чуть больше тепла в этих экранах надо сделать, как мне кажется. Например на
   варианте rest добавить hug и ещё как-то над самим текстом подумать»** – **build.** Warmth pass on
   the prologue injury screens; `hug` named explicitly as an addition to the `rest` option.
+
+  **SHIPPED – the hug is on the rest option, and the rest option is the knock's.** The one control
+  named `rest` in the whole game is the knock dialog's «Rest it» (`decide('rest')`,
+  KnockDialog.vue), whose copy is the engine's (`buildKnockPrompt`); the prologue itself carries no
+  rest variant anywhere, so «на варианте rest» can only be that screen and the warmth pass lands
+  there. The rest branch's sentence (engine/knock.ts `restCost`) was «She trains next to nothing
+  for a week. That week of work is gone.» and is now: **«A hug, the sofa, and a week of next to no
+  tennis. That week of work is gone.»** The cost clause is kept verbatim – warmth may not blur the
+  legibility rule the dialog exists for – and the push branch stays cold on purpose: it is a
+  warning, and a warm warning is a worse one. The house sweeps still hold (no digits, under 110
+  chars, short dash only, rest never equals push – tests/knock.test.ts green). Evidence:
+  `tests/component/round39-prologue-injury.test.ts` mounts the real dialog off the real prompt –
+  the REST button carries the hug and the PUSH button does not, on first knocks and repeats alike;
+  mutation (restCost reverted to the old sentence) → both assertions red, restored. Together with
+  15a's line, the injury moment's warmth pass is: the reassurance on the prologue popup, the hug on
+  rest – and nothing else reworded without his word.
 
 ---
 

@@ -473,7 +473,15 @@ export function buildKnockPrompt(knock: Knock, seed: string, condition: number):
     read: knockReadFor(condition, knock.repeat, readPick),
     // THE TWO COSTS, and they are the deliverable. One sentence each, naming the currency and not
     // the number - "a week of work" is a thing a parent understands, "loadFactor 0.35" is not.
-    restCost: 'She trains next to nothing for a week. That week of work is gone.',
+    //
+    // ⭐ ROUND 39 #15b – THE REST BRANCH IS WARM NOW, AND THE HUG IS HIS WORD. The owner: «И вообще
+    // чуть больше тепла в этих экранах надо сделать … Например на варианте rest добавить hug и ещё
+    // как-то над самим текстом подумать.» So the rest option's sentence opens with what the week is
+    // like for HER – a hug, the sofa – and only then names the price. ⚠ THE COST CLAUSE IS KEPT
+    // VERBATIM («That week of work is gone»): warmth may not blur the legibility rule this dialog
+    // exists for, and the push branch stays cold on purpose – it is a warning, and a warm warning
+    // is a worse one.
+    restCost: 'A hug, the sofa, and a week of next to no tennis. That week of work is gone.',
     pushCost: knock.repeat
       ? 'She trains as planned. If this one goes, it goes properly – and it will be the same ' +
         `${knock.part}.`
