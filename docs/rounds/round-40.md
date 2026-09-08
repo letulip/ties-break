@@ -330,7 +330,7 @@ real questions at the moment they hurt most. He answered all four.
   drawn, on the existing `:prologue:base` key. MAIN untouched, `tests/condition.test.ts` green, capture
   unchanged at **41550 / `e6b0c709`**.
 
-- [ ] **5. Verify the span: the film measured 2.49 where the enumeration says 1.87.** `coachMarket.ts`
+- [~] **5. Verify the span: the film measured 2.49 where the enumeration says 1.87.** `coachMarket.ts`
   records «enumerating all 32 runs through the SHIPPED CARD TABLE gives a span of 1.87 (mean arrival
   47.48 at the cheapest, 49.35 at the dearest)». The recorder measured its two paths 2.49 apart.
   ⚠ **A difference cannot exceed the span it lives in**, so one of the two is wrong: either the
@@ -347,6 +347,13 @@ real questions at the moment they hurt most. He answered all four.
   path A declines. Measured: the span is **2.44 with those questions varied and 2.44 without**. They
   move the arrival not at all. So nothing was missing from the enumeration; the number simply aged.
   §8c's picture is 30% wider than the file says, before anything is tuned.
+
+  ⭐ **AND WAVE F CLOSED IT STRUCTURALLY, which beats measuring it.** Walking the shipped function
+  over 3,200,000 childhoods it found the reason my corpus and the file disagree: my probe doubled its
+  runs with a Local Open answer that **cannot reach the arrival at all** – `yearAt` never reads
+  `run.entries`. So the tournament questions do not merely fail to move the number, they are not IN
+  the number by construction. Item 5 is answered: the figure aged, nothing was missing, and the
+  reason is now a fact about the code rather than a measured coincidence.
 
 - [ ] **6. §8c – the cards reach only 44% of the model's span. Variant B: compound, not sum.** Owner:
   «по п. 2 давай Вариант B попробуем». The model's extremes span 4.28 points; the shipped table
