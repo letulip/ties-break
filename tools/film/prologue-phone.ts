@@ -28,13 +28,21 @@ document.documentElement.style.zoom = String(zoom)
 // handed it to two different girls - different `startingSkills`, different potential - under a
 // caption saying «Same hidden potential». Caught on the handover frame: the two coach lines came
 // back different where the same band and the same seed must produce the same sentence. Pinned for
-// the session, both seeds land on the middle of their range, and the recorder compares the two
-// snapshots axis by axis rather than trusting this note.
+// the session, both seeds are the app's own generators at one constant, and the recorder compares
+// the two snapshots axis by axis rather than trusting this note.
 //
-// Nothing in `src/engine` may call `Math.random` (house law), so the only other callers are the
-// wizard's name roll, the ending screen, the confetti and the sfx variant picker - none of them on
-// this screen, and none of them load-bearing.
-Math.random = () => 0.5
+// ⭐⭐ WHY 0.04 AND NOT 0.5, AND THE RULE IS PRINTED BY `prologue-sweep.ts`. The first cut ran at 0.5
+// and the two handovers came out reading the SAME two coach sentences, because both arrivals landed
+// inside one band. That is not a filming problem - `childhoodArrival` adds `walk.level + walk.shape`
+// and then CLAMPS into `STARTING_SKILL_BAND`, the same band a fresh fourteen-year-old is drawn from,
+// so the spread between the cheapest childhood the table allows and the dearest is capped at
+// CHILDHOOD.swingPoints. Swept over 99 constants it is 1.89..2.54 points and never more. What the
+// constant DOES decide is where in the band her born skills sit, and therefore whether the two
+// arrivals fall either side of `HANDOVER_BASE_CUTS` - which is the one difference the coach says out
+// loud. THE RULE: the first constant that clamps no axis (so the whole swing survives) AND puts the
+// two arrivals in different base bands. That is 0.04. Tournament results were NOT a criterion and
+// are whatever it produced - four entered weekends, four defeats.
+Math.random = () => 0.04
 const app = createApp(ChildhoodPrologue)
 app.use(createPinia())
 const vm = app.mount('#app') as any
@@ -133,6 +141,20 @@ const setup = () => vm?.$?.setupState ?? {}
   /** ⚠ THE LAST BUTTON THE FILM TAPPED KEEPS THE FOCUS RING, and on the handover that ring lands on
    *  ONE of the two halves - an asymmetry the viewer reads as a difference between the paths. */
   blur: () => (document.activeElement as HTMLElement | null)?.blur(),
+  /** A box on screen, in LOGICAL px – the rects come back in visual px, so both are divided by the
+   *  zoom. The stage crops the handover down to the lines that actually differ, and it measures
+   *  where they are rather than assuming: the two cards are different heights (only one of them
+   *  carries a played line) and the shared card box centres each of them separately. */
+  rect: (sel: string) => {
+    const el = document.querySelector(sel) as HTMLElement | null
+    if (!el) return null
+    const z = Number(getComputedStyle(document.documentElement).zoom) || 1
+    const r = el.getBoundingClientRect()
+    return { top: r.top / z, bottom: r.bottom / z, height: r.height / z }
+  },
+  /** What a box on the screen actually says – read back so the report quotes the frame rather than
+   *  the table it came from. */
+  text: (sel: string) => (document.querySelector(sel) as HTMLElement | null)?.innerText.replace(/\s+/g, ' ').trim() ?? null,
   labels: (): string[] =>
     (Array.from(document.querySelectorAll('button')) as HTMLButtonElement[])
       .map((b) => (b.innerText || '').trim().replace(/\s+/g, ' '))

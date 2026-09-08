@@ -30,9 +30,9 @@ import { onMounted, ref } from 'vue'
 const LOGO_LINE = '/logo-tb-line-light.svg'
 const LOGO_LINE_2 = '/logo-tb-line-2-light.svg'
 
-type Mode = 'solo' | 'split' | 'focus-b' | 'logo'
+type Mode = 'split' | 'focus-b' | 'compare' | 'logo'
 
-const mode = ref<Mode>('solo')
+const mode = ref<Mode>('split')
 const lit = ref(0)
 const capA = ref('')
 const capB = ref('')
@@ -43,7 +43,14 @@ const logoOn = ref(false)
 const frameA = ref<HTMLIFrameElement | null>(null)
 const frameB = ref<HTMLIFrameElement | null>(null)
 
-const zoom = ref(1.08)
+const zoom = ref(1)
+
+/** ⭐ THE CLOSING BEAT CROPS THE HANDOVER DOWN TO THE LINES THAT ACTUALLY DIFFER and stacks the two
+ *  of them, which is the only way the difference is legible at 1080 square. Side by side the width
+ *  caps the scale at 1.28x; stacked it caps at 2.5x, and the coach's sentence goes from 15px to
+ *  nearly 40. Measured at run time, not guessed: the two cards are different heights (only one of
+ *  them carries a played line) and each is centred separately inside the shared card box. */
+const crop = ref<{ a: { top: number; height: number }; b: { top: number; height: number } } | null>(null)
 
 const trace: string[] = []
 ;(window as any).__filmTrace = trace
@@ -143,6 +150,31 @@ function scroll(which: 'a' | 'b' | 'both', to: number, ms: number): void {
   if (which !== 'a') phone('b')?.scrollCard(to, ms)
 }
 
+/** Measure the handover's coach-and-money block on both phones and work out the biggest scale that
+ *  still fits two of them stacked in the frame. `.handover-read` is the coach; `.handover-spent` is
+ *  the total and the per-week line, and the played line sits between them, so one span covers all
+ *  three. */
+function measureCrop(): number {
+  // ⚠ ASYMMETRIC PADDING, AND EACH STRIP KEEPS ITS OWN HEIGHT. A first cut padded both ends by 18
+  // logical px and gave both strips the taller one's height: the top then caught the descenders of
+  // the radar note above, and the shorter card - path A, which has no played line - ran on far
+  // enough to include its «Go on with her» button.
+  const TOP = 8
+  const BOTTOM = 12
+  const box = (which: 'a' | 'b') => {
+    const p = phone(which)
+    const read = p.rect('.handover-read')
+    const spent = p.rect('.handover-spent')
+    if (!read || !spent) throw new Error(`[${which}] no handover block to crop`)
+    return { top: read.top - TOP, height: spent.bottom - read.top + TOP + BOTTOM }
+  }
+  const a = box('a')
+  const b = box('b')
+  crop.value = { a, b }
+  // 1040 of usable width; two strips, their labels and the gap inside 1000 of usable height.
+  return Math.min(1040 / 414, 440 / Math.max(a.height, b.height))
+}
+
 // =================================================================================================
 // THE TIMELINE
 // =================================================================================================
@@ -163,10 +195,15 @@ const BEATS: Beat[] = [
   {
     key: 'five',
     slot: 2.6,
-    mode: 'solo',
+    mode: 'split',
     paint: () => {
       capA.value = 'The career starts at fourteen.'
       capB.value = ''
+      // ⭐ THE PATHS ARE NAMED FROM FRAME ONE AND NOTHING IS CHOSEN YET. The first cut opened on one
+      // phone and cut to two at age eight, and the owner read the three solo cards as «strange
+      // screen changing» - three layouts in four seconds, none of them on screen long enough. Ages
+      // five to seven are the SAME card on both paths, which is the truthful reason to show them
+      // twice: the childhoods do not part until the eighth.
       tagA.value = ''
       tagB.value = ''
     },
@@ -174,8 +211,8 @@ const BEATS: Beat[] = [
   },
   {
     key: 'six',
-    slot: 1.0,
-    mode: 'solo',
+    slot: 1.3,
+    mode: 'split',
     drive: async () => {
       await tap('a', ORIGIN)
       await tap('b', ORIGIN)
@@ -187,8 +224,8 @@ const BEATS: Beat[] = [
   },
   {
     key: 'seven',
-    slot: 1.0,
-    mode: 'solo',
+    slot: 1.3,
+    mode: 'split',
     drive: async () => {
       await tap('a', 'Sign her up')
       await tap('b', 'Sign her up')
@@ -200,12 +237,11 @@ const BEATS: Beat[] = [
   },
   {
     key: 'eight',
-    slot: 2.9,
+    slot: 2.6,
     mode: 'split',
     drive: async () => {
       await tap('a', 'A year passes')
       await tap('b', 'A year passes')
-      await setZoom(1)
     },
     paint: () => {
       tagA.value = 'Stay at the municipal court'
@@ -216,7 +252,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'nine',
-    slot: 2.6,
+    slot: 2.3,
     mode: 'split',
     drive: async () => {
       await year('a', 8, A_PICKS[8], false)
@@ -231,7 +267,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'ten',
-    slot: 2.0,
+    slot: 1.8,
     mode: 'split',
     drive: async () => {
       await year('a', 9, A_PICKS[9], false)
@@ -246,7 +282,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'open',
-    slot: 2.6,
+    slot: 2.4,
     mode: 'focus-b',
     drive: async () => {
       await year('a', 10, A_PICKS[10], false)
@@ -265,7 +301,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'result',
-    slot: 1.2,
+    slot: 1.0,
     mode: 'focus-b',
     drive: async () => {
       await tap('b', 'Skip the rest of the weekend')
@@ -278,7 +314,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'eleven',
-    slot: 3.0,
+    slot: 2.7,
     mode: 'split',
     drive: async () => {
       await tap('b', 'Go on')
@@ -296,7 +332,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'twelve',
-    slot: 4.1,
+    slot: 3.6,
     mode: 'split',
     drive: async () => {
       await year('a', 11, A_PICKS[11], false)
@@ -315,7 +351,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'handover',
-    slot: 5.5,
+    slot: 3.9,
     mode: 'split',
     drive: async () => {
       await year('a', 12, A_PICKS[12], false)
@@ -337,10 +373,31 @@ const BEATS: Beat[] = [
     },
   },
   {
+    // ⭐⭐ THE CLOSE-UP, AND IT EXISTS BECAUSE THE OWNER COULD NOT SEE THE DIFFERENCE. Two phone-sized
+    // handovers side by side put the one sentence that differs at 15px in a 1080 frame. This crops
+    // both cards to the coach block and the money lines, stacks them, and scales to whatever still
+    // fits - about 2.5x. Nothing is added: it is the same two screens, closer.
+    key: 'compare',
+    slot: 3.4,
+    mode: 'compare',
+    drive: async () => {
+      const z = measureCrop()
+      await setZoom(z)
+      await wait(120)
+    },
+    paint: () => {
+      tagA.value = ''
+      tagB.value = ''
+      capA.value = 'Different starting lines.'
+      capB.value = ''
+    },
+  },
+  {
     key: 'logo',
-    slot: 3.1,
+    slot: 2.7,
     mode: 'logo',
     drive: async () => {
+      await setZoom(1)
       logoOn.value = true
     },
     paint: () => {
@@ -354,12 +411,9 @@ const BEATS: Beat[] = [
 
 /** The handover beat says three things in sequence, and they have to land under one hold. */
 async function handoverCaptions(hold: number): Promise<void> {
-  const third = (hold * 1000) / 3
-  await wait(third)
+  await wait(hold * 1000 * 0.45)
   capA.value = 'Same girl. Same hidden potential.'
-  await wait(third)
-  capA.value = 'Same girl. Same hidden potential. Different starting lines.'
-  await wait(third)
+  await wait(hold * 1000 * 0.55)
 }
 
 async function openingCaptions(hold: number): Promise<void> {
@@ -404,10 +458,29 @@ async function play(): Promise<void> {
     probeB: b.probe(),
     runA: a.state().run,
     runB: b.state().run,
+    coachA: a.text('.handover-read'),
+    coachB: b.text('.handover-read'),
+    moneyA: a.text('.handover-spent'),
+    moneyB: b.text('.handover-spent'),
+    playedA: a.text('.handover-played'),
+    playedB: b.text('.handover-played'),
     snapA: a.snapshot(),
     snapB: b.snapshot(),
   }
   ;(window as any).__filmDone = true
+}
+
+function winStyle(which: 'a' | 'b'): Record<string, string> {
+  const c = crop.value
+  if (mode.value !== 'compare' || !c) return {}
+  return { height: `${Math.round(c[which].height * zoom.value)}px` }
+}
+
+function frameStyle(which: 'a' | 'b'): Record<string, string> {
+  const size = { width: `${414 * zoom.value}px`, height: `${896 * zoom.value}px` }
+  const c = crop.value
+  if (mode.value !== 'compare' || !c) return size
+  return { ...size, marginTop: `${-Math.round(c[which].top * zoom.value)}px` }
 }
 
 onMounted(() => {
@@ -435,20 +508,26 @@ onMounted(() => {
 
     <div class="floor">
       <div class="slot" :class="{ hidden: mode === 'focus-b' || mode === 'logo' }">
-        <iframe
-          ref="frameA"
-          class="phone"
-          :style="{ width: 414 * zoom + 'px', height: 896 * zoom + 'px' }"
-          src="/tools/film/prologue-phone.html?zoom=1.08"
-        ></iframe>
+        <p v-if="mode === 'compare'" class="strip">Keep it smaller</p>
+        <div class="win" :style="winStyle('a')">
+          <iframe
+            ref="frameA"
+            class="phone"
+            :style="frameStyle('a')"
+            src="/tools/film/prologue-phone.html?zoom=1"
+          ></iframe>
+        </div>
       </div>
-      <div class="slot" :class="{ hidden: mode === 'solo' || mode === 'logo' }">
-        <iframe
-          ref="frameB"
-          class="phone"
-          :style="{ width: 414 * zoom + 'px', height: 896 * zoom + 'px' }"
-          src="/tools/film/prologue-phone.html?zoom=1.08"
-        ></iframe>
+      <div class="slot" :class="{ hidden: mode === 'logo' }">
+        <p v-if="mode === 'compare'" class="strip b">Build around tennis</p>
+        <div class="win" :style="winStyle('b')">
+          <iframe
+            ref="frameB"
+            class="phone"
+            :style="frameStyle('b')"
+            src="/tools/film/prologue-phone.html?zoom=1"
+          ></iframe>
+        </div>
       </div>
 
       <div v-if="logoOn" class="logo">
@@ -478,13 +557,16 @@ onMounted(() => {
      collapsed to zero and the logo card - `position: absolute; inset: 0` inside it - collapsed with
      it, so the closing copy wrapped one word per line. */
   grid-template-columns: 1080px;
-  grid-template-rows: 0 988px 92px;
+  grid-template-rows: 96px 896px 88px;
   overflow: hidden;
   opacity: 0;
   transition: opacity 190ms ease;
 }
-.stage.split {
-  grid-template-rows: 96px 896px 88px;
+.stage.focus-b {
+  grid-template-rows: 0 988px 92px;
+}
+.stage.compare {
+  grid-template-rows: 0 1000px 80px;
 }
 .stage.logo {
   grid-template-rows: 0 1080px 0;
@@ -521,6 +603,9 @@ onMounted(() => {
   color: #6d7a83;
 }
 .chose {
+  /* ⚠ HELD OPEN. Ages five to seven have nothing chosen yet, and a band that changed height under
+     the first three cards would be the jump this beat was rebuilt to remove. */
+  min-height: 27px;
   margin: 6px 0 0;
   font-family: 'Sora', system-ui, sans-serif;
   font-size: 20px;
@@ -556,19 +641,40 @@ onMounted(() => {
   justify-content: center;
   gap: 32px;
 }
+.stage.compare .floor {
+  flex-direction: column;
+  gap: 24px;
+}
 .slot {
   position: relative;
   display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .slot.hidden {
   display: none;
 }
+.strip {
+  margin: 0 0 6px;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #6d7a83;
+}
+.strip.b {
+  color: #cfe152;
+}
+.win {
+  border-radius: 22px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
 .phone {
   display: block;
   border: 0;
-  border-radius: 22px;
   background: #0a0e13;
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .logo {
