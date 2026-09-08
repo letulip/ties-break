@@ -355,7 +355,7 @@ real questions at the moment they hurt most. He answered all four.
   the number by construction. Item 5 is answered: the figure aged, nothing was missing, and the
   reason is now a fact about the code rather than a measured coincidence.
 
-- [ ] **6. §8c – the cards reach only 44% of the model's span. Variant B: compound, not sum.** Owner:
+- [~] **6. §8c – the cards reach only 44% of the model's span. Variant B: compound, not sum.** Owner:
   «по п. 2 давай Вариант B попробуем». The model's extremes span 4.28 points; the shipped table
   spans 1.87. Today the choices ADD. If the club, the private hour and the sports school REINFORCED
   one another, the span widens without any single card getting stronger – which is also truer: three
@@ -363,8 +363,75 @@ real questions at the moment they hurt most. He answered all four.
   ⚠ **Held until items 4 and 5 report.** Item 4 may close this without touching balance at all (the
   same points, read against a smaller denominator), and item 5 may move the target. Widening a card's
   effect compounds through twenty years of career and is the most expensive of the three answers –
-  it goes last, on purpose. ⚠ `docs/specs/childhood-growth-2026-09.md` §8c is where this question was
-  already recorded as his.
+  it goes last, on purpose. ⚠ §8c is in `docs/specs/childhood-prologue-build-2026-09.md`, not in
+  `childhood-growth-2026-09.md` – the pointer above was rotted.
+
+  ⭐⭐⭐ **MEASURED ON `r40/wave-g`, AND NOTHING MOVED – no dial, no card, not one byte of `src/`.**
+  Full tables in `docs/specs/childhood-growth-2026-09.md` §9
+  (`tools/r40-childhood-compounding.ts`, 32 reachable runs x 4,000 seeds;
+  `tools/r40-childhood-career-blast.ts`, careers walked to thirty). Four findings, in the order they
+  decide it:
+
+  **1. THE CHANNEL IS ALREADY THERE AND IT IS LINEAR – which is the answer to «compound, not sum».**
+  `foldYears` carries a habit between years and 40% of a year's quality is that habit, so a year IS
+  carried forward: 38.9% of what a club year at eight buys is paid in the years after it. But it
+  carries linearly. Every one of 32 roads is its own single-decision deltas added up, **worst residual
+  2.15e-15 points**, because the fold's one nonlinearity (the strain term) is out of the table's reach
+  – joy is exactly 1 on all 32 runs. ⚠ The shipped table's 0.769 residual is **the twelfth's FORK**,
+  not compounding: which face a run meets is derived from years 5..11 and the two faces sell different
+  years. So «three years of private coaching after a club year» are worth exactly «three years of
+  private coaching» plus «a club year», and **no dial can change that** – compounding is a term the
+  arithmetic does not contain.
+
+  **2. AND THE DIRECTION THE ITEM ASKS FOR MAKES THE CARDS REACH LESS.** Sweeping both dials of the
+  channel (30 settings; the median anchor reads exactly 0.000 and the devoted anchor exactly 2.400 at
+  every one of them – they are normalisation-invariant, so the anchor never disqualified a candidate):
+
+  | coordinationShare | card span | cards reach | |
+  | --- | --- | --- | --- |
+  | 0.40 (habit strengthened – the item's direction) | 2.170 | **49.7%** | ⚠ narrower |
+  | **0.60 SHIPPED** | **2.383** | **55.7%** | |
+  | 0.80 (habit weakened) | 2.515 | 60.2% | |
+  | 1.00 (habit switched off) | 2.632 | 64.3% | the bound, not a candidate |
+
+  ⭐ The reason is mechanical: the years the habit carries include **the three at 5, 6 and 7 that no
+  card can change**, and their share of the childhood rises from 21.5% to 28.0% as the channel is
+  strengthened. ⚠ `habitCarry` also does not mean what its name suggests at the top – `(1 −
+  habitCarry)` is what a year folds in, so 0.90 WEAKENS the channel.
+
+  **3. THE BLAST RADIUS SAYS THE WIDTH IS NOT WORTH BUYING ANYWAY.** Careers walked to thirty, both
+  arms on the same 30 seeds: the span a player feels is **2.386 at fourteen, 0.842 at eighteen, 0.105
+  at her peak – 96% closed by `growWeek`'s headroom term.** The best candidate's +0.13 points at
+  fourteen is `−0.002 ± 0.018` at eighteen and `−0.005 ± 0.008` at her peak: inside the noise.
+
+  **4. THE PREMISE HAD ROTTED, TWICE.** §8c's 44% is now **55.7%** (the balance pass already widened
+  the table), against a structural ceiling near 58–64% that the `STARTING_SKILL_BAND` clamp sets. And
+  item 5's 2.44: its enumeration answered the twelfth with a pair of ids from DIFFERENT faces, so
+  **16 of its 32 rows were seven-year childhoods** – the extremes are the same runs either way, so
+  its conclusion stands and the honest figure is 2.38 (mean) to 2.44 (its median).
+
+  ⚠⚠ **WHAT IS STILL HIS.** Making the years compound is a **model change, not a dial**: the habit
+  would have to MULTIPLY the year rather than blend with it (`q = joy·coordination·taught·(1 + k·habit)`),
+  which re-prices every childhood, moves the neglected anchor and re-freezes every prologue-born
+  career. Measured as a mutation it does produce a real interaction (0.178 points), so it is available
+  – but it should be ruled on with finding 3 in front of it. Named in §9e, not made.
+
+  **EVIDENCE.** Four new arms in `tests/childhood.test.ts` and one in `tests/prologue-cards.test.ts`,
+  all mutation-verified – four mutations, four reds, all restored:
+
+  | mutation | result |
+  | --- | --- |
+  | the habit made to MULTIPLY the year (`* habit` -> `* habit * (1 + coordination)`) | **RED, 5 arms** – the worst road beats its own parts by 0.178 points, and two shipped pins go with it |
+  | `coordinationShare: 1` (the channel switched off) | **RED, 6 arms** – «the eighth year echoes 0.0%» |
+  | the weights flattened as well, so arrangement stops mattering | RED – the anti-vacuity arm: two arrangements of the same count read identically |
+  | `sports-school` given a share of 1.4 | RED – joy falls to 0.8375 on the eleventh, i.e. a card that sells more than an appetite reaches the model's one nonlinearity |
+
+  ⚠ **RNG (invariant 2): ZERO draws, and by construction.** `childhoodWalk` is arithmetic over a
+  handed-in list and imports no generator; nothing in `src/` was edited at all. `tests/condition.test.ts`
+  green, capture unchanged at **41550 / `e6b0c709`**. Frozen careers: an empty `src/` diff cannot move
+  one – verified rather than argued, `coach-travel-edge`, `-helping` and `-older-schemas` all green,
+  no re-freeze owed. **Schema: no move** (nothing persists; `SAVE_SCHEMA_VERSION` untouched,
+  `goldenSaves`/`migrations` green). `npm run test:e2e` **green, E2E_EXIT=0, 107 passed**.
 
 - [x] **7. The two seeds: give the prologue one, and let the career inherit it.** Owner: «Рекомендую
   B обязательно, C — обсудить… по-моему хорошо звучит».

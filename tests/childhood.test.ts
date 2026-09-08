@@ -340,6 +340,136 @@ describe('⭐⭐ the level answers the years she has lived', () => {
   })
 })
 
+// =================================================================================================
+// ⭐⭐ ROUND 40 #6 – «Вариант B: compound, not sum». THE CHILDHOOD IS A SUM, AND THAT IS MEASURED
+// =================================================================================================
+//
+// The owner asked for the nine years to COMPOUND: «three years of private coaching after a club year
+// are worth more than the three years apart». The channel that would do it is already in `foldYears`
+// – `carry` is a habit that survives between years and 40% of a year's quality is that habit – so
+// the item was about its STRENGTH. Measured (`tools/r40-childhood-compounding.ts`,
+// docs/specs/childhood-growth-2026-09.md §9) the answer is that the channel is LINEAR: it carries a
+// year forward, it does not multiply two years together, so the childhood is exactly the SUM of what
+// each year contributed and no dial in `CHILDHOOD` can change that. Nothing moved, and these arms are
+// what make the finding durable: a later change that DID make the years compound turns them red.
+describe('⭐⭐ the years ADD – the habit channel carries, it does not compound', () => {
+  /** ⚠ A DELIBERATE, INDEPENDENT RESTATEMENT OF THE FOLD, and its being a second expression of the
+   *  model is the whole point rather than the usual smell: it says what one year is worth ON ITS OWN
+   *  – its own term plus the echo it leaves in the years after it – and if the two ever disagree the
+   *  fold has stopped being a sum of its years, which is exactly the change this block exists to
+   *  catch. Valid only while `joy` is 1 (the strain term is the model's one nonlinearity), so every
+   *  arm below asserts that first. */
+  function partsPerYear(years: readonly ChildhoodYear[]): Array<{ own: number; echo: number }> {
+    const s = CHILDHOOD.coordinationShare
+    const a = CHILDHOOD.habitCarry
+    return years.map((y, i) => {
+      const c = Math.min(1, y.practice / appetiteAt(y.age))
+      const taught = CHILDHOOD.teachingFloor + (1 - CHILDHOOD.teachingFloor) * y.teaching
+      let echo = 0
+      for (let j = i + 1; j < years.length; j++) {
+        echo += weightAt(years[j].age) * (1 - s) * (1 - a) * Math.pow(a, j - 1 - i)
+      }
+      // ⚠ THE SPLIT IS THE POINT: what the year earns IN ITSELF, and what it leaves behind in the
+      // years that follow – the habit channel, isolated so its strength can be read off.
+      return { own: weightAt(y.age) * s * c * taught, echo: c * echo }
+    })
+  }
+  const valuePerYear = (years: readonly ChildhoodYear[]) => partsPerYear(years).map((p) => p.own + p.echo)
+  const sum = (xs: readonly number[]) => xs.reduce((p, q) => p + q, 0)
+
+  /** nine years built from a per-year pair, so «the same childhood arranged differently» is one call */
+  const roadOf = (dear: readonly boolean[]): ChildhoodYear[] =>
+    CHILDHOOD_AGES.map((age, i) => ({
+      age,
+      practice: (dear[i] ? 0.95 : 0.45) * appetiteAt(age),
+      teaching: dear[i] ? 0.95 : 0.15,
+      focus: 'general' as const,
+    }))
+
+  // MUTATION: in `foldYears`, make the habit multiply the year instead of blending with it
+  // (`... * habit` -> `... * habit * (1 + coordination)`) -> red on every childhood here.
+  it('⭐ every childhood is exactly the sum of what its nine years were worth on their own', () => {
+    const roads: Record<string, ChildhoodYear[]> = {
+      median: medianChildhood(),
+      devoted: devotedChildhood(),
+      neglected: neglectedChildhood(),
+      'late block': roadOf([false, false, false, false, true, true, true, true, true]),
+      alternating: roadOf([false, true, false, true, false, true, true, false, true]),
+      'early block': roadOf([true, true, true, true, true, false, false, false, false]),
+    }
+    for (const [name, years] of Object.entries(roads)) {
+      const walk = childhoodWalk(years)
+      // the precondition: the fold's ONE nonlinearity is the strain term, and none of these reach it
+      for (const row of walk.years) expect(row.joy, `${name} at ${row.age}`).toBe(1)
+      expect(sum(valuePerYear(years)), name).toBeCloseTo(walk.quality, 12)
+    }
+  })
+
+  // ⭐⭐ THE ITEM'S OWN QUESTION, ANSWERED IN THE FILE. Five decisions, all 32 combinations, against a
+  // prediction that knows only what each decision is worth ON ITS OWN. A compounding childhood would
+  // beat that prediction on the dear-heavy roads; this one matches it to twelve places.
+  // MUTATION: the same `* (1 + coordination)` in `foldYears` -> red, worst residual ~0.1 points.
+  it('⭐⭐ the decisions do not reinforce one another – 32 roads, and none beats its own parts', () => {
+    const DECISIONS = [3, 4, 5, 6, 7] // the positions the prologue's five decisions occupy
+    const roadFor = (mask: number) =>
+      roadOf(CHILDHOOD_AGES.map((_, i) => DECISIONS.includes(i) && ((mask >> DECISIONS.indexOf(i)) & 1) === 1))
+    const levelOf = (mask: number) => childhoodWalk(roadFor(mask)).level
+    const base = levelOf(0)
+    const solo = DECISIONS.map((_, i) => levelOf(1 << i) - base)
+    let worst = 0
+    for (let mask = 0; mask < 32; mask++) {
+      let predicted = base
+      for (let i = 0; i < DECISIONS.length; i++) if ((mask >> i) & 1) predicted += solo[i]
+      worst = Math.max(worst, Math.abs(predicted - levelOf(mask)))
+    }
+    expect(worst, `the worst road beats its own parts by ${worst.toFixed(4)} points`).toBeLessThan(1e-12)
+    // ...and the table it stands on is not degenerate: the roads really do differ, so «they add up»
+    // is a claim about the model and not about a set of identical numbers
+    expect(levelOf(31) - levelOf(0)).toBeGreaterThan(1)
+  })
+
+  // ⚠ THE ANTI-VACUITY ARM. Two identical childhoods must read identically – and the arm underneath
+  // it is what stops that being trivially true of everything: the SAME COUNT of dear years arranged
+  // differently reads differently, because a year's worth is positional (weight and echo both change
+  // with age). So «consistency» buys nothing on its own; WHICH years were dear is the whole effect.
+  it('two identical childhoods read identically – and two arrangements of the same count do not', () => {
+    const block = [false, false, false, false, true, true, true, true, true]
+    const spread = [false, true, false, true, false, true, true, false, true]
+    expect(block.filter(Boolean).length).toBe(spread.filter(Boolean).length)
+    expect(childhoodWalk(roadOf(block)).level).toBe(childhoodWalk(roadOf(block)).level)
+    expect(childhoodWalk(roadOf(block)).quality).toBe(childhoodWalk(roadOf([...block])).quality)
+    expect(childhoodWalk(roadOf(block)).level).not.toBeCloseTo(childhoodWalk(roadOf(spread)).level, 3)
+    // and the difference is nothing but the sum of the years that moved – no interaction term
+    const a = valuePerYear(roadOf(block))
+    const b = valuePerYear(roadOf(spread))
+    expect(sum(a) - sum(b)).toBeCloseTo(
+      childhoodWalk(roadOf(block)).quality - childhoodWalk(roadOf(spread)).quality,
+      12,
+    )
+  })
+
+  // ⭐ ...AND THE CHANNEL IS NOT WEAK, WHICH IS THE OTHER HALF OF THE ANSWER. A club year at eight is
+  // measurably paid in the years after it – 38.9% of what it buys, as shipped – and the echo FALLS
+  // with age, because a year at twelve has almost nowhere left to echo into. That is why moving the
+  // dial toward the habit hands the childhood to the three years at 5..7 that no card can change,
+  // and why the cards reach LESS of the model when the channel is strengthened (spec §9).
+  // MUTATION: `coordinationShare: 1` (the habit switched off) -> red, every echo reads 0.
+  it('⭐ a year is really carried forward – a third of the eighth year is paid after it', () => {
+    const at = (i: number) => {
+      const dear = partsPerYear(roadOf(CHILDHOOD_AGES.map((_, j) => j === i)))[i]
+      const cheap = partsPerYear(roadOf(CHILDHOOD_AGES.map(() => false)))[i]
+      const own = dear.own - cheap.own
+      const echo = dear.echo - cheap.echo
+      return echo / (own + echo)
+    }
+    const atEight = at(3)
+    const atTwelve = at(7)
+    expect(atEight, `the eighth year echoes ${(atEight * 100).toFixed(1)}%`).toBeGreaterThan(0.3)
+    expect(atTwelve, `the twelfth year echoes ${(atTwelve * 100).toFixed(1)}%`).toBeLessThan(atEight)
+    expect(atTwelve).toBeGreaterThan(0)
+  })
+})
+
 describe('the three terms, and the decision they make', () => {
   it('coordination saturates at what a child that age can absorb, not at a ceiling', () => {
     // twice the age-appropriate hours buy exactly the same coordination as the right amount
