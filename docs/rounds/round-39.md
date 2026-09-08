@@ -73,7 +73,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   weight 600, attachTo per birthday-dialog's rule) – mutation-verified by de-accenting the CSS rule
   (red, restored). A growing fourteen-year-old still sees no plate of either length.
 
-- [ ] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
+- [?] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
   выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и
   пожизненно»** – **measure then build.** First measure the actual term distribution by rank on his
@@ -126,7 +126,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   green across the five shelf files (r39-owned-shelf-paid, round35-shop, round29-shop-elite,
   shop-tab, round36-review).
 
-- [!] **5. «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
+- [?] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
   купил новый за 250к, а он снова за несколько недель уже 30+ стоит. Кажется надо ещё что-то с этой
   механикой подумать»** – **REOPENED against round 38 #15/#16.**
 
@@ -167,7 +167,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   instead of $1,844,174, half-value at a year. Alternative D (the sold brand keeps living and eats
   the new one's reach) named as the richer, heavier road. `[?]` waiting on his choice.
 
-- [ ] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
+- [?] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw
   luck? Measure the arrival rate before touching anything.
 
@@ -189,7 +189,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   the two cannot be told apart retrospectively). Remedy options in the report: a pity timer
   (guaranteed letter within 26 weeks of entering the band), a wider gate, or leave it. `[?]`.
 
-- [ ] **7. «Странно, что после шлема в 40м году она не смогла взять больше ни одного»** –
+- [~] **7. «Странно, что после шлема в 40м году она не смогла взять больше ни одного»** –
   **measure.** One Slam in season 40 and never again. Read her actual title history and the field
   she met off the save; a single Slam followed by nothing may be correct for her level, or may be a
   ceiling in the draw model.
@@ -225,7 +225,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   peak. The one anomaly is the OLD window's wta1000 over-performance (+14.3 wins), which the neutral
   probe (max condition, hard, today's skills) cannot attribute – flagged, not diagnosed.
 
-- [ ] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
+- [?] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
   offered $300k reads as insulting. Measure the offer curve against rank and check whether the top
   of the ladder is being underpaid.
 
@@ -323,7 +323,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   poked saves. Regression pin with his exact shape (Dec 21, stale week-569 row, week-570 check) in
   `tests/birthday-career.test.ts`, «ROUND 39 #9c».
 
-- [ ] **10. «Очень печально смотреть, как она регулярно сливает кому-то, сильно ниже #50 (хотя может
+- [~] **10. «Очень печально смотреть, как она регулярно сливает кому-то, сильно ниже #50 (хотя может
   только кажется, что регулярно). Проанализируй сейв пожалуйста с момента, где все покупки
   случились и дальше - это как раз новые правки пришли»** – **measure.** ⚠ He flags his own doubt
   («может только кажется»), so the honest answer is a rate, not an anecdote: her loss rate to
@@ -346,7 +346,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   ranks TODAY, not at match time, so an old loss may have been to someone then-strong – which is why
   the recent window matters most, and there it is WORSE (55%), not better.
 
-- [ ] **11a. «Бренд за 33м выглядит как имба, особенно на фоне академии за 17м совокупно, но может
+- [?] **11a. «Бренд за 33м выглядит как имба, особенно на фоне академии за 17м совокупно, но может
   быть я придираюсь»** – **measure then ask.** The two shelves' valuations against what each one
   earns. Related to 5: the same brand, at the top of its ramp.
 
@@ -388,7 +388,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   round29-shop-elite, shop-tab, round36-review), plus the copy guards over the touched template,
   EXIT=0 read from the log files.
 
-- [ ] **12. «Мне кажется, что когда у нас появляется самолёт можно перелёты зачеркнуть на карточке
+- [~] **12. «Мне кажется, что когда у нас появляется самолёт можно перелёты зачеркнуть на карточке
   и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
   **answer first, then build if it confirms.** He is asking how it works before asking for a change.
   Read what a plane actually does to the weekly flight cost today; if it already zeroes it, the card
@@ -469,7 +469,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 - [~] **13b. «Но очень хорошо, что тренер стал обращать внимание, что перформанс падает»** –
   **answer, nothing to build.** Round 38's decline note landing well. Recorded so it is not lost.
 
-- [ ] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
+- [?] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
   - одно и то же опять, давай какую-то вариативность в этих фразах сделаем, какие варианты?»** –
   **build + ask.** The retirement-thought copy repeats verbatim. He is asking BOTH for variety and
   what the variants should be, so the variants come back to him as a choice before they ship.
@@ -485,7 +485,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   (K=4 suggested), with the escalating ledes as the warning – plus a Home line after each
   one-more-year so the state is visible in-season. `[?]` copy and K wait on him.
 
-- [ ] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
+- [?] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
   Какой-то механизм для этого»** – **ask then build.** Today the line always ends «She will keep
   playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
   That is a mechanic, not copy – sharpen it to a choice before building.
