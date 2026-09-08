@@ -257,7 +257,7 @@ describe('round 39 #2b – exactly one read, and the empty string where the engi
         } else {
           expect(short, `${name} week ${sw}: the halves overlap or invert`).toBe(coachRoomBandShort(coachRoomBandOf(probe)!))
           expect(short, `${name} week ${sw}: a decline verdict on a growing career`).not.toContain('Past her peak')
-          expect(short, `${name} week ${sw}: a decline phrasing on a growing career`).not.toContain("she's")
+          expect(short, `${name} week ${sw}: a decline phrasing on a growing career`).not.toContain("She's")
         }
       }
     }
@@ -310,8 +310,8 @@ function behindBest(behind: number, seasonWeek: number): WorldState {
 const ALL_THREE = (seasonWeek: number): WorldState =>
   pastPeakWorld({ seasons: [season(16, 20), season(19, 68), season(20, 125)], seasonWeek })
 
-const FELL_RE = /^she's down \d+ places?$/
-const BELOW_RE = /^she's (below|far below|way below) her best$/
+const FELL_RE = /^She's down \d+ places?$/
+const BELOW_RE = /^She's (below|far below|way below) her best$/
 const SEASONS_RE = /^Past her peak – about \d+ seasons? left$/
 
 describe('round 39 #2b (re-reopened) – the phase decides which of his phrasings the plate says', () => {
@@ -353,11 +353,11 @@ describe('round 39 #2b (re-reopened) – the phase decides which of his phrasing
       else expect(short, `week ${sw} (late)`).toMatch(BELOW_RE)
     }
     // His words, verbatim, on this fixture's own numbers – the strings and not only their shapes.
-    expect(coachDeclineShort(ALL_THREE(0))).toBe("she's down 57 places")
+    expect(coachDeclineShort(ALL_THREE(0))).toBe("She's down 57 places")
     expect(coachDeclineShort(ALL_THREE(MID_SEASON_WEEK))).toMatch(SEASONS_RE)
     // 105 places behind her best is the MIDDLE rung of the measured ladder (p33 = 79, p67 = 257),
     // so this fixture is also a live read of where the cuts fell – not merely of the shape.
-    expect(coachDeclineShort(ALL_THREE(WEEKS_PER_YEAR - 1))).toBe("she's far below her best")
+    expect(coachDeclineShort(ALL_THREE(WEEKS_PER_YEAR - 1))).toBe("She's far below her best")
   })
 
   it('⭐⭐ HIS ASK, MEASURED: the plate is not static – walked over one season it says more than one thing', () => {
@@ -387,7 +387,7 @@ describe('round 39 #2b (re-reopened) – the phase decides which of his phrasing
     const LATE = WEEKS_PER_YEAR - 1
 
     // EARLY, first choice: the year fall exists → his year clause.
-    expect(coachDeclineShort(ALL_THREE(EARLY))).toBe("she's down 57 places")
+    expect(coachDeclineShort(ALL_THREE(EARLY))).toBe("She's down 57 places")
     // EARLY, no adjacent pair (s16 → s20 is four seasons, so `yearMove` is null) → falls to below-best.
     const gap = pastPeakWorld({ seasons: [season(16, 20), season(20, 125)], seasonWeek: EARLY })
     expect(seasonRankRead(gap).yearMove).toBeNull()
@@ -431,7 +431,7 @@ describe('round 39 #2b (re-reopened) – the phase decides which of his phrasing
         if (FELL_RE.test(short)) {
           expect(yearMove, `${name} week ${sw}: a year clause with no year fall`).not.toBeNull()
           expect(yearMove!, `${name} week ${sw}: a year clause on a move of ${yearMove}`).toBeGreaterThan(0)
-          expect(short, `${name} week ${sw}`).toBe(`she's down ${yearMove} ${yearMove === 1 ? 'place' : 'places'}`)
+          expect(short, `${name} week ${sw}`).toBe(`She's down ${yearMove} ${yearMove === 1 ? 'place' : 'places'}`)
         } else if (BELOW_RE.test(short)) {
           expect(belowBest, `${name} week ${sw}: a below-best clause with no best to be below`).not.toBeNull()
           expect(belowBest!, `${name} week ${sw}: a below-best clause at ${belowBest} places`).toBeGreaterThan(0)
@@ -472,18 +472,18 @@ describe('round 39 #2b (re-reopened) – the below-best intensity ladder, at its
   const LATE = WEEKS_PER_YEAR - 1
 
   it('⭐⭐ both edges, from both sides – three rungs, his three phrasings', () => {
-    expect(coachDeclineShort(behindBest(1, LATE))).toBe("she's below her best")
-    expect(coachDeclineShort(behindBest(LADDER_FAR - 1, LATE))).toBe("she's below her best")
-    expect(coachDeclineShort(behindBest(LADDER_FAR, LATE))).toBe("she's far below her best")
-    expect(coachDeclineShort(behindBest(LADDER_WAY - 1, LATE))).toBe("she's far below her best")
-    expect(coachDeclineShort(behindBest(LADDER_WAY, LATE))).toBe("she's way below her best")
-    expect(coachDeclineShort(behindBest(738, LATE))).toBe("she's way below her best")
+    expect(coachDeclineShort(behindBest(1, LATE))).toBe("She's below her best")
+    expect(coachDeclineShort(behindBest(LADDER_FAR - 1, LATE))).toBe("She's below her best")
+    expect(coachDeclineShort(behindBest(LADDER_FAR, LATE))).toBe("She's far below her best")
+    expect(coachDeclineShort(behindBest(LADDER_WAY - 1, LATE))).toBe("She's far below her best")
+    expect(coachDeclineShort(behindBest(LADDER_WAY, LATE))).toBe("She's way below her best")
+    expect(coachDeclineShort(behindBest(738, LATE))).toBe("She's way below her best")
   })
 
   it('⚠ it is MONOTONE and it never skips: walked across the measured range, the rung only ever rises', () => {
     // The ladder is an ordering claim as much as a threshold one – «far» may not appear below
     // «below», and a table sorted the wrong way round would still pass a pair of edge assertions.
-    const RUNGS = ["she's below her best", "she's far below her best", "she's way below her best"]
+    const RUNGS = ["She's below her best", "She's far below her best", "She's way below her best"]
     let seen = -1
     const occurred = new Set<string>()
     for (let behind = 1; behind <= 800; behind++) {
@@ -504,6 +504,6 @@ describe('round 39 #2b (re-reopened) – the below-best intensity ladder, at its
     const world = behindBest(105, LATE)
     expect(coachDeclineNote(world)).toContain('105 places below her best season')
     expect(coachDeclineShort(world), 'a count leaked into the plate').not.toMatch(/\d/)
-    expect(coachDeclineShort(world)).toBe("she's far below her best")
+    expect(coachDeclineShort(world)).toBe("She's far below her best")
   })
 })

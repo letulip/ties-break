@@ -1432,9 +1432,9 @@ const DECLINE_ROTATION: Record<DeclinePhase, readonly DeclineVariant[]> = {
  *  ⚠ ORDERED LOWEST-FIRST and scanned from the top with `>=`, so the table IS the thresholds: an
  *  edit here is the whole change, and `tests/r39-coach-short.test.ts` pins both edges on both sides. */
 const BELOW_BEST_LADDER: readonly { from: number; text: string }[] = [
-  { from: 1, text: "she's below her best" },
-  { from: 79, text: "she's far below her best" },
-  { from: 257, text: "she's way below her best" },
+  { from: 1, text: "She's below her best" },
+  { from: 79, text: "She's far below her best" },
+  { from: 257, text: "She's way below her best" },
 ]
 
 function belowBestShort(behind: number): string {
@@ -1448,7 +1448,8 @@ function belowBestShort(behind: number): string {
  *
  *  ⚠⚠ THE WORDS ARE HIS, VERBATIM (invariant 4). «she's down N places» / «she's below her best» /
  *  «she's far below her best» / «she's way below her best» are quoted out of his 08.09 message,
- *  down to the lower-case «she's», and «Past her peak – about N seasons left» is byte-identical to
+ *  and CAPITALISED on his word of 08.09 («поправь пожалуйста») – the plate opens a line, so the
+ *  sentence case is his own second ruling on the same copy. «Past her peak – about N seasons left» is byte-identical to
  *  the string wave A2 shipped. #13c's singular care rides on `places`. */
 function declineVariantText(
   variant: DeclineVariant,
@@ -1456,7 +1457,7 @@ function declineVariantText(
 ): string | null {
   switch (variant) {
     case 'fell':
-      return read.yearMove !== null && read.yearMove > 0 ? `she's down ${places(read.yearMove)}` : null
+      return read.yearMove !== null && read.yearMove > 0 ? `She's down ${places(read.yearMove)}` : null
     case 'below':
       return read.belowBest !== null && read.belowBest > 0 ? belowBestShort(read.belowBest) : null
     case 'seasons':

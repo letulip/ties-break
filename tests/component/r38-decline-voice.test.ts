@@ -242,7 +242,7 @@ describe('round 38 #6d – the coach plate on Home, and only past her peak', () 
     // the engine's long sentence – and the seasons form is pinned where it is the answer.
     const world = pastPeakWorld({ seasons: [season(17, 40), season(18, 40), season(19, 90)] })
     expect(coachDeclineNote(world)).toContain('down 50 places on the year')
-    expect(homePlate(world).plate, 'the subtraction is not on the rendered plate').toBe("she's down 50 places")
+    expect(homePlate(world).plate, 'the subtraction is not on the rendered plate').toBe("She's down 50 places")
     const mid = pastPeakWorld({ seasons: [season(17, 40), season(18, 40), season(19, 90)], seasonWeek: MID_SEASON_WEEK })
     expect(homePlate(mid).plate).toMatch(/^Past her peak – about \d+ seasons? left$/)
   })

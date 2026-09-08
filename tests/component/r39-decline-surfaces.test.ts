@@ -238,9 +238,9 @@ describe('round 39 #2b – Home keeps the short plate, in the old ceiling plate 
     }
     // HIS ASK, AS RENDERED: not one sentence three times.
     expect(new Set(seen).size, `the plate is still static: ${seen.join(' | ')}`).toBe(3)
-    expect(seen[0], 'early is not his year clause').toBe("she's down 57 places")
+    expect(seen[0], 'early is not his year clause').toBe("She's down 57 places")
     expect(seen[1], 'mid is not the clause he kept').toMatch(/^Past her peak – about \d+ seasons? left$/)
-    expect(seen[2], 'late is not his below-best clause').toMatch(/^she's (below|far below|way below) her best$/)
+    expect(seen[2], 'late is not his below-best clause').toMatch(/^She's (below|far below|way below) her best$/)
   })
 
   it('⭐ ...with the colour class APPLIED through the real cascade – the plate is accent, weight 600, on BOTH reads', () => {
@@ -343,13 +343,13 @@ describe('round 39 #13c – «down 1 place», singular, in both rank arms', () =
     const one = pastPeakWorld({ seasons: [season(19, 8), season(20, 9)] })
     expect(coachDeclineNote(one)).toContain('down 1 place on the year')
     expect(coachDeclineNote(one)).not.toContain('1 places')
-    expect(coachDeclineShort(one), 'the short lost #13c\'s singular').toBe("she's down 1 place")
+    expect(coachDeclineShort(one), 'the short lost #13c\'s singular').toBe("She's down 1 place")
     const oneMid = pastPeakWorld({ seasons: [season(19, 8), season(20, 9)], seasonWeek: MID_SEASON_WEEK })
     expect(coachDeclineShort(oneMid)).not.toContain('place')
     expect(coachDeclineShort(oneMid)).toMatch(/^Past her peak – about \d+ seasons? left$/)
     const two = pastPeakWorld({ seasons: [season(19, 8), season(20, 10)] })
     expect(coachDeclineNote(two)).toContain('down 2 places on the year')
-    expect(coachDeclineShort(two)).toBe("she's down 2 places")
+    expect(coachDeclineShort(two)).toBe("She's down 2 places")
     expect(coachDeclineShort(pastPeakWorld({ seasons: [season(19, 8), season(20, 10)], seasonWeek: MID_SEASON_WEEK }))).not.toContain('places')
   })
 
@@ -362,7 +362,7 @@ describe('round 39 #13c – «down 1 place», singular, in both rank arms', () =
     // phrasing is his digitless one, so #13c cannot reach it and the guard is that no COUNT of
     // places ever appears beside «below her best» on the plate.
     const late = pastPeakWorld({ seasons: [season(16, 8), season(20, 9)], seasonWeek: LATE_SEASON_WEEK })
-    expect(coachDeclineShort(late)).toMatch(/^she's (below|far below|way below) her best$/)
+    expect(coachDeclineShort(late)).toMatch(/^She's (below|far below|way below) her best$/)
     expect(coachDeclineShort(late), 'a count leaked into the plate\'s below-best clause').not.toMatch(/\d/)
     // ...and mid-season the clause is not reached for at all.
     expect(coachDeclineShort(pastPeakWorld({ seasons: [season(16, 8), season(20, 9)], seasonWeek: MID_SEASON_WEEK }))).not.toContain(
