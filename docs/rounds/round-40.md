@@ -387,12 +387,13 @@ real questions at the moment they hurt most. He answered all four.
   channel (30 settings; the median anchor reads exactly 0.000 and the devoted anchor exactly 2.400 at
   every one of them – they are normalisation-invariant, so the anchor never disqualified a candidate):
 
-  | coordinationShare | card span | cards reach | |
+  | coordinationShare / habitCarry | card span | cards reach | |
   | --- | --- | --- | --- |
-  | 0.40 (habit strengthened – the item's direction) | 2.170 | **49.7%** | ⚠ narrower |
-  | **0.60 SHIPPED** | **2.383** | **55.7%** | |
-  | 0.80 (habit weakened) | 2.515 | 60.2% | |
-  | 1.00 (habit switched off) | 2.632 | 64.3% | the bound, not a candidate |
+  | 0.40 / 0.75 (habit strengthened – the item's direction) | 2.170 | **49.7%** | ⚠ narrower |
+  | 0.40 / 0.60 | 2.230 | 50.8% | |
+  | **0.60 / 0.60 SHIPPED** | **2.383** | **55.7%** | |
+  | 0.80 / 0.60 (habit weakened) | 2.515 | 60.2% | |
+  | 1.00 / any (habit switched off) | 2.632 | 64.3% | the bound, not a candidate |
 
   ⭐ The reason is mechanical: the years the habit carries include **the three at 5, 6 and 7 that no
   card can change**, and their share of the childhood rises from 21.5% to 28.0% as the channel is
