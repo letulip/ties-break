@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-202 TypeScript files: **31 live**, **171 archival**.
+206 TypeScript files: **31 live**, **175 archival**.
 
 ## Why the split exists
 
@@ -81,6 +81,7 @@ the gate now runs – so evidence that stops compiling reddens a pull request in
 - `deep-run-cost.ts` · `domestic-ladder-probe.ts` · `domestic-season-to-date.ts` · `double-booked.ts`
 - `draw-vs-band.ts` · `drought-probe.ts` · `empty-week-census.ts` · `failure-modes.ts`
 - `fatigue-ledger-diag.ts` · `feed-audit.ts` · `field-quality.ts` · `fifth-skill-probe.ts`
+- `prologue-film.ts` · `prologue-phone.ts` · `prologue-probe.ts` · `prologue-worlds.ts`
 - `first-pair-replay.ts` · `first-ranking-probe.ts` · `fork-birthday-probe.ts` · `grid-visibility.ts`
 - `growth-age-sweep.ts` · `growth-pace-probe.ts` · `head-ladder-sweep.ts` · `his-cadence-probe.ts`
 - `his-cadence-read.ts` · `his-careers-brackets.ts` · `his-careers-dose.ts` · `injury-audit.ts`
