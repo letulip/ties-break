@@ -1007,6 +1007,98 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   rather than expired – the old record said «the campaign has run its course», which would now be a
   lie on a paper somebody cut short.
 
+  ---
+
+  **WAVE G2 – HIS TWO REFINEMENTS OF 08.09, BOTH BUILT.**
+
+  **1. THE NOTICE IS A RENEWAL, AND ONE OF THE TWO PATHS HAD TO STAND DOWN.** ⚠ **Which winter each
+  letter owns, because a genuine incumbent renewal already existed** (`raiseKitRenewal`, owner
+  10.08):
+
+  | winter | who writes | on what terms |
+  | --- | --- | --- |
+  | the one her kit deal ends **with the season** | the **incumbent's renewal**, on the window's closing week | the ending contract's own, **verbatim** |
+  | **every winter after that**, while the campaign runs and her kit is not promised | the **bond's notice**, from the window's opening week | the rung she clears **today** (ruling 2) |
+
+  ⚠⚠ **AND BEFORE G2 THEY BOTH LANDED, WHICH WAS MEASURED RATHER THAN FEARED.** `raiseKitOffers`
+  dedupes the incumbent against the ladder by **tier**, and that is blind the moment the tier she
+  SIGNED at and the tier she clears TODAY come apart. Probed on a `tour` deal from Baseline Athletic
+  ending under a career that now clears `icon`: the inbox held `kit-bond-671` (icon terms, Baseline
+  Athletic's name) **and** `kit-renew-kit-old-471` (tour terms, the same name) – one house, one
+  winter, two letters. That is round 28 #17's own defect («one brand in two voices») asked one
+  question further along, so the fix is that question's own answer: identity by **BRAND**, not by
+  rung. Six lines in `apparelBondLetter`, no new state. ⚠ Its cost is stated in the code: a career
+  that has already signed somebody else this window turns `raiseKitRenewal` away too, so in that
+  corner neither writes – and she is signed for next season either way, which is the state the
+  guarantee exists to prevent.
+
+  **The voice** is one optional flag, `KitOfferTerms.apparelBond` – **additive, no schema bump, v71
+  still stands** (the same move `renewal` itself shipped as). ⚠ It is **not** `renewal`: that flag
+  means the same contract offered again («the same deal, another year»), and this letter carries
+  today's rung, so borrowing that sentence would misdescribe the only number a parent can check.
+  ⚠ **Still signed by hand** – it is an ordinary `open` offer with a deadline, refusable, expirable,
+  beaten by any rival he signs instead, because an auto-renewal would delete the decision the whole
+  mechanism exists to create.
+
+  **2. THE RE-ARM NEEDED PINNING, NOT BUILDING.** ⭐ It was already true, and it is true for a reason
+  worth naming: the letter's id is the **window's** (`kit-bond-<opened>`), not the week's, so a
+  notice that lapses undecided is simply not in next winter's inbox and the same house writes again.
+  Walked before it was pinned – an eight-year campaign produced `kit-bond-671`, `-723`, `-775`,
+  `-827`, `-879`: **exactly one per off-season, same house, each lapsing on its own deadline.** No
+  flag, no counter, no new state. ⚠ **The ceiling is the point:** `offerChanceFor`'s doctrine says
+  nobody is guaranteed a letter and a missed one «is gone… which is the whole of what makes waiting a
+  real gamble rather than a free option». One per winter keeps a missed notice expensive – a season
+  of kit allowance and travel share – where a standing open letter would have overturned it.
+
+  ⚠ **ONE CORRECTION TO THE RULING'S OWN NOTE: `expireOffers` does NOT feed a lapse line.** It
+  returns what it lapsed «so the caller can put a line in the feed», and the caller
+  (`phaseObligations`) deliberately writes nothing – its own ⚠ note says why, and it is the feed
+  budget: «a non-match event row permanently displaces a MATCH from the 400-row cap». So the miss is
+  surfaced exactly as every other lapse is, and this wave did not add a row: the letter itself reads
+  **«Expired – they needed an answer.»** in the inbox for the life of the career, and the inbox dot
+  goes out. What the feed DOES carry is the ARRIVAL – the winter's one row names the notice, in its
+  own clause (below). Pinned that the notice reaches `expireOffers`' returned list like any letter.
+
+  **AND THE WINTER'S ROW NAMES IT AS A RENEWAL, which is the one place G2 went past the letter view
+  and is flagged for him.** The row's suitors clause – «letters from X and Y – they all want to put
+  her in their kit» – would have described as a pitch the one letter his ruling says is not one. It
+  now gets its own clause, exactly as the incumbent's renewal does. ⚠ **Only while it is OPEN**: a
+  signed notice stays in `post` or the row would lose «She is in X's kit for next season.», and that
+  seam is real here (this letter is raised on the window's opening week and can be answered four
+  weeks before the row is written, unlike the renewal). **If he would rather the row left alone, it
+  is one `if` to delete.**
+
+  ⚠ **RNG: STILL ZERO DRAWS, AND THE RE-ARM ADDS NONE.** Re-arming is an id, not a roll – no
+  `rngFromSeed` enters `engine/offers.ts` (its closed allowlist is the guard, green). MAIN untouched:
+  `tests/condition.test.ts` **51/51, 41550 draws / hash e6b0c709 unmoved**.
+
+  **EVIDENCE (G2).** `tests/r39-apparel-bond.test.ts` grew §11 (the re-arm: lapse-then-rewrite, once
+  per off-season over four winters, the lapse through `expireOffers`, a signed deal stopping it with
+  its own control, and the campaign running out ending it), §12 (which winter each path owns –
+  by hand and **through `reviewSponsors`**), §13 (the winter's row) – **40 cases, all green**;
+  `tests/component/r39-apparel-bond-warning.test.ts` grew 6 mounted cases (the paper opens as a
+  renewal, it is still a decision, it warns about nothing, **the warning and its number are still
+  there where a rival letter would carry them**, the inbox subject, its control) – **11 green**.
+  **Nine mutations, nine killed, all restored:** the window id becoming the week's (8 red) · the
+  incumbent gate deleted (2 red) · the `apparelBond` flag off the terms (2 red) · the row's exclusion
+  removed (1 red) · the row's `open` guard removed (1 red) · the letter's renewal arm deleted (1
+  red) · the inbox subject arm deleted (1 red) · the notice made unexpirable (1 red) · the
+  running-deal gate removed (3 red).
+
+  ⚠ **ONE GUARD RE-AIMED, NOT WEAKENED:** §2's field-for-field equality read «exactly ONE override»
+  and now names the second – `apparelBond: true`. An `objectContaining` would have turned an
+  exhaustive equality into a pin that can never see the next field arrive; naming it keeps the claim
+  ruling 2 is about, which is that every **NUMBER** on the letter is the ladder's own for her rank
+  today.
+
+  ⚠ **NEW COPY, ALL DRAFT** (three strings, verbatim):
+  * the letter's opening, `OfferLetter.vue`: **«Her face is already on our posters, and we would
+    rather she wore our kit while it is there. Our kit paper with her has run out, so this is us
+    renewing it – on the terms her ranking earns today.»**
+  * the inbox subject, `InboxSheet.vue`: **«Renewing her kit with us»**
+  * the winter's row, `world/sponsors.ts`: **«<Brand> already have her on their posters and would
+    like her back in their kit – their renewal is in the inbox.»**
+
 ## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
 No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
