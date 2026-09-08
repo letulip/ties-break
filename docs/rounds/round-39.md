@@ -10,19 +10,68 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 
 ---
 
-- [>] **1. «A spare key on her own ring... В 35 лет звучит уже довольно странно. Давай проведём
+- [x] **1. «A spare key on her own ring... В 35 лет звучит уже довольно странно. Давай проведём
   общее ревью этих фразочек на home с целью максимально убрать вот такие вот несоответствия»** –
   **build.** Home's flavour lines are written for a child and are still printed at 35. This is not
   one string: he is asking for a SWEEP of the home copy against the age it is shown at. Done means
   every home line has an age (or life-stage) gate that a mounted test can fail on.
 
-- [>] **2a. «„Past her peak – down 57 places on the year, and her body has about 6 more seasons in
+  **SHIPPED (wave A).** The pool is `DIARY_POOL` (`src/engine/diary/pool.ts`) – Home's `photoLine`
+  and `conditionNote`, 105 entries. Every entry now has a declared age/life-stage gate:
+  `tests/r39-home-age-gates.test.ts` carries a per-line gate map (also a verbatim pin on every
+  string, invariant 4's friend), fails any entry with no declaration, licenses the whole pool
+  against a stage x age x scenario grid (school 13/16, after-school 19/21, college 20, independent
+  22/24/29/35) and fails any line selectable outside its window. Mutation-verified: un-gating the
+  spare-key line went red on two arms, restored green. The spare key itself: `freshlyIndependent`
+  (independent AND under 25 – `SETTLED_ADULT_AGE` in `diary/words.ts`), so it prints in her first
+  flat years and never at 29/35. 17 further licence-only edits (no wording touched): witness lines
+  («She hummed in the car…», «She fell asleep holding the draw sheet.», «A finalist. We let that
+  word sit at dinner.», «An early bus home…», «She didn't say much on the way home.», «She slammed
+  the car door…», «The racquet stayed by the door all weekend.») gated `underOneRoof`; the
+  phone-register lines (both away birthday captions, voice note, trophy photo, «home safe», car-park
+  call, nineteen-second call, ice-pack photo, slow replies, changed-subject, money-after-call)
+  widened `independentVoice` → `awayVoice` so COLLEGE stops borrowing family-home lines and gets its
+  own voice (a college birthday licensed NO caption at all before this). Two NEW lines for his
+  review (the gated ones' age-appropriate siblings): «An early exit. She was fine on the evening
+  call.» (away softened loss) and «The Sunday call ran long. Nobody minded.» (settled-adult quiet
+  week, the spare key's counterweight). A pool-did-not-thin arm pins that college/20 and
+  independent/35 still license a photo line for won/sad/angry/tired/quiet/birthday weeks. Left
+  alone deliberately: the vacation captions (they describe the booked package, not her age) and the
+  Calendar fridge note (not Home; already stage-switched). Observed, not fixed (no ask): college has
+  no off-season condition line – falls back to «The week went by.»
+
+- [x] **2a. «„Past her peak – down 57 places on the year, and her body has about 6 more seasons in
   it." – вот это как раз можно на карточку тренера в списке тренеров перенести, много текста»** –
   **build.** The long decline sentence moves off Home and onto the coach card in the coach list.
 
-- [>] **2b. «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
+  **SHIPPED (wave A).** The whole engine sentence renders on the CURRENT coach's card in the market
+  list (`.cm-row.current .cm-decline`, CoachMarketScreen – beside his plaque, `.cm-plaque`'s own
+  treatment) and Home renders it nowhere: the round-38 `.coach-decline` paragraph is gone and the
+  card text carries no body clause. The headroom hint above the list – which has fallen through to
+  the decline read since round 38 #7b – stands down while his card carries the sentence (one screen
+  may not say one sentence twice); a SELF-COACHED career keeps the fallthrough, since there is no
+  card to carry it. Mounted evidence: `tests/component/r39-decline-surfaces.test.ts` (card carries
+  the exact engine string; hint absent beside it; self-coached fallthrough; growing career still
+  reads a headroom band) – mutation-verified by deleting the card line (2 arms red, restored).
+  `r38-decline-voice.test.ts`'s Home arms re-aimed with ⚠ notes.
+
+- [x] **2b. «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
   было до этого про потолок и прочее»** – **build.** Home keeps a SHORT, coloured read. ⚠ The old
   ceiling plate is the shape he is naming; match its length and its colour treatment, not its words.
+
+  **SHIPPED (wave A), wording = DRAFT FOR HIS REVIEW.** New engine field `Snapshot.coachDeclineShort`
+  (one derivation, `declineRead` in `world/coachMarket.ts`, feeds both the long card and this – the
+  two surfaces cannot disagree; '' on every growing career, the round-34 child guarantee held in the
+  data). Home renders it as `.coach-decline-short` in the OLD CEILING PLATE'S OWN treatment – round
+  24's `.coach-room` rule revived for the new line: 11px / weight 600 / `var(--accent)`, under the
+  coach quote. ⚠ The three draft strings, each the long sentence's own clause compressed, no new
+  vocabulary – say the word and any of them moves:
+  «Past her peak – down 57 places on the year» · «Past her peak – 48 places below her best» ·
+  «Past her peak – about 4 seasons left» (fallback when the table shows no fall; singular-safe).
+  Mounted evidence: the plate renders the exact engine string, starts with the label, carries no
+  body clause, and its COLOUR is asserted through the real cascade (`getComputedStyle` = `--accent`,
+  weight 600, attachTo per birthday-dialog's rule) – mutation-verified by de-accenting the CSS rule
+  (red, restored). A growing fourteen-year-old still sees no plate of either length.
 
 - [ ] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
@@ -282,7 +331,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   card stays honest as it is; a strikethrough-style clarity pass is possible if he wants it. `[~]`
   unless he overrules.
 
-- [>] **13a. «Ей почти 29, а тренер говорит, что она протянет ещё 13 сезонов, при этом она уже
+- [x] **13a. «Ей почти 29, а тренер говорит, что она протянет ещё 13 сезонов, при этом она уже
   начинает постепенно сдавать, что видно в статистике сезонов: уже не топ-10»** – **build.** The
   coach's remaining-seasons number contradicts the decline the same screen is reporting. 13 seasons
   at 29 puts her at 42.
@@ -292,8 +341,43 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   `seasonsOfBodyLeft`, which extrapolates from `physicalMean / peakPhysical` – and hers is **63.03
   of 63.19 = 99.7%**. She has barely declined yet, so the extrapolation runs to age 42.
 
-- [>] **13c. NOT RAISED BY HIM, found in the same sentence: «down 1 places».** `coachDeclineNote`
+  **SHIPPED (wave A), measured.** The walk was honest and aimed at the wrong END: it ran to
+  `ENDINGS.lastOfferPeakShare` (0.55) – the winter the retirement QUESTION runs out, the owner's own
+  26.08 dial, age ~41-42, Federer territory. The coach's sentence now stops at
+  `COACH_BODY_END_SHARE = 0.70` (`world/coachMarket.ts`) – the model's own end of a PROFESSIONAL
+  body: 0.70 is the share the deleted hard finish at 38 mapped to, and `tests/ending.test.ts` still
+  pins that 70%⇔38 equivalence as a tripwire, so the two dials cannot drift apart silently. The
+  0.70→0.55 stretch is the borrowed-time tail and reads the honest floor «about 1 more season».
+  ⚠ Tuning measured, not guessed – `tools/r39-body-seasons.ts`, synthetic states only (the 27 row
+  uses the direct-route pair 22/27; the rest the shipped 23/29; `live` = the real
+  `coachDeclineNote` after the change, and it matched the 0.55 column exactly before it):
+
+  | age | share | walk→0.55 says | walk→0.70 says (shipped) |
+  | ---: | ---: | ---: | ---: |
+  | 27.0 | 99.7% | 13 | **9** |
+  | 27.0 | 97% / 93% / 88% | 12 / 12 / 11 | 9 / 8 / 7 |
+  | 29.0 | **99.7% (his case)** | **13** | **9** |
+  | 29.0 | 97% / 93% / 88% | 12 / 12 / 11 | 9 / 8 / 7 |
+  | 31.0 | 99.7% / 97% / 93% / 88% | 11 / 11 / 11 / 10 | 8 / 8 / 7 / 6 |
+  | 33.0 | 99.7% / 97% / 93% / 88% | 10 / 10 / 9 / 9 | 7 / 7 / 6 / 5 |
+  | 35.0 | 99.7% / 97% / 93% / 88% | 9 / 9 / 8 / 8 | 6 / 6 / 5 / 4 |
+
+  A barely-declined 29-year-old hears **9**, single-digit; and on the r38 fixture's Alice shape
+  (35.3, 80.4%) the sentence says **2** – his own «ей осталось играть пара лет» register from 07.09,
+  which round 38 could not derive from the 0.55 stop. ⚠ Re-aimed guards, none deleted:
+  `r38-decline-voice.test.ts`'s cross-check arm derives from `COACH_BODY_END_SHARE` now (⚠ note in
+  place), its swept shares moved above the new stop (0.95/0.9/0.8), and the singular arm pins BOTH
+  edges of the 1-season tail. Mutation-verified: stop reverted to 0.55 → two arms red, restored.
+  His decline-note tests and the fresh #13c pins stayed green throughout.
+
+- [x] **13c. NOT RAISED BY HIM, found in the same sentence: «down 1 places».** `coachDeclineNote`
   interpolates `down ${yearMove} places` with no singular. Folded in – same file, same line.
+
+  **SHIPPED (wave A).** A `places(n)` helper in `coachDeclineNote` – «down 1 place» / «down 2
+  places» – and the SAME one-word defect fixed in the other rank arm («1 place below her best
+  season»), which would have printed the day her year-fall was exactly one. Pinned in
+  `tests/component/r39-decline-surfaces.test.ts` (both arms, singular and plural, long note and
+  short plate) and mutation-verified: singular removed → both pins red, restored green.
 
 - [~] **13b. «Но очень хорошо, что тренер стал обращать внимание, что перформанс падает»** –
   **answer, nothing to build.** Round 38's decline note landing well. Recorded so it is not lost.

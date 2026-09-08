@@ -445,6 +445,13 @@ export interface Snapshot {
    *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote`: it persists nothing, owes no
    *  migration and does not move `SAVE_SCHEMA_VERSION`. */
   coachDeclineNote: string
+  /** ⭐⭐ ROUND 39 #2a/#2b – THE SHORT PLATE FOR HOME, and '' while she is still growing. The owner:
+   *  the long sentence above is «много текста» for Home and moved to the coach card in the market
+   *  list; Home keeps this – the same state in the old ceiling plate's shape, «короткое, емкое и
+   *  яркое (в плане цвета)». One derivation writes both fields (`declineRead` in
+   *  `world/coachMarket.ts`), so the plate and the card can never disagree; the empty-on-a-child
+   *  guarantee is the same data-level one `coachDeclineNote` carries, for the same round-34 reason. */
+  coachDeclineShort: string
   /** ⭐⭐ THE HANDOVER'S READ, AND IT IS EMPTY ON EVERY WEEK BUT THE FIRST (childhood prologue §5).
    *
    *  One of the three words this game already grades remaining room in – `Huge potential` /
