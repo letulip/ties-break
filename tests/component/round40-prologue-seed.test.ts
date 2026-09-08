@@ -49,7 +49,8 @@ import { DEFAULT_PROFILE, type PlayerProfile, type PrologueHandover } from '../.
  *  the fallback arm asserts the BYTES rather than a shape. Kept in step by that arm going red. */
 const freshSeedOf = (v: number): string => `prologue-${(v.toString(36).slice(2) + '0000').slice(0, 8)}`
 
-/** A career, as the component asked for it. `seed` is the field round 40 #7 C is about. */
+/** A career, as the store would have made it – `seed` is the FINAL seed (the component's, or the
+ *  store's fallback when the component passed a blank one). That field is what #7 C is about. */
 interface Call {
   seed: string
   profile: PlayerProfile
@@ -61,11 +62,19 @@ function stubStore(): { calls: Call[] } {
   const calls: Call[] = []
   game.newCareer = vi.fn(
     async (seed: string, profile: PlayerProfile = DEFAULT_PROFILE, prologue?: PrologueHandover) => {
-      calls.push({ seed, profile, prologue })
+      // ⚠⚠ THE STORE'S OWN FALLBACK IS PART OF THE STUB, AND LEAVING IT OUT MADE AN ARM LIE. Watched
+      // it happen: with the pass-through mutated away the component passes `''`, and a stub that fed
+      // `''` straight to `createWorld` gave BOTH runs the same girl – so «two careers from the same
+      // prologue seed are the same girl» stayed GREEN against the very defect it exists to catch.
+      // The line below is `game.newCareer`'s, copied, so a blank seed here is as random as it is in
+      // the product and the mutation reddens the arm.
+      const finalSeed =
+        seed.trim() || `${profile.kidName.toLowerCase()}-${(Math.random().toString(36).slice(2) + '0000').slice(0, 4)}`
+      calls.push({ seed: finalSeed, profile, prologue })
       // ⭐ THE REAL ENGINE, ON THE REAL ARGUMENTS – including the seed, which is the whole subject of
       // this file. `createWorld` is what turns a seed into a girl, so building the career here is
       // what makes «the same seed is the same girl» a claim about the product and not about a stub.
-      game.snapshot = toSnapshot(createWorld(seed, profile, `c-${calls.length}`, prologue))
+      game.snapshot = toSnapshot(createWorld(finalSeed, profile, `c-${calls.length}`, prologue))
     },
   )
   game.deleteCareer = vi.fn(async () => {
@@ -134,7 +143,12 @@ async function walkQuietChildhood(w: VueWrapper): Promise<void> {
     }
     // ...and this year's tournament ask, declined – the second beat on the same card since round
     // 35 #4. On the thirteenth, which has no decision of its own, this IS the way on.
-    if (w.findAll('.prologue-answer-label').some((b) => b.text() === 'Not this year')) {
+    //
+    // ⚠ THE ASK IS RECOGNISED BY ITS *ENTER* LABEL AND DECLINED BY ITS OTHER ONE, and that is not
+    // fussiness: «Not this year» is ALSO the tenth card's own stay-home option, so a walk that
+    // looked for the decline label would answer the tenth year's decision a card early and every
+    // year after it by the wrong control. `Put her name down` appears on the ask and nowhere else.
+    if (w.findAll('.prologue-answer-label').some((b) => b.text() === 'Put her name down')) {
       await answer(w, 'Not this year')
     }
   }
@@ -202,6 +216,111 @@ describe('⭐⭐ round 40 #7 B – the prologue takes a seed, exactly as the car
     spy.mockRestore()
     await walkToFirstWeekend(w)
     expect(walkSeed(w)).toBe(freshSeedOf(0.4242))
+    w.unmount()
+  })
+})
+
+describe('⭐⭐ round 40 #7 C – the career born from a prologue inherits its seed', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  it('the seed the nine cards ran on is the seed the career is made with', async () => {
+    const { calls } = stubStore()
+    const w = mount(ChildhoodPrologue, { props: { seed: 'one-girl-one-seed' }, attachTo: document.body })
+    await walkQuietChildhood(w)
+    expect(calls.length, 'one career, not nine').toBe(1)
+    expect(calls[0]!.seed).toBe('one-girl-one-seed')
+    w.unmount()
+  })
+
+  it('⚠ an ordinary new career is untouched: no seed supplied, a fresh random one still', async () => {
+    const { calls } = stubStore()
+    const spy = vi.spyOn(Math, 'random').mockReturnValue(0.4242)
+    const w = mount(ChildhoodPrologue, { attachTo: document.body })
+    spy.mockRestore()
+    await walkQuietChildhood(w)
+    // ⚠ THE CAREER IS NOT BORN BLANK ANY MORE, and that is C. What a player must not be able to tell
+    // is that the seed STOPPED BEING RANDOM: it is the walk's own fresh draw, which is exactly as
+    // random as the store's fallback was, and no shipped caller supplies one.
+    expect(calls[0]!.seed).toBe(freshSeedOf(0.4242))
+    w.unmount()
+  })
+
+  it('⭐⭐ two careers from the same prologue seed are the SAME GIRL', async () => {
+    const runs = []
+    for (const _ of [0, 1]) {
+      setActivePinia(createPinia())
+      document.body.innerHTML = ''
+      const { calls } = stubStore()
+      const w = mount(ChildhoodPrologue, { props: { seed: 'same-hidden-potential' }, attachTo: document.body })
+      await walkQuietChildhood(w)
+      const call = calls[0]!
+      // The world the worker would have built, from the arguments the component actually passed.
+      const world = createWorld(call.seed, call.profile, 'c', call.prologue)
+      runs.push({
+        seed: call.seed,
+        skills: JSON.stringify(world.skills),
+        potential: JSON.stringify(world.potential),
+        // The coach's read is what the handover SAYS about her, and it is on screen right now.
+        read: (w.find('.handover-card').text() ?? '').replace(/\s+/g, ' ').trim(),
+      })
+      expect(runs[runs.length - 1]!.read.length, 'the handover is empty').toBeGreaterThan(80)
+      w.unmount()
+    }
+    const [a, b] = runs
+    expect(b!.seed).toBe(a!.seed)
+    expect(b!.skills, 'same seed, different build').toBe(a!.skills)
+    expect(b!.potential, 'same seed, different ceiling').toBe(a!.potential)
+    expect(b!.read, "same seed, a different coach's read").toBe(a!.read)
+  })
+
+  it('⚠ ...and two careers from DIFFERENT prologue seeds are not – the anti-vacuity arm', async () => {
+    const runs = []
+    for (const seed of ['same-hidden-potential', 'a-different-girl']) {
+      setActivePinia(createPinia())
+      document.body.innerHTML = ''
+      const { calls } = stubStore()
+      const w = mount(ChildhoodPrologue, { props: { seed }, attachTo: document.body })
+      await walkQuietChildhood(w)
+      const call = calls[0]!
+      const world = createWorld(call.seed, call.profile, 'c', call.prologue)
+      runs.push({ skills: JSON.stringify(world.skills), potential: JSON.stringify(world.potential) })
+      w.unmount()
+    }
+    const [a, b] = runs
+    // ⚠ WITHOUT THIS ARM the file passes against a world that ignores seeds entirely.
+    expect(b!.skills, 'two seeds, one build – the world is ignoring its seed').not.toBe(a!.skills)
+    expect(b!.potential, 'two seeds, one ceiling – the world is ignoring its seed').not.toBe(a!.potential)
+  })
+
+  it('⚠ «start again» keeps a SUPPLIED seed, and re-draws when there is none', async () => {
+    // The promo case, exactly: one seed, two different childhoods, the same girl at the end of both.
+    const { calls } = stubStore()
+    const supplied = mount(ChildhoodPrologue, { props: { seed: 'one-seed-two-walks' }, attachTo: document.body })
+    await walkQuietChildhood(supplied)
+    await supplied.findAll('.handover-answer')[1]!.trigger('click')
+    await Promise.resolve()
+    await supplied.vm.$nextTick()
+    await walkQuietChildhood(supplied)
+    expect(calls.length).toBe(2)
+    expect(calls[1]!.seed, 'a supplied seed did not survive «start again»').toBe(calls[0]!.seed)
+    supplied.unmount()
+
+    // ...and §2.3 is unmoved for a player: nothing supplied, so the restart is a different girl.
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    const { calls: free } = stubStore()
+    const w = mount(ChildhoodPrologue, { attachTo: document.body })
+    await walkQuietChildhood(w)
+    await w.findAll('.handover-answer')[1]!.trigger('click')
+    await Promise.resolve()
+    await w.vm.$nextTick()
+    await walkQuietChildhood(w)
+    expect(free.length).toBe(2)
+    expect(free[1]!.seed, '«start again» replayed the same childhood for a player').not.toBe(free[0]!.seed)
     w.unmount()
   })
 })

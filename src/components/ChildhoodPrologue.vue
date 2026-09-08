@@ -505,7 +505,25 @@ async function begin(): Promise<void> {
   creating.value = true
   try {
     await game.newCareer(
-      '',
+      // ⭐⭐ ROUND 40 #7 C – THE CAREER IS BORN ON THE CHILDHOOD'S OWN SEED. It used to be `''`, so
+      // the store drew a fresh random one here and the girl the nine cards had just walked became a
+      // DIFFERENT girl the instant the childhood ended. That discontinuity is what the promo film
+      // caught – «Same hidden potential» over two girls – but it was never the recorder's: it is in
+      // the shipped product, once per prologue career, and every player has been getting it.
+      //
+      // ⭐ AND IT MAKES A CHILDHOOD REPRODUCIBLE FOR THE PLAYER. One girl, one seed, all the way
+      // through – the seed is already persisted per career (`world.seed`), so the childhood that
+      // produced her is now recoverable from the save rather than lost at the handover.
+      //
+      // ⚠ NO SCHEMA MOVES AND NO MIGRATION IS OWED. `seed` is a field every save has carried since
+      // v1; what changed is the VALUE a career born after this ships is given, and a career already
+      // in flight keeps the seed on its own record untouched. Nothing reads a seed's SHAPE.
+      //
+      // ⚠ AND AN ORDINARY NEW CAREER IS UNTOUCHED. The wizard and «raise another» still call
+      // `newCareer('')` and still get the store's random fallback; a prologue career's seed is the
+      // walk's own `freshSeed()` draw unless a tool supplied one, which is exactly as random as the
+      // fallback it replaces. A player cannot tell this shipped.
+      seed.value,
       {
         ...DEFAULT_PROFILE,
         // ⚠ HER NAME, HER BIRTHDAY AND HER COUNTRY REACH `createWorld` HERE, on exactly the path the
