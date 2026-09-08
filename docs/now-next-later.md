@@ -29,10 +29,17 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 39 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 40 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 39 is the Ines wave** ([round-39.md](rounds/round-39.md), 08.09) – fifteen items off his
+**Round 40 is the prologue's choices** ([round-40.md](rounds/round-40.md), 08.09) – his testers
+reported controls that «не делают ничего»: the prologue rendered SELECTING controls exactly like the
+ones that ADVANCE, so pressing one and seeing the screen stay put read as a dead button. The census
+found 23 of them across ten scenes, not the two he named. Carried in from round 39: #14a (the
+plateau card's escalating voice, building) and #14b (the «she is done» state, measuring on the age
+branch after the plateau window was measured and refused).
+
+**Round 39 was the Ines wave** ([round-39.md](rounds/round-39.md), 08.09) – fifteen items off his
 week-832 career on the merged round-38 build, two of them reopens (the brand sell-and-rebuy loop
 against round 38 #15/#16, the birthday gift repetition against round 26 #9). Four disjoint build
 waves (Home's flavour and the coach's voice; the shelf's owned cards; the birthday pool; the
