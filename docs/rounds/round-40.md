@@ -31,6 +31,13 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   it cannot work. The first group stays visible and re-choosable after the second appears – a
   disclosed step must not become a trap.
 
+  ⚠ **HIS REFINEMENT (08.09): «верно, но при отжатом верхнем нижний не должен быть доступен».** So
+  the second group's availability is DERIVED from the first choice's current value, every render –
+  it is not a latch that stays open once opened. The distinction is the whole item: a one-way reveal
+  would leave the lower controls live in a state where they cannot work, which is the same defect as
+  item 1 wearing different clothes. Unset above -> unavailable below, at any moment, not only on the
+  first pass.
+
 ---
 
 ## Carried in from round 39, still open
