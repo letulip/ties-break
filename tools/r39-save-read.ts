@@ -110,7 +110,8 @@ if (args.includes('--report')) {
   const brand = (any.assets as any[]).find((a) => a.id === 'merch-brand')
   const held = w.week - brand.boughtWeek
   const sig = brandSignalsOf(w)
-  const baseX = ECONOMY.shop.catalogue.find((i: { id: string }) => i.id === 'merch-brand')?.earningsMultipleX ?? 14
+  const merchItem = ECONOMY.shop.catalogue.find((i) => i.id === 'merch-brand') as { earningsMultipleX?: number } | undefined
+  const baseX = merchItem?.earningsMultipleX ?? 14
   const derived = brandGrossWorthCents(sig, baseX)
   const hl = worthRampHalfLife(sig.fame, ECONOMY.shop.worthRamp.medianFame)
   console.log(`  brand  paid ${money(brand.paidCents)} at week ${brand.boughtWeek} · held ${held} weeks · shown ${money(brand.valueCents)}`)
@@ -172,7 +173,6 @@ if (args.includes('--report')) {
 if (args.includes('--extra')) {
   const w = world as unknown as WorldState
   const any = world as Record<string, any>
-  const money = (c: number) => `$${(c / 100).toLocaleString('en-US', { maximumFractionDigits: 0 })}`
   console.log('--- one ad offer, whole terms ---')
   console.log(JSON.stringify((any.offers as any[]).filter((o) => o.kind === 'ad').slice(-1)[0], null, 1))
   console.log('\n--- #10 the rank of every opponent that beat her ---')
