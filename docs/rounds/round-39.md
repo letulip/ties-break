@@ -930,6 +930,83 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   paper that signing ends the running campaign, and name the money it costs. Without the number it is
   a trap; with it, it is the decision he is asking for.
 
+  **BUILT (wave G). ⭐ MEASURED FIRST, and the answer is emphatic – this is not a rare seam**
+  (`tools/r39-apparel-bond.ts`, the round-29 corpus shape: 9 presets x 2 policies x 3 seeds = 54
+  careers x 900 weeks, the eager parent answering the post):
+
+  | | |
+  | --- | --- |
+  | careers with a signed clothing campaign | **31 of 54 – 57.4%** |
+  | ...in which one OUTLIVED its kit deal | **31 of 31 – every single one** |
+  | signed clothing campaigns | 189 |
+  | ...that outlived the kit deal that wrote them | **130 – 68.8%** |
+  | outlived by, in weeks | min **5** · median **53** · p90 **121** · max **247** |
+  | ...bucketed | 1-4w: **0** · 5-26w: 24 · 27-52w: 41 · **53w+: 65** |
+  | campaign weeks with the author NOT dressing her | 6,501 of 15,322 – **42.4%** |
+  | ...of those, weeks with NO kit deal at all | 352 – 2.3% |
+  | «leaving» events (a different house signed under a running campaign) | **117** |
+  | ...that would cost real money | 62 · median **$100,000** · max **$4,000,000** |
+
+  ⚠ **NOT ONE campaign outlived its kit deal by under five weeks**, so the hole is structural rather
+  than a calendar seam – and the median is a WHOLE SEASON. His own save was the typical case, not the
+  unlucky one.
+
+  **WHAT SHIPPED, ruling by ruling.** Everything is derived from state that already exists – the
+  running campaign's brand against the kit paper's brand – so **NO new persisted field and NO schema
+  move: v71 stands** (wave EF's bump is the round's only one).
+  1. **The trigger is the signature** (`signOffer`), never an absence. His w725-w727 gap leaves a
+     three-year contract alone – pinned.
+  2. **The guaranteed letter** (`apparelBondLetter`, inside `raiseKitOffers`): while X's clothing
+     campaign runs and her kit is not already promised, X writes with **no arrival roll** – at
+     `kitTermsFor(standing)`, the ladder's own rung for her rank TODAY, with exactly one field
+     overridden (the brand). A slid career gets today's rung, not premium-for-ever.
+  3. **Ending is the future only** (`endAdCampaign` pulls `untilWeek` back): no further anniversary,
+     no further shoot week, the category's slot re-opens – and not one line touches `fundsCents`.
+  4. **The lifetime letter is exempt** by category as well as by ruling, and its house now **dresses
+     her free**: one predicate (`lifetimeKitHouse`) read at the two tills the kit money flows
+     through – the over-the-counter price (`kitPurchaseSplit`, which is also what the shop BUTTON
+     quotes) and the weekly gear bill (`resolveGear`). ⚠ **Scope stated, not fudged:** free means the
+     BILL. The freshness ceiling, the travel share, the retainer, the appearance fee and the result
+     bonus stay the kit ladder's own promises – extending those would be inventing terms he did not
+     name, and the ruling's word is «снабжать».
+  5. **The reverse order owes nothing:** both reads ask «is a clothing campaign running THIS week».
+  6. **Only clothing:** watches, cars, drinks, the airline, fragrance and the capstone all charge
+     nothing and guarantee nothing – pinned category by category.
+
+  ⚠ **THE GUARANTEE'S THREE INHERITED GATES, stated because «unconditionally» has a shape.** It
+  bypasses the DICE and not the LADDER, so: she must clear a rung at all (no rung = no terms exist to
+  offer); a deal already covering the season ahead turns it away exactly as it turns any rung away;
+  and one letter per rung per window still holds – the guaranteed letter takes the top rung's slot
+  rather than doubling it. It also sits inside `raiseKitOffers`, which the review skips for a brand
+  **let down** this window: a house that has just ended her kit deal because she did not play does
+  not turn round and guarantee her another one the same winter.
+
+  ⚠ **RNG: zero draws added, and none spent.** No `rngFromSeed` enters `engine/offers.ts` (its closed
+  allowlist is the guard). Proved rather than asserted: the whole window's post is replayed with and
+  without a running campaign and every OTHER rung's letter comes back byte-identical. MAIN is
+  untouched – `tests/condition.test.ts` **51/51 green, 41550 draws / hash e6b0c709 unmoved**.
+
+  **EVIDENCE.** `tests/r39-apparel-bond.test.ts` (26 cases, §1-§10 = the six rulings plus the real
+  `reviewSponsors` door and the free-kit till) and `tests/component/r39-apparel-bond-warning.test.ts`
+  (5 mounted cases: the rival letter shows the sentence AND the number, the zero-fee arm says so
+  instead of printing a number that is not there, three controls). **Eight mutations, eight killed,
+  all restored** – the letter never raised · the bond taking X's own rung instead of her standing ·
+  the price firing for the same house · ending clawing the fee back · the bond reading any campaign
+  rather than clothing only · the free-kit hook removed · the warning clause deleted · the warning
+  keeping its sentence and losing its number.
+
+  ⚠ **ONE GUARD RE-AIMED, NOT WEAKENED:** `tests/offers.test.ts`' letterhead pin. The mark is keyed
+  on the BRAND's rung now, falling back to the letter's own tier – for every letter the ladder writes
+  the two are the same value (asserted), so no shipped letter resolves a different file; the bond
+  letter is the one paper where they part, and a sheet printing the rung's mark over X's signature
+  would contradict itself. The claim the pin protects – the filename is derived, never spelled out –
+  is untouched, and the exhaustive negative under it is unchanged.
+
+  ⚠ **ALL NEW COPY IS DRAFT, for his review** (four strings, verbatim in the wave report): the two
+  arms of the rival letter's warning clause, and one honest sentence for a campaign that was ENDED
+  rather than expired – the old record said «the campaign has run its course», which would now be a
+  lie on a paper somebody cut short.
+
 ## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
 No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
