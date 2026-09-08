@@ -105,10 +105,20 @@ function season(seasonIndex: number, wtaRank: number | null): SeasonHistoryEntry
  *  ⚠ `week` PUTS HER PAST HER OWN `declineStart` AND NOTHING ELSE DOES. A fresh world carries no
  *  stored `ageCurve`, so `ageCurveOf` returns the shipped pair - which is the arm a fourteen-year-old
  *  is measured against below, unchanged. */
-function pastPeakWorld(opts: { seasons: SeasonHistoryEntry[]; share?: number; ageYears?: number }): WorldState {
+/** ⚠⚠ `seasonWeek` JOINED THIS FIXTURE ON ROUND 39 #2b's SECOND REOPEN (08.09): Home's decline plate
+ *  rotates on which third of the season the week falls in, so an arm that wants one particular
+ *  sentence has to name its phase. `(years - 14) * 52` is a whole number of seasons, so the default
+ *  is season-week 0 – the EARLY third. `coachDeclineNote`, the LONG sentence, does not rotate. */
+const MID_SEASON_WEEK = 20
+function pastPeakWorld(opts: {
+  seasons: SeasonHistoryEntry[]
+  share?: number
+  ageYears?: number
+  seasonWeek?: number
+}): WorldState {
   const world = createWorld('r38-decline', { ...DEFAULT_PROFILE, coachTier: 'middle' })
   const years = opts.ageYears ?? 35
-  world.week = Math.round((years - 14) * 52)
+  world.week = Math.round((years - 14) * 52) + (opts.seasonWeek ?? 0)
   world.peakPhysical = physicalMean(world.skills) / (opts.share ?? 0.8)
   world.seasonHistory = opts.seasons
   return world
@@ -202,7 +212,11 @@ describe('round 38 #6d – the coach plate on Home, and only past her peak', () 
     // «может быть разве что – about 4 seasons left еще можно оставить» – so the plate says the
     // seasons clause and the rank subtraction lives in the card's long sentence alone (its arm one
     // test down).
-    const world = pastPeakWorld({ seasons: [season(16, 20), season(19, 68), season(20, 125)] })
+    // ⚠⚠ AND RE-AIMED A THIRD TIME BY THE 08.09 RE-REOPEN, WHICH ONLY ADDS A WEEK TO THE FIXTURE:
+    // the plate rotates on the season's third («чередовать … уберет статичность»), so the clause he
+    // kept is measured at MID season, where it is the engine's answer. Every other assertion in this
+    // arm is unchanged and still holds in every phase.
+    const world = pastPeakWorld({ seasons: [season(16, 20), season(19, 68), season(20, 125)], seasonWeek: MID_SEASON_WEEK })
     const { plate, quote, card, longGone } = homePlate(world)
 
     expect(plate).toMatch(/^Past her peak – about \d+ seasons? left$/)
@@ -218,14 +232,19 @@ describe('round 38 #6d – the coach plate on Home, and only past her peak', () 
     expect(LONG_DASH.test(plate), `a long dash in the read: ${plate}`).toBe(false)
   })
 
-  it('⚠ the rank move really is a subtraction – a second career, different ranks (⚠ re-aimed to the engine string)', () => {
+  it('⚠ the rank move really is a subtraction – a second career, different ranks (⚠ re-aimed twice)', () => {
     // One data point is satisfied by a constant. Two are not.
     // ⚠ RE-AIMED 08.09 (#2b reopen): the year clause left Home's plate for the coach card's long
     // sentence, so the subtraction is pinned where the words now are – `coachDeclineNote`, whose
     // rendered home (the market list's current-coach card) is pinned in r39-decline-surfaces.
+    // ⚠⚠ THE RE-REOPEN BROUGHT IT BACK TO HOME in his shorter phrasing for the EARLY third, so the
+    // subtraction is now pinned on BOTH surfaces off one fixture – rendered on Home at week 0 and in
+    // the engine's long sentence – and the seasons form is pinned where it is the answer.
     const world = pastPeakWorld({ seasons: [season(17, 40), season(18, 40), season(19, 90)] })
     expect(coachDeclineNote(world)).toContain('down 50 places on the year')
-    expect(homePlate(world).plate).toMatch(/^Past her peak – about \d+ seasons? left$/)
+    expect(homePlate(world).plate, 'the subtraction is not on the rendered plate').toBe("she's down 50 places")
+    const mid = pastPeakWorld({ seasons: [season(17, 40), season(18, 40), season(19, 90)], seasonWeek: MID_SEASON_WEEK })
+    expect(homePlate(mid).plate).toMatch(/^Past her peak – about \d+ seasons? left$/)
   })
 
   it('⚠ ...and it is HER BODY that decides the second half, walked and not guessed', () => {

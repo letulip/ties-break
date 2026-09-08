@@ -119,6 +119,87 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   ''-guarantee broken. Final: unit 215/215, component 41/41, `vue-tsc -b --force` clean,
   pins:check ok (the round24 sweep cuts the note with the ONE splitter, not a raw indexOf).
 
+  **SHIPPED (wave A3, 08.09) on his ruling over A2's static plate – the three new strings = DRAFT
+  FOR HIS REVIEW.** The ruling, verbatim: «слушай, а можно же чередовать как раз на спаде эти
+  фразочки. давай оставим и «Past her peak – about N seasons left», и «she's down N places» в начале
+  сезона, например или в конце наоборот, «she's below her best» или «she's way below her best» или
+  «she's far below her best», это даст живости и вариативности, уберет статичность». Only the
+  DECLINE half rotates; the four band shorts he approved in A2 are untouched, and so is the coach
+  card's long sentence.
+
+  1. THE DRIVER IS THE SEASON'S OWN PHASE – deterministic, and ZERO draws on any stream (invariant
+     2: no MAIN tap, no new sub-stream). The only new input is `world.week`, read through the
+     ledger's own `seasonStartWeek` – the one clock the banked rows, the wrap and the money windows
+     already key on, so this is a subtraction on the existing calendar and not a second one.
+     `declinePhaseOf` cuts the season into thirds, written as `round(WEEKS_PER_YEAR / 3)` so a
+     season that ever changes length still has three: **early 0-16 · mid 17-34 · late 35-51**.
+     ⚠ WHY THOSE EDGES, beyond his own placement: the season's row is BANKED at week 49
+     (`milestones.ts`, the wrap) – inside the LATE third – so «below her best», the career-spanning
+     comparison, lands exactly as a season closes; by EARLY that freshly-banked row is a whole
+     finished year, which is when the year-on-year move is news; and MID holds the body read, which
+     is also the only variant that is true every week. Against the round-5 real-dates epoch the
+     thirds read Jan-Apr / May-Aug / Sep-Dec, which is how a tennis year is spoken about.
+
+  2. THE STRINGS, his own words (⚠ DRAFT – say the word and any of them moves). Early:
+     «she's down 57 places» – #13c's singular rides it, «she's down 1 place». Mid: «Past her peak –
+     about 4 seasons left», byte-identical to A2's. Late, the ladder: «she's below her best» /
+     «she's far below her best» / «she's way below her best». ⚠ The lower-case «she's» is HIS
+     casing, quoted rather than corrected (invariant 4 – wording is not an agent's to change); a
+     capital is a one-word ask. All four new strings are 4-5 words, inside the 3-5 he sized, and the
+     late ones carry no digit at all.
+
+  3. A VARIANT ONLY SHOWS WHEN IT IS TRUE, and the fallthrough order is ONE table:
+     **early = fell → below → seasons · mid = seasons · late = below → fell → seasons.** Every row
+     ends at the seasons clause – `declineRead` guarantees it past the gate – so the plate can never
+     empty and never prints a number the history cannot stand behind (`yearMove` is null across a
+     season gap, `belowBest` is 0 on a career sitting on its own best).
+
+  4. THE INTENSITY LADDER IS MEASURED, NOT CHOSEN (invariant 5). `tools/r39-decline-rotation.ts`
+     walks 27 REAL careers – econ-bench's nine presets x three seeds on the 'player' policy, to the
+     endings horizon – and records the `belowBest` every past-peak week would have rendered:
+     **21,843 past-peak weeks, 21,196 of them with a true below-best, min 1, max 738 places.**
+
+     | places behind her best | 1-4 | 5-9 | 10-19 | 20-39 | 40-79 | 80-149 | 150-299 | 300-599 | 600+ |
+     | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+     | share of past-peak weeks | 4.2% | 6.0% | 8.9% | 3.7% | 10.9% | 12.4% | 28.2% | 24.9% | 0.8% |
+
+     The two cuts are that distribution's own TERCILES – **p33 = 79 places, p67 = 257** – and they
+     are the pair that makes all three rungs genuinely occur: **33.1% / 33.5% / 33.4%** of past-peak
+     weeks. Every round-numbered pair collapses a rung instead: 10/40 → 10.1 / 12.6 / 77.3,
+     20/80 → 19.0 / 14.6 / 66.4, 25/100 → 20.0 / 19.4 / 60.6, 50/150 → 23.7 / 22.3 / 54.0. The
+     per-BANKED-SEASON view (one row per career-season, n 445, so a long career cannot outvote a
+     short one) puts its own terciles at 79 and 273 – the same answer from the unit that weights
+     differently. `--dump` writes the sample, so the pair can be re-cut without walking again.
+
+  Evidence. `tests/r39-coach-short.test.ts` gained a rotation describe and a ladder describe: the
+  CLOCK (thirds pinned as literals, the phase repeating every season, the off-season inside LATE,
+  17/18/17 weeks); the MAPPING, swept over all 52 weeks of a world where all three variants are
+  true; the FALLTHROUGH walked row by row by removing the fact each phase would rather have; «a
+  variant is never shown without its number», swept over six history shapes x 52 weeks; STABILITY
+  (two calls agree, 100 calls leave `rngMain` byte-identical, and a re-derived `toSnapshot` says the
+  same thing); HIS ASK AS A MEASUREMENT – the set of distinct sentences one career's plate shows
+  across a season is 3, and the GROWING plate's set over the same walk is exactly 1, so the rotation
+  cannot leak into the band read; and the ladder's two edges from both sides plus a monotone walk
+  over 1..800 places that also proves all three rungs occur. Mounted: r39-decline-surfaces renders
+  all three phases off one career (3 distinct strings, each equal to the snapshot's own field, with
+  the long clauses still barred from Home in every phase), its colour arm now measures accent/600
+  through the real cascade on all THREE decline phases as well as the growing read, and #13c's
+  singular is pinned on the RENDERED plate; r38-decline-voice pins the rank subtraction on Home
+  again («she's down 50 places») beside the long sentence's own. Every A2 arm whose expected string
+  legitimately moved carries a ⚠ note naming its week – none deleted, and two grew: the partition
+  arm now sweeps all 52 weeks and bars «she's» as well as «Past her peak» from a growing plate, and
+  the #13c year arm pins both lengths instead of one. Mutation-verified four ways, each red on its
+  own arms alone and restored byte-exact: early/late rows swapped (2 unit + 3 mounted arms red);
+  the early row cut to `['fell']` (the fallthrough-order arm red); the year clause made
+  unconditional (the truth sweep red); the measured 79 moved to 5 (the ladder-edge arm red).
+  Final: unit green (bulk 4,424 + heavy 498), component 1651/1651, `vue-tsc -b --force` clean,
+  `check:tools` clean, pins:check ok (3/3 baseline), engine-purity ok, tools registry regenerated.
+  ⚠ The first full unit run was red on 12 files and only FIVE of them were real – the template-copy
+  rule, because a draft of Home's template comment quoted him in Cyrillic and Cyrillic is
+  script-block-only there (fixed; the quote lives on the computed). The other seven were 20 s
+  timeouts at load 20, and re-run on a quiet machine the same shard was green in 160 s – the
+  contention hazard CLAUDE.md records, caught by its own tell (the failing set was assertion-free).
+
 - [>] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
   выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и

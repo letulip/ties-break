@@ -21,6 +21,15 @@
 // ALONE – and a GROWING career's headroom band in 3-5 words the rest of the career. Exactly one of
 // the two reads at a time; the engine-side derivation pins live in tests/r39-coach-short.test.ts.
 //
+// ⚠⚠ AND RE-AIMED AGAIN BY THE SECOND REOPEN (owner, 08.09, on the static sentence that produced):
+// «слушай, а можно же чередовать как раз на спаде эти фразочки … «she's down N places» в начале
+// сезона, например или в конце наоборот, «she's below her best» … это даст живости и вариативности,
+// уберет статичность». The DECLINE half of the plate now rotates on the season's own third – early
+// his year clause, late his below-best ladder, mid the clause he kept – so every arm here that
+// wants one particular sentence NAMES its week, and the guards that hold in every phase (no long
+// clause on Home, no verdict on a child, the plate's colour) are swept across all three. The
+// GROWING half is untouched. Nothing was deleted; the ⚠ notes on each arm say what moved and why.
+//
 // ⚠ EVERY COPY ASSERTION IS READ AS RENDERED off a mounted component, r38-decline-voice's rule; the
 // engine-level arms (#13c, the short wording) read the same functions the snapshot wires.
 import { describe, it, expect, beforeEach } from 'vitest'
@@ -77,11 +86,24 @@ function season(seasonIndex: number, wtaRank: number | null): SeasonHistoryEntry
 }
 
 /** r38-decline-voice's fixture shape: a career past its peak, with the ranks under the test's own
- *  hand. `coachTier` decides whether the market list has a `current` card to carry the sentence. */
-function pastPeakWorld(opts: { seasons: SeasonHistoryEntry[]; share?: number; ageYears?: number; coachTier?: 'middle' | 'self' }): WorldState {
+ *  hand. `coachTier` decides whether the market list has a `current` card to carry the sentence.
+ *
+ *  ⚠⚠ `seasonWeek` JOINED THE FIXTURE ON THE 08.09 RE-REOPEN – Home's plate rotates on where the
+ *  week sits in its season, so an arm that wants one particular sentence has to name its phase.
+ *  `(years - 14) * 52` is a whole number of seasons, so the default is season-week 0 = the EARLY
+ *  third. The market list's LONG sentence does not rotate, so #2a's arms below name nothing. */
+const MID_SEASON_WEEK = 20
+const LATE_SEASON_WEEK = 51
+function pastPeakWorld(opts: {
+  seasons: SeasonHistoryEntry[]
+  share?: number
+  ageYears?: number
+  coachTier?: 'middle' | 'self'
+  seasonWeek?: number
+}): WorldState {
   const world = createWorld('r39-surfaces', { ...DEFAULT_PROFILE, coachTier: opts.coachTier ?? 'middle' })
   const years = opts.ageYears ?? 35
-  world.week = Math.round((years - 14) * 52)
+  world.week = Math.round((years - 14) * 52) + (opts.seasonWeek ?? 0)
   world.peakPhysical = physicalMean(world.skills) / (opts.share ?? 0.8)
   world.seasonHistory = opts.seasons
   return world
@@ -103,7 +125,10 @@ async function mountMarketCoaches(world: WorldState) {
   return wrapper
 }
 
-const PAST_PEAK = () => pastPeakWorld({ seasons: [season(16, 20), season(19, 68), season(20, 125)] })
+/** All three decline variants true at once: s19 #68 → s20 #125 is a 57-place year, and the career
+ *  best #20 is 105 places up. The default week is season-week 0 – the early third. */
+const PAST_PEAK = (seasonWeek = 0) =>
+  pastPeakWorld({ seasons: [season(16, 20), season(19, 68), season(20, 125)], seasonWeek })
 
 describe('round 39 #2a – the long sentence lives on the current coach card in the list', () => {
   beforeEach(() => setActivePinia(createPinia()))
@@ -156,26 +181,66 @@ describe('round 39 #2a – the long sentence lives on the current coach card in 
 describe('round 39 #2b – Home keeps the short plate, in the old ceiling plate treatment', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐⭐ THE ITEM: past her peak the plate is the seasons clause the owner kept, and nothing longer', () => {
+  it('⭐⭐ THE ITEM: mid-season the plate is the seasons clause, and nothing longer (⚠ re-aimed: MID)', () => {
     // ⚠ RE-AIMED 08.09: wave A's draft rendered «down 57 places on the year» here and the owner
     // ruled the rank arms off Home – «остальное всё пусть на карточке тренера живет, может быть
     // разве что – about 4 seasons left еще можно оставить». The fixture still FELL 57 places on
     // the year, so a plate that reaches for the rank fact goes red below, not merely different.
-    const world = PAST_PEAK()
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY THE RE-REOPEN (08.09) AND THE GUARD IS INTACT – it names its week now.
+    // He asked the plate to rotate («чередовать … уберет статичность»), and the clause he kept holds
+    // the MIDDLE third; the long form's tells – the body clause and the LONG rank clause – are still
+    // barred from Home in every phase, which is what the arm below the rotation one sweeps.
+    const world = PAST_PEAK(MID_SEASON_WEEK)
     const snapshot = toSnapshot(world)
     const wrapper = mountHome(world)
     const plate = wrapper.find('.coach-room-short')
     expect(plate.exists(), 'no short plate on Home').toBe(true)
     expect(plate.text().replace(/\s+/g, ' ').trim()).toBe(snapshot.coachRoomShort.replace(/\s+/g, ' ').trim())
     expect(plate.text()).toMatch(/^Past her peak – about \d+ seasons? left$/)
-    // the rank clauses live on the coach card's long sentence ALONE now
-    expect(plate.text()).not.toContain('down 57 places')
-    expect(plate.text()).not.toContain('below her best')
+    // the LONG rank clauses live on the coach card's long sentence ALONE, in every phase
+    expect(plate.text()).not.toContain('down 57 places on the year')
+    expect(plate.text()).not.toContain('places below her best season')
     // the LONG sentence's tell – the body clause – may not be on Home any more (#2a)
     expect(wrapper.find('.coach-decline').exists(), 'the round-38 long paragraph is still rendered').toBe(false)
     expect(wrapper.get('.coach-card').text()).not.toContain('more seasons in it')
     expect(wrapper.get('.coach-card').text()).not.toContain('places')
     wrapper.unmount()
+  })
+
+  it('⭐⭐⭐ THE RE-REOPEN, AS RENDERED: the plate says three different things across the season', () => {
+    // The owner, 08.09, on the single sentence wave A2 shipped: «слушай, а можно же чередовать как
+    // раз на спаде эти фразочки … «she's down N places» в начале сезона, например или в конце
+    // наоборот, «she's below her best» … это даст живости и вариативности, уберет статичность».
+    // The engine-side sweep is tests/r39-coach-short.test.ts; what this arm proves is that HOME
+    // renders whichever sentence the engine chose, at three weeks of one career.
+    const seen: string[] = []
+    for (const [phase, sw] of [
+      ['early', 0],
+      ['mid', MID_SEASON_WEEK],
+      ['late', LATE_SEASON_WEEK],
+    ] as const) {
+      setActivePinia(createPinia())
+      const world = PAST_PEAK(sw)
+      const snapshot = toSnapshot(world)
+      const wrapper = mountHome(world)
+      const plate = wrapper.find('.coach-room-short')
+      expect(plate.exists(), `${phase}: no plate`).toBe(true)
+      const text = plate.text().replace(/\s+/g, ' ').trim()
+      // the screen prints the engine's own field and adds no condition of its own
+      expect(text, `${phase}: the screen and the engine disagree`).toBe(snapshot.coachRoomShort.replace(/\s+/g, ' ').trim())
+      seen.push(text)
+      // whichever sentence it is, the long form's tells stay off Home in every phase
+      expect(wrapper.get('.coach-card').text(), `${phase}: the body clause is on Home`).not.toContain('more seasons in it')
+      expect(wrapper.get('.coach-card').text(), `${phase}: the long year clause is on Home`).not.toContain('on the year')
+      expect(wrapper.find('.coach-decline').exists(), `${phase}: the round-38 paragraph came back`).toBe(false)
+      wrapper.unmount()
+    }
+    // HIS ASK, AS RENDERED: not one sentence three times.
+    expect(new Set(seen).size, `the plate is still static: ${seen.join(' | ')}`).toBe(3)
+    expect(seen[0], 'early is not his year clause').toBe("she's down 57 places")
+    expect(seen[1], 'mid is not the clause he kept').toMatch(/^Past her peak – about \d+ seasons? left$/)
+    expect(seen[2], 'late is not his below-best clause').toMatch(/^she's (below|far below|way below) her best$/)
   })
 
   it('⭐ ...with the colour class APPLIED through the real cascade – the plate is accent, weight 600, on BOTH reads', () => {
@@ -186,9 +251,14 @@ describe('round 39 #2b – Home keeps the short plate, in the old ceiling plate 
     // birthday-dialog.test.ts records; an off-document mount computes color as ''.
     // ⚠ RE-AIMED 08.09: the plate carries either read now, so BOTH states are measured – the
     // renamed selector missing from either the template or the stylesheet ships grey and fails here.
+    // ⚠ WIDENED BY THE RE-REOPEN: every phase of the rotation is measured, because «яркое» is about
+    // the plate and not about which of his sentences is in it – a variant rendered outside the
+    // plate's own element would read grey and pass the string arms above.
     const growing = createWorld('r39-colour-young', { ...DEFAULT_PROFILE, coachTier: 'middle' })
     for (const [state, world] of [
-      ['declining', PAST_PEAK()],
+      ['declining (early)', PAST_PEAK(0)],
+      ['declining (mid)', PAST_PEAK(MID_SEASON_WEEK)],
+      ['declining (late)', PAST_PEAK(LATE_SEASON_WEEK)],
       ['growing', growing],
     ] as const) {
       setActivePinia(createPinia())
@@ -234,14 +304,17 @@ describe('round 39 #2b – Home keeps the short plate, in the old ceiling plate 
     wrapper.unmount()
   })
 
-  it('⚠ the short follows the long note\'s own seasons figure – one derivation under both (⚠ re-aimed 08.09)', () => {
+  it('⚠ the short follows the long note\'s own seasons figure – one derivation under both (⚠ re-aimed twice)', () => {
     // ⚠ RE-AIMED 08.09: wave A's three draft arms compressed three different clauses, and the owner
     // kept ONE – «может быть разве что – about 4 seasons left еще можно оставить». All three worlds
     // that used to pick three arms now read the seasons clause, with the long sentence keeping its
     // three arms on the coach card; the full engine-side sweep is tests/r39-coach-short.test.ts.
-    const fell = pastPeakWorld({ seasons: [season(19, 68), season(20, 125)] })
-    const belowBest = pastPeakWorld({ seasons: [season(16, 20), season(20, 125)] })
-    const atBest = pastPeakWorld({ seasons: [season(20, 30)] })
+    // ⚠⚠ RE-AIMED AGAIN BY THE RE-REOPEN: MID season, where the seasons clause is the phase's own
+    // variant. The claim – that the plate's N is the LONG sentence's N, one derivation under both –
+    // is unchanged and is what the arm still measures.
+    const fell = pastPeakWorld({ seasons: [season(19, 68), season(20, 125)], seasonWeek: MID_SEASON_WEEK })
+    const belowBest = pastPeakWorld({ seasons: [season(16, 20), season(20, 125)], seasonWeek: MID_SEASON_WEEK })
+    const atBest = pastPeakWorld({ seasons: [season(20, 30)], seasonWeek: MID_SEASON_WEEK })
     for (const world of [fell, belowBest, atBest]) {
       const long = coachDeclineNote(world).match(/about (\d+) more seasons? in it/)
       expect(long).not.toBeNull()
@@ -258,19 +331,26 @@ describe('round 39 #2b – Home keeps the short plate, in the old ceiling plate 
 describe('round 39 #13c – «down 1 place», singular, in both rank arms', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐ down 1 place / down 2 places – the year arm', () => {
+  it('⭐ down 1 place / down 2 places – the year arm, in BOTH lengths (⚠ re-aimed twice)', () => {
     // ⚠ RE-AIMED 08.09 (#2b reopen): the SHORT no longer carries the rank clauses at all – they
     // live in the long sentence alone – so the singular pins hold where the words still are, and
     // the short is pinned NOT to reach for the rank fact on exactly the world that has one. The
     // short's own singular («about 1 season left») is pinned in tests/r39-coach-short.test.ts.
+    // ⚠⚠ RE-AIMED AGAIN BY THE RE-REOPEN, AND THE ARM GREW RATHER THAN SHRANK: the year clause is
+    // back on Home in his shorter phrasing («she's down N places») for the EARLY third, so #13c's
+    // singular now has to hold in two places and both are pinned. The mid-season arm keeps the
+    // «no rank fact in the plate» guard exactly where the seasons clause is the engine's answer.
     const one = pastPeakWorld({ seasons: [season(19, 8), season(20, 9)] })
     expect(coachDeclineNote(one)).toContain('down 1 place on the year')
     expect(coachDeclineNote(one)).not.toContain('1 places')
-    expect(coachDeclineShort(one)).not.toContain('place')
-    expect(coachDeclineShort(one)).toMatch(/^Past her peak – about \d+ seasons? left$/)
+    expect(coachDeclineShort(one), 'the short lost #13c\'s singular').toBe("she's down 1 place")
+    const oneMid = pastPeakWorld({ seasons: [season(19, 8), season(20, 9)], seasonWeek: MID_SEASON_WEEK })
+    expect(coachDeclineShort(oneMid)).not.toContain('place')
+    expect(coachDeclineShort(oneMid)).toMatch(/^Past her peak – about \d+ seasons? left$/)
     const two = pastPeakWorld({ seasons: [season(19, 8), season(20, 10)] })
     expect(coachDeclineNote(two)).toContain('down 2 places on the year')
-    expect(coachDeclineShort(two)).not.toContain('places')
+    expect(coachDeclineShort(two)).toBe("she's down 2 places")
+    expect(coachDeclineShort(pastPeakWorld({ seasons: [season(19, 8), season(20, 10)], seasonWeek: MID_SEASON_WEEK }))).not.toContain('places')
   })
 
   it('⚠ ...and the best-season arm, which had the identical defect one clause over', () => {
@@ -278,7 +358,15 @@ describe('round 39 #13c – «down 1 place», singular, in both rank arms', () =
     const one = pastPeakWorld({ seasons: [season(16, 8), season(20, 9)] })
     expect(coachDeclineNote(one)).toContain('1 place below her best season')
     expect(coachDeclineNote(one)).not.toContain('1 places')
-    // ⚠ re-aimed 08.09: the best-season clause is the card's alone now – the short stays seasons-only.
-    expect(coachDeclineShort(one)).not.toContain('below her best')
+    // ⚠ re-aimed 08.09: the LONG best-season clause is the card's alone – Home's own below-best
+    // phrasing is his digitless one, so #13c cannot reach it and the guard is that no COUNT of
+    // places ever appears beside «below her best» on the plate.
+    const late = pastPeakWorld({ seasons: [season(16, 8), season(20, 9)], seasonWeek: LATE_SEASON_WEEK })
+    expect(coachDeclineShort(late)).toMatch(/^she's (below|far below|way below) her best$/)
+    expect(coachDeclineShort(late), 'a count leaked into the plate\'s below-best clause').not.toMatch(/\d/)
+    // ...and mid-season the clause is not reached for at all.
+    expect(coachDeclineShort(pastPeakWorld({ seasons: [season(16, 8), season(20, 9)], seasonWeek: MID_SEASON_WEEK }))).not.toContain(
+      'below her best',
+    )
   })
 })

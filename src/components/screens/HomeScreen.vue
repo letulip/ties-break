@@ -521,10 +521,19 @@ const coachQuote = computed(() =>
  *  drafts: «Past her peak хорошо и коротко, остальное всё пусть на карточке тренера живет, может
  *  быть разве что – about 4 seasons left еще можно оставить. И до этого были фразочки про то, что
  *  ей недалеко до потолка, что потолок достигнут и прочее, вот это тоже всё-таки можно показывать
- *  буквально в 3-5 слов на home». So `Snapshot.coachRoomShort` carries the seasons clause past her
+ *  буквально в 3-5 слов на home». So `Snapshot.coachRoomShort` carries the decline read past her
  *  peak and her headroom band – compressed to 3-5 words – while she grows; ONE field, so this
  *  template cannot show both reads or invent one, and '' where the engine says nothing (the
- *  round-34 child guarantee at its data-level core). */
+ *  round-34 child guarantee at its data-level core).
+ *
+ *  ⭐⭐ AND THE DECLINE HALF ROTATES WITH THE SEASON (owner again, 08.09, on the single static
+ *  sentence A2 shipped: «можно же чередовать как раз на спаде эти фразочки … это даст живости и
+ *  вариативности, уберет статичность»). Early in the season the plate says «she's down N places»,
+ *  late in it the below-her-best ladder, and the middle keeps «Past her peak – about N seasons
+ *  left», which is also what every week neither rank fact is true on falls back to. The whole
+ *  rotation is the ENGINE's (`declinePhaseOf`, off the ledger's season clock – deterministic and
+ *  drawless): this screen still prints one field and adds no condition of its own, so which
+ *  sentence appears is not a thing the template can get wrong. */
 const coachRoomShort = computed(() => game.snapshot?.coachRoomShort ?? '')
 
 // ⚠⚠ ROUND 34 #2a – THE CEILING READ IS NO LONGER ON THIS SCREEN, and the `roomBand` computed that
@@ -1531,15 +1540,16 @@ async function leaveCollege(): Promise<void> {
                  exactly the wording change invariant 4 forbids); what sits below since round 39 #2b
                  is there by the owner's own 08.09 word, not by a filler. -->
             <!-- ⭐⭐ ROUND 39 #2b (REOPENED 08.09) – THE SHORT PLATE, EITHER READ, ONE AT A TIME, in
-                 the old ceiling plate's place and treatment. Past her peak it is the seasons clause
-                 the owner kept of wave A's three decline drafts; on a growing career it is her
-                 headroom band in the 3-5 words he sized – the ceiling read returned to this exact
-                 slot by his own word (quoted on the computed in the script block, where Cyrillic is
-                 allowed). The LONG sentences render elsewhere: the decline sentence on the current
-                 coach's card in the market list (#2a), the band's argument above that list. ONE
-                 snapshot field carries whichever read exists and '' where the engine says nothing,
-                 so an edit to this template can neither show both nor put a verdict on a child –
-                 round 38 #6d's data-level guarantee, inherited unchanged. -->
+                 the old ceiling plate's place and treatment. Past her peak it is the decline read,
+                 which ROTATES with the season on his second 08.09 word (quoted in full on the
+                 computed in the script block, where Cyrillic is allowed – the ask was for liveliness
+                 instead of one static sentence); on a growing career it is her headroom band in the
+                 3-5 words he sized – the ceiling read returned to this exact slot by his own word.
+                 The LONG sentences render elsewhere: the decline sentence on the current coach's
+                 card in the market list (#2a), the band's argument above that list. ONE field carries
+                 whichever read exists and '' where the engine says nothing, so an edit to this
+                 template can neither show both nor put a verdict on a child – round 38 #6d's
+                 data-level guarantee, inherited unchanged. -->
             <p v-if="coachRoomShort" class="coach-room-short">{{ coachRoomShort }}</p>
             <!-- The export's handwritten sign-off, Caveat in lime at 0.72. It is his NAME, so it
                  appears only when there is a him. -->
