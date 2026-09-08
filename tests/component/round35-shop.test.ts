@@ -517,6 +517,11 @@ describe('#5-#9 – the framed rows', () => {
     // буквы» – so the car's half of this arm is re-aimed rather than kept as it was. ⚠ AND THE
     // OTHER HALF OF IT SURVIVES, because it is what stops one item spreading across six families:
     // WATER AND AIR still name what was paid, and a boat is the witness.
+    //
+    // ⚙ ROUND 39 #4 THEN TOOK WATER AND AIR TOO («В яхтах и (подразумеваю) самолётах на уже
+    // купленных тоже убрать…»), so the surviving witness is the BRAND alone – `business` and
+    // `investment` are the two families no round has named. The owned-boat and owned-plane arms
+    // live in r39-owned-shelf-paid.test.ts.
     const world = rich('r35-7-owned')
     buyAsset(world, 'house-first')
     buyAsset(world, 'car-sensible')

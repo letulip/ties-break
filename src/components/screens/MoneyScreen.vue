@@ -932,6 +932,25 @@ const SHOP_FAMILIES: { key: ShopRowView['family']; title: string; note: string }
 function shopRowsOf(family: ShopRowView['family']): ShopRowView[] {
   return shopRows.value.filter((r) => r.family === family)
 }
+// ⭐⭐ ROUND 39 #11 – THE ACADEMY'S ONE FIGURE, because four true lines added up in the head come
+// out wrong. THE OWNER, 08.09: «видимо вторая половина её, но ее не видно, поэтому и был вопрос,
+// т.к. в интерфейсе доход около 17к» – the engine pays $33,169 a week across the four stages and
+// he read the staff rung's $17,385 as the whole academy, because the shelf only ever says the
+// per-rung figures. So the family section gains ONE line: the total.
+//
+// ⚠ THE SUM IS OF THE ROWS' OWN `incomeCents` – the field every card under it prints – so the
+// total and the rungs cannot disagree: same snapshot, same engine arithmetic
+// (`assetWeeklyFamilyIncomeCents`, the figure the till banks), added once here and computed
+// nowhere else. A rung not delivered or not earning is 0 in that field by the engine's own rule,
+// which is what makes «sum of what the cards show» and «sum of the family» the same number.
+//
+// ⚠ THE ACADEMY ALONE. It is the one family on the shelf where several rungs earn at once – the
+// brand is a single rung and every other family earns nothing – so no other section gets a total,
+// and the line draws only while at least one delivered stage is actually earning (`> 0`, the same
+// predicate as the per-rung line: a field of grass and a stage on order say nothing).
+const academyIncomeCents = computed(() =>
+  shopRowsOf('academy').reduce((sum, row) => sum + row.incomeCents, 0),
+)
 /** ⭐ §2 – WHAT AN EMPTY SHELF SAYS: the cheapest thing on it, by name and price. «Never a locked
  *  row, a progress bar or a teaser» – so this is a real object at a real number, and the engine
  *  chose it (`shop.cheapestId`) rather than this screen sorting the rows itself. */
@@ -1721,14 +1740,25 @@ function shopRowArtWide(row: ShopRowView): boolean {
 // what was paid is X - Y, exactly as on a house. ⭐ Nothing is re-worded: the meta simply stops
 // being passed, which is the round 35 mechanism on two more families.
 //
-// ⚠ WATER AND AIR KEEP THEIRS. He named cars and the academy; boats and aeroplanes are not in
-// either sentence, and invariant 4 does not let a proportion spread on its own any more than a word
-// does. That leaves `paid $N` on `investment`, `business`, `boat` and `plane`.
-const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy']
+// ⚠ WATER AND AIR KEPT THEIRS UNTIL ROUND 39 #4. Round 36 could not take them – he had named cars
+// and the academy, boats and aeroplanes were in neither sentence, and invariant 4 does not let a
+// proportion spread on its own any more than a word does. Then he named them, 08.09: «В яхтах и
+// (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись „paid ..."» – the
+// «тоже» is round 36's own change asked for on the two families it deliberately left. The figure
+// survives the same way it did there: an OWNED boat or plane prints «Worth now $X» and the gain
+// line, so what was paid is still X - Y.
+//
+// ⚠ THAT LEAVES `paid $N` ON `investment` AND `business` ONLY – still unnamed, still kept. And the
+// `On order` row (water and air are BUILT to order) keeps its own `paid $N` untouched, as it was
+// under round 36: on that card there is no `Worth now` and no gain line, so the paid figure is the
+// ONLY money on it – removing it there fails the very check that let it go here, and «Ordered, not
+// bought» is the shelf's own word for a rung that is not yet an owned one.
+const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy', 'boat', 'plane']
 /** ⚙ ROUND 35 #7, HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки
  *  убрать совсем, раз прибавка и так видна. – верно.» The `Worth now` row's VALUE has always been
  *  the current price; what goes is the `paid $N` beside it. Round 36 review #12 and #13 add the
- *  cars and the academy to the house he said it of – see the note above. */
+ *  cars and the academy to the house he said it of; round 39 #4 adds the boats and the planes –
+ *  see the note above. */
 function shopRowPaidMeta(row: ShopRowView): string | undefined {
   return SHELF_NO_PAID_META.includes(row.family) ? undefined : `paid ${formatCents(row.paidCents ?? 0)}`
 }
@@ -2677,6 +2707,15 @@ function shopRowCornerAction(row: ShopRowView): boolean {
               </div>
             </div>
           </Card>
+          <!-- ⭐⭐ ROUND 39 #11 – THE FAMILY'S ONE TOTAL, under the rungs it adds up. The owner read
+               the staff rung's weekly figure as the whole academy, because only per-rung figures
+               were on screen; his words and the reasoning are on `academyIncomeCents` in the script
+               block (no Cyrillic in a template). The academy alone gets this line - the one family
+               where several rungs earn at once - and it draws on the per-rung line's own predicate:
+               something delivered is actually earning. -->
+          <p v-if="family.key === 'academy' && academyIncomeCents > 0" class="shop-family-earning">
+            The whole academy brings in {{ formatCents(academyIncomeCents) }} a week right now
+          </p>
         </div>
       </div>
 
@@ -3705,6 +3744,12 @@ function shopRowCornerAction(row: ShopRowView): boolean {
   .shop-family .shop-family-note {
     grid-column: 1 / -1;
   }
+
+  /* ⭐ ROUND 39 #11 – the family total spans like the head and the note do: it is a sentence about
+     the whole shelf row, not a card in it. A separate rule so the pair above keeps its own history. */
+  .shop-family .shop-family-earning {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -4048,6 +4093,17 @@ function shopRowCornerAction(row: ShopRowView): boolean {
    mirror, deliberately – two facts of equal rank, never netted. */
 .shop-row-earning {
   margin: 4px 0 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--money-in);
+}
+
+/* ⭐ ROUND 39 #11 – the family total under the academy's rungs, in the per-rung earning line's own
+   dress: same size, same weight, the app's one green for money arriving. Nothing is invented for
+   it; a total that dressed differently from the lines it adds up would read as a different kind of
+   fact. The 12px above it is the family's own gap. */
+.shop-family-earning {
+  margin: 0;
   font-size: 11.5px;
   font-weight: 700;
   color: var(--money-in);
