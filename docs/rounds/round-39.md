@@ -930,6 +930,28 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   paper that signing ends the running campaign, and name the money it costs. Without the number it is
   a trap; with it, it is the decision he is asking for.
 
+  **HIS RULINGS OF 08.09, AFTER READING THE SIX — wave G2 carries these:**
+  * **The incumbent's letter is a RENEWAL NOTICE, not a fresh pitch** («уведомление о продлении»).
+    ⚠ Still signed by hand: an auto-renewal would delete the decision the whole mechanism exists to
+    create («а игрок уже сам будет решать с кем подписывать»).
+  * **A signed contract NEVER reprices.** He read ruling 2 as touching running deals and it does not:
+    a premium kit deal signed at her peak plays out its whole term at its own terms even at #150 –
+    true today, true for the lifetime letter, and true in the sport. Standing speaks only in the
+    terms of the NEXT letter.
+  * **No rank floor** («пропустим пока»). A signed contract dying on a table fall is a punishment,
+    and it would land exactly when the money is needed most; «мы ни за что не наказываем».
+  * **A missed renewal re-arms each off-season (option A).** ⚠ This is the game's FIRST guaranteed
+    letter, so how often it re-arms is a real question against the house doctrine in
+    `offers.ts#offerChanceFor`: «Nobody is guaranteed a letter, which is what makes letting one
+    expire cost something the game cannot promise to replace… it is gone whether or not the player
+    ever opened it – which is the whole of what makes waiting a real gamble rather than a free
+    option.» Re-arming ONCE PER OFF-SEASON keeps the cost real and proportionate – a missed notice
+    costs a season of kit allowance and travel share, not the career – and does not overturn that
+    doctrine, which a standing always-open letter (option C) would have. `expireOffers` already
+    puts a lapse line in the feed, so the miss is never silent.
+  * **The lifetime letter is exempt and dresses her free for life** – he accepted both framings and
+    took the simpler one.
+
 ## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
 No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
