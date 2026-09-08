@@ -63,7 +63,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   reads a headroom band) – mutation-verified by deleting the card line (2 arms red, restored).
   `r38-decline-voice.test.ts`'s Home arms re-aimed with ⚠ notes.
 
-- [x] **2b. «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
+- [>] **2b. (REOPENED 08.09) «А вот на home хотелось бы увидеть что-то короткое, емкое и яркое (в плане цвета), как
   было до этого про потолок и прочее»** – **build.** Home keeps a SHORT, coloured read. ⚠ The old
   ceiling plate is the shape he is naming; match its length and its colour treatment, not its words.
 
@@ -81,7 +81,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   weight 600, attachTo per birthday-dialog's rule) – mutation-verified by de-accenting the CSS rule
   (red, restored). A growing fourteen-year-old still sees no plate of either length.
 
-- [?] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
+- [>] **3. «У нас все контракты стали на 12 месяцев? Или мне только кажется? Увидел пару штук на 2
   года - лучше. Но мы обсуждали, что на 12 месяцев дают контракты тем, кто только идёт в топ, а чем
   выше - тем дольше. В спорте я видел, что они и на 5, и на 10 лет заключают. А некоторые и
   пожизненно»** – **measure then build.** First measure the actual term distribution by rank on his
@@ -113,6 +113,8 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   letters stay churnable (max 5y at the top), the 8y capstone stands, and a once-per-career LIFETIME
   letter is proposed at legend status. `[?]` waiting on his word.
 
+  **OWNER (08.09): «давай так попробуем, как ты предложил» → wave EF builds the ladder.**
+
 - [x] **4. «В яхтах и (подразумеваю) самолётах на уже купленных тоже убрать с карточки серую надпись
 
   „paid ..."»** – **build.** The `paid …` caption must not show on an owned yacht or plane. He
@@ -134,7 +136,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   green across the five shelf files (r39-owned-shelf-paid, round35-shop, round29-shop-elite,
   shop-tab, round36-review).
 
-- [?] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
+- [>] **5. (REOPENED) «Я завел бренд у Инэс, он за несколько недель стал стоить 22 млн, я его продал. Потом
   купил новый за 250к, а он снова за несколько недель уже 30+ стоит. Кажется надо ещё что-то с этой
   механикой подумать»** – **REOPENED against round 38 #15/#16.**
 
@@ -175,7 +177,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   instead of $1,844,174, half-value at a year. Alternative D (the sold brand keeps living and eats
   the new one's reach) named as the richer, heavier road. `[?]` waiting on his choice.
 
-- [?] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
+  **OWNER (08.09): «давай попробуем, а D можно в беклог развернуто записать» → wave EF builds A+C;
+  D is written out in docs/now-next-later.md's Later.** He also refined the observation: «кажется
+  что у меня свежекупленный бренд возвращался к своей стоимости уже в течение 5 недель» – at the
+  13.3-week floor the 5-week point is $8.2M of $35.9M, so the feel was right in kind.
+
+- [~] **6. «2 года подряд спонсор с духами не пришёл»** – **measure.** A named sponsor category
   absent two seasons running. Is the perfume slot gated (rank, fame, exclusivity) or is it draw
   luck? Measure the arrival rate before touching anything.
 
@@ -196,6 +203,8 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   either that die or weeks where her live rank sat 11-15 (the save keeps no live-rank history, so
   the two cannot be told apart retrospectively). Remedy options in the report: a pity timer
   (guaranteed letter within 26 weeks of entering the band), a wider gate, or leave it. `[?]`.
+
+  **OWNER (08.09): «окей, пусть пока без изменений останется, я еще понаблюдаю» → closed, observed.**
 
 - [~] **7. «Странно, что после шлема в 40м году она не смогла взять больше ни одного»** –
   **measure.** One Slam in season 40 and never again. Read her actual title history and the field
@@ -233,7 +242,14 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   peak. The one anomaly is the OLD window's wta1000 over-performance (+14.3 wins), which the neutral
   probe (max condition, hard, today's skills) cannot attribute – flagged, not diagnosed.
 
-- [?] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
+  **OWNER (08.09):** «хорошо, что формула работает как задумано… Разве что можно в беклог отношений
+  записать, что-то вроде возможности работать с психологом в плане хладнокровия (тот же Федерер…
+  поработал над собой, стал лучше), как раз можно будет у психолога делать выбор над чем работать в
+  ближайший год» → recorded in the Later backlog beside the morale/relationship layer. And on the
+  slam itself: «мне просто было странно, что Шлем случился на пике топовой спортсменки всего 1 раз,
+  но может быть это окей для спорта».
+
+- [~] **8. «Meridian sport прислал контракт за 300к для #7»** – **measure then build.** A world #7
   offered $300k reads as insulting. Measure the offer curve against rank and check whether the top
   of the ladder is being underpaid.
 
@@ -258,6 +274,10 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   The $300,000 letters landed when her LIVE rank had slipped out of the top ten; «для #7» was the
   end-of-PREVIOUS-season rank. Working as ruled; the felt defect is the 3.3x cliff at the 10/11
   boundary. Remedy options in the report (tenure-buffered band, an 11-25 half-band, or leave). `[?]`.
+
+  **OWNER (08.09): «может сделать более плавные ступеньки всё-таки? хотя возможно наша новая система
+  контрактов и подправит ситуацию, давай так пока оставим, как есть» → closed for now; re-read after
+  the term ladder ships.**
 
 - [x] **9. «Опять just one day (REOPENED against round 26 #9). Я просил сделать много вариантов подарков для разных возрастных
 
@@ -354,7 +374,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   ranks TODAY, not at match time, so an old loss may have been to someone then-strong – which is why
   the recent window matters most, and there it is WORSE (55%), not better.
 
-- [?] **11a. «Бренд за 33м выглядит как имба, особенно на фоне академии за 17м совокупно, но может
+- [~] **11a. «Бренд за 33м выглядит как имба, особенно на фоне академии за 17м совокупно, но может
   быть я придираюсь»** – **measure then ask.** The two shelves' valuations against what each one
   earns. Related to 5: the same brand, at the top of its ramp.
 
@@ -381,6 +401,17 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   and on the sum itself: «убираем и сумму и тест, игрок справится 3 числа сложить». The line and its
   test are reverted; the ANSWER above is the whole deliverable. The lesson joins invariant 4's
   family: an observation about the screen licenses an explanation, never an element.
+
+- [~] **16. «просканируй последние сейвы Инэс и Алисы… были ли у её соперниц сходы по травмам в
+  матчах, если у нас есть эта информация вообще. И если были, то с какой периодичностью? А по
+  сравнению с ней самой?»** – **answer, measured (`--retire`).** The record exists per match
+  (`MatchRecord.retiredId`). Her logged matches: **Ines 3 of 247 = 1.21%** (she 1× w783, opponents
+  2× w750/w769), **Alice 3 of 226 = 1.33%** (she 2× w1006/w1068, opponents 1× w996) – against the
+  calibrated 2.73% either-side anchor (ITF corpus, PLOS ONE). ⚠ Two honest caveats: the diary logs
+  ONLY her matches and prunes old ones, so the denominator is the retained set; and **AI-vs-AI
+  matches resolve as one Bernoulli against the closed form – a rival cannot retire in a match she
+  is not part of.** So «сходы у соперниц в их собственных матчах» do not exist mechanically; the
+  door exists only where the point loop runs, which is her court.
   и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
   **answer first, then build if it confirms.** He is asking how it works before asking for a change.
   Read what a plane actually does to the weekly flight cost today; if it already zeroes it, the card
@@ -461,7 +492,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
 - [~] **13b. «Но очень хорошо, что тренер стал обращать внимание, что перформанс падает»** –
   **answer, nothing to build.** Round 38's decline note landing well. Recorded so it is not lost.
 
-- [?] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
+- [>] **14a. «„She said it in the car. Three seasons on the professional table and it has not moved…"
   - одно и то же опять, давай какую-то вариативность в этих фразах сделаем, какие варианты?»** –
   **build + ask.** The retirement-thought copy repeats verbatim. He is asking BOTH for variety and
   what the variants should be, so the variants come back to him as a choice before they ship.
@@ -477,12 +508,19 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   (K=4 suggested), with the escalating ledes as the warning – plus a Home line after each
   one-more-year so the state is visible in-season. `[?]` copy and K wait on him.
 
-- [?] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
+  **OWNER (08.09): «интересный механизм, давай только подумаем когда его реально включать, потому
+  что сейчас получается она буквально на пике карьеры начинает говорить, что "всё". Может быть это
+  тоже на какие-то показатели завязать? например хладнокровие+выносливость или вроде того, тогда это
+  будет менее предсказуемо, более вариативно и живо» → MINE: measure candidate triggers
+  (composure+stamina composites, physical share, plateau x decline overlap) across preset careers,
+  bring back WHEN each would fire, then the copy and K ship together.**
+
+- [>] **14b. «И как-то надо подсветить, когда она сама дальше вообще не готова играть продолжать.
   Какой-то механизм для этого»** – **ask then build.** Today the line always ends «She will keep
   playing if you want her to». He wants a state where she genuinely will not, and a signal for it.
   That is a mechanic, not copy – sharpen it to a choice before building.
 
-- [x] **15a. «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
+- [>] **15a. (EXTENDED 08.09) «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё нормально
   и ребёнок выживет и вернётся в строй»** – **build.** A first-time player reads a child's injury as
   a catastrophe. The prologue must say, in its own voice, that she recovers.
 
@@ -529,6 +567,12 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   mutation (restCost reverted to the old sentence) → both assertions red, restored. Together with
   15a's line, the injury moment's warmth pass is: the reassurance on the prologue popup, the hug on
   rest – and nothing else reworded without his word.
+
+  **OWNER (08.09) on the finding and the warmth: «да, вот в этом и дело может быть, мне жена сказала
+  "мой ребенок травмировался, а я даже ничего не поняла, ни обнять, ни понять что дальше". Надо
+  как-то это обыграть, если травма вообще случилась. Тёплые варианты ок - делаем» → wave D2: the
+  prologue injury moment becomes a beat the parent can hold (hug + what happens next), and the
+  career InjuryStopDialog takes the approved warm line.**
 
 ---
 

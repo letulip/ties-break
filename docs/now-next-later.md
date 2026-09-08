@@ -142,6 +142,24 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
 
 ## Later – needs the owner's word, not an engineer's
 
+**The sold brand keeps living (round 39 #5, option D – owner: «D можно в беклог развернуто
+записать», 08.09).** The shipped fix (A+C) prices a repeat founding at the market and slows the
+ramp; D was the richer road: a sold merch brand does not vanish – the buyer operates it, and for
+~two years it EATS the new brand's reach (a decaying shadow: the new founding's derived worth is
+discounted by the sold brand's share of her attention until the market forgets). It closes the
+sell-and-rebuy conveyor by fiction instead of by price tag, gives the shelf a visible competitor
+row, and makes «продать бренд» a real decision with a cost in the world rather than a ticket
+price. Build cost: a persisted shadow (schema move), a worth discount in brandReachOf, and a card.
+
+**A psychologist for her head (round 39 #7 tail, owner 08.09, for the morale/relationship layer):**
+«можно в беклог отношений записать, что-то вроде возможности работать с психологом в плане
+хладнокровия (тот же Федерер вроде бы в какой-то момент осознал, что психует много и поработал над
+собой, стал лучше), как раз можно будет у психолога делать выбор над чем работать в ближайший год
+на выбор игроку.» The measured hole it answers: composure is the one attribute her build left at
+50.6 while the field's 26-50 band averages 57.7 – and composure does not decline, so work on it
+compounds. Shape: a staff seat like the masseur's, one focus per year chosen by the player, bounded
+gains, morale-layer adjacency.
+
 - **The album needs a different SHAPE, not a longer one** – «Текущий слайдер из 7 не подходит для
   объемной и насыщенной карьеры, я хочу концептуально другое». The seven-polaroid pager was sized for
   a 14→18 career; the game now runs thirteen-plus seasons and is adding property he is drawing art

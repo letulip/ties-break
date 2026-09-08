@@ -318,3 +318,30 @@ if (args.includes('--audit')) {
   }
   console.log('  ' + 'HER'.padEnd(9) + keys.map((k) => (w.skills as any)[k].toFixed(1).padStart(8)).join(''))
 }
+
+// #16 (owner, 08.09) – IN-MATCH RETIREMENTS ON HIS OWN CAREERS: hers against her opponents'.
+// ⚠ WHAT THE SAVE CAN AND CANNOT SAY: the diary logs HER matches only, so this counts retirements
+// in matches SHE played. Nothing here can see an AI-vs-AI retirement – that sample does not exist
+// on a save. The design anchor to hold the numbers against: RETIRE_K is calibrated so ~2.73% of
+// matches end in a retirement by EITHER side (match/point.ts, PLOS ONE corpus).
+if (args.includes('--retire')) {
+  const any = world as Record<string, any>
+  const ms = (any.events as any[]).filter((e) => e.type === 'match' && e.match)
+  let hers = 0, theirs = 0
+  const rows: string[] = []
+  for (const e of ms) {
+    const r = e.match.retiredId
+    if (r === undefined || r === null) continue
+    const mine = r === 'kid'
+    if (mine) hers++
+    else theirs++
+    rows.push(`      w${e.week}  ${mine ? 'SHE stopped' : 'opponent stopped'}  ${String(e.text).slice(0, 78)}`)
+  }
+  const n = ms.length
+  const total = hers + theirs
+  console.log(`  logged matches ${n} (weeks ${ms[0]?.week}..${ms[ms.length - 1]?.week})`)
+  console.log(`  retirements: ${total} of ${n} = ${((total / Math.max(1, n)) * 100).toFixed(2)}% of her matches (design anchor 2.73% either side)`)
+  console.log(`    hers      ${hers}  (${((hers / Math.max(1, n)) * 100).toFixed(2)}% of matches)`)
+  console.log(`    opponents ${theirs}  (${((theirs / Math.max(1, n)) * 100).toFixed(2)}% of matches)`)
+  for (const r of rows) console.log(r)
+}
