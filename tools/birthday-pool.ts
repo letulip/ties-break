@@ -513,7 +513,7 @@ if (!CENSUS_ONLY) {
   // save the asked and given streams coincide on all 13 birthdays. Separate careers (offset seeds)
   // so the ids[0] sections above keep their round-26/27 comparability.
   const grant: BirthdayRow[] = []
-  for (let k = 0; k < CAREERS; k++) walkTour(PRESETS[k % PRESETS.length], 2000 + k, grant, (ids, asked) => asked)
+  for (let k = 0; k < CAREERS; k++) walkTour(PRESETS[k % PRESETS.length], 2000 + k, grant, (_ids, asked) => asked)
   careerScope(grant, '5. ROUND 39 #9 – CAREER-SCOPE REPEATS, a granting parent (asked === given, his own shape)')
   careerScope(tour, '6. ROUND 39 #9 – the same census over the ids[0] walk of section 2')
   console.log(`\n  (${((Date.now() - t0) / 1000).toFixed(0)}s)`)
