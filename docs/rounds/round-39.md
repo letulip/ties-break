@@ -412,6 +412,11 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   matches resolve as one Bernoulli against the closed form – a rival cannot retire in a match she
   is not part of.** So «сходы у соперниц в их собственных матчах» do not exist mechanically; the
   door exists only where the point loop runs, which is her court.
+
+  **OWNER (08.09): «механизм новостей про сходы соперниц запиши в беклог пожалуйста»** → written out
+  in `docs/now-next-later.md`'s Later, with the cheap shape (one sub-stream Bernoulli on the
+  closed-form path, resolved after the winner) separated from the expensive half (what a retirement
+  should MEAN for a rival's body and ranking, which the game does not model).
   и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
   **answer first, then build if it confirms.** He is asking how it works before asking for a change.
   Read what a plane actually does to the weekly flight cost today; if it already zeroes it, the card

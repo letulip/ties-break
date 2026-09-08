@@ -142,6 +142,25 @@ Each of these is already diagnosed in writing and none is waiting on a ruling.
 
 ## Later – needs the owner's word, not an engineer's
 
+**News that a rival went out hurt (round 39 #16, owner: «механизм новостей про сходы соперниц запиши
+в беклог», 08.09).** Today the tour cannot report one, and the reason is structural rather than an
+oversight: **a rival cannot retire in a match she is not part of.** `retireHazard` is integrated
+per point inside the point loop, and the point loop runs only where the player's kid is on court –
+every AI-vs-AI match is one Bernoulli against the closed form (`match/point.ts`, and
+`season/tournament.ts` writes `retiredId` only from a played result). Measured on the owner's two
+long careers with `tools/r39-save-read.ts --retire`: **Ines 3 retirements in 247 logged matches
+(1.21%), Alice 3 in 226 (1.33%)** – every one of them in a match SHE played, against the calibrated
+**2.73%** either-side anchor (women's ITF corpus, PLOS ONE 2024; `RETIRE_K`).
+
+The cheap shape, if he wants it: give the closed-form path its own retirement Bernoulli at the same
+calibrated rate – one draw on a purpose-scoped sub-stream (`rngFromSeed`, never MAIN, invariant 2),
+resolved AFTER the winner so it never changes who advanced, writing `retiredId` on the AI result the
+same field a played match already writes. That alone buys the feed its line and costs nothing else.
+⚠ The expensive half is what a retirement should MEAN for a rival – weeks out, a ranking that slides,
+a name that stops appearing in draws – which is a rival-body model the game does not have and should
+not grow by accident. Ship the reporting half first, or not at all; do not let the news imply a
+consequence the world will not deliver.
+
 **The sold brand keeps living (round 39 #5, option D – owner: «D можно в беклог развернуто
 записать», 08.09).** The shipped fix (A+C) prices a repeat founding at the market and slows the
 ramp; D was the richer road: a sold merch brand does not vanish – the buyer operates it, and for
