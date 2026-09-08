@@ -100,6 +100,32 @@ import {
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
 
+const props = withDefaults(
+  defineProps<{
+    /** ⭐⭐ ROUND 40 #7 B – THE PROLOGUE'S SEED, SUPPLIED FROM OUTSIDE, and it is the career's own
+     *  input one level up. `game.newCareer(seed, …)` has always taken a seed and fallen back to a
+     *  fresh random one when it is blank; this is the same argument in the same shape, so the walk
+     *  that happens BEFORE a career exists can be pinned the same way the career already could.
+     *
+     *  ⚠ WHY IT HAD TO EXIST: the promo recorder had no way in, so it patched `Math.random` around
+     *  the mount – which pinned THIS seed and left the career's own random, and the film walked one
+     *  childhood into two different girls under a caption reading «Same hidden potential». A tool
+     *  that has to reach inside a global to be deterministic will eventually pin the wrong half.
+     *
+     *  ⚠ A PROP AND NOT A QUERY PARAMETER, and that is the app's own precedent rather than a
+     *  preference: `PrologueLocalOpen.vue` already takes this exact seed as a prop from this
+     *  component, and `e2e/careerAt.ts` records the house rule the other way round – «NOTHING HERE
+     *  IS A TEST HOOK IN THE PRODUCT … no query parameter, no exposed binding, no branch in src/».
+     *  So the seam is a prop, and nothing about the shipped app's URLs, storage or bundle moves.
+     *
+     *  ⚠ ABSENT IS THE SHIPPED BEHAVIOUR, BYTE FOR BYTE. `App.vue` passes nothing, so this is `''`,
+     *  so `initialSeed()` calls `freshSeed()` – the one `Math.random` draw the walk has always
+     *  made, unchanged in position and in formula. A player cannot tell this exists. */
+    seed?: string
+  }>(),
+  { seed: '' },
+)
+
 const emit = defineEmits<{
   /** the player wants the wizard instead (§6) */
   (e: 'skip'): void
@@ -139,11 +165,31 @@ const creating = ref(false)
  *  cannot see any of it.
  *
  *  ⚠ AND IT IS DROPPED BY `startAgain`, with the run and the identity – a different childhood means
- *  a different girl, and it would be a strange kind of «start again» that replayed the same draws. */
+ *  a different girl, and it would be a strange kind of «start again» that replayed the same draws.
+ *
+ *  ⚠ ROUND 40 #7 B – `freshSeed` IS NOW THE FALLBACK RATHER THAN THE ONLY SOURCE. `initialSeed()`
+ *  below is what the walk actually reads; this function is what it calls when nothing was supplied,
+ *  and its formula and its single `Math.random` call are unchanged so the unsupplied walk is the
+ *  shipped one byte for byte. */
 function freshSeed(): string {
   return `prologue-${(Math.random().toString(36).slice(2) + '0000').slice(0, 8)}`
 }
-const seed = ref(freshSeed())
+
+/** ⭐⭐ ROUND 40 #7 B – THE SEED THIS WALK RUNS ON: the one that was supplied, or a fresh draw.
+ *
+ *  ⚠ `.trim() ||` IS THE STORE'S OWN SPELLING, COPIED ON PURPOSE. `game.newCareer` reads
+ *  «Empty seed -> generate a readable one store-side» as `seed.trim() || …`, so an explicit seed
+ *  wins, blank and whitespace both mean «none», and the fallback is the shipped draw untouched.
+ *  One idiom, two places, and the prologue half no longer needs a global patched to be pinned.
+ *
+ *  ⚠ AND IT IS A FUNCTION BECAUSE `startAgain` CALLS IT TOO. A supplied seed is supplied for the
+ *  whole session of the component, restart included – that is the promo film's actual case, ONE
+ *  seed walked down two childhoods – while an unsupplied one keeps drawing fresh, which is what
+ *  §2.3's «a different childhood and a different girl» has always meant for a player. */
+function initialSeed(): string {
+  return props.seed.trim() || freshSeed()
+}
+const seed = ref(initialSeed())
 
 /** THE WEEKENDS OF THE YEAR JUST ANSWERED, still to be played – `(age, index)` pairs, taken from the
  *  front. Empty in every year that holds none, which is every year of a childhood that never
@@ -459,7 +505,25 @@ async function begin(): Promise<void> {
   creating.value = true
   try {
     await game.newCareer(
-      '',
+      // ⭐⭐ ROUND 40 #7 C – THE CAREER IS BORN ON THE CHILDHOOD'S OWN SEED. It used to be `''`, so
+      // the store drew a fresh random one here and the girl the nine cards had just walked became a
+      // DIFFERENT girl the instant the childhood ended. That discontinuity is what the promo film
+      // caught – «Same hidden potential» over two girls – but it was never the recorder's: it is in
+      // the shipped product, once per prologue career, and every player has been getting it.
+      //
+      // ⭐ AND IT MAKES A CHILDHOOD REPRODUCIBLE FOR THE PLAYER. One girl, one seed, all the way
+      // through – the seed is already persisted per career (`world.seed`), so the childhood that
+      // produced her is now recoverable from the save rather than lost at the handover.
+      //
+      // ⚠ NO SCHEMA MOVES AND NO MIGRATION IS OWED. `seed` is a field every save has carried since
+      // v1; what changed is the VALUE a career born after this ships is given, and a career already
+      // in flight keeps the seed on its own record untouched. Nothing reads a seed's SHAPE.
+      //
+      // ⚠ AND AN ORDINARY NEW CAREER IS UNTOUCHED. The wizard and «raise another» still call
+      // `newCareer('')` and still get the store's random fallback; a prologue career's seed is the
+      // walk's own `freshSeed()` draw unless a tool supplied one, which is exactly as random as the
+      // fallback it replaces. A player cannot tell this shipped.
+      seed.value,
       {
         ...DEFAULT_PROFILE,
         // ⚠ HER NAME, HER BIRTHDAY AND HER COUNTRY REACH `createWorld` HERE, on exactly the path the
@@ -507,7 +571,12 @@ async function startAgain(): Promise<void> {
   openNow.value = null
   resultNow.value = null
   creating.value = false
-  seed.value = freshSeed()
+  // ⚠ ROUND 40 #7 B – `initialSeed()` AND NOT `freshSeed()`, AND THE DIFFERENCE IS ONLY VISIBLE TO A
+  // CALLER THAT SUPPLIED ONE. Nothing supplied (every shipped caller) -> a fresh draw, exactly as
+  // before, so §2.3's «a different childhood and a different girl» is unmoved for a player. A seed
+  // supplied -> that seed again, which is the whole promo case: the SAME girl walked down a second,
+  // different childhood is the comparison the film was trying to film.
+  seed.value = initialSeed()
 }
 </script>
 

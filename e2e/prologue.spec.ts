@@ -319,13 +319,22 @@ test('the nine cards run, the handover draws her, and going on starts the career
   // Week 1, painted off a Snapshot the worker built from a world the prologue's nine years were
   // spent on. This is the assertion the whole file exists for: the round trip happened.
   await expect(page.getByRole('heading', { name: /^W1 \d{4} · /, level: 1 })).toBeVisible()
-  // ⭐⭐ AND THE CAREER IS THE GIRL THE PLAYER NAMED. The store builds an empty seed out of her own
-  // name (`${kidName.toLowerCase()}-xxxx`, game.ts `newCareer`), so the seed the WORKER echoed back
-  // in this line is the one piece of evidence that a name typed on the first card survived the
-  // whole flow: nine cards, a `postMessage`, `createWorld`, a Snapshot and the render. Before
-  // 02.09 every prologue career opened on the default and this line read `alice-…` whatever was
-  // typed – because nothing was asked.
-  await expect(page.getByText(new RegExp(`career started \\(seed "${TYPED_NAME.toLowerCase()}-`))).toBeVisible()
+  // ⭐⭐ AND THE CAREER IS THE GIRL THE PLAYER NAMED. This line is the worker's own echo of what it
+  // built, so it is the one piece of evidence that a name typed on the first card survived the whole
+  // flow: nine cards, a `postMessage`, `createWorld`, a Snapshot and the render. Before 02.09 every
+  // prologue career opened on the default and it read `alice-…` whatever was typed – because nothing
+  // was asked.
+  //
+  // ⚠⚠ RE-AIMED BY ROUND 40 #7 C, NOT LOOSENED – IT NOW ASSERTS TWO THINGS WHERE IT ASSERTED ONE.
+  // The claim used to be read off the SEED (`${kidName.toLowerCase()}-xxxx`, the store's fallback for
+  // a blank one), and item 7 C stops the prologue passing a blank one: the career is now born on the
+  // CHILDHOOD'S OWN seed, so one girl keeps one seed from the first card to the last week. The name
+  // did not stop being provable here – it is the subject of this very sentence, and `${kidName}'s`
+  // comes off the same `profile` the seed used to be built from (engine/world.ts, the week-0 info
+  // event). So the same round trip is asserted, plus the inheritance: the seed is the prologue's.
+  await expect(
+    page.getByText(new RegExp(`${TYPED_NAME}'s career started \\(seed "prologue-`)),
+  ).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible()
 
   // --- ⭐⭐ §6 C: ...AND NO TOUR (phase 5) -------------------------------------------------------

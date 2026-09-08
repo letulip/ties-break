@@ -266,6 +266,12 @@ real worker (`e2e/prologue.spec.ts` types a name and reads it back out of the se
 echoed); the wizard path unchanged; the age-5 card's way out inside a 375x667 viewport; every claim
 mutation-verified.
 
+⚠ **That e2e assertion was RE-AIMED by round 40 #7 C (08.09) and still makes the same claim.** The
+name used to be read out of the SEED, because a prologue passed `newCareer('')` and the store built
+its fallback from `kidName`. The career is born on the childhood's own seed now, so the name is read
+off the same line's subject (`${kidName}'s career started (seed "prologue-…`) – one assertion, two
+facts: the typed name survived the round trip, and the career inherited the prologue's seed.
+
 **Phase 7 – the coach's read gains a second dimension, and the prologue gets its art. SHIPPED 02.09.**
 Two owner asks answered together. The read: «оставляем туман … вот ими надо добавить понимание про
 базу и перспективы» – a BASE band beside the room band, drawn deterministically, words only, no
