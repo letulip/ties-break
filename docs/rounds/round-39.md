@@ -1,3 +1,11 @@
+---
+type: round
+status: current
+area: rounds
+canonical: false
+last-reviewed: 2026-09-08
+---
+
 # Round 39 – Ines's career on the merged round-38 build, 15 items (08.09.2026)
 
 Save under analysis: `~/Downloads/tennis-sim_ines-xgv7_w832.tsave` – **read-only, never committed,
