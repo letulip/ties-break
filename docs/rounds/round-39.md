@@ -1099,6 +1099,84 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   * the winter's row, `world/sponsors.ts`: **«<Brand> already have her on their posters and would
     like her back in their kit – their renewal is in the inbox.»**
 
+  ---
+
+  **WAVE G3 – HIS RULING ON THE WARNING, AND WAVE G WAS WRONG.**
+
+  **OWNER, 08.09: «ты правда думаешь, что в реальности при переподписании кто-то пишет точные суммы
+  предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять это надо абсолютно точно»**
+  → on the proposal: **«да, давай так»**.
+
+  He is right on both halves at once. A rival apparel house does not KNOW a competitor's remaining
+  contract value and would never PUBLISH it – an exclusivity CLAUSE on its own letterhead is
+  realistic, a competitor's balance sheet is fiction – and the consequence still has to land without
+  any doubt at all. Wave G's own argument in the code («THE NUMBER IS THE POINT… without the money it
+  names, this clause is a trap») was right about the number and **wrong about the surface**, and that
+  comment is now rewritten to say so, with his sentence quoted in it.
+
+  **SO THE NUMBER DID NOT DISAPPEAR – IT MOVED TO THE SURFACE WHOSE OWN DOCTRINE ALREADY CLAIMED IT.**
+  Round 24 item 2's rule for the sign confirm is that it restates the deal «and the one thing the
+  letter cannot say». A competitor's figures are exactly that class of fact.
+
+  | surface | carries | why |
+  | --- | --- | --- |
+  | the rival's **letter** | the exclusivity clause, **no money, one arm** | a house cannot print a rival's books; with no figure there is nothing for two arms to differ about |
+  | the **sign confirm** | the campaign it ends **and the cost**, two arms | its job is the fact the paper cannot state |
+
+  **ONE DERIVATION, TWO SURFACES – AND NO LIFT WAS NEEDED.** `apparelBondCost` already lives in
+  `src/engine/offers.ts`, not on the letter's script: `OfferLetter` imports it to decide whether its
+  clause appears at all, `signOffer` calls it to end the campaign, and `InboxSheet` now imports the
+  same function and calls it on the same inbox (`game.snapshot.offers`, which is what the sheet
+  already passes down to the letter) and the same week. The paper, the confirm and the till cannot
+  answer the question differently, and nothing computes the cost a second way.
+
+  ⚠ **THE CONFIRM IS STILL A RESTATEMENT AND NEVER AN ARGUMENT** – its own standing rule. The clause
+  states the fact and stops; the dialog still ends on «This cannot be undone.» There is no
+  persuasion, no «are you sure you want to lose this», and the exclusivity TERM itself is still not
+  argued here (it is on the paper – `tests/offers.test.ts`' negative on `nobody else|turns away|
+  instead of waiting` is untouched and green).
+
+  **EVIDENCE.** `tests/component/r39-apparel-bond-warning.test.ts` – **17 mounted cases, all green**
+  (11 re-aimed from waves G/G2, 6 new). The letter's arms assert the money as an **ABSENCE** («the
+  rival letter prints the campaign's remaining value» / «…its yearly fee»), not merely that the
+  clause is present – a test that only looked for the clause would have stayed green on the paper
+  wave G shipped. **Seven mutations, seven killed, all restored:**
+  * the `<li v-if="bondCost">` clause deleted from the letter → **3 red** (both clause cases + the
+    G2 rival-renewal case), the three «no clause» controls green;
+  * `apparelBondCost`'s brand test inverted (`===` → `!==`) → **9 red**, including BOTH incumbent
+    controls (letter and confirm), which is the one mutation that proves the two surfaces share it;
+  * **wave G's money arms put back on the paper** → **3 red** on the «no figures» assertions – this
+    is the mutation that makes the file a test of his ruling rather than of the clause;
+  * `bondClause` forced to `''` in the confirm → **3 red** (both money cases + the untouched-arms
+    case), the two «gains nothing» controls green;
+  * the wrong arm forced (`bond.cents > 0` → `>= 0`) → the played-out case **red** on his own
+    sentence, the fees case green;
+  * the wrong arm forced the other way (`→ false`) → **2 red** on the figure, played-out green;
+  * `.dialog-card`'s `max-height` removed from `src/style.css` → the phone-fit case **red** («cap
+    NONE… expected Infinity to be less than or equal to 635»), which is what says that assertion is
+    real. CLAUDE.md's rule for a dialog this wave LENGTHENED.
+
+  Neighbours green and unweakened: `tests/offers.test.ts`, `tests/r39-apparel-bond.test.ts`,
+  `tests/ad-offer.test.ts`, `tests/money-format.test.ts`,
+  `tests/round29p3-manager-commission.test.ts`, `tests/pin-hygiene.test.ts` (**223 cases**);
+  nine component suites incl. `ad-offer-letter`, `round29-inbox-subjects`, `a11y-sweep`
+  (**126 cases**). `vue-tsc -b --force` clean. **No guard was re-aimed or widened this wave** – the
+  only test file touched is #17's own.
+
+  ⚠ **RNG: ZERO DRAWS – copy and one read.** Nothing new is rolled: `apparelBondCost` is arithmetic
+  on decided deals, and the confirm only reads it. `tests/condition.test.ts` **51/51 green, capture
+  41550 draws / hash e6b0c709 unmoved.**
+
+  ⚠ **NEW COPY, ALL DRAFT** (three strings, verbatim):
+  * the letter's clause, `OfferLetter.vue` – **«While you wear us, she appears in no other apparel
+    campaign – hers with <Brand> would end on signature.»** (replaces wave G's two money arms, in
+    place, still directly under «And while she is in our kit she is in nobody else's.»)
+  * the confirm, fees remaining, `InboxSheet.vue` – **«Signing ends her campaign with <Brand> –
+    $200,000 of fees still to come on it.»**
+  * the confirm, term played out, `InboxSheet.vue` – **«Signing ends her campaign with <Brand>.
+    Every fee it owed her is already banked and stays hers.»** ⚠ his own preferred wording,
+    carried over verbatim from wave G's letter arm rather than rewritten.
+
 ## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
 No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
