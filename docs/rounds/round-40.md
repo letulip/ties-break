@@ -98,3 +98,27 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
     real signal rather than a constant. His «she is done» becomes an earlier band there, above the
     existing `lastOfferPeakShare` 0.55. That needs its own measurement – when each candidate band
     fires past 29, and what she does after – and it is the next probe, not a guess.
+
+  ⭐⭐ **14b MEASURED (`tools/r40-age-branch.ts`, 108 careers x 1900 weeks): THE SHIPPED BAND IS
+  ALREADY THE HONEST PLACE, and every earlier one takes trophies off her.**
+
+  | band | median age | titles she still won after it | max | won nothing more |
+  | --- | ---: | ---: | ---: | ---: |
+  | share <= 0.95 | 31 | **9** | 23 | 40.7% |
+  | share <= 0.90 | 33 | 7 | 19 | 41.7% |
+  | share <= 0.85 | 34 | 6 | 19 | 41.7% |
+  | share <= 0.80 | 36 | 3 | 17 | 42.6% |
+  | share <= 0.75 | 37 | 2 | 16 | 43.5% |
+  | share <= 0.70 | 38 | 1 | 11 | 46.3% |
+  | **share <= 0.55 (SHIPPED)** | **42** | **0** | 4 | **71.3%** |
+
+  ⚠ The «won nothing more» column is NOT the discriminator – it sits at 41-46% even at the top,
+  because plenty of careers were never going to win again whatever the band said. The median is:
+  it reaches **zero only at the shipped 0.55**. An earlier «she is done» would cost her a median of
+  1 title at 0.70 and 3 at 0.80, and as many as 11 and 17 in the careers that had most left.
+
+  ⭐ **So the recommendation is not a new band.** The engine already turns the question final in the
+  right place, and round 38's `lastWordLine` already makes that offer HER sentence rather than a
+  formality. What 14b is really missing is not a state – it is WARNING: nothing on screen says the
+  last winter is coming until it arrives. That is a Home read, not a new mechanic, and it is
+  cheap. ⚠ Owner's word before anything is built.
