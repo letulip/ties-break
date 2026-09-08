@@ -30,6 +30,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { assertDismissReachable, boxOf, setViewport, PHONE } from './fits'
+import { landing } from './prologueLanding'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
@@ -102,7 +103,11 @@ async function click(el: ReturnType<typeof mount>, selector: string, label?: str
     ? el.findAll(selector).find((b) => b.text().startsWith(label))
     : el.findAll(selector)[0]
   expect(button, `no «${label ?? selector}»: ${el.text().slice(0, 140)}`).toBeTruthy()
-  await button!.trigger('click')
+  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. A finished card is now HELD for `PROLOGUE_LANDING_MS`
+  // before the walk advances, so this helper steps that clock rather than waiting on it – see
+  // tests/component/prologueLanding.ts. Nothing this file asserts moved: it still presses and then
+  // reads the screen the press produced.
+  await landing(() => button!.trigger('click'))
   await Promise.resolve()
   await el.vm.$nextTick()
 }
@@ -402,6 +407,17 @@ describe('⚠⚠ round-20 #3 – the way out of a weekend is on a 375x667 phone'
   // ⭐⭐ THE ASK BEAT IS A CARD AND IS MEASURED LIKE ONE. It is a scene the player meets in three of
   // the nine years and the round-20 #3 rule binds it exactly as it binds the nine – a card whose two
   // answers fall off a 375x667 phone stops a career before it starts.
+  // ⚠⚠ RE-AIMED BY ROUND 40 #2, AND IT GAINED THE ARM THAT SAYS WHEN THE QUESTION ARRIVES. The
+  // owner asked for the second group of buttons to appear once the first is answered, on the same
+  // screen («чтобы человек сначала делал верхний выбор, а потом на этом же экране появлялись
+  // следующие кнопки»), so on a card that carries a decision AND a question the tallest state - the
+  // one round-20 #3 has to be measured against - is the DISCLOSED one, and it is reached by handing
+  // the card the pick the player made. `picked` is exactly what the container passes there.
+  //
+  // ⚠ THE MEASUREMENT IS UNCHANGED AND STILL THE STRICTEST STATE: four controls on the eleventh and
+  // twelfth, two on the thirteenth, which is what it asserted before. What is NEW is the negative
+  // arm below it - undisclosed, the question is not on the card at all - so the disclosure is pinned
+  // in both directions rather than assumed from the fit passing.
   it('⭐⭐ every year`s tournament question fits, with its two answers inside the screen', () => {
     for (const [name, row] of [
       ['11', PROLOGUE_CARDS.find((c) => c.age === 11)!],
@@ -417,6 +433,9 @@ describe('⚠⚠ round-20 #3 – the way out of a weekend is on a 375x667 phone'
           warmth: 'cool' as const,
           mood: moodAt(row.age, EMPTY_RUN),
           ask: row.tournament,
+          // ⭐ THE YEAR ANSWERED, WHICH IS WHAT PUTS THE QUESTION ON THE SCREEN (round 40 #2). The
+          // thirteenth has no decision of its own, so it discloses with nothing pressed.
+          picked: row.options?.[0].id,
           identity: { ...OPENING_IDENTITY },
         },
       })
@@ -439,6 +458,49 @@ describe('⚠⚠ round-20 #3 – the way out of a weekend is on a 375x667 phone'
       wrapper.unmount()
       document.body.innerHTML = ''
     }
+  })
+
+  // ⭐⭐⭐ ROUND 40 #2 – AND BEFORE THE YEAR IS ANSWERED THE QUESTION IS NOT THERE AT ALL.
+  //
+  // THE OWNER, 08.09: «когда есть 2 группы кнопок, пока верхние не нажаты нижние ничего не делают,
+  // может быть сделать, чтобы человек сначала делал верхний выбор, а потом на этом же экране
+  // появлялись следующие кнопки, чтобы флоу был более явным?»
+  //
+  // MUTATION-VERIFIED: rendering the ask unconditionally (`askOpen` returning `Boolean(props.ask)`)
+  // reddens the first two arms; freezing the first group after a pick (`v-if="picked === undefined"`
+  // on `.prologue-picks`) reddens the third.
+  it('⭐⭐⭐ the year`s question waits for the year – and the year stays re-choosable under it', async () => {
+    const row = PROLOGUE_CARDS.find((c) => c.age === 11)!
+    setViewport(PHONE)
+    const wrapper = mount(PrologueCardView, {
+      attachTo: document.body,
+      props: { card: row, warmth: 'cool' as const, mood: moodAt(11, EMPTY_RUN), ask: row.tournament },
+    })
+    // 1. UNDISCLOSED: the card's own two answers, and no question under them.
+    expect(document.querySelector('.prologue-ask'), 'the question is on screen before the year is').toBeNull()
+    const labels = () => [...document.querySelectorAll('.prologue-answer-label')].map((b) => b.textContent!.trim())
+    expect(labels()).toEqual(row.options!.map((o) => o.label))
+
+    // 2. DISCLOSED: the same screen, with the question and its pair added under what was already
+    //    there. Nothing above them moved - the scene, the reading and both answers are unchanged.
+    await wrapper.setProps({ picked: row.options![0].id })
+    expect(document.querySelector('.prologue-ask')!.textContent!.trim()).toBe(row.tournament!.lede)
+    expect(labels()).toEqual([
+      ...row.options!.map((o) => o.label),
+      row.tournament!.enterLabel,
+      row.tournament!.declineLabel,
+    ])
+    expect(document.querySelector('.prologue-lede')!.textContent!.trim()).toBe(row.lede)
+
+    // 3. ⚠ AND THE FIRST CHOICE IS NOT A TRAP: it is still there, still pressable, and pressing the
+    //    other one emits its id. A disclosed step that froze the step above it would be worse than
+    //    the flow it replaced.
+    const first = wrapper.findAll('.prologue-choice')
+    expect(first.length, 'the year`s own answers left the screen when the question arrived').toBeGreaterThan(2)
+    await first[1].trigger('click')
+    expect(wrapper.emitted('answer')).toEqual([[row.options![1].id]])
+    wrapper.unmount()
+    document.body.innerHTML = ''
   })
 
   // ⚠ RE-AIMED BY ROUND 35 #1, NOT LOOSENED. The weekend no longer opens straight onto a court:

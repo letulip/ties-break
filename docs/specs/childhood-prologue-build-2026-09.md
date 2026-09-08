@@ -266,6 +266,12 @@ real worker (`e2e/prologue.spec.ts` types a name and reads it back out of the se
 echoed); the wizard path unchanged; the age-5 card's way out inside a 375x667 viewport; every claim
 mutation-verified.
 
+⚠ **That e2e assertion was RE-AIMED by round 40 #7 C (08.09) and still makes the same claim.** The
+name used to be read out of the SEED, because a prologue passed `newCareer('')` and the store built
+its fallback from `kidName`. The career is born on the childhood's own seed now, so the name is read
+off the same line's subject (`${kidName}'s career started (seed "prologue-…`) – one assertion, two
+facts: the typed name survived the round trip, and the career inherited the prologue's seed.
+
 **Phase 7 – the coach's read gains a second dimension, and the prologue gets its art. SHIPPED 02.09.**
 Two owner asks answered together. The read: «оставляем туман … вот ими надо добавить понимание про
 базу и перспективы» – a BASE band beside the room band, drawn deterministically, words only, no
@@ -483,6 +489,13 @@ champion.
 
 Everything in this section is a measurement taken on this branch, not a prediction (invariant 5).
 
+> ⚠⚠ **SUPERSEDED FOR THE BASE BAND'S READING BY §8e (round 40 #4, 08.09).** The band no longer reads
+> her ARRIVAL against the fresh-fourteen distribution, so the two cuts below – 46.30 / 50.70 – are no
+> longer the shipped ones and the shares under them are no longer the shipped shares. Everything else
+> here still stands, and the section is kept whole because §8e's argument is a comparison against it:
+> **finding 1 below is the reason the item exists**, and the height measurements were never about the
+> reading at all.
+
 ### The reference: what a freshly created fourteen-year-old IS
 
 Re-measured at 20,000, 100,000 and 400,000 seeds; every quantile below is stable to the hundredth at
@@ -536,6 +549,16 @@ against the model's neglected↔devoted **4.28**. The cheapest run is also the l
 money and build are perfectly aligned in the table today. That is why the base band moves on 40.9%
 of seeds for a real player and 89.9% between the model's extremes. **Widening what a card buys is a
 balance change and the owner's**; it is named here, not made.
+
+> ⚠⚠ **THE 44% HAS ROTTED, AND ROUND 40 #6 ANSWERED THE QUESTION IT OPENED.** The balance pass
+> (`childhood-prologue-balance-2026-09.md` §2) already widened the table, so the span is **2.38 points
+> and the cards reach 55.7%** of the model, re-measured 08.09 over the same 32 runs. The owner's
+> answer to this finding was «Вариант B» – make the choices COMPOUND rather than add – and that was
+> measured and **not built**: the fold is exactly linear (worst residual 2e-15 over 32 roads), the
+> direction the item asks for makes the cards reach LESS (49.7% at `coordinationShare` 0.4, because
+> the years the habit carries include the three at 5..7 that no card can change), and 96% of the
+> arrival span is closed by her peak anyway. Full tables in
+> `childhood-growth-2026-09.md` §9, which also names the one-line model change that WOULD compound.
 
 **2. THE FIT MODEL OVER-COUNTS THIS CARD BY MORE THAN DOUBLE, in two named ways.**
 `tests/component/fits.ts` calls itself a floor that «UNDER-COUNTS AND NEVER OVER-COUNTS». On the
@@ -595,6 +618,81 @@ coming, so the boundary is deliberately set where the prologue will need it»).
 see a photograph, so a title moved onto the art would leave `assertLegible` measuring a background
 that is not behind it. Round-17 #3 is why that gate exists. The fade into `--panel` is what buys the
 same look without blinding it.
+
+## 8e. Round 40 #4, measured – the base band reads her REALISATION
+
+Everything in this section is a measurement taken on `r40/wave-f`, not a prediction (invariant 5).
+The owner: «что если мы здесь как раз будем говорить о той разнице в реализации, которой уже к этому
+моменту она достигла? тогда это не нарушит ничего, но и отразить разный прогресс» → «делай».
+
+### Why the arrival reading had to go, in one table
+
+Filming a 32-second promo walked ONE seed down two childhoods and the payoff screen said the same
+thing twice. That was not a defect – §8c's own finding 1 predicts it – but it is what got the reading
+re-measured (`tools/r40-span-and-realisation.ts`, 200 seeds x 32 paired runs, cheapest against dearest
+on each seed):
+
+| reading | span between the two childhoods | the SENTENCE differs on |
+| --- | --- | --- |
+| arrival (§8c, shipped until now) | 2.44 points | 104 of 200 seeds – 52% |
+| realisation | **16.2 percentage points** | **200 of 200 – 100%** |
+
+⭐ **The cause is the denominator, not a bigger effect.** The arrival grades those 2.44 points against
+a population whose bands are ~2.2 points wide; realisation grades them against her own room
+(`potential − born`, five draws from `potentialBand` = [4, 26]). Nothing about what a card buys was
+touched – §8c's finding 1 is still open and still the owner's.
+
+### The derivation, and the half of round 34 #2b it keeps
+
+    handoverRealisation(world) =  Σ(world.skills − withHeadStart(startingSkills(seed, profile), birthMonth))
+                                  ─────────────────────────────────────────────────────────────────────────
+                                  Σ(world.potential − startingSkills(seed, profile))
+
+* The **numerator's** baseline is the build `createWorld` hands `childhoodArrival`, so the difference
+  is exactly what the nine years added and nothing else. A career with no prologue reads 0.000.
+* The **denominator** is the potential ROLL itself – uniform by construction, the same quantity
+  `handoverRoomBand` grades, and free of the birth month because `rollPotential` is fed the
+  pre-head-start build.
+* **Round 34 #2b's fix is inherited**: the birth build is subtracted and the divisor is the ROOM
+  rather than the asymptote. That is what stops «the verdict arriving earlier for the less gifted
+  girl», and two test arms hold it.
+* ⚠⚠ **`realisedShare` could not be reused, because it CLAMPS TO [0, 1].** This reading is signed and
+  the bottom band IS the negative half; under the clamp every neglected childhood reads 0.0 and
+  `behind` becomes unreachable. (Two lesser reasons: it divides by `reachableHeadroomShare()`, a
+  career-long yardstick that is a constant at week 0, and its birth build is the pre-head-start one.)
+
+### The distribution and the cuts
+
+`tools/r40-handover-realisation-cuts.ts`, walking the SHIPPED function over every childhood the card
+table can produce – the 32 reachable runs – on 100,000 seeds = **3,200,000 childhoods**:
+
+    REALISATION AT FOURTEEN
+      min −26.1%   p05 −7.9%   p20 −5.0%   p50 −0.1%   p80 +3.6%   p95 +7.4%   max +24.1%
+
+**The cuts are p20 and p80: −0.050 and +0.036**, chosen by the same principle §8c chose 46.30/50.70
+by, and stable to the thousandth at 64,000, 640,000 and 3,200,000 samples. The bands hold
+**20.0 / 60.0 / 20.0**, so the middle still holds «most» – the test that killed the tertiles in §8c.
+
+⚠ The population is the childhoods the table can sell, not fresh fourteen-year-olds: with no prologue
+the numerator is 0 by construction, so a wizard distribution is a spike at zero with no quantiles.
+
+⚠ **The birth month nearly leaves the reading and the residue is the clamp.** The head start stands in
+both terms of the numerator and cancels, except where `childhoodArrival`'s `STARTING_SKILL_BAND` clamp
+truncates a January girl's gain or a December girl's loss – measured: the clamp binds on 15.0% of
+attribute-childhoods at the ends of the table, and the sentence moves with the birthday on 13.5% of
+seeds against §8c's 43.4%.
+
+### The copy
+
+The bottom band's two sentences are the owner's, ruled 08.09 («давай смягчим формулировку нижней
+банды» → variant B), and they REPLACE what stood there:
+
+- «Most of what she has, she was born with. The years added little to it.»
+- «She comes with what she started with – the work has not reached it yet.»
+
+⚠ The replaced pair claimed a comparison against other girls, which realisation does not measure.
+⚠ `ahead` and `level` are byte-identical to §8a's drafts – **an ask, not a change**: those four still
+speak in the comparative register, and whether they should follow the bottom band is the owner's.
 
 ## 8d. Phase 8 – the owner's reading pass, 02.09
 

@@ -105,7 +105,7 @@ import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medic
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
-import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand } from './coachMarket'
+import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
@@ -1822,10 +1822,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // ⚠ WEEK 0 ONLY – see the field's own note. The handover is the one screen that reads it and it
     // exists for one week; a career past its first tick must not carry a reading of her true ceiling.
     handoverBand: world.week === 0 ? handoverRoomBand(world) : '',
-    // ⚠ WEEK 0 ONLY, AND FOR A SECOND REASON ON TOP OF THE FIRST. `handoverBaseBand` reads
-    // `world.skills` against the distribution a FRESHLY CREATED fourteen-year-old is drawn from, and
-    // `world.skills` is that arrival build only until the first tick moves it – so past week 0 the
-    // field would be comparing a seventeen-year-old with a reference that stopped applying.
+    // ⚠ WEEK 0 ONLY, AND FOR A SECOND REASON ON TOP OF THE FIRST. `handoverBaseBand` reads what the
+    // CHILDHOOD added – `world.skills` minus the head-started birth build the nine years started from
+    // – and `world.skills` is that arrival build only until the first tick moves it. Past week 0 the
+    // numerator would be a whole career's training wearing a childhood's name (round 40 #4; until it,
+    // the same bound held for the fresh-fourteen reference this replaced).
     handoverBaseBand: world.week === 0 ? handoverBaseBand(world) : '',
     coachEdge: coachEdgeView(world),
     kidRank: world.kidRank,
@@ -1987,6 +1988,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // shared/protocol/snapshot.ts, and the arithmetic is `physicalShareOf`'s – called, not repeated.
     // ⚠ ZERO DRAWS, like everything else in this builder.
     physicalShare: physicalShareOf(world),
+    // ⭐⭐⭐ ROUND 40 #14b – AND WHEN THE QUESTION RUNS OUT, which the share above cannot say. ONE
+    // number on ONE wire for three voices: the coach's card, her own line on the winter card and the
+    // season's wrap-up. Null on every week outside the window, so all three are silent by
+    // construction rather than by three conditions on three screens.
+    lastWinterIn: lastWinterIn(world),
     // ⭐ THE LONG GOODBYE STEP 4 – the one piece of state her last word reads, and the retirement
     // card is drawn long before `buildEndingView` above has anything to return.
     oneMoreYearCount: world.oneMoreYearCount,

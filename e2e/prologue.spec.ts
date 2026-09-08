@@ -76,15 +76,27 @@ const TYPED_NAME = 'Zenobia'
  *  `take` is which control this walk presses, and it exists because «the second one» stopped being a
  *  single rule: on a card with options it is the second OPTION, and on the thirteenth - which has
  *  none - the question is the only thing to answer and `clearWeekends` answers it. */
-const CARDS: readonly { controls: number; take: number | null; asks: boolean }[] = [
+/** ⚠⚠ RE-AIMED BY ROUND 40 #2, NOT LOOSENED – AND THE COUNT IS NOW TWO COUNTS. The owner asked for
+ *  the second group of buttons to appear once the first is answered, on the same screen («чтобы
+ *  человек сначала делал верхний выбор, а потом на этом же экране появлялись следующие кнопки, чтобы
+ *  флоу был более явным»), so on the eleventh and the twelfth the tournament question is NOT on the
+ *  card when it arrives and IS there one press later:
+ *
+ *    age 11, 12   two options, then two more when the year is answered   4 -> 2 then 4
+ *    age 13       no decision of its own, so nothing to wait behind      2 unchanged
+ *
+ *  `controls` is what the card carries on arrival and `disclosed` what it carries once the year is
+ *  answered – both asserted, which is what makes the disclosure a claim this walk can fail on rather
+ *  than a number it happens to agree with. */
+const CARDS: readonly { controls: number; disclosed?: number; take: number | null; asks: boolean }[] = [
   { controls: 4, take: 1, asks: false }, // 5  – three origins plus the way out; the second is the middle-class house
   { controls: 1, take: 0, asks: false }, // 6
   { controls: 1, take: 0, asks: false }, // 7
   { controls: 2, take: 1, asks: false }, // 8
   { controls: 2, take: 1, asks: false }, // 9
   { controls: 2, take: 1, asks: false }, // 10 – «Enter her», and it is the card's OWN decision
-  { controls: 4, take: 1, asks: true }, // 11 – two options AND this year's question
-  { controls: 4, take: 1, asks: true }, // 12
+  { controls: 2, disclosed: 4, take: 1, asks: true }, // 11 – two options, and then this year's question
+  { controls: 2, disclosed: 4, take: 1, asks: true }, // 12
   { controls: 2, take: null, asks: true }, // 13 – the question is the card's only pair; see `take`
 ]
 
@@ -125,6 +137,9 @@ async function clearWeekends(page: Page): Promise<number> {
     // The result scene: a card row with exactly one way on, and its picture is the outcome's face.
     const result = page.locator('.prologue-card .prologue-kicker', { hasText: 'The Local Open' })
     if (await result.count()) {
+      // ⚠ ROUND 40 #1 – AND THIS ONE IS STILL `getByRole('button')` ON PURPOSE, which is now a
+      // claim rather than a habit: a result scene answers nothing, so its way on is an ADVANCE and
+      // must NOT have become a radio with the answers. If it ever does, this line stops finding it.
       await page.getByRole('dialog').locator('.prologue-answers').getByRole('button').first().click()
       continue
     }
@@ -137,10 +152,15 @@ async function clearWeekends(page: Page): Promise<number> {
  *  tennis each year held. Returns how many weekends the walk actually saw. */
 async function walkTheChildhood(page: Page): Promise<number> {
   let weekends = 0
-  for (const [index, { controls, take, asks }] of CARDS.entries()) {
+  for (const [index, { controls, disclosed, take, asks }] of CARDS.entries()) {
     const card = page.getByRole('dialog')
     const heading = await card.getByRole('heading').textContent()
-    const buttons = card.locator('.prologue-answers').getByRole('button')
+    // ⚠⚠ RE-AIMED BY ROUND 40 #1: `getByRole('button')` NO LONGER FINDS AN ANSWER, and that is the
+    // item rather than a selector that rotted. His testers met controls that select drawn as the
+    // control that advances; the answers are real radios now (`role="radio"` in a named
+    // `radiogroup`), so a role-first locator asking for a button asks for the way ON. The count this
+    // walk rests on is «every control in the column», which is what the element query says.
+    const buttons = card.locator('.prologue-answers button')
     await expect(buttons, `card ${index + 1} does not have the controls it should`).toHaveCount(controls)
 
     // The card's own answer, where it has one. On card 1 that is the second family origin, which is
@@ -149,13 +169,41 @@ async function walkTheChildhood(page: Page): Promise<number> {
     // own, so its tournament question is the way on and `clearWeekends` is what presses it.
     if (take !== null) await buttons.nth(take).click()
 
+    // ⭐⭐⭐ ROUND 40 #2 – AND THE SECOND GROUP IS ON THE SCREEN NOW, on the same card, under the
+    // answer that was just given. Asserted between the two presses, which is the only place the
+    // disclosure can be seen at all.
+    if (disclosed !== undefined) {
+      await expect(buttons, `card ${index + 1} did not disclose its second group`).toHaveCount(disclosed)
+    }
+
     // ⭐⭐ ...AND THIS YEAR'S TOURNAMENT QUESTION, ON THE SAME SCREEN (round 35 #4). The owner:
     // «Сказали "не в этом году" – значит не в этом году, дальше тоже можно спрашивать.» This walk
     // always says yes, so it takes the busiest road the table can produce.
+    // ⚠ ADDRESSED AS A RADIO SINCE ROUND 40 #1 – the same control, saying what it is.
     if (asks) {
-      const enter = page.getByRole('dialog').getByRole('button').filter({ hasText: 'Put her name down' })
+      const enter = page.getByRole('dialog').getByRole('radio').filter({ hasText: 'Put her name down' })
       await expect(enter, `card ${index + 1} asks no tournament question`).toHaveCount(1)
       await enter.click()
+    }
+
+    // ⚠⚠ ROUND 40 #3 – THE CARD IS HELD BEFORE IT ADVANCES, so nothing after the last press may be
+    // measured until it has actually left. Item 3 holds an answering card ~200 ms so the ball lands;
+    // before it, answering advanced synchronously and the weekend – or the next card – was already
+    // on screen by the next line. Without this wait `clearWeekends` looked while the held card was
+    // still up, found no weekend, returned 0, and the takeover arrived a moment later: the walk then
+    // failed on the NEXT assertion, naming the heading instead of the hold.
+    // ⚠ A CONDITION, NOT A SLEEP. A fixed pause would pass by luck on a fast machine and rot the day
+    // the constant moves; this waits for what the hold is holding – the year's tennis, or the card
+    // after it.
+    if (take !== null || asks) {
+      await expect
+        .poll(
+          async () =>
+            (await page.getByRole('button', { name: 'Skip the rest of the weekend' }).count()) > 0 ||
+            (await page.getByRole('dialog').getByRole('heading').textContent()) !== heading,
+          { message: `card ${index + 1} never left after its answer` },
+        )
+        .toBe(true)
     }
 
     // ⭐ PHASE 11 – and then whatever tennis the year bought.
@@ -271,13 +319,22 @@ test('the nine cards run, the handover draws her, and going on starts the career
   // Week 1, painted off a Snapshot the worker built from a world the prologue's nine years were
   // spent on. This is the assertion the whole file exists for: the round trip happened.
   await expect(page.getByRole('heading', { name: /^W1 \d{4} · /, level: 1 })).toBeVisible()
-  // ⭐⭐ AND THE CAREER IS THE GIRL THE PLAYER NAMED. The store builds an empty seed out of her own
-  // name (`${kidName.toLowerCase()}-xxxx`, game.ts `newCareer`), so the seed the WORKER echoed back
-  // in this line is the one piece of evidence that a name typed on the first card survived the
-  // whole flow: nine cards, a `postMessage`, `createWorld`, a Snapshot and the render. Before
-  // 02.09 every prologue career opened on the default and this line read `alice-…` whatever was
-  // typed – because nothing was asked.
-  await expect(page.getByText(new RegExp(`career started \\(seed "${TYPED_NAME.toLowerCase()}-`))).toBeVisible()
+  // ⭐⭐ AND THE CAREER IS THE GIRL THE PLAYER NAMED. This line is the worker's own echo of what it
+  // built, so it is the one piece of evidence that a name typed on the first card survived the whole
+  // flow: nine cards, a `postMessage`, `createWorld`, a Snapshot and the render. Before 02.09 every
+  // prologue career opened on the default and it read `alice-…` whatever was typed – because nothing
+  // was asked.
+  //
+  // ⚠⚠ RE-AIMED BY ROUND 40 #7 C, NOT LOOSENED – IT NOW ASSERTS TWO THINGS WHERE IT ASSERTED ONE.
+  // The claim used to be read off the SEED (`${kidName.toLowerCase()}-xxxx`, the store's fallback for
+  // a blank one), and item 7 C stops the prologue passing a blank one: the career is now born on the
+  // CHILDHOOD'S OWN seed, so one girl keeps one seed from the first card to the last week. The name
+  // did not stop being provable here – it is the subject of this very sentence, and `${kidName}'s`
+  // comes off the same `profile` the seed used to be built from (engine/world.ts, the week-0 info
+  // event). So the same round trip is asserted, plus the inheritance: the seed is the prologue's.
+  await expect(
+    page.getByText(new RegExp(`${TYPED_NAME}'s career started \\(seed "prologue-`)),
+  ).toBeVisible()
   await expect(page.getByRole('navigation', { name: 'Main' })).toBeVisible()
 
   // --- ⭐⭐ §6 C: ...AND NO TOUR (phase 5) -------------------------------------------------------
@@ -430,6 +487,9 @@ test('⭐ the first card of the game is a picture and a scene, not a form', asyn
   //    the last control lands inside the viewport once it has.
   const answers = card.locator('.prologue-answers')
   await answers.scrollIntoViewIfNeeded()
-  const last = answers.getByRole('button').last()
+  // ⚠ ROUND 40 #1 – AN ELEMENT QUERY AND NOT A ROLE: the claim is «the LAST control in the column is
+  // reachable», and the column now holds two kinds (three radios and the way out of the story). A
+  // role-first locator would quietly measure the way out alone and still pass.
+  const last = answers.locator('button').last()
   await expect(last).toBeInViewport()
 })

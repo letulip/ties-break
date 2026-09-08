@@ -1,3 +1,20 @@
+<script lang="ts">
+// ⚠ MODULE SCOPE, AND IT HAS TO BE A SECOND BLOCK – ConfirmDialog.vue's own reason: everything
+// inside `<script setup>` is the setup FUNCTION's body, so a `const` declared there is not a named
+// export and no test can read it. This one has to be readable, because a suite that WAITED 200ms per
+// answer would add real seconds to every walk in tests/component and be timing-flaky besides.
+//
+// ⭐⭐⭐ ROUND 40 #3 – HOW LONG A CARD IS HELD AFTER THE ANSWER THAT FINISHES IT. The owner's word is
+// in docs/rounds/round-40.md, item 3, which is where his Russian is allowed to live; the short of it
+// is that the card should LAND rather than vanish, and that «~200 ms» is his starting point and not
+// a ruling.
+//
+// ⚠ IT IS PRESENTATION AND ONLY PRESENTATION. The card advances because `cardAnswered` says the run
+// is finished with it; this number decides when the player is shown that, and nothing about what is
+// shown or what is spent. Zero draws on any stream – see `answer()`.
+export const PROLOGUE_LANDING_MS = 200
+</script>
+
 <script setup lang="ts">
 // ⭐⭐ THE PROLOGUE, END TO END – phase 4 of docs/specs/childhood-prologue-build-2026-09.md §6.
 // Nine cards, then the career is created with what they came to, then the handover (§5). This
@@ -43,7 +60,7 @@
 // out of the DRAFT copy table, so `PrologueCard.vue` draws it with the nine years' own fit, contrast
 // and painting – and the painting is the owner's three faces, through the `outcome` argument phase 7
 // left the hook for («the wiring, when it comes, is one argument at one call site»).
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import MuteButton from './MuteButton.vue'
 import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
@@ -82,6 +99,32 @@ import {
 } from '../prologue/run'
 import { OPENING_IDENTITY, settleIdentity, type PrologueIdentity } from '../prologue/identity'
 import { DEFAULT_PROFILE, type FamilyBackground } from '../shared/protocol'
+
+const props = withDefaults(
+  defineProps<{
+    /** ⭐⭐ ROUND 40 #7 B – THE PROLOGUE'S SEED, SUPPLIED FROM OUTSIDE, and it is the career's own
+     *  input one level up. `game.newCareer(seed, …)` has always taken a seed and fallen back to a
+     *  fresh random one when it is blank; this is the same argument in the same shape, so the walk
+     *  that happens BEFORE a career exists can be pinned the same way the career already could.
+     *
+     *  ⚠ WHY IT HAD TO EXIST: the promo recorder had no way in, so it patched `Math.random` around
+     *  the mount – which pinned THIS seed and left the career's own random, and the film walked one
+     *  childhood into two different girls under a caption reading «Same hidden potential». A tool
+     *  that has to reach inside a global to be deterministic will eventually pin the wrong half.
+     *
+     *  ⚠ A PROP AND NOT A QUERY PARAMETER, and that is the app's own precedent rather than a
+     *  preference: `PrologueLocalOpen.vue` already takes this exact seed as a prop from this
+     *  component, and `e2e/careerAt.ts` records the house rule the other way round – «NOTHING HERE
+     *  IS A TEST HOOK IN THE PRODUCT … no query parameter, no exposed binding, no branch in src/».
+     *  So the seam is a prop, and nothing about the shipped app's URLs, storage or bundle moves.
+     *
+     *  ⚠ ABSENT IS THE SHIPPED BEHAVIOUR, BYTE FOR BYTE. `App.vue` passes nothing, so this is `''`,
+     *  so `initialSeed()` calls `freshSeed()` – the one `Math.random` draw the walk has always
+     *  made, unchanged in position and in formula. A player cannot tell this exists. */
+    seed?: string
+  }>(),
+  { seed: '' },
+)
 
 const emit = defineEmits<{
   /** the player wants the wizard instead (§6) */
@@ -122,11 +165,31 @@ const creating = ref(false)
  *  cannot see any of it.
  *
  *  ⚠ AND IT IS DROPPED BY `startAgain`, with the run and the identity – a different childhood means
- *  a different girl, and it would be a strange kind of «start again» that replayed the same draws. */
+ *  a different girl, and it would be a strange kind of «start again» that replayed the same draws.
+ *
+ *  ⚠ ROUND 40 #7 B – `freshSeed` IS NOW THE FALLBACK RATHER THAN THE ONLY SOURCE. `initialSeed()`
+ *  below is what the walk actually reads; this function is what it calls when nothing was supplied,
+ *  and its formula and its single `Math.random` call are unchanged so the unsupplied walk is the
+ *  shipped one byte for byte. */
 function freshSeed(): string {
   return `prologue-${(Math.random().toString(36).slice(2) + '0000').slice(0, 8)}`
 }
-const seed = ref(freshSeed())
+
+/** ⭐⭐ ROUND 40 #7 B – THE SEED THIS WALK RUNS ON: the one that was supplied, or a fresh draw.
+ *
+ *  ⚠ `.trim() ||` IS THE STORE'S OWN SPELLING, COPIED ON PURPOSE. `game.newCareer` reads
+ *  «Empty seed -> generate a readable one store-side» as `seed.trim() || …`, so an explicit seed
+ *  wins, blank and whitespace both mean «none», and the fallback is the shipped draw untouched.
+ *  One idiom, two places, and the prologue half no longer needs a global patched to be pinned.
+ *
+ *  ⚠ AND IT IS A FUNCTION BECAUSE `startAgain` CALLS IT TOO. A supplied seed is supplied for the
+ *  whole session of the component, restart included – that is the promo film's actual case, ONE
+ *  seed walked down two childhoods – while an unsupplied one keeps drawing fresh, which is what
+ *  §2.3's «a different childhood and a different girl» has always meant for a player. */
+function initialSeed(): string {
+  return props.seed.trim() || freshSeed()
+}
+const seed = ref(initialSeed())
 
 /** THE WEEKENDS OF THE YEAR JUST ANSWERED, still to be played – `(age, index)` pairs, taken from the
  *  front. Empty in every year that holds none, which is every year of a childhood that never
@@ -252,8 +315,22 @@ const ask = computed(() => {
 })
 /** ⭐ WHAT THIS YEAR HAS ALREADY ANSWERED, so a card carrying two questions can show which of them is
  *  settled. Read off the run here rather than held on the card, for the same reason `warmth` and
- *  `mood` are: `PrologueCard` reads no run. */
-const picked = computed(() => (resultNow.value ? undefined : run.value.picks[CARD_AGES[at.value]]))
+ *  `mood` are: `PrologueCard` reads no run.
+ *
+ *  ⭐ ROUND 40 #1 – AND IT ANSWERS FOR THE FIVE'S THREE ORIGINS TOO, which it did not need to while
+ *  the answers were plain buttons. They are a radio group now, and a radio that can never report
+ *  itself checked is a radio that lies about its state – so the card is handed whichever answer the
+ *  run holds, and the five's is `origin` rather than a `picks` entry (`withOrigin`). It is the same
+ *  question this computed always asked, asked of the card that is actually on the screen.
+ *
+ *  ⚠ IT IS STILL A READING AND CHANGES NOTHING: the five is finished the moment an origin is taken
+ *  (`cardAnswered` – that card carries no ask), so the mark is on screen for exactly as long as the
+ *  press takes, which is the same life `picks` has on the eight, the nine and the ten. */
+const picked = computed(() => {
+  if (resultNow.value) return undefined
+  const age = CARD_AGES[at.value]
+  return cardFor(age, run.value).origins ? (run.value.origin ?? undefined) : run.value.picks[age]
+})
 const entry = computed(() => (resultNow.value ? undefined : run.value.entries[CARD_AGES[at.value]]))
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
@@ -282,6 +359,58 @@ const coachBase = computed(() =>
  *  the handover, so this is the last of them. Empty for a childhood that never entered one, and the
  *  handover draws nothing at all then. */
 const played = computed(() => playedLine(run.value.opens))
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 40 #3 – THE CARD LANDS BEFORE IT LEAVES
+// =================================================================================================
+//
+// THE DEFECT, and it was the promo recorder rather than a tester who met it: on the eight, the nine
+// and the ten the card's ONE question is its whole card, so the answer that fills the ball is the
+// answer that moves the screen – the mark wave A built and the ball A2 painted were on screen for
+// less than a frame. His word is in docs/rounds/round-40.md, item 3.
+//
+// ⚠⚠ THE HOLD IS NOT A SECOND SOURCE OF TRUTH, AND THAT IS THE WHOLE DESIGN. The answer is written
+// into the run UNCONDITIONALLY, above, and `cardAnswered` decides on its own that the card is
+// finished – both exactly as they did before. What is deferred is the ADVANCE and nothing else, so
+// there is no «pending» state to get stuck in: a timer that never fired would leave a card that is
+// still fully answerable, still re-choosable, and still showing what the run holds.
+//
+// ⚠ AND A SECOND PRESS INSIDE THE HOLD RE-STARTS IT rather than being swallowed or queueing a
+// second advance. `land` clears whatever was in flight, so exactly one advance ever happens and it
+// is the one the LAST press earned – which is also what stops a double tap walking the player past
+// a card unread.
+
+/** The timer in flight, or null. ⚠ A PLAIN `let` AND NOT A `ref`: nothing renders off it, and a
+ *  reactive flag is precisely the second source of truth the note above refuses. */
+let landing: ReturnType<typeof setTimeout> | null = null
+
+/** ⚠ CLEARED ON UNMOUNT AND ON `startAgain`, because a timer that outlives its card would advance a
+ *  walk the player has left – or create a career for a childhood that was thrown away. */
+function clearLanding(): void {
+  if (landing === null) return
+  clearTimeout(landing)
+  landing = null
+}
+onUnmounted(clearLanding)
+
+function land(go: () => void): void {
+  clearLanding()
+  landing = setTimeout(() => {
+    landing = null
+    go()
+  }, PROLOGUE_LANDING_MS)
+}
+
+/** THE YEAR IS FINISHED – the weekend it just bought, or the next card. Split out of `answer()` so
+ *  that the hold defers exactly this and nothing about how the answer was recorded. */
+async function advanceYear(age: number): Promise<void> {
+  // ⭐⭐ THE WEEKEND THE YEAR JUST BOUGHT – asked of `localOpensAt`, which answers with a count off
+  // the childhood the player has actually chosen. The tournament plays WHERE THE CARD SITS: this
+  // year's answers are all in the run by the time this runs.
+  queue.value = opensForYear(age)
+  if (playNext()) return
+  await step()
+}
 
 /** ⭐ ONE ANSWER, WHATEVER KIND OF CARD IT WAS. An origin, a decision and a quiet year all arrive
  *  here; the table says which of the three it was, so nothing branches on the age. */
@@ -325,13 +454,21 @@ async function answer(id: string | null): Promise<void> {
   }
   // ⭐ THE CARD STAYS UNTIL IT IS FINISHED – both of its questions, on the four cards that ask two.
   // Nothing here decides which those are: the table does, and `cardAnswered` is the one reader.
+  //
+  // ⚠⚠ SO THIS ONE PREDICATE IS ALSO WHICH PRESSES ARE HELD, and no card is named anywhere. A press
+  // that leaves the card standing (the year's own answer on the eleventh and the twelfth, where the
+  // tournament question is still open under it) reaches this line and returns – there is nothing to
+  // hold for, and a delay there would only make a screen that stays feel slow.
   if (!cardAnswered(age, run.value)) return
-  // ⭐⭐ AND THEN THE WEEKEND THE YEAR JUST BOUGHT – asked of `localOpensAt`, which answers with a
-  // count off the childhood the player has actually chosen. The tournament plays WHERE THE CARD
-  // SITS: this year's answers are all in the run by the lines above.
-  queue.value = opensForYear(age)
-  if (playNext()) return
-  await step()
+  // ⭐⭐⭐ ROUND 40 #3 – AND A SELECTION IS HELD LONG ENOUGH TO BE SEEN. `null` is the way on off a
+  // card that decides nothing (`wayOn` in PrologueCard.vue, round 40 #1's own split: every control
+  // that SELECTS emits an id, and the one that only ADVANCES emits null). It has no taken state to
+  // show, so it is not held – the negative arm of item 1, from the other side.
+  if (id === null) {
+    await advanceYear(age)
+    return
+  }
+  land(() => void advanceYear(age))
 }
 
 /** How many weekends the year at `age` holds, as `(age, index)` pairs to be played in order. */
@@ -368,7 +505,25 @@ async function begin(): Promise<void> {
   creating.value = true
   try {
     await game.newCareer(
-      '',
+      // ⭐⭐ ROUND 40 #7 C – THE CAREER IS BORN ON THE CHILDHOOD'S OWN SEED. It used to be `''`, so
+      // the store drew a fresh random one here and the girl the nine cards had just walked became a
+      // DIFFERENT girl the instant the childhood ended. That discontinuity is what the promo film
+      // caught – «Same hidden potential» over two girls – but it was never the recorder's: it is in
+      // the shipped product, once per prologue career, and every player has been getting it.
+      //
+      // ⭐ AND IT MAKES A CHILDHOOD REPRODUCIBLE FOR THE PLAYER. One girl, one seed, all the way
+      // through – the seed is already persisted per career (`world.seed`), so the childhood that
+      // produced her is now recoverable from the save rather than lost at the handover.
+      //
+      // ⚠ NO SCHEMA MOVES AND NO MIGRATION IS OWED. `seed` is a field every save has carried since
+      // v1; what changed is the VALUE a career born after this ships is given, and a career already
+      // in flight keeps the seed on its own record untouched. Nothing reads a seed's SHAPE.
+      //
+      // ⚠ AND AN ORDINARY NEW CAREER IS UNTOUCHED. The wizard and «raise another» still call
+      // `newCareer('')` and still get the store's random fallback; a prologue career's seed is the
+      // walk's own `freshSeed()` draw unless a tool supplied one, which is exactly as random as the
+      // fallback it replaces. A player cannot tell this shipped.
+      seed.value,
       {
         ...DEFAULT_PROFILE,
         // ⚠ HER NAME, HER BIRTHDAY AND HER COUNTRY REACH `createWorld` HERE, on exactly the path the
@@ -396,6 +551,11 @@ async function begin(): Promise<void> {
 async function startAgain(): Promise<void> {
   const careerId = game.snapshot?.careerId
   if (careerId) await game.deleteCareer(careerId)
+  // ⚠ ROUND 40 #3 – AND ANY CARD STILL LANDING IS DROPPED WITH THE CHILDHOOD IT BELONGED TO. The
+  // handover cannot be reached with one in flight (it is the ninth card's own advance that opens
+  // it), so this is belt and braces rather than a live path – and it is the cheap half of «the timer
+  // must not outlive its walk», the other half being `onUnmounted`.
+  clearLanding()
   handoverOpen.value = false
   run.value = EMPTY_RUN
   // ⚠ AND THE IDENTITY GOES BACK TOO. «Start again» drops the career and starts the childhood over
@@ -411,7 +571,12 @@ async function startAgain(): Promise<void> {
   openNow.value = null
   resultNow.value = null
   creating.value = false
-  seed.value = freshSeed()
+  // ⚠ ROUND 40 #7 B – `initialSeed()` AND NOT `freshSeed()`, AND THE DIFFERENCE IS ONLY VISIBLE TO A
+  // CALLER THAT SUPPLIED ONE. Nothing supplied (every shipped caller) -> a fresh draw, exactly as
+  // before, so §2.3's «a different childhood and a different girl» is unmoved for a player. A seed
+  // supplied -> that seed again, which is the whole promo case: the SAME girl walked down a second,
+  // different childhood is the comparison the film was trying to film.
+  seed.value = initialSeed()
 }
 </script>
 

@@ -242,3 +242,133 @@ Both are one line, both are measured above, and neither needs new code:
 ⚠ The three reference childhoods (`neglectedChildhood` / `medianChildhood` / `devotedChildhood`) are
 NOT fixtures: two of them are the anchors the level is normalised against, so editing one is a
 balance change and belongs back in this document with a bench run.
+
+---
+
+## 9. Round 40 #6, measured – «Вариант B: compound, not sum», and NOTHING MOVED
+
+Owner, 08.09: «по п. 2 давай Вариант B попробуем» – the childhood's choices should COMPOUND rather
+than merely add, «so that the club year, the private hour and the sports school reinforce one
+another: three years of private coaching after a club year are worth more than the three years
+apart». `tools/r40-childhood-compounding.ts` (32 reachable runs x 4,000 seeds) and
+`tools/r40-childhood-career-blast.ts` (careers walked to thirty). **No dial moved, and this section is
+why.** ⚠ The item's own pointer was rotted: §8c is in `childhood-prologue-build-2026-09.md`, not here.
+
+### 9a. The channel exists, it carries, and it is LINEAR – which is the whole answer
+
+`foldYears` already has the channel the item is about: `carry` survives between years and 40% of a
+year's quality is that accumulated habit. So the first thing to establish is not whether it is there
+but what it does. It **carries a year forward; it does not multiply two years together**:
+
+| claim | measured |
+| --- | --- |
+| the model's one nonlinearity is the strain term (`joy = 1 − strainCost·burn`) | **joy is exactly 1 on every year of all 32 reachable runs** – no arm of any card sells more practice than a child that age can take, so the fold is linear over the whole shipped table |
+| every road is its own single-decision deltas added up | **worst residual 2.15e-15 points** over 32 masks (the twelfth held to one face) |
+| ...over the shipped table, where the twelfth's face is derived | 0.769 points – ⚠ **and that is the FORK, not compounding**: which face a run meets is derived from years 5..11 and the two faces sell different years (tired on 22 of the 32 runs, wants-more on 10) |
+
+⭐ **So «three years of private coaching after a club year» are worth exactly «three years of private
+coaching» plus «a club year», and no setting of `coordinationShare` or `habitCarry` can change that.**
+Compounding is not a strength this model has at a low setting; it is a term the arithmetic does not
+contain. Building it would be a NEW mechanism – see 9e, which names it rather than making it.
+
+⚠ **But the channel is not weak, and that matters for what follows.** The share of a decision that is
+paid in the years AFTER it, closed-form and checked against `childhoodWalk().quality` to 1e-16:
+
+    echo, as a share of what the decision is worth          age 8   age 9  age 10  age 11  age 12
+    as shipped (coordinationShare 0.6, habitCarry 0.6)      38.9%   32.6%   42.8%   28.8%   12.8%
+
+The eighth year is over a third paid later; the twelfth is an eighth, because there is almost nowhere
+left for it to echo into.
+
+### 9b. The consistency premium is zero – the spread is POSITIONAL
+
+Every run grouped by how many dear arms it took (levels, pre-clamp):
+
+    k dear   runs      min      max     span     mean
+       0        1   -1.284   -1.284    0.000   -1.284
+       1        5   -1.205   -0.354    0.851   -0.865
+       2       10   -0.938    0.168    1.106   -0.445
+       3       10   -0.007    0.572    0.579    0.282
+       4        5    0.652    1.179    0.527    0.904
+       5        1    1.259    1.259    0.000    1.259
+
+The spread inside a count is real – and it is entirely WHICH years were dear, not whether they were
+adjacent. Nine synthetic years, one multiset of five dear years arranged three ways: **late block
++0.743 · alternating +0.477 · early block +0.052**, and the difference is reproduced exactly by
+adding up the years that moved (no interaction term).
+
+### 9c. The sweep, and the finding that decides the item
+
+Both dials, 4,000 seeds, the 32 reachable runs. ⚠ The two anchors are **normalisation-invariant**: a
+median childhood reads exactly 0.000 and a devoted one exactly 2.400 at every one of the 30 settings,
+because `childhoodWalk` divides by the two references themselves. No candidate was ever disqualified
+by the anchor, so the anchor is not the constraint here – the span is.
+
+| coordinationShare | habitCarry | card span (points) | model span | cards reach | neglected level |
+| --- | --- | --- | --- | --- | --- |
+| 0.40 | 0.75 | **2.170** | 4.367 | **49.7%** | −2.391 |
+| 0.40 | 0.60 | 2.230 | 4.392 | 50.8% | −2.423 |
+| 0.50 | 0.60 | 2.308 | 4.333 | 53.3% | −2.351 |
+| **0.60** | **0.60** | **2.383** | **4.282** | **55.7%** | −2.285 · **SHIPPED** |
+| 0.70 | 0.60 | 2.459 | 4.231 | 58.1% | −2.226 |
+| 0.80 | 0.60 | 2.515 | 4.180 | 60.2% | −2.171 |
+| 1.00 | any | 2.632 | 4.095 | 64.3% | −2.074 · the habit switched off entirely |
+
+⭐⭐ **THE DIRECTION THE ITEM ASKS FOR MAKES THE CARDS REACH LESS.** Strengthening the habit channel –
+a lower `coordinationShare` – takes the table from 55.7% of the model down to 49.7%. The reason is
+mechanical and was checked rather than told: **the years the habit carries include the three the
+player never chooses.** The share of the whole childhood owned by ages 5, 6 and 7 (their own work plus
+their echo, closed-form, reconstruction error 1e-16):
+
+    coordinationShare  0.40    0.60 (shipped)    0.80    1.00
+    the unchosen years 28.0%   24.8%             21.5%   18.3%
+
+⚠ And `habitCarry` does not mean what its name suggests at the top of its range: `(1 - habitCarry)` is
+what a year folds INTO the habit, so **carry 0.90 WEAKENS the channel** (the eighth year's echo falls
+from 38.9% to 23.6%). A dial that reads as «more habit» is two dials pulling opposite ways.
+
+### 9d. The blast radius – and the childhood's span is mostly gone by her peak anyway
+
+`tools/r40-childhood-career-blast.ts`: the cheapest and dearest of the 32 runs, walked as real
+careers through `openCareer`/`stepCareerWeek` to age thirty, **30 seeds per cell, both arms on the
+same seeds** so the difference is paired and carries no seed noise. Arm B is the best candidate the
+sweep offers (`coordinationShare` 0.8).
+
+| | at 14 | at 18 | at peak |
+| --- | --- | --- | --- |
+| **the span a player feels, A (shipped)** | **2.386** | **0.842** | **0.105** |
+| the span a player feels, B (0.8) | 2.516 | 0.855 | 0.107 |
+| paired B − A, the dearest road | **+0.093 ± 0.003** | −0.002 ± 0.018 | −0.005 ± 0.008 |
+| paired B − A, the cheapest road | **−0.037 ± 0.001** | −0.015 ± 0.005 | −0.007 ± 0.004 |
+
+⭐⭐ **THE ARRIVAL SPAN DOES NOT SURVIVE THE CAREER: 2.39 points at fourteen is 0.84 at eighteen and
+0.11 at her peak – 96% of it closed by `growWeek`'s own headroom term** (a girl who arrives higher has
+less room and grows more slowly). And the candidate's effect, which is 30 standard errors wide at
+fourteen, is **inside the noise at eighteen and at her peak**: it buys +0.13 points of span on the
+handover screen and nothing a career can feel. ⚠ `tests/prologue-cards.test.ts` carries an older
+reading of the same fact – «the game's own growth closes 71% of an arrival gap by her peak (measured
+02.09)»; this walk says 96%, and both say the same thing about buying width.
+
+### 9e. What was NOT done, and what is his to rule on
+
+- **Nothing in `src/` was touched.** No dial moved, `swingPoints` was never a candidate (it is derived
+  from the game's own price of a junior year and moving it re-prices the childhood against the whole
+  career), and no card's arms were widened – that is §8c's finding 1 and still the owner's.
+- ⚠ **The item's premise has rotted twice over.** §8c says the cards reach 44% of the model; the
+  balance pass already took them to ~56% and this measurement reads **55.7%**, against a structural
+  ceiling near 58–64% (`childhood-prologue-balance-2026-09.md` §2 – the `STARTING_SKILL_BAND` clamp
+  pins the best run's arrival whatever the table does).
+- ⭐ **THE ONE-LINE SHAPE THAT WOULD ACTUALLY COMPOUND, named and not made.** Make the habit MULTIPLY
+  the year instead of blending with it – `q = joy · (share·coordination·taught + (1−share)·habit)`
+  becoming `q = joy · coordination · taught · (1 + k·habit)`. Measured as a mutation it produces a
+  real interaction (the worst road beats its own parts by 0.178 points) – and it is a **model change,
+  not a dial**: it re-prices every childhood, moves the neglected anchor, and re-freezes every
+  prologue-born career. It is his call, and it should be taken with 9d in front of it, because
+  whatever it widens at fourteen is 96% closed by her peak.
+- ⚠ **Round 40 #5's corpus carried a flaw that did not change its conclusion.** Its enumeration
+  answered the twelfth with a fixed pair of ids from DIFFERENT faces, and `pickAt` returns null for an
+  id the drawn face does not carry – so **16 of its 32 rows were seven-year childhoods**. The extremes
+  are the same runs either way, so the span is identical (2.383 on both corpora here) and «the 1.87
+  has rotted» stands. The figure to quote is **2.38–2.44 depending on the statistic**: 2.383 is the
+  mean over seeds of the per-seed span across the 32 reachable runs; #5's 2.44 was the median of a
+  corpus with the truncated rows in it.

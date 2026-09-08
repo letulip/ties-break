@@ -526,6 +526,91 @@ export function lastWordLine(oneMoreYearCount: number): string {
   return `${LAST_WORD_OPENING} She has said one more year ${oneMoreYearCount} ${times}, and this season was the last one.`
 }
 
+/** ⭐⭐⭐ ROUND 39 #14a – THE PLATEAU CARD'S LEDE, AND IT ESCALATES WITH HER OWN ANSWERS.
+ *
+ *  THE OWNER, 08.09: «„She said it in the car. Three seasons on the professional table and it has
+ *  not moved…" – одно и то же опять, давай какую-то вариативность в этих фразах сделаем, какие
+ *  варианты?» The card printed ONE sentence for the life of a career: a woman who had already said
+ *  «one more year» three times read the paragraph she read the first time, word for word.
+ *
+ *  `oneMoreYearCount` is the state that can tell those two apart – `lastWordLine` above says why it
+ *  is the richest field on this card – and on the plateau reading it is exact: the plateau branch of
+ *  `retirementDue` cannot fire past `askFromAgeYears`, so every answer counted here was given to
+ *  THIS card. It is incremented by `answerRetirement` AFTER the answer, so while the card is on
+ *  screen it reads how many times she has said those words BEFORE this winter.
+ *
+ *  ⚠ EXPORTED, AND THE COPY LIVES IN THE ENGINE RATHER THAN IN THE TEMPLATE, on `lastWordLine`'s own
+ *  precedent (and `RELEASE_LINE_PREFIX`'s before it): a test pins the four bands through the symbol
+ *  instead of through a spelling, and the four sentences cannot be four `v-if` arms that no engine
+ *  test can read. Nothing is drawn here – see the RNG note at the top of this file – so re-opening
+ *  the card cannot change a word of it, which is round 31 #4's defect and not to be re-shipped.
+ *
+ *  ⚠⚠ EVERY LEDE IS HER DOUBT AND NOT ONE OF THEM IS A FORECAST, AND THAT IS MEASURED RATHER THAN A
+ *  MATTER OF TASTE. `tools/r40-retire-trigger.ts`, 108 careers x 900 weeks, on the engine's own
+ *  `plateauViewOf`: the card asks on 52 of them, and in 52 of 52 she LATER beat the rank she held
+ *  the day it fired – 96.2% of them after the very FIRST ask. Read as a prediction this card is
+ *  wrong almost always; read as her doubt it is right every time, because she says she cannot reach
+ *  the top, the parent says keep going, and she breaks through. So a lede may say what SHE believes;
+ *  it may never say what the world is going to do, because the world does the opposite and the
+ *  player watches it happen. A lede that predicts is a defect here, not a style choice.
+ *
+ *  ⚠⚠ AND NO LEDE MAY ASSERT A NUMBER THE STATE CANNOT KEEP. The drafts said «Four seasons at the
+ *  same table» and «three more winters»: each is true at exactly ONE value of `oneMoreYearCount`,
+ *  and the 3+ band has no such value – «three» becomes a lie the moment she says yes again. Worse,
+ *  neither quantity is on the save at all: the asks need not be consecutive (a rung cleared inside
+ *  the window pushes the next reading out by seasons, and `plateauReading` declines on a short
+ *  window too), so «how many seasons flat» cannot be recovered from an answer count. What IS exact
+ *  is `oneMoreYearCount` itself. Hence the rule these four obey: a count may be SPELLED only where
+ *  the band pins its value, and the open band interpolates the real number or says none.
+ *
+ *  ⚠⚠ BAND 0 IS THE SHIPPED SENTENCE, BYTE-IDENTICAL – it is the owner's copy and invariant 4 puts
+ *  it out of reach, its «Three» included (that word is his, not `ENDINGS.plateauSeasons` seen
+ *  through a template). It is also the DEFAULT branch rather than an `=== 0` one, deliberately: a
+ *  count this function cannot read – a poked save, a NaN – falls back to the words that have always
+ *  been there instead of printing something strange into one of the new ones.
+ *
+ *  ⚠ ALL FOUR STILL LEAVE THE DOOR OPEN, because 14b («she is done» as a state) is NOT built: the
+ *  plateau offer draws two answers and either is legal, so a lede that closed the question would
+ *  contradict the controls under it. */
+export function plateauLede(oneMoreYearCount: number, tableName: string): string {
+  // 1 – SHE HAS SAID IT ONCE ALREADY, and the count is spelled as a word because this branch is
+  // reachable at exactly one value. «Four seasons at the same table» was the draft here and is the
+  // sentence the header refuses: it counts a thing the save does not carry.
+  if (oneMoreYearCount === 1) {
+    return (
+      'She brought it up before the airport this time. She has said one more year once already, and she has ' +
+      'stopped pretending the next season is different. She would still play a year for you – she said that too.'
+    )
+  }
+  // 2 – ...AND THIS ONE COUNTS NOTHING AT ALL, WHICH IS ITS ESCALATION: no argument, no question,
+  // the two numbers put down in front of the parent and a silence. It carries no count for the same
+  // reason it carries no adjectives.
+  if (oneMoreYearCount === 2) {
+    return (
+      'She did not argue and she did not ask. She put the season on the table – where it started, where it ' +
+      'ended – and waited. If you want another year, she will give you one more.'
+    )
+  }
+  // 3+ – THE OPEN BAND, AND THE ONLY ONE THAT MAY CARRY A NUMBER, because it is the only one whose
+  // value its own band does not pin. The number is `oneMoreYearCount` itself and not a count of
+  // seasons or winters, in the engine's existing idiom («She has said one more year 4 times»,
+  // `lastWordLine`) so the two surfaces count the same thing in the same words. Always plural: the
+  // band starts at three. The table clause is a PRESENT reading and says nothing about the years in
+  // between – whether it moved and came back is not on the save either.
+  if (oneMoreYearCount >= 3) {
+    return (
+      `This time she said it looking out of the window. She has said one more year ${oneMoreYearCount} times, ` +
+      `and the ${tableName} table has not moved. She will not fight you on one more – but you both know what she wants.`
+    )
+  }
+  // 0 – THE SHIPPED SENTENCE, WORD FOR WORD, and the fallback for every count this function cannot
+  // read. See the header.
+  return (
+    `Three seasons on the ${tableName} table and it has not moved. If she cannot reach the top, she would ` +
+    'rather go now – that is how she put it. She will keep playing if you want her to.'
+  )
+}
+
 export function endingForRetirement(
   offer: RetirementOffer,
   week: number,

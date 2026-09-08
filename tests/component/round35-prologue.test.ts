@@ -34,6 +34,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { assertDismissReachable, boxOf, measureDialog, setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
+import { landing } from './prologueLanding'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -82,11 +83,20 @@ function stubStore() {
 async function press(wrapper: ReturnType<typeof mount>, label: string): Promise<void> {
   const button = wrapper.findAll('button').find((b) => b.text().startsWith(label))
   expect(button, `no «${label}»: ${wrapper.text().slice(0, 160)}`).toBeTruthy()
-  await button!.trigger('click')
+  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. An answer that FINISHES a card is now held for
+  // `PROLOGUE_LANDING_MS` before the walk advances, so this helper steps that clock instead of
+  // waiting on it – see tests/component/prologueLanding.ts. The no-repeat guard below is
+  // untouched and still reads every scene the walk draws.
+  await landing(() => button!.trigger('click'))
   await Promise.resolve()
   await wrapper.vm.$nextTick()
 }
 
+/** ⚠ RE-AIMED BY ROUND 40 #2: `ask` now means «the card is on the beat where its question is up»,
+ *  and on a card that carries a decision as well that beat is reached by ANSWERING the year – the
+ *  owner asked for the second group of buttons to appear once the first is chosen, on the same
+ *  screen. So the mount hands the card the pick the container would be holding there; the
+ *  thirteenth has no decision of its own and discloses with nothing pressed. */
 function mountCard(card: PrologueCard, run: PrologueRun, ask = false) {
   setViewport(PHONE)
   const wrapper = mount(PrologueCardView, {
@@ -97,6 +107,7 @@ function mountCard(card: PrologueCard, run: PrologueRun, ask = false) {
       mood: moodAt(card.age, run),
       reason: card.age === 12 ? readTwelfth(run).reason : undefined,
       ask: ask ? card.tournament : undefined,
+      picked: ask ? card.options?.[0].id : undefined,
       identity: { ...OPENING_IDENTITY },
     },
   })
@@ -319,7 +330,7 @@ describe('⭐⭐⭐ item 4 – no scene is drawn twice in one childhood', () => 
   /** WHAT A SCREEN IS, for the purpose of «I have seen this one before»: the three things a player
    *  reads first. The painting is in it deliberately – the two-beat version kept the picture and the
    *  title and changed one paragraph, which is exactly why he read it as a repeat. */
-  function scene(wrapper: ReturnType<typeof mount>): { head: string; full: string } | null {
+  function scene(wrapper: ReturnType<typeof mount>): { head: string; lede: string; askLine: string; labels: string[] } | null {
     const title = wrapper.find('.prologue-title')
     if (!title.exists()) return null
     const kicker = wrapper.find('.prologue-kicker')
@@ -327,14 +338,16 @@ describe('⭐⭐⭐ item 4 – no scene is drawn twice in one childhood', () => 
     // THE HEAD is what a player recognises a screen by: the year, the heading and the painting.
     const head = `${kicker.exists() ? kicker.text() : ''} | ${title.text()} | ${art?.getAttribute('src') ?? ''}`
     // THE BODY is what is under it: the scene's own paragraph, the ask's line if there is one, and
-    // the answers on offer. ⚠ LABELS ONLY - a taken answer is marked with a class and not with a
-    // word, so pressing one does not count as a new screen.
+    // the answers on offer. ⚠ LABELS ONLY - a taken answer is marked by the radio's own state and
+    // not with a word, so pressing one does not count as a new screen.
     const lede = wrapper.find('.prologue-lede')
     const askLine = wrapper.find('.prologue-ask')
     const labels = [...document.querySelectorAll('.prologue-answer-label')].map((b) => b.textContent!.trim())
     return {
       head,
-      full: `${head} || ${lede.exists() ? lede.text() : ''} || ${askLine.exists() ? askLine.text() : ''} || ${labels.join('/')}`,
+      lede: lede.exists() ? lede.text() : '',
+      askLine: askLine.exists() ? askLine.text() : '',
+      labels,
     }
   }
 
@@ -350,33 +363,63 @@ describe('⭐⭐⭐ item 4 – no scene is drawn twice in one childhood', () => 
   // ⚠⚠ MUTATION-VERIFIED AND THIS IS THE CONTROL: restoring the two-beat `answer()` (write the pick,
   // set `beat = 'ask'`, return) makes this red with exactly those two titles listed twice, which is
   // the reproduction of what he saw.
-  it('⭐⭐⭐ walking the whole childhood draws no scene twice', async () => {
+  //
+  // ⚠⚠⚠ RE-AIMED BY ROUND 40 #2, AND THE RE-AIM IS THE ITEM. The rule used to be «one head, exactly
+  // one body», and the owner has now asked for the one thing that rule forbade: «чтобы человек
+  // сначала делал верхний выбор, а потом на этом же экране появлялись следующие кнопки, чтобы флоу
+  // был более явным». So a body may GROW - the tournament question and its pair are added under the
+  // year's own answers when the year is chosen - and the rule becomes what it was always protecting:
+  // NOTHING ALREADY ON THE SCREEN IS REPLACED. That still catches the two-beat defect exactly, and
+  // by both clauses rather than one: it swapped the lede for the ask's line AND took the card's own
+  // answers away. The mutation above was re-run against this shape.
+  it('⭐⭐⭐ walking the whole childhood draws no scene twice – a screen may grow, never change', async () => {
     stubStore()
     const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
     // ⚠ WHAT «DRAWN TWICE» MEANS, MEASURED RATHER THAN ASSERTED BY TASTE: one HEAD - the year, the
-    // heading and the painting, which is what a player recognises a screen by - may have exactly ONE
-    // body under it in a whole childhood. Two bodies under one head IS the defect he reported: the
-    // picture and the title stayed, one paragraph and the buttons changed, and he read it as the
-    // same screen coming back.
+    // heading and the painting, which is what a player recognises a screen by - keeps ONE scene
+    // under it for the whole of the childhood. A second, different body under the same head IS the
+    // defect he reported: the picture and the title stayed, one paragraph and the buttons changed,
+    // and he read it as the same screen coming back. What round 40 #2 permits is strictly an
+    // ADDITION at the foot of that body.
     //
     // ⚠ CARD SCENES ONLY, AND THAT IS NOT A LOOPHOLE. A year can hold two weekends
     // (`LOCAL_POOL.maxPerYear`), and the three result scenes are DELIBERATELY repeatable - cards.ts
     // says so in as many words («one of these three is read up to four times», which is why they are
     // the shortest scenes in the prologue). They also share a head, so they would be indistinguishable
     // from the defect; the thing he reported was a YEAR's own scene drawn twice.
-    const bodies = new Map<string, Set<string>>()
+    const bodies = new Map<string, ReturnType<typeof scene>[]>()
     await walkChildhood(wrapper, {
       enter: true,
       onScene: (kind) => {
         if (kind !== 'card') return
         const s = scene(wrapper)
         if (!s) return
-        if (!bodies.has(s.head)) bodies.set(s.head, new Set())
-        bodies.get(s.head)!.add(s.full)
+        if (!bodies.has(s.head)) bodies.set(s.head, [])
+        bodies.get(s.head)!.push(s)
       },
     })
-    const redrawn = [...bodies.entries()].filter(([, seen]) => seen.size > 1).map(([head]) => head)
-    expect(redrawn, 'a year`s own scene was drawn twice with a different body under it').toEqual([])
+    const replaced: string[] = []
+    let grew = 0
+    for (const [head, seen] of bodies) {
+      const shots = seen.map((s) => s!)
+      // the scene's own paragraph never changes under one head...
+      if (new Set(shots.map((s) => s.lede)).size > 1) replaced.push(`${head} – the scene was replaced`)
+      // ...nor does the question, once it is on the screen...
+      if (new Set(shots.map((s) => s.askLine).filter(Boolean)).size > 1) replaced.push(`${head} – the question was replaced`)
+      // ...and the answers only ever GROW: every earlier column is the front of every later one.
+      for (let i = 1; i < shots.length; i++) {
+        const before = shots[i - 1].labels
+        const after = shots[i].labels
+        if (after.length > before.length) grew += 1
+        const kept = before.every((label, at) => after[at] === label)
+        if (!kept) replaced.push(`${head} – the answers were replaced: ${before.join('/')} -> ${after.join('/')}`)
+      }
+    }
+    expect(replaced, 'a year`s own scene was redrawn with something on it taken away').toEqual([])
+    // ⚠ AND THE GROWING ARM IS NOT VACUOUS: the walk really did meet a card whose second group
+    // arrived while the first stayed. Without this the rule above would pass on a prologue that
+    // never disclosed anything at all.
+    expect(grew, 'no card grew its second group – round 40 #2 is not on the screen').toBeGreaterThan(0)
     // ⚠ AND THE WALK IS REAL, so the empty list above means something: nine cards at least, and the
     // twelfth and thirteenth – the two he named – were among them.
     expect(bodies.size).toBeGreaterThanOrEqual(CARD_AGES.length)

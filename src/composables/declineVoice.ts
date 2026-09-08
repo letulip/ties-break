@@ -186,12 +186,82 @@ export function herDeclineLine(
   ]
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 40 #14b – THE LAST WINTER IS COMING, IN TWO OF THE THREE VOICES
+// =================================================================================================
+//
+// THE OWNER, 08.09: «да, это именно то, о чем я и говорил. Где-то тренер может подсветить, где-то
+// она сама, где-то финальный экран сезона. Давай сделаем.» His window: «за сезон-два до того».
+//
+// ⚠⚠ THE NUMBER IS NOT DERIVED HERE AND MAY NEVER BE. `Snapshot.lastWinterIn` is one engine
+// derivation (`lastWinterIn`, engine/world/coachMarket.ts) read by all three surfaces – the coach's
+// card writes its own sentence off the same row in the engine, and these two format the SAME field.
+// A second projection living on the display side is two walkers, and two walkers WILL disagree.
+//
+// ⚠ SO BOTH FUNCTIONS ARE PURE FORMATTERS OF A NUMBER THEY DID NOT COMPUTE, and both are silent on
+// `null` – which is every week outside his window, plus the last winter itself, plus any snapshot
+// that predates the field. `pastHerPeak`'s own «absent is at-peak» rule, applied to a count.
+//
+// ⚠ THEY SPELL THEIR COUNT WHERE THE COACH'S SENTENCE PRINTS A DIGIT. That split is deliberate and
+// it is the engine's own: `Snapshot.coachDeclineNote` is documented as the one string on the wire
+// that carries digits about her, and a woman saying «2 more winters» out loud is a woman reading a
+// dial. `plateauLede`'s rule holds here too – a count may be SPELLED only where the band pins its
+// value, and `LAST_WINTER_WARN_SEASONS` pins this one at one or two.
+//
+// ⚠ DRAFT COPY, AWAITING THE OWNER'S WORD (invariant 4 works both ways: these are NEW lines on
+// surfaces this item authorised, and not one existing sentence moved to fit them).
+
+/** Small counts in words, sentence-cased because both lines below open with one. Falls through to
+ *  the digit above the table rather than throwing: the band is one or two today, and a constant that
+ *  moves must degrade to something true rather than to «undefined more winters». */
+const SPELLED_COUNTS: readonly string[] = ['No', 'One', 'Two', 'Three', 'Four']
+const spelledCount = (n: number): string => SPELLED_COUNTS[n] ?? String(n)
+
+/** (d) HER OWN VOICE ON THE WINTER CARD, or null when there is nothing to warn about.
+ *
+ *  ⚠ IT GOES WHERE SHE ALREADY TALKS – the age branch of the retirement card, under round 38 #6d's
+ *  `herSeasonWord` – and it is her PROJECTION where that one is her PERFORMANCE. No new panel.
+ *
+ *  ⭐ «I will tell you myself» IS THE POINT OF THE WARNING AND NOT A FLOURISH: it is what the final
+ *  card actually does («Nobody asked her this time. She said it herself» – `LAST_WORD_OPENING`), so
+ *  the parent is being told in advance the exact shape of the winter he cannot answer. */
+export function herLastWinterLine(winters: number | null | undefined): string | null {
+  if (typeof winters !== 'number' || !Number.isFinite(winters) || winters < 1) return null
+  if (winters === 1) {
+    return '«One more winter after this one, and it will not be a question. I will tell you myself.»'
+  }
+  return `«${spelledCount(winters)} more winters after this one, and the last of them is not a question. I will tell you myself.»`
+}
+
+/** (e) THE SEASON'S CLOSING SCREEN, in the wrap-up's own reporting voice – not hers and not the
+ *  parent's. The card already carries one of each: her line above the scrap, the scrap below it.
+ *  This is the third thing on it, and it is the only one that is about a winter that has not
+ *  happened yet. */
+export function seasonLastWinterLine(winters: number | null | undefined): string | null {
+  if (typeof winters !== 'number' || !Number.isFinite(winters) || winters < 1) return null
+  const word = winters === 1 ? 'winter' : 'winters'
+  return `${spelledCount(winters)} more ${word} after this one, and then nobody asks her again.`
+}
+
+/** Both new lines as they RENDER, at every count the window can produce, so the sweeps below read
+ *  the strings a player sees rather than a template. Ordered by count, her voice first. */
+export const LAST_WINTER_LINES: readonly string[] = [1, 2].flatMap((n) => [
+  herLastWinterLine(n)!,
+  seasonLastWinterLine(n)!,
+])
+
 /** EVERY SENTENCE THIS FILE CAN PUT ON A SCREEN, for the guards that have to sweep all of them –
  *  the house law (no Cyrillic, no long dash) and the invariant-4 byte pins. Kept here so a tenth
- *  line added later is swept by construction rather than by somebody remembering to list it. */
+ *  line added later is swept by construction rather than by somebody remembering to list it.
+ *
+ *  ⚠ ROUND 40 #14b WIDENED IT, AND THE «HIS NINE» PIN IS UNTOUCHED. The four rendered warnings join
+ *  the sweep because the sweep is about what reaches a screen; the arithmetic pin on the owner's own
+ *  nine (`DECLINE_RUNGS + COACH_DECLINE_LINES + 1 + HER_DECLINE_LINES === 9`) still counts exactly
+ *  the sentences he approved on 31.08, and still fails if one of them goes missing. */
 export const ALL_DECLINE_LINES: readonly string[] = [
   ...DECLINE_RUNGS.map((r) => r.line),
   ...COACH_DECLINE_LINES,
   ...Object.values(COACH_WEEK_CHOICE),
   ...HER_DECLINE_LINES,
+  ...LAST_WINTER_LINES,
 ]

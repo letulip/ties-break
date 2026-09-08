@@ -37,8 +37,9 @@ import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, VacationBookin
  *  question the Money screen and the week recap already answer off `financeWeeks`.
  *
  *  ⚠ Derived at snapshot time; persists nothing, bumps no schema. */
-/** ⭐ WHERE SHE STANDS AGAINST HER OWN AGE GROUP AT THE HANDOVER, as one of three keys – the second
- *  dimension of the coach's read (childhood prologue, phase 7). See `Snapshot.handoverBaseBand`.
+/** ⭐ WHAT THE NINE YEARS OF HER CHILDHOOD ADDED, as one of three keys – the second dimension of the
+ *  coach's read (childhood prologue, phase 7; re-aimed from her arrival to her realisation by round
+ *  40 #4). See `Snapshot.handoverBaseBand`.
  *
  *  ⚠ IT IS DECLARED HERE AND NOT BESIDE ITS DERIVATION, and the direction is invariant 1's: the
  *  engine imports the protocol and never the other way round, so a wire type belongs to the protocol
@@ -482,22 +483,27 @@ export interface Snapshot {
    *  ⚠ DERIVED AT SNAPSHOT TIME, exactly like `coachRoomNote` and `radar`: it persists nothing, owes
    *  no migration and does not move `SAVE_SCHEMA_VERSION`. */
   handoverBand: string
-  /** ⭐⭐ THE HANDOVER'S OTHER READ – WHERE SHE STANDS TODAY, and it is empty on every week but the
+  /** ⭐⭐ THE HANDOVER'S OTHER READ – WHAT THE NINE YEARS DID, and it is empty on every week but the
    *  first for exactly the reasons `handoverBand` above is (childhood prologue, phase 7).
    *
    *  ⚠⚠ THE TWO FIELDS SAY DIFFERENT THINGS AND ONLY ONE OF THEM MOVES WITH THE CHILDHOOD:
    *
-   *      this one       = what you BUILT       her arrival, against today's fourteen-year-olds
+   *      this one       = what you BUILT       how much of her own room the childhood filled
    *      `handoverBand` = what she was BORN with   the potential roll, which nine years cannot touch
    *
    *  So a neglected childhood and a devoted one from the SAME seed get different sentences here and
    *  the same sentence there, which is the potential rule (§4) working rather than a bug in it.
-   *  `engine/world/coachMarket.ts`'s `handoverBaseBand` carries the reference distribution and the
-   *  measurement that fixed its two cuts.
+   *  ⭐ ROUND 40 #4 MADE THE FIRST HALF OF THAT TRUE ON EVERY SEED: this used to read her ARRIVAL
+   *  against the fresh-fourteen distribution and the sentence moved on a measured 52% of them.
+   *  `engine/world/coachMarket.ts`'s `handoverBaseBand` carries the derivation, the measurement and
+   *  the two cuts.
    *
-   *  ⚠ `''` FROM WEEK 1 ONWARDS. The reference is «a freshly created fourteen-year-old», so the
-   *  reading stops meaning anything the moment she starts training – and `world.skills`, which this
-   *  reads, is her arrival build only at week 0.
+   *  ⚠ `''` FROM WEEK 1 ONWARDS. `world.skills` is her arrival build only at week 0; from week 1 the
+   *  difference this reads stops being what the childhood did and starts being her career.
+   *
+   *  ⚠ A CAREER STARTED THROUGH THE WIZARD READS `level`, ALWAYS – with no prologue there is nothing
+   *  between her birth build and her arrival, so the reading is exactly 0. No screen outside the
+   *  prologue's own handover reads this field.
    *
    *  ⚠ DERIVED AT SNAPSHOT TIME: persists nothing, owes no migration, does not move
    *  `SAVE_SCHEMA_VERSION`. */
@@ -774,6 +780,24 @@ export interface Snapshot {
    *  stored: this is computed from `world.skills` and `world.peakPhysical`, both of which have been
    *  on the save since v62, so `SAVE_SCHEMA_VERSION` does not move for it. */
   physicalShare: number
+  /** ⭐⭐⭐ ROUND 40 #14b – HOW MANY OFF-SEASONS ARE LEFT BEFORE THE LAST ONE, or null when nothing
+   *  should be said. 1 means the NEXT winter is the one the offer arrives `final` on.
+   *
+   *  ⚠⚠ IT IS THE WARNING THE SHARE ABOVE COULD NOT GIVE. `physicalShare` says how far gone she is;
+   *  it does not say when the question runs out, and nothing on any screen did – «nothing tells the
+   *  parent the last winter is coming until it arrives» is the whole of the item. The owner, 08.09:
+   *  «Где-то тренер может подсветить, где-то она сама, где-то финальный экран сезона.»
+   *
+   *  ⚠ ONE FIELD FOR THREE SURFACES, DELIBERATELY. The coach's card, her own line on the winter card
+   *  and the season's wrap-up all read THIS number, so no two of them can warn about different
+   *  winters – `declineRead`'s own guarantee for the coach's two, widened to the three voices.
+   *  `lastWinterIn` (engine/world/coachMarket.ts) is the derivation and carries the argument, the
+   *  measurement and the two gates: nothing before `ENDINGS.askFromAgeYears`, nothing further out
+   *  than `LAST_WINTER_WARN_SEASONS`, and silence on the last winter itself.
+   *
+   *  DERIVED AT SNAPSHOT TIME – `physicalShare`'s own precedent. Persists nothing, owes no migration
+   *  and does not move `SAVE_SCHEMA_VERSION`. */
+  lastWinterIn: number | null
   /** ⭐⭐ HOW MANY TIMES SHE HAS SAID «one more year» (the long goodbye step 4). On the snapshot
    *  ALWAYS, not only at the end, and that is the change: `EndingView.oneMoreYearCount` has carried
    *  it since the album shipped, but the ending view is null until a career has one – and the

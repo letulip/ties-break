@@ -32,10 +32,10 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { withHeadStart } from '../src/engine/world/player'
-import { HANDOVER_BASE_CUTS, coachRoomBand, coachRoomNote, handoverBaseBand, handoverRoomBand } from '../src/engine/world/coachMarket'
+import { HANDOVER_BASE_CUTS, coachRoomBand, coachRoomNote, handoverBaseBand, handoverRealisation, handoverRoomBand } from '../src/engine/world/coachMarket'
 import { ECONOMY, prologueFundsCents } from '../src/engine/economy'
 import { childhoodArrival, weightAt } from '../src/engine/childhood'
-import { physicalMean } from '../src/engine/development'
+import { SKILL_KEYS, physicalMean, rollPotential } from '../src/engine/development'
 import { styleOf } from '../src/engine/season/rival'
 import { PROLOGUE_CARDS } from '../src/prologue/cards'
 import {
@@ -622,98 +622,128 @@ describe('⭐ the coach speaks in the vocabulary he already has', () => {
 
 // =================================================================================================
 // ⭐⭐⭐ PHASE 7 – THE SECOND DIMENSION: THE BASE
+// ⭐⭐ ROUND 40 #4 – AND IT NOW READS HER REALISATION RATHER THAN HER ARRIVAL
 // =================================================================================================
 //
 // THE OWNER, 02.09: «оставляем туман, у нас есть слова тренера – вот ими надо добавить понимание про
-// базу и перспективы как раз в дополнение к туману».
+// базу и перспективы как раз в дополнение к туману». And 08.09: «что если мы здесь как раз будем
+// говорить о той разнице в реализации, которой уже к этому моменту она достигла?» → «делай».
 //
-//     the BASE = what you BUILT        the ROOM = what she was BORN with
+//     the BASE = what the YEARS DID     the ROOM = what she was BORN with
+//
+// ⚠⚠ THIS BLOCK WAS RE-AIMED, NOT LOOSENED, AND THE CLAIM IT WAS PROTECTING GOT STRONGER. Phase 7's
+// acceptance criterion – «the same seed walked two ways gives two different base sentences and one
+// room sentence» – used to be asserted with a floor of 25% because the arrival reading only moved on
+// a measured 40.9%; it is now asserted on EVERY seed. What changed underneath is the two pins that
+// were about the ARRIVAL's reference: the fresh-fourteen distribution and the shares over wizard
+// careers. Neither says anything about realisation – a career with no prologue realises exactly
+// nothing – so both are re-measured against the population the sentence is actually spoken to.
 //
 // ⚠⚠ MUTATION-VERIFIED. Every claim below was watched failing before it was believed:
-//   * `handoverBaseBand` reading the BIRTH build instead of `world.skills` -> «the base answers the
-//     childhood» goes red on 90% of seeds. That is the mutation of this block: it is the exact way a
-//     future reader would "unify" the two bands and silently delete the player's nine years.
-//   * `handoverBaseBand` returning `'level'` always -> the distribution test names the missing bands.
-//   * the two cuts widened to p05/p95 -> the distribution test goes red on the shares.
+//   * `handoverRealisation` dividing by the ASYMPTOTE (`world.potential[k]`) instead of by the room
+//     -> round 34 #2b's small-ceiling arm goes red, and the acceptance criterion goes red on ~99% of
+//     seeds. That is THE mutation of this block: it is round 34's own defect walking back in.
+//   * the numerator counting her BIRTH BUILD (`world.skills[k]` instead of the difference) -> the
+//     small-ceiling arm goes red naming the girl who gained nothing and read higher.
+//   * the numerator subtracting the PRE-head-start build -> the birth-month arm goes red.
+//   * either cut moved by a hundredth -> the measured-cuts arm goes red naming the quantile.
+//   * `handoverBaseBand` returning `'level'` always -> the shares arm names the missing bands.
+//   * a `behind` line put back to the shipped «She is behind most girls her age…» -> the copy arm
+//     goes red; so does swapping either `ahead` or `level` line for a re-worded one.
 //   * `coachBaseReadFor` drawing on `:prologue:read` (the room band's key) -> the independence test
 //     goes red.
 //   * a digit put into a base line -> the fog sweep goes red naming the band.
-describe('⭐⭐ where she stands TODAY – the base band, and it is the half the childhood moves', () => {
-  const AGE_GROUP = { p05: 44.3, p20: 46.3, p50: 48.5, p80: 50.7, p95: 52.7 }
+describe('⭐⭐ what the nine years added – the base band, and it is the half the childhood moves', () => {
+  const order = { behind: 0, level: 1, ahead: 2 }
 
-  function meanAttribute(w: WorldState): number {
-    const keys = ['serve', 'ret', 'composure', 'stamina', 'groundstrokes'] as const
-    return keys.reduce((a, k) => a + w.skills[k], 0) / keys.length
+  /** ⭐ EVERY CHILDHOOD THE SHIPPED CARD TABLE CAN PRODUCE – the 32 `everyRun()` walks, which is the
+   *  population this sentence is spoken to. ⚠ The Local Open questions are NOT a 33rd..64th run:
+   *  `yearAt` builds a year out of the card's own pick and never reads `run.entries`, so an entry
+   *  moves the money and the weekend she played and cannot move the arrival at all. */
+  const CHILDHOODS = everyRun().map((r) => chosenYears(r))
+
+  // ⚠⚠ THOUSANDS OF WORLDS, ONE `createWorld` – AND THE SUBSTITUTION IS PROVED, NOT ASSUMED. Building
+  // a real career is ~8 ms (a cohort and a season of pre-history), which the distribution below cannot
+  // afford; `handoverRealisation` reads `seed`, `profile`, `skills` and `potential` and nothing else,
+  // so a template with those four replaced is the same input. The first arm pins that against real
+  // careers, exactly as the arrival block pinned its own cheap world.
+  const TEMPLATE = createWorld('base-template', DEFAULT_PROFILE, 'w')
+  const worldFor = (seed: string, years: PrologueHandover['years']): WorldState => {
+    const birth = startingSkills(seed, DEFAULT_PROFILE)
+    const born = withHeadStart(birth, DEFAULT_PROFILE.birthMonth)
+    return {
+      ...TEMPLATE,
+      seed,
+      skills: years.length > 0 ? childhoodArrival(born, years) : born,
+      potential: rollPotential(seed, birth),
+    }
   }
 
-  // ⚠⚠ THOUSANDS OF SEEDS, ONE WORLD – AND THE SUBSTITUTION IS PROVED, NOT ASSUMED. `createWorld`
-  // builds a cohort and a season of pre-history, which is ~8ms a call: the distributions below need
-  // 4,000 samples and would spend two minutes buying nothing, and the first draft of this block
-  // timed the unit project out at 20s doing exactly that. `handoverBaseBand` reads `world.skills`
-  // and nothing else, and on the WIZARD path `createWorld` sets `skills` to
-  // `withHeadStart(startingSkills(seed, profile), profile.birthMonth)` – so a world with that field
-  // swapped is the same input. The test below pins that identity against real worlds, and every
-  // sampled test uses `arrivalOf` on top of it.
-  const TEMPLATE = createWorld('base-template', DEFAULT_PROFILE, 'w')
-  const freshWorld = (seed: string): WorldState => ({
-    ...TEMPLATE,
-    seed,
-    skills: withHeadStart(startingSkills(seed, DEFAULT_PROFILE), DEFAULT_PROFILE.birthMonth),
-  })
-
-  it('⚠ the cheap fresh world IS the world `createWorld` builds – the substitution below rests on it', () => {
-    for (let i = 0; i < 40; i++) {
+  it('⚠ the cheap world IS the world `createWorld` builds – the distribution below rests on it', () => {
+    for (let i = 0; i < 25; i++) {
       const seed = `sub-${i}`
-      const real = createWorld(seed, DEFAULT_PROFILE, 'w')
-      expect(freshWorld(seed).skills, seed).toEqual(real.skills)
-      expect(handoverBaseBand(freshWorld(seed)), seed).toBe(handoverBaseBand(real))
+      for (const prologue of [CHEAPEST, DEAREST]) {
+        const real = createWorld(seed, profileFor('middle'), 'p', prologue)
+        const cheap = worldFor(seed, prologue.years)
+        expect(cheap.skills, seed).toEqual(real.skills)
+        expect(handoverRealisation(cheap), seed).toBeCloseTo(handoverRealisation(real), 12)
+        expect(handoverBaseBand(cheap), seed).toBe(handoverBaseBand(real))
+      }
     }
   })
 
-  // ⭐ THE REFERENCE IS RE-MEASURED HERE RATHER THAN QUOTED. docs/specs/childhood-growth-2026-09.md
-  // §4a printed this distribution once, on a bench nobody runs on a commit; the two cuts in
-  // `HANDOVER_BASE_CUTS` are two of its quantiles, so if the fourteen-year-old a `createWorld` makes
-  // ever moves, the cuts stop meaning what their comment says and this is what notices.
-  // ⚠ 4,000 seeds and a tolerance of a tenth: the mean of five integers lives on a 0.2 lattice, and
-  // the growth spec's own note records a measurement bug caused by ignoring exactly that.
-  it('⚠ the fresh fourteen-year-old is still the distribution the cuts were measured against', () => {
+  // ⭐ THE CUTS ARE RE-MEASURED HERE RATHER THAN QUOTED (CLAUDE.md invariant 5). The two constants
+  // are p20/p80 of the distribution this arm walks, so if the childhood, the potential roll or the
+  // card table ever moves, the cuts stop meaning what their comment says and this is what notices.
+  // ⚠ THE POPULATION IS THE CHILDHOODS THE TABLE CAN PRODUCE, not fresh fourteen-year-olds. That is
+  // not a weakening of the old reference – it is the only one realisation HAS: with no prologue the
+  // numerator is 0 by construction, so a wizard distribution is a spike at zero with no quantiles.
+  it('⭐⭐ the cuts are the measured p20/p80 of realisation at fourteen', () => {
     const xs: number[] = []
-    for (let i = 0; i < 4000; i++) xs.push(meanAttribute(freshWorld(`ref-${i}`)))
+    for (let i = 0; i < 500; i++) {
+      for (const years of CHILDHOODS) xs.push(handoverRealisation(worldFor(`cut-${i}`, years)))
+    }
     xs.sort((a, b) => a - b)
     const at = (q: number) => xs[Math.round(q * (xs.length - 1))]
-    for (const [name, want] of Object.entries(AGE_GROUP)) {
+    // The 3,200,000-childhood run (`tools/r40-handover-realisation-cuts.ts --seeds 100000`), which
+    // reproduced to the thousandth at 64,000 and 640,000 as well.
+    const MEASURED = { p05: -0.079, p20: -0.05, p50: -0.001, p80: 0.036, p95: 0.074 }
+    for (const [name, want] of Object.entries(MEASURED)) {
       const q = Number(name.slice(1)) / 100
-      // ⚠ ±0.3 AND NOT TIGHTER, and the reason is the growth spec's own recorded measurement bug: a
-      // mean of five integers lives on a 0.2 LATTICE, so a tail quantile at 4,000 seeds legitimately
-      // lands one step off the 400,000-seed answer. Tightening this asserts the sample size, not the
-      // distribution. The CUTS themselves are at p20/p80, where the density is high and the same
-      // 4,000 seeds reproduce them exactly.
-      expect(Math.abs(at(q) - want), `${name} of today's fourteen-year-olds is ${at(q)}`).toBeLessThanOrEqual(0.3)
+      expect(Math.abs(at(q) - want), `${name} of the table's childhoods is ${at(q).toFixed(4)}`).toBeLessThanOrEqual(0.004)
     }
-    // ...and the cuts really are two of its quantiles.
-    expect(HANDOVER_BASE_CUTS.below).toBe(AGE_GROUP.p20)
-    expect(HANDOVER_BASE_CUTS.ahead).toBe(AGE_GROUP.p80)
+    // ...and the shipped cuts really are two of its quantiles.
+    expect(HANDOVER_BASE_CUTS.below, 'the lower cut is p20').toBeCloseTo(at(0.2), 2)
+    expect(HANDOVER_BASE_CUTS.ahead, 'the upper cut is p80').toBeCloseTo(at(0.8), 2)
+    // ⚠ AND THE LOWER ONE IS BELOW ZERO, which is the whole reason the bottom band was re-written: a
+    // childhood can leave her under the build she started it with, and `behind` is that case. A cut
+    // that drifted above zero would empty the band of exactly the girls the copy is about.
+    expect(HANDOVER_BASE_CUTS.below, 'the bottom band is «the years added little», not «she is last»').toBeLessThan(0)
   })
 
-  // ⭐ THE SHARES: 19 / 62 / 19 over careers the prologue never touched. Measured at 20k, 100k and
-  // 400k seeds while the cuts were being chosen and stable to the hundredth at all three.
-  it('⭐ over wizard careers the three bands hold about a fifth, three fifths and a fifth', () => {
+  // ⭐ THE SHARES: a fifth, three fifths and a fifth, by construction of a p20/p80 cut.
+  it('⭐ the three bands hold about a fifth, three fifths and a fifth of the childhoods the table makes', () => {
     const n: Record<string, number> = { behind: 0, level: 0, ahead: 0 }
-    const N = 4000
-    for (let i = 0; i < N; i++) n[handoverBaseBand(freshWorld(`dist-${i}`))]++
-    expect(n.behind / N, 'behind').toBeCloseTo(0.19, 1)
-    expect(n.level / N, 'level').toBeCloseTo(0.62, 1)
-    expect(n.ahead / N, 'ahead').toBeCloseTo(0.19, 1)
+    let total = 0
+    for (let i = 0; i < 300; i++) {
+      for (const years of CHILDHOODS) {
+        n[handoverBaseBand(worldFor(`dist-${i}`, years))]++
+        total++
+      }
+    }
+    expect(n.behind / total, 'behind').toBeCloseTo(0.2, 1)
+    expect(n.level / total, 'level').toBeCloseTo(0.6, 1)
+    expect(n.ahead / total, 'ahead').toBeCloseTo(0.2, 1)
     // ⚠⚠ AND THE MIDDLE BAND HOLDS MORE THAN HALF, which is not a taste – it is what makes «She is
-    // where most girls her age are» a TRUE sentence. The tertiles were measured at 37.6% and
-    // rejected on exactly this: the copy would have been a lie about the population.
-    expect(n.level / N, 'the middle sentence says «most», so it has to be most').toBeGreaterThan(0.5)
+    // where most girls her age are» a TRUE sentence. The tertiles were measured at 37.6% and rejected
+    // on exactly this when the arrival cuts were chosen; the same test binds the new pair.
+    expect(n.level / total, 'the middle sentence says «most», so it has to be most').toBeGreaterThan(0.5)
   })
 
-  // ⭐⭐⭐ THE ACCEPTANCE CRITERION, AND IT IS THE WHOLE POINT OF PHASE 7. Two childhoods, one seed:
-  // different BASE sentences, the SAME room sentence. The second half is the potential rule (§4)
-  // being kept, not a bug in the first.
-  it('⭐⭐ the same girl, raised two ways: the base answers the childhood and the room cannot', () => {
+  // ⭐⭐⭐ THE ACCEPTANCE CRITERION, AND ROUND 40 #4 IS WHY IT IS NOW ABOUT EVERY SEED. Two childhoods,
+  // one seed: different BASE sentences, the SAME room sentence. The second half is the potential rule
+  // (§4) being kept, not a bug in the first.
+  it('⭐⭐ the same girl, raised two ways: the base answers the childhood on EVERY seed', () => {
     let baseMoved = 0
     // ⚠ 150 REAL WORLDS, and they have to be real: this is the one claim that is ABOUT what a
     // childhood does to `createWorld`, so the cheap substitution above is not available here.
@@ -727,31 +757,142 @@ describe('⭐⭐ where she stands TODAY – the base band, and it is the half th
       expect(coachReadFor(toSnapshot(poor).handoverBand, seed), seed).toBe(
         coachReadFor(toSnapshot(rich).handoverBand, seed),
       )
-      // THE BASE IS NOT, on most of them – and it is never the WRONG way round.
-      expect(meanAttribute(rich), seed).toBeGreaterThan(meanAttribute(poor))
+      // THE BASE IS NOT – and it is never the WRONG way round.
+      expect(handoverRealisation(rich), seed).toBeGreaterThan(handoverRealisation(poor))
       if (handoverBaseBand(poor) !== handoverBaseBand(rich)) baseMoved++
     }
-    // ⚠⚠ 40.9%, MEASURED – AND THE NUMBER THE OWNER SHOULD BE TOLD IS THIS ONE, not the 89.9% the
-    // cuts were chosen against. That figure is the MODEL's extremes (`neglectedChildhood()` versus
-    // `devotedChildhood()`, a 4.28-point span); CHEAPEST and DEAREST here are the extremes of the
-    // SHIPPED CARD TABLE, and enumerating all 32 runs through it shows a span of only 1.87 points
-    // (47.48 -> 49.35 mean arrival). The cards do not reach the model's edges – recorded in
-    // docs/specs/childhood-prologue-build-2026-09.md §8c as a finding, not fixed here, because
-    // widening what a card buys is a balance change and §8 is not the place for one.
-    // The floor is set under the measurement and is still far out of reach of a base band that reads
-    // her birth build, which is what this test is protecting.
-    expect(baseMoved / N, 'the nine years reach the base sentence').toBeGreaterThan(0.25)
+    // ⚠⚠ 100%, MEASURED – and it is the property the promo film could not get. The arrival reading
+    // this replaced moved on 52% of seeds over the same corpus (200 seeds x 32 paired runs), so a
+    // recorder that walked one seed down two childhoods drew the same sentence twice and was right to
+    // report it. There is no floor here because there is nothing to leave room for.
+    expect(baseMoved, 'the nine years reach the base sentence on every seed').toBe(N)
   })
 
-  it('⚠ and the cheap childhood is never told she is ahead of a girl the dear one leaves behind', () => {
+  // ⚠⚠ THE ANTI-VACUITY ARM, AND IT IS NOT A FORMALITY. «The band differs» is satisfied by a band that
+  // differs at random; the claim only means something if the SAME walk twice gives the same answer.
+  it('⚠⚠ ...and two identical walks give the SAME band, so the arm above is about the childhood', () => {
+    for (let i = 0; i < 60; i++) {
+      const seed = `same-walk-${i}`
+      const a = createWorld(seed, profileFor('middle'), 'p', CHEAPEST)
+      const b = createWorld(seed, profileFor('middle'), 'p', CHEAPEST)
+      expect(handoverBaseBand(a), seed).toBe(handoverBaseBand(b))
+      expect(coachBaseReadFor(toSnapshot(a).handoverBaseBand, seed), seed).toBe(
+        coachBaseReadFor(toSnapshot(b).handoverBaseBand, seed),
+      )
+      // ...and the dear walk against itself, so the arm is not vacuous at one end only.
+      const c = createWorld(seed, profileFor('middle'), 'p', DEAREST)
+      const d = createWorld(seed, profileFor('middle'), 'p', DEAREST)
+      expect(handoverBaseBand(c), seed).toBe(handoverBaseBand(d))
+    }
+  })
+
+  it('⚠ and the cheap childhood is never told it did more than the dear one', () => {
     // Monotone in the only quantity it reads: a richer childhood cannot produce a LOWER band.
-    const order = { behind: 0, level: 1, ahead: 2 }
     for (let i = 0; i < 150; i++) {
       const seed = `monotone-${i}`
       const poor = handoverBaseBand(createWorld(seed, profileFor('middle'), 'p', CHEAPEST))
       const rich = handoverBaseBand(createWorld(seed, profileFor('middle'), 'p', DEAREST))
       expect(order[rich], `${seed}: ${poor} -> ${rich}`).toBeGreaterThanOrEqual(order[poor])
     }
+  })
+
+  // =================================================================================================
+  // ⭐⭐⭐ ROUND 34 #2b's TRAP, AND THE PROOF IT IS NOT RE-OPENED
+  // =================================================================================================
+  //
+  // That round found the coach's headroom ladder computing `mean(skills) / mean(potential)` – the
+  // birth build counted as achievement, divided by the asymptote – and the consequence was measured on
+  // the owner's own save: «Close to her ceiling» arrived at 41.6% of realised headroom for the less
+  // gifted girl and at 72.3% for the gifted one. THE VERDICT ARRIVED EARLIER FOR THE LESS TALENTED
+  // GIRL. The fix was the subtraction on both terms, and this reading inherits it.
+  describe('⚠⚠ the reading is the SHARE of her room, never the SIZE of it', () => {
+    /** A girl with a chosen ROOM who has filled a chosen SHARE of it. ⚠ Her BIRTH BUILD cannot be
+     *  handed in: `handoverRealisation` re-derives it from the seed (that is the point of it), so a
+     *  build is CHOSEN BY WALKING SEEDS and everything else is arithmetic on top of the one it finds. */
+    const meanOf = (s: WorldState['skills']) => SKILL_KEYS.reduce((n, k) => n + s[k], 0) / SKILL_KEYS.length
+    const seedBornAt = (pick: 'high' | 'low'): string => {
+      for (let i = 0; i < 4000; i++) {
+        const seed = `born-${pick}-${i}`
+        const mean = meanOf(startingSkills(seed, DEFAULT_PROFILE))
+        if (pick === 'high' ? mean > 51 : mean < 45) return seed
+      }
+      throw new Error(`no seed in 4000 is born ${pick} – the arm is empty and the test below is vacuous`)
+    }
+    const filled = (seed: string, roomPerAxis: number, share: number): WorldState => {
+      const birth = startingSkills(seed, DEFAULT_PROFILE)
+      const born = withHeadStart(birth, DEFAULT_PROFILE.birthMonth)
+      const skills = { ...born }
+      const potential = { ...birth }
+      for (const k of SKILL_KEYS) {
+        potential[k] = birth[k] + roomPerAxis
+        skills[k] = born[k] + share * roomPerAxis
+      }
+      return { ...TEMPLATE, seed, skills, potential }
+    }
+
+    it('⭐⭐ the same share of her own room reads the same, whatever the ceiling is', () => {
+      for (const share of [-0.1, -0.02, 0.05, 0.2]) {
+        const small = filled('ceil', 5, share)
+        const large = filled('ceil', 24, share)
+        expect(handoverRealisation(small), `share ${share}, small ceiling`).toBeCloseTo(share, 10)
+        expect(handoverRealisation(large), `share ${share}, large ceiling`).toBeCloseTo(share, 10)
+        expect(handoverBaseBand(small), `share ${share}`).toBe(handoverBaseBand(large))
+      }
+      // ⚠ THE MUTATION THIS ARM EXISTS FOR: divide by `world.potential[k]` (the asymptote) instead of
+      // by `potential − born` and the two stop agreeing – at share −0.1 the small-ceiling girl reads
+      // −0.010 against the big-ceiling girl's −0.034, i.e. BETTER for identical work. That is round 34
+      // #2b's inversion in one line.
+    })
+
+    it('⭐⭐ a girl born high who gained nothing never out-reads a girl born low who gained a lot', () => {
+      // The birth build is not an achievement, and this is that sentence as an assertion. Both girls
+      // have the same room; the one BORN NEAR THE TOP of the band filled none of it and the one BORN
+      // NEAR THE BOTTOM filled a fifth.
+      const idle = filled(seedBornAt('high'), 20, 0)
+      const worker = filled(seedBornAt('low'), 20, 0.2)
+      expect(meanOf(startingSkills(idle.seed, DEFAULT_PROFILE)), 'the arm is not vacuous').toBeGreaterThan(
+        meanOf(startingSkills(worker.seed, DEFAULT_PROFILE)) + 5,
+      )
+      // ⚠ THE ORDERING IS ASSERTED FIRST, ON PURPOSE: it is the claim this arm is named for, and an
+      // assertion that fires before it would hide which property the mutation actually broke.
+      expect(
+        order[handoverBaseBand(worker)],
+        'the girl who did nothing out-reads the girl who did the work',
+      ).toBeGreaterThan(order[handoverBaseBand(idle)])
+      expect(handoverRealisation(idle), 'nine years that added nothing realise nothing').toBeCloseTo(0, 10)
+      expect(handoverRealisation(worker)).toBeCloseTo(0.2, 10)
+      // ⚠ MUTATION: count `world.skills[k]` in the numerator instead of the difference and the girl
+      // who did nothing reads 2.6 against the worker's 2.4 – her build is most of the number, so she
+      // OUT-READS the girl who did the work. That is the defect round 34 #2b measured on his save.
+    })
+  })
+
+  it('⚠ a career with no prologue realises exactly nothing, and that reads `level`', () => {
+    for (let i = 0; i < 60; i++) {
+      const seed = `wizard-${i}`
+      const w = createWorld(seed, profileFor('middle'), 'w')
+      expect(handoverRealisation(w), seed).toBeCloseTo(0, 10)
+      expect(handoverBaseBand(w), seed).toBe('level')
+    }
+  })
+
+  // ⚠ THE BIRTH MONTH ALMOST LEAVES THE READING, AND THE «ALMOST» IS THE CLAMP RATHER THAN THE MODEL.
+  // `withHeadStart` runs BEFORE the childhood, so it stands in both terms of the numerator and
+  // cancels – except where `childhoodArrival`'s `STARTING_SKILL_BAND` clamp truncates a January girl's
+  // gain or a December girl's loss (measured: the clamp binds on 15.0% of attribute-childhoods at the
+  // ends of the table). The arrival reading this replaces moved on 43.4% of seeds between the two
+  // months; this is a fraction of that, and the assertion is the direction of travel rather than a
+  // zero, because a zero is a claim the clamp makes false.
+  it('⚠ her birthday is nearly out of this reading – it was 43.4% of seeds before', () => {
+    let moved = 0
+    const N = 200
+    for (let i = 0; i < N; i++) {
+      const seed = `month-${i}`
+      const jan = createWorld(seed, { ...profileFor('middle'), birthMonth: 1 }, 'p', DEAREST)
+      const dec = createWorld(seed, { ...profileFor('middle'), birthMonth: 12 }, 'p', DEAREST)
+      if (handoverBaseBand(jan) !== handoverBaseBand(dec)) moved++
+    }
+    expect(moved / N, 'the birth month is most of the base band again').toBeLessThan(0.25)
   })
 
   it('⚠ the band reaches the snapshot at week 0 and is GONE by week 1 – like the room band', () => {
@@ -790,13 +931,45 @@ describe('⭐⭐ where she stands TODAY – the base band, and it is the half th
     expect(differ, 'the two draws are the same draw wearing two names').toBeGreaterThan(60)
   })
 
+  // =================================================================================================
+  // ⭐⭐⭐ THE COPY ITSELF – TWO LINES REPLACED BY HIS, FOUR HELD BYTE-IDENTICAL (invariant 4)
+  // =================================================================================================
+  //
+  // ⚠⚠ THE BOTTOM BAND'S TWO SENTENCES WERE REPLACED AND NOT ADDED TO. What stood there claimed a
+  // COMPARISON AGAINST OTHER GIRLS – «She is behind most girls her age. That is the ground she starts
+  // from.» / «There is ground to make up on the girls her age.» – which was true of a band that read
+  // her arrival against the fresh-fourteen distribution and is not a thing realisation measures.
+  // ⚠ THE OTHER FOUR ARE NOT AN AGENT'S TO TOUCH. The owner ruled on the bottom band, «давай смягчим
+  // формулировку нижней банды» → variant B; he ruled on nothing else, and a wording change is the one
+  // kind of diff no test catches unless the test spells the string out. This one does.
+  it('⭐⭐ his two `behind` lines are shipped verbatim, and the old comparison is gone', () => {
+    expect(COACH_BASE_READS.behind).toEqual([
+      'Most of what she has, she was born with. The years added little to it.',
+      'She comes with what she started with – the work has not reached it yet.',
+    ])
+    for (const line of COACH_BASE_READS.behind) {
+      expect(/behind|ground to make up|most girls|girls her age/i.test(line), line).toBe(false)
+    }
+  })
+
+  it('⭐⭐ `ahead` and `level` are byte-identical to what shipped – not one word moved with the band', () => {
+    expect(COACH_BASE_READS.ahead).toEqual([
+      'She is ahead of most girls her age. Somebody did the work.',
+      'She is further along than the girls she will be playing.',
+    ])
+    expect(COACH_BASE_READS.level).toEqual([
+      'She is where most girls her age are.',
+      'She is level with the girls she will be playing.',
+    ])
+  })
+
   it('⚠ NOT ONE BASE LINE CARRIES A NUMBER, AND NONE OF THEM NAMES A CEILING', () => {
     for (const [band, lines] of Object.entries(COACH_BASE_READS)) {
       for (const line of lines) {
         expect(/\d/.test(line), `${band}: ${line}`).toBe(false)
         expect(/%|\$/.test(line), `${band}: ${line}`).toBe(false)
         // §5: «If he ever names a ceiling, the fog stops meaning anything.» The base band is a
-        // statement about TODAY and may not smuggle one in.
+        // statement about what the years did and may not smuggle one in.
         expect(/ceiling|potential|limit|as far as|as good as/i.test(line), `${band}: ${line}`).toBe(false)
       }
     }

@@ -23,6 +23,12 @@ import type { AgeCurveBounds } from '../development'
 // `./masseur` and `./business` above do. `world/college.ts` reads the same constants the same way.
 // ⚠ ROUND 39 #13a – `ENDINGS` left this file with the 0.55 stop: the coach's sentence now ends at
 // `COACH_BODY_END_SHARE` (see the constant), and nothing else here reads the endings config.
+// ⚠⚠ ROUND 40 #14b – AND IT IS BACK, FOR THE OTHER END AND FOR NOTHING ELSE. `lastWinterIn` below
+// walks to `ENDINGS.lastOfferPeakShare` and gates on `ENDINGS.askFromAgeYears`: the two numbers that
+// define the winter the question runs out. The coach's own sentence still ends at
+// `COACH_BODY_END_SHARE` – #13a's split is untouched, and the import is a READ of the endings dial,
+// never a second home for it.
+import { ENDINGS } from '../ending'
 import { LADDER_LABEL, LADDER_TRACKS } from '../../shared/protocol'
 import type { CoachEdgePlacement, CoachMarketRow, CoachTier, HandoverBaseBand, HouseholdWeekly, KitOfferTerms, PlayerProfile } from '../../shared/protocol'
 import { managerCommissionCents, parentIncomeForWeekCents } from '../economy'
@@ -46,13 +52,17 @@ import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 // purpose (see the header); the CURVE is not – `phaseGrowth.ts` hands `growWeek` her exact age, so
 // the week her growth stops and the week this module says it stopped have to be the same week.
 import { ageAtWeek, kidAgeExact, START_AGE_YEARS } from './age'
-// ⭐ HER BIRTH BUILD, RE-DERIVED, and two readers need it: `handoverRoomBand` measures how big her
-// room is (`potential - born`) and `realisedShare` - round 34 #2b - measures how much of it she has
-// FILLED, because the skill she was born with is not an achievement. Pure and seed-only
-// (`startingSkills` ignores its profile argument), and `engine/radar.ts` already re-derives it at
-// snapshot time for exactly the same reason: it is cheaper than a stored field and it cannot go
-// stale. `player.ts` imports nothing from this module, so this runs one way.
-import { startingSkills } from './player'
+// ⭐ HER BIRTH BUILD, RE-DERIVED, and three readers need it: `handoverRoomBand` measures how big her
+// room is (`potential - born`), `realisedShare` - round 34 #2b - measures how much of it she has
+// FILLED over a career, and `handoverRealisation` - round 40 #4 - measures how much of it the nine
+// years of her childhood filled; in all three, the skill she was born with is not an achievement.
+// Pure and seed-only (`startingSkills` ignores its profile argument), and `engine/radar.ts` already
+// re-derives it at snapshot time for exactly the same reason: it is cheaper than a stored field and
+// it cannot go stale. `player.ts` imports nothing from this module, so this runs one way.
+// ⚠ `withHeadStart` COMES WITH IT, and only `handoverRealisation` needs it: the childhood starts from
+// the HEAD-STARTED build (`createWorld`), so subtracting anything else would bill the parent for her
+// birth month. See that function's own note.
+import { startingSkills, withHeadStart } from './player'
 import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
@@ -1242,13 +1252,24 @@ export const COACH_BODY_END_SHARE = 0.7
  *  or under the stop walks zero weeks and the callers' `max(1, …)` says «about 1 more season» for
  *  the whole 0.70-0.55 tail, which is the honest floor: the question is still being asked there.
  *
+ *  ⭐⭐ ROUND 40 #14b – THE STOP IS A PARAMETER NOW, AND THERE IS STILL EXACTLY ONE WALKER. The
+ *  warning below needs the same forward walk aimed at the OTHER end – `ENDINGS.lastOfferPeakShare`,
+ *  the winter the question runs out – and a second copy of this loop is a loop that can be edited in
+ *  one place and not the other, which is `physicalShareOf`'s own reason for existing one file over.
+ *  The default is `COACH_BODY_END_SHARE`, so every caller that does not pass one is byte-identical
+ *  to what shipped.
+ *
  *  Returns null when the save carries no peak to measure against. */
-function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: number): number | null {
+function seasonsOfBodyLeft(
+  world: WorldState,
+  bounds: AgeCurveBounds,
+  age: number,
+  stop: number = COACH_BODY_END_SHARE,
+): number | null {
   const peak = world.peakPhysical
   if (!peak || peak <= 0) return null
   let share = physicalMean(world.skills) / peak
   if (!Number.isFinite(share)) return null
-  const stop = COACH_BODY_END_SHARE
   let walked = age
   let weeks = 0
   while (share > stop && weeks < 40 * WEEKS_PER_YEAR) {
@@ -1257,6 +1278,102 @@ function seasonsOfBodyLeft(world: WorldState, bounds: AgeCurveBounds, age: numbe
     weeks++
   }
   return weeks / WEEKS_PER_YEAR
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 40 #14b – HOW MANY WINTERS BEFORE THE QUESTION RUNS OUT. ONE DERIVATION, THREE VOICES.
+// =================================================================================================
+//
+// THE OWNER, 08.09, on the recommendation that came out of r39 #14b's measurement: «да, это именно
+// то, о чем я и говорил. Где-то тренер может подсветить, где-то она сама, где-то финальный экран
+// сезона. Давай сделаем.» And on when it should speak: «за сезон-два до того».
+//
+// ⚠⚠ THIS ADDS NO BAND AND NO MECHANIC, AND THAT IS THE MEASUREMENT'S OWN VERDICT rather than a
+// scoping decision (both tables are in docs/rounds/round-40.md):
+//
+//   * THE PLATEAU WINDOW CAN CARRY NO TRIGGER. `tools/r40-retire-trigger.ts`, 108 careers x 900
+//     weeks: the card asks on 52 of them and she LATER beat the rank she held that day in 52 of 52.
+//     The body cannot speak there either – `declineStart` IS 29 and the plateau branch cannot fire
+//     past `askFromAgeYears` = 29, so `physicalShare` is exactly 1.000 at every one of those asks.
+//   * AND PAST 29 THE SHIPPED BAND IS ALREADY THE HONEST PLACE. `tools/r40-age-branch.ts`, 108
+//     careers x 1900 weeks: the median number of titles she still wins after a band fires reaches
+//     ZERO only at the shipped 0.55. At 0.70 she still wins a median of 1 and as many as 11; at
+//     0.80, 3 and as many as 17. An earlier «she is done» takes trophies off her.
+//
+// ⭐ So what was missing was never a state – it was WARNING. Nothing on any screen said the last
+// winter was coming until it arrived. This is that number, and the three surfaces that speak it
+// (the coach's card, her own voice on the winter card, the season's wrap-up) all read THIS function.
+//
+// ⚠⚠ IT IS EXACT RATHER THAN ROUNDED, AND THE EXACTNESS IS WHAT LETS THE COPY SAY «the next one».
+// The walk gives the WEEK her share crosses the final band; the question is only ever raised on one
+// week of the year (`resolveEndings` 7d: `week % WEEKS_PER_YEAR === WEEKS_PER_YEAR - OFF_SEASON_WEEKS`),
+// so the last ask is the first such week at or after the crossing and the count is a subtraction on
+// the calendar, not a rounding of years. `Math.round(years)` would have claimed «next winter is the
+// last» on a career whose crossing lands two off-seasons out.
+//
+// ⚠ WHAT CAN STILL MOVE IT, said out loud because a warning that is quietly wrong is worse than no
+// warning: `ageCurveOf` pulls her `declineStart` EARLIER by the weeks she loses to injury, so a bad
+// layoff inside the window steepens the walk and can bring the last winter forward. It cannot push
+// it back – nothing in the engine returns physical share – so the projection errs on the late side
+// only, which is the honest direction for a warning.
+//
+// ZERO DRAWS, on any stream: a walk over persisted state and two subtractions on the calendar.
+
+/** ⭐ «за сезон-два до того» – HIS WINDOW, AS A CONSTANT. It speaks at this many winters or fewer
+ *  and says nothing before, because a warning that fires for eight seasons is wallpaper (the
+ *  `DRAW_CLAUSES` warning in SeasonScreen.vue, which this project keeps re-learning).
+ *
+ *  ⚠ MEASURED, AND IT IS A COUNT OF ASKS RATHER THAN OF YEARS, so it holds on every career curve
+ *  instead of on the shipped one. `tools/r40-last-winter.ts` walks four of them (a drawn 29, a
+ *  direct-route 27, a late 31, and a 29 with 40 weeks lost to injury): on all four the warning opens
+ *  exactly two off-seasons before the final one, counts 2 then 1, and goes quiet on the winter
+ *  itself. On the drawn-29 career that is the off-seasons at 40.5 and 41.5 against a last word at
+ *  42.5 – 104 weeks on the coach's card, 36 on Home's rotating plate, two cards on each of the two
+ *  surfaces that only exist at the wrap. */
+export const LAST_WINTER_WARN_SEASONS = 2
+
+/** The off-season week the retirement question is raised on – `resolveEndings` 7d's own test, read
+ *  forward instead of re-derived, so this count can never name a week the ask does not use. */
+const RETIRE_ASK_WEEK_OF_YEAR = WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+
+/** The first week the question is raised on, at or after `week`. Correct for a negative week too:
+ *  the modulo is normalised rather than assumed positive, which is `seasonIndexOf`'s own care. */
+function askWeekAtOrAfter(week: number): number {
+  const into = ((week % WEEKS_PER_YEAR) + WEEKS_PER_YEAR) % WEEKS_PER_YEAR
+  const delta = RETIRE_ASK_WEEK_OF_YEAR - into
+  return week + (delta >= 0 ? delta : delta + WEEKS_PER_YEAR)
+}
+
+/** ⭐⭐⭐ HOW MANY OFF-SEASONS ARE LEFT BEFORE THE LAST ONE, or null when nothing should be said.
+ *
+ *  1 means the NEXT winter is the one the offer arrives `final` on – exactly, not approximately.
+ *
+ *  ⚠⚠ NOTHING BEFORE `askFromAgeYears`, AND THAT GATE IS NOT REDUNDANT. Before 29 the share is
+ *  exactly 1 by construction (`declineStart` IS 29, and `growWeek` freezes the peak the week the
+ *  decline starts), so a projection off it would be a projection off a constant – which is precisely
+ *  what r39 #14b's plateau measurement proved: a wrecked career reads 100% at 28 as surely as a kept
+ *  one. The winter question itself starts at the same age, so a warning before it would be warning
+ *  about a question nobody has asked yet.
+ *
+ *  ⚠ IT IS SILENT ON THE LAST WINTER ITSELF, structurally rather than by a condition on a screen:
+ *  on that week the final ask IS this week, the count comes out 0, and `lastWordLine` is the only
+ *  thing that should be speaking there.
+ *
+ *  Null while the save carries no peak, while she is further out than the window, and on any world
+ *  whose body never reaches the band inside the walk's forty-year cap. */
+export function lastWinterIn(world: WorldState): number | null {
+  const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+  if (age < ENDINGS.askFromAgeYears) return null
+  const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
+  const years = seasonsOfBodyLeft(world, bounds, age, ENDINGS.lastOfferPeakShare)
+  if (years === null) return null
+  // ⚠ BACK TO WEEKS, because the walk counted weeks and only divided to answer its own caller. The
+  // round is the float's rounding and never a semantic one – `weeks / 52 * 52` is the same integer.
+  const crossWeek = world.week + Math.round(years * WEEKS_PER_YEAR)
+  const lastAsk = askWeekAtOrAfter(crossWeek)
+  const nextAsk = askWeekAtOrAfter(world.week + 1)
+  const winters = Math.round((lastAsk - nextAsk) / WEEKS_PER_YEAR) + 1
+  return winters >= 1 && winters <= LAST_WINTER_WARN_SEASONS ? winters : null
 }
 
 /** WHERE THE TABLE HAS TAKEN HER, off the seasons the career actually banked.
@@ -1314,24 +1431,54 @@ export function seasonRankRead(world: WorldState): { yearMove: number | null; be
  *  two surfaces can never disagree about whether she is past her peak or by how much – the "two
  *  sides asking different functions about one question" defect, prevented structurally. Null while
  *  she is still growing, which is the '' guarantee both formatters inherit. */
-function declineRead(world: WorldState): { seasons: number; yearMove: number | null; belowBest: number | null } | null {
+/** ⭐⭐⭐ ROUND 40 #14b – AND THE WARNING JOINS THE ROW RATHER THAN ARRIVING BESIDE IT. The near-final
+ *  case is a fourth field on the SAME read, so the long sentence and the short plate cannot end up
+ *  one warning apart: whichever of them speaks this week is speaking off this row. `lastWinter` is
+ *  null on every week outside his window, which is what keeps both formatters byte-identical to what
+ *  shipped for the whole of the decline before it. */
+type DeclineRead = { seasons: number; yearMove: number | null; belowBest: number | null; lastWinter: number | null }
+
+function declineRead(world: WorldState): DeclineRead | null {
   const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   const age = kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
   if (age < bounds.declineStart) return null
   const years = seasonsOfBodyLeft(world, bounds, age)
   if (years === null) return null
-  return { seasons: Math.max(1, Math.round(years)), ...seasonRankRead(world) }
+  return { seasons: Math.max(1, Math.round(years)), lastWinter: lastWinterIn(world), ...seasonRankRead(world) }
 }
 
 /** ⚠ ROUND 39 #13c – «down 1 places» had no singular. The seasons clause next to it always had one
  *  (`season/seasons`), so the defect was one word wide and lived in both rank arms. */
 const places = (n: number): string => `${n} ${n === 1 ? 'place' : 'places'}`
 
+/** ⭐⭐⭐ ROUND 40 #14b (DRAFT COPY, AWAITING THE OWNER'S WORD) – HIS VOICE FOR THE NEAR-FINAL CASE.
+ *
+ *  ⚠⚠ IT REPLACES THE `left` CLAUSE RATHER THAN STANDING BESIDE IT, which is the shape the item was
+ *  approved in: «Extend that voice for the near-final case rather than adding a second sentence
+ *  beside it.» All three arms of his sentence keep their grammar and their rank halves; what changes
+ *  is the clause they share, and only on the weeks the warning is on.
+ *
+ *  ⚠ AND THE CLAUSE IT REPLACES IS DEGENERATE EXACTLY THERE, which is why this is information and
+ *  not decoration. `seasonsOfBodyLeft` stops at `COACH_BODY_END_SHARE` and the callers floor it at
+ *  1, so «her body has about 1 more season in it» is what he says for the WHOLE 0.70-to-0.55 tail –
+ *  three and a half years of an unchanging number. The warning is the part of that tail the parent
+ *  can act on.
+ *
+ *  ⚠ DIGITS, because this note is deliberately the one string on the wire that carries them (see
+ *  `Snapshot.coachDeclineNote`). Her own voice spells its counts instead; that split is not an
+ *  accident of two authors. */
+function lastWinterClause(winters: number): string {
+  return winters === 1 ? 'her last winter is the next one' : `her last winter is ${winters} seasons away`
+}
+
 export function coachDeclineNote(world: WorldState): string {
   const read = declineRead(world)
   if (read === null) return ''
   const { seasons, yearMove, belowBest } = read
-  const left = `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
+  const left =
+    read.lastWinter !== null
+      ? lastWinterClause(read.lastWinter)
+      : `her body has about ${seasons} more ${seasons === 1 ? 'season' : 'seasons'} in it`
   const note =
     yearMove !== null && yearMove > 0
       ? `down ${places(yearMove)} on the year, and ${left}.`
@@ -1451,17 +1598,23 @@ function belowBestShort(behind: number): string {
  *  and CAPITALISED on his word of 08.09 («поправь пожалуйста») – the plate opens a line, so the
  *  sentence case is his own second ruling on the same copy. «Past her peak – about N seasons left» is byte-identical to
  *  the string wave A2 shipped. #13c's singular care rides on `places`. */
-function declineVariantText(
-  variant: DeclineVariant,
-  read: { seasons: number; yearMove: number | null; belowBest: number | null },
-): string | null {
+function declineVariantText(variant: DeclineVariant, read: DeclineRead): string | null {
   switch (variant) {
     case 'fell':
       return read.yearMove !== null && read.yearMove > 0 ? `She's down ${places(read.yearMove)}` : null
     case 'below':
       return read.belowBest !== null && read.belowBest > 0 ? belowBestShort(read.belowBest) : null
     case 'seasons':
-      return `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${read.seasons} ${read.seasons === 1 ? 'season' : 'seasons'} left`
+      // ⭐⭐⭐ ROUND 40 #14b (DRAFT COPY) – THE BODY CLAUSE BECOMES THE WARNING INSIDE HIS WINDOW, and
+      // it is the LONG sentence's own clause compressed, exactly as this variant has always been the
+      // compression of «her body has about N more seasons in it». ⚠ IT IS NOT OPTIONAL FOR THE PLATE
+      // TO STAY OUT OF THIS: past 0.70 the shipped clause is pinned at «about 1 season left», so a
+      // plate that kept it while the card said «her last winter is 2 seasons away» would put two
+      // different numbers about her remaining time on two of the coach's own surfaces – which is the
+      // contradiction the owner reported in #13a, arriving from the other side.
+      return read.lastWinter !== null
+        ? `${DECLINE_LABEL}${ROOM_NOTE_SEP}${read.lastWinter === 1 ? 'her last winter is next' : `her last winter is ${read.lastWinter} seasons away`}`
+        : `${DECLINE_LABEL}${ROOM_NOTE_SEP}about ${read.seasons} ${read.seasons === 1 ? 'season' : 'seasons'} left`
   }
 }
 
@@ -1670,7 +1823,8 @@ export function handoverRoomBand(world: WorldState): string {
 }
 
 // =================================================================================================
-// ⭐⭐⭐ THE HANDOVER'S SECOND DIMENSION – WHERE SHE STANDS TODAY (childhood prologue, phase 7)
+// ⭐⭐⭐ THE HANDOVER'S SECOND DIMENSION – WHAT THE NINE YEARS ADDED (childhood prologue, phase 7;
+// RE-AIMED FROM HER ARRIVAL TO HER REALISATION BY ROUND 40 #4)
 // =================================================================================================
 //
 // THE OWNER, 02.09: «оставляем туман, у нас есть слова тренера – вот ими надо добавить понимание про
@@ -1679,107 +1833,210 @@ export function handoverRoomBand(world: WorldState): string {
 //
 // ⭐⭐ SO THERE ARE TWO BANDS AND THEY ANSWER DIFFERENT QUESTIONS, AND THE DIFFERENCE IS THE POINT:
 //
-//     the BASE = what you BUILT        `handoverBaseBand` – her arrival, against her age group
+//     the BASE = WHAT THE YEARS DID     `handoverBaseBand` – how much of her room they filled
 //     the ROOM = what she was BORN with `handoverRoomBand` – the potential roll, above
 //
 // ⚠⚠ WHICH IS WHY THE ROOM BAND DOES NOT RESPOND TO THE CHILDHOOD AND THIS ONE DOES. That asymmetry
 // reads like a bug to every new reader and it is the design: `handoverRoomBand` re-derives her BIRTH
 // build on purpose (its own note records the measurement – reading her arrival moves the band on
 // 23.9% of seeds and moves it DOWNWARD for the girl whose parents did everything), so nine good
-// years cannot buy potential. They buy a fourteen-year-old who is further along, which is exactly
-// what this band reads. ⚠ Do not "fix" the room band to respond to the player; the second sentence
-// is where the player's nine years are answered.
+// years cannot buy potential. They buy a fourteen-year-old who has filled more of the room she was
+// born with, which is exactly what this band reads. ⚠ Do not "fix" the room band to respond to the
+// player; the second sentence is where the player's nine years are answered.
 //
 // ⚠ NO CEILING CONTOUR AND NO SECOND NUMBER. §5's rule is unchanged – the potential is never drawn
-// and the coach never names a ceiling – and this band names no ceiling either: it is a statement
-// about TODAY, against girls the same age, and it is spoken in the same three-band vocabulary with
+// and the coach never names a ceiling – and this band names no ceiling either: it grades a SHARE,
+// buckets it to three values before a word is written, and is spoken in a three-band vocabulary with
 // no digit in it (`src/prologue/handover.ts` holds the sentences and the test sweeps them).
 //
-// ⭐ THE REFERENCE IS MEASURED, NOT PICKED (invariant 5). `docs/specs/childhood-growth-2026-09.md`
-// §4a measured what a freshly created fourteen-year-old is TODAY on the mean attribute, and phase 7
-// re-measured the same distribution at 20k, 100k and 400k seeds to fix these two cuts. Every figure
-// below is that measurement:
+// =================================================================================================
+// ⭐⭐ ROUND 40 #4 – WHY THIS STOPPED READING HER ARRIVAL, AND THE MEASUREMENT THAT DECIDED IT
+// =================================================================================================
 //
-//     THE FRESH-FOURTEEN DISTRIBUTION (mean of the five attributes, 400,000 seeds)
-//       min 40.10   p05 44.30   p20 46.30   p50 48.50   p80 50.70   p95 52.70   max 57.30
+// THE OWNER, 08.09: «что если мы здесь как раз будем говорить о той разнице в реализации, которой уже
+// к этому моменту она достигла? тогда это не нарушит ничего, но и отразить разный прогресс» → «делай».
 //
-//   * THE CUTS ARE p20 AND p80, and they are stable to the hundredth at all three sample sizes:
-//     19.00% of fourteen-year-olds are below 46.30 and 19.00% are above 50.70, so the three bands
-//     hold 19 / 62 / 19 of the reference population.
-//   * ⭐ WHY THOSE TWO QUANTILES AND NOT ANOTHER PAIR, and the answer is a MEASUREMENT plus a
-//     sentence. The sentences this band licenses (see `COACH_BASE_READS`) say «where most girls her
-//     age are» and «ahead of most girls her age», so the middle band has to hold MORE THAN HALF of
-//     the reference or the copy is simply false – which is what killed the tertiles (measured: the
-//     middle third holds 37.6%, and «most» would have been a lie). Inside the pairs that survive
-//     that test, p20/p80 is the one that moves the band MOST with the childhood: same seed,
-//     neglected childhood versus devoted, the band changes on 89.9% of seeds (p25/p75: 89.0%,
-//     p15/p85: 76.0%, p10/p90: 60.0%, p05/p95: 40.9%).
-//   * ⚠⚠ AND THE NUMBER A PLAYER ACTUALLY GETS IS 40.9%, NOT 89.9%. `neglectedChildhood()` and
-//     `devotedChildhood()` are the MODEL's extremes and span 4.28 points; enumerating all 32 runs
-//     through the SHIPPED CARD TABLE gives a span of 1.87 (mean arrival 47.48 at the cheapest,
-//     49.35 at the dearest – and the cheapest run is also the lowest-arrival one, so money and build
-//     are perfectly aligned in the table today). Over that reachable span the band moves on 40.9% of
-//     seeds at these cuts, against 46.9% at p25/p75 and 53.9% at the tertiles – and both of those buy
-//     the extra movement by making «where most girls her age are» false or nearly so. Two careers in
-//     five hearing a different sentence for what the player did is the trade this pair takes.
-//     ⚠ That the cards reach only 44% of the model's span is a BALANCE question about what a card
-//     buys, and it is the owner's; it is recorded in the build spec's §8c, not fixed here.
-//   * ⚠ AND THE PAIR LANDS AT 48.50 ± 2.20, WHICH IS ONE DEVOTED CHILDHOOD FROM THE MEDIAN. Phase 1
-//     measured a devoted childhood at +2.188 and a neglected one at −2.093 (growth spec §4), so the
-//     distance from the middle of her age group to either cut is almost exactly what the nine years
-//     are worth. That is not how the cuts were chosen – they are the reference's own quantiles – but
-//     it is WHY the band moves: doing the work carries the median girl across a cut, and doing
-//     nothing leaves her where she was born.
+// ⚠ IT CAME OUT OF A PROMO FILM AND NOT A BUG REPORT. One seed was walked down two childhoods for a
+// 32-second recording and the payoff screen said the SAME SENTENCE both times. That was not a defect
+// – the arrival reading moved the band on about half of seeds and the film drew one of the others –
+// but it is what made the reading worth re-measuring (`tools/r40-span-and-realisation.ts`):
 //
-// THE MEASURED SHARES, per childhood, at these cuts (20,000 seeds each):
+//     200 seeds x 32 paired runs, the cheapest childhood against the dearest on each seed
+//     ------------------------------------------------------------------------------------
+//     reading                 span between the two childhoods   the SENTENCE differs on
+//     arrival (was shipped)   2.44 points                       104 of 200 seeds – 52%
+//     realisation             16.2 percentage points            200 of 200 seeds – 100%
 //
-//                     below   among   ahead
-//     the reference   19.3%   61.5%   19.2%
-//     neglected       49.7%   46.1%    4.2%
-//     median          19.4%   61.4%   19.2%
-//     grinder         30.5%   57.5%   11.9%
-//     mixed           12.1%   58.1%   29.8%
-//     devoted          3.5%   47.5%   49.0%
+// ⭐ AND THE REASON IS THE DENOMINATOR, NOT A BIGGER EFFECT. The same 2.44 points are being divided
+// by two different things: the arrival grades them against a POPULATION whose bands are ~2.2 points
+// wide, so 2.44 rarely crosses one; realisation grades them against HER OWN room (`potential − born`,
+// five draws from `potentialBand` = [4, 26], so ~15 points on the mean attribute), and there the same
+// 2.44 is most of a band. Nothing about the childhood was made stronger – §8c's balance question is
+// untouched and still the owner's.
 //
-// ⚠ THE BIRTH MONTH IS IN THIS NUMBER TOO, AND IT IS NOT NOISE. `withHeadStart` is applied before
-// the childhood, so a January girl arrives about 2.2 points above a December girl of the same seed
-// and the band moves on 43.4% of seeds between them. That is the relative-age effect the game
-// already models, and it belongs in a reading of where she stands against her age group TODAY –
-// which is precisely the quantity that washes out later, while the potential never does. It is
-// recorded here so nobody reads a moved band as proof the childhood moved it.
+// =================================================================================================
+// ⭐⭐⭐ THE DERIVATION, AND WHICH HALF OF ROUND 34 #2b IT KEEPS
+// =================================================================================================
+//
+// `realisedShare` above is the same idea for the career-long question, and it is READ rather than
+// re-invented here: the rule it exists to keep is that the reading may never become a function of
+// how big her ceiling is. It survives in this one intact –
+//
+//   * THE NUMERATOR SUBTRACTS HER BIRTH BUILD. Round 34's defect was `mean(skills) / mean(potential)`,
+//     which counts the skill she was BORN with as achievement and therefore reads HIGHER the SMALLER
+//     her ceiling is: measured on the owner's own save, «Close to her ceiling» arrived at 41.6% of
+//     realised headroom for the less gifted girl and at 72.3% for the gifted one. The verdict
+//     arriving earlier for the less talented girl IS the inversion, and only the subtraction stops it.
+//   * THE DENOMINATOR IS THE ROOM AND NOT THE ASYMPTOTE, for the same reason.
+//
+// ⚠⚠ AND `realisedShare` ITSELF CANNOT BE CALLED HERE. Three of its four parts are wrong for week 0,
+// and the first of them is fatal rather than untidy:
+//
+//   1. ⚠⚠ IT CLAMPS TO [0, 1], AND THIS READING IS SIGNED. A childhood can leave her BELOW the build
+//      she started it with – the measured range is −26.1% to +24.1% – and the whole bottom band is
+//      that case. Under the clamp every neglected childhood reads exactly 0.0, the p20 cut below zero
+//      is unreachable, and `behind` becomes a band no career can enter. A career reading has no use
+//      for a negative share (skills only fall past `declineStart`, which is what round 38 #7b handles
+//      with a different sentence); a nine-year reading has nothing else to say about half its range.
+//   2. IT DIVIDES BY `reachableHeadroomShare()` – what the BEST COACHING AVAILABLE can reach over a
+//      whole career. That is the right yardstick for «is there still room worth buying» and the wrong
+//      one for «what did the nine years do»: at week 0 it is a constant, so it could only rescale the
+//      cuts below, and it would put a career-long coaching dial inside a childhood's reading for no
+//      change in the sentence.
+//   3. ITS BIRTH BUILD IS THE PRE-HEAD-START ONE, so the relative-age effect lands in its NUMERATOR.
+//      See the birth-month note below – here that would be ~2.2 points of «realisation» nobody earned,
+//      against a childhood span of 2.44.
+//
+// So this is a second READING of one quantity rather than a second definition of it, the same
+// relationship `coachRoomShort` and `coachRoomNote` have through `roomBandRow`, and the two live
+// beside each other so the divergence is a paragraph rather than a discovery.
+//
+// ⚠ THE TWO BASELINES ARE DIFFERENT ON PURPOSE, AND EACH IS THE HONEST ONE FOR ITS HALF:
+//
+//   NUMERATOR  `world.skills − withHeadStart(startingSkills(...))` – the build `createWorld` handed
+//              `childhoodArrival`, so the difference is EXACTLY what the nine years added and nothing
+//              else. At week 0 there is no other growth, so a career with no prologue reads 0.000.
+//   DENOMINATOR `potential − startingSkills(...)` – the potential ROLL itself, uniform by construction
+//              in `ECONOMY.development.potentialBand` and the same quantity `handoverRoomBand` grades.
+//              `rollPotential` is fed the pre-head-start build (world.ts says why: a January birthday
+//              may not raise a CEILING), so this is her room as it was rolled.
+//
+// ⚠⚠ THE BIRTH MONTH ALMOST LEAVES THIS READING, WHICH IS A CHANGE FROM THE ARRIVAL BAND AND IS THE
+// RIGHT WAY ROUND – AND THE «ALMOST» IS MEASURED RATHER THAN GLOSSED. `withHeadStart` is applied
+// BEFORE the childhood, so a January girl arrives about 2.2 points above a December girl of the same
+// seed, and the arrival band this replaces moved on 43.4% of seeds between them. That belonged there:
+// that band was a statement about where she stands against her AGE GROUP today. This one is a
+// statement about what the YEARS did, and eleven months of being older is not something a parent did
+// – it stands in both terms of the numerator and cancels.
+//
+// ⚠ IT DOES NOT CANCEL COMPLETELY, AND THE RESIDUE IS THE CLAMP, NOT THE MODEL. `childhoodArrival`
+// holds her inside `STARTING_SKILL_BAND` (its own note: the set of girls a prologue can hand over is
+// the SAME SET a fresh fourteen-year-old is drawn from), and at the ends of the card table that clamp
+// binds on a measured 15.0% of attribute-childhoods – so a January girl near the top of an axis has
+// some of her gain truncated and a December girl near the bottom has some of her loss truncated.
+// Measured through the shipped band: the birth month moves the sentence on 13.5% of seeds against the
+// arrival reading's 43.4%. `tests/prologue-handover.test.ts` pins the direction of travel rather than
+// a zero, because a zero would be a claim the clamp makes false.
+//
+// ⚠ WHAT IS LEFT OF THE CEILING IN THE READING, STATED RATHER THAN HIDDEN. Realisation is a SHARE, so
+// for the same nine years the girl with less room reads a higher one – she really has filled more of
+// what she has. That is realisation being realisation and it is not round 34's inversion, which was
+// the reading being decided by the ceiling INSTEAD of by the work (a girl who had gained nothing
+// still read near the top). Here a girl who gains nothing reads 0.000 whatever her ceiling is.
+//
+// ⚠ A WIZARD CAREER READS `level`, ALWAYS, AND THAT IS NOT A HOLE. With no prologue `world.skills` IS
+// the head-started birth build, so the numerator is 0 by construction. The field only crosses the wire
+// at week 0 and the only screen that reads it is the prologue's own handover, which a wizard career
+// never sees; the three bands are graded over the childhoods the shipped card table can actually
+// produce, which is the population this sentence is spoken to.
+//
+// =================================================================================================
+// ⭐ THE CUTS ARE MEASURED, NOT CHOSEN (CLAUDE.md invariant 5)
+// =================================================================================================
+//
+// Same principle the arrival cuts were chosen by – p20/p80 of the reading's OWN distribution at
+// fourteen – and the population is the one that hears the sentence: every childhood the shipped card
+// table can produce. `tools/r40-handover-realisation-cuts.ts` walks it through the SHIPPED derivation
+// below.
+//
+//     REALISATION AT FOURTEEN – 100,000 seeds x all 32 runs of the card table = 3,200,000 childhoods
+//       min −26.1%   p05 −7.9%   p20 −5.0%   p50 −0.1%   p80 +3.6%   p95 +7.4%   max +24.1%
+//
+//   * THE CUTS ARE p20 AND p80: −0.050 and +0.036, so the three bands hold 20 / 60 / 20 of the
+//     childhoods the table can produce. ⚠ The middle band therefore holds MORE THAN HALF, which is
+//     not a taste – `COACH_BASE_READS.level` says «where most girls her age are» and the copy would
+//     be false otherwise. That is the same test that killed the tertiles when the arrival cuts were
+//     chosen (measured then: the middle third held 37.6%).
+//   * ⭐ STABLE TO THE THOUSANDTH ACROSS THREE SAMPLE SIZES, which is what says these are the
+//     distribution's quantiles and not the sample's: p20/p80 read −0.0504/+0.0365 at 2,000 seeds,
+//     −0.0504/+0.0364 at 20,000 and −0.0503/+0.0364 at 100,000.
+//   * ⚠ THE PROBE THAT AUTHORISED THE ITEM READ −5.0% / +2.7% ON 200 SEEDS AND A SLIGHTLY DIFFERENT
+//     QUANTITY (it applied no head start at all, so its numerator and denominator shared a baseline,
+//     and it doubled its corpus by a Local Open answer that cannot reach the arrival). The lower cut
+//     reproduces exactly; the upper one moves by 0.9 of a point on the shipped derivation.
+//   * ⚠ AND THE DISTRIBUTION IS NOT SYMMETRIC. `childhoodWalk` normalises against the MEDIAN
+//     childhood, which is exactly 0 – and the shipped card table's own runs sit a shade below it, so
+//     p50 is −0.1% and the negative tail is the longer one.
+//
+// THE SHARE THE SENTENCE MOVES ON, at these cuts and on the same corpus the item was argued from:
+// the cheapest childhood and the dearest one on the same seed land in DIFFERENT bands on 200 of 200
+// seeds – 100% – against 52% for the arrival reading. `tests/prologue-handover.test.ts` re-runs both.
 //
 // Pure, zero draws, derived at snapshot time – exactly like `handoverRoomBand` above.
 
-/** ⭐ THE FRESH-FOURTEEN CUTS, in mean-attribute points. See the measurement above. */
-export const HANDOVER_BASE_CUTS = { below: 46.3, ahead: 50.7 } as const
+/** ⭐⭐ HOW MUCH OF THE ROOM SHE WAS BORN WITH THE NINE YEARS FILLED, signed, at week 0.
+ *
+ *  Positive: the childhood added to the build she started it with. Negative: it did not, and she
+ *  arrives below it – which is a real outcome of the model and is what the bottom band says.
+ *
+ *  ⚠ IT IS ONLY MEANINGFUL AT WEEK 0, exactly as `handoverBaseBand` is: from week 1 `world.skills` is
+ *  her CURRENT build and the numerator stops being «what the childhood did». The snapshot enforces
+ *  that (`world/snapshot.ts` sets the band at week 0 only) and nothing else calls this.
+ *
+ *  ⚠ 0 WHEN THERE IS NO ROOM AT ALL, which reads as `level` – the same boring answer a tie gets, and
+ *  the honest one about a girl the model can say nothing about. `potentialBand` starts at 4, so on a
+ *  world this engine builds the branch is unreachable; it is here so a hand-built world cannot make
+ *  this return a division by zero. */
+export function handoverRealisation(world: WorldState): number {
+  const birth = startingSkills(world.seed, world.profile)
+  const born = withHeadStart(birth, world.profile.birthMonth)
+  let gained = 0
+  let room = 0
+  for (const k of SKILL_KEYS) {
+    gained += world.skills[k] - born[k]
+    room += world.potential[k] - birth[k]
+  }
+  return room > 0 ? gained / room : 0
+}
+
+/** ⭐ THE CUTS, AS A SHARE OF HER OWN ROOM – p20/p80 of the measurement above.
+ *
+ *  ⚠⚠ THE UNIT CHANGED WITH ROUND 40 #4 AND THE NAME DID NOT. Until then these were 46.3 / 50.7 in
+ *  MEAN-ATTRIBUTE POINTS, cut from the fresh-fourteen distribution; they are now a signed SHARE of
+ *  `potential − born`, and the lower one is BELOW ZERO because a childhood can leave her under the
+ *  build she started with. A reader who takes these for points will be off by a factor of ten – the
+ *  test re-measures the distribution and asserts both cuts are its own quantiles, so a stale unit
+ *  cannot survive a run. */
+export const HANDOVER_BASE_CUTS = { below: -0.05, ahead: 0.036 } as const
 
 // ⚠ THE THREE KEYS LIVE IN `shared/protocol/snapshot.ts` (`HandoverBaseBand`) rather than here,
 // which is the one place this deliberately differs from `handoverRoomBand`. That function returns
 // `ROOM_BANDS[i].label` because those three strings are the COACH MARKET's own player-facing
 // vocabulary and predate the handover by months – reusing them invents nothing. There is no shipped
-// vocabulary for «where she stands against her age group», so this returns KEYS, not labels: a
-// lowercase key cannot be mistaken for a sentence, which keeps invariant 4 out of a snapshot field,
-// and the union makes the copy table in `src/prologue/handover.ts` TOTAL – there is no fallback band
-// to get wrong. It is declared in the protocol because it crosses the wire and the engine imports
-// the protocol, never the reverse.
+// vocabulary for «what the nine years added», so this returns KEYS, not labels: a lowercase key
+// cannot be mistaken for a sentence, which keeps invariant 4 out of a snapshot field, and the union
+// makes the copy table in `src/prologue/handover.ts` TOTAL – there is no fallback band to get wrong.
+// It is declared in the protocol because it crosses the wire and the engine imports the protocol,
+// never the reverse.
 
-/** Her arrival build against today's fourteen-year-olds.
+/** What the nine years added, against the room she was born with.
  *
- *  ⚠ IT READS `world.skills`, WHICH AT WEEK 0 IS THE ARRIVAL – the head-started birth build with the
- *  childhood's nine years folded in (`createWorld`, phase 4), or exactly the head-started birth build
- *  when there was no prologue. That is the whole difference from `handoverRoomBand`, which re-derives
- *  the birth build so the childhood cannot reach it. ⚠ The snapshot only carries this at week 0
- *  (`world/snapshot.ts`), because from week 1 `world.skills` is her CURRENT build and a "fresh
- *  fourteen-year-old" reference stops meaning anything.
- *
- *  ⚠ A TIE READS AS `level`. A mean landing exactly on a cut is the boring answer, and the boring
+ *  ⚠ A TIE READS AS `level`. A share landing exactly on a cut is the boring answer, and the boring
  *  answer is the right one to give about a child. */
 export function handoverBaseBand(world: WorldState): HandoverBaseBand {
-  let level = 0
-  for (const k of SKILL_KEYS) level += world.skills[k]
-  level /= SKILL_KEYS.length
-  if (level < HANDOVER_BASE_CUTS.below) return 'behind'
-  if (level > HANDOVER_BASE_CUTS.ahead) return 'ahead'
+  const realised = handoverRealisation(world)
+  if (realised < HANDOVER_BASE_CUTS.below) return 'behind'
+  if (realised > HANDOVER_BASE_CUTS.ahead) return 'ahead'
   return 'level'
 }
 
