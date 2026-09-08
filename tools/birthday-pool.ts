@@ -99,6 +99,9 @@ interface BirthdayRow {
   options: string[]
   askedId: string
   given: string
+  /** ⭐ ROUND 39 #9 – which relaxation the ask needed, if any. Absent on an arm without the fix,
+   *  which is what lets the identical tool run on both sides of the change. */
+  eased: 'gap' | 'cap' | null
   fundsCents: number
   kidFundsCents: number
 }
@@ -106,7 +109,12 @@ interface BirthdayRow {
 /** Answer the birthday the way the dialog is answered, and record exactly what it printed.
  *  ⚠ THE PROMPT IS BUILT BEFORE `chooseGift`, because `chooseGift` pushes the row that would change
  *  what `giftsAlreadyGiven` sees – the same ordering `buildBirthdayPrompt` itself depends on. */
-function answerIfBirthday(world: WorldState, career: string, out: BirthdayRow[], pick: (ids: string[]) => string): boolean {
+function answerIfBirthday(
+  world: WorldState,
+  career: string,
+  out: BirthdayRow[],
+  pick: (ids: string[], askedId: string) => string,
+): boolean {
   if (pendingBirthday(world) === null) return false
   const prompt = buildBirthdayPrompt(world)!
   const ids = prompt.options.map((o) => o.id)
@@ -116,8 +124,9 @@ function answerIfBirthday(world: WorldState, career: string, out: BirthdayRow[],
   // seam. The arguments grew a fourth member (which college birthday this is) and a tool re-typing
   // them is a tool that measures a different dialog from the one the player answered – exactly the
   // drift `chooseGift`'s note is about, one layer out.
-  const { askedId } = birthdayOfferFor(world, prompt.age)
-  const given = pick(ids)
+  const offer = birthdayOfferFor(world, prompt.age) as { askedId: string; eased?: 'gap' | 'cap' | null }
+  const askedId = offer.askedId
+  const given = pick(ids, askedId)
   out.push({
     career,
     age: prompt.age,
@@ -126,6 +135,7 @@ function answerIfBirthday(world: WorldState, career: string, out: BirthdayRow[],
     options: ids,
     askedId,
     given,
+    eased: offer.eased ?? null,
     fundsCents: world.fundsCents,
     kidFundsCents: world.kidFundsCents ?? 0,
   })
@@ -133,12 +143,22 @@ function answerIfBirthday(world: WorldState, career: string, out: BirthdayRow[],
   return true
 }
 
-/** A tour career, walked from fourteen until it ends or the cap. Never answers the college fork. */
-function walkTour(preset: (typeof PRESETS)[number], i: number, out: BirthdayRow[]): void {
+/** A tour career, walked from fourteen until it ends or the cap. Never answers the college fork.
+ *
+ *  ⭐ ROUND 39 #9 – `pick` is a parameter now: the round-26/27 sections keep the historical
+ *  `ids[0]` player, and the career-scope section walks a GRANTING parent (`(ids, asked) => asked`),
+ *  because that is the owner's own log – on his save every ask of the career was granted, so the
+ *  asked and given streams coincide and the rule's whole budget is exercised. */
+function walkTour(
+  preset: (typeof PRESETS)[number],
+  i: number,
+  out: BirthdayRow[],
+  pick: (ids: string[], askedId: string) => string = (ids) => ids[0],
+): void {
   const { world, rng } = openCareer(preset, i, POLICY)
   const career = `tour-${preset.background}-${i}`
   for (let w = 0; w < WALK_CAP; w++) {
-    answerIfBirthday(world, career, out, (ids) => ids[0])
+    answerIfBirthday(world, career, out, pick)
     // ⚠ 'continue' AND NOT 'tour'. `ForkAnswer` is `continue | college | stop`; an unrecognised
     // string is not refused by `answerFork`, it simply never matches the continue arm, and every
     // career in the first draft of this file ended 'stopped' at week 243 – five birthdays each.
@@ -357,6 +377,85 @@ function againAsk(rows: BirthdayRow[], careers: string[]): void {
   console.log(`  ...on a DURABLE row (the ask may read as if she lacks it): ${durable}`)
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 39 #9 – THE CAREER-SCOPE RULE, COUNTED THE WAY THE OWNER COUNTED IT
+// =================================================================================================
+//
+// The owner, 08.09, REOPENING round 26 #9: «Опять just one day. Я просил сделать много вариантов
+// подарков для разных возрастных групп. Мне кажется, что вполне допустимо чтобы что-то повторялось,
+// но не больше 2-3 раз за всю карьеру и с разницей не меньше 5 лет.»
+//
+// Measured on his save: `day` asked-and-given at 22, 24, 25 and 27 – four times, gaps of 2, 1 and 2
+// years. Round 26 controlled CONSECUTIVE dialogs and round 27 consecutive day-asks; neither can see
+// a career-scope count or a gap, which is why both stayed green while he saw this.
+//
+// ⚠ AN APPEARANCE IS COUNTED EXACTLY AS THE ENGINE COUNTS IT (see `giftUse` in world/birthday.ts):
+// a material gift appears when a birthday row asked for it OR gave it (once per row); the day is
+// counted AS AN ASK ONLY – its presence on every card is the 11.08 ruling and giving it freely is
+// the player's own right, so only the sentence she says can repeat.
+function careerScope(rows: BirthdayRow[], title: string): void {
+  section(title)
+  if (!rows.length) {
+    console.log('  no birthdays recorded')
+    return
+  }
+  const DAY = BIRTHDAY_DAY_TOGETHER.id
+  const careers = [...new Set(rows.map((r) => r.career))]
+  interface Use {
+    count: number
+    weeks: number[]
+  }
+  let capBreaks = 0
+  let gapBreaks = 0
+  let easedGap = 0
+  let easedCap = 0
+  const worst = new Map<string, { count: number; minGap: number | null }>()
+  for (const c of careers) {
+    const mine = rows.filter((r) => r.career === c).sort((a, b) => a.week - b.week)
+    const use = new Map<string, Use>()
+    for (const r of mine) {
+      if (r.eased === 'gap') easedGap++
+      if (r.eased === 'cap') easedCap++
+      const bump = (id: string) => {
+        const u = use.get(id) ?? { count: 0, weeks: [] }
+        u.count++
+        u.weeks.push(r.week)
+        use.set(id, u)
+      }
+      if (r.askedId === DAY) bump(DAY)
+      else bump(r.askedId)
+      if (r.given !== r.askedId && r.given !== DAY) bump(r.given)
+    }
+    for (const [id, u] of use) {
+      let minGap: number | null = null
+      for (let i = 1; i < u.weeks.length; i++) {
+        const gap = u.weeks[i] - u.weeks[i - 1]
+        if (minGap === null || gap < minGap) minGap = gap
+      }
+      if (u.count > 3) capBreaks++
+      if (minGap !== null && minGap < 260) gapBreaks++
+      const w = worst.get(id) ?? { count: 0, minGap: null }
+      if (u.count > w.count) w.count = u.count
+      if (minGap !== null && (w.minGap === null || minGap < w.minGap)) w.minGap = minGap
+      worst.set(id, w)
+    }
+  }
+  console.log(`  ${careers.length} careers, ${rows.length} birthdays – appearances = asked OR given per row, day = asked only`)
+  console.log(`\n  THE OWNER'S TWO NUMBERS, over every walked career`)
+  console.log(`  ${'-'.repeat(96)}`)
+  console.log(`  gifts that exceed 3 appearances in one career:        ${capBreaks}`)
+  console.log(`  gifts repeated inside 260 weeks in one career:        ${gapBreaks}`)
+  console.log(`  asks that needed the pinned relaxation:               gap ${easedGap}, cap ${easedCap}`)
+  const rep = [...worst.entries()].filter(([, w]) => w.count > 1).sort((a, b) => b[1].count - a[1].count || (a[1].minGap ?? 9e9) - (b[1].minGap ?? 9e9))
+  console.log(`\n  TOP REPEATED GIFTS – worst career count and tightest gap between two appearances`)
+  console.log(`  ${'-'.repeat(96)}`)
+  console.log(`  ${padE('gift', 16)}${pad('worst count', 12)}${pad('tightest gap (weeks)', 22)}`)
+  for (const [id, w] of rep.slice(0, 10)) {
+    console.log(`  ${padE(id, 16)}${pad(w.count, 12)}${pad(w.minGap ?? '–', 22)}`)
+  }
+  if (!rep.length) console.log('  (no gift appeared twice in any career)')
+}
+
 function wallets(rows: BirthdayRow[]): void {
   section('4. THE WALLET AT EACH BIRTHDAY – round 26 #4, what the copy is allowed to assume')
   const coll = rows.filter((r) => r.atCollege)
@@ -410,5 +509,12 @@ if (!CENSUS_ONLY) {
   recurrence(tour, '2. A TOUR CAREER – every birthday from fourteen to the end')
   recurrence(coll.filter((r) => r.atCollege), '3. THE COLLEGE BAND – the four birthdays spent in a hall of residence')
   wallets([...tour, ...coll])
+  // ⭐ ROUND 39 #9 – a THIRD walk, granting every ask, because that is the owner's own log: on his
+  // save the asked and given streams coincide on all 13 birthdays. Separate careers (offset seeds)
+  // so the ids[0] sections above keep their round-26/27 comparability.
+  const grant: BirthdayRow[] = []
+  for (let k = 0; k < CAREERS; k++) walkTour(PRESETS[k % PRESETS.length], 2000 + k, grant, (ids, asked) => asked)
+  careerScope(grant, '5. ROUND 39 #9 – CAREER-SCOPE REPEATS, a granting parent (asked === given, his own shape)')
+  careerScope(tour, '6. ROUND 39 #9 – the same census over the ids[0] walk of section 2')
   console.log(`\n  (${((Date.now() - t0) / 1000).toFixed(0)}s)`)
 }
