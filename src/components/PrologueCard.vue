@@ -1134,9 +1134,41 @@ useDialogFocus(cardEl)
   border-color: var(--accent);
 }
 
-/* THE MARK ITSELF – a ring that fills when the answer is taken, which is what a radio looks like
-   everywhere. `aria-hidden` in the template: the state is on the control, and a decorative circle
-   that announced itself would say it twice.
+/* ⭐⭐⭐ ROUND 40 – THE MARK IS THE BALL. The owner named the visual on 08.09 and his words are in
+   docs/rounds/round-40.md, item 1, where they are allowed to live: the radio should be a custom
+   control built as a tennis ball – OUR OWN yellow dot off the logo, minimal, with nothing extra on
+   it. `aria-hidden` in the template: the state is on the control, and a decorative circle that
+   announced itself would say it twice.
+
+   ⚠ IT IS DRAWN IN CSS RATHER THAN OUT OF THE FILE, AND THE FILE IS WHY. `public/ball.svg` is the
+   logo's ball and it carries the two things this control must not: a literal `#C6E12B`, which
+   cannot follow a themed token, and the white seam curve, which is exactly the "extra element" the
+   ruling excludes. Read strictly, a ball with no seam, no gloss and no gradient IS a circle of one
+   colour – and a circle of one colour is `border-radius: 50%` and a background. So the whole
+   control is two declarations flipping on one attribute; both states share a border box
+   (`box-sizing: border-box`, top of style.css) so nothing on the row moves when the answer is
+   taken; the app's one focus ring stays on the BUTTON, untouched, because the ball is a span that
+   is not in the focus or hit path; and a mounted test reads the paint through the cascade the way
+   it reads every other colour on this card. An `<img>` would take none of that, and 23 inline
+   `<circle>`s would take it while adding a subtree per control to draw the same disc.
+
+   ⚠ THE COLOUR IS THE TOKEN, NEVER THE HEX. `--accent` is the logo lime the whole app is themed on
+   and the ball file's `#C6E12B` is its sibling; hard-coding either would be one screen's private
+   copy of the brand, which is the drift `--accent-rgb`'s own note in style.css exists to stop.
+
+   ⚠ AND THE EMPTY BALL HAS TO BE VISIBLE – that is not an extra element, that is the control being
+   findable at all. It used to be a `--line` ring around a `--bg` well, which measures 1.23:1 and
+   1.19:1 against the row it sits on: a radio nobody can see until after they have pressed it. The
+   ring is `--accent-soft` now, 3.36:1 on the same row, which clears the 3:1 WCAG 2.1 asks of a
+   control's own boundary (1.4.11 Non-text Contrast), and the centre is left to the row rather than
+   punched out – the ring is the whole of the unchecked state, and the taken one is the ball itself
+   at 11.28:1. Both numbers are measured through the real cascade in
+   tests/component/round40-prologue-choices.test.ts, not asserted off a class name.
+
+   ⚠ AND WAVE A'S FINDING IS UNTOUCHED: the ROW still takes no accent wash when it is chosen, and
+   for the reason recorded above – `--accent-fill` over `--card-top` puts the note at 4.29:1. The
+   ball and the edge carry the state; the ground under the text does not move.
+
    ⚠ IT COSTS THE ROW NO HEIGHT. Every control in a group carries a label AND a note, so the text
    beside it is at least 15px/1.3 + 2 + 12px/1.35 = 38px against this 20px box – the mark is never
    the tallest child, which is how the card stays inside the ceiling the walk pins. */
@@ -1146,8 +1178,8 @@ useDialogFocus(cardEl)
   height: 18px;
   margin-top: 1px;
   border-radius: 50%;
-  border: var(--stroke-hair) solid var(--line);
-  background: var(--bg);
+  border: var(--stroke-hair) solid var(--accent-soft);
+  background: transparent;
 }
 
 .prologue-choice[aria-checked='true'] .prologue-mark {

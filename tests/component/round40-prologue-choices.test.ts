@@ -42,7 +42,7 @@ import { describe, expect, it, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
-import { assertLegible } from './contrast'
+import { assertLegible, contrastRatio, effectiveBackground, parseColor } from './contrast'
 import { setViewport, PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
@@ -120,6 +120,17 @@ function mountScene(card: PrologueCard, run: PrologueRun, picked?: string) {
     },
   })
   return wrapper
+}
+
+/** Source-over compositing, for the one colour `effectiveBackground` cannot walk to: a BORDER. The
+ *  empty ball's whole visible state is its ring, and the ring is `rgba(207, 225, 82, 0.45)` – read
+ *  as an element background it would report an alpha nobody can compare against anything. */
+function overRow(fg: [number, number, number, number], bg: [number, number, number]): [number, number, number] {
+  return [
+    fg[0] * fg[3] + bg[0] * (1 - fg[3]),
+    fg[1] * fg[3] + bg[1] * (1 - fg[3]),
+    fg[2] * fg[3] + bg[2] * (1 - fg[3]),
+  ]
 }
 
 /** The first two steps of the accessible-name algorithm, which are the only two this surface uses –
@@ -290,6 +301,14 @@ describe('⭐⭐⭐ item 1 – every control that SELECTS is drawn and announced
     document.body.innerHTML = ''
 
     // ...and the mark, which is the part a player sees before reading anything.
+    //
+    // ⚠ ROUND 40, THE OWNER'S VISUAL (08.09) – THE MARK IS THE BALL NOW, and one expected value
+    // below legitimately moved with it: the UNTAKEN mark's own background was `--bg`, a well punched
+    // into the row, and it is `transparent` now, because the ring alone is the empty ball and a
+    // second edge nobody can see (1.19:1, measured) is not minimalism. The claim this arm makes is
+    // unchanged and still passes as written – taken and untaken are painted differently, and the
+    // taken one is the accent – and the ball's own describe block below measures both states, the
+    // ring included, against the row they sit on.
     const marked = mountScene(eleven, EMPTY_RUN, 'ordinary-school')
     const marks = [...document.querySelectorAll('.prologue-choice .prologue-mark')]
     expect(marks.length, 'a radio with no ring on it').toBe(4)
@@ -355,6 +374,191 @@ describe('⭐⭐⭐ item 1 – every control that SELECTS is drawn and announced
     expect(document.activeElement, 'the two questions are one group to the keyboard').toBe(radios[2])
     await wrapper.findAll('.prologue-choice')[3].trigger('click')
     expect(wrapper.emitted('answer')).toEqual([[eleven.options![0].id], [TOURNAMENT_ANSWER.decline]])
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ THE OWNER'S VISUAL (08.09) – THE RADIO IS OUR OWN BALL
+// =================================================================================================
+//
+// He named the picture after wave A shipped the behaviour: the radio should be a CUSTOM control
+// built as a tennis ball – the yellow dot off our own logo, minimal, with nothing extra on it. His
+// words are in docs/rounds/round-40.md, item 1, which is where they are allowed to live.
+//
+// ⚠ «MINIMAL, WITH NOTHING EXTRA» IS READ STRICTLY HERE, and that is what makes it testable: no
+// seam curve, no gloss, no gradient, no shadow. A ball with none of those IS a circle of one
+// colour, so the assertions below are about a circle, a token and two contrast ratios – not about a
+// class name, which would pass on a sheet where the rule had been deleted.
+//
+// ⚠ AND THE UNSELECTED STATE KEEPS ITS RING. That is not an extra element; it is the control being
+// findable before anyone has pressed it, and wave A's ring – `--line` around a `--bg` well – was
+// not: 1.23:1 and 1.19:1 against the row, measured, which is under the 3:1 WCAG 2.1 asks of a
+// control's own boundary (1.4.11 Non-text Contrast). The numbers below are the fix, and they are
+// printed on every run so a future edit that quietly returns the old ring fails with a number.
+//
+// ⚠ MUTATION-VERIFIED, like everything above it, and the numbers below are what the runs printed:
+//   * the checked ball's `background: var(--accent)` changed to `var(--line)` -> four go red: the
+//     ball's own test, the theme test, this block's «taken and untaken are told apart» arm, and
+//     wave A's older «a choice does not look like the way on» arm.
+//   * the ring's `var(--accent-soft)` put back to wave A's `var(--line)` -> the empty-ball test goes
+//     red at exactly 1.2256:1, and the theme test with it, since a `--line` ring no longer follows
+//     the brand. Nothing else moves.
+describe("⭐⭐⭐ the owner's visual – the mark a choice carries is the product's own ball", () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  const ELEVEN = () => PROLOGUE_CARDS.find((c) => c.age === 11)!
+  const token = (name: string) => getComputedStyle(document.documentElement).getPropertyValue(name).trim()
+  const rgb = (css: string): [number, number, number] => {
+    const [r, g, b] = parseColor(css)
+    return [r, g, b]
+  }
+  /** ⚠ THE MEASUREMENT REFUSES TO RUN BLIND, exactly as `assertLegible` does: with no stylesheet in
+   *  the document every element computes to its initial values and every claim here is vacuous. */
+  const notBlind = () => {
+    expect(document.head.querySelector('style'), 'no stylesheet – the component project needs `css: true`').toBeTruthy()
+    expect(token('--accent'), 'the theme did not load – this whole file would be measuring nothing').not.toBe('')
+  }
+
+  it('⭐⭐⭐ the taken answer wears the ball – a round accent dot on the row, measured', () => {
+    const wrapper = mountScene(ELEVEN(), EMPTY_RUN, 'ordinary-school')
+    notBlind()
+    const row = document.querySelector('.prologue-choice[aria-checked="true"]')!
+    const ball = row.querySelector('.prologue-mark')!
+    const cs = getComputedStyle(ball)
+    // a circle, and a circle of ONE colour
+    expect(cs.borderRadius, 'the ball is not round').toBe('50%')
+    expect(cs.width, 'the ball is an oval').toBe(cs.height)
+    expect(parseFloat(cs.width), 'the ball is too small to be a mark').toBeGreaterThanOrEqual(14)
+    // ...and the colour is the app's own lime, read through the cascade rather than off a class
+    const paint = effectiveBackground(ball)
+    const ground = effectiveBackground(row)
+    expect(paint, 'the ball is painted in the row it sits on – there is no dot').not.toEqual(ground)
+    expect(paint, 'the taken ball is not the accent').toEqual(rgb(token('--accent')))
+    const ratio = contrastRatio(paint, ground)
+    console.log(`  the taken ball on its row: ${ratio.toFixed(2)}:1 (accent ${token('--accent')} on ${token('--card-top')})`)
+    expect(ratio, `the ball is invisible on its own row at ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+    wrapper.unmount()
+  })
+
+  // ⭐⭐ AND IT IS THE TOKEN RATHER THAN THE HEX – PROVEN BY MOVING THE THEME UNDER IT. `public/ball.svg`
+  // carries a literal `#C6E12B`; a control painted in a literal would sit still while the app it
+  // belongs to changed colour, and no equality check against today's value can tell the two apart.
+  // This one can: swap the two tokens the ball is built from and watch the paint follow.
+  it('⭐⭐ the ball follows the THEME, which is what a hard-coded hex could not do', () => {
+    const wrapper = mountScene(ELEVEN(), EMPTY_RUN, 'ordinary-school')
+    notBlind()
+    const ball = document.querySelector('.prologue-choice[aria-checked="true"] .prologue-mark')!
+    const empty = document.querySelector('.prologue-choice[aria-checked="false"] .prologue-mark')!
+    const before = { ball: getComputedStyle(ball).backgroundColor, ring: getComputedStyle(empty).borderTopColor }
+    try {
+      document.documentElement.style.setProperty('--accent', '#ff00ff')
+      document.documentElement.style.setProperty('--accent-rgb', '255, 0, 255')
+      expect(getComputedStyle(ball).backgroundColor, 'the taken ball is a literal, not `--accent`').toBe('#ff00ff')
+      // the empty ball's ring is built from the same brand, through `--accent-soft`
+      expect(parseColor(getComputedStyle(empty).borderTopColor).slice(0, 3), 'the ring is a literal too').toEqual([255, 0, 255])
+    } finally {
+      document.documentElement.style.removeProperty('--accent')
+      document.documentElement.style.removeProperty('--accent-rgb')
+    }
+    // ...and the probe put the theme back, or every test after this one would be measuring magenta.
+    expect(getComputedStyle(ball).backgroundColor, 'the theme was left swapped').toBe(before.ball)
+    expect(getComputedStyle(empty).borderTopColor, 'the theme was left swapped').toBe(before.ring)
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ THE HALF THAT IS NOT THE PICTURE: A CONTROL NOBODY CAN SEE IS NOT A CONTROL. Before the ball
+  // the untaken mark was a `--line` hairline round a `--bg` well – 1.23:1 and 1.19:1 on this row,
+  // which is a radio that appears only once you have pressed it.
+  it('⚠⚠ the empty ball is findable – its ring measured against the row it sits on', () => {
+    const wrapper = mountScene(ELEVEN(), EMPTY_RUN, 'ordinary-school')
+    notBlind()
+    const row = document.querySelector('.prologue-choice[aria-checked="false"]')!
+    const empty = row.querySelector('.prologue-mark')!
+    const ground = effectiveBackground(row)
+    // the centre is the row's own ground: the ring is the whole of the empty state, and a second
+    // edge inside it would be the «extra element» the ruling excludes AND unreadable anyway.
+    expect(effectiveBackground(empty), 'the empty ball punches a well nobody can see').toEqual(ground)
+    const cs = getComputedStyle(empty)
+    const ring = parseColor(cs.borderTopColor)
+    expect(ring[3], 'the ring is not painted at all').toBeGreaterThan(0)
+    expect(parseFloat(cs.borderTopWidth), 'a ring with no width').toBeGreaterThan(0)
+    const seen = overRow(ring, ground)
+    const ratio = contrastRatio(seen, ground)
+    console.log(`  the empty ball's ring on its row: ${ratio.toFixed(2)}:1 (${cs.borderTopColor} on ${token('--card-top')})`)
+    expect(ratio, `the empty ball is invisible at ${ratio.toFixed(2)}:1 – it was 1.23:1 before the ball`).toBeGreaterThanOrEqual(3)
+
+    // ...and the two states are told apart by more than a name: the ball and the empty ring are
+    // themselves 3:1 apart, so «taken» is legible without reading the label beside it.
+    const taken = effectiveBackground(document.querySelector('.prologue-choice[aria-checked="true"] .prologue-mark')!)
+    const apart = contrastRatio(taken, seen)
+    console.log(`  taken ball against empty ring: ${apart.toFixed(2)}:1`)
+    expect(apart, `taken and untaken look alike at ${apart.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+    wrapper.unmount()
+  })
+
+  // ⚠ «WITH NOTHING EXTRA ON IT» – the ball file's white seam belongs on the logo, not on an 18px
+  // control, and neither does a gloss, a gradient or a shadow. This is the arm that keeps the next
+  // hand from prettying it up.
+  it('⚠ nothing but the dot – no seam, no gloss, no gradient, no shadow', () => {
+    const wrapper = mountScene(ELEVEN(), EMPTY_RUN, 'ordinary-school')
+    notBlind()
+    const marks = [...document.querySelectorAll('.prologue-mark')]
+    expect(marks.length, 'the walk is not seeing the marks').toBe(4)
+    const NOTHING = ['none', '', 'initial']
+    for (const mark of marks) {
+      const cs = getComputedStyle(mark)
+      // `initial` is what happy-dom reports for a property nobody declared, and it is the same
+      // answer as `none` here – a real gradient or shadow reports its own text and fails either way.
+      expect(NOTHING, 'a gradient on the ball').toContain(cs.backgroundImage)
+      expect(NOTHING, 'a shadow under the ball').toContain(cs.boxShadow)
+      // the seam, the gloss and every other picture would have to be drawn by a child of the mark
+      expect(mark.childElementCount, 'something is drawn inside the ball').toBe(0)
+      expect(mark.getAttribute('aria-hidden'), 'the decorative ball announces itself').toBe('true')
+    }
+    // ⚠ AND THE READER CAN SEE THE THING IT FORBIDS, or the four claims above are a green light on a
+    // blind measurement: declare the gloss and the shadow on one mark and watch them arrive.
+    const probe = marks[0] as HTMLElement
+    probe.style.backgroundImage = 'linear-gradient(#ffffff, #000000)'
+    probe.style.boxShadow = '0 1px 2px #000000'
+    expect(getComputedStyle(probe).backgroundImage, 'a gradient is invisible to this arm').toContain('linear-gradient')
+    expect(NOTHING, 'a shadow is invisible to this arm').not.toContain(getComputedStyle(probe).boxShadow)
+    probe.style.removeProperty('background-image')
+    probe.style.removeProperty('box-shadow')
+    wrapper.unmount()
+  })
+
+  // ⚠ AND THE KEYBOARD CAN STILL SEE WHERE IT IS. The app declares ONE focus ring (`:focus-visible`
+  // in style.css) and the ball must not have taken it: the mark is a decorative span, the control is
+  // the button around it.
+  //
+  // ⚠ WHAT THIS ARM CAN AND CANNOT SAY. happy-dom matches `:focus-visible` without gating it on
+  // focus, so this measures that the app's one ring REACHES this control and resolves to a legible
+  // hairline at an offset – not that the browser toggles it. The toggling was watched in a real
+  // Chromium on the wave-A walk.
+  it('⚠ focus is still visible, and it is the control that carries it rather than the ball', () => {
+    const wrapper = mountScene(ELEVEN(), EMPTY_RUN, 'ordinary-school')
+    notBlind()
+    const row = document.querySelector<HTMLElement>('.prologue-choice')!
+    row.focus()
+    expect(document.activeElement, 'an answer cannot take the keyboard').toBe(row)
+    const cs = getComputedStyle(row)
+    expect(cs.outlineStyle, 'the focused answer draws no ring').not.toBe('none')
+    expect(parseFloat(cs.outlineWidth), 'the focus ring has no width').toBeGreaterThan(0)
+    expect(cs.outlineColor, 'the focus ring is not the app`s own').toBe(token('--accent'))
+    // it is drawn at an offset, so what it is read against is the surface BEHIND the row
+    const behind = effectiveBackground(row.parentElement!)
+    const ratio = contrastRatio(rgb(cs.outlineColor), behind)
+    console.log(`  the focus ring behind the row: ${ratio.toFixed(2)}:1 (${cs.outlineWidth} at ${cs.outlineOffset})`)
+    expect(ratio, `the focus ring is invisible at ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+    // ...and the ball is not in the focus path at all: it cannot be tabbed to and it draws no ring.
+    const ball = row.querySelector<HTMLElement>('.prologue-mark')!
+    expect(ball.tabIndex, 'the decorative ball is in the tab order').toBeLessThan(0)
+    expect(ball.matches('button, a, input, select, textarea'), 'the ball became a control').toBe(false)
     wrapper.unmount()
   })
 })
@@ -434,6 +638,42 @@ describe('⭐⭐⭐ item 2 – the second group appears when the first is answer
     // 4. and answering the question is what finishes the card.
     await press(wrapper, eleven.tournament!.declineLabel)
     expect(wrapper.find('.prologue-title').text(), 'both questions were answered and the card stayed').not.toBe(eleven.title)
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ AND AVAILABILITY IS DERIVED, NOT LATCHED – the owner's own refinement of this item (08.09,
+  // in the ledger): with the upper choice released, the lower one must not be reachable. A
+  // disclosure that opens once and stays open satisfies every arm above and still breaks that rule,
+  // because all of them only ever walk FORWARD.
+  //
+  // ⚠ SO THIS ONE WALKS BACK, and it is honest about how. A player cannot un-press a radio here:
+  // the container only ever WRITES a pick (`withPick` in run.ts – there is no un-pick anywhere in
+  // the prologue), so the card's answer travels in one direction on a real walk. What the card is
+  // handed is `picked`, recomputed off the run by `ChildhoodPrologue` on every render, and THAT is
+  // the input this arm moves – forward and back. What it pins is exactly the owner's rule: the
+  // second group is a function of the CURRENT value, not a flag remembering that a value once
+  // existed. Mutation-verified by latching `askOpen` open (a `ref` set true on the first pick and
+  // never cleared): every other test in this file stays green and this one goes red on the last two
+  // assertions.
+  it('⚠⚠ the second group is a function of the first answer, not a door that stays open', async () => {
+    const eleven = PROLOGUE_CARDS.find((c) => c.age === 11)!
+    const wrapper = mountScene(eleven, EMPTY_RUN)
+    const asked = () => wrapper.find('.prologue-ask').exists()
+    const controls = () => wrapper.findAll('.prologue-choice').length
+
+    // 1. unset – the year's own two answers, and nothing under them
+    expect(asked(), 'the question is up before the year is answered').toBe(false)
+    expect(controls(), 'the card starts with more than its own answers').toBe(2)
+
+    // 2. answered – the question arrives on the same screen
+    await wrapper.setProps({ picked: 'ordinary-school' })
+    expect(asked(), 'answering the year did not disclose the question').toBe(true)
+    expect(controls()).toBe(4)
+
+    // 3. ⚠ and back to unset: the disclosure goes with the answer it was derived from
+    await wrapper.setProps({ picked: undefined })
+    expect(asked(), 'the disclosure LATCHED – it is open with nothing answered above it').toBe(false)
+    expect(controls(), 'the second pair is still reachable with the first question unanswered').toBe(2)
     wrapper.unmount()
   })
 
