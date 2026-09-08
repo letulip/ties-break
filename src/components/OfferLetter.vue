@@ -360,10 +360,20 @@ const markUrl = computed(
  *  so signing a DIFFERENT house ends it. The owner's own words: «если в межсезонье она решит
  *  подписать другого спонсора, то контракт обнулится».
  *
- *  ⚠ THE NUMBER IS THE POINT. Without the money it names, this clause is a trap – a consequence
- *  stated in the abstract that a parent cannot price. `apparelBondCost` is the ENGINE's own
- *  function, the very one `signOffer` reads to end the campaign, so the paper and the till cannot
- *  disagree about which campaign ends or what it was still worth.
+ *  ⚠⚠ WAVE G3 – AND THE MONEY IS NO LONGER ON THIS PAPER. What stood here argued the opposite («THE
+ *  NUMBER IS THE POINT. Without the money it names, this clause is a trap»), and the owner overturned
+ *  that argument on 08.09: «ты правда думаешь, что в реальности при переподписании кто-то пишет
+ *  точные суммы предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять это надо
+ *  абсолютно точно». He is right, and both halves of him are: a rival apparel house does not KNOW a
+ *  competitor's remaining contract value and would never PUBLISH it, so an exclusivity clause on its
+ *  own letterhead is realistic and a competitor's balance sheet is fiction – while the consequence
+ *  itself still has to land without any doubt at all.
+ *
+ *  ⚠ SO THE NUMBER DID NOT DISAPPEAR, IT MOVED to the one surface whose own doctrine already claims
+ *  it: the sign confirm in `InboxSheet.vue`, whose round-24 rule is that it restates the deal «and
+ *  the one thing the letter cannot say». A competitor's figures are exactly that. The two surfaces
+ *  read THIS function – the engine's own, the very one `signOffer` reads to end the campaign – so
+ *  the paper, the confirm and the till can never disagree about which campaign a signature ends.
  *
  *  Null on every letter that costs nothing: no campaign running, a campaign from THIS house (signing
  *  the house already shooting her ends nothing), a non-clothing campaign, and the lifetime paper,
@@ -873,24 +883,21 @@ const settled = computed(() => {
              a player who cannot read it here would be committing to it blind. In the brand's own
              voice, plainly, the way a commercial term is really written. -->
         <li>And while she is in our kit she is in nobody else's.</li>
-        <!-- ⭐⭐⭐ ROUND 39 #17 – AND WHAT THAT COSTS HER SOMEWHERE ELSE, WITH THE NUMBER ON IT. A
-             clothing campaign is written by the house that dresses her, so signing us ends the one
-             she is running with somebody else. The owner's own emphasis (his sentence is quoted in
-             the script above – no Cyrillic passes this line, tests/offers.test.ts): the warning IS
-             the mechanism – without the money it names it is a trap, and with it, it is the
-             decision he asked for. It sits directly under the exclusivity clause because it is that
-             clause's consequence, in the same commercial voice and with no scolding. The two arms
-             are the two true cases: fees still to come, or a term whose money is all banked. The
-             number is `apparelBondCost`, the engine's own – see the script. DRAFT copy. -->
+        <!-- ⭐⭐⭐ ROUND 39 #17, WAVE G3 – AND WHAT THAT CLAUSE COSTS HER, WITHOUT A NUMBER THIS
+             HOUSE COULD NOT KNOW. Wave G printed the competitor's remaining fees on this paper and
+             the owner overturned it on 08.09 (his sentence is quoted in the script above – no
+             Cyrillic passes this line, tests/offers.test.ts): nobody re-signing writes out a rival's
+             exact contract sums, and yet the consequence must be understood exactly. So the letter
+             keeps the CLAUSE and loses the figures, and the money is stated on the sign confirm –
+             the surface whose whole job is «the one thing the letter cannot say».
+             It sits directly under the exclusivity clause because it is that clause's consequence,
+             in the same commercial voice and with no scolding. ⚠ ONE ARM, NOT TWO: with no money on
+             it there is nothing left for the fees-remaining and term-served cases to differ about,
+             and a split that renders one sentence twice would be a lie about the paper. DRAFT
+             copy. -->
         <li v-if="bondCost">
-          <template v-if="bondCost.cents > 0">
-            Signing us ends her campaign with {{ bondBrand }} –
-            {{ formatCents(bondCost.cents) }} of fees still to come on it, and they will not come.
-          </template>
-          <template v-else>
-            Signing us ends her campaign with {{ bondBrand }}. Every fee it owed
-            her is already banked and stays hers.
-          </template>
+          While you wear us, she appears in no other apparel campaign – hers with {{ bondBrand }}
+          would end on signature.
         </li>
         <li>
           <!-- HOW LONG IT RUNS, in seasons AND in weeks. "Three seasons" left the parent counting
