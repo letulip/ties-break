@@ -376,7 +376,18 @@ async function doRefuse(id: string): Promise<void> {
         <!-- The app has ONE back control and this is it (IconButton, bare) – see its own header for
              why the hand-written arrow character was retired everywhere. -->
         <IconButton class="inbox-back" icon="back" label="Back to all letters" variant="bare" @click="backToList" />
-        <OfferLetter class="inbox-letter" :offer="openLetter" :week="week" @sign="askSign" @refuse="doRefuse" />
+        <!-- ⭐ ROUND 39 #17 – the whole inbox goes with the letter, because one clause on a rival
+             house's kit paper is about a CAMPAIGN that is not on that paper: signing ends it, and
+             the letter has to name the money. The sheet derives nothing – `OfferLetter` asks the
+             engine (`apparelBondCost`), the same function `signOffer` reads. -->
+        <OfferLetter
+          class="inbox-letter"
+          :offer="openLetter"
+          :week="week"
+          :offers="game.snapshot?.offers ?? []"
+          @sign="askSign"
+          @refuse="doRefuse"
+        />
       </template>
 
       <!-- ══ THE LIST ══ -->

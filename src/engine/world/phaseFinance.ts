@@ -24,7 +24,7 @@
 // re-exported from `engine/world` under its historical name, so the development step, the snapshot
 // and the tests all still read the ONE predicate. Moving it was forced rather than chosen: a leaf
 // may not import the barrel, so the bill could not have come here without it.
-import type { CoachTier, FamilyBackground, KitOfferTerms } from '../../shared/protocol'
+import type { AdOfferTerms, CoachTier, FamilyBackground, KitOfferTerms } from '../../shared/protocol'
 // ⭐ ROUND 35 #9 – the same formatter the prize and sponsor transfer rows use, so her three receipts
 // read as one sentence in three places rather than three spellings of one number.
 import { formatCents } from '../../shared/money'
@@ -47,7 +47,7 @@ import {
   tierOf,
   weeklyBillSplit,
 } from '../coach'
-import { activeKitDeal } from '../offers'
+import { activeKitDeal, lifetimeKitHouse } from '../offers'
 import { GEAR_CATEGORY_LINE } from '../equipment'
 import { schoolIsOver } from '../kidLife'
 // ⭐ ROUND 35 #9 – `accrueKidShare` is the memo beside her cut, the same writer the prize and the
@@ -619,6 +619,12 @@ function resolveGear(world: WorldState): void {
   const bg = world.profile.background
   const deal = activeKitDeal(world.offers, world.week)
   const terms = deal ? (deal.terms as KitOfferTerms) : null
+  // ⭐⭐⭐ ROUND 39 #17 RULING 4 – AND A LIFETIME HOUSE DRESSES HER FREE, FOR EVER (his own idea of
+  // 08.09). It is the same one hook the over-the-counter till takes (`kitPurchaseSplit`), asked once
+  // for the week rather than once per line: every line, no allowance, no season reset, and nothing
+  // banked against a kit deal's pot – the house that pays is not the house that opened it.
+  const forLife = lifetimeKitHouse(world.offers, world.week)
+  const forLifeBrand = forLife ? (forLife.terms as AdOfferTerms).brand : null
   for (const category of GEAR_CATEGORIES) {
     const hit = gearHitForWeek(world.seed, category, bg, world.week)
     if (!hit) continue
@@ -648,9 +654,9 @@ function resolveGear(world: WorldState): void {
     // and it needed no new rule: `Math.min(amount, remaining)` was always doing it.
     const remaining = deal && terms ? Math.max(0, terms.kitAllowanceCents - (deal.coveredCents ?? 0)) : 0
     const inDeal = !!terms && !!kitLine && terms.covers.includes(kitLine)
-    const covered = deal && terms && inDeal ? Math.min(amountCents, remaining) : 0
+    const covered = forLifeBrand ? amountCents : deal && terms && inDeal ? Math.min(amountCents, remaining) : 0
     const paid = amountCents - covered
-    if (deal && covered > 0) deal.coveredCents = (deal.coveredCents ?? 0) + covered
+    if (!forLifeBrand && deal && covered > 0) deal.coveredCents = (deal.coveredCents ?? 0) + covered
     world.fundsCents -= paid
     addEvent(world, {
       week: world.week,
@@ -660,10 +666,20 @@ function resolveGear(world: WorldState): void {
       // questionnaire she filled in at week 0 – see `gearVoice`. Copy only; `bg` above still keys
       // every draw and every price.
       text: (() => {
-        const flavor = line.flavor[gearVoice(bg, inDeal)]
-        return covered > 0 ? `${flavor} – on ${terms!.brand}` : flavor
+        // ⚠ THE PAYER IS NAMED ON THE LINE, WHOEVER IT IS – a cost that quietly shrinks is the
+        // dishonesty this text exists to prevent, and the lifetime house is a second payer rather
+        // than a second rule. `inDeal` is what picks the voice; a girl the lifetime house dresses is
+        // sponsored on every line, so the sponsored voice is the true one for her too.
+        const flavor = line.flavor[gearVoice(bg, inDeal || !!forLifeBrand)]
+        const payer = forLifeBrand ?? terms?.brand
+        return covered > 0 && payer ? `${flavor} – on ${payer}` : flavor
       })(),
-      amountCents: -paid,
+      // ⚠ `|| 0` IS `setKitGrade`'s OWN GUARD, ONE TILL OVER, and round 39 #17 is what makes it
+      // routine here: a fully covered line makes `-paid` the NEGATIVE ZERO, which survives into the
+      // ledger and out through any formatter as «-$0». The allowance could already cover a line
+      // whole; a lifetime house covers EVERY line, every week, so the artefact stops being rare.
+      // JSON round-trips it to 0 anyway, so this only ever changes what a screen would print.
+      amountCents: -paid || 0,
     })
   }
 }
