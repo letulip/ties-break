@@ -173,3 +173,124 @@ Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]`
   formality. What 14b is really missing is not a state – it is WARNING: nothing on screen says the
   last winter is coming until it arrives. That is a Home read, not a new mechanic, and it is
   cheap. ⚠ Owner's word before anything is built.
+
+  ---
+
+  ⭐⭐⭐ **14b BUILT ON `r40/wave-c` – ONE DERIVATION, THREE VOICES.** The owner, 08.09: «да, это
+  именно то, о чем я и говорил. Где-то тренер может подсветить, где-то она сама, где-то финальный
+  экран сезона. Давай сделаем.» His window: «за сезон-два до того».
+
+  ⚠ **NO BAND AND NO MECHANIC WERE ADDED**, on the two measurements above: the plateau window can
+  carry no trigger, and past 29 the shipped 0.55 is already the honest place. `ENDINGS`,
+  `retirementDue`, `plateauReading` and every threshold in them are untouched.
+
+  **THE DERIVATION – `lastWinterIn(world)` (`src/engine/world/coachMarket.ts`), on the wire as
+  `Snapshot.lastWinterIn: number | null`.** How many off-seasons are left before the last one; 1
+  means the NEXT winter is the one the offer arrives `final` on. It reuses round 39's own walk –
+  `seasonsOfBodyLeft` took a `stop` PARAMETER (default `COACH_BODY_END_SHARE`, so every shipped
+  caller is byte-identical) and this aims it at `ENDINGS.lastOfferPeakShare`. No second walker: two
+  walkers would disagree.
+
+  ⚠ It is EXACT rather than rounded, which is what lets the copy say «the next one». The walk gives
+  the WEEK her share crosses the band; the question is raised on one week of the year
+  (`resolveEndings` 7d), so the last ask is the first such week at or after the crossing and the
+  count is a subtraction on the calendar. `Math.round(years)` would have claimed «next winter is the
+  last» on a career whose crossing lands two off-seasons out. Two gates: nothing before
+  `ENDINGS.askFromAgeYears` (before 29 the share is exactly 1, so a projection off it is a
+  projection off a constant – the plateau measurement's own finding), and nothing above
+  `LAST_WINTER_WARN_SEASONS = 2`. Silence on the last winter itself falls out of the arithmetic
+  rather than a screen condition: there the count is 0.
+
+  ⭐⭐ **MEASURED BEFORE THE COPY WAS WRITTEN (`tools/r40-last-winter.ts`, invariant 5).** Four
+  synthetic careers walked week by week from their own `declineStart`, the share compounded exactly
+  as `growWeek` compounds it, every surface asked what it would say on every week, and the walk
+  stopped where the career stops:
+
+  | career curve (`declineStart`) | coach's card | Home's plate | her card / the wrap | final ask |
+  | --- | --- | --- | --- | --- |
+  | as the seed drew it, 29.0 | 40.5 – 42.5, 104 wk | 40.9 – 42.2, 36 wk | 40.5 and 41.5 – **2 off-seasons** | 42.5 |
+  | direct route, 27.0 | 38.5 – 40.5, 104 wk | 38.9 – 40.2, 36 wk | 38.5 and 39.5 – **2** | 40.5 |
+  | late, 31.0 | 42.5 – 44.5, 104 wk | 42.9 – 44.2, 36 wk | 42.5 and 43.5 – **2** | 44.5 |
+  | 29.0 with 40 wk lost to injury, pulled to 28.0 | 39.5 – 41.5, 104 wk | 39.9 – 41.2, 36 wk | 39.5 and 40.5 – **2** | 41.5 |
+
+  So it opens exactly two off-seasons out on every curve, counts 2 → 1 → silent, and speaks for two
+  winters and no more. Home's plate is the shortest of the four because it rotates on the season's
+  third (round 39 #2b): on a career with a year-on-year fall the body clause holds the MIDDLE third,
+  so the plate warns for ~18 weeks a season and the two rank arms keep the rest.
+
+  **EVERY NEW STRING, VERBATIM. ALL OF IT IS DRAFT AND AWAITS THE OWNER'S WORD.**
+
+  * **The coach, long, on his card in the coach list** (`coachDeclineNote`) – the near-final case
+    REPLACES the shared body clause; all three of his arms keep their grammar and their rank halves:
+    * `Past her peak – down 57 places on the year, and her last winter is 2 seasons away.`
+    * `Past her peak – 105 places below her best season, and her last winter is 2 seasons away.`
+    * `Past her peak – her last winter is the next one, and no coach buys that back.`
+    ⚠ The clause it replaces is DEGENERATE exactly there: `seasonsOfBodyLeft` stops at 0.70 and the
+    caller floors at 1, so «her body has about 1 more season in it» is what he says for the whole
+    0.70-to-0.55 tail – three and a half years of an unchanging number.
+  * **The coach, short, on Home** (`coachDeclineShort`, the `seasons` variant only):
+    * `Past her peak – her last winter is next`
+    * `Past her peak – her last winter is 2 seasons away`
+    ⚠ The plate had to move with the card: it would otherwise keep saying «about 1 season left»
+    while his card said «2 seasons away» – two numbers about her remaining time on two of his own
+    surfaces, which is the contradiction he reported in #13a arriving from the other side.
+  * **Her own voice, on the winter card** (`herLastWinterLine`, `src/composables/declineVoice.ts`) –
+    the age branch of `RetirementDialog`, under round 38 #6d's `herSeasonWord`, no new panel:
+    * `«One more winter after this one, and it will not be a question. I will tell you myself.»`
+    * `«Two more winters after this one, and the last of them is not a question. I will tell you myself.»`
+    ⭐ «I will tell you myself» is what the final card actually does – `LAST_WORD_OPENING`'s «Nobody
+    asked her this time. She said it herself» – so the parent is told in advance the shape of the
+    winter he will not be able to answer.
+  * **The season's closing screen** (`seasonLastWinterLine`, rendered by `SeasonSummaryDialog`
+    between her line and the parent's scrap), in the wrap-up's own reporting voice:
+    * `One more winter after this one, and then nobody asks her again.`
+    * `Two more winters after this one, and then nobody asks her again.`
+
+  ⚠ Her voice SPELLS its count where the coach's sentence prints a digit – `Snapshot.coachDeclineNote`
+  is documented as the one string on the wire that carries digits about her, and a woman saying «2
+  more winters» out loud is a woman reading a dial. ⚠ INVARIANT 4: not one existing sentence was
+  reworded. The round-30 lede, the round-31 rung, her season word, the coach's reply, the wrap's
+  title and the parent's scrap are byte-identical, and each new line is an added paragraph.
+
+  **EVIDENCE.** `tests/r40-last-winter.test.ts` (8 arms) and
+  `tests/component/r40-last-winter-surfaces.test.ts` (11 arms), both mutation-verified – nine
+  mutations, nine reds, all restored:
+
+  | mutation | result |
+  | --- | --- |
+  | the band read as a literal `0.55` instead of `ENDINGS.lastOfferPeakShare` | RED – the one-derivation pin |
+  | the window widened to 8 | RED (3 arms) |
+  | the age-29 gate removed | RED |
+  | the winter count off by one | RED (3 arms) |
+  | her line taken off the winter card | RED (3 arms) |
+  | the warning taken off the season screen | RED (4 arms) |
+  | the coach kept the shipped clause inside the window | RED (2 arms) |
+  | the phone-fit assertion given a 60px viewport | RED – it is live |
+  | the new lines dropped from `ALL_DECLINE_LINES` | RED – the house-law sweep sees them |
+
+  ⭐ The pin that matters is the first: mutate the walk's target and the coach's card, Home's plate,
+  her line and the wrap all move together, to the same number, in both the engine test and the
+  mounted one. Both dialogs that grew also carry `assertDismissReachable(... PHONE ...)` per
+  CLAUDE.md's round-20 #3 rule.
+
+  **TWO SHIPPED GUARDS WERE RE-AIMED, NEITHER DELETED.**
+  * `tests/component/round31-decline-voice.test.ts` – the sweep's length pin becomes
+    `10 + LAST_WINTER_LINES.length`, because `ALL_DECLINE_LINES` exists to be swept by the house law
+    and the four new rendered warnings belong in it. The arithmetic pin on the owner's own nine
+    sentences is untouched and still fails if one of them goes missing.
+  * `tests/component/r38-decline-voice.test.ts` – «the borrowed-time tail reads 1» SPLIT IN TWO
+    rather than moved. Its fixture sat a whisker above the band, i.e. squarely inside the new
+    window; the floor claim keeps its own fixture further up the tail (share 0.65, asserted OUTSIDE
+    the window so it cannot drift back in), and the old edge gets a new assertion that it now reads
+    the count. That pin's own subject – the degenerate «about 1 more season» across three and a half
+    years – is exactly what this item is for.
+
+  ⚠ **RNG (invariant 2): ZERO draws on any stream** – a walk over persisted state plus two
+  subtractions on the calendar. `tests/condition.test.ts` green, capture unchanged at **41550 /
+  `e6b0c709`**. No save-schema move: the field is derived at snapshot time, `physicalShare`'s own
+  precedent.
+
+  ⚠ **What can still move the projection, stated rather than hidden:** `ageCurveOf` pulls her
+  `declineStart` earlier by the weeks she loses to injury, so a bad layoff inside the window
+  steepens the walk and can bring the last winter forward. Nothing in the engine returns physical
+  share, so the projection can only ever be late – the honest direction for a warning.

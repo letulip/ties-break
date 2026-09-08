@@ -40,7 +40,7 @@
 import { computed, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
-import { herDeclineLine } from '../composables/declineVoice'
+import { herDeclineLine, seasonLastWinterLine } from '../composables/declineVoice'
 import { formatCentsSigned } from '../shared/money'
 import { LADDER_LABEL } from '../shared/protocol'
 import Card from './ui/Card.vue'
@@ -144,6 +144,23 @@ const herLine = computed(() => {
   if (!snap || year === undefined) return null
   return herDeclineLine(snap.physicalShare, snap.seed, year)
 })
+
+// ⭐⭐⭐ ROUND 40 #14b – HOW MANY WINTERS BEFORE THE LAST ONE, in the card's own reporting voice. The
+// owner, 08.09: «Где-то тренер может подсветить, где-то она сама, где-то финальный экран сезона.»
+//
+// ⚠ THIS IS THE ONE SURFACE OF THE THREE THAT IS NEITHER OF THEM. Her line above is hers and the
+// scrap below is the parent's; the wrap-up itself has been reporting the year in a flat voice since
+// round 7, and a warning is a fact about the calendar. So it is a third object on the card, not a
+// second clause of one of the two that were already here.
+//
+// ⚠ NOTHING IS DERIVED HERE. `Snapshot.lastWinterIn` is one engine number (`lastWinterIn`,
+// engine/world/coachMarket.ts) read by the coach's card and by her own line on the winter card too –
+// so no two of the three can ever be a winter apart. Null on every week outside the window, which is
+// every wrap of every career until she is nearly done, and null on the last winter itself.
+//
+// ⚠ AND IT DRAWS NOTHING, unlike the line above it: the count is a projection over persisted state,
+// so this card says the same thing every time it is opened.
+const lastWinterNote = computed(() => seasonLastWinterLine(game.snapshot?.lastWinterIn))
 </script>
 
 <template>
@@ -269,6 +286,12 @@ const herLine = computed(() => {
            of a career. See the note at the top of this file for the key it is drawn on. -->
       <p v-if="herLine" class="season-her-line">{{ herLine }}</p>
 
+      <!-- ⭐⭐⭐ ROUND 40 #14b – THE WARNING, in the card's own reporting voice rather than hers or
+           the parent's. Added under her line and above the scrap; neither of them moved a byte.
+           Absent on every wrap before the engine's count is inside its window, so this card is
+           unchanged for the whole of a career but its last two or three winters. -->
+      <p v-if="lastWinterNote" class="season-last-winter">{{ lastWinterNote }}</p>
+
       <!-- D's closing scrap. It was already the most human line in this dialog and it was set as a
            grey hint; on paper it reads as what it is – the parent's own note about the year. -->
       <!-- W4-SCHOOL: past her last school year the list is one item shorter, and the engine's own
@@ -370,6 +393,19 @@ const herLine = computed(() => {
   line-height: 1.5;
   text-align: center;
   color: var(--ink-soft);
+}
+
+/* ROUND 40 #14b – the warning, set exactly as her line above it: same measure, same centring, same
+   14px gap down to the scrap. It takes the card's full ink rather than `--ink-soft` because it is
+   the only line here about something that has not happened yet, and that is the one distinction the
+   card needs to make. No new colour and no rule of its own: a warning that shouted would be the
+   game grading a career, which §6 of the contract forbids. */
+.season-last-winter {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--ink);
 }
 
 /* ⚠ THE TYPE IS SET ON THE SHEET, NOT ON THE COMPONENT, since PaperNote's root became a wrapper so
