@@ -952,6 +952,31 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   * **The lifetime letter is exempt and dresses her free for life** – he accepted both framings and
     took the simpler one.
 
+  ⭐⭐ **AND THE MONEY MOVES OFF THE RIVAL'S LETTER (his ruling, 08.09) – he was right and the
+  architect was wrong.** The warning shipped by wave G named the competitor's remaining fees on the
+  rival house's own paper. His objection: «ты правда думаешь, что в реальности при переподписании
+  кто-то пишет точные суммы предыдущих контрактов конкурентов? я сомневаюсь в этом. Но дать понять
+  это надо абсолютно точно.» A rival brand does not know, and may not publish, a competitor's
+  contract value – an exclusivity CLAUSE is standard on a real apparel contract, a competitor's
+  balance sheet is not.
+
+  ⚠ The number does not disappear, it moves to the surface whose own doctrine already owns it. The
+  kit/ad confirm (round 24 item 2, `InboxSheet.vue`) states its job in its own comment: «the last
+  thing he reads restates the deal in the paper's own words … **and the one thing the letter cannot
+  say**». A competitor's figures are exactly that. So:
+
+  * **The rival's letter** carries the exclusivity clause and NO figures:
+    `While you wear us, she appears in no other apparel campaign – hers with {brand} would end on
+    signature.`
+  * **The confirm** carries the cost, because there the GAME is telling the player about the
+    PLAYER'S OWN contract, in the last moment before something irreversible:
+    `Signing ends her campaign with {brand} – {money} of fees still to come on it.`
+    and, when the term is played out, his own preferred sentence, verbatim:
+    `Signing ends her campaign with {brand}. Every fee it owed her is already banked and stays hers.`
+
+  Both halves of «дать понять это надо абсолютно точно» are kept, and neither surface says something
+  it could not know. Wave G3 carries it. DRAFT copy, his tone to overrule.
+
 ## Bundles (dispatched 08.09, owner's «можно запускать дальше»)
 
 No two bundles touch the same file. Each agent appends to its OWN ledger lines only, on its own
