@@ -206,7 +206,7 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   быть я придираюсь»** – **measure then ask.** The two shelves' valuations against what each one
   earns. Related to 5: the same brand, at the top of its ramp.
 
-- [ ] **11b. «При этом академия больше денег приносит, кстати»** – **answer.** Confirm or correct
+- [x] **11b. «При этом академия больше денег приносит, кстати»** – **answer.** Confirm or correct
   with the two weekly figures off his save; if the academy earns more while being worth half, that
   is the imbalance 11a is really about.
 
@@ -219,6 +219,26 @@ Class: **build** · **answer** · **measure** · **ask** · **already-works**
   **OWNER (08.09):** «видимо вторая половина её, но ее не видно, поэтому и был вопрос, т.к. в
   интерфейсе доход около 17к» → the engine pays $33,169 and his screen says ~17k. Find where the
   half goes on the MoneyScreen and either show it or name it. MINE to measure, then a small build.
+
+  **SHIPPED on `r39/wave-b` (08.09), the build half.** Where the half went: nowhere – the shelf
+  shows all four rungs, each with its own «Brings in $N a week right now», and he read the LAST
+  one ($17,385, the staff) as the family's figure because nothing on screen ever added them up.
+  The build is the architect's plan exactly: the «Her academy» section gains ONE line under its
+  rungs – «The whole academy brings in $33,169 a week right now» on his save – drawn only while at
+  least one delivered stage is earning, absent when the academy is unowned. The figure is the sum
+  of the rows' own `incomeCents` (the field every card prints, `assetWeeklyFamilyIncomeCents` at
+  the source), summed once in `academyIncomeCents` and never recomputed – total and rungs cannot
+  disagree. The academy ALONE gets a total (the one multi-rung earner; invariant 4 – nothing else
+  on the screen touched). Evidence: `tests/component/r39-academy-income-total.test.ts` walks a
+  real career, delivers land + courts + clubhouse directly (the land earns $0 by design – his
+  save's own shape), and asserts the line's figure equals the sum of the per-rung figures on the
+  cards AND the snapshot rows' own sum, exceeds every single rung, does not leak onto the brand,
+  and is absent on all six shelf pages of an academy-less career. Mutation-verified: the clubhouse
+  dropped from the sum -> the equality arm red ($950 against $3,450 on the cards); `> 0` loosened
+  to `>= 0` -> the owns-nothing arm red; both restored -> green. Targeted verdict: 59/59 across
+  the six shelf files (r39-academy-income-total, r39-owned-shelf-paid, round35-shop,
+  round29-shop-elite, shop-tab, round36-review), plus the copy guards over the touched template,
+  EXIT=0 read from the log files.
 
 - [ ] **12. «Мне кажется, что когда у нас появляется самолёт можно перелёты зачеркнуть на карточке
   и не считать в неделе: мы и так платим за самолёт еженедельно. Или это не так работает?»** –
