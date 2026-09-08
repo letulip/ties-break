@@ -862,6 +862,25 @@ export const LOCAL_OPEN_COPY = {
    *  not here for tennis should not have to press the other one three times a year for four years. */
   skipRest: 'Skip the rest of the weekend',
 
+  /** ⭐⭐ ROUND 39 #15a – WHAT THE PARENT KNOWS WHEN SHE STOPS MID-MATCH. DRAFT.
+   *
+   *  THE OWNER: «В прологе во время травмы нужно как-то аккуратно объяснить игроку, что всё
+   *  нормально и ребёнок выживет и вернётся в строй.» The one injury the prologue can show is the
+   *  in-match retirement (`.mv-hurt`, raised for her only): a child goes down in a Local Open, the
+   *  popup says she «could not continue» – and then NOTHING said she would be fine, because in the
+   *  career that popup is followed by the layoff report and in the prologue it is followed by
+   *  nothing at all. A first-time player read it as a catastrophe. This is the missing sentence.
+   *
+   *  ⚠ IT IS TRUE ONLY HERE, WHICH IS WHY IT IS PROLOGUE COPY AND NOT THE POPUP'S OWN. The engine's
+   *  every retirement is exhaustion deep in a long match («A long match on tired legs»), and a
+   *  prologue weekend stores no injury – she genuinely is playing again next card. In the career the
+   *  same moment opens a real layoff with weeks on it, so this sentence there would be a lie the
+   *  injury report contradicts one screen later. The viewer takes it as an optional note
+   *  (`hurtNote`), null everywhere but here – rendered under the popup's reason, quiet, one line. */
+  hurtNote:
+    'She is alright – worn out, nothing more. She sleeps the whole drive home, and in a few days ' +
+    'she is asking to play again.',
+
   /** ⭐⭐ THE THREE RESULT SCENES. DRAFT. The face each one hangs is NOT written here – it is
    *  `OUTCOME_FACES` in art/prologue.ts, which is art direction and not copy, the same split
    *  `PROLOGUE_FRAMES` is on the other side of.

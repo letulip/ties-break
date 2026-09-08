@@ -152,8 +152,19 @@ const props = withDefaults(
      *  and for them "he was not there" is the truth. It also keeps every existing caller's log
      *  byte-identical, which is what makes this additive. */
     coachTravelled?: boolean
+    /** ⭐ ROUND 39 #15a – ONE QUIET LINE UNDER THE RETIREMENT POPUP'S REASON, for the caller that
+     *  knows more about the moment than the model does. The prologue's Local Open passes the
+     *  parent's reassurance here (`LOCAL_OPEN_COPY.hurtNote` – a prologue weekend stores no injury,
+     *  so «she is alright» is a fact there, not a hope); every career surface leaves it null,
+     *  because there the same moment opens a real layoff and `InjuryStopDialog` still owes its
+     *  report. The sentence is the CALLER's, never this file's – the same rule the prologue holds
+     *  everywhere: no copy in a component it can hold in a table.
+     *
+     *  ⚠ null (default) IS A REAL ANSWER, like `previewEvent`'s: no note is drawn at all, and every
+     *  existing caller's popup is byte-identical. */
+    hurtNote?: string | null
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, hurtNote: null },
 )
 // `finish` = "the player is done with this match". ⚠ R17 #10 MOVED WHEN IT FIRES, NOT WHAT IT MEANS:
 // with a `proceedLabel` it waits for the Proceed press, and without one it still fires the instant
@@ -1390,6 +1401,11 @@ watch(finished, (isFinished) => {
           She retired hurt at <span class="num">{{ finalScoreLine }}</span
           >. {{ RETIREMENT_REASON }}
         </p>
+        <!-- ROUND 39 #15a - the caller's own quiet line under the reason, when it has one. The
+             prologue is the one caller today (see the prop): a weekend there stores no injury, so
+             the parent can say she is alright and be right. Career surfaces pass nothing and this
+             paragraph does not exist for them. -->
+        <p v-if="props.hurtNote" class="hint mv-hurt-note">{{ props.hurtNote }}</p>
         <div class="dialog-actions">
           <button class="primary" @click="dismissRetirementNotice">Stay with her</button>
         </div>
