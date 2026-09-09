@@ -194,6 +194,7 @@ produced a *defect list* instead of a workaround list.
 | `persistence.spec.ts` | the engine's tournament pause survives a reload and the app re-enters it by itself | 1, 2 |
 | `tournament-entry.spec.ts` | an event is entered on Season, and Home and the Calendar both say so – three readers, one snapshot | 1, 5 |
 | `tournament.spec.ts` | a tournament is revealed, played out, and its result reaches the feed and the ledger | 1, 5 |
+| `mood-word.spec.ts` | her Mood tile speaks a word the engine allows and her face beside it agrees – ONE engine decision reaching two renderers, which is the only place a face and a word can start describing different weeks | 1 |
 | `sponsor-inbox.spec.ts` | a kit letter is signed: the whole table closes, and the contract turns up on the money screen | 1, 5 |
 | `storage-recovery.spec.ts` | a database this build cannot open becomes a screen with three doors, not a fresh install | 2 |
 | `storage-recovery.spec.ts` | Retry finds the career again once storage comes back – in the same document, with no reload | 2, 1 |
