@@ -296,6 +296,55 @@
           "n": 193373
         }
       }
+    },
+    {
+      "name": "unheard",
+      "file": "unheard.tsave",
+      "purpose": "The week a life beat stops – she has said what she wants at the fork and nobody has answered her yet.",
+      "seed": "e2e-unheard-0",
+      "careerId": "c-e2e-unheard",
+      "slot": "auto:c-e2e-unheard:a",
+      "targetWeek": 242,
+      "schemaVersion": 73,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Luca",
+        "kidLastName": "Oberg",
+        "country": "US"
+      },
+      "bytes": 81666,
+      "payloadBytes": 81622,
+      "sha256": "6598d1beeb88f7a6e02abe60c202d0e0c8c785d6bccac0fd21750b64d4dd80ad",
+      "seedsTried": 1,
+      "facts": {
+        "week": 242,
+        "seasonIndex": 4,
+        "ageYears": 18,
+        "fundsCents": 645047,
+        "kidRank": 5,
+        "rankedDomestic": false,
+        "rankedItf": true,
+        "rankedWta": true,
+        "domesticPoints": 0,
+        "itfPoints": 436,
+        "wtaPoints": 426,
+        "seasonsPlayed": 4,
+        "resultRows": 2215,
+        "feedEvents": 401,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": 1814155461,
+          "n": 193371
+        }
+      }
     }
   ]
 }

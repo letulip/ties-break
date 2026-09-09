@@ -43,7 +43,16 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // so a spec can tick it and still have a career afterwards. The measurement that forced the split is
 // in e2e/week-advance.spec.ts: the funds stop toast could not be reached from `broke` at all,
 // because the advance that raises it latches the bankruptcy ending instead.
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending'] as const
+// ⚠ `unheard` AND `ending` ARE THE SAME WEEK SEEN FROM EITHER SIDE OF ONE QUESTION, and that is why
+// there are two of them. Both sit on `schoolEndWeek` – the tick that opens the college fork – but
+// `ending` is PAST it: the generator's own walk answered her beat and then answered the fork, so the
+// career is over and the epilogue has replaced the shell. `unheard` is the same week with nothing
+// answered yet: her `lifeLog` row is still `answer: null`, so the week is stopped for the life beat
+// and `answerFork` refuses behind it (v73, the private life's wave 2). No other fixture can hold
+// that state, because every other recipe walks through `answerLifeBeat(world, 'listen')` on its way
+// past – see the recipe in tools/e2e-fixtures.ts, whose ONE difference from the others is that it
+// stops before that line runs.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.

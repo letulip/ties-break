@@ -130,6 +130,25 @@ test.describe('a seeded career boots into the state the manifest describes', () 
     )
   })
 
+  test('unheard: the week a life beat stopped, her card over a shell that is still there', async ({
+    page,
+    careerAt,
+  }) => {
+    const { facts } = await careerAt('unheard')
+
+    await expect(page.getByText(onScreenWeek(facts.week))).toBeVisible()
+    await expect(page.getByRole('button', BUDGET_CARD)).toContainText(formatCents(facts.fundsCents))
+    // ⚠ THE FACT ONLY THIS FIXTURE HOLDS, and it lives as deep inside the payload as a fact can: a
+    // `lifeLog` row whose `answer` is still null. Nothing in the record's denormalised header knows
+    // about it, so a seed that silently did nothing cannot satisfy this line – it reaches the screen
+    // as the one card the player has to answer before the world will move again.
+    await expect(page.getByRole('dialog', { name: /^School is over, and / })).toBeVisible()
+    // ⚠ AND THE SHELL IS BEHIND IT RATHER THAN REPLACED BY IT, which is the difference from `ending`
+    // one test down: a beat STOPS a career, it does not end one. The tab bar is the positive form of
+    // "nothing has latched", exactly as it is for `sinking`.
+    await expect(page.getByRole('navigation').getByRole('button', { name: 'Home' })).toBeVisible()
+  })
+
   test('ending: past the fork, the epilogue instead of the shell, and no way to play on', async ({
     page,
     careerAt,

@@ -20,7 +20,7 @@
 // a BLOCKING overlay, so the owner's career stopped there and could not be resumed. The lesson
 // CLAUDE.md drew is about height; the other half of it is that a blocking card is the one place in
 // this app where being unable to act is being unable to play. `advanceRefusal`
-// (`src/engine/world/multiWeek.ts`) names the seven states that block, and every overlay below that
+// (`src/engine/world/multiWeek.ts`) names the eight states that block, and every overlay below that
 // raises one carries its reason in the map, so «which of the blocking ones is covered» is a
 // readable fact rather than a count.
 //
@@ -143,6 +143,10 @@ test.describe('axe – every screen the app has, at 375 and 1280', () => {
 // Escape pressed at something else would silently spend the one showing of the tour's rules. A
 // uniform expectation here would be this suite legislating product behaviour, and it would have
 // shipped a dead key on the retirement card (`RetirementDialog.vue:154-156` says so).
+//
+// ⚠ AND A CARD IS ADDRESSED BY NAME WHEREVER ANOTHER ONE CAN FOLLOW IT. `LifeBeatDialog` is
+// answered and the FORK card takes its place in the same frame, so `getByRole('dialog').first()` –
+// which is right for the three cards nothing queues behind – would quietly follow the queue there.
 
 interface Overlay {
   /** ⚠ WHICH CAREER RAISES IT, and it is per overlay because the fixtures differ – see `arrived`. */
@@ -197,6 +201,33 @@ const OVERLAYS: Record<string, Overlay> = {
     blocks: 'knock',
     escapeCloses: false,
     dismiss: (page) => page.getByRole('button', { name: /^Rest it/ }),
+  },
+
+  // ⭐⭐ THE LIFE BEAT – v73's blocking card, and the SECOND of `advanceRefusal`'s eight states this
+  // pass reaches. It is here because the wave that added it also added the career that holds it:
+  // `unheard` is parked on the tick that raises her opinion of the college fork, before anybody has
+  // answered her, which is a state no other committed fixture can be in (tools/e2e-fixtures.ts).
+  //
+  // ⚠ NAMED, NOT `.first()`, AND THAT IS NOT TIDINESS. The FORK card lands the instant this one is
+  // answered – the queue advances by one – so `getByRole('dialog').first()` would follow it and the
+  // keyboard test's closing assertion ("the documented control closed the card") would be measuring
+  // a card it never opened. Her heading opens with «School is over, and » in all three registers;
+  // the fork's own name ENDS with "School is over." behind her age, so the two never collide.
+  LifeBeatDialog: {
+    career: 'unheard',
+    raise: async () => {
+      // already up – `unheard` boots holding it, see `arrived`
+    },
+    arrived: (page) => page.getByRole('heading', { name: /^School is over, and / }),
+    card: (page) => page.getByRole('dialog', { name: /^School is over, and / }),
+    region: '[role="dialog"]',
+    blocks: 'life',
+    // `LifeBeatDialog.vue`: «a dialog the player can walk away from would answer her by walking
+    // away», so Escape is passed no handler and every control on the card is an answer.
+    escapeCloses: false,
+    // ⚠ `radio`, NOT `button` – round 40's conventions: these controls SELECT, so the card draws
+    // real radios in a real radiogroup and `getByRole('button')` finds none of them.
+    dismiss: (page) => page.getByRole('radio', { name: 'Say nothing, and let her talk', exact: true }),
   },
 
   // ⭐⭐ THE TOUR BRIEFING – the card that shipped the career-stopping defect of round 20 #3, and the
@@ -356,10 +387,10 @@ test.describe('the overlays hold the keyboard', () => {
 
 test.describe('the pass cannot quietly stop asking', () => {
   test('the blocking overlays this pass cannot reach are NAMED, not silently missing', () => {
-    // ⚠⚠ THE GAP AS A LIST RATHER THAN AS A SILENCE. `advanceRefusal` names seven states that
+    // ⚠⚠ THE GAP AS A LIST RATHER THAN AS A SILENCE. `advanceRefusal` names eight states that
     // refuse the advance with ZERO ticks – each is a card the player must answer before the world
     // moves, and each is therefore a place a keyboard user can be stranded mid-career. This pass
-    // reaches ONE of them from the committed fixtures. That is a real gap, so it is written down
+    // reaches TWO of them from the committed fixtures. That is a real gap, so it is written down
     // and asserted, which means the day somebody reaches another one this test says so and the day
     // the engine adds an eighth reason it says that too.
     //
@@ -373,6 +404,13 @@ test.describe('the pass cannot quietly stop asking', () => {
       'tournament',
       'knock',
       'birthday',
+      // ⭐ v73 – THE LIFE BEAT, AND IT MOVED TO THE COVERED HALF, which is what this list is for.
+      // It was written here as a gap on the day the stop landed – «the committed fixtures reach the
+      // knock on boot and nothing near that» – with the remedy named beside it: a fixture parked on
+      // the fork's own opening tick. That fixture is `unheard`, and `LifeBeatDialog` above is the
+      // overlay it raises, so axe and the keyboard pass both see the card now. The gap shrank by
+      // being closed rather than by being edited.
+      'life',
       'fork',
       'retirement',
       'shoot-clash',
@@ -384,11 +422,12 @@ test.describe('the pass cannot quietly stop asking', () => {
     expect(
       uncovered,
       'the blocking states no overlay above reaches. Each needs a career that holds it: the ' +
-        'committed fixtures reach the knock on boot and nothing else, so the rest need a fixture ' +
-        'or an engineered walk. This is the gap, stated – shrink it, do not edit it.',
+        'committed fixtures reach the knock and the life beat on boot and nothing else, so the ' +
+        'rest need a fixture or an engineered walk. This is the gap, stated – shrink it, do not ' +
+        'edit it.',
     ).toEqual(['ending', 'tournament', 'birthday', 'fork', 'retirement', 'shoot-clash'])
 
-    // ⚠ AND THE SOURCE OF THAT LIST HAS TO STILL BE SEVEN. A reason added to the engine with no row
+    // ⚠ AND THE SOURCE OF THAT LIST HAS TO STILL BE EIGHT. A reason added to the engine with no row
     // here would otherwise pass silently: the expectation above would still hold, because a longer
     // ADVANCE_REFUSALS with the same six uncovered is arithmetically identical.
     expect(
