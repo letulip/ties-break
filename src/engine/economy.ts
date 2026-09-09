@@ -3383,7 +3383,20 @@ export const ECONOMY = {
     /** THE MEMORY PROPERTY. Deltas land immediately and then regress toward `start` at this rate and
      *  nothing else moves it: a −25 season heals in ~50 weeks, which is recoverability («one bad click
      *  at fifteen» must not ruin a ten-season career) without making a decision weightless inside the
-     *  season it was taken in. */
+     *  season it was taken in.
+     *
+     *  ⚠⚠ IT IS NOT A CONTINUOUS DIAL, AND IT LOOKS LIKE ONE. Every bond write goes through
+     *  `roundHalf` onto the `step` grid above, so a week's regression is quantised before it lands:
+     *  measured through the engine's own weekly rule, 0.5 / 0.4 / 0.3 / 0.25 ALL move exactly 0.5,
+     *  and 0.24 / 0.2 / 0.1 ALL move exactly 0.00 – a −25 season then never heals at all, at any
+     *  horizon, rather than healing slowly. The cliff sits at half a step. So this constant has two
+     *  reachable behaviours and no gradient between them, and the wave-1 sweep that found this was
+     *  reading a dial that had already stopped turning three rows earlier.
+     *
+     *  The rule that follows, pinned in `tests/spirit.test.ts`: **a positive multiple of `step`.**
+     *  Anything else is a value whose measured behaviour is not the value written here. If a later
+     *  wave wants slower healing than half a point a week, the honest move is a finer `step` or a
+     *  regression that carries its remainder – not a smaller number here. */
     regressionPerWeek: 0.5,
     /** WHAT THE PARENT'S DECISIONS ARE WORTH (build plan §1d, verbatim). Every row lands at a real
      *  decision site – see `engine/spirit.ts`'s header for the map of which one writes which. */

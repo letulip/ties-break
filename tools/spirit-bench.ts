@@ -99,6 +99,11 @@ import {
   closeTournament,
   matchesEverPlayed,
   TEMPERAMENTS,
+  // ⚠ the two the SWEEP block below needs, and nothing the default run reads: the intensity axis
+  // (bar 1 is read per intensity arm, not pooled) and the weekly rule itself (sweep 2 measures the
+  // heal time through the engine's own function rather than as 25/rate).
+  temperamentIntensity,
+  accrueSpirit,
 } from '../src/engine/world'
 import type { Temperament, WorldState } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
@@ -338,6 +343,447 @@ function verdict(pass: boolean): string {
 function rule(title: string): void {
   console.log(`\n${'='.repeat(100)}\n${title}\n${'='.repeat(100)}`)
 }
+
+// =================================================================================================
+// ⭐ SWEEP MODE – `npm run bench:spirit -- --sweep=return` and `-- --sweep=bond`
+// =================================================================================================
+//
+// ⚠⚠ THIS CHANGES NOTHING AND PROPOSES NOTHING. Two of the six bars above fail by ARITHMETIC – the
+// weekly return is larger than almost every perturbation (bar 1), and the flat bond regression is
+// larger than what either arm's decisions are worth per week (bar 3) – and the owner's ruling on a
+// failed bar is the file header's: *a bar that fails is a finding for him, never a licence to touch
+// a constant.* So this mode does not propose a value. It walks a dial across a handful of settings
+// and prints, for each one, WHAT THE BAR WOULD READ **and what the setting costs elsewhere**, so
+// the ruling is made on numbers instead of on an opinion. The shipped value is always the FIRST row
+// of each table, and it is the row every other row has to be read against.
+//
+// ⚠⚠ NOTHING IN `src/` IS EDITED, AND NO SEAM WAS CARVED TO MAKE THIS WORK. `ECONOMY` is declared
+// `as const`, which is a TYPE-level readonly and nothing more – at runtime it is an ordinary object
+// and is never frozen – and `accrueSpirit` reads `ECONOMY.spirit.returnPerWeek` /
+// `ECONOMY.bond.regressionPerWeek` INSIDE the weekly call rather than caching either at module
+// load. So the bench writes the dial in its own process, runs the grid, and puts the shipped value
+// back before it exits. The default run (`npm run bench:spirit`, no arguments) never enters this
+// branch at all and its output is byte-identical to what it was before this mode existed.
+//
+// ⚠ AND EVERY ROW IS A FULL RE-RUN OF THE SAME GRID – the same 32 seeds, the same four temperaments,
+// the same two arms, the same entry policy – so two rows differ in the dial and in nothing else.
+
+type Sweep = 'return' | 'bond' | 'return-deep'
+
+/** `--sweep=return` / `--sweep=bond` / `--sweep=return-deep`; absent = the ordinary bench, untouched. */
+function sweepMode(): Sweep | null {
+  const flag = process.argv.find((a) => a.startsWith('--sweep='))
+  if (flag === undefined) return null
+  const value = flag.slice('--sweep='.length)
+  if (value === 'return' || value === 'bond' || value === 'return-deep') return value
+  console.error(`unknown --sweep=${value} – the sweeps are 'return', 'return-deep' and 'bond'`)
+  process.exit(2)
+}
+
+/** The five settings of each dial, shipped value FIRST. */
+const RETURN_VALUES: readonly { steady: number; intense: number }[] = [
+  { steady: 5, intense: 3 },
+  { steady: 4, intense: 2.5 },
+  { steady: 3, intense: 2 },
+  { steady: 2, intense: 1.5 },
+  { steady: 1.5, intense: 1 },
+]
+/** ⚠ BEYOND THE FIVE, AND SEPARATE FROM THEM ON PURPOSE. Sweep 1 answers "what would each of these
+ *  five settings read" and NOT ONE OF THEM clears bar 1 on the STEADY arm – it tops out at 1.52
+ *  against a bar of 2.00. So the question "what would" has no answer inside the requested range,
+ *  and this second list exists only to BOUND it. It is its own flag (`--sweep=return-deep`) so the
+ *  five the owner asked for are reported exactly as asked, unpadded; its first row REPEATS the last
+ *  row of sweep 1 as the anchor that proves the two runs are the same grid. It proposes nothing:
+ *  every row here is far outside anything who-she-is §4 has ruled on. */
+const RETURN_DEEP_VALUES: readonly { steady: number; intense: number }[] = [
+  { steady: 1.5, intense: 1 },
+  { steady: 1, intense: 0.7 },
+  { steady: 0.75, intense: 0.5 },
+  { steady: 0.5, intense: 0.35 },
+]
+const REGRESSION_VALUES: readonly number[] = [0.5, 0.4, 0.3, 0.2, 0.1]
+
+/** How long a probe is given to heal before "never" is the honest answer. Four seasons is the
+ *  whole grid; 2000 weeks is ~38 of them. */
+const HEAL_CAP = 2000
+
+/** The whole grid, once. */
+function runGrid(): Career[] {
+  const cs: Career[] = []
+  for (const arm of ARMS) {
+    for (const temperament of TEMPERAMENTS) {
+      for (let s = 0; s < SEED_COUNT; s++) cs.push(runCareer(`spirit-${s}`, arm, temperament))
+    }
+  }
+  return cs
+}
+
+const flat = (cs: readonly Career[], pick: (c: Career) => number[]) => cs.flatMap(pick)
+
+/** BAR 1's OWN STATISTIC, over any slice of careers: the mean per-career sd of spirit over weeks. */
+function meanCareerSd(cs: readonly Career[]): number {
+  return mean(cs.map((c) => sd(c.spirit)))
+}
+
+/** ⚠ THE FAIRNESS CORRIDOR, RECOMPUTED FROM SCRATCH FOR EVERY ROW – bar 5 is a HARD bar and a
+ *  slower return is not allowed to buy bar 1 by breaching it. Same paired construction as section
+ *  [5]: seed-for-seed and arm-for-arm, the two careers in a delta differing in nothing but who she
+ *  is. Returns the worst pair's |mean Δ| in points of win rate. */
+function fairnessWorst(cs: readonly Career[]): number {
+  const winRate = new Map<string, number>()
+  for (const c of cs) {
+    winRate.set(`${c.arm}|${c.temperament}|${c.seed}`, c.matchesPlayed === 0 ? Number.NaN : pct(c.matchesWon, c.matchesPlayed))
+  }
+  let worst = 0
+  for (let i = 0; i < TEMPERAMENTS.length; i++) {
+    for (let j = i + 1; j < TEMPERAMENTS.length; j++) {
+      const deltas: number[] = []
+      for (const arm of ARMS) {
+        for (let s = 0; s < SEED_COUNT; s++) {
+          const x = winRate.get(`${arm}|${TEMPERAMENTS[i]}|spirit-${s}`)
+          const y = winRate.get(`${arm}|${TEMPERAMENTS[j]}|spirit-${s}`)
+          if (x === undefined || y === undefined || Number.isNaN(x) || Number.isNaN(y)) continue
+          deltas.push(x - y)
+        }
+      }
+      worst = Math.max(worst, Math.abs(mean(deltas)))
+    }
+  }
+  return worst
+}
+
+/** SECTION [6]'s DP, lifted out so a sweep row can call it – identical arithmetic, plus the ONE
+ *  number section [6] does not print and the owner is actually choosing on: THE WIDTH OF THE
+ *  NARROWEST BAND. Five words are five contiguous bands, and the two outer ones are open-ended, so
+ *  the width that can be measured is an INTERIOR band's: the distance between two adjacent cut
+ *  points. A band 0.3 points wide is a tile that changes word on a rounding difference. */
+function cutSearch(xs: readonly number[]): { bestShare: number; cuts: number[]; narrowest: number } {
+  const distinct = [...new Set(xs)].sort((a, b) => a - b)
+  if (distinct.length < 5) return { bestShare: 0, cuts: [], narrowest: Number.NaN }
+  const counts = new Map<number, number>()
+  for (const x of xs) counts.set(x, (counts.get(x) ?? 0) + 1)
+  const cum: number[] = []
+  let running = 0
+  for (const v of distinct) {
+    running += counts.get(v) ?? 0
+    cum.push(running)
+  }
+  const upto = (index: number) => (index < 0 ? 0 : cum[index])
+  const massOf = (from: number, to: number) => upto(to) - upto(from - 1)
+  const NEG = -1
+  const best: number[][] = Array.from({ length: 6 }, () => new Array(distinct.length).fill(NEG))
+  const cutAt: number[][] = Array.from({ length: 6 }, () => new Array(distinct.length).fill(-1))
+  for (let i = 0; i < distinct.length; i++) best[1][i] = massOf(0, i)
+  for (let k = 2; k <= 5; k++) {
+    for (let i = k - 1; i < distinct.length; i++) {
+      for (let j = k - 2; j < i; j++) {
+        if (best[k - 1][j] === NEG) continue
+        const score = Math.min(best[k - 1][j], massOf(j + 1, i))
+        if (score > best[k][i]) {
+          best[k][i] = score
+          cutAt[k][i] = j
+        }
+      }
+    }
+  }
+  const edges: number[] = []
+  let k = 5
+  let i = distinct.length - 1
+  while (k > 1) {
+    const j = cutAt[k][i]
+    edges.unshift(j)
+    i = j
+    k--
+  }
+  const cuts = edges.map((e) => distinct[e + 1])
+  let narrowest = Number.POSITIVE_INFINITY
+  for (let b = 1; b < cuts.length; b++) narrowest = Math.min(narrowest, cuts[b] - cuts[b - 1])
+  return { bestShare: pct(best[5][distinct.length - 1], xs.length), cuts, narrowest }
+}
+
+/** BAR 3's OWN STATISTIC: the mean of the 32 PAIRED per-seed care−grind differences at the end of
+ *  season 3, with the paired SEM – over the 32 seeds and never over the 128 careers. */
+function bondGapAtSeason3(cs: readonly Career[]): { gap: number; sem: number; n: number } {
+  const seedIds = [...new Set(cs.map((c) => c.seed))]
+  const perSeed = (arm: Arm) =>
+    seedIds.map((s) =>
+      mean(cs.filter((c) => c.arm === arm && c.seed === s).map((c) => c.bondAtSeason3).filter((x) => !Number.isNaN(x))),
+    )
+  const care = perSeed('care')
+  const grind = perSeed('grind')
+  const gaps = care.map((x, idx) => x - grind[idx]).filter((d) => !Number.isNaN(d))
+  return { gap: mean(gaps), sem: sem(gaps), n: gaps.length }
+}
+
+/** ⚠⚠ THE COST HALF OF SWEEP 2, AND IT IS MEASURED THROUGH THE ENGINE'S OWN WEEKLY RULE rather
+ *  than computed as 25 / rate. `accrueSpirit` is the only writer of the regression and it rounds
+ *  EVERY write onto `ECONOMY.bond.step` (0.5), so "how many weeks does a −25 season take to heal"
+ *  is the number of times that function has to run at the dial as currently set – which is not
+ *  always 25 / rate, and the table is the place to find that out rather than the shipping build.
+ *  A probe world is held at a non-wrap week so the zero-vacations row cannot fire into the answer;
+ *  a week that moves nothing at all is reported as never, not as a large number. */
+function healWeeksForMinus25(): number {
+  const world = createWorld('bond-heal-probe', { ...DEFAULT_PROFILE, background: 'wealthy' })
+  world.week = 5
+  world.bond = ECONOMY.bond.start - 25
+  for (let w = 1; w <= HEAL_CAP; w++) {
+    const before = world.bond
+    accrueSpirit(world)
+    if (world.bond >= ECONOMY.bond.start) return w
+    if (world.bond === before) return Number.POSITIVE_INFINITY
+  }
+  return Number.POSITIVE_INFINITY
+}
+
+/** ⚠⚠ THE OTHER HALF OF THE SAME PROOF, AND THE REASON THREE ROWS OF SWEEP 2 READ IDENTICALLY.
+ *  What ONE week of the regression is actually worth at the dial as currently set, measured by
+ *  running `accrueSpirit` exactly once on the same probe world. It is NOT the dial: every bond
+ *  write goes through the engine's `roundHalf`, which lands the result on `ECONOMY.bond.step`
+ *  (0.5), so a rate of 0.4 or 0.3 rounds UP to a full half-point and a rate of 0.2 or 0.1 rounds
+ *  DOWN to nothing. Printed rather than argued, so a row that looks like a dial that failed to
+ *  apply can be read as the quantisation it is – and so the injection itself is visibly working,
+ *  since a dial that never reached the engine would print one number in every row. */
+function effectiveBondStep(): number {
+  const world = createWorld('bond-heal-probe', { ...DEFAULT_PROFILE, background: 'wealthy' })
+  world.week = 5
+  world.bond = ECONOMY.bond.start - 25
+  const before = world.bond
+  accrueSpirit(world)
+  return world.bond - before
+}
+
+/** BAR 2, SAID IN ONE CELL WITHOUT COLLAPSING ITS TWO HALVES INTO ONE WORD. */
+function bar2Label(rails: boolean, meanOk: boolean): string {
+  if (rails && meanOk) return 'PASS'
+  if (!rails && !meanOk) return 'FAIL both'
+  return rails ? 'FAIL mean' : 'FAIL rails'
+}
+
+function healLabel(weeks: number): string {
+  return Number.isFinite(weeks) ? `${weeks} wk` : 'never'
+}
+
+/** ⚠ THE ONE SEAM. `ECONOMY` is `as const` at the TYPE level only; at runtime it is a plain object
+ *  and `accrueSpirit` re-reads it every week. The casts widen the literal types the `as const`
+ *  produced; they write no file and the shipped values go back before the process exits. */
+const RETURN_DIAL = ECONOMY.spirit.returnPerWeek as unknown as { steady: number; intense: number }
+const BOND_DIAL = ECONOMY.bond as unknown as { regressionPerWeek: number }
+
+function runSweep(mode: Sweep): void {
+  const shippedReturn = { steady: RETURN_DIAL.steady, intense: RETURN_DIAL.intense }
+  const shippedRegression = BOND_DIAL.regressionPerWeek
+  const startedSweep = Date.now()
+  try {
+    if (mode === 'return') sweepReturn(RETURN_VALUES, false)
+    else if (mode === 'return-deep') sweepReturn(RETURN_DEEP_VALUES, true)
+    else sweepBond()
+  } finally {
+    RETURN_DIAL.steady = shippedReturn.steady
+    RETURN_DIAL.intense = shippedReturn.intense
+    BOND_DIAL.regressionPerWeek = shippedRegression
+    console.log(
+      `\n    dials restored to the shipped values: returnPerWeek ${RETURN_DIAL.steady} / ${RETURN_DIAL.intense} · ` +
+        `bond.regressionPerWeek ${BOND_DIAL.regressionPerWeek}`,
+    )
+    console.log(`    ${((Date.now() - startedSweep) / 1000).toFixed(1)}s`)
+  }
+}
+
+// --- SWEEP 1: THE WEEKLY RETURN ------------------------------------------------------------------
+
+interface ReturnRow {
+  label: string
+  /** the 2×2 of bar 1's own statistic: policy arm × intensity arm */
+  careSteady: number
+  careIntense: number
+  grindSteady: number
+  grindIntense: number
+  steady: number
+  intense: number
+  care: number
+  grind: number
+  at70all: number
+  at70care: number
+  under60: number
+  meanAll: number
+  /** BAR 2's TWO HALVES, KEPT APART. "the drift bar failed" is not a reading – the rails half and
+   *  the 70 ± 4 half fail for different reasons and cost different things, and a row whose mean is
+   *  still 69.30 has plainly failed the OTHER one. */
+  bar2rails: boolean
+  bar2mean: boolean
+  fairWorst: number
+  minBand: number
+  narrowest: number
+  cuts: number[]
+}
+
+function sweepReturn(values: readonly { steady: number; intense: number }[], deep: boolean): void {
+  rule(
+    (deep
+      ? `SWEEP 1-DEEP – ECONOMY.spirit.returnPerWeek BELOW the five, to bound a bar none of them clears\n`
+      : `SWEEP 1 – ECONOMY.spirit.returnPerWeek, everything else held at the shipped value\n`) +
+      `${SEED_COUNT} seeds × ${SEASONS} seasons × {care, grind} × 4 temperaments, the whole grid re-run per row\n` +
+      (deep
+        ? `⚠⚠ THESE ARE NOT PROPOSALS AND NOT THE OWNER'S FIVE. Sweep 1's slowest requested setting leaves the\n` +
+          `  STEADY arm at 1.52 against a bar of 2.00, so "the smallest change that makes bar 1 pass" has no\n` +
+          `  answer inside the requested range. These rows bound it and nothing else. The FIRST row repeats\n` +
+          `  sweep 1's last so the two runs can be checked against each other.`
+        : `⚠ BAR 1 IS READ PER INTENSITY ARM AND NOT POOLED. The return rate IS the intensity axis – 5 for a\n` +
+          `  steady girl, 3 for an intense one – so the care arm's shipped 2.00 is the mean of a 1.21 and a\n` +
+          `  2.79 and is a property of NEITHER population. The 2×2 below is the honest reading of that bar.`),
+  )
+  const rows: ReturnRow[] = []
+  for (const value of values) {
+    RETURN_DIAL.steady = value.steady
+    RETURN_DIAL.intense = value.intense
+    const cs = runGrid()
+    const slice = (arm: Arm | null, intensity: 'steady' | 'intense' | null) =>
+      cs.filter((c) => (arm === null || c.arm === arm) && (intensity === null || temperamentIntensity(c.temperament) === intensity))
+    const all = flat(cs, (c) => c.spirit)
+    const care = flat(slice('care', null), (c) => c.spirit)
+    const base = ECONOMY.spirit.baseline
+    // ⚠ BAR 2 IS A HARD BAR TOO, AND A SLOWER RETURN IS EXACTLY WHAT WOULD BREAK IT: the return is
+    // the only restoring force spirit has, so weakening it widens the distribution around 70. Held
+    // PER TEMPERAMENT ARM, both halves, the same way section [2] holds it – a row that buys bar 1
+    // by drifting out of 70 ± 4, or by pushing 2% of weeks past a rail, has not bought anything.
+    let bar2rails = true
+    let bar2mean = true
+    for (const armName of ARMS) {
+      for (const t of TEMPERAMENTS) {
+        const xs = flat(cs.filter((c) => c.arm === armName && c.temperament === t), (c) => c.spirit)
+        bar2rails &&= pct(xs.filter((x) => x < 20 || x > 95).length, xs.length) < 2
+        bar2mean &&= Math.abs(mean(xs) - 70) <= 4
+      }
+    }
+    const cut = cutSearch(care)
+    rows.push({
+      label: `${value.steady} / ${value.intense}${value.steady === 5 && value.intense === 3 ? ' ◄ shipped' : ''}`,
+      careSteady: meanCareerSd(slice('care', 'steady')),
+      careIntense: meanCareerSd(slice('care', 'intense')),
+      grindSteady: meanCareerSd(slice('grind', 'steady')),
+      grindIntense: meanCareerSd(slice('grind', 'intense')),
+      steady: meanCareerSd(slice(null, 'steady')),
+      intense: meanCareerSd(slice(null, 'intense')),
+      care: meanCareerSd(slice('care', null)),
+      grind: meanCareerSd(slice('grind', null)),
+      at70all: pct(all.filter((x) => x === base).length, all.length),
+      at70care: pct(care.filter((x) => x === base).length, care.length),
+      under60: pct(all.filter((x) => x < ECONOMY.spirit.knee).length, all.length),
+      meanAll: mean(all),
+      bar2rails,
+      bar2mean,
+      fairWorst: fairnessWorst(cs),
+      minBand: cut.bestShare,
+      narrowest: cut.narrowest,
+      cuts: cut.cuts,
+    })
+  }
+
+  console.log(`\n    1A · BAR 1 – the mean per-career sd of spirit, cut BOTH ways. The bar is ≥ 2.00.`)
+  console.log(
+    `    ${pad('steady/intense', 16)}${padL('care·std', 10)}${padL('care·int', 10)}${padL('grind·std', 11)}${padL('grind·int', 11)}` +
+      `${padL('STEADY', 9)}${padL('INTENSE', 9)}${padL('care', 8)}${padL('grind', 8)}${padL('both int.', 11)}${padL('both pol.', 11)}`,
+  )
+  console.log(`    ${'─'.repeat(114)}`)
+  for (const r of rows) {
+    console.log(
+      `    ${pad(r.label, 16)}${padL(r.careSteady.toFixed(2), 10)}${padL(r.careIntense.toFixed(2), 10)}` +
+        `${padL(r.grindSteady.toFixed(2), 11)}${padL(r.grindIntense.toFixed(2), 11)}` +
+        `${padL(r.steady.toFixed(2), 9)}${padL(r.intense.toFixed(2), 9)}${padL(r.care.toFixed(2), 8)}${padL(r.grind.toFixed(2), 8)}` +
+        `${padL(verdict(r.steady >= 2 && r.intense >= 2), 11)}${padL(verdict(r.care >= 2 && r.grind >= 2), 11)}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(114)}`)
+  console.log('    "STEADY"/"INTENSE" pool the two policy arms; "care"/"grind" pool the two intensity arms – section [1]\'s own reading.')
+  console.log('    "both int." = both INTENSITY arms ≥ 2.00 · "both pol." = both POLICY arms ≥ 2.00, which is how section [1] states it.')
+
+  console.log(`\n    1B · WHAT THE SETTING COSTS. Every column is measured on the same run as its 1A row.`)
+  console.log(
+    `    ${pad('steady/intense', 16)}${padL('@70.0 all', 11)}${padL('@70.0 care', 12)}${padL('< 60 knee', 11)}${padL('mean', 8)}${padL('bar 2', 12)}` +
+      `${padL('fair worst', 12)}${padL('bar 5', 8)}${padL('min band', 10)}${padL('narrowest', 11)}   cut points (descending)`,
+  )
+  console.log(`    ${'─'.repeat(144)}`)
+  for (const r of rows) {
+    console.log(
+      `    ${pad(r.label, 16)}${padL(r.at70all.toFixed(2) + '%', 11)}${padL(r.at70care.toFixed(2) + '%', 12)}` +
+        `${padL(r.under60.toFixed(2) + '%', 11)}${padL(r.meanAll.toFixed(2), 8)}${padL(bar2Label(r.bar2rails, r.bar2mean), 12)}` +
+        `${padL(r.fairWorst.toFixed(3) + 'pp', 12)}${padL(verdict(r.fairWorst <= 1.5), 8)}` +
+        `${padL(r.minBand.toFixed(2) + '%', 10)}${padL(Number.isFinite(r.narrowest) ? r.narrowest.toFixed(1) : '–', 11)}   ` +
+        `${[...r.cuts].reverse().map((c) => c.toFixed(1)).join('  ·  ')}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(144)}`)
+  console.log('    "@70.0" = weeks sitting at EXACTLY the baseline – the erasure bar 1 fails on. "< 60 knee" = the only weeks')
+  console.log('      `spiritMatchFactor` is not 1.0, i.e. the only weeks either number reaches the tennis at all.')
+  console.log('    "mean"/"bar 2" = the long-run spirit mean over all weeks, and BAR 2 held PER TEMPERAMENT ARM. Its two halves are')
+  console.log('      reported apart: "FAIL rails" = some arm put ≥ 2% of weeks below 20 or above 95, "FAIL mean" = some arm drifted')
+  console.log('      out of 70 ± 4, "FAIL both" = both. They fail for different reasons and cost different things.')
+  console.log('    ⚠ "fair worst"/"bar 5" = the worst temperament pair\'s |mean Δ| lifetime win rate against the ±1.5 pp corridor.')
+  console.log('      A HARD BAR, recomputed on every row: a slower return may not buy bar 1 by breaching who-she-is §4.')
+  console.log('    "min band" = the largest share the SMALLEST of five Mood words can hold, cut points free (bar 6 is ≥ 2%).')
+  console.log('    ⚠ "narrowest" = the WIDTH IN SPIRIT POINTS of the narrowest INTERIOR band of that best split, and it is the')
+  console.log('      number a tile actually lives on: at the shipped value the best cuts make one word 0.3 points wide, which is')
+  console.log('      a word that changes on a rounding difference. The two outer bands are open-ended and have no width to measure.')
+}
+
+// --- SWEEP 2: THE BOND REGRESSION ----------------------------------------------------------------
+
+function sweepBond(): void {
+  rule(
+    `SWEEP 2 – ECONOMY.bond.regressionPerWeek, everything else held at the shipped value\n` +
+      `${SEED_COUNT} seeds × ${SEASONS} seasons × {care, grind} × 4 temperaments, re-run per row\n` +
+      `⚠⚠ THE COST IS IN THE SAME TABLE, ON THE SAME ROW. Build plan §1d states the memory property as\n` +
+      `  «a −25 season heals in ~50 weeks, which is §4a.3's recoverability», and 25 / 0.5 = 50 IS the\n` +
+      `  shipped value. Lowering this dial buys bar 3 and sells recoverability; both halves are here.`,
+  )
+  console.log(
+    `    ${pad('regression', 16)}${padL('gap @ S3', 11)}${padL('± SEM', 9)}${padL('≥ 12', 7)}${padL('> 2×SEM', 10)}` +
+      `${padL('care med', 10)}${padL('grind med', 11)}${padL('at 0 %', 9)}${padL('at 100 %', 10)}${padL('clamped', 9)}` +
+      `${padL('eff. step/wk', 14)}${padL('−25 heals in', 14)}${padL('sd care', 10)}${padL('fair worst', 12)}`,
+  )
+  console.log(`    ${'─'.repeat(153)}`)
+  for (const value of REGRESSION_VALUES) {
+    BOND_DIAL.regressionPerWeek = value
+    const cs = runGrid()
+    const g = bondGapAtSeason3(cs)
+    const bondOf = (arm: Arm) => flat(cs.filter((c) => c.arm === arm), (c) => c.bond)
+    const careBond = bondOf('care')
+    const grindBond = bondOf('grind')
+    const bothBond = [...careBond, ...grindBond]
+    const careMed = median(careBond)
+    const grindMed = median(grindBond)
+    const clamped = [careMed, grindMed].some((m) => m === ECONOMY.bond.min || m === ECONOMY.bond.max)
+    const step = effectiveBondStep()
+    const heal = healWeeksForMinus25()
+    const label = `${value.toFixed(1)}${value === 0.5 ? ' ◄ shipped' : ''}`
+    console.log(
+      `    ${pad(label, 16)}${padL(g.gap.toFixed(2), 11)}${padL(g.sem.toFixed(3), 9)}${padL(verdict(g.gap >= 12), 7)}` +
+        `${padL(verdict(g.gap > 2 * g.sem), 10)}${padL(careMed.toFixed(2), 10)}${padL(grindMed.toFixed(2), 11)}` +
+        `${padL(pct(bothBond.filter((x) => x === ECONOMY.bond.min).length, bothBond.length).toFixed(2) + '%', 9)}` +
+        `${padL(pct(bothBond.filter((x) => x === ECONOMY.bond.max).length, bothBond.length).toFixed(2) + '%', 10)}` +
+        `${padL(clamped ? 'YES' : 'no', 9)}${padL(step.toFixed(2), 14)}${padL(healLabel(heal), 14)}` +
+        `${padL(meanCareerSd(cs.filter((c) => c.arm === 'care')).toFixed(2), 10)}${padL(fairnessWorst(cs).toFixed(3) + 'pp', 12)}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(153)}`)
+  console.log(`    "gap @ S3" = the mean of ${SEED_COUNT} PAIRED per-seed care−grind differences at the end of season 3; BAR 3 is ≥ 12 AND > 2×SEM.`)
+  console.log('    "care med"/"grind med" = the arm\'s bond median over every resolved week (bar 4\'s own reading); "clamped" = either median at 0 or 100.')
+  console.log('    ⚠⚠ "eff. step/wk" = what ONE week of the regression is actually worth at that dial, measured by running `accrueSpirit`')
+  console.log('       once. It is NOT the dial: `roundHalf` lands every bond write on `ECONOMY.bond.step` (0.5), so 0.4 and 0.3 round UP')
+  console.log('       to a full half-point and 0.2 and 0.1 round DOWN to zero. Rows that read identically are that quantisation, not a')
+  console.log('       dial that failed to apply – a dial that never reached the engine would print ONE number down the whole column.')
+  console.log('    ⚠⚠ "−25 heals in" = weeks of `accrueSpirit` for a bond of 45 to reach 70 again, MEASURED through the engine\'s own')
+  console.log('       weekly rule and NOT computed as 25/rate – every bond write is rounded onto `ECONOMY.bond.step` (0.5), so a rate')
+  console.log('       below half a step can move nothing at all and "never" is then the honest reading, not a large number.')
+  console.log('    "sd care" and "fair worst" are invariance checks: bond has no reader anywhere in the match, so they should not move.')
+}
+
+const SWEEP = sweepMode()
+if (SWEEP !== null) {
+  runSweep(SWEEP)
+  process.exit(0)
+}
+
 
 // =================================================================================================
 // THE RUN

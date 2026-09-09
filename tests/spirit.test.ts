@@ -425,6 +425,30 @@ describe('bond – the standing, and the memory property', () => {
     expect(world.bond * 2).toBe(Math.round(world.bond * 2))
   })
 
+  it('⚠⚠ regressionPerWeek is a MULTIPLE of the step, because the grid makes it a two-value dial', () => {
+    // FOUND BY THE WAVE-1 SWEEP, and it is the reason this pin exists rather than a comment. The
+    // regression is quantised by the same `roundHalf` as every other bond write, so the constant
+    // does not mean what it says at most values: measured through the weekly rule itself, 0.5, 0.4,
+    // 0.3 and 0.25 ALL move exactly half a point, and 0.24, 0.2 and 0.1 ALL move exactly nothing –
+    // at which point a −25 season never heals at any horizon rather than healing slowly. A sweep
+    // reading 0.5 → 0.1 is reading a dial that stopped turning after its third row, and the tuner
+    // has no way to see that from the number.
+    //
+    // So the legal set is pinned instead of documented: a POSITIVE MULTIPLE of `step`. The shipped
+    // 0.5 is one step exactly, which is why today's 50-week heal is real.
+    // ⚠ A later wave wanting slower healing changes the mechanism – a finer `step`, or a regression
+    // that carries its remainder between weeks – and not this number.
+    const { regressionPerWeek, step } = ECONOMY.bond
+    expect(regressionPerWeek).toBeGreaterThan(0)
+    expect(regressionPerWeek / step).toBe(Math.round(regressionPerWeek / step))
+    // ...and the property the multiple BUYS, asserted through the engine rather than by arithmetic:
+    // one week of regression moves exactly the constant, at a bond value already on the grid.
+    const world = probeWorld('sunny', 5)
+    world.bond = ECONOMY.bond.start - 10
+    accrueSpirit(world)
+    expect(world.bond).toBe(ECONOMY.bond.start - 10 + regressionPerWeek)
+  })
+
   describe('the delta table, at the decision sites that write it', () => {
     /** A career walked to the week a knock is live and unanswered, without touching the tick. */
     function knockWorld(choice: 'rest' | 'push', repeat: boolean): WorldState {
