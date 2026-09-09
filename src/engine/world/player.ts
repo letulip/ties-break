@@ -12,6 +12,7 @@ import { applySurfaceStyle } from '../match/style'
 import { applyKit, kitWearAt, type KitWear } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
+import { spiritMatchFactor } from '../spirit'
 import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
 import { coachEdgePp } from '../coach'
 import type { MatchPlayer, Surface } from '../match/types'
@@ -153,9 +154,11 @@ export function coachMatchEdge(world: {
 }
 
 /** THE COMPOSITION POINT: the kid exactly as she steps on court. Her raw build, scaled by the
- *  CONDITION factor (R9-19), then by the surface x play-style table (docs/specs/surface-style.md),
- *  then by the condition of her EQUIPMENT (docs/specs/equipment-and-serve-speed.md §2). All three
- *  are pure arithmetic with ZERO RNG, they compose multiplicatively, and every path that puts her in
+ *  CONDITION factor (R9-19) and – since v72 – by her SPIRIT (docs/specs/who-she-is-2026-09.md §4;
+ *  absent or at/above the knee ⇒ 1.0), then by the surface x play-style table
+ *  (docs/specs/surface-style.md), then by the condition of her EQUIPMENT
+ *  (docs/specs/equipment-and-serve-speed.md §2). All of them are pure arithmetic with ZERO RNG, they
+ *  compose multiplicatively, and every path that puts her in
  *  a match – the shadow tournament, the practice friendly, the exhibition viewer – builds her here,
  *  so the modifiers land exactly once per match. `all-court` (and any untouched attribute, and every
  *  attribute of a girl in fresh kit) comes back byte-identical to the pre-slice scaling.
@@ -207,6 +210,16 @@ export function kidMatchPlayerFor(
      *  `coachMatchEdge`). Optional and false-by-default, exactly like `coachId`: a pure caller
      *  without one composes byte-identically to what it did before the travel helping shipped. */
     coachOnEventWeeks?: boolean
+    /** ⭐ v72 – HER SPIRIT, the EIGHTH optional field and still not an eighth term. Optional for the
+     *  same reason `offers`, `kit`, `skills` and `coachId` are, and it is the strongest form of that
+     *  argument this file has: ABSENT ⇒ `spiritMatchFactor` is not called at all and the factor is
+     *  1.0, so every pure caller AND every stored `WorldMatch` replay composes byte-identically to
+     *  what it did before this shipped. A migrated career reads 70, which is above the knee, so it
+     *  is byte-identical too until something actually moves her.
+     *
+     *  ⚠ THE KID ONLY. Rivals have no private life and read nothing of this – their side of the
+     *  cohort question is form-and-slump §4.4's, deferred with it. */
+    spirit?: number
   },
   surface: Surface,
   /** ⭐⭐ IS HE ON **THIS** TRIP – the owner's ruling, 15.08: «поездки С тренером открываются на w
@@ -228,6 +241,19 @@ export function kidMatchPlayerFor(
 ): MatchPlayer {
   const raw = kidMatchPlayer(world)
   const factor = conditionMatchFactor(world.condition)
+  // ⭐⭐ v72 – AND HOW SHE IS IN HERSELF, on the identical seam and beside condition's own factor: a
+  // SECOND multiplicative factor on the same five wings, pure arithmetic, zero RNG, applied exactly
+  // once per match because every path that puts her on court builds her here (this file's contract).
+  //
+  // ⚠ ABSENT ⇒ 1.0, AND IT IS AN `undefined` CHECK RATHER THAN A `?? 70` DEFAULT ON PURPOSE. The
+  // literal 1 is the identity element for a product, so a pure caller without a spirit gets the same
+  // object it always got – not "a girl at baseline", which would be a claim about her.
+  //
+  // ⚠ NOT A SECOND SPELLING OF THE CURVE: `spiritMatchFactor` is the one implementation, in
+  // engine/spirit.ts beside `conditionMatchFactor`, and the two are the same curve family with
+  // different knees and floors (60/0.90 against 70/0.55 – spirit's worst is gentler than fatigue's
+  // at every point, which is the design's own bound).
+  const spiritF = world.spirit === undefined ? 1 : spiritMatchFactor(world.spirit)
   const composed = applyKit(
     applySurfaceStyle(
       {
@@ -246,11 +272,11 @@ export function kidMatchPlayerFor(
         // player through, so it survives the composition unchanged - which is the whole reason it can
         // be written at the top of it.
         condition: world.condition,
-        serve: raw.serve * factor,
-        ret: raw.ret * factor,
-        composure: raw.composure * factor,
-        stamina: raw.stamina * factor,
-        groundstrokes: raw.groundstrokes * factor,
+        serve: raw.serve * factor * spiritF,
+        ret: raw.ret * factor * spiritF,
+        composure: raw.composure * factor * spiritF,
+        stamina: raw.stamina * factor * spiritF,
+        groundstrokes: raw.groundstrokes * factor * spiritF,
       },
       world.profile.playStyle,
       surface,

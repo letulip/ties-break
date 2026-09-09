@@ -20,6 +20,9 @@
 // `avatarCropPath` below, never from this decision.
 
 import type { TierId } from '../engine/season/types'
+// ⭐ v72 (the private life, wave 1): the rung of her Mood ladder this week is on. TYPE-ONLY – the
+// derivation (`spiritBandOf`) and the five words stay engine-side, and nothing here reads a number.
+import type { SpiritBand } from '../engine/spirit'
 import type { LossStreak, WorldEvent } from './protocol'
 
 /** Every face there is a 256px CROP for – i.e. exactly what `avatarCropPath` below is TOTAL over.
@@ -278,7 +281,82 @@ export interface AvatarEmotionInput {
    *  Optional: a caller that supplies `rankClimbed` without this keeps the pre-softener behavior
    *  (no softening), because a climb that cannot be shown to be earned must not soothe a loss. */
   runPointsThisWeek?: number
+  /** ⭐⭐ v72 – HER LIFE, JOINING HER BODY AND HER TENNIS ON THE SAME FACE (who-she-is §5). The rung
+   *  of the Mood ladder her `spirit` is on this week, as the ENGINE read it (`spiritBandOf`); the
+   *  raw number never crosses, and this function never sees one.
+   *
+   *  Optional / absent ⇒ the pre-wave behaviour EXACTLY: the idle ladder is the body's alone and the
+   *  mood channel cannot win, so every caller that predates the layer and every stored replay reads
+   *  byte-identical. */
+  spiritBand?: SpiritBand | null
 }
+
+// =================================================================================================
+// ⭐⭐ v72 – WHERE HER LIFE MEETS HER BODY ON ONE FACE: the ruled collision, in three tables
+// =================================================================================================
+//
+// The ruling (runbook §4.1, who-she-is §5/§C): **injury first, then the LARGER DEVIATION of body
+// (condition) vs mood (spirit), then the existing result logic.** Read literally as a chain over the
+// whole function that last clause would demote a fresh WIN below a tired body – it would overturn
+// R8-6a («won -> happy; nothing here can override it»), a shipped face the owner ruled on twice. It
+// is not that: «the existing result logic» is the layer that is UNCHANGED and stays on top, and the
+// collision the ruling settles is the one the new channel actually creates – inside the IDLE half,
+// which is where a body ladder has always decided her face on a week she played nothing. So:
+//
+//   a fresh result -> the result layer, untouched      (a moment; it decays at the next tick)
+//   injured        -> rehab                            (first, exactly as before)
+//   larger rung    -> the mood face, or the body face   (⭐ the new rung; ties go to the BODY)
+//
+// ⚠ TIES GO TO THE BODY, AND THAT IS INVARIANT 4 EXPRESSED AS A TIE-BREAK. The body channel is the
+// one that ships today: on a tie the face does not move, the Mood word stays null, and each tile
+// keeps rendering its own existing word. A new channel may only ever WIN a week, never draw one.
+//
+// ⚠ AND THE COMPARISON IS IN RUNGS, NOT POINTS. Condition and spirit are both 0..100 and are not the
+// same scale: different baselines, different cut points, one bounded ladder of faces against another.
+// Comparing the raw distances would be arithmetic dressed as a rule. Each side is asked how far from
+// its own neutral it is – 0, 1 or 2 – and the larger answer speaks.
+
+/** How far from `norm` the BODY ladder is this week, in rungs. ⚠ IT READS `idleEmotion`'s OWN
+ *  THRESHOLDS and must keep reading them: the two are one ladder counted two ways, and the day they
+ *  disagree the face and the word start describing different weeks. Pinned in tests/spirit.test.ts.
+ *
+ *  ⚠ DOWNWARD ONLY, because the ladder is: there is no face for «unusually fresh», so `norm` is both
+ *  the neutral rung and the top one. The mood ladder deviates BOTH ways, and that asymmetry is what
+ *  lets a `Glowing` week put a smile on a girl who won nothing – the layer, in one sentence. */
+export function conditionDeviation(condition: number): number {
+  if (condition < 40) return 2
+  if (condition < 60) return 1
+  return 0
+}
+
+/** ...and the same count for the Mood ladder – 0 at `steady`, 1 at either neighbour, 2 at either end.
+ *  THE ONE SPELLING of it (engine/spirit.ts deliberately does not carry a second). */
+export const MOOD_DEVIATION: Record<SpiritBand, number> = {
+  glowing: 2,
+  bright: 1,
+  steady: 0,
+  dimmed: 1,
+  heavy: 2,
+}
+
+/** WHICH OF THE SEVEN FACES A MOOD RUNG WEARS. ⚠ NO NEW ART AND NO NEW EMOTION ID – the seven
+ *  already cover it (who-she-is §5), and five words map onto three of them: her life going right
+ *  reads `happy`, her life going wrong reads `sad`, and the neutral rung is the same `norm` the body
+ *  produces – which is why the neutral rung can never be the winner and never needs a word of its
+ *  own (the tiles already print `Steady` for `norm`, and «Steady» is the shared word the owner
+ *  ruled). */
+export const MOOD_FACE: Record<SpiritBand, PortraitEmotion> = {
+  glowing: 'happy',
+  bright: 'happy',
+  steady: 'norm',
+  dimmed: 'sad',
+  heavy: 'sad',
+}
+
+/** WHICH CHANNEL DECIDED HER FACE THIS WEEK. The Mood tile's word is licensed on `mood` and on
+ *  nothing else – see `DiaryFacts.moodWord` for why that nullability is CLAUDE.md invariant 4
+ *  expressed as a type. */
+export type EmotionChannel = 'result' | 'injury' | 'body' | 'mood'
 
 /**
  * State-aware idle emotion (R8-6b): what her face settles into once a result has decayed.
@@ -302,12 +380,34 @@ export interface AvatarEmotionInput {
  * about her ONGOING state is the moment of getting hurt. The idle ladder is otherwise untouched –
  * it is still a fatigue ladder (rehab -> tired -> serious -> norm) and it still outranks nothing:
  * a fresh result on an injured week still wins, exactly as before.
+ *
+ * ⭐⭐ v72 – AND IT IS NO LONGER A FATIGUE LADDER ALONE. `spiritBand` is her LIFE arriving on the same
+ * face, under the ruled collision above: injury first, then whichever of body and mood is further
+ * from its own neutral, ties to the body. Absent ⇒ byte-identical to every week before the layer.
+ * `idleRead` answers WHICH channel spoke, because the Mood tile's word is licensed on that and on
+ * nothing else; `idleEmotion` keeps its exact historical signature and behaviour over it.
  */
-export function idleEmotion(injured: boolean, condition: number): PortraitEmotion {
-  if (injured) return 'rehab'
-  if (condition < 40) return 'tired'
-  if (condition < 60) return 'serious'
-  return 'norm'
+export function idleRead(
+  injured: boolean,
+  condition: number,
+  spiritBand?: SpiritBand | null,
+): { emotion: PortraitEmotion; channel: 'injury' | 'body' | 'mood' } {
+  if (injured) return { emotion: 'rehab', channel: 'injury' }
+  const body = conditionDeviation(condition)
+  const mood = spiritBand ? MOOD_DEVIATION[spiritBand] : 0
+  // ⚠ STRICTLY GREATER: a tie leaves the shipped face and the shipped word exactly where they are.
+  if (spiritBand && mood > body) return { emotion: MOOD_FACE[spiritBand], channel: 'mood' }
+  if (condition < 40) return { emotion: 'tired', channel: 'body' }
+  if (condition < 60) return { emotion: 'serious', channel: 'body' }
+  return { emotion: 'norm', channel: 'body' }
+}
+
+export function idleEmotion(
+  injured: boolean,
+  condition: number,
+  spiritBand?: SpiritBand | null,
+): PortraitEmotion {
+  return idleRead(injured, condition, spiritBand).emotion
 }
 
 /** R9-11: true while a past title still shields the sad emotion – a title won at week W
@@ -388,7 +488,7 @@ function titleShields(week: number, lastTitle: LastKidTitle | null | undefined):
  * anger is not a point on it; a result emotion also decays at the next weekly tick, so her anger
  * lasts exactly the week she earned it and then her state takes over, like every other result.
  */
-export function avatarEmotion({
+export function avatarEmotionRead({
   week,
   condition,
   injured,
@@ -397,25 +497,36 @@ export function avatarEmotion({
   lossStreak,
   rankClimbed,
   runPointsThisWeek,
-}: AvatarEmotionInput): PortraitEmotion {
+  spiritBand,
+}: AvatarEmotionInput): { emotion: PortraitEmotion; channel: EmotionChannel } {
   if (lastResult && lastResult.week === week) {
-    if (lastResult.won) return 'happy'
-    if (lastResult.lostFinal) return 'serious'
+    // ⚠ v72 – THE RESULT LAYER IS UNTOUCHED, and the note over the collision tables says why at
+    // length: it is «the existing result logic» the ruling preserves, not a rung the new channel
+    // may outrank. Every branch below is R8-6a / R9-11 / R12-16 / R13-2 exactly as they shipped.
+    const result = (emotion: PortraitEmotion) => ({ emotion, channel: 'result' as const })
+    if (lastResult.won) return result('happy')
+    if (lastResult.lostFinal) return result('serious')
     // R9-11 softeners: a Local Open exit is never a tragedy, and a fresh Regional/National
     // champion is still riding the win – both read `serious`, not `sad`.
-    if (lastResult.tier === 'local') return 'serious'
-    if (titleShields(week, lastTitle)) return 'serious'
+    if (lastResult.tier === 'local') return result('serious')
+    if (titleShields(week, lastTitle)) return result('serious')
     // ...and only here, under every softener: the ONE loss that broke her (R12-16 – `===`, never
     // `>=`; see the ordering note above). A comparison, never a count and never a draw – the engine
     // did both, once per streak, so this cannot return a different face for the same screen twice.
-    if (lossStreak && lossStreak.losses === lossStreak.angerAt) return 'angry'
+    if (lossStreak && lossStreak.losses === lossStreak.angerAt) return result('angry')
     // The third softener, LAST by design (see the ordering note): a loss that still climbed the
     // table converts only a would-be `sad` – it never outranks the crossing above, and the
     // `serious` softeners above never needed it. Facts the ENGINE captured, never a UI guess.
     // R13-2: the climb must be EARNED – run points > 0 means she won matches this week. A climb
     // that arrived because rivals' results decayed out of their windows leaves her face alone.
-    if (rankClimbed && (runPointsThisWeek ?? 0) > 0) return 'serious'
-    return 'sad'
+    if (rankClimbed && (runPointsThisWeek ?? 0) > 0) return result('serious')
+    return result('sad')
   }
-  return idleEmotion(injured, condition)
+  return idleRead(injured, condition, spiritBand)
+}
+
+/** The face alone – the historical signature, and every caller outside the diary's facts assembly
+ *  still reads exactly this. `avatarEmotionRead` above adds only WHICH channel spoke. */
+export function avatarEmotion(input: AvatarEmotionInput): PortraitEmotion {
+  return avatarEmotionRead(input).emotion
 }

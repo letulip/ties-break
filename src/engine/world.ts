@@ -30,6 +30,9 @@ import {
   WEEKS_PER_YEAR,
   OFF_SEASON_WEEKS } from './season/calendar'
 import { clamp, tournamentRunStrain } from './condition'
+// ⭐ v72: `createWorld` draws her temperament through THE one derivation – the same function the
+// v71 -> v72 migration calls, which is what makes an old career turn out to have always been her.
+import { temperamentFor } from './spirit'
 import { ECONOMY,
   kidPrizeShareBps,
   kidPrizeShareCents,
@@ -271,6 +274,11 @@ export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, E
 // Pass-throughs that historically lived in the condition/availability block and left with it:
 // re-exported here so the ~111 modules importing them from  keep working.
 export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor } from './condition'
+// ⭐ v72: the private life's leaf, beside condition's and re-exported on the same line of reasoning –
+// the barrel is what the rest of the repo imports the engine through. The temperament TYPE travels
+// with them because `WorldState.temperament` is declared in it.
+export { accrueSpirit, applyBondDelta, spiritMatchFactor, temperamentFor, temperamentIntensity, TEMPERAMENTS } from './spirit'
+export type { Temperament } from './spirit'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
 // W4-SCHOOL: the school calendar. Lives in kidLife.ts with `gradeOf`, whose arithmetic it is.
 import { schoolEndWeek, schoolIsOver, schoolIsOverForBand } from './kidLife'
@@ -1483,6 +1491,25 @@ export function createWorld(
     // tests/coach-travel-edge-older-schemas.test.ts holds v61 down to v49 – off one shared peel in
     // tests/coachTravelEdgeFixtures.ts.
     assets: [],
+    // ⭐ v72 (the private life, wave 1): THE TWO NUMBERS AND WHO SHE IS.
+    //
+    // ⚠ LAST KEYS OF THE LITERAL, IN THIS ORDER, for the reason `assets`, `peakPhysical` and the
+    // masseur's three above give: the frozen-career identities reproduce each older schema's hashes
+    // by dropping exactly the keys appended since, and that only works while every key stays in the
+    // order it was appended in (`careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts peels them
+    // in reverse). The FIELDS are declared beside `condition` in state.ts, where they belong to a
+    // reader; the LITERAL order is a serialisation contract and answers to the ladder instead.
+    //
+    // Both numbers open at their baseline – she is neither happy nor unhappy on week 0, and the
+    // parent has neither built anything with her nor broken anything yet. 70 is above spirit's knee
+    // (60), so a fresh career plays exactly the tennis it played before this shipped.
+    spirit: ECONOMY.spirit.baseline,
+    bond: ECONOMY.bond.start,
+    // ⚠ THE ONLY DRAW THIS WAVE TAKES, and it is (seed)-keyed: two axis picks off the
+    // purpose-scoped `seed:temperament` sub-stream, nothing of the calendar's and nothing of the
+    // player's. MAIN is untouched, so the frozen capture (41550 / e6b0c709) cannot see it. The v71
+    // -> v72 migration calls THIS SAME function on the career's own seed – see `temperamentFor`.
+    temperament: temperamentFor(seed),
   }
   addEvent(world, {
     week: 0,

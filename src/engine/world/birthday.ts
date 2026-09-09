@@ -26,9 +26,30 @@
 //    choice is entirely "what do I think she wants" – which is the only question this was ever about.
 //    It also settles the catalogue: ONE list for every background, and no affordability test anywhere.
 //
-// 2. A GIFT GIVES NO SKILL. Nothing in this file touches the radar, condition, morale or `kitState`.
+// 2. A GIFT GIVES NO SKILL. Nothing in this file touches the radar, condition or `kitState`.
 //    The owner on whether a frame resets kit wear (spec §2c): «я бы сказал нет». The moment it does,
 //    the gift is useful, and a useful gift is a purchase.
+//
+//    ⭐⭐ AMENDED AT v72 (the private life, wave 1), AND THE RULING SURVIVES INTACT – THE OWNER'S OWN
+//    CORRECTION, 23.08. This clause used to read «the radar, condition, MORALE or kitState», because
+//    when it was written there was no morale to touch and the whole slice «records and does not
+//    consume» (spec §2b). `chooseGift` now moves `bond`, and the reason that is not a repeal is his:
+//
+//      «а как же с теми, которых она сама просила? мне кажется там вполне может двигаться в
+//       положительную сторону мораль»
+//
+//    THE ZERO SURVIVES FOR UNPROMPTED MATERIAL GIFTS – it is still true that buying her a thing she
+//    did not name moves no number. What moves the relationship is being HEARD, and the ask is not
+//    purchasable: it is drawn on `seed:birthday:<age>` – (seed, calendar), never a choice – so a
+//    player cannot manufacture the want and then buy it. He can only ANSWER one the world put in
+//    front of him, or not. That is the difference between a heard request and a purchase, and it is
+//    the whole of why ruling 2 still stands: A GIFT THAT MOVES A NUMBER WOULD BE A PURCHASE, AND
+//    NOTHING HERE LETS A PLAYER CHOOSE WHICH GIFT MOVES IT. The rows, and the disjointness argument
+//    for them, are at the bottom of `chooseGift`; the numbers are in `ECONOMY.bond.delta`; the other
+//    home of this amendment is docs/specs/birthday-and-gifts.md §2b, amended in the same commit.
+//
+//    ⚠ AND RULING 1 IS UNTOUCHED BY IT: still no `amountCents`, still no price on the screen, still
+//    no line in Money. `bond` is not money and is never shown as a number anywhere.
 //
 // 3. "NOTHING" MUST BE A REAL ANSWER. `DAY_TOGETHER` is always one of the four, it is never marked,
 //    and it is reachable as the ask – she does not want a thing, she wants you, and that is the best
@@ -44,6 +65,10 @@
 // choice by accident, repeatedly, and never know. So it BLOCKS, on the identical contract the knock
 // has (`advanceWeeks` refuses to tick), and the dialog has four buttons and no other way out.
 import { rngFromSeed } from '../rng'
+import { ECONOMY } from '../economy'
+// ⭐ v72: the consumer ruling 2 below was waiting for – see `chooseGift`. `applyBondDelta` is the one
+// writer of `world.bond`, so this file states WHICH row applies and never how the number is clamped.
+import { applyBondDelta, temperamentFor, type Temperament } from '../spirit'
 import { addEvent } from './ledger'
 import { ageInWords, birthdayTurning } from './age'
 import { guardNotEndedForGood } from './endings'
@@ -112,6 +137,51 @@ import type { WorldState } from '../world'
  *  when docs/specs/form-and-slump.md and the psychologist arrive, THIS table is the ladder to read,
  *  and the history to weigh it against is already on the record. */
 const TIME_TOGETHER: Record<string, string> = { day: 'day', familyweek: 'week', trip: 'trip' }
+
+/** ⭐ v72 – AND THE MORALE SLICE THE NOTE ABOVE PREDICTED HAS ARRIVED, reading exactly the ladder it
+ *  was told to read: three ids, three different numbers (build plan §1d). Same keys as
+ *  `TIME_TOGETHER` and `tests/spirit.test.ts` pins that they stay the same keys, so a fourth size of
+ *  "you" can never be added to one table and forgotten in the other. The VALUES live in
+ *  `ECONOMY.bond.delta` with every other tunable; this map is only the id→row wiring. */
+const TIME_TOGETHER_BOND: Record<string, number> = {
+  day: ECONOMY.bond.delta.giftDay,
+  familyweek: ECONOMY.bond.delta.giftFamilyWeek,
+  trip: ECONOMY.bond.delta.giftTrip,
+}
+/** Exported for the pin above – the two tables must describe the same three options. */
+export const BIRTHDAY_TIME_TOGETHER_BOND: Readonly<Record<string, number>> = TIME_TOGETHER_BOND
+
+// =================================================================================================
+// ⭐⭐ v72 – THE ASK LEANS TOWARD HER REGISTER, MILDLY (who-she-is §3, reader 7)
+// =================================================================================================
+//
+// «mild re-weight of which of the four offered she asks for – a TENDENCY, never a rule ... the ask
+// stays drawn on `seed:birthday:<age>`, deterministic re-weight, record untouched; weight capped
+// ~1.5×, every id common for every girl (anti-stereotype guard, 09.09).» All five properties hold
+// below, and each of them is pinned.
+//
+// ⚠⚠ WHICH AXIS, AND WHY IT IS THIS ONE. The catalogue carries exactly one categorical distinction
+// between its rows: TIME TOGETHER (`TIME_TOGETHER` above – the day, the week at home, the trip) as
+// against a THING. That is the OPENNESS axis's own subject and nothing else's – who-she-is §1 gives
+// openness «her flow with people» and intensity «how hard things land and how long they hold», and
+// nothing in the catalogue is louder or quieter than anything else in it. So an OPEN girl leans a
+// little toward the answer that is people, and a PRIVATE girl a little toward the answer that is
+// hers alone. ⚠ INTENSITY IS DELIBERATELY NOT READ HERE: it owns tempo and weight, and there is no
+// tempo in a gift row to read it off.
+//
+// ⚠ AND IT IS A LEAN, NOT A SCRIPT. With one time-together row on a card of four the open girl asks
+// for it 33% of the time against a uniform 25%, and the private girl 18% – so every id stays common
+// for every girl, which is exactly what the anti-stereotype guard asks and what the census prints.
+export const BIRTHDAY_ASK_TILT = 1.5
+
+/** The relative weight this row carries for this girl – 1.0 for everybody when the temperament is
+ *  absent, which is what keeps every catalogue sweep and every historical caller byte-identical. */
+function askWeightFor(gift: BirthdayGift, temperament: Temperament | null): number {
+  if (temperament === null) return 1
+  const open = temperament === 'sunny' || temperament === 'fiery'
+  const isTimeTogether = TIME_TOGETHER[gift.id] !== undefined
+  return isTimeTogether === open ? BIRTHDAY_ASK_TILT : 1
+}
 
 /** ⭐ THE FOURTH OPTION, ALWAYS OFFERED AND NEVER MARKED. Not a "no thanks" – it is the one answer
  *  in the list that costs the parent something he actually has, which is why it has to read as one
@@ -1057,6 +1127,13 @@ export function birthdayOffer(
    *  (the stream stays `seed:birthday:<age>`); it is an input to a pool filter, exactly as
    *  `alreadyGiven` has been since round-17 #18. */
   week: number | null = null,
+  /** ⭐⭐ v72 – WHO SHE IS, for the mild lean above. `null` – the default – is a UNIFORM draw and is
+   *  therefore the exact pre-wave behaviour, which is what every catalogue sweep in tests/ and
+   *  tools/ keeps asking for. The engine's one seam (`birthdayOfferFor`) always passes the real
+   *  girl. ⚠ It is NOT part of any RNG key: the stream is still `seed:birthday:<age>` and it is
+   *  still drawn exactly four times, because the weights are applied to the POOL and never to the
+   *  draw – the identical discipline `alreadyGiven` has been under since round-17 #18. */
+  temperament: Temperament | null = null,
 ): { options: BirthdayGift[]; askedId: string; eased: 'gap' | 'cap' | null } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
@@ -1145,7 +1222,25 @@ export function birthdayOffer(
   // reason the `alreadyGiven` filter is applied to the POOL and never to the draw. A branch that
   // skipped the roll would make the stream's position depend on where in her life she is, and the
   // count is pinned.
-  const drawn = pool[Math.floor(rng() * pool.length)].id
+  //
+  // ⭐⭐ v72 – AND IT IS ONE DRAW, WEIGHTED, RATHER THAN ONE DRAW, UNIFORM. `rng()` is called exactly
+  // once here, exactly as it always was; what changed is how the [0,1) it returns is CUT UP. That is
+  // the whole reason the lean costs no stream position and no record shape: a re-weight that added a
+  // second roll, or rolled only for some girls, would make the sub-stream's position depend on who
+  // she is – which is the failure mode every note in this function is written against.
+  const weights = pool.map((g) => askWeightFor(g, temperament))
+  let cut = rng() * weights.reduce((sum, w) => sum + w, 0)
+  // The last row is the total's own fallback: floating-point summation can leave `cut` a hair inside
+  // the final slice after the loop has spent every weight, and a draw that fell off the end would be
+  // a crash rather than an ask.
+  let drawn = pool[pool.length - 1].id
+  for (let i = 0; i < pool.length; i++) {
+    cut -= weights[i]
+    if (cut < 0) {
+      drawn = pool[i].id
+      break
+    }
+  }
   // ⭐⭐⭐ ROUND 26 #4, SECOND PASS – HER FIRST COLLEGE BIRTHDAY ASKS FOR THE BICYCLE. The owner:
   // «может быть это должна быть как раз просьба на первый ДР во время учебы вообще.»
   //
@@ -1249,6 +1344,11 @@ export function birthdayOfferFor(
     // the ask stays immutable once the dialog is on screen, exactly as `giftsAlreadyGiven` above.
     world.birthdays ?? [],
     world.week,
+    // ⭐⭐ v72 – the eighth argument, and the `??` is `accrueSpirit`'s own courtesy repeated for the
+    // same reason: probe worlds hand-built in tools and tests predate the field, and re-deriving it
+    // from the seed hands them the SAME girl rather than a uniform stranger – so a bench arm cannot
+    // measure a lean that is silently switched off in it.
+    world.temperament ?? temperamentFor(world.seed),
   )
 }
 
@@ -1425,9 +1525,13 @@ export function birthdayOptions(
  *  file to pass. Spec ship rule 3, and it is asserted directly: the same seed through every option
  *  ends the season on identical `fundsCents`.
  *
- *  ⚠ AND NOTHING ELSE MOVES EITHER: no skill, no condition, no `kitState`, no morale. This slice
- *  RECORDS and does not consume (spec §2b – «мораль и психологи у нас в будущем, так что сейчас можно
- *  просто подготовку сделать»). The diary reads the record; nothing else does. */
+ *  ⚠ AND NOTHING ELSE MOVES EITHER: no skill, no condition, no `kitState`. ⭐ THE ONE EXCEPTION SINCE
+ *  v72 IS `bond`, and it is the thing this slice was built to make possible rather than a breach of
+ *  it: «мораль и психологи у нас в будущем, так что сейчас можно просто подготовку сделать» (spec
+ *  §2b) – the preparation was the three-way record (`asked` matches `given` / they differ / `given`
+ *  is null), and the private-life layer is the future that has now arrived to read it. See the
+ *  amended ruling 2 at the top of this file for why an ASKED-FOR gift moving the number is not a
+ *  purchase, and the block at the foot of this function for the four disjoint cases. */
 export function chooseGift(world: WorldState, giftId: string): void {
   // ⭐⭐⭐ ROUND 24 – `guardNotEndedForGood`, NOT `guardNotEnded`, because the answer has to land
   // WHILE THE COLLEGE LATCH IS ON: the year pauses on her birthday week with the latch re-latched
@@ -1457,6 +1561,34 @@ export function chooseGift(world: WorldState, giftId: string): void {
   // dialog from another week must not be able to record an option this birthday never offered.
   if (!given) throw new Error('That is not one of this birthday\'s four options')
   world.birthdays.push({ week: world.week, age, asked: askedId, given: given.id })
+  // ⭐⭐ v72 – AND THE RECORD FINALLY HAS ITS CONSUMER (build plan §1d). Ruling 2 above is amended
+  // rather than repealed, and the three rows below are exactly the shape that lets it survive:
+  //
+  //   the TIME-TOGETHER ids  `day` +2 / `familyweek` +3 / `trip` +4 – she asked for you, and the
+  //                          three sizes of "you" are worth three different amounts;
+  //   the ASKED-FOR gift     granted (`asked` === `given`) +2.5 – the owner's own correction, 23.08:
+  //                          «а как же с теми, которых она сама просила? мне кажется там вполне
+  //                          может двигаться в положительную сторону мораль»;
+  //   the REFUSAL            she asked and got a different thing, or nothing at all, −1.5.
+  //
+  // ⚠⚠ AND AN UNPROMPTED MATERIAL GIFT IS STILL EXACTLY ZERO, which is what keeps this a gift and
+  // not a shop. The ask is drawn on `seed:birthday:<age>` – (seed, calendar), never a choice – so a
+  // player CANNOT MANUFACTURE THE ASK and buy the number; he can only ANSWER one the world put in
+  // front of him. That is the whole difference between a heard request and a purchase, and it is why
+  // ruling 2's «a gift that moves a number is a purchase» is untouched by the rows above.
+  //
+  // ⚠ NO MONEY STILL MOVES: ruling 1 is untouched, there is no `amountCents` in this file, and
+  // nothing here reads or writes a price. And no string moves either (invariant 4).
+  // ⚠ THE FOUR CASES ARE DISJOINT AND THE ORDER IS WHAT MAKES THEM SO. A time-together answer is
+  // priced by ITS OWN ID whatever she asked for (the seam round-18 #10b kept three ids alive for:
+  // «a day and a week must NOT be worth the same»); a material answer is then priced by whether it
+  // ANSWERS the ask; and "unprompted" is exactly the case where the ask was not for a thing at all –
+  // she wanted the day and got a parcel – so no material want was refused and ruling 2's zero stands.
+  const timeTogether = TIME_TOGETHER_BOND[given.id]
+  if (timeTogether !== undefined) applyBondDelta(world, timeTogether)
+  else if (given.id === askedId) applyBondDelta(world, ECONOMY.bond.delta.giftAskedGranted)
+  else if (TIME_TOGETHER[askedId] === undefined) applyBondDelta(world, ECONOMY.bond.delta.giftRefused)
+  else applyBondDelta(world, ECONOMY.bond.delta.giftUnprompted)
   addEvent(world, {
     week: world.week,
     type: 'info',

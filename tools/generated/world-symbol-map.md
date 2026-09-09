@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,305 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,332 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-392 exported names across 46 owning modules.
+399 exported names across 47 owning modules.
 
 ## Areas
 
@@ -31,6 +31,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
+| `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 7 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
@@ -425,6 +426,18 @@ THE KNOCK: she comes off court sore, and the parent rests it or sends her back o
 - `marketWave` – `src/engine/world/market.ts`
 - `worstCrashFreeRatio` – `src/engine/world/market.ts`
 - `worstMarketRatio` – `src/engine/world/market.ts`
+
+### `src/engine/spirit.ts`
+
+THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings.
+
+- `accrueSpirit` – `src/engine/spirit.ts`
+- `applyBondDelta` – `src/engine/spirit.ts`
+- `spiritMatchFactor` – `src/engine/spirit.ts`
+- `Temperament` *(type)* – `src/engine/spirit.ts`
+- `temperamentFor` – `src/engine/spirit.ts`
+- `temperamentIntensity` – `src/engine/spirit.ts`
+- `TEMPERAMENTS` – `src/engine/spirit.ts`
 
 ### `src/engine/world/brand.ts`
 

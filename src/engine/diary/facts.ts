@@ -18,6 +18,8 @@ import type {
   WorldEvent,
 } from '../../shared/protocol'
 import { TIERS, tierFromLabel } from '../season/calendar'
+// ⭐ v72: who she is, type-only – the derivation and the physics stay in engine/spirit.ts.
+import type { Temperament } from '../spirit'
 
 const TIER_IDS = Object.keys(TIERS) as TierId[]
 import type { TierId } from '../season/types'
@@ -162,6 +164,18 @@ export interface DiaryWorldView {
    *  not only about `week`. */
   kidAgeAt: (week: number) => number
   condition: number
+  /** ⭐ v72 – HER TWO NUMBERS, RAW, AND THIS IS THE LAST PLACE THEY ARE NUMBERS. `assembleDiaryFacts`
+   *  bands both on the way in (`spiritBandOf` / `bondBandOf`) and `DiaryFacts` carries no figure for
+   *  either: the fog law is enforced by the shape of the object the UI actually receives.
+   *
+   *  ⚠ REQUIRED, NOT OPTIONAL, AND `vacationPackageId` BELOW SPELLS OUT WHY AT LENGTH: both feed COPY
+   *  LICENCES now – the spirit register picks the variant, the bond band picks the channel – so a
+   *  fixture that omitted one would still build, still pass, and quietly sweep the wrong space. */
+  spirit: number
+  bond: number
+  /** ⭐ v72 – WHO SHE IS. The licence all 44 voiced lines read; without it none is selectable and the
+   *  wave ships dead copy. Required for the same reason as the two above. */
+  temperament: Temperament
   fundsCents: number
   injury: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** the FULL retained event log (not the snapshot's trailing 60) */

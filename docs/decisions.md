@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 78 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 80 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -41,8 +41,8 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 15 | [ROUND 40: THE PROLOGUE'S CHOICES, AND «Я НЕ ПРОСИЛ НОВЫЙ НАЧИНАТЬ»](#08092026--round-40-the-prologues-choices-and-я-не-просил-новый-начинать) | 2026-09-08 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
-| ranking-and-ladder | 6 | [⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him](#17082026---the-second-seat-he-refused-the-machinery-and-the-measurement-agreed-with-him-docsspecsthe-second-seat-2026-08md) | 2026-08-17 |
-| simulation-and-balance | 3 | [ROUND 38 / WAVE C: THE BALANCE RULINGS, EVERY ONE ON A BENCH](#0607092026--round-38--wave-c-the-balance-rulings-every-one-on-a-bench) | 2026-09-07 |
+| ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
+| simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -3107,3 +3107,107 @@ in three sittings on one day. Sources: [who-she-is-2026-09.md](specs/who-she-is-
 
 ---
 
+
+## 09.09.2026 – WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT
+
+The private life's first wave shipped `spirit`, `bond` and `temperament` behind schema v72, and
+`bench:spirit` measured it: 256 careers, 53,128 weeks, prediction written before the run. Four of the
+six pass bars pass. Two fail, and both fail by arithmetic rather than by luck.
+
+- **Bar 1 – spirit sd ≥ 2 per career.** Measured 1.21 steady / 2.79 intense in the care arm. The
+  weekly return (5 steady) is LARGER than every scaled perturbation in the table except an injury
+  onset, so seven of the eight rows are erased in one week and 77.6% of care-arm weeks sit at exactly
+  70.0. ⚠ The arm mean of 2.00 is the average of 1.21 and 2.79 and is a property of neither
+  population – reading the pooled number would have passed a bar no girl meets.
+- **Bar 3 – bond gap ≥ 12 at season 3.** Measured 4.84, at 3.6× its paired SEM: real separation, a
+  third of the bar. The regression is 0.5/week and the runbook's own decision tables produce 0.065
+  decisions/week (care) and 0.028 (grind), so the arms push 39% and 22% of what the regression pulls.
+
+A sweep priced both fixes. Bar 1 needs `returnPerWeek` cut sixfold to 0.75/0.5, which breaks bar 2's
+mean and takes weeks-under-the-knee from 0.02% to 4.95%; it buys no Mood-band width at all (the
+narrowest band stays 0.1–0.3 at every setting). Bar 3 cannot be part-bought: the dial has two
+reachable values, and the one that passes makes a −25 season never heal.
+
+⭐ **RULED, his word: «не трогать ни одну константу, а перевесить обе планки на волны, где приходят
+события – согласен».** Wave 1 has no life events by its own definition, so neither bar was ever a
+wave-1 question:
+
+- **Bar 1 moves to wave 4**, where the break-up shock (−22 steady / −34 intense) is the event the
+  five Mood words exist for. At the shipped return of 3/week an intense girl carries a −34 for about
+  eleven weeks – that is the range the ladder needs, and wave 1 has nothing that size on purpose.
+- **Bar 3 moves to wave 2**, where the reaction beats add decisions worth −4..+3 apiece. The gap is
+  small because the decisions are rare, not because the deltas are wrong.
+- **Wave 1's own bars are direction and significance**, and it meets them: the arms separate the
+  right way at 3.6× SEM, nothing drifts, nothing clamps, and the fairness corridor holds on every row
+  of every sweep (worst 0.179 pp against 1.5).
+
+⚠ **One defect was found and fixed rather than ruled**: `bond.regressionPerWeek` looked like a
+continuous dial and is not. Every bond write is quantised by `roundHalf` onto the 0.5 grid, so 0.5,
+0.4, 0.3 and 0.25 all move exactly half a point and 0.24, 0.2 and 0.1 all move exactly nothing – a
+−25 season then never heals at any horizon rather than healing slowly. The shipped 0.5 is one step
+exactly, so the 50-week recoverability is real; the constraint is now pinned in `tests/spirit.test.ts`
+(a positive multiple of `step`, mutation-verified) instead of being a fact nobody could see.
+
+⚠ **And one bench reading was corrected, not acted on.** The played-hurt −4 fires ~8×/career in the
+bench, which read as the wave's biggest bond lever. It is not: `medicalClearance` puts the warning
+band at condition 15–24, and `minConditionToEnter` is 20 for `local` and 30 or more for every other
+tier – so the row can ONLY fire at a Local Open, in the junior era. The 8× is the bench's own
+entry policy grinding her through junior locals, not a claim about how a career is played. The
+owner's «я вообще такого не ловил ни разу» is exactly what the arithmetic predicts.
+
+## 09.09.2026 – THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS
+
+Three rulings of the same session, all player-facing, all his. The runbook's §1.3 says an approval
+of the wording pass IS a ruling and goes here the same day; these three had reached the branch in
+commit bodies and the spec's own text, and not this log. Recorded now, before the PR.
+
+**1. The voice bibles are approved.** «После всего сказанного про библии давай пока решим, что там
+ок, остальное будет уже в игре в конкретных ситуациях видно, если надо – будем править.» So the four
+bibles, the flat pool, the five Mood words and the 52 tier-0 lines ship as written, and refinement
+happens against real situations in play rather than on paper.
+
+⚠ What the pass settled on the way, because he had commissioned an outside review of the draft and
+both versions had defects. The review was RIGHT about facts and the draft was right about rules:
+* **Taken from the review** – nine static durations removed (the `injured` claim licenses that an
+  injury exists and nothing about its length; `OFF_SEASON_WEEKS = 3`, so four «six weeks» off-season
+  lines were wrong by 2×); «The lake was cold» removed (a place and the weather on the `vacation`
+  claim alone, with no `WeekClaims` member for the package – the same failure he caught on 31.07);
+  the parent-neutral pass throughout (mom-or-dad is undecided since July and §5b's V3 already ships
+  address-neutral v1); and the 2×2 table's `fiery` row, which contradicted its own bible two
+  paragraphs below.
+* **Refused** – the softening of every hard rule (18 «never»s to 9). A bible exists so four voices do
+  not drift line by line across writing sessions, and «usually avoids» holds nothing. The five Mood
+  words were restored after the review substituted taste on the one thing that is explicitly his.
+  The exam stem was restored: `tests/week-scene.test.ts:205` requires `/exam|paper|revis/` and the
+  review's «Study» dropped it from all four lines.
+* **Where the draft over-claimed and the review was right** – `quiet` no longer «does not ask, she
+  waits». Privacy is not passivity: her questions are practical, and she does not ask the parent for
+  a feeling or fish for one to be offered.
+
+**2. ⭐ She may speak in the FIRST PERSON inside her own quotation marks.** His answer to the direct
+question, which decides the register of every line the layer will ever write. The narrator's law is
+unchanged – outside the quotation the diary is still the parent's journal, in the third person – and
+the pin's assertion was simply drawn in the wrong place, scanning her speech as if it were narration.
+⚠ The re-aim gained the arms it had been missing (lowercase `you`, `me`, `mine`) and two shape rules
+that make the boundary machine-checkable: at most ONE quoted span per line, and `she` present in the
+narration outside it. Without the second, «"You are not going back until I say so," we said.» passes
+any quote-aware strip – the parent quoted, addressing the player, which is the exact collapse the pin
+exists to prevent.
+
+**3. The Mood ladder takes WIDE HONEST BANDS, not the bench's optimum.** who-she-is §4a measured that
+the best five-way split by occupancy falls at 72.5 · 70.3 · 70.0 · 68.6, and said plainly that
+«whether that is a gamma or a flicker is his call and not the bench's». It is a flicker: four of the
+five words would fire on movements of a point or two, and the player cannot see `spirit`, so the word
+would change for no visible reason – against the legibility law that every dip be explainable.
+
+⭐ His ruling: the word changes only when something really happened. The cuts are therefore anchored
+to mechanical facts rather than chosen – **Heavy below 60 is the knee itself**, where
+`spiritMatchFactor` stops being 1.0 (so the word and the number agree by construction), **Steady is
+the baseline ± half a steady week's return** (5 ÷ 2), Bright reaches to 79.9 where wave 3's
+attachment lift will sit her, and Glowing is 80 and above.
+
+⚠ The consequence is accepted, not hidden: under these bands wave 1 reads Steady 90.98 %, Bright
+6.07 %, Dimmed 2.07 %, Glowing 0.88 %, Heavy 0.00 %, so the «each of the five words in ≥ 2 % of
+weeks» bar does NOT pass in wave 1 and moves to wave 4 with bars 1 and 3 – for the same reason and by
+the same logic he had already ruled: wave 1 has no life events, and the break-up shock (−22 steady /
+−34 intense) is the event those words exist for.

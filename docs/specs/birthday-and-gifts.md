@@ -188,6 +188,30 @@ So this slice **records and does not consume**. The minimum that makes the futur
 * nothing else reads it. No morale, no condition, no mood modifier. When
   `docs/specs/form-and-slump.md` and the psychologist arrive, the history is already there to read.
 
+> ⭐⭐ **AMENDED AT v72 – THE CONSUMER ARRIVED, AND IT IS THE ONE THIS SECTION WAS BUILT FOR.** «records
+> and does not consume» was a statement about a wave, not a law: the whole point of persisting *what
+> she asked for* was that something would one day read it. The private life's wave 1
+> ([who-she-is-2026-09](who-she-is-2026-09.md), [the-private-life-build](../plans/the-private-life-build.md)
+> §1d) is that something. `chooseGift` now moves **`bond`** – and nothing else: no morale word, no
+> condition, no mood modifier, and still not one cent.
+>
+> The rows, verbatim from the build plan's table – the **time-together ids by their own id**
+> (`day` +2 / `familyweek` +3 / `trip` +4, which is the ladder round-18 #10b kept three ids alive
+> for: «a day and a week must NOT be worth the same»); the **asked-for material gift granted**
+> (`asked` = `given`) **+2.5**; **she asked for a thing and got a different thing −1.5**; and an
+> **unprompted material gift 0** – the case where she asked for time and was handed a parcel, so no
+> material want was refused.
+>
+> ⚠ **AND HIS OWN CORRECTION IS WHY THE ZERO DID NOT SURVIVE WHOLE**, 23.08: «а как же с теми,
+> которых она сама просила? мне кажется там вполне может двигаться в положительную сторону мораль».
+>
+> ⚠ **RULING 2 IS INTACT AND THIS SECTION IS NOT A REPEAL OF IT.** «A gift that moves a number is a
+> purchase» still holds, because **nothing here lets a player choose which gift moves the number**:
+> the ask is drawn on `seed:birthday:<age>` – (seed, calendar), never a choice, §2a's own RNG rule –
+> so the want cannot be manufactured and then bought. It can only be **answered**, or not. The other
+> home of this amendment is ruling 2's comment at the top of `src/engine/world/birthday.ts`, amended
+> in the same commit; the numbers live in `ECONOMY.bond.delta`.
+
 ⚠ **Schema.** One append-only field, and it is a three-part move (bump + migration + golden fixture,
 CLAUDE.md invariant 3). ~~⚠ `docs/plans/wave-flags-grant.md` already claims v48, so this is v49 unless
 the owner reorders – stated here so two waves cannot both take the same number.~~

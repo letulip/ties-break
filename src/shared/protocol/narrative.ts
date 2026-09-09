@@ -8,6 +8,9 @@
 
 import type { SkillKey } from '../../engine/development'
 import type { TierId } from '../../engine/season/types'
+// ⭐ v72: WHO SHE IS, type-only – the four ids live beside the physics that reads them
+// (engine/spirit.ts) and are erased here at compile time, exactly like `TierId` above.
+import type { Temperament } from '../../engine/spirit'
 import type { AvatarEmotion, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
 
@@ -134,6 +137,22 @@ export interface BirthdayRecord {
 /** How drained she is, as a WORD (D3 – Home speaks words; Stats keeps the number). */
 export type ConditionBand = 'fresh' | 'ok' | 'worn' | 'drained'
 
+/** ⭐ v72 (the private life, wave 1) – WHAT THE PARENT HAS BUILT WITH HER, as a BAND and never as a
+ *  number (who-she-is §5b: «`bond` – no meter, ever»). The four cuts are the build plan's §1e:
+ *  `close` ≥ 80 · `steady` 55..79 · `strained` 35..54 · `cold` < 35. It reaches the wire because the
+ *  diary's line pools license on it – a warm line may not fire in a cold week – and for nothing else:
+ *  no component prints it, and `bondBandOf` (engine/spirit.ts) is the one derivation. */
+export type BondBand = 'close' | 'steady' | 'strained' | 'cold'
+
+/** ⭐ v72 – THE SPIRIT REGISTER OF THE MOMENT, collapsed to three for speech (who-she-is §5b's
+ *  composition rule: temperament owns the SHAPE of a line, spirit the REGISTER, bond the CHANNEL).
+ *
+ *  ⚠ IT IS A LICENCE ON A VARIANT, NOT A POOL OF ITS OWN, which is the whole reason the voice does
+ *  not multiply: most spoken moments carry one line and only the ones a low week actually rewords
+ *  split. Derived beside the Mood word from the SAME single reading of `spirit`, so the word she is
+ *  handed and the register her line is licensed under can never describe two different weeks. */
+export type MoodRegister = 'bright' | 'level' | 'low'
+
 /** How the family wallet is breathing, as a band – the diary never quotes the balance. */
 export type FundsPressure = 'tight' | 'watchful' | 'ok'
 
@@ -177,6 +196,43 @@ export interface DiaryFacts {
   /** raw condition 0..100 – the diary module bands it; surfaces print words, not this number */
   condition: number
   conditionBand: ConditionBand
+  // ===============================================================================================
+  // ⭐⭐ v72 (THE PRIVATE LIFE, WAVE 1) – THE FOUR FACTS THAT MAKE HER AUDIBLE AND VISIBLE
+  // ===============================================================================================
+  //
+  // ⚠ THE FOG LAW IS WHAT SHAPES ALL FOUR (who-she-is §5): `spirit` and `bond` are NUMBERS and no
+  // surface may ever print one – no meter, no bar, no arrow, no tile figure. What crosses to the UI
+  // is a WORD, a BAND and an id, each with exactly one consumer, and the raw numbers stay on the
+  // world where the match seam reads them.
+  /** WHO SHE IS – the licence every voiced line reads (`sunny` / `fiery` / `quiet` / `deep`).
+   *
+   *  ⚠ NEVER A LABEL, EVER (who-she-is §5b's «what deliberately gets NO surface»): the parent LEARNS
+   *  who she is from how the diary talks, and a character-sheet line would flatten the one discovery
+   *  the layer is about. It rides here because a line pool cannot be selected without it – without
+   *  this field all 44 voiced lines are unselectable and the wave ships dead copy. */
+  temperament: Temperament
+  /** ⭐⭐ HER MOOD AS THE TILE'S WORD, or NULL – and the null is the load-bearing half.
+   *
+   *  ⚠⚠ WHY IT IS NULLABLE, WHICH IS CLAUDE.md INVARIANT 4 EXPRESSED AS A TYPE. The naive reading of
+   *  the runbook («the engine hands one word, the tiles render it») is ILLEGAL here, because the two
+   *  Mood tiles do not agree today and both spellings are shipped: `screens/KidScreen.vue` renders
+   *  `angry: 'Angry'` and `WeekRecapCard.vue` renders `angry: 'Frustrated'`. A single engine word
+   *  would silently rename one of the owner's screens as a side effect of landing this layer.
+   *
+   *  So: NON-NULL only when the SPIRIT channel wins the priority rule (injury first, then the larger
+   *  deviation of body vs mood) – and then both tiles render exactly this word, one of the five the
+   *  owner approved. NULL when injury or the body/tennis channel wins, and then each tile falls back
+   *  to its OWN existing map, untouched. Net effect: zero shipped strings change, the five new words
+   *  are additive, and the face and the word still read ONE decision, so they cannot contradict each
+   *  other. See `assembleDiaryFacts`. */
+  moodWord: string | null
+  /** ...and the same reading collapsed to three, for the line pools. Present on EVERY week, unlike
+   *  `moodWord` – see `MoodRegister`. */
+  moodRegister: MoodRegister
+  /** WHAT THE PARENT HAS BUILT WITH HER, as a band – the channel her voice arrives through, or does
+   *  not. `close`/`steady` license her own four voices; `strained` collapses them into the shared
+   *  flat pool; `cold` is silence, and the parent's own line stands alone under the painting. */
+  bondBand: BondBand
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

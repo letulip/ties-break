@@ -555,7 +555,10 @@ describe('save migrations', () => {
     // ⚠ AND AT v71 (08.09, round 39 #5 – the brand founding remembered, so a repeat prices at the
     // market), for the SIXTH time and with the claim unchanged yet again: one more rung between the
     // collision and the head.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 71 – past the colliding 64, through 65').toBe(71)
+    // ⚠ AND AT v72 (09.09, the private life wave 1 – `spirit`, `bond` and `temperament`), for the
+    // SEVENTH time and with the claim unchanged once more. The pin follows the ladder's HEAD; it is
+    // the head that moves, never the claim, which is about the walk running past the colliding 64.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 72 – past the colliding 64, through 65').toBe(72)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

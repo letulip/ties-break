@@ -3313,6 +3313,168 @@ export const ECONOMY = {
     rivalFatigueWindowWeeks: 16,
   },
 
+  // =================================================================================================
+  // ⭐⭐ THE PRIVATE LIFE'S TWO NUMBERS (wave 1) – docs/specs/who-she-is-2026-09.md §4 is the source of
+  // truth for every value below, and docs/plans/the-private-life-build.md §§1b/1d is where each one is
+  // argued. `spirit` is the WEATHER (how she is this week) and `bond` is the STANDING (what the parent
+  // has built with her); neither is ever shown as a number on any surface – the fog rule.
+  //
+  // ⚠ THEY LIVE HERE AND NOT IN `engine/spirit.ts` FOR THE REASON `condition`'s DO. The balance model
+  // is ONE table that the bench, the tests and the engine all read, and a constant hidden inside a
+  // leaf is a constant nobody can retune without editing behaviour (CLAUDE.md invariant 5).
+  // =================================================================================================
+  spirit: {
+    /** Where she sits when nothing is happening to her, what a career starts at, and what every
+     *  week's return step walks back toward. */
+    baseline: 70,
+    min: 0,
+    max: 100,
+    /** ⚠ THE KNEE IS 60 AND THE START IS 70, so a fresh career – and every migrated one – reads
+     *  factor 1.0 and plays byte-identical tennis until something actually moves her. Same shape as
+     *  `condition.matchStrengthKnee`; see `spiritMatchFactor`. */
+    knee: 60,
+    /** The worst the curve can be, at spirit 0 – and it is DELIBERATELY far gentler than condition's
+     *  0.55 floor. The design's bound is «smaller than fatigue» at every point of the curve, and
+     *  0.90 vs 0.55 is that bound made arithmetic rather than promised. */
+    floor: 0.9,
+    /** THE RETURN TOWARD BASELINE, per week, by the INTENSITY axis of her temperament (who-she-is §4:
+     *  5 steady / 3 intense – the flat 4 of the 23.08 draft is superseded). A steady girl is back to
+     *  herself faster; an intense one holds a feeling longer. */
+    returnPerWeek: { steady: 5, intense: 3 },
+    /** ...and the same axis scales how hard the week LANDS on her – «она ярче во всём». Every row of
+     *  `perturb` below is multiplied by this before it is applied. */
+    perturbationScale: { steady: 0.8, intense: 1.25 },
+    /** THE WEEK'S OWN EVENTS (build plan §1b, verbatim), BEFORE the intensity scale. Existing world
+     *  facts only – no life events yet, that is wave 2's. ⚠ Deliberately absent and named so nobody
+     *  adds them by accident: match results (form's channel, parked) and training load (condition's
+     *  channel). */
+    perturb: {
+      injuryOnset: -8,
+      laidUpWeek: -1,
+      knockPushedWeek: -2,
+      vacationResolved: 5,
+      birthdayWeek: 2,
+      hardExamWeek: -2,
+      seasonWithNoVacation: -3,
+      blackoutWeek: 1,
+    },
+    /** The exam row's own gate: an exam week only costs her when the plan is still grinding through
+     *  it (`plan.train >= 85`, which is the `grind` preset). A light exam fortnight costs nothing. */
+    examTrainFloor: 85,
+    /** ⚠⚠ DECLARED AND DELIBERATELY NOT READ – THE ONE CONSTANT IN THIS FILE WITH NO READER, and it
+     *  is a wave-1 decision rather than an oversight. §1b's effective baseline is `baseline + this`
+     *  while the attachment slot is full, and THE ATTACHMENT SLOT DOES NOT EXIST UNTIL WAVE 3: there
+     *  is nothing to read it off. It is written down now because the number is HIS (a lift that
+     *  «lifts a little and stays lifted» is a baseline shift, not a bump) and because the wave that
+     *  builds the slot must not get to invent it. `tests/spirit.test.ts` pins the absence of a reader,
+     *  so the day wave 3 wires it the pin says so. */
+    attachmentLift: 5,
+    /** ⭐⭐ THE MOOD LADDER'S FOUR CUT POINTS – RULED 09.09, and every one of them is anchored to a
+     *  MECHANICAL FACT rather than to taste. The five words they divide are the owner's
+     *  (`docs/specs/voice-bibles-2026-09.md` §C, approved); the numbers are his ruling of the same
+     *  day, taken over the bench's measured optimum on the reason that moved bars 1 and 3 too:
+     *  «the word changes only when something really happened» – wave 1 is quiet on purpose and the
+     *  ladder is built for the finished layer.
+     *
+     *  The four read as two floors and two ceilings around the neutral band, and `spiritBandOf` is
+     *  the ONE reader: `< heavyBelow` Heavy · `< dimmedBelow` Dimmed · `>= glowingFrom` Glowing ·
+     *  `>= brightFrom` Bright · everything between the two Steady.
+     *
+     *  ⚠ THE ≥ 2% OCCUPANCY BAR DOES NOT PASS IN WAVE 1 AND THAT IS THE RULED OUTCOME, not a defect:
+     *  measured against who-she-is §4a's own distribution these cuts give Steady 90.98% · Bright
+     *  6.07% · Dimmed 2.07% · Glowing 0.88% · Heavy 0.00%. Glowing and Heavy are rare-to-absent
+     *  until wave 4's break-up shock (−22 steady / −34 intense) gives them their range – a lifted
+     *  girl at 75 taking −34 lands at 41, which is Heavy for weeks. The bar moved to wave 4 with
+     *  bar 1; see the runbook's §6 list. ⚠ These are not tuning dials: a test that would be easier
+     *  with other numbers is a test to rewrite, not a ladder to move. */
+    mood: {
+      /** ⭐ THE KNEE ITSELF – below this `spiritMatchFactor` stops being 1.0 and the match starts
+       *  reading her. It is already the approved doc's own gloss for «Heavy» («the weeks under the
+       *  knee, where the match factor starts reading her»), so the word and the number agree by
+       *  construction rather than by agreement. Kept equal to `knee` above by the pin in
+       *  tests/spirit.test.ts – if one moves the other has to be argued. */
+      heavyBelow: 60,
+      /** Below baseline by more than half a week's return (70 − 5/2 = 67.5). */
+      dimmedBelow: 67.5,
+      /** ⭐ BASELINE + HALF A STEADY WEEK'S RETURN (70 + 5/2 = 72.5) – the other side of the same
+       *  cut `dimmedBelow` makes. Inside `[dimmedBelow, brightFrom)` she is less than half a week of
+       *  coming back from herself, which is not worth a word: «her ordinary state – nothing pressing
+       *  in either direction», as arithmetic. It is where wave 3's attachment lift (+5 on a baseline
+       *  of 75) will sit her, so the word she wears while someone is in her life is decided here. */
+      brightFrom: 72.5,
+      /** The top of the range – rare by design, as the approved doc says of «Glowing». */
+      glowingFrom: 80,
+    },
+  },
+
+  bond: {
+    /** Start, range and the granularity every write rounds to (build plan §1d: 0..100 in steps of
+     *  0.5). Its own block beside `spirit` rather than a key inside it: they are two numbers with two
+     *  rules – one is weather and moves on the world, the other is a relationship and moves ONLY on
+     *  parent decisions – and nesting one under the other would say they are one thing. */
+    start: 70,
+    min: 0,
+    max: 100,
+    step: 0.5,
+    /** THE MEMORY PROPERTY. Deltas land immediately and then regress toward `start` at this rate and
+     *  nothing else moves it: a −25 season heals in ~50 weeks, which is recoverability («one bad click
+     *  at fifteen» must not ruin a ten-season career) without making a decision weightless inside the
+     *  season it was taken in.
+     *
+     *  ⚠⚠ IT IS NOT A CONTINUOUS DIAL, AND IT LOOKS LIKE ONE. Every bond write goes through
+     *  `roundHalf` onto the `step` grid above, so a week's regression is quantised before it lands:
+     *  measured through the engine's own weekly rule, 0.5 / 0.4 / 0.3 / 0.25 ALL move exactly 0.5,
+     *  and 0.24 / 0.2 / 0.1 ALL move exactly 0.00 – a −25 season then never heals at all, at any
+     *  horizon, rather than healing slowly. The cliff sits at half a step. So this constant has two
+     *  reachable behaviours and no gradient between them, and the wave-1 sweep that found this was
+     *  reading a dial that had already stopped turning three rows earlier.
+     *
+     *  The rule that follows, pinned in `tests/spirit.test.ts`: **a positive multiple of `step`.**
+     *  Anything else is a value whose measured behaviour is not the value written here. If a later
+     *  wave wants slower healing than half a point a week, the honest move is a finer `step` or a
+     *  regression that carries its remainder – not a smaller number here. */
+    regressionPerWeek: 0.5,
+    /** WHAT THE PARENT'S DECISIONS ARE WORTH (build plan §1d, verbatim). Every row lands at a real
+     *  decision site – see `engine/spirit.ts`'s header for the map of which one writes which. */
+    delta: {
+      knockRest: 1,
+      knockPush: -3,
+      knockPushRepeatPart: -5,
+      /** entering her with a `'warn'` clearance in hand – she plays hurt because he entered her. */
+      playedHurt: -4,
+      /** the birthday's TIME-TOGETHER ids only, by id (`day` / `familyweek` / `trip`). */
+      giftDay: 2,
+      giftFamilyWeek: 3,
+      giftTrip: 4,
+      /** ⭐ THE ASKED-FOR MATERIAL GIFT, GRANTED (`asked` === `given`) – the owner's own correction of
+       *  23.08: «а как же с теми, которых она сама просила? мне кажется там вполне может двигаться в
+       *  положительную сторону мораль». A heard request is not a purchase; see `chooseGift`. */
+      giftAskedGranted: 2.5,
+      /** she asked and was refused – nothing given, or a different thing. */
+      giftRefused: -1.5,
+      /** ⚠ AND AN UNPROMPTED MATERIAL GIFT IS EXACTLY ZERO, which is birthday ruling 2 surviving
+       *  intact: a gift that moves a number is a purchase, and only an ASK the player cannot
+       *  manufacture makes the answer to it a relationship move instead. */
+      giftUnprompted: 0,
+      vacationResolved: 1,
+      seasonWithNoVacation: -3,
+    },
+    /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
+     *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`
+     *  – the ONE reader, and the only road `bond` has to a sentence.
+     *
+     *  ⚠ WHAT THE BANDS SELECT IS THE CHANNEL, NOT THE VOLUME (who-she-is §5b): `close`/`steady` let
+     *  her speak in her own voice, `strained` collapses the four voices into the shared flat pool,
+     *  and `cold` is silence – the parent's line alone under the painting. A career therefore walks
+     *  down a ladder with three rungs, which is the loss the player is meant to hear. ⚠ There is
+     *  still NO METER: these divide a number nothing prints. */
+    band: {
+      close: 80,
+      steady: 55,
+      strained: 35,
+    },
+  },
+
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).

@@ -161,6 +161,12 @@ function facts(over: Partial<DiaryFacts> = {}): DiaryFacts {
     lossStreak: 0,
     condition: 80,
     conditionBand: conditionBandOf(80),
+    // ⚠ v72: the greeting reads none of these either; kept explicit so the type stays total. 70/70
+    // for everyone in v1 (ruling V4) reads `steady` on the bond and `level` on the register.
+    temperament: 'sunny',
+    moodWord: null,
+    moodRegister: 'level',
+    bondBand: 'steady',
     injured: null,
     travelled: false,
     playedTournament: false,

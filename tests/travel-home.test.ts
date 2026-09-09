@@ -262,6 +262,10 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     kidId: KID_ID,
     kidAgeAt: FIXTURE_AGE_AT,
     condition: 80,
+    // ⚠ v72: a career's opening state, unread here – 70/70 for everyone in v1 (ruling V4).
+    spirit: 70,
+    bond: 70,
+    temperament: 'sunny',
     fundsCents: 100_000_00,
     injury: null,
     events: [],
@@ -682,6 +686,8 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
   it('the facts carry the mood, and it is null on exactly the weeks the scene is', () => {
     const view = (over: Partial<DiaryWorldView>): DiaryWorldView => ({
       seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, kidAgeAt: FIXTURE_AGE_AT, condition: 80, fundsCents: 100_000_00,
+      // ⚠ v72: a career's opening state, unread here – 70/70 for everyone in v1 (ruling V4).
+      spirit: 70, bond: 70, temperament: 'sunny',
       injury: null, events: [], lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,
       vacationPackageId: null,
@@ -1039,6 +1045,8 @@ describe('ui/travel-set — on a real career', () => {
   it('buildDiarySnapshot is field-for-field deterministic with the journey on it', () => {
     const view: DiaryWorldView = {
       seed: 's', week: 11, ageYears: 14, inCollege: false, schoolOver: false, kidId: KID_ID, kidAgeAt: FIXTURE_AGE_AT, condition: 30, fundsCents: 100_000_00,
+      // ⚠ v72: a career's opening state, unread here – 70/70 for everyone in v1 (ruling V4).
+      spirit: 70, bond: 70, temperament: 'sunny',
       // ⚠ W4: the trip is in the view's OWN week now (11), not the one before it.
       injury: null, events: trip(11, 'j300'), lossStreak: null, kidRank: 50, prevKidRank: 50,
       pendingUnfinished: false, runPointsThisWeek: 0, milestones: [], vacationWeek: false,

@@ -642,3 +642,111 @@ branch, 09.09.
 **Done when:** the re-base pass folds this spec into the build plan – §4's constants and census
 arms, §2a's two channels (the leaning included), §5a's feed glyphs, §5b's voice system (bibles
 first) and §6's two cheap lines, against the plan's waves 1–5. Everything else is ruled.
+
+---
+
+## §4a. Measured – the wave-1 bench, predicted against measured
+
+`npm run bench:spirit` (`tools/spirit-bench.ts`), 09.09. **32 seeds × 4 seasons × {care, grind} × 4
+temperaments = 256 careers, 53,128 resolved weeks.** 252 of the 256 ran all four seasons; the other
+four ended in a career-ending injury, which is a real outcome and not a harness fault.
+
+⚠ **The predicted column was written BEFORE the bench existed**, by hand, off §4's constants and the
+build plan's §§1b/1d tables. A prediction written after a run measures nothing. **Nothing below is a
+ruling and no constant was touched**: two bars fail, and by the runbook's own sentence a failed bar
+is a finding for the owner, never a licence to tune.
+
+**The arms.** care = rest every knock · two family weeks booked in the off-season · light exam weeks
+(train 60). grind = push every knock · no family week ever · heavy exam weeks (train 85). The base
+plan is `balanced` in BOTH arms and only the exam weeks differ, because `examTrainFloor` (85) is
+exactly what «light exams» and «heavy exams» mean in the engine. The entry policy is IDENTICAL in
+both arms (everything eligible inside four weeks whose `availabilityStatus` is `ok`), the family is
+`wealthy` so no bankruptcy truncates the grid, and temperament is ASSIGNED after `createWorld` so
+the four arms are the same 32 careers played four times over – which is what makes the fairness
+deltas genuinely paired.
+
+### The table
+
+| # | bar | predicted | measured | verdict |
+| --- | --- | --- | --- | --- |
+| 1 | per-career spirit sd ≥ 2, both arms | care ~1.2 steady / ~1.7 intense · grind ~1.0 / ~1.6 – **FAIL** | care **1.21** steady / **2.79** intense (arm mean **2.00**) · grind **0.79** / **1.49** (arm mean **1.14**) | **FAIL** |
+| 2a | weeks < 20 or > 95 under 2% | 0.00% | **0.00%**, every temperament arm | PASS |
+| 2b | long-run mean 70 ± 4, per temperament | care 70.0–70.5 · grind 69.3–70.0 | care **70.09** / **70.42** · grind **69.79** / **69.55** | PASS |
+| 3 | bond gap ≥ 12 at season 3 AND > 2×SEM | gap ~1.0 pt – **FAIL** the 12 | care **69.80 ± 0.53** · grind **64.95 ± 0.64** · gap **4.84**, 2×SEM **1.36** | **FAIL** the 12, PASS the SEM |
+| 4 | neither bond median clamped | 70.0 both arms | **70.0** both arms (min 48.5 / 51.0, max 73.0 / 72.5) | PASS |
+| 5 | paired lifetime match-win deltas inside ±1.5 pp | max pairwise ≤ 0.3 pp | **0.000 pp** on all six pairs; lifetime win rate **57.99%** for all four | PASS |
+| 6 | five Mood words each ≥ 2% of weeks, cut points FREE | spike at 70.0 ≈ 75–85% of weeks; satisfiable only with cuts inside ~±1 point of 70 | spike at 70.0 = **77.61%**; best five-way split gives the smallest word **4.76%** | PASS |
+
+### The two failures, and what they are findings ABOUT
+
+**Bar 1 – spirit moves only for an intense girl, and only when the family takes a holiday.** The
+per-temperament rows are the finding, not the arm means: **no steady girl in either arm reaches sd 2
+in any of the 128 careers she runs** (her best is 1.58, her worst 0.50), while an intense girl in the
+care arm averages 2.79. The care arm's mean of exactly 2.00 is the average of those two populations
+and is not a property either of them has. The cause is structural and visible in the distribution:
+`returnPerWeek` (5 steady / 3 intense) erases any single perturbation in ONE week, so the week series
+is a spike at exactly 70.0 with one-week excursions hung off it – 77.61% of care-arm weeks sit at the
+baseline exactly. The intense arm clears the bar only because the two consecutive family weeks STACK
+against its slower 3/week return (+6.25, then +6.25 off 73.25, reaching 82.0).
+
+**Bar 3 – the separation is real, but it is a third of the size the bar asks for.** 4.84 points
+against a bar of 12, and it is not noise: it is 3.6× its own paired SEM. The ceiling is arithmetic
+rather than accidental. `regressionPerWeek` is a FLAT 0.5/week step toward 70, not a proportional
+one, so an arm can hold a displacement only while its decisions are worth **≥ 0.5 points a week**.
+Measured decision rates: the care arm's knocks, family weeks and birthdays together come to
+**0.065 decisions/week**, the grind arm's to **0.028** – roughly a tenth and a twentieth of what the
+regression absorbs. Both arms therefore return to 70 between events and neither can hold a level.
+No arm built out of the runbook's own decisions can reach 12 under the shipped constants.
+
+⚠ And one thing the bench found that is in NEITHER arm definition: **the played-hurt −4 is the
+biggest single bond lever in the wave.** It fired **8.13 times per career in the care arm and 8.84 in
+the grind arm** – against 1.47 and 1.72 knock decisions – because entering her four weeks out and
+having her arrive under a «cleared, but only just» verdict is a thing an ordinary calendar does to
+her. It is worth more bond per career than every arm-defining decision combined, and it is identical
+in both arms, so it drags both levels down without contributing to the gap.
+
+### The other four, briefly
+
+* **Bar 5 passes trivially, and the reason is worth recording**: `spiritMatchFactor` is 1.0 for
+  99.97% of weeks, so **temperament has no measurable effect on tennis at all in wave 1**. Spirit
+  went under the knee on 8 weeks out of 53,128 – all of them intense girls in the grind arm, lowest
+  57.5 – and not one of them changed a match. All four temperaments returned the same 57.99% lifetime
+  win rate to two decimals, and the same bond, knock and injury counts. §4's «inside the corridor
+  without help» prediction holds, with room to spare that the wave-4 shock will spend.
+* **Bar 2 passes comfortably** and holds per temperament arm, not merely pooled. Extremes are exactly
+  zero in every cell; the widest spread is the intense care arm at 60.0–82.0.
+* **Bar 4 passes** – both medians sit at 70.0, and neither arm ever touched 0 or 100.
+* **The birthday ask-mix is identical across all four temperaments** (255 asks each, same percentages
+  to a tenth), which is the EXPECTED reading: the ~1.5× weighting toward her register is runbook
+  step 4 and is not built, and the ask rides `seed:birthday:<age>`, which carries no temperament
+  term. This table is the baseline that weighting will be measured against.
+
+### Bar 6 – the distribution, for the wording pass
+
+The bar is met: cut points exist that put all five words in ≥ 2% of weeks. ⚠ **What follows is a
+measurement, not a proposal** – the five words and their ladder are the owner's, and the bench ships
+neither. The care arm's 26,504 weeks:
+
+| band | share |
+| --- | ---: |
+| < 60 (under the knee) | 0.00% |
+| 60 – 64.9 | 1.64% |
+| 65 – 67.4 | 0.43% |
+| 67.5 – 69.9 | 8.12% |
+| **exactly 70.0** | **77.61%** |
+| 70.1 – 72.4 | 5.25% |
+| 72.5 – 74.9 | 3.50% |
+| 75 – 79.9 | 2.57% |
+| ≥ 80 | 0.88% |
+
+Deciles D1..D9: 69.2 · 70.0 · 70.0 · 70.0 · 70.0 · 70.0 · 70.0 · 70.0 · 70.8.
+
+The best available five-way split – the one whose smallest band is largest – falls at **72.5 · 70.3 ·
+70.0 · 68.6**, giving 6.95% / 5.25% / **77.61%** / 4.76% / 5.43% from the top down. So the honest
+shape of the answer is: **the word that owns 70.0 owns roughly four weeks in five**, and the other
+four words live in slices 1.4 points wide on either side of it. Every one of them clears 2%, so
+nothing is dead copy – but four of the five would be firing on movements of a point or two, and
+whether that is a gamma or a flicker is his call and not the bench's.
+
+**What this section does NOT do:** it ships no word, no cut point, no ladder, and it changes no
+constant. Bars 1 and 3 are open questions for the owner.

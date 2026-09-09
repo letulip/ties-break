@@ -25,7 +25,7 @@
 // narrates feelings she cannot see. Player copy: English, short dash "–" only.
 
 import {
-  avatarEmotion,
+  avatarEmotionRead,
   portraitStage,
   type PortraitStage,
 } from '../shared/avatarEmotion'
@@ -41,6 +41,15 @@ import type {
   WeekScene,
 } from '../shared/protocol'
 import { isExamWeek, isOffSeasonWeek } from './season/calendar'
+// ⭐ v72 (the private life, wave 1): the two READINGS of her two numbers, and the five approved
+// words. The diary is handed a band and never a number – see the fog note in engine/spirit.ts.
+import {
+  MOOD_WORD,
+  bondBandOf,
+  moodRegisterOf,
+  spiritBandOf,
+  type SpiritBand,
+} from './spirit'
 import { rngFromSeed } from './rng'
 import { seasonYear, weekLabel } from '../shared/dates'
 // W6c: the anatomy, so a line about her body can know which body it is about. A leaf module – see the
@@ -97,7 +106,15 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
   // finalize, so until then the cached movement is LAST week's and must not colour this week's.
   const rankClimbed =
     !view.pendingUnfinished && view.prevKidRank !== null && view.kidRank < view.prevKidRank
-  const emotion = avatarEmotion({
+  // ⭐⭐ v72 – THE ONE READING OF HER TWO NUMBERS, taken once, here, and handed to everything below.
+  // The raw `spirit` stops at this line: what leaves is a band, a word, a register – never a figure
+  // (who-she-is §5's fog law, and the reason `DiaryFacts` carries no `spirit` field at all).
+  const spiritBand: SpiritBand = spiritBandOf(view.spirit)
+  // ⭐⭐ HER FACE, AND WITH IT WHO DECIDED IT. `spiritBand` joins the inputs (runbook §4.1): injury
+  // first, then the larger deviation of body vs mood, then the existing result logic – the ruling is
+  // argued in full over the collision tables in shared/avatarEmotion.ts. ⚠ F45-1 STANDS: this is the
+  // Home hero's and the Kid screen's portrait; the app header is age-only and reads none of it.
+  const { emotion, channel } = avatarEmotionRead({
     week,
     condition: view.condition,
     injured: view.injury !== null,
@@ -106,6 +123,7 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     lossStreak: view.lossStreak,
     rankClimbed,
     runPointsThisWeek: view.runPointsThisWeek,
+    spiritBand,
   })
   const resultFresh = lastResult !== null && lastResult.week === week
   const thisWeek = view.events.filter((e) => e.week === week)
@@ -143,6 +161,24 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     lossStreak: view.lossStreak?.losses ?? 0,
     condition: view.condition,
     conditionBand: conditionBandOf(view.condition),
+    // ⭐⭐ v72 – WHO SHE IS, HOW SHE IS, AND WHERE THE TWO OF THEM STAND.
+    temperament: view.temperament,
+    // ⚠⚠ THE WORD IS NON-NULL ON EXACTLY THE WEEKS THE SPIRIT CHANNEL WON HER FACE, and null on
+    // every other one – CLAUDE.md invariant 4 expressed as a type, argued at length on the field
+    // itself. The two Mood tiles disagree today (`Angry` on the Kid screen, `Frustrated` on the
+    // recap card) and both spellings are the owner's; handing them one engine word unconditionally
+    // would rename one of his screens as a side effect of landing this layer. So on a null week each
+    // tile falls back to its OWN existing map, untouched, and on a non-null week both print the same
+    // approved word – which is also what keeps the word and the painting one decision rather than
+    // two, because `channel` is the same call that produced `emotion` three lines up.
+    moodWord: channel === 'mood' ? MOOD_WORD[spiritBand] : null,
+    // ...and the register, which every week has whether or not the tile is carrying her mood. ⚠ IT
+    // IS NOT DERIVED FROM `moodWord`, and the reason is the null above: the body channel winning
+    // does not make her spirit level, and slot 9's low-register lines are licensed on exactly the
+    // weeks a drained body outranks a dimmed mood. Both come off the SAME `spiritBand` instead,
+    // which is the stronger form of the same guarantee.
+    moodRegister: moodRegisterOf(spiritBand),
+    bondBand: bondBandOf(view.bond),
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

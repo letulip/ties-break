@@ -37,6 +37,7 @@ import {
   fameAt,
   ownedAssets,
   revalueAssets,
+  SAVE_SCHEMA_VERSION,
   sellAsset,
   shopItem,
   shopView,
@@ -207,7 +208,10 @@ describe('round 39 #5 §4 – the schema move, all three parts live', () => {
 
   it('⭐ a v70 save that OWNS a brand migrates with the founding on record', () => {
     const migrated = migrateSave(v70())
-    expect(migrated.schemaVersion).toBe(71)
+    // ⚠ THE HEAD OF THE LADDER, NOT THIS ITEM'S OWN RUNG – a v70 save walks every step there is, so
+    // this number moves with `SAVE_SCHEMA_VERSION` and is read from it rather than re-typed. The
+    // claim underneath is unchanged: the walk carries the brand founding through to the head.
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect((migrated.assets ?? []).some((a) => a.id === MERCH), 'the corpus fixture owns one').toBe(true)
     expect(migrated.brandFounded, 'owning one proves founding one').toBe(true)
   })

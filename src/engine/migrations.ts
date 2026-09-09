@@ -47,6 +47,11 @@ import { shopItem, unitPriceCents } from './world/shop'
 // a back-filled name is one the game itself would have suggested. `nameSuggestionsFor` is the
 // world-free core of `assetNameSuggestions` and exists for exactly this caller.
 import { nameSuggestionsFor, sanitiseAssetName } from './world/assets'
+// ⭐ v72 (the private life, wave 1): the temperament back-fill DERIVES with `createWorld`'s exact
+// formula rather than drawing or defaulting – a migration with its own copy of the two axis picks
+// would hand a live save a different girl from the one the engine would have drawn. Same argument as
+// the v67 units and the v69 fame pin above, in the one domain where a copy would be unfalsifiable.
+import { temperamentFor } from './spirit'
 
 /** The pre-v67 shape of an owned row, as the units back-fill has to read it: `basisCents`/`basisWeek`
  *  were OPTIONAL keys on v63-v66 saves (round 29 #11 and part two #4 wrote them without a version
@@ -2390,6 +2395,56 @@ export function migrateSave(raw: unknown): WorldState {
     const assets = (Array.isArray(save.assets) ? save.assets : []) as { id?: unknown }[]
     if (assets.some((a) => a?.id === 'merch-brand')) save.brandFounded = true
     v = 71
+  }
+
+  // ⭐⭐⭐ v71 -> v72 – THE PRIVATE LIFE, WAVE 1: THE TWO NUMBERS, AND WHO SHE IS.
+  //
+  // World `+spirit` (the weather – how she is this week), `+bond` (the standing – what the parent has
+  // built with her) and `+temperament` (who she is: one trait, two axes, four ids). The rules live in
+  // engine/spirit.ts; the fields are documented on `WorldState` beside `condition`.
+  //
+  // ⚠⚠ THE BACK-FILL IS TWO DIFFERENT KINDS OF THING AND THE DIFFERENCE IS THE POINT OF THIS BLOCK.
+  //
+  // `spirit` and `bond` are the LITERAL 70 – uniform, ruling V4. Nothing in an older save can produce
+  // a truer number: neither has ever been recorded, and reconstructing "how she felt in season three"
+  // out of a results ledger would be re-deriving a fact from prose, which is what this repo calls a
+  // guess (the v70 step's own standard, one rung down). 70 is where a fresh career starts, and it is
+  // ABOVE spirit's knee (60) – so a migrated career reads factor 1.0 and plays byte-identical tennis
+  // until something actually moves her, which is the strongest possible statement of "this update did
+  // not change your save". ⚠ AND THE PROLOGUE DOES NOT LOAD IT: a childhood handover is a
+  // `PrologueHandover`, not a save, so there is no path on which a nine-year prologue could have been
+  // asked to author a temperament or a starting mood.
+  //
+  // `temperament` is DERIVED, and that is a third category this file has not needed before – not a
+  // default, not a guess, and above all NOT A DRAW. It calls `temperamentFor` – THE SAME exported
+  // function `createWorld` calls, imported here for exactly that reason – on the career's own seed.
+  // So an existing career does not GET a temperament, it turns out to have ALWAYS HAD one: the value
+  // is bit-stable, identical to what the engine would have drawn had the field existed on day one,
+  // and there is no re-roll for a player to feel robbed by.
+  //
+  // ⚠⚠ A SECOND SPELLING OF THAT FORMULA IS THE DEFECT THIS STEP EXISTS TO AVOID, and it is the exact
+  // failure the v67 units back-fill and the v69 fame pin both name in their own domains: «a migration
+  // with its own copy of the market would convert the copy». A migration with its own copy of the two
+  // axis picks would hand a live save a different girl from the one the engine would have drawn, and
+  // nothing downstream could ever tell which of them was real.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE ON MAIN: three `??=` writes on keys nothing else in the chain touches,
+  // gated on `v === 71`. The only stream reached on any path is the purpose-scoped `seed:temperament`
+  // sub-stream, re-derived at the call site and persisting nothing – MAIN is not touched, so the
+  // frozen capture (41550 / e6b0c709) cannot move. Full move: `SAVE_SCHEMA_VERSION` in
+  // world/state.ts, this step, tests/fixtures/saves/v72.json, and the mechanically-checked schema
+  // sentence in docs/context/saves-and-worker.md.
+  // ⚠ THE TWO NUMBERS ARE LITERALS AND THE FORMULA IS A CALL, WHICH IS NOT AN INCONSISTENCY. The
+  // house rule here is "a migration writes literals" (see the v58 step's note on
+  // `ECONOMY.masseur.defaultSessions`): a step must keep meaning what it meant on the day it shipped,
+  // so a later retune of `ECONOMY.spirit.baseline` must not silently change what a v71 save wakes up
+  // as. `temperamentFor` is the opposite case – it is not a tunable, it is the IDENTITY of the
+  // derivation, and the whole value of this step is that it is the same one `createWorld` runs.
+  if (v === 71) {
+    save.spirit ??= 70
+    save.bond ??= 70
+    save.temperament ??= temperamentFor(String(save.seed))
+    v = 72
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

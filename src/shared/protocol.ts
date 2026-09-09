@@ -139,6 +139,8 @@ export type {
   BirthdayPrompt,
   BirthdayRecord,
   ConditionBand,
+  BondBand,
+  MoodRegister,
   FundsPressure,
   DiaryLifeStage,
   DiaryFacts,

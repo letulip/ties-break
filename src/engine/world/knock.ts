@@ -13,6 +13,8 @@
 // imports these values with no runtime cycle.
 import { coachById, tierOf } from '../coach'
 import { drawKnock, knockUntilWeek, offCooldown } from '../knock'
+import { ECONOMY } from '../economy'
+import { applyBondDelta } from '../spirit'
 import { coachEscalates, coachKnockCall, coachManagesLoad, type CoachLoadView } from '../coachLoad'
 import { isBlackoutWeek } from '../season/calendar'
 // ⚠ FROM kidLife, NOT FROM ./summer's `pastSchool`: summer.ts imports `isCompetitionWeek` from THIS
@@ -271,6 +273,29 @@ export function decideKnock(world: WorldState, choice: KnockChoice): void {
   if (k.choice !== null) throw new Error('That knock has already been answered')
   k.choice = choice
   k.untilWeek = knockUntilWeek(k, choice)
+  // ⭐⭐ v72 – AND SHE REMEMBERS THE ANSWER (build plan §1d): rest +1, push −3, and push on a part he
+  // has already sent her back out on −5. THE REPEAT IS THE WHOLE ASYMMETRY: a first push is a
+  // judgement call a parent can honestly get wrong, and a second one on the same part is the record
+  // telling him and being overruled – which is why it costs nearly twice as much. `k.repeat` is the
+  // world's own flag (engine/knock.ts `pushedParts`), never re-derived here.
+  //
+  // ⚠ THE PARENT'S ARM ONLY, AND `coachDecidesKnock` DELIBERATELY TAKES NOTHING. `bond` moves on
+  // PARENT DECISIONS and on nothing else (build plan §1d, and it is the property that keeps it a
+  // relationship rather than a second morale number) – the hired coach answering on his own is the
+  // one knock path the parent did not take. The build plan's table names this function and not that
+  // one; if the layer ever wants to price "you paid somebody so you would not have to answer", that
+  // is a ruling to ask for, not a line to add here.
+  //
+  // ⚠ THE BODY IS UNTOUCHED and so is every string: this function's zero-draw, pure-state contract
+  // holds exactly as before – `bond` is arithmetic on one persisted number (invariant 4).
+  applyBondDelta(
+    world,
+    choice === 'rest'
+      ? ECONOMY.bond.delta.knockRest
+      : k.repeat
+        ? ECONOMY.bond.delta.knockPushRepeatPart
+        : ECONOMY.bond.delta.knockPush,
+  )
   addEvent(world, {
     week: world.week,
     type: 'info',

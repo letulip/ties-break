@@ -101,7 +101,12 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // verbatim: 71 was moved by that wave with its full four-part move (bump, append-only migration
     // that back-fills `brandFounded` from an owned brand, golden fixture v71, e2e fixtures
     // regenerated), never by this line's item. The claim above is untouched.
-    expect(SAVE_SCHEMA_VERSION).toBe(71)
+    // ⚠ AND AGAIN AT v72 (09.09, the private life's wave 1 – `spirit`, `bond` and `temperament` are
+    // born with her), NOT WEAKENED, for the seventh time and for the reason verbatim: 72 was moved
+    // by that wave with its full four-part move (bump, append-only migration back-filling 70/70 and
+    // DERIVING temperament from the career's own seed, golden fixture v72, e2e fixtures
+    // regenerated), never by this line's item. The claim above is untouched.
+    expect(SAVE_SCHEMA_VERSION).toBe(72)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

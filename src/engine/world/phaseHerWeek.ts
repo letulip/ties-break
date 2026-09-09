@@ -24,6 +24,7 @@ import { rivalField } from './weekField'
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
+import { accrueSpirit, applyBondDelta } from '../spirit'
 import { KNOCK_REST_CONDITION, knockRestWeek } from '../knock'
 import { TIERS } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking } from '../season/ranking'
@@ -217,6 +218,14 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   expireRecoveryBuff(world)
   const playedThisWeek = isCompetitionWeek(world) // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
+  // ⭐⭐ 1c-life (v72, the private life wave 1): AND WHAT THE WEEK DID TO HER SPIRIT, and to what the
+  //        parent has built with her. ITS OWN CALL, immediately after the body's – never a parameter
+  //        of `accrueCondition`, whose arity-2, zero-RNG contract is pinned by B1 in
+  //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain one:
+  //        the identical reason the knock's credit and the summer block's bill below are their own
+  //        lines. Pure arithmetic, ZERO draws on any stream. See engine/spirit.ts for both rules,
+  //        and in particular for the order the weekly one runs in (return first, then this week).
+  accrueSpirit(world)
   // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
   //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
   //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a
@@ -396,6 +405,14 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
     // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
     // somebody SAID something, which is what the 💬 channel is for.
     if (clearance === 'warn') {
+      // ⭐ v72 – AND SHE NOTICES WHO SENT HER OUT. The one `bond` delta in this file (−4, build plan
+      // §1d): the doctor said she was cleared "but only just", the parent read that and entered her
+      // anyway, and playing hurt is a decision about HER, not about a scoreline. It lands in this
+      // arm and no other, because this is the only place the warning band and a real entry meet –
+      // the walkover and medical-withdrawal arms above never reach it, which is right: she did not
+      // play. Pure arithmetic, zero draws; see engine/spirit.ts.
+      // ⚠ INVARIANT 4: the sentence below is untouched. This adds a number nobody can see.
+      applyBondDelta(world, ECONOMY.bond.delta.playedHurt)
       addEvent(world, {
         week: world.week,
         type: 'info',

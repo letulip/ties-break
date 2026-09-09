@@ -152,6 +152,11 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       kidId: KID_ID,
       kidAgeAt: FIXTURE_AGE_AT,
       condition: 80,
+      // ⚠ v72: a career's opening state (ruling V4 – 70/70 for everyone in v1). This test is about
+      // `rankClimbed` and nothing else; the two numbers are banded on the way into the facts.
+      spirit: 70,
+      bond: 70,
+      temperament: 'sunny',
       fundsCents: 100_000_00,
       injury: null,
       events: [],
@@ -260,6 +265,14 @@ function makeFacts(input: {
     lossStreak: input.losses,
     condition: input.condition,
     conditionBand: conditionBandOf(input.condition),
+    // ⚠ v72: this sweep is about DIARY_POOL, and no phrase in that pool is licensed on her voice, her
+    // register or her bond – the week-note pool that IS has its own sweep in tests/week-notes.test.ts,
+    // for the same reason the journey note does. So the fixture holds a career's opening state: 70/70
+    // reads `steady` on both bands and `level` on the register (ruling V4 – everyone starts there).
+    temperament: 'sunny',
+    moodWord: null,
+    moodRegister: 'level',
+    bondBand: 'steady',
     injured,
     travelled: s === 'tournament' || s === 'travelOnly',
     playedTournament: s === 'tournament',
