@@ -56,6 +56,7 @@
     "tools/shop-probe.ts",
     "tools/skill-ceiling.ts",
     "tools/snapshot-bench.ts",
+    "tools/spirit-bench.ts",
     "tools/sponsor-window-bench.ts",
     "tools/world-turnover.ts"
   ]
