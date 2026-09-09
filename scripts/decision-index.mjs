@@ -55,6 +55,10 @@ const AREAS = [
   ['college', /college|ncaa|academic year|call-up|championship/i],
   ['age-and-eligibility', /age grid|age clock|age-eligibility|eligibility|birthday|reads her date/i],
   ['injury-and-condition', /\binjur|condition|fatigue|recovery|masseur|layoff|strain|rehab/i],
+  // ⚠ ABOVE coach-and-staff AND process-and-git on purpose: "THE PSYCHOLOGIST'S YEAR-FOCUS GOES TO
+  // THE RELATIONSHIPS BACKLOG" carries a round number and the word "backlog", and both would
+  // otherwise route her inner life to process. Added 09.09 for the who-she-is layer.
+  ['life-and-morale', /психолог|psycholog|морал|morale|отношен|relationship|private life|personality|temperament|\bspirit\b|\bbond\b|who she is/i],
   ['coach-and-staff', /\bcoach|\bstaff\b|academy|retainer/i],
   ['ranking-and-ladder', /ladder|ranking|acceptance cut|head of the list|second seat|wta \d|slam door|plateau|skill law|does skill decide/i],
   ['world-and-field', /professional|the field\b|turnover|\brival|cohort|live .*table/i],

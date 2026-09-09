@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: college
 canonical: false
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-09
 ---
 
 # College – what the round-24 wave did NOT build
@@ -24,8 +24,8 @@ indexes what remains** – the content lives in those two files and is not resta
 | 6 | **The politer entry refusal** – entering an event past the departure week is legal and comes back as a full-refund release; «she leaves before this one» as an `entryStatus` reason would refuse at the door instead. Flagged for the owner; touches C2's refusal codes. | [college-departure-2026-08.md](../specs/college-departure-2026-08.md) §3, last bullet | owner's word (it changes a shipped ruling's surface) | S | Next |
 | 7 | **Her opinion at the fork (E1)** – «где-то её мнение увидеть» – PAUSED by the owner 22.08 until the private-life layer's steps 1–2 exist, so the game does not grow a second opinion system. | [college-the-flow.md](../plans/college-the-flow.md) E1 + ruling 4; [the-private-life.md](../plans/the-private-life.md) | private-life steps 1–2 | S (once the stat exists) | Parked |
 | 8 | **A postcard from the year** – one derived line per completed college year (campus detail, the call, coming home). Proposed in the human-language follow-on list; the birthday half was built differently (the pause), the texture half was not. ⚠ **Round 26 #10 built something ADJACENT and it is not this row**: `campusDigestLine` writes one compressed line per rest week about the WORLD she is away from (rivals aging, retiring, winning), which is why the feed no longer looks dead. The postcard is about HER year – campus detail, the call, coming home – and nobody has written it. | [human-language-proposals-2026-08-19.md](../plans/human-language-proposals-2026-08-19.md) §P1 | judged against playtest repetition, per that file's own rule | S–M | Later |
+| 9 | **Sharpen the fork's trade on the WTA evidence** – his own research: college graduates are ~5% of the WTA top 100 (4–7 players) against ~40% of the top-50 in DOUBLES; the women's college route is genuinely rarer and harder than the men's, which argues for making the fork's trade sharper rather than softer. ⚠ HELD BY HIM, 31.08: «мне кажется у нас пока нормально, запиши в беклог, я понаблюдаю еще, мало данных и игровой статистики от живых людей пока что.» Not a ruling against – a wait for playtest data. ⚠ Do NOT confuse with the age-curve fork (round 31 #10), which he APPROVED and which is separate work. | [round-31.md](../rounds/round-31.md) §10 | his word, after more playtest data | M | Parked |
 
 Related but not college's own: the wallet's four-year rest is the shop's best moment –
 [the-shop-and-the-broker.md](the-shop-and-the-broker.md) §0a, argued in
 [college-as-a-place.md](../plans/college-as-a-place.md) §7d.
-| 9 | **Sharpen the fork's trade on the WTA evidence** – his own research: college graduates are ~5% of the WTA top 100 (4–7 players) against ~40% of the top-50 in DOUBLES; the women's college route is genuinely rarer and harder than the men's, which argues for making the fork's trade sharper rather than softer. ⚠ HELD BY HIM, 31.08: «мне кажется у нас пока нормально, запиши в беклог, я понаблюдаю еще, мало данных и игровой статистики от живых людей пока что.» Not a ruling against – a wait for playtest data. ⚠ Do NOT confuse with the age-curve fork (round 31 #10), which he APPROVED and which is separate work. | [round-31.md](../rounds/round-31.md) §10 | his word, after more playtest data | M | Parked |

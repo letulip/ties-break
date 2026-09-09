@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 61 dated entries, newest 2026-08-26. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 78 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -31,18 +31,19 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | Area | Entries | Current entry | Date |
 | --- | ---: | --- | --- |
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
-| calendar-and-season | 3 | [Empty weeks are a number, not a gate; and two constants stop deciding for two others](#2026-08-16--empty-weeks-are-a-number-not-a-gate-and-two-constants-stop-deciding-for-two-others-waveround21) | 2026-08-16 |
+| calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
-| college | 13 | [ROUND 26: HIS RULINGS FROM FOUR YEARS OF COLLEGE PLAYED THROUGH](#2426082026--round-26-his-rulings-from-four-years-of-college-played-through-wavereview-intake-schema-v59--v61) | 2026-08-26 |
-| economy-and-money | 4 | [THE TEAM'S SHARE OF THE PRIZE MONEY](#22082026--the-teams-share-of-the-prize-money-waveround25-no-schema-move) | 2026-08-22 |
+| college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
+| economy-and-money | 7 | [ROUND 39: INES'S CAREER – SPONSOR TERMS, THE BRAND LOOP AND THE APPAREL RULINGS](#08092026--round-39-iness-career--sponsor-terms-the-brand-loop-and-the-apparel-rulings) | 2026-09-08 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
+| life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 7 | [THE FULL-PROJECT REVIEW (ROUND TWO) RECEIVED; THE R2 PROGRAMME AWAITS THE APPROVE](#23082026--the-full-project-review-round-two-received-the-r2-programme-awaits-the-approve) | 2026-08-23 |
+| process-and-git | 15 | [ROUND 40: THE PROLOGUE'S CHOICES, AND «Я НЕ ПРОСИЛ НОВЫЙ НАЧИНАТЬ»](#08092026--round-40-the-prologues-choices-and-я-не-просил-новый-начинать) | 2026-09-08 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 6 | [⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him](#17082026---the-second-seat-he-refused-the-machinery-and-the-measurement-agreed-with-him-docsspecsthe-second-seat-2026-08md) | 2026-08-17 |
-| simulation-and-balance | 2 | [THE SIM CORRIDORS: HIS TWO RULINGS AFTER THE BISECT](#22082026--the-sim-corridors-his-two-rulings-after-the-bisect) | 2026-08-22 |
-| ui-and-copy | 4 | [⚠⚠ EIGHTEEN OWNER RULINGS LIVED ONLY IN TWO `.vue` COMMENTS, AND THE COPY RULE WAS ABOUT TO ERASE THEM](#17082026---eighteen-owner-rulings-lived-only-in-two-vue-comments-and-the-copy-rule-was-about-to-erase-them-waveround21) | 2026-08-17 |
+| simulation-and-balance | 3 | [ROUND 38 / WAVE C: THE BALANCE RULINGS, EVERY ONE ON A BENCH](#0607092026--round-38--wave-c-the-balance-rulings-every-one-on-a-bench) | 2026-09-07 |
+| ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
 <!-- END GENERATED: current-decision index -->
@@ -2631,6 +2632,478 @@ bill (the US-only need layer) and opens home wild cards, and says so on no scree
 тест, но вопрос еще актуален, мне надо поиграть». ⚠ Round 26 then found the acceptance band had been
 re-aimed to 30–54% on 04.08 and today reads 71%; nothing moves under a live dose test. See
 [injuries-gear-and-open-bugs.md](backlog/injuries-gear-and-open-bugs.md).
+
+---
+
+## 27.08.2026 – ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY
+
+⚠ **Backfilled 09.09** – rounds 27–40 shipped while this log stood at 26.08; the entries from here
+to 09.09 transcribe only what each ledger marks as the owner's word. Source:
+[round-27.md](rounds/round-27.md).
+
+- He opened the round himself: «давай наверное мои все последние правки и замечания по колледжу в
+  мини раунд со своим документом соберем – много накопилось».
+- **The physio asymmetry is ACCEPTED, not a defect** (#10): «physio -2061 – это без массажиста,
+  здесь нет проблемы, а вот массажиста хорошо бы останавливать, как и тренера» – the masseur already
+  stands down in college; the physio billing through the freeze is his ruling.
+- **College's zero body cost and zero development stand** (#11): «для колледжа с одним-двумя
+  чемпионатами в год это вполне ок, меня не смущает».
+- **«Not rails»** (#13, after the 300-trial lever bench): «вариативность всё-таки есть, это хорошо,
+  значит не рельсы».
+- Held by his order: the growth curve decides before the college field is retuned (#9/#3), and #14
+  (favourites too safe) stays open so it is not fixed against the other findings.
+
+---
+
+## 28.08.2026 – ROUND 28: THE RULINGS TABLE FROM A FULL CAREER REPLAYED
+
+His seventeen items off save w675, and a rulings table closing round-27 leftovers. Source:
+[round-28.md](rounds/round-28.md) (§«Rulings he gave with this round»).
+
+- **Her cut widens to sponsor cheques** (#15): «С чеков спонсоров мне кажется ребёнку тоже нужно %
+  перечислять, как и с призовых, давай сделаем» – and the appearance fee stays in: «да, окей, пусть
+  остается пока».
+- **Every kit letter gets five weeks from arrival** (#2/#17b): «в чем проблема сделать 5? у нас
+  конечная неделя сезона 49 по сути… даже если приглашение придет на 1й или 2й неделе я не вижу
+  проблем сделать слот в 5 недель» – the window deadline retired.
+- **Outgrown tiers are fixed by display, never by the age clause** (#12): «это не страшно, просто по
+  приоритету мы их не покажем. Или просто убрать их на уровне про»; plan B approved – «это хороший
+  план, как раз пересекается с моим пониманием»; requirement recorded: «проконтролировать, что игрок
+  увидит все обязательные турниры в первую очередь и гарантированно, чтобы не было коллизий».
+- **Round-27 closures**: entry-age band delegated («если у нас всё ок – мне ок»), #8 closed («да, я
+  уже понял, не страшно»), #14 held («тогда на стопе пока»), #3 wants options («надо что-то
+  придумать с этим. Какие варианты?»).
+- The household strip approved («это хорошо») and extended to the masseur tab at his ask; his
+  save-scumming question (#18, Pathfinder: «Может быть можем какую-то грань найти здесь») is
+  recorded OPEN – it touches the RNG law and needs a spec before anything is built.
+
+---
+
+## 28–29.08.2026 – ROUND 29: WHOSE MONEY IT IS – SAVINGS, THE SHOP AND THE MANAGER'S CUT
+
+Eighteen items plus his answer batches, which he insisted belong to the round: «подожди, какой раунд
+30? я думал, что отвечал на вопросы 29… Как раз вот этот блок должен закрыть 29 раунд целиком.»
+Source: [round-29.md](rounds/round-29.md), parts one–five.
+
+- **Pace**: «делай план работ, выбирай агентов и запускай всю волну поочередно в ночь, работы много,
+  мы не торопимся, одновременно не надо делать, а пошагово вполне отлично». Verdicts: «По победам
+  как-будто по-лучше стало» · «Сейчас уже ощутимо хорошо».
+- **The interest ruling** (#11/#12): «И я предлагал убрать авто начисление % на текущий счёт» ·
+  «в реальности на текущем счете нет процентного дохода… мы для этого делаем Savings как раз. Одни
+  должны друг друга заменить» · then «не вижу проблем сделать ставку 3.17% на Savings» – the
+  replacement measured at 105% of the removed wage.
+- **«магазин открыт всегда с начала игры»** – the professional gate deleted; part sales by numeric
+  input («при продаже бумаг надо дать возможность только часть продавать»).
+- **«мировые топы должны иметь все возможности достучаться до топовой спортсменки»** – `global`
+  stops being dominated by `tour`, and a stronger rung may write over a running deal («вот с этим
+  надо что-то делать, там без спонсора грустновато немного живется»).
+- **Full offline**: «Запихнуть туда корты стоило бы +5108 КБ – это не очень большая цена, надо
+  сделать, чтобы можно было полностью оффлайн играть без помех… А с обновлением догружать то, чего
+  нет или обновлять то, что обновилось, а не весь сет.» Measured: an update fetches one file of 313.
+- **The epilogue is ruled in**: «Эпилог… надо добавить, мне кажется. Это всё-таки финал игры.» The
+  photo-album concept goes to the backlog by his word.
+- **The manager's commission** (P3): «как менеджер может от этого что-то получать в свою очередь.
+  10-20% например… контракт на полную сумму ребенку приходит на почту, после подписания видим на
+  счету уже родительский кат» – sponsor money is hers, the parent earns a fee («полностью согласен»).
+- **The shelf is aspiration, not entitlement** (P5): «И я ниразу не сказал, что каждая карьера
+  должна иметь возможность скупить весь магазин. Нет такого требования.» The $38M plane goes:
+  «значит убрать этот самолет за 38М и всех делов =)»; the motor boat becomes «парусную яхту».
+- **His economy loop, ordered end to end** (P6/P7): real-scale ad contracts («Федерер получал
+  контракт с Nike на 10+ миллионов, это 1-2млн для родителя. Таких контрактов может быть
+  несколько»), «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок,
+  выступлений, титулов и прочего», «нам нужна академия, которая зарабатывает», and per-stage academy
+  income «подвязать пропорционально к максимальному месту ребенка на турнирах… чем выше и дольше
+  место – тем выше будет доход»; the winter becomes the shoot season (P9: «у нас 6 пустых недель
+  там»); the fame floor-and-multiplier shape «здесь полностью согласен» (P8).
+- **The market fund**: «вроде посмотрел, давай сделаем, а я пощупаю и скажу свои ощущения потом»;
+  his crash layer «например раз в 3-5 лет и стартовый сезон уже может быть как раз с -20%?»; the
+  measured tail accepted – «хвост 1.1% принимаю».
+- **Closed with nothing to build**: the masseur on a shoot week («ты же сам сказал, что получает…
+  Всё ок»), the title-less season («так что "се ля ви", нечего чинить»), and both gear questions
+  («давай пока не будем здесь ничего менять»).
+
+---
+
+## 29.08.2026 – «НАРАСТИТЬ PLAYWRIGHT»: THE E2E DIRECTIVE, AT HIGH PRIORITY
+
+**His call, and it is standing work, not a one-off**: «Ну и нарастить playwright нужными проверками
+дальше, конечно… с высоким приоритетом и необходимостью пополнения дальше.» Recorded as the
+top-priority row of [the-quality-rig.md](backlog/the-quality-rig.md) (row 15): the suite was healthy
+(30/30 green in 22 s) and short of COVERAGE – all three engine/UI parity defects of round 29 lived
+in its declared blind spot – so every wave that ships a mechanic owes it a case. It runs locally as
+a condition of pushing (`pull-request` skill step 2b).
+
+---
+
+## 30.08.2026 – ROUND 30: THE WORDING LAW («Я ЭТО НЕ ПРОСИЛ»), AND THE DAY'S RULINGS
+
+Seventeen items «в догонку к 29му», on the same branch by his standing «докидывай в 29 раунд в гите
+всё скопом». Source: [round-30.md](rounds/round-30.md); the calendar items of the same day are
+[round-29.md](rounds/round-29.md) part five.
+
+- ⚠⚠ **THE WORDING LAW** (#4): «В Family budget вкладка This season изменилась на So far. Я это не
+  просил. Верни как было пожалуйста и запрети на уровне документации и спек агентам самовольно
+  изменять вординг» – an agent may not change user-facing wording it was not asked to change, even
+  while fixing something adjacent. Written into house law (invariant 4's family).
+- **The multi-week skip is deleted** (#3): «давай вообще эту кнопку про 6 недель уберём. Её можно
+  оставить только на длинные травмы и с обязательным правилом "минус 1 день от длины окна" – иначе
+  даже на турниры не записаться никак. Плохой паттерн».
+- **The retirement popup stops reading as a verdict** (#7): «звучит как механический приговор
+  безысходности пока что, надо что-то с этим сделать».
+- **The merch brand re-sized on his research** (#23): my ceiling objection overruled – «а что с этой
+  цифрой не так? вроде бы как раз спонсорские коллаборации со спортсменами дают и не такое, а кратно
+  большее» – and the instrument split on his own signal set: «У нас есть её профессионализм, сколько
+  играет, сколько выигрывает, как глубоко проходит и вся остальная информация»; the crowd corridor
+  admitted («У нас есть понимание коридора зрителей на каждом турнире, мне кажется этого достаточно
+  вполне»); «по сути этот мерч бренд это фундамент для этого слоя», collaborations «но не сейчас».
+- **The fund moves to UNITS** (#14): «надо логику фонда переделать на покупку ДОЛЕЙ в фонде… Зашёл,
+  когда доля стоила 4к, через десять лет она может вполне удвоиться. Или зашёл на пике… – имеешь
+  возможность усредниться или зафиксировать убыток»; cars gain a growing upkeep (#15); brand and
+  academy naming with «ввести своё название» (#8/#10); «Holds its value» re-worded (#11).
+- **The injury shape ruled in three parts** (#26/#27): the ageing measurement authorised («давай,
+  ставь замер»), then «тяжесть надо взять точно, но разумно. Однако и с показателем в 1 травму в год
+  надо что-то делать… вполне можно делать алгоритм, который будет увеличивать немного вероятность
+  новой такой же травмы или ее прогрессии (более тяжелой). Мне кажется это похоже на правду.»
+- **The tournament week in the calendar** (part five): draw days per tier («давай здесь тоже сделаем
+  разное количество Draw day в зависимости от уровня турнира…»), two-week events declined
+  («Подожди с этим») in favour of his edge-travel («и тогда не надо ничего менять в нашей
+  раскладке»), the Slam comes home «в Вс после матчей, массажа и конференций», and the match-day
+  order is his (#17): «матч, конференция через 30 минут, потом массаж».
+
+---
+
+## 31.08.2026 – ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE
+
+His play on the merged build, plus two ruling batches. Source: [round-31.md](rounds/round-31.md).
+
+- **The week recap is HIS four rows, stated as the specification** (#2): «Income - то, что пришло с
+  турнира · Other income - Другие семейные доходы · Spent … · Balance … и вот здесь her cut от
+  Income» – after «Я изначально просил просто отразить, что ребенку идет его % с призовых и всё».
+- **The chance formula must read skills, not the table** (#3): «формула, завязанная на рейтинг – это
+  плохая формула. Рейтинг меняется регулярно, а вот скиллы всегда с нами и более статичны. Давай
+  переделаем» – measured: it already did; the real defect was the re-drawn opponent (#4), his call:
+  «по-моему они точно знают с кем будут играть в первом туре и этот персонаж не меняется, разве
+  нет?». His order and reveal: draw at week −1, the name «прямо на карточке турнира… можно как раз в
+  поле Coach says это делать элегантно»; on the cost: «Почему не можем даже за минус 1 неделю
+  закрепить, в чем сложность?».
+- **The decline surfaces** (#9/#11): «да, заведи находку про пик и спад, и тренер вполне может
+  что-то такое говорить»; all nine drafted lines approved – «мне нравятся все вариации диалогов…
+  давай все использовать, сможем сделать разумно?».
+- **The age-curve fork approved** (#10/#11): «я думал уже так и есть, но тоже неплохо звучит» –
+  direct route peaks earlier than college; second batch: seeded `declineStart` spread A + C, and the
+  cohort gets it too («полностью согласен, если это реализуемо»); tier ladder dispatched at «так а в
+  чем проблема сделать сейчас?».
+- **The college-fork sharpening is PARKED, his hold**: «мне кажется у нас пока нормально, запиши в
+  беклог, я понаблюдаю еще, мало данных и игровой статистики от живых людей пока что» – a wait for
+  playtest data, not a refusal.
+
+---
+
+## 31.08.2026 – ROUND 32: THE BRAND'S PRICE FOLLOWS FAME – INERTIA AND COLLABORATIONS
+
+From his play on the merged round-31 build. Source: [round-32.md](rounds/round-32.md).
+
+- **The multiple must read fame** (#3): «личный бренд в цене подрос с 250к до 1.8м, а доход у него
+  1800 в неделю =))) что как-будто бы не очень соответствует стоимости» – and his sharpening: «её
+  известность 22.3 – да, это ок, главное, чтобы эта известность участвовала в механизме, тогда мы
+  увидим разницу на других карьерах». The ceiling itself is NOT to be cut (his 30.08 ruling stands).
+- **Brand inertia** (#4): «Инерция бренда – звучит интересно, давай попробуем»; collaborations as
+  the early-fame lever (#5): «и это надо внедрять да», measured together on his own word –
+  «совместный эффект – мерить, да».
+- **And he stopped the first cut the same day**: «меня смущает вот это: На пятом году бренд стоит
+  $166 060 при годовом доходе $1 352» – the memory moved into the REVENUE (retention), the worth
+  became a plain multiple of income again, and strong contracts buy durability: «чем больше она была
+  в сильных контрактах – тем больше у нее велосити».
+
+---
+
+## 01.09.2026 – ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED
+
+Source: [round-33.md](rounds/round-33.md).
+
+- **The structural question, his** (#1): «опять экран next tournament содержит next week – объясни
+  мне пожалуйста, почему вообще получилось так, что эти два на одном экране постоянно оказываются?
+  это разные экраны, нужны для разных вещей» – answered structurally: there was no tournament
+  screen; the arrival now shows the tournament and none of the week's furniture.
+- **The Stats-tiles regression is REFUTED by him and closed** (#2): «про эти подписи я тебе уже
+  говорил и прошу сделать пометку: там ничего не вылезает, всё ок» – three audits had reasoned from
+  a character count and never measured a rendered width. Do not re-file it.
+
+---
+
+## 02.09.2026 – ROUND 34: «ДА, ВСЁ УТВЕРЖДАЮ» – THE APPROVED NUMBERS, AND THE CEILING READ
+
+Twenty-one items on Vera's save, and an approved-numbers section agents build to verbatim. Source:
+[round-34.md](rounds/round-34.md); the prologue's coach read is
+[childhood-prologue-build-2026-09.md](specs/childhood-prologue-build-2026-09.md) §8a.
+
+- **The wave approval**: «да, всё утверждаю, запускай волну 34» – A1 (the ceiling bands read TRUE
+  realisation, edges 0.40 / 0.75 / 0.90), F1 (finals pay 40% of the tier's title), F2 (the season
+  ladder reaches top-150/250), F3 (the endorsement ladder below the top 100: a new ≤400 band at
+  $200,000, the ≤200 row ×10 – his anchor from «Cinquième Set»), F4 (+1 fame per $50,000 of live
+  contracts, cap +30). Above the top 100 nothing moves: «Про 50–100 отвечаю прямо: пересматривать не
+  надо».
+- **The ceiling read renormalised on his word** («да, перенормируй показ сразу»), then re-based on
+  the best-coached yardstick («да, запускай»); review fixes folded in the same wave («да, запускай в
+  эту же волну агента по фиксам ревью пожалуйста»).
+- **The prologue coach read, same day**: a player must leave the handover knowing «на сколько мощно
+  сейчас (на момент 13-14) и какой запас впереди», ruled as words over the fog – «оставляем туман, у
+  нас есть слова тренера – вот ими надо добавить понимание про базу и перспективы как раз в
+  дополнение к туману».
+- **The stacked week is design B, his own idea** (#14): «я как раз в одном из раундов и спрашивал
+  про несколько карточек из доступных на одной неделе… чисто интерфейсная правка на свайп карточек.
+  И никакого конфликта тогда нет – потому что есть выбор»; then #14b widened it to «can she enter»:
+  «ну сильно перерощенные да, а на какие-то можно и съездить, когда череда поражений идет очень
+  хочется что-то выиграть, знаешь ли».
+- **The pre-draw field figure** (#5): «может общую цифру шанса на проход первого тура делать, но
+  чтобы она всё-таки реальность отражала и не скакала от недели к неделе?» → «давай сделаем,
+  посмотрим на результат», plus the card's warning line: «хорошо, можно на карточке ДО жеребьевки
+  писать, что-то на эту тему».
+- **His own backlog instruction** (#8): refusing her bank account – «Можно как-то обыграть, например
+  если отказали – она сама пошла и открыла и на морали/отношениях отразится (это в бэклог)».
+
+---
+
+## 03.09.2026 – ROUND 35: THE PROLOGUE PLAYED THROUGH, AND THE SHOP DESIGN PASS
+
+The prologue end to end for the first time since it merged, plus his ten-item shop mockup pass
+(«есть нюансы, делаем не точно так» – his words beat his frames). Sources:
+[round-35.md](rounds/round-35.md), [round-35-shop.md](rounds/round-35-shop.md).
+
+- **The prologue takes the game's own tournament flow** (#1): «давай сделаем наш нормальный
+  полноценный флоу пожалуйста, чтобы был первый экран с артом турнира, потом матчи и переходы между
+  ними как обычно»; frameless full-width art (#2: «просто квадратный арт во всю ширину (как на
+  home)»); the age-10 entry card is the standard (#5: «Первый экран с заходом на турнир был
+  отличным, надо остальные в такой же манере сделать»).
+- **The fonts ship real faces** (#8): «B, и Sora проверь тоже, лишнее долой» – Manrope 600/700/800
+  and Sora 700/800; every affirmative button one weight.
+- **Her ramp splits the brand's week** (#9): «доход от ее бренда давай тоже как проценты с призовых
+  будем делить: т.е. в интерфейсе напишем про ее долю, в недельном доходе будет семье на руки сумма
+  меньше».
+- **Shop rulings**: the six category cards go TALL («сделаем не квадратными, как в макете, а
+  высокими»); the buy control moved twice and settled right of the price («иначе карточка очень
+  высокая получается» → «и я ошибся… кнопку buy поставь справа от цены пожалуйста»); sides ruled
+  («у машин картинки слева; у домов, яхт и самолетов справа»); «переключалка между категориями…
+  остается текущей и не меняется»; the first car is 60k («60к правильная - это наш дефолт, в
+  нейминге я ошибся»); a second live plane at $7M; property's price line: «в строке "worth now"
+  показывать текущую цену, а цену покупки убрать совсем, раз прибавка и так видна. - верно»; and
+  «Дом пусть будет за 590к - ок» (schema question closed by his own «никто не купил, нет игроков»).
+- **The Invest row corrected against his frames** (#12): «нет, не так, сверься с макетами
+  пожалуйста, там две кнопки о поле инпута одно, всё в ряд стоит» · «"Add more" и "Sell" - хорошо,
+  меньше места занимают».
+- **And his growth objection of the day, recorded for wave C**: «мы же вроде обсудили, что рост как
+  раз идет до 28-29» – later measured (C0): careers already peak at 26.6/28.6, so the dial is
+  `plateauRate`, not the phase boundaries. See [next-waves-2026-09.md](specs/next-waves-2026-09.md) §C1.
+
+---
+
+## 04.09.2026 – ROUND 36: THE RESPONSIVE WAVE – «1 К 1» ON EVERY WIDTH, AND HIS REVIEW OF IT
+
+The spec he approved 03.09 («скорректируй план пожалуйста и запускай в работу весь план пошагово»)
+built in seven phases, then his seventeen-item review and round 37's passes. Sources:
+[round-36.md](rounds/round-36.md), [round-36-review.md](rounds/round-36-review.md),
+[responsive-decisions-2026-09.md](specs/responsive-decisions-2026-09.md).
+
+- **The acceptance criterion is his**: «всё, что есть на мобиле, должно быть 1 к 1 на других
+  форматах» – enforced by the parity harness he suggested himself («возможно здесь как раз нас могу
+  выручить playwright?»); the layout judgement stays his: «я утром буду всё уже сам глазами
+  смотреть».
+- **His designs**: tablet «планшеты – это по сути широкий телефон, hero image на home будет НЕ
+  квадратной, но все оверлеи с текстом остаются как у нас»; desktop «Рельса слева, на всю высоту,
+  скроллится при переполнении, одинаковая на каждой странице… Жёлтая кнопка не как в дизайне –
+  прижата к низу».
+- **The pager rulings**: «Давай уберем свайп css и сделаем js функционал для листания
+  горизонтального, тогда будет полный паритет на всех устройствах» · «у нас на всех устройствах
+  могут появиться стрелки для листания в дополнение к JS свайпу» · then «Спрятать - да, показываем
+  только если есть что листать» – with the parity exemption taken knowingly («да»).
+- **The rail's mini-dashboard**: «надо создать новые компоненты и показывать их только на десктоп»,
+  «карточки сквозные, одинаковые, как мини-дашборд живут всегда в вертикальной полоске, т.е. на всех
+  страницах», «никаких контролов новых они не поставят, это просто шорт-кат с информацией из
+  внутренних разделов».
+- **The review overruled D28**: «пролог - так не пойдет, давай делать примерно как у нас home
+  сделан, надо чтобы картинку было видно хорошо, скролла не будет» – plus sixteen placement
+  corrections (Home first in the rail, the shop's back arrow out – «точка входа всегда общая
+  страница категорий», the week-results note at 50–60% width, and more).
+
+---
+
+## 05–06.09.2026 – ROUND 37: FROM THE STAND – AND «ИЗМЕРИМ ЗАНОВО ВМЕСТЕ С ВОЛНОЙ C»
+
+Three passes over the built responsive wave, and his housekeeping rulings. Source:
+[round-37.md](rounds/round-37.md).
+
+- **The dangling branches** (06.09): three carried real work and merged; the August measurement
+  branches are held – «измерим заново вместе с волной C позже, остальное не тащим» – so wave C
+  starts from fresh numbers, never stale ones.
+- **A design law, stated with a screenshot** (#14/#16): «любые отрицательные отступы - это
+  антипаттерн» – the fix is the container, not the offset; all three negative margins removed.
+- **His follow-ups of 06.09**: countries validated by list, not shape («у меня в планах было
+  расширить список стран вообще»); name fields capped («а зачем нам такие длинные имена? мы же не
+  твиттер… например 20»); axe added to e2e («нам нужна вся возможная уверенность»); dead tests go
+  with dead functions («если функции удаляются, то и тесты надо чистить»); `npm run icons` kept as
+  the recipe after his challenge.
+- **Closures from the stand**: D19/D24/D25/D75/D83 accepted («не вижу проблем, вроде ок» etc.), the
+  bell stays Home-only («да, утвердили, что только на главной»), Season desktop takes two cards with
+  pagers (#3), «Her own account» becomes Spending's alone (#9), the match widens past 880 (#12).
+
+---
+
+## 06–07.09.2026 – ROUND 38 / WAVE C: THE BALANCE RULINGS, EVERY ONE ON A BENCH
+
+His three balance observations off the w1115 career, folded into wave C – which he had ordered as a
+spec first: «сделай спеку пока что и план работ» · «к ней вернёмся после мержа 37, запиши или
+зафиксируй в документации». Sources: [round-38.md](rounds/round-38.md),
+[next-waves-2026-09.md](specs/next-waves-2026-09.md).
+
+- **C4, his instruction**: «хорошо бы одинаковые условия для всех, раз уж мы считаем» – one
+  calibrated closed form (composure and stamina finally reach the field), shipped ahead of C1/C2 on
+  his «можно делать по готовности». C3 stays blocked on his own «как это не превратить в гарантию?».
+- **Fame is presence, not only titles** (#2b): «спортсменка проводит свой лучший сезон (и не один)
+  находясь в топ-100 и входя иногда в топ-50 даже, у нее явно есть и репутация и о ней знают, не
+  могу забыть за год… мы должны были чинить это поведение в купе со стоимостью и доходностью делая
+  его более плавным».
+- **The decline softens, the ending stays** (#3d): «я вижу ветеранов на корте, да, они уже не могут
+  так быстро бегать, как раньше, но они и не беспомощны… Может разве что тоже плавнее сделать» –
+  «Хотя может быть для формального окончания игры это и ок». Which skills age is his too (#6c):
+  «может быть и навыки могут деградировать, это вполне ок, надо только подумать какие и с какой
+  скоростью» → «веса ок, строй и меряй пожалуйста»; and «деньги покупают восстановление и это ок».
+- **Her decline becomes audible** (#6d): «нужно чётко понимать, что карьера уже не та и явно это
+  подсвечивать… там нужно больше её голоса (или голоса тренера, если он есть, или совместного)» –
+  07.09: «вполне можно вернуть на home и как раз расширить на старение тоже, чтобы было видно, что
+  оно пошло».
+- **The academy is valued like the houses** (#8): «хорошо звучит, а что на счет стоимости и
+  индексации этой стоимости с годами? Как с домами, например.»
+- **The brand is a process** (#13/#16): first «да, чини по max(каталог, стоимость)», then his own
+  better model overturned it – «Я бы сказал, что он неизменно для первого открытия стоит 250к, а
+  потом МОЖЕТ набрать свои 5млн, но не за 1 день, т.к. это процесс. Если уровень известности
+  большой, то набор будет идти быстрее (может быть кратно быстрее), но он всё равно будет идти».
+- **The calibration dials are his pick** (#17): «Очень хорошо выглядит, давай этот» – with the
+  Borg-shaped fit law «если и только если случился метч»; and contracts keep fame warm (#18):
+  «долгосрочные контракты могут подогревать интерес у публики и держать известность долго, даже
+  после спада пика».
+- **Travel class is written down, not built** (#1): «давай про класс перелета отдельный документ
+  пока сделаем… это можно не сейчас делать, просто хочу закрепить» – per-person class, and
+  «нам вообще не надо следить кому и какие цены ставить – будет просто цена билетов». See
+  [travel-class-2026-09.md](specs/travel-class-2026-09.md).
+
+---
+
+## 08.09.2026 – ROUND 39: INES'S CAREER – SPONSOR TERMS, THE BRAND LOOP AND THE APPAREL RULINGS
+
+Fifteen-plus items off the w832 save; bundles dispatched on his «можно запускать дальше». Source:
+[round-39.md](rounds/round-39.md) (⚠ the ledger is damaged – item 12's header is destroyed and two
+blocks are duplicated; the duplicates carry the same rulings once).
+
+- **The contract-term ladder**: his sketch «для растущей карьеры не больше, чем на 12 месяцев, для
+  топ-100 до 1-2 года, топ-50 1-3 года, для топ-20 и выше до 10 лет», research ordered («ну давай
+  тоже какой-то ресерч проведем может быть на эту тему, чтобы было на что опираться?»), then the
+  proposal approved: «давай так попробуем, как ты предложил» – the band ladder plus a once-per-career
+  LIFETIME letter.
+- **The brand re-buy loop** (#5, reopened): «Мне кажется, что нам надо как-то вообще более
+  вариативно смотреть на цену бренда с точки зрения развития карьеры… У тебя какие мысли?» → ruled:
+  «давай попробуем, а D можно в беклог развернуто записать» (A+C: repeat foundings at derived worth,
+  the ramp floor 13 → 52 weeks; D written out in the backlog).
+- **The fragrance gate stays** (#6): after the cadence measurement – «окей, пусть пока без изменений
+  останется, я еще понаблюдаю»; the band cliff too (#8): «может сделать более плавные ступеньки
+  всё-таки? хотя возможно наша новая система контрактов и подправит ситуацию, давай так пока
+  оставим, как есть».
+- **Birthday gifts get his numbers** (#9): «вполне допустимо чтобы что-то повторялось, но не больше
+  2-3 раз за всю карьеру и с разницей не меньше 5 лет».
+- ⚠⚠ **An unasked build reverted on his word** (#11b): «я вообще не просил этого делать, верни как
+  было пожалуйста. Я говорил о другом, но ты уже всё мне объяснил» · «убираем и сумму и тест, игрок
+  справится 3 числа сложить» – an observation licenses an explanation, never an element.
+- **Rival retirements** (#16): «механизм новостей про сходы соперниц запиши в беклог пожалуйста».
+- **Warmth on the injury screens** (#15): «мне жена сказала "мой ребенок травмировался, а я даже
+  ничего не поняла, ни обнять, ни понять что дальше". Надо как-то это обыграть… Тёплые варианты ок -
+  делаем» – the hug beat and the warm career line shipped.
+- **The apparel bond** (#17): the incumbent's letter is «уведомление о продлении» (still signed by
+  hand – «а игрок уже сам будет решать с кем подписывать»); a signed contract never reprices; no
+  rank floor («пропустим пока»); the missed notice re-arms each off-season, «в ленту не надо»,
+  «оставляем строку»; and the money moves off the rival's letter – «ты правда думаешь, что в
+  реальности при переподписании кто-то пишет точные суммы предыдущих контрактов конкурентов? я
+  сомневаюсь в этом. Но дать понять это надо абсолютно точно» → «да, давай так».
+- **The single Slam stands** (#7): «мне просто было странно, что Шлем случился на пике топовой
+  спортсменки всего 1 раз, но может быть это окей для спорта» – researched: ~42.7% of Open-Era
+  champions never won a second; the model reproduces the modal shape.
+
+---
+
+## 08.09.2026 – ROUND 39: THE PSYCHOLOGIST'S YEAR-FOCUS GOES TO THE RELATIONSHIPS BACKLOG
+
+The tail of round 39 #7, after the skill-formula audit came back clean. Sources:
+[round-39.md](rounds/round-39.md) #7,
+[the-psychologists-year-2026-09.md](specs/the-psychologists-year-2026-09.md).
+
+- **His ruling**: «хорошо, что формула работает как задумано… Разве что можно в беклог отношений
+  записать, что-то вроде возможности работать с психологом в плане хладнокровия (тот же Федерер…
+  поработал над собой, стал лучше), как раз можно будет у психолога делать выбор над чем работать в
+  ближайший год» – the year-focus becomes the psychologist's design centre.
+- It reconciles his two standing rulings: 22.08 shape Б («психолог работает дистанционно и стоит
+  только зарплату. …да, надо распланировать») and 23.08 levels («по идее это 1 сессия в неделю но
+  может быть тогда будут разные уровни психологов с разной эффективностью, надо подумать этот
+  момент»). The reconciled seat – focus is the channel, rung is the quality – is the spec above;
+  its O1–O7 stay open for him.
+
+---
+
+## 08.09.2026 – ROUND 40: THE PROLOGUE'S CHOICES, AND «Я НЕ ПРОСИЛ НОВЫЙ НАЧИНАТЬ»
+
+Seven items from his testers and the promo film. ⚠ **A round is opened by the owner, not by
+arriving work**: «в этот же раунд добавь и 41 пожалуйста, я не просил новый начинать» – the four
+film items were folded back in. Source: [round-40.md](rounds/round-40.md).
+
+- **Selection must look like selection** (#1): radios, and the mark is his: «можно кастомный
+  радио-батон построить в виде теннисного мячика (я имею в виду нашу желтую точку с логотипа в стиле
+  минимализм без лишних элементов)»; progressive disclosure with his refinement (#2): «верно, но при
+  отжатом верхнем нижний не должен быть доступен»; the 200 ms landing (#3): «придержать карточку на
+  ~200 мс после выбора – можно сделать вполне, давай».
+- **The handover reads REALISATION** (#4): «что если мы здесь как раз будем говорить о той разнице в
+  реализации, которой уже к этому моменту она достигла?» → «делай»; the bottom band softened on his
+  pick – «давай смягчим формулировку нижней банды» → «B, запускай».
+- **Childhood compounding** (#6): «по п. 2 давай Вариант B попробуем» – measured, the arithmetic
+  contains no compounding term and the change is named as a model decision, still his. Seeds (#7):
+  «Рекомендую B обязательно, C – обсудить… по-моему хорошо звучит».
+- **The retirement voice lands** (r39 #14, carried in): the trigger measurement first («интересный
+  механизм, давай только подумаем когда его реально включать, потому что сейчас получается она
+  буквально на пике карьеры начинает говорить, что "всё"»), then his ruling on the warning read:
+  «да, это именно то, о чем я и говорил. Где-то тренер может подсветить, где-то она сама, где-то
+  финальный экран сезона. Давай сделаем.» His window: «за сезон-два до того».
+
+---
+
+## 09.09.2026 – WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS
+
+Temperament, the private-life personalities and the layer's face – everything in the spec is ruled,
+in three sittings on one day. Sources: [who-she-is-2026-09.md](specs/who-she-is-2026-09.md)
+(§7 carries every ruling verbatim), [the-psychologists-year-2026-09.md](specs/the-psychologists-year-2026-09.md).
+
+- **The eight, first sitting**: buckets («бакеты ок»); shares uniform first («взвешенные звучат
+  интереснее… но если версия 25х4 это логичный первый шаг - то можем сначала ее реализовать»); the
+  fairness corridor («коридор нравится, интересно звучит»); the five Mood words («пять слов
+  нравится, добавит гаммы»); prologue glimpses («да»); the album as an ARC – his better shape:
+  «предлагаю в конце лучше вариант: напишем с чего начиналось и к чему пришли»; birthday ask
+  weighting («да»); and the name stands – «давай оставим bond».
+- **The four tails, same day**: drift is BIDIRECTIONAL, his re-cut of the sketch – «как в спеке, да,
+  но "пинать → такая и останется" - здесь надо предусмотреть, что если она стала более открытой, а
+  ее начали пинать, то она вполне может и назад откатиться. И наоборот… И про другие характеристики
+  то же самое»; feed emoji Unicode («Фид: эмоджи»); the reweight waits for the first census read;
+  spirit shares condition's «Steady».
+- **The second sitting – her voice**: his ask «Еще надо про тон-оф-войс от ребенка при обращении к
+  родителю подумать в каждом состоянии, в каждой оси…» ruled as V1–V4: all three interaction tiers,
+  staged; tier-1 replies move nothing; address-neutral v1; 70/70 starts for everyone.
+- **The third sitting, the external review folded**: the axis law restated; **identity is
+  IMMUTABLE** – what drifts is walls and regulation, expression over an unchanging nature; **repair
+  is free, growth is work** – walls raised by neglect come down with time and care alone, the
+  psychologist only accelerates, and movement BEYOND her nature's baseline is her own chosen work;
+  the psychologist reframed accordingly (the listen focus coaches the PARENT and never reports her
+  sessions; from 18 the focus choice is joint – she can decline).
+- **The spotlight ask, his**: «давление известности и как она с ним справляется (и справляется ли
+  вообще). В зависимости от ее темперамента и оси текущей (может психолог что-то тоже поможет
+  исправить)» – pressure on exposure, never on success; the psychologist's fifth focus; its own wave
+  after step 5 (§3c).
+- **No meter, no label, no gauge**: `bond` gets no meter, `temperament` no label, a numeric spirit
+  gauge is rejected with reasons – «the layer ships no instrument». Detail lives in the two specs;
+  the psychologist's O1–O7 stay open there.
 
 ---
 

@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: tooling
 canonical: false
-last-reviewed: 2026-08-22
+last-reviewed: 2026-09-09
 ---
 
 ## ⭐ RE-CUT 23.08 – THE SKILL SHIPPED, THE ACTION IS THE OPTIONAL UPGRADE
@@ -85,6 +85,7 @@ the loop structural.
 
 ## 5. Size and blockers
 
-**Size: M** (a workflow file, the prompt, one trial wave to calibrate noise).
+**Size: S** – skill shipped; only the Action wrapper remains (a workflow file, one trial wave to
+calibrate noise – the 23.08 re-cut above).
 **Blocked by:** his ruling on the secret (billing) and on advisory-vs-blocking. Nothing technical
 blocks it.
