@@ -36,6 +36,7 @@ import type {
   Knock,
   KnockRecord,
   KitState,
+  LifeBeatRecord,
   Milestone,
   Offer,
   PenaltyRow,
@@ -922,6 +923,15 @@ export interface WorldState {
    *  a brand is OWNED – owning one proves founding one; anything less keeps the benefit of the
    *  doubt). */
   brandFounded?: boolean
+  /** ⭐⭐ v73 – EVERY LIFE BEAT THIS CAREER HAS LIVED, append-only and never pruned (the private
+   *  life, wave 2). A row whose `answer` is null is waiting to be answered, and that absence IS the
+   *  pending state – there is no second boolean to desync.
+   *
+   *  ⚠ OPTIONAL UNTIL THE SCHEMA MOVE. Wave 2's wire ships the field and the seam; step 4 bumps 72
+   *  to 73, back-fills `[]` in an append-only migration and freezes the golden fixture, at which
+   *  point every save carries it. Absent reads as an empty life, which is exactly true of every
+   *  career that predates the layer. */
+  lifeLog?: LifeBeatRecord[]
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

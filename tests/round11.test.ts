@@ -248,9 +248,21 @@ describe('R11-1 — every reason a week stopped the advance is reported', () => 
     // cannot be moved out of a week being lived). Slotted immediately below 'retirement': it BLOCKS
     // like the fork and the retirement offer, and it is below them because those two decide whether
     // there is a career at all while this decides one week of one.
-    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league', 'shoot-clash']
+    // ⚠⚠ v73 ADDED 'life', and it arrives with the same argument as 'birthday' and 'knock' before it:
+    // the beat BLOCKS (advanceWeeks returns early while a `lifeLog` row is unanswered), so a member
+    // with no precedence slot would be filtered out of the return value and the career would stop
+    // dead with the UI told nothing at all. Its SLOT is the ruled part - below 'birthday' because a
+    // birthday is a date that cannot move, above 'fork' because the fork is the parent answering and
+    // this is her being heard; `answerFork` refuses while her row is unanswered, so the ordering is
+    // the engine's and this line is its other half. The neighbours are pinned below.
+    const all: StopReason[] = ['tournament', 'deadline', 'funds', 'season-end', 'injury', 'medical', 'walkover', 'knock', 'birthday', 'life', 'ending', 'fork', 'retirement', 'academy', 'offer', 'call-up', 'college-league', 'shoot-clash']
     expect([...STOP_PRECEDENCE].sort()).toEqual([...all].sort())
     expect(new Set(STOP_PRECEDENCE).size).toBe(STOP_PRECEDENCE.length)
+    // ⚠ THE RULED SANDWICH, asserted rather than described: birthday leads the beat, the beat leads
+    // the fork. Reordering either pair silently would let the parent answer the fork before he has
+    // heard her, which is the one thing wave 2's contract is for.
+    expect(STOP_PRECEDENCE.indexOf('birthday')).toBeLessThan(STOP_PRECEDENCE.indexOf('life'))
+    expect(STOP_PRECEDENCE.indexOf('life')).toBeLessThan(STOP_PRECEDENCE.indexOf('fork'))
     for (const medical of ['injury', 'medical', 'walkover'] as StopReason[]) {
       expect(STOP_PRECEDENCE.indexOf(medical)).toBeLessThan(STOP_PRECEDENCE.indexOf('season-end'))
       expect(STOP_PRECEDENCE.indexOf(medical)).toBeLessThan(STOP_PRECEDENCE.indexOf('funds'))

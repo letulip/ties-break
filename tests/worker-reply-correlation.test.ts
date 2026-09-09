@@ -132,6 +132,10 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       tournamentClose: { type: 'tournamentClose', baseRevision: 0 },
       decideKnock: { type: 'decideKnock', choice: 'rest', baseRevision: 0 },
       chooseGift: { type: 'chooseGift', giftId: 'no-such-gift', baseRevision: 0 },
+      // ⭐⭐ v73: the life beat's answer. Like its birthday sibling above, the id is deliberately one
+      // the engine cannot have offered - this table drives the switch for its REPLY ARM, and a
+      // refusal is the arm a command with nothing pending must produce.
+      answerLifeBeat: { type: 'answerLifeBeat', optionId: 'no-such-option', baseRevision: 0 },
       // ⚠ ROUND 29 #3: a valid choice on a career with no collision open – the engine refuses it, which
       // is exactly what this table wants (every row is a command the worker must ANSWER, not obey).
       answerShootClash: { type: 'answerShootClash', choice: 'play-both', baseRevision: 0 },

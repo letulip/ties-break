@@ -170,6 +170,12 @@ export type ToWorker =
   // again on her birthday week. `giftId` is re-validated against the four the engine itself offered –
   // the worker is not the gate, so a stale dialog cannot record a gift this birthday never had.
   | { id: number; type: 'chooseGift'; giftId: string; baseRevision: number }
+  // ⭐⭐ v73: answer a life beat. The ONLY way a pending `lifeLog` row clears, and the only way time
+  // moves again on the week she said something. `optionId` is re-validated against the options the
+  // engine itself offered – the worker is not the gate, so a stale dialog cannot record an answer
+  // this beat never had. ⚠ NEVER A PURCHASE: an answer carries no `amountCents` and no price reaches
+  // any of its words (the build plan's no-cents rule for the whole surface).
+  | { id: number; type: 'answerLifeBeat'; optionId: string; baseRevision: number }
   // ⭐⭐ ROUND 29 #3: answer the shoot/tournament collision. The ONLY way `shootClashOpen` clears, and
   // the only way time moves again on the week before a shoot lands on a playing week. The engine
   // re-validates the collision itself – the worker is not the gate, so a stale card cannot withdraw
@@ -348,6 +354,7 @@ export const REPLY_BY_COMMAND = {
   setPlan: 'snapshot',
   decideKnock: 'snapshot',
   chooseGift: 'snapshot',
+  answerLifeBeat: 'snapshot',
   answerShootClash: 'snapshot',
   buyAsset: 'snapshot',
   sellAsset: 'snapshot',

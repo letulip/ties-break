@@ -576,7 +576,17 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
       'shoot-clash',
     ]
     const advanceCannotRaise: StopReason[] = ['call-up', 'college-league']
-    expect([...covered, ...advanceCannotRaise].sort()).toEqual([...STOP_PRECEDENCE].sort())
+    // ⚠⚠ WIRED BUT NOT YET RAISABLE – A THIRD LIST, AND IT IS A DEBT RATHER THAN A REASON. The two
+    // lists above are principled: one has a case, the other CANNOT have one. This one is neither.
+    // v73's wire lands `'life'` in the union and the precedence so both halves of wave 2 can build
+    // against it, and nothing writes a `lifeLog` row yet, so a span cannot stop for it and no case
+    // here could pass.
+    // ⚠ IT MUST BE EMPTY AGAIN BY THE END OF THE WAVE. The step that raises the first beat moves
+    // `'life'` up into `covered` and writes its case in block B; a wave that ships the beat and
+    // leaves this line standing has shipped a stop reason nobody proved stops anything, which is the
+    // exact hole this whole test exists to keep shut.
+    const wiredNotYetRaisable: StopReason[] = ['life']
+    expect([...covered, ...advanceCannotRaise, ...wiredNotYetRaisable].sort()).toEqual([...STOP_PRECEDENCE].sort())
   })
 })
 
