@@ -750,3 +750,128 @@ whether that is a gamma or a flicker is his call and not the bench's.
 
 **What this section does NOT do:** it ships no word, no cut point, no ladder, and it changes no
 constant. Bars 1 and 3 are open questions for the owner.
+
+---
+
+## §4a – wave 2 measured. Bar 3 re-aimed here, predicted against measured
+
+`npm run bench:spirit` (`tools/spirit-bench.ts`), 09.09, on `life/wave-2`. **The same grid wave 1 was
+read off, deliberately unchanged**: 32 seeds × 4 seasons × {care, grind} × 4 temperaments = 256
+careers, 53,128 resolved weeks, 252 of them running all four seasons and four ending in a
+career-ending injury. Nothing about the arms' calendar, entry policy, plan or family wealth moved, so
+every row below is comparable with §4a's line for line.
+
+⚠ **The predicted column was written before one character of `tools/spirit-bench.ts` was edited** and
+before any run – the same discipline §4a records, for the same reason: a prediction written after a
+run measures nothing. **Nothing below is a ruling and no constant, delta or regression rate was
+touched.**
+
+### What wave 2 changed in the instrument, and why it had to
+
+Bar 3 was re-aimed to this wave by his ruling («перевесить обе планки на волны, где приходят
+события»), so the two arms had to stop listening. The fork refusal has a blast radius: every harness
+that walks a career to the fork must now answer her first, so tools and suites across the repo carry
+`if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')` – and `beatListened` is **0** on the
+bond table. A bench that listened in both arms would measure a neutral world and report wave 1's
+number under a wave-2 date. So the arms now answer deliberately:
+
+* **care** – `back` her want (**+2**) and let `answerFork` **match** it (**+3**) = **+5**
+* **grind** – `press` the other way (**−2**) and let `answerFork` **contradict** it (**−4**) = **−6**
+
+**11 raw points of arm separation, once per career.** That is the whole of what wave 2 can be worth
+to bar 3, and it is more than the runbook's own estimate of «around 7–10» rather than less.
+
+### The table
+
+| # | bar | predicted | measured | verdict | moved since wave 1 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | per-career spirit sd ≥ 2, both arms | identical to wave 1 – wave 2 writes no spirit anywhere (the fence) – **FAIL** | care **1.21** steady / **2.79** intense (arm mean **2.00**) · grind **0.79** / **1.49** (**1.14**) | **FAIL** | **no – identical** |
+| 2a | weeks < 20 or > 95 under 2% | 0.00% | **0.00%**, every temperament arm | PASS | no |
+| 2b | long-run mean 70 ± 4, per temperament | identical to wave 1 | care **70.09** / **70.42** · grind **69.79** / **69.55** | PASS | no |
+| 3 | **bond gap ≥ 12 at season 3 AND > 2×SEM** | **4.84, exactly wave 1's number, change 0.00** – the deltas land after the reading | care **69.80 ± 0.525** · grind **64.95 ± 0.642** · **gap 4.84**, 2×SEM **1.362** | **FAIL** the 12, PASS the SEM | **no – identical to two decimals** |
+| 4 | neither bond median clamped | 70.0 both arms | **70.0** both (min 48.5 / 51.0, max 73.0 / 72.5) | PASS | no |
+| 5 | ⚠ paired lifetime match-win deltas inside ±1.5 pp | 0.000 pp – wave 2 adds no MAIN draw and no spirit write | **0.000 pp** on all six pairs; lifetime win rate **57.99%** for all four | PASS | **no – the corridor did not move** |
+| 6 | five Mood words each ≥ 2% of weeks | identical to wave 1 | spike at 70.0 = **77.61%**; best five-way split's smallest word **4.76%** | PASS | no |
+
+**Every number in the measured column reproduces §4a's to the last printed digit** – the six bars,
+the four early endings, the 53,128 weeks, the 8.13 / 8.84 played-hurt rate, the 255 birthday asks per
+temperament, and the decision rates (care 0.065/week, grind 0.028/week). Wave 2 moved nothing on this
+grid, and the next section is why.
+
+### ⚠⚠ The finding: the beat is 86 weeks later than the number the bar reads
+
+The bench now prints its own census beside bar 3, because a bond gap alone cannot tell «the two arms
+answered her differently and it was worth nothing» from «the answering code never ran» – and this
+repo has a written rule about believing a null result without proving the arm contains its reader.
+The census over the bar grid:
+
+| arm | careers | beats raised | back | press | listen | fork with | fork against |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| care | 128 | **0** | 0 | 0 | 0 | 0 | 0 |
+| grind | 128 | **0** | 0 | 0 | 0 | 0 | 0 |
+
+Her opinion is raised by the tick that **opens the fork** (`raiseForkOpinion`, `world/endings.ts` –
+the only `raiseLifeBeat` call site in the engine), the fork opens on `schoolEndWeek`, and for the
+bench's profile that is **week 242**. The bar grid ends at week 208. Bar 3 reads bond at **week 156**.
+
+> **242 > 208 > 156.** The wave-2 deltas are **86 weeks later than the week bar 3 reports**, and 34
+> weeks past the end of the grid the bar is read off.
+
+So bar 3's 4.84 is **not wave 2 failing to move the number**. It is wave 1's number re-measured, on a
+grid the wave's only decision never reaches. The fork-opinion beat is an age-18 event; season 3 ends
+at about sixteen. No arm built out of this wave's decisions can appear in a season-3 reading at all –
+not at these constants, and not at any constants, because the obstruction is the calendar rather than
+the arithmetic.
+
+### The fork-week diagnostic – what the two deltas ARE worth, where they land
+
+`npm run bench:spirit -- --fork` walks the same 256 careers one week past the fork instead of stopping
+at four seasons, and prices the deltas on the week they land. ⚠ **It is a diagnostic and it is not a
+bar.** Bar 3's reading week is the owner's; bars 1/2/4/5/6 read a longer week series in that mode and
+are not comparable with the four-season run. Bar 3 itself returns **4.84 again, identically**, which
+is the check that the two walks are the same career up to week 208.
+
+| arm | careers | beats | back | press | fork with | fork against | bond at week 242 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| care | 128 | **124** | 124 | 0 | **124** | 0 | **73.46 ± 0.407** (n 31 seeds) |
+| grind | 128 | **128** | 0 | 128 | 0 | **128** | **61.36 ± 0.643** (n 32 seeds) |
+
+**Paired gap at the fork week: 11.86 over 31 paired seeds, 2×SEM 1.585** – 7.5× the significance
+threshold, and **0.14 points short of the 12-point bar**. The four care careers with no beat are the
+career-ending injuries; the 24 careers that end at the fork are the care arm doing what she asked
+when what she asked was `stop`, which is the arm's definition and not a harness fault. The grind arm's
+contradiction never answers `stop`, on purpose: an arm that sometimes retired her would fold «he took
+the decision away» and «the career ended here» into one number.
+
+⚠ This row is here to **price** a road, not to propose one. Read plainly: the wave-2 decision mass is
+almost exactly the size bar 3 asks for, and it arrives 86 weeks after the week bar 3 looks.
+
+### Bar 3 failed again. The two roads, and the bench recommends neither
+
+**A failed bar is a finding for the owner, never a licence to tune** – so no constant, delta or
+regression rate was changed, and none is proposed. The runbook already names the two honest roads and
+the choice is his:
+
+1. **A further re-aim to waves 3–4**, where met/ended beats multiply the decision mass. What this
+   bench adds to that choice: the wave-2 beat could not have been seen at season 3 under any tuning,
+   so a re-aim is not the same question it was when bar 3 was moved here.
+2. **His retune of the flat 0.5/week regression** toward 70, which is what caps the held displacement
+   at ≥ 0.5 points a week of decisions against a measured 0.065 (care) and 0.028 (grind).
+
+And a third fact he did not have when he re-aimed bar 3 to this wave, which belongs beside them
+without being a road of its own: **bar 3's reading week and the private life's beat calendar are not
+in the same part of the career.** Whether that is fixed by moving the beats, moving the reading, or
+neither, is a ruling and not a measurement.
+
+### The other five bars, and whether this wave moved any
+
+**None of them moved.** The one that was worth checking hardest is **bar 5, the ±1.5 pp fairness
+corridor**, because this wave added decisions to the world: it returns **0.000 pp on all six pairs**
+and the same 57.99% lifetime win rate for all four temperaments, which is what the construction
+predicts – wave 2 takes one draw, on `seed:life:fork:<seasonIndex>`, a purpose-scoped sub-stream that
+MAIN never sees, and it writes `bond` alone. Bars 1, 2, 4 and 6 are byte-identical to §4a for the same
+reason: **no spirit delta exists anywhere in wave 2**, so nothing that reads spirit could have moved.
+
+**What this section does NOT do:** it changes no constant, proposes no re-aim, and ships no wording.
+Bars 1 and 3 remain open questions for the owner, and bar 3's is now a question about WHEN the layer's
+decisions arrive rather than about how much they are worth.
