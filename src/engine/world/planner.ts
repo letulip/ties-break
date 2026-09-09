@@ -21,6 +21,7 @@ import { schoolIsOver } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { simulateMatch } from '../match/engine'
 import { clamp, matchDrain } from '../condition'
+import { applyBondDelta } from '../spirit'
 import type { AiPlayer } from '../season/types'
 import type { MatchPlayer, Surface } from '../match/types'
 import { rivalGroundstrokes } from '../season/rival'
@@ -311,6 +312,13 @@ export function resolveVacation(world: WorldState): void {
   const pkg = vacationPackage(booking.packageId)
   if (!pkg) return
   world.condition = clamp(world.condition + pkg.conditionGain, ECONOMY.condition.min, ECONOMY.condition.max)
+  // ⭐ v72 – AND A WEEK AWAY IS A DECISION SOMEBODY TOOK FOR HER: `bond` +1 (build plan §1d), on the
+  // week the booking actually resolves rather than on the week it was paid for, so a holiday cancelled
+  // by anything that stops this function running is a holiday she never had. Her SPIRIT's own +5 for
+  // the same week is not here – it lands one call earlier in the phase, inside `accrueSpirit`, off the
+  // same `vacationForWeek` booking this function opened with (engine/spirit.ts explains why).
+  // Zero draws; no string on the event below moves (invariant 4).
+  applyBondDelta(world, ECONOMY.bond.delta.vacationResolved)
   if (pkg.buffFactor < 1) {
     world.recoveryBuff = { untilWeek: world.week + ECONOMY.vacation.buffWeeks, factor: pkg.buffFactor }
   }

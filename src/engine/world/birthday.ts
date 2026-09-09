@@ -26,9 +26,30 @@
 //    choice is entirely "what do I think she wants" – which is the only question this was ever about.
 //    It also settles the catalogue: ONE list for every background, and no affordability test anywhere.
 //
-// 2. A GIFT GIVES NO SKILL. Nothing in this file touches the radar, condition, morale or `kitState`.
+// 2. A GIFT GIVES NO SKILL. Nothing in this file touches the radar, condition or `kitState`.
 //    The owner on whether a frame resets kit wear (spec §2c): «я бы сказал нет». The moment it does,
 //    the gift is useful, and a useful gift is a purchase.
+//
+//    ⭐⭐ AMENDED AT v72 (the private life, wave 1), AND THE RULING SURVIVES INTACT – THE OWNER'S OWN
+//    CORRECTION, 23.08. This clause used to read «the radar, condition, MORALE or kitState», because
+//    when it was written there was no morale to touch and the whole slice «records and does not
+//    consume» (spec §2b). `chooseGift` now moves `bond`, and the reason that is not a repeal is his:
+//
+//      «а как же с теми, которых она сама просила? мне кажется там вполне может двигаться в
+//       положительную сторону мораль»
+//
+//    THE ZERO SURVIVES FOR UNPROMPTED MATERIAL GIFTS – it is still true that buying her a thing she
+//    did not name moves no number. What moves the relationship is being HEARD, and the ask is not
+//    purchasable: it is drawn on `seed:birthday:<age>` – (seed, calendar), never a choice – so a
+//    player cannot manufacture the want and then buy it. He can only ANSWER one the world put in
+//    front of him, or not. That is the difference between a heard request and a purchase, and it is
+//    the whole of why ruling 2 still stands: A GIFT THAT MOVES A NUMBER WOULD BE A PURCHASE, AND
+//    NOTHING HERE LETS A PLAYER CHOOSE WHICH GIFT MOVES IT. The rows, and the disjointness argument
+//    for them, are at the bottom of `chooseGift`; the numbers are in `ECONOMY.bond.delta`; the other
+//    home of this amendment is docs/specs/birthday-and-gifts.md §2b, amended in the same commit.
+//
+//    ⚠ AND RULING 1 IS UNTOUCHED BY IT: still no `amountCents`, still no price on the screen, still
+//    no line in Money. `bond` is not money and is never shown as a number anywhere.
 //
 // 3. "NOTHING" MUST BE A REAL ANSWER. `DAY_TOGETHER` is always one of the four, it is never marked,
 //    and it is reachable as the ask – she does not want a thing, she wants you, and that is the best
@@ -44,6 +65,10 @@
 // choice by accident, repeatedly, and never know. So it BLOCKS, on the identical contract the knock
 // has (`advanceWeeks` refuses to tick), and the dialog has four buttons and no other way out.
 import { rngFromSeed } from '../rng'
+import { ECONOMY } from '../economy'
+// ⭐ v72: the consumer ruling 2 below was waiting for – see `chooseGift`. `applyBondDelta` is the one
+// writer of `world.bond`, so this file states WHICH row applies and never how the number is clamped.
+import { applyBondDelta } from '../spirit'
 import { addEvent } from './ledger'
 import { ageInWords, birthdayTurning } from './age'
 import { guardNotEndedForGood } from './endings'
@@ -112,6 +137,19 @@ import type { WorldState } from '../world'
  *  when docs/specs/form-and-slump.md and the psychologist arrive, THIS table is the ladder to read,
  *  and the history to weigh it against is already on the record. */
 const TIME_TOGETHER: Record<string, string> = { day: 'day', familyweek: 'week', trip: 'trip' }
+
+/** ⭐ v72 – AND THE MORALE SLICE THE NOTE ABOVE PREDICTED HAS ARRIVED, reading exactly the ladder it
+ *  was told to read: three ids, three different numbers (build plan §1d). Same keys as
+ *  `TIME_TOGETHER` and `tests/spirit.test.ts` pins that they stay the same keys, so a fourth size of
+ *  "you" can never be added to one table and forgotten in the other. The VALUES live in
+ *  `ECONOMY.bond.delta` with every other tunable; this map is only the id→row wiring. */
+const TIME_TOGETHER_BOND: Record<string, number> = {
+  day: ECONOMY.bond.delta.giftDay,
+  familyweek: ECONOMY.bond.delta.giftFamilyWeek,
+  trip: ECONOMY.bond.delta.giftTrip,
+}
+/** Exported for the pin above – the two tables must describe the same three options. */
+export const BIRTHDAY_TIME_TOGETHER_BOND: Readonly<Record<string, number>> = TIME_TOGETHER_BOND
 
 /** ⭐ THE FOURTH OPTION, ALWAYS OFFERED AND NEVER MARKED. Not a "no thanks" – it is the one answer
  *  in the list that costs the parent something he actually has, which is why it has to read as one
@@ -1425,9 +1463,13 @@ export function birthdayOptions(
  *  file to pass. Spec ship rule 3, and it is asserted directly: the same seed through every option
  *  ends the season on identical `fundsCents`.
  *
- *  ⚠ AND NOTHING ELSE MOVES EITHER: no skill, no condition, no `kitState`, no morale. This slice
- *  RECORDS and does not consume (spec §2b – «мораль и психологи у нас в будущем, так что сейчас можно
- *  просто подготовку сделать»). The diary reads the record; nothing else does. */
+ *  ⚠ AND NOTHING ELSE MOVES EITHER: no skill, no condition, no `kitState`. ⭐ THE ONE EXCEPTION SINCE
+ *  v72 IS `bond`, and it is the thing this slice was built to make possible rather than a breach of
+ *  it: «мораль и психологи у нас в будущем, так что сейчас можно просто подготовку сделать» (spec
+ *  §2b) – the preparation was the three-way record (`asked` matches `given` / they differ / `given`
+ *  is null), and the private-life layer is the future that has now arrived to read it. See the
+ *  amended ruling 2 at the top of this file for why an ASKED-FOR gift moving the number is not a
+ *  purchase, and the block at the foot of this function for the four disjoint cases. */
 export function chooseGift(world: WorldState, giftId: string): void {
   // ⭐⭐⭐ ROUND 24 – `guardNotEndedForGood`, NOT `guardNotEnded`, because the answer has to land
   // WHILE THE COLLEGE LATCH IS ON: the year pauses on her birthday week with the latch re-latched
@@ -1457,6 +1499,34 @@ export function chooseGift(world: WorldState, giftId: string): void {
   // dialog from another week must not be able to record an option this birthday never offered.
   if (!given) throw new Error('That is not one of this birthday\'s four options')
   world.birthdays.push({ week: world.week, age, asked: askedId, given: given.id })
+  // ⭐⭐ v72 – AND THE RECORD FINALLY HAS ITS CONSUMER (build plan §1d). Ruling 2 above is amended
+  // rather than repealed, and the three rows below are exactly the shape that lets it survive:
+  //
+  //   the TIME-TOGETHER ids  `day` +2 / `familyweek` +3 / `trip` +4 – she asked for you, and the
+  //                          three sizes of "you" are worth three different amounts;
+  //   the ASKED-FOR gift     granted (`asked` === `given`) +2.5 – the owner's own correction, 23.08:
+  //                          «а как же с теми, которых она сама просила? мне кажется там вполне
+  //                          может двигаться в положительную сторону мораль»;
+  //   the REFUSAL            she asked and got a different thing, or nothing at all, −1.5.
+  //
+  // ⚠⚠ AND AN UNPROMPTED MATERIAL GIFT IS STILL EXACTLY ZERO, which is what keeps this a gift and
+  // not a shop. The ask is drawn on `seed:birthday:<age>` – (seed, calendar), never a choice – so a
+  // player CANNOT MANUFACTURE THE ASK and buy the number; he can only ANSWER one the world put in
+  // front of him. That is the whole difference between a heard request and a purchase, and it is why
+  // ruling 2's «a gift that moves a number is a purchase» is untouched by the rows above.
+  //
+  // ⚠ NO MONEY STILL MOVES: ruling 1 is untouched, there is no `amountCents` in this file, and
+  // nothing here reads or writes a price. And no string moves either (invariant 4).
+  // ⚠ THE FOUR CASES ARE DISJOINT AND THE ORDER IS WHAT MAKES THEM SO. A time-together answer is
+  // priced by ITS OWN ID whatever she asked for (the seam round-18 #10b kept three ids alive for:
+  // «a day and a week must NOT be worth the same»); a material answer is then priced by whether it
+  // ANSWERS the ask; and "unprompted" is exactly the case where the ask was not for a thing at all –
+  // she wanted the day and got a parcel – so no material want was refused and ruling 2's zero stands.
+  const timeTogether = TIME_TOGETHER_BOND[given.id]
+  if (timeTogether !== undefined) applyBondDelta(world, timeTogether)
+  else if (given.id === askedId) applyBondDelta(world, ECONOMY.bond.delta.giftAskedGranted)
+  else if (TIME_TOGETHER[askedId] === undefined) applyBondDelta(world, ECONOMY.bond.delta.giftRefused)
+  else applyBondDelta(world, ECONOMY.bond.delta.giftUnprompted)
   addEvent(world, {
     week: world.week,
     type: 'info',

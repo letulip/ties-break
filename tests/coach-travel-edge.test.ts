@@ -43,9 +43,29 @@ import {
   PRE_V68,
   PRE_V69,
   PRE_V71,
+  PRE_V72,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v72: rolling the schema back to 71 – and dropping the three keys v72 added – reproduces the v71 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 1 DID TO A FROZEN CAREER, AS AN IDENTITY – and it
+    // is the strongest form of this file's per-key protocol rather than a substitute for it. v72
+    // appends `spirit`, `bond` and `temperament` to `createWorld`'s literal; all three are written at
+    // birth, every career here carries them, and `spirit` moves week by week. Peel exactly those
+    // three, roll the number back, and the ENTIRE serialisation returns byte for byte – `rngMain`,
+    // `results`, `events`, the wallet, the body, all seventy-odd keys. So the diff is `schemaVersion`
+    // plus the three appends and provably nothing else.
+    //
+    // ⭐⭐ AND THIS IS ALSO THE MATCH-SEAM PIN. `spiritMatchFactor` multiplies her five wings, so a
+    // single week under the knee (60) would have changed who won a match – and her ranking, her
+    // cheques and her condition with it – and then nothing below could reproduce. It reproduces on
+    // all three careers over 156 weeks: spirit stayed above the knee, factor 1.0, tennis unmoved.
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    expect(careerHashAtSchema(5, 0, 71), '25k · middle coach · grinder').toBe(PRE_V72.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 71), '120k · elite coach · grinder').toBe(PRE_V72.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 71), '8k · self-coached · player').toBe(PRE_V72.selfTravelling)
+  })
+
   it('⭐⭐ v71: rolling ONLY the schema number back to 70 reproduces the v70 hashes byte for byte', () => {
     // ⚠ THE WHOLE OF WHAT ROUND 39 #5's SCHEMA MOVE DID TO A FROZEN CAREER, as an identity – and the
     // answer is the version number and nothing else. v71 adds `brandFounded`, written only by

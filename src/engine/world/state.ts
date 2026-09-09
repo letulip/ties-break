@@ -23,6 +23,9 @@
 // `world/*.ts` keep importing `WorldState` through the barrel without a cycle, and what would break
 // the moment a value import arrived here.
 import type { MainRngState } from '../rng'
+// ⭐ v72: `Temperament` is a type and this stays `import type`, so the leaf rule above holds – the
+// four ids and the derivation that picks between them live in `engine/spirit.ts`.
+import type { Temperament } from '../spirit'
 import type {
   BirthdayRecord,
   CareerEnding,
@@ -333,7 +336,26 @@ import type { AcademySupport } from '../academy'
 // stream is touched, so the frozen MAIN capture (41550 / e6b0c709) cannot move. Full move: this
 // constant, the v70 -> v71 step in migrations.ts, tests/fixtures/saves/v71.json and
 // tests/r39-brand-rebuy.test.ts.
-export const SAVE_SCHEMA_VERSION = 71
+//
+// ⭐⭐⭐ v72 (THE PRIVATE LIFE, WAVE 1) – THE TWO NUMBERS, AND WHO SHE IS. World `+spirit`, `+bond`
+// and `+temperament`; see the three fields above and `src/engine/spirit.ts` for the rules.
+//
+// ⚠⚠ THE BACK-FILL IS TWO KINDS OF THING IN ONE STEP, and the difference is the whole reason the
+// migration is worth reading. `spirit` and `bond` are back-filled to the literal 70 – UNIFORM,
+// ruling V4, because 70 is where a career starts and there is nothing in an old save to derive a
+// truer number from (and 70 is above the knee, so a migrated career plays byte-identical tennis
+// until something actually moves her). `temperament` is DERIVED, not defaulted and not drawn: the
+// step calls `temperamentFor` – THE SAME exported function `createWorld` calls – on the career's own
+// seed, so a career already in flight turns out to have always been her. A second spelling of that
+// formula would hand a live save a different girl from the one the engine would have drawn, which
+// is the one defect this move exists to make impossible.
+//
+// ⚠ IDEMPOTENT and DRAW-FREE ON MAIN: three `??=` writes gated on `v === 71`, and the only stream
+// touched anywhere is the purpose-scoped `seed:temperament` sub-stream, re-derived at the call site
+// and persisting nothing. The frozen MAIN capture (41550 / e6b0c709) cannot move. Full move: this
+// constant, the v71 -> v72 step in migrations.ts, tests/fixtures/saves/v72.json, and
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
+export const SAVE_SCHEMA_VERSION = 72
 
 
 
@@ -609,6 +631,21 @@ export interface WorldState {
   /** Season-Life (v12): per-week condition 0..100 (100 = fresh). Written ONLY by accrueCondition
    *  (pure arithmetic, zero main-stream RNG); fatigue is the derived 100 - condition, not stored. */
   condition: number
+  /** ⭐ v72 (the private life, wave 1): THE WEATHER – how she is this week, 0..100 in TENTHS, start
+   *  70. Written ONLY by `accrueSpirit` (engine/spirit.ts – pure arithmetic, zero draws on any
+   *  stream), read ONLY by `spiritMatchFactor` at the match seam. ⚠ NEVER SHOWN AS A NUMBER: no
+   *  meter, no tile, no bar, no arrow, on any surface, ever – the fog rule. */
+  spirit: number
+  /** ⭐ v72: THE STANDING – what the parent has built with her, 0..100 in steps of 0.5, start 70.
+   *  Moves ONLY on parent DECISIONS (the knock, the played-hurt entry, the birthday, a family week,
+   *  and a season that had none), then regresses toward 70 at 0.5/week on `accrueSpirit`'s own pass.
+   *  Never a scoreline, never the weather. Same fog rule: it is never a number on a screen. */
+  bond: number
+  /** ⭐ v72: WHO SHE IS – one trait, two axes, four ids, drawn once at `createWorld` off
+   *  `seed:temperament` and never re-rolled. ⚠ The derivation is `temperamentFor` (engine/spirit.ts)
+   *  and the v71 -> v72 migration calls THAT SAME function on the career's own seed, so an existing
+   *  career turns out to have always been her – zero draws, bit-stable. Never shown as a label. */
+  temperament: Temperament
   /** the kid's active injury, or null when healthy. Wired in slice B but ALWAYS null here – Slice C
    *  populates it. ⚠ The snapshot used to omit `sinceWeek` and carries it since round-16 #19, so
    *  the persisted shape and the surfaced one are now the same four-plus-one fields – see
