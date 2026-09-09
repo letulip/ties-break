@@ -108,33 +108,59 @@ moved: she trusts THIS parent. ⚠ Not a new mechanic – `bond` already has the
 this is its second reader (the diary is the first). It also makes the fog axis care-responsive
 without making openness trainable.
 
-**Channel 2 – true drift, ONE step, earned (ships with step 5, the psychologist).** The person
-can genuinely soften – slowly, boundedly, and by HER work, not by hugs alone (the layer's law:
-she decides, he enables):
+**Channel 2 – true drift, slow and BIDIRECTIONAL (⭐ his 09.09 ruling re-cut the sketch).** The
+draft here said «never backward»; it did not survive contact with him, verbatim:
 
-* at most **one band per axis per career** – закрытая+порывистая can become закрытая+ровная or
-  открытая+порывистая, never the full diagonal in one life;
-* conditions, all sustained over ~2+ seasons: bond at `close`/`steady`, the psychologist retained
-  with the matching year-focus chosen (his 08.09 year-focus idea finds its second job here), and
-  no counter-evidence pattern dominating (pushed knocks, played-hurt weeks);
-* **never backward, never a punishment** – neglect does not darken her: «если всё время пинать,
-  такая и останется» is exactly the shipped rule (his own phrasing), and «мы ни за что не
-  наказываем» stays mechanical – the door simply never opens;
-* **never guaranteed** – once the conditions hold, the step is a hazard on a purpose-scoped
-  sub-stream, so two identical caring careers can differ, and the census can price it.
+> «как в спеке, да, но "пинать → такая и останется" - здесь надо предусмотреть, что если она
+> стала более открытой, а ее начали пинать, то она вполне может и назад откатиться. И наоборот:
+> если она изначально была открытая и хотела всё рассказывать, а ее пинали, то вполне может
+> стать закрытой. И про другие характеристики то же самое.»
 
-**The convergence guard** – the trap this must not spring: if care reliably manufactures
-open+steady girls, the four personalities erode into one optimal endpoint (the kid-share trap's
-own shape: «generosity strictly optimal is the same failure as greed being free»). Guards: one
-step max, slow, hazarded, psychologist-gated (it costs money and occupies the year-focus slot
-that competes with «хладнокровие»), and the census (§4) prints the end-of-career distribution so
-erosion is measurable before it is real.
+He is right that the one-way door was the thesis half-applied – «отношения можно укрепить или
+разрушить» (his 20.08 law) must hold for who she becomes, not only for the standing. The model,
+re-cut:
+
+* **Each axis keeps a slow internal LEANING** – a bond-like accumulator, persisted, never shown
+  on any surface. The four buckets stay the only expressed truth (the voices, the physics); a
+  bucket flips only when the leaning crosses a threshold **with hysteresis**, so a flip is an
+  event of seasons, never a flicker, and churn is capped by the timescale rather than by a hard
+  counter. ⚠ Not the rejected continuous model returning: no reader and no line ever sees the
+  leaning – it exists purely so change can be gradual, rare and honest.
+* **Toward the care pole (open, steady) the road is DELIBERATE**: sustained `close`/`steady`
+  bond AND the psychologist retained with the matching year-focus chosen (his 08.09 year-focus
+  idea finds its second job here). Care alone opens the telling (channel 1); it does not rewrite
+  her. ⭐ The focus-gate is also what protects a well-loved `quiet` girl from being hugged into
+  an extravert: without the chosen work, her nature holds and only the relationship opens.
+* **Toward the hurt pole (closed, intense) the road is NEGLECT ITSELF** – no purchase required:
+  seasons where the kick pattern dominates (pushed knocks, played hurt, refused asks, zero
+  vacations) at a `strained`/`cold` bond walk the leaning the other way. An open girl who is
+  kicked learns to stop telling; a steady one learns to brace. ⭐ The asymmetry is the design:
+  repair costs deliberate work, damage costs only carelessness.
+* **Why this is not «наказание»** (the principle survives, applied honestly): nothing here is a
+  scripted penalty – it is the slow, telegraphed, nameable consequence of the parent's own
+  sustained pattern, visible on every surface the layer ships (the face dims, the Mood word
+  cools, the diary goes guarded, the feed goes quiet) for seasons before a flip lands – and the
+  road back always exists: a closed-again girl can be opened again, which the album will know
+  how to say. A career can round-trip; that sentence is earned drama, not damage.
+* **Never guaranteed, in either direction** – held conditions arm a hazard on a purpose-scoped
+  sub-stream; two identical patterns can differ by a season, and the census prices both roads.
+* **Bench option, ruled with step 5's rungs:** does a retained psychologist SLOW the backward
+  walk even without the matching focus – a second legible thing the retainer buys? Priced at the
+  bench, his word then.
+
+**The convergence guard, re-aimed for two poles** – the trap is any policy that reliably
+manufactures ONE bucket. Grind careers drifting closed+intense is the game telling the truth;
+every caring career ending open+steady would not be – the focus-gate is the dam. The census (§4)
+prints flip shares in both directions under a caring arm and a grinding arm, plus the
+end-of-career distribution, so erosion is a number before it is a fact.
 
 **The album arc this buys** – his §7.6 ruling: «напишем с чего начиналось и к чему пришли».
-Three honest endings for the line (copy drafts, his): unchanged – she was always the quiet one;
+The honest endings for the line (copy drafts, his): unchanged – she was always the quiet one;
 opened WITH him – quiet with the world, but by the end she told you everything (channel 1);
-genuinely softened – the girl who cried in the car learned to breathe (channel 2). The start is
-drawn at birth; the end is earned; the album gets a sentence only a whole career can write.
+genuinely softened – the girl who cried in the car learned to breathe (channel 2); and, since
+the 09.09 re-cut, the hurt roads – the girl who stopped telling you things, and the round trip
+that came back. The start is drawn at birth; the end is earned; the album gets a sentence only a
+whole career can write.
 
 ---
 
@@ -216,8 +242,9 @@ grows arms): 200 careers per temperament print – romance count distribution (m
 separate: fiery ≥ 4, sunny 2–3, deep ≤ 3, quiet ≤ 2), first-arrival age medians (quiet ≥ 17.5,
 fiery ≤ 17), «first or second love reaches the latch» share (quiet ≥ 50%, fiery ≤ 20%), late-feed
 share by openness (private ≥ 60%, open ≤ 25%). These eight numbers are the acceptance table his
-«утвердить» signs. Once §2a's drift ships, the census adds a ninth print: the END-of-career
-temperament distribution under a caring policy – the convergence guard made a number.
+«утвердить» signs. Once §2a's drift ships, the census adds the drift prints: flip shares in BOTH
+directions under a caring arm and a grinding arm, and the end-of-career temperament distribution
+– the two-pole convergence guard made numbers.
 
 ---
 
@@ -267,6 +294,10 @@ removable.
 
 ⚠ Whichever is ruled, the wording law extends to glyphs: the set is his to pick, and no agent
 adds or swaps one unasked.
+
+⭐ **RULED 09.09: the feed's life rows, Unicode emoji** – the recommendation taken («Фид:
+эмоджи»); nothing lands beside the Mood word. The glyphs ship with wave 3's first life rows, and
+the proposed set goes to him as drafts then – one glyph per row kind, his to swap.
 
 **What deliberately gets NO surface:**
 
@@ -349,18 +380,21 @@ Eight questions went to him with recommendations. His answers, verbatim where th
    apparel-bond strings (`kit-bond-<week>` – same word, different domain, no runtime collision);
    decided once, here.
 
-**Still open – each with a recommendation:**
+**The four tails – all RULED 09.09, same day:**
 
-1. **§2a, can she change** – the two-channel model and its parameters (one step max, the
-   sustained conditions, the hazard). Needs his «утверждаю» before wave 3 builds channel 1 and
-   the psychologist spec builds channel 2.
-2. **§5a, emoji** – recommendation: not beside the Mood word (the face IS the emoji); if
-   anywhere, the life rows of the feed, where a glyph is navigation rather than decoration. His
-   call, his glyphs.
-3. **The reweight moment** (ruling 2's tail) – after the first census read; the census table is
-   where that conversation gets numbers.
-4. **The Steady collision** (ruling 4's tail) – spirit shares condition's word or takes its own;
-   one word, his.
+1. **§2a, can she change – RULED: «как в спеке, да, но…»** – the two-channel model approved,
+   AMENDED to bidirectional drift by his word (quoted and re-cut in §2a: the hurt pole is
+   reachable by neglect alone, the care pole stays focus-gated, round trips exist).
+2. **§5a, emoji – RULED: the feed's life rows, Unicode** («Фид: эмоджи») – nothing beside the
+   Mood word; glyph drafts go to him with wave 3.
+3. **The reweight moment – RULED: after the first census read** – 25×4 ships; his «взвешенные
+   интереснее» is the recorded direction for that conversation, held until it has numbers.
+4. **The Steady collision – RULED: spirit shares condition's «Steady»** – the neutral state is
+   one state and gets one word; the gamma lives in Glowing/Bright/Dimmed/Heavy, and the tile's
+   priority rule (injury first, then the larger deviation of body vs mood) ships with wave 1.
+
+**Nothing in this spec now waits on his word.** The remaining numbers are bench proposals by
+nature (invariant 5): measured first, then read together.
 
 ---
 
@@ -419,6 +453,6 @@ one-line correction.
 * **Not new UI chrome** – §5 is an argument that the game already owns every surface this layer
   needs.
 
-**Done when:** §7's four open tails are ruled, the census table of §4 (ninth print included) is
-accepted as the acceptance bar, and the re-base pass folds §4's constants, §2a's channel 1 and
-§6's two cheap lines into the build plan's waves 1–4.
+**Done when:** the re-base pass folds this spec into the build plan – §4's constants and census
+arms, §2a's two channels (the leaning included), §5a's feed glyphs and §6's two cheap lines,
+against the plan's waves 1–5. §7 is fully ruled; nothing else waits on a word.
