@@ -3,10 +3,17 @@ type: index
 status: current
 area: backlog
 canonical: false
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-09
 ---
 
 # What is left – the whole answer, on one page
+
+⚙ **09.09: this page's last full verification is 26.08, and rounds 27–40 have landed since.** Do
+not read a state below as current – route the current state from
+[now-next-later.md](../now-next-later.md) first. Two corrections are already known: **kit wear on
+holiday** SHIPPED 29.08 (round 29 #20 – §2's own round-16 line below already records it), and
+**the childhood prologue** SHIPPED (see [modes-and-the-prologue.md](modes-and-the-prologue.md)'s
+09.09 note – the `Next` prologue lines below predate it). No full re-verify was attempted here.
 
 The owner, 24.08: «что там еще по ревью не закрыто? Что из наших предыдущих раундов правок еще
 актуально? Актуализируй всё»

@@ -3,7 +3,7 @@ type: index
 status: current
 area: backlog
 canonical: false
-last-reviewed: 2026-08-26
+last-reviewed: 2026-09-09
 ---
 
 # The backlog – every recorded piece of unbuilt work, indexed
@@ -26,9 +26,10 @@ unscheduled) · **Parked** (the owner parked it, or the design is not ready) · 
 COMPLETED result, not unfinished work – the house already lives this («measured refusal») and the
 state makes it legible.
 
-The sweep of 23.08 assigned a state to every row in every file here; **Now is deliberately empty –
+The sweep of 23.08 assigned a state to every row in every file here; **the sweep left Now empty –
 Now is assigned by the owner's pick, not by the sweep** – and `(?)` after a state marks the
-ambiguous calls the architect reviews.
+ambiguous calls the architect reviews. ⚙ One row holds Now since (corrected 09.09): his 29.08 pick,
+the e2e suite's growth – [the-quality-rig.md](the-quality-rig.md) #15.
 
 ## The gate for every NEW mechanic (adopted the same day, seven questions)
 

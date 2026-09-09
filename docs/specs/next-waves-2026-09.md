@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: planning
 canonical: false
-last-reviewed: 2026-09-06
+last-reviewed: 2026-09-09
 ---
 
 # The three waves after round 37
@@ -14,8 +14,15 @@ extraction, and «к ней вернёмся после мержа 37, запи�
 three files, because he asked for them together and because the third one depends on a measurement
 the first one does not.
 
-**None of these is started.** Each needs his word, and the balance wave needs it twice – once to
-begin and once on the design fork inside it.
+⚙ **Status, 09.09** (replacing this header's stale «none of these is started»): **Wave A SHIPPED
+07.09** (A1-A5 – §A's own note below; ledger [round-38.md](../rounds/round-38.md) #9) · **Wave B
+SHIPPED** (B1-B4, `src/composables/tabSeen.ts` – ledger round-38 #10; §B below was never annotated)
+· **Wave C closed in round 38**: **C4 SHIPPED 07.09**
+([one-closed-form-2026-09.md](one-closed-form-2026-09.md)); **C1** was first demoted to an ask by
+C0's measurement, then closed by round-38 **#17** – his pick moved `plateauRate`, not the phase
+pair; **C2** closed as answered, not built – the 93.3% premise was measured on the protected arm
+only; **C3** closed by the same #17, his «как это не превратить в гарантию?» answered by not
+building a guarantee. The C sections below keep their pre-close text as the argument's record.
 
 ---
 
