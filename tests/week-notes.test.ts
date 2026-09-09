@@ -50,11 +50,15 @@ import {
 } from '../src/engine/diary'
 import {
   WEEK_PLAN_PRESETS,
+  type BondBand,
   type ConditionBand,
   type DiaryFacts,
   type DiaryLifeStage,
   type FundsPressure,
+  type MoodRegister,
 } from '../src/shared/protocol'
+// ⭐ v72: who she is, and the five approved Mood words the ladder hands the tile.
+import { MOOD_WORD, TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
 // W6c: the anatomy the pin re-derives from, so a claim about her body is checked against her body.
 import { BODY_REGIONS, bodyGroupOf, bodyPartOf, type BodyGroup } from '../src/engine/body'
 // v48: the birthday catalogue, so the scrap budget is measured on the longest noun it can produce.
@@ -89,6 +93,16 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     lossStreak: 0,
     condition,
     conditionBand: conditionBandOf(condition),
+    // ⚠ v72 – WHO SHE IS, HOW SHE IS, AND WHERE THE TWO OF THEM STAND. The defaults are a career's
+    // opening state (ruling V4: 70/70 for everyone in v1), which reads `steady` on the bond and
+    // `level` on the register, and the openness/steadiness pair the first bible was written for.
+    // `sweepVoices` below crosses all four voices, all four bands and all three registers – holding
+    // them fixed here would repeat R2-18's mistake, where a sweep of ~47,000 fixtures contained
+    // exactly one answer to the question the item was about.
+    temperament: 'sunny',
+    moodWord: null,
+    moodRegister: 'level',
+    bondBand: 'steady',
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -235,10 +249,74 @@ function* sweepStages(): Generator<DiaryFacts> {
   }
 }
 
-/** Every fixture the pins run over: the week shapes, and then the stages. */
+/**
+ * ⭐⭐ v72 – THE VOICE AXES, and the reason they are a sweep of their own is `sweepStages`' reason
+ * one paragraph up, repeated for three new fields at once.
+ *
+ * `sweepWeeks` holds `temperament` at `sunny`, `bondBand` at `steady` and `moodRegister` at `level`
+ * on every one of its ~47,000 fixtures – so all 33 lines of the other three voices, all 8 of the
+ * flat pool and both register-scoped variants would be licensed in NONE of them, and their absence
+ * would be licensed in ALL of them. Crossing four voices × four bands × three registers into the
+ * main sweep would multiply it by 48 for no new information about the plan or the wallet, so the
+ * three axes get their own sweep at the shapes that actually differ, and both feed the honesty pin.
+ *
+ * ⚠ IT SWEEPS STATES THE ENGINE CANNOT REACH – a `cold` bond in wave 1, a `heavy` register – on the
+ * same method the knock axis states above: the pin checks the LICENCE SPACE, not the reachable one,
+ * so a licence that would become wrong the day wave 4's break-up shock arrives fails today.
+ */
+const VOICES: Temperament[] = ['sunny', 'fiery', 'quiet', 'deep']
+const BONDS: BondBand[] = ['close', 'steady', 'strained', 'cold']
+const REGISTERS: MoodRegister[] = ['bright', 'level', 'low']
+
+function* sweepVoices(): Generator<DiaryFacts> {
+  const calendars: Partial<DiaryFacts>[] = [
+    {},
+    { birthdayAge: 15 },
+    { examsWeek: true },
+    { offSeasonWeek: true },
+    { vacationWeek: true },
+    { playedPractice: true },
+  ]
+  const stages: DiaryLifeStage[] = ['school', 'independent']
+  for (const temperament of VOICES) {
+    for (const bondBand of BONDS) {
+      for (const moodRegister of REGISTERS) {
+        for (const lifeStage of stages) {
+          for (const calendar of calendars) {
+            if (lifeStage !== 'school' && calendar.examsWeek) continue // the engine cannot produce it
+            for (const trainPct of [WEEK_PLAN_PRESETS.light.train, WEEK_PLAN_PRESETS.grind.train]) {
+              for (const band of BANDS) {
+                for (const knock of KNOCKS) {
+                  for (const injured of [INJURIES[0], INJURIES[1]]) {
+                    yield homeWeek({
+                      temperament,
+                      bondBand,
+                      moodRegister,
+                      lifeStage,
+                      schoolOver: lifeStage !== 'school',
+                      ageYears: lifeStage === 'school' ? 15 : 24,
+                      trainPct,
+                      condition: BAND_CONDITION[band],
+                      injured,
+                      ...calendar,
+                      ...knock,
+                    })
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/** Every fixture the pins run over: the week shapes, then the stages, then the voices. */
 function* sweepAll(): Generator<DiaryFacts> {
   yield* sweepWeeks()
   yield* sweepStages()
+  yield* sweepVoices()
 }
 
 /** The sentence a note actually puts on the scrap. W4: an entry may be a facts-aware template, so the
@@ -311,6 +389,18 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // caught by reading.
   bodyGroup: (f, value) => f.injured !== null && bodyGroupOf(f.injured.kind) === value,
   birthday: (f) => f.birthdayAge !== null,
+  // ⭐ v72 – the three claims her own voice carries, each re-derived off the facts and NOT off the
+  // predicate in weekNotes.ts that produced the line. Same method as every entry above: a second
+  // spelling, so a licence and its claim cannot be wrong together.
+  voice: (f, value) => f.temperament === value,
+  // ⚠ THE THREE REGISTER VALUES DO NOT ALL MEAN "EQUALS", and the asymmetry is the approved doc's
+  // rather than a convenience: `level` is defined there as «the one variant that is not a low week»,
+  // so a level line says only that her week was not a bad one – which is all its words rest on.
+  register: (f, value) => (value === 'level' ? f.moodRegister !== 'low' : f.moodRegister === value),
+  // ⚠ "close enough to speak in her own voice" – BOTH warm bands, not «bond ≥ 80». See the claim's
+  // own note in weekNotes.ts for why the doc's name and this predicate are not the same sentence.
+  closeBond: (f) => f.bondBand === 'close' || f.bondBand === 'steady',
+  strainedBond: (f) => f.bondBand === 'strained',
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -665,24 +755,106 @@ describe('W2 — the note is the PARENT, and it fits on a scrap of paper', () =>
     for (const t of texts) expect(t.length, t).toBeLessThanOrEqual(80)
   })
 
+  // ===============================================================================================
+  // ⚠⚠ v72 — THE PIN RE-AIMED AT THE NARRATION, ON THE OWNER'S RULING OF 09.09. NOT WEAKENED.
+  // ===============================================================================================
+  //
+  // WHAT MOVED, exactly. Two assertions used to scan the WHOLE rendered sentence:
+  //
+  //     expect(t).not.toMatch(/\bYou\b|\byour\b|\bYour\b/)      // "never addresses the player"
+  //     expect(t).not.toMatch(/\bI\b/)                          // "written ABOUT her, third person"
+  //
+  // ⭐ THE RULING (owner, 09.09): **she may speak in the first person inside her own quotation
+  // marks.** `I`, `me`, `mine` and `we` are hers to use there, and so is addressing the parent
+  // directly – that is how a person talks, and tier 0 of her voice is her quoted line inside the
+  // parent's week story. THE NARRATOR'S LAW IS UNCHANGED: outside the quotation the diary is still
+  // the parent's journal, third person about her, no address to the player. What was wrong was the
+  // assertion's BOUNDARY – it scanned the rendered note without knowing where the quotation marks
+  // were – so the pin is RE-AIMED at the narration, and it comes back ARMED RATHER THAN RELAXED:
+  //
+  //   * the address ban gains its LOWERCASE arm. The shipped regex was case-sensitive and caught
+  //     `You` and `Your` but not `you` – the commonest spelling of the word it bans. Every line in
+  //     the pool, quoted or not, is now held to `/\byou\b/i` and `/\byour\b/i`.
+  //   * her narration gains `me`, `mine` and `we`, which the old pin had NO arm for at all.
+  //
+  // ⚠⚠ AND THE TWO SHAPE RULES ARE WHAT MAKE THE STRIP SAFE. Both are stated in the approved doc's
+  // own preamble (`docs/specs/voice-bibles-2026-09.md` §"How she speaks") and all 52 lines obey them:
+  //
+  //   1. AT MOST ONE QUOTED SPAN PER LINE. A greedy `/".*"/` strip over two spans swallows the
+  //      narration between them, so a two-span line could hide a first-person narrator from the
+  //      check. This asserts the shape instead of trusting it.
+  //   2. THE NARRATION OUTSIDE THE QUOTATION CONTAINS `she` OR `She`. A paired `/"[^"]*"/g` strip
+  //      cannot tell HER quotation from anybody else's – `"You are not going back until I say so,"
+  //      we said.` would sail straight through it – so the `she` is what names the speaker as her,
+  //      and it is exactly the collapse the pin exists to prevent.
+  //
+  // ⚠ WHY `we` IS HELD AGAINST HER LINES AND NOT AGAINST THE PARENT'S. «We said no», «Out before we
+  // were up», «We watched her serve more closely than usual» are the PARENT's own voice and have
+  // shipped for a year – the diary is written by a household. `we` in the narration AROUND HER
+  // QUOTATION is the different thing rule 2 is aimed at, and that is where it is banned.
+  const ONE_SPAN = /"[^"]*"/g
+  /** The line with her quotation taken out of it – the parent's own words, and only those. */
+  const narrationOf = (t: string): string => t.replace(ONE_SPAN, ' ')
+  /** ⚠ THE PRONOUN, NOT THE NOUN, and the lookbehind is measured rather than defensive: the first
+   *  run of the lowercase arm failed on a SHIPPED birthday line – «A pause, then a very good
+   *  thank-you.» – which addresses nobody and which CLAUDE.md invariant 4 forbids anyone to reword.
+   *  A hyphen in front of it is what separates the compound noun from the address, so that is what
+   *  the pin asks. Everything else the arm ever caught, it still catches. */
+  const ADDRESS = /(?<!-)\byou\b/i
+  const ADDRESS_POSSESSIVE = /(?<!-)\byour\b/i
+
+  it('⚠ SHAPE RULE 1: at most ONE quoted span per line, or the strip below is unsafe', () => {
+    for (const t of texts) {
+      expect((t.match(ONE_SPAN) ?? []).length, t).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('⚠ SHAPE RULE 2: a line that quotes her names her in the narration around it', () => {
+    let quoted = 0
+    for (const t of texts) {
+      if ((t.match(ONE_SPAN) ?? []).length === 0) continue
+      quoted++
+      expect(narrationOf(t), t).toMatch(/\bshe\b/i)
+    }
+    // ...and the rule has to have something to rule on: her lines EXIST in this pool.
+    expect(quoted, 'no line quotes her – then both rules above prove nothing').toBeGreaterThan(40)
+  })
+
   it('short dash only, no Cyrillic, and never addresses the player', () => {
     for (const t of texts) {
       expect(t, t).not.toContain('—')
       expect(t, t).not.toMatch(/[Ѐ-ӿ]/)
-      expect(t, t).not.toMatch(/\bYou\b|\byour\b|\bYour\b/)
+      // ⚠ RE-AIMED at the narration, and armed with the lowercase arm the shipped pin never had.
+      expect(narrationOf(t), t).not.toMatch(ADDRESS)
+      expect(narrationOf(t), t).not.toMatch(ADDRESS_POSSESSIVE)
     }
   })
 
   it('is written ABOUT her, in the third person – never her name, never the coach\'s register', () => {
     for (const t of texts) {
       // The game rolls her name; a note that used it would read like a certificate.
-      expect(t, t).not.toMatch(/\bI\b/)
+      // ⚠ RE-AIMED at the narration (see the block above), and armed with `me` / `mine` / `we`.
+      const narration = narrationOf(t)
+      expect(narration, t).not.toMatch(/\bI\b/)
+      expect(narration, t).not.toMatch(/\bme\b/i)
+      expect(narration, t).not.toMatch(/\bmine\b/i)
+      if ((t.match(ONE_SPAN) ?? []).length > 0) expect(narration, t).not.toMatch(/\bwe\b/i)
       // Nothing here grades her or predicts her: that is the coach's job, two tiles away
       // (engine/radar.ts), and two identical voices on one card is the failure this guards.
       expect(t.toLowerCase(), t).not.toContain('potential')
       expect(t.toLowerCase(), t).not.toContain('we need')
       expect(t.toLowerCase(), t).not.toContain('the job is')
     }
+  })
+
+  it('⚠ ...AND THE STRIP IS LOAD-BEARING – her quoted lines really do speak in the first person', () => {
+    // The other half of "re-aimed, never weakened": if no line in the pool used a first person
+    // INSIDE its quotation, the strip above would be free and the ruling would have bought nothing.
+    // This is the arm that makes the re-aim mean something – and it is what fails if a future
+    // rewrite silently narrows her back to reported speech.
+    const inside = texts.flatMap((t) => t.match(ONE_SPAN) ?? [])
+    expect(inside.filter((q) => /\bI\b/.test(q)).length, 'she never says I').toBeGreaterThan(5)
+    expect(inside.filter((q) => /\bme\b|\bmine\b|\bwe\b/i.test(q)).length).toBeGreaterThan(2)
   })
 
   it('no line appears twice, and the pool is big enough for a five-year career', () => {
@@ -705,6 +877,136 @@ describe('W2 — the wiring', () => {
     // subject is the PLAYER's choice, not the world's.
     // diary.ts AND every diary/*.ts part: the week-note pool moved to diary/weekNotes.ts.
     expect(diarySource()).toContain('f.trainPct >= WEEK_NOTE_GRIND')
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ v72 — HER VOICE: COMPLETENESS, AND THE THREE LICENCES THAT SELECT IT
+// =================================================================================================
+//
+// who-she-is §5b names the pin this block is: «a test walking beatKind × temperament × register that
+// FAILS on a missing variant, so a `quiet` girl can never silently receive a `fiery` girl's line as
+// a fallback. (The flat pool is the one legal shared fallback, and only at strained/cold.)»
+//
+// ⚠ WHY IT IS NOT ENOUGH THAT `VOICE_LINES` IS A TOTAL `Record`. The type makes a missing STRING a
+// compile error; it says nothing about whether the line is REACHABLE. A moment whose licence is
+// wrong for one voice – or a register that quietly excludes one – leaves that girl with silence
+// while the other three speak, and the type is perfectly happy. So this walks the LICENCES, which is
+// the property the design is actually about.
+describe('v72 — the voice completeness pin', () => {
+  const LAYOFF = { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 }
+  /** The eleven spoken moments, as WEEKS rather than as ids – a second spelling of `MOMENTS`, built
+   *  from the facts side, so the pin cannot agree with the pool by copying it. */
+  const SPOKEN: [string, Partial<DiaryFacts>][] = [
+    ['grind', { trainPct: WEEK_PLAN_PRESETS.grind.train }],
+    ['light', { trainPct: WEEK_PLAN_PRESETS.light.train }],
+    ['freshBody', { condition: BAND_CONDITION.fresh }],
+    ['exams', { examsWeek: true }],
+    ['vacation', { vacationWeek: true }],
+    ['restingKnock', { knockChoice: 'rest', knockPart: 'ankle' }],
+    ['pushingKnock', { knockChoice: 'push', knockPart: 'shoulder' }],
+    ['injured', { injured: LAYOFF }],
+    ['tired', { condition: BAND_CONDITION.drained }],
+    ['birthday', { birthdayAge: 15, lifeStage: 'school', schoolOver: false, ageYears: 15 }],
+    ['offSeason', { offSeasonWeek: true, lifeStage: 'independent', schoolOver: true, ageYears: 24 }],
+  ]
+
+  /** Every line in HER voice that this week licenses – i.e. the ones carrying a `voice` claim. */
+  const voicedAt = (over: Partial<DiaryFacts>): { voice: Temperament; text: string }[] =>
+    WEEK_NOTES.filter((n) => n.claims.voice !== undefined && n.license(homeWeek(over))).map((n) => ({
+      voice: n.claims.voice as Temperament,
+      text: render(n, homeWeek(over)),
+    }))
+
+  it('⚠⚠ every moment × register that speaks for ONE girl speaks for ALL FOUR', () => {
+    let spoke = 0
+    for (const [moment, week] of SPOKEN) {
+      for (const moodRegister of REGISTERS) {
+        const counts = TEMPERAMENTS.map(
+          (temperament) => voicedAt({ ...week, moodRegister, temperament }).length,
+        )
+        const label = `${moment} @ ${moodRegister}: ${JSON.stringify(
+          Object.fromEntries(TEMPERAMENTS.map((t, i) => [t, counts[i]])),
+        )}`
+        expect(new Set(counts).size, `a missing variant – ${label}`).toBe(1)
+        if (counts[0] > 0) spoke++
+      }
+    }
+    // ...and the walk has to actually reach her voice, or the equality above is four zeros.
+    expect(spoke, 'no moment speaks at all – then this pin proves nothing').toBeGreaterThan(8)
+  })
+
+  it('⚠ and a girl is only ever handed HER OWN voice – never another one as a fallback', () => {
+    for (const [, week] of SPOKEN) {
+      for (const moodRegister of REGISTERS) {
+        for (const temperament of TEMPERAMENTS) {
+          for (const line of voicedAt({ ...week, moodRegister, temperament })) {
+            expect(line.voice, `"${line.text}" reached a ${temperament} girl`).toBe(temperament)
+          }
+        }
+      }
+    }
+  })
+
+  it('⚠⚠ THE FLAT POOL IS THE ONLY SHARED FALLBACK, and only where the walls are up', () => {
+    const flatAt = (over: Partial<DiaryFacts>) =>
+      WEEK_NOTES.filter((n) => n.claims.strainedBond && n.license(homeWeek(over)))
+    for (const temperament of TEMPERAMENTS) {
+      // `strained` – her own voice is gone and the shared pool answers in its place.
+      const strained = { temperament, bondBand: 'strained' as const }
+      expect(voicedAt(strained), `${temperament} still has her voice at strained`).toEqual([])
+      expect(flatAt(strained).length, 'the walls-up pool has to speak').toBeGreaterThan(0)
+      // `cold` – the third rung of §B's ladder: nothing at all, and the parent's line stands alone.
+      const cold = { temperament, bondBand: 'cold' as const }
+      expect(voicedAt(cold)).toEqual([])
+      expect(flatAt(cold), 'tier 0 is ABSENT at cold, not quieter').toEqual([])
+      // ...and the flat pool never stands in for a girl who is still talking to her parent.
+      for (const band of ['close', 'steady'] as const) {
+        expect(flatAt({ temperament, bondBand: band }), `flat pool at ${band}`).toEqual([])
+      }
+      // ⚠ and a cold week still has the PARENT's own words – the loss is her voice, not the page.
+      expect(WEEK_NOTES.some((n) => n.license(homeWeek(cold)))).toBe(true)
+    }
+  })
+
+  it('⚠ the register is a licence on a VARIANT: low weeks and bright weeks are not interchangeable', () => {
+    // The two register-scoped moments, from both sides. `freshBody` is written at `bright` and
+    // `tired` at `low`; neither may fire in the other's week, and the eight-strong `level` band may
+    // not fire on a low week at all («the one variant that is not a low week»).
+    const fresh = { condition: BAND_CONDITION.fresh }
+    const drained = { condition: BAND_CONDITION.drained }
+    for (const temperament of TEMPERAMENTS) {
+      const at = (over: Partial<DiaryFacts>) => voicedAt({ ...over, temperament })
+      expect(at({ ...fresh, moodRegister: 'bright' }).length, 'the bright variant').toBe(1)
+      expect(at({ ...fresh, moodRegister: 'level' })).toEqual([])
+      expect(at({ ...fresh, moodRegister: 'low' })).toEqual([])
+      expect(at({ ...drained, moodRegister: 'low' }).length, 'the low variant').toBe(1)
+      expect(at({ ...drained, moodRegister: 'level' })).toEqual([])
+      // ...and a level line is licensed on a bright week too, which is what `level` MEANS.
+      const grind = { trainPct: WEEK_PLAN_PRESETS.grind.train, temperament }
+      expect(voicedAt({ ...grind, moodRegister: 'level' }).length).toBe(1)
+      expect(voicedAt({ ...grind, moodRegister: 'bright' }).length).toBe(1)
+      expect(voicedAt({ ...grind, moodRegister: 'low' })).toEqual([])
+    }
+  })
+
+  it('⚠ the fifty-two lines are all there, once each, and nothing else grew', () => {
+    // 44 voiced (11 moments x 4 voices) + 8 flat = 52, which is voice-bibles §E's own arithmetic.
+    const voiced = WEEK_NOTES.filter((n) => n.claims.voice !== undefined)
+    const flat = WEEK_NOTES.filter((n) => n.claims.strainedBond)
+    expect(voiced.length).toBe(44)
+    expect(flat.length).toBe(8)
+    // every voiced line claims the warm channel, and no flat line claims a voice
+    for (const n of voiced) expect(n.claims.closeBond, render(n, homeWeek({}))).toBe(true)
+    for (const n of flat) expect(n.claims.voice).toBeUndefined()
+    // eleven per voice, exactly
+    for (const t of TEMPERAMENTS) expect(voiced.filter((n) => n.claims.voice === t).length).toBe(11)
+  })
+
+  it('⚠ the five Mood words are the approved five, and the engine hands nothing else', () => {
+    // ⚠⚠ CLAUDE.md INVARIANT 4: these are the owner's words, from an approved document. This pin is
+    // here so a rename shows up as a failing test rather than as a screen nobody re-read.
+    expect(Object.values(MOOD_WORD)).toEqual(['Glowing', 'Bright', 'Steady', 'Dimmed', 'Heavy'])
   })
 })
 

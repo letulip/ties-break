@@ -162,7 +162,18 @@ who-she-is). Pass bars, all per arm:
   > 2×SEM – and neither median clamps;
 * **the fairness corridor: paired lifetime match-win deltas across temperaments inside
   ±1.5 pp** – a breach is a finding for the owner, never a silent rebalance;
-* **Mood-word occupancy: each of the five words in ≥ 2% of weeks** under the care arm;
+* ~~**Mood-word occupancy: each of the five words in ≥ 2% of weeks** under the care arm~~ →
+  **wave 4**, struck in place with bars 1 and 3 above and for the same reason, on his ruling of
+  09.09. The bar was written against FREE cut points; the ladder is now RULED, and he took **wide
+  honest bands** over the bench's measured optimum – «the word changes only when something really
+  happened». Against who-she-is §4a's own measured distribution the ruled cuts
+  (`ECONOMY.spirit.mood`: 60 / 67.5 / 72.5 / 80) give **Steady 90.98% · Bright 6.07% · Dimmed
+  2.07% · Glowing 0.88% · Heavy 0.00%** – so the bar does not pass in wave 1, and that is the ruled
+  outcome rather than a defect: wave 1 has no life events by its own definition, and the ladder is
+  built for the finished layer. Glowing and Heavy get their range from the **wave-4 break-up shock
+  (−22 steady / −34 intense)**, where a lifted girl at 75 taking −34 lands at 41 and wears Heavy for
+  weeks. ⚠ The cut points are not tuning dials: a test that would be easier with other numbers is a
+  test to rewrite (pinned in `tests/spirit.test.ts`).
 * printed for his read (no bars yet): the birthday ask-mix per temperament, weeks under the
   knee, bond outcomes per temperament.
 

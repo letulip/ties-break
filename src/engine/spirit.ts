@@ -37,9 +37,14 @@
 //   world/planner.ts   `resolveVacation` +1
 //   this file          the season-boundary zero-vacations block −3 (and −3 to spirit, one moment)
 //
-// ⚠ NOT HERE, AND NOT IN THIS WAVE: her face, the Mood word, any diary line, any component. Those
-// are the runbook's steps 4-5 and they are blocked on the owner's wording pass (CLAUDE.md invariant
-// 4 – every player-facing word is his). This module produces two numbers and nothing that speaks.
+// ⚠ WHAT IS HERE NOW AND WAS NOT WHEN THE NUMBERS LANDED (wave 1, step 4). This note used to end
+// «this module produces two numbers and nothing that speaks», because her face, the Mood word and
+// every diary line were blocked on the owner's wording pass (CLAUDE.md invariant 4 – every
+// player-facing word is his). ⭐ THE PASS HAPPENED: `docs/specs/voice-bibles-2026-09.md` is approved
+// and the ladder's four cut points were ruled 09.09. So this module now also owns the two pure
+// READINGS of the numbers – `spiritBandOf` / `bondBandOf` – and the five approved words the first of
+// them names. Still no line, no pool and no component: the diary owns those, and it is handed a
+// word, a register and a band.
 import { ECONOMY } from './economy'
 import { clamp } from './condition'
 import { pickInt, rngFromSeed } from './rng'
@@ -49,6 +54,7 @@ import { isBlackoutWeek, isExamWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './
 import { birthdayTurning } from './world/age'
 import { vacationForWeek } from './world/bookings'
 import { seasonStartWeek } from './world/ledger'
+import type { BondBand, MoodRegister } from '../shared/protocol'
 // ⚠ TYPE-ONLY, so this leaf adds no runtime edge back into the integration core – the same shape
 // `academy.ts` uses one floor up and every `world/*.ts` module uses beside it.
 import type { WorldState } from './world'
@@ -117,6 +123,80 @@ export function spiritMatchFactor(spirit: number): number {
   const s = ECONOMY.spirit
   if (spirit >= s.knee) return 1
   return s.floor + (1 - s.floor) * (spirit / s.knee)
+}
+
+// =================================================================================================
+// 2b. THE TWO READINGS – the only road either number has to a screen or a sentence
+// =================================================================================================
+//
+// ⚠⚠ THE FOG LAW, RESTATED WHERE IT IS ENFORCED (who-she-is §5; the build plan §1e). `spirit` and
+// `bond` are never shown as numbers – no meter, no bar, no arrow, no tile figure, on any surface,
+// ever. These two functions are the ENTIRE surface area of both: a band goes out, the number never
+// does. Everything downstream (the Mood word, the emotion, the diary's licences) reads a band.
+
+/** The five rungs of the Mood ladder, as ids. The WORDS they map to are the owner's and live in
+ *  `MOOD_WORD` below; nothing in the code decides them. */
+export type SpiritBand = 'glowing' | 'bright' | 'steady' | 'dimmed' | 'heavy'
+
+/** All five, top down – so a sweep walks the ladder by name instead of re-listing it. */
+export const SPIRIT_BANDS: readonly SpiritBand[] = ['glowing', 'bright', 'steady', 'dimmed', 'heavy']
+
+/**
+ * ⭐⭐ THE FIVE MOOD WORDS – APPROVED COPY, `docs/specs/voice-bibles-2026-09.md` §C, verbatim.
+ *
+ * ⚠⚠ CLAUDE.md INVARIANT 4 BINDS THIS TABLE TWICE OVER: it is nothing but wording, and the wording
+ * is the owner's. No agent renames one of these, and no agent adds a sixth – the ladder is five
+ * words wide because he ruled five.
+ *
+ * ⚠ «Steady» IS SHARED WITH CONDITION'S OWN WORD BY HIS RULING (who-she-is §7, tail 4: «the neutral
+ * state is one state and gets one word»). That is not a collision to be resolved: the two Mood tiles
+ * already print `Steady` for the `norm` face, so the neutral rung of this ladder and the neutral rung
+ * of the body's say the same thing whichever channel is carrying the week. The gamma lives in the
+ * other four.
+ */
+export const MOOD_WORD: Record<SpiritBand, string> = {
+  glowing: 'Glowing',
+  bright: 'Bright',
+  steady: 'Steady',
+  dimmed: 'Dimmed',
+  heavy: 'Heavy',
+}
+
+/** WHICH RUNG OF THE LADDER THIS WEEK IS ON. The four cut points are `ECONOMY.spirit.mood`, ruled
+ *  09.09, each anchored to a mechanical fact – see the constants for the anchors. Pure, total, and
+ *  the ONE reader of them. */
+export function spiritBandOf(spirit: number): SpiritBand {
+  const m = ECONOMY.spirit.mood
+  if (spirit < m.heavyBelow) return 'heavy'
+  if (spirit < m.dimmedBelow) return 'dimmed'
+  if (spirit >= m.glowingFrom) return 'glowing'
+  if (spirit >= m.brightFrom) return 'bright'
+  return 'steady'
+}
+
+/** ...and the same ladder collapsed to the three registers speech needs (who-she-is §5b). Derived
+ *  FROM THE BAND rather than from the number a second time, so the word she is handed and the
+ *  register her line is licensed under can never be readings of two different weeks. */
+export function moodRegisterOf(band: SpiritBand): MoodRegister {
+  if (band === 'glowing' || band === 'bright') return 'bright'
+  if (band === 'steady') return 'level'
+  return 'low'
+}
+
+// ⚠ THE RUNG DISTANCE THIS LADDER IS COMPARED ON IS *NOT* HERE, deliberately, and there is exactly
+// one spelling of it: `MOOD_DEVIATION` in `shared/avatarEmotion.ts`, beside the body ladder it has to
+// be compared against. The ruled collision rule («injury first, then the LARGER DEVIATION of body vs
+// mood») is a statement about her FACE, and a second copy of the mapping on this side is precisely
+// the drift that would let the word and the picture describe two different weeks.
+
+/** WHAT THE PARENT HAS BUILT WITH HER, as the four bands the diary's channels read (build plan §1e).
+ *  A band, never the number – same law as the ladder above. */
+export function bondBandOf(bond: number): BondBand {
+  const c = ECONOMY.bond.band
+  if (bond >= c.close) return 'close'
+  if (bond >= c.steady) return 'steady'
+  if (bond >= c.strained) return 'strained'
+  return 'cold'
 }
 
 // =================================================================================================

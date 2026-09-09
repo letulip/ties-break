@@ -98,6 +98,10 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   kidId: KID_ID,
   kidAgeAt: FIXTURE_AGE_AT,
   condition: 70,
+  // ⚠ v72: a career's opening state, unread here – 70/70 for everyone in v1 (ruling V4).
+  spirit: 70,
+  bond: 70,
+  temperament: 'sunny',
   fundsCents: 100_000_00,
   injury: null,
   events: [],

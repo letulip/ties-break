@@ -61,6 +61,12 @@ function baseFacts(stage: DiaryLifeStage, age: number): DiaryFacts {
     lossStreak: 0,
     condition: 70,
     conditionBand: 'ok',
+    // ⚠ v72: a career's opening state, unread by this suite – 70/70 for everyone in v1 (ruling V4),
+    // which reads `steady` on the bond band and `level` on the register.
+    temperament: 'sunny',
+    moodWord: null,
+    moodRegister: 'level',
+    bondBand: 'steady',
     injured: null,
     travelled: false,
     playedTournament: false,

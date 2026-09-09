@@ -68,7 +68,7 @@ import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 // ⭐ v72: the consumer ruling 2 below was waiting for – see `chooseGift`. `applyBondDelta` is the one
 // writer of `world.bond`, so this file states WHICH row applies and never how the number is clamped.
-import { applyBondDelta } from '../spirit'
+import { applyBondDelta, temperamentFor, type Temperament } from '../spirit'
 import { addEvent } from './ledger'
 import { ageInWords, birthdayTurning } from './age'
 import { guardNotEndedForGood } from './endings'
@@ -150,6 +150,38 @@ const TIME_TOGETHER_BOND: Record<string, number> = {
 }
 /** Exported for the pin above – the two tables must describe the same three options. */
 export const BIRTHDAY_TIME_TOGETHER_BOND: Readonly<Record<string, number>> = TIME_TOGETHER_BOND
+
+// =================================================================================================
+// ⭐⭐ v72 – THE ASK LEANS TOWARD HER REGISTER, MILDLY (who-she-is §3, reader 7)
+// =================================================================================================
+//
+// «mild re-weight of which of the four offered she asks for – a TENDENCY, never a rule ... the ask
+// stays drawn on `seed:birthday:<age>`, deterministic re-weight, record untouched; weight capped
+// ~1.5×, every id common for every girl (anti-stereotype guard, 09.09).» All five properties hold
+// below, and each of them is pinned.
+//
+// ⚠⚠ WHICH AXIS, AND WHY IT IS THIS ONE. The catalogue carries exactly one categorical distinction
+// between its rows: TIME TOGETHER (`TIME_TOGETHER` above – the day, the week at home, the trip) as
+// against a THING. That is the OPENNESS axis's own subject and nothing else's – who-she-is §1 gives
+// openness «her flow with people» and intensity «how hard things land and how long they hold», and
+// nothing in the catalogue is louder or quieter than anything else in it. So an OPEN girl leans a
+// little toward the answer that is people, and a PRIVATE girl a little toward the answer that is
+// hers alone. ⚠ INTENSITY IS DELIBERATELY NOT READ HERE: it owns tempo and weight, and there is no
+// tempo in a gift row to read it off.
+//
+// ⚠ AND IT IS A LEAN, NOT A SCRIPT. With one time-together row on a card of four the open girl asks
+// for it 33% of the time against a uniform 25%, and the private girl 18% – so every id stays common
+// for every girl, which is exactly what the anti-stereotype guard asks and what the census prints.
+export const BIRTHDAY_ASK_TILT = 1.5
+
+/** The relative weight this row carries for this girl – 1.0 for everybody when the temperament is
+ *  absent, which is what keeps every catalogue sweep and every historical caller byte-identical. */
+function askWeightFor(gift: BirthdayGift, temperament: Temperament | null): number {
+  if (temperament === null) return 1
+  const open = temperament === 'sunny' || temperament === 'fiery'
+  const isTimeTogether = TIME_TOGETHER[gift.id] !== undefined
+  return isTimeTogether === open ? BIRTHDAY_ASK_TILT : 1
+}
 
 /** ⭐ THE FOURTH OPTION, ALWAYS OFFERED AND NEVER MARKED. Not a "no thanks" – it is the one answer
  *  in the list that costs the parent something he actually has, which is why it has to read as one
@@ -1095,6 +1127,13 @@ export function birthdayOffer(
    *  (the stream stays `seed:birthday:<age>`); it is an input to a pool filter, exactly as
    *  `alreadyGiven` has been since round-17 #18. */
   week: number | null = null,
+  /** ⭐⭐ v72 – WHO SHE IS, for the mild lean above. `null` – the default – is a UNIFORM draw and is
+   *  therefore the exact pre-wave behaviour, which is what every catalogue sweep in tests/ and
+   *  tools/ keeps asking for. The engine's one seam (`birthdayOfferFor`) always passes the real
+   *  girl. ⚠ It is NOT part of any RNG key: the stream is still `seed:birthday:<age>` and it is
+   *  still drawn exactly four times, because the weights are applied to the POOL and never to the
+   *  draw – the identical discipline `alreadyGiven` has been under since round-17 #18. */
+  temperament: Temperament | null = null,
 ): { options: BirthdayGift[]; askedId: string; eased: 'gap' | 'cap' | null } {
   const band = bandFor(age, atCollege)
   // ⭐ ROUND 26 #9b – WHICH three, off the band's own cycle stream (see `materialFor`). The band
@@ -1183,7 +1222,25 @@ export function birthdayOffer(
   // reason the `alreadyGiven` filter is applied to the POOL and never to the draw. A branch that
   // skipped the roll would make the stream's position depend on where in her life she is, and the
   // count is pinned.
-  const drawn = pool[Math.floor(rng() * pool.length)].id
+  //
+  // ⭐⭐ v72 – AND IT IS ONE DRAW, WEIGHTED, RATHER THAN ONE DRAW, UNIFORM. `rng()` is called exactly
+  // once here, exactly as it always was; what changed is how the [0,1) it returns is CUT UP. That is
+  // the whole reason the lean costs no stream position and no record shape: a re-weight that added a
+  // second roll, or rolled only for some girls, would make the sub-stream's position depend on who
+  // she is – which is the failure mode every note in this function is written against.
+  const weights = pool.map((g) => askWeightFor(g, temperament))
+  let cut = rng() * weights.reduce((sum, w) => sum + w, 0)
+  // The last row is the total's own fallback: floating-point summation can leave `cut` a hair inside
+  // the final slice after the loop has spent every weight, and a draw that fell off the end would be
+  // a crash rather than an ask.
+  let drawn = pool[pool.length - 1].id
+  for (let i = 0; i < pool.length; i++) {
+    cut -= weights[i]
+    if (cut < 0) {
+      drawn = pool[i].id
+      break
+    }
+  }
   // ⭐⭐⭐ ROUND 26 #4, SECOND PASS – HER FIRST COLLEGE BIRTHDAY ASKS FOR THE BICYCLE. The owner:
   // «может быть это должна быть как раз просьба на первый ДР во время учебы вообще.»
   //
@@ -1287,6 +1344,11 @@ export function birthdayOfferFor(
     // the ask stays immutable once the dialog is on screen, exactly as `giftsAlreadyGiven` above.
     world.birthdays ?? [],
     world.week,
+    // ⭐⭐ v72 – the eighth argument, and the `??` is `accrueSpirit`'s own courtesy repeated for the
+    // same reason: probe worlds hand-built in tools and tests predate the field, and re-deriving it
+    // from the seed hands them the SAME girl rather than a uniform stranger – so a bench arm cannot
+    // measure a lean that is silently switched off in it.
+    world.temperament ?? temperamentFor(world.seed),
   )
 }
 

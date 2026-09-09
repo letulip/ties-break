@@ -3369,6 +3369,42 @@ export const ECONOMY = {
      *  builds the slot must not get to invent it. `tests/spirit.test.ts` pins the absence of a reader,
      *  so the day wave 3 wires it the pin says so. */
     attachmentLift: 5,
+    /** ⭐⭐ THE MOOD LADDER'S FOUR CUT POINTS – RULED 09.09, and every one of them is anchored to a
+     *  MECHANICAL FACT rather than to taste. The five words they divide are the owner's
+     *  (`docs/specs/voice-bibles-2026-09.md` §C, approved); the numbers are his ruling of the same
+     *  day, taken over the bench's measured optimum on the reason that moved bars 1 and 3 too:
+     *  «the word changes only when something really happened» – wave 1 is quiet on purpose and the
+     *  ladder is built for the finished layer.
+     *
+     *  The four read as two floors and two ceilings around the neutral band, and `spiritBandOf` is
+     *  the ONE reader: `< heavyBelow` Heavy · `< dimmedBelow` Dimmed · `>= glowingFrom` Glowing ·
+     *  `>= brightFrom` Bright · everything between the two Steady.
+     *
+     *  ⚠ THE ≥ 2% OCCUPANCY BAR DOES NOT PASS IN WAVE 1 AND THAT IS THE RULED OUTCOME, not a defect:
+     *  measured against who-she-is §4a's own distribution these cuts give Steady 90.98% · Bright
+     *  6.07% · Dimmed 2.07% · Glowing 0.88% · Heavy 0.00%. Glowing and Heavy are rare-to-absent
+     *  until wave 4's break-up shock (−22 steady / −34 intense) gives them their range – a lifted
+     *  girl at 75 taking −34 lands at 41, which is Heavy for weeks. The bar moved to wave 4 with
+     *  bar 1; see the runbook's §6 list. ⚠ These are not tuning dials: a test that would be easier
+     *  with other numbers is a test to rewrite, not a ladder to move. */
+    mood: {
+      /** ⭐ THE KNEE ITSELF – below this `spiritMatchFactor` stops being 1.0 and the match starts
+       *  reading her. It is already the approved doc's own gloss for «Heavy» («the weeks under the
+       *  knee, where the match factor starts reading her»), so the word and the number agree by
+       *  construction rather than by agreement. Kept equal to `knee` above by the pin in
+       *  tests/spirit.test.ts – if one moves the other has to be argued. */
+      heavyBelow: 60,
+      /** Below baseline by more than half a week's return (70 − 5/2 = 67.5). */
+      dimmedBelow: 67.5,
+      /** ⭐ BASELINE + HALF A STEADY WEEK'S RETURN (70 + 5/2 = 72.5) – the other side of the same
+       *  cut `dimmedBelow` makes. Inside `[dimmedBelow, brightFrom)` she is less than half a week of
+       *  coming back from herself, which is not worth a word: «her ordinary state – nothing pressing
+       *  in either direction», as arithmetic. It is where wave 3's attachment lift (+5 on a baseline
+       *  of 75) will sit her, so the word she wears while someone is in her life is decided here. */
+      brightFrom: 72.5,
+      /** The top of the range – rare by design, as the approved doc says of «Glowing». */
+      glowingFrom: 80,
+    },
   },
 
   bond: {
@@ -3422,6 +3458,20 @@ export const ECONOMY = {
       giftUnprompted: 0,
       vacationResolved: 1,
       seasonWithNoVacation: -3,
+    },
+    /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
+     *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`
+     *  – the ONE reader, and the only road `bond` has to a sentence.
+     *
+     *  ⚠ WHAT THE BANDS SELECT IS THE CHANNEL, NOT THE VOLUME (who-she-is §5b): `close`/`steady` let
+     *  her speak in her own voice, `strained` collapses the four voices into the shared flat pool,
+     *  and `cold` is silence – the parent's line alone under the painting. A career therefore walks
+     *  down a ladder with three rungs, which is the loss the player is meant to hear. ⚠ There is
+     *  still NO METER: these divide a number nothing prints. */
+    band: {
+      close: 80,
+      steady: 55,
+      strained: 35,
     },
   },
 

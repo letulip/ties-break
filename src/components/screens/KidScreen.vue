@@ -154,7 +154,17 @@ const countryName = computed(() => {
   return code ? COUNTRY_NAMES[code] ?? code : ''
 })
 const playStyleLabel = computed(() => (game.snapshot ? PLAY_STYLE_LABEL[game.snapshot.profile.playStyle] : ''))
-const moodLabel = computed(() => MOOD_LABEL[emotion.value] ?? 'Steady')
+// ⭐⭐ v72 (the private life, wave 1) – HER LIFE MAY TAKE THE WORD, AND ONLY WHEN IT TOOK THE FACE.
+// `diary.facts.moodWord` is one of the five approved Mood words on exactly the weeks the SPIRIT
+// channel won the engine's one emotion decision, and null on every other week – see the field's own
+// note for why that nullability is CLAUDE.md invariant 4 expressed as a type. ⚠⚠ NOTHING BELOW THIS
+// LINE CHANGED: `MOOD_LABEL` is untouched, `Angry` included, and it is still what this tile prints
+// on every week the engine hands no word. The two Mood tiles disagree on that one string (this
+// screen says `Angry`, WeekRecapCard says `Frustrated`), both spellings are the owner's, and a
+// single engine word rendered unconditionally would have renamed one of them by accident.
+const moodLabel = computed(
+  () => game.snapshot?.diary.facts.moodWord ?? MOOD_LABEL[emotion.value] ?? 'Steady',
+)
 
 // --- THE PERSONALITY / SCHOOL / FRIENDS TILES ------------------------------------------------
 // Three tiles, one field: `snapshot.life`, derived in engine/kidLife.ts. The screen chooses NONE of

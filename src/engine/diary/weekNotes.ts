@@ -12,7 +12,9 @@ import { bodyGroupOf, bodyPartOf, type BodyGroup } from '../body'
 // ⭐ R2-09: the noun moved to an engine leaf; the FACTS shape is still the wire's (see the cycle
 // note in world/birthdayGift.ts – this module is inside world/birthday.ts's own import closure).
 import { BIRTHDAY_DAY_NOUN } from '../world/birthdayGift'
-import type { DiaryFacts } from '../../shared/protocol'
+import type { DiaryFacts, MoodRegister } from '../../shared/protocol'
+// ⭐ v72: who she is, type-only – the four ids and their physics live in engine/spirit.ts.
+import type { Temperament } from '../spirit'
 import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof } from './words'
 
 // --- W2: THE ORDINARY WEEK GETS THE SAME SCRAP AND THE SAME HAND ------------------------------
@@ -116,6 +118,40 @@ export interface WeekClaims {
    *  this would have been decoration; that skip is gone and the pin reads the value. See
    *  tests/week-notes.test.ts. */
   bodyGroup?: BodyGroup
+  // ===============================================================================================
+  // ⭐⭐ v72 (THE PRIVATE LIFE, WAVE 1) – THE THREE CLAIMS HER OWN VOICE NEEDS
+  // ===============================================================================================
+  //
+  // who-she-is §5b's composition rule, as three claims rather than three pools: TEMPERAMENT owns the
+  // SHAPE of a line, SPIRIT the REGISTER of the moment, BOND the CHANNEL it arrives through. They
+  // compose, so eleven spoken moments cost 52 lines instead of 4 × 3 × 4 = 528.
+  /** ⚠ ASSERTS THE LINE IS IN *HER* VOICE – the second valued claim on this pool, after `bodyGroup`,
+   *  and for the same reason: "sounds like her" is not one thing to assert, it is four mutually
+   *  exclusive ones. A `fiery` girl's storm handed to a `quiet` girl is not a style slip, it is the
+   *  game telling the player he has a different daughter. Unselectable unless `f.temperament` is
+   *  this id, and the honesty pin re-derives that off the facts. */
+  voice?: Temperament
+  /** ⚠ ASSERTS THE SPIRIT REGISTER THE LINE IS WRITTEN AT, and the three values do NOT all mean
+   *  "equals": `'bright'` and `'low'` assert exactly themselves, while `'level'` asserts **not a low
+   *  week** – which is the approved doc's own definition of the level variant («the one variant that
+   *  is not a low week», voice-bibles §D preamble). A line at `level` says nothing about whether her
+   *  week was ordinary or good; it says only that it was not a bad one, which is all its words rest
+   *  on. The honesty pin re-derives each of the three separately. */
+  register?: MoodRegister
+  /** ⚠ ASSERTS SHE IS CLOSE ENOUGH TO SPEAK IN HER OWN VOICE – `close` OR `steady`, the two bands
+   *  who-she-is §5b lets her voice through, and NOT «her bond is 80+».
+   *
+   *  ⚠⚠ THE NAME IS THE DOC'S AND THE PREDICATE IS THE DESIGN'S, so it is spelled out here rather
+   *  than inferred from the word: what a warm line rests on is that the channel is open, and the
+   *  channel is open on both warm bands. The claim it is the opposite of is `strainedBond`, and the
+   *  pair exists so a warm line cannot fire in a cold week (voice-bibles §D, the OWED table). */
+  closeBond?: true
+  /** ⚠ ASSERTS THE WALLS ARE UP – `strained` exactly, which is the ONE band the shared flat pool is
+   *  licensed on. `cold` is not a band with a quieter line in it: tier 0 is «rare at strained;
+   *  ABSENT at cold» (who-she-is §5b's tier table), so a cold week has no quoted line at all and the
+   *  parent's own sentence stands alone under the painting. That is the third rung of the ladder and
+   *  it is the loss the player is meant to hear. */
+  strainedBond?: true
 }
 
 export interface WeekNote {
@@ -168,6 +204,29 @@ export const injuredGroup = (f: DiaryFacts): BodyGroup | null =>
 export const injuredPart = (f: DiaryFacts): string =>
   (f.injured === null ? null : bodyPartOf(f.injured.kind)) ?? 'injury'
 
+// --- v72: the three questions her own voice asks, one function each ---------------------------
+//
+// ⚠ SAME DOCTRINE AS `underOneRoof` NEXT DOOR: a predicate per question, written once, so the
+// fifty-two lines below cannot each carry their own spelling of "is she talking to us this week".
+
+/** THE CHANNEL. She is close enough to speak in her own voice – `close` or `steady`. */
+export const inHerVoice = (f: DiaryFacts): boolean =>
+  f.bondBand === 'close' || f.bondBand === 'steady'
+
+/** ...and the band where the four voices collapse into the shared flat pool. `cold` is deliberately
+ *  NOT here: at `cold` there is no tier-0 line at all (who-she-is §5b's tier table). */
+export const wallsUp = (f: DiaryFacts): boolean => f.bondBand === 'strained'
+
+/** THE SHAPE. Her voice AND the channel, which is what every one of the 44 voiced lines needs. */
+export const voiceOf = (t: Temperament) => (f: DiaryFacts): boolean =>
+  f.temperament === t && inHerVoice(f)
+
+/** THE REGISTER, in the three spellings the claim uses – see `WeekClaims.register` for why `level`
+ *  is "not low" rather than "exactly level". */
+export const brightWeek = (f: DiaryFacts): boolean => f.moodRegister === 'bright'
+export const levelWeek = (f: DiaryFacts): boolean => f.moodRegister !== 'low'
+export const lowWeek = (f: DiaryFacts): boolean => f.moodRegister === 'low'
+
 export const plainTraining = (f: DiaryFacts): boolean =>
   notTravellingWeek(f) &&
   f.injured === null &&
@@ -182,6 +241,211 @@ export const plainTraining = (f: DiaryFacts): boolean =>
 // house." – true, correctly worried, and enforced by nothing, which is how the lines below came to
 // license household observation off a travel fact. The predicates live in `words.ts` now and the
 // missing one, `underOneRoof`, is the sentence that paragraph was reaching for.
+
+// =================================================================================================
+// ⭐⭐⭐ v72 – THE ELEVEN SPOKEN MOMENTS, AND THE FOUR VOICES CROSSED OVER THEM
+// =================================================================================================
+//
+// ⚠ THE LICENCE IS WRITTEN ONCE PER MOMENT AND THE WORDS ONCE PER VOICE, which is the mechanical
+// half of «bond selects, register licenses, temperament shapes». Forty-four entries whose licences
+// were hand-copied would be forty-four chances for a `quiet` line to be selectable on a week a
+// `fiery` line is not, and the difference between two voices would quietly become a difference in
+// what is TRUE of the week – which is the one failure the honesty pin exists to prevent.
+//
+// ⚠ AND THE CROSS IS TOTAL BY TYPE. `Record<Temperament, Record<SpokenMoment, ...>>` means a missing
+// variant is a COMPILE error, not a silent hole a girl falls into – so `tests/week-notes.test.ts`'s
+// completeness pin is the second net over the same mistake rather than the only one.
+
+/** The eleven moments wave 1 gives her a line for, in the order voice-bibles §D lists them. */
+type SpokenMoment =
+  | 'grind'
+  | 'light'
+  | 'freshBody'
+  | 'exams'
+  | 'vacation'
+  | 'restingKnock'
+  | 'pushingKnock'
+  | 'injured'
+  | 'tired'
+  | 'birthday'
+  | 'offSeason'
+
+/** What each moment asserts and when it may be spoken – the voice-neutral half of a voiced line.
+ *
+ *  ⚠ EVERY LICENCE HERE IS THE POOL'S EXISTING ONE FOR THAT WEEK PLUS THE REGISTER, so a voiced line
+ *  can never reach a week the parent's own band for it could not. The register is what the approved
+ *  doc puts on the row: `bright` for the fresh-body line, `low` for the tired one (the single moment
+ *  in eleven where a low week changes the words), and `level` – "not a low week" – everywhere else. */
+const MOMENTS: Record<SpokenMoment, { claims: WeekClaims; license: (f: DiaryFacts) => boolean }> = {
+  grind: {
+    claims: { grind: true, notTravellingWeek: true, register: 'level' },
+    license: (f) => plainTraining(f) && levelWeek(f) && f.trainPct >= WEEK_NOTE_GRIND,
+  },
+  light: {
+    claims: { light: true, notTravellingWeek: true, register: 'level' },
+    license: (f) => plainTraining(f) && levelWeek(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  freshBody: {
+    claims: { freshBody: true, notTravellingWeek: true, register: 'bright' },
+    license: (f) => plainTraining(f) && brightWeek(f) && f.conditionBand === 'fresh',
+  },
+  exams: {
+    claims: { exams: true, notTravellingWeek: true, register: 'level' },
+    license: (f) => notTravellingWeek(f) && levelWeek(f) && f.examsWeek && f.injured === null,
+  },
+  vacation: {
+    // ⚠ NO PLACE, NO DESTINATION, NO WEATHER: `vacation` has no `WeekClaims` member for the package
+    // at all, so the words may not name one – the catalogue they would be guessing at holds no lake.
+    claims: { vacation: true, notTravellingWeek: true, register: 'level' },
+    license: (f) => notTravellingWeek(f) && levelWeek(f) && f.vacationWeek && f.injured === null,
+  },
+  restingKnock: {
+    claims: { restingKnock: true, notTravellingWeek: true, register: 'level' },
+    license: (f) =>
+      notTravellingWeek(f) && levelWeek(f) && f.injured === null && f.knockChoice === 'rest',
+  },
+  pushingKnock: {
+    claims: { pushingKnock: true, notTravellingWeek: true, register: 'level' },
+    license: (f) =>
+      notTravellingWeek(f) && levelWeek(f) && f.injured === null && f.knockChoice === 'push',
+  },
+  injured: {
+    // ⚠ DURATION-FREE, EVERY VOICE. `injured` carries `{kind, weeksRemaining, totalWeeks}`, so a
+    // LENGTH may be named only through a template that reads them; none of the four does, so none of
+    // them may say how long. Same `!f.examsWeek` split the parent's own layoff band keeps (W6b).
+    claims: { injured: true, notTravellingWeek: true, register: 'level' },
+    license: (f) => notTravellingWeek(f) && levelWeek(f) && f.injured !== null && !f.examsWeek,
+  },
+  tired: {
+    // ⚠⚠ THIS ONE ASSERTS TWO DIFFERENT THINGS AND THEY ARE TWO DIFFERENT NUMBERS. `tired` is a BODY
+    // claim (the `worn`/`drained` rungs of `conditionBand`); `low` is the SPIRIT register. Neither
+    // implies the other – a drained body on a level spirit is an ordinary hard week – and slot 9 is
+    // the one moment in eleven that needs both at once.
+    claims: { tired: true, notTravellingWeek: true, register: 'low' },
+    license: (f) =>
+      plainTraining(f) &&
+      lowWeek(f) &&
+      (f.conditionBand === 'worn' || f.conditionBand === 'drained'),
+  },
+  birthday: {
+    // Rail `school`, and it carries `domestic` because the parent is in the house for it.
+    claims: { birthday: true, domestic: true, notTravellingWeek: true, register: 'level' },
+    license: (f) =>
+      notTravellingWeek(f) &&
+      levelWeek(f) &&
+      f.lifeStage === 'school' &&
+      f.birthdayAge !== null &&
+      f.injured === null,
+  },
+  offSeason: {
+    // Rail `independent`, and no line may COUNT the weeks: `OFF_SEASON_WEEKS` is 3 and `offSeason`
+    // says only that this is one of them.
+    claims: { offSeason: true, notTravellingWeek: true, register: 'level' },
+    license: (f) =>
+      notTravellingWeek(f) &&
+      levelWeek(f) &&
+      independentVoice(f) &&
+      f.offSeasonWeek &&
+      !f.vacationWeek &&
+      f.injured === null,
+  },
+}
+
+/**
+ * ⭐⭐ THE FORTY-FOUR LINES, VERBATIM FROM THE APPROVED DOC (`voice-bibles-2026-09.md` §§D1-D4).
+ *
+ * Each voice is one bible made audible, and the bibles are two axis rules crossed:
+ *   `sunny`  open + steady   – says the whole week, evenly, and holds SPEED constant
+ *   `fiery`  open + intense  – offers the first verdict, at speed, and holds VOLUME constant
+ *   `quiet`  private + steady – says the schedule instead of herself; a stated feeling is a broken line
+ *   `deep`   private + intense – one thing, exactly, hard, and usually after it is over
+ *
+ * ⚠ THE AGE RAILS ARE ON THE LICENCE, NOT IN THE WORDS. Nine of the eleven moments cross every rail
+ * because every household frame in §D was written as REPORTED SPEECH rather than as observation; the
+ * birthday is scoped to `school` (it claims `domestic`) and the off-season to `independent`. Both
+ * rail-scoped moments sit beside a neutral sibling, so no stage and no voice is left without a line.
+ */
+const VOICE_LINES: Record<Temperament, Record<SpokenMoment, WeekNote['text']>> = {
+  sunny: {
+    grind: '"Hard week, good week, and I would take another," she said.',
+    light: '"Two mornings free, and that felt like plenty," she said.',
+    freshBody: '"I feel good this week. Properly good," she said.',
+    exams: '"Papers first, then the court." She kept to it all week.',
+    vacation: '"A whole week with nothing booked, and I needed it," she said.',
+    restingKnock: `"A week off is still a week, and I'll take it," she said.`,
+    pushingKnock: '"It held all week and I was careful with it," she said.',
+    injured: '"All right. Tell me what comes first," she said.',
+    tired: '"This one took everything I had," she said, in those words.',
+    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Save me the corner piece," she said.`,
+    offSeason: `"Nothing to play for a while, and I've made a list," she said.`,
+  },
+  fiery: {
+    grind: '"Six days! Every one of them at full speed!" she said.',
+    light: '"Free mornings! Two of them! I need a plan," she said at speed.',
+    freshBody: '"Everything works today! Everything!" she said, at volume.',
+    exams: '"Papers, papers, papers! Then one hour on court. One!" she said.',
+    vacation: '"No rankings, no schedule, nothing!" she said, three times over.',
+    restingKnock: '"Resting is the worst part!" she said, more than once.',
+    pushingKnock: '"Nothing wrong with it. Nothing!" she said after training.',
+    injured: '"That long?! There has to be another way," she said straight off.',
+    tired: '"Empty. Completely empty." She said it flat, which is the tell.',
+    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Cake first, questions later!" she announced.`,
+    offSeason: `"No matches and I'm already restless!" she wrote.`,
+  },
+  quiet: {
+    grind: '"Hard enough," she said. She named the hours, not the week.',
+    light: '"The court was free," she said, when asked how she spent it.',
+    freshBody: '"Better today," she said. Nothing further.',
+    exams: '"The papers are done," she said. Nothing about how they went.',
+    vacation: 'Asked about the break, she said: "It was quiet." Nothing more.',
+    restingKnock: '"The court can wait," she said. That was the whole answer.',
+    pushingKnock: '"Manageable," she said. No second sentence followed.',
+    injured: '"When does rehab start?" she asked. Nothing else.',
+    tired: `"Just tired," she said. Two words did the whole week's work.`,
+    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Can we keep it small?" she asked.`,
+    offSeason: 'She said it by message and left it there: "Quiet here."',
+  },
+  deep: {
+    grind: '"It was a lot," she said, and not until it was over.',
+    light: '"Sunday was mine." She did not say what she did with it.',
+    freshBody: '"Ready," she said before the first session.',
+    exams: '"Done." She said it about the exams and nothing else.',
+    vacation: '"It helped." She said so on the last day and not before.',
+    restingKnock: '"Long week," she said on Thursday.',
+    pushingKnock: '"It is holding." She said it once, on Monday, and not again.',
+    injured: '"How long?" she asked. Nothing else until the answer.',
+    tired: '"Nothing left." She waited until Sunday to say it.',
+    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "No fuss," she said. She let the cake wait.`,
+    offSeason: '"It is over for now." She did not say if that was good or bad.',
+  },
+}
+
+/** The cross: four voices × eleven moments, each line taking its own moment's licence AND her own. */
+function voicedNotes(): WeekNote[] {
+  return (Object.keys(VOICE_LINES) as Temperament[]).flatMap((voice) =>
+    (Object.keys(MOMENTS) as SpokenMoment[]).map((moment) => ({
+      text: VOICE_LINES[voice][moment],
+      claims: { ...MOMENTS[moment].claims, voice, closeBond: true },
+      license: (f: DiaryFacts) => voiceOf(voice)(f) && MOMENTS[moment].license(f),
+    })),
+  )
+}
+
+/** A flat-pool line on an ordinary training week – rows 1-6 of §D5. */
+function flat(): Pick<WeekNote, 'claims' | 'license'> {
+  return {
+    claims: { notTravellingWeek: true, strainedBond: true },
+    license: (f) => plainTraining(f) && wallsUp(f),
+  }
+}
+
+/** ...and rows 7-8, which claim the layoff because a line selectable on an injured week must. */
+function flatLayoff(): Pick<WeekNote, 'claims' | 'license'> {
+  return {
+    claims: { injured: true, notTravellingWeek: true, strainedBond: true },
+    license: (f) => notTravellingWeek(f) && wallsUp(f) && f.injured !== null && !f.examsWeek,
+  }
+}
 
 export const WEEK_NOTES: readonly WeekNote[] = [
   // --- A GRIND WEEK: what 85/15 actually looks like from the kitchen -----------------------------
@@ -764,6 +1028,51 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     claims: { injured: true, notTravellingWeek: true, bodyGroup: 'trunk' },
     license: (f) => notTravellingWeek(f) && !f.examsWeek && injuredGroup(f) === 'trunk',
   },
+  // ===============================================================================================
+  // ⭐⭐⭐ v72 (THE PRIVATE LIFE, WAVE 1) – HER OWN VOICE, INSIDE THE PARENT'S HAND
+  // ===============================================================================================
+  //
+  // ⚠⚠ EVERY STRING BELOW IS THE OWNER'S, TAKEN VERBATIM FROM AN APPROVED DOCUMENT –
+  // `docs/specs/voice-bibles-2026-09.md` §D, which he read and passed before one of them was wired
+  // (CLAUDE.md invariant 4, and the runbook's step 1 gate). Nothing here was written by an agent, no
+  // word of it is adjusted to fit a test, and the claims each line carries are the ones its own row
+  // of that table states. If a line looks wrong, it is the DOC that is asked, never edited here.
+  //
+  // WHAT THIS IS. Tier 0 of her voice (who-she-is §5b): her quoted line inside the parent's week
+  // story. The diary stays HIS journal – she speaks in quotation marks within it – which is why
+  // these are entries in this pool rather than a surface of their own. Tiers 1 and 2 (small talk,
+  // the big life beats) are waves 3 and 2-4.
+  //
+  // ⚠ AND SHE MAY SPEAK IN THE FIRST PERSON *INSIDE THE QUOTATION MARKS* – the owner's ruling of
+  // 09.09. Outside them the narration is unchanged: third person about her, no address to the
+  // player. The pin that enforces the boundary is `tests/week-notes.test.ts`, re-aimed by this wave
+  // to strip the quotation before it looks; see its own ⚠ note for what moved and on whose word.
+  //
+  // WHY IT DOES NOT EXPLODE, in one line: three owners, one line each (voice-bibles §E). The FOUR
+  // VOICES own the shape, the REGISTER is a licence on a variant rather than a pool, and the BOND
+  // SELECTS between her voice and the shared flat pool instead of multiplying it. Eleven moments ×
+  // four voices × three registers × four bands would be 528 lines; these are 52.
+  ...voicedNotes(),
+  // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
+  //
+  // ⚠ THIS IS NOT A FIFTH TEMPERAMENT. It is the same girl with her walls up, and the point is that
+  // the player CANNOT TELL WHICH of the four voices this is any more: one to four words, the smallest
+  // vocabulary in the document, reused on purpose – a pool that read varied would have failed. She
+  // answers and never offers, and she is never rude, because hostility would be a scene and a scene
+  // is a relationship. What the player is meant to hear is that there is nothing there.
+  //
+  // ⚠ ROWS 1-6 ARE THE ORDINARY TRAINING WEEK; ROWS 7-8 CLAIM `injured`, because the standing rule of
+  // this pool is the one the whole file keeps – A LAYOFF TAKES THE NOTE, so a line selectable on an
+  // injured week must say so. Nothing else in wave 1 is licensed at `strained`: she has nothing to
+  // say about the weeks that actually mattered, which is the truest sentence in §B.
+  { text: '"Fine," she said. Nothing else, all week.', ...flat() },
+  { text: '"It was okay," she said. That was all of it.', ...flat() },
+  { text: 'Asked about training, she said: "Same." Nothing after it.', ...flat() },
+  { text: 'Asked how the week went, she said only: "Fine."', ...flat() },
+  { text: '"Nothing to report," she said, and that was the report.', ...flat() },
+  { text: '"All right," she said. Two words, and no opening in them.', ...flat() },
+  { text: '"It is healing," she said. Nothing about pain.', ...flatLayoff() },
+  { text: '"On schedule," she said. That was the whole of the update.', ...flatLayoff() },
 ]
 
 /**

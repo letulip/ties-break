@@ -645,7 +645,14 @@ const MOOD_WORD: Record<PortraitEmotion, string> = {
   rehab: 'On the mend',
   angry: 'Frustrated',
 }
-const moodWord = computed(() => MOOD_WORD[emotion.value])
+// ⭐⭐ v72 (the private life, wave 1) – HER LIFE MAY TAKE THE WORD, AND ONLY WHEN IT TOOK THE FACE.
+// The engine hands one of the five approved Mood words on exactly the weeks the SPIRIT channel won
+// its one emotion decision, and null otherwise. ⚠⚠ `MOOD_WORD` BELOW IS UNTOUCHED – `Frustrated`
+// included – and still renders every other week; the Kid screen's own map says `Angry` for the same
+// face, both are shipped strings of the owner's, and this layer changes neither.
+const moodWord = computed(
+  () => game.snapshot?.diary.facts.moodWord ?? MOOD_WORD[emotion.value],
+)
 
 // D's "Energy" bar under the face. `condition` IS that number in this game (0..100, 100 = fresh),
 // so the bar is the value and the word above it is the band – the same pair Home's condition ring

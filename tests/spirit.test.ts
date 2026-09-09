@@ -13,13 +13,28 @@ import { fileURLToPath } from 'node:url'
 import {
   accrueSpirit,
   applyBondDelta,
+  bondBandOf,
+  moodRegisterOf,
   seasonWrapsWithNoVacation,
+  spiritBandOf,
   spiritMatchFactor,
   temperamentFor,
   temperamentIntensity,
+  MOOD_WORD,
+  SPIRIT_BANDS,
   TEMPERAMENTS,
+  type SpiritBand,
   type Temperament,
 } from '../src/engine/spirit'
+// ⭐ v72 step 4: the face the two ladders collide on, and the two rung counts they collide by.
+import {
+  MOOD_DEVIATION,
+  MOOD_FACE,
+  avatarEmotionRead,
+  conditionDeviation,
+  idleEmotion,
+} from '../src/shared/avatarEmotion'
+import { BIRTHDAY_ASK_TILT, birthdayOffer } from '../src/engine/world/birthday'
 import { ECONOMY } from '../src/engine/economy'
 import { createWorld, decideKnock, chooseGift, pendingBirthday, birthdayOfferFor } from '../src/engine/world'
 import { resolveVacation } from '../src/engine/world/planner'
@@ -623,6 +638,277 @@ describe('the v72 schema move', () => {
   }, 60_000)
 })
 
+// =================================================================================================
+// ⭐⭐⭐ v72 STEP 4 — THE MOOD LADDER, AND THE ONE DECISION HER FACE AND HER WORD BOTH READ
+// =================================================================================================
+describe('the Mood ladder – five words, four ruled cut points', () => {
+  it('⚠⚠ the four cuts are the RULED ones, and each is anchored to a mechanical fact', () => {
+    // ⚠ RULED 09.09 and NOT a tuning dial (runbook §6). A test that would be easier with other
+    // numbers is a test to rewrite; if one of these looks wrong, it goes back to the owner.
+    const m = ECONOMY.spirit.mood
+    expect(m.heavyBelow, 'Heavy is the knee itself').toBe(ECONOMY.spirit.knee)
+    // ⭐ the knee is the anchor that makes «the weeks under the knee» a checkable sentence: below it
+    // and only below it does `spiritMatchFactor` stop being 1.0.
+    expect(spiritMatchFactor(m.heavyBelow)).toBe(1)
+    expect(spiritMatchFactor(m.heavyBelow - 0.1)).toBeLessThan(1)
+    // baseline ± half a steady week's return (5 / 2 = 2.5) is the neutral band, on both sides
+    const half = ECONOMY.spirit.returnPerWeek.steady / 2
+    expect(m.dimmedBelow).toBe(ECONOMY.spirit.baseline - half)
+    expect(m.brightFrom).toBe(ECONOMY.spirit.baseline + half)
+    // ...and Glowing opens at the top of the range, where wave 3's lifted baseline (75) sits under it
+    expect(m.glowingFrom).toBe(80)
+    expect(ECONOMY.spirit.baseline + ECONOMY.spirit.attachmentLift).toBeLessThan(m.glowingFrom)
+  })
+
+  it('reads every rung, at its own edge and a tenth either side', () => {
+    const m = ECONOMY.spirit.mood
+    expect(spiritBandOf(0)).toBe('heavy')
+    expect(spiritBandOf(m.heavyBelow - 0.1)).toBe('heavy')
+    expect(spiritBandOf(m.heavyBelow)).toBe('dimmed')
+    expect(spiritBandOf(m.dimmedBelow - 0.1)).toBe('dimmed')
+    expect(spiritBandOf(m.dimmedBelow)).toBe('steady')
+    expect(spiritBandOf(ECONOMY.spirit.baseline)).toBe('steady')
+    expect(spiritBandOf(m.brightFrom - 0.1)).toBe('steady')
+    expect(spiritBandOf(m.brightFrom)).toBe('bright')
+    expect(spiritBandOf(m.glowingFrom - 0.1)).toBe('bright')
+    expect(spiritBandOf(m.glowingFrom)).toBe('glowing')
+    expect(spiritBandOf(100)).toBe('glowing')
+    // total over the whole range, in the tenths the number is actually stored in
+    for (let s = 0; s <= 1000; s++) expect(SPIRIT_BANDS).toContain(spiritBandOf(s / 10))
+  })
+
+  it('⚠⚠ the five words are the OWNER’s, and «Steady» is the one shared with condition', () => {
+    // CLAUDE.md invariant 4: approved copy, `docs/specs/voice-bibles-2026-09.md` §C. A rename shows
+    // up here rather than on a screen nobody re-read.
+    expect(SPIRIT_BANDS.map((b) => MOOD_WORD[b])).toEqual([
+      'Glowing',
+      'Bright',
+      'Steady',
+      'Dimmed',
+      'Heavy',
+    ])
+    // ...and the neutral rung says exactly what the two tiles already say for the `norm` face, which
+    // is the owner's «the neutral state is one state and gets one word».
+    expect(MOOD_WORD.steady).toBe('Steady')
+    expect(MOOD_FACE.steady).toBe('norm')
+  })
+
+  it('the register collapses the five to three, and a career’s opening week is `level`', () => {
+    expect(SPIRIT_BANDS.map(moodRegisterOf)).toEqual(['bright', 'bright', 'level', 'low', 'low'])
+    expect(moodRegisterOf(spiritBandOf(ECONOMY.spirit.baseline))).toBe('level')
+  })
+
+  it('the bond bands are the build plan’s four, at their own edges', () => {
+    const c = ECONOMY.bond.band
+    expect([c.close, c.steady, c.strained]).toEqual([80, 55, 35])
+    expect(bondBandOf(100)).toBe('close')
+    expect(bondBandOf(80)).toBe('close')
+    expect(bondBandOf(79.5)).toBe('steady')
+    expect(bondBandOf(ECONOMY.bond.start)).toBe('steady')
+    expect(bondBandOf(55)).toBe('steady')
+    expect(bondBandOf(54.5)).toBe('strained')
+    expect(bondBandOf(35)).toBe('strained')
+    expect(bondBandOf(34.5)).toBe('cold')
+    expect(bondBandOf(0)).toBe('cold')
+  })
+})
+
+describe('⚠⚠ the ruled collision – injury first, then the larger deviation, ties to the body', () => {
+  const RESULT_WEEK = 10
+  const loss = { week: RESULT_WEEK, won: false, lostFinal: false }
+
+  it('the two rung counts are one ladder counted twice – the body’s reads idleEmotion’s own thresholds', () => {
+    // If these two ever disagree the face and the word start describing different weeks, which is
+    // the single failure the "one decision" design exists to prevent.
+    for (let condition = 0; condition <= 100; condition++) {
+      const face = idleEmotion(false, condition)
+      const expected = face === 'tired' ? 2 : face === 'serious' ? 1 : 0
+      expect(conditionDeviation(condition), `condition ${condition} reads ${face}`).toBe(expected)
+    }
+    expect(SPIRIT_BANDS.map((b) => MOOD_DEVIATION[b])).toEqual([2, 1, 0, 1, 2])
+  })
+
+  it('injury outranks BOTH channels – a Glowing week in a brace is still the rehab painting', () => {
+    for (const band of SPIRIT_BANDS) {
+      const read = avatarEmotionRead({
+        week: RESULT_WEEK,
+        condition: 20,
+        injured: true,
+        lastResult: null,
+        spiritBand: band,
+      })
+      expect(read).toEqual({ emotion: 'rehab', channel: 'injury' })
+    }
+  })
+
+  it('⭐ the larger deviation speaks – and a Glowing week smiles on a girl who won nothing', () => {
+    const at = (condition: number, band: SpiritBand) =>
+      avatarEmotionRead({ week: RESULT_WEEK, condition, injured: false, lastResult: null, spiritBand: band })
+    // body 0, mood 2 -> her life takes the face
+    expect(at(90, 'glowing')).toEqual({ emotion: 'happy', channel: 'mood' })
+    // body 0, mood 1 -> still her life
+    expect(at(90, 'dimmed')).toEqual({ emotion: 'sad', channel: 'mood' })
+    // body 1 (serious), mood 2 -> her life again
+    expect(at(50, 'heavy')).toEqual({ emotion: 'sad', channel: 'mood' })
+    // body 2 (tired), mood 1 -> the body wins, and the tile keeps its own word
+    expect(at(20, 'dimmed')).toEqual({ emotion: 'tired', channel: 'body' })
+    // body 2, mood 2 -> A TIE, and a tie goes to the shipped channel
+    expect(at(20, 'heavy')).toEqual({ emotion: 'tired', channel: 'body' })
+    // body 1, mood 1 -> a tie one rung down, same answer
+    expect(at(50, 'bright')).toEqual({ emotion: 'serious', channel: 'body' })
+    // both neutral -> the body's `norm`, which is the same word either channel would have said
+    expect(at(90, 'steady')).toEqual({ emotion: 'norm', channel: 'body' })
+  })
+
+  it('⚠ a fresh RESULT is untouched by the layer – R8-6a is not overturned by a bad mood', () => {
+    // «then the existing result logic» is the layer that stays ON TOP, not a rung the new channel
+    // may outrank. A win reads `happy` on the worst week of her life, exactly as it always has.
+    for (const band of SPIRIT_BANDS) {
+      const won = avatarEmotionRead({
+        week: RESULT_WEEK,
+        condition: 20,
+        injured: false,
+        lastResult: { week: RESULT_WEEK, won: true, lostFinal: false },
+        spiritBand: band,
+      })
+      expect(won, `a win on a ${band} week`).toEqual({ emotion: 'happy', channel: 'result' })
+      const runnerUp = avatarEmotionRead({
+        week: RESULT_WEEK,
+        condition: 20,
+        injured: false,
+        lastResult: { week: RESULT_WEEK, won: false, lostFinal: true },
+        spiritBand: band,
+      })
+      expect(runnerUp.emotion, `a runner-up on a ${band} week`).toBe('serious')
+      const plain = avatarEmotionRead({
+        week: RESULT_WEEK,
+        condition: 90,
+        injured: false,
+        lastResult: loss,
+        spiritBand: band,
+      })
+      expect(plain, `a loss on a ${band} week`).toEqual({ emotion: 'sad', channel: 'result' })
+    }
+  })
+
+  it('⚠⚠ ABSENT, IT IS THE PRE-WAVE FUNCTION BYTE FOR BYTE – every caller that predates the layer', () => {
+    for (let condition = 0; condition <= 100; condition += 1) {
+      for (const injured of [false, true]) {
+        const before = injured ? 'rehab' : condition < 40 ? 'tired' : condition < 60 ? 'serious' : 'norm'
+        expect(idleEmotion(injured, condition)).toBe(before)
+        expect(idleEmotion(injured, condition, null)).toBe(before)
+        // ...and the neutral rung is inert too, which is what makes wave 1 quiet on purpose
+        expect(idleEmotion(injured, condition, 'steady')).toBe(before)
+      }
+    }
+  })
+
+  it('⚠ the face and the word can never disagree – the word exists on exactly the mood weeks', () => {
+    // The tile's word is licensed on `channel === 'mood'` and on nothing else, so a non-null word
+    // implies a face this ladder chose, and the two are one call.
+    for (const band of SPIRIT_BANDS) {
+      for (const condition of [10, 30, 50, 70, 90]) {
+        for (const injured of [false, true]) {
+          const read = avatarEmotionRead({
+            week: RESULT_WEEK,
+            condition,
+            injured,
+            lastResult: null,
+            spiritBand: band,
+          })
+          if (read.channel !== 'mood') continue
+          expect(read.emotion).toBe(MOOD_FACE[band])
+          expect(['Glowing', 'Bright', 'Dimmed', 'Heavy']).toContain(MOOD_WORD[band])
+          // the neutral rung can never win – it ties with a neutral body and loses to any other
+          expect(band).not.toBe('steady')
+        }
+      }
+    }
+  })
+})
+
+describe('⭐ the birthday ask leans toward her register – a tendency, never a rule', () => {
+  /** The ask, over one girl's whole run of birthdays, as a share per gift id. */
+  function askMix(temperament: Temperament | null, seeds = 60): Map<string, number> {
+    const mix = new Map<string, number>()
+    for (let s = 0; s < seeds; s++) {
+      for (let age = 13; age <= 30; age++) {
+        const { askedId } = birthdayOffer(`ask-${s}`, age, [], false, null, null, null, null, temperament)
+        mix.set(askedId, (mix.get(askedId) ?? 0) + 1)
+      }
+    }
+    return mix
+  }
+
+  it('⚠ absent, the draw is UNIFORM – every historical caller and every catalogue sweep is untouched', () => {
+    for (let s = 0; s < 25; s++) {
+      for (const age of [13, 16, 19, 23, 29]) {
+        const bare = birthdayOffer(`untouched-${s}`, age)
+        const explicit = birthdayOffer(`untouched-${s}`, age, [], false, null, null, null, null, null)
+        expect(explicit.askedId, `seed ${s} age ${age}`).toBe(bare.askedId)
+        expect(explicit.options.map((o) => o.id)).toEqual(bare.options.map((o) => o.id))
+      }
+    }
+  })
+
+  it('⭐ an OPEN girl asks for time together more often, a PRIVATE girl less – and both do', () => {
+    const share = (mix: Map<string, number>) => {
+      const total = [...mix.values()].reduce((a, b) => a + b, 0)
+      const together = ['day', 'familyweek', 'trip'].reduce((a, id) => a + (mix.get(id) ?? 0), 0)
+      return together / total
+    }
+    const open = share(askMix('sunny'))
+    const uniform = share(askMix(null))
+    const priv = share(askMix('quiet'))
+    expect(open, 'the open girl leans toward people').toBeGreaterThan(uniform)
+    expect(priv, 'the private girl leans away').toBeLessThan(uniform)
+    // ⚠ AND IT IS MILD – the whole lean is inside the ~1.5x cap the design put on it.
+    expect(open / priv).toBeLessThan(BIRTHDAY_ASK_TILT + 0.5)
+    // ⚠⚠ THE ANTI-STEREOTYPE GUARD (who-she-is §3, reader 7): every id stays COMMON for every girl.
+    //
+    // ⚠ MEASURED AGAINST THE UNIFORM MIX RATHER THAN AGAINST A FLAT FLOOR, because the ids are not
+    // equally common to begin with: `trip` lives in two age bands and answers ~1.3% of asks over a
+    // whole career whoever she is. A flat 2% floor therefore fails on a row the lean never touched –
+    // which is the first thing this pin did – and would have been "fixed" by weakening the guard.
+    // The honest question is whether the LEAN moved anything out of reach, so it is asked as a ratio.
+    const baseMix = askMix(null)
+    const baseTotal = [...baseMix.values()].reduce((a, b) => a + b, 0)
+    for (const temperament of TEMPERAMENTS) {
+      const mix = askMix(temperament)
+      const total = [...mix.values()].reduce((a, b) => a + b, 0)
+      for (const [id, n] of baseMix) {
+        const seen = (mix.get(id) ?? 0) / total
+        const base = n / baseTotal
+        expect(seen, `${temperament} never asks for ${id}`).toBeGreaterThan(0)
+        expect(seen / base, `${temperament} barely asks for ${id}`).toBeGreaterThan(0.5)
+        expect(seen / base, `${temperament} asks for ${id} far too often`).toBeLessThan(2)
+      }
+      // ...and no single id ever swallows the card
+      for (const [id, n] of mix) expect(n / total, `${temperament} asks only for ${id}`).toBeLessThan(0.6)
+    }
+  })
+
+  it('⚠⚠ SAME STREAM, SAME COUNT: the lean is applied to the pool, never to the draw', () => {
+    // The stream is `seed:birthday:<age>` and it is drawn exactly four times for every birthday in
+    // the game – three to order the four rows, one for the ask. A weighted CUT of one `rng()` keeps
+    // that; a second roll, or a roll skipped for some girls, would make the stream's position depend
+    // on who she is, which is CLAUDE.md invariant 2's own failure mode.
+    // ⚠ Both markers are CODE, because `codeOnly` has already taken the comments out – a docstring
+    // marker here would be the rotted-marker case `region` throws on, which is how this pin was
+    // written the first time and what the helper caught within the minute.
+    const src = codeOnly(readFileSync(`${SRC}engine/world/birthday.ts`, 'utf8'))
+    const offer = region(src, 'export function birthdayOffer(', 'function giftsAlreadyGiven(')
+    expect(offer.split('rng()').length - 1, 'the ask is still ONE draw').toBe(1)
+    // ...and the four options on the card do not move with her temperament: only which she names.
+    for (const temperament of [...TEMPERAMENTS, null]) {
+      const { options } = birthdayOffer('same-card', 17, [], false, null, null, null, null, temperament)
+      expect(options.map((o) => o.id)).toEqual(
+        birthdayOffer('same-card', 17).options.map((o) => o.id),
+      )
+    }
+  })
+})
+
 describe('the fence this step is judged by', () => {
   it('⚠⚠ the weekly rules take ZERO draws – MAIN is not touched by either of them', () => {
     const world = createWorld('no-draws')
@@ -673,21 +959,56 @@ describe('the fence this step is judged by', () => {
     expect(readers[0][1].split('delta.playedHurt').length - 1).toBe(1)
   })
 
-  it('⚠⚠ no meter, no tile, no bar, no arrow – neither number leaves the engine at all', () => {
-    // The fog rule, pinned at the strongest place it can be: the two numbers do not ride the
-    // Snapshot in this step, so no component, store or composable CAN print one. (`bond` is already
-    // a local name in two components – an apparel campaign's buy-out – which is why this asks the
-    // structural question and not a word-search one.)
+  // ===============================================================================================
+  // ⚠⚠ v72 STEP 4 — THE FOG PIN RE-AIMED. THE NUMBERS STILL DO NOT LEAVE; THE *WORDS* DO.
+  // ===============================================================================================
+  //
+  // WHAT IT SAID BEFORE, and it was right for the step it was written in: «the two numbers do not
+  // ride the Snapshot IN THIS STEP, so no component, store or composable CAN print one», enforced by
+  // refusing the four names anywhere outside `engine/` and refusing three field spellings anywhere
+  // in `shared/`.
+  //
+  // ⭐ STEP 4 IS THE STEP THAT CHANGES THAT, and it changes exactly half of it. Her face, the Mood
+  // word and her own voice all need a reading of the two numbers to cross the boundary – so what
+  // crosses now is a WORD, a BAND and an id (`moodWord` / `moodRegister` / `bondBand` /
+  // `temperament` on `DiaryFacts`). ⚠ WHAT DOES NOT CROSS, AND IS WHAT THE FOG LAW ACTUALLY BANS, IS
+  // THE NUMBER: there is no `spirit:` and no `bond:` field anywhere under `shared/`, so no meter, no
+  // bar, no arrow and no tile figure is CONSTRUCTIBLE, whatever a future screen decides to render.
+  // The pin is therefore re-aimed at the number rather than relaxed – and it gains an arm the old
+  // one did not have: no component may name the temperament either (who-she-is §5b, «no label,
+  // ever»), which is a different promise from the fog rule and was previously only implied.
+  it('⚠⚠ THE FOG RULE: no meter, no bar, no arrow – neither NUMBER leaves the engine at all', () => {
+    const shared = srcFiles().filter(([path]) => path.startsWith('shared/'))
+    for (const [path, text] of shared) {
+      for (const field of ['spirit:', 'bond:']) {
+        expect(text, `${path} puts the raw ${field.slice(0, -1)} on the wire`).not.toContain(field)
+      }
+    }
+    // ...and the weekly rules and the match seam stay engine-only: nothing outside can move either.
     const outsideTheEngine = srcFiles()
       .filter(([path]) => !path.startsWith('engine/'))
-      .filter(([, text]) => /\b(accrueSpirit|spiritMatchFactor|applyBondDelta|temperament)\b/.test(text))
+      .filter(([, text]) => /\b(accrueSpirit|spiritMatchFactor|applyBondDelta)\b/.test(text))
       .map(([path]) => path)
     expect(outsideTheEngine).toEqual([])
-    const protocol = srcFiles()
-      .filter(([path]) => path.startsWith('shared/'))
-      .map(([, text]) => text)
-      .join('\n')
-    for (const field of ['spirit:', 'bond:', 'temperament:']) expect(protocol).not.toContain(field)
+  })
+
+  it('⚠⚠ NO LABEL, EVER: `temperament` reaches the facts and no surface at all', () => {
+    // who-she-is §5b: the parent LEARNS who she is from how the diary talks. A character-sheet line
+    // («темперамент: холерик») would flatten the one discovery the layer is about – so the id may
+    // ride the facts (all 44 voiced lines are licensed on it) and may not reach a screen.
+    // ⚠ `codeOnly`, because this is a claim about CODE: a pin that tripped on the prose explaining
+    // the rule would be repaired by deleting the explanation, which is the wrong repair.
+    const surfaces = srcFiles()
+      .filter(([path]) => path.startsWith('components/') || path.startsWith('stores/') || path.startsWith('composables/'))
+      .filter(([, text]) => /\btemperament\b/i.test(codeOnly(text)))
+      .map(([path]) => path)
+    expect(surfaces).toEqual([])
+    // ...and the ONE place outside `engine/` that may name it is the facts shape itself.
+    const named = srcFiles()
+      .filter(([path]) => !path.startsWith('engine/'))
+      .filter(([, text]) => /\btemperament\b/i.test(codeOnly(text)))
+      .map(([path]) => path)
+    expect(named).toEqual(['shared/protocol/narrative.ts'])
   })
 
   it('⚠ attachmentLift is DECLARED AND NOT READ, deliberately, until wave 3 wires the slot', () => {

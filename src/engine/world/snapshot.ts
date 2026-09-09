@@ -1393,6 +1393,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // a milestone happened in, which is what it paints.
     kidAgeAt: (week: number) => kidAgeAt(world, week),
     condition: shownCondition,
+    // ⭐⭐ v72 – HER TWO NUMBERS AND WHO SHE IS, handed to the diary RAW and banded there (the one
+    // reading, beside the one emotion decision). ⚠ THEY GO NO FURTHER: `Snapshot` itself carries no
+    // `spirit` and no `bond`, and `DiaryFacts` carries only the bands – so there is no field on the
+    // wire a component could print even by accident. That is the fog law (who-she-is §5) enforced by
+    // the shape of the object rather than by a rule somebody has to remember.
+    spirit: world.spirit,
+    bond: world.bond,
+    temperament: world.temperament,
     fundsCents: world.fundsCents,
     injury: world.injury
       ? {
