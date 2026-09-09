@@ -415,15 +415,24 @@ describe('W2 — the ordinary week note is HONEST', () => {
           // waved the one claim through that most needed checking. `undefined` still skips, because an
           // absent claim asserts nothing; anything present is now verified against its value.
           if (value === undefined) continue
-          expect(
-            HOLDS[claim](f, value),
-            `"${render(note, f)}" claims ${claim} on: ${JSON.stringify({
-              train: f.trainPct, band: f.conditionBand, funds: f.fundsPressure,
-              exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek,
-              practice: f.playedPractice, injured: f.injured !== null,
-              knock: f.knockChoice,
-            })}`,
-          ).toBe(true)
+          // ⚠⚠ THE MESSAGE IS BUILT ONLY WHEN THE CLAIM FAILS, AND THAT IS THE WHOLE FIX (09.09).
+          // `expect(cond, msg)` evaluates `msg` EAGERLY, so the template below - a full `render()` of
+          // the line plus a `JSON.stringify` of nine fields - was running on every PASSING combination
+          // too. Wave 1 added `sweepVoices` (a nine-deep product) and 52 lines to the pool, and the
+          // string work it multiplied is what put this test over CI's 20s per-test timeout while it
+          // still passed locally in 5.2s. The assertion is unchanged and still visits every
+          // combination; only the diagnostics moved off the hot path.
+          if (!HOLDS[claim](f, value)) {
+            expect(
+              HOLDS[claim](f, value),
+              `"${render(note, f)}" claims ${claim} on: ${JSON.stringify({
+                train: f.trainPct, band: f.conditionBand, funds: f.fundsPressure,
+                exams: f.examsWeek, off: f.offSeasonWeek, vac: f.vacationWeek,
+                practice: f.playedPractice, injured: f.injured !== null,
+                knock: f.knockChoice,
+              })}`,
+            ).toBe(true)
+          }
           checked++
         }
       }
