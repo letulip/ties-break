@@ -562,6 +562,18 @@ export const useGameStore = defineStore('game', {
         this.applySnapshot(res)
       })
     },
+    /** ⭐⭐ v73: answer a life beat. Like `decideKnock` above, nothing else can clear it and the sim
+     *  will not tick until it is answered – and here that is stronger than the knock's contract
+     *  rather than merely like it: the beat is HER SPEAKING, so there is no dismiss branch to reach
+     *  for and every option is something the parent SAYS. The engine re-validates `optionId` against
+     *  the list it offered (invariant 1), so a stale dialog cannot record an answer this beat never
+     *  had, and it carries no `amountCents` – an answer is never a purchase. */
+    async answerLifeBeat(optionId: string) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'answerLifeBeat', optionId, baseRevision: this.revision }))
+        this.applySnapshot(res)
+      })
+    },
     /** THE INBOX (v32): sign a letter. Irreversible – the UI puts a ConfirmDialog in front of this
      *  and there is no unsign command to reach for afterwards. */
     async signOffer(offerId: string) {

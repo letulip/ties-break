@@ -21,7 +21,7 @@
 import type { Snapshot } from '../shared/protocol'
 
 /** The blocking overlays, HIGHEST PRECEDENCE FIRST. `null` = the shell is free. */
-export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'fork' | 'retirement' | 'shoot-clash'
+export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'life' | 'fork' | 'retirement' | 'shoot-clash'
 
 /**
  * ⚠ THE ORDER IS THE FEATURE. Each entry says which snapshot field raises it, and every one of these
@@ -41,8 +41,20 @@ export type BlockingOverlay = 'ending' | 'knock' | 'birthday' | 'fork' | 'retire
  *                     career ends on that click, `pendingBirthday` returns null behind an ending, and
  *                     she never got her nineteenth at all. It was not a queue in the wrong order; it
  *                     was a beat that could be deleted by the beat standing in front of it.
- *   4. `fork`       – the most expensive click in the game, and it can wait one tap.
- *   5. `retirement` – the same question at the other end of the career.
+ *   4. `life`       – ⭐⭐ v73, THE PRIVATE LIFE'S WAVE 2, and it sits exactly where the engine's own
+ *                     `STOP_PRECEDENCE` puts it: after the birthday, BEFORE the fork. The proving
+ *                     beat is her stated want at the college fork, raised on the fork's own opening
+ *                     tick – so the collision is guaranteed rather than hypothetical, and the order
+ *                     is the whole feature. He hears her out and then decides; asking him to decide
+ *                     her future in front of an unanswered sentence of hers would be the 12.08
+ *                     birthday defect again, one beat further down the same week.
+ *
+ *                     ⚠ AND THE ENGINE HOLDS THE SAME ORDER, so this is not the UI's opinion:
+ *                     `advanceWeeks` guards on the pending row above the fork, and `answerFork`
+ *                     REFUSES while it is unanswered (runbook §3.3). A queue that disagreed with
+ *                     that would put a card on screen whose command the engine rejects.
+ *   5. `fork`       – the most expensive click in the game, and it can wait one tap.
+ *   6. `retirement` – the same question at the other end of the career.
  */
 export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | null {
   if (!snapshot) return null
@@ -58,6 +70,12 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
   if (snapshot.ending && !(collegeShell && snapshot.birthdayPrompt)) return 'ending'
   if (snapshot.knockPrompt) return 'knock'
   if (snapshot.birthdayPrompt) return 'birthday'
+  // ⭐⭐ v73 – she speaks before he is asked to decide. Gated on the SNAPSHOT FIELD, which is the
+  // argument every entry above makes and which matters here for the same reason it matters on the
+  // knock: `lifeBeatPrompt` is set from `pendingLifeBeat`, the identical predicate `advanceWeeks`
+  // blocks on, so the card is up exactly when the sim is waiting and no action that produces a fresh
+  // snapshot can clear it out from under a week that cannot move.
+  if (snapshot.lifeBeatPrompt) return 'life'
   if (snapshot.fork) return 'fork'
   if (snapshot.retirementOffer) return 'retirement'
   // ⭐⭐ 6. `shoot-clash` – ROUND 29 #3, and it is LAST for the reason every entry above it is where
