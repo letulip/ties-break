@@ -87,6 +87,57 @@ either.)
 
 ---
 
+## 2a. ⭐ Can she change? – his 09.09 question, and the two-channel answer
+
+His ask verbatim:
+
+> «что если мы сделаем функционал, что в зависимости от выбора родителя (и работы с психологом)
+> ребенок может на протяжении карьеры потихоньку меняться или усиливаться в своих осях? т.е. если
+> изначально она была закрытая и порывистая, то может быть если ее больше поддерживать и обнимать,
+> она станет менее закрытая или вообще открытая, а если всё время "пинать", то такая и останется.»
+
+The recommendation is YES – in two channels that must never be confused, because «стала более
+открытой С ТОБОЙ» and «стала другим человеком» are different facts, and the game already owns a
+number for the first one.
+
+**Channel 1 – expression through `bond` (cheap, ships with waves 3–4).** Her nature stays fixed;
+what the parent EXPERIENCES of it follows the relationship. A `private` girl at a `close` bond
+band tells him sooner – the feed-lag draw reads the band and shaves the lag toward the open
+distribution – and her wants read a shade clearer in the wording. Nothing of her temperament
+moved: she trusts THIS parent. ⚠ Not a new mechanic – `bond` already has the memory property;
+this is its second reader (the diary is the first). It also makes the fog axis care-responsive
+without making openness trainable.
+
+**Channel 2 – true drift, ONE step, earned (ships with step 5, the psychologist).** The person
+can genuinely soften – slowly, boundedly, and by HER work, not by hugs alone (the layer's law:
+she decides, he enables):
+
+* at most **one band per axis per career** – закрытая+порывистая can become закрытая+ровная or
+  открытая+порывистая, never the full diagonal in one life;
+* conditions, all sustained over ~2+ seasons: bond at `close`/`steady`, the psychologist retained
+  with the matching year-focus chosen (his 08.09 year-focus idea finds its second job here), and
+  no counter-evidence pattern dominating (pushed knocks, played-hurt weeks);
+* **never backward, never a punishment** – neglect does not darken her: «если всё время пинать,
+  такая и останется» is exactly the shipped rule (his own phrasing), and «мы ни за что не
+  наказываем» stays mechanical – the door simply never opens;
+* **never guaranteed** – once the conditions hold, the step is a hazard on a purpose-scoped
+  sub-stream, so two identical caring careers can differ, and the census can price it.
+
+**The convergence guard** – the trap this must not spring: if care reliably manufactures
+open+steady girls, the four personalities erode into one optimal endpoint (the kid-share trap's
+own shape: «generosity strictly optimal is the same failure as greed being free»). Guards: one
+step max, slow, hazarded, psychologist-gated (it costs money and occupies the year-focus slot
+that competes with «хладнокровие»), and the census (§4) prints the end-of-career distribution so
+erosion is measurable before it is real.
+
+**The album arc this buys** – his §7.6 ruling: «напишем с чего начиналось и к чему пришли».
+Three honest endings for the line (copy drafts, his): unchanged – she was always the quiet one;
+opened WITH him – quiet with the world, but by the end she told you everything (channel 1);
+genuinely softened – the girl who cried in the car learned to breathe (channel 2). The start is
+drawn at birth; the end is earned; the album gets a sentence only a whole career can write.
+
+---
+
 ## 3. «Что, как и на что влияет» – the influence map
 
 Every reader, what it reads, when it ships, and what bounds it:
@@ -103,7 +154,7 @@ Every reader, what it reads, when it ships, and what bounds it:
 | 8 | life-beat prompt wording | the beat's copy carries her register (a `quiet` girl's «met someone» row is two guarded lines; a `fiery` girl's is a storm) | 2+ | engine-assembled copy, all DRAFT for him |
 | 9 | marriage timing (later) | steadiness nudges the latch hazard earlier once 22+ | 6 | his 22+ gate is absolute |
 | 10 | the psychologist's wants-read rung (later) | a `private` girl's wants are harder to read unaided – the top rung's brief is worth more exactly for her | 5 | the psychologist spec's own bench |
-| 11 | the album (later, his reserved redesign) | one retrospective line that finally names her – «she was always the quiet one» | album wave | open question 6 |
+| 11 | the album (later, his reserved redesign) | the ARC line – ruled 09.09: «напишем с чего начиналось и к чему пришли», §2a's three endings | album wave | §2a |
 
 ### ⚠⚠ THE FENCE – what temperament must NEVER touch
 
@@ -165,7 +216,8 @@ grows arms): 200 careers per temperament print – romance count distribution (m
 separate: fiery ≥ 4, sunny 2–3, deep ≤ 3, quiet ≤ 2), first-arrival age medians (quiet ≥ 17.5,
 fiery ≤ 17), «first or second love reaches the latch» share (quiet ≥ 50%, fiery ≤ 20%), late-feed
 share by openness (private ≥ 60%, open ≤ 25%). These eight numbers are the acceptance table his
-«утвердить» signs.
+«утвердить» signs. Once §2a's drift ships, the census adds a ninth print: the END-of-career
+temperament distribution under a caring policy – the convergence guard made a number.
 
 ---
 
@@ -191,6 +243,30 @@ The three carriers, all existing surfaces:
    number, never an arrow.
 3. **The diary and the feed** – as the build plan already lays out (`bondBand` licences, the feed
    rows, the beats), now spoken in four voices (§3.6).
+
+### 5a. Emoji beside the Mood word – his 09.09 question
+
+> «что если для этих 5 слов мы добавим по одному эмоджи рядом соответствующему? у нас их нигде
+> нет, а здесь могут оказаться вполне уместными и наглядными. я понимаю, что это "удешевляет", но
+> может быть имеет смысл, всё-таки их много доступно, можно еще больше подчеркнуть гамму чувств»
+
+The honest read: **the Mood tile already carries the game's own emoji – her 36px face.** The face
+is stage-true (it ages with her), emotion-true (engine-decided, the same decision the words read)
+and HERS – a Unicode glyph beside it would say the same thing twice in two visual languages, and
+platform emoji fonts sit oddly against the painted art. Recommendation: **not beside the Mood
+word.**
+
+⭐ Where a glyph WOULD do real work, if he wants the gamma: **the life rows of the feed.** A
+career's feed is hundreds of tennis rows; the private-life thread (met someone · it ended · the
+wedding · the birthday ask) is exactly the thread a player will want to re-find seasons later,
+and one small mark per life-row kind makes the whole biography scannable at a scroll. That is
+navigation, not decoration – and it is the one surface with no face to spend. Two routes there:
+Unicode emoji (cheap, his pick of glyphs), or the house route – tiny drawn glyphs in the game's
+own language, the round-40 tennis-ball-radio-dot family. Either is one line per row kind, and
+removable.
+
+⚠ Whichever is ruled, the wording law extends to glyphs: the set is his to pick, and no agent
+adds or swaps one unasked.
 
 **What deliberately gets NO surface:**
 
@@ -221,7 +297,26 @@ instruments the game already has (her face, her words, her diary) finally mean h
 | 3 (someone exists) | arrival multipliers, feed-lag by openness, wants weights, census arms | – |
 | 4 (it ends) | end/cooldown multipliers, shock by intensity, fairness-corridor arms | – |
 | 5 (psychologist) | the wants-read rung's extra worth for `private` girls | that spec's own |
-| 6+ (marriage, album) | latch timing nudge; the retrospective line | those waves' own |
+| 6+ (marriage, album) | latch timing nudge; the arc line (§2a) | those waves' own |
+
+Two cheap lines the 09.09 review pass adds to existing waves:
+
+* **Wave 2+ – her state colours her stated want.** The fork-opinion draw (build plan wave 2)
+  already weights her want by deterministic inputs; when `spirit` and `bond` exist they join
+  those inputs – a worn-down girl leans `stop`, a close one dares more. One line, no new system,
+  and «решения всё равно будут за девочкой» becomes mechanical. (Temperament itself stays out of
+  the want – §3's fence holds; this is her STATE speaking, not her birth.)
+* **Waves 3–4 – `bond` gates the fog** (§2a channel 1): the feed-lag and wants-clarity reads take
+  the bond band as an input beside openness.
+
+**Named later beats** – surfaced by the 09.09 external-review reconciliation (§7a), deliberately
+NOT in waves 1–5, recorded here so each is planned once:
+
+| beat | what it is | earliest honest slot |
+| --- | --- | --- |
+| burnout & the breaking point | sustained overload + low spirit as a PROCESS with an escalating warning ladder (the face → the Mood word → the coach's line → a beat), and – his ruling needed – a morale-driven end: she can be DONE with tennis, not only old. P2's one surviving unplanned concept; season-life-future §2's humane shape («pressure, withdrawal and burnout through humane conversations and support») | after step 5; its own spec and his word |
+| the parent in the stands | attend-vs-watch-on-TV (round 5: «кричите в телевизор – её там не слышно»). The travel line already prices two seats, so «stay home» can become a real choice with a bond/spirit meaning – the layer's first money-vs-relationship trade | after step 4; needs a presence model, priced before designed |
+| on-court conduct | the July flagship (the racket, in rage): low spirit × intense temperament × no psychologist → an incident with a visible cost – the exact commit that re-adds `conduct` to the penalty union (offers.ts removed the reserved member until a producer exists; act2-pro-tour §6 already names psyche as its source) | with/after burnout; his word |
 
 Costs named honestly: the engine half of this spec is **S–M** (multipliers, one field, one input);
 the real weight is **copy – four voices across diary, feed and beats, every line his to approve**
@@ -230,30 +325,84 @@ per-temperament arms – more grid cells, same instrument.
 
 ---
 
-## 7. Open questions for the owner – each with a recommendation
+## 7. His rulings of 09.09, and what stays open
 
-1. **Four buckets or continuous axes?** Recommendation: four buckets (§1's voice argument). The
-   axes stay implicit; splitting a bucket later is append-only content, not a schema fight.
-2. **Shares.** Recommendation: uniform 25×4 for v1; the census prints the realised mix and a
-   reweight is one line. (An alternative – steady girls commoner, ~30/20/30/20 – reads more like
-   life; his taste.)
-3. **The fairness corridor.** Recommendation: ±1.5 pp lifetime match-win across temperaments; if
-   breached, the support-responsiveness compensator (§4), never a stat rebate.
-4. **The Mood ladder's five words** – `Glowing / Bright / Steady / Dimmed / Heavy` are draft;
-   his to rename or refuse (the tile already prints Hurt/Tired/Steady today – the new words must
-   sit beside those, and «Steady» is already taken by condition's register: does spirit share the
-   word or own a different one?).
-5. **Prologue glimpses in v1?** Recommendation: yes – one scene variant per axis, revealing
-   never shaping; touches shipped prologue copy, so it is an ASK by the wording law.
-6. **Does the album name her temperament at the end?** Recommendation: yes, one line, landing
-   with the album redesign he has reserved – the layer's last word belongs to the epilogue.
-7. **Birthday ask weighting on?** Recommendation: yes, mild (~1.5× toward her register), reading
-   the existing draw – the asked/given record and its bond rows are untouched.
-8. **The name of the trait itself.** `temperament` in code; if a player-facing word is ever
-   needed (settings, album), his. Also standing from the review: the build plan's `bond` collides
-   with the offers vocabulary's apparel bond – rename to `trust`/`standing`, or keep and live
-   with the grep noise? Recommendation: keep `bond` (different domain, the offers term is
-   `kit-bond-<week>` strings), decide once here.
+Eight questions went to him with recommendations. His answers, verbatim where they decide:
+
+1. **Buckets – RULED: «бакеты ок».** Four voices stand.
+2. **Shares – RULED: uniform first.** «взвешенные звучат интереснее, как мне кажется, но если
+   версия 25х4 это логичный первый шаг - то можем сначала ее реализовать» – v1 ships 25×4; the
+   first census read is the scheduled moment to reweight toward his taste.
+3. **The fairness corridor – RULED: «коридор нравится, интересно звучит».** ±1.5 pp stands as
+   the bar; the support-responsiveness compensator only if the bench breaches it.
+4. **The five Mood words – RULED: «пять слов нравится, добавит гаммы».** The drafts stand for
+   his wording pass. ⚠ One tail still his: «Steady» is already condition's word on the same tile
+   – spirit shares the word or takes its own middle one.
+5. **Prologue glimpses – RULED: «да».** One scene variant per axis, revealing never shaping; the
+   glimpse lines go to him as drafts (prologue copy is his).
+6. **The album – RULED, with a better shape than the question offered:** «предлагаю в конце
+   лучше вариант: напишем с чего начиналось и к чему пришли» – not a label, an ARC: §2a's three
+   endings, landing with the album redesign he has reserved.
+7. **Birthday ask weighting – RULED: «да».** Mild (~1.5× toward her register), reading the
+   existing draw – the asked/given record and its bond rows untouched.
+8. **`bond` – RULED: «давай оставим bond».** The name stands beside the offers vocabulary's
+   apparel-bond strings (`kit-bond-<week>` – same word, different domain, no runtime collision);
+   decided once, here.
+
+**Still open – each with a recommendation:**
+
+1. **§2a, can she change** – the two-channel model and its parameters (one step max, the
+   sustained conditions, the hazard). Needs his «утверждаю» before wave 3 builds channel 1 and
+   the psychologist spec builds channel 2.
+2. **§5a, emoji** – recommendation: not beside the Mood word (the face IS the emoji); if
+   anywhere, the life rows of the feed, where a glyph is navigation rather than decoration. His
+   call, his glyphs.
+3. **The reweight moment** (ruling 2's tail) – after the first census read; the census table is
+   where that conversation gets numbers.
+4. **The Steady collision** (ruling 4's tail) – spirit shares condition's word or takes its own;
+   one word, his.
+
+---
+
+## 7a. The 09.09 external review, reconciled – covered, adopted, refused
+
+He brought an outside review's «what is not realised» list the same day. Verified against the
+code and this spec's plans, item by item, so nothing is double-planned and nothing slips:
+
+**Already covered by the layer's waves 1–4** (the review confirms the plan and adds nothing
+here): persistent morale (= `spirit`) · persistent bond · weekly rules for both · consequences
+for the emotional tone of parent decisions (the bond delta table: pushed knocks, played-hurt,
+zero vacations, refused asks) · bounded morale influence on match day (`spiritMatchFactor`,
+floor 0.90 – the review says «composure»; the shipped seam scales all five wings exactly as
+condition does, one idiom, same bound) · relationship-aware diary selection (`bondBand` licences
++ §3.6's four voices) · the psychologist (step 5 + the pending reconciliation doc). Its «P2
+starting point» is the absorbed proposal – morale = `spirit`, bond = the standing – already
+recorded as superseded in [the-private-life-layer.md](../backlog/the-private-life-layer.md) #3.
+
+**Genuinely missing from the plans until today – adopted as §6's named later beats:** burnout &
+the breaking point, with the escalating warning ladder and a possible morale-driven quit (P2's
+one surviving unplanned concept; round 40's plateau/«she is done» work is AGE-driven and does not
+cover «done with tennis») · the parent in the stands (round 5's attend-vs-watch, now cheap to
+price because the travel line already bills two seats) · on-court conduct as psyche's penalty
+producer (the review correctly reads offers.ts: the reserved `conduct` member was removed until a
+producer exists, and the beat above is that producer).
+
+**Deliberately NOT taken, with the reasons recorded so the list is answered rather than
+re-absorbed:**
+
+* «Morale reacting to results» – that is form-and-slump's channel, PARKED by his own word
+  («форму и спад тоже давай распишем спеком, но уже на потом»); double-charging results into
+  `spirit` builds the lose→sad→lose spiral the parking avoided. The perturbation table reads her
+  LIFE, not her scorelines – by design.
+* «Morale influence on training quality» – a second, invisible reader: a spirit malus inside the
+  training week would be condition-style invisible, the decorative failure pointing the other
+  way. `spirit`'s one mechanical reader is the match; the diary carries the rest.
+* The «visible warning ladder» already ships for WEATHER in §5's carriers (face → word → diary);
+  the explicit escalating ladder belongs to the burnout beat, not to waves 1–4.
+
+One doc nit found while verifying: `docs/context/product-and-narrative.md` still calls `conduct`
+«a reserved field» – it was removed (YAGNI-2, round-22 review); the re-base pass owes the pack a
+one-line correction.
 
 ---
 
@@ -270,5 +419,6 @@ per-temperament arms – more grid cells, same instrument.
 * **Not new UI chrome** – §5 is an argument that the game already owns every surface this layer
   needs.
 
-**Done when:** he rules on §7, the census table of §4 is accepted as the acceptance bar, and the
-re-base pass folds §4's constants into the build plan's waves 1–4.
+**Done when:** §7's four open tails are ruled, the census table of §4 (ninth print included) is
+accepted as the acceptance bar, and the re-base pass folds §4's constants, §2a's channel 1 and
+§6's two cheap lines into the build plan's waves 1–4.
