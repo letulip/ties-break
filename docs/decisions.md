@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 80 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 81 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 7 | [ROUND 39: INES'S CAREER – SPONSOR TERMS, THE BRAND LOOP AND THE APPAREL RULINGS](#08092026--round-39-iness-career--sponsor-terms-the-brand-loop-and-the-apparel-rulings) | 2026-09-08 |
+| economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
@@ -3211,3 +3211,35 @@ attachment lift will sit her, and Glowing is 80 and above.
 weeks» bar does NOT pass in wave 1 and moves to wave 4 with bars 1 and 3 – for the same reason and by
 the same logic he had already ruled: wave 1 has no life events, and the break-up shock (−22 steady /
 −34 intense) is the event those words exist for.
+
+## 09.09.2026 – WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY
+
+Asked before wave 2's own deltas stack on top of it (the runbook's precondition 4), because the
+wave-1 bench had read the played-hurt row as the biggest bond lever in the game and the reading
+needed his word before anything else leaned on it.
+
+**What the table actually says today.** Pushing a knock through costs −3. Entering her while the
+doctor's warning stands – `medicalClearance` says `warn` at condition 15–24, the band where in his
+own words «врач предупреждает, но формально запретить не может» – costs −4. And pressing «Push
+through» past the fatigue caution, at any tier, costs **nothing**: `minConditionToEnter` (local 20,
+regional 30, up to 60 for the big events) is a CAUTION ladder and not an entry ban, so the only hard
+stop in the game is the medical veto below 15.
+
+⚠ The wave-1 bench's «8.1–8.8× per career» was its own entry policy, not a career fact: it entered
+only on `availabilityStatus === 'ok'`, and the only tier whose caution floor sits inside the doctor's
+band is `local` (20), so every one of those was a junior Local Open. In a careless player's hands
+the row can fire at any tier. His own report – «я вообще такого не ловил ни разу» – is what the
+arithmetic predicts for a parent who rests her.
+
+⭐ **RULED: keep −4 as it stands, and measure the hole before pricing it.**
+
+* The −4 is a parent overruling a doctor about his daughter's body, which is exactly what the layer
+  exists to price, and it self-limits: a parent who rests her never meets it once.
+* ⚠ Narrowing the trigger by tier was refused for a reason already in the specs: who-she-is §3's
+  fence says **«the parenting price list is universal»** – temperament and circumstance change what
+  happens to her and what she wants, never the price of being her parent. A tier-scaled price would
+  be the first crack in that.
+* The «Push through» hole is a real inconsistency and stays open **on purpose**: its frequency is
+  unmeasured, and if a player presses it dozens of times a career a −4 would put `bond` on the floor
+  – «мы ни за что не наказываем» forbids exactly that, and invariant 5 forbids pricing it by guess.
+  Wave 2 measures it at the bench; the price is his afterwards, with the number in hand.
