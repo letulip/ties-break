@@ -369,14 +369,14 @@ the words) + 4 one-liners + the flat pool shared across beats + the feed row ≈
 * **Retro candidates** for the same voice pass, his call later: the birthday asks' copy and the
   last-winter line – both already «speak» for her in one fixed register today.
 
-**Open for his word – the second sitting:**
+**The second sitting – RULED 09.09, all four as recommended:**
 
-| # | question | recommendation |
-| --- | --- | --- |
-| V1 | the tier model – all three, staged (tier 0 with wave 1, tier 1 with wave 3, tier 2 per plan)? or cut tier 1 from v1? | all three, staged – tier 0 makes her audible from the first wave; tier 1 rides machinery wave 3 builds anyway |
-| V2 | do tier-1 replies move `bond`? | no in v1 (0), or capped ±0.5 once a season – small talk is texture; the delta table stays the big beats' |
-| V3 | address form – neutral v1, mom/dad as its own later pass? | yes – neutral costs nothing in English; the pass also wants round 3's tone presets |
-| V4 | starting `spirit`/`bond` vs the prologue (⚠ the 09.09 self-review's finding: the build plan's 70/70 start predates the shipped prologue – should a warm childhood start `bond` higher?) | keep 70/70 in v1 – the prologue already pays its weight in skills and joy; loading `bond` too would double it. Revisit on playtest |
+| # | ruling |
+| --- | --- |
+| V1 | **All three tiers, staged** – tier 0 with wave 1 (she is audible from the first wave), small talk with wave 3 (it rides the beat machinery built there), the big beats per plan |
+| V2 | **Tier-1 replies move nothing** – 0 in v1; small talk is texture, never economy, and the delta table stays the big beats' |
+| V3 | **Address-neutral v1** – English carries it without loss; the mom-or-dad pass (round 3, with its tone presets) ships separately later and upgrades the lines |
+| V4 | **70/70 for everyone in v1** – the prologue does not load `bond`/`spirit` (it already pays its weight in skills and joy); revisit on playtest |
 
 **What deliberately gets NO surface:**
 
@@ -478,10 +478,9 @@ Eight questions went to him with recommendations. His answers, verbatim where th
    one state and gets one word; the gamma lives in Glowing/Bright/Dimmed/Heavy, and the tile's
    priority rule (injury first, then the larger deviation of body vs mood) ships with wave 1.
 
-**After the second sitting, only §5b's four voice questions (V1–V4) wait on his word** – the
-voice system arrived the same day and carries its own open block. Everything above stands ruled;
-the remaining numbers are bench proposals by nature (invariant 5): measured first, then read
-together.
+**Everything in this spec is now ruled – §7's eight, the four tails, and §5b's V1–V4 (09.09,
+second sitting). Nothing waits on a word.** The remaining numbers are bench proposals by nature
+(invariant 5): measured first, then read together.
 
 ---
 
@@ -540,6 +539,6 @@ one-line correction.
 * **Not new UI chrome** – §5 is an argument that the game already owns every surface this layer
   needs.
 
-**Done when:** §5b's V1–V4 are ruled, and the re-base pass folds this spec into the build plan –
-§4's constants and census arms, §2a's two channels (the leaning included), §5a's feed glyphs,
-§5b's voice system (bibles first) and §6's two cheap lines, against the plan's waves 1–5.
+**Done when:** the re-base pass folds this spec into the build plan – §4's constants and census
+arms, §2a's two channels (the leaning included), §5a's feed glyphs, §5b's voice system (bibles
+first) and §6's two cheap lines, against the plan's waves 1–5. Everything else is ruled.
