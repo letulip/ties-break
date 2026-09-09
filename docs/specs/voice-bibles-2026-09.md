@@ -50,8 +50,11 @@ string slot 10 is measured on below.
   2. **The narration outside the quotation contains `she` or `She`.** A paired `/"[^"]*"/g` strip
      cannot tell her quotation from anyone else's – `"You are not going back until I say so," we
      said.` would otherwise pass it – so the `she` is what names the speaker as her.
-* ⚠ **The pin that enforces this does not exist yet.** Step 4 of wave 1 builds it, and the two rules
-  above are the contract it owes. Nothing in section D is selectable until it lands.
+* ⚙ **THE PIN LANDED (wave 1, step 4)** – this bullet used to say it did not exist yet, and the
+  sentence went stale by its own success. `tests/week-notes.test.ts` now asserts the third-person law
+  on the narration OUTSIDE her quotation and both shape rules above as their own cases, and wave 2
+  extended the same three pins to the life-beat pools. Section D is selectable, and every line the
+  layer adds from here is held to the same contract.
 
 ⚠ **What today's pin actually asserts**, stated plainly because both earlier drafts of this document
 described it wrongly. `tests/week-notes.test.ts:672` matches `/\bYou\b|\byour\b|\bYour\b/` –
