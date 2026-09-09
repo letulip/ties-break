@@ -57,6 +57,8 @@ that changes constants below. What moved since 23.08, so nobody builds against t
   pin (who-she-is §5b.3).
 * **Ruled names and starts**: `bond` stays `bond` (09.09, beside the offers' `kit-bond-*`
   strings); the start is uniform 70/70 – the prologue does not load it (ruling V4).
+* ⚠ **Source of truth for constants**: values here are quoted from who-she-is §4 – THAT table
+  wins on any drift between the two documents (the single-source rule, 09.09).
 
 ---
 
@@ -76,7 +78,8 @@ P2's parent-as-observer argument against a trust gauge).
 
 ### 1b. `spirit` – range, start, weekly rule
 
-* Range **0..100**, integer. Start **70** = `ECONOMY.spirit.baseline`.
+* Range **0..100** in tenths (0.1 – ruled 09.09; the intensity multipliers produce fractions,
+  and every write rounds to the nearest tenth). Start **70** = `ECONOMY.spirit.baseline`.
 * **Effective baseline** = `baseline` (70) **+ 5** while the attachment slot is full
   (`attachmentLift: 5`, step 3) – §3a's «lifts a little and stays lifted» is a baseline shift, not
   a one-off bump, so the lift arrives over ~2 weeks and holds.
@@ -85,12 +88,15 @@ P2's parent-as-observer argument against a trust gauge).
   `world/phaseHerWeek.ts`, immediately AFTER the `accrueCondition` call (:219) – its own call,
   never a parameter, because accrueCondition's arity-2 is test-pinned; pure arithmetic,
   **zero draws on any stream**):
-  1. apply the week's perturbations (table below) **× the intensity scale – ×0.8 steady /
-     ×1.25 intense** (who-she-is §4), clamp 0..100;
-  2. step toward the effective baseline by **min(returnPerWeekFor(temperament), |gap|)** –
+  1. step toward the effective baseline by **min(returnPerWeekFor(temperament), |gap|)** –
      **5/week steady, 3/week intense** (who-she-is §4; the flat 4 of the 23.08 draft is
-     superseded). One rule for the lift, the break-up recovery and every drift – no second curve
-     to tune.
+     superseded) – ⚠⚠ **RETURN RUNS FIRST, off LAST week's value (order ruled 09.09)**: in the
+     drafted perturb-then-return order a steady girl's vacation (+4) met the same-tick return of
+     4 and vanished, and with it most ordinary weather and most of the Mood ladder's words;
+  2. apply THIS week's perturbations (table below) **× the intensity scale – ×0.8 steady /
+     ×1.25 intense** (who-she-is §4), clamp 0..100, **round to the nearest tenth** (spirit is
+     stored in tenths – the multipliers produce fractions and the rounding is named). One rule
+     for the lift, the break-up recovery and every drift – no second curve to tune.
 
 **Step-1 perturbation table** – existing world facts only, no life events yet (that is step 1's
 definition). ⚠ Deliberately absent: match results (that is form's channel, parked), training load
@@ -211,12 +217,14 @@ re-pointing KidScreen's Confidence tile is NOT taken here – later surface, own
 | stream | drawn for | keyed on |
 | --- | --- | --- |
 | `seed:life:arrival:<week>` | does someone exist, this week (3a hazard) | the week – reload-proof, choice-proof |
-| `seed:life:partner:<sinceWeek>` | who he is: the feed lag, her `wants` read | the arrival week |
-| `seed:life:ends:<week>` | does it end this week (3b hazard) + the space/company read | the week |
+| `seed:life:partner:<sinceWeek>:lag` | the feed lag alone – ⚠ SPLIT 09.09: one value per key, so a later added read can never shift a neighbour | the arrival week |
+| `seed:life:partner:<sinceWeek>:wants` | her `wants` read | the arrival week |
+| `seed:life:ends:<week>` | does it end this week (3b hazard) | the week |
+| `seed:life:ends:<week>:react` | the space/company read at the ending | the week |
 | `seed:life:fork:<seasonIndex>` | her stated want at the college fork (step 2's beat) | the season |
 | `seed:life:copy:<week>` | copy selection at snapshot time only | the week |
 | `seed:temperament` | who she is – the two axis picks at world creation; the migration derives with the SAME formula, so old careers turn out to have always been her (09.09) | the seed alone |
-| `seed:hervoice:<week>` | tier-0/1 line and moment picks (who-she-is §5b) | the week |
+| `seed:hervoice:<kind>:<week>` | tier-0/1 line and moment picks (who-she-is §5b) – keyed per kind, so a new kind never shifts an old pick (09.09) | the kind and the week |
 | `seed:life:smalltalk:<week>` | does she come with something small this week (tier 1) | the week |
 
 All re-derived at the call site, nothing persisted, MAIN never touched – `seed:birthday:<age>`'s
@@ -251,7 +259,10 @@ on [60,100]; seam test – `kidMatchPlayerFor` with spirit absent or ≥ 60 deep
 player; B1 capture pin untouched; migration idempotency + fixture (temperament derivation pinned
 against the createWorld formula); diary licence sweep (new lines unselectable outside their
 bands); **the voice completeness pin** – beatKind × temperament × register with no silent
-fallback (the flat pool is the one legal shared fallback, only at strained/cold).
+fallback (the flat pool is the one legal shared fallback, only at strained/cold); **every
+perturbation row asserted FROM BASELINE per intensity arm** – the next week shows the full
+scaled delta (the order fix's own pin); **the Mood-word occupancy bar** read off the bench –
+each of the five words in ≥ 2% of weeks under normal play.
 
 **Bench (the «done when» row made measurable):** `tools/spirit-bench.ts` (`bench:spirit`), 32
 seeds × 4 seasons, arms {care: rest knocks + vacations + light exams} × {grind: push knocks + zero
@@ -316,6 +327,19 @@ inside it. Mechanics:
   contradicting it −4. A parent can disagree out loud and then do as she asked – the two deltas
   are separate on purpose.
 
+**The collision contract (09.09 – the second review's ask, made explicit):**
+
+* `STOP_PRECEDENCE`: `'life'` slots after `'birthday'` and before `'fork'` – a knock and a
+  birthday still outrank a life beat inside one week, and the fork-gap ordering (`'life'` above
+  `'fork'` in `advanceWeeks`) is this wave's own mechanic;
+* several life beats in one week QUEUE in lifeLog order – one dialog at a time, none lost
+  (`answer: null` rows ARE the queue, the machinery's own trick);
+* the face and the Mood word under collision: injury first, then **a live `spiritShock` outranks
+  result joy** – a title won in the week it ended shows a girl who won hollow, which is the
+  scene, not a bug – then the larger deviation of body vs mood (wave 1's rule);
+* a life beat sharing a week with a tournament is already the BLOCK contract's covered case
+  (collected inside the loop) – nothing new.
+
 **Bench / gate:** the «reverting the reaction changes the number, measured» row is deterministic –
 same seed, answer A vs answer B, bond differs by exactly the table (an equality test, no SEM);
 B1 capture byte-identical; fixture + migration tests; the 375x667 mounted test proven by mutation.
@@ -345,11 +369,18 @@ modules are the shared files – land the wire first.
 * cooldown after an `endedWeek`, per temperament: **12 fiery / 26 sunny / 39 quiet / 52 deep**
   weeks.
 
-**Schema move (v74, re-based 09.09):** `world.attachment:
-{ sinceWeek: number, knownWeek: number | null, partnerId: string, wants: 'private' | 'open' } | null`.
-`partnerId` = `p:<sinceWeek>` – an identity for later steps, no name at step 3 (the fictional-name
-rule gets its own pass when a name is ever printed). Her `wants` draw is weighted by openness –
-~70% toward her own register (who-she-is §4). Fixture `v74.json`.
+**Schema move (v74, re-cut 09.09 to EPISODES – the review's find #5):**
+`world.loveEpisodes: LoveEpisode[]` –
+`{ id, sinceWeek, endedWeek: number | null, knownWeek: number | null, wants: 'private' | 'open', partnerId }`,
+append-only; **the ACTIVE attachment is DERIVED** – the last row with `endedWeek === null` – so a
+romance that begins AND ends before the parent knew survives save/reload intact and surfaces
+later as one honest late row (the drafted single slot was nulled at the break-up and lost exactly
+that scene). The episode list is also step 6's courtship history and the album's love list,
+bought early for free. `partnerId` = `p:<sinceWeek>` – an identity, **no name and no gender
+persisted** (⚠ deliberate: the schema must not hardwire boyfriend→husband; who the partner is
+arrives with step 6's naming pass and the owner's word, and «no romance at all» / «never
+latches» remain first-class hazard outcomes, not failures). Her `wants` draw is weighted by
+openness – ~70% toward her own register (who-she-is §4). Fixture `v74.json`.
 
 **Feed-first, possibly late (§0.1; lag re-cut 09.09 by openness):** at `sinceWeek` the TRUTH
 moves – the slot fills, the spirit baseline lifts +5 – and the parent is told nothing. The feed
@@ -403,7 +434,8 @@ the whole episode then surfaces as one late row – §0's strongest scene, free 
 **The shock and the recovery curve – the numbers a bench can check:**
 
 * at `endedWeek`: spirit **−22 steady / −34 intense** (who-she-is §4; the 23.08 flat −28 is
-  superseded), slot lift removed (effective baseline back to 70), slot nulled,
+  superseded), the lift removed (effective baseline back to 70), **the episode's `endedWeek`
+  written – the row STAYS, nothing is nulled** (the active slot is derived; 09.09),
   `world.spiritShock = { week, kind: 'breakup' }` set, lifeLog `'ended'` row written;
 * recovery is the standing weekly rule, nothing special-cased: the per-intensity return (5/3)
   toward baseline. From a lifted 75: **steady ~1–2 weeks under the knee, back ~week 5; intense
@@ -459,7 +491,10 @@ the 08.09 year-focus («можно будет у психолога делать
 the 09.09 drift re-cut (who-she-is §2a: «работа над собой» is a focus that enables the care-pole
 walk) – so step 5 has THREE-plus candidate channels, not one. The reconciliation is
 [the-psychologists-year-2026-09](../specs/the-psychologists-year-2026-09.md); build step 5 against
-IT, and read this section as the preserved 23.08 record it absorbs.
+IT, and read this section as the preserved 23.08 record it absorbs. ⚠ Step 5's schema move also
+carries **who-she-is §2a's two walls-leanings** (initialised 0 = expression equals nature;
+migration back-fills 0) – their one and only schema home, next number at land (the review's find
+#4: the leanings had no wave until 09.09).
 
 His word, verbatim:
 

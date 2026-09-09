@@ -3,7 +3,7 @@ type: context-pack
 status: current
 area: narrative
 canonical: true
-last-reviewed: 2026-08-19
+last-reviewed: 2026-09-09
 ---
 
 # Product and narrative context
@@ -16,8 +16,12 @@ last-reviewed: 2026-08-19
   coaches, sponsors, diary texture and tournaments.
 - Endings SHIP: six terminal states, the epilogue view in `world/endings.ts` and `EndingScreen.vue`,
   and college as a live second act. Never describe any of this as planned.
-- Morale, the parent-child bond, burnout and quitting are NOT in the runtime (`conduct` is a
-  reserved field). Documents describing psyche are product intent, not shipped behavior.
+- Morale, the parent-child bond, burnout and quitting are NOT in the runtime. The once-reserved
+  `conduct` penalty member was REMOVED until a producer exists (`src/shared/protocol/offers.ts`,
+  YAGNI-2 – it returns in the commit that first charges it). Documents describing psyche are
+  product intent, not shipped behavior; the current design authority for that layer is
+  [who-she-is-2026-09](../specs/who-she-is-2026-09.md) plus
+  [the-private-life-build](../plans/the-private-life-build.md).
 - The Russian concept doc is the original pitch; the lore bible is a dated art/tone reference –
   check both against code before asserting implementation.
 - Delivery ordering is [now / next / later](../now-next-later.md) and nothing else. The August

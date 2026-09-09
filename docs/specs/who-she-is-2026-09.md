@@ -40,9 +40,15 @@ shown as a label. Two independent axes compose it:
 * **Openness** (открытая ↔ закрытая) – how much of her life reaches the parent, and how soon.
 * **Intensity** (ровная ↔ порывистая) – how hard events hit her and how fast she comes back.
 
-⭐ **The axis law that keeps the system honest: INTENSITY MOVES THE NUMBERS, OPENNESS MOVES WHAT
-THE PARENT KNOWS.** One axis is physics (hazards, amplitudes, recovery), the other is fog (feed
-lag, wants, how the diary speaks). They never trade jobs, so no combination double-charges.
+⭐ **The axis law – RESTATED 09.09** (the second external review caught the first draft
+overclaiming: arrival hazards read openness, so «openness moves only knowledge» was false):
+**INTENSITY owns how hard things land and how long feelings hold** – shock depth, recovery rate,
+an attachment's end-hazard. **OPENNESS owns her flow with people** – the telling (to the parent:
+lag, wants, voice) AND the meeting (the arrival of someone new, the meeting half of a cooldown).
+Each SYSTEM is owned exactly once, so no combination double-charges – and §4's romance
+multipliers are these two axes projected, **not a third trait in hiding**: a separate «attachment
+style» was considered and refused (a fifth concept against the design plan's own «one state, not
+five systems», and either a voice explosion or a hidden trait).
 
 The four temperaments (working names – ids for code; every player-facing word is his):
 
@@ -117,8 +123,32 @@ draft here said «never backward»; it did not survive contact with him, verbati
 > стать закрытой. И про другие характеристики то же самое.»
 
 He is right that the one-way door was the thesis half-applied – «отношения можно укрепить или
-разрушить» (his 20.08 law) must hold for who she becomes, not only for the standing. The model,
-re-cut:
+разрушить» (his 20.08 law) must hold for who she becomes, not only for the standing.
+
+⭐⭐ **RE-CUT AGAIN 09.09 (third sitting, the second external review's deepest point, ruled):
+identity is IMMUTABLE – what drifts is WALLS AND REGULATION, expression over an unchanging
+nature.** The review caught the «care pole / hurt pole» frame quietly saying that privacy and
+intensity are defects a paid specialist corrects. The fix keeps every mechanic and his every
+ruling, and changes what the mechanics MEAN:
+
+* **`temperament` is BIRTH, forever** – the voice bibles, her humour, her syntax, the census
+  identity. Therapy and years never turn a quiet girl into a sunny one.
+* **The leanings are her WALLS and her REGULATION** – displacement of EXPRESSION from her own
+  baseline, not a rewrite of it. Kicks raise walls (she is expressed-closed, dysregulated – «
+  стала закрытой» is the parent's true experience, and it reads MORE tragic over an open nature:
+  her nature wants to talk); care lowers them («стала открытая с тобой»). The flat voice pool at
+  strained/cold IS the walls, already designed.
+* ⭐ **Repair is free; growth is work (ruled 09.09).** Walls raised by neglect come down with
+  time and sustained care ALONE – the psychologist only accelerates; nothing about coming home
+  is paywalled («мы ни за что не наказываем», kept honest). What DOES require her deliberate
+  work (the year-focus) is movement BEYOND her nature's own baseline – a born-private girl
+  learning to speak more openly than her default, a born-intense one learning tools her
+  temperament never gave her. The anti-«hugged into an extravert» guard lives exactly there.
+* **The album arc gets truer, not thinner**: «she was always the quiet one – but with you, by
+  the end, she talked about everything» (walls down, nature intact) · «the girl behind walls you
+  built» (the hurt road) · «she learned to breathe – her work, your support» (beyond-baseline).
+
+The model, re-cut:
 
 * **Each axis keeps a slow internal LEANING** – a bond-like accumulator, persisted, never shown
   on any surface. The four buckets stay the only expressed truth (the voices, the physics); a
@@ -126,16 +156,17 @@ re-cut:
   event of seasons, never a flicker, and churn is capped by the timescale rather than by a hard
   counter. ⚠ Not the rejected continuous model returning: no reader and no line ever sees the
   leaning – it exists purely so change can be gradual, rare and honest.
-* **Toward the care pole (open, steady) the road is DELIBERATE**: sustained `close`/`steady`
-  bond AND the psychologist retained with the matching year-focus chosen (his 08.09 year-focus
-  idea finds its second job here). Care alone opens the telling (channel 1); it does not rewrite
-  her. ⭐ The focus-gate is also what protects a well-loved `quiet` girl from being hugged into
-  an extravert: without the chosen work, her nature holds and only the relationship opens.
-* **Toward the hurt pole (closed, intense) the road is NEGLECT ITSELF** – no purchase required:
-  seasons where the kick pattern dominates (pushed knocks, played hurt, refused asks, zero
-  vacations) at a `strained`/`cold` bond walk the leaning the other way. An open girl who is
-  kicked learns to stop telling; a steady one learns to brace. ⭐ The asymmetry is the design:
-  repair costs deliberate work, damage costs only carelessness.
+* **Walls RISE from neglect itself** – no purchase, no work: seasons where the kick pattern
+  dominates (pushed knocks, played hurt, refused asks, zero vacations) at a `strained`/`cold`
+  bond raise them. An open girl who is kicked learns to stop telling; a steady one learns to
+  brace.
+* **Walls FALL for free** – time plus sustained care at a `close`/`steady` bond walks her back
+  to HER OWN baseline; the psychologist ACCELERATES this and is never required for it (ruled
+  09.09: repair is free).
+* **BEYOND her baseline is her own work** – sustained close bond AND the psychologist's matching
+  year-focus, chosen (his 08.09 idea's second job). ⭐ This gate is what protects a well-loved
+  `quiet` girl from being hugged into an extravert: without HER chosen work, her nature holds
+  and only the relationship opens.
 * **Why this is not «наказание»** (the principle survives, applied honestly): nothing here is a
   scripted penalty – it is the slow, telegraphed, nameable consequence of the parent's own
   sustained pattern, visible on every surface the layer ships (the face dims, the Mood word
@@ -148,11 +179,12 @@ re-cut:
   walk even without the matching focus – a second legible thing the retainer buys? Priced at the
   bench, his word then.
 
-**The convergence guard, re-aimed for two poles** – the trap is any policy that reliably
-manufactures ONE bucket. Grind careers drifting closed+intense is the game telling the truth;
-every caring career ending open+steady would not be – the focus-gate is the dam. The census (§4)
-prints flip shares in both directions under a caring arm and a grinding arm, plus the
-end-of-career distribution, so erosion is a number before it is a fact.
+**The convergence guard, re-aimed for walls** – the trap is any policy that reliably
+manufactures ONE expressed bucket. Grind careers ending walled-up is the game telling the truth;
+every caring career ending expressed open+steady would not be – the beyond-baseline gate is the
+dam. The census (§4) prints walls-raised and walls-lowered shares under a caring arm and a
+grinding arm, plus the end-of-career EXPRESSED distribution beside the constant birth one, so
+erosion is a number before it is a fact.
 
 **The album arc this buys** – his §7.6 ruling: «напишем с чего начиналось и к чему пришли».
 The honest endings for the line (copy drafts, his): unchanged – she was always the quiet one;
@@ -176,11 +208,13 @@ Every reader, what it reads, when it ships, and what bounds it:
 | 4 | her `wants` reads (private/open, space/company) | openness biases the draw ~70/30 (§4) | 3–4 | per-event draw stays live – she is a person, not a formula |
 | 5 | spirit physics | intensity scales perturbations ×0.8/×1.25, return 5/3 per week, break-up shock −22/−34 (§4) | 1 | `spiritMatchFactor` floor 0.90 and knee 60 stand for everybody – temperament never touches the factor curve itself |
 | 6 | diary + feed voice | four line pools under the SAME licences – what is true stays machine-checked; how she says it is hers | 1+ | honesty pins; all copy DRAFT for him |
-| 7 | birthday ask weighting | mild re-weight of which of the four offered she asks for (fiery → the trip; quiet → the day together) | 1+ | the ask stays drawn on `seed:birthday:<age>` – deterministic re-weight, the record shape untouched |
+| 7 | birthday ask weighting | mild re-weight of which of the four offered she asks for – a TENDENCY, never a rule | 1+ | the ask stays drawn on `seed:birthday:<age>` – deterministic re-weight, record untouched; weight capped ~1.5×, every id common for every girl, the census prints the mix (anti-stereotype guard, 09.09) |
 | 8 | life-beat prompt wording | the beat's copy carries her register (a `quiet` girl's «met someone» row is two guarded lines; a `fiery` girl's is a storm) | 2+ | engine-assembled copy, all DRAFT for him |
 | 9 | marriage timing (later) | steadiness nudges the latch hazard earlier once 22+ | 6 | his 22+ gate is absolute |
 | 10 | the psychologist's wants-read rung (later) | a `private` girl's wants are harder to read unaided – the top rung's brief is worth more exactly for her | 5 | the psychologist spec's own bench |
-| 11 | the album (later, his reserved redesign) | the ARC line – ruled 09.09: «напишем с чего начиналось и к чему пришли», §2a's three endings | album wave | §2a |
+| 11 | the album (later, his reserved redesign) | the ARC line – ruled 09.09: «напишем с чего начиналось и к чему пришли», §2a's endings | album wave | §2a |
+| 12 | kidLife texture (school, friends, travel, humour, disagreement) | temperament flavours the existing texture – she is visibly HER from the first screens, years before any romance (09.09, the review's ask; `buildKidLife` is the surface) | 1+ | the same honesty licences; all copy his |
+| 13 | the spotlight (§3c) | fame's weight lands as spirit weather, scaled by EXPRESSED openness and intensity; habituation and the psychologist's fifth focus carry it | the spotlight wave (§3c) | through `spirit` only, recoverable, never a success tax |
 
 ### ⚠⚠ THE FENCE – what temperament must NEVER touch
 
@@ -197,7 +231,51 @@ Named now, because «этот слой меняет всю игру» is exactly
   earns) does not vary by temperament – temperament changes what happens to her and what she
   wants, never the price of being her parent. The situations differ; the arithmetic of care does
   not. (It also keeps the table benchable.)
+* **Identity is immutable (09.09, ruled).** No reader ever sees a changed NATURE: mechanics read
+  EXPRESSION (birth + §2a's walls), the voice bibles read birth alone, and the census's birth
+  distribution is constant by construction.
 * **Not a difficulty setting.** §5's fairness corridor is the mechanical guarantee.
+
+---
+
+## 3c. The spotlight – the weight of being known (his 09.09 ask)
+
+> «давление известности и как она с ним справляется (и справляется ли вообще). В зависимости от
+> ее темперамента и оси текущей (может психолог что-то тоже поможет исправить).»
+
+**What exists to read**: fame is already a derived number with a floor and event weeks
+(`fameAt`, `fameFloorOf`, `fameEventWeeks` – `world/fame.ts`), so the spotlight needs NO new
+axis – it is a spirit perturbation FAMILY that reads fame the way the §4 table already reads
+injuries and exams.
+
+* **Pressure lands on EXPOSURE, never on success itself**: at a high fame band, the weeks that
+  put her in the light – a title or a final on a big stage, a shoot week, a heavily public loss
+  – carry a pressure perturbation (draft −2..−4 before scaling; bench numbers). ⚠ No standing
+  weekly drain: fame as a constant tax would punish succeeding, and «мы ни за что не наказываем»
+  forbids exactly that.
+* ⭐ **Who carries it well is the whole point, and it reads the CURRENT her** (his «оси текущей»
+  answered mechanically): the pressure scales by **EXPRESSED openness** – an expressed-open girl
+  half-feeds on attention (×0.75), an expressed-private one pays more (×1.5) – and by intensity
+  like all weather. Because it reads expression (birth + §2a's walls), not birth alone, **the
+  parent is in the loop**: a walled-up girl carries fame worst, a repaired one carries it better
+  – «и справляется ли вообще» becomes a question about the home, not only the girl.
+* **Habituation – «справляется» has a curve**: sustained fame slowly shrinks her own pressure
+  scale (she learns to live known) – unless walls are up: walls freeze habituation. A veteran
+  star from a good home shrugs at cameras that once cost her sleep.
+* **The psychologist's FIFTH focus** («The public life», working name – his «может психолог
+  что-то тоже поможет исправить»; the psychologist spec carries it as O7): while held, the
+  pressure shrinks by rung and habituation accelerates. Sentence draft: «The cameras stopped
+  costing her sleep.»
+* **Surfaces**: the diary and tier-0/1 voice carry it (a private girl after a famous win speaks
+  in guarded lines about the noise – bible material); the Mood word shows the dips; the feed
+  names the exposure week in plain words (the legibility law – every dip explainable).
+
+**Boundaries**: through `spirit` only – bounded, recoverable, the factor floor stands; never a
+fame cap or a success penalty; rivals unaffected. **Landing**: its own small wave AFTER step 5
+(it wants the walls and the focus machinery), reading today's `fameAt`; it deepens for free when
+advertising step 3 gives fame its full life. **Bench**: paired high-fame arms per temperament –
+the fairness corridor gains a high-fame column, and the habituation curve is measured before any
+ruling.
 
 ---
 
@@ -242,9 +320,23 @@ grows arms): 200 careers per temperament print – romance count distribution (m
 separate: fiery ≥ 4, sunny 2–3, deep ≤ 3, quiet ≤ 2), first-arrival age medians (quiet ≥ 17.5,
 fiery ≤ 17), «first or second love reaches the latch» share (quiet ≥ 50%, fiery ≤ 20%), late-feed
 share by openness (private ≥ 60%, open ≤ 25%). These eight numbers are the acceptance table his
-«утвердить» signs. Once §2a's drift ships, the census adds the drift prints: flip shares in BOTH
-directions under a caring arm and a grinding arm, and the end-of-career temperament distribution
-– the two-pole convergence guard made numbers.
+«утвердить» signs. Once §2a's walls ship, the census adds the drift prints: walls-raised and
+walls-lowered shares under a caring arm and a grinding arm, and the end-of-career EXPRESSED
+distribution beside the constant birth one – the convergence guard made numbers. Two more guards
+from the 09.09 review pass: **each of the five Mood words occupies ≥ 2% of weeks** under normal
+play (a gamma that never fires is dead copy – protected by the ORDER FIX below), and the
+birthday-ask mix is printed per temperament (the mild weight must never read as a stereotype:
+every ask id stays common for every girl). Beside the ±1.5 pp hard bar the census also prints,
+per temperament: staff spend, weeks under the knee, the hidden-episode share, interaction counts
+and bond outcomes – his read after first numbers, bars only if a gradient looks unfair.
+
+⚠ **THE ORDER FIX (09.09 – the review found the weekly rule cancelling its own events):** the
+weekly update runs **return FIRST (off last week's value), THEN this week's perturbations** –
+in the drafted order a steady girl's vacation (+5 × 0.8 = +4) met the same-tick return of 4 and
+vanished, and with it most ordinary weather and most of the Mood ladder. And **spirit is stored
+in tenths (0.1)** – the intensity multipliers produce fractions, and the rounding is now named:
+round-to-nearest-tenth after every write. Every perturbation row gets a from-baseline unit test
+per intensity arm.
 
 ---
 
@@ -341,9 +433,13 @@ the words) + 4 one-liners + the flat pool shared across beats + the feed row ≈
 
 1. **Four voice bibles** – a short style guide per temperament: vocabulary, sentence length,
    what she names and what she leaves out, punctuation habits. In English (the game's copy
-   language). ⭐ The load-bearing artifact – without it four voices drift line by line across
-   writing sessions; drafted for his approval BEFORE the first pooled line, and every line
-   thereafter cites its bible. All player-facing words remain his (invariant 4).
+   language). **With AGE RAILS (09.09, the review's ask)**: the same voice at young / teen /
+   adult vocabulary maturity – a ten-year-old and a thirty-year-old must not share one
+   dictionary. `lifeStage` is already in the facts; the bible carries the rails, the licences
+   carry the stage – no pool explosion. ⭐ The load-bearing artifact – without it four voices
+   drift line by line across writing sessions; drafted for his approval BEFORE the first pooled
+   line, and every line thereafter cites its bible. All player-facing words remain his
+   (invariant 4).
 2. **Her-speech line pools under the diary's own honesty law** – a licence per line (a bright
    quoted line cannot fire in a heavy week), honesty-pinned like week notes.
 3. **A completeness pin** – a test walking beatKind × temperament × register that FAILS on a
@@ -430,7 +526,9 @@ NOT in waves 1–5, recorded here so each is planned once:
 
 The voice system (§5b) lands across the same waves: the four voice bibles and tier 0 with wave
 1; the beat prompts written against the bibles with wave 2; tier 1 and the feed glyphs (§5a)
-with wave 3. The mom-or-dad onboarding pass (round 3, open since July) becomes worth scheduling
+with wave 3. The walls-leanings' schema home is step 5 (the build plan's §6a records it), and
+**the spotlight (§3c) is its own small wave after step 5** – it wants the walls and the focus
+machinery. The mom-or-dad onboarding pass (round 3, open since July) becomes worth scheduling
 beside them – it upgrades the address form (§5b boundaries).
 
 Costs named honestly: the engine half of this spec is **S–M** (multipliers, two fields, one
@@ -478,8 +576,10 @@ Eight questions went to him with recommendations. His answers, verbatim where th
    one state and gets one word; the gamma lives in Glowing/Bright/Dimmed/Heavy, and the tile's
    priority rule (injury first, then the larger deviation of body vs mood) ships with wave 1.
 
-**Everything in this spec is now ruled – §7's eight, the four tails, and §5b's V1–V4 (09.09,
-second sitting). Nothing waits on a word.** The remaining numbers are bench proposals by nature
+**Everything in THIS spec is ruled – §7's eight, the four tails, §5b's V1–V4, and the third
+sitting's four (the axis law restated, identity-immutable walls, repair-free, the psychologist
+reframe – all 09.09, all as recommended).** Scope honestly: the psychologist spec's O1–O7 are its
+own and stay open there. The remaining numbers everywhere are bench proposals by nature
 (invariant 5): measured first, then read together.
 
 ---
@@ -520,9 +620,9 @@ re-absorbed:**
 * The «visible warning ladder» already ships for WEATHER in §5's carriers (face → word → diary);
   the explicit escalating ladder belongs to the burnout beat, not to waves 1–4.
 
-One doc nit found while verifying: `docs/context/product-and-narrative.md` still calls `conduct`
-«a reserved field» – it was removed (YAGNI-2, round-22 review); the re-base pass owes the pack a
-one-line correction.
+One doc nit found while verifying: `docs/context/product-and-narrative.md` still called `conduct`
+«a reserved field» – it was removed (YAGNI-2, round-22 review). ⚙ The correction shipped in this
+branch, 09.09.
 
 ---
 
