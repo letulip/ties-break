@@ -72,6 +72,8 @@ import {
   answerRetirement,
   KID_ID,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import { decideKnock } from '../src/engine/world/knock'
@@ -216,6 +218,7 @@ function clearRefusals(world: WorldState): string | null {
       if (prompt) chooseGift(world, prompt.options[0].id)
       else return 'birthday-stuck'
     } else if (refusal === 'fork') {
+      if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
       answerFork(world, 'continue')
     } else if (refusal === 'retirement') {
       answerRetirement(world, false)

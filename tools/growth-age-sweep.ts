@@ -57,7 +57,7 @@
 import { readFileSync } from 'node:fs'
 import { openCareer, stepCareerWeek, runCareer as benchRunCareer, PRESETS, POLICIES, type Preset, type Policy } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, startingSkills, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, startingSkills, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { kidAgeExact } from '../src/engine/world/age'
 import { withHeadStart } from '../src/engine/world/player'
 import { decodeExportFile } from '../src/engine/saveCodec'
@@ -276,6 +276,11 @@ function runTrace(preset: Preset, index: number, policy: Policy, weeks = FULL_CA
     const af = ageFactor(exactAge)
 
     stepCareerWeek(world, rng, policy)
+    // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+    // player must not put a number on the scale.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     // `plays-on`: one more year to everything until the game stops asking. An arm measuring a GROWTH
     // curve has to, or half the careers stop before the curve does.

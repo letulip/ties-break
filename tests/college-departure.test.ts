@@ -46,6 +46,8 @@ import {
   RELEASE_LINE_PREFIX,
   SAVE_SCHEMA_VERSION,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDays'
@@ -98,6 +100,12 @@ function walkedToTheFork(seed: string, birthMonth: number): { world: WorldState;
     finishAnyReveal(world)
   }
   expect(world.fork, 'the career reached the fork by playing').not.toBeNull()
+  // ⭐ v73: the same tick that raised the fork raised HER OPINION of it, and `answerFork` refuses
+  // until it is answered. `'listen'` is the harness's answer for the same reason `answerFork`'s
+  // no-tier default is the cheapest place: a caller that never asked the player must not put a
+  // number on the scale – and every case below is about the DEPARTURE, not about the standing.
+  expect(pendingLifeBeat(world), 'and she said what she wants on the same week').not.toBeNull()
+  answerLifeBeat(world, 'listen')
   return { world, rng }
 }
 

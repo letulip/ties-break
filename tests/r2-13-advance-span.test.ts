@@ -39,8 +39,11 @@ import {
   decideKnock,
   enterEvent,
   entryStatus,
+  answerLifeBeat,
+  lifeLogOf,
   pendingBirthday,
   pendingKnock,
+  pendingLifeBeat,
   recomputeKidRank,
   skipTournament,
   spanDigest,
@@ -96,6 +99,11 @@ function walkTo(world: WorldState, rng: Rng, week: number, solvent = false): voi
   while (world.week < week) {
     if (solvent) world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
+    // ⭐ v73: and so is her opinion of the fork, on the same terms – a walk PAST a beat must not
+    // leave one standing, or the case that walks to week 828 becomes a case about wave 2 instead of
+    // about the retirement offer. `'listen'` is the harness's answer: zero on the table, for the
+    // same reason `answerFork`'s no-tier default is the cheapest place.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     if (world.fork !== null && world.fork.answer === null) world.fork.answer = 'continue'
     tickWeek(world, rng)
     if (world.pendingTournament) {
@@ -515,13 +523,58 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     walkTo(world, rng, 241, true)
     world.season = []
     const { stops, weeks } = span(world, rng)
-    expect(stops).toEqual(['fork'])
+    // ⭐⭐ v73 – AND IT IS A REAL COLLISION NOW, exactly as the retirement case below has always been
+    // one: the tick that opens the fork also raises HER OPINION of it, so this week is two things by
+    // construction and R11-1 says both are reported. The ORDER is the ruled sandwich – `'life'` above
+    // `'fork'` – and it is the engine's rather than the dialog's, because `answerFork` refuses while
+    // her row stands unanswered. The claim of this case is unchanged: the span stops ON the ask.
+    expect(stops).toEqual(['life', 'fork'])
     expect(weeks, 'it stopped ON the ask').toBe(1)
     expect(world.fork?.answer, 'unanswered – two of its three answers end the career').toBeNull()
-    // REFUSAL: the most expensive click in the game may not be stepped past.
+    // REFUSAL: the most expensive click in the game may not be stepped past – and the refusal names
+    // the question the player must answer FIRST, which is her.
     const blocked = span(world, rng)
-    expect(blocked.stops).toEqual(['fork'])
+    expect(blocked.stops).toEqual(['life'])
     expect(blocked.weeks).toBe(0)
+    // ...and once she has been answered the fork is what stands there, still refusing.
+    answerLifeBeat(world, 'listen')
+    const stillBlocked = span(world, rng)
+    expect(stillBlocked.stops).toEqual(['fork'])
+    expect(stillBlocked.weeks).toBe(0)
+  })
+
+  it("⭐⭐ LIFE – halts on the week she says what she wants, and then refuses to restart until she is answered", () => {
+    // ⚠⚠ THE CASE THIS FILE WAS LEFT OWING. `'life'` shipped in wave 2's wire as a member of the
+    // union and the precedence with nothing able to raise it, and the third list at the foot of
+    // block B carried it as a DEBT with the rule written beside it: «the step that raises the first
+    // beat moves `'life'` up into `covered` and writes its case in block B; a wave that ships the
+    // beat and leaves this line standing has shipped a stop reason nobody proved stops anything».
+    // This is that case, and the list below it is empty again.
+    //
+    // ⚠ WALKED, NOT INJECTED, like every other case in this block: the beat is the ENGINE's, raised
+    // by the same tick that opens the fork, and nothing is pushed into `world.lifeLog`.
+    const { world, rng } = career('r2-13-life')
+    walkTo(world, rng, 241, true)
+    world.season = []
+    expect(pendingLifeBeat(world), 'nothing is waiting before the week that raises it').toBeNull()
+
+    const { stops, weeks } = span(world, rng)
+    expect(stops[0], 'she leads the week she spoke in').toBe('life')
+    expect(weeks, 'one week of the four – it stopped ON the beat').toBe(1)
+    expect(pendingLifeBeat(world), 'and the question is up').not.toBeNull()
+    expect(lifeLogOf(world).length, 'exactly one row, answered by nobody').toBe(1)
+
+    // REFUSAL: pressing again moves nothing at all until she has been answered.
+    const before = world.week
+    const blocked = span(world, rng)
+    expect(blocked.stops).toEqual(['life'])
+    expect(blocked.weeks).toBe(0)
+    expect(world.week, 'not one week moved').toBe(before)
+
+    // ...and answering her is what lets time move again – through the fork, which is now the reason.
+    answerLifeBeat(world, 'listen')
+    expect(pendingLifeBeat(world), 'the row is cleared by the answer and by nothing else').toBeNull()
+    expect(span(world, rng).stops, 'the beat is behind him; the fork is in front').toEqual(['fork'])
   })
 
   it('RETIREMENT – halts on the off-season week the question is put (walked, not injected)', () => {
@@ -573,19 +626,23 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     const covered: StopReason[] = [
       'birthday', 'injury', 'medical', 'walkover', 'academy', 'offer', 'knock',
       'tournament', 'deadline', 'funds', 'season-end', 'fork', 'retirement', 'ending',
-      'shoot-clash',
+      'shoot-clash', 'life',
     ]
     const advanceCannotRaise: StopReason[] = ['call-up', 'college-league']
     // ⚠⚠ WIRED BUT NOT YET RAISABLE – A THIRD LIST, AND IT IS A DEBT RATHER THAN A REASON. The two
     // lists above are principled: one has a case, the other CANNOT have one. This one is neither.
-    // v73's wire lands `'life'` in the union and the precedence so both halves of wave 2 can build
-    // against it, and nothing writes a `lifeLog` row yet, so a span cannot stop for it and no case
-    // here could pass.
-    // ⚠ IT MUST BE EMPTY AGAIN BY THE END OF THE WAVE. The step that raises the first beat moves
-    // `'life'` up into `covered` and writes its case in block B; a wave that ships the beat and
-    // leaves this line standing has shipped a stop reason nobody proved stops anything, which is the
-    // exact hole this whole test exists to keep shut.
-    const wiredNotYetRaisable: StopReason[] = ['life']
+    // v73's wire landed `'life'` in the union and the precedence so both halves of wave 2 could
+    // build against it while nothing yet wrote a `lifeLog` row, and the rule written here was that
+    // the step raising the first beat must move it up into `covered` and give it a case.
+    //
+    // ⭐ THE DEBT IS PAID AND THE LIST IS EMPTY AGAIN (wave 2 §3, the fork-opinion beat). `'life'`
+    // sits in `covered` above and its case is «LIFE – halts on the week she says what she wants» in
+    // block B, walked rather than injected like every other case there.
+    //
+    // ⚠ IT STAYS AN EMPTY LIST RATHER THAN BEING DELETED, and that is deliberate: it is the SEAM a
+    // later wave's wire commit lands in, with the same rule attached, and a seam that has to be
+    // re-invented is a seam the next wave will skip.
+    const wiredNotYetRaisable: StopReason[] = []
     expect([...covered, ...advanceCannotRaise, ...wiredNotYetRaisable].sort()).toEqual([...STOP_PRECEDENCE].sort())
   })
 })
@@ -710,6 +767,13 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     walkTo(birthday.world, birthday.rng, 22)
     advanceWeeks(birthday.world, birthday.rng, 1)
 
+    // ⭐⭐ v73 – THE EIGHTH REFUSAL, between the birthday and the fork. Built the cheapest honest way
+    // like every other row here (the point of the table is that the EIGHT are the eight, not how
+    // each one is reached): one unanswered row on the record is the pending state, by design – there
+    // is no second boolean to set.
+    const life = quietCareer('gate-life')
+    life.world.lifeLog.push({ week: life.world.week, kind: 'fork-opinion', detail: 'tour', answer: null })
+
     const fork = quietCareer('gate-fork')
     fork.world.fork = { askedWeek: fork.world.week, answer: null, offer: null, departsWeek: null }
 
@@ -749,6 +813,7 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
       { reason: 'tournament', world: tournament.world },
       { reason: 'knock', world: knock.world },
       { reason: 'birthday', world: birthday.world },
+      { reason: 'life', world: life.world },
       { reason: 'fork', world: fork.world },
       { reason: 'retirement', world: retirement.world },
       { reason: 'shoot-clash', world: clash.world },
@@ -920,7 +985,9 @@ describe('R2-13 D – the shell offers the span in exactly the states the engine
     // the round's claim about the list is stated, so it moves WITH the list rather than being loosened.
     // Everything the case is about is unchanged: the narrowing of the OFFER rule still does not reach
     // the engine, and the letter is still a halt and not a refusal.
-    expect([...ADVANCE_REFUSALS]).toEqual(['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement', 'shoot-clash'])
+    // ⚠ RE-AIMED AT v73 – `'life'` IS THE EIGHTH REFUSAL, slotted between the birthday and the fork
+    // (the ruled sandwich), and this line moves WITH the list rather than being loosened.
+    expect([...ADVANCE_REFUSALS]).toEqual(['ending', 'tournament', 'knock', 'birthday', 'life', 'fork', 'retirement', 'shoot-clash'])
     expect(ADVANCE_REFUSALS, 'the offer is still a halt and not a refusal').not.toContain('offer')
     for (const collegePause of ['ending', 'birthday', 'fork'] as const) {
       expect(STOP_PRECEDENCE, `the college pause '${collegePause}' still has its slot`).toContain(collegePause)

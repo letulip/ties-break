@@ -40,6 +40,8 @@ import {
   SAVE_SCHEMA_VERSION,
   toSnapshot,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, managerCommissionBps } from '../src/engine/economy'
@@ -71,6 +73,10 @@ function answerAll(world: WorldState): void {
   if (pendingKnock(world)) decideKnock(world, 'rest')
   const age = pendingBirthday(world)
   if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+  // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
+  // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
+  // cheapest place: a caller that never asked the player must not put a number on the scale.
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 }

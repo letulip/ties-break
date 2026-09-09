@@ -153,6 +153,11 @@ import {
   buildDebtView,
   buildEndingView,
   cheapestEntryFeeCents,
+  // ⭐⭐ v73: the fork will not be answered while her opinion of it stands unanswered – the other
+  // half of `'life'`'s slot in STOP_PRECEDENCE, off the barrel so a test pins the rule and not a
+  // spelling. `raiseForkOpinion` rides beside it for the same reason `latchEnding` does.
+  raiseForkOpinion,
+  FORK_UNHEARD_REFUSAL,
   guardNotEnded,
   latchEnding,
   lastRungSeasonIndexOf,
@@ -249,6 +254,8 @@ export {
   buildDebtView,
   buildEndingView,
   cheapestEntryFeeCents,
+  raiseForkOpinion,
+  FORK_UNHEARD_REFUSAL,
   guardNotEnded,
   latchEnding,
   lastRungSeasonIndexOf,
@@ -339,8 +346,8 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
 import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
 export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
-import { answerLifeBeat, buildLifeBeatPrompt, lifeLogOf, pendingLifeBeat } from './world/lifeBeat'
-export { answerLifeBeat, buildLifeBeatPrompt, lifeLogOf, pendingLifeBeat }
+import { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
+export { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -1512,6 +1519,16 @@ export function createWorld(
     // player's. MAIN is untouched, so the frozen capture (41550 / e6b0c709) cannot see it. The v71
     // -> v72 migration calls THIS SAME function on the career's own seed – see `temperamentFor`.
     temperament: temperamentFor(seed),
+    // ⭐ v73 (the private life, wave 2): EVERY LIFE BEAT THIS CAREER HAS LIVED, and on week 0 that is
+    // none. Empty is the identity here in the plainest sense – there is no earlier week to have said
+    // anything in – which is also exactly what the v72 -> v73 migration back-fills on every older
+    // save, so a migrated career and a fresh one are the same shape at the moment they load.
+    //
+    // ⚠ LAST KEY OF THE LITERAL, for the reason `spirit`/`bond`/`temperament`, `assets`,
+    // `peakPhysical` and the masseur's three above give: the frozen-career identities reproduce each
+    // older schema's hashes by dropping exactly the keys appended since, and that only works while
+    // every key stays in the order it was appended in (`careerHashAtSchema` peels in reverse).
+    lifeLog: [],
   }
   addEvent(world, {
     week: 0,
@@ -1925,6 +1942,12 @@ export function advanceWeeks(world: WorldState, rng: Rng, weeks: number): StopRe
     // R11-1's own reason – a birthday CAN land on a week that is also a tournament, an injury or the
     // season wrap, and a week that is several things must report all of them.
     if (pendingBirthday(world) !== null) stops.add('birthday')
+    // ⭐⭐ v73: she said something and nobody has answered her. Collected rather than returned early
+    // for R11-1's own reason, and this member needs it more than most – the beat that raises the
+    // fork-opinion row raises the FORK on the same tick by construction, so this week is two things
+    // every time it happens. `STOP_PRECEDENCE` puts her dialog first; `answerFork` refuses until it
+    // has been answered, so the ordering holds even if a surface ever renders them the other way.
+    if (pendingLifeBeat(world) !== null) stops.add('life')
     // Season just wrapped up (the tick landed on the year's first off-season week, week 49 of
     // the year): stop AFTER the wrap-up resolved, before week 50, so the season-summary popup
     // shows. Off-season weeks never carry a tournament, so this can't collide with 'tournament'.

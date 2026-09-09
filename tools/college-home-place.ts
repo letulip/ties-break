@@ -33,6 +33,8 @@ import {
   pendingBirthday,
   resumeFromCollege,
   skipTournament,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, canAfford, coveredShareOf } from '../src/engine/collegeOffer'
@@ -132,6 +134,7 @@ for (const country of COUNTRIES) {
         }
         const offer = at.world.fork!.offer as CollegeOffer
         const quote = offer.quotes.find((q) => q.tier === tier)!
+        if (pendingLifeBeat(at.world)) answerLifeBeat(at.world, 'listen')
         answerFork(at.world, 'college', tier)
         // ⚠ THE ANSWER RESERVES; the September departure enrols (round 24 #5). Walk the gap, then the
         // four years – pressing through the birthday pause the way the player does.

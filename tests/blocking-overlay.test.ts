@@ -29,11 +29,13 @@ import {
 } from '../src/composables/blockingOverlay'
 import {
   answerFork,
+  answerLifeBeat,
   chooseGift,
   createWorld,
   decideKnock,
   pendingBirthday,
   pendingKnock,
+  pendingLifeBeat,
   birthdayOffer,
   tickWeek,
   toSnapshot,
@@ -126,7 +128,7 @@ describe('the birthday speaks before the fork', () => {
     expect(blockingOverlay(snap), 'she is told it is her birthday first').toBe('birthday')
   })
 
-  it('answering the birthday genuinely raises the fork – the second beat is not lost', () => {
+  it('answering the birthday genuinely raises the next beat – nothing in the queue is lost', () => {
     const { world } = atTheFork()
     // "Nothing" is a button too; take the first option, whatever it is – the ordering must not
     // depend on WHICH present was chosen.
@@ -134,18 +136,41 @@ describe('the birthday speaks before the fork', () => {
 
     const after = toSnapshot(world)
     expect(after.birthdayPrompt, 'answering IS the exit').toBeNull()
-    expect(blockingOverlay(after), 'and the fork is now the question on the table').toBe('fork')
-    // The fork itself is untouched by the birthday – same week, same three answers.
-    expect(after.fork).not.toBeNull()
+    // ⭐⭐ v73 – THE QUEUE IS THREE DEEP NOW, and this line is where the wave shows up in this file.
+    // The tick that opens the fork also raises HER OPINION of it, so the week holds a birthday, a
+    // life beat and a fork at once. The ORDER is the ruled sandwich: the birthday is a DATE and
+    // cannot move, her opinion can wait a week without becoming untrue, and the fork is the parent
+    // ANSWERING – so it comes last, and `answerFork` refuses until she has been heard.
+    expect(blockingOverlay(after), 'and she is the next question on the table').toBe('life')
+    expect(after.lifeBeatPrompt, 'with her own dialog on the wire').not.toBeNull()
+
+    answerLifeBeat(world, 'listen')
+    const heard = toSnapshot(world)
+    expect(heard.lifeBeatPrompt, 'answering IS the exit here too').toBeNull()
+    expect(blockingOverlay(heard), 'and only THEN is the fork the question').toBe('fork')
+    // The fork itself is untouched by either of them – same week, same three answers.
+    expect(heard.fork).not.toBeNull()
   })
 
   it('the fork is still answerable afterwards – nothing about the birthday consumed it', () => {
     const { world } = atTheFork()
     answerBirthday(world)
+    answerLifeBeat(world, 'listen')
     answerFork(world, 'continue')
     const after = toSnapshot(world)
     expect(after.fork, 'answered forks leave the wire').toBeNull()
     expect(blockingOverlay(after), 'and the shell is free').toBeNull()
+  })
+
+  it('⭐⭐ v73 – and the fork may NOT be answered out of turn, which is the engine saying so', () => {
+    // ⚠ THE OTHER HALF OF THE ORDER, AND THE HALF A UI TEST CANNOT MAKE. `blockingOverlay` decides
+    // what is on SCREEN; this decides what the world will accept. A stale card, a replayed command
+    // or a second surface cannot answer the fork behind her – invariant 1, «the engine is the gate».
+    const { world } = atTheFork()
+    answerBirthday(world)
+    expect(pendingLifeBeat(world), 'she is waiting').not.toBeNull()
+    expect(() => answerFork(world, 'continue')).toThrow(/hear her out/)
+    expect(world.fork!.answer, 'and the fork took nothing').toBeNull()
   })
 })
 
@@ -164,10 +189,14 @@ describe('the queue cannot deadlock', () => {
       expect(++guard, `the queue stopped clearing at "${which}" – it is waiting on something else`).toBeLessThan(10)
       if (which === 'knock') decideKnock(world, 'rest')
       else if (which === 'birthday') answerBirthday(world)
+      // ⭐ v73: the beat's OWN clearing command, which is the whole claim of this block – an overlay
+      // that needed another one's command first is the deadlock this walk exists to rule out.
+      else if (which === 'life') answerLifeBeat(world, 'listen')
       else if (which === 'fork') answerFork(world, 'continue')
       else if (which === 'retirement') throw new Error('a retirement offer at nineteen is not a thing')
     }
     expect(seen[0]).toBe('birthday')
+    expect(seen, 'and she is in the queue between the date and the decision').toContain('life')
     expect(seen[seen.length - 1], 'the queue reaches empty').toBeNull()
   })
 
@@ -180,6 +209,9 @@ describe('the queue cannot deadlock', () => {
       const { world } = atTheFork()
       answerBirthday(world)
       expect(world.birthdays.some((b) => b.age === 19), `her nineteenth survives "${answer}"`).toBe(true)
+      // ⭐ v73: and so does her opinion – she is heard before either of the two answers that end the
+      // career, which is the same argument the birthday's own reordering was made on.
+      answerLifeBeat(world, 'listen')
       answerFork(world, answer)
       if (answer === 'stop') {
         expect(blockingOverlay(toSnapshot(world))).toBe('ending')

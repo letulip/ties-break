@@ -54,6 +54,8 @@ import {
   SAVE_SCHEMA_VERSION,
   STARTING_FUNDS_CENTS,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { resumeMain, rngFromSeed, pickInt, type Rng } from '../src/engine/rng'
 import { decodeExportFile, encodeExportFile, sha256 } from '../src/engine/saveCodec'
@@ -190,6 +192,11 @@ function openFixtureCareer(
  *  `fork` is the recipe's stance; the retirement offer cannot fire before 29 and is handled for
  *  completeness (refuse until the game stops asking, which keeps a career playing). */
 function answerOpenQuestions(world: WorldState, fork: 'continue' | 'college' | 'stop'): void {
+  // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+  // player must not put a number on the scale.
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   if (world.fork !== null && world.fork.answer === null) answerFork(world, fork)
   if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 }

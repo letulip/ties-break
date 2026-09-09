@@ -33,11 +33,20 @@ import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, seasonIndexOf } from './ledger'
 import { activeLadderOf } from './ladder'
-import { collegeProgressOf, inCollege, measureCollegeOffer } from './college'
+import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer } from './college'
+// ⭐⭐ v73 – THE PRIVATE LIFE'S WAVE 2. The fork's opening tick raises her opinion of it, and
+// `answerFork` will not run until it has been answered. `world/lifeBeat.ts` imports nothing from
+// here (it takes `guardNotEndedForGood` from `./constants` for exactly this reason), so this edge
+// runs one way only.
+import { drawForkWant, forkStandingOf, forkWantOf, pendingLifeBeat, raiseLifeBeat, FORK_WANT_ANSWER } from './lifeBeat'
 // ⚠ A VALUE IMPORT FROM A LEAF, NOT A CYCLE. `engine/collegeOffer.ts` imports only `shared/protocol`
 // and `engine/rng`, and `world/college.ts` already imports it – the edge endings -> collegeOffer runs
 // the same way. It is here for the cheapest-place fallback in `answerFork` (round 26 #2).
-import { COLLEGE_TIER_ORDER } from '../collegeOffer'
+import { COLLEGE_OFFER, COLLEGE_TIER_ORDER, juniorRecordScore } from '../collegeOffer'
+// ⚠ THE TWO BASELINES ONLY, and both behind a `??` – the defensive read `accrueSpirit` uses for a
+// probe world hand-built before v72. `applyBondDelta` (engine/spirit.ts) stays the one WRITER.
+import { ECONOMY } from '../economy'
+import { applyBondDelta } from '../spirit'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { kidAgeYears } from './age'
@@ -320,6 +329,11 @@ export function resolveEndings(world: WorldState): void {
     // carries no professional rank, finish or prize money at all, so there is no field a tour result
     // could move. The measure is her JUNIOR record, and a better one only ever buys her more.
     world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+    // ⭐⭐⭐ v73 – AND THE SAME TICK RAISES HER OPINION OF IT (the private life, wave 2, §3). She is
+    // asked FIRST and answered FIRST: `'life'` sits above `'fork'` in `STOP_PRECEDENCE`, and
+    // `answerFork` below refuses while her row is unanswered, so the ordering is the engine's and
+    // never a dialog convention anybody could reorder (invariant 1).
+    raiseForkOpinion(world)
     addEvent(world, {
       week: world.week,
       type: 'milestone',
@@ -372,7 +386,50 @@ export function resolveEndings(world: WorldState): void {
   }
 }
 
+/** ⭐⭐⭐ v73 – THE PROVING BEAT: WHAT SHE WANTS, ON THE WEEK THE QUESTION OPENS (wave-2 runbook §3).
+ *
+ *  ⚠⚠ THE THREE INPUTS, AND THE ONE THAT IS DELIBERATELY ABSENT. Her ladder standing, her `spirit`
+ *  and her `bond` weight the draw – ruled 09.09, «a worn-down girl leans `stop`, a close one dares
+ *  more». HER TEMPERAMENT DOES NOT AND MAY NOT: who-she-is §3's fence gives the birth trait the
+ *  WORDING of how she says it and nothing else, «otherwise temperament becomes a career script».
+ *  `drawForkWant` has no temperament parameter, so the fence is a signature rather than a promise.
+ *
+ *  ⚠ THE STANDING IS THE FORK'S OWN MEASURE, READ ONCE. `juniorRecordScore` over
+ *  `collegeRecruitViewOf` is exactly what `measureCollegeOffer` on the line above was written from –
+ *  what a programme SAW – so her want and the offer she is looking at come off one reading of one
+ *  career rather than two that could disagree by a week.
+ *
+ *  ⚠ ONE DRAW, ON `seed:life:fork:<seasonIndex>` – a purpose-scoped sub-stream re-derived at the
+ *  call site, persisting nothing, MAIN untouched (invariant 2). The frozen capture (41550 /
+ *  e6b0c709) cannot see it, and a player who plays the week differently cannot re-roll her want.
+ *
+ *  ⚠ AND IT WRITES NO `spirit`. It READS her mood and never moves it – life moves spirit, his words
+ *  move `bond` (§4a.2's law, kept by this whole wave). */
+export function raiseForkOpinion(world: WorldState): void {
+  const standing = forkStandingOf(juniorRecordScore(collegeRecruitViewOf(world)), COLLEGE_OFFER.maxJuniorScore)
+  const want = drawForkWant(
+    world.seed,
+    seasonIndexOf(world.week),
+    standing,
+    world.spirit ?? ECONOMY.spirit.baseline,
+    world.bond ?? ECONOMY.bond.start,
+  )
+  raiseLifeBeat(world, 'fork-opinion', want)
+}
+
 // --- the two answers ----------------------------------------------------------------------------
+
+/** ⭐⭐ WHY `answerFork` WILL NOT RUN YET – she has said what she wants and nobody has answered her.
+ *
+ *  ⚠ EXPORTED SO A TEST CAN PIN THE REFUSAL WITHOUT PINNING A SPELLING, on `COLLEGE_REVEAL_REFUSAL`'s
+ *  own precedent: the wording is player-facing (it reaches the toast through the worker's error
+ *  channel) and a string literal copied into a test is a rename that breaks a report in silence.
+ *
+ *  ⚠ IT NAMES THE STATE AND THE WAY OUT (R10-16's doctrine – a refused control with no reason on
+ *  screen is the bug), and it shames nobody: the beat's own dialog is already on screen in front of
+ *  the fork card, because `'life'` outranks `'fork'` in `STOP_PRECEDENCE`. */
+export const FORK_UNHEARD_REFUSAL =
+  'She has said what she wants and nobody has answered her – hear her out before answering the fork'
 
 /* ⭐⭐ `collegeStillOpen`, `collegeResultViewOf` AND `entryCostsCollege` WERE HERE, AND ALL THREE GO
  *  ON THE OWNER'S RULING OF 16.08 – see the retired `ENDINGS.collegeClosedFromTier` in `ending.ts`
@@ -504,6 +561,18 @@ export function resolveCollegeDeparture(world: WorldState): void {
 export function answerFork(world: WorldState, answer: ForkAnswer, tier?: CollegeTier): void {
   guardNotEnded(world)
   if (world.fork === null || world.fork.answer !== null) throw new Error('The fork is not open')
+  // ⭐⭐⭐ v73 – HE HEARS HER OUT FIRST, AND THE ENGINE IS WHAT SAYS SO (wave-2 runbook §3.3).
+  //
+  // ⚠⚠ THIS LINE AND `STOP_PRECEDENCE`'S `'life'` SLOT ARE TWO HALVES OF ONE RULE. The precedence
+  // puts her dialog in front of the fork card; this makes the ordering true of the WORLD rather than
+  // of the screen, so a stale card, a replayed command or a second surface cannot answer the fork
+  // behind her back. That is CLAUDE.md invariant 1 exactly – «every command is re-validated
+  // engine-side, so a stale screen cannot corrupt a career» – and it is why the gate is here and not
+  // in App.vue.
+  //
+  // ⚠ BELOW THE «not open» GUARD ON PURPOSE: a fork nobody has raised cannot have an opinion
+  // standing in front of it, and the older sentence is the one that describes that case.
+  if (pendingLifeBeat(world) !== null) throw new Error(FORK_UNHEARD_REFUSAL)
   // ⚠ #6's ENGINE-SIDE RE-VALIDATION IS GONE WITH THE RULE IT ENFORCED (owner, 16.08). It read:
   // `if (answer === 'college' && !collegeStillOpen(world)) throw` – the courtesy being that the
   // dialog stops drawing the button and this made it a rule rather than a decoration (CLAUDE.md
@@ -511,6 +580,23 @@ export function answerFork(world: WorldState, answer: ForkAnswer, tier?: College
   // nothing for the engine to re-validate: the guard above ("the fork is not open") is still the
   // whole of what this command can refuse, and it is still engine-side.
   world.fork = { ...world.fork, answer }
+  // ⭐⭐⭐ v73 – THE SECOND DELTA, AND IT LANDS WHERE THE DEED DOES (wave-2 runbook §3.5).
+  //
+  // ⚠⚠ TWO DELTAS, SEPARATE ON PURPOSE. The beat's own answer priced what he SAID (+2 / −2 / 0,
+  // `answerLifeBeat`); this prices what he DID. «A parent can disagree out loud and then do as she
+  // asked» – and a parent can also say all the right things and then take the decision away from
+  // her, which is the case a single combined number could not tell apart from either.
+  //
+  // ⚠ NULL IS NOT A ZERO ROW, IT IS AN ABSENCE. A career whose fork was raised before v73 has no
+  // opinion on record and there is nothing to be congruent WITH – so it is charged nothing, which is
+  // the same discipline every migration in this repo keeps about facts it cannot reconstruct.
+  //
+  // ⚠ `bond` ONLY. No spirit, no skill, no money, no string moves here.
+  const want = forkWantOf(world)
+  if (want !== null) {
+    const delta = FORK_WANT_ANSWER[want] === answer ? ECONOMY.bond.delta.forkWithHerWant : ECONOMY.bond.delta.forkAgainstHerWant
+    applyBondDelta(world, delta)
+  }
   // ⭐⭐⭐ ROUND 31 #10 – THE ROUTE IS DECIDED HERE, SO THE CURVE IS RESOLVED HERE. The owner believed
   // the fork already shaped the age curve («я думал уже так и есть»); it only ever priced it, in lost
   // ranking time. Direct to the tour peaks 22-26 and declines from 27; college keeps today's 23-28.

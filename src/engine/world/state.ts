@@ -356,7 +356,15 @@ import type { AcademySupport } from '../academy'
 // and persisting nothing. The frozen MAIN capture (41550 / e6b0c709) cannot move. Full move: this
 // constant, the v71 -> v72 step in migrations.ts, tests/fixtures/saves/v72.json, and
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-export const SAVE_SCHEMA_VERSION = 72
+// ⭐⭐⭐ v73 – THE PRIVATE LIFE, WAVE 2: `lifeLog` STOPS BEING OPTIONAL. Wave 1's wire shipped the
+// field behind a `?` so both halves of this wave could build against it before anything wrote a row;
+// step 4 makes it required, back-fills `[]` in an append-only migration and freezes the golden
+// fixture. Back-filling an EMPTY list is the exactly-true answer rather than a bargain struck with a
+// pruned log (v29/v31's shape): a career that predates the layer has lived no beats, because there
+// were none to live. Full move: this constant, the v72 -> v73 step in migrations.ts,
+// tests/fixtures/saves/v73.json, and docs/context/saves-and-worker.md's mechanically-checked
+// schema sentence.
+export const SAVE_SCHEMA_VERSION = 73
 
 
 
@@ -927,11 +935,12 @@ export interface WorldState {
    *  life, wave 2). A row whose `answer` is null is waiting to be answered, and that absence IS the
    *  pending state – there is no second boolean to desync.
    *
-   *  ⚠ OPTIONAL UNTIL THE SCHEMA MOVE. Wave 2's wire ships the field and the seam; step 4 bumps 72
-   *  to 73, back-fills `[]` in an append-only migration and freezes the golden fixture, at which
-   *  point every save carries it. Absent reads as an empty life, which is exactly true of every
-   *  career that predates the layer. */
-  lifeLog?: LifeBeatRecord[]
+   *  ⚠ REQUIRED SINCE v73 – the schema move step 4 landed. It shipped OPTIONAL in wave 2's wire so
+   *  both halves of the wave could build against the seam before anything wrote a row; the migration
+   *  now back-fills `[]` on every older save, so every career carries it. `lifeLogOf`'s `?? []`
+   *  survives as the courtesy `birthdayHistory` extends to probe worlds hand-built in tests, which
+   *  are not saves and predate every field they do not set. */
+  lifeLog: LifeBeatRecord[]
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

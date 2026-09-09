@@ -36,6 +36,9 @@ import type { WorldState } from '../world'
 import { pendingBirthday } from './birthday'
 import { UPCOMING_WEEKS } from './constants'
 import { pendingKnock } from './knock'
+// ⭐ v73: the beat blocks exactly as the knock and the birthday do; `world/lifeBeat.ts` is a leaf
+// beside this one and imports nothing from here.
+import { pendingLifeBeat } from './lifeBeat'
 import { layoffCoversWeek } from './medical'
 // ⭐ ROUND 29 #3: the shoot/tournament collision blocks the tick exactly as the knock and the fork
 // do; `world/shootClash.ts` is a leaf beside this one and imports nothing from here.
@@ -311,7 +314,7 @@ export const SPAN_REPORTS_ONLY: ReadonlySet<StopReason> = new Set<StopReason>(['
  *  again – so `tests/r2-13-advance-span.test.ts` counts the refusals in the function's own source
  *  against this list. Hand-written on the `STOP_PRECEDENCE` precedent (round11.test.ts): derived
  *  from the code it could never catch the member the code forgot. */
-export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'fork', 'retirement', 'shoot-clash']
+export const ADVANCE_REFUSALS: readonly StopReason[] = ['ending', 'tournament', 'knock', 'birthday', 'life', 'fork', 'retirement', 'shoot-clash']
 
 /** WHY THE ADVANCE WILL NOT MOVE, or `null` when it will. `advanceWeeks`'s entry gate, extracted
  *  verbatim so the gate and the button read one rule.
@@ -343,6 +346,18 @@ export function advanceRefusal(world: WorldState): StopReason | null {
   // walking away would silently become the "gave nothing" branch and the player would pick it by
   // accident, every year, and never know. Four buttons, all of them answers, and no other way out.
   if (pendingBirthday(world) !== null) return 'birthday'
+  // ⭐⭐ v73 – AND SO DOES A LIFE BEAT SHE HAS NOT BEEN ANSWERED ON, on the identical contract and
+  // for the strongest version of the birthday's reason. The birthday BLOCKS because walking away
+  // would silently become the «gave nothing» branch; a beat is HER SPEAKING, so a week a player
+  // could tick past would answer her by walking away – and that is an answer nobody chose and
+  // nobody would ever be told about.
+  //
+  // ⚠⚠ ABOVE THE FORK AND BELOW THE BIRTHDAY, which is not this function's usual mutual-exclusion
+  // order but a real ordering: the fork's opening tick raises her opinion of it, so both are live on
+  // the same week by construction, and the parent must have heard her before he may answer. The
+  // other half of that rule is `answerFork`'s own refusal (world/endings.ts) – the precedence puts
+  // her dialog in front of the card, and the command refuses if anything ever gets past it.
+  if (pendingLifeBeat(world) !== null) return 'life'
   // ⚠ ...AND SO DOES AN UNANSWERED FORK OR AN UNANSWERED OFFER, on the identical contract. Two of
   // the fork's three answers END the career, so a player who could press +4 past it would have the
   // engine choosing "continue" for him – which is exactly the «просто скипались» complaint the knock

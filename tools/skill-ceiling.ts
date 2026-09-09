@@ -39,7 +39,7 @@
 
 import { openCareer, stepCareerWeek, PRESETS, POLICIES, type Preset, type Policy } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, startingSkills, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, startingSkills, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { kidAgeExact } from '../src/engine/world/age'
 import { withHeadStart } from '../src/engine/world/player'
 import {
@@ -306,6 +306,11 @@ interface ArmOpts {
 }
 
 function answerOpenQuestions(world: WorldState, retire: RetireArm): void {
+  // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+  // player must not put a number on the scale.
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     const { reason, final } = world.retirementOffer

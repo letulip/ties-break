@@ -13,7 +13,7 @@
 //   GATE     `snapshot.tierOpen[rung]` – the engine's own floor verdict
 //   CHIP     what the Home strip / Season ladder plaque says for that rung that week
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
-import { answerFork, answerRetirement, toSnapshot, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, toSnapshot, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { tierState } from '../src/composables/tierState'
 import { TIER_SHORT, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { UPCOMING_WEEKS } from '../src/engine/world/constants'
@@ -29,6 +29,11 @@ const PRESET = argOf('preset', 4)
 const SEED = argOf('seed', 0)
 
 function answerWhateverIsOpen(world: WorldState): void {
+  // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+  // player must not put a number on the scale.
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     answerRetirement(world, world.retirementOffer.reason === 'plateau' || world.retirementOffer.final)

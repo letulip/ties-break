@@ -33,7 +33,7 @@
 // endings benches use. No engine number is written from here – the knob patches below are CLI-only
 // counterfactual arms (the fatigue bench's `withScenario` idiom), never written back to any file.
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Preset, type Policy } from './econ-bench'
-import { answerFork, answerRetirement, kidAgeYears } from '../src/engine/world'
+import {answerFork, answerRetirement, kidAgeYears, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { ENDINGS } from '../src/engine/ending'
 import { ageAtPhysicalShare } from '../src/engine/development'
 import { ECONOMY } from '../src/engine/economy'
@@ -278,6 +278,11 @@ function runCareer(preset: Preset, index: number, policy: Policy): CareerRow {
     }
 
     // answer whatever the world raises, the endings bench's own arm shape
+    // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+    // player must not put a number on the scale.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) {
       answerRetirement(world, ARM === 'plays-on' ? world.retirementOffer.final : true)

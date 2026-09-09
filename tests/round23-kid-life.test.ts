@@ -65,6 +65,8 @@ import {
   resumeFromCollege,
   toSnapshot,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { POLICIES, stepCareerWeek } from '../tools/econ-bench'
@@ -368,6 +370,10 @@ describe('#6b – on a career that really went', () => {
     expect(before.schoolLabel).toBe(STAGE_LABEL.after)
     expect(before.collegeNote).toBe('')
 
+    // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
+    // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
+    // cheapest place: a caller that never asked the player must not put a number on the scale.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     answerFork(world, 'college')
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
@@ -425,6 +431,7 @@ describe('#6b – on a career that really went', () => {
       const age = pendingBirthday(world)
       if (age !== null) chooseGift(world, answerableGift(world))
     }
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     answerFork(world, 'college')
     // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
     // SAME player-policy step the career arrived on (see the leaving case above for why).

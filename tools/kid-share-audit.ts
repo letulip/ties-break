@@ -31,7 +31,7 @@
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import { chooseGift, pendingBirthday, prizeCentsFor, resumeFromCollege } from '../src/engine/world'
+import {chooseGift, pendingBirthday, prizeCentsFor, resumeFromCollege, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { kidAgeYears } from '../src/engine/world/age'
 import { kidPrizeShareBps, kidPrizeShareCents, staffPrizeShareCents } from '../src/engine/economy'
@@ -143,6 +143,7 @@ function auditCareer(world: WorldState, rng: Rng, career: string, untilWeek: num
     // that asks whether the freeze pays anything at all – and the default takes the tour, which is
     // the arm that has cheques in it.
     if (world.fork !== null && world.fork.answer === null) {
+      if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
       answerFork(world, COLLEGE_ARM ? 'college' : 'continue')
     }
     if (world.ending?.type === 'college') {
