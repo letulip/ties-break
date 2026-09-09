@@ -299,6 +299,85 @@ adds or swaps one unasked.
 эмоджи»); nothing lands beside the Mood word. The glyphs ship with wave 3's first life rows, and
 the proposed set goes to him as drafts then – one glyph per row kind, his to swap.
 
+### 5b. Her voice to the parent – tone of voice per state, per axis (his 09.09 ask, second sitting)
+
+> «Еще надо про тон-оф-войс от ребенка при обращении к родителю подумать в каждом состоянии, в
+> каждой оси, будем ли мы добавлять интеракций (предполагаю, что да) и вот этот её голос хотелось
+> бы чтобы звучал по-разному, что нам для этого нужно?»
+
+**Where her voice stands today: she has none.** Verified 09.09: the diary is the PARENT's
+journal, every line reported speech at most («She asked for an extra hour on Sunday. We said
+no.»); the birthday asks narrate her («Proper paints, she said»); the feed is a reporter. The
+layer's beats are the first time she will TALK to the player – so the voice system is being
+designed before the first line exists, which is the right order.
+
+**The composition rule – three owners for three parts of a line, so pools do not multiply:**
+
+| owner | what it owns | how it lands |
+| --- | --- | --- |
+| temperament | the SHAPE – how much she says and how it moves: openness sets how much and how directly, intensity sets tempo and punctuation | 4 variants per spoken moment, written against the four voice bibles |
+| spirit | the REGISTER of the moment, collapsed for speech to three – bright / level / low | a licence on the variant, not a new pool: most moments only split low vs not-low |
+| bond | the CHANNEL and the DISTANCE – whether it arrives in her voice at all | picks the delivery shape: `close` – she comes herself, a dialog in her voice · `steady` – a mention, one line · `strained`/`cold` – the feed or the coach, late or never |
+
+⭐ Bond deliberately multiplies nothing – it selects between delivery shapes a beat needs
+anyway (her dialog / her one-liner / the feed row). §2a's channel 1 grows from «shaves the lag»
+to «decides whether the news comes in her voice». ⭐⭐ And at `strained`/`cold` the four voices
+COLLAPSE into one shared flat pool – short, even, interchangeable («Fine.») – because losing her
+voice is the point: a girl who has closed off sounds like nobody in particular, and the player
+hears exactly what he lost. Arithmetic per beat: ~4 dialog variants (×2 where a low week changes
+the words) + 4 one-liners + the flat pool shared across beats + the feed row ≈ **9–14 lines, not
+4×5×4 = 80.**
+
+**The three tiers of interaction** – his «будем ли мы добавлять интеракций (предполагаю, что
+да)» answered yes, tiered so the voice has FREQUENCY without spam:
+
+| tier | what | blocks the week | bond arithmetic | frequency |
+| --- | --- | --- | --- | --- |
+| 0 | her quoted line inside the parent's week story – the diary stays HIS journal; she speaks in quotation marks within it | no | none | every few weeks at close/steady; rare at strained; absent at cold |
+| 1 | small talk – she comes with something small (a worry before a big draw, a joy, a question); 2–3 reply options | soft – answerable, never lost | zero or capped-tiny (open question V2) – texture, never economy | a few per season at close; none at cold |
+| 2 | the big life beats (waves 2–4, already designed) – where her voice premieres | yes | the beats' own tables | as designed |
+
+**What we need to build it** (his literal question, answered as a list):
+
+1. **Four voice bibles** – a short style guide per temperament: vocabulary, sentence length,
+   what she names and what she leaves out, punctuation habits. In English (the game's copy
+   language). ⭐ The load-bearing artifact – without it four voices drift line by line across
+   writing sessions; drafted for his approval BEFORE the first pooled line, and every line
+   thereafter cites its bible. All player-facing words remain his (invariant 4).
+2. **Her-speech line pools under the diary's own honesty law** – a licence per line (a bright
+   quoted line cannot fire in a heavy week), honesty-pinned like week notes.
+3. **A completeness pin** – a test walking beatKind × temperament × register that FAILS on a
+   missing variant, so a `quiet` girl can never silently receive a `fiery` girl's line as a
+   fallback. (The flat pool is the one legal shared fallback, and only at strained/cold.)
+4. **Delivery-shape selection reading the bond band** – engine-side, beside the beat machinery.
+5. **Sub-streams** for line picks (the `seed:hervoice:<week>` family) – zero MAIN, invariant 2.
+6. **Caps without new state** – tier-0/1 frequency per season derived from `lifeLog` counts;
+   the only new persisted fields the whole voice system needs are §2a's two leanings.
+
+**Boundaries, stated now:**
+
+* **The diary stays the parent's voice forever**; hers appears inside it only in quotation
+  marks – the house voice survives intact.
+* **No partner voice before step 6** – the boyfriend is reported, never heard, until the
+  marriage latch gives a spouse an opinion surface by design.
+* **Her lines are expression, never mechanics** – they may not hide or replace a mechanical
+  truth (a knock, a clearance, a price), and no conversation moves `spirit`: life moves spirit,
+  his words move `bond` only (§4a.2's law, kept).
+* **The address form** – «Mom/Dad» needs the round-3 mom-or-dad onboarding choice, open since
+  July. v1 writes address-neutral English lines (no hard dependency); the mom-or-dad pass
+  upgrades them later and finally has a reason to be scheduled.
+* **Retro candidates** for the same voice pass, his call later: the birthday asks' copy and the
+  last-winter line – both already «speak» for her in one fixed register today.
+
+**Open for his word – the second sitting:**
+
+| # | question | recommendation |
+| --- | --- | --- |
+| V1 | the tier model – all three, staged (tier 0 with wave 1, tier 1 with wave 3, tier 2 per plan)? or cut tier 1 from v1? | all three, staged – tier 0 makes her audible from the first wave; tier 1 rides machinery wave 3 builds anyway |
+| V2 | do tier-1 replies move `bond`? | no in v1 (0), or capped ±0.5 once a season – small talk is texture; the delta table stays the big beats' |
+| V3 | address form – neutral v1, mom/dad as its own later pass? | yes – neutral costs nothing in English; the pass also wants round 3's tone presets |
+| V4 | starting `spirit`/`bond` vs the prologue (⚠ the 09.09 self-review's finding: the build plan's 70/70 start predates the shipped prologue – should a warm childhood start `bond` higher?) | keep 70/70 in v1 – the prologue already pays its weight in skills and joy; loading `bond` too would double it. Revisit on playtest |
+
 **What deliberately gets NO surface:**
 
 * **`bond` – no meter, ever.** The relationship lives in scenes and the diary's bands. A trust
@@ -349,8 +428,14 @@ NOT in waves 1–5, recorded here so each is planned once:
 | the parent in the stands | attend-vs-watch-on-TV (round 5: «кричите в телевизор – её там не слышно»). The travel line already prices two seats, so «stay home» can become a real choice with a bond/spirit meaning – the layer's first money-vs-relationship trade | after step 4; needs a presence model, priced before designed |
 | on-court conduct | the July flagship (the racket, in rage): low spirit × intense temperament × no psychologist → an incident with a visible cost – the exact commit that re-adds `conduct` to the penalty union (offers.ts removed the reserved member until a producer exists; act2-pro-tour §6 already names psyche as its source) | with/after burnout; his word |
 
-Costs named honestly: the engine half of this spec is **S–M** (multipliers, one field, one input);
-the real weight is **copy – four voices across diary, feed and beats, every line his to approve**
+The voice system (§5b) lands across the same waves: the four voice bibles and tier 0 with wave
+1; the beat prompts written against the bibles with wave 2; tier 1 and the feed glyphs (§5a)
+with wave 3. The mom-or-dad onboarding pass (round 3, open since July) becomes worth scheduling
+beside them – it upgrades the address form (§5b boundaries).
+
+Costs named honestly: the engine half of this spec is **S–M** (multipliers, two fields, one
+input, the delivery-shape selector); the real weight is **copy – four voices across diary, feed,
+beats and her own speech, anchored by the four voice bibles, every line his to approve**
 (invariant 4 of `CLAUDE.md` binds every string here twice over). The wave-1 bench grows
 per-temperament arms – more grid cells, same instrument.
 
@@ -393,8 +478,10 @@ Eight questions went to him with recommendations. His answers, verbatim where th
    one state and gets one word; the gamma lives in Glowing/Bright/Dimmed/Heavy, and the tile's
    priority rule (injury first, then the larger deviation of body vs mood) ships with wave 1.
 
-**Nothing in this spec now waits on his word.** The remaining numbers are bench proposals by
-nature (invariant 5): measured first, then read together.
+**After the second sitting, only §5b's four voice questions (V1–V4) wait on his word** – the
+voice system arrived the same day and carries its own open block. Everything above stands ruled;
+the remaining numbers are bench proposals by nature (invariant 5): measured first, then read
+together.
 
 ---
 
@@ -453,6 +540,6 @@ one-line correction.
 * **Not new UI chrome** – §5 is an argument that the game already owns every surface this layer
   needs.
 
-**Done when:** the re-base pass folds this spec into the build plan – §4's constants and census
-arms, §2a's two channels (the leaning included), §5a's feed glyphs and §6's two cheap lines,
-against the plan's waves 1–5. §7 is fully ruled; nothing else waits on a word.
+**Done when:** §5b's V1–V4 are ruled, and the re-base pass folds this spec into the build plan –
+§4's constants and census arms, §2a's two channels (the leaning included), §5a's feed glyphs,
+§5b's voice system (bibles first) and §6's two cheap lines, against the plan's waves 1–5.
