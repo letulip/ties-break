@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: life
 canonical: false
-last-reviewed: 2026-08-23
+last-reviewed: 2026-09-09
 ---
 
 # The private life – the build plan for steps 1–4
@@ -23,6 +23,40 @@ the two-variable physics and half the delta table (the design plan's backlog row
 substance lives in step 1); [form-and-slump.md](../specs/form-and-slump.md) supplies the scale
 yardstick and the boundary this layer must not cross (results-driven form is PARKED by the owner's
 own word – «форму и спад тоже давай распишем спеком, но уже на потом»).
+
+⚠⚠ **RE-BASED 09.09 AGAINST v71 CODE AND THE FULLY RULED
+[who-she-is-2026-09](../specs/who-she-is-2026-09.md)** – the third absorbed source, and the one
+that changes constants below. What moved since 23.08, so nobody builds against the old snapshot:
+
+* **Schema numbers**: written at v59; `SAVE_SCHEMA_VERSION` is **71** on 09.09, so the waves take
+  **v72–v75** (renumbered below). The standing rule still binds – whoever lands second takes the
+  next number; re-count at land.
+* **The tick moved**: `tickWeek` is a seven-phase dispatcher (`world.ts:1660`); `accrueCondition`
+  lives in `world/phaseHerWeek.ts` inside `resolveBodyAndPlanner` (:219 on 09.09), and its
+  arity-2 signature is TEST-PINNED – `accrueSpirit` is therefore its own call immediately after
+  it, never a new parameter.
+* **`answerFork` lives in `world/endings.ts` (:504)**, not college.ts; the fork's hold field is
+  `departsWeek`. `StopReason` is a union in `src/shared/protocol/events.ts` (:478–597) with
+  `STOP_PRECEDENCE` at :605 – the new `'life'` member joins BOTH.
+* **The seam**: `kidMatchPlayerFor` at `world/player.ts:169`, the condition factor at :230
+  multiplying the wings at :249–253; `spirit` joins the narrow arg type as the EIGHTH optional
+  field, absent ⇒ 1.0 – the file's own documented extension pattern.
+* **`portraitStageFor` is `portraitStage`**, and the 31+ stage's type name is `lateCareer`.
+* **Temperament folded in** (who-she-is, every ruling 09.09): wave 1 carries `world.temperament`
+  (drawn on `seed:temperament`; the migration DERIVES it from the career's own seed – zero
+  draws, bit-stable), per-intensity spirit physics, the five-word Mood ladder (sharing
+  condition's «Steady», priority: injury first, then the larger deviation), the portrait-emotion
+  input, the four voice bibles and tier-0 quoted lines. Waves 3–4 carry the per-temperament
+  hazard multipliers, openness feed-lag and wants weights, the bond-gated delivery channel,
+  tier-1 small talk (bond delta 0 – ruled V2) and the feed life-row emoji (his glyphs). The
+  fork-opinion draw gains `spirit`/`bond` inputs. Benches grow per-temperament arms, the census
+  (who-she-is §4's bars, drift prints included) and the **±1.5 pp fairness corridor**.
+* **Gates grew since 23.08**: every wave's gate also carries the responsive parity harness
+  (375/768/900/1280, round 36), the prologue's radio conventions where a dialog SELECTS
+  (round 40), **one e2e case per shipped mechanic** (his 29.08 rule), and the voice completeness
+  pin (who-she-is §5b.3).
+* **Ruled names and starts**: `bond` stays `bond` (09.09, beside the offers' `kit-bond-*`
+  strings); the start is uniform 70/70 – the prologue does not load it (ruling V4).
 
 ---
 
@@ -47,11 +81,16 @@ P2's parent-as-observer argument against a trust gauge).
   (`attachmentLift: 5`, step 3) – §3a's «lifts a little and stays lifted» is a baseline shift, not
   a one-off bump, so the lift arrives over ~2 weeks and holds.
 * **Weekly update** (`accrueSpirit(world)`, in a new leaf `src/engine/spirit.ts` beside
-  `condition.ts`; called in `tickWeek` immediately after `accrueCondition` – world.ts:3300; pure
-  arithmetic, **zero draws on any stream**):
-  1. apply the week's perturbations (table below), clamp 0..100;
-  2. step toward the effective baseline by **min(4, |gap|)** (`returnPerWeek: 4`), both directions.
-     One rule for the lift, the break-up recovery and every drift – no second curve to tune.
+  `condition.ts`; ⚠ re-based 09.09: called from `resolveBodyAndPlanner` in
+  `world/phaseHerWeek.ts`, immediately AFTER the `accrueCondition` call (:219) – its own call,
+  never a parameter, because accrueCondition's arity-2 is test-pinned; pure arithmetic,
+  **zero draws on any stream**):
+  1. apply the week's perturbations (table below) **× the intensity scale – ×0.8 steady /
+     ×1.25 intense** (who-she-is §4), clamp 0..100;
+  2. step toward the effective baseline by **min(returnPerWeekFor(temperament), |gap|)** –
+     **5/week steady, 3/week intense** (who-she-is §4; the flat 4 of the 23.08 draft is
+     superseded). One rule for the lift, the break-up recovery and every drift – no second curve
+     to tune.
 
 **Step-1 perturbation table** – existing world facts only, no life events yet (that is step 1's
 definition). ⚠ Deliberately absent: match results (that is form's channel, parked), training load
@@ -68,15 +107,18 @@ definition). ⚠ Deliberately absent: match results (that is form's channel, par
 | season wraps with zero vacations booked (season boundary block) | −3 |
 | off-season/blackout week (`isBlackoutWeek`) | +1 |
 
-Equilibrium check: perturbations are small against `returnPerWeek: 4`, so a career hovers at
-70 ± a few points and only step 4's shock (−28) produces a multi-week excursion. That is the
-step-1 «neither drifting to an extreme» row, made checkable (§1f).
+Equilibrium check (per intensity since 09.09): perturbations stay small against the return rate
+in BOTH arms, so a career hovers at 70 ± a few points and only step 4's shock (−22 steady /
+−34 intense) produces a multi-week excursion. That is the step-1 «neither drifting to an
+extreme» row, made checkable (§1f) – the bench runs it per-temperament, and the ±1.5 pp fairness
+corridor (who-she-is §4) is read off the same arms.
 
 ### 1c. `spirit`'s ONE reader – the exact seam
 
-`condition` reaches the match through one line of `kidMatchPlayerFor`
-(src/engine/world/player.ts:211): `const factor = conditionMatchFactor(world.condition)`, then the
-five wings multiply by `factor` at the composition point. `spirit` takes the identical seam:
+`condition` reaches the match through one line of `kidMatchPlayerFor` (src/engine/world/player.ts
+:169; re-based 09.09): `const factor = conditionMatchFactor(world.condition)` at :230, then the
+five wings multiply by `factor` at :249–253. `spirit` takes the identical seam, as the EIGHTH
+optional field of the narrow arg type – the file's own documented extension pattern:
 
 ```ts
 // engine/spirit.ts – same curve family as conditionMatchFactor
@@ -120,6 +162,7 @@ replay is byte-identical, the same trick `kit`, `skills` and `coachId` already u
 | a vacation that resolves | +1 |
 | season wrapped with zero vacations booked | −3 |
 | step 2+: a reaction option | −4..+3 (per beat) |
+| step 3+: a tier-1 small-talk reply (who-she-is §5b, ruling V2) | 0 – texture, never economy |
 
 The birthday row is the seam `birthday.ts` explicitly left waiting – the owner on the day/week
 pair: «когда будем мораль делать может быть надо будет учитывать оба».
@@ -172,6 +215,9 @@ re-pointing KidScreen's Confidence tile is NOT taken here – later surface, own
 | `seed:life:ends:<week>` | does it end this week (3b hazard) + the space/company read | the week |
 | `seed:life:fork:<seasonIndex>` | her stated want at the college fork (step 2's beat) | the season |
 | `seed:life:copy:<week>` | copy selection at snapshot time only | the week |
+| `seed:temperament` | who she is – the two axis picks at world creation; the migration derives with the SAME formula, so old careers turn out to have always been her (09.09) | the seed alone |
+| `seed:hervoice:<week>` | tier-0/1 line and moment picks (who-she-is §5b) | the week |
+| `seed:life:smalltalk:<week>` | does she come with something small this week (tier 1) | the week |
 
 All re-derived at the call site, nothing persisted, MAIN never touched – `seed:birthday:<age>`'s
 exact shape, including the immutability argument: every key is (seed, calendar), never a choice.
@@ -180,35 +226,53 @@ exact shape, including the immutability argument: every key is (seed, calendar),
 
 ## 2. Step 1 – the two numbers (wave 1)
 
-**Schema move (v60):** `world.spirit: number` + `world.bond: number` beside `condition`; bump
-`SAVE_SCHEMA_VERSION` 59 → 60; append-only migration back-fills `{ spirit: 70, bond: 70 }`;
-golden fixture `tests/fixtures/saves/v60.json`. Migrated saves play byte-identical matches until
-something moves (70 is above the knee ⇒ factor 1.0). ⚠ Version-number coordination is the standing
-rule: whoever lands second takes the next number.
+**Schema move (v72, re-based 09.09):** `world.spirit: number` + `world.bond: number` beside
+`condition`, **plus `world.temperament`**; bump `SAVE_SCHEMA_VERSION` 71 → 72; append-only
+migration back-fills `{ spirit: 70, bond: 70 }` (uniform start – ruling V4, the prologue does not
+load it) and DERIVES `temperament` from the career's own seed with createWorld's exact formula –
+zero draws, bit-stable, old careers turn out to have always been her. Golden fixture
+`tests/fixtures/saves/v72.json`. Migrated saves play byte-identical matches until something moves
+(70 is above the knee ⇒ factor 1.0). ⚠ Version-number coordination is the standing rule: whoever
+lands second takes the next number.
 
-**Wiring points:** `createWorld` init; `accrueSpirit` call after `accrueCondition`
-(world.ts:3300); bond deltas inside `decideKnock`, `chooseGift`, the played-hurt arm where
-`clearance` is in hand, `resolveVacation`, and the season boundary block; the factor in
-`kidMatchPlayerFor`; diary bands.
+**Wiring points:** `createWorld` init (temperament draw included); `accrueSpirit` call after the
+`accrueCondition` call in `resolveBodyAndPlanner` (world/phaseHerWeek.ts:219); bond deltas inside
+`decideKnock`, `chooseGift`, the played-hurt arm where `clearance` is in hand, `resolveVacation`,
+and the season boundary block; the factor in `kidMatchPlayerFor`; diary bands. **Plus the voice's
+ground (who-she-is, all ruled):** `spirit` joins the engine-side emotion decision
+(`assembleDiaryFacts` → `avatarEmotion`); the Mood word ladder gains the five spirit words
+(sharing condition's «Steady»; priority – injury first, then the larger deviation of body vs
+mood); the FOUR VOICE BIBLES land as docs and tier-0 quoted lines enter the week-note pools in
+all four voices (flat pool for strained/cold); the birthday ask re-weights mildly by temperament
+(~1.5× toward her register, the draw and record untouched).
 
-**Tests:** delta table unit tests; clamp/equilibrium; `spiritMatchFactor` exactly 1 on [60,100];
-seam test – `kidMatchPlayerFor` with spirit absent or ≥ 60 deep-equals the pre-slice player; B1
-capture pin untouched; migration idempotency + fixture; diary licence sweep (new lines unselectable
-outside their bands).
+**Tests:** delta table unit tests; clamp/equilibrium per intensity; `spiritMatchFactor` exactly 1
+on [60,100]; seam test – `kidMatchPlayerFor` with spirit absent or ≥ 60 deep-equals the pre-slice
+player; B1 capture pin untouched; migration idempotency + fixture (temperament derivation pinned
+against the createWorld formula); diary licence sweep (new lines unselectable outside their
+bands); **the voice completeness pin** – beatKind × temperament × register with no silent
+fallback (the flat pool is the one legal shared fallback, only at strained/cold).
 
 **Bench (the «done when» row made measurable):** `tools/spirit-bench.ts` (`bench:spirit`), 32
 seeds × 4 seasons, arms {care: rest knocks + vacations + light exams} × {grind: push knocks + zero
 vacations + heavy exams}, balanced entries in both. Pass bars:
 
 * spirit MOVES: per-career sd over weeks ≥ 2 points in both arms;
-* no extreme drift: weeks at spirit < 20 or > 95 under 2%; long-run mean 70 ± 4;
+* no extreme drift: weeks at spirit < 20 or > 95 under 2%; long-run mean 70 ± 4 – **held per
+  temperament arm** (09.09: the grid runs 2 policies × 4 temperaments);
 * bond separates: grind vs care gap **≥ 12 points at season 3, and > 2×SEM** (means ± SEM printed);
-* neither arm's bond median at a clamp (0 or 100).
+* neither arm's bond median at a clamp (0 or 100);
+* **the fairness corridor (who-she-is §4): paired lifetime match-win deltas across temperaments
+  inside ±1.5 pp** – breached means the support-responsiveness compensator conversation, never a
+  silent stat rebate.
 
-**Collision surface:** `src/engine/world.ts`, new `src/engine/spirit.ts`, `src/engine/world/player.ts`,
-`src/engine/economy.ts`, `src/engine/migrations.ts`, `src/engine/world/birthday.ts`,
-`src/engine/diary.ts`, `src/shared/protocol.ts` (DiaryFacts), `tests/*`, `tools/spirit-bench.ts`,
-`package.json`. One agent – too many shared hubs to split.
+**Collision surface:** `src/engine/world/phaseHerWeek.ts`, new `src/engine/spirit.ts`,
+`src/engine/world/player.ts`, `src/engine/economy.ts`, `src/engine/migrations.ts`,
+`src/engine/world/state.ts`, `src/engine/world/birthday.ts`, `src/engine/diary.ts` + `diary/*`,
+`src/shared/avatarEmotion.ts`, `src/shared/protocol/narrative.ts` (DiaryFacts),
+`src/components/screens/KidScreen.vue`, `src/components/WeekRecapCard.vue` (the Mood word),
+`tests/*`, `tools/spirit-bench.ts`, `package.json`. One agent – even more shared hubs than the
+23.08 draft counted; do not split.
 
 ---
 
@@ -227,10 +291,10 @@ GENERALISES into a new leaf `src/engine/world/lifeBeat.ts`, and what stays birth
 | the dialog shape: N buttons, all of them answers, no X (walking away must not silently become an answer) + copy assembled engine-side (`buildLifeBeatPrompt`) | – |
 | the round-20 popup law: a mounted 375x667 assertion that the LAST button's box is on screen, mutation-verified | – |
 
-**Schema move (v61):** `world.lifeLog: LifeBeatRecord[]` –
+**Schema move (v73, re-based 09.09):** `world.lifeLog: LifeBeatRecord[]` –
 `{ week, kind: 'fork-opinion' (grows per step), detail: string, answer: string | null }`.
 Append-only, never pruned (a handful of rows per career – `birthdays`' own argument). Fixture
-`v61.json`.
+`v73.json`.
 
 **The proving beat – her opinion in the fork gap.** The design plan names it itself: D2's
 ask–hold–depart split is live, and «the fork gap is its readiest beat»; the paused E1 surface
@@ -239,7 +303,10 @@ inside it. Mechanics:
 
 * trigger: the tick that opens the college fork also writes a `'fork-opinion'` row; her stated
   want (`college` / `tour` / `stop`) drawn on `seed:life:fork:<seasonIndex>`, weighted by her
-  standing on the ladder (deterministic inputs + the stream, nothing of the player's);
+  standing on the ladder **and – ruled 09.09 – by `spirit` and `bond`** (a worn-down girl leans
+  `stop`, a close one dares more; deterministic inputs + the stream, nothing of the player's,
+  and temperament itself stays OUT of the want – it colours only the wording, who-she-is §3's
+  fence);
 * order forced mechanically, not by the UI: the `'life'` guard sits ABOVE the fork guard in
   `advanceWeeks`, and `answerFork` refuses while her row is unanswered – he hears her out first
   (invariant 1: the engine is the gate);
@@ -253,12 +320,15 @@ inside it. Mechanics:
 same seed, answer A vs answer B, bond differs by exactly the table (an equality test, no SEM);
 B1 capture byte-identical; fixture + migration tests; the 375x667 mounted test proven by mutation.
 
-**Collision surface:** new `src/engine/world/lifeBeat.ts`, `src/engine/world.ts` (guards, command),
-`src/engine/world/college.ts` (fork congruence), `src/shared/protocol.ts` (StopReason:291, prompt
-wire), `src/worker/sim.worker.ts`, `src/worker/client.ts`, `src/stores/game.ts`, new
-`src/components/LifeBeatDialog.vue`, `App.vue`, `tests/component/*`, `src/engine/migrations.ts`.
-The engine half and the Vue half can be two agents; `protocol.ts` is the one shared file – land the
-wire first.
+**Collision surface (re-based 09.09):** new `src/engine/world/lifeBeat.ts`, `src/engine/world.ts`
+(guards, command), `src/engine/world/endings.ts` (fork congruence – `answerFork` lives THERE, not
+college.ts), `src/shared/protocol/events.ts` (`StopReason` union :478–597 AND `STOP_PRECEDENCE`
+:605 – the `'life'` member joins both), `src/shared/protocol/messages.ts` (prompt wire),
+`src/worker/sim.worker.ts`, `src/worker/client.ts`, `src/stores/game.ts`, new
+`src/components/LifeBeatDialog.vue` (its prompts written against the four voice bibles; its
+selecting controls follow round 40's radio conventions), `App.vue`, `tests/component/*`,
+`src/engine/migrations.ts`. The engine half and the Vue half can be two agents; the protocol
+modules are the shared files – land the wire first.
 
 ---
 
@@ -269,21 +339,34 @@ wire first.
 * age gate: nothing fires before `kidAgeExact ≥ 16` – ⭐ RULED 23.08, 16 confirmed (question 5,
   closed);
 * hazard while the slot is empty and the cooldown is clear: **1.0%/week before 18, 2.5%/week from
-  18**, one uniform on `seed:life:arrival:<week>` per eligible week. Median first arrival ≈ 17.3;
-  ~90% of careers have met someone by 19;
-* cooldown: **26 weeks** after an `endedWeek` – nobody new for half a season.
+  18, × the temperament multiplier** (who-she-is §4, ruled: sunny ×1.2 · fiery ×1.6 · quiet ×0.6
+  · deep ×0.5), one uniform on `seed:life:arrival:<week>` per eligible week – so the first-love
+  medians SPLIT by who she is (quiet ≥ 17.5, fiery ≤ 17, the census bars);
+* cooldown after an `endedWeek`, per temperament: **12 fiery / 26 sunny / 39 quiet / 52 deep**
+  weeks.
 
-**Schema move (v62):** `world.attachment:
+**Schema move (v74, re-based 09.09):** `world.attachment:
 { sinceWeek: number, knownWeek: number | null, partnerId: string, wants: 'private' | 'open' } | null`.
 `partnerId` = `p:<sinceWeek>` – an identity for later steps, no name at step 3 (the fictional-name
-rule gets its own pass when a name is ever printed). Fixture `v62.json`.
+rule gets its own pass when a name is ever printed). Her `wants` draw is weighted by openness –
+~70% toward her own register (who-she-is §4). Fixture `v74.json`.
 
-**Feed-first, possibly late (§0.1):** at `sinceWeek` the TRUTH moves – the slot fills, the spirit
-baseline lifts +5 – and the parent is told nothing. The feed lag is drawn once on
-`seed:life:partner:<sinceWeek>`: **0 with p = 0.25, else uniform 1..10 weeks**; `knownWeek =
-sinceWeek + lag`. So ~52% of arrivals surface 4+ weeks late, and an attentive player can see her
-playing a shade lighter before the feed says why – the fog is honest. At `knownWeek`: a kept feed
-row plus the reaction beat (step 2's machinery, `kind: 'met'`), which pauses the week.
+**Feed-first, possibly late (§0.1; lag re-cut 09.09 by openness):** at `sinceWeek` the TRUTH
+moves – the slot fills, the spirit baseline lifts +5 – and the parent is told nothing. The feed
+lag is drawn once on `seed:life:partner:<sinceWeek>`, **by openness: open – 0 with p 0.45, else
+uniform 1..5; private – 0 with p 0.10, else uniform 2..12** – and the bond band SHAVES a private
+girl's lag toward the open distribution (who-she-is §2a channel 1: she trusts THIS parent). The
+DELIVERY follows §5b's channel rule: at `close` bond the news arrives as her own dialog, at
+`steady` a mention, at `strained`/`cold` the feed alone – late, flat, or never in her voice. An
+attentive player can still see her playing a shade lighter before anything says why – the fog is
+honest. At `knownWeek`: a kept feed row plus the reaction beat (step 2's machinery,
+`kind: 'met'`), which pauses the week.
+
+**Also in this wave (ruled 09.09, who-she-is §5a–§5b):** tier-1 small talk – she comes with
+something small, 2–3 replies, **bond delta 0** (ruling V2), frequency by bond band (a few per
+season at `close`, none at `cold` – the silence is the line), hazard on
+`seed:life:smalltalk:<week>`, capped from `lifeLog` counts; and the feed's life-row emoji – one
+Unicode glyph per row kind, HIS picks, the proposed set delivered as drafts with this wave.
 
 **Reaction options' shape** (his responses – her choice was never on a menu): warm («tell her you
 are glad») / wary («ask the coach to keep an eye on the schedule») / intrusive («ask to meet him,
@@ -294,9 +377,13 @@ from his words (weather is hers; his words are the relationship – §4a.2's spl
 Fallback if the owner wants 3a truly minimal: ship feed + record + lift only, dialog deferred to
 step 4 – open question 7.
 
-**Bench:** 200 careers on `tools/life-arrival.ts` (`bench:life-arrival`): median first-arrival age
-in [16.5, 18.5]; late share (lag ≥ 4) in [40, 60]%; input-independence arm – a no-action and an
-action-laden run under the same seed report identical `sinceWeek`s; MAIN capture untouched.
+**Bench (re-cut 09.09 into the census):** 200 careers PER TEMPERAMENT on `tools/life-arrival.ts`
+(`bench:life-arrival`), who-she-is §4's bars verbatim: romance-count medians separate (fiery ≥ 4,
+sunny 2–3, deep ≤ 3, quiet ≤ 2 before the latch); first-arrival medians (quiet ≥ 17.5, fiery
+≤ 17); «first or second love reaches the latch» share (quiet ≥ 50%, fiery ≤ 20% – readable once
+step 6 exists, printed as the carried-into-year-two proxy until then); late share by openness
+(private ≥ 60%, open ≤ 25%); input-independence arm – a no-action and an action-laden run under
+the same seed report identical `sinceWeek`s; MAIN capture untouched.
 
 **Collision surface:** `src/engine/world/lifeBeat.ts` (grows), `src/engine/world.ts` (tick hazard),
 `src/engine/spirit.ts` (baseline read), `src/engine/world/ledger.ts` callers, `src/shared/protocol.ts`,
@@ -307,18 +394,21 @@ reader), `tools/life-arrival.ts`. One agent.
 
 ## 5. Step 4 – it ends (wave 4)
 
-**Trigger:** while the slot is full, **1.2%/week** on `seed:life:ends:<week>` (median duration
-≈ 57 weeks; ~28% of relationships survive to year two – step 6's raw material). Active from
-`sinceWeek`, not `knownWeek`: it can end before he ever knew, and the whole episode then surfaces
-as one late row – §0's strongest scene, free of charge.
+**Trigger:** while the slot is full, **1.2%/week × the temperament multiplier** (who-she-is §4:
+sunny ×0.6 · fiery ×1.5 · quiet ×0.35 · deep ×0.9) on `seed:life:ends:<week>` – so duration
+medians split (quiet ~3 seasons, fiery ~0.7; the several-or-one trajectories of his 23.08 ruling
+now have CAUSES). Active from `sinceWeek`, not `knownWeek`: it can end before he ever knew, and
+the whole episode then surfaces as one late row – §0's strongest scene, free of charge.
 
 **The shock and the recovery curve – the numbers a bench can check:**
 
-* at `endedWeek`: spirit **−28**, slot lift removed (effective baseline back to 70), slot nulled,
+* at `endedWeek`: spirit **−22 steady / −34 intense** (who-she-is §4; the 23.08 flat −28 is
+  superseded), slot lift removed (effective baseline back to 70), slot nulled,
   `world.spiritShock = { week, kind: 'breakup' }` set, lifeLog `'ended'` row written;
-* recovery is the standing weekly rule, nothing special-cased: +4/week toward baseline. From a
-  lifted 75: 47 → 51 → 55 → 59 → 63 – **4 weeks under the knee (visibly below herself), back at
-  baseline ~week 7**; factor bottoms at 0.978 ≈ 0.9–3.4 pp per match (§1c's yardstick);
+* recovery is the standing weekly rule, nothing special-cased: the per-intensity return (5/3)
+  toward baseline. From a lifted 75: **steady ~1–2 weeks under the knee, back ~week 5; intense
+  ~6–7 under, back ~week 12** – the break-up finally HITS differently by who she is, which is
+  the personalities made visible in results; factor bottoms per §1c's curve;
 * `spiritShock` clears when spirit ≥ baseline − 2. It exists ONLY so step 5's psychologist has a
   clean thing to read («is a recovery running») – he will add +3/week during one, 4 weeks under
   the knee becoming 2: legible with no number quoted, which is his whole hiring case;
@@ -331,17 +421,21 @@ wording; match +3, mismatch −3, fix-it −1, blame −4 always (some things ar
 what she wanted). Bond only – his words never speed her recovery (that is the psychologist's
 lever, and blurring them would make reactions an optimisation puzzle).
 
-**Schema move (v63):** `world.spiritShock: { week: number, kind: 'breakup' } | null` (kinds grow
-at steps 7–8). Fixture `v63.json`.
+**Schema move (v75, re-based 09.09):** `world.spiritShock: { week: number, kind: 'breakup' } | null`
+(kinds grow at steps 7–8). Fixture `v75.json`.
 
 **Bench (the «visible in results, not just in a stat» row):** paired arms on `bench:spirit` – 128
 seed-pairs, arm A forces the break-up at a fixed week by a tool-side world poke (never by touching
 a stream), arm B is the same seed untouched. Bars:
 
-* paired match-win-rate drop over the 5 weeks after the shock **inside [1, 8] pp and > 2×SEM**;
-* median weeks-to-baseline **7 ± 1**; weeks under the knee **4 ± 1**;
-* week 10+ after the shock: paired difference statistically zero (< 1×SEM) – the cost ENDS, it is
-  weather, not a scar.
+* paired match-win-rate drop over the weeks after the shock **inside [1, 8] pp and > 2×SEM** –
+  held PER INTENSITY ARM (09.09): both steady and intense land inside the corridor, at their own
+  depths;
+* median weeks-to-baseline **5 ± 1 steady / 12 ± 2 intense**; weeks under the knee **1–2 steady /
+  6 ± 1 intense** (who-she-is §4's table is the source);
+* after recovery completes: paired difference statistically zero (< 1×SEM) – the cost ENDS, it is
+  weather, not a scar;
+* the ±1.5 pp lifetime fairness corridor re-read on the same arms (who-she-is §4).
 
 **Collision surface:** `src/engine/spirit.ts`, `src/engine/world/lifeBeat.ts`,
 `src/engine/world.ts`, `src/shared/protocol.ts`, `src/engine/migrations.ts`, `src/engine/diary.ts`,
@@ -359,6 +453,13 @@ a stream), arm B is the same seed untouched. Bars:
 | 8 | a death in the family (3e) | **M–L** | Deliberately NOT on the attachment machinery (design §3e). Its own shock kind with an asymmetric, longer curve, it can reach the parent, and it ships behind an off switch – the settings question is open question 1 and must be answered before this is built. Last, carefully. ⭐ AND RULED INTO THE ORDER 23.08 – the funeral itself, gated on the adult rung; see §6b. |
 
 ### 6a. ⭐ Step 5 expanded – the psychologist has LEVELS (owner, 23.08)
+
+⚠ **09.09: THIS SECTION IS NOW FED, NOT GOVERNING.** Two rulings landed after it was written –
+the 08.09 year-focus («можно будет у психолога делать выбор над чем работать в ближайший год») and
+the 09.09 drift re-cut (who-she-is §2a: «работа над собой» is a focus that enables the care-pole
+walk) – so step 5 has THREE-plus candidate channels, not one. The reconciliation is
+[the-psychologists-year-2026-09](../specs/the-psychologists-year-2026-09.md); build step 5 against
+IT, and read this section as the preserved 23.08 record it absorbs.
 
 His word, verbatim:
 
@@ -461,8 +562,9 @@ pregnancy, children – now has its own first-sketch stack:
 > эффектами»
 
 So step 8 gains a hard gate the sketch did not have: nothing of it fires before the **adult
-rung** – the game's own stage ladder puts `adult` at 23+ (`portraitStageFor`,
-`src/shared/avatarEmotion.ts`: jun <11 · young 11–16 · teen 17–22 · adult 23–30 · milf 31+), so
+rung** – the game's own stage ladder puts `adult` at 23+ (`portraitStage`,
+`src/shared/avatarEmotion.ts`: jun <11 · young 11–16 · teen 17–22 · adult 23–30 · lateCareer 31+
+– names re-checked 09.09), so
 the recommendation is a `kidAgeExact ≥ 23` gate, and the junior years never see a bereavement.
 The funeral itself is part of the beat – «с соответствующими эффектами» – not a feed line: its own
 shock kind on step 8's asymmetric, longer curve, and everything §3e already holds still stands:
@@ -475,13 +577,15 @@ switch (open question 1 must be answered first), last, carefully.
 
 | wave | step | schema | new files | shared hubs touched | gate |
 | --- | --- | --- | --- | --- | --- |
-| 1 | the two numbers | v60 | engine/spirit.ts, tools/spirit-bench.ts | world.ts, player.ts, economy.ts, migrations.ts, birthday.ts, diary.ts, protocol.ts | check + test:sim + B1 pin + v60.json + bench corridor |
-| 2 | reaction surface (+ fork-gap beat) | v61 | world/lifeBeat.ts, LifeBeatDialog.vue | world.ts, college.ts, protocol.ts, worker RPC, game.ts, App.vue | check + test:sim + revert-the-reaction equality + 375x667 mounted pin + v61.json |
-| 3 | someone exists | v62 | tools/life-arrival.ts | lifeBeat.ts, world.ts, spirit.ts, diary.ts, protocol.ts | check + test:sim + arrival census + input-independence arm + v62.json |
-| 4 | it ends | v63 | – | spirit.ts, lifeBeat.ts, world.ts, diary.ts, protocol.ts | check + test:sim + paired-cost bench + v63.json |
+| 1 | the two numbers + temperament + the voice's ground (bibles, tier 0, the Mood ladder, the emotion input) | v72 | engine/spirit.ts, tools/spirit-bench.ts, the four voice bibles | phaseHerWeek.ts, player.ts, economy.ts, migrations.ts, state.ts, birthday.ts, diary/*, avatarEmotion.ts, KidScreen.vue, WeekRecapCard.vue, protocol/* | check + test:sim + B1 pin + v72.json + bench corridor (per-temperament arms + ±1.5 pp fairness) + voice completeness pin + e2e case + parity run |
+| 2 | reaction surface (+ fork-gap beat; spirit/bond join the want) | v73 | world/lifeBeat.ts, LifeBeatDialog.vue | world.ts, endings.ts, protocol/events.ts, protocol/messages.ts, worker RPC, game.ts, App.vue | check + test:sim + revert-the-reaction equality + 375x667 mounted pin + radio conventions + parity run + v73.json + e2e case |
+| 3 | someone exists + tier-1 small talk + the feed's life-row emoji | v74 | tools/life-arrival.ts | lifeBeat.ts, world.ts, spirit.ts, diary.ts, protocol/* | check + test:sim + per-temperament census + input-independence arm + v74.json + e2e case |
+| 4 | it ends | v75 | – | spirit.ts, lifeBeat.ts, world.ts, diary.ts, protocol/* | check + test:sim + paired-cost bench (per-intensity arms) + v75.json + e2e case |
 
 One branch per wave (house law); inside wave 2 the engine and Vue halves can be parallel agents if
-the protocol.ts wire lands first. Waves are strictly sequential – every step reads the one above.
+the protocol wire lands first. Waves are strictly sequential – every step reads the one above.
+⚠ Schema numbers re-based 09.09 from `SAVE_SCHEMA_VERSION = 71`; whoever lands second takes the
+next number – re-count at land.
 
 ---
 
