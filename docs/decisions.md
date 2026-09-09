@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 78 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 79 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -42,7 +42,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | process-and-git | 15 | [ROUND 40: THE PROLOGUE'S CHOICES, AND «Я НЕ ПРОСИЛ НОВЫЙ НАЧИНАТЬ»](#08092026--round-40-the-prologues-choices-and-я-не-просил-новый-начинать) | 2026-09-08 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 6 | [⭐⭐ THE SECOND SEAT: he refused the machinery, and the measurement agreed with him](#17082026---the-second-seat-he-refused-the-machinery-and-the-measurement-agreed-with-him-docsspecsthe-second-seat-2026-08md) | 2026-08-17 |
-| simulation-and-balance | 3 | [ROUND 38 / WAVE C: THE BALANCE RULINGS, EVERY ONE ON A BENCH](#0607092026--round-38--wave-c-the-balance-rulings-every-one-on-a-bench) | 2026-09-07 |
+| simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -3107,3 +3107,50 @@ in three sittings on one day. Sources: [who-she-is-2026-09.md](specs/who-she-is-
 
 ---
 
+
+## 09.09.2026 – WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT
+
+The private life's first wave shipped `spirit`, `bond` and `temperament` behind schema v72, and
+`bench:spirit` measured it: 256 careers, 53,128 weeks, prediction written before the run. Four of the
+six pass bars pass. Two fail, and both fail by arithmetic rather than by luck.
+
+- **Bar 1 – spirit sd ≥ 2 per career.** Measured 1.21 steady / 2.79 intense in the care arm. The
+  weekly return (5 steady) is LARGER than every scaled perturbation in the table except an injury
+  onset, so seven of the eight rows are erased in one week and 77.6% of care-arm weeks sit at exactly
+  70.0. ⚠ The arm mean of 2.00 is the average of 1.21 and 2.79 and is a property of neither
+  population – reading the pooled number would have passed a bar no girl meets.
+- **Bar 3 – bond gap ≥ 12 at season 3.** Measured 4.84, at 3.6× its paired SEM: real separation, a
+  third of the bar. The regression is 0.5/week and the runbook's own decision tables produce 0.065
+  decisions/week (care) and 0.028 (grind), so the arms push 39% and 22% of what the regression pulls.
+
+A sweep priced both fixes. Bar 1 needs `returnPerWeek` cut sixfold to 0.75/0.5, which breaks bar 2's
+mean and takes weeks-under-the-knee from 0.02% to 4.95%; it buys no Mood-band width at all (the
+narrowest band stays 0.1–0.3 at every setting). Bar 3 cannot be part-bought: the dial has two
+reachable values, and the one that passes makes a −25 season never heal.
+
+⭐ **RULED, his word: «не трогать ни одну константу, а перевесить обе планки на волны, где приходят
+события – согласен».** Wave 1 has no life events by its own definition, so neither bar was ever a
+wave-1 question:
+
+- **Bar 1 moves to wave 4**, where the break-up shock (−22 steady / −34 intense) is the event the
+  five Mood words exist for. At the shipped return of 3/week an intense girl carries a −34 for about
+  eleven weeks – that is the range the ladder needs, and wave 1 has nothing that size on purpose.
+- **Bar 3 moves to wave 2**, where the reaction beats add decisions worth −4..+3 apiece. The gap is
+  small because the decisions are rare, not because the deltas are wrong.
+- **Wave 1's own bars are direction and significance**, and it meets them: the arms separate the
+  right way at 3.6× SEM, nothing drifts, nothing clamps, and the fairness corridor holds on every row
+  of every sweep (worst 0.179 pp against 1.5).
+
+⚠ **One defect was found and fixed rather than ruled**: `bond.regressionPerWeek` looked like a
+continuous dial and is not. Every bond write is quantised by `roundHalf` onto the 0.5 grid, so 0.5,
+0.4, 0.3 and 0.25 all move exactly half a point and 0.24, 0.2 and 0.1 all move exactly nothing – a
+−25 season then never heals at any horizon rather than healing slowly. The shipped 0.5 is one step
+exactly, so the 50-week recoverability is real; the constraint is now pinned in `tests/spirit.test.ts`
+(a positive multiple of `step`, mutation-verified) instead of being a fact nobody could see.
+
+⚠ **And one bench reading was corrected, not acted on.** The played-hurt −4 fires ~8×/career in the
+bench, which read as the wave's biggest bond lever. It is not: `medicalClearance` puts the warning
+band at condition 15–24, and `minConditionToEnter` is 20 for `local` and 30 or more for every other
+tier – so the row can ONLY fire at a Local Open, in the junior era. The 8× is the bench's own
+entry policy grinding her through junior locals, not a claim about how a career is played. The
+owner's «я вообще такого не ловил ни разу» is exactly what the arithmetic predicts.

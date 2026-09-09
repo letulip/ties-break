@@ -141,9 +141,25 @@ exams; grind: push + zero vacations + heavy exams; balanced entries in both). Wr
 PREDICTED table first, run, record measured beside it (append a «§4a measured» section to
 who-she-is). Pass bars, all per arm:
 
-* spirit moves: per-career sd ≥ 2 points; no extreme drift: weeks < 20 or > 95 under 2%;
-  long-run mean 70 ± 4;
-* bond separates: grind vs care gap ≥ 12 points at season 3 and > 2×SEM; no clamped medians;
+* ⚠⚠ **RE-AIMED 09.09 AFTER THE BENCH RAN, on his word** («не трогать ни одну константу, а
+  перевесить обе планки на волны, где приходят события – согласен»). Two bars below were written as
+  wave-1 bars and are not wave-1 questions, because **wave 1 has no life events by its own
+  definition** – §1b's table is «existing world facts only». They are struck here and re-aimed, NOT
+  weakened, and the measurement that moved them is in who-she-is §4a and `docs/decisions.md`:
+  * ~~spirit moves: per-career sd ≥ 2 points~~ → **wave 4**, where the break-up shock (−22/−34) is
+    the event the five Mood words exist for. Measured here: 1.21 steady / 2.79 intense, and no
+    steady girl reaches 2 in any of 128 careers, because the weekly return outruns every
+    perturbation but an injury onset. ⚠ Do not read the pooled arm mean (2.00) – it is the average
+    of the two arms and a property of neither.
+  * ~~bond separates: grind vs care gap ≥ 12 points at season 3~~ → **wave 2**, where the reaction
+    beats add decisions worth −4..+3. Measured here: 4.84 at 3.6× its paired SEM – the separation is
+    real and in the right direction, and it is a third of the bar because the decisions are rare
+    (0.065/week care, 0.028/week grind against a 0.5/week regression), not because the deltas are
+    wrong.
+* spirit stays inside its range: no extreme drift, weeks < 20 or > 95 under 2%; long-run mean 70 ± 4,
+  **held per temperament arm**;
+* **bond separates in the right DIRECTION, with significance** – the care arm above the grind arm at
+  > 2×SEM – and neither median clamps;
 * **the fairness corridor: paired lifetime match-win deltas across temperaments inside
   ±1.5 pp** – a breach is a finding for the owner, never a silent rebalance;
 * **Mood-word occupancy: each of the five words in ≥ 2% of weeks** under the care arm;
