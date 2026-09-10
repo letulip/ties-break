@@ -338,7 +338,15 @@ inside it. Mechanics:
   result joy** – a title won in the week it ended shows a girl who won hollow, which is the
   scene, not a bug – then the larger deviation of body vs mood (wave 1's rule);
 * a life beat sharing a week with a tournament is already the BLOCK contract's covered case
-  (collected inside the loop) – nothing new.
+  (collected inside the loop) – nothing new;
+* ⚠⚠ **THE COLLEGE-FREEZE OVERLAY HOLE – waves 3–4's to close (found 09.09 while building wave
+  2):** `blockingOverlay` white-lists only the BIRTHDAY through the college freeze, so a life
+  beat raised INSIDE the freeze would be swallowed behind the freeze's own overlay – a stopped
+  week with no card to answer it. Harmless in wave 2 (the fork-opinion fires at the fork's
+  opening, outside the freeze), but the arrival (wave 3) and ending (wave 4) hazards run through
+  college years by design, so those waves must widen the overlay's exception on the birthday's
+  own precedent AND pin it with a mounted test before their first beat can fire behind the
+  freeze.
 
 **Bench / gate:** the «reverting the reaction changes the number, measured» row is deterministic –
 same seed, answer A vs answer B, bond differs by exactly the table (an equality test, no SEM);
