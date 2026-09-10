@@ -3398,6 +3398,15 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
 - ⚠ **Scope call, flagged**: the plan row's title says «22+»; the mechanics follow the message
   SURFACE – college and independent both, because `fridgeNoteFor` already serves the sent-message
   pools from college on. His to narrow if the college years should stay unconditional.
-- **B5 sub-step 2 pending his вычитка**: the strained and cold away pools (sparse-practical;
-  rare-minimal with the unanswered and the drafted-and-unsent) plus three close/steady additions
-  (the missed call, the captionless photo, the voice note) – drafted, not wired; invariant 4.
+- **B5 sub-step 2 RULED AND SHIPPED same-day**: «строки норм, вшивай семьи и собирай PR всей
+  волны.» The approved lines wired byte-identical: `STRAINED_AWAY_NOTES` (8 – sparse, practical,
+  the door held open through logistics) and `COLD_AWAY_NOTES` (6 – minimal, with the plan's two
+  artefacts: «The last two went unanswered. This is a third.» and «Draft, never sent: come home
+  for a weekend.»), plus three warm-pool additions (the missed call, the captionless photo, the
+  voice note). The band now picks the REGISTER on the weeks that speak – warm at close/steady,
+  logistics at strained, artefacts at cold; trip weeks stay one shared pool (the event is the
+  register). New pools joined the domestic FORBIDDEN sweep, the copy rules and the size/overlap
+  pins; membership pinned over 400 weeks; mutation arm recorded (strained mapped to the warm
+  pool → red). ⚠ One honest cost, noted in the source: the warm pool grew 24 → 27, so existing
+  careers' away scraps re-pick ONCE at update – growth moves the modulo, and a second coin to
+  avoid it is machinery a scrap of paper does not deserve.

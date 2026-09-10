@@ -69,9 +69,11 @@ of the same family.
    weeks always speak, home stages exempt, the pick key untouched so no speaking week
    reshuffled; corridor-pinned and mutation-verified in tests/calendar-grid.test.ts. ⚠ Scope
    note: the plan's title says «22+», the mechanics follow the message SURFACE – college and
-   independent both, since the note is a sent message from college on. Sub-step 2 (the strained
-   and cold pools, the missed call, the photo, the drafted-and-unsent) is drafted for his
-   вычитка – no word wires before his ruling.
+   independent both, since the note is a sent message from college on. ⚙ SUB-STEP 2 RULED AND SHIPPED
+   11.09 («строки норм, вшивай семьи и собирай PR всей волны»): `STRAINED_AWAY_NOTES` +
+   `COLD_AWAY_NOTES` + three warm-pool additions, byte-identical to the approved drafts; the
+   band picks the register on speaking weeks, trip weeks stay one shared pool. WAVE B IS
+   CLOSED – every B item shipped, the PR assembled by the skill.
 
 ## Done already (wave 2, 10.09, on `life/wave-2`)
 
