@@ -474,6 +474,22 @@ the words) + 4 one-liners + the flat pool shared across beats + the feed row ≈
 | V3 | **Address-neutral v1** – English carries it without loss; the mom-or-dad pass (round 3, with its tone presets) ships separately later and upgrades the lines |
 | V4 | **70/70 for everyone in v1** – the prologue does not load `bond`/`spirit` (it already pays its weight in skills and joy); revisit on playtest |
 
+### 5c. The supporting-cast rule (ruled 10.09: «давай»)
+
+A future friend, partner or spouse never gets a bible of their own. A supporting character needs
+exactly FOUR things, and no more:
+
+1. **one conversational habit** – how they always open, or always close;
+2. **one thing they notice that the parent does not** – their reason to exist in a scene;
+3. **one recurring source of friction** – what they and the family genuinely disagree about;
+4. **one way their presence changes HER speech** – the only mechanical read: her lines in their
+   company shift register, which the existing voice machinery already knows how to do.
+
+⚠ The daughter stays the narrative centre – a supporting character is measured by what they
+reveal of HER, never by their own arc. This rule feeds step 6's partner (the wedding sketch
+inherits it) and the friend texture of kidLife; it is why neither will ever need a fifth voice
+pool.
+
 **What deliberately gets NO surface:**
 
 * **`bond` – no meter, ever.** The relationship lives in scenes and the diary's bands. A trust

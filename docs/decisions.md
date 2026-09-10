@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 81 dated entries, newest 2026-09-09. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 82 dated entries, newest 2026-09-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -39,7 +39,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 15 | [ROUND 40: THE PROLOGUE'S CHOICES, AND «Я НЕ ПРОСИЛ НОВЫЙ НАЧИНАТЬ»](#08092026--round-40-the-prologues-choices-and-я-не-просил-новый-начинать) | 2026-09-08 |
+| process-and-git | 16 | [THE EDITORIAL REVIEW APPLIED, THE BOOTH MAY SAY ANYTHING, AND THE STRING SET PASSED](#10092026--the-editorial-review-applied-the-booth-may-say-anything-and-the-string-set-passed) | 2026-09-10 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
 | simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
@@ -3243,3 +3243,40 @@ arithmetic predicts for a parent who rests her.
   unmeasured, and if a player presses it dozens of times a career a −4 would put `bond` on the floor
   – «мы ни за что не наказываем» forbids exactly that, and invariant 5 forbids pricing it by guess.
   Wave 2 measures it at the bench; the price is his afterwards, with the number in hand.
+
+## 10.09.2026 – THE EDITORIAL REVIEW APPLIED, THE BOOTH MAY SAY ANYTHING, AND THE STRING SET PASSED
+
+The day's rulings on the voice corpus, in his words, logged the same day. Sources:
+[the-way-she-sounds-2026-09](plans/the-way-she-sounds-2026-09.md) (the queue his rulings re-cut),
+the wave-2 branch's copy commits, [who-she-is §5c](specs/who-she-is-2026-09.md) and
+[copy-provenance-2026-09](specs/copy-provenance-2026-09.md).
+
+- **The 10.09 editorial review IS his вычитка, ruled applied**: «моя вычитка это как раз ревью вот
+  это и было, давай осмысленно теперь применим и интегрируем с чем согласны». Wave 2's 24 lines
+  re-cut to its craft law; the listening detour BUILT on his «интересно про тишину и слушать, мне
+  кажется надо сделать» – she talks first, «Let her finish» records it, the flat home stays
+  silent. ⭐ The full re-cut set (24 + 12 continuations + the label) was put to him line by line:
+  **«По остальной проделанной работе - звучит очень хорошо»** – the set stands; his in-game read
+  remains the standing veto on every word.
+- **Blocks B and C taken into work, the ordering the architect's**: «По С тоже берем в работу.
+  Делай в своем порядке как считаешь нужным. Я на связи.»
+- **The broadcaster (C4), re-cut by his own ear** – the strict outside-professional did not
+  survive him: «если мы послушаем как комментируют из комментаторского лобби, то там всякое
+  говорят… "Я прикуривает сигару перед последней подачей, надеюсь это победная сигара". Так что
+  может быть что угодно в текстовой трансляции.» The booth stays outside the FAMILY, but it is
+  ALIVE – vivid human observation licensed by what a booth can see. ⚠ His film transcriptions
+  are NOT in the repo (searched 10.09) – he re-shares them; they land in `docs/research/` as the
+  tone reference before C4 builds.
+- **The institutions' flagged lines**: «She was ours» is context's call, no auto-cut («может и
+  нет, хотя смотря какой контекст»); «Playing when we call» STAYS («не вижу в чем проблема»);
+  Refuse and Decline may BOTH live, varying by register («вполне может от настроения и
+  темперамента быть оба»).
+- **The r39 #17 draft tone pass DELEGATED and done**: «посмотри на наш общий тон-оф-войс и
+  соответствие пожалуйста сам, я потом в игре буду смотреть.» Verdict: the drafts sit inside the
+  house letter voice (the ad-house already speaks its own trade – «Money, not kit – we are not a
+  tennis house»); one grammar nudge applied (the lifetime-exclusivity clause gains «only»,
+  matching the capstone arm's own idiom). His in-game read follows.
+- **Confirmed the same day**: the fallible parent is fallible in interpretation and timing,
+  never in fact («согласен» – the honesty pins stay law); the human editorial tests are the
+  playtest («будем в игре смотреть»); the copy-provenance note ruled in («делайте») and shipped;
+  the supporting-cast rule ruled in («давай») and shipped as who-she-is §5c.
