@@ -38,6 +38,7 @@ import {
   forkWantOf,
   forkWantWeights,
   lifeBeatSaid,
+  lifeBeatListenFollowUp,
   lifeLogOf,
   pendingBirthday,
   pendingKnock,
@@ -390,6 +391,10 @@ describe('wave 2 E – her voice at the beat', () => {
           })
         }
       }
+      // 10.09 – the continuations walk the same sweeps: same journal, same shape rules, same
+      // dash/Cyrillic/number law. Their own completeness and null-halves are the dedicated case.
+      const continued = lifeBeatListenFollowUp('fork-opinion', want, voice, 'close')
+      if (continued !== null) everyLine.push({ line: continued, where: `${voice}/${want}/continuation` })
     }
   }
 
@@ -464,6 +469,44 @@ describe('wave 2 E – her voice at the beat', () => {
   it('⚠ ...and the strip is load-bearing – she really does speak in the first person inside it', () => {
     const firstPerson = everyLine.filter(({ line }) => /\bI\b|\bmy\b/.test(quotedSpanOf(line)))
     expect(firstPerson.length, 'if no line used a first person, the rules above would prove nothing').toBeGreaterThan(10)
+  })
+
+  it('⭐⭐ 10.09 – LISTENING EARNS MORE OF HER: the continuation pool, complete, hers, closed to a closed home', () => {
+    // The owner's editorial ruling made mechanical: «Say nothing, and let her talk» must be
+    // followed by her actually talking – in HER voice, so the pool walks like the first one, and
+    // NEVER at strained/cold, because the flat pool's silence staying silent is that pool's point.
+    const seen: string[] = []
+    for (const want of FORK_WANTS) {
+      const four = TEMPERAMENTS.map((v) => lifeBeatListenFollowUp('fork-opinion', want, v, 'close'))
+      for (const [i, line] of four.entries()) {
+        const where = `${TEMPERAMENTS[i]}/${want} continuation`
+        expect(line, where).not.toBeNull()
+        expect((line!.match(ONE_SPAN) ?? []).length, where).toBe(1)
+        expect(narrationOf(line!), where).toMatch(/\bshe\b/i)
+        seen.push(line!)
+      }
+      expect(new Set(four).size, `${want}: four voices, four continuations`).toBe(TEMPERAMENTS.length)
+      for (const closed of ['strained', 'cold'] as BondBand[]) {
+        expect(
+          lifeBeatListenFollowUp('fork-opinion', want, 'sunny', closed),
+          `${want}/${closed}: the silence stays silent`,
+        ).toBeNull()
+      }
+      expect(
+        lifeBeatListenFollowUp('fork-opinion', want, 'quiet', 'steady'),
+        `${want}: a steady home still hears her`,
+      ).not.toBeNull()
+    }
+    // The corpus rules hold here too: short dash only, no Cyrillic, no number in any word of hers.
+    for (const t of seen) {
+      expect(t).not.toMatch(/—/)
+      expect(t).not.toMatch(/[Ѐ-ӿ]/)
+      expect(t).not.toMatch(/\d/)
+    }
+    // ...and the engine's binding for the detour exists: the option the continuation hangs off.
+    expect(LIFE_BEAT_OPTIONS.some((o) => o.id === 'listen'), 'the listen option the prompt binds to').toBe(true)
+    // ARM 13: quiet/stop continuation replaced with fiery's – RED (four voices, four continuations).
+    // ARM 14: `speaksInHerOwnVoice` ignored by the follow-up – RED (the silence stays silent).
   })
 
   it('short dash only, no Cyrillic, and no number anywhere in any word the beat prints', () => {

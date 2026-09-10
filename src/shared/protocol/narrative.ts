@@ -123,6 +123,13 @@ export interface LifeBeatPrompt {
   /** his possible responses, in the order to show them. Never her choices – the decision stays
    *  hers, and these are what the parent may say about it. */
   options: LifeBeatOption[]
+  /** ⭐ v73.1 – WHAT SHE SAYS WHEN HE ONLY LISTENS (the owner's 10.09 editorial ruling: «Say
+   *  nothing, and let her talk» was fictionally dishonest while the dialog closed and she did not
+   *  talk). Non-null only while she speaks in her own voice: at `strained`/`cold` the flat pool has
+   *  nothing more to say, and THAT silence staying silent is the pool's whole point. `said` is her
+   *  continuation, `done` is the label of the one control that then records `listen` – both
+   *  engine-assembled, because this dialog owns no sentence. */
+  listenFollowUp: { optionId: string; said: string; done: string } | null
 }
 
 /** One thing the parent may say back. `id` is what `answerLifeBeat` records, and the engine

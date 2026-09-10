@@ -31,13 +31,30 @@
 // arrow keys that walk the group. The whole argument for the shape, and for why the ball is two CSS
 // declarations rather than an `<img>` or an inline `<circle>`, is in `PrologueCard.vue`'s own style
 // block; the tokens below are that control's, on purpose, so the two cannot drift apart.
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
 
 const game = useGameStore()
 const prompt = computed(() => game.snapshot?.lifeBeatPrompt ?? null)
+
+// ⭐⭐ 10.09 – «SAY NOTHING» BECAME HONEST (the owner's editorial ruling): choosing to listen no
+// longer records the answer on the first tap. While `listening`, her continuation (engine-assembled,
+// `prompt.listenFollowUp.said`) replaces the answer column, and the ONE control left – the engine's
+// own `done` label – is what records `listen` and closes the beat. So the reward of saying nothing
+// is more of her, the answer still cannot be given by accident, and walking away is still not a way
+// out: the week stays stopped until the second tap. ⚠ At `strained`/`cold` the prompt carries no
+// follow-up – she said one word because there is nothing more – and the first tap records `listen`
+// exactly as before: the flat pool's silence staying silent is that pool's whole point.
+const listening = ref(false)
+const doneButton = useTemplateRef<HTMLButtonElement>('doneButton')
+watch(prompt, (p) => {
+  if (p === null) {
+    listening.value = false
+    chosen.value = null
+  }
+})
 
 // ⚠ AVAILABILITY IS DERIVED ON EVERY RENDER, NEVER LATCHED (round 40's third convention). Both
 // halves are live state read fresh each frame: `sending` guards the double-tap while the worker
@@ -61,6 +78,15 @@ const chosen = ref<string | null>(null)
 
 async function answer(optionId: string): Promise<void> {
   if (busy.value) return
+  // The listening detour: mark the choice, show her continuation, record NOTHING yet. The second
+  // tap (`finishListening`) is the answer. Pure presentation – no command, no draw, no state.
+  if (optionId === prompt.value?.listenFollowUp?.optionId && !listening.value) {
+    chosen.value = optionId
+    listening.value = true
+    playSfx('clickSoft')
+    void nextTick(() => doneButton.value?.focus())
+    return
+  }
   sending.value = true
   chosen.value = optionId
   try {
@@ -70,9 +96,18 @@ async function answer(optionId: string): Promise<void> {
     playSfx('clickSoft')
   } finally {
     sending.value = false
-    // Still asking? Then the answer did not take – see `chosen` above.
-    if (prompt.value) chosen.value = null
+    // Still asking? Then the answer did not take – see `chosen` above. A failed send while
+    // listening keeps the listening panel: her line stays, the one control goes live again.
+    if (prompt.value && !listening.value) chosen.value = null
   }
+}
+
+/** The second tap of the listening detour – the one that actually answers. The id is the
+ *  ENGINE'S binding (`prompt.listenFollowUp.optionId`), never this component's guess. */
+async function finishListening(): Promise<void> {
+  const follow = prompt.value?.listenFollowUp
+  if (follow === null || follow === undefined || busy.value) return
+  await answer(follow.optionId)
 }
 
 /** ⭐ THE RADIO GROUP'S OWN KEYS, `PrologueCard.vue`'s handler and its documented variation: the
@@ -118,6 +153,13 @@ useDialogFocus(card)
            written – this template may not touch it, shorten it or wrap it in anything. -->
       <p id="life-beat-said" class="life-beat-said">{{ prompt.said }}</p>
 
+      <!-- ⭐ 10.09 – HER CONTINUATION, only while he is listening. The engine's words verbatim,
+           exactly like the line above; rendered as a second paragraph of the same voice, because it
+           IS one. -->
+      <p v-if="listening && prompt.listenFollowUp" class="life-beat-said life-beat-continued">
+        {{ prompt.listenFollowUp.said }}
+      </p>
+
       <!-- ⭐⭐⭐ WHAT HE MAY SAY BACK – a real radio group, named by her line, because these controls
            SELECT rather than advance (round 40 #1). The order is the engine's. Every control is the
            same class: nothing here marks one of them as the one to take, on a card whose whole
@@ -130,6 +172,7 @@ useDialogFocus(card)
            round-20 #3 put there – so a beat whose words run long scrolls instead of pushing the
            last answer off the phone. -->
       <div
+        v-if="!listening"
         class="life-beat-choices"
         role="radiogroup"
         aria-labelledby="life-beat-said"
@@ -149,6 +192,22 @@ useDialogFocus(card)
           <span class="life-beat-choice-label">{{ option.label }}</span>
         </button>
       </div>
+
+      <!-- ⭐ THE LISTENING PANEL'S ONE CONTROL – it ADVANCES (records `listen`, closes the beat),
+           so it wears the advance idiom, not a fourth radio. Label is the engine's. It replaces the
+           radiogroup rather than following it, so in either phase the LAST control in the card's
+           flow is the one `tests/component/fits.ts` measures – the 375x667 verdict stays honest in
+           both. -->
+      <button
+        v-else-if="prompt.listenFollowUp"
+        ref="doneButton"
+        class="life-beat-listen-done"
+        type="button"
+        :disabled="busy"
+        @click="finishListening()"
+      >
+        {{ prompt.listenFollowUp.done }}
+      </button>
     </div>
   </div>
 </template>
@@ -248,5 +307,33 @@ useDialogFocus(card)
   font-weight: 600;
   line-height: 1.35;
   color: var(--text);
+}
+
+/* Her continuation sits closer to her first line than the answers did – one voice, two breaths. */
+.life-beat-continued {
+  margin-top: -6px;
+}
+
+/* ⭐ THE ADVANCE IDIOM for the listening panel's one control – `--accent-wash` on `--accent-soft`
+   is what this app paints a way ON (round 40 #1), and recording the answer and closing the beat is
+   a way on. Same box metrics as the answers so the card does not jump between phases; every colour
+   a declared token with no fallback, the round-17 #3 rule this file already keeps. */
+.life-beat-listen-done {
+  width: 100%;
+  padding: 11px 13px;
+  text-align: center;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  background: var(--accent-wash);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.life-beat-listen-done:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 </style>

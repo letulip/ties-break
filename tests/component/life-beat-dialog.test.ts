@@ -88,6 +88,13 @@ const BEAT: LifeBeatPrompt = {
     { id: 'press-other-way', label: 'FIXTURE answer two' },
     { id: 'say-nothing', label: 'FIXTURE answer three' },
   ],
+  // ⭐ 10.09 – the listening detour's fixture half. The `optionId` is deliberately NOT the engine's
+  // `listen`: the component must follow the prompt's own binding, never its own guess.
+  listenFollowUp: {
+    optionId: 'say-nothing',
+    said: 'FIXTURE continuation, standing in for more of her once he stays quiet.',
+    done: 'FIXTURE let her finish',
+  },
 }
 
 /** ⭐ THE TOO-TALL VARIANT, and it is the mutation the round-20 law asks for. A beat is copy, and
@@ -565,5 +572,92 @@ describe('⚠⚠ the life beat fits a phone, and the last answer can be reached'
       /declares no height bound that fits/,
     )
     w.unmount()
+  })
+})
+
+// =================================================================================================
+// 10.09 – THE LISTENING DETOUR (the owner's editorial ruling: «Say nothing» must be followed by her
+// actually talking). The answer records on the SECOND tap; walking away is still not a way out; a
+// prompt with no follow-up (the flat home) behaves exactly as before – the silence stays silent.
+// =================================================================================================
+describe('LifeBeatDialog – the listening detour', () => {
+  const listenLabel = BEAT.options[2]!.label
+
+  async function pressListen(w: ReturnType<typeof mountDialog>) {
+    const listen = w.findAll('button').find((b) => b.text().includes(listenLabel))!
+    await listen.trigger('click')
+  }
+
+  it('⭐⭐ the first tap records NOTHING – her continuation appears instead of the answers', async () => {
+    const w = mountDialog(BEAT)
+    const store = useGameStore()
+    const sent: string[] = []
+    store.answerLifeBeat = async (optionId: string) => { sent.push(optionId) }
+    await pressListen(w)
+    expect(sent, 'no command on the first tap').toHaveLength(0)
+    expect(w.text(), 'her continuation, verbatim, not one word more').toContain(BEAT.listenFollowUp!.said)
+    expect(w.find('[role="radiogroup"]').exists(), 'the answers made way for her').toBe(false)
+    const done = w.find('.life-beat-listen-done')
+    expect(done.exists(), 'the one control left').toBe(true)
+    expect(done.text(), 'the engine\'s own label').toBe(BEAT.listenFollowUp!.done)
+    // ARM 15: the detour condition dropped (`answer` sends on the first tap) – RED on `sent` above.
+    w.unmount()
+  })
+
+  it('⭐ the second tap answers – once, with the PROMPT\'s option id, and the beat closes', async () => {
+    const w = mountDialog(BEAT)
+    const store = useGameStore()
+    const sent: string[] = []
+    store.answerLifeBeat = async (optionId: string) => {
+      sent.push(optionId)
+      store.snapshot = snapshotWith(null)
+    }
+    await pressListen(w)
+    await w.find('.life-beat-listen-done').trigger('click')
+    expect(sent, 'one answer, the engine\'s binding, not a component guess').toEqual([BEAT.listenFollowUp!.optionId])
+    expect(w.find('.dialog-overlay').exists(), 'the beat closed').toBe(false)
+    // ARM 16: `finishListening` hard-coding `'listen'` – RED here (the fixture id is not `listen`).
+    w.unmount()
+  })
+
+  it('⚠ a beat with NO follow-up records on the first tap – the flat home\'s silence stays silent', async () => {
+    const w = mountDialog({ ...BEAT, listenFollowUp: null })
+    const store = useGameStore()
+    const sent: string[] = []
+    store.answerLifeBeat = async (optionId: string) => { sent.push(optionId) }
+    await pressListen(w)
+    expect(sent, 'the old contract, untouched where she has nothing more').toEqual(['say-nothing'])
+    w.unmount()
+  })
+
+  it('⚠ a refused send while listening keeps the panel – her line stays, the control goes live again', async () => {
+    const w = mountDialog(BEAT)
+    const store = useGameStore()
+    // The real store CATCHES a refusal and records it; the command resolves and the snapshot comes
+    // back unchanged (the prompt still standing IS the refusal, from this component's seat).
+    store.answerLifeBeat = async () => undefined
+    await pressListen(w)
+    await w.find('.life-beat-listen-done').trigger('click')
+    expect(w.text(), 'still listening').toContain(BEAT.listenFollowUp!.said)
+    const done = w.find('.life-beat-listen-done')
+    expect(done.exists() && !done.attributes('disabled'), 'live again for the retry').toBe(true)
+    w.unmount()
+  })
+
+  it('⚠⚠ the phone holds the listening panel too – the round-20 law on phase 2', async () => {
+    const { w, card } = mountAttached(BEAT)
+    const listen = [...card.querySelectorAll('button')].find((b) => b.textContent!.includes(listenLabel))!
+    ;(listen as HTMLButtonElement).click()
+    await w.vm.$nextTick()
+    const done = card.querySelector('.life-beat-listen-done')!
+    expect(done, 'phase 2 is up – nothing below is vacuous').toBeTruthy()
+    assertDismissReachable(card, done, PHONE, 'LifeBeatDialog (listening)')
+    w.unmount()
+    const narrow = mountAttached(BEAT, NARROW_PHONE)
+    const listenNarrow = [...narrow.card.querySelectorAll('button')].find((b) => b.textContent!.includes(listenLabel))!
+    ;(listenNarrow as HTMLButtonElement).click()
+    await narrow.w.vm.$nextTick()
+    assertDismissReachable(narrow.card, narrow.card.querySelector('.life-beat-listen-done')!, NARROW_PHONE, 'LifeBeatDialog (listening, 320x568)')
+    narrow.w.unmount()
   })
 })

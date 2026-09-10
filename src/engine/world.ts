@@ -346,8 +346,8 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
 import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
 export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
-import { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
-export { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
+import { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
+export { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'

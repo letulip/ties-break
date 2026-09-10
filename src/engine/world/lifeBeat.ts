@@ -222,7 +222,8 @@ export function forkWantOf(world: WorldState): ForkWant | null {
 //                                         the four voices into ONE shared flat pool, because losing
 //                                         her voice is the point
 //
-// 3 wants x 4 temperaments x 2 registers = 24 of her own, + 3 flat, + 3 headings.
+// 3 wants x 4 temperaments x 2 registers = 24 of her own, + 12 listen-continuations (10.09),
+// + 3 flat, + 3 headings.
 
 /** The register her line is licensed under, collapsed from the Mood ladder. Two rungs, not three:
  *  `bright` and `level` share a line and `low` gets its own, which is §5b's arithmetic exactly. */
@@ -244,33 +245,40 @@ type SpokenRegister = 'low' | 'up'
  *  exception – a feeling from her would be worth more than a paragraph from anyone else, precisely
  *  because tier 0 spent none.» This is that tier-2 beat, it fires once in a career, and even here
  *  she answers with a fact and a schedule wherever a fact will carry it. */
+// ⭐⭐ RE-CUT 10.09 TO THE OWNER'S EDITORIAL REVIEW – his вычитка of this pool, applied as ruled
+// («давай осмысленно теперь применим и интегрируем»). The rules the re-cut follows, from the review:
+// temperament shows in WHAT SHE NOTICES, WHAT SHE OMITS AND HOW SHE STRUCTURES A THOUGHT – never in
+// a narrator's adverb; the narration outside her quotation carries FACTS AND OBJECTS the parent saw
+// (a prospectus, a blanket, unsigned forms), never an interpretation («which is how she says it»,
+// «at volume», «like a result» – all deleted); a `low` week DISTURBS her normal voice rather than
+// swapping in a stock sad one. Lines the review's own craft already matched are kept byte-identical.
 const HER_LINE: Record<Temperament, Record<ForkWant, Record<SpokenRegister, string>>> = {
   sunny: {
     college: {
-      up: 'She had the answer ready over dinner. "I want the four years. I want to be somewhere with a library in it."',
-      low: 'She said it quietly, and she had been holding it a while. "I would like to go and be a student for a bit."',
+      up: 'She brought it up over dinner, to both of us. "I keep thinking about the library. And the four years, if I am honest."',
+      low: 'She waited for a quiet evening to ask. "Could we talk about me going? I would like the four years."',
     },
     tour: {
-      up: 'She talked the whole way home about it. "I want to play. Properly, all of it, next year."',
-      low: 'She was tired and she said it anyway. "I still want the tour. That has not changed, whatever this week looked like."',
+      up: 'She talked us through next season, city by city. "I want to play. Properly, all of it."',
+      low: 'She answered before the question was all the way out. "The tour. That has not changed, whatever this week looked like."',
     },
     stop: {
-      up: 'She said it plainly, and she was not upset. "I think I am done, and I am all right about it."',
-      low: 'She had been working up to it all week. "I want to stop. I do not think there is another season in me."',
+      up: 'She told us together, at the table. "I think I am done. I wanted you both to hear it from me."',
+      low: 'She picked a night when the house was full. "I want to stop. I do not think there is another season in me."',
     },
   },
   fiery: {
     college: {
-      up: 'She was already halfway through the argument when she said it. "College. Four years, and I want them."',
-      low: 'She was flat all week and then it came out at once. "College – I want out of this circuit for a while."',
+      up: 'She said yes to a question nobody had asked yet. "College. Four years. I already know."',
+      low: 'She was flat all week and said it anyway, all at once. "College. I want out of this circuit for a while."',
     },
     tour: {
-      up: 'She banged the table for it. "The tour. Nothing else. That is the whole list."',
-      low: 'She was wrung out and she still wanted it loudest. "The tour. I do not care how this week went."',
+      up: 'She did not sit down for this one. "Put me in. I do not want a careful year."',
+      low: 'She said it from under a blanket on the sofa. "The tour. I do not care how this week went."',
     },
     stop: {
-      up: 'She announced it like a result. "I am stopping. Done, finished, that is it."',
-      low: 'She said it once, hard, and would not take it back. "I want to stop. I have had enough of all of it."',
+      up: 'She stood up to say it. "I am stopping. Book nothing for next year."',
+      low: 'She said it once, with the door already half closed. "I want to stop. I have had enough of all of it."',
     },
   },
   quiet: {
@@ -280,28 +288,63 @@ const HER_LINE: Record<Temperament, Record<ForkWant, Record<SpokenRegister, stri
     },
     tour: {
       up: 'She was already writing next year down when she mentioned it. "I would keep playing. The schedule works."',
-      low: 'She asked about the entry deadlines first, which is how she says it. "I would rather keep going."',
+      low: 'She asked about the entry deadlines first. "I would rather keep going."',
     },
     stop: {
-      up: 'She had thought about it long before she said it. "I would like to stop now, I think."',
+      up: 'She handed back the entry forms unsigned. "I would like to stop now, I think."',
       low: 'She said it once, and then asked about something else entirely. "I want to stop."',
     },
   },
   deep: {
     college: {
-      up: 'She waited until the end of the week to say it. "College. I have known for a while."',
+      up: 'She told us at the end of the week, after the bags were unpacked. "College. I have known for a while."',
       low: 'She said it in the car, with the engine off. "College. I need somewhere else to be."',
     },
     tour: {
-      up: 'She said it late, and only once. "I want the tour."',
-      low: 'She had been quiet for days before it came. "The tour. Even now."',
+      up: 'She let everyone else talk first. "The tour. I know what it costs."',
+      low: 'She had been quiet for days, and said it at the sink. "The tour. Even now."',
     },
     stop: {
-      up: 'She said it after everyone else had gone to bed. "I want to stop."',
-      low: 'She said the true thing, late, and no more than that. "I am done."',
+      up: 'She said it after everyone else had gone to bed. "I want to stop. I do not want another January."',
+      low: 'She said it once, and turned the light off. "I am done."',
     },
   },
 }
+
+/** ⭐⭐ WHAT SHE SAYS WHEN HE ONLY LISTENS – 12 drafts, the 10.09 editorial ruling made mechanical:
+ *  «Say nothing, and let her talk» was fictionally dishonest while the dialog closed and she did
+ *  not talk. Choosing `listen` now shows this line BEFORE the answer is recorded – the reward of
+ *  saying nothing is MORE OF HER. One line per voice per want; no register split (the moment is
+ *  already priced by her first line) and NO FLAT ROW on purpose: at `strained`/`cold` she said one
+ *  word because there is nothing more, and listening harder does not manufacture it – the dialog
+ *  closes as before, and that silence staying silent is the flat pool's whole point. */
+const HER_CONTINUATION: Record<Temperament, Record<ForkWant, string>> = {
+  sunny: {
+    college: 'She kept going when nobody filled the pause. "And I would come home for the summers. I have looked at how it fits."',
+    tour: 'She filled the quiet herself. "I know what it asks of the house. I am asking anyway."',
+    stop: 'She reached over before she went on. "It is not one bad week. I have been sure for a while."',
+  },
+  fiery: {
+    college: 'She took the silence as a yes and kept building. "I will play the college season. It is not goodbye to tennis."',
+    tour: 'She was not finished. "And I do not want a safe schedule. Real draws."',
+    stop: 'She said the rest to the window. "I am not sad about it. I want you to know that."',
+  },
+  quiet: {
+    college: 'She added one thing, to the table more than to us. "The room comes with a desk by the window."',
+    tour: 'She slid the calendar across. "I marked the weeks I would be home."',
+    stop: 'She answered the question that had not been asked yet. "The racquets can go to the club."',
+  },
+  deep: {
+    college: 'She said the other half after a while. "It is not about the tennis. I want you to know it is not."',
+    tour: 'She looked up once. "Do not worry about me out there."',
+    stop: 'She finished it on her way out of the room. "Thank you for not talking me out of it."',
+  },
+}
+
+/** The one control of the listening panel – it records `listen` and closes the beat. A DRAFT like
+ *  every label here (invariant 4). It advances, so the dialog draws it in the advance idiom, not as
+ *  a fourth radio. */
+const LISTEN_DONE_LABEL = 'Let her finish'
 
 /** ⭐⭐ THE FLAT POOL – what a `strained` or `cold` home sounds like on the biggest question of her
  *  life (voice bibles §B). One to four words, the parent's own sentence carrying the rest, and no
@@ -382,6 +425,23 @@ export function lifeBeatSaid(
   return HER_LINE[voice][want][register === 'low' ? 'low' : 'up']
 }
 
+/** ⭐ HER CONTINUATION when the parent only listens – null exactly where the flat pool speaks,
+ *  because a girl who answered in one word has nothing more to give a silence (the 10.09 ruling's
+ *  own boundary). Exported beside `lifeBeatSaid` so the completeness pin walks this pool the same
+ *  way: kind x temperament x want, no silent fallback between voices. */
+export function lifeBeatListenFollowUp(
+  kind: LifeBeatKind,
+  detail: string,
+  voice: Temperament,
+  bond: BondBand,
+): string | null {
+  if (kind !== 'fork-opinion') throw new Error(`No copy for life beat kind ${kind}`)
+  const want = FORK_WANTS.find((w) => w === detail)
+  if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
+  if (!speaksInHerOwnVoice(bond)) return null
+  return HER_CONTINUATION[voice][want]
+}
+
 /** The prompt the Snapshot carries, assembled ENGINE-side so the dialog renders what it is handed
  *  and owns no sentence of its own – `buildBirthdayPrompt`'s own contract.
  *
@@ -396,12 +456,16 @@ export function buildLifeBeatPrompt(world: WorldState): LifeBeatPrompt | null {
   const pending = pendingLifeBeat(world)
   if (pending === null) return null
   const register = moodRegisterOf(spiritBandOf(world.spirit ?? ECONOMY.spirit.baseline))
+  const band = bondBandOf(world.bond ?? ECONOMY.bond.start)
+  const voice = voiceOf(world)
+  const followUp = lifeBeatListenFollowUp(pending.kind, pending.detail, voice, band)
   return {
     week: pending.week,
     kind: pending.kind,
     heading: HEADING[register],
-    said: lifeBeatSaid(pending.kind, pending.detail, voiceOf(world), register, bondBandOf(world.bond ?? ECONOMY.bond.start)),
+    said: lifeBeatSaid(pending.kind, pending.detail, voice, register, band),
     options: LIFE_BEAT_OPTIONS.map((o) => ({ id: o.id, label: o.label })),
+    listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
   }
 }
 
