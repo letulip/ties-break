@@ -24,6 +24,55 @@ stays the parent's journal; she speaks in quotation marks within it (§5b's tier
 Tier 1 (small talk) and tier 2 (the big beats) are waves 3 and 2–4, written later against these same
 bibles.
 
+## ⭐⭐ THE 10.09 AMENDMENT (wave B) – the craft law, the ban list, the rails made real. DRAFT FOR HIS PASS
+
+The owner ruled his editorial review applied to the whole corpus. Three changes to this
+document's law; every §D line is re-cut under them on `voice/wave-b`.
+
+**1. The craft law** (governs every line, existing and future):
+
+* **Temperament shows in WHAT SHE NOTICES, WHAT SHE OMITS AND HOW SHE STRUCTURES A THOUGHT** –
+  never in a narrator's adverb, never in punctuation alone. `sunny` brings the household into
+  her reasoning and may name a feeling plainly; `fiery` commits before explaining – verdict
+  first, imperatives, absolutes; `quiet` reveals through logistics and displacement (the
+  returned books, the re-gripped racquets) – a stated feeling is still a broken line; `deep`
+  names the consequence rather than the preference, late, in full stops.
+* **The narration outside her quotation carries FACTS AND OBJECTS the parent saw** – a
+  prospectus, a kit bag where she dropped it, the desk light late – never an interpretation of
+  her delivery. If the line needs the narrator to explain how to read her, the quotation has
+  not done its work.
+* **A low week DISTURBS her normal voice, it does not replace it with a stock sad one** – the
+  fiery girl gone flat IS the low register; the disturbance is the message.
+* **Closeness shortens lines** (the film study's law): the closer the scene, the fewer the
+  words – warmth is brevity with shared referents, never added sweetness.
+* **The childhood prologue is this corpus's tonal benchmark** – concrete situations, limited
+  sentimentality, decisions that do not announce their moral.
+
+**2. The BAN LIST – narrator tails, now a lint** (swept over every voiced line's narration by
+`tests/week-notes.test.ts`; adding to this list tightens the ratchet, removing from it is his
+call): «at speed» · «at volume» · «which is the tell» · «which is how she says it» · «nothing
+further» · «nothing more» · «in those words» · «three times over» · «more than once» · «that
+was the whole answer» · «did the whole week's work» · «no second sentence» · «she announced» ·
+«left it there».
+
+**3. The rails are VARIANTS now, not an escape clause.** The wave-1 rule («a line may cross all
+four rails when age-neutral») produced one dictionary for a fourteen-year-old and a
+thirty-four-year-old – nine of eleven moments identical across every stage, the review's exact
+finding. Superseded: **every railed moment carries TWO variants per voice** – `home` (school +
+after-school: the table, the car, a parent in the room – `underOneRoof`, the `domestic`
+docstring's own predicate) and `away` (college + independent: a message, a call, a photo, a
+visit – the distance frames §84's own paragraph already names as the licensed channel). The
+birthday stays home-only, the off-season away-only. Age owns VOCABULARY, SCALE and CHANNEL;
+the rails stay maturity, never personality – a `quiet` thirty-year-old is still quiet, in an
+adult's dictionary, over an adult's channel.
+
+**§E's arithmetic moves with it:** 11 moments × 4 voices was 44; nine railed moments × 2 + two
+scoped moments = 20 slots × 4 voices = **80 voiced lines**, + 8 flat = 88. Still one licence
+per moment, words per voice per rail – the cross stays total by type, so a missing variant is
+a compile error before it is a test failure.
+
+---
+
 ## The mechanical facts the lines are written to
 
 So that a later writer does not rediscover them, and so that nothing here is described from memory.
