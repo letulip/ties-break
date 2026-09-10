@@ -393,6 +393,13 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // predicate in weekNotes.ts that produced the line. Same method as every entry above: a second
   // spelling, so a licence and its claim cannot be wrong together.
   voice: (f, value) => f.temperament === value,
+  // ⭐ wave B – the age rail, re-derived off `lifeStage` independently of `underOneRoof`, the
+  // predicate that produced the line: a second spelling, so a table-side line reaching a college
+  // week is a failing test, not a style slip. `home` = the two roof stages; `away` = the rest.
+  rail: (f, value) =>
+    value === 'home'
+      ? f.lifeStage === 'school' || f.lifeStage === 'after-school'
+      : f.lifeStage === 'college' || f.lifeStage === 'independent',
   // ⚠ THE THREE REGISTER VALUES DO NOT ALL MEAN "EQUALS", and the asymmetry is the approved doc's
   // rather than a convenience: `level` is defined there as «the one variant that is not a low week»,
   // so a level line says only that her week was not a bad one – which is all its words rest on.
@@ -999,17 +1006,57 @@ describe('v72 — the voice completeness pin', () => {
     }
   })
 
-  it('⚠ the fifty-two lines are all there, once each, and nothing else grew', () => {
-    // 44 voiced (11 moments x 4 voices) + 8 flat = 52, which is voice-bibles §E's own arithmetic.
+  it('⚠ the eighty-eight lines are all there, once each, and nothing else grew', () => {
+    // wave B: 80 voiced (nine railed moments x 2 rails + birthday home-only + off-season
+    // away-only = 20 per voice, x 4) + 8 flat = 88 – the amended voice-bibles §E arithmetic.
     const voiced = WEEK_NOTES.filter((n) => n.claims.voice !== undefined)
     const flat = WEEK_NOTES.filter((n) => n.claims.strainedBond)
-    expect(voiced.length).toBe(44)
+    expect(voiced.length).toBe(80)
     expect(flat.length).toBe(8)
-    // every voiced line claims the warm channel, and no flat line claims a voice
+    // every voiced line claims the warm channel AND a rail, and no flat line claims a voice
     for (const n of voiced) expect(n.claims.closeBond, render(n, homeWeek({}))).toBe(true)
+    for (const n of voiced) expect(n.claims.rail, 'wave B: a voiced line without a rail').toBeDefined()
     for (const n of flat) expect(n.claims.voice).toBeUndefined()
-    // eleven per voice, exactly
-    for (const t of TEMPERAMENTS) expect(voiced.filter((n) => n.claims.voice === t).length).toBe(11)
+    // twenty per voice, exactly – and the rails split ten/ten
+    for (const t of TEMPERAMENTS) {
+      const hers = voiced.filter((n) => n.claims.voice === t)
+      expect(hers.length).toBe(20)
+      expect(hers.filter((n) => n.claims.rail === 'home').length, `${t}: home rail`).toBe(10)
+      expect(hers.filter((n) => n.claims.rail === 'away').length, `${t}: away rail`).toBe(10)
+    }
+    // ARM (wave B): one away variant deleted from VOICE_LINES – a compile error first, and this
+    // count second; the rail split above catches a home line pasted into an away slot.
+  })
+
+  it('⚠⚠ THE TAIL-LINT (wave B, the 10.09 ban list) – no narrator tail survives in any narration', () => {
+    // The amended bibles' ban list, swept over the NARRATION of every note in the pool – voiced,
+    // flat and the parent's own. The quotation is stripped first: the ban is on the narrator
+    // interpreting her, never on words she might say herself. A new tail joins the list to
+    // tighten the ratchet; removing one is the owner's call.
+    const BANNED_TAILS = [
+      'at speed',
+      'at volume',
+      'which is the tell',
+      'which is how she says it',
+      'nothing further',
+      'nothing more',
+      'in those words',
+      'three times over',
+      'more than once',
+      'that was the whole answer',
+      'did the whole week\'s work',
+      'no second sentence',
+      'she announced',
+      'left it there',
+    ]
+    for (const n of WEEK_NOTES) {
+      const text = typeof n.text === 'function' ? n.text(homeWeek({ birthdayAge: 15 })) : n.text
+      const narration = text.replace(/"[^"]*"/g, ' ').toLowerCase()
+      for (const tail of BANNED_TAILS) {
+        expect(narration.includes(tail), `banned tail «${tail}» in: ${text}`).toBe(false)
+      }
+    }
+    // ARM (wave B): re-adding «at volume» to any fiery narration – RED here by name.
   })
 
   it('⚠ the five Mood words are the approved five, and the engine hands nothing else', () => {

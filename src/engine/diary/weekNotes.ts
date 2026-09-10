@@ -62,6 +62,10 @@ import { ageWord, capitalise, familyHomeVoice, independentVoice, underOneRoof } 
 
 /** What a week note ASSERTS, as data the honesty pin can hold against the week's facts. Same idea as
  *  `TravelClaims`: a mis-licensed line is a failing test, not a matter of taste. */
+/** The two age rails her voiced lines are written on – wave B's split of one dictionary into a
+ *  school-years one and an adult one. `home` licenses on `underOneRoof`, `away` on its negation. */
+export type VoiceRail = 'home' | 'away'
+
 export interface WeekClaims {
   /** asserts a hard training week – unselectable below WEEK_NOTE_GRIND */
   grind?: true
@@ -138,6 +142,15 @@ export interface WeekClaims {
    *  week was ordinary or good; it says only that it was not a bad one, which is all its words rest
    *  on. The honesty pin re-derives each of the three separately. */
   register?: MoodRegister
+  /** ⚠ ASSERTS WHICH AGE RAIL THE WORDS ARE WRITTEN ON (wave B, the 10.09 editorial law: age owns
+   *  vocabulary, scale and CHANNEL). `'home'` = school and after-school – the table, the car, a
+   *  parent in the room: exactly `underOneRoof`, the `domestic` docstring's own predicate.
+   *  `'away'` = college and independent – a message, a call, a photo, a visit: the distance
+   *  frames the bibles name as the licensed channel. Valued, like `voice`, and for the same
+   *  reason: «sounds her age» is two mutually exclusive things, and a table-side line reaching a
+   *  college week would be the game sharing a house it does not share. The honesty pin
+   *  re-derives it off `f.lifeStage` independently. */
+  rail?: VoiceRail
   /** ⚠ ASSERTS SHE IS CLOSE ENOUGH TO SPEAK IN HER OWN VOICE – `close` OR `steady`, the two bands
    *  who-she-is §5b lets her voice through, and NOT «her bond is 80+».
    *
@@ -352,83 +365,236 @@ const MOMENTS: Record<SpokenMoment, { claims: WeekClaims; license: (f: DiaryFact
 }
 
 /**
- * ⭐⭐ THE FORTY-FOUR LINES, VERBATIM FROM THE APPROVED DOC (`voice-bibles-2026-09.md` §§D1-D4).
+ * ⭐⭐ THE EIGHTY LINES – RE-CUT 10.09 TO THE OWNER'S EDITORIAL RULING (voice-bibles, the 10.09
+ * amendment; wave B). Two changes to the forty-four this replaces, both his:
  *
- * Each voice is one bible made audible, and the bibles are two axis rules crossed:
- *   `sunny`  open + steady   – says the whole week, evenly, and holds SPEED constant
- *   `fiery`  open + intense  – offers the first verdict, at speed, and holds VOLUME constant
- *   `quiet`  private + steady – says the schedule instead of herself; a stated feeling is a broken line
- *   `deep`   private + intense – one thing, exactly, hard, and usually after it is over
+ * 1. THE CRAFT LAW: temperament shows in what she notices, omits and how she structures a
+ *    thought – never in a narrator's adverb. Every banned tail («at speed», «at volume», «which
+ *    is the tell», «nothing further»…) is deleted and now LINTED (tests/week-notes.test.ts); the
+ *    narration outside her quotation carries facts and objects the parent saw. The three lines
+ *    the review's own craft already matched are kept byte-identical.
  *
- * ⚠ THE AGE RAILS ARE ON THE LICENCE, NOT IN THE WORDS. Nine of the eleven moments cross every rail
- * because every household frame in §D was written as REPORTED SPEECH rather than as observation; the
- * birthday is scoped to `school` (it claims `domestic`) and the off-season to `independent`. Both
- * rail-scoped moments sit beside a neutral sibling, so no stage and no voice is left without a line.
+ * 2. ⚠⚠ THE RAILS ARE VARIANTS NOW, NOT AN ESCAPE CLAUSE. The old rule («age-neutral reported
+ *    speech crosses every rail») produced one dictionary for a fourteen-year-old and a
+ *    thirty-four-year-old – nine of eleven moments identical across stages, the review's exact
+ *    finding. Every railed moment now carries TWO variants per voice: `home` (school +
+ *    after-school – the table, the car, a parent in the room; `underOneRoof`) and `away`
+ *    (college + independent – a message, a call, a photo, a visit: the distance frames the
+ *    bibles name as the licensed channel). The birthday stays home-only, the off-season
+ *    away-only. The rails stay maturity, never personality.
+ *
+ * The bibles, one line each, unchanged in spirit: `sunny` says the whole week evenly and may
+ * name a feeling plainly; `fiery` commits before explaining; `quiet` says the schedule instead
+ * of herself; `deep` says one true thing, late, and names the consequence.
  */
-const VOICE_LINES: Record<Temperament, Record<SpokenMoment, WeekNote['text']>> = {
+type RailedMoment = Exclude<SpokenMoment, 'birthday' | 'offSeason'>
+
+const VOICE_LINES: Record<Temperament, Record<RailedMoment, Record<VoiceRail, WeekNote['text']>>> = {
   sunny: {
-    grind: '"Hard week, good week, and I would take another," she said.',
-    light: '"Two mornings free, and that felt like plenty," she said.',
-    freshBody: '"I feel good this week. Properly good," she said.',
-    exams: '"Papers first, then the court." She kept to it all week.',
-    vacation: '"A whole week with nothing booked, and I needed it," she said.',
-    restingKnock: `"A week off is still a week, and I'll take it," she said.`,
-    pushingKnock: '"It held all week and I was careful with it," she said.',
-    injured: '"All right. Tell me what comes first," she said.',
-    tired: '"This one took everything I had," she said, in those words.',
-    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Save me the corner piece," she said.`,
-    offSeason: `"Nothing to play for a while, and I've made a list," she said.`,
+    grind: {
+      home: 'She gave the week its review over dinner. "Hard, good, and I would go again."',
+      away: '"Hard week, the good kind," she wrote, under a photo of six racquets drying.',
+    },
+    light: {
+      home: 'She planned the free mornings at breakfast. "Two of them. I am keeping both."',
+      away: '"Two free mornings, and I slept through one on purpose," she wrote.',
+    },
+    freshBody: {
+      home: 'She was first to the car. "Everything answered today. Even the serve."',
+      away: '"Body said yes to everything today, even the serve," she wrote.',
+    },
+    exams: {
+      home: 'She ran the week like a timetable. "Papers first, then the court. In order."',
+      away: '"Papers first, court after, sanity pending," she wrote from the library.',
+    },
+    vacation: {
+      home: 'She let the week be slow, unapologetic. "Nothing booked. That was the point."',
+      away: '"A week of nothing, taken in full, no regrets," she wrote.',
+    },
+    restingKnock: {
+      home: 'She parked the racquet where she could see it. "A week off is still a week."',
+      away: '"Resting it properly, promise," she wrote, the bag photographed still zipped.',
+    },
+    pushingKnock: {
+      home: 'She flexed it at dinner to show the room. "It held. I was careful. Both true."',
+      away: '"It held all week – careful, before you ask," she wrote.',
+    },
+    injured: {
+      home: 'She had the rehab sheet on the fridge by evening. "Tell me what comes first."',
+      away: '"All right. Rehab list acquired. Starting tomorrow," she wrote.',
+    },
+    tired: {
+      home: 'She said it early and went up before dessert. "This one emptied me."',
+      away: '"Flat batteries tonight. Recharging. Do not worry," she wrote, later than usual.',
+    },
   },
   fiery: {
-    grind: '"Six days! Every one of them at full speed!" she said.',
-    light: '"Free mornings! Two of them! I need a plan," she said at speed.',
-    freshBody: '"Everything works today! Everything!" she said, at volume.',
-    exams: '"Papers, papers, papers! Then one hour on court. One!" she said.',
-    vacation: '"No rankings, no schedule, nothing!" she said, three times over.',
-    restingKnock: '"Resting is the worst part!" she said, more than once.',
-    pushingKnock: '"Nothing wrong with it. Nothing!" she said after training.',
-    injured: '"That long?! There has to be another way," she said straight off.',
-    tired: '"Empty. Completely empty." She said it flat, which is the tell.',
-    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Cake first, questions later!" she announced.`,
-    offSeason: `"No matches and I'm already restless!" she wrote.`,
+    grind: {
+      home: 'She delivered the verdict still in her kit. "Six days. All of them count."',
+      away: 'She wrote before her bags were unpacked. "Six days. I want six more."',
+    },
+    light: {
+      home: 'She had the free morning filled before it arrived. "A plan. I need a plan."',
+      away: 'She wrote at seven on her morning off. "Awake anyway. Might hit."',
+    },
+    freshBody: {
+      home: 'She did not want the session to end. "Again. One more basket. Again."',
+      away: 'She wrote from the court, mid-session. "Do not touch anything. It all works."',
+    },
+    exams: {
+      home: 'She stacked textbooks where the racquets live. "One hour on court. One."',
+      away: 'She wrote from the library steps. "Two down. Do not ask about the third."',
+    },
+    vacation: {
+      home: 'By day three she was juggling a ball off the wall. "I know. I know. Resting."',
+      away: 'She wrote on the last day: "Rested. Officially. Book things."',
+    },
+    restingKnock: {
+      home: 'She did wall-sits while the part rested. "The rest of me is not injured."',
+      away: 'She listed everything she trained instead. "The week is not wasted."',
+    },
+    pushingKnock: {
+      home: 'She refused to make the part the story. "It held. Ask about my backhand."',
+      away: '"Held. Playing on," she wrote, ahead of the question.',
+    },
+    injured: {
+      home: 'She negotiated with the diagnosis at dinner. "There has to be a faster way."',
+      away: 'She wrote straight from the clinic. "Fine. New plan. Watch me."',
+    },
+    tired: {
+      home: 'The kit bag stayed where she dropped it. "Empty," she said.',
+      away: 'She wrote without any of her usual punctuation. "Tired. Real tired."',
+    },
   },
   quiet: {
-    grind: '"Hard enough," she said. She named the hours, not the week.',
-    light: '"The court was free," she said, when asked how she spent it.',
-    freshBody: '"Better today," she said. Nothing further.',
-    exams: '"The papers are done," she said. Nothing about how they went.',
-    vacation: 'Asked about the break, she said: "It was quiet." Nothing more.',
-    restingKnock: '"The court can wait," she said. That was the whole answer.',
-    pushingKnock: '"Manageable," she said. No second sentence followed.',
-    injured: '"When does rehab start?" she asked. Nothing else.',
-    tired: `"Just tired," she said. Two words did the whole week's work.`,
-    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Can we keep it small?" she asked.`,
-    offSeason: 'She said it by message and left it there: "Quiet here."',
+    grind: {
+      home: 'She answered with the schedule. "Monday to Saturday. Two sessions most days."',
+      away: 'She forwarded the training plan without comment. "Done. All of it."',
+    },
+    light: {
+      home: 'She came back with library books and said only, "The court was free."',
+      away: 'She sent a photograph of a coffee and one line: "Quiet morning."',
+    },
+    freshBody: {
+      home: 'She re-gripped two racquets, unasked. "They should be ready," she said.',
+      away: '"Fresh," she wrote, and booked an extra court for the morning.',
+    },
+    exams: {
+      home: 'The desk light stayed on late all week. "The papers are on schedule," she said.',
+      away: '"Exams this week. Court on Friday," she wrote.',
+    },
+    vacation: {
+      home: 'She spent it reading and returned the books herself. "It was quiet," she said.',
+      away: 'She sent a photo of a full bookshelf, then one line: "Back Monday."',
+    },
+    restingKnock: {
+      home: 'She moved her sessions to the gym, unasked. "The court can wait," she said.',
+      away: '"Gym week. Court next week," she wrote, and attached nothing.',
+    },
+    pushingKnock: {
+      home: 'She iced it after each session, methodically. "Manageable," she said.',
+      away: '"Managed it. Trained full," she wrote, the ice pack in the photo\'s corner.',
+    },
+    injured: {
+      home: '"When does rehab start?" she asked, pen already on the calendar.',
+      away: '"Rehab booked," she wrote, and answered the schedule questions only.',
+    },
+    tired: {
+      home: '"Just tired," she said, and for once let the kettle be someone else\'s job.',
+      away: '"Tired. Early night," she wrote, and the phone stayed dark after eight.',
+    },
   },
   deep: {
-    grind: '"It was a lot," she said, and not until it was over.',
-    light: '"Sunday was mine." She did not say what she did with it.',
-    freshBody: '"Ready," she said before the first session.',
-    exams: '"Done." She said it about the exams and nothing else.',
-    vacation: '"It helped." She said so on the last day and not before.',
-    restingKnock: '"Long week," she said on Thursday.',
-    pushingKnock: '"It is holding." She said it once, on Monday, and not again.',
-    injured: '"How long?" she asked. Nothing else until the answer.',
-    tired: '"Nothing left." She waited until Sunday to say it.',
-    birthday: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "No fuss," she said. She let the cake wait.`,
-    offSeason: '"It is over for now." She did not say if that was good or bad.',
+    grind: {
+      home: 'She said it after the house went quiet. "It was a lot. It was supposed to be."',
+      away: 'She called on Sunday, when it was over. "It was a lot. I am glad it was."',
+    },
+    light: {
+      home: '"Sunday was mine." She kept what she did with it.',
+      away: 'She kept the call short on her day off. "I took the whole Sunday. I needed it."',
+    },
+    freshBody: {
+      home: '"Ready," she said before the first ball. She looked it.',
+      away: 'She sent one line the night before her session: "Ready. Finally."',
+    },
+    exams: {
+      home: 'She said it with the last paper handed in. "Done. I want the court back."',
+      away: 'She called after the final exam, not before. "Done. Now I can think again."',
+    },
+    vacation: {
+      home: '"It helped." She said it on the last evening, once the bags were packed again.',
+      away: 'She called at the end of it, not during. "It helped. I did not expect it to."',
+    },
+    restingKnock: {
+      home: '"The court can wait me out." She said it once and kept to it.',
+      away: 'She kept the call short. "It needs the week. So it gets the week."',
+    },
+    pushingKnock: {
+      home: '"It is holding." She said it on Monday and did not update it.',
+      away: 'She sent one message midweek: "Holding. Do not worry yet."',
+    },
+    injured: {
+      home: '"How long?" she asked. She wrote the answer down and said nothing after it.',
+      away: 'She called with the diagnosis herself. "It is what it is. I will do the work."',
+    },
+    tired: {
+      home: '"Nothing left." She said it standing in the doorway, already turned to go.',
+      away: 'She called late and kept it short. "Nothing left this week. There will be."',
+    },
   },
 }
 
-/** The cross: four voices × eleven moments, each line taking its own moment's licence AND her own. */
+/** The two rail-scoped moments, one line per voice each – the birthday is a house day by its own
+ *  licence (`domestic`), the off-season an away one. The kept-byte-identical lines are the three
+ *  the review's craft already matched. */
+const BIRTHDAY_LINES: Record<Temperament, WeekNote['text']> = {
+  sunny: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Save me the corner piece," she said.`,
+  fiery: (f) => `${capitalise(ageWord(f.birthdayAge))} today. She planned it by eight. "Cake first, questions later."`,
+  quiet: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "Can we keep it small?" she asked.`,
+  deep: (f) => `${capitalise(ageWord(f.birthdayAge))} today. "No fuss," she said. She let the cake wait.`,
+}
+
+const OFF_SEASON_LINES: Record<Temperament, WeekNote['text']> = {
+  sunny: '"Nothing to play for a while, so I am learning one dish properly," she wrote.',
+  fiery: '"Off-season. Already restless. Send tournaments," she wrote.',
+  quiet: '"Quiet here. Reading. Do not rescue me," she wrote.',
+  deep: 'She called once it felt over. "Done for now. Ask me in January."',
+}
+
+/** Which weeks a rail's words are honest on – `home` is `underOneRoof`, the `domestic`
+ *  docstring's own predicate; `away` is its negation. The claim carries the same fact for the
+ *  honesty pin to re-derive. */
+const RAIL_LICENSE: Record<VoiceRail, (f: DiaryFacts) => boolean> = {
+  home: (f) => underOneRoof(f),
+  away: (f) => !underOneRoof(f),
+}
+
+/** The cross: four voices × (nine railed moments × two rails + two scoped moments) = 80 lines,
+ *  each taking its moment's licence AND her voice's AND its rail's. Total by type – a missing
+ *  variant is a compile error before it is a test failure. */
 function voicedNotes(): WeekNote[] {
-  return (Object.keys(VOICE_LINES) as Temperament[]).flatMap((voice) =>
-    (Object.keys(MOMENTS) as SpokenMoment[]).map((moment) => ({
-      text: VOICE_LINES[voice][moment],
-      claims: { ...MOMENTS[moment].claims, voice, closeBond: true },
-      license: (f: DiaryFacts) => voiceOf(voice)(f) && MOMENTS[moment].license(f),
-    })),
+  const railed = (Object.keys(VOICE_LINES) as Temperament[]).flatMap((voice) =>
+    (Object.keys(VOICE_LINES[voice]) as RailedMoment[]).flatMap((moment) =>
+      (['home', 'away'] as VoiceRail[]).map((rail) => ({
+        text: VOICE_LINES[voice][moment][rail],
+        claims: { ...MOMENTS[moment].claims, voice, rail, closeBond: true as const },
+        license: (f: DiaryFacts) => voiceOf(voice)(f) && RAIL_LICENSE[rail](f) && MOMENTS[moment].license(f),
+      })),
+    ),
   )
+  const scoped = (Object.keys(BIRTHDAY_LINES) as Temperament[]).flatMap((voice) => [
+    {
+      text: BIRTHDAY_LINES[voice],
+      claims: { ...MOMENTS.birthday.claims, voice, rail: 'home' as const, closeBond: true as const },
+      license: (f: DiaryFacts) => voiceOf(voice)(f) && RAIL_LICENSE.home(f) && MOMENTS.birthday.license(f),
+    },
+    {
+      text: OFF_SEASON_LINES[voice],
+      claims: { ...MOMENTS.offSeason.claims, voice, rail: 'away' as const, closeBond: true as const },
+      license: (f: DiaryFacts) => voiceOf(voice)(f) && RAIL_LICENSE.away(f) && MOMENTS.offSeason.license(f),
+    },
+  ])
+  return [...railed, ...scoped]
 }
 
 /** A flat-pool line on an ordinary training week – rows 1-6 of §D5. */
@@ -1053,6 +1219,43 @@ export const WEEK_NOTES: readonly WeekNote[] = [
   // SELECTS between her voice and the shared flat pool instead of multiplying it. Eleven moments ×
   // four voices × three registers × four bands would be 528 lines; these are 52.
   ...voicedNotes(),
+  // --- THE FALLIBLE PARENT (wave B, B4 – the 10.09 editorial ruling made six lines) ------------
+  //
+  // ⚠ THE RULED BOUNDARY: fallible in INTERPRETATION AND TIMING, never in fact. Each line admits a
+  // miss – the wrong question first, the want heard as a promise, the quiet misread – and asserts
+  // nothing about the world its claims do not carry. His self-doubt is his own journal's licence;
+  // the honesty pins keep guarding every world-fact exactly as before.
+  {
+    text: 'We said the part would hold because we wanted it to. She heard the want.',
+    claims: { pushingKnock: true, notTravellingWeek: true },
+    license: (f) => notTravellingWeek(f) && f.injured === null && f.knockChoice === 'push',
+  },
+  {
+    text: 'We asked about the court first, the papers second. She noticed the order.',
+    claims: { exams: true, notTravellingWeek: true },
+    license: (f) => notTravellingWeek(f) && f.examsWeek && f.injured === null,
+  },
+  {
+    text: 'We called it a good sign that she was quiet. It was not that kind of quiet.',
+    claims: { tired: true, notTravellingWeek: true, register: 'low' },
+    license: (f) =>
+      plainTraining(f) && lowWeek(f) && (f.conditionBand === 'worn' || f.conditionBand === 'drained'),
+  },
+  {
+    text: 'We planned her week off for her. She would have planned it differently.',
+    claims: { vacation: true, notTravellingWeek: true },
+    license: (f) => notTravellingWeek(f) && f.vacationWeek && f.injured === null,
+  },
+  {
+    text: 'We remembered the date and misremembered the wish. She let it pass.',
+    claims: { birthday: true, domestic: true, notTravellingWeek: true },
+    license: (f) => notTravellingWeek(f) && underOneRoof(f) && f.birthdayAge !== null && f.injured === null,
+  },
+  {
+    text: 'We filled her free morning with an errand. It had been free for a reason.',
+    claims: { light: true, notTravellingWeek: true },
+    license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //
   // ⚠ THIS IS NOT A FIFTH TEMPERAMENT. It is the same girl with her walls up, and the point is that
