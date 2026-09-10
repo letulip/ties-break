@@ -38,7 +38,7 @@
 //
 // Zero engine changes, zero draws of its own.
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
-import { answerFork, answerRetirement, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { upcomingEvents } from '../src/engine/world/snapshot'
 import { DRAW_LEAD_WEEKS } from '../src/engine/season/preview'
 import { TIERS, TIER_LADDER, TIER_SHORT } from '../src/engine/season/calendar'
@@ -59,6 +59,11 @@ const PRESET_ARG = (() => {
 })()
 
 function answerWhateverIsOpen(world: WorldState): void {
+  // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+  // player must not put a number on the scale.
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     answerRetirement(world, world.retirementOffer.reason === 'plateau' || world.retirementOffer.final)

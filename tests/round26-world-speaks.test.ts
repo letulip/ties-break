@@ -42,6 +42,8 @@ import {
   tickWeek,
   toSnapshot,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { ENDINGS } from '../src/engine/ending'
@@ -433,6 +435,10 @@ describe('round 26 #10 (again) – the world speaks on the week he is looking at
         skipTournament(world)
         closeTournament(world)
       }
+      // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
+      // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
+      // cheapest place: a caller that never asked the player must not put a number on the scale.
+      if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
       if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     }
     expect(world.college, 'she never enrolled').toBeNull()

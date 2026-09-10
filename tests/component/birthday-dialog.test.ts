@@ -11,6 +11,7 @@
 // asserted are the engine's own rather than a fixture's.
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 // ⚠ THE APP'S OWN STYLESHEET, IMPORTED FOR ITS `:root` – see the legibility block at the bottom of
 // this file. Without it `var(--text)` resolves to nothing and every colour assertion is vacuous.
@@ -115,7 +116,7 @@ describe('BirthdayDialog – the four presents', () => {
     w.unmount()
   })
 
-  it('⚠ NO WAY OUT THAT IS NOT AN ANSWER – no close button, no dismiss, no overlay click', () => {
+  it('⚠ NO WAY OUT THAT IS NOT AN ANSWER – no close button, no dismiss, no overlay click', async () => {
     // The consequence of «я бы оставил попап на ДР всегда»: if the dialog could be closed, closing it
     // would silently become the "gave nothing" branch. Mutation-verified by wiring `@click.self` on
     // the overlay – the handler assertion below fails.
@@ -125,8 +126,32 @@ describe('BirthdayDialog – the four presents', () => {
     expect(buttons.length, 'exactly four buttons, and all four are presents').toBe(4)
     for (const b of buttons) expect(b.classes()).toContain('birthday-choice')
     expect(w.text()).not.toMatch(/\b(close|cancel|dismiss|not now|later|skip)\b/i)
-    // The scrim has no click handler at all – `@click.self` is deliberately not wired.
-    expect(w.find('.dialog-overlay').attributes('onclick')).toBeUndefined()
+    // ⚠⚠ RE-AIMED 09.09, AND THE OLD FORM WAS VACUOUS. This read
+    // `expect(w.find('.dialog-overlay').attributes('onclick')).toBeUndefined()` – but Vue 3 binds
+    // `@click` with `addEventListener`, so the `onclick` ATTRIBUTE is undefined whatever the
+    // template says. Measured while wave 2 built the same law into its own dialog: wiring
+    // `@click.self` on that overlay left every case in its file GREEN under the attribute form. So
+    // the sentence above this file has always made – «mutation-verified by wiring `@click.self`» –
+    // was not true of this assertion, and the scrim half of the law has been unguarded since it
+    // shipped.
+    // ⚠ The honest form dispatches a REAL click at the scrim and at the card and asserts that
+    // nothing was answered. It goes red on exactly the mutation the old one was supposed to catch.
+    const sent: string[] = []
+    useGameStore().chooseGift = async (giftId: string) => {
+      sent.push(giftId)
+      await Promise.resolve()
+    }
+    // ⚠ THROUGH THE WRAPPER, NOT `document`. `mount()` renders into a DETACHED container, so
+    // `document.querySelector('.dialog-overlay')` is null here and an optional-chained dispatch on it
+    // is a second vacuous assertion wearing a fix. Caught by mutation, which is the only reason this
+    // line reads the way it does.
+    for (const sel of ['.dialog-overlay', '.dialog-card']) {
+      const el = w.find(sel)
+      expect(el.exists(), `${sel} has to be in the tree for this assertion to mean anything`).toBe(true)
+      el.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    }
+    await nextTick()
+    expect(sent, 'clicking the scrim or the card must not answer for him').toEqual([])
     w.unmount()
   })
 

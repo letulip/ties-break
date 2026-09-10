@@ -38,7 +38,7 @@
  */
 import { openCareer, stepCareerWeek, PRESETS, POLICIES, type Preset, type Policy } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, computeLossStreak, seasonIndexOf, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, computeLossStreak, seasonIndexOf, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { KID_ID } from '../src/engine/world/constants'
 import type { TierId } from '../src/engine/season/types'
@@ -230,6 +230,11 @@ function runCareer(cell: string, preset: Preset, index: number): Career {
       }
     }
 
+    // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+    // player must not put a number on the scale.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 

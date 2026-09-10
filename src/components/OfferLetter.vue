@@ -245,7 +245,9 @@ const adExclusivityLine = computed(() => {
   const c = adTerms.value.category
   // ⭐ ROUND 39 #3 – the lifetime clause carries its own whole sentence: there is no term word to
   // open with, because there is no term. DRAFT copy.
-  if (adLifetime.value) return 'From signing, her name is with us for life – one of these is ever written, and it does not run out.'
+  // ⭐ 10.09 – the delegated tone pass («посмотри на наш общий тон-оф-войс сам»): one word added,
+  // matching the capstone arm's own «only ever one» idiom. Still DRAFT; his in-game read stands.
+  if (adLifetime.value) return 'From signing, her name is with us for life – only one of these is ever written, and it does not run out.'
   if (!c) return `${adTermWord.value} from signing, her face is with us – and in no other campaign while that runs.`
   if (c === 'capstone') return `${adTermWord.value} from signing, her face is with us – the house deal of her career, and there is only ever one of these.`
   const trade: Record<string, string> = {

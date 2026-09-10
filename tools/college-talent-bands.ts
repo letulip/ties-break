@@ -38,7 +38,7 @@ import {
   median,
   type Preset,
 } from './econ-bench'
-import { answerFork, answerRetirement, chooseGift, kidAgeExact, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import {answerFork, answerRetirement, chooseGift, kidAgeExact, pendingBirthday, resumeFromCollege, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { ceilingOf } from '../src/engine/academy'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
 // world/college.ts could stop importing the aggregate projection layer. Same function.
@@ -223,6 +223,7 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     // caller that never asked the player, and the cheapest open place «is the only default that
     // cannot be read as advice». The tier spread was measured separately (decisions.md 17.08:
     // the coaching is worth +0 / +8 / +2 on the top-100 row) and is not this file's question.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     answerFork(world, 'college')
     // ROUND 24 #5: the answer reserves – the gap year to the September departure is walked on the
     // arm's own policy step, so the college arm plays its last junior season exactly as a player's
@@ -237,6 +238,7 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     endedInCollege = world.ending ? world.ending.type : null
     exitWeek = world.week
   } else {
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     answerFork(world, 'continue')
     // ROUND 24 #5: the college arm now exits at DEPARTURE + four years (the gap year is played on
     // both arms), so the tour arm's like-for-like exit is the same calendar week – the next
@@ -271,6 +273,11 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
   if (arm === 'tour' || graduated) {
     while (world.ending === null && ageOf(world) < TO_AGE) {
       stepCareerWeek(world, rng, POLICY)
+      // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+      // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+      // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+      // player must not put a number on the scale.
+      if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
       if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
       if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
       note()

@@ -34,7 +34,7 @@ Programme rows: [the-r2-programme.md](the-r2-programme.md).
 | item | state | where it stands |
 | --- | --- | --- |
 | **R2-14 reasonable-player arms** | **open, no executor** | DI2's his-cadence policy standardised into the bench suite, at the next bench run – the only R2 item still unbuilt |
-| **R2-16 one adult decision hers** | **Parked – his pause** | accepted as E1's design; waits on private-life steps 1–2 by his own 22.08 word |
+| **R2-16 one adult decision hers** | ⚙ **Shipped 09.09 (wave 2)** | the pause is over on its own terms: her want at the fork is derived, the parent responds, and no second opinion system was grown |
 | Wave-5 hygiene list | Later | rolling, folded into [the-quality-rig.md](the-quality-rig.md) |
 
 ⚠⚠ **THIS SECTION WAS WRONG ABOUT ITSELF UNTIL 26.08, AND IN THE DIRECTION THAT MATTERS – it listed
@@ -88,7 +88,7 @@ and are gone from this list. Rounds 4, 6, 9, 12, 13, 18, 19, 20, 21 and 23 have 
 **Round 5** ([round-5.md](../rounds/round-5.md)) – four.
 
 - Player-uuid friendly exchange; no trace in `src/`. **Later** · [modes-and-the-prologue.md](modes-and-the-prologue.md) #6
-- Relationship/trust UI – absorbed into the private-life layer, which is unbuilt. **Next** · [the-private-life-layer.md](the-private-life-layer.md) #6
+- Relationship/trust UI – absorbed into the private-life layer, whose ⚙ **steps 1–2 are now built** (`spirit`, `bond`, `temperament` behind v72; the beat surface behind v73). ⚠ The row stays open on purpose: what shipped is deliberately NOT a trust UI – the fog law forbids a meter, and the relationship speaks through her face, her words and the diary's bands instead. Steps 3–8 are unbuilt. **Next** · [the-private-life-layer.md](the-private-life-layer.md) #6
 - Attend-vs-watch-on-TV parenting; unpriced. **Later** · [modes-and-the-prologue.md](modes-and-the-prologue.md) #7
 - The wealthy-track academy invitation – the academy that shipped is the need-based scholarship, the other side of the ladder. **open, unindexed**
 

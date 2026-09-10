@@ -25,6 +25,8 @@ import {
   resumeFromCollege,
   skipTournament,
   toSnapshot,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -215,6 +217,7 @@ function answerLeagueReveal(world: WorldState): void {
 function walkCollege(at: { world: WorldState; rng: Rng; label: string }): FreezeReport | null {
   const world = structuredClone(at.world)
   const rng = at.rng
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   answerFork(world, 'college')
   for (let gapW = 0; gapW < 54 && world.ending === null; gapW++) stepCareerWeek(world, rng, POLICIES[0])
   const college = world.college

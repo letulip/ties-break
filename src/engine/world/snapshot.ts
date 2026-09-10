@@ -89,6 +89,7 @@ import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
+import { buildLifeBeatPrompt } from './lifeBeat'
 import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
@@ -1683,6 +1684,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // `advanceWeeks` blocks on, so the dialog cannot be missing on a week the engine has stopped.
     // `buildBirthdayPrompt` re-checks the predicate itself, so this is one call rather than two.
     birthdayPrompt: buildBirthdayPrompt(world),
+    // ⭐⭐ v73 – null while nothing is pending, which is every career until wave 2 step 3 raises
+    // the first beat. Assembled engine-side, never stored (buildBirthdayPrompt's own contract).
+    lifeBeatPrompt: buildLifeBeatPrompt(world),
     // ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK. Same contract as the two prompts above and
     // for the same reason: non-null on exactly the weeks `shootClashOpen` is true, which is the
     // predicate `advanceRefusal` blocks on, so the card cannot be missing on a week the engine has

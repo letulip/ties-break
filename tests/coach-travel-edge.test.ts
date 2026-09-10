@@ -44,9 +44,29 @@ import {
   PRE_V69,
   PRE_V71,
   PRE_V72,
+  PRE_V73,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v73: rolling the schema back to 72 – and dropping the key v73 added – reproduces the v72 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 2 DID TO A FROZEN CAREER, AS AN IDENTITY – the
+    // wave-1 case directly below, repeated one version up. v73 appends ONE key to `createWorld`'s
+    // literal, `lifeLog`; every career here carries it and every one of them carries it EMPTY, since
+    // the only beat this wave raises is the fork's own opinion and the fork opens at week ~241
+    // against this walk's 156. Peel that key, roll the number back, and the ENTIRE serialisation
+    // returns byte for byte – `rngMain`, `results`, `events`, the wallet, the body, all eighty keys.
+    //
+    // ⭐⭐ AND IT IS THE STOP-AFTER-ANY-STEP PIN. The wave gave `advanceRefusal` a member, `answerFork`
+    // a refusal and the fork's opening tick a want-draw; if any of the three could bite before the
+    // fork, a career of 156 weeks would have a different calendar or a different `bond` and nothing
+    // below could reproduce. It reproduces on all three, which is «a player who never reaches the
+    // fork loses nothing» measured rather than argued.
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    expect(careerHashAtSchema(5, 0, 72), '25k · middle coach · grinder').toBe(PRE_V73.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 72), '120k · elite coach · grinder').toBe(PRE_V73.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 72), '8k · self-coached · player').toBe(PRE_V73.selfTravelling)
+  })
+
   it('⭐⭐⭐ v72: rolling the schema back to 71 – and dropping the three keys v72 added – reproduces the v71 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 1 DID TO A FROZEN CAREER, AS AN IDENTITY – and it
     // is the strongest form of this file's per-key protocol rather than a substitute for it. v72

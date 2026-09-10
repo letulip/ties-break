@@ -53,7 +53,7 @@ import {
   type Policy,
 } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, createWorld, seasonIndexOf, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, createWorld, seasonIndexOf, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { fieldProsOf, kidPoints, rankingFor, tableSize } from '../src/engine/world/ladder'
 import { autoEndingViewOf, cheapestEntryFeeCents } from '../src/engine/world/endings'
 import { bankruptcyDue } from '../src/engine/ending'
@@ -233,6 +233,11 @@ function runCareer(cell: string, preset: Preset, index: number, policy: Policy):
         rank: rankBefore ?? tableSize(world, 'wta'),
       })
     }
+    // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+    // player must not put a number on the scale.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
     // Guarded on having been PAID – money-decomposition's rule against the point-less dense-rank-1

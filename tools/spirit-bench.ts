@@ -1,5 +1,13 @@
-// THE SPIRIT BENCH (wave 1, runbook §6) - `npm run bench:spirit`. Same shape as the econ / fatigue /
-// knock / radar benches: a measurement harness, run by hand, never part of a gate.
+// THE SPIRIT BENCH (wave 1, runbook §6; wave 2's bench duty, runbook §7) - `npm run bench:spirit`.
+// Same shape as the econ / fatigue / knock / radar benches: a measurement harness, run by hand,
+// never part of a gate.
+//
+// ⭐⭐⭐ WHAT WAVE 2 ADDED, AND WHAT IT FOUND (09.09, who-she-is §4a-w2). Bar 3 was re-aimed to wave 2
+// by the owner's ruling, so the two arms now ANSWER her at the fork instead of listening: care backs
+// her want and matches it, grind presses and contradicts. The census in section [3] then measured
+// that the arms never run - her opinion is raised by the tick that opens the fork, week 242, and the
+// bar grid ends at week 208 with bar 3's own reading at week 156. `--fork` walks past 242 to price
+// the deltas where they land; that row is a diagnostic and is not a bar.
 //
 // ⚠⚠ WHAT THIS FILE IS FOR, AND WHAT IT IS FORBIDDEN TO DO. CLAUDE.md invariant 5 - «tuning is
 // measured, not guessed» - and the runbook's own sentence: **a bar that fails is a finding for the
@@ -104,12 +112,21 @@ import {
   // heal time through the engine's own function rather than as 25/rate).
   temperamentIntensity,
   accrueSpirit,
+  // ⚠⚠ WAVE 2 - THE FOUR THE BEAT ARMS NEED. `answerLifeBeat` is what makes the two arms ANSWER her
+  // rather than leave her standing there, `answerFork` is where the second delta lands, and
+  // `forkWantOf` / `FORK_WANT_ANSWER` are how the bench knows what "matching her want" IS without
+  // re-deriving her want (and without a second reading that could disagree with the engine's).
+  pendingLifeBeat,
+  answerLifeBeat,
+  answerFork,
+  forkWantOf,
+  FORK_WANT_ANSWER,
 } from '../src/engine/world'
 import type { Temperament, WorldState } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { isExamWeek, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { schoolIsOver } from '../src/engine/kidLife'
+import { schoolIsOver, schoolEndWeek } from '../src/engine/kidLife'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 
 // =================================================================================================
@@ -117,12 +134,32 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 // =================================================================================================
 
 const SEASONS = 4
-const WEEKS = SEASONS * WEEKS_PER_YEAR
-/** Season 3's LAST week - the moment bar 3 reads bond at. */
+/** Season 3's LAST week - the moment bar 3 reads bond at. ⚠ THE SAME NUMBER IN EVERY MODE below:
+ *  bar 3 is «the gap AT SEASON 3» and a diagnostic that moved its reading would be answering a
+ *  different question under the bar's name. */
 const SEASON_3_WEEK = 3 * WEEKS_PER_YEAR
 const SEED_COUNT = seedCount()
 const ARMS = ['care', 'grind'] as const
 type Arm = (typeof ARMS)[number]
+
+/** ⭐⭐⭐ WAVE 2 - THE WEEK HER OPINION EXISTS, DERIVED AND NEVER QUOTED. `raiseForkOpinion` is
+ *  called by the tick that opens the fork (`world/endings.ts`), the fork opens on `schoolEndWeek`,
+ *  and the bench's profile is `DEFAULT_PROFILE` with only `background` overridden - so this is the
+ *  earliest week any career on this grid can hold a `'fork-opinion'` row.
+ *
+ *  ⚠⚠ IT IS 242, THE DEFAULT GRID ENDS AT 208, AND BAR 3 READS AT 156. That ordering is the whole
+ *  of what section [3] found in wave 2 and it is computed here rather than asserted, so a later
+ *  birth-month or school-length change moves the print instead of silently invalidating it. */
+const FORK_WEEK = schoolEndWeek(DEFAULT_PROFILE.birthMonth)
+
+/** ⚠ THE DIAGNOSTIC GRID, `--fork`, AND IT IS NOT THE BAR GRID. The default walk is the runbook's
+ *  four seasons, unchanged from wave 1, and every bar in this file is read off it. `--fork` walks
+ *  one week past `FORK_WEEK` INSTEAD, for one purpose only: to price what the wave-2 deltas are
+ *  worth on the week they land, since on the bar grid they never land at all. Bars 1/2/4/5/6 read a
+ *  longer week series in that mode and are NOT comparable with wave 1; bar 3 is, because its reading
+ *  is week 156 in both and the two walks are byte-identical up to week 208. */
+const FORK_MODE = process.argv.includes('--fork')
+const WEEKS = FORK_MODE ? FORK_WEEK + 1 : SEASONS * WEEKS_PER_YEAR
 
 /** `--seeds=N` for a smoke run; the grid the bars are read off is the runbook's 32. */
 function seedCount(): number {
@@ -161,6 +198,20 @@ interface Career {
   heavyWeeks: number
   /** every birthday ask she raised, by gift id */
   asks: string[]
+  /** ⭐⭐ WAVE 2's CENSUS, AND IT EXISTS TO MAKE A NULL RESULT FALSIFIABLE. CLAUDE.md's rule -
+   *  «before you believe a null result, prove the arm contains both the change and its reader» - is
+   *  unprovable from a bond number alone: an arm that answers her and an arm whose answering code
+   *  never runs produce the SAME gap if the beat is out of the grid's reach. These four counters are
+   *  what tells those two apart, and section [3] prints them beside the bar. */
+  /** `'fork-opinion'` rows this career ever held (0 or 1 - the fork is raised once). */
+  beatsRaised: number
+  /** what he SAID, by option id, in `lifeLog` order - `back` in the care arm, `press` in grind. */
+  beatAnswers: string[]
+  /** what he DID at the fork, priced against her recorded want, or null if he never answered one. */
+  forkCongruence: 'with' | 'against' | null
+  /** bond immediately after the fork was answered - the week the two wave-2 deltas have landed.
+   *  NaN for every career that never reached one, which on the bar grid is all of them. */
+  bondAtFork: number
   weeks: number
   /** null when she played all four seasons; the ending's own type when she did not */
   endedAs: string | null
@@ -185,6 +236,10 @@ function runCareer(seed: string, arm: Arm, temperament: Temperament): Career {
     vacations: 0,
     heavyWeeks: 0,
     asks: [],
+    beatsRaised: 0,
+    beatAnswers: [],
+    forkCongruence: null,
+    bondAtFork: Number.NaN,
     weeks: 0,
     endedAs: null,
   }
@@ -217,6 +272,11 @@ function runCareer(seed: string, arm: Arm, temperament: Temperament): Career {
       decideKnock(world, arm === 'care' ? 'rest' : 'push')
     }
     answerTheBirthday(world, career)
+    // ⭐⭐⭐ WAVE 2 - AND THE ORDER OF THESE TWO IS THE ENGINE'S, NOT THE BENCH'S. `answerFork`
+    // refuses while her row is unanswered (`FORK_UNHEARD_REFUSAL`), so the words come before the
+    // deed here because they come before the deed in the world.
+    answerTheLifeBeat(world, arm, career)
+    answerTheForkTheWayThisArmWould(world, arm, career)
 
     // Bond is read AFTER the week's decisions - "what he has built with her by the end of week W".
     career.bond.push(world.bond)
@@ -288,6 +348,68 @@ function answerTheBirthday(world: WorldState, career: Career): void {
     chooseGift(world, granted)
   } catch {
     /* a latch we cannot answer behind - the row simply does not appear */
+  }
+}
+
+// =================================================================================================
+// ⭐⭐⭐ WAVE 2 - THE TWO ARMS ANSWER HER, AND THEY ANSWER HER DIFFERENTLY
+// =================================================================================================
+//
+// ⚠⚠ WHY THIS IS NOT `answerLifeBeat(world, 'listen')`. Forty tools and several suites gained
+// `if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')` when the fork refusal landed, because
+// every harness that walks a career to the fork must now answer her before it may answer the fork.
+// That line is correct for a harness measuring something else and WRONG here: `beatListened` is 0 on
+// the bond table, so a bench that listened in both arms would be measuring a NEUTRAL world and
+// reporting wave 1's number back with a wave-2 date on it. This bench is the one place the answer is
+// itself the variable, so the arms answer deliberately - and the census counters above are what
+// prove the code ran rather than merely existing.
+//
+//   care    backs her want (+2) and MATCHES it at the fork (+3)      = +5 over the two deltas
+//   grind   presses the other way (−2) and CONTRADICTS it (−4)       = −6
+//
+// 11 raw points of arm separation, which is the whole of what wave 2 can be worth to bar 3.
+
+/** WHAT HE SAYS. One answer per arm, from `LIFE_BEAT_OPTIONS`' own ids, and no third case: `listen`
+ *  is deliberately in neither arm (see the block above). */
+function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
+  const pending = pendingLifeBeat(world)
+  if (pending === null) return
+  career.beatsRaised++
+  const said = arm === 'care' ? 'back' : 'press'
+  try {
+    answerLifeBeat(world, said)
+    career.beatAnswers.push(said)
+  } catch {
+    /* a terminal latch – `guardNotEndedForGood` refuses, and the row stays open for nobody */
+  }
+}
+
+/** ⭐⭐ WHAT HE DOES, priced against the want the ENGINE recorded rather than against a want the
+ *  bench re-drew - `forkWantOf` reads the `lifeLog` row, so the two readings cannot disagree.
+ *
+ *  ⚠ THE CARE ARM MATCHES HER, WHATEVER SHE SAID, `'stop'` INCLUDED. Doing what she asked is the
+ *  definition of the arm, and a bench that quietly declined to match the one want that ends a career
+ *  would be scoring the care arm on an answer it did not give.
+ *
+ *  ⚠⚠ THE GRIND ARM'S CONTRADICTION NEVER PICKS `'stop'`, AND THAT IS A MEASUREMENT DECISION WITH A
+ *  REASON. Two of the three fork answers end the career; `'stop'` ends it for good. A contradicting
+ *  arm that sometimes retired her and sometimes did not would fold "he took the decision away" and
+ *  "the career stopped here" into one number, and bar 3 would again be measuring two things at once
+ *  (the same argument the header makes for the identical entry policy). So the grind arm keeps her
+ *  playing when she wanted anything else, and sends her to college when she wanted the tour - the
+ *  contradiction in both directions, and never the ending. */
+function answerTheForkTheWayThisArmWould(world: WorldState, arm: Arm, career: Career): void {
+  if (world.fork === null || world.fork.answer !== null) return
+  const want = forkWantOf(world)
+  if (want === null) return
+  const hers = FORK_WANT_ANSWER[want]
+  const answer = arm === 'care' ? hers : hers === 'continue' ? 'college' : 'continue'
+  try {
+    answerFork(world, answer)
+    career.forkCongruence = answer === hers ? 'with' : 'against'
+    career.bondAtFork = world.bond
+  } catch {
+    /* her row is still open, or the fork closed under us - either way nothing was answered */
   }
 }
 
@@ -805,12 +927,18 @@ const weeksOf = (cs: readonly Career[], pick: (c: Career) => number[]) => cs.fla
 
 const full = careers.filter((c) => c.weeks === WEEKS).length
 rule(
-  `SPIRIT BENCH – wave 1, runbook §6 · ${SEED_COUNT} seeds × ${SEASONS} seasons × {care, grind} × 4 temperaments\n` +
+  `SPIRIT BENCH – runbook §6 (wave 1's six bars) + §7 (wave 2's beat arms) · ${SEED_COUNT} seeds × ` +
+    `${FORK_MODE ? `${WEEKS} weeks` : `${SEASONS} seasons`} × {care, grind} × 4 temperaments\n` +
+    (FORK_MODE
+      ? `⚠⚠ --fork: THE DIAGNOSTIC GRID, NOT THE BAR GRID. The walk runs to week ${WEEKS} so the fork at ${FORK_WEEK} is\n` +
+        `   reached and the wave-2 deltas can be priced. Bar 3 still reads week ${SEASON_3_WEEK} and is comparable; bars\n` +
+        `   1/2/4/5/6 read a longer week series here and are NOT comparable with the four-season run.\n`
+      : '') +
     `${careers.length} careers, ${careers.reduce((a, c) => a + c.weeks, 0).toLocaleString('en-US')} resolved weeks · ` +
     `constants read from ECONOMY.spirit / ECONOMY.bond, none changed\n` +
     // ⚠ A CAREER THAT ENDED EARLY IS A SHORTER ARM, and a season-3 reading taken off one that no
     // longer exists is a lie. Printed rather than assumed, so truncation can never hide in a mean.
-    `careers that ran all ${SEASONS} seasons: ${full}/${careers.length}` +
+    `careers that ran all ${FORK_MODE ? `${WEEKS} weeks` : `${SEASONS} seasons`}: ${full}/${careers.length}` +
     (full === careers.length
       ? ''
       : `  ⚠ ${careers.length - full} ENDED EARLY (` +
@@ -924,6 +1052,73 @@ for (const arm of ARMS) {
   const asks = cs.reduce((a, c) => a + c.asks.length, 0)
   console.log(
     `      ${pad(arm, 8)}knocks ${(knocks / weeks).toFixed(4)}/wk · family weeks ${(vac / weeks).toFixed(4)}/wk · birthdays ${(asks / weeks).toFixed(4)}/wk`,
+  )
+}
+
+// --- 3w2. ⭐⭐⭐ WAVE 2's OWN CENSUS – DID THE ARMS ACTUALLY RUN? ----------------------------------
+//
+// ⚠⚠ THIS BLOCK IS THE ANSWER TO CLAUDE.md's «before you believe a null result, prove the arm
+// contains both the change and its reader». The bond gap above cannot distinguish "the two arms
+// answered her differently and it was worth nothing" from "the answering code never executed". These
+// counters can, and they are printed beside the bar rather than in a comment for exactly that reason.
+console.log(`\n    ⭐ WAVE 2 – THE BEAT ARMS, COUNTED (care backs and matches · grind presses and contradicts)`)
+console.log(
+  `    ${pad('arm', 8)}${padL('careers', 9)}${padL('beats', 8)}${padL('back', 7)}${padL('press', 7)}${padL('listen', 8)}` +
+    `${padL('fork with', 11)}${padL('fork against', 14)}${padL('bond @ fork', 13)}`,
+)
+console.log(`    ${'─'.repeat(77)}`)
+const bondAtFork: Record<Arm, number[]> = { care: perSeed('care', (c) => c.bondAtFork), grind: perSeed('grind', (c) => c.bondAtFork) }
+for (const arm of ARMS) {
+  const cs = of(arm)
+  const answers = cs.flatMap((c) => c.beatAnswers)
+  const forkBond = cs.map((c) => c.bondAtFork).filter((x) => !Number.isNaN(x))
+  console.log(
+    `    ${pad(arm, 8)}${padL(cs.length, 9)}${padL(cs.reduce((a, c) => a + c.beatsRaised, 0), 8)}` +
+      `${padL(answers.filter((a) => a === 'back').length, 7)}${padL(answers.filter((a) => a === 'press').length, 7)}` +
+      `${padL(answers.filter((a) => a === 'listen').length, 8)}` +
+      `${padL(cs.filter((c) => c.forkCongruence === 'with').length, 11)}${padL(cs.filter((c) => c.forkCongruence === 'against').length, 14)}` +
+      `${padL(forkBond.length === 0 ? '–' : mean(forkBond).toFixed(2), 13)}`,
+  )
+}
+console.log(`    ${'─'.repeat(77)}`)
+const beatsFired = careers.reduce((a, c) => a + c.beatsRaised, 0)
+// ⭐⭐ THE ARITHMETIC OF WHAT WAVE 2 IS WORTH, OFF THE CONSTANTS AND NOT OFF A GUESS. Both deltas are
+// per-career and one-shot, so the separation they can add to the gap is a single subtraction.
+const armSpread =
+  ECONOMY.bond.delta.beatBacked +
+  ECONOMY.bond.delta.forkWithHerWant -
+  (ECONOMY.bond.delta.beatPressed + ECONOMY.bond.delta.forkAgainstHerWant)
+console.log(
+  `    the two wave-2 deltas are worth ${ECONOMY.bond.delta.beatBacked} + ${ECONOMY.bond.delta.forkWithHerWant} = ` +
+    `${ECONOMY.bond.delta.beatBacked + ECONOMY.bond.delta.forkWithHerWant} to care and ` +
+    `${ECONOMY.bond.delta.beatPressed} ${ECONOMY.bond.delta.forkAgainstHerWant} = ` +
+    `${ECONOMY.bond.delta.beatPressed + ECONOMY.bond.delta.forkAgainstHerWant} to grind → ${armSpread} raw points of separation, once per career.`,
+)
+if (beatsFired === 0) {
+  // ⚠⚠ THE FINDING WAVE 2 ACTUALLY MADE, PRINTED BY THE INSTRUMENT ITSELF so that it cannot be
+  // mistaken for a quiet pass. Every number in this sentence is derived above, none is quoted.
+  console.log(
+    `    ⚠⚠ NO BEAT FIRED, AND THE ARMS ABOVE THEREFORE MEASURE NOTHING: her opinion is raised by the tick that\n` +
+      `       OPENS THE FORK, which is week ${FORK_WEEK} (schoolEndWeek, birth month ${DEFAULT_PROFILE.birthMonth}); this grid ends at week ${WEEKS};\n` +
+      `       and bar 3 reads bond at week ${SEASON_3_WEEK}. ${FORK_WEEK} > ${WEEKS} > ${SEASON_3_WEEK}, so the wave-2 deltas are ` +
+      `${FORK_WEEK - SEASON_3_WEEK} weeks LATER than\n` +
+      `       the number this bar reports. The gap above is wave 1's, re-measured – not wave 2 failing to move it.\n` +
+      `       ⚠ Run \`npm run bench:spirit -- --fork\` to walk past week ${FORK_WEEK} and price the two deltas where they land.`,
+  )
+} else {
+  const forkGaps = paired(bondAtFork.care, bondAtFork.grind)
+  // ⚠ NaN IS DROPPED FROM THE ARM COLUMNS AND NEVER SUBSTITUTED, on `bondAtSeason3`'s own argument
+  // one screen up: a seed whose careers all ended before the fork contributes no fork reading, and
+  // a mean that swallowed it would be reporting a week those careers never saw. The paired gap
+  // already drops the seed entirely, which is why its n can be smaller than either column's.
+  const defined = (xs: readonly number[]) => xs.filter((x) => !Number.isNaN(x))
+  console.log(
+    `    ⭐ FORK-WEEK READING (diagnostic, NOT bar 3 – bar 3 is week ${SEASON_3_WEEK} and this is week ${FORK_WEEK}):\n` +
+      `       care ${mean(defined(bondAtFork.care)).toFixed(2)} ± ${sem(defined(bondAtFork.care)).toFixed(3)} (n ${defined(bondAtFork.care).length}) · ` +
+      `grind ${mean(defined(bondAtFork.grind)).toFixed(2)} ± ${sem(defined(bondAtFork.grind)).toFixed(3)} (n ${defined(bondAtFork.grind).length}) · ` +
+      `gap ${mean(forkGaps).toFixed(2)} over ${forkGaps.length} paired seeds, 2×SEM ${(2 * sem(forkGaps)).toFixed(3)}\n` +
+      `       ⚠ THIS IS NOT A BAR AND CANNOT BECOME ONE. Bar 3's reading week is the owner's; this row exists only to\n` +
+      `       price what a re-aim would be buying, and it changes no constant.`,
   )
 }
 

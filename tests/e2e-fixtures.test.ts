@@ -1,7 +1,16 @@
 import { describe, it, expect } from 'vitest'
 import { existsSync, statSync } from 'node:fs'
 import { decodeExportFile, decompressWorld, sha256 } from '../src/engine/saveCodec'
-import { SAVE_SCHEMA_VERSION, STARTING_FUNDS_CENTS, maxMainDraws } from '../src/engine/world'
+import {
+  SAVE_SCHEMA_VERSION,
+  STARTING_FUNDS_CENTS,
+  advanceRefusal,
+  answerFork,
+  maxMainDraws,
+  pendingLifeBeat,
+  schoolEndWeek,
+  FORK_UNHEARD_REFUSAL,
+} from '../src/engine/world'
 import { mainStateConsistent } from '../src/engine/rng'
 import { ENDINGS } from '../src/engine/ending'
 import { isSponsorWindowWeek } from '../src/engine/offers'
@@ -297,5 +306,35 @@ describe('e2e fixtures: each is the state its name promises', () => {
     // the age is bounded rather than dropped, so a fixture that regressed to seventeen still fails.
     expect(f.ageYears).toBeGreaterThanOrEqual(ENDINGS.forkAgeYears - 1)
     expect(f.endingType, 'and the fork was genuinely reached and answered').toBe('stopped')
+  })
+
+  it('unheard is parked on an unanswered life beat, with the fork open behind it', async () => {
+    // ⚠ THE ONE ASSERTION IN THIS BLOCK THAT DECODES THE SAVE, and the reason is worth stating: the
+    // state this fixture exists for is not in `FixtureFacts` at all. That sheet is one fixed shape
+    // every fixture shares and every manifest row carries, so adding a `lifeLog` column to all seven
+    // to describe one of them would rewrite six rows to say nothing – and the manifest's own bytes
+    // are pinned by the specs above. So the claim is read off the WORLD, through the same import
+    // door every test in this file uses.
+    //
+    // ⚠ AND IT IS TIED TO THE ENGINE'S OWN PREDICATES, never to the week the search stopped at:
+    // `pendingLifeBeat` is what `advanceWeeks` blocks on, `advanceRefusal` is the gate itself, and
+    // the week is asked of `schoolEndWeek` rather than written as 242. A wave that moves the beat
+    // off the fork's opening tick fails here by name instead of leaving a browser to time out.
+    const world = await decodeExportFile(readFixtureBytes('unheard.tsave'))
+    expect(world.ending, 'the unheard fixture is meant to be a career still being played').toBeNull()
+
+    const pending = pendingLifeBeat(world)
+    expect(pending, 'the unheard fixture is meant to hold a life beat nobody has answered').not.toBeNull()
+    expect(pending!.kind).toBe('fork-opinion')
+    expect(pending!.answer).toBeNull()
+    expect(advanceRefusal(world), 'and it is what the engine refuses to move the week for').toBe('life')
+    expect(world.week).toBe(schoolEndWeek(world.profile.birthMonth))
+
+    // ⭐ THE FORK IS OPEN BEHIND HER, AND REFUSED WHILE SHE STANDS. Both halves matter to
+    // e2e/life-beat.spec.ts: the first is what makes its "no fork answers on the page" step a
+    // REFUSAL rather than an absence, and the second is the wave's contract itself.
+    expect(world.fork, 'the fork is meant to be open behind her').not.toBeNull()
+    expect(world.fork!.answer).toBeNull()
+    expect(() => answerFork(world, 'continue')).toThrow(FORK_UNHEARD_REFUSAL)
   })
 })

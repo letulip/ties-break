@@ -106,7 +106,12 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // by that wave with its full four-part move (bump, append-only migration back-filling 70/70 and
     // DERIVING temperament from the career's own seed, golden fixture v72, e2e fixtures
     // regenerated), never by this line's item. The claim above is untouched.
-    expect(SAVE_SCHEMA_VERSION).toBe(72)
+    // ⚠ AND AGAIN AT v73 (09.09, the private life's wave 2 – `lifeLog`, the record that is also the
+    // queue of beats waiting to be answered), NOT WEAKENED, for the eighth time and for the reason
+    // verbatim: 73 was moved by that wave with its full four-part move (bump, append-only migration
+    // back-filling an empty `lifeLog`, golden fixture v73, e2e fixtures regenerated), never by this
+    // line's item. The claim above is untouched.
+    expect(SAVE_SCHEMA_VERSION).toBe(73)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

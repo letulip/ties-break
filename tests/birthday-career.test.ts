@@ -27,6 +27,8 @@ import {
   pendingBirthday,
   pendingKnock,
   tickWeek,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import {
@@ -242,6 +244,10 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
           asks.push({ week: world.week, id: askedId, eased })
           chooseGift(world, askedId)
         }
+        // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
+        // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
+        // cheapest place: a caller that never asked the player must not put a number on the scale.
+        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (world.ending) break
         tickWeek(world, rng)

@@ -58,6 +58,8 @@ import {
   BIRTHDAY_COLLEGE_BAND,
   BIRTHDAY_DAY_TOGETHER,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
@@ -637,6 +639,10 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
       if (pendingBirthday(world) !== null) answerBirthday(world)
     }
     expect(world.fork, 'the fork was asked by the calendar, not by the fixture').not.toBeNull()
+    // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
+    // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
+    // cheapest place: a caller that never asked the player must not put a number on the scale.
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     answerFork(world, 'college')
     for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
       tickWeek(world, rng)

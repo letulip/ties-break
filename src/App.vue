@@ -73,6 +73,8 @@ import InjuryStopDialog from './components/InjuryStopDialog.vue'
 import KnockDialog from './components/KnockDialog.vue'
 import ShootClashDialog from './components/ShootClashDialog.vue'
 import BirthdayDialog from './components/BirthdayDialog.vue'
+// ⭐⭐ v73 – the private life's wave 2: the beat where she says something and the parent answers.
+import LifeBeatDialog from './components/LifeBeatDialog.vue'
 import TourBriefingDialog from './components/TourBriefingDialog.vue'
 import EndingScreen from './components/EndingScreen.vue'
 // ⭐⭐ ROUND 24 #4 – the last college screen. See `showCollegeDone` for why it reads `world.college`
@@ -1045,6 +1047,12 @@ const showRetirement = computed(() => overlay.value === 'retirement')
 // never happened.
 const showBirthday = computed(() => overlay.value === 'birthday')
 
+// ⭐⭐ v73 – THE LIFE BEAT. Read off `overlay` like every other blocking question, so its place in
+// the queue is `blockingOverlay`'s decision and not this file's – which is round-21 #9's whole point
+// and the reason nothing about WHEN a popup may land is decided here any more. Its own entry there
+// records why it stands between the birthday and the fork.
+const showLifeBeat = computed(() => overlay.value === 'life')
+
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
 //
@@ -1770,6 +1778,13 @@ function reopenTour(): void {
          dismiss – answering IS the exit – but here that is the owner's ruling rather than a
          consequence: the popup fires ALWAYS, so "nothing" has to be a button (see BirthdayDialog). -->
     <BirthdayDialog v-if="showBirthday" />
+
+    <!-- v73: the life beat – she says something, and the parent answers. Like the birthday it emits
+         no event and has no dismiss, and here that is the strongest form of the rule in the app:
+         walking away would answer her by walking away, so every button is an answer and the week
+         stays stopped until one is pressed. Ahead of the fork by `blockingOverlay`'s own entry –
+         the engine refuses the fork while her row is unanswered, so he hears her out first. -->
+    <LifeBeatDialog v-if="showLifeBeat" />
 
     <!-- W2-ENDINGS: the two blocking questions. Neither has a dismiss and neither has a third
          button - answering IS the exit, and until one is answered the engine will not tick a week.

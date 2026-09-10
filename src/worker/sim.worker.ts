@@ -7,6 +7,7 @@ import {
   shootClashOpen,
   pendingBirthday,
   chooseGift,
+  answerLifeBeat,
   replayMainState,
   enterEvent,
   withdrawEvent,
@@ -500,6 +501,14 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     // a double-tap (or a stale dialog on a reloaded save) from recording a second row for one year.
     case 'chooseGift': {
       return mutate(msg.id, msg.baseRevision, (world) => chooseGift(world, msg.giftId))
+    }
+    // ⭐⭐ v73: the parent answers a life beat. Same contract as the birthday above and one reason
+    // more – the beat is HER speaking, so a week a player could tick past would answer her by
+    // walking away. `answerLifeBeat` throws when nothing is waiting and when the option was never
+    // offered, which is what keeps a double-tap or a stale dialog on a reloaded save from recording
+    // an answer this beat never had. ⚠ Never a purchase: no amount reaches the ledger.
+    case 'answerLifeBeat': {
+      return mutate(msg.id, msg.baseRevision, (world) => answerLifeBeat(world, msg.optionId))
     }
     // ⭐⭐ v63, THE SHOP SLICE 1: the parent buys and sells with the family's own money. Nothing here
     // is a gate - `buyAsset` re-derives the professional-era unlock, the already-owned rung, the

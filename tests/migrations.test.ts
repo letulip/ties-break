@@ -558,7 +558,10 @@ describe('save migrations', () => {
     // ⚠ AND AT v72 (09.09, the private life wave 1 – `spirit`, `bond` and `temperament`), for the
     // SEVENTH time and with the claim unchanged once more. The pin follows the ladder's HEAD; it is
     // the head that moves, never the claim, which is about the walk running past the colliding 64.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 72 – past the colliding 64, through 65').toBe(72)
+    // ⚠ AND AT v73 (09.09, the private life wave 2 – `lifeLog`, the beat record that is also the
+    // queue), for the EIGHTH time and with the claim unchanged again: one more rung between the
+    // collision and the head, and nothing about the walk itself moves.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 73 – past the colliding 64, through 65').toBe(73)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

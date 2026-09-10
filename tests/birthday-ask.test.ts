@@ -47,6 +47,8 @@ import {
   meansOfCents,
   MEANS_BANDS,
   type FamilyMeans,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { ENDINGS } from '../src/engine/ending'
@@ -766,6 +768,10 @@ describe('ROUND 26 #4 – the wish is licensed by what the family has', () => {
       const world = createWorld('means-render', { ...DEFAULT_PROFILE, birthMonth: 6, birthDay: 15, coachTier: 'self' })
       const rng = rngFromSeed(world.seed)
       for (let guard = 0; guard < 700; guard++) {
+        // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
+        // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
+        // cheapest place: a caller that never asked the player must not put a number on the scale.
+        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (pendingKnock(world)) decideKnock(world, 'rest')
         const age = pendingBirthday(world)

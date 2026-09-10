@@ -51,6 +51,8 @@ import {
   answerRetirement,
   KID_ID,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { decideKnock } from '../src/engine/world/knock'
 import { advanceRefusal } from '../src/engine/world/multiWeek'
@@ -218,6 +220,7 @@ function walk(path: string, armId: string): Run {
         if (prompt) chooseGift(world, prompt.options[0].id)
         else break
       } else if (refusal === 'fork') {
+        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
         answerFork(world, 'continue')
       } else if (refusal === 'retirement') {
         answerRetirement(world, false)

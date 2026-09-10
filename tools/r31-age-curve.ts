@@ -44,6 +44,8 @@ import {
   resumeFromCollege,
   skipTournament,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { weeksLostSoFar } from '../src/engine/ending'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean } from './econ-bench'
@@ -223,6 +225,7 @@ for (let i = 0; i < CAREERS; i++) {
     let peakAge = 0
     for (let w = 0; w < WEEKS; w++) {
       if (world.fork !== null && world.fork.answer === null) {
+        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
         answerFork(world, arm)
         resolvedAt = world.week
       }

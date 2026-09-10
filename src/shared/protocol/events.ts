@@ -573,6 +573,18 @@ export type StopReason =
    *  SAME year's end under it, and the gift dialog renders on the live Home shell. The next press
    *  finishes the year. It is the one member of this list that both blocking commands raise. */
   | 'birthday'
+  /** ⭐⭐ v73 – A LIFE BEAT IS WAITING AND SHE HAS NOT BEEN ANSWERED (the private life's wave 2).
+   *  BLOCKS, on the birthday's own argument and one of its own: the beat is the moment she says
+   *  something to the parent, and a stop a player can tick past would answer her by walking away.
+   *  `advanceWeeks` refuses to restart while a `lifeLog` row's `answer` is null.
+   *
+   *  ⚠ IT SITS BELOW 'birthday' AND ABOVE 'fork' IN THE PRECEDENCE BELOW, and both halves are the
+   *  ruled contract rather than taste: below the birthday because a birthday is a date that cannot
+   *  move and a beat can wait a week; above the fork because the fork is the DEED and this is her
+   *  telling him what she wants – he has to have heard her before he may answer it, and
+   *  `answerFork` refuses while her row is unanswered so the ordering is the engine's and not the
+   *  dialog's (invariant 1). */
+  | 'life'
   /** W2-ENDINGS: the story has no next week. It outranks everything because its surface REPLACES
    *  the app shell rather than laying a dialog over it – there is nothing behind an epilogue left
    *  to stop for. `advanceWeeks` refuses to tick at all while it is latched. */
@@ -683,6 +695,13 @@ export const STOP_PRECEDENCE: readonly StopReason[] = [
   // championship week. Both college reports rank above it here, which is right twice over: they are
   // NEWS the toast has copy for, while the birthday's surface is the blocking dialog itself.
   'birthday',
+  // ⭐⭐ v73 – THE LIFE BEAT, between the birthday above it and the fork below, and the sandwich is
+  // the whole contract. A birthday is a DATE and cannot be moved, so it leads; a beat is something
+  // she has said and it can wait a week without becoming untrue. And it must outrank the fork,
+  // because the fork is the parent ANSWERING and this is her being heard: the engine refuses
+  // `answerFork` while her row is unanswered, so this line and that refusal are two halves of one
+  // rule rather than a dialog convention anybody could reorder.
+  'life',
   // W2-ENDINGS. The fork and the natural end's offer sit here, below the knock and above everything
   // that owns a dismissable toast, because they BLOCK: `advanceWeeks` refuses to restart until they
   // are answered. They are below the medical trio for the trio's own reason – those have already

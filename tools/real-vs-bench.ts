@@ -39,6 +39,8 @@ import {
   bookVacation,
   hireCoach,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 import { SPONSOR_TIERS } from '../src/engine/offers'
 import { buildCoachRoster, coachById, tierOf, COACH_TIER_LABEL } from '../src/engine/coach'
@@ -498,6 +500,7 @@ function runBenchCareer(preset: Preset, index: number, seasons: number, arm: Arm
     // it), and all of them guarded on `world.ending` – a career that has stopped decides nothing.
     if (!world.ending) {
       if (arm.answerForkContinue && world.fork !== null && world.fork.answer === null) {
+        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
         answerFork(world, 'continue')
         acts.forkAnswered++
       }

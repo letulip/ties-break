@@ -21,7 +21,7 @@
 // `preferredWeekEvent` for the feed - so it cannot disagree with the screen by construction. Zero
 // engine changes, zero draws.
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean, median, type Policy } from './econ-bench'
-import { answerFork, answerRetirement, toSnapshot, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, toSnapshot, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { feedContext, feedShows, preferredWeekEvent } from '../src/composables/tierState'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
@@ -82,6 +82,11 @@ interface CareerRow {
 }
 
 function answerWhateverIsOpen(world: WorldState): void {
+  // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+  // player must not put a number on the scale.
+  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     answerRetirement(world, world.retirementOffer.reason === 'plateau' || world.retirementOffer.final)

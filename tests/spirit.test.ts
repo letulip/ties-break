@@ -588,7 +588,12 @@ describe('the match seam – a second factor beside condition’s, and 1.0 when 
 
 describe('the v72 schema move', () => {
   it('bumps the version and ships a golden fixture for it', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(72)
+    // ⚠ RE-AIMED AT v73 (the private life's wave 2 took the next rung the day after), NOT LOOSENED.
+    // This case is about v72's OWN RUNG – that the move happened and left a fixture of its own shape
+    // behind – and never about the ladder's head, which moves with every wave. The head's own guard
+    // («a bump forces a new golden save») lives in tests/goldenSaves.test.ts and is the only place
+    // that should ever name a number that changes.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(72)
     const v72 = JSON.parse(readFileSync(`${SAVES}/v72.json`, 'utf8'))
     expect(v72.schemaVersion).toBe(72)
   })

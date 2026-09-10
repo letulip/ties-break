@@ -36,6 +36,8 @@ import {
   resumeFromCollege,
   kidAgeYears,
   type WorldState,
+  answerLifeBeat,
+  pendingLifeBeat,
 } from '../src/engine/world'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
 // GAME. The owner removed the rule that closed the college door on a result («Колледж – это
@@ -298,6 +300,7 @@ function answerWhateverIsOpen(
     // shown rather than about what she did with it – and because `answerFork` throws on 'college'
     // when the door is shut, so a reading taken afterwards would only ever see the open half.
     out.collegeOpenAtFork = retiredCollegeDoorOpen(world)
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     answerFork(world, arm)
   }
   // ⚠ ROUND 24 #5: the college answer RESERVES and the ending latches at the September DEPARTURE –

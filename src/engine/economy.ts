@@ -3458,6 +3458,31 @@ export const ECONOMY = {
       giftUnprompted: 0,
       vacationResolved: 1,
       seasonWithNoVacation: -3,
+      /** ⭐⭐ v73 – THE LIFE BEAT'S OWN THREE (the private life, wave 2; build plan §3, «his reaction
+       *  options – responses, never her choices»). What he SAYS when she has told him what she
+       *  wants: back it, press the other way, or listen and say nothing.
+       *
+       *  ⚠⚠ THE PRICE LIST IS UNIVERSAL – who-she-is §3's fence, verbatim: «The `bond` delta table
+       *  does not vary by temperament ... The situations differ; the arithmetic of care does not.»
+       *  So there is one row per ANSWER here and never a row per girl, and that is also what keeps
+       *  the table benchable.
+       *
+       *  ⚠ AND SAYING NOTHING IS EXACTLY ZERO, not a small negative. Listening is a real answer –
+       *  the beat's dialog has no X precisely so that it can be one – and pricing silence as a small
+       *  failure would make it the option a player learns to avoid, which is the opposite of what a
+       *  parent who does not know what to say is doing. */
+      beatBacked: 2,
+      beatPressed: -2,
+      beatListened: 0,
+      /** ⭐⭐ v73 – AND THE SECOND DELTA, WHICH LANDS WHERE THE DEED DOES: `answerFork` matching the
+       *  want she stated at the beat, or contradicting it. Two deltas, separate on purpose – «a
+       *  parent can disagree out loud and then do as she asked» (build plan §3).
+       *
+       *  ⚠ THE ASYMMETRY IS THE DESIGN'S (+3 / −4) and it is the same shape the knock's rows carry:
+       *  doing the thing she asked for is worth less than overriding it costs, because the fork is
+       *  the one decision of hers that the parent can take away. */
+      forkWithHerWant: 3,
+      forkAgainstHerWant: -4,
     },
     /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
      *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`

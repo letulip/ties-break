@@ -103,6 +103,66 @@ export interface BirthdayPrompt {
   options: BirthdayOption[]
 }
 
+/** ⭐⭐ v73 – THE LIFE BEAT'S PROMPT (the private life's wave 2). The generalised birthday: copy
+ *  assembled ENGINE-side from the approved pools and handed over whole, so the dialog renders what
+ *  it is given, verbatim, and owns no sentence of its own.
+ *
+ *  ⚠ EVERY BUTTON IS AN ANSWER AND THERE IS NO X – the birthday's own law, for a stronger reason
+ *  here: the beat is her speaking, and a dialog a player can dismiss would answer her by walking
+ *  away. The week stays stopped until he says something. */
+export interface LifeBeatPrompt {
+  week: number
+  /** which beat this is – the union grows one member per step of the layer, never a free string. */
+  kind: LifeBeatKind
+  /** the engine's heading for this beat, already in her register */
+  heading: string
+  /** ⭐ HER LINE, in her voice – written against the four voice bibles and obeying their two shape
+   *  rules (one quoted span, and `she` in the narration outside it), which the week-note pins
+   *  enforce for the whole corpus since wave 1. */
+  said: string
+  /** his possible responses, in the order to show them. Never her choices – the decision stays
+   *  hers, and these are what the parent may say about it. */
+  options: LifeBeatOption[]
+  /** ⭐ v73.1 – WHAT SHE SAYS WHEN HE ONLY LISTENS (the owner's 10.09 editorial ruling: «Say
+   *  nothing, and let her talk» was fictionally dishonest while the dialog closed and she did not
+   *  talk). Non-null only while she speaks in her own voice: at `strained`/`cold` the flat pool has
+   *  nothing more to say, and THAT silence staying silent is the pool's whole point. `said` is her
+   *  continuation, `done` is the label of the one control that then records `listen` – both
+   *  engine-assembled, because this dialog owns no sentence. */
+  listenFollowUp: { optionId: string; said: string; done: string } | null
+}
+
+/** One thing the parent may say back. `id` is what `answerLifeBeat` records, and the engine
+ *  re-validates it against the list it offered. */
+export interface LifeBeatOption {
+  id: string
+  label: string
+}
+
+/** The beats this layer knows how to raise. Wave 2 ships exactly one; the union is the thing that
+ *  keeps a later step from smuggling in a free-form string the records cannot be read by. */
+export type LifeBeatKind = 'fork-opinion'
+
+/** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
+ *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
+ *
+ *  ⚠ THERE IS DELIBERATELY NO SECOND BOOLEAN. A `pending` flag beside the answer is a second source
+ *  of truth for one fact, and the two desync the first time a migration or a command touches one and
+ *  not the other. The absence of an answer IS the pending state.
+ *
+ *  ⚠ APPEND-ONLY, NEVER PRUNED: the album and the census both read the whole life later, and a row
+ *  dropped for tidiness is a biography with a hole in it. */
+export interface LifeBeatRecord {
+  /** the career week the beat fired in */
+  week: number
+  kind: LifeBeatKind
+  /** what the beat was ABOUT, in the engine's own terms – for `fork-opinion`, her stated want.
+   *  Machine-readable, never a rendered sentence: the copy is re-assembled from the pools. */
+  detail: string
+  /** the option id the parent chose, or null while she is still waiting to be answered */
+  answer: string | null
+}
+
 /** ⭐ ONE ROW PER BIRTHDAY (v48). The DIARY reads it and nothing else does: no morale, no condition,
  *  no mood modifier – that system does not exist yet and this slice only lays the ground (spec §2b,
  *  owner: «мораль и психологи у нас в будущем, так что сейчас можно просто подготовку сделать»).

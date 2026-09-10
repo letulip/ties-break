@@ -2447,6 +2447,39 @@ export function migrateSave(raw: unknown): WorldState {
     v = 72
   }
 
+  // ⭐⭐⭐ v72 -> v73 – THE PRIVATE LIFE, WAVE 2: THE LIFE LOG.
+  //
+  // World `+lifeLog` – every beat this career has lived, append-only and never pruned, one row per
+  // beat (`{week, kind, detail, answer}`). A row whose `answer` is null is WAITING, and that absence
+  // is the pending state: there is no second boolean, which is why the migration has exactly one key
+  // to write.
+  //
+  // ⚠⚠ THE BACK-FILL IS EMPTY AND IT IS EXACTLY TRUE, which puts it in a different class from every
+  // other empty back-fill in this file. v29 and v31 wrote nothing because the evidence had been
+  // PRUNED away and a confident wrong answer is worse than a partial one; v26 and v32 wrote nothing
+  // because fabricating rows would mean fabricating DECISIONS the player never made. Here there is a
+  // third and simpler reason: **a career that predates this layer has lived no beats, because there
+  // were none to live.** Nothing is lost, nothing is guessed, and zero is not a placeholder for the
+  // true value – it IS the true value. The nearest relative is v30's `seasonRecord.wta`, whose own
+  // note makes the same claim for the same reason.
+  //
+  // ⚠ AND A MIGRATED CAREER STANDING ON AN OPEN FORK IS NOT RETRO-FITTED WITH AN OPINION. The
+  // fork-opinion row is raised by the tick that OPENS the fork (`raiseForkOpinion`, world/endings.ts)
+  // and that tick has already happened for such a career – so it answers its fork with no row on
+  // record, `answerFork` refuses nothing, and `forkWantOf` returns null so the congruence delta is
+  // not charged. That is the honest reading: nobody asked her, so nobody can have overruled her.
+  // Every fork raised from this version on carries her opinion in front of it.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE: one `??=` on a key nothing else in the chain touches, gated on
+  // `v === 72`, writing a literal. No sub-stream is reached at all on this path, so MAIN cannot move
+  // and the frozen capture (41550 / e6b0c709) is untouched by construction. Full move:
+  // `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v73.json, and the
+  // mechanically-checked schema sentence in docs/context/saves-and-worker.md.
+  if (v === 72) {
+    save.lifeLog ??= []
+    v = 73
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

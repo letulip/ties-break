@@ -11,10 +11,12 @@ last-reviewed: 2026-08-08
 
 ## Current truth
 
-- **Six committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the sponsor
-  window) · **`sinking` (halfway through a debt spell)** · `broke` (one week short of the bankruptcy
-  latch) · `ending` (past the fork at nineteen). 342 KiB in total, written by the shipped `saveCodec`
-  so a fixture can never disagree with what the product reads.
+- **Seven committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
+  sponsor window) · **`sinking` (halfway through a debt spell)** · `broke` (one week short of the
+  bankruptcy latch) · `ending` (past the fork at nineteen) · **`unheard` (the same week as `ending`,
+  stopped one answer earlier – her life beat is raised and nobody has answered her)**. 438 KiB in
+  total, written by the shipped `saveCodec` so a fixture can never disagree with what the product
+  reads.
 - **Found, not forced.** Every state is reached by walking a real career under a real policy and
   stopping when the engine says so – `broke` is `bankruptcyGraceWeeks - 1`, not "week 88". A fixture
   that could not have happened in play would test nothing.
@@ -25,7 +27,9 @@ last-reviewed: 2026-08-08
 - **Regenerate with `npm run e2e:fixtures`** (~4 s, byte-identical across runs). ⚠ Verified again on
   10.08 when `sinking` was added: the other five `.tsave` files came back **byte-for-byte identical**
   and only the manifest changed. A generator that quietly re-rolled its neighbours would make every
-  addition a five-fixture change.
+  addition a five-fixture change. ⚠ Verified a third time on 09.09 when `unheard` was added, this
+  time through `--only unheard`: the six existing binaries and their six manifest rows were not
+  written at all, so their SHA-256s are the ones other specs already pin.
 - **The browser harness reaches them through `careerAt`** (`e2e/careerAt.ts`, built 08.08): a save
   written into IndexedDB inside the database-creation transaction, before the app's first script, so
   the store's single `listCareers` finds a career instead of an empty install. **Measured at
@@ -34,30 +38,31 @@ last-reviewed: 2026-08-08
   is what a spec may import; `tools/e2e-fixtures.ts` imports the engine, self-executes as a CLI, and
   re-exports the reader so every existing import path still resolves.
 - **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
-  ever, proving *migrations work*. This is six states at the current version, regenerated rather than
+  ever, proving *migrations work*. This is seven states at the current version, regenerated rather than
   migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
 **This is the build of §3 of `docs/plans/playwright.md`** – the load-bearing idea of the whole
 Playwright integration: *a test starts at week 412 instead of clicking through 412 weeks.* Nothing
-here needs a browser, and none of it depends on the harness; it is a node tool, six binaries, a
+here needs a browser, and none of it depends on the harness; it is a node tool, seven binaries, a
 manifest and a test.
 
 ```bash
-npm run e2e:fixtures                 # regenerate all six (~4 s, byte-identical every time)
-npm run e2e:fixtures -- --only pro   # one of them; the other five keep their manifest rows
+npm run e2e:fixtures                 # regenerate all seven (~4 s, byte-identical every time)
+npm run e2e:fixtures -- --only pro   # one of them; the other six keep their manifest rows
 npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it gives up
 ```
 
 | file | what it is |
 |---|---|
 | `tools/e2e-fixtures.ts` | the generator, and the reader the harness and the test both come through |
-| `e2e/fixtures/*.tsave` | six career saves in the app's own export format |
+| `e2e/fixtures/*.tsave` | seven career saves in the app's own export format |
 | `e2e/fixtures/manifest.json` | seed, week, schema version and the facts a spec may assert on |
 | `tests/e2e-fixtures.test.ts` | the rot alarm, in the `unit` project, on the PR gate |
 
-## The six
+## The seven
 
-Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added. Every one was found
-on the FIRST seed tried – these are ordinary careers, not lottery tickets.
+Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added; `unheard` joined
+them on 09.09. All but `junior` were found on the FIRST seed tried, `unheard` included – these are
+ordinary careers, not lottery tickets, and `junior` is the one carrying three requirements at once.
 
 ⚠ THIS LINE USED TO CARRY THE SCHEMA VERSION AND WAS STALE WITHIN A DAY – it said v43 while
 `e2e/fixtures/manifest.json` said v45, because the fixtures were regenerated with the schema and the
@@ -75,8 +80,9 @@ the manifest at runtime and none of it is read from here.
 | `sinking` | `e2e-sinking-0` | 67 | 14 | **-$506** | 89 | 53.1 KiB | **six weeks under water of twelve** – a warning a career can still be ticked out of |
 | `broke` | `e2e-broke-0` | 73 | 14 | **-$2,502** | 67 | 52.0 KiB | eleven weeks under water – one week short of the bankruptcy latch |
 | `ending` | `e2e-ending-0` | 282 | 19 | $6,822 | 41 | 77.0 KiB | past the fork at nineteen, racket down, career read-only |
+| `unheard` | `e2e-unheard-0` | 242 | 18 | $6,450 | 5 | 79.8 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
 
-**342 KiB of saves**, the largest single file 77 KiB. That is not a nuisance and there is no
+**438 KiB of saves**, the largest single file 80 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of
 uncompressed JSON, and one version's JSON alone is ~372 KB – nearly five times the week-412 fixture,
 because these are gzipped by the product's own codec. If the set ever does grow (more fixtures, a bigger
@@ -138,13 +144,21 @@ on. Two consequences worth spelling out:
   to it. Halfway is not a taste – it is the only depth maximally far from both ends: deep enough that
   the countdown on the banner is a real number, shallow enough that one advance cannot latch anything.
 
-⚠ **Adding a sixth fixture is a five-file change and all five are in this repo's own rules.** For the
+⚠ **Adding a fixture is a five-file change and all five are in this repo's own rules.** For the
 record, so the next one costs an hour rather than a morning: the name goes in `FIXTURE_NAMES`
 (`tools/e2e-fixtures-read.ts`), the recipe in `RECIPES` (`tools/e2e-fixtures.ts`), a state assertion
 in `tests/e2e-fixtures.test.ts` (§"each is the state its name promises" – tie it to an engine
 constant, never to the number the search happened to find), a row in `e2e/seeded-careers.spec.ts`
 (whose header promises one test per fixture and would otherwise start lying), and a row in the table
 above. The binary and the manifest are then written by `npm run e2e:fixtures`.
+
+⭐ **`unheard` (09.09) was the first one added by following that paragraph, and it cost an hour.** Two
+notes it earned. (1) Generate with **`--only <name>`**: the partial run keeps every other manifest
+row verbatim, so the six existing binaries and their SHA-256s are not merely unchanged, they are not
+rewritten at all – which matters because other specs pin them. (2) Its state assertion is the one in
+that section that has to DECODE the save: what makes it the fixture it is – a `lifeLog` row with no
+answer on it – is not in `FixtureFacts`, and widening that shared sheet to describe one fixture would
+have rewritten six rows to say nothing.
 
 The one thing the generator does choose is `careerId` – and only because the engine does not own it
 either: the worker mints one from `Date.now()` outside the deterministic engine, so the fixtures pin

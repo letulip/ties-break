@@ -60,7 +60,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { openCareer, stepCareerWeek, POLICIES, type Preset } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import { answerFork, answerRetirement, type WorldState } from '../src/engine/world'
+import {answerFork, answerRetirement, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
 import { kidPoints, rankingFor } from '../src/engine/world/ladder'
 import { kidMatchPlayerFor, startingSkills } from '../src/engine/world/player'
 import { COACH_EDGE_CORRIDOR_PP } from '../src/engine/coach'
@@ -224,6 +224,11 @@ function calibrate(): void {
       const { world, rng } = openCareer(preset, idx, POLICIES[1])
       for (let wk = 1; wk <= FULL_CAREER_WEEKS && world.ending === null; wk++) {
         stepCareerWeek(world, rng, POLICIES[1])
+        // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
+        // refuses until it is answered. `'listen'` is the harness's answer for the same reason
+        // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
+        // player must not put a number on the scale.
+        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
         if (wk % 13 !== 0) continue
@@ -450,6 +455,7 @@ function runCareer(arm: Arm, index: number): CareerSummary {
         }
       }
     }
+    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
     const wtaRank = world.kidRankWta
