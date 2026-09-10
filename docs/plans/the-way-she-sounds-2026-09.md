@@ -55,13 +55,23 @@ of the same family.
    birthday (home-only) + off-season (away-only) = 80 lines; the `rail` claim (valued, like
    `voice`) with its honesty-pin checker off `lifeStage`; six fallible-parent notes. ⚠ THE STOP:
    everything wired but the wave does not merge before his вычитка of the full before→after
-   table.
+   table. ⚙ SUPERSEDED BY THE 11.09 «4 полосы» ruling – the rails became four stage
+   dictionaries (148 voiced, exams corrected to school-only by the engine's own fact) – and
+   ⭐ THE ВЫЧИТКА PASSED 11.09, both halves: «да вроде нормально всё, я так просто текстом не
+   вижу особых проблем. Если что, потом при плейтестах скажу.» The playtest is the final read.
 3. **B3's test half with the content** – the tail-lint (the ban list swept over every narration
    in the pool, a ratchet inside `check`); the rail completeness rides the type-total cross +
    the count pin (80 + 8 flat = 88).
 4. **B5 last, two sub-steps** – the silence cadence first (bond-banded frequency + «no contact
    this week» as a result: mechanics only, no new words), the channel families second (his
-   words, after the B1/B2 pass).
+   words, after the B1/B2 pass). ⚙ SUB-STEP 1 SHIPPED 11.09 on `fridgeNoteFor` – the away-stage
+   scrap gains `AWAY_NOTE_CHANCE` (close .75 · steady .55 · strained .30 · cold .12), event
+   weeks always speak, home stages exempt, the pick key untouched so no speaking week
+   reshuffled; corridor-pinned and mutation-verified in tests/calendar-grid.test.ts. ⚠ Scope
+   note: the plan's title says «22+», the mechanics follow the message SURFACE – college and
+   independent both, since the note is a sent message from college on. Sub-step 2 (the strained
+   and cold pools, the missed call, the photo, the drafted-and-unsent) is drafted for his
+   вычитка – no word wires before his ruling.
 
 ## Done already (wave 2, 10.09, on `life/wave-2`)
 

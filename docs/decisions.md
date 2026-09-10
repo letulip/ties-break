@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 84 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 85 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -37,7 +37,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
+| life-and-morale | 3 | [WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)](#11092026--wave-b-the-вычитка-passed-and-the-bond-cadence-of-silence-b51) | 2026-09-11 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -3371,3 +3371,33 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
   `notTravellingWeek`), the review-flagged «Starting now» class, and re-verified the palette per
   column. Keepers byte-identical: quiet calendar-pen and kettle, deep «Ready» / January / «No
   fuss» / doorway, fiery kit-bag «Empty», sunny rehab-sheet.
+
+## 11.09.2026 – WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)
+
+- ⭐ **THE STOP LIFTED.** Both halves of the four-stage вычитка (148 lines, roof stages then away
+  stages) read and passed: «да вроде нормально всё, я так просто текстом не вижу особых проблем.
+  Если что, потом при плейтестах скажу. Давай дальше.» The words are his by ruling; the playtest
+  is the final read (his standing 10.09 rule – the human editorial tests are the game, not a pin).
+- **B5 sub-step 1 shipped – the cadence of contact, mechanics only, zero new words.** Once she
+  lives away the calendar's fridge scrap is the week's MESSAGE, so it gains a bond-banded
+  cadence: `AWAY_NOTE_CHANCE` = close .75 · steady .55 · strained .30 · cold .12, and «no
+  contact this week» is a first-class result – the paper stays off the wall (`null`, and the
+  CalendarScreen guard renders nothing). Event weeks always speak (the plan's own «rare,
+  EVENT-TRIGGERED» cold wording – a tournament makes even a cold parent write); the home stages
+  are exempt (a hallway chore note does not read the bond); the silence coin hashes
+  `:fridge-quiet:` while the pick still hashes `:fridge:`, so a week that speaks shows the
+  byte-identical scrap it always showed – the composable's no-reshuffle promise extended. No
+  meter: the band is never printed, the corridors overlap in casual observation, the ladder is
+  heard across months. Local hash per the file's own doctrine – no engine draw, no sub-stream,
+  the MAIN capture unmoved by construction.
+- **Mutation arms recorded** (the house net-verification rule): ARM A – `cold: 0.12 → 0.75`
+  turns the ladder-ordering pin red; ARM B – dropping `livingAway` from the gate turns the
+  home-stages-exempt pin red. Both fired, both reverted, final 58/58 green. The old
+  «rides with the GRID» source pin re-aimed with its ⚠ note (`v-if` legitimately gained
+  `&& fridgeNote`).
+- ⚠ **Scope call, flagged**: the plan row's title says «22+»; the mechanics follow the message
+  SURFACE – college and independent both, because `fridgeNoteFor` already serves the sent-message
+  pools from college on. His to narrow if the college years should stay unconditional.
+- **B5 sub-step 2 pending his вычитка**: the strained and cold away pools (sparse-practical;
+  rare-minimal with the unanswered and the drafted-and-unsent) plus three close/steady additions
+  (the missed call, the captionless photo, the voice note) – drafted, not wired; invariant 4.
