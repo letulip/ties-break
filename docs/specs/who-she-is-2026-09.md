@@ -282,6 +282,47 @@ advertising step 3 gives fame its full life. **Bench**: paired high-fame arms pe
 the fairness corridor gains a high-fame column, and the habituation curve is measured before any
 ruling.
 
+### 3c-bis. The leak model – what the world learns, and how wrong (his 10.09 ask, planned)
+
+> «слава + комментаторы + пресса + давление + темпераменты – мне кажется у нас как-то тоже можно
+> понимать сколько вообще какой личной информации и куда просачивается у разных характеров…
+> можем какую-то логику запланировать?»
+
+Planned as the spotlight wave's second half – one mechanism, three derived surfaces, zero new
+systems:
+
+* **One new fact per episode: `publicWeek`** – when the WORLD learned, beside `knownWeek` (when
+  the parent did). Null until a leak. ⚠ By YAGNI-2 (the `conduct` lesson) the field is NOT
+  pre-reserved in v74 – the leak wave adds it in the commit that first writes it, with its own
+  migration.
+* **The leak hazard** (sub-stream per episode, zero MAIN) scales by **fame × EXPRESSED
+  openness** – more lenses on a bigger star, and an open girl is simply seen (dinner, a hand
+  held at an airport).
+* ⭐⭐ **The gem the films handed us: openness controls not only the SPEED of a leak but its
+  ACCURACY.** An open girl's life leaks EARLY and roughly TRUE – the world saw it, it is
+  ordinary. A private girl's life leaks LATE and WRONG – the tabloid misattribution engine
+  (Wimbledon, chapter D): a «mystery man», a wrong story, a blame headline. A wrong public
+  story is its own pressure event, its own feed row, and its own beat.
+* **The channel ladder, mildest to hardest** (each a different voice, all already planned):
+  the booth's box-read mention (a face in the players' box – his publicity ruling) → a press
+  question SHE has to answer (a beat: her temperament answers it – fiery snaps, quiet deflects
+  into logistics, deep gives the one sentence; the parent reads her answer in the feed) → the
+  tabloid story (accuracy governed by the rule above).
+* ⭐ **The world can OVERTAKE the family**: for a private girl at high fame, `publicWeek` can
+  land before `knownWeek` – the parent learns about the boyfriend FROM A HEADLINE. That is the
+  design plan §0's own founding scene («a parent learning about a boyfriend from a photograph»)
+  finally given its mechanism – strongest for exactly the girl whose walls kept him out.
+* **The correction device exists** – a wrong story can be publicly corrected (the film's own
+  repair shape: institutions repurposed for intimacy); a correction is a beat with reaction
+  options, never an automatic fix, and «мы ни за что не наказываем» holds: leaks are weather
+  plus beats, recoverable, never a spiral.
+* **Fog law intact**: no publicity meter anywhere – the model is READ entirely through what the
+  booth says, what the press asks and what the feed prints.
+* **Landing**: rides the spotlight wave (post step 5) for the hazard + booth/box channel; the
+  press-question and correction BEATS are wave-6+ material on the lifeBeat machinery. All
+  numbers bench proposals; the census gains leak prints per temperament (share leaked, median
+  lag, wrong-story share – expected: open leaks often/true, private rarely/late/wrong).
+
 ---
 
 ## 4. The numbers – all proposals for the bench

@@ -3282,6 +3282,17 @@ the wave-2 branch's copy commits, [who-she-is §5c](specs/who-she-is-2026-09.md)
   house letter voice (the ad-house already speaks its own trade – «Money, not kit – we are not a
   tennis house»); one grammar nudge applied (the lifetime-exclusivity clause gains «only»,
   matching the capstone arm's own idiom). His in-game read follows.
+- **Two planning asks, the same evening, both designed in**: commentator VARIETY («может и
+  вариативность в текстовые трансляции добавим, что-то типа разных комментаторов или намеков на
+  них хотя бы») – the persona model in the-way-she-sounds C4: unnamed voices as
+  licence-preference profiles, one voice at low rungs, the skeptic+empath duo at big ones; and
+  the LEAK MODEL («сколько вообще какой личной информации и куда просачивается у разных
+  характеров… можем какую-то логику запланировать?») – who-she-is §3c-bis: `publicWeek` beside
+  `knownWeek`, hazard by fame × expressed openness, ⭐ openness governing a leak's ACCURACY (open
+  → early and true; private → late and WRONG, the tabloid misattribution engine), the channel
+  ladder (box-read → press question → tabloid), and the world able to OVERTAKE the family – the
+  parent learning about the boyfriend from a headline, the design plan §0's founding scene
+  given its mechanism.
 - **Confirmed the same day**: the fallible parent is fallible in interpretation and timing,
   never in fact («согласен» – the honesty pins stay law); the human editorial tests are the
   playtest («будем в игре смотреть»); the copy-provenance note ruled in («делайте») and shipped;
