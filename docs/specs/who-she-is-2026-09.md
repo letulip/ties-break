@@ -443,11 +443,16 @@ the proposed set goes to him as drafts then – one glyph per row kind, his to s
 > каждой оси, будем ли мы добавлять интеракций (предполагаю, что да) и вот этот её голос хотелось
 > бы чтобы звучал по-разному, что нам для этого нужно?»
 
-**Where her voice stands today: she has none.** Verified 09.09: the diary is the PARENT's
-journal, every line reported speech at most («She asked for an extra hour on Sunday. We said
-no.»); the birthday asks narrate her («Proper paints, she said»); the feed is a reporter. The
-layer's beats are the first time she will TALK to the player – so the voice system is being
-designed before the first line exists, which is the right order.
+**Where her voice stood on 09.09, when this was designed: she had none.** Verified then: the
+diary was the PARENT's journal, every line reported speech at most («She asked for an extra
+hour on Sunday. We said no.»); the birthday asks narrate her; the feed is a reporter. The
+layer's beats were designed before her first line existed, which is the right order.
+
+⚙ SUPERSEDED BY THE BUILD (10–11.09, recorded so this paragraph cannot mislead a reader of
+the current branch): tier 0 is WIRED – wave 1 shipped her 44-voiced-line tier 0 on `main`,
+wave 2 the life-beat speech, and `voice/wave-b` carries the four-stage 148-line corpus
+(drafts, merge-gated on the owner's вычитка). The baseline above stays as what the system
+was designed against.
 
 **The composition rule – three owners for three parts of a line, so pools do not multiply:**
 

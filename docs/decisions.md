@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 83 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 84 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -39,7 +39,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 17 | [WAVE B, THE SECOND EDITORIAL REVIEW: FOUR STAGES, AND THE HONESTY CORRECTIONS](#11092026--wave-b-the-second-editorial-review-four-stages-and-the-honesty-corrections) | 2026-09-11 |
+| process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
 | simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
@@ -3328,3 +3328,46 @@ Its findings and the owner's ruling, logged same-day. Source:
 - **The label**: the architect over-called the pins-green draft «FINAL»; corrected – pins prove
   form, the вычитка and playtest prove naturalness. Nothing merges before his read of the
   re-cut, delivered in two halves (the home stages, then the away stages).
+
+## 11.09.2026 – WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX
+
+The four-stage corpus landed the same day (148 voiced + 8 flat = 156, wired, pin-green,
+merge-gated on the вычитка) – and a third editorial review arrived mid-build, aimed at the
+voice-bibles DOCUMENT: «the creative direction is substantially better, but the document needs
+a structural rewrite before it can safely function as a voice bible». Verdicts logged per
+finding; the вычитка of the corpus (two halves) is the owner's gate on the words themselves.
+
+- ⭐ **THE MATRIX CORRECTED BY THE ENGINE, independently found twice**: the 11.09 amendment
+  promised exams at school / after-school / college; `isExamWeek(week, schoolOver)` is false the
+  day school ends, so exams are SCHOOL-ONLY and the arithmetic is 8×4 + 1 + 2 + 2 = 37 per
+  voice, **148 voiced** (not 156-voiced/164). The review's finding 2 named the same conflict.
+  The bible now labels every matrix scope as engine fact vs content decision: birthday
+  roof-only (her away birthday belongs to C1), off-season away-only (the roof stages keep the
+  parent's own December), both CONTENT SCOPE; exams school-only, ENGINE.
+- **Applied from the review** (the architect's call, inside standing rulings): the bible
+  restructured to one-current-truth + permanent rules + corpus section, superseded tables
+  removed (git and this log hold them); rule strength made explicit (MUST/SHOULD/MAY/DRAFT);
+  the presence law (stage owns diction, never proves observation – away lines carry their own
+  delivery frame); the honesty law split in two tiers (consequential facts MUST be licensed;
+  scene texture MAY ride the delivery frame – without the split the law is enforced by whichever
+  detail a reviewer notices); the «rotor» renamed a channel PALETTE (corpus diversity; the
+  per-week rotor is B5's); the four voice profiles re-tiered core/often/rarely so «never» is
+  reserved for licensing law (fiery gains scale – the biggest weeks can flatten her, which the
+  tired row already wrote; quiet's rare feeling-word marks a break, not a routine; deep gains a
+  dry humour allowance) – tiered wording DRAFT for the owner; who-she-is §5b's «she has no
+  voice» dated as the 09.09 baseline and marked superseded by the build; drifted line-number
+  references replaced with stable test names.
+- **Pushed back / left to the owner**: «Dimmed» is his pinned Mood word (invariant 4) – the
+  review's candidates (Off / Low / Flat) are recorded as an OPEN item, no default change; the
+  house ⚠/⭐ style is the repo's own voice – the bible was toned down as the review asked, but a
+  repo-wide RFC restyle is not this branch's call.
+- **The fallible parent finished to finding 6**: four of six notes re-cut off omniscient endings
+  («She heard the want» → «She said nothing»; «She noticed the order» → «The order was ours»;
+  the planned week off ends «We noticed too late»; the birthday miss no longer asserts a wrong
+  gift the gift system can contradict – «She may have wanted a new shape»).
+- **The corpus curation, recorded**: agents drafted per voice; the architect cut cross-voice
+  frame collisions (the fridge, the kit bag, «called with the diagnosis herself», feet-up,
+  played-through), vacation booking/travel claims («nothing booked», «unpacked», homecomings on
+  `notTravellingWeek`), the review-flagged «Starting now» class, and re-verified the palette per
+  column. Keepers byte-identical: quiet calendar-pen and kettle, deep «Ready» / January / «No
+  fuss» / doorway, fiery kit-bag «Empty», sunny rehab-sheet.
