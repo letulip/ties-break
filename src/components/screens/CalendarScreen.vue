@@ -227,12 +227,17 @@ const NOTE_MOOD: Record<DayKind, NoteMood> = {
 const fridgeNote = computed(() => {
   const snap = game.snapshot
   const week = calendar.value
+  // ⭐ B5: the bond band arms the away-stage cadence – `null` back means NO CONTACT THIS WEEK, a
+  // first-class result the template renders as no paper at all. Home stages are exempt inside the
+  // composable (a hallway chore note does not depend on the bond), and the band itself is never
+  // printed – the ladder is heard across months, not read off a week.
   return snap && week
     ? fridgeNoteFor(snap.seed, week.week,
         NOTE_MOOD[week.days[0]?.kind ?? 'court'],
         snap.diary.facts.lifeStage,
+        snap.diary.facts.bondBand,
       )
-    : ''
+    : null
 })
 
 // --- (d) THE MARKER'S CARD ----------------------------------------------------------------------
@@ -453,8 +458,10 @@ const showGo = computed(() => !game.snapshot?.pending)
            note on a fridge asserts nothing about the week - it is milk, the bins and a rain jacket -
            so there is nothing for an honesty pin to check. What 31.07 added is a small layer on top:
            on the two weeks that carry a fact a parent would mention - the exams, a tournament - the
-           scrap may speak to it, because on that week it is true. See `NOTE_MOOD` above. -->
-      <PaperNote v-if="grid" class="cal-note" :tilt="-0.8" ruled torn tape>
+           scrap may speak to it, because on that week it is true. See `NOTE_MOOD` above.
+           ⭐ B5: once she lives away the scrap is the week's MESSAGE, and a message can not exist –
+           a `null` note is «no contact this week», so the paper itself stays off the wall. -->
+      <PaperNote v-if="grid && fridgeNote" class="cal-note" :tilt="-0.8" ruled torn tape>
         <span class="cal-note-label">Notes</span>
         <span class="cal-note-text">{{ fridgeNote }}</span>
       </PaperNote>

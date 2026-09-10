@@ -51,6 +51,7 @@ import {
   type OrdinaryKind,
 } from '../src/composables/weekGrid'
 import {
+  AWAY_NOTE_CHANCE,
   EXAM_NOTES,
   FRIDGE_NOTES,
   INDEPENDENT_NOTES,
@@ -58,6 +59,7 @@ import {
   TRIP_NOTES,
   fridgeNoteFor,
 } from '../src/composables/fridgeNote'
+import type { BondBand } from '../src/shared/protocol'
 import {
   SUMMER_WEEKS,
   calendarWeekFor,
@@ -992,6 +994,91 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     expect(across.size).toBeGreaterThan(1)
   })
 
+  describe('⭐ B5 — the away-note cadence: «no contact this week» is a result, not a bug', () => {
+    // The plan's ruled ladder (the-way-she-sounds B5): once she lives away the scrap is the week's
+    // MESSAGE, so it gains a bond-banded cadence – close: frequent, not weekly · steady: occasional
+    // · strained: sparse · cold: rare, event-triggered. Four protections pinned here: the silent
+    // weeks are deterministic; a speaking week keeps its byte-identical pre-cadence scrap (the
+    // pick key never moved); event weeks and the home stages never go quiet; and a band-less call
+    // keeps the old behaviour, so no pre-B5 caller regressed.
+    const CADENCE_BANDS: BondBand[] = ['close', 'steady', 'strained', 'cold']
+
+    it('deterministic per (seed, week, band), including the silent weeks', () => {
+      for (const band of CADENCE_BANDS) {
+        for (const week of [3, 17, 40, 121]) {
+          expect(fridgeNoteFor('cad', week, 'home', 'independent', band))
+            .toBe(fridgeNoteFor('cad', week, 'home', 'independent', band))
+        }
+      }
+    })
+
+    it('⚠ a week that speaks shows the byte-identical scrap the pre-cadence career showed', () => {
+      // The composable's own no-reshuffle promise, extended: the coin hashes `:fridge-quiet:`,
+      // the pick still hashes `:fridge:`, so arming the cadence must not move a single line.
+      let checked = 0
+      for (let week = 0; week < 200; week++) {
+        const armed = fridgeNoteFor('cad', week, 'home', 'independent', 'close')
+        if (armed === null) continue
+        checked++
+        expect(armed).toBe(fridgeNoteFor('cad', week, 'home', 'independent'))
+      }
+      expect(checked, 'the pin needs speaking weeks to bite on').toBeGreaterThan(80)
+    })
+
+    it('the ladder holds near the ruled shares, in order – and neither end is absolute', () => {
+      const share = (band: BondBand, lifeStage: 'college' | 'independent' = 'independent'): number => {
+        const weeks = 800
+        let spoke = 0
+        for (let week = 0; week < weeks; week++) {
+          if (fridgeNoteFor('cad-corridor', week, 'home', lifeStage, band) !== null) spoke++
+        }
+        return spoke / weeks
+      }
+      const measured = Object.fromEntries(
+        CADENCE_BANDS.map((b) => [b, share(b)]),
+      ) as Record<BondBand, number>
+      for (const band of CADENCE_BANDS) {
+        expect(
+          Math.abs(measured[band] - AWAY_NOTE_CHANCE[band]),
+          `${band} measured ${measured[band]}`,
+        ).toBeLessThan(0.08)
+      }
+      expect(measured.close).toBeGreaterThan(measured.steady)
+      expect(measured.steady).toBeGreaterThan(measured.strained)
+      expect(measured.strained).toBeGreaterThan(measured.cold)
+      // «frequent, NOT weekly» and «rare, not never»: silence exists even at close (life, not a
+      // meter) and a cold parent still writes sometimes (a person, not a switch).
+      expect(measured.close).toBeLessThan(1)
+      expect(measured.cold).toBeGreaterThan(0)
+      // ...and college is gated the same way – the message surface starts when she moves out.
+      expect(share('cold', 'college')).toBeLessThan(0.3)
+    })
+
+    it('⚠ event weeks always speak – a tournament makes even a cold parent write', () => {
+      for (const band of CADENCE_BANDS) {
+        for (let week = 0; week < 60; week++) {
+          expect(fridgeNoteFor('cad', week, 'trip', 'independent', band), `trip w${week} @ ${band}`).not.toBeNull()
+          expect(fridgeNoteFor('cad', week, 'trip', 'college', band)).not.toBeNull()
+        }
+      }
+    })
+
+    it('⚠ the home stages are exempt – a hallway chore note does not read the bond', () => {
+      for (const band of CADENCE_BANDS) {
+        for (let week = 0; week < 60; week++) {
+          expect(fridgeNoteFor('cad', week, 'home', 'school', band), `school w${week} @ ${band}`).not.toBeNull()
+          expect(fridgeNoteFor('cad', week, 'home', 'after-school', band)).not.toBeNull()
+        }
+      }
+    })
+
+    it('a band-less call keeps the old always-a-note behaviour – no pre-B5 caller regressed', () => {
+      for (let week = 0; week < 60; week++) {
+        expect(fridgeNoteFor('cad', week, 'home', 'independent')).not.toBeNull()
+      }
+    })
+  })
+
   it('a season of weeks really does walk the pool, rather than sticking on one line', () => {
     // The avalanche step in the hash is what buys this; without it consecutive weeks land on
     // consecutive-ish indexes and a career reads the pool in order.
@@ -1023,12 +1110,18 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
   it('the note rides with the GRID, and its week is the grid\'s week', () => {
     // If the two read different weeks, the paper and the picture next to it would be about different
     // sevens of days.
-    expect(screen).toContain('<PaperNote v-if="grid" class="cal-note"')
+    // ⚠ RE-AIMED (11.09, B5): the guard gained `&& fridgeNote` because a `null` note is now a real
+    // result – «no contact this week» keeps the paper itself off the wall. The rule pinned here is
+    // unchanged (the paper rides with the grid and reads the grid's own week); what moved is that
+    // the paper may honestly be absent, and the cadence's own pins live beside AWAY_NOTE_CHANCE.
+    expect(screen).toContain('<PaperNote v-if="grid && fridgeNote" class="cal-note"')
     // ⚠ RE-AIMED (31.07): a third argument joined the call - which POOL this week's scrap comes from.
     // The rule pinned is unchanged (one week, read once, shared by the paper and the picture), so it
     // matches the call's opening rather than its arity. The mapping itself is pinned just below.
     expect(screen).toContain('fridgeNoteFor(snap.seed, week.week')
     expect(screen).toContain('snap.diary.facts.lifeStage')
+    // ⚠ B5: the band ARMS the cadence – and stays unprinted (narrative.ts: «no component prints it»)
+    expect(screen).toContain('snap.diary.facts.bondBand')
     // the week's kind chooses the pool, and it is a total map – a ninth DayKind fails to compile
     expect(screen).toContain('const NOTE_MOOD: Record<DayKind, NoteMood>')
     expect(screen).toMatch(/away: 'trip',/)
