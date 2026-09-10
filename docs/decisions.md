@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 82 dated entries, newest 2026-09-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 83 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -39,7 +39,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 16 | [THE EDITORIAL REVIEW APPLIED, THE BOOTH MAY SAY ANYTHING, AND THE STRING SET PASSED](#10092026--the-editorial-review-applied-the-booth-may-say-anything-and-the-string-set-passed) | 2026-09-10 |
+| process-and-git | 17 | [WAVE B, THE SECOND EDITORIAL REVIEW: FOUR STAGES, AND THE HONESTY CORRECTIONS](#11092026--wave-b-the-second-editorial-review-four-stages-and-the-honesty-corrections) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
 | simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
@@ -3297,3 +3297,34 @@ the wave-2 branch's copy commits, [who-she-is §5c](specs/who-she-is-2026-09.md)
   never in fact («согласен» – the honesty pins stay law); the human editorial tests are the
   playtest («будем в игре смотреть»); the copy-provenance note ruled in («делайте») and shipped;
   the supporting-cast rule ruled in («давай») and shipped as who-she-is §5c.
+
+## 11.09.2026 – WAVE B, THE SECOND EDITORIAL REVIEW: FOUR STAGES, AND THE HONESTY CORRECTIONS
+
+A second editorial review of the wave-B draft landed «editorial, not FINAL» and was right on the
+substance – the structural pins prove shape and licensing, not naturalness or factual honesty.
+Its findings and the owner's ruling, logged same-day. Source:
+[voice-bibles-2026-09](specs/voice-bibles-2026-09.md) the 11.09 amendment,
+[the-way-she-sounds](plans/the-way-she-sounds-2026-09.md).
+
+- ⭐ **THE FOUR STAGES, RULED: «4 полосы (полный ответ ревью)».** The wave-B draft collapsed the
+  bible's four maturity stages (school / after-school / college / independent) into two presence
+  rails (home / away), so a schoolgirl and a 20-year-old at home shared a dictionary, and a
+  college student and a settled pro shared another – the adult voice still sounded like a
+  daughter reporting to her parents. The owner chose the FULL fix over 3-band or defer: presence
+  is now DERIVED from the stage, «visit» is one channel of the adult rotor, and each stage is its
+  own dictionary (~156 voiced lines). The architect's cost note (≈1.8× the вычитка, delivered in
+  stage passes) was put to him and he took the full four.
+- **The honesty corrections adopted as LAW, not taste** (the architect's read, within the house's
+  own rules): no unlicensed facts – the sim does not know racquet counts, serve/backhand quality,
+  exam counts or gym specifics, so those come out (the vacation «no lake» rule, everywhere); the
+  fallible parent may not state the daughter's interior as fact (acts → notices uncertainty →
+  unresolved), and the birthday miss may not claim a wrong gift on a week the sim does not know
+  one; a line never explains its own signal (the «without any punctuation» contradiction deleted).
+- **The craft corrections adopted** (his вычитка is the final word on the words): contractions for
+  sunny/fiery throughout, quiet mostly, deep lightly (its formality is partly character); quiet
+  vs deep separated by CONTENT (quiet = facts and arrangements, deep = cost and consequence), the
+  propping narration («said only», «without comment») banned; the away delivery rotor (finding 2)
+  replaces the 27-of-40 «wrote» template. The lines the review named to preserve are kept.
+- **The label**: the architect over-called the pins-green draft «FINAL»; corrected – pins prove
+  form, the вычитка and playtest prove naturalness. Nothing merges before his read of the
+  re-cut, delivered in two halves (the home stages, then the away stages).

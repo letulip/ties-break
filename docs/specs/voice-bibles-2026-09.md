@@ -24,7 +24,87 @@ stays the parent's journal; she speaks in quotation marks within it (§5b's tier
 Tier 1 (small talk) and tier 2 (the big beats) are waves 3 and 2–4, written later against these same
 bibles.
 
-## ⭐⭐ THE 10.09 AMENDMENT (wave B) – the craft law, the ban list, the rails made real. DRAFT FOR HIS PASS
+## ⭐⭐⭐ THE 11.09 AMENDMENT (wave B, part 2) – FOUR STAGES, the delivery rotor, the honesty corrections
+
+A second editorial review found the wave-B draft «editorial, not FINAL» and was right. The owner
+ruled the full fix (11.09): **the two presence-rails become the four maturity STAGES, each its own
+dictionary** – «4 полосы (полный ответ ревью)». Presence (can the parent observe it) is DERIVED
+from the stage; it is no longer the axis. This section supersedes the two-rail model of the 10.09
+amendment below; that section's craft law and ban list still stand.
+
+**The four stage dictionaries** (`DiaryLifeStage`, the field already on the facts):
+
+| stage | reads as | vocabulary, subjects, scale | presence + channel |
+| --- | --- | --- | --- |
+| `school` | 11–17, at home | today and this week; the court, the bus, dinner, the papers, the kitchen table. Short, concrete, no career words, no money | CO-PRESENT: overheard, watched, found. No channel word |
+| `after-school` | 17–19, still home, tour beginning | the SEASON replaces the timetable; she talks in weeks and draws, not days. Same house, same closeness, wider words; money starts to exist | CO-PRESENT: still the kitchen and the car, but she is often away playing – a line may be a homecoming |
+| `college` | 18–22, away, a student | the campus, the term, the drive back, the roommate; a student's world laid over the tennis one. She REPORTS rather than shows | CHANNEL: the call home, the term-time text – she is a student who phones |
+| `independent` | 22+, her own household and trade | her block, her own schedule, the bill, the swing, the flight; the furniture of the parent's house has left the dictionary for good | CHANNEL + the delivery rotor below; a peer who keeps in touch, not a child reporting |
+
+⚠ **The stages are MATURITY, never personality** – a `quiet` thirty-year-old is quiet in an
+adult's vocabulary over an adult's channel. And they answer the review's exact two complaints: a
+schoolgirl and a 20-year-old at home no longer share a dictionary (school ≠ after-school), and a
+college student and a settled pro no longer do (college ≠ independent).
+
+**The moment × stage matrix** (not every moment exists at every stage – an honest matrix, not a
+rectangle):
+
+* **all four stages**: grind · light · freshBody · vacation · restingKnock · pushingKnock ·
+  injured · tired (she trains, breaks, gets knocks and tires at every age).
+* **school · after-school · college** only: exams (a settled pro sits none).
+* **school · after-school** only: birthday (the co-present house day; an away birthday is a later
+  addition, not v1).
+* **college · independent** only: offSeason (the pro winter; it means nothing before the tour).
+
+**⭐ The delivery rotor (finding 2) – the away stages must not all say «wrote».** The 10.09 draft
+used «wrote» in 27 of 40 away lines: the player saw the template before the character. The away
+copy now spreads across a rotor, one channel per line, varied within each voice's own register:
+a call · a text · a voice note · a photograph with one line · a forwarded schedule · a family-chat
+message · a delayed reply that came days later · **a visit** (the one away-channel that grants
+momentary co-presence – the adult in the kitchen for an evening) · **and sometimes no note at all**
+(silence is a first-class away result, especially at a cooler bond – but that is the flat pool's
+and B5's business; here the rotor is just channel variety within the warm bands). ⚠ No voice uses
+the same channel twice in a row across its own away lines; the true per-week channel DRAW is B5.
+
+**The honesty corrections folded in (findings 4, 6, 7 – these are the LAW half, not taste):**
+
+* ⚠⚠ **No unlicensed facts.** A line may name only what the moment's claim establishes. The sim
+  does not know how many racquets she owns, whether her serve or her backhand is good this week,
+  how many exams she has sat, or what she did in the gym – so «six racquets drying», «even the
+  serve», «two exams down, a third to go», «wall-sits», «re-gripped two racquets», «booked an
+  extra court», «rehab starting tomorrow» are all OUT. This is the vacation «no lake» rule
+  (§ the mechanical facts) applied to every moment: replace the invented specific with an
+  observation the moment licenses (she trained hard; she is resting the knock; she is on a break).
+* ⚠ **The narrator never states her interior as fact** (finding 6). «She heard the want», «She
+  noticed the order», «she let it pass» make the narrator omniscient, not the parent fallible. The
+  fallible-parent pattern is: the parent ACTS → NOTICES an uncertainty or a consequence →
+  the interpretation stays UNRESOLVED. «Afterwards we wondered who we were convincing» is the
+  shape. And the birthday miss may not claim a wrong gift on a week the sim does not know one
+  happened – either license it on the birthday's own asked≠given record, or (v1) write it so no
+  false claim is made.
+* ⚠ **A line never explains its own signal** (finding 7). «without any of her usual punctuation»
+  followed by punctuated words both contradicts itself and tells the player what to notice.
+  Delete the explanation; let the short words BE the tiredness.
+
+**Contractions (finding 3):** `sunny` and `fiery` speak in contractions throughout («I'm», «I'd»,
+«don't», «it's»); `quiet` mostly; `deep` LIGHTLY – some of its formality is the character (the
+«negotiated distance» of the film study), so it keeps a measured diction where that is doing work.
+
+**Quiet vs deep, by CONTENT not by brevity (finding 5):** both are short, but the SUBJECT differs
+and the narrator never props the difference («said only», «without comment», «attached nothing»
+are banned tails). `quiet` says FACTS, arrangements, completed actions, practical boundaries
+(«The court can wait», «Rehab booked», «Two sessions most days»). `deep` says MEANING, cost,
+ambivalence, consequence, changed understanding («It was a lot. It was supposed to be», «I know
+what it costs»).
+
+**§E arithmetic, restated:** 8 all-stage moments × 4 stages + exams×3 + birthday×2 + offSeason×2 =
+32 + 3 + 2 + 2 = 39 slots × 4 voices = **156 voiced lines**, + 8 flat = 164. Still one licence per
+(moment, stage), words per voice; the cross stays total by type for the rectangular moments and
+explicit maps for the scoped ones, so a missing cell is a compile error before it is a test.
+
+---
+
+## THE 10.09 AMENDMENT (wave B) – the craft law, the ban list, the rails made real. DRAFT FOR HIS PASS
 
 The owner ruled his editorial review applied to the whole corpus. Three changes to this
 document's law; every §D line is re-cut under them on `voice/wave-b`.
