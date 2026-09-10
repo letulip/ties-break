@@ -3267,6 +3267,12 @@ the wave-2 branch's copy commits, [who-she-is §5c](specs/who-she-is-2026-09.md)
   ALIVE – vivid human observation licensed by what a booth can see. ⚠ His film transcriptions
   are NOT in the repo (searched 10.09) – he re-shares them; they land in `docs/research/` as the
   tone reference before C4 builds.
+- **…and the booth's privacy wall fell the same day, by his second word**: «личная жизнь
+  спортсменов часто на виду, т.е. что-то вполне может быть и про частную жизнь, как в Wimbledon
+  фильме в конце было.» The boundary is the world's own PUBLICITY, not the family's walls: the
+  broadcaster may touch a REVEALED, fed life event at a fame band that makes her news – and the
+  mention itself is an exposure event of the spotlight (who-she-is §3c): the commentary and the
+  pressure are one system.
 - **The institutions' flagged lines**: «She was ours» is context's call, no auto-cut («может и
   нет, хотя смотря какой контекст»); «Playing when we call» STAYS («не вижу в чем проблема»);
   Refuse and Decline may BOTH live, varying by register («вполне может от настроения и

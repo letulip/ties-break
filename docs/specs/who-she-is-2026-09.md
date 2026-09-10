@@ -252,7 +252,12 @@ injuries and exams.
   put her in the light – a title or a final on a big stage, a shoot week, a heavily public loss
   – carry a pressure perturbation (draft −2..−4 before scaling; bench numbers). ⚠ No standing
   weekly drain: fame as a constant tax would punish succeeding, and «мы ни за что не наказываем»
-  forbids exactly that.
+  forbids exactly that. ⭐ RULED 10.09, the booth joins the exposure family: «личная жизнь
+  спортсменов часто на виду… что-то вполне может быть и про частную жизнь, как в Wimbledon
+  фильме в конце было» – the broadcaster may touch her private life exactly as far as the world
+  publicly knows it (a REVEALED and fed life event, at a fame band that makes her news – never a
+  fact only the family holds), and such a mention IS an exposure event of this very family: the
+  commentary and the pressure are one system (the-way-she-sounds C4 carries the voice half).
 * ⭐ **Who carries it well is the whole point, and it reads the CURRENT her** (his «оси текущей»
   answered mechanically): the pressure scales by **EXPRESSED openness** – an expressed-open girl
   half-feeds on attention (×0.75), an expressed-private one pays more (×1.5) – and by intensity
