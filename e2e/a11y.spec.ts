@@ -227,7 +227,11 @@ const OVERLAYS: Record<string, Overlay> = {
     escapeCloses: false,
     // ⚠ `radio`, NOT `button` – round 40's conventions: these controls SELECT, so the card draws
     // real radios in a real radiogroup and `getByRole('button')` finds none of them.
-    dismiss: (page) => page.getByRole('radio', { name: 'Say nothing, and let her talk', exact: true }),
+    // ⚠ 10.09 – NOT the listening answer: that one takes TWO taps by the owner's editorial ruling
+    // (she talks, then «let her finish» records it), and the two-tap way out has its own case in
+    // e2e/life-beat.spec.ts. This flow asserts the one-tap contract, so it presses an answer that
+    // still closes in one.
+    dismiss: (page) => page.getByRole('radio', { name: 'Tell her we are behind her', exact: true }),
   },
 
   // ⭐⭐ THE TOUR BRIEFING – the card that shipped the career-stopping defect of round 20 #3, and the

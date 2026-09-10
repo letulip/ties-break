@@ -245,4 +245,33 @@ test.describe('the life beat at the college fork', () => {
 
     expect(crashes, 'the app threw while answering a life beat and the fork behind it').toEqual([])
   })
+
+  test('⭐ 10.09 – listening takes two taps: she talks first, and «let her finish» records it', async ({
+    page,
+    careerAt,
+  }) => {
+    const crashes: string[] = []
+    page.on('pageerror', (error) => crashes.push(error.message))
+    await careerAt('unheard')
+    const card = page.getByRole('dialog', { name: /^School is over, and / })
+    await expect(card).toBeVisible()
+
+    // THE FIRST TAP RECORDS NOTHING – her continuation appears instead, asserted BY FORM (a
+    // narration naming her, one quoted span – the voice bibles' shape rules), never by text: the
+    // words are his and may change without touching this browser test.
+    await page.getByRole('radio', { name: 'Say nothing, and let her talk', exact: true }).click()
+    await expect(card, 'still up – no answer was recorded by the first tap').toBeVisible()
+    const continued = card.locator('.life-beat-continued')
+    await expect(continued).toBeVisible()
+    await expect(continued).toHaveText(/She[^"]*"[^"]+"/)
+    await expect(card.getByRole('radio'), 'the answers made way for her').toHaveCount(0)
+
+    // THE SECOND TAP ANSWERS – addressed by class, not by its draft label – and the beat closes;
+    // the fork card takes its place in the same frame (the queue this file already documents).
+    await card.locator('.life-beat-listen-done').click()
+    await expect(card).toHaveCount(0)
+    await expect(page.getByRole('dialog')).toBeVisible()
+
+    expect(crashes, 'the app threw during the listening detour').toEqual([])
+  })
 })
