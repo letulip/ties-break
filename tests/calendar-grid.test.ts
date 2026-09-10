@@ -52,10 +52,12 @@ import {
 } from '../src/composables/weekGrid'
 import {
   AWAY_NOTE_CHANCE,
+  COLD_AWAY_NOTES,
   EXAM_NOTES,
   FRIDGE_NOTES,
   INDEPENDENT_NOTES,
   INDEPENDENT_TRIP_NOTES,
+  STRAINED_AWAY_NOTES,
   TRIP_NOTES,
   fridgeNoteFor,
 } from '../src/composables/fridgeNote'
@@ -910,7 +912,8 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
       'flight', 'plane', 'airport', 'trip', 'travel', 'hotel', 'luck',
     ]
     const bad: string[] = []
-    for (const line of [...FRIDGE_NOTES, ...INDEPENDENT_NOTES]) {
+    // B5.2: the band registers are domestic pools like any other – the sweep owns them too
+    for (const line of [...FRIDGE_NOTES, ...INDEPENDENT_NOTES, ...STRAINED_AWAY_NOTES, ...COLD_AWAY_NOTES]) {
       for (const word of FORBIDDEN) {
         if (new RegExp(`\\b${word}\\b`, 'i').test(line)) bad.push(`"${line}"  – says "${word}"`)
       }
@@ -932,6 +935,16 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
       expect(new Set(pool).size, `${what}: duplicates`).toBe(pool.length)
       // ...and no line belongs to two pools, which would make the mood do nothing on that week
       for (const line of pool) expect(FRIDGE_NOTES, `"${line}" is in the domestic pool too`).not.toContain(line)
+    }
+    // ⭐ B5.2: the band registers are pools of their own – small, distinct, never borrowed, or
+    // the band would do nothing on the weeks it is supposed to change the sound of
+    for (const [what, pool] of [['strained', STRAINED_AWAY_NOTES], ['cold', COLD_AWAY_NOTES]] as const) {
+      expect(pool.length, `${what}: not enough scraps to avoid a photocopy`).toBeGreaterThanOrEqual(6)
+      expect(new Set(pool).size, `${what}: duplicates`).toBe(pool.length)
+      for (const line of pool) {
+        expect(INDEPENDENT_NOTES, `"${line}" is in the warm pool too`).not.toContain(line)
+        expect(FRIDGE_NOTES, `"${line}" is in the domestic pool too`).not.toContain(line)
+      }
     }
   })
 
@@ -961,7 +974,7 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
   })
 
   it('player copy: short dash only, no Cyrillic, and short enough to be a scrap', () => {
-    for (const line of [...FRIDGE_NOTES, ...INDEPENDENT_NOTES, ...EXAM_NOTES, ...TRIP_NOTES, ...INDEPENDENT_TRIP_NOTES]) {
+    for (const line of [...FRIDGE_NOTES, ...INDEPENDENT_NOTES, ...STRAINED_AWAY_NOTES, ...COLD_AWAY_NOTES, ...EXAM_NOTES, ...TRIP_NOTES, ...INDEPENDENT_TRIP_NOTES]) {
       expect(line, 'long dash on the fridge').not.toContain('—')
       expect(line, 'Cyrillic on the fridge').not.toMatch(/[Ѐ-ӿ]/)
       expect(line.length, `"${line}" is a letter, not a note`).toBeLessThanOrEqual(56)
@@ -1075,6 +1088,34 @@ describe('the fridge note is a parent\'s handwriting, and it claims nothing abou
     it('a band-less call keeps the old always-a-note behaviour – no pre-B5 caller regressed', () => {
       for (let week = 0; week < 60; week++) {
         expect(fridgeNoteFor('cad', week, 'home', 'independent')).not.toBeNull()
+      }
+    })
+
+    it('⭐ B5.2 – on the weeks that speak, the band picks the REGISTER', () => {
+      // Warm chatter at close/steady, logistics at strained, the minimal artefacts at cold –
+      // owner-approved pools, and a wrong mapping would make the band change nothing but the
+      // frequency. Membership is asserted on every speaking week across a long stretch.
+      let strained = 0
+      let cold = 0
+      for (let week = 0; week < 400; week++) {
+        const warm = fridgeNoteFor('cad', week, 'home', 'independent', 'steady')
+        if (warm !== null) expect(INDEPENDENT_NOTES).toContain(warm)
+        const s = fridgeNoteFor('cad', week, 'home', 'independent', 'strained')
+        if (s !== null) {
+          strained++
+          expect(STRAINED_AWAY_NOTES).toContain(s)
+        }
+        const c = fridgeNoteFor('cad', week, 'home', 'college', 'cold')
+        if (c !== null) {
+          cold++
+          expect(COLD_AWAY_NOTES).toContain(c)
+        }
+      }
+      expect(strained, 'the strained register has to actually appear').toBeGreaterThan(30)
+      expect(cold, 'the cold register has to actually appear').toBeGreaterThan(10)
+      // ...and the trip week is ONE shared pool at every band – the event is the register
+      for (const band of CADENCE_BANDS) {
+        expect(INDEPENDENT_TRIP_NOTES).toContain(fridgeNoteFor('cad', 9, 'trip', 'independent', band))
       }
     })
   })

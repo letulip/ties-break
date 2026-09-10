@@ -160,6 +160,43 @@ export const INDEPENDENT_NOTES: readonly string[] = [
   'The plant you left us is doing suspiciously well.',
   'Nothing urgent. I just wanted to hear your voice.',
   'Too much bread again. Some things do not change.',
+  // ⭐ B5.2 (owner-approved 11.09) – the missed call, the captionless photo, the voice note: the
+  // channel families the plan named, living in the warm pool because they ARE warm-band texture.
+  // ⚠ Growing this pool re-picks existing careers' away scraps once at update (modulo moved) –
+  // accepted: the doctrine's no-reshuffle promise was about ADDING POOLS beside the pick, growth
+  // reshuffles by construction, and a second coin to avoid it would be machinery a scrap of
+  // paper does not deserve.
+  'Missed you by a minute. Rang back into voicemail.',
+  'Sent you a photo of the garden. No caption needed.',
+  'Played your voice note twice. Once was on purpose.',
+]
+
+/** ⭐ B5.2 – what `strained` writes (owner-approved 11.09): sparse and PRACTICAL, the parent
+ *  keeping the door open through logistics – post, forms, keys, the standing Sunday offer.
+ *  Warmth is not performed; the trying is in the fact of the note at all. Same domestic law as
+ *  every pool here: no tennis, no results, no money, no travel, nothing about her body. */
+export const STRAINED_AWAY_NOTES: readonly string[] = [
+  'Your post is here. Say when.',
+  'The dentist sent forms. I filled in most of it.',
+  'Spare key is still under the mat.',
+  'Grandma asks for your address. I said I would check.',
+  'The boiler man came. Your old room is fine.',
+  'Sunday lunch stands, if ever.',
+  'Half the photos here are yours. Say which half.',
+  'New number for the house phone. Same house.',
+]
+
+/** ⭐ B5.2 – what `cold` writes on the rare week it writes (owner-approved 11.09): minimal, and
+ *  the plan's two artefacts live here – the message that says its predecessors went UNANSWERED,
+ *  and the DRAFT THAT WAS NEVER SENT, pinned to the player's own board because the board is the
+ *  parent's. Nothing asks for anything; «no reply needed» is the armour. */
+export const COLD_AWAY_NOTES: readonly string[] = [
+  'Still the same address, if needed.',
+  'The last two went unanswered. This is a third.',
+  'No reply needed. Just checking the line works.',
+  'Draft, never sent: come home for a weekend.',
+  'Your grandmother turned eighty. She asked.',
+  'The house key still fits. Checked it myself.',
 ]
 
 /** WHICH SCRAP THIS WEEK GETS. `home` is the unlicensed domestic pool and the default for every week
@@ -289,11 +326,18 @@ export function fridgeNoteFor(
     const quiet = hash32(`${seed}:fridge-quiet:${week}`) / 0x100000000
     if (quiet >= AWAY_NOTE_CHANCE[bondBand]) return null
   }
+  // B5.2: on the weeks that DO speak, the band also picks the register – warm chatter at
+  // close/steady, logistics at strained, the minimal artefacts at cold. Trip weeks stay one
+  // shared pool at every band: the event is the register. `null` band keeps the warm pool.
+  const awayHomePool =
+    bondBand === 'strained' ? STRAINED_AWAY_NOTES
+    : bondBand === 'cold' ? COLD_AWAY_NOTES
+    : INDEPENDENT_NOTES
   const pool = livingAway
     ? mood === 'trip'
       ? INDEPENDENT_TRIP_NOTES
       : mood === 'home'
-        ? INDEPENDENT_NOTES
+        ? awayHomePool
         : EXAM_NOTES
     : POOLS[mood]
   return pool[hash32(`${seed}:fridge:${week}`) % pool.length]
