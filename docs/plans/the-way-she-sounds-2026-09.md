@@ -43,6 +43,26 @@ sport, and everything in this house – says the whole layer in one line. ⚠ No
 words it; «love-all» (нулевая, СТАРТОВАЯ счётная позиция – и «любить всё») is the second candidate
 of the same family.
 
+## Wave B build order (branch `voice/wave-b`, opened 10.09 after the wave-2 merge)
+
+1. **B1 first – the bibles amended** (docs, DRAFT for his pass): the craft law written in, the
+   BAN LIST of narrator tails (becomes a lint), the rails defined as `home` (school +
+   after-school – the table, the car, a parent in the room; the existing `underOneRoof`
+   predicate) vs `away` (college + independent – a message, a call, a photo, a visit: the
+   `domestic` docstring's own canonical rule, now given to HER voice), the prologue named the
+   tonal benchmark, §E's arithmetic updated (44 → 80).
+2. **B2 + B4 together** – the corpus re-cut on rails: nine moments × two rails × four voices +
+   birthday (home-only) + off-season (away-only) = 80 lines; the `rail` claim (valued, like
+   `voice`) with its honesty-pin checker off `lifeStage`; six fallible-parent notes. ⚠ THE STOP:
+   everything wired but the wave does not merge before his вычитка of the full before→after
+   table.
+3. **B3's test half with the content** – the tail-lint (the ban list swept over every narration
+   in the pool, a ratchet inside `check`); the rail completeness rides the type-total cross +
+   the count pin (80 + 8 flat = 88).
+4. **B5 last, two sub-steps** – the silence cadence first (bond-banded frequency + «no contact
+   this week» as a result: mechanics only, no new words), the channel families second (his
+   words, after the B1/B2 pass).
+
 ## Done already (wave 2, 10.09, on `life/wave-2`)
 
 The review applied to the wave's own 27 strings: tails deleted, temperament moved into content,
