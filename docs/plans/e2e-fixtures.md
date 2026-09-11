@@ -38,31 +38,32 @@ last-reviewed: 2026-08-08
   is what a spec may import; `tools/e2e-fixtures.ts` imports the engine, self-executes as a CLI, and
   re-exports the reader so every existing import path still resolves.
 - **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
-  ever, proving *migrations work*. This is seven states at the current version, regenerated rather than
+  ever, proving *migrations work*. This is eight states at the current version, regenerated rather than
   migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
 **This is the build of §3 of `docs/plans/playwright.md`** – the load-bearing idea of the whole
 Playwright integration: *a test starts at week 412 instead of clicking through 412 weeks.* Nothing
-here needs a browser, and none of it depends on the harness; it is a node tool, seven binaries, a
+here needs a browser, and none of it depends on the harness; it is a node tool, eight binaries, a
 manifest and a test.
 
 ```bash
-npm run e2e:fixtures                 # regenerate all seven (~4 s, byte-identical every time)
-npm run e2e:fixtures -- --only pro   # one of them; the other six keep their manifest rows
+npm run e2e:fixtures                 # regenerate all eight (~4 s, byte-identical every time)
+npm run e2e:fixtures -- --only pro   # one of them; the other seven keep their manifest rows
 npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it gives up
 ```
 
 | file | what it is |
 |---|---|
 | `tools/e2e-fixtures.ts` | the generator, and the reader the harness and the test both come through |
-| `e2e/fixtures/*.tsave` | seven career saves in the app's own export format |
+| `e2e/fixtures/*.tsave` | eight career saves in the app's own export format |
 | `e2e/fixtures/manifest.json` | seed, week, schema version and the facts a spec may assert on |
 | `tests/e2e-fixtures.test.ts` | the rot alarm, in the `unit` project, on the PR gate |
 
-## The seven
+## The eight
 
 Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added; `unheard` joined
-them on 09.09. All but `junior` were found on the FIRST seed tried, `unheard` included – these are
-ordinary careers, not lottery tickets, and `junior` is the one carrying three requirements at once.
+them on 09.09 and `soft` on 11.09. All but `junior`, `unheard` and `soft` were found on the FIRST
+seed tried – these are ordinary careers, not lottery tickets, and `junior` is the one carrying three
+requirements at once.
 
 ⚠ THIS LINE USED TO CARRY THE SCHEMA VERSION AND WAS STALE WITHIN A DAY – it said v43 while
 `e2e/fixtures/manifest.json` said v45, because the fixtures were regenerated with the schema and the
@@ -81,6 +82,7 @@ the manifest at runtime and none of it is read from here.
 | `broke` | `e2e-broke-0` | 73 | 14 | **-$2,502** | 67 | 52.0 KiB | eleven weeks under water – one week short of the bankruptcy latch |
 | `ending` | `e2e-ending-0` | 282 | 19 | $6,822 | 41 | 77.0 KiB | past the fork at nineteen, racket down, career read-only |
 | `unheard` | `e2e-unheard-0` | 242 | 18 | $6,450 | 5 | 79.8 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
+| `soft` | `e2e-soft-1` | 9 | 13 | $25,324 | 127 | 34.1 KiB | the week she came by with something **small** – a tier-1 row live inside its three-week window, unanswered, on a week the engine never stopped |
 
 **438 KiB of saves**, the largest single file 80 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of

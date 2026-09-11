@@ -53,7 +53,18 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // (v74: it read `answerLifeBeat(world, 'listen')` while `'fork-opinion'` was the only beat kind) –
 // see the recipe in tools/e2e-fixtures.ts, whose ONE difference from the others is that it stops
 // before that line runs.
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard'] as const
+// ⚠⚠ `soft` IS THE TIER-1 CAREER, AND IT IS AN EIGHTH FIXTURE RATHER THAN A FLAG ON ONE OF THE
+// SEVEN BECAUSE NONE OF THEM CAN HOLD THE STATE (v74 T15, 11.09). The soft surface is a `'small-talk'
+// row that is unanswered AND still inside its three-week window (`liveSoftBeat`, derived from
+// `week − row.week`), on a week the engine never stopped – and every recipe above walks past that
+// state without ever parking on it: six of them stop on a week chosen for money, a ranking or an
+// ending, and `unheard` stops on a BLOCKING row, whose card covers the hub the soft card lives on.
+// ⚠ MEASURED BEFORE THE RECIPE WAS WRITTEN, not assumed: six of the seven carry `'small-talk'` rows
+// (3 to 11 each, `fresh` is week 0 and has none) and all 40 of them are unanswered and EXPIRED. The
+// closest miss is `junior`, whose youngest row is **4 weeks** old against a window of 3 – one week
+// outside it. So the tier-1 case had nowhere to start until this career existed, which is the same
+// argument one tier down that `unheard` makes about the blocking beat.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.

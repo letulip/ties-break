@@ -345,6 +345,55 @@
           "n": 193373
         }
       }
+    },
+    {
+      "name": "soft",
+      "file": "soft.tsave",
+      "purpose": "She came by with something small – a live, unanswered tier-1 row on a week the engine never stopped.",
+      "seed": "e2e-soft-1",
+      "careerId": "c-e2e-soft",
+      "slot": "auto:c-e2e-soft:a",
+      "targetWeek": 9,
+      "schemaVersion": 74,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Ines",
+        "kidLastName": "Lombardi",
+        "country": "US"
+      },
+      "bytes": 34943,
+      "payloadBytes": 34899,
+      "sha256": "7ef82f4a62bdfb1ad8cd23409f4aee8319475a29183a3b5cb31f52bc09e4deeb",
+      "seedsTried": 2,
+      "facts": {
+        "week": 9,
+        "seasonIndex": 0,
+        "ageYears": 13,
+        "fundsCents": 2532436,
+        "kidRank": 127,
+        "rankedDomestic": true,
+        "rankedItf": false,
+        "rankedWta": false,
+        "domesticPoints": 60,
+        "itfPoints": 0,
+        "wtaPoints": 0,
+        "seasonsPlayed": 0,
+        "resultRows": 877,
+        "feedEvents": 76,
+        "financeWeeks": 10,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": 2001421337,
+          "n": 7191
+        }
+      }
     }
   ]
 }
