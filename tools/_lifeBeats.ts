@@ -25,7 +25,7 @@
 // exited 1 at `tools/e2e-fixtures.ts:202`, and `tools/spirit-bench.ts`, whose `try/catch` swallows
 // the throw, exited 0 while its own census printed 842 beats raised and ZERO answered over a 4-seed
 // grid – with `bond @ fork` NaN in both arms, because `answerFork` refuses behind an open row.
-import { answerLifeBeat, pendingLifeBeat, LIFE_BEAT_OPTIONS, type WorldState } from '../src/engine/world'
+import { answerLifeBeat, pendingLifeBeat, pendingLifeBeatOptions, type WorldState } from '../src/engine/world'
 import type { LifeBeatKind } from '../src/shared/protocol'
 
 /** ⭐⭐ ANSWER WHATEVER BEAT IS WAITING, WITH THE ANSWER THAT COSTS NOTHING, AND KEEP ANSWERING UNTIL
@@ -36,7 +36,16 @@ import type { LifeBeatKind } from '../src/shared/protocol'
  *  such option rather than picking one, because a silently chosen answer would move every bond
  *  reading downstream of it by an unknown amount. Today that is `'listen'` on `'fork-opinion'`
  *  (`beatListened` is 0) and `'wary'` on `'met'` (`metWary` is 0), which is byte-for-byte what the
- *  46 hand-written lines did on the one kind that used to exist. */
+ *  46 hand-written lines did on the one kind that used to exist.
+ *
+ *  ⚠⚠ AND IT ASKS THE ENGINE FOR **THIS ROW'S** PRICES, NOT FOR THE TABLE (v74 T7, 11.09). The
+ *  wants flip re-prices two of `'met'`'s four answers for a girl who asked that it be kept quiet, so
+ *  `LIFE_BEAT_OPTIONS` is no longer «what an answer costs» – it is the `'open'` column of it.
+ *  Reading the record directly would have been asking one question and paying for another: today the
+ *  two agree (`wary` is 0 in both readings, which is exactly what the flip being an OVERLAY
+ *  guarantees) and NOTHING any bench measures moves, but the agreement would be a coincidence this
+ *  file depended on rather than a property it checked. `pendingLifeBeatOptions` is the engine's own
+ *  reading, so the zero this picks is the zero `answerLifeBeat` will charge. */
 export function drainLifeBeats(world: WorldState, except?: LifeBeatKind): number {
   let cleared = 0
   for (let guard = 0; guard < 200; guard++) {
@@ -45,7 +54,7 @@ export function drainLifeBeats(world: WorldState, except?: LifeBeatKind): number
     // was built to reach would delete the thing the file is about (`tools/spirit-bench.ts`'s two
     // arms are the live case). Everything else is cleared.
     if (row === null || row.kind === except) return cleared
-    const free = LIFE_BEAT_OPTIONS[row.kind].find((o) => o.bond === 0)
+    const free = pendingLifeBeatOptions(world)?.find((o) => o.bond === 0)
     if (!free) throw new Error(`${row.kind} has no bond-neutral answer – a walk cannot drain it without moving the number`)
     answerLifeBeat(world, free.id)
     cleared++

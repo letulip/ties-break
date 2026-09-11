@@ -363,8 +363,16 @@ export { activeEpisode, knownPartner, loveEpisodesOf }
 // ⭐⭐ v74 T6 ADDS THE DELIVERY HALF: `deliverKnownPartner` is the weekly check the tick calls on
 // `knownWeek`, and `lifeBeatHeading` joins `lifeBeatSaid` / `lifeBeatListenFollowUp` as the third
 // pure copy assembler the voice pins walk without posing a world.
-import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
-export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
+// ⭐⭐ v74 T7 ADDS THE PRICING HALF: `lifeBeatOptionsFor` is the ONE reading of what an answer costs
+// (`LIFE_BEAT_OPTIONS` alone is now only the `'open'` column), `pendingLifeBeatOptions` is that
+// reading for the row in hand – the shape `tools/_lifeBeats.ts` drains beats through – and
+// `PARTNER_WANTS` is the two-value list the neutrality pin walks so it cannot go stale on a union.
+// ⚠ `LifeBeatAnswer` IS NOT `shared/protocol`'s `LifeBeatOption` and the two names are kept apart on
+// purpose: the wire shape the dialog is handed carries `{id, label}` and no price, and this one
+// carries the price. Same name on two barrels would have been the duplicate-identifier confusion at
+// its most expensive – the priced type silently satisfying the unpriced one.
+import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, PARTNER_WANTS, type ForkWant, type LifeBeatAnswer } from './world/lifeBeat'
+export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, PARTNER_WANTS, type ForkWant, type LifeBeatAnswer }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'

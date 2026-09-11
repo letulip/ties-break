@@ -435,25 +435,59 @@ function metRegisterOf(band: BondBand): MetRegister {
  *  ⚠ NO REGISTER SPLIT, AND IT IS A SCOPE STATEMENT RATHER THAN AN OVERSIGHT. The fork's pool splits
  *  `low` from `up` because the fork is a decision her week can weigh on; this is one piece of news
  *  and the spirit register is already carried by the heading above it. T10 owns the expansion (the
- *  brief's own «~8–12 lines» is the FEED's matrix, and this pool is its four-line neighbour). */
-const MET_HER_LINE: Record<Temperament, string> = {
-  sunny: 'She brought it up over dinner, before anyone asked. "There is someone. I wanted you to hear it from me first."',
-  fiery: 'She was talking before her bag was down. "There is someone. It is good. That is all you are getting."',
-  quiet: 'She said it while she put the shopping away, between two other things. "There is someone I see now."',
-  deep: 'She waited until the house was quiet, then said it once. "There is someone. That is all."',
+ *  brief's own «~8–12 lines» is the FEED's matrix, and this pool is its four-line neighbour).
+ *
+ *  ⭐⭐⭐ v74 T7 – AND THE SECOND AXIS IS `wants`, WHICH IS THE ONLY PLACE THE FLIP IS EVER SURFACED.
+ *  Her drawn `wants` re-prices two of the four answers (`ECONOMY.bond.delta.metWarmPrivate` /
+ *  `metSilentPrivate`), and the player is told which way by THE WORDING AND BY NOTHING ELSE – no
+ *  meter, no badge, no label, no marked option. That is the birthday-ask scene generalised: the ask
+ *  is in the line she says, a parent who is listening hears it, and a parent who is not pays for it
+ *  over months. ⚠ THE FRAME PER VOICE IS THE SAME IN BOTH COLUMNS on purpose – she is the same girl
+ *  with the same habits, and what differs is the request she attaches. The `open` column is T6's
+ *  four lines, BYTE-IDENTICAL. */
+const MET_HER_LINE: Record<Temperament, Record<LoveEpisode['wants'], string>> = {
+  sunny: {
+    open: 'She brought it up over dinner, before anyone asked. "There is someone. I wanted you to hear it from me first."',
+    private: 'She brought it up over dinner, and wished straight away that she had not. "There is someone. Please do not go telling people."',
+  },
+  fiery: {
+    open: 'She was talking before her bag was down. "There is someone. It is good. That is all you are getting."',
+    private: 'She was talking before her bag was down. "There is someone. And no, we are not doing questions about it."',
+  },
+  quiet: {
+    open: 'She said it while she put the shopping away, between two other things. "There is someone I see now."',
+    private: 'She said it while she put the shopping away, and did not look up. "There is someone. I would rather that stayed in this room."',
+  },
+  deep: {
+    open: 'She waited until the house was quiet, then said it once. "There is someone. That is all."',
+    private: 'She waited until the house was quiet, and asked first that it go no further. "There is someone. Now please let it be."',
+  },
 }
 
 /** ⭐ `steady` – A MENTION, AND NOT ONE WORD OF HERS IN IT. She said it somewhere in the week and the
  *  parent caught it; there is no scene, because a scene is what `close` has and this home does not.
  *
- *  ⚠ ONE LINE, NOT FOUR. It is the PARENT'S narration and the fence keeps temperament out of that –
- *  `HER_LINE` and `MET_HER_LINE` are the only pools in this file a girl's voice indexes. */
-const MET_MENTION = 'She mentioned someone this week, in passing, and did not stop to say who.'
+ *  ⚠ ONE LINE PER READING, NOT FOUR. It is the PARENT'S narration and the fence keeps temperament out
+ *  of that – `HER_LINE` and `MET_HER_LINE` are the only pools in this file a girl's voice indexes.
+ *  The `wants` axis is not the fence: it is not who she is, it is what she asked for. */
+const MET_MENTION: Record<LoveEpisode['wants'], string> = {
+  open: 'She mentioned someone this week, in passing, and did not stop to say who.',
+  private: 'She let someone slip this week, caught herself, and moved the conversation on.',
+}
 
 /** ⭐⭐ `strained` / `cold` – THE DRY CARD. No quotation at all, which is a stronger silence than the
  *  fork's flat pool: there she at least answered a question, and here the parent found out without
- *  her. The loss is the whole content of the line, and nothing in it is rude. */
-const MET_DRY = 'There is someone in her life. She did not say so, and the house found out anyway.'
+ *  her. The loss is the whole content of the line, and nothing in it is rude.
+ *
+ *  ⚠⚠ AND IT CARRIES THE `wants` READ TOO, WHICH IS THE DECISION WORTH READING TWICE. The flip
+ *  applies at EVERY band – a cold home's four answers are priced exactly as a close home's – so a
+ *  pool that only split at `close` would leave the far half of the ladder paying a rule it could
+ *  never read. The parent at this distance is not told what she wants; he is told she kept it, which
+ *  is the same fact arriving as an inference instead of as a request. */
+const MET_DRY: Record<LoveEpisode['wants'], string> = {
+  open: 'There is someone in her life. She did not say so, and the house found out anyway.',
+  private: 'There is someone in her life. She had been keeping it to herself, and the house found out anyway.',
+}
 
 /** The parent's frame over the card, one per register. ⚠ IT KEYS ON THE BOND BAND AND NOT ON THE
  *  MOOD LADDER, unlike the fork's `HEADING`: what this week is ABOUT is the distance between them,
@@ -464,7 +498,29 @@ const MET_HEADING: Record<MetRegister, string> = {
   dry: 'There is someone in her life',
 }
 
+/** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
+ *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
+ *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
+ *
+ *  ⚠⚠ `LifeBeatAnswer` AND NOT `LifeBeatOption`, WHICH IS TAKEN AND IS A DIFFERENT THING.
+ *  `shared/protocol/narrative.ts` already exports `LifeBeatOption` – the WIRE shape, `{id, label}`,
+ *  what `LifeBeatPrompt.options` carries to the dialog and DELIBERATELY has no `bond` on it. Two
+ *  types of the same name on two barrels, one with a price and one without, is the duplicate-
+ *  identifier confusion at its most expensive: the safer one silently accepting the costed one.
+ *  ⭐ AND THE SPLIT IS THE FENCE ITSELF – the engine's answer knows what it costs, the screen's
+ *  cannot, and that is why the flip can never leak onto a button. */
+export interface LifeBeatAnswer {
+  id: string
+  label: string
+  bond: number
+}
+
 /** ⭐⭐ WHAT THE PARENT MAY SAY BACK, PER BEAT KIND – and not one option in either list is HER choice.
+ *
+ *  ⚠⚠ THIS IS THE TABLE AS AN **`open`** GIRL PRICES IT (v74 T7). It is still the one place the
+ *  labels and the base numbers live, and `lifeBeatOptionsFor` below is the ONLY road to the priced
+ *  set a given row is answered against – read this record directly and you have read one of the two
+ *  readings. It stays the default because `'open'` is the reading with no request attached.
  *
  *  ⚠⚠ RESTRUCTURED FROM A FLAT LIST IN v74 (wave 3, T6), and the reason is the type rather than
  *  tidiness: a `'met'` answer set is not a fork-opinion answer set. «Tell her we are behind her» is
@@ -479,7 +535,7 @@ const MET_HEADING: Record<MetRegister, string> = {
  *  boyfriend -> husband»), so a button reading «ask to meet HIM» would put on screen a fact the world
  *  does not hold. The wave-3 brief's own draft of the intrusive label says «him»; this is the same
  *  option with the fact taken out, and the wording is the owner's to settle either way (§5). */
-export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly { id: string; label: string; bond: number }[]> = {
+export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> = {
   /** ⚠ THE FORK'S THREE, BYTE-IDENTICAL AND IN THEIR ORIGINAL ORDER (invariant 4 – a shipped string
    *  is not an agent's to change, and this restructure touched none of them). The labels name no
    *  want, deliberately: the buttons cannot become a second way of reading her answer off the
@@ -490,8 +546,7 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly { id: string; labe
     { id: 'listen', label: 'Say nothing, and let her talk', bond: ECONOMY.bond.delta.beatListened },
   ],
   /** ⭐ THE FOUR REACTIONS (brief §2 T7's shape, §4's ruled deltas): warm, wary, intrusive, silent.
-   *  ⚠ THE WANTS FLIP IS T7's AND IS NOT HERE – a `'private'` girl reads silent +2 / warm −1, which
-   *  is a rule ABOUT the table and not a row in it. */
+   *  ⚠ THE WANTS FLIP IS AN OVERLAY ON THIS LIST, not a row in it – see `MET_BOND_PRIVATE`. */
   met: [
     { id: 'warm', label: 'Tell her we are glad', bond: ECONOMY.bond.delta.metWarm },
     { id: 'wary', label: 'Ask the coach to watch her schedule', bond: ECONOMY.bond.delta.metWary },
@@ -499,6 +554,53 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly { id: string; labe
     { id: 'silent', label: 'Say nothing about it', bond: ECONOMY.bond.delta.metSilent },
   ],
 }
+
+/** ⭐⭐⭐ v74 T7 – THE WANTS FLIP, AS AN OVERLAY AND NEVER AS A SECOND TABLE. A girl whose drawn
+ *  `wants` is `'private'` reads silence as the kindness and warmth as the thing that puts it in the
+ *  room; the other two answers are the same act whatever she asked for, so they are ABSENT here.
+ *
+ *  ⚠⚠ THE ABSENCE IS THE LOAD-BEARING HALF AND IT IS WHY THIS IS AN OVERLAY. `'met'` must keep
+ *  exactly one BOND-NEUTRAL answer under BOTH readings: `tools/_lifeBeats.ts`' `drainLifeBeats` is
+ *  how forty tools, `npm run e2e:fixtures` and `tests/helpers/career.ts` walk careers past a beat
+ *  they never meant to price, it takes the option whose delta is zero, and it THROWS rather than
+ *  pick a costed one. A flip written as a COPY of the four rows could drift `wary` off zero in one
+ *  careless edit and move every bond number those benches measure – `npm run check` staying green
+ *  the whole way, because all of it typechecks. Overlaying two rows makes the zero literally the
+ *  same zero. `tests/wave3-reaction.test.ts` §D pins it over every kind x every `wants`.
+ *
+ *  ⚠ AND NOTHING PRINTS EITHER NUMBER: the read reaches the player through `MET_HER_LINE`,
+ *  `MET_MENTION`, `MET_DRY` and `MET_EVENT` – wording, never a mark. */
+const MET_BOND_PRIVATE: Readonly<Record<string, number | undefined>> = {
+  warm: ECONOMY.bond.delta.metWarmPrivate,
+  silent: ECONOMY.bond.delta.metSilentPrivate,
+}
+
+/** ⭐⭐⭐ v74 T7 – THE ANSWER SET **AS THIS GIRL PRICES IT**, and the one road to it. Every reader of
+ *  a beat's answers goes through here: `buildLifeBeatPrompt` to render the card, `answerLifeBeat` to
+ *  charge it, `pendingLifeBeatOptions` for everything outside the engine. Two readings of one price
+ *  list is exactly the disagreement rule 3 exists to prevent, so there is one function.
+ *
+ *  ⚠ `'fork-opinion'` IGNORES `wants` ENTIRELY and that is not an oversight: her attachment has a
+ *  `wants` and her college answer does not, and the parameter is meaningless on that kind rather
+ *  than merely unused. Only `'met'` flips.
+ *
+ *  ⚠ THE LABELS ARE UNTOUCHED BY THE FLIP – same four sentences, same order, same ids, in both
+ *  readings. A button that changed its words with the price would be the meter this wave refuses to
+ *  build, one step removed. */
+export function lifeBeatOptionsFor(kind: LifeBeatKind, wants: LoveEpisode['wants']): readonly LifeBeatAnswer[] {
+  const base = LIFE_BEAT_OPTIONS[kind]
+  if (kind !== 'met' || wants !== 'private') return base
+  return base.map((option) => {
+    const flipped = MET_BOND_PRIVATE[option.id]
+    return flipped === undefined ? option : { ...option, bond: flipped }
+  })
+}
+
+/** ⭐ HER TWO READINGS AS A LIST, so a pin can walk both without transcribing the union. ⚠ DERIVED
+ *  FROM A TOTAL RECORD rather than written out: a third `wants` value would make the record below a
+ *  compile error, which is the same guarantee `LIFE_BEAT_OPTIONS`' own keying gives the kinds. */
+const WANTS_TOTAL: Record<LoveEpisode['wants'], true> = { open: true, private: true }
+export const PARTNER_WANTS = Object.keys(WANTS_TOTAL) as readonly LoveEpisode['wants'][]
 
 /** The feed line each answer writes, per kind. ⚠ NO `amountCents` AND NO PRICE IN ANY WORD OF IT
  *  (rule 4). ⚠ Keyed by kind for `LIFE_BEAT_OPTIONS`' own reason: two beats can share an option id
@@ -534,21 +636,34 @@ function speaksInHerOwnVoice(band: BondBand): boolean {
  *  register x want without mounting a world – §5b's line item 3: «a test walking beatKind x
  *  temperament x register that FAILS on a missing variant, so a `quiet` girl can never silently
  *  receive a `fiery` girl's line as a fallback. (The flat pool is the one legal shared fallback, and
- *  only at strained/cold.)» */
+ *  only at strained/cold.)»
+ *
+ *  ⭐ v74 T7 – `wants` IS THE LAST PARAMETER AND IT DEFAULTS TO `'open'`, which is a statement about
+ *  the two kinds and not a convenience. `'fork-opinion'` has no `wants` at all – her college answer
+ *  is not an attachment – so a default lets wave 2's whole pin sweep keep calling this with five
+ *  arguments and keep asserting, byte for byte, the lines it was written against. `'met'` is always
+ *  called with the episode's own reading (`buildLifeBeatPrompt` -> `beatWants`), and the default
+ *  `'open'` is T6's shipped reading rather than a neutral stand-in. */
 export function lifeBeatSaid(
   kind: LifeBeatKind,
   detail: string,
   voice: Temperament,
   register: MoodRegister,
   bond: BondBand,
+  wants: LoveEpisode['wants'] = 'open',
 ): string {
   // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
   // without this function refusing to compile against it. ⚠ `'met'` READS NO `detail` AND NO
   // `register`: its detail is an episode id (a machine value, never a rendered word) and its three
   // registers are the BOND ladder, not the Mood one – see the §3b banner.
   switch (kind) {
-    case 'met':
-      return metRegisterOf(bond) === 'her' ? MET_HER_LINE[voice] : metRegisterOf(bond) === 'mention' ? MET_MENTION : MET_DRY
+    case 'met': {
+      // ⭐⭐ v74 T7 – THE READ IS IN THE WORDING AND IN NOTHING ELSE. All three rungs of the ladder
+      // carry it, because the flip prices a cold home's answers exactly as it prices a close one's
+      // and a rule only half the ladder can read is a hidden number.
+      const met = metRegisterOf(bond)
+      return met === 'her' ? MET_HER_LINE[voice][wants] : met === 'mention' ? MET_MENTION[wants] : MET_DRY[wants]
+    }
     case 'fork-opinion': {
       const want = FORK_WANTS.find((w) => w === detail)
       if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
@@ -592,32 +707,68 @@ export function lifeBeatListenFollowUp(
   return HER_CONTINUATION[voice][want]
 }
 
+/** ⭐⭐ v74 T7 – WHAT SHE ASKED FOR, FOR THE ROW IN HAND. `'met'`'s `detail` is the episode id, so the
+ *  row itself names the attachment whose `wants` prices its answers and colours its line.
+ *
+ *  ⚠ `'open'` IS THE ANSWER FOR EVERY OTHER KIND, AND IT IS THE BASE READING RATHER THAN A NEUTRAL
+ *  STAND-IN: `'fork-opinion'` has no attachment, so there is nothing to read, and the base table is
+ *  exactly what such a row has always been answered against.
+ *
+ *  ⚠ AND `'open'` AGAIN WHEN THE EPISODE IS GONE. A `'met'` row whose episode no longer exists is
+ *  unreachable on any state the sim produces (episodes are append-only and never pruned – the
+ *  `LoveEpisode` banner), so this branch is for probe worlds hand-built in tests and benches. It
+ *  fails onto T6's shipped reading, never onto a price nobody chose. */
+function beatWants(world: WorldState, row: LifeBeatRecord): LoveEpisode['wants'] {
+  if (row.kind !== 'met') return 'open'
+  return loveEpisodesOf(world).find((episode) => episode.id === row.detail)?.wants ?? 'open'
+}
+
+/** ⭐⭐ v74 T7 – THE PRICED ANSWER SET FOR WHATEVER IS PENDING, or null when nothing is. The one
+ *  reading of «what would this answer cost» available OUTSIDE the engine, and it exists because
+ *  `LIFE_BEAT_OPTIONS` alone is no longer that reading: a caller that reads the base record and
+ *  answers from it is asking one question and paying for another.
+ *
+ *  ⚠ ITS FIRST CALLER IS `tools/_lifeBeats.ts`' `drainLifeBeats`, which picks the bond-NEUTRAL answer
+ *  so a harness that never meant to price a beat cannot move the number it is measuring. Under
+ *  today's table that is `wary` either way, so nothing a bench measures moves; under a future flip
+ *  it is still whatever is genuinely zero FOR THIS ROW, which the base record could not have said. */
+export function pendingLifeBeatOptions(world: WorldState): readonly LifeBeatAnswer[] | null {
+  const pending = pendingLifeBeat(world)
+  return pending === null ? null : lifeBeatOptionsFor(pending.kind, beatWants(world, pending))
+}
+
 /** The prompt the Snapshot carries, assembled ENGINE-side so the dialog renders what it is handed
  *  and owns no sentence of its own – `buildBirthdayPrompt`'s own contract.
  *
  *  ⚠ NULL WHILE NOTHING IS PENDING, which is every week of nearly every career: this is called on
  *  every `toSnapshot`, so it is a `find` over a handful of rows and no more.
  *
- *  ⚠ ZERO DRAWS. Every word of it is selected by (want, voice, register, bond band) – four facts the
- *  world already holds – so the prompt is a pure function of the world and re-assembling it costs
- *  nothing on any stream. That is also what lets `answerLifeBeat` re-derive it to re-validate the
- *  option id (rule 3) without the two readings ever being able to disagree. */
+ *  ⚠ ZERO DRAWS. Every word of it is selected by (want, voice, register, bond band, wants) – five
+ *  facts the world already holds – so the prompt is a pure function of the world and re-assembling
+ *  it costs nothing on any stream. That is also what lets `answerLifeBeat` re-derive it to
+ *  re-validate the option id (rule 3) without the two readings ever being able to disagree.
+ *
+ *  ⚠⚠ AND THE FLIP REACHES THE SCREEN THROUGH `said` ALONE (v74 T7). `options` carries ids and
+ *  LABELS and has never carried a `bond`, so the re-priced number cannot leak onto a button even by
+ *  accident – the type is the fence. What the player has to go on is her line, which is the whole
+ *  design: never marked, never labelled, no meter. */
 export function buildLifeBeatPrompt(world: WorldState): LifeBeatPrompt | null {
   const pending = pendingLifeBeat(world)
   if (pending === null) return null
   const register = moodRegisterOf(spiritBandOf(world.spirit ?? ECONOMY.spirit.baseline))
   const band = bondBandOf(world.bond ?? ECONOMY.bond.start)
   const voice = voiceOf(world)
+  const wants = beatWants(world, pending)
   const followUp = lifeBeatListenFollowUp(pending.kind, pending.detail, voice, band)
   return {
     week: pending.week,
     kind: pending.kind,
     heading: lifeBeatHeading(pending.kind, register, band),
-    said: lifeBeatSaid(pending.kind, pending.detail, voice, register, band),
+    said: lifeBeatSaid(pending.kind, pending.detail, voice, register, band, wants),
     // ⚠ THE PENDING ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a
     // girl's «there is someone» the fork's three buttons, which is the defect the per-kind record
     // exists to make impossible – and `answerLifeBeat` re-validates against THIS same reading.
-    options: LIFE_BEAT_OPTIONS[pending.kind].map((o) => ({ id: o.id, label: o.label })),
+    options: lifeBeatOptionsFor(pending.kind, wants).map((o) => ({ id: o.id, label: o.label })),
     listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
   }
 }
@@ -662,7 +813,13 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   // table here would let a `'met'` row be answered with the fork's `back` – the prompt would refuse
   // it, but the refusal would then be the ONLY thing standing between two beats' answer sets, and
   // rule 3 exists precisely so that two readings of the same fact cannot disagree.
-  const chosen = LIFE_BEAT_OPTIONS[rows[at].kind].find((o) => o.id === optionId && prompt?.options.some((p) => p.id === o.id))
+  // ⚠⚠ AND THE ROW'S OWN `wants` PICKS THE PRICE (v74 T7), through the SAME function the prompt one
+  // line up was built from. What she asked for is a fact on the episode, so the charge is re-derived
+  // here from the world and never carried in from the screen – a dialog cannot choose its own price
+  // any more than it can choose its own option set.
+  const chosen = lifeBeatOptionsFor(rows[at].kind, beatWants(world, rows[at])).find(
+    (o) => o.id === optionId && prompt?.options.some((p) => p.id === o.id),
+  )
   if (!chosen) throw new Error('That is not one of the answers this beat offered')
   rows[at] = { ...rows[at], answer: chosen.id }
   // ⚠ HIS WORDS MOVE `bond` AND NOTHING ELSE (§4a.2's law, and this wave's fence): no spirit delta
@@ -908,10 +1065,21 @@ export function rollArrival(world: WorldState): void {
  *
  *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD OF IT (rule 4 at the top of this file). ⚠ AND NO FACT
  *  ABOUT THE PARTNER: the sim holds none, so neither does the row. T10 owns the full matrix (the
- *  brief's «by openness x wants x told-early/told-late»); these two are the draft that renders. */
-const MET_EVENT: Record<'told' | 'found-out', string> = {
-  told: 'She told us there is someone in her life.',
-  'found-out': 'There is someone in her life, and she did not tell us herself.',
+ *  brief's «by openness x wants x told-early/told-late»); these four are the draft that renders.
+ *
+ *  ⭐⭐⭐ v74 T7 – THE `wants` COLUMN IS HALF THE SURFACE THE FLIP HAS, AND IT IS THE DURABLE HALF.
+ *  The card is answered once and gone; this row is `keep: true` and a career reads its own life back
+ *  seasons later, so the feed is where a player who was not listening the first time can still learn
+ *  what she asked for. ⚠ The `open` column is T6's two lines, BYTE-IDENTICAL. */
+const MET_EVENT: Record<'told' | 'found-out', Record<LoveEpisode['wants'], string>> = {
+  told: {
+    open: 'She told us there is someone in her life.',
+    private: 'She told us there is someone in her life, and asked that it stay between us.',
+  },
+  'found-out': {
+    open: 'There is someone in her life, and she did not tell us herself.',
+    private: 'There is someone in her life. She had been keeping it to herself.',
+  },
 }
 
 /** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW.
@@ -945,7 +1113,8 @@ export function deliverKnownPartner(world: WorldState): void {
     keep: true,
     // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
     // keeps `accrueFinance` from ever seeing this row.
-    text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'],
+    // ⚠ THE EPISODE'S OWN `wants` (v74 T7) – the read, unmarked, in the one row the album keeps.
+    text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'][known.wants],
   })
   // ⚠ THE SAME TICK, AND THE ORDER IS THE READING: the feed row is what HAPPENED and the beat is what
   // the parent is being asked about it, so the news is on the record before the card can be answered.

@@ -3508,14 +3508,36 @@ export const ECONOMY = {
        *  was being asked of him – saying nothing back is the one reply that leaves her holding it
        *  alone, so it costs a little.
        *
-       *  ⚠ THE WANTS FLIP IS **T7's** AND IS NOT WIRED HERE. A girl whose drawn `wants` is
-       *  `'private'` reads silent +2 and warm −1 (brief §4's own «flip» column); T6 ships only the
-       *  four universal rows above, so a reader of this block does not mistake the table for the
-       *  whole rule. */
+       *  ⚠ THE FOUR ROWS BELOW ARE THE TABLE AN **`open`** GIRL IS READ BY, and the two after them
+       *  are the whole of the difference a `private` one makes (T7, 11.09). T6's own note here said
+       *  the flip «is not wired here»; it is now, and the note is CORRECTED rather than left
+       *  standing, because a comment that still says «not yet» beside the wiring is the one kind of
+       *  stale a constants file cannot carry. */
       metWarm: 2,
       metWary: 0,
       metIntrusive: -3,
       metSilent: -1,
+      /** ⭐⭐⭐ v74 T7 – THE WANTS FLIP, AND IT IS TWO ROWS RATHER THAN A SECOND TABLE. A girl whose
+       *  drawn `wants` is `'private'` reads silence as the kindness and warmth as the thing that
+       *  puts it in the room: silent **+2**, warm **−1** (brief §4's «flip» column, verbatim).
+       *
+       *  ⚠⚠ `wary` AND `meet` ARE ABSENT ON PURPOSE AND THE ABSENCE IS LOAD-BEARING. The flip is an
+       *  OVERLAY on the four above (`world/lifeBeat.ts`'s `MET_BOND_PRIVATE`), so the two rows it
+       *  does not name keep the SAME number in both readings – which is what guarantees `'met'`
+       *  still has a bond-NEUTRAL answer (`wary`, 0) whatever she wants. Forty tools, the e2e
+       *  fixture generator and `tests/helpers/career.ts` drain beats through that zero
+       *  (`tools/_lifeBeats.ts`), and a flip that copied the table instead of overlaying it could
+       *  drift `wary` off zero and move every bond number those benches measure.
+       *
+       *  ⚠⚠ AND IT IS STILL NOT A ROW PER GIRL – the fence above holds. What varies is not WHO she
+       *  is (temperament never reaches this table) but what she ASKED FOR, which is a fact she put
+       *  on the record herself. The arithmetic of care is the same; the request is hers.
+       *
+       *  ⚠ NOTHING PRINTS EITHER NUMBER. The read reaches the player through the feed line's and
+       *  the card's WORDING alone – no meter, no badge, no label (the birthday-ask scene
+       *  generalised, brief §2 T7). */
+      metWarmPrivate: -1,
+      metSilentPrivate: 2,
     },
     /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
      *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`
