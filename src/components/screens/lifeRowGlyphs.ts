@@ -51,11 +51,19 @@ export type LifeRowKind = (typeof LIFE_ROW_KINDS)[number]
  *  a reader who is not a compiler can see it stated. */
 export type LifeRowGlyphs = Record<string, never> | Record<LifeRowKind, string>
 
-// ⚠⚠ THE OWNER'S PICKS GO HERE AND NOWHERE ELSE. One line per row kind, e.g. `life: 'X',` with his
-// glyph in the quotes. Until then the object is empty and every life row renders exactly as an
-// unmapped row does – its sentence, with nothing in front of it.
+// ⚠⚠ THE OWNER'S PICKS GO HERE AND NOWHERE ELSE. One line per row kind. ⭐ FILLED 11.09: he picked
+// the WHITE HEART for the life row – it names the thread at the lowest possible volume, monochrome
+// so it sits quietly against the painted feed, gender-free (the episode persists no gender by
+// design), and honest across all three registers the row already has: told, found out, and the
+// later ones wave 4 will add. `❤️` would shout over the dry card; `🌱` reads as pregnancy the moment
+// children exist in the sim.
+//
+// ⚠ ONE GLYPH MARKS EVERY LIFE ROW TODAY, and that is a known limit rather than an oversight:
+// `WorldEvent` carries no life-kind discriminator, so wave 4's endings and §5a's wedding would wear
+// this same heart. Per-kind marks need either new `WorldEventType` members or a field on the row –
+// a design call that is his, flagged at T9 and still open.
 const PICKS = {
-  // life: 'X',   <- his glyph in place of the X, and that is the whole edit
+  life: '🤍',
 } satisfies LifeRowGlyphs
 
 /** The column the feed reads. `Partial<…>` is the honest type for the READER – a kind may have no
