@@ -66,8 +66,31 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
   // pauses with its question rendered nowhere and the career strands. The predicate is App.vue's
   // own `showCollege` half ("this ending draws the Home shell, not the epilogue"), so the two
   // cannot part; every other ending, college-after-leaving included, replaces the shell as before.
+  //
+  // ⭐⭐ v74, THE PRIVATE LIFE'S WAVE 3 (T2) – AND THE LIFE BEAT IS THE SECOND QUESTION THAT MAY BE
+  // LAID OVER THAT LATCH, on the birthday's own precedent and for the identical reason. The block
+  // above is unchanged and still the argument; what has changed is that the birthday is no longer
+  // the only beat the freeze can swallow.
+  //
+  // ⚠ WHY IT COULD NOT WAIT FOR THE BEAT THAT NEEDS IT. Wave 2 raises exactly one beat – her
+  // opinion at the college fork – and it fires on the fork's own opening tick, OUTSIDE the freeze,
+  // so a birthday-only white-list was harmless. Wave 3's arrival hazard rolls every eligible week
+  // from sixteen on, which runs straight through the college years BY DESIGN: a beat raised in
+  // there returned 'ending', the freeze's own card rendered, and the beat had no dialog at all –
+  // a week the engine has stopped (`advanceRefusal` blocks on `pendingLifeBeat`) with nothing on
+  // screen to answer it. That is the round-24 strand exactly, one beat further down the same week,
+  // which is why this lands BEFORE the hazard that can produce it.
+  //
+  // ⚠ AND THE KNOCK STILL OUTRANKS THE BEAT INSIDE THE FREEZE, which is inherited from the
+  // birthday's precedent and deliberately NOT this wave's to change: falling past 'ending' hands
+  // the question to the list below, and that list has always put her BODY ahead of the cake
+  // (STOP_PRECEDENCE's own ordering). A sore shoulder is answered before a conversation for the
+  // same reason it is answered before a present, and both clear by a command of their own, so
+  // nothing is lost by waiting one tap – `tests/blocking-overlay.test.ts` is the proof that the
+  // queue empties however deep it is standing.
   const collegeShell = snapshot.ending?.ending?.type === 'college' && snapshot.ending.college !== null
-  if (snapshot.ending && !(collegeShell && snapshot.birthdayPrompt)) return 'ending'
+  const laidOverLatch = snapshot.birthdayPrompt || snapshot.lifeBeatPrompt
+  if (snapshot.ending && !(collegeShell && laidOverLatch)) return 'ending'
   if (snapshot.knockPrompt) return 'knock'
   if (snapshot.birthdayPrompt) return 'birthday'
   // ⭐⭐ v73 – she speaks before he is asked to decide. Gated on the SNAPSHOT FIELD, which is the
