@@ -79,7 +79,15 @@ import { activeEpisode, knownPartner, loveEpisodesOf } from './loveEpisodes'
 // into `endings.ts` would close a runtime loop. `constants.ts` is the bottom of the package's graph
 // and `endings.ts` re-exports the guard from there anyway, so nothing about the semantics moves.
 import { guardNotEndedForGood } from './constants'
-import type { BondBand, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
+// ⭐⭐ THE PRESENCE AXIS' TWO IMPORTS (11.09, the вычитка fold) – and both of them are «ask the one
+// copy» rather than «re-type the rule». `awayVoice` is R2-18 / ARCH-07's single spelling of «she
+// lives elsewhere and the parent HEARS about the week»; `diaryLifeStageFor` is the single spelling
+// of which stage a girl of this age on this week is in. Both leaves are type-and-calendar only (no
+// world state, no RNG, no import back into `world/`), so neither closes a cycle.
+import { awayVoice } from '../diary/words'
+import { diaryLifeStageFor } from '../diary/facts'
+import { schoolIsOver } from '../kidLife'
+import type { BondBand, DiaryLifeStage, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
 import type { WorldState } from '../world'
 
 // =================================================================================================
@@ -311,6 +319,57 @@ export function forkWantOf(world: WorldState): ForkWant | null {
 //
 // 3 wants x 4 temperaments x 2 registers = 24 of her own, + 12 listen-continuations (10.09),
 // + 3 flat, + 3 headings.
+//
+// =================================================================================================
+// ⭐⭐⭐ THE PRESENCE LAW – THE FOURTH AXIS, AND IT IS THE ONE THE SCENE IS MADE OF
+// (`docs/specs/voice-bibles-2026-09.md`, «The presence law (MUST; 11.09)», folded 11.09 after the
+//  owner's own вычитка of the away frames)
+// =================================================================================================
+//
+// «At the two roof stages cohabitation licenses household observation. At `college` and
+//  `independent` the stage only restricts the available frames: every away line carries its own
+//  delivery frame – a call, a text, a forwarded plan, a named visit – because distance makes
+//  observation something the line has to earn, not assume.»
+//
+// ⚠⚠ THE DEFECT IT CLOSES IS A LICENCE DEFECT, NOT A TASTE ONE. «She was talking before her bag
+// was down» and «She put the kettle on and mentioned it while it filled» are the parent watching
+// her cross a room – a claim a parent four hundred miles away cannot make. Wave 3 shipped both
+// pools with one column, so a twenty-six-year-old in her own flat came through the door of a house
+// she moved out of six years earlier.
+//
+// ⚠ IT IS DERIVED FROM `DiaryLifeStage` AND FROM NOTHING ELSE, and it asks the question through
+// `awayVoice` rather than re-typing it. R2-18 / ARCH-07's whole finding was that this one rule had
+// been written out three times and the copies would part the day the rule gained a stage; there is
+// ONE copy, it lives in `diary/words.ts`, and this pool now asks it too.
+type BeatPresence = 'roof' | 'away'
+
+function presenceOf(stage: DiaryLifeStage): BeatPresence {
+  return awayVoice({ lifeStage: stage }) ? 'away' : 'roof'
+}
+
+/** One cell of a voiced pool, in both presence registers. ⚠⚠ `away` IS OPTIONAL AND THE `?` IS A
+ *  RULING RATHER THAN A CONVENIENCE: the owner wrote 19 away frames for 20 cells and named the
+ *  twentieth himself – `sunny`/`joy`'s «She said it before anyone had asked how the week went.» is
+ *  channel-neutral and stays SHARED, so that one cell reads its roof line at both distances. The
+ *  totality this file otherwise insists on is asserted by a PIN instead of by the type
+ *  (`tests/wave3-presence.test.ts` §C), because the pin can say «exactly one cell falls back» and a
+ *  required field can only say «none does».
+ *
+ *  ⚠ AND THE QUOTED SPAN IS SHARED BY LAW, not by habit (the owner, 11.09: «цитаты уже с
+ *  контракциями по P2, они общие с домашними рамками»). What presence changes is the FRAME – the
+ *  scene the parent is standing in – never the sentence she says inside the quotation marks. §D of
+ *  the same pin file extracts both spans and asserts they are identical, which is what makes that a
+ *  property instead of a convention the next editor never hears about. */
+interface PresenceCell {
+  roof: string
+  away?: string
+}
+
+/** ⭐ THE READ, ONE FUNCTION, SO THE FALLBACK HAS EXACTLY ONE SPELLING. `away ?? roof` is the whole
+ *  of it, and the `??` is reachable by exactly one cell today. */
+function presenceLine(cell: PresenceCell, presence: BeatPresence): string {
+  return presence === 'away' ? (cell.away ?? cell.roof) : cell.roof
+}
 
 /** The register her line is licensed under, collapsed from the Mood ladder. Two rungs, not three:
  *  `bright` and `level` share a line and `low` gets its own, which is §5b's arithmetic exactly. */
@@ -515,23 +574,66 @@ function metRegisterOf(band: BondBand): MetRegister {
  *  is in the line she says, a parent who is listening hears it, and a parent who is not pays for it
  *  over months. ⚠ THE FRAME PER VOICE IS THE SAME IN BOTH COLUMNS on purpose – she is the same girl
  *  with the same habits, and what differs is the request she attaches. The `open` column is T6's
- *  four lines, BYTE-IDENTICAL. */
-const MET_HER_LINE: Record<Temperament, Record<LoveEpisode['wants'], string>> = {
+ *  four lines, with only its QUOTED SPAN moved by the вычитка below.
+ *
+ *  ⭐⭐⭐ 11.09, THE OWNER'S ВЫЧИТКА – THE THIRD AXIS IS PRESENCE, AND THE EIGHT `away` FRAMES BELOW
+ *  ARE HIS OWN WORDS, FOLDED VERBATIM. The roof frames stage a house – the dinner table, the bag
+ *  going down, the shopping put away, the room going quiet – and from `college` on the parent is not
+ *  in that house. So every away frame carries its own delivery: she rang, she called, she said it at
+ *  the end of a message about something else.
+ *
+ *  ⚠⚠ AND THE QUOTATION IS SHARED ACROSS THE TWO REGISTERS, WHICH IS THE HALF WORTH READING TWICE
+ *  («цитаты уже с контракциями по P2, они общие с домашними рамками»). Presence moves the FRAME and
+ *  never the sentence: the roof quotes were re-cut to HIS contracted forms so that each (voice,
+ *  want) reads the identical span at both distances, and the pin extracts both spans and compares
+ *  them rather than trusting that anyone remembers.
+ *
+ *  ⚠ `deep` NEVER CONTRACTS AND THE OTHER THREE DO, which is the register difference rather than an
+ *  inconsistency in his delivery. His own label said «контракции sunny/fiery»; his delivered text
+ *  contracts `quiet` too and leaves `deep` alone at every single cell, and the delivered text is
+ *  what the player reads. `deep`'s formality is the character – the bibles' «`deep` lightly – some
+ *  of deep's formality is the character, kept where it does work» – so both of its cells below are
+ *  byte-identical to what T6 shipped. */
+const MET_HER_LINE: Record<Temperament, Record<LoveEpisode['wants'], PresenceCell>> = {
   sunny: {
-    open: 'She brought it up over dinner, before anyone asked. "There is someone. I wanted you to hear it from me first."',
-    private: 'She brought it up over dinner, and wished straight away that she had not. "There is someone. Please do not go telling people."',
+    open: {
+      roof: 'She brought it up over dinner, before anyone asked. "There\'s someone. I wanted you to hear it from me first."',
+      away: 'She rang just to say it, nothing else on the list. "There\'s someone. I wanted you to hear it from me first."',
+    },
+    private: {
+      roof: 'She brought it up over dinner, and wished straight away that she had not. "There\'s someone. Please don\'t go telling people."',
+      away: 'She said it fast, at the end of an ordinary call. "There\'s someone. Please don\'t go telling people."',
+    },
   },
   fiery: {
-    open: 'She was talking before her bag was down. "There is someone. It is good. That is all you are getting."',
-    private: 'She was talking before her bag was down. "There is someone. And no, we are not doing questions about it."',
+    open: {
+      roof: 'She was talking before her bag was down. "There\'s someone. It\'s good. That\'s all you\'re getting."',
+      away: 'She called, and was already talking. "There\'s someone. It\'s good. That\'s all you\'re getting."',
+    },
+    private: {
+      roof: 'She was talking before her bag was down. "There\'s someone. And no, we\'re not doing questions about it."',
+      away: 'She called, said it, and changed the subject herself. "There\'s someone. And no, we\'re not doing questions about it."',
+    },
   },
   quiet: {
-    open: 'She said it while she put the shopping away, between two other things. "There is someone I see now."',
-    private: 'She said it while she put the shopping away, and did not look up. "There is someone. I would rather that stayed in this room."',
+    open: {
+      roof: 'She said it while she put the shopping away, between two other things. "There\'s someone I see now."',
+      away: 'She slipped it in with the week\'s other news. "There\'s someone I see now."',
+    },
+    private: {
+      roof: 'She said it while she put the shopping away, and did not look up. "There\'s someone. I\'d rather that stayed in this room."',
+      away: 'She said it at the end of a message about something else. "There\'s someone. I\'d rather that stayed in this room."',
+    },
   },
   deep: {
-    open: 'She waited until the house was quiet, then said it once. "There is someone. That is all."',
-    private: 'She waited until the house was quiet, and asked first that it go no further. "There is someone. Now please let it be."',
+    open: {
+      roof: 'She waited until the house was quiet, then said it once. "There is someone. That is all."',
+      away: 'She called late, when the day was done, and said it once. "There is someone. That is all."',
+    },
+    private: {
+      roof: 'She waited until the house was quiet, and asked first that it go no further. "There is someone. Now please let it be."',
+      away: 'She called once she was sure of the words, and asked first that it go no further. "There is someone. Now please let it be."',
+    },
   },
 }
 
@@ -540,9 +642,20 @@ const MET_HER_LINE: Record<Temperament, Record<LoveEpisode['wants'], string>> = 
  *
  *  ⚠ ONE LINE PER READING, NOT FOUR. It is the PARENT'S narration and the fence keeps temperament out
  *  of that – `HER_LINE` and `MET_HER_LINE` are the only pools in this file a girl's voice indexes.
- *  The `wants` axis is not the fence: it is not who she is, it is what she asked for. */
+ *  The `wants` axis is not the fence: it is not who she is, it is what she asked for.
+ *
+ *  ⭐⭐ 11.09, THE ВЫЧИТКА – `open`'s TAIL WAS EXPLAINING AN ABSENCE. It read «…and did not stop to
+ *  say who», which is the narrator telling the player what DIDN'T happen and why it matters, one
+ *  rung below the banned-tail line but the same move. The replacement states the absence as a fact
+ *  of the week instead: «No name came with it.»
+ *
+ *  ⚠⚠ AND THAT SECOND SENTENCE IS HONEST PRECISELY BECAUSE THE SIM HOLDS NO NAME. `LoveEpisode`
+ *  carries no name, no gender and no place, deliberately, so «no name came with it» is not the
+ *  parent's guess about her reticence – it is the two-tier honesty law's own discipline printed as a
+ *  sentence: the line asserts exactly the consequential fact the world holds, and the reason it can
+ *  never be contradicted is that there is nothing there to contradict it. */
 const MET_MENTION: Record<LoveEpisode['wants'], string> = {
-  open: 'She mentioned someone this week, in passing, and did not stop to say who.',
+  open: 'She mentioned someone this week, in passing. No name came with it.',
   private: 'She let someone slip this week, caught herself, and moved the conversation on.',
 }
 
@@ -554,10 +667,22 @@ const MET_MENTION: Record<LoveEpisode['wants'], string> = {
  *  applies at EVERY band – a cold home's four answers are priced exactly as a close home's – so a
  *  pool that only split at `close` would leave the far half of the ladder paying a rule it could
  *  never read. The parent at this distance is not told what she wants; he is told she kept it, which
- *  is the same fact arriving as an inference instead of as a request. */
+ *  is the same fact arriving as an inference instead of as a request.
+ *
+ *  ⭐⭐ 11.09, THE ВЫЧИТКА – A TWO-ROW POOL THAT ENDED THE SAME WAY TWICE. Both rows closed on «and
+ *  the house found out anyway», so the one axis this pool exists to carry – what she wanted done
+ *  with it – arrived under a tail the player had already read. `open` keeps it, because that is the
+ *  row the tail was written for: nobody was asked to keep anything, and the house simply learned.
+ *  `private` now ends on the thing that is actually different about it – she was holding it, and it
+ *  got out from under her.
+ *
+ *  ⚠ AND IT IS NOT `MET_EVENT['found-out'].private`, WHICH IS THE NEIGHBOUR IT COULD MOST EASILY
+ *  HAVE COLLIDED WITH: that row reads «She had been keeping it to herself.» and is the FEED's
+ *  permanent record of the same week. Two surfaces, two sentences – the card says how it surfaced,
+ *  the kept row says what she had been doing. */
 const MET_DRY: Record<LoveEpisode['wants'], string> = {
   open: 'There is someone in her life. She did not say so, and the house found out anyway.',
-  private: 'There is someone in her life. She had been keeping it to herself, and the house found out anyway.',
+  private: 'There is someone in her life. She had been keeping it close, and it surfaced without her.',
 }
 
 /** The parent's frame over the card, one per register. ⚠ IT KEYS ON THE BOND BAND AND NOT ON THE
@@ -637,27 +762,88 @@ export function smallTalkSubjectFor(register: MoodRegister): SmallTalkSubject {
  *
  *  ⚠ AND THE TWO-TIER HONESTY LAW. Not one line names a draw, a result, a place, a person, a plan or
  *  a count – the sim holds no such fact about «something small», so neither does the pool. What each
- *  line asserts is her own verdict on her own week, which is the one thing she is the source of. */
-const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, string>> = {
+ *  line asserts is her own verdict on her own week, which is the one thing she is the source of.
+ *
+ *  ⭐⭐⭐ 11.09, THE OWNER'S ВЫЧИТКА – THE PRESENCE COLUMN, ELEVEN OF HIS OWN FRAMES, VERBATIM. The
+ *  roof frames are a kitchen: the plates done, the kettle filling, the shelf being stacked, the room
+ *  emptying. From `college` on the parent is in none of those rooms, so the away frames carry a
+ *  channel instead – she stayed on the line, she rang out of turn, it came at the bottom of an
+ *  ordinary message, the voice note skipped hello.
+ *
+ *  ⚠⚠ ELEVEN AND NOT TWELVE, AND THE MISSING ONE IS HIS OWN RULING RATHER THAN A GAP. `sunny`/`joy`
+ *  has NO away frame: «She said it before anyone had asked how the week went.» is channel-neutral –
+ *  it describes an ORDER of events and not a room – so it stays SHARED and the away read falls back
+ *  to it. That is why the вычитка's set is 19 and not 20, and `tests/wave3-presence.test.ts` §C pins
+ *  the fallback from both sides: that cell must read the SAME string at both distances, and every
+ *  other cell must read a DIFFERENT one.
+ *
+ *  ⚠ TWO OF HIS AWAY FRAMES OPEN `Her` RATHER THAN `She` («Her voice note skipped hello entirely.»,
+ *  «Her message came and did not ask for a reply.»). The corpus's shape rule 2 is written as «the
+ *  narration outside the quotation contains `she`»; both lines still name her in the third person,
+ *  which is what the rule is FOR, and they are the owner's words. Flagged to him rather than edited,
+ *  and the pin asserts the third person (`she` or `her`) instead of the letter of the older form.
+ *
+ *  ⚠ THE QUOTED SPAN IS SHARED with the roof column, exactly as `MET_HER_LINE`'s is – see that
+ *  pool's note for the rule and for why `deep` never contracts. ⚠⚠ ONE QUOTE HERE WAS INFERRED AND
+ *  NOT RECEIVED: `sunny`/`joy`'s «Something went well. I'm pleased about it.» – its frame is shared,
+ *  so the owner supplied no away row to take a span from, and the contraction is the architect's
+ *  reading of sunny's other three. It is the one line of the twenty he has not yet read in the form
+ *  that ships. */
+const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, PresenceCell>> = {
   sunny: {
-    worry: 'She came and sat down without being asked to. "I have been worrying at something all week. I would rather say it than carry it."',
-    joy: 'She said it before anyone had asked how the week went. "Something went well. I am pleased about it."',
-    question: 'She asked it over dinner, with the context first. "Can I ask you something? It is not urgent, I just want to know."',
+    worry: {
+      roof: 'She came and sat down without being asked to. "I\'ve been worrying at something all week. I\'d rather say it than carry it."',
+      away: 'She stayed on the line past the point of the call. "I\'ve been worrying at something all week. I\'d rather say it than carry it."',
+    },
+    joy: {
+      roof: 'She said it before anyone had asked how the week went. "Something went well. I\'m pleased about it."',
+    },
+    question: {
+      roof: 'She asked it over dinner, with the context first. "Can I ask you something? It\'s not urgent, I just want to know."',
+      away: 'She saved it for the end of the call, with the context first. "Can I ask you something? It\'s not urgent, I just want to know."',
+    },
   },
   fiery: {
-    worry: 'She was through the door and straight into it. "Something is bothering me. It has been bothering me for days."',
-    joy: 'She was talking before she had put anything down. "Today was a good one. A really good one."',
-    question: 'She asked it the second she sat down. "I want to ask you something. And I want a straight answer."',
+    worry: {
+      roof: 'She was through the door and straight into it. "Something\'s bothering me. It\'s been bothering me for days."',
+      away: 'She rang out of turn and went straight in. "Something\'s bothering me. It\'s been bothering me for days."',
+    },
+    joy: {
+      roof: 'She was talking before she had put anything down. "Today was a good one. A really good one."',
+      away: 'Her voice note skipped hello entirely. "Today was a good one. A really good one."',
+    },
+    question: {
+      roof: 'She asked it the second she sat down. "I want to ask you something. And I want a straight answer."',
+      away: 'She rang and asked before hello was done. "I want to ask you something. And I want a straight answer."',
+    },
   },
   quiet: {
-    worry: 'She stayed in the kitchen after the plates were done. "There is something I keep going back over."',
-    joy: 'She put the kettle on and mentioned it while it filled. "The morning went the way I wanted it to."',
-    question: 'She asked it while she was stacking the shelf, without looking round. "Can I ask you about something?"',
+    worry: {
+      roof: 'She stayed in the kitchen after the plates were done. "There\'s something I keep going back over."',
+      away: 'She put it at the bottom of an ordinary message. "There\'s something I keep going back over."',
+    },
+    joy: {
+      roof: 'She put the kettle on and mentioned it while it filled. "The morning went the way I wanted it to."',
+      away: 'She mentioned it in the middle of a call about other things. "The morning went the way I wanted it to."',
+    },
+    question: {
+      roof: 'She asked it while she was stacking the shelf, without looking round. "Can I ask you about something?"',
+      away: 'She asked it right before hanging up. "Can I ask you about something?"',
+    },
   },
   deep: {
-    worry: 'She waited until the room was quiet. "Something is sitting wrong. That is all I have."',
-    joy: 'She said it on her way past, and did not stop. "Good week. I will take it."',
-    question: 'She waited for the room to empty first. "I want to ask you something."',
+    worry: {
+      roof: 'She waited until the room was quiet. "Something is sitting wrong. That is all I have."',
+      away: 'She called late, and took a while getting to it. "Something is sitting wrong. That is all I have."',
+    },
+    joy: {
+      roof: 'She said it on her way past, and did not stop. "Good week. I will take it."',
+      away: 'Her message came and did not ask for a reply. "Good week. I will take it."',
+    },
+    question: {
+      roof: 'She waited for the room to empty first. "I want to ask you something."',
+      away: 'She waited until the call was nearly over. "I want to ask you something."',
+    },
   },
 }
 
@@ -849,6 +1035,25 @@ function voiceOf(world: WorldState): Temperament {
   return world.temperament ?? temperamentFor(world.seed)
 }
 
+/** ⭐⭐ WHERE SHE IS LIVING THIS WEEK, for the WORDING alone – the presence law's one input, read off
+ *  the world through the diary's own single derivation (`diaryLifeStageFor`) so a life beat and the
+ *  week note under the same painting can never disagree about which stage she is in.
+ *
+ *  ⚠ THE `inCollege` TEST IS STRUCTURAL RATHER THAN THE FUNCTION, and it is `world/snapshot.ts`'
+ *  OWN precedent copied with its reason: `world/college.ts` is the heavy middle of the package and
+ *  this file is imported BY `endings.ts`, which imports college in turn – so the import would be a
+ *  new arrow into a module that already has one pointing here. The comparison is two lines and has
+ *  an inlined twin in `world/medical.ts` for the same kind of reason. ⚠ It is NOT a second reading
+ *  of the STAGE, which is the fact that matters: `diaryLifeStageFor` is still the one place the
+ *  four stages are cut. */
+function lifeStageOf(world: WorldState): DiaryLifeStage {
+  return diaryLifeStageFor(
+    kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
+    schoolIsOver(world.week, world.profile.birthMonth),
+    world.college !== null && world.week < world.college.untilWeek,
+  )
+}
+
 /** ⭐ THE CHANNEL – does the news arrive in HER VOICE at all (who-she-is §5b's bond row)? `close` and
  *  `steady` do; `strained` and `cold` collapse into the flat pool. Bond multiplies no pool: it
  *  SELECTS between two the beat needs anyway. */
@@ -867,7 +1072,17 @@ function speaksInHerOwnVoice(band: BondBand): boolean {
  *  is not an attachment – so a default lets wave 2's whole pin sweep keep calling this with five
  *  arguments and keep asserting, byte for byte, the lines it was written against. `'met'` is always
  *  called with the episode's own reading (`buildLifeBeatPrompt` -> `beatWants`), and the default
- *  `'open'` is T6's shipped reading rather than a neutral stand-in. */
+ *  `'open'` is T6's shipped reading rather than a neutral stand-in.
+ *
+ *  ⭐ 11.09 – `stage` IS THE SEVENTH AND IT IS THREADED EXACTLY AS `wants` WAS, for exactly the same
+ *  reason: an added parameter with a safe default, so wave 2's whole pin sweep keeps calling this
+ *  with five arguments and keeps asserting the lines it was written against. The default is
+ *  `'school'`, which is a ROOF stage – T6's and T8's shipped reading, not a neutral stand-in – and
+ *  every real call comes through `lifeBeatPromptFor`, which derives the stage from the world.
+ *
+ *  ⚠ IT TAKES THE STAGE AND NOT A `BeatPresence`, so the ONE place the roof/away cut is made is
+ *  `presenceOf` above (which asks `awayVoice`, which is the single copy of the rule). A caller that
+ *  could hand in a presence directly would be a second reading of «is she under this roof». */
 export function lifeBeatSaid(
   kind: LifeBeatKind,
   detail: string,
@@ -875,7 +1090,9 @@ export function lifeBeatSaid(
   register: MoodRegister,
   bond: BondBand,
   wants: LoveEpisode['wants'] = 'open',
+  stage: DiaryLifeStage = 'school',
 ): string {
+  const presence = presenceOf(stage)
   // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
   // without this function refusing to compile against it. ⚠ `'met'` READS NO `detail` AND NO
   // `register`: its detail is an episode id (a machine value, never a rendered word) and its three
@@ -885,8 +1102,16 @@ export function lifeBeatSaid(
       // ⭐⭐ v74 T7 – THE READ IS IN THE WORDING AND IN NOTHING ELSE. All three rungs of the ladder
       // carry it, because the flip prices a cold home's answers exactly as it prices a close one's
       // and a rule only half the ladder can read is a hidden number.
+      // ⚠ AND PRESENCE REACHES THE `her` RUNG ALONE, which is the reading rather than an omission:
+      // the mention and the dry card are the PARENT's narration about a house that was not told, and
+      // «the house found out anyway» is as true of a family chat as of a hallway. What presence
+      // governs is the scene SHE is standing in when she speaks, and on those two rungs she does not.
       const met = metRegisterOf(bond)
-      return met === 'her' ? MET_HER_LINE[voice][wants] : met === 'mention' ? MET_MENTION[wants] : MET_DRY[wants]
+      return met === 'her'
+        ? presenceLine(MET_HER_LINE[voice][wants], presence)
+        : met === 'mention'
+          ? MET_MENTION[wants]
+          : MET_DRY[wants]
     }
     // ⭐ v74 T8 – THE THIRD KIND. ⚠ IT READS THE ROW'S OWN `detail` AND NOT THIS WEEK'S REGISTER,
     // which is `'fork-opinion'`'s shape and is the honest one: the subject she came with is a fact
@@ -897,8 +1122,12 @@ export function lifeBeatSaid(
     case 'small-talk': {
       const subject = SMALL_TALK_SUBJECTS.find((s) => s === detail)
       if (subject === undefined) throw new Error(`A small-talk row carries no subject: ${detail}`)
-      return SMALL_TALK_LINE[voice][subject]
+      return presenceLine(SMALL_TALK_LINE[voice][subject], presence)
     }
+    // ⚠ THE FORK READS NO PRESENCE, AND THAT IS A SCOPE STATEMENT. Its pool is wave 2's and the
+    // вычитка was of wave 3's two; the fork also fires in a narrow window around the end of school,
+    // which is a roof stage by construction (`schoolOver` is what opens `after-school` at all). The
+    // day a beat of wave 2's can fire from a dorm, its own away column is a step, not a line here.
     case 'fork-opinion': {
       const want = FORK_WANTS.find((w) => w === detail)
       if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
@@ -987,10 +1216,10 @@ export function pendingLifeBeatOptions(world: WorldState): readonly LifeBeatAnsw
  *  ⚠ NULL WHILE NOTHING IS PENDING, which is every week of nearly every career: this is called on
  *  every `toSnapshot`, so it is a `find` over a handful of rows and no more.
  *
- *  ⚠ ZERO DRAWS. Every word of it is selected by (want, voice, register, bond band, wants) – five
- *  facts the world already holds – so the prompt is a pure function of the world and re-assembling
- *  it costs nothing on any stream. That is also what lets `answerLifeBeat` re-derive it to
- *  re-validate the option id (rule 3) without the two readings ever being able to disagree.
+ *  ⚠ ZERO DRAWS. Every word of it is selected by (want, voice, register, bond band, wants, stage) –
+ *  six facts the world already holds – so the prompt is a pure function of the world and
+ *  re-assembling it costs nothing on any stream. That is also what lets `answerLifeBeat` re-derive it
+ *  to re-validate the option id (rule 3) without the two readings ever being able to disagree.
  *
  *  ⚠⚠ AND THE FLIP REACHES THE SCREEN THROUGH `said` ALONE (v74 T7). `options` carries ids and
  *  LABELS and has never carried a `bond`, so the re-priced number cannot leak onto a button even by
@@ -1017,7 +1246,7 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     week: row.week,
     kind: row.kind,
     heading: lifeBeatHeading(row.kind, register, band),
-    said: lifeBeatSaid(row.kind, row.detail, voice, register, band, wants),
+    said: lifeBeatSaid(row.kind, row.detail, voice, register, band, wants, lifeStageOf(world)),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
