@@ -93,6 +93,7 @@ obey throughout.
 | T13 | the wave gate | green logs, arms recorded, handoff package |
 | T14 | the graduated portrait (folded in 11.09, his order) | CollegeDoneDialog + the home week, painting-only |
 | T15 | the tier-1 soft surface (ruled in 11.09) | Home card → the same dialog; `pendingLifeBeat` narrows to blocking |
+| T16 | knock escalation – the coach calls home (ruled 11.09: «давай попробуем») | repeated part / `'warn'` week escalate to the parent's knock dialog |
 
 T2 lands BEFORE T3 – the hazard must not be able to raise a beat behind the college freeze while
 the freeze still swallows it. T10 may be drafted in parallel from T6 on, but nothing merges
@@ -229,8 +230,10 @@ key, so a later added read can never shift a neighbour):
 
 * `seed:life:partner:<sinceWeek>:wants` → `'private' | 'open'`, weighted ~70% toward her own
   openness register (an open girl draws `open` at 0.7);
-* `seed:life:partner:<sinceWeek>:lag` → the RAW feed lag, by openness: **open – 0 with p 0.45,
-  else uniform 1..5; private – 0 with p 0.10, else uniform 2..12** (weeks).
+* `seed:life:partner:<sinceWeek>:lag` → the RAW feed lag, by openness: **open – 0 with p 0.70,
+  else uniform 1..4; private – 0 with p 0.10, else uniform 2..12** (weeks). ⭐ The open row
+  moved 11.09 on the census miss («двигать таблицу – ок»): at 0.45 the open register was 2.3×
+  its own late-bar before any shave – «open» now means the parent usually hears at once.
 
 **The bond shave** (who-she-is §2a channel 1 – «she trusts THIS parent»): the raw lag is then
 shortened by the bond band AT the arrival week – ⚠ architect's concretisation, bench-visible,
@@ -473,6 +476,29 @@ re-enables the raise вариант 3 turned off, through the soft path:
 6. **The fallback stays cheap**: if anything resists, T15 reverts to вариант 3's state (raise
    off) without touching T1–T8 – the engine was already built for exactly that.
 
+### T16 – knock escalation: the coach calls home (⭐ RULED 11.09, «давай попробуем»)
+
+T12 measured why: at every coach rung with `coachManagesLoad` the coach answered 232 of 280
+knocks – the parent was asked ~1.5 times per career, so the bond table's knock rows are nearly
+dead in normal play. The ruled repair makes the lever live WITHOUT touching the ruled 0.5/week
+memory: ordinary knocks stay the coach's, but two classes ESCALATE to the parent's existing
+knock dialog even under `coachManagesLoad`:
+
+* **(a) a repeated part** – a knock on a part already knocked this season (the −5 delta row's
+  own trigger: the repeat is exactly the decision the table prices);
+* **(b) a `'warn'` clearance week** – any knock arriving while the medical clearance reads
+  `'warn'` (the played-hurt −4 row's neighbourhood: the week where the answer carries risk).
+
+Build notes: the escalation predicate lives beside `decideKnock`'s coach path, pure, no draws;
+the dialog raised is the EXISTING knock overlay (no new component, no new copy – invariant 4
+untouched); harnesses already answer knocks in both arms, so walkers keep walking. Frozen
+careers WILL move where an escalated knock changes an answer – per-key diff first, that file's
+protocol, re-stamp with the record. Then re-run the T12 pair: the predicted-vs-measured
+headline is the parent-asked rate (~1.5 → 4–6 per career expected), corridors printed, NOTHING
+else retuned – the 92%-regression arithmetic deliberately travels to планка-3's own session.
+Tests: the two escalation conditions unit-pinned both ways (an ordinary knock at the default
+coach still never asks); mutation arm – dropping the predicate returns the rate to ~1.5, red.
+
 ---
 
 ## 3. The streams of this wave (from the build plan §1f – verbatim keys)
@@ -495,7 +521,7 @@ Nothing else draws. `seed:life:ends:*` is wave 4's – do not create it early.
 | temperament mult | sunny 1.2 · fiery 1.6 · quiet 0.6 · deep 0.5 | census bars are the same table |
 | cooldown (wks) | fiery 12 · sunny 26 · quiet 39 · deep 52 | from `endedWeek` |
 | attachmentLift | +5 spirit baseline | while slot full |
-| lag, open | 0 @ p .45, else U[1..5] | raw |
+| lag, open | 0 @ p .70, else U[1..4] | raw – ⭐ moved 11.09, census |
 | lag, private | 0 @ p .10, else U[2..12] | raw |
 | bond shave | close ⌊/3⌋ · steady ⌊/2⌋ · else raw | ⚠ architect's concretisation |
 | wants weight | 70% toward her own openness | |

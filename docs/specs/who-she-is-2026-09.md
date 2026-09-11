@@ -337,9 +337,11 @@ systems:
 | quiet | ×0.6 | ×0.35 | 39 | first arrival median ~18; ~1–2 romances, median ~3 seasons |
 | deep | ×0.5 | ×0.9 | 52 | ~1–3 romances, median ~1.2 seasons, each ending −34 |
 
-**Feed lag** (arrival's `knownWeek − sinceWeek`): open – 0 with p 0.45, else uniform 1..5;
-private – 0 with p 0.10, else uniform 2..12. (The build plan's single distribution retires; its
-~50% «he learns 4+ weeks late» average survives as the mix of the two.)
+**Feed lag** (arrival's `knownWeek − sinceWeek`): open – **0 with p 0.70, else uniform 1..4**
+(⭐ MOVED 11.09 on the wave-3 census miss, his «двигать таблицу – ок»: at 0.45 the open register
+ran 57.4% late against its own ≤ 25% bar before any shave touched it – «open» means the parent
+usually hears at once); private – 0 with p 0.10, else uniform 2..12. (The build plan's single
+distribution retires; the late-share bars in §4a re-measure under the moved row.)
 
 **Wants weights**: open girls draw `'open'` / `'company'` at ~70%; private girls `'private'` /
 `'space'` at ~70%. The read stays surfaced only in the feed line's wording, as designed.

@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 93 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 94 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -38,7 +38,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 4 | [THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS](#11092026--the-private-life-events-the-art-was-already-painted-and-six-rulings) | 2026-09-11 |
+| life-and-morale | 5 | [THE PRIVATE LIFE, THE GATE DAY: SIX RULINGS AND A DELEGATED ВЫЧИТКА](#11092026--the-private-life-the-gate-day-six-rulings-and-a-delegated-вычитка) | 2026-09-11 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -3820,3 +3820,31 @@ the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-ch
   played per pair, +108 injury onsets, +380 injured weeks.
 - ⚠ **A wrapper notification claimed «exit code 0» while the log said `BENCH_EXIT=1`** – the seventh
   time this session. Every verdict in this wave was read from a file the command appended itself.
+
+## 11.09.2026 – THE PRIVATE LIFE, THE GATE DAY: SIX RULINGS AND A DELEGATED ВЫЧИТКА
+
+The wave-3 final gate passed (verdict in the session; zero code findings), and the owner ruled
+the six waiting items in one message:
+
+- ⭐ **The вычитка itself is DELEGATED**: «посмотри сам пожалуйста, уже у нас вроде весь подход
+  есть, можно по аналогии проверить» – the architect reads the 228 lines against the
+  established laws and edits under that delegation; the owner's final read stays the playtest
+  (his standing 10.09 rule). Invariant 4's chain of custody: owner → architect, recorded here.
+- **§16, «We listened, and left it there»**: «да как будто бы и не страшно, но можешь
+  предложить» – two candidates go to him; the line stays until he picks.
+- ⭐ **T14's window: the finish week stands** («ок») – the card meets the moment; `doneWeek + 1`
+  would show it a week late.
+- ⭐ **The glyph is 🤍** («ок») – the v1 single mark for every life row; per-kind marks stay
+  deferred until a discriminator exists (T9's flagged design call).
+- ⭐ **Bar 5 moves the TABLE, not the bar** («двигать таблицу – ок»): the open feed-lag becomes
+  **0 with p 0.70, else uniform 1..4** (was 0.45 / 1..5) – «open» now means the parent usually
+  hears at once; private is untouched. All three doc homes edited (who-she-is §4 wins on
+  drift); the census re-runs with the fold and §4a gains the re-measured bar.
+- ⭐⭐ **The push-through escalation: «давай попробуем»** – wave 3 gains T16: at every coach rung
+  with `coachManagesLoad`, ORDINARY knocks stay the coach's, but two classes ESCALATE to the
+  parent's own knock dialog – (a) a repeated part (the −5 row's own trigger), (b) any knock in
+  a week carrying a `'warn'` medical clearance. The coach calls home; the bond lever lives
+  without touching the ruled 0.5/week memory. The T12 pair re-runs after: parent-asked rate is
+  the predicted-vs-measured headline (~1.5 → 4–6 per career expected), corridors printed, no
+  other constant moved. The regression-arithmetic question (92% erased) is deliberately NOT
+  ruled here – it travels with планка-3 to its own session.
