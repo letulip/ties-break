@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 91 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 92 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
-| general | 3 | [WAVE 3 T7 + T9: THE FLIP AS AN OVERLAY, AND A BUILDER WHO CAUGHT ITS OWN DEAD NET](#11092026--wave-3-t7--t9-the-flip-as-an-overlay-and-a-builder-who-caught-its-own-dead-net) | 2026-09-11 |
+| general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 4 | [THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS](#11092026--the-private-life-events-the-art-was-already-painted-and-six-rulings) | 2026-09-11 |
@@ -3721,3 +3721,54 @@ the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-ch
   life-kind discriminator, so wave 4's endings and §5a's wedding would wear the same mark as «met
   someone». Per-kind glyphs need either new `WorldEventType` members or a field on the row – a design
   call, flagged rather than pre-built. Proposed candidate for the one glyph: 🤍.
+
+## 11.09.2026 – WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY
+
+- **The drift.** The wave-3 brief sent tier 1 through tier 2's HARD pause; who-she-is §5b's ruled
+  table says «soft – answerable, never lost». The builder built what the brief said, **flagged the
+  contradiction rather than choosing silently, and MEASURED the cost**: bond starts at 70 (`steady`),
+  so small talk fired from week 0 on every career and broke 136 walked fixtures – in play, ~2–4
+  week-stopping modals a season for a zero-bond event. ⭐ The blast radius WAS the design signal: a
+  frequent zero-stakes event that stops the week is exactly the «spam» the tiering exists to prevent.
+- **The owner ruled twice, same day**: first вариант 3 – raise off, engine kept – then «расписать
+  вариант 2 подробнее сейчас в спеке и тоже всё-таки в эту волну загнать», which became §5b's SOFT BLOCK
+  CONCRETIZED amendment and the brief's T15. **Second ruling: NO AGE GATE** – she talks at any age;
+  tier 1 is texture, not part of the romance layer.
+- ⭐⭐ **THE DEFERRAL WAS PROVEN COMPLETE BY IDENTITY, not by assertion.** T8's raise moved 12 frozen
+  constants; with the raise removed every one had to return to its pre-T8 value **byte for byte**,
+  confirmed by RUNNING the helpers rather than reverting a diff. Result: 0 differing hex constants,
+  and the regenerated e2e fixtures byte-identical to before tier 1 existed. That identity is what made
+  T15 safe – it re-enabled a raise against a clean baseline rather than on a half-reverted one.
+- **The dormancy pattern earned its keep a second time.** T8b left tier 1 «declared and never raised»
+  with a mutation-verified guard – the shape wave 1 used for `attachmentLift`, which wave 3's T4 then
+  turned red exactly as designed. T15 turned T8b's guard red in the same way and **re-aimed it to a
+  claim that is still checkable**: «tier 1 is raised through the SOFT path and through no other» –
+  a deleted raise AND a second raise site both go red.
+- ⭐⭐⭐ **THE ARCHITECT'S CROSS-CHECK FAILED, AND THE BUILDER PROVED WHY RATHER THAN RE-STAMPING.**
+  The architect predicted the soft path would raise the SAME rows as T8's hard path and handed over
+  T8's recorded `lifeLog` hashes to check against. They did not match. The builder RECONSTRUCTED the
+  cause: T8's hard pause left each career with exactly ONE small-talk row for ever, because its gate
+  refused every later raise while any row stayed pending and the bench never drains – and hashing a
+  one-row log reproduced all three of T8's recorded values character for character. The soft path
+  expires the window and she returns (11 / 6 / 10 rows). ⚠ **The first hit is the same week in both
+  paths (1, 5, 20)**, so the dice are identical and only the window differs. The premise was wrong;
+  the wave is right; both are now measured.
+- **The eighth dead test of the wave, caught by ARM 10.** Two walked-career cases asserted the
+  refusal AFTER `drainLifeBeats` – which answers the row and clears it – so they were asserting
+  against an empty queue. They assert before the drain now, and on the kind.
+- **T15's shape**: `LIFE_BEAT_BLOCKING` total by kind (a future kind MUST choose); `pendingLifeBeat`
+  narrowed to blocking rows; `liveSoftBeat` with a 3-week window DERIVED from `week − row.week`;
+  the Home card is only the INVITATION and opens the SAME `LifeBeatDialog` through one optional prop
+  – **no new dialog component anywhere**. ⚠ **No schema move**: nothing new is persisted, so v74 stands.
+- **Two things T15 ruled that neither spec nor brief covered**: (1) `answerLifeBeat` takes the
+  BLOCKING row first and the live soft row only when nothing is blocking – a naive scan would have
+  recorded a `'met'` answer against a three-week-dead conversation and left the week stopped (ARM 13
+  pins it); (2) no dismiss control was invented for the soft dialog – all three replies are free and
+  one is «tell her it can keep», so backing out would be a new control and new copy, the owner's.
+- ⚠ **OWED, carried to T13**: the Playwright e2e for the soft card. Measured reason – no committed
+  fixture parks a career on a LIVE soft row (all seven carry only expired ones), so the case needs a
+  new recipe and a new `.tsave`, which is a change to the shared fixture set. The claim IS covered at
+  the engine and mounted levels; the owner's 29.08 rule («one e2e case per shipped mechanic») is not
+  yet satisfied, and this is the record that it is owed rather than forgotten.
+- ⚠ Every e2e fixture now carries 3–11 **expired unanswered** small-talk rows – the ruled record that
+  she came by and it went unasked. Worth knowing before anyone reads a fixture's `lifeLog`.
