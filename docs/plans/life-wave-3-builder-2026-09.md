@@ -501,6 +501,31 @@ else retuned – the 92%-regression arithmetic deliberately travels to план�
 Tests: the two escalation conditions unit-pinned both ways (an ordinary knock at the default
 coach still never asks); mutation arm – dropping the predicate returns the rate to ~1.5, red.
 
+⚠⚠ **FIELD NOTES (architect, 11.09 – excavated at the gate, read BEFORE building):**
+
+* **Escalation already EXISTS and unconditional-repeat was TRIED AND REJECTED.**
+  `coachEscalates(view, repeat)` in `coachLoad.ts` (~:206–240) is a confidence-scaled doubt
+  zone; `REPEAT_DOUBT = 3` WIDENS it, and its comment records why the first draft's
+  unconditional repeat was rejected: it flattened the tap ladder (9.5/9.1/9.1/9.1 measured) and
+  «being asked about the shoulder IS the burden you are paying him to carry», tuned against
+  `bench:load`. **T16 is the NEWER ruling and it stands** – made ON T12's measurement that the
+  bond lever is dead (~1.5 asks/career) – but implement it as an explicit OVERRIDE, preserving
+  the old rationale verbatim in the comment beside the new one: the two priced classes (repeat,
+  `'warn'` week) are the PARENT'S because their bond prices (−5, −4's neighbourhood) were
+  priced as parent decisions; everything else keeps the doubt-zone ladder.
+* **Pins that MUST go red and be re-aimed with the ⚠ note**: `tests/coach-load.test.ts:237`
+  («a sure coach handles even a repeat» → false) and its neighbours – re-aim under the 11.09
+  ruling, do not delete; keep :245–246 (the confidence ladder for ORDINARY knocks) green
+  untouched, which is the half of the old design that survives.
+* **The `'warn'` input**: `medicalClearance(condition)` (`world/medical.ts:363`) – compute at
+  `coachDecidesKnock` and pass in (arity change on `coachEscalates` – check its other callers:
+  `tools/load-bench.ts:138`, `tools/spirit-bench.ts:996`).
+* **The escalation feed line for the `'warn'` class**: reuse the existing non-repeat line («The
+  coach is in two minds about the … – and is asking us.») – zero new strings, invariant 4 quiet.
+* **Benches that move**: `bench:load` (the tap ladder – record the new predicted-vs-measured
+  shape; the ladder is EXPECTED to lift at every rung now, that is the ruled trade) AND the T12
+  pair re-run (parent-asked rate ~1.5 → 4–6 is the headline). Both into §4a.
+
 ### T17 – the stop-want arc (⭐ RULED 11.09, measured by the owner's own playtest)
 
 **The measurement.** His world #5, healthy, close home, said «stop» at the fork. The formula
@@ -549,6 +574,20 @@ formula (state × standing), plus the walked share of unsupported-stop careers �
 predicted-vs-measured into §4a. Mutation arms: `STOP_FLOOR → 1.0` returns the old quarter
 (grid test red); skipping the counsel raise lets `answerFork` through (refusal test red);
 the driver thresholds inverted (wording pin red).
+
+⚠ **FIELD NOTES (architect, 11.09 – three shortcuts excavated at the gate):**
+
+* **The fork is ROOF-ONLY by construction** (it opens at school's end, she is home), so the
+  stop-driver lines and the counsel beat need NO away frames – the presence machinery the
+  вычитка fold built does not apply here. 12 roof lines, not 24.
+* **The four existing stop lines ARE the `'own'` driver already** – «It is not one bad week. I
+  have been sure for a while», «The racquets can go to the club» are the Barty register
+  verbatim. Keep them byte-identical as `own`; draft only worn ×4 and strained ×4.
+* **`answerFork` needs ZERO guard changes**: it already refuses while `pendingLifeBeat` is
+  non-null, so raising `'fork-counsel'` (blocking: true) at the moment the stop-want row is
+  ANSWERED holds the fork closed for free. The whole of layer 2's machinery is one raise call,
+  one `LIFE_BEAT_BLOCKING` entry, options/said/event rows for the new kind – and the walked
+  share print rides `bench:spirit --fork` (16 careers already answer forks there).
 
 ---
 
