@@ -35,6 +35,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   createWorld,
+  decideKnock,
+  pendingKnock,
   tickWeek,
   enterEvent,
   skipTournament,
@@ -122,6 +124,37 @@ function legacyBestFinish(world: WorldState, from: number, to: number): number |
 /** A GREEDY PROFESSIONAL CAREER: the strongest rung she is admitted to, one entry a week, funds kept
  *  solvent so the wallet gate is never the reason she stays home. Same idiom as tools/boredom-guard.ts,
  *  and the only way to reach professional VOLUME - which is the whole point of this file. */
+/** ⚠⚠ ADDED BY WAVE 3's T16, AND IT IS THE GREEDY POLICY THIS FILE ALREADY DECLARES.
+ *
+ *  WHY IT IS NEEDED. Since T16 a knock on a REPEATED part or on a `'warn'` clearance week reaches the
+ *  parent even with a coach (`world/knock.ts` `knockNeedsTheParent`, the owner's ruling 11.09). An
+ *  undecided knock NEVER expires – it blocks time instead – and `rollKnock` refuses to raise another
+ *  while one is open, so a walker that ticks straight past it spends the rest of the career in a
+ *  state THE GAME FORBIDS: `advanceWeeks` halts on `pendingKnock` and the player cannot move until he
+ *  answers. This career went red exactly there, on «she never reached a W-dominant season at all».
+ *
+ *  ⚠⚠ AND `push` IS NOT PICKED FOR ITS RESULT – IT IS THE ONLY ANSWER UNDER WHICH THIS FILE STILL
+ *  MEASURES ITS OWN SUBJECT, which is the argument the header above makes twice: «the only way to
+ *  reach professional VOLUME – which is the whole point of this file», and «the regime this file
+ *  measures begins around week 430». Resting knocks spends that volume. MEASURED, same walk, 520
+ *  weeks, the two candidate policies:
+ *
+ *      answer                    seasons played   decayed   halved
+ *      `coachKnockCall`'s call          6            3         0    – ends by injury, week ~307
+ *      `'push'` (this one)             10            7         4    – reaches the saturated regime
+ *
+ *  The first never gets past week 430, so the caps this file exists to exercise never engage and two
+ *  of its three witnesses go quiet. That is a fixture that stopped measuring, not a stricter one. ⭐
+ *  AND NOT ONE ASSERTION IN THIS FILE MOVED for the greedy answer: 12 of 12 green, on the same
+ *  bounds, with the pre-T16 tree reproducing 12 of 12 as well.
+ *
+ *  ⚠ A REST-EVERY-KNOCK WALK WOULD ALSO NEVER PRODUCE CLASS (a) AT ALL – `pushedParts` only records
+ *  parts she was sent back out on – so it could not exercise the routing this repair exists for. */
+function answerTheKnock(world: WorldState): void {
+  if (!pendingKnock(world) || world.ending !== null) return
+  decideKnock(world, 'push')
+}
+
 function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFacts[] } {
   const world = createWorld(SEED)
   const rng = rngFromSeed(world.seed)
@@ -163,6 +196,7 @@ function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFact
       }
     }
     tickWeek(world, rng)
+    answerTheKnock(world)
     if (world.pendingTournament) {
       skipTournament(world)
       closeTournament(world)

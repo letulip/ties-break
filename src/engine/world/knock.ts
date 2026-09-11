@@ -17,6 +17,10 @@ import { ECONOMY } from '../economy'
 import { applyBondDelta } from '../spirit'
 import { coachEscalates, coachKnockCall, coachManagesLoad, type CoachLoadView } from '../coachLoad'
 import { isBlackoutWeek } from '../season/calendar'
+// ⚠ T16: medical.ts is a LEAF of this file's dependency direction, not a peer – it imports bookings,
+// ladder, entryCaps, masseur, assets, mandatory and age, and none of those reaches back here. The
+// edge knock -> medical is therefore one-way, exactly like knock -> injury already is.
+import { medicalClearance, type MedicalClearance } from './medical'
 // ⚠ FROM kidLife, NOT FROM ./summer's `pastSchool`: summer.ts imports `isCompetitionWeek` from THIS
 // file, so that edge would close a runtime cycle. kidLife is a leaf and has none.
 import { schoolIsOver } from '../kidLife'
@@ -140,6 +144,50 @@ export function rollKnock(world: WorldState): void {
 }
 
 
+/**
+ * ⭐⭐ T16 – DOES THIS KNOCK GO TO THE PARENT, EVEN THOUGH THE FAMILY IS PAYING SOMEBODY?
+ *
+ * ⚠ IT IS NOT A NEW MECHANISM AND SAYING SO IS THE POINT. `coachEscalates` already hands a knock
+ * back – the probabilistic DOUBT zone, scaled by his confidence – and that is the third disjunct
+ * below, untouched. What T16 adds is TWO DETERMINISTIC CLASSES BESIDE IT, because the doubt zone
+ * alone fires rarely: T12 measured the coach answering 232 of 280 knocks at every `coachManagesLoad`
+ * rung, so the parent met the dialog about 1.5 times per career against 9.0 self-coached – and the
+ * bond table's knock rows (−3 push, −5 push-on-a-repeat) were therefore nearly dead in normal play.
+ * The owner ruled the repair 11.09 («давай попробуем»), and ruled it WITHOUT touching the 0.5/week
+ * bond memory, which is why the repair is here and not in `ECONOMY.bond`.
+ *
+ *   (a) A REPEATED PART. `repeat` is the knock's own ledger flag (engine/knock.ts `pushedParts`: "a
+ *       statement about the RECORD"), and it is the −5 delta row's OWN trigger. `decideKnock`'s note
+ *       calls the repeat "the record telling him and being overruled" – a decision the table prices
+ *       at nearly twice the ordinary push has to be a decision the parent is actually offered.
+ *       ⚠⚠ AND IT COSTS EXACTLY WHAT `REPEAT_DOUBT` SAID IT WOULD, WHICH IS RECORDED HERE RATHER
+ *       THAN DISCOVERED LATER. coachLoad.ts rejected an UNCONDITIONAL repeat escalation because it
+ *       flattened the rung ladder (9.5 / 9.1 / 9.1 / 9.1 taps – measured), and this rule is
+ *       unconditional in exactly that way. Re-measured for T16, tap SHARE pooled over 8 seeds ×
+ *       208 weeks: budget/middle/high/elite went 0.148 / 0.103 / 0.078 / 0.075 to 0.716 / 0.684 /
+ *       0.692 / 0.662. The ladder still runs end to end – budget above elite, self above all – but
+ *       a 2x span is now 1.08x. That argument was about the DOUBT ZONE, where it still stands and
+ *       is untouched; what the owner bought on 11.09 is a live −5 row at the price of most of what
+ *       "fewer interruptions" was worth. It is his trade, made on T12's measurement.
+ *
+ *   (b) A `'warn'` CLEARANCE WEEK. `medicalClearance` is the doctor's own three-way verdict
+ *       (world/medical.ts, owner 26.07): in [medicalFloor, medicalWarningCeiling) she plays and he
+ *       warns the family. A knock arriving inside that band is the week where the answer carries
+ *       real risk, and it is the played-hurt row's neighbourhood. Not `'withdraw'`: that is the
+ *       doctor's veto and no knock answer survives it anyway.
+ *
+ * PURE, ZERO DRAWS, ON ANY STREAM. Three booleans over facts the world already holds – the ledger
+ * flag, one integer comparison, and `coachEscalates`' arithmetic. The frozen MAIN capture cannot
+ * move, and `rngMain` is byte-identical across the change by construction.
+ */
+export function knockNeedsTheParent(
+  view: CoachLoadView,
+  repeat: boolean,
+  clearance: MedicalClearance,
+): boolean {
+  return repeat || clearance === 'warn' || coachEscalates(view, repeat)
+}
+
 /** The hired coach's answer, taken the moment the knock arrives. Separate from `decideKnock` so the
  *  parent's path keeps its guard (`decideKnock` throws on an already-answered knock, which is a real
  *  protection against a double-tap) while this one is an internal step of the same tick.
@@ -151,20 +199,43 @@ export function coachDecidesKnock(world: WorldState): void {
   const k = world.knock
   if (!k || k.choice !== null) return
   const view = coachLoadViewOf(world)
-  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY. The call stays unanswered, `pendingKnock` stays true, and the
-  // dialog opens exactly as it does for a self-coached career - which is what keeps W4's content alive on
-  // a career that has a coach (DEFAULT_PROFILE is 'middle', so that is most of them). See coachLoad.ts
-  // `coachEscalates`: the zone scales with his haze, so a cheap coach asks often and an Elite one almost
-  // never - and "you are buying your attention back" becomes a number instead of a slogan.
-  if (coachEscalates(view, k.repeat)) {
+  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY, OR THE WEEK IS ONE OF THE TWO THE PARENT ALWAYS GETS. The call
+  // stays unanswered, `pendingKnock` stays true, and the dialog opens exactly as it does for a self-coached
+  // career - which is what keeps W4's content alive on a career that has a coach (DEFAULT_PROFILE is
+  // 'middle', so that is most of them). See coachLoad.ts `coachEscalates`: the zone scales with his haze,
+  // so a cheap coach asks often and an Elite one almost never - and "you are buying your attention back"
+  // becomes a number instead of a slogan. ⭐ T16 puts two deterministic classes BESIDE that zone (the
+  // repeat and the `'warn'` week - see `knockNeedsTheParent`), because the zone alone left the bond
+  // table's knock rows nearly dead at the shipped rung.
+  if (knockNeedsTheParent(view, k.repeat, medicalClearance(world.condition))) {
+    // ⚠⚠ NO NEW COPY, AND THE KEY MOVED FROM `k.repeat` TO «IS HE ACTUALLY IN TWO MINDS» SO THAT NO
+    // SHIPPED SENTENCE CHANGES THE SITUATION IT DESCRIBES (invariant 4). T16 raises escalations that
+    // the doubt zone would not have raised, and one of the two lines claims a MENTAL STATE:
+    //
+    //   · «in two minds» is a claim about HIM, and it is true of exactly one thing – `coachEscalates`
+    //     firing. On a `'warn'` week where he is NOT in doubt it would be a sentence the mechanism
+    //     does not support, so that case may not have it.
+    //   · «wants to talk … before anyone decides» claims only the ACT, which is true of every
+    //     escalation there is. It is what a repeat already prints, and it is honest for the new
+    //     classes for the same reason: it says what happened and nothing about why.
+    //
+    // So: in-doubt-and-not-a-repeat keeps «two minds», everything else takes «wants to talk». ⚠ Check
+    // it against the OLD behaviour and nothing moves – before T16 the only way into this branch was
+    // `coachEscalates`, so repeat -> line 1 and non-repeat -> line 2, which is exactly what this
+    // still does. Only the two NEW classes are newly reading line 1.
+    //
+    // ⚠ THE SECOND `coachEscalates` CALL IS DELIBERATE, not a leftover: the predicate above is the
+    // one the engine routes on, and this asks a different question (which of the three reasons it
+    // was). It is pure arithmetic with no draw, evaluated a handful of times per career.
+    const inTwoMinds = !k.repeat && coachEscalates(view, k.repeat)
     addEvent(world, {
       week: world.week,
       type: 'info',
       // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see `coachLoadNote` in world/coachMarket.ts for the
       // owner's ruling and why the dash is doing the work a guessed "he" used to do.
-      text: k.repeat
-        ? `The coach wants to talk about her ${k.part} before anyone decides.`
-        : `The coach is in two minds about the ${k.part} – and is asking us.`,
+      text: inTwoMinds
+        ? `The coach is in two minds about the ${k.part} – and is asking us.`
+        : `The coach wants to talk about her ${k.part} before anyone decides.`,
     })
     return
   }

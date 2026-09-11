@@ -19,6 +19,23 @@
 //   4. BOTH DIRECTIONS OF ERROR. A cheap rung must be able to be wrong EITHER way (see coachLoad.ts) -
 //      a single-signed error would be a tax pretending to be a model.
 //   5. THE ADVICE IS ADVICE. `coachWarnsEntry` never blocks an entry, at any rung.
+//
+// ⚠⚠ WAVE 3's T16 RE-AIMED TWO OF THESE, AND THE NOTE BELONGS AT THE TOP BECAUSE IT CHANGES HOW THE
+// FILE READS. The owner ruled on 11.09 («давай попробуем») that a knock on a REPEATED part and a knock
+// arriving on a `'warn'` clearance week go to the parent at EVERY rung – T12 had measured the coach
+// answering 232 of 280 knocks, which left the bond table's −3/−5 push rows nearly dead in normal play.
+// The two classes are tier-independent by construction, so they do to the ladder exactly what
+// `REPEAT_DOUBT`'s own note says an unconditional repeat rule does: they compress it.
+//
+//     tap share, pooled 8 seeds × 208 wks   self   budget  middle   high   elite
+//     before T16                            1.000   0.148   0.103   0.078  0.075
+//     after  T16                            1.000   0.716   0.684   0.692  0.662
+//
+// CLAIM 3 SURVIVES END TO END and is now asserted per KNOCK rather than per career (the count and the
+// share disagree once every rung escalates most of what it sees). CLAIM 2's «an elite coach handles
+// MOST of them alone» does NOT survive – 95% became 31% – and it is narrowed to «a material share,
+// and those weeks never stop», with the erosion written into the case. Each re-aim carries its own ⚠
+// block naming what moved and why; nothing here was deleted.
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
@@ -69,6 +86,14 @@ function play(seed: string, tier: CoachTier, weeks: number, plan = WEEK_PLAN_PRE
   world.plan = { ...plan }
   let taps = 0
   for (let w = 0; w < weeks; w++) {
+    // ⚠ THE TERMINAL LATCH, ADDED BY WAVE 3's T16 AND IT IS A HARNESS REPAIR, NOT A CLAIM CHANGE.
+    // `decideKnock` calls `guardNotEnded`, so a knock raised by the tick that ALSO ended the career
+    // throws «This career has ended» – and the walk died there rather than reporting. It was latent
+    // before and T16 exposed it by raising more knocks to the parent (the ladder case went red with
+    // that throw, from a career that ended, not from a ladder that stopped running). Handled the way
+    // `tools/spirit-bench.ts`'s anti-stall contract demands: the latch is TESTED, never caught, so a
+    // refusal for any OTHER reason still propagates and kills the run.
+    if (world.ending !== null) break
     for (const e of world.season.filter((x) => x.week > world.week && x.week <= world.week + 4)) {
       if (world.entries.includes(e.id)) continue
       try {
@@ -79,7 +104,7 @@ function play(seed: string, tier: CoachTier, weeks: number, plan = WEEK_PLAN_PRE
       }
     }
     tickWeek(world, rng)
-    if (pendingKnock(world)) {
+    if (pendingKnock(world) && world.ending === null) {
       decideKnock(world, 'rest')
       taps++
     }
@@ -113,9 +138,33 @@ describe('the routing: who answers the knock', () => {
   })
 
   it('⚠ HIRED: the coach answers the routine ones himself, and the week does not stop', () => {
-    const { taps, knocks, handled } = play('routing-hired', 'elite', 156, WEEK_PLAN_PRESETS.grind)
+    // ⚠⚠ RE-AIMED BY WAVE 3's T16 (the owner's ruling 11.09, «давай попробуем»), AND WHAT MOVED IS
+    // NAMED RATHER THAN SMOOTHED. This case read `handled > taps` – «an elite coach must handle MOST
+    // of them alone» – and T16 makes that false BY DESIGN: a repeated part and a `'warn'` clearance
+    // week now go to the parent at every rung, and a career that pushes manufactures repeats. The
+    // erosion is large and it is the price the owner bought:
+    //
+    //     pooled 8 seeds, elite, 156 wks of grinding   before T16   after T16
+    //     knocks                                            82          84
+    //     the coach answered alone                          78 (95%)    26 (31%)
+    //
+    // So the claim narrows to the one T16 did NOT buy and that would still sink the slice: the
+    // routing is NOT unconditional – a hired coach still takes a MATERIAL share of her knocks
+    // himself, and those weeks never stop. The rung comparison moves to the ladder case below, which
+    // is where it belongs. ⚠ AND IT IS POOLED OVER EIGHT SEEDS for the reason the W4 case below
+    // records: a share this close to the middle of its range is a tail event on any one career.
+    let taps = 0
+    let knocks = 0
+    let handled = 0
+    for (const s of ['', '-e0', '-e1', '-e2', '-e3', '-e4', '-e5', '-e6']) {
+      const r = play(`routing-hired${s}`, 'elite', 156, WEEK_PLAN_PRESETS.grind)
+      taps += r.taps
+      knocks += r.knocks
+      handled += r.handled
+    }
     expect(knocks, 'the fixture must produce knocks').toBeGreaterThan(0)
-    expect(handled, 'an elite coach must handle most of them alone').toBeGreaterThan(taps)
+    expect(handled, `the coach must answer a material share alone: ${handled} of ${knocks}`).toBeGreaterThan(0)
+    expect(handled * 5, 'at least one knock in five, and the week does not stop for those').toBeGreaterThan(knocks)
   })
 
   it('⚠ AND W4 SURVIVES ON THE DEFAULT CAREER, which is the one that could have been gutted', () => {
@@ -146,10 +195,46 @@ describe('the routing: who answers the knock', () => {
     // Asserted as a TREND over the whole ladder rather than rung-by-rung: the escalation zone is driven by
     // `axisConfidence`, which ramps with tenure and evidence, so adjacent rungs can tie on a given seed.
     // What may never happen is the ladder running backwards end to end.
-    const taps = COACH_TIERS.map((t) => play(`escal-${t}`, t, 208).taps)
-    const self = taps[0]
-    const budget = taps[1]
-    const elite = taps[taps.length - 1]
+    //
+    // ⚠⚠ RE-AIMED BY WAVE 3's T16, AND BOTH HALVES OF THE RE-AIM ARE MEASUREMENTS. It read one seed per
+    // rung and compared ABSOLUTE tap counts; T16 broke that in two separate ways, and the compression
+    // is the finding coachLoad.ts's own `REPEAT_DOUBT` note predicted for exactly this shape of rule:
+    //
+    //   (1) THE DENOMINATOR. T16's two classes are TIER-INDEPENDENT, so every rung's tap SHARE is now
+    //       near 1 and absolute taps track how many knocks that seed happened to produce rather than
+    //       the rung. Measured: `escal-budget` 3 taps of 4 knocks against `escal-elite` 7 of 12 – the
+    //       ladder inverted on counts (3 < 7) while running the RIGHT way on shares (0.75 > 0.58).
+    //       The claim always meant «per knock», so it now says so.
+    //   (2) THE POOL. Pooled over eight seeds per rung, 208 weeks, the trend survives and it is a
+    //       FRACTION of what it was – this is the price the owner bought on 11.09, recorded here
+    //       rather than discovered later:
+    //
+    //           tap share      self    budget   middle    high    elite
+    //           before T16     1.000    0.148    0.103    0.078   0.075
+    //           after  T16     1.000    0.716    0.684    0.692   0.662
+    //
+    //       A 2x budget-to-elite span becomes 1.08x. The ladder still runs end to end and «you are
+    //       buying your attention back» is still true; it is worth much less than it was.
+    // ⚠ FOUR SEEDS AND THE THREE ASSERTED RUNGS, which is a cost cut and NOT a coverage one: the old
+    // form walked all five tiers and then read indices 0, 1 and last, so `middle` and `high` were
+    // computed and thrown away. Eight seeds put this case 32 s over vitest's 20 s per-test timeout;
+    // four hold the claim with room (measured, tap share @208: 3 seeds 1.000/0.788/0.720 · 4 seeds
+    // 1.000/0.756/0.686 · 5 seeds 1.000/0.760/0.674). The five-rung shape stays in the header table.
+    const seeds = ['e0', 'e1', 'e2', 'e3']
+    const share = (tier: CoachTier) => {
+      let taps = 0
+      let knocks = 0
+      for (const s of seeds) {
+        const r = play(`escal-${s}`, tier, 208)
+        taps += r.taps
+        knocks += r.knocks
+      }
+      expect(knocks, `${tier}: the fixture must produce knocks`).toBeGreaterThan(0)
+      return taps / knocks
+    }
+    const self = share(COACH_TIERS[0])
+    const budget = share(COACH_TIERS[1])
+    const elite = share(COACH_TIERS[COACH_TIERS.length - 1])
     expect(self, 'self-coached is asked about all of them').toBeGreaterThan(budget)
     expect(budget, 'a budget coach must ask more often than an elite one').toBeGreaterThan(elite)
   })
@@ -226,10 +311,17 @@ describe('the mechanism: what he is allowed to know', () => {
     expect(coachKnockCall(v2, false)).toBe('rest')
   })
 
-  it('a repeat weighs on the call but does not force the parent into it', () => {
+  it('a repeat weighs on the call but does not force the parent into it – IN THE DOUBT ZONE', () => {
     // The first draft escalated every repeat at every rung, which flattened the whole ladder (see
     // REPEAT_DOUBT). It must still WEIGH - knock.ts prices it at 3.0 tau against 2.2 - so a repeat on an
     // otherwise identical week moves the call towards rest, and a coach who knows her can still handle it.
+    //
+    // ⚠⚠ AND SINCE WAVE 3's T16 THE TITLE IS TRUE OF `coachEscalates` AND NOT OF THE ROUTING. The owner
+    // ruled on 11.09 that a repeat DOES go to the parent - `world/knock.ts` `knockNeedsTheParent` puts it
+    // beside this zone as a deterministic class, because the -5 delta row prices a decision the parent
+    // was not being offered. Nothing below is re-aimed: every line is about `coachEscalates` itself,
+    // which T16 did not touch, and that is exactly why this case is the one that would catch a repair
+    // that had reached INTO the zone instead of standing beside it.
     const v = view({ shownStamina: 60, condition: 70, playedWeeks: 0 })
     expect(strainOf(v, true) - strainOf(v, false)).toBe(STRAIN_PER_REPEAT)
     // ...and an elite coach can absorb one rather than always passing it up
