@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 81931,
-      "payloadBytes": 81887,
-      "sha256": "a42560d0ece8f073561f14180f7baa49288fb4bb0129b70688500e1ae081f21e",
+      "bytes": 81934,
+      "payloadBytes": 81890,
+      "sha256": "945f9e97e10e3b47cde7b56713f8aaaee4aba666016de008531f8566cf09bedf",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -167,15 +167,15 @@
         "kidLastName": "Fujimoto",
         "country": "US"
       },
-      "bytes": 61933,
-      "payloadBytes": 61889,
-      "sha256": "c9e04f1d340c13ce8ccf0db921aad5519e0e2164273d1165713558c6e69a209a",
+      "bytes": 62138,
+      "payloadBytes": 62094,
+      "sha256": "93b22b5638b10e6c657d883e958460f9c3a7976b04bc41818b1dbdd2a9938fe3",
       "seedsTried": 1,
       "facts": {
         "week": 96,
         "seasonIndex": 1,
         "ageYears": 15,
-        "fundsCents": -59475,
+        "fundsCents": -62178,
         "kidRank": 61,
         "rankedDomestic": true,
         "rankedItf": true,
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 81744,
-      "payloadBytes": 81700,
-      "sha256": "b6d52f5810ff1ecdd0f844ab472ce927f564576879ce75364e32e96918a1609f",
+      "bytes": 81747,
+      "payloadBytes": 81703,
+      "sha256": "ce631187e7d74b1e34bf12bf413c4cd2f4ce169557f843c5cde07d72b301bb9b",
       "seedsTried": 1,
       "facts": {
         "week": 242,
@@ -316,7 +316,7 @@
       },
       "bytes": 83052,
       "payloadBytes": 83008,
-      "sha256": "80e6ffc5452bf1d7769d7da4f4d756b429841dceffb05e5dc852fa7f3310572f",
+      "sha256": "b183a204a6b3a59195075d3c283ea71a2e65013488dbf843c1dfe3b895611a87",
       "seedsTried": 14,
       "facts": {
         "week": 242,
