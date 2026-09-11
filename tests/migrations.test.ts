@@ -561,7 +561,13 @@ describe('save migrations', () => {
     // ⚠ AND AT v73 (09.09, the private life wave 2 – `lifeLog`, the beat record that is also the
     // queue), for the EIGHTH time and with the claim unchanged again: one more rung between the
     // collision and the head, and nothing about the walk itself moves.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 73 – past the colliding 64, through 65').toBe(73)
+    // ⚠ RE-AIMED AT v74 (11.09, the private life wave 3 – `loveEpisodes`, someone exists), NOT
+    // WEAKENED, for the NINTH time and with the claim unchanged once more. What moved is the LADDER'S
+    // HEAD and nothing else: 74 was taken by that wave's own full move (bump, append-only v73 -> v74
+    // step back-filling `[]`, golden fixture v74, e2e fixtures regenerated), the walk below is the
+    // same walk, and the claim this line makes – that the chain runs PAST the colliding 64 and
+    // through 65 – now has one more rung to cross before it arrives.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 74 – past the colliding 64, through 65').toBe(74)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

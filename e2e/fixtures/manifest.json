@@ -1,7 +1,7 @@
 {
   "generatedBy": "tools/e2e-fixtures.ts",
   "command": "npm run e2e:fixtures",
-  "schemaVersion": 73,
+  "schemaVersion": 74,
   "fixtures": [
     {
       "name": "fresh",
@@ -11,7 +11,7 @@
       "careerId": "c-e2e-fresh",
       "slot": "auto:c-e2e-fresh:a",
       "targetWeek": 0,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 24073,
-      "payloadBytes": 24029,
-      "sha256": "7563cd4a8707f9e2ac5135cf3b8b30273ed69398e031ffd90d5df5d18712fbd2",
+      "bytes": 24086,
+      "payloadBytes": 24042,
+      "sha256": "3249ba2521139fc3433d6081f27658cc1270992d0823e5fac1a8d0523ba446a9",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -60,7 +60,7 @@
       "careerId": "c-e2e-junior",
       "slot": "auto:c-e2e-junior:a",
       "targetWeek": 120,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -69,9 +69,9 @@
         "kidLastName": "Kaminski",
         "country": "US"
       },
-      "bytes": 57637,
-      "payloadBytes": 57593,
-      "sha256": "b3cef46d62bba93e0a0323d93216308feae780ba72f691f96c59bf13c03624e4",
+      "bytes": 57645,
+      "payloadBytes": 57601,
+      "sha256": "80f37ff4b65be6588a0fd9b8c41ffee6664d013a5f8d013c40be4f4f19436ebc",
       "seedsTried": 20,
       "facts": {
         "week": 120,
@@ -109,7 +109,7 @@
       "careerId": "c-e2e-pro",
       "slot": "auto:c-e2e-pro:a",
       "targetWeek": 412,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 81945,
-      "payloadBytes": 81901,
-      "sha256": "4695e804389786d6ea1ac78a1e941f0a90e280582790fcfe050e23040f090afe",
+      "bytes": 81955,
+      "payloadBytes": 81911,
+      "sha256": "a568ccb46bfc11101696669eeacb365e456f7e5a196b46d95310689e218f37c4",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -158,7 +158,7 @@
       "careerId": "c-e2e-sinking",
       "slot": "auto:c-e2e-sinking:a",
       "targetWeek": 96,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -167,9 +167,9 @@
         "kidLastName": "Fujimoto",
         "country": "US"
       },
-      "bytes": 61873,
-      "payloadBytes": 61829,
-      "sha256": "ee53533f5ebd01193151542103cd44c44c9564d7f905d919cded699401e872da",
+      "bytes": 61885,
+      "payloadBytes": 61841,
+      "sha256": "e1c89978cb6ef704bc86c74c935257902ab9672167014504c4fd6a0f95391416",
       "seedsTried": 1,
       "facts": {
         "week": 96,
@@ -207,7 +207,7 @@
       "careerId": "c-e2e-broke",
       "slot": "auto:c-e2e-broke:a",
       "targetWeek": 94,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "working",
       "coachTier": "middle",
       "policy": "grinder",
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60156,
-      "payloadBytes": 60112,
-      "sha256": "331f9e0784b157d7fa1b56090f048e6928284be4af35066fc9aff079d87ee102",
+      "bytes": 60166,
+      "payloadBytes": 60122,
+      "sha256": "1d84811e0bb9705f4bc4fe1e23c12598e1ca63fb6b8ecc9a230b6d7a2f8ed1c7",
       "seedsTried": 1,
       "facts": {
         "week": 94,
@@ -256,7 +256,7 @@
       "careerId": "c-e2e-ending",
       "slot": "auto:c-e2e-ending:a",
       "targetWeek": 242,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 81687,
-      "payloadBytes": 81643,
-      "sha256": "9cbd2a6b0130ea4642e5c6f8e708945bc7ada202f1707e1ce12d76bee9e38872",
+      "bytes": 81702,
+      "payloadBytes": 81658,
+      "sha256": "7d2ad9bed86d0f368d535f4ef2309876ee6a15857207c6f02c40bbc76109ff53",
       "seedsTried": 1,
       "facts": {
         "week": 242,
@@ -305,7 +305,7 @@
       "careerId": "c-e2e-unheard",
       "slot": "auto:c-e2e-unheard:a",
       "targetWeek": 242,
-      "schemaVersion": 73,
+      "schemaVersion": 74,
       "background": "middle",
       "coachTier": "middle",
       "policy": "player",
@@ -314,9 +314,9 @@
         "kidLastName": "Oberg",
         "country": "US"
       },
-      "bytes": 81666,
-      "payloadBytes": 81622,
-      "sha256": "6598d1beeb88f7a6e02abe60c202d0e0c8c785d6bccac0fd21750b64d4dd80ad",
+      "bytes": 81680,
+      "payloadBytes": 81636,
+      "sha256": "474d4b427b68c4a3026ce85992096de1482b68f4855994cc13675463d429f326",
       "seedsTried": 1,
       "facts": {
         "week": 242,

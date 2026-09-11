@@ -65,6 +65,56 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⭐⭐ RE-STAMPED FOR v74 (11.09.2026, THE PRIVATE LIFE – WAVE 3) – ONE KEY WAS APPENDED TO THE WORLD
+// AND NOT ONE OTHER BYTE OF ANY CAREER MOVED. The narrowest legitimate re-freeze this file
+// recognises, in v49's own sense, and the wave-2 block directly below is the pattern it repeats.
+// =================================================================================================
+//
+// WHAT MOVED THEM. `SAVE_SCHEMA_VERSION` 73 -> 74, and `createWorld`'s literal gains ONE key:
+// `loveEpisodes` – every attachment this career has lived, append-only, the ACTIVE one DERIVED from
+// the list (`activeEpisode`: the last row with `endedWeek === null`) rather than stored beside it.
+// Every frozen career carries it and every frozen career carries it EMPTY.
+//
+// ⭐⭐ AND THE REASON IT IS EMPTY IS STRONGER HERE THAN AT ANY RUNG ABOVE IT, which is the sentence
+// worth carrying. v73's `lifeLog` was empty because the walk stops at 156 weeks and the only beat
+// that wave raised opens at ~241 – a fact about THESE CAREERS. This wave's T1 ships the list, the
+// migration and the selector and **no writer whatsoever**: the arrival hazard is T3. So the list is
+// empty because nothing in the tree can append to it – a fact about the TREE – and this rung
+// therefore proves nothing yet about a career that lives an attachment inside 156 weeks. The step
+// that adds `rollArrival` answers that question, by reproducing here or by not.
+//
+// ⭐⭐ THE PER-KEY DIFF IS TAKEN AS AN IDENTITY RATHER THAN AS A REPORT, WHICH IS STRICTLY STRONGER –
+// v72's and v73's own note, repeated. `PRE_V74` below is `careerHashAtSchema(…, 73)` – this world
+// with the one new key peeled and the version rolled back – and its three values are the VERBATIM
+// v73 `FROZEN` constants, character for character:
+//
+//     middleGrinder   c7d3eb487706…   eliteGrinder   3a6b22de71f3…   selfTravelling   e2f230aaeffe…
+//
+// So the diff is `schemaVersion` + `loveEpisodes` and provably nothing else – all eighty keys,
+// `rngMain` and `results` and `events` and the wallet included.
+//
+// ⚠ AND THE PER-KEY TOOL WAS RUN FIRST ANYWAY, BEFORE A CONSTANT WAS TOUCHED, because that is the
+// order this file's protocol fixes and the identity above is only available AFTER the peel is
+// written. `tools/frozen-key-diff.ts` on all three careers (`--preset 5 --policy 0`,
+// `--preset 8 --policy 0`, `--preset 0 --policy 1`), control = this branch at `cb3a3a18` with no
+// edit in the tree, reports exactly TWO moved lines on each: `schemaVersion`, and `loveEpisodes`
+// APPEARING, with hash `4f53cda18c2b` – which is `JSON.stringify([])` and is the same hash `assets`
+// carries on these careers. Seventy-seven other keys byte-identical.
+//
+// ⚠⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+// tests/condition.test.ts, green on this tree. It held BY CONSTRUCTION and for the plainest reason
+// any rung in this file has had: the step takes NO DRAW ON ANY STREAM AT ALL – `createWorld` writes
+// a literal `[]` and the migration writes a literal `[]`.
+//
+// ⚠ EVERY `PRE_V*` RUNG BELOW IS UNTOUCHED and still reproduces, because `careerHashAtSchema` peels
+// the new key ahead of all ten of its older peels – see its v74 note. Nine constants move (`FROZEN`,
+// `PRE_R28B`, `PRE_NAME_VERA`); the rest do not, and «untouched» there is a property of this pass
+// rather than a promise: they were not re-written with their own values.
+//
+// ⚠⚠ EVERY NEW VALUE WAS COMPUTED BY RUNNING THE EXPORTED HELPERS, never copied from a failing test
+// report – vitest elides a hash with an ellipsis, which is how a wrong constant survives a wave.
+//
+// =================================================================================================
 // ⭐⭐ RE-STAMPED FOR v73 (09.09.2026, THE PRIVATE LIFE – WAVE 2) – ONE KEY WAS APPENDED TO THE WORLD
 // AND NOT ONE OTHER BYTE OF ANY CAREER MOVED. The narrowest legitimate re-freeze this file
 // recognises, in v49's own sense, and the wave-1 block directly below is the pattern it repeats.
@@ -1499,7 +1549,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: 'c7d3eb487706562574c1f6170baf52179b692b9877110e9d988266d1ee4d5e4d',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '50374fbf57698615fea9b81de66c1da207fe08e96fd9909836e157bb9a837373',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1534,7 +1584,7 @@ export const FROZEN = {
    *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
    *  this career carries all three of the day's moves and its constant matches no branch that exists,
    *  which is what a renumbered collision looks like from inside a fixture. */
-  eliteGrinder: '3a6b22de71f3e7f7a8ee188777a11bb0fcb78a1df91e779406bee4c40aef50b4',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: 'a26fd07fe881dfd6426fcf33792c7e7b99f4cdf7fcdd5c81ff377716bf2d8b9d',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1774,7 +1824,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: 'e2f230aaeffeb883d082f3241f557f49c5107e8501e203cb0563cb32f980fdae',}
+  selfTravelling: '8c52158189bf3b0ac0ea8bd9164a5fd168bdeeb6ab4f256c7885960a15c05939',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -1821,6 +1871,28 @@ export const FROZEN = {
  *  is untouched – count 41550, hash e6b0c709 – and needs no re-pin. `offers` is byte-identical too,
  *  which is the independent confirmation that #5 changed how a signed letter is READ and not whether
  *  one is written. */
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v73 – the identity the v74 re-freeze rests on,
+ *  and the wave-2 pattern (`PRE_V73` directly below) repeated one version up. These three values are
+ *  the VERBATIM v73 `FROZEN` constants, character for character, and they are reproduced here by
+ *  peeling exactly the ONE key v74 appended (`loveEpisodes`) and rolling the number back – so
+ *  «nothing but that key moved» is an identity over the whole serialisation rather than a claim about
+ *  a diff.
+ *
+ *  ⚠ THE PEEL REMOVES A KEY AND NEVER A ROW, for a reason one notch stronger than v73's below: T1
+ *  ships the LIST, the migration and the derived selector, and **no writer at all**. `rollArrival`
+ *  arrives in T3. So `loveEpisodes` is `[]` on every career in this file not because the walk is too
+ *  short to reach a hazard but because there is nothing in the tree that could append a row – which
+ *  is also why this rung says nothing yet about whether an attachment inside 156 weeks would move
+ *  these hashes. The wave that adds the writer answers that, by reproducing here or not.
+ *
+ *  ⚠⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+ *  tests/condition.test.ts, green on this tree. It held BY CONSTRUCTION – this step takes no draw on
+ *  any stream at all: `createWorld` writes a literal `[]` and the migration writes a literal `[]`. */
+export const PRE_V74 = {
+  middleGrinder: 'c7d3eb487706562574c1f6170baf52179b692b9877110e9d988266d1ee4d5e4d',
+  eliteGrinder: '3a6b22de71f3e7f7a8ee188777a11bb0fcb78a1df91e779406bee4c40aef50b4',
+  selfTravelling: 'e2f230aaeffeb883d082f3241f557f49c5107e8501e203cb0563cb32f980fdae',}
+
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v72 – the identity the v73 re-freeze rests on,
  *  and the wave-1 pattern (`PRE_V72` directly below) repeated one version up. These three values are
  *  the VERBATIM v72 `FROZEN` constants, character for character, and they are reproduced here by
@@ -1893,9 +1965,9 @@ export const PRE_V69 = {
  *  is a VALUE a career carries, not a version number stamped on it. The per-key diff, the two keys
  *  it moved and why the second one is her name being printed are on that function. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'bc8b281d044aea9ab663f2df4772417a5d08feb6c1ff2c60af7cd52404709f6b',
-  eliteGrinder: 'fbbe8c6fc6468b606628078d1b9ebf21f76f5dc2581caccd1989254b21c875f3',
-  selfTravelling: '2dcbf303d72395f5f7090caa0fb7db6a082590a628c9c2e7c4da0853c658517d',}
+  middleGrinder: 'b0634a0c58c172f308b92e0d5c83b9de23601795d45408eb785eb8f11ea41c60',
+  eliteGrinder: '2988dafd8bafda306b012fd1d816c821d44aa36a37f2b141adc4014c2e993fda',
+  selfTravelling: '129ea330a214baa687dd48972b6272acbfd8637cefb346da44d0ef459b950857',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -2005,9 +2077,9 @@ export const PRE_V66 = {
  *  three relations still hold: `middleGrinder` and `selfTravelling` equal their `FROZEN` twins and
  *  `eliteGrinder` differs by the one moved letter. The numbers moved together, the argument did not. */
 export const PRE_R28B = {
-  middleGrinder: 'c7d3eb487706562574c1f6170baf52179b692b9877110e9d988266d1ee4d5e4d',
-  eliteGrinder: '3a6b22de71f3e7f7a8ee188777a11bb0fcb78a1df91e779406bee4c40aef50b4',
-  selfTravelling: 'e2f230aaeffeb883d082f3241f557f49c5107e8501e203cb0563cb32f980fdae',}
+  middleGrinder: '50374fbf57698615fea9b81de66c1da207fe08e96fd9909836e157bb9a837373',
+  eliteGrinder: 'a26fd07fe881dfd6426fcf33792c7e7b99f4cdf7fcdd5c81ff377716bf2d8b9d',
+  selfTravelling: '8c52158189bf3b0ac0ea8bd9164a5fd168bdeeb6ab4f256c7885960a15c05939',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -2553,7 +2625,18 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // that is a property of these careers rather than of the field: the only beat wave 2 raises is the
   // fork's own opinion, the fork opens at week ~241, and this walk stops at 156. So the peel removes
   // a key and never a row, which is exactly what `PRE_V73` asserts.
-  const { lifeLog: _beats, ...preBeats } = world
+  // ⚠⚠ RE-AIMED FOR v74 (the private life, wave 3), NOT WEAKENED, AND IT PEELS AHEAD OF ALL TEN
+  // BELOW because `loveEpisodes` is the newest key and the peel order is reverse order of arrival.
+  // It is written by `createWorld` itself, so every career here carries it – and it carries it
+  // EMPTY, which is a property of these careers rather than of the field: the arrival hazard is
+  // gated on `kidAgeExact >= 16` and this walk stops at 156 weeks, where she is 16.6 – but nothing
+  // in THIS step draws at all, because T1 ships the list and the migration and no writer. So the
+  // peel removes a key and never a row, exactly as v73's did, and `PRE_V74` asserts it.
+  // ⚠ MEASURED BEFORE THIS LINE WAS WRITTEN, as this file's protocol demands: `tools/frozen-key-diff.ts`
+  // on all three careers, a control capture taken at `cb3a3a18` before any edit, reports exactly TWO
+  // moved keys – `schemaVersion`, and `loveEpisodes` appearing with the hash of `[]`.
+  const { loveEpisodes: _episodes, ...preEpisodes } = world
+  const { lifeLog: _beats, ...preBeats } = preEpisodes
   const { spirit: _spirit, bond: _bond, temperament: _temperament, ...preLife } = preBeats
   const { drawnFirstRounds: _draw, ...preDraw } = preLife
   const { brandStrengthSeed: _pin, ...preSeed } = preDraw
@@ -2582,7 +2665,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
                     ? preLife
                     : schemaVersion < 73
                       ? preBeats
-                      : world
+                      : schemaVersion < 74
+                        ? preEpisodes
+                        : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 

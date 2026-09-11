@@ -566,7 +566,15 @@ function everyHeading(): string[] {
 // =================================================================================================
 describe('wave 2 G – v73, the three-part move', () => {
   it('bumps the version and ships a golden fixture of its own shape', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(73)
+    // ⚠ RE-AIMED AT v74 (11.09, the private life's wave 3 took the next rung – `loveEpisodes`), NOT
+    // LOOSENED, and on `tests/spirit.test.ts`'s own precedent one version down, verbatim. This case
+    // is about v73's OWN RUNG – that the move happened and left a fixture of ITS OWN SHAPE behind –
+    // and never about the ladder's head, which moves with every wave. So the head is asserted as a
+    // FLOOR and the two claims that actually belong to this rung (the fixture says 73, and it carries
+    // the key 73 added) are asserted exactly as before. The head's own guard – «a bump forces a new
+    // golden save» – lives in tests/goldenSaves.test.ts and is the only place that should ever name a
+    // number that changes.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(73)
     const v73 = JSON.parse(readFileSync(`${SAVES}/v73.json`, 'utf8'))
     expect(v73.schemaVersion).toBe(73)
     expect(v73.lifeLog, 'and the fixture carries the key this version added').toEqual([])
@@ -580,7 +588,17 @@ describe('wave 2 G – v73, the three-part move', () => {
     expect(migrated.lifeLog, 'a career that predates the layer has lived no beats').toEqual([])
     // ⚠ AND THE FIXTURE IS THE REAL MIGRATION'S OWN OUTPUT, not a hand-written file beside it – the
     // recipe every fixture since v25 uses. Asserted, so a hand edit to either one goes red here.
-    expect(JSON.parse(readFileSync(`${SAVES}/v73.json`, 'utf8'))).toEqual(migrated)
+    //
+    // ⚠⚠ RE-AIMED AT v74 (11.09, wave 3's `loveEpisodes`), NOT WEAKENED, AND THIS ONE HAD TO BE –
+    // `migrateSave` always walks to the LADDER'S HEAD, so the moment the head moved past 73 the
+    // migrated payload stopped being a v73 save and the direct equality could never hold again. The
+    // claim is unchanged and is made where it stays true: the v73 FIXTURE and the migrated v72
+    // CONVERGE at the head, byte for byte, which is «the fixture is the migration's own output»
+    // carried one rung forward. A hand edit to either file still goes red here, which is the whole
+    // point of the line; v73's own shape is pinned by the case above (`schemaVersion` 73, `lifeLog`
+    // present), and v74's own «produced by the real migration» equality lives at its own rung in
+    // tests/wave3-love-episodes.test.ts.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v73.json`, 'utf8')))).toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a life a save already has', () => {

@@ -60,7 +60,7 @@ import { addEvent } from './ledger'
 // into `endings.ts` would close a runtime loop. `constants.ts` is the bottom of the package's graph
 // and `endings.ts` re-exports the guard from there anyway, so nothing about the semantics moves.
 import { guardNotEndedForGood } from './constants'
-import type { BondBand, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, MoodRegister } from '../../shared/protocol/narrative'
+import type { BondBand, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister } from '../../shared/protocol/narrative'
 import type { WorldState } from '../world'
 
 // =================================================================================================
@@ -83,6 +83,44 @@ export function lifeLogOf(world: WorldState): readonly LifeBeatRecord[] {
  *  that raised two of them asks about them one at a time and never loses the second. */
 export function pendingLifeBeat(world: WorldState): LifeBeatRecord | null {
   return lifeLogOf(world).find((row) => row.answer === null) ?? null
+}
+
+/** ⭐⭐ v74 (the private life, wave 3) – EVERY ATTACHMENT THIS CAREER HAS LIVED, in the order it
+ *  lived them. Append-only and never pruned: the census and the album both read the whole life
+ *  later, and a row dropped for tidiness is a biography with a hole in it – `lifeLogOf`'s own rule.
+ *
+ *  ⚠ THE `?? []` IS THE SAME COURTESY `lifeLogOf` EXTENDS and for the same reason: v74 makes the
+ *  field required and back-fills `[]`, so no SAVE reaching this line can be missing it, but probe
+ *  worlds hand-built in tests are not saves and predate every field they do not set. */
+export function loveEpisodesOf(world: WorldState): readonly LoveEpisode[] {
+  return world.loveEpisodes ?? []
+}
+
+/** ⭐⭐⭐ THE ACTIVE ATTACHMENT, DERIVED AND NEVER STORED – the LAST row with `endedWeek === null`,
+ *  or null when nobody is there. This function is the whole of «is someone in her life right now»:
+ *  there is no `world.partner` slot and there must never be one.
+ *
+ *  ⚠⚠ EPISODES RATHER THAN A SLOT IS THE 09.09 RE-CUT (review find #5), and this signature is where
+ *  it is paid for. A romance that begins AND ENDS before the parent ever knew must survive save and
+ *  reload intact and surface later as one honest late row; a stored «current partner» would have
+ *  been overwritten out of existence the next time someone appeared. So the list keeps everything
+ *  and the CURRENT one is a question asked of it, which cannot desync from the rows it reads.
+ *
+ *  ⚠ THE LAST OPEN ROW AND NOT THE FIRST. Wave 3 can only ever have one open row at a time – the
+ *  arrival hazard refuses to draw while `activeEpisode` is non-null (T3's eligibility) – so the two
+ *  readings agree today. They stop agreeing the moment anything raises a second one, and «the
+ *  current attachment is the most recent one» is the reading that stays true then; `pendingLifeBeat`
+ *  above takes the FIRST for the opposite and equally deliberate reason, because a queue that
+ *  answered its newest entry first would lose the oldest.
+ *
+ *  ⚠ IT READS `endedWeek` AND NEVER `knownWeek`. Whether the parent has been TOLD is a different
+ *  question from whether someone is there, and conflating them would make a private girl single. */
+export function activeEpisode(world: WorldState): LoveEpisode | null {
+  const rows = loveEpisodesOf(world)
+  for (let i = rows.length - 1; i >= 0; i--) {
+    if (rows[i].endedWeek === null) return rows[i]
+  }
+  return null
 }
 
 // =================================================================================================

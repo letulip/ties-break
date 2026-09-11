@@ -45,9 +45,30 @@ import {
   PRE_V71,
   PRE_V72,
   PRE_V73,
+  PRE_V74,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v74: rolling the schema back to 73 – and dropping the key v74 added – reproduces the v73 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 3 STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
+    // the wave-2 case directly below, repeated one version up. v74 appends ONE key to `createWorld`'s
+    // literal, `loveEpisodes`; every career here carries it and every one of them carries it EMPTY.
+    // Peel that key, roll the number back, and the ENTIRE serialisation returns byte for byte –
+    // `rngMain`, `results`, `events`, the wallet, the body, all eighty keys.
+    //
+    // ⚠⚠ AND THIS RUNG'S «EMPTY» IS A FACT ABOUT THE TREE, NOT ABOUT THESE CAREERS – which is the
+    // one way it differs from every rung below it and the thing a later reader must not misread. T1
+    // ships the list, the migration and the derived selector and NO WRITER AT ALL; `rollArrival`
+    // lands in T3. So this case does not yet say «an attachment cannot reach a 156-week career», the
+    // way the v73 case below says it about a beat. It says the schema move is inert, which is all a
+    // schema move should ever be. The step that adds the writer will answer the other question here,
+    // by reproducing or by not.
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    expect(careerHashAtSchema(5, 0, 73), '25k · middle coach · grinder').toBe(PRE_V74.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 73), '120k · elite coach · grinder').toBe(PRE_V74.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 73), '8k · self-coached · player').toBe(PRE_V74.selfTravelling)
+  })
+
   it('⭐⭐⭐ v73: rolling the schema back to 72 – and dropping the key v73 added – reproduces the v72 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 2 DID TO A FROZEN CAREER, AS AN IDENTITY – the
     // wave-1 case directly below, repeated one version up. v73 appends ONE key to `createWorld`'s

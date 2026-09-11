@@ -346,8 +346,11 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
 import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
 export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
-import { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
-export { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
+// ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` ride the same barrel line –
+// the ACTIVE attachment is a question asked of `loveEpisodes`, never a field, so every reader in the
+// repo has to arrive at it through this one function or the derivation acquires a second spelling.
+import { activeEpisode, answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, loveEpisodesOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
+export { activeEpisode, answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, loveEpisodesOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -1529,6 +1532,17 @@ export function createWorld(
     // older schema's hashes by dropping exactly the keys appended since, and that only works while
     // every key stays in the order it was appended in (`careerHashAtSchema` peels in reverse).
     lifeLog: [],
+    // ⭐ v74 (the private life, wave 3): EVERY ATTACHMENT THIS CAREER HAS LIVED, and on week 0 that
+    // is none – she is eight. Empty is the identity in the plainest sense, and it is exactly what
+    // the v73 -> v74 migration back-fills on every older save, so a migrated career and a fresh one
+    // are the same shape at the moment they load.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `lifeLog` above has stopped being it – the same
+    // handover `peakPhysical` made to `assets` and `assets` to the wave-1 three. The frozen-career
+    // identities reproduce each older schema's hashes by dropping exactly the keys appended since,
+    // so every key must stay in the order it was appended in (`careerHashAtSchema` peels in
+    // reverse, newest first).
+    loveEpisodes: [],
   }
   addEvent(world, {
     week: 0,
