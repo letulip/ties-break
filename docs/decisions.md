@@ -3459,3 +3459,14 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
   tail case red, 1 of 12) and the repaired wave-2 assertion (the v73 step's `??=` written as `=` →
   red, where it had been green). MAIN capture unmoved: 41550 / `e6b0c709`, `tests/condition.test.ts`
   byte-untouched by the step.
+- **The pathspec commit rule had a hole, found by T2's builder.** `git commit -F msg -- <paths>`
+  selects from the INDEX, so it CANNOT commit a new file: an untracked path fails with «pathspec …
+  did not match any file(s) known to git». The house rule as written read as though the pathspec
+  replaced staging entirely, which makes any step that adds a file read as an instruction that
+  cannot be obeyed. The fix is `git add -- <that one path>` first, then the pathspec commit.
+  ⚠ **Recorded here and NOT in CLAUDE.md, for a reason worth its own line**: CLAUDE.md is 21,978
+  characters against a 22,000-character context-budget gate – **22 characters of headroom**. Adding
+  the note broke `context:audit` and took the whole gate red (`CHECK_EXIT=1` at the first stage), and
+  the two rules it would have stated are already in the file further down anyway. The next single
+  line anybody adds to CLAUDE.md fails the gate the same way. Compressing it is the owner's call,
+  not an agent's – it is his governance document.

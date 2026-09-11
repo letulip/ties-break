@@ -102,13 +102,6 @@ unnoticed 17.08–07.09.
 - **Push to `origin` (GitHub) only**, not `gitlab` — the two `main`s have diverged.
 - Side work while a wave branch is active goes in a **worktree** (`../tb-*`), never by switching the shared checkout.
 - Check the current branch before every commit.
-- **Commit with the pathspec form** – `git commit -F <msgfile> -- <paths>` – so a commit can never
-  pick up a file it was not meant to carry. ⚠ **The pathspec does NOT replace `git add` for a NEW
-  file**: an untracked path fails with «pathspec … did not match any file(s) known to git», so
-  `git add -- <that one path>` first, then commit with the pathspec. (Found 11.09, wave 3 T2 – the
-  rule as written read as if it replaced staging entirely.)
-- **Never `git checkout -- <file>` to undo a mutation before committing.** Restore from a copy taken
-  before the mutation; a checkout over a tree that also holds unstaged real work destroys it.
 
 ## Layout
 
