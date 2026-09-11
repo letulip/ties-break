@@ -1214,3 +1214,68 @@ correctly**, because the net reads `knockGoverns` from the ENGINE rather than th
 No `try/catch` stands between a knock and its answer. Arms differ only in the knock answer,
 verified by a counting wrapper over all 256 pairs: **0 draw-count, 0 draw-value-hash and 0
 arrival-week mismatches.** Frozen capture unmoved (41550 / `e6b0c709`). **Nothing was adjusted.**
+
+
+## §4a – wave 3 measured, third entry. T16's knock escalation: the rate, and what it cost the ladder
+
+T12 measured that the push-through price was **mostly not the parent's to pay**: at every rung with
+`coachManagesLoad` the coach answered **232 of 280** knocks, so the parent was asked ~1.5 times per
+career against 9.0 self-coached. The owner ruled the repair («давай попробуем»): two classes
+escalate to the parent's EXISTING knock dialog even under `coachManagesLoad` – a repeated part, and
+a `'warn'` clearance week – **without touching the ruled 0.5/week bond memory**.
+
+⚠ **The mechanism was not new.** `coachEscalates` already handed a knock back through a
+confidence-scaled DOUBT zone; T12's ~1.5 was that zone firing rarely. T16 adds two DETERMINISTIC
+classes beside it: `knockNeedsTheParent = repeat || clearance === 'warn' || coachEscalates(...)`.
+
+**The headline, predicted vs measured** (`bench:spirit --push --coached --seeds=4`, 32 careers × 208
+weeks; control = the predicate reverted in place, grep-verified both directions):
+
+| | before | after | predicted |
+| --- | --- | --- | --- |
+| **parent asked / career** | 1.88 | **6.50** | 4–6 |
+| arrived | 304 | 296 | – |
+| coach answered alone | 244 | **88** | – |
+| asked / answered / latched | 60 / 60 / 0 | 208 / 208 / 0 | – |
+| rests · pushes (first/repeat) | 32 · 8/20 | 104 · 12/92 | – |
+| push-governed weeks | 160 | 364 | – |
+
+`bench:load`'s normal-play policy (PLAYER, rests, heeds caution) at the shipped rung reads
+**1.9 → 5.8** – inside the corridor. Anti-stall held and printed: both ledgers balance, `[P0b]` 0
+draw-count / 0 hash / 0 arrival-week mismatches over 16 pairs, `[P0a]` 0 delta mismatches.
+
+⭐⭐⭐ **AND THE PRICE, WHICH IS THE ENTRY'S REAL CONTENT: THE COACH LADDER FLATTENS.** The two
+classes are **tier-independent**, so they reach every rung equally. Tap share, 8 seeds × 208 weeks:
+
+| | self | budget | middle | high | elite |
+| --- | --- | --- | --- | --- | --- |
+| before | 1.000 | 0.148 | 0.103 | 0.078 | 0.075 |
+| after | 1.000 | 0.716 | 0.684 | 0.692 | **0.662** |
+
+A **2× budget-to-elite span becomes 1.08×**. `bench:load`'s taps/career on the grinder arm goes
+2.3 / 1.8 / 1.1 / 0.9 → 7.7 / 8.0 / 7.6 / 6.6 – **no longer monotone**. The elite coach went from
+answering **95%** of knocks alone to **31%**. ⚠ «You are buying your attention back» was a number and
+is now worth a fraction of it. The ladder still runs end to end. **This is the owner's trade on
+T12's measurement, recorded here so it is a decision rather than a discovery.**
+
+**What else moved, reported and NOT adjusted** (`regressionPerWeek` untouched, no delta row touched):
+the DEFAULT self-coached T12 pair is **byte-identical** to this section's second entry – T16 cannot
+reach it, `coachManagesLoad('self')` being false. On the COACHED control the bond gap at week 208
+goes 1.38 ± 1.375 → **6.19 ± 3.430** and **bar 1 turns AGREE → DISAGREE** there: ⭐ that is §4a's own
+92%-regression finding arriving on the coached arm, now that the parent actually answers. Spirit
+weeks 5.00 / −2.13 → 17.75 / +10.63; Δpp −4.224 → −2.498; push-arm injuries 48 → 44, injured weeks
+184 → 216.
+
+**Frozen careers**: `selfTravelling` **0 keys of 80, byte-identical** (and all 25 rungs reproduce);
+`eliteGrinder` 13 keys with `bond` and `results` **unmoved**; `middleGrinder` 20 keys. ⚠⚠ `rngMain`
+is **byte-identical on all three** – the escalation takes no draw. 50 moved / 25 held, re-stamped
+under the protocol. ⭐ The width is explained rather than waved at: `econ-bench` never answers a
+knock, so the first escalation LATCHES the slot for the rest of the walk (5/0: 6 arrivals / 1
+escalation / 2 jammed weeks → 4 / 3 / **47**). **A harness property, not a play property** –
+`advanceWeeks` halts on `pendingKnock`. ⚠ It does mean those fixtures now walk less game than they
+did, which is worth its own look.
+
+**Copy**: zero new strings. The `'warn'` class reuses «The coach wants to talk about her {part}
+before anyone decides» – which claims only the ACT – rather than «in two minds», which claims a
+mental state a risk week cannot back. Verified: **no pre-T16 (state → sentence) pairing moves at
+all.** A risk-week sentence of its own would be a one-line вычитка ask, not a builder's edit.
