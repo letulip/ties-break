@@ -1279,3 +1279,58 @@ did, which is worth its own look.
 before anyone decides» – which claims only the ACT – rather than «in two minds», which claims a
 mental state a risk week cannot back. Verified: **no pre-T16 (state → sentence) pairing moves at
 all.** A risk-week sentence of its own would be a one-line вычитка ask, not a builder's edit.
+
+
+## §4a – wave 3 measured, fourth entry. T17: the stop want stops being a quarter
+
+**The owner measured this one in play.** His world #5 – healthy, close home – said «stop» at the fork,
+and the formula made that no tail: `lean` clamps every weight to [1.0, 1.6] and `stop` was
+`lean(worn)`, never below 1.0, so **P(stop) bottomed out at ~22–24% at ANY state**. A quarter of
+players met «хочу закончить» at the game's biggest triumph with no root they could read.
+
+`stop = floor + gainWorn·worn + gainStrained·strained` (`ECONOMY.life.forkStop` = 0.12 / 2.5 / 2.0),
+`strained` being the mirror of `close` – distance BELOW the start. **P(stop), pure formula:**
+
+| state | measured | driver |
+| --- | --- | --- |
+| **OLD formula, unsupported** | **27.8%** | – |
+| unsupported, bond = start | **4.4%** | own |
+| unsupported, bond 100 | **3.3%** | own |
+| at the driver line (.15) | 16.0% | own |
+| worn .3 | 25.1% | worn |
+| strained .3 | 21.7% | strained |
+| worn + strained .4 | 42.5% | worn |
+| worn + strained .6 | 52.0% | worn |
+| drained, cold | 64.0% | worn |
+
+⭐⭐ **A STRUCTURAL FINDING THE BRIEF DID NOT HAVE: P(stop) is FLAT ACROSS STANDING whenever
+`bond <= start`.** `college = lean(1−s)` and `tour = lean(s)` are complementary and sum to 2.6 at
+every standing, while `close = 0` kills the only term standing could move. **Standing reaches
+P(stop) solely through the `close` multiplier** – so how high she got changes what she wants only in
+a home above the start. The bench prints a second grid at `bond > start` where the axis is alive.
+
+**Walked** (`bench:spirit --fork --seeds=32`): 256 careers · **252 reached the fork and stated a
+want** · **24 `'fork-counsel'` rows raised = the 24 stops exactly** (the arc's proof-of-run).
+Wants: college 152 · tour 76 · **stop 24 = 9.5%**.
+⭐ **BAR: strictly unsupported stops (worn = strained = 0) 4/252 = 1.6% – PASS** against ≤ 5%.
+Diagnostic, not a bar: stops whose WORDS claim no root (driver `own`) 20/252 = 7.9% – the `own`
+band runs to ~14% at its bottom edge, so «too small to name» rather than absent, and `own` is the
+Barty register, a root of its own.
+⚠ **No career on this grid was `worn` at the fork**, so the worn copy column is unexercised by the
+walk and carried by unit tests only. The bench prints that itself rather than leaving it inferred.
+
+**Frozen careers: 0 keys of 80 on ALL THREE, byte-identical, no constant re-stamped.** The fork
+opens at week 294 and the freeze walk ends at 156, so T17 cannot reach them. Frozen MAIN capture
+**41550 / `e6b0c709`** unmoved.
+
+⚠⚠ **AND `bench:spirit` WOULD HAVE LIED AGAIN.** Its `answerTheForkTheWayThisArmWould` carried a
+`catch {}` that swallows `answerFork`'s refusal – so every stopping career would have reported
+`forkCongruence: null` and `bondAtFork: NaN` **with no error**, byte-for-byte the T6b failure on the
+same instrument. Found and fixed with a second bond-neutral drain. That is twice this wave the same
+bench has been caught reporting a stall as a measurement.
+
+⚠ **The `strained` driver is narrow in HER voice**: `speaksInHerOwnVoice` is false below bond 55 and
+the driver starts below 59.5, so she speaks a `strained` line only in the bottom ~4.5 points of the
+`steady` band. The root still reaches the player at every band **through the coach**, whose counsel
+is driver-keyed rather than bond-keyed – taken as the design answer and documented rather than
+widening the pool.
