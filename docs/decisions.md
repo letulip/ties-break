@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 89 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 90 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -44,7 +44,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
 | saves-and-schema | 1 | [WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES](#11092026--wave-3-t1-v74-episodes-rather-than-a-slot-and-the-tail-decides) | 2026-09-11 |
-| simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
+| simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -3623,3 +3623,58 @@ the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-ch
 - ❓ **OPEN, for the owner**: T14's window. «Exactly ONE week after the finish week» is shipped as the
   FINISH WEEK ITSELF – the week the player lands on Home as the card hands over, expiring next tick.
   The alternative reading is `doneWeek + 1`. The length is already data, so either is one line.
+
+## 11.09.2026 – WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING
+
+- **T6 – delivery on `knownWeek`.** The beat fires at EVERY band; the bond band picks the REGISTER.
+  `close` -> her own line in her four voices, `steady` -> a mention, `strained`/`cold` -> a dry card
+  and a flat feed row. A kept `addEvent` row (`type: 'life'`, no `amountCents`) plus a `'met'` row
+  through wave 2's existing queue machinery, which was reused and not duplicated.
+  ⚠ Once-ness is the RECORD, not a flag: the `'met'` row's `detail` is the episode id and is its own
+  receipt. Frozen-career diff: `eliteGrinder` moves `events`, `lifeLog`, `nextEventId` – and
+  `results`, `rngMain`, `fundsCents` are byte-identical, so delivery changed neither the tennis nor
+  the money. ⚠ The re-stamp was **25 constants**, every `PRE_V*` rung from V74 down to V50: T3 added a
+  key (the peel undid it), T4 moved a v72 key (PRE_V72's peel caught it), but T6 moves
+  `events`/`nextEventId`, which predate every peel this file has – no rung is low enough.
+- ⚠⚠⚠ **T6b – THE BLOCKING REPAIR, AND THE MOST IMPORTANT THING THE WAVE HAS FOUND.** Until T6 there
+  was exactly ONE `LifeBeatKind`, so `answerLifeBeat(world, 'listen')` was a complete answer to any
+  pending beat, and ~50 harnesses wrote that line out by hand. `'met'` is raised on any week from her
+  sixteenth on, and the engine rightly refuses an option the pending row never offered – so every one
+  of those sites throws the first time a career meets somebody, and a walker that handles no beat at
+  all simply STALLS (`advanceWeeks` will not tick while a row is unanswered).
+  **48 sites across 40 tools repaired**, one home: `tools/_lifeBeats.ts` (the `tools/_seeds.ts`
+  convention), with `tests/helpers/career.ts` re-exporting it – no second copy. Direction verified
+  before deciding: `tests/` already imports `tools/` in 25 files; `tools/` imports `tests/` in none.
+- ⚠⚠ **`npm run check` IS GREEN ON THIS BREAKAGE AND ALWAYS WOULD HAVE BEEN.** Every one of those
+  files typechecks. The gate cannot see it. It was found only because T6's builder repaired the
+  `tests/` side and then went looking for the same shape elsewhere instead of stopping at its own
+  scope. ⭐ **The general lesson**: a green gate is evidence about what the gate RUNS. 41 of 219 tools
+  are exercised by no suite at all, and «it compiles» is the only claim that covers them.
+- ⭐⭐⭐ **AND ONE INSTRUMENT WAS LYING WITH EXIT 0.** `bench:spirit` – the very tool T12 must extend
+  to price the push-through – ran, printed a full census table, and exited **0** while answering
+  nothing: 842 beat rows raised across the two arms, **0 back / 0 press / 0 listen, both fork columns
+  empty, bond@fork blank**, no error anywhere. Its `try/catch` swallowed the throw and left the row
+  pending. ⚠ Had T12 been run before this repair it would have measured a stall and reported a
+  price. The failure mode to remember is not «the bench crashed» – it is «the bench succeeded and the
+  columns were empty».
+- **The breakage was wider than the architect named**: besides `e2e-fixtures` and `spirit-bench`,
+  five more benches died the same way on the control tree – `bench:floor`, `bench:deadweek`,
+  `bench:outgrown`, `bench:money`, `bench:skill`. All exit 0 after the repair.
+- **No measurement moved, proven rather than asserted**: `bench:endings` (the one repaired bench that
+  still RAN before the commit) is byte-identical across the change, md5 `bff91c7592c98c0d5c87eb2824a0415d`
+  on a control worktree and on the fixed tree – so `drainLifeBeats` is exactly the inlined loop.
+  ⚠ `bench:spirit --fork` DID move, 4 of 16 careers reaching a fork answer -> 16 of 16, and that is the
+  repair rather than a retune: **the pre-fix number was the stall, not a baseline.**
+- ⚠ **`spirit-bench`'s two measuring arms were left alone, deliberately.** They answer `'back'` on care
+  and `'press'` on grind because those arms are PRICING the bond; a mechanical sweep to the neutral
+  option would have destroyed the instrument. A neutral drain was added IN FRONT of them so a row the
+  bench never meant to price cannot sit ahead of hers.
+- **A latent generator kill closed by the architect**: `tools/e2e-fixtures.ts`'s `unheard` look-ahead
+  presses `'back'` on the pending row, assuming it is the fork's opinion. A `'met'` row raised in the
+  same week the fork opens would throw and kill the whole generator rather than reject one seed –
+  reachable only since wave 3's hazard. Closed with a rejection clause; verified a no-op on the
+  current seeds (fixtures byte-identical, generator exit 0). The builder flagged it and left it,
+  correctly, because it edits a measuring site.
+- ❓ **OPEN, for the owner**: T6's intrusive option label reads «Say we want to meet them, now» –
+  «them», not «him», because `LoveEpisode` persists no gender by design (T1) and a pinned test now
+  forbids gendered pronouns in the `'met'` labels. His to overrule at the вычитка.

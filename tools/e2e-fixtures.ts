@@ -475,6 +475,20 @@ const RECIPES: Recipe[] = [
           // not show that. Guaranteed by the engine – the fork's opening tick raises the row – so
           // this is the clause that would notice if that ever stopped being true.
           if (world.fork === null || world.fork.answer !== null) return 'the fork is not open behind her'
+          // ⚠⚠ AND THE ROW WAITING MUST BE HER OPINION OF THAT FORK, WHICH IS NOT THE SAME CLAIM. The
+          // look-ahead below presses `'back'` – a fork-opinion answer – and the engine deliberately
+          // REFUSES an option the pending row never offered. So a `'met'` row raised in the same week
+          // the fork opens would sit first in the queue and make that line THROW, killing the whole
+          // generator instead of rejecting one seed.
+          //
+          // ⚠ WAVE 3 IS WHAT MADE THIS REACHABLE: the arrival hazard can raise a beat on any week from
+          // her sixteenth on, where wave 2 had exactly one beat kind and it fired at the fork. The
+          // clause directly above rejects nearly every `'met'`-first seed as a side effect, but NOT one
+          // that lands on the fork's own week – that is the gap, and it is the difference between a
+          // filtered seed and a dead generator. Found by the T6b tools repair and closed here (11.09);
+          // it did not bite on the current seeds, which is exactly why it is worth a clause rather
+          // than a note.
+          if (pendingLifeBeat(world)?.kind !== 'fork-opinion') return 'the row waiting is not her opinion of the fork'
 
           // ⚠ AND BOTH ANSWERS TOGETHER MUST LEAVE AN ORDINARY WEEK. e2e/life-beat.spec.ts closes by
           // pressing the week button and reading the next week off the screen, so a tick that opened
