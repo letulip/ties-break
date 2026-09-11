@@ -139,7 +139,13 @@ test.describe('the life beat at the college fork', () => {
       answers,
       'the answers are not named by her line – `aria-labelledby="life-beat-said"` is what tells a ' +
         'listener which sentence these three are a reply to.',
-    ).toHaveAccessibleName(/^She .+"[^"]+"$/)
+    // ⚠ RE-AIMED 11.09 TO `(She|Her)`, NOT WEAKENED. The claim was always «third-person narration
+    // plus one quoted span»; `^She ` was a PROXY for it that the owner's own away frames have now
+    // outgrown - two of the nineteen open «Her voice note skipped hello entirely.» and «Her message
+    // came and did not ask for a reply.» No committed fixture sits at an away stage yet, so this
+    // cannot bite today; it would have bitten silently the first time wave 4 regenerated one onto a
+    // college career with a fiery or deep girl on a bright week, on HIS copy.
+    ).toHaveAccessibleName(/^(She|Her) .+"[^"]+"$/)
 
     // ROUND 40'S CONVENTIONS, ON THE WIRE: real radios in a real group, nothing marked on arrival.
     // The card may not point at an answer, on a card whose whole subject is that the answer is his.

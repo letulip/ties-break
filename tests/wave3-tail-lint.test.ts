@@ -34,14 +34,19 @@ function literalsOf(src: string): string[] {
   return [...code.matchAll(/'((?:[^'\\]|\\.)*)'/g)].map((m) => m[1].replace(/\\'/g, "'"))
 }
 
-// ⚠⚠ THE ONE KNOWN VIOLATION, BASELINED RATHER THAN SILENTLY FIXED - the `pins:check` ratchet idiom.
-// It is PRE-EXISTING: `b7ed734b` (wave 2) shipped it to main, and wave 3's T6 only moved it
-// byte-identically into the per-kind record. Changing it is a WORDING change, which invariant 4
-// makes the owner's and never an agent's, so it is carried to the вычитка with a flag rather than
-// rewritten here. The count is asserted exactly, so a SECOND violation cannot hide behind this one.
-const KNOWN_VIOLATIONS = [
-  'She said what she wants after school. We listened, and left it there.',
-] as const
+// ⭐⭐ THE BASELINE IS NOW EMPTY, AND THAT IS THE POINT OF HAVING HAD ONE.
+//
+// This list carried exactly one entry: `ANSWER_EVENT['fork-opinion'].listen`, «We listened, and
+// left it there» – shipped to main by wave 2's `b7ed734b` and only moved byte-identically by T6.
+// It was baselined rather than fixed because rewriting it is a WORDING change, which invariant 4
+// makes the owner's. He put the choice to the architect on 11.09 with two candidates and a
+// «leave it», and the delegated pick was «We listened all the way to the end.»
+//
+// ⚠ THE EMPTY ARRAY IS LOAD-BEARING, not housekeeping: the count assertion below still runs, so
+// the pool now proves ZERO banned tails and a new one cannot hide behind a non-empty baseline.
+// ⚠ If a future violation is ever legitimately baselined here, it needs the same custody – named,
+// dated, and pointed at whoever owns the wording.
+const KNOWN_VIOLATIONS: readonly string[] = []
 
 describe('the narrator-tail ban reaches every life pool, not just the week notes', () => {
   it('⭐⭐⭐ no banned tail survives in any life string, except the one on the owner\'s desk', () => {
@@ -55,8 +60,13 @@ describe('the narrator-tail ban reaches every life pool, not just the week notes
     // real violation lives in. A tight count would go red every time a pool gains a line, which
     // trains people to edit the number instead of reading the failure.
     expect(literals.length, 'the extractor found the file\'s strings').toBeGreaterThan(150)
-    expect(literals, 'and it really reaches the pool the violation lives in')
-      .toContain(KNOWN_VIOLATIONS[0])
+    // ⚠ RE-AIMED 11.09 WITH THE BASELINE'S EMPTYING, NOT WEAKENED. This half proves the extractor
+    // REACHES `ANSWER_EVENT` - the module-private pool the one real violation lived in, and the
+    // reason this lint reads source instead of calling functions. It named the violation itself
+    // until the owner's pick removed it; it now names its repaired sibling in the same object, so
+    // the claim «the extractor can see into that pool» is unchanged and still checkable.
+    expect(literals, 'and it really reaches the pool the violation lived in')
+      .toContain('She said what she wants after school. We listened all the way to the end.')
 
     const found: string[] = []
     for (const text of literals) {

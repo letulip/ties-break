@@ -588,11 +588,17 @@ function metRegisterOf(band: BondBand): MetRegister {
  *  want) reads the identical span at both distances, and the pin extracts both spans and compares
  *  them rather than trusting that anyone remembers.
  *
- *  ⚠ `deep` NEVER CONTRACTS AND THE OTHER THREE DO, which is the register difference rather than an
- *  inconsistency in his delivery. His own label said «контракции sunny/fiery»; his delivered text
- *  contracts `quiet` too and leaves `deep` alone at every single cell, and the delivered text is
- *  what the player reads. `deep`'s formality is the character – the bibles' «`deep` lightly – some
- *  of deep's formality is the character, kept where it does work» – so both of its cells below are
+ *  ⚠ `deep` STAYS UNCONTRACTED IN THESE POOLS – the bible's «lightly»: her formality is load-bearing
+ *  in a confession. ⚠⚠ THE LAW HOME IS `voice-bibles-2026-09.md` §Contractions, NOT THIS COMMENT,
+ *  and the distinction matters: the bible licenses `deep` lightly rather than never, so a future
+ *  `deep` line where a contraction genuinely works is ALLOWED. An absolute written here would send
+ *  whoever meets that line to «fix» the wrong side of it (the owner's correction, 11.09 – absolutes
+ *  are reserved for licensing law).
+ *
+ *  The other three contract where it is natural – a local fold of the same section, and the same
+ *  pointer applies: sunny and fiery throughout, quiet mostly. His own label said «контракции
+ *  sunny/fiery» while his delivered text contracts `quiet` too and leaves `deep` alone at every
+ *  cell; the delivered text is what the player reads, so the text won. Both `deep` cells below are
  *  byte-identical to what T6 shipped. */
 const MET_HER_LINE: Record<Temperament, Record<LoveEpisode['wants'], PresenceCell>> = {
   sunny: {
@@ -784,11 +790,13 @@ export function smallTalkSubjectFor(register: MoodRegister): SmallTalkSubject {
  *  and the pin asserts the third person (`she` or `her`) instead of the letter of the older form.
  *
  *  ⚠ THE QUOTED SPAN IS SHARED with the roof column, exactly as `MET_HER_LINE`'s is – see that
- *  pool's note for the rule and for why `deep` never contracts. ⚠⚠ ONE QUOTE HERE WAS INFERRED AND
- *  NOT RECEIVED: `sunny`/`joy`'s «Something went well. I'm pleased about it.» – its frame is shared,
- *  so the owner supplied no away row to take a span from, and the contraction is the architect's
- *  reading of sunny's other three. It is the one line of the twenty he has not yet read in the form
- *  that ships. */
+ *  pool's note for the contraction fold and for the law home it points at.
+ *
+ *  ⭐ PROVENANCE OF `sunny`/`joy`'s «Something went well. I'm pleased about it.», corrected 11.09:
+ *  it is THE OWNER'S OWN WORD, carried on his P2 verdict list. It is absent from the 19-frame
+ *  delivery for one reason only – that cell's frame is channel-neutral and SHARED, so there was no
+ *  away row for it to appear in. The architect first recorded it as an inference and the owner
+ *  corrected the record: one source, byte-for-byte agreement, chain of custody clean. */
 const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, PresenceCell>> = {
   sunny: {
     worry: {
@@ -1016,7 +1024,7 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
   'fork-opinion': {
     back: 'She said what she wants after school. We told her we are behind her.',
     press: 'She said what she wants after school. We told her we see it differently.',
-    listen: 'She said what she wants after school. We listened, and left it there.',
+    listen: 'She said what she wants after school. We listened all the way to the end.',
   },
   met: {
     warm: 'There is someone in her life. We told her we are glad about it.',

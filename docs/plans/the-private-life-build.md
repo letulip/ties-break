@@ -394,7 +394,7 @@ openness – ~70% toward her own register (who-she-is §4). Fixture `v74.json`.
 moves – the slot fills, the spirit baseline lifts +5 – and the parent is told nothing. The feed
 lag is drawn once on `seed:life:partner:<sinceWeek>`, **by openness: open – 0 with p 0.70 (⭐
 moved 11.09 on the census miss – who-she-is §4 wins on drift), else
-uniform 1..5; private – 0 with p 0.10, else uniform 2..12** – and the bond band SHAVES a private
+uniform 1..4; private – 0 with p 0.10, else uniform 2..12** – and the bond band SHAVES a private
 girl's lag toward the open distribution (who-she-is §2a channel 1: she trusts THIS parent). The
 DELIVERY follows §5b's channel rule: at `close` bond the news arrives as her own dialog, at
 `steady` a mention, at `strained`/`cold` the feed alone – late, flat, or never in her voice. An
