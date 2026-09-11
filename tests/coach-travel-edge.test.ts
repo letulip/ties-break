@@ -49,7 +49,7 @@ import {
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
-  it('⭐⭐⭐ v74: rolling the schema back to 73 – and dropping the key v74 added – reproduces the v73 hashes byte for byte', () => {
+  it('⭐⭐⭐ v74: rolling the schema back to 73 – and dropping the key v74 added – reproduces v73 byte for byte on every career the private life never reached', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 3 STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
     // the wave-2 case directly below, repeated one version up. v74 appends ONE key to `createWorld`'s
     // literal, `loveEpisodes`; every career here carries it and every one of them carries it EMPTY.
@@ -74,12 +74,30 @@ describe('the byte-identity of a career that does not travel', () => {
     // returns v73 byte for byte on all three careers. So the pair reads «a career moved, and only
     // where the wave was allowed to move it» – see `FROZEN.eliteGrinder`'s own block for the diff,
     // the row and the control.
+    //
+    // ⚠⚠ RE-AIMED 11.09 BY T4, AND NOT WEAKENED – THE CASE NAME CHANGED AND SO DID ONE CONSTANT.
+    //
+    // WHAT MOVED: `PRE_V74.eliteGrinder`. WHY IT HAD TO: T4 is the first step of this layer that is
+    // NOT a schema move. It adds no key and takes no draw; it changes the VALUE of `spirit` – she is
+    // lifted toward 75 while someone is there – and `spirit` arrived at v72, so it is INSIDE the v73
+    // shape this case rolls back to. A peel that drops `loveEpisodes` cannot undo a value the
+    // remaining shape still carries, and no amount of care would have kept this green.
+    //
+    // ⭐ SO THE LINE THREE PARAGRAPHS UP FIRED CORRECTLY: «IF THIS GOES RED BESIDE A RED FREEZE, the
+    // wave moved a career and not just a schema». It did, deliberately. The name now says what the
+    // case actually proves – byte-for-byte reproduction on the two careers who meet nobody inside 156
+    // weeks, and an exact peel on the third – and the claim is unchanged for `middleGrinder` and
+    // `selfTravelling`, whose constants were not touched.
+    //
+    // ⭐⭐ THE IDENTITY THAT STILL COVERS ALL THREE IS `PRE_V72`'s, two cases down: its peel drops
+    // `spirit` itself and it reproduces untouched, so every key that predates the private life –
+    // `results`, `events`, `rngMain`, the wallet – is where it was three waves ago.
     expect(careerHashAtSchema(5, 0, 73), '25k · middle coach · grinder').toBe(PRE_V74.middleGrinder)
     expect(careerHashAtSchema(8, 0, 73), '120k · elite coach · grinder').toBe(PRE_V74.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 73), '8k · self-coached · player').toBe(PRE_V74.selfTravelling)
   })
 
-  it('⭐⭐⭐ v73: rolling the schema back to 72 – and dropping the key v73 added – reproduces the v72 hashes byte for byte', () => {
+  it('⭐⭐⭐ v73: rolling the schema back to 72 – and dropping the key v73 added – reproduces v72 byte for byte on every career the private life never reached', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 2 DID TO A FROZEN CAREER, AS AN IDENTITY – the
     // wave-1 case directly below, repeated one version up. v73 appends ONE key to `createWorld`'s
     // literal, `lifeLog`; every career here carries it and every one of them carries it EMPTY, since
@@ -93,6 +111,13 @@ describe('the byte-identity of a career that does not travel', () => {
     // below could reproduce. It reproduces on all three, which is «a player who never reaches the
     // fork loses nothing» measured rather than argued.
     // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    //
+    // ⚠⚠ RE-AIMED 11.09 BY T4, IN STEP WITH THE v74 CASE ABOVE AND FOR THE IDENTICAL REASON, which is
+    // written out there in full: the attachment lift moves `spirit`, `spirit` is a v72 key, and the
+    // v72 shape this rung rolls back to still contains it. `PRE_V73.eliteGrinder` was re-stamped;
+    // `middleGrinder` and `selfTravelling` were not touched and still reproduce character for
+    // character. The wave-2 claim this case was written for – the fork machinery cannot bite before
+    // week 241 – is untouched by any of it, and is what those two careers still prove.
     expect(careerHashAtSchema(5, 0, 72), '25k · middle coach · grinder').toBe(PRE_V73.middleGrinder)
     expect(careerHashAtSchema(8, 0, 72), '120k · elite coach · grinder').toBe(PRE_V73.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 72), '8k · self-coached · player').toBe(PRE_V73.selfTravelling)

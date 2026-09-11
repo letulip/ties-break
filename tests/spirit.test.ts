@@ -45,7 +45,7 @@ import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { birthdayTurning } from '../src/engine/world/age'
 import { isBlackoutWeek, isExamWeek, isOffSeasonWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
-import { worldFunction } from './worldSource'
+import { engineModuleFunction, worldFunction } from './worldSource'
 import { region } from './helpers/source'
 import type { WorldState } from '../src/engine/world'
 
@@ -1030,15 +1030,49 @@ describe('the fence this step is judged by', () => {
     expect(named).toEqual(['shared/protocol/narrative.ts'])
   })
 
-  it('⚠ attachmentLift is DECLARED AND NOT READ, deliberately, until wave 3 wires the slot', () => {
+  it('⚠⚠ attachmentLift is read ONCE – in accrueSpirit’s return TARGET – and nowhere else', () => {
+    // ⚠⚠ RE-AIMED 11.09 BY WAVE 3's T4, AND NOT WEAKENED.
+    //
+    // WHAT IT SAID BEFORE, and it was right for the wave it was written in: «attachmentLift is
+    // DECLARED AND NOT READ, deliberately, until wave 3 wires the slot», enforced by asserting that
+    // NO file under `src/` reads it. WHAT MOVED: T4 is the step that gives it a reader –
+    // `accrueSpirit`'s weekly return now walks toward `baseline + attachmentLift` while
+    // `activeEpisode` returns a row (docs/plans/life-wave-3-builder-2026-09.md §2 T4). The old form
+    // was written to go red on exactly this commit, and this is that commit.
+    //
+    // ⚠ THE CLAIM IS TIGHTER THAN THE ONE IT REPLACES, not looser. «No reader anywhere» has become
+    // «ONE reader, in one named function, on the line that computes the return's TARGET», and the
+    // three ways this rule could be got wrong are each refused by a line below: a second reader
+    // anywhere in `src/`; a read that is not gated on the slot being full; and a read that lands in
+    // `weekPerturbation`, which would make the lift a one-off SPIKE THAT DECAYS instead of a moved
+    // baseline – the opposite shape from «lifts a little and stays lifted», and the one thing §1b
+    // actually specifies.
     const owners = srcFiles()
-      // ⚠ A READ, NOT A MENTION: the constant is discussed in prose in two places (its own
-      // declaration and `accrueSpirit`'s note on why the target is a flat baseline), and a pin that
-      // tripped on prose would be repaired by deleting the explanation, which is the wrong repair.
-      .filter(([, text]) => text.includes('.attachmentLift'))
+      // ⚠ A READ, NOT A MENTION – and `codeOnly` now, because the constant is discussed in prose in
+      // four places (its declaration, `accrueSpirit`'s note, the `ECONOMY.life` banner and
+      // `world/loveEpisodes.ts`), and a pin that tripped on prose would be repaired by deleting the
+      // explanation, which is the wrong repair.
+      .filter(([, text]) => codeOnly(text).includes('.attachmentLift'))
       .map(([path]) => path)
-    expect(owners).toEqual([])
-    // ...and it IS declared, at the value the design named – the other half of the same claim.
+    expect(owners, 'exactly one file in src/ reads it').toEqual(['engine/spirit.ts'])
+    // ...and inside that file it is read exactly ONCE, on the line that builds the return's target.
+    const accrue = codeOnly(engineModuleFunction('spirit', 'accrueSpirit'))
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+    const reads = accrue.filter((l) => l.includes('.attachmentLift'))
+    expect(reads, 'one read, and it is inside accrueSpirit').toHaveLength(1)
+    expect(reads[0], 'it is added to the BASELINE – an effective baseline, not a bonus').toContain('s.baseline +')
+    expect(reads[0], 'and it is gated on somebody actually being there').toContain('activeEpisode(world)')
+    // ...and THAT value is what the return step is handed, which is the whole of «a target, not a
+    // bump»: she walks toward it at her own rate and holds there.
+    const step = accrue.filter((l) => l.includes('stepToward(world.spirit'))
+    expect(step, 'the return step is still one line').toHaveLength(1)
+    expect(step[0], 'the return walks toward the lifted target').toContain('target')
+    // ⚠⚠ AND NOT ONE TENTH OF IT REACHES THE WEEK'S OWN EVENTS.
+    expect(codeOnly(engineModuleFunction('spirit', 'weekPerturbation'))).not.toContain('attachmentLift')
+    // ...and it IS declared, at the value the design named – the other half of the same claim, kept
+    // verbatim from the pin this replaces.
     expect(ECONOMY.spirit.attachmentLift).toBe(5)
   })
 })

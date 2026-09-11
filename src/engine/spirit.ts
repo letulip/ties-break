@@ -54,6 +54,13 @@ import { isBlackoutWeek, isExamWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './
 import { birthdayTurning } from './world/age'
 import { vacationForWeek } from './world/bookings'
 import { seasonStartWeek } from './world/ledger'
+// ⚠⚠ FROM `world/loveEpisodes` AND DELIBERATELY NOT FROM `world/lifeBeat`, WHICH IS WHERE IT WAS
+// DECLARED UNTIL T4. `lifeBeat.ts` imports six values from THIS file at runtime (`applyBondDelta`,
+// `bondBandOf`, `moodRegisterOf`, `spiritBandOf`, `temperamentFor`, `temperamentOpenness`), so an
+// import of it here would close a value loop – the brief flagged the hazard and it was real. The
+// selector moved verbatim to a leaf whose only import is a type; the arrow stays one-way and
+// `src/engine/world/*` still has no runtime cycles. See that module's banner for the whole of it.
+import { activeEpisode } from './world/loveEpisodes'
 import type { BondBand, MoodRegister } from '../shared/protocol'
 // ⚠ TYPE-ONLY, so this leaf adds no runtime edge back into the integration core – the same shape
 // `academy.ts` uses one floor up and every `world/*.ts` module uses beside it.
@@ -320,10 +327,25 @@ function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): numbe
  * backwards and the wave is worthless, which is why every perturbation row has a from-baseline unit
  * test per intensity arm: the next week must show the FULL scaled delta.
  *
- * ⚠ THE TARGET IS `baseline`, FLAT. §1b's effective baseline is `baseline + attachmentLift` while
- * the attachment slot is full, and the slot does not exist until wave 3 – so the lift is DECLARED in
- * `ECONOMY.spirit` and read by nobody, deliberately. Wiring a lift to a slot that cannot be full
- * would be a rule with no way to be wrong.
+ * ⭐⭐ THE TARGET IS THE **EFFECTIVE** BASELINE, AND SINCE T4 (11.09, the private life's wave 3) THAT
+ * IS `baseline + attachmentLift` WHILE SOMEONE IS THERE. This note used to end «the slot does not
+ * exist until wave 3 – so the lift is DECLARED in `ECONOMY.spirit` and read by nobody, deliberately»;
+ * wave 3 built the slot (`world/loveEpisodes.ts`, `activeEpisode`) and this is the step that wires it.
+ *
+ * ⚠⚠ AND IT ARRIVES THROUGH THE RETURN RULE ABOVE, WITH NO ONE-OFF BUMP ANYWHERE. The owner's
+ * sentence is «lifts a little and stays lifted» (build plan §1b): moving the TARGET is the whole
+ * mechanism, so she walks the five points up at her own return rate – one step for a steady girl
+ * (5/wk), two for an intense one (3 then 2), which is the design's «over ~2 weeks» – and she walks
+ * back down the same way, at the same rate, the week the slot empties. A
+ * `+5` added to `weekPerturbation` would have produced a spike that decays instead – the opposite
+ * shape, and the one thing the design names. `weekPerturbation` therefore has no row for this and
+ * `tests/spirit.test.ts`'s re-aimed guard asserts the constant is read HERE and nowhere else.
+ *
+ * ⚠ NO ARITHMETIC ELSEWHERE MOVES. `spiritMatchFactor` is flat 1.0 from the knee (60) up, so a
+ * lifted 75 plays exactly the tennis a baseline 70 does; what the lift buys is DISTANCE FROM THE
+ * KNEE when something knocks her down. And `baseline + attachmentLift` (75) sits UNDER `mood.glowingFrom`
+ * (80) by construction – pinned in tests/spirit.test.ts – so being attached is not a permanent
+ * residence in the top Mood band.
  *
  * ⚠ ZERO DRAWS, ON ANY STREAM. Pure arithmetic over facts the world already holds, which is the
  * strongest possible answer to invariant 2 – the frozen capture (41550 / e6b0c709) cannot see this
@@ -342,9 +364,13 @@ export function accrueSpirit(world: WorldState): void {
   // had a holiday this season – the same "asked once, carried" doctrine the masseur's fare follows.
   const wrapWithNoVacation = seasonWrapsWithNoVacation(world)
 
-  // 1. THE RETURN – off last week's value, toward the baseline, capped by the gap so it can never
-  //    overshoot into an oscillation.
-  const returned = stepToward(world.spirit ?? s.baseline, s.baseline, s.returnPerWeek[intensity])
+  // 1. THE RETURN – off last week's value, toward the EFFECTIVE baseline, capped by the gap so it
+  //    can never overshoot into an oscillation.
+  //    ⭐ THE ONE READ OF `attachmentLift` IN THE ENGINE (T4): the target rises by it for exactly as
+  //    long as `activeEpisode` returns a row, and drops back the week it stops. A target, never a
+  //    bump – see the ⚠⚠ note above.
+  const target = s.baseline + (activeEpisode(world) === null ? 0 : s.attachmentLift)
+  const returned = stepToward(world.spirit ?? s.baseline, target, s.returnPerWeek[intensity])
   // 2. ...and THEN what this week did to her, scaled by how hard things land on this girl.
   const moved = returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity]
   world.spirit = roundTenth(clamp(moved, s.min, s.max))

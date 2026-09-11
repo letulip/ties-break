@@ -3361,13 +3361,24 @@ export const ECONOMY = {
     /** The exam row's own gate: an exam week only costs her when the plan is still grinding through
      *  it (`plan.train >= 85`, which is the `grind` preset). A light exam fortnight costs nothing. */
     examTrainFloor: 85,
-    /** ⚠⚠ DECLARED AND DELIBERATELY NOT READ – THE ONE CONSTANT IN THIS FILE WITH NO READER, and it
-     *  is a wave-1 decision rather than an oversight. §1b's effective baseline is `baseline + this`
-     *  while the attachment slot is full, and THE ATTACHMENT SLOT DOES NOT EXIST UNTIL WAVE 3: there
-     *  is nothing to read it off. It is written down now because the number is HIS (a lift that
-     *  «lifts a little and stays lifted» is a baseline shift, not a bump) and because the wave that
-     *  builds the slot must not get to invent it. `tests/spirit.test.ts` pins the absence of a reader,
-     *  so the day wave 3 wires it the pin says so. */
+    /** ⭐⭐ THE EFFECTIVE BASELINE'S LIFT – `accrueSpirit`'s weekly return walks toward
+     *  `baseline + this` while the attachment slot is full (§1b). WIRED BY WAVE 3's T4 (11.09), and
+     *  the note it replaces is worth keeping in one line because it was the point: this was DECLARED
+     *  IN WAVE 1 AND READ BY NOBODY, deliberately, because the slot did not exist yet – written down
+     *  early so that the number stayed HIS and the wave that built the slot could not invent it.
+     *
+     *  ⚠ IT IS A TARGET AND NOT A BUMP, which is the whole of «lifts a little and stays lifted»: she
+     *  arrives at 75 over ~2 weeks through the standing return rule and leaves the same way. There is
+     *  no row for it in `perturb` above and there must never be one.
+     *
+     *  ⚠ AND IT STAYS IN `spirit` RATHER THAN MOVING TO `life` BELOW. The private life merely
+     *  SWITCHES this on; the number is spirit's own, it is read by `accrueSpirit` and by nothing
+     *  else, and `baseline + attachmentLift < mood.glowingFrom` is a relation between three numbers
+     *  that all live here (pinned in tests/spirit.test.ts – it is the reason the value is 5).
+     *
+     *  ⚠ THE READER IS PINNED, NOT JUST THE VALUE. `tests/spirit.test.ts` used to assert this
+     *  constant had NO reader; T4 re-aimed that guard rather than deleting it, and it now asserts the
+     *  read happens in `accrueSpirit`'s return target and in no other place in `src/`. */
     attachmentLift: 5,
     /** ⭐⭐ THE MOOD LADDER'S FOUR CUT POINTS – RULED 09.09, and every one of them is anchored to a
      *  MECHANICAL FACT rather than to taste. The five words they divide are the owner's
@@ -3514,9 +3525,11 @@ export const ECONOMY = {
   // bench-visible by design, so his word can move them without touching a line of design.
   //
   // ⚠ THE LIFT THAT BELONGS TO THIS LAYER IS NOT HERE. §1b's effective-baseline constant lives in
-  // `spirit` above, declared and deliberately unread, because it is a SPIRIT number that this layer
-  // merely switches on; wave 3's T4 wires it where it already stands. Moving it here would have
-  // broken the pin in tests/spirit.test.ts that guards its absence of a reader.
+  // `spirit` above, because it is a SPIRIT number that this layer merely switches on; wave 3's T4
+  // wired it where it already stood, and it stays there. ⚠⚠ THE BRIEF'S §4 TABLE LISTS IT UNDER THIS
+  // BLOCK AND THE BRIEF IS WRONG ON THAT ROW – moving it would break the two pins in
+  // tests/spirit.test.ts that hold `baseline + attachmentLift < mood.glowingFrom`, which is the
+  // relation the value 5 comes from, and it would buy nothing.
   life: {
     /** ⭐ THE AGE GATE – RULED 23.08 and confirmed for this wave. Read against `kidAgeExact`, the
      *  FRACTIONAL age, so a girl turns eligible in the week she turns sixteen and not in the January

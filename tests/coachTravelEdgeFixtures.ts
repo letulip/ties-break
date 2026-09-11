@@ -65,6 +65,72 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⭐⭐⭐ RE-STAMPED AGAIN FOR WAVE 3's T4 (11.09.2026, THE ATTACHMENT LIFT) – AND THIS ONE IS NOT A
+// SCHEMA MOVE. NO KEY WAS ADDED, NO DRAW WAS TAKEN, AND ONE EXISTING KEY CHANGED VALUE ON ONE CAREER.
+// =================================================================================================
+//
+// WHAT MOVED THEM. `accrueSpirit`'s weekly return now walks toward `baseline + attachmentLift` (75)
+// instead of a flat `baseline` (70) for as long as `activeEpisode` returns a row – the private life's
+// effective baseline (the build plan §1b, «lifts a little and stays lifted»). `eliteGrinder` met
+// somebody at week 137 when T3 landed, so from that week on she is a lifted girl and her `spirit` is
+// a different number. The other two careers meet nobody inside 156 weeks and did not move at all.
+//
+// ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, with MY OWN CHANGE REVERTED IN PLACE
+// as the control – the lift term alone neutralised (`s.baseline + (activeEpisode(world) === null ? 0
+// : 0)`), which is the whole of the behavioural change and nothing else. `tools/frozen-key-diff.ts`
+// on all three careers, 156 weeks:
+//
+//   · 5/0 (25k middle, grinder)             – **0 keys. Byte-identical.** She meets nobody.
+//   · 0/1 (8k working, self-coached, PLAYER) – **0 keys. Byte-identical.** She meets nobody.
+//   · 8/0 (120k wealthy, elite, grinder)     – **EXACTLY 1 KEY OF 79, and it is `spirit`**
+//     (`ff5a1ae012af` -> `f369cb89fc62`). `rngMain`, `results`, `events`, the wallet, the body, the
+//     skills, `condition`, `bond`, `loveEpisodes` – every one of the other seventy-eight identical.
+//
+// ⚠⚠ AND THE ONE KEY THAT DID **NOT** MOVE IS THE LOAD-BEARING HALF: `results` IS BYTE-IDENTICAL, so
+// the lift changed nobody's match. That is not luck, it is `spiritMatchFactor`'s shape – flat 1.0
+// from the knee (60) upward, so a lifted 75 and a baseline 70 play exactly the same tennis. The lift
+// buys DISTANCE FROM THE KNEE for the weeks something knocks her down, never a stat rebate. A wave
+// that moved `results` here would be a far bigger fact than a re-stamp and would stop at the gate.
+//
+// ⚠⚠ THE TRAIL ITSELF, PRINTED RATHER THAN INFERRED, because «one key moved» only reassures if the
+// shape inside it is the thing the step claims to write. Her spirit, control -> lifted, weeks 136-141:
+//
+//     control  136:70   137:70   138:70   139:70   140:70   141:70     …  final 70
+//     lifted   136:70   137:73   138:75   139:75   140:75   141:75     …  final 75
+//
+// She is a FIERY girl (intense, 3/wk return), and the first step lands in week 137 – THE ARRIVAL'S
+// OWN WEEK, not the one after it. That is the order pin of T4 reproduced on a frozen career: it is
+// why `rollArrival` sits immediately before `accrueSpirit` in `world/phaseHerWeek.ts`. Two steps
+// (3 then 2) and she holds at 75 – a moved TARGET reached through the standing return rule, never a
+// bump: a `+5` perturbation would have put her at 75 in one week and then decayed her back to 70.
+//
+// ⚠⚠ FIVE CONSTANTS MOVE AND EVERY ONE OF THEM IS `eliteGrinder` – `FROZEN`, `PRE_R28B`,
+// `PRE_NAME_VERA` and, UNLIKE T3, the two SCHEMA ROLLBACK rungs `PRE_V74` and `PRE_V73` as well. That
+// difference is the whole character of this step and it is stated here rather than discovered: T3
+// wrote a NEW key, so peeling the key undid it and both rungs stayed green; T4 changes the value of
+// an OLD one (`spirit` arrived at v72), and no peel can un-move a value that the rolled-back shape
+// still contains. Those two rungs going red beside a red freeze is exactly what their own
+// «⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema» was
+// written to say, and it is saying it correctly.
+//
+// ⭐⭐ AND THE RUNG THAT **HELD** IS THE STRONGEST STATEMENT AVAILABLE HERE. `PRE_V72` –
+// `careerHashAtSchema(…, 71)` – peels `spirit`, `bond` and `temperament` themselves, because v72 is
+// the version that added them. It reproduces on all three careers, UNTOUCHED: the career as it stood
+// before the private life existed at all is byte-identical, every key, including `results`,
+// `rngMain` and the wallet. Every `PRE_V*` rung below v72 holds for the same reason and none of them
+// was re-written.
+//
+// ⚠⚠ EVERY NEW VALUE WAS COMPUTED BY RUNNING THE EXPORTED HELPERS (`careerHash`,
+// `careerHashAtSchema`, `careerHashUnderTheWindowRule`, `careerHashUnderTheOldName`), never
+// transcribed from a failure message – vitest elides a hash with an ellipsis, which is how a wrong
+// constant survives a wave.
+//
+// ⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+// tests/condition.test.ts, green on this tree. It held BY CONSTRUCTION – `accrueSpirit` takes no
+// `Rng` and reaches no stream at all, which the per-key `rngMain` identity above confirms from the
+// other side.
+//
+// =================================================================================================
 // ⭐⭐ RE-STAMPED FOR v74 (11.09.2026, THE PRIVATE LIFE – WAVE 3) – ONE KEY WAS APPENDED TO THE WORLD
 // AND NOT ONE OTHER BYTE OF ANY CAREER MOVED. The narrowest legitimate re-freeze this file
 // recognises, in v49's own sense, and the wave-2 block directly below is the pattern it repeats.
@@ -1628,8 +1694,35 @@ export const FROZEN = {
    *  for THIS career move – `FROZEN`, `PRE_R28B` and `PRE_NAME_VERA` – and not one `middleGrinder`
    *  or `selfTravelling` value in this file is touched. Every new value was computed by RUNNING the
    *  exported helpers (`careerHash`, `careerHashUnderTheWindowRule`, `careerHashUnderTheOldName`),
-   *  never transcribed from a failure message. */
-  eliteGrinder: 'cb8b718ca39ee7c77753299b273c008b4e47770aa106ad461c0225984386df7c',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+   *  never transcribed from a failure message.
+   *
+   *  ⭐⭐⭐ AND MOVED ONCE MORE, THE SAME DAY, BY THE OTHER HALF OF THE SAME LAYER – **SHE IS LIFTED**
+   *  (11.09, wave 3's T4: the attachment lift). The paragraph above ends «only the three LIVE hashes
+   *  move»; this step moves FIVE, and the two extra ones are the schema-rollback rungs `PRE_V74` and
+   *  `PRE_V73`. ⚠⚠ THAT DIFFERENCE IS THE WHOLE CHARACTER OF THE STEP AND NOT AN ESCALATION: T3 wrote
+   *  a NEW key and peeling the key undid it, so both rungs stayed green; T4 changes the VALUE of an
+   *  old one. `accrueSpirit`'s weekly return walks toward `baseline + attachmentLift` (75) instead of
+   *  a flat 70 while `activeEpisode` returns a row, and `spirit` arrived at v72 – so the v73 and v74
+   *  shapes still contain it and no peel can un-move it. Those two rungs going red beside a red
+   *  freeze is precisely what their own «IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a
+   *  career and not just a schema» exists to say.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, control = MY OWN CHANGE REVERTED IN PLACE (the lift term alone
+   *  neutralised). 5/0 and 0/1 BYTE-IDENTICAL on every key – they meet nobody. 8/0 moves **EXACTLY
+   *  ONE KEY OF SEVENTY-NINE, `spirit`** (`ff5a1ae012af` -> `f369cb89fc62`). ⚠⚠ `results`, `events`,
+   *  `rngMain` and the wallet are IDENTICAL, and that is the load-bearing half: `spiritMatchFactor`
+   *  is flat 1.0 from the knee (60) up, so a lifted 75 plays the same tennis a baseline 70 does and
+   *  the lift cannot have decided a match. Her trail, control -> lifted, from the arrival week:
+   *
+   *      control  136:70  137:70  138:70  139:70 … 156:70
+   *      lifted   136:70  137:73  138:75  139:75 … 156:75
+   *
+   *  She is FIERY – intense, 3/wk – and the FIRST STEP LANDS IN WEEK 137, the arrival's own week,
+   *  which is T4's order pin reproduced on a frozen career. Two steps and she holds: a moved target,
+   *  never a bump. ⚠ `PRE_V72` and every rung below it are UNTOUCHED and still reproduce, because
+   *  `careerHashAtSchema(…, 71)` peels `spirit` itself – the career as it stood before the private
+   *  life existed is byte-identical, `results` and `rngMain` included. */
+  eliteGrinder: 'f7a5251a6b7ae64f529f412bd90a0d4b18f4f0c542d21c47a84b97deb479dab2',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1932,10 +2025,32 @@ export const FROZEN = {
  *
  *  ⚠⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
  *  tests/condition.test.ts, green on this tree. It held BY CONSTRUCTION – this step takes no draw on
- *  any stream at all: `createWorld` writes a literal `[]` and the migration writes a literal `[]`. */
+ *  any stream at all: `createWorld` writes a literal `[]` and the migration writes a literal `[]`.
+ *
+ *  ⚠⚠ RE-STAMPED 11.09 BY WAVE 3's T4 – `eliteGrinder` ALONE – AND THE SENTENCE ABOVE ABOUT «THE
+ *  VERBATIM v73 `FROZEN` CONSTANTS» NO LONGER HOLDS FOR HER. It still holds, character for character,
+ *  for `middleGrinder` and `selfTravelling`: they meet nobody inside 156 weeks and every byte of both
+ *  is untouched. She does. T4 makes `accrueSpirit`'s return walk toward `baseline + attachmentLift`
+ *  while someone is there, and `spirit` is a v72 key – so it is INSIDE the v73 shape this rung rolls
+ *  back to, and peeling `loveEpisodes` cannot undo a value that the remaining shape still carries.
+ *
+ *  ⚠⚠ SO THIS RUNG DID EXACTLY WHAT IT WAS BUILT TO DO, and the re-stamp is the honest answer rather
+ *  than a repair. Its case in tests/coach-travel-edge.test.ts carries the line «IF THIS GOES RED
+ *  BESIDE A RED FREEZE, the wave moved a career and not just a schema»; T4 moved a career, on purpose,
+ *  and this is what that looks like from inside the ladder. What the rung still proves for all three
+ *  is that the PEEL is exact – the v74 key comes off and nothing else does.
+ *
+ *  ⭐⭐ AND THE CLAIM THAT SURVIVES WHOLE IS `PRE_V72`'s, one rung down: `careerHashAtSchema(…, 71)`
+ *  peels `spirit`, `bond` and `temperament` themselves, and it reproduces on all three careers
+ *  UNTOUCHED. The career as it stood before the private life existed at all is byte-identical –
+ *  `results`, `events`, `rngMain` and the wallet included – which is the strongest statement about
+ *  this layer's reach that this file can make, and it is made by a constant nobody had to re-write.
+ *
+ *  ⚠ Per-key diff first, control = the lift reverted in place: 1 key of 79 on 8/0 (`spirit`), 0 keys
+ *  on the other two. Value computed by RUNNING `careerHashAtSchema(8, 0, 73)`. */
 export const PRE_V74 = {
   middleGrinder: 'c7d3eb487706562574c1f6170baf52179b692b9877110e9d988266d1ee4d5e4d',
-  eliteGrinder: '3a6b22de71f3e7f7a8ee188777a11bb0fcb78a1df91e779406bee4c40aef50b4',
+  eliteGrinder: 'b54103aaf3e26c92a429e7a87d3a67ccd582f033d415aa7ea940e0d1a1e077e1',
   selfTravelling: 'e2f230aaeffeb883d082f3241f557f49c5107e8501e203cb0563cb32f980fdae',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v72 – the identity the v73 re-freeze rests on,
@@ -1954,10 +2069,21 @@ export const PRE_V74 = {
  *  refusal, `advanceRefusal` gained a member and the fork's opening tick gained a draw on
  *  `seed:life:fork:<seasonIndex>` – and NONE of them can be reached before week 241, which is what
  *  this reproducing says about all three. The frozen MAIN capture is unmoved and NOT re-pinned:
- *  41550 / e6b0c709, and the one draw the wave takes is on a purpose-scoped sub-stream. */
+ *  41550 / e6b0c709, and the one draw the wave takes is on a purpose-scoped sub-stream.
+ *
+ *  ⚠⚠ RE-STAMPED 11.09 BY WAVE 3's T4 – `eliteGrinder` ALONE, in step with `PRE_V74` one rung up and
+ *  for the identical reason, which is set out in full there and over `FROZEN.eliteGrinder`: the
+ *  attachment lift moves `spirit`, `spirit` is a v72 key, and both the v73 and the v74 shapes still
+ *  contain it – so no peel at either rung can undo it. The paragraph above predicted the shape of
+ *  this exactly («a wave that later raises a beat inside 156 weeks will move these hashes... by no
+ *  longer reproducing»); what actually reached her was an ATTACHMENT rather than a beat, and the
+ *  mechanism is the same. `middleGrinder` and `selfTravelling` are untouched and still ARE the
+ *  verbatim v72 `FROZEN` constants. Value computed by RUNNING `careerHashAtSchema(8, 0, 72)`.
+ *  ⭐ `PRE_V72` below is where the peel finally catches it – it drops `spirit` itself – and it
+ *  reproduces on all three careers, unchanged. */
 export const PRE_V73 = {
   middleGrinder: '9d4480f3b374cf6cb7af587dce0d45a4797b8f227bfb383ce760b47c39c2b523',
-  eliteGrinder: '13fe091bbf8a5b735a292d281b5a897524d534569fc87af0e4fe3389d0a90fec',
+  eliteGrinder: '96e7016fb7e0094a1058c2590588b0f7b2c301461c8e2116b80976c80cce9841',
   selfTravelling: '91eb11a3acdfb16d1ed5580771f28f869daf6d0e0c185b1a61475fc117805ce8',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v71 – and this rung is not merely another one in
@@ -1975,7 +2101,17 @@ export const PRE_V73 = {
  *  ⚠ IT IS ALSO WHERE THE MATCH SEAM IS PROVED HARMLESS ON THESE CAREERS. `spiritMatchFactor`
  *  multiplies her five wings, so any week below the knee (60) would have changed who won a match and
  *  with it her results, rank, wallet and body – and then no rollback could reproduce anything. It
- *  reproduces exactly, over 156 weeks, on all three. */
+ *  reproduces exactly, over 156 weeks, on all three.
+ *
+ *  ⭐⭐⭐ AND THAT IS WHY THIS RUNG IS THE ONE WAVE 3 NEVER MOVED, WHICH IS WORTH SAYING OUT LOUD
+ *  (11.09, T4 – the attachment lift). The two rungs ABOVE it were re-stamped for `eliteGrinder`,
+ *  because `spirit` survives their peels and the lift changes it. This one drops `spirit` itself, and
+ *  it stayed GREEN and byte-identical on all three careers – so the whole of the private life, three
+ *  waves of it, has left every key that predates it exactly as it was: `results`, `events`, `rngMain`,
+ *  the wallet, the body, the skills, the calendar. ⚠ NOT ONE CONSTANT IN THIS SET WAS RE-WRITTEN and
+ *  «untouched» here is a measured property of the T4 pass rather than a promise – the per-key diff
+ *  reports `results` byte-identical directly, and the paragraph above is why: the lift moves her
+ *  UPWARD from 70 and `spiritMatchFactor` is flat 1.0 from 60 up, so no week of hers changed a match. */
 export const PRE_V72 = {
   middleGrinder: '294a473b91e3ee8a79ab39c56d26c3a0e93ba366470dc6a14d2ba3702bbdbbb1',
   eliteGrinder: 'e1ad5f37d51880df3625682d5fbf0e8894cdad0343cfb7916dab6894b877a18d',
@@ -2017,10 +2153,18 @@ export const PRE_V69 = {
  *  arrival stream is keyed on `seed:life:arrival:<week>` and the girl's NAME is no part of any key
  *  in this wave, so putting `Vera` back before birth still reproduces – the same girl still meets
  *  the same person in the same week, under either name. A wave that had keyed a draw on her name
- *  would be red here beside a green freeze, which is exactly what this set is for. */
+ *  would be red here beside a green freeze, which is exactly what this set is for.
+ *
+ *  ⚠ AND RE-STAMPED AGAIN THE SAME DAY, FOR T4's ATTACHMENT LIFT – `eliteGrinder` ALONE once more,
+ *  the reason in full over `FROZEN.eliteGrinder`: someone is in her life from week 137, so her
+ *  `spirit` walks toward 75 instead of a flat 70 and ONE key of seventy-nine moves. ⚠⚠ THE IDENTITY
+ *  THIS SET ASSERTS SURVIVES INTACT, and for the same reason the arrival left it intact: nothing in
+ *  this layer reads her NAME. The lift reads `activeEpisode` and her temperament and nothing else, so
+ *  putting `Vera` back before birth reproduces the same lifted career week for week. Value computed
+ *  by RUNNING `careerHashUnderTheOldName(8, 0)`. */
 export const PRE_NAME_VERA = {
   middleGrinder: 'b0634a0c58c172f308b92e0d5c83b9de23601795d45408eb785eb8f11ea41c60',
-  eliteGrinder: '84e2b501adea73959915ff6fbd1f20cfdaef53c70cae43c7a6aa8fb861e99ccb',
+  eliteGrinder: 'f030a72d8077e5f54fcd687c304cfb42a3999f035edf0bf3ae8152167a6a7276',
   selfTravelling: '129ea330a214baa687dd48972b6272acbfd8637cefb346da44d0ef459b950857',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
@@ -2136,10 +2280,17 @@ export const PRE_V66 = {
  *  this set asserts is untouched – the window rewrite reads only `offers`, which the per-key diff
  *  reports byte-identical, so putting the deadline back still returns the pre-ruling career. ⚠ AND
  *  THE RELATION HOLDS AS BEFORE: this career's inbox was never written, so `PRE_R28B.eliteGrinder`
- *  still EQUALS `FROZEN.eliteGrinder`, both at the new value. */
+ *  still EQUALS `FROZEN.eliteGrinder`, both at the new value.
+ *
+ *  ⚠ AND RE-STAMPED AGAIN THE SAME DAY FOR T4's ATTACHMENT LIFT – `eliteGrinder` ALONE for the third
+ *  time on one branch, the reason in full over `FROZEN.eliteGrinder`. Both halves above still hold
+ *  and both were re-checked rather than assumed: the window rewrite reads only `offers`, which the
+ *  per-key diff reports byte-identical, and this career's inbox is still unwritten – so
+ *  `PRE_R28B.eliteGrinder` EQUALS `FROZEN.eliteGrinder` again, both at the newest value. Computed by
+ *  RUNNING `careerHashUnderTheWindowRule(8, 0)`. */
 export const PRE_R28B = {
   middleGrinder: '50374fbf57698615fea9b81de66c1da207fe08e96fd9909836e157bb9a837373',
-  eliteGrinder: 'cb8b718ca39ee7c77753299b273c008b4e47770aa106ad461c0225984386df7c',
+  eliteGrinder: 'f7a5251a6b7ae64f529f412bd90a0d4b18f4f0c542d21c47a84b97deb479dab2',
   selfTravelling: '8c52158189bf3b0ac0ea8bd9164a5fd168bdeeb6ab4f256c7885960a15c05939',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze

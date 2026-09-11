@@ -346,16 +346,22 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
 import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
 export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
-// ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` ride the same barrel line –
+// ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` arrive on the barrel too –
 // the ACTIVE attachment is a question asked of `loveEpisodes`, never a field, so every reader in the
 // repo has to arrive at it through this one function or the derivation acquires a second spelling.
+// ⚠ THEY COME FROM `./world/loveEpisodes` AND NO LONGER FROM `./world/lifeBeat` – T4's cycle fix, set
+// out in full in that leaf's own banner: `engine/spirit.ts` reads `activeEpisode` for the effective
+// baseline and `lifeBeat.ts` imports `spirit.ts` at runtime. The two NAMES on this barrel did not
+// move, which is the half that matters here (CLAUDE.md: the public API must not change).
+import { activeEpisode, loveEpisodesOf } from './world/loveEpisodes'
+export { activeEpisode, loveEpisodesOf }
 // ⭐⭐ v74 (the private life, wave 3 – T3/T5) adds the ARRIVAL half: `rollArrival` is the weekly roll
 // the tick calls, and `arrivalEligible` / `arrivalHazardFor` / `drawPartnerWants` / `drawRawLag` /
 // `shaveLag` are the pure pieces it is assembled from – exported under the historical convention so
 // the corridor tests and T11's census bench can sweep the tables directly instead of posing a world
 // per cell (`forkStandingOf`'s own primitives doctrine).
-import { activeEpisode, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, loveEpisodesOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
-export { activeEpisode, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, loveEpisodesOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
+import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
+export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
