@@ -230,6 +230,14 @@ function* sweepStages(): Generator<DiaryFacts> {
     // fixture, so a line licensed on it would be licensed in NONE of them and its absence in ALL of
     // them. One extra shape on the smallest sweep is the cheapest place the axis can exist at all.
     { partnerKnown: true },
+    // ⭐ v74 T10 – ...AND THE SAME SHAPE AT `bright`, WIDENING THE SWEEP RATHER THAN RELAXING IT.
+    // `homeWeek` holds `moodRegister` at 'level' and `sweepVoices` (the only sweep that moves it)
+    // holds `partnerKnown` at false, so T10's two «lighter week» lines – licensed on BOTH – would
+    // have been licensed in no fixture of any sweep and the honesty pin would have proved nothing
+    // about them. The line above is still the one that catches a MISSING register licence (a line
+    // claiming `bright` would be licensed there at 'level' and fail `HOLDS.register`); this one is
+    // what makes the claim's true state reachable, which is the other half of the same guard.
+    { partnerKnown: true, moodRegister: 'bright' as const },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -474,6 +482,26 @@ describe('W2 — the ordinary week note is HONEST', () => {
     expect(checked, 'the sweep has to actually reach the pool').toBeGreaterThan(500)
   })
 
+  it('⭐ v74 T10 – and `HOLDS.partnerKnown` is REACHED, not decoration', () => {
+    // ⚠⚠ THE ENTRY LANDED IN T6 WITH THE FACT AND HAD NO CONSUMER UNTIL T10, which is precisely the
+    // state R2-18's law forbids a wave to ship in: a checker for a claim nothing makes is green for
+    // the same reason an empty pool is. The sweep above would pass identically with the band deleted,
+    // so this counts the visits – if the band ever goes away, or its licence stops being reachable in
+    // ANY fixture of ANY sweep, this fails by name rather than passing quietly.
+    let licensed = 0
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.partnerKnown === undefined) continue
+        licensed++
+        expect(
+          HOLDS.partnerKnown(f, true),
+          `"${render(note, f)}" claims partnerKnown on a career nobody has been mentioned in`,
+        ).toBe(true)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.partnerKnown proves nothing').toBeGreaterThan(0)
+  })
+
   it('⚠ W6c: NO LINE NAMES A BODY PART THAT IS NOT HERS – read the sentence, not the claim', () => {
     // THE GUARD THE OWNER'S OWN READING IS. He found «She revised with her leg up on a chair» on a girl
     // with a strained wrist by looking at it, and no machine in this repo could have: `WeekClaims` is a
@@ -548,7 +576,16 @@ describe('W2 — the ordinary week note is HONEST', () => {
   it('an injured week is not offered a line about baking', () => {
     // Same rule the journey home keeps: a layoff TAKES the note. A pool that also licensed "she had
     // time to be fifteen this week" on the week the ice pack came out would draw it most of the time.
-    for (const f of sweepWeeks()) {
+    //
+    // ⚠ RE-AIMED BY v74 T10, AND WIDENED RATHER THAN CHANGED. What moved: the walk is `sweepAll()`
+    // instead of `sweepWeeks()`. Why: `sweepWeeks` holds `lifeStage` at 'school', `partnerKnown` at
+    // false and the three voice axes fixed, so this rule – the one that keeps the page from reading
+    // as though the game had not noticed she is hurt – was structurally BLIND to every stage-gated,
+    // voiced and (now) `partnerKnown`-licensed line in the pool. Measured: T10's own ARM 4 (the band
+    // relaxed from `plainTraining` to `notTravellingWeek`, i.e. reaching a layoff) left this case
+    // GREEN before the widening and reddens it after. The rule is unchanged; the space it is checked
+    // over grew from one sweep to three.
+    for (const f of sweepAll()) {
       if (f.injured === null) continue
       const licensed = WEEK_NOTES.filter((n) => n.license(f))
       expect(licensed.length, 'a layoff week must still have words').toBeGreaterThan(0)
