@@ -144,9 +144,13 @@ function openKid(): void {
 // `object-fit: cover` and steered by the face centre from the ONE crop table (src/art/faceRects.ts),
 // so the window shows her face plus the scene around it. The emotion is the ENGINE's decision
 // (snapshot.diary), same as the caption under it – image and words cannot disagree by construction.
-const { portraitUrl, stage, emotion } = useKidEmotion()
+// ⭐ T14: the stem comes from the composable now rather than being rebuilt here, because the hero's
+// picture is no longer always `{stage}-{emotion}` – on the week she graduates it is the one
+// graduation painting, which has neither in its name. Same value, one source: the frame follows
+// whatever is actually on screen.
+const { portraitUrl, portraitStem } = useKidEmotion()
 const photoStyle = computed(() => {
-  const p = facePoint(`${portraitAssetStem(stage.value)}-${emotion.value}`)
+  const p = facePoint(portraitStem.value)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 // The ONE phrase under her name (D2) – null on a deliberately quiet week. It appears exactly once
