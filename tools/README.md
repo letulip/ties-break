@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-211 TypeScript files: **33 live**, **178 archival**.
+212 TypeScript files: **34 live**, **178 archival**.
 
 ## Why the split exists
 
@@ -46,6 +46,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `injury-landscape.ts` | the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched |
 | `knock-rate.ts` | `npm run bench:knock` |
 | `ladder-floor.ts` | `npm run bench:floor` |
+| `life-arrival.ts` | `npm run bench:life-arrival` |
 | `load-bench.ts` | `npm run bench:load` |
 | `money-decomposition.ts` | `npm run bench:money` |
 | `outgrown-entry-probe.ts` | `npm run bench:outgrown` |

@@ -42,6 +42,7 @@
     "tools/injury-landscape.ts",
     "tools/knock-rate.ts",
     "tools/ladder-floor.ts",
+    "tools/life-arrival.ts",
     "tools/load-bench.ts",
     "tools/money-decomposition.ts",
     "tools/outgrown-entry-probe.ts",

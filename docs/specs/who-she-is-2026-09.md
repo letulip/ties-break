@@ -968,3 +968,133 @@ reason: **no spirit delta exists anywhere in wave 2**, so nothing that reads spi
 **What this section does NOT do:** it changes no constant, proposes no re-aim, and ships no wording.
 Bars 1 and 3 remain open questions for the owner, and bar 3's is now a question about WHEN the layer's
 decisions arrive rather than about how much they are worth.
+
+---
+
+## §4a – wave 3 measured. The arrival census, predicted against measured
+
+`npm run bench:life-arrival` (`tools/life-arrival.ts`), 11.09, on `life/wave-3`, exit 0. **200 careers
+per temperament × 4 = 800**, 430,344 resolved weeks, each career walked from week 0 to the week she
+turns twenty-four (**week 543**), wealthy family, the `player` entry policy in both directions, every
+knock rested and the birthday she asked for. **Temperament is ASSIGNED after `createWorld`**, so the
+four columns are the same 200 seeds played four times over and a difference between them is who she
+is – §4a's own construction, for §4a's own reason. 772 of the 800 walked the full window; the other
+**28 ended in a career-ending injury**, which is a real outcome and not a harness fault.
+
+⚠ **Provenance of the predicted column, stated rather than claimed.** It is the closed-form
+arithmetic of §4's own tables – the derivation is printed beside every row below, so a reader can
+check that it does not depend on the run. It is **not blind in the way §4a's wave-1 column was**: an
+8-seed smoke of this tool ran before the grid. Saying so is the point; a prediction whose provenance
+is not stated measures nothing. **No constant was touched anywhere.** One bar misses and it is
+recorded as a finding.
+
+### ⚠⚠ The count bars run in a BENCH-ONLY mode, and the control that keeps them honest
+
+Wave 3 ships **arrivals only**: nothing in `src/` writes `endedWeek`, and `arrivalEligible` refuses to
+draw while `activeEpisode` is non-null. So exactly **one** episode can exist per career and every
+romance-count median read off the shipped engine is 1, for all four temperaments – a fact about the
+wave's scope, not about her. The bench therefore **pokes `endedWeek` tool-side**, at a fixed duration
+per temperament taken off §4's own «median duration» column (sunny 94w · fiery 36w · quiet 156w ·
+deep 62w), so that the cooldown and the re-arrival are exercised at all. It is one field, written by
+the bench on the bench's own world: **no draw, no stream, no engine change.** A drawn duration would
+have needed `seed:life:ends:*`, which is wave 4's and does not exist on this tree.
+
+The **shipped control arm** is what stops that becoming a lie – 100 careers (25 per temperament) with
+the poke off:
+
+| control | measured |
+| --- | --- |
+| episodes per career, **max** | **1** – the wave's whole scope in one number |
+| careers that ever met anybody | 96/100 |
+| first-arrival week **identical** to the poked arm | **100/100 seeds** – the poke is confined to what happens after an ending |
+
+### The table
+
+| # | bar | predicted (arithmetic) | measured | verdict |
+| --- | --- | --- | --- | --- |
+| 1a | romance-count median, **fiery ≥ 4** | 104/(62.5+48) + 312/(25+48) = **5.2** | median **5.0** (mean 5.48, 3–8, n 193) | **HIT** |
+| 1b | **sunny 2–3** | 104/(83.3+120) + 312/(33.3+120) = **2.6** | median **3.0** (mean 2.81, 1–4, n 193) | **HIT** |
+| 1c | **deep ≤ 3** | 104/(200+114) + 312/(80+114) = **1.9** | median **2.0** (mean 2.11, 0–4, n 193) | **HIT** |
+| 1d | **quiet ≤ 2** | 104/(166.7+195) + 312/(66.7+195) = **1.5** | median **2.0** (mean 1.76, 1–3, n 193) | **HIT** |
+| 1e | the four medians **separate** | fiery 5 > sunny 3 ≥ deep 2 / quiet 2 | **5.0 · 3.0 · 2.0 · 2.0** | **HIT** |
+| 2a | first-arrival median, **fiery ≤ 17** | ln2 / −ln(1−.016) = 43.0 w from week 128 = **16.83** | **16.78** (n 199, 1 never) | **HIT** |
+| 2b | **quiet ≥ 17.5** | survives 104 w at .006 (S = .535), then 4.5 w at .015 → week 236 = **18.08** | **18.03** (n 199, 1 never) | **HIT** |
+| 2c | sunny / deep (no bar) | **17.10** / **18.26** | **16.99** / **18.16** | – |
+| 3a | late share, **private ≥ 60%** | ⌊raw/2⌋ = 0 only at raw 0, and p(raw 0) = .10 → **90.0%** | **90.2%** (first episodes, n 396) | **HIT** |
+| 3b | late share, **open ≤ 25%** | p(raw 0) .45 + p(raw 1) .11 = .56 zero → **44.0%** | **44.0%** (first episodes, n 398) | **MISS** |
+| 4 | the latch proxy | **unreadable this wave** – nothing ends an attachment | printed, **no verdict** (see below) | – |
+| 5 | input-independence: identical `sinceWeek` lists | identical, by construction of the key | **53 arrival weeks, 16 pairs, 0 mismatches – asserted** | **HIT** |
+
+Bar 1's «minor window» is weeks 128–231 (104 weeks at 1.0%×mult) and the «adult window» is 232–543
+(312 weeks at 2.5%×mult); both boundaries are **derived** by the bench off `kidAgeExact`, not quoted.
+
+### The finding: bar 3's open corridor is not reachable under §4's own lag table
+
+44.0% measured against a bar of ≤25%, and the bench prints the reason beside the number instead of
+leaving it to be guessed at. **The raw draw – before `ECONOMY.life.bondShave` touches it – is already
+57.4% late** (nominal 55.0%: §4's «open – 0 with p 0.45»). That is **2.3× the bar before the shave
+exists**, so no setting of the shave can reach the corridor:
+
+| band | divisor | open late |
+| --- | --- | --- |
+| strained / cold | ⌊/1⌋ | **57.4%** – MEASURED: the raw draw itself, n 1638 |
+| steady | ⌊/2⌋ | **45.4%** – MEASURED, n 1638 (the only band this grid reached) |
+| close | ⌊/3⌋ | ≈ **33%** – COMPUTED off §4's nominal table (zero at raw 0, 1 or 2 = .45 + .11 + .11); not measured, because no career reached `close` |
+
+So the miss is a property of the **lag table**, not of the architect's concretisation: ≤25% needs
+p(raw = 0) ≈ 0.75 for an open girl, against §4's 0.45. Whether the bar moves or the table does is a
+ruling and not a measurement. **Nothing was retuned.** For the record beside it, the private column
+lands where the same arithmetic puts it – 90.2% against a predicted 90.0% – so the instrument is not
+reading the two registers differently.
+
+### The second finding: three of the shave's four rows were never reached
+
+**100% of the 2,405 arrivals landed at bond band `steady`.** `close`, `strained` and `cold` are empty
+columns in the run, printed as `–` rather than as 0.0%. Two things follow and both are the
+architect's, not the bench's:
+
+* the shave as shipped is, in practice, a **single divisor** (⌊/2⌋) for an ordinary parent – the other
+  three rows of `ECONOMY.life.bondShave` are unexercised design;
+* the bench's own `--policy grinder` arm shows the other end and it is not a middle: walked ten years
+  under «enter everything, refuse nothing», the bond **collapses** – 66.7% of arrivals at `cold`,
+  28.6% at `strained`, 4.8% at `steady`, none at `close` (8-seed smoke, 11.09). The played-hurt −4
+  fires on every draw she enters hurt and the flat 0.5/week regression toward 70 cannot carry it.
+  That is §4a's wave-1 bar-3 finding seen from a ten-year window rather than a four-season one.
+
+⚠ One smaller observation, recorded and **not** claimed: the raw zero-share came in about 2 pp under
+nominal in both registers (private 8.0% against 10%, open 42.6% against 45%). The two columns are not
+independent – the census is paired, so quiet/deep and sunny/fiery share arrival keys – and at the
+effective sample size this sits inside noise. It is written down so a later run that reproduces it has
+something to reproduce.
+
+### The input-independence arm – asserted, not eyeballed
+
+One seed walked twice per temperament, four seeds per temperament, sixteen pairs. **no-action** enters
+nothing, books nothing, reviews no coach and answers neither knock nor birthday – it answers only what
+the engine refuses to move without (her beats, bond-neutrally; the fork; the retirement offer).
+**action-laden** is the `player` policy plus every knock rested and every birthday answered.
+
+* **53 arrival weeks compared, 0 mismatches**, and the comparison is a `throw` rather than a printed
+  «yes». A player choice does not reach `seed:life:arrival:<week>`.
+* **The arm is not vacuous**, which needed its own check (CLAUDE.md's 17.08 rule – two arms that turn
+  out to be one career pass this equality trivially): **final bond differs in 16/16 pairs**, and the
+  bench throws if it ever does not.
+* `knownWeek` differed in **0** episodes. That is permitted (the brief's §0.2 – the shave is the
+  relationship the player built, not the world's dice) and it is **not** evidence the shave is inert:
+  the shave is a step function of the band, and every arrival in both arms landed at `steady`, so the
+  two arms divided by the same number. The bench prints the bands per pair so this cannot be read the
+  other way.
+
+### The latch proxy, and why it carries no verdict
+
+§4's «first or second love reaches the latch» bar (quiet ≥ 50%, fiery ≤ 20%) is **unreadable in this
+wave**. Nothing in the engine ends an attachment, so in the shipped game the share is 100% by
+construction, and in the bench-only mode it is a readback of the tool's own duration table (fiery
+0.0%, everyone else 100.0%, which is exactly `36w < 52 ≤ 62w`). Neither number is a property of the
+sim. The column is printed so that step 6 has somewhere to land, and marked so that nobody signs it.
+
+### What this section does NOT do
+
+It changes no constant, proposes no retune, and ships no wording. Bar 3's open corridor and the three
+unreached rows of the shave are questions for the owner and the architect. The bench's own
+`endedWeek` poke is deleted the day wave 4 ships the ending hazard.
