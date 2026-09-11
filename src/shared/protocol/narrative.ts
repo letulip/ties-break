@@ -150,8 +150,18 @@ export interface LifeBeatOption {
  *  (architect, 11.09, on wave 2's own precedent). At `close` the news arrives in her own voice, at
  *  `steady` as a mention, at `strained`/`cold` as a dry card with no line of hers. A bond band that
  *  decided whether the beat happened at all would make a distant parent's career quieter rather than
- *  colder, which is the opposite of what the layer is for. */
-export type LifeBeatKind = 'fork-opinion' | 'met'
+ *  colder, which is the opposite of what the layer is for.
+ *
+ *  ⭐⭐ v74 (wave 3 – T8) ADDS `'small-talk'`: TIER 1 (who-she-is §5b's three tiers), she comes with
+ *  something small and the parent answers it. Its `detail` is the SUBJECT she came with – a worry, a
+ *  joy or a question, §5b's own triple – and that is the whole of what the row records.
+ *
+ *  ⚠⚠ EVERY ONE OF ITS REPLIES IS PRICED ZERO, RULED (V2, 09.09): «tier-1 replies move nothing –
+ *  small talk is texture, never economy, and the delta table stays the big beats'». The value of the
+ *  beat is the READ, not a number, and a tier that quietly earned bond would make the frequent thing
+ *  the profitable thing. ⚠ It is also the ONE kind with no feed row of its own: the `lifeLog` row IS
+ *  the record (`world/lifeBeat.ts` §3c). */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.

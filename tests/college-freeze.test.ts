@@ -56,6 +56,8 @@ import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ENDINGS } from '../src/engine/ending'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
+import { drainLifeBeats } from './helpers/career'
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
  *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
@@ -88,6 +90,10 @@ function playedCareer(seed: string, weeks: number): { world: WorldState; rng: Rn
   for (let i = 0; i < weeks; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+    // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+    // unanswered, so every opener below threw. Bond-neutral, so nothing measured here moves.
+    drainLifeBeats(world)
   }
   return { world, rng }
 }
@@ -135,6 +141,7 @@ function walkToDeparture(world: WorldState, rng: Rng): void {
   for (let i = 0; i < WEEKS_PER_YEAR + 4 && world.ending === null; i++) {
     tickWeek(world, rng)
     if (world.pendingTournament) finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure latched the college ending').toBe('college')
 }
@@ -146,6 +153,7 @@ function walkToJustBeforeDeparture(world: WorldState, rng: Rng, weeksBefore: num
   while (world.week < departs - weeksBefore) {
     tickWeek(world, rng)
     if (world.pendingTournament) finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   return departs
 }

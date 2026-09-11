@@ -64,6 +64,8 @@
 //          in `blockingOverlay.ts`, and both questions clear by a command of their own. The arm is
 //          recorded because it proves the fixture is not quietly leaning on a knock that is absent.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
+import { drainLifeBeats } from '../helpers/career'
 
 // ⚠ A RUNNER-SIZED CEILING, THE ARITHMETIC IS round24-college-shell.test.ts's: every case mounts the
 // whole App over a career walked ~110 weeks to the college latch, the heaviest shape a component
@@ -149,16 +151,22 @@ function atCollegeWithBeat(seed: string): WorldState {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   // ⚠ THE ONE THUMB ON THE SCALE, and it is `college-freeze.test.ts`'s: four years is 208 weeks of
   // base costs, and a career that went bankrupt inside them would be measuring the family budget.
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   // ROUND 24 #5: the answer reserves – the walk to the September departure is what latches it.
   for (let i = 0; i < 54 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   world.knock = null

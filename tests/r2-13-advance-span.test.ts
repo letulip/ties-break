@@ -62,6 +62,8 @@ import { drainLifeBeats } from './helpers/career'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
+// ⚠ v74 (wave 3, T8): the season length, for `silenceTierOne` – the engine's own, never a literal 52.
+import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { multiOffered } from '../src/composables/weekAction'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type Offer, type OfferState, type StopReason } from '../src/shared/protocol'
@@ -92,7 +94,35 @@ function career(seed: string, over: Partial<typeof DEFAULT_PROFILE> = {}): { wor
 function quietCareer(seed: string, over: Partial<typeof DEFAULT_PROFILE> = {}): { world: WorldState; rng: Rng } {
   const c = career(seed, over)
   c.world.season = []
+  silenceTierOne(c.world)
   return c
+}
+
+/** ⚠⚠ ...AND WITH TIER-1 SMALL TALK SPENT FOR THE SEASON (v74, wave 3 – T8), which is the SAME MOVE
+ *  as `season = []` one line up and is here for the same stated reason: «a case about one stop reason
+ *  is not also a case about the tournament desk». T8 gives every career up to 8%/wk of an answerable
+ *  `lifeLog` row, and a row raised mid-span makes `'life'` the stop – so three cases below that mean
+ *  «a quiet four-week stretch» stopped being about the span at all.
+ *
+ *  ⚠ IT IS THE ENGINE'S OWN CAP AND NOT A SWITCH: `rollSmallTalk` refuses once this season already
+ *  holds `smallTalkCapPerSeason` of her rows, so a career that has had its conversations is a state
+ *  the sim produces on its own. The rows are ANSWERED (`answer` is not null), so the queue is empty
+ *  and nothing here is pending; they are dated inside the CURRENT season, which is the only season
+ *  any case in this file walks through. Bond is untouched – a tier-1 reply is priced zero anyway.
+ *
+ *  ⚠ AND IT TAKES NO DRAW AND WRITES NO EVENT, so block A's MAIN identity is untouched by it: both
+ *  arms are built through this same helper and `seed:life:smalltalk:<week>` is not MAIN. */
+function silenceTierOne(world: WorldState): void {
+  const season = Math.floor(world.week / WEEKS_PER_YEAR)
+  world.lifeLog = [
+    ...(world.lifeLog ?? []),
+    ...Array.from({ length: ECONOMY.life.smallTalkCapPerSeason }, (_, i) => ({
+      week: season * WEEKS_PER_YEAR + i,
+      kind: 'small-talk' as const,
+      detail: 'question',
+      answer: 'more',
+    })),
+  ]
 }
 
 /** Tick to `week` the way a test harness must: `tickWeek` is total, so reveals are resolved and
@@ -118,6 +148,10 @@ function walkTo(world: WorldState, rng: Rng, week: number, solvent = false): voi
     }
   }
   if (pendingKnock(world)) decideKnock(world, 'rest')
+  // ⚠ v74 (wave 3, T8): AND THE TRAILING DRAIN, which the trailing knock line above has always had
+  // and the beats did not. The loop drains BEFORE its `tickWeek`, so a row raised by the LAST tick
+  // walked past nothing and stood there – `'life'` then led the very first span a case measured.
+  drainLifeBeats(world)
 }
 
 /** Enough domestic points to clear a rung's entry band, kept on the ledger (unlike events.test.ts's

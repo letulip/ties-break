@@ -46,14 +46,22 @@ import type { LifeBeatKind } from '../src/shared/protocol'
  *  guarantees) and NOTHING any bench measures moves, but the agreement would be a coincidence this
  *  file depended on rather than a property it checked. `pendingLifeBeatOptions` is the engine's own
  *  reading, so the zero this picks is the zero `answerLifeBeat` will charge. */
-export function drainLifeBeats(world: WorldState, except?: LifeBeatKind): number {
+export function drainLifeBeats(world: WorldState, except?: LifeBeatKind | readonly LifeBeatKind[]): number {
+  // ⭐ v74 T8 – `except` TAKES A LIST NOW, AND THE SINGLE KIND IS THE ONE-ELEMENT CASE OF IT. Every
+  // existing call site passes one kind or none and reads exactly as it did. The list exists because
+  // `tools/e2e-fixtures.ts`' `unheard` recipe has TWO kinds it must not answer – it is hunting the
+  // fork's own row and it REJECTS a seed whose `'met'` row arrived first – while tier-1 small talk,
+  // which now fires from week 0 on nearly every seed, has to be answered on the way past or no seed
+  // in two hundred ever reaches the state. Widening the shared helper is what stops that recipe
+  // growing a second, private copy of the bond-neutral rule.
+  const keep: readonly LifeBeatKind[] = except === undefined ? [] : typeof except === 'string' ? [except] : except
   let cleared = 0
   for (let guard = 0; guard < 200; guard++) {
     const row = pendingLifeBeat(world)
     // ⚠ `except` IS FOR A HARNESS WHOSE SUBJECT IS ONE OF THE KINDS: a walk that drained the beat it
     // was built to reach would delete the thing the file is about (`tools/spirit-bench.ts`'s two
     // arms are the live case). Everything else is cleared.
-    if (row === null || row.kind === except) return cleared
+    if (row === null || keep.includes(row.kind)) return cleared
     const free = pendingLifeBeatOptions(world)?.find((o) => o.bond === 0)
     if (!free) throw new Error(`${row.kind} has no bond-neutral answer – a walk cannot drain it without moving the number`)
     answerLifeBeat(world, free.id)

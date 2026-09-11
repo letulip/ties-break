@@ -8,6 +8,8 @@
 //      every one of those suppressions is POST-DRAW - so a player's answer at the fork cannot move
 //      the MAIN sequence. That is invariant 2 and it is a fairness property, not a tidiness one.
 import { describe, it, expect } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
+import { drainLifeBeats } from './helpers/career'
 import { readFileSync } from 'node:fs'
 import { migrateSave } from '../src/engine/migrations'
 import {
@@ -613,8 +615,15 @@ function freshWorld(seed = 'ending-test') {
  *  the enrolled career. The walked-gap semantics themselves are pinned in
  *  tests/college-departure.test.ts. */
 function answerCollegeAndDepart(world: WorldState, rng: Rng): void {
+  // ⚠ v74 (wave 3, T8): tier-1 small talk raises an answerable `lifeLog` row from week 0 and
+  // `answerFork` refuses while ANY row is unanswered («hear her out before answering the fork»), so
+  // the walked opener threw here. Bond-neutral drain – nothing this file measures moves.
+  drainLifeBeats(world)
   answerFork(world, 'college')
-  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) tickWeek(world, rng)
+  for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
+    tickWeek(world, rng)
+    drainLifeBeats(world)
+  }
 }
 
 describe('the latch, on a real world', () => {

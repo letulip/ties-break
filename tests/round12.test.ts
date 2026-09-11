@@ -7,6 +7,8 @@
 // Player copy rule throughout: the short dash "–", never "—", and no Cyrillic in anything a player
 // reads.
 import { describe, it, expect } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked loop must be able to pass a beat.
+import { drainLifeBeats } from './helpers/career'
 import { worldSource, worldFunction } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
@@ -182,6 +184,10 @@ describe('R12-15 — the dead Play button after an injury (the round\'s worst it
       // spins on the same week for ever. Answered 'push' so the career under test keeps training as
       // planned and nothing else about it moves.
       if (pendingKnock(world)) decideKnock(world, 'push')
+      // ⚠ v74 T8: ...AND SO DOES A LIFE BEAT, on the identical contract. Tier-1 small talk raises an
+      // answerable row from week 0 and the loop stalled on it, so the owner's dead-click state was
+      // never reached. Bond-neutral, and nothing about the Play button reads `bond`.
+      drainLifeBeats(world)
       if (world.pendingTournament) {
         skipTournament(world)
         closeTournament(world)

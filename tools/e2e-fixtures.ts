@@ -448,6 +448,16 @@ const RECIPES: Recipe[] = [
     drive: (world, rng, recipe) => {
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
         stepCareerWeek(world, rng, recipe.policy)
+        // ⚠⚠ v74 (wave 3, T8) – TIER-1 SMALL TALK IS ANSWERED ON THE WAY PAST, AND IT HAD TO BE.
+        // T8 raises a `'small-talk'` row on up to 8% of weeks from week 0, so on nearly every seed
+        // the FIRST pending row this loop met was tier 1 and the clause below rejected it: measured,
+        // `unheard` reported «no seed in 200 reached the state» with 199 of them reading «the fork is
+        // not open behind her» at weeks 1-68. Answering it here is what every OTHER recipe in this
+        // file already does through `answerOpenQuestions`, and the answer is the BOND-NEUTRAL one, so
+        // the fixture's numbers are the ones a career that was never asked would have had.
+        // ⚠ THE LIST KEEPS BOTH OF THE KINDS THIS RECIPE MUST NOT ANSWER: the fork's own row is what
+        // it is hunting, and a `'met'` row is a seed it deliberately REJECTS four clauses down.
+        drainLifeBeats(world, ['fork-opinion', 'met'])
         // ⚠⚠ THE CHECK SITS BEFORE THE ANSWER, AND THAT ONE LINE IS THE WHOLE RECIPE. Every other
         // career in this file walks through `answerOpenQuestions`, whose FIRST clause drains the
         // beat on the way past (v74: `drainLifeBeats`, which was `answerLifeBeat(world, 'listen')`

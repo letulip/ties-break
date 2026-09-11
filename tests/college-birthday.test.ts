@@ -134,6 +134,11 @@ function openedAtCollege(seed: string, birthMonth: number, birthDay: number): { 
     finishAnyReveal(world)
     if (pendingKnock(world)) decideKnock(world, 'rest')
     if (pendingBirthday(world) !== null) answerBirthday(world)
+    // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+    // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+    // unanswered, so this opener threw before it reached a case. `drainLifeBeats` answers with the
+    // option priced ZERO – a walk that never meant to price a beat moves no number below.
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: null }
@@ -146,6 +151,7 @@ function openedAtCollege(seed: string, birthMonth: number, birthDay: number): { 
     finishAnyReveal(world)
     if (pendingKnock(world)) decideKnock(world, 'rest')
     if (world.ending === null && pendingBirthday(world) !== null) answerBirthday(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   // A birth date near 1 September can put a birthday IN the departure week itself – that one is the
@@ -170,6 +176,10 @@ function pressToBirthday(world: WorldState, rng: Rng): StopReason[] {
   for (let guard = 0; guard < 4; guard++) {
     const stops = resumeFromCollege(world, rng)
     answerCollegeReveal(world)
+    // ⚠ v74 T8: a pressed year can raise a tier-1 row, and this file's cases are about the CAKE –
+    // a small-talk card left standing would be the overlay the last assertion read instead of the
+    // college latch. Bond-neutral, so nothing any case measures moves.
+    drainLifeBeats(world)
     if (pendingBirthday(world) !== null) return stops
     if (world.ending?.type !== 'college') break
   }
@@ -195,6 +205,8 @@ function walkTheFreeze(world: WorldState, rng: Rng, maxPresses = 24): Press[] {
     // that too – see `answerLeagueReveal` at the head of this file.
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) answerBirthday(world)
+    // ⚠ v74 T8: and any tier-1 row the pressed weeks raised, for the same reason – bond-neutral.
+    drainLifeBeats(world)
   }
   return presses
 }

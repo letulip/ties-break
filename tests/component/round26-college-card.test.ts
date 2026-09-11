@@ -31,6 +31,8 @@
 // only fire on a genuine wedge. ⚠ If a case here ever takes tens of seconds ALONE, that is a real
 // regression and this ceiling must not be raised to hide it.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
+import { drainLifeBeats } from '../helpers/career'
 vi.setConfig({ testTimeout: 30_000 })
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
@@ -167,13 +169,19 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   for (let i = 0; i < 54 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }

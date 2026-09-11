@@ -35,7 +35,7 @@ import { addEvent } from './ledger'
 // ⚠ ONE-WAY ARROW. `world/lifeBeat.ts` imports `./ledger`, `./constants`, `./age`, `../spirit`,
 // `../economy` and `../rng` – never a phase – so this import closes no runtime loop, the same shape
 // `world/endings.ts` already uses to raise the fork-opinion row.
-import { deliverKnownPartner, rollArrival } from './lifeBeat'
+import { deliverKnownPartner, rollArrival, rollSmallTalk } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -260,6 +260,30 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        called and not duplicated. `STOP_PRECEDENCE` already puts the birthday's card in front of
   //        it on a week that is both.
   deliverKnownPartner(world)
+  // ⭐⭐ 1c-smalltalk (v74, the private life wave 3 – T8): AND THE ORDINARY WEEK IN WHICH SHE SIMPLY
+  //        CAME AND SAID SOMETHING. Tier 1 (who-she-is §5b), capped at four a season off `lifeLog`
+  //        itself and priced at zero on every reply – ruled V2, «texture, never economy».
+  //
+  //        ⚠⚠ AFTER `deliverKnownPartner` AND THE ORDER IS A BEHAVIOUR. The brief's rule is «fires
+  //        only when no beat is already pending that week», and the delivery one line up is the thing
+  //        most likely to have raised one: a week that is both «there is someone» and «something
+  //        small» is a week the small thing loses, which is the right way round. Placed BEFORE the
+  //        delivery it would have queued a worry in front of the biggest news of her life.
+  //
+  //        ⚠ BEFORE `accrueSpirit`, for `rollArrival`'s own reason twice over: the bond band it
+  //        reads and the Mood register that decides WHAT she comes with are both last week's settled
+  //        values, which is the week she is actually talking about.
+  //
+  //        ⚠ ZERO MAIN DRAWS, and ZERO DRAWS AT ALL on a week the gate refuses: it pulls only from
+  //        the private `seed:life:smalltalk:<week>` sub-stream and derives it only after
+  //        `smallTalkEligible` has said yes, so a `strained` or `cold` home – priced at 0 – never
+  //        reaches a stream (world/lifeBeat.ts §7). The frozen capture (41550 / e6b0c709) is
+  //        untouched by construction. ITS OWN CALL, for `accrueCondition`'s arity-2 reason below.
+  //
+  //        ⚠ IT CAN STOP THE WEEK, exactly as the delivery can: the row it raises is a pending
+  //        `lifeLog` row, so `advanceWeeks` reports `'life'` until the parent answers – wave-2
+  //        machinery, called and not duplicated.
+  rollSmallTalk(world)
   // ⭐⭐ 1c-life (v72, the private life wave 1): AND WHAT THE WEEK DID TO HER SPIRIT, and to what the
   //        parent has built with her. ITS OWN CALL, immediately after the body's – never a parameter
   //        of `accrueCondition`, whose arity-2, zero-RNG contract is pinned by B1 in

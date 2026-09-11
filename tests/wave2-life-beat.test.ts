@@ -302,7 +302,18 @@ describe('wave 2 B – where the beat sits, and what that means on a week that i
     // ⚠ THE BIRTHDAY IS THE ENGINE'S – walked to, not injected (r2-13's own recipe: the default
     // profile is born 15 June and her first birthday is marked in week 23).
     const { world, rng } = career('w2-collision')
-    while (world.week < 22) tickWeek(world, rng)
+    // ⚠⚠ RE-AIMED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. This walk
+    // was a bare `tickWeek` loop, which was complete while no beat could fire before the fork at
+    // week ~241. T8 raises tier-1 small talk from week 0 at up to 8%/wk, so `'life'` was already
+    // pending when the advance below ran and `advanceWeeks` refused at ENTRY – the case read
+    // `['life']` for a beat that has nothing to do with what it is about. `drainOtherBeats` is this
+    // file's own answer to exactly that (it is what `walkToFork` does, and what T6 added for the
+    // `'met'` row); it stops at a `'fork-opinion'` row, so the subject of this file is untouched.
+    while (world.week < 22) {
+      drainOtherBeats(world)
+      tickWeek(world, rng)
+    }
+    drainOtherBeats(world)
     expect(advanceWeeks(world, rng, 1), 'the tick reaches her birthday').toEqual(['birthday'])
     expect(pendingBirthday(world), 'and the question is up').not.toBeNull()
 

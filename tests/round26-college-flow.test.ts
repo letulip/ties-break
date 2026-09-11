@@ -56,6 +56,9 @@ import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { SNAPSHOT_EVENTS } from '../src/engine/world/constants'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE } from '../src/shared/protocol'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – `tools/_lifeBeats.ts` through this file's own
+// re-export. It answers a beat with the option whose delta is zero and THROWS if a kind has none.
+import { drainLifeBeats } from './helpers/career'
 
 const DIR = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 
@@ -77,6 +80,12 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+    // talk raises an answerable `lifeLog` row from week 0 at up to 8%/wk, and `answerFork` refuses
+    // while ANY row is unanswered («hear her out before answering the fork»), so this opener threw
+    // before it reached a single case. `drainLifeBeats` answers with the option priced ZERO, which
+    // is what keeps a walk that never meant to price a beat from moving any number below.
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
@@ -84,6 +93,7 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }

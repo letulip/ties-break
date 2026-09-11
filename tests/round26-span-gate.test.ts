@@ -23,6 +23,8 @@
 //   * the pill's POSITION and its fit on a phone – `tests/component/round26-span-gate-ui.test.ts`,
 //     which mounts the real shell because a source pin cannot say which control is on the left.
 import { describe, expect, it, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – the walk answers her beats like its knocks.
+import { drainLifeBeats } from './helpers/career'
 import {
   LONG_LAYOFF_WEEKS,
   MULTI_WEEK_SPAN,
@@ -89,6 +91,11 @@ function walk(): WeekRow[] {
       closeTournament(world)
     }
     if (pendingKnock(world)) decideKnock(world, 'rest')
+    // ⚠ v74 (wave 3, T8): ...AND HER BEATS, on the walk's own stated contract («so no case below is
+    // secretly a case about one of them»). Tier-1 small talk raises an answerable row from week 0 and
+    // a pending one makes `spanWorthOffering` false on every week it stands, which would have turned
+    // this whole file into a file about the life queue. Bond-neutral; nothing here reads `bond`.
+    drainLifeBeats(world)
     const snap = toSnapshot(world)
     const hersAhead = snap.upcoming.filter(
       (e) => e.week > snap.week && e.week <= snap.week + QUIET_WINDOW_WEEKS && eventIsHers(e, snap.week),

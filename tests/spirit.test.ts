@@ -957,6 +957,17 @@ describe('the fence this step is judged by', () => {
     // hold that news back a week for no reason a player could be told. It writes no spirit and takes
     // no `Rng`, so `accrueSpirit`'s own reading is untouched by its presence.
     //
+    // ⚠⚠ RE-AIMED A THIRD TIME 11.09 BY WAVE 3's T8, AND AGAIN THE RE-AIM IS THE PIN DOING ITS JOB:
+    // it went RED («expected [ 'rollArrival(world)', …(2) ] to deeply equal [ 'rollArrival(world)',
+    // …(1) ]») the moment a third statement slid into the gap. WHAT MOVED: `rollSmallTalk(world)` –
+    // the tier-1 weekly roll (§7 of the same module). WHY IT BELONGS THERE, AND WHY IN THIS ORDER:
+    // it must run AFTER `deliverKnownPartner`, because the brief's rule is «fires only when no beat
+    // is already pending that week» and the delivery is the thing most likely to have raised one –
+    // a week that is both «there is someone» and «something small» is a week the small thing loses.
+    // And BEFORE `accrueSpirit`, for `rollArrival`'s own reason twice over: the bond band it reads
+    // and the Mood register that decides what she comes with are both LAST week's settled values.
+    // It writes no spirit and takes no `Rng`, so `accrueSpirit`'s own reading is untouched.
+    //
     // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
     // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
     // the two can be reordered – a third statement appearing here goes red just as a swap does.
@@ -970,9 +981,10 @@ describe('the fence this step is judged by', () => {
     const j = code.indexOf('accrueSpirit(world)')
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
-    expect(code.slice(i + 1, j), 'only the arrival roll and its delivery separate them').toEqual([
+    expect(code.slice(i + 1, j), 'only the private life\'s three weekly calls separate them').toEqual([
       'rollArrival(world)',
       'deliverKnownPartner(world)',
+      'rollSmallTalk(world)',
     ])
   })
 

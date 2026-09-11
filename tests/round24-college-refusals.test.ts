@@ -68,6 +68,8 @@ import {
 } from '../src/engine/world'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
+import { drainLifeBeats } from './helpers/career'
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
  *  PAUSES on the College League week the way it pauses on her birthday, because the owner's
@@ -110,6 +112,11 @@ function playedCareer(seed: string, weeks: number): { world: WorldState; rng: Rn
   for (let i = 0; i < weeks; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+    // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+    // unanswered («hear her out before answering the fork»), so every opener below threw. The drain
+    // answers with the option priced ZERO, so no number any case measures moves.
+    drainLifeBeats(world)
   }
   return { world, rng }
 }
@@ -138,11 +145,13 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 54 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
   expect(inCollege(world), 'and she really is at a university this week').toBe(true)
@@ -182,6 +191,7 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   while (world.week < departs - 6) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   const vacWeek = bookableWeek(world, 'vacation', departs + 55, departs + 90)
   const pracWeek = bookableWeek(world, 'practice', departs + 55, departs + 90)
@@ -190,12 +200,14 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   for (let i = 0; i < 10 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   // ⚠ Press-answer-press, exactly as `careerAtCollege` above – the year pauses for her birthday now.
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    drainLifeBeats(world)
   }
   expect(world.ending?.type).toBe('college')
   // ⚠ AND BOTH SURVIVED THE YEAR – `prunePlannerBookings` keeps four trailing weeks, and these are

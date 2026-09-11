@@ -1,4 +1,6 @@
 import 'fake-indexeddb/auto'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a quiet career must have an empty queue.
+import { drainLifeBeats } from './helpers/career'
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { createWorld, tickWeek, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
@@ -60,6 +62,12 @@ function quietCareer(seed: string, weeks = 10): WorldState {
   for (let i = 0; i < weeks; i++) tickWeek(world, rng)
   world.knock = null
   world.knockHistory = [{ part: 'wrist', sinceWeek: world.week, untilWeek: world.week, choice: 'rest' }]
+  // ⚠ v74 (wave 3, T8): ...AND THE SAME COURTESY FOR THE LIFE QUEUE, for the identical reason the
+  // knock row above is retired. Tier-1 small talk raises an answerable `lifeLog` row from week 0, and
+  // an unanswered one refuses `advance` at ENTRY – «every advance moves EXACTLY one week» stops being
+  // true and this file's revisions stop being deterministic. Bond-neutral, and the pipeline reads no
+  // number the drain could move.
+  drainLifeBeats(world)
   return world
 }
 

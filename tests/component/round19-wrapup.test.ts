@@ -19,6 +19,8 @@
 // stop reasons, because only an `advance` ever passes them. That substitution is the bug's whole
 // mechanism, so it is asserted (`stopReasons` is undefined afterwards) rather than assumed.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – an input-free walk must pass a tier-1 row.
+import { drainLifeBeats } from '../helpers/career'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 
@@ -72,6 +74,11 @@ function atTheWrap(seed: string): WorldState {
   // wrap. It outranks every dialog in `blockingOverlay`, which would leave these tests looking at a
   // knock instead of the two popups they are about.
   world.knock = null
+  // ⚠ v74 (wave 3, T8): ...AND HER TIER-1 ROW IS THE SAME ARTEFACT, for the same reason. Small talk
+  // raises an answerable `lifeLog` row from week 0, an input-free fifty-week loop never answers one,
+  // and `'life'` outranks the two popups these cases are about in `blockingOverlay` – and refuses
+  // `answerFork` outright. Bond-neutral drain; nothing here reads `bond`.
+  drainLifeBeats(world)
   return world
 }
 

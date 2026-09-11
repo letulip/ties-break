@@ -58,6 +58,8 @@ import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
 import { ENDINGS } from '../src/engine/ending'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type CallUpLetterTerms, type Offer } from '../src/shared/protocol'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
+import { drainLifeBeats } from './helpers/career'
 import { componentFile } from './worldSource'
 import { region } from './helpers/source'
 
@@ -79,6 +81,9 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    // ⚠ v74 (wave 3, T8): tier-1 small talk raises an answerable `lifeLog` row from week 0 and
+    // `answerFork` refuses while any row is unanswered. Bond-neutral drain – nothing measured moves.
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
@@ -86,6 +91,7 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }
@@ -107,6 +113,7 @@ function walkTheFreeze(world: WorldState, rng: Rng): void {
     resumeFromCollege(world, rng)
     answerAnyCollegeReveal(world)
     if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    drainLifeBeats(world)
   }
 }
 

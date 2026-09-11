@@ -21,6 +21,8 @@
 // `min-width: 206px` back on them and watches the same assertion go red. A test that cannot fail on
 // the broken version is not this test.
 import { describe, it, expect, beforeEach } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
+import { drainLifeBeats } from '../helpers/career'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import HomeScreen from '../../src/components/screens/HomeScreen.vue'
@@ -215,6 +217,7 @@ function walkedCollegeSnapshot(): Snapshot {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   // ⚠ THE FIXTURE'S ONE THUMB ON THE SCALE, and it is `college-freeze.test.ts`'s: four college years
   // is 208 weeks of base costs, and a career that went bankrupt inside them would be measuring the
@@ -222,11 +225,16 @@ function walkedCollegeSnapshot(): Snapshot {
   // whatever the balance is.
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   // ⚠ ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
   for (let i = 0; i < 54 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   // ⚠⚠ ROUND 26 #6 RE-AIM, AND THE FIXTURE WOULD HAVE GONE QUIETLY WRONG WITHOUT IT. One press no
   // longer spends a whole year: the championship week PAUSES it and `TournamentFlow` walks the

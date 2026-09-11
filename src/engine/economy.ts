@@ -3627,6 +3627,30 @@ export const ECONOMY = {
      *  pure function of the relationship the player built, so `knownWeek` MAY differ between runs.
      *  That is the relationship affecting DISCLOSURE, not the world's dice being re-rolled. */
     bondShave: { close: 3, steady: 2, strained: 1, cold: 1 },
+    /** ⭐⭐ TIER-1 SMALL TALK, PER WEEK, BY BOND BAND (wave-3 brief §4's last row, verbatim) – ⚠ THE
+     *  ARCHITECT'S PROPOSAL AND MARKED AS ONE THERE, bench-visible, NOT a ruling. It is sourced to
+     *  who-she-is §5b's frequency column, which is prose rather than a number: «a few per season at
+     *  `close`; none at `cold`».
+     *
+     *  ⚠⚠ THE TWO ZEROES ARE A SHORT-CIRCUIT AND NEVER A COMPARISON. `rollSmallTalk` returns before
+     *  `seed:life:smalltalk:<week>` is ever derived when the chance is 0, exactly as `rollArrival`'s
+     *  gate does – an ineligible week takes ZERO draws (T3's load-bearing rule, inherited whole).
+     *
+     *  ⚠ AND «NONE AT COLD» IS THE DESIGN RATHER THAN A FLOOR: at `strained` and `cold` the silence
+     *  IS the line (§5b's own sentence). There is no flat pool for this beat, because a beat that
+     *  never fires needs none. */
+    smallTalkPerWeek: { close: 0.08, steady: 0.04, strained: 0, cold: 0 },
+    /** THE HARD CAP PER SEASON (brief §4: «cap 4/season»), counted off `lifeLog` itself.
+     *
+     *  ⚠⚠ THE LOG IS THE COUNTER AND THERE IS NO NEW STATE – who-she-is §5b's line item 6 («caps
+     *  without new state – tier-0/1 frequency per season derived from `lifeLog` counts»). A counter
+     *  field beside a record that already answers the question is one fact with two sources of
+     *  truth, which is `pendingLifeBeat`'s own doctrine applied to frequency.
+     *
+     *  ⚠ THE COUNT IS `'small-talk'` ROWS OF **THIS** SEASON AND NOTHING ELSE. `lifeLog` also holds
+     *  `'fork-opinion'` and `'met'` rows, and a naive length would cap her small talk on the week
+     *  she was told there is someone. */
+    smallTalkCapPerSeason: 4,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

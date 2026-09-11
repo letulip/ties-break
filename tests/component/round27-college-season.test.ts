@@ -22,6 +22,8 @@
 // the same class of lie as leaving Enter live, pointed the other way, so both directions are pinned
 // here and the fixture books a real trip and a real friendly to make the second one non-vacuous.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
+import { drainLifeBeats } from '../helpers/career'
 
 // ⚠ A RUNNER-SIZED CEILING, ON round24-college-shell.test.ts's OWN ARITHMETIC AND FOR ITS REASON.
 // The fixture walks a real career ~86 weeks to the September she leaves in; measured alone it is
@@ -77,9 +79,14 @@ function atCollegeWithBookings(seed: string): Snapshot {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   const departsWeek = world.fork.departsWeek
   expect(departsWeek, 'the answer reserved a place and named the September').not.toBeNull()
@@ -90,6 +97,7 @@ function atCollegeWithBookings(seed: string): Snapshot {
   for (let i = 0; i < 60 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   expect(world.week, 'and it latched on the week she was due to leave').toBe(departsWeek)

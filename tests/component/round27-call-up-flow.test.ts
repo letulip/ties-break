@@ -18,6 +18,8 @@
 // bar's resume press on screen. If any of the three were false the career would stand in front of a
 // question with no way out.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
+import { drainLifeBeats } from '../helpers/career'
 
 // ⚠ A RUNNER-SIZED CEILING, the same arithmetic `round26-college-flow.test.ts` states: every case
 // here mounts the whole App over a career walked ~115 weeks to the fork and then pressed through
@@ -94,13 +96,19 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }

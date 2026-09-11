@@ -107,17 +107,23 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   // ⚠ THE ONE THUMB ON THE SCALE, and it is `college-freeze.test.ts`'s: four years is 208 weeks of
   // base costs, and a career that went bankrupt inside them would be measuring the family budget.
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   // ⚠ ROUND 24 #5: the answer reserves – the walk to the September departure is what latches the
   // college ending now (the gap semantics are pinned in tests/college-departure.test.ts).
   for (let i = 0; i < 54 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }
@@ -293,12 +299,18 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // is not at a boundary, and the engine says so.
     // ⚠ ROUND 27 #6: and the tie, on the same argument – `endCollegeEarly` refuses behind a paused
     // year, and a year paused on a reveal is not at a boundary either.
+    // ⚠ v74 (wave 3, T8) RE-AIM: ...and a FIFTH stop, her tier-1 small talk, on exactly the argument
+    // `graduate` above records for the `'met'` beat – T2's exception lets a life row lay OVER the
+    // latch, so a row left standing is the card on screen instead of the early-return one, which is
+    // what this case went red on. Drained bond-neutrally, like the birthday one line up.
     for (let press = 0; press < 5 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      drainLifeBeats(world)
     }
+    drainLifeBeats(world)
     endCollegeEarly(world)
     world.knock = null // the walked-career artefact, see `graduate` above
     const { w } = await openShell(world)

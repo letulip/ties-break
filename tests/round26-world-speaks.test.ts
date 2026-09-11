@@ -303,6 +303,9 @@ function enrolled(seed: string): { world: WorldState; rng: Rng } {
       skipTournament(world)
       closeTournament(world)
     }
+    // ⚠ v74 (wave 3, T8): tier-1 small talk raises an answerable `lifeLog` row from week 0 and
+    // `answerFork` refuses while any row is unanswered. Bond-neutral drain – nothing measured moves.
+    drainLifeBeats(world)
   }
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
@@ -310,6 +313,7 @@ function enrolled(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 54 && world.ending === null; i++) {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     tickWeek(world, rng)
+    drainLifeBeats(world)
     if (world.pendingTournament) {
       skipTournament(world)
       closeTournament(world)
