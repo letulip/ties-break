@@ -1365,14 +1365,29 @@ export function smallTalkEligible(world: WorldState): boolean {
 
 /** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE writer of a `'small-talk'` row.
  *
+ *  ⚠⚠⚠ IT IS FINISHED AND IT IS **NOT CALLED** – THE OWNER RULED THE RAISE OFF ON 11.09.2026
+ *  («вариант 3»: raise reverted, engine kept), and `world/phaseHerWeek.ts` carries the full note
+ *  where the call used to be. §5b prices tier 1 «soft – answerable, never lost», what T8 shipped was
+ *  tier 2's HARD pause, and a soft beat needs a surface – so every part of this section stays,
+ *  dormant, until the step that builds one. That step is now named: T15 of the wave-3 brief, §5b's
+ *  SOFT BLOCK CONCRETIZED amendment, which re-enables the raise through a per-kind `blocking` flag
+ *  and a Home card rather than a pause. `tests/wave3-small-talk.test.ts` §H is the guard that holds
+ *  the interim state and is mutation-verified (ARM 9); it is written to go RED on the commit that
+ *  switches tier 1 on, which is T15's signal to re-aim it – exactly as wave 3's T4 re-aimed
+ *  `attachmentLift`'s. It is also T15's own stated fallback if the soft path resists.
+ *  ⚠ AND THE SECOND RULING FOR T15: NO AGE GATE. She talks at any age – a child bringing a parent a
+ *  worry, a joy or a question is natural at any age, and tier 1 is texture rather than part of the
+ *  romance layer, so it must NOT inherit `arrivalEligible`'s sixteenth-birthday gate.
+ *
  *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED. The line order IS the rule;
  *  moving the roll above the gate would break it silently, because every key here carries its own
  *  week and a discarded draw changes no other week's value.
  *
- *  ⚠ THE BOND AND THE SPIRIT IT READS ARE LAST WEEK'S SETTLED VALUES, because this runs before
- *  `accrueSpirit` (see the call site in `world/phaseHerWeek.ts`) – `rollArrival`'s own argument one
- *  section up, and for the same reason: what she brings to the table is about the week that has just
- *  been lived, not about what this same tick is on its way to doing to her.
+ *  ⚠ THE BOND AND THE SPIRIT IT READS ARE LAST WEEK'S SETTLED VALUES, because it is written to run
+ *  before `accrueSpirit` – `rollArrival`'s own argument one section up, and for the same reason:
+ *  what she brings to the table is about the week that has just been lived, not about what this same
+ *  tick is on its way to doing to her. (The call site that gave it that position is deferred; the
+ *  position is the one the next wave must restore.)
  *
  *  ⚠ THE SUBJECT IS DERIVED AND NEVER DRAWN (`smallTalkSubjectFor`) – the wave owns four stream keys
  *  and this one answers a single question. */

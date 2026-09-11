@@ -3632,6 +3632,15 @@ export const ECONOMY = {
      *  who-she-is §5b's frequency column, which is prose rather than a number: «a few per season at
      *  `close`; none at `cold`».
      *
+     *  ⚠⚠ DECLARED AND NOT REACHED AS OF THIS STEP, DELIBERATELY – the owner ruled the raise off on
+     *  11.09.2026 («вариант 3»: raise reverted, engine kept), so no production path raises the beat
+     *  and nothing reads these two numbers at runtime yet. This is `ECONOMY.spirit.attachmentLift`'s
+     *  own shape from wave 1, guarded the same way (tests/wave3-small-talk.test.ts §H) and inherited
+     *  whole by the step that builds tier 1's SURFACE – T15, §5b's SOFT BLOCK CONCRETIZED amendment,
+     *  because §5b prices tier 1 «soft – answerable, never lost» and a soft beat may not stop the
+     *  week. ⚠ THE RULING FOR T15, recorded where the numbers are: NO AGE GATE. She talks at any
+     *  age; tier 1 is texture, not part of the romance layer.
+     *
      *  ⚠⚠ THE TWO ZEROES ARE A SHORT-CIRCUIT AND NEVER A COMPARISON. `rollSmallTalk` returns before
      *  `seed:life:smalltalk:<week>` is ever derived when the chance is 0, exactly as `rollArrival`'s
      *  gate does – an ineligible week takes ZERO draws (T3's load-bearing rule, inherited whole).

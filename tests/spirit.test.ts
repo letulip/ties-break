@@ -968,6 +968,24 @@ describe('the fence this step is judged by', () => {
     // and the Mood register that decides what she comes with are both LAST week's settled values.
     // It writes no spirit and takes no `Rng`, so `accrueSpirit`'s own reading is untouched.
     //
+    // ⚠⚠ AND RE-AIMED A FOURTH TIME THE SAME DAY, BACK TO TWO – 11.09, THE OWNER'S «ВАРИАНТ 3»
+    // (the raise reverted, the engine kept). WHAT MOVED: the `rollSmallTalk(world)` statement the
+    // note above describes was REMOVED from the gap again. WHY: §5b prices tier 1 «soft – answerable,
+    // never lost» while what T8 shipped through the standard machinery is tier 2's HARD pause, and a
+    // soft beat needs a surface – so the whole of tier 1 stays built and DORMANT until T15 builds one
+    // (see the note at the call site, and the dormancy guard in tests/wave3-small-talk.test.ts §H,
+    // whose ledger records this case among ARM 9's four). ⚠ T15 PUTS THE STATEMENT BACK ON THE SAME
+    // LINE, so this pin returns to the three-element form it held for one commit – re-aim it there
+    // with its note, exactly as this note does.
+    //
+    // ⚠ NOTHING IS WEAKENED BY THE RE-AIM: the form is the same ORDERED LIST and it is one element
+    // SHORTER, so it refuses a third statement sliding back into the gap – including the tier-1 roll
+    // itself, which is the deferral this pin is now the second reader of. MEASURED IN THAT DIRECTION
+    // RATHER THAN ASSUMED: with the call site restored it goes RED here – «only the private life's
+    // two weekly calls separate them: expected [ 'rollArrival(world)', …(2) ] to deeply equal
+    // [ 'rollArrival(world)', …(1) ]» – which is this pin refusing the very statement the deferral
+    // took out.
+    //
     // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
     // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
     // the two can be reordered – a third statement appearing here goes red just as a swap does.
@@ -981,10 +999,9 @@ describe('the fence this step is judged by', () => {
     const j = code.indexOf('accrueSpirit(world)')
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
-    expect(code.slice(i + 1, j), 'only the private life\'s three weekly calls separate them').toEqual([
+    expect(code.slice(i + 1, j), 'only the private life\'s two weekly calls separate them').toEqual([
       'rollArrival(world)',
       'deliverKnownPartner(world)',
-      'rollSmallTalk(world)',
     ])
   })
 

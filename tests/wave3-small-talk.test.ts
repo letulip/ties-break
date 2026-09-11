@@ -11,6 +11,23 @@
 // twelve different lines», «no price in any of them», «one quoted span», never a string.
 //
 // =================================================================================================
+// ⚠⚠ AND READ §H FIRST: TIER 1 IS BUILT AND DORMANT (the owner's deferral, 11.09.2026)
+// =================================================================================================
+//
+// Everything in §A–§G below tests code that SHIPS and STAYS – the hazard by band, the season cap, the
+// subject derivation, the constants, the option table and her eighteen drafted lines. What does NOT
+// ship in THIS STEP is the one line that would RAISE the beat: the owner ruled it off after T8
+// landed («вариант 3»), because §5b prices tier 1 «soft – answerable, never lost» while the brief's
+// «standard machinery (pause, queue, re-validation)» is tier 2's HARD pause – and a soft beat needs a
+// surface. T15 is the step that builds one and turns the raise back on; §H is the guard that holds
+// the interim state, and it carries the second ruling too: NO AGE GATE when it lands.
+//
+// ⚠ SO EVERY CASE BELOW CALLS `rollSmallTalk` DIRECTLY. That was already true when T8 wrote them –
+// they were never walked-career cases – so the deferral moved no assertion in §A–§G, only the call
+// site in `world/phaseHerWeek.ts`. The one pin that DID read the call site is
+// `tests/spirit.test.ts`'s ordered call-order gap, re-aimed there with its own ⚠ note.
+//
+// =================================================================================================
 // ⚠⚠ THE ARM LEDGER – every net below was RUN, watched fail, and put back. The count is what the
 // mutation actually reddened, because a mutation that reddens the WRONG case is as much a finding as
 // one that reddens nothing.
@@ -85,6 +102,23 @@
 //           stayed green under it, which is what stops the negative assertion passing because
 //           `addEvent` was never reachable at all.
 //
+//   ARM 9   ⚠⚠ THE DORMANCY ARM – the deferral's own net, and the one the next wave will trip. The
+//           call site RESTORED: `rollSmallTalk(world)` put back in `world/phaseHerWeek.ts`
+//           immediately after `deliverKnownPartner(world)`, with its import.
+//           4 RED · §H «⚠⚠ NO PRODUCTION PATH CALLS THE ROLL: tier 1 is deferred: no file under
+//           src/ may raise it: expected [ 'engine/world/phaseHerWeek.ts' ] to deeply equal []»,
+//           §H «⚠⚠ ...and a WALKED career raises not one `small-talk` row: dormant-1: a walked season
+//           may not produce tier 1: expected [ { week: 1, …(3) }, …(2) ] to deeply equal []» (weeks
+//           1, 14 and 15, `detail: 'question'`, answered `'more'` by the drain), §H «⚠ ...the
+//           anti-vacuity control: still none after the walk: expected [ { week: 1, …(3) }, …(2) ] to
+//           deeply equal []», and tests/spirit.test.ts's call-order gap «only the private life's two
+//           weekly calls separate them: expected [ 'rollArrival(world)', …(2) ] to deeply equal
+//           [ 'rollArrival(world)', …(1) ]».
+//           ⚠ AND THE OTHER 121 CASES OF THE TWO FILES STAYED GREEN under it, which is the statement
+//           §A–§G make about themselves: they call the roll DIRECTLY, so they are indifferent to
+//           whether the engine also calls it – exactly what lets tier 1 be switched on later without
+//           re-writing one of them.
+//
 // ⚠⚠ AND A WORD ON WHY §B IS A KEY COUNT AND NOT AN ALIGNMENT COMPARISON, inherited whole from T3's
 // own finding (tests/wave3-arrival.test.ts §B, ARM 2b): every key in this wave carries its own week,
 // so a discarded draw cannot shift any other week's value and «two worlds differing only in an
@@ -109,10 +143,17 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
   }
 })
 
+// ⚠ v74 DEFERRAL (§H): the filesystem reader and the walk. `readdirSync`/`readFileSync` are
+// spirit.test.ts's own whole-tree reader, and `tickWeek` + `resumeMain` are how a career is really
+// walked – §H's claim is that the ENGINE raises nothing, which only a real tick can say.
+import { readdirSync, readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+
 import {
   answerLifeBeat,
   buildLifeBeatPrompt,
   createWorld,
+  tickWeek,
   lifeBeatHeading,
   lifeBeatListenFollowUp,
   lifeBeatSaid,
@@ -131,6 +172,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { drainLifeBeats } from '../tools/_lifeBeats'
+import { resumeMain } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { bondBandOf, moodRegisterOf, spiritBandOf } from '../src/engine/spirit'
 import type { BondBand, LifeBeatRecord, MoodRegister } from '../src/shared/protocol'
@@ -140,6 +182,9 @@ const OPTIONS = LIFE_BEAT_OPTIONS['small-talk']
 const BANDS: readonly BondBand[] = ['close', 'steady', 'strained', 'cold']
 const REGISTERS: readonly MoodRegister[] = ['bright', 'level', 'low']
 const WEEKS_IN_SEASON = 52
+/** `src/`, for §H's whole-tree reader. ⚠ `import.meta.url` is legal here – this file runs in the
+ *  UNIT project (node), never under happy-dom, where the URL scheme would throw at collect time. */
+const SRC_ROOT = fileURLToPath(new URL('../src/', import.meta.url))
 
 // -------------------------------------------------------------------------------------------------
 // FIXTURES
@@ -696,5 +741,130 @@ describe('wave 3 T8 G – what she came with, and how the card is assembled', ()
     for (const line of words) {
       expect(line, `a price in: ${line}`).not.toMatch(/[$€£]|\bcents?\b|\bdollars?\b|\d/)
     }
+  })
+})
+
+// =================================================================================================
+// H. ⚠⚠ THE DORMANCY GUARD – TIER 1 IS DECLARED AND DELIBERATELY NEVER RAISED
+// =================================================================================================
+//
+// ⚠⚠ THE OWNER'S RULING, 11.09.2026 – «ВАРИАНТ 3»: THE RAISE REVERTED, THE ENGINE KEPT. Everything
+// above this section tests code that is FINISHED and STAYS – the hazard by band, the season cap, the
+// subject derivation, the constants, the option table and her eighteen drafted lines. What does not
+// ship in this step is the single line in `world/phaseHerWeek.ts` that would RAISE the beat.
+//
+// WHY, IN THE OWNER'S TERMS. `docs/specs/who-she-is-2026-09.md` §5b's tier table prices tier 1
+// «soft – answerable, never lost». The wave-3 brief asked for it «through the standard machinery
+// (pause, queue, re-validation)» – which is TIER 2's HARD pause. T8's builder found the drift and
+// correctly flagged it, then shipped the pause; and because `bond` starts at 70 (`steady`, a live
+// band) the beat fired from week 0 on every career and BLOCKED THE WEEK, breaking 136 walked
+// fixtures. A soft beat needs a surface that does not stop the week, and a beat with no surface may
+// not be raised at all – which is this step.
+//
+// ⚠⚠ AND THE STEP THAT TURNS IT BACK ON IS NAMED: T15. The same day, the owner asked for «вариант 2»
+// written out in the spec and folded into this wave – §5b's SOFT BLOCK CONCRETIZED amendment, whose
+// build order is T15 of the wave-3 brief: a per-kind `blocking` flag, `pendingLifeBeat` narrowed to
+// blocking rows, a Home card that opens the SAME dialog, and a 3-week derived TTL. So §H is not
+// «tier 1 is cancelled» – it is the interim state held honestly, and T15's own stated fallback if
+// the soft path resists («T15 reverts to вариант 3's state without touching T1-T8»).
+//
+// ⚠ THE SECOND RULING, RECORDED HERE BECAUSE THIS IS WHERE T15 WILL LOOK: NO AGE GATE.
+// «She talks at any age» – a child bringing a parent a worry, a joy or a question is natural at any
+// age, and tier 1 is TEXTURE rather than part of the romance layer. When it is switched on it must
+// NOT inherit the arrival's sixteenth-birthday gate.
+//
+// ⚠⚠ AND THE SHAPE OF THIS GUARD IS NOT INVENTED – IT IS THE ONE THIS REPO HAS ALREADY PROVEN.
+// Wave 1 shipped `ECONOMY.spirit.attachmentLift` declared and not read, deliberately, with a guard
+// asserting precisely that (tests/spirit.test.ts); when wave 3's T4 wired it the guard went RED and
+// was re-aimed with its ⚠ note. T15 does the same to this one: it is written to fail on exactly that
+// commit, and a red here is tier 1 being switched on, not a defect. ⚠ WHAT T15 MUST NOT DO IS DELETE
+// IT – the re-aim is «raised through the SOFT path and never through a pause», which is a claim this
+// file will still want to make afterwards.
+describe('wave 3 T8 H – tier 1 is BUILT AND DORMANT (owner\'s deferral, 11.09)', () => {
+  /** Every `.ts`/`.vue` file under `src/`, as (relative path, source) – spirit.test.ts's own reader,
+   *  and the same reason: this is a claim about the whole production tree, not about one file. */
+  function srcFiles(dir = SRC_ROOT, prefix = ''): [string, string][] {
+    const out: [string, string][] = []
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (entry.isDirectory()) out.push(...srcFiles(`${dir}${entry.name}/`, `${prefix}${entry.name}/`))
+      else if (/\.(ts|vue)$/.test(entry.name)) out.push([prefix + entry.name, readFileSync(dir + entry.name, 'utf8')])
+    }
+    return out
+  }
+
+  /** Source with every comment removed – block first, then line. ⚠ LOAD-BEARING HERE: the deferral is
+   *  EXPLAINED in prose at the call site and in `ECONOMY.life`, and a pin that tripped on the
+   *  explanation would be repaired by deleting the explanation, which is the wrong repair. */
+  function codeOnly(text: string): string {
+    return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
+  }
+
+  it('⚠⚠ NO PRODUCTION PATH CALLS THE ROLL – the raise is what was deferred', () => {
+    // ⚠⚠ THIS IS THE MUTATION TARGET. Restore `rollSmallTalk(world)` in `world/phaseHerWeek.ts` and
+    // this line goes red naming the file (ARM 9 in the ledger at the head of this file). The call
+    // text is matched rather than the bare name, because the barrel legitimately re-exports the name
+    // and the module legitimately declares it – and neither of those raises a beat.
+    const callers = srcFiles()
+      .filter(([, text]) => codeOnly(text).includes('rollSmallTalk(world)'))
+      .map(([path]) => path)
+    expect(callers, 'tier 1 is deferred: no file under src/ may raise it').toEqual([])
+    // ...and the half that makes «no caller» a DEFERRAL rather than a deletion: the name reaches
+    // exactly two files – the module that declares it, and the barrel that re-exports it.
+    const named = srcFiles()
+      .filter(([, text]) => /\brollSmallTalk\b/.test(codeOnly(text)))
+      .map(([path]) => path)
+      // ⚠ SORTED HERE AND NOT AT THE READER: `srcFiles` walks a directory before its sibling FILE
+      // (`engine/world/` precedes `engine/world.ts`), which is a fact about `readdirSync` and not
+      // about this claim. A pin that encoded the walk order would go red on an unrelated new module.
+      .sort()
+    expect(named, 'declared and exported, and nothing more').toEqual(['engine/world.ts', 'engine/world/lifeBeat.ts'])
+    // ...and it is still a real function with its real constants behind it, inherited whole by the
+    // wave that switches it on.
+    expect(typeof rollSmallTalk, 'the engine is kept, only its call site is not').toBe('function')
+    expect(LIFE.smallTalkPerWeek, 'the hazard table stands').toEqual({ close: 0.08, steady: 0.04, strained: 0, cold: 0 })
+    expect(LIFE.smallTalkCapPerSeason, 'and the season cap').toBe(4)
+    expect(OPTIONS.length, 'and her parent still has three free replies waiting').toBe(3)
+  })
+
+  it('⚠⚠ ...and a WALKED career raises not one `small-talk` row, over a whole season', () => {
+    // The behavioural half. `close` is the MOST generous band (8%/wk), re-pinned every week so the
+    // engine's own drift cannot quietly walk her out of it – under the raise this is ~4 rows a season
+    // and the cap is reached, which is why the arm reddens here loudly rather than probabilistically.
+    // ⚠ THE DRAIN STAYS IN THE LOOP: `'met'` still raises and still blocks, and a walk that stopped
+    // on it would be measuring the wrong thing.
+    for (const seed of ['dormant-1', 'dormant-2', 'dormant-3', 'dormant-4']) {
+      const world = createWorld(seed)
+      const rng = resumeMain(world.rngMain)
+      const close = bondFor('close')
+      for (let w = 0; w < WEEKS_IN_SEASON; w++) {
+        world.bond = close
+        tickWeek(world, rng)
+        drainLifeBeats(world)
+      }
+      const rows = lifeLogOf(world).filter((r) => r.kind === 'small-talk')
+      expect(rows, `${seed}: a walked season may not produce tier 1`).toEqual([])
+    }
+  })
+
+  it('⚠ ...and the walk above really COULD have raised one – the anti-vacuity control', () => {
+    // «No rows» is free on a career the beat could never have reached. So the same fixture, at the
+    // same band, is handed to the roll DIRECTLY and it raises – which is what makes the case above a
+    // statement about the missing call site rather than about a gate that refuses everything.
+    const world = createWorld('dormant-1')
+    const rng = resumeMain(world.rngMain)
+    const close = bondFor('close')
+    for (let w = 0; w < WEEKS_IN_SEASON; w++) {
+      world.bond = close
+      tickWeek(world, rng)
+      drainLifeBeats(world)
+    }
+    expect(lifeLogOf(world).filter((r) => r.kind === 'small-talk'), 'still none after the walk').toEqual([])
+    world.bond = close
+    expect(smallTalkEligible(world), 'the gate would have said yes on this very world').toBe(true)
+    const hit = firstHit(world, world.week)
+    world.week = hit
+    world.lifeLog = []
+    rollSmallTalk(world)
+    expect(lifeLogOf(world).map((r) => r.kind), 'called directly, the engine still raises it').toEqual(['small-talk'])
   })
 })
