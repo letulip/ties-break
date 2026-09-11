@@ -36,10 +36,8 @@ import {
   resumeFromCollege,
   kidAgeYears,
   type WorldState,
-  answerLifeBeat,
-  LIFE_BEAT_OPTIONS,
-  pendingLifeBeat,
 } from '../src/engine/world'
+import { drainLifeBeats } from './_lifeBeats'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
 // GAME. The owner removed the rule that closed the college door on a result («Колледж – это
 // независимая ветка карьеры … альтернативная»); in the game as it ships the third answer is on the
@@ -307,13 +305,11 @@ function answerWhateverIsOpen(
     // call threw the first time a walked career met somebody. The row's OWN kind is asked for its
     // bond-neutral answer, which is the same intent this line always had: a harness that never asked
     // the player must not put a number on the scale.
-    for (let guard = 0; guard < 50; guard++) {
-      const beat = pendingLifeBeat(world)
-      if (beat === null) break
-      const free = LIFE_BEAT_OPTIONS[beat.kind].find((o) => o.bond === 0)
-      if (!free) throw new Error(`${beat.kind} has no bond-neutral answer – this bench cannot drain it without moving the number`)
-      answerLifeBeat(world, free.id)
-    }
+    // ⚠ T6b: the loop that used to stand here was written out by hand, and then the same body was
+    // needed by the other thirty-eight tools and by `tests/helpers/career.ts`. It lives in
+    // `tools/_lifeBeats.ts` now – one implementation, because two copies of a helper whose whole job
+    // is «do not move the number» is how one of them starts moving it.
+    drainLifeBeats(world)
     answerFork(world, arm)
   }
   // ⚠ ROUND 24 #5: the college answer RESERVES and the ending latches at the September DEPARTURE –

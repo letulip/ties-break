@@ -33,8 +33,6 @@ import {
   pendingBirthday,
   resumeFromCollege,
   skipTournament,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { COLLEGE_TIERS, COLLEGE_TIER_ORDER, canAfford, coveredShareOf } from '../src/engine/collegeOffer'
@@ -44,6 +42,7 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { CollegeOffer, CollegeTier, PlayerProfile } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 const args = process.argv.slice(2)
 const argOf = (n: string, d: number) => {
@@ -134,7 +133,7 @@ for (const country of COUNTRIES) {
         }
         const offer = at.world.fork!.offer as CollegeOffer
         const quote = offer.quotes.find((q) => q.tier === tier)!
-        if (pendingLifeBeat(at.world)) answerLifeBeat(at.world, 'listen')
+        drainLifeBeats(at.world)
         answerFork(at.world, 'college', tier)
         // ⚠ THE ANSWER RESERVES; the September departure enrols (round 24 #5). Walk the gap, then the
         // four years – pressing through the birthday pause the way the player does.

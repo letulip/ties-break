@@ -60,7 +60,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { openCareer, stepCareerWeek, POLICIES, type Preset } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import {answerFork, answerRetirement, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {answerFork, answerRetirement, type WorldState } from '../src/engine/world'
 import { kidPoints, rankingFor } from '../src/engine/world/ladder'
 import { kidMatchPlayerFor, startingSkills } from '../src/engine/world/player'
 import { COACH_EDGE_CORRIDOR_PP } from '../src/engine/coach'
@@ -74,6 +74,7 @@ import type { CoachTier, FamilyBackground } from '../src/shared/protocol'
 import type { MatchPlayer } from '../src/engine/match/types'
 import type { TierId } from '../src/engine/season/types'
 import type { WorldEventCategory } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 // -------------------------------------------------------------------------------------------------
 // args
@@ -225,10 +226,11 @@ function calibrate(): void {
       for (let wk = 1; wk <= FULL_CAREER_WEEKS && world.ending === null; wk++) {
         stepCareerWeek(world, rng, POLICIES[1])
         // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-        // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-        // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-        // player must not put a number on the scale.
-        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+        // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+        // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+        // the one this line always had: a caller that never asked the player must not put a number on
+        // the scale, so every row takes the bond-neutral answer of its OWN kind.
+        drainLifeBeats(world)
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
         if (wk % 13 !== 0) continue
@@ -455,7 +457,7 @@ function runCareer(arm: Arm, index: number): CareerSummary {
         }
       }
     }
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
     const wtaRank = world.kidRankWta

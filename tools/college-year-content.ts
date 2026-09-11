@@ -24,7 +24,7 @@
 //
 // ⚠ MEASUREMENT ONLY. Nothing under `src/` is touched and no save is written.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { NATIONAL_TEAM } from '../src/engine/nationalTeam'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -33,6 +33,7 @@ import { ENDINGS } from '../src/engine/ending'
 import type { Rng } from '../src/engine/rng'
 import type { WorldState } from '../src/engine/world'
 import type { CollegeTier } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 const args = process.argv.slice(2)
 const numOf = (n: string, d: number): number => {
@@ -132,7 +133,7 @@ function walkToFork(preset: (typeof PRESETS)[number], i: number): { world: World
 function walkCollege(at: { world: WorldState; rng: Rng; label: string }, tier?: CollegeTier): YearRow[] {
   const world = structuredClone(at.world)
   const rng = at.rng
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  drainLifeBeats(world)
   answerFork(world, 'college', tier)
   // ROUND 24 #5: the answer reserves – walk the gap to the September departure first.
   for (let gapW = 0; gapW < 54 && world.ending === null; gapW++) stepCareerWeek(world, rng, POLICIES[0])

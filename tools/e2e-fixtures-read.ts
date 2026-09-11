@@ -49,9 +49,10 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // career is over and the epilogue has replaced the shell. `unheard` is the same week with nothing
 // answered yet: her `lifeLog` row is still `answer: null`, so the week is stopped for the life beat
 // and `answerFork` refuses behind it (v73, the private life's wave 2). No other fixture can hold
-// that state, because every other recipe walks through `answerLifeBeat(world, 'listen')` on its way
-// past – see the recipe in tools/e2e-fixtures.ts, whose ONE difference from the others is that it
-// stops before that line runs.
+// that state, because every other recipe walks through `drainLifeBeats(world)` on its way past
+// (v74: it read `answerLifeBeat(world, 'listen')` while `'fork-opinion'` was the only beat kind) –
+// see the recipe in tools/e2e-fixtures.ts, whose ONE difference from the others is that it stops
+// before that line runs.
 export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 

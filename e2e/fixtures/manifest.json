@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 81955,
-      "payloadBytes": 81911,
-      "sha256": "a568ccb46bfc11101696669eeacb365e456f7e5a196b46d95310689e218f37c4",
+      "bytes": 81853,
+      "payloadBytes": 81809,
+      "sha256": "4a1244e8b1366aeae68545320b6f5aa1f5ca38b66ff558cc5bdc4e9b1e424dc4",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 81702,
-      "payloadBytes": 81658,
-      "sha256": "7d2ad9bed86d0f368d535f4ef2309876ee6a15857207c6f02c40bbc76109ff53",
+      "bytes": 81683,
+      "payloadBytes": 81639,
+      "sha256": "9efd26d49dbb888e27619d2b42474bb2d475fdbe3fadbd794f9b123521b78560",
       "seedsTried": 1,
       "facts": {
         "week": 242,
@@ -301,7 +301,7 @@
       "name": "unheard",
       "file": "unheard.tsave",
       "purpose": "The week a life beat stops – she has said what she wants at the fork and nobody has answered her yet.",
-      "seed": "e2e-unheard-0",
+      "seed": "e2e-unheard-13",
       "careerId": "c-e2e-unheard",
       "slot": "auto:c-e2e-unheard:a",
       "targetWeek": 242,
@@ -310,28 +310,28 @@
       "coachTier": "middle",
       "policy": "player",
       "profile": {
-        "kidName": "Luca",
-        "kidLastName": "Oberg",
+        "kidName": "Camila",
+        "kidLastName": "Nikolaidis",
         "country": "US"
       },
-      "bytes": 81680,
-      "payloadBytes": 81636,
-      "sha256": "474d4b427b68c4a3026ce85992096de1482b68f4855994cc13675463d429f326",
-      "seedsTried": 1,
+      "bytes": 82975,
+      "payloadBytes": 82931,
+      "sha256": "ad02b3d9be67c0958c52f68a4ff32e8b54bb404c95ccf90b7fefb45bbfb56bd1",
+      "seedsTried": 14,
       "facts": {
         "week": 242,
         "seasonIndex": 4,
         "ageYears": 18,
-        "fundsCents": 645047,
-        "kidRank": 5,
+        "fundsCents": 49206159,
+        "kidRank": 35,
         "rankedDomestic": false,
         "rankedItf": true,
         "rankedWta": true,
         "domesticPoints": 0,
-        "itfPoints": 436,
-        "wtaPoints": 426,
+        "itfPoints": 121,
+        "wtaPoints": 1140,
         "seasonsPlayed": 4,
-        "resultRows": 2215,
+        "resultRows": 2241,
         "feedEvents": 401,
         "financeWeeks": 60,
         "cohortSize": 199,
@@ -341,8 +341,8 @@
         "openKitLetters": 0,
         "hasActiveKitDeal": false,
         "rngMain": {
-          "s": 1814155461,
-          "n": 193371
+          "s": 895955431,
+          "n": 193373
         }
       }
     }

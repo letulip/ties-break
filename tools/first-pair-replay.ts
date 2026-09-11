@@ -72,8 +72,6 @@ import {
   answerRetirement,
   KID_ID,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { decodeExportFile } from '../src/engine/saveCodec'
 import { decideKnock } from '../src/engine/world/knock'
@@ -89,6 +87,7 @@ import { fastMatchProbability } from '../src/engine/match/engine'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { KIT_GRADES } from '../src/engine/equipment'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { drainLifeBeats } from './_lifeBeats'
 
 // --- args ----------------------------------------------------------------------------------------
 const args = process.argv.slice(2)
@@ -218,7 +217,7 @@ function clearRefusals(world: WorldState): string | null {
       if (prompt) chooseGift(world, prompt.options[0].id)
       else return 'birthday-stuck'
     } else if (refusal === 'fork') {
-      if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+      drainLifeBeats(world)
       answerFork(world, 'continue')
     } else if (refusal === 'retirement') {
       answerRetirement(world, false)

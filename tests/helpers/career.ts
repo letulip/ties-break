@@ -11,10 +11,17 @@
 // `import.meta.url` resolves to an http scheme and `new URL(rel, import.meta.url)` throws "The URL
 // must be of scheme file" at COLLECT time – the whole file then reports "no tests" rather than one
 // red assertion. Nothing here touches the filesystem; keep it that way.
-import { answerLifeBeat, createWorld, pendingLifeBeat, tickWeek, toSnapshot, LIFE_BEAT_OPTIONS, type WorldState } from '../../src/engine/world'
-import type { LifeBeatKind } from '../../src/shared/protocol'
+import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { PlayerProfile, Snapshot } from '../../src/shared/protocol'
+// ⚠ `drainLifeBeats` LIVES IN `tools/` AND IS RE-EXPORTED HERE, NOT COPIED (v74, T6b). It was written
+// in this file for T6 and then needed, word for word, by the 46 hand-written
+// `answerLifeBeat(world, 'listen')` sites across 38 tools – so the body moved to
+// `tools/_lifeBeats.ts` and this line is all that is left of it. The direction is the one the
+// repository already runs: `tests/` imports `tools/` in 25 files and no tool imports `tests/`. Two
+// copies of a helper whose whole job is «do not move the number» is exactly the drift that lets one
+// of them start moving it.
+export { drainLifeBeats } from '../../tools/_lifeBeats'
 
 /**
  * A career on `seed`, ticked `weeks` weeks, as a `Snapshot`.
@@ -29,35 +36,4 @@ export function careerSnapshot(weeks: number, seed: string, profile?: PlayerProf
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < weeks; i++) tickWeek(world, rng)
   return toSnapshot(world)
-}
-
-/** ⭐⭐ v74 (the private life, wave 3 – T6) – ANSWER WHATEVER BEAT IS WAITING, WITH THE ANSWER THAT
- *  COSTS NOTHING, AND KEEP ANSWERING UNTIL THE QUEUE IS EMPTY. Returns how many it cleared.
- *
- *  ⚠⚠ WHY THIS EXISTS, AND IT IS A FINDING RATHER THAN A CONVENIENCE. Until T6 there was exactly ONE
- *  beat kind, so `answerLifeBeat(world, 'listen')` was a complete answer and a dozen walk helpers
- *  across this suite wrote it out by hand. T6 adds `'met'`, raised on `knownWeek` – any week from her
- *  sixteenth on – and `'listen'` is not one of ITS answers: every one of those call sites threw «That
- *  is not one of the answers this beat offered» the moment a career met somebody, and the walkers
- *  that handled no beat at all simply stalled, because `advanceWeeks` refuses to tick while a row is
- *  unanswered. One helper, asked of the row's OWN kind, is what stops the next beat kind doing it
- *  again.
- *
- *  ⚠ BOND-NEUTRAL BY CONSTRUCTION. It takes the option whose delta is zero, so a beat a fixture never
- *  meant to live cannot move the number that fixture is measuring – and it THROWS if a kind has no
- *  such option rather than picking one, because a silently chosen answer would move every bond
- *  assertion in the suite by an unknown amount. */
-export function drainLifeBeats(world: WorldState, except?: LifeBeatKind): number {
-  let cleared = 0
-  for (let guard = 0; guard < 200; guard++) {
-    const row = pendingLifeBeat(world)
-    // ⚠ `except` IS FOR A FIXTURE WHOSE SUBJECT IS ONE OF THE KINDS: a walk that drained the beat it
-    // was built to reach would delete the thing the file is about. Everything else is cleared.
-    if (row === null || row.kind === except) return cleared
-    const free = LIFE_BEAT_OPTIONS[row.kind].find((o) => o.bond === 0)
-    if (!free) throw new Error(`${row.kind} has no bond-neutral answer – a walk cannot drain it without moving the number`)
-    answerLifeBeat(world, free.id)
-    cleared++
-  }
-  throw new Error('a life-beat queue that will not drain')
 }

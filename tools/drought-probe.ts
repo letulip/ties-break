@@ -68,8 +68,6 @@ import {
   tierOpenFor,
   PLAY_DOWN,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { kidAgeExact } from '../src/engine/world/age'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -77,6 +75,7 @@ import { SKILL_KEYS } from '../src/engine/development'
 import { coreForStanding } from '../src/engine/season/fieldPros'
 import type { LadderTrack, TierId } from '../src/engine/season/types'
 import { writeFileSync } from 'node:fs'
+import { drainLifeBeats } from './_lifeBeats'
 
 // -------------------------------------------------------------------------------------------------
 // args
@@ -344,10 +343,11 @@ function runCareer(cell: string, preset: Preset, index: number, policy: Policy):
     }
 
     // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-    // player must not put a number on the scale.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+    // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+    // the one this line always had: a caller that never asked the player must not put a number on
+    // the scale, so every row takes the bond-neutral answer of its OWN kind.
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 

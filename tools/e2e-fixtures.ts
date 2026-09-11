@@ -83,6 +83,7 @@ import {
   type FixtureManifest as FixtureManifestFile,
   type FixtureName,
 } from './e2e-fixtures-read'
+import { drainLifeBeats } from './_lifeBeats'
 
 // --- reading (the rot alarm and the Playwright harness both come through here) --------------------
 //
@@ -196,10 +197,11 @@ function openFixtureCareer(
  *  completeness (refuse until the game stops asking, which keeps a career playing). */
 function answerOpenQuestions(world: WorldState, fork: 'continue' | 'college' | 'stop'): void {
   // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-  // player must not put a number on the scale.
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+  // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+  // the one this line always had: a caller that never asked the player must not put a number on
+  // the scale, so every row takes the bond-neutral answer of its OWN kind.
+  drainLifeBeats(world)
   if (world.fork !== null && world.fork.answer === null) answerFork(world, fork)
   if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 }
@@ -447,9 +449,10 @@ const RECIPES: Recipe[] = [
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
         stepCareerWeek(world, rng, recipe.policy)
         // ⚠⚠ THE CHECK SITS BEFORE THE ANSWER, AND THAT ONE LINE IS THE WHOLE RECIPE. Every other
-        // career in this file walks through `answerOpenQuestions`, whose FIRST clause answers the
-        // beat with `'listen'` on the way past – so no committed fixture could ever boot holding a
-        // pending one, and e2e/life-beat.spec.ts had nowhere to start. This stops the walk on the
+        // career in this file walks through `answerOpenQuestions`, whose FIRST clause drains the
+        // beat on the way past (v74: `drainLifeBeats`, which was `answerLifeBeat(world, 'listen')`
+        // while `'fork-opinion'` was the only kind) – so no committed fixture could ever boot holding
+        // a pending one, and e2e/life-beat.spec.ts had nowhere to start. This stops the walk on the
         // tick that raised her row instead of one line later. Nothing is hand-written: the state is
         // reached by playing, exactly as every other recipe reaches its own.
         if (pendingLifeBeat(world) !== null) {

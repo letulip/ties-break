@@ -26,8 +26,6 @@ import {
   answerFork,
   answerRetirement,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { ageAtWeek, kidAgeExact, kidAgeYears, birthdayWeek } from '../src/engine/world/age'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -37,6 +35,7 @@ import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 import { KID_ID, recomputeKidRank } from '../src/engine/world'
 import { POLICIES, stepCareerWeek, zeroByTier } from './econ-bench'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { drainLifeBeats } from './_lifeBeats'
 
 const argv = process.argv.slice(2)
 const argOf = (name: string, fallback: number): number => {
@@ -203,10 +202,11 @@ function runCareer(seed: string, birthMonth: number, weeks: number): CareerOut {
     // The career can ask a question that HALTS the advance; a bench answers it and keeps going.
     // Same two answers `tools/ladder-floor.ts` gives, so the arms stay comparable.
     // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-    // player must not put a number on the scale.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+    // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+    // the one this line always had: a caller that never asked the player must not put a number on
+    // the scale, so every row takes the bond-neutral answer of its OWN kind.
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) {
       answerRetirement(world, world.retirementOffer.reason === 'plateau' || world.retirementOffer.final)

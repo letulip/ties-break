@@ -121,8 +121,12 @@ import {
   answerFork,
   forkWantOf,
   FORK_WANT_ANSWER,
+  // ⚠ v74 – the engine's own refusal string, so the drain below can tell a terminal latch (which is
+  // tolerated) from a beat kind with no bond-neutral answer (which must never be swallowed here).
+  CAREER_ENDED_REFUSAL,
 } from '../src/engine/world'
 import type { Temperament, WorldState } from '../src/engine/world'
+import { drainLifeBeats } from './_lifeBeats'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { isExamWeek, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -368,10 +372,40 @@ function answerTheBirthday(world: WorldState, career: Career): void {
 //   grind   presses the other way (−2) and CONTRADICTS it (−4)       = −6
 //
 // 11 raw points of arm separation, which is the whole of what wave 2 can be worth to bar 3.
+//
+// ⚠⚠ AND THE SAME PARAGRAPH IS WHY v74 NEARLY KILLED THIS FILE IN SILENCE. Wave 3's T6 added a
+// second beat kind, `'met'`, raised on `knownWeek` – any week from her sixteenth on, which is inside
+// this bench's own four seasons. `'back'` and `'press'` are not among ITS answers, so every attempt
+// threw, the `try/catch` below swallowed the throw, and the row stayed open forever: `answerFork`
+// refuses behind an unanswered beat, so from her sixteenth birthday on this bench answered NOTHING
+// and measured NOTHING, while exiting 0. Measured on a 4-seed grid before the repair:
+//
+//     arm       careers   beats   back  press  listen  fork with  fork against  bond @ fork
+//     care           16     379      0      0       0          0             0            –
+//     grind          16     463      0      0       0          0             0            –
+//
+// 842 rows raised, zero answered, both fork columns empty - and no error anywhere. The distinction
+// the block above draws is UNCHANGED: the two arms still answer a `'fork-opinion'` row and only that
+// row, deliberately, and `'listen'` is still in neither arm. What changed is that a beat this bench
+// never meant to price is now DRAINED bond-neutrally instead of being left to block her.
 
 /** WHAT HE SAYS. One answer per arm, from `LIFE_BEAT_OPTIONS`' own ids, and no third case: `listen`
- *  is deliberately in neither arm (see the block above). */
+ *  is deliberately in neither arm (see the block above).
+ *
+ *  ⚠ THE DRAIN GOES FIRST AND IS NOT AN ARM (v74, T6b). Any row that is not the fork opinion is a
+ *  beat this file does not measure – it takes the bond-neutral answer of its own kind (`metWary` is
+ *  0), so it cannot move bar 3 and cannot sit in front of the one row the arms are about. The arms
+ *  themselves are untouched: `beatsRaised` and `beatAnswers` still count ONLY `'fork-opinion'`, which
+ *  is what the census columns have always meant. */
 function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
+  try {
+    drainLifeBeats(world, 'fork-opinion')
+  } catch (e) {
+    // ⚠ ONLY the terminal latch is tolerated, and the test is the engine's own refusal string.
+    // Anything else – a beat kind that has no bond-neutral answer – is rethrown on purpose: a
+    // swallowed drain is the exact defect the block above records, and it cost this file a wave.
+    if (!(e instanceof Error) || e.message !== CAREER_ENDED_REFUSAL) throw e
+  }
   const pending = pendingLifeBeat(world)
   if (pending === null) return
   career.beatsRaised++

@@ -53,7 +53,7 @@ import {
   type Policy,
 } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import {answerFork, answerRetirement, createWorld, seasonIndexOf, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {answerFork, answerRetirement, createWorld, seasonIndexOf, type WorldState } from '../src/engine/world'
 import { fieldProsOf, kidPoints, rankingFor, tableSize } from '../src/engine/world/ladder'
 import { autoEndingViewOf, cheapestEntryFeeCents } from '../src/engine/world/endings'
 import { bankruptcyDue } from '../src/engine/ending'
@@ -66,6 +66,7 @@ import { SKILL_KEYS, rollPotential } from '../src/engine/development'
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type CareerEnding, type PlayerProfile } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { drainLifeBeats } from './_lifeBeats'
 
 // -------------------------------------------------------------------------------------------------
 // args
@@ -234,10 +235,11 @@ function runCareer(cell: string, preset: Preset, index: number, policy: Policy):
       })
     }
     // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-    // player must not put a number on the scale.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+    // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+    // the one this line always had: a caller that never asked the player must not put a number on
+    // the scale, so every row takes the bond-neutral answer of its OWN kind.
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
     // Guarded on having been PAID – money-decomposition's rule against the point-less dense-rank-1
