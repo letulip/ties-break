@@ -937,9 +937,20 @@ describe('the fence this step is judged by', () => {
     expect(src).not.toMatch(/from '(vue|pinia|\.\.\/components)/)
   })
 
-  it('⚠⚠ accrueSpirit is its OWN call, immediately after accrueCondition’s', () => {
+  it('⚠⚠ accrueSpirit is its OWN call, after accrueCondition’s and with only the arrival roll between', () => {
     // `accrueCondition`'s arity-2, zero-RNG contract is pinned in tests/condition.test.ts and must
     // not gain a parameter – so this asserts the CALL ORDER, not a signature.
+    //
+    // ⚠⚠ RE-AIMED 11.09 BY WAVE 3's T3, AND NOT WEAKENED. WHAT MOVED: one statement now sits between
+    // the two calls – `rollArrival(world)`, the private life's weekly arrival hazard
+    // (`engine/world/lifeBeat.ts` §5). WHY IT HAD TO: the attachment lifts spirit's effective
+    // baseline while the slot is full, so a roll placed after the spirit pass would hand the lift its
+    // first return-step a week late – «immediately BEFORE `accrueSpirit`» is the brief's own wording
+    // (docs/plans/life-wave-3-builder-2026-09.md §2 T3) and it is the order the lift is judged on.
+    //
+    // The claim this pin makes is therefore unchanged and the form is if anything tighter: the gap
+    // between the two calls is asserted EXACTLY, so nothing else can slide into it – a third
+    // statement appearing here goes red just as a reordering does.
     const body = worldFunction('resolveBodyAndPlanner')
     const code = body
       .split('\n')
@@ -947,7 +958,10 @@ describe('the fence this step is judged by', () => {
       .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
     const i = code.indexOf('accrueCondition(world, playedThisWeek)')
     expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
-    expect(code[i + 1]).toBe('accrueSpirit(world)')
+    const j = code.indexOf('accrueSpirit(world)')
+    expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
+    expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
+    expect(code.slice(i + 1, j), 'only the arrival roll separates them').toEqual(['rollArrival(world)'])
   })
 
   it('⚠⚠ the played-hurt −4 sits INSIDE the warning band’s own arm, and nowhere else', () => {

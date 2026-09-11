@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,371 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,376 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-419 exported names across 48 owning modules.
+425 exported names across 48 owning modules.
 
 ## Areas
 
@@ -17,9 +17,9 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 24 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 18 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
@@ -163,6 +163,35 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 - `unitPriceHistory` – `src/engine/world/assets.ts`
 - `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
 
+### `src/engine/world/lifeBeat.ts`
+
+THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
+
+- `activeEpisode` – `src/engine/world/lifeBeat.ts`
+- `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `arrivalEligible` – `src/engine/world/lifeBeat.ts`
+- `arrivalHazardFor` – `src/engine/world/lifeBeat.ts`
+- `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
+- `drawForkWant` – `src/engine/world/lifeBeat.ts`
+- `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
+- `drawRawLag` – `src/engine/world/lifeBeat.ts`
+- `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
+- `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
+- `FORK_WANTS` – `src/engine/world/lifeBeat.ts`
+- `forkStandingOf` – `src/engine/world/lifeBeat.ts`
+- `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
+- `forkWantOf` – `src/engine/world/lifeBeat.ts`
+- `forkWantWeights` – `src/engine/world/lifeBeat.ts`
+- `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
+- `lifeBeatListenFollowUp` – `src/engine/world/lifeBeat.ts`
+- `lifeBeatSaid` – `src/engine/world/lifeBeat.ts`
+- `lifeLogOf` – `src/engine/world/lifeBeat.ts`
+- `loveEpisodesOf` – `src/engine/world/lifeBeat.ts`
+- `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `rollArrival` – `src/engine/world/lifeBeat.ts`
+- `shaveLag` – `src/engine/world/lifeBeat.ts`
+
 ### `src/engine/world/ladder.ts`
 
 THE LADDER: where she stands, and what that standing opens.
@@ -215,29 +244,6 @@ THE GATES: condition, the doctor's veto, the layoff, and whether she may enter a
 - `recoveryBaseFor` – `src/engine/world/medical.ts`
 - `restRecoveryBonus` – `src/engine/world/medical.ts`
 - `withheldFreeWeekRecovery` – `src/engine/world/medical.ts`
-
-### `src/engine/world/lifeBeat.ts`
-
-THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
-
-- `activeEpisode` – `src/engine/world/lifeBeat.ts`
-- `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
-- `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
-- `drawForkWant` – `src/engine/world/lifeBeat.ts`
-- `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
-- `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
-- `FORK_WANTS` – `src/engine/world/lifeBeat.ts`
-- `forkStandingOf` – `src/engine/world/lifeBeat.ts`
-- `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
-- `forkWantOf` – `src/engine/world/lifeBeat.ts`
-- `forkWantWeights` – `src/engine/world/lifeBeat.ts`
-- `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
-- `lifeBeatListenFollowUp` – `src/engine/world/lifeBeat.ts`
-- `lifeBeatSaid` – `src/engine/world/lifeBeat.ts`
-- `lifeLogOf` – `src/engine/world/lifeBeat.ts`
-- `loveEpisodesOf` – `src/engine/world/lifeBeat.ts`
-- `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
-- `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 
 ### `src/engine/world/entryCaps.ts`
 

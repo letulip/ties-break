@@ -64,6 +64,16 @@ describe('the byte-identity of a career that does not travel', () => {
     // schema move should ever be. The step that adds the writer will answer the other question here,
     // by reproducing or by not.
     // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    //
+    // ⭐⭐⭐ ANSWERED 11.09 BY T3/T5, AND THE ANSWER IS BOTH HALVES AT ONCE – this rung GREEN beside a
+    // RED freeze, which is the third combination the paragraph above did not name and the most
+    // informative one. AN ATTACHMENT DOES REACH A 156-WEEK CAREER: `eliteGrinder` is a fiery girl
+    // (×1.6, who-she-is §4's likeliest row) who turns sixteen at about week 128 and meets somebody
+    // at 137, so her live hash moved and was re-frozen. This case stays green because the move is
+    // CONFINED TO THE NEW KEY: the per-key diff is 1 of 79, `loveEpisodes` alone, and peeling it
+    // returns v73 byte for byte on all three careers. So the pair reads «a career moved, and only
+    // where the wave was allowed to move it» – see `FROZEN.eliteGrinder`'s own block for the diff,
+    // the row and the control.
     expect(careerHashAtSchema(5, 0, 73), '25k · middle coach · grinder').toBe(PRE_V74.middleGrinder)
     expect(careerHashAtSchema(8, 0, 73), '120k · elite coach · grinder').toBe(PRE_V74.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 73), '8k · self-coached · player').toBe(PRE_V74.selfTravelling)

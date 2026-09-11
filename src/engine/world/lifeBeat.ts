@@ -50,9 +50,10 @@
 // ⚠ AND SPIRIT IS READ, NEVER WRITTEN. Nothing in this file touches `world.spirit`: the want-draw
 // reads it, the parent's answer moves `bond` alone (§4a.2's law – life moves spirit, his words move
 // the standing). `applyBondDelta` is the only writer this file calls.
-import { rngFromSeed } from '../rng'
+import { pickInt, rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
-import { applyBondDelta, bondBandOf, moodRegisterOf, spiritBandOf, temperamentFor, type Temperament } from '../spirit'
+import { applyBondDelta, bondBandOf, moodRegisterOf, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
+import { kidAgeExact } from './age'
 import { addEvent } from './ledger'
 // ⚠ FROM ./constants, NOT ./endings, AND IT IS A CYCLE FIX RATHER THAN A PREFERENCE – the same swap
 // `world/entries.ts` records at its own import. `endings.ts` imports THIS module (it raises the
@@ -565,4 +566,204 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
     // would put a conversation in the Money breakdown.
     text: ANSWER_EVENT[chosen.id],
   })
+}
+
+// =================================================================================================
+// 5. THE ARRIVAL – ⚠⚠ WHETHER SOMEONE EXISTS AT ALL (the private life, wave 3: T3 + T5)
+// =================================================================================================
+//
+// `docs/plans/life-wave-3-builder-2026-09.md` §2 T3 and §2 T5. T3 is the weekly hazard and the row it
+// appends; T5 is the two draws that fill the row in. THEY ARE ONE MOMENT IN THE CODE and could not
+// honestly be two: the brief's own T3 says the row carries «`knownWeek`/`wants` from T5's draws,
+// computed at this moment», so a T3 that shipped alone would have had to write placeholder values –
+// knowingly-wrong behaviour standing in the tree waiting for a later commit to correct it.
+//
+// ⚠⚠ THE THREE STREAMS AND NOTHING ELSE (build plan §1f, and §3 of the brief quotes it verbatim):
+//
+//     seed:life:arrival:<week>             does someone appear, this week
+//     seed:life:partner:<sinceWeek>:wants  what she wants done with the news
+//     seed:life:partner:<sinceWeek>:lag    how long the parent waits to hear it, RAW
+//
+// SPLIT KEYS, ONE VALUE PER KEY (the 09.09 stream law), so a read added to one of them later can
+// never shift a neighbour's value. `seed:life:smalltalk:<week>` is T8's and `seed:life:ends:*` is
+// WAVE 4's – neither exists on this tree and neither may be created early.
+//
+// ⚠⚠ ZERO DRAWS ON MAIN, AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is CLAUDE.md invariant 2
+// and is structural: nothing here takes an `Rng`, so the frozen capture (41550 / e6b0c709) cannot
+// see this file. The second is the brief's load-bearing rule and is enforced by `rollArrival`'s very
+// first line – the gate returns BEFORE the hazard stream is ever derived, never draw-and-discard.
+//
+// ⚠ AND A MEASURED NOTE ON HOW THAT RULE IS TESTED, because it changes what the test has to be. The
+// three keys above carry the WEEK in them, so every week derives a fresh stream from its own key and
+// no draw can shift any other week's value: «stream alignment» is true here BY CONSTRUCTION, and a
+// two-worlds alignment comparison stays green even under a draw-and-discard mutation. The honest net
+// is therefore a COUNT of the keys the gate reaches, and that is what tests/wave3-arrival.test.ts
+// asserts (§B) – see its ARM ledger, where the alignment arm is recorded as the one that did NOT go
+// red and says so.
+
+/** HER AGE THIS WEEK, fractional. ⚠ `kidAgeExact` TAKES (week, month, day) AND NEVER A WORLD – the
+ *  whole engine spells it this way (`world/medical.ts`, `world/coachMarket.ts`, `world/player.ts`),
+ *  and it is wrapped here only so the gate and the hazard cannot ask the question two ways. */
+function kidAgeNow(world: WorldState): number {
+  return kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay)
+}
+
+/** WHO SHE IS, with `accrueSpirit`'s own courtesy for probe worlds hand-built in tests and benches:
+ *  the field is required on every career that was created or migrated, and re-deriving it from the
+ *  seed is the SAME function `createWorld` drew it with, so the fallback cannot invent a different
+ *  girl from the one the save holds. */
+function temperamentOf(world: WorldState): Temperament {
+  return world.temperament ?? temperamentFor(world.seed)
+}
+
+/** THE LAST WEEK AN ATTACHMENT ENDED, or null when none ever has.
+ *
+ *  ⚠ THE MAXIMUM AND NOT THE TAIL'S, and the two agree on every state the sim can produce: rows are
+ *  appended in calendar order and an ending cannot precede its own beginning. Where they differ is a
+ *  poked save, and there the maximum is the safe reading – «the most recent time something ended» is
+ *  what a cooldown is about, and reading a stale earlier row would let the next arrival come early.
+ *
+ *  ⚠ NULL IS «CLEAR», NEVER «BLOCKED» (brief §2 T3: «No ended row yet ⇒ clear»). A career that has
+ *  lived nothing is not serving a cooldown for it. */
+function lastEndedWeek(world: WorldState): number | null {
+  let last: number | null = null
+  for (const row of loveEpisodesOf(world)) {
+    if (row.endedWeek !== null && (last === null || row.endedWeek > last)) last = row.endedWeek
+  }
+  return last
+}
+
+/** ⭐⭐ THE GATE – ALL THREE, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
+ *
+ *  ⚠⚠ THIS IS THE LOAD-BEARING INVARIANT OF THE STEP and the reason it is a predicate of its own
+ *  rather than three `if`s inlined above a roll: a reader has to be able to see, in one place, that
+ *  the whole of eligibility is decided before any stream exists. Pure, zero draws, no writes.
+ *
+ *  1. ⭐ SIXTEEN – RULED 23.08, confirmed for this wave (who-she-is §4, brief §4's first row).
+ *  2. `activeEpisode(world) === null` – nobody new appears while someone is already there. This is
+ *     also what makes the tail reading of `activeEpisode` safe: only the tail can ever be open,
+ *     because this line refuses to append behind an open row.
+ *  3. THE COOLDOWN, per temperament (who-she-is §4's `cooldown` column).
+ *
+ *  ⚠ THE COOLDOWN IS UNREACHABLE ON THIS TREE, AND IT IS HERE ON PURPOSE. Wave 3 ships arrivals
+ *  ONLY: nothing writes `endedWeek`, so `lastEndedWeek` is null on every career the engine can
+ *  produce and clause 3 is always true in play. It lands now – with its own tests, run against
+ *  hand-built worlds that DO carry an ended row – so that wave 4, which writes the endings, changes
+ *  nothing in this function and inherits a cooldown that was tested before it had a caller. Deleting
+ *  it as dead code would be the defect, not the tidy-up. */
+export function arrivalEligible(world: WorldState): boolean {
+  const life = ECONOMY.life
+  if (kidAgeNow(world) < life.ageGate) return false
+  if (activeEpisode(world) !== null) return false
+  const ended = lastEndedWeek(world)
+  if (ended !== null && world.week - ended < life.cooldownWeeks[temperamentOf(world)]) return false
+  return true
+}
+
+/** THE WEEKLY HAZARD, as one probability (who-she-is §4: base 1.0%/wk before 18 and 2.5% from 18,
+ *  times the temperament multiplier). Takes PRIMITIVES rather than the world – `forkStandingOf`'s
+ *  own doctrine one section up – so the bench and the corridor tests can sweep the table directly
+ *  instead of posing a world per cell. */
+export function arrivalHazardFor(age: number, temperament: Temperament): number {
+  const life = ECONOMY.life
+  const base = age < life.adultFrom ? life.arrivalPerWeek.minor : life.arrivalPerWeek.adult
+  return base * life.temperamentMult[temperament]
+}
+
+/** ⭐ DRAW 1 OF 2 – WHAT SHE WANTS DONE WITH IT, on `seed:life:partner:<sinceWeek>:wants`.
+ *
+ *  Weighted toward the register she was born with (who-she-is §4: «open girls draw `open` ... at
+ *  ~70%») and free to come out the other way, which is the point: a tendency, never a rule, and the
+ *  30% is what stops an open girl being a stereotype who never once keeps something to herself.
+ *
+ *  ⚠ (seed, calendar)-KEYED, NEVER (seed, choice)-KEYED – `drawForkWant`'s own argument above. The
+ *  arrival week is calendar, so a player cannot re-roll her preference by playing the week
+ *  differently. MAIN is not reached. */
+export function drawPartnerWants(seed: string, sinceWeek: number, temperament: Temperament): LoveEpisode['wants'] {
+  const own = temperamentOpenness(temperament)
+  const roll = rngFromSeed(`${seed}:life:partner:${sinceWeek}:wants`)()
+  if (roll < ECONOMY.life.wantsOwnRegister) return own
+  return own === 'open' ? 'private' : 'open'
+}
+
+/** ⭐ DRAW 2 OF 2 – HOW LONG THE PARENT WAITS, **RAW**, on `seed:life:partner:<sinceWeek>:lag`.
+ *
+ *  who-she-is §4's «Feed lag» table, verbatim: open – 0 with p 0.45, else uniform 1..5; private –
+ *  0 with p 0.10, else uniform 2..12.
+ *
+ *  ⚠ IT TAKES THE OPENNESS REGISTER, NOT THE DRAWN `wants`, and the two are independent on purpose:
+ *  a private girl who this time decided to say it out loud is still a girl who takes a while to get
+ *  round to it. §4's neighbouring rows are what settle the reading – the «Wants weights» row says
+ *  «open GIRLS», so «open» in the lag row above it is the same girl and not a drawn value.
+ *
+ *  ⚠ TWO READS OF ONE PRIVATE STREAM, and that is still ONE VALUE PER KEY: the p-zero test and the
+ *  uniform are two halves of a single distribution, and the stream they share is derived here and
+ *  discarded here. The split-key law is about two DIFFERENT facts never sharing a key, which is why
+ *  `wants` is above with a key of its own. */
+export function drawRawLag(seed: string, sinceWeek: number, openness: 'open' | 'private'): number {
+  const table = ECONOMY.life.lag[openness]
+  const r = rngFromSeed(`${seed}:life:partner:${sinceWeek}:lag`)
+  if (r() < table.zeroChance) return 0
+  return pickInt(r, table.min, table.max)
+}
+
+/** ⭐⭐ THE BOND SHAVE – the raw lag shortened by what the parent has actually built with her.
+ *
+ *  ⚠⚠ AND THIS IS THE INPUT-INDEPENDENCE STORY OF THE WHOLE WAVE, so it is written down here rather
+ *  than assumed. CLAUDE.md invariant 2 says a player's choices may never re-roll the world's dice.
+ *  They do not:
+ *
+ *    * THE DRAW is keyed on (seed, calendar) alone – `sinceWeek` is therefore IDENTICAL across a
+ *      no-action run and an action-laden run of one seed, and T11's bench asserts exactly that;
+ *    * THE SHAVE is a pure function of `bond`, which is the history the player built by showing up.
+ *      So `knownWeek` MAY differ between two runs of one seed, DELIBERATELY.
+ *
+ *  That is a relationship affecting DISCLOSURE, not dice being re-rolled – who-she-is §2a channel 1,
+ *  «she trusts THIS parent». It is the one place in this wave where a player choice is allowed to
+ *  show, and anything that made `sinceWeek` move with it would be the bug this note exists to name.
+ *
+ *  ⚠ THE DIVISORS ARE THE ARCHITECT'S CONCRETISATION (brief §4, marked ⚠ there), bench-visible –
+ *  and `strained`/`cold` divide by 1, so a distant home hears about it exactly when the dice said. */
+export function shaveLag(raw: number, band: BondBand): number {
+  return Math.floor(raw / ECONOMY.life.bondShave[band])
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE writer of a `loveEpisodes` row.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED. An ineligible week takes ZERO
+ *  draws – never draw-and-discard – which is the brief's own load-bearing rule for the step. The
+ *  line order below IS the rule; moving the roll above the gate would break it silently, because
+ *  every key here carries its own week and a discarded draw changes no other week's value.
+ *
+ *  ⚠ THE BOND IT SHAVES WITH IS LAST WEEK'S SETTLED VALUE, because this runs before `accrueSpirit`
+ *  (see the call site in `world/phaseHerWeek.ts`) and `accrueSpirit` is what regresses `bond` toward
+ *  70 each week. That is the reading the design wants – «the bond band AT the arrival week» is what
+ *  the parent had built by the time someone appeared, not what this same tick is about to do to it.
+ *
+ *  ⚠ IT RAISES NO BEAT AND WRITES NO FEED ROW. Delivery is T6's, on `knownWeek`, and a beat raised
+ *  here would tell the parent the moment someone appeared – which is the one thing the lag exists to
+ *  prevent. The row is a fact about HER; nobody has been told anything yet.
+ *
+ *  ⚠ AND `endedWeek` IS ALWAYS NULL – wave 4 writes it, and `activeEpisode`'s tail reading plus the
+ *  gate's clause 2 are together why the list can only ever end in at most one open row. */
+export function rollArrival(world: WorldState): void {
+  if (!arrivalEligible(world)) return
+  const temperament = temperamentOf(world)
+  const hazard = arrivalHazardFor(kidAgeNow(world), temperament)
+  // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY. `<` and not `<=`: a hazard of 0 must be impossible rather
+  // than merely unlikely, and `rngFromSeed` can return exactly 0.
+  if (rngFromSeed(`${world.seed}:life:arrival:${world.week}`)() >= hazard) return
+  const sinceWeek = world.week
+  const wants = drawPartnerWants(world.seed, sinceWeek, temperament)
+  const raw = drawRawLag(world.seed, sinceWeek, temperamentOpenness(temperament))
+  const knownWeek = sinceWeek + shaveLag(raw, bondBandOf(world.bond ?? ECONOMY.bond.start))
+  // ⚠ THE `??=` IS `raiseLifeBeat`'s OWN COURTESY and for the same reason: v74 makes the field
+  // required and back-fills `[]` on every save, but a probe world hand-built in a test or a bench is
+  // not a save and predates every field it does not set.
+  world.loveEpisodes ??= []
+  // ⚠ `id` AND `partnerId` ARE THE SAME STRING TODAY AND ARE STILL TWO FIELDS – step 6's naming pass
+  // is when the identity of the ROW and the identity of the PERSON stop being the same thing, and a
+  // schema that had conflated them could not tell them apart afterwards (the T1 note on the type).
+  const id = `p:${sinceWeek}`
+  world.loveEpisodes.push({ id, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: id })
 }

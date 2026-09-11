@@ -1583,8 +1583,53 @@ export const FROZEN = {
    *  APPENDED KEY – see the block on `middleGrinder`. `PRE_V65.eliteGrinder` is the byte-level half:
    *  drop `fieldSeasonTitles`, roll the number back to 64, and the merge value above comes back. So
    *  this career carries all three of the day's moves and its constant matches no branch that exists,
-   *  which is what a renumbered collision looks like from inside a fixture. */
-  eliteGrinder: 'a26fd07fe881dfd6426fcf33792c7e7b99f4cdf7fcdd5c81ff377716bf2d8b9d',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+   *  which is what a renumbered collision looks like from inside a fixture.
+   *
+   *  ⭐⭐⭐ AND MOVED AGAIN – ALONE, AND **SOMEONE APPEARED IN HER LIFE** (11.09, the private life's
+   *  wave 3 T3/T5: the arrival hazard). This is the answer the v74 rung's own note said would come:
+   *  «T1 ships the list ... and NO WRITER AT ALL; `rollArrival` lands in T3. ... The step that adds
+   *  the writer will answer the other question here, by reproducing or by not.» IT DOES NOT
+   *  REPRODUCE, and that is the correct answer rather than a defect – the hazard opens at sixteen
+   *  (ruled 23.08), these careers walk 156 weeks, and this girl turns sixteen at about week 128. She
+   *  has ~28 eligible weeks and she is FIERY, the ×1.6 row of who-she-is §4's table – the likeliest
+   *  girl in the game to meet somebody.
+   *
+   *  ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, and the control was **MY OWN
+   *  CHANGE REVERTED IN PLACE** – the single call site `rollArrival(world)` in
+   *  `world/phaseHerWeek.ts` commented out, which is the whole of the behavioural change – rather
+   *  than the previous commit. A worktree was not available for this step (the brief forbids one),
+   *  and in place is the same control here: nothing else was uncommitted and no other agent was
+   *  working. `tools/frozen-key-diff.ts` on all three careers, 156 weeks:
+   *
+   *    · 5/0 (25k middle, grinder)              – **0 keys. Byte-identical.** `loveEpisodes` stayed
+   *      `4f53cda18c2b`, which is the hash of `[]`.
+   *    · 0/1 (8k working, self-coached, PLAYER)  – **0 keys. Byte-identical.** `loveEpisodes` `[]`.
+   *    · 8/0 (120k wealthy, elite, grinder)      – **EXACTLY 1 KEY OF 79, and it is `loveEpisodes`**
+   *      (`4f53cda18c2b` -> `f7c55b26eeff`). Every other key – `rngMain`, `results`, `events`, the
+   *      wallet, the body, the skills, `condition`, `bond`, `spirit` – byte-identical.
+   *
+   *  ⚠⚠ THE ROW ITSELF, PRINTED RATHER THAN INFERRED, because «one key moved» only reassures if what
+   *  is in it is the thing the step claims to write:
+   *
+   *      [{ id: 'p:137', sinceWeek: 137, endedWeek: null, knownWeek: 139, wants: 'open',
+   *         partnerId: 'p:137' }]
+   *
+   *  One arrival, week 137, `endedWeek` null (wave 3 never writes an ending), a two-week disclosure
+   *  lag – her bond is 50 by then, which is `strained`, so the shave divides by 1 and the raw draw
+   *  was 2. Open register, open wants. Nothing invented and nobody named.
+   *
+   *  ⚠⚠ AND `rngMain` IS BYTE-IDENTICAL, which is the load-bearing half: `rollArrival` takes no
+   *  `Rng` and pulls only from `seed:life:arrival:<week>` and the two `seed:life:partner:*` keys.
+   *  The frozen MAIN capture is unmoved and NOT re-pinned – 41550 / e6b0c709, green on this tree.
+   *
+   *  ⚠ EVERY ROLLBACK IDENTITY BELOW STILL HOLDS, `PRE_V74`'s included: peeling `loveEpisodes` and
+   *  rolling the number back to 73 reproduces the v73 hashes on all three careers, because the peel
+   *  drops the key whatever is in it and nothing else in the world moved. Only the three LIVE hashes
+   *  for THIS career move – `FROZEN`, `PRE_R28B` and `PRE_NAME_VERA` – and not one `middleGrinder`
+   *  or `selfTravelling` value in this file is touched. Every new value was computed by RUNNING the
+   *  exported helpers (`careerHash`, `careerHashUnderTheWindowRule`, `careerHashUnderTheOldName`),
+   *  never transcribed from a failure message. */
+  eliteGrinder: 'cb8b718ca39ee7c77753299b273c008b4e47770aa106ad461c0225984386df7c',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -1963,10 +2008,19 @@ export const PRE_V69 = {
  *  ⚠ IT IS NOT A SCHEMA ROLL-BACK, so it is `careerHashUnderTheOldName` and not `careerHashAtSchema`
  *  that reproduces it – the same distinction `PRE_R28B` makes, and for the same reason: what moved
  *  is a VALUE a career carries, not a version number stamped on it. The per-key diff, the two keys
- *  it moved and why the second one is her name being printed are on that function. */
+ *  it moved and why the second one is her name being printed are on that function.
+ *
+ *  ⚠ RE-STAMPED FOR WAVE 3's ARRIVAL HAZARD (11.09) – `eliteGrinder` ALONE, in step with `FROZEN`
+ *  and `PRE_R28B`, and the reason is set out in full over `FROZEN.eliteGrinder`: one key of
+ *  seventy-nine moves, `loveEpisodes`, because someone appears in her life at week 137. ⚠⚠ AND THE
+ *  IDENTITY THIS SET ASSERTS IS THE ONE THING THE RE-STAMP HAD TO PRESERVE, which it does: the
+ *  arrival stream is keyed on `seed:life:arrival:<week>` and the girl's NAME is no part of any key
+ *  in this wave, so putting `Vera` back before birth still reproduces – the same girl still meets
+ *  the same person in the same week, under either name. A wave that had keyed a draw on her name
+ *  would be red here beside a green freeze, which is exactly what this set is for. */
 export const PRE_NAME_VERA = {
   middleGrinder: 'b0634a0c58c172f308b92e0d5c83b9de23601795d45408eb785eb8f11ea41c60',
-  eliteGrinder: '2988dafd8bafda306b012fd1d816c821d44aa36a37f2b141adc4014c2e993fda',
+  eliteGrinder: '84e2b501adea73959915ff6fbd1f20cfdaef53c70cae43c7a6aa8fb861e99ccb',
   selfTravelling: '129ea330a214baa687dd48972b6272acbfd8637cefb346da44d0ef459b950857',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
@@ -2076,9 +2130,16 @@ export const PRE_V66 = {
  *  `schemaVersion`, with `offers` – the only thing this helper's rewrite reads – byte-identical. All
  *  three relations still hold: `middleGrinder` and `selfTravelling` equal their `FROZEN` twins and
  *  `eliteGrinder` differs by the one moved letter. The numbers moved together, the argument did not. */
+/** ⚠ AND RE-STAMPED FOR WAVE 3's ARRIVAL HAZARD (11.09) – `eliteGrinder` ALONE, the same one value
+ *  `FROZEN` moved, for the reason set out in full over `FROZEN.eliteGrinder`: someone appears in her
+ *  life at week 137 and `loveEpisodes` is the single key of seventy-nine that moves. The identity
+ *  this set asserts is untouched – the window rewrite reads only `offers`, which the per-key diff
+ *  reports byte-identical, so putting the deadline back still returns the pre-ruling career. ⚠ AND
+ *  THE RELATION HOLDS AS BEFORE: this career's inbox was never written, so `PRE_R28B.eliteGrinder`
+ *  still EQUALS `FROZEN.eliteGrinder`, both at the new value. */
 export const PRE_R28B = {
   middleGrinder: '50374fbf57698615fea9b81de66c1da207fe08e96fd9909836e157bb9a837373',
-  eliteGrinder: 'a26fd07fe881dfd6426fcf33792c7e7b99f4cdf7fcdd5c81ff377716bf2d8b9d',
+  eliteGrinder: 'cb8b718ca39ee7c77753299b273c008b4e47770aa106ad461c0225984386df7c',
   selfTravelling: '8c52158189bf3b0ac0ea8bd9164a5fd168bdeeb6ab4f256c7885960a15c05939',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze

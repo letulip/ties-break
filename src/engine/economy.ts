@@ -3500,6 +3500,78 @@ export const ECONOMY = {
     },
   },
 
+  // =================================================================================================
+  // ⭐⭐ THE PRIVATE LIFE, WAVE 3 – «SOMEONE EXISTS»: WHETHER HE ARRIVES, AND WHEN THE PARENT HEARS
+  // =================================================================================================
+  //
+  // ITS OWN BLOCK BESIDE `spirit` AND `bond` for the reason those two are beside each other rather
+  // than nested: three numbers, three rules. Spirit is weather, bond is a relationship, and THIS is
+  // a biography – a thing that happens to her once and then stays happened.
+  //
+  // ⚠ EVERY VALUE BELOW IS SOURCED TO `docs/specs/who-she-is-2026-09.md` §4 («The numbers – all
+  // proposals for the bench»), and THAT TABLE WINS ON ANY DRIFT. Two of them are the architect's
+  // concretisations rather than the spec's own rows and are marked ⚠ where they sit – they are
+  // bench-visible by design, so his word can move them without touching a line of design.
+  //
+  // ⚠ THE LIFT THAT BELONGS TO THIS LAYER IS NOT HERE. §1b's effective-baseline constant lives in
+  // `spirit` above, declared and deliberately unread, because it is a SPIRIT number that this layer
+  // merely switches on; wave 3's T4 wires it where it already stands. Moving it here would have
+  // broken the pin in tests/spirit.test.ts that guards its absence of a reader.
+  life: {
+    /** ⭐ THE AGE GATE – RULED 23.08 and confirmed for this wave. Read against `kidAgeExact`, the
+     *  FRACTIONAL age, so a girl turns eligible in the week she turns sixteen and not in the January
+     *  of the year she will. A whole-years read would have handed a December girl eleven free
+     *  months. */
+    ageGate: 16,
+    /** The step in the hazard below: under this she is at school and the base rate is the low one,
+     *  from it she is not. Named rather than inlined so the two rows below cannot drift from it. */
+    adultFrom: 18,
+    /** THE BASE WEEKLY ARRIVAL HAZARD, before temperament (who-she-is §4, on the build plan's base:
+     *  «arrival 1.0%/wk before 18, 2.5% from 18»). Per WEEK, not per season: the roll is one uniform
+     *  on `seed:life:arrival:<week>` and nothing accumulates between weeks. */
+    arrivalPerWeek: { minor: 0.010, adult: 0.025 },
+    /** ...and how hard each girl leans on it (who-she-is §4's hazard-multiplier table, verbatim).
+     *  ⚠ THE CENSUS BARS ARE THIS TABLE'S OTHER FACE – the expected biographies in the same row of
+     *  the same table («fiery ~4–6 romances, quiet first arrival median ~18») are what T11 measures,
+     *  so a number moved here moves an acceptance bar and is never a local tweak. */
+    temperamentMult: { sunny: 1.2, fiery: 1.6, quiet: 0.6, deep: 0.5 },
+    /** THE WEEKS AFTER AN ENDING BEFORE ANYONE MAY APPEAR AGAIN (who-she-is §4, the `cooldown`
+     *  column). ⚠ UNREACHABLE IN WAVE 3 AND SHIPPED ANYWAY: nothing in this wave writes
+     *  `endedWeek`, so no career can ever be inside a cooldown – it lands now, with its tests, so
+     *  that wave 4 (which writes the endings) changes nothing here. */
+    cooldownWeeks: { fiery: 12, sunny: 26, quiet: 39, deep: 52 },
+    /** THE RAW FEED LAG, in weeks, by her OPENNESS REGISTER (who-she-is §4, «Feed lag», verbatim:
+     *  open – 0 with p 0.45, else uniform 1..5; private – 0 with p 0.10, else uniform 2..12).
+     *
+     *  ⚠ INDEXED BY THE REGISTER SHE WAS BORN WITH, not by the `wants` she drew for this particular
+     *  attachment. The two are separate facts on separate keys and are free to disagree; §4's own
+     *  neighbouring row («open girls draw `open` at ~70%») is what settles which sense of the word
+     *  «open» each table is keyed on – there the girl, here the girl.
+     *
+     *  ⚠ RAW, and the bond band shortens it afterwards (`bondShave`). This is the world's dice; the
+     *  shave is the parent's history. */
+    lag: {
+      open: { zeroChance: 0.45, min: 1, max: 5 },
+      private: { zeroChance: 0.10, min: 2, max: 12 },
+    },
+    /** HOW HEAVILY THE `wants` DRAW LEANS ON HER OWN REGISTER (who-she-is §4, «Wants weights»: «open
+     *  girls draw `open` ... at ~70%»). A TENDENCY and never a rule – the other 30% is the whole
+     *  reason the want is drawn instead of read off the temperament, and it is what stops an open
+     *  girl being a stereotype who never once keeps something to herself. */
+    wantsOwnRegister: 0.70,
+    /** ⚠ THE BOND SHAVE – THE ARCHITECT'S CONCRETISATION (wave-3 brief §4), bench-visible, NOT a
+     *  ruling: the divisor the raw lag is floored by, read off the bond band AT the arrival week.
+     *  who-she-is §2a channel 1 is the design it serves – «she trusts THIS parent» – and 1 is the
+     *  identity, so `strained` and `cold` pay the raw lag in full.
+     *
+     *  ⚠⚠ THIS IS THE ONE PLACE IN THE WAVE WHERE A PLAYER CHOICE IS ALLOWED TO SHOW, and it is
+     *  deliberate. The DRAW is keyed on (seed, calendar) alone, so `sinceWeek` is identical across
+     *  every run of one seed – CLAUDE.md invariant 2's input-independence, intact. The SHAVE is a
+     *  pure function of the relationship the player built, so `knownWeek` MAY differ between runs.
+     *  That is the relationship affecting DISCLOSURE, not the world's dice being re-rolled. */
+    bondShave: { close: 3, steady: 2, strained: 1, cold: 1 },
+  },
+
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
   // blocks (season-week offsets, blacked out for tournaments). Off-season weeks (49-51) are already
   // event-free and are treated as blackout too (see isBlackoutWeek in world.ts).

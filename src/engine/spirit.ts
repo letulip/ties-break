@@ -81,6 +81,24 @@ export function temperamentIntensity(temperament: Temperament): 'steady' | 'inte
   return temperament === 'sunny' || temperament === 'quiet' ? 'steady' : 'intense'
 }
 
+/** THE OPENNESS AXIS, projected – `temperamentIntensity`'s twin, and the other half of the one trait.
+ *  Owns «her flow with people» (who-she-is §1): wave 3's private life reads it for BOTH partner draws
+ *  – how likely she is to want the thing said out loud, and how long the parent waits to hear it –
+ *  and nothing else in the engine reads it yet.
+ *
+ *  ⚠ A PROJECTION, NEVER A SECOND TRAIT. The mapping is the one this section's header already states
+ *  (`sunny`/`fiery` are the open pair, `quiet`/`deep` the private one), written down ONCE and here,
+ *  beside its twin – so `world/lifeBeat.ts` does not grow a second spelling of the same axis, which
+ *  is the drift `temperamentFor`'s own ⚠⚠ note refuses one paragraph down.
+ *
+ *  ⚠ AND THE UNION IS DELIBERATELY `LoveEpisode['wants']`'s. Her REGISTER (born this way) and her
+ *  drawn WANT about one particular attachment are two different facts that happen to be spelled with
+ *  the same two words; the draw weights one toward the other (`drawPartnerWants`) and they are free
+ *  to disagree – which is the whole reason the want is drawn at all instead of read off here. */
+export function temperamentOpenness(temperament: Temperament): 'open' | 'private' {
+  return temperament === 'sunny' || temperament === 'fiery' ? 'open' : 'private'
+}
+
 /**
  * ⚠⚠ THE ONE DERIVATION. `createWorld` calls this and the v71 -> v72 migration calls THIS SAME
  * FUNCTION on the career's own seed – which is the entire reason a career already in flight simply

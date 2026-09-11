@@ -32,6 +32,10 @@ import { mergedWtaRanking, universeForTier } from '../season/fieldPros'
 import { kidSeedIndexIn, runTournament, selectEntrants, weekFieldExclusion } from '../season/tournament'
 import { KID_ID } from './constants'
 import { addEvent } from './ledger'
+// ⚠ ONE-WAY ARROW. `world/lifeBeat.ts` imports `./ledger`, `./constants`, `./age`, `../spirit`,
+// `../economy` and `../rng` – never a phase – so this import closes no runtime loop, the same shape
+// `world/endings.ts` already uses to raise the fork-opinion row.
+import { rollArrival } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -218,6 +222,27 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   expireRecoveryBuff(world)
   const playedThisWeek = isCompetitionWeek(world) // injured on the play week => walkover
   accrueCondition(world, playedThisWeek)
+  // ⭐⭐ 1c-arrival (v74, the private life wave 3 – T3/T5): DOES SOMEONE EXIST, THIS WEEK.
+  //
+  //        ⚠⚠ THE ORDER IS THE POINT, AND IT IS «IMMEDIATELY BEFORE `accrueSpirit`», NOT MERELY
+  //        «somewhere in the phase». The attachment lifts spirit's effective baseline while the slot
+  //        is full (wave 3's T4, the next step, reads `activeEpisode` inside `accrueSpirit`), so a
+  //        roll placed AFTER the spirit pass would hand the lift its first return-step a week late –
+  //        an arrival in week W that starts lifting her in W+1, for no reason a player could ever be
+  //        told. Rolling first means the week someone appears is the week she is lifted.
+  //
+  //        ⚠ AND THE MIRROR OF THAT ORDER IS DELIBERATE TOO: `rollArrival` shaves the disclosure lag
+  //        with the bond band, and running before `accrueSpirit` means it reads LAST week's settled
+  //        bond rather than the value this same tick is about to regress. «The bond band AT the
+  //        arrival week» is what the parent had built by the time someone appeared.
+  //
+  //        ITS OWN CALL, for `accrueSpirit`'s own reason one line down – `accrueCondition`'s arity-2,
+  //        zero-RNG contract is pinned by B1 in tests/condition.test.ts and must not gain a
+  //        parameter. ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:arrival:<week>` / `seed:life:partner:<sinceWeek>:*` sub-streams, and an
+  //        INELIGIBLE week derives none of them at all (world/lifeBeat.ts §5). The frozen capture
+  //        (41550 / e6b0c709) is untouched by construction.
+  rollArrival(world)
   // ⭐⭐ 1c-life (v72, the private life wave 1): AND WHAT THE WEEK DID TO HER SPIRIT, and to what the
   //        parent has built with her. ITS OWN CALL, immediately after the body's – never a parameter
   //        of `accrueCondition`, whose arity-2, zero-RNG contract is pinned by B1 in
