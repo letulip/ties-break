@@ -277,7 +277,11 @@ function* sweepVoices(): Generator<DiaryFacts> {
     { vacationWeek: true },
     { playedPractice: true },
   ]
-  const stages: DiaryLifeStage[] = ['school', 'independent']
+  // ⚠ ALL FOUR (11.09, «4 полосы»). This held ['school', 'independent'] while the pool's rails were
+  // two, and that was already the honest pair; with four stage dictionaries it would leave every
+  // fiery/quiet/deep after-school and college cell licensed in NO fixture of ANY sweep – the exact
+  // R2-18 failure this comment block describes, reborn one shelf down.
+  const stages: DiaryLifeStage[] = ['school', 'after-school', 'college', 'independent']
   for (const temperament of VOICES) {
     for (const bondBand of BONDS) {
       for (const moodRegister of REGISTERS) {
@@ -393,6 +397,12 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // predicate in weekNotes.ts that produced the line. Same method as every entry above: a second
   // spelling, so a licence and its claim cannot be wrong together.
   voice: (f, value) => f.temperament === value,
+  // ⭐ wave B – the stage dictionary, re-derived off `lifeStage` independently of STAGE_LICENSE,
+  // the predicate that produced the line: a second spelling, so a table-side line reaching a
+  // college week is a failing test, not a style slip. ⚠ FOUR EXACT VALUES NOW (11.09, «4 полосы»),
+  // never a band: a band was the old rail, and a band is what let one dictionary serve a
+  // fourteen-year-old and a nineteen-year-old – the second editorial review's lead finding.
+  rail: (f, value) => f.lifeStage === value,
   // ⚠ THE THREE REGISTER VALUES DO NOT ALL MEAN "EQUALS", and the asymmetry is the approved doc's
   // rather than a convenience: `level` is defined there as «the one variant that is not a low week»,
   // so a level line says only that her week was not a bad one – which is all its words rest on.
@@ -904,20 +914,34 @@ describe('W2 — the wiring', () => {
 // the property the design is actually about.
 describe('v72 — the voice completeness pin', () => {
   const LAYOFF = { kind: 'ankle strain', weeksRemaining: 3, totalWeeks: 6 }
-  /** The eleven spoken moments, as WEEKS rather than as ids – a second spelling of `MOMENTS`, built
-   *  from the facts side, so the pin cannot agree with the pool by copying it. */
+  /** The spoken moments × THE STAGES THE MATRIX GIVES THEM, as WEEKS rather than as ids – a second
+   *  spelling of `MOMENTS`/`STAGE_LICENSE`, built from the facts side, so the pin cannot agree
+   *  with the pool by copying it. ⚠ Wave B («4 полосы», 11.09): the eight all-stage moments walk
+   *  all four stages; exams walk SCHOOL ONLY (the engine's own fact – see the sweeps' «cannot
+   *  produce» guards above); the birthday walks the two roof stages and the off-season the two
+   *  away ones (the matrix's content scope). A cell missing at any stage fails HERE by name. */
+  const STAGE_FACTS: Record<DiaryLifeStage, Partial<DiaryFacts>> = {
+    school: { lifeStage: 'school', schoolOver: false, ageYears: 15 },
+    'after-school': { lifeStage: 'after-school', schoolOver: true, ageYears: 19 },
+    college: { lifeStage: 'college', schoolOver: true, ageYears: 21 },
+    independent: { lifeStage: 'independent', schoolOver: true, ageYears: 24 },
+  }
   const SPOKEN: [string, Partial<DiaryFacts>][] = [
-    ['grind', { trainPct: WEEK_PLAN_PRESETS.grind.train }],
-    ['light', { trainPct: WEEK_PLAN_PRESETS.light.train }],
-    ['freshBody', { condition: BAND_CONDITION.fresh }],
-    ['exams', { examsWeek: true }],
-    ['vacation', { vacationWeek: true }],
-    ['restingKnock', { knockChoice: 'rest', knockPart: 'ankle' }],
-    ['pushingKnock', { knockChoice: 'push', knockPart: 'shoulder' }],
-    ['injured', { injured: LAYOFF }],
-    ['tired', { condition: BAND_CONDITION.drained }],
-    ['birthday', { birthdayAge: 15, lifeStage: 'school', schoolOver: false, ageYears: 15 }],
-    ['offSeason', { offSeasonWeek: true, lifeStage: 'independent', schoolOver: true, ageYears: 24 }],
+    ...STAGES.flatMap((stage): [string, Partial<DiaryFacts>][] => [
+      [`grind@${stage}`, { trainPct: WEEK_PLAN_PRESETS.grind.train, ...STAGE_FACTS[stage] }],
+      [`light@${stage}`, { trainPct: WEEK_PLAN_PRESETS.light.train, ...STAGE_FACTS[stage] }],
+      [`freshBody@${stage}`, { condition: BAND_CONDITION.fresh, ...STAGE_FACTS[stage] }],
+      [`vacation@${stage}`, { vacationWeek: true, ...STAGE_FACTS[stage] }],
+      [`restingKnock@${stage}`, { knockChoice: 'rest', knockPart: 'ankle', ...STAGE_FACTS[stage] }],
+      [`pushingKnock@${stage}`, { knockChoice: 'push', knockPart: 'shoulder', ...STAGE_FACTS[stage] }],
+      [`injured@${stage}`, { injured: LAYOFF, ...STAGE_FACTS[stage] }],
+      [`tired@${stage}`, { condition: BAND_CONDITION.drained, ...STAGE_FACTS[stage] }],
+    ]),
+    ['exams@school', { examsWeek: true, ...STAGE_FACTS.school }],
+    ['birthday@school', { birthdayAge: 15, ...STAGE_FACTS.school }],
+    ['birthday@after-school', { birthdayAge: 19, ...STAGE_FACTS['after-school'] }],
+    ['offSeason@college', { offSeasonWeek: true, ...STAGE_FACTS.college }],
+    ['offSeason@independent', { offSeasonWeek: true, ...STAGE_FACTS.independent }],
   ]
 
   /** Every line in HER voice that this week licenses – i.e. the ones carrying a `voice` claim. */
@@ -941,8 +965,9 @@ describe('v72 — the voice completeness pin', () => {
         if (counts[0] > 0) spoke++
       }
     }
-    // ...and the walk has to actually reach her voice, or the equality above is four zeros.
-    expect(spoke, 'no moment speaks at all – then this pin proves nothing').toBeGreaterThan(8)
+    // ...and the walk has to actually reach her voice, or the equality above is four zeros. The
+    // floor is stage-aware now: 37 moment×stage cells, most speaking at two registers each.
+    expect(spoke, 'no moment speaks at all – then this pin proves nothing').toBeGreaterThan(45)
   })
 
   it('⚠ and a girl is only ever handed HER OWN voice – never another one as a fallback', () => {
@@ -999,17 +1024,61 @@ describe('v72 — the voice completeness pin', () => {
     }
   })
 
-  it('⚠ the fifty-two lines are all there, once each, and nothing else grew', () => {
-    // 44 voiced (11 moments x 4 voices) + 8 flat = 52, which is voice-bibles §E's own arithmetic.
+  it('⚠ the hundred and fifty-six lines are all there, once each, and nothing else grew', () => {
+    // wave B, «4 полосы» (11.09): 8 all-stage moments × 4 stages + exams at school only (the
+    // ENGINE's fact – isExamWeek(week, schoolOver) dies with school, so the amendment's «×3»
+    // column was corrected) + birthday × 2 roof stages + off-season × 2 away stages = 37 per
+    // voice, × 4 = 148 voiced + 8 flat = 156 – the corrected voice-bibles §E arithmetic.
     const voiced = WEEK_NOTES.filter((n) => n.claims.voice !== undefined)
     const flat = WEEK_NOTES.filter((n) => n.claims.strainedBond)
-    expect(voiced.length).toBe(44)
+    expect(voiced.length).toBe(148)
     expect(flat.length).toBe(8)
-    // every voiced line claims the warm channel, and no flat line claims a voice
+    // every voiced line claims the warm channel AND a stage, and no flat line claims a voice
     for (const n of voiced) expect(n.claims.closeBond, render(n, homeWeek({}))).toBe(true)
+    for (const n of voiced) expect(n.claims.rail, 'wave B: a voiced line without a stage').toBeDefined()
     for (const n of flat) expect(n.claims.voice).toBeUndefined()
-    // eleven per voice, exactly
-    for (const t of TEMPERAMENTS) expect(voiced.filter((n) => n.claims.voice === t).length).toBe(11)
+    // thirty-seven per voice, exactly – and the stages split 10 / 9 / 9 / 9
+    const PER_STAGE: Record<DiaryLifeStage, number> = { school: 10, 'after-school': 9, college: 9, independent: 9 }
+    for (const t of TEMPERAMENTS) {
+      const hers = voiced.filter((n) => n.claims.voice === t)
+      expect(hers.length).toBe(37)
+      for (const stage of STAGES) {
+        expect(hers.filter((n) => n.claims.rail === stage).length, `${t}: ${stage}`).toBe(PER_STAGE[stage])
+      }
+    }
+    // ARM (wave B): one cell deleted from VOICE_LINES – a compile error first, and this count
+    // second; the per-stage split above catches a school line pasted into a college slot.
+  })
+
+  it('⚠⚠ THE TAIL-LINT (wave B, the 10.09 ban list) – no narrator tail survives in any narration', () => {
+    // The amended bibles' ban list, swept over the NARRATION of every note in the pool – voiced,
+    // flat and the parent's own. The quotation is stripped first: the ban is on the narrator
+    // interpreting her, never on words she might say herself. A new tail joins the list to
+    // tighten the ratchet; removing one is the owner's call.
+    const BANNED_TAILS = [
+      'at speed',
+      'at volume',
+      'which is the tell',
+      'which is how she says it',
+      'nothing further',
+      'nothing more',
+      'in those words',
+      'three times over',
+      'more than once',
+      'that was the whole answer',
+      'did the whole week\'s work',
+      'no second sentence',
+      'she announced',
+      'left it there',
+    ]
+    for (const n of WEEK_NOTES) {
+      const text = typeof n.text === 'function' ? n.text(homeWeek({ birthdayAge: 15 })) : n.text
+      const narration = text.replace(/"[^"]*"/g, ' ').toLowerCase()
+      for (const tail of BANNED_TAILS) {
+        expect(narration.includes(tail), `banned tail «${tail}» in: ${text}`).toBe(false)
+      }
+    }
+    // ARM (wave B): re-adding «at volume» to any fiery narration – RED here by name.
   })
 
   it('⚠ the five Mood words are the approved five, and the engine hands nothing else', () => {

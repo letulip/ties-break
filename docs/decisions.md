@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 82 dated entries, newest 2026-09-10. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 85 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -37,9 +37,9 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 2 | [WHO SHE IS: THE PERSONALITY LAYER RULED IN THREE SITTINGS](#09092026--who-she-is-the-personality-layer-ruled-in-three-sittings) | 2026-09-09 |
+| life-and-morale | 3 | [WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)](#11092026--wave-b-the-вычитка-passed-and-the-bond-cadence-of-silence-b51) | 2026-09-11 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
-| process-and-git | 16 | [THE EDITORIAL REVIEW APPLIED, THE BOOTH MAY SAY ANYTHING, AND THE STRING SET PASSED](#10092026--the-editorial-review-applied-the-booth-may-say-anything-and-the-string-set-passed) | 2026-09-10 |
+| process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
 | simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
@@ -3297,3 +3297,116 @@ the wave-2 branch's copy commits, [who-she-is §5c](specs/who-she-is-2026-09.md)
   never in fact («согласен» – the honesty pins stay law); the human editorial tests are the
   playtest («будем в игре смотреть»); the copy-provenance note ruled in («делайте») and shipped;
   the supporting-cast rule ruled in («давай») and shipped as who-she-is §5c.
+
+## 11.09.2026 – WAVE B, THE SECOND EDITORIAL REVIEW: FOUR STAGES, AND THE HONESTY CORRECTIONS
+
+A second editorial review of the wave-B draft landed «editorial, not FINAL» and was right on the
+substance – the structural pins prove shape and licensing, not naturalness or factual honesty.
+Its findings and the owner's ruling, logged same-day. Source:
+[voice-bibles-2026-09](specs/voice-bibles-2026-09.md) the 11.09 amendment,
+[the-way-she-sounds](plans/the-way-she-sounds-2026-09.md).
+
+- ⭐ **THE FOUR STAGES, RULED: «4 полосы (полный ответ ревью)».** The wave-B draft collapsed the
+  bible's four maturity stages (school / after-school / college / independent) into two presence
+  rails (home / away), so a schoolgirl and a 20-year-old at home shared a dictionary, and a
+  college student and a settled pro shared another – the adult voice still sounded like a
+  daughter reporting to her parents. The owner chose the FULL fix over 3-band or defer: presence
+  is now DERIVED from the stage, «visit» is one channel of the adult rotor, and each stage is its
+  own dictionary (~156 voiced lines). The architect's cost note (≈1.8× the вычитка, delivered in
+  stage passes) was put to him and he took the full four.
+- **The honesty corrections adopted as LAW, not taste** (the architect's read, within the house's
+  own rules): no unlicensed facts – the sim does not know racquet counts, serve/backhand quality,
+  exam counts or gym specifics, so those come out (the vacation «no lake» rule, everywhere); the
+  fallible parent may not state the daughter's interior as fact (acts → notices uncertainty →
+  unresolved), and the birthday miss may not claim a wrong gift on a week the sim does not know
+  one; a line never explains its own signal (the «without any punctuation» contradiction deleted).
+- **The craft corrections adopted** (his вычитка is the final word on the words): contractions for
+  sunny/fiery throughout, quiet mostly, deep lightly (its formality is partly character); quiet
+  vs deep separated by CONTENT (quiet = facts and arrangements, deep = cost and consequence), the
+  propping narration («said only», «without comment») banned; the away delivery rotor (finding 2)
+  replaces the 27-of-40 «wrote» template. The lines the review named to preserve are kept.
+- **The label**: the architect over-called the pins-green draft «FINAL»; corrected – pins prove
+  form, the вычитка and playtest prove naturalness. Nothing merges before his read of the
+  re-cut, delivered in two halves (the home stages, then the away stages).
+
+## 11.09.2026 – WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX
+
+The four-stage corpus landed the same day (148 voiced + 8 flat = 156, wired, pin-green,
+merge-gated on the вычитка) – and a third editorial review arrived mid-build, aimed at the
+voice-bibles DOCUMENT: «the creative direction is substantially better, but the document needs
+a structural rewrite before it can safely function as a voice bible». Verdicts logged per
+finding; the вычитка of the corpus (two halves) is the owner's gate on the words themselves.
+
+- ⭐ **THE MATRIX CORRECTED BY THE ENGINE, independently found twice**: the 11.09 amendment
+  promised exams at school / after-school / college; `isExamWeek(week, schoolOver)` is false the
+  day school ends, so exams are SCHOOL-ONLY and the arithmetic is 8×4 + 1 + 2 + 2 = 37 per
+  voice, **148 voiced** (not 156-voiced/164). The review's finding 2 named the same conflict.
+  The bible now labels every matrix scope as engine fact vs content decision: birthday
+  roof-only (her away birthday belongs to C1), off-season away-only (the roof stages keep the
+  parent's own December), both CONTENT SCOPE; exams school-only, ENGINE.
+- **Applied from the review** (the architect's call, inside standing rulings): the bible
+  restructured to one-current-truth + permanent rules + corpus section, superseded tables
+  removed (git and this log hold them); rule strength made explicit (MUST/SHOULD/MAY/DRAFT);
+  the presence law (stage owns diction, never proves observation – away lines carry their own
+  delivery frame); the honesty law split in two tiers (consequential facts MUST be licensed;
+  scene texture MAY ride the delivery frame – without the split the law is enforced by whichever
+  detail a reviewer notices); the «rotor» renamed a channel PALETTE (corpus diversity; the
+  per-week rotor is B5's); the four voice profiles re-tiered core/often/rarely so «never» is
+  reserved for licensing law (fiery gains scale – the biggest weeks can flatten her, which the
+  tired row already wrote; quiet's rare feeling-word marks a break, not a routine; deep gains a
+  dry humour allowance) – tiered wording DRAFT for the owner; who-she-is §5b's «she has no
+  voice» dated as the 09.09 baseline and marked superseded by the build; drifted line-number
+  references replaced with stable test names.
+- **Pushed back / left to the owner**: «Dimmed» is his pinned Mood word (invariant 4) – the
+  review's candidates (Off / Low / Flat) are recorded as an OPEN item, no default change; the
+  house ⚠/⭐ style is the repo's own voice – the bible was toned down as the review asked, but a
+  repo-wide RFC restyle is not this branch's call.
+- **The fallible parent finished to finding 6**: four of six notes re-cut off omniscient endings
+  («She heard the want» → «She said nothing»; «She noticed the order» → «The order was ours»;
+  the planned week off ends «We noticed too late»; the birthday miss no longer asserts a wrong
+  gift the gift system can contradict – «She may have wanted a new shape»).
+- **The corpus curation, recorded**: agents drafted per voice; the architect cut cross-voice
+  frame collisions (the fridge, the kit bag, «called with the diagnosis herself», feet-up,
+  played-through), vacation booking/travel claims («nothing booked», «unpacked», homecomings on
+  `notTravellingWeek`), the review-flagged «Starting now» class, and re-verified the palette per
+  column. Keepers byte-identical: quiet calendar-pen and kettle, deep «Ready» / January / «No
+  fuss» / doorway, fiery kit-bag «Empty», sunny rehab-sheet.
+
+## 11.09.2026 – WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)
+
+- ⭐ **THE STOP LIFTED.** Both halves of the four-stage вычитка (148 lines, roof stages then away
+  stages) read and passed: «да вроде нормально всё, я так просто текстом не вижу особых проблем.
+  Если что, потом при плейтестах скажу. Давай дальше.» The words are his by ruling; the playtest
+  is the final read (his standing 10.09 rule – the human editorial tests are the game, not a pin).
+- **B5 sub-step 1 shipped – the cadence of contact, mechanics only, zero new words.** Once she
+  lives away the calendar's fridge scrap is the week's MESSAGE, so it gains a bond-banded
+  cadence: `AWAY_NOTE_CHANCE` = close .75 · steady .55 · strained .30 · cold .12, and «no
+  contact this week» is a first-class result – the paper stays off the wall (`null`, and the
+  CalendarScreen guard renders nothing). Event weeks always speak (the plan's own «rare,
+  EVENT-TRIGGERED» cold wording – a tournament makes even a cold parent write); the home stages
+  are exempt (a hallway chore note does not read the bond); the silence coin hashes
+  `:fridge-quiet:` while the pick still hashes `:fridge:`, so a week that speaks shows the
+  byte-identical scrap it always showed – the composable's no-reshuffle promise extended. No
+  meter: the band is never printed, the corridors overlap in casual observation, the ladder is
+  heard across months. Local hash per the file's own doctrine – no engine draw, no sub-stream,
+  the MAIN capture unmoved by construction.
+- **Mutation arms recorded** (the house net-verification rule): ARM A – `cold: 0.12 → 0.75`
+  turns the ladder-ordering pin red; ARM B – dropping `livingAway` from the gate turns the
+  home-stages-exempt pin red. Both fired, both reverted, final 58/58 green. The old
+  «rides with the GRID» source pin re-aimed with its ⚠ note (`v-if` legitimately gained
+  `&& fridgeNote`).
+- ⚠ **Scope call, flagged**: the plan row's title says «22+»; the mechanics follow the message
+  SURFACE – college and independent both, because `fridgeNoteFor` already serves the sent-message
+  pools from college on. His to narrow if the college years should stay unconditional.
+- **B5 sub-step 2 RULED AND SHIPPED same-day**: «строки норм, вшивай семьи и собирай PR всей
+  волны.» The approved lines wired byte-identical: `STRAINED_AWAY_NOTES` (8 – sparse, practical,
+  the door held open through logistics) and `COLD_AWAY_NOTES` (6 – minimal, with the plan's two
+  artefacts: «The last two went unanswered. This is a third.» and «Draft, never sent: come home
+  for a weekend.»), plus three warm-pool additions (the missed call, the captionless photo, the
+  voice note). The band now picks the REGISTER on the weeks that speak – warm at close/steady,
+  logistics at strained, artefacts at cold; trip weeks stay one shared pool (the event is the
+  register). New pools joined the domestic FORBIDDEN sweep, the copy rules and the size/overlap
+  pins; membership pinned over 400 weeks; mutation arm recorded (strained mapped to the warm
+  pool → red). ⚠ One honest cost, noted in the source: the warm pool grew 24 → 27, so existing
+  careers' away scraps re-pick ONCE at update – growth moves the modulo, and a second coin to
+  avoid it is machinery a scrap of paper does not deserve.

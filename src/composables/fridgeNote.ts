@@ -71,7 +71,7 @@
 // and maps it (CalendarScreen's `NOTE_MOOD`), so this file needs no engine facts. Its only imported
 // shape is the snapshot's type-only narrative stage.
 
-import type { DiaryLifeStage } from '../shared/protocol'
+import type { BondBand, DiaryLifeStage } from '../shared/protocol'
 
 /** THE POOL. Household noise, in a parent's hand: chores, small kindnesses, the ordinary business of
  *  a family. Player copy rules in full - short dash "–" and never "—", no Cyrillic.
@@ -160,6 +160,43 @@ export const INDEPENDENT_NOTES: readonly string[] = [
   'The plant you left us is doing suspiciously well.',
   'Nothing urgent. I just wanted to hear your voice.',
   'Too much bread again. Some things do not change.',
+  // ⭐ B5.2 (owner-approved 11.09) – the missed call, the captionless photo, the voice note: the
+  // channel families the plan named, living in the warm pool because they ARE warm-band texture.
+  // ⚠ Growing this pool re-picks existing careers' away scraps once at update (modulo moved) –
+  // accepted: the doctrine's no-reshuffle promise was about ADDING POOLS beside the pick, growth
+  // reshuffles by construction, and a second coin to avoid it would be machinery a scrap of
+  // paper does not deserve.
+  'Missed you by a minute. Rang back into voicemail.',
+  'Sent you a photo of the garden. No caption needed.',
+  'Played your voice note twice. Once was on purpose.',
+]
+
+/** ⭐ B5.2 – what `strained` writes (owner-approved 11.09): sparse and PRACTICAL, the parent
+ *  keeping the door open through logistics – post, forms, keys, the standing Sunday offer.
+ *  Warmth is not performed; the trying is in the fact of the note at all. Same domestic law as
+ *  every pool here: no tennis, no results, no money, no travel, nothing about her body. */
+export const STRAINED_AWAY_NOTES: readonly string[] = [
+  'Your post is here. Say when.',
+  'The dentist sent forms. I filled in most of it.',
+  'Spare key is still under the mat.',
+  'Grandma asks for your address. I said I would check.',
+  'The boiler man came. Your old room is fine.',
+  'Sunday lunch stands, if ever.',
+  'Half the photos here are yours. Say which half.',
+  'New number for the house phone. Same house.',
+]
+
+/** ⭐ B5.2 – what `cold` writes on the rare week it writes (owner-approved 11.09): minimal, and
+ *  the plan's two artefacts live here – the message that says its predecessors went UNANSWERED,
+ *  and the DRAFT THAT WAS NEVER SENT, pinned to the player's own board because the board is the
+ *  parent's. Nothing asks for anything; «no reply needed» is the armour. */
+export const COLD_AWAY_NOTES: readonly string[] = [
+  'Still the same address, if needed.',
+  'The last two went unanswered. This is a third.',
+  'No reply needed. Just checking the line works.',
+  'Draft, never sent: come home for a weekend.',
+  'Your grandmother turned eighty. She asked.',
+  'The house key still fits. Checked it myself.',
 ]
 
 /** WHICH SCRAP THIS WEEK GETS. `home` is the unlicensed domestic pool and the default for every week
@@ -218,6 +255,37 @@ const POOLS: Record<NoteMood, readonly string[]> = {
   trip: TRIP_NOTES,
 }
 
+// -------------------------------------------------------------------------------------------------
+// ⭐ B5 – THE CADENCE OF CONTACT (the-way-she-sounds, wave B). Once she lives away, the paper is no
+// longer a chore list in a shared hallway – it is the message a parent sent this week. A message
+// implies a channel, and a channel has weeks with nothing in it. So the away-stage scrap gains a
+// CADENCE from the bond band, and «no contact this week» is a first-class result: the slot is
+// empty because nothing passed between the houses, not because a pool ran dry.
+// -------------------------------------------------------------------------------------------------
+// ⚠ THE RULES, in the order they protect things:
+//   * HOME STAGES ARE EXEMPT. A chore note in the family hallway does not depend on the bond –
+//     the bins still go out on the worst week of the year. The gate reads `livingAway` only.
+//   * EVENT WEEKS ALWAYS SPEAK. The plan's own cold-band wording is «rare, EVENT-TRIGGERED»: a
+//     tournament week is exactly the event that makes even a cold parent write. `trip` (and the
+//     defensive away-`exam` branch) skip the gate entirely.
+//   * ⚠ THE PICK KEY IS UNTOUCHED. The silence coin hashes `:fridge-quiet:`, never `:fridge:`,
+//     so a week that speaks shows the byte-identical scrap it showed before the cadence existed –
+//     the same no-reshuffle promise this file already made when the mood pools were added.
+//   * ⚠ NO METER. The bands overlap in what a player can casually observe (close is not weekly,
+//     cold is not never) – the ladder is meant to be HEARD across months, never read off a week.
+//     Nothing renders the band itself; the narrative.ts docstring's «no component prints it» holds.
+//   * Same determinism doctrine as the pick (see the header): a local hash off (seed, week), no
+//     engine draw, no sub-stream, the MAIN capture cannot move by construction.
+/** How often the away-stage message exists at all, per bond band – B5's ruled ladder («close:
+ *  frequent, not weekly · steady: occasional · strained: sparse · cold: rare, event-triggered»).
+ *  Corridor-pinned in tests/calendar-grid.test.ts; retuning is a deliberate act, not a drive-by. */
+export const AWAY_NOTE_CHANCE: Record<BondBand, number> = {
+  close: 0.75,
+  steady: 0.55,
+  strained: 0.3,
+  cold: 0.12,
+}
+
 /** A 32-bit FNV-1a with an avalanche finish – local, tiny and deliberately NOT `engine/rng.ts`.
  *
  *  See the header: the sim's RNG is for randomness the sim owns. This is a stable index for a
@@ -248,13 +316,28 @@ export function fridgeNoteFor(
   week: number,
   mood: NoteMood = 'home',
   lifeStage: DiaryLifeStage = 'school',
-): string {
+  /** B5: pass the week's bond band to arm the away-stage cadence; `null` (the default, and every
+   *  pre-B5 caller) keeps the old always-a-note behaviour. `null` on the SLOT means silence. */
+  bondBand: BondBand | null = null,
+): string | null {
   const livingAway = lifeStage === 'college' || lifeStage === 'independent'
+  // B5: the silence gate – away stages, ordinary weeks only; event weeks always speak (see above).
+  if (livingAway && bondBand !== null && mood === 'home') {
+    const quiet = hash32(`${seed}:fridge-quiet:${week}`) / 0x100000000
+    if (quiet >= AWAY_NOTE_CHANCE[bondBand]) return null
+  }
+  // B5.2: on the weeks that DO speak, the band also picks the register – warm chatter at
+  // close/steady, logistics at strained, the minimal artefacts at cold. Trip weeks stay one
+  // shared pool at every band: the event is the register. `null` band keeps the warm pool.
+  const awayHomePool =
+    bondBand === 'strained' ? STRAINED_AWAY_NOTES
+    : bondBand === 'cold' ? COLD_AWAY_NOTES
+    : INDEPENDENT_NOTES
   const pool = livingAway
     ? mood === 'trip'
       ? INDEPENDENT_TRIP_NOTES
       : mood === 'home'
-        ? INDEPENDENT_NOTES
+        ? awayHomePool
         : EXAM_NOTES
     : POOLS[mood]
   return pool[hash32(`${seed}:fridge:${week}`) % pool.length]
