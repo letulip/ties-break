@@ -49,7 +49,7 @@ import {
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
-  it('⭐⭐⭐ v74: rolling the schema back to 73 – and dropping the key v74 added – reproduces v73 byte for byte on every career the private life never reached', () => {
+  it('⭐⭐⭐ v74: rolling the schema back to 73 – and dropping the key v74 added – reproduces the v73 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 3 STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
     // the wave-2 case directly below, repeated one version up. v74 appends ONE key to `createWorld`'s
     // literal, `loveEpisodes`; every career here carries it and every one of them carries it EMPTY.
@@ -84,10 +84,16 @@ describe('the byte-identity of a career that does not travel', () => {
     // remaining shape still carries, and no amount of care would have kept this green.
     //
     // ⭐ SO THE LINE THREE PARAGRAPHS UP FIRED CORRECTLY: «IF THIS GOES RED BESIDE A RED FREEZE, the
-    // wave moved a career and not just a schema». It did, deliberately. The name now says what the
-    // case actually proves – byte-for-byte reproduction on the two careers who meet nobody inside 156
-    // weeks, and an exact peel on the third – and the claim is unchanged for `middleGrinder` and
-    // `selfTravelling`, whose constants were not touched.
+    // wave moved a career and not just a schema». It did, deliberately. The claim is unchanged for
+    // `middleGrinder` and `selfTravelling`, whose constants were not touched; for `eliteGrinder` the
+    // peel is still exact, against a constant that moved with her.
+    //
+    // ⚠ THE CASE NAME WAS BRIEFLY CHANGED TO «…on every career the private life never reached» AND
+    // THE ARCHITECT PUT IT BACK (11.09). That name is not true of this case: all THREE careers are
+    // still asserted below, `eliteGrinder` among them at her re-stamped value – so a name excluding
+    // her would let a reader think she is skipped, and not notice if her line were ever dropped. The
+    // name states the mechanical claim (peel the key, roll the number back, the serialisation
+    // returns), which holds on all three; WHY lives here, which is this file's convention.
     //
     // ⭐⭐ THE IDENTITY THAT STILL COVERS ALL THREE IS `PRE_V72`'s, two cases down: its peel drops
     // `spirit` itself and it reproduces untouched, so every key that predates the private life –
@@ -97,7 +103,7 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(careerHashAtSchema(0, 1, 73), '8k · self-coached · player').toBe(PRE_V74.selfTravelling)
   })
 
-  it('⭐⭐⭐ v73: rolling the schema back to 72 – and dropping the key v73 added – reproduces v72 byte for byte on every career the private life never reached', () => {
+  it('⭐⭐⭐ v73: rolling the schema back to 72 – and dropping the key v73 added – reproduces the v72 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 2 DID TO A FROZEN CAREER, AS AN IDENTITY – the
     // wave-1 case directly below, repeated one version up. v73 appends ONE key to `createWorld`'s
     // literal, `lifeLog`; every career here carries it and every one of them carries it EMPTY, since

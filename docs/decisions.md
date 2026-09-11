@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 88 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 89 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
-| general | 1 | [WAVE 3 T3+T5: SOMEONE APPEARS, AND A TEST THE ARCHITECT SPECIFIED COULD NOT FAIL](#11092026--wave-3-t3t5-someone-appears-and-a-test-the-architect-specified-could-not-fail) | 2026-09-11 |
+| general | 2 | [WAVE 3 T4 + T14: THE LIFT MOVES A FROZEN CAREER, AND A PRECEDENT THAT DID NOT TRANSFER](#11092026--wave-3-t4--t14-the-lift-moves-a-frozen-career-and-a-precedent-that-did-not-transfer) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 4 | [THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS](#11092026--the-private-life-events-the-art-was-already-painted-and-six-rulings) | 2026-09-11 |
@@ -3568,3 +3568,58 @@ the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-ch
   latched episode and a remarriage is the same machinery on a later one. The CONTENT stays
   deferred: no divorce in W1–W5, raised after playtests; children stay state through it – no
   custody loop, ever.
+
+## 11.09.2026 – WAVE 3 T4 + T14: THE LIFT MOVES A FROZEN CAREER, AND A PRECEDENT THAT DID NOT TRANSFER
+
+- **T4 – the attachment lift wired, and the import hazard was REAL.** `accrueSpirit`'s return step now
+  targets `baseline + attachmentLift` while the slot is full. `lifeBeat.ts` imports six runtime
+  values from `spirit.ts`, so reading `activeEpisode` inside `accrueSpirit` would have closed the
+  first value cycle `engine/world/*` has ever had. Taken the way the brief prescribed as the fallback:
+  `loveEpisodesOf` + `activeEpisode` moved verbatim to a new leaf `engine/world/loveEpisodes.ts`
+  whose only imports are `import type`. No importer in the repo moved (the barrel re-exports).
+- ⭐⭐⭐ **THE LIFT MOVED A FROZEN CAREER, AND THE STOP CONDITION DID NOT FIRE.** Per-key diff measured
+  first, control = the lift term neutralised in place. `middleGrinder` and `selfTravelling`
+  byte-identical (they meet nobody in 156 weeks); `eliteGrinder` moves **exactly 1 key of 79 –
+  `spirit`**. ⚠⚠ `results`, `events`, `rngMain` and the wallet are byte-identical, which was the
+  architect's explicit STOP condition – had they moved, the lift would have changed who won a match.
+  They did not, and not by luck: `spiritMatchFactor` is flat 1.0 from the knee (60) up, so a lifted
+  75 plays the tennis a baseline 70 plays. Her trail reads `136:70 137:73 138:75 … 156:75` –
+  **first step in week 137, the arrival's own week**, so T3's order pin reproduced independently on a
+  frozen career rather than only in a poked unit.
+- **Two rollback rungs moved that no previous wave had touched** (`PRE_V73`, `PRE_V74`), and the
+  distinction is worth keeping: T3 wrote a NEW key, so the peel undid it; T4 changes the VALUE of an
+  old one (`spirit` arrived at v72), which every later shape still carries. ⭐ The anchor that still
+  covers all three careers is `PRE_V72` – its peel drops `spirit` itself – and it held untouched, so
+  the career as it stood before the private life existed is byte-identical.
+- ⚠ **ARM 2 measured what the wave-1 pins are FOR**: making the lift ignore `activeEpisode` turns all
+  44 from-baseline perturbation pins red. Those pins were never described as the guard against an
+  ungated lift; they are, and it is now measured rather than assumed.
+- **RULING – two guard-test NAMES put back.** T4 renamed the v73/v74 rollback cases to «…on every
+  career the private life never reached». Reverted: all three careers are still asserted, including
+  `eliteGrinder` at her re-stamped value, so a name excluding her would let a reader think she is
+  skipped and not notice if her line were ever dropped. The name states the mechanical claim, which
+  holds on all three; WHY lives in the comment, which is that file's convention. The builder flagged
+  it for the architect rather than deciding alone – correct.
+- **T14 – the graduation painting, and the prescribed precedent DID NOT TRANSFER.** The brief (and the
+  architect's brief after it) said to mirror `rehab` exactly: a `PortraitEmotion` member, painting-only.
+  Measured and refused, on two grounds, both verified at the gate. (1) The bands are
+  `teen 17-22 · adult 23-30` and a career graduates at ~22 – so she is in `teen`, while the only asset
+  on disk is `adult-graduated.webp`. Through `portraitUrl(stage, emotion)` the app would have built
+  `teen-graduated.webp` and **404'd**; the picture would never have appeared. (2) `PortraitEmotion` is
+  the key type of `KidScreen.MOOD_LABEL` and `WeekRecapCard.MOOD_WORD`, both
+  `Record<PortraitEmotion, string>` – so a new member forces **a new player-facing word**, which
+  invariant 4 forbids an agent to invent. It took the road `art/preload.ts` already names for art that
+  is not band-scoped (`onboardingHeroUrl` / `travelHomeUrl`): one picture, one builder. Painting-only
+  is kept where it is real – no crop, no avatar chip, cutter skip, `emotion` untouched.
+  ⭐ **The general lesson**: «follow the precedent» is an instruction about SHAPE, not a licence to
+  skip measuring whether the precedent's preconditions hold.
+- **The honesty split is pinned both ways**: a girl who LEFT college after one year gets no graduation
+  portrait on either surface, and the graduate's own portrait is asserted to render in the same case
+  – the positive control that stops the negative from being vacuous.
+- ⚠ **An arm that stayed GREEN was reported as a finding, not a pass** (T14 ARM 10): both surfaces
+  assert «the style carries what `facePoint` answers», so deleting the face rect moves table and
+  expectation together. The arm that does catch that class is named beside it. This is the behaviour
+  the wave has been asking for, offered unprompted.
+- ❓ **OPEN, for the owner**: T14's window. «Exactly ONE week after the finish week» is shipped as the
+  FINISH WEEK ITSELF – the week the player lands on Home as the card hands over, expiring next tick.
+  The alternative reading is `doneWeek + 1`. The length is already data, so either is one line.
