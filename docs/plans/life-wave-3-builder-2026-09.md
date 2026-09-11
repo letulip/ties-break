@@ -94,6 +94,7 @@ obey throughout.
 | T14 | the graduated portrait (folded in 11.09, his order) | CollegeDoneDialog + the home week, painting-only |
 | T15 | the tier-1 soft surface (ruled in 11.09) | Home card → the same dialog; `pendingLifeBeat` narrows to blocking |
 | T16 | knock escalation – the coach calls home (ruled 11.09: «давай попробуем») | repeated part / `'warn'` week escalate to the parent's knock dialog |
+| T17 | the stop-want arc (ruled 11.09, his playtest) | `stop` becomes a supported tail; driver-keyed wording; the coach counsel beat before the fork |
 
 T2 lands BEFORE T3 – the hazard must not be able to raise a beat behind the college freeze while
 the freeze still swallows it. T10 may be drafted in parallel from T6 on, but nothing merges
@@ -498,6 +499,55 @@ headline is the parent-asked rate (~1.5 → 4–6 per career expected), corridor
 else retuned – the 92%-regression arithmetic deliberately travels to планка-3's own session.
 Tests: the two escalation conditions unit-pinned both ways (an ordinary knock at the default
 coach still never asks); mutation arm – dropping the predicate returns the rate to ~1.5, red.
+
+### T17 – the stop-want arc (⭐ RULED 11.09, measured by the owner's own playtest)
+
+**The measurement.** His world #5, healthy, close home, said «stop» at the fork. The formula
+says that was no tail: every `forkWantWeights` weight sits in [1.0, 1.6], so the FLOOR of
+P(stop) is ~19–25% at ANY state – a quarter of all players meet «хочу закончить» at the game's
+biggest triumph moment. The magnitude was flagged «DRAFT FOR THE BENCH… ours until it is
+measured»; the owner measured it, in play, at 18 («моей 18, я ещё игры не видел, ещё магазин не
+скуплен»). The SHOCK stays possible – the Barty tail is a feature – but at an
+eighteen-year-old's rarity, and always with readable roots.
+
+**Layer 1 – the arithmetic of roots (weights + wording).**
+
+* `college` and `tour` weights are UNTOUCHED; the three-inputs fence (standing, spirit, bond –
+  no temperament, no fourth) is untouched.
+* `stop` stops being «always ≥ 1»: `stop = STOP_FLOOR + STOP_GAIN_WORN × worn +
+  STOP_GAIN_STRAINED × strained`, where `strained = max(0, (b.start − bond)/(b.start − b.min))`
+  – the mirror of `close`, distance BELOW the start. ⚠ Numbers DRAFT for the bench:
+  `STOP_FLOOR 0.12`, `GAIN_WORN 2.5`, `GAIN_STRAINED 2.0` – unsupported at top standing reads
+  P(stop) ≈ 3–4%; a post-shock worn girl in a strained home reads it as a real lean (~40%); a
+  drained girl in a cold home reads it dominant. Constants to `ECONOMY.life`; the «EVERY WEIGHT
+  IS ≥ 1» comment is rewritten honestly (the floor is ε > 0, never zero – any girl MAY still
+  want any of the three; the tail is priced for eighteen).
+* **The DRIVER, derived once and spent on wording**: `worn > 0.15 → 'worn'`, else
+  `strained > 0.15 → 'strained'`, else `'own'`. Her `stop`-want line gains driver variants –
+  4 voices × 3 drivers (worn: the tiredness register; strained: the distance register; own:
+  «I have done what I came for» – the Barty register). Drafted against the bibles; the
+  architect reads under the standing delegation. The driver is WORDING ONLY – it never
+  re-weights the draw it explains.
+
+**Layer 2 – the counsel arc (his «обсуждать с тренером»).** Only when the drawn want is
+`stop`: answering her beat raises `'fork-counsel'` (new `LifeBeatKind`, blocking: true) –
+THE COACH'S read, keyed by the same driver («the tennis is not the question» family; worn →
+he names the season's toll, strained → he names what he cannot reach, own → he names respect).
+Options: two acknowledgments, both bond 0 (counsel is information, not a test – V2's own law).
+`answerFork` refuses while the counsel row is unanswered – the same mechanical-order trick the
+her-row guard already uses. ⚠ THE PSYCHOLOGIST'S COUNSEL IS WAVE 5's: he does not exist yet;
+this arc is built so his beat SLOTS BESIDE the coach's when he arrives (the spec note stands
+here so wave 5 finds it). `college`/`tour` wants keep today's exact flow. Layer 3 – the
+pressed-through stop remembered and re-read later – is wave 5's, with the psychologist.
+
+**Gates.** The unheard e2e fixture walks the fork – its look-ahead and the generator recipe
+must learn the counsel beat (T6b's rejection-clause site; `drainLifeBeats` already survives via
+the bond-neutral option, which `'fork-counsel'` has by construction). Frozen careers that reach
+the fork re-stamp under the per-key protocol. Bench: the P(stop) grid printed from the pure
+formula (state × standing), plus the walked share of unsupported-stop careers ≤ 5% – both
+predicted-vs-measured into §4a. Mutation arms: `STOP_FLOOR → 1.0` returns the old quarter
+(grid test red); skipping the counsel raise lets `answerFork` through (refusal test red);
+the driver thresholds inverted (wording pin red).
 
 ---
 

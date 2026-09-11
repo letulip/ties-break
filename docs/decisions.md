@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 94 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 95 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -38,7 +38,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 5 | [THE PRIVATE LIFE, THE GATE DAY: SIX RULINGS AND A DELEGATED ВЫЧИТКА](#11092026--the-private-life-the-gate-day-six-rulings-and-a-delegated-вычитка) | 2026-09-11 |
+| life-and-morale | 6 | [THE PRIVATE LIFE: THE STOP-WANT WAS A QUARTER, NOT A TAIL (T17 RULED IN)](#11092026--the-private-life-the-stop-want-was-a-quarter-not-a-tail-t17-ruled-in) | 2026-09-11 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -3848,3 +3848,27 @@ the six waiting items in one message:
   the predicted-vs-measured headline (~1.5 → 4–6 per career expected), corridors printed, no
   other constant moved. The regression-arithmetic question (92% erased) is deliberately NOT
   ruled here – it travels with планка-3 to its own session.
+
+## 11.09.2026 – THE PRIVATE LIFE: THE STOP-WANT WAS A QUARTER, NOT A TAIL (T17 RULED IN)
+
+The owner's own playtest measured what the bench had not yet: his world #5, healthy, close
+home, said «stop» at the fork – «Для меня, как игрока, да и виртуального родителя тоже, это
+был форменный шок… С одной стороны круто – потому что никто не ожидал. С другой очень обидно
+как игроку». The formula agrees it was no fluke: every fork-want weight sits in [1.0, 1.6], so
+P(stop) floors at ~19–25% at ANY state – the magnitude was flagged «ours until it is measured»,
+and he measured it. His age point sharpened it: «Эшли Барти ушла первой ракеткой мира в 25 –
+это окей, моей 18, я ещё игры не видел, ещё магазин не скуплен» – an unsupported quit at the
+fork must be an eighteen-year-old's tail, not a coin.
+
+- ⭐ **Ruled into wave 3 as T17** («если это мини-волна, давай её сюда же сделаем»): layer 1 –
+  `stop` becomes a SUPPORTED tail (floor ε ≈ 0.12 → ~3–4% unsupported; worn and strained-mirror
+  gains make a genuinely worn girl in a strained home lean it for real), college/tour weights
+  and the three-inputs temperament fence untouched; the DRIVER (worn / strained / own) is
+  derived once and spent on WORDING only – her stop line reads as tiredness, distance, or the
+  Barty register («I have done what I came for»), so even the shock reads backwards. Layer 2 –
+  his «обсуждать с тренером»: a `'fork-counsel'` beat (coach's read, driver-keyed, bond-0
+  acknowledgments) blocks the fork answer until heard. ⚠ The psychologist's counsel seat is
+  built-for but EMPTY – he is wave 5's; layer 3 (the pressed-through stop remembered and
+  re-read later) travels to wave 5 with him.
+- **The Barty tail stays a feature**: nothing can zero `stop` – the design keeps «никто не
+  ожидал» possible, priced for her age and always with roots the player can re-read.
