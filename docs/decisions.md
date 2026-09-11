@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 86 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 87 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,6 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
+| general | 1 | [WAVE 3 T3+T5: SOMEONE APPEARS, AND A TEST THE ARCHITECT SPECIFIED COULD NOT FAIL](#11092026--wave-3-t3t5-someone-appears-and-a-test-the-architect-specified-could-not-fail) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 3 | [WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)](#11092026--wave-b-the-вычитка-passed-and-the-bond-cadence-of-silence-b51) | 2026-09-11 |
@@ -3470,3 +3471,54 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
   the two rules it would have stated are already in the file further down anyway. The next single
   line anybody adds to CLAUDE.md fails the gate the same way. Compressing it is the owner's call,
   not an agent's – it is his governance document.
+
+## 11.09.2026 – WAVE 3 T3+T5: SOMEONE APPEARS, AND A TEST THE ARCHITECT SPECIFIED COULD NOT FAIL
+
+- **T3 and T5 shipped as ONE commit, deliberately.** The brief orders them as two, but the row cannot
+  be honestly constructed without both draws – T3's own text says it carries «`knownWeek`/`wants`
+  from T5's draws, computed at this moment». A T3 alone would have written placeholder values into a
+  PERSISTED row and left knowingly-wrong behaviour in the tree waiting for the next commit. The
+  builder said so and chose the honest shape; recorded here so the commit table's drift is not read
+  later as a skipped step.
+- ⚠⚠ **THE ZERO-DRAW TEST THE ARCHITECT SPECIFIED CANNOT FAIL, and the builder proved it rather than
+  reporting it done.** The brief (and the architect's brief after it) asked for the short-circuit to
+  be proven «by stream alignment – two worlds differing only in an ineligible week's state produce
+  identical later arrivals». Measured: that property is true BY CONSTRUCTION here, because every key
+  carries its own week (`seed:life:arrival:<week>`), so each week derives a fresh stream and a
+  discarded draw shifts nothing. Built, armed with exactly the draw-and-discard mutation, and it
+  stayed GREEN (ARM 2b, recorded). The honest net is a COUNT of the keys the gate reached, held in an
+  array the code under test cannot see, **with a positive control** – an eligible-but-missing week
+  that reaches exactly one key – so «no keys» is a property of the gate and not of a broken recorder.
+  The alignment comparison is kept under its true name as the guard for a future re-key.
+  ⭐ **The general lesson, third instance this wave**: a test whose property holds by construction is
+  indistinguishable from a working test until something arms it. «Prove the arm goes red» is not a
+  formality – it is the only thing separating the two.
+- **The same trap bit a second time in the same step**: the first split-key case («the lag does not
+  move when the wants draw is taken first») also survived both draws being folded onto one key.
+  Replaced with the property that CAN fail – the conditional p-zero across the wants split (0.63
+  apart under the mutation, under 0.06 apart in truth).
+- ⭐⭐⭐ **A FROZEN CAREER MOVED, AND THAT IS THE RIGHT ANSWER.** The three careers in
+  `coachTravelEdgeFixtures` walk 156 weeks; the age gate opens at 16 and these girls turn 16 at
+  ~week 128. `eliteGrinder` is **fiery** (hazard ×1.6) and meets somebody at **week 137**. Per-key
+  diff taken FIRST, with the change reverted in place, as that file's protocol demands: 5/0 and 0/1
+  byte-identical, 8/0 moves **exactly 1 key of 79 – `loveEpisodes`**, and ⚠⚠ **`rngMain` is
+  byte-identical**, which is the load-bearing half: `rollArrival` takes nothing from MAIN. Three live
+  constants re-stamped for that one career only. The v74 rung stayed green beside the red freeze –
+  a career moved, and only where the wave is allowed to move it.
+- **RULING – the lag table is indexed by her BORN REGISTER, not by the drawn `wants`.** The builder
+  flagged this as a reading rather than a quote, correctly: who-she-is §4 says «lag, open / lag,
+  private» without saying which openness. Confirmed for the register, and the decisive argument is
+  the brief's own: the two draws are specified as INDEPENDENT. Indexing the lag on `wants` would make
+  it conditional on the neighbouring draw, which is the exact coupling the split-key law exists to
+  forbid. A girl's general openness is how fast she tells things; what she wants for THIS
+  relationship is a separate read, and T7's flip is where that one is spent.
+- **`temperamentOpenness` added** beside `temperamentIntensity` so the axis has one spelling, with
+  its literal mapping pinned – without that pin an inversion would move implementation and
+  expectation together (ARM 7 proves it red).
+- ⚠ **A guard re-aimed and made TIGHTER**: `spirit.test.ts`'s adjacency pin asserted `accrueSpirit`
+  was the statement immediately after `accrueCondition`; `rollArrival` now sits between them (the
+  order the lift is judged on). It now asserts the gap EXACTLY – `['rollArrival(world)']` and nothing
+  else, plus `accrueSpirit` called once – so a third statement sliding in goes red just as a
+  reordering does. Re-aimed, not weakened, with its ⚠ note.
+- **Eight mutation arms, all run rather than reasoned**, ledger in `tests/wave3-arrival.test.ts`.
+  Frozen capture unmoved: 41550 / `e6b0c709`.
