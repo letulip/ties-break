@@ -901,10 +901,14 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // OTHER TWO ARE PINNED TRUE IN THE SAME BREATH: this is the table that would silently restore the
     // hard pause if tier 1 were flipped, and a pin that only named tier 1 would let the fork or the
     // delivery be flipped the other way and stop stopping the week.
+    // ⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED: `'fork-counsel'` is the fourth kind (the coach's
+    // read on a `stop`) and it declares TRUE. The claim – «total by type, and the other kinds are
+    // pinned in the same breath so none can be flipped quietly» – is unchanged and now covers four.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
       'small-talk': false,
+      'fork-counsel': true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

@@ -183,8 +183,28 @@ export interface SoftBeatInvite {
  *  small talk is texture, never economy, and the delta table stays the big beats'». The value of the
  *  beat is the READ, not a number, and a tier that quietly earned bond would make the frequent thing
  *  the profitable thing. ⚠ It is also the ONE kind with no feed row of its own: the `lifeLog` row IS
- *  the record (`world/lifeBeat.ts` §3c). */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk'
+ *  the record (`world/lifeBeat.ts` §3c).
+ *
+ *  ⭐⭐⭐ v74 (wave 3 – T17) ADDS `'fork-counsel'`: THE COACH'S READ, raised ONLY when the want she
+ *  stated at the fork was `'stop'`, and only at the moment the parent has answered her (the owner's
+ *  «обсуждать с тренером», ruled 11.09 off his own playtest). Its `detail` is the DRIVER of that want
+ *  – `'worn'`, `'strained'` or `'own'` – the same reading her own line was worded from, so the row
+ *  records WHICH stop this was and the two voices cannot end up explaining different things.
+ *
+ *  ⚠⚠ IT IS INFORMATION AND NOT A TEST. Both of its answers are priced ZERO – what the coach tells
+ *  him is not a thing a parent can get wrong – which is also what keeps `tools/_lifeBeats.ts`'
+ *  bond-neutral drain able to walk a career past it.
+ *
+ *  ⚠ AND IT BLOCKS, which is the whole of its mechanism: `answerFork` already refuses while any
+ *  blocking row is unanswered, so a counsel row raised on the answer to her opinion holds the fork
+ *  closed until the parent has heard the coach out. No new guard exists anywhere.
+ *
+ *  ⚠⚠ THE PSYCHOLOGIST'S COUNSEL IS **WAVE 5's** AND HE DOES NOT EXIST YET. The arc is built so his
+ *  beat SLOTS BESIDE the coach's – a second row raised from the same place, keyed on the same driver,
+ *  blocking in the same way, answered before the fork like this one – and layer 3 (the pressed-through
+ *  stop remembered and re-read later) is wave 5's with him. Nothing here anticipates either; this
+ *  note is the pointer wave 5 is meant to find. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.

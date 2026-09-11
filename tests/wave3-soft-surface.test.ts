@@ -187,10 +187,17 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
     for (const kind of kinds) {
       expect(typeof LIFE_BEAT_BLOCKING[kind], `${kind}: declared, never undefined`).toBe('boolean')
     }
+    // ⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED: `'fork-counsel'` is the fourth kind – the coach's
+    // read on a `stop`, and it is TRUE. The claim this line makes is unchanged («the ruled table,
+    // written out, so a kind cannot change side quietly»); what moved is that the union grew by one,
+    // which is exactly the event a total record is supposed to force somebody to type. ARM 10 (tier 1
+    // marked blocking) still goes red on this line, and a `'fork-counsel': false` would too – which
+    // is the whole of the counsel arc's mechanism, since `answerFork` refuses on BLOCKING rows.
     expect(LIFE_BEAT_BLOCKING, 'the ruled table: tier 2 blocks, tier 1 does not').toEqual({
       'fork-opinion': true,
       met: true,
       'small-talk': false,
+      'fork-counsel': true,
     })
   })
 

@@ -54,6 +54,13 @@
 //     can take – a temperament term cannot be added to the maths without changing a signature.
 //   * `HER_LINE` is indexed BY temperament, and it is the only thing in this file that is.
 //
+// ⭐⭐⭐ v74 T17 ADDS A SECOND WALL OF THE SAME KIND, ONE LEVEL IN. The `stop` want now has ROOTS
+// (`ECONOMY.life.forkStop`) and a DRIVER worded from them – and the driver is spent on wording and
+// nothing else: `forkWantWeights` never calls `forkStopDriverOf`, so the same three inputs produce
+// the identical three weights whether or not anything ever reads a driver. A reading that explains a
+// draw must not be able to become a term in it, which is who-she-is §3's own argument applied to the
+// thing §3 was written about.
+//
 // ⚠ AND SPIRIT IS READ, NEVER WRITTEN. Nothing in this file touches `world.spirit`: the want-draw
 // reads it, the parent's answer moves `bond` alone (§4a.2's law – life moves spirit, his words move
 // the standing). `applyBondDelta` is the only writer this file calls.
@@ -125,6 +132,11 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   'fork-opinion': true,
   met: true,
   'small-talk': false,
+  // ⭐⭐⭐ v74 T17 – TRUE, AND THIS ONE WORD IS THE WHOLE MECHANISM OF THE COUNSEL ARC. `answerFork`
+  // already refuses while `pendingLifeBeat` is non-null, so a blocking row raised at the moment her
+  // opinion is answered holds the fork shut until the coach has been heard – no new guard, no new
+  // ordering rule, and the same mechanical-order trick her own row has used since wave 2.
+  'fork-counsel': true,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -206,6 +218,32 @@ function lean(share: number): number {
   return 1 + (FORK_WANT_TILT - 1) * Math.min(1, Math.max(0, share))
 }
 
+/** A distance read as a 0..1 share, clamped at both ends. ⚠ `lean` did this inline for its own
+ *  argument; T17's `stop` weight is not a lean and needs the same clamp said out loud. */
+function share(value: number): number {
+  return Math.min(1, Math.max(0, value))
+}
+
+/** ⭐⭐⭐ v74 T17 – THE TWO ROOTS OF A `stop`, READ ONCE. How far she is BELOW spirit's baseline and
+ *  how far the home is BELOW bond's start, each as a 0..1 share.
+ *
+ *  ⚠⚠ ONE READING, TWO CONSUMERS, AND THAT IS THE WHOLE REASON THIS IS A FUNCTION. The weight
+ *  (`forkWantWeights`) and the wording (`forkStopDriverOf`) must be talking about the SAME girl: two
+ *  copies of «how worn is she» would be two sources of truth for one fact, and rule 3 at the head of
+ *  this file exists because those disagree the first time somebody edits one of them. `close` stays
+ *  inline in the weights because nothing else reads it.
+ *
+ *  ⚠ `strained` IS THE MIRROR OF `close`, measured off `bond.start` in the other direction, so 70
+ *  reads as neutral from both sides and a neutral home leans nothing either way. */
+function stopRootsOf(spirit: number, bond: number): { worn: number; strained: number } {
+  const s = ECONOMY.spirit
+  const b = ECONOMY.bond
+  return {
+    worn: share((s.baseline - spirit) / (s.baseline - s.min)),
+    strained: share((b.start - bond) / (b.start - b.min)),
+  }
+}
+
 /** ⭐⭐ WHAT SHE WANTS, AS THREE WEIGHTS – the whole of the ruling of 09.09, and the whole of the
  *  fence with it.
  *
@@ -225,20 +263,71 @@ function lean(share: number): number {
  *      the distance BELOW spirit's baseline, so a girl at or above 70 has no such lean at all.
  *    * A CLOSE HOME pulls `tour` up – «a close one dares more». Measured off the distance ABOVE
  *      bond's start, for the same reason: 70 is the neutral reading and neutral must mean neutral.
+ *    * ⭐⭐⭐ v74 T17 – AND A STRAINED HOME PULLS `stop` UP, which is `close` READ THE OTHER WAY: the
+ *      distance BELOW bond's start, mirror for mirror, so one number cannot mean «neutral» on one
+ *      side of 70 and «a little cold» on the other.
  *
- *  ⚠ EVERY WEIGHT IS >= 1, so no reading can ever drive a want to zero – she can want any of the
- *  three at any standing, in any mood, in any home. */
+ *  ⚠⚠ THE `stop` WEIGHT IS NO LONGER A LEAN, AND THIS IS THE OWNER'S RULING OF 11.09 MADE ARITHMETIC.
+ *  It read `lean(worn)`, which bottoms out at 1.0 like every other lean – so the FLOOR of P(stop) was
+ *  ~22% at top standing in a close home and ~24% at zero standing, whatever the girl. He met it in
+ *  play at eighteen («моей 18, я ещё игры не видел») on a healthy girl in a close home, and a quarter
+ *  of all players would have met it at the biggest moment of the career with no root they could read.
+ *  It is now `floor + gainWorn × worn + gainStrained × strained` (`ECONOMY.life.forkStop`), so the
+ *  want has ROOTS: unsupported it reads ~3–4% at every standing, a post-shock girl in a strained home
+ *  reads it as a real lean, and a drained girl in a cold home reads it dominant.
+ *
+ *  ⚠⚠ AND THE OLD «EVERY WEIGHT IS >= 1» CLAIM IS REPLACED BY AN HONEST ONE: **the floor is ε > 0 and
+ *  never zero.** `college` and `tour` are untouched and still sit in [1.0, 2.56]; `stop` can go as low
+ *  as `forkStop.floor` and no lower. Nothing may ever drive a want to zero – any girl MAY still want
+ *  any of the three at any standing, in any mood, in any home, and the Barty tail (whole, winning,
+ *  finished) stays a feature. What changed is its PRICE: it is an eighteen-year-old's rarity now
+ *  instead of a coin-flip's neighbour.
+ *
+ *  ⚠ BOTH ROOTS ARE CLAMPED TO 0..1, which `lean` used to do for `worn` on its way past. A spirit
+ *  above baseline is not «negative wear» that could refund the floor, and a poked save below
+ *  `spirit.min` is not a girl who wants to stop twice over. */
 export function forkWantWeights(standing: number, spirit: number, bond: number): Record<ForkWant, number> {
-  const s = ECONOMY.spirit
   const b = ECONOMY.bond
-  const worn = (s.baseline - spirit) / (s.baseline - s.min)
+  const f = ECONOMY.life.forkStop
+  const { worn, strained } = stopRootsOf(spirit, bond)
   const close = (bond - b.start) / (b.max - b.start)
   return {
     college: lean(1 - standing),
     tour: lean(standing) * lean(close),
-    stop: lean(worn),
+    stop: f.floor + f.gainWorn * worn + f.gainStrained * strained,
   }
 }
+
+/** ⭐⭐⭐ v74 T17 – WHICH ROOT HER `stop` IS WORDED FROM, and it is spent on WORDING AND NOTHING ELSE.
+ *
+ *  ⚠⚠ THE DRIVER NEVER RE-WEIGHTS THE DRAW IT EXPLAINS. `forkWantWeights` above does not call this
+ *  function and does not read `forkStopDriverFrom`; the same (standing, spirit, bond) produces the
+ *  identical three weights whether or not anything ever asks for a driver. That is the fence of §3
+ *  applied one level in: a reading that colours the words must not be able to become a term in the
+ *  maths, or «readable roots» becomes a fourth input by the back door.
+ *
+ *  ⚠ WORN WINS A TIE ON PURPOSE. A girl who is both worn down and far from home is stopping because
+ *  of the season first – the tiredness is what she would be putting down, and the distance is what
+ *  made it lonely. The order is the wording's, not a claim about the arithmetic, where both terms are
+ *  simply added.
+ *
+ *  ⚠ THE THRESHOLD IS **STRICTLY GREATER**, so a girl at exactly the line is still `'own'`: the
+ *  register that claims a cause is the one that has to earn it. */
+export type ForkStopDriver = 'worn' | 'strained' | 'own'
+
+export function forkStopDriverOf(spirit: number, bond: number): ForkStopDriver {
+  const from = ECONOMY.life.forkStopDriverFrom
+  const { worn, strained } = stopRootsOf(spirit, bond)
+  if (worn > from) return 'worn'
+  if (strained > from) return 'strained'
+  return 'own'
+}
+
+/** The three drivers as a list, derived from a TOTAL record rather than written out – so a fourth
+ *  root added later is a compile error in every sweep instead of a silently unswept column. Same
+ *  guarantee `PARTNER_WANTS` takes from `WANTS_TOTAL`. */
+const DRIVER_TOTAL: Record<ForkStopDriver, true> = { worn: true, strained: true, own: true }
+export const FORK_STOP_DRIVERS = Object.keys(DRIVER_TOTAL) as readonly ForkStopDriver[]
 
 /** ⭐ HER LADDER STANDING AS ONE 0..1 NUMBER – how high she actually got, normalised.
  *
@@ -457,6 +546,69 @@ const HER_LINE: Record<Temperament, Record<ForkWant, Record<SpokenRegister, stri
   },
 }
 
+/** ⭐⭐⭐ v74 T17 – HER `stop` LINE, BY VOICE, BY THE ROOT THE WANT ACTUALLY HAS – 8 drafts, and the
+ *  `'own'` column is the EIGHT LINES ABOVE, untouched.
+ *
+ *  ⚠⚠ WHY THIS POOL EXISTS AT ALL. Until T17 `stop` had a floor of 1.0 like every other want, so a
+ *  quarter of all players met «I want to stop» at the biggest moment of the career with no root they
+ *  could read – the owner met it himself, at eighteen, on a healthy girl in a close home. T17 prices
+ *  the tail (`ECONOMY.life.forkStop`) AND gives it words: «always with readable roots» is a copy
+ *  requirement as much as an arithmetic one, and this is the copy half.
+ *
+ *  ⚠⚠ THE DRIVER IS WORDING AND NEVER WEIGHT. `forkStopDriverOf` (§2) reads the same two roots the
+ *  weight is built from and decides nothing about the draw; the fence of §3 applied one level in.
+ *
+ *  ⚠⚠ AND THE REGISTER SPLIT IS ABSENT HERE **BY DERIVATION, NOT BY ECONOMY** – this is the half
+ *  worth reading twice, because it looks like a shortcut and is not. `worn > 0.15` means
+ *  `spirit < 59.5`, and the `low` register is `spirit < 67.5` (`ECONOMY.spirit.mood.dimmedBelow`):
+ *  the `worn` column is a STRICT SUBSET of the low register, so a second «low» variant of a worn
+ *  line would be a variant of a line that can only ever fire low. `'own'` is the column that spans
+ *  both – she can be sure in a bright week and sure in a flat one – and `'own'` is exactly where the
+ *  shipped `up`/`low` pair stayed. `strained` fires with her spirit at or near baseline by
+ *  construction (`worn <= 0.15`), so its line is written register-neutral and claims no week.
+ *
+ *  ⚠ NO PRESENCE AXIS, AND IT IS THE SAME SCOPE STATEMENT `HER_LINE` MAKES. The fork opens on the
+ *  week school ends, which is a roof stage by construction, so there is no away frame to write. 12
+ *  readings (4 voices x 3 drivers), all of them roof.
+ *
+ *  ⚠ A `strained` LINE IS ONLY REACHABLE IN HER OWN VOICE INSIDE A NARROW WINDOW, and the design
+ *  answer is the counsel beat rather than a wider pool: `speaksInHerOwnVoice` is false below bond 55,
+ *  and the `strained` driver starts below bond 59.5, so she says one of these only in the bottom of
+ *  the `steady` band. Below that the flat pool speaks – and the ROOT still reaches the player, from
+ *  the coach, because `'fork-counsel'` is keyed on the same driver at every band. A cold home hears
+ *  why from the one person still talking, which is the layer's whole subject.
+ *
+ *  ⚠ THE BIBLE EACH VOICE IS WRITTEN TO is `HER_LINE`'s own line above, unchanged, plus the
+ *  §Contractions law the owner's вычитка applied to the wave-3 pools: `sunny` and `fiery` contract
+ *  throughout, `quiet` mostly, `deep` LIGHTLY – lightly and not never, which is the correction of
+ *  11.09. ⚠ The shipped `'own'` lines above are uncontracted (wave 2, pre-вычитка) and are NOT
+ *  touched here: invariant 4 makes that the owner's call, and it is flagged in the вычитка package
+ *  rather than fixed by an agent. */
+const HER_STOP_LINE: Record<Temperament, Record<Exclude<ForkStopDriver, 'own'>, string>> = {
+  sunny: {
+    worn: 'She came looking for us both, and left the kit bag where it was. "I\'m tired in a way an off-season doesn\'t fix. I want to stop."',
+    strained: 'She told us in the kitchen, standing, with her coat over her arm. "I\'ve decided to stop. I should have said something sooner."',
+  },
+  fiery: {
+    worn: 'She said it sitting on the stairs, still in her kit. "I\'m empty. Every week took something. I want to stop."',
+    strained: 'She said it from the doorway, keys still in her hand. "I\'m stopping. It\'s not a conversation. I wanted you to know."',
+  },
+  quiet: {
+    worn: 'She had put her bag on the high shelf before she said anything. "I haven\'t got another season in me. The rest we can sort later."',
+    strained: 'She said it while she was putting her shoes away, without stopping. "I\'m not playing next year. You\'ll need to tell the club, I think."',
+  },
+  deep: {
+    worn: 'She said it standing by the window, with her back to the room. "I\'m tired. Not this week. All of it."',
+    strained: 'She said it on her way through the room, without sitting down. "I\'m stopping. I decided it on my own."',
+  },
+}
+
+/** ⭐ THE READ, ONE FUNCTION, so «which line does a stopping girl say» has exactly one spelling.
+ *  `'own'` falls through to the shipped register pair and every other driver takes its own line. */
+function stopLine(voice: Temperament, driver: ForkStopDriver, register: SpokenRegister): string {
+  return driver === 'own' ? HER_LINE[voice].stop[register] : HER_STOP_LINE[voice][driver]
+}
+
 /** ⭐⭐ WHAT SHE SAYS WHEN HE ONLY LISTENS – 12 drafts, the 10.09 editorial ruling made mechanical:
  *  «Say nothing, and let her talk» was fictionally dishonest while the dialog closed and she did
  *  not talk. Choosing `listen` now shows this line BEFORE the answer is recorded – the reward of
@@ -514,6 +666,50 @@ const HEADING: Record<MoodRegister, string> = {
   level: 'School is over, and she has said what she wants',
   low: 'School is over, and it took her a while to say it',
 }
+
+// =================================================================================================
+// 3d. `'fork-counsel'` – THE COACH'S READ ON A `stop` (wave 3, T17). EVERY WORD BELOW IS A DRAFT.
+// =================================================================================================
+//
+// ⭐⭐⭐ THE OWNER'S «обсуждать с тренером», RULED 11.09 off his own playtest. When the want she states
+// at the fork is `stop`, answering her raises ONE more row before the fork may be answered: the coach
+// says what he sees. It is the second half of «always with readable roots» – the arithmetic gives the
+// want a cause, this gives the player somebody who can name it.
+//
+// ⚠⚠ THE VOICE IS NOT HERS AND THIS POOL IS THEREFORE **NOT INDEXED BY TEMPERAMENT**. `HER_LINE`,
+// `MET_HER_LINE` and `SMALL_TALK_LINE` are indexed by it because they are her speaking; the coach is
+// a man with a professional opinion, and giving him four voices would be the supporting-cast rule
+// (who-she-is §5c) broken on its first use. He is keyed on the DRIVER and on nothing else.
+//
+// ⚠ AND NOT BY THE BOND BAND EITHER. The band is the distance between HER and the parent; the coach
+// is not in that relationship, and his read of a cold home is exactly the read the flat pool cannot
+// give – see `HER_STOP_LINE`'s own note on why `strained` reaches the player through him.
+//
+// ⚠⚠ THE PSYCHOLOGIST'S COUNSEL IS WAVE 5's AND HE DOES NOT EXIST. His beat slots BESIDE this one –
+// another kind, raised from the same place in `answerLifeBeat`, keyed on the same driver, blocking in
+// the same way – and layer 3 (the pressed-through stop remembered and re-read later) is his too. This
+// pool is deliberately shaped so that adding him is a second table and not a rewrite of this one.
+
+/** ⭐⭐ WHAT THE COACH SAYS, BY DRIVER – 3 drafts, the «the tennis is not the question» family.
+ *
+ *  ⚠ THE SHARED OPENING IS THE POINT OF THE FAMILY and not a lazy prefix: whatever the root, the one
+ *  thing the man paid to make her better says first is that this is not a tennis problem. Everything
+ *  after it is what he can see and what he cannot.
+ *
+ *  ⚠ THE HONESTY LAW BINDS HIM AS HARD AS IT BINDS HER. He may name what he has seen in a session and
+ *  what he cannot reach; he may not name a duration, a date, a count, a result or another person –
+ *  the sim holds none of them for him, and «he has coached her for years» is a fact nobody wrote. */
+const COACH_COUNSEL: Record<ForkStopDriver, string> = {
+  worn: 'Her coach came by that evening. "The tennis is not the question. She has had nothing left to give a session, and I cannot coach that out of her."',
+  strained:
+    'Her coach rang, and stayed on after the practice talk was done. "The tennis is not the question. Whatever this is, it sits outside the court, and I cannot reach it from where I stand."',
+  own: 'Her coach rang the same evening, and did not argue any of it. "The tennis is not the question. She is not running from anything, and I would think less of her if she stayed to please us."',
+}
+
+/** The parent's frame over the counsel card. ONE line and not a register table: the week's weather is
+ *  hers, and this card is a phone call from somebody else. ⚠ It also says why the fork is still shut,
+ *  which is R10-16's doctrine (a control held back with no reason on screen is the bug). */
+const COUNSEL_HEADING = 'She wants to stop, and her coach has asked for a word before we answer'
 
 // =================================================================================================
 // 3b. `'met'` – THE WEEK HE IS TOLD THERE IS SOMEONE (wave 3, T6). EVERY WORD BELOW IS A DRAFT.
@@ -959,6 +1155,30 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'view', label: 'Tell her what we think', bond: 0 },
     { id: 'easy', label: 'Tell her it can keep', bond: 0 },
   ],
+  /** ⭐⭐⭐ v74 T17 – TWO ACKNOWLEDGMENTS, BOTH PRICED ZERO, AND THE ZERO IS A RULING RATHER THAN A
+   *  DEFAULT. «Counsel is information, not a test» – V2's own law read one tier up: the coach is not
+   *  a person the parent can answer WRONGLY, and a priced reply would turn a phone call about his
+   *  daughter into a thing to be played correctly. There is no third option and no `listen` detour:
+   *  he has said his piece, and a panel promising more of him would be the fictional dishonesty the
+   *  10.09 ruling took out of the fork.
+   *
+   *  ⚠⚠ AND THE PAIR OF ZEROES IS ALSO A HARD REQUIREMENT, not just a design one:
+   *  `tools/_lifeBeats.ts`' `drainLifeBeats` picks the bond-neutral option and THROWS if a kind has
+   *  none – forty tools, `npm run e2e:fixtures` and every walked test depend on it, and `npm run
+   *  check` would stay green while all of them broke. `tests/wave3-reaction.test.ts` §D is the sweep
+   *  that says every kind has one.
+   *
+   *  ⚠ NEITHER LABEL PROMISES AN OUTCOME. What the parent does about it is the fork, one card later,
+   *  and a button here reading «tell the coach she is playing» would be a second, unpriced fork.
+   *
+   *  ⚠⚠ AND NO PRONOUN FOR THE COACH, IN THESE LABELS OR IN THE FEED ROWS BELOW – R15-7's rule, which
+   *  `tests/coach-voice.test.ts` sweeps over every literal in this file: the sim holds no gender for a
+   *  coach, so «thank him» is a fact the world does not have. The first draft of this pool said it and
+   *  the sweep caught it, which is what that guard is for. */
+  'fork-counsel': [
+    { id: 'heard', label: 'Thank the coach for saying it plainly', bond: 0 },
+    { id: 'weigh', label: 'Say we will sit with it', bond: 0 },
+  ],
 }
 
 /** ⭐⭐⭐ v74 T7 – THE WANTS FLIP, AS AN OVERLAY AND NEVER AS A SECOND TABLE. A girl whose drawn
@@ -1035,6 +1255,16 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
   // ⚠⚠ NO ROW, AND THE `null` IS THE STATEMENT – see the record's own note above. Tier 1 leaves its
   // trace in `lifeLog` and nowhere else.
   'small-talk': null,
+  // ⭐⭐⭐ v74 T17 – AND THE COUNSEL **DOES** WRITE ONE, which is the opposite call to tier 1's and has
+  // the opposite reason. This fires at most once in a career, on the biggest week of it, and the feed
+  // is where the career is read back afterwards: a stop that the coach had a view about and a stop he
+  // was never asked about are two different biographies, and only the row can tell them apart later.
+  // ⚠ NO `amountCents` AND NO PRICE IN EITHER LINE (rule 4), and neither names what he said – the
+  // read was the card's, and the feed records that the call happened and what the parent did with it.
+  'fork-counsel': {
+    heard: 'Her coach called about her wanting to stop. We said thank you for the plain answer.',
+    weigh: 'Her coach called about her wanting to stop. We said we would sit with it.',
+  },
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -1099,6 +1329,7 @@ export function lifeBeatSaid(
   bond: BondBand,
   wants: LoveEpisode['wants'] = 'open',
   stage: DiaryLifeStage = 'school',
+  driver: ForkStopDriver = 'own',
 ): string {
   const presence = presenceOf(stage)
   // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
@@ -1140,7 +1371,24 @@ export function lifeBeatSaid(
       const want = FORK_WANTS.find((w) => w === detail)
       if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
       if (!speaksInHerOwnVoice(bond)) return FLAT_LINE[want]
-      return HER_LINE[voice][want][register === 'low' ? 'low' : 'up']
+      // ⭐⭐⭐ v74 T17 – AND `stop` IS THE ONE WANT WITH A ROOT TO NAME. `college` and `tour` read
+      // exactly the lines they have always read (the driver is `'own'` by default and `stopLine` is
+      // not on their path at all); `stop` reads the driver's column, whose `'own'` case IS the
+      // shipped register pair. Not one byte of wave 2's pool moved for this.
+      if (want !== 'stop') return HER_LINE[voice][want][register === 'low' ? 'low' : 'up']
+      return stopLine(voice, driver, register === 'low' ? 'low' : 'up')
+    }
+    // ⭐⭐⭐ v74 T17 – THE FOURTH KIND, AND IT READS ITS OWN `detail` LIKE TIER 1 DOES. The row records
+    // the driver the moment it is raised, off the same spirit and bond her own line was worded from
+    // (`answerLifeBeat` derives it BEFORE the answer's bond delta lands), so the two voices are
+    // reading one girl. A re-derivation from a later world could hand a parent a coach explaining a
+    // different stop from the one she just described.
+    // ⚠ IT READS NO `voice` AND NO `bond`: the coach is not her and is not the relationship – see the
+    // §3d banner. It reads no `register` either, for tier 1's own reason: the week is hers.
+    case 'fork-counsel': {
+      const root = FORK_STOP_DRIVERS.find((d) => d === detail)
+      if (root === undefined) throw new Error(`A fork-counsel row carries no driver: ${detail}`)
+      return COACH_COUNSEL[root]
     }
   }
 }
@@ -1160,6 +1408,11 @@ export function lifeBeatHeading(kind: LifeBeatKind, register: MoodRegister, bond
       return SMALL_TALK_HEADING[register]
     case 'fork-opinion':
       return HEADING[register]
+    // ⭐ v74 T17 – ONE FRAME, KEYED ON NOTHING. The Mood register is the weather of HER week and the
+    // bond band is the distance between the two of them; this card is a call from a third person, and
+    // neither axis is a fact about it. See `COUNSEL_HEADING`.
+    case 'fork-counsel':
+      return COUNSEL_HEADING
   }
 }
 
@@ -1181,7 +1434,11 @@ export function lifeBeatListenFollowUp(
   // she came with something SMALL and has said it. The three replies are the whole of the beat, one
   // of which is letting it keep – a second panel promising more of her would be the same fictional
   // dishonesty the 10.09 ruling removed from the fork.
-  if (kind === 'met' || kind === 'small-talk') return null
+  // ⚠ AND `'fork-counsel'` HAS NONE, for a third reason of its own (v74 T17): the listening detour is
+  // «say nothing, and let HER talk», and the reward of it is more of her. The coach has given a
+  // professional read and has no second half of it being withheld; a panel offering one would promise
+  // words nobody wrote. The card's two acknowledgments are the whole of the beat.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -1254,7 +1511,23 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     week: row.week,
     kind: row.kind,
     heading: lifeBeatHeading(row.kind, register, band),
-    said: lifeBeatSaid(row.kind, row.detail, voice, register, band, wants, lifeStageOf(world)),
+    // ⭐ v74 T17 – THE EIGHTH ARGUMENT IS THE DRIVER, AND IT IS THREADED EXACTLY AS `wants` AND
+    // `stage` WERE: a parameter with a safe default (`'own'`, which is the shipped reading of a
+    // `stop` line and not a neutral stand-in), so every pin wave 2 and wave 3 wrote keeps calling
+    // this with five or seven arguments and keeps asserting the lines it was written against.
+    // ⚠ IT IS DERIVED FROM THE WORLD'S OWN NUMBERS, not from the band and the register the two lines
+    // above read: those are ladders, and the driver is a distance. `forkStopDriverOf` is the one
+    // spelling of it and `forkWantWeights` reads the same two roots through the same helper.
+    said: lifeBeatSaid(
+      row.kind,
+      row.detail,
+      voice,
+      register,
+      band,
+      wants,
+      lifeStageOf(world),
+      forkStopDriverOf(world.spirit ?? ECONOMY.spirit.baseline, world.bond ?? ECONOMY.bond.start),
+    ),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
@@ -1341,10 +1614,34 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
     (o) => o.id === optionId && prompt.options.some((p) => p.id === o.id),
   )
   if (!chosen) throw new Error('That is not one of the answers this beat offered')
+  // ⭐⭐⭐ v74 T17 – THE COUNSEL ARC'S ONE DECISION, AND IT IS TAKEN **BEFORE** THE BOND DELTA LANDS.
+  //
+  // ⚠⚠ THE ORDER IS THE WHOLE OF THE CORRECTNESS HERE. The driver is the reading her own line was
+  // just worded from, and `applyBondDelta` one line down moves the very number a `'strained'` driver
+  // is read off – a −2 for pressing her could turn «she is sure» into «the home is cold» between the
+  // card the parent read and the call he gets about it. Derived here, the coach explains the girl she
+  // described; derived after, he would sometimes be explaining the parent's answer.
+  //
+  // ⚠ ONLY ON A `stop`, AND ONLY OFF HER OWN ROW. `college` and `tour` keep today's exact flow: her
+  // row is answered, the fork opens, nothing else is raised – which is the ruling's own boundary.
+  const counselDriver =
+    rows[target].kind === 'fork-opinion' && rows[target].detail === 'stop'
+      ? forkStopDriverOf(world.spirit ?? ECONOMY.spirit.baseline, world.bond ?? ECONOMY.bond.start)
+      : null
   rows[target] = { ...rows[target], answer: chosen.id }
   // ⚠ HIS WORDS MOVE `bond` AND NOTHING ELSE (§4a.2's law, and this wave's fence): no spirit delta
   // from any of this, no skill, no condition, no money.
   applyBondDelta(world, chosen.bond)
+  // ⭐⭐⭐ v74 T17 – ...AND THE COACH CALLS. One raise, and the whole of layer 2's machinery is this
+  // line plus a `true` in `LIFE_BEAT_BLOCKING`: the new row is blocking, `answerFork` already refuses
+  // while any blocking row is unanswered, and so the fork stays shut until the parent has heard him.
+  // ⚠ ABOVE THE `ANSWER_EVENT` EARLY RETURN on purpose. Her kind writes a feed row today, so the two
+  // orders agree – but a kind that stopped writing one must not silently stop raising the counsel,
+  // and «the raise is below a `return`» is exactly how that would happen.
+  // ⚠⚠ THE PSYCHOLOGIST'S BEAT SLOTS HERE, BESIDE THIS LINE, AND NOWHERE ELSE (wave 5). He is a second
+  // `raiseLifeBeat` on the same condition with the same driver; the queue answers them in log order,
+  // the fork waits for both, and nothing about this file changes shape to take him.
+  if (counselDriver !== null) raiseLifeBeat(world, 'fork-counsel', counselDriver)
   // ⭐⭐ v74 T8 – AND A KIND MAY WRITE NO ROW AT ALL. `'small-talk'`'s entry in `ANSWER_EVENT` is
   // `null`, deliberately and by the record's own totality: tier 1 leaves its trace in `lifeLog` and
   // nowhere else, because four «we asked her to say more» rows a season would bury the private-life

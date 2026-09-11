@@ -374,6 +374,16 @@ describe('wave 2 C – `answerFork` refuses while her row is unanswered', () => 
     expect(advanceWeeks(world, rng, 4), 'she is the reason, not the fork').toEqual(['life'])
     expect(world.week, 'zero ticks – a refusal, not a halt').toBe(before)
     answerLifeBeat(world, 'back')
+    // ⚠⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED – and the ⚠ note names exactly what moved. When
+    // the want she stated is `'stop'`, answering her raises `'fork-counsel'` (the coach's read,
+    // blocking), which is ALSO a `'life'` reason – so on a stopping career this line read `['life']`
+    // a second time. The claim of this case is «the block is the ENGINE'S, not the dialog's», i.e.
+    // that nothing ticks past a life row, and that claim is unchanged: the life queue is walked to
+    // its end and the fork is what is left standing. ⚠ ON A `college` OR `tour` WANT THIS HELPER DOES
+    // NOTHING AT ALL and the line below reads precisely as it did before T17, which is the ruling's
+    // own boundary. ⚠ It is also `drainOtherBeats`, the file's existing helper, so the bond-neutral
+    // rule is not re-typed here.
+    drainOtherBeats(world)
     expect(advanceWeeks(world, rng, 4), 'and now the fork is').toEqual(['fork'])
     expect(world.week, 'still zero ticks').toBe(before)
     // ARM 4: the `pendingLifeBeat` line deleted from `advanceRefusal` – RED here (the first
@@ -415,7 +425,22 @@ describe('wave 2 D – the record IS the queue', () => {
     const second = buildLifeBeatPrompt(world)!
     expect(second.week, 'the queue advanced by exactly one').toBe(lifeLogOf(world)[1].week)
     answerLifeBeat(world, 'press')
-    expect(lifeLogOf(world).map((r) => r.answer), 'both answered, in the order they were raised').toEqual(['back', 'press'])
+    // ⚠⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED. The second row here is a `'stop'`, so answering
+    // it raises the coach's counsel BEHIND it – a third row, unanswered, by design. The claim is
+    // «two pending rows are answered one at a time, in lifeLog order, and none is lost», and it is
+    // asserted on HER TWO ROWS rather than on the whole log, which is what the claim was always
+    // about. The counsel is then named explicitly, so a row appearing here can never be a silent
+    // extra.
+    expect(
+      lifeLogOf(world).filter((r) => r.kind === 'fork-opinion').map((r) => r.answer),
+      'both answered, in the order they were raised',
+    ).toEqual(['back', 'press'])
+    expect(lifeLogOf(world).map((r) => r.kind), '...and the third row is the counsel T17 raises on a stop').toEqual([
+      'fork-opinion',
+      'fork-opinion',
+      'fork-counsel',
+    ])
+    drainOtherBeats(world)
     expect(buildLifeBeatPrompt(world), 'and the queue is empty').toBeNull()
     expect(pendingLifeBeat(world)).toBeNull()
     // ARM 6: `pendingLifeBeat` re-pointed at the LAST unanswered row – RED here (the answers come
@@ -788,13 +813,30 @@ describe('wave 2 F – the player\'s answer may never move the world\'s dice', (
     // ⚠ THROUGH `region` AND NEVER A RAW `indexOf` SLICE: a raw slice does not fail when a marker
     // rots – `indexOf` returns −1, the region silently WIDENS to almost the whole file, and a pin
     // that then reads the copy table would pass on `sunny` alone. `region` throws on either marker.
-    const maths = region(engineModuleSource('world/lifeBeat'), 'export function forkWantWeights', 'export function forkStandingOf')
+    // ⚠⚠ THE END MARKER MOVED IN v74 T17 (11.09) AND THE REGION IS NARROWER, NOT WEAKER. T17 put
+    // `forkStopDriverOf` between the weights and `forkStandingOf`, so the old span swallowed it – and
+    // the pin is a SUBSTRING check, which made the word «quietly» in the driver's own doc comment a
+    // temperament hit («quiet»). The region now ends at the driver's type declaration, so it is
+    // exactly the weighting function, which is what the claim was always about; the driver is swept
+    // by its own region directly below, so nothing lost cover.
+    const source = engineModuleSource('world/lifeBeat')
+    const maths = region(source, 'export function forkWantWeights', 'export type ForkStopDriver')
     expect(maths.length, 'the region really was cut').toBeGreaterThan(100)
     expect(maths, 'and it is the maths half, not the copy half').not.toContain('HER_LINE')
     for (const trait of [...TEMPERAMENTS, 'temperament', 'Temperament']) {
       expect(maths, `the want's maths names no ${trait}`).not.toContain(trait)
     }
     // ARM 9: `temperament === 'fiery' ? 2 : 1` folded into `forkWantWeights` – RED on 3.
+
+    // 4. ⭐⭐⭐ v74 T17 – AND THE SAME CUT OVER THE DRIVER, which is the fence one level in. The driver
+    //    is derived from spirit and bond alone and is spent on WORDING; a temperament term in it
+    //    would not script her career, but a temperament term is not what it reads, and the wall is
+    //    worth having on both halves of a function pair that share their inputs.
+    const driver = region(source, 'export function forkStopDriverOf', 'const DRIVER_TOTAL')
+    expect(driver.length, 'the driver region really was cut').toBeGreaterThan(50)
+    for (const trait of [...TEMPERAMENTS, 'temperament', 'Temperament']) {
+      expect(driver, `the driver names no ${trait} either`).not.toContain(trait)
+    }
   })
 
   it('⚠ the three leans point the ruled way – worn leans stop, close dares more, standing wants the tour', () => {
@@ -807,11 +849,24 @@ describe('wave 2 F – the player\'s answer may never move the world\'s dice', (
     expect(forkWantWeights(0, 70, 70).college, '...and one who did not wants the place').toBeGreaterThan(flat.college)
     // ⚠ AND NO READING EVER DRIVES A WANT TO ZERO – every want stays common for every girl, which is
     // the anti-stereotype guard §3 asks for, applied to a want.
+    //
+    // ⚠⚠ RE-AIMED BY v74 T17 (11.09) FROM `>= 1` TO `> 0`, AND THE RULING IS WHAT MOVED, NOT THE
+    // BAR'S INTENT. The claim this sweep makes is «no reading drives a want to zero», and it is
+    // unchanged. What is gone is the accident that used to carry it: `stop` was `lean(worn)` and
+    // every lean floors at 1.0, so P(stop) could never fall below ~22% at ANY state – the owner met
+    // exactly that in play, at eighteen, on a healthy girl in a close home. `stop` is now
+    // `ECONOMY.life.forkStop.floor + …`, whose floor is ε > 0 and never zero: the Barty tail stays a
+    // feature and is priced for an eighteen-year-old's rarity. ⚠ `college` and `tour` are untouched
+    // and still ≥ 1, which the case they are asserted in (`tests/wave3-stop-want.test.ts` §A) holds
+    // byte-for-byte against the old formulae. ⚠ A FLOOR OF 0 MAKES THIS LINE RED, which is the whole
+    // reason it is a `> 0` rather than a deleted assertion (ARM 17d there).
     for (const standing of [0, 0.5, 1]) {
       for (const spirit of [0, 50, 100]) {
         for (const bond of [0, 70, 100]) {
           const w = forkWantWeights(standing, spirit, bond)
-          for (const want of FORK_WANTS) expect(w[want], `${standing}/${spirit}/${bond} ${want}`).toBeGreaterThanOrEqual(1)
+          for (const want of FORK_WANTS) expect(w[want], `${standing}/${spirit}/${bond} ${want}`).toBeGreaterThan(0)
+          expect(w.college, `${standing}/${spirit}/${bond}: college is untouched and still leans`).toBeGreaterThanOrEqual(1)
+          expect(w.tour, `${standing}/${spirit}/${bond}: tour is untouched and still leans`).toBeGreaterThanOrEqual(1)
         }
       }
     }

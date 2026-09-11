@@ -3688,6 +3688,40 @@ export const ECONOMY = {
      *  `'fork-opinion'` and `'met'` rows, and a naive length would cap her small talk on the week
      *  she was told there is someone. */
     smallTalkCapPerSeason: 4,
+    /** ⭐⭐⭐ v74 T17 – WHAT IT TAKES FOR HER TO WANT TO STOP (the owner's ruling of 11.09, made on
+     *  his own playtest: his world #5, healthy, close home, met «I want to finish» at eighteen).
+     *
+     *  ⚠⚠ THE SHAPE IS THE RULING AND THE THREE NUMBERS ARE **DRAFT FOR THE BENCH**, in exactly the
+     *  sense §4's other rows are: `stop = floor + gainWorn × worn + gainStrained × strained`, read
+     *  by `forkWantWeights` (world/lifeBeat.ts §2) and by nothing else. Before this the `stop` weight
+     *  was `lean(worn)`, which is 1.0 at its floor – so the least stop-shaped girl the game can
+     *  produce still met the question at ~22–25%, and a quarter of all players were told at the
+     *  biggest moment of the career that she wanted to finish, with no root they could read.
+     *
+     *  ⚠ THE TAIL IS PRICED, NOT REMOVED. `floor` is ε > 0 and must stay so: the Barty ending – she
+     *  is whole, she is winning, and she is done – is a FEATURE, and any girl may still want any of
+     *  the three. What the floor buys is its RARITY: unsupported (worn = strained = 0) it reads
+     *  ~3–4% at every standing, which is an eighteen-year-old's rarity rather than a quarter.
+     *
+     *  ⚠ `strained` IS THE MIRROR OF `close` and is measured off the distance BELOW `bond.start`,
+     *  exactly as `close` is measured above it – so 70 is neutral in both directions and a neutral
+     *  home leans nothing. The two gains are ordered deliberately: being worn out weighs more than
+     *  being far from the parent, because the season is what she would be stopping. */
+    forkStop: { floor: 0.12, gainWorn: 2.5, gainStrained: 2.0 },
+    /** ⭐⭐ THE DRIVER'S THRESHOLD – the one number that decides which ROOT her stop line and the
+     *  coach's counsel are worded from (`worn > this` → `'worn'`, else `strained > this` →
+     *  `'strained'`, else `'own'`).
+     *
+     *  ⚠⚠ IT IS SPENT ON WORDING AND ON NOTHING ELSE. The driver never re-weights the draw it
+     *  explains: `forkWantWeights` reads `forkStop` above and never this, and the same (standing,
+     *  spirit, bond) produces the identical three weights whether or not anything asks for a driver.
+     *  `tests/wave3-stop-want.test.ts` §B is the pin that says so.
+     *
+     *  ⚠ 0.15 IS «SOMETHING REAL RATHER THAN ROUNDING»: at 0.15 the stop weight has moved by 0.375
+     *  (worn) or 0.30 (strained) off its floor, which is already three times the floor itself – so
+     *  the wording claims a root only where the arithmetic actually leaned on one. Below it she is
+     *  the Barty case and the copy says so. */
+    forkStopDriverFrom: 0.15,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

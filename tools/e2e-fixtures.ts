@@ -526,6 +526,24 @@ const RECIPES: Recipe[] = [
           // fixture's own world is touched.
           const probe = structuredClone(world)
           answerLifeBeat(probe, 'back')
+          // ⭐⭐⭐ v74 T17 – AND ANSWERING HER CAN NOW RAISE ANOTHER CARD IN FRONT OF THE FORK. When the
+          // want she stated is `'stop'`, recording the parent's answer raises `'fork-counsel'` – the
+          // coach's read, blocking – and `answerFork` on the next line would THROW
+          // (`FORK_UNHEARD_REFUSAL`), killing the generator instead of rejecting one seed. That is
+          // the same shape as the `'met'`-on-the-fork-week gap four clauses up, and it is closed the
+          // same way: this is the REJECTION CLAUSE, and it doubles as the look-ahead learning the
+          // beat, because it asks the ENGINE what is standing there rather than listing the kinds
+          // that could be. Wave 5's psychologist raises a second such row beside the coach's and is
+          // covered the day it is declared.
+          //
+          // ⚠⚠ AND IT HAS TO BE A REJECTION AND NOT A DRAIN. `e2e/life-beat.spec.ts` presses her
+          // answer and then reads the FORK's three buttons off the very next snapshot; a counsel card
+          // between them would put the spec in front of a dialog it knows nothing about. Draining the
+          // row here would hide that from the generator and move the failure into Playwright.
+          const raisedByAnswering = pendingLifeBeat(probe)
+          if (raisedByAnswering !== null) {
+            return `answering her raises a '${raisedByAnswering.kind}' card in front of the fork, and the spec presses straight past it`
+          }
           answerFork(probe, recipe.fork)
           const stillBlocked = advanceRefusal(probe)
           if (stillBlocked !== null) return `answering both leaves a '${stillBlocked}' standing in the week's way`

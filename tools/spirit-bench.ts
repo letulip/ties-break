@@ -121,6 +121,18 @@ import {
   answerFork,
   forkWantOf,
   FORK_WANT_ANSWER,
+  // ⚠⚠ v74 T17 – THE FIVE THE STOP-WANT SECTION NEEDS. `forkWantWeights` is the PURE formula the grid
+  // is printed from (no world, no draw, no walk – so the grid is arithmetic and the share below it is
+  // a measurement, and the two cannot be confused); `forkStopDriverOf` is the engine's own single
+  // spelling of which root a stop has, asked rather than re-derived here; `lifeLogOf` is how the
+  // walked half COUNTS the counsel rows the arc actually raised, which is this file's own hard rule
+  // about actuation after a bench that exited 0 while answering nothing.
+  forkWantWeights,
+  forkStopDriverOf,
+  lifeLogOf,
+  FORK_WANTS,
+  FORK_WANT_TILT,
+  FORK_STOP_DRIVERS,
   // ⚠ v74 – the engine's own refusal string, so the drain below can tell a terminal latch (which is
   // tolerated) from a beat kind with no bond-neutral answer (which must never be swallowed here).
   CAREER_ENDED_REFUSAL,
@@ -130,7 +142,7 @@ import {
   // the arrival is keyed on (seed, calendar) alone, so the two arms must hold it on the same weeks.
   activeEpisode,
 } from '../src/engine/world'
-import type { Temperament, WorldState } from '../src/engine/world'
+import type { ForkStopDriver, ForkWant, Temperament, WorldState } from '../src/engine/world'
 // ⚠ T12 reads two knock facts the barrel does not re-export, from the leaf that owns them – the same
 // direct-to-leaf shape this file already uses for `ECONOMY`, `isExamWeek` and `schoolEndWeek`.
 // `knockGoverns` is the engine's OWN answer to "is this week one the push is being paid for", so the
@@ -226,6 +238,19 @@ interface Career {
   /** bond immediately after the fork was answered - the week the two wave-2 deltas have landed.
    *  NaN for every career that never reached one, which on the bar grid is all of them. */
   bondAtFork: number
+  /** ⭐⭐⭐ v74 T17's FOUR, AND THEY ARE THE ACTUATION RECORD AS MUCH AS THE MEASUREMENT. The share
+   *  printed in [3b] is «stops with no readable root, over careers that reached the fork», and a
+   *  share whose denominator nobody printed is worth nothing - this file has already shipped a
+   *  «0 answered» run that exited 0. So the want, the root reading it was drawn under, the driver the
+   *  ENGINE derived from that reading, and the count of counsel rows the arc actually raised are all
+   *  recorded per career, and every one of them is printed beside the number it supports. */
+  forkWant: ForkWant | null
+  /** the driver at the moment her row was answered - the engine's own function, not a re-derivation */
+  forkDriver: ForkStopDriver | null
+  /** the two roots as the weights read them, for the STRICT «unsupported» reading (both exactly 0) */
+  forkRoots: { worn: number; strained: number } | null
+  /** `'fork-counsel'` rows this career ever held - 0 on every want but `stop`, 1 on a stop */
+  counselRows: number
   weeks: number
   /** null when she played all four seasons; the ending's own type when she did not */
   endedAs: string | null
@@ -254,6 +279,10 @@ function runCareer(seed: string, arm: Arm, temperament: Temperament): Career {
     beatAnswers: [],
     forkCongruence: null,
     bondAtFork: Number.NaN,
+    forkWant: null,
+    forkDriver: null,
+    forkRoots: null,
+    counselRows: 0,
     weeks: 0,
     endedAs: null,
   }
@@ -427,6 +456,19 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
   const pending = pendingLifeBeat(world)
   if (pending === null) return
   career.beatsRaised++
+  // ⭐⭐⭐ v74 T17 – READ THE WANT AND ITS ROOTS **BEFORE** THE ANSWER, for the engine's own reason: the
+  // bond delta this answer is about to apply moves the very number `strained` is measured off, so a
+  // reading taken after it would sometimes describe the parent's reply instead of the girl. This is
+  // the same line `answerLifeBeat` draws internally, and `forkStopDriverOf` is the SAME function - a
+  // bench re-derivation of «which root» is exactly the second reading this repo keeps catching.
+  career.forkWant = forkWantOf(world)
+  const s = ECONOMY.spirit
+  const b = ECONOMY.bond
+  career.forkRoots = {
+    worn: Math.min(1, Math.max(0, (s.baseline - world.spirit) / (s.baseline - s.min))),
+    strained: Math.min(1, Math.max(0, (b.start - world.bond) / (b.start - b.min))),
+  }
+  career.forkDriver = forkStopDriverOf(world.spirit, world.bond)
   const said = arm === 'care' ? 'back' : 'press'
   try {
     answerLifeBeat(world, said)
@@ -434,6 +476,23 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
   } catch {
     /* a terminal latch – `guardNotEndedForGood` refuses, and the row stays open for nobody */
   }
+  // ⭐⭐⭐ v74 T17 – AND THE SECOND DRAIN IS NOT A TIDY-UP, IT IS THE FIX FOR A BENCH THAT WOULD HAVE
+  // LIED AGAIN. Answering a `'stop'` opinion raises `'fork-counsel'` (the coach's read, blocking), and
+  // `answerTheForkTheWayThisArmWould` one line below has a `catch {}` around `answerFork` – so every
+  // stopping career would have had `forkCongruence: null` and `bondAtFork: NaN` with no error
+  // anywhere, which is byte-for-byte the failure mode this file's own header records from T6b.
+  // ⚠ IT IS THE BOND-NEUTRAL DRAIN, so the counsel cannot move the number either arm is measuring –
+  // both of its answers are zero by construction, which is what makes it drainable at all.
+  try {
+    drainLifeBeats(world, 'fork-opinion')
+  } catch (e) {
+    if (!(e instanceof Error) || e.message !== CAREER_ENDED_REFUSAL) throw e
+  }
+  // ⚠⚠ AND THE ARC IS COUNTED OFF THE WORLD'S OWN LOG, not off the bench's expectation of it. «The
+  // counsel fired» is the actuation half of [3b]'s share: a run reporting «0% unsupported» with zero
+  // counsel rows is a run in which nothing happened, and the two numbers printed together is what
+  // makes that impossible to miss.
+  career.counselRows = lifeLogOf(world).filter((row) => row.kind === 'fork-counsel').length
 }
 
 /** ⭐⭐ WHAT HE DOES, priced against the want the ENGINE recorded rather than against a want the
@@ -2016,6 +2075,136 @@ if (beatsFired === 0) {
       `       ⚠ THIS IS NOT A BAR AND CANNOT BECOME ONE. Bar 3's reading week is the owner's; this row exists only to\n` +
       `       price what a re-aim would be buying, and it changes no constant.`,
   )
+}
+
+// --- 3b. THE STOP WANT (v74 T17) -----------------------------------------------------------------
+//
+// ⭐⭐⭐ THE OWNER MEASURED THIS IN PLAY AND IT IS WHY T17 EXISTS: his world #5, healthy, close home,
+// met «I want to stop» at eighteen. Under the old weights that was NO TAIL – `stop` was `lean(worn)`,
+// which bottoms out at 1.0 like every other lean, so P(stop) floored at ~22–25% at every state.
+//
+// ⚠⚠ THIS SECTION IS TWO DIFFERENT KINDS OF NUMBER AND THEY ARE PRINTED APART ON PURPOSE. The GRID is
+// the PURE FORMULA – `forkWantWeights` called on a state, no world, no draw, no walk – so it is
+// arithmetic and it is exact. The SHARE is a MEASUREMENT off walked careers, with its denominator and
+// its actuation counts printed beside it, because a share nobody can prove was measured is worth
+// nothing here: this very file once exited 0 having raised 842 beats and answered none of them.
+rule('[3b] THE STOP WANT – the pure P(stop) grid, and the walked share with no readable root')
+{
+  const f = ECONOMY.life.forkStop
+  const s = ECONOMY.spirit
+  const b = ECONOMY.bond
+  console.log(
+    `    the formula: stop = ${f.floor} + ${f.gainWorn}×worn + ${f.gainStrained}×strained, ` +
+      `worn = (${s.baseline} − spirit)/${s.baseline - s.min}, strained = (${b.start} − bond)/${b.start - b.min} (both clamped 0..1)\n` +
+      `    college and tour are UNTOUCHED: college = lean(1−standing), tour = lean(standing)×lean(close), lean ∈ [1.0, ${FORK_WANT_TILT}]\n` +
+      `    the driver (WORDING ONLY, never a weight): worn > ${ECONOMY.life.forkStopDriverFrom} → 'worn', else strained > ${ECONOMY.life.forkStopDriverFrom} → 'strained', else 'own'`,
+  )
+  // The state axis: the two roots together, as the brief reads them («a post-shock worn girl in a
+  // strained home», «a drained girl in a cold home»). The standing axis is the fork's own 0..1.
+  const STATES: readonly { name: string; worn: number; strained: number }[] = [
+    { name: 'unsupported', worn: 0, strained: 0 },
+    { name: 'at the driver line', worn: ECONOMY.life.forkStopDriverFrom, strained: 0 },
+    { name: 'worn .3', worn: 0.3, strained: 0 },
+    { name: 'strained .3', worn: 0, strained: 0.3 },
+    { name: 'worn+strained .4', worn: 0.4, strained: 0.4 },
+    { name: 'worn+strained .6', worn: 0.6, strained: 0.6 },
+    { name: 'drained, cold', worn: 1, strained: 1 },
+  ]
+  const STANDINGS = [0, 0.25, 0.5, 0.75, 1] as const
+  // ⚠ THE GRID IS PRINTED AT A **CLOSE** HOME'S `close` TERM ONLY WHERE THE HOME ALLOWS IT. `close`
+  // and `strained` are the same distance read from the two sides of `bond.start`, so a strained state
+  // has `close = 0` by construction: the spirit and bond a cell is evaluated at are derived from its
+  // own roots, never chosen, which is what keeps the grid a reading of the formula rather than of a
+  // set of numbers somebody picked.
+  console.log(`\n    P(stop) %, by state × standing  (bond = start − strained×${b.start - b.min}, spirit = baseline − worn×${s.baseline - s.min})`)
+  console.log(`    ${pad('state', 22)}${STANDINGS.map((x) => padL(`st ${x}`, 10)).join('')}${padL('driver', 12)}`)
+  console.log(`    ${'─'.repeat(22 + 10 * STANDINGS.length + 12)}`)
+  for (const state of STATES) {
+    const spirit = s.baseline - state.worn * (s.baseline - s.min)
+    const bond = b.start - state.strained * (b.start - b.min)
+    const cells = STANDINGS.map((standing) => {
+      const w = forkWantWeights(standing, spirit, bond)
+      const total = FORK_WANTS.reduce((sum, want) => sum + w[want], 0)
+      return padL(`${((100 * w.stop) / total).toFixed(1)}`, 10)
+    })
+    console.log(`    ${pad(state.name, 22)}${cells.join('')}${padL(forkStopDriverOf(spirit, bond), 12)}`)
+  }
+  // ⚠⚠ THE CONTROL ROW: the SAME grid under the OLD `stop` weight. Without it «3.3%» is a number with
+  // nothing to be small compared to, and a reader cannot tell a priced tail from a broken formula.
+  const oldStop = (worn: number) => 1 + (FORK_WANT_TILT - 1) * Math.min(1, Math.max(0, worn))
+  const oldAt = (standing: number, worn: number, strained: number) => {
+    const bond = b.start - strained * (b.start - b.min)
+    const w = forkWantWeights(standing, s.baseline - worn * (s.baseline - s.min), bond)
+    const stop = oldStop(worn)
+    return (100 * stop) / (w.college + w.tour + stop)
+  }
+  console.log(
+    `\n    ⚠ THE OLD FORMULA ON THE SAME GRID (stop = lean(worn)), which is what the owner met:\n` +
+      `    ${pad('unsupported', 22)}${STANDINGS.map((x) => padL(oldAt(x, 0, 0).toFixed(1), 10)).join('')}\n` +
+      `    ${pad('worn+strained .4', 22)}${STANDINGS.map((x) => padL(oldAt(x, 0.4, 0.4).toFixed(1), 10)).join('')}`,
+  )
+  // ⚠⚠ AND WHY EVERY ROW ABOVE IS FLAT ACROSS THE STANDING AXIS – a finding rather than a bug, and it
+  // is printed because a reader who does not know it will read the flatness as a broken grid. The two
+  // standing leans are COMPLEMENTARY: `college = lean(1−standing)` and `tour = lean(standing)`, and
+  // while `close` is 0 their sum is `2 + (TILT−1)` at EVERY standing. Every row above is evaluated at
+  // `bond <= start` (that is what a `strained` reading means), so `close` is 0 throughout and only the
+  // two leans' constant sum reaches the denominator. Standing moves P(stop) only through `close`,
+  // which needs a bond ABOVE start – so the second grid is the one where the axis is alive.
+  console.log(
+    `\n    ...AND AT A HOME ABOVE THE START (close > 0), where the standing axis is not degenerate:\n` +
+      `    ${pad('state', 22)}${STANDINGS.map((x) => padL(`st ${x}`, 10)).join('')}${padL('bond', 12)}`,
+  )
+  for (const bondNow of [b.max, (b.start + b.max) / 2, b.start]) {
+    const cells = STANDINGS.map((standing) => {
+      const w = forkWantWeights(standing, s.baseline, bondNow)
+      return padL((((100 * w.stop) / (w.college + w.tour + w.stop))).toFixed(1), 10)
+    })
+    console.log(`    ${pad('unsupported', 22)}${cells.join('')}${padL(bondNow, 12)}`)
+  }
+
+  // --- the walked half ---------------------------------------------------------------------------
+  const reached = careers.filter((c) => c.forkWant !== null)
+  const stops = reached.filter((c) => c.forkWant === 'stop')
+  const rootless = stops.filter((c) => c.forkDriver === 'own')
+  const strictly = stops.filter((c) => c.forkRoots !== null && c.forkRoots.worn === 0 && c.forkRoots.strained === 0)
+  const counsel = careers.reduce((a, c) => a + c.counselRows, 0)
+  console.log(
+    `\n    WALKED – actuation first, because a share without it is not a measurement:\n` +
+      `       careers walked ${careers.length} · reached the fork and stated a want ${reached.length} · ` +
+      `'fork-counsel' rows raised ${counsel}\n` +
+      `       wants drawn: ${FORK_WANTS.map((w) => `${w} ${reached.filter((c) => c.forkWant === w).length}`).join(' · ')}\n` +
+      `       drivers at the fork: ${FORK_STOP_DRIVERS.map((d) => `${d} ${reached.filter((c) => c.forkDriver === d).length}`).join(' · ')}`,
+  )
+  if (reached.length === 0) {
+    console.log(
+      `    ⚠⚠ NO CAREER REACHED THE FORK, SO THE SHARE BELOW MEASURES NOTHING. The fork opens at week ` +
+        `${FORK_WEEK} and this grid ends at week ${WEEKS};\n` +
+        `       run \`npm run bench:spirit -- --fork\` (and \`--seeds=N\` for a denominator worth quoting).`,
+    )
+  } else {
+    // ⚠⚠ THE BAR IS THE BRIEF'S OWN DEFINITION OF «UNSUPPORTED» – worn = strained = 0, the state whose
+    // arithmetic the architect checked at 3.3%/3.6%. The driver-`'own'` share is printed BESIDE it as
+    // a diagnostic and is NOT the bar, and the distinction is a MEASURED finding rather than a
+    // convenience: the driver line sits at 0.15, and at the very bottom of the `'own'` band
+    // (bond a hair above 59.5) P(stop) is already ~14%, so the `'own'` band is «the root is too small
+    // to claim in words», not «there is no root». That is also what the register SAYS – `'own'` is
+    // «I have done what I came for», the Barty read, which is a root of its own and the one the owner
+    // ruled must stay possible. Both numbers go to the architect; only the first is a corridor.
+    const share = (100 * strictly.length) / reached.length
+    const ownShare = (100 * rootless.length) / reached.length
+    console.log(
+      `    ⭐ UNSUPPORTED STOPS – BAR: ≤ 5% of careers that reached the fork meet a stop with NO root at all\n` +
+        `       strictly unsupported (worn = strained = 0) ${strictly.length}/${reached.length} = ` +
+        `${share.toFixed(1)}% → ${verdict(share <= 5)}\n` +
+        `       ⚠ DIAGNOSTIC, NOT A BAR – stops the WORDS claim no root for (driver 'own') ` +
+        `${rootless.length}/${reached.length} = ${ownShare.toFixed(1)}%; the 'own' band runs to ~14% P(stop) at its\n` +
+        `       own bottom edge, so it is «too small to name» rather than «absent» – see the note in the source.\n` +
+        `       all stops ${stops.length}/${reached.length} = ${((100 * stops.length) / reached.length).toFixed(1)}%\n` +
+        `       ⚠ THE COUNSEL COUNT ABOVE IS THE PROOF THE ARC RAN: it must equal the number of stops (${stops.length}).` +
+        `${counsel === stops.length ? '' : ' ⚠⚠ IT DOES NOT – the arc did not fire on every stop.'}` +
+        `${reached.filter((c) => c.forkDriver === 'worn').length === 0 ? '\n       ⚠⚠ AND NO CAREER ON THIS GRID WAS `worn` AT THE FORK, so the worn column of the copy is NOT exercised by this walk.' : ''}`,
+    )
+  }
 }
 
 // --- 4. NO CLAMPED MEDIANS -----------------------------------------------------------------------

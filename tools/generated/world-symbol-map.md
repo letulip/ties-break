@@ -8,14 +8,14 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-442 exported names across 49 owning modules.
+445 exported names across 49 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 38 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 41 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
@@ -104,10 +104,13 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
 - `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
 - `drawRawLag` – `src/engine/world/lifeBeat.ts`
+- `FORK_STOP_DRIVERS` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANTS` – `src/engine/world/lifeBeat.ts`
 - `forkStandingOf` – `src/engine/world/lifeBeat.ts`
+- `ForkStopDriver` *(type)* – `src/engine/world/lifeBeat.ts`
+- `forkStopDriverOf` – `src/engine/world/lifeBeat.ts`
 - `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
 - `forkWantOf` – `src/engine/world/lifeBeat.ts`
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
