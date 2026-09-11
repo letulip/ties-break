@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 90 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 91 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
-| general | 2 | [WAVE 3 T4 + T14: THE LIFT MOVES A FROZEN CAREER, AND A PRECEDENT THAT DID NOT TRANSFER](#11092026--wave-3-t4--t14-the-lift-moves-a-frozen-career-and-a-precedent-that-did-not-transfer) | 2026-09-11 |
+| general | 3 | [WAVE 3 T7 + T9: THE FLIP AS AN OVERLAY, AND A BUILDER WHO CAUGHT ITS OWN DEAD NET](#11092026--wave-3-t7--t9-the-flip-as-an-overlay-and-a-builder-who-caught-its-own-dead-net) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 4 | [THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS](#11092026--the-private-life-events-the-art-was-already-painted-and-six-rulings) | 2026-09-11 |
@@ -3678,3 +3678,46 @@ the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-ch
 - ❓ **OPEN, for the owner**: T6's intrusive option label reads «Say we want to meet them, now» –
   «them», not «him», because `LoveEpisode` persists no gender by design (T1) and a pinned test now
   forbids gendered pronouns in the `'met'` labels. His to overrule at the вычитка.
+
+## 11.09.2026 – WAVE 3 T7 + T9: THE FLIP AS AN OVERLAY, AND A BUILDER WHO CAUGHT ITS OWN DEAD NET
+
+- **T7 – the wants flip, built as an OVERLAY of two rows rather than a second table of four.** A girl
+  who asked that it be kept quiet reads **silent +2, warm −1**; `wary` and `intrusive` are untouched.
+  ⭐ The overlay shape is the point: `wary`'s zero is LITERALLY the same zero in both readings, which
+  is what makes the bond-neutral guarantee a property rather than a coincidence.
+  `lifeBeatOptionsFor(kind, wants)` is the single road to a priced answer set – the prompt renders
+  through it and `answerLifeBeat` charges through it – so the two readings cannot disagree.
+- ⚠⚠ **THE HAZARD THE ARCHITECT NAMED WAS REAL, AND IS NOW PINNED.** T6b's `drainLifeBeats` picks the
+  option priced ZERO and throws if a kind has none; had the flip left `'met'` with no neutral answer
+  under `'private'`, all 40 repaired tools, `e2e:fixtures` and the whole e2e suite would have broken
+  **while `npm run check` stayed green**. ARM 4 (`MET_BOND_PRIVATE` gains `wary: 1`) turns 9 cases red
+  including the drain itself – `Error: met has no bond-neutral answer`. A pin now asserts every
+  `LifeBeatKind` keeps a bond-neutral answer under every `wants`.
+- **And the drain now asks the ENGINE for this row's prices**, not the record: after the flip,
+  `LIFE_BEAT_OPTIONS` is only the `'open'` column of what an answer costs. Reading it directly would
+  have been asking one question and paying for another. Today the two agree and nothing any bench
+  measures moves (proven: e2e fixtures byte-identical, frozen diff 0 keys of 80 on all three
+  careers) – but agreement would have been a coincidence the file depended on rather than a property
+  it checked.
+- ⭐⭐⭐ **ARM 7 – THE BUILDER CAUGHT ITS OWN NET UNABLE TO FAIL, using the warning it was given.** The
+  arm «`answerLifeBeat` also nudges spirit» came back **0 RED**: the net compared the two ANSWER ARMS
+  to each other, and a mutation moving both arms identically is invisible to that – the architect's
+  own «both sides moved together» trap, reproduced inside the net written against it. Rewritten to
+  compare the world BEFORE the answer against AFTER; re-run, 1 RED. The arm-against-arm equality is
+  kept as the smaller control. **Sixth member of this family in one wave, and the first self-caught.**
+- **T9 – the glyph column, mechanism only, map deliberately EMPTY** (who-she-is §5a: the glyphs are the
+  owner's picks). The totality gate is compile-shaped: while `PICKS` is empty it asserts nothing; the
+  moment one glyph lands it demands every life row kind, so a half-done fill fails the BUILD with the
+  missing kind named. Drilled both ways (filled → reaches the cell; emptied → genuinely inert).
+- **T9 also fixed a shipped defect with a type lie behind it.** An unmapped event kind rendered a
+  stray LEADING SPACE, because `EVENT_EMOJI` was typed `Record<string, string>` – claiming every kind
+  has a glyph. The type now admits `undefined` and the space travels with the glyph.
+  ⚠ `wrapper.text()` TRIMS, so a trimmed read would have passed on the broken build; every assertion
+  reads raw `textContent`. One more entry in this wave's vacuity catalogue.
+- **A name collision caught mid-build**: `shared/protocol/narrative.ts` already exports
+  `LifeBeatOption` – the WIRE shape, `{id, label}`, no price. The engine's priced shape is now
+  `LifeBeatAnswer`, and the split is the fence that stops a price reaching a button.
+- ❓ **OPEN, for the owner (T9)**: one glyph marks EVERY life row today. `WorldEvent` carries no
+  life-kind discriminator, so wave 4's endings and §5a's wedding would wear the same mark as «met
+  someone». Per-kind glyphs need either new `WorldEventType` members or a field on the row – a design
+  call, flagged rather than pre-built. Proposed candidate for the one glyph: 🤍.
