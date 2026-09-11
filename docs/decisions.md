@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 85 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 86 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -42,6 +42,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
+| saves-and-schema | 1 | [WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES](#11092026--wave-3-t1-v74-episodes-rather-than-a-slot-and-the-tail-decides) | 2026-09-11 |
 | simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
@@ -3410,3 +3411,51 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
   pool → red). ⚠ One honest cost, noted in the source: the warm pool grew 24 → 27, so existing
   careers' away scraps re-pick ONCE at update – growth moves the modulo, and a second coin to
   avoid it is machinery a scrap of paper does not deserve.
+
+## 11.09.2026 – WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES
+
+- **v74 shipped as a full move, not a three-part one.** `world.loveEpisodes: LoveEpisode[]`,
+  append-only and never pruned, with `activeEpisode` DERIVED from it and no `world.partner` slot
+  anywhere – the 09.09 re-cut (review find #5) paid for in the signature: a romance that begins
+  AND ends before the parent knew survives save/reload and surfaces later as one honest late row,
+  which a stored «current partner» would have overwritten out of existence. No name and no gender
+  persisted, deliberately: the schema must not hardwire boyfriend→husband.
+- ⚠ **The brief called it a three-part move; it is a seventeen-file one.** `loveEpisodes` is written
+  by `createWorld`, so every frozen whole-world career hash moves: `tests/coachTravelEdgeFixtures.ts`
+  needed a `PRE_V74` set, a new peel at the head of the destructure chain and nine re-stamped
+  constants, all under that file's own protocol – the per-key diff MEASURED before a constant is
+  touched, never asserted afterwards. Measured result: exactly two keys move on all three careers,
+  `schemaVersion` and `loveEpisodes` (hash `4f53cda18c2b` = `JSON.stringify([])`), 77 keys
+  byte-identical. `tools/generated/world-symbol-map.md` and `docs/context/saves-and-worker.md` move
+  with any schema step too; neither was on the brief's list.
+- ⭐⭐ **RULING – THE TAIL DECIDES, reversing the builder.** The brief's prose defined `activeEpisode`
+  as «the LAST row with `endedWeek === null`»; the brief's own enumerated test list said «open row
+  then ended row → null». On the shape `[open, ended]` those disagree, and the builder – correctly
+  isolating the contradiction rather than picking silently – implemented the prose. Ruled for the
+  TAIL on three grounds: (1) the divergence is UNREACHABLE, since rows are chronological and the
+  arrival gate refuses to draw while this is non-null, so only the tail can ever be open and both
+  readings agree on every state the sim can produce; (2) on unreachable data the tail FAILS SAFE
+  where a backward scan FAILS STUCK – one row mis-ended by a future bug would pin `activeEpisode`
+  non-null for the rest of the career, meaning no arrival ever again and a permanent +5 baseline
+  lift with nothing anywhere saying why; (3) where prose and an enumerated list disagree, the list
+  is the more specific statement. Nothing is lost from the record either way – the archive is
+  `loveEpisodes` itself, and this function answers only «is someone there NOW».
+- ⚠⚠ **A wave-2 guard test was found VACUOUS and repaired.** `wave2-life-beat.test.ts`'s «a life
+  already on the record is kept whole» read `expect(migrateSave(lived).lifeLog).toEqual(lived.lifeLog)`
+  – and `migrateSave` mutates its payload in place, so both sides were the same object and the
+  assertion compared it with itself. It could not fail, and shipped that way. Caught because wave 3's
+  builder wrote the identical shape one rung up and its mutation arm came back GREEN. Repaired by
+  freezing the expected rows before the call; the same mutation now reads «expected [] to deeply
+  equal [ { week: 9, … } ]». **The house law this is an instance of**: an assertion about something
+  being PRESERVED must hold a copy the code under test cannot reach – the sibling of «a negative
+  assertion must first prove its target exists», which cost two vacuous guards in wave 2.
+- **A third schema pin the brief did not name**, and it needed two edits: `wave2-life-beat.test.ts`
+  pinned `SAVE_SCHEMA_VERSION` exactly AND asserted `v73.json` equals `migrateSave(v72.json)` – the
+  second structurally unfixable as written, since `migrateSave` always walks to the ladder's head.
+  Re-aimed, not weakened: the head is a FLOOR (that case is about v73's own rung), and the equality
+  is made where it stays true – the v73 fixture and the migrated v72 CONVERGE at the head.
+- **Mutation arms, run rather than reasoned.** Builder's five recorded in the new file's header;
+  the architect re-ran two after the ruling: ARM 1 re-aimed with the reversal (a backward scan → the
+  tail case red, 1 of 12) and the repaired wave-2 assertion (the v73 step's `??=` written as `=` →
+  red, where it had been green). MAIN capture unmoved: 41550 / `e6b0c709`, `tests/condition.test.ts`
+  byte-untouched by the step.

@@ -15,10 +15,13 @@
 // nothing, so what was broken and what went red is written down here rather than in a commit message
 // nobody re-reads:
 //
-//   ARM 1  `activeEpisode` reads the LAST INDEX and null-checks it     1 RED – «an OPEN row followed
-//          by a LATER ENDED one»: expected null to be `p:300`
+//   ARM 1  `activeEpisode` SCANS BACK for the last open row            1 RED – «an OPEN row followed
+//          by a LATER ENDED one»: expected `p:300` to be null
+//          ⚠ RE-AIMED 11.09 WITH THE TAIL RULING, NOT DROPPED. It was the mirror of this before the
+//          reversal («reads the last index», 1 RED on the same case) – the case still separates the
+//          two readings and still has exactly one arm; which side is the mutation swapped.
 //   ARM 2  `activeEpisode` drops its `endedWeek === null` test         2 RED – «a row that has ENDED
-//          reads null» (`p:300` came back), and the disagreement case (`p:320` for `p:300`)
+//          reads null» (`p:300` came back), and the tail case (`p:320` came back for null)
 //   ARM 3  `activeEpisode` returns the FIRST match, not the last       1 RED – «two open rows read
 //          the LAST»: `p:300` for `p:340`
 //   ARM 4  the v73 -> v74 step's `??=` written as `=`                  1 RED – «is idempotent…»:
@@ -86,21 +89,27 @@ describe('wave 3 T1 A – the active attachment is derived, never stored', () =>
     expect(activeEpisode(worldWith(episode(300, 320)))).toBeNull()
   })
 
-  it('⚠⚠ an OPEN row followed by a LATER ENDED one still reads the OPEN one – the LIST is walked, not the last index', () => {
-    // ⚠⚠ THIS IS THE ONE CASE WHERE «the last row with `endedWeek === null`» (T1's own definition of
-    // this function) AND «the last row, if it is open» DISAGREE, and it is written as its own case so
-    // that nobody has to guess which one the code means. The definition wins, and it wins on the
-    // argument the whole episodes-not-a-slot re-cut rests on: row 300 says it NEVER ENDED, and a
-    // reading that answered «nobody is there» would be throwing away a fact the list is keeping on
-    // purpose. Losing that is precisely what a stored «current partner» slot did.
+  it('⚠⚠ an OPEN row followed by a LATER ENDED one reads NULL – the TAIL decides, and that is a ruling', () => {
+    // ⚠⚠ THIS IS THE ONE CASE WHERE «the last row with `endedWeek === null`» (the brief's PROSE) and
+    // «the last row, if it is open» (the brief's own enumerated TEST LIST) DISAGREE. The builder
+    // implemented the prose; the architect reversed it on 11.09 and the tail wins. Written as its own
+    // case so nobody has to guess which one the code means – see `activeEpisode`'s own comment for the
+    // three grounds, of which this is the load-bearing one:
     //
-    // ⚠ AND THE SHAPE IS UNREACHABLE ON THIS TREE, deliberately said out loud rather than left to be
-    // inferred: the arrival hazard (T3) refuses to draw while `activeEpisode` is non-null, so at most
-    // one row is open at a time and a later row cannot end before an earlier one that is still going.
-    // The case is pinned NOW anyway, because a selector's behaviour on an impossible state is exactly
-    // what gets decided by accident once something depends on the answer.
+    // ⚠ A BACKWARD SCAN FAILS STUCK WHERE THE TAIL FAILS SAFE. This shape is UNREACHABLE today – the
+    // arrival hazard (T3) refuses to draw while `activeEpisode` is non-null, so at most one row is
+    // open and a later row cannot end before an earlier one still going. But if some future bug ever
+    // produced it, a scan would answer «someone is there» for the rest of the career: no arrival ever
+    // again, a permanent +5 baseline lift, and nothing anywhere saying why. The tail reading lets the
+    // cooldown run and the career recover. A selector's behaviour on an impossible state is exactly
+    // what gets decided by accident once something depends on the answer, so it is decided here.
+    //
+    // ⚠ AND THE ROW IS NOT LOST: `loveEpisodes` still holds it, which is what the list is for. This
+    // function answers only «is someone there NOW».
     const open = episode(300, null)
-    expect(activeEpisode(worldWith(open, episode(320, 340)))).toBe(open)
+    const rows = worldWith(open, episode(320, 340))
+    expect(activeEpisode(rows)).toBeNull()
+    expect(loveEpisodesOf(rows), 'and the open row is still on the record').toContain(open)
   })
 
   it('⭐⭐ an ENDED row followed by an OPEN one reads the OPEN one – the LAST match, not the first', () => {

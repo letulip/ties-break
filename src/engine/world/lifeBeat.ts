@@ -96,8 +96,8 @@ export function loveEpisodesOf(world: WorldState): readonly LoveEpisode[] {
   return world.loveEpisodes ?? []
 }
 
-/** ⭐⭐⭐ THE ACTIVE ATTACHMENT, DERIVED AND NEVER STORED – the LAST row with `endedWeek === null`,
- *  or null when nobody is there. This function is the whole of «is someone in her life right now»:
+/** ⭐⭐⭐ THE ACTIVE ATTACHMENT, DERIVED AND NEVER STORED – the LAST row, and only if it is still
+ *  open; null when nobody is there. This function is the whole of «is someone in her life right now»:
  *  there is no `world.partner` slot and there must never be one.
  *
  *  ⚠⚠ EPISODES RATHER THAN A SLOT IS THE 09.09 RE-CUT (review find #5), and this signature is where
@@ -106,21 +106,30 @@ export function loveEpisodesOf(world: WorldState): readonly LoveEpisode[] {
  *  been overwritten out of existence the next time someone appeared. So the list keeps everything
  *  and the CURRENT one is a question asked of it, which cannot desync from the rows it reads.
  *
- *  ⚠ THE LAST OPEN ROW AND NOT THE FIRST. Wave 3 can only ever have one open row at a time – the
- *  arrival hazard refuses to draw while `activeEpisode` is non-null (T3's eligibility) – so the two
- *  readings agree today. They stop agreeing the moment anything raises a second one, and «the
- *  current attachment is the most recent one» is the reading that stays true then; `pendingLifeBeat`
- *  above takes the FIRST for the opposite and equally deliberate reason, because a queue that
- *  answered its newest entry first would lose the oldest.
+ *  ⚠⚠ THE TAIL DECIDES, AND IT IS A RULING (architect, 11.09) rather than a reading. The brief's
+ *  prose said «the LAST row with `endedWeek === null`» while the brief's own enumerated test list
+ *  said «open row then ended row -> null», and on the shape `[open, ended]` those two disagree. The
+ *  builder implemented the prose; this is the reversal, on three grounds.
+ *
+ *  1. The divergence is UNREACHABLE. Rows are appended in calendar order and the arrival hazard
+ *     refuses to draw while this is non-null (T3's eligibility), so only the TAIL can ever be open.
+ *     On every state the sim can actually produce, the two readings return the same row.
+ *  2. On unreachable data the tail reading FAILS SAFE and the scan fails STUCK. A row mis-ended by
+ *     some future bug leaves the scan pinned non-null for the rest of the career – no arrival ever
+ *     again, a permanent +5 baseline lift, and no error anywhere to say so. The tail reading lets
+ *     the cooldown run and the career recover.
+ *  3. Where prose and an enumerated list disagree, the list is the more specific statement.
+ *
+ *  ⚠ NOTHING IS LOST FROM THE RECORD EITHER WAY, which is what makes this cheap: the archive is
+ *  `loveEpisodes` itself and every row stays in it. This function answers only «is someone there
+ *  NOW». `pendingLifeBeat` above takes the FIRST unanswered row for the opposite and equally
+ *  deliberate reason – a queue that answered its newest entry first would lose the oldest.
  *
  *  ⚠ IT READS `endedWeek` AND NEVER `knownWeek`. Whether the parent has been TOLD is a different
  *  question from whether someone is there, and conflating them would make a private girl single. */
 export function activeEpisode(world: WorldState): LoveEpisode | null {
-  const rows = loveEpisodesOf(world)
-  for (let i = rows.length - 1; i >= 0; i--) {
-    if (rows[i].endedWeek === null) return rows[i]
-  }
-  return null
+  const last = loveEpisodesOf(world).at(-1) ?? null
+  return last !== null && last.endedWeek === null ? last : null
 }
 
 // =================================================================================================

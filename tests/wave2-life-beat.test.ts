@@ -607,8 +607,19 @@ describe('wave 2 G – v73, the three-part move', () => {
     const twice = migrateSave(JSON.parse(JSON.stringify(once)))
     expect(JSON.stringify(twice)).toBe(JSON.stringify(once))
 
-    const lived = { ...JSON.parse(JSON.stringify(v72)), schemaVersion: 72, lifeLog: [{ week: 9, kind: 'fork-opinion', detail: 'stop', answer: 'back' }] }
-    expect(migrateSave(lived).lifeLog, 'a life already on the record is kept whole').toEqual(lived.lifeLog)
+    // ⚠⚠ THE EXPECTATION IS FROZEN BEFORE THE CALL, and that is the entire point of these two lines.
+    // Written the obvious way – `expect(migrateSave(lived).lifeLog).toEqual(lived.lifeLog)` – this case
+    // CANNOT FAIL: `migrateSave` mutates its payload in place, so both sides of the comparison are the
+    // same object and the assertion compares it with itself. It shipped that way with wave 2 and was
+    // caught on 11.09 when wave 3's builder wrote the identical shape one rung up and its mutation arm
+    // (the step's `??=` rewritten as `=`) came back GREEN. Copying the rows first is what gives the
+    // assertion something the migration cannot reach.
+    // ⚠ THE HOUSE LAW THIS IS AN INSTANCE OF: an assertion about something being PRESERVED must hold a
+    // copy the code under test cannot touch – the sibling of «a negative assertion must first prove its
+    // target exists», which cost two vacuous guards in wave 2.
+    const kept = [{ week: 9, kind: 'fork-opinion', detail: 'stop', answer: 'back' }]
+    const lived = { ...JSON.parse(JSON.stringify(v72)), schemaVersion: 72, lifeLog: JSON.parse(JSON.stringify(kept)) }
+    expect(migrateSave(lived).lifeLog, 'a life already on the record is kept whole').toEqual(kept)
   })
 
   it('⚠ takes NOTHING from any stream – the persisted MAIN position is byte-identical', () => {
