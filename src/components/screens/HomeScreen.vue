@@ -85,6 +85,8 @@ import { playSfx } from '../../audio/sfx'
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
 import { flagEmoji } from '../../composables/countries'
+// ⭐ T9 – the feed's life-row glyph column, empty until the owner's picks (who-she-is §5a).
+import { LIFE_ROW_EMOJI } from './lifeRowGlyphs'
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
@@ -1034,7 +1036,15 @@ function kidScoreOf(m: WorldMatch): string {
   if (!m.score) return ''
   return m.bId === KID_ID ? flipScore(m.score) : m.score
 }
-const EVENT_EMOJI: Record<string, string> = {
+// --- The feed's glyph column (wave 3, T9) ------------------------------------------------------
+//
+// ⚠⚠ `string | undefined` IS THE FIX, NOT A TIGHTENING. This read `Record<string, string>`, which
+// told every reader that every row kind has a glyph – and since T6 one does not: `'life'` is a
+// `WorldEventType` with no mark of its own (the marks are the owner's picks, `./lifeRowGlyphs.ts`).
+// The template was `{{ EVENT_EMOJI[e.type] }} {{ e.text }}`, so an unmapped kind drew an EMPTY
+// string and then a real space, and the row sat one space in from every row around it. The type now
+// says what the map is, and `eventPrefix` is the only thing that reads it.
+const EVENT_EMOJI: Record<string, string | undefined> = {
   info: '💬',
   entry: '📝',
   match: '🎾',
@@ -1042,6 +1052,19 @@ const EVENT_EMOJI: Record<string, string> = {
   milestone: '🏆',
   injury: '🩹',
   recovery: '💪',
+  // ⭐ THE LIFE ROWS, ruled 09.09 («Фид: эмоджи», who-she-is §5a) – the one surface a glyph was
+  // given. Empty until the owner picks the glyphs, and his pick is ONE LINE in that file: nothing
+  // here moves when it lands.
+  ...LIFE_ROW_EMOJI,
+}
+/** What a feed row draws BEFORE its sentence.
+ *
+ *  ⚠ A KIND WITH NO GLYPH DRAWS NOTHING – not an empty string and then a space. The space belongs
+ *  to the glyph and travels with it, which is why it is built here and not left in the template
+ *  between two interpolations. */
+function eventPrefix(type: string): string {
+  const glyph = EVENT_EMOJI[type]
+  return glyph ? `${glyph} ` : ''
 }
 interface NewsGroup {
   week: number
@@ -1672,7 +1695,7 @@ async function leaveCollege(): Promise<void> {
                       <span class="watch-cue">Watch</span>
                     </button>
                   </td>
-                  <td v-else>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</td>
+                  <td v-else>{{ eventPrefix(e.type) }}{{ e.text }}</td>
                 </tr>
               </tbody>
             </table>
