@@ -948,9 +948,18 @@ describe('the fence this step is judged by', () => {
     // first return-step a week late – «immediately BEFORE `accrueSpirit`» is the brief's own wording
     // (docs/plans/life-wave-3-builder-2026-09.md §2 T3) and it is the order the lift is judged on.
     //
-    // The claim this pin makes is therefore unchanged and the form is if anything tighter: the gap
-    // between the two calls is asserted EXACTLY, so nothing else can slide into it – a third
-    // statement appearing here goes red just as a reordering does.
+    // ⚠⚠ RE-AIMED AGAIN 11.09 BY WAVE 3's T6, AND THE RE-AIM IS THE PIN DOING ITS JOB: it went RED
+    // («expected [ 'rollArrival(world)', …(1) ] to deeply equal [ 'rollArrival(world)' ]») the moment
+    // a second statement slid into the gap, which is exactly what «asserted EXACTLY» was written for.
+    // WHAT MOVED: `deliverKnownPartner(world)` – the delivery on `knownWeek` (§6 of the same module).
+    // WHY IT BELONGS THERE: a shaved lag of ZERO is common (an open girl draws it at p 0.45), so
+    // `knownWeek === sinceWeek` on those careers, and delivery placed anywhere before the roll would
+    // hold that news back a week for no reason a player could be told. It writes no spirit and takes
+    // no `Rng`, so `accrueSpirit`'s own reading is untouched by its presence.
+    //
+    // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
+    // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
+    // the two can be reordered – a third statement appearing here goes red just as a swap does.
     const body = worldFunction('resolveBodyAndPlanner')
     const code = body
       .split('\n')
@@ -961,7 +970,10 @@ describe('the fence this step is judged by', () => {
     const j = code.indexOf('accrueSpirit(world)')
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
-    expect(code.slice(i + 1, j), 'only the arrival roll separates them').toEqual(['rollArrival(world)'])
+    expect(code.slice(i + 1, j), 'only the arrival roll and its delivery separate them').toEqual([
+      'rollArrival(world)',
+      'deliverKnownPartner(world)',
+    ])
   })
 
   it('⚠⚠ the played-hurt −4 sits INSIDE the warning band’s own arm, and nowhere else', () => {

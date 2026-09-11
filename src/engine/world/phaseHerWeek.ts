@@ -35,7 +35,7 @@ import { addEvent } from './ledger'
 // ⚠ ONE-WAY ARROW. `world/lifeBeat.ts` imports `./ledger`, `./constants`, `./age`, `../spirit`,
 // `../economy` and `../rng` – never a phase – so this import closes no runtime loop, the same shape
 // `world/endings.ts` already uses to raise the fork-opinion row.
-import { rollArrival } from './lifeBeat'
+import { deliverKnownPartner, rollArrival } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -243,6 +243,23 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        INELIGIBLE week derives none of them at all (world/lifeBeat.ts §5). The frozen capture
   //        (41550 / e6b0c709) is untouched by construction.
   rollArrival(world)
+  // ⭐⭐ 1c-told (v74, the private life wave 3 – T6): AND THE WEEK HE IS TOLD ABOUT IT.
+  //
+  //        ⚠⚠ IMMEDIATELY AFTER THE ROLL, AND THE ORDER IS A BEHAVIOUR RATHER THAN A STYLE. A shaved
+  //        lag of ZERO is a real and common outcome (an open girl draws it at p 0.45 before the bond
+  //        even shaves it), and `knownWeek === sinceWeek` on those careers. Delivery placed before
+  //        the roll would hold that news back a whole week for no reason a player could be told –
+  //        the mirror of the argument `rollArrival`'s own placement above makes about the lift.
+  //
+  //        ⚠ ZERO DRAWS AND ZERO NEW STREAMS: it reads `loveEpisodes`, `lifeLog` and `week`, takes no
+  //        `rng`, and derives nothing. `accrueCondition`'s arity-2 contract (B1, tests/condition.test.ts)
+  //        is untouched for the same reason every line in this block is its own call.
+  //
+  //        ⚠ IT CAN STOP THE WEEK. The row it raises is a pending `lifeLog` row, so `advanceWeeks`
+  //        reports `'life'` and refuses to tick again until the parent answers – wave-2 machinery,
+  //        called and not duplicated. `STOP_PRECEDENCE` already puts the birthday's card in front of
+  //        it on a week that is both.
+  deliverKnownPartner(world)
   // ⭐⭐ 1c-life (v72, the private life wave 1): AND WHAT THE WEEK DID TO HER SPIRIT, and to what the
   //        parent has built with her. ITS OWN CALL, immediately after the body's – never a parameter
   //        of `accrueCondition`, whose arity-2, zero-RNG contract is pinned by B1 in

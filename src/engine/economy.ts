@@ -3494,6 +3494,28 @@ export const ECONOMY = {
        *  the one decision of hers that the parent can take away. */
       forkWithHerWant: 3,
       forkAgainstHerWant: -4,
+      /** ⭐⭐ v74 (the private life, wave 3 – T6/T7) – WHAT HE SAYS THE WEEK HE IS TOLD THERE IS
+       *  SOMEONE. Four answers, and not one of them is hers: the wave-3 brief §4's «'met' bond
+       *  deltas» row, verbatim – warm +2 · wary 0 · intrusive −3 · silent −1.
+       *
+       *  ⚠⚠ THE PRICE LIST IS UNIVERSAL – who-she-is §3's fence, and the same sentence the three
+       *  rows above carry: «The `bond` delta table does not vary by temperament ... The situations
+       *  differ; the arithmetic of care does not.» One row per ANSWER, never a row per girl.
+       *
+       *  ⚠ SILENCE IS PRICED HERE AND IS EXACTLY ZERO AT THE FORK, and the difference is the beat
+       *  and not an inconsistency. At the fork she asked him a question and listening IS an answer
+       *  to it (`beatListened`'s own note). Here she handed him a piece of her life and said nothing
+       *  was being asked of him – saying nothing back is the one reply that leaves her holding it
+       *  alone, so it costs a little.
+       *
+       *  ⚠ THE WANTS FLIP IS **T7's** AND IS NOT WIRED HERE. A girl whose drawn `wants` is
+       *  `'private'` reads silent +2 and warm −1 (brief §4's own «flip» column); T6 ships only the
+       *  four universal rows above, so a reader of this block does not mistake the table for the
+       *  whole rule. */
+      metWarm: 2,
+      metWary: 0,
+      metIntrusive: -3,
+      metSilent: -1,
     },
     /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
      *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`

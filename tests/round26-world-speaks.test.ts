@@ -42,8 +42,6 @@ import {
   tickWeek,
   toSnapshot,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { ENDINGS } from '../src/engine/ending'
@@ -58,6 +56,11 @@ import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type WorldEvent } from '../src/shared/protocol'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
 import type { SeasonResult } from '../src/engine/season/ranking'
+// ⭐ v74 T6 – ONE DRAIN FOR EVERY BEAT KIND. `answerLifeBeat(world, 'listen')` was a complete
+// answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
+// can be raised any week from her sixteenth on, so every hand-written call site threw. See
+// `drainLifeBeats`.
+import { drainLifeBeats } from './helpers/career'
 
 /** A career walked to `week`, kept solvent, with every reveal resolved. Nothing is entered, so this
  *  is the QUIETEST possible world – which is the point for #10: whatever the feed says here, the
@@ -438,7 +441,7 @@ describe('round 26 #10 (again) – the world speaks on the week he is looking at
       // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
       // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
       // cheapest place: a caller that never asked the player must not put a number on the scale.
-      if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+      drainLifeBeats(world)
       if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     }
     expect(world.college, 'she never enrolled').toBeNull()

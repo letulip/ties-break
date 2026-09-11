@@ -353,15 +353,18 @@ export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthd
 // out in full in that leaf's own banner: `engine/spirit.ts` reads `activeEpisode` for the effective
 // baseline and `lifeBeat.ts` imports `spirit.ts` at runtime. The two NAMES on this barrel did not
 // move, which is the half that matters here (CLAUDE.md: the public API must not change).
-import { activeEpisode, loveEpisodesOf } from './world/loveEpisodes'
-export { activeEpisode, loveEpisodesOf }
+import { activeEpisode, knownPartner, loveEpisodesOf } from './world/loveEpisodes'
+export { activeEpisode, knownPartner, loveEpisodesOf }
 // ⭐⭐ v74 (the private life, wave 3 – T3/T5) adds the ARRIVAL half: `rollArrival` is the weekly roll
 // the tick calls, and `arrivalEligible` / `arrivalHazardFor` / `drawPartnerWants` / `drawRawLag` /
 // `shaveLag` are the pure pieces it is assembled from – exported under the historical convention so
 // the corridor tests and T11's census bench can sweep the tables directly instead of posing a world
 // per cell (`forkStandingOf`'s own primitives doctrine).
-import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
-export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
+// ⭐⭐ v74 T6 ADDS THE DELIVERY HALF: `deliverKnownPartner` is the weekly check the tick calls on
+// `knownWeek`, and `lifeBeatHeading` joins `lifeBeatSaid` / `lifeBeatListenFollowUp` as the third
+// pure copy assembler the voice pins walk without posing a world.
+import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
+export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, rollArrival, shaveLag, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'

@@ -71,6 +71,8 @@ import { resumeMain, type Rng } from '../../src/engine/rng'
 import { ENDINGS } from '../../src/engine/ending'
 import { assertDismissReachable, PHONE, setViewport } from './fits'
 import { DEFAULT_PROFILE, type CareerEnding } from '../../src/shared/protocol'
+// ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
+import { drainLifeBeats } from '../helpers/career'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE GRADUATION CARD'S WATERMARK IS localStorage. Same shim
 // as round19-wrapup / round21-popup-order – supply the browser's object, do not weaken the app.
@@ -237,12 +239,20 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // `closeTournament` are no-ops when no reveal is open – because naming one of the two reveals is
     // what left this walk standing at year three. The ceiling grows to five for the same arithmetic:
     // three questions in a year costs four presses to finish it.
+    // ⚠ v74 (wave 3, T6) RE-AIM: ...and a FOURTH stop, hers. The arrival hazard runs through the
+    // college years by design and T6 delivers the news on `knownWeek`, so a `'met'` beat can be
+    // raised inside the freeze – where T2's own exception deliberately lets it lay OVER the latch.
+    // A row left standing is therefore the card on screen instead of the graduation one, which is
+    // what these four cases went red on: «four years closed with no beat at all before this». Drained
+    // bond-neutrally, for the same reason the birthday is answered one line down.
     for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      drainLifeBeats(world)
     }
+    drainLifeBeats(world)
     expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
     expect(world.college?.years).toHaveLength(ENDINGS.collegeYears)
     world.knock = null

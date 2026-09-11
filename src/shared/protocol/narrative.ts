@@ -139,9 +139,19 @@ export interface LifeBeatOption {
   label: string
 }
 
-/** The beats this layer knows how to raise. Wave 2 ships exactly one; the union is the thing that
- *  keeps a later step from smuggling in a free-form string the records cannot be read by. */
-export type LifeBeatKind = 'fork-opinion'
+/** The beats this layer knows how to raise. Wave 2 shipped exactly one; the union is the thing that
+ *  keeps a later step from smuggling in a free-form string the records cannot be read by.
+ *
+ *  ⭐⭐ v74 (the private life, wave 3 – T6) ADDS `'met'`: the week the parent is TOLD that someone
+ *  exists. Its `detail` is the `LoveEpisode.id` the row is about, which is also what makes the beat
+ *  fire exactly once per attachment – the record is the queue AND the receipt (`world/lifeBeat.ts`).
+ *
+ *  ⚠ THE BEAT FIRES ALWAYS AT `knownWeek`; THE BOND BAND PICKS THE REGISTER, NEVER THE EXISTENCE
+ *  (architect, 11.09, on wave 2's own precedent). At `close` the news arrives in her own voice, at
+ *  `steady` as a mention, at `strained`/`cold` as a dry card with no line of hers. A bond band that
+ *  decided whether the beat happened at all would make a distant parent's career quieter rather than
+ *  colder, which is the opposite of what the layer is for. */
+export type LifeBeatKind = 'fork-opinion' | 'met'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
@@ -333,6 +343,21 @@ export interface DiaryFacts {
    *  not. `close`/`steady` license her own four voices; `strained` collapses them into the shared
    *  flat pool; `cold` is silence, and the parent's own line stands alone under the painting. */
   bondBand: BondBand
+  /** ⭐⭐ v74 (the private life, wave 3 – T6) – THE PARENT KNOWS THERE IS SOMEONE: an attachment that
+   *  has not ended and whose `knownWeek` has arrived. Derived at snapshot time off `loveEpisodes`,
+   *  never persisted.
+   *
+   *  ⚠⚠ IT IS THE WHOLE OF WHAT THE DIARY MAY KNOW ABOUT HER PRIVATE LIFE, and the narrowness is
+   *  R2-18's law rather than an oversight: a fact ships only with the licence that consumes it, in
+   *  the same wave. There is no name here, no gender, no `sinceWeek`, no «how long» – the schema
+   *  persists none of them (see `LoveEpisode`), so a diary line that reached for one would be
+   *  inventing a consequential fact, which is exactly what the honesty law forbids. What a line
+   *  licensed on this may say is «the parent knows», and nothing further.
+   *
+   *  ⚠ IT IS ABOUT DISCLOSURE AND NOT ABOUT THE ATTACHMENT. A romance the parent has not been told
+   *  about reads `false` here while `activeEpisode` is non-null and spirit's baseline is already
+   *  lifted – which is the design: he sees a lighter week before he knows why. */
+  partnerKnown: boolean
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

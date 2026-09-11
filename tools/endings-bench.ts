@@ -37,6 +37,7 @@ import {
   kidAgeYears,
   type WorldState,
   answerLifeBeat,
+  LIFE_BEAT_OPTIONS,
   pendingLifeBeat,
 } from '../src/engine/world'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
@@ -300,7 +301,19 @@ function answerWhateverIsOpen(
     // shown rather than about what she did with it – and because `answerFork` throws on 'college'
     // when the door is shut, so a reading taken afterwards would only ever see the open half.
     out.collegeOpenAtFork = retiredCollegeDoorOpen(world)
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // ⚠ RE-AIMED v74 (wave 3, T6): this read `answerLifeBeat(world, 'listen')`, which was a complete
+    // answer while `'fork-opinion'` was the only beat kind. Wave 3 raises a `'met'` row on
+    // `knownWeek` – any week from her sixteenth on – and it does not offer that id, so the hard-coded
+    // call threw the first time a walked career met somebody. The row's OWN kind is asked for its
+    // bond-neutral answer, which is the same intent this line always had: a harness that never asked
+    // the player must not put a number on the scale.
+    for (let guard = 0; guard < 50; guard++) {
+      const beat = pendingLifeBeat(world)
+      if (beat === null) break
+      const free = LIFE_BEAT_OPTIONS[beat.kind].find((o) => o.bond === 0)
+      if (!free) throw new Error(`${beat.kind} has no bond-neutral answer – this bench cannot drain it without moving the number`)
+      answerLifeBeat(world, free.id)
+    }
     answerFork(world, arm)
   }
   // ⚠ ROUND 24 #5: the college answer RESERVES and the ending latches at the September DEPARTURE –

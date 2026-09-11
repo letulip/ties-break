@@ -47,8 +47,6 @@ import {
   meansOfCents,
   MEANS_BANDS,
   type FamilyMeans,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { ENDINGS } from '../src/engine/ending'
@@ -59,6 +57,11 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 // ⚠ RE-AIMED by R2-09, not weakened: `BirthdayGift` left the wire format for the engine leaf that
 // owns the catalogue's shape (src/engine/world/birthdayGift.ts). Same type, same assertions.
 import type { BirthdayGift } from '../src/engine/world/birthdayGift'
+// ⭐ v74 T6 – ONE DRAIN FOR EVERY BEAT KIND. `answerLifeBeat(world, 'listen')` was a complete
+// answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
+// can be raised any week from her sixteenth on, so every hand-written call site threw. See
+// `drainLifeBeats`.
+import { drainLifeBeats } from './helpers/career'
 
 /** Every gift that can be on screen together: a band's own list plus the day, which is offered in
  *  every band (spec §2a). Three of a band's gifts are drawn, so ANY pair of them can co-occur and
@@ -771,7 +774,7 @@ describe('ROUND 26 #4 – the wish is licensed by what the family has', () => {
         // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
         // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
         // cheapest place: a caller that never asked the player must not put a number on the scale.
-        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+        drainLifeBeats(world)
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (pendingKnock(world)) decideKnock(world, 'rest')
         const age = pendingBirthday(world)

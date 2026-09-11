@@ -78,3 +78,26 @@ export function activeEpisode(world: WorldState): LoveEpisode | null {
   const last = loveEpisodesOf(world).at(-1) ?? null
   return last !== null && last.endedWeek === null ? last : null
 }
+
+/** ⭐⭐ v74 (wave 3, T6) – THE ATTACHMENT THE PARENT HAS ACTUALLY BEEN TOLD ABOUT, or null. The
+ *  active one, and only once its `knownWeek` has arrived.
+ *
+ *  ⚠⚠ TWO QUESTIONS, NOT ONE, AND THIS IS THE SECOND OF THEM. `activeEpisode` answers «is someone
+ *  there»; this answers «does he know». They are deliberately different for as long as the lag lasts
+ *  – spirit's baseline is already lifted while this still returns null, which is the design saying
+ *  the parent sees a lighter week before he is told why (who-she-is §2a). Conflating them would make
+ *  a private girl single, which is the warning `activeEpisode`'s own note ends on.
+ *
+ *  ⚠ IT ASKS THE ACTIVE ROW AND NOT THE LIST, so «not ended» keeps ONE spelling in this module. The
+ *  reading that follows is the one T6 delivers on and the one `DiaryFacts.partnerKnown` carries: an
+ *  attachment that ended before the parent ever heard of it surfaces through wave 4's endings copy,
+ *  not through a fact that says somebody is there now.
+ *
+ *  ⚠ THE WEEK IS A PARAMETER RATHER THAN `world.week`, for `kidAgeAt`'s own reason one layer up: the
+ *  album and the memory card ask about weeks that are seasons behind, and a selector that could only
+ *  answer «today» would have to be re-derived at every one of them. */
+export function knownPartner(world: WorldState, week: number): LoveEpisode | null {
+  const open = activeEpisode(world)
+  if (open === null || open.knownWeek === null) return null
+  return open.knownWeek <= week ? open : null
+}

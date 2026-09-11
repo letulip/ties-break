@@ -60,7 +60,9 @@ import { addEvent } from './ledger'
 // here by T1; T4 gave `engine/spirit.ts` a reader for `activeEpisode` (the effective baseline), and
 // this module imports `../spirit` at runtime, so leaving them here would have closed a value loop.
 // They moved verbatim to the leaf and nothing about either of them changed.
-import { activeEpisode, loveEpisodesOf } from './loveEpisodes'
+// ⭐ v74 T6 ADDS `knownPartner` TO THE SAME IMPORT – «does he KNOW», the second question that leaf
+// asks of the list, and the one the delivery below fires on.
+import { activeEpisode, knownPartner, loveEpisodesOf } from './loveEpisodes'
 // ⚠ FROM ./constants, NOT ./endings, AND IT IS A CYCLE FIX RATHER THAN A PREFERENCE – the same swap
 // `world/entries.ts` records at its own import. `endings.ts` imports THIS module (it raises the
 // fork-opinion row and asks `pendingLifeBeat` before it will answer the fork), so an import back
@@ -383,26 +385,136 @@ const HEADING: Record<MoodRegister, string> = {
   low: 'School is over, and it took her a while to say it',
 }
 
-/** ⭐⭐ WHAT THE PARENT MAY SAY BACK – three responses, and NOT ONE OF THEM IS HER CHOICE. The
- *  decision at the fork stays his to make and hers to have an opinion about; these are what he says
- *  now that she has said hers.
- *
- *  ⚠ THE LABELS NAME NO WANT, deliberately. One wording per option, whatever she asked for, so the
- *  buttons cannot become a second way of reading the answer off the screen – and so "press the other
- *  way" stays honest when there are two other ways.
- *
- *  ⚠ NO NUMBER, NO PRICE, NO METER – the dialog never exposes one (the fence). */
-export const LIFE_BEAT_OPTIONS: readonly { id: string; label: string; bond: number }[] = [
-  { id: 'back', label: 'Tell her we are behind her', bond: ECONOMY.bond.delta.beatBacked },
-  { id: 'press', label: 'Tell her we see it differently', bond: ECONOMY.bond.delta.beatPressed },
-  { id: 'listen', label: 'Say nothing, and let her talk', bond: ECONOMY.bond.delta.beatListened },
-]
+// =================================================================================================
+// 3b. `'met'` – THE WEEK HE IS TOLD THERE IS SOMEONE (wave 3, T6). EVERY WORD BELOW IS A DRAFT.
+// =================================================================================================
+//
+// ⚠⚠ THE BEAT FIRES ALWAYS; THE BOND BAND PICKS THE REGISTER (architect, 11.09, resolving the build
+// plan's §0.1 against its §4 on wave 2's own precedent). Three registers, and they are the same
+// three rungs the voice bibles' «her voice, the shared pool, silence» ladder already has:
+//
+//     close              HER OWN LINE, in her own four voices – she came and said it
+//     steady             A MENTION – the parent heard it, not from her, and not as a scene
+//     strained / cold    A DRY CARD – no line of hers anywhere on it
+//
+// A band that decided whether the beat HAPPENED would make a distant parent's career quieter rather
+// than colder; a band that only decides how the news sounds makes it colder, which is the layer's
+// whole subject.
+//
+// ⚠⚠ AND THE TWO-TIER HONESTY LAW BINDS THIS POOL HARDER THAN ANY OTHER IN THE FILE, because the
+// sim holds ALMOST NOTHING about the partner and that is deliberate (`LoveEpisode`: no name, no
+// gender, no place, no age, nothing). So not one line below names a person, a place, a plan or a
+// duration – «there is someone» is the entire consequential fact any of them may assert, and every
+// other word is delivery texture the frame itself licenses.
+//
+// ⚠ NO LISTEN DETOUR HERE (the brief's own boundary). At the fork «say nothing and let her talk»
+// buys more of her, because she came to say something and has more of it. This is news, not a
+// question: the four answers are REACTIONS, and one of them is saying nothing – a plain answer with
+// a plain price, not a second panel.
 
-/** The feed line each answer writes. ⚠ NO `amountCents` AND NO PRICE IN ANY WORD OF IT (rule 4). */
-const ANSWER_EVENT: Record<string, string> = {
-  back: 'She said what she wants after school. We told her we are behind her.',
-  press: 'She said what she wants after school. We told her we see it differently.',
-  listen: 'She said what she wants after school. We listened, and left it there.',
+/** Which of the three registers the news arrives in. ⚠ NOT `speaksInHerOwnVoice` – that predicate is
+ *  the fork's two-rung channel (`close`+`steady` speak) and this beat's ladder has three rungs,
+ *  because a mention is a real thing a home at `steady` does and the fork had no room for it. Two
+ *  readings, two functions, neither pretending to be the other. */
+type MetRegister = 'her' | 'mention' | 'dry'
+
+function metRegisterOf(band: BondBand): MetRegister {
+  if (band === 'close') return 'her'
+  if (band === 'steady') return 'mention'
+  return 'dry'
+}
+
+/** ⭐⭐ HER OWN LINE AT `close`, BY VOICE – four drafts, and this is the SECOND thing in this file
+ *  indexed by temperament (the fence's own shape: the wording knows who she is, nothing else does).
+ *
+ *  The bible each one is written to, in a phrase: `sunny` volunteers it and names the ordinary
+ *  feeling; `fiery` is talking before she is through the door and closes the subject herself;
+ *  `quiet` says it sideways, in the middle of a household action, and leaves herself out of it;
+ *  `deep` waits for the room to be quiet and gives the conclusion with nothing round it.
+ *
+ *  ⚠ NO REGISTER SPLIT, AND IT IS A SCOPE STATEMENT RATHER THAN AN OVERSIGHT. The fork's pool splits
+ *  `low` from `up` because the fork is a decision her week can weigh on; this is one piece of news
+ *  and the spirit register is already carried by the heading above it. T10 owns the expansion (the
+ *  brief's own «~8–12 lines» is the FEED's matrix, and this pool is its four-line neighbour). */
+const MET_HER_LINE: Record<Temperament, string> = {
+  sunny: 'She brought it up over dinner, before anyone asked. "There is someone. I wanted you to hear it from me first."',
+  fiery: 'She was talking before her bag was down. "There is someone. It is good. That is all you are getting."',
+  quiet: 'She said it while she put the shopping away, between two other things. "There is someone I see now."',
+  deep: 'She waited until the house was quiet, then said it once. "There is someone. That is all."',
+}
+
+/** ⭐ `steady` – A MENTION, AND NOT ONE WORD OF HERS IN IT. She said it somewhere in the week and the
+ *  parent caught it; there is no scene, because a scene is what `close` has and this home does not.
+ *
+ *  ⚠ ONE LINE, NOT FOUR. It is the PARENT'S narration and the fence keeps temperament out of that –
+ *  `HER_LINE` and `MET_HER_LINE` are the only pools in this file a girl's voice indexes. */
+const MET_MENTION = 'She mentioned someone this week, in passing, and did not stop to say who.'
+
+/** ⭐⭐ `strained` / `cold` – THE DRY CARD. No quotation at all, which is a stronger silence than the
+ *  fork's flat pool: there she at least answered a question, and here the parent found out without
+ *  her. The loss is the whole content of the line, and nothing in it is rude. */
+const MET_DRY = 'There is someone in her life. She did not say so, and the house found out anyway.'
+
+/** The parent's frame over the card, one per register. ⚠ IT KEYS ON THE BOND BAND AND NOT ON THE
+ *  MOOD LADDER, unlike the fork's `HEADING`: what this week is ABOUT is the distance between them,
+ *  and a heading that read her spirit would be answering a different question from the card's. */
+const MET_HEADING: Record<MetRegister, string> = {
+  her: 'She has told us there is someone',
+  mention: 'Something she mentioned this week',
+  dry: 'There is someone in her life',
+}
+
+/** ⭐⭐ WHAT THE PARENT MAY SAY BACK, PER BEAT KIND – and not one option in either list is HER choice.
+ *
+ *  ⚠⚠ RESTRUCTURED FROM A FLAT LIST IN v74 (wave 3, T6), and the reason is the type rather than
+ *  tidiness: a `'met'` answer set is not a fork-opinion answer set. «Tell her we are behind her» is
+ *  a sentence about a decision she asked him to weigh in on; there is no decision here and nothing
+ *  was asked of him. Keying the table on `LifeBeatKind` makes a missing set a COMPILE error, which
+ *  is the same guarantee `HER_LINE`'s total record gives her voice.
+ *
+ *  ⚠ NO NUMBER, NO PRICE, NO METER in any label – the dialog never exposes one (the fence).
+ *
+ *  ⚠ THE `'met'` LABELS NAME NO GENDER, and that is the schema being obeyed rather than a style
+ *  choice: `LoveEpisode` persists no name and no gender on purpose («the schema must not hardwire
+ *  boyfriend -> husband»), so a button reading «ask to meet HIM» would put on screen a fact the world
+ *  does not hold. The wave-3 brief's own draft of the intrusive label says «him»; this is the same
+ *  option with the fact taken out, and the wording is the owner's to settle either way (§5). */
+export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly { id: string; label: string; bond: number }[]> = {
+  /** ⚠ THE FORK'S THREE, BYTE-IDENTICAL AND IN THEIR ORIGINAL ORDER (invariant 4 – a shipped string
+   *  is not an agent's to change, and this restructure touched none of them). The labels name no
+   *  want, deliberately: the buttons cannot become a second way of reading her answer off the
+   *  screen, and «press the other way» stays honest when there are two other ways. */
+  'fork-opinion': [
+    { id: 'back', label: 'Tell her we are behind her', bond: ECONOMY.bond.delta.beatBacked },
+    { id: 'press', label: 'Tell her we see it differently', bond: ECONOMY.bond.delta.beatPressed },
+    { id: 'listen', label: 'Say nothing, and let her talk', bond: ECONOMY.bond.delta.beatListened },
+  ],
+  /** ⭐ THE FOUR REACTIONS (brief §2 T7's shape, §4's ruled deltas): warm, wary, intrusive, silent.
+   *  ⚠ THE WANTS FLIP IS T7's AND IS NOT HERE – a `'private'` girl reads silent +2 / warm −1, which
+   *  is a rule ABOUT the table and not a row in it. */
+  met: [
+    { id: 'warm', label: 'Tell her we are glad', bond: ECONOMY.bond.delta.metWarm },
+    { id: 'wary', label: 'Ask the coach to watch her schedule', bond: ECONOMY.bond.delta.metWary },
+    { id: 'meet', label: 'Say we want to meet them, now', bond: ECONOMY.bond.delta.metIntrusive },
+    { id: 'silent', label: 'Say nothing about it', bond: ECONOMY.bond.delta.metSilent },
+  ],
+}
+
+/** The feed line each answer writes, per kind. ⚠ NO `amountCents` AND NO PRICE IN ANY WORD OF IT
+ *  (rule 4). ⚠ Keyed by kind for `LIFE_BEAT_OPTIONS`' own reason: two beats can share an option id
+ *  no more than they share an answer set. */
+const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string>> = {
+  'fork-opinion': {
+    back: 'She said what she wants after school. We told her we are behind her.',
+    press: 'She said what she wants after school. We told her we see it differently.',
+    listen: 'She said what she wants after school. We listened, and left it there.',
+  },
+  met: {
+    warm: 'There is someone in her life. We told her we are glad about it.',
+    wary: 'There is someone in her life. We asked her coach to keep an eye on the weeks.',
+    meet: 'There is someone in her life. We asked to meet them, and asked this week.',
+    silent: 'There is someone in her life. We left it where she put it.',
+  },
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -430,13 +542,33 @@ export function lifeBeatSaid(
   register: MoodRegister,
   bond: BondBand,
 ): string {
-  // One kind today, and the switch is the union's whole point: a second kind cannot be added without
-  // this function refusing to compile against it.
-  if (kind !== 'fork-opinion') throw new Error(`No copy for life beat kind ${kind}`)
-  const want = FORK_WANTS.find((w) => w === detail)
-  if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
-  if (!speaksInHerOwnVoice(bond)) return FLAT_LINE[want]
-  return HER_LINE[voice][want][register === 'low' ? 'low' : 'up']
+  // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
+  // without this function refusing to compile against it. ⚠ `'met'` READS NO `detail` AND NO
+  // `register`: its detail is an episode id (a machine value, never a rendered word) and its three
+  // registers are the BOND ladder, not the Mood one – see the §3b banner.
+  switch (kind) {
+    case 'met':
+      return metRegisterOf(bond) === 'her' ? MET_HER_LINE[voice] : metRegisterOf(bond) === 'mention' ? MET_MENTION : MET_DRY
+    case 'fork-opinion': {
+      const want = FORK_WANTS.find((w) => w === detail)
+      if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
+      if (!speaksInHerOwnVoice(bond)) return FLAT_LINE[want]
+      return HER_LINE[voice][want][register === 'low' ? 'low' : 'up']
+    }
+  }
+}
+
+/** The parent's frame over the card, per kind. ⚠ THE TWO KINDS KEY ON DIFFERENT FACTS and that is
+ *  the reading rather than an inconsistency: the fork's heading says what the WEEK around the
+ *  conversation was like (the Mood register), and this beat's says how far apart the two of them are
+ *  when the news lands (the bond band). See `MET_HEADING`. */
+export function lifeBeatHeading(kind: LifeBeatKind, register: MoodRegister, bond: BondBand): string {
+  switch (kind) {
+    case 'met':
+      return MET_HEADING[metRegisterOf(bond)]
+    case 'fork-opinion':
+      return HEADING[register]
+  }
 }
 
 /** ⭐ HER CONTINUATION when the parent only listens – null exactly where the flat pool speaks,
@@ -449,7 +581,11 @@ export function lifeBeatListenFollowUp(
   voice: Temperament,
   bond: BondBand,
 ): string | null {
-  if (kind !== 'fork-opinion') throw new Error(`No copy for life beat kind ${kind}`)
+  // ⚠⚠ `'met'` HAS NO LISTEN DETOUR, AND THE NULL IS THE RULE RATHER THAN A GAP (brief §2 T6). At the
+  // fork «say nothing and let her talk» buys more of her, because she came to say something and has
+  // more of it. `'met'` is news: its four answers are REACTIONS, one of which is saying nothing, and
+  // a second panel promising more of her would be the fictional dishonesty the 10.09 ruling removed.
+  if (kind === 'met') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -476,9 +612,12 @@ export function buildLifeBeatPrompt(world: WorldState): LifeBeatPrompt | null {
   return {
     week: pending.week,
     kind: pending.kind,
-    heading: HEADING[register],
+    heading: lifeBeatHeading(pending.kind, register, band),
     said: lifeBeatSaid(pending.kind, pending.detail, voice, register, band),
-    options: LIFE_BEAT_OPTIONS.map((o) => ({ id: o.id, label: o.label })),
+    // ⚠ THE PENDING ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a
+    // girl's «there is someone» the fork's three buttons, which is the defect the per-kind record
+    // exists to make impossible – and `answerLifeBeat` re-validates against THIS same reading.
+    options: LIFE_BEAT_OPTIONS[pending.kind].map((o) => ({ id: o.id, label: o.label })),
     listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
   }
 }
@@ -519,7 +658,11 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   const at = rows.findIndex((row) => row.answer === null)
   if (at < 0) throw new Error('No life beat is waiting to be answered')
   const prompt = buildLifeBeatPrompt(world)
-  const chosen = LIFE_BEAT_OPTIONS.find((o) => o.id === optionId && prompt?.options.some((p) => p.id === o.id))
+  // ⚠ THE ROW'S OWN KIND, AND NOT A FLAT SEARCH OVER EVERY KIND'S OPTIONS (v74). Reading the whole
+  // table here would let a `'met'` row be answered with the fork's `back` – the prompt would refuse
+  // it, but the refusal would then be the ONLY thing standing between two beats' answer sets, and
+  // rule 3 exists precisely so that two readings of the same fact cannot disagree.
+  const chosen = LIFE_BEAT_OPTIONS[rows[at].kind].find((o) => o.id === optionId && prompt?.options.some((p) => p.id === o.id))
   if (!chosen) throw new Error('That is not one of the answers this beat offered')
   rows[at] = { ...rows[at], answer: chosen.id }
   // ⚠ HIS WORDS MOVE `bond` AND NOTHING ELSE (§4a.2's law, and this wave's fence): no spirit delta
@@ -527,10 +670,15 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   applyBondDelta(world, chosen.bond)
   addEvent(world, {
     week: world.week,
+    // ⚠ `'info'` AND NOT v74's `'life'`, ON BOTH KINDS, AND IT IS LEFT ALONE DELIBERATELY. This row
+    // is wave-2 machinery: re-typing it would change what the shipped fork-opinion answer looks like
+    // in the feed, which is not T6's to do. Whether an ANSWER row should carry the life glyph beside
+    // the DELIVERY row that provoked it is a question for T9 (the glyph pass) and for the owner, and
+    // it is flagged there rather than settled here.
     type: 'info',
     // ⚠ NO AMOUNT AND NO PRICE IN THE WORDS – rule 4 at the top of this file. An `amountCents` here
     // would put a conversation in the Money breakdown.
-    text: ANSWER_EVENT[chosen.id],
+    text: ANSWER_EVENT[rows[at].kind][chosen.id],
   })
 }
 
@@ -732,4 +880,76 @@ export function rollArrival(world: WorldState): void {
   // schema that had conflated them could not tell them apart afterwards (the T1 note on the type).
   const id = `p:${sinceWeek}`
   world.loveEpisodes.push({ id, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: id })
+}
+
+// =================================================================================================
+// 6. THE DELIVERY – ⚠⚠ THE WEEK HE IS TOLD (the private life, wave 3: T6)
+// =================================================================================================
+//
+// `docs/plans/life-wave-3-builder-2026-09.md` §2 T6. The arrival above wrote a fact about HER and
+// told nobody; this is the other end of the lag, and it is the first moment the private life reaches
+// a screen at all.
+//
+// ⚠⚠ IT FIRES ALWAYS, AND THE BOND BAND PICKS ONLY THE REGISTER (architect, 11.09 – the resolution
+// of the build plan's §0.1 against its §4, on wave 2's own precedent). See the §3b banner for the
+// three registers. The one-line eligibility change that would make `strained`/`cold` feed-only is
+// named in the brief's §7 as a FALLBACK the owner may ask for; it is deliberately not pre-built.
+//
+// ⚠⚠ ZERO DRAWS, AND THE SHAPE IS WHY: this function reads facts the world already holds
+// (`loveEpisodes`, `lifeLog`, `week`) and takes no `Rng` and derives no stream. `seed:life:smalltalk:*`
+// is T8's and `seed:life:ends:*` is wave 4's; neither exists on this tree.
+//
+// ⚠ AND IT DUPLICATES NONE OF THE QUEUE. `raiseLifeBeat` appends the row, `pendingLifeBeat` finds it,
+// the `'life'` StopReason stops the week and `answerLifeBeat` re-validates the answer – all four are
+// wave-2 property and all four are called, never re-implemented.
+
+/** ⭐ THE FEED LINE THE NEWS ITSELF WRITES, before anybody has answered anything. Two of them, on the
+ *  same three-rung ladder as the card: a home that was told, and a home that found out.
+ *
+ *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD OF IT (rule 4 at the top of this file). ⚠ AND NO FACT
+ *  ABOUT THE PARTNER: the sim holds none, so neither does the row. T10 owns the full matrix (the
+ *  brief's «by openness x wants x told-early/told-late»); these two are the draft that renders. */
+const MET_EVENT: Record<'told' | 'found-out', string> = {
+  told: 'She told us there is someone in her life.',
+  'found-out': 'There is someone in her life, and she did not tell us herself.',
+}
+
+/** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW.
+ *
+ *  ⚠⚠ EXACTLY ONCE PER EPISODE, AND THE RECEIPT IS THE `lifeLog` ITSELF – a `'met'` row whose
+ *  `detail` is this episode's id. That is `pendingLifeBeat`'s own doctrine read the other way round
+ *  («the record IS the queue», rule 2): there is no `told: true` flag on the episode, because a
+ *  second boolean beside a record that already answers the question is one fact with two sources of
+ *  truth, and they desync.
+ *
+ *  ⚠ `<=` AND NOT `===`, DELIBERATELY. The beat is owed on `knownWeek`; the comparison being an
+ *  inequality means a week that somehow passed without this running still delivers on the next tick
+ *  instead of losing the news for good. The dedupe above is what makes that safe, and the two
+ *  together are the property the pin asserts: it fires on `knownWeek`, and it fires once.
+ *
+ *  ⚠ IT ASKS `activeEpisode` THROUGH `knownPartner`, so «not ended» has ONE spelling in this layer.
+ *  An attachment that ended before its `knownWeek` arrived tells the parent nothing here – wave 4's
+ *  endings own that late row, and a fact saying «there is someone» about somebody already gone would
+ *  be the one dishonest thing this beat could say.
+ *
+ *  ⚠ THE ROW IS `keep: true` – the brief's «a KEPT feed row». `pruneEvents` drops ordinary rows at
+ *  sixty weeks and a career reads its own life back seasons later; the week someone appeared in it
+ *  is not a line the album may be missing. */
+export function deliverKnownPartner(world: WorldState): void {
+  const known = knownPartner(world, world.week)
+  if (known === null) return
+  if (lifeLogOf(world).some((row) => row.kind === 'met' && row.detail === known.id)) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    keep: true,
+    // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
+    // keeps `accrueFinance` from ever seeing this row.
+    text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'],
+  })
+  // ⚠ THE SAME TICK, AND THE ORDER IS THE READING: the feed row is what HAPPENED and the beat is what
+  // the parent is being asked about it, so the news is on the record before the card can be answered.
+  // ⚠ THE DETAIL IS THE EPISODE ID – machine-readable, never a rendered sentence (`LifeBeatRecord`),
+  // and it is also the receipt the dedupe above reads.
+  raiseLifeBeat(world, 'met', known.id)
 }

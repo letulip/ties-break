@@ -41,6 +41,8 @@ import {
   toSnapshot,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
+// ⭐ v74 T6 – the suite's one drain for a beat a fixture did not come for; see its own note.
+import { drainLifeBeats } from './helpers/career'
 import { schoolEndWeek } from '../src/engine/kidLife'
 import { kidAgeYears } from '../src/engine/world/age'
 import { DEFAULT_PROFILE, type Snapshot } from '../src/shared/protocol'
@@ -100,6 +102,12 @@ function atTheFork(birthMonth = 9, birthDay = 1) {
     // parent who has not yet opened the birthday when the fork is raised - and the queue this file
     // tests is genuinely two deep.
     if (pendingBirthday(world) !== null) answerBirthday(world)
+    // ⭐ v74 T6 – and any beat that is not the FORK's own opinion, drained bond-neutrally. Wave 3
+    // can raise a `'met'` row anywhere from her sixteenth on, and an unanswered row stops the walk
+    // dead (`advanceWeeks` refuses) while `answerLifeBeat(world, 'listen')` below would be
+    // answering the wrong beat with an id it does not offer. The fork's own row is left standing –
+    // it is what this file is about.
+    drainLifeBeats(world, 'fork-opinion')
     tickWeek(world, rng)
   }
   return { world, rng }

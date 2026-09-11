@@ -90,6 +90,8 @@ import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
 import { buildLifeBeatPrompt } from './lifeBeat'
+// ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
+import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
 // ⭐ round-18 #8: the tour's commitment rules, spelled out by the module that already enforces them.
 import { buildTourBriefing } from './mandatory'
@@ -1454,6 +1456,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // decision rather than the world's, and the subject of the ordinary week's note.
     // ⭐ ROUND-21 #2: the ONE predicate, asked here and carried – see `coachTravelsWithHer`.
     coachTravelled: coachTravelsWithHer(world),
+    // ⭐⭐ v74 (the private life, wave 3 – T6): has he been told there is someone? The ONE predicate,
+    // asked here and carried – `coachTravelsWithHer`'s own shape on the line above. ⚠ It is about
+    // DISCLOSURE, not about the attachment: a lifted week can arrive before this turns true.
+    partnerKnown: knownPartner(world, world.week) !== null,
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must

@@ -57,6 +57,8 @@ import {
 import { readFileSync } from 'node:fs'
 import { worldFunction } from './worldSource'
 import { before, region } from './helpers/source'
+// ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
+import { drainLifeBeats } from './helpers/career'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
@@ -101,9 +103,13 @@ function walkTo(world: WorldState, rng: Rng, week: number, solvent = false): voi
     if (pendingKnock(world)) decideKnock(world, 'rest')
     // ⭐ v73: and so is her opinion of the fork, on the same terms – a walk PAST a beat must not
     // leave one standing, or the case that walks to week 828 becomes a case about wave 2 instead of
-    // about the retirement offer. `'listen'` is the harness's answer: zero on the table, for the
+    // about the retirement offer. The harness's answer is the one worth ZERO on the table, for the
     // same reason `answerFork`'s no-tier default is the cheapest place.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // ⚠ RE-AIMED v74 (wave 3, T6): this read `answerLifeBeat(world, 'listen')`, which was a complete
+    // answer while `'fork-opinion'` was the only kind. The `'met'` beat does not offer that id, so
+    // the hard-coded call threw the first time a walked career met somebody. `drainLifeBeats` asks
+    // the ROW's own kind for its bond-neutral answer, which is the same intent spelled once.
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) world.fork.answer = 'continue'
     tickWeek(world, rng)
     if (world.pendingTournament) {
@@ -562,7 +568,12 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     expect(stops[0], 'she leads the week she spoke in').toBe('life')
     expect(weeks, 'one week of the four – it stopped ON the beat').toBe(1)
     expect(pendingLifeBeat(world), 'and the question is up').not.toBeNull()
-    expect(lifeLogOf(world).length, 'exactly one row, answered by nobody').toBe(1)
+    // ⚠ RE-AIMED v74 (wave 3, T6): this counted the WHOLE log, which was the same thing while the
+    // fork's opinion was the only beat a career could live. Wave 3's `'met'` beat can be raised and
+    // ANSWERED by `walkTo` on the way here, so the honest count is of rows still WAITING – and the
+    // kind is now named, because «one row pending» would have been true of the wrong beat.
+    expect(lifeLogOf(world).filter((r) => r.answer === null).length, 'exactly one row, answered by nobody').toBe(1)
+    expect(pendingLifeBeat(world)!.kind, 'and it is her opinion of the fork').toBe('fork-opinion')
 
     // REFUSAL: pressing again moves nothing at all until she has been answered.
     const before = world.week

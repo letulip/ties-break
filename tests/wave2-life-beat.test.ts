@@ -20,6 +20,15 @@
 //           is asserted on the SOURCE, and the arm is a temperament term added to the maths
 //   ARM 10  `answerLifeBeat` given an `amountCents`       the no-cents pin, RED (money moved)
 //
+// ⚠⚠ RE-AIMED TWICE FOR v74 (wave 3, T6 – 11.09), AND BOTH RE-AIMS CARRY THEIR OWN ARM. (a)
+// `LIFE_BEAT_OPTIONS` became a `Record<LifeBeatKind, …>`, so every pin here reads `FORK_OPTIONS` –
+// see its own note below for what moved and why; wave 2's ARM 1 (`beatBacked` 2 -> 2.5) was RE-RUN
+// against the re-aimed file and went RED on four cases, «back / press / listen, as ruled: expected
+// [ 2.5, -2, +0 ] to deeply equal [ 2, -2, +0 ]», so the pin bites exactly as it did. (b)
+// `walkToFork` now drains beats that are not the fork's, because wave 3 can raise one inside the
+// walk – three cases were RED before the drain with «That is not one of the answers this beat
+// offered», and `atTheFork`'s own assertion was passing on the wrong row. See `drainOtherBeats`.
+//
 // ⚠ WHAT THIS FILE DOES NOT DO. It writes no wording of its own and changes none: every string it
 // asserts on comes out of the engine's own pools, which are DRAFTS for the owner (invariant 4). The
 // shape rules are asserted; the sentences are his.
@@ -65,7 +74,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
-import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type MoodRegister } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type LifeBeatKind, type MoodRegister } from '../src/shared/protocol'
 
 // Several blocks walk a real career to its fork (242 weeks). Deterministic but slow, and the suite
 // runs many files in parallel – the same generous file-level timeout r2-13 and round11 carry.
@@ -85,14 +94,39 @@ function career(seed: string): { world: WorldState; rng: Rng } {
   return { world, rng: resumeMain(world.rngMain) }
 }
 
+/** ⚠⚠ RE-AIMED FOR v74 (wave 3, T6 – 11.09), AND THE RE-AIM IS A REAL FINDING RATHER THAN A TIDY-UP.
+ *
+ *  WHAT MOVED: wave 3's arrival hazard rolls every eligible week from her sixteenth (week ~104), and
+ *  T6 delivers the news on `knownWeek` – so a `'met'` beat can now be raised INSIDE this 242-week
+ *  walk, ahead of the fork-opinion row this file is about. `walkToFork` drains reveals and knocks for
+ *  exactly that reason and had nothing to drain a beat with, because in wave 2 no beat could fire
+ *  before the fork.
+ *
+ *  WHAT IT COST BEFORE THE FIX, measured: three cases went RED with «That is not one of the answers
+ *  this beat offered» – `answerLifeBeat(world, 'back')` was answering a `'met'` row, because the
+ *  queue is FIFO and the met row came first. And `atTheFork`'s own «she has said what she wants» was
+ *  passing on the WRONG ROW, which is the worse half: the fixture had started lying before anything
+ *  failed.
+ *
+ *  ⚠ THE DRAIN IS BOND-NEUTRAL ON PURPOSE. It answers with the option whose delta is ZERO, so a beat
+ *  this file never meant to live cannot move the number every block below measures. Asserted rather
+ *  than assumed – `neutralAnswerFor` throws if a kind has no such option, because a silently missing
+ *  zero row would make every bond assertion in this file wrong by an unknown amount. */
+function neutralAnswerFor(kind: LifeBeatKind): string {
+  const free = LIFE_BEAT_OPTIONS[kind].find((o) => o.bond === 0)
+  if (!free) throw new Error(`${kind} has no bond-neutral answer – this fixture cannot drain it without moving the number`)
+  return free.id
+}
+
 /** Tick until the tick that opens the fork – which is the tick that raises her opinion of it. Reveals
- *  are resolved and knocks answered on the way, so neither becomes the thing under test; the family
- *  is kept solvent so a career about the fork is not also a career about bankruptcy. NOTHING is
- *  injected: the fork is the engine's, and so is the row in front of it. */
+ *  are resolved, knocks answered and OTHER KINDS OF BEAT drained on the way, so none of them becomes
+ *  the thing under test; the family is kept solvent so a career about the fork is not also a career
+ *  about bankruptcy. NOTHING is injected: the fork is the engine's, and so is the row in front of it. */
 function walkToFork(world: WorldState, rng: Rng): void {
   for (let i = 0; i < 400 && world.fork === null; i++) {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
+    drainOtherBeats(world)
     tickWeek(world, rng)
     if (world.pendingTournament) {
       skipTournament(world)
@@ -101,6 +135,19 @@ function walkToFork(world: WorldState, rng: Rng): void {
     world.season = []
   }
   if (pendingKnock(world)) decideKnock(world, 'rest')
+  drainOtherBeats(world)
+}
+
+/** Every pending beat that is NOT the fork's own, answered neutrally. ⚠ IT STOPS AT A
+ *  `'fork-opinion'` ROW – that row is the subject of this file and answering it here would delete
+ *  the thing every block below is about. */
+function drainOtherBeats(world: WorldState): void {
+  for (let guard = 0; guard < 50; guard++) {
+    const row = pendingLifeBeat(world)
+    if (row === null || row.kind === 'fork-opinion') return
+    answerLifeBeat(world, neutralAnswerFor(row.kind))
+  }
+  throw new Error('a beat queue that will not drain')
 }
 
 /** A career standing exactly where wave 2 exists to be measured: the fork is open, her opinion of it
@@ -110,9 +157,33 @@ function atTheFork(seed: string): { world: WorldState; rng: Rng } {
   walkToFork(c.world, c.rng)
   expect(c.world.fork, `${seed}: the fixture reached its fork`).not.toBeNull()
   expect(c.world.fork!.answer, 'and it is unanswered').toBeNull()
+  // ⚠ RE-AIMED (v74): «not null» was true of ANY beat once wave 3 could raise one inside the walk,
+  // so the pending row is now named. A `'met'` row standing here would be a fixture about the wrong
+  // conversation, and it would pass the old assertion.
   expect(pendingLifeBeat(c.world), 'and she has said what she wants').not.toBeNull()
+  expect(pendingLifeBeat(c.world)!.kind, 'and it is HER OPINION OF THE FORK that is waiting').toBe('fork-opinion')
   return c
 }
+
+/** ⚠⚠ RE-AIMED FOR v74 (wave 3, T6 – 11.09), AND NOT DELETED, NARROWED OR WEAKENED.
+ *
+ *  WHAT MOVED: `LIFE_BEAT_OPTIONS` was a FLAT `readonly {id,label,bond}[]` – the wave-2 tree had one
+ *  beat kind, so a list and a table were the same object. T6 adds `'met'` and restructures it to
+ *  `Record<LifeBeatKind, readonly {…}[]>`.
+ *
+ *  WHY IT HAD TO: a `'met'` answer set is NOT a fork-opinion answer set. «Tell her we are behind her»
+ *  is a sentence about a decision she asked the parent to weigh in on; the `'met'` beat asks nothing
+ *  of him, so its four answers are reactions with their own ids, their own labels and their own
+ *  deltas. A flat list shared between the two kinds would have offered a girl's «there is someone»
+ *  the fork's three buttons – which is exactly the defect the per-kind record makes a compile error.
+ *
+ *  WHAT THIS FILE ASSERTS IS UNCHANGED. Every pin below reads the FORK'S OWN three, under the same
+ *  assertions, in the same order, with the same literals – `back / press / listen` and `[2, -2, 0]`
+ *  are still pinned as ruled numbers, and the labels still name no want. The only edit is the one
+ *  character of indexing that says WHICH beat's answers a wave-2 pin is about, and TypeScript refuses
+ *  the key if the kind is ever renamed, so the re-aim cannot silently point at nothing. The `'met'`
+ *  set has its own pins, in `tests/wave3-delivery.test.ts`. */
+const FORK_OPTIONS = LIFE_BEAT_OPTIONS['fork-opinion']
 
 /** A world with a beat pending and NOTHING else – no fork, no career walked. For the copy and queue
  *  blocks, where a 242-week walk would buy nothing but minutes. */
@@ -133,7 +204,7 @@ function withBeats(seed: string, details: ForkWant[]): WorldState {
 describe('wave 2 A – reverting the reaction moves the number by exactly the table', () => {
   it('⭐⭐ back / press / listen land the table\'s own three deltas, and nothing else moves', () => {
     // The three arms are the SAME WORLD, so the only variable is the answer.
-    const arms = LIFE_BEAT_OPTIONS.map((option) => {
+    const arms = FORK_OPTIONS.map((option) => {
       const world = withBeats('w2-equality', ['tour'])
       const before = { bond: world.bond, spirit: world.spirit, funds: world.fundsCents }
       answerLifeBeat(world, option.id)
@@ -152,7 +223,7 @@ describe('wave 2 A – reverting the reaction moves the number by exactly the ta
     // rather than a mis-typed constant. These three numbers are RULED (09.09, build plan §3.4 – «his
     // reaction options ... Bond +2 / −2 / 0») and not bench proposals, so a change to one of them is
     // a change to a ruling and has to come through this line.
-    expect(LIFE_BEAT_OPTIONS.map((o) => o.bond), 'back / press / listen, as ruled').toEqual([2, -2, 0])
+    expect(FORK_OPTIONS.map((o) => o.bond), 'back / press / listen, as ruled').toEqual([2, -2, 0])
     expect(
       [ECONOMY.bond.delta.forkWithHerWant, ECONOMY.bond.delta.forkAgainstHerWant],
       'and the deed\'s own two, also ruled (§3.5)',
@@ -504,7 +575,7 @@ describe('wave 2 E – her voice at the beat', () => {
       expect(t).not.toMatch(/\d/)
     }
     // ...and the engine's binding for the detour exists: the option the continuation hangs off.
-    expect(LIFE_BEAT_OPTIONS.some((o) => o.id === 'listen'), 'the listen option the prompt binds to').toBe(true)
+    expect(FORK_OPTIONS.some((o) => o.id === 'listen'), 'the listen option the prompt binds to').toBe(true)
     // ARM 13: quiet/stop continuation replaced with fiery's – RED (four voices, four continuations).
     // ARM 14: `speaksInHerOwnVoice` ignored by the follow-up – RED (the silence stays silent).
   })
@@ -512,7 +583,7 @@ describe('wave 2 E – her voice at the beat', () => {
   it('short dash only, no Cyrillic, and no number anywhere in any word the beat prints', () => {
     const everyWord = [
       ...everyLine.map((l) => l.line),
-      ...LIFE_BEAT_OPTIONS.map((o) => o.label),
+      ...FORK_OPTIONS.map((o) => o.label),
       ...everyHeading(),
     ]
     for (const t of everyWord) {
@@ -528,14 +599,14 @@ describe('wave 2 E – her voice at the beat', () => {
     // The shape the design fixed: back her want / press the other way / listen and say nothing. The
     // labels name no want, so a button can never become a second way of reading her answer off the
     // screen – and «press the other way» stays honest when there are two other ways.
-    expect(LIFE_BEAT_OPTIONS.map((o) => o.id)).toEqual(['back', 'press', 'listen'])
-    for (const option of LIFE_BEAT_OPTIONS) {
+    expect(FORK_OPTIONS.map((o) => o.id)).toEqual(['back', 'press', 'listen'])
+    for (const option of FORK_OPTIONS) {
       expect(option.label.length, option.id).toBeGreaterThan(0)
       for (const want of ['college', 'tour', 'stop']) {
         expect(option.label.toLowerCase(), `${option.id} names no want`).not.toContain(want)
       }
     }
-    expect(new Set(LIFE_BEAT_OPTIONS.map((o) => o.label)).size, 'three different sentences').toBe(3)
+    expect(new Set(FORK_OPTIONS.map((o) => o.label)).size, 'three different sentences').toBe(3)
   })
 })
 

@@ -25,6 +25,25 @@ export type WorldEventType =
   | 'milestone'
   | 'injury'
   | 'recovery'
+  /** ⭐⭐ v74 (the private life, wave 3 – T6) – A ROW ABOUT HER LIFE RATHER THAN ABOUT HER TENNIS
+   *  OR THE FAMILY'S MONEY. The first writer is the delivery on `knownWeek` («there is someone»,
+   *  `world/lifeBeat.ts`); wave 4's endings write the other half.
+   *
+   *  ⚠⚠ IT CARRIES NO `amountCents`, EVER, AND THAT IS THE TYPE DOING THE ARGUING. A life beat is
+   *  never a purchase (the wave's no-cents rule, `world/lifeBeat.ts` rule 4), so a row of this kind
+   *  that folded into `accrueFinance` would put a conversation in the Money breakdown. The field is
+   *  optional on `WorldEvent` and this kind simply never sets it, exactly as `'info'` never does.
+   *
+   *  ⚠ A KIND OF ITS OWN RATHER THAN `'info'`, and the reason is a column and not a taxonomy: T9
+   *  gives the feed one glyph per life-row kind (the owner's ruled surface, «Фид: эмоджи»), and a
+   *  glyph keyed on `'info'` would mark every letter, verdict and notice in the game. The glyphs
+   *  themselves are the OWNER'S PICKS (who-she-is §5a: «no agent adds or swaps one unasked») and
+   *  land with T9; until then the feed renders a life row exactly as it renders an unmapped one.
+   *
+   *  ⚠ NOT A SCHEMA MOVE. Widening this union adds no field to `WorldEvent` and no save already
+   *  written carries a row of it, so nothing is owed a migration – the same reading
+   *  `tests/finance.test.ts` records for the members it inherited. */
+  | 'life'
 
 /** Spending/earning bucket a financial event belongs to (Money-breakdown pie, round-7).
  *  Optional on the event: pre-round-7 events carry none and render as 'other'.

@@ -58,8 +58,6 @@ import {
   BIRTHDAY_COLLEGE_BAND,
   BIRTHDAY_DAY_TOGETHER,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { COLLEGE_LEAGUE } from '../src/engine/collegeLeague'
@@ -69,6 +67,11 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type StopReason } from '../src/shared/protocol'
+// ⭐ v74 T6 – ONE DRAIN FOR EVERY BEAT KIND. `answerLifeBeat(world, 'listen')` was a complete
+// answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
+// can be raised any week from her sixteenth on, so every hand-written call site threw. See
+// `drainLifeBeats`.
+import { drainLifeBeats } from './helpers/career'
 
 // ⚠⚠ THE UNIT PROJECT'S CEILING IS 20s AND THIS FILE WALKS CAREERS, WHICH IS THE ARITHMETIC ROUND 26
 // #16 IS ABOUT. Measured on an idle machine, 26.08: the whole file is 52s and its slowest single case
@@ -642,7 +645,7 @@ describe('ROUND 26 #4 – a college wish may not assume a wallet she has not got
     // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
     // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
     // cheapest place: a caller that never asked the player must not put a number on the scale.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    drainLifeBeats(world)
     answerFork(world, 'college')
     for (let i = 0; i < WEEKS_PER_YEAR + 2 && world.ending === null; i++) {
       tickWeek(world, rng)

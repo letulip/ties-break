@@ -103,6 +103,9 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     moodWord: null,
     moodRegister: 'level',
     bondBand: 'steady',
+    // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
+    // written about (see `DiaryFacts.partnerKnown`).
+    partnerKnown: false,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -222,6 +225,11 @@ function* sweepStages(): Generator<DiaryFacts> {
     { offSeasonWeek: true },
     { vacationWeek: true },
     { playedPractice: true },
+    // ⭐ v74 T6 – NOT A CALENDAR, AND IT IS HERE ANYWAY, for R2-18's reason in this list's own
+    // paragraph above: `sweepWeeks` and `sweepVoices` both hold `partnerKnown` at false on every
+    // fixture, so a line licensed on it would be licensed in NONE of them and its absence in ALL of
+    // them. One extra shape on the smallest sweep is the cheapest place the axis can exist at all.
+    { partnerKnown: true },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -411,6 +419,22 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // own note in weekNotes.ts for why the doc's name and this predicate are not the same sentence.
   closeBond: (f) => f.bondBand === 'close' || f.bondBand === 'steady',
   strainedBond: (f) => f.bondBand === 'strained',
+  // ⭐⭐ v74 (the private life, wave 3 – T6) – THE ONE THING THE DIARY MAY KNOW ABOUT HER PRIVATE
+  // LIFE, re-derived off the FACT and not off the licence in weekNotes.ts that produced the line,
+  // which is this whole table's method. It is an identity here for the same reason `vacation`,
+  // `offSeason` and `exams` are: the fact is already a boolean the engine computed, and the second
+  // spelling a valued claim needs (`bodyGroup`, `rail`) has nothing to re-derive from.
+  //
+  // ⚠⚠ AND WHAT IT FORBIDS IS THE POINT. A line licensed on this may say that the parent KNOWS there
+  // is someone, and nothing further: no name, no gender, no «since when», no «how it is going» – the
+  // schema persists none of them (see `LoveEpisode`), so any of those would be an unlicensed
+  // consequential fact under the honesty law's first tier. The claim carries the knowledge and the
+  // reviewer carries the rest.
+  //
+  // ⚠ THE CONSUMING LICENCE IS T10's (the wave's diary band) and lands in this same wave – R2-18's
+  // law. The `{ partnerKnown: true }` shape in `sweepStages` is what keeps the axis from being the
+  // R2-18 failure itself: without it every such line would be licensed in NO fixture of ANY sweep.
+  partnerKnown: (f) => f.partnerKnown,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {

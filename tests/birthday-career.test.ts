@@ -27,8 +27,6 @@ import {
   pendingBirthday,
   pendingKnock,
   tickWeek,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import {
@@ -41,6 +39,8 @@ import {
 import type { BirthdayGiven } from '../src/engine/world/birthday'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+// ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
+import { drainLifeBeats } from './helpers/career'
 
 const DAY = BIRTHDAY_DAY_TOGETHER.id
 
@@ -245,9 +245,12 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
           chooseGift(world, askedId)
         }
         // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
-        // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
-        // cheapest place: a caller that never asked the player must not put a number on the scale.
-        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+        // The harness's answer is the one worth ZERO for the same reason `answerFork`'s no-tier
+        // default is the cheapest place: a caller that never asked the player must not put a number
+        // on the scale. ⚠ RE-AIMED v74 (wave 3, T6): this read `answerLifeBeat(world, 'listen')`,
+        // which was complete while `'fork-opinion'` was the only kind; the `'met'` beat does not
+        // offer that id, so `drainLifeBeats` asks the ROW's own kind for its neutral answer.
+        drainLifeBeats(world)
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (world.ending) break
         tickWeek(world, rng)

@@ -216,6 +216,14 @@ export interface DiaryWorldView {
    *  Required rather than optional, for the reason `vacationPackageId` above spells out at length: it
    *  selects COPY, and a view that forgot it would build, pass, and quietly say he stayed home. */
   coachTravelled: boolean
+  /** ⭐⭐ v74 (the private life, wave 3 – T6) – DOES THE PARENT KNOW THERE IS SOMEONE? The ONE
+   *  predicate, `knownPartner(world, week) !== null`, asked at snapshot time and carried – exactly
+   *  the shape `coachTravelled` above records, and for the same reason: the beat, the feed row and
+   *  the diary must not be able to disagree about the same attachment.
+   *
+   *  Required rather than optional, for the reason `vacationPackageId` spells out at length: it
+   *  selects COPY, and a view that forgot it would build, pass, and quietly say nobody is there. */
+  partnerKnown: boolean
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training
