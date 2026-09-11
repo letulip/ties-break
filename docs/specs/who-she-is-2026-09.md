@@ -975,7 +975,23 @@ decisions arrive rather than about how much they are worth.
 
 ## §4a – wave 3 measured. The arrival census, predicted against measured
 
-`npm run bench:life-arrival` (`tools/life-arrival.ts`), 11.09, on `life/wave-3`, exit 0. **200 careers
+⭐⭐ **RE-MEASURED 11.09 AFTER THE LAG ROW MOVED, AND THE WHOLE POINT OF THE ENTRY IS THAT BOTH
+READINGS ARE HERE.** The first run measured bar 3's open late-share at **44.0% against its own
+≤ 25% bar – a MISS** – and attributed it: §4's «Feed lag» open row («0 with p 0.45, else U[1..5]»)
+was already 57.4% late RAW, before `bondShave` could touch it, so no setting of the shave reached
+the corridor. It went to the owner as a finding, **the bar did not move**, and he moved the TABLE:
+«двигать таблицу – ок» – open became **0 with p 0.70, else U[1..4]**, «open» meaning the parent
+usually hears at once. The private row was not touched. The constant landed in
+`ECONOMY.life.lag.open` and the bench was re-run against it. **Every number below carries its
+before and its after.** Nothing else in the wave was retuned: the bars are what they were, the
+private row is what it was, and the seven bars that HIT under the old table HIT again under the
+new one.
+
+`npm run bench:life-arrival` (`tools/life-arrival.ts`), re-run 11.09 on `life/wave-3` with the moved
+constant in the working tree (branch head `a74caca5` when the run started; a copy-only commit
+`62773c8f` from a concurrent session landed while it walked, and it moves no bar – the frozen careers
+reproduce on it), **exit 0** – read out of the log the command itself appended, never off a pipe.
+**200 careers
 per temperament × 4 = 800**, 430,344 resolved weeks, each career walked from week 0 to the week she
 turns twenty-four (**week 543**), wealthy family, the `player` entry policy in both directions, every
 knock rested and the birthday she asked for. **Temperament is ASSIGNED after `createWorld`**, so the
@@ -987,8 +1003,18 @@ is – §4a's own construction, for §4a's own reason. 772 of the 800 walked the
 arithmetic of §4's own tables – the derivation is printed beside every row below, so a reader can
 check that it does not depend on the run. It is **not blind in the way §4a's wave-1 column was**: an
 8-seed smoke of this tool ran before the grid. Saying so is the point; a prediction whose provenance
-is not stated measures nothing. **No constant was touched anywhere.** One bar misses and it is
-recorded as a finding.
+is not stated measures nothing. The predicted column below is re-derived off the MOVED table for
+the two rows that read it, and the old derivation is kept beside it.
+
+⚠ **What was touched between the two runs, exactly and only:** `ECONOMY.life.lag.open`, from
+`{ zeroChance: 0.45, min: 1, max: 5 }` to `{ zeroChance: 0.70, min: 1, max: 4 }`. **No bar moved,
+no second constant moved, and no new draw exists** – `drawRawLag` reads the same single uniform off
+the same `seed:life:partner:<sinceWeek>:lag` key and compares it with a different threshold. The
+frozen MAIN capture is unmoved and not re-pinned (41550 / `e6b0c709`). ⚠ And the identity check
+that makes the re-run readable at all: **bars 1, 2 and 5 came back byte-identical** – the same
+medians, the same n, the same 28 injuries, the same 53 arrival weeks – which is what a lag move
+MUST do, because the arrival key never sees it. A lag that had moved an arrival week would have
+been the bug.
 
 ### ⚠⚠ The count bars run in a BENCH-ONLY mode, and the control that keeps them honest
 
@@ -1012,6 +1038,10 @@ the poke off:
 
 ### The table
 
+⚠ **Read the two right-hand columns as BEFORE → AFTER.** Rows 1, 2, 4 and 5 came back identical, so
+they carry one number; rows 3a and 3b carry both runs, because 3b is the row the table moved for and
+3a is the control that proves the private register was left alone.
+
 | # | bar | predicted (arithmetic) | measured | verdict |
 | --- | --- | --- | --- | --- |
 | 1a | romance-count median, **fiery ≥ 4** | 104/(62.5+48) + 312/(25+48) = **5.2** | median **5.0** (mean 5.48, 3–8, n 193) | **HIT** |
@@ -1022,32 +1052,45 @@ the poke off:
 | 2a | first-arrival median, **fiery ≤ 17** | ln2 / −ln(1−.016) = 43.0 w from week 128 = **16.83** | **16.78** (n 199, 1 never) | **HIT** |
 | 2b | **quiet ≥ 17.5** | survives 104 w at .006 (S = .535), then 4.5 w at .015 → week 236 = **18.08** | **18.03** (n 199, 1 never) | **HIT** |
 | 2c | sunny / deep (no bar) | **17.10** / **18.26** | **16.99** / **18.16** | – |
-| 3a | late share, **private ≥ 60%** | ⌊raw/2⌋ = 0 only at raw 0, and p(raw 0) = .10 → **90.0%** | **90.2%** (first episodes, n 396) | **HIT** |
-| 3b | late share, **open ≤ 25%** | p(raw 0) .45 + p(raw 1) .11 = .56 zero → **44.0%** | **44.0%** (first episodes, n 398) | **MISS** |
+| 3a | late share, **private ≥ 60%** | ⌊raw/2⌋ = 0 only at raw 0, and p(raw 0) = .10 → **90.0%** (unchanged – the private row did not move) | **90.2%** before → **90.2%** after (first episodes, n 396 both runs) | **HIT** → **HIT** |
+| 3b | late share, **open ≤ 25%** | old row: p(raw 0) .45 + p(raw 1) .11 = .56 zero → **44.0%**. Moved row: p(raw 0) .70 + p(raw 1) .075 = .775 zero → **22.5%** | **44.0%** before → **20.6%** after (first episodes, n 398 both runs) | **MISS** → **HIT** |
 | 4 | the latch proxy | **unreadable this wave** – nothing ends an attachment | printed, **no verdict** (see below) | – |
 | 5 | input-independence: identical `sinceWeek` lists | identical, by construction of the key | **53 arrival weeks, 16 pairs, 0 mismatches – asserted** | **HIT** |
 
 Bar 1's «minor window» is weeks 128–231 (104 weeks at 1.0%×mult) and the «adult window» is 232–543
 (312 weeks at 2.5%×mult); both boundaries are **derived** by the bench off `kidAgeExact`, not quoted.
 
-### The finding: bar 3's open corridor is not reachable under §4's own lag table
+### The finding that moved the table: bar 3's open corridor was not reachable under the OLD lag row
 
-44.0% measured against a bar of ≤25%, and the bench prints the reason beside the number instead of
-leaving it to be guessed at. **The raw draw – before `ECONOMY.life.bondShave` touches it – is already
-57.4% late** (nominal 55.0%: §4's «open – 0 with p 0.45»). That is **2.3× the bar before the shave
-exists**, so no setting of the shave can reach the corridor:
+**The first run, kept whole because it is the reason the table moved.** 44.0% measured against a bar
+of ≤25%, and the bench printed the reason beside the number instead of leaving it to be guessed at.
+**The raw draw – before `ECONOMY.life.bondShave` touches it – was already 57.4% late** (nominal
+55.0%: the old «open – 0 with p 0.45»). That is **2.3× the bar before the shave exists**, so no
+setting of the shave could reach the corridor:
 
-| band | divisor | open late |
-| --- | --- | --- |
-| strained / cold | ⌊/1⌋ | **57.4%** – MEASURED: the raw draw itself, n 1638 |
-| steady | ⌊/2⌋ | **45.4%** – MEASURED, n 1638 (the only band this grid reached) |
-| close | ⌊/3⌋ | ≈ **33%** – COMPUTED off §4's nominal table (zero at raw 0, 1 or 2 = .45 + .11 + .11); not measured, because no career reached `close` |
+| band | divisor | open late, OLD row (0 @ .45, U[1..5]) | open late, MOVED row (0 @ .70, U[1..4]) |
+| --- | --- | --- | --- |
+| strained / cold | ⌊/1⌋ | **57.4%** – MEASURED: the raw draw itself, n 1638 | **33.0%** – MEASURED: the raw draw itself, n 1638 (nominal 30.0%) |
+| steady | ⌊/2⌋ | **45.4%** – MEASURED, n 1638 (the only band either grid reached) | **23.9%** – MEASURED, n 1638 (still the only band reached) |
+| close | ⌊/3⌋ | ≈ **33%** – COMPUTED off the old nominal table (zero at raw 0, 1 or 2 = .45 + .11 + .11); not measured, because no career reached `close` | ≈ **15%** – COMPUTED off the moved table (zero at raw 0, 1 or 2 = .70 + .075 + .075); still not measured, for the same reason |
 
-So the miss is a property of the **lag table**, not of the architect's concretisation: ≤25% needs
-p(raw = 0) ≈ 0.75 for an open girl, against §4's 0.45. Whether the bar moves or the table does is a
-ruling and not a measurement. **Nothing was retuned.** For the record beside it, the private column
-lands where the same arithmetic puts it – 90.2% against a predicted 90.0% – so the instrument is not
-reading the two registers differently.
+So the miss was a property of the **lag table**, not of the architect's concretisation: ≤25% needed
+p(raw = 0) ≈ 0.75 for an open girl, against the old 0.45. **Whether the bar moved or the table did
+was a ruling and not a measurement, and the owner ruled the table** («двигать таблицу – ок», 11.09) –
+0.70, U[1..4], which is the 0.75 the arithmetic asked for rounded to a number a design can say out
+loud: «open» means the parent usually hears at once.
+
+**What it reads now.** Open first-episode late share **20.6%** against ≤25% – a **HIT**, and with
+room: the closed form off the moved row predicts 22.5% at `steady` and the run came in 1.9 pp under
+it, the same direction and the same size as the raw-zero observation recorded below. The bar was
+never touched. For the record beside it, the private column did not move one digit – **90.2% before,
+90.2% after, n 396 both runs** – which is the control that says the move reached exactly the register
+it was aimed at, and the instrument is still not reading the two registers differently.
+
+⚠ **The three unreached bands are still unreached**, so the middle column of the table above is the
+only one either run measured. The moved row therefore reaches the corridor **at the band an ordinary
+parent actually produces**, and the `close`/`strained`/`cold` figures remain arithmetic – see the
+second finding, unchanged below.
 
 ### The second finding: three of the shave's four rows were never reached
 
@@ -1069,6 +1112,15 @@ independent – the census is paired, so quiet/deep and sunny/fiery share arriva
 effective sample size this sits inside noise. It is written down so a later run that reproduces it has
 something to reproduce.
 
+⭐ **AND THE LATER RUN REPRODUCED IT, which is why it was written down.** Under the moved row the raw
+zero-shares are **private 8.0% against 10% (identical to the digit – the private row never moved, and
+its draws are the same draws on the same keys) and open 67.0% against 70%** – the same ~2–3 pp, the
+same direction, on a threshold 25 pp away from the one that produced the first reading. A bias that
+survives moving the constant is a property of the sampled key set, not of the number: the paired grid
+re-reads one arrival key per (seed, week) for all four girls, so the effective n behind these shares
+is far smaller than the 1,638 and 767 rows printed beside them. Still not claimed as anything; now it
+has been reproduced once.
+
 ### The input-independence arm – asserted, not eyeballed
 
 One seed walked twice per temperament, four seeds per temperament, sixteen pairs. **no-action** enters
@@ -1087,6 +1139,11 @@ the engine refuses to move without (her beats, bond-neutrally; the fork; the ret
   two arms divided by the same number. The bench prints the bands per pair so this cannot be read the
   other way.
 
+⚠ **Re-run under the moved row: identical, to the last line.** 16 pairs, **53 arrival weeks, 0
+mismatches**, final bond differs 16/16, `knownWeek` differs in 0 – and the sixteen printed
+`sinceWeek` lists are the same sixteen lists, week for week. That is the strongest single statement
+the re-run makes: **a lag row cannot move an arrival**, because the arrival key never reads it.
+
 ### The latch proxy, and why it carries no verdict
 
 §4's «first or second love reaches the latch» bar (quiet ≥ 50%, fiery ≤ 20%) is **unreadable in this
@@ -1097,9 +1154,16 @@ sim. The column is printed so that step 6 has somewhere to land, and marked so t
 
 ### What this section does NOT do
 
-It changes no constant, proposes no retune, and ships no wording. Bar 3's open corridor and the three
-unreached rows of the shave are questions for the owner and the architect. The bench's own
-`endedWeek` poke is deleted the day wave 4 ships the ending hazard.
+It proposes no retune and ships no wording. **One constant moved between the two runs and it is named
+at the top of this section – `ECONOMY.life.lag.open`, on the owner's ruling, against a bar that stayed
+where it was.** That is the order invariant 5 requires: the bench measured, the miss was attributed,
+the finding went up, the owner moved a design number, and the bench re-measured. It is not the order
+where a number is nudged until a bar goes green, and the difference is visible in this section – both
+readings are here, the bars are untouched, and the seven bars that were HIT are still HIT on the same
+inputs.
+
+The three unreached rows of the shave remain a question for the owner and the architect. The bench's
+own `endedWeek` poke is deleted the day wave 4 ships the ending hazard.
 
 
 ## §4a – wave 3 measured, second entry. The push-through price, predicted against measured

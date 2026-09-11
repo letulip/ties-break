@@ -952,7 +952,8 @@ describe('the fence this step is judged by', () => {
     // («expected [ 'rollArrival(world)', …(1) ] to deeply equal [ 'rollArrival(world)' ]») the moment
     // a second statement slid into the gap, which is exactly what «asserted EXACTLY» was written for.
     // WHAT MOVED: `deliverKnownPartner(world)` – the delivery on `knownWeek` (§6 of the same module).
-    // WHY IT BELONGS THERE: a shaved lag of ZERO is common (an open girl draws it at p 0.45), so
+    // WHY IT BELONGS THERE: a shaved lag of ZERO is common (an open girl draws it at p 0.70 since
+    // §4's lag row moved on the census miss, 11.09 – it read p 0.45 when this note was written), so
     // `knownWeek === sinceWeek` on those careers, and delivery placed anywhere before the roll would
     // hold that news back a week for no reason a player could be told. It writes no spirit and takes
     // no `Rng`, so `accrueSpirit`'s own reading is untouched by its presence.

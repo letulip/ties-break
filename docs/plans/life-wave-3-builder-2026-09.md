@@ -246,9 +246,10 @@ that split is the input-independence story and the comment must tell it.
 derived result is legal (it is a record, like `world.birthdays`); the stream is still never
 persisted.
 
-**Tests.** Distribution corridors per openness over many arrivals (p₀ near 0.45/0.10, ranges
-honored); the shave monotone (close ≤ steady ≤ strained for one raw); wants ≈ 70/30 corridor;
-`knownWeek ≥ sinceWeek` always; determinism per key.
+**Tests.** Distribution corridors per openness over many arrivals (p₀ near **0.70**/0.10 – ⭐ the
+open figure moved with the row above it on 11.09, this line said 0.45 until the census miss was
+ruled on; ranges honored); the shave monotone (close ≤ steady ≤ strained for one raw); wants ≈
+70/30 corridor; `knownWeek ≥ sinceWeek` always; determinism per key.
 
 ### T6 – delivery on `knownWeek`
 

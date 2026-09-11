@@ -3598,7 +3598,20 @@ export const ECONOMY = {
      *  that wave 4 (which writes the endings) changes nothing here. */
     cooldownWeeks: { fiery: 12, sunny: 26, quiet: 39, deep: 52 },
     /** THE RAW FEED LAG, in weeks, by her OPENNESS REGISTER (who-she-is §4, «Feed lag», verbatim:
-     *  open – 0 with p 0.45, else uniform 1..5; private – 0 with p 0.10, else uniform 2..12).
+     *  open – 0 with p 0.70, else uniform 1..4; private – 0 with p 0.10, else uniform 2..12).
+     *
+     *  ⭐⭐ THE OPEN ROW MOVED ON 11.09.2026, AND IT MOVED BECAUSE A BAR MISSED – not because anybody
+     *  preferred the shape of it. T11's arrival census (§4a's wave-3 entry) measured the open
+     *  late-share at **44.0% against its own ≤ 25% bar**, and it measured the CAUSE beside it: the
+     *  RAW draw, before `bondShave` touches it, was already **57.4% late** (nominal 55.0% – the old
+     *  row's own «0 with p 0.45»). That is 2.3× the bar with no shave in it at all, so no setting of
+     *  the shave could ever have reached the corridor; ≤ 25% needs p(raw = 0) ≈ 0.75 for an open
+     *  girl. The finding went to the owner as a finding and he moved the TABLE rather than the bar
+     *  («двигать таблицу – ок»): **open now means the parent usually hears at once.**
+     *
+     *  ⚠ THE BAR ITSELF DID NOT MOVE AND MUST NOT (invariant 5: numbers are measured, never
+     *  adjusted). ≤ 25% / ≥ 60% are still what `tools/life-arrival.ts` prints against, and §4a
+     *  carries the re-measurement under the moved row, old numbers beside the new ones.
      *
      *  ⚠ INDEXED BY THE REGISTER SHE WAS BORN WITH, not by the `wants` she drew for this particular
      *  attachment. The two are separate facts on separate keys and are free to disagree; §4's own
@@ -3608,7 +3621,7 @@ export const ECONOMY = {
      *  ⚠ RAW, and the bond band shortens it afterwards (`bondShave`). This is the world's dice; the
      *  shave is the parent's history. */
     lag: {
-      open: { zeroChance: 0.45, min: 1, max: 5 },
+      open: { zeroChance: 0.70, min: 1, max: 4 },
       private: { zeroChance: 0.10, min: 2, max: 12 },
     },
     /** HOW HEAVILY THE `wants` DRAW LEANS ON HER OWN REGISTER (who-she-is §4, «Wants weights»: «open

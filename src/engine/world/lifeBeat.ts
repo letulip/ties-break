@@ -1478,8 +1478,15 @@ export function drawPartnerWants(seed: string, sinceWeek: number, temperament: T
 
 /** ⭐ DRAW 2 OF 2 – HOW LONG THE PARENT WAITS, **RAW**, on `seed:life:partner:<sinceWeek>:lag`.
  *
- *  who-she-is §4's «Feed lag» table, verbatim: open – 0 with p 0.45, else uniform 1..5; private –
+ *  who-she-is §4's «Feed lag» table, verbatim: open – 0 with p 0.70, else uniform 1..4; private –
  *  0 with p 0.10, else uniform 2..12.
+ *
+ *  ⭐ THE OPEN ROW MOVED 11.09.2026 and this quotation moved with it, because a stale verbatim quote
+ *  is drift wearing a citation. §4a's wave-3 census measured the open late-share at 44.0% against
+ *  its own ≤ 25% bar, with the RAW draw already 57.4% late before `shaveLag` below could touch it;
+ *  the owner moved the table rather than the bar («двигать таблицу – ок»). The DRAW here is
+ *  unchanged – one uniform, one key, one threshold read off `ECONOMY.life.lag`. Only the threshold
+ *  and the ceiling moved, which is why this step added no stream and took no new draw.
  *
  *  ⚠ IT TAKES THE OPENNESS REGISTER, NOT THE DRAWN `wants`, and the two are independent on purpose:
  *  a private girl who this time decided to say it out loud is still a girl who takes a while to get

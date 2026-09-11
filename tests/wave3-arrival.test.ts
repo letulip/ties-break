@@ -484,6 +484,18 @@ describe('wave 3 T5 D – lag and wants', () => {
   })
 
   it('⭐ the RAW lag honours who-she-is §4: p-zero, and the range outside it', () => {
+    // ⚠⚠ RE-AIMED 11.09.2026 AND **NOT WEAKENED**. WHAT MOVED: who-she-is §4's «Feed lag» OPEN row –
+    // `0 with p 0.45, else uniform 1..5` became `0 with p 0.70, else uniform 1..4`. WHY: T11's
+    // arrival census (§4a's wave-3 entry) measured the open late-share at 44.0% against its own
+    // ≤ 25% bar, and measured the cause beside it – the RAW draw was already 57.4% late before
+    // `bondShave` could touch it, 2.3× the bar with no shave at all. The owner moved the TABLE and
+    // not the bar («двигать таблицу – ок»). The PRIVATE row did not move.
+    //
+    // ⚠ THE CORRIDOR IS THE SAME WIDTH AROUND THE NEW CENTRE and it always was: ±0.04 read off
+    // `table.zeroChance` itself, so it re-aims with the constant and cannot be «widened» by a wave
+    // without the widening being visible right here. The three claims under it – the floor, the
+    // ceiling and «every value in between is reachable» – are likewise read off the table, so the
+    // narrowed open range 1..4 is asserted at its new ceiling rather than at a loosened one.
     for (const openness of ['open', 'private'] as const) {
       const table = LIFE.lag[openness]
       const draws = WEEKS.map((w) => drawRawLag('lag-corridor', w, openness))
@@ -498,12 +510,21 @@ describe('wave 3 T5 D – lag and wants', () => {
         expect(nonZero.filter((d) => d === v).length, `${openness}: the lag is sometimes ${v}`).toBeGreaterThan(0)
       }
     }
-    expect(LIFE.lag).toEqual({ open: { zeroChance: 0.45, min: 1, max: 5 }, private: { zeroChance: 0.10, min: 2, max: 12 } })
+    // ⚠ RE-AIMED, NOT WEAKENED: the literal table moved with the row above it and is still asserted
+    // whole – every field of both registers, so a half-applied move (threshold without ceiling, or
+    // the private row dragged along) fails here rather than passing as «close enough».
+    expect(LIFE.lag).toEqual({ open: { zeroChance: 0.70, min: 1, max: 4 }, private: { zeroChance: 0.10, min: 2, max: 12 } })
   })
 
   it('⭐ a private girl\'s silence CONTAINS an open girl\'s – one key, two thresholds', () => {
-    // p 0.10 against p 0.45 on the same uniform: every week a private girl says it at once is a week
+    // p 0.10 against p 0.70 on the same uniform: every week a private girl says it at once is a week
     // an open girl would have. Exact, not sampled.
+    // ⚠ RE-AIMED 11.09.2026, NOT WEAKENED – the OPEN threshold moved 0.45 -> 0.70 (the census miss,
+    // the owner's ruling). The claim is the same exact one over the same 4,000 weeks, and what it
+    // holds is STRUCTURAL rather than statistical: the two registers read ONE key, so the two
+    // thresholds cut the same uniform and the smaller set sits inside the larger whatever the numbers
+    // are. It is the case that would catch a second key appearing under `private`, and it catches
+    // that at 0.70 exactly as it did at 0.45.
     for (const w of WEEKS) {
       if (drawRawLag('containment', w, 'private') === 0) {
         expect(drawRawLag('containment', w, 'open'), `week ${w}`).toBe(0)
@@ -520,9 +541,16 @@ describe('wave 3 T5 D – lag and wants', () => {
     // one key.
     //
     // What a shared key DOES produce is a CORRELATION: both facts are then read off the same first
-    // uniform, and for an open girl `lag === 0` (p .45) would become a strict consequence of
-    // `wants === own` (p .70). So the honest behavioural net is the conditional p-zero, measured on
-    // both sides of the wants split and required to agree.
+    // uniform, and for an open girl `lag === 0` would become a strict consequence of `wants === own`.
+    // So the honest behavioural net is the conditional p-zero, measured on both sides of the wants
+    // split and required to agree.
+    //
+    // ⚠ RE-AIMED 11.09.2026, NOT WEAKENED – and the move made this net STRONGER, which is worth
+    // writing down rather than leaving as luck. The open p-zero went 0.45 -> 0.70 (§4's lag row moved
+    // on the census miss, the owner's ruling) and `wantsOwnRegister` is 0.70, so for an OPEN girl the
+    // two thresholds now coincide: under a shared key the two facts would not merely correlate, they
+    // would be the SAME EVENT, and the conditional p-zero would read 1.0 against 0.0. The gap bar is
+    // unchanged at 0.06 – the same tightness, on a net that now has a wider failure to catch.
     for (const temperament of TEMPERAMENTS) {
       const own = temperamentOpenness(temperament)
       const drawn = WEEKS.map((w) => ({
