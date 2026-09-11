@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 85 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 86 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -37,7 +37,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 3 | [WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)](#11092026--wave-b-the-вычитка-passed-and-the-bond-cadence-of-silence-b51) | 2026-09-11 |
+| life-and-morale | 4 | [THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS](#11092026--the-private-life-events-the-art-was-already-painted-and-six-rulings) | 2026-09-11 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -3410,3 +3410,48 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
   pool → red). ⚠ One honest cost, noted in the source: the warm pool grew 24 → 27, so existing
   careers' away scraps re-pick ONCE at update – growth moves the modulo, and a second coin to
   avoid it is machinery a scrap of paper does not deserve.
+
+## 11.09.2026 – THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS
+
+While wave 3 builds, the owner asked whether death, weddings and pregnancy are specced – and the
+inventory answer found the art shipped ahead of the mechanics: the `adult` portrait set already
+holds `bride`, `funeral`, `pregnant-early`, `pregnant-last` and `graduated`, all unwired
+(`public/images/fem-euro-brunnet/`). Funeral exists at `adult` ONLY – the asset enforces his
+23.08 «начиная со ступени adult» by construction. Rulings and confirmations, logged same-day;
+the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-children.md).
+
+- ⭐ **The forgotten graduate**: «graduated – вот это хорошо, что ты нашёл, мы забыли эту
+  картинку, надо встроить на окончание колледжа где-то, может быть в попапе и даже на главной
+  показывать неделю по окончании (если случилось окончание).» A wiring task spun off (its own
+  branch, not wave 3's): the painting joins `CollegeDoneDialog` and the home portrait for the
+  week after the finish, as a painting-only portrait state on `rehab`'s exact precedent
+  (`PortraitEmotion`) – ⚠ guarded by `kidLife`'s own graduated-vs-left distinction («she
+  graduated» must never print, or paint, for a girl who left after a year).
+- ⭐ **The wedding gate is 23+** («свадьба на 23+ – мне вполне ок») – supersedes 23.08's 22+; the
+  art already draws the bride at `adult` only, so the gate is art-enforced. Build plan §6b and
+  the wedding sketch both corrected.
+- ⭐ **Late pregnancy reuses the scenes** («не страшно в этом случае, можно использовать повторно
+  существующее») – no `lateCareer` pregnant art commissioned; the 24–35 research window stays.
+- **Bereavement, confirmed as designed on the layer's own axes** – his ask: «кто-то может быстро
+  оправиться, а кто-то долго, вот это мы отразили? и шок тоже может быть разным по глубине… и
+  показывать своё состояние они могут по-разному». Yes, three axes, all standing law: INTENSITY
+  owns depth AND duration (the same pair that prices the break-up −22/−34, on bereavement's own
+  longer asymmetric curve with its own `spiritShock` kind); OPENNESS owns expression (private
+  grieves quietly – the feed and diary nearly silent, the face and the funeral frame carrying
+  it; open speaks); the realised cost rides a benched corridor like the break-up's, under the
+  ±1.5 pp fairness law. The psychologist reads the shock kind for free; the off-switch (open
+  question 1) still gates the build.
+- **The repeat pregnancy** («после беременности может быть и повторная») – already in the sketch
+  (§3: same machinery re-entered, lower hazard); extended with the count rule: the hazard reads
+  the age window AND how many children exist, so a third stays rare.
+- ⭐ **The dynasty hook** («в конце карьеры можно сделать хук на новую карьеру через ребёнка») –
+  NEW, recorded as the sketch's §7: the retired star becomes the next PARENT (the player's role
+  never changes), a new save with a small inheritance block – seed lineage, wealth band, fame
+  from birth through the spotlight layer, the album as an heirloom, the mother as §5c cast.
+  Step 9, after step 7; M in v1.
+- **Divorce and a second wedding** («а свадьба может быть у нас не одна, кстати? разводы будем
+  делать?») – the schema is pre-paid NOW at zero cost: the latch moves onto the episode row
+  (`latchedWeek` on `LoveEpisode`, never a global boolean), so a divorce is an ending on a
+  latched episode and a remarriage is the same machinery on a later one. The CONTENT stays
+  deferred: no divorce in W1–W5, raised after playtests; children stay state through it – no
+  custody loop, ever.

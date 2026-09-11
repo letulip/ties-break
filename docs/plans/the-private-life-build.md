@@ -590,7 +590,9 @@ recommendation (open question 5 is closed below).
 > «Свадьбы предлагаю с 22+ уже делать. Романов может быть как несколько, так и один, как мне
 > кажется, это тоже будет сильно»
 
-So step 6's latch carries its own age gate – **no marriage before 22** – beside step 3's 16, and
+So step 6's latch carries its own age gate – ⭐ **no marriage before 23** since 11.09 (his 23.08
+«с 22+» superseded by his own word on the art-driven gate: the bride is painted at the `adult`
+portrait stage only, «свадьба на 23+ – мне вполне ок») – beside step 3's 16, and
 the slot's life between those gates may CYCLE (arrival → end → cooldown → someone new) or HOLD
 (one long romance carried into the latch). Both are his design, not edge cases: step 4's hazards
 already produce both (median duration ≈ 57 weeks, ~28% of relationships reach year two), and no
