@@ -91,6 +91,7 @@ obey throughout.
 | T11 | the census bench | `tools/life-arrival.ts` + bars |
 | T12 | the push-through debt | paired measurement + spec record |
 | T13 | the wave gate | green logs, arms recorded, handoff package |
+| T14 | the graduated portrait (folded in 11.09, his order) | CollegeDoneDialog + the home week, painting-only |
 
 T2 lands BEFORE T3 – the hazard must not be able to raise a beat behind the college freeze while
 the freeze still swallows it. T10 may be drafted in parallel from T6 on, but nothing merges
@@ -409,6 +410,35 @@ Before handing back:
    any net the builder added);
 7. the вычитка package assembled (§5) – NOT merged, handed over;
 8. worktrees removed, `pgrep -lf "vite-node|vitest"` empty, no orphan background chips.
+
+### T14 – the graduated portrait (⭐ FOLDED INTO THE WAVE 11.09, his order)
+
+The owner, on the found-and-forgotten asset: «graduated – вот это хорошо, что ты нашёл, мы
+забыли эту картинку, надо встроить на окончание колледжа где-то, может быть в попапе и даже на
+главной показывать неделю по окончании (если случилось окончание)» – and, same day: «надо будет
+в эту же волну добавить, а не отдельно делать». So it is this wave's, not a spin-off.
+
+**The asset**: `public/images/fem-euro-brunnet/fem-euro-brunnet-adult-graduated.webp` – shipped,
+zero code references, `adult` stage only.
+
+**The precedent**: `rehab` in `src/shared/avatarEmotion.ts` – a PAINTING-ONLY portrait emotion
+(`PortraitEmotion = AvatarEmotion | 'rehab'`, excluded from `CROPPABLE_EMOTIONS`). `'graduated'`
+joins exactly the same way: painting-only, no crop, no avatar chip.
+
+**The two surfaces**: (1) `src/components/CollegeDoneDialog.vue` (round 24 #4, App.vue's
+`showCollegeDone`) shows the painting on the finished-course arm; (2) the home/Kid portrait for
+exactly ONE week after the finish week – a `graduated`-week override in the portrait pick, then
+back to normal.
+
+⚠ **The honesty guard, load-bearing**: `kidLife.ts` (:260 at brief time) defines graduated =
+«four years, done» and warns the graduate's line must never print for a girl who left after one
+year – the PAINTING obeys the same split. A leaver gets no graduation portrait anywhere; pin
+both arms, mutation-verified.
+
+**Bounds**: invariant 4 – the dialog's existing copy stays byte-identical (this is a picture,
+not words); no new RNG (presentation reading existing facts); round-20 375x667 law if the
+dialog's height moves. Collision-free with T1–T8 (avatarEmotion + one dialog + the portrait
+pick); slot it wherever it fits after T2.
 
 ---
 

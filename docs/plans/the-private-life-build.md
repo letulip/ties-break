@@ -614,7 +614,28 @@ the recommendation is a `kidAgeExact ≥ 23` gate, and the junior years never se
 The funeral itself is part of the beat – «с соответствующими эффектами» – not a feed line: its own
 shock kind on step 8's asymmetric, longer curve, and everything §3e already holds still stands:
 deliberately NOT on the attachment machinery, it can reach the parent, it ships behind an off
-switch (open question 1 must be answered first), last, carefully.
+switch (open question 1 must be answered first), last, carefully. ⭐ The funeral painting already
+exists and is `adult`-only (`fem-euro-brunnet-adult-funeral.webp`, found unwired 11.09) – the
+asset enforces this gate by construction.
+
+⭐ **THE HAZARD PROPOSAL (11.09 – his ask: «что насчёт частоты похорон?»; numbers for the bench,
+none ruled).** ⚠ The hazard is TEMPERAMENT-FREE, and that is a design law, not a default: a
+death is the world's dice, never her personality's – modulating FREQUENCY by who she is would
+be the layer's one true unfairness. Only the RESPONSE is hers: intensity prices the depth and
+the duration (the −22/−34 pair's sibling on a longer, asymmetric curve), openness prices the
+expression (private grieves almost silently – the face and the funeral frame carry it; open
+speaks). Proposed numbers: **0.08%/week from the adult rung** (≈4% per season; over a 23→35
+tail E ≈ 0.5 – roughly 40% of careers meet one loss, ~8% a second), spacing **≥ 156 weeks**,
+hard cap **2 per career**, one uniform on `seed:life:loss:<week>` (named now, created at
+step 8, zero draws while ineligible). The realised cost rides a benched pp-corridor like the
+break-up's, under the ±1.5 pp fairness law read on the RESPONSE arms.
+
+⚠ **The kin-name collision, found 11.09 and left as step 8's opening constraint**: the fridge
+pool already NAMES a grandmother in several unlicensed domestic lines (including the cold
+pool's «Your grandmother turned eighty. She asked.»). Step 8's v1 therefore keeps the deceased
+an UNNAMED relative in both mechanics and copy – or licenses every named-kin line off a
+live-kin fact first. Shipping a named death against an unlicensed «Grandma called» scrap is
+exactly the contradiction the honesty law exists to prevent.
 
 ---
 
