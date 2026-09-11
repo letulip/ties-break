@@ -38,6 +38,7 @@
 // ⚠ ZERO MAIN-STREAM DRAWS is proved next door, in tests/travel-home.test.ts's byte-identical
 // capture (41550 / e6b0c709), which now touches `diary.weekNote` on every one of 52 weeks.
 import { describe, expect, it } from 'vitest'
+import { BANNED_TAILS } from './helpers/bannedTails'
 import { worldSource, diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
@@ -1116,22 +1117,13 @@ describe('v72 — the voice completeness pin', () => {
     // flat and the parent's own. The quotation is stripped first: the ban is on the narrator
     // interpreting her, never on words she might say herself. A new tail joins the list to
     // tighten the ratchet; removing one is the owner's call.
-    const BANNED_TAILS = [
-      'at speed',
-      'at volume',
-      'which is the tell',
-      'which is how she says it',
-      'nothing further',
-      'nothing more',
-      'in those words',
-      'three times over',
-      'more than once',
-      'that was the whole answer',
-      'did the whole week\'s work',
-      'no second sentence',
-      'she announced',
-      'left it there',
-    ]
+    // ⚠ RE-AIMED 11.09 AT THE SHARED LIST, NOT WEAKENED – and the list itself is byte-identical.
+    // WHAT MOVED: `BANNED_TAILS` left this file for `tests/helpers/bannedTails.ts`. WHY: T10's
+    // verification pass found the ban is marked «MUST, linted» while the lint swept `WEEK_NOTES`
+    // and nothing else – wave 2 put two more narration pools in `engine/world/lifeBeat.ts` and wave 3
+    // added five, none of them ever swept. `tests/wave3-tail-lint.test.ts` now sweeps those seven,
+    // and TWO copies of a ban list are two lists that drift. This case is unchanged in every other
+    // respect: same pool, same strip, same assertion, same message.
     for (const n of WEEK_NOTES) {
       const text = typeof n.text === 'function' ? n.text(homeWeek({ birthdayAge: 15 })) : n.text
       const narration = text.replace(/"[^"]*"/g, ' ').toLowerCase()
