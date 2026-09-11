@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 95 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 96 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -38,7 +38,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 6 | [THE PRIVATE LIFE: THE STOP-WANT WAS A QUARTER, NOT A TAIL (T17 RULED IN)](#11092026--the-private-life-the-stop-want-was-a-quarter-not-a-tail-t17-ruled-in) | 2026-09-11 |
+| life-and-morale | 7 | [THE PRIVATE LIFE: T16 OVERCORRECTED, AND THE NINE-POINT FOLD (T16b)](#12092026--the-private-life-t16-overcorrected-and-the-nine-point-fold-t16b) | 2026-09-12 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -3872,3 +3872,44 @@ fork must be an eighteen-year-old's tail, not a coin.
   re-read later) travels to wave 5 with him.
 - **The Barty tail stays a feature**: nothing can zero `stop` – the design keeps «никто не
   ожидал» possible, priced for her age and always with roots the player can re-read.
+
+## 12.09.2026 – THE PRIVATE LIFE: T16 OVERCORRECTED, AND THE NINE-POINT FOLD (T16b)
+
+The builder shipped T16/T17 and measured its own medicine: the unconditional escalation classes
+flattened the coach ladder to 1.08× (Elite self-decide 95% → 31%) – the attention-buying
+product died for the lever's sake. The owner: «мне это не очень нравится», then «давай по всем
+пунктам микро спеку… чтобы он всё починил». The nine answers, logged:
+
+- ⭐⭐ **T16b ruled – the widener model replaces the override.** `'warn'` becomes a second
+  doubt-widener beside `REPEAT_DOUBT` (draft ≈2.5–3); the unconditional classes revert; bars:
+  ladder spread ≥ 1.6×, middle-rung parent-asked 3–5/career, Elite self-decide ≥ 85%. Invariant
+  5 working as designed: «давай попробуем» → measured → corrected by the ladder's own number.
+  The coach-load pins re-aim BACK with the three-turn story preserved (23.08 rejection → 11.09
+  override → 12.09 widener).
+- **The warn feed line is the architect's**: «The coach is not calling the {part} alone – not
+  on a week like this.» replaces the reuse (his «мне вроде как ок» to the reuse stood; the line
+  closes it cleaner at zero cost).
+- **Own-stop contractions: LEAVE** – the four shipped wave-2 keepers stay byte-identical; the
+  Barty-register formality is load-bearing, and the pool is never seen whole.
+- **Worn-at-the-fork is reachable in play** (injury before the fork, pushed-knock runs, exam
+  grind, vacation-less seasons – NOT weekly tournaments: results are form's parked channel and
+  deliberately absent from the perturbation table); the bench gains a POKED worn arm so the
+  copy renders in a walked context at least once.
+- **The frozen-fixture stall explained and repaired**: harnesses that answer nothing latched on
+  the first escalated knock (econ-bench 2 → 47 stuck weeks – a property of the stand, not the
+  game); a shared knock drain (answer `rest`) lands for every harness not measuring her, under
+  T6b's law that a drain never overwrites a measuring arm.
+- ⭐ **The bond magnet is now measured THREE ways** (wave-2 bar 3 · T12's 92% erasure · 100% of
+  2,405 arrivals at `steady`, close never reached): the 0.5/week regression to 70 is a magnet
+  rare pluses cannot escape upward. NOT retuned here – the bond-memory model gets its own
+  session with планка-3. His paired observation answered: mood variation in play waits on wave
+  4's shocks (step-1 spirit hovers by design); temperament itself never changes BY LAW (§3
+  fence) – its EXPRESSION (walls/leanings, his «может и назад откатиться») is wave 5's schema.
+- **The glyph discriminator rides v75**: an optional `lifeKind` on the event row lands with
+  wave 4's own bump (its endings need it first); 🤍 stays the single v1 mark; he sees it live
+  in the post-merge playtest build.
+- **ending.tsave's staleness debt** gains a re-gate check: every fixture newer than the head
+  that shaped it.
+- **CLAUDE.md compression ruled its own post-merge PR** («кажется надо оптимизировать») – the
+  Gotcha case-histories compress to law + decisions links; 22 characters of headroom is one
+  agent-line from a red gate.

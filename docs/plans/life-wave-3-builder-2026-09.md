@@ -526,6 +526,55 @@ coach still never asks); mutation arm – dropping the predicate returns the rat
   shape; the ladder is EXPECTED to lift at every rung now, that is the ruled trade) AND the T12
   pair re-run (parent-asked rate ~1.5 → 4–6 is the headline). Both into §4a.
 
+### T16b + the nine-point fold (⭐ RULED 12.09 – «давай по всем пунктам… чтобы он всё починил»)
+
+The builder's own measurement overturned T16's shape: the unconditional classes flattened the
+coach ladder to 1.08× (Elite self-decide 95% → 31%) – the attention-buying product died, and
+the owner's word was «мне это не очень нравится». T12's dead lever was measured at the DEFAULT
+(middle) coach; the cure must not spend the premium rungs. So:
+
+**1 – T16b, the widener model (replaces the override).**
+
+* Revert the unconditional `repeat || warn` classes. `'warn'` becomes the SECOND doubt-widener
+  beside `REPEAT_DOUBT`: `WARN_DOUBT ≈ 2.5–3` (draft for the bench), multiplying the zone the
+  same way; a warn-week REPEAT compounds (both wideners apply). The ordinary-knock confidence
+  ladder is untouched.
+* **Bars, all three printed**: ladder spread (budget→elite asks) **≥ 1.6×**; middle-rung
+  parent-asked **3–5 per career** (was ~1.5); Elite self-decide **≥ 85%**. Tune `WARN_DOUBT`
+  (and, if needed, one step of `ESCALATE_CAUTION`) against these; nothing else moves.
+* Re-aim the coach-load pins BACK: «a sure coach handles even a repeat» returns green, with
+  the ⚠ note now telling BOTH turns of the story (23.08 rejection → 11.09 override tried on
+  T12's measurement → 12.09 widener, corrected by the ladder's own number). The comment beside
+  the constants preserves all three rulings verbatim – this is the file's best history lesson.
+* Re-run `bench:load` and the T12 pair; both records into §4a replace T16's. Frozen careers
+  re-stamp back under the per-key protocol.
+
+**2 – the warn line (architect's, under the standing delegation).** Replace the reuse with:
+«The coach is not calling the {part} alone – not on a week like this.» – R15-7 clean, short
+dash, template on the part like its siblings.
+
+**3 – the own-stop contractions: LEAVE, and record.** The four shipped wave-2 lines stay
+byte-identical (keepers; the Barty-register formality is load-bearing in a career-defining
+sentence, and the player only ever sees one line of the pool). One ledger line, no code.
+
+**4 – the worn column gets a POKED arm.** The fork grid gains one tool-side poke (spirit forced
+into the worn band at the fork week – the step-4 bench's own precedent, never through a
+stream), so the worn-driver copy renders at least once in a walked context and the grid prints
+the row. The unpoked grid keeps printing its honest `–`.
+
+**5 – the shared knock drain.** `tools/_lifeBeats.ts`'s sibling: a knock drain (answer `rest`)
+for every harness that is NOT measuring her – econ-bench's stuck weeks return to ~2. Benches
+that price knocks keep their explicit arms (the T6b law: a drain must never overwrite a
+measuring arm). Note in the helper: T16b itself shrinks escalations, the drain covers the rest.
+
+**8 – at the re-gate**: verify every `.tsave` and golden is newer than the head that shaped it
+(the ending.tsave staleness debt's own check, one loop over mtimes vs the generator run).
+
+Points 6, 7 and 9 of the builder's list are NOT this wave's: the bond-memory model travels to
+the планка-3 session (the 0.5/week magnet is now measured three ways); the glyph discriminator
+rides wave 4's own v75 bump as an optional `lifeKind` on the event row; the CLAUDE.md
+compression is its own post-merge PR on the owner's word («кажется надо оптимизировать»).
+
 ### T17 – the stop-want arc (⭐ RULED 11.09, measured by the owner's own playtest)
 
 **The measurement.** His world #5, healthy, close home, said «stop» at the fork. The formula
