@@ -92,6 +92,7 @@ obey throughout.
 | T12 | the push-through debt | paired measurement + spec record |
 | T13 | the wave gate | green logs, arms recorded, handoff package |
 | T14 | the graduated portrait (folded in 11.09, his order) | CollegeDoneDialog + the home week, painting-only |
+| T15 | the tier-1 soft surface (ruled in 11.09) | Home card → the same dialog; `pendingLifeBeat` narrows to blocking |
 
 T2 lands BEFORE T3 – the hazard must not be able to raise a beat behind the college freeze while
 the freeze still swallows it. T10 may be drafted in parallel from T6 on, but nothing merges
@@ -439,6 +440,38 @@ both arms, mutation-verified.
 not words); no new RNG (presentation reading existing facts); round-20 375x667 law if the
 dialog's height moves. Collision-free with T1–T8 (avatarEmotion + one dialog + the portrait
 pick); slot it wherever it fits after T2.
+
+### T15 – the tier-1 soft surface (⭐ RULED IN 11.09)
+
+The drift story first, so the task reads honestly: the brief's T8 sent tier 1 through the hard
+pause; §5b's ruled table says «soft – answerable, never lost»; the builder flagged it and the
+owner ruled вариант 3 (raise reverted, engine kept) and then, same day: «расписать вариант 2
+подробнее сейчас в спеке и тоже всё-таки в эту волну загнать». The spec is who-she-is §5b's
+«SOFT BLOCK CONCRETIZED» amendment – read it FIRST; this task is its build order, and it
+re-enables the raise вариант 3 turned off, through the soft path:
+
+1. **The kind registry declares blocking**: a per-kind `blocking: boolean` beside the options
+   (total by type – a future kind must choose); `'fork-opinion'` and `'met'` true,
+   `'small-talk'` false. `pendingLifeBeat` narrows to blocking rows; a new
+   `liveSoftBeat(world)` selector returns the live soft row – TTL **3 weeks**
+   (`ECONOMY.life.smallTalkTtlWeeks`), liveness DERIVED from `week − row.week`, never stored.
+2. **Advance untouched by soft**: the `'life'` StopReason path reads blocking rows only.
+   ⚠ Re-aim wave-2's block-contract pins with the note naming what moved (the pending set) and
+   why (§5b's soft row was never a stop).
+3. **The Home card**: visible while `liveSoftBeat` is non-null; tap opens `LifeBeatDialog`
+   with the soft prompt – same wire, same component, same engine re-validation; answering
+   writes the row exactly as any beat. The card label is DRAFT copy – the вычитка package
+   (invariant 4), one short line.
+4. **Raising re-enabled**: T8's hazard writes soft rows again; eligibility gains «no live
+   unanswered soft row exists».
+5. **Tests**: `pendingLifeBeat` excludes soft – mutation ARM: mark `'small-talk'` blocking →
+   the advance-never-stops case goes red, recorded; TTL boundary (live at raise+2, gone at
+   raise+3, the row persists unanswered); the V2 zero-bond pin survives expiry; the card's tap
+   target inside the 375 viewport (mounted), the dialog it opens keeps its own 375x667 pin;
+   card absent at strained/cold; e2e: card appears → open → answer → card gone, week never
+   stopped by it.
+6. **The fallback stays cheap**: if anything resists, T15 reverts to вариант 3's state (raise
+   off) without touching T1–T8 – the engine was already built for exactly that.
 
 ---
 

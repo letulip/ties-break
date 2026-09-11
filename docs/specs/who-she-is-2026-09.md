@@ -480,6 +480,32 @@ the words) + 4 one-liners + the flat pool shared across beats + the feed row ≈
 | 1 | small talk – she comes with something small (a worry before a big draw, a joy, a question); 2–3 reply options | soft – answerable, never lost | zero or capped-tiny (open question V2) – texture, never economy | a few per season at close; none at cold |
 | 2 | the big life beats (waves 2–4, already designed) – where her voice premieres | yes | the beats' own tables | as designed |
 
+⭐⭐ **THE «SOFT» BLOCK CONCRETIZED (11.09, wave 3 – the drift and the repair).** The wave-3
+brief mistakenly sent tier 1 through tier 2's hard pause; the builder built it, flagged the
+contradiction with this table and measured the cost (~2–4 week-stopping modals a season for a
+zero-bond event, from week 0 – bond starts at steady). The owner's calls, same day: the raise
+reverted first (вариант 3 – the engine, hazard, cap and lines all stay), then «расписать
+вариант 2 подробнее сейчас в спеке и тоже всё-таки в эту волну загнать» – so this is the
+ruled meaning of «soft – answerable, never lost», built as wave 3's T15:
+
+* **The surface is a Home-hub card, and the card is only the INVITATION** – she has come by
+  with something. Tapping it opens the SAME `LifeBeatDialog` on the same prompt contract;
+  modal only because the player chose to listen. No new dialog exists anywhere. The card's
+  copy is the owner's (invariant 4), delivered with the wave's вычитка package.
+* **Soft never stops the week**: the beat-kind registry declares `blocking` per kind (total
+  by type, so every future kind must choose), `pendingLifeBeat` narrows to blocking rows, and
+  the `'life'` stop reads only those. A soft row and a blocking beat coexist untouched.
+* **Answerable has a WINDOW**: a soft row is live for 3 weeks (the raise week + 2); liveness
+  is DERIVED from `week − row.week`, never stored – the episodes discipline again. After the
+  window the moment has passed: the card goes, nothing asks.
+* **Never lost = the ROW, not the chance**: the lifeLog row stands forever – answered, or
+  expired with `answer: null`, the honest record that she came and it went unasked. Bond moves
+  nothing either way (V2's zero holds even for the silence). A later wave MAY let the diary
+  read expired rows as texture; nothing does today.
+* **One at a time, and the band gate stands**: no new raise while a live unanswered soft row
+  exists; the season cap counts raised rows answered or not; close/steady only, so the card
+  cannot exist at cold – the silence is still the line.
+
 **What we need to build it** (his literal question, answered as a list):
 
 1. **Four voice bibles** – a short style guide per temperament: vocabulary, sentence length,
