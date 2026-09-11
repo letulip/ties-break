@@ -124,10 +124,20 @@ import {
   // ⚠ v74 – the engine's own refusal string, so the drain below can tell a terminal latch (which is
   // tolerated) from a beat kind with no bond-neutral answer (which must never be swallowed here).
   CAREER_ENDED_REFUSAL,
+  // ⚠⚠ T12 – the attachment slot, read for ONE purpose: `accrueSpirit` walks toward
+  // `baseline + attachmentLift` while it returns a row, so "weeks under the baseline" has to know
+  // how many of the pair's weeks were lived above a LIFTED target. It is also an invariance probe –
+  // the arrival is keyed on (seed, calendar) alone, so the two arms must hold it on the same weeks.
+  activeEpisode,
 } from '../src/engine/world'
 import type { Temperament, WorldState } from '../src/engine/world'
+// ⚠ T12 reads two knock facts the barrel does not re-export, from the leaf that owns them – the same
+// direct-to-leaf shape this file already uses for `ECONOMY`, `isExamWeek` and `schoolEndWeek`.
+// `knockGoverns` is the engine's OWN answer to "is this week one the push is being paid for", so the
+// governed-week count below is the rule itself rather than a bench re-derivation of 3 weeks a push.
+import { knockGoverns, KNOCK_PUSH_WEEKS, KNOCK_REST_GROWTH } from '../src/engine/knock'
 import { drainLifeBeats } from './_lifeBeats'
-import { rngFromSeed } from '../src/engine/rng'
+import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { isExamWeek, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { schoolIsOver, schoolEndWeek } from '../src/engine/kidLife'
@@ -306,8 +316,12 @@ function planFor(world: WorldState, arm: Arm) {
 }
 
 /** The care arm's family weeks, booked a season ahead into the off-season. Swallows the planner's
- *  refusals the way the screen does: an unbookable week is simply a week the family does not get. */
-function bookTheFamilyWeeks(world: WorldState, career: Career): void {
+ *  refusals the way the screen does: an unbookable week is simply a week the family does not get.
+ *
+ *  ⚠ THE COUNTER IS TAKEN STRUCTURALLY (`{ vacations: number }`) RATHER THAN AS A `Career`, so T12's
+ *  pair below books its family weeks through THIS function instead of growing a second copy of the
+ *  off-season rule. Nothing about the care arm changed: a `Career` still satisfies the shape. */
+function bookTheFamilyWeeks(world: WorldState, career: { vacations: number }): void {
   for (const offset of VACATION_OFFSETS) {
     const week = world.week + offset
     if (week >= WEEKS) continue
@@ -340,8 +354,12 @@ function enterWhatSheCan(world: WorldState): void {
 }
 
 /** Answered the SAME way in both arms - she gets the thing she asked for. See the header for why
- *  this is deliberately not an arm difference. The ask itself is what §6's print wants. */
-function answerTheBirthday(world: WorldState, career: Career): void {
+ *  this is deliberately not an arm difference. The ask itself is what §6's print wants.
+ *
+ *  ⚠ `{ asks: string[] }` FOR THE SAME REASON `bookTheFamilyWeeks` TAKES A SHAPE: T12's pair answers
+ *  the birthday identically in both of ITS arms too, and one implementation is what guarantees the
+ *  two walks cannot drift into answering her differently. */
+function answerTheBirthday(world: WorldState, career: { asks: string[] }): void {
   const age = pendingBirthday(world)
   if (age === null) return
   const { options, askedId } = birthdayOfferFor(world, age)
@@ -940,6 +958,850 @@ if (SWEEP !== null) {
   process.exit(0)
 }
 
+// =================================================================================================
+// ⭐⭐⭐ T12 – THE PUSH-THROUGH PAIR – `npm run bench:spirit -- --push`
+// =================================================================================================
+//
+// ⚠⚠ WHAT THIS IS. Wave 1 shipped the push-through PRICE – bond +1 / −3 / −5 at `decideKnock`, and
+// spirit −2 on every week a push governs – and shipped it WITHOUT the paired measurement CLAUDE.md
+// invariant 5 owes every balance change («balance changes ship with a bench run and a spec recording
+// predicted vs measured»). That debt is wave 3's T12 and this block is the payment: one clean pair,
+// identical policy except the knock answer, 64 seeds × 4 temperaments.
+//
+// ⚠⚠ IT DOES NOT TOUCH THE TWO ARMS ABOVE AND MUST NOT. `care` / `grind` move THREE decisions at
+// once (the knock, the family week, the exam plan) because they are pricing the BOND, and they
+// answer her beats non-neutrally on purpose – that is the runbook's grid and every bar in this file
+// is read off it. A pair that prices ONE decision cannot be carved out of a grid that moves three,
+// so this is its own walk with its own policy. The `--push` flag exits before THE RUN below, exactly
+// as `--sweep` does, so the default printout is byte-identical to what it was before this existed.
+//
+// THE PAIR, and every clause is HELD EQUAL rather than merely unmentioned:
+//
+//   arm A  rest    `decideKnock(world, 'rest')` on every knock
+//   arm B  push    `decideKnock(world, 'push')` on every knock
+//
+//   · `balanced` every week in both arms, so the exam row (`train >= examTrainFloor`) cannot fire in
+//     either. The care/grind arms vary the exam plan deliberately; a knock pair must not.
+//   · THE FAMILY WEEKS ARE BOOKED IN BOTH ARMS (off-season 50/51, `staycation`, free at `wealthy`),
+//     so the season-wrap `seasonWithNoVacation` row (−3 bond AND −3 spirit) cannot fire in either.
+//     Both of those rows would cancel in a paired difference anyway – they are held out because they
+//     are worth four weeks under the baseline apiece, and number 2 below counts weeks.
+//   · the same entry policy (`enterWhatSheCan`), the same birthday answer (`answerTheBirthday`), and
+//     every life beat drained at its own bond-neutral price in both arms.
+//   · `wealthy`, `DEFAULT_PROFILE`, assigned temperament – this file's own three choices, unchanged.
+//
+// ⚠⚠ AND THE CAREER IS SELF-COACHED (`coachTier: 'self'`), WHICH IS THE ONE POLICY CHOICE THIS BLOCK
+// MAKES THAT THE BAR GRID DOES NOT – MEASURED, not preferred. `DEFAULT_PROFILE` is `middle`, and
+// `coachManagesLoad` is true for every rung but `self`: a hired coach ANSWERS most knocks himself
+// inside the tick (`coachDecidesKnock`), escalating to the parent only when `coachEscalates` says
+// so, and his answer moves no bond at all («the hired coach answering on his own is the one knock
+// path the parent did not take» – world/knock.ts). Two things follow and both are fatal to this
+// pair: the parent is asked about only a fraction of her knocks, so "arm A rests EVERY knock" is
+// simply not what the walk does; and the push-governed weeks in arm A are then NOT zero – they are
+// the coach's, and the spirit row fires for a decision neither arm made. Run
+// `npm run bench:spirit -- --push --coached` to reproduce that reading at the shipped `middle` rung:
+// it prints the same census with the coach's own column filled in, and it is why the default is
+// `self`. ⚠ `'self'` is a first-class rung (`CoachTier`, «the parent on the court»), not a poke: it
+// reaches the world through `openingCoachId`, which returns null for it, and nothing is written
+// behind the engine's back.
+//
+// ⚠⚠ THE ANTI-STALL CONTRACT, AND IT IS THE POINT OF THE BLOCK RATHER THAN A PRECAUTION. This file
+// spent a wave printing a full census while answering NOTHING (842 beats raised, 0 answered, exit 0
+// – see the wave-2 banner above §"THE TWO ARMS ANSWER HER"), so a pair that can report a price it
+// did not measure is not an instrument. Four properties, and the run DIES rather than prints if any
+// of them fails:
+//
+//   1. THE ARMS ARE COUNTED, NOT ASSUMED. Every knock that ARRIVED is counted, every one the parent
+//      was asked about is counted, every answer is counted, and BOTH ledgers have to balance:
+//      `asked + coach-decided === arrived` and `answered + latched === asked`, per arm. Arm B must
+//      record pushes > 0 and arm A rests > 0 – printed beside every price, never in a comment.
+//   2. NO `try/catch` STANDS BETWEEN A KNOCK AND ITS ANSWER. `decideKnock` is called bare. Its one
+//      legitimate refusal on this walk – `guardNotEnded`, when the tick that raised the knock also
+//      ended the career – is handled by TESTING the latch instead of catching its throw, and those
+//      knocks are counted into their own printed column. Any other refusal propagates and kills the
+//      run, which is the behaviour the swallowed throw of v74 did not have.
+//   3. THE TWO ARMS ARE PROVEN TO HAVE TAPPED ONE MAIN STREAM, per week, by a counting wrapper that
+//      takes no draw of its own – see `runPushCareer`. A pair whose draw counts or draw hashes
+//      diverge is measuring the seed and not the choice, and is a hard failure.
+//   4. EVERY PRINTED NUMBER CARRIES ITS OWN `n`, and a number with n = 0 is a failure, not a dash.
+//
+// ⚠⚠ AND NOTHING HERE CHANGES A CONSTANT. Same ruling as the sweeps and the bars: a measurement that
+// disagrees with the delta table's prediction IS the finding, and retuning is the owner's call on
+// the record (who-she-is §4a).
+
+/** ⚠⚠ THE ARM **IS** THE KNOCK ANSWER, which is the strongest statement of «the two arms differ only
+ *  in the knock answer» that can be made in code rather than in prose: the arm label is a
+ *  `KnockChoice`, the walker reads `arm` in exactly ONE expression (`decideKnock(world, arm)`), and
+ *  there is no second branch anywhere in this block for a difference to hide in. */
+const PUSH_ARMS = ['rest', 'push'] as const
+type PushArm = (typeof PUSH_ARMS)[number]
+
+const PUSH_MODE = process.argv.includes('--push')
+/** ⚠ THE CONTROL FOR THE PARAGRAPH ABOVE, NOT A SECOND MEASUREMENT. `--push --coached` runs the same
+ *  pair at `DEFAULT_PROFILE`'s shipped `middle` rung, where the coach answers most knocks himself –
+ *  so the reason the default is self-coached is a command anyone can re-run rather than a number
+ *  quoted in a comment. Its arms are NOT "rest/push every knock" and its printout says so. */
+const PUSH_COACHED = process.argv.includes('--coached')
+const PUSH_COACH_TIER = PUSH_COACHED ? DEFAULT_PROFILE.coachTier : 'self'
+
+/** The brief's grid is 64 seed-pairs; `--seeds=N` shrinks it for a smoke run and the printout says
+ *  so in its own header rather than letting a 4-seed run be read as the measurement. */
+const PUSH_SEEDS_ASKED = 64
+function pushSeedCount(): number {
+  const flag = process.argv.find((a) => a.startsWith('--seeds='))
+  if (flag === undefined) return PUSH_SEEDS_ASKED
+  const n = Number(flag.slice('--seeds='.length))
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : PUSH_SEEDS_ASKED
+}
+
+interface PairCareer {
+  seed: string
+  arm: PushArm
+  temperament: Temperament
+  weeks: number
+  endedAs: string | null
+  // --- the census that makes a stall visible ----------------------------------------------------
+  /** every knock that ARRIVED in this career, whoever ended up answering it. */
+  knocksArrived: number
+  /** ...of which the coach answered inside the tick and the parent was never asked about. Zero is
+   *  the whole point of the self-coached profile, and it is CHECKED rather than assumed. */
+  knocksCoachDecided: number
+  /** ...and of which the parent was asked (`pendingKnock` true after the tick). */
+  knocksAsked: number
+  knocksAnswered: number
+  /** asked by the same tick that ended the career – `decideKnock` would refuse, so it is COUNTED
+   *  and printed instead of being caught. `answered + latched === asked` is checked. */
+  knocksLatched: number
+  rests: number
+  pushesFirst: number
+  pushesRepeat: number
+  /** weeks `knockGoverns` says a push is being paid for – the engine's own rule, not 3 × pushes. */
+  pushGovernedWeeks: number
+  /** ⭐ THE DELTA TABLE, MEASURED AT THE DECISION ITSELF: what `world.bond` actually moved by across
+   *  each `decideKnock` call, against what `ECONOMY.bond.delta` says that answer is worth. This is
+   *  the ONE reading that can tell «the delta never landed» from «the delta landed and the weekly
+   *  regression paid it back», which is the whole question [P1] below turns on. */
+  knockBondMeasured: number
+  knockBondPredicted: number
+  knockDeltaMismatches: number
+  // --- the three prices -------------------------------------------------------------------------
+  bond: number[]
+  spirit: number[]
+  weeksUnderBaseline: number
+  weeksUnderKnee: number
+  minSpirit: number
+  matchesPlayed: number
+  matchesWon: number
+  injuries: number
+  weeksInjured: number
+  attachedWeeks: number
+  episodeWeeks: number[]
+  /** how many life beats `drainLifeBeats` cleared – printed for the same reason every other counter
+   *  in this block is: a drain that never ran is indistinguishable from a walk with nothing to drain
+   *  until somebody prints the number. */
+  beatsDrained: number
+  /** the two the SHARED helpers write - `bookTheFamilyWeeks` and `answerTheBirthday`. They are here
+   *  so this pair can call the bar grid's own implementations instead of growing a second copy of
+   *  the off-season rule and the birthday answer. */
+  vacations: number
+  asks: string[]
+  // --- the invariance trace ---------------------------------------------------------------------
+  /** cumulative MAIN draws after every resolved week, and a cumulative hash of the VALUES drawn. */
+  mainDrawsAtWeek: number[]
+  mainHashAtWeek: number[]
+}
+
+/** Every life beat, answered at its own bond-neutral price, in BOTH arms – this pair prices one
+ *  decision and a beat is not it.
+ *
+ *  ⚠ THE ONE TOLERATED REFUSAL IS THE TERMINAL LATCH, tested against the engine's OWN string, and
+ *  ANYTHING ELSE IS RETHROWN on purpose. A beat kind with no bond-neutral answer must stop this run,
+ *  not be swallowed: the swallowed version of this exact `catch` is what left the census above
+ *  printing 842 beats raised and zero answered while exiting 0. */
+function drainEveryBeat(world: WorldState): number {
+  try {
+    return drainLifeBeats(world)
+  } catch (e) {
+    if (!(e instanceof Error) || e.message !== CAREER_ENDED_REFUSAL) throw e
+    return 0
+  }
+}
+
+function runPushCareer(seed: string, arm: PushArm, temperament: Temperament): PairCareer {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: PUSH_COACH_TIER })
+  // ⚠ the same single field the bar grid writes, for the same reason – see the file header.
+  world.temperament = temperament
+
+  // ⚠⚠ THE COUNTING WRAPPER TAKES NO DRAW OF ITS OWN. It calls the same generator, in the same
+  // order, and returns the same value; what it adds is a POSITION, which is the only way two arms
+  // can be proven to have tapped one stream instead of being expected to. `rngFromSeed(world.seed)`
+  // is the world's own MAIN, exactly as every other bench drives it – zero new RNG, on any stream.
+  const main = rngFromSeed(world.seed)
+  let draws = 0
+  let hash = 0x811c9dc5 | 0
+  const rng: Rng = () => {
+    const v = main()
+    draws++
+    hash = Math.imul(hash ^ Math.floor(v * 0x100000000), 16777619) | 0
+    return v
+  }
+
+  const career: PairCareer = {
+    seed,
+    arm,
+    temperament,
+    weeks: 0,
+    endedAs: null,
+    knocksArrived: 0,
+    knocksCoachDecided: 0,
+    knocksAsked: 0,
+    knocksAnswered: 0,
+    knocksLatched: 0,
+    rests: 0,
+    pushesFirst: 0,
+    pushesRepeat: 0,
+    pushGovernedWeeks: 0,
+    knockBondMeasured: 0,
+    knockBondPredicted: 0,
+    knockDeltaMismatches: 0,
+    bond: [],
+    spirit: [],
+    weeksUnderBaseline: 0,
+    weeksUnderKnee: 0,
+    minSpirit: Number.POSITIVE_INFINITY,
+    matchesPlayed: 0,
+    matchesWon: 0,
+    injuries: 0,
+    weeksInjured: 0,
+    attachedWeeks: 0,
+    episodeWeeks: [],
+    beatsDrained: 0,
+    vacations: 0,
+    asks: [],
+    mainDrawsAtWeek: [],
+    mainHashAtWeek: [],
+  }
+
+  for (let i = 0; i < WEEKS; i++) {
+    if (world.ending !== null) break
+    // The family weeks are booked in BOTH arms - see the block header for why this is held equal
+    // rather than made an arm difference.
+    if (world.week % WEEKS_PER_YEAR === 0) bookTheFamilyWeeks(world, career)
+    world.plan = { ...WEEK_PLAN_PRESETS.balanced }
+    enterWhatSheCan(world)
+
+    tickWeek(world, rng)
+    career.weeks++
+    career.mainDrawsAtWeek.push(draws)
+    career.mainHashAtWeek.push(hash)
+    career.spirit.push(world.spirit)
+    if (world.spirit < ECONOMY.spirit.baseline) career.weeksUnderBaseline++
+    if (world.spirit < ECONOMY.spirit.knee) career.weeksUnderKnee++
+    career.minSpirit = Math.min(career.minSpirit, world.spirit)
+    if (activeEpisode(world) !== null) career.attachedWeeks++
+    // ⚠ READ HERE, BEFORE THIS WEEK'S DECISIONS: `accrueSpirit` has already run inside the tick and
+    // has already asked this same question, so this counts the weeks the `knockPushedWeek` row
+    // actually fired rather than the weeks a bench thinks it should have.
+    if (knockGoverns(world.knock, world.week) && world.knock?.choice === 'push') career.pushGovernedWeeks++
+    if (world.injury !== null) {
+      career.weeksInjured++
+      if (world.injury.sinceWeek === world.week) career.injuries++
+    }
+
+    while (world.pendingTournament) {
+      if (!world.pendingTournament.finished) skipTournament(world)
+      closeTournament(world)
+    }
+
+    // --- ⭐⭐⭐ THE ONE DECISION THE ARMS DISAGREE ABOUT, AND THE ONLY READ OF `arm` IN THIS WALK ----
+    //
+    // ⚠ THE ARRIVAL IS COUNTED SEPARATELY FROM THE ASK, because they are not the same number on a
+    // coached career: `rollKnock` calls `coachDecidesKnock` inside the tick, and a knock he answered
+    // himself never reaches `pendingKnock`. Both ledgers are printed and both have to balance.
+    if (world.knock !== null && world.knock.sinceWeek === world.week) {
+      career.knocksArrived++
+      if (!pendingKnock(world)) career.knocksCoachDecided++
+    }
+    if (pendingKnock(world)) {
+      career.knocksAsked++
+      if (world.ending === null) {
+        // ⚠ the repeat flag is the WORLD's (`k.repeat`, engine/knock.ts `pushedParts`), read before
+        // the answer so the −3 and the −5 rows can be predicted apart from the delta table below.
+        const repeat = world.knock?.repeat === true
+        const predicted =
+          arm === 'rest' ? ECONOMY.bond.delta.knockRest : repeat ? ECONOMY.bond.delta.knockPushRepeatPart : ECONOMY.bond.delta.knockPush
+        const bondBeforeDecision = world.bond
+        // ⚠⚠ NO `try/catch`. `decideKnock`'s only legitimate refusal on this walk is `guardNotEnded`
+        // on a career the same tick ended, and that case is TESTED above rather than caught – so any
+        // other refusal propagates, kills the run, and cannot be mistaken for a measurement.
+        decideKnock(world, arm)
+        const landed = world.bond - bondBeforeDecision
+        career.knockBondMeasured += landed
+        career.knockBondPredicted += predicted
+        // ⚠ A CLAMP IS THE ONLY LEGAL DISAGREEMENT (`ECONOMY.bond.min`/`max`); anything else would be
+        // a delta that did not land, which is exactly what this counter exists to make visible.
+        if (landed !== predicted) career.knockDeltaMismatches++
+        career.knocksAnswered++
+        if (arm === 'rest') career.rests++
+        else if (repeat) career.pushesRepeat++
+        else career.pushesFirst++
+      } else {
+        career.knocksLatched++
+      }
+    }
+    answerTheBirthday(world, career)
+    career.beatsDrained += drainEveryBeat(world)
+
+    career.bond.push(world.bond)
+  }
+
+  career.endedAs = world.ending === null ? null : world.ending.type
+  career.matchesPlayed = matchesEverPlayed(world)
+  career.matchesWon = world.seasonWins + world.seasonHistory.reduce((sum, h) => sum + h.wins, 0)
+  career.episodeWeeks = (world.loveEpisodes ?? []).map((e) => e.sinceWeek)
+  return career
+}
+
+interface Pair {
+  seed: string
+  temperament: Temperament
+  rest: PairCareer
+  push: PairCareer
+  /** the last week BOTH arms resolved – a pushed career that ended early is a shorter arm, and a
+   *  reading taken off a week one of the two never saw is not a paired reading. */
+  horizon: number
+  full: boolean
+}
+
+interface Stat {
+  mean: number
+  sem: number
+  n: number
+}
+
+function stat(xs: readonly number[]): Stat {
+  const d = xs.filter((x) => !Number.isNaN(x))
+  return { mean: mean(d), sem: sem(d), n: d.length }
+}
+
+/** ⚠⚠ EVERY HEADLINE NUMBER IS FOLDED TO ONE VALUE PER SEED BEFORE ITS SEM IS TAKEN – section [3]'s
+ *  own construction, and here it is not a refinement but a correction. The four temperament arms are
+ *  the SAME seeds played four times over, and in wave 1 `temperament` is read by nothing but
+ *  `temperamentIntensity` inside `accrueSpirit`, while `spiritMatchFactor` is flat 1.0 above the
+ *  knee – so for the bond gap and the match-pp cost the four rows are four REPLICAS, not four
+ *  samples. MEASURED rather than argued: the per-temperament table below prints an identical knock
+ *  census, an identical bond gap and an identical Δ pp down all four rows. Pooling 4 × 64 as if it
+ *  were 256 independent pairs would halve every SEM in this block for free. */
+function foldBySeed(pairs: readonly Pair[], pick: (p: Pair) => number): number[] {
+  const seedIds = [...new Set(pairs.map((p) => p.seed))]
+  return seedIds.map((s) => mean(pairs.filter((p) => p.seed === s).map(pick).filter((x) => !Number.isNaN(x))))
+}
+
+function say(s: Stat, digits = 2): string {
+  return s.n === 0 ? 'n=0 ⚠' : `${s.mean.toFixed(digits)} ± ${s.sem.toFixed(digits + 1)} (n ${s.n})`
+}
+
+/** ⚠⚠ THE RUN DIES HERE RATHER THAN PRINTING A PRICE. Every caller is a property the pair has to
+ *  have before any of its three numbers means anything; the exit code is what a gate reads. */
+function stall(headline: string, detail: string): never {
+  console.error(`\n${'!'.repeat(100)}`)
+  console.error(`THE PUSH PAIR MEASURED NOTHING – NO PRICE IS PRINTED`)
+  console.error(`  ${headline}`)
+  console.error(`  ${detail}`)
+  console.error(
+    `  ⚠ This is the anti-stall contract firing, not a crash. A pair that cannot prove it answered\n` +
+      `    knocks in both arms, on one MAIN stream, is a stall wearing a census – see the block header.`,
+  )
+  console.error(`${'!'.repeat(100)}\n`)
+  process.exit(1)
+}
+
+function winRateOf(c: PairCareer): number {
+  return c.matchesPlayed === 0 ? Number.NaN : pct(c.matchesWon, c.matchesPlayed)
+}
+
+function runPushPair(): void {
+  const startedPair = Date.now()
+  /** The delta table itself, read once – every "predicted" number in this block comes off it. */
+  const d0 = ECONOMY.bond.delta
+  const seedCountHere = pushSeedCount()
+  const careers: PairCareer[] = []
+  for (const arm of PUSH_ARMS) {
+    for (const temperament of TEMPERAMENTS) {
+      for (let s = 0; s < seedCountHere; s++) careers.push(runPushCareer(`push-${s}`, arm, temperament))
+    }
+  }
+  const armOf = (arm: PushArm) => careers.filter((c) => c.arm === arm)
+  const find = (arm: PushArm, t: Temperament, seed: string) =>
+    careers.find((c) => c.arm === arm && c.temperament === t && c.seed === seed)
+
+  const pairs: Pair[] = []
+  for (const t of TEMPERAMENTS) {
+    for (let s = 0; s < seedCountHere; s++) {
+      const seed = `push-${s}`
+      const rest = find('rest', t, seed)
+      const push = find('push', t, seed)
+      if (rest === undefined || push === undefined) stall('a pair is missing an arm', `${t} / ${seed}`)
+      const horizon = Math.min(rest.weeks, push.weeks)
+      pairs.push({ seed, temperament: t, rest, push, horizon, full: rest.weeks === WEEKS && push.weeks === WEEKS })
+    }
+  }
+
+  rule(
+    `THE PUSH-THROUGH PAIR (T12) – wave 1's measurement debt, paid · ${seedCountHere} seeds × 4 temperaments × {rest, push}\n` +
+      `${pairs.length} seed-pairs, ${careers.length} careers, ${careers.reduce((a, c) => a + c.weeks, 0).toLocaleString('en-US')} resolved weeks · ` +
+      `the grid is ${WEEKS} weeks (${FORK_MODE ? '--fork' : `${SEASONS} seasons`})\n` +
+      `IDENTICAL POLICY EXCEPT THE KNOCK ANSWER: balanced plan every week in both arms · the family weeks booked in BOTH ·\n` +
+      `  one entry policy · one birthday answer · every life beat drained bond-neutrally in both · constants read, none changed\n` +
+      `coach rung: ${PUSH_COACH_TIER}` +
+      (PUSH_COACHED
+        ? `  ⚠⚠ --coached: THE CONTROL, NOT THE MEASUREMENT. At this rung \`coachDecidesKnock\` answers most knocks inside\n` +
+          `   the tick and moves no bond, so NEITHER arm rests-or-pushes every knock and the three prices below are not T12's.\n` +
+          `   It exists to print the "coach decided" column the default run has to show as zero.\n`
+        : `  (self-coached on purpose – see the block header; the "coach decided" column below is the proof, and it must be 0)\n`) +
+      (seedCountHere < PUSH_SEEDS_ASKED
+        ? `⚠⚠ SMOKE RUN – ${seedCountHere} seeds is BELOW the brief's ${PUSH_SEEDS_ASKED} seed-pairs and these numbers are not the measurement.\n`
+        : ''),
+  )
+
+  // --- P0. THE ARMS DID THE THING -----------------------------------------------------------------
+  console.log(`\n    [P0] THE ARMS DID THE THING – counted, never assumed. Every price below is void if a cell here is wrong.`)
+  console.log(
+    `    ${pad('arm', 8)}${padL('careers', 9)}${padL('arrived', 9)}${padL('coach did', 11)}${padL('asked', 8)}${padL('answered', 10)}${padL('latched', 9)}` +
+      `${padL('rests', 8)}${padL('push 1st', 10)}${padL('push rpt', 10)}${padL('gov. wks', 10)}${padL('per career', 12)}`,
+  )
+  console.log(`    ${'─'.repeat(114)}`)
+  interface ArmTotals {
+    arrived: number
+    coach: number
+    asked: number
+    answered: number
+    latched: number
+    rests: number
+    first: number
+    repeat: number
+    gov: number
+    beats: number
+    bondMeasured: number
+    bondPredicted: number
+    deltaMismatches: number
+  }
+  const zero = (): ArmTotals => ({
+    arrived: 0, coach: 0, asked: 0, answered: 0, latched: 0, rests: 0, first: 0, repeat: 0, gov: 0, beats: 0,
+    bondMeasured: 0, bondPredicted: 0, deltaMismatches: 0,
+  })
+  const armTotals: Record<PushArm, ArmTotals> = { rest: zero(), push: zero() }
+  for (const arm of PUSH_ARMS) {
+    const cs = armOf(arm)
+    const tot = armTotals[arm]
+    for (const c of cs) {
+      tot.arrived += c.knocksArrived
+      tot.coach += c.knocksCoachDecided
+      tot.asked += c.knocksAsked
+      tot.answered += c.knocksAnswered
+      tot.latched += c.knocksLatched
+      tot.rests += c.rests
+      tot.first += c.pushesFirst
+      tot.repeat += c.pushesRepeat
+      tot.gov += c.pushGovernedWeeks
+      tot.beats += c.beatsDrained
+      tot.bondMeasured += c.knockBondMeasured
+      tot.bondPredicted += c.knockBondPredicted
+      tot.deltaMismatches += c.knockDeltaMismatches
+    }
+    console.log(
+      `    ${pad(arm, 8)}${padL(cs.length, 9)}${padL(tot.arrived, 9)}${padL(tot.coach, 11)}${padL(tot.asked, 8)}${padL(tot.answered, 10)}${padL(tot.latched, 9)}` +
+        `${padL(tot.rests, 8)}${padL(tot.first, 10)}${padL(tot.repeat, 10)}${padL(tot.gov, 10)}${padL((tot.answered / cs.length).toFixed(2), 12)}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(114)}`)
+  console.log(`    "coach did" = answered inside the tick by \`coachDecidesKnock\`, which moves no bond – MUST be 0 on the self-coached default.`)
+  console.log(`    "latched" = asked by the tick that ALSO ended the career, so \`decideKnock\` would refuse – tested, not caught.`)
+  console.log(`    "gov. wks" = weeks \`knockGoverns\` says a push is being paid for (the engine's own rule, not ${KNOCK_PUSH_WEEKS} × pushes).`)
+  console.log(
+    `    ⚠ THE TWO ARMS DO NOT SEE THE SAME NUMBER OF KNOCKS, and that is the answer working rather than a broken pairing:\n` +
+      `      \`knockUntilWeek\` holds a pushed knock for ${KNOCK_PUSH_WEEKS} weeks against the rested one's 1, and the cooldown runs from the\n` +
+      `      RETIREMENT, so pushing buys fewer future knocks. The prediction in [P1] is therefore computed off each arm's OWN\n` +
+      `      counts, never off a shared one.`,
+  )
+
+  // --- P0a. THE DELTA TABLE, MEASURED AT THE DECISION ITSELF --------------------------------------
+  console.log(`\n    [P0a] THE DELTA TABLE LANDED – what \`world.bond\` moved by across each \`decideKnock\`, against the table.`)
+  console.log(`    ${pad('arm', 8)}${padL('decisions', 11)}${padL('predicted', 11)}${padL('measured', 11)}${padL('per decision', 14)}${padL('mismatches', 12)}`)
+  console.log(`    ${'─'.repeat(67)}`)
+  for (const arm of PUSH_ARMS) {
+    const tot = armTotals[arm]
+    console.log(
+      `    ${pad(arm, 8)}${padL(tot.answered, 11)}${padL(tot.bondPredicted.toFixed(1), 11)}${padL(tot.bondMeasured.toFixed(1), 11)}` +
+        `${padL(tot.answered === 0 ? '–' : (tot.bondMeasured / tot.answered).toFixed(3), 14)}${padL(tot.deltaMismatches, 12)}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(67)}`)
+  console.log(
+    `    \`knockRest\` ${d0.knockRest} · \`knockPush\` ${d0.knockPush} · \`knockPushRepeatPart\` ${d0.knockPushRepeatPart}. "mismatches" = decisions where the bond moved by\n` +
+      `    something other than the table says – only a clamp at ${ECONOMY.bond.min}/${ECONOMY.bond.max} can do that legally, and a non-zero column with\n` +
+      `    no clamped career is a delta that did not land. ⚠ THIS ROW IS WHAT SEPARATES «the price is nothing» from «the price\n` +
+      `    was paid and the ${ECONOMY.bond.regressionPerWeek}/wk regression took it back», which is the whole of [P1].`,
+  )
+
+  // THE HARD CHECKS. Order matters: a price is printed only after every one of them passes.
+  for (const arm of PUSH_ARMS) {
+    const tot = armTotals[arm]
+    if (tot.asked + tot.coach !== tot.arrived) {
+      stall(
+        `arm '${arm}': the arrival ledger does not balance`,
+        `asked ${tot.asked} + coach-decided ${tot.coach} ≠ arrived ${tot.arrived} – a knock nobody is recorded as having handled.`,
+      )
+    }
+    if (tot.answered + tot.latched !== tot.asked) {
+      stall(
+        `arm '${arm}' was asked about ${tot.asked} knocks and accounted for ${tot.answered + tot.latched}`,
+        `answered ${tot.answered} + latched ${tot.latched} ≠ asked ${tot.asked} – a knock this arm never answered is an arm that did not run.`,
+      )
+    }
+  }
+  if (!PUSH_COACHED && armTotals.rest.coach + armTotals.push.coach !== 0) {
+    stall(
+      `the coach answered ${armTotals.rest.coach + armTotals.push.coach} knocks on a self-coached grid`,
+      `arm A would not be resting every knock and arm B would not be pushing every one – the pair is not the pair.`,
+    )
+  }
+  if (armTotals.rest.rests === 0) {
+    stall(`arm A recorded ZERO rests`, `${armTotals.rest.asked} knocks reached the parent in the rest arm and none of them was rested.`)
+  }
+  if (armTotals.push.first + armTotals.push.repeat === 0) {
+    stall(`arm B recorded ZERO pushes`, `${armTotals.push.asked} knocks reached the parent in the push arm and none of them was pushed through.`)
+  }
+  if (armTotals.push.gov === 0) {
+    stall(
+      `arm B pushed ${armTotals.push.first + armTotals.push.repeat} knocks and NO week was ever governed by one`,
+      `\`knockPushedWeek\` therefore never fired, so number 2 below would be pricing a spirit row that never ran.`,
+    )
+  }
+  if (armTotals.rest.first + armTotals.rest.repeat !== 0 || armTotals.push.rests !== 0) {
+    stall(`the arms answered each other's answer`, `rest arm pushes ${armTotals.rest.first + armTotals.rest.repeat}, push arm rests ${armTotals.push.rests}.`)
+  }
+  if (armTotals.rest.bondMeasured <= 0 || armTotals.push.bondMeasured >= 0) {
+    stall(
+      `the knock deltas did not land on the ledger`,
+      `rest arm moved bond by ${armTotals.rest.bondMeasured.toFixed(1)} (expected > 0) and the push arm by ${armTotals.push.bondMeasured.toFixed(1)} (expected < 0) across their decisions.`,
+    )
+  }
+
+  // --- P0b. ONE MAIN STREAM -----------------------------------------------------------------------
+  let drawMismatch = 0
+  let hashMismatch = 0
+  let episodeMismatch = 0
+  let firstBad = ''
+  for (const p of pairs) {
+    for (let w = 0; w < p.horizon; w++) {
+      if (p.rest.mainDrawsAtWeek[w] !== p.push.mainDrawsAtWeek[w]) {
+        drawMismatch++
+        if (firstBad === '') firstBad = `${p.temperament}/${p.seed} week ${w + 1}: rest ${p.rest.mainDrawsAtWeek[w]} draws vs push ${p.push.mainDrawsAtWeek[w]}`
+        break
+      }
+      if (p.rest.mainHashAtWeek[w] !== p.push.mainHashAtWeek[w]) {
+        hashMismatch++
+        if (firstBad === '') firstBad = `${p.temperament}/${p.seed} week ${w + 1}: the same draw COUNT and a different value hash`
+        break
+      }
+    }
+    const upTo = (c: PairCareer) => c.episodeWeeks.filter((w) => w <= p.horizon).join(',')
+    if (upTo(p.rest) !== upTo(p.push)) episodeMismatch++
+  }
+  console.log(`\n    [P0b] ONE MAIN STREAM, MEASURED – the two arms may not re-roll the world's dice (CLAUDE.md invariant 2).`)
+  console.log(
+    `    ${pad('pairs checked', 20)}${padL(pairs.length, 8)}   ` +
+      `draw-count mismatches ${drawMismatch} · draw-value hash mismatches ${hashMismatch} · arrival-week mismatches ${episodeMismatch}`,
+  )
+  console.log(
+    `    Compared week by week to each pair's COMMON horizon (a career the push ended early is a shorter arm, not a\n` +
+      `    divergent stream). The counting wrapper adds a position and no draw; the hash is over the VALUES drawn.`,
+  )
+  if (drawMismatch > 0 || hashMismatch > 0) {
+    stall(`the two arms did NOT tap the same MAIN stream`, `${drawMismatch} draw-count and ${hashMismatch} hash mismatches – first: ${firstBad}`)
+  }
+  if (episodeMismatch > 0) {
+    stall(
+      `the two arms drew DIFFERENT arrival weeks (${episodeMismatch} pairs)`,
+      `the arrival is keyed on (seed, calendar) alone, so a knock answer that moves it is a broken invariant, not a price.`,
+    )
+  }
+  console.log(`    → the arms differ in the knock answer and in nothing the dice can see.`)
+
+  // --- P0c. WHAT THE WALK COST --------------------------------------------------------------------
+  console.log(`\n    [P0c] THE SHAPE OF THE TWO WALKS – printed because a truncated arm cannot be read at season end.`)
+  console.log(
+    `    ${pad('arm', 8)}${padL('ran full', 10)}${padL('ended early', 13)}${padL('injuries', 10)}${padL('wks injured', 13)}` +
+      `${padL('family wks', 12)}${padL('birthdays', 11)}${padL('beats drained', 15)}${padL('attached wks', 14)}${padL('min spirit', 12)}${padL('wks < knee', 12)}  endings`,
+  )
+  console.log(`    ${'─'.repeat(146)}`)
+  for (const arm of PUSH_ARMS) {
+    const cs = armOf(arm)
+    const full = cs.filter((c) => c.weeks === WEEKS).length
+    const kinds = [...new Set(cs.filter((c) => c.endedAs !== null).map((c) => c.endedAs))]
+      .map((k) => `${k} ${cs.filter((c) => c.endedAs === k).length}`)
+      .join(', ')
+    console.log(
+      `    ${pad(arm, 8)}${padL(`${full}/${cs.length}`, 10)}${padL(cs.length - full, 13)}` +
+        `${padL(cs.reduce((a, c) => a + c.injuries, 0), 10)}${padL(cs.reduce((a, c) => a + c.weeksInjured, 0), 13)}` +
+        `${padL(cs.reduce((a, c) => a + c.vacations, 0), 12)}${padL(cs.reduce((a, c) => a + c.asks.length, 0), 11)}` +
+        `${padL(cs.reduce((a, c) => a + c.beatsDrained, 0), 15)}${padL(cs.reduce((a, c) => a + c.attachedWeeks, 0), 14)}` +
+        `${padL(Math.min(...cs.map((c) => c.minSpirit)).toFixed(1), 12)}${padL(cs.reduce((a, c) => a + c.weeksUnderKnee, 0), 12)}  ${kinds || '–'}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(146)}`)
+  console.log(`    ⚠ "family wks" and "birthdays" are the HELD-EQUAL columns: both arms book the same off-season weeks and give her the`)
+  console.log(`      thing she asked for. They differ only where a pushed career ended early and stopped booking – see "ended early".`)
+  console.log(`    "beats drained" = rows \`drainLifeBeats\` cleared at their own bond-neutral price. Printed, not assumed: a drain that`)
+  console.log(`      never ran and a walk with nothing to drain look the same until somebody counts.`)
+  if (armTotals.rest.beats + armTotals.push.beats === 0) {
+    console.log(`    ⚠⚠ ZERO BEATS DRAINED over the whole grid – the \`'met'\` row is raised from her sixteenth on, which is inside this`)
+    console.log(`       grid, so this is a finding about the beat and not about the price. No number below reads it either way.`)
+  }
+  const cleanPairs = pairs.filter((p) => p.full)
+  console.log(
+    `    ${cleanPairs.length}/${pairs.length} pairs ran the whole ${WEEKS}-week grid in BOTH arms. The season-end readings below are those pairs;\n` +
+      `    the common-horizon rows beside them use every pair, so the dropped ones cannot hide inside a selection.`,
+  )
+  if (cleanPairs.length === 0) {
+    stall(`no pair ran the full grid in both arms`, `there is no season-end week both arms saw, so no season-end gap can be reported.`)
+  }
+
+  // --- P1. THE BOND TRAJECTORY GAP ----------------------------------------------------------------
+  rule('[P1] BOND – the delta table\'s PREDICTION against the gap MEASURED at season end')
+  const predictedOf = (p: Pair) =>
+    p.rest.rests * d0.knockRest - (p.push.pushesFirst * d0.knockPush + p.push.pushesRepeat * d0.knockPushRepeatPart)
+  const endBond = (c: PairCareer) => c.bond[c.bond.length - 1]
+  const predicted = stat(foldBySeed(cleanPairs, predictedOf))
+  const measuredEnd = stat(foldBySeed(cleanPairs, (p) => endBond(p.rest) - endBond(p.push)))
+  const measuredCommon = stat(foldBySeed(pairs, (p) => p.rest.bond[p.horizon - 1] - p.push.bond[p.horizon - 1]))
+  const measuredTrajectory = stat(foldBySeed(pairs, (p) => mean(p.rest.bond.slice(0, p.horizon)) - mean(p.push.bond.slice(0, p.horizon))))
+  const seasonEnds: number[] = []
+  for (let s = 1; s * WEEKS_PER_YEAR <= WEEKS; s++) seasonEnds.push(s * WEEKS_PER_YEAR)
+  console.log(
+    `    PREDICTED, straight off \`ECONOMY.bond.delta\` and each arm's OWN measured knock counts:\n` +
+      `      rest  ${(armTotals.rest.rests / armOf('rest').length).toFixed(2)} rests × ${d0.knockRest} per career · ` +
+      `push  ${(armTotals.push.first / armOf('push').length).toFixed(2)} × ${d0.knockPush} + ${(armTotals.push.repeat / armOf('push').length).toFixed(2)} × ${d0.knockPushRepeatPart} per career\n` +
+      `      → ${predicted.mean.toFixed(2)} raw bond points of separation per pair over the career (± ${predicted.sem.toFixed(3)}, n ${predicted.n} seeds),\n` +
+      `        and [P0a] above has already shown those points LANDING on the ledger, decision by decision.`,
+  )
+  console.log(
+    `\n    ${pad('reading', 40)}${padL('gap', 10)}${padL('± SEM', 10)}${padL('n', 7)}   what it is`,
+  )
+  console.log(`    ${'─'.repeat(112)}`)
+  console.log(
+    `    ${pad('PREDICTED (delta table, raw)', 40)}${padL(predicted.mean.toFixed(2), 10)}${padL(predicted.sem.toFixed(3), 10)}${padL(predicted.n, 7)}   every knock delta the two arms took, summed`,
+  )
+  console.log(
+    `    ${pad('MEASURED at season end (week ' + WEEKS + ')', 40)}${padL(measuredEnd.mean.toFixed(2), 10)}${padL(measuredEnd.sem.toFixed(3), 10)}${padL(measuredEnd.n, 7)}   bond(rest) − bond(push), full-grid pairs`,
+  )
+  console.log(
+    `    ${pad('MEASURED at the common horizon', 40)}${padL(measuredCommon.mean.toFixed(2), 10)}${padL(measuredCommon.sem.toFixed(3), 10)}${padL(measuredCommon.n, 7)}   the same, every pair, at min(weeks)`,
+  )
+  console.log(
+    `    ${pad('MEASURED over the whole trajectory', 40)}${padL(measuredTrajectory.mean.toFixed(2), 10)}${padL(measuredTrajectory.sem.toFixed(3), 10)}${padL(measuredTrajectory.n, 7)}   mean weekly bond gap, the area between the curves`,
+  )
+  console.log(`    ${'─'.repeat(112)}`)
+  // ⚠ EVERY SEASON END AND NOT JUST THE LAST ONE, because "at season end" is a reading week and the
+  // last week of this grid is an OFF-SEASON week with no knock anywhere near it. Four readings turn
+  // "the endpoint is uninformative" from an excuse into a measurement.
+  console.log(`    ⚠ the same gap at EVERY season end, so the choice of reading week cannot flatter or bury it:`)
+  console.log(
+    `      ` +
+      seasonEnds
+        .map((w) => {
+          const g = stat(foldBySeed(pairs.filter((p) => p.horizon >= w), (p) => p.rest.bond[w - 1] - p.push.bond[w - 1]))
+          return `week ${w}: ${g.n === 0 ? 'n=0' : `${g.mean.toFixed(2)} ± ${g.sem.toFixed(3)} (n ${g.n})`}`
+        })
+        .join('   ·   '),
+  )
+  // THE BRIDGE between the two, computed from the constants the way section [3] computes its own.
+  const restWeeks = armOf('rest').reduce((a, c) => a + c.weeks, 0)
+  const pushWeeks = armOf('push').reduce((a, c) => a + c.weeks, 0)
+  const restRate = armTotals.rest.answered / restWeeks
+  const pushRate = armTotals.push.answered / pushWeeks
+  const restPerWeek = armTotals.rest.bondMeasured / restWeeks
+  const pushPerWeek = armTotals.push.bondMeasured / pushWeeks
+  console.log(
+    `\n    ⚠ THE ARITHMETIC CEILING, and it is why those rows disagree with the prediction. Bond regresses a FLAT\n` +
+      `      ${ECONOMY.bond.regressionPerWeek}/week toward ${ECONOMY.bond.start}, so a displacement survives only while the arm's decisions are worth ≥ ${ECONOMY.bond.regressionPerWeek}/week:\n` +
+      `        rest  ${restRate.toFixed(4)} decisions/wk, ${restPerWeek.toFixed(4)} bond/wk   ${Math.abs(restPerWeek) >= ECONOMY.bond.regressionPerWeek ? '≥' : '<'} ${ECONOMY.bond.regressionPerWeek}\n` +
+      `        push  ${pushRate.toFixed(4)} decisions/wk, ${pushPerWeek.toFixed(4)} bond/wk   ${Math.abs(pushPerWeek) >= ECONOMY.bond.regressionPerWeek ? '≥' : '<'} ${ECONOMY.bond.regressionPerWeek}\n` +
+      `      Neither arm is worth half a point a week, so the ${predicted.mean.toFixed(2)} raw points ARE paid (see [P0a]) and are then paid\n` +
+      `      BACK between knocks. What survives to a reading week is a snapshot of how recently a knock landed.`,
+  )
+
+  // --- P2. SPIRIT WEEKS UNDER THE BASELINE ---------------------------------------------------------
+  rule('[P2] SPIRIT – the weeks under the baseline that PUSHING is responsible for')
+  // ⚠ THE PREDICTION IS THE DIFFERENCE IN GOVERNED WEEKS AND NOT ARM B's COUNT. On the self-coached
+  // default arm A's count is zero and the two are the same number; under `--coached` it is not,
+  // because the coach pushes her in BOTH arms and those weeks belong to neither arm's answer.
+  const predictedWeeks = stat(foldBySeed(cleanPairs, (p) => p.push.pushGovernedWeeks - p.rest.pushGovernedWeeks))
+  const measuredWeeks = stat(foldBySeed(cleanPairs, (p) => p.push.weeksUnderBaseline - p.rest.weeksUnderBaseline))
+  const measuredWeeksCommon = stat(
+    foldBySeed(
+      pairs,
+      (p) =>
+        p.push.spirit.slice(0, p.horizon).filter((x) => x < ECONOMY.spirit.baseline).length -
+        p.rest.spirit.slice(0, p.horizon).filter((x) => x < ECONOMY.spirit.baseline).length,
+    ),
+  )
+  console.log(
+    `    PREDICTED: the spirit table has exactly ONE row for this decision – \`perturb.knockPushedWeek\` ${ECONOMY.spirit.perturb.knockPushedWeek}, scaled by\n` +
+      `      \`perturbationScale\` (${ECONOMY.spirit.perturbationScale.steady} steady / ${ECONOMY.spirit.perturbationScale.intense} intense) – and it fires on every week \`knockGoverns\` reports a push,\n` +
+      `      which is ${KNOCK_PUSH_WEEKS} weeks per push. The return runs FIRST and then the row lands, so a girl sitting at the baseline ends\n` +
+      `      that week under it: predicted extra weeks under ${ECONOMY.spirit.baseline} = the governed weeks arm B has and arm A does not.`,
+  )
+  console.log(
+    `\n    ${pad('reading', 44)}${padL('weeks', 10)}${padL('± SEM', 10)}${padL('n', 7)}   what it is`,
+  )
+  console.log(`    ${'─'.repeat(112)}`)
+  console.log(
+    `    ${pad('PREDICTED (governed weeks, B − A)', 44)}${padL(predictedWeeks.mean.toFixed(2), 10)}${padL(predictedWeeks.sem.toFixed(3), 10)}${padL(predictedWeeks.n, 7)}   weeks the \`knockPushedWeek\` row fired`,
+  )
+  console.log(
+    `    ${pad('MEASURED (paired, full-grid pairs)', 44)}${padL(measuredWeeks.mean.toFixed(2), 10)}${padL(measuredWeeks.sem.toFixed(3), 10)}${padL(measuredWeeks.n, 7)}   weeks < ${ECONOMY.spirit.baseline}: push − rest`,
+  )
+  console.log(
+    `    ${pad('MEASURED (paired, common horizon)', 44)}${padL(measuredWeeksCommon.mean.toFixed(2), 10)}${padL(measuredWeeksCommon.sem.toFixed(3), 10)}${padL(measuredWeeksCommon.n, 7)}   the same, every pair, to min(weeks)`,
+  )
+  console.log(`    ${'─'.repeat(112)}`)
+  const attachedRest = armOf('rest').reduce((a, c) => a + c.attachedWeeks, 0)
+  const injuriesGap = stat(foldBySeed(cleanPairs, (p) => p.push.weeksInjured - p.rest.weeksInjured))
+  const onsetGap = stat(foldBySeed(cleanPairs, (p) => p.push.injuries - p.rest.injuries))
+  console.log(
+    `    ⚠ THE TWO NAMED LEAKS BETWEEN THEM, so the difference is read rather than guessed:\n` +
+      `      (a) THE ATTACHMENT LIFT. \`accrueSpirit\` walks toward ${ECONOMY.spirit.baseline} + ${ECONOMY.spirit.attachmentLift} while \`activeEpisode\` returns a row, so a pushed\n` +
+      `          week lived at a LIFTED target lands at ~${(ECONOMY.spirit.baseline + ECONOMY.spirit.attachmentLift + ECONOMY.spirit.perturb.knockPushedWeek * ECONOMY.spirit.perturbationScale.intense).toFixed(1)}–${(ECONOMY.spirit.baseline + ECONOMY.spirit.attachmentLift + ECONOMY.spirit.perturb.knockPushedWeek * ECONOMY.spirit.perturbationScale.steady).toFixed(1)} and is NOT under the baseline. ${attachedRest} attached weeks in the rest arm.\n` +
+      `      (b) THE INJURY CHANNEL. Pushing multiplies the injury threshold, and \`injuryOnset\` ${ECONOMY.spirit.perturb.injuryOnset} / \`laidUpWeek\` ${ECONOMY.spirit.perturb.laidUpWeek} put her\n` +
+      `          under the baseline for weeks the knock row never wrote: ${say(onsetGap)} extra onsets and ${say(injuriesGap)} extra injured\n` +
+      `          weeks per pair. ⚠ The arm totals in [P0c] are the blunter reading of the same thing and are the larger signal.\n` +
+      `      Both are consequences of pushing rather than confounds – the prediction is the ROW's own weeks, the measurement is\n` +
+      `      the decision's, and the distance between them is what the row alone does not tell the owner.`,
+  )
+
+  // --- P3. THE PAIRED MATCH-PP COST ----------------------------------------------------------------
+  rule('[P3] THE PAIRED MATCH-pp COST OF PUSHING – paired seed-for-seed, temperament-for-temperament')
+  const ppClean = stat(foldBySeed(cleanPairs, (p) => winRateOf(p.push) - winRateOf(p.rest)))
+  const ppAll = stat(foldBySeed(pairs, (p) => winRateOf(p.push) - winRateOf(p.rest)))
+  const matchesGap = stat(foldBySeed(cleanPairs, (p) => p.push.matchesPlayed - p.rest.matchesPlayed))
+  const kneeWeeks = PUSH_ARMS.map((a) => `${a} ${armOf(a).reduce((x, c) => x + c.weeksUnderKnee, 0)}`).join(' · ')
+  const allWeeks = careers.reduce((a, c) => a + c.weeks, 0)
+  console.log(
+    `    PREDICTED through the SPIRIT channel: 0.000 pp. \`spiritMatchFactor\` is flat 1.0 at and above the knee (${ECONOMY.spirit.knee})\n` +
+      `      and the push row alone lands her at ~${(ECONOMY.spirit.baseline + ECONOMY.spirit.perturb.knockPushedWeek * ECONOMY.spirit.perturbationScale.intense).toFixed(1)}–${(ECONOMY.spirit.baseline + ECONOMY.spirit.perturb.knockPushedWeek * ECONOMY.spirit.perturbationScale.steady).toFixed(1)}, which is ${(ECONOMY.spirit.baseline + ECONOMY.spirit.perturb.knockPushedWeek * ECONOMY.spirit.perturbationScale.intense - ECONOMY.spirit.knee).toFixed(1)} points clear of it – so pushing cannot reach the\n` +
+      `      match through spirit. ⚠ MEASURED rather than asserted: weeks under the knee, ${kneeWeeks}, out of ${allWeeks.toLocaleString('en-US')}. Not zero (an\n` +
+      `      injury onset is ${(ECONOMY.spirit.perturb.injuryOnset * ECONOMY.spirit.perturbationScale.intense).toFixed(1)} and gets there on its own), and far too rare to carry a win rate.\n` +
+      `      Whatever the measurement shows is therefore the OTHER trade: resting gives up ${(100 * (1 - KNOCK_REST_GROWTH)).toFixed(0)}% of a week's development\n` +
+      `      (\`KNOCK_REST_GROWTH\` ${KNOCK_REST_GROWTH}), pushing keeps the week whole and buys a loaded injury roll. The delta table predicts no sign.`,
+  )
+  console.log(`\n    ${pad('reading', 44)}${padL('Δ pp', 10)}${padL('± SEM', 10)}${padL('n', 7)}   what it is`)
+  console.log(`    ${'─'.repeat(112)}`)
+  console.log(`    ${pad('PREDICTED (spirit channel)', 44)}${padL('0.000', 10)}${padL('–', 10)}${padL('–', 7)}   the factor never leaves 1.0 above the knee`)
+  console.log(
+    `    ${pad('MEASURED (full-grid pairs)', 44)}${padL(ppClean.mean.toFixed(3), 10)}${padL(ppClean.sem.toFixed(3), 10)}${padL(ppClean.n, 7)}   win rate: push − rest`,
+  )
+  console.log(
+    `    ${pad('MEASURED (every pair)', 44)}${padL(ppAll.mean.toFixed(3), 10)}${padL(ppAll.sem.toFixed(3), 10)}${padL(ppAll.n, 7)}   the same, truncated arms included`,
+  )
+  console.log(
+    `    ${pad('matches PLAYED (full-grid pairs)', 44)}${padL(matchesGap.mean.toFixed(2), 10)}${padL(matchesGap.sem.toFixed(3), 10)}${padL(matchesGap.n, 7)}   push − rest, in matches`,
+  )
+  console.log(`    ${'─'.repeat(112)}`)
+  console.log(
+    `    ${pad('lifetime win rate', 22)}` +
+      PUSH_ARMS.map((a) => `${a} ${mean(armOf(a).map(winRateOf).filter((x) => !Number.isNaN(x))).toFixed(2)}%`).join('  ·  ') +
+      `   ⚠ unpaired, for scale only – the paired rows above are the reading.`,
+  )
+
+  // --- PER TEMPERAMENT -----------------------------------------------------------------------------
+  console.log(`\n    PER TEMPERAMENT – A DIAGNOSTIC AND NOT FOUR SAMPLES. It is also the EVIDENCE for the fold above: the knock`)
+  console.log(`    census, the bond gap and the Δ pp read identically down all four rows, because in wave 1 \`temperament\` reaches`)
+  console.log(`    nothing but \`accrueSpirit\` and spirit never reaches the match above the knee. Only "wks < 70" is allowed to move.`)
+  console.log(
+    `    ${pad('temperament', 14)}${padL('pairs', 7)}${padL('full', 7)}${padL('pred bond', 11)}${padL('bond @ end', 12)}` +
+      `${padL('pred wks', 10)}${padL('wks < 70', 10)}${padL('Δ pp', 10)}${padL('pushes', 9)}${padL('rests', 8)}`,
+  )
+  console.log(`    ${'─'.repeat(98)}`)
+  for (const t of TEMPERAMENTS) {
+    const ps = pairs.filter((p) => p.temperament === t)
+    const cl = ps.filter((p) => p.full)
+    const pushes = ps.reduce((a, p) => a + p.push.pushesFirst + p.push.pushesRepeat, 0)
+    const rests = ps.reduce((a, p) => a + p.rest.rests, 0)
+    console.log(
+      `    ${pad(t, 14)}${padL(ps.length, 7)}${padL(cl.length, 7)}${padL(stat(cl.map(predictedOf)).mean.toFixed(2), 11)}` +
+        `${padL(stat(cl.map((p) => endBond(p.rest) - endBond(p.push))).mean.toFixed(2), 12)}` +
+        `${padL(stat(cl.map((p) => p.push.pushGovernedWeeks - p.rest.pushGovernedWeeks)).mean.toFixed(2), 10)}` +
+        `${padL(stat(cl.map((p) => p.push.weeksUnderBaseline - p.rest.weeksUnderBaseline)).mean.toFixed(2), 10)}` +
+        `${padL(stat(cl.map((p) => winRateOf(p.push) - winRateOf(p.rest))).mean.toFixed(3), 10)}${padL(pushes, 9)}${padL(rests, 8)}`,
+    )
+  }
+  console.log(`    ${'─'.repeat(98)}`)
+
+  // --- THE VERDICT ---------------------------------------------------------------------------------
+  rule('T12 – THE THREE NUMBERS, PREDICTED AGAINST MEASURED')
+  // ⚠⚠ THE TEST IS ON THE PAIRED RESIDUAL AND NOT ON TWO MEANS. Both columns are per-seed readings
+  // of the SAME seeds, so "predicted − measured" is itself a paired quantity with its own SEM;
+  // comparing a prediction against the measurement's SEM alone would ignore the pairing and hand the
+  // verdict whichever answer the noisier column wanted. Same argument section [3] makes for its gap.
+  const residual = (pred: readonly number[], meas: readonly number[]) =>
+    stat(pred.map((x, i) => x - meas[i]))
+  const line = (label: string, pred: string, measured: string, res: Stat, why: string) => {
+    const ok = Math.abs(res.mean) <= 2 * res.sem
+    console.log(
+      `    ${pad(label, 38)}${padL(pred, 11)}${padL(measured, 25)}${padL(say(res), 25)}   ${ok ? 'AGREE   ' : 'DISAGREE'}  ${why}`,
+    )
+  }
+  console.log(`    ${pad('number', 38)}${padL('predicted', 11)}${padL('measured', 25)}${padL('predicted − measured', 25)}   verdict   why`)
+  console.log(`    ${'─'.repeat(170)}`)
+  line(
+    '1  bond gap at season end',
+    predicted.mean.toFixed(2),
+    say(measuredEnd),
+    residual(foldBySeed(cleanPairs, predictedOf), foldBySeed(cleanPairs, (p) => endBond(p.rest) - endBond(p.push))),
+    `the ${ECONOMY.bond.regressionPerWeek}/wk regression pays the raw deltas back between knocks`,
+  )
+  line(
+    '2  spirit weeks under the baseline',
+    predictedWeeks.mean.toFixed(2),
+    say(measuredWeeks),
+    residual(
+      foldBySeed(cleanPairs, (p) => p.push.pushGovernedWeeks - p.rest.pushGovernedWeeks),
+      foldBySeed(cleanPairs, (p) => p.push.weeksUnderBaseline - p.rest.weeksUnderBaseline),
+    ),
+    `the row's own weeks against the decision's – the lift and the injury channel`,
+  )
+  line(
+    '3  match-win cost of pushing (pp)',
+    '0.000',
+    say(ppClean, 3),
+    residual(
+      foldBySeed(cleanPairs, () => 0),
+      foldBySeed(cleanPairs, (p) => winRateOf(p.push) - winRateOf(p.rest)),
+    ),
+    `pushing cannot reach the match through spirit above the knee (${ECONOMY.spirit.knee})`,
+  )
+  console.log(`    ${'─'.repeat(170)}`)
+  console.log(`    "AGREE" = the PAIRED residual's mean sits inside its own ± 2 SEM. It is a READING, not a bar: nothing here passes or fails.`)
+  console.log(`    ⚠ Every n above is a SEED, not a career: the four temperament arms are the same seeds replayed – see the fold's own note.`)
+  console.log(
+    `\n    ⚠⚠ A DISAGREEMENT IS THE FINDING AND NOT A LICENCE. This block read \`ECONOMY.bond.delta\`, \`ECONOMY.spirit.perturb\`\n` +
+      `       and \`ECONOMY.bond.regressionPerWeek\` and changed none of them; retuning is the owner's call on the record.`,
+  )
+  console.log(
+    `\n    ⚠ AND THE PRICES ABOVE ARE ONLY AS REAL AS [P0]: rests ${armTotals.rest.rests} · pushes ${armTotals.push.first + armTotals.push.repeat} ` +
+      `(${armTotals.push.first} first, ${armTotals.push.repeat} repeat) · push-governed weeks ${armTotals.push.gov} (arm A ${armTotals.rest.gov}) ·\n` +
+      `      coach-decided knocks ${armTotals.rest.coach + armTotals.push.coach} · knocks unaccounted for 0 · ` +
+      `bond moved at the decisions ${armTotals.rest.bondMeasured.toFixed(1)} / ${armTotals.push.bondMeasured.toFixed(1)}.`,
+  )
+  console.log(`\n    ${((Date.now() - startedPair) / 1000).toFixed(1)}s`)
+}
+
+if (PUSH_MODE) {
+  runPushPair()
+  process.exit(0)
+}
 
 // =================================================================================================
 // THE RUN
