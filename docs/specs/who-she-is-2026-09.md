@@ -1098,3 +1098,53 @@ sim. The column is printed so that step 6 has somewhere to land, and marked so t
 It changes no constant, proposes no retune, and ships no wording. Bar 3's open corridor and the three
 unreached rows of the shave are questions for the owner and the architect. The bench's own
 `endedWeek` poke is deleted the day wave 4 ships the ending hazard.
+
+
+## §4a – wave 3 measured, second entry. The push-through price, predicted against measured
+
+Wave 1's **measurement debt** (invariant 5), assigned to wave 3 as T12 and paid here. One clean
+pair, 64 seeds × 4 temperaments = 512 careers, 106,100 weeks: identical policy except the knock
+answer – arm A rests every knock, arm B pushes every one. Self-coached (see the coach finding
+below); `--coached` ships as the reproducible control.
+
+⚠⚠ **THE INSTRUMENT WAS BROKEN UNTIL THE SAME DAY.** `bench:spirit` had been running, printing a
+full census and exiting **0 while answering nothing** – 842 beat rows raised, zero answered, both
+fork columns empty – because a `try/catch` swallowed a throw that appeared when a second beat kind
+did. Repaired in T6b; `--fork` went from 4 of 16 careers reaching a fork answer to 16 of 16. **The
+numbers below are the first honest ones this tool has produced.**
+
+| # | predicted | measured | paired residual | verdict |
+| --- | --- | --- | --- | --- |
+| 1 bond gap at season end | **44.15** | **3.58 ± 0.756** | 40.57 ± 1.354 | **DISAGREE** |
+| 2 spirit weeks under baseline | 22.55 | 21.08 ± 1.037 | 1.47 ± 0.909 | agree |
+| 3 paired match-pp cost of pushing | 0.000 | −0.114 ± 0.491 | 0.11 ± 0.491 | agree |
+
+⭐⭐⭐ **#1 IS THE FINDING, AND THE DELTAS ARE NOT THE PROBLEM – THEY LAND TO THE POINT.** Measured
+across every `decideKnock`: rest **+2304.0 predicted / +2304.0 measured**, push **−8908.0 / −8908.0**,
+**zero mismatches**. The table charges exactly what it says it charges. What erases it is
+`ECONOMY.bond.regressionPerWeek` – a flat **0.5/week** back toward 70 – because neither arm's
+decisions are worth half a point a week (rest +0.0434/wk, push −0.1681/wk). **92% of the delta
+table's separation never survives to a reading week.** Measured at four consecutive season ends
+– 1.42 / 2.52 / 3.71 / 3.58 – it **plateaus at ~3.5 rather than accumulating**, so it is an
+arithmetic ceiling and not an unlucky sample. ⚠ This is the SAME ceiling wave 2's bar 3 hit (the
+gap that came 0.14 short of 12), now measured on a pair that moves exactly one decision.
+
+⚠⚠ **AND AT THE SHIPPED COACH RUNG THE PARENT DOES NOT ANSWER MOST KNOCKS.** `coachManagesLoad`
+is true for every rung but `self`, so the coach decides inside the tick and moves no bond.
+Measured with `--coached`: **280 knocks arrived, the coach answered 232**; the parent was asked
+about **1.5 times per career** against 9.0 self-coached, and the resting arm then carried 176
+push-governed weeks it never chose. **The push-through price is mostly not the parent's to pay at
+the default coach** – a finding for the owner, not a thing to retune.
+
+**What pushing DOES cost is availability, not win rate**: −4.10 ± 1.317 matches played per pair,
+**+108 injury onsets and +380 injured weeks** across the arm. And **60% of pushes are repeats**
+(1268 of 2124), so the −5 row dominates the −3 one.
+
+**Anti-stall**: four hard checks, each mutation-verified – both ledgers must balance
+(`asked + coach-decided == arrived`, `answered + latched == asked`), pushes and rests both
+non-zero, governed weeks non-zero, and the bond must have moved the right sign at the decisions.
+⭐ The best of them caught a forced stall **even though the bench's own push counter still read
+correctly**, because the net reads `knockGoverns` from the ENGINE rather than the bench's label.
+No `try/catch` stands between a knock and its answer. Arms differ only in the knock answer,
+verified by a counting wrapper over all 256 pairs: **0 draw-count, 0 draw-value-hash and 0
+arrival-week mismatches.** Frozen capture unmoved (41550 / `e6b0c709`). **Nothing was adjusted.**

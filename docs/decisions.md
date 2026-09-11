@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 92 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 93 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
+| economy-and-money | 9 | [WAVE 3 T11 + T12: THE CENSUS HOLDS, AND THE PUSH-THROUGH PRICE IS 92% ERASED](#11092026--wave-3-t11--t12-the-census-holds-and-the-push-through-price-is-92-erased) | 2026-09-11 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -3772,3 +3772,51 @@ the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-ch
   yet satisfied, and this is the record that it is owed rather than forgotten.
 - ⚠ Every e2e fixture now carries 3–11 **expired unanswered** small-talk rows – the ruled record that
   she came by and it went unasked. Worth knowing before anyone reads a fixture's `lifeLog`.
+
+## 11.09.2026 – WAVE 3 T11 + T12: THE CENSUS HOLDS, AND THE PUSH-THROUGH PRICE IS 92% ERASED
+
+- **T11 – the arrival census, 800 careers. TEN of eleven bars HIT.** Count medians separate exactly as
+  §4 predicts (fiery 5.0 · sunny 3.0 · deep 2.0 · quiet 2.0); first-arrival medians hit both bars
+  (fiery 16.78 ≤ 17, quiet 18.03 ≥ 17.5); private late-share 90.2% against ≥ 60%.
+  **Input-independence asserted, not eyeballed: 53 arrival weeks over 16 pairs, ZERO mismatches** –
+  and the arm carries its own positive control, because two arms that are secretly one career pass
+  that equality trivially: final bond differs in 16/16 pairs.
+- **THE ONE MISS IS ATTRIBUTABLE, WHICH IS THE POINT OF MEASURING**: open late-share ≤ 25%, measured
+  **44.0%**. The open register is **already 57.4% late BEFORE the shave touches it** (§4's own «open –
+  0 with p 0.45» = 55% nominal), i.e. 2.3× the bar with no shave at all; `close` (⌊/3⌋) would give
+  ≈33%. So ≤ 25% needs p(raw = 0) ≈ 0.75 against §4's 0.45 – **it is the LAG TABLE, not the
+  architect's shave concretisation.** No constant was touched. The owner's to move or to accept.
+- ⭐⭐ **AND A SECOND FINDING NOBODY ASKED FOR: 100% of 2,405 arrivals landed at bond band `steady`.**
+  Three of `bondShave`'s four rows are unexercised design. The tool's grinder arm shows the other end
+  is not a middle either – bond COLLAPSES over ten years (66.7% `cold`, none `close`). Read beside
+  T12 below, this is one story: **the standing does not travel far from 70.**
+- **The bench caught two defects in ITSELF before reporting either.** (1) It used `14 + week/52` –
+  which is `ageAtWeek`, the COACH MARKET's restocking clock, and `world/age.ts` says so explicitly.
+  Every first-arrival age was half a year too old and **both** bar-2 verdicts were wrong (fiery read
+  MISS at 17.14; it is 16.78, a HIT). It now asks `kidAgeExact`, the same function `arrivalEligible`
+  gates on. (2) A receipt threw on «1081 raised, 1080 answered» – a career-ending injury latching on
+  the very tick that delivered her news, leaving a row `answerLifeBeat` refuses forever. Checked row
+  by row against its own story now, never counted off as slack.
+- **How an empty column was made impossible to mistake for a measurement** (the direct answer to
+  `bench:spirit` exiting 0 on a swallowed throw): **no `try`/`catch` anywhere in the file**; every
+  number through `sample()`/`share()`, which throw on a short list and guard the denominator so
+  `0/0` cannot render as `NaN%`; the instrument asserts its own actuation PER TEMPERAMENT, never
+  pooled (a pooled total passes with one column dead); a legitimately empty cell prints `–`, never
+  `0.0%`; and **two exit codes with different meanings** – a missed corridor exits 0 (a finding), an
+  unmeasured column exits non-zero (a broken instrument).
+- ⚠ **The latch proxy carries NO verdict this wave and is marked unsigned**: shipped it is 100% by
+  construction (nothing ends an attachment), poked it is a readback of the tool's own duration table.
+  Neither is a property of the sim. Printed so the column exists for step 6 to fill.
+- **T12 – wave 1's measurement debt paid, and the answer is that the price is largely not paid.**
+  Full numbers in who-she-is §4a's second wave-3 entry. The headline: the deltas land **to the point**
+  (zero mismatches at every `decideKnock`), and the flat **0.5/week** regression then pays them back
+  between knocks – **92% of the delta table's separation never reaches a reading week**, plateauing
+  at ~3.5 against a predicted 44.15. ⚠ Same arithmetic ceiling as wave 2's bar 3, now measured on a
+  pair that moves exactly one decision.
+- ⚠⚠ **AND THE PARENT DOES NOT ANSWER MOST KNOCKS AT THE DEFAULT COACH.** `coachManagesLoad` is true
+  at every rung but `self`: 280 knocks arrived, **the coach answered 232**, the parent was asked ~1.5
+  times per career against 9.0 self-coached. The push-through price the owner asked about is mostly
+  **not his to pay** in normal play. What pushing actually costs is availability – −4.10 matches
+  played per pair, +108 injury onsets, +380 injured weeks.
+- ⚠ **A wrapper notification claimed «exit code 0» while the log said `BENCH_EXIT=1`** – the seventh
+  time this session. Every verdict in this wave was read from a file the command appended itself.
