@@ -139,6 +139,29 @@ export interface LifeBeatOption {
   label: string
 }
 
+/** ⭐⭐⭐ v74 T15 – THE SOFT BEAT'S INVITATION (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment,
+ *  11.09). Non-null exactly while a tier-1 row is inside its three-week window and unanswered.
+ *
+ *  ⚠⚠ THE CARD IS ONLY THE INVITATION, AND THE DIALOG IS THE SAME DIALOG. `card` is one short line
+ *  saying she has come by with something; tapping it opens `LifeBeatDialog` on `prompt`, which is a
+ *  `LifeBeatPrompt` like any other beat's – same contract, same component, same engine-side
+ *  re-validation on the way back. There is no second dialog anywhere in the app, and this type is
+ *  what says so: the only thing the soft path adds to the wire is a sentence and a reason to draw it.
+ *
+ *  ⚠ THE TWO TRAVEL TOGETHER BECAUSE THEY ARE ONE STATE. A surface that could hold the card without
+ *  the conversation behind it (or the other way round) would be two readings of «is she waiting», and
+ *  the engine's own selector (`liveSoftBeat`) is the only one there is.
+ *
+ *  ⚠ AND THE WEEK IS NEVER STOPPED FOR IT. `pendingLifeBeat` – the predicate both halves of the
+ *  block contract ask – reads BLOCKING rows only, so this field can be non-null on a week that ticks
+ *  on as if nothing were waiting, which is exactly what «soft» means. */
+export interface SoftBeatInvite {
+  /** the Home card's line – the invitation, never what she came with */
+  card: string
+  /** the conversation the card opens, on the ordinary prompt contract */
+  prompt: LifeBeatPrompt
+}
+
 /** The beats this layer knows how to raise. Wave 2 shipped exactly one; the union is the thing that
  *  keeps a later step from smuggling in a free-form string the records cannot be read by.
  *

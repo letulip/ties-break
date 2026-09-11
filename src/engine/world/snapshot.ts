@@ -89,7 +89,7 @@ import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'
 // ⭐ v48: the birthday popup's copy, assembled in the engine like every other dialog's.
 import { birthdayHistory, buildBirthdayPrompt, giftNoun } from './birthday'
-import { buildLifeBeatPrompt } from './lifeBeat'
+import { buildLifeBeatPrompt, buildSoftBeatInvite } from './lifeBeat'
 // ⭐ v74 T6 – «has he been told there is someone», read straight off the leaf that owns the question.
 import { knownPartner } from './loveEpisodes'
 import { buildShootClashPrompt } from './shootClash'
@@ -1693,6 +1693,12 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // ⭐⭐ v73 – null while nothing is pending, which is every career until wave 2 step 3 raises
     // the first beat. Assembled engine-side, never stored (buildBirthdayPrompt's own contract).
     lifeBeatPrompt: buildLifeBeatPrompt(world),
+    // ⭐⭐⭐ v74 T15 – AND THE SOFT ONE BESIDE IT, WHICH IS NOT A STOP. Non-null while a tier-1 row is
+    // inside its three-week window and unanswered (`liveSoftBeat`); it carries the Home card's line
+    // and the prompt the card opens. ⚠ THE FIELD ABOVE AND THIS ONE ARE READ BY DIFFERENT SURFACES
+    // FOR OPPOSITE REASONS: `lifeBeatPrompt` is non-null exactly when the week is refused, this one
+    // on a week that ticks on regardless – so `blockingOverlay` reads the first and never this.
+    softBeat: buildSoftBeatInvite(world),
     // ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK. Same contract as the two prompts above and
     // for the same reason: non-null on exactly the weeks `shootClashOpen` is true, which is the
     // predicate `advanceRefusal` blocks on, so the card cannot be missing on a week the engine has

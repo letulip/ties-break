@@ -98,6 +98,12 @@ export function blockingOverlay(snapshot: Snapshot | null): BlockingOverlay | nu
   // knock: `lifeBeatPrompt` is set from `pendingLifeBeat`, the identical predicate `advanceWeeks`
   // blocks on, so the card is up exactly when the sim is waiting and no action that produces a fresh
   // snapshot can clear it out from under a week that cannot move.
+  // ⚠⚠ v74 T15 – AND `snapshot.softBeat` IS DELIBERATELY NOT READ ANYWHERE IN THIS FUNCTION. Tier-1
+  // small talk is «soft – answerable, never lost» (who-she-is §5b): the engine is waiting on nothing,
+  // the week ticks on, and the conversation is opened from a Home card BY THE PLAYER. This list
+  // answers «which question has the engine stopped the career for», so a soft row has no entry here
+  // by construction – putting one in would be the hard pause the owner reverted, rebuilt on the
+  // surface side. `tests/wave3-soft-surface.test.ts` §A pins exactly that, with the control beside it.
   if (snapshot.lifeBeatPrompt) return 'life'
   if (snapshot.fork) return 'fork'
   if (snapshot.retirementOffer) return 'retirement'

@@ -15,6 +15,13 @@
 //    reports all of them. The two halves are in world/multiWeek.ts and world.ts respectively; the
 //    predicate both of them ask is `pendingLifeBeat` below.
 //
+//    ⭐⭐ v74 T15 – AND THE CONTRACT IS **PER KIND** SINCE 11.09: `LIFE_BEAT_BLOCKING` declares, for
+//    every kind and by type, whether it stops the week, and `pendingLifeBeat` narrows to the rows
+//    that do. Tier 2's two block exactly as they always did; tier-1 small talk does not – it is
+//    «soft – answerable, never lost» (who-she-is §5b), so it is answered from a Home card inside a
+//    three-week window and the week never waits for it. NOTHING ELSE about rules 2–5 changes for it:
+//    the same record, the same re-validation, the same prompt, the same dialog.
+//
 // 2. ⭐ THE RECORD IS THE QUEUE. A row whose `answer` is null is waiting; several beats in one week
 //    are answered one dialog at a time, in `lifeLog` order. There is deliberately no second boolean –
 //    a `pending` flag beside the answer is one fact with two sources of truth, and they desync.
@@ -72,7 +79,7 @@ import { activeEpisode, knownPartner, loveEpisodesOf } from './loveEpisodes'
 // into `endings.ts` would close a runtime loop. `constants.ts` is the bottom of the package's graph
 // and `endings.ts` re-exports the guard from there anyway, so nothing about the semantics moves.
 import { guardNotEndedForGood } from './constants'
-import type { BondBand, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister } from '../../shared/protocol/narrative'
+import type { BondBand, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
 import type { WorldState } from '../world'
 
 // =================================================================================================
@@ -91,10 +98,71 @@ export function lifeLogOf(world: WorldState): readonly LifeBeatRecord[] {
   return world.lifeLog ?? []
 }
 
+/** ⭐⭐⭐ v74 T15 – WHICH KINDS STOP THE WEEK, DECLARED PER KIND AND **TOTAL BY TYPE**
+ *  (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment, 11.09: «the beat-kind registry declares
+ *  `blocking` per kind – total by type, so every future kind must choose»).
+ *
+ *  ⚠⚠ A `Record<LifeBeatKind, boolean>` AND NEVER A LIST OF THE BLOCKING ONES, which is the same
+ *  argument `LIFE_BEAT_OPTIONS`, `ANSWER_EVENT` and `HER_LINE` all make in this file: a list makes
+ *  silence the default, and the next kind ships soft by FORGETTING. The total record makes a missing
+ *  kind a COMPILE error, so «does this stop the week» is a sentence somebody had to type.
+ *
+ *  ⚠ AND IT IS A PROPERTY OF THE TIER, which is why it belongs beside the kinds rather than at the
+ *  two stop sites. §5b prices tier 2 «blocks the week: yes» and tier 1 «soft – answerable, never
+ *  lost»: the fork's opinion and the news that someone exists are both the week she said something
+ *  the parent must answer before time may move (rule 1 at the head of this file). `'small-talk'` is
+ *  FALSE – it is texture, it is answered from a Home card inside a three-week window, and the week
+ *  never waits for it. */
+export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
+  'fork-opinion': true,
+  met: true,
+  'small-talk': false,
+}
+
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
- *  that raised two of them asks about them one at a time and never loses the second. */
+ *  that raised two of them asks about them one at a time and never loses the second.
+ *
+ *  ⭐⭐ v74 T15 – AND «WAITING» NOW MEANS **BLOCKING** AND UNANSWERED. This predicate is what both
+ *  halves of the block contract ask (rule 1), so narrowing it here is what makes a soft row stop
+ *  being a stop: `advanceRefusal` and the `'life'` StopReason read this function and nothing else,
+ *  and `LIFE_BEAT_BLOCKING` is the one place the answer lives. A soft row and a blocking beat
+ *  coexist untouched – the soft one is found by `liveSoftBeat` below, on its own window.
+ *
+ *  ⚠⚠ AND THE NARROWING IS ALSO WHAT KEEPS AN EXPIRED ROW HARMLESS. A soft row that was never
+ *  answered keeps `answer: null` FOREVER (that is «never lost = the ROW, not the chance»), so an
+ *  un-narrowed predicate would have parked every career behind a conversation whose moment passed
+ *  three weeks ago and which nothing on any screen can answer. */
 export function pendingLifeBeat(world: WorldState): LifeBeatRecord | null {
-  return lifeLogOf(world).find((row) => row.answer === null) ?? null
+  return lifeLogOf(world).find((row) => row.answer === null && LIFE_BEAT_BLOCKING[row.kind]) ?? null
+}
+
+/** ⭐⭐⭐ v74 T15 – THE SOFT ROW THAT IS STILL ANSWERABLE, or null. The Home card's whole existence
+ *  condition, and the second half of what the queue means now.
+ *
+ *  ⚠⚠ THE WINDOW IS DERIVED AND NEVER STORED (`ECONOMY.life.smallTalkTtlWeeks`, 3 = the raise week
+ *  and the two after it). `week − row.week` is the whole of the arithmetic – there is no `expired`
+ *  flag, no TTL field and no new persisted state anywhere in this step, which is `activeEpisode`'s
+ *  own discipline and the queue's own reason for having no `pending` boolean.
+ *
+ *  ⚠ `>= 0` REFUSES A ROW FROM THE FUTURE rather than reading it as live. No state the sim produces
+ *  can hold one (`raiseLifeBeat` stamps `world.week`), so this is for the probe worlds hand-built in
+ *  tests and benches – and a negative age answering «live» would be a window nobody could close.
+ *
+ *  ⚠ THE **FIRST** LIVE ONE, IN LOG ORDER, which is `pendingLifeBeat`'s own rule: the raise gate
+ *  allows only one live soft row at a time, so on every state the sim produces there is at most one –
+ *  and where a hand-built world holds two, the older is the one that is about to expire and is
+ *  therefore the one to ask about first. */
+export function liveSoftBeat(world: WorldState): LifeBeatRecord | null {
+  const ttl = ECONOMY.life.smallTalkTtlWeeks
+  return (
+    lifeLogOf(world).find(
+      (row) =>
+        row.answer === null &&
+        !LIFE_BEAT_BLOCKING[row.kind] &&
+        world.week - row.week >= 0 &&
+        world.week - row.week < ttl,
+    ) ?? null
+  )
 }
 
 // ⚠⚠ `loveEpisodesOf` AND `activeEpisode` LEFT THIS FILE IN T4 (11.09) AND THE MOVE IS A CYCLE FIX,
@@ -607,6 +675,25 @@ const SMALL_TALK_HEADING: Record<MoodRegister, string> = {
   low: 'She came to us with something on her mind',
 }
 
+/** ⭐⭐⭐ v74 T15 – THE INVITATION, AND IT IS THE ONLY STRING THE SOFT SURFACE ADDS. A DRAFT for the
+ *  owner's вычитка like every word in this file (invariant 4).
+ *
+ *  ⚠⚠ ONE SHORT LINE, AND THE CARD IS **ONLY** THE INVITATION (who-she-is §5b's amendment): it says
+ *  she has come by with something, and tapping it opens the SAME `LifeBeatDialog` on the same prompt
+ *  contract – modal only because the player chose to listen. So this line may never carry what she
+ *  came with: the subject, her opener and the parent's frame are the DIALOG's, assembled from the
+ *  pools above, and a card that previewed them would make the conversation answerable from the hub
+ *  without her ever having spoken.
+ *
+ *  ⚠ IT IS ENGINE-SIDE FOR THE REASON EVERY OTHER LINE HERE IS: the surface renders what it is
+ *  handed and owns no sentence, so there is exactly one place her voice is edited from and the owner
+ *  reads the whole set in one package.
+ *
+ *  ⚠ AND IT NAMES NO WEEK AND NO COUNT. The row is live for three weeks, so «this week» would be
+ *  false on two of them; the two-tier honesty law forbids the rest (no draw, no result, no place, no
+ *  person, no plan, no number). What is left is the one thing the world actually holds: she came. */
+const SMALL_TALK_CARD = 'She came by with something small.'
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -911,23 +998,51 @@ export function pendingLifeBeatOptions(world: WorldState): readonly LifeBeatAnsw
  *  design: never marked, never labelled, no meter. */
 export function buildLifeBeatPrompt(world: WorldState): LifeBeatPrompt | null {
   const pending = pendingLifeBeat(world)
-  if (pending === null) return null
+  return pending === null ? null : lifeBeatPromptFor(world, pending)
+}
+
+/** ⭐⭐ v74 T15 – THE PROMPT FOR **ONE ROW**, and it is the whole of `buildLifeBeatPrompt`'s body
+ *  lifted out unchanged, line for line. The soft surface needs the same assembly for a row the
+ *  pending predicate deliberately no longer returns, and the amendment's own words are «the SAME
+ *  `LifeBeatDialog` on the same prompt contract» – so there is ONE assembler and both readings of
+ *  «which row» hand it the row. A second copy for the card would be the two-readings-of-one-fact
+ *  defect rule 3 exists to prevent, one level up. */
+function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatPrompt {
   const register = moodRegisterOf(spiritBandOf(world.spirit ?? ECONOMY.spirit.baseline))
   const band = bondBandOf(world.bond ?? ECONOMY.bond.start)
   const voice = voiceOf(world)
-  const wants = beatWants(world, pending)
-  const followUp = lifeBeatListenFollowUp(pending.kind, pending.detail, voice, band)
+  const wants = beatWants(world, row)
+  const followUp = lifeBeatListenFollowUp(row.kind, row.detail, voice, band)
   return {
-    week: pending.week,
-    kind: pending.kind,
-    heading: lifeBeatHeading(pending.kind, register, band),
-    said: lifeBeatSaid(pending.kind, pending.detail, voice, register, band, wants),
-    // ⚠ THE PENDING ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a
-    // girl's «there is someone» the fork's three buttons, which is the defect the per-kind record
-    // exists to make impossible – and `answerLifeBeat` re-validates against THIS same reading.
-    options: lifeBeatOptionsFor(pending.kind, wants).map((o) => ({ id: o.id, label: o.label })),
+    week: row.week,
+    kind: row.kind,
+    heading: lifeBeatHeading(row.kind, register, band),
+    said: lifeBeatSaid(row.kind, row.detail, voice, register, band, wants),
+    // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
+    // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
+    // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
+    options: lifeBeatOptionsFor(row.kind, wants).map((o) => ({ id: o.id, label: o.label })),
     listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
   }
+}
+
+/** ⭐⭐⭐ v74 T15 – THE SOFT SURFACE, AS ONE SNAPSHOT FACT: the Home card's line and the dialog it
+ *  opens, or null when nothing of hers is waiting to be heard (who-she-is §5b's amendment).
+ *
+ *  ⚠⚠ ONE FIELD AND NOT TWO. The card and the prompt are one state – she came by, and this is what
+ *  she came with – so a surface cannot draw the invitation while the conversation behind it is
+ *  missing, and a screen cannot open a dialog for a row whose window has closed. Both are decided
+ *  HERE, by `liveSoftBeat`, which is the same derivation the raise gate asks.
+ *
+ *  ⚠ `prompt` IS A `LifeBeatPrompt` AND NOT A NEW SHAPE. «Tapping it opens the SAME `LifeBeatDialog`
+ *  on the same prompt contract» is the ruling, so the type is the contract and no new dialog exists
+ *  anywhere: the component renders whichever of the two prompts it is pointed at.
+ *
+ *  ⚠ ZERO DRAWS, like every other prompt in this file – it is a `find` over a handful of rows and a
+ *  re-assembly from facts the world already holds. */
+export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
+  const row = liveSoftBeat(world)
+  return row === null ? null : { card: SMALL_TALK_CARD, prompt: lifeBeatPromptFor(world, row) }
 }
 
 // =================================================================================================
@@ -960,12 +1075,23 @@ export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: str
 export function answerLifeBeat(world: WorldState, optionId: string): void {
   guardNotEndedForGood(world)
   const rows = world.lifeLog ?? []
-  // ⚠ THE INDEX AND NOT THE ROW `pendingLifeBeat` HANDS BACK: `lifeLogOf` returns a readonly view on
-  // purpose, and the queue's order is what decides WHICH row this answers – the first unanswered
-  // one, exactly as the prompt was built from.
-  const at = rows.findIndex((row) => row.answer === null)
-  if (at < 0) throw new Error('No life beat is waiting to be answered')
-  const prompt = buildLifeBeatPrompt(world)
+  // ⚠ THE INDEX AND NOT THE ROW THE SELECTORS HAND BACK: `lifeLogOf` returns a readonly view on
+  // purpose, and the queue's order is what decides WHICH row this answers – exactly the row the
+  // prompt was built from.
+  //
+  // ⭐⭐⭐ v74 T15 – AND «WHICH ROW» IS NOW TWO QUESTIONS IN ONE ORDER: the blocking beat first, and
+  // the live soft row only when nothing is blocking. ⚠⚠ IT IS NOT A `findIndex(answer === null)`
+  // ANY MORE, AND THE CHANGE IS LOAD-BEARING RATHER THAN TIDY: a soft row whose window closed keeps
+  // `answer: null` for the rest of the career (the honest record that she came and it went unasked),
+  // so the naive scan would hand every later answer – a fork, a «there is someone» – to a
+  // conversation three weeks dead, and record the parent's word about her attachment against it.
+  // ⚠ THE ORDER IS THE STOP CONTRACT READ THE OTHER WAY ROUND: while a blocking beat is up the week
+  // is stopped and the card cannot be reached, so the blocking row is what the player is answering.
+  const soft = liveSoftBeat(world)
+  const at = rows.findIndex((row) => row.answer === null && LIFE_BEAT_BLOCKING[row.kind])
+  const target = at >= 0 ? at : soft === null ? -1 : rows.indexOf(soft)
+  if (target < 0) throw new Error('No life beat is waiting to be answered')
+  const prompt = lifeBeatPromptFor(world, rows[target])
   // ⚠ THE ROW'S OWN KIND, AND NOT A FLAT SEARCH OVER EVERY KIND'S OPTIONS (v74). Reading the whole
   // table here would let a `'met'` row be answered with the fork's `back` – the prompt would refuse
   // it, but the refusal would then be the ONLY thing standing between two beats' answer sets, and
@@ -974,11 +1100,11 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   // line up was built from. What she asked for is a fact on the episode, so the charge is re-derived
   // here from the world and never carried in from the screen – a dialog cannot choose its own price
   // any more than it can choose its own option set.
-  const chosen = lifeBeatOptionsFor(rows[at].kind, beatWants(world, rows[at])).find(
-    (o) => o.id === optionId && prompt?.options.some((p) => p.id === o.id),
+  const chosen = lifeBeatOptionsFor(rows[target].kind, beatWants(world, rows[target])).find(
+    (o) => o.id === optionId && prompt.options.some((p) => p.id === o.id),
   )
   if (!chosen) throw new Error('That is not one of the answers this beat offered')
-  rows[at] = { ...rows[at], answer: chosen.id }
+  rows[target] = { ...rows[target], answer: chosen.id }
   // ⚠ HIS WORDS MOVE `bond` AND NOTHING ELSE (§4a.2's law, and this wave's fence): no spirit delta
   // from any of this, no skill, no condition, no money.
   applyBondDelta(world, chosen.bond)
@@ -987,7 +1113,7 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   // nowhere else, because four «we asked her to say more» rows a season would bury the private-life
   // thread in the parent's own replies to it. ⚠ THE TWO SHIPPED KINDS ARE UNTOUCHED by this branch –
   // their lines are exactly the lines they were, in exactly the feed they were in.
-  const answerLine = ANSWER_EVENT[rows[at].kind]
+  const answerLine = ANSWER_EVENT[rows[target].kind]
   if (answerLine === null) return
   addEvent(world, {
     week: world.week,
@@ -1348,36 +1474,48 @@ export function smallTalkThisSeason(world: WorldState): number {
  *  one place, that the whole of eligibility is decided before any stream exists. Pure, zero draws,
  *  no writes.
  *
- *  1. NOTHING IS ALREADY WAITING (the brief's «fires only when no beat is already pending that
- *     week»). The queue is answered one card at a time and the week is already stopped; adding a
+ *  1. NOTHING BLOCKING IS ALREADY WAITING (the brief's «fires only when no beat is already pending
+ *     that week»). The queue is answered one card at a time and the week is already stopped; adding a
  *     small thing behind the biggest news of her life would make the parent answer them in the wrong
- *     order for the rest of the week.
- *  2. THE SEASON CAP – four, off the log itself.
- *  3. THE BAND'S OWN CHANCE IS ABOVE ZERO. ⚠⚠ THIS CLAUSE IS THE SHORT-CIRCUIT AND NOT AN
+ *     order for the rest of the week. ⚠ v74 T15 – `pendingLifeBeat` reads BLOCKING rows now, so this
+ *     clause says exactly what it always meant: she does not come with something small on the week
+ *     she has been asked the biggest question of her life.
+ *  2. ⭐⭐ v74 T15 – AND NOT WHILE SHE IS STILL WAITING TO BE HEARD ON THE LAST ONE («one at a time»,
+ *     who-she-is §5b's amendment). A live unanswered soft row already has a card on the hub; a second
+ *     would either queue behind it invisibly or replace it, and replacing it is how «never lost»
+ *     stops being true. ⚠ AND IT IS THE **LIVE** ONE AND NOT ANY UNANSWERED ONE: an expired row is
+ *     the record of a moment that passed, and a career that fell silent for ever because one
+ *     conversation went unanswered in week 9 would be the deferral's own bug wearing a TTL.
+ *  3. THE SEASON CAP – four, off the log itself. ⚠ IT COUNTS RAISED ROWS, ANSWERED OR NOT (§5b's
+ *     amendment: «the season cap counts raised rows whether answered or not»), which is what
+ *     `smallTalkThisSeason` has always done: the row is the counter and the answer is not part of it.
+ *  4. THE BAND'S OWN CHANCE IS ABOVE ZERO. ⚠⚠ THIS CLAUSE IS THE SHORT-CIRCUIT AND NOT AN
  *     OPTIMISATION: `strained` and `cold` are priced at 0, and a 0 compared against a DRAWN uniform
  *     would take a draw on a week the design says is silent. `>` and not `>=` for `rollArrival`'s
- *     own reason in reverse – a chance of zero must be impossible rather than merely unlikely. */
+ *     own reason in reverse – a chance of zero must be impossible rather than merely unlikely.
+ *     ⚠ IT IS ALSO WHY THE CARD CANNOT EXIST AT `cold`: nothing raises a row there, so nothing is
+ *     ever live there – «the silence is still the line». */
 export function smallTalkEligible(world: WorldState): boolean {
   if (pendingLifeBeat(world) !== null) return false
+  if (liveSoftBeat(world) !== null) return false
   if (smallTalkThisSeason(world) >= ECONOMY.life.smallTalkCapPerSeason) return false
   return smallTalkChanceFor(bondBandOf(world.bond ?? ECONOMY.bond.start)) > 0
 }
 
 /** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE writer of a `'small-talk'` row.
  *
- *  ⚠⚠⚠ IT IS FINISHED AND IT IS **NOT CALLED** – THE OWNER RULED THE RAISE OFF ON 11.09.2026
- *  («вариант 3»: raise reverted, engine kept), and `world/phaseHerWeek.ts` carries the full note
- *  where the call used to be. §5b prices tier 1 «soft – answerable, never lost», what T8 shipped was
- *  tier 2's HARD pause, and a soft beat needs a surface – so every part of this section stays,
- *  dormant, until the step that builds one. That step is now named: T15 of the wave-3 brief, §5b's
- *  SOFT BLOCK CONCRETIZED amendment, which re-enables the raise through a per-kind `blocking` flag
- *  and a Home card rather than a pause. `tests/wave3-small-talk.test.ts` §H is the guard that holds
- *  the interim state and is mutation-verified (ARM 9); it is written to go RED on the commit that
- *  switches tier 1 on, which is T15's signal to re-aim it – exactly as wave 3's T4 re-aimed
- *  `attachmentLift`'s. It is also T15's own stated fallback if the soft path resists.
- *  ⚠ AND THE SECOND RULING FOR T15: NO AGE GATE. She talks at any age – a child bringing a parent a
- *  worry, a joy or a question is natural at any age, and tier 1 is texture rather than part of the
- *  romance layer, so it must NOT inherit `arrivalEligible`'s sixteenth-birthday gate.
+ *  ⭐⭐ IT IS CALLED AGAIN SINCE v74 T15 (11.09.2026), THROUGH THE SOFT PATH. The history is kept
+ *  because it is the reason this section is shaped the way it is: T8 shipped the raise through tier
+ *  2's HARD pause, §5b prices tier 1 «soft – answerable, never lost», and the owner ruled the raise
+ *  off («вариант 3»: raise reverted, engine kept) for exactly as long as it took to specify the
+ *  surface. T15 built it – `LIFE_BEAT_BLOCKING` declares the kind non-blocking, `pendingLifeBeat`
+ *  narrows to blocking rows, `liveSoftBeat` holds the three-week window and a Home card opens the
+ *  same dialog – so `world/phaseHerWeek.ts` calls this again, in the position the deferral's note
+ *  reserved for it, and a raised row now stops nothing.
+ *  ⚠ AND THE SECOND RULING, HONOURED HERE: NO AGE GATE. She talks at any age – a child bringing a
+ *  parent a worry, a joy or a question is natural at any age, and tier 1 is texture rather than part
+ *  of the romance layer – so `smallTalkEligible` does NOT inherit `arrivalEligible`'s
+ *  sixteenth-birthday gate, and must not acquire one.
  *
  *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED. The line order IS the rule;
  *  moving the roll above the gate would break it silently, because every key here carries its own
@@ -1386,8 +1524,8 @@ export function smallTalkEligible(world: WorldState): boolean {
  *  ⚠ THE BOND AND THE SPIRIT IT READS ARE LAST WEEK'S SETTLED VALUES, because it is written to run
  *  before `accrueSpirit` – `rollArrival`'s own argument one section up, and for the same reason:
  *  what she brings to the table is about the week that has just been lived, not about what this same
- *  tick is on its way to doing to her. (The call site that gave it that position is deferred; the
- *  position is the one the next wave must restore.)
+ *  tick is on its way to doing to her. (T15 restored the call site to exactly that position, which is
+ *  the one the deferral's note reserved.)
  *
  *  ⚠ THE SUBJECT IS DERIVED AND NEVER DRAWN (`smallTalkSubjectFor`) – the wave owns four stream keys
  *  and this one answers a single question. */

@@ -12,7 +12,7 @@ import type { ArrivalPreview, EntryCapUsage, LossStreak, PendingView, SeasonHist
 import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReason, WorldEvent } from './events'
 import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
-import type { BirthdayPrompt, DiarySnapshot, KidLife, LifeBeatPrompt, Milestone, RadarAxis, TrainingRead } from './narrative'
+import type { BirthdayPrompt, DiarySnapshot, KidLife, LifeBeatPrompt, Milestone, RadarAxis, SoftBeatInvite, TrainingRead } from './narrative'
 import type { AdPortfolioRow, CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
 // ⚠ `RecoveryBuff` is no longer imported here – E-07 removed the `recoveryBuff` member. The type
 // still lives in `./profile` and is still re-exported by `shared/protocol.ts`, because
@@ -256,6 +256,22 @@ export interface Snapshot {
    *  wants, and neither may cross to the UI as a number: nothing here carries one, and no component
    *  prints one. */
   lifeBeatPrompt: LifeBeatPrompt | null
+  /** ⭐⭐⭐ v74 T15 – SHE CAME BY WITH SOMETHING SMALL, AND THE WEEK DID NOT STOP FOR IT
+   *  (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment). Non-null while a tier-1 row is inside
+   *  its three-week window and unanswered; it carries the Home card's line AND the prompt that card
+   *  opens, because they are one state.
+   *
+   *  ⚠⚠ THE CONTRAST WITH THE FIELD ABOVE IS THE WHOLE OF THE FEATURE. `lifeBeatPrompt` is non-null
+   *  exactly when the engine has REFUSED to tick; this one is non-null on a week that ticks on
+   *  regardless, so a surface must never treat it as a stop, and `blockingOverlay` deliberately does
+   *  not read it. The dialog it opens is the same `LifeBeatDialog` on the same prompt contract –
+   *  modal only because the player chose to listen.
+   *
+   *  DERIVED, not persisted (`buildSoftBeatInvite`): the row is in `lifeLog`, and whether it is still
+   *  live is `week − row.week` against `ECONOMY.life.smallTalkTtlWeeks`, computed per snapshot. After
+   *  the window this goes null and the ROW stays – answered, or the honest record that she came and
+   *  it went unasked. */
+  softBeat: SoftBeatInvite | null
   /** ⭐⭐ ROUND 29 #3 – THE SHOOT ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT. Non-null on
    *  exactly the weeks `shootClashOpen` is true, which is the predicate `advanceWeeks` blocks on –
    *  so the dialog cannot be missing on a week the engine has refused to tick. Same contract as

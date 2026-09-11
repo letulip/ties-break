@@ -448,6 +448,12 @@ const RECIPES: Recipe[] = [
     drive: (world, rng, recipe) => {
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
         stepCareerWeek(world, rng, recipe.policy)
+        // ⚠⚠ v74 T15 – AND TIER 1 IS NO LONGER AMONG WHAT THIS LINE ANSWERS, which is why the note
+        // below reads as history. A `'small-talk'` row is declared NON-BLOCKING (§5b's soft surface,
+        // ruled 11.09), so it is not pending, this drain never sees one, and the recipe's own clause
+        // below cannot be tripped by one either – the rows simply ride along in `lifeLog`, unanswered
+        // and harmless, exactly as they do in a played career. The call STAYS: `'met'` still raises
+        // and still blocks, and this recipe must walk past one without answering the fork.
         // ⚠⚠ v74 (wave 3, T8) – TIER-1 SMALL TALK IS ANSWERED ON THE WAY PAST, AND IT HAD TO BE.
         // T8 raises a `'small-talk'` row on up to 8% of weeks from week 0, so on nearly every seed
         // the FIRST pending row this loop met was tier 1 and the clause below rejected it: measured,

@@ -65,8 +65,86 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⭐⭐⭐ RE-STAMPED FOR WAVE 3's T15 (11.09.2026, THE TIER-1 SOFT SURFACE) – THE SAME TWELVE, AND THE
+// CROSS-CHECK THE BLOCK BELOW LEFT FOR THIS STEP **DID NOT MATCH. THAT IS THE FINDING.**
+// =================================================================================================
+//
+// WHAT MOVED THEM. T15 turns the tier-1 raise back on through the SOFT path (who-she-is §5b's SOFT
+// BLOCK CONCRETIZED amendment): `rollSmallTalk` is called from `world/phaseHerWeek.ts` again, the
+// kind is declared NON-BLOCKING, `pendingLifeBeat` narrows to blocking rows, and a soft row is
+// answerable from a Home card for three weeks. So `lifeLog` fills on all three careers again.
+//
+// ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands, with MY OWN CHANGE NEUTRALISED IN
+// PLACE as the control – the single `rollSmallTalk(world)` call commented out, which is вариант 3's
+// state exactly and is the WHOLE of T15's behavioural reach on a bench walk (the `blocking` registry,
+// the TTL selector, the snapshot field and the Home card write nothing into a career: the first two
+// only answer questions ABOUT a row, and the last two are surface). Both arms verified before they
+// were read – `grep -c '^  rollSmallTalk(world)'` returns 0 on A and 1 on B, which is CLAUDE.md's
+// null-arm check run in both directions. `tools/frozen-key-diff.ts`, all three careers, 156 weeks,
+// headers checked against the invocations:
+//
+//   · 5/0 (25k middle, middle coach, grinder)  – **EXACTLY 1 KEY OF 80**: `lifeLog`
+//     (`4f53cda18c2b`, which is `JSON.stringify([])`, -> `97e136febb30`).
+//   · 8/0 (120k wealthy, elite coach, grinder) – **EXACTLY 1 KEY OF 80**: `lifeLog`
+//     (`e2b09e7534fb`, T6's `'met'`-only log, -> `df59d088f9c0`).
+//   · 0/1 (8k working, self-coached, PLAYER)   – **EXACTLY 1 KEY OF 80**: `lifeLog`
+//     (`4f53cda18c2b` -> `4eddca3f246c`).
+//
+// ⚠⚠ AND WHAT DID **NOT** MOVE IS THE HALF THE BRIEF NAMED AS THE STOP CONDITION: `results`,
+// `rngMain` and the wallet are BYTE-IDENTICAL on all three arms – on 8/0 they read `2e333910e713`,
+// `aebc8101d6df` and `941f30c12e89`, the same three strings T6's own note records – and so are
+// `bond`, `spirit`, `condition`, `careerTotals`, `financeWeeks`, `loveEpisodes`, `events` and
+// `nextEventId`. `bond` in particular is untouched because the rows are RAISED AND NOT ANSWERED: a
+// bench never taps a card, and a tier-1 reply is priced zero even when somebody does.
+//
+// ⚠⚠⚠ THE CROSS-CHECK THE PREVIOUS BLOCK LEFT («T8's are the ones to expect») **FAILED, AND IT WAS
+// RIGHT TO FAIL.** T8's twelve were `FROZEN` 2688dcd1…/99d79959…/e3353d96…; T15's are
+// 4db60d5a…/8ffcb7c9…/501a24c5…. The reason is measured rather than guessed, and it is a real
+// difference in BEHAVIOUR rather than in accounting – the two paths raise a different NUMBER of rows:
+//
+//   · T8 (the hard pause): `tools/econ-bench.ts` walks with `tickWeek` and never drains a beat, so
+//     the first row raised stayed unanswered for ever – and T8's own gate refused every later raise
+//     while ANY row was pending. Each career therefore ended the walk with exactly ONE small-talk row
+//     (8/0 also carries T6's `'met'` row). **PROVED BY RECONSTRUCTION, not by inference**: hashing
+//     `[{week:1,kind:'small-talk',detail:'question',answer:null}]` gives `0df08747a27a`, which is
+//     T8's own recorded `lifeLog` hash for 5/0 character for character; `[…@5, met@139]` gives
+//     `34d43fbd658b` (8/0) and `[…@20]` gives `82084efb4618` (0/1). All three of T8's values are
+//     reproduced exactly by a log holding ONE row.
+//   · T15 (the soft path): the row stops blocking, the window expires after three weeks, and she
+//     comes back – 11, 6 and 10 rows on the three careers, all `answer: null`, capped four a season
+//     and never two live at once. The FIRST hit is on the same week in both paths (1, 5 and 20), so
+//     the dice are identical: what changed is that the career does not fall silent after it.
+//
+// ⭐ SO THE RIGHT READING OF THE MISMATCH IS «THE DEFERRAL'S SIDE EFFECT WAS INVISIBLE UNTIL NOW»:
+// under the hard pause a walked career got ONE conversation per lifetime, which nobody could have
+// noticed while the step was reverted the same day. The soft path is the ruled behaviour and these
+// twelve are its first honest measurement.
+//
+// ⚠ AND THE RUNGS BELOW `lifeLog` ARE UNTOUCHED, WHICH IS THE OTHER HALF OF «ONE KEY». `PRE_V73`
+// (`careerHashAtSchema(…, 72)`) is where the peel drops `lifeLog` – v73 is the version that ADDED it
+// – and it was RE-RUN on this tree: `9d4480f3b374…`, `a8506c9358a3…`, `91eb11a3acdf…`, the three
+// values already in this file, unchanged. Drop `lifeLog` and the entire serialisation comes back.
+//
+// ⚠⚠ EVERY NEW VALUE WAS COMPUTED BY RUNNING THE EXPORTED HELPERS (`careerHash`,
+// `careerHashAtSchema(…, 73)`, `careerHashUnderTheOldName`, `careerHashUnderTheWindowRule`) AND
+// WRITTEN TO A FILE, never transcribed from a failure message – vitest elides a hash with an
+// ellipsis, which is how a wrong constant survives a wave. ⚠ AND THE FILE'S OWN MTIME WAS CHECKED
+// AGAINST THE RUN: the first attempt at this measurement read a STALE file from an earlier session's
+// re-stamp (the run itself had exited 1 – `coachTravelEdgeFixtures.ts` imports `expect`, so it
+// cannot be driven by `vite-node`), which would have stamped four-day-old numbers into this file.
+// The verdict came out of the log, the values out of a file written after it.
+//
+// ⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+// tests/condition.test.ts, green on this tree. It holds BY CONSTRUCTION – `rollSmallTalk` takes no
+// `Rng` and pulls only from the private `seed:life:smalltalk:<week>` sub-stream – and the per-key
+// `rngMain` identity above confirms it from the other side.
+//
+// =================================================================================================
 // ⭐⭐⭐ WAVE 3's T8 RE-STAMP WAS **UN-STAMPED** THE SAME DAY (11.09.2026) – AND THE TWELVE CONSTANTS
 // COMING BACK TO THEIR OLD VALUES, CHARACTER FOR CHARACTER, IS THE PROOF THAT THE DEFERRAL IS TOTAL.
+// ⚠ SUPERSEDED BY THE BLOCK ABOVE (T15 re-stamped the same twelve a third time); kept because its
+// identity is what proves the deferral was total while it stood, and because its «expected» list is
+// the cross-check T15 measured against and found wrong – see above for why.
 // =================================================================================================
 //
 // WHAT HAPPENED. T8 shipped tier-1 small talk with a HARD pause and re-stamped twelve constants for
@@ -1727,7 +1805,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '50374fbf57698615fea9b81de66c1da207fe08e96fd9909836e157bb9a837373',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '4db60d5a78bb4567fa080cf4b9bf89082aba23a1cef4de275f9853d70705498b',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -1834,7 +1912,7 @@ export const FROZEN = {
    *  never a bump. ⚠ `PRE_V72` and every rung below it are UNTOUCHED and still reproduce, because
    *  `careerHashAtSchema(…, 71)` peels `spirit` itself – the career as it stood before the private
    *  life existed is byte-identical, `results` and `rngMain` included. */
-  eliteGrinder: '1396c91f02889b7d0c2c7f3fe5d6cff382a4e70c6925eef04e03bc946062d942',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '8ffcb7c951dbf12334387a6ba1d8e51c454fb7e44de0da7f2a21b0d74db2e4b0',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -2074,7 +2152,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: '8c52158189bf3b0ac0ea8bd9164a5fd168bdeeb6ab4f256c7885960a15c05939',}
+  selfTravelling: '501a24c5c45f699d859f926c7d20499ea9332110cb474f13c5027c12f240b99e',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -2161,9 +2239,9 @@ export const FROZEN = {
  *  ⚠ Per-key diff first, control = the lift reverted in place: 1 key of 79 on 8/0 (`spirit`), 0 keys
  *  on the other two. Value computed by RUNNING `careerHashAtSchema(8, 0, 73)`. */
 export const PRE_V74 = {
-  middleGrinder: 'c7d3eb487706562574c1f6170baf52179b692b9877110e9d988266d1ee4d5e4d',
-  eliteGrinder: '1a0132faec3ac748b0e2a723b47d2eb54bdc0a84d0ad38dc72a0195372df16de',
-  selfTravelling: 'e2f230aaeffeb883d082f3241f557f49c5107e8501e203cb0563cb32f980fdae',}
+  middleGrinder: '4aa716e2d5f8b44e4884c0fbb286e4e3977acd0e438a411751a7ebdbbb31e45f',
+  eliteGrinder: '99a9a682386f650c9ff738203e10d4c5f7742019dcf5a00102b20ccced132a5d',
+  selfTravelling: '59d200f511cec486747fd929457aa0646668476e8bd4c9001d9b3666604a4852',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v72 – the identity the v73 re-freeze rests on,
  *  and the wave-1 pattern (`PRE_V72` directly below) repeated one version up. These three values are
@@ -2275,9 +2353,9 @@ export const PRE_V69 = {
  *  putting `Vera` back before birth reproduces the same lifted career week for week. Value computed
  *  by RUNNING `careerHashUnderTheOldName(8, 0)`. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'b0634a0c58c172f308b92e0d5c83b9de23601795d45408eb785eb8f11ea41c60',
-  eliteGrinder: 'd4ba7b7a4cb5f5bcbb87487b0792edf7996a786ced5aa4a66efc7d0bd85eec4b',
-  selfTravelling: '129ea330a214baa687dd48972b6272acbfd8637cefb346da44d0ef459b950857',}
+  middleGrinder: 'cdabe24eabed5c8fd9071965a03d776557326c1131fe7952344060e3bd720871',
+  eliteGrinder: 'c8d4a034cea38a490f85f8bb5452c54e2cb8451fea92cded3ab250ccd6707916',
+  selfTravelling: '8f8c3bf7b1d553626f13938f6551efce1b03a65914f5858eef35991083bcd2f9',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -2401,9 +2479,9 @@ export const PRE_V66 = {
  *  `PRE_R28B.eliteGrinder` EQUALS `FROZEN.eliteGrinder` again, both at the newest value. Computed by
  *  RUNNING `careerHashUnderTheWindowRule(8, 0)`. */
 export const PRE_R28B = {
-  middleGrinder: '50374fbf57698615fea9b81de66c1da207fe08e96fd9909836e157bb9a837373',
-  eliteGrinder: '1396c91f02889b7d0c2c7f3fe5d6cff382a4e70c6925eef04e03bc946062d942',
-  selfTravelling: '8c52158189bf3b0ac0ea8bd9164a5fd168bdeeb6ab4f256c7885960a15c05939',}
+  middleGrinder: '4db60d5a78bb4567fa080cf4b9bf89082aba23a1cef4de275f9853d70705498b',
+  eliteGrinder: '8ffcb7c951dbf12334387a6ba1d8e51c454fb7e44de0da7f2a21b0d74db2e4b0',
+  selfTravelling: '501a24c5c45f699d859f926c7d20499ea9332110cb474f13c5027c12f240b99e',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.

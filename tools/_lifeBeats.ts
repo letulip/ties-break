@@ -54,6 +54,16 @@ export function drainLifeBeats(world: WorldState, except?: LifeBeatKind | readon
   // which now fires from week 0 on nearly every seed, has to be answered on the way past or no seed
   // in two hundred ever reaches the state. Widening the shared helper is what stops that recipe
   // growing a second, private copy of the bond-neutral rule.
+  //
+  // ⚠⚠ AND v74 T15 TOOK TIER 1 OUT OF THIS HELPER'S REACH ENTIRELY – recorded rather than deleted,
+  // because the sentence above explains a list that is still list-shaped. A `'small-talk'` row is
+  // declared NON-BLOCKING (`LIFE_BEAT_BLOCKING`, engine/world/lifeBeat.ts §1), so `pendingLifeBeat`
+  // never returns one and this loop never sees one: a walk cannot stall behind a beat that stops
+  // nothing, so there is nothing to drain. The rows stay in `lifeLog` UNANSWERED for the life of the
+  // career, which is the ruling («never lost = the ROW, not the chance» – who-she-is §5b) and not a
+  // leak. ⚠ SO A HARNESS THAT COUNTS «unanswered rows» IS COUNTING SOMETHING ELSE NOW, and the one
+  // that did – `tests/r2-13-advance-span.test.ts`' `'life'` span case – was re-aimed at the blocking
+  // kinds with its own ⚠ note. The `except` list keeps `'small-talk'` legal and inert.
   const keep: readonly LifeBeatKind[] = except === undefined ? [] : typeof except === 'string' ? [except] : except
   let cleared = 0
   for (let guard = 0; guard < 200; guard++) {

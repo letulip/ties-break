@@ -102,7 +102,12 @@
 //           stayed green under it, which is what stops the negative assertion passing because
 //           `addEvent` was never reachable at all.
 //
-//   ARM 9   ⚠⚠ THE DORMANCY ARM – the deferral's own net, and the one the next wave will trip. The
+//   ARM 9   ⚠⚠ THE DORMANCY ARM – the deferral's own net, and the one T15 DID trip. ⚠ IT IS KEPT
+//           VERBATIM AS THE RECORD OF THE STATE THE OWNER RULED ON 11.09 AND OF THE GUARD THAT HELD
+//           IT: the cases it names have been re-aimed (§H is «raised through the SOFT path and
+//           through no other» now – see its banner), so this entry describes a form of the pin that
+//           no longer stands, and it is here because the ledger is a history rather than an index.
+//           The
 //           call site RESTORED: `rollSmallTalk(world)` put back in `world/phaseHerWeek.ts`
 //           immediately after `deliverKnownPartner(world)`, with its import.
 //           4 RED · §H «⚠⚠ NO PRODUCTION PATH CALLS THE ROLL: tier 1 is deferred: no file under
@@ -118,6 +123,17 @@
 //           §A–§G make about themselves: they call the roll DIRECTLY, so they are indifferent to
 //           whether the engine also calls it – exactly what lets tier 1 be switched on later without
 //           re-writing one of them.
+//
+//   ARMS 10–14  ⚠⚠ T15's OWN FIVE, and their red output is recorded where they were run:
+//           `tests/wave3-soft-surface.test.ts`' ledger. Two of them reach INTO this file and are
+//           named here so a reader of §A, §D or §H knows those cases are watched from outside:
+//           ARM 10 (`'small-talk'` marked blocking – the hard pause restored by a one-word table
+//           edit) reddened §H's walked career «dormant-1 week 1: tier 1 stopped a week: expected
+//           'small-talk' not to be 'small-talk'» plus §A, §C, §D and §G's fixtures – 28 red in all;
+//           ARM 12 (the three-week window dropped) reddened §D's own cap sweep «and the cap really is
+//           reached – the sweep could have failed: expected 0 to be greater than 0», because one
+//           unanswered row would then silence the career for ever; ARM 14 (the one-at-a-time clause
+//           deleted) reddened §A's «a live soft row refuses: expected true to be false».
 //
 // ⚠⚠ AND A WORD ON WHY §B IS A KEY COUNT AND NOT AN ALIGNMENT COMPARISON, inherited whole from T3's
 // own finding (tests/wave3-arrival.test.ts §B, ARM 2b): every key in this wave carries its own week,
@@ -150,14 +166,17 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import {
+  advanceRefusal,
   answerLifeBeat,
-  buildLifeBeatPrompt,
+  buildSoftBeatInvite,
   createWorld,
   tickWeek,
   lifeBeatHeading,
   lifeBeatListenFollowUp,
+  lifeBeatOptionsFor,
   lifeBeatSaid,
   lifeLogOf,
+  liveSoftBeat,
   pendingLifeBeat,
   pendingLifeBeatOptions,
   raiseLifeBeat,
@@ -166,6 +185,7 @@ import {
   smallTalkEligible,
   smallTalkSubjectFor,
   smallTalkThisSeason,
+  LIFE_BEAT_BLOCKING,
   LIFE_BEAT_OPTIONS,
   SMALL_TALK_SUBJECTS,
   TEMPERAMENTS,
@@ -278,19 +298,36 @@ describe('wave 3 T8 A – when she may come with something', () => {
   })
 
   it('⭐ nothing new while something is still waiting – the queue is the gate', () => {
+    // ⚠⚠ RE-AIMED BY v74 T15 (11.09), AND WHAT MOVED IS **WHERE «WAITING» IS READ**, not the claim.
+    // The owner ruled the soft surface into the wave: tier 1 is declared NON-BLOCKING
+    // (`LIFE_BEAT_BLOCKING`), so `pendingLifeBeat` – the predicate the block contract asks – no
+    // longer returns a small-talk row, and the row lives on `liveSoftBeat` inside its three-week
+    // window instead. «Nothing new while something is still waiting» is exactly as true and exactly
+    // as load-bearing as it was («one at a time», who-she-is §5b's amendment); the fixture now asks
+    // the selector that owns the answer. ⚠ ALSO PINNED HERE, BECAUSE IT IS THE OTHER HALF OF THE
+    // MOVE: the very same row is NOT pending, so the week it sits in is never stopped for it.
     const world = careerAt('gate-pending', 200, 'close')
     raiseLifeBeat(world, 'small-talk', 'worry')
-    expect(pendingLifeBeat(world), 'the fixture really is waiting').not.toBeNull()
-    expect(smallTalkEligible(world), 'a pending row refuses').toBe(false)
+    expect(liveSoftBeat(world), 'the fixture really is waiting').not.toBeNull()
+    expect(pendingLifeBeat(world), '...and it is waiting SOFTLY – the week never stopped').toBeNull()
+    expect(smallTalkEligible(world), 'a live soft row refuses').toBe(false)
     // ...and over a whole season of asking, not one more row lands behind it.
+    // ⚠ THE WEEK IS PINNED HERE, which it has to be now that liveness is derived: the loop below
+    // walks a season, and a row raised at 200 stops being live at 203 – so without holding the world
+    // AT the raise week this case would be measuring the TTL rather than the queue. The expiry is
+    // §J's subject in tests/wave3-soft-surface.test.ts, with its own boundary.
     for (let w = 200; w < 200 + WEEKS_IN_SEASON; w++) {
-      world.week = w
       rollSmallTalk(world)
+      void w
     }
     expect(lifeLogOf(world).length, '⭐ nothing new while something is still waiting').toBe(1)
     // THE POSITIVE CONTROL: answer it, and the very same loop is busy again.
-    drainLifeBeats(world)
-    expect(pendingLifeBeat(world), 'the queue is empty now').toBeNull()
+    // ⚠ THE ENGINE COMMAND AND NOT `drainLifeBeats`, and the swap is T15's second consequence rather
+    // than a preference: the drain answers whatever is PENDING, and a soft row is deliberately not –
+    // so the helper correctly leaves it alone and a control built on it would clear nothing and prove
+    // nothing. `answerLifeBeat` is the command the card sends, which is the path being controlled for.
+    answerLifeBeat(world, OPTIONS[0].id)
+    expect(liveSoftBeat(world), 'the queue is empty now').toBeNull()
     let more = 0
     for (let w = 200; w < 200 + WEEKS_IN_SEASON; w++) {
       world.week = w
@@ -401,7 +438,10 @@ describe('wave 3 T8 C – a tier-1 reply moves nothing', () => {
     world.week = week
     world.lifeLog = []
     rollSmallTalk(world)
-    expect(pendingLifeBeat(world), `${seed}: the fixture really raised one`).not.toBeNull()
+    // ⚠ RE-AIMED BY v74 T15: a raised tier-1 row is found by `liveSoftBeat` (non-blocking by kind,
+    // live for three weeks from the raise), never by `pendingLifeBeat`. The fixture is at the raise
+    // week, so the row it just raised is live by construction.
+    expect(liveSoftBeat(world), `${seed}: the fixture really raised one`).not.toBeNull()
     return world
   }
 
@@ -418,7 +458,11 @@ describe('wave 3 T8 C – a tier-1 reply moves nothing', () => {
         // ⚠⚠ THE ANTI-VACUITY HALF. «Bond did not move» is free on a beat that was never answered,
         // so the row has to show the answer it was given.
         expect(lifeLogOf(world)[0].answer, `${band}/${option.id}: something really was answered`).toBe(option.id)
-        expect(pendingLifeBeat(world), `${band}/${option.id}: and the queue is empty`).toBeNull()
+        expect(liveSoftBeat(world), `${band}/${option.id}: and the queue is empty`).toBeNull()
+        // ⚠ v74 T15 – AND THE ANSWER REACHED THE RIGHT ROW THROUGH THE SOFT PATH: `answerLifeBeat`
+        // takes the blocking row first and the live soft row only when nothing is blocking, and this
+        // world holds exactly one row of either sort.
+        expect(pendingLifeBeat(world), `${band}/${option.id}: nothing blocking was ever involved`).toBeNull()
       }
     }
   })
@@ -432,19 +476,32 @@ describe('wave 3 T8 C – a tier-1 reply moves nothing', () => {
     expect(new Set(OPTIONS.map((o) => o.label)).size, 'three different sentences').toBe(OPTIONS.length)
   })
 
-  it('⚠ the harness\'s own free answer drains it, and the number it was measuring does not move', () => {
-    // END TO END THROUGH `tools/_lifeBeats.ts` – the path `npm run e2e:fixtures` and forty benches
-    // take. `drainLifeBeats` THROWS if a kind has no bond-neutral answer, so this is also the T6b pin
-    // met on a live row rather than on the table.
+  it('⚠ the harness walks straight past it, and the number it was measuring does not move', () => {
+    // ⚠⚠ RE-AIMED BY v74 T15 (11.09), AND THE CLAIM IS THE SAME ONE INVERTED. It read «the harness's
+    // own free answer DRAINS it»: under T8's hard pause a walk had to answer tier 1 or stall, because
+    // `advanceWeeks` refuses while any row is unanswered. The owner ruled the soft surface in, the
+    // kind is declared NON-BLOCKING, and `drainLifeBeats` – which answers whatever is PENDING –
+    // therefore never sees one. That is CORRECT rather than a regression: a beat that stops nothing
+    // needs no draining, and forty tools, `npm run e2e:fixtures` and `tests/helpers/career.ts` walk
+    // past it with the number they are measuring untouched, which is what this case now asserts.
+    // ⚠ THE T6b PIN IT USED TO CARRY IS NOT LOST – «every kind has a bond-neutral answer» is asserted
+    // on the priced set below, and §C's first case answers all three through the engine command.
     const world = withBeat('v2-drain', 'close')
     const before = world.bond
-    expect(pendingLifeBeatOptions(world)!.filter((o) => o.bond === 0).length, 'all three are free').toBe(
+    expect(lifeBeatOptionsFor('small-talk', 'open').filter((o) => o.bond === 0).length, 'all three are free').toBe(
       OPTIONS.length,
     )
+    // ⚠ AND THE PRICED READING FOR THE ROW IN HAND IS **NULL**, because nothing is pending – the one
+    // fact `drainLifeBeats` acts on. Asserted rather than inferred: it is the whole reason the walk
+    // below clears zero.
+    expect(pendingLifeBeatOptions(world), 'a soft row is not the pending row').toBeNull()
     const cleared = drainLifeBeats(world)
-    expect(cleared, 'the helper answered the row').toBe(1)
+    expect(cleared, 'the helper has nothing to answer – the week was never stopped').toBe(0)
     expect(world.bond, '⚠⚠ a walk that never asked the player put nothing on the scale').toBe(before)
-    expect(lifeLogOf(world)[0].answer, 'and something really was answered').not.toBeNull()
+    // ⚠⚠ THE ANTI-VACUITY HALF, and it is the load-bearing one now that the count is zero: the row is
+    // STILL THERE, still unanswered, still live – «never lost» – rather than quietly consumed.
+    expect(lifeLogOf(world)[0].answer, 'and her row is still waiting, not swallowed').toBeNull()
+    expect(liveSoftBeat(world), 'and the card is still up').not.toBeNull()
   })
 
   it('⚠ tier 1 leaves its trace in the log and nowhere else – no feed row, with the control beside it', () => {
@@ -534,8 +591,11 @@ describe('wave 3 T8 D – four a season, and the counter counts the right rows',
     for (let w = 160; w < 160 + WEEKS_IN_SEASON; w++) {
       world.week = w
       rollSmallTalk(world)
-      const pending = pendingLifeBeat(world)
-      if (pending !== null) {
+      // ⚠ RE-AIMED BY v74 T15: a raised tier-1 row is `liveSoftBeat`'s, not `pendingLifeBeat`'s –
+      // the kind is declared non-blocking, so the pending predicate (which is what the block contract
+      // asks) deliberately cannot see it. The loop's claim is untouched.
+      const raised = liveSoftBeat(world)
+      if (raised !== null) {
         hits++
         answerLifeBeat(world, OPTIONS[0].id)
       }
@@ -555,7 +615,8 @@ describe('wave 3 T8 D – four a season, and the counter counts the right rows',
     for (let w = 4 * WEEKS_IN_SEASON; w < 5 * WEEKS_IN_SEASON; w++) {
       world.week = w
       rollSmallTalk(world)
-      if (pendingLifeBeat(world) !== null) {
+      // ⚠ RE-AIMED BY v74 T15, exactly as the case above – the row is the soft selector's now.
+      if (liveSoftBeat(world) !== null) {
         hits++
         answerLifeBeat(world, OPTIONS[0].id)
       }
@@ -679,7 +740,14 @@ describe('wave 3 T8 G – what she came with, and how the card is assembled', ()
       expect(row.detail, `${register}: the subject`).toBe(EXPECTED_SUBJECT[register])
       // ⚠ THE CARD'S FRAME AND HER LINE ARE ABOUT THE SAME SMALL THING – the correspondence the
       // §3c note claims «by construction», asserted rather than assumed.
-      const prompt = buildLifeBeatPrompt(world)!
+      // ⚠ RE-AIMED BY v74 T15: tier 1's prompt reaches the screen through `buildSoftBeatInvite` (the
+      // Home card's line plus the prompt the card opens) rather than through `buildLifeBeatPrompt`,
+      // which now answers for BLOCKING rows only. ⚠⚠ IT IS THE SAME `LifeBeatPrompt` AND THE SAME
+      // ASSEMBLER – «the SAME LifeBeatDialog on the same prompt contract» is the ruling – so every
+      // assertion below is byte-for-byte the one T8 wrote.
+      const invite = buildSoftBeatInvite(world)!
+      expect(invite.card, `${register}: the invitation is one line of the engine's`).toBeTruthy()
+      const prompt = invite.prompt
       expect(prompt.heading, `${register}: the frame is the assembler's own`).toBe(
         lifeBeatHeading('small-talk', register, bondBandOf(world.bond!)),
       )
@@ -745,42 +813,39 @@ describe('wave 3 T8 G – what she came with, and how the card is assembled', ()
 })
 
 // =================================================================================================
-// H. ⚠⚠ THE DORMANCY GUARD – TIER 1 IS DECLARED AND DELIBERATELY NEVER RAISED
+// H. ⚠⚠ THE RAISE PATH – TIER 1 REACHES THE PLAYER THROUGH THE **SOFT** SURFACE AND THROUGH NO OTHER
 // =================================================================================================
 //
-// ⚠⚠ THE OWNER'S RULING, 11.09.2026 – «ВАРИАНТ 3»: THE RAISE REVERTED, THE ENGINE KEPT. Everything
-// above this section tests code that is FINISHED and STAYS – the hazard by band, the season cap, the
-// subject derivation, the constants, the option table and her eighteen drafted lines. What does not
-// ship in this step is the single line in `world/phaseHerWeek.ts` that would RAISE the beat.
+// ⚠⚠ RE-AIMED BY v74 T15 (11.09.2026), AND THIS IS THE COMMIT THE OLD FORM WAS WRITTEN TO FAIL ON.
+// WHAT MOVED: `rollSmallTalk(world)` is back in `world/phaseHerWeek.ts` – the owner ruled the soft
+// surface into this wave («расписать вариант 2 подробнее сейчас в спеке и тоже всё-таки в эту волну
+// загнать»), which is who-she-is §5b's SOFT BLOCK CONCRETIZED amendment, built as T15. WHY THE OLD
+// FORM EXISTED: for one commit the raise was OFF («вариант 3»: raise reverted, engine kept) because
+// T8 had shipped tier 1 through tier 2's HARD pause, and §5b prices tier 1 «soft – answerable, never
+// lost». A soft beat needs a surface; until it had one, nothing might raise the row.
 //
-// WHY, IN THE OWNER'S TERMS. `docs/specs/who-she-is-2026-09.md` §5b's tier table prices tier 1
-// «soft – answerable, never lost». The wave-3 brief asked for it «through the standard machinery
-// (pause, queue, re-validation)» – which is TIER 2's HARD pause. T8's builder found the drift and
-// correctly flagged it, then shipped the pause; and because `bond` starts at 70 (`steady`, a live
-// band) the beat fired from week 0 on every career and BLOCKED THE WEEK, breaking 136 walked
-// fixtures. A soft beat needs a surface that does not stop the week, and a beat with no surface may
-// not be raised at all – which is this step.
+// ⚠⚠ AND IT IS RE-AIMED RATHER THAN DELETED, EXACTLY AS THE DEFERRAL'S OWN NOTE INSTRUCTED («what
+// T15 MUST NOT DO IS DELETE IT – the re-aim is “raised through the SOFT path and never through a
+// pause”, which is a claim this file will still want to make afterwards»). That is the claim below,
+// and it is checkable in both directions:
 //
-// ⚠⚠ AND THE STEP THAT TURNS IT BACK ON IS NAMED: T15. The same day, the owner asked for «вариант 2»
-// written out in the spec and folded into this wave – §5b's SOFT BLOCK CONCRETIZED amendment, whose
-// build order is T15 of the wave-3 brief: a per-kind `blocking` flag, `pendingLifeBeat` narrowed to
-// blocking rows, a Home card that opens the SAME dialog, and a 3-week derived TTL. So §H is not
-// «tier 1 is cancelled» – it is the interim state held honestly, and T15's own stated fallback if
-// the soft path resists («T15 reverts to вариант 3's state without touching T1-T8»).
+//   1. the roll is called from EXACTLY ONE file under `src/`, and it is the weekly tick's own phase –
+//      so tier 1 cannot acquire a second, un-gated raise site;
+//   2. the kind is declared NON-BLOCKING and `pendingLifeBeat` never returns one, on a really walked
+//      career – so the hard pause the owner reverted cannot come back by a table edit;
+//   3. a walked season raises rows AND `advanceWeeks` never reports `'life'` for any of them – the
+//      behavioural half, with the anti-vacuity control beside it (the rows really are there).
 //
-// ⚠ THE SECOND RULING, RECORDED HERE BECAUSE THIS IS WHERE T15 WILL LOOK: NO AGE GATE.
-// «She talks at any age» – a child bringing a parent a worry, a joy or a question is natural at any
-// age, and tier 1 is TEXTURE rather than part of the romance layer. When it is switched on it must
-// NOT inherit the arrival's sixteenth-birthday gate.
+// ⚠ THE SECOND RULING, HONOURED AND PINNED HERE: NO AGE GATE. «She talks at any age» – a child
+// bringing a parent a worry, a joy or a question is natural at any age, and tier 1 is TEXTURE rather
+// than part of the romance layer, so it does not inherit the arrival's sixteenth-birthday gate. The
+// walked careers below are twelve-year-olds and they raise rows, which is that ruling as a behaviour.
 //
-// ⚠⚠ AND THE SHAPE OF THIS GUARD IS NOT INVENTED – IT IS THE ONE THIS REPO HAS ALREADY PROVEN.
-// Wave 1 shipped `ECONOMY.spirit.attachmentLift` declared and not read, deliberately, with a guard
-// asserting precisely that (tests/spirit.test.ts); when wave 3's T4 wired it the guard went RED and
-// was re-aimed with its ⚠ note. T15 does the same to this one: it is written to fail on exactly that
-// commit, and a red here is tier 1 being switched on, not a defect. ⚠ WHAT T15 MUST NOT DO IS DELETE
-// IT – the re-aim is «raised through the SOFT path and never through a pause», which is a claim this
-// file will still want to make afterwards.
-describe('wave 3 T8 H – tier 1 is BUILT AND DORMANT (owner\'s deferral, 11.09)', () => {
+// ⚠ THE PRECEDENT FOR THE RE-AIM IS THIS REPO'S OWN. Wave 1 shipped `ECONOMY.spirit.attachmentLift`
+// declared and not read, with a guard asserting precisely that; wave 3's T4 wired it, the guard went
+// RED and was re-aimed with its ⚠ note rather than deleted. ARM 9 in the ledger at the head of this
+// file records the old form's own mutation; ARMS 10–12 record this one's.
+describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through no other', () => {
   /** Every `.ts`/`.vue` file under `src/`, as (relative path, source) – spirit.test.ts's own reader,
    *  and the same reason: this is a claim about the whole production tree, not about one file. */
   function srcFiles(dir = SRC_ROOT, prefix = ''): [string, string][] {
@@ -799,17 +864,19 @@ describe('wave 3 T8 H – tier 1 is BUILT AND DORMANT (owner\'s deferral, 11.09)
     return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
   }
 
-  it('⚠⚠ NO PRODUCTION PATH CALLS THE ROLL – the raise is what was deferred', () => {
-    // ⚠⚠ THIS IS THE MUTATION TARGET. Restore `rollSmallTalk(world)` in `world/phaseHerWeek.ts` and
-    // this line goes red naming the file (ARM 9 in the ledger at the head of this file). The call
-    // text is matched rather than the bare name, because the barrel legitimately re-exports the name
-    // and the module legitimately declares it – and neither of those raises a beat.
+  it('⚠⚠ ONE RAISE SITE UNDER src/, AND IT IS THE WEEKLY TICK\'S OWN PHASE', () => {
+    // ⚠⚠ THIS IS THE MUTATION TARGET, AND IT READS THE OTHER WAY ROUND SINCE T15. The old form
+    // demanded ZERO callers (the deferral); this one demands exactly one, and names it – so both a
+    // deleted raise (tier 1 silently switched off again) and a SECOND raise site (a surface, a
+    // command or a second phase raising her beat behind the gate) go red here. The call text is
+    // matched rather than the bare name, because the barrel legitimately re-exports the name and the
+    // module legitimately declares it – and neither of those raises a beat.
     const callers = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('rollSmallTalk(world)'))
       .map(([path]) => path)
-    expect(callers, 'tier 1 is deferred: no file under src/ may raise it').toEqual([])
-    // ...and the half that makes «no caller» a DEFERRAL rather than a deletion: the name reaches
-    // exactly two files – the module that declares it, and the barrel that re-exports it.
+    expect(callers, 'the raise is the tick\'s, and the tick\'s alone').toEqual(['engine/world/phaseHerWeek.ts'])
+    // ...and the name still reaches exactly the three files it may: the module that declares it, the
+    // barrel that re-exports it, and the phase that calls it.
     const named = srcFiles()
       .filter(([, text]) => /\brollSmallTalk\b/.test(codeOnly(text)))
       .map(([path]) => path)
@@ -817,21 +884,44 @@ describe('wave 3 T8 H – tier 1 is BUILT AND DORMANT (owner\'s deferral, 11.09)
       // (`engine/world/` precedes `engine/world.ts`), which is a fact about `readdirSync` and not
       // about this claim. A pin that encoded the walk order would go red on an unrelated new module.
       .sort()
-    expect(named, 'declared and exported, and nothing more').toEqual(['engine/world.ts', 'engine/world/lifeBeat.ts'])
-    // ...and it is still a real function with its real constants behind it, inherited whole by the
-    // wave that switches it on.
-    expect(typeof rollSmallTalk, 'the engine is kept, only its call site is not').toBe('function')
+    expect(named, 'declared, exported, and called from one phase').toEqual([
+      'engine/world.ts',
+      'engine/world/lifeBeat.ts',
+      'engine/world/phaseHerWeek.ts',
+    ])
+    // ...and the constants behind it are the ones the owner ruled, unchanged by the surface step.
+    expect(typeof rollSmallTalk, 'the engine is the engine T8 built').toBe('function')
     expect(LIFE.smallTalkPerWeek, 'the hazard table stands').toEqual({ close: 0.08, steady: 0.04, strained: 0, cold: 0 })
     expect(LIFE.smallTalkCapPerSeason, 'and the season cap').toBe(4)
     expect(OPTIONS.length, 'and her parent still has three free replies waiting').toBe(3)
   })
 
-  it('⚠⚠ ...and a WALKED career raises not one `small-talk` row, over a whole season', () => {
-    // The behavioural half. `close` is the MOST generous band (8%/wk), re-pinned every week so the
-    // engine's own drift cannot quietly walk her out of it – under the raise this is ~4 rows a season
-    // and the cap is reached, which is why the arm reddens here loudly rather than probabilistically.
-    // ⚠ THE DRAIN STAYS IN THE LOOP: `'met'` still raises and still blocks, and a walk that stopped
-    // on it would be measuring the wrong thing.
+  it('⚠⚠ THE KIND IS NON-BLOCKING BY TYPE, AND THE PENDING SET IS WHERE THAT IS ENFORCED', () => {
+    // The structural half of «soft», read off the registry the block contract asks through. ⚠ THE
+    // OTHER TWO ARE PINNED TRUE IN THE SAME BREATH: this is the table that would silently restore the
+    // hard pause if tier 1 were flipped, and a pin that only named tier 1 would let the fork or the
+    // delivery be flipped the other way and stop stopping the week.
+    expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
+      'fork-opinion': true,
+      met: true,
+      'small-talk': false,
+    })
+    // ...and the predicate really honours it, on a row the roll itself raised.
+    const world = careerAt('soft-not-pending', 200, 'close')
+    world.week = firstHit(world, 200)
+    world.lifeLog = []
+    rollSmallTalk(world)
+    expect(lifeLogOf(world).map((r) => r.kind), 'the fixture really raised one').toEqual(['small-talk'])
+    expect(pendingLifeBeat(world), '⚠⚠ and the week is NOT waiting on it').toBeNull()
+    expect(liveSoftBeat(world), '...it is waiting on the hub instead').not.toBeNull()
+  })
+
+  it('⚠⚠ ...and a WALKED career raises them while the week NEVER stops for one', () => {
+    // The behavioural half, on the fixture the old dormancy case used, at the same band. `close` is
+    // the MOST generous band (8%/wk), re-pinned every week so the engine's own drift cannot quietly
+    // walk her out of it. ⚠ THE DRAIN STAYS IN THE LOOP: `'met'` still raises and still blocks, and a
+    // walk that stopped on it would be measuring the wrong thing – it clears nothing here, which is
+    // precisely the point (a soft row is not the pending row).
     for (const seed of ['dormant-1', 'dormant-2', 'dormant-3', 'dormant-4']) {
       const world = createWorld(seed)
       const rng = resumeMain(world.rngMain)
@@ -839,32 +929,39 @@ describe('wave 3 T8 H – tier 1 is BUILT AND DORMANT (owner\'s deferral, 11.09)
       for (let w = 0; w < WEEKS_IN_SEASON; w++) {
         world.bond = close
         tickWeek(world, rng)
+        // ⚠⚠ THE ASSERTION IS INSIDE THE LOOP, ON EVERY WEEK, AND **BEFORE THE DRAIN**, which is the
+        // position the arm measured: a hard pause shows up as a `'life'` refusal on the very week the
+        // row is raised, and a drain running first ANSWERS it and clears the refusal – so the same
+        // assertion one line lower reads green under the very mutation it exists to catch. (Measured:
+        // ARM 10 left this case red on a different line entirely until the order was fixed.)
+        // ⚠ AND IT IS NOT «NEVER `'life'`», because `'met'` still blocks and still should: the claim
+        // is that no week is ever stopped BY A SOFT ROW, which is what the kind check says.
+        if (advanceRefusal(world) === 'life') {
+          expect(pendingLifeBeat(world)!.kind, `${seed} week ${world.week}: tier 1 stopped a week`).not.toBe(
+            'small-talk',
+          )
+        }
         drainLifeBeats(world)
       }
       const rows = lifeLogOf(world).filter((r) => r.kind === 'small-talk')
-      expect(rows, `${seed}: a walked season may not produce tier 1`).toEqual([])
+      // ⚠ THE ANTI-VACUITY HALF: «no week stopped» is free on a career that raised nothing at all.
+      expect(rows.length, `${seed}: a walked season really does bring her to the table`).toBeGreaterThan(0)
+      // ...and every one of them is hers alone – unanswered, because a walk never taps the card.
+      expect(rows.every((r) => r.answer === null), `${seed}: nothing answered her`).toBe(true)
     }
   })
 
-  it('⚠ ...and the walk above really COULD have raised one – the anti-vacuity control', () => {
-    // «No rows» is free on a career the beat could never have reached. So the same fixture, at the
-    // same band, is handed to the roll DIRECTLY and it raises – which is what makes the case above a
-    // statement about the missing call site rather than about a gate that refuses everything.
+  it('⚠ ...and the very same walk DOES stop for a blocking beat – the control for the case above', () => {
+    // «The week never stopped» is free if `advanceRefusal` could not say `'life'` at all. So the same
+    // predicate, on the same kind of world, with a BLOCKING row in it: it refuses, by name.
     const world = createWorld('dormant-1')
-    const rng = resumeMain(world.rngMain)
-    const close = bondFor('close')
-    for (let w = 0; w < WEEKS_IN_SEASON; w++) {
-      world.bond = close
-      tickWeek(world, rng)
-      drainLifeBeats(world)
-    }
-    expect(lifeLogOf(world).filter((r) => r.kind === 'small-talk'), 'still none after the walk').toEqual([])
-    world.bond = close
-    expect(smallTalkEligible(world), 'the gate would have said yes on this very world').toBe(true)
-    const hit = firstHit(world, world.week)
-    world.week = hit
-    world.lifeLog = []
-    rollSmallTalk(world)
-    expect(lifeLogOf(world).map((r) => r.kind), 'called directly, the engine still raises it').toEqual(['small-talk'])
+    world.week = 200
+    world.loveEpisodes = [
+      { id: 'p:190', sinceWeek: 190, endedWeek: null, knownWeek: 200, wants: 'open', partnerId: 'p:190' },
+    ]
+    raiseLifeBeat(world, 'met', 'p:190')
+    expect(pendingLifeBeat(world), 'the blocking row really is waiting').not.toBeNull()
+    expect(advanceRefusal(world), 'and THAT is what stops a week').toBe('life')
   })
+
 })

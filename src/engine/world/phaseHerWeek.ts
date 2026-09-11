@@ -35,10 +35,11 @@ import { addEvent } from './ledger'
 // ⚠ ONE-WAY ARROW. `world/lifeBeat.ts` imports `./ledger`, `./constants`, `./age`, `../spirit`,
 // `../economy` and `../rng` – never a phase – so this import closes no runtime loop, the same shape
 // `world/endings.ts` already uses to raise the fork-opinion row.
-// ⚠⚠ AND TIER 1'S ROLL IS DELIBERATELY NOT IMPORTED HERE – see the deferral note below
-// `deliverKnownPartner`. It is built, exported and dormant; an import on this line would be the
-// first half of the thing the guard in `tests/wave3-small-talk.test.ts` §H refuses.
-import { deliverKnownPartner, rollArrival } from './lifeBeat'
+// ⭐⭐ AND TIER 1'S ROLL IS BACK ON THIS LINE SINCE v74 T15 (11.09) – `rollSmallTalk`, through the
+// SOFT path the owner ruled into the wave. It left for one commit («вариант 3»: the raise reverted,
+// the engine kept) because §5b prices tier 1 «soft – answerable, never lost» and what T8 shipped was
+// tier 2's hard pause; the row it raises now blocks nothing (see the call site below).
+import { deliverKnownPartner, rollArrival, rollSmallTalk } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -263,44 +264,39 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        called and not duplicated. `STOP_PRECEDENCE` already puts the birthday's card in front of
   //        it on a week that is both.
   deliverKnownPartner(world)
-  // ⚠⚠ 1c-smalltalk (v74, the private life wave 3 – T8) IS NOT ON THIS LINE, AND ITS ABSENCE IS A
-  //        RULING RATHER THAN AN OMISSION. THE OWNER DEFERRED TIER 1 TO A LATER WAVE (11.09.2026).
+  // ⭐⭐⭐ 1c-smalltalk (v74, the private life wave 3 – T8's roll, T15's surface): AND THE WEEK SHE
+  //        COMES WITH SOMETHING SMALL. who-she-is §5b's tier 1, on the position T8 chose and the
+  //        deferral's note reserved – after the delivery, because a week that is both «there is
+  //        someone» and «something small» is a week the small thing loses; before `accrueSpirit`,
+  //        because the bond band it reads and the Mood register that decides WHAT she comes with are
+  //        both LAST week's settled values.
   //
-  //        WHAT IS BUILT AND STAYS BUILT: the hazard by band, the four-a-season cap counted off
-  //        `lifeLog` itself, the subject derivation, `ECONOMY.life.smallTalkPerWeek` /
-  //        `smallTalkCapPerSeason`, the option table and her eighteen drafted lines – all of it in
-  //        `world/lifeBeat.ts` §7, finished, exported and inherited whole by the wave that switches
-  //        it on. WHAT IS NOT BUILT IS THE ONE LINE THAT WOULD RAISE THE BEAT.
+  //        ⚠⚠ AND IT DOES NOT STOP THE WEEK, WHICH IS THE WHOLE OF WHAT T15 CHANGED ABOUT IT. The
+  //        row it raises is declared NON-BLOCKING by kind (`LIFE_BEAT_BLOCKING`, world/lifeBeat.ts
+  //        §1), `pendingLifeBeat` narrows to blocking rows, and `advanceWeeks` therefore never
+  //        reports `'life'` for it: she is answered from a Home card, inside a three-week window
+  //        derived from `week − row.week`, and the tick rolls on whether the parent listens or not.
   //
-  //        WHY. `docs/specs/who-she-is-2026-09.md` §5b's tier table prices tier 1 «soft – answerable,
-  //        never lost»; the wave-3 brief asked for it «through the standard machinery (pause, queue,
-  //        re-validation)», which is tier 2's HARD pause. T8 found the drift, flagged it, and shipped
-  //        the pause. Because `bond` starts at 70 – `steady`, a live band – it then fired from week 0
-  //        on every career and BLOCKED THE WEEK behind a beat that has no on-screen home: 136 walked
-  //        fixtures had to learn to drain it. A soft beat needs a SURFACE that does not stop the
-  //        week, and until one exists nothing may raise the row.
+  //        WHY THE HISTORY IS KEPT HERE. T8 shipped this same call through tier 2's HARD pause – the
+  //        brief asked for «the standard machinery (pause, queue, re-validation)», §5b's own table
+  //        prices tier 1 «soft – answerable, never lost», and because `bond` starts at 70
+  //        (`steady`, a live band) the beat then fired from week 0 on every career and BLOCKED THE
+  //        WEEK behind a row with no on-screen home, breaking 136 walked fixtures. The owner ruled
+  //        «вариант 3» (raise reverted, engine kept) and, the same day, «расписать вариант 2
+  //        подробнее сейчас в спеке и тоже всё-таки в эту волну загнать» – §5b's SOFT BLOCK
+  //        CONCRETIZED amendment, built as T15. This line is what that amendment turns back on.
   //
-  //        ⚠⚠ AND THE SURFACE IS NOW SPECIFIED: the owner's «вариант 3» (this step – raise reverted,
-  //        engine kept) was followed the same day by «расписать вариант 2 подробнее сейчас в спеке и
-  //        тоже всё-таки в эту волну загнать», which is §5b's SOFT BLOCK CONCRETIZED amendment and
-  //        T15 of the wave-3 brief. T15 is what re-enables this line, through the soft path – a
-  //        per-kind `blocking` flag, `pendingLifeBeat` narrowed to blocking rows, a Home card and a
-  //        3-week derived TTL – so the call comes back HERE, in this position, and not as a hard
-  //        pause. Until T15 lands, the raise is off and this state is also T15's own named fallback
-  //        («if anything resists, T15 reverts to вариант 3's state without touching T1-T8»).
-  //
-  //        ⚠ AND THE SECOND RULING, RECORDED HERE FOR T15: NO AGE GATE. «She talks at any age» – a
+  //        ⚠ NO AGE GATE, and it is a RULING rather than an omission: «she talks at any age» – a
   //        child bringing a parent a worry, a joy or a question is natural at any age, and tier 1 is
-  //        TEXTURE rather than part of the romance layer. It must not inherit the arrival's
-  //        sixteenth-birthday gate when it is switched on.
+  //        TEXTURE rather than part of the romance layer. `smallTalkEligible` has none.
   //
-  //        ⚠⚠ THE DORMANCY IS GUARDED AND THE GUARD IS MUTATION-VERIFIED – `tests/wave3-small-talk.test.ts`
-  //        §H: no file under `src/` calls the roll, and a walked career raises not one `'small-talk'`
-  //        row. Put a call back on this line and it goes RED (ARM 9, recorded in that file's ledger),
-  //        which is precisely what makes «the raise is off» a state somebody would notice leaving.
-  //        This is the shape wave 1 used for `ECONOMY.spirit.attachmentLift` – declared and not read,
-  //        deliberately, with a guard asserting exactly that – until wave 3's T4 wired it and the
-  //        guard went red and was re-aimed with its ⚠ note. T15 inherits that job here.
+  //        ⚠ ITS OWN CALL, for `accrueSpirit`'s own reason one line down – `accrueCondition`'s
+  //        arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts and must not gain a
+  //        parameter. ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:smalltalk:<week>` sub-stream, and an INELIGIBLE week derives none of it at all
+  //        (world/lifeBeat.ts §7). The frozen capture (41550 / e6b0c709) is untouched by
+  //        construction.
+  rollSmallTalk(world)
   // ⭐⭐ 1c-life (v72, the private life wave 1): AND WHAT THE WEEK DID TO HER SPIRIT, and to what the
   //        parent has built with her. ITS OWN CALL, immediately after the body's – never a parameter
   //        of `accrueCondition`, whose arity-2, zero-RNG contract is pinned by B1 in

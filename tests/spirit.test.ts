@@ -986,6 +986,22 @@ describe('the fence this step is judged by', () => {
     // [ 'rollArrival(world)', …(1) ]» – which is this pin refusing the very statement the deferral
     // took out.
     //
+    // ⚠⚠ AND RE-AIMED A FIFTH TIME, BACK TO THREE – 11.09, WAVE 3's T15, WHICH IS THE STEP THE NOTE
+    // ABOVE SAID WOULD DO EXACTLY THIS. WHAT MOVED: `rollSmallTalk(world)` is on that line again.
+    // WHY: the owner ruled tier 1's SOFT surface into this wave («расписать вариант 2 подробнее
+    // сейчас в спеке и тоже всё-таки в эту волну загнать» – who-she-is §5b's SOFT BLOCK CONCRETIZED
+    // amendment), so the raise is back – through a per-kind `blocking` flag, a `pendingLifeBeat`
+    // narrowed to blocking rows, a Home card and a three-week derived TTL, rather than through a
+    // pause. THE POSITION IS THE ONE T8 ARGUED FOR AND THE DEFERRAL RESERVED, unchanged: after the
+    // delivery (a week that is both «there is someone» and «something small» is a week the small
+    // thing loses – and the raise gate still refuses behind a BLOCKING row), and before
+    // `accrueSpirit`, because the bond band it reads and the Mood register that decides what she
+    // comes with are both LAST week's settled values. It writes no spirit and takes no `Rng`.
+    //
+    // ⚠ THE PIN IS THE SAME PIN AND REFUSES THE SAME THINGS: an ordered list of exactly the private
+    // life's three weekly calls, so a FOURTH statement sliding into the gap, a reorder of these
+    // three, or a removal of any one of them is red.
+    //
     // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
     // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
     // the two can be reordered – a third statement appearing here goes red just as a swap does.
@@ -999,9 +1015,10 @@ describe('the fence this step is judged by', () => {
     const j = code.indexOf('accrueSpirit(world)')
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
-    expect(code.slice(i + 1, j), 'only the private life\'s two weekly calls separate them').toEqual([
+    expect(code.slice(i + 1, j), 'only the private life\'s three weekly calls separate them').toEqual([
       'rollArrival(world)',
       'deliverKnownPartner(world)',
+      'rollSmallTalk(world)',
     ])
   })
 

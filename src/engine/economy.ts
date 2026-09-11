@@ -3632,14 +3632,14 @@ export const ECONOMY = {
      *  who-she-is §5b's frequency column, which is prose rather than a number: «a few per season at
      *  `close`; none at `cold`».
      *
-     *  ⚠⚠ DECLARED AND NOT REACHED AS OF THIS STEP, DELIBERATELY – the owner ruled the raise off on
-     *  11.09.2026 («вариант 3»: raise reverted, engine kept), so no production path raises the beat
-     *  and nothing reads these two numbers at runtime yet. This is `ECONOMY.spirit.attachmentLift`'s
-     *  own shape from wave 1, guarded the same way (tests/wave3-small-talk.test.ts §H) and inherited
-     *  whole by the step that builds tier 1's SURFACE – T15, §5b's SOFT BLOCK CONCRETIZED amendment,
-     *  because §5b prices tier 1 «soft – answerable, never lost» and a soft beat may not stop the
-     *  week. ⚠ THE RULING FOR T15, recorded where the numbers are: NO AGE GATE. She talks at any
-     *  age; tier 1 is texture, not part of the romance layer.
+     *  ⭐⭐ READ AT RUNTIME AGAIN SINCE v74 T15 (11.09.2026), AND THE NOTE IS RE-AIMED RATHER THAN
+     *  DELETED so the interim state cannot be mistaken for a cancellation. These two numbers shipped
+     *  DECLARED AND NOT REACHED for one commit – the owner's «вариант 3» took the raise out while
+     *  §5b's «soft – answerable, never lost» had no surface to be answerable ON. T15 built the
+     *  surface (a Home card, a per-kind `blocking` flag, a 3-week derived TTL), so `rollSmallTalk` is
+     *  called again from `world/phaseHerWeek.ts` and the hazard is live. ⚠ THE RULING THAT CAME WITH
+     *  IT, kept where the numbers are: NO AGE GATE. She talks at any age; tier 1 is texture, not part
+     *  of the romance layer – `smallTalkEligible` has none and must not acquire one.
      *
      *  ⚠⚠ THE TWO ZEROES ARE A SHORT-CIRCUIT AND NEVER A COMPARISON. `rollSmallTalk` returns before
      *  `seed:life:smalltalk:<week>` is ever derived when the chance is 0, exactly as `rollArrival`'s
@@ -3649,6 +3649,21 @@ export const ECONOMY = {
      *  IS the line (§5b's own sentence). There is no flat pool for this beat, because a beat that
      *  never fires needs none. */
     smallTalkPerWeek: { close: 0.08, steady: 0.04, strained: 0, cold: 0 },
+    /** ⭐⭐⭐ v74 T15 – HOW LONG A SOFT ROW STAYS ANSWERABLE: THE RAISE WEEK AND THE TWO AFTER IT
+     *  (who-she-is §5b's SOFT BLOCK CONCRETIZED amendment, 11.09: «a soft row is live for 3 weeks
+     *  (the raise week + 2)»).
+     *
+     *  ⚠⚠ LIVENESS IS **DERIVED** FROM `week − row.week` AND IS NEVER STORED – `activeEpisode`'s own
+     *  discipline, and the reason is the same one the queue gives for having no `pending` boolean: an
+     *  «expired» flag beside a week number is one fact with two sources of truth, and the two desync
+     *  the first time a migration, a load or a command touches one and not the other. `liveSoftBeat`
+     *  (world/lifeBeat.ts §1) is the one reader, and there is no new persisted field anywhere in T15.
+     *
+     *  ⚠ 3 IS «THE RAISE WEEK + 2» AND THE COMPARISON IS STRICTLY `<`: at `week − row.week` of 0, 1
+     *  and 2 the card is up; at 3 the moment has passed, the card goes and nothing asks. The ROW
+     *  stands forever either way – answered, or expired with `answer: null`, which is the honest
+     *  record that she came and it went unasked («never lost = the ROW, not the chance»). */
+    smallTalkTtlWeeks: 3,
     /** THE HARD CAP PER SEASON (brief §4: «cap 4/season»), counted off `lifeLog` itself.
      *
      *  ⚠⚠ THE LOG IS THE COUNTER AND THERE IS NO NEW STATE – who-she-is §5b's line item 6 («caps
