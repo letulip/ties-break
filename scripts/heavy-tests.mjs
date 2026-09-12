@@ -257,9 +257,11 @@ export const HEAVY_UNIT_FILES = [
   // it. Measured both ways before anything moved, in-pool -> solo:
   //
   //     college-birthday    77.7 -> 27      college-second-act  42.0 -> 14
+  //       <- cut in two on 12.09; this row is the record of the reading, not of a file that still
+  //          measures it. See the block against the entries below.
   //     coach-travel-edge   59.9 -> 21      goldenSaves         41.4 -> 14
-  //       <- cut into three on 31.08; this row is the record of the reading, not of a file that
-  //          still measures it. See the block against the entries below.
+  //       <- cut into three on 31.08 and the frozen half cut again on 12.09; this row is the record
+  //          of the reading, not of a file that still measures it. See the blocks below.
   //     season-mirror       45.8 -> 16      world-trio          36.7 -> 13
   //     viz/commentary      42.8 -> 14      coach-load          36.2 -> 13
   //     blocking-overlay    42.3 -> 15      round23-kid-share   33.8 -> 13
@@ -287,7 +289,53 @@ export const HEAVY_UNIT_FILES = [
   // not available to it. Solo on CI it is ~28 s of the 60 s window, comparable to `endings-bench`'s
   // ~23 s two entries up, so it clears both halves of the bar: a regression test by its own header,
   // and real headroom under birpc's wall.
+  //
+  // ⚠⚠ 12.09, THE FIFTH RED `unit-heavy` (wave 3, PR #135): `college-birthday` HAD TO BE CUT, AND SO
+  // DID `coach-travel-edge` – see the block against that entry below. The FIRST cut of this PR took
+  // `goldenSaves` and `economy` out on the same shape, and the job came back red at the same ~10
+  // minute mark, which is the finding: the staller was never those two. All 18 entries of this list
+  // were then measured SOLO, one vitest process each, `--project unit --reporter=json`, sequentially
+  // on a quiet machine (load 2.1-4.5, ambient recorded per file), and only two crossed:
+  //
+  //     coach-travel-edge  29.78 / 29.69 / 29.69 s  -> x2.24 = 66.5 s   OVER the 60 s window
+  //     college-birthday   26.41 / 26.05 / 26.10 s  -> x2.24 = 58.4 s   AT it
+  //
+  // Under 0.4 s of spread across three runs each. ⚠ AND THE TWO BEHIND THEM ARE NAMED RATHER THAN
+  // CUT, because the bar is a measurement and not a mood: `coach-travel-edge-older-schemas` reads
+  // 19.47-19.80 s (43.6 s, 73 % of the window) and `ladder-floor` 19.36-19.69 s (43.6 s). Both need
+  // a 1.38x unlucky stretch to stall and neither can have caused this one. Where their cuts go, when
+  // they come, is written into their own headers so nobody re-derives it under pressure.
+  //
+  // ⚠ THE SEAM IS THE OWNER'S OWN SECOND PASS, AND THE TOPICAL SEAM WOULD NOT HAVE MOVED THE NUMBER.
+  // MEASURED per describe on the same runs, 18 tests / 26.05 s:
+  //
+  //     ROUND 26 #4 – a college wish may not assume a wallet   21.05 s    8 cases
+  //     the other four describes                                5.37 s   10 cases
+  //
+  // **79.7 % of the file is ONE describe**, so lifting the four cheap describes out buys 5.4 s of
+  // the 58.4 s that stalls and leaves a file at four fifths of what already stalled – the trade
+  // fatigue-bench-policy spent two weeks proving is not a cut. The seam runs THROUGH that describe,
+  // along the boundary it already draws itself: its own banner, «ROUND 26 #4, SECOND PASS – THE WISH
+  // BESIDE THE BICYCLE IS ABOUT THE BICYCLE», where the owner corrected the first pass. The two
+  // halves cost 10.53 s each, to the hundredth. Solo, same invocation, after:
+  //
+  //     college-birthday        15.67 s   14 cases   the four walked describes + the FIRST pass
+  //     college-birthday-wish   10.78 s    4 cases   the SECOND pass
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED, as 27.08's cut demands – except
+  // that here there is no shortfall to explain and that is the check passing, not skipping.
+  // 15.67 + 10.78 = 26.45 s against 26.05 s for the file they replaced: 18 cases before and 18
+  // after, every one of them walking its own careers, so nothing could have gone missing without the
+  // sum FALLING. The +0.40 s is the JIT warm-up the first case of a file pays, now paid twice.
+  //
+  // ⚠ NOT ONE SEED, WEEK COUNT, WALLET OR ASSERTION MOVED, and no test name changed either: all 18
+  // full names are a BYTE-IDENTICAL MULTISET to the one file's, checked mechanically rather than by
+  // eye, because the new file keeps the ORIGINAL describe name. tests/collegeBirthdayFixtures.ts
+  // holds the walk to the fork, the presses through the freeze and the four wordings, so
+  // `openedAtCollege`'s thumb on the scale – the one piece that must never have two truths – is
+  // imported by both halves rather than copied into each.
   'tests/college-birthday.test.ts',
+  'tests/college-birthday-wish.test.ts',
   // ⚠⚠ 31.08: `coach-travel-edge` HAD TO BE CUT, AND THE HONEST SEAM WAS NOT THE ONE THAT MOVED THE
   // NUMBER. A process of its own stopped being enough on CI – `43 passed (43)`,
   // `Test Files 1 passed (1)`, then ONE unhandled `Timeout calling "onTaskUpdate"`, exit 1, at
@@ -330,7 +378,40 @@ export const HEAVY_UNIT_FILES = [
   // 1.1 s at the pool's measured x2.9, an order of magnitude under this list's ~32 s in-pool line,
   // so promoting it would cost the gate a vitest start to serialise nothing. The bar is cost, and
   // it does not meet it.
+  //
+  // ⚠⚠ AND ON 12.09 THE LADDER WENT BACK OVER THE WALL AND WAS CUT AGAIN – the fifth red
+  // `unit-heavy` of wave 3's PR #135, and the file that actually caused it. 29.78 / 29.69 / 29.69 s
+  // solo across three runs, which is **66.5 s** at this file's own 2.24x: over birpc's 60 s window,
+  // not near it. See the college-birthday block above for how the whole list was measured.
+  //
+  // ⚠ IT GREW WITHOUT GAINING A TEST IT DID NOT EARN, by two multiplications at once, and that is
+  // the part worth carrying. (1) THE LADDER GREW: v72, v73 and v74 – the private life's three waves –
+  // took this file from 10 cases / 25 walks to 17 / 46. (2) EVERY WALK GOT DEARER: T16b's widener
+  // and the shared knock drain (`tools/_knocks.ts`) mean a frozen career no longer sits on an
+  // undecided knock for 39-106 weeks of its 156, so arrivals go 4->6, 3->6 and 3->7 and the fixtures
+  // module says it in as many words – «these fixtures now walk MORE game than they did, not less».
+  // Per walk, 0.51 s -> 0.65 s. ⚠ `-older-schemas` gained (2) WITHOUT (1) and without its own file
+  // being touched at all, which is why a stale row is worse than none here.
+  //
+  // ⚠ THE SEAM IS THE LADDER AGAIN AND IT IS THE ONLY ONE THAT MOVES THE NUMBER. All 17 cases sit in
+  // ONE describe and the per-case cost is FLAT – every three-walk rung reads 1.89-2.09 s, the three
+  // live-hash cases 1.26 / 0.67 / 0.62 s – so there is no hot case to lift and no topical seam to
+  // find. The cost IS the walk count, which makes the split arithmetic. Solo, same invocation:
+  //
+  //     coach-travel-edge               14.26 s    9 cases · 22 walks   live hashes + v71 – v74
+  //     coach-travel-edge-mid-schemas   15.71 s    8 cases · 24 walks   v69 – v62
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED. 14.26 + 15.71 = 29.97 s against
+  // 29.69 s for the file they replaced – 46 career walks before and 46 after, ~0.65 s each either
+  // way, and that sum is the proof no walk went missing. The +0.28 s is the JIT warm-up the first
+  // case of a file pays, now paid twice; the wall clock costs a further ~2 s, one vitest start.
+  //
+  // ⚠ NOT ONE SEED, HORIZON, CONSTANT OR ASSERTION MOVED, and no test name changed either: all 17
+  // full names are a BYTE-IDENTICAL MULTISET to the one file's, because both files keep the ORIGINAL
+  // describe name. The eighteen constants are untouched in tests/coachTravelEdgeFixtures.ts, which
+  // all three frozen files import rather than copy.
   'tests/coach-travel-edge.test.ts',
+  'tests/coach-travel-edge-mid-schemas.test.ts',
   'tests/coach-travel-edge-older-schemas.test.ts',
   // ⚠⚠ AN ORPHANED COMMENT LIVED HERE AND IT WAS MINE (corrected 27.08). It read «THE FROZEN MAIN
   // CAPTURE LIVES HERE NOW» – true when twelve files were promoted on 26.08, false four hours later

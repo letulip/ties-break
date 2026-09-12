@@ -1,6 +1,8 @@
-// THE UNIT SUITE: the light 218 in one pool, the heavy 13 a process each – strictly one at a time
+// THE UNIT SUITE: the light 252 in one pool, the heavy 20 a process each – strictly one at a time
 // on a small runner, a few at a time on a big machine. (It read «the light 109 … the heavy three»
-// until 05.09; both halves have roughly doubled since, and the counts are derived, not declared.)
+// until 05.09 and «218 … 13» until 12.09; both halves keep growing, and the counts are DERIVED, not
+// declared – `npx vitest list --project unit --filesOnly` with and without `TB_UNIT_SKIP_HEAVY=1`
+// prints them, and the difference is `HEAVY_UNIT_FILES.length` or something is wrong.)
 //
 // ⚠ THIS IS THE SAME 60 s BIRPC WALL THAT ALREADY PUSHED THE MONTE-CARLO FILES OUT OF THE GATE
 // (.github/workflows/simulation.yml's header tells that story). It came back on the UNIT project
