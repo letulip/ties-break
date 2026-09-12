@@ -1731,7 +1731,12 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
    square photograph, and `position: relative` is `.tf-brief-art`'s containing block. */
 .tf-brief {
   position: relative;
-  overflow: hidden;
+  /* ⚠ NO `overflow: hidden` HERE – the gate's second lesson on this tile (round 41 #7). It was
+     added so the square portrait could not bleed past the card's rounded corner, and on the short
+     desktops (600-640px heights, round 37 #7's own grid ground) it CLIPPED the card's tail – the
+     Begin pill's centre fell outside the visible box and five e2e arms timed out on
+     «.tf-brief-body intercepts pointer events». The portrait carries its own left-side radius
+     below instead; the card clips nothing, exactly as it did before this round. */
   padding: 0;
 }
 
@@ -1751,6 +1756,8 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
   display: block;
   height: 100%;
   width: auto;
+  /* The card no longer clips (see .tf-brief) – the portrait rounds its own outer corners. */
+  border-radius: var(--radius-card) 0 0 var(--radius-card);
 }
 
 /* The coach's read on the left, the reading and the button on the right (the design's 168px
@@ -1771,7 +1778,11 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  width: 100%;
+  /* ⚠ NO `width: 100%` HERE, AND THE GATE IS WHY (round 41 #7's own e2e red): with the portrait
+     present this box also carries `margin-left: 70px`, and 100% + 70px overflowed the card's
+     `overflow: hidden` – the Begin pill's centre landed in the clipped zone and the click hit
+     this div instead, timing out two short-desktop e2e arms. A block-level box's auto width
+     already subtracts its margins; that is the whole fix. */
   box-sizing: border-box;
   padding: 14px;
 }

@@ -78,7 +78,7 @@ import type {
 // ⭐ ROUND 34 #19 – the chart's four windows are a VALUE from the protocol, so the picker here and
 // the series length in `shopView` read one table.
 import { SHOP_PRICE_RANGE_MONTHS } from '../../shared/protocol'
-import { monthLabel, seasonYear, weekLabel } from '../../shared/dates'
+import { monthLabel, seasonYear, weekLabel, weeksLeftBracket } from '../../shared/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
@@ -772,12 +772,12 @@ const dealTerm = computed(() => {
  *  (reviewed at the season boundary – no end week is ever persisted) or the lifetime ad row
  *  (`for life`, further down – never lapses BY CONSTRUCTION, round-39.md:296-297). A bracket on any
  *  of the three would be a countdown this screen invented, not one the engine can honour – recon's
- *  derivability census, docs/rounds/round-41.md item 14. */
-function weeksLeftBracket(untilWeek: number, atWeek: number): string {
-  const left = untilWeek - atWeek
-  if (left <= 0) return '(last week)'
-  return left === 1 ? '(1 week left)' : `(${left} weeks left)`
-}
+ *  derivability census, docs/rounds/round-41.md item 14.
+ *
+ *  ⚠ THE FUNCTION ITSELF MOVED TO `shared/dates.ts` beside `weekLabel` (the round's own gate found
+ *  it): the R11-6 week-numbering sweep blesses interpolations by shared-formatter prefix, and a
+ *  formatter defined in one screen is invisible to that list – the same road `monthLabel` took in
+ *  round 34 #19. Imported above; the notes on who gets NO bracket stay here, where the calls are. */
 /** The kit deal's own bracket, beside `dealTerm` – both empty together (no live deal), both live
  *  together (a live deal always carries a real `untilWeek`, `kitDealView`'s own contract). */
 const dealWeeksLeft = computed(() => {

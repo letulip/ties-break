@@ -246,13 +246,19 @@ describe('R11-6 guard – no surface prints a raw absolute week', () => {
         // printing the raw integer (the owner met «back wk 70» in a playtest); a sixth entry in a
         // list of shared formatters is exactly what the list is for, and the guard is unchanged for
         // every OTHER spelling – a `{{ row.week }}` on the same line would still be caught.
+        // ⚠ ROUND 41 #14 ADDED `weeksLeftBracket(` – the same argument as monthLabel's round-34
+        // entry, not a loosening. It prints a DURATION («(14 weeks left)» / «(last week)»), never
+        // an absolute week, and it moved INTO shared/dates.ts beside weekLabel to earn this line –
+        // a screen-local formatter has no place on a shared-formatter allowlist. A raw
+        // `{{ row.week }}` on the same line is still caught.
         if (
           expr.includes('weekLabel(') ||
           expr.includes('weekDates') ||
           expr.includes('weekRange(') ||
           expr.includes('weekOnly(') ||
           expr.includes('monthLabel(') ||
-          expr.includes('seasonWeekRange(')
+          expr.includes('seasonWeekRange(') ||
+          expr.includes('weeksLeftBracket(')
         ) {
           continue
         }

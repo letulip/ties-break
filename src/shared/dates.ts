@@ -346,6 +346,21 @@ export function monthLabel(week: number): string {
   return `${MONTHS[d.month]} '${String(((d.year % 100) + 100) % 100).padStart(2, '0')}`
 }
 
+/** "(14 weeks left)" / "(1 week left)" / "(last week)" – the remaining-term bracket round 41 #14
+ *  put on every Bills position that carries a real `untilWeek` (the kit deal, the filled ad rows).
+ *
+ *  ⚠ IT LIVES HERE AND NOT IN THE SCREEN, and the week-numbering guard is why: it prints a
+ *  DURATION, never an absolute week – exactly the distinction R11-6's sweep exists to hold (the
+ *  owner met «back wk 70» in a playtest) – so it joins the shared formatters the guard blesses,
+ *  the same move round 34 #19 made for `monthLabel`. A raw `{{ row.week }}` on the same line is
+ *  still caught. The «last week» arm is the `left <= 0` boundary: a deal inside its final week
+ *  must not print «(0 weeks left)». */
+export function weeksLeftBracket(untilWeek: number, atWeek: number): string {
+  const left = untilWeek - atWeek
+  if (left <= 0) return '(last week)'
+  return left === 1 ? '(1 week left)' : `(${left} weeks left)`
+}
+
 /** "Jun 3 – Jun 9" – the week's Monday..Sunday span, both months always named, NO year.
  *
  *  A second shape of `weekRange`, not a rival to it: the two share `weekStart`/`weekEnd`, so they
