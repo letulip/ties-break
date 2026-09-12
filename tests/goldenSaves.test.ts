@@ -1,31 +1,24 @@
+// THE CORPUS SCAN AND THE PER-FIXTURE INVARIANTS WALK – the first of the three walks this file used
+// to make in one process. tests/goldenSavesCorpus.ts holds the fixture enumeration and the whole
+// argument for why there are three files; the two sweeps that left are in goldenSaves-quote.test.ts
+// and goldenSaves-peak.test.ts, under this same describe name, so every full test name across the
+// three is still the name it was.
+//
+// ⚠ THE ONE-FIXTURE-PER-VERSION LAW STAYED HERE, ON PURPOSE. CLAUDE.md's invariant 3 names this
+// path – «`tests/goldenSaves.test.ts` enforces one fixture per version» – and the two cases that
+// enforce it have to see the WHOLE of tests/fixtures/saves/ in a single sweep. They are free (0.00 s
+// both: a `readdirSync` and an `existsSync`), so splitting them would have divided a product
+// guarantee across processes to save nothing. The WALKS are the cost, and the walks are what moved.
+
 import { describe, it, expect } from 'vitest'
-import { readdirSync, readFileSync, existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { existsSync } from 'node:fs'
 import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION, maxMainDraws } from '../src/engine/world'
 import { mainStateConsistent } from '../src/engine/rng'
 import { COACH_TIERS } from '../src/engine/coach'
-import { physicalMean, SKILL_CEILING_MAX } from '../src/engine/development'
 import { LADDER_TRACKS } from '../src/shared/protocol'
 import { daysInBirthMonth } from '../src/shared/dates'
-
-// Backward compatibility is a hard product guarantee: every historical save shape must still
-// load. Each fixture is a world-shaped payload for one schema version; all of them must migrate
-// cleanly to the CURRENT schema. See tests/fixtures/saves/README.md for the rule.
-
-const DIR = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
-const FILES = readdirSync(DIR)
-  .filter((f) => /^v\d+\.json$/.test(f))
-  .sort((a, b) => Number(a.match(/\d+/)![0]) - Number(b.match(/\d+/)![0]))
-
-function load(file: string): unknown {
-  return JSON.parse(readFileSync(`${DIR}/${file}`, 'utf8'))
-}
-
-/** The first fixture whose save carries a college quote through the ladder. Measured 05.09: every
- *  fixture from here on carries exactly one, twenty of them. It is the anti-vacuity floor for the
- *  v61 sweep – see the note there. */
-const FIRST_QUOTE_FIXTURE = 51
+import { DIR, FILES, load } from './goldenSavesCorpus'
 
 /** "This record is numbers all the way down" – the season-history row's size guarantee, asked of the
  *  LEAVES rather than of the top level so a nested value (v46's `byTrack`) is covered rather than
@@ -184,86 +177,4 @@ describe('golden saves corpus', () => {
       }
     })
   }
-
-  // ⭐⭐⭐⭐ v61 – THE FIRST FIELD THIS LADDER HAS DELETED, AND THE DELETE HAS TO BE PROVED ON THE
-  // CORPUS RATHER THAN ON ITS OWN MIGRATION. Round 26 #2, second pass: the owner overruled the rule
-  // that could shut a college place («по-моему в каждой стране есть домашний универ»), so
-  // `CollegeQuote.open` left the type – and a value left behind in a save is worse than one that was
-  // never removed, because `answerFork` used to filter on it. NINE fixtures (v52..v60) carry a fork
-  // offer with `open: true`, so this sweep is not vacuous and its own anti-vacuity line says so.
-  //
-  // ⚠⚠ ONE TEST PER FIXTURE, AND THE SPLIT IS THE FIX ROUND 31 ALREADY MADE ONCE (P-14, 05.09).
-  // This was a single `it` walking the whole corpus, and `migrateSave` runs the WHOLE ladder on each
-  // fixture, so it grew TWICE with every wave: one more fixture, and one more step in every other
-  // fixture's chain. Measured here at v70: this sweep and the v62 one below were 6.3 s and 6.1 s of
-  // the file's 19.0 s of test time – 65 % of it, in two tests, against a 20 s PER-TEST ceiling that
-  // has already killed this exact file (27.08, red four times on `check` with zero assertion
-  // failures). `tests/round31-age-curve.test.ts:298-311` records the same failure and the same fix;
-  // its own words apply here unchanged: «`it.each` is not a loosening – the same assertions run over
-  // the same fixtures. Each one now gets its own budget, a failure names the fixture instead of the
-  // sweep, and the arm cannot cross the line again however many schema versions accumulate.»
-  //
-  // ⚠ AND THE CORPUS IS DELIBERATELY NOT MIGRATED ONCE INTO A SHARED CONSTANT, which was the other
-  // remedy on the table. It would take ~12 s out of the file, and it would put that work at MODULE
-  // level, where no per-test budget and no `hookTimeout` covers it and the reporter attributes it to
-  // no test – which is the defect P-15 is about, one file over. Cheaper is not the same as bounded.
-  it.each(FILES)('⭐⭐⭐⭐ v61: %s carries no college quote `open` flag', (file) => {
-    const migrated = migrateSave(load(file)) as unknown as {
-      fork?: { offer?: { quotes?: Array<Record<string, unknown>> } | null } | null
-    }
-    const quotes = migrated.fork?.offer?.quotes ?? []
-    // ⚠ THE ANTI-VACUITY HALF, RE-AIMED BY P-14 AND STRICTLY STRONGER THAN WHAT IT REPLACES. The
-    // sweep used to count quotes across the whole corpus and assert `>= 9` once; per fixture, the
-    // same claim is made of EACH carrier by name, so a fixture that quietly stopped carrying its
-    // quote is red instead of being absorbed by the other nineteen. Measured 05.09: every fixture
-    // from v51 on carries exactly one, twenty of them – the comment this replaces still said nine.
-    if (Number(file.match(/\d+/)![0]) >= FIRST_QUOTE_FIXTURE) {
-      expect(quotes.length, `${file}: at or past v${FIRST_QUOTE_FIXTURE} and carrying no college quote – the case below would prove nothing`)
-        .toBeGreaterThanOrEqual(1)
-    }
-    for (const q of quotes) {
-      expect('open' in q, `${file}: a shut flag survived the migration`).toBe(false)
-      // ⚠ AND NOTHING ELSE ON THE QUOTE MOVED. The migration deletes one key and re-prices nothing
-      // – `ForkState.offer`'s own doctrine that a career is not re-priced halfway through a bill.
-      expect(typeof q.costPerYearCents, `${file}: the sticker is still there`).toBe('number')
-      expect(typeof q.familyPerYearCents, `${file}: and so is what the family pays`).toBe('number')
-    }
-  })
-
-  it('⚠ ...and the corpus really does carry college quotes for that sweep to check', () => {
-    // The corpus-scale half of the anti-vacuity, kept as its own claim now that the sweep is
-    // per-fixture: there have to BE carriers, or every case above is a loop over an empty array.
-    const carriers = FILES.filter((f) => Number(f.match(/\d+/)![0]) >= FIRST_QUOTE_FIXTURE)
-    expect(carriers.length, 'no fixture is old enough to carry a college quote').toBeGreaterThanOrEqual(9)
-  })
-
-  // ⭐⭐⭐⭐ v62 – EVERY SAVE THIS GAME HAS EVER WRITTEN COMES BACK WITH A PEAK, AND IT IS AT LEAST THE
-  // BODY IT IS CARRYING. `peakPhysical` (the long goodbye step 1) is a RUNNING MAXIMUM, so the one
-  // thing that can never be true of it is that it sits below her current physical mean – a save that
-  // loaded like that would tell step 2 she is at more than 100% of her own peak, i.e. that the
-  // decline runs backwards. The v62 migration reconstructs the value rather than defaulting it, and
-  // this is the corpus-scale check on that: sixty-three fixtures, every historical shape the ladder
-  // has ever produced, through the real loader.
-  //
-  // ⚠⚠ AND WHAT IT CANNOT DO IS STATED RATHER THAN IMPLIED, because the corpus has one blind spot
-  // here: the DEEPEST fixture in it is week 333 – she is 19 – so no golden save has ever reached
-  // `declineStart` and the reconstruction's divisor is 1 on every one of them. Mutation-verified in
-  // both directions: seeding half her build fails this on v0.json, and INVERTING the divisor
-  // (`* shareLeft` for `/ shareLeft`) passes it, which is exactly the hole. So this case is the
-  // loader-side FLOOR – every historical shape survives the ladder and comes back with a usable
-  // number – and the reconstruction's accuracy is measured where a career can actually be old, on
-  // walked careers of 33 / 38 / 41 in tests/peak-physical.test.ts. Neither can do the other's job.
-  //
-  // ⚠ ONE TEST PER FIXTURE – P-14, for the reason written out above the v61 sweep. This one was the
-  // slowest test in the file (6.3 s of 19.0 s, and 10.2 s on the review's machine).
-  it.each(FILES)('⭐⭐⭐⭐ v62: %s carries a peak physical, and it is never below her build', (file) => {
-    const migrated = migrateSave(load(file))
-    expect(typeof migrated.peakPhysical, `${file}: no stored peak`).toBe('number')
-    expect(Number.isFinite(migrated.peakPhysical), `${file}: the peak is not a real number`).toBe(true)
-    // A hundredth of tolerance for the floating-point walk the reconstruction does, and no more.
-    expect(migrated.peakPhysical, `${file}: the peak is BELOW her current body`)
-      .toBeGreaterThanOrEqual(physicalMean(migrated.skills) - 0.01)
-    expect(migrated.peakPhysical, `${file}: the peak is above anything this engine can produce`)
-      .toBeLessThanOrEqual(SKILL_CEILING_MAX)
-  })
 })
