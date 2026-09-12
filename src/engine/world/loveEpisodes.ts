@@ -122,7 +122,9 @@ export function activeEpisode(world: WorldState): LoveEpisode | null {
  *  ⚠ IT WRITES `endedWeek` AND **NOTHING ELSE ANYWHERE**. The spirit shock is T3's, the `'ended'` beat
  *  is T4's and the feed row is T5's – that commit order is the design, not a staging convenience, and
  *  a spirit or `lifeLog` line appearing in this function is the red flag it was written to make
- *  visible. */
+ *  visible. ⚠ ALL THREE HAVE LANDED (T5, 12.09) AND THIS CLAIM IS UNCHANGED BY THAT, which is the
+ *  point of having written it: the mark, the card and the kept row are all `rollEnds`' own lines,
+ *  one call up, and this function still writes exactly one date. */
 export function endEpisode(world: WorldState, week: number): void {
   const open = activeEpisode(world)
   if (open === null) return

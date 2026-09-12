@@ -570,8 +570,16 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
     expect(lifeLogOf(world).some((r) => r.kind === 'met'), 'the fixture holds NO receipt – the negative below is about that')
       .toBe(false)
     expect(lifeLogOf(world), '⚠ an ending he was never told about raises nothing at all').toEqual(before.lifeLog)
-    expect(world.events, '⚠ the feed row and its `lifeKind` stamp are T5\'s').toEqual(eventsBefore)
-    expect(world.events.some((e) => e.lifeKind !== undefined), 'and no row on this tree wears a kind').toBe(false)
+    // ⭐⭐ RE-AIMED 12.09 BY T5, NOT WEAKENED, AND THE OLD MESSAGES ARE KEPT IN THIS NOTE SO THE RE-AIM
+    // READS AS ONE HISTORY. They said «the feed row and its `lifeKind` stamp are T5's» and «no row on
+    // this tree wears a kind», and T5 is the step they were written to be re-read on: both the kept
+    // ending row and the two stamps exist now. WHAT DID NOT MOVE IS THIS FIXTURE'S ANSWER, and that is
+    // why the assertions stand unchanged rather than being re-pointed: the row and the card share ONE
+    // condition – the `'met'` receipt – and this career has none, so an ending the parent was never
+    // told about still writes nothing at all. ⚠ The claim is now about THIS WORLD rather than about
+    // the tree, which is the only thing the messages needed to stop saying.
+    expect(world.events, '⚠ an ending he was never told about writes no feed row either').toEqual(eventsBefore)
+    expect(world.events.some((e) => e.lifeKind !== undefined), 'and no row in THIS career wears a kind').toBe(false)
   })
 })
 

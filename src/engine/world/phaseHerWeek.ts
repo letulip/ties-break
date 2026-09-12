@@ -280,6 +280,13 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        all (world/lifeBeat.ts §8). The frozen capture (41550 / e6b0c709) is untouched by
   //        construction. ⚠ AND IT WRITES ONE DATE AND NOTHING ELSE – the shock is T3, the `'ended'`
   //        beat is T4, the feed row is T5; on this tree an ending is silent on every surface.
+  //        ⭐⭐ RE-AIMED AT v75 T5 (12.09) AND THE SENTENCE ABOVE IS KEPT AS THE RECORD OF THE COMMIT
+  //        ORDER. All three steps have landed, so the last clause has stopped being true: this call
+  //        now writes the date, sets `world.spiritShock`, raises the told-now `'ended'` card and
+  //        appends its kept feed row (stamped `lifeKind: 'ended'`) – the last three behind the
+  //        `'met'` receipt, so an ending the parent was never told about is still silent here and
+  //        surfaces at `deliverKnownPartner` instead. ⚠ WHAT IT STILL DOES NOT WRITE IS `world.spirit`
+  //        – `accrueSpirit`, five lines down, stays the one writer of it in the engine.
   rollEnds(world)
   rollArrival(world)
   // ⭐⭐ 1c-told (v74, the private life wave 3 – T6): AND THE WEEK HE IS TOLD ABOUT IT.

@@ -2351,6 +2351,34 @@ const MET_EVENT: Record<'told' | 'found-out', Record<LoveEpisode['wants'], strin
   },
 }
 
+/** ⭐⭐⭐ v75 T5 – THE ENDING'S OWN KEPT ROW, ON THE TOLD-NOW PATH. The album's other half: wave 3
+ *  wrote «there is someone» and this is the week that stops being true, for a parent who already knew
+ *  there was somebody.
+ *
+ *  ⚠⚠ IT IS BUILT HERE RATHER THAN IN T4 BECAUSE THE TREE SAID SO IN NINE PLACES AND THE BRIEF SAID
+ *  SO IN ONE. `rollEnds` carried «NO FEED ROW ON THIS PATH (T5's, per the commit order)», and
+ *  `loveEpisodes.ts`, `phaseHerWeek.ts`, `tests/spirit.test.ts`, `tests/wave4-ends.test.ts` and
+ *  `tests/wave4-ended-beat.test.ts` all said the same thing in their own words. ⚠ THE T5 BRIEF
+ *  NEVERTHELESS CALLS THIS ROW «T4's» and asks only for a STAMP on it – that is the one sentence of
+ *  the brief this step does not build, because the row it names does not exist. Reported rather than
+ *  worked around, which is the wave's standing rule; see the commit message.
+ *
+ *  ⚠⚠ WITHOUT IT THE COLUMN IS SILENT ON THE LOUDEST SCENE THE LAYER HAS. The told-now ending raised
+ *  a card and, once answered, an `'info'` reply row – so the feed said what the PARENT did and never
+ *  what happened. A glyph column bought for navigation («met someone · it ended») that cannot mark
+ *  «it ended» for the common case is a column that half exists.
+ *
+ *  ⚠ ONE LINE, NO READ AXIS, NO BOND COLUMN – and both absences are ruled rather than skipped.
+ *  Ruling I puts her read on «the HEADING and the told-late feed row» and enumerates its own surfaces
+ *  as «4 heading cells plus 2 feed rows»; a read on this row would be a third surface, which is a
+ *  ruling change and not a builder's. The bond band is `MET_EVENT`'s column and `ENDED_LATE_EVENT`
+ *  refused to guess at it for T6 – this refuses the same way, for the same reason.
+ *
+ *  ⚠ IT STATES WHAT THE WEEK HELD AND NOTHING ELSE: no reason, no fault, no channel the sim does not
+ *  hold (the two-tier honesty law), no name, no gender, no `amountCents` and no price in any word of
+ *  it (rule 4). ⚠ A DRAFT, AND T6 OWNS THE MATRIX – invariant 4 makes the final wording the owner's. */
+const ENDED_NOW_EVENT = 'There was someone in her life, and this week there is not.'
+
 /** ⭐⭐⭐ v75 T4 – THE TOLD-LATE ROW, AND IT IS THE ROW THAT REPLACES `MET_EVENT` ON THIS PATH rather
  *  than a row added beside it. An episode that was over before its `knownWeek` arrived used to tell
  *  the parent NOTHING at all (wave 3 read the ended row through `knownPartner` and got null); ruling
@@ -2445,6 +2473,12 @@ export function deliverKnownPartner(world: WorldState): void {
       text: ENDED_LATE_EVENT[
         drawEndsRead(world.seed, due.endedWeek, temperamentOf(world))
       ],
+      // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED. `WorldEvent.lifeKind` (T1's field) is what lets the feed's
+      // glyph column tell one life row from another; this is the told-late ENDING row, so `'ended'`.
+      // ⚠ IT IS THE BEAT KIND AND NOT THE REGISTER: told-now and told-late are two wordings of one
+      // piece of news, and a column that marked them differently would be telling the player which of
+      // the two scenes he got, which is a fact about the LAG and not about her life.
+      lifeKind: 'ended',
     })
     // ⚠⚠ AND THE REGISTER IS NOT WRITTEN ONTO THE ROW. `beatEndsRegister` asks the `'met'` receipt
     // and finds none, which is what makes this card the told-late one – now and twenty seasons from
@@ -2460,6 +2494,12 @@ export function deliverKnownPartner(world: WorldState): void {
     // keeps `accrueFinance` from ever seeing this row.
     // ⚠ THE EPISODE'S OWN `wants` (v74 T7) – the read, unmarked, in the one row the album keeps.
     text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'][due.wants],
+    // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED, on wave 3's own arrival row. ⚠⚠ THE SENTENCE ABOVE DID NOT
+    // MOVE AND MUST NOT (invariant 4): this adds a MACHINE-READABLE field beside it, which is exactly
+    // what T1's field comment said the two write sites would do. ⚠ AND IT IS NOT A BACK-FILL: rows
+    // written before this commit stay unstamped for T1's stated reason, and the column's `?? 'met'`
+    // default is what keeps them wearing the same 🤍 they always wore.
+    lifeKind: 'met',
   })
   // ⚠ THE SAME TICK, AND THE ORDER IS THE READING: the feed row is what HAPPENED and the beat is what
   // the parent is being asked about it, so the news is on the record before the card can be answered.
@@ -2665,7 +2705,12 @@ export function rollSmallTalk(world: WorldState): void {
 // receipt already exists (ruling B's split of responsibility). WHAT DID NOT: `world.spirit`, `events`
 // and the `lifeKind` stamp are still not this function's to touch – the POINTS are `accrueSpirit`'s,
 // the ending's own kept feed row and the per-kind glyph are T5's, and any of those appearing here is
-// still the defect this note exists to make visible. ⚠ AND THE TOLD-LATE HALF IS NOT HERE AND CANNOT
+// still the defect this note exists to make visible.
+// ⭐⭐ RE-AIMED A THIRD TIME BY T5 (12.09), AND THE TWO PARAGRAPHS ABOVE ARE KEPT WHOLE. WHAT MOVED:
+// `events` – the told-now ending's kept row and its `lifeKind: 'ended'` stamp are written here now,
+// behind the very same `'met'` receipt as the card, so the album and the queue can never disagree
+// about which scene this week was. WHAT DID NOT: `world.spirit`, which is the one item this note has
+// been guarding since T2 and is the only one left on the list. ⚠ AND THE TOLD-LATE HALF IS NOT HERE AND CANNOT
 // BE: it fires on a week this function has no way to see (`knownWeek`, which may be seasons off), so
 // §6 owns it – see `deliverKnownPartner`.
 
@@ -2739,6 +2784,10 @@ export function endsHazardFor(temperament: Temperament): number {
  *  `raiseLifeBeat(world, 'ended', …)` on the last line, guarded by the `'met'` receipt (ruling B).
  *  WHAT STILL DID NOT: `world.spirit` and `events`. A feed row or a spirit point appearing in this
  *  function is the defect the note is still watching for; the ending's own kept row is T5's.
+ *  ⭐⭐ ...AND T5 IS THE LAST OF THEM, SO THE LIST IS DOWN TO ONE AND THE WHOLE HISTORY STAYS READABLE.
+ *  WHAT MOVED: `events` – the kept told-now row, stamped `lifeKind: 'ended'`, behind the same receipt
+ *  as the card. WHAT STILL DID NOT AND NEVER WILL: `world.spirit`. `accrueSpirit` is the one writer
+ *  of it in the engine and that is the property these three re-aims have been protecting all along.
  *
  *  ⚠⚠ THE MARK IS SET HERE AND THE ARITHMETIC IS DONE THERE, WHICH IS THE WHOLE SPLIT (ruling C, and
  *  the T3 brief's «who sets it, who applies it»). This function knows the WEEK an attachment ended;
@@ -2781,7 +2830,34 @@ export function rollEnds(world: WorldState): void {
   // one honest late row. The romance the parent was never told about is not lost – it is deferred to
   // the week he hears of it, which is the whole reason `loveEpisodes` is a list.
   //
-  // ⚠ NO FEED ROW ON THIS PATH (T5's, per the commit order) and NO SPIRIT POINT (`accrueSpirit`'s,
-  // four calls later). What this line adds is the CARD, and nothing else.
-  if (hasBeatFor(world, over.id, ['met'])) raiseLifeBeat(world, 'ended', over.id)
+  // ⭐⭐ RE-AIMED BY T5 (12.09) AND THE OLD SENTENCE IS KEPT SO THE RE-AIM READS AS ONE HISTORY. It
+  // said «NO FEED ROW ON THIS PATH (T5's, per the commit order) and NO SPIRIT POINT», and T5 is the
+  // step it was written to be re-read on. WHAT MOVED: the kept `'life'` row below, stamped `'ended'`.
+  // WHAT DID NOT: `world.spirit` – the POINTS are still `accrueSpirit`'s, four calls later in this
+  // same tick, and a spirit delta appearing in this function is still the defect the note watches for.
+  //
+  // ⚠⚠ THE ROW AND THE CARD SHARE ONE CONDITION AND MUST GO ON SHARING IT. Behind the receipt they
+  // both fire; without it BOTH wait, and §6 raises the told-late pair on `knownWeek` instead. A row
+  // written here unconditionally would tell a parent about a romance he has never heard of, in the
+  // week it ends – which is precisely the news `deliverKnownPartner` exists to deliver honestly, one
+  // sentence later in her story rather than two.
+  //
+  // ⚠ THE ORDER IS THE READING, as it is in §6: the feed row is what HAPPENED and the card is what he
+  // is being asked about it, so the news is on the record before the card can be answered.
+  if (!hasBeatFor(world, over.id, ['met'])) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    // ⚠ KEPT. `pruneEvents` drops ordinary rows at sixty weeks and a career reads its own life back
+    // seasons later; the week it ended is not a line the album may be missing, for `MET_EVENT`'s own
+    // reason one scene on.
+    keep: true,
+    // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
+    // keeps `accrueFinance` from ever seeing this row.
+    text: ENDED_NOW_EVENT,
+    // ⭐ THE KIND, STAMPED – the same `'ended'` the told-late row carries, because it is the same
+    // piece of news in the other register (see that row's note).
+    lifeKind: 'ended',
+  })
+  raiseLifeBeat(world, 'ended', over.id)
 }

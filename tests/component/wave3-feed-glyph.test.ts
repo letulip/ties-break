@@ -152,6 +152,14 @@ describe('T9 §B – the column is wired for his pick, and cannot be half-filled
     // ⚠ RE-AIM NOTE FOR WAVE 4: when the endings row arrives (§5a's «it ended», and the wedding and
     // the birthday ask after it), its kind is added to `LIFE_ROW_KINDS` and THIS line moves with it –
     // that is the roster being the place a new life row gets noticed, not a guard being weakened.
+    // ⭐⭐ THE ENDING ARRIVED AT v75 T5 (12.09) AND THE PREDICTION ABOVE WAS WRONG, WHICH IS WORTH MORE
+    // THAN A SILENT EDIT. It did NOT join this roster, because it is not a `WorldEventType` at all:
+    // T1 answered the T9 note's «new members or a field on the row» the FIELD way, so an ending is a
+    // `'life'` row carrying `lifeKind: 'ended'`. This roster therefore still reads `['life']`, and
+    // stays the guard against a `WorldEventType` rename that it always was. ⚠ THE PER-KIND ROSTER IS
+    // ITS OWN (`LIFE_BEAT_ROW_KINDS`, same file) and tests/component/wave4-feed-glyph-kind.test.ts §C
+    // is where a new life-row KIND gets noticed instead. ⚠ NOTHING IN THIS FILE WAS WEAKENED OR
+    // RE-POINTED: the whole storey below is untouched and still asserts the row-level column.
     expect([...LIFE_ROW_KINDS]).toEqual(['life'])
     for (const key of Object.keys(LIFE_ROW_EMOJI)) {
       expect(LIFE_ROW_KINDS as readonly string[], `«${key}» is a life row kind`).toContain(key)

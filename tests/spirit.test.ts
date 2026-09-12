@@ -1026,6 +1026,12 @@ describe('the fence this step is judged by', () => {
     // week the effective baseline drops back to the flat one, through the standing return rule and
     // through no new code. It writes one date, takes no `Rng` and raises nothing – the shock is T3,
     // the beat T4, the feed row T5 – so `accrueSpirit`'s own reading is untouched by its presence.
+    // ⭐⭐ ALL THREE HAVE LANDED (T5, 12.09) AND THE SENTENCE ABOVE IS KEPT AS THE RECORD OF THE COMMIT
+    // ORDER RATHER THAN EDITED AWAY. `rollEnds` now also sets `world.spiritShock`, raises the told-now
+    // `'ended'` card and appends its kept feed row. ⚠ WHAT THIS PIN IS ABOUT IS UNCHANGED BY ANY OF
+    // THAT, which is why the assertion did not move: none of the three touches `world.spirit`, so
+    // `accrueSpirit` is still the one writer of it and still reads a world no earlier call in the gap
+    // has perturbed. A spirit delta appearing in `rollEnds` is the thing this note still watches for.
     //
     // ⚠ NOTHING IS WEAKENED: the form is the same ORDERED LIST, one element LONGER, so a FIFTH
     // statement sliding into the gap, a reorder of these four, or a removal of any one of them is

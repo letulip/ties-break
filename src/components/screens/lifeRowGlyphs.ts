@@ -21,7 +21,7 @@
 // No type moves, no renderer moves, no test is re-aimed: `HomeScreen.vue` spreads this map into its
 // own `EVENT_EMOJI` and `eventPrefix()` reads whatever is there, and the feed test asserts the row
 // against THIS MAP rather than against a hard-coded glyph.
-import type { WorldEventType } from '../../shared/protocol'
+import type { LifeBeatKind, WorldEventType } from '../../shared/protocol'
 
 /** The feed row kinds that are about HER LIFE rather than about her tennis or the family's money.
  *
@@ -73,6 +73,9 @@ export type LifeRowGlyphs = Record<string, never> | Record<LifeRowKind, string>
 // read it at T5, which keys on `lifeKind ?? 'met'` so a wave-3 row keeps 🤍 untouched – and the
 // GLYPHS for the new kinds remain the owner's picks (§5a: «no agent adds or swaps one unasked»),
 // proposed to him with T6's package and landing in `PICKS` after his word, never before.
+// ⚠ T5 IS HERE (12.09) AND IT IS THE SECOND STOREY BELOW THIS RECORD, NOT AN EDIT TO IT. The column
+// now reads `lifeKind ?? 'met'` exactly as promised, and `PICKS` did not move by a byte – the per-kind
+// picks are their own record, shipped EMPTY, with his white heart as the fallback under all of them.
 const PICKS = {
   life: '🤍',
 } satisfies LifeRowGlyphs
@@ -80,3 +83,103 @@ const PICKS = {
 /** The column the feed reads. `Partial<…>` is the honest type for the READER – a kind may have no
  *  glyph – while `PICKS` above carries the empty-or-total gate for the WRITER. */
 export const LIFE_ROW_EMOJI: Partial<Record<LifeRowKind, string>> = PICKS
+
+// =================================================================================================
+// ⭐⭐⭐ v75 T5 – THE SECOND STOREY: A GLYPH PER LIFE **KIND**, OVER THE ROW-LEVEL MARK ABOVE
+// =================================================================================================
+//
+// The T9 note above ends «Per-kind marks need either new `WorldEventType` members or a field on the
+// row – a design call that is his»; T1 answered it the FIELD way (`WorldEvent.lifeKind?`) and this
+// is the column that reads it. ⚠⚠ NOTHING ABOVE THIS LINE MOVED, AND THAT IS DELIBERATE RATHER THAN
+// LAZY: `PICKS` is the owner's data, his 11.09 white heart is in it, and a T5 that re-shaped the
+// record his pick lives in would be editing his answer while claiming to read it.
+//
+// ⚠⚠ TWO ROSTERS, ON PURPOSE, AND THEY ANSWER TWO DIFFERENT QUESTIONS. `LIFE_ROW_KINDS` is
+// `WorldEventType`-shaped and asks «which feed rows are about her life» – it is what keeps the file
+// honest against a `WorldEventType` rename, and collapsing it into this one would throw that guard
+// away. `LIFE_BEAT_ROW_KINDS` is `LifeBeatKind`-shaped and asks the finer question `shared/protocol/
+// events.ts` names in the `lifeKind` field's own comment: «WHICH life beat it was is a second, finer
+// question». One roster could not carry both without one of the two `satisfies` clauses going.
+//
+// ⚠ IT IS THE NARROWER ROSTER OF THE FIVE `LifeBeatKind`s, and the field's own note says why a
+// narrower one is honest HERE while it would not be on the wire: `'small-talk'` raises no feed row
+// at all (§3c: the `lifeLog` row IS the record) and the two fork kinds write `'info'` answer rows,
+// not `'life'` ones. Two kinds reach a `'life'` row today – `'met'` (wave 3's delivery) and
+// `'ended'` (wave 4's, both registers) – and §5a's wedding joins them at step 6.
+
+/** The life-beat kinds that can reach a `'life'` feed row, and therefore the kinds a glyph can be
+ *  picked for. ⚠ `satisfies` KEEPS IT HONEST BOTH WAYS, exactly as the roster above: a kind renamed
+ *  or dropped from `LifeBeatKind` fails the build on this line instead of rotting into a lookup that
+ *  never hits, and a new kind that starts writing rows has to be added here to be markable. */
+export const LIFE_BEAT_ROW_KINDS = ['met', 'ended'] as const satisfies readonly LifeBeatKind[]
+
+export type LifeBeatRowKind = (typeof LIFE_BEAT_ROW_KINDS)[number]
+
+/** ⚠⚠ THE SAME TOTALITY GATE, ONE STOREY UP: **empty, or total – never half-filled.** Identical
+ *  shape and identical argument to `LifeRowGlyphs` (read its note), applied to the per-kind record:
+ *  `{}` satisfies the `never` arm and costs nothing, and the moment ONE per-kind glyph lands the
+ *  literal has to satisfy the other arm, which names every markable kind. */
+export type LifeBeatGlyphs = Record<string, never> | Record<LifeBeatRowKind, string>
+
+// ⚠⚠ THE OWNER'S PER-KIND PICKS GO HERE AND NOWHERE ELSE, AND IT SHIPS **EMPTY** – who-she-is §5a,
+// «the set is his to pick, and no agent adds or swaps one unasked», which CLAUDE.md's invariant 4
+// extends to marks because a mark on a row IS what the row says. T5 ships the COLUMN and hands him
+// candidates with the wave's package; this record fills after his word and not before.
+//
+// ⚠⚠ AND «EMPTY» IS WHY EVERY ROW STILL WEARS HIS WHITE HEART TODAY RATHER THAN NOTHING. The reader
+// below falls back to `LIFE_ROW_EMOJI.life` – his own 11.09 pick, read out of `PICKS` rather than
+// copied – so an ending row draws exactly what it drew before this file grew a second storey. The
+// fallback is the whole reason a per-kind column could be built without touching his data: a kind
+// with no pick of its own is not unmarked, it is marked the way the life row has always been marked.
+//
+// ⚠ FILLING IT IS ONE LINE, as upstairs: `ended: '…',` inside this record, and nothing else anywhere.
+//
+// -------------------------------------------------------------------------------------------------
+// ⭐ THE CANDIDATES T5 PUT TO HIM, RECORDED HERE SO THE REASONING IS BESIDE THE LINE HE WOULD EDIT.
+// ⚠⚠ THESE ARE PROPOSALS AND NOT PICKS. They live in a COMMENT precisely because the record below is
+// his; none of them is in force, and the day he rules, exactly one of them (or something else
+// entirely) becomes one line inside the braces. Read in his own register for 🤍 – lowest possible
+// volume, monochrome, gender-free, honest in every register the row has.
+//
+//   `'ended'`, first choice   🩶  the grey heart: his own mark one shade down, so the column reads as
+//                                 one thread rather than two symbols – the same shape, gone quiet,
+//                                 with none of 🖤's mourning or 💔's volume. ⚠ Unicode 15.0 (2022),
+//                                 so an older phone may draw a box; that is the one thing to weigh.
+//   `'ended'`, no-risk alt    ♡  the white heart SUIT (Unicode 1.1, renders everywhere): an outline
+//                                 of the mark the arrival wears, the same thread emptied. ⚠ It is a
+//                                 text glyph, so it draws thinner and narrower than the emoji beside
+//                                 it – quieter still, and slightly out of family.
+//   `'ended'`, leave it       🤍  do nothing: the fallback already puts his heart on both rows, and
+//                                 an ending sits directly under the arrival it ends, so the thread
+//                                 stays findable. Costs nothing and is a real answer.
+//
+//   `'met'`                   –   NOTHING PROPOSED. 🤍 is already the arrival's mark, so a pick here
+//                                 would be re-picking what he picked. ⚠⚠ AND IT HAS A CONSEQUENCE
+//                                 WORTH KNOWING BEFORE HE EVER DOES: T1 took no back-fill, so every
+//                                 historical row resolves through the `?? 'met'` default – a `'met'`
+//                                 glyph would therefore repaint every life row in every save ever
+//                                 written, not only the new ones.
+//
+//   the wedding's 💍          –   NOT PROPOSED NOW. Step 6's, with the row it marks.
+// -------------------------------------------------------------------------------------------------
+const KIND_PICKS = {} satisfies LifeBeatGlyphs
+
+/** The per-kind column the feed reads. ⚠ TYPED OVER THE **WHOLE** `LifeBeatKind`, not over the
+ *  narrow roster, and that is the reader/writer split the file already makes one storey up: a caller
+ *  holds `WorldEvent.lifeKind`, which is any of the five, and a map that refused to be asked about
+ *  `'small-talk'` would force a cast at the only call site. `KIND_PICKS` carries the gate for the
+ *  WRITER over the narrow roster; this is the honest type for the READER. */
+export const LIFE_BEAT_EMOJI: Partial<Record<LifeBeatKind, string>> = KIND_PICKS
+
+/** ⭐⭐⭐ WHAT A `'life'` ROW WEARS – the one road, and the `?? 'met'` in it is T1's own promise kept.
+ *
+ *  ⚠⚠ AN UNSTAMPED ROW READS AS `'met'`, WHICH IS NOT A GUESS ABOUT WHAT IT WAS. T1 deliberately took
+ *  no back-fill («stamping `'met'` onto the `'life'` rows an old save happens to hold would be
+ *  re-deriving a fact from prose and calling the guess a record»), so no historical row carries a
+ *  kind – and the DEFAULT here is what keeps that free: every row ever written before T5 resolves to
+ *  the `'met'` cell, which is empty, which falls back to the white heart it already wore. The
+ *  fallback is what makes the default harmless; a `'met'` pick landing one day is the moment to look
+ *  at this line again, and the test file says so beside its arm. */
+export function lifeRowGlyph(lifeKind: LifeBeatKind | undefined): string | undefined {
+  return LIFE_BEAT_EMOJI[lifeKind ?? 'met'] ?? LIFE_ROW_EMOJI.life
+}

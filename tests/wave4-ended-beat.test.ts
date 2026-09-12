@@ -298,7 +298,17 @@ describe('wave 4 T4 A – who raises the card', () => {
     expect(raised.map((r) => r.kind), '⭐ one `met` and then one `ended`, in that order').toEqual(['met', 'ended'])
     expect(pendingLifeBeat(world)?.kind, 'and the ending is what is waiting').toBe('ended')
     // ⚠ AND `rollEnds` STILL WRITES NO FEED ROW – that is T5's, and the commit order is the design.
-    expect(lifeRows(world).map((e) => e.text), 'only wave 3\'s own delivery row is in the feed').toEqual([MET_TOLD_OPEN])
+    // ⭐⭐ RE-AIMED 12.09 BY T5, NOT WEAKENED, AND THE SENTENCE ABOVE IS KEPT AS THE RECORD. T5 is the
+    // step this line was written to be re-read on: the told-now ending now writes its OWN kept row,
+    // behind the same `'met'` receipt as the card. WHAT MOVED: the feed holds two rows here instead of
+    // one. WHAT DID NOT AND IS THE POINT OF THE ASSERTION: wave 3's delivery sentence is still the
+    // FIRST of them, byte unchanged (invariant 4), and the ending did not overwrite or re-word it.
+    // ⚠ THE ENDING'S OWN SENTENCE IS NOT PINNED HERE – it is a T6 draft, and tests/wave4-life-row
+    // -stamp.test.ts §C owns the claims about it.
+    const feedNow = lifeRows(world)
+    expect(feedNow.map((e) => e.text)[0], 'wave 3\'s own delivery row is still there, unchanged').toBe(MET_TOLD_OPEN)
+    expect(feedNow, '⭐ and the ending added one row of its own beside it').toHaveLength(2)
+    expect(feedNow.map((e) => e.lifeKind), 'each stamped with the kind the glyph column reads').toEqual(['met', 'ended'])
   })
 
   it('⚠⚠ he was NEVER told: the ending raises NOTHING, and the row waits for `knownWeek`', () => {

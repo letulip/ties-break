@@ -263,6 +263,12 @@ export interface WorldEvent {
    *  career, which is what makes the v75 bump provably empty. It rides that bump only because it
    *  lands in the same commit: by itself it would have moved no number at all, exactly as commit
    *  2763caa added the whole `entry` offer family with the version left at 36.
+   *  ⭐⭐ T5 IS HERE (12.09) AND THE COUNT WAS THREE, NOT TWO – the sentence above is kept as T1's own
+   *  record and this is the correction. The ending has a feed row in EACH of its two registers
+   *  (told-now, from `rollEnds`; told-late, from `deliverKnownPartner`), and T4 had shipped only the
+   *  second – so T5 built the first as well as stamping all three. ⚠ BOTH ENDING ROWS CARRY THE SAME
+   *  `'ended'`: the register is a fact about the LAG rather than about her life, and a column that
+   *  marked the two apart would be telling the player which scene he happened to get.
    *
    *  ⚠ AND IT REACHES THE UI BY CONSTRUCTION rather than by a wire decision. `snapshotEvents`
    *  (engine/world/snapshot.ts) puts the event ROWS THEMSELVES on the snapshot – there is no

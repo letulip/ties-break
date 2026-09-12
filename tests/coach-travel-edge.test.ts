@@ -72,6 +72,14 @@ describe('the byte-identity of a career that does not travel', () => {
     // nothing until T5, so no row in any of these three careers carries it and `events` is one of the
     // keys measured byte-identical. A schema bump whose second half is invisible to a whole-world hash
     // is exactly what «optional and not a schema move on its own» means, stated as a measurement.
+    // ⭐⭐⭐ ANSWERED 12.09 BY T5, AND THE PARAGRAPH ABOVE IS KEPT AS THE RECORD OF WHAT A SCHEMA MOVE
+    // COST BY ITSELF. T5 writes the field at all three `'life'` write sites, so it DOES now reach a
+    // career: `eliteGrinder`'s delivered `'met'` row took a stamp, her `events` hash moved, and this
+    // whole ladder was re-stamped (the block at the head of tests/coachTravelEdgeFixtures.ts). ⚠ AND
+    // THIS RUNG IS STILL GREEN BESIDE THAT, which is the informative combination: `careerHashAtSchema`
+    // peels `spiritShock` and rolls the number, and the stamp rides inside `events` on BOTH sides of
+    // the identity – so «v75 is v74 plus one key» is unchanged by a field that was never a key of the
+    // world. ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
     expect(careerHashAtSchema(5, 0, 74), '25k · middle coach · grinder').toBe(PRE_V75.middleGrinder)
     expect(careerHashAtSchema(8, 0, 74), '120k · elite coach · grinder').toBe(PRE_V75.eliteGrinder)
     expect(careerHashAtSchema(0, 1, 74), '8k · self-coached · player').toBe(PRE_V75.selfTravelling)
