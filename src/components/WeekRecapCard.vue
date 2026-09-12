@@ -1215,6 +1215,30 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
   }
 }
 
+/* ⭐ ROUND 41 #13 – THE DESKTOP BAND CUTS HEADS OFF, AND THE SHAPE IS WHY. From 768 (P2-5 above) this
+   box is WIDER than it is tall (384x286 at 768, up to 640x286 at 1280) while most of what rotates
+   through it is square or near-square (the training/off-1..3 weeks, the travel-home and rehab
+   masters – src/art/weeks.ts), so under `cover` the overflow is spent almost entirely on the
+   VERTICAL axis and the shared rule's default 50% 50% (`.week-art img`, style.css) throws away as
+   much off the top of a portrait as the bottom. Same reasoning `MatchScene.vue`'s
+   `.scene--fill .scene-art` already banked on its own wide box ("TOP, NOT BOTTOM… anchoring at the
+   top keeps her head complete and spends the crop at the foot"): bias the window upward so a head
+   near the top of the frame survives and the crop lands on whatever is beneath it instead.
+   ⚠ GATED TO THE SAME 768 THIS CARD'S OWN RECTANGLE STARTS AT – below it the band is close to its
+   own 390/286 shape (343x251 at 375) and nothing here was asked to move; the phone cascade is
+   untouched by construction rather than by a second breakpoint number to keep in step.
+   ⚠ AND IT IS THE DEFAULT, NOT A REPLACEMENT FOR THE VACATION STEER RIGHT BELOW. `object-position`
+   takes one axis pair, so a scene that needs the HORIZONTAL steer (`.recap-art-vacation img`) still
+   has to win outright rather than blend with this one. Both selectors are scoped to this file and
+   carry the identical `[data-v-*]` bump, so they tie on specificity with each other – it is SOURCE
+   ORDER that settles it, which is why this rule stays above that one: the vacation scene's own
+   steer is declared last and wins the tie. */
+@media (min-width: 768px) {
+  .recap-art img {
+    object-position: 50% 20%;
+  }
+}
+
 /* ⭐ ROUND-17 #26 – the vacation weeks, and only those. Scoped, so it beats the shared
    `.week-art img` rule in style.css without either of them having to know about the other. */
 .recap-art-vacation img {
