@@ -102,14 +102,21 @@ describe('round 41 #28 – the build ring on a tile that builds to order', () =>
     wrapper.unmount()
   })
 
-  it('the order week reads 0, and a stale over-due row clamps at 100 – never past the circle', async () => {
+  it('the order week reads 0, and a finished circle is never shown – his second word on the item', async () => {
     const fresh = await mountShop(orderedAt('r41-ring-0', 0))
     expect((await shelfRow(fresh, 'The yacht')).find('.build-ring b').text()).toBe('0')
     fresh.unmount()
-    // Week surgery past the due date leaves readyWeek set (no tick ran to deliver) – the reading
-    // must clamp, not print 128%. The real screen can meet this for one render on a load.
+    // ⚠ RE-AIMED THE DAY IT WAS WRITTEN, on the owner's own follow-up: «когда заполнен на 100%
+    // (построено) больше не надо показывать, только в процессе стройки». The first cut asserted a
+    // stale over-due row CLAMPS at 100; his word is that a full circle never renders at all – the
+    // week surgery past the due date (readyWeek still set, no tick ran to deliver) now shows a
+    // clean tile, and the delivery tick's own clearing of readyWeek is covered by r29 §2.
     const stale = await mountShop(orderedAt('r41-ring-over', 200))
-    expect((await shelfRow(stale, 'The yacht')).find('.build-ring b').text()).toBe('100')
+    expect((await shelfRow(stale, 'The yacht')).find('.build-ring').exists(), 'no dial at 100%').toBe(false)
+    // The last week UNDER the line still shows – 155 of 156 is in-progress, 99%.
+    const lastWeek = await mountShop(orderedAt('r41-ring-155', 155))
+    expect((await shelfRow(lastWeek, 'The yacht')).find('.build-ring b').text()).toBe('99')
+    lastWeek.unmount()
     stale.unmount()
   })
 

@@ -2572,9 +2572,12 @@ function shopRowCornerAction(row: ShopRowView): boolean {
               <!-- ROUND 41 #28 – the build ring, top-right of the painting, only while the engine
                    says the thing is still being built. The corner choice is the coordinator's
                    (the scrim's name gradient owns the bottom) – one line to move if his eye says
-                   otherwise. -->
+                   otherwise. ⚠ AND NEVER AT 100% – his second word on the item: «когда заполнен на
+                   100% (построено) больше не надо показывать, только в процессе стройки». A full
+                   circle is not progress, it is a delivery the tick has not banked yet (the stale
+                   over-due load) – the tile goes clean instead of wearing a finished dial. -->
               <ProgressRing
-                v-if="isBuilding(row) && row.buildWeeks"
+                v-if="isBuilding(row) && row.buildWeeks && buildProgress(row) < 1"
                 class="build-ring"
                 :size="36"
                 :value="buildProgress(row)"
