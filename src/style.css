@@ -4844,7 +4844,13 @@ tr.kid-row td {
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  color: var(--ink-dim);
+  /* ⚠ ROUND 41 (12.09): the a11y baseline's own entry called this «DEBT … 4.388:1 against AA's
+     4.5:1 … Same one-token fix» – and the round's card-padding token nudged the layout enough for
+     axe's borderline sampling to double the firing set at the final gate. The debt is PAID, not
+     re-baselined: --muted is the app's own secondary ink and clears AA on this ground; the two
+     CoachMarket entries left e2e/a11y-baseline.json with this line. Money's sibling debt (same
+     colour, different class) is deliberately untouched – not this gate's red. */
+  color: var(--muted);
 }
 .tier-range {
   margin-left: auto;
@@ -4964,7 +4970,13 @@ tr.kid-row td {
   opacity: 0.45;
 }
 .cm-row.blocked .cm-name {
-  color: var(--ink-dim);
+  /* ⚠ ROUND 41 (12.09): the elite shelf ×1.25 (the owner's own «единая элит-полка вверх») made
+     blocked rows APPEAR on the axe fixture's career, and their --ink-dim read 4.13:1 against AA's
+     4.5 on 14.5px bold. --muted keeps the row visibly dimmer than a live one (whose name is
+     brighter still) and clears AA – the same debt-paid move as .tier-count, entered nowhere in the
+     baseline. The row's dashed border, washed art and dimmed price carry the «blocked» reading;
+     legibility is not the thing a blocked row is allowed to lose. */
+  color: var(--muted);
 }
 /* ...and none of the three above may reach the coach she actually has - see the block above. */
 .cm-row.current.blocked {
@@ -5176,7 +5188,8 @@ tr.kid-row td {
   color: var(--muted);
 }
 .cm-row.blocked .cm-price {
-  color: var(--ink-dim);
+  /* Round 41's same AA payment as .cm-name above – the pair fires together on axe. */
+  color: var(--muted);
 }
 /* ⭐ ROUND-21 #11: never on the coach she has – see the `.cm-row.current` block above. */
 .cm-row.current.blocked .cm-price {
