@@ -1174,7 +1174,19 @@ function isBuilding(row: ShopRowView): boolean {
  *  art corner of every tile that builds to order – academy stages, boats, planes alike, because
  *  the predicate is the engine's `readyWeek`/`buildWeeks` pair and never a family list.
  *  Progress is derived, zero state: the weeks already served over the row's own `buildWeeks`.
- *  Clamped both ends – a row seen on its order week reads 0, never a negative. */
+ *  Clamped both ends – a row seen on its order week reads 0, never a negative.
+ *
+ *  ⚠ AND IT HIDES AT 100%, his second word on the item: «когда заполнен на 100% (построено) больше
+ *  не надо показывать, только в процессе стройки». The markup's `v-if` carries it. The quote lives
+ *  HERE rather than beside that `v-if` because `tests/template-copy-rules.test.ts` forbids Cyrillic
+ *  anywhere in the markup block – strings and comments alike – and its own failure message names
+ *  this remedy: move the owner's quote to the script side.
+ *
+ *  ⚠⚠ AND THE OPENING TAG MAY NOT BE SPELLED IN THIS FILE'S SCRIPT AT ALL, which is the second half
+ *  of the same lesson and cost a red run to learn. That test slices from the FIRST literal opening
+ *  tag to the LAST closing one, so one in a script comment moves the start marker up and hands the
+ *  scan ~670 lines of script – whereupon every owner quote in this block reads as an offender. Same
+ *  family as round 36 P2-1's «neither HTML comment delimiter may be spelled inside one». */
 function buildProgress(row: ShopRowView): number {
   if (row.readyWeek === null || !row.buildWeeks) return 0
   const served = row.buildWeeks - (row.readyWeek - week.value)
@@ -2591,10 +2603,11 @@ function shopRowCornerAction(row: ShopRowView): boolean {
               <!-- ROUND 41 #28 – the build ring, top-right of the painting, only while the engine
                    says the thing is still being built. The corner choice is the coordinator's
                    (the scrim's name gradient owns the bottom) – one line to move if his eye says
-                   otherwise. ⚠ AND NEVER AT 100% – his second word on the item: «когда заполнен на
-                   100% (построено) больше не надо показывать, только в процессе стройки». A full
-                   circle is not progress, it is a delivery the tick has not banked yet (the stale
-                   over-due load) – the tile goes clean instead of wearing a finished dial. -->
+                   otherwise. ⚠ AND NEVER AT 100%: a full circle is not progress, it is a delivery
+                   the tick has not banked yet (the stale over-due load) – the tile goes clean
+                   instead of wearing a finished dial. His second word on the item, verbatim, is on
+                   the script side above `buildProgress` (this file's templates carry no Cyrillic –
+                   tests/template-copy-rules.test.ts). -->
               <ProgressRing
                 v-if="isBuilding(row) && row.buildWeeks && buildProgress(row) < 1"
                 class="build-ring"

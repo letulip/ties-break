@@ -40,11 +40,22 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     // Middle on top is not an accident: it buys the rung with the widest gap between what the family
     // earns and what its academy charges. And wealthy at the top of the market spends its whole
     // income on the coach alone, before a single trip - which is the design, stated as a number.
+    //
+    // ⚠⚠⚠ RE-AIMED A THIRD TIME BY ROUND 41 P1 (12.09), AND **THE ORDERING IS THE HALF THAT DID NOT
+    // MOVE.** Measured on the same batch after his two rulings: middle -8,039 < working -5,667 <
+    // wealthy -4,917 – the chain above holds cell for cell, and the sentence about WHY middle sits
+    // on top is unchanged. What broke is the last line: the wealthy cell is no longer a burn, so
+    // «the only one that BURNS» has no member. Its $11,197 swing decomposes as gear -$3,309 and the
+    // corridor fade -$7,888 (tests/economyCalibration.ts's `BANDS` block carries the control and
+    // both arms). **THIS IS A FINDING AWAITING HIS WORD, NOT A RE-TUNE** – the two levers that could
+    // restore the burn are the wealthy income and the elite rate band, and neither was touched. The
+    // line is inverted rather than deleted precisely so that a re-tune of either goes RED here and
+    // is re-pinned deliberately.
     const w = mean(batchBurns('working', { excludeSponsor: true }))
     const m = mean(batchBurns('middle'))
     const rich = mean(batchBurns('wealthy'))
     expect(m).toBeLessThan(w)
     expect(w).toBeLessThan(rich)
-    expect(rich).toBeGreaterThan(0) // the only cell in the table that is a burn at all
+    expect(rich, '⚠ no cell in this table is a burn any more – round 41 P1, his to rule on').toBeLessThan(0)
   })
 })

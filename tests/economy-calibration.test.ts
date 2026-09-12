@@ -74,12 +74,21 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     }
   })
 
-  it('wealthy (elite coach) BURNS $4.5-8k in an idle year – premium everything hurts again', () => {
-    // ⚠ THE SIGN FLIPPED BACK (Round 2). Round 12 had raised the wealthy income to $750/wk and this
-    // cell became a break-even; Round 1 of the ladder made it a $8.3k saving, because an Elite coach
-    // at four hours and no corridor was $480/wk. With the owner's 5 hours and his corridor, a
-    // premium academy's Elite coach is $750/wk - exactly the family's weekly income - so the idle
-    // year burns, which is what the round-7 "premium everything must hurt" always meant.
+  // ⚠⚠⚠ RE-AIMED BY ROUND 41 P1, AND THE SIGN FLIPPED A THIRD TIME – **A FINDING FOR THE OWNER,
+  // NOT A RE-TUNE.** The full decomposition, the control and the two levers that are his are in
+  // tests/economyCalibration.ts's `BANDS` block; in one line: his own two rulings of 12.09 (uniform
+  // gear prices, and the corridor stopping at `high`) take this cell from a **+$6,280 burn to a
+  // -$4,917 saving**, of which the corridor half is 70%. The ORDERING below it is untouched.
+  it('wealthy (elite coach) now SAVES ~$4.9k in an idle year – ⚠ premium everything stopped hurting', () => {
+    // ⚠ THE HISTORY IS KEPT because it is what makes the third flip legible. Round 12 had raised the
+    // wealthy income to $750/wk and this cell became a break-even; Round 1 of the ladder made it a
+    // $8.3k saving, because an Elite coach at four hours and no corridor was $480/wk. Round 2
+    // restored the corridor and raised the hours, so a premium academy's Elite coach was $750/wk -
+    // exactly the family's weekly income - and the idle year burned, which is what the round-7
+    // "premium everything must hurt" always meant. ROUND 41 P1 takes the corridor off that rung: the
+    // same coach is $800/wk for EVERY family now, the family's own gear fell to the uniform rung
+    // price, and $750/wk of income no longer loses the race. The principle is not refuted; it is
+    // un-funded, and the fix (if he wants one) is on the income or the elite rate, not here.
     const burns = batchBurns('wealthy')
     const [lo, hi] = BANDS.wealthy
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
