@@ -38,6 +38,44 @@ export interface SnapshotInjury {
   weeksSaved?: number
 }
 
+/** ⭐⭐⭐ ROUND 41 #19 – THE LAYOFF AS THE DIALOG SEES IT: the persisted shape above, plus ONE number
+ *  the world never holds.
+ *
+ *  The owner, 12.09: «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели.
+ *  Видимо массажист очень хорошо работает, но в этом случае вообще на экране травмы можно писать
+ *  сколько реально займет восстановление с текущим тиром массажиста.»
+ *
+ *  ⚠⚠ A SEPARATE TYPE, AND THAT IS THE WHOLE POINT OF IT. `WorldState.injury` is typed
+ *  `SnapshotInjury` – the persisted shape – so widening THAT interface would have quietly made a
+ *  derived forecast serialisable, and a save that carries its own forecast is the one failure mode
+ *  no test here is shaped to catch (world/derivedCache.ts makes the same argument about a cache). The
+ *  extension lives on the WIRE type instead: `Snapshot.injury` is an `InjuryView`, `WorldState.injury`
+ *  is not, and the compiler is what keeps the forecast out of the save. `SAVE_SCHEMA_VERSION` does
+ *  not move, no migration is written, no golden fixture is added. */
+export interface InjuryView extends SnapshotInjury {
+  /** WEEKS SHE WILL ACTUALLY BE OUT FROM TODAY, with the masseur's cadence replayed forward.
+   *
+   *  The clinic's number already contains the PHYSIO (`physioRecoveryFactor`, up to −16%); the
+   *  MASSEUR's weeks are paid out one at a time in `rollInjury`, and on the daily rung a dealt 7 runs
+   *  4 – to the week, which is the arithmetic behind his report. So both numbers are true and neither
+   *  is the other: `totalWeeks` is what she was DEALT, `weeksSaved` is what has been taken off SO
+   *  FAR, and this is what the current rung is on course to take off ALTOGETHER. It is
+   *  `weeksRemaining − masseurRehabWeeksAhead(world)` – the same forward replay round 34 #21's
+   *  withdrawal sweep already trusts, never a second spelling of the cadence.
+   *
+   *  ⚠ IT IS A FORECAST, AND THE COUNTDOWN IS STILL NOT REWRITTEN FROM IT. The parent may fire him
+   *  or drop him a rung mid-layoff, so `weeksRemaining` stays the clinic's number and his weeks keep
+   *  arriving one receipt at a time – «recovery you can watch» is the product and this does not
+   *  replace it. What it adds is the honest second number at the ANNOUNCEMENT, the one moment the
+   *  parent plans against and the only moment no receipt has yet had anything to say.
+   *
+   *  ⚠ ABSENT WHEN THERE IS NOTHING TO SAY, on `weeksSaved`'s own rule: no masseur, a layoff too
+   *  short for the cadence (`totalWeeks > 2` – «nobody massages a one-week soreness away»), or a
+   *  rung whose cadence saves nothing over what is left. A surface can therefore render the second
+   *  line on presence alone and never print «more like 7» under «~7 wks». */
+  expectedWeeks?: number
+}
+
 // --- ⭐ R2-02: the injury report, as facts ------------------------------------
 // WHY THIS TYPE EXISTS. `InjuryStopDialog` recovered four domain facts by reading the news feed's
 // ENGLISH – `startsWith(RELEASE_LINE_PREFIX.injury)` for the cancelled entries and a raw

@@ -109,7 +109,7 @@ import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
-import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
+import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
@@ -1432,6 +1432,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // would deliver the fade as three visible jumps instead of a slope, which is the opposite of what
   // §4a is for. `tests/condition-boundary.test.ts` is the guard.
   const shownCondition = Math.round(world.condition)
+  // ⭐ ROUND 41 #19 – ONCE PER SNAPSHOT, not once per reader. `masseurRehabWeeksAhead` walks the whole
+  // remaining layoff, so the `injury` view below asks it exactly one time and spends the answer twice
+  // (the guard and the number). 0 for every healthy career, by its own first line.
+  const rehabAhead = masseurRehabWeeksAhead(world)
   // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
   // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
   // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
@@ -1699,6 +1703,23 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
           // v59: present only while the masseur has taken weeks off THIS layoff – the projection
           // mirrors the persisted shape, absent-for-none included.
           ...(world.injury.weeksSaved !== undefined ? { weeksSaved: world.injury.weeksSaved } : {}),
+          // ⭐⭐⭐ ROUND 41 #19 – AND WHAT HE IS ON COURSE TO TAKE OFF ALTOGETHER. The owner: «мне
+          // написали, что травма отнимет 7 недель, а в итогах года было 4 недели … можно писать
+          // сколько реально займет восстановление с текущим тиром массажиста.» Both numbers were
+          // right: the clinic's 7 already carries the physio's cut, and the masseur's weeks arrive
+          // afterwards, one receipt at a time – so the announcement and the year-end total were
+          // never describing the same arithmetic.
+          //
+          // ⚠ `masseurRehabWeeksAhead` AND NOT A SECOND SPELLING OF THE CADENCE. It is the forward
+          // replay round 34 #21 already trusts for the withdrawal sweep, so the rung's N, the
+          // `totalWeeks > 2` niggle guard, the `weeksRemaining > 0` check and the future's own
+          // stand-downs (a booked holiday, the college freeze) are all honoured by construction.
+          // Pure, and it spends nothing on any stream – this file may never draw.
+          //
+          // ⚠ ABSENT WHEN IT WOULD SAY NOTHING, on `weeksSaved`'s rule one line up: no masseur, a
+          // layoff too short, or a rung that saves nothing over what is left. The dialog can then
+          // render its second line on presence alone, and can never print «more like 7» under «~7».
+          ...(rehabAhead > 0 ? { expectedWeeks: world.injury.weeksRemaining - rehabAhead } : {}),
         }
       : null,
     // ⭐ R2-02: and WHAT IT DID, as facts. See `buildInjuryReport` for why the surface may no longer

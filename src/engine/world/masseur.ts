@@ -254,6 +254,15 @@ export function masseurWorksInWeek(hired: boolean, frozen: boolean, bookedOff: b
  *  closes. Erring by keeping an entry is recoverable (`cancelEntry` is still there); erring by
  *  cancelling one is what the owner is reporting.
  *
+ *  ⚠⚠ ROUND 41 #19 WIDENS «ONLY EVER USED WHERE» BY EXACTLY ONE SURFACE, at the owner's ask (12.09:
+ *  «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели … можно писать сколько
+ *  реально займет восстановление с текущим тиром массажиста»). `toSnapshot` now spends this function
+ *  on `Snapshot.injury.expectedWeeks`, so the injury dialog can print the honest pair at ANNOUNCEMENT
+ *  – the clinic's number, and his. The clause above that the countdown is not rewritten from it still
+ *  holds word for word: `weeksRemaining` is untouched and every «bought a week back» receipt still
+ *  arrives. A forecast SHOWN as a forecast, on the one week the parent plans against, is a third
+ *  place a forecast is the right instrument; it is not the field, and it never becomes the field.
+ *
  *  Pure arithmetic over persisted state, ZERO draws on any stream. 0 for every career without a
  *  masseur, without an injury, or with a layoff too short for the cadence to touch. */
 export function masseurRehabWeeksAhead(world: WorldState): number {

@@ -617,6 +617,19 @@ export function onsetInjury(
   // the clinic's dealt number and his weeks keep arriving one receipt at a time – that is the whole
   // legible difference between him and the physio (world/masseur.ts), and folding the forecast into
   // the field would delete it. The forecast governs the one decision that cannot be undone later.
+  //
+  // ⚠⚠ ROUND 41 #19 AMENDS THE PARAGRAPH ABOVE – ITS SECOND HALF ONLY, and knowingly. The owner,
+  // 12.09: «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели … можно писать
+  // сколько реально займет восстановление с текущим тиром массажиста.» So the forecast is no longer
+  // confined to the withdrawal sweep: the ANNOUNCEMENT carries it too, as
+  // `Snapshot.injury.expectedWeeks` – a derived WIRE field (`InjuryView`), printed beside the
+  // clinic's number rather than instead of it.
+  //
+  // Everything the sentence above protects is intact: `weeksRemaining` is untouched, the «bought a
+  // week back» receipt still prints on every cadence week, and nothing in this function moved. What
+  // the report overturns is the narrower claim that the forecast may not be SHOWN at onset, and his
+  // argument is the one the ruling had no answer to – the week he is told «7» is the week he plans
+  // against, and by the time the receipts have corrected it the plan is already made.
   const rehabAhead = masseurRehabWeeksAhead(world)
   for (const id of [...world.entries]) {
     const e = eventById(world, id)

@@ -85,6 +85,7 @@ export {
 export type {
   InjurySeverity,
   SnapshotInjury,
+  InjuryView,
   InjuryCircumstanceKind,
   InjuryEntryRow,
   InjuryReport,

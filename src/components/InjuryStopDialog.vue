@@ -73,6 +73,25 @@ const backWeek = computed(() => week.value + (injury.value?.weeksRemaining ?? 0)
 // WHEN: the layoff's own week, off the injury rather than off "now". They are the same number on the
 // week this dialog mounts, and reading the injury is the one that stays true if it ever is not.
 const onsetWeek = computed(() => injury.value?.sinceWeek ?? week.value)
+// ⭐⭐⭐ ROUND 41 #19 – THE SECOND NUMBER, WHEN THERE IS ONE. The owner, 12.09: «мне написали, что
+// травма отнимет 7 недель, а в итогах года было 4 недели. Видимо массажист очень хорошо работает, но
+// в этом случае вообще на экране травмы можно писать сколько реально займет восстановление с текущим
+// тиром массажиста.»
+//
+// ⚠ THIS SUPERSEDES A RECORDED RULING, KNOWINGLY. `world/injury.ts` and `world/masseur.ts` both say
+// the forecast is deliberately NOT displayed – «recovery you can watch», one receipt at a time – and
+// that reasoning still stands for the COUNTDOWN, which is untouched: `weeksRemaining` is still the
+// clinic's number and every «bought a week back» receipt still arrives in the feed. What the 12.09
+// report overturns is the narrower claim that the ANNOUNCEMENT may not carry it, and his argument is
+// the one the ruling had no answer to: the week he is told «7» is the week he plans against, and by
+// the time the receipts have corrected it the plan is already made.
+//
+// ⚠ ABSENCE IS THE ENGINE'S DECISION, NOT THIS FILE'S. `expectedWeeks` reaches the wire only when a
+// masseur is hired, the layoff is long enough for his cadence and the projection actually differs
+// (world/snapshot.ts), so the guard here is PRESENCE: this card can never print «more like 7 wks»
+// under «~7 wks», and a career without him renders exactly the row it always did.
+const expectedWeeks = computed(() => injury.value?.expectedWeeks ?? null)
+const expectedBackWeek = computed(() => week.value + (expectedWeeks.value ?? 0))
 
 /** She stopped ON COURT – the one distinction that changes the title as well as the sentence. */
 const retired = computed(() => report.value?.kind === 'retired-match' || report.value?.kind === 'retired-friendly')
@@ -187,6 +206,12 @@ useDialogFocus(card, () => emit('continue'))
             <td>
               ~{{ injury.totalWeeks }} wk{{ injury.totalWeeks === 1 ? '' : 's' }} – back around
               {{ weekLabel(backWeek) }}
+              <!-- ROUND 41 #19: the masseur's own forecast, beside the clinic's number rather than
+                   instead of it. Rendered only when the engine sent one – see `expectedWeeks`. -->
+              <div v-if="expectedWeeks !== null" class="hint injury-stop-projection">
+                With the masseur – more like {{ expectedWeeks }} wk{{ expectedWeeks === 1 ? '' : 's' }}, back around
+                {{ weekLabel(expectedBackWeek) }}.
+              </div>
             </td>
           </tr>
           <tr>

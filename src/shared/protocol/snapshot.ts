@@ -10,7 +10,7 @@ import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { CollegeOffer, CollegeState, EndingView, RetirementOffer } from './career'
 import type { ArrivalPreview, EntryCapUsage, LossStreak, PendingView, SeasonHistoryEntry, SeasonSummary, SeasonSupply, TierOpenMap, TierRefusal, TierTrophies, UpcomingEvent } from './competition'
 import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReason, WorldEvent } from './events'
-import type { InjuryReport, Knock, KnockPrompt, SnapshotInjury } from './health'
+import type { InjuryReport, InjuryView, Knock, KnockPrompt } from './health'
 import type { CountingResult, LadderViews, StandingRow } from './ladder'
 import type { BirthdayPrompt, DiarySnapshot, KidLife, LifeBeatPrompt, Milestone, RadarAxis, SoftBeatInvite, TrainingRead } from './narrative'
 import type { AdPortfolioRow, CoachMarketRow, KitDealView, KitLineView, Offer, ShootClashPrompt, ShopView, SnapshotAcademy, TourBriefing } from './offers'
@@ -192,8 +192,12 @@ export interface Snapshot {
    *  week returns fades with her body from 29 on. No screen may round this again: the boundary owns
    *  the decision, and `tests/condition-boundary.test.ts` is the ratchet that says so. */
   condition: number
-  /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it). */
-  injury: SnapshotInjury | null
+  /** the kid's active injury, or null when healthy. Always null in slice B (Slice C populates it).
+   *  ⚠ `InjuryView`, NOT `SnapshotInjury`, SINCE ROUND 41 #19: the wire carries one derived number
+   *  (`expectedWeeks`, the masseur's forward cadence) that the SAVE must never hold, and the two
+   *  types are what keeps that a compiler fact rather than a promise. `WorldState.injury` stays the
+   *  persisted shape. */
+  injury: InjuryView | null
   /** ⭐ R2-02 – WHAT THAT INJURY DID, as facts rather than as sentences: the door it came in by, the
    *  entries the layoff cancelled, the ones it stranded, and the money that came back. Non-null on
    *  exactly the weeks `injury` is. The dialog that renders it is a FORMATTER: it parses no feed
