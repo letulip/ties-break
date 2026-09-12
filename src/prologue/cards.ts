@@ -954,6 +954,55 @@ export const LOCAL_OPEN_COPY = {
     coach: 'The coach says a quiet week is all this needs.',
     continueLabel: 'Hold her',
   } as LocalOpenResultCopy,
+
+  /** ⭐⭐⭐ ROUND 41 #4 – WHAT THE COACH SAYS WHEN IT IS NOT HER FIRST WEEKEND. DRAFT, all seven.
+   *
+   *  THE OWNER, 12.09, playing his own build: «В прологе проиграли первый турнир "The coach said the
+   *  first one doesn't count", выиграли второй, а потом снова вылетели в первом раунде 3го турнира,
+   *  а фраза та же самая пишется, надо какой-то каунтер завести для этих трех турниров может быть и
+   *  сделать эти фразочки более соответствующими. И в четвертом турнире пролога после вылета в
+   *  полуфинале я тоже вижу "The coach says the first one is never the one that counts." ту же самую
+   *  фразу.» (his Russian lives in docs/rounds/round-41.md, item 4.)
+   *
+   *  ⚠⚠ TWO DEFECTS IN ONE REPORT, AND THEY ARE NOT THE SAME DEFECT. The first is REPETITION – one
+   *  string served every weekend, so a third first-round exit was told it was her first. The second
+   *  is a WRONG READING, and it is the sharper one: `outcomeOf` collapses «out in the semifinal» and
+   *  «out in the first match» into one `lost` face (pool.ts – 0 is the title, 1 is the final, and
+   *  everything else is `lost`), so a weekend she won a match at printed the line about never having
+   *  started. The face is right – she did go out before the final, and the painting is that – but the
+   *  SENTENCE has to read `finish` rather than the face.
+   *
+   *  ⭐ SO THE SEVEN BELOW EXTEND THE THREE ABOVE RATHER THAN REPLACING THEM. The result table's own
+   *  `coach` lines are the ORDINAL-ONE lines and are unchanged byte for byte (invariant 4: they were
+   *  right where they stood, and this item did not ask for them). `coachLineFor` returns one of them
+   *  for a first weekend and one of these afterwards, which is why the kept three are not copied here
+   *  – a string declared twice is a string that can drift in one copy.
+   *
+   *  ⚠ NOT ONE OF THEM NAMES A NUMBER, and that is a constraint rather than a style. The draw is
+   *  eight today, so a semifinal exit is exactly one win – but `rounds` is read off the BRACKET THAT
+   *  WAS PLAYED (`playLocalOpen`, and it says why), so a short pool makes that arithmetic different
+   *  without telling anybody. A line that counted her wins would be the kind of sentence that is true
+   *  until a constant moves. They name the SHAPE of the weekend, which cannot go stale.
+   *
+   *  ⚠ AND NONE OF THEM CLAIMS ANYTHING ABOUT THE FIELD. What the model knows is her own finish; who
+   *  the other children were, how strong the draw was and what happened after she left it are not
+   *  things this scene has seen – the same rule the three above are written under. */
+  coachAgain: {
+    /** her first title, and not her first weekend */
+    firstTitle: 'The coach says the first one she wins is the one she will remember.',
+    /** she has won one of these before */
+    wonBefore: 'The coach says that is not the first cup she has carried home.',
+    /** a final, and not her first weekend */
+    finalAgain: 'The coach says she knows these weekends now – the last match is still the hard one.',
+    /** out in her first match, and the weekend before it ended the same way */
+    outFirstAgain: 'The coach says this is the part nobody tells you about, and that it passes.',
+    /** out in her first match, but the weekend before it went further */
+    outFirst: 'The coach says she has had better weekends than this one, and will again.',
+    /** her first weekend, and she won a match before going out – the reading the owner met */
+    pastFirstOnce: 'The coach says she got past the first one, and that is where it starts.',
+    /** past the first match and out before the final, and not her first weekend */
+    pastFirst: 'The coach says she is winning matches at these weekends now, not just turning up.',
+  },
 } as const
 
 /** ⭐⭐ ROUND 35 #1 – HOW BIG THE DRAW IS, IN THE TOURNAMENT FLOW'S OWN WORDS. A function beside the
@@ -968,6 +1017,66 @@ export function localDrawLine(drawSize: number): string {
   return `${drawSize}-player draw`
 }
 
+/** ⭐ ONE WEEKEND AS A COACH LINE NEEDS TO SEE IT – two numbers off the bracket and nothing else.
+ *
+ *  ⚠⚠ PRIMITIVES, BECAUSE THIS FILE MAY NOT IMPORT `run.ts`. The dependency runs one way – run.ts
+ *  imports this table, and the header at the top of this file is where that is argued – so a
+ *  function here cannot take a `PlayedOpen`. It does not need one: `finish` and `rounds` are the
+ *  whole of what the weekend's SHAPE is, and `PlayedOpen` is structurally assignable to this, so the
+ *  caller passes its own rows with no mapping. Same shape of seam as `localDrawLine(drawSize)`. */
+export interface LocalOpenFinish {
+  /** 0 is the title, 1 is the final she lost, `rounds` is out in her first match – `LocalOpen.finish` */
+  readonly finish: number
+  /** how many rounds the bracket that was actually played had */
+  readonly rounds: number
+}
+
+/** ⭐⭐⭐ ROUND 41 #4 – WHICH SENTENCE THE COACH SAYS ABOUT THIS WEEKEND, AND IT IS A PURE FUNCTION OF
+ *  THREE NUMBERS AND A LIST OF NUMBERS.
+ *
+ *  ⚠⚠ ZERO DRAWS, ON ANY STREAM, BY CONSTRUCTION. Everything it reads is already decided: `ordinal`
+ *  is how many Local Opens the childhood has held including this one, `finish` and `rounds` are the
+ *  bracket's own (resolved before the screen opened – `playNext` in ChildhoodPrologue.vue), and
+ *  `past` is the run's own list of the weekends before it. There is no seed here, no generator and
+ *  nothing to persist, so invariant 2 is not merely respected – it is unreachable.
+ *
+ *  ⚠ IT READS `finish` AND NOT THE OUTCOME FACE, which is the half of the owner's report that is a
+ *  wrong reading rather than a repetition: `outcomeOf` collapses «out in the semifinal» and «out in
+ *  the first match» into one `lost`, and his semifinal exit printed the line about never having
+ *  started. The PAINTING still hangs off the face (that is `OUTCOME_FACES`, art direction, and a
+ *  weekend she went out of before the final really is that picture); only the sentence is finer.
+ *
+ *  ⚠ AND IT LOOKS BACK EXACTLY ONE WEEKEND FOR THE REPEAT and across all of them for a title, which
+ *  is the smallest memory the two defects need. «The coach neither panics nor repeats himself» is a
+ *  claim about the weekend BEFORE this one; «she has won one of these» is a claim about any of them.
+ *  A fuller history would be a model of her form, which this scene has no business having.
+ *
+ *  ⚠ THE ORDINAL-ONE ARMS RETURN THE RESULT TABLE'S OWN LINES rather than copies of them, so the
+ *  three sentences that were right where they stood stay in exactly one place (invariant 4). */
+export function coachLineFor(
+  ordinal: number,
+  finish: number,
+  rounds: number,
+  past: readonly LocalOpenFinish[] = [],
+): string {
+  const again = LOCAL_OPEN_COPY.coachAgain
+  const first = ordinal <= 1
+  if (finish === 0) {
+    if (first) return LOCAL_OPEN_COPY.result.won.coach
+    return past.some((o) => o.finish === 0) ? again.wonBefore : again.firstTitle
+  }
+  if (finish === 1) return first ? LOCAL_OPEN_COPY.result.final.coach : again.finalAgain
+  // ⚠ «OUT IN HER FIRST MATCH» IS `finish === rounds` AND NOT A NUMBER. A loser's finish is
+  // `rounds - round`, so the girl who lost her opening match has the bracket's whole depth as her
+  // index whatever that depth is – which is what keeps this true of a draw that was not eight.
+  if (finish >= rounds) {
+    if (first) return LOCAL_OPEN_COPY.result.lost.coach
+    const last = past[past.length - 1]
+    return last && last.finish >= last.rounds ? again.outFirstAgain : again.outFirst
+  }
+  return first ? again.pastFirstOnce : again.pastFirst
+}
+
 /** ⭐ THE RESULT SCENE AS A CARD ROW, so the shipped card component draws it with no branch of its
  *  own. `her` and `coach` are the same sentence in both arms deliberately, and it is the rule cards
  *  5..8 are written under: a scene may not claim to have read something it cannot have seen, and
@@ -976,16 +1085,34 @@ export function localDrawLine(drawSize: number): string {
  *  ⚠ ROUND 39 #15a D2 – `hurt` PICKS THE FOURTH FACE and changes nothing else: the age and the
  *  synthesis are the same, so every caller that never passes it (the three-faces tests, the walk's
  *  own measurement) is byte-identical. It is a flag and not a fourth `LocalOpenOutcome`, because the
- *  outcome is the BRACKET's answer and still decides the painting; hurt is HOW she left it. */
-export function localOpenCard(age: number, outcome: LocalOpenOutcome, hurt = false): PrologueCard {
+ *  outcome is the BRACKET's answer and still decides the painting; hurt is HOW she left it.
+ *
+ *  ⭐⭐⭐ ROUND 41 #4 – AND `weekend` IS THE COUNTER THE OWNER ASKED FOR, arriving the way phase 7's
+ *  own note asks for a hook to arrive: «one argument at one call site». Given, the coach's sentence
+ *  is `coachLineFor`'s; absent, it is the result table's own – which is the ordinal-one line, so a
+ *  caller that does not count gets exactly what it got before this shipped, byte for byte. That is
+ *  what keeps the art and three-faces tests unchanged.
+ *
+ *  ⚠ AND THE HURT FACE IS UNTOUCHED BY IT. `hurt` has its own scene and its own coach line, and the
+ *  run remembers no injury per weekend – there is no field for it in `PlayedOpen` and this item does
+ *  not add one, so a counting line about a weekend she left early would be counting something the
+ *  model does not hold. */
+export function localOpenCard(
+  age: number,
+  outcome: LocalOpenOutcome,
+  hurt = false,
+  weekend?: { ordinal: number; finish: number; rounds: number; past: readonly LocalOpenFinish[] },
+): PrologueCard {
   const copy = hurt ? LOCAL_OPEN_COPY.hurt : LOCAL_OPEN_COPY.result[outcome]
+  const coach =
+    hurt || !weekend ? copy.coach : coachLineFor(weekend.ordinal, weekend.finish, weekend.rounds, weekend.past)
   return {
     age,
     kicker: copy.kicker,
     title: copy.title,
     lede: copy.lede,
     her: { cool: copy.her, warm: copy.her },
-    coach: { cool: copy.coach, warm: copy.coach },
+    coach: { cool: coach, warm: coach },
     continueLabel: copy.continueLabel,
   }
 }

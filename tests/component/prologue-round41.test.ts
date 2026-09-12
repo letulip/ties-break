@@ -42,7 +42,7 @@ import { setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
-import { PROLOGUE_CARDS, TOURNAMENT_ANSWER, type PrologueCard } from '../../src/prologue/cards'
+import { LOCAL_OPEN_COPY, PROLOGUE_CARDS, TOURNAMENT_ANSWER, type PrologueCard } from '../../src/prologue/cards'
 import { WALK_COPY } from '../../src/prologue/handover'
 import { EMPTY_RUN, cardFor, withPick, type PrologueRun } from '../../src/prologue/run'
 import {
@@ -110,7 +110,13 @@ function optionLabel(age: number, run: PrologueRun, id: string): string {
  *
  *  ⚠ THE ASK IS ALWAYS DECLINED except where the road enters her, which is the tenth's own option
  *  rather than an ask. `TOURNAMENT_ANSWER.decline`'s label is read off the card, never typed. */
-async function answerCard(w: Wrapper, age: number, run: PrologueRun, road: Record<number, string>): Promise<PrologueRun> {
+async function answerCard(
+  w: Wrapper,
+  age: number,
+  run: PrologueRun,
+  road: Record<number, string>,
+  enterAsk = false,
+): Promise<PrologueRun> {
   const card = cardFor(age, run)
   let next = run
   if (card.origins) {
@@ -124,8 +130,9 @@ async function answerCard(w: Wrapper, age: number, run: PrologueRun, road: Recor
     return next
   }
   if (card.tournament) {
-    await press(w, card.tournament.declineLabel)
-    next = { ...next, entries: { ...next.entries, [age]: TOURNAMENT_ANSWER.decline } }
+    await press(w, enterAsk ? card.tournament.enterLabel : card.tournament.declineLabel)
+    const answer = enterAsk ? TOURNAMENT_ANSWER.enter : TOURNAMENT_ANSWER.decline
+    next = { ...next, entries: { ...next.entries, [age]: answer } }
   }
   const proceed = proceedOn(w)
   expect(proceed.exists(), `the card at ${age} is answered and offers no way on`).toBe(true)
@@ -345,6 +352,87 @@ describe('⭐⭐⭐ item 8 – the way back to the card before this one', () => 
     expect(ninth.teaching, 'the career was built from the answer the player went back and changed').toBe(
       oneToOne.teaching,
     )
+    w.unmount()
+  })
+})
+
+// =================================================================================================
+describe('⭐⭐⭐ item 4 – the coach line on the screen, across two weekends of one childhood', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+    setViewport(PHONE)
+  })
+
+  // ⭐⭐⭐ HIS COMPLAINT, END TO END: «а фраза та же самая пишется». The unit table
+  // (tests/prologue-round41.test.ts) pins which sentence each shape of weekend gets; what this
+  // measures is the half that table cannot – that the CONTAINER counts, that it counts the right
+  // weekend, and that the second Local Open of a childhood therefore never prints a first-weekend
+  // line whatever the brackets happened to come to.
+  //
+  // ⚠ THE CLAIM IS SEED-INDEPENDENT ON PURPOSE. The walk draws its own seed at mount and the two
+  // brackets are whatever that seed gives, so an arm that named a sentence would be pinning a draw.
+  // What is true of EVERY draw is the shape of the rule: ordinal one may print one of the scenes'
+  // own lines, and ordinal two may not print any of them.
+  // MUTATION-VERIFIED: `localOpenCard`'s fourth argument ignored -> the second weekend prints a
+  // first-weekend line and this reddens, naming it.
+  it('⭐⭐⭐ the second Local Open never repeats a first-weekend sentence', async () => {
+    stubStore()
+    const w = mount(ChildhoodPrologue, { attachTo: document.body })
+    await nextTick()
+    let run: PrologueRun = EMPTY_RUN
+    for (const age of [5, 6, 7, 8, 9]) run = await answerCard(w, age, run, CARRIED_ROAD)
+
+    /** Walk whatever tennis is on the screen off it, returning the coach line its result scene said.
+     *  ⚠ THE RESULT SCENE IS RECOGNISED BY ITS KICKER, which is the weekend's own and is shared by
+     *  all four of its faces – the three the bracket chooses between and the hurt one. */
+    async function playWeekendOff(): Promise<string> {
+      let said = ''
+      for (let guard = 0; guard < 10; guard++) {
+        const skip = w.find('.plo-skip')
+        if (skip.exists()) {
+          await skip.trigger('click')
+          await flush(w)
+          continue
+        }
+        if (w.find('.prologue-kicker').text() === LOCAL_OPEN_COPY.kicker) {
+          said = w.find('.prologue-read-coach').text()
+          await w.find('.prologue-answer').trigger('click')
+          await flush(w)
+          return said
+        }
+        break
+      }
+      throw new Error(`no weekend on the screen: ${w.text().slice(0, 140)}`)
+    }
+
+    // the tenth, entered – the card's OWN decision at that age
+    await press(w, optionLabel(10, run, 'enter'))
+    await proceedOn(w).trigger('click')
+    await flush(w)
+    const first = await playWeekendOff()
+    run = withPick(run, 10, 'enter')
+
+    // ...and the eleventh, whose lighter ask is answered yes
+    expect(titleNow(w), 'the walk never reached the eleventh').toBe(PROLOGUE_CARDS.find((c) => c.age === 11)!.title)
+    run = await answerCard(w, 11, run, CARRIED_ROAD, true)
+    const second = await playWeekendOff()
+
+    const scenes = [LOCAL_OPEN_COPY.result.won, LOCAL_OPEN_COPY.result.final, LOCAL_OPEN_COPY.result.lost]
+    const firstWeekendLines = scenes.map((s) => s.coach)
+    expect(first, `her first weekend said something no first weekend says: ${first}`).toBeTruthy()
+    expect(
+      [...firstWeekendLines, LOCAL_OPEN_COPY.coachAgain.pastFirstOnce, LOCAL_OPEN_COPY.hurt.coach].includes(first),
+      `the first weekend said «${first}», which is not one of the sentences a first weekend has`,
+    ).toBe(true)
+    expect(
+      firstWeekendLines.includes(second),
+      `the second weekend repeated a first-weekend sentence: «${second}»`,
+    ).toBe(false)
+    expect(
+      [...Object.values(LOCAL_OPEN_COPY.coachAgain), LOCAL_OPEN_COPY.hurt.coach].includes(second),
+      `the second weekend said «${second}», which the counter cannot produce`,
+    ).toBe(true)
     w.unmount()
   })
 })

@@ -251,11 +251,34 @@ function closeOpen(): void {
   }
 }
 
+/** ⭐⭐⭐ ROUND 41 #4 – WHICH LOCAL OPEN THIS SCENE IS, AND WHAT CAME BEFORE IT. The owner met one
+ *  static coach line on four different weekends – «а фраза та же самая пишется, надо какой-то
+ *  каунтер завести» – and this is the counter. His Russian is in docs/rounds/round-41.md, item 4.
+ *
+ *  ⚠⚠ IT IS COUNTED OFF THE RUN AND STORED NOWHERE, which is what makes it deterministic and what
+ *  keeps it out of the save. `withOpen` appends the weekend the instant the bracket is resolved
+ *  (`playNext`, above, before the screen ever opens), and a result scene is shown for the weekend
+ *  that was just played – so the tail of `run.opens` IS this scene, its position in the list IS the
+ *  ordinal, and everything in front of it is what came before. Zero draws on any stream.
+ *
+ *  ⚠ THE AGE IS CHECKED RATHER THAN ASSUMED. The tail is this scene's weekend on every road the
+ *  table can produce (a year holds at most one, `LOCAL_POOL.maxPerYear`), and if that ever stops
+ *  being true this returns nothing and `localOpenCard` falls back to the result table's own line –
+ *  a scene that says less rather than a scene that counts wrong. */
+const weekendNow = computed(() => {
+  const res = resultNow.value
+  if (!res) return undefined
+  const opens = run.value.opens
+  const last = opens[opens.length - 1]
+  if (!last || last.age !== res.age) return undefined
+  return { ordinal: opens.length, finish: last.finish, rounds: last.rounds, past: opens.slice(0, -1) }
+})
+
 /** ⭐ THE SCENE ON SCREEN. A weekend's result scene is a card row like any other, so this one
  *  computed is the whole of the branch and `PrologueCard.vue` gets no `v-if` of its own. */
 const card = computed(() =>
   resultNow.value
-    ? localOpenCard(resultNow.value.age, resultNow.value.outcome, resultNow.value.hurt)
+    ? localOpenCard(resultNow.value.age, resultNow.value.outcome, resultNow.value.hurt, weekendNow.value)
     : cardFor(CARD_AGES[at.value], run.value),
 )
 const warmth = computed(() => warmthAt(card.value.age, run.value))
