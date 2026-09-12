@@ -3442,9 +3442,12 @@ export const ECONOMY = {
      *  toward the flat 70 happens first (75 → 72 for an intense girl) and the shock lands on that.
      *  The claim the sentence was making is unchanged and is now a measurement rather than a
      *  prediction: an intense girl is Heavy for EIGHT weeks (38 41 44 47 50 53 56 59, then 62) and a
-     *  steady one for three (48 53 58, then 63). ⚠ The same «lands at 41» is still written in
-     *  `docs/plans/wave-1-the-two-numbers-runbook-2026-09.md` §6 – left alone deliberately, because
-     *  that file is wave 1's record of what it predicted, and it is the architect's to re-date. ⚠ These are not tuning dials: a test that would be easier
+     *  steady one for three (48 53 58, then 63). ⚠ The «lands at 41» in
+     *  `docs/plans/wave-1-the-two-numbers-runbook-2026-09.md` §6 WAS annotated after all
+     *  (`a22e7499`, additively – the 41 kept as wave 1's record of its own prediction), so the
+     *  earlier reading of this sentence («left alone, the architect's to re-date») aged the day it
+     *  was written down; corrected 12.09 by the wave's judge rather than left to mislead.
+     *  ⚠ These are not tuning dials: a test that would be easier
      *  with other numbers is a test to rewrite, not a ladder to move. */
     mood: {
       /** ⭐ THE KNEE ITSELF – below this `spiritMatchFactor` stops being 1.0 and the match starts

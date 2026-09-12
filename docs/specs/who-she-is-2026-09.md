@@ -1776,6 +1776,11 @@ Two questions leave this section for the architect, and neither is the bench's t
    whichever way it is ruled, the number is already there.
 
 ⚠ **A last note on `tools/spirit-bench.ts` itself, because the file's history makes it load-bearing.**
+⭐ **PAID 12.09, POST-GATE (`d0ff1533`) – ALL FIVE ARE GONE.** The paragraph below is kept as the
+record of the debt this measurement named, not as the file's current state; the architect's judge
+found this sentence still asserting the old state after the payment and annotated it here rather
+than letting «a record that reads unfixed» outlive the fix the same way the wave-3 «fixed» outlived
+the swallow. As it stood when T7 measured:
 The new block contains no `try`/`catch` at all and answers her through the bare tallied drain. The
 REST of the file still carries **five bare `catch {}` blocks** – `bookTheFamilyWeeks`,
 `enterWhatSheCan`, `answerTheBirthday`, `answerTheLifeBeat`'s `answerLifeBeat` and
