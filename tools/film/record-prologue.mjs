@@ -79,6 +79,17 @@ if (!report.sameSeed) {
   console.error('REFUSED: seeds diverged during the run')
   process.exit(2)
 }
+// ⚠ THE READ-OUT IS A CLAIM ABOUT THE WORLD ON SCREEN, so it is checked like one. `__phone.facts()`
+// re-runs the shipped `createWorld` over the phone's own live run and answers `ok` only when the
+// rebuilt radar, funds and base band match the snapshot the frame is drawing. A false `ok` means
+// the sheet printed numbers belonging to a different girl.
+for (const which of ['factsA', 'factsB']) {
+  const f = report[which]
+  if (!f || !f.ok) {
+    console.error(`REFUSED: ${which} does not reproduce the handover on screen –`, JSON.stringify(f?.ok ?? null))
+    process.exit(2)
+  }
+}
 
 fs.writeFileSync(
   `${OUT}/log.json`,
@@ -99,3 +110,6 @@ console.log('spent A', report.runA && '$' + (0).toFixed(0), '| funds A', sa?.fun
 console.log('coach tier A', sa?.profile?.coachTier, '| B', sb?.profile?.coachTier, '| style', sa?.profile?.playStyle, '/', sb?.profile?.playStyle)
 console.log('B opens:', (report.runB?.opens ?? []).map((o) => `${o.age}:${o.outcome}`).join(' '))
 console.log('radar ceilings identical (fogged):', ceilings(sa) === ceilings(sb))
+console.log('\nthe sheet, as it was printed:')
+for (const r of report.rows ?? [])
+  console.log(r.head ? `  -- ${r.head}` : `  ${String(r.label).padEnd(16)} ${String(r.a).padStart(9)}   ${String(r.b).padStart(9)}   accent: ${r.hi ?? 'neither'}`)

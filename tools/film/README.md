@@ -19,6 +19,7 @@ node tools/film/assemble-prologue.mjs /tmp/prologuefilm out/nine-years.mp4 publi
 | `prologue-probe.ts` | dumps the shipped `PROLOGUE_CARDS` and walks both paths through `run.ts` |
 | `prologue-worlds.ts` | both childhoods through `createWorld` -> `toSnapshot`, skill by skill |
 | `prologue-sweep.ts` | how big the gap between the two paths CAN be, and which constant to pin |
+| the `stats` beat | the handover as numbers, over each screen – higher value in the accent, lower in white |
 | `fitprobe.mjs` | how tall each card is at 414 logical px (this is why the film scrolls) |
 | `zoomtest.mjs` | what root `zoom` does to the layout box and to the media queries |
 
@@ -39,18 +40,32 @@ first draws the Local Opens and the venue art, the second draws her starting ski
 potential. `Math.random` is pinned for the life of each phone document, so both are the app's own
 generators at one constant and both halves are the same girl.
 
-**The constant is 0.04, and `prologue-sweep.ts` is why.** The first cut ran at 0.5 and the two
+**The constant is 0.004, and `prologue-sweep.ts` is why.** The first cut ran at 0.5 and the two
 handovers printed the SAME two coach sentences. That is not a filming problem: `childhoodArrival`
 adds `walk.level + walk.shape` and then CLAMPS into `STARTING_SKILL_BAND` – the same band a fresh
 fourteen-year-old is drawn from – so the spread between the cheapest childhood the table allows and
-the dearest is capped by `CHILDHOOD.swingPoints`. Swept over 99 constants it is **1.89 to 2.54
-points and never more**, and a `behind -> ahead` split is arithmetically impossible (that needs 4.4).
-What the constant DOES decide is where in the band her born skills sit, and therefore whether the two
-arrivals fall either side of `HANDOVER_BASE_CUTS` – the one difference the coach says out loud.
+the dearest is capped by `CHILDHOOD.swingPoints`.
 
-> **THE RULE, stated before it was applied:** the first constant that clamps no axis (so the whole
-> swing survives) AND puts the two arrivals in different base bands. That is **0.04**. Tournament
-> results were **not** a criterion and are whatever it produced – four entered weekends, four defeats.
+**⚠⚠ AND NO SEED CAN WIDEN IT.** Swept over 999 constants: wherever no axis clamps, the gap is
+**exactly 2.5400 points on every one of them**, because `arrival = born + level + shape` and the
+difference between the two paths cancels `born` entirely. Clamping is the only thing a seed does to
+the gap and it can only take points away (1.70 at the worst). A `behind -> ahead` split needs 4.4
+and is arithmetically impossible at any seed with any legal pair of childhoods. So the search is not
+for a bigger gap – there is not one – but for the constant that makes the most of the handover
+differ, because the coach's base sentence, his rung and her play style are all thresholds on WHERE
+IN THE BAND her born skills sit.
+
+> **THE RULE, printed above the table before it is read:** no clamped axis on either path, the two
+> arrivals on opposite sides of `HANDOVER_BASE_CUTS`, then the most of the handover differing, then
+> the widest gap, then the lowest constant. **Four of the five comparable facts is the ceiling** –
+> base band, coach sentence, coach rung, play style; the ROOM band can never differ, by construction
+> – and 69 of the 999 reach it. The pick is **0.004**. Tournament results were **not** a criterion
+> and are whatever it produced – four entered weekends, four defeats.
+
+⚠ The tie-break inside those 69 is presentation, and it is not a tournament result: **0.04** scores
+the same four and was the pin until the read-out sheet existed, but at that constant `startingSkills`
+draws serve and ret EQUAL, so two of the five rows print the same number twice and the column reads
+as a rendering fault. 0.004 draws five distinct values and the same four defeats.
 
 ⚠ A first cut restored `Math.random` after the mount. That fixed the prologue seed and left the
 career seed random, so the two frames walked one childhood and handed it to **two different girls**
@@ -96,8 +111,21 @@ recorder refuses a take where either frame reports `matchMedia('(min-width: 768p
   can't be read by the viewer because of the speed». It now opens on both frames and never changes
   layout until the match cut. Showing the same card twice is the truthful thing to do there: the two
   childhoods are identical until the eighth card.
-- **Side by side, the handover's one differing sentence is 15px in a 1080 frame.** The closing beat
-  crops both cards to `.handover-read` through `.handover-spent` and STACKS them, which lifts the cap
-  on scale from 1.28x (width-bound) to about 2.5x (height-bound). Each strip keeps its own height:
-  giving both the taller one's height ran path A – which has no played line – far enough to include
-  its «Go on with her» button.
+- **Side by side, the handover's one differing sentence is 15px in a 1080 frame.** The `compare`
+  beat crops both cards to `.handover-read` through `.handover-spent` and STACKS them, which lifts
+  the cap on scale from 1.28x (width-bound) to about 2.5x (height-bound). Each strip keeps its own
+  height: giving both the taller one's height ran path A – which has no played line – far enough to
+  include its «Go on with her» button.
+- **The read-out sheet cannot take its numbers off the snapshot**, and that is a design decision
+  rather than a gap: `RadarAxis.shownValue` is an ESTIMATE that is deliberately wrong while she is
+  undiscovered, and the two paths do not even carry the same fog (B played four weekends, so her band
+  is narrower), so colouring «higher» off the estimates could paint the wrong half yellow.
+  `__phone.facts()` re-runs the shipped `createWorld` over that phone's own live run and profile and
+  reads `world.skills` – then compares the rebuilt radar, funds and base band against the live
+  snapshot and answers `ok: false` if any of them disagree. The recorder refuses the take on a false
+  `ok`: a read-out of a girl who is not on screen is the same class of defect as the two seeds.
+  **Potential is never returned by `facts()`**, so the brief's «do not expose hidden potential as a
+  number» cannot be broken by accident.
+- **A 0.88 scrim is not enough to put a sheet over a card.** Measured on the first still: the coach's
+  two sentences ran straight through the money rows and the frame read as two texts fighting. 0.955
+  plus a 3px backdrop blur leaves the card as a texture instead of a second column of words.

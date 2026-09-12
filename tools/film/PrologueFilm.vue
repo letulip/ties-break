@@ -30,7 +30,7 @@ import { onMounted, ref } from 'vue'
 const LOGO_LINE = '/logo-tb-line-light.svg'
 const LOGO_LINE_2 = '/logo-tb-line-2-light.svg'
 
-type Mode = 'split' | 'focus-b' | 'compare' | 'logo'
+type Mode = 'split' | 'focus-b' | 'stats' | 'compare' | 'logo'
 
 const mode = ref<Mode>('split')
 const lit = ref(0)
@@ -51,6 +51,20 @@ const zoom = ref(1)
  *  nearly 40. Measured at run time, not guessed: the two cards are different heights (only one of
  *  them carries a played line) and each is centred separately inside the shared card box. */
 const crop = ref<{ a: { top: number; height: number }; b: { top: number; height: number } } | null>(null)
+
+/** ⭐⭐ THE READ-OUT, and it is the owner's own suggestion: «we could print result parameters over
+ *  each screen and highlight the difference, for example higher stats would be in our accent yellow,
+ *  lower in white». One row per fact, both values, and which of the two is the larger number –
+ *  LARGER, not better, because on the money rows the larger number is the one that was spent.
+ *
+ *  ⚠ NOTHING HERE IS TYPED. Every value arrives as a formatted string from `__phone.facts()`, which
+ *  re-runs the shipped `createWorld` over that phone's own live run and refuses to answer unless the
+ *  world it rebuilt is byte-identical to the one the frame is drawing. The strings this file owns are
+ *  the two section heads; the row labels are the engine's own `RADAR_AXIS_LABEL` where they name a
+ *  wing. */
+type Row = { head?: string; label?: string; a?: string; b?: string; hi?: 'a' | 'b' | null }
+const rows = ref<Row[]>([])
+let facts: { a: any; b: any } | null = null
 
 const trace: string[] = []
 ;(window as any).__filmTrace = trace
@@ -175,6 +189,35 @@ function measureCrop(): number {
   return Math.min(1040 / 414, 440 / Math.max(a.height, b.height))
 }
 
+/** Both phones' handovers as numbers, side by side, with the larger of each pair marked. */
+function buildRows(): void {
+  const fa = phone('a').facts()
+  const fb = phone('b').facts()
+  if (!fa || !fb) throw new Error('[stats] no handover to read out')
+  // ⚠ THE GUARD IS THE WHOLE POINT OF READING THE WORLD BACK. `facts()` rebuilds the handover from
+  // the live run and compares the result against the snapshot the frame is drawing; a false `ok` is
+  // a read-out of a girl who is not on screen, which is the same class of defect as the two seeds.
+  if (!fa.ok || !fb.ok) throw new Error(`[stats] the rebuilt handover is not the world on screen (a=${fa.ok} b=${fb.ok})`)
+  facts = { a: fa, b: fb }
+  const row = (label: string, a: number, b: number, sa: string, sb: string): Row => ({
+    label,
+    a: sa,
+    b: sb,
+    hi: a === b ? null : a > b ? 'a' : 'b',
+  })
+  rows.value = [
+    { head: 'At fourteen' },
+    ...fa.skills.map((k: any, i: number) =>
+      row(k.label, k.value, fb.skills[i].value, k.value.toFixed(1), fb.skills[i].value.toFixed(1)),
+    ),
+    { head: 'What the nine years took' },
+    row('Local Opens', fa.opens, fb.opens, String(fa.opens), String(fb.opens)),
+    row('Nine years', fa.spentCents, fb.spentCents, fa.money.spent, fb.money.spent),
+    row('Every week', fa.weeklyCents, fb.weeklyCents, fa.money.weekly, fb.money.weekly),
+    row('Family reserve', fa.fundsCents, fb.fundsCents, fa.money.funds, fb.money.funds),
+  ]
+}
+
 // =================================================================================================
 // THE TIMELINE
 // =================================================================================================
@@ -194,7 +237,7 @@ const IN = 190
 const BEATS: Beat[] = [
   {
     key: 'five',
-    slot: 2.6,
+    slot: 2.5,
     mode: 'split',
     paint: () => {
       capA.value = 'The career starts at fourteen.'
@@ -211,7 +254,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'six',
-    slot: 1.3,
+    slot: 1.25,
     mode: 'split',
     drive: async () => {
       await tap('a', ORIGIN)
@@ -224,7 +267,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'seven',
-    slot: 1.3,
+    slot: 1.25,
     mode: 'split',
     drive: async () => {
       await tap('a', 'Sign her up')
@@ -237,7 +280,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'eight',
-    slot: 2.6,
+    slot: 2.4,
     mode: 'split',
     drive: async () => {
       await tap('a', 'A year passes')
@@ -252,7 +295,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'nine',
-    slot: 2.3,
+    slot: 2.1,
     mode: 'split',
     drive: async () => {
       await year('a', 8, A_PICKS[8], false)
@@ -267,7 +310,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'ten',
-    slot: 1.8,
+    slot: 1.7,
     mode: 'split',
     drive: async () => {
       await year('a', 9, A_PICKS[9], false)
@@ -282,7 +325,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'open',
-    slot: 2.4,
+    slot: 2.1,
     mode: 'focus-b',
     drive: async () => {
       await year('a', 10, A_PICKS[10], false)
@@ -301,7 +344,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'result',
-    slot: 1.0,
+    slot: 0.95,
     mode: 'focus-b',
     drive: async () => {
       await tap('b', 'Skip the rest of the weekend')
@@ -314,7 +357,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'eleven',
-    slot: 2.7,
+    slot: 2.4,
     mode: 'split',
     drive: async () => {
       await tap('b', 'Go on')
@@ -332,7 +375,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'twelve',
-    slot: 3.6,
+    slot: 3.0,
     mode: 'split',
     drive: async () => {
       await year('a', 11, A_PICKS[11], false)
@@ -351,7 +394,7 @@ const BEATS: Beat[] = [
   },
   {
     key: 'handover',
-    slot: 3.9,
+    slot: 3.0,
     mode: 'split',
     drive: async () => {
       await year('a', 12, A_PICKS[12], false)
@@ -373,17 +416,15 @@ const BEATS: Beat[] = [
     },
   },
   {
-    // ⭐⭐ THE CLOSE-UP, AND IT EXISTS BECAUSE THE OWNER COULD NOT SEE THE DIFFERENCE. Two phone-sized
-    // handovers side by side put the one sentence that differs at 15px in a 1080 frame. This crops
-    // both cards to the coach block and the money lines, stacks them, and scales to whatever still
-    // fits - about 2.5x. Nothing is added: it is the same two screens, closer.
-    key: 'compare',
-    slot: 3.4,
-    mode: 'compare',
+    // ⭐⭐ THE READ-OUT. The owner's note after the second cut: «we could print result parameters over
+    // each screen and highlight the difference, for example higher stats would be in our accent
+    // yellow, lower in white». The two handovers stay exactly where they are and the sheet comes up
+    // over each of them, so the layout does not move between this beat and the one before it.
+    key: 'stats',
+    slot: 4.2,
+    mode: 'stats',
     drive: async () => {
-      const z = measureCrop()
-      await setZoom(z)
-      await wait(120)
+      buildRows()
     },
     paint: () => {
       tagA.value = ''
@@ -393,8 +434,28 @@ const BEATS: Beat[] = [
     },
   },
   {
+    // ⭐⭐ THE CLOSE-UP, AND IT EXISTS BECAUSE THE OWNER COULD NOT SEE THE DIFFERENCE. Two phone-sized
+    // handovers side by side put the one sentence that differs at 15px in a 1080 frame. This crops
+    // both cards to the coach block and the money lines, stacks them, and scales to whatever still
+    // fits - about 2.5x. Nothing is added: it is the same two screens, closer.
+    key: 'compare',
+    slot: 2.2,
+    mode: 'compare',
+    drive: async () => {
+      const z = measureCrop()
+      await setZoom(z)
+      await wait(120)
+    },
+    paint: () => {
+      tagA.value = ''
+      tagB.value = ''
+      capA.value = 'The coach said it out loud.'
+      capB.value = ''
+    },
+  },
+  {
     key: 'logo',
-    slot: 2.7,
+    slot: 2.6,
     mode: 'logo',
     drive: async () => {
       await setZoom(1)
@@ -466,6 +527,9 @@ async function play(): Promise<void> {
     playedB: b.text('.handover-played'),
     snapA: a.snapshot(),
     snapB: b.snapshot(),
+    factsA: facts?.a ?? null,
+    factsB: facts?.b ?? null,
+    rows: rows.value,
   }
   ;(window as any).__filmDone = true
 }
@@ -494,7 +558,7 @@ onMounted(() => {
 <template>
   <div class="stage" :class="[mode, { lit: lit === 1 }]">
     <div class="band top">
-      <div v-if="mode === 'split'" class="tags">
+      <div v-if="mode === 'split' || mode === 'stats'" class="tags">
         <div class="col">
           <p class="who">Keep it smaller</p>
           <p class="chose a">{{ tagA }}</p>
@@ -516,6 +580,15 @@ onMounted(() => {
             :style="frameStyle('a')"
             src="/tools/film/prologue-phone.html?zoom=1"
           ></iframe>
+        <div v-if="mode === 'stats'" class="sheet">
+          <template v-for="(r, i) in rows" :key="'a' + i">
+            <p v-if="r.head" class="sheet-head">{{ r.head }}</p>
+            <div v-else class="row">
+              <span class="k">{{ r.label }}</span>
+              <span class="v" :class="{ hi: r.hi === 'a' }">{{ r.a }}</span>
+            </div>
+          </template>
+        </div>
         </div>
       </div>
       <div class="slot" :class="{ hidden: mode === 'logo' }">
@@ -527,6 +600,15 @@ onMounted(() => {
             :style="frameStyle('b')"
             src="/tools/film/prologue-phone.html?zoom=1"
           ></iframe>
+        <div v-if="mode === 'stats'" class="sheet">
+          <template v-for="(r, i) in rows" :key="'b' + i">
+            <p v-if="r.head" class="sheet-head">{{ r.head }}</p>
+            <div v-else class="row">
+              <span class="k">{{ r.label }}</span>
+              <span class="v" :class="{ hi: r.hi === 'b' }">{{ r.b }}</span>
+            </div>
+          </template>
+        </div>
         </div>
       </div>
 
@@ -667,6 +749,7 @@ onMounted(() => {
   color: #cfe152;
 }
 .win {
+  position: relative;
   border-radius: 22px;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
   overflow: hidden;
@@ -675,6 +758,67 @@ onMounted(() => {
   display: block;
   border: 0;
   background: #0a0e13;
+}
+
+/* ⭐ THE READ-OUT SHEET, laid OVER the handover rather than beside it – the owner asked for the
+   parameters «over each screen», and the card stays faintly visible underneath so it is still
+   obvious which screen each column belongs to. Sora, which is `--font-heading` and the app's own
+   display face. */
+.sheet {
+  position: absolute;
+  inset: 0;
+  padding: 26px 24px;
+  /* ⚠ MEASURED ON THE FIRST STILL: at 0.88 the card's own lines showed THROUGH the rows – the coach's
+     two sentences ran straight across the money block and the frame read as two texts fighting. The
+     card is still there, just far enough back to be a texture rather than a second column of words. */
+  background: rgba(8, 11, 15, 0.955);
+  backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.sheet-head {
+  margin: 0 0 8px;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #6d7a83;
+}
+.sheet-head + .row {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.row + .sheet-head {
+  margin-top: 30px;
+}
+.row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.row .k {
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: #8e9ba4;
+}
+/* ⚠ HIGHER, NOT BETTER. His rule, applied literally: the larger of the two numbers is in the
+   accent and the smaller is white. On the money rows the larger number is the one that was SPENT,
+   and marking it is the honest reading – the sheet is a comparison, not a verdict. */
+.row .v {
+  font-family: 'Sora', system-ui, sans-serif;
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: #f2f6f8;
+}
+.row .v.hi {
+  color: #cfe152;
 }
 
 .logo {

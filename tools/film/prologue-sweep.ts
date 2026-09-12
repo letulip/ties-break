@@ -1,25 +1,34 @@
-// WHY THE TWO GIRLS LOOK ALIKE AT THE HANDOVER, AND WHETHER ANY LEGAL SETUP LOOKS DIFFERENT.
+// WHY THE TWO GIRLS LOOK ALIKE AT THE HANDOVER, AND WHICH LEGAL SETUP LOOKS THE LEAST ALIKE.
 //
 // The owner's two paths are already the extremes the table allows: A takes the cheapest option on
 // every card and enters nothing, B takes the dearest on every card and enters every weekend. So the
 // spread is not a choice problem – it is `childhoodArrival`, which adds `walk.level + walk.shape[k]`
 // to her born skills and then CLAMPS the result back into `STARTING_SKILL_BAND`, the same band a
-// fresh fourteen-year-old is drawn from. Two things follow and this sweep measures both:
+// fresh fourteen-year-old is drawn from. Three things follow and this sweep measures all three:
 //
 //   1. the gap is bounded by CHILDHOOD.swingPoints, whatever the seed;
-//   2. where in the band her born skills sit decides how much of that gap SURVIVES the clamp, and
-//      whether the two arrivals land on opposite sides of the coach's own HANDOVER_BASE_CUTS.
+//   2. ⭐ WHERE NO AXIS CLAMPS THE GAP IS THE SAME NUMBER FOR EVERY SEED – `arrival = born + level +
+//      shape`, so the difference between the two paths cancels `born` entirely. The seed cannot
+//      widen the gap. All it can do is lose some of it to the clamp;
+//   3. ...and decide WHERE IN THE BAND the pair sits, which is what actually changes the screen:
+//      the coach's base sentence, his rung, and her play style are all thresholds on that position.
 //
-// The film's seed is whatever `Math.random` is pinned to, because both of the app's own generators
-// read it (`freshSeed()` for the prologue, the store's empty-seed fill for the career). So the sweep
-// is over that one constant, and the rule for choosing it is printed with the table: no clamped
-// axis, and the two arrivals on opposite sides of the cut.
+// So the search is not for a bigger gap – there isn't one – but for the constant that makes the
+// MOST OF THE HANDOVER DIFFER. The film's seed is whatever `Math.random` is pinned to, because both
+// of the app's own generators read it (`freshSeed()` for the prologue, the store's empty-seed fill
+// for the career), so the sweep is over that one constant.
+//
+// ⚠ TOURNAMENT OUTCOMES ARE NOT A CRITERION. The brief: «never search for or reroll a more
+// convenient tournament result». They are computed here and printed AFTER the pick, so the table
+// shows what the chosen constant gave rather than what was chosen for.
 import { TOURNAMENT_ANSWER } from '../../src/prologue/cards'
 import { EMPTY_RUN, withOrigin, withPick, withEntry, cardFor, chosenYears, spentCents, enteredAges, yearsSoFar, yearsLivedBy, type PrologueRun } from '../../src/prologue/run'
 import { localOpensAt, playLocalOpen, outcomeOf, prologueEntrant } from '../../src/prologue/pool'
 import { createWorld, KID_ID } from '../../src/engine/world'
+import { toSnapshot } from '../../src/engine/world/snapshot'
 import { DEFAULT_PROFILE } from '../../src/shared/protocol'
 import { settleIdentity, OPENING_IDENTITY } from '../../src/prologue/identity'
+import { coachBaseReadFor } from '../../src/prologue/handover'
 import { HANDOVER_BASE_CUTS } from '../../src/engine/world/coachMarket'
 import { STARTING_SKILL_BAND, SKILL_KEYS } from '../../src/engine/development'
 import { PROLOGUE_CARDS } from '../../src/prologue/cards'
@@ -39,46 +48,86 @@ const named = settleIdentity(OPENING_IDENTITY)
 const profileFor = (run: PrologueRun) => ({ ...DEFAULT_PROFILE, ...named, background: run.origin! })
 const avg = (o: any) => SKILL_KEYS.reduce((n, k) => n + o[k], 0) / SKILL_KEYS.length
 const bandOf = (level: number) => (level < HANDOVER_BASE_CUTS.below ? 'behind' : level > HANDOVER_BASE_CUTS.ahead ? 'ahead' : 'level')
+const SPAN = Number(process.env.SPAN || 999)
 
-console.log('HANDOVER_BASE_CUTS', JSON.stringify(HANDOVER_BASE_CUTS), '| band', JSON.stringify(STARTING_SKILL_BAND))
-console.log('\n  v      prologue-seed   career    A avg   B avg   gap   A/B band        clamped(B)   B opens')
-
-const rows: any[] = []
-for (let i = 1; i <= 99; i++) {
-  const v = i / 100
+// ⭐⭐ THE RULE, WRITTEN DOWN BEFORE THE TABLE IS READ. Keep the constants where NO axis clamps on
+// EITHER path – top or bottom – so the whole of the swing reaches the screen. Of those, keep the
+// ones that put the two arrivals in different `HANDOVER_BASE_CUTS` bands, because that is the one
+// difference the coach says out loud. Then take the constant that makes the MOST of the handover
+// differ – base band, coach's base sentence, coach rung, play style – tie-broken by the widest
+// arrival gap and then by the lowest constant. The tournament column is printed but never read.
+type Row = ReturnType<typeof measure>
+function measure(v: number) {
   const prologueSeed = `prologue-${(v.toString(36).slice(2) + '0000').slice(0, 8)}`
   const careerSeed = `${named.kidName.toLowerCase()}-${(v.toString(36).slice(2) + '0000').slice(0, 4)}`
   const wa: any = createWorld(careerSeed, profileFor(A), 'sw-a', { years: chosenYears(A), spentCents: spentCents(A) })
   const wb: any = createWorld(careerSeed, profileFor(B), 'sw-b', { years: chosenYears(B), spentCents: spentCents(B) })
-  const clamped = SKILL_KEYS.filter((k) => wb.skills[k] >= STARTING_SKILL_BAND[k][1] - 0.001)
+  const sa: any = toSnapshot(wa)
+  const sb: any = toSnapshot(wb)
+  const clamped = SKILL_KEYS.filter(
+    (k) =>
+      wb.skills[k] >= STARTING_SKILL_BAND[k][1] - 0.001 ||
+      wa.skills[k] <= STARTING_SKILL_BAND[k][0] + 0.001 ||
+      wa.skills[k] >= STARTING_SKILL_BAND[k][1] - 0.001 ||
+      wb.skills[k] <= STARTING_SKILL_BAND[k][0] + 0.001,
+  )
   const la = avg(wa.skills)
   const lb = avg(wb.skills)
+  const ba = bandOf(la)
+  const bb = bandOf(lb)
+  const differs = {
+    baseBand: sa.handoverBaseBand !== sb.handoverBaseBand,
+    coachLine: coachBaseReadFor(sa.handoverBaseBand, sa.seed) !== coachBaseReadFor(sb.handoverBaseBand, sb.seed),
+    rung: (sa.profile?.coachTier ?? '') !== (sb.profile?.coachTier ?? ''),
+    style: (sa.profile?.playStyle ?? '') !== (sb.profile?.playStyle ?? ''),
+    roomBand: sa.handoverBand !== sb.handoverBand,
+  }
+  const score = Object.values(differs).filter(Boolean).length
+  return {
+    v, prologueSeed, careerSeed, la, lb, gap: lb - la, ba, bb, clamped, differs, score,
+    rungA: sa.profile?.coachTier ?? '?', rungB: sb.profile?.coachTier ?? '?',
+    styleA: sa.profile?.playStyle ?? '?', styleB: sb.profile?.playStyle ?? '?',
+    perAxis: SKILL_KEYS.map((k) => ({ k, a: wa.skills[k], b: wb.skills[k], d: wb.skills[k] - wa.skills[k] })),
+  }
+}
+function opensOf(prologueSeed: string) {
   const full = `${named.kidName} ${named.kidLastName}`
-  const opens: string[] = []
+  const out: string[] = []
   for (const card of PROLOGUE_CARDS) {
     const n = localOpensAt(yearsSoFar(B), card.age, enteredAges(B))
     for (let idx = 0; idx < n; idx++) {
       const kid = prologueEntrant(prologueSeed, KID_ID, full, card.age, yearsLivedBy(B, card.age))
-      opens.push(`${card.age}:${outcomeOf(playLocalOpen(prologueSeed, kid, card.age, idx))}`)
+      out.push(`${card.age}:${outcomeOf(playLocalOpen(prologueSeed, kid, card.age, idx))}`)
     }
   }
-  const row = { v, prologueSeed, careerSeed, la, lb, gap: lb - la, ba: bandOf(la), bb: bandOf(lb), clamped, opens }
-  rows.push(row)
-  if (process.env.QUIET) continue
-  console.log(
-    `  ${v.toFixed(4)} ${prologueSeed.padEnd(17)} ${careerSeed.padEnd(9)} ${la.toFixed(2).padStart(6)} ${lb.toFixed(2).padStart(7)} ${row.gap.toFixed(2).padStart(6)}   ${(row.ba + '/' + row.bb).padEnd(14)} ${(clamped.join(',') || '-').padEnd(12)} ${opens.join(' ')}`,
-  )
+  return out
 }
 
+console.log('HANDOVER_BASE_CUTS', JSON.stringify(HANDOVER_BASE_CUTS), '| band', JSON.stringify(STARTING_SKILL_BAND))
+console.log(`sweeping ${SPAN} constants v = i/${SPAN + 1}\n`)
+const rows: Row[] = []
+for (let i = 1; i <= SPAN; i++) rows.push(measure(i / (SPAN + 1)))
+
 const clean = rows.filter((r) => r.clamped.length === 0)
-const split = rows.filter((r) => r.ba !== r.bb)
-console.log(`\n  ${rows.length} constants swept | ${clean.length} with no clamped axis | ${split.length} where the coach's base band DIFFERS between the paths`)
-console.log('  gap range', Math.min(...rows.map((r) => r.gap)).toFixed(2), '..', Math.max(...rows.map((r) => r.gap)).toFixed(2))
-const both = rows.filter((r) => r.clamped.length === 0 && r.ba !== r.bb)
-console.log('  no clamp AND different band:', both.length)
-const pick = both[0]
-console.log('\n  ⭐ THE RULE: the first constant in the sweep that clamps no axis (so the whole swing survives)')
-console.log('     and lands the two arrivals on opposite sides of HANDOVER_BASE_CUTS (so the coach says two')
-console.log('     different sentences). Tournament results are NOT a criterion and are whatever it gives.')
+console.log(`  ${rows.length} constants swept | ${clean.length} clamp no axis on either path`)
+console.log('  gap range          ', Math.min(...rows.map((r) => r.gap)).toFixed(2), '..', Math.max(...rows.map((r) => r.gap)).toFixed(2))
+console.log('  gap where no clamp ', Math.min(...clean.map((r) => r.gap)).toFixed(4), '..', Math.max(...clean.map((r) => r.gap)).toFixed(4), ' <- one number: the seed cannot widen it')
+for (const key of ['baseBand', 'coachLine', 'rung', 'style', 'roomBand'] as const)
+  console.log(`  ${key.padEnd(10)} differs on ${String(rows.filter((r) => r.differs[key]).length).padStart(4)} / ${rows.length}   (of the unclamped: ${clean.filter((r) => r.differs[key]).length} / ${clean.length})`)
+
+const eligible = clean.filter((r) => r.differs.baseBand)
+const best = Math.max(...eligible.map((r) => r.score))
+const short = eligible.filter((r) => r.score === best).sort((a, b) => b.gap - a.gap || a.v - b.v)
+console.log(`\n  eligible (no clamp AND different base band): ${eligible.length} | best score ${best} of 5 | ${short.length} tie`)
+const pick = short[0]
+console.log('\n  ⭐ THE RULE (written above the table, applied to it): no clamped axis on either path,')
+console.log('     the two arrivals in different HANDOVER_BASE_CUTS bands, then the most of the handover')
+console.log('     differing, then the widest gap, then the lowest constant. Tournaments are not read.')
 console.log('  ⭐ PICKED v =', pick.v, '| prologue seed', pick.prologueSeed, '| career seed', pick.careerSeed)
-console.log('     A', pick.la.toFixed(2), pick.ba, '-> B', pick.lb.toFixed(2), pick.bb, '| gap', pick.gap.toFixed(2), '| opens', pick.opens.join(' '))
+console.log('     A', pick.la.toFixed(2), pick.ba, '-> B', pick.lb.toFixed(2), pick.bb, '| gap', pick.gap.toFixed(2), '| score', pick.score)
+console.log('     rung ', pick.rungA, '->', pick.rungB, '| style', pick.styleA, '->', pick.styleB)
+console.log('     differs:', Object.entries(pick.differs).filter(([, y]) => y).map(([k]) => k).join(' '))
+for (const a of pick.perAxis) console.log(`     ${a.k.padEnd(14)} A ${a.a.toFixed(2).padStart(6)}   B ${a.b.toFixed(2).padStart(6)}   +${a.d.toFixed(2)}`)
+console.log('     opens (read after the pick):', opensOf(pick.prologueSeed).join(' '))
+console.log('\n  runners-up at the same score:')
+for (const r of short.slice(0, 8)) console.log(`     v=${r.v} ${r.careerSeed.padEnd(10)} ${r.la.toFixed(2)} ${r.ba} -> ${r.lb.toFixed(2)} ${r.bb} | ${r.rungA}->${r.rungB} | ${r.styleA}->${r.styleB}`)
