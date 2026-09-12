@@ -3,7 +3,7 @@ type: spec
 status: current
 area: economy
 canonical: false
-last-reviewed: 2026-09-01
+last-reviewed: 2026-09-12
 ---
 
 # Brand inertia – a built brand must not evaporate with this year's noise
@@ -547,3 +547,75 @@ current `fameAt` and round 32 #5's half-life ladder is part of that – the same
 the first time, for the same reason, and `tests/fixtures/saves/v69.json` is a frozen artefact of the
 version rather than a re-derivation, so nothing regenerates. All seventy fixtures v0…v69 still
 migrate: `tests/goldenSaves.test.ts` and `round32-brand-inertia.test.ts` §5's named ladder.
+
+---
+
+## 20. ⭐⭐⭐ THE WALK IS INCREMENTAL – round 41 #18 (12.09.2026), and it is the defect this spec is named for
+
+**HIS REPORT:** «у девочки в 16 лет в топ-100 свежекупленный бренд почему-то упал в цене на вторую
+неделю и остался там и дальше на долго. Начал потихоньку расти только после победы на w500. Надо
+проверить логику. **И снова потом упал в цене внезапно.**»
+
+**Three of the four things he saw are the model working, and they are untouched:**
+
+* **the dip after the buy** – the row opens at what was PAID (round 38 #16's sell-and-rebuy fix) and
+  a sixteen-year-old's derived worth is far below it, so the first weeks fall;
+* **the long flat stretch** – `worthRampHalfLife` is ≈266 weeks at low fame;
+* **the rise after the W500** – fame climbs and the target crosses above the row.
+
+**The fourth was a defect, and it was in the SPAN.** `assetWorthCents` called
+`rampedWorthCents(paidCents, derived, week − boughtWeek, H_today)`: the half-life was recomputed from
+**today's** fame and then applied to the **whole holding period**, so a fame that fell re-read every
+week the family had already lived.
+
+### The worked example, reproduced and then measured away (`tools/r41-brand-ramp.ts`)
+
+Held 100 weeks, paid $250,000, derived $2,000,000, fame **25.6 → 12.8** (half-life 52 → 104 weeks).
+The three predictions were written into the tool's header before the first run:
+
+| | predicted | measured |
+| --- | --- | ---: |
+| Q1 the OLD arm's move at the fame halving | about −29% | **−28.13%** |
+| Q2 the NEW arm's move at the same event | under 1% | **+0.20%** |
+| Q3 his own scenario's first week, OLD vs NEW | identical | **identical** (and the first eight) |
+
+```
+  week                   OLD             NEW
+  1                 $273,172        $273,172
+  52              $1,125,000      $1,125,000
+  99              $1,532,348      $1,532,348
+  100             $1,101,359      $1,535,454     <- the fame halves
+  101             $1,107,329      $1,538,540
+  160             $1,397,558      $1,688,572
+```
+
+The OLD column is his report exactly: a cliff, then a slow climb back out of it. ⚠ **The two arms
+agree to $0 at week 99**, which is what makes this one path measured twice rather than two models.
+
+### What changed, and what it costs
+
+`assetWorthCents`' business arm now steps **one week from the row's own value** at this week's pace:
+`value += (derived − value)·(1 − 0.5^(1/H_now))`. The accumulator is `owned.valueCents`, which
+`revalueAssets` has written every week since slice 1 – **no new persisted field, no migration,
+`SAVE_SCHEMA_VERSION` stays 74**, and a save mid-hold keeps walking from the value it was saved with.
+
+⚠ **It is the SAME curve.** For a constant half-life the weekly product telescopes to the shipped
+closed form exactly (`d + (v − d)·q` applied n times from `paid` is `d + (paid − d)·qⁿ`), so every
+number round 38 #16 measured still describes this path. Measured drift over 416 weekly roundings:
+**four cents on $156,250**.
+
+⚠⚠ **THE ONE PROPERTY IT COSTS IS IDEMPOTENCE, ON ONE FAMILY.** `revalueAssets` run twice in a week
+now double-steps a brand. It is safe because the tick is its only caller
+(`world/phaseObligations.ts`, after the week is incremented and after `deliverAssets`), the warning
+lives on `revalueAssets`' own header where a reader adding a second caller will see it, and
+`tests/round41-brand-inertia.test.ts` §5 states it out loud rather than leaving it to be discovered.
+
+⚠ **The academy arm was deliberately NOT moved.** Its driver is `academyReputationOf`, which starts
+at 1 and can only ever ADD, so its half-life can only shorten and the retroactive hazard cannot
+arise. Moving it would be a balance change with no complaint behind it.
+
+⚠ **One shipped band was re-measured rather than re-banded quietly** – `round30-brand-value` §3's
+«two quiet seasons» hold was (0.40, 0.60) against a measured 0.5385 and is now (0.55, 0.80) against
+**0.7065**. Nothing about fame, the multiple or the income moved: a fading brand simply stops having
+its own past re-read, so two quiet seasons cost about three tenths of the asset instead of a half.
+That is «падение должно быть более плавным» arriving properly, three rounds after it was asked for.

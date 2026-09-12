@@ -467,20 +467,40 @@ export function worthRampHalfLife(driver: number, medianDriver: number): number 
   return Math.min(R.maxHalfLifeWeeks, Math.max(R.minHalfLifeWeeks, R.halfLifeWeeks / pace))
 }
 
-/** ⭐⭐ THE RAMP ITSELF – what a row is worth `weeksHeld` after it was bought, given what it was paid
- *  for and what the world says it is worth.
+/** ⭐⭐ THE RAMP ITSELF – what a row is worth `weeksHeld` after the value it started from, given that
+ *  starting value and what the world says it is worth now.
  *
- *  ⚠⚠ AT `weeksHeld === 0` THIS IS EXACTLY `paidCents`, AND THAT IS THE WHOLE OF THE LOOP FIX. A rung
+ *  ⚠⚠ AT `weeksHeld === 0` THIS IS EXACTLY `fromCents`, AND THAT IS THE WHOLE OF THE LOOP FIX. A rung
  *  bought this week is worth what was paid for it, so selling a grown one and buying it back hands
  *  the family the difference in cash and takes the same difference off the shelf.
  *
  *  ⚠ IT CONVERGES FROM BOTH SIDES. When the derived value is BELOW what was paid – a brand whose fame
  *  has gone – the same curve walks the row DOWN to it instead of up, which is why one function
- *  answers «стоимость набирается не за день» and «падение должно быть более плавным» at once. */
-export function rampedWorthCents(paidCents: number, derivedCents: number, weeksHeld: number, halfLifeWeeks: number): number {
+ *  answers «стоимость набирается не за день» and «падение должно быть более плавным» at once.
+ *
+ *  ⭐⭐⭐ ROUND 41 #18 RENAMED THE FIRST ARGUMENT AND NOTHING ELSE, AND THE RENAME IS THE ITEM.
+ *
+ *  THE OWNER, 12.09: «у девочки в 16 лет в топ-100 свежекупленный бренд почему-то упал в цене на
+ *  вторую неделю и остался там и дальше на долго … И снова потом упал в цене внезапно.»
+ *
+ *  ⚠⚠ THE SUDDEN LATER DROP WAS A REAL DEFECT AND IT WAS IN THE **SPAN**, NOT IN THIS ARITHMETIC.
+ *  The brand's caller used to pass `paidCents` and the WHOLE holding period, with a half-life
+ *  recomputed from TODAY's fame – so a fame that fell rewrote the entire history of the row at once.
+ *  The worked example: held 100 weeks, paid $250,000, derived $2,000,000, fame 25.6 → 12.8 halves the
+ *  pace (H 52 → 104) and the row drops **29% in a single week** without anything having happened to
+ *  the brand that week. Now the caller passes THE ROW'S OWN CURRENT VALUE and a span of ONE WEEK, so
+ *  each week steps toward today's target at today's pace and no week can rewrite an earlier one.
+ *
+ *  ⚠ THE FUNCTION IS UNCHANGED TO THE CENT, and that is worth saying out loud: for a CONSTANT
+ *  half-life the weekly product telescopes to exactly this closed form –
+ *  `d + (v − d)·q` applied n times from `paid` is `d + (paid − d)·qⁿ` – so every number round 38 #16
+ *  measured still describes this path. What changed is which (start, span) the brand's caller hands
+ *  it. `tests/round41-brand-inertia.test.ts` §1 asserts the equivalence rather than asserting this
+ *  paragraph. */
+export function rampedWorthCents(fromCents: number, derivedCents: number, weeksHeld: number, halfLifeWeeks: number): number {
   if (!(halfLifeWeeks > 0)) return Math.round(derivedCents)
   const kept = Math.pow(0.5, Math.max(0, weeksHeld) / halfLifeWeeks)
-  return Math.round(derivedCents + (paidCents - derivedCents) * kept)
+  return Math.round(derivedCents + (fromCents - derivedCents) * kept)
 }
 
 export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: ShopItem, weekOffset = 0): number {
@@ -520,8 +540,55 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
     // curve walks a fading brand DOWN, which is «более плавным» from the other side.
     const derived = Math.max(owned.paidCents * ECONOMY.shop.businessValueFloorShare, grossCents)
     if (item.family !== 'business') return Math.round(derived)
+    // ⭐⭐⭐ ROUND 41 #18 – THE WALK IS INCREMENTAL AND PATH-HONEST NOW, AND THIS IS THE WHOLE FIX.
+    //
+    // THE OWNER, 12.09: «у девочки в 16 лет в топ-100 свежекупленный бренд почему-то упал в цене на
+    // вторую неделю и остался там и дальше на долго. Начал потихоньку расти только после победы на
+    // w500. Надо проверить логику. И снова потом упал в цене внезапно.»
+    //
+    // ⚠⚠ THREE OF THE FOUR THINGS HE SAW ARE THE MODEL WORKING AND ARE UNTOUCHED. The dip after the
+    // buy (the row opens at what was PAID and the derived value for a sixteen-year-old's brand is
+    // far below it), the long flat stretch (H ≈ 266 weeks at low fame) and the rise after the W500
+    // (fame +8 flips the sign) are all design, recorded in the round's own recon. The FOURTH – «и
+    // снова потом упал в цене внезапно» – was a defect, and it was in the SPAN this call passed.
+    //
+    // ⚠⚠ WHAT IT USED TO DO: `rampedWorthCents(paidCents, derived, week − boughtWeek, H_today)`. The
+    // half-life was recomputed from TODAY's fame and then applied to the WHOLE holding period, so a
+    // fame that fell rewrote every week the family had already lived. Worked example: held 100
+    // weeks, paid $250,000, derived $2,000,000, fame 25.6 → 12.8 (H 52 → 104) drops the row **29% in
+    // one week** with nothing having happened to the brand that week. A valuation that can rewrite
+    // its own past is not a valuation, it is a re-reading.
+    //
+    // ⚠⚠ WHAT IT DOES NOW: one week's step from THE ROW'S OWN CURRENT VALUE, at this week's pace
+    // toward this week's target. `owned.valueCents` is the accumulator – `revalueAssets` has written
+    // it every week since slice 1 – so no new field is persisted and `SAVE_SCHEMA_VERSION` does not
+    // move. A save mid-hold simply keeps walking from the value it was saved with.
+    //
+    // ⚠⚠ AND IT IS THE SAME CURVE, NOT A NEW ONE. For a constant half-life the weekly product
+    // telescopes to the shipped closed form exactly (`rampedWorthCents`' own note), so round 38
+    // #16's measurements still describe this path; what a FALLING fame no longer does is reach
+    // backwards.
+    //
+    // ⚠⚠⚠ THE ONE PROPERTY THIS COSTS IS IDEMPOTENCE, AND IT IS PAID KNOWINGLY. `revalueAssets`'
+    // header says the value is «never of the previous value, so running it twice in a week or
+    // skipping a week changes nothing» – true of every other family and no longer true of this one.
+    // It is safe because the tick is the only caller (`phaseObligations.ts`, once, after the week
+    // has been incremented and after `deliverAssets`), and it is exactly the shape `reportMarketSeason`
+    // names as the thing to watch: **a second caller of `revalueAssets` would double-step a brand**.
+    // The note on `revalueAssets` carries the warning where a reader adding one would see it.
+    //
+    // ⚠ THE WEEK-ZERO IDENTITY IS EXPLICIT NOW rather than falling out of the span, because the span
+    // is one week from here on: a row bought this week is worth what was paid for it, which is what
+    // closes the sell-and-rebuy loop (round 38 #16) and what holds a commissioned order at its price
+    // (§3f's negative span, which this branch can also see).
+    const held = week - (owned.basisWeek ?? owned.boughtWeek)
+    if (held <= 0) return Math.round(owned.paidCents)
     const brandHalf = worthRampHalfLife(brandSignalsOf(world, week).fame, ECONOMY.shop.worthRamp.medianFame)
-    return rampedWorthCents(owned.paidCents, derived, week - (owned.basisWeek ?? owned.boughtWeek), brandHalf)
+    // ⚠ `weekOffset + 1` IS «ONE MORE WEEK OF HOLDING» READ FROM THE ROW'S LAST VALUATION, and it is
+    // what keeps `householdWeekly` honest for free: the strip's line is this function at +1 less this
+    // function at 0, which is now the step AFTER the one the tick just took – the same magnitude, the
+    // same sign, and still one subtraction of one function from itself.
+    return rampedWorthCents(owned.valueCents, derived, weekOffset + 1, brandHalf)
   }
   const drifted = assetValueCents(item, owned.paidCents, week - (owned.basisWeek ?? owned.boughtWeek))
   // ⭐⭐⭐ ROUND 38 #8 – THE FOURTH ARITHMETIC, AND IT IS THE THIRD ONE'S MIRROR IMAGE ON PURPOSE.
@@ -559,6 +626,14 @@ export function assetWorthCents(world: WorldState, owned: OwnedAsset, item: Shop
   // already a function of weeks held, so a stage bought this week is worth exactly what was paid on
   // that half; it was the PREMIUM that arrived WHOLE on the buying week and made the academy loopable
   // at about $1M of WEALTH a cycle. Same curve, same constants, its own driver.
+  // ⚠⚠ ROUND 41 #18 LEFT THIS ARM ON THE CLOSED FORM ON PURPOSE, AND THE REASON IS THE DRIVER. The
+  // brand's walk went incremental because its driver – FAME – can FALL, and a falling driver
+  // recomputed over the whole holding period rewrites weeks the family has already lived. The
+  // academy's driver is `academyReputationOf`, a fold over banked seasons that starts at 1 and can
+  // only ever ADD (its own note: «a career that collapses cannot take back the land and the
+  // courts»), so its half-life can only ever SHORTEN and the retroactive hazard this item fixed
+  // cannot arise here. ⚠ Moving it anyway would be a balance change with no complaint behind it and
+  // no measurement in front of it, which is the thing invariant 5 exists to refuse.
   const acadHeld = week - (owned.basisWeek ?? owned.boughtWeek)
   const acadHalf = worthRampHalfLife(Math.max(0, academyReputationOf(world) - 1), ECONOMY.shop.worthRamp.medianReputationOver1)
   return rampedWorthCents(drifted, Math.round(drifted * academyPremiumX(world)), acadHeld, acadHalf)
