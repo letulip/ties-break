@@ -40,13 +40,16 @@ import {
   SAVE_SCHEMA_VERSION,
   toSnapshot,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
 import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, managerCommissionBps } from '../src/engine/economy'
 import { ownAccountNote, type KidLifeWorldView } from '../src/engine/kidLife'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+// ⭐ v74 T6 – ONE DRAIN FOR EVERY BEAT KIND. `answerLifeBeat(world, 'listen')` was a complete
+// answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
+// can be raised any week from her sixteenth on, so every hand-written call site threw. See
+// `drainLifeBeats`.
+import { drainLifeBeats } from './helpers/career'
 
 /** His ladder, spelled out. NOT read from `ECONOMY.kidShare`, so a retune has to come here and be
  *  looked at rather than sliding through green. */
@@ -76,7 +79,7 @@ function answerAll(world: WorldState): void {
   // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
   // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
   // cheapest place: a caller that never asked the player must not put a number on the scale.
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  drainLifeBeats(world)
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 }

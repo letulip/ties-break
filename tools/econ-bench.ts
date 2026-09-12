@@ -67,6 +67,7 @@ import {
   STARTING_FUNDS_CENTS,
   type WorldState,
 } from '../src/engine/world'
+import { drainKnock } from './_knocks'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { WEEK_PLAN_PRESETS, LADDER_TRACKS } from '../src/shared/protocol'
 import type { CoachTier, FamilyBackground, PlayerProfile, WorldEventCategory } from '../src/shared/protocol'
@@ -616,11 +617,25 @@ export const POLICIES: Policy[] = [
  *  function exists to prevent. Undefined is the historical arm, byte for byte. */
 export type EntryVeto = (world: WorldState, event: SeasonEvent) => boolean
 
+/** ⚠ THE ONE OPT-OUT THIS WALK HAS, AND IT EXISTS FOR THE T6b LAW. `stepCareerWeek` answers an open
+ *  knock (see the drain below), which is right for every harness that does not care who answered –
+ *  and fatal for the two that do. `tools/e2e-fixtures.ts`' `junior` recipe REQUIRES a save that boots
+ *  holding an unanswered knock (`e2e/week-advance.spec.ts` is the only place that claim can live), and
+ *  `tools/life-arrival.ts` has `decides` as an ARM. Both pass `drainKnocks: false` and keep exactly
+ *  the walk they had. ⚠ Measured rather than reasoned: with the drain unconditional, `e2e:fixtures`
+ *  exits 1 on «junior: no seed in 200 reached the state» – 200 of 200 rejected with «boots without an
+ *  open knock», because there is no longer such a week to find. */
+export interface StepOptions {
+  /** false = leave an open knock alone. Default (undefined/true) answers it with `'rest'`. */
+  drainKnocks?: boolean
+}
+
 export function stepCareerWeek(
   world: WorldState,
   rng: Rng,
   policy: Policy = POLICIES[0],
   veto?: EntryVeto,
+  opts?: StepOptions,
 ): Record<TierId, number> {
   const entered = zeroByTier()
   // ⚠ W2-ENDINGS: A CAREER THAT HAS ENDED ENTERS NOTHING, and the week still ticks. Since v39 a
@@ -748,6 +763,15 @@ export function stepCareerWeek(
   // ⭐ R6 – the look at the coaching bill.
   reviewCoach(world, policy, reserveCents)
   tickWeek(world, rng)
+  // ⭐ THE KNOCK DRAIN (wave 3, point 5). THIS BENCH DOES NOT MEASURE WHO ANSWERS A KNOCK, and until
+  // this line it did not answer one either – which is not the same as ignoring it. An undecided knock
+  // blocks time («Undecided knocks never expire – they block time instead», world/knock.ts) and
+  // `rollKnock` refuses to raise a new one while it is open, so ONE escalation used to latch the slot
+  // for the rest of the walk: measured at 47 of 156 weeks on the 25k/middle frozen career under T16,
+  // against 2 before it. The answer is `'rest'`, the same in every policy and every preset, so no arm
+  // of this bench can differ through it – see `tools/_knocks.ts` for why there is no bond-neutral
+  // option to take instead, and for the list of harnesses that must NOT have this line.
+  if (opts?.drainKnocks !== false) drainKnock(world)
   if (world.pendingTournament) {
     skipTournament(world)
     closeTournament(world)

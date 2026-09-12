@@ -281,6 +281,8 @@ describe('R14-2 — on the facts object, and on a real career', () => {
     // preset is the career default and nothing here reads it.
     // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
     coachTravelled: false,
+    // ⭐ v74 T6 – nobody has been mentioned to this parent; see `DiaryWorldView.partnerKnown`.
+    partnerKnown: false,
     trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -693,6 +695,8 @@ describe('ui/travel-set — the mood is the owner\'s rule and nothing else', () 
       vacationPackageId: null,
       // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
       coachTravelled: false,
+      // ⭐ v74 T6 – nobody has been mentioned to this parent; see `DiaryWorldView.partnerKnown`.
+      partnerKnown: false,
       trainPct: 75, knockChoice: null, knockPart: null, birthdayAge: null, birthdayGift: null, birthdayWanted: false, birthdayRepeatAge: null, ...over,   // ⚠ W2/W4: unread here
     })
     const away = assembleDiaryFacts(view({ events: trip(11, 'national') })) // ⚠ W4: the view's own week
@@ -1053,6 +1057,8 @@ describe('ui/travel-set — on a real career', () => {
       vacationPackageId: null,
       // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
       coachTravelled: false,
+      // ⭐ v74 T6 – nobody has been mentioned to this parent; see `DiaryWorldView.partnerKnown`.
+      partnerKnown: false,
       trainPct: 75,   // ⚠ W2: the plan, unread here
       knockChoice: null,
       birthdayAge: null,

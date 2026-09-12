@@ -132,6 +132,33 @@ export function prologueSceneUrl(stem: string): string {
   return `${base()}${ART_DIR}${stem}.webp`
 }
 
+// --- the graduation painting (T14) -------------------------------------------------------------
+//
+// `fem-euro-brunnet-adult-graduated.webp` – she is out of the hall, results in one hand, the
+// banner still up behind her. It shipped with the art set on 31.07 and no code has ever asked for
+// it; the owner found it in the directory on 11.09 and asked for it to be used.
+//
+// ⚠⚠ IT IS NOT A BAND FACE, AND THAT IS A MEASUREMENT. ONE file exists – `adult` – where `rehab`,
+// the painting-only face this was to copy, ships five. So it gets ITS OWN BUILDER for the reason
+// `onboardingHeroUrl` and `travelHomeUrl` have theirs, stated one screen up: threading a picture
+// through the stage×emotion matrix implies the files the matrix promises. Joining `PortraitEmotion`
+// would have made `portraitUrl` able to build four filenames that are not on disk, on a career that
+// graduates at twenty-two – i.e. in the `teen` band, not in `adult`.
+//
+// ⚠ NOT WARMED, DELIBERATELY, and the paragraph at the top of this file is why: every file under
+// `public/images/**` is in the PWA install since round 29 part two #7, so the painting is on the
+// device before the popup that shows it exists. A `preloadGraduationArt` would warm a file the
+// precache already holds, on a week that has exactly one of them.
+
+/** The graduation painting's stem – ALSO the key its face centre is filed under in art/faceRects.
+ *  One spelling, because the URL and the framing must name the same picture. */
+export const GRADUATED_ART_STEM = 'adult-graduated'
+
+/** Painting URL for the graduation portrait. No stage, no emotion: there is one file. */
+export function graduatedUrl(): string {
+  return `${base()}${ART_DIR}${NAME}-${GRADUATED_ART_STEM}.webp`
+}
+
 /** 256px crop URL. No clamp any more: `adult` used to redirect to the teen crops because the adult
  *  ones had never been cut, and with the 31+ band reachable that would have put a teenager's face on a
  *  31-year-old. The missing crops were cut instead, so every stage now has its own — same rule as

@@ -100,15 +100,35 @@ export const CROPS: Record<string, [number, number, number]> = {
   'teen-rehab': [252, 118, 150],
   'adult-rehab': [228, 118, 160],
   'lateCareer-rehab': [250, 115, 155],
+  // ⭐ T14 – THE GRADUATION PAINTING, AND IT IS THE FIRST ENTRY HERE THAT IS NOT A BAND×FACE.
+  // One file exists (`adult-graduated`) where every other row belongs to a set of five, so the
+  // picture is NOT an emotion and deliberately not a `PortraitEmotion` member – see the note on
+  // that type and `graduatedUrl` in art/preload.ts. It is filed here anyway because this table's
+  // SECOND consumer is the question "where is her face in this painting", and two surfaces crop
+  // this one landscape: the graduation popup's strip and Home's hero on a tablet. A second little
+  // table beside the builder would be the divergence this file exists to prevent.
+  // Centre read the way the header describes – a labelled 64px grid over the 512px painting, then
+  // the rectangle cut and looked at: her head spans y~62-172, so (250, 128) with the set's usual
+  // ~1.5x head height.
+  'adult-graduated': [250, 128, 165],
 }
 
-/** The emotions that have a PAINTING but no 256px crop – the set the cutter must skip.
+/** The faces that have a PAINTING but no 256px crop – the set the cutter must skip.
  *
- *  This is the art-side spelling of `shared/avatarEmotion.ts`'s `PortraitEmotion \ AvatarEmotion`,
- *  kept as a literal here so this module stays import-free (the cutter script loads it under bare
- *  node type-stripping). tests/portrait-bands.test.ts pins the two spellings equal, so they cannot
- *  drift: add a painting-only face to the union and the test fails until this list agrees. */
-export const PAINTING_ONLY_FACES: readonly string[] = ['rehab']
+ *  It CONTAINS the art-side spelling of `shared/avatarEmotion.ts`'s `PortraitEmotion \
+ *  AvatarEmotion`, kept as a literal here so this module stays import-free (the cutter script loads
+ *  it under bare node type-stripping). tests/portrait-bands.test.ts pins that containment, so the
+ *  two cannot drift: add a painting-only face to the union and the test fails until this list
+ *  agrees.
+ *
+ *  ⚠ RE-AIMED BY T14, AND ONLY IN THE DIRECTION THIS LIST IS ABOUT. It used to be EQUAL to that
+ *  difference, which was true while every painting belonged to a band. `graduated` is the first
+ *  that does not: one file, no band, no emotion, deliberately outside `PortraitEmotion` (the note
+ *  on that type says why at length). It is painting-only in exactly the sense the CUTTER cares
+ *  about – there is no crop and no url builder that could ask for one – so it belongs here, and
+ *  the pin states containment plus the literal list rather than an equality that is no longer the
+ *  fact. */
+export const PAINTING_ONLY_FACES: readonly string[] = ['rehab', 'graduated']
 
 /** The stems the 256px cutter should cut – every entry except the painting-only faces. */
 export function croppableStems(): string[] {

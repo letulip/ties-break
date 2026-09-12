@@ -20,6 +20,15 @@
 //           is asserted on the SOURCE, and the arm is a temperament term added to the maths
 //   ARM 10  `answerLifeBeat` given an `amountCents`       the no-cents pin, RED (money moved)
 //
+// ⚠⚠ RE-AIMED TWICE FOR v74 (wave 3, T6 – 11.09), AND BOTH RE-AIMS CARRY THEIR OWN ARM. (a)
+// `LIFE_BEAT_OPTIONS` became a `Record<LifeBeatKind, …>`, so every pin here reads `FORK_OPTIONS` –
+// see its own note below for what moved and why; wave 2's ARM 1 (`beatBacked` 2 -> 2.5) was RE-RUN
+// against the re-aimed file and went RED on four cases, «back / press / listen, as ruled: expected
+// [ 2.5, -2, +0 ] to deeply equal [ 2, -2, +0 ]», so the pin bites exactly as it did. (b)
+// `walkToFork` now drains beats that are not the fork's, because wave 3 can raise one inside the
+// walk – three cases were RED before the drain with «That is not one of the answers this beat
+// offered», and `atTheFork`'s own assertion was passing on the wrong row. See `drainOtherBeats`.
+//
 // ⚠ WHAT THIS FILE DOES NOT DO. It writes no wording of its own and changes none: every string it
 // asserts on comes out of the engine's own pools, which are DRAFTS for the owner (invariant 4). The
 // shape rules are asserted; the sentences are his.
@@ -65,7 +74,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
-import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type MoodRegister } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type LifeBeatKind, type MoodRegister } from '../src/shared/protocol'
 
 // Several blocks walk a real career to its fork (242 weeks). Deterministic but slow, and the suite
 // runs many files in parallel – the same generous file-level timeout r2-13 and round11 carry.
@@ -85,14 +94,39 @@ function career(seed: string): { world: WorldState; rng: Rng } {
   return { world, rng: resumeMain(world.rngMain) }
 }
 
+/** ⚠⚠ RE-AIMED FOR v74 (wave 3, T6 – 11.09), AND THE RE-AIM IS A REAL FINDING RATHER THAN A TIDY-UP.
+ *
+ *  WHAT MOVED: wave 3's arrival hazard rolls every eligible week from her sixteenth (week ~104), and
+ *  T6 delivers the news on `knownWeek` – so a `'met'` beat can now be raised INSIDE this 242-week
+ *  walk, ahead of the fork-opinion row this file is about. `walkToFork` drains reveals and knocks for
+ *  exactly that reason and had nothing to drain a beat with, because in wave 2 no beat could fire
+ *  before the fork.
+ *
+ *  WHAT IT COST BEFORE THE FIX, measured: three cases went RED with «That is not one of the answers
+ *  this beat offered» – `answerLifeBeat(world, 'back')` was answering a `'met'` row, because the
+ *  queue is FIFO and the met row came first. And `atTheFork`'s own «she has said what she wants» was
+ *  passing on the WRONG ROW, which is the worse half: the fixture had started lying before anything
+ *  failed.
+ *
+ *  ⚠ THE DRAIN IS BOND-NEUTRAL ON PURPOSE. It answers with the option whose delta is ZERO, so a beat
+ *  this file never meant to live cannot move the number every block below measures. Asserted rather
+ *  than assumed – `neutralAnswerFor` throws if a kind has no such option, because a silently missing
+ *  zero row would make every bond assertion in this file wrong by an unknown amount. */
+function neutralAnswerFor(kind: LifeBeatKind): string {
+  const free = LIFE_BEAT_OPTIONS[kind].find((o) => o.bond === 0)
+  if (!free) throw new Error(`${kind} has no bond-neutral answer – this fixture cannot drain it without moving the number`)
+  return free.id
+}
+
 /** Tick until the tick that opens the fork – which is the tick that raises her opinion of it. Reveals
- *  are resolved and knocks answered on the way, so neither becomes the thing under test; the family
- *  is kept solvent so a career about the fork is not also a career about bankruptcy. NOTHING is
- *  injected: the fork is the engine's, and so is the row in front of it. */
+ *  are resolved, knocks answered and OTHER KINDS OF BEAT drained on the way, so none of them becomes
+ *  the thing under test; the family is kept solvent so a career about the fork is not also a career
+ *  about bankruptcy. NOTHING is injected: the fork is the engine's, and so is the row in front of it. */
 function walkToFork(world: WorldState, rng: Rng): void {
   for (let i = 0; i < 400 && world.fork === null; i++) {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
+    drainOtherBeats(world)
     tickWeek(world, rng)
     if (world.pendingTournament) {
       skipTournament(world)
@@ -101,6 +135,19 @@ function walkToFork(world: WorldState, rng: Rng): void {
     world.season = []
   }
   if (pendingKnock(world)) decideKnock(world, 'rest')
+  drainOtherBeats(world)
+}
+
+/** Every pending beat that is NOT the fork's own, answered neutrally. ⚠ IT STOPS AT A
+ *  `'fork-opinion'` ROW – that row is the subject of this file and answering it here would delete
+ *  the thing every block below is about. */
+function drainOtherBeats(world: WorldState): void {
+  for (let guard = 0; guard < 50; guard++) {
+    const row = pendingLifeBeat(world)
+    if (row === null || row.kind === 'fork-opinion') return
+    answerLifeBeat(world, neutralAnswerFor(row.kind))
+  }
+  throw new Error('a beat queue that will not drain')
 }
 
 /** A career standing exactly where wave 2 exists to be measured: the fork is open, her opinion of it
@@ -110,9 +157,33 @@ function atTheFork(seed: string): { world: WorldState; rng: Rng } {
   walkToFork(c.world, c.rng)
   expect(c.world.fork, `${seed}: the fixture reached its fork`).not.toBeNull()
   expect(c.world.fork!.answer, 'and it is unanswered').toBeNull()
+  // ⚠ RE-AIMED (v74): «not null» was true of ANY beat once wave 3 could raise one inside the walk,
+  // so the pending row is now named. A `'met'` row standing here would be a fixture about the wrong
+  // conversation, and it would pass the old assertion.
   expect(pendingLifeBeat(c.world), 'and she has said what she wants').not.toBeNull()
+  expect(pendingLifeBeat(c.world)!.kind, 'and it is HER OPINION OF THE FORK that is waiting').toBe('fork-opinion')
   return c
 }
+
+/** ⚠⚠ RE-AIMED FOR v74 (wave 3, T6 – 11.09), AND NOT DELETED, NARROWED OR WEAKENED.
+ *
+ *  WHAT MOVED: `LIFE_BEAT_OPTIONS` was a FLAT `readonly {id,label,bond}[]` – the wave-2 tree had one
+ *  beat kind, so a list and a table were the same object. T6 adds `'met'` and restructures it to
+ *  `Record<LifeBeatKind, readonly {…}[]>`.
+ *
+ *  WHY IT HAD TO: a `'met'` answer set is NOT a fork-opinion answer set. «Tell her we are behind her»
+ *  is a sentence about a decision she asked the parent to weigh in on; the `'met'` beat asks nothing
+ *  of him, so its four answers are reactions with their own ids, their own labels and their own
+ *  deltas. A flat list shared between the two kinds would have offered a girl's «there is someone»
+ *  the fork's three buttons – which is exactly the defect the per-kind record makes a compile error.
+ *
+ *  WHAT THIS FILE ASSERTS IS UNCHANGED. Every pin below reads the FORK'S OWN three, under the same
+ *  assertions, in the same order, with the same literals – `back / press / listen` and `[2, -2, 0]`
+ *  are still pinned as ruled numbers, and the labels still name no want. The only edit is the one
+ *  character of indexing that says WHICH beat's answers a wave-2 pin is about, and TypeScript refuses
+ *  the key if the kind is ever renamed, so the re-aim cannot silently point at nothing. The `'met'`
+ *  set has its own pins, in `tests/wave3-delivery.test.ts`. */
+const FORK_OPTIONS = LIFE_BEAT_OPTIONS['fork-opinion']
 
 /** A world with a beat pending and NOTHING else – no fork, no career walked. For the copy and queue
  *  blocks, where a 242-week walk would buy nothing but minutes. */
@@ -133,7 +204,7 @@ function withBeats(seed: string, details: ForkWant[]): WorldState {
 describe('wave 2 A – reverting the reaction moves the number by exactly the table', () => {
   it('⭐⭐ back / press / listen land the table\'s own three deltas, and nothing else moves', () => {
     // The three arms are the SAME WORLD, so the only variable is the answer.
-    const arms = LIFE_BEAT_OPTIONS.map((option) => {
+    const arms = FORK_OPTIONS.map((option) => {
       const world = withBeats('w2-equality', ['tour'])
       const before = { bond: world.bond, spirit: world.spirit, funds: world.fundsCents }
       answerLifeBeat(world, option.id)
@@ -152,7 +223,7 @@ describe('wave 2 A – reverting the reaction moves the number by exactly the ta
     // rather than a mis-typed constant. These three numbers are RULED (09.09, build plan §3.4 – «his
     // reaction options ... Bond +2 / −2 / 0») and not bench proposals, so a change to one of them is
     // a change to a ruling and has to come through this line.
-    expect(LIFE_BEAT_OPTIONS.map((o) => o.bond), 'back / press / listen, as ruled').toEqual([2, -2, 0])
+    expect(FORK_OPTIONS.map((o) => o.bond), 'back / press / listen, as ruled').toEqual([2, -2, 0])
     expect(
       [ECONOMY.bond.delta.forkWithHerWant, ECONOMY.bond.delta.forkAgainstHerWant],
       'and the deed\'s own two, also ruled (§3.5)',
@@ -231,7 +302,18 @@ describe('wave 2 B – where the beat sits, and what that means on a week that i
     // ⚠ THE BIRTHDAY IS THE ENGINE'S – walked to, not injected (r2-13's own recipe: the default
     // profile is born 15 June and her first birthday is marked in week 23).
     const { world, rng } = career('w2-collision')
-    while (world.week < 22) tickWeek(world, rng)
+    // ⚠⚠ RE-AIMED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. This walk
+    // was a bare `tickWeek` loop, which was complete while no beat could fire before the fork at
+    // week ~241. T8 raises tier-1 small talk from week 0 at up to 8%/wk, so `'life'` was already
+    // pending when the advance below ran and `advanceWeeks` refused at ENTRY – the case read
+    // `['life']` for a beat that has nothing to do with what it is about. `drainOtherBeats` is this
+    // file's own answer to exactly that (it is what `walkToFork` does, and what T6 added for the
+    // `'met'` row); it stops at a `'fork-opinion'` row, so the subject of this file is untouched.
+    while (world.week < 22) {
+      drainOtherBeats(world)
+      tickWeek(world, rng)
+    }
+    drainOtherBeats(world)
     expect(advanceWeeks(world, rng, 1), 'the tick reaches her birthday').toEqual(['birthday'])
     expect(pendingBirthday(world), 'and the question is up').not.toBeNull()
 
@@ -292,6 +374,16 @@ describe('wave 2 C – `answerFork` refuses while her row is unanswered', () => 
     expect(advanceWeeks(world, rng, 4), 'she is the reason, not the fork').toEqual(['life'])
     expect(world.week, 'zero ticks – a refusal, not a halt').toBe(before)
     answerLifeBeat(world, 'back')
+    // ⚠⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED – and the ⚠ note names exactly what moved. When
+    // the want she stated is `'stop'`, answering her raises `'fork-counsel'` (the coach's read,
+    // blocking), which is ALSO a `'life'` reason – so on a stopping career this line read `['life']`
+    // a second time. The claim of this case is «the block is the ENGINE'S, not the dialog's», i.e.
+    // that nothing ticks past a life row, and that claim is unchanged: the life queue is walked to
+    // its end and the fork is what is left standing. ⚠ ON A `college` OR `tour` WANT THIS HELPER DOES
+    // NOTHING AT ALL and the line below reads precisely as it did before T17, which is the ruling's
+    // own boundary. ⚠ It is also `drainOtherBeats`, the file's existing helper, so the bond-neutral
+    // rule is not re-typed here.
+    drainOtherBeats(world)
     expect(advanceWeeks(world, rng, 4), 'and now the fork is').toEqual(['fork'])
     expect(world.week, 'still zero ticks').toBe(before)
     // ARM 4: the `pendingLifeBeat` line deleted from `advanceRefusal` – RED here (the first
@@ -333,7 +425,22 @@ describe('wave 2 D – the record IS the queue', () => {
     const second = buildLifeBeatPrompt(world)!
     expect(second.week, 'the queue advanced by exactly one').toBe(lifeLogOf(world)[1].week)
     answerLifeBeat(world, 'press')
-    expect(lifeLogOf(world).map((r) => r.answer), 'both answered, in the order they were raised').toEqual(['back', 'press'])
+    // ⚠⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED. The second row here is a `'stop'`, so answering
+    // it raises the coach's counsel BEHIND it – a third row, unanswered, by design. The claim is
+    // «two pending rows are answered one at a time, in lifeLog order, and none is lost», and it is
+    // asserted on HER TWO ROWS rather than on the whole log, which is what the claim was always
+    // about. The counsel is then named explicitly, so a row appearing here can never be a silent
+    // extra.
+    expect(
+      lifeLogOf(world).filter((r) => r.kind === 'fork-opinion').map((r) => r.answer),
+      'both answered, in the order they were raised',
+    ).toEqual(['back', 'press'])
+    expect(lifeLogOf(world).map((r) => r.kind), '...and the third row is the counsel T17 raises on a stop').toEqual([
+      'fork-opinion',
+      'fork-opinion',
+      'fork-counsel',
+    ])
+    drainOtherBeats(world)
     expect(buildLifeBeatPrompt(world), 'and the queue is empty').toBeNull()
     expect(pendingLifeBeat(world)).toBeNull()
     // ARM 6: `pendingLifeBeat` re-pointed at the LAST unanswered row – RED here (the answers come
@@ -504,7 +611,7 @@ describe('wave 2 E – her voice at the beat', () => {
       expect(t).not.toMatch(/\d/)
     }
     // ...and the engine's binding for the detour exists: the option the continuation hangs off.
-    expect(LIFE_BEAT_OPTIONS.some((o) => o.id === 'listen'), 'the listen option the prompt binds to').toBe(true)
+    expect(FORK_OPTIONS.some((o) => o.id === 'listen'), 'the listen option the prompt binds to').toBe(true)
     // ARM 13: quiet/stop continuation replaced with fiery's – RED (four voices, four continuations).
     // ARM 14: `speaksInHerOwnVoice` ignored by the follow-up – RED (the silence stays silent).
   })
@@ -512,7 +619,7 @@ describe('wave 2 E – her voice at the beat', () => {
   it('short dash only, no Cyrillic, and no number anywhere in any word the beat prints', () => {
     const everyWord = [
       ...everyLine.map((l) => l.line),
-      ...LIFE_BEAT_OPTIONS.map((o) => o.label),
+      ...FORK_OPTIONS.map((o) => o.label),
       ...everyHeading(),
     ]
     for (const t of everyWord) {
@@ -528,14 +635,14 @@ describe('wave 2 E – her voice at the beat', () => {
     // The shape the design fixed: back her want / press the other way / listen and say nothing. The
     // labels name no want, so a button can never become a second way of reading her answer off the
     // screen – and «press the other way» stays honest when there are two other ways.
-    expect(LIFE_BEAT_OPTIONS.map((o) => o.id)).toEqual(['back', 'press', 'listen'])
-    for (const option of LIFE_BEAT_OPTIONS) {
+    expect(FORK_OPTIONS.map((o) => o.id)).toEqual(['back', 'press', 'listen'])
+    for (const option of FORK_OPTIONS) {
       expect(option.label.length, option.id).toBeGreaterThan(0)
       for (const want of ['college', 'tour', 'stop']) {
         expect(option.label.toLowerCase(), `${option.id} names no want`).not.toContain(want)
       }
     }
-    expect(new Set(LIFE_BEAT_OPTIONS.map((o) => o.label)).size, 'three different sentences').toBe(3)
+    expect(new Set(FORK_OPTIONS.map((o) => o.label)).size, 'three different sentences').toBe(3)
   })
 })
 
@@ -566,7 +673,15 @@ function everyHeading(): string[] {
 // =================================================================================================
 describe('wave 2 G – v73, the three-part move', () => {
   it('bumps the version and ships a golden fixture of its own shape', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(73)
+    // ⚠ RE-AIMED AT v74 (11.09, the private life's wave 3 took the next rung – `loveEpisodes`), NOT
+    // LOOSENED, and on `tests/spirit.test.ts`'s own precedent one version down, verbatim. This case
+    // is about v73's OWN RUNG – that the move happened and left a fixture of ITS OWN SHAPE behind –
+    // and never about the ladder's head, which moves with every wave. So the head is asserted as a
+    // FLOOR and the two claims that actually belong to this rung (the fixture says 73, and it carries
+    // the key 73 added) are asserted exactly as before. The head's own guard – «a bump forces a new
+    // golden save» – lives in tests/goldenSaves.test.ts and is the only place that should ever name a
+    // number that changes.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(73)
     const v73 = JSON.parse(readFileSync(`${SAVES}/v73.json`, 'utf8'))
     expect(v73.schemaVersion).toBe(73)
     expect(v73.lifeLog, 'and the fixture carries the key this version added').toEqual([])
@@ -580,7 +695,17 @@ describe('wave 2 G – v73, the three-part move', () => {
     expect(migrated.lifeLog, 'a career that predates the layer has lived no beats').toEqual([])
     // ⚠ AND THE FIXTURE IS THE REAL MIGRATION'S OWN OUTPUT, not a hand-written file beside it – the
     // recipe every fixture since v25 uses. Asserted, so a hand edit to either one goes red here.
-    expect(JSON.parse(readFileSync(`${SAVES}/v73.json`, 'utf8'))).toEqual(migrated)
+    //
+    // ⚠⚠ RE-AIMED AT v74 (11.09, wave 3's `loveEpisodes`), NOT WEAKENED, AND THIS ONE HAD TO BE –
+    // `migrateSave` always walks to the LADDER'S HEAD, so the moment the head moved past 73 the
+    // migrated payload stopped being a v73 save and the direct equality could never hold again. The
+    // claim is unchanged and is made where it stays true: the v73 FIXTURE and the migrated v72
+    // CONVERGE at the head, byte for byte, which is «the fixture is the migration's own output»
+    // carried one rung forward. A hand edit to either file still goes red here, which is the whole
+    // point of the line; v73's own shape is pinned by the case above (`schemaVersion` 73, `lifeLog`
+    // present), and v74's own «produced by the real migration» equality lives at its own rung in
+    // tests/wave3-love-episodes.test.ts.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v73.json`, 'utf8')))).toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a life a save already has', () => {
@@ -589,8 +714,19 @@ describe('wave 2 G – v73, the three-part move', () => {
     const twice = migrateSave(JSON.parse(JSON.stringify(once)))
     expect(JSON.stringify(twice)).toBe(JSON.stringify(once))
 
-    const lived = { ...JSON.parse(JSON.stringify(v72)), schemaVersion: 72, lifeLog: [{ week: 9, kind: 'fork-opinion', detail: 'stop', answer: 'back' }] }
-    expect(migrateSave(lived).lifeLog, 'a life already on the record is kept whole').toEqual(lived.lifeLog)
+    // ⚠⚠ THE EXPECTATION IS FROZEN BEFORE THE CALL, and that is the entire point of these two lines.
+    // Written the obvious way – `expect(migrateSave(lived).lifeLog).toEqual(lived.lifeLog)` – this case
+    // CANNOT FAIL: `migrateSave` mutates its payload in place, so both sides of the comparison are the
+    // same object and the assertion compares it with itself. It shipped that way with wave 2 and was
+    // caught on 11.09 when wave 3's builder wrote the identical shape one rung up and its mutation arm
+    // (the step's `??=` rewritten as `=`) came back GREEN. Copying the rows first is what gives the
+    // assertion something the migration cannot reach.
+    // ⚠ THE HOUSE LAW THIS IS AN INSTANCE OF: an assertion about something being PRESERVED must hold a
+    // copy the code under test cannot touch – the sibling of «a negative assertion must first prove its
+    // target exists», which cost two vacuous guards in wave 2.
+    const kept = [{ week: 9, kind: 'fork-opinion', detail: 'stop', answer: 'back' }]
+    const lived = { ...JSON.parse(JSON.stringify(v72)), schemaVersion: 72, lifeLog: JSON.parse(JSON.stringify(kept)) }
+    expect(migrateSave(lived).lifeLog, 'a life already on the record is kept whole').toEqual(kept)
   })
 
   it('⚠ takes NOTHING from any stream – the persisted MAIN position is byte-identical', () => {
@@ -677,13 +813,30 @@ describe('wave 2 F – the player\'s answer may never move the world\'s dice', (
     // ⚠ THROUGH `region` AND NEVER A RAW `indexOf` SLICE: a raw slice does not fail when a marker
     // rots – `indexOf` returns −1, the region silently WIDENS to almost the whole file, and a pin
     // that then reads the copy table would pass on `sunny` alone. `region` throws on either marker.
-    const maths = region(engineModuleSource('world/lifeBeat'), 'export function forkWantWeights', 'export function forkStandingOf')
+    // ⚠⚠ THE END MARKER MOVED IN v74 T17 (11.09) AND THE REGION IS NARROWER, NOT WEAKER. T17 put
+    // `forkStopDriverOf` between the weights and `forkStandingOf`, so the old span swallowed it – and
+    // the pin is a SUBSTRING check, which made the word «quietly» in the driver's own doc comment a
+    // temperament hit («quiet»). The region now ends at the driver's type declaration, so it is
+    // exactly the weighting function, which is what the claim was always about; the driver is swept
+    // by its own region directly below, so nothing lost cover.
+    const source = engineModuleSource('world/lifeBeat')
+    const maths = region(source, 'export function forkWantWeights', 'export type ForkStopDriver')
     expect(maths.length, 'the region really was cut').toBeGreaterThan(100)
     expect(maths, 'and it is the maths half, not the copy half').not.toContain('HER_LINE')
     for (const trait of [...TEMPERAMENTS, 'temperament', 'Temperament']) {
       expect(maths, `the want's maths names no ${trait}`).not.toContain(trait)
     }
     // ARM 9: `temperament === 'fiery' ? 2 : 1` folded into `forkWantWeights` – RED on 3.
+
+    // 4. ⭐⭐⭐ v74 T17 – AND THE SAME CUT OVER THE DRIVER, which is the fence one level in. The driver
+    //    is derived from spirit and bond alone and is spent on WORDING; a temperament term in it
+    //    would not script her career, but a temperament term is not what it reads, and the wall is
+    //    worth having on both halves of a function pair that share their inputs.
+    const driver = region(source, 'export function forkStopDriverOf', 'const DRIVER_TOTAL')
+    expect(driver.length, 'the driver region really was cut').toBeGreaterThan(50)
+    for (const trait of [...TEMPERAMENTS, 'temperament', 'Temperament']) {
+      expect(driver, `the driver names no ${trait} either`).not.toContain(trait)
+    }
   })
 
   it('⚠ the three leans point the ruled way – worn leans stop, close dares more, standing wants the tour', () => {
@@ -696,11 +849,24 @@ describe('wave 2 F – the player\'s answer may never move the world\'s dice', (
     expect(forkWantWeights(0, 70, 70).college, '...and one who did not wants the place').toBeGreaterThan(flat.college)
     // ⚠ AND NO READING EVER DRIVES A WANT TO ZERO – every want stays common for every girl, which is
     // the anti-stereotype guard §3 asks for, applied to a want.
+    //
+    // ⚠⚠ RE-AIMED BY v74 T17 (11.09) FROM `>= 1` TO `> 0`, AND THE RULING IS WHAT MOVED, NOT THE
+    // BAR'S INTENT. The claim this sweep makes is «no reading drives a want to zero», and it is
+    // unchanged. What is gone is the accident that used to carry it: `stop` was `lean(worn)` and
+    // every lean floors at 1.0, so P(stop) could never fall below ~22% at ANY state – the owner met
+    // exactly that in play, at eighteen, on a healthy girl in a close home. `stop` is now
+    // `ECONOMY.life.forkStop.floor + …`, whose floor is ε > 0 and never zero: the Barty tail stays a
+    // feature and is priced for an eighteen-year-old's rarity. ⚠ `college` and `tour` are untouched
+    // and still ≥ 1, which the case they are asserted in (`tests/wave3-stop-want.test.ts` §A) holds
+    // byte-for-byte against the old formulae. ⚠ A FLOOR OF 0 MAKES THIS LINE RED, which is the whole
+    // reason it is a `> 0` rather than a deleted assertion (ARM 17d there).
     for (const standing of [0, 0.5, 1]) {
       for (const spirit of [0, 50, 100]) {
         for (const bond of [0, 70, 100]) {
           const w = forkWantWeights(standing, spirit, bond)
-          for (const want of FORK_WANTS) expect(w[want], `${standing}/${spirit}/${bond} ${want}`).toBeGreaterThanOrEqual(1)
+          for (const want of FORK_WANTS) expect(w[want], `${standing}/${spirit}/${bond} ${want}`).toBeGreaterThan(0)
+          expect(w.college, `${standing}/${spirit}/${bond}: college is untouched and still leans`).toBeGreaterThanOrEqual(1)
+          expect(w.tour, `${standing}/${spirit}/${bond}: tour is untouched and still leans`).toBeGreaterThanOrEqual(1)
         }
       }
     }

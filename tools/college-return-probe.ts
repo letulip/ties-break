@@ -20,7 +20,7 @@
 //
 // ⚠ MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { COLLEGE_TIER_ORDER, canAfford } from '../src/engine/collegeOffer'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
@@ -30,6 +30,7 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { CollegeOffer, CollegeTier } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 const args = process.argv.slice(2)
 const argOf = (n: string, d: number) => {
@@ -103,7 +104,7 @@ function walkOneArm(
   const offer = at.world.fork!.offer as CollegeOffer
   const quote = offer.quotes.find((q) => q.tier === tier)!
   const rankAtFork = kidLadderRank(at.world, 'wta')
-  if (pendingLifeBeat(at.world)) answerLifeBeat(at.world, 'listen')
+  drainLifeBeats(at.world)
   answerFork(at.world, 'college', tier)
   // ROUND 24 #5: the answer reserves – walk the gap to the September departure first, on the same
   // bench step the career arrived on, so the tour arm and the college arm compare like for like.

@@ -169,6 +169,23 @@ export interface WeekClaims {
    *  parent's own sentence stands alone under the painting. That is the third rung of the ladder and
    *  it is the loss the player is meant to hear. */
   strainedBond?: true
+  /** ⭐⭐ v74 (the private life, wave 3 – T10) – ASSERTS THE PARENT HAS BEEN TOLD THERE IS SOMEONE,
+   *  and asserts NOTHING ELSE about her private life. Unselectable unless `f.partnerKnown`, and the
+   *  honesty pin re-derives that off the fact rather than off the licence below (`HOLDS.partnerKnown`
+   *  in tests/week-notes.test.ts, landed with the fact itself in T6).
+   *
+   *  ⚠⚠ THE NARROWNESS IS THE WHOLE DISCIPLINE, not an oversight. `LoveEpisode` persists no name, no
+   *  gender, no place and no detail of any kind, and `DiaryFacts` carries neither `sinceWeek` nor
+   *  `wants` – so a line carrying this claim may say that he KNOWS, and may say what HE did about
+   *  knowing, and may say nothing further. A sentence implying the parent has met them, or holds one
+   *  fact about them, is an unlicensed consequential fact under the honesty law's first tier
+   *  (voice-bibles-2026-09 §"The honesty law, in two tiers") – the same rule that keeps the vacation
+   *  band from naming a destination the catalogue does hold.
+   *
+   *  ⚠ AND IT IS DISCLOSURE, NOT THE ATTACHMENT. The lift on her spirit baseline is already running
+   *  while this is false (T4 reads `activeEpisode`, which `partnerKnown` does not) – so a line about
+   *  a lighter week is licensed here on what the parent has been TOLD, never on the lift itself. */
+  partnerKnown?: true
 }
 
 export interface WeekNote {
@@ -1381,6 +1398,82 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'We filled her free morning with an errand. It had been free for a reason.',
     claims: { light: true, notTravellingWeek: true },
     license: (f) => plainTraining(f) && f.trainPct <= WEEK_NOTE_LIGHT,
+  },
+  // ===============================================================================================
+  // ⭐⭐⭐ v74 (THE PRIVATE LIFE, WAVE 3 – T10) – THE WEEKS AFTER HE IS TOLD THERE IS SOMEONE
+  // ===============================================================================================
+  //
+  // ⚠⚠ THIS BAND IS `partnerKnown`'s CONSUMING LICENCE, and it exists in this wave because R2-18's
+  // law says a fact ships with its consumer or not at all. T6 wired the fact through
+  // `assembleDiaryFacts` and landed `HOLDS.partnerKnown`; without these five lines the wave would
+  // have shipped half a rule – a boolean on the snapshot that nothing in the game can read.
+  //
+  // ⚠⚠ WHAT THEY MAY SAY, AND WHY IT IS SO LITTLE. The honesty law's first tier makes other people
+  // and relationships CONSEQUENTIAL facts, needing a claim to license them – and the claim here
+  // carries exactly one bit: HE HAS BEEN TOLD. The schema holds no name, no gender, no place, no
+  // «how it is going» (see `LoveEpisode`), and `DiaryFacts` deliberately carries neither `sinceWeek`
+  // nor `wants`, so there is nothing else true to say. The parent has not met them; a line implying
+  // he had would be the diary inventing a person. So the band is about HIM: what he does with a
+  // piece of news he has been given and has not been invited into. That restraint IS the content.
+  //
+  // ⚠ THE SECOND TIER IS WHERE THE WARMTH LIVES – the scene texture (a careful question, the credit
+  // nobody earned) asserts no consequential fact and rides the frame it belongs to.
+  //
+  // ⚠⚠ AND NOT ONE OF THEM SAYS HOW HE FOUND OUT, which the first draft of this band got WRONG and
+  // no mechanical check could have caught. «She has mentioned someone» reads as the obvious sentence
+  // and is a LIE on half the bond ladder: `MET_EVENT`'s `found-out` arm – the row a `strained` or
+  // `cold` home actually gets – says «she did not tell us herself». `partnerKnown` carries the
+  // KNOWING and nothing about its channel (the register split is `metRegisterOf`'s, and this pool
+  // reads no bond), so a line naming the channel is asserting a fact one table over that can
+  // contradict it in the same career. Every line below is true whether she said it or the house
+  // worked it out.
+  //
+  // ⚠ THE FALLIBLE PARENT, unchanged: he ACTS, he NOTICES an uncertainty, and it stays UNRESOLVED.
+  // «There may have been a better one» is a miss that does not know its own answer, which is the
+  // 11.09 editorial ruling; what she made of the question is not his to report.
+  //
+  // ⚠ LICENSED ON `plainTraining` LIKE THE PARENT'S OTHER ORDINARY-WEEK BANDS, so an exam week, a
+  // holiday, a knock and a layoff keep their own words (A LAYOFF TAKES THE NOTE), and the coin in
+  // `weekNoteFor` rations them exactly as it rations the rest of an ordinary week.
+  //
+  // ⚠ NO `domestic` CLAIM ON ANY OF THEM. The band has to work at all four stages – the hazard runs
+  // from sixteen (who-she-is §4) straight through college and independence – and none of these five
+  // sentences claims the parent was in the room: news reaches him, a question can be asked down a
+  // phone, and her register is on the Mood tile at every stage.
+  //
+  // ⚠⚠ AND THE TWO «LIGHTER» LINES CARRY `register: 'bright'` RATHER THAN RIDING THE ATTACHMENT.
+  // T4's lift raises her BASELINE while the slot is full, which is not the same sentence as «this
+  // week was a good one»: a girl with someone in her life can still have a flat week, and a line
+  // that called it lighter anyway would be the pool contradicting the Mood word beside it. So the
+  // brightness is licensed on the register the engine actually computed, and `partnerKnown` licenses
+  // only the half about knowing why.
+  //
+  // ⚠ EVERY LINE HERE IS A DRAFT until the owner's вычитка (CLAUDE.md invariant 4, the wave's
+  // standing merge gate – §5 of the builder brief). Nothing in this band ships on an agent's word.
+  {
+    text: 'There is someone in her life. We are managing not to ask about it.',
+    claims: { notTravellingWeek: true, partnerKnown: true },
+    license: (f) => plainTraining(f) && f.partnerKnown,
+  },
+  {
+    text: 'Someone matters to her now. We are being careful with that.',
+    claims: { notTravellingWeek: true, partnerKnown: true },
+    license: (f) => plainTraining(f) && f.partnerKnown,
+  },
+  {
+    text: 'We asked her one careful question. There may have been a better one.',
+    claims: { notTravellingWeek: true, partnerKnown: true },
+    license: (f) => plainTraining(f) && f.partnerKnown,
+  },
+  {
+    text: 'She is lighter this week, and we did nothing to deserve the credit.',
+    claims: { notTravellingWeek: true, partnerKnown: true, register: 'bright' },
+    license: (f) => plainTraining(f) && brightWeek(f) && f.partnerKnown,
+  },
+  {
+    text: 'She is brighter than the week explains. We think we know why now.',
+    claims: { notTravellingWeek: true, partnerKnown: true, register: 'bright' },
+    license: (f) => plainTraining(f) && brightWeek(f) && f.partnerKnown,
   },
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //

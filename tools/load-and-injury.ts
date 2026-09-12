@@ -8,7 +8,8 @@
 // engine reads her condition when the match is played. So this samples where the engine reads.
 //
 //     npx vite-node tools/load-and-injury.ts [--careers 20] [--weeks 156]
-import { createWorld, enterEvent, tickWeek, entryStatus, pendingKnock, decideKnock, skipTournament, closeTournament } from '../src/engine/world'
+import { createWorld, enterEvent, tickWeek, entryStatus, skipTournament, closeTournament } from '../src/engine/world'
+import { drainKnock } from './_knocks'
 import { resumeMain } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
@@ -34,7 +35,7 @@ for (const [label, capPerSeason] of [['everything', 99], ['capped 18 ', 18], ['c
     const rng = resumeMain(world.rngMain)
     let enteredThisSeason = 0
     for (let w = 0; w < WEEKS; w++) {
-      if (pendingKnock(world)) decideKnock(world, 'rest')
+      drainKnock(world)
       if (world.week % 52 === 0) enteredThisSeason = 0
       for (const e of world.season as any[]) {
         if (e.week <= world.week || world.entries.includes(e.id)) continue

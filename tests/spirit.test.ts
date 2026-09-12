@@ -45,7 +45,7 @@ import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 import { birthdayTurning } from '../src/engine/world/age'
 import { isBlackoutWeek, isExamWeek, isOffSeasonWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
-import { worldFunction } from './worldSource'
+import { engineModuleFunction, worldFunction } from './worldSource'
 import { region } from './helpers/source'
 import type { WorldState } from '../src/engine/world'
 
@@ -937,9 +937,75 @@ describe('the fence this step is judged by', () => {
     expect(src).not.toMatch(/from '(vue|pinia|\.\.\/components)/)
   })
 
-  it('⚠⚠ accrueSpirit is its OWN call, immediately after accrueCondition’s', () => {
+  it('⚠⚠ accrueSpirit is its OWN call, after accrueCondition’s and with only the arrival roll between', () => {
     // `accrueCondition`'s arity-2, zero-RNG contract is pinned in tests/condition.test.ts and must
     // not gain a parameter – so this asserts the CALL ORDER, not a signature.
+    //
+    // ⚠⚠ RE-AIMED 11.09 BY WAVE 3's T3, AND NOT WEAKENED. WHAT MOVED: one statement now sits between
+    // the two calls – `rollArrival(world)`, the private life's weekly arrival hazard
+    // (`engine/world/lifeBeat.ts` §5). WHY IT HAD TO: the attachment lifts spirit's effective
+    // baseline while the slot is full, so a roll placed after the spirit pass would hand the lift its
+    // first return-step a week late – «immediately BEFORE `accrueSpirit`» is the brief's own wording
+    // (docs/plans/life-wave-3-builder-2026-09.md §2 T3) and it is the order the lift is judged on.
+    //
+    // ⚠⚠ RE-AIMED AGAIN 11.09 BY WAVE 3's T6, AND THE RE-AIM IS THE PIN DOING ITS JOB: it went RED
+    // («expected [ 'rollArrival(world)', …(1) ] to deeply equal [ 'rollArrival(world)' ]») the moment
+    // a second statement slid into the gap, which is exactly what «asserted EXACTLY» was written for.
+    // WHAT MOVED: `deliverKnownPartner(world)` – the delivery on `knownWeek` (§6 of the same module).
+    // WHY IT BELONGS THERE: a shaved lag of ZERO is common (an open girl draws it at p 0.70 since
+    // §4's lag row moved on the census miss, 11.09 – it read p 0.45 when this note was written), so
+    // `knownWeek === sinceWeek` on those careers, and delivery placed anywhere before the roll would
+    // hold that news back a week for no reason a player could be told. It writes no spirit and takes
+    // no `Rng`, so `accrueSpirit`'s own reading is untouched by its presence.
+    //
+    // ⚠⚠ RE-AIMED A THIRD TIME 11.09 BY WAVE 3's T8, AND AGAIN THE RE-AIM IS THE PIN DOING ITS JOB:
+    // it went RED («expected [ 'rollArrival(world)', …(2) ] to deeply equal [ 'rollArrival(world)',
+    // …(1) ]») the moment a third statement slid into the gap. WHAT MOVED: `rollSmallTalk(world)` –
+    // the tier-1 weekly roll (§7 of the same module). WHY IT BELONGS THERE, AND WHY IN THIS ORDER:
+    // it must run AFTER `deliverKnownPartner`, because the brief's rule is «fires only when no beat
+    // is already pending that week» and the delivery is the thing most likely to have raised one –
+    // a week that is both «there is someone» and «something small» is a week the small thing loses.
+    // And BEFORE `accrueSpirit`, for `rollArrival`'s own reason twice over: the bond band it reads
+    // and the Mood register that decides what she comes with are both LAST week's settled values.
+    // It writes no spirit and takes no `Rng`, so `accrueSpirit`'s own reading is untouched.
+    //
+    // ⚠⚠ AND RE-AIMED A FOURTH TIME THE SAME DAY, BACK TO TWO – 11.09, THE OWNER'S «ВАРИАНТ 3»
+    // (the raise reverted, the engine kept). WHAT MOVED: the `rollSmallTalk(world)` statement the
+    // note above describes was REMOVED from the gap again. WHY: §5b prices tier 1 «soft – answerable,
+    // never lost» while what T8 shipped through the standard machinery is tier 2's HARD pause, and a
+    // soft beat needs a surface – so the whole of tier 1 stays built and DORMANT until T15 builds one
+    // (see the note at the call site, and the dormancy guard in tests/wave3-small-talk.test.ts §H,
+    // whose ledger records this case among ARM 9's four). ⚠ T15 PUTS THE STATEMENT BACK ON THE SAME
+    // LINE, so this pin returns to the three-element form it held for one commit – re-aim it there
+    // with its note, exactly as this note does.
+    //
+    // ⚠ NOTHING IS WEAKENED BY THE RE-AIM: the form is the same ORDERED LIST and it is one element
+    // SHORTER, so it refuses a third statement sliding back into the gap – including the tier-1 roll
+    // itself, which is the deferral this pin is now the second reader of. MEASURED IN THAT DIRECTION
+    // RATHER THAN ASSUMED: with the call site restored it goes RED here – «only the private life's
+    // two weekly calls separate them: expected [ 'rollArrival(world)', …(2) ] to deeply equal
+    // [ 'rollArrival(world)', …(1) ]» – which is this pin refusing the very statement the deferral
+    // took out.
+    //
+    // ⚠⚠ AND RE-AIMED A FIFTH TIME, BACK TO THREE – 11.09, WAVE 3's T15, WHICH IS THE STEP THE NOTE
+    // ABOVE SAID WOULD DO EXACTLY THIS. WHAT MOVED: `rollSmallTalk(world)` is on that line again.
+    // WHY: the owner ruled tier 1's SOFT surface into this wave («расписать вариант 2 подробнее
+    // сейчас в спеке и тоже всё-таки в эту волну загнать» – who-she-is §5b's SOFT BLOCK CONCRETIZED
+    // amendment), so the raise is back – through a per-kind `blocking` flag, a `pendingLifeBeat`
+    // narrowed to blocking rows, a Home card and a three-week derived TTL, rather than through a
+    // pause. THE POSITION IS THE ONE T8 ARGUED FOR AND THE DEFERRAL RESERVED, unchanged: after the
+    // delivery (a week that is both «there is someone» and «something small» is a week the small
+    // thing loses – and the raise gate still refuses behind a BLOCKING row), and before
+    // `accrueSpirit`, because the bond band it reads and the Mood register that decides what she
+    // comes with are both LAST week's settled values. It writes no spirit and takes no `Rng`.
+    //
+    // ⚠ THE PIN IS THE SAME PIN AND REFUSES THE SAME THINGS: an ordered list of exactly the private
+    // life's three weekly calls, so a FOURTH statement sliding into the gap, a reorder of these
+    // three, or a removal of any one of them is red.
+    //
+    // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
+    // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
+    // the two can be reordered – a third statement appearing here goes red just as a swap does.
     const body = worldFunction('resolveBodyAndPlanner')
     const code = body
       .split('\n')
@@ -947,7 +1013,14 @@ describe('the fence this step is judged by', () => {
       .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
     const i = code.indexOf('accrueCondition(world, playedThisWeek)')
     expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
-    expect(code[i + 1]).toBe('accrueSpirit(world)')
+    const j = code.indexOf('accrueSpirit(world)')
+    expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
+    expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
+    expect(code.slice(i + 1, j), 'only the private life\'s three weekly calls separate them').toEqual([
+      'rollArrival(world)',
+      'deliverKnownPartner(world)',
+      'rollSmallTalk(world)',
+    ])
   })
 
   it('⚠⚠ the played-hurt −4 sits INSIDE the warning band’s own arm, and nowhere else', () => {
@@ -1016,15 +1089,49 @@ describe('the fence this step is judged by', () => {
     expect(named).toEqual(['shared/protocol/narrative.ts'])
   })
 
-  it('⚠ attachmentLift is DECLARED AND NOT READ, deliberately, until wave 3 wires the slot', () => {
+  it('⚠⚠ attachmentLift is read ONCE – in accrueSpirit’s return TARGET – and nowhere else', () => {
+    // ⚠⚠ RE-AIMED 11.09 BY WAVE 3's T4, AND NOT WEAKENED.
+    //
+    // WHAT IT SAID BEFORE, and it was right for the wave it was written in: «attachmentLift is
+    // DECLARED AND NOT READ, deliberately, until wave 3 wires the slot», enforced by asserting that
+    // NO file under `src/` reads it. WHAT MOVED: T4 is the step that gives it a reader –
+    // `accrueSpirit`'s weekly return now walks toward `baseline + attachmentLift` while
+    // `activeEpisode` returns a row (docs/plans/life-wave-3-builder-2026-09.md §2 T4). The old form
+    // was written to go red on exactly this commit, and this is that commit.
+    //
+    // ⚠ THE CLAIM IS TIGHTER THAN THE ONE IT REPLACES, not looser. «No reader anywhere» has become
+    // «ONE reader, in one named function, on the line that computes the return's TARGET», and the
+    // three ways this rule could be got wrong are each refused by a line below: a second reader
+    // anywhere in `src/`; a read that is not gated on the slot being full; and a read that lands in
+    // `weekPerturbation`, which would make the lift a one-off SPIKE THAT DECAYS instead of a moved
+    // baseline – the opposite shape from «lifts a little and stays lifted», and the one thing §1b
+    // actually specifies.
     const owners = srcFiles()
-      // ⚠ A READ, NOT A MENTION: the constant is discussed in prose in two places (its own
-      // declaration and `accrueSpirit`'s note on why the target is a flat baseline), and a pin that
-      // tripped on prose would be repaired by deleting the explanation, which is the wrong repair.
-      .filter(([, text]) => text.includes('.attachmentLift'))
+      // ⚠ A READ, NOT A MENTION – and `codeOnly` now, because the constant is discussed in prose in
+      // four places (its declaration, `accrueSpirit`'s note, the `ECONOMY.life` banner and
+      // `world/loveEpisodes.ts`), and a pin that tripped on prose would be repaired by deleting the
+      // explanation, which is the wrong repair.
+      .filter(([, text]) => codeOnly(text).includes('.attachmentLift'))
       .map(([path]) => path)
-    expect(owners).toEqual([])
-    // ...and it IS declared, at the value the design named – the other half of the same claim.
+    expect(owners, 'exactly one file in src/ reads it').toEqual(['engine/spirit.ts'])
+    // ...and inside that file it is read exactly ONCE, on the line that builds the return's target.
+    const accrue = codeOnly(engineModuleFunction('spirit', 'accrueSpirit'))
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+    const reads = accrue.filter((l) => l.includes('.attachmentLift'))
+    expect(reads, 'one read, and it is inside accrueSpirit').toHaveLength(1)
+    expect(reads[0], 'it is added to the BASELINE – an effective baseline, not a bonus').toContain('s.baseline +')
+    expect(reads[0], 'and it is gated on somebody actually being there').toContain('activeEpisode(world)')
+    // ...and THAT value is what the return step is handed, which is the whole of «a target, not a
+    // bump»: she walks toward it at her own rate and holds there.
+    const step = accrue.filter((l) => l.includes('stepToward(world.spirit'))
+    expect(step, 'the return step is still one line').toHaveLength(1)
+    expect(step[0], 'the return walks toward the lifted target').toContain('target')
+    // ⚠⚠ AND NOT ONE TENTH OF IT REACHES THE WEEK'S OWN EVENTS.
+    expect(codeOnly(engineModuleFunction('spirit', 'weekPerturbation'))).not.toContain('attachmentLift')
+    // ...and it IS declared, at the value the design named – the other half of the same claim, kept
+    // verbatim from the pin this replaces.
     expect(ECONOMY.spirit.attachmentLift).toBe(5)
   })
 })

@@ -63,14 +63,18 @@ vi.setConfig({ testTimeout: 300_000 })
 import {
   KID_ID,
   closeTournament,
+  coachLoadViewOf,
   createWorld,
+  decideKnock,
   enterEvent,
   kidAgeYears,
+  pendingKnock,
   skipTournament,
   tickWeek,
   toSnapshot,
   type WorldState,
 } from '../src/engine/world'
+import { coachKnockCall } from '../src/engine/coachLoad'
 import { sponsorStandingOf } from '../src/engine/world/sponsors'
 import { kitTermsFor, signOffer } from '../src/engine/offers'
 import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../src/engine/economy'
@@ -166,6 +170,30 @@ function capWeekWithBonus() {
       }
     }
     tickWeek(world, rng)
+    // ⚠⚠ ADDED BY WAVE 3's T16, A HARNESS REPAIR RATHER THAN A POLICY CHOICE. Since T16 a knock on a
+    // REPEATED part or on a `'warn'` clearance week reaches the parent even with a coach
+    // (`world/knock.ts` `knockNeedsTheParent`, the owner's ruling 11.09). ⚠ T16b (12.09) withdrew the
+    // two classes and made `'warn'` a WIDENER instead, so fewer knocks reach the parent than under
+    // T16 – the repair is kept because the hazard it answers is older than T16 and survives it: any
+    // escalation at all, at any rate, jams a walker that ticks past it. An undecided knock never
+    // expires and `rollKnock` raises no other while one is open, so a walker that ticks past it
+    // spends the rest of the career in a state the GAME FORBIDS – `advanceWeeks` halts on
+    // `pendingKnock`. This walk went red exactly there, on the kid-cut ratio (1.73 against 1.34),
+    // because a career that stops picking up knocks is a different career.
+    //
+    // ⚠⚠ AND IT REPLAYS THE COACH'S OWN CALL, WHICH IS THE MINIMAL-PERTURBATION ANSWER AND IS WHAT
+    // THIS FIXTURE NEEDS. Before T16 `coachDecidesKnock` took these decisions for this walk with
+    // `coachKnockCall`, so replaying it keeps the harness's POLICY exactly what it implicitly was and
+    // moves only WHO is recorded as having made it. ⚠ MEASURED against the alternative rather than
+    // assumed: `tests/long-career-ledgers.test.ts` takes the GREEDY `'push'` answer, because its
+    // subject is the saturated regime at week 430+ and only a greedy career reaches it – and the same
+    // `'push'` here walks PAST the one week this file is about, failing all five cases with «the walk
+    // never reached a MIXED week». The fixture is a SPECIFIC week (a paid prize row, a kit result
+    // bonus and a split cheque together), so the policy that disturbs the walk least is the right one
+    // here for the same reason the greedy one is right there.
+    if (pendingKnock(world) && world.ending === null) {
+      decideKnock(world, coachKnockCall(coachLoadViewOf(world), world.knock!.repeat))
+    }
     if (world.pendingTournament) {
       skipTournament(world)
       closeTournament(world)

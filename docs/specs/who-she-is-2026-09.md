@@ -337,9 +337,11 @@ systems:
 | quiet | ×0.6 | ×0.35 | 39 | first arrival median ~18; ~1–2 romances, median ~3 seasons |
 | deep | ×0.5 | ×0.9 | 52 | ~1–3 romances, median ~1.2 seasons, each ending −34 |
 
-**Feed lag** (arrival's `knownWeek − sinceWeek`): open – 0 with p 0.45, else uniform 1..5;
-private – 0 with p 0.10, else uniform 2..12. (The build plan's single distribution retires; its
-~50% «he learns 4+ weeks late» average survives as the mix of the two.)
+**Feed lag** (arrival's `knownWeek − sinceWeek`): open – **0 with p 0.70, else uniform 1..4**
+(⭐ MOVED 11.09 on the wave-3 census miss, his «двигать таблицу – ок»: at 0.45 the open register
+ran 57.4% late against its own ≤ 25% bar before any shave touched it – «open» means the parent
+usually hears at once); private – 0 with p 0.10, else uniform 2..12. (The build plan's single
+distribution retires; the late-share bars in §4a re-measure under the moved row.)
 
 **Wants weights**: open girls draw `'open'` / `'company'` at ~70%; private girls `'private'` /
 `'space'` at ~70%. The read stays surfaced only in the feed line's wording, as designed.
@@ -479,6 +481,32 @@ the words) + 4 one-liners + the flat pool shared across beats + the feed row ≈
 | 0 | her quoted line inside the parent's week story – the diary stays HIS journal; she speaks in quotation marks within it | no | none | every few weeks at close/steady; rare at strained; absent at cold |
 | 1 | small talk – she comes with something small (a worry before a big draw, a joy, a question); 2–3 reply options | soft – answerable, never lost | zero or capped-tiny (open question V2) – texture, never economy | a few per season at close; none at cold |
 | 2 | the big life beats (waves 2–4, already designed) – where her voice premieres | yes | the beats' own tables | as designed |
+
+⭐⭐ **THE «SOFT» BLOCK CONCRETIZED (11.09, wave 3 – the drift and the repair).** The wave-3
+brief mistakenly sent tier 1 through tier 2's hard pause; the builder built it, flagged the
+contradiction with this table and measured the cost (~2–4 week-stopping modals a season for a
+zero-bond event, from week 0 – bond starts at steady). The owner's calls, same day: the raise
+reverted first (вариант 3 – the engine, hazard, cap and lines all stay), then «расписать
+вариант 2 подробнее сейчас в спеке и тоже всё-таки в эту волну загнать» – so this is the
+ruled meaning of «soft – answerable, never lost», built as wave 3's T15:
+
+* **The surface is a Home-hub card, and the card is only the INVITATION** – she has come by
+  with something. Tapping it opens the SAME `LifeBeatDialog` on the same prompt contract;
+  modal only because the player chose to listen. No new dialog exists anywhere. The card's
+  copy is the owner's (invariant 4), delivered with the wave's вычитка package.
+* **Soft never stops the week**: the beat-kind registry declares `blocking` per kind (total
+  by type, so every future kind must choose), `pendingLifeBeat` narrows to blocking rows, and
+  the `'life'` stop reads only those. A soft row and a blocking beat coexist untouched.
+* **Answerable has a WINDOW**: a soft row is live for 3 weeks (the raise week + 2); liveness
+  is DERIVED from `week − row.week`, never stored – the episodes discipline again. After the
+  window the moment has passed: the card goes, nothing asks.
+* **Never lost = the ROW, not the chance**: the lifeLog row stands forever – answered, or
+  expired with `answer: null`, the honest record that she came and it went unasked. Bond moves
+  nothing either way (V2's zero holds even for the silence). A later wave MAY let the diary
+  read expired rows as texture; nothing does today.
+* **One at a time, and the band gate stands**: no new raise while a live unanswered soft row
+  exists; the season cap counts raised rows answered or not; close/steady only, so the card
+  cannot exist at cold – the silence is still the line.
 
 **What we need to build it** (his literal question, answered as a list):
 
@@ -942,3 +970,367 @@ reason: **no spirit delta exists anywhere in wave 2**, so nothing that reads spi
 **What this section does NOT do:** it changes no constant, proposes no re-aim, and ships no wording.
 Bars 1 and 3 remain open questions for the owner, and bar 3's is now a question about WHEN the layer's
 decisions arrive rather than about how much they are worth.
+
+---
+
+## §4a – wave 3 measured. The arrival census, predicted against measured
+
+⭐⭐ **RE-MEASURED 11.09 AFTER THE LAG ROW MOVED, AND THE WHOLE POINT OF THE ENTRY IS THAT BOTH
+READINGS ARE HERE.** The first run measured bar 3's open late-share at **44.0% against its own
+≤ 25% bar – a MISS** – and attributed it: §4's «Feed lag» open row («0 with p 0.45, else U[1..5]»)
+was already 57.4% late RAW, before `bondShave` could touch it, so no setting of the shave reached
+the corridor. It went to the owner as a finding, **the bar did not move**, and he moved the TABLE:
+«двигать таблицу – ок» – open became **0 with p 0.70, else U[1..4]**, «open» meaning the parent
+usually hears at once. The private row was not touched. The constant landed in
+`ECONOMY.life.lag.open` and the bench was re-run against it. **Every number below carries its
+before and its after.** Nothing else in the wave was retuned: the bars are what they were, the
+private row is what it was, and the seven bars that HIT under the old table HIT again under the
+new one.
+
+`npm run bench:life-arrival` (`tools/life-arrival.ts`), re-run 11.09 on `life/wave-3` with the moved
+constant in the working tree (branch head `a74caca5` when the run started; a copy-only commit
+`62773c8f` from a concurrent session landed while it walked, and it moves no bar – the frozen careers
+reproduce on it), **exit 0** – read out of the log the command itself appended, never off a pipe.
+**200 careers
+per temperament × 4 = 800**, 430,344 resolved weeks, each career walked from week 0 to the week she
+turns twenty-four (**week 543**), wealthy family, the `player` entry policy in both directions, every
+knock rested and the birthday she asked for. **Temperament is ASSIGNED after `createWorld`**, so the
+four columns are the same 200 seeds played four times over and a difference between them is who she
+is – §4a's own construction, for §4a's own reason. 772 of the 800 walked the full window; the other
+**28 ended in a career-ending injury**, which is a real outcome and not a harness fault.
+
+⚠ **Provenance of the predicted column, stated rather than claimed.** It is the closed-form
+arithmetic of §4's own tables – the derivation is printed beside every row below, so a reader can
+check that it does not depend on the run. It is **not blind in the way §4a's wave-1 column was**: an
+8-seed smoke of this tool ran before the grid. Saying so is the point; a prediction whose provenance
+is not stated measures nothing. The predicted column below is re-derived off the MOVED table for
+the two rows that read it, and the old derivation is kept beside it.
+
+⚠ **What was touched between the two runs, exactly and only:** `ECONOMY.life.lag.open`, from
+`{ zeroChance: 0.45, min: 1, max: 5 }` to `{ zeroChance: 0.70, min: 1, max: 4 }`. **No bar moved,
+no second constant moved, and no new draw exists** – `drawRawLag` reads the same single uniform off
+the same `seed:life:partner:<sinceWeek>:lag` key and compares it with a different threshold. The
+frozen MAIN capture is unmoved and not re-pinned (41550 / `e6b0c709`). ⚠ And the identity check
+that makes the re-run readable at all: **bars 1, 2 and 5 came back byte-identical** – the same
+medians, the same n, the same 28 injuries, the same 53 arrival weeks – which is what a lag move
+MUST do, because the arrival key never sees it. A lag that had moved an arrival week would have
+been the bug.
+
+### ⚠⚠ The count bars run in a BENCH-ONLY mode, and the control that keeps them honest
+
+Wave 3 ships **arrivals only**: nothing in `src/` writes `endedWeek`, and `arrivalEligible` refuses to
+draw while `activeEpisode` is non-null. So exactly **one** episode can exist per career and every
+romance-count median read off the shipped engine is 1, for all four temperaments – a fact about the
+wave's scope, not about her. The bench therefore **pokes `endedWeek` tool-side**, at a fixed duration
+per temperament taken off §4's own «median duration» column (sunny 94w · fiery 36w · quiet 156w ·
+deep 62w), so that the cooldown and the re-arrival are exercised at all. It is one field, written by
+the bench on the bench's own world: **no draw, no stream, no engine change.** A drawn duration would
+have needed `seed:life:ends:*`, which is wave 4's and does not exist on this tree.
+
+The **shipped control arm** is what stops that becoming a lie – 100 careers (25 per temperament) with
+the poke off:
+
+| control | measured |
+| --- | --- |
+| episodes per career, **max** | **1** – the wave's whole scope in one number |
+| careers that ever met anybody | 96/100 |
+| first-arrival week **identical** to the poked arm | **100/100 seeds** – the poke is confined to what happens after an ending |
+
+### The table
+
+⚠ **Read the two right-hand columns as BEFORE → AFTER.** Rows 1, 2, 4 and 5 came back identical, so
+they carry one number; rows 3a and 3b carry both runs, because 3b is the row the table moved for and
+3a is the control that proves the private register was left alone.
+
+| # | bar | predicted (arithmetic) | measured | verdict |
+| --- | --- | --- | --- | --- |
+| 1a | romance-count median, **fiery ≥ 4** | 104/(62.5+48) + 312/(25+48) = **5.2** | median **5.0** (mean 5.48, 3–8, n 193) | **HIT** |
+| 1b | **sunny 2–3** | 104/(83.3+120) + 312/(33.3+120) = **2.6** | median **3.0** (mean 2.81, 1–4, n 193) | **HIT** |
+| 1c | **deep ≤ 3** | 104/(200+114) + 312/(80+114) = **1.9** | median **2.0** (mean 2.11, 0–4, n 193) | **HIT** |
+| 1d | **quiet ≤ 2** | 104/(166.7+195) + 312/(66.7+195) = **1.5** | median **2.0** (mean 1.76, 1–3, n 193) | **HIT** |
+| 1e | the four medians **separate** | fiery 5 > sunny 3 ≥ deep 2 / quiet 2 | **5.0 · 3.0 · 2.0 · 2.0** | **HIT** |
+| 2a | first-arrival median, **fiery ≤ 17** | ln2 / −ln(1−.016) = 43.0 w from week 128 = **16.83** | **16.78** (n 199, 1 never) | **HIT** |
+| 2b | **quiet ≥ 17.5** | survives 104 w at .006 (S = .535), then 4.5 w at .015 → week 236 = **18.08** | **18.03** (n 199, 1 never) | **HIT** |
+| 2c | sunny / deep (no bar) | **17.10** / **18.26** | **16.99** / **18.16** | – |
+| 3a | late share, **private ≥ 60%** | ⌊raw/2⌋ = 0 only at raw 0, and p(raw 0) = .10 → **90.0%** (unchanged – the private row did not move) | **90.2%** before → **90.2%** after (first episodes, n 396 both runs) | **HIT** → **HIT** |
+| 3b | late share, **open ≤ 25%** | old row: p(raw 0) .45 + p(raw 1) .11 = .56 zero → **44.0%**. Moved row: p(raw 0) .70 + p(raw 1) .075 = .775 zero → **22.5%** | **44.0%** before → **20.6%** after (first episodes, n 398 both runs) | **MISS** → **HIT** |
+| 4 | the latch proxy | **unreadable this wave** – nothing ends an attachment | printed, **no verdict** (see below) | – |
+| 5 | input-independence: identical `sinceWeek` lists | identical, by construction of the key | **53 arrival weeks, 16 pairs, 0 mismatches – asserted** | **HIT** |
+
+Bar 1's «minor window» is weeks 128–231 (104 weeks at 1.0%×mult) and the «adult window» is 232–543
+(312 weeks at 2.5%×mult); both boundaries are **derived** by the bench off `kidAgeExact`, not quoted.
+
+### The finding that moved the table: bar 3's open corridor was not reachable under the OLD lag row
+
+**The first run, kept whole because it is the reason the table moved.** 44.0% measured against a bar
+of ≤25%, and the bench printed the reason beside the number instead of leaving it to be guessed at.
+**The raw draw – before `ECONOMY.life.bondShave` touches it – was already 57.4% late** (nominal
+55.0%: the old «open – 0 with p 0.45»). That is **2.3× the bar before the shave exists**, so no
+setting of the shave could reach the corridor:
+
+| band | divisor | open late, OLD row (0 @ .45, U[1..5]) | open late, MOVED row (0 @ .70, U[1..4]) |
+| --- | --- | --- | --- |
+| strained / cold | ⌊/1⌋ | **57.4%** – MEASURED: the raw draw itself, n 1638 | **33.0%** – MEASURED: the raw draw itself, n 1638 (nominal 30.0%) |
+| steady | ⌊/2⌋ | **45.4%** – MEASURED, n 1638 (the only band either grid reached) | **23.9%** – MEASURED, n 1638 (still the only band reached) |
+| close | ⌊/3⌋ | ≈ **33%** – COMPUTED off the old nominal table (zero at raw 0, 1 or 2 = .45 + .11 + .11); not measured, because no career reached `close` | ≈ **15%** – COMPUTED off the moved table (zero at raw 0, 1 or 2 = .70 + .075 + .075); still not measured, for the same reason |
+
+So the miss was a property of the **lag table**, not of the architect's concretisation: ≤25% needed
+p(raw = 0) ≈ 0.75 for an open girl, against the old 0.45. **Whether the bar moved or the table did
+was a ruling and not a measurement, and the owner ruled the table** («двигать таблицу – ок», 11.09) –
+0.70, U[1..4], which is the 0.75 the arithmetic asked for rounded to a number a design can say out
+loud: «open» means the parent usually hears at once.
+
+**What it reads now.** Open first-episode late share **20.6%** against ≤25% – a **HIT**, and with
+room: the closed form off the moved row predicts 22.5% at `steady` and the run came in 1.9 pp under
+it, the same direction and the same size as the raw-zero observation recorded below. The bar was
+never touched. For the record beside it, the private column did not move one digit – **90.2% before,
+90.2% after, n 396 both runs** – which is the control that says the move reached exactly the register
+it was aimed at, and the instrument is still not reading the two registers differently.
+
+⚠ **The three unreached bands are still unreached**, so the middle column of the table above is the
+only one either run measured. The moved row therefore reaches the corridor **at the band an ordinary
+parent actually produces**, and the `close`/`strained`/`cold` figures remain arithmetic – see the
+second finding, unchanged below.
+
+### The second finding: three of the shave's four rows were never reached
+
+**100% of the 2,405 arrivals landed at bond band `steady`.** `close`, `strained` and `cold` are empty
+columns in the run, printed as `–` rather than as 0.0%. Two things follow and both are the
+architect's, not the bench's:
+
+* the shave as shipped is, in practice, a **single divisor** (⌊/2⌋) for an ordinary parent – the other
+  three rows of `ECONOMY.life.bondShave` are unexercised design;
+* the bench's own `--policy grinder` arm shows the other end and it is not a middle: walked ten years
+  under «enter everything, refuse nothing», the bond **collapses** – 66.7% of arrivals at `cold`,
+  28.6% at `strained`, 4.8% at `steady`, none at `close` (8-seed smoke, 11.09). The played-hurt −4
+  fires on every draw she enters hurt and the flat 0.5/week regression toward 70 cannot carry it.
+  That is §4a's wave-1 bar-3 finding seen from a ten-year window rather than a four-season one.
+
+⚠ One smaller observation, recorded and **not** claimed: the raw zero-share came in about 2 pp under
+nominal in both registers (private 8.0% against 10%, open 42.6% against 45%). The two columns are not
+independent – the census is paired, so quiet/deep and sunny/fiery share arrival keys – and at the
+effective sample size this sits inside noise. It is written down so a later run that reproduces it has
+something to reproduce.
+
+⭐ **AND THE LATER RUN REPRODUCED IT, which is why it was written down.** Under the moved row the raw
+zero-shares are **private 8.0% against 10% (identical to the digit – the private row never moved, and
+its draws are the same draws on the same keys) and open 67.0% against 70%** – the same ~2–3 pp, the
+same direction, on a threshold 25 pp away from the one that produced the first reading. A bias that
+survives moving the constant is a property of the sampled key set, not of the number: the paired grid
+re-reads one arrival key per (seed, week) for all four girls, so the effective n behind these shares
+is far smaller than the 1,638 and 767 rows printed beside them. Still not claimed as anything; now it
+has been reproduced once.
+
+### The input-independence arm – asserted, not eyeballed
+
+One seed walked twice per temperament, four seeds per temperament, sixteen pairs. **no-action** enters
+nothing, books nothing, reviews no coach and answers neither knock nor birthday – it answers only what
+the engine refuses to move without (her beats, bond-neutrally; the fork; the retirement offer).
+**action-laden** is the `player` policy plus every knock rested and every birthday answered.
+
+* **53 arrival weeks compared, 0 mismatches**, and the comparison is a `throw` rather than a printed
+  «yes». A player choice does not reach `seed:life:arrival:<week>`.
+* **The arm is not vacuous**, which needed its own check (CLAUDE.md's 17.08 rule – two arms that turn
+  out to be one career pass this equality trivially): **final bond differs in 16/16 pairs**, and the
+  bench throws if it ever does not.
+* `knownWeek` differed in **0** episodes. That is permitted (the brief's §0.2 – the shave is the
+  relationship the player built, not the world's dice) and it is **not** evidence the shave is inert:
+  the shave is a step function of the band, and every arrival in both arms landed at `steady`, so the
+  two arms divided by the same number. The bench prints the bands per pair so this cannot be read the
+  other way.
+
+⚠ **Re-run under the moved row: identical, to the last line.** 16 pairs, **53 arrival weeks, 0
+mismatches**, final bond differs 16/16, `knownWeek` differs in 0 – and the sixteen printed
+`sinceWeek` lists are the same sixteen lists, week for week. That is the strongest single statement
+the re-run makes: **a lag row cannot move an arrival**, because the arrival key never reads it.
+
+### The latch proxy, and why it carries no verdict
+
+§4's «first or second love reaches the latch» bar (quiet ≥ 50%, fiery ≤ 20%) is **unreadable in this
+wave**. Nothing in the engine ends an attachment, so in the shipped game the share is 100% by
+construction, and in the bench-only mode it is a readback of the tool's own duration table (fiery
+0.0%, everyone else 100.0%, which is exactly `36w < 52 ≤ 62w`). Neither number is a property of the
+sim. The column is printed so that step 6 has somewhere to land, and marked so that nobody signs it.
+
+### What this section does NOT do
+
+It proposes no retune and ships no wording. **One constant moved between the two runs and it is named
+at the top of this section – `ECONOMY.life.lag.open`, on the owner's ruling, against a bar that stayed
+where it was.** That is the order invariant 5 requires: the bench measured, the miss was attributed,
+the finding went up, the owner moved a design number, and the bench re-measured. It is not the order
+where a number is nudged until a bar goes green, and the difference is visible in this section – both
+readings are here, the bars are untouched, and the seven bars that were HIT are still HIT on the same
+inputs.
+
+The three unreached rows of the shave remain a question for the owner and the architect. The bench's
+own `endedWeek` poke is deleted the day wave 4 ships the ending hazard.
+
+
+## §4a – wave 3 measured, second entry. The push-through price, predicted against measured
+
+Wave 1's **measurement debt** (invariant 5), assigned to wave 3 as T12 and paid here. One clean
+pair, 64 seeds × 4 temperaments = 512 careers, 106,100 weeks: identical policy except the knock
+answer – arm A rests every knock, arm B pushes every one. Self-coached (see the coach finding
+below); `--coached` ships as the reproducible control.
+
+⚠⚠ **THE INSTRUMENT WAS BROKEN UNTIL THE SAME DAY.** `bench:spirit` had been running, printing a
+full census and exiting **0 while answering nothing** – 842 beat rows raised, zero answered, both
+fork columns empty – because a `try/catch` swallowed a throw that appeared when a second beat kind
+did. Repaired in T6b; `--fork` went from 4 of 16 careers reaching a fork answer to 16 of 16. **The
+numbers below are the first honest ones this tool has produced.**
+
+| # | predicted | measured | paired residual | verdict |
+| --- | --- | --- | --- | --- |
+| 1 bond gap at season end | **44.15** | **3.58 ± 0.756** | 40.57 ± 1.354 | **DISAGREE** |
+| 2 spirit weeks under baseline | 22.55 | 21.08 ± 1.037 | 1.47 ± 0.909 | agree |
+| 3 paired match-pp cost of pushing | 0.000 | −0.114 ± 0.491 | 0.11 ± 0.491 | agree |
+
+⭐⭐⭐ **#1 IS THE FINDING, AND THE DELTAS ARE NOT THE PROBLEM – THEY LAND TO THE POINT.** Measured
+across every `decideKnock`: rest **+2304.0 predicted / +2304.0 measured**, push **−8908.0 / −8908.0**,
+**zero mismatches**. The table charges exactly what it says it charges. What erases it is
+`ECONOMY.bond.regressionPerWeek` – a flat **0.5/week** back toward 70 – because neither arm's
+decisions are worth half a point a week (rest +0.0434/wk, push −0.1681/wk). **92% of the delta
+table's separation never survives to a reading week.** Measured at four consecutive season ends
+– 1.42 / 2.52 / 3.71 / 3.58 – it **plateaus at ~3.5 rather than accumulating**, so it is an
+arithmetic ceiling and not an unlucky sample. ⚠ This is the SAME ceiling wave 2's bar 3 hit (the
+gap that came 0.14 short of 12), now measured on a pair that moves exactly one decision.
+
+⚠⚠ **AND AT THE SHIPPED COACH RUNG THE PARENT DOES NOT ANSWER MOST KNOCKS.** `coachManagesLoad`
+is true for every rung but `self`, so the coach decides inside the tick and moves no bond.
+Measured with `--coached`: **280 knocks arrived, the coach answered 232**; the parent was asked
+about **1.5 times per career** against 9.0 self-coached, and the resting arm then carried 176
+push-governed weeks it never chose. **The push-through price is mostly not the parent's to pay at
+the default coach** – a finding for the owner, not a thing to retune.
+
+**What pushing DOES cost is availability, not win rate**: −4.10 ± 1.317 matches played per pair,
+**+108 injury onsets and +380 injured weeks** across the arm. And **60% of pushes are repeats**
+(1268 of 2124), so the −5 row dominates the −3 one.
+
+**Anti-stall**: four hard checks, each mutation-verified – both ledgers must balance
+(`asked + coach-decided == arrived`, `answered + latched == asked`), pushes and rests both
+non-zero, governed weeks non-zero, and the bond must have moved the right sign at the decisions.
+⭐ The best of them caught a forced stall **even though the bench's own push counter still read
+correctly**, because the net reads `knockGoverns` from the ENGINE rather than the bench's label.
+No `try/catch` stands between a knock and its answer. Arms differ only in the knock answer,
+verified by a counting wrapper over all 256 pairs: **0 draw-count, 0 draw-value-hash and 0
+arrival-week mismatches.** Frozen capture unmoved (41550 / `e6b0c709`). **Nothing was adjusted.**
+
+## §4a – wave 3 measured, third entry. T16 → T16b: the ladder's own number corrected the cure
+
+⭐⭐⭐ **THIS ENTRY REPLACES T16's, AND THE REPLACEMENT IS THE RECORD.** T12 measured the
+push-through lever dead at the DEFAULT rung: the coach answered **232 of 280** knocks and the parent
+was asked ~1.5 times a career. T16 cured it with two UNCONDITIONAL classes (a repeated part, a
+`'warn'` week). It hit its rate – 1.88 → 6.50 asks a career – and **its own measurement killed it**:
+the classes were TIER-INDEPENDENT, so tap share went budget 0.148 / elite 0.075 to budget 0.716 /
+elite 0.662. A **2× ladder span became 1.08×**; the Elite coach fell from deciding **95%** of knocks
+alone to **31%**. The attention-buying product died. The owner: «мне это не очень нравится».
+⭐ **The cure must not spend the premium rungs** – T12's dead lever was measured at the MIDDLE coach.
+
+**T16b, the widener model.** The unconditional classes are reverted; escalation returns to the
+confidence DOUBT ZONE alone, and `'warn'` becomes the SECOND doubt-widener beside `REPEAT_DOUBT`.
+A warn-week repeat compounds – both wideners apply. The ordinary-knock confidence ladder is untouched.
+
+| bar | ruling | measured | actuation |
+| --- | --- | --- | --- |
+| ladder spread budget→elite | ≥ 1.6× | **6.3×** | budget 5.5 taps of 10.8 knocks = .509 · elite 1.0 of 12.3 = .081 |
+| middle-rung asked / career | 3–5 | **3.50 rest / 4.00 push** | 56 asked / 16 careers · 64 asked / 16 careers |
+| Elite self-decide | ≥ 85% | **91.9%** | 11.3 handled of 12.3 knocks per career |
+
+`bench:load` taps per career, self/budget/middle/high/elite – grinder **11.5 / 5.5 / 3.8 / 1.4 / 1.0**
+(pre-T16 –/2.3/1.8/1.1/0.9; **T16 –/7.7/8.0/7.6/6.6, not even monotone**), player 9.7/4.3/2.4/1.1/0.5.
+
+⚠ **THE TUNING IS ON THE RECORD.** `WARN_DOUBT = 3` alone MISSED: the warning band is condition
+[15, 25), so a warn week is both rare AND arrives carrying ~30 strain points of gap that a confident
+coach's zone never reaches – at `ESCALATE_CAUTION 3.5` the pair read 2.25 / 2.50. The one authorised
+step, 3.5 → **4.5**, gave 3.50 / 4.00. **5.0 was declined as more movement than the corridor needed.**
+Nothing else moved: no delta row, no `regressionPerWeek`, no confidence ladder.
+
+**Frozen careers re-stamped back**: 19 / 25 / 6 keys of ~78, `results` and the wallet moved (a
+different knock answer changes whether she plays), and ⚠⚠ **`rngMain` byte-identical on all three** –
+the widener takes no draw. Capture **41550 / `e6b0c709`** unmoved.
+
+**And the harnesses got a shared knock drain** (`tools/_knocks.ts`): jammed weeks **47 → 0, 39 → 0,
+106 → 0**, arrivals ROSE, so the frozen fixtures now walk MORE game than before T16, not less.
+⭐ The architect predicted «~2»; the true answer is **0** – a drain answering in the same tick leaves
+no week holding one. ⚠⚠ The T6b law held under test: the drain first went into `econ-bench`'s
+`stepCareerWeek` and SILENTLY reached `e2e-fixtures` and `life-arrival`; `npm run e2e:fixtures` caught
+it red («junior: no seed in 200 reached the state», 200/200 booting without an open knock), the fix
+is an explicit opt-out, and `junior.tsave` regenerated **byte-identical** proving the walk restored.
+Benches that PRICE knocks kept their explicit arms and were not touched.
+
+⚠ **A guard had inverted its own T16-era measurement**: `long-career-ledgers` answered `'push'`
+because under T16 the repeat class was what reached the parent; under T16b what reaches him is the
+HARD call, and greedily pushing those bought injuries – 258 matches against its own floor of 300.
+`'rest'` gives 12/12.
+
+**Copy**: one new line, the architect's under the standing delegation – «The coach is not calling the
+{part} alone – not on a week like this.» T16's reuse of «in two minds» is gone: it claimed a mental
+state a risk week cannot back.
+
+## §4a – wave 3 measured, fourth entry. T17: the stop want stops being a quarter
+
+**The owner measured this one in play.** His world #5 – healthy, close home – said «stop» at the fork,
+and the formula made that no tail: `lean` clamps every weight to [1.0, 1.6] and `stop` was
+`lean(worn)`, never below 1.0, so **P(stop) bottomed out at ~22–24% at ANY state**. A quarter of
+players met «хочу закончить» at the game's biggest triumph with no root they could read.
+
+`stop = floor + gainWorn·worn + gainStrained·strained` (`ECONOMY.life.forkStop` = 0.12 / 2.5 / 2.0),
+`strained` being the mirror of `close` – distance BELOW the start. **P(stop), pure formula:**
+
+| state | measured | driver |
+| --- | --- | --- |
+| **OLD formula, unsupported** | **27.8%** | – |
+| unsupported, bond = start | **4.4%** | own |
+| unsupported, bond 100 | **3.3%** | own |
+| at the driver line (.15) | 16.0% | own |
+| worn .3 | 25.1% | worn |
+| strained .3 | 21.7% | strained |
+| worn + strained .4 | 42.5% | worn |
+| worn + strained .6 | 52.0% | worn |
+| drained, cold | 64.0% | worn |
+
+⭐⭐ **A STRUCTURAL FINDING THE BRIEF DID NOT HAVE: P(stop) is FLAT ACROSS STANDING whenever
+`bond <= start`.** `college = lean(1−s)` and `tour = lean(s)` are complementary and sum to 2.6 at
+every standing, while `close = 0` kills the only term standing could move. **Standing reaches
+P(stop) solely through the `close` multiplier** – so how high she got changes what she wants only in
+a home above the start. The bench prints a second grid at `bond > start` where the axis is alive.
+
+**Walked** (`bench:spirit --fork --seeds=32`): 256 careers · **252 reached the fork and stated a
+want** · **24 `'fork-counsel'` rows raised = the 24 stops exactly** (the arc's proof-of-run).
+Wants: college 152 · tour 76 · **stop 24 = 9.5%**.
+⭐ **BAR: strictly unsupported stops (worn = strained = 0) 4/252 = 1.6% – PASS** against ≤ 5%.
+Diagnostic, not a bar: stops whose WORDS claim no root (driver `own`) 20/252 = 7.9% – the `own`
+band runs to ~14% at its bottom edge, so «too small to name» rather than absent, and `own` is the
+Barty register, a root of its own.
+⚠ **No career on this grid was `worn` at the fork**, so the worn copy column is unexercised by the
+walk and carried by unit tests only. The bench prints that itself rather than leaving it inferred.
+
+⭐⭐ **CLOSED BY POINT 4 (12.09) WITH A POKED ARM, AND THE WALKED READING IS UNCHANGED.** The fork
+grid gained a BENCH-ONLY arm that pokes `world.spirit` tool-side to 38.50 on week 241 – one field, on
+the bench's own world, no draw and no stream (`tools/life-arrival.ts`'s precedent). The driver
+derived `worn` on **28/28** poked careers that stated a want, and the column rendered **8× in her own
+voice and 8× in the coach's**. ⚠ The walked row still reads `worn 0` and is untouched: two arms, two
+meanings, and the printout says so in its own banner.
+⭐ **THE ASSERTION IS THE PART WORTH KEEPING**: each captured string is proven EQUAL to the engine's
+`worn` reading for that girl **and DIFFERENT from its `own` reading** – because below the flat-pool
+cut both readings collapse to the pool's line, so a bare equality would have passed on a career whose
+worn copy never appeared at all. The poke's depth is DERIVED (3× the driver line, a 21-point margin
+against `accrueSpirit`'s ≤ 5/week return), not chosen.
+⚠ The fork week derives to **242** on this tree (`schoolEndWeek`), not the 294 an earlier report
+quoted; both exceed the 156-week freeze walk, so the frozen-career conclusion is unaffected.
+
+**Frozen careers: 0 keys of 80 on ALL THREE, byte-identical, no constant re-stamped.** The fork
+opens at week 294 and the freeze walk ends at 156, so T17 cannot reach them. Frozen MAIN capture
+**41550 / `e6b0c709`** unmoved.
+
+⚠⚠ **AND `bench:spirit` WOULD HAVE LIED AGAIN.** Its `answerTheForkTheWayThisArmWould` carried a
+`catch {}` that swallows `answerFork`'s refusal – so every stopping career would have reported
+`forkCongruence: null` and `bondAtFork: NaN` **with no error**, byte-for-byte the T6b failure on the
+same instrument. Found and fixed with a second bond-neutral drain. That is twice this wave the same
+bench has been caught reporting a stall as a measurement.
+
+⚠ **The `strained` driver is narrow in HER voice**: `speaksInHerOwnVoice` is false below bond 55 and
+the driver starts below 59.5, so she speaks a `strained` line only in the bottom ~4.5 points of the
+`steady` band. The root still reaches the player at every band **through the coach**, whose counsel
+is driver-keyed rather than bond-keyed – taken as the design answer and documented rather than
+widening the pool.

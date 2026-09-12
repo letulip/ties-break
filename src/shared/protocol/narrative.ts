@@ -139,9 +139,72 @@ export interface LifeBeatOption {
   label: string
 }
 
-/** The beats this layer knows how to raise. Wave 2 ships exactly one; the union is the thing that
- *  keeps a later step from smuggling in a free-form string the records cannot be read by. */
-export type LifeBeatKind = 'fork-opinion'
+/** ⭐⭐⭐ v74 T15 – THE SOFT BEAT'S INVITATION (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment,
+ *  11.09). Non-null exactly while a tier-1 row is inside its three-week window and unanswered.
+ *
+ *  ⚠⚠ THE CARD IS ONLY THE INVITATION, AND THE DIALOG IS THE SAME DIALOG. `card` is one short line
+ *  saying she has come by with something; tapping it opens `LifeBeatDialog` on `prompt`, which is a
+ *  `LifeBeatPrompt` like any other beat's – same contract, same component, same engine-side
+ *  re-validation on the way back. There is no second dialog anywhere in the app, and this type is
+ *  what says so: the only thing the soft path adds to the wire is a sentence and a reason to draw it.
+ *
+ *  ⚠ THE TWO TRAVEL TOGETHER BECAUSE THEY ARE ONE STATE. A surface that could hold the card without
+ *  the conversation behind it (or the other way round) would be two readings of «is she waiting», and
+ *  the engine's own selector (`liveSoftBeat`) is the only one there is.
+ *
+ *  ⚠ AND THE WEEK IS NEVER STOPPED FOR IT. `pendingLifeBeat` – the predicate both halves of the
+ *  block contract ask – reads BLOCKING rows only, so this field can be non-null on a week that ticks
+ *  on as if nothing were waiting, which is exactly what «soft» means. */
+export interface SoftBeatInvite {
+  /** the Home card's line – the invitation, never what she came with */
+  card: string
+  /** the conversation the card opens, on the ordinary prompt contract */
+  prompt: LifeBeatPrompt
+}
+
+/** The beats this layer knows how to raise. Wave 2 shipped exactly one; the union is the thing that
+ *  keeps a later step from smuggling in a free-form string the records cannot be read by.
+ *
+ *  ⭐⭐ v74 (the private life, wave 3 – T6) ADDS `'met'`: the week the parent is TOLD that someone
+ *  exists. Its `detail` is the `LoveEpisode.id` the row is about, which is also what makes the beat
+ *  fire exactly once per attachment – the record is the queue AND the receipt (`world/lifeBeat.ts`).
+ *
+ *  ⚠ THE BEAT FIRES ALWAYS AT `knownWeek`; THE BOND BAND PICKS THE REGISTER, NEVER THE EXISTENCE
+ *  (architect, 11.09, on wave 2's own precedent). At `close` the news arrives in her own voice, at
+ *  `steady` as a mention, at `strained`/`cold` as a dry card with no line of hers. A bond band that
+ *  decided whether the beat happened at all would make a distant parent's career quieter rather than
+ *  colder, which is the opposite of what the layer is for.
+ *
+ *  ⭐⭐ v74 (wave 3 – T8) ADDS `'small-talk'`: TIER 1 (who-she-is §5b's three tiers), she comes with
+ *  something small and the parent answers it. Its `detail` is the SUBJECT she came with – a worry, a
+ *  joy or a question, §5b's own triple – and that is the whole of what the row records.
+ *
+ *  ⚠⚠ EVERY ONE OF ITS REPLIES IS PRICED ZERO, RULED (V2, 09.09): «tier-1 replies move nothing –
+ *  small talk is texture, never economy, and the delta table stays the big beats'». The value of the
+ *  beat is the READ, not a number, and a tier that quietly earned bond would make the frequent thing
+ *  the profitable thing. ⚠ It is also the ONE kind with no feed row of its own: the `lifeLog` row IS
+ *  the record (`world/lifeBeat.ts` §3c).
+ *
+ *  ⭐⭐⭐ v74 (wave 3 – T17) ADDS `'fork-counsel'`: THE COACH'S READ, raised ONLY when the want she
+ *  stated at the fork was `'stop'`, and only at the moment the parent has answered her (the owner's
+ *  «обсуждать с тренером», ruled 11.09 off his own playtest). Its `detail` is the DRIVER of that want
+ *  – `'worn'`, `'strained'` or `'own'` – the same reading her own line was worded from, so the row
+ *  records WHICH stop this was and the two voices cannot end up explaining different things.
+ *
+ *  ⚠⚠ IT IS INFORMATION AND NOT A TEST. Both of its answers are priced ZERO – what the coach tells
+ *  him is not a thing a parent can get wrong – which is also what keeps `tools/_lifeBeats.ts`'
+ *  bond-neutral drain able to walk a career past it.
+ *
+ *  ⚠ AND IT BLOCKS, which is the whole of its mechanism: `answerFork` already refuses while any
+ *  blocking row is unanswered, so a counsel row raised on the answer to her opinion holds the fork
+ *  closed until the parent has heard the coach out. No new guard exists anywhere.
+ *
+ *  ⚠⚠ THE PSYCHOLOGIST'S COUNSEL IS **WAVE 5's** AND HE DOES NOT EXIST YET. The arc is built so his
+ *  beat SLOTS BESIDE the coach's – a second row raised from the same place, keyed on the same driver,
+ *  blocking in the same way, answered before the fork like this one – and layer 3 (the pressed-through
+ *  stop remembered and re-read later) is wave 5's with him. Nothing here anticipates either; this
+ *  note is the pointer wave 5 is meant to find. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
@@ -161,6 +224,46 @@ export interface LifeBeatRecord {
   detail: string
   /** the option id the parent chose, or null while she is still waiting to be answered */
   answer: string | null
+}
+
+/** ⭐⭐⭐ v74 – SOMEONE EXISTS. One row per attachment this career has lived, append-only and never
+ *  pruned (`world.loveEpisodes`; the private life, wave 3, `docs/plans/the-private-life-build.md` §4
+ *  step 3). A handful of rows per career at most, which is `world.birthdays`' own argument for
+ *  keeping every one of them.
+ *
+ *  ⚠⚠ EPISODES, NOT A NULLABLE SLOT, AND THE 09.09 RE-CUT (review find #5) IS THE WHOLE REASON. A
+ *  romance that begins AND ENDS before the parent ever knew of it must survive save and reload
+ *  intact and surface later as one honest late row; a single «current partner» slot would have
+ *  overwritten it out of existence the next time someone appeared, and the biography would be
+ *  missing the part the parent most needed to hear. **The active attachment is DERIVED, never
+ *  stored** – the last row with `endedWeek === null`, which is `activeEpisode` in
+ *  engine/world/lifeBeat.ts and nothing else.
+ *
+ *  ⚠⚠ NO NAME AND NO GENDER IS PERSISTED, DELIBERATELY. The schema must not hardwire
+ *  boyfriend -> husband: who the partner is arrives with step 6's fictional-name pass and the
+ *  owner's word, and a field added now would have to be guessed at by every migration between here
+ *  and there. It follows that «no romance at all» and «never latches» are FIRST-CLASS HAZARD
+ *  OUTCOMES rather than failures – an empty list is a life this career genuinely lived. */
+export interface LoveEpisode {
+  /** `p:<sinceWeek>` – an identity, nothing more. It is not a person, it is not a seed and nothing
+   *  derives from it; a reader that wants to know WHO must wait for step 6. */
+  id: string
+  /** the career week someone appeared */
+  sinceWeek: number
+  /** the week it ended, or null while it is still going. ⚠ Wave 4 writes it; THIS wave always
+   *  leaves it null, and the cooldown that reads it is shipped now so wave 4 changes nothing here. */
+  endedWeek: number | null
+  /** the week the PARENT found out – `sinceWeek` plus the shaved lag (wave 3 T5) – or null while he
+   *  has not been told. ⚠ It is a fact about disclosure and never about the attachment: a row can
+   *  begin and end with this still null, which is exactly the late-row case above. */
+  knownWeek: number | null
+  /** her drawn preference about being told: `'private'` keeps it to herself, `'open'` says it out
+   *  loud (wave 3 T5). Hers, not his. */
+  wants: 'private' | 'open'
+  /** === `id` today, and kept as its own field for step 6's naming pass – when a partner acquires a
+   *  fictional name the identity of the ROW and the identity of the PERSON stop being the same
+   *  thing, and a schema that had conflated them could not tell them apart afterwards. */
+  partnerId: string
 }
 
 /** ⭐ ONE ROW PER BIRTHDAY (v48). The DIARY reads it and nothing else does: no morale, no condition,
@@ -293,6 +396,21 @@ export interface DiaryFacts {
    *  not. `close`/`steady` license her own four voices; `strained` collapses them into the shared
    *  flat pool; `cold` is silence, and the parent's own line stands alone under the painting. */
   bondBand: BondBand
+  /** ⭐⭐ v74 (the private life, wave 3 – T6) – THE PARENT KNOWS THERE IS SOMEONE: an attachment that
+   *  has not ended and whose `knownWeek` has arrived. Derived at snapshot time off `loveEpisodes`,
+   *  never persisted.
+   *
+   *  ⚠⚠ IT IS THE WHOLE OF WHAT THE DIARY MAY KNOW ABOUT HER PRIVATE LIFE, and the narrowness is
+   *  R2-18's law rather than an oversight: a fact ships only with the licence that consumes it, in
+   *  the same wave. There is no name here, no gender, no `sinceWeek`, no «how long» – the schema
+   *  persists none of them (see `LoveEpisode`), so a diary line that reached for one would be
+   *  inventing a consequential fact, which is exactly what the honesty law forbids. What a line
+   *  licensed on this may say is «the parent knows», and nothing further.
+   *
+   *  ⚠ IT IS ABOUT DISCLOSURE AND NOT ABOUT THE ATTACHMENT. A romance the parent has not been told
+   *  about reads `false` here while `activeEpisode` is non-null and spirit's baseline is already
+   *  lifted – which is the design: he sees a lighter week before he knows why. */
+  partnerKnown: boolean
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

@@ -346,8 +346,43 @@ export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
 import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
 export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
-import { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant } from './world/lifeBeat'
-export { answerLifeBeat, buildLifeBeatPrompt, drawForkWant, forkStandingOf, forkWantOf, forkWantWeights, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, pendingLifeBeat, raiseLifeBeat, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_OPTIONS, type ForkWant }
+// ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` arrive on the barrel too –
+// the ACTIVE attachment is a question asked of `loveEpisodes`, never a field, so every reader in the
+// repo has to arrive at it through this one function or the derivation acquires a second spelling.
+// ⚠ THEY COME FROM `./world/loveEpisodes` AND NO LONGER FROM `./world/lifeBeat` – T4's cycle fix, set
+// out in full in that leaf's own banner: `engine/spirit.ts` reads `activeEpisode` for the effective
+// baseline and `lifeBeat.ts` imports `spirit.ts` at runtime. The two NAMES on this barrel did not
+// move, which is the half that matters here (CLAUDE.md: the public API must not change).
+import { activeEpisode, knownPartner, loveEpisodesOf } from './world/loveEpisodes'
+export { activeEpisode, knownPartner, loveEpisodesOf }
+// ⭐⭐ v74 (the private life, wave 3 – T3/T5) adds the ARRIVAL half: `rollArrival` is the weekly roll
+// the tick calls, and `arrivalEligible` / `arrivalHazardFor` / `drawPartnerWants` / `drawRawLag` /
+// `shaveLag` are the pure pieces it is assembled from – exported under the historical convention so
+// the corridor tests and T11's census bench can sweep the tables directly instead of posing a world
+// per cell (`forkStandingOf`'s own primitives doctrine).
+// ⭐⭐ v74 T6 ADDS THE DELIVERY HALF: `deliverKnownPartner` is the weekly check the tick calls on
+// `knownWeek`, and `lifeBeatHeading` joins `lifeBeatSaid` / `lifeBeatListenFollowUp` as the third
+// pure copy assembler the voice pins walk without posing a world.
+// ⭐⭐ v74 T7 ADDS THE PRICING HALF: `lifeBeatOptionsFor` is the ONE reading of what an answer costs
+// (`LIFE_BEAT_OPTIONS` alone is now only the `'open'` column), `pendingLifeBeatOptions` is that
+// reading for the row in hand – the shape `tools/_lifeBeats.ts` drains beats through – and
+// `PARTNER_WANTS` is the two-value list the neutrality pin walks so it cannot go stale on a union.
+// ⚠ `LifeBeatAnswer` IS NOT `shared/protocol`'s `LifeBeatOption` and the two names are kept apart on
+// purpose: the wire shape the dialog is handed carries `{id, label}` and no price, and this one
+// carries the price. Same name on two barrels would have been the duplicate-identifier confusion at
+// its most expensive – the priced type silently satisfying the unpriced one.
+// ⭐⭐ v74 T8 ADDS TIER 1: `rollSmallTalk` is the fourth and last weekly roll of the wave, and
+// `smallTalkChanceFor` / `smallTalkEligible` / `smallTalkThisSeason` / `smallTalkSubjectFor` are the
+// pure pieces it is assembled from – the same primitives doctrine the arrival half is exported under.
+// `SMALL_TALK_SUBJECTS` is the total list her openers and the census are keyed on.
+// ⭐⭐⭐ v74 T15 ADDS THE SOFT SURFACE: `liveSoftBeat` is the selector the Home card exists on (the
+// three-week window, DERIVED from `week − row.week` and never stored), `buildSoftBeatInvite` is the
+// snapshot half – the card's line plus the prompt it opens, on the ordinary contract – and
+// `LIFE_BEAT_BLOCKING` is the per-kind registry both halves of the block contract now read through
+// `pendingLifeBeat`. All three are exported for the same reason the rest of this import is: the pins
+// walk them directly rather than posing a world per cell.
+import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
+export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -1529,6 +1564,17 @@ export function createWorld(
     // older schema's hashes by dropping exactly the keys appended since, and that only works while
     // every key stays in the order it was appended in (`careerHashAtSchema` peels in reverse).
     lifeLog: [],
+    // ⭐ v74 (the private life, wave 3): EVERY ATTACHMENT THIS CAREER HAS LIVED, and on week 0 that
+    // is none – she is eight. Empty is the identity in the plainest sense, and it is exactly what
+    // the v73 -> v74 migration back-fills on every older save, so a migrated career and a fresh one
+    // are the same shape at the moment they load.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `lifeLog` above has stopped being it – the same
+    // handover `peakPhysical` made to `assets` and `assets` to the wave-1 three. The frozen-career
+    // identities reproduce each older schema's hashes by dropping exactly the keys appended since,
+    // so every key must stay in the order it was appended in (`careerHashAtSchema` peels in
+    // reverse, newest first).
+    loveEpisodes: [],
   }
   addEvent(world, {
     week: 0,

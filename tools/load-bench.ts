@@ -202,7 +202,14 @@ function runCareer(seed: string, tier: CoachTier, policy: Policy, weeks: number)
     // ⚠ THE PARENT ONLY ANSWERS WHAT REACHES HIM NOW. On a hired career the coach has already replied by
     // the time the tick returns, so `pendingKnock` is false and this does not fire - which is the routing
     // working, not the bench missing something. `knockHistory` is what counts the knocks themselves.
-    if (pendingKnock(world)) {
+    // ⚠⚠ AND THE TERMINAL LATCH IS TESTED, NOT CAUGHT (added by wave 3's T16, and it was ALREADY
+    // RED BEFORE IT). `decideKnock` calls `guardNotEnded`, so a knock raised by the tick that ALSO
+    // ended the career throws «This career has ended» and kills the run mid-table. MEASURED on both
+    // trees: the PRE-T16 tool dies too, later in the grid – so this is a latent tool bug that T16
+    // merely reaches sooner by routing more knocks to the parent. Handled the way
+    // `tools/spirit-bench.ts`'s anti-stall contract demands: the latch is TESTED and counted out,
+    // never wrapped in a `try/catch`, so any OTHER refusal still propagates and kills the run.
+    if (pendingKnock(world) && world.ending === null) {
       decideKnock(world, policy.knock)
       c.taps++
     }

@@ -11,13 +11,23 @@
 // `tests/component/life-beat-dialog.test.ts` asserts the rendered text is EXACTLY the prompt's own
 // strings and nothing else, so a sentence added here fails rather than ships.
 //
+// ⭐⭐⭐ v74 T15 – AND IT NOW SERVES TWO ENTRANCES ON ONE CONTRACT. `snapshot.lifeBeatPrompt` is the
+// blocking one (the week is stopped and this card is why); `snapshot.softBeat.prompt` is tier 1's,
+// opened from a Home card the player chose to tap, on a week that never stopped at all. ⚠ THE ONLY
+// DIFFERENCE IS WHICH FIELD THE `soft` PROP READS: same component, same prompt type, same
+// engine-side re-validation, same law below – «no new dialog exists anywhere» is the ruling, and one
+// prop is what keeps it true.
+//
 // ⚠ EVERY BUTTON IS AN ANSWER AND THERE IS NO X – the birthday's own law, for a stronger reason.
 // BirthdayDialog argues it from the owner's «попап на ДР всегда»: if the card could be closed,
 // closing it would silently become the "gave nothing" branch. Here the beat is HER SPEAKING, and a
 // dialog the player can walk away from would answer her by walking away – so `@click.self` is
 // deliberately not wired on the scrim, Escape is passed no handler, and the week stays stopped until
 // he says something. The engine holds the other end of that contract: `advanceWeeks` refuses to tick
-// while a `lifeLog` row is unanswered, and `answerFork` refuses too, so he hears her out first.
+// while a BLOCKING `lifeLog` row is unanswered, and `answerFork` refuses too, so he hears her out
+// first. ⚠ ON THE SOFT ENTRANCE THE LAW IS THE SAME AND THE CONSEQUENCE IS SMALLER: the week was
+// never stopped, so nothing is held hostage – but a card opened to hear her out still has no way out
+// that is not one of the three things the parent may say, and one of them is «tell her it can keep».
 //
 // ⚠ AND THERE IS NO NUMBER ON THIS SCREEN. Her words move `bond` twice – once here, once at the
 // deed – and none of that may be shown: no meter grows a first pixel, no count, no bar, no price
@@ -37,7 +47,24 @@ import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
 
 const game = useGameStore()
-const prompt = computed(() => game.snapshot?.lifeBeatPrompt ?? null)
+
+/** ⭐⭐⭐ v74 T15 – WHICH OF THE TWO PROMPTS THIS MOUNT RENDERS, and it is the ONLY thing the soft
+ *  surface adds to this component (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment: «Tapping it
+ *  opens the SAME `LifeBeatDialog` on the same prompt contract – modal only because the player chose
+ *  to listen. No new dialog exists anywhere»).
+ *
+ *  ⚠⚠ THE PROP CHOOSES THE SOURCE AND CHANGES NOTHING ELSE. `snapshot.softBeat.prompt` is a
+ *  `LifeBeatPrompt` like `snapshot.lifeBeatPrompt`, so everything below – the radio group, the
+ *  listening detour, the engine-side re-validation on the way back, the no-X law, the height cap –
+ *  is one implementation serving both. A second component would have been a second place her voice
+ *  could be edited from, which is the loophole the header closes.
+ *
+ *  ⚠ DEFAULT FALSE, so every existing mount (App.vue's blocking one, and every mounted test written
+ *  against it) asks exactly the question it always asked. */
+const props = withDefaults(defineProps<{ soft?: boolean }>(), { soft: false })
+const prompt = computed(() =>
+  (props.soft ? game.snapshot?.softBeat?.prompt : game.snapshot?.lifeBeatPrompt) ?? null,
+)
 
 // ⭐⭐ 10.09 – «SAY NOTHING» BECAME HONEST (the owner's editorial ruling): choosing to listen no
 // longer records the answer on the first tap. While `listening`, her continuation (engine-assembled,

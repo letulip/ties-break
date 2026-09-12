@@ -16,11 +16,15 @@ import { useGameStore } from '../stores/game'
 import {
   avatarCropPath,
   hasCrop,
+  portraitAssetStem,
   portraitStage,
   resultShowsOnHerFace,
+  wearsGraduationPortrait,
   type PortraitEmotion,
   type PortraitStage,
 } from '../shared/avatarEmotion'
+import { GRADUATED_ART_STEM, graduatedUrl } from '../art/preload'
+import { ENDINGS } from '../engine/ending'
 
 /**
  * R11-2 – which recorded matches are allowed to change her FACE. THE DEFINITION lives in
@@ -77,12 +81,44 @@ export function useKidEmotion() {
       `${import.meta.env.BASE_URL}${avatarCropPath(stage.value, hasCrop(emotion.value) ? emotion.value : 'injury')}`,
   )
 
-  // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
-  // (every stage×emotion exists, adult and the painting-only `rehab` included).
-  const portraitUrl = computed(
-    () =>
-      `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${emotion.value}.webp`,
+  // ⭐⭐ T14 – THE ONE WEEK HER PORTRAIT IS NOT ABOUT TENNIS (owner, 11.09: «даже на главной
+  // показывать неделю по окончании (если случилось окончание)»).
+  //
+  // ⚠ IT IS THE PICTURE ONLY, AND THAT IS THE DESIGN, not a shortcut. `emotion` below is untouched
+  // on this week: it is the ENGINE's decision and it licenses the Mood tile's WORD (KidScreen's
+  // `MOOD_LABEL`, the recap's `MOOD_WORD`), so a face that spoke through it would be a new
+  // player-facing string – which is CLAUDE.md invariant 4 and nobody's to add unasked. The
+  // graduation painting is a picture on the hero and nothing else says anything new.
+  //
+  // ⚠ AND THE LEAVER IS EXCLUDED BY THE SHARED PREDICATE, not by a second reading of the same
+  // state: `wearsGraduationPortrait` is the popup's own test (shared/avatarEmotion.ts), so the two
+  // surfaces cannot come apart on the only question that matters here.
+  const college = computed(() => game.snapshot?.college ?? null)
+  const graduationWeek = computed(() =>
+    wearsGraduationPortrait({
+      week: game.snapshot?.week ?? 0,
+      doneWeek: college.value?.doneWeek ?? null,
+      yearsDone: college.value?.years.length ?? 0,
+      totalYears: ENDINGS.collegeYears,
+    }),
   )
 
-  return { emotion, stage, cropUrl, moodCropUrl, portraitUrl }
+  // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
+  // (every stage×emotion exists, adult and the painting-only `rehab` included) – or, for one week,
+  // the single graduation painting, which has no band and no emotion in its name.
+  const portraitUrl = computed(() =>
+    graduationWeek.value
+      ? graduatedUrl()
+      : `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${emotion.value}.webp`,
+  )
+
+  /** WHICH PAINTING THE HERO IS FRAMING, as the key art/faceRects files it under. It exists because
+   *  `portraitUrl` can now point at a picture whose stem is not `{stage}-{emotion}`: a caller that
+   *  rebuilt that stem by hand would steer the graduation week's crop by the face position of a
+   *  painting that is not on screen. One value, so the URL and the framing cannot disagree. */
+  const portraitStem = computed(() =>
+    graduationWeek.value ? GRADUATED_ART_STEM : `${portraitAssetStem(stage.value)}-${emotion.value}`,
+  )
+
+  return { emotion, stage, cropUrl, moodCropUrl, portraitUrl, portraitStem }
 }

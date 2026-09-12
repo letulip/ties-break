@@ -71,6 +71,8 @@ import { resumeMain, type Rng } from '../../src/engine/rng'
 import { ENDINGS } from '../../src/engine/ending'
 import { assertDismissReachable, PHONE, setViewport } from './fits'
 import { DEFAULT_PROFILE, type CareerEnding } from '../../src/shared/protocol'
+// ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
+import { drainLifeBeats } from '../helpers/career'
 
 // ⚠ THIS RUNNER HAS NO localStorage, AND THE GRADUATION CARD'S WATERMARK IS localStorage. Same shim
 // as round19-wrapup / round21-popup-order – supply the browser's object, do not weaken the app.
@@ -105,17 +107,23 @@ function atCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let i = 0; i < 60; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   // ⚠ THE ONE THUMB ON THE SCALE, and it is `college-freeze.test.ts`'s: four years is 208 weeks of
   // base costs, and a career that went bankrupt inside them would be measuring the family budget.
   world.fundsCents = 500_000_00
   world.fork = { askedWeek: world.week, answer: null, offer: measureCollegeOffer(world) }
+  // ⚠⚠ ADDED FOR v74 (wave 3, T8 – 11.09), AND THE FIXTURE MOVED, NOT THE ASSERTION. Tier-1 small
+  // talk raises an answerable `lifeLog` row from week 0, and `answerFork` refuses while ANY row is
+  // unanswered, so this opener threw before it reached a case. Bond-neutral drain.
+  drainLifeBeats(world)
   answerFork(world, 'college')
   // ⚠ ROUND 24 #5: the answer reserves – the walk to the September departure is what latches the
   // college ending now (the gap semantics are pinned in tests/college-departure.test.ts).
   for (let i = 0; i < 54 && world.ending === null; i++) {
     tickWeek(world, rng)
     finishAnyReveal(world)
+    drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the departure really latched the college ending').toBe('college')
   return { world, rng }
@@ -237,12 +245,20 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // `closeTournament` are no-ops when no reveal is open – because naming one of the two reveals is
     // what left this walk standing at year three. The ceiling grows to five for the same arithmetic:
     // three questions in a year costs four presses to finish it.
+    // ⚠ v74 (wave 3, T6) RE-AIM: ...and a FOURTH stop, hers. The arrival hazard runs through the
+    // college years by design and T6 delivers the news on `knownWeek`, so a `'met'` beat can be
+    // raised inside the freeze – where T2's own exception deliberately lets it lay OVER the latch.
+    // A row left standing is therefore the card on screen instead of the graduation one, which is
+    // what these four cases went red on: «four years closed with no beat at all before this». Drained
+    // bond-neutrally, for the same reason the birthday is answered one line down.
     for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      drainLifeBeats(world)
     }
+    drainLifeBeats(world)
     expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
     expect(world.college?.years).toHaveLength(ENDINGS.collegeYears)
     world.knock = null
@@ -283,12 +299,18 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
     // is not at a boundary, and the engine says so.
     // ⚠ ROUND 27 #6: and the tie, on the same argument – `endCollegeEarly` refuses behind a paused
     // year, and a year paused on a reveal is not at a boundary either.
+    // ⚠ v74 (wave 3, T8) RE-AIM: ...and a FIFTH stop, her tier-1 small talk, on exactly the argument
+    // `graduate` above records for the `'met'` beat – T2's exception lets a life row lay OVER the
+    // latch, so a row left standing is the card on screen instead of the early-return one, which is
+    // what this case went red on. Drained bond-neutrally, like the birthday one line up.
     for (let press = 0; press < 5 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
       if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      drainLifeBeats(world)
     }
+    drainLifeBeats(world)
     endCollegeEarly(world)
     world.knock = null // the walked-career artefact, see `graduate` above
     const { w } = await openShell(world)

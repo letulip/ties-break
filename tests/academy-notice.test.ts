@@ -26,6 +26,8 @@
 // pinned so the collision cannot quietly change shape – see its own comment for what to do with it
 // on the day the advance learns to stop here.
 import { describe, it, expect, vi } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked career must be able to pass a beat.
+import { drainLifeBeats } from './helpers/career'
 
 // The rise/fall arm ticks two full seasons of a real career to reach its second review.
 vi.setConfig({ testTimeout: 120_000 })
@@ -174,6 +176,10 @@ describe('Round 23 #16 – the academy says so when it takes her on', () => {
     // makes this non-vacuous, and without it the stop would have nothing to fire on.
     const world = runCareer('r23-academy-stop', 'working', wrapWeek - 1)
     const rng = rngFromSeed(world.seed)
+    // ⚠ v74 T8: the walked weeks can leave a tier-1 row standing, and `advanceWeeks` then refuses at
+    // ENTRY with `'life'` – the press below would measure her small talk instead of the academy's
+    // verdict. Bond-neutral, and nothing in this file reads `bond`.
+    drainLifeBeats(world)
     const landed: number[] = []
 
     const toWrap = advanceWeeks(world, rng, 1)

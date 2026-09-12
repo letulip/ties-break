@@ -3,7 +3,7 @@ type: plan
 status: draft
 area: life
 canonical: false
-last-reviewed: 2026-08-23
+last-reviewed: 2026-09-11
 ---
 
 # The wedding and the children – first sketch of the branch behind step 6
@@ -15,11 +15,22 @@ The owner, 23.08, asking for exactly this file:
 > что на нее тоже первые прикидки детальный стек написать)»
 
 ⚠ **FIRST SKETCHES, NOTHING BUILT, AND NOTHING RULED THAT HE HAS NOT RULED.** What he HAS ruled
-and this file inherits as law: weddings from 22+ and both romance trajectories (several, or one
-long) first-class ([the-private-life-build.md](the-private-life-build.md) §6b, 23.08); she
+and this file inherits as law: weddings from **23+** (⭐ RE-RULED 11.09, superseding 23.08's 22+ –
+the art already draws the bride at the `adult` portrait stage only, and his word on the
+art-driven gate was «свадьба на 23+ – мне вполне ок») and both romance trajectories (several, or
+one long) first-class ([the-private-life-build.md](the-private-life-build.md) §6b, 23.08); she
 decides, he reacts, the reaction moves `bond` ([the-private-life.md](the-private-life.md) §4a,
 20.08); pregnancy does not ship before 3a–3c (design §3d). Everything else below is a proposal
 with a question mark that belongs to him.
+
+⭐ **THE ART IS ALREADY PAINTED (found 11.09, unwired):** the `adult` portrait set holds
+`bride`, `funeral`, `pregnant-early`, `pregnant-last` and `graduated`
+(`public/images/fem-euro-brunnet/fem-euro-brunnet-adult-*.webp`), `lateCareer` holds `farewell`
+and `retired`. Funeral exists at `adult` only – the asset itself enforces the ≥23 bereavement
+gate. `graduated` is not this stack's: it wires at the college finish (its own spun-off task,
+guard: `kidLife`'s graduated-vs-left distinction). ⭐ RULED 11.09 on the one gap: a pregnancy at
+the `lateCareer` stage (31+) simply REUSES the adult scenes – «не страшно в этом случае, можно
+использовать повторно существующее» – no new art, the research's 24–35 window stays.
 
 **Dependencies, named so nobody starts early:** the whole branch stands on the private-life build
 plan's **waves 1–4** (`spirit`/`bond`, the reaction surface, the attachment slot, the break-up
@@ -34,11 +45,17 @@ Design §3c's sentence is the whole thesis: ⭐ **marriage is where the game cha
 a spouse is a second adult with an opinion** – and this sketch turns that into mechanics that
 reuse what steps 1–4 built rather than inventing beside them.
 
-* **The latch** – `attachment.latched` (step 6's schema move), entered through a beat, not a
-  menu: SHE decides to marry; the parent's dialog is his reaction (bless / distance / oppose –
-  the research digest's own triple, [life-events-motherhood.md](../research/life-events-motherhood.md)
-  §2), landing on `bond` through step 2's machinery. The 22+ gate is his ruling and sits in the
-  hazard, not the UI.
+* **The latch** – ⭐ RE-SHAPED 11.09, on the episodes lesson AND his own question («а свадьба
+  может быть у нас не одна, кстати?»): the latch lives ON THE EPISODE ROW – `LoveEpisode` gains
+  `latchedWeek: number | null` at step 6's schema move – never as a global `attachment.latched`
+  boolean. A marriage is then a property of one episode; a divorce (if ever built – §6.3) is an
+  ending on a latched episode; a SECOND wedding is the same machinery re-entered on a later
+  episode, zero migrations later. Entered through a beat, not a menu: SHE decides to marry; the
+  parent's dialog is his reaction (bless / distance / oppose – the research digest's own triple,
+  [life-events-motherhood.md](../research/life-events-motherhood.md) §2), landing on `bond`
+  through step 2's machinery. The **23+** gate (11.09) is his ruling and sits in the hazard, not
+  the UI. ⚠ Proposal for the bench: a latched episode's ending hazard drops hard (marriage
+  steadies the slot) – the wave-4 multiplier × a latch factor, measured, never assumed.
 * **The name** – a latched partner finally needs one, so the fictional-name pass (no real
   surnames constructible – house law) lands here, as the build plan's step-6 row already says.
 * **The opinion surface** – a small disagreement stream over schedule and travel: a planned
@@ -95,7 +112,9 @@ mirroring the attachment slot's own discipline:
   **permanent mental-resilience bonus after the return** («priorities shift») – the single place
   this branch is allowed to touch a skill-adjacent number, and only with a bench;
 * a second child is the same machinery re-entered (the research: documented multi-return careers,
-  est. 20–30% success) – no new system, a lower hazard;
+  est. 20–30% success) – no new system, a lower hazard. ⭐ CONFIRMED WANTED 11.09 («после
+  беременности может быть и повторная»); the repeat hazard reads the age window AND the count of
+  children, so a third stays rare rather than routine – the exact curve is the bench's;
 * ⚠ no child-raising loop. The player is already raising a daughter; the game does not recurse.
   The child is texture, claim and consequence – never a second career sim.
 
@@ -136,13 +155,50 @@ marriage; W3–W5 are the children's own layer, separately shippable, exactly as
    family ledger (the game's numbers are honest everywhere else), sized on the bench against the
    wealth corridors – but priced as one event, never a recurring drain; the recurring texture
    belongs to the child, not the party.
-3. **Can the marriage end?** The design plan never says divorce and this file will not invent it
-   unprompted – but the slot's own physics (step 4's hazard) make «the latch can break» a
-   question that will come. Recommendation: not in W1–W5 at all; raise it only after the layer
-   has lived in playtests.
+3. **Can the marriage end?** ⭐ NO LONGER UNPROMPTED – the owner raised it himself, 11.09: «а
+   свадьба может быть у нас не одна, кстати? разводы будем делать?» So the question is live, and
+   the answer splits in two: (a) the SCHEMA is pre-paid NOW and costs nothing – the latch on the
+   episode row (§1) makes a divorce an ending on a latched episode and a remarriage the same
+   machinery on a later one, with serial weddings falling out of the episodes discipline for
+   free; (b) the CONTENT is deliberately deferred – recommendation unchanged: build no divorce in
+   W1–W5, raise it after the layer has lived in playtests. When built, it is a break-up plus:
+   its own deeper shock kind, the money claim unwinding as beats (never accounting), and ⚠ the
+   children stay STATE through it – no custody loop, the «no child-raising sim» law holds.
 4. **Does pregnancy have an age window of its own?** The research puts first children at 24–35.
    Recommendation: hazard shaped by that window rather than a hard gate – the 22+ wedding gate
    plus the fork's own «not before 3a–3c» already keep it out of the junior years.
+
+## 7. ⭐ The dynasty hook – a new career through the child (his 11.09 ask, first sketch)
+
+His word, verbatim: «в конце карьеры можно сделать хук на новую карьеру через ребенка,
+например». The architect's read, recorded the same day – **the loop closes on the game's own
+premise**: the player plays the PARENT, so a dynasty is never «play as the daughter» – it is
+**the retired star becoming the new parent**. You raised her; now she raises hers. The role
+never changes; the whole private-life layer becomes the meta-loop (romance → marriage → child →
+the next career) instead of texture.
+
+The shape, sized for a later step 9 (after step 7 – it needs children to exist; independent of
+step 8):
+
+* **A NEW SAVE, never a continued world** – at an ending where `world.children` holds a child,
+  the album screen offers the next career. `createWorld` gains an INHERITANCE BLOCK, small on
+  purpose: the seed lineage (`seed:dynasty:<n>` – deterministic ancestry), the household wealth
+  band (a retired pro's home starts in a different corridor), and **fame from birth** – «дочь
+  той самой» is the spotlight layer's (who-she-is §3c) second customer for free: press pressure
+  and booth lineage mentions licensed from day one, no new machinery.
+* **The mother as supporting cast** – §5c's rule is ready-made (one habit, one thing she
+  notices, one friction, one way her presence changes speech); the old album reads from the new
+  career as an heirloom page (content, zero mechanics).
+* **Timeline arithmetic holds**: born at her ~26–32, career ends ~33–38, the child is 3–10 – the
+  new career starts at the standard age, and the skip is free because the world is built fresh
+  (prehistory/conveyor already do this).
+* **Guards**: temperament heredity, if any, is a weighted lean on ONE axis and passes the
+  ±1.5 pp fairness corridor; the family surname arrives through the fictional-name pass (which
+  finally gets its reason to produce one); a new world means new streams – input-independence
+  untouched by construction.
+* **Size**: M for v1 (seed + wealth + fame + heirloom), L with heredity and the mother as cast.
+  Nothing of it is ruled beyond his one sentence; this section exists so the idea survives until
+  its step.
 
 ---
 

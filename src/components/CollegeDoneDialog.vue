@@ -23,11 +23,29 @@
 // verdict here about whether the years were worth it, because the game does not grade her. The
 // engine's own sentence about the four years («X years of student tennis…», `collegeEpilogueLine`)
 // is a kept milestone and is in the news feed on the very screen this hands back to.
+//
+// ⭐⭐ T14 – AND FOUR YEARS NOW HAVE A PICTURE OF THEMSELVES (owner, 11.09: «graduated – …надо
+// встроить на окончание колледжа где-то, может быть в попапе…»). The painting shipped with the art
+// set and nothing had ever asked for it.
+//
+// ⚠⚠ ON THE GRADUATE'S ARM ONLY, and it is the same split this card's heading already makes on a
+// COUNT. `engine/kidLife.ts`: «a tile that knew only "she went" and "she graduated" would print the
+// graduate's line for a girl who left after one year» – a photograph of a girl holding up her
+// results is that line in a louder voice, so the leaver's card carries no picture at all. The test
+// is `finishedTheCourse`, shared with the home portrait's one week (shared/avatarEmotion.ts), so
+// the two surfaces cannot disagree about who graduated.
+//
+// ⚠ NOT A WORD CHANGES. Every sentence on this card is byte-identical to the one that shipped
+// (CLAUDE.md invariant 4); the image is decorative and carries an empty `alt`, which is what
+// `.injury-stop-art` – the one other painting on a `.dialog-card` – does for the same reason.
 import { computed, ref } from 'vue'
 import { useGameStore } from '../stores/game'
 import { formatCents } from '../shared/money'
 import { weekLabel } from '../shared/dates'
 import { ENDINGS } from '../engine/ending'
+import { finishedTheCourse } from '../shared/avatarEmotion'
+import { GRADUATED_ART_STEM, graduatedUrl } from '../art/preload'
+import { facePoint } from '../art/faceRects'
 import { useDialogFocus } from '../composables/dialogFocus'
 import PrimaryPill from './ui/PrimaryPill.vue'
 
@@ -41,8 +59,20 @@ const college = computed(() => game.snapshot?.college ?? null)
 const years = computed(() => college.value?.years ?? [])
 
 /** THE FOUR YEARS, OR FEWER. `ENDINGS.collegeYears` rather than a template's idea of four – the same
- *  discipline `CollegeProgressView.totalYears` keeps one door along. */
-const graduated = computed(() => years.value.length >= ENDINGS.collegeYears)
+ *  discipline `CollegeProgressView.totalYears` keeps one door along.
+ *
+ *  ⚠ T14: the comparison moved into `finishedTheCourse` and did not change – `>=` against the same
+ *  two numbers. It is shared rather than repeated because the portrait's one week asks the identical
+ *  question, and a picture and a heading that disagreed about a degree would be worse than either. */
+const graduated = computed(() => finishedTheCourse(years.value.length, ENDINGS.collegeYears))
+
+/** The painting, and where her face is in it – framed off the ONE face table, exactly as the injury
+ *  popup frames the picture of the week she went down. */
+const artUrl = graduatedUrl()
+const artStyle = (() => {
+  const p = facePoint(GRADUATED_ART_STEM)
+  return { objectPosition: `${p.x}% ${p.y}%` }
+})()
 
 const title = computed(() =>
   graduated.value ? 'She has graduated.' : 'She has left the scholarship.',
@@ -80,6 +110,9 @@ function rankMark(rank: number | null): string {
       aria-labelledby="college-done-kicker college-done-title"
       tabindex="-1"
     >
+      <!-- The graduate's picture, and hers alone – see the header. A leaver's card opens on the
+           kicker, exactly as every card here did before T14. -->
+      <img v-if="graduated" class="college-done-art" :src="artUrl" :style="artStyle" alt="" />
       <p id="college-done-kicker" class="season-summary-kicker">College · {{ weekLabel(college.doneWeek ?? 0) }}</p>
       <h2 id="college-done-title" class="season-summary-title">{{ title }}</h2>
 
@@ -124,6 +157,29 @@ function rankMark(rank: number | null): string {
 
    ⚠ EVERY COLOUR IS A DECLARED APP TOKEN WITH NO FALLBACK – the round-17 #3 lesson: `var(--card,
    #fff)` shipped four unreadable buttons because `--card` is declared nowhere and the fallback won. */
+/* ⭐ T14 – the graduation painting, full-bleed across the top of the card.
+   THE MECHANICS ARE `.injury-stop-art`'s (src/style.css): `width: calc(100% + 32px)` with a -16px
+   side margin cancels the card's own padding exactly, `cover` plus the face-table `object-position`
+   keeps her head in the strip, and the top corners take the card's radius.
+   ⚠ ONE DELIBERATE DIFFERENCE FROM THAT PRECEDENT: the corner token is `--radius-dialog` (12px),
+   which is what `.dialog-card` itself declares – the injury strip rounds to `--radius-panel` (10px)
+   and is 2px out of step with the box it sits in. Copied mechanics, not a copied mismatch.
+   ⚠ THE HEIGHT IS DECLARED IN PIXELS AND THAT IS LOAD-BEARING, not a style choice: the round-20
+   fit model measures a box by its declared height, and an `<img>` with neither height nor ratio
+   measures as ZERO – i.e. a picture the phone measurement cannot see. 132 rather than the injury
+   popup's 168 because this card carries four year rows, the totals and two paragraphs under it;
+   at 375x667 the graduate's card then measures 523.75px against 635px of room, with Continue at
+   y=540..578 (tests/component/wave3-graduated-portrait.test.ts §C, where the same measurement is
+   mutated until it fails). */
+.college-done-art {
+  display: block;
+  width: calc(100% + 32px);
+  height: 132px;
+  margin: -16px -16px 12px;
+  object-fit: cover;
+  border-radius: var(--radius-dialog) var(--radius-dialog) 0 0;
+}
+
 .college-done-years {
   list-style: none;
   margin: 12px 0 0;

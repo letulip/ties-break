@@ -39,7 +39,15 @@ export type AvatarEmotion = 'norm' | 'happy' | 'sad' | 'serious' | 'tired' | 'in
  *  `useKidEmotion().cropUrl` has no consumers. Cutting five crops nobody can request would be five
  *  files in every user's download for nothing – so the TYPES carry the fact instead of a comment
  *  carrying it: `avatarCropPath` stays total over the seven croppable faces and simply cannot be
- *  handed a face that would 404, while the painting surfaces take the wider union. */
+ *  handed a face that would 404, while the painting surfaces take the wider union.
+ *
+ *  ⚠⚠ AND `graduated` IS NOT A MEMBER, WHICH IS A MEASUREMENT AND NOT AN OVERSIGHT (T14). The
+ *  graduation painting exists in ONE band – `fem-euro-brunnet-adult-graduated.webp`, and nothing
+ *  else – where `rehab`, the face it was to be modelled on, ships five. Adding it here would make
+ *  `portraitUrl(stage, emotion)` able to build four filenames that are not on disk, which is exactly
+ *  the totality the paragraph above exists to protect. It is ONE PICTURE OF ONE MOMENT, so it takes
+ *  the `onboardingHeroUrl` / `travelHomeUrl` road instead – its own builder, no band and no emotion
+ *  to interpolate (see `graduatedUrl` in art/preload.ts, and the decision below). */
 export type PortraitEmotion = AvatarEmotion | 'rehab'
 
 /** The seven croppable faces, as a value (the type's own members – a test pins that they agree). */
@@ -190,6 +198,64 @@ export function avatarCropPath(stage: PortraitStage, emotion: AvatarEmotion): st
   // ⚠ R2-18: the STEM, never the stage - see `portraitAssetStem`. The 31+ band's type name moved
   // and its paintings did not, so interpolating `stage` here would 404 on every career past thirty.
   return `avatars/${portraitAssetStem(stage)}-${emotion}.webp`
+}
+
+// =================================================================================================
+// ⭐⭐ T14 – THE GRADUATION PORTRAIT, AND THE ONE THING IT IS NOT ALLOWED TO SAY
+// =================================================================================================
+//
+// The owner, 11.09, on a painting that shipped with the art set and was never wired to anything:
+// «graduated – вот это хорошо, что ты нашёл, мы забыли эту картинку, надо встроить на окончание
+// колледжа где-то, может быть в попапе и даже на главной показывать неделю по окончании (если
+// случилось окончание)».
+//
+// ⚠⚠ «ЕСЛИ СЛУЧИЛОСЬ ОКОНЧАНИЕ» IS THE WHOLE OF THIS DECISION, and `engine/kidLife.ts` has already
+// written the rule out in words: there are THREE college states and not two, because
+// `endCollegeEarly` is a real answer at every year boundary, and «a tile that knew only "she went"
+// and "she graduated" would print the graduate's line for a girl who left after one year». A
+// PICTURE of a girl holding up her results is that same sentence said louder, so it obeys the same
+// test – the full course or nothing. A leaver gets no graduation portrait on any surface.
+//
+// ⚠ IT IS PRESENTATION READING FACTS THE WORLD ALREADY HOLDS – `doneWeek`, the banked years and the
+// current week, all persisted, none of them derived here and none of them drawn. No RNG, no schema,
+// no engine change: the same standing this file's other decisions have.
+
+/** How long the graduation painting stays on the home/Kid portrait, in weeks. ONE – «показывать
+ *  неделю по окончании»: the week she came out wears it, the next week is an ordinary week again.
+ *  A constant rather than a literal so the length is data the architect can move, and so the
+ *  window below cannot be read as an off-by-one. */
+export const GRADUATION_PORTRAIT_WEEKS = 1
+
+/** THE HONESTY SPLIT, as one predicate with two callers (the popup's arm and the portrait's
+ *  window). `resultShowsOnHerFace` above is here for the same reason: two surfaces that must agree
+ *  about one fact agree by sharing the sentence, never by keeping two careful copies of it. */
+export function finishedTheCourse(yearsDone: number, totalYears: number): boolean {
+  return totalYears > 0 && yearsDone >= totalYears
+}
+
+export interface GraduationPortraitInput {
+  /** the snapshot's current week */
+  week: number
+  /** the week she came out of college, or null while she is still in it / never went */
+  doneWeek: number | null
+  /** years BANKED – `college.years.length`, one row per year lived */
+  yearsDone: number
+  /** the length of the course – `ENDINGS.collegeYears` */
+  totalYears: number
+}
+
+/** Does her portrait wear the graduation painting this week? False for every girl who left early,
+ *  in every week of her career – see the note above. */
+export function wearsGraduationPortrait({
+  week,
+  doneWeek,
+  yearsDone,
+  totalYears,
+}: GraduationPortraitInput): boolean {
+  if (doneWeek === null) return false
+  if (!finishedTheCourse(yearsDone, totalYears)) return false
+  const since = week - doneWeek
+  return since >= 0 && since < GRADUATION_PORTRAIT_WEEKS
 }
 
 /** R9-11: how many weeks a TITLE at each tier shields the sad emotion. local titles shield

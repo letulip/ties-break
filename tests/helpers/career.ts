@@ -14,6 +14,14 @@
 import { createWorld, tickWeek, toSnapshot } from '../../src/engine/world'
 import { rngFromSeed } from '../../src/engine/rng'
 import type { PlayerProfile, Snapshot } from '../../src/shared/protocol'
+// ⚠ `drainLifeBeats` LIVES IN `tools/` AND IS RE-EXPORTED HERE, NOT COPIED (v74, T6b). It was written
+// in this file for T6 and then needed, word for word, by the 46 hand-written
+// `answerLifeBeat(world, 'listen')` sites across 38 tools – so the body moved to
+// `tools/_lifeBeats.ts` and this line is all that is left of it. The direction is the one the
+// repository already runs: `tests/` imports `tools/` in 25 files and no tool imports `tests/`. Two
+// copies of a helper whose whole job is «do not move the number» is exactly the drift that lets one
+// of them start moving it.
+export { drainLifeBeats } from '../../tools/_lifeBeats'
 
 /**
  * A career on `seed`, ticked `weeks` weeks, as a `Snapshot`.

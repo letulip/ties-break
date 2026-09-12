@@ -6,17 +6,19 @@
 // `toSnapshot`, week by week – so a hit here is the string the strip renders. Prints the first week
 // each rung's note carries a requirement of ZERO, with the standing behind it.
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
-import {answerFork, answerRetirement, toSnapshot, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {answerFork, answerRetirement, toSnapshot, type WorldState } from '../src/engine/world'
 import { tierState } from '../src/composables/tierState'
 import { TIER_LADDER, TIER_SHORT } from '../src/engine/season/calendar'
 import { UPCOMING_WEEKS } from '../src/engine/world/constants'
+import { drainLifeBeats } from './_lifeBeats'
 
 function answerWhateverIsOpen(world: WorldState): void {
   // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-  // player must not put a number on the scale.
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+  // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+  // the one this line always had: a caller that never asked the player must not put a number on
+  // the scale, so every row takes the bond-neutral answer of its OWN kind.
+  drainLifeBeats(world)
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     answerRetirement(world, world.retirementOffer.reason === 'plateau' || world.retirementOffer.final)

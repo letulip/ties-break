@@ -52,14 +52,19 @@ import {
   tickWeek,
   toSnapshot,
   KID_ID,
+  LIFE_BEAT_BLOCKING,
   type WorldState,
 } from '../src/engine/world'
 import { readFileSync } from 'node:fs'
 import { worldFunction } from './worldSource'
 import { before, region } from './helpers/source'
+// ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
+import { drainLifeBeats } from './helpers/career'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
+// ⚠ v74 (wave 3, T8): the season length, for `silenceTierOne` – the engine's own, never a literal 52.
+import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { blockingOverlay } from '../src/composables/blockingOverlay'
 import { multiOffered } from '../src/composables/weekAction'
 import { DEFAULT_PROFILE, STOP_PRECEDENCE, type Offer, type OfferState, type StopReason } from '../src/shared/protocol'
@@ -90,7 +95,41 @@ function career(seed: string, over: Partial<typeof DEFAULT_PROFILE> = {}): { wor
 function quietCareer(seed: string, over: Partial<typeof DEFAULT_PROFILE> = {}): { world: WorldState; rng: Rng } {
   const c = career(seed, over)
   c.world.season = []
+  silenceTierOne(c.world)
   return c
+}
+
+/** ⚠⚠ ...AND WITH TIER-1 SMALL TALK SPENT FOR THE SEASON (v74, wave 3 – T8), which is the SAME MOVE
+ *  as `season = []` one line up and is here for the same stated reason: «a case about one stop reason
+ *  is not also a case about the tournament desk». T8 gives every career up to 8%/wk of an answerable
+ *  `lifeLog` row, and a row raised mid-span made `'life'` the stop – so three cases below that mean
+ *  «a quiet four-week stretch» stopped being about the span at all.
+ *
+ *  ⚠ v74 T15 RE-AIMED THE REASON AND KEPT THE HELPER. A tier-1 row is NON-BLOCKING now (§5b's soft
+ *  surface, ruled 11.09), so it can no longer make `'life'` the stop and the sentence above describes
+ *  a state that lasted one commit. What the helper still buys is what the `season = []` line buys: a
+ *  span case stays about ONE thing, and a career that spends its four conversations raises no rows to
+ *  read, count or explain inside the window being measured. Kept, with its reason restated.
+ *
+ *  ⚠ IT IS THE ENGINE'S OWN CAP AND NOT A SWITCH: `rollSmallTalk` refuses once this season already
+ *  holds `smallTalkCapPerSeason` of her rows, so a career that has had its conversations is a state
+ *  the sim produces on its own. The rows are ANSWERED (`answer` is not null), so the queue is empty
+ *  and nothing here is pending; they are dated inside the CURRENT season, which is the only season
+ *  any case in this file walks through. Bond is untouched – a tier-1 reply is priced zero anyway.
+ *
+ *  ⚠ AND IT TAKES NO DRAW AND WRITES NO EVENT, so block A's MAIN identity is untouched by it: both
+ *  arms are built through this same helper and `seed:life:smalltalk:<week>` is not MAIN. */
+function silenceTierOne(world: WorldState): void {
+  const season = Math.floor(world.week / WEEKS_PER_YEAR)
+  world.lifeLog = [
+    ...(world.lifeLog ?? []),
+    ...Array.from({ length: ECONOMY.life.smallTalkCapPerSeason }, (_, i) => ({
+      week: season * WEEKS_PER_YEAR + i,
+      kind: 'small-talk' as const,
+      detail: 'question',
+      answer: 'more',
+    })),
+  ]
 }
 
 /** Tick to `week` the way a test harness must: `tickWeek` is total, so reveals are resolved and
@@ -101,9 +140,13 @@ function walkTo(world: WorldState, rng: Rng, week: number, solvent = false): voi
     if (pendingKnock(world)) decideKnock(world, 'rest')
     // ⭐ v73: and so is her opinion of the fork, on the same terms – a walk PAST a beat must not
     // leave one standing, or the case that walks to week 828 becomes a case about wave 2 instead of
-    // about the retirement offer. `'listen'` is the harness's answer: zero on the table, for the
+    // about the retirement offer. The harness's answer is the one worth ZERO on the table, for the
     // same reason `answerFork`'s no-tier default is the cheapest place.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // ⚠ RE-AIMED v74 (wave 3, T6): this read `answerLifeBeat(world, 'listen')`, which was a complete
+    // answer while `'fork-opinion'` was the only kind. The `'met'` beat does not offer that id, so
+    // the hard-coded call threw the first time a walked career met somebody. `drainLifeBeats` asks
+    // the ROW's own kind for its bond-neutral answer, which is the same intent spelled once.
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) world.fork.answer = 'continue'
     tickWeek(world, rng)
     if (world.pendingTournament) {
@@ -112,6 +155,10 @@ function walkTo(world: WorldState, rng: Rng, week: number, solvent = false): voi
     }
   }
   if (pendingKnock(world)) decideKnock(world, 'rest')
+  // ⚠ v74 (wave 3, T8): AND THE TRAILING DRAIN, which the trailing knock line above has always had
+  // and the beats did not. The loop drains BEFORE its `tickWeek`, so a row raised by the LAST tick
+  // walked past nothing and stood there – `'life'` then led the very first span a case measured.
+  drainLifeBeats(world)
 }
 
 /** Enough domestic points to clear a rung's entry band, kept on the ledger (unlike events.test.ts's
@@ -562,7 +609,35 @@ describe('R2-13 B – the span stops before every blocking event, one reason at 
     expect(stops[0], 'she leads the week she spoke in').toBe('life')
     expect(weeks, 'one week of the four – it stopped ON the beat').toBe(1)
     expect(pendingLifeBeat(world), 'and the question is up').not.toBeNull()
-    expect(lifeLogOf(world).length, 'exactly one row, answered by nobody').toBe(1)
+    // ⚠ RE-AIMED v74 (wave 3, T6): this counted the WHOLE log, which was the same thing while the
+    // fork's opinion was the only beat a career could live. Wave 3's `'met'` beat can be raised and
+    // ANSWERED by `walkTo` on the way here, so the honest count is of rows still WAITING – and the
+    // kind is now named, because «one row pending» would have been true of the wrong beat.
+    //
+    // ⚠⚠ RE-AIMED AGAIN v74 (wave 3, T15 – THE SOFT SURFACE), AND WHAT MOVED IS **THE PENDING SET**.
+    // The owner ruled tier 1's soft surface into this wave (who-she-is §5b's SOFT BLOCK CONCRETIZED
+    // amendment): a `'small-talk'` row is declared NON-BLOCKING, so it never stops a week and
+    // `pendingLifeBeat` – the predicate BOTH halves of the block contract ask – no longer returns
+    // one. §5b's soft row was never a stop; what T8 shipped for one commit was tier 2's hard pause.
+    // The consequence here is arithmetic: a walked career now carries its small-talk rows UNANSWERED
+    // for ever (a harness never taps a card, and «never lost = the ROW» is the ruling), so «rows with
+    // no answer» stopped being «questions the player owes». Measured on this walk: 11 unanswered rows
+    // where the case wanted 1.
+    //
+    // ⚠ NOTHING IS WEAKENED: the claim was «exactly one question is standing in front of him», and
+    // that is what the count now asks – unanswered rows OF THE KINDS THAT STOP THE WEEK. A second
+    // blocking beat left standing is still red, which is the whole of what this case is about.
+    // MEASURED RATHER THAN ASSERTED (T15's ARM 13, `answerLifeBeat` put back on the naive
+    // `findIndex(answer === null)`): this case goes red, «Error: That is not one of the answers this
+    // beat offered», thrown when the walk's bond-neutral drain aims a blocking beat's answer at an
+    // expired small-talk row – 3 red in this file, and the FORK and RETIREMENT cases beside it.
+    // ⚠ AND IT IS INSENSITIVE TO ARM 10 (`'small-talk'` marked blocking), which is worth recording so
+    // nobody reads that as a hole: a blocking tier 1 would be DRAINED by `walkTo` on the way here, so
+    // the count reads 1 either way. The arm for the blocking flag lives where it bites – the walked
+    // careers in tests/wave3-soft-surface.test.ts §F and tests/wave3-small-talk.test.ts §H.
+    const waiting = lifeLogOf(world).filter((r) => r.answer === null && LIFE_BEAT_BLOCKING[r.kind])
+    expect(waiting.length, 'exactly one row is standing in his way, answered by nobody').toBe(1)
+    expect(pendingLifeBeat(world)!.kind, 'and it is her opinion of the fork').toBe('fork-opinion')
 
     // REFUSAL: pressing again moves nothing at all until she has been answered.
     const before = world.week

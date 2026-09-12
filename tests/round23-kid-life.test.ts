@@ -65,13 +65,16 @@ import {
   resumeFromCollege,
   toSnapshot,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { POLICIES, stepCareerWeek } from '../tools/econ-bench'
 import { seasonYear } from '../src/shared/dates'
 import { DEFAULT_PROFILE, type CollegeTier } from '../src/shared/protocol'
+// ⭐ v74 T6 – ONE DRAIN FOR EVERY BEAT KIND. `answerLifeBeat(world, 'listen')` was a complete
+// answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
+// can be raised any week from her sixteenth on, so every hand-written call site threw. See
+// `drainLifeBeats`.
+import { drainLifeBeats } from './helpers/career'
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
  *  the year on the College League week the way it already pauses on her birthday, because the owner
@@ -373,7 +376,7 @@ describe('#6b – on a career that really went', () => {
     // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
     // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
     // cheapest place: a caller that never asked the player must not put a number on the scale.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    drainLifeBeats(world)
     answerFork(world, 'college')
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
@@ -431,7 +434,7 @@ describe('#6b – on a career that really went', () => {
       const age = pendingBirthday(world)
       if (age !== null) chooseGift(world, answerableGift(world))
     }
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    drainLifeBeats(world)
     answerFork(world, 'college')
     // ⚠ ROUND 24 #5: the answer reserves – the gap to the September departure is walked with the
     // SAME player-policy step the career arrived on (see the leaving case above for why).

@@ -57,7 +57,7 @@
 import { readFileSync } from 'node:fs'
 import { openCareer, stepCareerWeek, runCareer as benchRunCareer, PRESETS, POLICIES, type Preset, type Policy } from './econ-bench'
 import { FULL_CAREER_WEEKS } from './endings-bench'
-import {answerFork, answerRetirement, startingSkills, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {answerFork, answerRetirement, startingSkills, type WorldState } from '../src/engine/world'
 import { kidAgeExact } from '../src/engine/world/age'
 import { withHeadStart } from '../src/engine/world/player'
 import { decodeExportFile } from '../src/engine/saveCodec'
@@ -75,6 +75,7 @@ import { CEILING_FLOOR_HALF, TRAINING_FOG_FLOOR, TRAINING_STEP } from '../src/en
 import { TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS, type PlayerProfile } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { drainLifeBeats } from './_lifeBeats'
 
 // -------------------------------------------------------------------------------------------------
 // args
@@ -277,10 +278,11 @@ function runTrace(preset: Preset, index: number, policy: Policy, weeks = FULL_CA
 
     stepCareerWeek(world, rng, policy)
     // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-    // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-    // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-    // player must not put a number on the scale.
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+    // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+    // the one this line always had: a caller that never asked the player must not put a number on
+    // the scale, so every row takes the bond-neutral answer of its OWN kind.
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     // `plays-on`: one more year to everything until the game stops asking. An arm measuring a GROWTH
     // curve has to, or half the careers stop before the curve does.

@@ -111,7 +111,14 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // verbatim: 73 was moved by that wave with its full four-part move (bump, append-only migration
     // back-filling an empty `lifeLog`, golden fixture v73, e2e fixtures regenerated), never by this
     // line's item. The claim above is untouched.
-    expect(SAVE_SCHEMA_VERSION).toBe(73)
+    // ⚠ AND AGAIN AT v74 (11.09, the private life's wave 3 – `loveEpisodes`, someone exists and the
+    // ACTIVE attachment is derived from the list rather than stored beside it), NOT WEAKENED, for the
+    // NINTH time and for the reason verbatim: 74 was moved by that wave with its full four-part move
+    // (bump, append-only migration back-filling an empty `loveEpisodes`, golden fixture v74, e2e
+    // fixtures regenerated), never by this line's item. The claim above – «the BUILD-LINE wave moved
+    // no schema» – is untouched, and the pin still follows the ladder's head so the sentence over it
+    // stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(74)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

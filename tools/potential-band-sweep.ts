@@ -54,8 +54,6 @@ import {
   tickWeek,
   seasonIndexOf,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { withHeadStart } from '../src/engine/world/player'
 import { kidAgeExact } from '../src/engine/world/age'
@@ -68,6 +66,7 @@ import { FIELD, fieldProsFor } from '../src/engine/season/fieldPros'
 import { TIER_LADDER } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type PlayerProfile } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
+import { drainLifeBeats } from './_lifeBeats'
 
 // -------------------------------------------------------------------------------------------------
 // args
@@ -277,10 +276,11 @@ function section0(): void {
       const rng = rngFromSeed(w.seed)
       for (let i = 0; i < NOACTION_WEEKS && w.ending === null; i++) {
         // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-        // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-        // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-        // player must not put a number on the scale.
-        if (pendingLifeBeat(w)) answerLifeBeat(w, 'listen')
+        // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+        // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+        // the one this line always had: a caller that never asked the player must not put a number on
+        // the scale, so every row takes the bond-neutral answer of its OWN kind.
+        drainLifeBeats(w)
         if (w.fork !== null && w.fork.answer === null) answerFork(w, 'continue')
         if (w.retirementOffer !== null) answerRetirement(w, false)
         tickWeek(w, rng)
@@ -300,7 +300,7 @@ function section0(): void {
     withBand(band, () => {
       const { world, rng } = openCareer(PRESETS[5], 0, POLICIES[1])
       for (let i = 0; i < NOACTION_WEEKS && world.ending === null; i++) {
-        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+        drainLifeBeats(world)
         if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
         if (world.retirementOffer !== null) answerRetirement(world, false)
         stepCareerWeek(world, rng, POLICIES[1])
@@ -455,7 +455,7 @@ function runCareer(preset: Preset, index: number, policy: Policy): CareerRow {
     // is about the band and nothing else.
     world.debtSinceWeek = null
     stepCareerWeek(world, rng, policy)
-    if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+    drainLifeBeats(world)
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     // `plays-on`: one more year to everything until the game stops asking. An arm measuring a GROWTH
     // curve has to, or half the careers stop before the curve does.

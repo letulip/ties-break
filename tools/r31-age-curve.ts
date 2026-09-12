@@ -44,11 +44,10 @@ import {
   resumeFromCollege,
   skipTournament,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { weeksLostSoFar } from '../src/engine/ending'
 import { PRESETS, POLICIES, openCareer, stepCareerWeek, mean } from './econ-bench'
+import { drainLifeBeats } from './_lifeBeats'
 
 const argOf = (name: string, fallback: number): number => {
   const next = process.argv[process.argv.indexOf(`--${name}`) + 1]
@@ -225,7 +224,7 @@ for (let i = 0; i < CAREERS; i++) {
     let peakAge = 0
     for (let w = 0; w < WEEKS; w++) {
       if (world.fork !== null && world.fork.answer === null) {
-        if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+        drainLifeBeats(world)
         answerFork(world, arm)
         resolvedAt = world.week
       }

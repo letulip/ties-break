@@ -142,6 +142,7 @@ export type {
   LifeBeatOption,
   LifeBeatPrompt,
   LifeBeatRecord,
+  LoveEpisode,
   ConditionBand,
   BondBand,
   MoodRegister,

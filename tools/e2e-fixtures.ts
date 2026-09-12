@@ -59,6 +59,7 @@ import {
   type WorldState,
   answerLifeBeat,
   pendingLifeBeat,
+  liveSoftBeat,
 } from '../src/engine/world'
 import { resumeMain, rngFromSeed, pickInt, type Rng } from '../src/engine/rng'
 import { decodeExportFile, encodeExportFile, sha256 } from '../src/engine/saveCodec'
@@ -83,6 +84,7 @@ import {
   type FixtureManifest as FixtureManifestFile,
   type FixtureName,
 } from './e2e-fixtures-read'
+import { drainLifeBeats } from './_lifeBeats'
 
 // --- reading (the rot alarm and the Playwright harness both come through here) --------------------
 //
@@ -196,10 +198,11 @@ function openFixtureCareer(
  *  completeness (refuse until the game stops asking, which keeps a career playing). */
 function answerOpenQuestions(world: WorldState, fork: 'continue' | 'college' | 'stop'): void {
   // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-  // player must not put a number on the scale.
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+  // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+  // the one this line always had: a caller that never asked the player must not put a number on
+  // the scale, so every row takes the bond-neutral answer of its OWN kind.
+  drainLifeBeats(world)
   if (world.fork !== null && world.fork.answer === null) answerFork(world, fork)
   if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
 }
@@ -221,7 +224,12 @@ const PLAYER = POLICIES[1]
 /** Play forward to `until`, answering every question on the way. Stops early if the career ends. */
 function playTo(world: WorldState, rng: Rng, recipe: Recipe, until: number): void {
   while (world.week < until && world.ending === null) {
-    stepCareerWeek(world, rng, recipe.policy)
+    // ⚠ `drainKnocks: false` – THIS TOOL MEASURES THE KNOCK. The `junior` recipe demands a save
+    // that BOOTS holding an unanswered one and three recipes reject a seed that grows one, so the
+    // shared drain (`tools/_knocks.ts`, wave 3 point 5) must not reach this walk: with it on, 200
+    // of 200 junior seeds were rejected with «boots without an open knock». The T6b law, at the
+    // one site where it arrives through a helper rather than through a call of its own.
+    stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
     answerOpenQuestions(world, recipe.fork)
   }
 }
@@ -248,6 +256,14 @@ const SINKING_DEBT_WEEKS = Math.floor(ENDINGS.bankruptcyGraceWeeks / 2)
 /** The fork is her nineteenth birthday week – five seasons and a bit. The cap is generous so a late
  *  birthday still lands inside it. */
 const FORK_CAP_WEEK = 6 * WEEKS_PER_YEAR
+/** ⭐ HOW LONG `soft` WAITS FOR HER TO COME BY, AND THE NUMBER IS THE HAZARD'S RATHER THAN A ROUND
+ *  ONE. Tier 1 rolls every week from week 0 with no age gate, at 4% a week at `steady` and 8% at
+ *  `close` (`ECONOMY.life.smallTalkPerWeek`), so one season is already `1 − 0.96^52` ≈ **88%** of
+ *  seeds on the slower of the two bands – and a seed that brings nothing in a whole season is a
+ *  career whose bond sat in `strained`/`cold`, where the chance is priced at ZERO and the silence is
+ *  the design («none at cold; the silence is still the line», who-she-is §5b). That is a different
+ *  fixture, not a slow one, so the walk says so and the search moves on. */
+const SOFT_CAP_WEEK = WEEKS_PER_YEAR
 
 const RECIPES: Recipe[] = [
   {
@@ -363,7 +379,7 @@ const RECIPES: Recipe[] = [
       // passes through this week too, so the state is on the way to bankruptcy rather than staged
       // beside it – and the career still has room to be advanced without ending.
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
         answerOpenQuestions(world, recipe.fork)
         if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) {
           // ⚠ AND THE WEEK AFTER THIS ONE MUST NOT RAISE A KNOCK (16.08). e2e/week-advance.spec.ts's
@@ -401,7 +417,7 @@ const RECIPES: Recipe[] = [
       // that ever reaches the grace window passes through this week, so the state is found rather
       // than constructed – and stopping here leaves the career still alive and still refusable.
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
         answerOpenQuestions(world, recipe.fork)
         if (debtWeeks(autoEndingViewOf(world)) === BROKE_DEBT_WEEKS) {
           return null
@@ -445,11 +461,28 @@ const RECIPES: Recipe[] = [
     fork: 'continue',
     drive: (world, rng, recipe) => {
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
+        // ⚠⚠ v74 T15 – AND TIER 1 IS NO LONGER AMONG WHAT THIS LINE ANSWERS, which is why the note
+        // below reads as history. A `'small-talk'` row is declared NON-BLOCKING (§5b's soft surface,
+        // ruled 11.09), so it is not pending, this drain never sees one, and the recipe's own clause
+        // below cannot be tripped by one either – the rows simply ride along in `lifeLog`, unanswered
+        // and harmless, exactly as they do in a played career. The call STAYS: `'met'` still raises
+        // and still blocks, and this recipe must walk past one without answering the fork.
+        // ⚠⚠ v74 (wave 3, T8) – TIER-1 SMALL TALK IS ANSWERED ON THE WAY PAST, AND IT HAD TO BE.
+        // T8 raises a `'small-talk'` row on up to 8% of weeks from week 0, so on nearly every seed
+        // the FIRST pending row this loop met was tier 1 and the clause below rejected it: measured,
+        // `unheard` reported «no seed in 200 reached the state» with 199 of them reading «the fork is
+        // not open behind her» at weeks 1-68. Answering it here is what every OTHER recipe in this
+        // file already does through `answerOpenQuestions`, and the answer is the BOND-NEUTRAL one, so
+        // the fixture's numbers are the ones a career that was never asked would have had.
+        // ⚠ THE LIST KEEPS BOTH OF THE KINDS THIS RECIPE MUST NOT ANSWER: the fork's own row is what
+        // it is hunting, and a `'met'` row is a seed it deliberately REJECTS four clauses down.
+        drainLifeBeats(world, ['fork-opinion', 'met'])
         // ⚠⚠ THE CHECK SITS BEFORE THE ANSWER, AND THAT ONE LINE IS THE WHOLE RECIPE. Every other
-        // career in this file walks through `answerOpenQuestions`, whose FIRST clause answers the
-        // beat with `'listen'` on the way past – so no committed fixture could ever boot holding a
-        // pending one, and e2e/life-beat.spec.ts had nowhere to start. This stops the walk on the
+        // career in this file walks through `answerOpenQuestions`, whose FIRST clause drains the
+        // beat on the way past (v74: `drainLifeBeats`, which was `answerLifeBeat(world, 'listen')`
+        // while `'fork-opinion'` was the only kind) – so no committed fixture could ever boot holding
+        // a pending one, and e2e/life-beat.spec.ts had nowhere to start. This stops the walk on the
         // tick that raised her row instead of one line later. Nothing is hand-written: the state is
         // reached by playing, exactly as every other recipe reaches its own.
         if (pendingLifeBeat(world) !== null) {
@@ -472,6 +505,20 @@ const RECIPES: Recipe[] = [
           // not show that. Guaranteed by the engine – the fork's opening tick raises the row – so
           // this is the clause that would notice if that ever stopped being true.
           if (world.fork === null || world.fork.answer !== null) return 'the fork is not open behind her'
+          // ⚠⚠ AND THE ROW WAITING MUST BE HER OPINION OF THAT FORK, WHICH IS NOT THE SAME CLAIM. The
+          // look-ahead below presses `'back'` – a fork-opinion answer – and the engine deliberately
+          // REFUSES an option the pending row never offered. So a `'met'` row raised in the same week
+          // the fork opens would sit first in the queue and make that line THROW, killing the whole
+          // generator instead of rejecting one seed.
+          //
+          // ⚠ WAVE 3 IS WHAT MADE THIS REACHABLE: the arrival hazard can raise a beat on any week from
+          // her sixteenth on, where wave 2 had exactly one beat kind and it fired at the fork. The
+          // clause directly above rejects nearly every `'met'`-first seed as a side effect, but NOT one
+          // that lands on the fork's own week – that is the gap, and it is the difference between a
+          // filtered seed and a dead generator. Found by the T6b tools repair and closed here (11.09);
+          // it did not bite on the current seeds, which is exactly why it is worth a clause rather
+          // than a note.
+          if (pendingLifeBeat(world)?.kind !== 'fork-opinion') return 'the row waiting is not her opinion of the fork'
 
           // ⚠ AND BOTH ANSWERS TOGETHER MUST LEAVE AN ORDINARY WEEK. e2e/life-beat.spec.ts closes by
           // pressing the week button and reading the next week off the screen, so a tick that opened
@@ -484,6 +531,24 @@ const RECIPES: Recipe[] = [
           // fixture's own world is touched.
           const probe = structuredClone(world)
           answerLifeBeat(probe, 'back')
+          // ⭐⭐⭐ v74 T17 – AND ANSWERING HER CAN NOW RAISE ANOTHER CARD IN FRONT OF THE FORK. When the
+          // want she stated is `'stop'`, recording the parent's answer raises `'fork-counsel'` – the
+          // coach's read, blocking – and `answerFork` on the next line would THROW
+          // (`FORK_UNHEARD_REFUSAL`), killing the generator instead of rejecting one seed. That is
+          // the same shape as the `'met'`-on-the-fork-week gap four clauses up, and it is closed the
+          // same way: this is the REJECTION CLAUSE, and it doubles as the look-ahead learning the
+          // beat, because it asks the ENGINE what is standing there rather than listing the kinds
+          // that could be. Wave 5's psychologist raises a second such row beside the coach's and is
+          // covered the day it is declared.
+          //
+          // ⚠⚠ AND IT HAS TO BE A REJECTION AND NOT A DRAIN. `e2e/life-beat.spec.ts` presses her
+          // answer and then reads the FORK's three buttons off the very next snapshot; a counsel card
+          // between them would put the spec in front of a dialog it knows nothing about. Draining the
+          // row here would hide that from the generator and move the failure into Playwright.
+          const raisedByAnswering = pendingLifeBeat(probe)
+          if (raisedByAnswering !== null) {
+            return `answering her raises a '${raisedByAnswering.kind}' card in front of the fork, and the spec presses straight past it`
+          }
           answerFork(probe, recipe.fork)
           const stillBlocked = advanceRefusal(probe)
           if (stillBlocked !== null) return `answering both leaves a '${stillBlocked}' standing in the week's way`
@@ -498,6 +563,96 @@ const RECIPES: Recipe[] = [
       return world.ending !== null
         ? `career ended (${world.ending.type}) before the fork opened`
         : 'the fork never opened'
+    },
+  },
+  {
+    name: 'soft',
+    // ⭐⭐⭐ v74 T15 – THE TIER-1 CAREER: she came by with something small, and the week did not stop
+    // for it. See FIXTURE_NAMES in tools/e2e-fixtures-read.ts for the measurement that made this an
+    // eighth fixture rather than a flag on one of the seven.
+    purpose:
+      'She came by with something small – a live, unanswered tier-1 row on a week the engine never stopped.',
+    background: 'middle',
+    coachTier: 'middle',
+    policy: PLAYER,
+    // ⚠ NEVER REACHED BY THIS WALK EITHER, and for the opposite reason to `unheard`'s: the search
+    // stops on the first live soft row, which lands years before her nineteenth birthday. It is
+    // `'continue'` so that a seed which somehow walked that far would still leave a career playing.
+    fork: 'continue',
+    drive: (world, rng, recipe) => {
+      while (world.week < SOFT_CAP_WEEK && world.ending === null) {
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
+        // ⚠ EVERY BLOCKING QUESTION IS ANSWERED ON THE WAY PAST AND TIER 1 IS NOT ONE OF THEM. This
+        // is the ordinary `answerOpenQuestions`, whose `drainLifeBeats` reads `pendingLifeBeat` –
+        // BLOCKING rows only since T15 – so a `'small-talk'` row rides along untouched and the loop
+        // below is what stops on it. That is the whole difference between this recipe and the six
+        // that walk past the same rows without noticing them.
+        answerOpenQuestions(world, recipe.fork)
+
+        // ⭐⭐⭐ THE STATE, AND IT IS THE ENGINE'S OWN PREDICATE THAT DECIDES IT. `liveSoftBeat` is
+        // what `buildSoftBeatInvite` asks, which is what `snapshot.softBeat` carries, which is what
+        // Home's card is drawn from – so a fixture accepted here is a fixture whose card the browser
+        // will really see. Nothing is hand-written: the row was raised by `rollSmallTalk` on a week
+        // this career actually lived.
+        const row = liveSoftBeat(world)
+        if (row === null) continue
+
+        // ⚠⚠ AND NOTHING MAY BE STANDING IN FRONT OF THE HUB. The card lives ON Home, under her
+        // photograph, and `showSoftBeat` (src/App.vue) is gated on `overlay.value === null` – so a
+        // career that boots into ANY blocking question boots into somebody else's card with the
+        // invitation sitting unreachable behind it. Same seed-filter remedy `unheard` takes for the
+        // same stated reason: a clause here survives the NEXT regeneration, a spec that steps around
+        // a bad seed survives only until the one after.
+        if (pendingLifeBeat(world) !== null) return 'boots holding a blocking beat, whose card covers the hub'
+        if (pendingKnock(world)) return 'boots holding a knock, which is a blocking overlay over Home'
+        if (pendingBirthday(world) !== null) return 'boots holding a birthday, which is a blocking overlay over Home'
+        if (world.pendingTournament) return 'boots into a tournament reveal, which holds the hub back'
+        // ⚠ AND THE BRIEFING, which is not in `blockingOverlay`'s list but is a blocking card all the
+        // same – `unheard`'s own clause, for the same reason it has one.
+        if (buildTourBriefing(world) !== null) return 'the tour briefing is owed and would land over the hub'
+
+        // ⭐⭐⭐ AND THE WEEK IS **NOT** STOPPED, WHICH IS THE WHOLE CLAIM OF TIER 1 AND THEREFORE OF
+        // THIS FIXTURE. `advanceRefusal` is the engine's own answer to «may time move» – the same
+        // predicate `advanceWeeks` guards on – and a soft row is deliberately absent from it
+        // (`pendingLifeBeat` reads blocking rows only). A seed parked behind ANY other refusal would
+        // hand e2e/soft-beat.spec.ts a week button it could not press, and the spec would then be
+        // unable to tell «soft never stops the week» from «this career was stopped for something
+        // else», which is the one thing it exists to say.
+        const refusal = advanceRefusal(world)
+        if (refusal !== null) return `the week is stopped by '${refusal}' – this fixture's whole claim is that it is not`
+
+        // ⚠⚠ AND THE ROW MUST STILL BE LIVE ON THE WEEK THE SPEC READS IT BACK AT, WHICH IS ONE TICK
+        // LATER. The window is DERIVED (`ECONOMY.life.smallTalkTtlWeeks`, 3 = the raise week and the
+        // two after it) and `liveSoftBeat` recomputes it from `week − row.week` every time it is
+        // asked – so a career parked ON the raise week is live now and says nothing about being live
+        // after the press. The spec's second step is «the week moved and she is still waiting», which
+        // is «never lost» seen from the hub, and it needs that to be a PROPERTY of the fixture rather
+        // than a hope about a constant.
+        //
+        // ⚠ THE LOOK-AHEAD IS EXACT, NOT AN ESTIMATE – `sinking`'s and `unheard`'s own precedent. The
+        // clone carries `rngMain`, so resuming MAIN from it walks the sequence the browser will walk
+        // and `tickWeek` is what the worker runs behind the week button. Nothing about the fixture's
+        // own world is touched.
+        const probe = structuredClone(world)
+        tickWeek(probe, resumeMain(probe.rngMain))
+        const after = liveSoftBeat(probe)
+        if (after === null || after.week !== row.week)
+          return `her row is not live any more one week on (smallTalkTtlWeeks would have to be > ${probe.week - row.week})`
+        // AND THE WEEK THE PRESS REACHES IS AN ORDINARY ONE. The spec reads the new week off the
+        // screen with the card still on it, so a tick that ended the career, opened a reveal or
+        // raised a blocking question would replace the surface it is reading – and a blocking beat in
+        // particular would put a modal over the very card the next step goes on to tap.
+        if (probe.ending !== null) return `the week after ends the career (${probe.ending.type})`
+        if (probe.pendingTournament) return 'the week after opens a tournament reveal'
+        if (pendingKnock(probe)) return 'a knock lands on the week after'
+        if (pendingBirthday(probe) !== null) return 'a birthday lands on the week after'
+        if (pendingLifeBeat(probe) !== null) return 'a blocking beat lands on the week after, and its card would cover hers'
+        if (buildTourBriefing(probe) !== null) return 'the tour briefing would land on the week after'
+        return null
+      }
+      return world.ending !== null
+        ? `career ended (${world.ending.type}) before she came by`
+        : `no small talk in ${SOFT_CAP_WEEK} weeks`
     },
   },
 ]

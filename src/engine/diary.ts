@@ -179,6 +179,15 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // which is the stronger form of the same guarantee.
     moodRegister: moodRegisterOf(spiritBand),
     bondBand: bondBandOf(view.bond),
+    // ⭐⭐ v74 (the private life, wave 3 – T6). Carried, not re-derived: the diary owns no reading of
+    // `loveEpisodes` any more than it owns a calendar (`schoolOver`'s own rule one field family up),
+    // and `knownPartner` is the engine's single spelling of «he has been told».
+    //
+    // ⚠ R2-18's LAW IS WHY THERE IS EXACTLY ONE OF THESE AND NOT THREE. A fact ships only with the
+    // licence that consumes it, in the same wave; T10's diary band licenses on this and on nothing
+    // else the pool cannot re-derive, so `sinceWeek`, «how long» and any reading of `wants` are
+    // deliberately absent rather than forgotten.
+    partnerKnown: view.partnerKnown,
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

@@ -28,7 +28,7 @@
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
 import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 import { skillMeanOf } from '../src/engine/world/college'
@@ -41,6 +41,7 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { CollegeOffer, CollegeTier } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 /** ⚠⚠⚠ THE GAP BETWEEN THE ANSWER AND THE DEPARTURE, AND THE REASON THIS PROBE READ A WORLD THAT
  *  NEVER WENT TO COLLEGE. Round 24 split the two: `answerFork('college')` RESERVES a place and
@@ -168,7 +169,7 @@ for (let p = 0; p < PRESETS.length; p++) {
       // ⚠ A PLACE RESIDENCE SHUTS IS STILL WALKED, AND `answerFork` FALLS BACK. The bench's presets
       // are all American so this never fires today; the row records the tier it ASKED for and the
       // engine's re-validation is what decides. See `answerFork`'s own note.
-      if (pendingLifeBeat(at.world)) answerLifeBeat(at.world, 'listen')
+      drainLifeBeats(at.world)
       answerFork(at.world, 'college', tier)
       departToCollege(at.world, at.rng)
       let firstYearTuition = 0

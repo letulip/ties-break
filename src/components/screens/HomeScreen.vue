@@ -85,6 +85,8 @@ import { playSfx } from '../../audio/sfx'
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
 import { flagEmoji } from '../../composables/countries'
+// ⭐ T9 – the feed's life-row glyph column, empty until the owner's picks (who-she-is §5a).
+import { LIFE_ROW_EMOJI } from './lifeRowGlyphs'
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
@@ -103,9 +105,29 @@ import { flagEmoji } from '../../composables/countries'
 // longer carries a bare `'week'` on purpose – Home has exactly one door into that screen and this is
 // it, so a future second door has to state its own reason rather than inherit this one by accident.
 defineProps<{ recapFresh: boolean }>()
-const emit = defineEmits<{ navigate: ['money' | 'week:tournament' | 'more' | 'kid' | 'market'] }>()
+/** ⭐⭐⭐ v74 T15 – AND ONE EVENT THAT IS NOT A NAVIGATION: «she came by, open it» (who-she-is §5b's
+ *  «SOFT BLOCK CONCRETIZED» amendment). It is an EVENT rather than a local dialog for the reason
+ *  every other popup in this app is App.vue's: the shell owns every overlay, so the card asks and the
+ *  shell answers – one mount of `LifeBeatDialog`, on the same prompt contract, over the same scrim,
+ *  outside any transformed ancestor that could contain a `position: fixed` card. */
+const emit = defineEmits<{
+  navigate: ['money' | 'week:tournament' | 'more' | 'kid' | 'market']
+  softBeat: []
+}>()
 
 const game = useGameStore()
+/** ⭐⭐⭐ v74 T15 – THE INVITATION, AND THE WHOLE OF WHAT THIS SCREEN KNOWS ABOUT IT. Non-null while a
+ *  tier-1 row is inside its three-week window and unanswered; the engine decides that (`liveSoftBeat`
+ *  on `week − row.week`) and this screen derives nothing – Home's own standing rule.
+ *
+ *  ⚠⚠ THE CARD IS ONLY THE INVITATION. Its one line is the ENGINE's (`softBeat.card`), and what she
+ *  came with is not on it: the subject, her opener and the parent's frame belong to the dialog the
+ *  tap opens, which is the same `LifeBeatDialog` every other beat uses.
+ *
+ *  ⚠ AND IT IS NOT A STOP. `lifeBeatPrompt` is non-null exactly when the engine has refused to tick;
+ *  this field is non-null on a week that ticks on regardless, so the card sits in the page like any
+ *  other card and the advance bar below it stays live. */
+const softBeat = computed(() => game.snapshot?.softBeat ?? null)
 /** Vite's base path, so the brand mark resolves under a sub-path deploy the same way the art does. */
 const base = import.meta.env.BASE_URL
 
@@ -144,9 +166,13 @@ function openKid(): void {
 // `object-fit: cover` and steered by the face centre from the ONE crop table (src/art/faceRects.ts),
 // so the window shows her face plus the scene around it. The emotion is the ENGINE's decision
 // (snapshot.diary), same as the caption under it – image and words cannot disagree by construction.
-const { portraitUrl, stage, emotion } = useKidEmotion()
+// ⭐ T14: the stem comes from the composable now rather than being rebuilt here, because the hero's
+// picture is no longer always `{stage}-{emotion}` – on the week she graduates it is the one
+// graduation painting, which has neither in its name. Same value, one source: the frame follows
+// whatever is actually on screen.
+const { portraitUrl, portraitStem } = useKidEmotion()
 const photoStyle = computed(() => {
-  const p = facePoint(`${portraitAssetStem(stage.value)}-${emotion.value}`)
+  const p = facePoint(portraitStem.value)
   return { objectPosition: `${p.x}% ${p.y}%` }
 })
 // The ONE phrase under her name (D2) – null on a deliberately quiet week. It appears exactly once
@@ -1030,7 +1056,15 @@ function kidScoreOf(m: WorldMatch): string {
   if (!m.score) return ''
   return m.bId === KID_ID ? flipScore(m.score) : m.score
 }
-const EVENT_EMOJI: Record<string, string> = {
+// --- The feed's glyph column (wave 3, T9) ------------------------------------------------------
+//
+// ⚠⚠ `string | undefined` IS THE FIX, NOT A TIGHTENING. This read `Record<string, string>`, which
+// told every reader that every row kind has a glyph – and since T6 one does not: `'life'` is a
+// `WorldEventType` with no mark of its own (the marks are the owner's picks, `./lifeRowGlyphs.ts`).
+// The template was `{{ EVENT_EMOJI[e.type] }} {{ e.text }}`, so an unmapped kind drew an EMPTY
+// string and then a real space, and the row sat one space in from every row around it. The type now
+// says what the map is, and `eventPrefix` is the only thing that reads it.
+const EVENT_EMOJI: Record<string, string | undefined> = {
   info: '💬',
   entry: '📝',
   match: '🎾',
@@ -1038,6 +1072,19 @@ const EVENT_EMOJI: Record<string, string> = {
   milestone: '🏆',
   injury: '🩹',
   recovery: '💪',
+  // ⭐ THE LIFE ROWS, ruled 09.09 («Фид: эмоджи», who-she-is §5a) – the one surface a glyph was
+  // given. Empty until the owner picks the glyphs, and his pick is ONE LINE in that file: nothing
+  // here moves when it lands.
+  ...LIFE_ROW_EMOJI,
+}
+/** What a feed row draws BEFORE its sentence.
+ *
+ *  ⚠ A KIND WITH NO GLYPH DRAWS NOTHING – not an empty string and then a space. The space belongs
+ *  to the glyph and travels with it, which is why it is built here and not left in the template
+ *  between two interpolations. */
+function eventPrefix(type: string): string {
+  const glyph = EVENT_EMOJI[type]
+  return glyph ? `${glyph} ` : ''
 }
 interface NewsGroup {
   week: number
@@ -1410,6 +1457,23 @@ async function leaveCollege(): Promise<void> {
            latch is on; every other week of every other career is byte-identical. -->
       <CollegeYearCard v-if="collegeWeek" />
 
+      <!-- ⭐⭐⭐ v74 T15 – SHE CAME BY WITH SOMETHING, AND THE WEEK DID NOT STOP FOR IT.
+           who-she-is §5b's tier 1, «soft – answerable, never lost», as the amendment ruled it: the
+           card is ONLY the invitation, and tapping it opens the SAME `LifeBeatDialog` on the same
+           prompt contract – modal only because the player chose to listen.
+
+           ⚠ ITS ONE LINE IS THE ENGINE'S, rendered verbatim like every other word of hers on this
+           screen. This template may not add a kicker, a week label or a preview of what she came
+           with: an invitation that previewed the conversation would answer it from the hub.
+
+           ⚠ ABOVE THE GRID AND UNDER HER PHOTOGRAPH, where the college year sits on the weeks it
+           exists – she is the subject of both, and a card that expires in three weeks may not be
+           below the fold. It is a door, so it is a `button` and it lifts under the finger; the four
+           cards below keep their own grid and their own geometry, untouched. -->
+      <Card v-if="softBeat" as="button" class="soft-beat-card" @click="emit('softBeat')">
+        <p class="soft-beat-line">{{ softBeat.card }}</p>
+      </Card>
+
       <!-- 3. THE CARD GRID – the visual signature. Two of the four are doors, and they say so by
            lifting under the finger; the two that are not, do not move. -->
       <div class="card-grid">
@@ -1668,7 +1732,7 @@ async function leaveCollege(): Promise<void> {
                       <span class="watch-cue">Watch</span>
                     </button>
                   </td>
-                  <td v-else>{{ EVENT_EMOJI[e.type] }} {{ e.text }}</td>
+                  <td v-else>{{ eventPrefix(e.type) }}{{ e.text }}</td>
                 </tr>
               </tbody>
             </table>
@@ -2281,6 +2345,61 @@ async function leaveCollege(): Promise<void> {
 
 .note-card.card-short {
   min-height: 138px;
+}
+
+/* ⭐⭐⭐ v74 T15 – THE SOFT BEAT'S INVITATION. A full-width door on the notecard surface (the
+   gradient, the hairline and the corners are `Card`'s, exactly as the grid's four get them), and
+   nothing else: one line of the engine's, at the page's own body size.
+
+   ⚠ NOT `.note-card`, AND THE ABSENCE OF THAT CLASS IS THE RULE RATHER THAN AN OMISSION. That class
+   carries `min-height: 186px` and a two-column cell's geometry, which is a box the size of the
+   tournament card holding one sentence. This is a strip: it takes the height of its line.
+
+   ⚠ EVERY COLOUR A DECLARED TOKEN WITH NO FALLBACK – round-17 #3's rule, kept where a new surface
+   appears. The lift is `button.note-card`'s own two declarations, copied rather than shared, because
+   this card is not in that grid and a selector list spanning both would put the grid's geometry one
+   careless edit away from this strip. */
+.soft-beat-card {
+  display: block;
+  width: 100%;
+  margin-bottom: 12px;
+  text-align: left;
+  color: var(--ink);
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.soft-beat-card:hover:not(:disabled),
+.soft-beat-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card-lift);
+  border-color: var(--accent-soft);
+}
+
+.soft-beat-card:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: var(--shadow-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .soft-beat-card,
+  .soft-beat-card:hover:not(:disabled),
+  .soft-beat-card:focus-visible {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Her line on the card. `min-width: 0` so a long draft wraps inside the box instead of widening it –
+   the answer labels in `LifeBeatDialog` carry the same declaration for the same reason. */
+.soft-beat-line {
+  min-width: 0;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--ink);
 }
 
 /* Picking a card up: a TAPPABLE card lifts under the finger. A card with nowhere to go does not

@@ -2,7 +2,8 @@
 // `forkDue` reads kidAgeYears(week, birthMonth) - month only - while `pendingBirthday` reads
 // birthdayTurning(week, birthMonth, birthDay). Two clocks; this measures the gap.
 // Throwaway: run with `npx vite-node tools/fork-birthday-probe.ts`.
-import { birthdayOffer, chooseGift, createWorld, decideKnock, pendingBirthday, pendingKnock, tickWeek } from '../src/engine/world'
+import { birthdayOffer, chooseGift, createWorld, pendingBirthday, tickWeek } from '../src/engine/world'
+import { drainKnock } from './_knocks'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
@@ -18,7 +19,7 @@ for (const [m, d] of [
   let forkWeek: number | null = null
   const bdays: string[] = []
   for (let i = 0; i < 52 * 9; i++) {
-    if (pendingKnock(world)) decideKnock(world, 'rest')
+    drainKnock(world)
     const age = pendingBirthday(world)
     if (age !== null) {
       if (age >= 18) bdays.push(`age${age}@w${world.week}`)

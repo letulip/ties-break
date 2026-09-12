@@ -56,6 +56,8 @@ import { kidAgeYears } from '../src/engine/world/age'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { ENDINGS } from '../src/engine/ending'
+// ⭐ v74 T6 – one drain for every beat kind; see its own note in tests/helpers/career.ts.
+import { drainLifeBeats } from './helpers/career'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now PAUSES
@@ -96,15 +98,24 @@ function walkedToTheFork(seed: string, birthMonth: number): { world: WorldState;
   // one thumb on the scale every college suite puts there.
   for (let i = 0; i < 6 * WEEKS_PER_YEAR && world.fork === null && world.ending === null; i++) {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
+    // ⭐ v74 T6 – any beat that is not the fork's own opinion, drained bond-neutrally. Wave 3 raises
+    // a `'met'` row on `knownWeek`, which can be any week from her sixteenth on, and a row left
+    // standing here would be the row `answerLifeBeat` below then answered – with an id it does not
+    // offer. The fork's own row is left for the line under the loop.
+    drainLifeBeats(world, 'fork-opinion')
     tickWeek(world, rng)
     finishAnyReveal(world)
   }
+  drainLifeBeats(world, 'fork-opinion')
   expect(world.fork, 'the career reached the fork by playing').not.toBeNull()
   // ⭐ v73: the same tick that raised the fork raised HER OPINION of it, and `answerFork` refuses
   // until it is answered. `'listen'` is the harness's answer for the same reason `answerFork`'s
   // no-tier default is the cheapest place: a caller that never asked the player must not put a
   // number on the scale – and every case below is about the DEPARTURE, not about the standing.
   expect(pendingLifeBeat(world), 'and she said what she wants on the same week').not.toBeNull()
+  // ⚠ NAMED SINCE v74 (wave 3, T6): «not null» was true of any beat once a career could live one
+  // before the fork, and the line below only answers the fork's.
+  expect(pendingLifeBeat(world)!.kind, 'and it is her opinion of the fork').toBe('fork-opinion')
   answerLifeBeat(world, 'listen')
   return { world, rng }
 }

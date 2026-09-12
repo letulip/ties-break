@@ -1053,6 +1053,35 @@ const showBirthday = computed(() => overlay.value === 'birthday')
 // records why it stands between the birthday and the fork.
 const showLifeBeat = computed(() => overlay.value === 'life')
 
+/** ⭐⭐⭐ v74 T15 – TIER 1's SOFT BEAT, AND IT IS THE ONE OVERLAY THIS FILE OPENS WITHOUT THE ENGINE
+ *  ASKING FOR IT (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment). Home's card is the
+ *  invitation; this is the player accepting it.
+ *
+ *  ⚠⚠ IT IS **NOT** IN `blockingOverlay`'s LIST AND MUST NOT BE. That function answers «which
+ *  question is the engine waiting on», and the engine is waiting on nothing here: `pendingLifeBeat`
+ *  reads blocking rows only, so the week ticks whether this is ever opened or not. Putting a soft row
+ *  in that queue is the hard pause the owner reverted.
+ *
+ *  ⚠ THREE CONDITIONS, AND THE LAST TWO ARE WHY THIS IS A `computed` RATHER THAN THE REF ALONE: the
+ *  player asked for it; she is still waiting (the engine's own window – an answer or an expiry takes
+ *  the field away and the card with it); and NO blocking question is up, because a modal over a modal
+ *  is two dialogs trapping one keyboard, and the question the engine has stopped the week for
+ *  outranks an invitation every time. */
+const softBeatAsked = ref(false)
+const showSoftBeat = computed(
+  () => softBeatAsked.value && game.snapshot?.softBeat != null && overlay.value === null,
+)
+// ⚠ AND THE ASK IS RELEASED THE MOMENT THE ENGINE'S ANSWER ARRIVES. Without this the flag would
+// still be true when her NEXT conversation is raised, weeks later, and the dialog would open itself
+// over a hub the player never tapped. `watch` on the engine's field rather than on the ref, because
+// the field is the truth: an answer clears it, and so does the three-week window closing.
+watch(
+  () => game.snapshot?.softBeat ?? null,
+  (invite) => {
+    if (invite === null) softBeatAsked.value = false
+  },
+)
+
 // R9-21a: the injury stop popup – blocking, until Continue. The dialog itself plays the alert sfx
 // on mount.
 //
@@ -1499,7 +1528,12 @@ function reopenTour(): void {
       <!-- ⭐ ROUND 31 #1: the ternary became `openFromHome` when a second of Home's doors grew a
            reason to carry ("take me to the tournament", not merely "take me to the week screen").
            Both interceptions live in one named function now instead of nesting in an attribute. -->
-      <HomeScreen v-if="tab === 'home'" :recap-fresh="weekTabDot" @navigate="openFromHome($event)" />
+      <HomeScreen
+        v-if="tab === 'home'"
+        :recap-fresh="weekTabDot"
+        @navigate="openFromHome($event)"
+        @soft-beat="softBeatAsked = true"
+      />
       <SeasonScreen v-else-if="tab === 'play'" />
       <!-- Screen H, the calendar. It ASKS to play the week rather than doing it: `playWeek` is the
            app's one advance, and a second caller of `game.advance` is how "what does this press cost"
@@ -1785,6 +1819,14 @@ function reopenTour(): void {
          stays stopped until one is pressed. Ahead of the fork by `blockingOverlay`'s own entry –
          the engine refuses the fork while her row is unanswered, so he hears her out first. -->
     <LifeBeatDialog v-if="showLifeBeat" />
+
+    <!-- ⭐⭐⭐ v74 T15 – THE SAME DIALOG, OPENED FROM HOME'S CARD. `soft` is the only difference: it
+         reads `snapshot.softBeat.prompt` instead of `snapshot.lifeBeatPrompt`, and every law above
+         holds unchanged. ⚠ IT IS NOT GATED ON `overlay` HAVING NAMED IT, because `overlay` answers
+         for the questions the ENGINE is waiting on and this is not one – the week was never stopped.
+         `showSoftBeat` carries the three conditions, the last of which is that no blocking question
+         is up. -->
+    <LifeBeatDialog v-if="showSoftBeat" soft />
 
     <!-- W2-ENDINGS: the two blocking questions. Neither has a dismiss and neither has a third
          button - answering IS the exit, and until one is answered the engine will not tick a week.

@@ -38,12 +38,13 @@ import {
   type Policy,
 } from './econ-bench'
 import { runToEnding, FULL_CAREER_WEEKS } from './endings-bench'
-import {answerFork, answerRetirement, kidPoints, type WorldState, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {answerFork, answerRetirement, kidPoints, type WorldState } from '../src/engine/world'
 import { rankingFor } from '../src/engine/world/ladder'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
 import type { CareerEndingType, WorldEventCategory } from '../src/shared/protocol'
 import { seasonIndexOf } from '../src/engine/world/ledger'
+import { drainLifeBeats } from './_lifeBeats'
 
 /** The endings bench's own default is 20; its published §6 table is a 10-seed run (9 x 10 x 2 arms
  *  = the 180 it prints). We reproduce THAT, and the verify arm is what makes the claim checkable. */
@@ -189,10 +190,11 @@ function zeroCats(): Record<WorldEventCategory, number> {
  *  The college branch is absent because this arm always answers the fork "continue". */
 function answerOpenQuestions(world: WorldState, retireArm: RetireArm): void {
   // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-  // player must not put a number on the scale.
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+  // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+  // the one this line always had: a caller that never asked the player must not put a number on
+  // the scale, so every row takes the bond-neutral answer of its OWN kind.
+  drainLifeBeats(world)
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     const { reason, final } = world.retirementOffer

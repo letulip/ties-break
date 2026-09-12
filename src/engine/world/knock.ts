@@ -17,6 +17,10 @@ import { ECONOMY } from '../economy'
 import { applyBondDelta } from '../spirit'
 import { coachEscalates, coachKnockCall, coachManagesLoad, type CoachLoadView } from '../coachLoad'
 import { isBlackoutWeek } from '../season/calendar'
+// ⚠ T16: medical.ts is a LEAF of this file's dependency direction, not a peer – it imports bookings,
+// ladder, entryCaps, masseur, assets, mandatory and age, and none of those reaches back here. The
+// edge knock -> medical is therefore one-way, exactly like knock -> injury already is.
+import { medicalClearance, type MedicalClearance } from './medical'
 // ⚠ FROM kidLife, NOT FROM ./summer's `pastSchool`: summer.ts imports `isCompetitionWeek` from THIS
 // file, so that edge would close a runtime cycle. kidLife is a leaf and has none.
 import { schoolIsOver } from '../kidLife'
@@ -140,6 +144,45 @@ export function rollKnock(world: WorldState): void {
 }
 
 
+/**
+ * ⭐⭐ T16b – DOES THIS KNOCK GO TO THE PARENT, EVEN THOUGH THE FAMILY IS PAYING SOMEBODY?
+ *
+ * ⚠ IT IS THE DOUBT ZONE, AND ONLY THE DOUBT ZONE. `coachEscalates` hands a knock back when the call
+ * sits inside his own uncertainty – scaled by his confidence, so a cheap coach asks often and an
+ * Elite one almost never. This function's whole job is to turn the doctor's three-way verdict into
+ * the one boolean that zone takes: `'warn'` is a WIDENER (coachLoad.ts `WARN_DOUBT`), the same shape
+ * `repeat` has, and both multiply together on a warn-week repeat.
+ *
+ * ⚠⚠ AND IT WAS AN OVERRIDE FOR ONE DAY, WHICH IS THE REASON THIS DOC BLOCK IS LONGER THAN THE
+ * FUNCTION. T16 (11.09, the owner's «давай попробуем») made the two classes DETERMINISTIC –
+ * `repeat || clearance === 'warn' || coachEscalates(...)` – on T12's finding that the push-through
+ * price was mostly not the parent's to pay (the coach answered 232 of 280 knocks; the parent met the
+ * dialog ~1.5 times a career against 9.0 self-coached, so the bond table's −3/−5 push rows were
+ * nearly dead in normal play). It worked on its own terms and it cost the ladder: tap share went
+ * 0.148 / 0.103 / 0.078 / 0.075 to 0.716 / 0.684 / 0.692 / 0.662 over 8 seeds × 208 weeks, a 2×
+ * budget-to-elite span down to 1.08×, and the Elite coach from deciding 95% of knocks alone to 31%.
+ * The owner, 12.09: «мне это не очень нравится». ⭐ THE CORRECTION IS NOT A REVERT: T12's dead lever
+ * was measured at the DEFAULT (middle) rung, so the cure has to lift the middle WITHOUT spending the
+ * premium rungs – which is exactly what a widener does and a deterministic class cannot, because the
+ * widener is multiplied by `1 - confidence` and the class is not. coachLoad.ts's constants carry all
+ * three rulings; this is where the verdict becomes the flag.
+ *
+ * ⚠ `'withdraw'` IS NOT A WIDENER, and "any bad clearance" is the obvious wrong generalisation. Below
+ * `medicalFloor` she is not cleared at all – the doctor's veto is not a load call, and no knock answer
+ * survives it anyway.
+ *
+ * PURE, ZERO DRAWS, ON ANY STREAM. One ledger flag, one equality, and `coachEscalates`' arithmetic.
+ * The frozen MAIN capture cannot move, and `rngMain` is byte-identical across the change by
+ * construction.
+ */
+export function knockNeedsTheParent(
+  view: CoachLoadView,
+  repeat: boolean,
+  clearance: MedicalClearance,
+): boolean {
+  return coachEscalates(view, repeat, clearance === 'warn')
+}
+
 /** The hired coach's answer, taken the moment the knock arrives. Separate from `decideKnock` so the
  *  parent's path keeps its guard (`decideKnock` throws on an already-answered knock, which is a real
  *  protection against a double-tap) while this one is an internal step of the same tick.
@@ -155,17 +198,38 @@ export function coachDecidesKnock(world: WorldState): void {
   // dialog opens exactly as it does for a self-coached career - which is what keeps W4's content alive on
   // a career that has a coach (DEFAULT_PROFILE is 'middle', so that is most of them). See coachLoad.ts
   // `coachEscalates`: the zone scales with his haze, so a cheap coach asks often and an Elite one almost
-  // never - and "you are buying your attention back" becomes a number instead of a slogan.
-  if (coachEscalates(view, k.repeat)) {
-    addEvent(world, {
-      week: world.week,
-      type: 'info',
-      // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see `coachLoadNote` in world/coachMarket.ts for the
-      // owner's ruling and why the dash is doing the work a guessed "he" used to do.
-      text: k.repeat
-        ? `The coach wants to talk about her ${k.part} before anyone decides.`
-        : `The coach is in two minds about the ${k.part} – and is asking us.`,
-    })
+  // never - and "you are buying your attention back" becomes a number instead of a slogan. ⭐ T16b widens
+  // that zone on a `'warn'` week instead of overriding it (see `knockNeedsTheParent` for the day T16
+  // spent as an override and the ladder number that ended it).
+  const clearance = medicalClearance(world.condition)
+  if (knockNeedsTheParent(view, k.repeat, clearance)) {
+    // ⚠⚠ THREE SITUATIONS, THREE SENTENCES, AND TWO OF THEM ARE THE PRE-T16 PAIRING CHARACTER FOR
+    // CHARACTER (invariant 4). Before T16 the only way into this branch was `coachEscalates`, and the
+    // key was `k.repeat`: a repeat printed «wants to talk», anything else «in two minds». Both of
+    // those pairings are restored here exactly, because T16b restores the mechanism they described -
+    // every escalation IS the doubt zone again, so «in two minds» is a claim the mechanism backs.
+    //
+    //   · «in two minds» is a claim about HIM. True of exactly one thing – `coachEscalates` firing –
+    //     which under T16b is true of every line this branch writes.
+    //   · «wants to talk … before anyone decides» claims only the ACT. It is what a repeat has always
+    //     printed and it stays the repeat's line.
+    //   · ⭐ THE WARN WEEK GETS ITS OWN SENTENCE (the architect's, 12.09, under the standing wording
+    //     delegation; T16 had it reusing the repeat's line, which said nothing about the week). It is
+    //     the one new string in this step, R15-7 clean like its siblings – no pronoun for the coach –
+    //     and it claims what the widener claims: not that he cannot decide, but that this is not the
+    //     week to decide alone.
+    //
+    // The warn line wins over the repeat's when both hold, because it is the WEEK that is being
+    // described and the week is the stronger fact.
+    const text =
+      clearance === 'warn'
+        ? // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see `coachLoadNote` in world/coachMarket.ts for the
+          // owner's ruling and why the dash is doing the work a guessed "he" used to do.
+          `The coach is not calling the ${k.part} alone – not on a week like this.`
+        : k.repeat
+          ? `The coach wants to talk about her ${k.part} before anyone decides.`
+          : `The coach is in two minds about the ${k.part} – and is asking us.`
+    addEvent(world, { week: world.week, type: 'info', text })
     return
   }
   const choice = coachKnockCall(view, k.repeat)

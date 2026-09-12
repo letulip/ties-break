@@ -37,11 +37,10 @@ import {
   toSnapshot,
   KID_ID,
   type WorldState,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
+import { drainLifeBeats } from './_lifeBeats'
 
 const args = process.argv.slice(2)
 const argOf = (name: string, fallback: number): number => {
@@ -119,10 +118,11 @@ function outgrownNow(world: WorldState, tier: TierId): boolean {
  *  the population matches endings-bench's slot-6 rows and the published rank table. */
 function answerWhateverIsOpen(world: WorldState): void {
   // ⭐ v73: her opinion of the fork is raised by the tick that opens it, and `answerFork`
-  // refuses until it is answered. `'listen'` is the harness's answer for the same reason
-  // `answerFork`'s no-tier default is the cheapest place: a caller that never asked the
-  // player must not put a number on the scale.
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  // refuses until it is answered. ⚠ RE-AIMED v74 from `answerLifeBeat(world, 'listen')`, which
+  // stopped being a complete answer when `'met'` landed – see `tools/_lifeBeats.ts`. The intent is
+  // the one this line always had: a caller that never asked the player must not put a number on
+  // the scale, so every row takes the bond-neutral answer of its OWN kind.
+  drainLifeBeats(world)
   if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
   if (world.retirementOffer !== null) {
     answerRetirement(world, world.retirementOffer.reason === 'plateau' || world.retirementOffer.final)

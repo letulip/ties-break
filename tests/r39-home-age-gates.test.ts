@@ -67,6 +67,9 @@ function baseFacts(stage: DiaryLifeStage, age: number): DiaryFacts {
     moodWord: null,
     moodRegister: 'level',
     bondBand: 'steady',
+    // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
+    // written about (see `DiaryFacts.partnerKnown`).
+    partnerKnown: false,
     injured: null,
     travelled: false,
     playedTournament: false,

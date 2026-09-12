@@ -38,6 +38,7 @@
 // ⚠ ZERO MAIN-STREAM DRAWS is proved next door, in tests/travel-home.test.ts's byte-identical
 // capture (41550 / e6b0c709), which now touches `diary.weekNote` on every one of 52 weeks.
 import { describe, expect, it } from 'vitest'
+import { BANNED_TAILS } from './helpers/bannedTails'
 import { worldSource, diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import {
@@ -103,6 +104,9 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     moodWord: null,
     moodRegister: 'level',
     bondBand: 'steady',
+    // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
+    // written about (see `DiaryFacts.partnerKnown`).
+    partnerKnown: false,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -222,6 +226,19 @@ function* sweepStages(): Generator<DiaryFacts> {
     { offSeasonWeek: true },
     { vacationWeek: true },
     { playedPractice: true },
+    // ⭐ v74 T6 – NOT A CALENDAR, AND IT IS HERE ANYWAY, for R2-18's reason in this list's own
+    // paragraph above: `sweepWeeks` and `sweepVoices` both hold `partnerKnown` at false on every
+    // fixture, so a line licensed on it would be licensed in NONE of them and its absence in ALL of
+    // them. One extra shape on the smallest sweep is the cheapest place the axis can exist at all.
+    { partnerKnown: true },
+    // ⭐ v74 T10 – ...AND THE SAME SHAPE AT `bright`, WIDENING THE SWEEP RATHER THAN RELAXING IT.
+    // `homeWeek` holds `moodRegister` at 'level' and `sweepVoices` (the only sweep that moves it)
+    // holds `partnerKnown` at false, so T10's two «lighter week» lines – licensed on BOTH – would
+    // have been licensed in no fixture of any sweep and the honesty pin would have proved nothing
+    // about them. The line above is still the one that catches a MISSING register licence (a line
+    // claiming `bright` would be licensed there at 'level' and fail `HOLDS.register`); this one is
+    // what makes the claim's true state reachable, which is the other half of the same guard.
+    { partnerKnown: true, moodRegister: 'bright' as const },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -411,6 +428,22 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // own note in weekNotes.ts for why the doc's name and this predicate are not the same sentence.
   closeBond: (f) => f.bondBand === 'close' || f.bondBand === 'steady',
   strainedBond: (f) => f.bondBand === 'strained',
+  // ⭐⭐ v74 (the private life, wave 3 – T6) – THE ONE THING THE DIARY MAY KNOW ABOUT HER PRIVATE
+  // LIFE, re-derived off the FACT and not off the licence in weekNotes.ts that produced the line,
+  // which is this whole table's method. It is an identity here for the same reason `vacation`,
+  // `offSeason` and `exams` are: the fact is already a boolean the engine computed, and the second
+  // spelling a valued claim needs (`bodyGroup`, `rail`) has nothing to re-derive from.
+  //
+  // ⚠⚠ AND WHAT IT FORBIDS IS THE POINT. A line licensed on this may say that the parent KNOWS there
+  // is someone, and nothing further: no name, no gender, no «since when», no «how it is going» – the
+  // schema persists none of them (see `LoveEpisode`), so any of those would be an unlicensed
+  // consequential fact under the honesty law's first tier. The claim carries the knowledge and the
+  // reviewer carries the rest.
+  //
+  // ⚠ THE CONSUMING LICENCE IS T10's (the wave's diary band) and lands in this same wave – R2-18's
+  // law. The `{ partnerKnown: true }` shape in `sweepStages` is what keeps the axis from being the
+  // R2-18 failure itself: without it every such line would be licensed in NO fixture of ANY sweep.
+  partnerKnown: (f) => f.partnerKnown,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -448,6 +481,26 @@ describe('W2 — the ordinary week note is HONEST', () => {
       }
     }
     expect(checked, 'the sweep has to actually reach the pool').toBeGreaterThan(500)
+  })
+
+  it('⭐ v74 T10 – and `HOLDS.partnerKnown` is REACHED, not decoration', () => {
+    // ⚠⚠ THE ENTRY LANDED IN T6 WITH THE FACT AND HAD NO CONSUMER UNTIL T10, which is precisely the
+    // state R2-18's law forbids a wave to ship in: a checker for a claim nothing makes is green for
+    // the same reason an empty pool is. The sweep above would pass identically with the band deleted,
+    // so this counts the visits – if the band ever goes away, or its licence stops being reachable in
+    // ANY fixture of ANY sweep, this fails by name rather than passing quietly.
+    let licensed = 0
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.partnerKnown === undefined) continue
+        licensed++
+        expect(
+          HOLDS.partnerKnown(f, true),
+          `"${render(note, f)}" claims partnerKnown on a career nobody has been mentioned in`,
+        ).toBe(true)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.partnerKnown proves nothing').toBeGreaterThan(0)
   })
 
   it('⚠ W6c: NO LINE NAMES A BODY PART THAT IS NOT HERS – read the sentence, not the claim', () => {
@@ -524,7 +577,16 @@ describe('W2 — the ordinary week note is HONEST', () => {
   it('an injured week is not offered a line about baking', () => {
     // Same rule the journey home keeps: a layoff TAKES the note. A pool that also licensed "she had
     // time to be fifteen this week" on the week the ice pack came out would draw it most of the time.
-    for (const f of sweepWeeks()) {
+    //
+    // ⚠ RE-AIMED BY v74 T10, AND WIDENED RATHER THAN CHANGED. What moved: the walk is `sweepAll()`
+    // instead of `sweepWeeks()`. Why: `sweepWeeks` holds `lifeStage` at 'school', `partnerKnown` at
+    // false and the three voice axes fixed, so this rule – the one that keeps the page from reading
+    // as though the game had not noticed she is hurt – was structurally BLIND to every stage-gated,
+    // voiced and (now) `partnerKnown`-licensed line in the pool. Measured: T10's own ARM 4 (the band
+    // relaxed from `plainTraining` to `notTravellingWeek`, i.e. reaching a layoff) left this case
+    // GREEN before the widening and reddens it after. The rule is unchanged; the space it is checked
+    // over grew from one sweep to three.
+    for (const f of sweepAll()) {
       if (f.injured === null) continue
       const licensed = WEEK_NOTES.filter((n) => n.license(f))
       expect(licensed.length, 'a layoff week must still have words').toBeGreaterThan(0)
@@ -1055,22 +1117,13 @@ describe('v72 — the voice completeness pin', () => {
     // flat and the parent's own. The quotation is stripped first: the ban is on the narrator
     // interpreting her, never on words she might say herself. A new tail joins the list to
     // tighten the ratchet; removing one is the owner's call.
-    const BANNED_TAILS = [
-      'at speed',
-      'at volume',
-      'which is the tell',
-      'which is how she says it',
-      'nothing further',
-      'nothing more',
-      'in those words',
-      'three times over',
-      'more than once',
-      'that was the whole answer',
-      'did the whole week\'s work',
-      'no second sentence',
-      'she announced',
-      'left it there',
-    ]
+    // ⚠ RE-AIMED 11.09 AT THE SHARED LIST, NOT WEAKENED – and the list itself is byte-identical.
+    // WHAT MOVED: `BANNED_TAILS` left this file for `tests/helpers/bannedTails.ts`. WHY: T10's
+    // verification pass found the ban is marked «MUST, linted» while the lint swept `WEEK_NOTES`
+    // and nothing else – wave 2 put two more narration pools in `engine/world/lifeBeat.ts` and wave 3
+    // added five, none of them ever swept. `tests/wave3-tail-lint.test.ts` now sweeps those seven,
+    // and TWO copies of a ban list are two lists that drift. This case is unchanged in every other
+    // respect: same pool, same strip, same assertion, same message.
     for (const n of WEEK_NOTES) {
       const text = typeof n.text === 'function' ? n.text(homeWeek({ birthdayAge: 15 })) : n.text
       const narration = text.replace(/"[^"]*"/g, ' ').toLowerCase()

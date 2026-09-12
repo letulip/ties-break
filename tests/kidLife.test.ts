@@ -18,6 +18,8 @@
 // instrument for it: the design's cells are `white-space: nowrap`, so a line that outgrows
 // TILE_LINE_MAX is silently truncated on the screen. Every line the module can produce is swept.
 import { describe, it, expect } from 'vitest'
+// ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked loop must be able to pass a beat.
+import { drainLifeBeats } from './helpers/career'
 import { readFileSync } from 'node:fs'
 import {
   buildKidLife,
@@ -422,6 +424,11 @@ describe('a real career', () => {
       // spins on the same week for ever. Answered 'push' so the career under test keeps training as
       // planned and nothing else about it moves.
       if (pendingKnock(world)) decideKnock(world, 'push')
+      // ⚠ v74 T8: ...AND SO DOES A LIFE BEAT, on the identical contract – tier-1 small talk raises an
+      // answerable row from week 0, and without this the loop stalled and the age assertion below
+      // read 13 instead of 17. `drainLifeBeats` answers with the option priced ZERO, and no tile this
+      // suite is about can be reached by a `bond` write in any case.
+      drainLifeBeats(world)
       // ⚠ v48: ...AND SO DOES THE BIRTHDAY, on the identical contract. Without this the career never
       // got past its first one and the age assertion below read 14 instead of 17. Whatever the engine
       // offered first: a gift moves no skill, no condition, no kit and no money, so it cannot reach

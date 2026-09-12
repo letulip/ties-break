@@ -172,7 +172,20 @@ describe('the art matrix is complete on disk', () => {
     for (const e of EMOTIONS) expect(hasCrop(e), `${e} should be croppable`).toBe(true)
     // 3. the ART side's own spelling of the same fact (faceRects, which the cutter script reads)
     //    cannot drift from the type union – add a painting-only face to one and this fails.
-    expect(PAINTING_ONLY_FACES).toEqual(['rehab'])
+    //
+    // ⚠ RE-AIMED BY T14, AND THE DRIFT GUARD IS THE HALF THAT SURVIVES. This was `toEqual(['rehab'])`,
+    // i.e. the two spellings are EQUAL – true while every painting belonged to a band. `graduated`
+    // is the first that does not: ONE file (`adult-graduated`), no band, no emotion, deliberately
+    // NOT a `PortraitEmotion` member because a member would let `portraitUrl` build four filenames
+    // that are not on disk (the type's own note says so, and tests/wave3-graduated-portrait.test.ts
+    // measures it). It is still painting-only in the sense this list is FOR – the cutter must skip
+    // it – so the claim is now containment (every painting-only face of the union is here: add one
+    // and this fails, exactly as before) plus the literal list, so a third arrival is still a
+    // deliberate edit rather than a silent one.
+    for (const e of PAINTED.filter((f) => !(EMOTIONS as PortraitEmotion[]).includes(f))) {
+      expect(PAINTING_ONLY_FACES, `${e} is painting-only in the union and must be on the cutter's skip list`).toContain(e)
+    }
+    expect([...PAINTING_ONLY_FACES].sort()).toEqual(['graduated', 'rehab'])
   })
 })
 

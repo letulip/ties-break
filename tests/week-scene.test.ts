@@ -115,6 +115,8 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   vacationPackageId: null,
   // ⭐ ROUND-21 #2: he stayed home, which is what every fixture in this file was written about.
   coachTravelled: false,
+  // ⭐ v74 T6 – nobody has been mentioned to this parent; see `DiaryWorldView.partnerKnown`.
+  partnerKnown: false,
   trainPct: 75,
   knockChoice: null,
   birthdayAge: null,

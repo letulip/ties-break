@@ -78,8 +78,6 @@ import {
   enterEvent,
   revealTournamentRound,
   closeTournament,
-  answerLifeBeat,
-  pendingLifeBeat,
 } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { decodeExportFile, encodeExportFile, compressWorld, decompressWorld } from '../src/engine/saveCodec'
@@ -91,6 +89,7 @@ import { resumeMain, type Rng } from '../src/engine/rng'
 import { KID_ID } from '../src/engine/world/constants'
 import type { WorldState } from '../src/engine/world'
 import type { CollegeTier } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 const args = process.argv.slice(2)
 const strOf = (n: string): string | null => {
@@ -263,7 +262,7 @@ async function walkCollege(
 ): Promise<Health> {
   let { world, rng } = armFrom(at)
   if (clearEntries) world.entries = []
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  drainLifeBeats(world)
   answerFork(world, 'college', tier)
   // ROUND 24 #5: the answer reserves and the freeze starts at the September departure – the gap is
   // ticked plainly here (the reveal of a gap entry is closed like any other), which is itself the
@@ -340,7 +339,7 @@ function bookAnEntryInsideTheFreeze(world: WorldState, weeksOut: number): string
 function walkWithStaleEntry(at: AtFork, weeksOut: number, finishReveal: boolean): { h: Health; entry: string | null } {
   const { world, rng } = armFrom(at)
   const entry = bookAnEntryInsideTheFreeze(world, weeksOut)
-  if (pendingLifeBeat(world)) answerLifeBeat(world, 'listen')
+  drainLifeBeats(world)
   answerFork(world, 'college', undefined)
   for (let y = 0; y < 16 && world.ending?.type === 'college'; y++) {
     resumeFromCollege(world, rng)

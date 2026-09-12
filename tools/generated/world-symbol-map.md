@@ -2,25 +2,25 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,357 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,403 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-417 exported names across 48 owning modules.
+445 exported names across 49 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 41 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 16 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
@@ -50,6 +50,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
+| `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
@@ -89,6 +90,52 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 - `skipTournament` – `src/engine/world.ts`
 - `STARTING_FUNDS_CENTS` – `src/engine/world.ts`
 - `tickWeek` – `src/engine/world.ts`
+
+### `src/engine/world/lifeBeat.ts`
+
+THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
+
+- `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `arrivalEligible` – `src/engine/world/lifeBeat.ts`
+- `arrivalHazardFor` – `src/engine/world/lifeBeat.ts`
+- `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
+- `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
+- `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
+- `drawForkWant` – `src/engine/world/lifeBeat.ts`
+- `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
+- `drawRawLag` – `src/engine/world/lifeBeat.ts`
+- `FORK_STOP_DRIVERS` – `src/engine/world/lifeBeat.ts`
+- `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
+- `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
+- `FORK_WANTS` – `src/engine/world/lifeBeat.ts`
+- `forkStandingOf` – `src/engine/world/lifeBeat.ts`
+- `ForkStopDriver` *(type)* – `src/engine/world/lifeBeat.ts`
+- `forkStopDriverOf` – `src/engine/world/lifeBeat.ts`
+- `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
+- `forkWantOf` – `src/engine/world/lifeBeat.ts`
+- `forkWantWeights` – `src/engine/world/lifeBeat.ts`
+- `LIFE_BEAT_BLOCKING` – `src/engine/world/lifeBeat.ts`
+- `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
+- `LifeBeatAnswer` *(type)* – `src/engine/world/lifeBeat.ts`
+- `lifeBeatHeading` – `src/engine/world/lifeBeat.ts`
+- `lifeBeatListenFollowUp` – `src/engine/world/lifeBeat.ts`
+- `lifeBeatOptionsFor` – `src/engine/world/lifeBeat.ts`
+- `lifeBeatSaid` – `src/engine/world/lifeBeat.ts`
+- `lifeLogOf` – `src/engine/world/lifeBeat.ts`
+- `liveSoftBeat` – `src/engine/world/lifeBeat.ts`
+- `PARTNER_WANTS` – `src/engine/world/lifeBeat.ts`
+- `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
+- `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `rollArrival` – `src/engine/world/lifeBeat.ts`
+- `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
+- `shaveLag` – `src/engine/world/lifeBeat.ts`
+- `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
+- `smallTalkChanceFor` – `src/engine/world/lifeBeat.ts`
+- `smallTalkEligible` – `src/engine/world/lifeBeat.ts`
+- `SmallTalkSubject` *(type)* – `src/engine/world/lifeBeat.ts`
+- `smallTalkSubjectFor` – `src/engine/world/lifeBeat.ts`
+- `smallTalkThisSeason` – `src/engine/world/lifeBeat.ts`
 
 ### `src/engine/world/college.ts`
 
@@ -237,27 +284,6 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapRefusalDetail` – `src/engine/world/entryCaps.ts`
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
-
-### `src/engine/world/lifeBeat.ts`
-
-THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
-
-- `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
-- `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
-- `drawForkWant` – `src/engine/world/lifeBeat.ts`
-- `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
-- `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
-- `FORK_WANTS` – `src/engine/world/lifeBeat.ts`
-- `forkStandingOf` – `src/engine/world/lifeBeat.ts`
-- `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
-- `forkWantOf` – `src/engine/world/lifeBeat.ts`
-- `forkWantWeights` – `src/engine/world/lifeBeat.ts`
-- `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
-- `lifeBeatListenFollowUp` – `src/engine/world/lifeBeat.ts`
-- `lifeBeatSaid` – `src/engine/world/lifeBeat.ts`
-- `lifeLogOf` – `src/engine/world/lifeBeat.ts`
-- `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
-- `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 
 ### `src/engine/world/masseur.ts`
 
@@ -638,6 +664,14 @@ HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are n
 - `announceCampusInterlude` – `src/engine/world/fieldNews.ts`
 - `campusDigestLine` – `src/engine/world/fieldNews.ts`
 - `FIELD_NEWS` – `src/engine/world/fieldNews.ts`
+
+### `src/engine/world/loveEpisodes.ts`
+
+THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now.
+
+- `activeEpisode` – `src/engine/world/loveEpisodes.ts`
+- `knownPartner` – `src/engine/world/loveEpisodes.ts`
+- `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
 
 ### `src/engine/world/phaseObligations.ts`
 

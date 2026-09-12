@@ -35,6 +35,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   createWorld,
+  decideKnock,
+  pendingKnock,
   tickWeek,
   enterEvent,
   skipTournament,
@@ -122,6 +124,56 @@ function legacyBestFinish(world: WorldState, from: number, to: number): number |
 /** A GREEDY PROFESSIONAL CAREER: the strongest rung she is admitted to, one entry a week, funds kept
  *  solvent so the wallet gate is never the reason she stays home. Same idiom as tools/boredom-guard.ts,
  *  and the only way to reach professional VOLUME - which is the whole point of this file. */
+/** ⚠⚠ ADDED BY WAVE 3's T16, AND IT IS THE GREEDY POLICY THIS FILE ALREADY DECLARES.
+ *
+ *  WHY IT IS NEEDED. Since T16 a knock on a REPEATED part or on a `'warn'` clearance week reaches the
+ *  parent even with a coach (`world/knock.ts` `knockNeedsTheParent`, the owner's ruling 11.09). ⚠ T16b
+ *  (12.09) took those two CLASSES out again and made `'warn'` a widener of the doubt zone, so fewer
+ *  knocks escalate than under T16 – but this walker still needs the answer, and for a reason that
+ *  predates both: a SELF-COACHED career escalates every knock it ever has, and a hired one still
+ *  escalates the blurry calls. The repair stands; only the rate it was provoked by has moved. An
+ *  undecided knock NEVER expires – it blocks time instead – and `rollKnock` refuses to raise another
+ *  while one is open, so a walker that ticks straight past it spends the rest of the career in a
+ *  state THE GAME FORBIDS: `advanceWeeks` halts on `pendingKnock` and the player cannot move until he
+ *  answers. This career went red exactly there, on «she never reached a W-dominant season at all».
+ *
+ *  ⚠⚠ AND `push` IS NOT PICKED FOR ITS RESULT – IT IS THE ONLY ANSWER UNDER WHICH THIS FILE STILL
+ *  MEASURES ITS OWN SUBJECT, which is the argument the header above makes twice: «the only way to
+ *  reach professional VOLUME – which is the whole point of this file», and «the regime this file
+ *  measures begins around week 430». Resting knocks spends that volume. MEASURED, same walk, 520
+ *  weeks, the two candidate policies:
+ *
+ *      answer                    seasons played   decayed   halved
+ *      `coachKnockCall`'s call          6            3         0    – ends by injury, week ~307
+ *      `'push'` (this one)             10            7         4    – reaches the saturated regime
+ *
+ *  The first never gets past week 430, so the caps this file exists to exercise never engage and two
+ *  of its three witnesses go quiet. That is a fixture that stopped measuring, not a stricter one. ⭐
+ *  AND NOT ONE ASSERTION IN THIS FILE MOVED for the greedy answer: 12 of 12 green, on the same
+ *  bounds, with the pre-T16 tree reproducing 12 of 12 as well.
+ *
+ *  ⚠ A REST-EVERY-KNOCK WALK WOULD ALSO NEVER PRODUCE CLASS (a) AT ALL – `pushedParts` only records
+ *  parts she was sent back out on – so it could not exercise the routing this repair exists for.
+ *
+ *  ⚠⚠ AND T16b (12.09) INVERTED THAT MEASUREMENT, WHICH IS WHY THE ANSWER BELOW IS NOW `'rest'`. Two
+ *  things changed under it and they compound:
+ *    · THE CLASSES ARE GONE. `knockNeedsTheParent` is the doubt zone and nothing else, so there is no
+ *      «class (a)» left to exercise – the paragraph above is kept as the record of an argument that
+ *      was true while T16 stood, and it no longer applies to anything.
+ *    · WHAT REACHES THE PARENT IS NOW THE HARD CALL, not the routine one. A knock the coach hands
+ *      back is one his own read cannot settle, and greedily pushing exactly those multiplies
+ *      `injuryTau` on the worst bets in the career. MEASURED on this walk, 520 weeks, same seed:
+ *      `'push'` gives **258 matches against this file's own floor of 300**, `saturated` empty, and
+ *      four of the twelve cases red – the fixture had stopped reaching the regime it exists for.
+ *      `'rest'` gives **12 of 12 green** on the same bounds, with nothing else touched.
+ *  ⭐ SO THE RULE THE ORIGINAL NOTE STATES SURVIVES ITS OWN REVERSAL: the answer is picked because it
+ *  is the only one under which this file still measures its own subject, and it is re-measured when
+ *  the escalation model moves rather than carried forward on the last wave's reasoning. */
+function answerTheKnock(world: WorldState): void {
+  if (!pendingKnock(world) || world.ending !== null) return
+  decideKnock(world, 'rest')
+}
+
 function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFacts[] } {
   const world = createWorld(SEED)
   const rng = rngFromSeed(world.seed)
@@ -163,6 +215,7 @@ function buildCareer(): { world: WorldState; weeks: WeekFacts[]; wraps: WrapFact
       }
     }
     tickWeek(world, rng)
+    answerTheKnock(world)
     if (world.pendingTournament) {
       skipTournament(world)
       closeTournament(world)

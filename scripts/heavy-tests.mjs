@@ -183,7 +183,52 @@ export const HEAVY_UNIT_FILES = [
   // INFRASTRUCTURE outcome, and the honest fix is a process, never a raised per-test timeout that
   // hides how long the file really is.
   'tests/birthday-career.test.ts',
+  // ⚠⚠ 12.09 (wave 3, PR #135): `economy` HAD TO BE CUT, AND SO DID `goldenSaves` – SEE THE BLOCK
+  // AGAINST THAT ENTRY AT THE BOTTOM OF THIS LIST. `unit-heavy` died FOUR TIMES on the
+  // all-green-non-zero shape – stalled, retried once by scripts/units.mjs, stalled again, exit 1,
+  // a ~582 s step and a blank annotation. Both files were already alone in their process from this
+  // list, so the FILE was the unit and the file had to be cut, exactly as radar's was on 11.08,
+  // fatigue-bench-policy's on 27.08 and coach-travel-edge's on 31.08. ⚠ The engine did not get
+  // slower – a clean 156-week walk reads the same as main – the files' own work grew.
+  //
+  // ⚠ THE SEAM IS THE BATCH, AND A TOPICAL CUT WOULD NOT HAVE DONE IT. MEASURED SOLO before
+  // anything was touched, one vitest process, `--project unit --reporter=json`, 37 tests in 25.48 s
+  // of test time:
+  //
+  //     ordering (3 batches)          7.93 s      the four behaviour describes, 32 tests   6.57 s
+  //     working  (2 batches)          5.37 s        (the largest single one: 2.04 s)
+  //     middle   (1 batch)            2.71 s
+  //     wealthy  (1 batch)            2.68 s
+  //     the unsponsored precondition  0.22 s      ------------------------------------------------
+  //                                  ------       18.91 s in five cases, 6.57 s in the other 32
+  //
+  // **74 % of the file is FIVE TESTS**, and the cost is linear in batches at ~2.6 s each – a batch
+  // being 16 seeds × 52 weeks of real `tickWeek`. So "calibration versus the sponsor" leaves a file
+  // at three quarters of what already stalled, which is the trade fatigue-bench-policy spent two
+  // weeks proving is not a cut. The seam runs through the SEVEN BATCHES instead: the calibration
+  // describe leaves the file entirely, and `ordering` – the heaviest arm, which re-walks all three
+  // batches, and which the 05.09 review already had as the file's slowest test at 12.7 s quiet /
+  // 21.4 s contended – is separated from the three cells it re-walks. Solo, same invocation, after:
+  //
+  //     economy                       6.85 s   32 tests   the sponsor / gear / bill / need describes
+  //     economy-calibration          10.76 s    4 tests   the three band cells + the precondition
+  //     economy-calibration-ordering  8.00 s    1 test    the ordering cell, 3 batches
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED, as 27.08's cut demands.
+  // 6.85 + 10.76 + 8.00 = 25.61 s against 25.48 s for the file they replaced – seven batches before
+  // and seven after, ~2.6 s each either way, and that sum is the proof no batch went missing. Both
+  // arms were measured BACK TO BACK in one pass at load 3.2-3.7, the A arm restored from HEAD into a
+  // temp path, so the comparison is between the arms and not between two moments.
+  //
+  // ⚠ NOT ONE SEED, HORIZON, BAND OR ASSERTION MOVED, and no test name changed either: all 37 full
+  // names are a BYTE-IDENTICAL MULTISET to the one file's, checked mechanically rather than by eye,
+  // because both calibration files keep the ORIGINAL describe name. tests/economyCalibration.ts
+  // holds the batch, the walk and the owner's frozen bands, so `seasonBurnDollars`' exclusion
+  // arithmetic – the one piece that must never have two truths – is imported by both halves rather
+  // than copied into each.
   'tests/economy.test.ts',
+  'tests/economy-calibration.test.ts',
+  'tests/economy-calibration-ordering.test.ts',
   'tests/radar.test.ts',
   'tests/radar-read.test.ts',
   'tests/radar-training.test.ts',
@@ -212,9 +257,11 @@ export const HEAVY_UNIT_FILES = [
   // it. Measured both ways before anything moved, in-pool -> solo:
   //
   //     college-birthday    77.7 -> 27      college-second-act  42.0 -> 14
+  //       <- cut in two on 12.09; this row is the record of the reading, not of a file that still
+  //          measures it. See the block against the entries below.
   //     coach-travel-edge   59.9 -> 21      goldenSaves         41.4 -> 14
-  //       <- cut into three on 31.08; this row is the record of the reading, not of a file that
-  //          still measures it. See the block against the entries below.
+  //       <- cut into three on 31.08 and the frozen half cut again on 12.09; this row is the record
+  //          of the reading, not of a file that still measures it. See the blocks below.
   //     season-mirror       45.8 -> 16      world-trio          36.7 -> 13
   //     viz/commentary      42.8 -> 14      coach-load          36.2 -> 13
   //     blocking-overlay    42.3 -> 15      round23-kid-share   33.8 -> 13
@@ -242,7 +289,53 @@ export const HEAVY_UNIT_FILES = [
   // not available to it. Solo on CI it is ~28 s of the 60 s window, comparable to `endings-bench`'s
   // ~23 s two entries up, so it clears both halves of the bar: a regression test by its own header,
   // and real headroom under birpc's wall.
+  //
+  // ⚠⚠ 12.09, THE FIFTH RED `unit-heavy` (wave 3, PR #135): `college-birthday` HAD TO BE CUT, AND SO
+  // DID `coach-travel-edge` – see the block against that entry below. The FIRST cut of this PR took
+  // `goldenSaves` and `economy` out on the same shape, and the job came back red at the same ~10
+  // minute mark, which is the finding: the staller was never those two. All 18 entries of this list
+  // were then measured SOLO, one vitest process each, `--project unit --reporter=json`, sequentially
+  // on a quiet machine (load 2.1-4.5, ambient recorded per file), and only two crossed:
+  //
+  //     coach-travel-edge  29.78 / 29.69 / 29.69 s  -> x2.24 = 66.5 s   OVER the 60 s window
+  //     college-birthday   26.41 / 26.05 / 26.10 s  -> x2.24 = 58.4 s   AT it
+  //
+  // Under 0.4 s of spread across three runs each. ⚠ AND THE TWO BEHIND THEM ARE NAMED RATHER THAN
+  // CUT, because the bar is a measurement and not a mood: `coach-travel-edge-older-schemas` reads
+  // 19.47-19.80 s (43.6 s, 73 % of the window) and `ladder-floor` 19.36-19.69 s (43.6 s). Both need
+  // a 1.38x unlucky stretch to stall and neither can have caused this one. Where their cuts go, when
+  // they come, is written into their own headers so nobody re-derives it under pressure.
+  //
+  // ⚠ THE SEAM IS THE OWNER'S OWN SECOND PASS, AND THE TOPICAL SEAM WOULD NOT HAVE MOVED THE NUMBER.
+  // MEASURED per describe on the same runs, 18 tests / 26.05 s:
+  //
+  //     ROUND 26 #4 – a college wish may not assume a wallet   21.05 s    8 cases
+  //     the other four describes                                5.37 s   10 cases
+  //
+  // **79.7 % of the file is ONE describe**, so lifting the four cheap describes out buys 5.4 s of
+  // the 58.4 s that stalls and leaves a file at four fifths of what already stalled – the trade
+  // fatigue-bench-policy spent two weeks proving is not a cut. The seam runs THROUGH that describe,
+  // along the boundary it already draws itself: its own banner, «ROUND 26 #4, SECOND PASS – THE WISH
+  // BESIDE THE BICYCLE IS ABOUT THE BICYCLE», where the owner corrected the first pass. The two
+  // halves cost 10.53 s each, to the hundredth. Solo, same invocation, after:
+  //
+  //     college-birthday        15.67 s   14 cases   the four walked describes + the FIRST pass
+  //     college-birthday-wish   10.78 s    4 cases   the SECOND pass
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED, as 27.08's cut demands – except
+  // that here there is no shortfall to explain and that is the check passing, not skipping.
+  // 15.67 + 10.78 = 26.45 s against 26.05 s for the file they replaced: 18 cases before and 18
+  // after, every one of them walking its own careers, so nothing could have gone missing without the
+  // sum FALLING. The +0.40 s is the JIT warm-up the first case of a file pays, now paid twice.
+  //
+  // ⚠ NOT ONE SEED, WEEK COUNT, WALLET OR ASSERTION MOVED, and no test name changed either: all 18
+  // full names are a BYTE-IDENTICAL MULTISET to the one file's, checked mechanically rather than by
+  // eye, because the new file keeps the ORIGINAL describe name. tests/collegeBirthdayFixtures.ts
+  // holds the walk to the fork, the presses through the freeze and the four wordings, so
+  // `openedAtCollege`'s thumb on the scale – the one piece that must never have two truths – is
+  // imported by both halves rather than copied into each.
   'tests/college-birthday.test.ts',
+  'tests/college-birthday-wish.test.ts',
   // ⚠⚠ 31.08: `coach-travel-edge` HAD TO BE CUT, AND THE HONEST SEAM WAS NOT THE ONE THAT MOVED THE
   // NUMBER. A process of its own stopped being enough on CI – `43 passed (43)`,
   // `Test Files 1 passed (1)`, then ONE unhandled `Timeout calling "onTaskUpdate"`, exit 1, at
@@ -285,7 +378,40 @@ export const HEAVY_UNIT_FILES = [
   // 1.1 s at the pool's measured x2.9, an order of magnitude under this list's ~32 s in-pool line,
   // so promoting it would cost the gate a vitest start to serialise nothing. The bar is cost, and
   // it does not meet it.
+  //
+  // ⚠⚠ AND ON 12.09 THE LADDER WENT BACK OVER THE WALL AND WAS CUT AGAIN – the fifth red
+  // `unit-heavy` of wave 3's PR #135, and the file that actually caused it. 29.78 / 29.69 / 29.69 s
+  // solo across three runs, which is **66.5 s** at this file's own 2.24x: over birpc's 60 s window,
+  // not near it. See the college-birthday block above for how the whole list was measured.
+  //
+  // ⚠ IT GREW WITHOUT GAINING A TEST IT DID NOT EARN, by two multiplications at once, and that is
+  // the part worth carrying. (1) THE LADDER GREW: v72, v73 and v74 – the private life's three waves –
+  // took this file from 10 cases / 25 walks to 17 / 46. (2) EVERY WALK GOT DEARER: T16b's widener
+  // and the shared knock drain (`tools/_knocks.ts`) mean a frozen career no longer sits on an
+  // undecided knock for 39-106 weeks of its 156, so arrivals go 4->6, 3->6 and 3->7 and the fixtures
+  // module says it in as many words – «these fixtures now walk MORE game than they did, not less».
+  // Per walk, 0.51 s -> 0.65 s. ⚠ `-older-schemas` gained (2) WITHOUT (1) and without its own file
+  // being touched at all, which is why a stale row is worse than none here.
+  //
+  // ⚠ THE SEAM IS THE LADDER AGAIN AND IT IS THE ONLY ONE THAT MOVES THE NUMBER. All 17 cases sit in
+  // ONE describe and the per-case cost is FLAT – every three-walk rung reads 1.89-2.09 s, the three
+  // live-hash cases 1.26 / 0.67 / 0.62 s – so there is no hot case to lift and no topical seam to
+  // find. The cost IS the walk count, which makes the split arithmetic. Solo, same invocation:
+  //
+  //     coach-travel-edge               14.26 s    9 cases · 22 walks   live hashes + v71 – v74
+  //     coach-travel-edge-mid-schemas   15.71 s    8 cases · 24 walks   v69 – v62
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED. 14.26 + 15.71 = 29.97 s against
+  // 29.69 s for the file they replaced – 46 career walks before and 46 after, ~0.65 s each either
+  // way, and that sum is the proof no walk went missing. The +0.28 s is the JIT warm-up the first
+  // case of a file pays, now paid twice; the wall clock costs a further ~2 s, one vitest start.
+  //
+  // ⚠ NOT ONE SEED, HORIZON, CONSTANT OR ASSERTION MOVED, and no test name changed either: all 17
+  // full names are a BYTE-IDENTICAL MULTISET to the one file's, because both files keep the ORIGINAL
+  // describe name. The eighteen constants are untouched in tests/coachTravelEdgeFixtures.ts, which
+  // all three frozen files import rather than copy.
   'tests/coach-travel-edge.test.ts',
+  'tests/coach-travel-edge-mid-schemas.test.ts',
   'tests/coach-travel-edge-older-schemas.test.ts',
   // ⚠⚠ AN ORPHANED COMMENT LIVED HERE AND IT WAS MINE (corrected 27.08). It read «THE FROZEN MAIN
   // CAPTURE LIVES HERE NOW» – true when twelve files were promoted on 26.08, false four hours later
@@ -306,7 +432,53 @@ export const HEAVY_UNIT_FILES = [
   // distinction matters. The wall is a 60 s reporter RPC; this is vitest's own 20 s per-test ceiling,
   // reached because the corpus walks 68 golden saves while 170 other files share the cores. Same
   // remedy, different mechanism, and a later reader must not conclude the wall moved.
+  //
+  // ⚠⚠ AND ON 12.09 THE WALL ARRIVED TOO, WHICH IS THE SECOND MECHANISM CATCHING THE SAME FILE. The
+  // block above is the record of a per-TEST ceiling; this is birpc's per-SHARD one, and it took
+  // `unit-heavy` down four times on wave 3's PR #135 (see the economy block near the top of this
+  // list for the shape – both files were in that job, and both had grown past the wall). 68 golden
+  // saves is 75 now, and `migrateSave` runs the WHOLE ladder on each, so this file grew TWICE with
+  // every wave: one more fixture, and one more step in every other fixture's chain. v74 alone added
+  // a 26,838-line golden to a walk that happens three times over.
+  //
+  // ⚠ THREE WALKS, AND THAT IS THE WHOLE COST AND THE WHOLE SEAM. MEASURED SOLO before anything was
+  // touched, one vitest process, `--project unit --reporter=json`, 228 tests in 19.82 s of test time:
+  //
+  //     the per-fixture invariants walk      6.82 s   75 cases
+  //     the v61 college-quote sweep          6.52 s   75 cases
+  //     the v62 peak-physical sweep          6.48 s   75 cases
+  //     the corpus scan + the two guards     0.00 s    3 cases   <- free, and they stay put
+  //
+  // NEAR-EQUAL THIRDS, and nothing else in the file costs a millisecond. The 05.09 review priced the
+  // same shape independently at 20.4 s of 31.0 s for the two sweeps (P-14,
+  // docs/review-principles-2026-09-05/04-performance.md), so this is a reading reproduced twice. One
+  // walk per file is therefore the only seam that divides the number three ways; any seam leaving
+  // two walks together leaves a file at two thirds of what already stalled. Solo, same invocation,
+  // after the cut:
+  //
+  //     goldenSaves                          6.79 s   77 cases   the scan + the invariants walk
+  //     goldenSaves-quote                    6.74 s   76 cases   v61, + its anti-vacuity floor
+  //     goldenSaves-peak                     6.84 s   75 cases   v62
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED. 6.79 + 6.74 + 6.84 = 20.37 s
+  // against 19.82 s for the file they replaced – 225 `migrateSave` walks before and 225 after – and
+  // that sum is the proof no walk went missing. Both arms were measured BACK TO BACK in one pass at
+  // load 3.2-3.7, the A arm restored from HEAD into a temp path, so the comparison is between the
+  // arms and not between two moments.
+  //
+  // ⚠ NOT ONE FIXTURE, ASSERTION OR TEST NAME MOVED: all 228 full names are a BYTE-IDENTICAL
+  // MULTISET to the one file's, checked mechanically rather than by eye, because all three files
+  // keep the ORIGINAL describe name `golden saves corpus`. Nothing under tests/fixtures/ was touched.
+  //
+  // ⚠⚠ AND THE ONE-FIXTURE-PER-VERSION LAW STAYED WHOLE, IN `goldenSaves.test.ts`. CLAUDE.md's
+  // invariant 3 names that path, and its two cases must see the WHOLE of tests/fixtures/saves/ in a
+  // single sweep. They cost 0.00 s, so splitting them would have divided a product guarantee across
+  // processes to save nothing. tests/goldenSavesCorpus.ts reads the directory ONCE and the three
+  // files import it – three copies of that `readdirSync` + filter + sort is exactly the
+  // hand-maintained second copy this module exists to make impossible.
   'tests/goldenSaves.test.ts',
+  'tests/goldenSaves-quote.test.ts',
+  'tests/goldenSaves-peak.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

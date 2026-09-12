@@ -392,8 +392,9 @@ openness – ~70% toward her own register (who-she-is §4). Fixture `v74.json`.
 
 **Feed-first, possibly late (§0.1; lag re-cut 09.09 by openness):** at `sinceWeek` the TRUTH
 moves – the slot fills, the spirit baseline lifts +5 – and the parent is told nothing. The feed
-lag is drawn once on `seed:life:partner:<sinceWeek>`, **by openness: open – 0 with p 0.45, else
-uniform 1..5; private – 0 with p 0.10, else uniform 2..12** – and the bond band SHAVES a private
+lag is drawn once on `seed:life:partner:<sinceWeek>`, **by openness: open – 0 with p 0.70 (⭐
+moved 11.09 on the census miss – who-she-is §4 wins on drift), else
+uniform 1..4; private – 0 with p 0.10, else uniform 2..12** – and the bond band SHAVES a private
 girl's lag toward the open distribution (who-she-is §2a channel 1: she trusts THIS parent). The
 DELIVERY follows §5b's channel rule: at `close` bond the news arrives as her own dialog, at
 `steady` a mention, at `strained`/`cold` the feed alone – late, flat, or never in her voice. An
@@ -590,7 +591,9 @@ recommendation (open question 5 is closed below).
 > «Свадьбы предлагаю с 22+ уже делать. Романов может быть как несколько, так и один, как мне
 > кажется, это тоже будет сильно»
 
-So step 6's latch carries its own age gate – **no marriage before 22** – beside step 3's 16, and
+So step 6's latch carries its own age gate – ⭐ **no marriage before 23** since 11.09 (his 23.08
+«с 22+» superseded by his own word on the art-driven gate: the bride is painted at the `adult`
+portrait stage only, «свадьба на 23+ – мне вполне ок») – beside step 3's 16, and
 the slot's life between those gates may CYCLE (arrival → end → cooldown → someone new) or HOLD
 (one long romance carried into the latch). Both are his design, not edge cases: step 4's hazards
 already produce both (median duration ≈ 57 weeks, ~28% of relationships reach year two), and no
@@ -612,7 +615,28 @@ the recommendation is a `kidAgeExact ≥ 23` gate, and the junior years never se
 The funeral itself is part of the beat – «с соответствующими эффектами» – not a feed line: its own
 shock kind on step 8's asymmetric, longer curve, and everything §3e already holds still stands:
 deliberately NOT on the attachment machinery, it can reach the parent, it ships behind an off
-switch (open question 1 must be answered first), last, carefully.
+switch (open question 1 must be answered first), last, carefully. ⭐ The funeral painting already
+exists and is `adult`-only (`fem-euro-brunnet-adult-funeral.webp`, found unwired 11.09) – the
+asset enforces this gate by construction.
+
+⭐ **THE HAZARD PROPOSAL (11.09 – his ask: «что насчёт частоты похорон?»; numbers for the bench,
+none ruled).** ⚠ The hazard is TEMPERAMENT-FREE, and that is a design law, not a default: a
+death is the world's dice, never her personality's – modulating FREQUENCY by who she is would
+be the layer's one true unfairness. Only the RESPONSE is hers: intensity prices the depth and
+the duration (the −22/−34 pair's sibling on a longer, asymmetric curve), openness prices the
+expression (private grieves almost silently – the face and the funeral frame carry it; open
+speaks). Proposed numbers: **0.08%/week from the adult rung** (≈4% per season; over a 23→35
+tail E ≈ 0.5 – roughly 40% of careers meet one loss, ~8% a second), spacing **≥ 156 weeks**,
+hard cap **2 per career**, one uniform on `seed:life:loss:<week>` (named now, created at
+step 8, zero draws while ineligible). The realised cost rides a benched pp-corridor like the
+break-up's, under the ±1.5 pp fairness law read on the RESPONSE arms.
+
+⚠ **The kin-name collision, found 11.09 and left as step 8's opening constraint**: the fridge
+pool already NAMES a grandmother in several unlicensed domestic lines (including the cold
+pool's «Your grandmother turned eighty. She asked.»). Step 8's v1 therefore keeps the deceased
+an UNNAMED relative in both mechanics and copy – or licenses every named-kin line off a
+live-kin fact first. Shipping a named death against an unlicensed «Grandma called» scrap is
+exactly the contradiction the honesty law exists to prevent.
 
 ---
 

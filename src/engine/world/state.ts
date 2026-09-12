@@ -37,6 +37,7 @@ import type {
   KnockRecord,
   KitState,
   LifeBeatRecord,
+  LoveEpisode,
   Milestone,
   Offer,
   PenaltyRow,
@@ -364,7 +365,16 @@ import type { AcademySupport } from '../academy'
 // were none to live. Full move: this constant, the v72 -> v73 step in migrations.ts,
 // tests/fixtures/saves/v73.json, and docs/context/saves-and-worker.md's mechanically-checked
 // schema sentence.
-export const SAVE_SCHEMA_VERSION = 73
+// ⭐⭐⭐ v74 – THE PRIVATE LIFE, WAVE 3: `loveEpisodes`, SOMEONE EXISTS. World `+loveEpisodes` – one
+// append-only row per attachment, never pruned, and the ACTIVE one is DERIVED from the list rather
+// than stored beside it (`activeEpisode`, world/lifeBeat.ts: the last row with `endedWeek === null`).
+// A romance that begins and ends before the parent knew must survive save and reload intact and
+// surface later as one honest late row – the 09.09 re-cut, review find #5 – which a single nullable
+// slot would have overwritten out of existence. The back-fill is `[]` and it is EXACTLY TRUE in v73's
+// own sense: a career that predates the layer has lived no attachments, because there were none to
+// live. Full move: this constant, the v73 -> v74 step in migrations.ts, tests/fixtures/saves/v74.json,
+// and docs/context/saves-and-worker.md's mechanically-checked schema sentence.
+export const SAVE_SCHEMA_VERSION = 74
 
 
 
@@ -941,6 +951,25 @@ export interface WorldState {
    *  survives as the courtesy `birthdayHistory` extends to probe worlds hand-built in tests, which
    *  are not saves and predate every field they do not set. */
   lifeLog: LifeBeatRecord[]
+  /** ⭐⭐⭐ v74 – EVERY ATTACHMENT THIS CAREER HAS LIVED, append-only and never pruned (the private
+   *  life, wave 3; `docs/plans/the-private-life-build.md` §4 step 3, constants from
+   *  `docs/specs/who-she-is-2026-09.md` §4). A handful of rows per career at most, which is
+   *  `world.birthdays`' own argument for keeping all of them.
+   *
+   *  ⚠⚠ THE ACTIVE ATTACHMENT IS DERIVED AND NEVER STORED – the last row with `endedWeek === null`,
+   *  read through `activeEpisode` (world/lifeBeat.ts) and through nothing else. A nullable «current
+   *  partner» slot beside this list would be a second source of truth for one fact, which is the
+   *  defect `lifeLog`'s own missing-`pending`-boolean note names one field up.
+   *
+   *  ⚠ EPISODES RATHER THAN A SLOT, for the 09.09 re-cut's reason (review find #5): a romance that
+   *  begins AND ENDS before the parent knew must survive save and reload intact and surface later as
+   *  one honest late row. A slot would have overwritten it the next time someone appeared.
+   *
+   *  ⚠ REQUIRED FROM THE DAY IT ARRIVES, unlike `lifeLog` above – there is no wire half to build
+   *  against this time, so the field ships with its migration and every save carries it. Wave 3
+   *  never writes `endedWeek`; wave 4 does, and the cooldown that reads it lands now so that wave
+   *  changes nothing here. */
+  loveEpisodes: LoveEpisode[]
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

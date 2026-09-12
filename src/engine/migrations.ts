@@ -2480,6 +2480,45 @@ export function migrateSave(raw: unknown): WorldState {
     v = 73
   }
 
+  // ⭐⭐⭐ v73 -> v74 – THE PRIVATE LIFE, WAVE 3: SOMEONE EXISTS.
+  //
+  // World `+loveEpisodes` – one append-only row per attachment, never pruned
+  // (`{id, sinceWeek, endedWeek, knownWeek, wants, partnerId}`). The ACTIVE attachment is DERIVED
+  // from the list and never stored beside it – the last row with `endedWeek === null`, which is
+  // `activeEpisode` in world/lifeBeat.ts – so this step has exactly one key to write, for the same
+  // reason the v73 step above had exactly one: a second source of truth for one fact is a desync
+  // waiting for the first migration that touches one half and not the other.
+  //
+  // ⚠⚠ THE BACK-FILL IS EMPTY AND IT IS EXACTLY TRUE, in v73's own sense one rung down rather than
+  // in v29's and v31's. Those two wrote nothing because the evidence had been PRUNED away and a
+  // confident wrong answer is worse than a partial one; v26 and v32 wrote nothing because
+  // fabricating rows would mean fabricating DECISIONS the player never made. Here, again, the reason
+  // is the simplest one available: **a career that predates this layer has lived no attachments,
+  // because there were none to live.** Nothing is lost, nothing is guessed, and zero is not a
+  // placeholder for the true value – it IS the true value.
+  //
+  // ⚠ AND AN EMPTY LIST IS NOT A DEFECT TO BE REPAIRED LATER. «No romance at all» and «never
+  // latches» are first-class outcomes of wave 3's arrival hazard rather than failures, so a migrated
+  // career carrying `[]` for the rest of its life is a life this career genuinely lived. Nothing
+  // downstream may read an empty list as «not yet computed».
+  //
+  // ⚠ A MIGRATED CAREER IS NOT RETRO-FITTED WITH A PAST, which is this step's version of v73's
+  // fork-opinion note. The arrival hazard runs on the tick (`seed:life:arrival:<week>`) and every
+  // tick a migrated career has already taken happened before the hazard existed; so she arrives at
+  // this version with nobody, and the first person who can appear appears on her next eligible week
+  // under the same roll every fresh career gets. Inventing a partner for the weeks behind her would
+  // be inventing the one thing this layer exists to let the player live through.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE: one `??=` on a key nothing else in the chain touches, gated on
+  // `v === 73`, writing a literal. No sub-stream is reached at all on this path, so MAIN cannot move
+  // and the frozen capture (41550 / e6b0c709) is untouched by construction. Full move:
+  // `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v74.json, and the
+  // mechanically-checked schema sentence in docs/context/saves-and-worker.md.
+  if (v === 73) {
+    save.loveEpisodes ??= []
+    v = 74
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

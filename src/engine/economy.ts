@@ -3361,13 +3361,24 @@ export const ECONOMY = {
     /** The exam row's own gate: an exam week only costs her when the plan is still grinding through
      *  it (`plan.train >= 85`, which is the `grind` preset). A light exam fortnight costs nothing. */
     examTrainFloor: 85,
-    /** ⚠⚠ DECLARED AND DELIBERATELY NOT READ – THE ONE CONSTANT IN THIS FILE WITH NO READER, and it
-     *  is a wave-1 decision rather than an oversight. §1b's effective baseline is `baseline + this`
-     *  while the attachment slot is full, and THE ATTACHMENT SLOT DOES NOT EXIST UNTIL WAVE 3: there
-     *  is nothing to read it off. It is written down now because the number is HIS (a lift that
-     *  «lifts a little and stays lifted» is a baseline shift, not a bump) and because the wave that
-     *  builds the slot must not get to invent it. `tests/spirit.test.ts` pins the absence of a reader,
-     *  so the day wave 3 wires it the pin says so. */
+    /** ⭐⭐ THE EFFECTIVE BASELINE'S LIFT – `accrueSpirit`'s weekly return walks toward
+     *  `baseline + this` while the attachment slot is full (§1b). WIRED BY WAVE 3's T4 (11.09), and
+     *  the note it replaces is worth keeping in one line because it was the point: this was DECLARED
+     *  IN WAVE 1 AND READ BY NOBODY, deliberately, because the slot did not exist yet – written down
+     *  early so that the number stayed HIS and the wave that built the slot could not invent it.
+     *
+     *  ⚠ IT IS A TARGET AND NOT A BUMP, which is the whole of «lifts a little and stays lifted»: she
+     *  arrives at 75 over ~2 weeks through the standing return rule and leaves the same way. There is
+     *  no row for it in `perturb` above and there must never be one.
+     *
+     *  ⚠ AND IT STAYS IN `spirit` RATHER THAN MOVING TO `life` BELOW. The private life merely
+     *  SWITCHES this on; the number is spirit's own, it is read by `accrueSpirit` and by nothing
+     *  else, and `baseline + attachmentLift < mood.glowingFrom` is a relation between three numbers
+     *  that all live here (pinned in tests/spirit.test.ts – it is the reason the value is 5).
+     *
+     *  ⚠ THE READER IS PINNED, NOT JUST THE VALUE. `tests/spirit.test.ts` used to assert this
+     *  constant had NO reader; T4 re-aimed that guard rather than deleting it, and it now asserts the
+     *  read happens in `accrueSpirit`'s return target and in no other place in `src/`. */
     attachmentLift: 5,
     /** ⭐⭐ THE MOOD LADDER'S FOUR CUT POINTS – RULED 09.09, and every one of them is anchored to a
      *  MECHANICAL FACT rather than to taste. The five words they divide are the owner's
@@ -3483,6 +3494,50 @@ export const ECONOMY = {
        *  the one decision of hers that the parent can take away. */
       forkWithHerWant: 3,
       forkAgainstHerWant: -4,
+      /** ⭐⭐ v74 (the private life, wave 3 – T6/T7) – WHAT HE SAYS THE WEEK HE IS TOLD THERE IS
+       *  SOMEONE. Four answers, and not one of them is hers: the wave-3 brief §4's «'met' bond
+       *  deltas» row, verbatim – warm +2 · wary 0 · intrusive −3 · silent −1.
+       *
+       *  ⚠⚠ THE PRICE LIST IS UNIVERSAL – who-she-is §3's fence, and the same sentence the three
+       *  rows above carry: «The `bond` delta table does not vary by temperament ... The situations
+       *  differ; the arithmetic of care does not.» One row per ANSWER, never a row per girl.
+       *
+       *  ⚠ SILENCE IS PRICED HERE AND IS EXACTLY ZERO AT THE FORK, and the difference is the beat
+       *  and not an inconsistency. At the fork she asked him a question and listening IS an answer
+       *  to it (`beatListened`'s own note). Here she handed him a piece of her life and said nothing
+       *  was being asked of him – saying nothing back is the one reply that leaves her holding it
+       *  alone, so it costs a little.
+       *
+       *  ⚠ THE FOUR ROWS BELOW ARE THE TABLE AN **`open`** GIRL IS READ BY, and the two after them
+       *  are the whole of the difference a `private` one makes (T7, 11.09). T6's own note here said
+       *  the flip «is not wired here»; it is now, and the note is CORRECTED rather than left
+       *  standing, because a comment that still says «not yet» beside the wiring is the one kind of
+       *  stale a constants file cannot carry. */
+      metWarm: 2,
+      metWary: 0,
+      metIntrusive: -3,
+      metSilent: -1,
+      /** ⭐⭐⭐ v74 T7 – THE WANTS FLIP, AND IT IS TWO ROWS RATHER THAN A SECOND TABLE. A girl whose
+       *  drawn `wants` is `'private'` reads silence as the kindness and warmth as the thing that
+       *  puts it in the room: silent **+2**, warm **−1** (brief §4's «flip» column, verbatim).
+       *
+       *  ⚠⚠ `wary` AND `meet` ARE ABSENT ON PURPOSE AND THE ABSENCE IS LOAD-BEARING. The flip is an
+       *  OVERLAY on the four above (`world/lifeBeat.ts`'s `MET_BOND_PRIVATE`), so the two rows it
+       *  does not name keep the SAME number in both readings – which is what guarantees `'met'`
+       *  still has a bond-NEUTRAL answer (`wary`, 0) whatever she wants. Forty tools, the e2e
+       *  fixture generator and `tests/helpers/career.ts` drain beats through that zero
+       *  (`tools/_lifeBeats.ts`), and a flip that copied the table instead of overlaying it could
+       *  drift `wary` off zero and move every bond number those benches measure.
+       *
+       *  ⚠⚠ AND IT IS STILL NOT A ROW PER GIRL – the fence above holds. What varies is not WHO she
+       *  is (temperament never reaches this table) but what she ASKED FOR, which is a fact she put
+       *  on the record herself. The arithmetic of care is the same; the request is hers.
+       *
+       *  ⚠ NOTHING PRINTS EITHER NUMBER. The read reaches the player through the feed line's and
+       *  the card's WORDING alone – no meter, no badge, no label (the birthday-ask scene
+       *  generalised, brief §2 T7). */
+      metWarmPrivate: -1,
+      metSilentPrivate: 2,
     },
     /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
      *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`
@@ -3498,6 +3553,175 @@ export const ECONOMY = {
       steady: 55,
       strained: 35,
     },
+  },
+
+  // =================================================================================================
+  // ⭐⭐ THE PRIVATE LIFE, WAVE 3 – «SOMEONE EXISTS»: WHETHER HE ARRIVES, AND WHEN THE PARENT HEARS
+  // =================================================================================================
+  //
+  // ITS OWN BLOCK BESIDE `spirit` AND `bond` for the reason those two are beside each other rather
+  // than nested: three numbers, three rules. Spirit is weather, bond is a relationship, and THIS is
+  // a biography – a thing that happens to her once and then stays happened.
+  //
+  // ⚠ EVERY VALUE BELOW IS SOURCED TO `docs/specs/who-she-is-2026-09.md` §4 («The numbers – all
+  // proposals for the bench»), and THAT TABLE WINS ON ANY DRIFT. Two of them are the architect's
+  // concretisations rather than the spec's own rows and are marked ⚠ where they sit – they are
+  // bench-visible by design, so his word can move them without touching a line of design.
+  //
+  // ⚠ THE LIFT THAT BELONGS TO THIS LAYER IS NOT HERE. §1b's effective-baseline constant lives in
+  // `spirit` above, because it is a SPIRIT number that this layer merely switches on; wave 3's T4
+  // wired it where it already stood, and it stays there. ⚠⚠ THE BRIEF'S §4 TABLE LISTS IT UNDER THIS
+  // BLOCK AND THE BRIEF IS WRONG ON THAT ROW – moving it would break the two pins in
+  // tests/spirit.test.ts that hold `baseline + attachmentLift < mood.glowingFrom`, which is the
+  // relation the value 5 comes from, and it would buy nothing.
+  life: {
+    /** ⭐ THE AGE GATE – RULED 23.08 and confirmed for this wave. Read against `kidAgeExact`, the
+     *  FRACTIONAL age, so a girl turns eligible in the week she turns sixteen and not in the January
+     *  of the year she will. A whole-years read would have handed a December girl eleven free
+     *  months. */
+    ageGate: 16,
+    /** The step in the hazard below: under this she is at school and the base rate is the low one,
+     *  from it she is not. Named rather than inlined so the two rows below cannot drift from it. */
+    adultFrom: 18,
+    /** THE BASE WEEKLY ARRIVAL HAZARD, before temperament (who-she-is §4, on the build plan's base:
+     *  «arrival 1.0%/wk before 18, 2.5% from 18»). Per WEEK, not per season: the roll is one uniform
+     *  on `seed:life:arrival:<week>` and nothing accumulates between weeks. */
+    arrivalPerWeek: { minor: 0.010, adult: 0.025 },
+    /** ...and how hard each girl leans on it (who-she-is §4's hazard-multiplier table, verbatim).
+     *  ⚠ THE CENSUS BARS ARE THIS TABLE'S OTHER FACE – the expected biographies in the same row of
+     *  the same table («fiery ~4–6 romances, quiet first arrival median ~18») are what T11 measures,
+     *  so a number moved here moves an acceptance bar and is never a local tweak. */
+    temperamentMult: { sunny: 1.2, fiery: 1.6, quiet: 0.6, deep: 0.5 },
+    /** THE WEEKS AFTER AN ENDING BEFORE ANYONE MAY APPEAR AGAIN (who-she-is §4, the `cooldown`
+     *  column). ⚠ UNREACHABLE IN WAVE 3 AND SHIPPED ANYWAY: nothing in this wave writes
+     *  `endedWeek`, so no career can ever be inside a cooldown – it lands now, with its tests, so
+     *  that wave 4 (which writes the endings) changes nothing here. */
+    cooldownWeeks: { fiery: 12, sunny: 26, quiet: 39, deep: 52 },
+    /** THE RAW FEED LAG, in weeks, by her OPENNESS REGISTER (who-she-is §4, «Feed lag», verbatim:
+     *  open – 0 with p 0.70, else uniform 1..4; private – 0 with p 0.10, else uniform 2..12).
+     *
+     *  ⭐⭐ THE OPEN ROW MOVED ON 11.09.2026, AND IT MOVED BECAUSE A BAR MISSED – not because anybody
+     *  preferred the shape of it. T11's arrival census (§4a's wave-3 entry) measured the open
+     *  late-share at **44.0% against its own ≤ 25% bar**, and it measured the CAUSE beside it: the
+     *  RAW draw, before `bondShave` touches it, was already **57.4% late** (nominal 55.0% – the old
+     *  row's own «0 with p 0.45»). That is 2.3× the bar with no shave in it at all, so no setting of
+     *  the shave could ever have reached the corridor; ≤ 25% needs p(raw = 0) ≈ 0.75 for an open
+     *  girl. The finding went to the owner as a finding and he moved the TABLE rather than the bar
+     *  («двигать таблицу – ок»): **open now means the parent usually hears at once.**
+     *
+     *  ⚠ THE BAR ITSELF DID NOT MOVE AND MUST NOT (invariant 5: numbers are measured, never
+     *  adjusted). ≤ 25% / ≥ 60% are still what `tools/life-arrival.ts` prints against, and §4a
+     *  carries the re-measurement under the moved row, old numbers beside the new ones.
+     *
+     *  ⚠ INDEXED BY THE REGISTER SHE WAS BORN WITH, not by the `wants` she drew for this particular
+     *  attachment. The two are separate facts on separate keys and are free to disagree; §4's own
+     *  neighbouring row («open girls draw `open` at ~70%») is what settles which sense of the word
+     *  «open» each table is keyed on – there the girl, here the girl.
+     *
+     *  ⚠ RAW, and the bond band shortens it afterwards (`bondShave`). This is the world's dice; the
+     *  shave is the parent's history. */
+    lag: {
+      open: { zeroChance: 0.70, min: 1, max: 4 },
+      private: { zeroChance: 0.10, min: 2, max: 12 },
+    },
+    /** HOW HEAVILY THE `wants` DRAW LEANS ON HER OWN REGISTER (who-she-is §4, «Wants weights»: «open
+     *  girls draw `open` ... at ~70%»). A TENDENCY and never a rule – the other 30% is the whole
+     *  reason the want is drawn instead of read off the temperament, and it is what stops an open
+     *  girl being a stereotype who never once keeps something to herself. */
+    wantsOwnRegister: 0.70,
+    /** ⚠ THE BOND SHAVE – THE ARCHITECT'S CONCRETISATION (wave-3 brief §4), bench-visible, NOT a
+     *  ruling: the divisor the raw lag is floored by, read off the bond band AT the arrival week.
+     *  who-she-is §2a channel 1 is the design it serves – «she trusts THIS parent» – and 1 is the
+     *  identity, so `strained` and `cold` pay the raw lag in full.
+     *
+     *  ⚠⚠ THIS IS THE ONE PLACE IN THE WAVE WHERE A PLAYER CHOICE IS ALLOWED TO SHOW, and it is
+     *  deliberate. The DRAW is keyed on (seed, calendar) alone, so `sinceWeek` is identical across
+     *  every run of one seed – CLAUDE.md invariant 2's input-independence, intact. The SHAVE is a
+     *  pure function of the relationship the player built, so `knownWeek` MAY differ between runs.
+     *  That is the relationship affecting DISCLOSURE, not the world's dice being re-rolled. */
+    bondShave: { close: 3, steady: 2, strained: 1, cold: 1 },
+    /** ⭐⭐ TIER-1 SMALL TALK, PER WEEK, BY BOND BAND (wave-3 brief §4's last row, verbatim) – ⚠ THE
+     *  ARCHITECT'S PROPOSAL AND MARKED AS ONE THERE, bench-visible, NOT a ruling. It is sourced to
+     *  who-she-is §5b's frequency column, which is prose rather than a number: «a few per season at
+     *  `close`; none at `cold`».
+     *
+     *  ⭐⭐ READ AT RUNTIME AGAIN SINCE v74 T15 (11.09.2026), AND THE NOTE IS RE-AIMED RATHER THAN
+     *  DELETED so the interim state cannot be mistaken for a cancellation. These two numbers shipped
+     *  DECLARED AND NOT REACHED for one commit – the owner's «вариант 3» took the raise out while
+     *  §5b's «soft – answerable, never lost» had no surface to be answerable ON. T15 built the
+     *  surface (a Home card, a per-kind `blocking` flag, a 3-week derived TTL), so `rollSmallTalk` is
+     *  called again from `world/phaseHerWeek.ts` and the hazard is live. ⚠ THE RULING THAT CAME WITH
+     *  IT, kept where the numbers are: NO AGE GATE. She talks at any age; tier 1 is texture, not part
+     *  of the romance layer – `smallTalkEligible` has none and must not acquire one.
+     *
+     *  ⚠⚠ THE TWO ZEROES ARE A SHORT-CIRCUIT AND NEVER A COMPARISON. `rollSmallTalk` returns before
+     *  `seed:life:smalltalk:<week>` is ever derived when the chance is 0, exactly as `rollArrival`'s
+     *  gate does – an ineligible week takes ZERO draws (T3's load-bearing rule, inherited whole).
+     *
+     *  ⚠ AND «NONE AT COLD» IS THE DESIGN RATHER THAN A FLOOR: at `strained` and `cold` the silence
+     *  IS the line (§5b's own sentence). There is no flat pool for this beat, because a beat that
+     *  never fires needs none. */
+    smallTalkPerWeek: { close: 0.08, steady: 0.04, strained: 0, cold: 0 },
+    /** ⭐⭐⭐ v74 T15 – HOW LONG A SOFT ROW STAYS ANSWERABLE: THE RAISE WEEK AND THE TWO AFTER IT
+     *  (who-she-is §5b's SOFT BLOCK CONCRETIZED amendment, 11.09: «a soft row is live for 3 weeks
+     *  (the raise week + 2)»).
+     *
+     *  ⚠⚠ LIVENESS IS **DERIVED** FROM `week − row.week` AND IS NEVER STORED – `activeEpisode`'s own
+     *  discipline, and the reason is the same one the queue gives for having no `pending` boolean: an
+     *  «expired» flag beside a week number is one fact with two sources of truth, and the two desync
+     *  the first time a migration, a load or a command touches one and not the other. `liveSoftBeat`
+     *  (world/lifeBeat.ts §1) is the one reader, and there is no new persisted field anywhere in T15.
+     *
+     *  ⚠ 3 IS «THE RAISE WEEK + 2» AND THE COMPARISON IS STRICTLY `<`: at `week − row.week` of 0, 1
+     *  and 2 the card is up; at 3 the moment has passed, the card goes and nothing asks. The ROW
+     *  stands forever either way – answered, or expired with `answer: null`, which is the honest
+     *  record that she came and it went unasked («never lost = the ROW, not the chance»). */
+    smallTalkTtlWeeks: 3,
+    /** THE HARD CAP PER SEASON (brief §4: «cap 4/season»), counted off `lifeLog` itself.
+     *
+     *  ⚠⚠ THE LOG IS THE COUNTER AND THERE IS NO NEW STATE – who-she-is §5b's line item 6 («caps
+     *  without new state – tier-0/1 frequency per season derived from `lifeLog` counts»). A counter
+     *  field beside a record that already answers the question is one fact with two sources of
+     *  truth, which is `pendingLifeBeat`'s own doctrine applied to frequency.
+     *
+     *  ⚠ THE COUNT IS `'small-talk'` ROWS OF **THIS** SEASON AND NOTHING ELSE. `lifeLog` also holds
+     *  `'fork-opinion'` and `'met'` rows, and a naive length would cap her small talk on the week
+     *  she was told there is someone. */
+    smallTalkCapPerSeason: 4,
+    /** ⭐⭐⭐ v74 T17 – WHAT IT TAKES FOR HER TO WANT TO STOP (the owner's ruling of 11.09, made on
+     *  his own playtest: his world #5, healthy, close home, met «I want to finish» at eighteen).
+     *
+     *  ⚠⚠ THE SHAPE IS THE RULING AND THE THREE NUMBERS ARE **DRAFT FOR THE BENCH**, in exactly the
+     *  sense §4's other rows are: `stop = floor + gainWorn × worn + gainStrained × strained`, read
+     *  by `forkWantWeights` (world/lifeBeat.ts §2) and by nothing else. Before this the `stop` weight
+     *  was `lean(worn)`, which is 1.0 at its floor – so the least stop-shaped girl the game can
+     *  produce still met the question at ~22–25%, and a quarter of all players were told at the
+     *  biggest moment of the career that she wanted to finish, with no root they could read.
+     *
+     *  ⚠ THE TAIL IS PRICED, NOT REMOVED. `floor` is ε > 0 and must stay so: the Barty ending – she
+     *  is whole, she is winning, and she is done – is a FEATURE, and any girl may still want any of
+     *  the three. What the floor buys is its RARITY: unsupported (worn = strained = 0) it reads
+     *  ~3–4% at every standing, which is an eighteen-year-old's rarity rather than a quarter.
+     *
+     *  ⚠ `strained` IS THE MIRROR OF `close` and is measured off the distance BELOW `bond.start`,
+     *  exactly as `close` is measured above it – so 70 is neutral in both directions and a neutral
+     *  home leans nothing. The two gains are ordered deliberately: being worn out weighs more than
+     *  being far from the parent, because the season is what she would be stopping. */
+    forkStop: { floor: 0.12, gainWorn: 2.5, gainStrained: 2.0 },
+    /** ⭐⭐ THE DRIVER'S THRESHOLD – the one number that decides which ROOT her stop line and the
+     *  coach's counsel are worded from (`worn > this` → `'worn'`, else `strained > this` →
+     *  `'strained'`, else `'own'`).
+     *
+     *  ⚠⚠ IT IS SPENT ON WORDING AND ON NOTHING ELSE. The driver never re-weights the draw it
+     *  explains: `forkWantWeights` reads `forkStop` above and never this, and the same (standing,
+     *  spirit, bond) produces the identical three weights whether or not anything asks for a driver.
+     *  `tests/wave3-stop-want.test.ts` §B is the pin that says so.
+     *
+     *  ⚠ 0.15 IS «SOMETHING REAL RATHER THAN ROUNDING»: at 0.15 the stop weight has moved by 0.375
+     *  (worn) or 0.30 (strained) off its floor, which is already three times the floor itself – so
+     *  the wording claims a root only where the arithmetic actually leaned on one. Below it she is
+     *  the Barty case and the copy says so. */
+    forkStopDriverFrom: 0.15,
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout

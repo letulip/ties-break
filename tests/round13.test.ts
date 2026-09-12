@@ -58,6 +58,9 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     moodWord: null,
     moodRegister: 'level',
     bondBand: 'steady',
+    // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
+    // written about (see `DiaryFacts.partnerKnown`).
+    partnerKnown: false,
     week: 10,
     ageYears: 14,
     lifeStage: 'school',
@@ -343,6 +346,9 @@ describe('R13-10 — the ordinary-week pool', () => {
     moodWord: null,
     moodRegister: 'level',
     bondBand: 'steady',
+    // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
+    // written about (see `DiaryFacts.partnerKnown`).
+    partnerKnown: false,
     week: 10,
     ageYears: 14,
     lifeStage: 'school',

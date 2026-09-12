@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 85 dated entries, newest 2026-09-11. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 97 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,15 +34,17 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 8 | [WAVE 2 OPENS: THE PRICE OF OVERRULING ADVICE ABOUT HER BODY](#09092026--wave-2-opens-the-price-of-overruling-advice-about-her-body) | 2026-09-09 |
+| economy-and-money | 9 | [WAVE 3 T11 + T12: THE CENSUS HOLDS, AND THE PUSH-THROUGH PRICE IS 92% ERASED](#11092026--wave-3-t11--t12-the-census-holds-and-the-push-through-price-is-92-erased) | 2026-09-11 |
+| general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 3 | [WAVE B: THE ВЫЧИТКА PASSED, AND THE BOND-CADENCE OF SILENCE (B5.1)](#11092026--wave-b-the-вычитка-passed-and-the-bond-cadence-of-silence-b51) | 2026-09-11 |
+| life-and-morale | 7 | [THE PRIVATE LIFE: T16 OVERCORRECTED, AND THE NINE-POINT FOLD (T16b)](#12092026--the-private-life-t16-overcorrected-and-the-nine-point-fold-t16b) | 2026-09-12 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
-| ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
-| simulation-and-balance | 4 | [WAVE 1 BENCHED: THE BARS MOVE, THE CONSTANTS DO NOT](#09092026--wave-1-benched-the-bars-move-the-constants-do-not) | 2026-09-09 |
+| ranking-and-ladder | 8 | [WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE](#12092026--wave-3-the-nine-point-fold-the-ladders-own-number-corrected-the-cure) | 2026-09-12 |
+| saves-and-schema | 1 | [WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES](#11092026--wave-3-t1-v74-episodes-rather-than-a-slot-and-the-tail-decides) | 2026-09-11 |
+| simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
 
@@ -3410,3 +3412,544 @@ finding; the вычитка of the corpus (two halves) is the owner's gate on th
   pool → red). ⚠ One honest cost, noted in the source: the warm pool grew 24 → 27, so existing
   careers' away scraps re-pick ONCE at update – growth moves the modulo, and a second coin to
   avoid it is machinery a scrap of paper does not deserve.
+
+## 11.09.2026 – WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES
+
+- **v74 shipped as a full move, not a three-part one.** `world.loveEpisodes: LoveEpisode[]`,
+  append-only and never pruned, with `activeEpisode` DERIVED from it and no `world.partner` slot
+  anywhere – the 09.09 re-cut (review find #5) paid for in the signature: a romance that begins
+  AND ends before the parent knew survives save/reload and surfaces later as one honest late row,
+  which a stored «current partner» would have overwritten out of existence. No name and no gender
+  persisted, deliberately: the schema must not hardwire boyfriend→husband.
+- ⚠ **The brief called it a three-part move; it is a seventeen-file one.** `loveEpisodes` is written
+  by `createWorld`, so every frozen whole-world career hash moves: `tests/coachTravelEdgeFixtures.ts`
+  needed a `PRE_V74` set, a new peel at the head of the destructure chain and nine re-stamped
+  constants, all under that file's own protocol – the per-key diff MEASURED before a constant is
+  touched, never asserted afterwards. Measured result: exactly two keys move on all three careers,
+  `schemaVersion` and `loveEpisodes` (hash `4f53cda18c2b` = `JSON.stringify([])`), 77 keys
+  byte-identical. `tools/generated/world-symbol-map.md` and `docs/context/saves-and-worker.md` move
+  with any schema step too; neither was on the brief's list.
+- ⭐⭐ **RULING – THE TAIL DECIDES, reversing the builder.** The brief's prose defined `activeEpisode`
+  as «the LAST row with `endedWeek === null`»; the brief's own enumerated test list said «open row
+  then ended row → null». On the shape `[open, ended]` those disagree, and the builder – correctly
+  isolating the contradiction rather than picking silently – implemented the prose. Ruled for the
+  TAIL on three grounds: (1) the divergence is UNREACHABLE, since rows are chronological and the
+  arrival gate refuses to draw while this is non-null, so only the tail can ever be open and both
+  readings agree on every state the sim can produce; (2) on unreachable data the tail FAILS SAFE
+  where a backward scan FAILS STUCK – one row mis-ended by a future bug would pin `activeEpisode`
+  non-null for the rest of the career, meaning no arrival ever again and a permanent +5 baseline
+  lift with nothing anywhere saying why; (3) where prose and an enumerated list disagree, the list
+  is the more specific statement. Nothing is lost from the record either way – the archive is
+  `loveEpisodes` itself, and this function answers only «is someone there NOW».
+- ⚠⚠ **A wave-2 guard test was found VACUOUS and repaired.** `wave2-life-beat.test.ts`'s «a life
+  already on the record is kept whole» read `expect(migrateSave(lived).lifeLog).toEqual(lived.lifeLog)`
+  – and `migrateSave` mutates its payload in place, so both sides were the same object and the
+  assertion compared it with itself. It could not fail, and shipped that way. Caught because wave 3's
+  builder wrote the identical shape one rung up and its mutation arm came back GREEN. Repaired by
+  freezing the expected rows before the call; the same mutation now reads «expected [] to deeply
+  equal [ { week: 9, … } ]». **The house law this is an instance of**: an assertion about something
+  being PRESERVED must hold a copy the code under test cannot reach – the sibling of «a negative
+  assertion must first prove its target exists», which cost two vacuous guards in wave 2.
+- **A third schema pin the brief did not name**, and it needed two edits: `wave2-life-beat.test.ts`
+  pinned `SAVE_SCHEMA_VERSION` exactly AND asserted `v73.json` equals `migrateSave(v72.json)` – the
+  second structurally unfixable as written, since `migrateSave` always walks to the ladder's head.
+  Re-aimed, not weakened: the head is a FLOOR (that case is about v73's own rung), and the equality
+  is made where it stays true – the v73 fixture and the migrated v72 CONVERGE at the head.
+- **Mutation arms, run rather than reasoned.** Builder's five recorded in the new file's header;
+  the architect re-ran two after the ruling: ARM 1 re-aimed with the reversal (a backward scan → the
+  tail case red, 1 of 12) and the repaired wave-2 assertion (the v73 step's `??=` written as `=` →
+  red, where it had been green). MAIN capture unmoved: 41550 / `e6b0c709`, `tests/condition.test.ts`
+  byte-untouched by the step.
+- **The pathspec commit rule had a hole, found by T2's builder.** `git commit -F msg -- <paths>`
+  selects from the INDEX, so it CANNOT commit a new file: an untracked path fails with «pathspec …
+  did not match any file(s) known to git». The house rule as written read as though the pathspec
+  replaced staging entirely, which makes any step that adds a file read as an instruction that
+  cannot be obeyed. The fix is `git add -- <that one path>` first, then the pathspec commit.
+  ⚠ **Recorded here and NOT in CLAUDE.md, for a reason worth its own line**: CLAUDE.md is 21,978
+  characters against a 22,000-character context-budget gate – **22 characters of headroom**. Adding
+  the note broke `context:audit` and took the whole gate red (`CHECK_EXIT=1` at the first stage), and
+  the two rules it would have stated are already in the file further down anyway. The next single
+  line anybody adds to CLAUDE.md fails the gate the same way. Compressing it is the owner's call,
+  not an agent's – it is his governance document.
+
+## 11.09.2026 – WAVE 3 T3+T5: SOMEONE APPEARS, AND A TEST THE ARCHITECT SPECIFIED COULD NOT FAIL
+
+- **T3 and T5 shipped as ONE commit, deliberately.** The brief orders them as two, but the row cannot
+  be honestly constructed without both draws – T3's own text says it carries «`knownWeek`/`wants`
+  from T5's draws, computed at this moment». A T3 alone would have written placeholder values into a
+  PERSISTED row and left knowingly-wrong behaviour in the tree waiting for the next commit. The
+  builder said so and chose the honest shape; recorded here so the commit table's drift is not read
+  later as a skipped step.
+- ⚠⚠ **THE ZERO-DRAW TEST THE ARCHITECT SPECIFIED CANNOT FAIL, and the builder proved it rather than
+  reporting it done.** The brief (and the architect's brief after it) asked for the short-circuit to
+  be proven «by stream alignment – two worlds differing only in an ineligible week's state produce
+  identical later arrivals». Measured: that property is true BY CONSTRUCTION here, because every key
+  carries its own week (`seed:life:arrival:<week>`), so each week derives a fresh stream and a
+  discarded draw shifts nothing. Built, armed with exactly the draw-and-discard mutation, and it
+  stayed GREEN (ARM 2b, recorded). The honest net is a COUNT of the keys the gate reached, held in an
+  array the code under test cannot see, **with a positive control** – an eligible-but-missing week
+  that reaches exactly one key – so «no keys» is a property of the gate and not of a broken recorder.
+  The alignment comparison is kept under its true name as the guard for a future re-key.
+  ⭐ **The general lesson, third instance this wave**: a test whose property holds by construction is
+  indistinguishable from a working test until something arms it. «Prove the arm goes red» is not a
+  formality – it is the only thing separating the two.
+- **The same trap bit a second time in the same step**: the first split-key case («the lag does not
+  move when the wants draw is taken first») also survived both draws being folded onto one key.
+  Replaced with the property that CAN fail – the conditional p-zero across the wants split (0.63
+  apart under the mutation, under 0.06 apart in truth).
+- ⭐⭐⭐ **A FROZEN CAREER MOVED, AND THAT IS THE RIGHT ANSWER.** The three careers in
+  `coachTravelEdgeFixtures` walk 156 weeks; the age gate opens at 16 and these girls turn 16 at
+  ~week 128. `eliteGrinder` is **fiery** (hazard ×1.6) and meets somebody at **week 137**. Per-key
+  diff taken FIRST, with the change reverted in place, as that file's protocol demands: 5/0 and 0/1
+  byte-identical, 8/0 moves **exactly 1 key of 79 – `loveEpisodes`**, and ⚠⚠ **`rngMain` is
+  byte-identical**, which is the load-bearing half: `rollArrival` takes nothing from MAIN. Three live
+  constants re-stamped for that one career only. The v74 rung stayed green beside the red freeze –
+  a career moved, and only where the wave is allowed to move it.
+- **RULING – the lag table is indexed by her BORN REGISTER, not by the drawn `wants`.** The builder
+  flagged this as a reading rather than a quote, correctly: who-she-is §4 says «lag, open / lag,
+  private» without saying which openness. Confirmed for the register, and the decisive argument is
+  the brief's own: the two draws are specified as INDEPENDENT. Indexing the lag on `wants` would make
+  it conditional on the neighbouring draw, which is the exact coupling the split-key law exists to
+  forbid. A girl's general openness is how fast she tells things; what she wants for THIS
+  relationship is a separate read, and T7's flip is where that one is spent.
+- **`temperamentOpenness` added** beside `temperamentIntensity` so the axis has one spelling, with
+  its literal mapping pinned – without that pin an inversion would move implementation and
+  expectation together (ARM 7 proves it red).
+- ⚠ **A guard re-aimed and made TIGHTER**: `spirit.test.ts`'s adjacency pin asserted `accrueSpirit`
+  was the statement immediately after `accrueCondition`; `rollArrival` now sits between them (the
+  order the lift is judged on). It now asserts the gap EXACTLY – `['rollArrival(world)']` and nothing
+  else, plus `accrueSpirit` called once – so a third statement sliding in goes red just as a
+  reordering does. Re-aimed, not weakened, with its ⚠ note.
+- **Eight mutation arms, all run rather than reasoned**, ledger in `tests/wave3-arrival.test.ts`.
+  Frozen capture unmoved: 41550 / `e6b0c709`.
+
+## 11.09.2026 – THE PRIVATE LIFE EVENTS: THE ART WAS ALREADY PAINTED, AND SIX RULINGS
+
+While wave 3 builds, the owner asked whether death, weddings and pregnancy are specced – and the
+inventory answer found the art shipped ahead of the mechanics: the `adult` portrait set already
+holds `bride`, `funeral`, `pregnant-early`, `pregnant-last` and `graduated`, all unwired
+(`public/images/fem-euro-brunnet/`). Funeral exists at `adult` ONLY – the asset enforces his
+23.08 «начиная со ступени adult» by construction. Rulings and confirmations, logged same-day;
+the sketches live in [the-wedding-and-the-children](plans/the-wedding-and-the-children.md).
+
+- ⭐ **The forgotten graduate**: «graduated – вот это хорошо, что ты нашёл, мы забыли эту
+  картинку, надо встроить на окончание колледжа где-то, может быть в попапе и даже на главной
+  показывать неделю по окончании (если случилось окончание).» ⭐ RE-ROUTED the same day, his
+  order: «надо будет в эту же волну добавить, а не отдельно делать» – the task is wave 3's own
+  T14 (the spun-off chip dismissed): the painting joins `CollegeDoneDialog` and the home
+  portrait for the week after the finish, as a painting-only portrait state on `rehab`'s exact
+  precedent (`PortraitEmotion`) – ⚠ guarded by `kidLife`'s own graduated-vs-left distinction
+  («she graduated» must never print, or paint, for a girl who left after a year).
+- ⭐ **The wedding gate is 23+** («свадьба на 23+ – мне вполне ок») – supersedes 23.08's 22+; the
+  art already draws the bride at `adult` only, so the gate is art-enforced. Build plan §6b and
+  the wedding sketch both corrected.
+- ⭐ **Late pregnancy reuses the scenes** («не страшно в этом случае, можно использовать повторно
+  существующее») – no `lateCareer` pregnant art commissioned; the 24–35 research window stays.
+- **Bereavement, confirmed as designed on the layer's own axes** – his ask: «кто-то может быстро
+  оправиться, а кто-то долго, вот это мы отразили? и шок тоже может быть разным по глубине… и
+  показывать своё состояние они могут по-разному». Yes, three axes, all standing law: INTENSITY
+  owns depth AND duration (the same pair that prices the break-up −22/−34, on bereavement's own
+  longer asymmetric curve with its own `spiritShock` kind); OPENNESS owns expression (private
+  grieves quietly – the feed and diary nearly silent, the face and the funeral frame carrying
+  it; open speaks); the realised cost rides a benched corridor like the break-up's, under the
+  ±1.5 pp fairness law. The psychologist reads the shock kind for free; the off-switch (open
+  question 1) still gates the build.
+- **The repeat pregnancy** («после беременности может быть и повторная») – already in the sketch
+  (§3: same machinery re-entered, lower hazard); extended with the count rule: the hazard reads
+  the age window AND how many children exist, so a third stays rare.
+- ⭐ **The dynasty hook** («в конце карьеры можно сделать хук на новую карьеру через ребёнка») –
+  NEW, recorded as the sketch's §7: the retired star becomes the next PARENT (the player's role
+  never changes), a new save with a small inheritance block – seed lineage, wealth band, fame
+  from birth through the spotlight layer, the album as an heirloom, the mother as §5c cast.
+  Step 9, after step 7; M in v1.
+- **Divorce and a second wedding** («а свадьба может быть у нас не одна, кстати? разводы будем
+  делать?») – the schema is pre-paid NOW at zero cost: the latch moves onto the episode row
+  (`latchedWeek` on `LoveEpisode`, never a global boolean), so a divorce is an ending on a
+  latched episode and a remarriage is the same machinery on a later one. The CONTENT stays
+  deferred: no divorce in W1–W5, raised after playtests; children stay state through it – no
+  custody loop, ever.
+
+## 11.09.2026 – WAVE 3 T4 + T14: THE LIFT MOVES A FROZEN CAREER, AND A PRECEDENT THAT DID NOT TRANSFER
+
+- **T4 – the attachment lift wired, and the import hazard was REAL.** `accrueSpirit`'s return step now
+  targets `baseline + attachmentLift` while the slot is full. `lifeBeat.ts` imports six runtime
+  values from `spirit.ts`, so reading `activeEpisode` inside `accrueSpirit` would have closed the
+  first value cycle `engine/world/*` has ever had. Taken the way the brief prescribed as the fallback:
+  `loveEpisodesOf` + `activeEpisode` moved verbatim to a new leaf `engine/world/loveEpisodes.ts`
+  whose only imports are `import type`. No importer in the repo moved (the barrel re-exports).
+- ⭐⭐⭐ **THE LIFT MOVED A FROZEN CAREER, AND THE STOP CONDITION DID NOT FIRE.** Per-key diff measured
+  first, control = the lift term neutralised in place. `middleGrinder` and `selfTravelling`
+  byte-identical (they meet nobody in 156 weeks); `eliteGrinder` moves **exactly 1 key of 79 –
+  `spirit`**. ⚠⚠ `results`, `events`, `rngMain` and the wallet are byte-identical, which was the
+  architect's explicit STOP condition – had they moved, the lift would have changed who won a match.
+  They did not, and not by luck: `spiritMatchFactor` is flat 1.0 from the knee (60) up, so a lifted
+  75 plays the tennis a baseline 70 plays. Her trail reads `136:70 137:73 138:75 … 156:75` –
+  **first step in week 137, the arrival's own week**, so T3's order pin reproduced independently on a
+  frozen career rather than only in a poked unit.
+- **Two rollback rungs moved that no previous wave had touched** (`PRE_V73`, `PRE_V74`), and the
+  distinction is worth keeping: T3 wrote a NEW key, so the peel undid it; T4 changes the VALUE of an
+  old one (`spirit` arrived at v72), which every later shape still carries. ⭐ The anchor that still
+  covers all three careers is `PRE_V72` – its peel drops `spirit` itself – and it held untouched, so
+  the career as it stood before the private life existed is byte-identical.
+- ⚠ **ARM 2 measured what the wave-1 pins are FOR**: making the lift ignore `activeEpisode` turns all
+  44 from-baseline perturbation pins red. Those pins were never described as the guard against an
+  ungated lift; they are, and it is now measured rather than assumed.
+- **RULING – two guard-test NAMES put back.** T4 renamed the v73/v74 rollback cases to «…on every
+  career the private life never reached». Reverted: all three careers are still asserted, including
+  `eliteGrinder` at her re-stamped value, so a name excluding her would let a reader think she is
+  skipped and not notice if her line were ever dropped. The name states the mechanical claim, which
+  holds on all three; WHY lives in the comment, which is that file's convention. The builder flagged
+  it for the architect rather than deciding alone – correct.
+- **T14 – the graduation painting, and the prescribed precedent DID NOT TRANSFER.** The brief (and the
+  architect's brief after it) said to mirror `rehab` exactly: a `PortraitEmotion` member, painting-only.
+  Measured and refused, on two grounds, both verified at the gate. (1) The bands are
+  `teen 17-22 · adult 23-30` and a career graduates at ~22 – so she is in `teen`, while the only asset
+  on disk is `adult-graduated.webp`. Through `portraitUrl(stage, emotion)` the app would have built
+  `teen-graduated.webp` and **404'd**; the picture would never have appeared. (2) `PortraitEmotion` is
+  the key type of `KidScreen.MOOD_LABEL` and `WeekRecapCard.MOOD_WORD`, both
+  `Record<PortraitEmotion, string>` – so a new member forces **a new player-facing word**, which
+  invariant 4 forbids an agent to invent. It took the road `art/preload.ts` already names for art that
+  is not band-scoped (`onboardingHeroUrl` / `travelHomeUrl`): one picture, one builder. Painting-only
+  is kept where it is real – no crop, no avatar chip, cutter skip, `emotion` untouched.
+  ⭐ **The general lesson**: «follow the precedent» is an instruction about SHAPE, not a licence to
+  skip measuring whether the precedent's preconditions hold.
+- **The honesty split is pinned both ways**: a girl who LEFT college after one year gets no graduation
+  portrait on either surface, and the graduate's own portrait is asserted to render in the same case
+  – the positive control that stops the negative from being vacuous.
+- ⚠ **An arm that stayed GREEN was reported as a finding, not a pass** (T14 ARM 10): both surfaces
+  assert «the style carries what `facePoint` answers», so deleting the face rect moves table and
+  expectation together. The arm that does catch that class is named beside it. This is the behaviour
+  the wave has been asking for, offered unprompted.
+- ❓ **OPEN, for the owner**: T14's window. «Exactly ONE week after the finish week» is shipped as the
+  FINISH WEEK ITSELF – the week the player lands on Home as the card hands over, expiring next tick.
+  The alternative reading is `doneWeek + 1`. The length is already data, so either is one line.
+
+## 11.09.2026 – WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING
+
+- **T6 – delivery on `knownWeek`.** The beat fires at EVERY band; the bond band picks the REGISTER.
+  `close` -> her own line in her four voices, `steady` -> a mention, `strained`/`cold` -> a dry card
+  and a flat feed row. A kept `addEvent` row (`type: 'life'`, no `amountCents`) plus a `'met'` row
+  through wave 2's existing queue machinery, which was reused and not duplicated.
+  ⚠ Once-ness is the RECORD, not a flag: the `'met'` row's `detail` is the episode id and is its own
+  receipt. Frozen-career diff: `eliteGrinder` moves `events`, `lifeLog`, `nextEventId` – and
+  `results`, `rngMain`, `fundsCents` are byte-identical, so delivery changed neither the tennis nor
+  the money. ⚠ The re-stamp was **25 constants**, every `PRE_V*` rung from V74 down to V50: T3 added a
+  key (the peel undid it), T4 moved a v72 key (PRE_V72's peel caught it), but T6 moves
+  `events`/`nextEventId`, which predate every peel this file has – no rung is low enough.
+- ⚠⚠⚠ **T6b – THE BLOCKING REPAIR, AND THE MOST IMPORTANT THING THE WAVE HAS FOUND.** Until T6 there
+  was exactly ONE `LifeBeatKind`, so `answerLifeBeat(world, 'listen')` was a complete answer to any
+  pending beat, and ~50 harnesses wrote that line out by hand. `'met'` is raised on any week from her
+  sixteenth on, and the engine rightly refuses an option the pending row never offered – so every one
+  of those sites throws the first time a career meets somebody, and a walker that handles no beat at
+  all simply STALLS (`advanceWeeks` will not tick while a row is unanswered).
+  **48 sites across 40 tools repaired**, one home: `tools/_lifeBeats.ts` (the `tools/_seeds.ts`
+  convention), with `tests/helpers/career.ts` re-exporting it – no second copy. Direction verified
+  before deciding: `tests/` already imports `tools/` in 25 files; `tools/` imports `tests/` in none.
+- ⚠⚠ **`npm run check` IS GREEN ON THIS BREAKAGE AND ALWAYS WOULD HAVE BEEN.** Every one of those
+  files typechecks. The gate cannot see it. It was found only because T6's builder repaired the
+  `tests/` side and then went looking for the same shape elsewhere instead of stopping at its own
+  scope. ⭐ **The general lesson**: a green gate is evidence about what the gate RUNS. 41 of 219 tools
+  are exercised by no suite at all, and «it compiles» is the only claim that covers them.
+- ⭐⭐⭐ **AND ONE INSTRUMENT WAS LYING WITH EXIT 0.** `bench:spirit` – the very tool T12 must extend
+  to price the push-through – ran, printed a full census table, and exited **0** while answering
+  nothing: 842 beat rows raised across the two arms, **0 back / 0 press / 0 listen, both fork columns
+  empty, bond@fork blank**, no error anywhere. Its `try/catch` swallowed the throw and left the row
+  pending. ⚠ Had T12 been run before this repair it would have measured a stall and reported a
+  price. The failure mode to remember is not «the bench crashed» – it is «the bench succeeded and the
+  columns were empty».
+- **The breakage was wider than the architect named**: besides `e2e-fixtures` and `spirit-bench`,
+  five more benches died the same way on the control tree – `bench:floor`, `bench:deadweek`,
+  `bench:outgrown`, `bench:money`, `bench:skill`. All exit 0 after the repair.
+- **No measurement moved, proven rather than asserted**: `bench:endings` (the one repaired bench that
+  still RAN before the commit) is byte-identical across the change, md5 `bff91c7592c98c0d5c87eb2824a0415d`
+  on a control worktree and on the fixed tree – so `drainLifeBeats` is exactly the inlined loop.
+  ⚠ `bench:spirit --fork` DID move, 4 of 16 careers reaching a fork answer -> 16 of 16, and that is the
+  repair rather than a retune: **the pre-fix number was the stall, not a baseline.**
+- ⚠ **`spirit-bench`'s two measuring arms were left alone, deliberately.** They answer `'back'` on care
+  and `'press'` on grind because those arms are PRICING the bond; a mechanical sweep to the neutral
+  option would have destroyed the instrument. A neutral drain was added IN FRONT of them so a row the
+  bench never meant to price cannot sit ahead of hers.
+- **A latent generator kill closed by the architect**: `tools/e2e-fixtures.ts`'s `unheard` look-ahead
+  presses `'back'` on the pending row, assuming it is the fork's opinion. A `'met'` row raised in the
+  same week the fork opens would throw and kill the whole generator rather than reject one seed –
+  reachable only since wave 3's hazard. Closed with a rejection clause; verified a no-op on the
+  current seeds (fixtures byte-identical, generator exit 0). The builder flagged it and left it,
+  correctly, because it edits a measuring site.
+- ❓ **OPEN, for the owner**: T6's intrusive option label reads «Say we want to meet them, now» –
+  «them», not «him», because `LoveEpisode` persists no gender by design (T1) and a pinned test now
+  forbids gendered pronouns in the `'met'` labels. His to overrule at the вычитка.
+
+## 11.09.2026 – WAVE 3 T7 + T9: THE FLIP AS AN OVERLAY, AND A BUILDER WHO CAUGHT ITS OWN DEAD NET
+
+- **T7 – the wants flip, built as an OVERLAY of two rows rather than a second table of four.** A girl
+  who asked that it be kept quiet reads **silent +2, warm −1**; `wary` and `intrusive` are untouched.
+  ⭐ The overlay shape is the point: `wary`'s zero is LITERALLY the same zero in both readings, which
+  is what makes the bond-neutral guarantee a property rather than a coincidence.
+  `lifeBeatOptionsFor(kind, wants)` is the single road to a priced answer set – the prompt renders
+  through it and `answerLifeBeat` charges through it – so the two readings cannot disagree.
+- ⚠⚠ **THE HAZARD THE ARCHITECT NAMED WAS REAL, AND IS NOW PINNED.** T6b's `drainLifeBeats` picks the
+  option priced ZERO and throws if a kind has none; had the flip left `'met'` with no neutral answer
+  under `'private'`, all 40 repaired tools, `e2e:fixtures` and the whole e2e suite would have broken
+  **while `npm run check` stayed green**. ARM 4 (`MET_BOND_PRIVATE` gains `wary: 1`) turns 9 cases red
+  including the drain itself – `Error: met has no bond-neutral answer`. A pin now asserts every
+  `LifeBeatKind` keeps a bond-neutral answer under every `wants`.
+- **And the drain now asks the ENGINE for this row's prices**, not the record: after the flip,
+  `LIFE_BEAT_OPTIONS` is only the `'open'` column of what an answer costs. Reading it directly would
+  have been asking one question and paying for another. Today the two agree and nothing any bench
+  measures moves (proven: e2e fixtures byte-identical, frozen diff 0 keys of 80 on all three
+  careers) – but agreement would have been a coincidence the file depended on rather than a property
+  it checked.
+- ⭐⭐⭐ **ARM 7 – THE BUILDER CAUGHT ITS OWN NET UNABLE TO FAIL, using the warning it was given.** The
+  arm «`answerLifeBeat` also nudges spirit» came back **0 RED**: the net compared the two ANSWER ARMS
+  to each other, and a mutation moving both arms identically is invisible to that – the architect's
+  own «both sides moved together» trap, reproduced inside the net written against it. Rewritten to
+  compare the world BEFORE the answer against AFTER; re-run, 1 RED. The arm-against-arm equality is
+  kept as the smaller control. **Sixth member of this family in one wave, and the first self-caught.**
+- **T9 – the glyph column, mechanism only, map deliberately EMPTY** (who-she-is §5a: the glyphs are the
+  owner's picks). The totality gate is compile-shaped: while `PICKS` is empty it asserts nothing; the
+  moment one glyph lands it demands every life row kind, so a half-done fill fails the BUILD with the
+  missing kind named. Drilled both ways (filled → reaches the cell; emptied → genuinely inert).
+- **T9 also fixed a shipped defect with a type lie behind it.** An unmapped event kind rendered a
+  stray LEADING SPACE, because `EVENT_EMOJI` was typed `Record<string, string>` – claiming every kind
+  has a glyph. The type now admits `undefined` and the space travels with the glyph.
+  ⚠ `wrapper.text()` TRIMS, so a trimmed read would have passed on the broken build; every assertion
+  reads raw `textContent`. One more entry in this wave's vacuity catalogue.
+- **A name collision caught mid-build**: `shared/protocol/narrative.ts` already exports
+  `LifeBeatOption` – the WIRE shape, `{id, label}`, no price. The engine's priced shape is now
+  `LifeBeatAnswer`, and the split is the fence that stops a price reaching a button.
+- ❓ **OPEN, for the owner (T9)**: one glyph marks EVERY life row today. `WorldEvent` carries no
+  life-kind discriminator, so wave 4's endings and §5a's wedding would wear the same mark as «met
+  someone». Per-kind glyphs need either new `WorldEventType` members or a field on the row – a design
+  call, flagged rather than pre-built. Proposed candidate for the one glyph: 🤍.
+
+## 11.09.2026 – WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY
+
+- **The drift.** The wave-3 brief sent tier 1 through tier 2's HARD pause; who-she-is §5b's ruled
+  table says «soft – answerable, never lost». The builder built what the brief said, **flagged the
+  contradiction rather than choosing silently, and MEASURED the cost**: bond starts at 70 (`steady`),
+  so small talk fired from week 0 on every career and broke 136 walked fixtures – in play, ~2–4
+  week-stopping modals a season for a zero-bond event. ⭐ The blast radius WAS the design signal: a
+  frequent zero-stakes event that stops the week is exactly the «spam» the tiering exists to prevent.
+- **The owner ruled twice, same day**: first вариант 3 – raise off, engine kept – then «расписать
+  вариант 2 подробнее сейчас в спеке и тоже всё-таки в эту волну загнать», which became §5b's SOFT BLOCK
+  CONCRETIZED amendment and the brief's T15. **Second ruling: NO AGE GATE** – she talks at any age;
+  tier 1 is texture, not part of the romance layer.
+- ⭐⭐ **THE DEFERRAL WAS PROVEN COMPLETE BY IDENTITY, not by assertion.** T8's raise moved 12 frozen
+  constants; with the raise removed every one had to return to its pre-T8 value **byte for byte**,
+  confirmed by RUNNING the helpers rather than reverting a diff. Result: 0 differing hex constants,
+  and the regenerated e2e fixtures byte-identical to before tier 1 existed. That identity is what made
+  T15 safe – it re-enabled a raise against a clean baseline rather than on a half-reverted one.
+- **The dormancy pattern earned its keep a second time.** T8b left tier 1 «declared and never raised»
+  with a mutation-verified guard – the shape wave 1 used for `attachmentLift`, which wave 3's T4 then
+  turned red exactly as designed. T15 turned T8b's guard red in the same way and **re-aimed it to a
+  claim that is still checkable**: «tier 1 is raised through the SOFT path and through no other» –
+  a deleted raise AND a second raise site both go red.
+- ⭐⭐⭐ **THE ARCHITECT'S CROSS-CHECK FAILED, AND THE BUILDER PROVED WHY RATHER THAN RE-STAMPING.**
+  The architect predicted the soft path would raise the SAME rows as T8's hard path and handed over
+  T8's recorded `lifeLog` hashes to check against. They did not match. The builder RECONSTRUCTED the
+  cause: T8's hard pause left each career with exactly ONE small-talk row for ever, because its gate
+  refused every later raise while any row stayed pending and the bench never drains – and hashing a
+  one-row log reproduced all three of T8's recorded values character for character. The soft path
+  expires the window and she returns (11 / 6 / 10 rows). ⚠ **The first hit is the same week in both
+  paths (1, 5, 20)**, so the dice are identical and only the window differs. The premise was wrong;
+  the wave is right; both are now measured.
+- **The eighth dead test of the wave, caught by ARM 10.** Two walked-career cases asserted the
+  refusal AFTER `drainLifeBeats` – which answers the row and clears it – so they were asserting
+  against an empty queue. They assert before the drain now, and on the kind.
+- **T15's shape**: `LIFE_BEAT_BLOCKING` total by kind (a future kind MUST choose); `pendingLifeBeat`
+  narrowed to blocking rows; `liveSoftBeat` with a 3-week window DERIVED from `week − row.week`;
+  the Home card is only the INVITATION and opens the SAME `LifeBeatDialog` through one optional prop
+  – **no new dialog component anywhere**. ⚠ **No schema move**: nothing new is persisted, so v74 stands.
+- **Two things T15 ruled that neither spec nor brief covered**: (1) `answerLifeBeat` takes the
+  BLOCKING row first and the live soft row only when nothing is blocking – a naive scan would have
+  recorded a `'met'` answer against a three-week-dead conversation and left the week stopped (ARM 13
+  pins it); (2) no dismiss control was invented for the soft dialog – all three replies are free and
+  one is «tell her it can keep», so backing out would be a new control and new copy, the owner's.
+- ⚠ **OWED, carried to T13**: the Playwright e2e for the soft card. Measured reason – no committed
+  fixture parks a career on a LIVE soft row (all seven carry only expired ones), so the case needs a
+  new recipe and a new `.tsave`, which is a change to the shared fixture set. The claim IS covered at
+  the engine and mounted levels; the owner's 29.08 rule («one e2e case per shipped mechanic») is not
+  yet satisfied, and this is the record that it is owed rather than forgotten.
+- ⚠ Every e2e fixture now carries 3–11 **expired unanswered** small-talk rows – the ruled record that
+  she came by and it went unasked. Worth knowing before anyone reads a fixture's `lifeLog`.
+
+## 11.09.2026 – WAVE 3 T11 + T12: THE CENSUS HOLDS, AND THE PUSH-THROUGH PRICE IS 92% ERASED
+
+- **T11 – the arrival census, 800 careers. TEN of eleven bars HIT.** Count medians separate exactly as
+  §4 predicts (fiery 5.0 · sunny 3.0 · deep 2.0 · quiet 2.0); first-arrival medians hit both bars
+  (fiery 16.78 ≤ 17, quiet 18.03 ≥ 17.5); private late-share 90.2% against ≥ 60%.
+  **Input-independence asserted, not eyeballed: 53 arrival weeks over 16 pairs, ZERO mismatches** –
+  and the arm carries its own positive control, because two arms that are secretly one career pass
+  that equality trivially: final bond differs in 16/16 pairs.
+- **THE ONE MISS IS ATTRIBUTABLE, WHICH IS THE POINT OF MEASURING**: open late-share ≤ 25%, measured
+  **44.0%**. The open register is **already 57.4% late BEFORE the shave touches it** (§4's own «open –
+  0 with p 0.45» = 55% nominal), i.e. 2.3× the bar with no shave at all; `close` (⌊/3⌋) would give
+  ≈33%. So ≤ 25% needs p(raw = 0) ≈ 0.75 against §4's 0.45 – **it is the LAG TABLE, not the
+  architect's shave concretisation.** No constant was touched. The owner's to move or to accept.
+- ⭐⭐ **AND A SECOND FINDING NOBODY ASKED FOR: 100% of 2,405 arrivals landed at bond band `steady`.**
+  Three of `bondShave`'s four rows are unexercised design. The tool's grinder arm shows the other end
+  is not a middle either – bond COLLAPSES over ten years (66.7% `cold`, none `close`). Read beside
+  T12 below, this is one story: **the standing does not travel far from 70.**
+- **The bench caught two defects in ITSELF before reporting either.** (1) It used `14 + week/52` –
+  which is `ageAtWeek`, the COACH MARKET's restocking clock, and `world/age.ts` says so explicitly.
+  Every first-arrival age was half a year too old and **both** bar-2 verdicts were wrong (fiery read
+  MISS at 17.14; it is 16.78, a HIT). It now asks `kidAgeExact`, the same function `arrivalEligible`
+  gates on. (2) A receipt threw on «1081 raised, 1080 answered» – a career-ending injury latching on
+  the very tick that delivered her news, leaving a row `answerLifeBeat` refuses forever. Checked row
+  by row against its own story now, never counted off as slack.
+- **How an empty column was made impossible to mistake for a measurement** (the direct answer to
+  `bench:spirit` exiting 0 on a swallowed throw): **no `try`/`catch` anywhere in the file**; every
+  number through `sample()`/`share()`, which throw on a short list and guard the denominator so
+  `0/0` cannot render as `NaN%`; the instrument asserts its own actuation PER TEMPERAMENT, never
+  pooled (a pooled total passes with one column dead); a legitimately empty cell prints `–`, never
+  `0.0%`; and **two exit codes with different meanings** – a missed corridor exits 0 (a finding), an
+  unmeasured column exits non-zero (a broken instrument).
+- ⚠ **The latch proxy carries NO verdict this wave and is marked unsigned**: shipped it is 100% by
+  construction (nothing ends an attachment), poked it is a readback of the tool's own duration table.
+  Neither is a property of the sim. Printed so the column exists for step 6 to fill.
+- **T12 – wave 1's measurement debt paid, and the answer is that the price is largely not paid.**
+  Full numbers in who-she-is §4a's second wave-3 entry. The headline: the deltas land **to the point**
+  (zero mismatches at every `decideKnock`), and the flat **0.5/week** regression then pays them back
+  between knocks – **92% of the delta table's separation never reaches a reading week**, plateauing
+  at ~3.5 against a predicted 44.15. ⚠ Same arithmetic ceiling as wave 2's bar 3, now measured on a
+  pair that moves exactly one decision.
+- ⚠⚠ **AND THE PARENT DOES NOT ANSWER MOST KNOCKS AT THE DEFAULT COACH.** `coachManagesLoad` is true
+  at every rung but `self`: 280 knocks arrived, **the coach answered 232**, the parent was asked ~1.5
+  times per career against 9.0 self-coached. The push-through price the owner asked about is mostly
+  **not his to pay** in normal play. What pushing actually costs is availability – −4.10 matches
+  played per pair, +108 injury onsets, +380 injured weeks.
+- ⚠ **A wrapper notification claimed «exit code 0» while the log said `BENCH_EXIT=1`** – the seventh
+  time this session. Every verdict in this wave was read from a file the command appended itself.
+
+## 11.09.2026 – THE PRIVATE LIFE, THE GATE DAY: SIX RULINGS AND A DELEGATED ВЫЧИТКА
+
+The wave-3 final gate passed (verdict in the session; zero code findings), and the owner ruled
+the six waiting items in one message:
+
+- ⭐ **The вычитка itself is DELEGATED**: «посмотри сам пожалуйста, уже у нас вроде весь подход
+  есть, можно по аналогии проверить» – the architect reads the 228 lines against the
+  established laws and edits under that delegation; the owner's final read stays the playtest
+  (his standing 10.09 rule). Invariant 4's chain of custody: owner → architect, recorded here.
+- **§16, «We listened, and left it there»**: «да как будто бы и не страшно, но можешь
+  предложить» – two candidates go to him; the line stays until he picks.
+- ⭐ **T14's window: the finish week stands** («ок») – the card meets the moment; `doneWeek + 1`
+  would show it a week late.
+- ⭐ **The glyph is 🤍** («ок») – the v1 single mark for every life row; per-kind marks stay
+  deferred until a discriminator exists (T9's flagged design call).
+- ⭐ **Bar 5 moves the TABLE, not the bar** («двигать таблицу – ок»): the open feed-lag becomes
+  **0 with p 0.70, else uniform 1..4** (was 0.45 / 1..5) – «open» now means the parent usually
+  hears at once; private is untouched. All three doc homes edited (who-she-is §4 wins on
+  drift); the census re-runs with the fold and §4a gains the re-measured bar.
+- ⭐⭐ **The push-through escalation: «давай попробуем»** – wave 3 gains T16: at every coach rung
+  with `coachManagesLoad`, ORDINARY knocks stay the coach's, but two classes ESCALATE to the
+  parent's own knock dialog – (a) a repeated part (the −5 row's own trigger), (b) any knock in
+  a week carrying a `'warn'` medical clearance. The coach calls home; the bond lever lives
+  without touching the ruled 0.5/week memory. The T12 pair re-runs after: parent-asked rate is
+  the predicted-vs-measured headline (~1.5 → 4–6 per career expected), corridors printed, no
+  other constant moved. The regression-arithmetic question (92% erased) is deliberately NOT
+  ruled here – it travels with планка-3 to its own session.
+
+## 11.09.2026 – THE PRIVATE LIFE: THE STOP-WANT WAS A QUARTER, NOT A TAIL (T17 RULED IN)
+
+The owner's own playtest measured what the bench had not yet: his world #5, healthy, close
+home, said «stop» at the fork – «Для меня, как игрока, да и виртуального родителя тоже, это
+был форменный шок… С одной стороны круто – потому что никто не ожидал. С другой очень обидно
+как игроку». The formula agrees it was no fluke: every fork-want weight sits in [1.0, 1.6], so
+P(stop) floors at ~19–25% at ANY state – the magnitude was flagged «ours until it is measured»,
+and he measured it. His age point sharpened it: «Эшли Барти ушла первой ракеткой мира в 25 –
+это окей, моей 18, я ещё игры не видел, ещё магазин не скуплен» – an unsupported quit at the
+fork must be an eighteen-year-old's tail, not a coin.
+
+- ⭐ **Ruled into wave 3 as T17** («если это мини-волна, давай её сюда же сделаем»): layer 1 –
+  `stop` becomes a SUPPORTED tail (floor ε ≈ 0.12 → ~3–4% unsupported; worn and strained-mirror
+  gains make a genuinely worn girl in a strained home lean it for real), college/tour weights
+  and the three-inputs temperament fence untouched; the DRIVER (worn / strained / own) is
+  derived once and spent on WORDING only – her stop line reads as tiredness, distance, or the
+  Barty register («I have done what I came for»), so even the shock reads backwards. Layer 2 –
+  his «обсуждать с тренером»: a `'fork-counsel'` beat (coach's read, driver-keyed, bond-0
+  acknowledgments) blocks the fork answer until heard. ⚠ The psychologist's counsel seat is
+  built-for but EMPTY – he is wave 5's; layer 3 (the pressed-through stop remembered and
+  re-read later) travels to wave 5 with him.
+- **The Barty tail stays a feature**: nothing can zero `stop` – the design keeps «никто не
+  ожидал» possible, priced for her age and always with roots the player can re-read.
+
+## 12.09.2026 – THE PRIVATE LIFE: T16 OVERCORRECTED, AND THE NINE-POINT FOLD (T16b)
+
+The builder shipped T16/T17 and measured its own medicine: the unconditional escalation classes
+flattened the coach ladder to 1.08× (Elite self-decide 95% → 31%) – the attention-buying
+product died for the lever's sake. The owner: «мне это не очень нравится», then «давай по всем
+пунктам микро спеку… чтобы он всё починил». The nine answers, logged:
+
+- ⭐⭐ **T16b ruled – the widener model replaces the override.** `'warn'` becomes a second
+  doubt-widener beside `REPEAT_DOUBT` (draft ≈2.5–3); the unconditional classes revert; bars:
+  ladder spread ≥ 1.6×, middle-rung parent-asked 3–5/career, Elite self-decide ≥ 85%. Invariant
+  5 working as designed: «давай попробуем» → measured → corrected by the ladder's own number.
+  The coach-load pins re-aim BACK with the three-turn story preserved (23.08 rejection → 11.09
+  override → 12.09 widener).
+- **The warn feed line is the architect's**: «The coach is not calling the {part} alone – not
+  on a week like this.» replaces the reuse (his «мне вроде как ок» to the reuse stood; the line
+  closes it cleaner at zero cost).
+- **Own-stop contractions: LEAVE** – the four shipped wave-2 keepers stay byte-identical; the
+  Barty-register formality is load-bearing, and the pool is never seen whole.
+- **Worn-at-the-fork is reachable in play** (injury before the fork, pushed-knock runs, exam
+  grind, vacation-less seasons – NOT weekly tournaments: results are form's parked channel and
+  deliberately absent from the perturbation table); the bench gains a POKED worn arm so the
+  copy renders in a walked context at least once.
+- **The frozen-fixture stall explained and repaired**: harnesses that answer nothing latched on
+  the first escalated knock (econ-bench 2 → 47 stuck weeks – a property of the stand, not the
+  game); a shared knock drain (answer `rest`) lands for every harness not measuring her, under
+  T6b's law that a drain never overwrites a measuring arm.
+- ⭐ **The bond magnet is now measured THREE ways** (wave-2 bar 3 · T12's 92% erasure · 100% of
+  2,405 arrivals at `steady`, close never reached): the 0.5/week regression to 70 is a magnet
+  rare pluses cannot escape upward. NOT retuned here – the bond-memory model gets its own
+  session with планка-3. His paired observation answered: mood variation in play waits on wave
+  4's shocks (step-1 spirit hovers by design); temperament itself never changes BY LAW (§3
+  fence) – its EXPRESSION (walls/leanings, his «может и назад откатиться») is wave 5's schema.
+- **The glyph discriminator rides v75**: an optional `lifeKind` on the event row lands with
+  wave 4's own bump (its endings need it first); 🤍 stays the single v1 mark; he sees it live
+  in the post-merge playtest build.
+- **ending.tsave's staleness debt** gains a re-gate check: every fixture newer than the head
+  that shaped it.
+- **CLAUDE.md compression ruled its own post-merge PR** («кажется надо оптимизировать») – the
+  Gotcha case-histories compress to law + decisions links; 22 characters of headroom is one
+  agent-line from a red gate.
+
+## 12.09.2026 – WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE
+
+- ⭐⭐⭐ **T16 WAS OVERTURNED BY ITS OWN MEASUREMENT, AND THAT IS THE ENTRY.** It hit the rate it was
+  built for (1.88 → 6.50 parent-asked knocks a career) and reported, unprompted, that its two
+  UNCONDITIONAL classes were tier-independent and had flattened the coach ladder from a 2×
+  budget-to-elite span to **1.08×**, with the Elite coach falling from deciding 95% of knocks alone to
+  31%. The owner: «мне это не очень нравится». **A builder that had reported only its bar would
+  have shipped the death of the attention-buying product as a success.**
+- **T16b replaces it**: `'warn'` becomes a second doubt-widener beside `REPEAT_DOUBT` rather than an
+  unconditional override. All three ruled bars HIT – ladder spread **6.3×** (≥ 1.6), middle-rung asked
+  **3.50 / 4.00** (3–5), Elite self-decide **91.9%** (≥ 85). Full numbers in who-she-is §4a's third
+  wave-3 entry, which REPLACES T16's per the owner's ruling.
+- ⚠ **The one authorised tuning of the wave, and it is on the record.** `WARN_DOUBT = 3` alone missed
+  – the warning band is condition [15, 25), so a warn week is rare AND arrives carrying ~30 strain
+  points of gap a confident coach's zone never reaches. `ESCALATE_CAUTION` 3.5 → 4.5 was the single
+  permitted step; **5.0 was declined as more movement than the corridor needed.** Nothing else moved.
+- ⚠⚠ **THE T6b LAW BROKE ONCE, UNDER TEST, AND THE GATE CAUGHT IT.** The shared knock drain was put
+  inside `econ-bench`'s `stepCareerWeek` and silently reached `e2e-fixtures` and `life-arrival`;
+  `npm run e2e:fixtures` went red («junior: no seed in 200 reached the state»). Fixed with an explicit
+  opt-out, `junior.tsave` regenerated **byte-identical** proving the walk restored, and the incident
+  written into `tools/_knocks.ts` as the finding rather than a silent repair. ⭐ The law it proves:
+  **a drain must never overwrite a measuring arm**, and a helper is how it reaches one by accident.
+- **The drain beat its prediction**: jammed weeks 47 → 0, 39 → 0, 106 → 0, and arrivals ROSE – the
+  frozen fixtures now walk MORE game than before T16. The architect predicted «~2»; the answer is 0,
+  because a drain answering in the same tick leaves no week holding one.
+- **Point 2 – the warn line ships**: «The coach is not calling the {part} alone – not on a week like
+  this.» T16's reuse of «in two minds» is gone; it claimed a mental state a risk week cannot back.
+- **Point 3 – the four shipped wave-2 `own` stop lines STAY UNCONTRACTED, and are keepers byte for
+  byte** (the owner, 12.09: «согласен, оставить»). The Barty-register formality is load-bearing in a
+  career-defining sentence, and the player ever sees only one line of that pool. T17's 8 NEW stop
+  lines follow §Contractions; the two conventions coexist on purpose. **One ledger line, zero code.**
+- **Point 4 – the worn column now renders in a walked context**, via a bench-only poked arm; the
+  walked reading (`worn 0`) is untouched and still the finding. Recorded on §4a's fourth entry.
+- **Points 6, 7 and 9 are NOT this wave's, by ruling**: the bond-memory magnet travels to the
+  планка-3 session (now measured three independent ways – wave 2's bar 3, the push-through's 92%
+  erasure, and 100% of arrivals landing at `steady`); the glyph discriminator rides wave 4's v75 bump
+  as an optional `lifeKind` on the event row; the `CLAUDE.md` compression is its own post-merge PR.
+- ⚠ **Point 8 stands as a re-gate check**: every `.tsave` and golden must be newer than the head that
+  shaped it – the `ending.tsave` staleness debt's own guard.

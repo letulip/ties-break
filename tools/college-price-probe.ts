@@ -35,7 +35,7 @@
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament, answerLifeBeat, pendingLifeBeat } from '../src/engine/world'
+import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
 import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
@@ -63,6 +63,7 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { WorldState } from '../src/engine/world'
 import type { Rng } from '../src/engine/rng'
 import type { FamilyBackground } from '../src/shared/protocol'
+import { drainLifeBeats } from './_lifeBeats'
 
 /** ⚠⚠⚠ THE GAP BETWEEN THE ANSWER AND THE DEPARTURE, AND THE REASON THIS PROBE READ A WORLD THAT
  *  NEVER WENT TO COLLEGE. Round 24 split the two: `answerFork('college')` RESERVES a place and
@@ -238,7 +239,7 @@ for (let p = 0; p < PRESETS.length; p++) {
       // picks a place now, and this probe never was a player. `answerFork` falls back to the CHEAPEST
       // place open to her, so this file measures the college branch at its floor price and nothing
       // else. The choice is measured in `tools/college-choice-probe.ts`.
-      if (pendingLifeBeat(at.world)) answerLifeBeat(at.world, 'listen')
+      drainLifeBeats(at.world)
       answerFork(at.world, 'college')
       departToCollege(at.world, at.rng)
       // Round 24: the year pauses on her birthday week – press, answer, press again.
@@ -277,7 +278,7 @@ for (let p = 0; p < PRESETS.length; p++) {
       const from = snapshot(at.world)
       // ⚠ THE FORK IS ANSWERED 'continue' RATHER THAN LEFT OPEN, so the two arms differ in the
       // ANSWER and not in whether a question is outstanding.
-      if (pendingLifeBeat(at.world)) answerLifeBeat(at.world, 'listen')
+      drainLifeBeats(at.world)
       answerFork(at.world, 'continue')
       for (let w = 0; w < YEARS * WEEKS_PER_YEAR; w++) {
         stepCareerWeek(at.world, at.rng, POLICY)
