@@ -191,20 +191,98 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   the shape of the rule rather than a sentence – ordinal one may print one of the scenes' own lines,
   ordinal two may not print ANY of them. An arm that named a sentence would be pinning a draw.
 
-- [ ] **5. «на десктоп на экране ребенка (по клику на аватар в углу) давай тоже сделаем как на
+- [x] **5. «на десктоп на экране ребенка (по клику на аватар в углу) давай тоже сделаем как на
   главной примерно: кватратная картинка полная, все карточки останутся внизу, а вот эти ее Skills
   может быть вполне влезут возле фото справа.»** – **build.** Desktop layout for the kid screen:
   full square painting, Skills beside the photo on the right, the other cards below – Home's own
   desktop idiom (round 36 phase 3). Mobile untouched.
 
-- [ ] **6. «мне кажется, что здесь "Charge your phone. It was on two per cent again." лишний пробел
+  **SHIPPED** on `round/41` (`6d2a4350`).
+
+  **WHAT CHANGED.** `KidScreen.vue` gains a `@media (min-width: 1024px)` block transplanting Home's
+  own idiom, token for token: `:deep(.tb-screen-body) { display: grid; grid-template-columns:
+  minmax(0, var(--hero-max)) minmax(310px, 1fr); }` – the SAME `--hero-max`/`--hero-aspect` tokens
+  `HomeScreen.vue`'s `.diary-hero` reads at this breakpoint, not new numbers. `.kid-hero` takes
+  `aspect-ratio: var(--hero-aspect)` (with `height: auto` to let the ratio apply at all – the base
+  rule's fixed `height: 392px` would otherwise win outright), `grid-row: span 2`, `align-self:
+  start`; everything else (`.kid-grid`, the three conditional footnotes, `.error`, and two of the
+  three `.kid-panel` cards) wraps to `grid-column: 1 / -1`, the same move Home's
+  `.card-pair`/`.strip-pair` make in the identical spot.
+
+  ⚠ **EXPLICIT PLACEMENT, NOT A REORDER.** The Skills panel is LAST of six blocks in the template's
+  own source order and has to render FIRST, beside the photo. A new `kid-panel-radar` hook on just
+  that card takes `grid-column: 2; grid-row: 1` explicitly, so it lands beside the hero without one
+  element moving in the markup – the phone's reading and tab order, and every existing pin that
+  reads them, are untouched.
+
+  ⚠ **THE PAINTING ITSELF DOES NOT MOVE.** `.kid-hero-img`'s `object-fit: cover` /
+  `object-position: 50% 22%` are the base rule, untouched – the standing ruling that this art is
+  shown WHOLE. Only the FRAME's aspect-ratio changes, and only past 1024.
+
+  *Evidence* – `tests/component/round41-kid-desktop-layout.test.ts` (5 arms): the shell body becomes
+  the declared two-track grid; the hero reads `grid-row: span 2` / `align-self: start` /
+  `max-width: 512px` / `aspect-ratio: 450 / 400` / `height: auto`; the Skills card reads
+  `grid-column: 2` / `grid-row: 1`; the attribute grid, a REAL rendered footnote
+  (`.kid-note-account`, forced via `buildKidLife` rather than a 300-week walk) and the two other
+  panels all read `grid-column: 1 / -1`; a phone keeps `display` off `grid` and the hero's shipped
+  `height: 392px`. Mutation: deleting the whole media block reddens every desktop assertion while
+  the phone control stays green; deleting only the `kid-panel-radar` placement rule reddens the
+  Skills-placement assertion alone (both restored, both green). Every existing phone-width pin this
+  item could touch (`round23-kid-page`, `round21-school-cutoff`, `wave1-mood-word`,
+  `wave3-graduated-portrait`, `round15-surfaces`, `round36-error-surfaces` – 62 tests across 6
+  files) re-run green, unmodified.
+  *No new player-facing strings.*
+
+- [x] **6. «мне кажется, что здесь "Charge your phone. It was on two per cent again." лишний пробел
   между per и cent»** – **build, his wording call.** `src/composables/fridgeNote.ts:98` → «two
   percent». Any corpus pin that holds the byte moves WITH it, with the ⚠ note.
 
-- [ ] **7. «на экране перед матчем если тренер есть давай может вот на этой нижней плитке со словами
+  **SHIPPED** on `round/41` (`ce7277bd`).
+
+  **WHAT CHANGED.** `FRIDGE_NOTES[15]` (`fridgeNote.ts:98`), one string:
+  `'Charge your phone. It was on two per cent again.'` → `'Charge your phone. It was on two percent
+  again.'` – one character removed (the space), nothing else.
+
+  ⚠ **NO CORPUS PIN MOVED.** `tests/calendar-grid.test.ts`'s FRIDGE_NOTES checks (pool size 40-60,
+  uniqueness, length ≤56, no forbidden words) are all STRUCTURAL – selection is a hash of
+  `seed:week`, never of the text, so a byte inside one entry cannot touch any of them.
+
+  *Evidence* – `tests/calendar-grid.test.ts` (59) and `tests/calendar-screen.test.ts` (65), both
+  re-run green, unmodified. *No test added*: the string is data, not logic, and the existing corpus
+  sweep already covers the pool's shape.
+
+- [x] **7. «на экране перед матчем если тренер есть давай может вот на этой нижней плитке со словами
   коуча (Coach prediction Three wins for the title. B. Bakker) поставим ее картинку тоже слева как
   на главной на тайле стоит?»** – **build.** The coach portrait joins the prediction tile on the
   pre-match screen, same asset road as Home's coach tile. No wording change.
+
+  **SHIPPED** on `round/41` (`d4cd384b`).
+
+  **WHAT CHANGED.** `TournamentFlow.vue`'s `.tf-brief` card gains a portrait strip reusing Home's
+  exact idiom (`coachPortraitUrl(currentCoach.value.id)`, absolute + flush left + height-driven with
+  no vertical crop – the 28.07 ruling – + a 90deg fade mask). The card's own padding moved one level
+  deeper (a new `.tf-brief-body` wrapping the existing two columns) so the picture can bleed to the
+  card's own edges, exactly as `.coach-card` does on Home; the resulting content width and height
+  are numerically identical to before (the 14px card padding split into a border(1) + body-padding
+  (14) chain that sums to the same 30px inset either way).
+
+  ⚠ **DELIBERATELY NOT HOME'S FALLBACK.** Home always draws a face (a family-background default
+  silhouette while self-coached), because that card is the parent's own voice. This tile is the
+  COACH's read, and his own words are «если тренер есть», not «always» – so the portrait is
+  `v-if="coachPhoto"`, gated on a hired coach existing, and a self-coached family's card is
+  untouched, to the pixel.
+
+  *Evidence* – `tests/component/round41-coach-portrait-tile.test.ts` (3 arms): a hired coach's
+  portrait resolves through `coachPortraitUrl` off the engine's own coach id (not a literal), with
+  an empty `alt`; a self-coached career draws no portrait and the body reads flush left; the
+  existing coach-line/signature/Begin content is unmoved by the restructuring. Mutation: forcing the
+  portrait to always render reddens the self-coached arm alone; resolving the URL off the coach's
+  name instead of id reddens the URL arm alone (both restored, both green). The phone-fit evidence
+  this item owes is the PRE-EXISTING `tests/component/round21-coach-travel.test.ts` §3 (27 tests,
+  re-run green) – its own `atTournament(..., true)` fixture already has a hired coach, so that
+  measurement already includes the new portrait. Every neighbouring TournamentFlow suite
+  (`round37-frame`, `round27-call-up-flow` – 22 more tests) re-run green.
+  *No new player-facing strings.*
 
 - [x] **8. «На прологе добавить возможность вернуться к первому экрану с созданием персонажа со
   второго экрана, или сделать промежуточный попап с подтверждением введенной информации и
@@ -368,11 +446,28 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   **e2e:** `e2e/prologue.spec.ts` 2 passed; `e2e/smoke.spec.ts` 1 passed; `e2e/responsive.spec.ts -g
   "onboarding's choices"` 6 passed (375x600, 375x812, 768x640, 900x620, 1024x620, 1280x600).
 
-- [ ] **10. «на экране с анимацией прохода недели давай записочку под таблицей недели сделаем
+- [x] **10. «на экране с анимацией прохода недели давай записочку под таблицей недели сделаем
   по-шире на дестоп и планшетах?»** – **build.** CSS width for the note under the week table on the
   week-advance screen, tablet + desktop.
 
-- [ ] **11. «точки с буквами о днях тренировки на плашке на week recap давай чуть кучнее соберем на
+  **SHIPPED** on `round/41` (`35718fea`).
+
+  **WHAT CHANGED.** `CalendarScreen.vue`'s `.cal-note` was a flat `max-width: 280px` at every width
+  – the design's own scrap-beside-a-343px-phone-card number, never asked to answer for a screen with
+  room to spare. Two steps: `min(420px, 62%)` at 768, `min(480px, 54%)` at 1024 – `min(px, %)`
+  rather than a bare percentage, because the scrap carries one short sentence (the corpus caps at 56
+  characters) and a percentage alone would stretch a one-line note into a banner on a very wide
+  window.
+
+  *Evidence* – `tests/component/round41-calendar-note-width.test.ts` (3 arms): 375 reads the
+  shipped `280px`; 768 reads `min(420px, 62%)`; 1024 and 1280 both read `min(480px, 54%)`
+  (happy-dom substitutes the custom property but does not fold `min()`'s arithmetic, so the literal
+  expression is the honest read). Mutation: deleting both media blocks reddens the 768/1024 arms
+  only; swapping their two values reddens the same two arms with the swapped numbers (both
+  restored, both green). `tests/paper-note.test.ts` (9) re-run green, unmodified.
+  *No new player-facing strings.*
+
+- [x] **11. «точки с буквами о днях тренировки на плашке на week recap давай чуть кучнее соберем на
   планшетах и десктопах, а то они сильно широко друг от друга, не очень читаются. И вообще на этом
   экране для всех плашек на планшете можно чуть больше паддинги сделать, а на десктоп еще чуть
   больше. Тогда карточки станут аккуратнее. По типу Training plan и This week на этом же экране, там
@@ -383,15 +478,130 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   one consistent size, (d) the same padding audit on Home's cards. Token-level where possible, not
   per-file numbers.
 
-- [ ] **12. «на календаре на цветных плашках на десктоп и планшете сделать шрифт крупнее»** –
+  **SHIPPED** on `round/41` (`ffcfa8cf`).
+
+  **(a) THE DOTS.** `WeekRecapCard.vue`'s `.recap-days` was `justify-content: space-between` at
+  every width – reads as one group on a 168px phone tile, as seven unrelated marks once the tile is
+  several hundred px wide. Past 768: `justify-content: flex-start; gap: 14px`.
+
+  **(b) THE TOKEN.** A new `--tb-card-pad` custom property on `:root` (`src/style.css`) – 14px base
+  (the exact number `Card.vue`'s own `padding: var(--tb-card-pad, 14px)` has read as an unnamed
+  FALLBACK since U0), 16px past 768, 18px past 1024, declared in the sheet's two EXISTING breakpoint
+  `:root` blocks rather than new ones. The four recap tiles drop their hardcoded `pad="12px 13px"`
+  and take the Card default. `.rail-dash-card`'s own `--tb-card-pad: 10px 12px` and `.coach-card`'s
+  `padding: 0` both continue to win over the inherited token, unchanged – a direct declaration on
+  the element always beats an inherited `:root` value, which this item's own tests hold as a
+  separate arm rather than trust by argument.
+
+  ⚠ **A BARE `<section>` READS 16PX, NOT THE CARD'S 14, AND `var(--tb-card-pad, 16px)` WOULD HAVE
+  BEEN A SILENT REGRESSION** the moment the token stopped being unset (a fallback only fires when
+  nothing defines the variable; `:root` now does). `section`'s own rule is
+  `padding: calc(var(--tb-card-pad) + 2px)` instead – 16/18/20, the same +2 relationship it always
+  had over the card, growing WITH the token rather than colliding with it.
+
+  ⚠ **DEAD CODE COLLAPSED IN THE SAME COMMIT.** `src/style.css` carried a round-7 `.recap-days` /
+  `.recap-day` / `.recap-day-letter` triplet, fully shadowed by `WeekRecapCard.vue`'s own scoped
+  copy of the same three names since the redesign wave (a scoped selector's `[data-v-*]` bump always
+  outranks an unscoped global one of equal specificity) – deleted rather than carried forward a
+  second time. `tests/stylesheet-integrity.test.ts` (the trailing-comma guard) re-run green after
+  the deletion.
+
+  **(c) ONE SIZE.** Consequence of (b) rather than a separate rule: all four tiles now read the
+  identical computed `padding` at any given width (asserted directly, see Evidence).
+
+  **(d) THE HOME AUDIT.** `.note-card` usages with no `pad` prop of their own (Family budget, Recent
+  memory) ride the same token automatically; `.coach-card`'s own `padding: 0` is unaffected, as
+  designed.
+
+  ⚠⚠ **THE PIN THAT MOVED, RE-MEASURED HONESTLY.**
+  `tests/component/round36-pass2-shop-recap.test.ts`'s `CARD_H_BEFORE` (`{768: 984.85, 900: 984.85,
+  1280: 984.85}`) assumed the old 12px/13px padding. Re-run against the tree AFTER this item: the
+  model reads **1016.85** at both 768 and 900 (the same 16px step covers both) and **1032.85** at
+  1280 (the 18px step) – recorded with a ⚠⚠ note naming this item and the token, `toBeCloseTo`
+  precision UNCHANGED (never loosened). The sibling scrap-band assertion in the same block holds.
+
+  *Evidence* – `tests/component/round41-card-padding-and-dots.test.ts` (10 arms) covering all four
+  halves: the dots stay spread on a phone and pull to `flex-start`/`14px` at 768 and 1280; all four
+  recap tiles read 14/16/16/18px at 375/768/900/1280 and agree with each other
+  (`new Set(...).size === 1`); `.rail-dash-card`'s override is confirmed still declared verbatim (a
+  source check – the rail needs the whole App shell to mount, which this claim is not worth); Home's
+  Family-budget card reads the same 16/18px steps and `.coach-card` keeps `padding: 0`; a bare
+  `<section>` (no Vue component needed – the rule is on the tag) reads `calc(14px + 2px)` /
+  `calc(16px + 2px)` / `calc(18px + 2px)` at 375/768/1280 (happy-dom substitutes the custom property
+  but does not fold the arithmetic, so the resolved-but-unevaluated expression is the honest read).
+  Mutation: deleting the dots media block reddens the dots arm alone; deleting the two
+  `--tb-card-pad` step declarations reddens every padding arm above the 14px base (5 arms) while the
+  dots arm and the phone-padding control stay green (both mutations restored, both green).
+  `tests/component/round36-pass2-shop-recap.test.ts` (13, re-measured pin), `tests/design-tokens.test.ts`
+  (9), `tests/pin-hygiene.test.ts` (4), `tests/stylesheet-integrity.test.ts` (3), and every other
+  WeekRecapCard-touching component suite (`r37-week-note-tilt`, `round29p2-coach-cut-weekly`,
+  `round33-tournament-arrival`, `round32-week-results`, `dials-screen`, `round37-money`,
+  `week-recap-money`, `week-recap-kid-share`, `round36-review` – 101 more tests across 9 files)
+  re-run green.
+  ⚠ **SCOPE NOTE.** `--tb-card-pad` is a GLOBAL token: every `<Card>` on every screen that takes the
+  default padding (not just this bundle's files) now steps at 768/1024 – the owner's own scope for
+  this item («на home экране тоже проверить»). No file outside this bundle's ownership was edited;
+  the effect is a property of the shared token, which is what "the clean move" means here.
+  *No new player-facing strings.*
+
+- [x] **12. «на календаре на цветных плашках на десктоп и планшете сделать шрифт крупнее»** –
   **build.** Font-size on the calendar's coloured plates at tablet/desktop. `tests/calendar-grid`
   pins are structural – verified before the change is believed safe.
 
-- [ ] **13. «Проверить картинки на week recap, на скриншоте одна, где голова обрезана (десктоп),
+  **SHIPPED** on `round/41` (`facfabb9`).
+
+  **WHAT CHANGED.** `.cal-block`'s `font-size: 8.5px` was one value at every width, fitted against
+  the phone's ~40px-wide column. Two steps: 10px past 768, 11px past 1024. `overflow: hidden` and
+  `word-break: break-word` are untouched, so a label that cannot fit still clips rather than
+  spilling – and the risk runs the OTHER way from what a font bump suggests: `.cal-time-cols` is
+  `repeat(7, 1fr)` across the card's own width, so the same seven columns are WIDER at 768 and wider
+  again at 1024, not narrower, while only the font grew. The longest label in the catalogue
+  ("Road-trip home", 14 characters – `composables/weekGrid.ts`) was checked against that wider
+  column at both steps.
+
+  *Evidence* – `tests/component/round41-calendar-block-font.test.ts` (4 arms): 375 keeps `8.5px`;
+  768 reads `10px`; 1024 and 1280 both read `11px`; the safety nets (`overflow: hidden`,
+  `word-break: break-word`) are still declared at 1280. Mutation: deleting both media blocks
+  reddens the 768/1024 arms only (restored, green). `tests/calendar-grid.test.ts` (59) and
+  `tests/calendar-screen.test.ts` (65) re-run green, unmodified – recon's own finding that neither
+  pins a font-size held.
+  *No new player-facing strings.*
+
+- [x] **13. «Проверить картинки на week recap, на скриншоте одна, где голова обрезана (десктоп),
   есть и другие, может просто этот блок чуть выше сделать или для десктоп картинку по-другому
   спозиционировать»** – **build.** The recap painting's desktop crop cuts heads – container height
   and/or `object-position` for the desktop band, checked across the art that rotates there, not just
   the one screenshot.
+
+  **SHIPPED** on `round/41` (`5238f24e`).
+
+  **WHAT CHANGED.** `WeekRecapCard.vue`'s `.recap-art` becomes a WIDE rectangle past 768 (384x286 at
+  768, 640x286 at 1280 – round 36 P2-5's own numbers), while most of the art that rotates there
+  (`src/art/weeks.ts`: the training/off-1..3 weeks, the travel-home and rehab masters) is square or
+  near-square. Under `object-fit: cover` a box wider than its picture crops VERTICALLY, and the
+  shared rule's default `50% 50%` (`.week-art img`, style.css) spent half of that overflow above the
+  subject. A new rule, gated to the same 768 the rectangle starts at:
+  `.recap-art img { object-position: 50% 20%; }` – biases the window up, same reasoning
+  `MatchScene.vue`'s `.scene--fill .scene-art` already banked on ("TOP, NOT BOTTOM").
+
+  ⚠ **THE VACATION STEER STILL WINS.** `.recap-art-vacation img`'s own `object-position:
+  var(--crop-vacation-x) 50%` needs horizontal steer, not this item's vertical one – both selectors
+  are scoped to this file and carry the identical `[data-v-*]` bump, so they tie on specificity and
+  it is SOURCE ORDER that decides. The new rule is declared BEFORE the vacation one for exactly that
+  reason.
+
+  ⚠ **GATED TO 768, PHONE UNTOUCHED.** Below 768 the band is close to its own 390/286 shape (343x251
+  at 375) and nothing here was asked to move.
+
+  *Evidence* – `tests/component/round41-recap-crop.test.ts` (3 arms): an ordinary week at 1280 reads
+  `object-position: 50% 20%`; a vacation week at 1280 still reads `90% 50%` (the vacation steer); an
+  ordinary week at 375 declares no object-position at all (happy-dom's idiom for "unset", matching
+  `vacation-crop.test.ts`'s own reading of an unset `width`). Mutation: dropping the new rule
+  reddens the ordinary-week arm alone; reordering it after the vacation rule reddens the vacation
+  arm alone (both restored, both green). `vacation-crop.test.ts` (10) and
+  `round36-pass2-shop-recap.test.ts` (13, before item 11's later padding re-measure) both re-run
+  green, unmodified by this item.
+  *No new player-facing strings.*
 
 - [ ] **14. «На Bills на все выбранные позиции добавить в скобках сколько недель осталось»** –
   **build.** Every selected bills position gets «(N weeks left)». Recon is confirming the remaining
@@ -403,10 +613,37 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   Real-world juniors do sign endorsements (racquet/apparel deals commonly land mid-teens). Batched
   with item 27 into the round's money question – see «The asks» below.
 
-- [ ] **16. «мне достался wild card на шлем в 16 лет - это очень круто! А давай этот wild card
+- [x] **16. «мне достался wild card на шлем в 16 лет - это очень круто! А давай этот wild card
   как-то другим цветом на карточке выделим, чтобы он прямо в глаза бросался и отличался от наших
   желтых плашек?»** – **build.** A wildcard entry gets its own accent on the tournament card –
   token-based, distinct from the yellow family; the pick lands here as DRAFT for his eye.
+
+  **SHIPPED** on `round/41` (`7eb2df89`).
+
+  **WHAT CHANGED.** `SeasonScreen.vue`'s `.wildcard-chip` shared ONE declaration with `.defend-chip`
+  ("ONE RULE, TWO CHIPS, AND NO NEW COLOUR IS INVENTED HERE") – split into its own rule, reading a
+  new `--wildcard` token (`src/style.css`, aliased to `--amber`, same idiom as `--warning` two lines
+  up). `CalendarScreen.vue`'s marker card is the SAME event card and had never drawn the chip at
+  all: `UpcomingEvent.wildCard` already reaches it unchanged through `preferredWeekEvent`
+  (`composables/tierState.ts`), so only the markup needed adding – same flag, same
+  `WILD_CARD.slots`-derived tooltip, same words, mirrored from Season's exact chip.
+
+  **DRAFT COLOUR (for his eye).** Amber (`--wildcard: var(--amber)`) – it reads as a find, not a
+  caution, closer to «это очень круто» than the warning family it would otherwise share a hue with.
+  Alternatives on the table: `--orange`, `--locked` – moving to either is the one line in
+  `src/style.css`'s token declaration. ⚠ Never `--gold` from `docs/design/tokens.css` – that file is
+  not imported (a standing rule this token's own comment repeats).
+
+  *Evidence* – `tests/component/round41-wildcard-chip.test.ts` (5 arms): the SeasonScreen chip
+  resolves `#f5b942` (`--wildcard`/`--amber`) and NOT `#cfe152` (`--accent`, the defending badge's
+  colour); it is legible against its card (`tests/component/contrast.ts`'s `assertLegible`); it is
+  absent when the engine did not flag the event; the CalendarScreen marker shows the same chip, same
+  tooltip, for a flagged event; and is absent when unflagged. Mutation: re-merging the two chip
+  declarations reddens the colour-inequality arm alone; dropping the calendar template block
+  reddens the calendar arm alone (both restored, both green).
+  `tests/component/season-screen.test.ts` (11, including the pre-existing wild-card badge suite) and
+  `tests/component/round36-funds-short.test.ts` (4) re-run green. `stylesheet-integrity` and
+  `design-tokens` re-run green after the style.css edit.
 
 - [x] **17. «у некоторых соперниц в про лиге нет флага, проверь там логику пожалуйста»** –
   **build (bug).** Recon is locating where rival nationality is assigned (cohort/conveyor) and where
