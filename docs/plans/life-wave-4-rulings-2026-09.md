@@ -30,9 +30,21 @@ raised for that episode**. The receipt already exists and is already the dedupe 
 **Why the literal rule is wrong, and it is REACHABLE rather than theoretical.** The two readings
 agree everywhere except `endedWeek === knownWeek`, and there the literal rule classifies the
 episode as *known* (`knownWeek <= endedWeek`) – so T2's tick raises `'ended'` while the SAME tick's
-`deliverKnownPartner` still sees `knownWeek <= week` and raises `'met'`. Two contradictory beats in
-one week, which is the exact outcome the brief forbids two lines above: «it must read as one honest
-late row, not two contradictory beats».
+`deliverKnownPartner` fires again on the same episode. Two beats in one week for one piece of news,
+which is the exact outcome the brief forbids two lines above: «it must read as one honest late row,
+not two contradictory beats».
+
+⚠ **CORRECTED 12.09 BY T4's MEASUREMENT – the verdict stood, the arithmetic was one row off.** This
+ruling predicted the pair would be `['ended', 'met']`. Measured, it is `['ended', 'ended']`: the
+second row comes out of ruling B's told-late branch, which lives in the same function. The defect is
+the same size and the same shape; only its name was wrong.
+
+⭐⭐ **AND T4 MEASURED THE MORE DANGEROUS VARIANT, which this ruling had not foreseen.** A later
+reader who applies the literal rule but KEEPS ruling B's two-kind dedupe – the combination somebody
+would actually reach for – does not get a loud double row. It fails **quieter**: the card is raised,
+delivery sees a receipt and skips, and **the week's news never reaches the album at all.** A
+duplicate row is visible; a missing one is not. That is the stronger argument for the receipt
+reading, and it was found by building the arm rather than by reasoning.
 
 Reachability: `rollEnds` runs BEFORE `rollArrival`, so an episode cannot end in its own arrival week
 and `endedWeek >= sinceWeek + 1`. `endedWeek === knownWeek` therefore needs only a lag >= 1 – drawn
@@ -129,3 +141,35 @@ Three consequences, all forced:
    grow a sibling. Whatever the signature becomes, `pendingLifeBeatOptions`, `buildLifeBeatPrompt`
    and `answerLifeBeat` all keep reaching the prices through it, and `tools/_lifeBeats.ts` keeps
    reaching them through `pendingLifeBeatOptions`.
+
+
+## H. The space-vs-company read draws at the SAME 0.70, off the SAME openness register
+
+Neither the wave-4 brief nor ruling G rules the read's distribution, and T4 flagged that a builder
+reading only those two ships a **coin flip** – a silent tuning change wearing the clothes of an
+absent constant. **who-she-is §4 does rule it**, in one sentence:
+
+> **Wants weights**: open girls draw `'open'` / `'company'` at ~70%; private girls `'private'` /
+> `'space'` at ~70%.
+
+One sentence, one number, both pairs. `'company'` is the open register's read exactly as `'open'` is
+its want. So `drawEndsRead` is `drawPartnerWants`' twin off `ECONOMY.life.wantsOwnRegister`, and
+T4's implementation is **confirmed**.
+
+⚠ **They share the constant because §4 states them as ONE rule about ONE axis – her openness** – not
+because 0.70 happened twice. A later session that wants to move one without the other is making a
+SPEC change, not a tuning change, and must say so in §4 first. The comment at the constant says this,
+so the coupling cannot be dissolved by accident.
+
+## I. The read surfaces on the HEADING and the told-late feed row, not inside her line
+
+T4 had to place the read and asked for the call. **Confirmed as built**, on its own two grounds:
+
+1. The heading is the **parent's frame**, and «what she seems to want» belongs there – she does not
+   narrate her own needs. T6's enumerated matrix gives HER_LINE no read axis, which is consistent
+   with that rather than an omission.
+2. It is carried at **every bond band**, so the dry card at `strained`/`cold` carries it too. That is
+   `MET_DRY`'s own argument: a rule only half the ladder can read is a hidden number.
+
+⚠ Cheap to move – it is 4 heading cells plus 2 feed rows – so T6 or the owner's вычитка may relocate
+it without touching the mechanic.
