@@ -126,6 +126,17 @@
   --card-edge: rgba(255, 255, 255, 0.055);
   /* --radius-card is a rung of THE RADIUS LADDER below, and is 18px since 29.07 (it was 17). */
 
+  /* ⭐ ROUND 41 #11 – THE CARD'S OWN PADDING, NAMED, SO IT CAN GROW WITH THE SCREEN. `Card.vue`'s
+     `padding: var(--tb-card-pad, 14px)` has read this exact number as an unnamed FALLBACK since U0;
+     this is the same 14px stated as a real token instead, so the two breakpoint steps below (:768,
+     :1024 – search this file for `--tb-card-pad` to find them) have something to be steps FROM.
+     ⚠ EVERY CARD ON EVERY SCREEN THAT TAKES THE DEFAULT PADDING RIDES THIS TOKEN, which is the
+     owner's own scope for this item: «на home экране тоже проверить эти же паддинги на карточках».
+     A card with its own `pad` prop (an inline `--tb-card-pad`) or its own scoped override – see
+     `.rail-dash-card` below – still wins over this, same as it always did; only the UNSET default
+     moves. */
+  --tb-card-pad: 14px;
+
   /* Four steps of ink, because the export uses exactly four: the headline, the sentence, the label,
      and the caption under a label. */
   --ink: #f2f6f8;
@@ -655,6 +666,9 @@ body {
     /* PHASE 4. The takeover's column joins the other two takeovers on their own cap – see the token
        for the argument, and `docs/specs/responsive-decisions-2026-09.md` D22 for what it moves. */
     --takeover-col-max: var(--app-max-width);
+    /* ⭐ ROUND 41 #11 – THE CARD'S PADDING, STEP ONE. His words in full are beside the base 14px
+       above and beside the 1024 step below. */
+    --tb-card-pad: 16px;
   }
 }
 
@@ -695,6 +709,12 @@ body {
        lands at the top of the band (511px at 1280), so on the widest screen the two are the same
        photograph to within a pixel. */
     --hero-max: 512px;
+    /* ⭐ ROUND 41 #11 – THE CARD'S PADDING, STEP TWO. The owner: «на этом же экране для всех плашек
+       на планшете можно чуть больше паддинги сделать, а на десктоп еще чуть больше» (quoted here
+       rather than in a template – tests/template-copy-rules.test.ts bans Cyrillic inside one). Base
+       14px (`:root` above), 16px past 768, 18px past 1024 – a step at each of the two widths he
+       named, read by every card that takes the default (`Card.vue`'s `var(--tb-card-pad, 14px)`). */
+    --tb-card-pad: 18px;
   }
 }
 
@@ -1213,11 +1233,18 @@ h1 .ball-icon {
   margin: 0 0 24px;
 }
 
+/* ⭐ ROUND 41 #11 – RIDING THE SAME TOKEN AS THE CARD, AT ITS OWN BASELINE. `--tb-card-pad` starts
+   at 14px and a bare section has always read 16 – two more than a card, not the same number – so
+   `padding: var(--tb-card-pad, 16px)` would have been a silent REGRESSION the moment the token
+   stopped being unset: the fallback only ever fires when nothing defines the variable, and once
+   `:root` does, a phone section would have measured 14px where it always measured 16.
+   `calc(var(--tb-card-pad) + 2px)` keeps that +2 relationship at every step instead – 16 / 18 / 20
+   for the card's 14 / 16 / 18 – so a section grows WITH the token rather than colliding with it. */
 section {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-panel);
-  padding: 16px;
+  padding: calc(var(--tb-card-pad) + 2px);
   margin-bottom: 16px;
 }
 
@@ -4272,28 +4299,15 @@ tr.kid-row td {
   opacity: 0.7;
 }
 
-/* item 5b: week-recap day column (dot + Mon–Sun letter) and the legend. */
-.recap-days {
-  display: flex;
-  gap: 6px;
-  margin: 12px 0 6px;
-}
-
-.recap-day {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-
-.recap-day-letter {
-  font-size: 10px;
-  line-height: 1;
-  color: var(--muted);
-}
-
-/* ⚠ `.recap-legend` and `.recap-key{,.train,.rest}` went the same way: the day dots carry their own
-   `.recap-day-letter` row now, so the separate legend under them had nothing left to label. */
+/* ⭐ ROUND 41 #11a – `.recap-days` / `.recap-day` / `.recap-day-letter` REMOVED FROM HERE. This was
+   the round-7 original; `src/components/WeekRecapCard.vue`'s own scoped copy (same three names)
+   has shadowed it completely since the card was rebuilt for the redesign wave – a scoped selector
+   with the SFC's `[data-v-*]` attribute always outranks an unscoped global one of otherwise equal
+   specificity, so nothing has read these three declarations in a long time. Kept dead rather than
+   deleted until now only because nobody had reason to touch this neighbourhood; item 11a did, so
+   the duplicate is collapsed rather than carried forward a second time. `.recap-legend` and
+   `.recap-key{,.train,.rest}` went the same way earlier, for the same reason, and are not this
+   note's to re-explain. */
 
 /* --- Round 7 item 2: Money breakdown (donut + category rows) ----------------- */
 
