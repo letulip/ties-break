@@ -161,8 +161,14 @@ import {
   // how many of the pair's weeks were lived above a LIFTED target. It is also an invariance probe –
   // the arrival is keyed on (seed, calendar) alone, so the two arms must hold it on the same weeks.
   activeEpisode,
+  // ⚠⚠ v75 T7 – THE ONE THE SHOCK ARMS NEED FROM THE BARREL, AND IT IS THE SAME RULE
+  // `tools/life-arrival.ts` states at length: her age is ASKED of the engine and never computed here
+  // (`14 + week/52` is the coach market's restocking clock wearing her name). Every week the shock
+  // block cuts its windows on is derived through it.
+  kidAgeExact,
 } from '../src/engine/world'
 import type { ForkStopDriver, ForkWant, Temperament, WorldState } from '../src/engine/world'
+import type { LifeBeatKind } from '../src/shared/protocol'
 // ⚠ T12 reads two knock facts the barrel does not re-export, from the leaf that owns them – the same
 // direct-to-leaf shape this file already uses for `ECONOMY`, `isExamWeek` and `schoolEndWeek`.
 // `knockGoverns` is the engine's OWN answer to "is this week one the push is being paid for", so the
@@ -174,8 +180,13 @@ import { knockGoverns, KNOCK_PUSH_WEEKS, KNOCK_REST_GROWTH } from '../src/engine
 // through the ENGINE'S functions at the instant the prompt was built rather than by cutting its own.
 // ⚠ AND IF EITHER DERIVATION IS EVER WRONG, THE ASSERTION GOES RED – it compares the captured string
 // against them – which is the safe direction for a second reading to fail in.
-import { bondBandOf, moodRegisterOf, spiritBandOf } from '../src/engine/spirit'
-import { drainLifeBeats } from './_lifeBeats'
+// ⚠ v75 T7 – `spiritMatchFactor` joins them for ONE printed line: the shock arms report the exact
+// factor the landing spirit produces, because «what a shock can reach a match through» is the whole
+// of the mechanism behind bar S2 and a bench that quoted 0.98 would be re-typing the engine's curve.
+import { bondBandOf, moodRegisterOf, spiritBandOf, spiritMatchFactor } from '../src/engine/spirit'
+// ⚠ v75 T7 – the TALLIED drain and its two readers, so the shock arms can print «N drained x −1» as
+// arithmetic rather than carry an unstated offset into a bond column (wave-4 brief §0.2).
+import { drainLifeBeats, drainLifeBeatsTallied, drainSkewLine, emptyDrainCounts } from './_lifeBeats'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { isExamWeek, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -2073,6 +2084,848 @@ function runPushPair(): void {
 
 if (PUSH_MODE) {
   runPushPair()
+  process.exit(0)
+}
+
+// =================================================================================================
+// ⭐⭐⭐ v75 T7 – THE PAIRED SHOCK ARMS – `npm run bench:spirit -- --shock`
+// =================================================================================================
+//
+// ⚠⚠ WHAT THIS IS. Wave 4 ships the break-up: `rollEnds` dates the row, stamps
+// `world.spiritShock`, and `accrueSpirit` charges −22 steady / −34 intense on the week that matches
+// (who-she-is §4's spirit-physics table). Invariant 5 owes that a paired measurement, and §4 owes it
+// five specific numbers. This block is the payment: one clean pair, 128 seed-pairs PER INTENSITY,
+// and every clause but the ending itself held equal.
+//
+// ⚠⚠ IT DOES NOT TOUCH THE GRID ABOVE AND MUST NOT. `--shock` exits before THE RUN, exactly as
+// `--push` and `--sweep` do, so the default printout is byte-identical to what it was before this
+// existed. Nothing here changes a constant permanently: the two dials it moves are moved for ONE
+// TICK at a time and restored, and the restoration is ASSERTED at the end rather than trusted.
+//
+// THE PAIR, and every clause is HELD EQUAL rather than merely unmentioned:
+//
+//   arm A  shocked   the attachment ENDS at `SHOCK_WEEK`
+//   arm B  spared    the same attachment, never ended
+//
+//   · THE ARRIVAL IS FORCED IN **BOTH** ARMS, at the same week, off the same dial. Without it the
+//     pair is unmeasurable rather than merely small: the arrival hazard is 1.0–4.0 %/wk at sixteen,
+//     so eight weeks after the age gate roughly four careers in five have nobody to lose and «128
+//     pairs» would be a grid of empty arms. The brief says «arm B untouched»; on this tree that
+//     phrase cannot mean what it meant in wave 3, and the two sentences below are why.
+//   · THE ENDING HAZARD IS HELD AT ZERO IN BOTH ARMS FOR EVERY OTHER WEEK, which is the half the
+//     brief's «untouched» could not survive contact with wave 4. `rollEnds` is LIVE: over the ~70
+//     weeks between the arrival and the end of the walk a fiery girl's episode ends with probability
+//     ~1 − (1 − 0.018)^70 ≈ 72 %. An «untouched» arm B is therefore not a control – it is a second,
+//     randomly-timed break-up, and the paired difference would be «one ending at a known week» minus
+//     «0.7 endings at unknown weeks». Holding the hazard at zero in both arms and firing exactly one
+//     ending in arm A is what makes the pair differ in ONE EVENT, which is the only thing a paired
+//     reading can price. The hazard's own rate is not this block's subject: it is the census's
+//     (`npm run bench:life-arrival`, walked, §3a's duration medians).
+//   · `balanced` every week in both arms; the family weeks booked in both (off-season 50/51,
+//     `staycation`); the same entry policy (`enterWhatSheCan`); every knock RESTED in both; the
+//     birthday she asked for in both; every life beat drained at its registered price in both.
+//   · `wealthy`, `DEFAULT_PROFILE`, assigned temperament – this file's own three choices, unchanged.
+//
+// ⚠⚠ THE DIAL IS THE POKE, AND IT IS A POKE OF THE **THRESHOLD**, NEVER OF THE STREAM. `rollEnds`
+// draws one uniform on `seed:life:ends:<week>` and compares it with `endsPerWeek × endsMult[t]`;
+// this block moves the constant for one tick and lets the engine draw the same value off the same
+// key it always would. Two properties follow and they are the reason this shape was chosen over
+// writing `endedWeek` by hand:
+//
+//   1. THE PAIR STAYS PAIRED. `rngFromSeed` is re-derived at the call site and persists nothing, so
+//      the sequence MAIN sees is untouched by the threshold moving. Poking a stream would have
+//      re-rolled the world and the two arms would have stopped being one career.
+//   2. THE SHIPPED PATH IS THE ONE MEASURED. The ending goes through `endsEligible` → the hazard →
+//      `endEpisode` → `world.spiritShock` → the kept feed row → the `'ended'` card → `accrueSpirit`'s
+//      shock term. A bench that wrote `endedWeek` and `spiritShock` by hand would be measuring its
+//      own two lines and would keep passing on the day `rollEnds` stopped calling either. The
+//      receipt below asserts each of those stations fired, PER TEMPERAMENT.
+//
+// `RETURN_DIAL` and `BOND_DIAL` (the sweeps, above) are the precedent for moving an `ECONOMY` number
+// at runtime; this is the third, it is the narrowest of the three – one tick – and it is the only
+// one that restores and then CHECKS it restored.
+//
+// ⚠⚠ INSTRUMENT LAWS, AND THEY ARE STRUCTURAL RATHER THAN A PROMISE (this file printed 842 beats
+// raised and ZERO answered while exiting 0, twice, in wave 3):
+//   · NO `try`/`catch` IN THIS BLOCK. Not one. The one refusal a walk can legitimately meet – a
+//     career-ending injury latching inside the tick – is TESTED (`world.ending !== null` breaks the
+//     loop before anything is answered), never caught. The walk answers her through
+//     `drainLifeBeatsTallied` bare, and calls neither `answerLifeBeat` nor `answerFork` directly.
+//     ⚠⚠ AND THAT IS DELIBERATE ROUTING RATHER THAN STYLE, BECAUSE THE REST OF THIS FILE STILL HAS
+//     FIVE BARE `catch {}` BLOCKS AND T7 LEAVES THEM FOR A RULING: `bookTheFamilyWeeks`,
+//     `enterWhatSheCan`, `answerTheBirthday`, `answerTheLifeBeat`'s `answerLifeBeat` and
+//     `answerTheForkTheWayThisArmWould`'s `answerFork`. The last two are the exact swallow this
+//     file's own history is about – who-she-is §4a's wave-3 fourth entry records the `answerFork`
+//     one being «found and fixed with a second bond-neutral drain», and the DRAIN is what was added:
+//     the `catch {}` in front of which it stands is still there, so the day the drain stops clearing
+//     the file returns to printing `bondAtFork: NaN` in silence. Three others (`drainEveryBeat` and
+//     the two `drainLifeBeats` sites) are narrow and RE-THROW anything but the terminal latch, which
+//     is a different thing entirely. Removing a swallow changes what the DEFAULT grid measures, so it
+//     is a task with its own before/after and not a tidy-up inside this one.
+//   · PER-TEMPERAMENT ACTUATION, printed and asserted: arrivals forced, endings landed, shocks
+//     stamped, `'ended'` cards drained. A zero in any of those columns is a FAILED RUN and exits
+//     non-zero – it is never a result of zero.
+//   · `–` FOR AN UNMEASURED CELL, never `0.0%`.
+//   · TWO EXIT CODES, the house pair (`tools/life-arrival.ts`'s own): a MISSED corridor is a finding
+//     for the architect and exits 0 with the miss re-printed; an UNMEASURED column is a broken
+//     instrument and exits non-zero.
+//   · EVERY BAR'S MEASURED VALUE IS PRINTED WHETHER IT PASSES OR NOT – T16's lesson, which hit its
+//     own rate while silently flattening a ladder nobody had asked it to print.
+
+const SHOCK_MODE = process.argv.includes('--shock')
+
+/** ⚠ THE BRIEF'S GRID IS «128 SEED-PAIRS PER INTENSITY», and an intensity is two temperaments, so
+ *  the seed count is half of it and every seed is played by both girls on that axis. That is the
+ *  census's own paired construction (`tools/life-arrival.ts`): the columns differ in who she is and
+ *  in nothing else. `--seeds=N` shrinks it for a smoke run and the header says the grid it ran. */
+const SHOCK_SEEDS_ASKED = 64
+function shockSeedCount(): number {
+  const flag = process.argv.find((a) => a.startsWith('--seeds='))
+  if (flag === undefined) return SHOCK_SEEDS_ASKED
+  const n = Number(flag.slice('--seeds='.length))
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : SHOCK_SEEDS_ASKED
+}
+
+const SHOCK_ARMS = ['shocked', 'spared'] as const
+type ShockArm = (typeof SHOCK_ARMS)[number]
+
+/** ⚠⚠ EVERY WEEK BELOW IS DERIVED FROM THE ENGINE'S OWN CONSTANTS AND NONE IS QUOTED, `life-arrival`'s
+ *  rule verbatim – a birth-date, an age gate or a return rate that moves has to move these too or the
+ *  bars would be read against a window that no longer exists. */
+function shockWeekSheTurns(age: number): number {
+  for (let w = 0; w < 40 * WEEKS_PER_YEAR; w++) {
+    if (kidAgeExact(w, DEFAULT_PROFILE.birthMonth, DEFAULT_PROFILE.birthDay) >= age) return w
+  }
+  throw new Error(`she never reaches ${age} inside forty years – the calendar moved under this bench`)
+}
+/** The first week `arrivalEligible`'s age clause can be true. */
+const SHOCK_ARRIVAL_WEEK = shockWeekSheTurns(ECONOMY.life.ageGate)
+/** ⚠⚠ HOW LONG THE ATTACHMENT RUNS BEFORE IT ENDS, AND IT IS DERIVED FROM THE LIFT'S OWN ARITHMETIC.
+ *  §4's prediction is «from a LIFTED 75», so the shock must land on a girl who has actually reached
+ *  `baseline + attachmentLift`. `accrueSpirit` walks toward that target by `returnPerWeek` a week, so
+ *  the slowest girl needs `ceil(lift / min(returnPerWeek))` weeks to close the gap; four times that
+ *  is the margin, and the receipt PRINTS the spirit she actually carried into the shock week rather
+ *  than assuming the arithmetic worked. */
+const SHOCK_SETTLE_WEEKS = 4 * Math.ceil(ECONOMY.spirit.attachmentLift / Math.min(...Object.values(ECONOMY.spirit.returnPerWeek)))
+const SHOCK_WEEK = SHOCK_ARRIVAL_WEEK + SHOCK_SETTLE_WEEKS
+/** ⚠ THE POST-SHOCK WINDOW – half a season. It is the shortest window that accumulates matches in
+ *  both arms, and it contains BOTH of §4's recovery predictions (~5 weeks steady, ~12 intense) with
+ *  room, so a drop measured inside it is a drop during and just after the dip rather than a drop
+ *  measured past the end of one. */
+const SHOCK_POST_WINDOW = Math.round(WEEKS_PER_YEAR / 2)
+/** ...and «after recovery» is everything from the end of that window to the end of the walk. */
+const SHOCK_AFTER_FROM = SHOCK_WEEK + SHOCK_POST_WINDOW
+
+/** ⚠ THE ONE SEAM, and the same one `RETURN_DIAL` / `BOND_DIAL` use: `ECONOMY` is `as const` at the
+ *  TYPE level only, so a bench that means to move a dial says so here, once, in a named cast. */
+const LIFE_DIAL = ECONOMY.life as unknown as {
+  arrivalPerWeek: { minor: number; adult: number }
+  endsPerWeek: number
+}
+/** What the dials read before this block touched them – restored and then CHECKED at the end. */
+const LIFE_DIAL_SHIPPED = {
+  minor: ECONOMY.life.arrivalPerWeek.minor,
+  adult: ECONOMY.life.arrivalPerWeek.adult,
+  ends: ECONOMY.life.endsPerWeek,
+}
+/** ⚠ BIG ENOUGH THAT EVERY MULTIPLIER CLEARS 1, DERIVED RATHER THAN CHOSEN: the hazard the engine
+ *  compares against is `rate × mult`, `rngFromSeed` returns [0, 1), and the smallest multiplier in
+ *  either table is `endsMult.quiet`. A rate of `2 / min(mult)` therefore makes `draw < hazard`
+ *  certain for every girl, with the same single draw on the same key. */
+const SHOCK_FORCE_RATE =
+  2 / Math.min(...Object.values(ECONOMY.life.temperamentMult), ...Object.values(ECONOMY.life.endsMult))
+
+interface ShockCareer {
+  seed: string
+  arm: ShockArm
+  temperament: Temperament
+  weeks: number
+  endedAs: string | null
+  /** spirit indexed BY WEEK (`world.week` after the tick), so every reading below names its week
+   *  instead of counting offsets into an array – the off-by-one this file cannot afford. */
+  spiritByWeek: number[]
+  bondFinal: number
+  /** the episodes the ENGINE wrote, read back at the end of the walk. */
+  episodes: { sinceWeek: number; knownWeek: number | null; endedWeek: number | null }[]
+  /** the week `world.spiritShock` was first seen standing – the T3 mark, observed rather than assumed */
+  shockStampedWeek: number | null
+  /** ...and the week it cleared again (`spirit >= baseline − shockClearWithin`). */
+  shockClearedWeek: number | null
+  /** every beat this walk drained, by kind – so the bond skew is arithmetic and not noise. */
+  drained: Record<LifeBeatKind, number>
+  attachedWeeks: number
+  /** ⚠ THE TWO SHAPES THE SHARED HELPERS TAKE (`bookTheFamilyWeeks`, `answerTheBirthday`), carried as
+   *  real fields rather than cast in at the call site – T12's own reason for taking a shape. */
+  vacations: number
+  asks: string[]
+  /** ⚠⚠ CUMULATIVE MATCHES INDEXED **BY WEEK**, not sampled at three boundaries. The dip is a set of
+   *  weeks and not an interval – she is under the knee for three weeks and then she is not – so a
+   *  reading cut on two timestamps cannot price the weeks that actually cost her anything. Two
+   *  running totals a week is the cheapest shape that lets any window, contiguous or not, be cut
+   *  afterwards, and it is what makes the diagnostic beside bar S2 possible at all. */
+  playedByWeek: number[]
+  wonByWeek: number[]
+}
+
+function runShockCareer(seed: string, arm: ShockArm, temperament: Temperament): ShockCareer {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy' })
+  // ⚠ the same single field the bar grid writes, for the same reason – see the file header.
+  world.temperament = temperament
+  const rng = rngFromSeed(world.seed)
+  const career: ShockCareer = {
+    seed,
+    arm,
+    temperament,
+    weeks: 0,
+    endedAs: null,
+    spiritByWeek: [],
+    bondFinal: Number.NaN,
+    episodes: [],
+    shockStampedWeek: null,
+    shockClearedWeek: null,
+    drained: emptyDrainCounts(),
+    attachedWeeks: 0,
+    vacations: 0,
+    asks: [],
+    playedByWeek: [],
+    wonByWeek: [],
+  }
+  const wonSoFar = (): number => world.seasonWins + world.seasonHistory.reduce((sum, h) => sum + h.wins, 0)
+
+  for (let i = 0; i < WEEKS; i++) {
+    if (world.ending !== null) break
+    if (world.week % WEEKS_PER_YEAR === 0) bookTheFamilyWeeks(world, career)
+    world.plan = { ...WEEK_PLAN_PRESETS.balanced }
+    enterWhatSheCan(world)
+
+    // --- ⚠⚠ THE DIALS FOR **THIS TICK**, AND THEY ARE WRITTEN EVERY WEEK RATHER THAN TOGGLED ------
+    //
+    // `tickWeek` increments the week FIRST, so the week this tick will land on is `world.week + 1`
+    // and the dials are set for that week, not for the one just finished. Writing all three every
+    // week – rather than setting them on the two special weeks and restoring afterwards – is what
+    // makes «zero on every other week» a property of the loop instead of of a restore that could be
+    // skipped by an early `break`.
+    const landingOn = world.week + 1
+    const forcedArrival = landingOn === SHOCK_ARRIVAL_WEEK
+    LIFE_DIAL.arrivalPerWeek.minor = forcedArrival ? SHOCK_FORCE_RATE : 0
+    LIFE_DIAL.arrivalPerWeek.adult = forcedArrival ? SHOCK_FORCE_RATE : 0
+    LIFE_DIAL.endsPerWeek = arm === 'shocked' && landingOn === SHOCK_WEEK ? SHOCK_FORCE_RATE : 0
+
+    tickWeek(world, rng)
+    career.weeks++
+    career.spiritByWeek[world.week] = world.spirit
+    if (activeEpisode(world) !== null) career.attachedWeeks++
+    // ⚠ THE MARK IS OBSERVED, NEVER INFERRED. `rollEnds` stamps it and `accrueSpirit` clears it in
+    // the same tick's tail, so a shock that landed and cleared inside one week would show as a
+    // stamp this loop never saw – which is why the CLEAR is read off the transition and the stamp is
+    // read off the world, and both are printed.
+    if (world.spiritShock !== null && career.shockStampedWeek === null) career.shockStampedWeek = world.spiritShock.week
+    if (world.spiritShock === null && career.shockStampedWeek !== null && career.shockClearedWeek === null) {
+      career.shockClearedWeek = world.week
+    }
+    // ⚠⚠ THE LATCH IS TESTED AND NEVER CAUGHT – the anti-stall rule this file's own header states.
+    // `answerLifeBeat`, `decideKnock` and `chooseGift` all refuse behind `guardNotEndedForGood`, so
+    // breaking HERE is what keeps this block free of the `try/catch` the banner forswears.
+    if (world.ending !== null) break
+
+    while (world.pendingTournament) {
+      if (!world.pendingTournament.finished) skipTournament(world)
+      closeTournament(world)
+    }
+    // ⚠ READ **AFTER** THE TOURNAMENT IS CLOSED, which is where the week's results become countable:
+    // `closeTournament` is what folds them into `seasonWins`/`seasonLosses`, so a reading taken
+    // before it would file every match under the following week and shift every window by one.
+    career.playedByWeek[world.week] = matchesEverPlayed(world)
+    career.wonByWeek[world.week] = wonSoFar()
+
+    // --- the parent's decisions, IDENTICAL IN BOTH ARMS --------------------------------------------
+    if (pendingKnock(world)) decideKnock(world, 'rest')
+    answerTheBirthday(world, career)
+    // ⚠ THE DRAIN IS TALLIED, so the −1 the `'ended'` card costs is arithmetic a reader can check
+    // rather than a mystery in a bond column (wave-4 brief §0.2). It is NOT an `except` list: the
+    // subject of this block is the SHOCK, which is spirit, and the card is a beat like any other.
+    const drained = drainLifeBeatsTallied(world)
+    for (const kind of Object.keys(drained.byKind) as LifeBeatKind[]) career.drained[kind] += drained.byKind[kind]
+  }
+
+  career.endedAs = world.ending === null ? null : world.ending.type
+  career.bondFinal = world.bond
+  career.episodes = (world.loveEpisodes ?? []).map((e) => ({
+    sinceWeek: e.sinceWeek,
+    knownWeek: e.knownWeek,
+    endedWeek: e.endedWeek,
+  }))
+  return career
+}
+
+/** ⚠⚠ THE RUN DIES HERE RATHER THAN PRINTING A NUMBER. Every caller is a property the pair has to
+ *  have before any bar below means anything – the second of this file's two exit codes. */
+function shockStall(headline: string, detail: string): never {
+  console.error(`\n${'!'.repeat(100)}`)
+  console.error(`THE SHOCK ARMS MEASURED NOTHING – NO BAR IS PRINTED`)
+  console.error(`  ${headline}`)
+  console.error(`  ${detail}`)
+  console.error(
+    `  ⚠ This is the actuation contract firing, not a crash. A per-temperament zero is a FAILED RUN\n` +
+      `    and never a result of zero – see the block header.`,
+  )
+  console.error(`${'!'.repeat(100)}\n`)
+  process.exit(2)
+}
+
+interface ShockPair {
+  seed: string
+  temperament: Temperament
+  intensity: 'steady' | 'intense'
+  shocked: ShockCareer
+  spared: ShockCareer
+  /** both arms resolved every week the readings below are cut on */
+  usable: boolean
+}
+
+const shockMisses: string[] = []
+function shockVerdict(bar: string, ok: boolean, detail: string): string {
+  if (!ok) shockMisses.push(`${bar} – ${detail}`)
+  return ok ? 'HIT ' : 'MISS'
+}
+
+/** A window rate, `–` when the window held no matches. ⚠ `0.0%` IS A MEASUREMENT AND A DASH IS AN
+ *  ABSENCE, and this is the one place the difference could be smuggled past a reader. */
+function windowRate(played: number, won: number): number {
+  return played === 0 ? Number.NaN : pct(won, played)
+}
+
+/** Cumulative-at-week, with the weeks before the walk reading zero. */
+function cumAt(xs: readonly number[], week: number): number {
+  for (let w = Math.min(week, xs.length - 1); w >= 0; w--) if (xs[w] !== undefined) return xs[w]
+  return 0
+}
+/** Matches played and won over a CONTIGUOUS window `[from, to)`, in weeks. */
+function overWindow(c: ShockCareer, from: number, to: number): { played: number; won: number } {
+  return {
+    played: cumAt(c.playedByWeek, to - 1) - cumAt(c.playedByWeek, from - 1),
+    won: cumAt(c.wonByWeek, to - 1) - cumAt(c.wonByWeek, from - 1),
+  }
+}
+/** ...and over an ARBITRARY SET of weeks, which is what the dip actually is. ⚠ THE WEEK SET IS ONE
+ *  ARM'S AND IS APPLIED TO BOTH, or the two columns would be reading two different calendars and the
+ *  difference between them would be a difference of windows rather than of careers. */
+function overWeeks(c: ShockCareer, weeks: readonly number[]): { played: number; won: number } {
+  let played = 0
+  let won = 0
+  for (const w of weeks) {
+    played += cumAt(c.playedByWeek, w) - cumAt(c.playedByWeek, w - 1)
+    won += cumAt(c.wonByWeek, w) - cumAt(c.wonByWeek, w - 1)
+  }
+  return { played, won }
+}
+function dashed(x: number, digits = 2, suffix = ''): string {
+  return Number.isNaN(x) ? '–' : `${x.toFixed(digits)}${suffix}`
+}
+
+function runShockPair(): void {
+  const startedShock = Date.now()
+  const seeds = shockSeedCount()
+  const careersS: ShockCareer[] = []
+  for (const arm of SHOCK_ARMS) {
+    for (const temperament of TEMPERAMENTS) {
+      for (let s = 0; s < seeds; s++) careersS.push(runShockCareer(`shock-${s}`, arm, temperament))
+    }
+  }
+  // ⚠⚠ AND THE DIALS GO BACK, AND THE RESTORATION IS CHECKED RATHER THAN TRUSTED. A bench that left
+  // `ECONOMY` moved would poison every section that ran after it in the same process; `--shock`
+  // exits before THE RUN, so today nothing follows – which is exactly the condition under which a
+  // silent leak survives into the wave that adds a section below this one.
+  LIFE_DIAL.arrivalPerWeek.minor = LIFE_DIAL_SHIPPED.minor
+  LIFE_DIAL.arrivalPerWeek.adult = LIFE_DIAL_SHIPPED.adult
+  LIFE_DIAL.endsPerWeek = LIFE_DIAL_SHIPPED.ends
+
+  const pairs: ShockPair[] = []
+  for (const temperament of TEMPERAMENTS) {
+    for (let s = 0; s < seeds; s++) {
+      const seed = `shock-${s}`
+      const a = careersS.find((c) => c.arm === 'shocked' && c.temperament === temperament && c.seed === seed)
+      const b = careersS.find((c) => c.arm === 'spared' && c.temperament === temperament && c.seed === seed)
+      if (a === undefined || b === undefined) shockStall('a pair is missing an arm', `${seed}/${temperament}`)
+      pairs.push({
+        seed,
+        temperament,
+        intensity: temperamentIntensity(temperament),
+        shocked: a,
+        spared: b,
+        usable: a.weeks === WEEKS && b.weeks === WEEKS,
+      })
+    }
+  }
+
+  rule(
+    `[S] THE PAIRED SHOCK ARMS – who-she-is §4's spirit-physics table, predicted against measured\n` +
+      `    ${seeds} seeds × 4 temperaments × {shocked, spared} = ${careersS.length} careers, ` +
+      `${careersS.reduce((n, c) => n + c.weeks, 0).toLocaleString('en-US')} resolved weeks\n` +
+      `    ${seeds * 2} seed-pairs per INTENSITY (the brief's 128 at the default grid) · ` +
+      `arrival forced week ${SHOCK_ARRIVAL_WEEK} in BOTH arms · ending forced week ${SHOCK_WEEK} in arm A only\n` +
+      `    post-shock window [${SHOCK_WEEK}, ${SHOCK_AFTER_FROM}) · after-recovery window [${SHOCK_AFTER_FROM}, ${WEEKS}] · ` +
+      `constants read from ECONOMY, none changed`,
+  )
+  if (SHOCK_AFTER_FROM >= WEEKS) {
+    shockStall(
+      'the after-recovery window does not exist on this grid',
+      `shock ${SHOCK_WEEK} + window ${SHOCK_POST_WINDOW} = ${SHOCK_AFTER_FROM}, and the walk stops at ${WEEKS}`,
+    )
+  }
+
+  // --- [S0] THE RECEIPT ---------------------------------------------------------------------------
+  console.log('')
+  console.log('  ── [S0] THE RECEIPT – the instrument asserting its own actuation, PER TEMPERAMENT ─────────')
+  console.log('')
+  console.log(
+    `    ${pad('temperament', 12)}${pad('intensity', 10)}${padL('pairs', 7)}${padL('usable', 8)}${padL('arrivals A/B', 14)}` +
+      `${padL('ended @W', 10)}${padL('shock stamped', 15)}${padL(`'ended' cards`, 15)}${padL('spirit @W−1', 13)}${padL('spirit @W', 11)}`,
+  )
+  for (const t of TEMPERAMENTS) {
+    const ps = pairs.filter((p) => p.temperament === t)
+    const usable = ps.filter((p) => p.usable)
+    const arrivalsA = ps.filter((p) => p.shocked.episodes.some((e) => e.sinceWeek === SHOCK_ARRIVAL_WEEK)).length
+    const arrivalsB = ps.filter((p) => p.spared.episodes.some((e) => e.sinceWeek === SHOCK_ARRIVAL_WEEK)).length
+    const endedAtW = ps.filter((p) => p.shocked.episodes.some((e) => e.endedWeek === SHOCK_WEEK)).length
+    const stamped = ps.filter((p) => p.shocked.shockStampedWeek === SHOCK_WEEK).length
+    const cards = ps.reduce((n, p) => n + p.shocked.drained.ended, 0)
+    const before = mean(usable.map((p) => p.shocked.spiritByWeek[SHOCK_WEEK - 1]))
+    const at = mean(usable.map((p) => p.shocked.spiritByWeek[SHOCK_WEEK]))
+    console.log(
+      `    ${pad(t, 12)}${pad(temperamentIntensity(t), 10)}${padL(ps.length, 7)}${padL(usable.length, 8)}` +
+        `${padL(`${arrivalsA}/${arrivalsB}`, 14)}${padL(endedAtW, 10)}${padL(stamped, 15)}${padL(cards, 15)}` +
+        `${padL(dashed(before, 1), 13)}${padL(dashed(at, 1), 11)}`,
+    )
+  }
+  console.log('')
+  // ⚠⚠ FOUR CLAUSES, PER TEMPERAMENT, EACH ONE A SENTENCE THE v74 STALL COULD NOT HAVE SAID ABOUT
+  // ITSELF. A pooled total passes while one column is dead; that is the failure this guard is named
+  // after.
+  for (const t of TEMPERAMENTS) {
+    const ps = pairs.filter((p) => p.temperament === t)
+    const usable = ps.filter((p) => p.usable)
+    if (usable.length === 0) shockStall(`${t}: not one pair walked both arms to week ${WEEKS}`, 'every reading would be empty')
+    const noArrival = usable.filter((p) => !p.shocked.episodes.some((e) => e.sinceWeek === SHOCK_ARRIVAL_WEEK))
+    if (noArrival.length > 0) {
+      shockStall(
+        `${t}: ${noArrival.length} usable pair(s) have no forced arrival at week ${SHOCK_ARRIVAL_WEEK}`,
+        `the dial did not reach \`rollArrival\` – e.g. ${noArrival[0].seed}`,
+      )
+    }
+    const notEnded = usable.filter((p) => !p.shocked.episodes.some((e) => e.endedWeek === SHOCK_WEEK))
+    if (notEnded.length > 0) {
+      shockStall(
+        `${t}: ${notEnded.length} usable shocked arm(s) did not end at week ${SHOCK_WEEK}`,
+        `the forced ending is not landing – e.g. ${notEnded[0].seed}`,
+      )
+    }
+    const stamped = usable.filter((p) => p.shocked.shockStampedWeek === SHOCK_WEEK).length
+    if (stamped === 0) {
+      shockStall(`${t}: ZERO shocked arms carried \`world.spiritShock\``, 'the T3 mark never reached the spirit pass')
+    }
+    const strays = usable.filter((p) => p.spared.episodes.some((e) => e.endedWeek !== null))
+    if (strays.length > 0) {
+      shockStall(
+        `${t}: ${strays.length} SPARED arm(s) broke up anyway`,
+        `the control is not a control – e.g. ${strays[0].seed}`,
+      )
+    }
+    const extra = usable.filter((p) => p.shocked.episodes.length !== 1 || p.spared.episodes.length !== 1)
+    if (extra.length > 0) {
+      shockStall(
+        `${t}: ${extra.length} pair(s) hold more than one episode`,
+        `the arrival dial is leaking into another week – e.g. ${extra[0].seed}`,
+      )
+    }
+  }
+  const endedCards = pairs.reduce((n, p) => n + p.shocked.drained.ended, 0)
+  if (endedCards === 0) {
+    shockStall(
+      `ZERO 'ended' cards were drained across ${pairs.length} shocked arms`,
+      "the T4 beat never fired – the walk is measuring an ending the parent was never shown",
+    )
+  }
+  console.log(`    ✓ every temperament: the arrival forced in both arms, the ending landed on week ${SHOCK_WEEK},`)
+  console.log(`      \`world.spiritShock\` stamped, the \`'ended'\` card raised and answered, the SPARED arm never ended.`)
+  console.log('')
+  const drainedAll = emptyDrainCounts()
+  const drainedShocked = emptyDrainCounts()
+  const drainedSpared = emptyDrainCounts()
+  for (const c of careersS) {
+    for (const kind of Object.keys(c.drained) as LifeBeatKind[]) {
+      drainedAll[kind] += c.drained[kind]
+      if (c.arm === 'shocked') drainedShocked[kind] += c.drained[kind]
+      else drainedSpared[kind] += c.drained[kind]
+    }
+  }
+  console.log(`    drain skew, shocked arm : ${drainSkewLine(drainedShocked)}`)
+  console.log(`    drain skew, spared arm  : ${drainSkewLine(drainedSpared)}`)
+  console.log(`    drain skew, both arms   : ${drainSkewLine(drainedAll)}`)
+  console.log(`      ⚠ the arms DIFFER here by construction and the difference is the \`'ended'\` card: it exists only`)
+  console.log(`        where the ending did. It is bond and never spirit – §4's bars below read spirit and matches.`)
+  console.log('')
+  console.log(`    ⚠ the ECONOMY dials are back: arrival ${ECONOMY.life.arrivalPerWeek.minor}/${ECONOMY.life.arrivalPerWeek.adult}, ends ${ECONOMY.life.endsPerWeek}`)
+  if (
+    ECONOMY.life.arrivalPerWeek.minor !== LIFE_DIAL_SHIPPED.minor ||
+    ECONOMY.life.arrivalPerWeek.adult !== LIFE_DIAL_SHIPPED.adult ||
+    ECONOMY.life.endsPerWeek !== LIFE_DIAL_SHIPPED.ends
+  ) {
+    shockStall('the ECONOMY dials did not restore', 'every number in this printout was read off a moved constant')
+  }
+
+  // --- [S1] THE SHAPE OF THE DIP ------------------------------------------------------------------
+  const usablePairs = pairs.filter((p) => p.usable)
+  const byIntensity = (i: 'steady' | 'intense') => usablePairs.filter((p) => p.intensity === i)
+  const INTENSITIES = ['steady', 'intense'] as const
+
+  /** ⚠ COUNTED FROM THE SHOCK WEEK ITSELF, which is the week the −22/−34 lands: `accrueSpirit`
+   *  applies it on the tick whose `world.week` matches the stamp. «Back at +5» therefore means five
+   *  weeks after the drop, not five weeks after the week before it. */
+  const weeksToBaseline = (c: ShockCareer): number => {
+    for (let d = 0; d <= SHOCK_POST_WINDOW; d++) {
+      const v = c.spiritByWeek[SHOCK_WEEK + d]
+      if (v !== undefined && v >= ECONOMY.spirit.baseline) return d
+    }
+    return Number.NaN
+  }
+  /** The weeks she actually spent under the knee, as a LIST – bar S1b counts it and section [S2]'s
+   *  diagnostic cuts its matches on it. */
+  const kneeWeeks = (c: ShockCareer, from: number): number[] => {
+    const out: number[] = []
+    for (let w = from; w < SHOCK_AFTER_FROM; w++) if ((c.spiritByWeek[w] ?? ECONOMY.spirit.baseline) < ECONOMY.spirit.knee) out.push(w)
+    return out
+  }
+  const weeksUnderKnee = (c: ShockCareer): number => kneeWeeks(c, SHOCK_WEEK).length
+  /** ⚠⚠ THE SAME COUNT WITHOUT THE LANDING WEEK, AND IT IS PRINTED BECAUSE THE TWO CONVENTIONS
+   *  DISAGREE BY EXACTLY ONE AND THE DISAGREEMENT IS THE FINDING. §4's row reads «weeks under the
+   *  knee AFTER a lifted-75 break-up», and §4's OWN derivation of the 1–2 counts the landing week
+   *  (75 − 22 = 53, then 58, then 63: two weeks below 60). So the bar is read on the INCLUSIVE count,
+   *  which is §4's own. The exclusive count is here beside it because T3's report used it, and two
+   *  entries in §4a that count different weeks under one name would be worse than a miss. */
+  const weeksUnderKneeAfter = (c: ShockCareer): number => kneeWeeks(c, SHOCK_WEEK + 1).length
+  /** ⚠⚠ WHAT §4's ARITHMETIC ACTUALLY PREDICTS ON THIS ENGINE, AND IT IS NOT «75 + shock». `rollEnds`
+   *  runs BEFORE `accrueSpirit` in the same tick, so on the landing week `activeEpisode` is already
+   *  null and the RETURN step walks her from the lifted 75 toward the FLAT 70 before the shock is
+   *  added. The lift's exit and the shock are the same week. §4's table says «from a lifted 75, −22»
+   *  and stops there; the engine does one more step first, and this is it, derived through the same
+   *  two constants rather than typed in. */
+  const predictedLanding = (i: 'steady' | 'intense'): number => {
+    const lifted = ECONOMY.spirit.baseline + ECONOMY.spirit.attachmentLift
+    const rate = ECONOMY.spirit.returnPerWeek[i]
+    const returned = lifted - Math.min(rate, lifted - ECONOMY.spirit.baseline)
+    return returned + ECONOMY.spirit.shock.breakup[i]
+  }
+
+  rule('[S1] THE DIP – §4\'s spirit physics, predicted against measured (shocked arm; the spared arm is the control column)')
+  console.log(
+    `    ${pad('intensity', 10)}${pad('temperament', 13)}${padL('n', 6)}${padL('shock', 8)}${padL('spirit @W', 11)}${padL('predicted', 11)}` +
+      `${padL('wks→baseline', 14)}${padL('bar', 10)}${padL('verdict', 9)}${padL('wks<knee A', 12)}${padL('B', 6)}${padL('paired', 9)}${padL('bar', 10)}${padL('verdict', 9)}`,
+  )
+  const TO_BASE_BAR: Record<'steady' | 'intense', { text: string; ok: (m: number) => boolean }> = {
+    steady: { text: '5 ± 1', ok: (m) => m >= 4 && m <= 6 },
+    intense: { text: '12 ± 2', ok: (m) => m >= 10 && m <= 14 },
+  }
+  const KNEE_BAR: Record<'steady' | 'intense', { text: string; ok: (m: number) => boolean }> = {
+    steady: { text: '1 – 2', ok: (m) => m >= 1 && m <= 2 },
+    intense: { text: '6 ± 1', ok: (m) => m >= 5 && m <= 7 },
+  }
+  const toBaseMedian: Partial<Record<'steady' | 'intense', number>> = {}
+  const kneeMedian: Partial<Record<'steady' | 'intense', number>> = {}
+  for (const i of INTENSITIES) {
+    for (const t of TEMPERAMENTS.filter((x) => temperamentIntensity(x) === i)) {
+      const ps = usablePairs.filter((p) => p.temperament === t)
+      const toBase = ps.map((p) => weeksToBaseline(p.shocked)).filter((x) => !Number.isNaN(x))
+      const kneeA = ps.map((p) => weeksUnderKnee(p.shocked))
+      const kneeB = ps.map((p) => weeksUnderKnee(p.spared))
+      console.log(
+        `    ${pad(i, 10)}${pad(t, 13)}${padL(ps.length, 6)}${padL(ECONOMY.spirit.shock.breakup[i], 8)}` +
+          `${padL(dashed(mean(ps.map((p) => p.shocked.spiritByWeek[SHOCK_WEEK])), 1), 11)}` +
+          `${padL(predictedLanding(i).toFixed(1), 11)}` +
+          `${padL(dashed(median(toBase), 1), 14)}${padL('–', 10)}${padL('–', 9)}` +
+          `${padL(dashed(median(kneeA), 1), 12)}${padL(dashed(median(kneeB), 1), 6)}` +
+          `${padL(dashed(median(ps.map((p) => weeksUnderKnee(p.shocked) - weeksUnderKnee(p.spared))), 1), 9)}${padL('–', 10)}${padL('–', 9)}`,
+      )
+    }
+    // ⚠ THE BAR IS READ PER INTENSITY, which is the axis §4's table has rows for. The per-temperament
+    // rows above carry no verdict of their own on purpose – printing four verdicts against two
+    // corridors would double-count the same two numbers.
+    const ps = byIntensity(i)
+    const toBase = ps.map((p) => weeksToBaseline(p.shocked)).filter((x) => !Number.isNaN(x))
+    const censored = ps.length - toBase.length
+    const kneeA = ps.map((p) => weeksUnderKnee(p.shocked))
+    const kneeB = ps.map((p) => weeksUnderKnee(p.spared))
+    const paired = ps.map((p) => weeksUnderKnee(p.shocked) - weeksUnderKnee(p.spared))
+    if (toBase.length === 0) shockStall(`${i}: not one shocked arm returned to baseline inside ${SHOCK_POST_WINDOW} weeks`, 'the column is unmeasured')
+    const mBase = median(toBase)
+    const mKnee = median(kneeA)
+    toBaseMedian[i] = mBase
+    kneeMedian[i] = mKnee
+    console.log(
+      `    ${pad(i.toUpperCase(), 10)}${pad('– ALL –', 13)}${padL(ps.length, 6)}${padL(ECONOMY.spirit.shock.breakup[i], 8)}` +
+        `${padL(dashed(mean(ps.map((p) => p.shocked.spiritByWeek[SHOCK_WEEK])), 1), 11)}` +
+        `${padL(predictedLanding(i).toFixed(1), 11)}` +
+        `${padL(mBase.toFixed(1), 14)}${padL(TO_BASE_BAR[i].text, 10)}` +
+        `${padL(shockVerdict(`bar S1a · ${i} weeks-to-baseline ${TO_BASE_BAR[i].text}`, TO_BASE_BAR[i].ok(mBase), `measured ${mBase.toFixed(1)}`), 9)}` +
+        `${padL(mKnee.toFixed(1), 12)}${padL(median(kneeB).toFixed(1), 6)}${padL(median(paired).toFixed(1), 9)}${padL(KNEE_BAR[i].text, 10)}` +
+        `${padL(shockVerdict(`bar S1b · ${i} weeks under the knee ${KNEE_BAR[i].text}`, KNEE_BAR[i].ok(mKnee), `measured ${mKnee.toFixed(1)}`), 9)}`,
+    )
+    if (censored > 0) {
+      console.log(`      ⚠ ${censored}/${ps.length} ${i} arms had NOT returned to ${ECONOMY.spirit.baseline} inside the ${SHOCK_POST_WINDOW}-week window and are excluded from the median – printed, never folded in at the window's edge.`)
+    }
+    console.log(
+      `      weeks under the knee NOT counting the landing week (T3's convention): median ` +
+        `${median(ps.map((p) => weeksUnderKneeAfter(p.shocked))).toFixed(1)} – printed because the two conventions differ by exactly one week, and §4's own derivation counts the landing week.`,
+    )
+    console.log(
+      `      shock cleared (spirit >= ${ECONOMY.spirit.baseline - ECONOMY.spirit.shockClearWithin}) after ` +
+        `${dashed(median(ps.map((p) => (p.shocked.shockClearedWeek === null ? Number.NaN : p.shocked.shockClearedWeek - SHOCK_WEEK)).filter((x) => !Number.isNaN(x))), 1)} weeks (median) · ` +
+        `spared arm's median weeks under the knee in the same window: ${median(kneeB).toFixed(1)}`,
+    )
+  }
+
+  // --- [S2] THE MATCH-WIN DROP --------------------------------------------------------------------
+  rule('[S2] THE PRICE IN MATCHES – paired, per intensity · BARS: drop inside [1, 8] pp AND > 2 × SEM')
+  console.log(
+    `    ${pad('intensity', 10)}${pad('temperament', 13)}${padL('pairs', 7)}${padL('A win%', 9)}${padL('B win%', 9)}` +
+      `${padL('Δ pp', 9)}${padL('± SEM', 9)}${padL('2×SEM', 9)}${padL('matches A', 11)}${padL('B', 8)}${padL('corridor', 12)}${padL('verdict', 9)}`,
+  )
+  const rateOver = (c: ShockCareer, from: number, to: number): number => {
+    const w = overWindow(c, from, to)
+    return windowRate(w.played, w.won)
+  }
+  /** ⚠ THE DROP IS **SPARED MINUS SHOCKED**, so a positive number is a price she paid. Stated here
+   *  because the sign of a paired difference is the one thing a reader cannot recover from the
+   *  number, and the corridor [1, 8] pp is written as a price. */
+  const dropOf = (p: ShockPair): number => {
+    const a = rateOver(p.shocked, SHOCK_WEEK, SHOCK_AFTER_FROM)
+    const b = rateOver(p.spared, SHOCK_WEEK, SHOCK_AFTER_FROM)
+    return Number.isNaN(a) || Number.isNaN(b) ? Number.NaN : b - a
+  }
+  const afterOf = (p: ShockPair): number => {
+    const a = rateOver(p.shocked, SHOCK_AFTER_FROM, WEEKS + 1)
+    const b = rateOver(p.spared, SHOCK_AFTER_FROM, WEEKS + 1)
+    return Number.isNaN(a) || Number.isNaN(b) ? Number.NaN : b - a
+  }
+  /** ⭐ THE UNASKED NUMBER, AND T16 IS WHY IT IS HERE. The bar reads a 26-week window because that is
+   *  what the brief asked for, and a dip three weeks long inside it is diluted by a factor of nine
+   *  before the bar ever sees it. This is the SAME paired difference cut on the weeks she was
+   *  ACTUALLY under the knee – the shocked arm's own week list, applied to both arms. It carries NO
+   *  bar: it is the diagnostic that says whether a missed corridor is «the ending costs nothing» or
+   *  «the window is the wrong window». */
+  const dipDropOf = (p: ShockPair): number => {
+    const weeks = kneeWeeks(p.shocked, SHOCK_WEEK)
+    if (weeks.length === 0) return Number.NaN
+    const a = overWeeks(p.shocked, weeks)
+    const b = overWeeks(p.spared, weeks)
+    const ra = windowRate(a.played, a.won)
+    const rb = windowRate(b.played, b.won)
+    return Number.isNaN(ra) || Number.isNaN(rb) ? Number.NaN : rb - ra
+  }
+  const dropStat: Partial<Record<'steady' | 'intense', { mean: number; sem: number; n: number }>> = {}
+  for (const i of INTENSITIES) {
+    for (const t of TEMPERAMENTS.filter((x) => temperamentIntensity(x) === i)) {
+      const ps = usablePairs.filter((p) => p.temperament === t)
+      const ds = ps.map(dropOf).filter((x) => !Number.isNaN(x))
+      const aR = ps.map((p) => rateOver(p.shocked, SHOCK_WEEK, SHOCK_AFTER_FROM)).filter((x) => !Number.isNaN(x))
+      const bR = ps.map((p) => rateOver(p.spared, SHOCK_WEEK, SHOCK_AFTER_FROM)).filter((x) => !Number.isNaN(x))
+      console.log(
+        `    ${pad(i, 10)}${pad(t, 13)}${padL(ps.length, 7)}${padL(dashed(mean(aR)), 9)}${padL(dashed(mean(bR)), 9)}` +
+          `${padL(dashed(mean(ds), 3), 9)}${padL(dashed(sem(ds), 3), 9)}${padL(dashed(2 * sem(ds), 3), 9)}` +
+          `${padL(mean(ps.map((p) => overWindow(p.shocked, SHOCK_WEEK, SHOCK_AFTER_FROM).played)).toFixed(1), 11)}` +
+          `${padL(mean(ps.map((p) => overWindow(p.spared, SHOCK_WEEK, SHOCK_AFTER_FROM).played)).toFixed(1), 8)}${padL('–', 12)}${padL('–', 9)}`,
+      )
+    }
+    const ps = byIntensity(i)
+    // ⚠⚠ FOLDED TO ONE VALUE PER SEED BEFORE THE SEM IS TAKEN – section [3]'s own correction, and it
+    // bites harder here: the two temperaments inside one intensity read the SAME `returnPerWeek`, the
+    // SAME shock and (with the arrival forced) the same everything else, so they are REPLICAS of one
+    // another and not two samples. Pooling 2 × n as if it were 2n independent pairs would divide
+    // every SEM in this section by √2 for free. The per-temperament rows above are printed so a
+    // reader can SEE the replication rather than take this note's word for it.
+    const seedIds = [...new Set(ps.map((p) => p.seed))]
+    const folded = seedIds
+      .map((s) => mean(ps.filter((p) => p.seed === s).map(dropOf).filter((x) => !Number.isNaN(x))))
+      .filter((x) => !Number.isNaN(x))
+    if (folded.length === 0) shockStall(`${i}: ZERO pairs produced a match-win drop`, 'no window held matches in both arms')
+    const m = mean(folded)
+    const e = sem(folded)
+    dropStat[i] = { mean: m, sem: e, n: folded.length }
+    const inCorridor = m >= 1 && m <= 8
+    const overSem = Math.abs(m) > 2 * e
+    console.log(
+      `    ${pad(i.toUpperCase(), 10)}${pad('– FOLDED –', 13)}${padL(folded.length, 7)}${padL('–', 9)}${padL('–', 9)}` +
+        `${padL(m.toFixed(3), 9)}${padL(e.toFixed(3), 9)}${padL((2 * e).toFixed(3), 9)}${padL('–', 11)}${padL('–', 8)}` +
+        `${padL('[1, 8] pp', 12)}${padL(shockVerdict(`bar S2a · ${i} match-win drop inside [1, 8] pp`, inCorridor, `measured ${m.toFixed(3)} pp`), 9)}`,
+    )
+    console.log(
+      `    ${pad('', 10)}${pad('', 13)}${padL('', 7)}${padL('', 9)}${padL('', 9)}${padL('', 9)}${padL('', 9)}${padL('', 9)}${padL('', 11)}${padL('', 8)}` +
+        `${padL('> 2×SEM', 12)}${padL(shockVerdict(`bar S2b · ${i} drop > 2×SEM`, overSem, `|${m.toFixed(3)}| vs ${(2 * e).toFixed(3)}`), 9)}`,
+    )
+    // ⭐ AND THE UNASKED NUMBER BESIDE THE ASKED ONE (T16). No bar, on purpose.
+    const dipFolded = seedIds
+      .map((sd) => mean(ps.filter((p) => p.seed === sd).map(dipDropOf).filter((x) => !Number.isNaN(x))))
+      .filter((x) => !Number.isNaN(x))
+    const dipMatches = mean(ps.map((p) => overWeeks(p.shocked, kneeWeeks(p.shocked, SHOCK_WEEK)).played))
+    console.log(
+      `      ⭐ diagnostic, NO BAR – the same paired difference cut on the weeks she was UNDER THE KNEE only: ` +
+        `${dashed(mean(dipFolded), 3)} pp ± ${dashed(sem(dipFolded), 3)} (n ${dipFolded.length} seeds, ${dashed(dipMatches, 1)} matches per career in those weeks).` ,
+    )
+    console.log(
+      `        the 26-week window holds ${dashed(mean(ps.map((p) => overWindow(p.shocked, SHOCK_WEEK, SHOCK_AFTER_FROM).played)), 1)} matches, of which ${dashed(dipMatches, 1)} fall in the dip – ` +
+        `so the bar's window dilutes the dip by about ${dashed(dipMatches === 0 ? Number.NaN : mean(ps.map((p) => overWindow(p.shocked, SHOCK_WEEK, SHOCK_AFTER_FROM).played)) / dipMatches, 1)}×.`,
+    )
+    console.log(
+      `        \`spiritMatchFactor\` at the landing spirit is ${spiritMatchFactor(predictedLanding(i)).toFixed(4)} (1.0000 at or above the knee ${ECONOMY.spirit.knee}) – ` +
+        `the whole of what a shock can reach a match through.`,
+    )
+  }
+
+  rule('[S3] AFTER RECOVERY – weather, not a scar · BAR: the paired difference sits INSIDE 1 × SEM')
+  console.log(
+    `    ${pad('intensity', 10)}${padL('pairs', 7)}${padL('Δ pp', 10)}${padL('± SEM', 10)}${padL('|Δ|', 10)}${padL('vs 1×SEM', 12)}${padL('verdict', 9)}   window`,
+  )
+  for (const i of INTENSITIES) {
+    const ps = byIntensity(i)
+    const seedIds = [...new Set(ps.map((p) => p.seed))]
+    const folded = seedIds
+      .map((s) => mean(ps.filter((p) => p.seed === s).map(afterOf).filter((x) => !Number.isNaN(x))))
+      .filter((x) => !Number.isNaN(x))
+    if (folded.length === 0) shockStall(`${i}: ZERO pairs produced an after-recovery reading`, 'the window held no matches in both arms')
+    const m = mean(folded)
+    const e = sem(folded)
+    // ⚠⚠ `<=`, AND THE DEGENERATE CASE IS WHY. The bar is «the difference sits inside noise»; an
+    // EXACTLY ZERO paired difference is the strongest form of that claim there is, and it arrives
+    // with SEM 0, so a strict `<` would fail the one reading that cannot be a scar. The relation is
+    // therefore `|Δ| <= SEM` and both numbers are printed beside it – a reader can see which case
+    // produced the verdict rather than take it on the operator's word.
+    const ok = Math.abs(m) <= e
+    console.log(
+      `    ${pad(i, 10)}${padL(folded.length, 7)}${padL(m.toFixed(3), 10)}${padL(e.toFixed(3), 10)}${padL(Math.abs(m).toFixed(3), 10)}${padL(e.toFixed(3), 12)}` +
+        `${padL(shockVerdict(`bar S3 · ${i} after-recovery difference inside 1×SEM`, ok, `|${m.toFixed(3)}| vs SEM ${e.toFixed(3)}`), 9)}   [${SHOCK_AFTER_FROM}, ${WEEKS}]`,
+    )
+  }
+
+  // --- [S4] THE FAIRNESS CORRIDOR ------------------------------------------------------------------
+  rule('[S4] ⚠ THE FAIRNESS CORRIDOR, RE-READ ON THESE ARMS – BAR: paired lifetime match-win deltas across temperaments inside ±1.5 pp')
+  console.log('    Paired seed-for-seed: the two careers in every delta differ in NOTHING but who she is – the ending is')
+  console.log('    forced on the same week for all four, so what is left is the temperament and the shock it scales.')
+  console.log(`    ${pad('pair', 20)}${padL('n', 6)}${padL('mean Δ pp', 12)}${padL('± SEM', 10)}${padL('max |Δ| pp', 13)}${padL('inside ±1.5', 13)}   read`)
+  const lifetime = new Map<string, number>()
+  for (const c of careersS) {
+    lifetime.set(`${c.arm}|${c.temperament}|${c.seed}`, rateOver(c, 0, WEEKS + 1))
+  }
+  // ⚠⚠ THE VACUITY CONTROL, AND IT IS THE ONE THIS SECTION CANNOT DO WITHOUT. A corridor read on a
+  // grid where the ending never reached a single match outcome would print ±0.000 pp and «PASS» for
+  // every pair – a thing compared with itself (CLAUDE.md, 17.08). So the run counts, per temperament,
+  // the careers whose LIFETIME win rate moved between the arms. A zero is not a pass: it is the
+  // statement that the shock is invisible to the match engine over a career, and the corridor below
+  // is then a reading of that fact rather than of fairness.
+  console.log('')
+  const armsMoved: Partial<Record<Temperament, number>> = {}
+  for (const t of TEMPERAMENTS) {
+    let moved = 0
+    for (let sIdx = 0; sIdx < seeds; sIdx++) {
+      const u = lifetime.get(`shocked|${t}|shock-${sIdx}`)
+      const v = lifetime.get(`spared|${t}|shock-${sIdx}`)
+      if (u !== undefined && v !== undefined && !Number.isNaN(u) && !Number.isNaN(v) && u !== v) moved++
+    }
+    armsMoved[t] = moved
+  }
+  console.log(
+    `    careers whose LIFETIME win rate MOVED between the arms: ${TEMPERAMENTS.map((t) => `${t} ${armsMoved[t]}/${seeds}`).join(' · ')}`,
+  )
+  const movedTotal = TEMPERAMENTS.reduce((n, t) => n + (armsMoved[t] ?? 0), 0)
+  if (movedTotal === 0) {
+    console.log('    ⚠⚠ ZERO – over this grid the break-up does not reach a single LIFETIME match number. The corridor')
+    console.log('       below is therefore a reading of THAT and not of fairness between temperaments, and it is')
+    console.log('       printed unsigned: a ±0.000 pp that comes from a thing compared with itself is not a HIT.')
+  }
+  console.log('')
+  let barS4 = true
+  let worstShockPair = 0
+  for (const arm of SHOCK_ARMS) {
+    for (let x = 0; x < TEMPERAMENTS.length; x++) {
+      for (let y = x + 1; y < TEMPERAMENTS.length; y++) {
+        const a = TEMPERAMENTS[x]
+        const b = TEMPERAMENTS[y]
+        const deltas: number[] = []
+        for (let s = 0; s < seeds; s++) {
+          const u = lifetime.get(`${arm}|${a}|shock-${s}`)
+          const v = lifetime.get(`${arm}|${b}|shock-${s}`)
+          if (u === undefined || v === undefined || Number.isNaN(u) || Number.isNaN(v)) continue
+          deltas.push(u - v)
+        }
+        if (deltas.length === 0) shockStall(`${arm}: ${a} − ${b} produced no comparable careers`, 'the corridor is unmeasured')
+        const m = mean(deltas)
+        const ok = Math.abs(m) <= 1.5
+        // ⚠ THE BAR IS THE SHOCKED ARM'S. The spared arm is printed as the control – it is the same
+        // comparison on girls who never broke up, so a corridor that only opens in arm A is the
+        // ending's doing and a corridor open in both is the world's.
+        if (arm === 'shocked') {
+          barS4 &&= ok
+          worstShockPair = Math.max(worstShockPair, Math.abs(m))
+        }
+        const sameIntensity = temperamentIntensity(a) === temperamentIntensity(b)
+        console.log(
+          `    ${pad(`${arm === 'shocked' ? 'A' : 'B'}  ${a} − ${b}`, 20)}${padL(deltas.length, 6)}${padL(m.toFixed(3), 12)}${padL(sem(deltas).toFixed(3), 10)}` +
+            `${padL(deltas.reduce((acc, d) => Math.max(acc, Math.abs(d)), 0).toFixed(3), 13)}${padL(arm === 'shocked' ? verdict(ok) : '–', 13)}   ` +
+            (sameIntensity
+              ? '⚠ SAME INTENSITY – a replica pair, not a sample (see the note below)'
+              : 'steady vs intense – the informative comparison'),
+        )
+      }
+    }
+  }
+  console.log('')
+  console.log(
+    `    worst pair |mean Δ| in the SHOCKED arm ${worstShockPair.toFixed(3)} pp vs corridor 1.500 pp → ` +
+      (movedTotal === 0
+        ? '–   ⚠ UNSIGNED: the arms never diverged on a lifetime number, so there is nothing for a corridor to bound'
+        : shockVerdict('bar S4 · fairness corridor ±1.5 pp', barS4, `worst pair ${worstShockPair.toFixed(3)} pp`)),
+  )
+  console.log('    ⚠⚠ FOUR OF THE SIX PAIRS SHARE AN INTENSITY AND ARE THEREFORE REPLICAS RATHER THAN SAMPLES, and the')
+  console.log('       table says which. `temperamentIntensity` is what `accrueSpirit` reads; with the arrival and the')
+  console.log('       ending both forced onto fixed weeks, the arrival multiplier, the ends multiplier and the cooldown')
+  console.log('       are all held out of the walk – so two girls of one intensity differ only in her openness, which')
+  console.log('       reaches `knownWeek` and nothing the match engine can see. A 0.000 there is arithmetic, not a bar.')
+  console.log('    ⚠ A BREACH IS A FINDING FOR THE OWNER, NEVER A SILENT REBALANCE (who-she-is §4 names the only')
+  console.log('      sanctioned compensator – support-responsiveness, not a stat rebate – and it needs his word first).')
+
+  // --- THE VERDICT SHEET --------------------------------------------------------------------------
+  rule('[S] THE VERDICT SHEET')
+  console.log(`    ${pad('bar', 52)}${padL('steady', 14)}${padL('intense', 14)}   corridor`)
+  console.log(`    ${'─'.repeat(100)}`)
+  console.log(
+    `    ${pad('S1a  median weeks to baseline', 52)}${padL(dashed(toBaseMedian.steady ?? Number.NaN, 1), 14)}${padL(dashed(toBaseMedian.intense ?? Number.NaN, 1), 14)}   5 ± 1 / 12 ± 2`,
+  )
+  console.log(
+    `    ${pad('S1b  median weeks under the knee', 52)}${padL(dashed(kneeMedian.steady ?? Number.NaN, 1), 14)}${padL(dashed(kneeMedian.intense ?? Number.NaN, 1), 14)}   1 – 2 / 6 ± 1`,
+  )
+  console.log(
+    `    ${pad('S2a  paired match-win drop (pp)', 52)}${padL(dashed(dropStat.steady?.mean ?? Number.NaN, 3), 14)}${padL(dashed(dropStat.intense?.mean ?? Number.NaN, 3), 14)}   inside [1, 8]`,
+  )
+  console.log(
+    `    ${pad('S2b  ...against 2 × SEM', 52)}${padL(dashed(2 * (dropStat.steady?.sem ?? Number.NaN), 3), 14)}${padL(dashed(2 * (dropStat.intense?.sem ?? Number.NaN), 3), 14)}   drop must exceed it`,
+  )
+  console.log(`    ${'─'.repeat(100)}`)
+  console.log('')
+  if (shockMisses.length === 0) {
+    console.log('    every corridor HIT.')
+  } else {
+    console.log(`    ⚠⚠ ${shockMisses.length} BAR(S) OFF CORRIDOR. These are FINDINGS FOR THE ARCHITECT and this run exits 0:`)
+    console.log('       invariant 5 – numbers are MEASURED, never adjusted. No constant was changed by this block.')
+    console.log('')
+    for (const m of shockMisses) console.log(`      MISS  ${m}`)
+  }
+  console.log('')
+  console.log(`    ⚠ EXIT CODES: 0 = measured (bars may have missed, and the misses are above); 2 = the instrument`)
+  console.log(`      could not measure and printed no bar. «Exited 0» means «measured», never «passed».`)
+  console.log(`\n    ${((Date.now() - startedShock) / 1000).toFixed(1)}s`)
+}
+
+if (SHOCK_MODE) {
+  runShockPair()
   process.exit(0)
 }
 

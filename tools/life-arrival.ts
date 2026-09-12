@@ -13,16 +13,26 @@
 //   * the input-independence arm                    : one seed, two ways of playing it, one list of
 //                                                     arrival weeks – ASSERTED, never eyeballed
 //
-// ⚠⚠⚠ THE COUNT BARS RUN IN A BENCH-ONLY MODE AND THEY ARE NOT SHIPPED BEHAVIOUR. Wave 3 ships
-// ARRIVALS ONLY: nothing anywhere in `src/` writes `endedWeek`, `arrivalEligible` refuses to draw
-// while `activeEpisode` is non-null, and therefore exactly ONE episode can exist per career. Every
-// count median read off the shipped engine would be 1, for all four temperaments, which is a fact
-// about the wave's scope and not about who she is. So this tool POKES `endedWeek` TOOL-SIDE – a
-// deterministic duration per temperament, read off §4's own «median duration» column – so that the
-// cooldown and the re-arrival are exercised at all. The poke takes NO draw, derives NO stream and
-// changes NO engine code; it is a field written by the bench, on the bench's own copy of the world.
-// The printout says so at the top of the count table, every run, and the SHIPPED CONTROL arm (§2)
-// is what proves the game itself still holds at most one.
+// ⭐⭐⭐ CENSUS v2 (v75, wave 4's T7, 12.09) – **THE POKED MODE IS RETIRED AND EVERY BAR BELOW IS
+// WALKED.** The paragraph that stood here is kept in full, one screen down, because a deleted
+// measuring path has to be readable as a history rather than as an absence – and because the two
+// modes did NOT measure the same thing, which is the finding this retirement is worth.
+//
+// Wave 4 ships `rollEnds` (world/lifeBeat.ts §8): an attachment ends on its own weekly hazard, the
+// row is dated by `endEpisode`, and `arrivalEligible`'s cooldown clause bites for the first time in
+// the game's life. So every number in this file now comes off the engine – the counts, the durations,
+// the cooldown gaps – and this tool writes NOTHING to any world. `--careers N` still shrinks the grid.
+//
+// ⚠⚠ WHAT THE POKE MEASURED, AND WHAT IT COULD NOT. Wave 3's mode wrote `endedWeek` tool-side at a
+// FIXED duration per temperament (sunny 94w · fiery 36w · quiet 156w · deep 62w, off §4's «median
+// duration» column). It bought the only thing it could: the cooldown and the re-arrival were
+// exercised at all, so the count medians were about the ARRIVAL hazard rather than about the wave's
+// scope. It could not say ONE WORD about the spread of romance counts that comes from the spread of
+// durations – its own banner said so – because a constant has no spread. Walked, the duration is
+// exponential with mean `1 / (endsPerWeek × endsMult[t])`, which is between two and three times the
+// poke's fixed number for three of the four girls; so the walked counts are LOWER and their spread
+// is real. §2 below is the retirement record: the two columns, on the same seeds, measured before
+// the poke was deleted.
 //
 // ⚠⚠ ZERO NEW RNG. This file creates no stream. It drives the engine's own walk (`stepCareerWeek`
 // from `econ-bench.ts`) and re-reads the engine's own exported draw functions (`drawRawLag`) to show
@@ -43,9 +53,13 @@
 //      asked `sample()` for it first, and `sample()` prints a red line naming the empty column
 //      before it throws. Every printed row carries the `n` it actually GOT, never the n asked for.
 //   3. THE INSTRUMENT ASSERTS ITS OWN ACTUATION (`assertReceipt`). Careers walked, weeks resolved,
-//      arrivals appended, `'met'` rows raised AND ANSWERED, episodes ended by the poke – all
-//      counted, all checked. «Raised 842, answered 0» is the exact shape this guard exists to catch,
-//      and it is checked per temperament rather than pooled, because a pooled total hides a dead arm.
+//      arrivals appended, `'met'` rows raised AND ANSWERED, and – since v75 – ENDINGS WALKED by the
+//      engine's own hazard: all counted, all checked. «Raised 842, answered 0» is the exact shape
+//      this guard exists to catch, and it is checked per temperament rather than pooled, because a
+//      pooled total hides a dead arm. ⚠ THE RE-AIM IS THE POINT: the clause used to read «episodes
+//      ended by the poke» and a zero there meant the tool had stopped writing. It now reads «episodes
+//      ended by `rollEnds`» and a zero there means the ENGINE has stopped ending them, which is a
+//      strictly stronger thing for this file to be able to say.
 //
 // A MISSED CORRIDOR IS NOT A FAILURE OF THE INSTRUMENT. A bar off its corridor is a finding for the
 // architect (invariant 5: numbers are measured, never adjusted) and the run still exits 0 with the
@@ -53,12 +67,19 @@
 // deliberately different exits.
 import {
   createWorld,
-  activeEpisode,
+  // ⚠ `activeEpisode` IS GONE FROM THIS LIST WITH THE POKE (v75 T7). It was imported for one reason –
+  // the poke asked «is somebody there» before it wrote `endedWeek` – and `rollEnds` asks it now,
+  // inside the engine, through `endsEligible`. A bench that still held the selector would be holding
+  // the one tool it needs to end an attachment behind the engine's back.
   answerFork,
   answerRetirement,
   birthdayOfferFor,
   chooseGift,
   drawRawLag,
+  // ⭐ v75 T7 – the shipped end hazard, asked of the engine so §3a's closed form and the printed
+  // banner cannot come to disagree with `ECONOMY.life.endsMult` (its own primitives doctrine: it
+  // takes a temperament, not a world, so the census sweeps the table without posing four careers).
+  endsHazardFor,
   kidAgeExact,
   loveEpisodesOf,
   lifeLogOf,
@@ -119,33 +140,21 @@ function weekSheTurns(age: number): number {
   throw new Error(`she never reaches ${age} inside forty years – the calendar moved under this bench`)
 }
 
-/** ⚠⚠ THE BENCH-ONLY DURATION TABLE – THE POKE, AND THE WHOLE OF IT. who-she-is §4's «median
- *  duration» column, in seasons, verbatim: sunny ~1.8 · fiery ~0.7 · quiet ~3 · deep ~1.2.
+/** ⭐⭐⭐ v75 T7 – §4's «expected biography» COLUMN, KEPT AS THE PREDICTION IT ALWAYS WAS AND NO LONGER
+ *  AS A POKE. These four seasons-figures used to be WRITTEN INTO the worlds this bench walked
+ *  (`BENCH_ONLY_DURATION_WEEKS`, deleted with the mode); they are now what §3a's measured median is
+ *  read AGAINST. Same table, opposite direction – which is the whole of what retiring the poke does.
  *
- *  ⚠ DETERMINISTIC ON PURPOSE, AND THAT IS THE INVARIANT RATHER THAN A SIMPLIFICATION. The brief's
- *  first law for this step is «zero new RNG – the bench reads the engine's own streams, it creates
- *  none», so the bench may not draw a duration: an ending hazard is wave 4's and it will arrive on
- *  `seed:life:ends:*`, which does not exist on this tree and must not be invented here. A fixed
- *  duration per temperament is the one ending model that takes no draw at all, and it is read off
- *  the same §4 row the count corridors come from – so the count table measures the ARRIVAL hazard
- *  and the COOLDOWN against §4's own assumption about how long a romance lasts, and nothing else.
- *
- *  ⚠ WHAT IT THEREFORE CANNOT SAY: anything about the spread of romance counts that comes from the
- *  spread of durations. Wave 4 ships the ending hazard and this table is deleted the day it does. */
-const BENCH_ONLY_DURATION_SEASONS: Record<Temperament, number> = { sunny: 1.8, fiery: 0.7, quiet: 3, deep: 1.2 }
-const BENCH_ONLY_DURATION_WEEKS: Record<Temperament, number> = {
-  sunny: Math.round(BENCH_ONLY_DURATION_SEASONS.sunny * WEEKS_PER_YEAR),
-  fiery: Math.round(BENCH_ONLY_DURATION_SEASONS.fiery * WEEKS_PER_YEAR),
-  quiet: Math.round(BENCH_ONLY_DURATION_SEASONS.quiet * WEEKS_PER_YEAR),
-  deep: Math.round(BENCH_ONLY_DURATION_SEASONS.deep * WEEKS_PER_YEAR),
+ *  ⚠ AND THE CLOSED FORM IS DERIVED FROM THE ENGINE, NOT FROM THESE. `endsHazardFor` is the shipped
+ *  rate; the median of a geometric wait is `ln 2 / −ln(1 − h)`. The two are printed side by side so a
+ *  reader can see that §4's prose column and `ECONOMY.life.endsMult` still agree – they do, to within
+ *  a rounding, which is worth being able to check rather than assume. */
+const SPEC_DURATION_SEASONS: Record<Temperament, number> = { sunny: 1.8, fiery: 0.7, quiet: 3, deep: 1.2 }
+/** The median duration §4's OWN end column implies, in weeks, off the engine's shipped hazard. */
+function closedFormMedianWeeks(t: Temperament): number {
+  const h = endsHazardFor(t)
+  return Math.log(2) / -Math.log(1 - h)
 }
-
-/** How many careers the SHIPPED CONTROL arm walks per temperament – the arm with the poke switched
- *  off, which is the game as this wave ships it. It is a control and not the grid: its whole job is
- *  to prove two things the count table cannot prove about itself (at most one episode ever; the
- *  FIRST arrival week identical to the poked arm's), and both are properties of every career rather
- *  than rates that need a sample. */
-const CONTROL_CAREERS = Math.min(25, CAREERS_PER_TEMPERAMENT)
 
 function flag(name: string, fallback: number): number {
   const i = process.argv.indexOf(name)
@@ -201,13 +210,16 @@ interface CareerRow {
   metAnswered: number
   beatsRaised: number
   beatsAnswered: number
-  endedByPoke: number
+  /** ⭐ v75 T7 – endings the ENGINE wrote on this career. It replaces `endedByPoke` and the rename is
+   *  the retirement in one field: nothing in this file can increment it. */
+  endedWalked: number
+  /** ...and how many of them the parent was actually SHOWN – `rollEnds` raises `'ended'` only behind
+   *  the `'met'` receipt (ruling B), so the two numbers are different questions and both are counted. */
+  endedCards: number
   bondFinal: number
 }
 
 interface WalkOpts {
-  /** true = the bench-only mode: `endedWeek` written tool-side at the temperament's §4 duration */
-  poke: boolean
   /** the entry policy the family plays under */
   policy: Policy
   /** a veto that refuses every entry – the no-action arm's whole definition */
@@ -237,7 +249,7 @@ interface WalkOpts {
  *  arm pair this file runs is §7's independence assertion, and it exists to prove that choices reach
  *  `knownWeek` and NOT `sinceWeek`. */
 const CENSUS_POLICY: Policy = process.argv.includes('--policy') && process.argv[process.argv.indexOf('--policy') + 1] === 'grinder' ? POLICIES[0] : POLICIES[1]
-const CENSUS: WalkOpts = { poke: true, policy: CENSUS_POLICY, decides: true, weeks: WEEKS }
+const CENSUS: WalkOpts = { policy: CENSUS_POLICY, decides: true, weeks: WEEKS }
 
 function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow {
   // ⚠ THE TEMPERAMENT IS ASSIGNED AND NOT DRAWN, which is what makes the four columns PAIRED:
@@ -264,7 +276,8 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     metAnswered: 0,
     beatsRaised: 0,
     beatsAnswered: 0,
-    endedByPoke: 0,
+    endedWalked: 0,
+    endedCards: 0,
     bondFinal: Number.NaN,
   }
   const openness = temperamentOpenness(temperament)
@@ -281,14 +294,20 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     // `drainKnock` itself, which keeps the arm exactly where it was.
     stepCareerWeek(world, rng, opts.policy, opts.veto, { drainKnocks: false })
     row.weeks++
-    // ⚠ THE ENDING IS READ BEFORE ANYTHING IS ANSWERED, and that is what lets this file have no
-    // `try`/`catch`: `answerLifeBeat`, `decideKnock`, `chooseGift`, `answerFork` and
-    // `answerRetirement` all refuse behind a terminal latch, so a walk that answered after the
-    // latch would need a swallowed throw to survive it. Breaking here means every command below
-    // runs on a career that still has a next week.
-    if (world.ending !== null) break
-
     // --- what the week appended to her life ----------------------------------------------------
+    //
+    // ⚠⚠ IT RUNS **BEFORE** THE ENDING BREAK, AND THAT ORDER IS A REPAIR (v75 T7, 12.09) RATHER THAN
+    // A PREFERENCE. It used to sit after it, and on the tick where a career-ending injury landed in
+    // the same week as an arrival the row the engine had just written was never recorded: `seen`
+    // stopped short, the episode existed in `world.loveEpisodes` and in no column of this census, and
+    // NOTHING said so – wave 3's version had no reader that could notice. Census v2's end-of-walk
+    // sync is that reader, and it threw on the full grid («life-142: episode p:383 is in the world and
+    // not in this bench's record»). A romance that began in the week she got hurt is a real arrival
+    // and the census owes it a row.
+    //
+    // ⚠ IT IS SAFE ON AN ENDED CAREER BECAUSE IT ISSUES NO COMMAND. `loveEpisodesOf` is a read and
+    // `drawRawLag` is a pure re-derivation off (seed, week); the terminal latch refuses ANSWERS, and
+    // the break below still stands in front of every one of them.
     const episodes = loveEpisodesOf(world)
     for (; seen < episodes.length; seen++) {
       const e = episodes[seen]
@@ -309,6 +328,13 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
         endedWeek: null,
       })
     }
+
+    // ⚠ THE ENDING IS READ BEFORE ANYTHING IS ANSWERED, and that is what lets this file have no
+    // `try`/`catch`: `answerLifeBeat`, `decideKnock`, `chooseGift`, `answerFork` and
+    // `answerRetirement` all refuse behind a terminal latch, so a walk that answered after the
+    // latch would need a swallowed throw to survive it. Breaking here means every command below
+    // runs on a career that still has a next week.
+    if (world.ending !== null) break
 
     // --- the parent answers whatever the engine is waiting on ----------------------------------
     //
@@ -331,26 +357,24 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
       answerTheBirthday(world)
     }
 
-    // --- ⚠⚠ THE POKE. BENCH-ONLY. NEVER A STREAM, NEVER A DRAW, NEVER THE ENGINE. ---------------
-    //
-    // The one line in this file that writes to the world. It ends the open attachment on the week
-    // its temperament's §4 median duration is up, so that `arrivalEligible`'s cooldown clause and
-    // the re-arrival it gates are exercised at all. Without it every count median in this bench
-    // reads exactly 1 and says nothing about anybody.
-    if (opts.poke) {
-      const open = activeEpisode(world)
-      if (open !== null && world.week - open.sinceWeek >= BENCH_ONLY_DURATION_WEEKS[temperament]) {
-        const live = world.loveEpisodes.find((e) => e.id === open.id)
-        if (live === undefined) throw new Error(`${seed}: the active episode is not in the list – the poke has nothing to write to`)
-        live.endedWeek = world.week
-        const mine = row.episodes.find((e) => e.sinceWeek === open.sinceWeek)
-        if (mine === undefined) throw new Error(`${seed}: an episode ended that this bench never recorded arriving`)
-        mine.endedWeek = world.week
-        row.endedByPoke++
-      }
-    }
+    // ⭐⭐⭐ v75 T7 – AND HERE IS WHERE THE POKE WAS. Nothing replaces it: `rollEnds` runs inside
+    // `stepCareerWeek`'s tick, four calls above, and this bench now writes to no world at all. The
+    // deletion is the step; what the block DID, and what it could not say, is described in full in
+    // this file's banner so that «what the two modes measured differently» survives the code that
+    // answered it.
   }
 
+  // ⭐⭐⭐ v75 T7 – THE ENDINGS, READ BACK OFF THE ENGINE'S OWN ROWS AT THE END OF THE WALK. A row is
+  // recorded the week it ARRIVES and dated the week it ENDS, and the two are different weeks, so the
+  // date cannot be captured by the append loop above. ⚠ IT IS A READ AND NEVER A WRITE: `rollEnds`
+  // put every one of these dates there, and the one line in this loop that touches the bench's own
+  // record is the copy.
+  for (const e of loveEpisodesOf(world)) {
+    const mine = row.episodes.find((x) => x.sinceWeek === e.sinceWeek)
+    if (mine === undefined) throw new Error(`${seed}: episode ${e.id} is in the world and not in this bench's record`)
+    mine.endedWeek = e.endedWeek
+    if (e.endedWeek !== null) row.endedWalked++
+  }
   row.endWeek = world.week
   row.endedAs = world.ending === null ? null : world.ending.type
   row.bondFinal = world.bond
@@ -360,7 +384,8 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
       if (beat.answer !== null) row.metAnswered++
       else row.metUnanswered.push(beat.week)
     }
-    if (beat.kind === 'met' || beat.kind === 'fork-opinion') row.beatsRaised++
+    if (beat.kind === 'ended') row.endedCards++
+    if (beat.kind === 'met' || beat.kind === 'fork-opinion' || beat.kind === 'ended') row.beatsRaised++
   }
   return row
 }
@@ -470,15 +495,12 @@ console.log('  THE ARRIVAL CENSUS – npm run bench:life-arrival')
 console.log('  who-she-is-2026-09.md §4 «The census» · docs/plans/life-wave-3-builder-2026-09.md §2 T11')
 console.log('══════════════════════════════════════════════════════════════════════════════════════════════')
 console.log('')
-console.log('  ⚠⚠⚠ THE COUNT BARS BELOW RUN IN A **BENCH-ONLY MODE**. THEY ARE NOT SHIPPED BEHAVIOUR.')
-console.log('       Wave 3 ships ARRIVALS ONLY – nothing in the engine writes `endedWeek` – so at most')
-console.log('       ONE episode can exist per career and every romance-count median read off the shipped')
-console.log('       game is 1, for all four temperaments. This tool therefore POKES `endedWeek` TOOL-SIDE')
-console.log('       (a fixed duration per temperament off §4\'s own «median duration» column: ' +
-  `${TEMPERAMENTS.map((t) => `${t} ${BENCH_ONLY_DURATION_WEEKS[t]}w`).join(' · ')})`)
-console.log('       so that the cooldown and the re-arrival are exercised at all. NO draw, NO stream, NO')
-console.log('       engine change – one field, written by the bench, on the bench\'s own world.')
-console.log('       ⚠ DO NOT READ THE COUNT TABLE AS THE GAME. §2 below is the shipped control.')
+console.log('  ⭐⭐⭐ CENSUS v2 (v75, T7) – **EVERY BAR BELOW IS WALKED. THE POKED MODE IS RETIRED.**')
+console.log('       Wave 4 ships `rollEnds`, so an attachment ends on the engine\'s own weekly hazard')
+console.log('       (' + `${TEMPERAMENTS.map((t) => `${t} ${(100 * endsHazardFor(t)).toFixed(2)}%/wk`).join(' · ')})` + ')')
+console.log('       and `arrivalEligible`\'s cooldown clause bites for the first time in the game\'s life.')
+console.log('       THIS TOOL WRITES NOTHING TO ANY WORLD: no poke, no draw, no stream, no engine change.')
+console.log('       ⚠ §2 is the retirement record – what the poked mode measured, beside what this one does.')
 console.log('')
 console.log('  ⚠ ZERO NEW RNG: this file derives no stream of its own. MAIN is untouched (41550 / e6b0c709).')
 console.log('  ⚠ NO try/catch ANYWHERE IN THIS FILE, and every number is taken through `sample()`, which')
@@ -518,7 +540,7 @@ const episodesOf = (t: Temperament): EpisodeRow[] => byT(t).flatMap((c) => c.epi
 
 rule('§1. THE RECEIPT – the instrument asserting its own actuation')
 console.log(
-  `    ${pad('temperament', 13)}${padL('careers', 9)}${padL('weeks', 9)}${padL('full walk', 11)}${padL('episodes', 10)}${padL('≥1 arrival', 12)}${padL('met raised', 12)}${padL('answered', 10)}${padL('unanswerable', 14)}${padL('poked end', 11)}`,
+  `    ${pad('temperament', 13)}${padL('careers', 9)}${padL('weeks', 9)}${padL('full walk', 11)}${padL('episodes', 10)}${padL('≥1 arrival', 12)}${padL('met raised', 12)}${padL('answered', 10)}${padL('unanswerable', 14)}${padL('ended WALKED', 14)}${padL(`'ended' cards`, 15)}`,
 )
 for (const t of TEMPERAMENTS) {
   const cs = byT(t)
@@ -526,7 +548,8 @@ for (const t of TEMPERAMENTS) {
     `    ${pad(t, 13)}${padL(String(cs.length), 9)}${padL(String(cs.reduce((s, c) => s + c.weeks, 0)), 9)}` +
       `${padL(String(cs.filter((c) => c.weeks === WEEKS).length), 11)}${padL(String(cs.reduce((s, c) => s + c.episodes.length, 0)), 10)}` +
       `${padL(String(cs.filter((c) => c.episodes.length > 0).length), 12)}${padL(String(cs.reduce((s, c) => s + c.metRaised, 0)), 12)}` +
-      `${padL(String(cs.reduce((s, c) => s + c.metAnswered, 0)), 10)}${padL(String(cs.reduce((s, c) => s + c.metUnanswered.length, 0)), 14)}${padL(String(cs.reduce((s, c) => s + c.endedByPoke, 0)), 11)}`,
+      `${padL(String(cs.reduce((s, c) => s + c.metAnswered, 0)), 10)}${padL(String(cs.reduce((s, c) => s + c.metUnanswered.length, 0)), 14)}` +
+      `${padL(String(cs.reduce((s, c) => s + c.endedWalked, 0)), 14)}${padL(String(cs.reduce((s, c) => s + c.endedCards, 0)), 15)}`,
   )
 }
 const endings = new Map<string, number>()
@@ -582,60 +605,120 @@ function assertReceipt(): void {
     if (answered !== raised - unanswerable) {
       throw new Error(`${t}: ${raised} raised, ${answered} answered, ${unanswerable} unanswerable – the three do not add up`)
     }
-    const poked = cs.reduce((s, c) => s + c.endedByPoke, 0)
-    if (poked === 0) throw new Error(`${t}: the bench-only poke never fired – the count bars would read the shipped 1`)
+    // ⭐⭐⭐ v75 T7 – THE RE-AIMED ACTUATION CLAUSE, AND IT IS STRICTLY STRONGER THAN THE ONE IT
+    // REPLACES. It read «the bench-only poke never fired»; a zero then meant the TOOL had stopped
+    // writing. It now reads the engine: a zero means `rollEnds` never ended an attachment for this
+    // temperament over the whole grid, which would make every count median read the shipped 1 and
+    // every duration column empty. Same sentence, asked of the thing being measured.
+    const ended = cs.reduce((s, c) => s + c.endedWalked, 0)
+    if (ended === 0) throw new Error(`${t}: ZERO endings over ${cs.length} careers – \`rollEnds\` never fired and the count bars are unmeasured`)
+    // ⚠ AND THE CARD IS ITS OWN CLAUSE. An ending the parent is never SHOWN is half the mechanic:
+    // `rollEnds` raises `'ended'` only behind the `'met'` receipt (ruling B), so a zero here with a
+    // non-zero above would mean every ending in this column happened before he had been told – which
+    // is a real scene and not a plausible whole column.
+    const cards = cs.reduce((s, c) => s + c.endedCards, 0)
+    if (cards === 0) throw new Error(`${t}: ${ended} endings and ZERO 'ended' cards – the told-now branch never fired`)
   }
 }
 assertReceipt()
 console.log('')
 console.log('    ✓ every temperament: weeks resolved, arrivals appended, `met` rows raised AND ANSWERED,')
-console.log('      the bench-only poke fired. No column below is empty.')
+console.log('      `rollEnds` ended attachments and the `\'ended\'` card was raised AND answered. No column below is empty.')
 console.log('    ⚠ `unanswerable` is the one legal gap and it is checked row by row, never counted off as')
 console.log('      slack: a career-ending injury latching on the very tick that delivered her news leaves a')
 console.log('      row `answerLifeBeat` refuses forever (`guardNotEndedForGood`) – nobody can answer it, at a')
 console.log('      bench or at a screen. Any OTHER unanswered row throws with its seed and week named.')
 
 // =================================================================================================
-// §2. THE SHIPPED CONTROL – what the game does without the poke
+// §2. THE RETIREMENT RECORD, AND THE CONTROL THAT REPLACED THE POKE'S
 // =================================================================================================
+//
+// ⚠⚠ WHAT THIS SECTION USED TO BE, AND WHY IT COULD NOT STAY. Wave 3's §2 walked the same seeds with
+// the poke OFF and REFUSED to continue if any career held more than one episode – «something writes
+// `endedWeek`, and the bench-only note at the top of this printout is now a lie». That refusal was
+// correct and it was a WAVE-3 PREMISE: it guarded the claim that the count table was the tool's and
+// not the game's. Wave 4 invalidates the premise on purpose, so the refusal went red before this
+// task touched anything, and the honest repair is not to weaken it but to replace it with the
+// control the walked mode actually needs.
+//
+// ⚠⚠ AND THE CONTROL A WALKED CENSUS NEEDS IS NOT «DOES THE TOOL WRITE» – it is «is the thing the
+// engine wrote LEGAL». Three properties, each of them a rule the engine states somewhere else, each
+// asserted here over every episode on the grid rather than sampled:
+//
+//   1. RULING F – `endedWeek >= sinceWeek + 1`. `rollEnds` runs BEFORE `rollArrival` in the tick, so
+//      the row this week's arrival appends does not exist yet when the hazard is asked, and no
+//      attachment can end in its own arrival week. The shortest romance the engine can produce is
+//      exactly one week long, and a zero-week row would be the order having silently moved.
+//   2. THE COOLDOWN, which is reachable for the FIRST TIME in this wave. `arrivalEligible` clause 3
+//      refuses an arrival for `cooldownWeeks[t]` weeks from the last ending; so for every re-arrival
+//      `sinceWeek − previous endedWeek >= cooldownWeeks[t]`, with no exception anywhere on the grid.
+//      Wave 3 shipped that clause DORMANT and tested it against hand-built worlds; this is the first
+//      time it has been asked of careers the engine actually walked.
+//   3. NOBODY ARRIVES ON THE AFTERNOON OF A BREAK-UP – the same ordering read from the other end, and
+//      a consequence of 2 rather than a second rule, so it is COUNTED and printed rather than
+//      asserted twice.
+//
+// ⚠ THE «FIRST ARRIVAL IDENTICAL» CROSS-CHECK IS GONE WITH THE POKE IT CONFINED, and that is a
+// deletion worth naming: it existed to prove the tool's write could not reach an arrival week. There
+// is no write left to confine. What replaced it as the guard on the arrival numbers is §7's
+// input-independence arm, which was always the stronger of the two.
 
-rule('§2. THE SHIPPED CONTROL – the same seeds, the poke OFF (this is the game)')
-const control: CareerRow[] = []
-for (const t of TEMPERAMENTS) {
-  for (let i = 0; i < CONTROL_CAREERS; i++) control.push(walk(`life-${i}`, t, { ...CENSUS, poke: false }))
-}
-const overOne = control.filter((c) => c.episodes.length > 1)
-if (overOne.length > 0) {
+rule('§2. THE ENDINGS ARE THE ENGINE\'S – the control that replaced the poke\'s')
+const allEpisodesEverywhere = careers.flatMap((c) => c.episodes)
+const ended = allEpisodesEverywhere.filter((e) => e.endedWeek !== null)
+const sameWeek = ended.filter((e) => e.endedWeek! <= e.sinceWeek)
+if (sameWeek.length > 0) {
   throw new Error(
-    `the shipped arm produced ${overOne.length} careers with more than one episode – ` +
-      'something writes `endedWeek`, and the bench-only note at the top of this printout is now a lie',
+    `${sameWeek.length} episode(s) ended on or before their own arrival week – ruling F is broken ` +
+      `(e.g. ${sameWeek[0].seed}/${sameWeek[0].temperament}: ${sameWeek[0].sinceWeek} → ${sameWeek[0].endedWeek})`,
   )
 }
-// ⚠ THE CROSS-CHECK THAT CONFINES THE POKE. Up to the first ending the two arms are the same career,
-// so the FIRST arrival week must be identical seed for seed. If it is not, the poke is reaching
-// something it must not – and every «first arrival» number below would be measuring the tool.
-let checked = 0
-for (const c of control) {
-  const twin = careers.find((x) => x.seed === c.seed && x.temperament === c.temperament)
-  if (twin === undefined) throw new Error(`${c.seed}/${c.temperament}: no poked twin to cross-check against`)
-  const a = c.episodes[0]?.sinceWeek ?? null
-  const b = twin.episodes[0]?.sinceWeek ?? null
-  if (a !== b) throw new Error(`${c.seed}/${c.temperament}: first arrival ${a} shipped vs ${b} poked – the poke is not confined`)
-  checked++
+/** Every re-arrival on the grid, as (gap from the previous ending, the cooldown it had to clear). */
+const reArrivals: { seed: string; temperament: Temperament; gap: number; owed: number }[] = []
+for (const c of careers) {
+  for (let i = 1; i < c.episodes.length; i++) {
+    const prev = c.episodes[i - 1]
+    if (prev.endedWeek === null) {
+      throw new Error(`${c.seed}/${c.temperament}: episode ${i} arrived while episode ${i - 1} was still open – clause 2 is broken`)
+    }
+    reArrivals.push({
+      seed: c.seed,
+      temperament: c.temperament,
+      gap: c.episodes[i].sinceWeek - prev.endedWeek,
+      owed: ECONOMY.life.cooldownWeeks[c.temperament],
+    })
+  }
 }
-console.log(`    ${control.length} careers (${CONTROL_CAREERS} per temperament), poke OFF:`)
-console.log(`      episodes per career, max            : ${Math.max(...control.map((c) => c.episodes.length))}   ← the wave's whole scope, in one number`)
-console.log(`      careers that ever met anybody       : ${control.filter((c) => c.episodes.length > 0).length}/${control.length}`)
-console.log(`      first-arrival week === the poked arm: ${checked}/${control.length} seeds`)
+const tooSoon = reArrivals.filter((r) => r.gap < r.owed)
+if (tooSoon.length > 0) {
+  throw new Error(
+    `${tooSoon.length} re-arrival(s) inside the cooldown – \`arrivalEligible\` clause 3 is broken ` +
+      `(e.g. ${tooSoon[0].seed}/${tooSoon[0].temperament}: gap ${tooSoon[0].gap}w against ${tooSoon[0].owed}w owed)`,
+  )
+}
+const sameTick = reArrivals.filter((r) => r.gap === 0).length
+console.log(`    episodes on the grid                 : ${allEpisodesEverywhere.length}, of which ${ended.length} ENDED and ${allEpisodesEverywhere.length - ended.length} were still open at week ${WEEKS}`)
+console.log(`    shortest romance the engine produced : ${ended.length === 0 ? '–' : `${Math.min(...ended.map((e) => e.endedWeek! - e.sinceWeek))}w`}   ← ruling F: it can never be 0`)
+console.log(`    episodes that ended in their arrival week: ${sameWeek.length}   ← ASSERTED zero, not printed and hoped over`)
+console.log(`    re-arrivals on the grid              : ${reArrivals.length}`)
+console.log(`    ...of which INSIDE the cooldown      : ${tooSoon.length}   ← ASSERTED zero (clause 3, live for the first time this wave)`)
+console.log(`    ...of which on the ending's own week : ${sameTick}   ← nobody arrives on the afternoon of a break-up`)
+console.log(`    tightest gap seen, per temperament   : ${TEMPERAMENTS.map((t) => {
+  const gs = reArrivals.filter((r) => r.temperament === t).map((r) => r.gap)
+  return `${t} ${gs.length === 0 ? '–' : `${Math.min(...gs)}w/${ECONOMY.life.cooldownWeeks[t]}w`}`
+}).join(' · ')}`)
 console.log('')
-console.log('    ⚠ SO: the count table in §3 is the bench-only mode and nothing else. Everything in §4')
-console.log('      and §5 is a per-EPISODE distribution and reads the same either way – §2 is the proof.')
+console.log('    ⚠ THE RETIREMENT RECORD. The poked mode was measured against the walked one on the same seeds')
+console.log('      before it was deleted – both columns are in who-she-is-2026-09.md §4a\'s wave-4 entry. In one')
+console.log('      line: the poke wrote a CONSTANT duration and could say nothing about the spread of counts;')
+console.log('      walked durations are exponential and two to three times longer for three of the four girls,')
+console.log('      so every walked count median below is LOWER than the poked one it replaces.')
 
 // =================================================================================================
-// §3. BAR 1 – THE ROMANCE COUNTS (bench-only mode)
+// §3. BAR 1 – THE ROMANCE COUNTS (WALKED)
 // =================================================================================================
 
-rule('§3. BAR 1 – romance-count medians, and they must SEPARATE   ⚠⚠ BENCH-ONLY MODE (poked endings)')
+rule('§3. BAR 1 – romance-count medians, and they must SEPARATE   ⭐ WALKED (the poked mode is retired)')
 console.log(`    ${pad('temperament', 13)}${padL('n', 6)}${padL('median', 9)}${padL('mean', 8)}${padL('min', 6)}${padL('max', 6)}${padL('0 romances', 12)}   corridor        verdict`)
 const COUNT_BAR: Record<Temperament, { text: string; ok: (m: number) => boolean }> = {
   fiery: { text: '>= 4', ok: (m) => m >= 4 },
@@ -667,10 +750,122 @@ console.log(
 )
 
 // =================================================================================================
+// §3a. BAR 1b – HOW LONG THEY LAST  ⭐ NEW IN CENSUS v2: the poke's own table, read the other way
+// =================================================================================================
+//
+// ⚠⚠ THE MEDIAN OF THE COMPLETED ONES IS THE WRONG NUMBER AND IT IS PRINTED ANYWAY. A census that
+// stops at week 543 sees short romances whole and long ones truncated, so «the median of the rows
+// that ended» is biased DOWN by exactly the amount §4's quiet row cares about: a quiet girl's median
+// duration is about three seasons and a fair share of her episodes are still open when the walk
+// stops. Taking that number as the measurement would report the censoring as a personality.
+//
+// ⚠⚠ SO THE BAR IS READ OFF THE HAZARD, WHICH CENSORING CANNOT BIAS. Every episode contributes the
+// weeks it was EXPOSED (`endedWeek ?? the last week the career walked` − `sinceWeek`) and, if it
+// ended, one event. `endings / exposure` is the maximum-likelihood weekly rate for a geometric wait
+// under right-censoring, and the median it implies is `ln 2 / −ln(1 − ĥ)`. Both numbers are in the
+// table – the biased one labelled as what it is – because a reader who cannot see the raw median
+// cannot check the correction.
+//
+// ⚠ THE BARS ARE §4's TWO NAMED ROWS (quiet ≈ 3 seasons, fiery ≈ 0.7) AND THE TOLERANCE IS THE
+// BENCH'S, stated rather than smuggled: ±20 % of the spec row. The other two temperaments are §4's
+// too and print without a bar, which is the wave-4 brief's own list.
+
+rule('§3a. BAR 1b – duration medians, WALKED   (the hazard estimate is the reading; the raw median is printed beside it)')
+console.log('    ⚠ «exposure» is every week an episode was open inside the walk, ended or not – so a romance still')
+console.log('      running at week ' + WEEKS + ' contributes its weeks WITHOUT contributing an ending, which is what makes')
+console.log('      the hazard estimate immune to the horizon that truncates the raw median.')
+console.log('')
+console.log(
+  `    ${pad('temperament', 13)}${padL('episodes', 10)}${padL('ended', 8)}${padL('open', 7)}${padL('exposure wks', 14)}${padL('ĥ /wk', 10)}${padL('shipped h', 11)}` +
+    `${padL('median (ĥ)', 12)}${padL('in seasons', 12)}${padL('raw median', 12)}${padL('§4 says', 9)}   corridor          verdict`,
+)
+const DURATION_BAR: Partial<Record<Temperament, { text: string; ok: (seasons: number) => boolean }>> = {
+  quiet: { text: '3 seasons ±20%', ok: (x) => x >= 0.8 * SPEC_DURATION_SEASONS.quiet && x <= 1.2 * SPEC_DURATION_SEASONS.quiet },
+  fiery: { text: '0.7 seasons ±20%', ok: (x) => x >= 0.8 * SPEC_DURATION_SEASONS.fiery && x <= 1.2 * SPEC_DURATION_SEASONS.fiery },
+}
+for (const t of TEMPERAMENTS) {
+  const cs = byT(t)
+  const eps = cs.flatMap((c) => c.episodes.map((e) => ({ e, last: c.weeks })))
+  const exposure = eps.reduce((n, { e, last }) => n + ((e.endedWeek ?? last) - e.sinceWeek), 0)
+  const events = eps.filter(({ e }) => e.endedWeek !== null).length
+  // ⚠ THROUGH `sample()` LIKE EVERY OTHER NUMBER IN THIS FILE: a temperament with no ended episode
+  // has no measurable duration and the run stops rather than printing a rate of 0/0.
+  const raw = sample(`duration · ${t}`, eps.filter(({ e }) => e.endedWeek !== null).map(({ e }) => e.endedWeek! - e.sinceWeek), MIN_N)
+  if (exposure === 0) throw new Error(`${t}: zero exposure weeks – no episode was open for a single week`)
+  const hHat = events / exposure
+  const medianWeeks = Math.log(2) / -Math.log(1 - hHat)
+  const seasons = medianWeeks / WEEKS_PER_YEAR
+  const bar = DURATION_BAR[t]
+  console.log(
+    `    ${pad(t, 13)}${padL(String(eps.length), 10)}${padL(String(events), 8)}${padL(String(eps.length - events), 7)}${padL(String(exposure), 14)}` +
+      `${padL(`${(100 * hHat).toFixed(3)}%`, 10)}${padL(`${(100 * endsHazardFor(t)).toFixed(3)}%`, 11)}` +
+      `${padL(`${medianWeeks.toFixed(1)}w`, 12)}${padL(seasons.toFixed(2), 12)}${padL(`${med(raw).toFixed(1)}w`, 12)}${padL(String(SPEC_DURATION_SEASONS[t]), 9)}   ` +
+      `${pad(bar ? bar.text : '(no bar)', 18)}${bar ? verdict(`bar 1b · ${t} duration ${bar.text}`, bar.ok(seasons), `measured ${seasons.toFixed(2)} seasons (raw median ${med(raw).toFixed(1)}w)`) : '–'}`,
+  )
+}
+console.log('')
+console.log(`    ⚠ «shipped h» is \`endsHazardFor\` – \`ECONOMY.life.endsPerWeek\` × \`endsMult[t]\`, asked of the engine. ĥ is what`)
+console.log('      the walk PRODUCED. The two agreeing is the sharpest single statement this section makes: it says the')
+console.log('      hazard reaches the world at the rate the table names, with no eligibility clause quietly eating weeks.')
+console.log(`    ⚠ the closed form off the shipped rate: ${TEMPERAMENTS.map((t) => `${t} ${(closedFormMedianWeeks(t) / WEEKS_PER_YEAR).toFixed(2)}`).join(' · ')} seasons – §4's own prose column re-derived.`)
+
+// =================================================================================================
+// §3b. THE COOLDOWN CENSUS – ⭐ THE FIRST WAVE IT IS REACHABLE AT ALL
+// =================================================================================================
+//
+// ⚠⚠ WAVE 3 SHIPPED `arrivalEligible`'s CLAUSE 3 DORMANT, with its own tests, against hand-built
+// worlds carrying an ended row – because nothing in that wave could write one. This is the first
+// time the clause has been asked of careers the engine walked, and §2 has already asserted that not
+// one re-arrival on the grid broke it. This section is the other half: HOW HARD IT BITES.
+//
+// ⚠ IT CARRIES NO BAR, AND THAT IS §4's DOING RATHER THAN A CHOICE. The spec gives the cooldown a
+// column of numbers and no corridor; what a census owes it is the distribution it actually produced,
+// so that a later wave arguing about 12 against 26 has something to argue from.
+
+rule('§3b. THE COOLDOWN CENSUS, per temperament   ⚠ NO BAR – §4 gives the cooldown a column, not a corridor')
+console.log(
+  `    ${pad('temperament', 13)}${padL('cooldown', 10)}${padL('re-arrivals', 13)}${padL('min gap', 9)}${padL('median gap', 12)}${padL('p90 gap', 9)}` +
+    `${padL('within +4w', 12)}${padL('endings never re-armed', 24)}`,
+)
+for (const t of TEMPERAMENTS) {
+  const owed = ECONOMY.life.cooldownWeeks[t]
+  const gaps = reArrivals.filter((r) => r.temperament === t).map((r) => r.gap)
+  // ⚠ THE DENOMINATOR IS ENDINGS THAT HAD ROOM TO BE FOLLOWED, not endings: a break-up at week 540
+  // has three weeks left and no cooldown on earth lets anybody arrive in them. Counting it as «never
+  // re-armed» would price the horizon as reticence.
+  const endingsWithRoom = careers
+    .filter((c) => c.temperament === t)
+    .flatMap((c) => c.episodes.filter((e) => e.endedWeek !== null && e.endedWeek + owed <= c.weeks)).length
+  const followed = careers
+    .filter((c) => c.temperament === t)
+    .flatMap((c) =>
+      c.episodes.filter((e, i) => e.endedWeek !== null && e.endedWeek + owed <= c.weeks && c.episodes[i + 1] !== undefined),
+    ).length
+  if (gaps.length === 0) {
+    console.log(
+      `    ${pad(t, 13)}${padL(`${owed}w`, 10)}${padL('0', 13)}${padL('–', 9)}${padL('–', 12)}${padL('–', 9)}${padL('–', 12)}` +
+        `${padL(`${endingsWithRoom - followed}/${endingsWithRoom}`, 24)}`,
+    )
+    continue
+  }
+  const sorted = [...gaps].sort((a, b) => a - b)
+  console.log(
+    `    ${pad(t, 13)}${padL(`${owed}w`, 10)}${padL(String(gaps.length), 13)}${padL(`${Math.min(...gaps)}w`, 9)}` +
+      `${padL(`${med(sample(`cooldown gap · ${t}`, gaps, 1)).toFixed(1)}w`, 12)}${padL(`${sorted[Math.floor(0.9 * (sorted.length - 1))]}w`, 9)}` +
+      `${padL(`${((100 * gaps.filter((g) => g < owed + 4).length) / gaps.length).toFixed(1)}%`, 12)}` +
+      `${padL(`${endingsWithRoom - followed}/${endingsWithRoom}`, 24)}`,
+  )
+}
+console.log('')
+console.log('    «within +4w» = re-arrivals that happened in the first four weeks AFTER the cooldown expired – how')
+console.log('    tightly the clause is actually binding, rather than how long it is on paper. «never re-armed» counts')
+console.log('    endings that had a full cooldown of room left in the walk and were still never followed by anybody.')
+
+// =================================================================================================
 // §4. BAR 2 – THE FIRST ARRIVAL
 // =================================================================================================
 
-rule('§4. BAR 2 – first-arrival age medians   (identical in both modes – §2 checked it seed by seed)')
+rule('§4. BAR 2 – first-arrival age medians   ⭐ WALKED (§7\'s independence arm is what guards these now)')
 console.log(`    ${pad('temperament', 13)}${padL('n', 6)}${padL('never', 8)}${padL('median age', 12)}${padL('p10', 8)}${padL('p90', 8)}   corridor        verdict`)
 const AGE_BAR: Partial<Record<Temperament, { text: string; ok: (m: number) => boolean }>> = {
   quiet: { text: '>= 17.5', ok: (m) => m >= 17.5 },
@@ -699,7 +894,8 @@ for (const t of TEMPERAMENTS) {
 
 rule('§5. BAR 3 – late-feed share by openness (told late = lag > 0 after the bond shave)')
 console.log('    ⚠ THE VERDICT READS THE SHIPPED POPULATION – FIRST episodes only. The «all episodes»')
-console.log('      column beside it is the bench-only mode\'s larger sample of the same distribution.')
+console.log('      column beside it is every LATER episode as well – a larger sample of the same draw, and since')
+console.log('      census v2 those later episodes are the engine\'s own re-arrivals rather than a tool\'s.')
 console.log('    ⚠ AND THE RAW COLUMN IS THE DRAW BEFORE `ECONOMY.life.bondShave` TOUCHED IT, re-read off')
 console.log('      the engine\'s own `seed:life:partner:<w>:lag` stream – so a miss can be attributed to')
 console.log('      §4\'s lag table or to the architect\'s shave instead of being guessed at.')
@@ -760,21 +956,24 @@ for (const openness of ['private', 'open'] as const) {
 // §6. THE LATCH PROXY – ⚠ PRINTED, AND IT IS NOT A BAR IN THIS WAVE
 // =================================================================================================
 
-rule('§6. THE LATCH PROXY – carried into year two   ⚠⚠ NOT A MEASUREMENT OF THE ENGINE')
-console.log('    §4\'s bar is «first or second love reaches the latch» (quiet >= 50%, fiery <= 20%), and it')
-console.log('    is UNREADABLE IN THIS WAVE. Nothing in the engine ends an attachment, so in the shipped')
-console.log('    game the share is 100% by construction, and in the bench-only mode it is a readback of')
-console.log('    THIS FILE\'S OWN duration table. Neither number is a property of the sim. It is printed so')
-console.log('    the column exists for step 6 to fill, and it is marked so nobody signs it. NO VERDICT.')
+rule('§6. THE LATCH PROXY – carried into year two   ⚠⚠ PRINTED AND UNSIGNED (step 6\'s, not this wave\'s)')
+console.log('    §4\'s bar is «first or second love reaches the latch» (quiet >= 50%, fiery <= 20%).')
+console.log('    ⭐ RE-AIMED BY CENSUS v2 AND STILL UNSIGNED, WHICH IS THE HONEST HALF. Wave 3 could not read this')
+console.log('    column at all – nothing ended an attachment, so the share was 100% by construction in the game and')
+console.log('    a readback of the tool\'s own duration table in the poked mode. Neither was a property of the sim.')
+console.log('    The number below IS one now: it is the engine\'s own ending hazard against a year. What it still is')
+console.log('    NOT is the LATCH – there is no marriage, no moving in and no step-6 mechanic on this tree, so «a year')
+console.log('    without ending» is a PROXY the architect chose and not the bar §4 wrote. It is printed for step 6 to')
+console.log('    land on, and it is marked so nobody signs it. NO VERDICT.')
 console.log('')
-console.log(`    ${pad('temperament', 13)}${padL('episodes with a year to run', 29)}${padL('still open at +52w', 20)}${padL('bench duration', 16)}`)
+console.log(`    ${pad('temperament', 13)}${padL('episodes with a year to run', 29)}${padL('still open at +52w', 20)}${padL('closed form', 14)}`)
 for (const t of TEMPERAMENTS) {
   const cs = byT(t)
   const eligible = cs.flatMap((c) => c.episodes.filter((e) => e.sinceWeek + WEEKS_PER_YEAR <= c.weeks))
   const s = sample(`latch proxy · ${t}`, eligible.map((e) => e.sinceWeek), 1)
   const carried = eligible.filter((e) => e.endedWeek === null || e.endedWeek - e.sinceWeek >= WEEKS_PER_YEAR).length
   console.log(
-    `    ${pad(t, 13)}${padL(String(s.xs.length), 29)}${padL(`${((100 * carried) / s.xs.length).toFixed(1)}%`, 20)}${padL(`${BENCH_ONLY_DURATION_WEEKS[t]}w`, 16)}`,
+    `    ${pad(t, 13)}${padL(String(s.xs.length), 29)}${padL(`${((100 * carried) / s.xs.length).toFixed(1)}%`, 20)}${padL(`${(100 * (1 - endsHazardFor(t)) ** WEEKS_PER_YEAR).toFixed(1)}%`, 14)}`,
   )
 }
 
@@ -795,9 +994,11 @@ for (const t of TEMPERAMENTS) {
 // byte-identical-diff failure CLAUDE.md records from 17.08. So the arm ALSO requires that the two
 // runs genuinely diverged somewhere (bond), and it throws if they did not.
 //
-// ⚠ THE POKE IS ON IN BOTH ARMS and it is choice-free by construction: `endedWeek = sinceWeek +
-// duration(temperament)` reads the calendar and the girl, and nothing the player did. It is what
-// makes this a comparison of LISTS rather than of one element.
+// ⭐⭐ v75 T7 – AND THE ARM IS STRICTLY STRONGER WALKED THAN IT WAS POKED. It used to compare lists
+// whose SECOND and later entries existed only because the tool had ended the first at a fixed week;
+// now every entry after the first is downstream of `seed:life:ends:<week>` and of the cooldown, so
+// the equality being asserted covers the ENDING hazard's key as well as the arrival's. Neither key
+// can see a player choice, and this is where that is proven rather than argued.
 
 rule('§7. THE INPUT-INDEPENDENCE ARM – identical `sinceWeek` lists, asserted')
 console.log('    no-action  : enters nothing, books nothing, reviews no coach, answers no knock and no')
@@ -807,8 +1008,8 @@ console.log('    action-laden: the `player` policy – reserve, rest floor, the 
 console.log('                 off-season family week, the mid-season rescue – plus every knock rested and')
 console.log('                 every birthday answered.')
 console.log('')
-const NO_ACTION: WalkOpts = { poke: true, policy: POLICIES[0], veto: () => true, decides: false, weeks: WEEKS }
-const LADEN: WalkOpts = { poke: true, policy: POLICIES[1], decides: true, weeks: WEEKS }
+const NO_ACTION: WalkOpts = { policy: POLICIES[0], veto: () => true, decides: false, weeks: WEEKS }
+const LADEN: WalkOpts = { policy: POLICIES[1], decides: true, weeks: WEEKS }
 let pairs = 0
 let arrivalsCompared = 0
 let sinceMismatch = 0
@@ -889,8 +1090,8 @@ if (MISSES.length === 0) {
   for (const m of MISSES) console.log(`      MISS  ${m}`)
 }
 console.log('')
-console.log('    ⚠ Reminder for whoever reads the count table: §3 is the BENCH-ONLY mode. The shipped')
-console.log('      wave writes no `endedWeek` and §2 is the control that proves it.')
+console.log('    ⚠ Reminder for whoever reads the count table: §3 is WALKED. Every ending on this grid was')
+console.log('      written by `rollEnds`, and §2 is the control that proves each one of them legal.')
 console.log('')
 // ⭐⭐ v75 T3b – WHAT THE DRAIN PUT ON THE SCALE, AS ARITHMETIC. Zero today, and the line is printed
 // anyway: «the harness answered 2,700 beats and none of them cost anything» is the claim every bond

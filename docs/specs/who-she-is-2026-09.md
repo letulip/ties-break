@@ -1334,3 +1334,371 @@ the driver starts below 59.5, so she speaks a `strained` line only in the bottom
 `steady` band. The root still reaches the player at every band **through the coach**, whose counsel
 is driver-keyed rather than bond-keyed – taken as the design answer and documented rather than
 widening the pool.
+
+## §4a – wave 4 measured. T7: the break-up priced, and the census walked
+
+Two instruments, one entry, because they answer the two halves of one question – **what an ending
+costs her** (`npm run bench:spirit -- --shock`, new) and **how often she has one to pay for**
+(`npm run bench:life-arrival`, census v2). Both were run on `life/wave-4` at head `647a11a4`, on a
+quiet machine (load average 2.4 and 2.5 at the two launches), and every verdict below is read out of
+a log file the command itself appended, never off a pipe.
+
+**Provenance of the predicted column, stated rather than claimed.** It is §4's own spirit-physics
+table and §4's own «expected biography» column, re-derived through the engine's constants at the
+head of each run – the bench prints the derivation beside every row. Two of the predictions are
+**not** §4's arithmetic as §4 wrote it, and those two are the entry's first finding.
+
+### ⚠⚠ The finding that moved two bars: the lift's exit and the shock are the SAME TICK
+
+§4's table says «break-up shock −22 / −34» and «weeks under the knee after a lifted-75 break-up
+~1–2 / ~6–7», and it derives the second from the first as `75 − 22 = 53 → 58 → 63`: two weeks below
+the knee. **The engine does one step more, first.** `rollEnds` runs before `accrueSpirit` in the same
+tick, so on the landing week `activeEpisode` is already null, the RETURN step walks her from the
+lifted 75 toward the **flat** 70 – and the shock lands on what is left:
+
+| | steady | intense |
+| --- | ---: | ---: |
+| §4's arithmetic (75 + shock) | 53.0 | 41.0 |
+| the engine's (75 → return → 70 or 72, then shock) | **48.0** | **38.0** |
+| measured, mean of 128 arms each | **47.8** | **37.5** |
+
+That is T3's own design working exactly as ruled («the effective baseline drops back to 70 by itself
+– ZERO new code»); what it was not is priced into §4's prose. **The dip is five points deeper for a
+steady girl and three for an intense one than the table's own derivation**, and that is the whole of
+why bar S1b misses by exactly one week in both arms.
+
+### The table – the shock arms
+
+`npm run bench:spirit -- --shock`, **exit 0** (`/tmp/w4t7/shock-full.log`, `SHOCK_FULL_EXIT=0`).
+**64 seeds × 4 temperaments × {shocked, spared} = 512 careers, 106,496 resolved weeks, 410.7 s** –
+**128 seed-pairs per intensity**, which is the brief's grid. The attachment is forced at week 128 in
+**both** arms and the ending at week 136 in arm A only; every other clause is held equal.
+
+| # | bar | predicted | measured | verdict |
+| --- | --- | --- | --- | --- |
+| S1a | median weeks to baseline, **steady 5 ± 1** | §4: back ~week 5 · engine's closed form: 48 → 70 at 5/wk = **5** | **5.0** (n 128) | **HIT** |
+| S1a | ...**intense 12 ± 2** | §4: back ~week 12 · closed form: 38 → 70 at 3/wk = **11** | **11.5** (n 128) | **HIT** |
+| S1b | weeks under the knee, **steady 1–2** | §4: **2** off 53 · off the engine's 48 it is **3** | **3.0** (n 128) | **MISS** |
+| S1b | ...**intense 6 ± 1** | §4: **7** off 41 · off the engine's 38 it is **8** | **8.0** (n 128) | **MISS** |
+| S2a | paired match-win drop over the post-shock window, **inside [1, 8] pp**, steady | – (no closed form; the channel is `spiritMatchFactor` alone) | **1.260 pp** ± 0.646 (n 64 seeds) | **HIT** |
+| S2a | ...intense | – | **1.114 pp** ± 0.724 (n 64 seeds) | **HIT** |
+| S2b | ...and **> 2 × SEM**, steady | – | 1.260 against 2×SEM **1.291** | **MISS** |
+| S2b | ...intense | – | 1.114 against 2×SEM **1.448** | **MISS** |
+| S3 | after recovery, paired difference **inside 1 × SEM**, steady | 0 – weather, not a scar | **0.423 pp**, SEM 0.567 | **HIT** |
+| S3 | ...intense | 0 | **0.908 pp**, SEM 0.778 | **MISS** (1.17 × SEM) |
+| S4 | the **±1.5 pp lifetime fairness corridor**, re-read on these arms | «well under 1 pp – inside the corridor without help» | **worst pair 0.054 pp** | **HIT** |
+
+⭐ **Actuation, per temperament, printed and asserted**: 64/64 arrivals forced in both arms, 64/64
+endings landed on week 136, 64/64 `world.spiritShock` stamped, 64 `'ended'` cards raised AND
+answered – in each of the four columns. Spirit carried into the shock week: **74.7 steady / 74.4
+intense**, which is the «lifted 75» the prediction is written against, measured rather than assumed.
+The shock cleared (spirit ≥ 68) after a median of **4.0 weeks steady / 10.0 intense**.
+
+⚠ **Drain skew, stated as arithmetic** (wave-4 brief §0.2): shocked arm `met 256 × 0 · ended 256 ×
+−1 = **−256** bond`; spared arm `met 256 × 0 = **0**`. The two arms differ here **by construction** –
+the card exists only where the ending did – and it is bond, which no bar above reads.
+
+### ⚠⚠ Bar S2's two verdicts disagree, and the disagreement is the finding, not the noise
+
+The drop is inside the corridor and **fails to clear its own 2 × SEM in both arms**, by 3 % and by
+30 %. That pair of verdicts is not «almost significant»; it is the measurement saying the corridor
+and the window were chosen for different things. Three numbers say why, and the bench prints all
+three beside the bar:
+
+* `spiritMatchFactor` is **0.9800** at the steady landing spirit and **0.9633** at the intense one –
+  a 2 % and a 3.7 % strength deficit, and that is the **whole** of what a break-up can reach a match
+  through. There is no other channel.
+* the dip is **3 weeks long steady / 8 intense**; the bar's window is **26**. Of the 27 matches the
+  window holds, **2.8 fall in the dip for a steady girl and 9.2 for an intense one** – a dilution of
+  **9.9×** and **2.9×**.
+* cut on the weeks she was actually under the knee, the same paired difference reads
+  **4.409 pp ± 1.834 (steady)** and **2.299 pp ± 1.384 (intense)**. That is the number the [1, 8] pp
+  corridor appears to have been written for; it carries **no bar** here, because inventing one is the
+  architect's call and not the bench's.
+
+⚠ **And the two intensities are NOT distinguishable in the match price**, which is worth saying
+plainly because it is the opposite of what a −34 against a −22 suggests: 1.260 ± 0.646 against
+1.114 ± 0.724 over the window, 4.409 ± 1.834 against 2.299 ± 1.384 in the dip. A deeper, longer dip
+did not buy a bigger measurable loss at this sample size. What DID separate the two is how often the
+shock reaches the match engine at all: **lifetime win rate moved in 19/64 steady careers and 41/64
+intense ones.**
+
+### Bar S3's intense arm missed at 1.17 × SEM, and it is reported rather than explained away
+
+After recovery (weeks 162–208, every arm back at baseline long before) the paired difference is
+**0.908 pp against a SEM of 0.778**. The steady arm is 0.423 against 0.567 and HITS. There is no
+mechanism for a scar – `spiritShock` is cleared, spirit is back at 70, `spiritMatchFactor` reads
+1.0000 – so the honest reading is that a career that lost a handful of matches in the dip walks a
+different draw afterwards, and 64 seeds is not enough to separate that residue from zero. It is
+recorded as a miss because it missed.
+
+### ⭐ The fairness question T3 flagged, answered
+
+T3 left it open, and the note is worth quoting: spirit moves **a threshold, not a tap**, so an
+ending could swing outcomes hard – `pro.tsave` moved results 2230 → 2231 while funds went $1.15 M →
+$4.23 M on a byte-identical `rngMain`. **The corridor settles it: 0.054 pp, twenty-eight times inside
+the ±1.5 pp bar.** Three things make that reading load-bearing rather than empty:
+
+* it is not vacuous – the arms genuinely diverged on a lifetime number in **60 of 256 careers**, and
+  the bench refuses to sign the corridor if that count is zero;
+* the per-seed spread IS large (**max |Δ| 5.178 pp**) and the MEAN is 0.054 – so the ending is loud
+  in an individual career and silent in the population, which is exactly the shape a threshold
+  produces and exactly why the paired mean is the right statistic for a fairness bar;
+* the **spared** arm reads 0.000 on every pair, which is the control: with no ending, the four girls
+  are numerically identical careers.
+
+⚠ **Four of the six temperament pairs share an intensity and are REPLICAS, not samples.** With the
+arrival and the ending both forced onto fixed weeks, `temperamentMult`, `endsMult` and
+`cooldownWeeks` are all held out of the walk, and `temperamentIntensity` is the only thing
+`accrueSpirit` reads – so sunny/quiet and fiery/deep differ only in her openness, which reaches
+`knownWeek` and nothing the match engine can see. Their 0.000 is arithmetic. **The informative
+comparisons are the four steady-vs-intense pairs, and they read ±0.054 pp.**
+
+### ⚠ What the shock arms are NOT, said before somebody reads them as the game
+
+The arrival is forced in **both** arms and the ending hazard is held at zero everywhere except the
+one forced week. The brief said «arm B untouched»; on this tree that cannot mean what it meant in
+wave 3, and the bench's banner argues it at length. `rollEnds` is live: over the ~70 weeks between
+the forced arrival and the end of the walk a fiery girl's episode ends on its own with probability
+≈ 72 %. An untouched arm B is not a control – it is a second, randomly-timed break-up, and the
+paired difference would have been «one ending at a known week» minus «0.7 endings at unknown weeks».
+**The hazard's own rate is the census's subject, not this block's**, and it is measured below.
+
+### ⭐⭐ The census: the poked mode RETIRES, and here is what it was measuring
+
+`npm run bench:life-arrival` shipped wave 3 with a **bench-only mode**: nothing in wave 3's `src/`
+wrote `endedWeek`, so at most one episode could exist per career and every romance-count median read
+off the shipped engine was 1. The tool therefore wrote `endedWeek` itself, at a FIXED duration per
+temperament taken off §4's «median duration» column, and its §2 control REFUSED to continue if the
+un-poked arm ever produced a career with two episodes.
+
+**Wave 4 invalidated that control on purpose, and the bench had been red since T2** – it died at §2,
+before reaching §8, which is why T3b's drain-skew line had never printed in a real run. The bench was
+right to refuse; its premise was simply out of date.
+
+⚠ **The two modes were measured side by side, on the same seeds, BEFORE the poke was deleted** (the
+transitional run, 60 careers per temperament, control arm 25 – `/tmp/w4t7/arrival-transitional-two-modes.log`,
+exit 0). This is what the deletion cost and bought:
+
+| temperament | poked count median | walked count median | poked mean | walked mean | poked duration | walked raw median duration |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| sunny | 3.0 | **2.0** | 3.17 | 2.33 | 94 w (fixed) | 78.0 w (n 45) |
+| fiery | 6.0 | **4.0** | 5.92 | 4.50 | 36 w (fixed) | 42.0 w (n 95) |
+| quiet | 2.0 | **1.5** | 1.75 | 1.58 | 156 w (fixed) | 117.0 w (n 26) |
+| deep | 2.0 | **2.0** | 2.21 | 1.79 | 62 w (fixed) | 71.0 w (n 36) |
+
+**69 of 100 control careers held more than one episode** – the number wave 3 threw on – and the
+maximum was **8**. The poke was still confined to the last: first-arrival week identical on
+**100/100 seeds**, checked one final time before the cross-check was deleted with the write it
+confined.
+
+**What the two modes measured differently, in one sentence each.** The poked mode measured the
+ARRIVAL hazard and the COOLDOWN against §4's ASSUMPTION about how long a romance lasts; it could say
+nothing at all about the spread of romance counts, because a constant has no spread. The walked mode
+measures the arrival hazard, the cooldown AND the ending hazard together, and its counts come out
+LOWER in three columns of four – the walked duration is exponential with mean `1 / (endsPerWeek ×
+endsMult[t])`, which is longer than the poke's fixed number for sunny, quiet and deep and shorter for
+fiery. Nothing about the arrival changed: bar 2's first-arrival medians are the same numbers in both
+modes, seed for seed, which is the identity check that makes the rest readable.
+
+### The table – census v2, WALKED
+
+`npm run bench:life-arrival`, **exit 0** (`/tmp/w4t7/census-v2-full-2.log`, `CENSUS_FULL2_EXIT=0`).
+**200 careers per temperament × 4 = 800**, **430,832 resolved weeks**, each walked from week 0 to the
+week she turns twenty-four (**week 543**), wealthy family, the `player` entry policy, every knock
+rested and the birthday she asked for – wave 3's grid, unchanged, so the two entries are comparable
+row for row. **775 of the 800 walked the full window; the other 25 ended in a career-ending injury.**
+**2,201 episodes** on the grid, of which **1,741 ended and 460 were still open at week 543**, and
+**1,407 re-arrivals**.
+
+| # | bar | predicted (arithmetic) | measured, WALKED | wave 3, POKED | verdict |
+| --- | --- | --- | --- | --- | --- |
+| 1a | romance-count median, **fiery ≥ 4** | renewal, mean **4.17** – see the derivation below | **5.0** (mean 4.74, 2–8, n 193) | 5.0 (mean 5.48, 3–8, n 193) | **HIT** |
+| 1b | **sunny 2–3** | renewal, mean **1.99** | **3.0** (mean 2.61, 1–5, n 195) | 3.0 (mean 2.81, 1–4, n 193) | **HIT** |
+| 1c | **deep ≤ 3** | renewal, mean **1.69** | **2.0** (mean 1.99, 0–4, n 193) | 2.0 (mean 2.11, 0–4, n 193) | **HIT** |
+| 1d | **quiet ≤ 2** | renewal, mean **1.14** | **2.0** (mean 1.74, 1–4, n 194) | 2.0 (mean 1.76, 1–3, n 193) | **HIT** |
+| 1e | the four medians **separate** | fiery > sunny ≥ quiet/deep | **5.0 · 3.0 · 2.0 · 2.0** | same | **HIT** |
+| 1b-a | duration median, **fiery ≈ 0.7 seasons** (±20 %) | `ln 2 / −ln(1 − 0.018)` = **0.73** | **0.69** (ĥ 1.908 %/wk, 823 endings) | – | **HIT** |
+| 1b-b | **quiet ≈ 3 seasons** (±20 %) | `ln 2 / −ln(1 − 0.0042)` = **3.17** | **2.78** (ĥ 0.479 %/wk, 218 endings) | – | **HIT** |
+| 1b-c | sunny / deep (no bar) | **1.84** / **1.23** | **1.68** / **1.20** | – | – |
+| 2a | first-arrival median, **fiery ≤ 17** | 16.83 | **16.78** (n 199, 1 never) | 16.78 | **HIT** |
+| 2b | **quiet ≥ 17.5** | 18.08 | **18.03** (n 199, 1 never) | 18.03 | **HIT** |
+| 2c | sunny / deep (no bar) | 17.10 / 18.26 | **16.99** / **18.16** | 16.99 / 18.16 | – |
+| 3a | late share, **private ≥ 60 %** | 90.0 % | **90.2 %** (first episodes, n 396) | 90.2 %, n 396 | **HIT** |
+| 3b | late share, **open ≤ 25 %** | 22.5 % | **20.6 %** (first episodes, n 398) | 20.6 %, n 398 | **HIT** |
+| 4 | the latch proxy | – | printed, **no verdict** (see below) | printed, no verdict | – |
+| 5 | input-independence: identical `sinceWeek` lists | identical, by construction of the key | **33 arrival weeks, 16 pairs, 0 mismatches – asserted** | 53 weeks, 16 pairs, 0 | **HIT** |
+
+⚠ **The bar-1 predicted column is a MEAN and the bar reads a MEDIAN, which is stated rather than
+glossed.** Walked, a career is a renewal process – wait, romance, cooldown, repeat – so the expected
+count over a window is that window divided by the mean cycle, with the minor and adult hazards
+treated separately as wave 3's own derivation does. Cycle = `1/arrival + 1/end + cooldown`, and the
+two windows are weeks 128–231 (104 weeks) and 232–543 (312):
+
+* fiery `104/(62.5 + 55.6 + 12) + 312/(25 + 55.6 + 12) = 0.80 + 3.37 = **4.17**`
+* sunny `104/(83.3 + 138.9 + 26) + 312/(33.3 + 138.9 + 26) = 0.42 + 1.57 = **1.99**`
+* deep `104/(200 + 92.6 + 52) + 312/(80 + 92.6 + 52) = 0.30 + 1.39 = **1.69**`
+* quiet `104/(166.7 + 238.1 + 39) + 312/(66.7 + 238.1 + 39) = 0.23 + 0.91 = **1.14**`
+
+**Every measured mean sits about half a romance ABOVE its closed form** (4.74 · 2.61 · 1.99 · 1.74),
+in the same direction in all four columns, which is what a renewal count does over a finite window
+when the cycle has high variance – the asymptotic `T/μ` omits a positive correction term of order
+`(σ² − μ²)/2μ²`, and an exponential wait plus an exponential duration is exactly the high-variance
+case. It is recorded as an expected shortfall of the arithmetic, not as a discrepancy in the engine.
+
+⭐⭐ **EVERY BAR HIT, AND THE BAR VERDICTS DID NOT MOVE WHEN THE POKE DID.** All four count MEDIANS
+come back at the same number they read under the poked mode; what changed is the **mean and the
+spread** – fiery 5.48 → 4.74 with a minimum of 2 instead of 3, sunny 2.81 → 2.61, deep 2.11 → 1.99,
+quiet 1.76 → 1.74. That is the poke's own stated limitation measured: a constant duration has no
+spread, and the walked one does.
+
+⚠ **And bars 2 and 3 are BYTE-IDENTICAL to wave 3's, to the last digit and the last `n`** – the same
+four first-arrival medians, the same 90.2 % / 20.6 % on the same 396 / 398 first episodes. That is
+the identity check that makes the rest readable: **an ending hazard cannot move a first arrival or a
+lag**, because neither key ever sees it, and if either column had moved that would have been the bug.
+
+### The control that replaced the poke's – `arrivalEligible`'s cooldown, live for the first time
+
+Wave 3's §2 asserted «the shipped wave writes no `endedWeek`», refused when that stopped being true,
+and was therefore the thing wave 4 had to retire. What a WALKED census needs instead is not «does the
+tool write» but «is what the engine wrote legal», and all three are asserted over every episode on
+the grid rather than sampled:
+
+* **ruling F** – `endedWeek ≥ sinceWeek + 1`: **0 episodes ended in their own arrival week**, and the
+  shortest romance the engine produced is exactly **1 week**, which is the bound reached rather than
+  respected from a distance;
+* **the cooldown** – **0 of 1,407 re-arrivals inside it**, and the tightest gap seen in EVERY column
+  is the cooldown itself: **sunny 26 w / 26 · fiery 12 / 12 · quiet 39 / 39 · deep 52 / 52.** The
+  clause shipped dormant in wave 3 against hand-built worlds; this is the first time it has been
+  asked of careers the engine walked, and it binds exactly at its own number;
+* **nobody arrives on the afternoon of a break-up** – 0 re-arrivals on the ending's own week, which
+  is a consequence of the tick order rather than a second rule, so it is counted rather than asserted
+  twice.
+
+⚠ **The «first arrival identical» cross-check is gone with the poke it confined** – it existed to
+prove a tool's write could not reach an arrival week, and there is no write left. §7's
+input-independence arm was always the stronger of the two and is what guards those numbers now.
+
+### The cooldown census – printed, unsigned (§4 gives the cooldown a column and no corridor)
+
+| temperament | cooldown | re-arrivals | min gap | median gap | p90 gap | re-armed within +4 w | endings never re-armed |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| sunny | 26 w | 318 | **26 w** | 45 w | 95 w | 14.5 % | 42 / 360 |
+| fiery | 12 w | 745 | **12 w** | 29 w | 69 w | 15.8 % | 60 / 805 |
+| quiet | 39 w | 146 | **39 w** | 79 w | 133 w | 10.3 % | 40 / 186 |
+| deep | 52 w | 198 | **52 w** | 91 w | 184 w | 4.0 % | 63 / 261 |
+
+«never re-armed» counts only endings that had a full cooldown of room left inside the walk, so the
+horizon is not being priced as reticence. Read together with the median gap, the clause is a floor
+that roughly one re-arrival in seven touches and the rest clear comfortably – a deep girl least of
+all, at 4.0 %.
+
+### The latch proxy – now a property of the sim, and still unsigned
+
+Wave 3 could not read this column at all. Walked, «still open a year later» reads **sunny 68.3 % ·
+fiery 37.1 % · quiet 77.8 % · deep 58.3 %**, against the closed form off the shipped hazard
+(`(1 − h)^52`) of **68.7 / 38.9 / 80.3 / 56.9** – the engine reproducing its own table. §4's bar is
+«first or second love reaches THE LATCH» (quiet ≥ 50 %, fiery ≤ 20 %) and **this is not that**: there
+is no marriage, no moving in and no step-6 mechanic on this tree, so «a year without an ending» is a
+proxy the architect chose and not the bar §4 wrote. It is printed for step 6 to land on and it
+carries **no verdict**.
+
+### ⚠ One observation, recorded and NOT claimed
+
+The measured weekly end hazard came in **above** the shipped rate in all four columns: sunny 0.790 %
+against 0.720, fiery 1.908 against 1.800, quiet 0.479 against 0.420, deep 1.105 against 1.080. Three
+of the four sit about 1.7–2.0 standard errors high and the fourth at 0.4. **The four columns are not
+independent**: `seed:life:ends:<week>` carries no temperament, so one uniform is compared against
+four thresholds and a week whose draw runs low ends the romance for every girl who is holding one.
+The effective sample behind the four numbers is therefore far smaller than the four exposure totals
+printed beside them, and at that size this sits inside noise. It is written down – wave 3's raw
+zero-share observation is the precedent, and it was written down for the same reason – so that a
+later run which reproduces it has something to reproduce.
+
+### ⭐ And the drain-skew line prints, end to end, for the first time
+
+T3b built `drainSkewLine` and could not see it fire: the bench died at §2 before reaching §8. Census
+v2's §8 prints it on the full grid – **`drained 4864: fork-opinion 825 × 0 · met 2223 × 0 ·
+fork-counsel 41 × 0 · ended 1775 × −1 = bond skew −1775`** – which is the wave-4 amendment doing
+exactly what it was landed for: the harness answered 4,864 beats she never meant to price, 1,775 of
+them cost one point of bond each, and the number is arithmetic a reader can check instead of drift in
+a bond column.
+
+### ⚠⚠ The instrument found a defect in its own walk, and it is recorded rather than tidied away
+
+The first full census run **exited 1**: «life-142: episode p:383 is in the world and not in this
+bench's record» (`/tmp/w4t7/census-v2-full.log`, `CENSUS_FULL_EXIT=1`). It is real and it predates
+this wave. The walk recorded new episodes AFTER its terminal-latch break, so on the tick where a
+career-ending injury landed in the SAME week as an arrival, the row the engine had just written was
+never recorded – `seen` stopped short, the episode existed in `world.loveEpisodes` and in no column
+of the census, and **nothing said so**, because wave 3's version had no reader that could notice.
+Census v2's end-of-walk sync is that reader. The append loop now runs BEFORE the break (it issues no
+engine command – `loveEpisodesOf` is a read and `drawRawLag` a pure re-derivation off (seed, week) –
+so the latch has nothing to refuse), and the re-run is the exit-0 above. **A romance that began in
+the week she got hurt is a real arrival and the census owes it a row.**
+
+### The arms, with their red counts
+
+Control green FIRST in both instruments, then every net and every bar mutated and the ARM recorded.
+
+| arm | mutation | result |
+| --- | --- | --- |
+| 0 · census | control, unmutated | **green**, exit 0 |
+| 1 | `arrivalEligible` clause 3 neutralised (`< 0` instead of `< cooldownWeeks`) | **RED** – «16 re-arrival(s) inside the cooldown», exit 1 |
+| 2 | `rollEnds` / `rollArrival` order swapped in the tick | **ZERO RED**, exit 0 – **an under-powered mutation, not a hole** (see below) |
+| 2b | `endEpisode(world, over.sinceWeek)` – the ending dated with the arrival week | **RED** – «35 episode(s) ended on or before their own arrival week», exit 1 |
+| 3 | `rollEnds` returns before the gate – the hazard never fires | **RED** – «sunny: ZERO endings over 4 careers», exit 1 |
+| 4 | the told-now `'ended'` card suppressed | **RED** – «sunny: 6 endings and ZERO `'ended'` cards», exit 1 |
+| 8 | `arrivalEligible` clause 2 removed | **RED** – «episode 2 arrived while episode 1 was still open», exit 1 |
+| 0S · shock | control, unmutated | **green**, exit 0 |
+| 5 | the ending never forced (`endsPerWeek = 0` in both arms) | **RED** – «3 usable shocked arm(s) did not end at week 136», **exit 2** |
+| 6 | `shock.breakup` zeroed | **RED** – «ZERO shocked arms carried `world.spiritShock`», **exit 2** (the stamp clears inside the same tick when there is no drop, so the receipt refuses before any bar is reached) |
+| 6b | `shock.breakup` halved to −11 / −17 | **RED on the bars** – S1a 5.0 → 3.0 and 11.0 → 5.0, S1b intense 8.0 → 2.0; **3 bars moved, exit 0** |
+| 7 | the SPARED arm broken up too | **RED** – «3 SPARED arm(s) broke up anyway», **exit 2** |
+| 9 | `spirit.floor` 0.9 → 0.3 (the spirit→match channel three times harsher) | **RED on bar S2** – the intense drop **1.747 → 4.308 pp** against a matched 8-seed control |
+
+⚠ **ARM 2 IS THE ZERO-RED ONE AND IT IS NAMED AS A WRONG MUTATION, NOT A HOLE.** Swapping the tick
+order lets an attachment end in its own arrival week – but only when the hazard happens to fire on
+the very week the arrival did, which at `--careers 4` is a coin-flip over the whole grid (≈ 48
+episodes × ~1 % ≈ 0.5 expected collisions). The net is sound; the arm was under-powered. It was
+**replaced by ARM 2b rather than dropped** – dating every ending with its arrival week makes the same
+violation certain, and the net caught 35 of them on the first grid.
+
+⚠ Exit codes were read out of log files the commands themselves appended, mtime-checked, never off a
+pipe or a background notification. The two shock exits are DIFFERENT numbers on purpose: **0 means
+measured** (bars may have missed, and the misses are re-printed) and **2 means the instrument could
+not measure and printed no bar**. Arms 5, 6 and 7 all landed on 2; arms 6b and 9 landed on 0 with
+bars moved, which is what makes the pair of codes worth having.
+
+### What this section does NOT do, and the two things it hands up
+
+**No constant moved.** Both instruments read `ECONOMY` and changed nothing in it; the shock block
+moves two dials for ONE TICK at a time inside its own walk, restores them, and **asserts the
+restoration** before it prints a number. Every miss above is a finding on the record, in the order
+invariant 5 requires: measure, attribute, report, and let the owner move a design number if he wants
+one moved.
+
+Two questions leave this section for the architect, and neither is the bench's to answer:
+
+1. **§4's «weeks under the knee» row is off by one week in both intensities, and the cause is known.**
+   Either the row moves to 2–3 steady / 7–8 intense (the engine's own arithmetic, with the lift's
+   same-tick exit priced in), or §4 states that the landing week is not counted – under which
+   convention the measurement reads **2.0 and 7.0** and both corridors HIT as written. It is a
+   ruling, not a measurement, and the bench refuses to pick: both numbers are printed side by side in
+   every run.
+2. **Bar S2's [1, 8] pp corridor does not fit the window it is read over.** Over 26 weeks the drop is
+   1.260 / 1.114 pp and clears neither 2 × SEM; over the weeks she is actually under the knee it is
+   4.409 / 2.299 pp. Either the corridor belongs to the dip and the bar should say so, or the bar
+   wants a wider grid than 128 pairs an intensity. The diagnostic is printed unsigned so that
+   whichever way it is ruled, the number is already there.
+
+⚠ **A last note on `tools/spirit-bench.ts` itself, because the file's history makes it load-bearing.**
+The new block contains no `try`/`catch` at all and answers her through the bare tallied drain. The
+REST of the file still carries **five bare `catch {}` blocks** – `bookTheFamilyWeeks`,
+`enterWhatSheCan`, `answerTheBirthday`, `answerTheLifeBeat`'s `answerLifeBeat` and
+`answerTheForkTheWayThisArmWould`'s `answerFork`. The last two are the exact swallow this spec's
+wave-3 fourth entry records being «found and fixed with a second bond-neutral drain»: the DRAIN was
+added, and it stands in front of a `catch {}` that is still there. Three other sites re-throw
+anything but the engine's terminal-latch string and are a different thing entirely. Removing a
+swallow changes what the DEFAULT grid measures, so it needs its own before/after and is left as a
+finding rather than taken inside T7.
