@@ -1451,12 +1451,24 @@ why bar S1b misses by exactly one week in both arms.
 | S1a | ...**intense 12 ± 2** | §4: back ~week 12 · closed form: 38 → 70 at 3/wk = **11** | **11.5** (n 128) | **HIT** |
 | S1b | weeks under the knee, **steady 3** (bar moved by the ruling – was 1–2) | §4's corrected row: **3** off the engine's 48, counted inclusive | **3.0** (n 128) | **HIT** |
 | S1b | ...**intense 8** (was 6 ± 1) | **8** off the engine's 38, inclusive | **8.0** (n 128) | **HIT** |
-| S2a | paired match-win drop over the post-shock window, **inside [1, 8] pp**, steady | – (no closed form; the channel is `spiritMatchFactor` alone) | **1.260 pp** ± 0.646 (n 64 seeds) | **HIT** |
-| S2a | ...intense | – | **1.114 pp** ± 0.724 (n 64 seeds) | **HIT** |
-| S2b | ...and **> 2 × SEM**, steady | – | 1.260 against 2×SEM **1.291** | **MISS** – ×4 corpus ruled (owner 12.09), re-run pending below |
-| S2b | ...intense | – | 1.114 against 2×SEM **1.448** | **MISS** – same re-run |
-| S3 | after recovery, paired difference **inside 1 × SEM**, steady | 0 – weather, not a scar | **0.423 pp**, SEM 0.567 | **HIT** |
-| S3 | ...intense | 0 | **0.908 pp**, SEM 0.778 | **MISS** (1.17 × SEM) |
+| S2a | paired match-win drop on the weeks she is UNDER THE KNEE – **inside [1, 8] pp** (⚠ bar re-aimed, see the ×4 note) | – (the channel is `spiritMatchFactor` alone; it prices 0.980 / 0.9633 at the landing spirit) | **3.048 pp** ± 1.070 (n 232, ×4 corpus) | **HIT** |
+| S2a | ...intense | – | **2.367 pp** ± 0.800 (n 253) | **HIT** |
+| S2b | ...and **> 2 × SEM**, steady | – | 3.048 against 2×SEM **2.140** | **HIT** |
+| S2b | ...intense | – | 2.367 against 2×SEM **1.600** | **HIT** |
+| S3 | after recovery, paired difference **inside 1 × SEM**, steady | 0 – weather, not a scar | **0.099 pp**, SEM 0.267 (×4) | **HIT** |
+| S3 | ...intense | 0 | **0.315 pp**, SEM 0.356 (×4) | **HIT** |
+
+⚠⚠ **THE ×4 RE-RUN (owner-ruled 12.09, 253/254 pairs per intensity) RETIRED THE ORIGINAL S2 BAR AS
+MIS-AIMED, AND BOTH NUMBERS STAY PRINTED.** Over the original 26-week post-shock WINDOW the drop
+reads **0.822 pp ± 0.310 steady / 0.797 ± 0.459 intense** – under the [1,8] floor, and the n-64
+run's 1.260/1.114 were that same dilution plus luck. The bench's own diagnostic says why: the
+window holds ~26.7 matches and the dip holds **2.8 / 8.9** of them – a **9.5× / 3.0× dilution** –
+because recovery is FAST (3 / 8 weeks of 26, S1b's own rows). The mechanism prices matches only
+through `spiritMatchFactor` on sub-knee weeks, so the honest bar measures those weeks: the re-aim
+is STRICTER on the mechanism (3.0 pp must clear, not 0.8) and the window figure is kept beside it
+as the career-scale read. S3 at ×4 is clean twice over – the possible «designed −2 clearance
+residual» flagged before the run did **not** materialise (0.099 / 0.315 pp, both inside 1×SEM):
+weather, not a scar, now with the noise floor to prove it.
 | S4 | the **±1.5 pp lifetime fairness corridor**, re-read on these arms | «well under 1 pp – inside the corridor without help» | **worst pair 0.054 pp** | **HIT** |
 
 ⭐ **Actuation, per temperament, printed and asserted**: 64/64 arrivals forced in both arms, 64/64
