@@ -64,6 +64,83 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   coach line becomes a deterministic function of (which Local Open this is by count, this result,
   what came before) – zero RNG. All new lines = DRAFT, listed here for his read.
 
+  **SHIPPED** on `round/41` (`fe6b4469`).
+
+  **⚠⚠ HIS REPORT CARRIES TWO DIFFERENT DEFECTS, AND ONLY ONE OF THEM IS A COUNTER.**
+  1. **REPETITION** – one string served every weekend, so a third first-round exit was told it was
+     her first. That is the counter.
+  2. **A WRONG READING, and it is the sharper one** – `outcomeOf` collapses «out in the semifinal»
+     and «out in the first match» into one `lost` face (pool.ts: 0 is the title, 1 is the final,
+     everything else is `lost`), so his FOURTH tournament – a semifinal exit – printed the line about
+     never having started. No amount of counting fixes that on its own: the sentence had to stop
+     reading the face and start reading `finish`.
+
+  **WHAT CHANGED.** `coachLineFor(ordinal, finish, rounds, past)` in `src/prologue/cards.ts`, beside
+  `localDrawLine` – a pure function of PRIMITIVES, because cards.ts may not import run.ts (one-way
+  dependency, header law). `localOpenCard` takes one more optional argument and the container fills
+  it at the one call site (`weekendNow`, counted off `run.opens`, whose tail IS the scene on screen
+  because `withOpen` fires in `playNext` before the screen opens). ⚠ Omit the argument and the card
+  is byte-identical to what shipped, which is what leaves `prologue-art.test.ts:282` and
+  `round40-prologue-choices.test.ts:241-242` compiling and green untouched.
+
+  **⚠ ZERO DRAWS, BY CONSTRUCTION, not by discipline.** The module imports no generator, takes no
+  seed and persists nothing – asserted directly (`Math.random` / `rngFromSeed` / `new Date(` all
+  absent from cards.ts) plus a 50-call determinism arm. **No schema move.**
+
+  **⚠ «out in her first match» IS `finish >= rounds`, NEVER THE NUMBER THREE.** `playLocalOpen` reads
+  `rounds` off the bracket that was ACTUALLY played rather than off `LOCAL_POOL.size`, because a pool
+  too small to fill the draw makes the two disagree – a hard-coded 3 would tell a girl who lost the
+  only match she played that she reached a semifinal. Pinned at rounds = 2, 3 and 4.
+
+  **THE LINES. Three KEPT byte-identical (invariant 4 – they were right where they stood and this
+  item did not ask about them), and they are returned by identity rather than copied, so there is
+  still exactly ONE declaration of each:**
+  * ordinal 1, won — `The coach says the draw was small and she still had to win it.` *(kept)*
+  * ordinal 1, a final — `The coach says the last one is the hard one.` *(kept)*
+  * ordinal 1, out in her first match — `The coach says the first one is never the one that counts.`
+    *(kept – his own first tournament, and it was right)*
+
+  **SEVEN NEW, ALL DRAFT** (`LOCAL_OPEN_COPY.coachAgain`):
+  * `firstTitle` — `The coach says the first one she wins is the one she will remember.`
+  * `wonBefore` — `The coach says that is not the first cup she has carried home.`
+  * `finalAgain` — `The coach says she knows these weekends now – the last match is still the hard one.`
+  * `outFirstAgain` — `The coach says this is the part nobody tells you about, and that it passes.`
+  * `outFirst` — `The coach says she has had better weekends than this one, and will again.`
+  * `pastFirstOnce` — `The coach says she got past the first one, and that is where it starts.`
+  * `pastFirst` — `The coach says she is winning matches at these weekends now, not just turning up.`
+
+  Ten sentences in all, which keeps the matrix small. The hurt face is UNTOUCHED – `PlayedOpen` holds
+  no injury and this item did not add a field for one, so a weekend she left early keeps its own
+  scene whatever the ordinal.
+
+  **⚠ NOT ONE LINE COUNTS HER MATCHES, in digits or in words**, and that is a constraint rather than
+  a style: the only counts available are her wins, and `rounds` comes off the bracket, so «she won
+  two» would be true until a short pool made it false. Asserted. None of them claims anything about
+  the field either (who the other children were, how strong the draw was, what happened after she
+  left it) – the rule the three shipped lines are already written under.
+
+  **COPY GUARDS** (re-asserted in `tests/prologue-round41.test.ts`, because
+  `prologue-cards.test.ts`'s `everySentence()` sweeps `PROLOGUE_CARDS` and these lines are not on a
+  card row): no Cyrillic, the short dash `–` only, the player is «you», the coach is unnamed and
+  never gendered, no digits or spelled counts, one sentence each, every one begins «The coach says».
+  `coach-voice.test.ts` and `template-copy-rules.test.ts` green.
+
+  **MUTATION → RED.**
+
+  | mutation | red |
+  | --- | --- |
+  | `coachLineFor` collapsed to one static line per face (as it shipped) | 3 arms, incl. his own four-weekend sequence: «the coach said the same thing twice: … first one is never … \| draw was small … \| first one is never … \| first one is never …» (2 distinct, expected 4) |
+  | `finish >= rounds` → `finish >= 3` | «a two-round bracket's first-match exit» |
+  | the repeat reads `past[0]` instead of the last weekend | 2 arms: «an old first-round exit counted as a repeat» |
+  | the `past.some(o => o.finish === 0)` title memory dropped | «a title, and she has won one before» |
+  | `localOpenCard` ignores the counter | the unit wiring arm AND the mounted acceptance, on three separate seeds: «the second weekend repeated a first-weekend sentence» |
+  | the container counts every weekend as the first (`ordinal: 1, past: []`) | the mounted acceptance, on three separate seeds |
+
+  **THE ACCEPTANCE IS MOUNTED AND SEED-INDEPENDENT** (`tests/component/prologue-round41.test.ts`):
+  a real childhood entered at ten and eleven, two weekends walked off the screen, and the claim is
+  the shape of the rule rather than a sentence – ordinal one may print one of the scenes' own lines,
+  ordinal two may not print ANY of them. An arm that named a sentence would be pinning a draw.
+
 - [ ] **5. «на десктоп на экране ребенка (по клику на аватар в углу) давай тоже сделаем как на
   главной примерно: кватратная картинка полная, все карточки останутся внизу, а вот эти ее Skills
   может быть вполне влезут возле фото справа.»** – **build.** Desktop layout for the kid screen:
@@ -79,7 +156,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   на главной на тайле стоит?»** – **build.** The coach portrait joins the prediction tile on the
   pre-match screen, same asset road as Home's coach tile. No wording change.
 
-- [ ] **8. «На прологе добавить возможность вернуться к первому экрану с созданием персонажа со
+- [x] **8. «На прологе добавить возможность вернуться к первому экрану с созданием персонажа со
   второго экрана, или сделать промежуточный попап с подтверждением введенной информации и
   продолжить/изменить, а то я на радиобатон нажал и не ожидал, что меня переключит дальше сразу»** –
   **build.** Of his two roads the round takes BACK navigation, because item 9 removes the surprise
@@ -88,7 +165,59 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   second card to the first with answers intact. If the playtest still wants the confirm popup after
   both land, it is its own small item.
 
-- [ ] **9. «радиобатон на прологе не должен переключать сразу, он только про выбор, давай сделаем
+  **SHIPPED** on `round/41` (`42199c70`, with item 9).
+
+  **WHAT CHANGED.** A quiet control at the foot of the answers column, in the slot the FIRST card
+  gives to the way out of the prologue – `skipLabel` is keyed to `at === 0` and this to `at >= 1`, so
+  the two are mutually exclusive by construction and `.prologue-answers` still ends in exactly one
+  quiet control. It decrements `at` and does nothing else: the earlier card reads its own answer back
+  off the run through `picked` / `entry` (both already existed), and every reading that depends on it
+  – the twelfth's face, the ask's disclosure, the money – is a computed, so a changed answer is
+  RECOMPUTED rather than refreshed. **No new state, no schema move.**
+
+  **⚠⚠ THE SAFETY PREDICATE, AND IT IS WHY THIS IS NOT SIMPLY `at -= 1`.** `run.opens` is
+  APPEND-ONLY BY DESIGN (run.ts: «a weekend that happened cannot un-happen»). A Back into a year whose
+  Local Open has already been played would invite the player to answer «Not this year» for a
+  tournament the run still holds, and the childhood would then bill and report a weekend it says was
+  never entered. So Back is offered **iff the TARGET card's age has no row in `run.opens`** – which
+  is every year below ten by construction (`LOCAL_POOL.fromAge`), covering his literal ask (card 2 →
+  card 1) always, and from ten it is every year the player declined. On the busiest road the control
+  is correctly absent on 11, 12 and 13.
+
+  **DRAFT STRING (one):**
+  * `Back` — `WALK_COPY.back`, `src/prologue/handover.ts`. One word, like the way on it sits under,
+    and it names the DIRECTION rather than the screen: it is offered on eight different cards, so
+    anything naming what is behind it would be wrong on seven of them.
+
+  **STYLE:** the way out's own treatment (transparent on transparent, the label at `var(--text)`), so
+  the two quiet controls read alike. ⚠ Declared PARENTED (`.prologue-answers .prologue-back`) where
+  `.prologue-skip` is bare – the hazard this sheet names twice: at equal specificity happy-dom keeps
+  the FIRST matching rule where a browser keeps the last, so a bare override of `.prologue-answer`
+  would repaint in Chromium and silently do nothing in every mounted test.
+
+  **TESTS** (`tests/component/prologue-round41.test.ts`, new):
+  * the six goes back to the five, the origin is still marked, it is re-choosable (and re-choosing
+    OVERWRITES – one mark, not two), and forward works again;
+  * Back is ABSENT on the eleventh when the tenth played a weekend – walked through the real
+    tournament flow rather than asserted off the run;
+  * Back is absent on the first card (the way out is there instead);
+  * ⚠ the one with teeth: walk to the handover having gone BACK to the ninth and changed its answer,
+    and read the years `newCareer` was actually given – the career is built from the corrected
+    childhood, not the first pass.
+  * ⚠ The no-repeat guard tolerates the back-walk without a re-aim of its own: going back and forward
+    to the same face is not a redraw – the walk records a SCENE per press, and a card seen twice under
+    one head with the same body and the same labels is what that guard already permits. The only
+    thing that moved its rule was Proceed (item 9).
+
+  **MUTATION → RED.**
+
+  | mutation | red |
+  | --- | --- |
+  | `canGoBack`'s `run.opens` clause dropped | «the eleventh offers to walk back into a year whose tournament she has already played» |
+  | `goBack()` decrements nothing | «the way back did not go back» ×2 |
+  | `backLabel` offered on every card | 3 arms: the five's last button is `Back`, not the way out; «the first card offers a way back to nothing» |
+
+- [x] **9. «радиобатон на прологе не должен переключать сразу, он только про выбор, давай сделаем
   где нет активных кнопок, а есть только радиобатоны при выборе всех будет появляться наша желтая
   кнорпка proceed - это будет хорошее удобное поведение»** – **build, and it re-rules round 40 #3.**
   Radios never advance; on cards whose only controls are radios, answering everything reveals the
@@ -98,6 +227,96 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   five fake-clock press suites get re-aimed with the three-round story written at the re-aim, never
   loosened silently. Every e2e walker that presses prologue controls is being censused by recon
   before the build starts.
+
+  **SHIPPED** on `round/41` (`42199c70`, with item 8 – he cut them as one, «8+9 as cut, верно»).
+
+  **WHAT CHANGED.** `answer()` writes the run and returns: no selection advances anything, on any
+  card. A new `proceed` emit carries the way on, and `cardFinished` (ChildhoodPrologue.vue) decides
+  every render whether the card offers one – never latched, which is r40 #2's own rule arriving on a
+  third control. ⚠ The five's predicate is `run.origin !== null` and NOT `cardAnswered`, which reads
+  true for that card from the moment it arrives (it has no `options`, so `yearAt` returns its own
+  row): keyed on `cardAnswered` the first screen of the game would offer a way on before the player
+  had chosen where the family is from. Eight faces carry Proceed (5, 8, 9, 10, 11, 12×2, 13); the
+  six, the seven and the four result scenes keep `wayOn` – r40 #1's negative arm, still holding.
+
+  **THE HOLD IS RETIRED, NOT MOVED.** `PROLOGUE_LANDING_MS`, `land`, `clearLanding` and
+  `onUnmounted(clearLanding)` are gone, and so is the module `<script>` block that existed to export
+  the constant. Nothing schedules an advance any more – asserted, not assumed: three arms press an
+  answer under a fake clock and require `vi.getTimerCount() === 0`, so the fake clock survives as the
+  instrument that proves the hold is gone rather than relocated.
+
+  **DRAFT STRING (one, and it is the only new player-facing word item 9 adds):**
+  * `Proceed` — `WALK_COPY.proceed`, `src/prologue/handover.ts`. His own word for it («наша желтая
+    кнопка proceed»). It sits beside `skip` rather than in the card table, because `DECISION_AGES` is
+    derived from `options` alone and a control parked in a row would count as a decision.
+
+  **THE TREATMENT IS `.prologue-answer`, the accent wash r40 #1 made mean «advance and nothing
+  else»** – so no `assertLegible` contrast refusal is owed (r40 measured `--accent-fill` over
+  `--card-top` at 4.29:1 and refused it; this control is not on `--card-top`). A mounted arm measures
+  the label through the real cascade anyway, and asserts the row carries no mark, no `role` and no
+  `aria-checked`.
+
+  **PHONE FIT, RE-MEASURED IN THE ANSWERED STATE** – the state the player actually decides from, and
+  the one `prologue-walk.test.ts` could not see before (its `mountCard` was never handed `picked`,
+  the ask, the way out or the way back). Content floor at 375x667, arrival → answered, carried road:
+  age 5 2095→2146, 6 690→690, 7 690→690, 8 830→882, 9 835→887, 10 789→841, 11 819→1105,
+  12 927→1192, 13 710→924. One answer row costs ≈51px; 11, 12 and 13's larger jump is round 40 #2's
+  disclosure, not this item. Every card scrolls and every dismiss control lands inside the viewport
+  (ends y=651 of 667; y=552 of 568 on the 320x568 arm). **No card stopped fitting, so no spacing was
+  tightened.**
+
+  **RE-AIMED PINS (every one with its ⚠ note in the file):**
+  * `tests/component/round40-prologue-choices.test.ts`, the whole item-3 block → «⭐⭐⭐ item 3,
+    re-ruled – a radio never advances, and Proceed is what does», with the four arms re-aimed one for
+    one. Its header now reads: *«⚠⚠ WHAT THIS BLOCK USED TO ASSERT, AND WHY IT IS RE-AIMED RATHER
+    THAN DELETED OR LOOSENED … ROUND 41 #9 ANSWERS THE SAME COMPLAINT WITH A CONTROL INSTEAD OF A
+    CLOCK, AND IT IS HIS OWN RULING, NOT AN AGENT'S READ»*. A fifth arm was ADDED for the five's own
+    predicate.
+  * `tests/component/prologueLanding.ts` – the shared press helper, `landing` → `finishCard(wrapper,
+    click)`. *«⚠ THE NAME IS KEPT ON PURPOSE. Six suites import this path … and the file's SUBJECT
+    never changed: it is «press something on a prologue card and let the walk settle». What changed
+    is what settling means.»* The second argument is REQUIRED so a suite that was not re-aimed is a
+    type error rather than a silent half-walk.
+  * the six press helpers that import it (`round35-prologue`, `round39-prologue-injury`,
+    `prologue-two-paths`, `prologue-tournaments`, `round40-prologue-choices`, `round40-prologue-seed`)
+    – each carries *«⚠⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED, AND THE THIRD ROUND TO AIM IT»* plus
+    the claim that file actually rests on (the pinned seeds; the rhythm; item 2's disclosure).
+    ⚠ `prologueLanding.ts`'s stale «Five suites» docstring is gone with the rewrite – it was six.
+  * `tests/component/prologue-walk.test.ts:461` (the exact control counts) → two counts, arrival and
+    answered, with the quiet cards as the negative arm. Plus a NEW fit arm in the answered state.
+  * `tests/component/round35-prologue.test.ts` – the no-repeat guard's growing-PREFIX rule → a
+    growing SUBSEQUENCE. ⚠ Said out loud because it is a weaker rule: *«Round 41 #9 adds a control
+    that is NOT at the bottom … the five really does go three origins / Skip the childhood → three
+    origins / Proceed / Skip the childhood, which is an INSERTION, not an append … What the rule is
+    actually for is unmoved: what makes a screen the same screen twice is something being TAKEN AWAY
+    or SWAPPED.»* ⚠ And it is not left looser: a new arm names `WALK_COPY.proceed` as the ONLY label
+    that may be inserted mid-column. ⚠⚠ The guard was also BLIND to Proceed until this round – it
+    sampled only before each press – so the walker now records the answered card too; without that
+    the re-aim would have been unnecessary and the guard would have been quietly weaker.
+  * `e2e/prologue.spec.ts` – the CARDS table is three counts now (`controls` / `disclosed` /
+    `finished`) and the hold-wait poll INVERTS: *«the constant is gone and so is the race: a card
+    answered by selecting is now GUARANTEED to still be there, so «it did not leave» is something
+    this walk can state outright»*.
+  * `e2e/responsive.spec.ts:914` – the nth(1) press is followed by a Proceed press, and the ⚠ note
+    records that r40 #3's note stood there and is superseded.
+  * `e2e/smoke.spec.ts:69` – **untouched and verified**: Proceed sits BEFORE `.prologue-skip`, so the
+    last button on the five is still the way out. A mounted arm now asserts that precondition so it
+    fails in 40 ms instead of in a browser.
+
+  **MUTATION → RED.** Each applied, run, reverted.
+
+  | mutation | red |
+  | --- | --- |
+  | Proceed rendered after `.prologue-skip` | «the way out is no longer the last control»; «Proceed pushed the way out off the bottom of the card» |
+  | Proceed rendered unconditionally (`v-if` dropped) | 4 arms: the quiet card has two ways on; Proceed up before anything is answered; the five with no origin; the eleventh while its ask is open |
+  | `cardFinished` collapsed to `cardAnswered` | «the five offers a way on with no origin taken» |
+  | the 200 ms landing hold put back | 3 arms: «something is still holding the card on a clock» ×2, «the last card put an advance on a clock» |
+  | `proceed()`'s own `cardFinished` re-read dropped | «an unearned Proceed walked the player off the five» |
+  | a SECOND control rendered beside Proceed | the no-repeat guard: `['Proceed', 'Onward']` ≠ `['Proceed']` |
+  | `.prologue-proceed` padded 360px taller | the ANSWERED fit arm reddens (age 5 at 375x667, dismiss at y=-18..651) while the arrival arm stays green |
+
+  **e2e:** `e2e/prologue.spec.ts` 2 passed; `e2e/smoke.spec.ts` 1 passed; `e2e/responsive.spec.ts -g
+  "onboarding's choices"` 6 passed (375x600, 375x812, 768x640, 900x620, 1024x620, 1280x600).
 
 - [ ] **10. «на экране с анимацией прохода недели давай записочку под таблицей недели сделаем
   по-шире на дестоп и планшетах?»** – **build.** CSS width for the note under the week table on the
