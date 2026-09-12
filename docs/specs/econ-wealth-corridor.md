@@ -1,3 +1,11 @@
+---
+type: spec
+status: reference
+area: economy-and-progression
+canonical: false
+last-reviewed: 2026-09-12
+---
+
 # Spec-let — the app-level wealth corridor (owner directive 25.07)
 
 > ⚠⚠ **SUPERSEDED IN SCOPE, 12.09.2026 — round 41 P1, and the owner narrowed it himself.** The

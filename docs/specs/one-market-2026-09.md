@@ -12,6 +12,28 @@ last-reviewed: 2026-09-12
 habitually buys and how often, never what an item costs it — and the wealth corridor survives only
 where the thing being bought is a SERVICE at the bottom of its own ladder.
 
+## Current truth
+
+* **Gear is priced by the RUNG and by nothing else.** `ECONOMY.gear[*].price` is a `by: 'rung'`
+  band for strings, frames and shoes, identical for every background; apparel — the one line with no
+  quality ladder — keeps a `by: 'basket'` band, because its three tiers are three different products
+  rather than one product with three prices. `kitLinePriceCents(line, grade)` takes no background.
+* **Cadence stays per-background.** A wealthy family replaces gear oftener; that is behaviour, and it
+  is the other half of «different baskets».
+* **The wealth corridor prices services at the LOWER tiers only.** `corridorAppliesAt(tier)` —
+  `self` / `budget` / `middle` keep ±25–30%; `high` / `elite` are exactly 1.0 for every background,
+  on the coach line, the facility line and the medical bill. `corridorBandFor(background, tier)` is
+  the only place it is applied.
+* **Travel, vacations and practice fees keep the corridor** (he named travel as a keeper; it has no
+  tier axis). **The masseur never had one.**
+* **No schema move** (v74 stands), **no player-facing string changed**, **zero RNG movement**: a
+  uniform tier still spends its corridor roll at `[1, 1]`, and `pickInt` spends one `rng()` call
+  whatever its bounds.
+* ⚠ **One balance consequence is open and is the owner's:** a wealthy family with an elite coach no
+  longer burns money in an idle year (+$6,280 → −$4,917 on the 16-seed calibration batch), so the
+  round-7 «premium everything must hurt» principle is un-funded rather than refuted. §3 and
+  `tests/economyCalibration.ts`'s `BANDS` block carry the decomposition and the two levers.
+
 ## 1. The two rulings this is built from, verbatim
 
 > «на рынке цены для всех сословий одинаковые, просто каждый покупает те товары, которые может…
