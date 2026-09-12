@@ -24,7 +24,9 @@ const props = withDefaults(
   defineProps<{
     /** 0..1. Clamped here, so no caller can hand the arc a number that draws past the circle. */
     value: number
-    size?: 46 | 56
+    /** 36 is round 41 #28's – the build-progress ring on a shop tile's art corner, «чуть меньше
+     *  размером, чем на главной» in the owner's own words, so it sits under Home's 46. */
+    size?: 36 | 46 | 56
     /** The stroke colour of the arc. Anything CSS accepts; the ramp is the caller's decision. */
     color?: string
     /** What the ring says out loud. A ring is a picture, so it must have one. */
@@ -39,7 +41,7 @@ const props = withDefaults(
 const STROKE = 3
 const geom = computed(() => {
   const box = props.size
-  const r = box === 56 ? 24 : 19
+  const r = box === 56 ? 24 : box === 46 ? 19 : 15
   return { box, r, c: Math.round(2 * Math.PI * r * 10) / 10 }
 })
 const offset = computed(() => {
@@ -88,6 +90,11 @@ const offset = computed(() => {
 .tb-ring {
   position: relative;
   flex: none;
+}
+
+.tb-ring--36 {
+  width: 36px;
+  height: 36px;
 }
 
 .tb-ring--46 {
@@ -149,6 +156,16 @@ const offset = computed(() => {
   font-size: 15px;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+/* The 36px ring scales the pair the same way 56 does – proportionally, so the figure keeps the
+   same look at every size (the 26% nudge above is already proportional by its own ⚠ note). */
+.tb-ring--36 .tb-ring-value :deep(b) {
+  font-size: 12px;
+}
+
+.tb-ring--36 .tb-ring-value :deep(i) {
+  font-size: 8.5px;
 }
 
 .tb-ring-value :deep(i) {

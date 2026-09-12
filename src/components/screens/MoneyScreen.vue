@@ -104,6 +104,7 @@ import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import IconButton from '../ui/IconButton.vue'
+import ProgressRing from '../ui/ProgressRing.vue'
 import Polaroid from '../ui/Polaroid.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -1147,6 +1148,23 @@ function canBuy(row: ShopRowView): boolean {
  *  week it is due instead. The engine decided it (`ShopRowView.readyWeek`); this reads the field. */
 function isBuilding(row: ShopRowView): boolean {
   return row.readyWeek !== null
+}
+/** ⭐ ROUND 41 #28 – THE BUILD RING. «добавим в уголке картинки наш круглый гаудж… чтобы он
+ *  показывал в процентах прогресс стройки от 0 до 100» – the export's own ProgressRing (Home's
+ *  condition ring), at the NEW 36px he asked for («чуть меньше размером, чем на главной»), on the
+ *  art corner of every tile that builds to order – academy stages, boats, planes alike, because
+ *  the predicate is the engine's `readyWeek`/`buildWeeks` pair and never a family list.
+ *  Progress is derived, zero state: the weeks already served over the row's own `buildWeeks`.
+ *  Clamped both ends – a row seen on its order week reads 0, never a negative. */
+function buildProgress(row: ShopRowView): number {
+  if (row.readyWeek === null || !row.buildWeeks) return 0
+  const served = row.buildWeeks - (row.readyWeek - week.value)
+  return Math.max(0, Math.min(1, served / row.buildWeeks))
+}
+/** The ring's spoken sentence – the visible figure is the ring's own default slot (N%). DRAFT for
+ *  the owner's read, listed on the ledger item. Week through `weekLabel`, per R11-6. */
+function buildRingLabel(row: ShopRowView): string {
+  return `${Math.round(buildProgress(row) * 100)}% built – ready ${weekLabel(row.readyWeek ?? 0)}`
 }
 /** The stage this rung is waiting on, by NAME – the label off the row it names, never an id on
  *  screen. Empty when the requirement is met or there is none. */
@@ -2551,6 +2569,18 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             <div v-if="shelfArtUrl(row.id)" class="card-art shop-row-art">
               <img :src="shelfArtUrl(row.id) ?? undefined" alt="" />
               <span class="card-art-scrim" aria-hidden="true"></span>
+              <!-- ROUND 41 #28 – the build ring, top-right of the painting, only while the engine
+                   says the thing is still being built. The corner choice is the coordinator's
+                   (the scrim's name gradient owns the bottom) – one line to move if his eye says
+                   otherwise. -->
+              <ProgressRing
+                v-if="isBuilding(row) && row.buildWeeks"
+                class="build-ring"
+                :size="36"
+                :value="buildProgress(row)"
+                :label="buildRingLabel(row)"
+                on-art
+              />
             </div>
             <div class="shop-row-body">
               <div class="shop-row-head">
@@ -3910,6 +3940,15 @@ function shopRowCornerAction(row: ShopRowView): boolean {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgb(0 0 0 / 0%) 55%, rgb(0 0 0 / 45%) 100%);
+}
+
+/* ROUND 41 #28 – the build ring rides the painting's top-right corner (the scrim's name gradient
+   owns the bottom); `.card-art`'s own `position: relative` is the anchor, `on-art` brings the
+   ring's photograph shadow. */
+.card-art .build-ring {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 
 /* On the two Bills cards the band sits inside a padded card, so it cancels that padding to reach

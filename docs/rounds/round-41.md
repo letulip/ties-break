@@ -1513,3 +1513,68 @@ NOT slower – one clean 156-week walk via `tools/frozen-key-diff.ts` reads 1.9 
 migrate-every-fixture walk; economy's arms). Fix per the radar/fatigue-bench-policy/coach-travel-
 edge precedent, ON `life/wave-3` so his merge unblocks: cut the two FILES – same tests, same
 seeds, more processes – re-measure each half solo, update `scripts/heavy-tests.mjs`.
+(It took TWO passes: the first cut goldenSaves ×3 + economy's calibration out and CI stayed red –
+the fifth attempt named nothing, so the second pass measured ALL 18 shards solo and found
+coach-travel-edge at **66.7 s projected – over the window, not near it** – and college-birthday at
+59.2; both split by their own documented seams, 538 tests byte-identical, and attempt six went
+green: unit-heavy success in 9m03s, every job green on `3dda7566`.)
+
+---
+
+## The owner's second visit (12.09, evening) – item 28, three closures, and the source save
+
+* **«про капстон - ок»**, and his follow-up confirmed the reading: **stays at 4, question closed**
+  (round 39's parked line retires; the 16.7%-vs-8% pricing tension stays recorded for whenever the
+  ad economy is next on the table).
+* **Item 21 continued – he engaged the design**: «на рынке цены для всех сословий одинаковые,
+  просто каждый покупает те товары, которые может… топовая ракетка для рабочей семьи стоит около
+  1к долларов, а для богатой 2.2к… Мне кажется это немного странно. Давай подумаем как здесь лучше
+  сделать» – plus the allowance-side oddity (a working family's 12k icon allowance would
+  over-cover their cheaper gear). The coordinator's proposal (one market, different baskets: gear
+  prices become grade-only and uniform, backgrounds set the DEFAULT basket and cadence, the
+  corridor narrows to services where economy-vs-business is an honest fiction) went to him as ask
+  P1/P2/P3 – awaiting his word; both his oddities dissolve under P1 by construction.
+
+- [x] **28. «давай на плитках тех айтемов в магазине, которые нуждаются в постройке длительной
+  (академия, яхты, самолеты) добавим в уголке картинки наш круглый гаудж (переиспользуем
+  компонент), чтобы он показывал в процентах прогресс стройки от 0 до 100 - это будет
+  супер-наглядно. Только его надо сделать чуть меньше размером, чем на главной, как мне
+  кажется.»** – **build, shipped.** The export's own `ProgressRing` (Home's condition ring) grew
+  the third size he asked for – **36px** (r=15, value pair 12/8.5px, proportional like the 56) –
+  and rides the art band's top-right corner of any tile whose row carries `readyWeek` +
+  `buildWeeks`: the predicate is the ENGINE's pair, never a family list, so the academy's staged
+  rows, the boats and the planes all grow it the day they order, and an instant rung cannot.
+  Progress is derived, zero state: weeks served over `buildWeeks`, clamped both ends (a stale
+  over-due row on a fresh load reads 100, never 128%). The visible figure is the ring's own
+  default slot (`N%`); the corner choice (top-right – the scrim's name gradient owns the bottom)
+  is the coordinator's, one line to move.
+  **DRAFT (aria, his read):** `{pct}% built – ready W{n} '{yy}` (week through `weekLabel`, R11-6).
+  *Evidence*: `tests/component/round41-build-ring.test.ts`, 3 mounted arms on real
+  engine-built snapshots – 13-of-156 weeks reads the row's own arithmetic (the first cut of the
+  test hardcoded 52 and the engine said 156 – the arm now reads `buildWeeks` off the snapshot),
+  the 36px class asserted, aria matched, order-week 0 and over-due 100 both pinned, and the
+  negative arm holds no ring anywhere on an unordered world. ⭐ On HIS OWN SAVE the ring lights
+  immediately: `boat-launch` bought w400, ready w452 – he loads into a 10% ring.
+
+## The source save, read (tools/r41-alice-save.ts – the save itself is personal, never committed)
+
+Alice, prologue-born, **week 405 · season 7 · age 21.00 · wealthy**; family $2.37M, her account
+$38.29M. What it says about the round:
+
+* **26**: cache and fold AGREE on this save (8 = 8) – consistent with the diagnosis (the
+  disagreement window is the season-wrap/reveal week, exactly when his screenshot was taken); the
+  shipped fix makes the agreement structural rather than lucky.
+* **27**: career prize gross $16.1M against her $38.3M account – the account was always fed by the
+  UNGATED sponsor/appearance/bonus cheques; the A1 change adds the prize side from the first W
+  cheque. Her share at 21.0 reads 25% – the shipped ladder to the point.
+* **25**: no live kit deal at w405 (the Aurelia term ended) – his August report was an earlier
+  season; the projection line will speak on the next deal.
+* **18, live and enormous**: `merch-brand` paid $250k, worth **$31.75M** at rank 8 – the retro-H
+  defect was rewriting history on THIS position; the «sudden drops» he saw were millions. The
+  incremental walk lands exactly here.
+* **24/28 migration-safe by construction**: his academy stages (bought w314–346, pre-round) carry
+  no `readyWeek` – owned = delivered, nothing retro-freezes; only new orders build.
+* **v74 migration on a real pre-wave save: clean** – `loveEpisodes` back-filled `[]`; at 21 the
+  arrival hazard opens the week he loads post-merge, as designed.
+* Nothing new broken found: events capped at 406 rows, no negative balances, car depreciation
+  honest ($60k → $43.7k), the building boat worth exactly paid.
