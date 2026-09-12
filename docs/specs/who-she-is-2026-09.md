@@ -1215,71 +1215,57 @@ No `try/catch` stands between a knock and its answer. Arms differ only in the kn
 verified by a counting wrapper over all 256 pairs: **0 draw-count, 0 draw-value-hash and 0
 arrival-week mismatches.** Frozen capture unmoved (41550 / `e6b0c709`). **Nothing was adjusted.**
 
+## §4a – wave 3 measured, third entry. T16 → T16b: the ladder's own number corrected the cure
 
-## §4a – wave 3 measured, third entry. T16's knock escalation: the rate, and what it cost the ladder
+⭐⭐⭐ **THIS ENTRY REPLACES T16's, AND THE REPLACEMENT IS THE RECORD.** T12 measured the
+push-through lever dead at the DEFAULT rung: the coach answered **232 of 280** knocks and the parent
+was asked ~1.5 times a career. T16 cured it with two UNCONDITIONAL classes (a repeated part, a
+`'warn'` week). It hit its rate – 1.88 → 6.50 asks a career – and **its own measurement killed it**:
+the classes were TIER-INDEPENDENT, so tap share went budget 0.148 / elite 0.075 to budget 0.716 /
+elite 0.662. A **2× ladder span became 1.08×**; the Elite coach fell from deciding **95%** of knocks
+alone to **31%**. The attention-buying product died. The owner: «мне это не очень нравится».
+⭐ **The cure must not spend the premium rungs** – T12's dead lever was measured at the MIDDLE coach.
 
-T12 measured that the push-through price was **mostly not the parent's to pay**: at every rung with
-`coachManagesLoad` the coach answered **232 of 280** knocks, so the parent was asked ~1.5 times per
-career against 9.0 self-coached. The owner ruled the repair («давай попробуем»): two classes
-escalate to the parent's EXISTING knock dialog even under `coachManagesLoad` – a repeated part, and
-a `'warn'` clearance week – **without touching the ruled 0.5/week bond memory**.
+**T16b, the widener model.** The unconditional classes are reverted; escalation returns to the
+confidence DOUBT ZONE alone, and `'warn'` becomes the SECOND doubt-widener beside `REPEAT_DOUBT`.
+A warn-week repeat compounds – both wideners apply. The ordinary-knock confidence ladder is untouched.
 
-⚠ **The mechanism was not new.** `coachEscalates` already handed a knock back through a
-confidence-scaled DOUBT zone; T12's ~1.5 was that zone firing rarely. T16 adds two DETERMINISTIC
-classes beside it: `knockNeedsTheParent = repeat || clearance === 'warn' || coachEscalates(...)`.
-
-**The headline, predicted vs measured** (`bench:spirit --push --coached --seeds=4`, 32 careers × 208
-weeks; control = the predicate reverted in place, grep-verified both directions):
-
-| | before | after | predicted |
+| bar | ruling | measured | actuation |
 | --- | --- | --- | --- |
-| **parent asked / career** | 1.88 | **6.50** | 4–6 |
-| arrived | 304 | 296 | – |
-| coach answered alone | 244 | **88** | – |
-| asked / answered / latched | 60 / 60 / 0 | 208 / 208 / 0 | – |
-| rests · pushes (first/repeat) | 32 · 8/20 | 104 · 12/92 | – |
-| push-governed weeks | 160 | 364 | – |
+| ladder spread budget→elite | ≥ 1.6× | **6.3×** | budget 5.5 taps of 10.8 knocks = .509 · elite 1.0 of 12.3 = .081 |
+| middle-rung asked / career | 3–5 | **3.50 rest / 4.00 push** | 56 asked / 16 careers · 64 asked / 16 careers |
+| Elite self-decide | ≥ 85% | **91.9%** | 11.3 handled of 12.3 knocks per career |
 
-`bench:load`'s normal-play policy (PLAYER, rests, heeds caution) at the shipped rung reads
-**1.9 → 5.8** – inside the corridor. Anti-stall held and printed: both ledgers balance, `[P0b]` 0
-draw-count / 0 hash / 0 arrival-week mismatches over 16 pairs, `[P0a]` 0 delta mismatches.
+`bench:load` taps per career, self/budget/middle/high/elite – grinder **11.5 / 5.5 / 3.8 / 1.4 / 1.0**
+(pre-T16 –/2.3/1.8/1.1/0.9; **T16 –/7.7/8.0/7.6/6.6, not even monotone**), player 9.7/4.3/2.4/1.1/0.5.
 
-⭐⭐⭐ **AND THE PRICE, WHICH IS THE ENTRY'S REAL CONTENT: THE COACH LADDER FLATTENS.** The two
-classes are **tier-independent**, so they reach every rung equally. Tap share, 8 seeds × 208 weeks:
+⚠ **THE TUNING IS ON THE RECORD.** `WARN_DOUBT = 3` alone MISSED: the warning band is condition
+[15, 25), so a warn week is both rare AND arrives carrying ~30 strain points of gap that a confident
+coach's zone never reaches – at `ESCALATE_CAUTION 3.5` the pair read 2.25 / 2.50. The one authorised
+step, 3.5 → **4.5**, gave 3.50 / 4.00. **5.0 was declined as more movement than the corridor needed.**
+Nothing else moved: no delta row, no `regressionPerWeek`, no confidence ladder.
 
-| | self | budget | middle | high | elite |
-| --- | --- | --- | --- | --- | --- |
-| before | 1.000 | 0.148 | 0.103 | 0.078 | 0.075 |
-| after | 1.000 | 0.716 | 0.684 | 0.692 | **0.662** |
+**Frozen careers re-stamped back**: 19 / 25 / 6 keys of ~78, `results` and the wallet moved (a
+different knock answer changes whether she plays), and ⚠⚠ **`rngMain` byte-identical on all three** –
+the widener takes no draw. Capture **41550 / `e6b0c709`** unmoved.
 
-A **2× budget-to-elite span becomes 1.08×**. `bench:load`'s taps/career on the grinder arm goes
-2.3 / 1.8 / 1.1 / 0.9 → 7.7 / 8.0 / 7.6 / 6.6 – **no longer monotone**. The elite coach went from
-answering **95%** of knocks alone to **31%**. ⚠ «You are buying your attention back» was a number and
-is now worth a fraction of it. The ladder still runs end to end. **This is the owner's trade on
-T12's measurement, recorded here so it is a decision rather than a discovery.**
+**And the harnesses got a shared knock drain** (`tools/_knocks.ts`): jammed weeks **47 → 0, 39 → 0,
+106 → 0**, arrivals ROSE, so the frozen fixtures now walk MORE game than before T16, not less.
+⭐ The architect predicted «~2»; the true answer is **0** – a drain answering in the same tick leaves
+no week holding one. ⚠⚠ The T6b law held under test: the drain first went into `econ-bench`'s
+`stepCareerWeek` and SILENTLY reached `e2e-fixtures` and `life-arrival`; `npm run e2e:fixtures` caught
+it red («junior: no seed in 200 reached the state», 200/200 booting without an open knock), the fix
+is an explicit opt-out, and `junior.tsave` regenerated **byte-identical** proving the walk restored.
+Benches that PRICE knocks kept their explicit arms and were not touched.
 
-**What else moved, reported and NOT adjusted** (`regressionPerWeek` untouched, no delta row touched):
-the DEFAULT self-coached T12 pair is **byte-identical** to this section's second entry – T16 cannot
-reach it, `coachManagesLoad('self')` being false. On the COACHED control the bond gap at week 208
-goes 1.38 ± 1.375 → **6.19 ± 3.430** and **bar 1 turns AGREE → DISAGREE** there: ⭐ that is §4a's own
-92%-regression finding arriving on the coached arm, now that the parent actually answers. Spirit
-weeks 5.00 / −2.13 → 17.75 / +10.63; Δpp −4.224 → −2.498; push-arm injuries 48 → 44, injured weeks
-184 → 216.
+⚠ **A guard had inverted its own T16-era measurement**: `long-career-ledgers` answered `'push'`
+because under T16 the repeat class was what reached the parent; under T16b what reaches him is the
+HARD call, and greedily pushing those bought injuries – 258 matches against its own floor of 300.
+`'rest'` gives 12/12.
 
-**Frozen careers**: `selfTravelling` **0 keys of 80, byte-identical** (and all 25 rungs reproduce);
-`eliteGrinder` 13 keys with `bond` and `results` **unmoved**; `middleGrinder` 20 keys. ⚠⚠ `rngMain`
-is **byte-identical on all three** – the escalation takes no draw. 50 moved / 25 held, re-stamped
-under the protocol. ⭐ The width is explained rather than waved at: `econ-bench` never answers a
-knock, so the first escalation LATCHES the slot for the rest of the walk (5/0: 6 arrivals / 1
-escalation / 2 jammed weeks → 4 / 3 / **47**). **A harness property, not a play property** –
-`advanceWeeks` halts on `pendingKnock`. ⚠ It does mean those fixtures now walk less game than they
-did, which is worth its own look.
-
-**Copy**: zero new strings. The `'warn'` class reuses «The coach wants to talk about her {part}
-before anyone decides» – which claims only the ACT – rather than «in two minds», which claims a
-mental state a risk week cannot back. Verified: **no pre-T16 (state → sentence) pairing moves at
-all.** A risk-week sentence of its own would be a one-line вычитка ask, not a builder's edit.
-
+**Copy**: one new line, the architect's under the standing delegation – «The coach is not calling the
+{part} alone – not on a week like this.» T16's reuse of «in two minds» is gone: it claimed a mental
+state a risk week cannot back.
 
 ## §4a – wave 3 measured, fourth entry. T17: the stop want stops being a quarter
 
@@ -1318,6 +1304,20 @@ band runs to ~14% at its bottom edge, so «too small to name» rather than absen
 Barty register, a root of its own.
 ⚠ **No career on this grid was `worn` at the fork**, so the worn copy column is unexercised by the
 walk and carried by unit tests only. The bench prints that itself rather than leaving it inferred.
+
+⭐⭐ **CLOSED BY POINT 4 (12.09) WITH A POKED ARM, AND THE WALKED READING IS UNCHANGED.** The fork
+grid gained a BENCH-ONLY arm that pokes `world.spirit` tool-side to 38.50 on week 241 – one field, on
+the bench's own world, no draw and no stream (`tools/life-arrival.ts`'s precedent). The driver
+derived `worn` on **28/28** poked careers that stated a want, and the column rendered **8× in her own
+voice and 8× in the coach's**. ⚠ The walked row still reads `worn 0` and is untouched: two arms, two
+meanings, and the printout says so in its own banner.
+⭐ **THE ASSERTION IS THE PART WORTH KEEPING**: each captured string is proven EQUAL to the engine's
+`worn` reading for that girl **and DIFFERENT from its `own` reading** – because below the flat-pool
+cut both readings collapse to the pool's line, so a bare equality would have passed on a career whose
+worn copy never appeared at all. The poke's depth is DERIVED (3× the driver line, a 21-point margin
+against `accrueSpirit`'s ≤ 5/week return), not chosen.
+⚠ The fork week derives to **242** on this tree (`schoolEndWeek`), not the 294 an earlier report
+quoted; both exceed the 156-week freeze walk, so the frozen-career conclusion is unaffected.
 
 **Frozen careers: 0 keys of 80 on ALL THREE, byte-identical, no constant re-stamped.** The fork
 opens at week 294 and the freeze walk ends at 156, so T17 cannot reach them. Frozen MAIN capture

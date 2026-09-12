@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 96 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 97 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -42,7 +42,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
-| ranking-and-ladder | 7 | [THE VOICE BIBLES PASS, THE FIRST-PERSON RULING, AND THE MOOD LADDER'S BANDS](#09092026--the-voice-bibles-pass-the-first-person-ruling-and-the-mood-ladders-bands) | 2026-09-09 |
+| ranking-and-ladder | 8 | [WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE](#12092026--wave-3-the-nine-point-fold-the-ladders-own-number-corrected-the-cure) | 2026-09-12 |
 | saves-and-schema | 1 | [WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES](#11092026--wave-3-t1-v74-episodes-rather-than-a-slot-and-the-tail-decides) | 2026-09-11 |
 | simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
@@ -3913,3 +3913,43 @@ product died for the lever's sake. The owner: «мне это не очень н
 - **CLAUDE.md compression ruled its own post-merge PR** («кажется надо оптимизировать») – the
   Gotcha case-histories compress to law + decisions links; 22 characters of headroom is one
   agent-line from a red gate.
+
+## 12.09.2026 – WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE
+
+- ⭐⭐⭐ **T16 WAS OVERTURNED BY ITS OWN MEASUREMENT, AND THAT IS THE ENTRY.** It hit the rate it was
+  built for (1.88 → 6.50 parent-asked knocks a career) and reported, unprompted, that its two
+  UNCONDITIONAL classes were tier-independent and had flattened the coach ladder from a 2×
+  budget-to-elite span to **1.08×**, with the Elite coach falling from deciding 95% of knocks alone to
+  31%. The owner: «мне это не очень нравится». **A builder that had reported only its bar would
+  have shipped the death of the attention-buying product as a success.**
+- **T16b replaces it**: `'warn'` becomes a second doubt-widener beside `REPEAT_DOUBT` rather than an
+  unconditional override. All three ruled bars HIT – ladder spread **6.3×** (≥ 1.6), middle-rung asked
+  **3.50 / 4.00** (3–5), Elite self-decide **91.9%** (≥ 85). Full numbers in who-she-is §4a's third
+  wave-3 entry, which REPLACES T16's per the owner's ruling.
+- ⚠ **The one authorised tuning of the wave, and it is on the record.** `WARN_DOUBT = 3` alone missed
+  – the warning band is condition [15, 25), so a warn week is rare AND arrives carrying ~30 strain
+  points of gap a confident coach's zone never reaches. `ESCALATE_CAUTION` 3.5 → 4.5 was the single
+  permitted step; **5.0 was declined as more movement than the corridor needed.** Nothing else moved.
+- ⚠⚠ **THE T6b LAW BROKE ONCE, UNDER TEST, AND THE GATE CAUGHT IT.** The shared knock drain was put
+  inside `econ-bench`'s `stepCareerWeek` and silently reached `e2e-fixtures` and `life-arrival`;
+  `npm run e2e:fixtures` went red («junior: no seed in 200 reached the state»). Fixed with an explicit
+  opt-out, `junior.tsave` regenerated **byte-identical** proving the walk restored, and the incident
+  written into `tools/_knocks.ts` as the finding rather than a silent repair. ⭐ The law it proves:
+  **a drain must never overwrite a measuring arm**, and a helper is how it reaches one by accident.
+- **The drain beat its prediction**: jammed weeks 47 → 0, 39 → 0, 106 → 0, and arrivals ROSE – the
+  frozen fixtures now walk MORE game than before T16. The architect predicted «~2»; the answer is 0,
+  because a drain answering in the same tick leaves no week holding one.
+- **Point 2 – the warn line ships**: «The coach is not calling the {part} alone – not on a week like
+  this.» T16's reuse of «in two minds» is gone; it claimed a mental state a risk week cannot back.
+- **Point 3 – the four shipped wave-2 `own` stop lines STAY UNCONTRACTED, and are keepers byte for
+  byte** (the owner, 12.09: «согласен, оставить»). The Barty-register formality is load-bearing in a
+  career-defining sentence, and the player ever sees only one line of that pool. T17's 8 NEW stop
+  lines follow §Contractions; the two conventions coexist on purpose. **One ledger line, zero code.**
+- **Point 4 – the worn column now renders in a walked context**, via a bench-only poked arm; the
+  walked reading (`worn 0`) is untouched and still the finding. Recorded on §4a's fourth entry.
+- **Points 6, 7 and 9 are NOT this wave's, by ruling**: the bond-memory magnet travels to the
+  планка-3 session (now measured three independent ways – wave 2's bar 3, the push-through's 92%
+  erasure, and 100% of arrivals landing at `steady`); the glyph discriminator rides wave 4's v75 bump
+  as an optional `lifeKind` on the event row; the `CLAUDE.md` compression is its own post-merge PR.
+- ⚠ **Point 8 stands as a re-gate check**: every `.tsave` and golden must be newer than the head that
+  shaped it – the `ending.tsave` staleness debt's own guard.
