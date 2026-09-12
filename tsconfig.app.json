@@ -27,6 +27,7 @@
     "src/**/*.ts",
     "src/**/*.vue",
     "tests/**/*.ts",
+    "tools/_knocks.ts",
     "tools/_lifeBeats.ts",
     "tools/ad-shoot-bench.ts",
     "tools/childhood-bench.ts",

@@ -52,12 +52,12 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { decideKnock } from '../src/engine/world/knock'
 import { advanceRefusal } from '../src/engine/world/multiWeek'
 import { resumeMain } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { TierId } from '../src/engine/season/types'
+import { drainKnock } from './_knocks'
 import { drainLifeBeats } from './_lifeBeats'
 
 const { nextEntry, bookHisVacation } = await import('./his-cadence-probe')
@@ -213,7 +213,7 @@ function walk(path: string, armId: string): Run {
         skipTournament(world)
         closeTournament(world)
       } else if (refusal === 'knock') {
-        decideKnock(world, 'rest')
+        drainKnock(world)
       } else if (refusal === 'birthday') {
         const prompt = buildBirthdayPrompt(world)
         if (prompt) chooseGift(world, prompt.options[0].id)

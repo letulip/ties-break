@@ -145,47 +145,42 @@ export function rollKnock(world: WorldState): void {
 
 
 /**
- * ⭐⭐ T16 – DOES THIS KNOCK GO TO THE PARENT, EVEN THOUGH THE FAMILY IS PAYING SOMEBODY?
+ * ⭐⭐ T16b – DOES THIS KNOCK GO TO THE PARENT, EVEN THOUGH THE FAMILY IS PAYING SOMEBODY?
  *
- * ⚠ IT IS NOT A NEW MECHANISM AND SAYING SO IS THE POINT. `coachEscalates` already hands a knock
- * back – the probabilistic DOUBT zone, scaled by his confidence – and that is the third disjunct
- * below, untouched. What T16 adds is TWO DETERMINISTIC CLASSES BESIDE IT, because the doubt zone
- * alone fires rarely: T12 measured the coach answering 232 of 280 knocks at every `coachManagesLoad`
- * rung, so the parent met the dialog about 1.5 times per career against 9.0 self-coached – and the
- * bond table's knock rows (−3 push, −5 push-on-a-repeat) were therefore nearly dead in normal play.
- * The owner ruled the repair 11.09 («давай попробуем»), and ruled it WITHOUT touching the 0.5/week
- * bond memory, which is why the repair is here and not in `ECONOMY.bond`.
+ * ⚠ IT IS THE DOUBT ZONE, AND ONLY THE DOUBT ZONE. `coachEscalates` hands a knock back when the call
+ * sits inside his own uncertainty – scaled by his confidence, so a cheap coach asks often and an
+ * Elite one almost never. This function's whole job is to turn the doctor's three-way verdict into
+ * the one boolean that zone takes: `'warn'` is a WIDENER (coachLoad.ts `WARN_DOUBT`), the same shape
+ * `repeat` has, and both multiply together on a warn-week repeat.
  *
- *   (a) A REPEATED PART. `repeat` is the knock's own ledger flag (engine/knock.ts `pushedParts`: "a
- *       statement about the RECORD"), and it is the −5 delta row's OWN trigger. `decideKnock`'s note
- *       calls the repeat "the record telling him and being overruled" – a decision the table prices
- *       at nearly twice the ordinary push has to be a decision the parent is actually offered.
- *       ⚠⚠ AND IT COSTS EXACTLY WHAT `REPEAT_DOUBT` SAID IT WOULD, WHICH IS RECORDED HERE RATHER
- *       THAN DISCOVERED LATER. coachLoad.ts rejected an UNCONDITIONAL repeat escalation because it
- *       flattened the rung ladder (9.5 / 9.1 / 9.1 / 9.1 taps – measured), and this rule is
- *       unconditional in exactly that way. Re-measured for T16, tap SHARE pooled over 8 seeds ×
- *       208 weeks: budget/middle/high/elite went 0.148 / 0.103 / 0.078 / 0.075 to 0.716 / 0.684 /
- *       0.692 / 0.662. The ladder still runs end to end – budget above elite, self above all – but
- *       a 2x span is now 1.08x. That argument was about the DOUBT ZONE, where it still stands and
- *       is untouched; what the owner bought on 11.09 is a live −5 row at the price of most of what
- *       "fewer interruptions" was worth. It is his trade, made on T12's measurement.
+ * ⚠⚠ AND IT WAS AN OVERRIDE FOR ONE DAY, WHICH IS THE REASON THIS DOC BLOCK IS LONGER THAN THE
+ * FUNCTION. T16 (11.09, the owner's «давай попробуем») made the two classes DETERMINISTIC –
+ * `repeat || clearance === 'warn' || coachEscalates(...)` – on T12's finding that the push-through
+ * price was mostly not the parent's to pay (the coach answered 232 of 280 knocks; the parent met the
+ * dialog ~1.5 times a career against 9.0 self-coached, so the bond table's −3/−5 push rows were
+ * nearly dead in normal play). It worked on its own terms and it cost the ladder: tap share went
+ * 0.148 / 0.103 / 0.078 / 0.075 to 0.716 / 0.684 / 0.692 / 0.662 over 8 seeds × 208 weeks, a 2×
+ * budget-to-elite span down to 1.08×, and the Elite coach from deciding 95% of knocks alone to 31%.
+ * The owner, 12.09: «мне это не очень нравится». ⭐ THE CORRECTION IS NOT A REVERT: T12's dead lever
+ * was measured at the DEFAULT (middle) rung, so the cure has to lift the middle WITHOUT spending the
+ * premium rungs – which is exactly what a widener does and a deterministic class cannot, because the
+ * widener is multiplied by `1 - confidence` and the class is not. coachLoad.ts's constants carry all
+ * three rulings; this is where the verdict becomes the flag.
  *
- *   (b) A `'warn'` CLEARANCE WEEK. `medicalClearance` is the doctor's own three-way verdict
- *       (world/medical.ts, owner 26.07): in [medicalFloor, medicalWarningCeiling) she plays and he
- *       warns the family. A knock arriving inside that band is the week where the answer carries
- *       real risk, and it is the played-hurt row's neighbourhood. Not `'withdraw'`: that is the
- *       doctor's veto and no knock answer survives it anyway.
+ * ⚠ `'withdraw'` IS NOT A WIDENER, and "any bad clearance" is the obvious wrong generalisation. Below
+ * `medicalFloor` she is not cleared at all – the doctor's veto is not a load call, and no knock answer
+ * survives it anyway.
  *
- * PURE, ZERO DRAWS, ON ANY STREAM. Three booleans over facts the world already holds – the ledger
- * flag, one integer comparison, and `coachEscalates`' arithmetic. The frozen MAIN capture cannot
- * move, and `rngMain` is byte-identical across the change by construction.
+ * PURE, ZERO DRAWS, ON ANY STREAM. One ledger flag, one equality, and `coachEscalates`' arithmetic.
+ * The frozen MAIN capture cannot move, and `rngMain` is byte-identical across the change by
+ * construction.
  */
 export function knockNeedsTheParent(
   view: CoachLoadView,
   repeat: boolean,
   clearance: MedicalClearance,
 ): boolean {
-  return repeat || clearance === 'warn' || coachEscalates(view, repeat)
+  return coachEscalates(view, repeat, clearance === 'warn')
 }
 
 /** The hired coach's answer, taken the moment the knock arrives. Separate from `decideKnock` so the
@@ -199,44 +194,42 @@ export function coachDecidesKnock(world: WorldState): void {
   const k = world.knock
   if (!k || k.choice !== null) return
   const view = coachLoadViewOf(world)
-  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY, OR THE WEEK IS ONE OF THE TWO THE PARENT ALWAYS GETS. The call
-  // stays unanswered, `pendingKnock` stays true, and the dialog opens exactly as it does for a self-coached
-  // career - which is what keeps W4's content alive on a career that has a coach (DEFAULT_PROFILE is
-  // 'middle', so that is most of them). See coachLoad.ts `coachEscalates`: the zone scales with his haze,
-  // so a cheap coach asks often and an Elite one almost never - and "you are buying your attention back"
-  // becomes a number instead of a slogan. ⭐ T16 puts two deterministic classes BESIDE that zone (the
-  // repeat and the `'warn'` week - see `knockNeedsTheParent`), because the zone alone left the bond
-  // table's knock rows nearly dead at the shipped rung.
-  if (knockNeedsTheParent(view, k.repeat, medicalClearance(world.condition))) {
-    // ⚠⚠ NO NEW COPY, AND THE KEY MOVED FROM `k.repeat` TO «IS HE ACTUALLY IN TWO MINDS» SO THAT NO
-    // SHIPPED SENTENCE CHANGES THE SITUATION IT DESCRIBES (invariant 4). T16 raises escalations that
-    // the doubt zone would not have raised, and one of the two lines claims a MENTAL STATE:
+  // ⚠ ...UNLESS HE WANTS THE PARENT'S SAY. The call stays unanswered, `pendingKnock` stays true, and the
+  // dialog opens exactly as it does for a self-coached career - which is what keeps W4's content alive on
+  // a career that has a coach (DEFAULT_PROFILE is 'middle', so that is most of them). See coachLoad.ts
+  // `coachEscalates`: the zone scales with his haze, so a cheap coach asks often and an Elite one almost
+  // never - and "you are buying your attention back" becomes a number instead of a slogan. ⭐ T16b widens
+  // that zone on a `'warn'` week instead of overriding it (see `knockNeedsTheParent` for the day T16
+  // spent as an override and the ladder number that ended it).
+  const clearance = medicalClearance(world.condition)
+  if (knockNeedsTheParent(view, k.repeat, clearance)) {
+    // ⚠⚠ THREE SITUATIONS, THREE SENTENCES, AND TWO OF THEM ARE THE PRE-T16 PAIRING CHARACTER FOR
+    // CHARACTER (invariant 4). Before T16 the only way into this branch was `coachEscalates`, and the
+    // key was `k.repeat`: a repeat printed «wants to talk», anything else «in two minds». Both of
+    // those pairings are restored here exactly, because T16b restores the mechanism they described -
+    // every escalation IS the doubt zone again, so «in two minds» is a claim the mechanism backs.
     //
-    //   · «in two minds» is a claim about HIM, and it is true of exactly one thing – `coachEscalates`
-    //     firing. On a `'warn'` week where he is NOT in doubt it would be a sentence the mechanism
-    //     does not support, so that case may not have it.
-    //   · «wants to talk … before anyone decides» claims only the ACT, which is true of every
-    //     escalation there is. It is what a repeat already prints, and it is honest for the new
-    //     classes for the same reason: it says what happened and nothing about why.
+    //   · «in two minds» is a claim about HIM. True of exactly one thing – `coachEscalates` firing –
+    //     which under T16b is true of every line this branch writes.
+    //   · «wants to talk … before anyone decides» claims only the ACT. It is what a repeat has always
+    //     printed and it stays the repeat's line.
+    //   · ⭐ THE WARN WEEK GETS ITS OWN SENTENCE (the architect's, 12.09, under the standing wording
+    //     delegation; T16 had it reusing the repeat's line, which said nothing about the week). It is
+    //     the one new string in this step, R15-7 clean like its siblings – no pronoun for the coach –
+    //     and it claims what the widener claims: not that he cannot decide, but that this is not the
+    //     week to decide alone.
     //
-    // So: in-doubt-and-not-a-repeat keeps «two minds», everything else takes «wants to talk». ⚠ Check
-    // it against the OLD behaviour and nothing moves – before T16 the only way into this branch was
-    // `coachEscalates`, so repeat -> line 1 and non-repeat -> line 2, which is exactly what this
-    // still does. Only the two NEW classes are newly reading line 1.
-    //
-    // ⚠ THE SECOND `coachEscalates` CALL IS DELIBERATE, not a leftover: the predicate above is the
-    // one the engine routes on, and this asks a different question (which of the three reasons it
-    // was). It is pure arithmetic with no draw, evaluated a handful of times per career.
-    const inTwoMinds = !k.repeat && coachEscalates(view, k.repeat)
-    addEvent(world, {
-      week: world.week,
-      type: 'info',
-      // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see `coachLoadNote` in world/coachMarket.ts for the
-      // owner's ruling and why the dash is doing the work a guessed "he" used to do.
-      text: inTwoMinds
-        ? `The coach is in two minds about the ${k.part} – and is asking us.`
-        : `The coach wants to talk about her ${k.part} before anyone decides.`,
-    })
+    // The warn line wins over the repeat's when both hold, because it is the WEEK that is being
+    // described and the week is the stronger fact.
+    const text =
+      clearance === 'warn'
+        ? // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see `coachLoadNote` in world/coachMarket.ts for the
+          // owner's ruling and why the dash is doing the work a guessed "he" used to do.
+          `The coach is not calling the ${k.part} alone – not on a week like this.`
+        : k.repeat
+          ? `The coach wants to talk about her ${k.part} before anyone decides.`
+          : `The coach is in two minds about the ${k.part} – and is asking us.`
+    addEvent(world, { week: world.week, type: 'info', text })
     return
   }
   const choice = coachKnockCall(view, k.repeat)

@@ -15,12 +15,12 @@ import {
   bookVacation,
   closeTournament,
   createWorld,
-  decideKnock,
   enterEvent,
   skipTournament,
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
+import { drainKnock } from './_knocks'
 import { rngFromSeed } from '../src/engine/rng'
 import { weekSceneArtUrl } from '../src/art/weeks'
 import { isExamWeek, isOffSeasonWeek } from '../src/engine/season/calendar'
@@ -62,8 +62,9 @@ for (let i = 0; i < weeks; i++) {
     }
   }
   tickWeek(world, rng)
-  // answer a knock the way a careful parent would: rest it
-  if (world.knock !== null && world.knock.choice === null) decideKnock(world, 'rest')
+  // answer a knock the way a careful parent would: rest it – the shared drain, since this trace is
+  // about the WEEK'S STORY and not about who answered (tools/_knocks.ts).
+  drainKnock(world)
   if (world.pendingTournament) {
     skipTournament(world)
     closeTournament(world)

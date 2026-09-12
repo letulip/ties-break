@@ -172,7 +172,10 @@ function capWeekWithBonus() {
     tickWeek(world, rng)
     // ⚠⚠ ADDED BY WAVE 3's T16, A HARNESS REPAIR RATHER THAN A POLICY CHOICE. Since T16 a knock on a
     // REPEATED part or on a `'warn'` clearance week reaches the parent even with a coach
-    // (`world/knock.ts` `knockNeedsTheParent`, the owner's ruling 11.09). An undecided knock never
+    // (`world/knock.ts` `knockNeedsTheParent`, the owner's ruling 11.09). ⚠ T16b (12.09) withdrew the
+    // two classes and made `'warn'` a WIDENER instead, so fewer knocks reach the parent than under
+    // T16 – the repair is kept because the hazard it answers is older than T16 and survives it: any
+    // escalation at all, at any rate, jams a walker that ticks past it. An undecided knock never
     // expires and `rollKnock` raises no other while one is open, so a walker that ticks past it
     // spends the rest of the career in a state the GAME FORBIDS – `advanceWeeks` halts on
     // `pendingKnock`. This walk went red exactly there, on the kid-cut ratio (1.73 against 1.34),

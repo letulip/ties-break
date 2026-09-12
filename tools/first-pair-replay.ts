@@ -74,7 +74,6 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { decodeExportFile } from '../src/engine/saveCodec'
-import { decideKnock } from '../src/engine/world/knock'
 import { advanceRefusal } from '../src/engine/world/multiWeek'
 import { resumeMain } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
@@ -87,6 +86,7 @@ import { fastMatchProbability } from '../src/engine/match/engine'
 import { JUNIOR_TOUR } from '../src/engine/season/tournament'
 import { KIT_GRADES } from '../src/engine/equipment'
 import type { SeasonEvent, TierId } from '../src/engine/season/types'
+import { drainKnock } from './_knocks'
 import { drainLifeBeats } from './_lifeBeats'
 
 // --- args ----------------------------------------------------------------------------------------
@@ -211,7 +211,7 @@ function clearRefusals(world: WorldState): string | null {
       skipTournament(world)
       closeTournament(world)
     } else if (refusal === 'knock') {
-      decideKnock(world, 'rest')
+      drainKnock(world)
     } else if (refusal === 'birthday') {
       const prompt = buildBirthdayPrompt(world)
       if (prompt) chooseGift(world, prompt.options[0].id)

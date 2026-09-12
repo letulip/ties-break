@@ -189,6 +189,9 @@ export function coachKnockCall(view: CoachLoadView, repeat: boolean): KnockChoic
 //
 // A REPEAT WIDENS HIS DOUBT rather than forcing his hand - see REPEAT_DOUBT, and the first draft got
 // this wrong in a way the bench caught.
+//
+// ⭐ AND SO DOES A `'warn'` CLEARANCE WEEK - see WARN_DOUBT. Two wideners, one shape, and the three
+// rulings that produced that shape are written out below rather than summarised.
 
 /** Half-width of the "I would rather you decided" zone at ZERO confidence, in STRAIN points.
  *
@@ -209,24 +212,90 @@ export const ESCALATE_BAND_MAX = 9.6
  *  0.7 to 27. A zone that narrow catches almost nothing, so escalation was driven ENTIRELY by the repeat
  *  rule and the tap counts came out flat across the whole ladder (9.5 / 9.1 / 9.1 / 9.1 - measured).
  *  This is the factor that makes his own read decide how often he asks. Tuned against
- *  `npm run bench:load`. */
-export const ESCALATE_CAUTION = 3.5
+ *  `npm run bench:load`.
+ *
+ *  ⚠ 3.5 -> 4.5 ON T16b's BENCH (12.09), THE ONE STEP THE 12.09 RULING AUTHORISED AND THE ONLY THING
+ *  ON THIS PAGE THAT MOVED BESIDES THE NEW WIDENER. `WARN_DOUBT` alone was not enough to reach the
+ *  ruling's middle bar: the warning band is [15, 25) condition, so a warn week is RARE and it arrives
+ *  carrying so much strain that at a confident coach the call is nowhere near his threshold anyway.
+ *  MEASURED, the T12 pair at the shipped rung (`bench:spirit --push --coached --seeds=4`, asks per
+ *  career, the bar being 3-5): 1.88 before T16 · 6.50 under T16 · **2.25 / 2.50** at CAUTION 3.5 with
+ *  the widener · **3.50 / 4.00** at 4.5. The ladder pays nothing for it, because the zone this scales
+ *  is already multiplied by `1 - confidence`: budget-to-elite tap share stayed at 4.2x. */
+export const ESCALATE_CAUTION = 4.5
+
+// =================================================================================================
+// ⭐⭐⭐ THE TWO WIDENERS, AND THE THREE RULINGS THAT MADE THEM WIDENERS RATHER THAN OVERRIDES
+// =================================================================================================
+//
+// ⚠⚠ THIS BLOCK IS THE FILE'S HISTORY LESSON AND IT IS KEPT WHOLE ON PURPOSE. The same idea - "some
+// classes of knock are the parent's, whatever the rung" - was proposed, rejected, shipped, measured
+// and withdrawn across three weeks, and the argument turned on ONE number each time. Whoever proposes
+// it a fourth time should have to read all three rulings first.
+//
+//   23.08 - REJECTED (the first draft of this file). An unconditional repeat escalation, at every
+//     rung, on the argument that "the parent is entitled to be asked before somebody gambles the same
+//     joint twice". That reads well and it is what flattened the ladder: repeats are tier-independent,
+//     they are ~40% of escalations, and an unconditional rule means the Elite coach interrupts you
+//     about the shoulder exactly as often as the Budget one (9.5 / 9.1 / 9.1 / 9.1 taps - measured).
+//     But BEING ASKED ABOUT THE SHOULDER IS THE BURDEN YOU ARE PAYING HIM TO CARRY. So a repeat
+//     WIDENS his doubt instead - see REPEAT_DOUBT.
+//
+//   11.09 - OVERRIDDEN ANYWAY, on T12's measurement, and the owner ruled it («давай попробуем»). T12
+//     had found the push-through price mostly not the parent's to pay: at every `coachManagesLoad`
+//     rung the coach answered 232 of 280 knocks, so the parent met the dialog ~1.5 times a career
+//     against 9.0 self-coached and `ECONOMY.bond.delta.knockPush` (−3) / `knockPushRepeatPart` (−5)
+//     were nearly dead in normal play. T16 therefore put TWO DETERMINISTIC CLASSES beside this zone in
+//     `world/knock.ts` - a repeated part, and a `'warn'` clearance week - routing both to the parent
+//     at every rung. The 23.08 note was preserved beside it, and it was preserved because it was the
+//     prediction: the classes are tier-independent in exactly the way the rejection describes.
+//
+//   12.09 - CORRECTED BY THE LADDER'S OWN NUMBER, which is the part worth keeping. T16's own
+//     measurement overturned T16. Tap share pooled over 8 seeds × 208 weeks went
+//     0.148 / 0.103 / 0.078 / 0.075 (budget→elite) to 0.716 / 0.684 / 0.692 / 0.662: a 2× budget-to-
+//     elite span became 1.08×, and the Elite coach went from deciding 95% of knocks alone to 31%. The
+//     attention-buying product died, and the owner's word on it was «мне это не очень нравится». So
+//     the classes come out and `'warn'` becomes the SECOND WIDENER beside the repeat - the doubt zone
+//     alone decides again, a warn week merely makes him three times readier to ask, and a warn-week
+//     repeat compounds because both multipliers apply. The parent is asked more than T12 measured
+//     WITHOUT the premium rungs paying for it, because a widener scales with `1 - confidence` and a
+//     deterministic class does not.
+//
+// ⚠ WHAT THAT LEAVES AS THE STANDING RULE: escalation is the DOUBT ZONE and nothing else. Any future
+// "this class always goes to the parent" proposal is the 23.08 draft again, and it costs the ladder
+// again; the lever that does not is a widener.
 
 /** ...and how much further a REPEAT widens it.
  *
- *  ⚠ THE FIRST DRAFT MADE A REPEAT ESCALATE UNCONDITIONALLY, at every rung, on the argument that "the
- *  parent is entitled to be asked before somebody gambles the same joint twice". That reads well and it
- *  is what flattened the ladder: repeats are tier-independent, they are ~40% of escalations, and an
- *  unconditional rule means the Elite coach interrupts you about the shoulder exactly as often as the
- *  Budget one. But being asked about the shoulder IS the burden you are paying him to carry. So a repeat
- *  now widens his doubt - a big widening, because knock.ts prices the repeat at KNOCK_REPEAT_TAU 3.0
- *  against 2.2 and it genuinely is a harder call - and a coach who knows her well still handles it. */
+ *  ⚠ A BIG WIDENING, because knock.ts prices the repeat at KNOCK_REPEAT_TAU 3.0 against 2.2 and it
+ *  genuinely is a harder call - and a coach who knows her well still handles it. See the block above
+ *  for why it is a widening rather than a rule. */
 export const REPEAT_DOUBT = 3
 
-/** Does he bring this one to the parent instead of deciding it? */
-export function coachEscalates(view: CoachLoadView, repeat: boolean): boolean {
+/** ...and how much a `'warn'` CLEARANCE WEEK widens it. THE SECOND WIDENER (T16b, 12.09).
+ *
+ *  `medicalClearance` is the doctor's own three-way verdict (world/medical.ts, owner 26.07): inside
+ *  [medicalFloor, medicalWarningCeiling) she plays and he warns the family. A knock arriving in that
+ *  band is the week where the answer carries real risk - the played-hurt row's neighbourhood - so he
+ *  is readier to ask, not obliged to. NOT `'withdraw'`: that is the doctor's veto and no knock answer
+ *  survives it anyway, which is why the flag reaching this function is `clearance === 'warn'` and not
+ *  "any bad clearance" (`world/knock.ts` `knockNeedsTheParent` is where the verdict becomes the flag).
+ *
+ *  ⚠ THE SAME MAGNITUDE AS `REPEAT_DOUBT` AND THAT IS A CLAIM, NOT A COPY: the two are the same size
+ *  of harder call. A repeat is the record telling him; a warn week is the doctor telling him. DRAFTED
+ *  at 3 for the bench out of 2.5-3 and MEASURED there against the three bars the 12.09 ruling set -
+ *  ladder spread ≥ 1.6×, middle-rung asks 3-5 a career, Elite self-decide ≥ 85% - see
+ *  docs/specs/who-she-is-2026-09.md §4a's T16b entry for what each setting produced. */
+export const WARN_DOUBT = 3
+
+/** Does he bring this one to the parent instead of deciding it?
+ *
+ *  ⚠ THE TWO WIDENERS MULTIPLY, so a repeat on a warn week compounds - `REPEAT_DOUBT * WARN_DOUBT`
+ *  against his uncertainty, which is the widest this zone ever opens. That is deliberate: it is the
+ *  hardest call the model can describe, and it is still HIS call when he is sure of her. */
+export function coachEscalates(view: CoachLoadView, repeat: boolean, warn: boolean): boolean {
   const doubt = ESCALATE_BAND_MAX * (1 - Math.max(0, Math.min(1, view.confidence)))
-  const margin = doubt * ESCALATE_CAUTION * (repeat ? REPEAT_DOUBT : 1)
+  const margin = doubt * ESCALATE_CAUTION * (repeat ? REPEAT_DOUBT : 1) * (warn ? WARN_DOUBT : 1)
   const threshold = view.shownStamina * PUSH_TOLERANCE
   // ⚠ STRICTLY LESS THAN, so a zero-width zone escalates NOTHING. With `<=` a coach of perfect confidence
   // still passed up the call that landed exactly on his threshold - the one case where he is certain the

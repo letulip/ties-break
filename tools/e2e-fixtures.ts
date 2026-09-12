@@ -224,7 +224,12 @@ const PLAYER = POLICIES[1]
 /** Play forward to `until`, answering every question on the way. Stops early if the career ends. */
 function playTo(world: WorldState, rng: Rng, recipe: Recipe, until: number): void {
   while (world.week < until && world.ending === null) {
-    stepCareerWeek(world, rng, recipe.policy)
+    // ⚠ `drainKnocks: false` – THIS TOOL MEASURES THE KNOCK. The `junior` recipe demands a save
+    // that BOOTS holding an unanswered one and three recipes reject a seed that grows one, so the
+    // shared drain (`tools/_knocks.ts`, wave 3 point 5) must not reach this walk: with it on, 200
+    // of 200 junior seeds were rejected with «boots without an open knock». The T6b law, at the
+    // one site where it arrives through a helper rather than through a call of its own.
+    stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
     answerOpenQuestions(world, recipe.fork)
   }
 }
@@ -374,7 +379,7 @@ const RECIPES: Recipe[] = [
       // passes through this week too, so the state is on the way to bankruptcy rather than staged
       // beside it – and the career still has room to be advanced without ending.
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
         answerOpenQuestions(world, recipe.fork)
         if (debtWeeks(autoEndingViewOf(world)) === SINKING_DEBT_WEEKS) {
           // ⚠ AND THE WEEK AFTER THIS ONE MUST NOT RAISE A KNOCK (16.08). e2e/week-advance.spec.ts's
@@ -412,7 +417,7 @@ const RECIPES: Recipe[] = [
       // that ever reaches the grace window passes through this week, so the state is found rather
       // than constructed – and stopping here leaves the career still alive and still refusable.
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
         answerOpenQuestions(world, recipe.fork)
         if (debtWeeks(autoEndingViewOf(world)) === BROKE_DEBT_WEEKS) {
           return null
@@ -456,7 +461,7 @@ const RECIPES: Recipe[] = [
     fork: 'continue',
     drive: (world, rng, recipe) => {
       while (world.week < FORK_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
         // ⚠⚠ v74 T15 – AND TIER 1 IS NO LONGER AMONG WHAT THIS LINE ANSWERS, which is why the note
         // below reads as history. A `'small-talk'` row is declared NON-BLOCKING (§5b's soft surface,
         // ruled 11.09), so it is not pending, this drain never sees one, and the recipe's own clause
@@ -576,7 +581,7 @@ const RECIPES: Recipe[] = [
     fork: 'continue',
     drive: (world, rng, recipe) => {
       while (world.week < SOFT_CAP_WEEK && world.ending === null) {
-        stepCareerWeek(world, rng, recipe.policy)
+        stepCareerWeek(world, rng, recipe.policy, undefined, { drainKnocks: false })
         // ⚠ EVERY BLOCKING QUESTION IS ANSWERED ON THE WAY PAST AND TIER 1 IS NOT ONE OF THEM. This
         // is the ordinary `answerOpenQuestions`, whose `drainLifeBeats` reads `pendingLifeBeat` –
         // BLOCKING rows only since T15 – so a `'small-talk'` row rides along untouched and the loop

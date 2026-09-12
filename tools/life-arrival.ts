@@ -58,13 +58,11 @@ import {
   answerRetirement,
   birthdayOfferFor,
   chooseGift,
-  decideKnock,
   drawRawLag,
   kidAgeExact,
   loveEpisodesOf,
   lifeLogOf,
   pendingBirthday,
-  pendingKnock,
   TEMPERAMENTS,
   type Temperament,
   type WorldState,
@@ -80,6 +78,7 @@ import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { BondBand, LoveEpisode } from '../src/shared/protocol/narrative'
 import { rngFromSeed } from '../src/engine/rng'
 import { median, mean, stepCareerWeek, POLICIES, type Policy, type EntryVeto } from './econ-bench'
+import { drainKnock } from './_knocks'
 import { drainLifeBeats } from './_lifeBeats'
 
 // =================================================================================================
@@ -277,7 +276,10 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
 
   for (let i = 0; i < opts.weeks; i++) {
     bondEntering = world.bond
-    stepCareerWeek(world, rng, opts.policy, opts.veto)
+    // ⚠ `drainKnocks: false` – `decides` IS AN ARM OF THIS BENCH, so the shared drain may not answer
+    // a knock this walk deliberately leaves open (the T6b law). The `opts.decides` branch below calls
+    // `drainKnock` itself, which keeps the arm exactly where it was.
+    stepCareerWeek(world, rng, opts.policy, opts.veto, { drainKnocks: false })
     row.weeks++
     // ⚠ THE ENDING IS READ BEFORE ANYTHING IS ANSWERED, and that is what lets this file have no
     // `try`/`catch`: `answerLifeBeat`, `decideKnock`, `chooseGift`, `answerFork` and
@@ -321,7 +323,7 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
     if (opts.decides) {
-      if (pendingKnock(world)) decideKnock(world, 'rest')
+      drainKnock(world)
       answerTheBirthday(world)
     }
 
