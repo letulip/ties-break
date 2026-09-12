@@ -1434,9 +1434,10 @@ Leftovers the bundles flagged across each other's fences, fixed at the seam:
 
 ### The gate's harvest, part two (12.09 – the ruling's arithmetic, and one law)
 
-Nine unit arms across six files, eight of them the same story: ruling A1 (items 15+27) sends 10% of
-every W cheque to `kidFundsCents` at ANY age, so every fixture that walks a junior through a paying
-rung had the wrong funds equation. **Every re-aim folds the engine's own helper** (`kidPrizeShareCents`
+**Ten** unit arms across six files – the hand-off named eight, and `team-share` turned out to hold
+four rather than three – nine of them one story: ruling A1 (items 15+27) sends 10% of every W cheque
+to `kidFundsCents` at ANY age, so every fixture that walks a junior through a paying rung had the
+wrong funds equation. **Every re-aim folds the engine's own helper** (`kidPrizeShareCents`
 / `kidPrizeShareBps` at `kidAgeYears`) rather than a new literal, so the tests keep one source of
 truth with the engine, and each carries a ⚠ note naming the items and the ruling. ⚠ THE STOP
 CONDITION WAS CHECKED AND DID NOT FIRE: read off `finalizeTournament` itself (world.ts, the
@@ -1450,10 +1451,10 @@ reddens four team-share arms.
   arm walks four junior seasons with the W door shut (she plays, `careerTotals.prizeCents` is 0,
   nothing is written) and the same seed with it open pays her from its FIRST cheque – measured: week
   3, age **14**, $220 at 1000 bps, 44 credits in four seasons. The durable-ledger claim
-  (`ledgerDelta === fundsDelta`) is intact. ⚠ A second, GREEN line
-  in the first arm was quietly false and is fixed too – «nothing is credited before her eighteenth»
-  survived the ruling only because `pruneFinanceWeeks` drops rows older than sixty weeks. Mutation:
-  `startBps` back to 0 → red.
+  (`ledgerDelta === fundsDelta`) is intact. ⚠ A second, GREEN line in the FIRST arm was quietly false
+  and is fixed too – «nothing is credited before her eighteenth» survived the ruling only because
+  `pruneFinanceWeeks` drops rows older than sixty weeks, so a twelve-season walk has no junior row
+  left to look at. Mutation: `startBps` back to 0 → red.
 * **`match-retirement`** – «paid exactly like a defeat in that round» now compares GROSS with GROSS:
   the family's `prize` row plus `financeWeeks[].kidShare.prize.cents`, which is sponsor-proof where a
   `kidFundsCents` delta would not be (an appearance fee banks in the same finalize). Mutation: the
@@ -1480,8 +1481,13 @@ reddens four team-share arms.
   **The DRAFT string `Back` is retired from `WALK_COPY`** – item 8 adds no user-facing string at all
   now, which is invariant 4 happier than it was. Bundle B's arms press by `[aria-label="Back"]`;
   `prologue-walk`'s control count splits the foot in two (the way out is answer-shaped, the way back
-  is an icon). Mutation: `variant="plate"` → the law's arm red. Green after: ui-control-system 26/26,
-  prologue-round41 8/8, prologue-walk, round40-prologue-choices, round35-prologue (71/71 together).
+  is an icon). Mutation: `variant="plate"` → the law's arm red. ⚠ AND IT WAS WALKED IN THE REAL APP
+  at 375x812, on a dev server started IN THE WORKTREE – the first attempt served the shared checkout
+  on `life/wave-3` and showed a prologue with no way back at all, which is the same cwd hazard
+  CLAUDE.md records for background commands wearing a different hat. On the round's own tree: the
+  glyph sits at 16,716, 32px, inside the phone, and one press returns to the five with the origin
+  still marked and the name still typed. Green after: ui-control-system 26/26, prologue-round41 8/8,
+  and the FULL component project – 173 files, 1870 tests.
 
 ## The unit-heavy diagnosis (the owner's side ask, PR #135)
 
