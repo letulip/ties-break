@@ -29,10 +29,14 @@ where the thing being bought is a SERVICE at the bottom of its own ladder.
 * **No schema move** (v74 stands), **no player-facing string changed**, **zero RNG movement**: a
   uniform tier still spends its corridor roll at `[1, 1]`, and `pickInt` spends one `rng()` call
   whatever its bounds.
-* ⚠ **One balance consequence is open and is the owner's:** a wealthy family with an elite coach no
-  longer burns money in an idle year (+$6,280 → −$4,917 on the 16-seed calibration batch), so the
-  round-7 «premium everything must hurt» principle is un-funded rather than refuted. §3 and
-  `tests/economyCalibration.ts`'s `BANDS` block carry the decomposition and the two levers.
+* ⭐ **The one balance consequence P1 left open was ruled on the same day and is CLOSED.** The corridor
+  fade had stopped a wealthy family's idle year from burning (+$6,280 → −$4,917 on the 16-seed
+  batch); of the two levers, the owner picked the elite rate band and raised it – «единая элит-полка
+  вверх - верно». `ECONOMY.coach.hourlyRateCents.elite` is now his own 29.07 table × **1.25**, the
+  midpoint of the corridor that rung lost, so the **single** price everybody pays is what the wealthy
+  family used to pay: **$750 / $1,000 / $1,250 a week** by age row at the balanced plan. The cell
+  measures **+$2,970** and «premium everything must hurt» is funded again. §3's resolution block and
+  `tests/economyCalibration.ts`'s `BANDS` block carry the decomposition, the prediction and the miss.
 
 ## 1. The two rulings this is built from, verbatim
 
@@ -132,6 +136,71 @@ is real money for the first time) and still replaces gear oftener, which is the 
    `startWear` / `lifeFactor` / `frameInjuryRise`. It is a balance decision, not a price one.
 3. raise the wealthy cadence (behaviour, not price) — the axis the model says the difference belongs on.
 
+### ⭐⭐⭐ RESOLVED, 12.09.2026 – the owner picked the elite shelf, and it goes UP
+
+The finding above (and §4's half of it) left one question open and it was his: **should a wealthy
+family with an elite coach still run a deficit in an idle year?** `tests/economyCalibration.ts`'s
+`BANDS` block put the two honest levers beside it – the wealthy income, or the elite rate band – and
+took neither. His ruling, verbatim:
+
+> «единая элит-полка вверх - верно»
+
+**ONE LEVER, and it is the second of the two.** `ECONOMY.coach.hourlyRateCents.elite` rises by the
+**wealthy corridor midpoint, 1.25** (`WEALTH_CORRIDOR.wealthy` is `[1.2, 1.3]`), so the
+uniform-for-everyone elite price is *exactly what the wealthy family used to pay under the corridor
+P1 retired*. `high` is untouched – his word was «элит» – and every corridored rung
+(`self` / `budget` / `middle`) is untouched, so nothing below the cut moves at all.
+
+| age row | hourly band before | hourly band after | weekly shelf before (uniform) | weekly shelf after (uniform) |
+|---|---|---|---|---|
+| 12–16 | $96–144 | **$120–180** | $600.00 | **$750.00** |
+| 17–22 | $128–192 | **$160–240** | $800.00 | **$1,000.00** |
+| 23+ | $160–240 | **$200–300** | $1,000.00 | **$1,250.00** |
+
+Weekly figures are the band midpoint at the balanced plan (5 sessions). **The shelf is ONE number per
+age row now** – a working family, a middle family and a wealthy family buying an elite coach at 19 all
+pay **$1,000.00/wk**. Against §4's table that is: wealthy **$1,000 → $800 → $1,000**, restored to the
+cent; middle **$800 → $800 → $1,000** (+25%); working **$600 → $800 → $1,000** (+66.7% against its
+pre-P1 price). ⚠ The ruling cuts the way it cut before: «цены для всех должны быть равны» has no
+version where only the top pays the new shelf.
+
+**PREDICTED, written before the batch was run.** The lever restores *precisely* the component the
+corridor fade removed from the wealthy·elite cell (−$7,888 of its $11,197 swing), and nothing else –
+so the cell should return to **≈ +$2,971**, P1's own «part A only» row, not to the +$6,280 control:
+the gear half of the swing is his other ruling and stays. Working (budget rung) and middle (middle
+rung) should not move by one cent. Written here before the first measurement, per CLAUDE.md
+invariant 5.
+
+**MEASURED** – same 16 seeds, same 52-week walk, the arm verified to contain the change before it was
+read (the probe prints `ECONOMY.coach.hourlyRateCents.elite` beside the means):
+
+| cell | control (P1 full, measured) | PREDICTED | **MEASURED** | miss |
+|---|---|---|---|---|
+| working · budget | −5,666.67 | −5,666.67 (unmoved) | **−5,666.67** | 0 – byte-identical |
+| middle · middle | −8,039.47 | −8,039.47 (unmoved) | **−8,039.47** | 0 – byte-identical |
+| **wealthy · elite** | **−4,916.82** | **≈ +2,971** | **+2,970.05** | **$1.06** |
+
+Per-seed spread on the wealthy cell: −$4,453.94 .. +$9,731.94 (control: −$10,846.46 .. +$513.20).
+`BANDS.wealthy` is re-pinned to **[+1,200, +4,700]** – measured, not chosen, at the same ±1,750
+half-width the working band carries.
+
+⚠ **The two cells below the cut did not move one cent**, and that is the lever's shape read back:
+`CALIBRATION_TIER` puts working on `budget` and middle on `middle`, and neither rung is elite.
+⚠ **The $1.06 miss is `pickInt`'s rounding and is understood rather than tolerated** – a coach's rate
+is `lo + floor(u × (hi − lo + 1))`, so scaling the band scales the drawn rate to within a cent an hour
+rather than exactly. The corridor's week-to-week spread is not averaged away, it is gone: the roll
+lands on exactly 1.0. Nothing was chased.
+
+**What it buys back:** the round-7 item-1d principle – «premium everything must hurt» – is funded
+again for the family it was written about, and the ordering cell's «the only one that BURNS» has a
+member again. That last line was deliberately INVERTED by P1 rather than deleted, precisely so this
+retune would go red and be re-pinned on purpose; it is restored in
+`tests/economy-calibration-ordering.test.ts` with his quote.
+
+**Zero RNG.** The elite band is read by `pickInt`, which spends exactly one `rng()` call whatever its
+bounds, and the corridor roll at `[1, 1]` is untouched – the constant moves through the same draw
+path P1 built. No schema move (v74 stands). No player-facing string: the screens quote the engine.
+
 ### The allowance oddity, half-dissolved
 
 His second oddity: a working family's $12,000 icon allowance would over-cover their cheaper gear.
@@ -192,6 +261,13 @@ what it loses is only the week-to-week ±5% wobble.
 where they start. **The narrower reading is a one-line retune** (drop `'high'` from
 `corridorAppliesAt`'s list) and it is his to take.
 
+⭐ **The elite row of that table moved again the same day, and §3's resolution block is where it
+lives.** The table above is P1's measurement and stands as the record of what the FADE did; on his
+«единая элит-полка вверх - верно» the elite shelf then rose to $1,000 for all three columns – the
+wealthy column restored to the cent, the other two lifted onto it. **`high` did not move**: he named
+elite, and widening the PRICE is a second decision he has not made. So the `high` row above is still
+current, and only the `elite` row has a newer number.
+
 ### The masseur: his sentence was already true
 
 > «По крайней мере элит тренеры и **массажисты** мне кажется вполне могут стоить одинаково для всех.»
@@ -238,6 +314,22 @@ since the rung dial shipped. Writing this down IS the answer.
   Only money keys move; no result, rank, injury or knock key does. **50 constants re-stamped of 75**
   (48 unique); all 25 `selfTravelling` cells untouched — the diagonal's identity check, read back
   from the fixture ladder.
+
+* ⭐ **And again for §3's resolution (the elite shelf), on the same protocol** – control captured on
+  the clean tree before the edit, three arms with explicit flags one command at a time, each header
+  read back:
+
+  | career | keys moved | which | `rngMain` |
+  |---|---|---|---|
+  | 5/0 · 25k middle, middle coach, grinder | **0** | – byte-identical, whole file | `1dbff28caca2` **unmoved** |
+  | 8/0 · 120k wealthy, elite coach, grinder | **6 of 78** | careerTotals, events, financeWeeks, fundsCents (`db57151e9e09` → `2cb8dde3c124`), lastSeasonSummary, seasonHistory | `aebc8101d6df` **unmoved** |
+  | 0/1 · 8k working, self-coached, player | **0** | – byte-identical, whole file | `d84bcbf0c481` **unmoved** |
+
+  **25 constants re-stamped of 75** (24 unique – FROZEN and PRE_R28B share the value), and every one
+  is an `eliteGrinder` cell: all 25 `middleGrinder` and all 25 `selfTravelling` values reproduce
+  untouched, measured cell by cell. The two zeros were **predicted first and then measured**, not
+  assumed – neither career hires at `elite`. Zero RNG: the band is read by `pickInt`, one `rng()`
+  call whatever its bounds, and the uniform corridor roll still lands on exactly 1.0.
 
 ## 6. Supersedes
 

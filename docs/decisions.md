@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 102 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 103 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 13 | [ROUND 41 #18 PART TWO: A SLAM DEBUT BUYS FAME, AND THE BRAND'S MONEY IS SETTLED ONCE](#12092026--round-41-18-part-two-a-slam-debut-buys-fame-and-the-brands-money-is-settled-once) | 2026-09-12 |
+| economy-and-money | 14 | [ROUND 41 P1 (c): THE ELITE SHELF GOES UP – ONE PRICE, AND IT IS WHAT THE WEALTHY USED TO PAY](#12092026--round-41-p1-c-the-elite-shelf-goes-up--one-price-and-it-is-what-the-wealthy-used-to-pay) | 2026-09-12 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -4189,3 +4189,45 @@ shapes are in the spec, and the decision is his. (c) At the cap the worth ramp f
 **One new player-facing string, DRAFT and his to replace** – the milestone row needs a sentence and
 the fame read depends on no word of it: «🏆 First Grand Slam main draw – from this week the world
 knows her name.» Nothing else on any screen moved (invariant 4).
+
+## 12.09.2026 – ROUND 41 P1 (c): THE ELITE SHELF GOES UP – ONE PRICE, AND IT IS WHAT THE WEALTHY USED TO PAY
+
+- **HIS RULING, verbatim, answering the one question P1 (b) left open:** «единая элит-полка вверх -
+  верно». The question was stated in `tests/economyCalibration.ts`'s `BANDS` block and in the spec:
+  after the corridor fade, should a wealthy family with an elite coach still run a deficit in an idle
+  year? Two levers were put in front of him and neither was touched – the wealthy income, or the
+  elite rate band. **He picked the second, and he picked the direction.**
+- **ONE LEVER, ONE ROW OF ONE CONSTANT.** `ECONOMY.coach.hourlyRateCents.elite` rises by **1.25**, the
+  midpoint of `WEALTH_CORRIDOR.wealthy` (`[1.2, 1.3]`) – the corridor P1 (b) took off that rung. So
+  the new **uniform-for-everyone** price is not a chosen number: it is **exactly what the wealthy
+  family used to pay**. His own 29.07 per-hour table becomes $120 → **$150**/h at 12-16, $160 →
+  **$200** at 17-22, $200 → **$250** at 23+, which at the balanced plan's five sessions is a single
+  weekly shelf of **$750 / $1,000 / $1,250** by age row, identical for all three backgrounds.
+- ⚠ **«элит» MEANS `elite`. `high` IS NOT TOUCHED.** P1 (b) faded the corridor at `high` AND `elite`
+  on «по крайней мере» being a floor rather than a bound; raising the PRICE is a second decision and
+  he named one rung when he made it. The `high` shelf stands at $500/wk.
+- ⚠ **IT CUTS THE WAY THE LAST ONE CUT.** Measured at 19, balanced: **wealthy $1,000 → $800 →
+  $1,000**, restored to the cent; **middle $800 → $800 → $1,000** (+25%); **working $600 → $800 →
+  $1,000** (+66.7% against its pre-P1 price). «Цены для всех должны быть равны» has no version where
+  only the top pays the new shelf, and a working family that puts its daughter in front of a
+  tour-level teacher now pays the tour-level teacher's fee.
+- **PREDICTED BEFORE THE BATCH RAN, then measured** (CLAUDE.md invariant 5; the prediction is in
+  `docs/specs/one-market-2026-09.md` §3's resolution block, written before the first run). The lever
+  restores precisely the component the corridor fade removed (−$7,888) and nothing else, so the idle
+  year should return to P1's own «part A only» row rather than to the pre-P1 control – the GEAR half
+  of the swing is his other ruling and stays. **Predicted ≈ +$2,971; measured +$2,970.05**, a miss of
+  **$1.06**, which is `pickInt`'s integer band and is understood rather than tolerated. Working
+  (−$5,666.67) and middle (−$8,039.47) are **byte-identical**: neither rung is elite.
+- ⭐ **SO «PREMIUM EVERYTHING MUST HURT» IS FUNDED AGAIN** – the round-7 item-1d principle, for the
+  family it was written about. The ordering cell's «the only one that BURNS» had been deliberately
+  INVERTED by P1 rather than deleted, precisely so a retune of either lever would go red there and be
+  re-pinned on purpose. It did, and it was: `tests/economy-calibration-ordering.test.ts` carries his
+  quote beside the restored line. The ordering itself (middle saves most, then working, then wealthy)
+  is untouched for the third time.
+- ⚠⚠ **ZERO RNG, NO SCHEMA MOVE, NO PLAYER-FACING STRING.** The band is read by `pickInt`, which
+  spends exactly one `rng()` call whatever its bounds, and the uniform corridor roll still lands on
+  exactly 1.0 – a constant moved through the draw path P1 had already built, adding, removing and
+  reordering nothing on any stream. `SAVE_SCHEMA_VERSION` stays **74**. The screens quote the engine,
+  so no template changed. On the three frozen careers **`rngMain` is byte-identical** and exactly one
+  moves: the wealthy·elite grinder, 6 money keys of 78; the middle and working careers are
+  byte-identical whole-file, predicted first and then measured.

@@ -1758,6 +1758,79 @@ two historical numbers kept in the prose, the arithmetic re-derived).
 `docs/specs/one-market-2026-09.md`, the amended principle line in `docs/specs/econ-wealth-corridor.md`,
 and the two `docs/decisions.md` entries of 12.09.
 
+⚠ **THE ONE THING P1 LEFT THAT NEEDED THE OWNER** – the only question this build handed back rather
+than answered: **should a wealthy family with an elite coach still run a deficit in an idle year?**
+The corridor fade took that cell from **+$6,280 to −$4,917** on the 16-seed batch (70% of an $11,197
+swing), so round 7's «premium everything must hurt» was un-funded rather than refuted. Two levers
+were named and NEITHER was touched – the wealthy income, or the elite rate band – because re-pinning
+the number a third time is not a lever. The ordering cell's «the only one that BURNS» was left
+**deliberately inverted rather than deleted**, so that a retune of either lever would go red there
+and be re-pinned on purpose.
+
+### ⭐⭐⭐ RESOLVED THE SAME EVENING – «единая элит-полка вверх - верно» (P1 (c))
+
+**His word, verbatim, choosing between the two levers: «единая элит-полка вверх - верно».** He took
+the **elite rate band**, and upward, to a single shelf. `ECONOMY.coach.hourlyRateCents.elite` × **1.25**
+– the midpoint of `WEALTH_CORRIDOR.wealthy` `[1.2, 1.3]`, the corridor P1 had just taken off that rung
+– so the new uniform price is not chosen, it **is what the wealthy family used to pay**: his own 29.07
+table becomes $150 / $200 / $250 an hour by age row, a weekly shelf of **$750 / $1,000 / $1,250** for
+every background. `high` untouched (his word was «элит»); every corridored rung untouched.
+
+**PREDICTED before the batch ran, then measured** – the lever restores exactly the component the fade
+removed (−$7,888) and nothing else, so the cell should return to P1's own «part A only» row rather
+than to the pre-P1 control, the gear half being his other ruling. **Predicted ≈ +$2,971; measured
++$2,970.05** (miss **$1.06**, `pickInt`'s integer band – not chased). Working **−$5,666.67** and
+middle **−$8,039.47** are byte-identical: neither rung is elite. **`BANDS.wealthy` re-pinned to
+[+1,200, +4,700]**, measured at the same ±1,750 half-width working carries.
+
+⭐ **So «premium everything must hurt» is funded again**, and the inverted ordering line was re-pinned
+the way it was designed to be: it went red on his retune and `tests/economy-calibration-ordering.test.ts`
+now carries his quote beside the restored «the only one that BURNS». The ordering itself – middle
+saves most, then working, then wealthy – is untouched for the third time.
+
+**Frozen careers, protocol first** (`tools/frozen-key-diff.ts`; control = this change's own
+before-state on the clean tree, three arms with explicit flags **one command at a time**, each header
+read back). Exactly one career moves, which is the lever's shape read back:
+
+| career | keys moved | which | `rngMain` |
+|---|---|---|---|
+| 5/0 · 25k middle, middle coach, grinder | **0 – byte-identical** | – | `1dbff28caca2` unmoved |
+| 8/0 · 120k wealthy, elite coach, grinder | **6 of 78** | careerTotals, events, financeWeeks, fundsCents (`db57151e9e09` → `2cb8dde3c124`), lastSeasonSummary, seasonHistory | `aebc8101d6df` unmoved |
+| 0/1 · 8k working, self-coached, player | **0 – byte-identical** | – | `d84bcbf0c481` unmoved |
+
+Money keys only; no result, rank, injury or knock key moved. **25 constants re-stamped of 75** (24
+unique), every one an `eliteGrinder` cell – all 25 `middleGrinder` and all 25 `selfTravelling` values
+reproduce untouched, and the two zeros were **predicted first and then measured**, not assumed.
+
+**NO SCHEMA MOVE** (74 stands), **no player-facing string** (the screens quote the engine; the whole
+component gate – 174 files, 1,873 tests – is green with zero template edits), **ZERO RNG**: the band
+is read by `pickInt`, one `rng()` call whatever its bounds, and the uniform corridor roll still lands
+on exactly 1.0. A constant moved through the draw path P1 had already built.
+
+**Re-aimed pins, each carrying a ⚠ note naming his ruling:** `tests/economy-calibration-ordering.test.ts`
+(the inversion spent, the burn line restored); `tests/economyCalibration.ts` (`BANDS.wealthy` + the
+resolution block); `tests/economy-calibration.test.ts` (the wealthy cell's name and its history);
+`tests/coachTiers.test.ts` (his per-hour table – the three rungs below the cut still reproduce it to
+the dollar, and elite now reproduces its WEALTHY column, asserted against `wealthCorridor` rather than
+against a literal); `tests/split-the-bill.test.ts` (the two elite rates are the band's real endpoints
+again); `tests/coachTravelEdgeFixtures.ts` (25 constants + the dated protocol note).
+
+⚠ **ONE TEST WENT RED THAT IS NOT A PIN, AND IT WENT RED BY DOING ITS JOB.**
+`tests/round23-kid-share.test.ts`'s A/B comparability guard – «prove the arms are comparable before
+reading the difference» – refused a two-year horizon on `PRESETS[8]`, the wealthy·ELITE career: at
+25% more coach, one entry decision fell differently between the arms (**2,179 results against
+2,180**). **The control was run before anything was concluded** – the elite row reverted in place,
+the arm verified to lack the new value, file green; restored, file red – so it is this change and not
+the machine. The remedy is the one that test's own block prescribes («THE FIX IS THE HORIZON AND NOT
+THE ASSERTION»): the horizon moves `WEEKS_PER_YEAR * 2` → `WEEKS_PER_YEAR + 26`, chosen from a
+measured scan (104 diverges; 100·96·92·88·84·80·78·76·72·68·64·60 are all identical) so it sits in the
+middle of the green run rather than four weeks from a known break. She is still paid real cheques on
+it ($2,158), so no coverage is lost and no assertion was weakened.
+
+**Evidence**: `docs/specs/one-market-2026-09.md` §3's dated resolution block (prediction written
+before the first measurement), `tests/economyCalibration.ts`'s `BANDS` block, and the
+`docs/decisions.md` entry «ROUND 41 P1 (c)» of 12.09.
+
 - [x] **28. «давай на плитках тех айтемов в магазине, которые нуждаются в постройке длительной
   (академия, яхты, самолеты) добавим в уголке картинки наш круглый гаудж (переиспользуем
   компонент), чтобы он показывал в процентах прогресс стройки от 0 до 100 - это будет
