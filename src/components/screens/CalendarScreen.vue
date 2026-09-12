@@ -1011,6 +1011,30 @@ const showGo = computed(() => !game.snapshot?.pending)
   max-width: 280px;
 }
 
+/* ⭐ ROUND 41 #10 – WIDER PAST 768, WHICH THE DESIGN'S OWN 280PX NEVER HAD TO ANSWER FOR. The owner:
+   «на экране с анимацией прохода недели давай записочку под таблицей недели сделаем по-шире на
+   дестоп и планшетах?» (quoted here rather than in the template - tests/template-copy-rules.test.ts
+   bans Cyrillic inside one). A flat cap that reads as a scrap beside a 343px phone card reads as a
+   sliver under the full-width `.cal-time` grid once the screen has room to spare - the same
+   contrast WeekRecapCard.vue's own note-beside-photo item measured in words: 280px "reads as half a
+   scrap at 768 and a quarter at 1280".
+   ⚠ `min(px, %)` RATHER THAN A BARE PERCENTAGE, on purpose: the scrap carries one short sentence
+   (the corpus caps at 56 characters, tests/calendar-grid.test.ts), and a percentage alone would keep
+   stretching a one-line sentence into a banner on a very wide window. The percentage does the work
+   at 768-900, where the column itself is still modest; the px figure takes over past that and holds
+   the note to a size that still reads as a note. */
+@media (min-width: 768px) {
+  .cal-note {
+    max-width: min(420px, 62%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-note {
+    max-width: min(480px, 54%);
+  }
+}
+
 .cal-note :deep(.tb-paper) {
   padding: 14px 26px 18px 18px;
 }
