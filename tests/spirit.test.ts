@@ -1164,4 +1164,45 @@ describe('the fence this step is judged by', () => {
     // verbatim from the pin this replaces.
     expect(ECONOMY.spirit.attachmentLift).toBe(5)
   })
+
+  it('⚠⚠ the break-up shock is read ONCE, OUTSIDE the scale, and never inside weekPerturbation', () => {
+    // ⚠⚠ THE ARCHITECT'S RULING C AS A STRUCTURAL PIN (docs/plans/life-wave-4-rulings-2026-09.md §C),
+    // and it is deliberately the TWIN of the `attachmentLift` guard above rather than a new shape –
+    // the two constants fail in the same direction and the same three ways. who-she-is §4's −22 / −34
+    // are ALREADY intensity-scaled: one base of about −27.5 seen through `perturbationScale`'s ×0.8
+    // and ×1.25. A row inside `weekPerturbation` would multiply them a SECOND time, to −17.6 / −42.5 –
+    // two numbers that look every bit as plausible and are not the design's.
+    //
+    // ⚠ THE BEHAVIOURAL HALF IS tests/wave4-spirit-shock.test.ts §C, which reads the literal 48 / 36
+    // from a flat 70 against the 52.4 / 27.5 the double-scale would produce. This half is here because
+    // this is where the constant's ONE legal reader lives, and because a structural pin refuses the
+    // defect at the line that would introduce it rather than at the number that would come out.
+    const owners = srcFiles()
+      // ⚠ A READ, NOT A MENTION – `codeOnly` for `attachmentLift`'s own stated reason: the constant is
+      // discussed in prose in `economy.ts`, in `accrueSpirit`'s note and in `world/lifeBeat.ts`, and a
+      // pin that tripped on an explanation would be repaired by deleting the explanation.
+      .filter(([, text]) => codeOnly(text).includes('.shock'))
+      .map(([path]) => path)
+    expect(owners, 'exactly one file in src/ reads it').toEqual(['engine/spirit.ts'])
+    const accrue = codeOnly(engineModuleFunction('spirit', 'accrueSpirit'))
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+    const reads = accrue.filter((l) => l.includes('.shock['))
+    expect(reads, 'one read, and it is inside accrueSpirit').toHaveLength(1)
+    // ⚠⚠ AND IT IS NOT ON THE SCALED LINE. This is the whole of ruling C in one assertion: the term is
+    // built on its own line, so nothing can multiply it on the way past.
+    expect(reads[0], 'the shock term is never multiplied by the perturbation scale')
+      .not.toContain('perturbationScale')
+    // ...and the sum that lands adds it as its own summand, beside the scaled perturbation.
+    const moved = accrue.filter((l) => l.includes('weekPerturbation(world'))
+    expect(moved, 'the week\'s movement is still one expression').toHaveLength(1)
+    expect(moved[0], 'the perturbation is still the thing that is scaled').toContain('perturbationScale')
+    // ⚠⚠ AND NOT ONE POINT OF THE SHOCK REACHES THE WEEK'S OWN EVENTS – `attachmentLift`'s own last
+    // line, restated for the constant that would be scaled twice instead of decaying.
+    expect(codeOnly(engineModuleFunction('spirit', 'weekPerturbation'))).not.toContain('.shock')
+    // ...and both rows ARE declared, at the values §4 named – asserted as literals, because a
+    // comparison built out of the constant cannot see the constant move.
+    expect(ECONOMY.spirit.shock.breakup).toEqual({ steady: -22, intense: -34 })
+  })
 })

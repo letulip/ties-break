@@ -3380,6 +3380,44 @@ export const ECONOMY = {
      *  constant had NO reader; T4 re-aimed that guard rather than deleting it, and it now asserts the
      *  read happens in `accrueSpirit`'s return target and in no other place in `src/`. */
     attachmentLift: 5,
+    /** ⭐⭐⭐ v75 (the private life, wave 4 – T3) – WHAT AN ENDING COSTS HER, in points of spirit, by
+     *  the INTENSITY axis (who-she-is §4's spirit-physics table, verbatim: «break-up shock −22 / −34»).
+     *  Keyed by `spiritShock['kind']` so the kinds the build plan's steps 7–8 add land as siblings in
+     *  this record rather than as a second table; `'breakup'` is wave 4's and the only one today.
+     *
+     *  ⚠⚠ THESE TWO NUMBERS ARE **ALREADY INTENSITY-SCALED**, SO THEY GO IN **AFTER** THE SCALE AND
+     *  NEVER THROUGH `perturb` – the architect's ruling C (docs/plans/life-wave-4-rulings-2026-09.md
+     *  §C), and the reconstruction is written out here because it is the one thing a later reader
+     *  cannot recover from the values themselves. They are ONE base of about **−27.5** seen through
+     *  `perturbationScale` above: −27.5 × 0.8 = −22.0 and −27.5 × 1.25 = −34.4. A row added to
+     *  `perturb` would therefore be multiplied a SECOND time, to −17.6 / −42.5 – two numbers that look
+     *  every bit as plausible and are not the design's. `accrueSpirit` adds this on its own line after
+     *  the scaled perturbation; `weekPerturbation` has no row for it and must never grow one, which is
+     *  pinned in tests/spirit.test.ts in `attachmentLift`'s own guard shape.
+     *
+     *  ⚠ −34 AND NEVER THE DERIVED −34.375: §4's own two numbers win on drift (the single-source
+     *  rule), and the −27.5 above is a reconstruction of where they came from, not their definition.
+     *
+     *  ⚠ AND IT IS A ONE-WEEK EVENT WITH NO RECOVERY CURVE ANYWHERE BEHIND IT. She takes this on the
+     *  week the attachment ends – the same week `activeEpisode` goes null and the effective baseline
+     *  drops back to the flat one by itself – and then comes back at `returnPerWeek` and at nothing
+     *  else. §4's own prediction for a lifted 75 is the whole of the shape: ~1–2 weeks under the knee
+     *  for a steady girl, ~6–7 for an intense one. A second return rate here would be a second
+     *  mechanic wearing a constant. */
+    shock: { breakup: { steady: -22, intense: -34 } },
+    /** ⭐⭐ HOW CLOSE TO HER OWN BASELINE COUNTS AS BACK – the gap `accrueSpirit`'s tail clears
+     *  `world.spiritShock` at (the build plan §5 step 4: «clears when spirit ≥ baseline − 2», i.e.
+     *  **68**).
+     *
+     *  ⚠⚠ IT IS SUBTRACTED FROM THE PLAIN `baseline` AND NEVER FROM THE EFFECTIVE ONE – ruling D. The
+     *  mark is a question about HER recovery, not about who is in her life now: read against
+     *  `baseline + attachmentLift` the bar would be 73, and a shock would then be held OPEN LONGER
+     *  precisely because a new romance had arrived, which reads backwards on screen.
+     *
+     *  ⚠ NAMED RATHER THAN INLINED because this module's own law is that `engine/spirit.ts` invents no
+     *  number (its header: «Every constant lives in `ECONOMY.spirit` / `ECONOMY.bond`»). The ruling
+     *  writes the bar as `baseline - 2`; this is that 2, with its source on it. */
+    shockClearWithin: 2,
     /** ⭐⭐ THE MOOD LADDER'S FOUR CUT POINTS – RULED 09.09, and every one of them is anchored to a
      *  MECHANICAL FACT rather than to taste. The five words they divide are the owner's
      *  (`docs/specs/voice-bibles-2026-09.md` §C, approved); the numbers are his ruling of the same
@@ -3395,8 +3433,18 @@ export const ECONOMY = {
      *  measured against who-she-is §4a's own distribution these cuts give Steady 90.98% · Bright
      *  6.07% · Dimmed 2.07% · Glowing 0.88% · Heavy 0.00%. Glowing and Heavy are rare-to-absent
      *  until wave 4's break-up shock (−22 steady / −34 intense) gives them their range – a lifted
-     *  girl at 75 taking −34 lands at 41, which is Heavy for weeks. The bar moved to wave 4 with
-     *  bar 1; see the runbook's §6 list. ⚠ These are not tuning dials: a test that would be easier
+     *  girl taking −34 lands deep in Heavy and stays there for weeks. The bar moved to wave 4 with
+     *  bar 1; see the runbook's §6 list.
+     *
+     *  ⭐ THE SHOCK SHIPPED IN v75's T3 AND THE ARITHMETIC ABOVE WAS ONE WEEK'S RETURN OUT – the
+     *  sentence read «a lifted girl at 75 taking −34 lands at 41», and the MEASURED figure is **38**.
+     *  75 − 34 = 41 forgets that the ending frees the slot BEFORE `accrueSpirit` runs, so the return
+     *  toward the flat 70 happens first (75 → 72 for an intense girl) and the shock lands on that.
+     *  The claim the sentence was making is unchanged and is now a measurement rather than a
+     *  prediction: an intense girl is Heavy for EIGHT weeks (38 41 44 47 50 53 56 59, then 62) and a
+     *  steady one for three (48 53 58, then 63). ⚠ The same «lands at 41» is still written in
+     *  `docs/plans/wave-1-the-two-numbers-runbook-2026-09.md` §6 – left alone deliberately, because
+     *  that file is wave 1's record of what it predicted, and it is the architect's to re-date. ⚠ These are not tuning dials: a test that would be easier
      *  with other numbers is a test to rewrite, not a ladder to move. */
     mood: {
       /** ⭐ THE KNEE ITSELF – below this `spiritMatchFactor` stops being 1.0 and the match starts

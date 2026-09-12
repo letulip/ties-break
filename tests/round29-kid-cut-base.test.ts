@@ -119,11 +119,48 @@ function signKit(world: WorldState, rung: 'tour' | 'premium' | 'icon'): KitOffer
  *  would assert the arithmetic of a single cheque and would have been green all through the defect.
  *
  *  Walked to the ramp's CAP (26) with a `tour` kit deal signed, which is his save's own shape.
- *  Walked once for the file: every claim below is about the same week. */
+ *  Walked once for the file: every claim below is about the same week.
+ *
+ *  ⚠⚠ RE-AIMED BY WAVE 4's T3 (12.09) – A SEED BUDGET, AND IT IS THE THIRD TIME THIS HARNESS HAS
+ *  BEEN MOVED BY AN ENGINE CHANGE IT IS NOT ABOUT. Round 38's C4 kept the kit deal LIVE instead of
+ *  signing it once; wave 3's T16 replayed the coach's own knock call; and now the career on
+ *  `r29-kid-cut` **ends**. MEASURED, NOT INFERRED: on the pre-T3 tree (`67480780`, a worktree) that
+ *  career is still playing at week 3120 and its first mixed week is **626**; on this tree it takes a
+ *  CAREER-ENDING INJURY at **week 386** («27 weeks already lost, and then this one») and never sees
+ *  another tournament. WHY T3 CAN DO THAT: the break-up shock drops spirit to 38–48 for weeks at a
+ *  time, `spiritMatchFactor` has bitten below the knee since wave 1, and a career whose results move
+ *  enters different draws, carries a different load and meets different injuries. Nothing about her
+ *  cut, its base or the label moved – but the ONE WEEK this file is about stopped existing.
+ *
+ *  ⚠ SO THE FIXTURE NOW WALKS A SMALL SEED BUDGET AND THIS IS A STRENGTHENING, exactly as C4's was:
+ *  the subject is the ARITHMETIC of a mixed week, never one seed's luck, and a file that goes red
+ *  because a butterfly retired one girl is measuring the wrong thing. `r29-kid-cut` stays FIRST, so
+ *  a tree where she survives selects the week it always did – verified: on the pre-T3 worktree this
+ *  ladder still picks `r29-kid-cut` at **week 626**, which is the same fixture the old form picked,
+ *  and all ten cases are green there. The `throw` is still the non-vacuity guard and now names the
+ *  budget it exhausted. ⚠ AND A WALK ABANDONS ITS CAREER THE MOMENT IT ENDS – a retired player
+ *  cannot reach another tournament week, so ticking her to season 32 is dead time and hides the
+ *  reason in a timeout rather than showing it. */
+const CAP_WEEK_SEEDS = ['r29-kid-cut', 'r29-kid-cut-b', 'r29-kid-cut-c', 'r29-kid-cut-d'] as const
 let cached: { world: WorldState; snap: Snapshot; week: number } | null = null
 function capWeekWithBonus() {
   if (cached) return cached
-  const world = createWorld('r29-kid-cut', { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 5 })
+  for (const seed of CAP_WEEK_SEEDS) {
+    const found = walkForMixedWeek(seed)
+    if (found) {
+      cached = found
+      return cached
+    }
+  }
+  throw new Error(
+    `the walk never reached a MIXED week – a paid prize row plus a kit result bonus, kit deal live – ` +
+      `on any of ${CAP_WEEK_SEEDS.length} seeds`,
+  )
+}
+
+/** One career's walk: the mixed week it reached, or null if it ended or ran out of seasons first. */
+function walkForMixedWeek(seed: string): { world: WorldState; snap: Snapshot; week: number } | null {
+  const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 5 })
   const rng = rngFromSeed(world.seed)
   // ⚠⚠ THE DEAL IS KEPT LIVE, NOT SIGNED ONCE – round 38 C4, and it is the second half of the same
   // luck this function was running on. A `tour` kit runs `terms.seasons` (2) and then EXPIRES, so
@@ -214,11 +251,13 @@ function capWeekWithBonus() {
     // selection demands the mixed week the whole file is about – and the `throw` below is the
     // non-vacuity guard the file already believed it had. Nothing downstream was touched.
     if (signed && fw?.kidShare?.baseCents && (fw.byCategory.prize ?? 0) > 0 && fw.kidShare.prize && fw.kidShare.sponsor) {
-      cached = { world, snap: toSnapshot(world), week: world.week }
-      return cached
+      return { world, snap: toSnapshot(world), week: world.week }
     }
+    // ⚠ THE CAREER IS OVER AND THERE ARE NO MORE TOURNAMENTS – see the budget note above. Placed
+    // AFTER the predicate so a mixed week that lands on the very week she retires still counts.
+    if (world.ending !== null) return null
   }
-  throw new Error('the walk never reached a MIXED week – a paid prize row plus a kit result bonus, kit deal live')
+  return null
 }
 
 describe('round 29 #10 – the fixture is the week he was looking at', () => {

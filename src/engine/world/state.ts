@@ -1007,19 +1007,33 @@ export interface WorldState {
    *  widens in place and every exhaustive read goes red at the site that has to decide – the same
    *  argument `LifeBeatKind` and `LIFE_ROW_KINDS` each make for their own rosters.
    *
-   *  ⚠ NOTHING READS IT IN T1, AND THAT IS CORRECT RATHER THAN UNFINISHED – v74's `loveEpisodes` one
-   *  wave down, verbatim: the seat lands before the writers so the schema move stays inert and
-   *  provable. T2 fires the ending, T3 writes and clears this field, and its only readers after that
-   *  are `DiaryFacts.freshBreakup` and wave 2's Mood collision rule until wave 5's psychologist –
-   *  who is the reason it is persisted at all.
+   *  ⭐⭐ T3 HAS LANDED (12.09) AND THIS NOTE IS RE-AIMED RATHER THAN LEFT TO AGE. It read «NOTHING
+   *  READS IT IN T1, AND THAT IS CORRECT RATHER THAN UNFINISHED – the seat lands before the writers so
+   *  the schema move stays inert and provable», which is what v74's `loveEpisodes` said one wave down
+   *  and it held for exactly two commits. The two writers are now real and they are the only two:
+   *  `rollEnds` SETS it on the week an attachment ends (world/lifeBeat.ts §8) and `accrueSpirit`'s
+   *  tail CLEARS it (engine/spirit.ts). The applier is the same `accrueSpirit`, which keeps the points
+   *  in the one function that has ever written `world.spirit`.
    *
-   *  ⚠ AND IT IS DELIBERATELY NOT ON THE WIRE YET. `Snapshot` is assembled field by field
-   *  (invariant 1: the UI never sees a `WorldState`), so a persisted field does not reach a screen by
-   *  existing – it reaches one when a reader is written for it, and T3 carries the wire field with
-   *  its reader. A `spiritShock` on the snapshot today would be a wire contract nothing could
-   *  exercise. `WorldEvent.lifeKind` is the opposite case and needs no such decision: the feed ships
-   *  the event ROWS THEMSELVES (`snapshotEvents`, world/snapshot.ts), so widening the row widens the
-   *  wire by construction. */
+   *  ⚠⚠ AND THE READER LIST IN THE OLD NOTE WAS WRONG IN ONE HALF, WHICH IS WRITTEN DOWN HERE RATHER
+   *  THAN QUIETLY DROPPED. It named «`DiaryFacts.freshBreakup` and wave 2's Mood collision rule». The
+   *  first is right and is T6's. **The second does not exist**: `idleRead` (shared/avatarEmotion.ts)
+   *  implements injury → the larger deviation of body vs mood → ties to the body, and its own ⚠ note
+   *  says in as many words that «the existing result logic» is the layer that is UNCHANGED and stays
+   *  on TOP – R8-6a, a face the owner ruled on twice. The build plan's «a live `spiritShock` outranks
+   *  result joy» (§4's collision contract) was therefore never built, and T3 did not invent it: a
+   *  rule that demotes a fresh win is a wording-and-face decision that belongs to the owner. So the
+   *  Mood surface shows the shock the way the layer was always going to show it – through the NUMBER.
+   *  −22/−34 puts her two or three rungs down the ladder and `spiritBandOf` reads it, which needs no
+   *  reader of this field at all.
+   *
+   *  ⚠ AND IT IS STILL DELIBERATELY NOT ON THE WIRE – the old note expected T3 to carry a snapshot
+   *  field «with its reader», and T3's reader turned out not to need one. `Snapshot` is assembled
+   *  field by field (invariant 1: the UI never sees a `WorldState`), and the one reader this layer is
+   *  getting – `DiaryFacts.freshBreakup`, T6's – travels on `diary.facts`, which is already on the
+   *  wire. A `spiritShock` beside it would be a second road to one fact. `WorldEvent.lifeKind` is the
+   *  opposite case and needs no such decision: the feed ships the event ROWS THEMSELVES
+   *  (`snapshotEvents`, world/snapshot.ts), so widening the row widens the wire by construction. */
   spiritShock: { week: number; kind: 'breakup' } | null
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).

@@ -2151,11 +2151,14 @@ export function rollSmallTalk(world: WorldState): void {
 // time he hears of it – and never from lagging the ending itself. Adding a symmetrical
 // `endKnownWeek` would produce a fourth date on the row and a scene nobody asked for.
 //
-// ⚠ IT RAISES NOTHING AND WRITES NO ROW – not a beat, not a feed line, not a spirit point, not
-// `spiritShock`. T3 is the shock, T4 is the `'ended'` beat and its told-late branch, T5 is the feed
-// row and the `lifeKind` stamp. The commit order IS the design: ship the hazard alone and let the
-// derived readings fall out of it, so that anything which moves in the frozen careers moved because
-// somebody's romance ended and for no other reason.
+// ⚠⚠ IT RAISES NOTHING AND WRITES NO ROW – not a beat, not a feed line, not a spirit point. ⭐ RE-AIMED
+// BY T3 (12.09) AND NOT RELAXED: this line ended «not `spiritShock`. T3 is the shock…», and T3 is
+// here. The MARK is now written by `rollEnds` – one `{week, kind}` fact on the world – while the
+// POINTS it is worth stay `accrueSpirit`'s, four calls later in the same tick, which keeps that
+// function the only writer of `world.spirit` in the engine. T4 is still the `'ended'` beat and its
+// told-late branch, T5 still the feed row and the `lifeKind` stamp. The commit order IS the design:
+// ship each half alone and let the derived readings fall out of it, so that anything which moves in
+// the frozen careers moved for exactly one nameable reason.
 
 /** ⭐⭐ THE GATE – ONE CLAUSE, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
  *
@@ -2216,9 +2219,25 @@ export function endsHazardFor(temperament: Temperament): number {
  *  §7's gate this comparison is not standing in for a short-circuit – but a temperament priced at
  *  «she never leaves» is the kind of row a later spec adds, and it would have to mean never.
  *
- *  ⚠ IT TAKES NO `Rng` AND WRITES NOTHING BUT THE DATE. The shock is T3's, the beat is T4's, the feed
- *  row is T5's. A `world.spirit`, `world.spiritShock` or `lifeLog` line appearing in this function is
- *  the defect this note exists to make visible. */
+ *  ⚠⚠ IT TAKES NO `Rng`, AND SINCE T3 IT WRITES THE DATE **AND THE MARK** – RE-AIMED, NOT RELAXED.
+ *  This note read «writes NOTHING BUT THE DATE. The shock is T3's, the beat is T4's, the feed row is
+ *  T5's», and T3 is the step it was written to be re-read on. WHAT MOVED: the `world.spiritShock`
+ *  line below. WHAT DID NOT: `world.spirit` itself, `lifeLog` and `events` are still not this
+ *  function's to touch – the POINTS are `accrueSpirit`'s (which runs later in the same tick and stays
+ *  the one writer of `world.spirit`), the `'ended'` beat is T4's and the feed row is T5's, and any of
+ *  those three appearing here is still the defect this note exists to make visible.
+ *
+ *  ⚠⚠ THE MARK IS SET HERE AND THE ARITHMETIC IS DONE THERE, WHICH IS THE WHOLE SPLIT (ruling C, and
+ *  the T3 brief's «who sets it, who applies it»). This function knows the WEEK an attachment ended;
+ *  `accrueSpirit` owns the weekly sum and the intensity scale. So the ending stamps a fact –
+ *  `{week, kind}` – and the spirit pass four calls later reads that fact, applies −22/−34 on the
+ *  week it matches, and clears the stamp again once she is back within `shockClearWithin` of her own
+ *  baseline. No second writer of `world.spirit`, and no spirit arithmetic in the private life's
+ *  hazards.
+ *
+ *  ⚠ IT IS SET ON THE SAME LINE-RUN AS THE DATE AND NEVER CONDITIONALLY, so «an attachment ended this
+ *  week» and «a shock is live» cannot disagree. `endEpisode` is a no-op when there is nothing to end,
+ *  but it cannot be reached in that state from here – the gate above has already found the row. */
 export function rollEnds(world: WorldState): void {
   if (!endsEligible(world)) return
   const hazard = endsHazardFor(temperamentOf(world))
@@ -2227,4 +2246,8 @@ export function rollEnds(world: WorldState): void {
   // rather than four unrelated dice, and it is the property the nesting pin holds them to.
   if (rngFromSeed(`${world.seed}:life:ends:${world.week}`)() >= hazard) return
   endEpisode(world, world.week)
+  // ⭐⭐⭐ v75 T3 – AND THE MARK IT LEAVES ON HER. A fact, never a number: what it costs is
+  // `ECONOMY.spirit.shock.breakup` and `accrueSpirit` is the one place that reads it (see the note
+  // above). The kind is the union's only member today; steps 7–8 add the others.
+  world.spiritShock = { week: world.week, kind: 'breakup' }
 }

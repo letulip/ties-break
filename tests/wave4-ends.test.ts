@@ -6,11 +6,19 @@
 // (rulings E and F), constants from `docs/specs/who-she-is-2026-09.md` §4's `end` column.
 //
 // ⚠⚠ WHAT THIS STEP IS, SAID ONCE, BECAUSE HALF THIS FILE IS ABOUT WHAT IT IS **NOT**. T2 writes
-// `endedWeek` and nothing else. It does not set `world.spiritShock` (T3), does not raise the `'ended'`
-// beat or its told-late branch (T4), writes no feed row and stamps no `lifeKind` (T5). The commit
-// order IS the design: ship the hazard alone, let the derived readings fall out of it, and then
-// anything that moves in a frozen career moved because somebody's romance ended and for no other
-// reason. §D is that claim as a test rather than as a promise.
+// `endedWeek` and nothing else. It does not raise the `'ended'` beat or its told-late branch (T4),
+// writes no feed row and stamps no `lifeKind` (T5). The commit order IS the design: ship the hazard
+// alone, let the derived readings fall out of it, and then anything that moves in a frozen career
+// moved because somebody's romance ended and for no other reason. §D is that claim as a test rather
+// than as a promise.
+//
+// ⚠⚠ ONE CLAUSE OF THAT PARAGRAPH WAS RE-AIMED BY T3 (12.09) AND THE OLD WORDING IS KEPT HERE so the
+// re-aim reads as one: it said «It does not set `world.spiritShock` (T3)», and T3 is the step it was
+// written to be re-read on. `rollEnds` now sets the MARK – one `{week, kind}` fact – alongside the
+// date. §D's own case moved with it, from `toBeNull()` to the exact object, which is a STRONGER
+// assertion than the one it replaces and not a relaxed one; every other negative in that case
+// (`spirit`, `bond`, `lifeLog`, `events`, `lifeKind`) is untouched, because the POINTS the mark is
+// worth are `accrueSpirit`'s and the beat and the row are still T4's and T5's.
 //
 // ⚠ IT ASSERTS NO PLAYER-FACING SENTENCE, because this step raises none (CLAUDE.md invariant 4): no
 // beat, no feed row, no string. The strings are T6's, after the architect's read.
@@ -504,12 +512,25 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
     expect(() => endEpisode(probe, 420)).not.toThrow()
   })
 
-  it('⚠⚠ T2 WRITES THE DATE AND **NOTHING ELSE** – no shock, no beat, no feed row, no spirit, no bond', () => {
+  it('⚠⚠ THE HAZARD WRITES THE DATE AND THE MARK AND **NOTHING ELSE** – no beat, no feed row, no spirit, no bond', () => {
     // ⚠⚠ THE CLAIM THE WHOLE COMMIT ORDER RESTS ON, and every arm of it is a NEGATIVE – so each one
-    // names a target that provably exists on this tree before asserting it did not move. `spiritShock`
-    // is T1's field (v75, inert), `lifeLog`/`events` are wave 2 and 3 machinery with live writers one
-    // section over, `spirit` and `bond` are written every week by `accrueSpirit`. None of them is this
-    // function's to touch, and a value appearing in any of them is the defect this case exists for.
+    // names a target that provably exists on this tree before asserting it did not move.
+    // `lifeLog`/`events` are wave 2 and 3 machinery with live writers one section over, `spirit` and
+    // `bond` are written every week by `accrueSpirit`. None of them is this function's to touch, and a
+    // value appearing in any of them is the defect this case exists for.
+    //
+    // ⚠⚠ RE-AIMED 12.09 BY T3, AND NOT WEAKENED. WHAT MOVED: `world.spiritShock`. It was a NEGATIVE
+    // here («the shock is T3's – not one point of it lands here», `toBeNull()`) and T3 is that step;
+    // the assertion is now the exact `{week, kind}` object the hazard must write, which refuses three
+    // failures the null could not even see – a mark written on the WRONG week, a mark carrying a kind
+    // nobody ruled, and a mark not written at all. WHY IT BELONGS IN `rollEnds` RATHER THAN IN
+    // `accrueSpirit`: this is the function that knows WHICH WEEK an attachment ended, and the split
+    // ruled by the T3 brief is «`rollEnds` sets it, `accrueSpirit` applies it» so that the one writer
+    // of `world.spirit` stays one writer.
+    //
+    // ⚠ AND THE OTHER FIVE NEGATIVES ARE UNTOUCHED, which is what makes this a re-aim. The POINTS the
+    // mark is worth land four calls later; the `'ended'` beat is still T4's and the feed row still
+    // T5's; and bond is parent-decision-only in every wave.
     const world = careerAt('ends-writes-nothing', 420, 'fiery', episode(300, 302))
     world.spirit = 75
     world.bond = 64
@@ -518,12 +539,23 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
     const eventsBefore = JSON.parse(JSON.stringify(world.events))
     const before = { spirit: world.spirit, bond: world.bond, lifeLog: [...lifeLogOf(world)] }
 
-    rollEnds(world) // the roll's own path, gate and all – it may fire or miss, and neither matters here
-    endEpisode(world, 420) // ...and the write, unconditionally, so the case cannot pass on a miss
+    // ⚠⚠ THE WEEK IS FOUND BY WALKING THE HAZARD, NEVER PLACED BY HAND – the case used to call
+    // `endEpisode` unconditionally so that it could not pass on a miss, and that was right while the
+    // claim was a row of nulls. Now that `rollEnds` writes a mark, the mark has to be the FUNCTION's
+    // and not the test's, so the roll is walked until its own dice fire and the assertions below read
+    // what the engine put there. The `not.toBeNull()` is what refuses a silent pass on a career that
+    // never ended.
+    let ended: number | null = null
+    for (let w = 420; w < 820 && ended === null; w++) {
+      world.week = w
+      rollEnds(world)
+      ended = world.loveEpisodes[0].endedWeek
+    }
+    expect(ended, 'her romance really ended inside the search window').not.toBeNull()
 
-    expect(world.loveEpisodes[0].endedWeek, 'the ending really happened').toBe(420)
-    expect(world.spiritShock, '⚠ the shock is T3\'s – not one point of it lands here').toBeNull()
-    expect(world.spirit, '⚠ and spirit itself is untouched: life moves spirit, but not in this commit').toBe(before.spirit)
+    expect(world.spiritShock, '⭐ the MARK is this function\'s – the ending week and the ruled kind')
+      .toEqual({ week: ended, kind: 'breakup' })
+    expect(world.spirit, '⚠ but the POINTS are accrueSpirit\'s – this function writes no spirit at all').toBe(before.spirit)
     expect(world.bond, '⚠ bond is parent-decision-only (§4a.2) and an ending is not a decision').toBe(before.bond)
     expect(lifeLogOf(world), '⚠ the `\'ended\'` beat is T4\'s – nothing is raised').toEqual(before.lifeLog)
     expect(world.events, '⚠ the feed row and its `lifeKind` stamp are T5\'s').toEqual(eventsBefore)
