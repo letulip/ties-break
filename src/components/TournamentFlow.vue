@@ -11,7 +11,7 @@ import { useKidEmotion } from '../composables/kidEmotion'
 // the scale IN the call: this number is a 0..100 percentage, not a 0..1 share, and the signature
 // will not let the two be confused.
 import { readingColor } from '../composables/readingColor'
-import { finaleUrl } from '../art/preload'
+import { finaleUrl, coachPortraitUrl } from '../art/preload'
 // THE REAL SILVERWARE, and the flight that carries it to the cabinet – see the ⚠ over
 // `herTrophy` and over `continueFinale`.
 import { trophyArtUrl, trophyMetalFor } from '../art/trophies'
@@ -395,12 +395,26 @@ const coachLine = computed(() => {
   const price = `${WINS_IN_WORDS[winsToTitle.value] ?? `${winsToTitle.value} wins`} for the title.`
   return fit ? `The court ${fit}. ${price}` : price
 })
+/** The roster row marked `current`, or null while she is self-coached – shared by the signature and
+ *  the portrait below rather than found twice. */
+const currentCoach = computed(() => game.snapshot?.coachMarket.find((c) => c.current) ?? null)
 /** His signature under it, in Caveat – the same one Home's coach note is signed with, so the note
  *  and the brief are the same man. Empty while she is self-coached: nobody signs their own read. */
-const coachSignature = computed(() => {
-  const current = game.snapshot?.coachMarket.find((c) => c.current)
-  return current ? formatShortName(current.name) : ''
-})
+const coachSignature = computed(() => (currentCoach.value ? formatShortName(currentCoach.value.name) : ''))
+// ⭐ ROUND 41 #7 – HIS FACE, ON THE PREDICTION TILE. The owner: «на экране перед матчем если тренер
+// есть давай может вот на этой нижней плитке со словами коуча ... поставим ее картинку тоже слева
+// как на главной на тайле стоит?» (quoted here rather than in the template –
+// tests/round13-nav.test.ts bans Cyrillic inside one).
+//
+// ⚠ THE RESOLUTION IS HOME'S OWN (`currentCoach.value.id` through `coachPortraitUrl` –
+// HomeScreen.vue's `coachPhoto`), and SO IS THE MASTER (162x264 webp, the same file this screen
+// already fetches nowhere else). ⚠⚠ AND THE GATE IS NOT. Home always draws a face – a family
+// background's default silhouette while she is self-coached, because that card is written in the
+// parent's own voice and a voice needs a face. This tile is the COACH'S read, and there is no
+// coach's read to sign or picture when she is self-coached – his own words are "если тренер есть",
+// not "always". So this is `coachPhoto || ''` gated on `currentCoach`, never `coachUrlFor`'s
+// fallback: the empty string is the correct answer on a self-coached career, not a missing asset.
+const coachPhoto = computed(() => (currentCoach.value ? coachPortraitUrl(currentCoach.value.id) : ''))
 /**
  * THE RING IS HER CONDITION, not the design's "Your chance to win".
  *
@@ -996,39 +1010,54 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
 
       <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
       <Card class="tf-brief">
-        <div class="tf-brief-said">
-          <p class="tf-brief-label">Coach prediction</p>
-          <p class="tf-brief-line">{{ coachLine }}</p>
-          <p v-if="coachSignature" class="tf-brief-sign">{{ coachSignature }}</p>
-          <!-- ⭐ ROUND-21 #2 – HE IS HERE, AND THE SCREEN SAYS SO. The owner reported for the THIRD
-               time that the coach still does not go to tournaments, and then named what to build:
-               presence in the flow and in the broadcast, if he travels. His words in full are in
-               tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE and
-               tests/round13-nav.test.ts bans Cyrillic inside one, comments included, which is
-               exactly the guard that caught the first draft of this note.
-               ONE LINE, on the card that is already his: the brief is the coach's own read, signed
-               by him, so "and he came" belongs under the signature and not in the four-cell facts
-               grid above (whose count the design handoff defends). The engine decides
-               (`PendingView.coachTravelled` off `coachTravelsWithHer`); this screen only draws it,
-               which is why the flow, the live commentary and the week's story cannot disagree about
-               one trip. -->
-          <p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – a second fare on this trip.</p>
+        <!-- ⭐ ROUND 41 #7 – HIS FACE, ON HIS OWN TILE. The owner: «на экране перед матчем если
+             тренер есть давай может вот на этой нижней плитке со словами коуча ... поставим ее
+             картинку тоже слева как на главной на тайле стоит?» (quoted here rather than in the
+             template - tests/round13-nav.test.ts bans Cyrillic inside one). Home's exact idiom
+             (`.coach-art`/`.coach-art img`, HomeScreen.vue): absolute, flush to the card's left
+             edge, height-driven with no vertical crop (28.07 ruling), a 90deg mask fading him into
+             the card rather than a hard edge. `v-if` on the coach existing, his own words - a
+             self-coached career keeps the card exactly as it read before this item. -->
+        <div v-if="coachPhoto" class="tf-brief-art">
+          <img :src="coachPhoto" alt="" />
         </div>
-        <div class="tf-brief-go">
-          <p class="tf-brief-ring-label">Her condition</p>
-          <!-- ⚠ THE LABEL NO LONGER ROUNDS – `toSnapshot` rounds `condition` once at the boundary
-               (the long goodbye §4a, owner 26.08). It used to be spelled here and in KidScreen and
-               nowhere else, while five other readers of the same field rounded nothing. -->
-          <ProgressRing
-            :value="condition / 100"
-            :color="conditionColor"
-            :label="`Her condition going into this tournament: ${condition} percent`"
-          />
-          <!-- ⚠ JUST THE WORD - the owner, 30.07: on begin, simply drop the arrow. The arrow was doing
-               nothing the button was not: a lime CTA at the foot of a brief is already the way
-               forward, and §E's own copy for this control is one word. The design's onboarding CTA
-               is "Begin" bare as well, so the two now match. -->
-          <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin</PrimaryPill>
+        <!-- The card's original two columns, now the padded body BESIDE the portrait rather than
+             the card's own direct children - see `.tf-brief-body` for why the padding moved here. -->
+        <div class="tf-brief-body">
+          <div class="tf-brief-said">
+            <p class="tf-brief-label">Coach prediction</p>
+            <p class="tf-brief-line">{{ coachLine }}</p>
+            <p v-if="coachSignature" class="tf-brief-sign">{{ coachSignature }}</p>
+            <!-- ⭐ ROUND-21 #2 – HE IS HERE, AND THE SCREEN SAYS SO. The owner reported for the THIRD
+                 time that the coach still does not go to tournaments, and then named what to build:
+                 presence in the flow and in the broadcast, if he travels. His words in full are in
+                 tests/component/round21-coach-travel.test.ts - THIS IS A TEMPLATE and
+                 tests/round13-nav.test.ts bans Cyrillic inside one, comments included, which is
+                 exactly the guard that caught the first draft of this note.
+                 ONE LINE, on the card that is already his: the brief is the coach's own read, signed
+                 by him, so "and he came" belongs under the signature and not in the four-cell facts
+                 grid above (whose count the design handoff defends). The engine decides
+                 (`PendingView.coachTravelled` off `coachTravelsWithHer`); this screen only draws it,
+                 which is why the flow, the live commentary and the week's story cannot disagree about
+                 one trip. -->
+            <p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – a second fare on this trip.</p>
+          </div>
+          <div class="tf-brief-go">
+            <p class="tf-brief-ring-label">Her condition</p>
+            <!-- ⚠ THE LABEL NO LONGER ROUNDS – `toSnapshot` rounds `condition` once at the boundary
+                 (the long goodbye §4a, owner 26.08). It used to be spelled here and in KidScreen and
+                 nowhere else, while five other readers of the same field rounded nothing. -->
+            <ProgressRing
+              :value="condition / 100"
+              :color="conditionColor"
+              :label="`Her condition going into this tournament: ${condition} percent`"
+            />
+            <!-- ⚠ JUST THE WORD - the owner, 30.07: on begin, simply drop the arrow. The arrow was doing
+                 nothing the button was not: a lime CTA at the foot of a brief is already the way
+                 forward, and §E's own copy for this control is one word. The design's onboarding CTA
+                 is "Begin" bare as well, so the two now match. -->
+            <PrimaryPill variant="cta" :disabled="game.busy" @click="beginFromSplash">Begin</PrimaryPill>
+          </div>
         </div>
       </Card>
 
@@ -1696,12 +1725,55 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
   color: var(--ink-soft);
 }
 
-/* The coach's read on the left, the reading and the button on the right (the design's 168px
-   column, as a min-content track so a long tier name cannot squeeze the CTA). */
+/* ⭐ ROUND 41 #7 – THE CARD ITSELF IS NOW THE PORTRAIT'S FRAME, exactly as `.coach-card` is on Home
+   (HomeScreen.vue). Padding moves to `.tf-brief-body` below so the picture can bleed to all four
+   of this card's own edges; `overflow: hidden` is what lets the card's own rounded corner clip a
+   square photograph, and `position: relative` is `.tf-brief-art`'s containing block. */
 .tf-brief {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+/* ⭐ ROUND 41 #7 – HIS FACE. Home's idiom, verbatim: absolute and flush left, HEIGHT-DRIVEN with no
+   vertical crop (the 28.07 ruling `.coach-art`'s own comment records), and a 90deg mask that fades
+   him into the card rather than drawing a hard edge down his side. */
+.tf-brief-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 96%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 34%, transparent 96%);
+}
+
+.tf-brief-art img {
+  display: block;
+  height: 100%;
+  width: auto;
+}
+
+/* The coach's read on the left, the reading and the button on the right (the design's 168px
+   column, as a min-content track so a long tier name cannot squeeze the CTA) – the card's own
+   former direct children, now this padded row beside the portrait instead.
+   ⚠ THE CLEARANCE IS AN ESTIMATE, NAMED AS ONE, NOT A CHROMIUM MEASUREMENT LIKE HOME'S 54PX. This
+   card's height is NOT fixed the way Home's grid pair is - `coachLine` runs one to three lines and
+   the travel line is conditional - so the portrait's own height-driven width genuinely varies with
+   it (roughly 57-94px across the realistic range, at the master's 162:264 ratio). 70px clears the
+   common case with the mask's own fade (34-96% of the strip's width) absorbing the rest; a card
+   that stacks every optional line at once may see text start a few px into the fade, which is a
+   number to retune from a real screenshot rather than a defect to chase from arithmetic alone. */
+.tf-brief-art + .tf-brief-body {
+  margin-left: 70px;
+}
+
+.tf-brief-body {
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 14px;
 }
 
 .tf-brief-said {
