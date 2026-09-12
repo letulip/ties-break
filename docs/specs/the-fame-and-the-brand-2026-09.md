@@ -1,7 +1,11 @@
 ---
 type: spec
 status: current
-area: simulation-and-balance
+# ⚠ `economy/brand` AND NOT `simulation-and-balance`, which round 41 P1's one-market spec already
+# holds as the canonical document of (`scripts/context-audit.mjs` allows exactly one per area). This
+# is the narrower subject anyway – what fame is made of and what a brand is worth – so the area is
+# the honest one rather than a slot found for it.
+area: economy/brand
 canonical: true
 last-reviewed: 2026-09-12
 ---
@@ -160,11 +164,105 @@ run** — at the purchase week w138, debut reconstructed at w130:
 | derived worth at w138 | $118,874 | **≈ $230,000** (≈ the $250,000 paid) |
 | the wake | w166, the first W500 title | **the debut itself** |
 
-**MEASURED:** see §3. *(filled in from the run — this section was committed before it.)*
+**MEASURED** (`tools/r41-brand-history.ts`, the reference save, debut reconstructed at w130 —
+commit `5c55e3fe` put the predictions above on the record before the tool had run once):
+
+| | predicted | measured | verdict |
+| --- | ---: | ---: | --- |
+| fame at w138 | ≈ 14 | **13.63** (from 9.84) | **hit**, −2.6% |
+| brand income at w138 | ≈ $570 / wk | **$559 / wk** (from $291) | **hit**, −1.9% |
+| derived worth at w138 | ≈ $230,000 | **$240,830** (from $118,874) | **hit**, +4.7%; 96.3% of the $250,000 paid |
+| the wake | moves to the debut | **w166 on BOTH arms — MISSED** | §3.2 |
+
+The three quantitative predictions land inside 5%. **The fourth was a shape claim and it was
+wrong**, which is recorded rather than tuned away: see §3.2 for why the wake could not have moved
+and what the debut moves instead.
 
 ## 3. The reference career, annotated — OLD / FIXED / FIXED+DEBUT
 
-*(measured; filled in after §2 was committed)*
+`OLD` is the pre-round-41 closed form whose half-life was re-read from today's fame across the whole
+holding period (the retro defect, fixed in part one). `FIXED` is the shipped incremental walk.
+`FIXED+DEBUT` is the same walk on a world carrying exactly the milestone row `finalizeTournament`
+would have written at w130 — the shipped engine functions read off an injected row, not a
+re-implementation of the floor.
+
+### 3.1 The story weeks
+
+| week | what happened | fame | income / wk | derived worth | the walked row |
+| --- | --- | ---: | ---: | ---: | ---: |
+| **w138** | the brand is bought, $250,000 | 9.8 → **13.6** | $291 → **$559** | $118,874 → **$240,830** | $249,330 → $249,935 |
+| **w166** | her first World Tour 500 title | 16.8 → **19.9** | $894 → **$1,261** | $401,553 → **$590,305** | $233,193 → **$246,784** |
+| **w220** | her first World Tour 1000 title | 45.9 → **48.1** | $7,277 → **$7,989** | $4,538,055 → **$5,087,219** | $595,911 → **$722,023** |
+| **w234** | the Slam final, lost | 56.9 → **58.9** | $11,180 → **$11,979** | $7,707,023 → **$8,401,360** | $1,331,680 → **$1,529,209** |
+| **w258** | fame reaches the cap | 100.0 → 100.0 | $34,500 → $34,500 | $32,670,733 (both) | $9,343,456 → $9,710,575 |
+| **w314** | the Slam title, at 19 | 100.0 → 100.0 | $34,500 → $34,500 | $32,670,733 (both) | $21,612,700 → $21,786,729 |
+
+The multiple at the same weeks: 7.84× → 8.28× · 8.64× → 9.00× · 11.99× → 12.25× · 13.26× → 13.49× ·
+18.21× (both) · 18.21× (both).
+
+**Read the first two rows together and the item is answered.** At the week he bought the brand its
+derived worth was 47.5% of what he had just paid for it; with the debut counted it is **96.3%**. His
+«около 240к около года и приносил 270 долларов всё это время» becomes about $250k paying **$559** —
+the money nearly doubles at the exact week he was looking at. By w220 the row is 21% bigger; by w314
+the gap has closed to 0.8%, which is the decay doing its job: a debut is worth a great deal to a
+climber and nothing at all to a champion.
+
+### 3.2 ⚠ THE PREDICTION THAT MISSED, AND WHY IT COULD NOT HAVE HELD
+
+The prediction said the wake would move from w166 to the debut. **It does not: the row first rises
+again at w166 on both arms**, and that is arithmetic rather than a tuning failure. Fame is
+piecewise-DECAYING (§1's closing property): between w138 and w166 the reference career has no dated
+event at all, so the floor can only fall, the derived worth can only fall, and the walked row can
+only follow it down. The first W500 title is the next dated event, so it is necessarily where the
+slope turns — on every arm, at every step size.
+
+What the debut moves is the **DEPTH of the trough**, which is the half of his complaint that is
+about money rather than about a date:
+
+| arm | trough | when | first week the row rises |
+| --- | ---: | --- | --- |
+| FIXED (no debut) | $231,718 | w165 | w166 |
+| FIXED + DEBUT w130 | **$243,207** | w165 | w166 |
+
+**−7.3% of what was paid becomes −2.7%.** «упал в цене на вторую неделю и остался там» survives as a
+1-in-40 sag instead of a 1-in-14 one, and the brand is earning nearly twice as much while it sits
+there.
+
+### 3.3 The step frontier — measured, and the retune is HIS
+
+Since the debut week is reconstructed and the step was written down before the run, both are worth a
+sensitivity reading rather than a claim.
+
+**The debut week barely matters.** At every one of the four weeks a Slam can be played in season 2
+(`TIERS.slam.anchorWeeks` = [2, 21, 26, 34], season 2 = w104..w155):
+
+| debut | fame @ w138 | income @ w138 | derived @ w138 |
+| --- | ---: | ---: | ---: |
+| w106 | 13.07 | $514 | $219,707 |
+| w125 | 13.51 | $549 | $236,047 |
+| **w130** | **13.63** | **$559** | **$240,830** |
+| w138 | 13.84 | $577 | $248,937 |
+
+The whole 32-week span moves the answer by 13%. The reconstruction is therefore not load-bearing.
+
+**The step does matter, and the frontier has a number:**
+
+| step | fame @ w138 | income @ w138 | derived @ w138 | vs the $250,000 paid |
+| --- | ---: | ---: | ---: | ---: |
+| +0 (before) | 9.84 | $291 | $118,874 | 47.5% |
+| +3 | 12.69 | $484 | $205,753 | 82.3% |
+| **+4 (shipped)** | **13.63** | **$559** | **$240,830** | **96.3%** |
+| +5 | 14.58 | $640 | $279,113 | 111.6% |
+| +6 | 15.53 | $726 | $320,705 | 128.3% |
+| +8 | 17.43 | $914 | $414,165 | 165.7% |
+
+⚠ **The line between «the row still sags a little» and «the row is worth what it cost the week it is
+bought» lies between +4 and +5**, and nothing was retuned to cross it. +4 was written down before the
+run and is what shipped; the criterion behind it is the ladder (a Slam main draw = one World Tour
+250 title = 16% of a Slam title), not this table. If he wants a fresh brand to hold its price
+through a debut season, **+5 is the one-line change and it is his**: it also raises a #155 wildcard's
+fame by 48% over the shipped step, which is a balance decision about how famous «сыграл Шлем»
+should make a teenager, not a pricing one.
 
 ## 4. The brand chain, written once
 
@@ -239,7 +337,75 @@ happen at this boundary:
 
 ## 5. The rough edges the audit surfaced
 
-*(filled in with the measurements — see §7)*
+Each one is either fixed with a number or named as HIS. None was quietly retuned.
+
+### (a) FOUR of `brandSignalsOf`'s seven terms ignore the week they are asked about
+
+`brandSignalsOf(world, week)` takes a week, and `proSeasons`, `topSeasons`, `finalsLost` and
+`winRate` fold over **all** of `seasonHistory` / `trophiesByTier` regardless of it. Only `fame`,
+`strength`, `contractFame` and `roomSize` are dated. (The brief named two of these; the audit found
+four, which is the reason the audit exists.)
+
+**Live, it is honest and it is not a defect.** Every runtime caller asks about NOW — the shop row,
+`revalueAssets`, the Money screen — and at `week = world.week` those four folds are exactly right.
+`assetWorthCents` is the one caller that asks about a different week (`week + 1`, to quote «one more
+week of holding»), and a season cannot end inside one week, so nothing it asks for can be wrong
+either. It is also deliberate that they never DECAY: «a career that happened cannot un-happen» is
+this file's stated rule for the four multiple rungs, and it still holds.
+
+**It IS a caveat on any RECONSTRUCTION**, including §3's — asked at w138 the multiple already counts
+seasons that had not ended and finals she had not yet lost, which flatters the early `multiple`
+column slightly. It cannot manufacture his plateau (fame, income, the floor and the crowd are all
+exactly dated, and the plateau is a fame story), and it moves both arms of §3 identically, so every
+DIFFERENCE in that table is clean. Stated here, not hidden; **not fixed**, because dating them would
+change live behaviour nowhere and would cost four folds on a hot path.
+
+### (b) The fame cap at 100 — the number, and the question is HIS
+
+Measured on the reference career (`tools/r41-brand-history.ts` §5):
+
+| week | capped fame | uncapped | the cap is clipping |
+| --- | ---: | ---: | --- |
+| w234 (Slam final) | 58.9 | 58.9 | – |
+| w249 | 80.0 | 80.0 | – |
+| **w258** | 100.0 | 120.7 | **1.21× the ceiling — it starts biting here** |
+| w314 (Slam title, at 19) | 100.0 | 192.1 | 1.92× |
+| w405 (today) | 100.0 | **194.9** | **1.95×** |
+
+So **148 weeks — nearly three full seasons — of her career are invisible to her own brand**, and the
+career being made invisible is the one he calls «эталонный рецепт знаменитости»: world #2, a Slam at
+19 (Federer's own age, his words), eleven World Tour 500 titles, seven 1000s. Her income has been
+pinned at **$34,500 a week = $1,794,000 a year** for all 148 of them, and her derived worth at
+$32,670,733.
+
+**The argument FOR leaving it exactly where it is** is not weak, which is why this is a question and
+not a recommendation. $1.794M a year is at the **top of the researched band** for a top own-brand
+($0.5M–$2M a year, `docs/research/player-brands-and-what-they-are-worth.md` §7d), so the ceiling is
+not an arbitrary clip — it lands an all-time great precisely where the real world says an all-time
+great lands, and «superstardom saturates» is a real property of fame. The income curve is `reach²`,
+so an uncapped 195 would pay **3.8×** — $6.8M a year, three times the top of the research band — and
+`brandMultipleX`'s base ramp is normalised on `ECONOMY.fame.cap` too, so lifting the cap lifts the
+ceiling of the multiple as well and the worth would move ~7×. That is the one end round 32 #3 was
+forbidden to touch.
+
+**⚠ HIS CALL, and the three shapes, none of them taken:**
+1. **Leave it.** Saturation is the design; the reference career is at the top of the real band.
+2. **Raise the cap and re-normalise the multiple's ramp on the old 100** so only the INCOME moves.
+   A career at uncapped 195 would then pay ~$6.8M/yr — outside the research band, and every number
+   he has already approved at the top of the shelf moves with it.
+3. **Keep the cap and pay the saturated years somewhere else** — an above-the-cap term that reaches
+   the MULTIPLE rather than the income, i.e. «a brand this durable changes hands higher» without
+   claiming she sells four times the shirts. This is the only one of the three that leaves every
+   approved number where it is, and it is the most work.
+
+### (c) The fresh brand's first three years converge slowly, and that is round 39 #5's floor
+
+At the cap, `worthRampHalfLife(100, 12.8)` = `104 / 7.81` = 13.3 weeks, floored to
+`minHalfLifeWeeks` = **52**. So the owned row needs ~5 half-lives to reach a derived worth that
+stopped moving 148 weeks ago: at w258 the row reads $9.34M against $32.67M derived, and by w405 it
+has reached $29.2M — **89% converged after 147 weeks**. That is the round 39 #5 floor working as
+ruled (13 → 52 closed a sell-and-rebuy loop), and the visible consequence is «она в топ-2, а бренд
+всё ещё догоняет». Named, measured, **not changed** — the floor is load-bearing for a different item.
 
 ## 6. Retroactivity, stated
 
@@ -257,7 +423,30 @@ their first Slam.**
 
 ## 7. The questions that are HIS, not ours
 
-*(filled in with the measurements)*
+Three, and every one of them carries its number so the answer costs him a sentence:
+
+1. **The fame cap.** §5(b). His career is clipped 1.95× and has been for 148 weeks. Leave it
+   (saturation, and the top of the research band), raise it, or pay the saturated years into the
+   multiple instead. **Nothing was changed.**
+2. **The debut step.** §3.3. **+4** shipped, sized off the ladder, and it leaves a fresh brand 3.7%
+   below what was paid at the purchase week. **+5** would put it above — a one-line change, and a
+   decision about how famous playing a Slam should make a teenager.
+3. **The feed line.** The debut fires a player-facing milestone row, so it needs a sentence. The
+   DRAFT is in the round-41 ledger under item 18 PART TWO and is **his to approve or replace**; the
+   fame read does not depend on a word of it.
+
+## 9. What was NOT done, and why
+
+* **No retroactive fame** (§6) — the date is not inventable, and the reference save proves it.
+* **No per-appearance term** (§2.4) — it would price the same career twice.
+* **No `mainDraws[]` on the trophy shelf** (§2.3) — the cabinet's contract is silverware.
+* **No retune of anything measured here.** §3.3's +5 frontier, §5(b)'s three cap shapes and
+  §5(c)'s 52-week floor are all written down with their numbers and left alone.
+* **No schema move.** `SAVE_SCHEMA_VERSION` = 74, unmoved; no migration, no golden fixture.
+* **No frozen-career re-stamp is owed.** Measured rather than assumed: walked at
+  `FREEZE_WEEKS` = 156, the three fixture careers reach `w75` at best — `bestFinishByTier.slam` is
+  absent on all three — so no fixture career has ever completed a Slam run and no `events` /
+  `nextEventId` key can move. See the ledger for the reading.
 
 ## 8. Provenance
 

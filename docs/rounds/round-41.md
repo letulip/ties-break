@@ -869,6 +869,133 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   re-read, which is «падение должно быть более плавным» arriving properly three rounds after he
   asked for it.
 
+  ### PART TWO – THE DEBUT FLOOR (12.09, his second word on the same item)
+
+  **HIS RULING, verbatim:** «да, делаем fame за основу Шлема, надо полностью с математикой бренда
+  разобраться, чтобы этот вопрос уже не поднимался, а механизм слаженно, гладко и четко работал. У
+  тебя вся история супер-звезды есть, более крутой карьеры мне пока не выпадало. Она разве что
+  только в топ-1 не попадала, но на топ-2 была. Это точно эталонный рецепт знаменитости. Федерер
+  выиграл Шлем в 19, она тоже.»
+
+  **SHIPPED** (`3a273567` engine+tests, `5c55e3fe` the prediction, and the audit's own commit).
+  Part one fixed how the brand's price MOVED; this is about what the price could SEE. Of the 128
+  women in a Slam main draw, `fameFloorOf` could see exactly two – `titleFloor.slam` pays the
+  champion and `slamFinalFloor` the runner-up. **His #155 wildcard therefore banked zero**, and
+  nothing else in the save remembered the week either (`world.results` prunes at 52 weeks, the
+  tournament summary is an ordinary feed row the 400-cap eats, `seasonEntries` is current-season).
+  That silence IS the plateau he reported.
+
+  **THE MECHANISM, in three facts.**
+  * **Fire site** – `finalizeTournament`, beside `first-title` / `first-national`, on
+    `event.tier === 'slam'`. A `keep: true` milestone, `SLAM_DEBUT_KEY = 'first-slam-main-draw'`.
+    ⭐ **Main draw is not an assumption**: qualifying is not modelled at any rung («a qualifier earns
+    her place in a draw we do not run» – `season/tournament.ts`), so the eight reserved wildcard
+    chairs and the direct acceptances are the only two ways in, and every Slam run that reaches
+    finalize is a main draw. It also means «she PLAYED it»: a skip, the walkover branch and a medical
+    withdrawal never reach that line, and a retirement mid-match does and counts.
+  * **Idempotence** – the ROW's own existence is the fired-check (`fireMilestone` returns at its
+    first line on a duplicate key). Pinned on a real career that plays **three** Slams: one row,
+    dated at the first, and the floor carries exactly one step.
+  * **Prune survival, VERIFIED and not assumed** – `pruneEvents` (`world/bookkeeping.ts`) splits the
+    feed into `kept` / her competitive matches / everything else, trims only the last two, and
+    splices `kept` back **whole**. Pinned by flooding a real career's feed to **2× `EVENTS_CAP`**
+    with rows written AFTER the debut – an age-only prune would have kept them and dropped it.
+
+  **THE ROAD NOT TAKEN** – an optional `mainDraws?: number[]` on `trophiesByTier.slam` under the
+  `entryRef` precedent (`shared/protocol/events.ts:210-212`). Refused, and not for schema reasons:
+  `TierTrophies` is the **silverware cabinet**, its contract is «titles and finals, disjoint», and
+  six readers fold over exactly those two arrays (the fame floor twice, `brandSignalsOf`'s
+  `finalsLost` and `roomSize`, `fameEventWeeks`, the Trophies screen). A third array holding a
+  different KIND of fact would need excluding **by name** in all six – the shape `slamFinalFloor`'s
+  own «by name rather than by arithmetic» note exists to warn about – and one would eventually be
+  missed. The milestone channel is already dated, already idempotent, already unprunable.
+
+  **THE DEBUT AND NOT THE APPEARANCE**, recorded with its reason: a regular's Slam weeks are already
+  paid through titles, lost finals and season end-bands, so a per-appearance step prices one career
+  twice and grows without bound (40 appearances × any step is a second fame model). What nothing
+  else can see is the FIRST one.
+
+  ***Predicted-first, and one prediction MISSED.*** The step **+4** (one World Tour 250 title; 16% of
+  a Slam title) and all four predictions were committed in `5c55e3fe` **before** the tool had run:
+
+  | at the purchase week w138 | before | predicted | measured |
+  | --- | ---: | ---: | ---: |
+  | fame | 9.84 | ≈ 14 | **13.63** |
+  | brand income | $291 / wk | ≈ $570 | **$559 / wk** |
+  | derived worth | $118,874 | ≈ $230,000 | **$240,830** (96.3% of the $250,000 paid) |
+  | the wake | w166 | moves to the debut | ⚠ **still w166 – MISSED** |
+
+  ⚠⚠ **THE MISS IS RECORDED, NOT TUNED AWAY, AND IT COULD NOT HAVE HELD.** Fame is
+  piecewise-DECAYING: between w138 and w166 that career has no dated event at all, so the floor can
+  only fall and the row can only follow it down. The first W500 title is the next dated event, so it
+  is necessarily where the slope turns – on every arm, at every step size. What the debut moves is
+  the **depth of the trough**: **−7.3% of what was paid becomes −2.7%**, with the brand earning
+  nearly twice as much while it sits there. Half his sentence («упал в цене… и остался там») is
+  answered in money; the other half (the date) is design and now says so.
+
+  **ALICE'S CURVE, THREE ARMS** (OLD retro-H · FIXED incremental · FIXED+DEBUT at w130):
+
+  | week | fame | income / wk | derived | the walked row |
+  | --- | ---: | ---: | ---: | ---: |
+  | w138 buy | 9.8 → **13.6** | $291 → **$559** | $118,874 → **$240,830** | $249,330 → $249,935 |
+  | w166 first W500 | 16.8 → **19.9** | $894 → **$1,261** | $401,553 → **$590,305** | $233,193 → **$246,784** |
+  | w220 first W1000 | 45.9 → **48.1** | $7,277 → **$7,989** | $4.54M → **$5.09M** | $595,911 → **$722,023** |
+  | w234 Slam final | 56.9 → **58.9** | $11,180 → **$11,979** | $7.71M → **$8.40M** | $1.33M → **$1.53M** |
+  | w258 the cap | 100.0 → 100.0 | $34,500 (both) | $32.67M (both) | $9.34M → $9.71M |
+  | w314 Slam title, at 19 | 100.0 → 100.0 | $34,500 (both) | $32.67M (both) | $21.61M → $21.79M |
+
+  A debut is worth a great deal to a climber (+21% on the row by w220) and almost nothing to a
+  champion (+0.8% by w314), which is the decay doing its job.
+
+  ⚠ **HER DEBUT WEEK IS RECONSTRUCTED, and the save cannot confirm it** – measured, not assumed: her
+  kid result rows span w353..w405 only, three tournament rows survive (w401/w403/w405), and the
+  earliest Slam evidence left anywhere is the LOST FINAL at w234. **w130 is not a guess**: it is one
+  of the four weeks a Slam can be played in season 2 (`TIERS.slam.anchorWeeks` = [2, 21, 26, 34];
+  season 2 = w104..w155 → w106/w125/w130/w138), and her own WTA end-ranks bracket it where he puts
+  it (#158 at the w101 wrap, #89 at the w153 wrap, his wildcard at #155). All four candidates are
+  printed: the whole 32-week span moves the answer by 13%, so nothing here rests on the choice.
+
+  **RETROACTIVITY, HONEST.** Old saves carry no row and earn **nothing** back – the date is not
+  inventable and the reference save proves it. It costs Alice nothing: her fame has been pinned at
+  the cap since w258. A career mid-climb on an old save loses a step it never banked; new careers
+  get it from their first Slam.
+
+  **⚠ NO FROZEN-CAREER RE-STAMP IS OWED, AND IT WAS MEASURED RATHER THAN HOPED.** Walked at
+  `FREEZE_WEEKS` = 156 through the fixtures' own `openCareer`/`stepCareerWeek`, the three careers
+  reach `w75` at best and `bestFinishByTier.slam` is **absent on all three** – 5/0 reaches
+  local/national/regional, 8/0 adds j30, 0/1 tops out at w75. **No fixture career has ever completed
+  a Slam run**, so no `events` / `nextEventId` key can move and the eighteen constants stand
+  untouched. Confirmed by running both frozen files plus `goldenSaves`: 210 tests green across nine
+  suites, zero re-stamps.
+
+  **RNG: ZERO.** A scan and a push. Pinned by an arm that runs the SAME forced-Slam week on two
+  worlds – one where the row is written, one that already carries it so the write no-ops – and
+  asserts an identical MAIN draw count. **No schema move**: v74 stands, no migration, no fixture.
+
+  **DRAFT COPY (one line, his to approve or replace – invariant 4).** `fireMilestone` requires text,
+  so the row carries a sentence; the fame read depends on no word of it. Register read off its
+  neighbours (`🏆 First career title: Local Open!`, `🏆 First win at National level!`,
+  `💰 First prize money – $2,200 at the World Tour 15!`):
+
+  > **🏆 First Grand Slam main draw – from this week the world knows her name.**
+
+  *Evidence*: `docs/specs/the-fame-and-the-brand-2026-09.md` (the audit – every fame source with its
+  constant and clock, the five-link brand chain, the three rough edges, the three questions marked
+  HIS), `tools/r41-brand-history.ts` (predictions in the header, written before the run),
+  `tests/round41-slam-debut.test.ts` (13 arms, four mutations measured: 3 / 2 / 1 / 2 red).
+
+  ⚠ **THREE THINGS THE AUDIT SURFACED AND LEFT ALONE, each with its number** (spec §5, §7): **(a)**
+  FOUR of `brandSignalsOf`'s seven terms ignore the week they are asked about (`proSeasons`,
+  `topSeasons`, `finalsLost`, `winRate`) – honest live, because every runtime caller asks about NOW,
+  and a caveat on any reconstruction; the brief named two, the audit found four. **(b)** ⚠⚠ **THE
+  FAME CAP IS CLIPPING HIS REFERENCE CAREER 1.95×** and has been for **148 weeks**: uncapped she
+  reads 194.9 at w405 against a ceiling of 100, so world #2 plus a Slam at 19 plus eleven 500s and
+  seven 1000s bought nothing after w258, with income pinned at $34,500/wk = **$1,794,000 a year**.
+  The argument for leaving it is real – that is the TOP of the researched $0.5M–$2M band, and
+  uncapped would pay 3.8× it – so the number and three shapes are in the spec and the call is HIS.
+  **(c)** at the cap `worthRampHalfLife` floors at 52 weeks (round 39 #5's own ruling), so the row
+  spends ~3 years catching up: 89% converged after 147 weeks. Named, not changed.
+
 - [x] **19. «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели. Видимо
   массажист очень хорошо работает, но в этом случае вообще на экране травмы можно писать сколько
   реально займет восстановление с текущим тиром массажиста»** – **build.** The injury screen quotes

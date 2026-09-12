@@ -16,11 +16,17 @@
 // tests/age-caps.test.ts do – the acceptance ladder is pinned in its own files and this one is about
 // what `finalizeTournament` records once she is IN the draw. A real 128-draw costs ~16 ms.
 //
-// MUTATIONS, read off the run and recorded rather than claimed:
-//   * the debut term deleted from `fameFloorOf`              -> 6 red
-//   * `fireMilestone` at the fire site made unconditional    -> 2 red (the negative arm and §1's date)
-//   * the debut week removed from `fameEventWeeks`           -> 1 red
-//   * `keep: true` dropped from `fireMilestone`              -> 2 red (§3 and §1's keep assertion)
+// MUTATIONS, READ OFF THE RUN (13 arms; the counts below are measured, not predicted):
+//   * the debut term deleted from `fameFloorOf`           -> 3 red · §1's three-Slam difference and
+//     §2's two value arms. ⚠ The other three fame arms stay GREEN and are SUPPOSED to: «a debut in
+//     the future is worth nothing», «no row, so the constant cannot reach her» and §5's legacy save
+//     all assert a ZERO, and a deleted term still answers zero. A count is not a grade.
+//   * the fire site made unconditional (every tier fires)  -> 2 red · the wta1000 negative arm and
+//     the w15/w35 «played no Slam» arm – which is exactly the pair that says «slam AND ONLY slam».
+//   * the debut week dropped from `fameEventWeeks`        -> 1 red · §2's coupling arm, the only
+//     thing standing between this source and `brandStrengthAt` under-reading the peak.
+//   * `keep: true` dropped from `fireMilestone`           -> 2 red · §3's prune law and §1's keep
+//     assertion. (It is a whole-repo mutation; these two are this file's share of it.)
 import { describe, expect, it } from 'vitest'
 import { ECONOMY } from '../src/engine/economy'
 import { rngFromSeed, type Rng } from '../src/engine/rng'

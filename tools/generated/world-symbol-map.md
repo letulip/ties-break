@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,403 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,427 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-445 exported names across 49 owning modules.
+447 exported names across 49 owning modules.
 
 ## Areas
 
@@ -30,19 +30,19 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
+| `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
 | `src/engine/world/market.ts` | ⭐⭐⭐ THE MARKET – round 29 part three #16, and it is the answer to one sentence of his | 8 |
 | `src/engine/spirit.ts` | THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no strings | 7 |
 | `src/engine/world/brand.ts` | ⭐⭐⭐ THE BRAND – round 30 #23 and #24, and it is TWO functions of ONE signal set | 7 |
-| `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 7 |
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
+| `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
-| `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 5 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
@@ -451,6 +451,19 @@ HER AGE: the band and the girl, and the birthday that lands in the feed.
 - `kidBirthYear` – `src/engine/world/age.ts`
 - `START_AGE_YEARS` – `src/engine/world/age.ts`
 
+### `src/engine/world/fame.ts`
+
+⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
+
+- `completedShootsByBand` – `src/engine/world/fame.ts`
+- `completedShootWeeks` – `src/engine/world/fame.ts`
+- `fameAt` – `src/engine/world/fame.ts`
+- `fameEventWeeks` – `src/engine/world/fame.ts`
+- `fameFloorOf` – `src/engine/world/fame.ts`
+- `fameShootMultOf` – `src/engine/world/fame.ts`
+- `shootFloorDecayAt` – `src/engine/world/fame.ts`
+- `slamDebutWeekOf` – `src/engine/world/fame.ts`
+
 ### `src/engine/world/knock.ts`
 
 THE KNOCK: she comes off court sore, and the parent rests it or sends her back out.
@@ -501,18 +514,6 @@ THE PRIVATE LIFE'S TWO NUMBERS, AND WHO SHE IS – one weekly rule, no draws, no
 - `brandSignalsOf` – `src/engine/world/brand.ts`
 - `brandWeeklyGrossCents` – `src/engine/world/brand.ts`
 
-### `src/engine/world/fame.ts`
-
-⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md.
-
-- `completedShootsByBand` – `src/engine/world/fame.ts`
-- `completedShootWeeks` – `src/engine/world/fame.ts`
-- `fameAt` – `src/engine/world/fame.ts`
-- `fameEventWeeks` – `src/engine/world/fame.ts`
-- `fameFloorOf` – `src/engine/world/fame.ts`
-- `fameShootMultOf` – `src/engine/world/fame.ts`
-- `shootFloorDecayAt` – `src/engine/world/fame.ts`
-
 ### `src/engine/world/injury.ts`
 
 INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates.
@@ -560,6 +561,17 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `merchFamilyWeeklyIncomeCents` – `src/engine/world/business.ts`
 - `merchWeeklyIncomeCents` – `src/engine/world/business.ts`
 
+### `src/engine/world/constants.ts`
+
+THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
+
+- `CAREER_ENDED_REFUSAL` – `src/engine/world/constants.ts`
+- `COLLEGE_FREEZE_REFUSAL` – `src/engine/world/constants.ts`
+- `guardNotEnded` – `src/engine/world/constants.ts`
+- `guardNotEndedForGood` – `src/engine/world/constants.ts`
+- `KID_ID` – `src/engine/world/constants.ts`
+- `SLAM_DEBUT_KEY` – `src/engine/world/constants.ts`
+
 ### `src/engine/world/entries.ts`
 
 THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
@@ -592,16 +604,6 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `shootClashOpen` – `src/engine/world/shootClash.ts`
 - `shootClashWeek` – `src/engine/world/shootClash.ts`
 - `shootMoveTarget` – `src/engine/world/shootClash.ts`
-
-### `src/engine/world/constants.ts`
-
-THE SHARED IDS AND CAPS: the handful of constants more than one world module needs.
-
-- `CAREER_ENDED_REFUSAL` – `src/engine/world/constants.ts`
-- `COLLEGE_FREEZE_REFUSAL` – `src/engine/world/constants.ts`
-- `guardNotEnded` – `src/engine/world/constants.ts`
-- `guardNotEndedForGood` – `src/engine/world/constants.ts`
-- `KID_ID` – `src/engine/world/constants.ts`
 
 ### `src/engine/world/means.ts`
 

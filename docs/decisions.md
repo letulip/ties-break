@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 101 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 102 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 12 | [ROUND 41 P1 (b): THE WEALTH CORRIDOR STOPS AT THE TOP – ONE PRICE FOR EVERY FAMILY IN THE BIG-CHEQUE YEARS](#12092026--round-41-p1-b-the-wealth-corridor-stops-at-the-top--one-price-for-every-family-in-the-big-cheque-years) | 2026-09-12 |
+| economy-and-money | 13 | [ROUND 41 #18 PART TWO: A SLAM DEBUT BUYS FAME, AND THE BRAND'S MONEY IS SETTLED ONCE](#12092026--round-41-18-part-two-a-slam-debut-buys-fame-and-the-brands-money-is-settled-once) | 2026-09-12 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -4143,3 +4143,49 @@ product died for the lever's sake. The owner: «мне это не очень н
   background. Skipping the multiply instead would have shifted those sub-streams by one position for
   half the tier ladder – a stream change dressed as a price change. **No schema move (74 stands), no
   player-facing string, `rngMain` byte-identical on all three frozen careers.**
+
+## 12.09.2026 – ROUND 41 #18 PART TWO: A SLAM DEBUT BUYS FAME, AND THE BRAND'S MONEY IS SETTLED ONCE
+
+**His ruling, verbatim:**
+
+> «да, делаем fame за основу Шлема, надо полностью с математикой бренда разобраться, чтобы этот
+> вопрос уже не поднимался, а механизм слаженно, гладко и четко работал. У тебя вся история
+> супер-звезды есть, более крутой карьеры мне пока не выпадало. Она разве что только в топ-1 не
+> попадала, но на топ-2 была. Это точно эталонный рецепт знаменитости. Федерер выиграл Шлем в 19,
+> она тоже.»
+
+Two instructions, and the second is the bigger one. **The first: a Slam main draw is fame.** Of the
+128 women in that draw the model could see exactly two – the champion and the runner-up – so his own
+«вайлдкард на Шлем, когда она была #155» banked nothing, and no other ledger in the save remembered
+the week either. **The second: settle the mathematics so the question stops coming back**, which is
+`docs/specs/the-fame-and-the-brand-2026-09.md` – every fame source with its constant, its clock and
+one sentence of why, and the brand chain (fame → reach → income → multiple → worth) written once.
+
+**Shipped.** `ECONOMY.fame.slamDebutFloor` = **4**, dated at a `keep: true` milestone row fired in
+`finalizeTournament`, decaying on the title clock, **once per career** – the debut, never the
+appearance, because a regular's Slam weeks are already paid through titles, lost finals and season
+end-bands. **No schema move (74 stands), no migration, no fixture, zero RNG**, and no frozen-career
+re-stamp is owed – measured, not assumed: no fixture career completes a Slam run in its 156 frozen
+weeks. Old saves carry no row and get no retroactive fame; the date is not inventable and the
+reference save proves it.
+
+**Predicted-first, and one prediction missed on the record.** Committed before the tool ran: fame at
+the purchase week 9.84 → **13.63** (predicted ≈14), income $291 → **$559/wk** (predicted ≈$570),
+derived worth $118,874 → **$240,830** (predicted ≈$230,000, and 96.3% of the $250,000 he paid). The
+fourth prediction – that the brand's wake would move off w166 – **was wrong and is kept rather than
+tuned away**: fame is piecewise-decaying, so with no dated event between w138 and w166 the row can
+only fall until the first W500 title, on every arm at every step size. What the debut moves is the
+DEPTH – the trough goes from −7.3% of what was paid to −2.7%, with the brand earning nearly twice as
+much while it sits there. The +4/+5 frontier is measured and left as his.
+
+**Three things the audit found and did not change, each with its number.** (a) Four of
+`brandSignalsOf`'s seven terms ignore the week they are asked about – honest live, a caveat on any
+reconstruction. (b) ⚠ **The fame cap is clipping his own reference career 1.95× and has been for 148
+weeks** (uncapped 194.9 against a ceiling of 100; income pinned at $1,794,000 a year, which is the
+top of the researched band for a real top own-brand) – the number, the trade and three possible
+shapes are in the spec, and the decision is his. (c) At the cap the worth ramp floors at 52 weeks
+(round 39 #5's own ruling), so a saturated brand spends ~3 years catching up to what it is worth.
+
+**One new player-facing string, DRAFT and his to replace** – the milestone row needs a sentence and
+the fame read depends on no word of it: «🏆 First Grand Slam main draw – from this week the world
+knows her name.» Nothing else on any screen moved (invariant 4).
