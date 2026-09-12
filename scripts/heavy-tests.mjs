@@ -183,7 +183,52 @@ export const HEAVY_UNIT_FILES = [
   // INFRASTRUCTURE outcome, and the honest fix is a process, never a raised per-test timeout that
   // hides how long the file really is.
   'tests/birthday-career.test.ts',
+  // ⚠⚠ 12.09 (wave 3, PR #135): `economy` HAD TO BE CUT, AND SO DID `goldenSaves` – SEE THE BLOCK
+  // AGAINST THAT ENTRY AT THE BOTTOM OF THIS LIST. `unit-heavy` died FOUR TIMES on the
+  // all-green-non-zero shape – stalled, retried once by scripts/units.mjs, stalled again, exit 1,
+  // a ~582 s step and a blank annotation. Both files were already alone in their process from this
+  // list, so the FILE was the unit and the file had to be cut, exactly as radar's was on 11.08,
+  // fatigue-bench-policy's on 27.08 and coach-travel-edge's on 31.08. ⚠ The engine did not get
+  // slower – a clean 156-week walk reads the same as main – the files' own work grew.
+  //
+  // ⚠ THE SEAM IS THE BATCH, AND A TOPICAL CUT WOULD NOT HAVE DONE IT. MEASURED SOLO before
+  // anything was touched, one vitest process, `--project unit --reporter=json`, 37 tests in 25.48 s
+  // of test time:
+  //
+  //     ordering (3 batches)          7.93 s      the four behaviour describes, 32 tests   6.57 s
+  //     working  (2 batches)          5.37 s        (the largest single one: 2.04 s)
+  //     middle   (1 batch)            2.71 s
+  //     wealthy  (1 batch)            2.68 s
+  //     the unsponsored precondition  0.22 s      ------------------------------------------------
+  //                                  ------       18.91 s in five cases, 6.57 s in the other 32
+  //
+  // **74 % of the file is FIVE TESTS**, and the cost is linear in batches at ~2.6 s each – a batch
+  // being 16 seeds × 52 weeks of real `tickWeek`. So "calibration versus the sponsor" leaves a file
+  // at three quarters of what already stalled, which is the trade fatigue-bench-policy spent two
+  // weeks proving is not a cut. The seam runs through the SEVEN BATCHES instead: the calibration
+  // describe leaves the file entirely, and `ordering` – the heaviest arm, which re-walks all three
+  // batches, and which the 05.09 review already had as the file's slowest test at 12.7 s quiet /
+  // 21.4 s contended – is separated from the three cells it re-walks. Solo, same invocation, after:
+  //
+  //     economy                       6.85 s   32 tests   the sponsor / gear / bill / need describes
+  //     economy-calibration          10.76 s    4 tests   the three band cells + the precondition
+  //     economy-calibration-ordering  8.00 s    1 test    the ordering cell, 3 batches
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED, as 27.08's cut demands.
+  // 6.85 + 10.76 + 8.00 = 25.61 s against 25.48 s for the file they replaced – seven batches before
+  // and seven after, ~2.6 s each either way, and that sum is the proof no batch went missing. Both
+  // arms were measured BACK TO BACK in one pass at load 3.2-3.7, the A arm restored from HEAD into a
+  // temp path, so the comparison is between the arms and not between two moments.
+  //
+  // ⚠ NOT ONE SEED, HORIZON, BAND OR ASSERTION MOVED, and no test name changed either: all 37 full
+  // names are a BYTE-IDENTICAL MULTISET to the one file's, checked mechanically rather than by eye,
+  // because both calibration files keep the ORIGINAL describe name. tests/economyCalibration.ts
+  // holds the batch, the walk and the owner's frozen bands, so `seasonBurnDollars`' exclusion
+  // arithmetic – the one piece that must never have two truths – is imported by both halves rather
+  // than copied into each.
   'tests/economy.test.ts',
+  'tests/economy-calibration.test.ts',
+  'tests/economy-calibration-ordering.test.ts',
   'tests/radar.test.ts',
   'tests/radar-read.test.ts',
   'tests/radar-training.test.ts',
@@ -306,7 +351,53 @@ export const HEAVY_UNIT_FILES = [
   // distinction matters. The wall is a 60 s reporter RPC; this is vitest's own 20 s per-test ceiling,
   // reached because the corpus walks 68 golden saves while 170 other files share the cores. Same
   // remedy, different mechanism, and a later reader must not conclude the wall moved.
+  //
+  // ⚠⚠ AND ON 12.09 THE WALL ARRIVED TOO, WHICH IS THE SECOND MECHANISM CATCHING THE SAME FILE. The
+  // block above is the record of a per-TEST ceiling; this is birpc's per-SHARD one, and it took
+  // `unit-heavy` down four times on wave 3's PR #135 (see the economy block near the top of this
+  // list for the shape – both files were in that job, and both had grown past the wall). 68 golden
+  // saves is 75 now, and `migrateSave` runs the WHOLE ladder on each, so this file grew TWICE with
+  // every wave: one more fixture, and one more step in every other fixture's chain. v74 alone added
+  // a 26,838-line golden to a walk that happens three times over.
+  //
+  // ⚠ THREE WALKS, AND THAT IS THE WHOLE COST AND THE WHOLE SEAM. MEASURED SOLO before anything was
+  // touched, one vitest process, `--project unit --reporter=json`, 228 tests in 19.82 s of test time:
+  //
+  //     the per-fixture invariants walk      6.82 s   75 cases
+  //     the v61 college-quote sweep          6.52 s   75 cases
+  //     the v62 peak-physical sweep          6.48 s   75 cases
+  //     the corpus scan + the two guards     0.00 s    3 cases   <- free, and they stay put
+  //
+  // NEAR-EQUAL THIRDS, and nothing else in the file costs a millisecond. The 05.09 review priced the
+  // same shape independently at 20.4 s of 31.0 s for the two sweeps (P-14,
+  // docs/review-principles-2026-09-05/04-performance.md), so this is a reading reproduced twice. One
+  // walk per file is therefore the only seam that divides the number three ways; any seam leaving
+  // two walks together leaves a file at two thirds of what already stalled. Solo, same invocation,
+  // after the cut:
+  //
+  //     goldenSaves                          6.79 s   77 cases   the scan + the invariants walk
+  //     goldenSaves-quote                    6.74 s   76 cases   v61, + its anti-vacuity floor
+  //     goldenSaves-peak                     6.84 s   75 cases   v62
+  //
+  // ⚠ AND THE SHORTFALL WAS CONTROLLED FOR RATHER THAN POCKETED. 6.79 + 6.74 + 6.84 = 20.37 s
+  // against 19.82 s for the file they replaced – 225 `migrateSave` walks before and 225 after – and
+  // that sum is the proof no walk went missing. Both arms were measured BACK TO BACK in one pass at
+  // load 3.2-3.7, the A arm restored from HEAD into a temp path, so the comparison is between the
+  // arms and not between two moments.
+  //
+  // ⚠ NOT ONE FIXTURE, ASSERTION OR TEST NAME MOVED: all 228 full names are a BYTE-IDENTICAL
+  // MULTISET to the one file's, checked mechanically rather than by eye, because all three files
+  // keep the ORIGINAL describe name `golden saves corpus`. Nothing under tests/fixtures/ was touched.
+  //
+  // ⚠⚠ AND THE ONE-FIXTURE-PER-VERSION LAW STAYED WHOLE, IN `goldenSaves.test.ts`. CLAUDE.md's
+  // invariant 3 names that path, and its two cases must see the WHOLE of tests/fixtures/saves/ in a
+  // single sweep. They cost 0.00 s, so splitting them would have divided a product guarantee across
+  // processes to save nothing. tests/goldenSavesCorpus.ts reads the directory ONCE and the three
+  // files import it – three copies of that `readdirSync` + filter + sort is exactly the
+  // hand-maintained second copy this module exists to make impossible.
   'tests/goldenSaves.test.ts',
+  'tests/goldenSaves-quote.test.ts',
+  'tests/goldenSaves-peak.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

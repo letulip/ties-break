@@ -1,9 +1,18 @@
+// THE BEHAVIOUR DESCRIBES – the local sponsor, the gear cadence, the coaching bill and the need
+// gate. The 52-week BURN CALIBRATION that used to open this file is now
+// tests/economy-calibration.test.ts and tests/economy-calibration-ordering.test.ts, sharing
+// tests/economyCalibration.ts, which holds the batch, the walk, the frozen bands and the whole
+// argument for why there are three files. Nothing here changed except that those four cases – 74 %
+// of this file's cost, in seven 16-seed × 52-week batches – now run in processes of their own.
+
 import { describe, it, expect, vi } from 'vitest'
 
-// The 16-seed × 52-week calibration batches below sit at ~3s against vitest's 5s default – close
-// enough that a busy run tips them over and the gate goes red on timing, not on a claim. Same
-// generous file-level timeout the other batch files already use (tests/fatigue-bench.test.ts):
-// these tests are deterministic, only slow.
+// ⚠ THE FILE-LEVEL TIMEOUT STAYS, AND IT IS NO LONGER THE CALIBRATION IT IS PROTECTING. It was
+// written for the 16-seed × 52-week calibration batches, which have left; what needs it now are the
+// single-career walks below (the largest, the kit-allowance ceiling, is 2.04 s solo, and this
+// project's own measurements put the bulk pool's contention penalty at 1.6-2.9x). Same reasoning
+// either way, and the same generous file-level timeout the other batch files already use
+// (tests/fatigue-bench.test.ts): these tests are deterministic, only slow.
 vi.setConfig({ testTimeout: 240_000 })
 import {
   ageAtWeek,
@@ -14,7 +23,6 @@ import {
   localSponsorCents,
   acceptOffer,
   declineOffer,
-  STARTING_FUNDS_CENTS,
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
@@ -25,212 +33,11 @@ import { rngFromSeed } from '../src/engine/rng'
 import { COACH_TIERS, coachWeeklyBandCents, facilityRateCents, weeklyBillSplit } from '../src/engine/coach'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/shared/protocol'
 
-// Fixed calibration batch. 16 seeds so the mean is stable against the working-class sponsor's
-// high variance (a single working season can swing several $k on sponsor luck – see below), while
-// staying cheap.
-const SEEDS = Array.from({ length: 16 }, (_, i) => `cal-${i + 1}`)
-
 /** The first week of the season a kit deal signed in the first off-season actually COVERS.
  *  `coveredSeasonStart(49)` – the letter is for the season ahead, not the fortnight it arrives in.
  *  Named because three assertions now measure the ledger over exactly that block, since 08.08 made
  *  `coveredCents` a per-season counter rather than a per-term one. */
 const COVERED_SEASON_START = 52
-
-/** The season's physio/medical spend in cents (a positive number). Season-Life slice C layered
- *  injuries + physio ON TOP of the base economy; the owner's net-burn bands below were frozen
- *  BEFORE that layer, so the calibration excludes the 'physio' bucket (a stochastic medical tail
- *  – a single severe onset swings $3-6k) and keeps measuring what it always measured: the fixed
- *  base cashflow. The medical layer's own calibration lives in tests/injuries.test.ts + the bench. */
-function physioSpendCents(world: WorldState): number {
-  return -(financeWindow(world.financeWeeks, 0).byCategory.physio ?? 0)
-}
-
-/** The season's savings-interest income in cents (round-9 R9-1). Like the physio tail above,
- *  the interest layer landed AFTER the owner froze the burn bands – and it scales with the
- *  STARTING reserve (wealthy's 120k earns ~$3.7k/yr, dwarfing middle's), so leaving it in
- *  would warp the band comparison. The calibration adds it back and keeps measuring the fixed
- *  base cashflow it always measured. */
-function interestEarnedCents(world: WorldState): number {
-  return financeWindow(world.financeWeeks, 0).byCategory.interest ?? 0
-}
-
-/** The season's local-sponsor cameo income in cents (working-only; 0 for middle/wealthy). See the
- *  working-burn test below for why the calibration measures the burn BEFORE this gift. */
-function sponsorIncomeCents(world: WorldState): number {
-  return financeWindow(world.financeWeeks, 0).byCategory.sponsor ?? 0
-}
-
-/** Net funds lost over 52 weeks with NO tournaments entered (fixed costs only). A fresh career
- *  earns no ranking points on EITHER ladder, so the kid sits at the bottom of both tables all year →
- *  national rank > 30 → the local sponsor's annual review pays her nothing. These are the owner's
- *  UNSPONSORED-kid bands. (Read "rank > 30" as the NATIONAL rank since 30.07: the sponsorship is a
- *  flat annual grant gated on the domestic table, not a share of a gear bill gated on the ITF one.)
- *
- *  ⚠ TAKES A COACH RUNG NOW – see CALIBRATION_TIER below for why it has to. */
-function seasonBurnDollars(
-  seed: string,
-  background: FamilyBackground,
-  opts: { excludeSponsor?: boolean } = {},
-): number {
-  const world = createWorld(seed, { ...DEFAULT_PROFILE, background, coachTier: CALIBRATION_TIER[background] })
-  const rng = rngFromSeed(world.seed)
-  const start = STARTING_FUNDS_CENTS[background]
-  for (let i = 0; i < 52; i++) tickWeek(world, rng)
-  const sponsor = opts.excludeSponsor ? sponsorIncomeCents(world) : 0
-  return (start - world.fundsCents - physioSpendCents(world) + interestEarnedCents(world) + sponsor) / 100
-}
-
-function batchBurns(background: FamilyBackground, opts: { excludeSponsor?: boolean } = {}): number[] {
-  return SEEDS.map((s) => seasonBurnDollars(s, background, opts))
-}
-
-function mean(xs: number[]): number {
-  return xs.reduce((a, b) => a + b, 0) / xs.length
-}
-
-// ⚠ RE-AIMED BY THE COACH LADDER – THE MECHANISM THAT MAKES THE THREE CELLS DIFFER MOVED, so this
-// calibration had to move with it or stop measuring anything about class.
-//
-// Until now all three cells ran on the SAME coach setting (DEFAULT_PROFILE's `hired`) and the
-// WEALTH CORRIDOR did the tiering: one $250-700/wk band × 0.75 / 1.00 / 1.25. The corridor has left
-// coaching (docs/specs/coach-tiers.md §2), so holding the coach constant would now charge all three
-// families the identical bill and the cells would differ only by income and gear. The rung is what
-// tiers them now, so each family is calibrated on the rung it actually buys – the same three rungs
-// tools/econ-bench.ts puts them on.
-const CALIBRATION_TIER: Record<FamilyBackground, CoachTier> = {
-  working: 'budget',
-  middle: 'middle',
-  wealthy: 'elite',
-}
-
-// ⚠ RE-BASED AGAIN (Round 2), and this time the WEALTHY cell flips back to a burn. Two knobs moved
-// under it: hours went 4 -> 5 at the balanced plan (the owner's own 4/5/6), which raises every
-// weekly bill by a quarter, and the wealth corridor went back ON coaching, which prices each family
-// in its own market. Together they put an Elite coach in a premium academy at $750/wk against a
-// wealthy family's $750/wk of parent income - so "premium everything must hurt" is back in the idle
-// year for the family it was written about, rather than only in the playing season.
-//
-// The Round-1 note still stands for the other two, and it is worth keeping because it explains what
-// the ORIGINAL bands were really measuring: they charged every family a coach the spec prices as
-// ELITE (the old `hired` band's ~$475/wk midpoint), so a working family on $245/wk of parent income
-// was billed $356/wk for coaching - 145% of its own income - in a year with no tournaments in it.
-// That was the wall, measured, in a test that had been reporting it as a healthy $6.8k burn.
-//
-// Measured (same 16 seeds, sponsor-excluded for working), with the coaching line that produced it:
-//   working · budget  $112/wk  burn mean -$5,667   spread -$6,670 .. -$4,798
-//   middle  · middle  $250/wk  burn mean -$7,334   spread -$9,441 .. -$4,754
-//   wealthy · elite   $750/wk  burn mean +$6,280   spread -$1,126 .. +$13,527
-// The mean bands below are those windows with headroom; the per-seed tolerances are wider because
-// the corridor roll now breathes on the coaching line every week, which it did not in Round 1.
-//
-// FOR THE OWNER, and please do not "fix" it by moving these numbers: an idle year is still a SAVING
-// for the two families below the top, so the round-7 item-1d burn bands no longer discriminate
-// between all three and are due a design decision rather than another re-pin. The bench is where
-// the real question lives now - tools/econ-bench.ts walks each family up its own corridor and
-// reports which rungs it survives.
-const BANDS: Record<FamilyBackground, [number, number]> = {
-  working: [-6_500, -4_800],
-  middle: [-8_500, -6_000],
-  wealthy: [4_500, 8_000],
-}
-
-/** Per-seed tolerance around each band. The corridor roll moves the coaching line every week, so a
- *  single season lands further from the batch mean than it did with a corridor-free bill. */
-const SEED_SLACK: Record<FamilyBackground, number> = { working: 2_500, middle: 3_500, wealthy: 8_000 }
-
-describe('economy calibration – 52-week net burn (no tournaments, unsponsored kid)', () => {
-  it('the calibration kid really is unsponsored: rank stays well past the sponsor threshold', () => {
-    const world = createWorld('cal-1', { ...DEFAULT_PROFILE, background: 'middle' })
-    const rng = rngFromSeed(world.seed)
-    for (let i = 0; i < 52; i++) tickWeek(world, rng)
-    // ⚠ RE-AIMED (30.07, tune/rank-numbers): reads the NATIONAL cache now, because that is the table
-    // ECONOMY.sponsorship gates on. THE PROTECTED FACT IS UNCHANGED and it is the whole subject of
-    // the bands below – this kid enters nothing all year, so she earns no points on EITHER ladder and
-    // no sponsor money reaches her. The old line asserted the same thing against `world.kidRank`,
-    // which was the right cache while the gate read the international table and is now simply the
-    // wrong one to be asking. Both are still true; this is the one that guards the bands.
-    expect(world.kidRankDomestic!).toBeGreaterThan(ECONOMY.sponsorship.maxRank)
-    // ...so the annual review pays her nothing, which is what makes these the UNSPONSORED bands.
-    expect(localSponsorCents(world.kidRankDomestic!)).toBe(0)
-  })
-
-  it('working (budget coach) lands in the -$6.5k..-$4.8k band (batch mean, BEFORE the sponsor cameo)', () => {
-    // The sponsor exclusion is UNCHANGED and its reasoning is untouched by the ladder. Working keeps
-    // the need-based local sponsor, whose 6% × $500-1500 roll is worth ~$3.1k a season in
-    // expectation with a ~$1.7k per-season spread – comparable to the entire measured figure. So a
-    // sponsor-INCLUSIVE 16-seed batch mean is nowhere near converged and moves by more than $1k
-    // whenever the main stream re-aligns. The band's own subject is the FIXED base cashflow (see the
-    // physio / interest exclusions above), so the calibration measures exactly that.
-    const burns = batchBurns('working', { excludeSponsor: true })
-    const [lo, hi] = BANDS.working
-    expect(mean(burns)).toBeGreaterThanOrEqual(lo)
-    expect(mean(burns)).toBeLessThanOrEqual(hi)
-    // ⚠ RE-AIMED 10.08 (fix/sponsor-need), NOT WEAKENED – SAME TWO QUANTITIES, AND THE RELATION
-    //   BETWEEN THEM IS NOW THE STRONGER CLAIM. This read `toBeLessThan`, on the note "the branch is
-    //   exercised, not a no-op on this batch", and that was true only because the cameo paid EVERY
-    //   working family EVERY week whatever its balance. `ECONOMY.sponsor.eligible` is gone: the gate
-    //   is need now (`sponsorNeedMet`), and this calibration career is the textbook family that has
-    //   none of it. She enters nothing all year, so she pays fixed costs only, so her balance never
-    //   drops within `runwayWeeks` weeks of her court – she opens on 104 weeks of it and rises.
-    //
-    //   So the exclusion is a no-op HERE, by design, and equality is what says so. And because cameo
-    //   income can never be negative, `mean(inclusive) === mean(exclusive)` over the batch is not a
-    //   weaker statement than the old inequality – it proves EVERY seed banked EXACTLY ZERO, where
-    //   the old line only proved that at least one banked something.
-    //
-    //   This block is titled "unsponsored kid" and the case above it asserts that against the ANNUAL
-    //   GRANT. This is the same claim against the CAMEO – the mechanism that made the title a
-    //   half-truth for the whole of this file's life.
-    expect(mean(batchBurns('working'))).toBe(mean(burns))
-  })
-
-  it('middle (middle coach) lands in the -$8.5k..-$6k band (mean, and every seed inside slack)', () => {
-    const burns = batchBurns('middle')
-    const [lo, hi] = BANDS.middle
-    expect(mean(burns)).toBeGreaterThanOrEqual(lo)
-    expect(mean(burns)).toBeLessThanOrEqual(hi)
-    for (const b of burns) {
-      expect(b).toBeGreaterThanOrEqual(lo - SEED_SLACK.middle)
-      expect(b).toBeLessThanOrEqual(hi + SEED_SLACK.middle)
-    }
-  })
-
-  it('wealthy (elite coach) BURNS $4.5-8k in an idle year – premium everything hurts again', () => {
-    // ⚠ THE SIGN FLIPPED BACK (Round 2). Round 12 had raised the wealthy income to $750/wk and this
-    // cell became a break-even; Round 1 of the ladder made it a $8.3k saving, because an Elite coach
-    // at four hours and no corridor was $480/wk. With the owner's 5 hours and his corridor, a
-    // premium academy's Elite coach is $750/wk - exactly the family's weekly income - so the idle
-    // year burns, which is what the round-7 "premium everything must hurt" always meant.
-    const burns = batchBurns('wealthy')
-    const [lo, hi] = BANDS.wealthy
-    expect(mean(burns)).toBeGreaterThanOrEqual(lo)
-    expect(mean(burns)).toBeLessThanOrEqual(hi)
-    for (const b of burns) {
-      expect(b).toBeGreaterThanOrEqual(lo - SEED_SLACK.wealthy)
-      expect(b).toBeLessThanOrEqual(hi + SEED_SLACK.wealthy)
-    }
-  })
-
-  it('ordering: the top of the ladder burns, and the two rungs below it save', () => {
-    // ⚠ RE-AIMED TWICE. The original read "working < middle, and wealthy no longer belongs in that
-    // ordering" - round 12 had already broken the working < middle < wealthy chain by raising the
-    // wealthy income, and what ordered the two survivors was the corridor on their shared coach
-    // band. Round 1 of the ladder made it "income minus a rung's price". Round 2 restores the
-    // corridor AND raises the hours, and the chain that comes out is a third thing again:
-    //   middle  · middle  425/wk income − 250/wk coach   burn -$7,334   saves the MOST
-    //   working · budget  245/wk income − 112/wk coach   burn -$5,667
-    //   wealthy · elite   750/wk income − 750/wk coach   burn +$6,280   the only one that BURNS
-    // Middle on top is not an accident: it buys the rung with the widest gap between what the family
-    // earns and what its academy charges. And wealthy at the top of the market spends its whole
-    // income on the coach alone, before a single trip - which is the design, stated as a number.
-    const w = mean(batchBurns('working', { excludeSponsor: true }))
-    const m = mean(batchBurns('middle'))
-    const rich = mean(batchBurns('wealthy'))
-    expect(m).toBeLessThan(w)
-    expect(w).toBeLessThan(rich)
-    expect(rich).toBeGreaterThan(0) // the only cell in the table that is a burn at all
-  })
-})
 
 describe('the local sponsor (round-7 amendment, rebuilt 30.07)', () => {
   // ⚠ RE-AIMED, NOT WEAKENED (30.07, tune/rank-numbers). The three protected facts are the same
