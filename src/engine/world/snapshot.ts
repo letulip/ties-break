@@ -1941,10 +1941,16 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     //
     // THE THIRD IS BUILT EXACTLY LIKE THE OTHER TWO – same call, same argument, no special case –
     // which is the whole reason `LadderTrack` was widened rather than the adult rungs folded into
-    // `itf`. Nothing here decides whether the player SEES it: the Stats and rank-help screens still
-    // list two tabs by hand, because a fourteen-year-old with an empty professional table is noise
-    // and the week it stops being noise is the handover at 19 (docs/specs/adult-tour-and-endings.md
-    // §4), which is a slice of its own. The view exists and is correct from week 0 regardless.
+    // `itf`. Nothing here decides whether the player SEES it: that was always a surface question,
+    // and both surfaces have since answered it the same way – Stats derived its switch from
+    // `LADDER_LABEL` in round 15, and `RankHelpDialog` its blocks from `LADDER_TRACKS` in round 41
+    // #1, at the owner's own report («их явно три»).
+    // ⚠ THIS NOTE USED TO SAY THEY «still list two tabs by hand», on the argument that a
+    // fourteen-year-old with an empty professional table is noise and that the week it stops being
+    // noise is the handover at 19 (docs/specs/adult-tour-and-endings.md §4). He opened the card and
+    // disagreed; an empty table that explains itself turned out to be the better answer. The view
+    // exists and is correct from week 0 regardless, which is what let both surfaces change their
+    // minds without this line moving.
     ladders: {
       domestic: computeLadderView(world, 'domestic'),
       itf: computeLadderView(world, 'itf'),
