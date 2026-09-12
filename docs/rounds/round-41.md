@@ -118,10 +118,13 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   attribute reddens the boat and the plane arms simultaneously (one template site, one mutation
   point, two families); reverted, both green.
 
-- [ ] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answer first.** The capstone is
-  the 8-year ad deal (`src/engine/economy.ts:1872-1889`). Recon is finding what «4 → 3» was ruled
-  (docs/rounds, decisions.md) and whether the constant moved. If it was promised and did not ship,
-  this becomes `[!]` and ships now.
+- [~] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answered: NOT changed, and
+  deliberately.** The LIFETIME letter went to 3 top-10 seasons («тогда окей и не вижу причин это
+  не сделать»); the capstone stayed at 4 – «tenure without a title… the stricter bar» – and round
+  39 parked «capstone left at 4?» as his open question (`round-39.md:248-251`; lowering it was a
+  measured corpus no-op at the time). ⚠ Still his to rule, with a number attached: the corpus now
+  puts ≥4 top-10 seasons at 16.7% where the capstone was priced against 8% – the deal is no longer
+  the top-decile letter it was priced as. One constant if he says the word.
 
 - [ ] **4. «В прологе проиграли первый турнир "The coach said the first one doesn't count" (или
   что-то вроде того), выиграли второй, а потом снова вылетели в первом раунде 3го турнира, а фраза
@@ -963,18 +966,26 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   is **left alone** – it is a friendly, outside item 20's scope.
   *No new player-facing strings* – all three coach sentences and both confirm labels already existed.
 
-- [ ] **21. «А что у нас со стоимостью всех вещей в bills? Мне кажется, что для семьи с большим
+- [~] **21. «А что у нас со стоимостью всех вещей в bills? Мне кажется, что для семьи с большим
   достатком цены сильно выше, чем для других, хотя вроде бы вещи всегда для всех стоят одинаково.»**
-  – **answer or build, on what recon finds.** If a wealth multiplier exists on bills prices, the
-  round reports whether a spec sanctions it – changing sanctioned balance is his call, not ours; if
-  nothing scales, the answer names what DOES differ by wealth (baseline family spending) that reads
-  as higher prices.
+  – **answered: sanctioned, twice.** The ±25–30% corridor is canon (`econ-wealth-corridor.md`:
+  «every family-background price scaling… ONE corridor set»; his own ruling in `economy.ts:120-124`:
+  «для 120к стоят дороже всего» – «THE MARKET SHE TRAINS IN»). What actually reads as «вещи стоят
+  по-разному» is the GEAR table's 5–8× spread (`economy.ts:1264-1295`: the same named racket $360
+  working vs $2,260 wealthy·pro) – written independently of the corridor. Flagged for his word,
+  deliberately not changed: sanctioned balance is his. What does NOT scale by wealth: the shop
+  catalogue, prize money, kit allowances, the ad ladder.
 
-- [ ] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
-  hover/клике с суммой и датой?»** – **build, schema-guarded.** Purchase marks on the fund chart
-  with a hover/tap micro-popup (amount + date). Recon is answering whether buy events are already
-  persisted or derivable; if marks need NEW persisted state, the item stops here and waits for v76
-  (the no-schema rule) – flagged, not silently shipped.
+- [?] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
+  hover/клике с суммой и датой?»** – **PARKED FOR v76, honestly, per the no-schema rule.** Purchase
+  marks need `(week, amount)` per BUY and no persisted road exists: `boughtWeek` is first-buy-only,
+  `paidCents` a blended net sum, the feed rows un-keyed prose capped 400/50 and prunable, the
+  ledger weekly category totals mixing buys/sells/upkeep. The degraded single-mark version would
+  print a number the family never paid on any topped-up holding – refused. The design that ships
+  right after wave 4 lands v75: `OwnedAsset.entries?: {week, cents, units}[]` (append-only,
+  backfilled `[]`), chart marks + the hover micro-popup off it. Companion note: `WorldEvent
+  .assetRef?` (the `entryRef?` precedent) would key feed rows from the next purchase on, but
+  history older than the 400-row cap stays unreachable – the entries array is the honest store.
 
 - [x] **23. «почему-то в 2036 сезоне упала выигрываемость, даже не смотря на лучшего тренера и
   массажиста, которые с ней ездят»** – **measure.** A bench aimed at season 2036 (she is ~19 there):
