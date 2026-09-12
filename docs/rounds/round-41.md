@@ -877,7 +877,8 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   только в топ-1 не попадала, но на топ-2 была. Это точно эталонный рецепт знаменитости. Федерер
   выиграл Шлем в 19, она тоже.»
 
-  **SHIPPED** (`3a273567` engine+tests, `5c55e3fe` the prediction, and the audit's own commit).
+  **SHIPPED** (`5c55e3fe` the prediction, written first; `3a273567` engine+tests; `ecf448d3` the
+  measured audit).
   Part one fixed how the brand's price MOVED; this is about what the price could SEE. Of the 128
   women in a Slam main draw, `fameFloorOf` could see exactly two – `titleFloor.slam` pays the
   champion and `slamFinalFloor` the runner-up. **His #155 wildcard therefore banked zero**, and
