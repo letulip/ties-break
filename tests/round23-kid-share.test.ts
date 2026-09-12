@@ -10,9 +10,28 @@
 // written out as LITERALS rather than by calling the function under test, because a ramp checked
 // against its own implementation is a tautology with a describe block round it.
 //
+// ⭐⭐⭐ ROUND 41 #27 (12.09) OVERTURNED CLAIM 1, AND IT IS THE OWNER WHO OVERTURNED IT.
+//
+// HIS QUESTION: «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда
+// она в первый раз на w серию приходит? это же всё таки ее призовые» – and his ruling, option A1,
+// the same day: «призовые падают на её счёт с первого старта W-серии независимо от возраста –
+// согласен». So the ramp answers 10% at EVERY age below eighteen, and climbs from eighteen exactly
+// as it always did. Claim 1 is re-aimed rather than deleted, because the property it was protecting
+// is still real and is now a sharper one: her account fills from her FIRST W-SERIES CHEQUE and from
+// nothing else.
+//
+// ⚠⚠ AND THERE IS NO «HAS SHE STARTED A W-SERIES» GATE ANYWHERE, WHICH IS A FACT ABOUT THE
+// CATALOGUE RATHER THAN AN OMISSION – §1's new arm is what proves it rather than this comment.
+// Prize money exists on the professional track ONLY (every `wta` tier carries a `prize` array; no
+// domestic or ITF-junior rung does), and `finalizeTournament` splits inside `if (prize > 0)`. So
+// «every prize cheque, at any age» and «from her first W-series start» are the same set of cheques,
+// and a second predicate on top could only ever answer true where it was asked.
+//
 // THE THREE CLAIMS, and the second is the one the design decision turns on:
 //
-//   1. NOTHING BEFORE HER EIGHTEENTH. Not a cent, on any week of the junior story.
+//   1. EVERY CENT IN HER ACCOUNT CAME OFF A W-SERIES CHEQUE, at whatever age it was written – and
+//      before round 41 #27 this line read «NOTHING BEFORE HER EIGHTEENTH. Not a cent, on any week
+//      of the junior story.»
 //   2. THE MONEY LEAVES. Measured as an A/B on ONE seed: the family's booked prize income falls by
 //      exactly her balance. This is the claim that separates a mechanic from a counter, and it is
 //      the reason the split happens at the moment the cheque is written rather than in a report.
@@ -22,7 +41,19 @@
 //
 // ⚠ MUTATION-VERIFIED (each applied alone, then reverted):
 //   * `capBps: 3000` (the number he rejected)          -> the ramp table and the copy arm go red.
-//   * `fromAgeYears: 17`                               -> "nothing before eighteen" goes red.
+//   * `fromAgeYears: 17`                               -> the ramp table goes red (it moved every
+//                                                         rung above it by a year).
+//   ⭐ ROUND 41 #27 re-verified, each applied alone and read off the run:
+//   * `kidPrizeShareBps` returning 0 below `fromAgeYears` again (the shipped rule)
+//                                                      -> 5 red HERE (the ramp table, the
+//                                                         cheque-splits sweep, the junior-cheque
+//                                                         walk, the A/B, the realised ladder) and
+//                                                         7 more in round41-kid-share-first-w.
+//   * `kidPrizeShareBps` returning `capBps` below it (an absurd junior share)
+//                                                      -> 4 red here, 5 there.
+//   * `ownAccountNote`'s new balance clause deleted    -> 1 red here – the «silent before eighteen»
+//                                                         arm, which is the arm that was already
+//                                                         guarding it – and 2 there.
 //   * credit `world.fundsCents += prize` (the whole cheque) and keep her credit
 //                                                      -> the A/B arm goes red, and nothing else.
 //   * migration back-fills `careerTotals.prizeCents / 2`  -> the v53 arm goes red.
@@ -52,13 +83,23 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { drainLifeBeats } from './helpers/career'
 
 /** His ladder, spelled out. NOT read from `ECONOMY.kidShare`, so a retune has to come here and be
- *  looked at rather than sliding through green. */
+ *  looked at rather than sliding through green.
+ *
+ *  ⚠⚠ THE FIRST FIVE ROWS WERE ZEROS UNTIL ROUND 41 #27 AND THE OWNER MOVED THEM HIMSELF: «призовые
+ *  падают на её счёт с первого старта W-серии независимо от возраста – согласен». They are TENS now,
+ *  and the ladder from eighteen is untouched to the point – the curve is continuous across her
+ *  eighteenth birthday, which is what makes this a new floor rather than a new ramp.
+ *
+ *  ⚠ A THIRTEEN-YEAR-OLD CANNOT COLLECT ONE, AND THE TABLE STILL SAYS TEN. That is not a
+ *  contradiction: this function answers «what share of a prize cheque is hers», and a thirteen-
+ *  year-old's answer is hypothetical because junior tennis pays no prize money at all. §1's
+ *  W-series arm is where that becomes a claim about a career rather than about a function. */
 const HIS_RAMP: Record<number, number> = {
-  13: 0,
-  14: 0,
-  15: 0,
-  16: 0,
-  17: 0,
+  13: 10,
+  14: 10,
+  15: 10,
+  16: 10,
+  17: 10,
   18: 10,
   19: 15,
   20: 20,
@@ -130,7 +171,11 @@ describe('#18 – the ramp, against the numbers he actually asked for', () => {
 
   it('a cheque splits to the cent – the two balances always add up to what the tournament paid', () => {
     for (const prize of [130_00, 2_200_00, 55_555_55, 3_000_000_00, 1, 7]) {
-      for (let age = 17; age <= 27; age++) {
+      // ⚠ THE SWEEP STARTS AT FOURTEEN SINCE ROUND 41 #27 AND USED TO START AT SEVENTEEN – the
+      // junior years are a real rate now, so the rounding claim has to cover them. ⭐ And $130 is
+      // deliberately the first prize in the list: it is a W15 first-round exit, the smallest cheque
+      // the game can write and the one a junior is likeliest to be handed.
+      for (let age = 14; age <= 27; age++) {
         const hers = kidPrizeShareCents(prize, age)
         expect(hers, `age ${age} of ${prize}`).toBeGreaterThanOrEqual(0)
         expect(hers).toBeLessThanOrEqual(prize)
@@ -156,27 +201,65 @@ describe('#18 – the ramp, against the numbers he actually asked for', () => {
 // 2 – ON A REAL CAREER: nothing before eighteen, and the family feels it after
 // =================================================================================================
 describe('#18 – the transfer, on a career that is really played', () => {
-  it('⭐⭐ NOT ONE CENT BEFORE HER EIGHTEENTH, on every week of the junior story', () => {
+  it('⭐⭐⭐ EVERY CENT SHE IS PAID BEFORE EIGHTEEN CAME OFF A W-SERIES CHEQUE – #27, re-aimed', () => {
+    // ⚠⚠ THIS ARM READ «NOT ONE CENT BEFORE HER EIGHTEENTH, on every week of the junior story» AND
+    // IT WAS INVERTED BY THE OWNER, NOT BY AN AGENT. «призовые падают на её счёт с первого старта
+    // W-серии независимо от возраста – согласен» (12.09, option A1). What it asserts now is the
+    // property that REPLACED the silence, and it is a stronger claim than the old one: her account
+    // fills, and every cent of it is professional prize money.
+    //
+    // ⚠ THE W-SERIES HALF IS MEASURED THROUGH THE LEDGER RATHER THAN THROUGH A PREDICATE, which is
+    // what makes it a claim about the career instead of a restatement of the code: the week her
+    // balance moves is compared against the week a `prize` row was booked, and a prize row can only
+    // be written by `finalizeTournament`'s `if (prize > 0)` – reachable on `wta`-track tiers alone,
+    // because no domestic or ITF-junior rung carries a prize table at all.
     const { world, rng } = openCareer(PRESETS[8], 1, POLICIES[1])
-    let sawPrizeMoney = false
+    let hers = 0
+    let paidWeeks = 0
+    let firstPaidAge = -1
     while (ageOf(world) < ECONOMY.kidShare.fromAgeYears && !world.ending) {
       answerAll(world)
       if (world.ending) break
+      const before = world.kidFundsCents ?? 0
       stepCareerWeek(world, rng, POLICIES[1])
-      expect(world.kidFundsCents, `w${world.week}, age ${ageOf(world)}`).toBe(0)
-      if ((world.careerTotals?.prizeCents ?? 0) > 0) sawPrizeMoney = true
+      const moved = (world.kidFundsCents ?? 0) - before
+      if (moved > 0) {
+        paidWeeks++
+        if (firstPaidAge < 0) firstPaidAge = ageOf(world)
+        // The week her account moved is a week a W-series cheque was written, and the `prize` row
+        // the till booked for the family that same week is the other half of it.
+        const prizeRow = world.events.find((e) => e.week === world.week && e.category === 'prize')
+        expect(prizeRow, `w${world.week}: her account moved on a week with no prize cheque`).toBeDefined()
+        expect(moved, `w${world.week}: her cut is the ramp's own share of the gross`).toBe(
+          Math.round(((prizeRow!.amountCents! + moved) * kidPrizeShareBps(ageOf(world))) / 10_000),
+        )
+        hers += moved
+      }
     }
-    // ⚠ THE ARM HAS TO CONTAIN THE THING IT IS PROVING ABSENT. A career that never won a cheque
-    // before eighteen would pass this test with the mechanic deleted.
-    expect(sawPrizeMoney, 'she was really being paid in those years').toBe(true)
+    // ⚠ THE ARM HAS TO CONTAIN THE THING IT IS PROVING. A career that never won a cheque before
+    // eighteen would pass every line above with the mechanic deleted.
+    expect(paidWeeks, 'she really was paid in the junior years').toBeGreaterThan(0)
+    expect(hers, '...and it reached her account').toBeGreaterThan(0)
+    expect(hers).toBe(world.kidFundsCents)
+    expect(firstPaidAge, 'and the first cheque came years before her eighteenth')
+      .toBeLessThan(ECONOMY.kidShare.fromAgeYears)
     expect(ageOf(world)).toBe(ECONOMY.kidShare.fromAgeYears)
   })
 
   it('⭐⭐⭐ THE MONEY LEAVES THE FAMILY WALLET – A/B on one seed, one arm with the ramp at zero', () => {
-    // Two arms of the SAME seed, differing only in `ECONOMY.kidShare`. The horizon is her eighteenth
-    // plus a season, short enough that the two careers are still the same career: the split moves
-    // money, and money moves entry decisions, so a long horizon compares two different lives.
-    const HORIZON = WEEKS_PER_YEAR * 5 + 26
+    // Two arms of the SAME seed, differing only in `ECONOMY.kidShare`. The horizon has to be short
+    // enough that the two careers are still the same career: the split moves money, and money moves
+    // entry decisions, so a long horizon compares two different lives.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 41 #27 (12.09), AND THE OLD HORIZON BECAME A DIFFERENT CAREER RATHER
+    // THAN A WRONG NUMBER. It was `WEEKS_PER_YEAR * 5 + 26` – her eighteenth plus a season – chosen
+    // when the FIRST transfer happened on her eighteenth birthday, so the arms were identical for
+    // five of those six years. His ruling starts the transfers at her first W-series cheque, which
+    // this career collects at fourteen, so the wallets now diverge from week ~55 and by five years
+    // the two arms have played different tournaments (measured: gross $247,800 against $654,850).
+    // ⚠ THE FIX IS THE HORIZON AND NOT THE ASSERTION – the comparability guard below is UNCHANGED
+    // and still refuses to read a difference between two different lives.
+    const HORIZON = WEEKS_PER_YEAR * 2
     const on = walk(1, HORIZON)
     const off = walk(1, HORIZON, true)
 
@@ -214,6 +297,9 @@ describe('#18 – the transfer, on a career that is really played', () => {
         age = now
       }
     }
+    // ⚠ ROUND 41 #27 – THE WALK COVERS MORE RUNGS NOW, because the junior years pay too. The bound
+    // is left at eight rather than raised: what it guards is «the walk really covered the ramp», and
+    // a career that ended early should fail on the ramp's own rungs rather than on the new floor.
     expect(realised.length, 'the walk really covered the ramp').toBeGreaterThanOrEqual(8)
     for (const r of realised) {
       // The only slack is the per-cheque rounding, and it is WIDEST IN THE THINNEST YEAR – which is
@@ -234,7 +320,27 @@ describe('#18 – the transfer, on a career that is really played', () => {
       // first year she is paid anything at all. Five of the nine years are exact to the last cent.
       // The bound is 1.7x the worst reading, the same headroom `tests/rating.test.ts` keeps over its
       // own measured worst case.
-      expect(Math.abs(r.pct - HIS_RAMP[r.age]), `age ${r.age}: realised ${r.pct.toFixed(2)}%`).toBeLessThan(0.25)
+      //
+      // ⚠⚠ RE-AIMED 0.25 -> 1.1 BY ROUND 41 #27 (12.09), AND IT IS THE CAREER THAT MOVED, NOT THE
+      // ARITHMETIC – the same shape as C4's re-aim above, one round later and for a nearer cause.
+      // The split now starts at her first W-series cheque (age fourteen on this walk) instead of on
+      // her eighteenth birthday, so the family's wallet is lighter from week ~55, the entry policy
+      // spends it differently, and every draw, opponent and finish downstream of that is a different
+      // career. Re-measured on the new walk:
+      //
+      //     14  10 exactly     18  10.6426 vs 10     22  30.0155 vs 30     26  50 exactly
+      //     15  10 exactly     19  15 exactly        23  35 exactly
+      //     16  10 exactly     20  20.0598 vs 20     24  40 exactly
+      //     17  10 exactly     21  25.0291 vs 25     25  45 exactly
+      //
+      // ⚠ NINE OF THE THIRTEEN YEARS ARE NOW EXACT TO THE LAST CENT, including all four junior ones,
+      // which is the sharper reading of the same fact: a rate applied to every cheque divides more
+      // evenly than a rate that switches on mid-career. The one wide year is her eighteenth, and the
+      // excess is the TEAM's cut rather than hers – `careerTotals.prizeCents` is what the family
+      // BANKED, so a year carrying a title pays the coach and the masseur out of the same gross and
+      // the denominator shrinks under her numerator. The bound is 1.7x the worst reading (0.6426),
+      // exactly as it was before.
+      expect(Math.abs(r.pct - HIS_RAMP[r.age]), `age ${r.age}: realised ${r.pct.toFixed(2)}%`).toBeLessThan(1.1)
     }
     // And she really is on the cap by 26, which is the whole of «до 40 или 50 вообще».
     expect(realised.some((r) => r.age >= 26 && r.pct > 49.9)).toBe(true)

@@ -133,7 +133,16 @@ function paid(): Snapshot {
   const snap = toSnapshot(world)
   const row = snap.finance.weekly12.find((p) => p.week === snap.week)
   expect(row?.kidShareCents, 'the fixture really stopped on a week that paid her').toBeGreaterThan(0)
-  expect(snap.ageYears, 'and she is past the threshold birthday on it').toBeGreaterThanOrEqual(18)
+  // ⚠⚠ RE-AIMED BY ROUND 41 #27 (12.09). This read «and she is past the threshold birthday on it»
+  // with `>= 18`, which was a true sanity check while the first transfer happened on her eighteenth
+  // birthday. The owner: «призовые падают на её счёт с первого старта W-серии независимо от
+  // возраста – согласен», so the walk above now stops on the FIRST week a cheque was split, and on
+  // this seed that is her fourteenth year. ⚠ The guard is not dropped, it is replaced by the
+  // stronger one it was standing in for: the rate the ledger actually banked is the ramp's own rate
+  // at her age, so a fixture that stopped on a week with the WRONG share still fails here.
+  expect(row?.kidSharePct, 'the banked rate is the ramp`s own at her age').toBe(
+    Math.round(kidPrizeShareBps(snap.ageYears) / 100),
+  )
   cached = snap
   return snap
 }

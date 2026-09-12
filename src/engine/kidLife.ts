@@ -433,10 +433,24 @@ export function collegeNote(view: KidLifeWorldView): string {
  *  is `kidPrizeShareBps` (the function the till divides by) and the ceiling is `ECONOMY.kidShare`, so
  *  a retune moves the sentence with the money instead of leaving a stale promise on her page.
  *
- *  Empty before the threshold birthday - there is no account and no rule to explain yet. */
+ *  Empty before the threshold birthday - there is no account and no rule to explain yet.
+ *
+ *  ⚠⚠ ROUND 41 #27 (12.09) RE-AIMED THAT GATE, AND THE SENTENCE ABOVE IS WHY IT NEEDED RE-AIMING
+ *  RATHER THAN DELETING. The owner: «может быть начать отчисления не в 18, а в 16 лет уже или вообще
+ *  с момента, когда она в первый раз на w серию приходит? это же всё таки ее призовые», ruled «с
+ *  первого старта W-серии независимо от возраста – согласен». So `kidPrizeShareBps` answers 10% at
+ *  every age now and `bps <= 0` is a guard that can no longer be true – and left as it was, this
+ *  note would have appeared on a ten-year-old's page, explaining the terms of an empty account.
+ *  ⚠ THE NEW GATE IS THE ACCOUNT ITSELF, which is what the note is ABOUT: it speaks from her
+ *  eighteenth exactly as it always has (so no career loses a sentence it had), and BEFORE that only
+ *  once money has actually reached her. Since prize money exists on the professional track alone
+ *  (`kidPrizeShareBps`' own note), a junior's balance is non-zero precisely when she has been paid
+ *  for a W-series start – which is his sentence, read off the money instead of off a second
+ *  predicate. */
 export function ownAccountNote(view: KidLifeWorldView): string {
   const bps = kidPrizeShareBps(view.ageYears)
   if (bps <= 0) return ''
+  if (view.ageYears < ECONOMY.kidShare.fromAgeYears && view.kidFundsCents <= 0) return ''
   // ⚠⚠ «PRIZE» IS LOAD-BEARING SINCE ROUND 29 P3 AND WAS NOT THERE BEFORE. This sentence said «of
   // every cheque» while ONE ramp split every cheque in the game. The manager's commission gave
   // sponsor money its own rule – it is hers, less a flat fee – so «every cheque» became a promise

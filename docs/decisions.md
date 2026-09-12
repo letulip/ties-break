@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 98 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 99 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 9 | [WAVE 3 T11 + T12: THE CENSUS HOLDS, AND THE PUSH-THROUGH PRICE IS 92% ERASED](#11092026--wave-3-t11--t12-the-census-holds-and-the-push-through-price-is-92-erased) | 2026-09-11 |
+| economy-and-money | 10 | [ROUND 41, ASK A1: THE SPONSOR LETTERS OPEN AT SIXTEEN, AND THE PRIZE MONEY IS HERS FROM HER FIRST W-SERIES START](#12092026--round-41-ask-a1-the-sponsor-letters-open-at-sixteen-and-the-prize-money-is-hers-from-her-first-w-series-start) | 2026-09-12 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -3988,3 +3988,55 @@ product died for the lever's sake. The owner: «мне это не очень н
   stages now hold three different clocks inside one academy, because a commissioned row's value clock
   starts at DELIVERY. The land's figures are byte-identical across the change, which is what makes
   the pair its own control. Full record: `docs/specs/academy-worth-2026-09.md` §6.
+
+## 12.09.2026 – ROUND 41, ASK A1: THE SPONSOR LETTERS OPEN AT SIXTEEN, AND THE PRIZE MONEY IS HERS FROM HER FIRST W-SERIES START
+
+- **HIS QUESTION (#15):** «А рекламных контрактов правда не предлагают до 18 лет или это наше
+  ноу-хау? кажется молодые тоже в рекламах снимаются.» **AND (#27):** «может быть начать отчисления
+  не в 18, а в 16 лет уже или вообще с момента, когда она в первый раз на w серию приходит? это же
+  всё таки ее призовые.» **HIS RULING, option A1, the same day:** «реклама открывается с 16
+  (юниорские суммы, реже), а призовые падают на её счёт с первого старта W-серии независимо от
+  возраста – **согласен**».
+- ⭐⭐⭐ **THE 18 WAS OUR READING AND NOT HIS RULING, AND THE SHIPPED COMMENT IS THE EXHIBIT.**
+  `ECONOMY.advertising.fromAgeYears` said it came from «какие у нас могут быть механики этих
+  контрактов дополнительные от 18+ лет начиная и дальше» – a question about what EXTRA mechanics
+  exist above eighteen, read as an eligibility gate. Its three supporting facts (the prize ramp
+  started at 18, school ends by 18.92, the junior rungs shut) are all true and none of them is about
+  advertising. The paragraph is kept verbatim under the correction, because the mistake is the
+  useful part.
+- **THE ADVERTISING HALF.** The gate is 16. Between 16 and 18 a `junior` band governs: **`drinks` and
+  `clothing` only** (the shelf's own cheapest rungs – clothing already needs a live kit deal to be
+  written at all), **half** the adult cheque, **half** the arrival chance, **one year** and never
+  more. A multi-year deal signed for a minor was the thing his own round-34 complaint was about at
+  the foot of the adult ladder, and it is worse at sixteen. From her eighteenth birthday the shelf is
+  the shipped one, byte for byte.
+- **THE PRIZE HALF, AND ITS FINDING.** `kidPrizeShareBps` answers a flat 10% below eighteen instead
+  of zero; the ladder from eighteen is untouched to the point, the curve is continuous across her
+  birthday and the cap still lands at 26. ⚠⚠ **«С первого старта W-серии» needed no gate, and that
+  is a fact about the catalogue rather than a shortcut**: prize money exists on the professional
+  track ONLY (no domestic or ITF-junior rung carries a prize table – junior tennis pays nothing,
+  ever) and the split sits inside `if (prize > 0)`, so «every prize cheque at any age» and «from her
+  first W-series start» are the same set of cheques.
+- ⚠⚠ **`wtaEverCounted` WOULD HAVE BEEN THE WRONG FACT, and it was the obvious candidate.** It means
+  «a W result has ever SCORED» – it reads `bestFinishByTier` against the tier's POINTS table – and a
+  W15 first-round exit pays **$130 and zero points**. A trigger built on it would have refused her a
+  share of the first cheque she ever earned, which is the opposite of «в первый раз на w серию
+  приходит». Pinned in `tests/round41-kid-share-first-w.test.ts` §1.
+- ⚠ **The merch brand moves with the prize ramp, by round 35 #9's own rule** («доход от ее бренда
+  давай тоже как проценты с призовых будем делить»): a sixteen-year-old whose family owns her brand
+  now keeps a tenth of its week too. It can only ever ADD to her account, and the alternative – a
+  second ramp for the brand – is the drift that ruling exists to prevent.
+- ⚠ **Her page now follows the ACCOUNT rather than the birthday.** `ownAccountNote` spoke from her
+  eighteenth on a rate that was zero below it; the rate is never zero now, so left alone it would
+  have explained the terms of an empty account to a ten-year-old. It speaks from eighteen exactly as
+  before, and earlier only once money has actually reached her.
+- **NO SCHEMA MOVE ON EITHER HALF** (`SAVE_SCHEMA_VERSION` stays 74), **no new player-facing string**,
+  and **zero new RNG draws**: «реже» is the same purpose-scoped sub-stream read at a lower bar, and
+  the junior one-year ceiling is applied AFTER the letter rng spends its uniform, so no stream shifts
+  by one draw at any age. `tests/condition.test.ts` green and unmodified.
+- **MEASURED, both halves, predictions written before the runs**
+  (`docs/specs/ad-portfolio-2026-08.md` §5 and the kid-share record beside round 23's):
+  advertising, 216 careers per arm – **organic 0% sign a junior deal**, and the diagnostic says why
+  (0% of bench careers ever stand in an advertising band before eighteen: the STANDING binds, not the
+  gate); **staged 61.6%**, her account **+$25,185** mean, the family **+$3,862** (the manager's 15%),
+  and every letter that arrives is a **drink**.

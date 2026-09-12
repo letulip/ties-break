@@ -64,7 +64,7 @@ import {
   tickWeek,
   toSnapshot,
 } from '../../src/engine/world'
-import { kidPrizeShareBps, managerCommissionBps } from '../../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../src/engine/economy'
 import { rngFromSeed } from '../../src/engine/rng'
 import { formatCents } from '../../src/shared/money'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
@@ -136,11 +136,21 @@ describe('round 26 #5b – her share is said out loud on the Money screen', () =
     )
   })
 
-  it('says nothing at all before her eighteenth, when there is no transfer to explain', () => {
+  it('says nothing at all before her eighteenth WHEN NOTHING HAS REACHED HER – #27, re-aimed', () => {
     const world = careerAt(52 * 4)
     const snap = toSnapshot(world)
     expect(snap.ageYears, 'the arm needs her under the threshold').toBeLessThan(18)
-    expect(kidPrizeShareBps(snap.ageYears), 'nothing is being transferred yet').toBe(0)
+    // ⚠⚠ RE-AIMED BY ROUND 41 #27 (12.09) AND IT IS A SHARPER CLAIM THAN THE ONE IT REPLACES. This
+    // line asserted `kidPrizeShareBps(14) === 0` – «nothing is being transferred yet» – and the
+    // owner has ruled otherwise: «призовые падают на её счёт с первого старта W-серии независимо от
+    // возраста – согласен». The RATE is ten percent at every age now. What the strip is silent
+    // about is the ACCOUNT, and this career has none: `careerAt` skips every tournament, so no
+    // cheque was ever written and her balance is zero.
+    expect(kidPrizeShareBps(snap.ageYears), 'the rate applies at her age too, now').toBe(
+      ECONOMY.kidShare.startBps,
+    )
+    expect(world.kidFundsCents ?? 0, 'but nothing has ever reached her').toBe(0)
+    expect(snap.life.ownAccount, 'so the engine composes no sentence about it').toBe('')
 
     const text = clean(mountMoney(snap).text())
     expect(text, 'no share strip before the ramp starts').not.toContain('split before it reaches this account')
