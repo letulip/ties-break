@@ -59,7 +59,8 @@
 
 import { expect } from 'vitest'
 import { createHash } from 'node:crypto'
-import { sponsorWindowClosesAt } from '../src/engine/offers'
+import { kitOfferDeadline, sponsorWindowClosesAt, sponsorWindowOpensAt } from '../src/engine/offers'
+import type { Offer, OfferState } from '../src/shared/protocol/offers'
 import { physicalMean } from '../src/engine/development'
 import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
@@ -2829,10 +2830,125 @@ export const PRE_V66 = {
  *  per-key diff reports byte-identical, and this career's inbox is still unwritten – so
  *  `PRE_R28B.eliteGrinder` EQUALS `FROZEN.eliteGrinder` again, both at the newest value. Computed by
  *  RUNNING `careerHashUnderTheWindowRule(8, 0)`. */
+/** ⚠⚠⚠ RE-AIMED 12.09.2026 (WAVE 4, T1b) – NOT WEAKENED, NOT LOOSENED, AND NOT ONE CONSTANT ABOVE
+ *  MOVED. TWO CAREERS WERE ADDED AND THE RECONSTRUCTION WAS REPAIRED. The three strings above are
+ *  character for character what they were at `97b4e6c9`; the per-key diff and the re-run that say so
+ *  are at the foot of this note.
+ *
+ *  ⭐⭐ THE DEFECT, STATED AT ITS REAL STRENGTH. Not «two constants converged». **THIS CASE WAS DOWN TO
+ *  ZERO DISCRIMINATING CAREERS, FROM ONE, AND STAYED GREEN FOR NINE DAYS WHILE PROVING NOTHING ABOUT
+ *  THE RULE IT IS NAMED AFTER.** The rewrite `careerHashUnderTheWindowRule` applies is a NO-OP on a
+ *  kit letter that landed on the window's opening week – there `kitOfferDeadline(w)` and
+ *  `sponsorWindowClosesAt(w)` are the same number by arithmetic (`decideWeeks === SPONSOR_WINDOW_WEEKS
+ *  === 5`), so the helper hands back the same world and the identity below holds by construction. A
+ *  career only WITNESSES the ruling while it holds a letter that landed MID-window. By 12.09 none of
+ *  the three did.
+ *
+ *  ⚠ AND IT WAS `eliteGrinder` THAT DISCRIMINATED, NOT `middleGrinder`. Both the owner's report and
+ *  the architect's sharpening named preset 5 / policy 0 as «the only career that could tell the WINDOW
+ *  rule from the LETTER rule, via `kit-152`». That is preset 8 / policy 0 – the block over
+ *  `careerHashUnderTheWindowRule` is explicit («`--preset 8 --policy 0` … three of the four kit letters
+ *  this career receives arrive on the window's OPENING week (47, 99, 151)»), the v65/v66 notes above
+ *  say the same thing three times («`middleGrinder` is still IDENTICAL to `FROZEN.middleGrinder` … only
+ *  `eliteGrinder` differs»), and the walk confirms it: at `a1c1109c`, preset 5 / policy 0 held
+ *  kit-47/99/151, ALL on slot 0. **`middleGrinder` never discriminated, on any tree.** `selfTravelling`
+ *  is asserted with plain `careerHash` and is identity by design. So the count was 1, and it is the
+ *  120k elite career that had it.
+ *
+ *  ⭐⭐ WHEN AND WHY, DATED BY RUNNING THE ENGINE ON BOTH SIDES RATHER THAN BY READING HASHES.
+ *  **`ac2b5de3` (03.09.2026, «round 35 #14: the draw is a fact, so it is written down», schema v70).**
+ *  Its parent `a1c1109c` and it were walked in two detached worktrees, same probe, both logs kept:
+ *
+ *    · at `a1c1109c` – preset 8 / policy 0 holds FOUR kit letters, `kit-47/99/151` on slot 0 and
+ *      **`kit-152` on slot 1**: deadline 156 under the letter rule, 155 under the window rule, `open`
+ *      at the horizon. `kidRank` 23. That is the letter the whole block above describes.
+ *    · at `ac2b5de3` – preset 8 / policy 0 holds TWO, `kit-47` and `kit-151`, both slot 0. `kidRank` 54.
+ *
+ *  The cause is not the sponsorship code, which that commit does not touch. The draw pin decides who
+ *  she PLAYS; her results moved, her standing moved with them, and `windowLadder(standing)` /
+ *  `offerChanceFor(standing, tier)` are read fresh on every week of the window – so a different set of
+ *  rungs cleared and wrote on different slots, and the mid-window letter stopped being raised. That
+ *  commit's own message says it in advance («22 / 33 / 31 / 28 / 34 keys of ~73 on five preset/policy
+ *  pairs – wide, because the change decides who she plays»); what nobody could see is that one of the
+ *  keys it moved was the only thing making this case mean anything. ⚠ THE LESSON IS THE SHAPE, NOT THE
+ *  COMMIT: a guard whose subject is chosen by her RANKING is re-rolled by every balance change, and
+ *  this one died silently because it asserted only a hash and never asserted its own subject.
+ *
+ *  ⭐ SO THE REPAIR IS (a) RESTORE, AND THE THIRD OUTCOME IS REFUTED BY MEASUREMENT. The round-28 #17-b
+ *  ruling is NOT unobservable: all eighteen preset/policy pairs were walked to week 156 and printed,
+ *  and **five of them hold a mid-window kit letter where the two rules disagree** – 3/1, 4/1, 5/1, 6/1
+ *  and 8/1, every one of them under `POLICIES[1]`. Nothing was invented and nothing was hand-tuned:
+ *  both careers added below are existing bench pairs walked by this file's own `walkFrozenCareer`,
+ *  whose fifteen assertions (counted, not quoted – `grep -c 'expect('` over the function) they pass
+ *  unchanged: no college, no fork, no call-up letter, no masseur, no shelf, no business, and the v62
+ *  peak standing at today's physical mean.
+ *
+ *    · `elitePlayer` = preset 8 / policy 1 (120k wealthy · ELITE coach · player policy) – the same
+ *      preset as the career that used to carry it, one policy across. Its witness is `kit-152` again:
+ *      week 152, slot 1, written deadline **156**, window deadline **155**, `open` at the horizon
+ *      instead of expired. The identical shape the original finding named.
+ *    · `middlePlayer` = preset 5 / policy 1 (25k middle · middle coach · player policy) – carried for
+ *      the OTHER branch: `kit-100`, week 100, slot 1, already **expired** at the horizon on
+ *      `decidedWeek` 105, where the window rule would have lapsed it on 104. Without this career the
+ *      repaired reconstruction below would be code nobody watches.
+ *
+ *  ⚠⚠ AND THE RECONSTRUCTION WAS WRONG, WHICH ONLY THE RESTORE COULD HAVE SHOWN. `underTheWindowRule`
+ *  rewound `deadlineWeek` on an already-expired letter and left `decidedWeek` where the LETTER rule had
+ *  put it – a world the engine never wrote. It could not bite while every frozen career's letters sat
+ *  on slot 0 (there the rewrite is a no-op), and it bit on the first career restored. Fixed in the
+ *  helper, with the measurement beside the line.
+ *
+ *  ⭐⭐ EVERY CONSTANT HERE IS A **MEASURED** VALUE FROM A TREE THAT ACTUALLY RAN THE OLD RULE, NOT THE
+ *  HELPER'S OWN OUTPUT PINNED BACK AT ITSELF. `src/engine/offers.ts:965` (`raiseKitOffers`) and `:1059`
+ *  (`raiseKitRenewal`) – the two lines `d1cec974` changed, and only those two – were put back to
+ *  `sponsorWindowClosesAt(week)` in a detached worktree at `97b4e6c9`, and the whole world was hashed.
+ *  The B arm of that worktree reproduced `FROZEN` on all three original careers first, so the arm is
+ *  provably the right tree. **EIGHT CAREERS, EIGHT AGREEMENTS between the engine-toggled hash and this
+ *  file's reconstruction**, including the five that discriminate:
+ *
+ *      5/0 d364eec3…  8/0 4b4d1b32…  0/1 172cacb1…   (no mid-window letter – unchanged, as expected)
+ *      8/1 59968dae…  5/1 de9a7dda…  3/1 f54a240d…  4/1 a2ebc9ec…  6/1 b6008c45…
+ *
+ *  ⚠ Before the helper repair, 5/1's reconstruction read `23ba204dc0ca…` against the engine's
+ *  `de9a7dda7916…` – one letter's `decidedWeek`, and the only reason it is not in this file as a wrong
+ *  constant is that the two arms were compared instead of one being trusted.
+ *
+ *  ⚠ TWO CLAIMS IN THE NOTES ABOVE ARE STALE AND ARE CORRECTED HERE RATHER THAN EDITED OUT OF THEM,
+ *  because those notes are the record of their own day: (1) «the 8k self-coached career … holds no kit
+ *  letter» – it holds THREE today (`kit-47`, `kit-99`, `kit-151`), all on slot 0, which is why its hash
+ *  is unchanged; the conclusion survives, the reason does not. (2) «this career holds no kit letter for
+ *  the window rule to rewrite» over `FROZEN.eliteGrinder` (11.09) reported the convergence as a
+ *  property of that career without dating it – it is the downstream of `ac2b5de3`, eight days earlier.
+ *
+ *  ⚠ NO CONSTANT ABOVE MOVED, MEASURED BOTH WAYS. `tools/frozen-key-diff.ts` on 5/0, 8/0 and 0/1,
+ *  captured before the first edit and again after the last, headers checked on all six captures
+ *  (`# preset N policy M weeks 156`): **ZERO keys of 79 / 78 / 80 differ on any career, `offers` and
+ *  `rngMain` among the unmoved** – this pass touches no engine file. And the three constants were
+ *  RE-RUN through the exported helpers into a file and compared character for character, never read
+ *  off a failure message. ⚠ The mutation arm says the same thing from the other side: un-shipping the
+ *  ruling in the engine leaves seventeen of this file's eighteen cases GREEN.
+ *
+ *  ⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+ *  tests/condition.test.ts, green on this tree. It could not be otherwise – this pass adds no engine
+ *  code at all, and the two careers added take their draws off the same MAIN stream every other bench
+ *  career here has always used. */
 export const PRE_R28B = {
   middleGrinder: 'd364eec3d216d146b343c5025ce4a3fd58ec844604f5ed4cc36204664bdf4826',
   eliteGrinder: '4b4d1b32f48ef275bd3bff307eab96299a3552bea384d3549f291147d75e4da8',
-  selfTravelling: '172cacb1cdde1152bd0aebb09565d33850cf04c11368f096e62b6da23d21b724',}
+  selfTravelling: '172cacb1cdde1152bd0aebb09565d33850cf04c11368f096e62b6da23d21b724',
+  /** ⭐⭐ PRESETS[8] · 120k wealthy · ELITE coach · PLAYER policy – THE WITNESS, restored 12.09.2026.
+   *  The one career in this file whose inbox the window rule actually rewrites: `kit-152` lands on
+   *  window week 48 (slot 1), so its deadline is 156 by the letter and 155 by the window, and it is
+   *  still `open` at the 156-week horizon instead of expired. MEASURED on a tree that ran the old rule
+   *  (offers.ts:965 and :1059 reverted, detached worktree at `97b4e6c9`), not produced by the helper
+   *  it is asserted against. */
+  elitePlayer: '59968dae991faf1c3ab705dc2257614cb1435148e7d0f9cf222d1fd1efeb010a',
+  /** ⭐ PRESETS[5] · 25k middle · middle coach · PLAYER policy – THE EXPIRED-LETTER WITNESS, and the
+   *  only career here that exercises the `decidedWeek` rewind. `kit-100` lands on window week 49 and
+   *  has ALREADY lapsed by the horizon, on 105 under the letter rule and on 104 under the window rule;
+   *  this career is what makes that branch of the reconstruction a measured claim instead of unwatched
+   *  code. Same provenance: the engine-toggled worktree, not the helper. */
+  middlePlayer: 'de9a7dda7916f93882b0dcf5acfc617adb61f0703edb023d7e2bec44e20338c9',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -3473,11 +3589,32 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
  *  asserts directly. */
 export function careerHashUnderTheWindowRule(presetIndex: number, policyIndex: number): string {
   const world = walkFrozenCareer(presetIndex, policyIndex)
-  const offers = world.offers.map((o) => {
+  return createHash('sha256').update(JSON.stringify({ ...world, offers: underTheWindowRule(world) })).digest('hex')
+}
+
+/** The rewrite itself, shared by `careerHashUnderTheWindowRule` and `windowRuleWitness` so that a
+ *  witness costs ONE walk instead of two. Declared below its caller on purpose: the block above is
+ *  what every citation of `careerHashUnderTheWindowRule` means – 31 of them across 3 files on
+ *  12.09.2026, counted rather than quoted – and it belongs over the name they cite. */
+function underTheWindowRule(world: ReturnType<typeof walkFrozenCareer>): Offer[] {
+  return world.offers.map((o) => {
     // `info` letters - the brand's goodbye, the tournament desk's receipts - carry
     // `deadlineWeek: week` from their own raise and were never touched by either rule.
     if (o.kind !== 'kit' || o.state === 'info') return o
     const deadlineWeek = sponsorWindowClosesAt(o.week)
+    // ⚠⚠ AND A LETTER THAT HAD **ALREADY** EXPIRED LAPSED A WEEK EARLIER UNDER THE WINDOW RULE, WHICH
+    // THIS HELPER GOT WRONG FROM ITS FIRST VERSION UNTIL 12.09.2026 – see the T1b block over
+    // `PRE_R28B`. `expireOffers` lapses a letter on `deadlineWeek + 1`, so moving the deadline moves
+    // the lapse WITH it; rewriting only `deadlineWeek` left `decidedWeek` at the LETTER rule's week
+    // and reconstructed a world the engine never wrote. It never bit, because until this pass no
+    // frozen career held a mid-window letter that expired inside the horizon - and it bit the moment
+    // one was restored. MEASURED, not argued: with the two ruling lines in `src/engine/offers.ts`
+    // put back to `sponsorWindowClosesAt` in a detached worktree at `97b4e6c9`, preset 5 / policy 1
+    // hashes `de9a7dda7916…`; this helper returned `23ba204dc0ca…` before the line below and returns
+    // `de9a7dda7916…` after it. ⚠ On a letter that landed on the window's OPENING week the line is a
+    // no-op by arithmetic (`deadlineWeek` does not move, and `decidedWeek` is already
+    // `deadlineWeek + 1`), which is why all three original careers reproduce character for character.
+    if (o.state === 'expired') return { ...o, deadlineWeek, decidedWeek: deadlineWeek + 1 }
     if (o.state !== 'open' || world.week <= deadlineWeek) return { ...o, deadlineWeek }
     // ⚠ AND THE EXPIRY THAT FOLLOWED FROM IT, BOTH FIELDS. `expireOffers` writes `state` AND
     // `decidedWeek` - the week it lapsed - and it runs every week, so a letter past its deadline was
@@ -3486,7 +3623,63 @@ export function careerHashUnderTheWindowRule(presetIndex: number, policyIndex: n
     // catches and a looser assertion would not.
     return { ...o, deadlineWeek, state: 'expired' as const, decidedWeek: deadlineWeek + 1 }
   })
-  return createHash('sha256').update(JSON.stringify({ ...world, offers })).digest('hex')
+}
+
+/** ⭐⭐ THE DISCRIMINATING HALF OF ROUND 28 #17-b, MADE ASSERTABLE – added 12.09.2026 by T1b, and the
+ *  reason it exists is the whole of that task. The identity `careerHashUnderTheWindowRule(p, q) ===
+ *  PRE_R28B[…]` is TRUE BY ARITHMETIC on a career whose kit letters all landed on the window's opening
+ *  week, because there the two rules ARE the same number and the rewrite above is a no-op. Such a
+ *  career still proves «this career did not move», which is worth having – but it proves NOTHING about
+ *  the window rule, and for nine days the case proved nothing about the window rule on any of its
+ *  three careers and stayed green throughout. So a career is only a WITNESS to the ruling while it
+ *  holds a letter the two rules disagree about, and this is what lets the case assert that in so many
+ *  words instead of trusting it.
+ *
+ *  ⚠ ONE WALK, NOT THREE. `careerHash`, `careerHashUnderTheWindowRule` and a read of the inbox are
+ *  three walks of the same 156 weeks at ~0.5 s each, and this file's whole reason for being cut in
+ *  three is the 62,889 ms CI stall in the header. This returns all three facts off one walk. */
+export interface WindowRuleWitness {
+  /** the live world's hash – exactly what `careerHash(presetIndex, policyIndex)` returns. */
+  live: string
+  /** the same career with the deadline put back on the window – what `careerHashUnderTheWindowRule` returns. */
+  underTheWindowRule: string
+  /** every kit letter in the inbox at the horizon, with BOTH rules spelled out beside what was written. */
+  kitLetters: {
+    id: string
+    week: number
+    /** `week - sponsorWindowOpensAt(week)`. Slot 0 is the window's opening week, where the two rules agree. */
+    slot: number
+    /** what the engine actually wrote – `kitOfferDeadline(week)` since round 28 #17-b. */
+    deadlineWeek: number
+    state: OfferState
+    decidedWeek: number | null
+    /** `kitOfferDeadline(week)` – THE LETTER RULE, five weeks from the day it landed. */
+    letterRule: number
+    /** `sponsorWindowClosesAt(week)` – THE WINDOW RULE, the winter's own closing week. */
+    windowRule: number
+  }[]
+}
+
+export function windowRuleWitness(presetIndex: number, policyIndex: number): WindowRuleWitness {
+  const world = walkFrozenCareer(presetIndex, policyIndex)
+  return {
+    live: createHash('sha256').update(JSON.stringify(world)).digest('hex'),
+    underTheWindowRule: createHash('sha256')
+      .update(JSON.stringify({ ...world, offers: underTheWindowRule(world) }))
+      .digest('hex'),
+    kitLetters: world.offers
+      .filter((o) => o.kind === 'kit')
+      .map((o) => ({
+        id: o.id,
+        week: o.week,
+        slot: o.week - sponsorWindowOpensAt(o.week),
+        deadlineWeek: o.deadlineWeek,
+        state: o.state,
+        decidedWeek: o.decidedWeek ?? null,
+        letterRule: kitOfferDeadline(o.week),
+        windowRule: sponsorWindowClosesAt(o.week),
+      })),
+  }
 }
 
 
