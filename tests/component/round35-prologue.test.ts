@@ -34,7 +34,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { assertDismissReachable, boxOf, measureDialog, setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
-import { landing } from './prologueLanding'
+import { finishCard } from './prologueLanding'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import { useGameStore } from '../../src/stores/game'
@@ -49,7 +49,7 @@ import {
   localDrawLine,
   type PrologueCard,
 } from '../../src/prologue/cards'
-import { handoverKicker, handoverRoseTitle } from '../../src/prologue/handover'
+import { WALK_COPY, handoverKicker, handoverRoseTitle } from '../../src/prologue/handover'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import { LOCAL_POOL, playLocalOpen, prologueEntrant } from '../../src/prologue/pool'
 import {
@@ -80,14 +80,23 @@ function stubStore() {
   return game
 }
 
-async function press(wrapper: ReturnType<typeof mount>, label: string): Promise<void> {
+async function press(
+  wrapper: ReturnType<typeof mount>,
+  label: string,
+  /** ⭐ ROUND 41 #9 – a look at the card ANSWERED, before Proceed takes it away. Only the no-repeat
+   *  guard passes one, and it is the only thing that can see the Proceed row at all. */
+  onAnswered?: () => void,
+): Promise<void> {
   const button = wrapper.findAll('button').find((b) => b.text().startsWith(label))
   expect(button, `no «${label}»: ${wrapper.text().slice(0, 160)}`).toBeTruthy()
-  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. An answer that FINISHES a card is now held for
-  // `PROLOGUE_LANDING_MS` before the walk advances, so this helper steps that clock instead of
-  // waiting on it – see tests/component/prologueLanding.ts. The no-repeat guard below is
-  // untouched and still reads every scene the walk draws.
-  await landing(() => button!.trigger('click'))
+  // ⚠⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED – AND THIS IS THE THIRD ROUND TO AIM IT. Round 40 #3
+  // held a finished card 200 ms before advancing and this helper stepped that clock; round 41 #9
+  // RETIRED the hold at the owner's own ruling, because a radio «только про выбор» no longer
+  // advances anything – the card stays until the player presses Proceed. So this presses the answer
+  // AND, where that answer finished the card, the Proceed it produced (`finishCard`,
+  // tests/component/prologueLanding.ts). The no-repeat guard below is untouched and still reads
+  // every scene the walk draws – see its own ⚠ for what Proceed did to its prefix rule.
+  await finishCard(wrapper, () => button!.trigger('click'), onAnswered)
   await Promise.resolve()
   await wrapper.vm.$nextTick()
 }
@@ -135,18 +144,24 @@ async function walkChildhood(
   opts: { enter: boolean; rich?: boolean; onScene?: (kind: 'card' | 'result', last: boolean) => void },
 ): Promise<void> {
   let run = EMPTY_RUN
+  // ⚠⚠ ROUND 41 #9 – AND THE ANSWERED CARD IS RECORDED TOO, WHICH IS THE ONLY MOMENT IT EXISTS.
+  // A card that is finished grows a Proceed row and then leaves on the very next press, so a walk
+  // that only looked BEFORE each press would never see the column the player actually decides from –
+  // and the no-repeat guard would be silently blind to the one control round 41 added to it. This is
+  // handed to `press` and fires between the answer and the Proceed.
+  const answered = () => opts.onScene?.('card', false)
   for (const age of CARD_AGES) {
     const row = PROLOGUE_CARDS.find((c) => c.age === age)!
     const card = cardFor(age, run)
     opts.onScene?.('card', false)
     if (card.origins) {
-      await press(wrapper, card.origins[1].label)
+      await press(wrapper, card.origins[1].label, answered)
       run = withOrigin(run, 'middle')
     } else if (card.options) {
       const option = opts.rich === false
         ? [...card.options].sort((a, b) => (a.costCents ?? 0) - (b.costCents ?? 0))[0]
         : (card.options.find((o) => o.id === CARRIED_ROAD[age]) ?? card.options[1])
-      await press(wrapper, option.label)
+      await press(wrapper, option.label, answered)
       run = withPick(run, age, option.id)
     } else if (!row.tournament) {
       // ⚠ A CARD THAT CARRIES A TOURNAMENT QUESTION SYNTHESISES NO «Go on» (round 35 #4): the ask's
@@ -162,7 +177,7 @@ async function walkChildhood(
       // WHAT MAKES THE NO-REPEAT ARM ABLE TO FAIL. Under the two-beat version this is where the
       // second drawing of the card appeared - same painting, same title, a different body.
       opts.onScene?.('card', false)
-      await press(wrapper, opts.enter ? 'Put her name down' : 'Not this year')
+      await press(wrapper, opts.enter ? 'Put her name down' : 'Not this year', answered)
     }
     // ...and then whatever tennis the year held.
     for (let guard = 0; guard < 12; guard++) {
@@ -399,6 +414,9 @@ describe('⭐⭐⭐ item 4 – no scene is drawn twice in one childhood', () => 
       },
     })
     const replaced: string[] = []
+    /** ⭐ ROUND 41 #9 – every label that appeared in the MIDDLE of a column rather than at the end of
+     *  it. Filled by the same pass that checks nothing was taken away; see the arm below the loop. */
+    const inserted = new Set<string>()
     let grew = 0
     for (const [head, seen] of bodies) {
       const shots = seen.map((s) => s!)
@@ -406,13 +424,52 @@ describe('⭐⭐⭐ item 4 – no scene is drawn twice in one childhood', () => 
       if (new Set(shots.map((s) => s.lede)).size > 1) replaced.push(`${head} – the scene was replaced`)
       // ...nor does the question, once it is on the screen...
       if (new Set(shots.map((s) => s.askLine).filter(Boolean)).size > 1) replaced.push(`${head} – the question was replaced`)
-      // ...and the answers only ever GROW: every earlier column is the front of every later one.
+      // ...and the answers only ever GROW: every label the screen already showed is still there,
+      // still in that order.
+      //
+      // ⚠⚠ RE-AIMED BY ROUND 41 #9, AND THE RE-AIM IS FROM «PREFIX» TO «SUBSEQUENCE» – said out loud
+      // because it is a weaker rule and a weaker rule has to be argued for. It read «every earlier
+      // column is the FRONT of every later one», which was true while everything a card could grow
+      // was appended at the bottom: round 40 #2's disclosed pair arrives under the year's answers,
+      // and the way out of the story is only ever on the first card, where nothing grows.
+      //
+      // Round 41 #9 adds a control that is NOT at the bottom. Proceed appears when every question on
+      // the card is answered, and it sits AFTER the ask group but BEFORE the quiet control at the
+      // foot of the column – the way out on the five, the way back on every card after it – because
+      // `.prologue-answers` must end in the way out (the round-20 #3 fit measurement reads it off
+      // the card's bottom edge) and `e2e/smoke.spec.ts` presses the LAST control on the five
+      // expecting the skip. So the five really does go
+      //     three origins / Skip the childhood  ->  three origins / Proceed / Skip the childhood
+      // which is an INSERTION, not an append, and the prefix rule reported it as «the answers were
+      // replaced» on four cards.
+      //
+      // ⚠ WHAT THE RULE IS ACTUALLY FOR IS UNMOVED: the owner reported reading the same screen
+      // twice, and what makes a screen the same screen twice is something being TAKEN AWAY or SWAPPED
+      // under an unchanged head. A subsequence check says exactly that and nothing less – nothing
+      // vanished, nothing was reordered, nothing was replaced – and what it stops permitting is only
+      // «a new control appeared between two old ones», which is what round 41 asked for.
+      // ⚠ AND IT IS NOT LEFT TO A LOOSER RULE ALONE: the arm under the loop names Proceed as the
+      // growth by label, so a column that grew something else would still have to answer for it.
       for (let i = 1; i < shots.length; i++) {
         const before = shots[i - 1].labels
         const after = shots[i].labels
         if (after.length > before.length) grew += 1
-        const kept = before.every((label, at) => after[at] === label)
-        if (!kept) replaced.push(`${head} – the answers were replaced: ${before.join('/')} -> ${after.join('/')}`)
+        // ⚠ ONE PASS ANSWERS BOTH QUESTIONS. Walking `after` while matching `before` as a
+        // subsequence says whether everything the screen showed is still there and in order (`at`
+        // reaching the end of `before`), and – for free – WHICH new labels arrived before the old
+        // column had run out, which is the insertion the arm under this loop names. A label added
+        // after the last old one is an APPEND and is not one.
+        let at = 0
+        for (const label of after) {
+          if (at < before.length && before[at] === label) {
+            at += 1
+            continue
+          }
+          if (at < before.length) inserted.add(label)
+        }
+        if (at < before.length) {
+          replaced.push(`${head} – the answers were replaced: ${before.join('/')} -> ${after.join('/')}`)
+        }
       }
     }
     expect(replaced, 'a year`s own scene was redrawn with something on it taken away').toEqual([])
@@ -420,6 +477,15 @@ describe('⭐⭐⭐ item 4 – no scene is drawn twice in one childhood', () => 
     // arrived while the first stayed. Without this the rule above would pass on a prologue that
     // never disclosed anything at all.
     expect(grew, 'no card grew its second group – round 40 #2 is not on the screen').toBeGreaterThan(0)
+    // ⚠⚠ AND THE ONE THING THAT MAY BE INSERTED IS NAMED, so «subsequence» is not a licence to put
+    // anything anywhere. Every column that grew WITHOUT simply appending grew by exactly the way on
+    // and by nothing else – and it is not vacuous either way round: an empty set fails this just as
+    // a second label does, so a build where Proceed stopped appearing mid-column would be caught
+    // here rather than quietly satisfying a looser rule.
+    // MUTATION-VERIFIED: a second control rendered beside Proceed -> red, naming both labels.
+    expect([...inserted], 'a card grew a control in the middle of its column and it is not the way on').toEqual([
+      WALK_COPY.proceed,
+    ])
     // ⚠ AND THE WALK IS REAL, so the empty list above means something: nine cards at least, and the
     // twelfth and thirteenth – the two he named – were among them.
     expect(bodies.size).toBeGreaterThanOrEqual(CARD_AGES.length)

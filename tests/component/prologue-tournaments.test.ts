@@ -30,7 +30,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { assertDismissReachable, boxOf, setViewport, PHONE } from './fits'
-import { landing } from './prologueLanding'
+import { finishCard } from './prologueLanding'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
@@ -103,11 +103,12 @@ async function click(el: ReturnType<typeof mount>, selector: string, label?: str
     ? el.findAll(selector).find((b) => b.text().startsWith(label))
     : el.findAll(selector)[0]
   expect(button, `no «${label ?? selector}»: ${el.text().slice(0, 140)}`).toBeTruthy()
-  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. A finished card is now HELD for `PROLOGUE_LANDING_MS`
-  // before the walk advances, so this helper steps that clock rather than waiting on it – see
-  // tests/component/prologueLanding.ts. Nothing this file asserts moved: it still presses and then
-  // reads the screen the press produced.
-  await landing(() => button!.trigger('click'))
+  // ⚠⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED, AND THE THIRD ROUND TO AIM IT. Round 40 #3 HELD a
+  // finished card 200 ms before the walk advanced and this stepped that clock; round 41 #9 retired
+  // the hold – a radio only selects now, so the card stays until Proceed is pressed. This presses
+  // the answer and then the Proceed it produced (`finishCard`). ⚠ THE RHYTHM THIS FILE COUNTS IS
+  // UNTOUCHED: the weekends are still queued by `advanceYear` off `localOpensAt`, one press later.
+  await finishCard(el, () => button!.trigger('click'))
   await Promise.resolve()
   await el.vm.$nextTick()
 }

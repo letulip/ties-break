@@ -39,7 +39,7 @@ import MatchViewer from '../../src/components/MatchViewer.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
 import KnockDialog from '../../src/components/KnockDialog.vue'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
-import { landing } from './prologueLanding'
+import { finishCard } from './prologueLanding'
 import InjuryStopDialog from '../../src/components/InjuryStopDialog.vue'
 import { simulateMatch } from '../../src/engine/match/engine'
 import { annotateMatch } from '../../src/engine/match/rally'
@@ -252,11 +252,14 @@ function midBandKid(): MatchPlayer {
 async function pressAnswer(w: VueWrapper, label: string): Promise<void> {
   const btn = w.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
   expect(btn, `no answer «${label}»: ${w.text().slice(0, 140)}`).toBeTruthy()
-  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. An answer that FINISHES a card is now held for
-  // `PROLOGUE_LANDING_MS` before the walk advances, so this helper steps that clock instead of
-  // waiting on it – see tests/component/prologueLanding.ts. The pinned seeds and the brackets
-  // they resolve are untouched: the hold defers the advance and draws nothing.
-  await landing(() => btn!.trigger('click'))
+  // ⚠⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED, AND THE THIRD ROUND TO AIM IT. Round 40 #3 held a
+  // finished card 200 ms before advancing and this stepped that clock; round 41 #9 retired the hold
+  // – a radio no longer advances anything, and the card stays until Proceed is pressed. So this
+  // presses the answer and then the Proceed it produced (`finishCard`). ⚠ THE PINNED SEEDS AND THE
+  // BRACKETS THEY RESOLVE ARE UNTOUCHED, which is the claim this file actually rests on: an extra
+  // press draws no dice – `playLocalOpen` is called from `advanceYear`, which now runs on Proceed
+  // instead of on a timer, with the same seed, the same age and the same index.
+  await finishCard(w, () => btn!.trigger('click'))
   await Promise.resolve()
   await nextTick()
 }

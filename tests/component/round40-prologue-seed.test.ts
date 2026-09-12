@@ -39,7 +39,7 @@ import '../../src/style.css'
 import { setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
 import PrologueLocalOpen from '../../src/components/PrologueLocalOpen.vue'
-import { landing } from './prologueLanding'
+import { finishCard } from './prologueLanding'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { CARD_AGES, PROLOGUE_CARDS } from '../../src/prologue/cards'
@@ -83,11 +83,17 @@ function stubStore(): { calls: Call[] } {
   return { calls }
 }
 
-/** Press the answer whose label starts with `label`, and let round 40 #3's landing elapse. */
+/** Press the answer whose label starts with `label`, and finish the card if that press finished it.
+ *
+ *  ⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED. It used to let round 40 #3's 200 ms landing elapse; that
+ *  hold is retired, because a radio no longer advances anything and the card waits on Proceed
+ *  instead. ⚠ B'S CLAIM IS UNMOVED AND IS WHY THIS FILE CARES: the seed is drawn once at mount
+ *  (`initialSeed`) and every weekend is a sub-stream off it, so an extra press per card changes no
+ *  draw – the same childhood on the same seed is still the same girl. */
 async function answer(w: VueWrapper, label: string): Promise<void> {
   const button = w.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
   expect(button, `no control «${label}» on this card: ${w.text().slice(0, 140)}`).toBeTruthy()
-  await landing(() => button!.trigger('click'))
+  await finishCard(w, () => button!.trigger('click'))
   await Promise.resolve()
   await w.vm.$nextTick()
 }

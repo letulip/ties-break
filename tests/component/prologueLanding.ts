@@ -1,49 +1,71 @@
-// ⚠⚠ ROUND 40 #3 – WHY EVERY PROLOGUE WALK IN tests/component STEPS A CLOCK NOW, AND WHY IT IS NOT
-// A SLEEP.
+// ⚠⚠ ROUND 41 #9 – WHAT THIS FILE IS NOW, AND WHY IT STILL HAS ROUND 40'S NAME.
 //
-// The container holds a finished card for `PROLOGUE_LANDING_MS` before it advances, so that the
-// answer the player just took is on screen long enough to be seen (docs/rounds/round-40.md, item 3).
-// A walk that pressed and looked would now find the SAME card, so every suite that drives the real
-// component has to let that hold elapse.
+// It was built for round 40 #3, the 200 ms LANDING HOLD: the container held a finished card before
+// it advanced, so every walk in tests/component had to let that hold elapse, and this stepped a fake
+// clock rather than sleeping. Round 41 #9 RETIRED the hold at the owner's own ruling – «8+9 as cut,
+// верно» – because a radio no longer advances anything at all: the taken answer now stays on screen
+// until the player presses Proceed, which is a better answer to «let the ball be seen» than a timer
+// was. There is no timer left to step, so the clock work is gone with it.
 //
-// ⚠ IT MAY NOT BE A REAL WAIT. Five suites walk this component and a nine-year walk holds SEVEN
-// times, so a real `await sleep(200)` per answer would add seconds to the component project on every
-// run – and, worse, would be a race: a machine under load (CLAUDE.md's own contention note) would
-// paint late and the walk would read the old card. The clock is FAKED and STEPPED instead, so the
-// hold is exact and costs nothing.
+// ⭐ WHAT REPLACES IT IS THE OTHER HALF OF THE SAME PROBLEM. Six suites walk the real container by
+// pressing labels, and on the eight cards that are answered by SELECTING, a press no longer moves
+// the walk: the card stays and grows a Proceed. So every one of those walks needs one more press per
+// card, and this is that press, in one place – `finishCard` presses whatever the answer produced.
 //
-// ⚠⚠ AND THE FAKE CLOCK IS SCOPED TO THE PRESS RATHER THAN TO THE SUITE, which is the one design
-// decision in this file. A suite-wide `vi.useFakeTimers()` would also be sitting under the match
-// viewer, the transitions and the weekend flow that these same walks drive – all of which run on
-// timers this file knows nothing about. Installed for the click and uninstalled before Vue paints,
-// it can only ever affect the landing it exists for.
-import { vi } from 'vitest'
+// ⚠ THE NAME IS KEPT ON PURPOSE. Six suites import this path, `docs/rounds/round-41.md` names it in
+// the round's own map, and the file's SUBJECT never changed: it is «press something on a prologue
+// card and let the walk settle». What changed is what settling means.
+//
+// ⚠⚠ AND THE SECOND ARGUMENT IS REQUIRED RATHER THAN OPTIONAL, WHICH IS THE ONE DESIGN DECISION IN
+// THIS FILE. A `finishCard(click)` that took the wrapper optionally would compile in a suite that
+// forgot it, and that suite would silently walk one card and then assert against a card that never
+// advanced – a green-to-red conversion nobody could read. Taking the wrapper FIRST makes a suite
+// that has not been re-aimed a type error instead.
 import { nextTick } from 'vue'
-import { PROLOGUE_LANDING_MS } from '../../src/components/ChildhoodPrologue.vue'
 
-export { PROLOGUE_LANDING_MS }
+/** The Proceed control's own hook – the one thing this helper needs to know about the markup.
+ *  Spelled once here so a class rename is one edit rather than six. */
+export const PROCEED_SELECTOR = '.prologue-proceed'
+
+/** The half of `@vue/test-utils`'s wrapper this file uses. Structural rather than imported, so a
+ *  caller may hand over a `VueWrapper` of any component without this file knowing which. */
+interface Pressable {
+  find(selector: string): { exists(): boolean; trigger(event: string): Promise<unknown> }
+}
+
+/** ⚠ TWO MICROTASK TURNS AND A RENDER. `answer()` and `proceed()` are both async and the last card's
+ *  advance awaits `newCareer` through the store, so one `nextTick` is not always enough to reach the
+ *  screen the press produced. Callers add their own flush on top; this is the floor. */
+async function settle(): Promise<void> {
+  await Promise.resolve()
+  await Promise.resolve()
+  await nextTick()
+}
 
 /**
- * Press something on a prologue card and let whatever it started LAND.
+ * Press something on a prologue card, and then finish the card if that press finished it.
  *
- * ⚠ HARMLESS ON A PRESS THAT SCHEDULES NOTHING – the year's own answer on a card that still has its
- * tournament question open, the way on off a quiet card, a weekend's skip. There is no timer to
- * fire, so stepping the clock does nothing at all and the caller does not have to know which kind of
+ * ⚠ HARMLESS ON A PRESS THAT DOES NOT. The way on off a quiet card, a weekend's skip, the way on off
+ * a result scene and the year's own answer on a card whose tournament question is still open all
+ * advance – or fail to – exactly as they did: there is no Proceed on the screen afterwards, so the
+ * second half of this function does nothing and the caller does not have to know which kind of
  * control it just pressed.
  */
-export async function landing(click: () => Promise<unknown>): Promise<void> {
-  // ⚠ ONLY `setTimeout` / `clearTimeout`. `vi.useFakeTimers()` with no argument also fakes `Date`,
-  // `performance` and `requestAnimationFrame`, and the walks below open the real match viewer, which
-  // is driven by all three.
-  vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
-  try {
-    await click()
-    vi.advanceTimersByTime(PROLOGUE_LANDING_MS)
-  } finally {
-    // ⚠ BEFORE THE PAINT, DELIBERATELY. The landing's callback has already run by here and Vue's
-    // flush is a microtask, so the screen the advance opens – a weekend, the viewer, the next card –
-    // mounts under the REAL clock, exactly as it does in the app.
-    vi.useRealTimers()
-  }
-  await nextTick()
+export async function finishCard(
+  wrapper: Pressable,
+  click: () => Promise<unknown>,
+  /** ⭐ ROUND 41 #9 – A LOOK AT THE CARD IN ITS ANSWERED STATE, BEFORE Proceed TAKES IT AWAY. This is
+   *  the one moment a walk can see what the column looks like with the way on in it, and the
+   *  no-repeat guard in round35-prologue.test.ts is what needs it: a card that GROWS a Proceed row
+   *  is a growth that guard is supposed to be able to see. Absent for every other caller, which then
+   *  walks exactly as before. */
+  onAnswered?: () => void,
+): Promise<void> {
+  await click()
+  await settle()
+  const proceed = wrapper.find(PROCEED_SELECTOR)
+  if (!proceed.exists()) return
+  onAnswered?.()
+  await proceed.trigger('click')
+  await settle()
 }

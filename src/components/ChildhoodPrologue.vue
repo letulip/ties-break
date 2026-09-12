@@ -1,20 +1,3 @@
-<script lang="ts">
-// ⚠ MODULE SCOPE, AND IT HAS TO BE A SECOND BLOCK – ConfirmDialog.vue's own reason: everything
-// inside `<script setup>` is the setup FUNCTION's body, so a `const` declared there is not a named
-// export and no test can read it. This one has to be readable, because a suite that WAITED 200ms per
-// answer would add real seconds to every walk in tests/component and be timing-flaky besides.
-//
-// ⭐⭐⭐ ROUND 40 #3 – HOW LONG A CARD IS HELD AFTER THE ANSWER THAT FINISHES IT. The owner's word is
-// in docs/rounds/round-40.md, item 3, which is where his Russian is allowed to live; the short of it
-// is that the card should LAND rather than vanish, and that «~200 ms» is his starting point and not
-// a ruling.
-//
-// ⚠ IT IS PRESENTATION AND ONLY PRESENTATION. The card advances because `cardAnswered` says the run
-// is finished with it; this number decides when the player is shown that, and nothing about what is
-// shown or what is spent. Zero draws on any stream – see `answer()`.
-export const PROLOGUE_LANDING_MS = 200
-</script>
-
 <script setup lang="ts">
 // ⭐⭐ THE PROLOGUE, END TO END – phase 4 of docs/specs/childhood-prologue-build-2026-09.md §6.
 // Nine cards, then the career is created with what they came to, then the handover (§5). This
@@ -60,7 +43,7 @@ export const PROLOGUE_LANDING_MS = 200
 // out of the DRAFT copy table, so `PrologueCard.vue` draws it with the nine years' own fit, contrast
 // and painting – and the painting is the owner's three faces, through the `outcome` argument phase 7
 // left the hook for («the wiring, when it comes, is one argument at one call site»).
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import MuteButton from './MuteButton.vue'
 import PrologueCard from './PrologueCard.vue'
 import PrologueHandover from './PrologueHandover.vue'
@@ -335,6 +318,89 @@ const entry = computed(() => (resultNow.value ? undefined : run.value.entries[CA
 /** ⚠ THE FIRST CARD ONLY – see `WALK_COPY.skip`. */
 const skipLabel = computed(() => (at.value === 0 ? WALK_COPY.skip : undefined))
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 41 #9 – A RADIO NEVER ADVANCES; ANSWERING EVERYTHING REVEALS Proceed, AND Proceed DOES
+// =================================================================================================
+//
+// THE OWNER, 12.09: «радиобатон на прологе не должен переключать сразу, он только про выбор, давай
+// сделаем где нет активных кнопок, а есть только радиобатоны при выборе всех будет появляться наша
+// желтая кнопка proceed – это будет хорошее удобное поведение.» His Russian lives in
+// docs/rounds/round-41.md, item 9, where it is allowed to.
+//
+// ⚠⚠ AND IT KNOWINGLY SUPERSEDES ROUND 40 #3 – his ruling, not an agent's read: «8+9 as cut,
+// верно». The 200 ms landing hold existed so the ball a press had just filled could be SEEN before
+// the card left. With Proceed there is nothing to defer: a selection never moves the screen at all,
+// so the taken state is on the card for as long as the player looks at it. The hold, its constant
+// and the unmount guard that carried it are gone – r40 #3's own negative arm says a control with no
+// taken state to show is not held, and a card that no longer leaves on a press has nothing to hold.
+//
+// ⚠ THE PREDICATE IS DERIVED EVERY RENDER AND IS NEVER LATCHED – r40 #2's own rule, arriving on the
+// third control of the same column: «при отжатом верхнем нижний не должен быть доступен». Proceed is
+// not a state the card enters and keeps; it is a reading of the run, so a card that stops being
+// finished stops offering it.
+//
+// ⚠ AND IT IS OFFERED ONLY WHERE A SELECTION IS WHAT FINISHES THE CARD. The six and the seven, and
+// every weekend's result scene, keep the way on they already have (`wayOn`, PrologueCard.vue) – they
+// decide nothing, so there is no «answer everything» for a Proceed to wait behind, and a second
+// advance control beside the first would be two ways on off one screen.
+
+/** ⭐⭐ IS THIS CARD FINISHED? – the whole of when Proceed is on screen, and the five is the one age
+ *  it cannot ask `cardAnswered` about.
+ *
+ *  ⚠⚠ `cardAnswered(5, run)` IS TRUE FROM THE MOMENT THE FIVE ARRIVES, which is correct for what
+ *  that function means and wrong for this question. The five carries no `options` and no
+ *  `sameAsLastYear`, so `yearAt` returns the card's own row rather than null, and the five's real
+ *  decision is its ORIGIN – which `isComplete` asks about separately for exactly this reason
+ *  (run.ts). Keyed on `cardAnswered` alone the five would show Proceed before the player had chosen
+ *  where the family is from, which is the one card where that is a lie. */
+const cardFinished = computed(() => {
+  if (resultNow.value) return false
+  const age = CARD_AGES[at.value]
+  const row = card.value
+  // a card with nothing to select keeps its own way on – r40 #1's negative arm, from this side
+  if (!row.origins && !row.options && !row.tournament) return false
+  if (row.origins) return run.value.origin !== null
+  return cardAnswered(age, run.value)
+})
+
+/** ⚠ A LABEL AND NOT A FLAG, exactly as `skipLabel` is: the card holds no copy and no predicate of
+ *  its own, so «is it finished» is answered here and the component draws whatever it is handed. */
+const proceedLabel = computed(() => (cardFinished.value ? WALK_COPY.proceed : undefined))
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 41 #8 – THE WAY BACK TO THE CARD BEFORE THIS ONE
+// =================================================================================================
+//
+// THE OWNER, 12.09: «На прологе добавить возможность вернуться к первому экрану с созданием
+// персонажа со второго экрана … а то я на радиобатон нажал и не ожидал, что меня переключит дальше
+// сразу.» Of the two roads he offered – a Back control, or a confirmation popup – the round took
+// BACK, because item 9 removes the surprise itself and a confirm would then be a second answer to
+// the same complaint (round-41.md, item 8).
+//
+// ⚠⚠ IT MAY NEVER UNWIND A WEEKEND SHE ACTUALLY PLAYED, and that is the whole of the safety
+// argument. `run.opens` is APPEND-ONLY BY DESIGN (run.ts's own note: «a weekend that happened cannot
+// un-happen»), so a Back that returned to a year whose Local Open had already been played would
+// leave the run holding a weekend for a year the player is being invited to answer differently –
+// and answering it «Not this year» would then bill and report a tournament that is no longer in the
+// childhood. So Back is offered only where the TARGET card's year holds no played weekend. Below ten
+// that is every year by construction (`LOCAL_POOL.fromAge`), which is his literal ask – card 2 back
+// to card 1 – and from ten it is every year the player declined.
+//
+// ⚠ NOTHING IS STORED TO MAKE THE EARLIER CARD REDRAW ANSWERED. `picked` and `entry` above already
+// read the run, and the run is what Back walks back into – so the card arrives with its own answer
+// marked and re-choosable, and `withPick` / `withOrigin` overwrite the same keys. Everything
+// downstream is a computed off the run (`yearAt`, the twelfth's face, the ask's disclosure), so a
+// changed answer is recomputed rather than refreshed.
+const canGoBack = computed(() => {
+  if (resultNow.value || at.value === 0) return false
+  const target = CARD_AGES[at.value - 1]
+  return !run.value.opens.some((o) => o.age === target)
+})
+
+/** ⚠ SHARES THE SLOT WITH THE WAY OUT, AND THE TWO CAN NEVER BOTH BE THERE: `skipLabel` is the first
+ *  card's and this one is every card but the first's. */
+const backLabel = computed(() => (canGoBack.value ? WALK_COPY.back : undefined))
+
 /** HIS BAND, IN THE GAME'S OWN WORDS, off the snapshot. The screen computes NO share, percentage or
  *  headroom of its own: `handoverRoomBand` did the reading engine-side at snapshot time and this
  *  looks his sentence up by the word it returned. It is empty from week 1 onwards, by construction –
@@ -360,49 +426,12 @@ const coachBase = computed(() =>
  *  handover draws nothing at all then. */
 const played = computed(() => playedLine(run.value.opens))
 
-// =================================================================================================
-// ⭐⭐⭐ ROUND 40 #3 – THE CARD LANDS BEFORE IT LEAVES
-// =================================================================================================
-//
-// THE DEFECT, and it was the promo recorder rather than a tester who met it: on the eight, the nine
-// and the ten the card's ONE question is its whole card, so the answer that fills the ball is the
-// answer that moves the screen – the mark wave A built and the ball A2 painted were on screen for
-// less than a frame. His word is in docs/rounds/round-40.md, item 3.
-//
-// ⚠⚠ THE HOLD IS NOT A SECOND SOURCE OF TRUTH, AND THAT IS THE WHOLE DESIGN. The answer is written
-// into the run UNCONDITIONALLY, above, and `cardAnswered` decides on its own that the card is
-// finished – both exactly as they did before. What is deferred is the ADVANCE and nothing else, so
-// there is no «pending» state to get stuck in: a timer that never fired would leave a card that is
-// still fully answerable, still re-choosable, and still showing what the run holds.
-//
-// ⚠ AND A SECOND PRESS INSIDE THE HOLD RE-STARTS IT rather than being swallowed or queueing a
-// second advance. `land` clears whatever was in flight, so exactly one advance ever happens and it
-// is the one the LAST press earned – which is also what stops a double tap walking the player past
-// a card unread.
-
-/** The timer in flight, or null. ⚠ A PLAIN `let` AND NOT A `ref`: nothing renders off it, and a
- *  reactive flag is precisely the second source of truth the note above refuses. */
-let landing: ReturnType<typeof setTimeout> | null = null
-
-/** ⚠ CLEARED ON UNMOUNT AND ON `startAgain`, because a timer that outlives its card would advance a
- *  walk the player has left – or create a career for a childhood that was thrown away. */
-function clearLanding(): void {
-  if (landing === null) return
-  clearTimeout(landing)
-  landing = null
-}
-onUnmounted(clearLanding)
-
-function land(go: () => void): void {
-  clearLanding()
-  landing = setTimeout(() => {
-    landing = null
-    go()
-  }, PROLOGUE_LANDING_MS)
-}
-
-/** THE YEAR IS FINISHED – the weekend it just bought, or the next card. Split out of `answer()` so
- *  that the hold defers exactly this and nothing about how the answer was recorded. */
+/** THE YEAR IS FINISHED – the weekend it just bought, or the next card.
+ *
+ *  ⚠ ROUND 41 #9 – IT IS NO LONGER REACHED BY ANSWERING. It was split out of `answer()` so the
+ *  round-40 hold could defer exactly this; the hold is gone and the split survives it, because the
+ *  two ways on off a card are now genuinely two callers – `proceed()` on a card that is answered by
+ *  selection, and `answer(null)` on a card that decides nothing. */
 async function advanceYear(age: number): Promise<void> {
   // ⭐⭐ THE WEEKEND THE YEAR JUST BOUGHT – asked of `localOpensAt`, which answers with a count off
   // the childhood the player has actually chosen. The tournament plays WHERE THE CARD SITS: this
@@ -452,23 +481,41 @@ async function answer(id: string | null): Promise<void> {
     if (id === null) return
     run.value = withPick(run.value, row.age, id)
   }
-  // ⭐ THE CARD STAYS UNTIL IT IS FINISHED – both of its questions, on the four cards that ask two.
-  // Nothing here decides which those are: the table does, and `cardAnswered` is the one reader.
+  // ⭐⭐⭐ ROUND 41 #9 – AND THAT IS THE WHOLE OF ANSWERING NOW: THE RUN IS WRITTEN AND THE SCREEN
+  // STAYS. A radio «только про выбор» – it selects, and nothing else happens – so there is no
+  // advance on this path and no card named anywhere to decide which presses move the walk.
   //
-  // ⚠⚠ SO THIS ONE PREDICATE IS ALSO WHICH PRESSES ARE HELD, and no card is named anywhere. A press
-  // that leaves the card standing (the year's own answer on the eleventh and the twelfth, where the
-  // tournament question is still open under it) reaches this line and returns – there is nothing to
-  // hold for, and a delay there would only make a screen that stays feel slow.
+  // ⚠ `null` IS THE ONE EXCEPTION AND IT IS NOT A SELECTION. It is the way on off a card that
+  // decides nothing (`wayOn` in PrologueCard.vue, round 40 #1's own split: every control that
+  // SELECTS emits an id, and the one that only ADVANCES emits null) – the six, the seven and every
+  // weekend's result scene. Those cards carry no Proceed, so this is their way on and it advances,
+  // exactly as it always did.
+  if (id !== null) return
   if (!cardAnswered(age, run.value)) return
-  // ⭐⭐⭐ ROUND 40 #3 – AND A SELECTION IS HELD LONG ENOUGH TO BE SEEN. `null` is the way on off a
-  // card that decides nothing (`wayOn` in PrologueCard.vue, round 40 #1's own split: every control
-  // that SELECTS emits an id, and the one that only ADVANCES emits null). It has no taken state to
-  // show, so it is not held – the negative arm of item 1, from the other side.
-  if (id === null) {
-    await advanceYear(age)
-    return
-  }
-  land(() => void advanceYear(age))
+  await advanceYear(age)
+}
+
+/** ⭐⭐⭐ ROUND 41 #9 – THE YELLOW BUTTON, AND IT IS THE ONLY THING THAT MOVES AN ANSWERED CARD ON.
+ *
+ *  ⚠ THE PREDICATE IS RE-READ HERE RATHER THAN TRUSTED FROM THE SCREEN. `cardFinished` is what
+ *  renders the control and what this refuses on, so a press that arrives from a card the run has
+ *  since stopped agreeing with (a stale frame, a double tap on the way out) cannot walk the player
+ *  past a year. It is the same «re-validate at the boundary» rule the engine states about commands,
+ *  spelled for a screen that owns its own state. */
+async function proceed(): Promise<void> {
+  if (!cardFinished.value) return
+  await advanceYear(CARD_AGES[at.value])
+}
+
+/** ⭐⭐ ROUND 41 #8 – BACK ONE CARD, with everything the player answered still in the run.
+ *
+ *  ⚠ IT MOVES `at` AND NOTHING ELSE. Nothing is cleared, unwound or re-derived by hand: the earlier
+ *  card reads its own answer back off the run through `picked` / `entry`, and every reading that
+ *  depends on it – the twelfth's face, the ask's disclosure, the money – is a computed. See
+ *  `canGoBack` for why a year that has already played its weekend is not offered this. */
+function goBack(): void {
+  if (!canGoBack.value) return
+  at.value -= 1
 }
 
 /** How many weekends the year at `age` holds, as `(age, index)` pairs to be played in order. */
@@ -551,11 +598,6 @@ async function begin(): Promise<void> {
 async function startAgain(): Promise<void> {
   const careerId = game.snapshot?.careerId
   if (careerId) await game.deleteCareer(careerId)
-  // ⚠ ROUND 40 #3 – AND ANY CARD STILL LANDING IS DROPPED WITH THE CHILDHOOD IT BELONGED TO. The
-  // handover cannot be reached with one in flight (it is the ninth card's own advance that opens
-  // it), so this is belt and braces rather than a live path – and it is the cheap half of «the timer
-  // must not outlive its walk», the other half being `onUnmounted`.
-  clearLanding()
   handoverOpen.value = false
   run.value = EMPTY_RUN
   // ⚠ AND THE IDENTITY GOES BACK TOO. «Start again» drops the career and starts the childhood over
@@ -630,8 +672,12 @@ async function startAgain(): Promise<void> {
     :entry="entry"
     :identity="identity"
     :skip-label="skipLabel"
+    :proceed-label="proceedLabel"
+    :back-label="backLabel"
     :busy="game.busy"
     @answer="answer"
+    @proceed="proceed()"
+    @back="goBack()"
     @identity="identity = $event"
     @skip="emit('skip')"
   />

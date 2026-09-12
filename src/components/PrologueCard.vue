@@ -132,6 +132,17 @@ const props = defineProps<{
    *  container offers it on the first one only, because a skip that follows you to the eighth year is
    *  a screen asking whether you would rather be somewhere else. */
   skipLabel?: string
+  /** ⭐⭐⭐ ROUND 41 #9 – THE WAY ON OFF A CARD THAT IS ANSWERED BY SELECTING, and it is a LABEL for
+   *  the same reason `skipLabel` is: this component holds no copy and no predicate. The container
+   *  decides whether the card is finished (`cardFinished`, ChildhoodPrologue.vue) and hands the word
+   *  down when it is, so «hidden until every radio is answered» is one reading of the run rather
+   *  than a second one kept in step here. Absent on the six, the seven and every result scene – they
+   *  select nothing, so they keep the way on they already have. */
+  proceedLabel?: string
+  /** ⭐⭐ ROUND 41 #8 – ...and the way back to the card before this one, on the same terms: a label
+   *  when the container says the earlier year can still be re-answered, absent otherwise. It shares
+   *  the foot of the column with `skipLabel`, which is the first card's and only the first card's. */
+  backLabel?: string
   busy?: boolean
 }>()
 
@@ -140,6 +151,14 @@ const emit = defineEmits<{
    *  beat it is one of `TOURNAMENT_ANSWER`'s two ids – the container knows which beat it is on,
    *  because it is the one that put the `ask` prop there. */
   (e: 'answer', id: string | null): void
+  /** ⭐⭐⭐ ROUND 41 #9 – the answered card's way on, and it is its OWN emit rather than an `answer`
+   *  carrying null. The two say different things: `answer` reports what the player CHOSE, and this
+   *  reports that they are done choosing. Overloading null would have made the way on off a quiet
+   *  card and the Proceed off an answered one indistinguishable at the container, which is exactly
+   *  the branch `answer()` no longer has to make. */
+  (e: 'proceed'): void
+  /** ⭐⭐ ROUND 41 #8 – the player wants the card before this one back */
+  (e: 'back'): void
   /** the player would rather have the wizard */
   (e: 'skip'): void
   /** a field of the identity was edited – the whole of it, so the container stays the owner */
@@ -615,6 +634,31 @@ useDialogFocus(cardEl)
           </div>
         </template>
 
+        <!-- ⭐⭐⭐ ROUND 41 #9 - THE YELLOW BUTTON, AFTER EVERY QUESTION THIS CARD ASKS AND BEFORE
+             THE WAY OUT. The owner's sentence is in docs/rounds/round-41.md, item 9, where his
+             Russian is allowed to live; the short of it is that a radio only ever selects, and when
+             every radio on the card is answered the way on appears.
+
+             ⚠ ITS PLACE IN THE COLUMN IS LOAD-BEARING IN THREE DIFFERENT PLACES. After the ask
+             group, because a way on drawn above a question the player has not reached yet would be
+             offering to leave a screen that is still asking; and BEFORE the way out of the story,
+             because `e2e/smoke.spec.ts` takes the skip as the LAST control on the five and the round
+             -20 #3 fit measurement reads the card's way out off its bottom edge.
+
+             ⚠ IT IS `.prologue-answer` AND NOT A SELECTION, deliberately - r40 #1 made that class
+             mean «advance and nothing else» (see the style block), and this is the one control on an
+             answered card that advances. It carries no mark, no `aria-checked` and no group, which
+             is that item's negative arm still holding: what LOOKS like a choice must BE one. -->
+        <button
+          v-if="proceedLabel"
+          class="prologue-answer prologue-proceed"
+          type="button"
+          :disabled="busy"
+          @click="emit('proceed')"
+        >
+          <span class="prologue-answer-label">{{ proceedLabel }}</span>
+        </button>
+
         <!-- ⭐ PHASE 4, §6 - THE OTHER PATH. Inside `.prologue-answers` and last within it, which is
              what keeps `.prologue-answers` the card's last element: the fit measurement reads the
              way out off the card's bottom edge, and a control added anywhere after it would make
@@ -629,6 +673,24 @@ useDialogFocus(cardEl)
           @click="emit('skip')"
         >
           <span class="prologue-answer-label">{{ skipLabel }}</span>
+        </button>
+
+        <!-- ⭐⭐ ROUND 41 #8 - AND THE WAY BACK, IN THE SAME SLOT AS THE WAY OUT. The owner pressed a
+             radio on the second card and did not expect to be moved on; item 9 stops the move and
+             this is the other half of his ask - the card before this one, with what he answered on
+             it still answered.
+
+             ⚠ THE SLOT IS SHARED AND THE TWO CAN NEVER COLLIDE: the way out is the FIRST card's and
+             this is offered on no card but the ones after it, so the column ends in exactly one
+             quiet control either way and `.prologue-answers` stays the card's last element. -->
+        <button
+          v-if="backLabel"
+          class="prologue-answer prologue-back"
+          type="button"
+          :disabled="busy"
+          @click="emit('back')"
+        >
+          <span class="prologue-answer-label">{{ backLabel }}</span>
         </button>
       </div>
     </div>
@@ -1212,6 +1274,28 @@ useDialogFocus(cardEl)
 }
 
 .prologue-skip:hover:not(:disabled) {
+  background: var(--accent-wash);
+}
+
+/* ⭐⭐ ROUND 41 #8 – THE WAY BACK IS THE WAY OUT'S TREATMENT, because it is the same KIND of control:
+   a quiet second option at the foot of a column whose loud one is the way on. It is not a year of
+   her childhood and it is not the decision, so it does not take the answer's wash.
+
+   ⚠ PARENTED WHERE `.prologue-skip` IS NOT, AND THAT IS THE HAZARD THIS FILE ALREADY NAMES TWICE
+   (`.prologue-choice` above, and the media block at the foot): at EQUAL specificity happy-dom keeps
+   the FIRST matching rule where a browser keeps the last, so a bare `.prologue-back` overriding a
+   bare `.prologue-answer` declared 150 lines earlier would repaint this control in Chromium and
+   silently do nothing in every mounted test. Naming the parent makes it win in both engines.
+
+   ⚠ AND THE LABEL KEEPS `var(--text)` (`.prologue-answer-label`), so the way back is held to the
+   same AA measurement every other control on this card is – round-17 #3's rule, unchanged. */
+.prologue-answers .prologue-back {
+  border-color: transparent;
+  background: transparent;
+  padding: 8px 13px;
+}
+
+.prologue-answers .prologue-back:hover:not(:disabled) {
   background: var(--accent-wash);
 }
 

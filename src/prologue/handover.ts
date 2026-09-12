@@ -326,16 +326,28 @@ export const START_AGAIN_DRAFTS: readonly string[] = [
   'Give the nine years to another girl',
 ]
 
-/** ⭐ THE WALK'S OWN ONE CONTROL – the way out of the prologue and into the wizard (§6), offered on
- *  the FIRST card only: a skip that follows the player to the eighth year is a screen asking whether
- *  they would rather be somewhere else.
+/** ⭐ THE WALK'S OWN CONTROLS – the ones that belong to the nine cards as a WALK rather than to any
+ *  one year of her childhood: the way out into the wizard (§6), offered on the FIRST card only,
+ *  because a skip that follows the player to the eighth year is a screen asking whether they would
+ *  rather be somewhere else; and, since round 41, the way ON and the way BACK.
  *
- *  DRAFT. ⚠ It lives beside the handover's copy rather than in the card table because it is not a
- *  card, and it must not become one: `DECISION_AGES` is derived from `options` alone, so a way out
- *  parked in a row would count as a decision the prologue asks for. */
+ *  DRAFT, every word. ⚠ They live beside the handover's copy rather than in the card table because
+ *  they are not cards, and they must not become ones: `DECISION_AGES` is derived from `options`
+ *  alone, so a control parked in a row would count as a decision the prologue asks for. */
 export const WALK_COPY = {
   /** DRAFT */
   skip: 'Skip the childhood',
+  /** ⭐⭐⭐ ROUND 41 #9 – THE YELLOW BUTTON. DRAFT, and the word is his own: «при выборе всех будет
+   *  появляться наша желтая кнопка proceed». One word and no punctuation, deliberately – it is the
+   *  way on off a card whose questions are all answered, not a sentence about having answered them.
+   *
+   *  ⚠ IT IS ONE STRING FOR ALL EIGHT CARDS THAT SHOW IT. A per-card way on would be eight more
+   *  drafts for the owner to read and eight places for the same button to drift apart. */
+  proceed: 'Proceed',
+  /** ⭐⭐ ROUND 41 #8 – THE WAY BACK TO THE CARD BEFORE THIS ONE. DRAFT. One word, like the way on it
+   *  sits under, and it names the DIRECTION rather than the screen: it is offered on eight different
+   *  cards, so anything naming what is behind it would be wrong on seven of them. */
+  back: 'Back',
 } as const
 
 /** ⭐⭐ THE MONEY, ONCE, AND THIS IS THE ONLY PLACE IT IS EVER SAID. Build spec §2.4: each card names

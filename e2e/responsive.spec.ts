@@ -912,14 +912,22 @@ for (const vp of [...SHORT, PHONE_TALL]) {
     // finds only the way out of the prologue and «the second one» would be nothing at all. The
     // claim is unchanged: take the second control on the five, the way e2e/prologue.spec.ts walks it.
     await page.locator('.prologue-answers button').nth(1).click()
-    // ⚠⚠ ROUND 40 #3 – WAIT FOR THE CARD TO ACTUALLY LEAVE. Item 3 holds an answering card ~200 ms
-    // so the ball lands, so `toBeVisible()` on «a heading» was satisfied by the card still on screen
-    // – the five – and `choiceFit` then measured the WRONG card. Naming the six's own heading is
-    // what makes the wait a condition rather than a pause, and it is the sentence this block is
-    // about: the age-6 card, the one where the painting is the taller column.
+    // ⚠⚠ RE-AIMED BY ROUND 41 #9 – AND THE PRESS ABOVE NO LONGER MOVES ANYTHING, WHICH IS THE ITEM.
+    // The owner: «радиобатон на прологе не должен переключать сразу, он только про выбор … при выборе
+    // всех будет появляться наша желтая кнопка proceed». So the origin selects, the five stays, and
+    // the way on appears under it – pressing that is what reaches the six.
+    // ⚠ ROUND 40 #3'S NOTE STOOD HERE AND IS SUPERSEDED: it held an answering card ~200 ms so the
+    // ball landed, and `toBeVisible()` on «a heading» was satisfied by the five still being on
+    // screen, which made `choiceFit` measure the WRONG card. Naming the six's own heading is still
+    // what makes this a condition rather than a pause, and it is the sentence this block is about:
+    // the age-6 card, the one where the painting is the taller column.
+    await page.locator('.prologue-proceed').click()
     await expect(card.getByRole('heading').first()).toHaveText('She asks to go back to the court.')
     const six = await choiceFit(page)
-    expect(six.buttons.length, 'the age-6 card is not the one-answer card any more').toBe(1)
+    // ⚠ TWO CONTROLS HERE SINCE ROUND 41 #8 AND THE CLAIM IS UNCHANGED: the six's own way on, and
+    // the way BACK to the five (his «возможность вернуться … со второго экрана» – the second screen
+    // is this one). What this arm measures is where the FIRST of them begins under the painting.
+    expect(six.buttons.length, 'the age-6 card is not the one-answer-plus-a-way-back card any more').toBe(2)
     expect(
       six.gapUnderThePicture,
       `«прилипают к картинке»: the first answer begins ${six.gapUnderThePicture}px under the painting at ${vp.width}x${vp.height}`,

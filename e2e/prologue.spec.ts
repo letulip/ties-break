@@ -88,16 +88,46 @@ const TYPED_NAME = 'Zenobia'
  *  `controls` is what the card carries on arrival and `disclosed` what it carries once the year is
  *  answered – both asserted, which is what makes the disclosure a claim this walk can fail on rather
  *  than a number it happens to agree with. */
-const CARDS: readonly { controls: number; disclosed?: number; take: number | null; asks: boolean }[] = [
-  { controls: 4, take: 1, asks: false }, // 5  – three origins plus the way out; the second is the middle-class house
-  { controls: 1, take: 0, asks: false }, // 6
-  { controls: 1, take: 0, asks: false }, // 7
-  { controls: 2, take: 1, asks: false }, // 8
-  { controls: 2, take: 1, asks: false }, // 9
-  { controls: 2, take: 1, asks: false }, // 10 – «Enter her», and it is the card's OWN decision
-  { controls: 2, disclosed: 4, take: 1, asks: true }, // 11 – two options, and then this year's question
-  { controls: 2, disclosed: 4, take: 1, asks: true }, // 12
-  { controls: 2, take: null, asks: true }, // 13 – the question is the card's only pair; see `take`
+/** ⚠⚠ RE-AIMED BY ROUND 41 #8 AND #9, NOT LOOSENED – AND THE COUNT IS THREE COUNTS NOW, BECAUSE THE
+ *  COLUMN HAS THREE STATES AND THE WALK PRESSES ONE MORE CONTROL PER CARD.
+ *
+ *  Two controls were added to this column in one round, and each is conditional on something
+ *  different, which is why a single number can no longer describe a card:
+ *
+ *    #9  Proceed – «при выборе всех будет появляться наша желтая кнопка proceed». It appears when
+ *        every question ON the card is answered, and pressing it is now the ONLY thing that
+ *        advances a card answered by selecting. The six and the seven select nothing, so they never
+ *        grow one and still advance on their own way on.
+ *    #8  the way back – offered on every card after the first, EXCEPT where the previous year has
+ *        already played its Local Open (`run.opens` is append-only, so that year may not be
+ *        re-answered). This walk says yes to every ask, so from the eleventh on the year behind is
+ *        always a year she played – and the way back is correctly absent on 11, 12 and 13.
+ *
+ *  `finished` is the column once the card is fully answered, and it is what the Proceed is pressed
+ *  from. Absent on the six and the seven, which have nothing to finish.
+ *
+ *    age  5   three origins + the way OUT                 4 -> 5 with Proceed
+ *    age  6,7 the way on + the way BACK                   2, and the way on still advances
+ *    age  8,9 two options + the way back                  3 -> 4 with Proceed
+ *    age 10   as above; «Enter her» buys the weekend      3 -> 4
+ *    age 11,12 two options, no way back (she played ten)  2 -> 4 disclosed -> 5 with Proceed
+ *    age 13   the ask's pair only, no way back            2 -> 3 with Proceed */
+const CARDS: readonly {
+  controls: number
+  disclosed?: number
+  finished?: number
+  take: number | null
+  asks: boolean
+}[] = [
+  { controls: 4, finished: 5, take: 1, asks: false }, // 5  – three origins plus the way out; the second is the middle-class house
+  { controls: 2, take: 0, asks: false }, // 6  – the way on, and the way back to the five
+  { controls: 2, take: 0, asks: false }, // 7
+  { controls: 3, finished: 4, take: 1, asks: false }, // 8
+  { controls: 3, finished: 4, take: 1, asks: false }, // 9
+  { controls: 3, finished: 4, take: 1, asks: false }, // 10 – «Enter her», and it is the card's OWN decision
+  { controls: 2, disclosed: 4, finished: 5, take: 1, asks: true }, // 11 – two options, and then this year's question
+  { controls: 2, disclosed: 4, finished: 5, take: 1, asks: true }, // 12
+  { controls: 2, finished: 3, take: null, asks: true }, // 13 – the question is the card's only pair; see `take`
 ]
 
 /** ⭐⭐ PHASE 11 – WHATEVER TENNIS THE YEAR HELD, CLEARED IN A REAL BROWSER. The walk takes the
@@ -152,7 +182,7 @@ async function clearWeekends(page: Page): Promise<number> {
  *  tennis each year held. Returns how many weekends the walk actually saw. */
 async function walkTheChildhood(page: Page): Promise<number> {
   let weekends = 0
-  for (const [index, { controls, disclosed, take, asks }] of CARDS.entries()) {
+  for (const [index, { controls, disclosed, finished, take, asks }] of CARDS.entries()) {
     const card = page.getByRole('dialog')
     const heading = await card.getByRole('heading').textContent()
     // ⚠⚠ RE-AIMED BY ROUND 40 #1: `getByRole('button')` NO LONGER FINDS AN ANSWER, and that is the
@@ -186,15 +216,23 @@ async function walkTheChildhood(page: Page): Promise<number> {
       await enter.click()
     }
 
-    // ⚠⚠ ROUND 40 #3 – THE CARD IS HELD BEFORE IT ADVANCES, so nothing after the last press may be
-    // measured until it has actually left. Item 3 holds an answering card ~200 ms so the ball lands;
-    // before it, answering advanced synchronously and the weekend – or the next card – was already
-    // on screen by the next line. Without this wait `clearWeekends` looked while the held card was
-    // still up, found no weekend, returned 0, and the takeover arrived a moment later: the walk then
-    // failed on the NEXT assertion, naming the heading instead of the hold.
-    // ⚠ A CONDITION, NOT A SLEEP. A fixed pause would pass by luck on a fast machine and rot the day
-    // the constant moves; this waits for what the hold is holding – the year's tennis, or the card
-    // after it.
+    // ⚠⚠ RE-AIMED BY ROUND 41 #9, AND THE WAIT INVERTS INTO AN ASSERTION. Round 40 #3 held an
+    // answering card ~200 ms, so this block polled for the card to LEAVE – a condition rather than a
+    // sleep, because a fixed pause would have rotted the day the constant moved. The constant is
+    // gone and so is the race: a card answered by selecting is now GUARANTEED to still be there, so
+    // «it did not leave» is something this walk can state outright, and the press that moves it is
+    // the player's.
+    if (finished !== undefined) {
+      await expect(card.getByRole('heading'), `card ${index + 1} advanced on an answer`).toHaveText(heading ?? '')
+      await expect(buttons, `card ${index + 1} is answered and offers no way on`).toHaveCount(finished)
+      const proceed = card.locator('.prologue-proceed')
+      await expect(proceed, `card ${index + 1} has no Proceed to press`).toHaveCount(1)
+      await proceed.click()
+    }
+
+    // ⚠ AND THE WALK STILL WAITS FOR WHAT THE PRESS PRODUCED rather than assuming it is there: the
+    // advance runs through `advanceYear`, which may open a weekend takeover instead of the next
+    // card. A condition, not a sleep.
     if (take !== null || asks) {
       await expect
         .poll(
