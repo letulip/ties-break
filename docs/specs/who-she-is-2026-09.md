@@ -353,7 +353,25 @@ distribution retires; the late-share bars in §4a re-measure under the moved row
 | perturbation scale | ×0.8 | ×1.25 |
 | return toward baseline | 5/wk | 3/wk |
 | break-up shock | −22 | −34 |
-| weeks under the knee after a lifted-75 break-up | ~1–2 | ~6–7 |
+| weeks under the knee after a lifted-75 break-up | **3** | **8** |
+
+⚠⚠ **THE KNEE ROW WAS CORRECTED 12.09 ON T7's MEASUREMENT, AND THE ARITHMETIC IT REPLACES IS KEPT
+HERE because the row is the live number and the derivation is the lesson.** It read **~1–2 / ~6–7**,
+derived as `75 − 22 = 53 → 58 → 63` – two weeks below the knee. **The engine does one step more,
+first**: `rollEnds` runs before `accrueSpirit` in the same tick, so on the landing week
+`activeEpisode` is already null and the RETURN step walks her from the lifted 75 toward the **flat**
+70 before the shock lands. 75 → 70 → **48** steady, 75 → 72 → **38** intense; measured over 128
+seed-pairs per intensity, **47.8 / 37.5**. That is T3's design working exactly as ruled («the
+effective baseline drops back to 70 by itself – ZERO new code»); it was simply never priced into
+this table's prose.
+
+⭐ **AND THE COUNTING CONVENTION IS RULED INCLUSIVE (architect, 12.09)**, which is the other half of
+why the old row read low. T7 found that §4 and T3 had been counting different weeks under one name:
+excluding the landing week reproduces T3's **2 / 7** exactly, including it gives **3 / 8**.
+**Inclusive is the truthful count**, because `spiritMatchFactor` reads her spirit on the landing week
+itself – she is at 48 that week and the match penalty bites that week. A convention that excluded it
+would name a week «not under the knee» while the engine was pricing it as under. The bench prints
+both and signs the inclusive one.
 
 **The fairness corridor** (the not-a-difficulty-setting bar): the wave-1 and wave-4 benches run
 per-temperament arms; paired lifetime deltas across temperaments must land inside **±1.5 pp of
@@ -1326,7 +1344,14 @@ opens at week 294 and the freeze walk ends at 156, so T17 cannot reach them. Fro
 ⚠⚠ **AND `bench:spirit` WOULD HAVE LIED AGAIN.** Its `answerTheForkTheWayThisArmWould` carried a
 `catch {}` that swallows `answerFork`'s refusal – so every stopping career would have reported
 `forkCongruence: null` and `bondAtFork: NaN` **with no error**, byte-for-byte the T6b failure on the
-same instrument. Found and fixed with a second bond-neutral drain. That is twice this wave the same
+same instrument. Found and fixed with a second bond-neutral drain. ⚠⚠ **CORRECTED 12.09 (wave 4,
+T7): «fixed» OVERSTATES IT, AND THIS RECORD WAS THE ONLY THING SAYING OTHERWISE.** The drain was
+added **in front of** the `catch {}`; the catch is still there, and `tools/spirit-bench.ts` still
+carries **five** bare ones (`bookTheFamilyWeeks`, `enterWhatSheCan`, `answerTheBirthday`,
+`answerTheLifeBeat`, `answerTheForkTheWayThisArmWould`). The symptom was cured and the swallow was
+not. It is left standing rather than ripped out mid-wave – removing a swallow changes what the
+default grid measures and owes its own before/after – but a record that reads «fixed» is how it
+would have survived another wave unlooked-at. That is twice this wave the same
 bench has been caught reporting a stall as a measurement.
 
 ⚠ **The `strained` driver is narrow in HER voice**: `speaksInHerOwnVoice` is false below bond 55 and
