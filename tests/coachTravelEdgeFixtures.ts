@@ -65,6 +65,75 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⭐⭐⭐ RE-STAMPED FOR WAVE 4's T1 (12.09.2026, SCHEMA v75) – NINE CONSTANTS, WHICH IS EXACTLY WHAT A
+// SCHEMA MOVE COSTS IN THIS FILE AND NOT ONE CELL MORE. EVERY `PRE_V*` RUNG HELD, `rngMain` IS
+// BYTE-IDENTICAL ON ALL THREE CAREERS, AND THE FROZEN MAIN CAPTURE IS UNMOVED.
+// =================================================================================================
+//
+// WHAT MOVED THEM. v75 appends ONE key to `createWorld`'s literal – `spiritShock`, the mark an ending
+// leaves on her until spirit is back within two points of her own baseline (the private life, wave 4).
+// Every career here carries it and every one of them carries it `null`, because T1 ships the seat, the
+// migration and NO WRITER AT ALL: `rollEnds` is T2 and the shock itself is T3. The second field of the
+// same bump, `WorldEvent.lifeKind?`, is optional, never back-filled and written nowhere, so it cannot
+// reach a career at all and is not part of this re-stamp in any way.
+//
+// ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands and never after the fact. Control = this
+// branch's head `74bcdf61` with a CLEAN tree, captured before a character was edited;
+// `tools/frozen-key-diff.ts` on all three careers; headers checked on all six captures (the first
+// attempt at this measurement lost its word-splitting and ran preset 0 / policy 1 three times, which
+// the header check caught and nothing else would have):
+//
+//   · 5/0 (25k middle, grinder)              – **2 lines of 79**: `schemaVersion` (`eb624dbe56eb` ->
+//     `f369cb89fc62`) and `spiritShock` APPEARING with `74234e98afe7`. 77 keys byte-identical.
+//   · 8/0 (120k wealthy, elite, grinder)     – **2 lines of 78**, the same two. 76 byte-identical.
+//   · 0/1 (8k working, self-coached, PLAYER) – **2 lines of 80**, the same two. 78 byte-identical.
+//
+// `74234e98afe7` is the sha256 of `JSON.stringify(null)`, which is the whole of what this step writes.
+//
+// ⚠⚠ AND WHAT DID **NOT** MOVE IS THE LOAD-BEARING HALF, on all three careers: `rngMain`, `results`,
+// `events`, `nextEventId`, the wallet, `bond`, `spirit`, `condition`, `careerTotals`, `financeWeeks`,
+// `lifeLog` and `loveEpisodes` are every one of them byte-identical. A schema move that had touched any
+// of those would be a career moving rather than a shape, and the pair of rungs below says which.
+//
+// ⚠ NINE AND NOT SEVENTY-FIVE, AND THE DIFFERENCE IS THE CHARACTER OF THE STEP RATHER THAN ITS SIZE.
+// `FROZEN`, `PRE_R28B` and `PRE_NAME_VERA` hash the LIVE world with NO PEEL AT ALL, so a bumped
+// `schemaVersion` moves all nine by arithmetic – v74's own commit recorded the identical nine. Every
+// `PRE_V*` rung HELD, measured rather than assumed: `careerHashAtSchema(…, 73)`, `(…, 72)` and
+// `(…, 71)` were RUN on this tree and returned `PRE_V74`, `PRE_V73` and `PRE_V72` character for
+// character, because `careerHashAtSchema` peels the new key ahead of all eleven of its older peels.
+// `PRE_V75` is NEW rather than moved, and its three values are the VERBATIM v74 `FROZEN` constants.
+//
+// ⚠⚠ THE WAVE-4 BRIEF PREDICTED THE OPPOSITE OF THAT AND THE MEASUREMENT IS THE RECORD. It read
+// «`PRE_V75` is the only rung that moves; `FROZEN`, `PRE_R28B`, `PRE_NAME_VERA`, `PRE_V74`, `PRE_V73`,
+// `PRE_V72` all HOLD». The three LADDER rungs held exactly as written; the three LIVE hashes could not
+// have, for the reason one paragraph up. See `PRE_V75`'s own block for the full statement – it is
+// recorded in two places on purpose, because a builder reading a brief will not find a note buried
+// beside a constant.
+//
+// ⚠⚠ EVERY NEW VALUE WAS COMPUTED BY RUNNING THE EXPORTED HELPERS (`careerHash`,
+// `careerHashAtSchema` at rungs 74/73/72/71, `careerHashUnderTheOldName`,
+// `careerHashUnderTheWindowRule`) INSIDE A THROW-AWAY VITEST HARNESS THAT WROTE THEM TO A FILE – never
+// transcribed from a failure message, which elides a hash with an ellipsis – and the file's mtime was
+// checked against the run's start. ⚠ The discipline earned its keep twice in this pass: the control
+// captures were re-run after the header check caught the word-splitting, and the `spiritShock` hash in
+// `careerHashAtSchema`'s own note was first written as `37a6259cc0c1`, from memory, which is the MD5 of
+// «null» and not the sha256 this tool prints.
+//
+// ⚠ THE NEW PEEL WAS MUTATION-VERIFIED AND THE ARM IS RECORDED, which this file has never had a
+// standing ledger for and now does. A peel is a net like any other: it claims «drop this one key and
+// the whole serialisation returns», and a peel that never ran could sit here reading correct and
+// proving nothing. **ARM: `const { spiritShock: _shock, ...preShock } = world` replaced by
+// `const preShock = world`** – the key left ON the rolled-back shape. Result: **13 RED** in
+// tests/coach-travel-edge.test.ts, which is EVERY rollback rung in that file and not only the new one,
+// because the shape each of them rolls back to would then carry a key no shipped version ever wrote –
+// exactly the failure the v62 note above predicted in the abstract. Re-edited back by hand, green.
+//
+// ⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+// tests/condition.test.ts, green on this tree. It holds BY CONSTRUCTION – the step takes no draw on any
+// stream at all, `createWorld` writes a literal `null` and the migration writes a literal `null` – and
+// the per-key `rngMain` identity above confirms it from the other side.
+//
+// =================================================================================================
 // ⭐⭐⭐ RE-STAMPED FOR WAVE 3's T16b + THE KNOCK DRAIN (12.09.2026) – **ALL SEVENTY-FIVE**, WHICH IS
 // EVERY CELL IN THIS MODULE AND THE FIRST TIME THAT HAS HAPPENED. `rngMain` IS BYTE-IDENTICAL ON ALL
 // THREE CAREERS AND THE FROZEN MAIN CAPTURE IS UNMOVED.
@@ -2033,7 +2102,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: 'fccff4a6b7f9d084e6be292fa22837b6d0178c8acc30dea1e370be8c9bcaaa69',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: 'd364eec3d216d146b343c5025ce4a3fd58ec844604f5ed4cc36204664bdf4826',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -2140,7 +2209,7 @@ export const FROZEN = {
    *  never a bump. ⚠ `PRE_V72` and every rung below it are UNTOUCHED and still reproduce, because
    *  `careerHashAtSchema(…, 71)` peels `spirit` itself – the career as it stood before the private
    *  life existed is byte-identical, `results` and `rngMain` included. */
-  eliteGrinder: 'aff3bf0b9366c7744ce6b9cbf0a43a52015fcdb84072fa0d31aebf7e5ac3e1a3',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: '4b4d1b32f48ef275bd3bff307eab96299a3552bea384d3549f291147d75e4da8',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -2380,7 +2449,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: '6f19702b97878a99d46df41612b0fec420554a1dd78893e9aa22824ee9861e66',}
+  selfTravelling: '172cacb1cdde1152bd0aebb09565d33850cf04c11368f096e62b6da23d21b724',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -2427,6 +2496,60 @@ export const FROZEN = {
  *  is untouched – count 41550, hash e6b0c709 – and needs no re-pin. `offers` is byte-identical too,
  *  which is the independent confirmation that #5 changed how a signed letter is READ and not whether
  *  one is written. */
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v74 – the identity the v75 re-freeze rests on,
+ *  and the wave-3 pattern (`PRE_V74` directly below) repeated one version up. These three values are
+ *  the VERBATIM v74 `FROZEN` constants, character for character, and they are reproduced here by
+ *  peeling exactly the ONE key v75 appended (`spiritShock`) and rolling the number back – so «nothing
+ *  but that key moved» is an identity over the whole serialisation rather than a claim about a diff.
+ *
+ *  ⚠ THE PEEL REMOVES A KEY AND NEVER A VALUE, and on this rung that is a fact about THE TREE rather
+ *  than about these careers – v74's own note, verbatim in its situation. T1 ships the seat, the
+ *  migration and **no writer at all**: `rollEnds` arrives in T2 and the shock that would put a week
+ *  in this field is T3. So `spiritShock` is `null` on every career here not because the walk is too
+ *  short to reach an ending but because there is nothing in the tree that could write one – which is
+ *  also why this rung says nothing yet about whether an ending inside 156 weeks would move these
+ *  hashes. `eliteGrinder` is the one to watch: she is fiery (×1.5 on the ends hazard) and meets
+ *  somebody at 137, so T2 is where that question gets answered, by this rung reproducing or not.
+ *
+ *  ⚠⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+ *  tests/condition.test.ts, green on this tree. It held BY CONSTRUCTION – this step takes no draw on
+ *  any stream at all: `createWorld` writes a literal `null` and the migration writes a literal `null`.
+ *
+ *  ⚠ PER-KEY DIFF FIRST, as this file's protocol demands and never after the fact. Control = this
+ *  branch's head `74bcdf61` with a clean tree; `tools/frozen-key-diff.ts` on all three careers,
+ *  headers checked on all six captures:
+ *
+ *    · 5/0 (25k middle, grinder)              – **2 lines of 79**: `schemaVersion`, and `spiritShock`
+ *      APPEARING with `74234e98afe7`. 77 keys byte-identical.
+ *    · 8/0 (120k wealthy, elite, grinder)     – **2 lines of 78**, the same two. 76 byte-identical.
+ *    · 0/1 (8k working, self-coached, PLAYER) – **2 lines of 80**, the same two. 78 byte-identical.
+ *
+ *  `rngMain`, `results`, `events`, `nextEventId`, `bond`, `spirit`, `condition`, `careerTotals`,
+ *  `financeWeeks`, `lifeLog`, `loveEpisodes` and the wallet are untouched on all three – which is the
+ *  load-bearing half, and the one this rung then restates as an identity instead of as a diff.
+ *
+ *  ⚠⚠ AND THE WAVE-4 BRIEF PREDICTED THIS WRONG, WHICH IS WORTH RECORDING WHERE THE NEXT READER OF A
+ *  BRIEF WILL SEE IT. It read «`PRE_V75` is the only rung that moves; `FROZEN`, `PRE_R28B`,
+ *  `PRE_NAME_VERA`, `PRE_V74`, `PRE_V73`, `PRE_V72` all HOLD». The last three DID hold, exactly as
+ *  written. The first three CANNOT, and not by any property of this wave: `careerHash`,
+ *  `careerHashUnderTheWindowRule` and `careerHashUnderTheOldName` hash the LIVE world with NO peel at
+ *  all, so a bumped `schemaVersion` moves each of them by arithmetic. Nine live constants is what
+ *  every schema move in this file's history has cost – v74's own commit says «nine constants
+ *  re-stamped (FROZEN, PRE_R28B, PRE_NAME_VERA), every `PRE_V*` rung below untouched» – and this is
+ *  that same nine. The rule the brief was reaching for is the one §0.4 states correctly: a NEW key
+ *  PEELS at its own rung, so the LADDER holds.
+ *
+ *  ⚠ ONE THING THIS PASS FOUND AND DID NOT FIX, flagged rather than quietly carried: `PRE_R28B` is
+ *  byte-identical to `FROZEN` and has been since at least v73 – `careerHashUnderTheWindowRule(5, 0)`
+ *  and `(8, 0)` now return exactly what `careerHash` returns, measured on this tree. The round-28
+ *  #17-b case therefore still catches a moved career, but it no longer distinguishes the WINDOW rule
+ *  from the LETTER rule, which is the thing it was written to prove. That predates this wave, is
+ *  nothing T1 may repair under its own brief, and belongs to whoever re-reads that case. */
+export const PRE_V75 = {
+  middleGrinder: 'fccff4a6b7f9d084e6be292fa22837b6d0178c8acc30dea1e370be8c9bcaaa69',
+  eliteGrinder: 'aff3bf0b9366c7744ce6b9cbf0a43a52015fcdb84072fa0d31aebf7e5ac3e1a3',
+  selfTravelling: '6f19702b97878a99d46df41612b0fec420554a1dd78893e9aa22824ee9861e66',}
+
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v73 – the identity the v74 re-freeze rests on,
  *  and the wave-2 pattern (`PRE_V73` directly below) repeated one version up. These three values are
  *  the VERBATIM v73 `FROZEN` constants, character for character, and they are reproduced here by
@@ -2581,9 +2704,9 @@ export const PRE_V69 = {
  *  putting `Vera` back before birth reproduces the same lifted career week for week. Value computed
  *  by RUNNING `careerHashUnderTheOldName(8, 0)`. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'ccd7800a0e0ca4664fe9a4cf0d4a7f5f8f9521e6de25f22c998cb1a5db1804d8',
-  eliteGrinder: 'a45008cb31ea432663ff173e32d314ee97045792b451ff5d087a7dda3f7c84e5',
-  selfTravelling: 'e5ebdc38a4e6fad9854121591c29470dfdf0327877b4d3c52d51a3390722852d',}
+  middleGrinder: '59afcfb4e545b486366402717ceb1deb472eb4c93d65e4cb526072254810997e',
+  eliteGrinder: 'bcb77bb989876b95bd6607c0121b57a6aa2a16a270e767e9801569673dd5a6c9',
+  selfTravelling: '1d9e153babb1d2df26459851196fbbc605ff927c898512917255989ba220ea59',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -2707,9 +2830,9 @@ export const PRE_V66 = {
  *  `PRE_R28B.eliteGrinder` EQUALS `FROZEN.eliteGrinder` again, both at the newest value. Computed by
  *  RUNNING `careerHashUnderTheWindowRule(8, 0)`. */
 export const PRE_R28B = {
-  middleGrinder: 'fccff4a6b7f9d084e6be292fa22837b6d0178c8acc30dea1e370be8c9bcaaa69',
-  eliteGrinder: 'aff3bf0b9366c7744ce6b9cbf0a43a52015fcdb84072fa0d31aebf7e5ac3e1a3',
-  selfTravelling: '6f19702b97878a99d46df41612b0fec420554a1dd78893e9aa22824ee9861e66',}
+  middleGrinder: 'd364eec3d216d146b343c5025ce4a3fd58ec844604f5ed4cc36204664bdf4826',
+  eliteGrinder: '4b4d1b32f48ef275bd3bff307eab96299a3552bea384d3549f291147d75e4da8',
+  selfTravelling: '172cacb1cdde1152bd0aebb09565d33850cf04c11368f096e62b6da23d21b724',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -3265,7 +3388,24 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // ⚠ MEASURED BEFORE THIS LINE WAS WRITTEN, as this file's protocol demands: `tools/frozen-key-diff.ts`
   // on all three careers, a control capture taken at `cb3a3a18` before any edit, reports exactly TWO
   // moved keys – `schemaVersion`, and `loveEpisodes` appearing with the hash of `[]`.
-  const { loveEpisodes: _episodes, ...preEpisodes } = world
+  // ⚠⚠ RE-AIMED FOR v75 (the private life, wave 4 – T1), NOT WEAKENED, AND IT PEELS AHEAD OF ALL
+  // ELEVEN BELOW because `spiritShock` is the newest key and the peel order is reverse order of
+  // arrival. It is written by `createWorld` itself, so every career here carries it – and it carries
+  // it `null`, which on this rung is a property of THE TREE rather than of these careers, exactly as
+  // v74's was: T1 ships the seat, the migration and NO WRITER AT ALL (`rollEnds` is T2, the shock is
+  // T3), so nothing on this tree could put a value there however long the walk ran. So the peel
+  // removes a key and never a value, and `PRE_V75` asserts it.
+  // ⚠ MEASURED BEFORE THIS LINE WAS WRITTEN, as the protocol demands and never after the fact:
+  // `tools/frozen-key-diff.ts` on all three careers, control = this branch's head `74bcdf61` with a
+  // clean tree, headers checked on all six captures. Exactly TWO lines move on each – `schemaVersion`
+  // (`eb624dbe56eb` -> `f369cb89fc62`), and `spiritShock` APPEARING with hash `74234e98afe7`, which is
+  // the sha256 of `JSON.stringify(null)` – with 77 / 76 / 78 other keys byte-identical, `rngMain`,
+  // `results`, `events`, `nextEventId`, `bond`, `spirit` and the wallet among them.
+  // ⚠ THAT HASH WAS WRONG THE FIRST TIME IT WAS WRITTEN HERE, which is this note's own small proof of
+  // the rule above it: `37a6259cc0c1` was typed from memory, and it is the MD5 of «null» rather than
+  // the sha256 this tool prints. Run the capture, read the file, copy the string.
+  const { spiritShock: _shock, ...preShock } = world
+  const { loveEpisodes: _episodes, ...preEpisodes } = preShock
   const { lifeLog: _beats, ...preBeats } = preEpisodes
   const { spirit: _spirit, bond: _bond, temperament: _temperament, ...preLife } = preBeats
   const { drawnFirstRounds: _draw, ...preDraw } = preLife
@@ -3297,7 +3437,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
                       ? preBeats
                       : schemaVersion < 74
                         ? preEpisodes
-                        : world
+                        : schemaVersion < 75
+                          ? preShock
+                          : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 

@@ -374,7 +374,25 @@ import type { AcademySupport } from '../academy'
 // own sense: a career that predates the layer has lived no attachments, because there were none to
 // live. Full move: this constant, the v73 -> v74 step in migrations.ts, tests/fixtures/saves/v74.json,
 // and docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-export const SAVE_SCHEMA_VERSION = 74
+// ⭐⭐⭐ v75 – THE PRIVATE LIFE, WAVE 4: IT ENDS. World `+spiritShock` – the mark an ending leaves on
+// her while it is still sitting there, `{week, kind}` or null (`docs/plans/life-wave-4-builder-2026-09.md`
+// §2 T1/T3, constants from `docs/specs/who-she-is-2026-09.md` §4). The back-fill is `null` and it is
+// EXACTLY TRUE in v73's and v74's own sense one rung further on: a career that predates the layer
+// carries no live shock, because there was nothing in its past that could have shocked her. T1 ships
+// the SEAT and no writer at all – `rollEnds` is T2 and the shock itself is T3 – so this version is
+// inert by construction, which is all a schema move should ever be, and the frozen careers prove it.
+//
+// ⚠⚠ THE SAME BUMP CARRIES `WorldEvent.lifeKind?` AND THAT FIELD IS OWED NO BACK-FILL, which is said
+// here rather than left for a reader to wonder whether it was forgotten. It is OPTIONAL and purely
+// additive – absent means exactly what every historical row already means, «this row carries no
+// life-kind discriminator», and that is true of every row ever written – and NOTHING writes it before
+// T5, so there is no shape anywhere for a migration to repair. On `WorldEvent.entryRef`'s own rule it
+// would have moved no number at all had it shipped alone; it rides this version because the two land
+// in one commit, not because it needs one.
+//
+// Full move: this constant, the v74 -> v75 step in migrations.ts, tests/fixtures/saves/v75.json, and
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
+export const SAVE_SCHEMA_VERSION = 75
 
 
 
@@ -970,6 +988,39 @@ export interface WorldState {
    *  never writes `endedWeek`; wave 4 does, and the cooldown that reads it lands now so that wave
    *  changes nothing here. */
   loveEpisodes: LoveEpisode[]
+  /** ⭐⭐⭐ v75 – WHAT AN ENDING LEFT ON HER, AND IT IS A MARK RATHER THAN A MECHANISM (the private
+   *  life, wave 4; `docs/plans/life-wave-4-builder-2026-09.md` §2 T3, constants from
+   *  `docs/specs/who-she-is-2026-09.md` §4). Non-null from the week an attachment ends until spirit
+   *  has climbed back to within two points of her own baseline, where `accrueSpirit`'s tail clears it
+   *  – those are the only two sites that may ever write this field.
+   *
+   *  ⚠⚠ IT IS NOT THE PHYSICS AND MUST NEVER GROW INTO IT. The DROP (−22 steady / −34 intense) goes
+   *  through the standing perturbation path and the RECOVERY is the standing weekly return with no
+   *  special curve at all – §2 T3's «recovery is the standing weekly rule and NOTHING else». What
+   *  this field adds is the one fact the numbers cannot state: that a live shock is WHY she is under
+   *  her line. A spirit of 48 looks identical whichever way it got there, and a reader that had to
+   *  infer the cause from the number would be re-deriving a fact instead of reading one.
+   *
+   *  ⚠ `kind` IS A UNION WITH ONE MEMBER TODAY, ON PURPOSE, and the roster is the place the second
+   *  one gets noticed. `'breakup'` is wave 4's; the build plan's steps 7–8 add the others. A bare
+   *  boolean or a bare week would have to be WIDENED by a migration when they arrive, where a union
+   *  widens in place and every exhaustive read goes red at the site that has to decide – the same
+   *  argument `LifeBeatKind` and `LIFE_ROW_KINDS` each make for their own rosters.
+   *
+   *  ⚠ NOTHING READS IT IN T1, AND THAT IS CORRECT RATHER THAN UNFINISHED – v74's `loveEpisodes` one
+   *  wave down, verbatim: the seat lands before the writers so the schema move stays inert and
+   *  provable. T2 fires the ending, T3 writes and clears this field, and its only readers after that
+   *  are `DiaryFacts.freshBreakup` and wave 2's Mood collision rule until wave 5's psychologist –
+   *  who is the reason it is persisted at all.
+   *
+   *  ⚠ AND IT IS DELIBERATELY NOT ON THE WIRE YET. `Snapshot` is assembled field by field
+   *  (invariant 1: the UI never sees a `WorldState`), so a persisted field does not reach a screen by
+   *  existing – it reaches one when a reader is written for it, and T3 carries the wire field with
+   *  its reader. A `spiritShock` on the snapshot today would be a wire contract nothing could
+   *  exercise. `WorldEvent.lifeKind` is the opposite case and needs no such decision: the feed ships
+   *  the event ROWS THEMSELVES (`snapshotEvents`, world/snapshot.ts), so widening the row widens the
+   *  wire by construction. */
+  spiritShock: { week: number; kind: 'breakup' } | null
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

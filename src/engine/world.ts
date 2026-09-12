@@ -1575,6 +1575,17 @@ export function createWorld(
     // so every key must stay in the order it was appended in (`careerHashAtSchema` peels in
     // reverse, newest first).
     loveEpisodes: [],
+    // ⭐ v75 (the private life, wave 4): NOTHING HAS ENDED, and on week 0 nothing could have – she is
+    // eight and there is nobody to lose. `null` is the identity here in the plainest sense, and it is
+    // exactly what the v74 -> v75 migration back-fills on every older save, so a migrated career and
+    // a fresh one are the same shape at the moment they load.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `loveEpisodes` above has stopped being it – the same
+    // handover `lifeLog` made to `loveEpisodes` one wave down, and `peakPhysical` to `assets` before
+    // that. The frozen-career identities reproduce each older schema's hashes by dropping exactly the
+    // keys appended since, so every key must stay in the order it was appended in
+    // (`careerHashAtSchema` peels in reverse, newest first).
+    spiritShock: null,
   }
   addEvent(world, {
     week: 0,

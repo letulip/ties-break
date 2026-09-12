@@ -46,9 +46,36 @@ import {
   PRE_V72,
   PRE_V73,
   PRE_V74,
+  PRE_V75,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v75: rolling the schema back to 74 – and dropping the key v75 added – reproduces the v74 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 4 STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
+    // the v74 case directly below, repeated one version up. v75 appends ONE key to `createWorld`'s
+    // literal, `spiritShock`; every career here carries it and every one of them carries it `null`.
+    // Peel that key, roll the number back, and the ENTIRE serialisation returns byte for byte –
+    // `rngMain`, `results`, `events`, the wallet, the body, all eighty keys.
+    //
+    // ⚠⚠ AND THIS RUNG'S «NULL» IS A FACT ABOUT THE TREE, NOT ABOUT THESE CAREERS, which is v74's own
+    // caveat one rung down and is the thing a later reader must not misread. T1 ships the seat, the
+    // migration and NO WRITER AT ALL; `rollEnds` lands in T2 and the shock in T3. So this case does
+    // not yet say «an ending cannot reach a 156-week career». It says the schema move is inert, which
+    // is all a schema move should ever be. T2 answers the other question here, by reproducing or not –
+    // and `eliteGrinder` is where to watch for it: she is fiery (×1.5 on the ends hazard) and has been
+    // with somebody since week 137 ever since T3/T5 landed.
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    //
+    // ⚠ THE SECOND FIELD OF THIS BUMP CANNOT REACH THIS CASE AT ALL, and it is worth naming so nobody
+    // looks for it: `WorldEvent.lifeKind?` is optional, additive, never back-filled and written by
+    // nothing until T5, so no row in any of these three careers carries it and `events` is one of the
+    // keys measured byte-identical. A schema bump whose second half is invisible to a whole-world hash
+    // is exactly what «optional and not a schema move on its own» means, stated as a measurement.
+    expect(careerHashAtSchema(5, 0, 74), '25k · middle coach · grinder').toBe(PRE_V75.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 74), '120k · elite coach · grinder').toBe(PRE_V75.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 74), '8k · self-coached · player').toBe(PRE_V75.selfTravelling)
+  })
+
   it('⭐⭐⭐ v74: rolling the schema back to 73 – and dropping the key v74 added – reproduces the v73 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 3 STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
     // the wave-2 case directly below, repeated one version up. v74 appends ONE key to `createWorld`'s

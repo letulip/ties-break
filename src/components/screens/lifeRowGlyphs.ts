@@ -62,6 +62,17 @@ export type LifeRowGlyphs = Record<string, never> | Record<LifeRowKind, string>
 // `WorldEvent` carries no life-kind discriminator, so wave 4's endings and §5a's wedding would wear
 // this same heart. Per-kind marks need either new `WorldEventType` members or a field on the row –
 // a design call that is his, flagged at T9 and still open.
+//
+// ⚠⚠ HALF OF THAT NOTE WAS ANSWERED AT v75 (wave 4 T1, 12.09) AND THE OTHER HALF IS STILL HIS. The
+// design call went the FIELD way: `WorldEvent.lifeKind?: LifeBeatKind` exists now, optional and
+// never back-filled, and its own comment carries the argument for why a row's KIND is a finer
+// question than what the row IS. So the sentence above – «`WorldEvent` carries no life-kind
+// discriminator» – has stopped being true and is kept as the record of where the choice was flagged.
+// ⚠ NOTHING ELSE MOVED IN THIS FILE AND NOTHING SHOULD HAVE: T1 writes the field nowhere, so every
+// row in every career still reads `undefined` and still wears this same heart. The column learns to
+// read it at T5, which keys on `lifeKind ?? 'met'` so a wave-3 row keeps 🤍 untouched – and the
+// GLYPHS for the new kinds remain the owner's picks (§5a: «no agent adds or swaps one unasked»),
+// proposed to him with T6's package and landing in `PICKS` after his word, never before.
 const PICKS = {
   life: '🤍',
 } satisfies LifeRowGlyphs
