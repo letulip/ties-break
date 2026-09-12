@@ -53,7 +53,14 @@ import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/ec
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
-import { ASSET_NAME_MAX_CHARS, STARTING_FUNDS_CENTS } from '../../engine/world'
+// ⭐⭐ ROUND 41 #25 – `seasonStartWeek` JOINS THE SAME IMPORT, for the same reason. world/ledger.ts
+// calls it «THE ONE definition of 'this season' for money: the Money screen's "This season" window
+// … reads it» – so the allowance projection below reads the screen's own clock rather than a second
+// modulo this file would own alone.
+import { ASSET_NAME_MAX_CHARS, seasonStartWeek, STARTING_FUNDS_CENTS } from '../../engine/world'
+// ⭐ ROUND 41 #25 – the season's length, read the same way StatsScreen.vue and CollegeYearCard.vue
+// already do (`WEEKS_PER_YEAR` off the calendar module, never a second literal 52).
+import { WEEKS_PER_YEAR } from '../../engine/season/calendar'
 // ⭐⭐ U-03 (05.09 review): the bill's arithmetic USED to be imported here, so the note under the
 // breakdown could quote the number the engine charges rather than a mirror of it. It is now READ off
 // the snapshot instead - same rule, one fewer copy of the sum. See `coachBilling` in
@@ -776,6 +783,41 @@ function weeksLeftBracket(untilWeek: number, atWeek: number): string {
 const dealWeeksLeft = computed(() => {
   const d = kitDeal.value
   return d ? weeksLeftBracket(d.untilWeek, week.value) : ''
+})
+
+/** ⭐⭐ ROUND 41 #25 – THE PROJECTED-EMPTY LINE. His report, 12.09: «даже тикер в 12к годовых на
+ *  форму заканчивается раньше года, в августе уже 0» – recon (docs/rounds/round-41.md, "recon
+ *  verdicts folded", item 25) found the ticker working exactly as designed: a SEASON allowance, not
+ *  a subscription, and the corpus reproduces his August to the week (Aurelia's icon rung, wealthy x
+ *  pro, ≈$388/wk -> ≈31 weeks). What the design owed him was never a fix – it was the FORECAST: a
+ *  parent burning the allowance at a steady rate should be told before it hits zero, not after.
+ *
+ *  pace = what she has spent this season / how many weeks of the season have gone by –
+ *  `seasonStartWeek` (world/ledger.ts) is "THE ONE definition of 'this season' for money", the same
+ *  clock `spentCents` itself resets on (`rolloverKitAllowance`, sponsors.ts:104-108, fires on
+ *  `week % WEEKS_PER_YEAR === 0`). Weeks elapsed is read 0-based off that boundary (the season's own
+ *  first week is a zero-week-old season), which is also why the guard below reads `< 4` and not `< 5`.
+ *
+ *  ⚠ THE FOUR-WEEK FLOOR IS PART OF THE DESIGN, NOT A NICETY. `spentCents` over one or two weeks is
+ *  noise – a single racquet bought in week one would print a pace nothing about her real season
+ *  supports, and a parent who checked the card that week would be told a number this screen could
+ *  not stand behind. Refusing to forecast is the honest answer until there is enough season to read.
+ *
+ *  ⚠ AND A PROJECTION PAST THE SEASON'S OWN END IS SILENCE, NOT A LONGER COUNTDOWN. The allowance
+ *  resets at the boundary (`rolloverKitAllowance` again), so a pace that would not empty the pot
+ *  before the reset never actually runs out – "at this pace it runs out" would be a sentence about a
+ *  week that was never going to happen. */
+const kitAllowanceProjectedEmptyWeek = computed<number | null>(() => {
+  const d = kitDeal.value
+  if (!d || d.remainingCents <= 0) return null
+  const seasonStart = seasonStartWeek(week.value)
+  const weeksElapsed = week.value - seasonStart
+  if (weeksElapsed < 4) return null
+  const pace = d.spentCents / weeksElapsed
+  if (pace <= 0) return null
+  const projectedWeek = week.value + Math.ceil(d.remainingCents / pace)
+  if (projectedWeek >= seasonStart + WEEKS_PER_YEAR) return null
+  return projectedWeek
 })
 
 // --- THE ACADEMY, WHICH PAYS AND IS NEVER SEEN (backlog #90, measured 09.08) ----------------------
@@ -2091,6 +2133,13 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             :value="formatCents(kitDeal.remainingCents)"
             :tone="kitDeal.remainingCents > 0 ? 'positive' : 'negative'"
           />
+          <!-- ⭐⭐ ROUND 41 #25 – THE PROJECTED-EMPTY LINE. `kitAllowanceProjectedEmptyWeek` in the
+               script block carries his report, the recon and the two guards (four weeks of season
+               read, the projection still inside it); mutually exclusive with the spent-out note
+               below by construction (one wants `remainingCents > 0`, the other `=== 0`). -->
+          <p v-if="kitAllowanceProjectedEmptyWeek !== null" class="kit-deal-note is-projected">
+            At this pace it runs out around {{ weekLabel(kitAllowanceProjectedEmptyWeek) }}.
+          </p>
           <p v-if="kitDeal.remainingCents === 0" class="kit-deal-note is-spent">
             The season's allowance is spent. Her {{ dealCovers }} are billed to the family at full
             price until the new season starts – the deal still keeps them fresh, and it still pays
