@@ -396,12 +396,35 @@ export const ECONOMY = {
     // priced at exactly the court rental §3 quotes, $10-30/h, and takes the MIDDLE of that band: it
     // has no roster and nobody to be dearer than. A $0 rung would hand the working family the single
     // largest line in the game.
+    // ⭐⭐⭐ THE ELITE ROW IS THE OWNER'S SHELF AND IT IS HIS TABLE × 1.25 (round 41, 12.09, after P1:
+    // «единая элит-полка вверх - верно»). P1 took the corridor off `high` and `elite` – one price for
+    // everybody – and the measured consequence was that a wealthy family's idle year stopped burning
+    // (+$6,280 -> -$4,917 on the 16-seed batch, 70% of it the corridor fade). Of the two levers the
+    // calibration put in front of him – the wealthy INCOME or this band – he picked this one, and he
+    // picked the direction: UP, to a single shelf.
+    //
+    // THE ARITHMETIC IS NOT A TUNING, IT IS AN IDENTITY: the new uniform price is what the WEALTHY
+    // family paid under the corridor P1 retired, so the row is his own 29.07 midpoints times
+    // `WEALTH_CORRIDOR.wealthy`'s midpoint, `(1.2 + 1.3) / 2 = 1.25`, to the dollar -
+    //   12-16  $120 -> $150/h     17-22  $160 -> $200/h     23+  $200 -> $250/h
+    // - and at the balanced plan's five sessions that is a weekly shelf of $750 / $1,000 / $1,250 for
+    // EVERY background. docs/specs/one-market-2026-09.md §3's resolution block carries the table and
+    // the predicted-vs-measured; `tests/economyCalibration.ts`'s `BANDS` block carries the burn.
+    //
+    // ⚠ `high` IS DELIBERATELY NOT HERE. His word was «элит», and P1's own «по крайней мере» note
+    // already records that widening the cut was a floor rather than a bound - widening the PRICE is a
+    // second decision and he did not make it.
+    //
+    // ⚠ ZERO RNG. `pickInt` spends exactly one `rng()` call whatever its bounds, so a wider band moves
+    // the cents a coach charges and never a position on `seed:coaches`; the corridor roll still lands
+    // on exactly 1.0 at this rung. Every elite rate scales monotonically, so `bestFitCoachAt`'s
+    // cheapest-among-equals tie-break hires the same man at the same seed.
     hourlyRateCents: {
       self: [[10_00, 30_00], [11_00, 33_00], [12_00, 36_00]],
       budget: [[24_00, 36_00], [28_00, 42_00], [32_00, 48_00]],
       middle: [[40_00, 60_00], [48_00, 72_00], [52_00, 78_00]],
       high: [[64_00, 96_00], [80_00, 120_00], [96_00, 144_00]],
-      elite: [[96_00, 144_00], [128_00, 192_00], [160_00, 240_00]],
+      elite: [[120_00, 180_00], [160_00, 240_00], [200_00, 300_00]],
     } as Record<CoachTier, [number, number][]>,
 
     // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).

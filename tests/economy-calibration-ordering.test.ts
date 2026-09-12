@@ -51,11 +51,32 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     // restore the burn are the wealthy income and the elite rate band, and neither was touched. The
     // line is inverted rather than deleted precisely so that a re-tune of either goes RED here and
     // is re-pinned deliberately.
+    //
+    // ⭐⭐⭐ AND IT DID, WITHIN THE DAY. THE INVERSION IS SPENT – THE LAST LINE IS RESTORED (12.09,
+    // the owner, choosing between the two levers above):
+    //
+    //     «единая элит-полка вверх - верно»
+    //
+    // He took the ELITE RATE BAND and raised it to a single shelf: `ECONOMY.coach.hourlyRateCents.elite`
+    // × 1.25, the midpoint of the wealthy corridor P1 retired, so the uniform price everybody now pays
+    // is exactly what the wealthy family used to pay. THE RE-PIN IS THE POINT OF THE INVERSION – this
+    // line went red on his retune and is being re-aimed deliberately, which is the whole reason P1
+    // inverted it instead of deleting it. Measured on the same batch, the same 16 seeds:
+    //
+    //   middle  · middle  -$8,039   saves the MOST – unmoved to the cent, its rung kept the corridor
+    //   working · budget  -$5,667   unmoved to the cent, same reason
+    //   wealthy · elite   **+$2,970**   the only one that BURNS, again
+    //
+    // ⚠ THE CHAIN ABOVE IS UNTOUCHED FOR THE THIRD TIME and the sentence about why middle sits on
+    // top still stands: the only thing that moved is the wealthy cell's SIGN, back to where round 7's
+    // «premium everything must hurt» put it. The decomposition, the prediction (+$2,971, missed by
+    // $1.06) and his ruling in full are in tests/economyCalibration.ts's `BANDS` block and
+    // docs/specs/one-market-2026-09.md §3.
     const w = mean(batchBurns('working', { excludeSponsor: true }))
     const m = mean(batchBurns('middle'))
     const rich = mean(batchBurns('wealthy'))
     expect(m).toBeLessThan(w)
     expect(w).toBeLessThan(rich)
-    expect(rich, '⚠ no cell in this table is a burn any more – round 41 P1, his to rule on').toBeLessThan(0)
+    expect(rich, '⚠ the wealthy cell BURNS again – his «единая элит-полка вверх», 12.09').toBeGreaterThan(0)
   })
 })

@@ -79,16 +79,24 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
   // tests/economyCalibration.ts's `BANDS` block; in one line: his own two rulings of 12.09 (uniform
   // gear prices, and the corridor stopping at `high`) take this cell from a **+$6,280 burn to a
   // -$4,917 saving**, of which the corridor half is 70%. The ORDERING below it is untouched.
-  it('wealthy (elite coach) now SAVES ~$4.9k in an idle year – ⚠ premium everything stopped hurting', () => {
-    // ⚠ THE HISTORY IS KEPT because it is what makes the third flip legible. Round 12 had raised the
+  //
+  // ⭐⭐⭐ AND RE-AIMED A FOURTH TIME THE SAME DAY, BECAUSE HE RULED ON IT: «единая элит-полка вверх -
+  // верно». He took the second of the two levers – `ECONOMY.coach.hourlyRateCents.elite` × 1.25, the
+  // midpoint of the corridor P1 retired, so the uniform price is what the wealthy family used to pay –
+  // and the cell comes back to **+$2,970**, which is P1's own «part A only» row to within $1.06. This
+  // is a re-pin AFTER an engine constant moved on his word, not a re-pin INSTEAD of a lever.
+  it('wealthy (elite coach) BURNS ~$3k in an idle year again – ⚠ premium everything hurts, funded', () => {
+    // ⚠ THE HISTORY IS KEPT because it is what makes the fourth flip legible. Round 12 had raised the
     // wealthy income to $750/wk and this cell became a break-even; Round 1 of the ladder made it a
     // $8.3k saving, because an Elite coach at four hours and no corridor was $480/wk. Round 2
     // restored the corridor and raised the hours, so a premium academy's Elite coach was $750/wk -
     // exactly the family's weekly income - and the idle year burned, which is what the round-7
-    // "premium everything must hurt" always meant. ROUND 41 P1 takes the corridor off that rung: the
-    // same coach is $800/wk for EVERY family now, the family's own gear fell to the uniform rung
-    // price, and $750/wk of income no longer loses the race. The principle is not refuted; it is
-    // un-funded, and the fix (if he wants one) is on the income or the elite rate, not here.
+    // "premium everything must hurt" always meant. ROUND 41 P1 took the corridor off that rung: the
+    // same coach was $800/wk for EVERY family, the family's own gear fell to the uniform rung price,
+    // and $750/wk of income no longer lost the race - the principle un-funded rather than refuted.
+    // HIS RULING PUT THE SHELF ITSELF UP instead: the elite coach is $1,000/wk at 17-22 for every
+    // family now, which is the wealthy corridor's old price charged to the whole market. The gear
+    // half of P1 stays, which is why this is +$2,970 and not the +$6,280 it was before either ruling.
     const burns = batchBurns('wealthy')
     const [lo, hi] = BANDS.wealthy
     expect(mean(burns)).toBeGreaterThanOrEqual(lo)
