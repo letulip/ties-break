@@ -782,6 +782,50 @@ describe('wave 4 T4 G – the pools', () => {
     }
   })
 
+  it('⭐⭐⭐ v75 T6 – NO ENDING FRAME IS AN ARRIVAL FRAME, which is the one collision that reads as a bug', () => {
+    // ⚠⚠ WHY THIS NET EXISTS AND WHAT IT CAUGHT. T4's draft gave `deep` two frames BYTE-IDENTICAL to
+    // `MET_HER_LINE.deep.open`'s – «She waited until the house was quiet, then said it once.» and
+    // «She called late, when the day was done, and said it once.» – so one girl's career staged the
+    // very same scene for «there is someone» and for «it is over», seasons apart, and the second
+    // reading of it would land as a copy-paste rather than as a life. NOTHING IN THE TREE COULD SEE
+    // IT: §G's cases compare cells inside this pool, `wave3-delivery` compares cells inside that one,
+    // and the two pools are never held up against each other. It was found by reading and this is
+    // what stops the next one.
+    //
+    // ⚠ IT COMPARES THE FRAME AND NOT THE LINE, deliberately: the quotations differ by construction
+    // (one says there is someone, the other that it is over), so a whole-line comparison would pass
+    // over exactly the defect. The frame is the scene the parent is standing in, and that is the part
+    // a player recognises.
+    const frameOf = (s: string): string => s.split('"')[0].trim()
+    const arrivals = new Set(
+      TEMPERAMENTS.flatMap((v) =>
+        PARTNER_WANTS.flatMap((w) =>
+          [ROOF, AWAY].map((stage) => frameOf(lifeBeatSaid('met', 'p:1', v, 'level', 'close', w, stage))),
+        ),
+      ),
+    )
+    // ⚠ THE POSITIVE CONTROL FIRST – a negative claim over an empty set passes forever, and the
+    // extractor is the thing most likely to break here (a pool that stopped quoting, a split that
+    // stopped splitting). Sixteen arrival cells, and the frames really are frames.
+    expect(arrivals.size, 'the arrival frames were extracted at all').toBeGreaterThan(8)
+    for (const f of arrivals) expect(f, 'a frame that is really the whole line').not.toContain('"')
+    let checked = 0
+    for (const voice of TEMPERAMENTS) {
+      for (const register of ENDS_REGISTERS) {
+        for (const stage of [ROOF, AWAY]) {
+          const frame = frameOf(said(voice, 'close', stage, register))
+          expect(frame.length, `${voice}/${register}/${stage}: there is a frame to compare`).toBeGreaterThan(10)
+          expect(
+            arrivals.has(frame),
+            `⚠⚠ ${voice}/${register}/${stage} stages the SAME scene as her arrival line: "${frame}"`,
+          ).toBe(false)
+          checked++
+        }
+      }
+    }
+    expect(checked, 'all sixteen cells were compared').toBe(16)
+  })
+
   it('⭐⭐ FOUR DISTINCT VOICES in each register – no girl silently receives another\'s line', () => {
     for (const register of ENDS_REGISTERS) {
       const lines = TEMPERAMENTS.map((v) => said(v, 'close', ROOF, register))

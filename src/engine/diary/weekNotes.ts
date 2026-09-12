@@ -186,6 +186,23 @@ export interface WeekClaims {
    *  while this is false (T4 reads `activeEpisode`, which `partnerKnown` does not) – so a line about
    *  a lighter week is licensed here on what the parent has been TOLD, never on the lift itself. */
   partnerKnown?: true
+  /** ⭐⭐ v75 (the private life, wave 4 – T6) – ASSERTS THE MARK OF AN ENDING IS STILL ON HER, and
+   *  asserts NOTHING about what the parent has been told. Unselectable unless `f.freshBreakup`, and
+   *  the honesty pin re-derives that off the fact rather than off the licence below
+   *  (`HOLDS.freshBreakup` in tests/week-notes.test.ts, landed with the fact itself – R2-18's law).
+   *
+   *  ⚠⚠ THE HALF THAT LOOKS LIKE ITS NEIGHBOUR AND IS NOT. `partnerKnown` is DISCLOSURE and this is
+   *  HER, and they are not two readings of one thing: `rollEnds` stamps the shock on `endedWeek`
+   *  regardless of whether the parent has ever heard of anybody, so on a told-late episode this claim
+   *  is true for every week between the ending and `knownWeek` – weeks in which he does not know there
+   *  was a person, let alone that it stopped. THAT is the constraint on the band below: a line may say
+   *  what he sees and what he does about it, and may NOT say that he knows why.
+   *
+   *  ⚠ AND NOTHING ABOUT THE CAUSE, EVER. The sim models no reason for an ending – `endEpisode` writes
+   *  a week and nothing else – so «they were not right for her», «she found out», any of it, is an
+   *  unlicensed consequential fact under the honesty law's first tier, and the claim does not license
+   *  it however true it sounds. */
+  freshBreakup?: true
 }
 
 export interface WeekNote {
@@ -1474,6 +1491,61 @@ export const WEEK_NOTES: readonly WeekNote[] = [
     text: 'She is brighter than the week explains. We think we know why now.',
     claims: { notTravellingWeek: true, partnerKnown: true, register: 'bright' },
     license: (f) => plainTraining(f) && brightWeek(f) && f.partnerKnown,
+  },
+  // ===============================================================================================
+  // ⭐⭐⭐ v75 (THE PRIVATE LIFE, WAVE 4 – T6) – THE WEEKS AFTER SOMETHING OF HERS ENDED
+  // ===============================================================================================
+  //
+  // ⚠⚠ THIS BAND IS `freshBreakup`'s CONSUMING LICENCE and it ships in the same task as the fact and
+  // as `HOLDS.freshBreakup`, which is R2-18's law read literally: a fact ships with its consumer and
+  // its checker, or not at all. The band above is the precedent, one wave down, in its own words.
+  //
+  // ⚠⚠ AND THE ONE RULE THAT SHAPES EVERY LINE HERE IS THAT **HE MAY NOT KNOW WHY**. `rollEnds` stamps
+  // `spiritShock` on `endedWeek` whether or not the parent has ever been told there was anybody, and
+  // the told-late scene is built on exactly that gap – so this fact is true across a whole reachable
+  // band of weeks in which he has heard of no person and no ending. A line saying «the break-up is
+  // hard on her» would be false there in its first three words. What is true on EVERY week the fact
+  // is true is narrower and better: he can see the week, he cannot account for it, and he acts anyway.
+  // That is the fallible-parent law arriving as a licence rather than as advice.
+  //
+  // ⚠ NOR MAY ONE NAME A CAUSE ON THE WEEKS HE DOES KNOW. The sim models no reason for an ending –
+  // `endEpisode` writes a date and nothing else – so the honest sentence about a told-now week is
+  // still «we do not know what happened», and that is why the same four lines serve both bands.
+  //
+  // ⚠ NO INTERIOR OF HERS STATED AS FACT (the fallible parent, second half). «She is heartbroken» is
+  // omniscience wearing sympathy: the parent sees a flat week, not the inside of it. Every line below
+  // reports either something he did or something he could watch happen.
+  //
+  // ⚠ NO `domestic` CLAIM ON ANY OF THEM, for the band above's reason: the ends hazard runs at every
+  // stage (who-she-is §4), so a line that put the parent in the room would be false from `college` on.
+  //
+  // ⚠⚠ AND ONLY THE LAST OF THE FOUR CLAIMS `register: 'low'`, WHICH IS ARITHMETIC RATHER THAN CAUTION.
+  // `spiritShock` clears at `spirit >= baseline - 2` = 68 and the low register starts at
+  // `dimmedBelow` = 67.5, so there is a half-point window in which the mark is still on her and her
+  // Mood word is NOT low. `freshBreakup` therefore does not imply a flat week, and the one line that
+  // says she was flat has to earn it off the register the engine actually computed – the same
+  // correction the two «lighter» lines above carry for the other end of the ladder.
+  //
+  // ⚠ EVERY LINE HERE IS A DRAFT until the owner's вычитка (CLAUDE.md invariant 4).
+  {
+    text: 'We were careful with her all week, and never asked the question.',
+    claims: { notTravellingWeek: true, freshBreakup: true },
+    license: (f) => plainTraining(f) && f.freshBreakup,
+  },
+  {
+    text: 'We put it down to the schedule. We may have had that wrong.',
+    claims: { notTravellingWeek: true, freshBreakup: true },
+    license: (f) => plainTraining(f) && f.freshBreakup,
+  },
+  {
+    text: 'She did the week and said very little about any of it.',
+    claims: { notTravellingWeek: true, freshBreakup: true },
+    license: (f) => plainTraining(f) && f.freshBreakup,
+  },
+  {
+    text: 'She was flat all week, and the training does not explain it.',
+    claims: { notTravellingWeek: true, freshBreakup: true, register: 'low' },
+    license: (f) => plainTraining(f) && lowWeek(f) && f.freshBreakup,
   },
   // --- THE FLAT POOL – what `strained` sounds like (voice-bibles §B), 8 lines for all four voices --
   //

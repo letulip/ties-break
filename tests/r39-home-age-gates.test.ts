@@ -70,6 +70,8 @@ function baseFacts(stage: DiaryLifeStage, age: number): DiaryFacts {
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).
     partnerKnown: false,
+    // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryFacts.freshBreakup`.
+    freshBreakup: false,
     injured: null,
     travelled: false,
     playedTournament: false,

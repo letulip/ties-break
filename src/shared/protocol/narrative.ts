@@ -430,6 +430,24 @@ export interface DiaryFacts {
    *  about reads `false` here while `activeEpisode` is non-null and spirit's baseline is already
    *  lifted – which is the design: he sees a lighter week before he knows why. */
   partnerKnown: boolean
+  /** ⭐⭐ v75 (the private life, wave 4 – T6) – AN ATTACHMENT OF HERS ENDED RECENTLY AND THE MARK IS
+   *  STILL ON HER: `world.spiritShock` live and of kind `'breakup'`. Derived at snapshot time, never
+   *  persisted on the wire – `state.ts`' own note on `spiritShock` rules that this fact is the ONE
+   *  reader the field gets and that a `spiritShock` beside it would be a second road to one fact.
+   *
+   *  ⚠⚠ IT IS ABOUT HER, NOT ABOUT WHAT HE KNOWS, AND THAT IS THE WHOLE OF WHAT A LINE MAY REST ON.
+   *  `rollEnds` stamps the shock on `endedWeek` whether or not the parent has ever been told there was
+   *  anybody – so on a told-late episode this is TRUE for every week between `endedWeek` and
+   *  `knownWeek`, while `partnerKnown` is false and the parent knows nothing at all. A line licensed
+   *  on this may therefore say what he SEES and what he DOES about it, and may not say that he knows
+   *  why: on a whole reachable band of weeks he does not. `partnerKnown`'s own note one field up is
+   *  the mirror of this one – there the lift arrives before the knowledge, here the loss does.
+   *
+   *  ⚠ AND IT CARRIES NO WHEN, NO WHO AND NO WHY. The schema holds no reason for an ending any more
+   *  than it holds a name for the person (see `LoveEpisode`), and `DiaryFacts` deliberately carries
+   *  neither `endedWeek` nor the read – so a line reaching for a cause would be inventing the one
+   *  consequential fact the whole mechanic refuses to model. */
+  freshBreakup: boolean
   /** the active injury, or null when healthy */
   injured: { kind: string; weeksRemaining: number; totalWeeks: number } | null
   /** this week's drains, read off the week's own events/state */

@@ -100,7 +100,7 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { accrueSpirit, spiritBandOf, temperamentIntensity, MOOD_WORD, TEMPERAMENTS, type Temperament } from '../src/engine/spirit'
-import { createWorld, rollEnds, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
+import { createWorld, rollEnds, toSnapshot, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import { idleRead } from '../src/shared/avatarEmotion'
 import { ECONOMY } from '../src/engine/economy'
 import { isBlackoutWeek } from '../src/engine/season/calendar'
@@ -537,7 +537,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
 // E. WHAT MAY READ IT – the exhaustive list, and how Mood shows the shock with ZERO new code
 // =================================================================================================
 describe('wave 4 T3 E – the readers, and the Mood surface', () => {
-  it('⚠⚠ the field is named in exactly five files in src/, and they are the writers and the seat', () => {
+  it('⚠⚠ the field is named in exactly six files in src/, and they are the writers, the seat and T6\'s derivation', () => {
     // ⚠ THE T3 BRIEF'S «EXHAUSTIVE LIST», MADE MECHANICAL. The field is persisted FOR wave 5's
     // psychologist; a reader added anywhere else is scope the owner did not ask for, and the cheapest
     // way to notice one is to pin the set. ⚠ `codeOnly`, because `economy.ts` discusses the field in
@@ -548,10 +548,19 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
       .map(([path]) => path)
     // ⚠ THE ORDER IS THE WALK'S, NOT AN ALPHABET'S: `srcFiles` recurses a directory where it meets it,
     // so `engine/world/` is exhausted before `engine/world.ts` («world» sorts before «world.ts»).
+    // ⚠⚠ RE-AIMED BY v75 T6 (12.09), AND THE SIXTH ENTRY WAS PREDICTED BY NAME BEFORE IT EXISTED.
+    // WHAT MOVED: `engine/world/snapshot.ts` joined the list. WHY: T6 builds `DiaryFacts.freshBreakup`
+    // (the wave-4 brief §2 T6, item 4), and `state.ts`' own note on the field already ruled that this
+    // is «the ONE reader this layer is getting» and that it «travels on `diary.facts`, which is
+    // already on the wire. A `spiritShock` beside it would be a second road to one fact.» So the
+    // census grew by exactly the file that ruling required and by nothing else, which is the claim
+    // this pin was built to make. ⚠ NOT WEAKENED: the list is still exact, still ordered by the walk,
+    // and the wire assertion below is UNCHANGED and has been joined by a stronger one.
     expect(named).toEqual([
       'engine/migrations.ts', // the v74 -> v75 back-fill
       'engine/spirit.ts', // reads it (the delta) and clears it (the tail)
       'engine/world/lifeBeat.ts', // `rollEnds` – the one place it is SET
+      'engine/world/snapshot.ts', // v75 T6 – derives `DiaryFacts.freshBreakup` off it, and ships a boolean
       'engine/world/state.ts', // the seat itself
       'engine/world.ts', // `createWorld`'s literal – null
     ])
@@ -559,6 +568,34 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     // store or composable can be reading a field the snapshot does not carry.
     expect(named.some((p) => p.startsWith('components/') || p.startsWith('stores/') || p.startsWith('composables/')))
       .toBe(false)
+    // ⭐⭐ v75 T6 – AND THE SECOND HALF IS NOW MEASURED ON THE WIRE ITSELF RATHER THAN INFERRED FROM A
+    // FILE LIST. The sentence above used to rest entirely on «snapshot.ts does not mention the
+    // field»; the moment T6 made it mention the field, that inference was gone and the claim would
+    // have been carried by nothing. So the claim is asked of the real `Snapshot`: a LIVE shock, and
+    // the object the UI receives carries the derived boolean and no `spiritShock` at any depth.
+    const shocked = createWorld('t6-wire-shape')
+    shocked.spiritShock = { week: shocked.week, kind: 'breakup' }
+    const snap = toSnapshot(shocked)
+    expect(snap.diary.facts.freshBreakup, 'the derived fact really reaches the diary').toBe(true)
+    expect(JSON.stringify(snap), '⚠ the mark itself stays off the wire – one road to one fact')
+      .not.toContain('spiritShock')
+    // ...and the positive control for that negative: with no shock the boolean is false, so the
+    // assertion above is about a shape and not about a world that happens to be empty.
+    expect(toSnapshot(createWorld('t6-wire-shape')).diary.facts.freshBreakup, 'and it is not a constant').toBe(false)
+    // ⭐⭐⭐ v75 T6 – AND THE DRILL THAT MAKES «READS THE KIND» MEAN SOMETHING TODAY. `freshBreakup` is
+    // `world.spiritShock?.kind === 'breakup'` and not `!== null`, which is a distinction WITHOUT A
+    // DIFFERENCE while `'breakup'` is the union's only member – so a mutation to the loose form goes
+    // red in ZERO cases and the stricter code is unguarded until steps 7-8 add the second kind. That
+    // is the shape T5's ARMS 7 and 8 met and solved the same way: the second kind is posed HERE, by
+    // cast, so the two programs are split on every green build instead of at some future wave's mercy.
+    // ⚠ THE CAST IS THE POINT AND NOT A SHORTCUT – `state.ts` types the field as `'breakup'` alone, so
+    // there is no honest way to pose the successor except to write down that it is coming.
+    const other = createWorld('t6-future-kind')
+    other.spiritShock = { week: other.week, kind: 'divorce' as 'breakup' }
+    expect(
+      toSnapshot(other).diary.facts.freshBreakup,
+      '⚠⚠ a mark of some OTHER kind must not license a band written about a break-up',
+    ).toBe(false)
   })
 
   it('⭐⭐ MOOD SHOWS IT, AND THROUGH THE NUMBER – the band, the word and the face all move, zero new code', () => {

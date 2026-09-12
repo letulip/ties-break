@@ -1187,47 +1187,87 @@ export const ENDS_READS = ['space', 'company'] as const satisfies readonly EndsR
  *
  *  ⚠ THE QUOTED SPAN IS SHARED BETWEEN THE TWO PRESENCES, by the presence law («цитаты ... общие с
  *  домашними рамками»): what distance changes is the FRAME she is standing in, never the sentence
- *  inside the quotation marks. `deep` stays uncontracted, lightly, on §3b's own pointer to
- *  `voice-bibles-2026-09.md` §Contractions. */
+ *  inside the quotation marks.
+ *
+ *  ⭐⭐⭐ RE-CUT BY v75 T6 (12.09) AGAINST THE BIBLE, AND THE FOUR FINDINGS ARE RECORDED HERE RATHER
+ *  THAN QUIETLY REPAIRED, because each of them is a rule a later writer will meet again:
+ *
+ *  1. ⚠ THE NARRATOR'S ADVERB. «plainly», «straight out», «flatly» (twice) and «for once she was not
+ *     in a hurry» all interpreted her DELIVERY, which the craft law bans in as many words – «short
+ *     words ARE the tiredness; a frame that says so has failed». Every frame now carries a fact or an
+ *     object the parent saw (a short call, a bag put down slowly, a bag open on the floor) and lets it
+ *     do the work. ⚠ `fiery`'s slow bag is KEPT BYTE-IDENTICAL: it is an observed action, not a manner
+ *     word, and the fire gone flat is shown by it rather than named.
+ *  2. ⚠⚠ THE UNLICENSED DURATION, AND IT WAS FALSE ON A REACHABLE WEEK. All four told-late quotes said
+ *     «a while ago» / «for a while», and `ENDED_DRY` said it a fifth time – but ruling A's own
+ *     collision (`endedWeek === knownWeek`, which that ruling argues is a certainty across a census)
+ *     falls through to the told-late branch with ZERO weeks between the ending and the telling. A
+ *     duration is a first-tier consequential fact and the world does not license this one. What the
+ *     told-late column may assert instead is what is true on BOTH paths: he is hearing of the person
+ *     and of the ending in one breath, and she is saying why she had not mentioned it.
+ *  3. ⚠⚠ TWO `deep` FRAMES WERE BYTE-IDENTICAL TO `MET_HER_LINE.deep.open`'s – «She waited until the
+ *     house was quiet, then said it once.» and «She called late, when the day was done, and said it
+ *     once.» So one girl's career staged the same scene for «there is someone» and for «it is over»,
+ *     which is the one pairing in this file that must not share a sentence. Both are new here.
+ *  4. ⚠ `quiet`'s away frame said «She wrote to say…». The channel palette rule is «the corpus avoids
+ *     «wrote» entirely»; it is a text now, with the arrangements first and the news under them.
+ *
+ *  ⭐⭐ AND THE CONTRACTION SPLIT IN `deep` IS DERIVED, NOT PREFERRED. §Contractions licenses `deep`
+ *  «lightly», and T17's precedent says WHERE: her contraction cracks under the WORN kind of breakage
+ *  (`HER_STOP_LINE.deep.worn` – «I'm tired. Not this week. All of it.»), while her `own` column stays
+ *  formal. The told-now card is inside that window BY CONSTRUCTION – the shock lands −22/−34 on a
+ *  baseline of 70 (lifted 75), so her spirit is 36-53 and `worn > 0.15` is `spirit < 59.5` – so her
+ *  told-now line contracts. The told-late card carries NO such guarantee (the shock cleared seasons
+ *  before `knownWeek` on the ordinary path), so her told-late line stays uncontracted. One rule, two
+ *  columns, and the difference is a fact about the week rather than an editor's ear.
+ *
+ *  ⚠⚠ AND THAT SAME ARITHMETIC IS WHY THIS POOL IS WRITTEN AT TWO DIFFERENT REGISTERS THOUGH IT READS
+ *  NONE. `lifeBeatSaid` hands this card no `MoodRegister` (see the case below), so the composition
+ *  rule's SPIRIT axis has to be satisfied by the writing rather than by a lookup. TOLD-NOW is the low
+ *  register by construction, for the arithmetic above, and is written to it. TOLD-LATE is not: on the
+ *  ordinary path the ending is seasons old and her week can be bright, level or low, and only the
+ *  collision case lands it in a flat week. So every told-late line is written REGISTER-NEUTRAL – true
+ *  of a girl who has recovered and of one who has not – and a told-late line that leaned on her being
+ *  flat would be this pool contradicting the Mood word beside it. */
 const ENDED_HER_LINE: Record<Temperament, Record<EndsRegister, PresenceCell>> = {
   sunny: {
     'told-now': {
-      roof: 'She said it at the table, plainly, and stayed sitting there after. "It\'s over. I\'m alright. I will be, anyway."',
-      away: 'She rang in the evening and said it straight out. "It\'s over. I\'m alright. I will be, anyway."',
+      roof: 'She said it at the table and stayed sitting there afterwards. "It\'s over. I\'m alright. I will be, anyway."',
+      away: 'She called that evening and said it before anything else. "It\'s over. I\'m alright. I will be, anyway."',
     },
     'told-late': {
-      roof: 'She mentioned it while she cleared the plates, weeks after the fact. "There was someone. It ended a while ago."',
-      away: 'She said it near the end of a call about nothing much. "There was someone. It ended a while ago."',
+      roof: 'She raised it herself on an ordinary evening, out of nothing. "There was someone. It\'s finished, and I should have said."',
+      away: 'She came home for the weekend and said it before she went back. "There was someone. It\'s finished, and I should have said."',
     },
   },
   fiery: {
     'told-now': {
       roof: 'She came in, put her bag down slowly, and sat. "It\'s finished. No, I don\'t want to go through it."',
-      away: 'She called late, and for once she was not in a hurry. "It\'s finished. No, I don\'t want to go through it."',
+      away: 'She rang, and it was a short call. "It\'s finished. No, I don\'t want to go through it."',
     },
     'told-late': {
-      roof: 'She said it flatly, on her way through the kitchen. "There was someone. It\'s been done for a while."',
-      away: 'She said it flatly, at the end of a message about the schedule. "There was someone. It\'s been done for a while."',
+      roof: 'She said it on her way through the kitchen and did not stop. "There was someone. It\'s done. I wasn\'t going to make a thing of it."',
+      away: 'She put it in a voice note about something else entirely. "There was someone. It\'s done. I wasn\'t going to make a thing of it."',
     },
   },
   quiet: {
     'told-now': {
       roof: 'She took her racquets out of the hall and re-stacked them by the door. "The weekend\'s free now. That\'s finished."',
-      away: 'She wrote to say the weekend plans were off, and one line more. "The weekend\'s free now. That\'s finished."',
+      away: 'She texted the week\'s plans through, and this was under them. "The weekend\'s free now. That\'s finished."',
     },
     'told-late': {
-      roof: 'She was sorting the weekend bag and said it without stopping. "There was someone. That\'s been over a while."',
-      away: 'She said it at the end of a note about the travel dates. "There was someone. That\'s been over a while."',
+      roof: 'She had the weekend bag open on the floor when she said it. "There was someone. It didn\'t need saying at the time."',
+      away: 'She put it in the family chat, after the travel dates were settled. "There was someone. It didn\'t need saying at the time."',
     },
   },
   deep: {
     'told-now': {
-      roof: 'She waited until the house was quiet, then said it once. "It is over. I would rather not say more tonight."',
-      away: 'She called late, when the day was done, and said it once. "It is over. I would rather not say more tonight."',
+      roof: 'She let the week finish before she said anything at all. "It\'s over. I\'d rather not say more."',
+      away: 'She let the message sit a while, and answered it with this. "It\'s over. I\'d rather not say more."',
     },
     'told-late': {
-      roof: 'She said it to the window rather than to the room. "There was someone. It ended some time ago."',
-      away: 'She called once she was sure of the words. "There was someone. It ended some time ago."',
+      roof: 'She said it to the window rather than to the room. "There was someone. It is over. That was mine to keep."',
+      away: 'She said it at the door on a visit home, already leaving. "There was someone. It is over. That was mine to keep."',
     },
   },
 }
@@ -1241,9 +1281,17 @@ const ENDED_HER_LINE: Record<Temperament, Record<EndsRegister, PresenceCell>> = 
  *  ⚠ AND IT CARRIES NO READ, WHICH IS WHY THE READ LIVES IN THE HEADING. A dry card that read her
  *  wants would be a home at this distance being told what she needs, which is the one thing the rung
  *  is defined by not having. The heading above it carries the read at every band – see the banner. */
+// ⭐⭐ RE-CUT BY v75 T6, AND BOTH ROWS MOVED FOR A REASON THE COMMENT ABOVE HAD ALREADY WRITTEN DOWN.
+// ⚠ `told-now` SAID HOW THE NEWS SURFACED («She did not say so, and the house worked it out»), which
+// is exactly what this pool's own note says it does NOT do – that is `MET_DRY`'s job, and closing on
+// the house a third time is the repetition the 11.09 вычитка took out of `MET_DRY` itself. It states
+// what the WEEK HOLDS now, which is the loss: she is carrying on, and not talking about it.
+// ⚠⚠ `told-late` LOST «for a while» – the unlicensed duration, false on ruling A's collision week.
+// See finding 2 in `ENDED_HER_LINE`'s note. «Already over» is true on both paths by construction:
+// `rollEnds` writes `endedWeek` before `deliverKnownPartner` reads it, in the same tick.
 const ENDED_DRY: Record<EndsRegister, string> = {
-  'told-now': 'It is over. She did not say so, and the house worked it out.',
-  'told-late': 'There was someone in her life, and it has been over for a while. Nobody was told at the time.',
+  'told-now': 'It is over. She is getting on with the week and not talking about it.',
+  'told-late': 'There was someone in her life, and it is already over. Nobody was told at the time.',
 }
 
 /** The parent's frame over the card – by register, and by HER READ. ⚠ THE READ IS HERE AND NOWHERE
@@ -1262,7 +1310,13 @@ const ENDED_HEADING: Record<EndsRegister, Record<EndsRead, string>> = {
     // ⚠ NOT «leave it there» – the past tense of that phrase is a BANNED TAIL and the present tense
     // is the same narrator move one conjugation away. See `ENDED_LATE_EVENT` below.
     space: 'There was someone, it is already over, and she would rather not go into it',
-    company: 'There was someone, it is already over, and she has been round more since',
+    // ⚠⚠ RE-CUT BY v75 T6. It read «and she has been round more since», and that cell asserted TWO
+    // things the world does not hold: a count of VISITS (the sim models none, at any stage) and a
+    // SPAN, on a card raised in the very week the news lands, when «since» is empty. It is also the
+    // one reading that cannot survive the stages – a thirty-year-old in her own household is not
+    // «round». The read itself is a persisted draw and IS licensed, so what the heading carries now
+    // is the read and nothing round it, in the parent's own frame.
+    company: 'There was someone, it is already over, and she is not done talking about it',
   },
 }
 
@@ -1377,7 +1431,15 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
    *  `LoveEpisode` persists no name and no gender, so «them» is the only honest word for whoever is
    *  gone. ⚠ AND NO NUMBER, NO PRICE, NO METER in any of them (the fence) – and, per ruling G, the
    *  LABELS ARE UNTOUCHED BY THE FLIP: same four sentences, same order, same ids, both readings. A
-   *  button that changed its words with its price would be the meter one step removed. */
+   *  button that changed its words with its price would be the meter one step removed.
+   *
+   *  ⭐ T6 READ ALL FOUR AND KEPT THEM BYTE-IDENTICAL, WHICH IS A DECISION AND NOT AN OMISSION. They
+   *  are gender-free by «them» (the schema persists no name and no gender), carry no number, no price
+   *  and no meter, and – the test a label has to pass that a sentence does not – EACH ONE READS AS A
+   *  PLAUSIBLE PARENT IN BOTH READINGS, because the flip moves the price and never the words. «Give
+   *  her room, and say we are here» is the kind answer when she wants space and a distant one when she
+   *  wants company; «Keep her company, and stay close this week» is warmth one way and crowding the
+   *  other. A label that only worked under one read would be the read leaking onto the button. */
   ended: [
     { id: 'space', label: 'Give her room, and say we are here', bond: ECONOMY.bond.delta.endedMatched },
     { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.bond.delta.endedMismatched },
@@ -1525,7 +1587,23 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
    *  scored the answer would be the meter, written down. ⚠ T6 owns the full matrix and may split it.
    *
    *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD (rule 4), no name, no gender, no fault and no
-   *  reason – the two-tier honesty law, which binds this pool exactly as hard as the card's. */
+   *  reason – the two-tier honesty law, which binds this pool exactly as hard as the card's.
+   *
+   *  ⭐ T6 READ ALL FOUR AND KEPT THEM BYTE-IDENTICAL, AND THE ONE THING IT WOULD HAVE CHANGED IS ON
+   *  THE OWNER'S DESK INSTEAD. All four open on the same clause, and the kept `'ended'` row directly
+   *  above them in the feed has just given the same news – so within the sixty weeks before
+   *  `pruneEvents` takes the answer row, the pair reads as a restatement. ⚠ IT IS KEPT BECAUSE THE
+   *  SHIPPED `met` FOUR DO EXACTLY THE SAME THING («There is someone in her life. We …»), so the
+   *  repeated subject clause is this pool's established shape rather than this draft's slip, and
+   *  breaking the parallel on one kind is a wording decision about a SHIPPED pool. Flagged in T6's
+   *  package as a question; invariant 4 makes the answer his.
+   *
+   *  ⚠ AND THERE IS STILL NO READ AXIS HERE, which T6 re-confirmed against a contradiction rather than
+   *  inheriting. The wave-4 brief's §2 T6 line reads «ANSWER_EVENT feed lines x4 (the read surfaces
+   *  here in wording ONLY)»; ruling I (12.09, later) puts the read on «the HEADING and the told-late
+   *  feed row» and enumerates its surfaces as «4 heading cells plus 2 feed rows», which is this pool
+   *  excluded by count. The ruling wins on date and on arithmetic, and the row's own argument stands:
+   *  what it records is what the parent DID, which is the same act whichever way her read came out. */
   ended: {
     space: 'Her relationship ended. We gave her room, and said we were there.',
     company: 'Her relationship ended. We kept her company through the week.',
@@ -2376,8 +2454,27 @@ const MET_EVENT: Record<'told' | 'found-out', Record<LoveEpisode['wants'], strin
  *
  *  ⚠ IT STATES WHAT THE WEEK HELD AND NOTHING ELSE: no reason, no fault, no channel the sim does not
  *  hold (the two-tier honesty law), no name, no gender, no `amountCents` and no price in any word of
- *  it (rule 4). ⚠ A DRAFT, AND T6 OWNS THE MATRIX – invariant 4 makes the final wording the owner's. */
-const ENDED_NOW_EVENT = 'There was someone in her life, and this week there is not.'
+ *  it (rule 4). ⚠ A DRAFT, AND T6 OWNS THE MATRIX – invariant 4 makes the final wording the owner's.
+ *
+ *  ⭐⭐⭐ RE-WRITTEN BY T6, AND THE OLD SENTENCE IS NAMED SO THE JUDGMENT CAN BE OVERRULED. It read
+ *  «There was someone in her life, and this week there is not.» Two things were wrong with it and
+ *  neither is a matter of taste.
+ *
+ *  1. ⚠⚠ IT INTRODUCED A PERSON THE ALBUM HAD ALREADY INTRODUCED. This row is the TOLD-NOW one, which
+ *     fires only behind the `'met'` receipt – so a kept `MET_EVENT` row seasons up the same feed has
+ *     already said «there is someone in her life», and both rows are `keep: true`, so they are read
+ *     together for the life of the career. A closing row that opens by announcing the person reads as
+ *     the album meeting her for a second first time. What this row is FOR is closing the earlier one.
+ *  2. ⚠ «and this week there is not» IS A NARRATOR'S FIGURE, not a statement of the week. The antithesis
+ *     performs the loss instead of recording it, which is the move the banned-tail list is a sample of
+ *     rather than the whole of – and the lint's list is literal, so it would never have caught this.
+ *
+ *  ⚠ WHAT THE REPLACEMENT ASSERTS, AND ITS LICENCE FOR EACH HALF. «It ended this week» – `endEpisode`
+ *  wrote `endedWeek = world.week` four lines above this row's write site. «There is nobody in her life
+ *  now» – `activeEpisode` is null by construction once the row is dated, and the cooldown forbids a
+ *  re-arrival on the same tick (T2's own pin), so it is the world's state and not a guess. Nothing
+ *  else: no reason, no fault, no channel, no name, no gender, no duration, no bond band. */
+const ENDED_NOW_EVENT = 'It ended this week, and there is nobody in her life now.'
 
 /** ⭐⭐⭐ v75 T4 – THE TOLD-LATE ROW, AND IT IS THE ROW THAT REPLACES `MET_EVENT` ON THIS PATH rather
  *  than a row added beside it. An episode that was over before its `knownWeek` arrived used to tell
@@ -2402,8 +2499,18 @@ const ENDED_LATE_EVENT: Record<EndsRead, string> = {
   // (tests/wave3-tail-lint.test.ts, `BANNED_TAILS`). It is on the list because the owner replaced
   // the fork's “We listened, and left it there” with a line of his own on 11.09, and the ban is on
   // the NARRATOR summing her up. The replacement states what the week held instead of what it meant.
-  space: 'There had been someone in her life. We heard about it and that it was over in the same week, and she has not brought it up since.',
-  company: 'There had been someone in her life. We heard about it and that it was over in the same week, and she has been round more since.',
+  // ⭐⭐ RE-CUT BY v75 T6, AND THE TAIL IS WHERE BOTH ROWS FAILED. `company` said «and she has been
+  // round more since»: a count of VISITS the sim models nowhere, at a stage where the parent may be
+  // four hundred miles away, plus a «since» that is empty in the week the row is written. `space` said
+  // «and she has not brought it up since» – the same empty span, and one conjugation from a banned
+  // tail besides. ⚠ THE READ ITSELF IS LICENSED and stays: `drawEndsRead` is a persisted draw off her
+  // own openness register, so «what she wants» is a fact of the world here and not the narrator
+  // guessing at her interior. What the two rows carry now is that fact, in the present, with nothing
+  // round it. ⚠ AND «it was over before we heard of it» IS TRUE ON BOTH PATHS: `rollEnds` writes
+  // `endedWeek` at §8 and `deliverKnownPartner` reads it at §6 of the same tick, so even ruling A's
+  // collision week hears of an attachment that had already ended.
+  space: 'There had been someone in her life, and it was over before we heard of it. She wants the subject closed.',
+  company: 'There had been someone in her life, and it was over before we heard of it. She does not want it dropped.',
 }
 
 /** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW. ⭐⭐ SINCE v75 T4 IT IS ALSO THE ONE WRITER
