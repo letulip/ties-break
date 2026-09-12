@@ -75,11 +75,11 @@ import { bondBandOf, temperamentOpenness } from '../src/engine/spirit'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
-import type { BondBand, LoveEpisode } from '../src/shared/protocol/narrative'
+import type { BondBand, LifeBeatKind, LoveEpisode } from '../src/shared/protocol/narrative'
 import { rngFromSeed } from '../src/engine/rng'
 import { median, mean, stepCareerWeek, POLICIES, type Policy, type EntryVeto } from './econ-bench'
 import { drainKnock } from './_knocks'
-import { drainLifeBeats } from './_lifeBeats'
+import { drainLifeBeatsTallied, drainSkewLine, emptyDrainCounts } from './_lifeBeats'
 
 // =================================================================================================
 // 1. THE GRID
@@ -319,7 +319,11 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     // bench is measuring. Tier-1 `'small-talk'` rows are NON-blocking since T15 and are never seen
     // by the drain; they stay in `lifeLog` unanswered for the life of the career, which is the
     // ruling and not a leak.
-    row.beatsAnswered += drainLifeBeats(world)
+    // ⭐ v75 T3b – TALLIED RATHER THAN COUNTED, so §8 can print what the drain cost this run. Same
+    // walk, same answers; `drainLifeBeats` is this call's `cleared` field and nothing else.
+    const drained = drainLifeBeatsTallied(world)
+    row.beatsAnswered += drained.cleared
+    for (const kind of Object.keys(drained.byKind) as LifeBeatKind[]) DRAINED[kind] += drained.byKind[kind]
     if (world.fork !== null && world.fork.answer === null) answerFork(world, 'continue')
     if (world.retirementOffer !== null) answerRetirement(world, world.retirementOffer.final)
     if (opts.decides) {
@@ -433,6 +437,21 @@ function rule(title: string): void {
 }
 
 const MISSES: string[] = []
+
+/** ⭐⭐ v75 T3b – EVERY BEAT THIS BENCH DRAINED, BY KIND, FOLDED ACROSS EVERY WALK IN THE RUN.
+ *
+ *  ⚠⚠ IT EXISTS SO THE SKEW IS ARITHMETIC RATHER THAN NOISE (wave-4 brief §0.2). This file walks
+ *  3,200-odd careers and answers whatever the engine is waiting on so the walks do not stall; those
+ *  answers move `bond`, and `bond` is a number §5 and §6 read. Until 12.09 the drain took whatever
+ *  priced at ZERO, so the skew was nil by construction and nobody had to say so; the amendment
+ *  replaced that with a REGISTERED answer per kind whose price is merely READ-INDEPENDENT – still
+ *  zero for every kind that exists today, and −1 for the `'ended'` beat that follows. A bench that
+ *  did not print it would be carrying an unstated offset into its own bond figures, which is exactly
+ *  the thing `tools/_lifeBeats.ts` was written to prevent.
+ *
+ *  ⚠ THE ZEROES COME FROM THE REGISTRY'S OWN KEYS (`emptyDrainCounts`), so a kind added next wave is
+ *  counted here without this file being edited. */
+const DRAINED = emptyDrainCounts()
 /** A bar's verdict. ⚠ A MISS IS A FINDING AND NOT AN ERROR – invariant 5: numbers are measured, never
  *  adjusted, and «off the corridor» is information the architect asked for. The run still exits 0;
  *  the misses are re-printed together at the end so none can be lost in the scroll. */
@@ -872,4 +891,11 @@ if (MISSES.length === 0) {
 console.log('')
 console.log('    ⚠ Reminder for whoever reads the count table: §3 is the BENCH-ONLY mode. The shipped')
 console.log('      wave writes no `endedWeek` and §2 is the control that proves it.')
+console.log('')
+// ⭐⭐ v75 T3b – WHAT THE DRAIN PUT ON THE SCALE, AS ARITHMETIC. Zero today, and the line is printed
+// anyway: «the harness answered 2,700 beats and none of them cost anything» is the claim every bond
+// figure above rests on, and an unprinted claim is one nobody can check.
+console.log(`    drain skew this run: ${drainSkewLine(DRAINED)}`)
+console.log('      ⚠ these answers are the harness\'s, not a player\'s. The registry that picks them is')
+console.log('        `DRAIN_ANSWER` in tools/_lifeBeats.ts and its price is read-independent by law.')
 console.log('')

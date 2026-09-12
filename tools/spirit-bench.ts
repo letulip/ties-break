@@ -573,8 +573,13 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
     drainLifeBeats(world, 'fork-opinion')
   } catch (e) {
     // ⚠ ONLY the terminal latch is tolerated, and the test is the engine's own refusal string.
-    // Anything else – a beat kind that has no bond-neutral answer – is rethrown on purpose: a
-    // swallowed drain is the exact defect the block above records, and it cost this file a wave.
+    // Anything else is rethrown on purpose: a swallowed drain is the exact defect the block above
+    // records, and it cost this file a wave.
+    // ⚠ v75 T3b (12.09) – WHAT «ANYTHING ELSE» IS HAS CHANGED, AND THE CLASSIFIER HAS NOT. The drain
+    // no longer throws «this kind has no bond-neutral answer»; it throws when the registered drain
+    // answer's price DEPENDS ON WHAT SHE WANTS, or when the registry names an id the kind does not
+    // offer (`drainCostOf`, tools/_lifeBeats.ts). Both are still «anything else» and both still stop
+    // this run, which is why this test reads the engine's string rather than the drain's.
     if (!(e instanceof Error) || e.message !== CAREER_ENDED_REFUSAL) throw e
   }
   const pending = pendingLifeBeat(world)
@@ -1380,9 +1385,12 @@ interface PairCareer {
  *  decision and a beat is not it.
  *
  *  ⚠ THE ONE TOLERATED REFUSAL IS THE TERMINAL LATCH, tested against the engine's OWN string, and
- *  ANYTHING ELSE IS RETHROWN on purpose. A beat kind with no bond-neutral answer must stop this run,
+ *  ANYTHING ELSE IS RETHROWN on purpose. A drain that cannot state its own price must stop this run,
  *  not be swallowed: the swallowed version of this exact `catch` is what left the census above
- *  printing 842 beats raised and zero answered while exiting 0. */
+ *  printing 842 beats raised and zero answered while exiting 0.
+ *  ⚠ v75 T3b – «cannot state its own price» is the amended wording of what used to be «a beat kind
+ *  with no bond-neutral answer»: `drainCostOf` now refuses a registered answer whose delta moves with
+ *  her `wants`, rather than the drain refusing a kind with no zero. Same catch, same rethrow. */
 function drainEveryBeat(world: WorldState): number {
   try {
     return drainLifeBeats(world)
