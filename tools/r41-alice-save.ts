@@ -21,6 +21,7 @@ import { seasonIndexOf } from '../src/engine/world/ledger'
 import { rankingFor } from '../src/engine/world/ladder'
 import { KID_ID } from '../src/engine/world/constants'
 import { kidPrizeShareCents } from '../src/engine/economy'
+import { activeKitDeal } from '../src/engine/offers'
 import { formatCents } from '../src/shared/money'
 
 function section(title: string): void {
@@ -51,10 +52,16 @@ async function main(): Promise<void> {
   console.log(`share at her age now (${age.toFixed(1)})              = ${kidPrizeShareCents(100_00, age)} cents of a $100 cheque`)
 
   section('ITEM 25 – the kit deal and its allowance, AS HE PLAYS IT')
-  const deal = w.kitDeal as unknown as { brand?: string; coveredCents?: number; terms?: { kitAllowanceCents?: number } } | null
+  // ⚠ RE-CUT: the first draft read `w.kitDeal`, a field that does not exist on WorldState – so its
+  // «no live kit deal» line was printed from a never-set value and check:tools was red (P1's agent
+  // caught both). The engine's own accessor is the truth: activeKitDeal(world.offers, week).
+  const deal = activeKitDeal(w.offers ?? [], w.week)
   if (deal) {
-    console.log(`brand ${deal.brand ?? '?'} · covered ${formatCents(deal.coveredCents ?? 0)} of ${formatCents(deal.terms?.kitAllowanceCents ?? 0)}`)
-  } else console.log('no live kit deal on the save')
+    const d = deal as unknown as { brand?: string; coveredCents?: number; terms?: { kitAllowanceCents?: number } }
+    console.log(
+      `brand ${d.brand ?? '?'} · covered ${formatCents(d.coveredCents ?? 0)} of ${formatCents(d.terms?.kitAllowanceCents ?? 0)}`,
+    )
+  } else console.log('no live kit deal on the save (via activeKitDeal – the engine\'s own read)')
 
   section('ITEMS 18/24/28 – what the family owns (assets: id, paid, worth, readyWeek)')
   for (const a of w.assets ?? []) {
