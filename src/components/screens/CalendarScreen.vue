@@ -91,6 +91,10 @@ import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
+// ⭐ ROUND 41 #16 – the wild-card chip, on this screen's own copy of the same card (round 21 #2b put
+// it on Season's; this marker takes `UpcomingEvent` unchanged off the same `snap.upcoming` row via
+// `preferredWeekEvent`, so `marker.wildCard` is already the engine's flag – nothing to wire).
+import { WILD_CARD } from '../../engine/season/tournament'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
 import PaperNote from '../ui/PaperNote.vue'
@@ -277,6 +281,11 @@ function enterMarker(e: UpcomingEvent): void {
 // the Season screen, listed as still open by two reviews running; the name this file used is the
 // name the module took, so nothing at the call sites below reads differently.
 const { academyCoverPct, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
+
+// ⭐ ROUND 41 #16 – the marker card's own wild-card chip reads the engine's own count, exactly as
+// SeasonScreen's does, so a bench that sweeps `WILD_CARD.slots` cannot leave a stale number on
+// either surface.
+const wildCardSlots = WILD_CARD.slots
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
@@ -573,6 +582,17 @@ const showGo = computed(() => !game.snapshot?.pending)
           <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
           <span class="pill">closes {{ weekLabel(marker.deadlineWeek) }}</span>
           <span v-if="marker.entered" class="pill ok">Entered</span>
+          <!-- ⭐ ROUND 41 #16 – THE WILD CARD, ON THIS SCREEN'S OWN COPY OF THE SAME CARD. Round 21
+               #2b put this exact chip (flag, tooltip and words) on Season's event card; this marker
+               IS that card again (see the note at `cal-card-days` above), so it was the one surface
+               still silent about it. Same flag, same count, same words - never restated. -->
+          <span
+            v-if="marker.wildCard"
+            class="pill wildcard-chip"
+            :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
+          >
+            wild card
+          </span>
         </div>
 
         <div class="cal-card-odds">

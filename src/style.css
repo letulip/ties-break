@@ -255,6 +255,17 @@
   --warning-wash: rgba(245, 185, 66, 0.06);
   --locked: #d9b26a;
   --against: #c98d63;
+  /* ⭐ ROUND 41 #16 – THE WILD CARD, ITS OWN COLOUR. The owner: «мне достался wild card на шлем в 16
+     лет - это очень круто! А давай этот wild card как-то другим цветом на карточке выделим»
+     (quoted here rather than in a template - tests/template-copy-rules.test.ts bans Cyrillic inside
+     one). It shared `--accent` with the defending badge (SeasonScreen.vue: "ONE RULE, TWO CHIPS,
+     AND NO NEW COLOUR") - split below, and a state this narrow earns an ALIAS rather than a new hex,
+     same idiom as `--warning` two lines up.
+     ⚠⚠ DRAFT FOR HIS EYE (round-41 ledger item 16): amber is the pick here - it reads as a find, not
+     a caution, which is closer to «это очень круто» than the warning family. Alternatives on the
+     table are --orange and --locked; moving to either is this one line.
+     ⚠ NEVER `--gold` from docs/design/tokens.css - that file is not imported (see the note above). */
+  --wildcard: var(--amber);
   /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
   --polaroid-paper: #f3f0e8;
 

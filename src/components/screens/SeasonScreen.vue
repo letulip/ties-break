@@ -2586,14 +2586,22 @@ section.bare .event-cards {
 
 /* The defending badge (W2-LADDER §3): the accent register the Entered pill already uses - points
    at stake is good news to act on, not a warning - with the number kept tabular. */
-/* ⚠ ONE RULE, TWO CHIPS, AND NO NEW COLOUR IS INVENTED HERE. Both say something about the PLACE
-   she holds rather than about the week, so they share the accent token the palette already
-   defines – the wild-card badge adds a selector to an existing declaration instead of a second
-   palette entry that would then have to be kept in step with this one. */
-.defend-chip,
-.wildcard-chip {
+.defend-chip {
   color: var(--accent);
   border-color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ⭐ ROUND 41 #16 – AND NOW THE WILD CARD HAS ITS OWN COLOUR, SPLIT FROM THE RULE ABOVE. The two
+   used to share `--accent` under the note "ONE RULE, TWO CHIPS, AND NO NEW COLOUR IS INVENTED
+   HERE" - his 12.09 report supersedes that reasoning: the wild card is meant to stand out from
+   the app's yellow-lime family precisely because it "brought a title into reach" is a different
+   kind of good news from "points defended", and one rule painting both the same made them read as
+   one thing. `--wildcard` is declared in src/style.css beside the other named states, DRAFT for
+   his eye there. */
+.wildcard-chip {
+  color: var(--wildcard);
+  border-color: var(--wildcard);
   font-variant-numeric: tabular-nums;
 }
 
