@@ -3586,6 +3586,37 @@ export const ECONOMY = {
        *  generalised, brief §2 T7). */
       metWarmPrivate: -1,
       metSilentPrivate: 2,
+      /** ⭐⭐⭐ v75 (the private life, wave 4 – T4) – WHAT HE SAYS THE WEEK HE LEARNS IT IS OVER.
+       *  Four answers – give her space · keep her company · try to fix it · blame – priced from the
+       *  build plan §5's own row, verbatim: «match +3, mismatch −3, fix-it −1, blame −4 always (some
+       *  things are wrong regardless of what she wanted)».
+       *
+       *  ⚠⚠ THE FIRST TWO ARE ONE PAIR READ TWO WAYS AND THAT IS WHY THEY ARE TWO ROWS RATHER THAN
+       *  FOUR. Which of «space» and «company» is the match is HER read, drawn on
+       *  `seed:life:ends:<endedWeek>:react`; the answer that matches costs `endedMatched` and the
+       *  other `endedMismatched`, whichever way round the draw came out. So there is one price for
+       *  «you gave her what she wanted» and one for «you did not», and the flip is an overlay on the
+       *  base list (`world/lifeBeat.ts`'s `ENDED_BOND_COMPANY`) exactly as `'met'`'s is – never a
+       *  second table, so the two rows the flip does not name keep the SAME number in both readings.
+       *
+       *  ⚠⚠ AND `endedBlame` IS THE ONE ROW WITH NO READING AT ALL. «Some things are wrong
+       *  regardless of what she wanted» is the ruling's own sentence: blaming her, or the person who
+       *  is gone, costs −4 whichever way her read came out. `endedFixIt` is read-independent too, and
+       *  that is load-bearing beyond the design – it is the answer `tools/_lifeBeats.ts` drains this
+       *  kind with, and a drain answer whose price moved with a fact the harness is not tracking is
+       *  refused by `drainCostOf` rather than averaged.
+       *
+       *  ⚠ THE FENCE HOLDS HERE TOO (who-she-is §3): one row per ANSWER, never a row per girl.
+       *  Temperament does not reach this table – what varies is what she asked for, which is a fact
+       *  she put on the record herself.
+       *
+       *  ⚠ NOTHING PRINTS ANY OF THE FOUR. The read reaches the player through the card's heading
+       *  and the told-late feed line's WORDING and through nothing else – no meter, no badge, no
+       *  label, no marked option (the `'met'` flip's own law, generalised). */
+      endedMatched: 3,
+      endedMismatched: -3,
+      endedFixIt: -1,
+      endedBlame: -4,
     },
     /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
      *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`

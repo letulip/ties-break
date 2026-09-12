@@ -32,7 +32,7 @@
 // which no zero exists under any reading and the hunt would have thrown at fifty call sites at once.
 // The property that made the hunt safe is kept and generalised, and the note on `DRAIN_ANSWER` is
 // where that argument lives.
-import { answerLifeBeat, lifeBeatOptionsFor, pendingLifeBeat, PARTNER_WANTS, type WorldState } from '../src/engine/world'
+import { answerLifeBeat, lifeBeatOptionsFor, pendingLifeBeat, ENDS_READS, PARTNER_WANTS, type WorldState } from '../src/engine/world'
 import type { LifeBeatKind } from '../src/shared/protocol'
 
 /** ⭐⭐⭐ WHICH ANSWER A HARNESS GIVES, PER KIND – THE REGISTRY, AND IT IS THE 12.09 AMENDMENT ITSELF
@@ -72,12 +72,21 @@ import type { LifeBeatKind } from '../src/shared/protocol'
  *  spends this id – see the v74 T15 note inside `drainLifeBeatsTallied`. The entry exists because
  *  TOTALITY is the point: a record with a hole in it is a list again, and the day tier 1 blocks –
  *  or the day somebody drains a soft row deliberately – the answer is already ruled and already
- *  zero, rather than being chosen in a hurry by whoever hits the throw. */
+ *  zero, rather than being chosen in a hurry by whoever hits the throw.
+ *
+ *  ⭐⭐⭐ AND v75 T4 IS THE ROW THE WHOLE AMENDMENT WAS LANDED FOR – `'ended'` -> `fix-it`, −1. It is
+ *  the FIRST entry here that is not zero, and it is the first one that could not have been: give her
+ *  space / keep her company are +3 or −3 by her read, and blame is −4. «Try to fix it» is the answer
+ *  whose price does not move – ruled −1 under every reading, and written as an ABSENCE from
+ *  `ENDED_BOND_COMPANY` rather than as two agreeing numbers, so it is literally the same −1 in both.
+ *  A harness that drains N of these can therefore state its skew exactly: −1 x N, which is what
+ *  `drainSkewLine` prints and what the zero-hunt could never have produced. */
 export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   'fork-opinion': 'listen',
   met: 'wary',
   'small-talk': 'more',
   'fork-counsel': 'heard',
+  ended: 'fix-it',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table
@@ -95,20 +104,33 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
  *  every kind; this is the code that makes the law bite at runtime.
  *
  *  ⚠ `PARTNER_WANTS` IS DERIVED FROM A TOTAL RECORD engine-side, so a third reading of her wants
- *  widens this sweep on the day it is declared and cannot go stale here. */
+ *  widens this sweep on the day it is declared and cannot go stale here.
+ *
+ *  ⭐⭐⭐ v75 T4 – AND THE SWEEP IS NOW THE **CROSS PRODUCT** OF HER TWO READS, WHICH IS THE ONE CHANGE
+ *  THIS FILE NEEDED FOR THE NEW KIND AND IS A WIDENING RATHER THAN A REPAIR. `lifeBeatOptionsFor`
+ *  grew a third parameter – the ending's space-vs-company read (ruling G.3) – and a sweep that
+ *  walked `wants` alone would have priced `'ended'` at the DEFAULT read only and called the answer
+ *  read-independent on the strength of never having asked. The guard's own sentence is «a price that
+ *  depends on a fact about the girl the harness is not tracking», and the ending's read is exactly
+ *  such a fact, so it belongs inside the product. ⚠ BOTH LISTS ARE DERIVED FROM TOTAL RECORDS
+ *  engine-side (`PARTNER_WANTS`, `ENDS_READS`), so a third value of either widens this on the day it
+ *  is declared and neither can go stale here. */
 export function drainCostOf(kind: LifeBeatKind): number {
   const id = DRAIN_ANSWER[kind]
-  const priced = PARTNER_WANTS.map((wants) => {
-    const answer = lifeBeatOptionsFor(kind, wants).find((o) => o.id === id)
+  const readings = PARTNER_WANTS.flatMap((wants) => ENDS_READS.map((read) => ({ wants, read })))
+  const priced = readings.map(({ wants, read }) => {
+    const answer = lifeBeatOptionsFor(kind, wants, read).find((o) => o.id === id)
     if (answer === undefined) {
-      throw new Error(`${kind}'s drain answer «${id}» is not one of its answers under «${wants}» – DRAIN_ANSWER is stale`)
+      throw new Error(
+        `${kind}'s drain answer «${id}» is not one of its answers under «${wants}»/«${read}» – DRAIN_ANSWER is stale`,
+      )
     }
     return answer.bond
   })
   const spread = [...new Set(priced)]
   if (spread.length !== 1) {
     throw new Error(
-      `${kind}'s drain answer «${id}» costs ${priced.join(' / ')} depending on what she wants – a harness cannot state that skew`,
+      `${kind}'s drain answer «${id}» costs ${priced.join(' / ')} depending on how she is read – a harness cannot state that skew`,
     )
   }
   return spread[0]
@@ -121,7 +143,10 @@ export function drainCostOf(kind: LifeBeatKind): number {
  *  purpose. `applyBondDelta` CLAMPS to `ECONOMY.bond`'s rails, so a career parked at the floor pays
  *  less than the registry says – today every reachable cost is 0 and the two can only agree, but the
  *  day the skew is real a bench reading one number would not be able to tell a clamp from a bug.
- *  Two numbers side by side say it. */
+ *  Two numbers side by side say it.
+ *  ⭐ THAT DAY IS v75 T4: `'ended'` drains at −1, so a walk that meets one really does move `bond`,
+ *  and a career already sitting on the floor really can pay less than −1 x count. The two fields are
+ *  no longer a precaution. */
 export interface DrainTally {
   /** how many rows were answered – the whole of `drainLifeBeats`' historical return */
   cleared: number
@@ -146,8 +171,10 @@ export function emptyDrainCounts(): Record<LifeBeatKind, number> {
 const signed = (n: number): string => (n > 0 ? `+${n}` : `${n}`)
 
 /** ⭐ THE SKEW AS ONE PRINTABLE LINE (wave-4 brief §0.2: «benches that count drained beats print the
- *  known −1 x count line so the skew is visible arithmetic, not noise»). Today every reachable cost
- *  is zero, so this prints zero and says so; T4's `'ended'` is what makes it bite.
+ *  known −1 x count line so the skew is visible arithmetic, not noise»). ⭐ AND T4 IS THE STEP THAT
+ *  MAKES IT BITE – it landed reading «today every reachable cost is zero, so this prints zero and
+ *  says so; T4's `'ended'` is what makes it bite», and the `'ended'` beat is here: a walk that met one
+ *  prints `ended N x -1` and a bench's bond number carries a skew it can state to the point.
  *
  *  ⚠⚠ IT TAKES THE COUNTS AND NOT A `DrainTally`, WHICH IS WHAT MAKES IT USABLE BY A BENCH AT ALL.
  *  A bench folds hundreds of walks – `tools/life-arrival.ts` runs 3,200 careers – so what it holds

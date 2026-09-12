@@ -168,6 +168,7 @@ import {
   pendingLifeBeat,
   pendingLifeBeatOptions,
   raiseLifeBeat,
+  ENDS_READS,
   LIFE_BEAT_BLOCKING,
   LIFE_BEAT_OPTIONS,
   PARTNER_WANTS,
@@ -553,6 +554,17 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   met: { id: 'wary', bond: 0 },
   'small-talk': { id: 'more', bond: 0 },
   'fork-counsel': { id: 'heard', bond: 0 },
+  // ⚠⚠ RE-AIMED 12.09 BY v75 T4, AND THIS ROW IS THE WHOLE POINT OF THE 12.09 AMENDMENT ARRIVING.
+  // WHAT MOVED: the record gained `'ended'`, and its number is **−1** rather than the 0 every row
+  // above carries – it is the first drain answer in the game that COSTS something. WHAT DID NOT: the
+  // law this section asserts, which was never «zero» and is «the SAME price under every reading».
+  // `fix-it` is −1 whether she wanted space or company and whether the ending is told now or told
+  // late, because `ENDED_BOND_COMPANY` (world/lifeBeat.ts) does not name it – so a bench that drains
+  // one can state its skew as −1 exactly. ⚠ THE NUMBER IS THE RULING'S LITERAL, transcribed from
+  // build plan §5 («fix-it −1») and from the wave-4 rulings §3, never read off `ECONOMY.bond.delta`
+  // – this file's own ARM 2 is the recorded proof of what happens when an expectation is read out of
+  // the thing under test.
+  ended: { id: 'fix-it', bond: -1 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -563,6 +575,12 @@ function raised(seed: string, kind: LifeBeatKind, detail: string, wants: LoveEpi
   const world = careerAt(seed, 900)
   world.bond = MID_BOND
   if (kind === 'met') world.loveEpisodes = [episode(892, 900, wants)]
+  // ⚠ RE-AIMED 12.09 BY v75 T4 – AN `'ended'` ROW NEEDS AN EPISODE WITH A **DATE ON IT**, because
+  // that date is what its price is re-derived from (`beatEndsRead` -> `seed:life:ends:<endedWeek>
+  // :react`, ruling G.2). An episode with `endedWeek: null` would fall onto the base table and the
+  // sweep would then be pricing a row the engine can never produce – the fixture defect this
+  // helper's own note warns about, one field further in.
+  if (kind === 'ended') world.loveEpisodes = [{ ...episode(892, 896, wants), endedWeek: 899 }]
   raiseLifeBeat(world, kind, detail)
   return world
 }
@@ -572,13 +590,30 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   met: 'p:892',
   'small-talk': 'worry',
   'fork-counsel': 'own',
+  // ⚠ RE-AIMED BY v75 T4: the ending's `detail` is the EPISODE ID, exactly as `'met'`'s is – ruling
+  // G.2's «machine-readable, never a rendered sentence», and the id `raised` above builds.
+  ended: 'p:892',
 }
 
-describe('wave 3 T7 D / v75 T3b – every kind\'s DRAIN ANSWER costs the same under every `wants`', () => {
+/** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.
+ *
+ *  ⚠⚠ RE-AIMED 12.09 BY v75 T4, AND THE WIDENING IS THE POINT. §D swept `PARTNER_WANTS` alone until
+ *  the ending existed, because `wants` was the only fact that could re-price an answer. T4 adds the
+ *  space-vs-company read as a THIRD parameter of `lifeBeatOptionsFor`, and a sweep that still walked
+ *  `wants` alone would have priced `'ended'` at the DEFAULT read only – then called `fix-it`
+ *  read-independent on the strength of never having asked. That is the null-arm shape CLAUDE.md
+ *  names: a sweep whose axis does not contain the thing it is claiming about.
+ *
+ *  ⚠ BOTH LISTS ARE DERIVED FROM TOTAL RECORDS ENGINE-SIDE, so a third value of either widens this on
+ *  the day it is declared and neither can go stale here. */
+const READINGS = PARTNER_WANTS.flatMap((wants) => ENDS_READS.map((read) => ({ wants, read })))
+
+describe('wave 3 T7 D / v75 T3b – every kind\'s DRAIN ANSWER costs the same under every reading', () => {
   it('⚠⚠ EVERY KIND x EVERY READING: THE DRAIN ANSWER\'S PRICE DOES NOT MOVE', () => {
     // ⚠ THE KINDS COME FROM THE RECORD ITSELF, so T8's `'small-talk'` and every kind after it is
     // covered the day it is declared – `LIFE_BEAT_OPTIONS` is keyed on `LifeBeatKind`, so its own
-    // keys are the total list and cannot go stale. `PARTNER_WANTS` is derived the same way.
+    // keys are the total list and cannot go stale. `PARTNER_WANTS` and `ENDS_READS` are derived the
+    // same way.
     //
     // ⚠⚠ THE PRICES COME FROM THE ENGINE (`lifeBeatOptionsFor`) AND THE ID FROM THE REGISTRY, AND
     // THE TWO SIDES ARE DELIBERATELY DIFFERENT SOURCES. A pin built from `drainCostOf` – the helper
@@ -588,10 +623,12 @@ describe('wave 3 T7 D / v75 T3b – every kind\'s DRAIN ANSWER costs the same un
     const kinds = Object.keys(LIFE_BEAT_OPTIONS) as LifeBeatKind[]
     expect(kinds.length, 'the sweep has kinds to sweep').toBeGreaterThan(0)
     expect(PARTNER_WANTS.length, 'and both readings of her wants').toBe(2)
+    expect(ENDS_READS.length, '...and both readings of what she wants after it ends').toBe(2)
+    expect(READINGS.length, 'so four ways to read one girl, and the sweep walks all of them').toBe(4)
     for (const kind of kinds) {
-      const priced = PARTNER_WANTS.map((wants) => {
-        const answer = lifeBeatOptionsFor(kind, wants).find((o) => o.id === DRAIN_ANSWER[kind])
-        expect(answer, `⚠⚠ ${kind} @ ${wants}: its drain answer «${DRAIN_ANSWER[kind]}» is not one of its answers`)
+      const priced = READINGS.map(({ wants, read }) => {
+        const answer = lifeBeatOptionsFor(kind, wants, read).find((o) => o.id === DRAIN_ANSWER[kind])
+        expect(answer, `⚠⚠ ${kind} @ ${wants}/${read}: its drain answer «${DRAIN_ANSWER[kind]}» is not one of its answers`)
           .toBeDefined()
         return answer!.bond
       })
@@ -602,12 +639,15 @@ describe('wave 3 T7 D / v75 T3b – every kind\'s DRAIN ANSWER costs the same un
 
   it('⭐⭐ and this is WHICH answer, and WHAT it costs, against the rulings – not against the registry', () => {
     // The literal half. Read-independence alone is satisfied by a drain that charges −40 every time;
-    // what says the 12.09 amendment moved nothing is that these four prices are still the ruled ones.
+    // what says the amendment moved nothing is that these prices are still the ruled ones.
+    // ⚠ AND SINCE T4 THAT SENTENCE HAS TWO HALVES: four kinds still cost nothing, and `'ended'` costs
+    // the ruled −1 – the first drain answer in the game with a price, and the reason the law had to
+    // stop being «zero» before the kind could exist.
     for (const kind of Object.keys(DRAIN_TODAY) as LifeBeatKind[]) {
       expect(DRAIN_ANSWER[kind], `${kind}: the registered answer`).toBe(DRAIN_TODAY[kind].id)
-      for (const wants of PARTNER_WANTS) {
-        const answer = lifeBeatOptionsFor(kind, wants).find((o) => o.id === DRAIN_TODAY[kind].id)!
-        expect(answer.bond, `${kind} @ ${wants}: the ruled price`).toBe(DRAIN_TODAY[kind].bond)
+      for (const { wants, read } of READINGS) {
+        const answer = lifeBeatOptionsFor(kind, wants, read).find((o) => o.id === DRAIN_TODAY[kind].id)!
+        expect(answer.bond, `${kind} @ ${wants}/${read}: the ruled price`).toBe(DRAIN_TODAY[kind].bond)
       }
     }
     // ⚠ AND THE REGISTRY IS TOTAL OVER THE ENGINE'S OWN KINDS – the property that turns a forgotten
@@ -721,18 +761,24 @@ describe('wave 3 T7 D / v75 T3b – every kind\'s DRAIN ANSWER costs the same un
     // that named it would be asking every bench downstream to absorb a skew nobody can state. The
     // old law's throw («no bond-neutral answer») is gone and THIS is what stands in its place.
     // ⚠ The registry row is put back in `finally`: this file's other cases read the shipped one.
+    // ⚠⚠ THE EXPECTED SENTENCE WAS RE-AIMED BY v75 T4 AND NOT RELAXED. It read «depending on what she
+    // wants», which named the ONE axis that could re-price an answer until the ending existed; the
+    // sweep inside `drainCostOf` is now the cross product of her `wants` and her space-vs-company
+    // read, so the refusal says «depending on how she is read». The GUARD is unchanged and strictly
+    // wider – it now also refuses an answer whose price moves with the ending's read, which is the
+    // fact a harness is least likely to be tracking.
     const shipped = DRAIN_ANSWER.met
     try {
       const priced = PARTNER_WANTS.map((wants) => lifeBeatOptionsFor('met', wants).find((o) => o.id === 'warm')!.bond)
       expect(new Set(priced).size, 'the fixture really is read-dependent – the arm is not vacuous').toBe(2)
       DRAIN_ANSWER.met = 'warm'
       expect(() => drainCostOf('met'), '⚠⚠ a read-dependent drain answer is refused, not averaged').toThrow(
-        /depending on what she wants/,
+        /depending on how she is read/,
       )
       // ⚠ AND THE REFUSAL REACHES THE WALK: a harness does not get a half-answered row out of it.
       const world = raised('t3b-refuse', 'met', DETAIL_FOR.met, 'private')
       expect(() => drainLifeBeats(world), 'the drain stops rather than skewing silently').toThrow(
-        /depending on what she wants/,
+        /depending on how she is read/,
       )
       expect(lifeLogOf(world)[0].answer, 'and the row is still waiting, untouched').toBeNull()
       // ⚠ THE OTHER HALF OF THE GUARD: an id the kind does not offer at all.

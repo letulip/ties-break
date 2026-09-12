@@ -910,11 +910,16 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // ⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED: `'fork-counsel'` is the fourth kind (the coach's
     // read on a `stop`) and it declares TRUE. The claim – «total by type, and the other kinds are
     // pinned in the same breath so none can be flipped quietly» – is unchanged and now covers four.
+    // ⚠ RE-AIMED AGAIN BY v75 T4 (12.09), NOT WEAKENED: `'ended'` is the fifth kind (the week the
+    // attachment is over) and it declares TRUE – tier 2 from the other end of the same arc. The claim
+    // still covers every declared kind, which is the half that matters, and tier 1 is still the only
+    // `false` in the table.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
       'small-talk': false,
       'fork-counsel': true,
+      ended: true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

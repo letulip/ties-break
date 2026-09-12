@@ -203,8 +203,27 @@ export interface SoftBeatInvite {
  *  beat SLOTS BESIDE the coach's – a second row raised from the same place, keyed on the same driver,
  *  blocking in the same way, answered before the fork like this one – and layer 3 (the pressed-through
  *  stop remembered and re-read later) is wave 5's with him. Nothing here anticipates either; this
- *  note is the pointer wave 5 is meant to find. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel'
+ *  note is the pointer wave 5 is meant to find.
+ *
+ *  ⭐⭐⭐ v75 (the private life, wave 4 – T4) ADDS `'ended'`: THE WEEK HE LEARNS IT IS OVER. Its
+ *  `detail` is the `LoveEpisode.id`, exactly as `'met'`'s is – machine-readable, never a rendered
+ *  sentence – and that id is what lets the price be RE-DERIVED at answer time from the episode's own
+ *  `endedWeek` (the wave-4 rulings, G).
+ *
+ *  ⚠⚠ IT HAS TWO REGISTERS AND THEY ARE **DERIVED FROM THE RECEIPT**, never stored (the wave-4
+ *  rulings, A). Told-NOW is an ending the parent hears about while he already knew there was
+ *  somebody – a `'met'` row for this episode is in the `lifeLog`. Told-LATE is the other scene the
+ *  whole episode schema was cut for: there was someone, he was never told, and the first he hears of
+ *  it is that it is already over. The discriminator is that receipt and NOT `endedWeek < knownWeek`,
+ *  because the two readings disagree on `endedWeek === knownWeek` – where the literal one raises
+ *  `'ended'` and `'met'` in the SAME week, two contradictory beats about one girl.
+ *
+ *  ⚠⚠ AND IT IS THE FIRST KIND WITH NO FREE ANSWER (wave-4 brief §0.2). Its four are space / company
+ *  (+3 or −3 by her read) / fix-it (−1) / blame (−4 always), so no option costs zero under any
+ *  reading – which is why `tools/_lifeBeats.ts` stopped hunting a zero one commit before this kind
+ *  existed and reads a registry instead. `DRAIN_ANSWER['ended']` is `fix-it`, whose −1 is the same −1
+ *  under every read: read-INDEPENDENT, which is what the drain law actually needed. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.

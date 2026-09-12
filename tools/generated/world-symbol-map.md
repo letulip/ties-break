@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,425 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,432 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-449 exported names across 49 owning modules.
+454 exported names across 49 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 44 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 49 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
@@ -101,11 +101,16 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
+- `drawEndsRead` – `src/engine/world/lifeBeat.ts`
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
 - `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
 - `drawRawLag` – `src/engine/world/lifeBeat.ts`
+- `ENDS_READS` – `src/engine/world/lifeBeat.ts`
+- `ENDS_REGISTERS` – `src/engine/world/lifeBeat.ts`
 - `endsEligible` – `src/engine/world/lifeBeat.ts`
 - `endsHazardFor` – `src/engine/world/lifeBeat.ts`
+- `EndsRead` *(type)* – `src/engine/world/lifeBeat.ts`
+- `EndsRegister` *(type)* – `src/engine/world/lifeBeat.ts`
 - `FORK_STOP_DRIVERS` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`

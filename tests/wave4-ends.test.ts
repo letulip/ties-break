@@ -557,7 +557,19 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
       .toEqual({ week: ended, kind: 'breakup' })
     expect(world.spirit, '⚠ but the POINTS are accrueSpirit\'s – this function writes no spirit at all').toBe(before.spirit)
     expect(world.bond, '⚠ bond is parent-decision-only (§4a.2) and an ending is not a decision').toBe(before.bond)
-    expect(lifeLogOf(world), '⚠ the `\'ended\'` beat is T4\'s – nothing is raised').toEqual(before.lifeLog)
+    // ⚠⚠ RE-AIMED 12.09 BY T4, AND THE CLAIM NARROWED TO THE ONE IT ALWAYS MEANT. It read «the
+    // `'ended'` beat is T4's – nothing is raised», and T4 is the step it was written to be re-read on:
+    // `rollEnds` now DOES raise the told-now card, and only ever behind the `'met'` receipt (ruling
+    // B's split). This fixture has no receipt – its episode was never delivered – so the row stays
+    // empty here, and the assertion would now pass for a reason it was not written for. That is a pin
+    // going quietly vacuous, so it is made explicit instead: the precondition is asserted, and the
+    // NEGATIVE is then the honest one – «an ending the parent never heard of raises nothing».
+    // ⚠ THE POSITIVE HALF OF THE SAME LAW – «and behind a receipt it raises exactly one» – lives in
+    // tests/wave4-ended-beat.test.ts §A, which is T4's own file. Measured: with the receipt condition
+    // replaced by the brief's literal `knownWeek <= week`, this case goes RED here (T4's ARM 1).
+    expect(lifeLogOf(world).some((r) => r.kind === 'met'), 'the fixture holds NO receipt – the negative below is about that')
+      .toBe(false)
+    expect(lifeLogOf(world), '⚠ an ending he was never told about raises nothing at all').toEqual(before.lifeLog)
     expect(world.events, '⚠ the feed row and its `lifeKind` stamp are T5\'s').toEqual(eventsBefore)
     expect(world.events.some((e) => e.lifeKind !== undefined), 'and no row on this tree wears a kind').toBe(false)
   })
@@ -710,8 +722,14 @@ describe('wave 4 T2 F – the hazard is the tick\'s, and the tick\'s alone', () 
       'engine/world/loveEpisodes.ts',
     ])
     // ...and nothing outside that leaf assigns the field by hand.
+    // ⚠⚠ THE PATTERN WAS RE-AIMED BY v75 T4 (12.09) AND IT IS A TIGHTENING, NOT A RELAXATION. It read
+    // `/\.endedWeek\s*=/`, which matches an EQUALITY as readily as an assignment – `=` is the first
+    // character of `===` – and T4 gives `world/lifeBeat.ts` two honest READS of the field
+    // (`episode.endedWeek === null` in `beatEndsRead`, and the told-late branch's own test). The old
+    // pattern called that file a writer. `=(?!=)` says «assigned, not compared», so the claim this
+    // line makes is the claim it always meant to make, and it still goes red on a real second writer.
     const writers = srcFiles()
-      .filter(([, text]) => /\.endedWeek\s*=/.test(codeOnly(text)))
+      .filter(([, text]) => /\.endedWeek\s*=(?!=)/.test(codeOnly(text)))
       .map(([path]) => path)
     expect(writers, '`endedWeek` is written in exactly one place').toEqual(['engine/world/loveEpisodes.ts'])
   })
