@@ -80,7 +80,15 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // ⚠ PER-KEY DIFF TAKEN FIRST, before a character was edited, on FIVE careers rather than three –
 // the three this file freezes plus 5/1 and 8/1, because `windowRuleWitness` reaches the PLAYER-policy
 // pair and round 28 #17-b's reconstruction hashes them. Headers checked on all ten captures
-// (`# preset N policy M weeks 156`), key counts 79 / 78 / 80 / 78 / 78:
+// (`# preset N policy M weeks 156`), key counts 79 / 80 / 78 / 78 / 78:
+//
+// ⚠ CORRECTED 12.09 (wave 4, T8 measured it, architect fixed it): this line read
+// `79 / 78 / 80 / 78 / 78` – positions 2 and 3 transposed against its own bullet order. 0/1 has
+// **80** keys and 5/1 has **78**, not the other way round. Verified by diffing key NAMES rather than
+// re-counting: 0/1 alone carries `medicalWithdrawalWeek` and `walkoverWeek`, while 5/0 carries
+// `gearRestWeeks`. ⚠ The per-key VERDICTS in the bullets below were always right – only the summary
+// line was wrong, which is the kind of error a reader inherits as fact because the block around it
+// is correct.
 //
 //   · 5/0 (25k middle, grinder)              – **0 lines. Byte-identical.** No love life at all.
 //   · 0/1 (8k working, self-coached, PLAYER) – **0 lines. Byte-identical.** No love life at all.
