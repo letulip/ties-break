@@ -892,6 +892,29 @@ export function playerShortName(world: WorldState, id: string): string {
   return formatShortName(ai?.name ?? id)
 }
 
+/** ⭐ ANY ID -> HER FLAG, over BOTH populations a draw can be made of (round 41 #17, the owner:
+ *  «у некоторых соперниц в про лиге нет флага, проверь там логику пожалуйста»).
+ *
+ *  ⚠ WHAT WAS WRONG. The VS card's nation was a cohort-only lookup –
+ *  `world.cohort.find((c) => c.id === oppId)?.nation ?? ''` – and `world.cohort` is the ~200 JUNIORS.
+ *  Every W-track draw is filled from `fieldProsOf` instead (`fp-…` ids, living-field phase W), so a
+ *  professional opponent fell through to `''`, `flagEmoji('')` renders nothing, and the class
+ *  affected is the majority of every W-series opponent she ever meets. The pros HAVE nations – the
+ *  generator gives every one of them one, and `computeStandings` above has always read them for the
+ *  Stats table's `meta` map.
+ *
+ *  ⚠ THE SHAPE IS DELIBERATELY `playerShortName`'s, one function up: same two populations, same
+ *  `isFieldProId` discriminator, same single `.find` (`fieldProsOf` is season-stable and memoised, so
+ *  a lookup costs a scan of an array that is already built). `pendingView`'s RANK arm nine lines
+ *  below its nation arm already special-cased `isFieldProId` for exactly this reason – the nation arm
+ *  simply never learned it, which is how one population ended up answered two different ways.
+ *
+ *  Empty for an id belonging to neither, which is what every caller's own `?? ''` already meant. */
+export function playerNation(world: WorldState, id: string): string {
+  if (isFieldProId(id)) return fieldProsOf(world).find((p) => p.id === id)?.nation ?? ''
+  return world.cohort.find((c) => c.id === id)?.nation ?? ''
+}
+
 /**
  * ⭐⭐⭐ ROUND 26 #7 – THE FEED'S WINDOW, AND THE ONE PROMISE IT WAS SILENTLY BREAKING.
  *
@@ -1022,11 +1045,10 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // `season/tournament.ts` where the whole argument for it lives (see `entrantNationAt`: a filter is
   // unfillable at every playable country, so the domestic ladder re-labels rather than re-deals).
   // `AiPlayer.nation` is untouched: the same girl carries her own flag at a J event next week.
-  const oppNation = entrantNationAt(
-    event.tier,
-    world.cohort.find((c) => c.id === oppId)?.nation ?? '',
-    world.profile.country,
-  )
+  // ⚠ AND THE LOOKUP UNDER IT IS `playerNation` SINCE ROUND 41 #17 – it was a cohort-only `.find`,
+  // which is why a professional opponent rendered no flag at all. The re-labelling rule above is
+  // unchanged; what changed is that the nation handed to it now exists for a `fp-…` id.
+  const oppNation = entrantNationAt(event.tier, playerNation(world, oppId), world.profile.country)
   const oppAge = p.players[oppId]?.age
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
