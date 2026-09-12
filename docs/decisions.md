@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 99 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 101 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 10 | [ROUND 41, ASK A1: THE SPONSOR LETTERS OPEN AT SIXTEEN, AND THE PRIZE MONEY IS HERS FROM HER FIRST W-SERIES START](#12092026--round-41-ask-a1-the-sponsor-letters-open-at-sixteen-and-the-prize-money-is-hers-from-her-first-w-series-start) | 2026-09-12 |
+| economy-and-money | 12 | [ROUND 41 P1 (b): THE WEALTH CORRIDOR STOPS AT THE TOP – ONE PRICE FOR EVERY FAMILY IN THE BIG-CHEQUE YEARS](#12092026--round-41-p1-b-the-wealth-corridor-stops-at-the-top--one-price-for-every-family-in-the-big-cheque-years) | 2026-09-12 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -4040,3 +4040,106 @@ product died for the lever's sake. The owner: «мне это не очень н
   (0% of bench careers ever stand in an advertising band before eighteen: the STANDING binds, not the
   gate); **staged 61.6%**, her account **+$25,185** mean, the family **+$3,862** (the manager's 15%),
   and every letter that arrives is a **drink**.
+
+## 12.09.2026 – ROUND 41 P1 (a): ONE MARKET, DIFFERENT BASKETS – A GEAR PRICE IS THE RUNG'S, NOT THE FAMILY'S
+
+- **HIS QUESTION (#21, continued from the answer that sanctioned the spread):** «на рынке цены для
+  всех сословий одинаковые, просто каждый покупает те товары, которые может… Я не против разлета цен,
+  просто получается, что топовая ракетка для рабочей семьи стоит около 1к долларов, а для богатой
+  2.2к… Мне кажется это немного странно. Давай подумаем как здесь лучше сделать» – plus the
+  allowance-side oddity, that a working family's 12k icon allowance would over-cover their cheaper
+  gear. **HIS RULING on the proposal, the same evening: «P1, запускай».**
+- ⭐⭐⭐ **THE PRICE HAD TWO AXES AND THE SECOND WAS INVISIBLE.** A purchase cost
+  `mid(band[background]) × grades[grade].priceFactor`: the quality ladder NAMED the product («Kestra
+  Pro Stock») and the background re-priced it, so one item – identical `startWear`, identical
+  `lifeFactor`, identical effect on her arm – carried three price tags ($360 / $920 / $2,260 for the
+  same frame). The corridor prices A MARKET; this was one object with three stickers, which is
+  exactly what he could not read. **The rung is the product now, and a product has one price.**
+- **THE SHAPE.** `GearLine.priceCents` became `GearLine.price`, a union: `by: 'rung'` for strings,
+  frames and shoes (a band per `KitGrade`, identical for every background) and `by: 'basket'` for
+  **apparel alone** – the one line with no ladder, whose three bands are three DIFFERENT products
+  that no rung names («club basics» / «brand kit» / «full designer kit»). A background-keyed price
+  there is a background-keyed BASKET, and «просто каждый покупает те товары, которые может» IS that
+  line, so it is deliberately untouched. `kitLinePriceCents` **lost its `background` parameter**
+  rather than keeping it dead, and the compiler named all six call sites.
+- **THE CALIBRATION IS THE OLD DIAGONAL, WRITTEN OUT AS CENTS** – each rung anchored at the
+  background whose flavour already described that rung's product, times that rung's shipped
+  `priceFactor`: frame **$49.50 / $90 / $506 / $2,260** (alloy / composite / performance / pro),
+  strings $13.20 / $24 / $80.30 / $230, shoes $41.25 / $75 / $275 / $820. **His own $2.2k top frame
+  survives to the cent and is now what EVERYBODY pays** – a working family that wants the tour frame
+  pays the tour frame's price, and a wealthy family can buy the $90 club stick.
+- ⚠⚠ **THE «ZERO DRIFT BY CONSTRUCTION» THE DESIGN PROMISED WAS FALSE, AND SAYING SO IS THE POINT OF
+  THE BENCH.** The promise rested on backgrounds having different DEFAULT rungs. They never have:
+  `DEFAULT_KIT_GRADES` is `composite` on all three lines for all three backgrounds, and no engine
+  path moves a rung – `setKitGrade` is reachable from the Money screen and nowhere else, so no career
+  is ever pushed onto gear it did not buy. **MEASURED** (`tools/r41-one-market.ts` §1, 64 seeds ×
+  1,040 weeks, the real `seed:gear:*` sub-stream walked twice with two price rules): working
+  **0.0 ¢/wk, $0.00 a season – exact**; middle **−$947.84 a season (−37%)**; wealthy **−$3,665.15
+  a season (−58%)**. Both were paying a premium for the working family's object. **Nobody's bill
+  rises**, which is the one direction it would have been dangerous to ship quietly – the $8k family
+  is the one that cannot absorb a surprise – and the ladder is real money to spend for the first time.
+- **THREE ONE-LINE RETUNES ARE HIS IF HE WANTS THE OLD SPEND BACK, none taken here:** anchor
+  `composite` at the middle band (raises the poorest family's bill 160% – refused by default); give
+  each background a default RUNG (restores it to the cent **and changes PLAY**, because a rung moves
+  `startWear` / `lifeFactor` / `frameInjuryRise` – a balance decision, not a price one); or raise the
+  wealthy cadence, which is the axis the model says the difference belongs on.
+- **HIS ALLOWANCE ODDITY IS HALF-DISSOLVED AND THE OTHER HALF IS THE MODEL WORKING.** At the pro rung
+  the $12,000 icon pot covered 100% / 100% / 59% of a season and now covers **86% / 75% / 59%**: the
+  over-coverage is gone, and what remains is not a price difference but a CADENCE one – a wealthy
+  family buys the same $2,260 frame oftener. Predicted «three identical numbers»; measured three
+  different ones; recorded rather than patched.
+- **NO SCHEMA MOVE** (`SAVE_SCHEMA_VERSION` stays 74 – prices are constants, nothing persists), **no
+  player-facing string changed** (every `flavor` and every `gradeCopy` label byte-identical; the
+  flavour is still chosen by background through `gearVoice`), **and zero RNG movement**: `pickInt`
+  spends one `rng()` call whatever its bounds, so moving the band from the background's to the rung's
+  changes the cents and never the stream position. Every purchase WEEK in every career is unmoved.
+- **THE FROZEN CAREERS, per-key protocol first** (`tools/frozen-key-diff.ts`, control = this change's
+  own before-state on the clean tree, explicit flags, headers read back): 5/0 **6 keys of 79**, 8/0
+  **6 keys of 78** – money keys only, no result/rank/injury/knock key – and 0/1 (8k working,
+  self-coached) **ZERO, byte-identical**, which is the diagonal's identity check read back from a
+  real career. **`rngMain` byte-identical on all three.** 50 constants re-stamped of 75; all 25
+  `selfTravelling` cells untouched. Spec: `docs/specs/one-market-2026-09.md`.
+
+## 12.09.2026 – ROUND 41 P1 (b): THE WEALTH CORRIDOR STOPS AT THE TOP – ONE PRICE FOR EVERY FAMILY IN THE BIG-CHEQUE YEARS
+
+- **HIS RULING, unprompted, in the same message that approved the gear half:** «Коридор ±25–30%
+  остаётся только на сервисах (физио, перелёты, тренер) и то только на нижних тирах, мне кажется что
+  в про карьере с большими чеками цены для всех должны быть равны. По крайней мере элит тренеры и
+  массажисты мне кажется вполне могут стоить одинаково для всех.»
+- **THE CUT IS AT THE RUNG, NOT AT THE FAMILY**, so it is one predicate: `corridorAppliesAt(tier)` –
+  `self` / `budget` / `middle` **keep** the corridor, `high` / `elite` are **exactly 1.0** for every
+  background. `corridorBandFor(background, tier)` is the single place it is applied, so the card, the
+  week's roll, the envelope on screen and the medical bill cannot disagree about where it ends. The
+  fiction survives where it was ever true – a school hall and a premium academy really are two rooms
+  – and stops where it was a surcharge for a questionnaire answered nine years earlier.
+- **IT REACHES THREE SERVICES AND NO MORE.** The coach line; the facility line that came out of it
+  (one corridor taken once, so `coach + facility === total` is untouched); and the **medical** bill –
+  retainer, weekly rehab, onset treatment – which rides the same rung because it always did:
+  `coachIncludesPhysio` says she has a physio because a coach was hired, and `PHYSIO_QUALITY` says
+  how good that team is BY RUNG, so it was the coach ladder's bill wearing another name.
+- ⚠ **IT CUTS BOTH WAYS AND THAT IS THE RULING, NOT A SIDE EFFECT.** **MEASURED** (§3, rung midpoint
+  at 19, balanced plan): at `high` and `elite` a working family pays **+33.3%** and a wealthy family
+  **−20.0%**, and the three-number spread (1.67×) becomes **one number** (1.00×). «Цены для всех
+  должны быть равны» has no version where only one side moves. The middle column reads 0.0%, because
+  its corridor mid was already 1.00 – what it loses is the ±5% weekly wobble. Every rung below the
+  cut is **0.0% on every background**, byte-identical.
+- ⚠ **`high`, NOT ELITE-ONLY, and the narrower reading is a one-line retune.** His sentence names
+  elite – «**по крайней мере** элит тренеры…» – and «по крайней мере» is a floor rather than a bound;
+  the reason he gives is the big cheques, and `high` is where they start. Dropping `'high'` from
+  `corridorAppliesAt`'s list is the whole of the alternative, and it is recorded with his quote in
+  `docs/specs/one-market-2026-09.md` §4 for him to take.
+- ⭐ **THE MASSEUR NEEDED NO CHANGE BECAUSE HIS SENTENCE WAS ALREADY TRUE.** `ECONOMY.masseur` is a
+  flat contract per rung – its own comment reads «STILL A FLAT CONTRACT PER RUNG: no corridor, no
+  jitter, no draw» – and `world/masseur.ts` bills `rung.sessions × perSessionCents` with no background
+  anywhere on the path: $150 / $300 / $525 a week, identical for all three since the rung dial
+  shipped. Writing that down IS the answer; inventing a change would have been the dishonest one.
+- **TRAVEL AND THE SEASON PLANNER'S PACKAGES ARE UNTOUCHED AND STILL HIS TO RULE ON.** He named
+  travel as a service that KEEPS the corridor, and it has no tier axis to fade along – a flight is a
+  flight. `vacationPriceCents` / `practiceFeeCents` he did not name at all; they are named in the
+  spec as standing corridor users so the next pass does not have to rediscover them.
+- ⚠⚠ **ZERO STREAM MOVEMENT, and the shape was chosen for that.** `ECONOMY.uniformCorridor` is
+  `[1, 1]`, so a uniform rung STILL SPENDS its roll and `lo + roll * (hi - lo)` lands on exactly 1.0:
+  `seed:coachbg:<week>` and `seed:physio:<week>` walk identical positions at every rung on every
+  background. Skipping the multiply instead would have shifted those sub-streams by one position for
+  half the tier ladder – a stream change dressed as a price change. **No schema move (74 stands), no
+  player-facing string, `rngMain` byte-identical on all three frozen careers.**

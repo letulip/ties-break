@@ -1,6 +1,29 @@
 # Spec-let — the app-level wealth corridor (owner directive 25.07)
 
-**Principle (canonical, app-level):** every family-background price scaling in the game uses ONE
+> ⚠⚠ **SUPERSEDED IN SCOPE, 12.09.2026 — round 41 P1, and the owner narrowed it himself.** The
+> principle below said *every* family-background price scaling. It is now **services, lower tiers
+> only**. His two sentences, the same evening:
+>
+> > «на рынке цены для всех сословий одинаковые, просто каждый покупает те товары, которые может»
+> >
+> > «Коридор ±25–30% остаётся только на сервисах (физио, перелёты, тренер) и то только на нижних
+> > тирах, мне кажется что в про карьере с большими чеками цены для всех должны быть равны.»
+>
+> **What left it:** GEAR, entirely — a rung is one object with one price (`ECONOMY.gear[*].price` is
+> rung-keyed; apparel, the one line with no ladder, keeps a background-keyed BASKET, which is a
+> different claim). And the TOP of the coach ladder: the coach line, the facility line that came out
+> of it and the medical bill that rides the same rung keep the corridor at `self` / `budget` /
+> `middle` and are **exactly 1.0 at `high` / `elite`** (`coach.corridorAppliesAt`).
+>
+> **What is unchanged:** the band values themselves, the one-roll-per-bill shape, the post-draw
+> discipline, every sub-stream — and **travel** plus the season planner's **vacation / practice**
+> packages, which he did not name and which remain standing corridor users. The **masseur** was never
+> corridored at all, so his «массажисты… могут стоить одинаково для всех» was already true.
+>
+> Full model, the diagonal calibration and every measurement: **`docs/specs/one-market-2026-09.md`**.
+
+**Principle (as written 25.07 — the word «every» is what round 41 P1 retired; see the note above):**
+~~every~~ family-background price scaling in the game uses ONE
 corridor set — `working [0.70, 0.80] · middle [0.95, 1.05] · wealthy [1.20, 1.30]` — drawn as one
 uniform roll per bill/trip mapped into the background's band, always as a POST-draw multiply on a
 purpose-scoped sub-stream (never the main RNG stream). Framing: simpler cars/economy flights/public

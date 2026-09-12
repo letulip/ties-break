@@ -966,7 +966,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   is **left alone** – it is a friendly, outside item 20's scope.
   *No new player-facing strings* – all three coach sentences and both confirm labels already existed.
 
-- [~] **21. «А что у нас со стоимостью всех вещей в bills? Мне кажется, что для семьи с большим
+- [x] **21. «А что у нас со стоимостью всех вещей в bills? Мне кажется, что для семьи с большим
   достатком цены сильно выше, чем для других, хотя вроде бы вещи всегда для всех стоят одинаково.»**
   – **answered: sanctioned, twice.** The ±25–30% corridor is canon (`econ-wealth-corridor.md`:
   «every family-background price scaling… ONE corridor set»; his own ruling in `economy.ts:120-124`:
@@ -975,6 +975,18 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   working vs $2,260 wealthy·pro) – written independently of the corridor. Flagged for his word,
   deliberately not changed: sanctioned balance is his. What does NOT scale by wealth: the shop
   catalogue, prize money, kit allowances, the ad ladder.
+
+  **SHIPPED (P1), on his second visit's ruling «P1, запускай» plus his own narrowing of the
+  corridor.** ⭐⭐⭐ **THE ANSWER ABOVE WAS RIGHT ABOUT THE CANON AND WRONG ABOUT THE OBJECT, AND
+  THAT IS THE ROUND'S OWN CORRECTION.** The gear spread was not «a second scaling written
+  independently of the corridor» that he had sanctioned – it was ONE ITEM WITH THREE PRICE TAGS.
+  `mid(band[background]) × grades[grade].priceFactor` meant the ladder NAMED the product («Kestra Pro
+  Stock») and the background re-priced it, for an object the equipment model treats as literally
+  identical: same `startWear`, same `lifeFactor`, same effect on her arm. The corridor prices a
+  MARKET; this priced a NAME. His «вроде бы вещи всегда для всех стоят одинаково» was a correct
+  reading of the model, and the ledger's own «sanctioned» had mistaken one for the other.
+  Full record: the two `docs/decisions.md` entries of 12.09 and `docs/specs/one-market-2026-09.md`;
+  the whole build is in the P1 block of «The owner's second visit» below.
 
 - [?] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
   hover/клике с суммой и датой?»** – **PARKED FOR v76, honestly, per the no-schema rule.** Purchase
@@ -1534,6 +1546,89 @@ green: unit-heavy success in 9m03s, every job green on `3dda7566`.)
   prices become grade-only and uniform, backgrounds set the DEFAULT basket and cadence, the
   corridor narrows to services where economy-vs-business is an honest fiction) went to him as ask
   P1/P2/P3 – awaiting his word; both his oddities dissolve under P1 by construction.
+
+### P1 – «one market, different baskets», SHIPPED (12.09, his «P1, запускай»)
+
+**PART A – a gear price is the RUNG's, never the family's.** `GearLine.priceCents` became
+`GearLine.price`, a union: `by: 'rung'` for strings / frames / shoes (one band per `KitGrade`,
+identical for every background) and `by: 'basket'` for **apparel alone**, the one line with no
+ladder, whose three bands really are three different products that no rung names. `kitLinePriceCents`
+**lost its `background` parameter** rather than keeping it dead – the compiler then named all six
+call sites – and `resolveGear` lost its post-draw `priceFactor` multiply, because the rung is passed
+INTO the draw now and cents are decided in exactly one place.
+
+The calibration is **the old diagonal written out as cents**, each rung anchored at the background
+whose flavour already described that rung's product: frame **$49.50 / $90 / $506 / $2,260** (alloy /
+composite / performance / pro), strings $13.20 / $24 / $80.30 / $230, shoes $41.25 / $75 / $275 /
+$820. His own $2.2k top frame survives to the cent and is now what **everybody** pays.
+
+⚠⚠ **THE «ZERO DRIFT BY CONSTRUCTION» THE DESIGN PROMISED WAS FALSE, AND THE BENCH EXISTS TO SAY SO.**
+The promise assumed backgrounds have different DEFAULT rungs. They never have: `DEFAULT_KIT_GRADES`
+is `composite` on all three lines for all three backgrounds, and nothing in the engine moves a rung –
+`setKitGrade` is reachable from the Money screen and nowhere else, so no career is ever pushed onto
+gear it did not buy (the hazard the brief asked to watch for does not exist here). **MEASURED**
+(`tools/r41-one-market.ts` §1 – 64 seeds × 1,040 weeks, the real `seed:gear:*` sub-stream walked
+twice with two price rules): working **0.0 ¢/wk, $0.00 a season, exact**; middle **−$947.84 a season
+(−37.1%)**; wealthy **−$3,665.15 a season (−58.0%)**. Both were paying a premium for the working
+family's object. **Nobody's bill rises** – the one direction it would have been dangerous to ship
+quietly. Three one-line retunes are recorded for him in the spec's §3 and none was taken; the second
+of them (a per-background default RUNG) would restore the old spend exactly **and change PLAY**,
+which makes it a balance decision rather than a price one.
+
+His allowance oddity is **half-dissolved, and the other half is the model working**: at the pro rung
+the $12,000 icon pot covered 100 / 100 / 59% and now covers **86 / 75 / 59%** – the over-coverage is
+gone and what remains is CADENCE, a wealthy family buying the same $2,260 frame oftener. Predicted
+three identical numbers, measured three different ones, recorded rather than patched.
+
+**PART B – the corridor prices services at the bottom of their ladder and stops**, on his own
+sentence «только на нижних тирах». One predicate, `corridorAppliesAt(tier)`: `self` / `budget` /
+`middle` keep it, `high` / `elite` are exactly 1.0 for every background; `corridorBandFor` is the one
+place it is applied, so the card, the week's roll, the on-screen envelope and the medical bill cannot
+disagree. It reaches the coach line, the facility line that came out of it, and the **medical** bill –
+which rides the same rung because it always did (`coachIncludesPhysio` + `PHYSIO_QUALITY` made it the
+coach ladder's bill under another name). **MEASURED** (§3, rung midpoint at 19): at `high`/`elite` a
+working family pays **+33.3%** and a wealthy family **−20.0%**, and the 1.67× spread becomes **1.00×**;
+every rung below the cut is 0.0% on every background. ⚠ `high`, not elite-only – «**по крайней мере**
+элит» is a floor rather than a bound, and the narrower reading is a one-line retune written up with
+his quote. ⭐ **The masseur needed no change**: `ECONOMY.masseur` is a flat contract per rung with no
+background on the path ($150 / $300 / $525 a week for everyone), so his «массажисты… могут стоить
+одинаково для всех» was already true, and saying so IS the answer. **Travel** and the planner's
+**vacation / practice** packages are untouched and named in the spec as standing corridor users.
+
+**NO SCHEMA MOVE** (74 stands), **no player-facing string** (every `flavor` and `gradeCopy` label
+byte-identical; the flavour is still chosen by background through `gearVoice`), **ZERO RNG
+MOVEMENT**: `pickInt` spends one `rng()` call whatever its bounds, so a rung-keyed band moves cents
+and never a stream position, and a uniform tier **still spends its corridor roll** (`uniformCorridor`
+is `[1, 1]`, landing on exactly 1.0) rather than skipping the multiply – which would have shifted
+`seed:coachbg` / `seed:physio` by one position for half the ladder.
+
+**THE FROZEN CAREERS, protocol first** (`tools/frozen-key-diff.ts`, control = this change's own
+before-state captured on the clean tree, explicit flags, each header read back – ⚠ the zsh
+word-split this apparatus has warned about twice caught the first attempt again and those captures
+were thrown away):
+
+| career | keys moved | which | `rngMain` |
+|---|---|---|---|
+| 5/0 · 25k middle, middle coach, grinder | 6 of 79 | careerTotals, events, financeWeeks, fundsCents, lastSeasonSummary, seasonHistory | `1dbff28caca2` unmoved |
+| 8/0 · 120k wealthy, elite coach, grinder | 6 of 78 | the same six (fundsCents `62f148b9763c` → `db57151e9e09`) | `aebc8101d6df` unmoved |
+| 0/1 · 8k working, self-coached, player | **0 – byte-identical** | – | `d84bcbf0c481` unmoved |
+
+Money keys only; no result, rank, injury or knock key moved. **50 constants re-stamped of 75** (48
+unique); all 25 `selfTravelling` cells untouched, which is the diagonal's identity check read back
+from a real career rather than asserted.
+
+**Re-aimed pins, each carrying a ⚠ note naming round 41 P1:** `tests/equipment.test.ts` (the rung
+now prices the bill INSTEAD of the corridor – the old test pinned the very fact he objected to);
+`tests/economy.test.ts` ×2 (the gear band resolver; the corridor ordering, now ordered below the cut
+and EQUAL above it); `tests/coachTiers.test.ts` ×4; `tests/split-the-bill.test.ts` ×2 (the
+venue-ladder theorem asserted WITHIN each corridor regime, narrowly, plus a pin that the two regimes
+really are two); `tests/round36-u03-coach-billing.test.ts`; `tests/component/one-clock-ui.test.ts`;
+`tests/component/round23-bills-around.test.ts` (round 23 #17's quote-vs-bill complaint intact, its
+two historical numbers kept in the prose, the arithmetic re-derived).
+
+**Evidence**: `tools/r41-one-market.ts` (predictions in the header, written before the first run),
+`docs/specs/one-market-2026-09.md`, the amended principle line in `docs/specs/econ-wealth-corridor.md`,
+and the two `docs/decisions.md` entries of 12.09.
 
 - [x] **28. «давай на плитках тех айтемов в магазине, которые нуждаются в постройке длительной
   (академия, яхты, самолеты) добавим в уголке картинки наш круглый гаудж (переиспользуем
