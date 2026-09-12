@@ -477,9 +477,13 @@ describe('RNG discipline - one draw produced two lines', () => {
     const at = (rateCents: number, tier: CoachTier) =>
       weeklyBillSplit({ rateCents, ageYears: 15, tier, plan: WEEK_PLAN_PRESETS.balanced, background: 'middle' })
 
-    // (a) WITHIN a rung: the elite band is $96-144/h at 12-16, so these are two real elite coaches.
-    const cheapElite = at(96_00, 'elite')
-    const dearElite = at(144_00, 'elite')
+    // (a) WITHIN a rung: the elite band is $120-180/h at 12-16, so these are two real elite coaches.
+    // ⚠ RE-AIMED 12.09 by the owner's «единая элит-полка вверх - верно» – the band is his own 29.07
+    // midpoint x 1.25, the corridor midpoint P1's uniform rung gave up. The two rates here are the
+    // band's ENDPOINTS and have to be real ones or the arm stops being about two elite coaches; the
+    // claim itself (same rung, same court, whatever the man charges) is untouched.
+    const cheapElite = at(120_00, 'elite')
+    const dearElite = at(180_00, 'elite')
     expect(dearElite.facilityCents).toBe(cheapElite.facilityCents)
     expect(dearElite.coachCents - cheapElite.coachCents).toBe(dearElite.totalCents - cheapElite.totalCents)
 

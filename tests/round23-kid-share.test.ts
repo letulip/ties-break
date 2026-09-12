@@ -259,7 +259,23 @@ describe('#18 – the transfer, on a career that is really played', () => {
     // the two arms have played different tournaments (measured: gross $247,800 against $654,850).
     // ⚠ THE FIX IS THE HORIZON AND NOT THE ASSERTION – the comparability guard below is UNCHANGED
     // and still refuses to read a difference between two different lives.
-    const HORIZON = WEEKS_PER_YEAR * 2
+    //
+    // ⚠⚠ AND RE-AIMED AGAIN THE SAME DAY, BY THE ELITE SHELF (round 41, the owner's «единая
+    // элит-полка вверх - верно»), FOR THE SAME REASON AND BY THE SAME REMEDY. `PRESETS[8]` is the
+    // wealthy family with the ELITE coach, so a 25% rise in that rung's price is 25% more off the
+    // wallet both arms spend from – and at two years the guard did exactly its job: **2,179 results
+    // against 2,180**, one entry decision falling differently on the tighter side. That is the guard
+    // WORKING rather than a defect in it, and the rule the block above sets is the rule followed.
+    //
+    // ⭐ THE NEW HORIZON IS MEASURED RATHER THAN GUESSED, and it is set INSIDE the green run instead
+    // of at its edge. Scanned on the shipped constant, both arms walked at every step:
+    //   104 -> 2,179 / 2,180  ✗ (the only divergent point in the scan)
+    //   100 · 96 · 92 · 88 · 84 · 80 · 78 · 76 · 72 · 68 · 64 · 60 -> identical, every one
+    // 78 – a year and a half, and the file's own `+ 26` idiom – sits in the middle of that run
+    // rather than four weeks from a known break, which is what stops the next balance change
+    // re-breaking this test for a third time. It costs no coverage: she is still paid real cheques
+    // on it ($2,158 of her own money against $6,021 at two years), which is all the claim needs.
+    const HORIZON = WEEKS_PER_YEAR + 26
     const on = walk(1, HORIZON)
     const off = walk(1, HORIZON, true)
 

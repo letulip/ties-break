@@ -182,11 +182,21 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     }
   })
 
-  it('reproduces the owner\'s per-hour table in the MIDDLE corridor: 30 / 50 / 80 / 120 at 12-16', () => {
+  it('reproduces the owner\'s per-hour table in the MIDDLE corridor: 30 / 50 / 80 at 12-16, and elite at his own x1.25', () => {
     // ⚠ RE-AIMED (Round 2). This used to pin his WEEKLY table ($120/$200/$320/$480 at four hours);
     // with the corridor back on coaching a weekly figure is a figure per MARKET, so the invariant
     // moved down to the unit he actually priced in - dollars an hour, in an ordinary academy.
     // Middle's corridor is [0.95, 1.05], centred on 1.0, so his table IS the middle market's price.
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY HIS RULING OF 12.09 – «единая элит-полка вверх - верно» – AND ONLY THE
+    // ELITE ROW MOVES. P1 took the corridor off `high` and `elite`, and the measured consequence was
+    // that a wealthy family's idle year stopped burning; of the two levers the calibration put in
+    // front of him he chose the elite band and chose UP. The row is his OWN 29.07 midpoint times the
+    // midpoint of the corridor that rung lost (`WEALTH_CORRIDOR.wealthy` = [1.2, 1.3] -> 1.25), so
+    // the single shelf everybody pays is what the WEALTHY family used to pay: 120 x 1.25 = 150.
+    //   ⭐ His table is therefore not contradicted, it is re-anchored: the three rungs below the cut
+    //   still reproduce it to the dollar, and elite reproduces its WEALTHY column instead of its
+    //   middle one - which is the arithmetic statement of «единая элит-полка».
     const midHourly = (tier: CoachTier) => {
       const [lo, hi] = coachRateBandCents(tier, 14)
       return (lo + hi) / 2 / 100
@@ -194,7 +204,10 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     expect(midHourly('budget')).toBe(30)
     expect(midHourly('middle')).toBe(50)
     expect(midHourly('high')).toBe(80)
-    expect(midHourly('elite')).toBe(120)
+    expect(midHourly('elite')).toBe(150)
+    // ...and that 150 is not a chosen number: it is his 120 in the corridor P1 retired, to the cent.
+    const [wLo, wHi] = ECONOMY.wealthCorridor.wealthy
+    expect(midHourly('elite')).toBe(120 * ((wLo + wHi) / 2))
     // ...and self sits below Budget, which is where the spec puts the parent's rung.
     expect(midHourly('self')).toBeLessThan(midHourly('budget'))
     // The middle corridor really is the neutral one: a quote there is his hourly rate x the hours.
