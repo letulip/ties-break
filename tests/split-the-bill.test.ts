@@ -6,6 +6,7 @@ import {
   coachById,
   coachRateBandCents,
   coachCorridorMid,
+  corridorAppliesAt,
   coachWeeklyCents,
   facilityRateCents,
   weeklyBillSplit,
@@ -70,9 +71,13 @@ describe('the total did not move - the split is a partition, not a re-price', ()
           for (const age of AGES) {
             for (const bps of [jLo, 9600, 10_000, 10_400, jHi]) {
               const rate = midRate(tier, age)
-              const corridor = coachCorridorMid(background)
+              // ⚠ RE-AIMED BY ROUND 41 P1 – `coachCorridorMid` and `coachWeeklyCents` take the RUNG
+              // now, because the corridor stops at `high`. The partition claim is untouched: the
+              // reference expression is still the pre-split line, read at the same corridor the
+              // split reads, and it now sweeps the uniform rungs as well as the corridored ones.
+              const corridor = coachCorridorMid(background, tier)
               const jitter = bps / 10_000
-              const wasCharged = Math.round(coachWeeklyCents(rate, plan, background, corridor) * jitter)
+              const wasCharged = Math.round(coachWeeklyCents(rate, plan, background, tier, corridor) * jitter)
               const split = weeklyBillSplit({ rateCents: rate, ageYears: age, tier, plan, background, corridor, jitter })
               expect(split.totalCents, `${background}/${tier}/${age}/${bps}`).toBe(wasCharged)
               expect(split.coachCents + split.facilityCents).toBe(split.totalCents)
@@ -529,25 +534,38 @@ describe('RNG discipline - one draw produced two lines', () => {
   it('cannot move the TOTAL whatever the venue ladder says - the theorem, pinned', () => {
     // ⚠⚠ THIS IS WHY A COURT RE-PRICE IS FREE, AND IT IS WORTH AN ASSERTION RATHER THAN AN ARGUMENT
     // (docs/specs/court-follows-the-coach-2026-08.md §3d). `totalCents` is computed from the rate, the
-    // plan, the background, the corridor and the jitter - `tier` does not appear in it. So ANY value of
-    // `courtTierFactor` that clears the guards above leaves `world.fundsCents` identical on every week
+    // plan, the background, the corridor and the jitter - `courtTierFactor` does not appear in it. So
+    // ANY value of it that clears the guards above leaves `world.fundsCents` identical on every week
     // of every career, and the bench can only ever report the survival rate it already had.
     //
     // The consequence the owner should know: the bench CANNOT decide what the court ladder should be.
     // It is free in survival terms, so the question is evidential and not economic. Two full bench runs
     // demonstrated it at two different ladders (538 of 1,620 both times); this holds it as arithmetic,
     // which is cheaper and stricter than a third run.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 41 P1, AND NARROWLY – THE THEOREM IS ABOUT THE VENUE LADDER AND STILL IS.
+    // The rung now reaches the total through ONE other door: it decides whether the wealth corridor
+    // applies at all (the owner, 12.09, «только на нижних тирах»). So the invariance is asserted
+    // WITHIN each corridor regime, which is exactly the set of rungs `courtTierFactor` is free
+    // across. Weakening it to a single group would have been the wrong repair: the claim that a
+    // court re-price is free has to survive rung by rung, and here it does, twice.
     for (const background of BACKGROUNDS) {
       for (const age of AGES) {
         for (const plan of PLANS) {
           const rate = 100_00
-          const totals = COACH_TIERS.map(
-            (tier) => weeklyBillSplit({ rateCents: rate, ageYears: age, tier, plan, background }).totalCents,
-          )
-          for (const t of totals) expect(t, `${background}/${age}`).toBe(totals[0])
+          for (const regime of [true, false]) {
+            const tiers = COACH_TIERS.filter((t) => corridorAppliesAt(t) === regime)
+            const totals = tiers.map(
+              (tier) => weeklyBillSplit({ rateCents: rate, ageYears: age, tier, plan, background }).totalCents,
+            )
+            for (const t of totals) expect(t, `${background}/${age}/${regime}`).toBe(totals[0])
+          }
         }
       }
     }
+    // ...and the two regimes really are two, so the loop above is not one group wearing a filter.
+    expect(COACH_TIERS.filter(corridorAppliesAt)).toEqual(['self', 'budget', 'middle'])
+    expect(COACH_TIERS.filter((t) => !corridorAppliesAt(t))).toEqual(['high', 'elite'])
   })
 
   it('keeps the venue ladder inside the two ceilings that pin it', () => {

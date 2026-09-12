@@ -38,7 +38,9 @@ describe('U-03: the coach billing is projected, not recomputed', () => {
     const age = ageAtWeek(world.week)
     const coach = coachById(world.seed, age, world.coachId)
     const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
-    const expectedRange = coachBillRangeCents(rate, world.plan, world.profile.background)
+    // ⚠ `tierOf(coach)` added by round 41 P1 – `coachBillRangeCents` takes the rung, because the
+    // corridor no longer applies above `middle`. Still the engine's own call, spelled once.
+    const expectedRange = coachBillRangeCents(rate, world.plan, world.profile.background, tierOf(coach))
     const expectedSplit = weeklyBillSplit({
       rateCents: rate,
       ageYears: age,

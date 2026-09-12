@@ -9,6 +9,7 @@ import {
   coachHoursForPlan,
   coachIncludesPhysio,
   coachRateBandCents,
+  corridorAppliesAt,
   coachSeasonUplift,
   coachWeeklyBandCents,
   coachWeeklyCents,
@@ -197,23 +198,41 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     // ...and self sits below Budget, which is where the spec puts the parent's rung.
     expect(midHourly('self')).toBeLessThan(midHourly('budget'))
     // The middle corridor really is the neutral one: a quote there is his hourly rate x the hours.
-    expect(coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle')).toBe(250_00)
+    // ⚠ `'middle'` TWICE SINCE ROUND 41 P1, and they are two different words: the family's
+    // background and the RUNG she trains at. The rung is what decides whether there is a corridor
+    // at all now, and `middle` is one of the three that keep it.
+    expect(coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle', 'middle')).toBe(250_00)
   })
 
-  it('prices every rung in every market, and the wealthy family pays MORE for the same rung', () => {
-    // The owner's correction, as arithmetic: «для 8к все тиры стоят согласно их коридору, для 25к -
-    // свои цены, для 120к стоят дороже всего». Same coach, same hours, three markets.
+  // ⚠⚠ RE-AIMED BY ROUND 41 P1, AND THE RE-AIM IS THE RULING (the owner, 12.09: «Коридор ±25–30%
+  // остаётся только на сервисах… и то только на нижних тирах, мне кажется что в про карьере с
+  // большими чеками цены для всех должны быть равны»). His round-2 correction below is UNCHANGED at
+  // the bottom of the ladder, which is where he made it – «для 8к все тиры стоят согласно их
+  // коридору» was written about the market a junior's family trains in – and it stops at `high`.
+  // The old test asserted working < middle < wealthy at EVERY rung and did not read `tier` at all;
+  // it now asserts the corridor where the corridor is and EQUALITY where he removed it, which is a
+  // strictly stronger claim than the one it replaces.
+  it('prices every rung in the market that rung is sold in – corridored below, equal at the top', () => {
     for (const tier of COACH_TIERS) {
-      const w = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'working')
-      const m = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle')
-      const r = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'wealthy')
-      expect(w).toBeLessThan(m)
-      expect(m).toBeLessThan(r)
-      // ...and the rung's envelope moves with the market too.
+      const w = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'working', tier)
+      const m = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle', tier)
+      const r = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'wealthy', tier)
       const [wLo] = coachWeeklyBandCents(tier, 14, WEEK_PLAN_PRESETS.balanced, 'working')
       const [rLo] = coachWeeklyBandCents(tier, 14, WEEK_PLAN_PRESETS.balanced, 'wealthy')
-      expect(wLo).toBeLessThan(rLo)
+      if (corridorAppliesAt(tier)) {
+        expect(w, tier).toBeLessThan(m)
+        expect(m, tier).toBeLessThan(r)
+        // ...and the rung's envelope moves with the market too.
+        expect(wLo, tier).toBeLessThan(rLo)
+      } else {
+        // «цены для всех должны быть равны» – to the cent, quote and envelope alike.
+        expect(w, tier).toBe(m)
+        expect(m, tier).toBe(r)
+        expect(wLo, tier).toBe(rLo)
+      }
     }
+    // ...and the cut is where he put it, named rather than implied.
+    expect(COACH_TIERS.filter((t) => !corridorAppliesAt(t))).toEqual(['high', 'elite'])
   })
 
   it('every drawn bill lands inside its rung\'s weekly band', () => {
@@ -256,7 +275,9 @@ describe('fit and development – what the rung is worth', () => {
     // ...while the price climbs the other way: each rung costs more than the last, by more.
     const price = COACH_TIERS.map((t) => {
       const [lo, hi] = coachRateBandCents(t, 14)
-      return coachWeeklyCents((lo + hi) / 2, WEEK_PLAN_PRESETS.balanced, 'middle')
+      // ⚠ round 41 P1: the fourth argument is the RUNG being priced, so each rung is quoted in its
+      // own market – which is what makes this a price ladder rather than a corridor comparison.
+      return coachWeeklyCents((lo + hi) / 2, WEEK_PLAN_PRESETS.balanced, 'middle', t)
     })
     for (let i = 1; i < price.length; i++) expect(price[i]).toBeGreaterThan(price[i - 1])
   })
@@ -970,10 +991,16 @@ describe('the coach market slice', () => {
     expect(rows).toHaveLength(16)
     expect(rows.filter((r) => r.current)).toHaveLength(1)
     expect(rows.find((r) => r.current)!.tier).toBe('budget')
-    // Working prices are the working corridor's, so every row is cheaper than the same row would be
-    // for a wealthy family - the corridor is the market, and it applies to the whole ladder.
+    // ⚠ RE-AIMED BY ROUND 41 P1: «the corridor applies to the whole ladder» was true when this was
+    // written and is the exact sentence the owner retired on 12.09 – «только на нижних тирах». A
+    // working family's card is cheaper than a wealthy family's on the rungs that kept the corridor
+    // and IDENTICAL on `high`/`elite`, which is the market she is now shopping in.
     const rich = coachMarket(createWorld('market', { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: 'budget' }))
-    rows.forEach((r, i) => expect(r.weeklyCents).toBeLessThan(rich[i].weeklyCents))
+    rows.forEach((r, i) => {
+      if (corridorAppliesAt(r.tier)) expect(r.weeklyCents, r.tier).toBeLessThan(rich[i].weeklyCents)
+      else expect(r.weeklyCents, r.tier).toBe(rich[i].weeklyCents)
+    })
+    expect(rows.some((r) => !corridorAppliesAt(r.tier)), 'the roster really does reach the uniform rungs').toBe(true)
     // Nothing is locked while the elite gate is off.
     expect(rows.every((r) => r.lockedPoints === null)).toBe(true)
     // Over-budget is measured against the WEEK'S INCOME, and an 8k family cannot carry an Elite.

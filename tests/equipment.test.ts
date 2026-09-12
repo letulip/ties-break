@@ -13,7 +13,7 @@ import {
   kitMultipliers,
   kitWearAt,
 } from '../src/engine/equipment'
-import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo, weeksSinceGear } from '../src/engine/economy'
+import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo, gearPriceBandCents, LADDER_IDENTITY_GRADE, weeksSinceGear } from '../src/engine/economy'
 import {
   expectedServeSpeed,
   LEGACY_SNAPSHOT_AGE,
@@ -453,23 +453,48 @@ describe('the quality ladder — both axes, and it can never buy destiny', () =>
     expect(kitWearAt('bought', 'working', 77, null, defaultKitState())).toEqual(kitWearAt('bought', 'working', 77))
   })
 
-  it('the rung prices the recurring bill through the wealth corridor, not instead of it', () => {
-    for (const bg of BACKGROUNDS) {
-      const composite = kitLinePriceCents(bg, 'frame', 'composite')
-      expect(kitLinePriceCents(bg, 'frame', 'alloy')).toBeLessThan(composite)
-      expect(kitLinePriceCents(bg, 'frame', 'pro')).toBeGreaterThan(composite)
-    }
-    // The corridor still sets the base: a wealthy family's frame is dearer at every rung.
+  // ⚠⚠ RE-AIMED BY ROUND 41 P1, AND IT IS THE OPPOSITE ASSERTION ON PURPOSE. This test was called
+  // «the rung prices the recurring bill THROUGH the wealth corridor, not instead of it» and its
+  // second half pinned exactly the fact the owner objected to on 12.09: «на рынке цены для всех
+  // сословий одинаковые, просто каждый покупает те товары, которые может… топовая ракетка для
+  // рабочей семьи стоит около 1к долларов, а для богатой 2.2к… Мне кажется это немного странно».
+  // `kitLinePriceCents` has no `background` parameter to pin any more; what is pinned instead is
+  // that the RECURRING TILL – the only place a background is still in the room – prices the same
+  // rung at the same cents for all three.
+  it('the rung prices the bill INSTEAD of the wealth corridor: one market, one price per rung', () => {
+    const composite = kitLinePriceCents('frame', 'composite')
+    expect(kitLinePriceCents('frame', 'alloy')).toBeLessThan(composite)
+    expect(kitLinePriceCents('frame', 'pro')).toBeGreaterThan(composite)
+
+    // ONE MARKET: the same rung costs the same cents in every family's shop, quoted and billed.
     for (const grade of KIT_GRADES) {
-      expect(kitLinePriceCents('wealthy', 'frame', grade)).toBeGreaterThan(kitLinePriceCents('working', 'frame', grade))
+      for (const category of ['rackets', 'stringing', 'shoes'] as const) {
+        const bands = BACKGROUNDS.map((bg) => gearPriceBandCents(category, bg, grade))
+        expect(bands[1], `${category}/${grade}`).toEqual(bands[0])
+        expect(bands[2], `${category}/${grade}`).toEqual(bands[0])
+      }
     }
+
+    // ...and the diagonal the uniform prices were calibrated on, to the cent (the spec's §2 table):
+    // each rung anchored at the background whose flavour already described that rung's product.
+    expect(kitLinePriceCents('frame', 'alloy')).toBe(49_50)
+    expect(kitLinePriceCents('frame', 'composite')).toBe(90_00)
+    expect(kitLinePriceCents('frame', 'performance')).toBe(506_00)
+    expect(kitLinePriceCents('frame', 'pro')).toBe(2_260_00)
+
+    // ⚠ AND THE LOCAL COPY OF THE LADDER'S IDENTITY ELEMENT CANNOT DRIFT. `economy.ts` may not
+    // import this module (that edge is the runtime cycle), so it spells `composite` a second time;
+    // the two are pinned equal here, which is the only place both are visible.
+    expect(LADDER_IDENTITY_GRADE).toBe(DEFAULT_KIT_GRADES.frame)
+    expect(LADDER_IDENTITY_GRADE).toBe(DEFAULT_KIT_GRADES.strings)
+    expect(LADDER_IDENTITY_GRADE).toBe(DEFAULT_KIT_GRADES.shoes)
   })
 
   it('the till: up buys and bills, down is free, and a repeat tap buys nothing', () => {
     const world = createWorld('kit-till')
     const before = world.fundsCents
     setKitGrade(world, 'frame', 'pro')
-    const price = kitLinePriceCents(world.profile.background, 'frame', 'pro')
+    const price = kitLinePriceCents('frame', 'pro')
     expect(world.fundsCents).toBe(before - price)
     expect(world.kit!.grade.frame).toBe('pro')
     expect(world.kit!.sinceWeek.frame).toBe(world.week)
@@ -526,7 +551,7 @@ describe('the quality ladder — both axes, and it can never buy destiny', () =>
     it('charges the family nothing when the allowance covers the whole purchase', () => {
       const world = withDeal(['strings', 'frame'], 3_000_00)
       const before = world.fundsCents
-      const price = kitLinePriceCents(world.profile.background, 'frame', 'pro')
+      const price = kitLinePriceCents('frame', 'pro')
       expect(price).toBeLessThan(3_000_00) // ...the fixture really does have room
       setKitGrade(world, 'frame', 'pro')
       expect(world.fundsCents).toBe(before) // not a cent
@@ -540,7 +565,7 @@ describe('the quality ladder — both axes, and it can never buy destiny', () =>
     })
 
     it('splits the bill when the allowance runs out mid-purchase', () => {
-      const price = kitLinePriceCents(createWorld('kit-cover').profile.background, 'frame', 'pro')
+      const price = kitLinePriceCents('frame', 'pro')
       const world = withDeal(['frame'], price, price - 40_00) // $40 of pot left
       const before = world.fundsCents
       setKitGrade(world, 'frame', 'pro')
@@ -551,7 +576,7 @@ describe('the quality ladder — both axes, and it can never buy destiny', () =>
     it('does NOT cover a line the deal leaves hers, which is the whole brand ladder', () => {
       const world = withDeal(['strings', 'frame'], 3_000_00) // national: shoes stay hers
       const before = world.fundsCents
-      const price = kitLinePriceCents(world.profile.background, 'shoes', 'pro')
+      const price = kitLinePriceCents('shoes', 'pro')
       setKitGrade(world, 'shoes', 'pro')
       expect(world.fundsCents).toBe(before - price)
       expect(world.offers[0].coveredCents).toBe(0)
