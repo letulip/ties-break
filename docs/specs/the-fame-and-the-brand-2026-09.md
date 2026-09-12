@@ -39,7 +39,7 @@ w138 for $250,000 at fame 9.8.
   (`world/fame.ts`; proved on a ticked world by `tests/round29p5-business.test.ts`).
 * **`fame = min(100, floor × shootMultiplier)`.** The floor is earned on court; the photographs
   multiply it. Zero floor times anything is zero.
-* **Since 12.09 the floor has a seventh source: HER FIRST GRAND SLAM MAIN DRAW**, worth
+* **Since 12.09 the floor has a sixth source: HER FIRST GRAND SLAM MAIN DRAW**, worth
   `ECONOMY.fame.slamDebutFloor` = **4**, dated at the week she played it, decaying on the title
   clock, **once per career**. Before it, a Slam main draw was worth exactly zero fame unless she
   reached the final.
@@ -64,7 +64,7 @@ about how long the world remembers three different kinds of thing — a title, a
 | **Season ended in band** | `seasonHistory[].byTrack.wta.endRank`, dated at its own wrap | `seasonEndBands` | ≤10 → 10 · ≤20 → 4 · ≤50 → 1.5 · ≤100 → 0.6 | **career, 312 w** | «не могу забыть за год» — a decade of being a professional the world can name must not fade like an afternoon. Best matching band only, once per season. |
 | **Delivered shoot (the ADD)** | signed `AdOfferTerms.shootWeeks` already lived | `shootFloorByBand` | [0.03, 0.04, 0.06, 0.08, 0.11] | **campaign**, `shootFloorHalfLifeByBand` [13, 26, 39, 52, 78] w | a collaboration is a public event in its own right; it is added, not multiplied, because a multiplier cannot lift a career with nothing to multiply. The band reaches both the size and the clock. |
 | **Delivered shoot (the MULTIPLIER)** | the same weeks | `shootStep`, `shootMultCap` | 0.05 per shoot, capped ×2 | title, 104 w | the player's lever. The photographs can at most double what the court earned. |
-| **The cap** | — | `cap` | 100 | — | §7(b) — the open question. |
+| **The cap** | — | `cap` | 100 | — | §5(b) — the measured question, marked HIS. |
 
 ⚠ **`contractFame` is on this list in the brief and is NOT in this table, deliberately.** It is
 `ECONOMY.business.merch.contracts` — +1 per **$50,000** of LIVE annual contract value
@@ -402,8 +402,8 @@ forbidden to touch.
 
 At the cap, `worthRampHalfLife(100, 12.8)` = `104 / 7.81` = 13.3 weeks, floored to
 `minHalfLifeWeeks` = **52**. So the owned row needs ~5 half-lives to reach a derived worth that
-stopped moving 148 weeks ago: at w258 the row reads $9.34M against $32.67M derived, and by w405 it
-has reached $29.2M — **89% converged after 147 weeks**. That is the round 39 #5 floor working as
+stopped moving 148 weeks ago: at w258 the row reads $9.34M against $32.67M derived, and by w402 it
+has reached $29.2M — **89% converged after 144 weeks**. That is the round 39 #5 floor working as
 ruled (13 → 52 closed a sell-and-rebuy loop), and the visible consequence is «она в топ-2, а бренд
 всё ещё догоняет». Named, measured, **not changed** — the floor is load-bearing for a different item.
 
@@ -435,7 +435,7 @@ Three, and every one of them carries its number so the answer costs him a senten
    DRAFT is in the round-41 ledger under item 18 PART TWO and is **his to approve or replace**; the
    fame read does not depend on a word of it.
 
-## 9. What was NOT done, and why
+## 8. What was NOT done, and why
 
 * **No retroactive fame** (§6) — the date is not inventable, and the reference save proves it.
 * **No per-appearance term** (§2.4) — it would price the same career twice.
@@ -448,7 +448,7 @@ Three, and every one of them carries its number so the answer costs him a senten
   absent on all three — so no fixture career has ever completed a Slam run and no `events` /
   `nextEventId` key can move. See the ledger for the reading.
 
-## 8. Provenance
+## 9. Provenance
 
 * Engine: `src/engine/world/fame.ts` (`slamDebutWeekOf`, the floor term, the `fameEventWeeks`
   coupling), `src/engine/world/constants.ts` (`SLAM_DEBUT_KEY`), `src/engine/world.ts` (the fire

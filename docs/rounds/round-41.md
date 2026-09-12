@@ -994,7 +994,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   The argument for leaving it is real – that is the TOP of the researched $0.5M–$2M band, and
   uncapped would pay 3.8× it – so the number and three shapes are in the spec and the call is HIS.
   **(c)** at the cap `worthRampHalfLife` floors at 52 weeks (round 39 #5's own ruling), so the row
-  spends ~3 years catching up: 89% converged after 147 weeks. Named, not changed.
+  spends ~3 years catching up: 89% converged after 144 weeks. Named, not changed.
 
 - [x] **19. «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели. Видимо
   массажист очень хорошо работает, но в этом случае вообще на экране травмы можно писать сколько
