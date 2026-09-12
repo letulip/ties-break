@@ -420,9 +420,16 @@ const canGoBack = computed(() => {
   return !run.value.opens.some((o) => o.age === target)
 })
 
-/** ⚠ SHARES THE SLOT WITH THE WAY OUT, AND THE TWO CAN NEVER BOTH BE THERE: `skipLabel` is the first
- *  card's and this one is every card but the first's. */
-const backLabel = computed(() => (canGoBack.value ? WALK_COPY.back : undefined))
+// ⚠ IT SHARES THE SLOT WITH THE WAY OUT, AND THE TWO CAN NEVER BOTH BE THERE: `skipLabel` is the
+// first card's and `canGoBack` is every card but the first's – it goes down to the card as itself.
+//
+// ⚠⚠ THERE IS NO `backLabel` COMPUTED HERE ANY MORE, AND ITS ABSENCE IS THE FIX. It read
+// `canGoBack.value ? WALK_COPY.back : undefined` – a word, for a hand-written text button – and the
+// standing law (owner, 30.07: «Для back я просил везде сделать один компонент и его консистентно
+// использовать, просто иконка с белым fill») says a control whose job is «go back» is `IconButton
+// variant="bare" icon="back"` wherever it appears. The card draws the house control off this
+// predicate, so the prologue's way back has no copy of its own at all and the `Back` DRAFT left
+// `WALK_COPY` with it.
 
 /** HIS BAND, IN THE GAME'S OWN WORDS, off the snapshot. The screen computes NO share, percentage or
  *  headroom of its own: `handoverRoomBand` did the reading engine-side at snapshot time and this
@@ -696,7 +703,7 @@ async function startAgain(): Promise<void> {
     :identity="identity"
     :skip-label="skipLabel"
     :proceed-label="proceedLabel"
-    :back-label="backLabel"
+    :can-go-back="canGoBack"
     :busy="game.busy"
     @answer="answer"
     @proceed="proceed()"

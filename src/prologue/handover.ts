@@ -329,11 +329,21 @@ export const START_AGAIN_DRAFTS: readonly string[] = [
 /** ⭐ THE WALK'S OWN CONTROLS – the ones that belong to the nine cards as a WALK rather than to any
  *  one year of her childhood: the way out into the wizard (§6), offered on the FIRST card only,
  *  because a skip that follows the player to the eighth year is a screen asking whether they would
- *  rather be somewhere else; and, since round 41, the way ON and the way BACK.
+ *  rather be somewhere else; and, since round 41, the way ON.
  *
  *  DRAFT, every word. ⚠ They live beside the handover's copy rather than in the card table because
  *  they are not cards, and they must not become ones: `DECISION_AGES` is derived from `options`
- *  alone, so a control parked in a row would count as a decision the prologue asks for. */
+ *  alone, so a control parked in a row would count as a decision the prologue asks for.
+ *
+ *  ⚠⚠ AND THE WAY BACK IS NOT HERE, WHICH IS ROUND 41 #8 FINISHED RATHER THAN UNDONE. It shipped as
+ *  a third entry, `back: 'Back'`, because the control was a hand-written text button – and the
+ *  standing law (owner, 30.07: «Для back я просил везде сделать один компонент и его консистентно
+ *  использовать, просто иконка с белым fill») says anything whose job is «go back» is `IconButton
+ *  variant="bare" icon="back"`, which the app's four screen headers already are and which
+ *  `tests/ui-control-system.test.ts` enforces. The prologue's way back is that control now; a bare
+ *  icon has no copy, its accessible name is the house's own `Back`, and the DRAFT retired with the
+ *  button it was drawn on. One fewer string for the owner to rule on, and a string that does not
+ *  exist cannot drift. */
 export const WALK_COPY = {
   /** DRAFT */
   skip: 'Skip the childhood',
@@ -344,10 +354,6 @@ export const WALK_COPY = {
    *  ⚠ IT IS ONE STRING FOR ALL EIGHT CARDS THAT SHOW IT. A per-card way on would be eight more
    *  drafts for the owner to read and eight places for the same button to drift apart. */
   proceed: 'Proceed',
-  /** ⭐⭐ ROUND 41 #8 – THE WAY BACK TO THE CARD BEFORE THIS ONE. DRAFT. One word, like the way on it
-   *  sits under, and it names the DIRECTION rather than the screen: it is offered on eight different
-   *  cards, so anything naming what is behind it would be wrong on seven of them. */
-  back: 'Back',
 } as const
 
 /** ⭐⭐ THE MONEY, ONCE, AND THIS IS THE ONLY PLACE IT IS EVER SAID. Build spec §2.4: each card names

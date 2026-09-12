@@ -330,16 +330,22 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   card 1) always, and from ten it is every year the player declined. On the busiest road the control
   is correctly absent on 11, 12 and 13.
 
-  **DRAFT STRING (one):**
-  * `Back` — `WALK_COPY.back`, `src/prologue/handover.ts`. One word, like the way on it sits under,
-    and it names the DIRECTION rather than the screen: it is offered on eight different cards, so
-    anything naming what is behind it would be wrong on seven of them.
+  **DRAFT STRINGS: NONE – the house back icon, no string.** ⚠ This line shipped as one DRAFT
+  (`Back` — `WALK_COPY.back`, `src/prologue/handover.ts`) for a hand-written text button, and the
+  gate's second harvest retired both. The standing law (owner, 30.07: «Для back я просил везде
+  сделать один компонент и его консистентно использовать, просто иконка с белым fill») says a control
+  whose job is «go back» is `IconButton variant="bare" icon="back"`, and
+  `tests/ui-control-system.test.ts` refuses anything else. The control is that component now; a bare
+  icon carries no copy, its
+  accessible name is the house's own `Back` (the word `CoachMarketScreen` already gives it), and
+  `WALK_COPY` is back to two entries. **Invariant 4 is happier for it:** the item now adds no new
+  user-facing string at all, so there is nothing here for the owner to rule on.
 
-  **STYLE:** the way out's own treatment (transparent on transparent, the label at `var(--text)`), so
-  the two quiet controls read alike. ⚠ Declared PARENTED (`.prologue-answers .prologue-back`) where
-  `.prologue-skip` is bare – the hazard this sheet names twice: at equal specificity happy-dom keeps
-  the FIRST matching rule where a browser keeps the last, so a bare override of `.prologue-answer`
-  would repaint in Chromium and silently do nothing in every mounted test.
+  **STYLE:** `IconButton`'s own – the bare 32px glyph the four screen headers carry, drawn by the
+  component and given no second opinion on this card. ⚠ The three local declarations went with the
+  text button (they existed only to undo `.prologue-answer`: transparent border, no wash, the skip's
+  padding), and the specificity note they needed went with them; `.prologue-back` survives as the
+  column's hook, which is what round 40's «one way on» arm counts the slot by.
 
   **TESTS** (`tests/component/prologue-round41.test.ts`, new):
   * the six goes back to the five, the origin is still marked, it is re-choosable (and re-choosing
@@ -361,7 +367,8 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   | --- | --- |
   | `canGoBack`'s `run.opens` clause dropped | «the eleventh offers to walk back into a year whose tournament she has already played» |
   | `goBack()` decrements nothing | «the way back did not go back» ×2 |
-  | `backLabel` offered on every card | 3 arms: the five's last button is `Back`, not the way out; «the first card offers a way back to nothing» |
+  | `canGoBack` true on every card | 3 arms, re-measured after harvest two: «Proceed comes after every question on the card and before the way out», «the last button on the five is still the way out», and «the six goes back to the five» on its «the first card offers a way back to nothing» line. (The row named `backLabel` while the control was a text button.) |
+  | `variant="plate"` on the way back | the law's own arm: «src/components/PrologueCard.vue: back control is not the bare back icon» (harvest two) |
 
 - [x] **9. «радиобатон на прологе не должен переключать сразу, он только про выбор, давай сделаем
   где нет активных кнопок, а есть только радиобатоны при выборе всех будет появляться наша желтая
@@ -1424,6 +1431,57 @@ Leftovers the bundles flagged across each other's fences, fixed at the seam:
   moving the money), never the stream. 25 constants re-stamped from the colourless failure pairs
   (24 unique; `selfTravelling` shares one value across two adjacent rungs, both arms agree on the
   new value). Both files now 27/27 green.
+
+### The gate's harvest, part two (12.09 – the ruling's arithmetic, and one law)
+
+Nine unit arms across six files, eight of them the same story: ruling A1 (items 15+27) sends 10% of
+every W cheque to `kidFundsCents` at ANY age, so every fixture that walks a junior through a paying
+rung had the wrong funds equation. **Every re-aim folds the engine's own helper** (`kidPrizeShareCents`
+/ `kidPrizeShareBps` at `kidAgeYears`) rather than a new literal, so the tests keep one source of
+truth with the engine, and each carries a ⚠ note naming the items and the ruling. ⚠ THE STOP
+CONDITION WAS CHECKED AND DID NOT FIRE: read off `finalizeTournament` itself (world.ts, the
+`if (prize > 0)` block), both staff shares are still `staffPrizeShareCents(role, prize, kidFinish)`
+off the GROSS and are unaffected by her cut – the family's residue absorbs all three – exactly as
+bundle E reported. Proved by mutation rather than by reading: paying the coach off `prize - herShare`
+reddens four team-share arms.
+
+* **`kid-share-memo`** – «writes nothing at all before her eighteenth» died BY the ruling. Re-aimed to
+  «writes nothing before her first W-SERIES prize cheque»: the walk takes an `enterable` filter, one
+  arm walks four junior seasons with the W door shut (she plays, `careerTotals.prizeCents` is 0,
+  nothing is written) and the same seed with it open pays her from its FIRST cheque – measured: week
+  3, age **14**, $220 at 1000 bps, 44 credits in four seasons. The durable-ledger claim
+  (`ledgerDelta === fundsDelta`) is intact. ⚠ A second, GREEN line
+  in the first arm was quietly false and is fixed too – «nothing is credited before her eighteenth»
+  survived the ruling only because `pruneFinanceWeeks` drops rows older than sixty weeks. Mutation:
+  `startBps` back to 0 → red.
+* **`match-retirement`** – «paid exactly like a defeat in that round» now compares GROSS with GROSS:
+  the family's `prize` row plus `financeWeeks[].kidShare.prize.cents`, which is sponsor-proof where a
+  `kidFundsCents` delta would not be (an appearance fee banks in the same finalize). Mutation: the
+  cheque paid for `kidFinish + 1` → red.
+* **`prize-money` ×2** – the wealth-corridor arm asserts the CHEQUE, re-assembled from the two
+  balances the split writes, against `prizeCentsFor(tier, finish)`; the claim «identical for every
+  family» is untouched. The milestone arm: the engine prints `formatCents(prize)`, the GROSS – read,
+  not assumed – so only the figure's reconstruction moved. Mutation: the fire site printing
+  `familyShare` → red.
+* **`round29p3-manager-commission`** – the commission has no age term and E did not touch it; what
+  moved is the arm's own anti-vacuity precondition, which asserted the young world's PRIZE ramp was
+  `0`. It is the RELATION now (`youngBps === startBps`, `oldBps > youngBps`). Mutation: an age term on
+  `bankSponsorCheque`'s commission → the no-age-term arm red (6 arms in all).
+* **`team-share` ×4** (the gate found four, not three) – coach 10% of gross, the masseur's slice,
+  below-a-final nothing, empty seats owe nothing: every GROSS claim stands as written and only the
+  funds equations fold `herShareOf(world, prize)`. The coach arm also witnesses her account moving by
+  exactly that, so it cannot go green on a cheque that merely shrank. ⚠ The green «OFF THE GROSS»
+  arm lost its `fromAgeYears: 13` patch – A1 makes her ramp flow at thirteen on the SHIPPED ladder, so
+  the patch had become a dead guard with a sentence explaining why it was load-bearing.
+* **`ui-control-system`** (the law) – item 8's Back shipped as a hand-written text button and the
+  standing law (owner 30.07) says a control whose job is «go back» is `IconButton variant="bare"
+  icon="back"`. It is that now, `label="Back"` for its accessible name; the `run.opens` gate is
+  untouched and travels as a predicate (`canGoBack`) because a bare icon has no copy to hand down.
+  **The DRAFT string `Back` is retired from `WALK_COPY`** – item 8 adds no user-facing string at all
+  now, which is invariant 4 happier than it was. Bundle B's arms press by `[aria-label="Back"]`;
+  `prologue-walk`'s control count splits the foot in two (the way out is answer-shaped, the way back
+  is an icon). Mutation: `variant="plate"` → the law's arm red. Green after: ui-control-system 26/26,
+  prologue-round41 8/8, prologue-walk, round40-prologue-choices, round35-prologue (71/71 together).
 
 ## The unit-heavy diagnosis (the owner's side ask, PR #135)
 

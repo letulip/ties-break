@@ -58,6 +58,7 @@
 // the two read lines read, so the picture cannot disagree with the sentence under it, and there is
 // no `mood` column in the card table for anybody to keep in sync by hand.
 import { computed, ref, useTemplateRef } from 'vue'
+import IconButton from './ui/IconButton.vue'
 import { prologueArtUrl, prologueFacePoint, type PrologueOutcome } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
@@ -139,10 +140,19 @@ const props = defineProps<{
    *  than a second one kept in step here. Absent on the six, the seven and every result scene – they
    *  select nothing, so they keep the way on they already have. */
   proceedLabel?: string
-  /** ⭐⭐ ROUND 41 #8 – ...and the way back to the card before this one, on the same terms: a label
-   *  when the container says the earlier year can still be re-answered, absent otherwise. It shares
-   *  the foot of the column with `skipLabel`, which is the first card's and only the first card's. */
-  backLabel?: string
+  /** ⭐⭐ ROUND 41 #8 – ...and the way back to the card before this one: true when the container says
+   *  the earlier year can still be re-answered (`canGoBack`, ChildhoodPrologue.vue), false otherwise.
+   *  It shares the foot of the column with `skipLabel`, which is the first card's and only the first
+   *  card's.
+   *
+   *  ⚠⚠ IT IS A PREDICATE AND NOT A LABEL, WHICH IS THE ONE PLACE THIS PROP DIFFERS FROM THE TWO
+   *  ABOVE IT, AND THE LAW IS WHY (owner, 30.07: «Для back я просил везде сделать один компонент и
+   *  его консистентно использовать, просто иконка с белым fill»). A control whose job is «go back» is
+   *  the app's ONE component – `IconButton variant="bare" icon="back"` – and a bare icon has no copy
+   *  to hand down: its accessible name is the house's own `Back`, the word `CoachMarketScreen`
+   *  already gives the same control. So this card holds no back copy either, and `WALK_COPY` is one
+   *  DRAFT string lighter than it was when the control was a word. */
+  canGoBack?: boolean
   busy?: boolean
 }>()
 
@@ -682,16 +692,26 @@ useDialogFocus(cardEl)
 
              ⚠ THE SLOT IS SHARED AND THE TWO CAN NEVER COLLIDE: the way out is the FIRST card's and
              this is offered on no card but the ones after it, so the column ends in exactly one
-             quiet control either way and `.prologue-answers` stays the card's last element. -->
-        <button
-          v-if="backLabel"
-          class="prologue-answer prologue-back"
-          type="button"
+             quiet control either way and `.prologue-answers` stays the card's last element.
+
+             ⚠⚠ AND IT IS THE APP'S ONE BACK CONTROL, NOT A SECOND DESIGN OF ONE. The owner's
+             sentence of 30.07 is in `IconButton.vue`'s own header and in docs/rounds/round-41.md
+             (item 8) - the copy law bans Cyrillic inside a template, comments included, so it is
+             pointed at rather than quoted here. It shipped as a hand-written text button and
+             `tests/ui-control-system.test.ts` refused it on exactly that sentence: anything whose
+             job is "go back" is `IconButton variant="bare" icon="back"`, the same control the four
+             screen headers carry. The GATE is untouched - `canGoBack` is still the container's
+             `run.opens` safety, so a year whose weekend has been played still offers nothing. The
+             class stays as the column's own hook. -->
+        <IconButton
+          v-if="canGoBack"
+          class="prologue-back"
+          variant="bare"
+          icon="back"
+          label="Back"
           :disabled="busy"
           @click="emit('back')"
-        >
-          <span class="prologue-answer-label">{{ backLabel }}</span>
-        </button>
+        />
       </div>
     </div>
   </div>
@@ -1277,27 +1297,14 @@ useDialogFocus(cardEl)
   background: var(--accent-wash);
 }
 
-/* ⭐⭐ ROUND 41 #8 – THE WAY BACK IS THE WAY OUT'S TREATMENT, because it is the same KIND of control:
-   a quiet second option at the foot of a column whose loud one is the way on. It is not a year of
-   her childhood and it is not the decision, so it does not take the answer's wash.
-
-   ⚠ PARENTED WHERE `.prologue-skip` IS NOT, AND THAT IS THE HAZARD THIS FILE ALREADY NAMES TWICE
-   (`.prologue-choice` above, and the media block at the foot): at EQUAL specificity happy-dom keeps
-   the FIRST matching rule where a browser keeps the last, so a bare `.prologue-back` overriding a
-   bare `.prologue-answer` declared 150 lines earlier would repaint this control in Chromium and
-   silently do nothing in every mounted test. Naming the parent makes it win in both engines.
-
-   ⚠ AND THE LABEL KEEPS `var(--text)` (`.prologue-answer-label`), so the way back is held to the
-   same AA measurement every other control on this card is – round-17 #3's rule, unchanged. */
-.prologue-answers .prologue-back {
-  border-color: transparent;
-  background: transparent;
-  padding: 8px 13px;
-}
-
-.prologue-answers .prologue-back:hover:not(:disabled) {
-  background: var(--accent-wash);
-}
+/* ⭐⭐ ROUND 41 #8 – THE WAY BACK HAS NO TREATMENT HERE, AND THAT IS THE POINT OF IT.
+   It shipped as a text button in `.prologue-answer`'s clothes and needed three declarations to undo
+   them (transparent border, no wash, the skip's padding); it is `IconButton variant="bare"
+   icon="back"` now – the app's one back control, owner 30.07 – which draws itself, is 32px either
+   side, takes no wash and is held to no `.prologue-answer` rule because it is not one. `IconButton`'s
+   own sheet carries the colour and the hover, so a second opinion about either would be the drift the
+   component exists to stop. The class survives only as the column's hook (round 40's «one way on»
+   arm counts the buttons in this slot and excludes the way back by it). */
 
 .prologue-answer-label {
   font-size: 15px;

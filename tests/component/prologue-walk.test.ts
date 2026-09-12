@@ -80,7 +80,12 @@ function mountCard(
       entry: answered && card.tournament ? TOURNAMENT_ANSWER.enter : undefined,
       proceedLabel: answered && (choices || card.tournament) ? WALK_COPY.proceed : undefined,
       skipLabel: card.age === CARD_AGES[0] ? WALK_COPY.skip : undefined,
-      backLabel: card.age === CARD_AGES[0] ? undefined : WALK_COPY.back,
+      // ⚠ A PREDICATE AND NOT A LABEL, because the way back is the app's ONE back control – a bare
+      // icon with no copy (owner, 30.07; `tests/ui-control-system.test.ts`). It is passed exactly
+      // where the container passes it, so the card measured below is still the card the player meets:
+      // the control is 32px where the text button it replaced was a full-width row, which can only
+      // make these fit numbers smaller.
+      canGoBack: card.age !== CARD_AGES[0],
       // ⭐ PHASE 7 – THE PICTURE, and it is passed exactly where the container passes it. `mood` is
       // required on the component precisely so a mount that forgot it cannot compile: a card with no
       // painting is a quarter of a screen of height this file would otherwise never measure.
@@ -496,12 +501,25 @@ describe('⭐ what the walk shows about her – and it is nothing numeric', () =
   //
   // ⚠ THE QUIET CARDS ARE THE NEGATIVE ARM AND THEY DO NOT MOVE: the six and the seven select
   // nothing, so answering them adds no Proceed – their count is the same in both states.
+  //
+  // ⚠⚠ AND THE FOOT IS COUNTED IN TWO PIECES SINCE THE WAY BACK BECAME THE HOUSE CONTROL. It was one
+  // number – «the way out on the five, the way back on the rest» – while both were `.prologue-answer`
+  // text buttons. The standing law (owner, 30.07: «Для back я просил везде сделать один компонент…»)
+  // makes the way back an `IconButton variant="bare" icon="back"`, which is not an answer and carries
+  // no answer class, so it is asserted by the name the law gives it. The claim is unchanged and is if
+  // anything sharper: the column holds exactly its own answers plus the way out, and the way back is
+  // present on every card but the first.
   it('every card carries exactly the controls it should, on arrival and once it is answered', () => {
     for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
       const own = (card.origins ?? card.options)?.length ?? 1
-      const foot = 1 // the way out on the five, the way back on the rest
+      const first = card.age === CARD_AGES[0]
+      const foot = first ? 1 : 0 // the way OUT is the five's and is answer-shaped; the way back is an icon
       const arrival = mountCard(card, run, PHONE)
       expect(arrival.wrapper.findAll('.prologue-answer').length, `age ${card.age} on arrival`).toBe(own + foot)
+      expect(
+        arrival.wrapper.find('button[aria-label="Back"]').exists(),
+        `age ${card.age} on arrival: the way back is the first card's only absence`,
+      ).toBe(!first)
       expect(
         arrival.wrapper.find('.prologue-proceed').exists(),
         `age ${card.age} offers a way on before it is answered`,
@@ -518,6 +536,10 @@ describe('⭐ what the walk shows about her – and it is nothing numeric', () =
       expect(done.wrapper.findAll('.prologue-answer').length, `age ${card.age} answered`).toBe(
         synthesised + pair + proceed + foot,
       )
+      expect(
+        done.wrapper.find('button[aria-label="Back"]').exists(),
+        `age ${card.age} answered: the way back is still there`,
+      ).toBe(!first)
       done.wrapper.unmount()
     }
   })

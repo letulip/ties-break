@@ -95,7 +95,15 @@ async function press(w: Wrapper, label: string): Promise<void> {
 }
 
 const proceedOn = (w: Wrapper) => w.find('.prologue-proceed')
-const backOn = (w: Wrapper) => w.find('.prologue-back')
+/** ⚠⚠ THE WAY BACK IS FOUND BY ITS ACCESSIBLE NAME AND NOT BY A PRIVATE CLASS, because of the
+ *  standing law (owner, 30.07: «Для back я просил везде сделать один компонент и его консистентно
+ *  использовать, просто иконка с белым fill»). Item 8 shipped this control as a hand-written text
+ *  button and `tests/ui-control-system.test.ts` refused it on exactly that sentence; it is the house
+ *  `IconButton variant="bare" icon="back"` now, so there is no word on the card to read and the only
+ *  handle a player with a screen reader – or this file – has is the name the component puts on it.
+ *  Pressing what the law names is also what keeps these arms alive through the next restyling of the
+ *  column. ⚠ The gate itself did not move: `canGoBack` is the same `run.opens` predicate. */
+const backOn = (w: Wrapper) => w.find('button[aria-label="Back"]')
 
 /** The label of the option with `id` on whatever face of the card at `age` this run is drawing. */
 function optionLabel(age: number, run: PrologueRun, id: string): string {
