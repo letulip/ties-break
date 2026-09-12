@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 97 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 98 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -43,7 +43,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
 | ranking-and-ladder | 8 | [WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE](#12092026--wave-3-the-nine-point-fold-the-ladders-own-number-corrected-the-cure) | 2026-09-12 |
-| saves-and-schema | 1 | [WAVE 3 T1: v74, EPISODES RATHER THAN A SLOT, AND THE TAIL DECIDES](#11092026--wave-3-t1-v74-episodes-rather-than-a-slot-and-the-tail-decides) | 2026-09-11 |
+| saves-and-schema | 2 | [WAVE 4, «IT ENDS»: THE SCHEMA MOVED, THE DICE DID NOT](#12092026--wave-4-it-ends-the-schema-moved-the-dice-did-not) | 2026-09-12 |
 | simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
 | world-and-field | 2 | [⚠⚠ THE LIVE PROFESSIONAL TABLE, CORRECTED: WINNINGS REPLACE A SHARE OF THE BOOK](#19082026---the-live-professional-table-corrected-winnings-replace-a-share-of-the-book-waveround22) | 2026-08-19 |
@@ -3953,3 +3953,55 @@ product died for the lever's sake. The owner: «мне это не очень н
   as an optional `lifeKind` on the event row; the `CLAUDE.md` compression is its own post-merge PR.
 - ⚠ **Point 8 stands as a re-gate check**: every `.tsave` and golden must be newer than the head that
   shaped it – the `ending.tsave` staleness debt's own guard.
+
+## 12.09.2026 – WAVE 4, «IT ENDS»: THE SCHEMA MOVED, THE DICE DID NOT
+
+- ⭐⭐⭐ **THE WAVE GATE IS GREEN ON A QUIET MACHINE, FOUR VERDICTS FROM FOUR FILES.**
+  `CHECK_EXIT=0` (309 s, 5,530 unit + 1,813 component) · `SIM_EXIT=0` (13/13, 723 s) ·
+  `E2E_EXIT=0` (116 tests) · `CAP_EXIT=0` (51). Head **667c069b before AND after all four**, tree
+  clean on both sides; no foreign `vue-tsc`/`vitest` at any launch, checked with `ps` and not only
+  the load average. ⚠ The wrapper said «exit code 0» before the gates had started – the sixteenth
+  time this project has been lied to, and the files are what was read.
+- ⭐⭐ **THE FROZEN MAIN CAPTURE IS UNTOUCHED ACROSS BOTH WAVES AND WAS NEVER RE-PINNED**: 41550 /
+  `e6b0c709`. Stronger than the diff the protocol asks for – `git log 16bc88c7..HEAD --
+  tests/condition.test.ts` is **EMPTY**, so it was never even moved and moved back. v75 adds two
+  fields and takes no draw on any stream.
+- ⭐⭐ **FIXTURE FRESHNESS IS NOW A BYTE CHECK, AND IT PASSED AT THE FINAL HEAD**: all ten `.tsave`
+  and the manifest regenerate byte-identical (893 s), `git status` clean after. The search paths
+  reproduced seed for seed – `belated` on its 473rd, 864 s – which is what says the engine did not
+  move. ⚠ mtimes are worthless for this: a task restored two files on a clean tree and gave them
+  fresh stamps.
+- **The drain law is amended, not weakened**: bond-neutrality becomes **READ-INDEPENDENCE**,
+  `DRAIN_ANSWER` is a registry total by type, and `drainCostOf` refuses to name a price it cannot
+  know. `'ended'` has no zero under any read; `fix-it` is −1 in both readings by construction.
+- **Ruling A is the `'met'` RECEIPT, not `endedWeek < knownWeek`** – measured, not argued: the
+  literal rule raises two rows on the collision week (ARM 1, 4 RED), and the quieter variant
+  (ARM 1b) **loses the news entirely**. A duplicate row is visible; a missing one is not.
+- ⚠ **THE PRICE OF AN ENDING IS ONE WEEK DEEPER THAN §4's OWN ARITHMETIC.** The lift's exit and the
+  shock are the SAME TICK, so she lands at **48 / 38** rather than 53 / 41 and both «weeks under the
+  knee» bars miss by exactly one. T3's design working as ruled; never priced into the prose.
+  Counting convention ruled **INCLUSIVE** – the landing week IS charged by `spiritMatchFactor`.
+- ⭐ **THE FAIRNESS QUESTION IS ANSWERED**: worst pair **0.054 pp** against the ±1.5 pp corridor, and
+  the arms genuinely diverge (60 of 256 careers, max |Δ| 5.178 pp per seed). Spirit moves a
+  **threshold, not a tap**, and the threshold does not buy a different career.
+- ⚠ **FOUR ZERO-RED ARMS WERE REAL HOLES AND EACH BOUGHT A NET**: T4's `ANSWER_EVENT` row (nothing
+  but a fixture regen watched it), T6's snapshot derivation, T5's over-narrow extractor, and **T8's
+  «her Mood word is lower at all» – which could not fail**, because the attachment lift comes off on
+  the same tick and one shared word («Steady») serves two ladders. Three more zero-reds are declared
+  NULLS about today's data, not holes, and are named as such.
+- ⚠⚠ **THE FROZEN-CAREER PER-KEY DIFF IS A NULL ARM FOR ANYTHING THE WALKER CANNOT REACH.**
+  `tools/econ-bench.ts` never calls the drain or the answer path. Measured, not assumed: a mutation
+  charging −3 per drained row still moved **zero keys on all five careers**. The arm that
+  discriminates is `e2e:fixtures` byte-identity plus a positive control.
+- **Two frozen careers share one private life** – `openCareer` keys the seed on the BACKGROUND
+  alone, so preset 8 under both policies is one seed. Five careers to diff, two coupled.
+- **A transposed summary was corrected rather than re-counted**: 0/1 has 80 keys and 5/1 has 78,
+  proved by diffing key NAMES. Three tasks had quoted the wrong order.
+- ⚠⚠ **DEBTS THIS WAVE DID NOT PAY, ALL FOUR STILL STANDING**: five bare catches in
+  `tools/spirit-bench.ts` (the drain was added IN FRONT of the catch – «fixed» in the old record
+  overstated it); `soft.tsave` has no claim block and the string `soft` appears **zero times in
+  `tests/`**, so it is invisible to `npm run check` (it IS covered by CI's own e2e job); **the
+  `.tsave` corpus is the only gated-nowhere generated artifact** – the rot alarm compares a fixture
+  to its own manifest, and the two regenerate together, so a stale pair passes; and `App.vue:1581`
+  opens with the retired «GLOBAL – renders on every tab» rule fourteen lines above the wave-2 ruling
+  that made it Home-only.
