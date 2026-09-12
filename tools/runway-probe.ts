@@ -96,7 +96,7 @@ function runwayAt(world: WorldState): WeekRunway {
   const coach = coachById(world.seed, age, world.coachId)
   const tier = tierOf(coach)
   const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
-  const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
+  const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background, tier)
   const split = weeklyBillSplit({
     rateCents: rate,
     ageYears: age,
