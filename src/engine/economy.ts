@@ -5311,6 +5311,38 @@ export const ECONOMY = {
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
       // and a stage IS the wait.
       //
+      // ⭐⭐⭐ ROUND 41 #24 (12.09) – THE OWNER GAVE THE FILE WHAT §3g HAD NOT, AND THE PARAGRAPH
+      // ABOVE IS AMENDED RATHER THAN DELETED: it recorded, correctly, that the wait was never ours
+      // to invent. He asked for it himself – «может быть для Академии корты, клубный дом и стафф
+      // тоже должны сколько-то строиться по времени, а не сразу быть готовы?» – and then ruled the
+      // proposed timings and the round in one line: «сроки ок, в этот же раунд заводи пожалуйста».
+      // So three of the four stages now carry §3f's own `buildWeeks`, and the UPKEEP half of the
+      // sentence still stands untouched: he asked about building time, not about a maintenance
+      // line, and the spec's §2 refusal of a land/building split is the reason inventing one here
+      // would be worse than silence.
+      //
+      // ⚠⚠ THE LAND DOES NOT BUILD, AND THAT IS HIS OWN LIST READ LITERALLY: «корты, клубный дом и
+      // стафф» names three things and the deeds are not among them. A field is BOUGHT rather than
+      // BUILT – there is nothing to wait for once the money has moved – so `academy-land` carries no
+      // `buildWeeks` and a career that orders it owns it the same week, exactly as it always has.
+      //
+      // ⚠⚠ THE THREE NUMBERS ARE THE ROUND'S PROPOSAL, WHICH IS WHAT HE APPROVED: courts 6 weeks,
+      // the clubhouse 12, the staff 3. His band for the hire was «2–4» and the round proposed ONE
+      // number out of it – 3, the middle – because a range is not a field. The two builds are the
+      // shortest waits on this shelf by a long way (`boat-launch`'s 52 is the next one up), and that
+      // is the point rather than an oversight: sixteen courts and a clubhouse are a season's work in
+      // a way a yacht is not, and the whole of §3g's «a half-built academy is a real state the
+      // player can sit in» is that the stages are LIVED through rather than waited out.
+      //
+      // ⚠⚠⚠ AND NOT ONE LINE OF MACHINERY MOVED FOR THIS. Every reader of academy ownership already
+      // asks `deliveredAssets` – the income (`assetWeeklyIncomeCents`'s own first line), the ending's
+      // stage count, the sale, the upkeep meter – and the WORTH falls out of the clamps two
+      // functions already carry (`buyAsset` writes `basisWeek = readyWeek`, and both
+      // `assetValueCents` and `rampedWorthCents` clamp a negative span to zero), so a stage under
+      // construction is worth exactly what was paid for it, which is the boats' own behaviour to the
+      // cent. A wait that needed a new guard would have needed a new persisted field; this one needs
+      // neither, and `SAVE_SCHEMA_VERSION` does not move.
+      //
       // ⭐⭐⭐ ROUND 38 #8 (07.09) – THE FOUR RATES MOVED 0 -> +300 bps, WHICH IS THE HOUSES' OWN
       // NUMBER, AND THE OWNER ASKED FOR EXACTLY THAT COMPARISON: «а что насчёт стоимости и индексации
       // этой стоимости с годами? Как с домами, например.»
@@ -5363,6 +5395,8 @@ export const ECONOMY = {
         entryCents: 3_000_000_00,
         annualRateBps: 300,
         requiresId: 'academy-land',
+        // ROUND 41 #24 – «корты… должны сколько-то строиться по времени»; his «сроки ок».
+        buildWeeks: 6,
       },
       {
         id: 'academy-building',
@@ -5373,6 +5407,8 @@ export const ECONOMY = {
         entryCents: 4_000_000_00,
         annualRateBps: 300,
         requiresId: 'academy-courts',
+        // ROUND 41 #24 – «клубный дом», the longest of the three: gym, kitchen and forty beds.
+        buildWeeks: 12,
       },
       {
         id: 'academy-staff',
@@ -5383,6 +5419,9 @@ export const ECONOMY = {
         entryCents: 3_000_000_00,
         annualRateBps: 300,
         requiresId: 'academy-building',
+        // ROUND 41 #24 – the STAFF is a hire rather than a build, and his band was «2–4» weeks.
+        // One number out of the middle of it: notice periods, not concrete.
+        buildWeeks: 3,
       },
     ],
     /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE FAMILY'S OWN PLANE TAKES OFF A FARE, as a share of it.

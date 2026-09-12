@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 97 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 98 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -32,7 +32,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | --- | ---: | --- | --- |
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
-| coach-and-staff | 3 | [A 25k family that buys a high coach should go broke; the tripwire moves cell](#2026-08-10--a-25k-family-that-buys-a-high-coach-should-go-broke-the-tripwire-moves-cell-fixreach-fixture) | 2026-08-10 |
+| coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 9 | [WAVE 3 T11 + T12: THE CENSUS HOLDS, AND THE PUSH-THROUGH PRICE IS 92% ERASED](#11092026--wave-3-t11--t12-the-census-holds-and-the-push-through-price-is-92-erased) | 2026-09-11 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
@@ -3953,3 +3953,38 @@ product died for the lever's sake. The owner: «мне это не очень н
   as an optional `lifeKind` on the event row; the `CLAUDE.md` compression is its own post-merge PR.
 - ⚠ **Point 8 stands as a re-gate check**: every `.tsave` and golden must be newer than the head that
   shaped it – the `ending.tsave` staleness debt's own guard.
+
+## 12.09.2026 – ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER
+
+- **HIS ASK, and it is the whole item:** «может быть для Академии корты, клубный дом и стафф тоже
+  должны сколько-то строиться по времени, а не сразу быть готовы?» The round answered with a
+  proposal and a caveat – courts ~6 weeks, clubhouse ~12, staff hire 2–4, but pending construction
+  looked like a save-schema move and v75 is wave 4's. **HIS RULING:** «сроки ок, в этот же раунд
+  заводи пожалуйста». So: **in this round, and the timings are his.**
+- **The numbers that shipped: courts 6, clubhouse 12, staff 3.** The hire's band was «2–4» and one
+  number came out of the middle of it, because a range is not a field.
+- ⚠⚠ **THE LAND DOES NOT BUILD, and that is his own sentence read literally.** He named three
+  things; the deeds are not among them. A field is bought rather than built, so `academy-land` still
+  arrives with the money.
+- ⭐⭐⭐ **THE CAVEAT WAS WRONG AND THE RECON SAID SO BEFORE A LINE WAS WRITTEN: no schema move was
+  needed.** The commissioning road has been shipped machinery since round 29 #5 – `buildWeeks` on the
+  catalogue row, `readyWeek` on the owned row, `deliverAssets` as a tick phase, «Ordered:» / «On
+  order» on the card – and it was built for the boats and the planes. The academy rows simply joined
+  it. **`SAVE_SCHEMA_VERSION` stays 74**, no migration, no fixture, and a save written before the
+  item finds its academy standing (an absent `readyWeek` already means «delivered»).
+- **Every reader of academy ownership was ALREADY gated on delivery** – the income, the epilogue's
+  stage count, the sale, the upkeep meter – and the WORTH falls out of two clamps that were already
+  there: a stage under construction is worth exactly what was paid for it. A building site earns
+  nothing, cannot be sold, and does not wear out. **No new player-facing string:** «Ordered:» and
+  «is on order – due W…» are round 29's own sentences, and this item only changed which rungs reach
+  them.
+- **What the delay costs, measured rather than argued** (`tests/round41-academy-build.test.ts` §3, a
+  career at reputation 1.0 ordering all four stages at once): the academy is $7,250 a week when
+  whole; it banks **$47,150** across the twelve-week build against **$87,000** had it all arrived at
+  once, so the wait defers **$39,850, once** – 0.33% of the $12M the shelf charges. **No balance
+  corridor moved**: not one price, rate, income figure or band changed, which is why the item owes a
+  measured note rather than a bench arm.
+- ⚠ **One genuinely new fact, and it moved six expectations in `round38-academy-worth.test.ts`:** the
+  stages now hold three different clocks inside one academy, because a commissioned row's value clock
+  starts at DELIVERY. The land's figures are byte-identical across the change, which is what makes
+  the pair its own control. Full record: `docs/specs/academy-worth-2026-09.md` §6.
