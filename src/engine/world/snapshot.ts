@@ -101,7 +101,7 @@ import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
-import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
 import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medical'
@@ -805,7 +805,13 @@ export function computeLadderView(world: WorldState, track: LadderTrack): Ladder
     // as a single digit. The screens have always papered over that by asking `countingResults.length
     // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
     // is she?" and "is she ranked at all?") stop being one field.
-    rank: kidLadderRank(world, track),
+    // ⭐⭐ ROUND 41 #26 – AND IT COMES OFF THE SAME FOLD `standings` BELOW WINDOWS. The owner: «в тайле
+    // под аватаркой professional #3 а реальный в таблице #4». This read `kidLadderRank`, i.e. the
+    // persisted cache, while the rows two lines down were folded fresh – one aggregate answered at two
+    // moments, which the tick opens a gap between at least three times a career-year. The whole
+    // argument, the three stale paths and why the cache STAYS for every engine reader are on
+    // `kidLadderRankFolded` in ./ladder.ts.
+    rank: kidLadderRankFolded(world, track),
     points,
     standings: computeStandings(world, track),
     countingResults: counting,
@@ -1065,6 +1071,15 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // the rank recompute to `finalizeTournament` while the week's AI results are already banked); a
   // one-place drift between two different players' numbers is invisible, whereas a drift in HERS
   // between two screens is the bug.
+  //
+  // ⭐⭐ ROUND 41 #26 – AND THE ASYMMETRY IS NOW GONE, because the premise above moved. That paragraph
+  // reads the cache for ONE stated reason: it is what `ladders[track].rank` reads. Round 41 #26 moved
+  // `ladders[track].rank` onto the fresh `rankingFor` fold (see `kidLadderRankFolded`), so honouring
+  // the SENTENCE means following it rather than keeping the line it used to justify - leaving
+  // `kidLadderRank` here would have re-opened the same two-moments split one screen further in. Both
+  // girls' numbers on the VS card now come off the one fold `ranks` is already built from, which is
+  // strictly more agreement than this note ever promised: the reveal-week place the paragraph calls
+  // invisible is no longer there to be invisible.
   // A FIELD PRO IS ALWAYS RANKED (living-field phase W, 01.08): her points are virtual, so the
   // ledger fold below would read 0 and print her "unranked" – on the very row the merged table
   // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
@@ -1100,7 +1115,7 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // ⭐⭐⭐ ROUND 27 #6 – NOTHING STANDS WHERE THE TABLE'S NAME IS, BECAUSE THE TABLE HAS A NAME. The
     // pairing this field's docstring pins: `ladder` non-null, note null, in one literal.
     ladderNote: null,
-    kidRank: kidLadderRank(world, track),
+    kidRank: kidLadderRankFolded(world, track),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
       nation: oppNation,
