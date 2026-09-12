@@ -48,7 +48,7 @@ import { loadedPartShares } from '../src/engine/knock'
 import { rngFromSeed } from '../src/engine/rng'
 import { runTournament } from '../src/engine/season/tournament'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
-import { ECONOMY } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
 import {
   KID_ID,
   closeTournament,
@@ -58,6 +58,7 @@ import {
   skipTournament,
   tickWeek,
 } from '../src/engine/world'
+import { kidAgeYears } from '../src/engine/world/age'
 import { worldSource, engineModuleSource } from './worldSource'
 import type { MatchPlayer, MatchOptions, Side } from '../src/engine/match/types'
 import type { SeasonEvent } from '../src/engine/season/types'
@@ -359,11 +360,28 @@ describe('⚠ the round she reached is hers, in full', () => {
         else expect(row, 'a zero-point round writes no row, retirement or not').toBeUndefined()
 
         // 2. THE CHEQUE. Same finish index, same table, and it really reached the balance.
+        //
+        // ⚠⚠ ROUND 41 ITEMS 15+27 (the owner's ruling A1) – THE EQUALITY IS THIS ARM'S SOUL AND IT
+        // IS NOW ASSERTED ON THE GROSS, which is what «paid exactly like a defeat in that round» has
+        // always meant. Her share leaves the family wallet at ANY age since the ruling («призовые
+        // падают на её счёт с первого старта W-серии независимо от возраста – согласен»), so the
+        // `prize` LEDGER ROW is the family's part and no longer the cheque: left as it was, this
+        // line would compare a net figure against a gross one, and «re-aiming» it onto the family's
+        // part would weaken the claim into «paid like a defeat, less her cut». So the two halves the
+        // split writes are re-added – the family's row plus `financeWeeks[].kidShare.prize`, the very
+        // cents her account received, carried by the site that paid them – and THAT sum is the
+        // tournament's cheque for the round she reached, to the cent.
         const prize = prizeCentsFor(event.tier, finish)
         const paid = world.events
           .filter((e) => e.week === world.week && e.category === 'prize')
           .reduce((sum, e) => sum + (e.amountCents ?? 0), 0)
-        expect(paid, `${tier.label} prize for finish ${finish}`).toBe(prize)
+        const hers = world.financeWeeks.find((w) => w.week === world.week)?.kidShare?.prize?.cents ?? 0
+        expect(paid + hers, `${tier.label} prize for finish ${finish}`).toBe(prize)
+        // ...and her half is the ruled share at her real age that week – the engine's own helper,
+        // never a second copy of the ladder, so a retune moves this arm with the game.
+        expect(hers, `${tier.label} finish ${finish}: her share of it`).toBe(
+          kidPrizeShareCents(prize, kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)),
+        )
         if (prize > 0) expect(world.fundsCents).toBeGreaterThan(fundsBefore - prize)
 
         // 3. THE RUN IS ON HER RECORD, and the stopped match is counted as the loss it is.
