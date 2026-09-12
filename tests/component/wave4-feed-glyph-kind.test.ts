@@ -109,6 +109,11 @@ const MAPPED_TEXT = 'fixture row about a trophy'
  *  note, never a weakening. */
 const HIS_LIFE_ROW_PICK = '🤍'
 
+/** ⭐ HIS 12.09 PICK FOR THE ENDING ROWS, transcribed under the same law as the anchor above:
+ *  «безрисковая альтернатива ♡ – хорошо». If he ever changes it, this line moves with it – a
+ *  re-aim with a note, never a weakening. */
+const HIS_ENDED_PICK = '♡'
+
 /** Home, drawn over a real fresh career whose feed is exactly the rows given. */
 function openHome(rows: WorldEvent[]) {
   const world = createWorld('t5-feed-kind', { ...DEFAULT_PROFILE })
@@ -162,11 +167,14 @@ describe('T5 §A – the column reads the kind, and every life row still wears h
     // step that re-routed the whole column: the row a wave-3 save holds draws what it always drew.
     expect(markOf(wrapper, OLD_TEXT), '⭐⭐ an UNSTAMPED wave-3 row keeps his white heart, untouched')
       .toBe(`${HIS_LIFE_ROW_PICK} `)
-    // ...and so do the two stamped ones, because the per-kind record is empty and every kind falls
-    // back to the same pick. That is «🤍 stays the universal fallback until he speaks», measured.
-    expect(markOf(wrapper, MET_TEXT), 'the arrival row wears it too').toBe(`${HIS_LIFE_ROW_PICK} `)
-    expect(markOf(wrapper, ENDED_TEXT), '⭐⭐ and so does the ENDING row – quiet, not absent')
-      .toBe(`${HIS_LIFE_ROW_PICK} `)
+    // ⚠ RE-AIMED 12.09, NOT LOOSENED: «🤍 stays the universal fallback until he speaks» was this
+    // arm's sentence, and he spoke – for `'ended'` only («безрисковая альтернатива ♡ – хорошо»).
+    // The arrival row and the unstamped row still measure the fallback; the ending row now
+    // measures HIS pick, which is the stronger claim (the fill drill below proves the wiring, this
+    // proves the DATA).
+    expect(markOf(wrapper, MET_TEXT), 'the arrival row wears the fallback still').toBe(`${HIS_LIFE_ROW_PICK} `)
+    expect(markOf(wrapper, ENDED_TEXT), '⭐⭐ and the ENDING row wears his 12.09 pick')
+      .toBe(`${HIS_ENDED_PICK} `)
   })
 
   it('⚠ the row-level map really is where that heart comes from – the two halves agree', () => {
@@ -186,9 +194,12 @@ describe('T5 §B – the fill drill: his pick is one line, and it reaches exactl
 
   // ⚠ RESTORED IN AN `afterEach`, NOT AT THE FOOT OF THE CASE. A failing expectation aborts the case,
   // and a fill left standing would leak into every file the runner touches after this one.
+  // ⚠⚠ RESTORED, NOT DELETED, for `'ended'` since 12.09: his pick LIVES in the map now, so a bare
+  // `delete` here would strip his data for every later mount in the run – the drill puts the shelf
+  // back the way the product ships it.
   afterEach(() => {
     delete LIFE_BEAT_EMOJI.met
-    delete LIFE_BEAT_EMOJI.ended
+    LIFE_BEAT_EMOJI.ended = HIS_ENDED_PICK
   })
 
   it('⭐⭐⭐ one glyph on `ended` marks the ENDING rows and leaves every other row alone', () => {
@@ -224,8 +235,8 @@ describe('T5 §B – the fill drill: his pick is one line, and it reaches exactl
     expect(markOf(wrapper, MET_TEXT), 'the stamped arrival row takes it').toBe(`${THROWAWAY} `)
     expect(markOf(wrapper, OLD_TEXT), '⭐⭐ and so does the unstamped row, through the `?? \'met\'` default')
       .toBe(`${THROWAWAY} `)
-    expect(markOf(wrapper, ENDED_TEXT), 'while the ending row keeps the fallback')
-      .toBe(`${HIS_LIFE_ROW_PICK} `)
+    expect(markOf(wrapper, ENDED_TEXT), 'while the ending row keeps his own pick, untouched by met\'s fill')
+      .toBe(`${HIS_ENDED_PICK} `)
   })
 })
 
@@ -244,16 +255,16 @@ describe('T5 §C – the roster, and the gate that cannot be half-filled', () =>
     }
   })
 
-  it('empty, or total – the per-kind map is never half-filled over its roster', () => {
-    // The runnable MIRROR of the compile gate in `lifeRowGlyphs.ts` (`LifeBeatGlyphs`, the union
-    // satisfied by `{}` or by a total record and by nothing in between). The TYPE is the binding
-    // check – it fails `vue-tsc` inside `npm run check`, naming the missing kind – and this is where
-    // a reader who is not a compiler can see the property stated and watch it hold.
-    const filled = LIFE_BEAT_ROW_KINDS.filter((kind) => LIFE_BEAT_EMOJI[kind] !== undefined)
-    expect(
-      filled.length === 0 || filled.length === LIFE_BEAT_ROW_KINDS.length,
-      `the per-kind column holds ${filled.length} of ${LIFE_BEAT_ROW_KINDS.length} kinds – it may hold all or none`,
-    ).toBe(true)
+  it('the shipped record is exactly his 12.09 pick – ♡ on ended, met left to the fallback', () => {
+    // ⚠ RE-AIMED 12.09, NOT LOOSENED – this arm was «empty, or total: never half-filled», the
+    // runnable mirror of the old union type. His ruling made the subset THE shipped shape (♡ for
+    // ended; met deliberately unpicked, because a met pick repaints every historical row – T1 took
+    // no back-fill). The type gate now guards keys-only (`Partial<Record<LifeBeatRowKind, …>>`,
+    // its re-cut note tells the story), the roster loop above holds the keys, and THIS arm pins
+    // the DATA: what he picked, and what he deliberately did not.
+    expect(LIFE_BEAT_EMOJI.ended, 'his 12.09 pick, transcribed').toBe(HIS_ENDED_PICK)
+    expect(LIFE_BEAT_EMOJI.met, '⚠ met stays UNPICKED – the repaint consequence stays chosen, not discovered')
+      .toBeUndefined()
   })
 
   it('⚠ the reader falls back rather than returning nothing – asked directly, off the screen', () => {
@@ -262,6 +273,6 @@ describe('T5 §C – the roster, and the gate that cannot be half-filled', () =>
     // shipped save passes in.
     expect(lifeRowGlyph(undefined), 'an unstamped row is marked, never bare').toBe(HIS_LIFE_ROW_PICK)
     expect(lifeRowGlyph('met'), 'and so is an arrival row').toBe(HIS_LIFE_ROW_PICK)
-    expect(lifeRowGlyph('ended'), 'and so is an ending row').toBe(HIS_LIFE_ROW_PICK)
+    expect(lifeRowGlyph('ended'), 'an ending row wears his 12.09 pick').toBe(HIS_ENDED_PICK)
   })
 })

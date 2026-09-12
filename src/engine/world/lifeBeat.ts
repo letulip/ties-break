@@ -1309,14 +1309,19 @@ const ENDED_HEADING: Record<EndsRegister, Record<EndsRead, string>> = {
   'told-late': {
     // ⚠ NOT «leave it there» – the past tense of that phrase is a BANNED TAIL and the present tense
     // is the same narrator move one conjugation away. See `ENDED_LATE_EVENT` below.
-    space: 'There was someone, it is already over, and she would rather not go into it',
+    // ⚠ RE-CUT 12.09, HIS WORD ON THE AXIS («давай попробуем»): the told-late headings used to state
+    // the read as RECOUNTING («would rather not go into it» / «is not done talking about it») while
+    // both registers' answers price PRESENCE – the reader argued about talking and the buttons
+    // offered company. Both cells (and the two told-late feed rows) now speak the presence axis the
+    // told-now pair already speaks; e2e pins the shared prefix, so the pin survived by construction.
+    space: 'There was someone, it is already over, and she wants the room to herself',
     // ⚠⚠ RE-CUT BY v75 T6. It read «and she has been round more since», and that cell asserted TWO
     // things the world does not hold: a count of VISITS (the sim models none, at any stage) and a
     // SPAN, on a card raised in the very week the news lands, when «since» is empty. It is also the
     // one reading that cannot survive the stages – a thirty-year-old in her own household is not
     // «round». The read itself is a persisted draw and IS licensed, so what the heading carries now
     // is the read and nothing round it, in the parent's own frame.
-    company: 'There was someone, it is already over, and she is not done talking about it',
+    company: 'There was someone, it is already over, and she does not want to be on her own with it',
   },
 }
 
@@ -2509,8 +2514,9 @@ const ENDED_LATE_EVENT: Record<EndsRead, string> = {
   // round it. ⚠ AND «it was over before we heard of it» IS TRUE ON BOTH PATHS: `rollEnds` writes
   // `endedWeek` at §8 and `deliverKnownPartner` reads it at §6 of the same tick, so even ruling A's
   // collision week hears of an attachment that had already ended.
-  space: 'There had been someone in her life, and it was over before we heard of it. She wants the subject closed.',
-  company: 'There had been someone in her life, and it was over before we heard of it. She does not want it dropped.',
+  // ⚠ RE-CUT 12.09 with the heading cells above – the same presence axis, the same ruling.
+  space: 'There had been someone in her life, and it was over before we heard of it. She wants the room to herself.',
+  company: 'There had been someone in her life, and it was over before we heard of it. She does not want to be on her own with it.',
 }
 
 /** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW. ⭐⭐ SINCE v75 T4 IT IS ALSO THE ONE WRITER

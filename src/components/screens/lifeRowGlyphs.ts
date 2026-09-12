@@ -115,11 +115,16 @@ export const LIFE_BEAT_ROW_KINDS = ['met', 'ended'] as const satisfies readonly 
 
 export type LifeBeatRowKind = (typeof LIFE_BEAT_ROW_KINDS)[number]
 
-/** ⚠⚠ THE SAME TOTALITY GATE, ONE STOREY UP: **empty, or total – never half-filled.** Identical
- *  shape and identical argument to `LifeRowGlyphs` (read its note), applied to the per-kind record:
- *  `{}` satisfies the `never` arm and costs nothing, and the moment ONE per-kind glyph lands the
- *  literal has to satisfy the other arm, which names every markable kind. */
-export type LifeBeatGlyphs = Record<string, never> | Record<LifeBeatRowKind, string>
+/** ⚠ RE-CUT 12.09 – THE TOTALITY GATE GAVE WAY TO HIS OWN RULING, and the note records why rather
+ *  than pretending the first shape never stood. As shipped this was «empty, or total – never
+ *  half-filled» (`Record<string, never> | Record<LifeBeatRowKind, string>`, `LifeRowGlyphs`' own
+ *  argument one storey up). Then he picked: ♡ for `'ended'` – and deliberately NOTHING for
+ *  `'met'`, because T1 took no back-fill and a met pick repaints every historical life row in
+ *  every save ever written (the consequence block above the reader). A subset IS the ruled state,
+ *  so the compile gate now guards the half that is still law: every KEY must be a markable kind –
+ *  a typo'd or off-roster key still fails `vue-tsc` – and the unpicked kinds are carried by the
+ *  fallback, which the reader's own tests hold load-bearing. */
+export type LifeBeatGlyphs = Partial<Record<LifeBeatRowKind, string>>
 
 // ⚠⚠ THE OWNER'S PER-KIND PICKS GO HERE AND NOWHERE ELSE, AND IT SHIPS **EMPTY** – who-she-is §5a,
 // «the set is his to pick, and no agent adds or swaps one unasked», which CLAUDE.md's invariant 4
@@ -162,7 +167,12 @@ export type LifeBeatGlyphs = Record<string, never> | Record<LifeBeatRowKind, str
 //
 //   the wedding's 💍          –   NOT PROPOSED NOW. Step 6's, with the row it marks.
 // -------------------------------------------------------------------------------------------------
-const KIND_PICKS = {} satisfies LifeBeatGlyphs
+// ⭐ HIS PICK, 12.09 («безрисковая альтернатива ♡ – хорошо»): the ENDING rows wear the text heart –
+// the no-risk choice over 🩶, whose Unicode-15.0 box risk the proposal block above records. `'met'`
+// stays unpicked on purpose: T1 took no back-fill, so a met glyph would repaint every historical
+// life row in every save ever written – that consequence stays chosen-not-discovered, and 🤍
+// remains the fallback the unpicked kinds wear.
+const KIND_PICKS = { ended: '♡' } satisfies LifeBeatGlyphs
 
 /** The per-kind column the feed reads. ⚠ TYPED OVER THE **WHOLE** `LifeBeatKind`, not over the
  *  narrow roster, and that is the reader/writer split the file already makes one storey up: a caller
