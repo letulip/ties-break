@@ -847,6 +847,30 @@ const showGo = computed(() => !game.snapshot?.pending)
   color: var(--paper-ink);
 }
 
+/* ⭐ ROUND 41 #12 – LARGER TYPE ON THE PLATES, PAST 768. The owner: «на календаре на цветных
+   плашках на десктоп и планшет сделать шрифт крупнее» (quoted here rather than in the template –
+   tests/template-copy-rules.test.ts bans Cyrillic inside one). 8.5px was fitted against the 375px
+   phone's ~40px-wide column (the comment at `.cal-time` above); it never had to be read from a
+   tablet or a desktop, where the same seven columns split a card several times as wide.
+   ⚠ CLIPPING WAS THE THING TO CHECK, NOT GUESS AT – `overflow: hidden` and `word-break: break-word`
+   both stay exactly as they were, so a label that cannot fit still clips rather than spilling out of
+   its plate. And the risk runs the OTHER way from what a bare font bump suggests: `.cal-time-cols`
+   is `repeat(7, 1fr)` across the card's own width, so the SAME seven columns are wider at 768 and
+   wider again at 1024 – more room per column, not less – while only the font grew. The longest label
+   in the catalogue ("Road-trip home", 14 characters – composables/weekGrid.ts) was checked against
+   that wider column at both steps. */
+@media (min-width: 768px) {
+  .cal-block {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-block {
+    font-size: 11px;
+  }
+}
+
 /* THE PALETTE, one static rule per block kind, and it is the WALLET'S palette (see the `--cat-*`
    block in src/style.css for why the two screens share one). Written out rather than composed from
    the kind at runtime for the reason the surface tints above give: a `var(--cat-${kind})` built in a
