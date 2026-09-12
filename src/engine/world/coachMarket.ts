@@ -393,7 +393,8 @@ export function coachBilling(world: WorldState): {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
   const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
-  const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background)
+  // ⚠ THE RUNG, round 41 P1: the quote has to know whether the corridor still prices this week.
+  const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background, tierOf(coach))
   const seasonStart = seasonStartWeek(world.week)
   const enteredIn = (from: number) => {
     const to = from + WEEKS_PER_YEAR
@@ -474,7 +475,7 @@ export function coachBilling(world: WorldState): {
     // rather than re-derived: one bill, quoted once, read by both figures in the block.
     household: householdWeekly(world, weeklyCents),
     // U-03: the same `rate`, `age` and `tier` the line above billed at - no second read of the coach.
-    weekRangeCents: coachBillRangeCents(rate, world.plan, world.profile.background),
+    weekRangeCents: coachBillRangeCents(rate, world.plan, world.profile.background, tierOf(coach)),
     split: weeklyBillSplit({
       rateCents: rate,
       ageYears: age,
@@ -750,7 +751,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       name: coach.name,
       style: coach.style,
       fit,
-      weeklyCents: coachWeeklyCents(coach.rateCents, world.plan, world.profile.background),
+      weeklyCents: coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier),
       current: world.coachId === coach.id,
       // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
       // one week of anything; what the family is actually deciding is whether this bill fits the
@@ -758,7 +759,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // ⭐ ROUND-21 #12: that income is now ALL of it (`familyWeeklyIncomeCents`) and not the
       // parents' line alone. The ruling above is unchanged - the reserve is still not counted - it
       // is the week's income that was being under-read, by more than half on his own save.
-      overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background) - weeklyIncome),
+      overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier) - weeklyIncome),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
       // ⚠ THE RUNG'S CORRIDOR, NEVER HIS OWN NUMBER (spec §4). A number on an unhired card turns the

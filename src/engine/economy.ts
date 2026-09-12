@@ -98,16 +98,71 @@ export interface VacationPackage {
   freeOnceGranted?: boolean
 }
 
+/** ⭐⭐⭐ ONE MARKET, DIFFERENT BASKETS – HOW A GEAR LINE IS PRICED (round 41 P1, the owner 12.09:
+ *  «на рынке цены для всех сословий одинаковые, просто каждый покупает те товары, которые может…
+ *  получается, что топовая ракетка для рабочей семьи стоит около 1к долларов, а для богатой 2.2к…
+ *  Мне кажется это немного странно»).
+ *
+ *  ⚠⚠ WHAT HE WAS LOOKING AT WAS A PRICE WITH TWO AXES, AND THE SECOND ONE WAS INVISIBLE. Until this
+ *  slice a purchase cost `mid(band[background]) × grades[grade].priceFactor`, so the SAME NAMED rung
+ *  – «Kestra Pro Stock» – cost $360 in a working family's shop and $2,260 in a wealthy one, for an
+ *  item the equipment model treats as literally identical (same `startWear`, same `lifeFactor`, same
+ *  effect on her arm). That is not a corridor pricing a SERVICE in the market she trains in; it is
+ *  one object with two price tags, which is precisely the thing he could not read.
+ *
+ *  SO THERE ARE TWO SHAPES NOW, and which one a line carries is decided by ONE question: does the
+ *  quality ladder NAME this line's product?
+ *
+ *    * `by: 'rung'` – strings, frames and shoes. The ladder names them (`ECONOMY.equipment
+ *      .gradeCopy`), the player buys them by name, and a name may have exactly one price. Identical
+ *      for every background: the $90 club frame is $90 in a wealthy family's shop and the $2,260
+ *      tour frame is $2,260 in a working one. His sentence, by construction rather than by tuning.
+ *    * `by: 'basket'` – apparel, and it is the ONE line with no ladder. Its three bands are three
+ *      DIFFERENT products that no rung names («club basics» / «brand kit» / «full designer kit»), so
+ *      a background-keyed price here is a background-keyed BASKET rather than a background-keyed
+ *      price for one thing. «просто каждый покупает те товары, которые может» IS this line, and it
+ *      is therefore left alone. If a ladder is ever offered on apparel, this shape goes with it.
+ *
+ *  ⚠ CADENCE IS NOT PRICE AND STAYS PER-BACKGROUND. A wealthy family replaces its frames every
+ *  10-12 weeks and a working one every 14-18: that is BEHAVIOUR – what a family does – and not a
+ *  different price for the same act. It is the other half of «different baskets», and P1 does not
+ *  touch it. */
+export type GearPricing =
+  | { by: 'rung'; cents: Record<KitGrade, [number, number]> }
+  | { by: 'basket'; cents: Record<FamilyBackground, [number, number]> }
+
 export interface GearLine {
   /** breakdown category this line reports under */
   breakdown: 'gear' | 'stringing'
   /** [min,max] weeks between purchases, drawn per purchase from the gear sub-stream
    *  (min === max ⇒ a fixed cadence, e.g. stringing / quarterly apparel) */
   cadenceWeeks: Record<FamilyBackground, [number, number]>
-  /** [min,max] price in whole cents, drawn per purchase */
-  priceCents: Record<FamilyBackground, [number, number]>
+  /** [min,max] price in whole cents, drawn per purchase – see `GearPricing` for which axis prices it */
+  price: GearPricing
   /** event flavor naming the item tier (owner: "Restring – tour gut" vs "budget synthetic") */
   flavor: Record<FamilyBackground, string>
+}
+
+/** ⚠ THE RUNG A CALLER WITH NO KIT STATE IS PRICED AT – the ladder's identity element, the same
+ *  value `engine/equipment.ts` exports as `DEFAULT_KIT_GRADES` and the v37 migration back-fills on
+ *  every line. It is spelled a second time HERE because this module may not import equipment.ts
+ *  (that edge is the runtime cycle: equipment imports economy), and the two are pinned equal in
+ *  tests/equipment.test.ts so the copy cannot drift. */
+export const LADDER_IDENTITY_GRADE: KitGrade = 'composite'
+
+/** THE BAND ONE PURCHASE OF `category` IS DRAWN FROM – the single source of truth for what gear
+ *  costs, read by the recurring till (`gearHitsUpTo`) and by the shop window (`kitLinePriceCents`).
+ *
+ *  `grade` is the rung she is standing on for this line, or `null` for a caller that has no kit
+ *  state (and for apparel, which has no rung to stand on). See `GearPricing` for why a laddered line
+ *  ignores `background` and the one un-laddered line ignores `grade`. */
+export function gearPriceBandCents(
+  category: GearCategory,
+  background: FamilyBackground,
+  grade: KitGrade | null,
+): readonly [number, number] {
+  const price = ECONOMY.gear[category].price
+  return price.by === 'rung' ? price.cents[grade ?? LADDER_IDENTITY_GRADE] : price.cents[background]
 }
 
 // THE app-level wealth-price corridor (owner canon, 25.07): the same [lo, hi] factor band per
@@ -130,15 +185,40 @@ export interface GearLine {
 // bill split, docs/specs/split-the-bill-2026-08.md - the FACILITY line that came out of it. The last
 // of those is the corridor at its most literal: the same court costs less in a working-class club
 // than in a premium academy, and the family can now see the number.
+//
+// ⭐⭐⭐ AND SINCE ROUND 41 P1 IT HAS A CEILING: THE CORRIDOR PRICES THE LOWER TIERS OF A SERVICE AND
+// STOPS. The owner, 12.09, ruling on the gear complaint and then narrowing the corridor himself:
+// «Коридор ±25–30% остаётся только на сервисах (физио, перелёты, тренер) и то только на нижних
+// тирах, мне кажется что в про карьере с большими чеками цены для всех должны быть равны. По крайней
+// мере элит тренеры и массажисты мне кажется вполне могут стоить одинаково для всех.»
+//
+// So the framing above survives exactly where it was ever true – a working-class club and a premium
+// academy really are two different rooms at the bottom of the market – and stops where it stops
+// being a fiction: an elite coach's week and a tour clinic's hour are ONE product with ONE price,
+// and a family that has reached them is in the big-cheque era he is describing. See
+// `UNIFORM_CORRIDOR` and `coach.corridorAppliesAt` for the rungs, and
+// docs/specs/one-market-2026-09.md §4 for what stays corridored and why.
 const WEALTH_CORRIDOR = {
   working: [0.7, 0.8],
   middle: [0.95, 1.05],
   wealthy: [1.2, 1.3],
 } as Record<FamilyBackground, [number, number]>
 
+/** ⚠ THE BAND A UNIFORM TIER IS PRICED IN, AND IT IS A BAND RATHER THAN A SKIPPED MULTIPLY ON
+ *  PURPOSE (round 41 P1). Every corridor customer in this engine spends ONE uniform roll mapped into
+ *  `lo + roll * (hi - lo)`; with `lo === hi === 1` that roll is still spent and still lands on
+ *  exactly 1.0, so a tier going uniform changes the ARITHMETIC and not the SHAPE of any sub-stream.
+ *  Skipping the draw instead would shift `seed:coachbg:<week>` / `seed:physio:<week>` by one position
+ *  for half the tier ladder – a stream change dressed as a price change, and the kind of thing
+ *  invariant 2 exists to refuse. */
+const UNIFORM_CORRIDOR: [number, number] = [1, 1]
+
 export const ECONOMY = {
   /** The canonical wealth-price corridor – see WEALTH_CORRIDOR above. */
   wealthCorridor: WEALTH_CORRIDOR,
+
+  /** The corridor a tier that has left it is priced in: exactly 1.0, same roll. See UNIFORM_CORRIDOR. */
+  uniformCorridor: UNIFORM_CORRIDOR,
 
   /** ⭐ THE WAR CHEST THE FAMILY OPENS WITH, and the game's own three pictures of what a family HAS.
    *
@@ -1258,11 +1338,43 @@ export const ECONOMY = {
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per
   // category (never the main weekly stream). Cadence + price are drawn from that sub-stream.
+  //
+  // ⭐⭐⭐ THE PRICES BELOW ARE RUNG-KEYED SINCE ROUND 41 P1 – see `GearPricing` for the owner's
+  // ruling and for why apparel alone keeps a background-keyed band.
+  //
+  // ⚠⚠ THE CALIBRATION IS THE OLD DIAGONAL, AND IT IS AN ARITHMETIC FACT RATHER THAN A NEW TUNE.
+  // Each rung's band is the band of the background whose FLAVOUR already described that rung's
+  // product, scaled by that rung's shipped `priceFactor`:
+  //
+  //     alloy        := working band × 0.55     («used, off the classifieds» × the starter rung)
+  //     composite    := working band × 1.00     – the ladder's identity element, untouched arithmetic
+  //     performance  := middle  band × 2.20     («current retail model»)
+  //     pro          := wealthy band × 4.00     («custom pro stock»)
+  //
+  // So a working family's recurring bill is BYTE-IDENTICAL to the shipped game at every hit (its band
+  // and the composite band are the same numbers), and the top of the ladder still costs the $2,260
+  // the owner himself quoted – now to everybody. What the diagonal could NOT preserve is measured and
+  // reported rather than hidden: every career in this game starts on `composite` (`DEFAULT_KIT_GRADES`
+  // – there has never been a per-background starting rung), so a middle or wealthy family's DEFAULT
+  // basket falls to the working family's price, because it was always the same object. The spec
+  // docs/specs/one-market-2026-09.md §3 carries the measured weekly figure and the one-line retunes.
+  //
+  // ⚠ NOTHING HERE MOVES PLAY. A rung's `startWear` / `lifeFactor` / `frameInjuryRise` are untouched,
+  // no background's DEFAULT rung moves, and `priceFactor` is gone from the arithmetic entirely: it
+  // survives only as the number these bands were derived WITH, written out above.
   gear: {
     rackets: {
       breakdown: 'gear',
       cadenceWeeks: { working: [14, 18], middle: [12, 16], wealthy: [10, 12] },
-      priceCents: { working: [60_00, 120_00], middle: [180_00, 280_00], wealthy: [480_00, 650_00] },
+      price: {
+        by: 'rung',
+        cents: {
+          alloy: [33_00, 66_00],
+          composite: [60_00, 120_00],
+          performance: [396_00, 616_00],
+          pro: [1920_00, 2600_00],
+        },
+      },
       flavor: {
         working: 'New racket – used, off the classifieds',
         middle: 'New racket – current retail model',
@@ -1272,7 +1384,15 @@ export const ECONOMY = {
     stringing: {
       breakdown: 'stringing',
       cadenceWeeks: { working: [4, 4], middle: [3, 3], wealthy: [2, 2] },
-      priceCents: { working: [18_00, 30_00], middle: [28_00, 45_00], wealthy: [45_00, 70_00] },
+      price: {
+        by: 'rung',
+        cents: {
+          alloy: [9_90, 16_50],
+          composite: [18_00, 30_00],
+          performance: [61_60, 99_00],
+          pro: [180_00, 280_00],
+        },
+      },
       flavor: {
         working: 'Restring – budget synthetic',
         middle: 'Restring – multifilament',
@@ -1282,7 +1402,15 @@ export const ECONOMY = {
     shoes: {
       breakdown: 'gear',
       cadenceWeeks: { working: [10, 14], middle: [10, 14], wealthy: [10, 14] },
-      priceCents: { working: [60_00, 90_00], middle: [100_00, 150_00], wealthy: [170_00, 240_00] },
+      price: {
+        by: 'rung',
+        cents: {
+          alloy: [33_00, 49_50],
+          composite: [60_00, 90_00],
+          performance: [220_00, 330_00],
+          pro: [680_00, 960_00],
+        },
+      },
       flavor: {
         working: "New shoes – last season's model",
         middle: 'New shoes – mid-range performance',
@@ -1292,7 +1420,12 @@ export const ECONOMY = {
     apparel: {
       breakdown: 'gear',
       cadenceWeeks: { working: [13, 13], middle: [13, 13], wealthy: [13, 13] },
-      priceCents: { working: [40_00, 70_00], middle: [110_00, 160_00], wealthy: [260_00, 380_00] },
+      // ⚠ THE ONE LINE WITH NO LADDER, so the only one still priced by the family's own basket –
+      // three different products, three prices, and nothing here claims they are the same thing.
+      price: {
+        by: 'basket',
+        cents: { working: [40_00, 70_00], middle: [110_00, 160_00], wealthy: [260_00, 380_00] },
+      },
       flavor: {
         working: 'Apparel refresh – club basics',
         middle: 'Apparel refresh – brand kit',
@@ -5638,10 +5771,16 @@ export function gearHitsUpTo(
   category: GearCategory,
   background: FamilyBackground,
   uptoWeek: number,
+  grade: KitGrade | null = null,
 ): GearHit[] {
   const line = ECONOMY.gear[category]
   const [cadLo, cadHi] = line.cadenceWeeks[background]
-  const [prLo, prHi] = line.priceCents[background]
+  // ⚠ THE RUNG PRICES THE PURCHASE (round 41 P1) AND THE STREAM CANNOT FEEL IT. `pickInt` spends
+  // exactly ONE `rng()` call whatever its bounds, so moving this band from the background's to the
+  // rung's changes the VALUE drawn and never the position after it – the cadence walk, and therefore
+  // every purchase WEEK a career has ever had, is byte-identical. That is what lets `weeksSinceGear`
+  // below stay rung-blind and still agree with this function to the week.
+  const [prLo, prHi] = gearPriceBandCents(category, background, grade)
   const rng = rngFromSeed(`${seed}:gear:${category}`)
   const hits: GearHit[] = []
   let w = 0
@@ -5806,7 +5945,6 @@ export function weeksSinceGear(
 ): number {
   const line = ECONOMY.gear[category]
   const [cadLo, cadHi] = line.cadenceWeeks[background]
-  const [prLo, prHi] = line.priceCents[background]
   const rng = rngFromSeed(`${seed}:gear:${category}`)
   let w = 0
   let last = 0
@@ -5815,7 +5953,12 @@ export function weeksSinceGear(
     if (w > week) break
     // The price draw must be spent even though it is unused here, or the NEXT cadence draw would
     // read a different number than `gearHitsUpTo` reads and the two functions would drift apart.
-    pickInt(rng, prLo, prHi)
+    //
+    // ⚠ AND ITS BAND IS IRRELEVANT, WHICH IS WHY THIS FUNCTION NEEDED NO RUNG WHEN ROUND 41 P1 MADE
+    // THE PRICE RUNG-KEYED. `pickInt` spends exactly one `rng()` call whatever its bounds, so the
+    // stream position after the discard does not depend on which band is passed; the degenerate band
+    // says that out loud rather than quoting a rung this function has no business knowing.
+    pickInt(rng, 0, 0)
     last = w
   }
   return week - last
@@ -5827,8 +5970,9 @@ export function gearHitForWeek(
   category: GearCategory,
   background: FamilyBackground,
   week: number,
+  grade: KitGrade | null = null,
 ): GearHit | null {
-  return gearHitsUpTo(seed, category, background, week).find((h) => h.week === week) ?? null
+  return gearHitsUpTo(seed, category, background, week, grade).find((h) => h.week === week) ?? null
 }
 
 /**

@@ -149,22 +149,84 @@ export function facilityRateCents(ageYears: number, tier: CoachTier): number {
   return Math.round(((lo + hi) / 2) * ECONOMY.coach.courtTierFactor[tier])
 }
 
-/** The middle of a background's wealth corridor - the number a QUOTE uses.
+// =================================================================================================
+// ⭐⭐⭐ WHERE THE CORRIDOR STOPS – round 41 P1, and it is the owner's own narrowing
+// =================================================================================================
+//
+// «Коридор ±25–30% остаётся только на сервисах (физио, перелёты, тренер) и то только на НИЖНИХ
+//  ТИРАХ, мне кажется что в про карьере с большими чеками цены для всех должны быть равны. По
+//  крайней мере элит тренеры и массажисты мне кажется вполне могут стоить одинаково для всех.»
+//  (12.09, immediately after approving P1's gear half.)
+//
+// ⚠ THE CUT IS AT THE RUNG AND NOT AT THE FAMILY, which is why it can be stated in one predicate.
+// `self`, `budget` and `middle` are the bottom of the market – a school hall, a club court, a
+// municipal physio – and the corridor there is the honest fiction the 25.07 ruling bought it for: the
+// same hour really does cost differently in a working-class club and a premium academy. `high` and
+// `elite` are the other thing. A tour-level coach has ONE rate, his clinic has ONE price list, and a
+// family standing in front of him is by definition in the «про карьера с большими чеками» he named –
+// so the corridor there was never a market, it was a surcharge for having answered a questionnaire
+// nine years earlier.
+//
+// ⚠ IT CUTS BOTH WAYS AND THAT IS THE RULING, NOT A SIDE EFFECT. A wealthy family's elite week loses
+// its 1.20-1.30 (it gets ~21% cheaper) and a WORKING family's elite week loses its 0.70-0.80 (it gets
+// ~33% dearer). «Цены для всех должны быть равны» has no version where only one side moves, and the
+// measured size of both is in docs/specs/one-market-2026-09.md §4.
+//
+// ⚠ HIGH, NOT ELITE-ONLY. His sentence names elite («по крайней мере элит…»), and «по крайней мере»
+// is a floor rather than a bound – the reason given is the big cheques, and `high` is where they
+// start. The narrower reading is a ONE-LINE retune (drop `'high'` from the list below), it is written
+// up with his quote in the spec's §4, and it is his to take.
+//
+// ⚠ THE MASSEUR IS NOT HERE BECAUSE HE WAS NEVER IN. `ECONOMY.masseur` is a flat contract per rung –
+// «STILL A FLAT CONTRACT PER RUNG: no corridor, no jitter, no draw» – and `world/masseur.ts` bills
+// `rung.sessions × perSessionCents` with no background anywhere on the path. His «массажисты… вполне
+// могут стоить одинаково для всех» is a description of the shipped game, and the honest answer to it
+// was to say so rather than to invent a change.
+
+/** Does the wealth corridor still price this rung? See the block above for the ruling.
+ *
+ *  ⚠ WRITTEN AS THE POSITIVE LIST rather than `tier !== 'high' && tier !== 'elite'`, so a rung added
+ *  to `CoachTier` above the elite one is uniform by default: the direction this ladder grows in is
+ *  the direction the corridor is leaving. */
+export function corridorAppliesAt(tier: CoachTier): boolean {
+  return tier === 'self' || tier === 'budget' || tier === 'middle'
+}
+
+/** The [lo, hi] this rung is priced in for this family – the ONE place the cut above is applied, so
+ *  the quote, the week's roll and every band helper cannot disagree about where the corridor ends. */
+export function corridorBandFor(background: FamilyBackground, tier: CoachTier): readonly [number, number] {
+  return corridorAppliesAt(tier) ? ECONOMY.wealthCorridor[background] : ECONOMY.uniformCorridor
+}
+
+/** The middle of the corridor this rung is priced in - the number a QUOTE uses.
  *
  *  The engine bills through one roll mapped into `[lo, hi]` (see coachCorridorFactor), so a real
  *  week lands either side of this. A price on a card has to be one number, and the honest one is
- *  the middle of the market she is buying in. */
-export function coachCorridorMid(background: FamilyBackground): number {
-  const [lo, hi] = ECONOMY.wealthCorridor[background]
+ *  the middle of the market she is buying in.
+ *
+ *  ⚠ `tier` IS REQUIRED AND NOT DEFAULTED, for `facilityRateCents`' own reason one screen up: a
+ *  forgotten argument here would silently put an elite bill back inside a corridor the owner took it
+ *  out of, and a price is exactly the kind of fact where that would never be noticed. */
+export function coachCorridorMid(background: FamilyBackground, tier: CoachTier): number {
+  const [lo, hi] = corridorBandFor(background, tier)
   return (lo + hi) / 2
 }
 
 /** The corridor factor for ONE week, off the private `seed:coachbg:<week>` sub-stream - the same
  *  roll, on the same stream, that priced coaching before the tier slice took it off. Mirrors
  *  travelBgFactor / medicalBgFactor: one uniform roll into the background's band, POST-draw, so the
- *  main-stream sequence can never depend on background. */
-export function coachCorridorFactor(seed: string, week: number, background: FamilyBackground): number {
-  const [lo, hi] = ECONOMY.wealthCorridor[background]
+ *  main-stream sequence can never depend on background.
+ *
+ *  ⚠ THE ROLL IS STILL SPENT AT A UNIFORM RUNG (round 41 P1). `ECONOMY.uniformCorridor` is `[1, 1]`,
+ *  so `lo + roll * (hi - lo)` is exactly 1.0 and this sub-stream's position after the call is
+ *  identical at every rung – the price moved, the stream did not, on any week of any career. */
+export function coachCorridorFactor(
+  seed: string,
+  week: number,
+  background: FamilyBackground,
+  tier: CoachTier,
+): number {
+  const [lo, hi] = corridorBandFor(background, tier)
   return lo + rngFromSeed(`${seed}:coachbg:${week}`)() * (hi - lo)
 }
 
@@ -176,7 +238,8 @@ export function coachWeeklyCents(
   rateCents: number,
   plan: WeekPlan,
   background: FamilyBackground,
-  corridor: number = coachCorridorMid(background),
+  tier: CoachTier,
+  corridor: number = coachCorridorMid(background, tier),
 ): number {
   return Math.round(rateCents * coachHoursForPlan(plan) * corridor)
 }
@@ -250,10 +313,14 @@ export function weeklyBillSplit(input: {
   /** the week's own jitter as a multiplier; 1 = the quote */
   jitter?: number
 }): WeeklyBillSplit {
-  const corridor = input.corridor ?? coachCorridorMid(input.background)
+  // ⚠ THE SPLIT TAKES THE CORRIDOR ONCE AND BOTH LINES RIDE IT (round 41 P1 changes nothing here):
+  // the rung decides whether there is a corridor at all, and `coach + facility === total` survives
+  // because they are still two readings of ONE factor. A uniform rung's court is uniform too, which
+  // is the right answer – the premium academy charges the premium academy's price to everybody.
+  const corridor = input.corridor ?? coachCorridorMid(input.background, input.tier)
   const jitter = input.jitter ?? 1
   const at = (rate: number): number =>
-    Math.round(coachWeeklyCents(rate, input.plan, input.background, corridor) * jitter)
+    Math.round(coachWeeklyCents(rate, input.plan, input.background, input.tier, corridor) * jitter)
   const totalCents = at(input.rateCents)
   const facilityCents = Math.min(totalCents, at(facilityRateCents(input.ageYears, input.tier)))
   return { totalCents, coachCents: totalCents - facilityCents, facilityCents }
@@ -266,8 +333,11 @@ export function coachBillRangeCents(
   rateCents: number,
   plan: WeekPlan,
   background: FamilyBackground,
+  tier: CoachTier,
 ): [number, number] {
-  const [cLo, cHi] = ECONOMY.wealthCorridor[background]
+  // ⚠ `tier` REQUIRED, round 41 P1 – the envelope has to know whether the corridor still applies, or
+  // the screens would draw a ±25-30% spread around a bill that no longer has one.
+  const [cLo, cHi] = corridorBandFor(background, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const hours = coachHoursForPlan(plan)
   return [
@@ -286,7 +356,10 @@ export function coachWeeklyBandCents(
   background: FamilyBackground,
 ): [number, number] {
   const [rLo, rHi] = coachRateBandCents(tier, ageYears)
-  const [cLo, cHi] = ECONOMY.wealthCorridor[background]
+  // ⚠ round 41 P1 – at `high` and `elite` this band collapses onto one number for every background,
+  // which is the visible half of the ruling: the tier header on screen T reads the same range for a
+  // working family and a wealthy one.
+  const [cLo, cHi] = corridorBandFor(background, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const hours = coachHoursForPlan(plan)
   return [

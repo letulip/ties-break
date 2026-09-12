@@ -217,7 +217,8 @@ export function setKitGrade(world: WorldState, line: KitLine, grade: KitGrade): 
   kit.grade[line] = grade
   if (!movingUp) return
 
-  const costCents = kitLinePriceCents(world.profile.background, line, grade)
+  // ⚠ ONE MARKET (round 41 P1): the rung's price, and no family's own. See `kitLinePriceCents`.
+  const costCents = kitLinePriceCents(line, grade)
   kit.sinceWeek[line] = world.week
   const { paidCents, coveredCents, brand } = chargeKitPurchase(world, line, costCents)
   world.fundsCents -= paidCents
@@ -364,7 +365,7 @@ export function kitLineViews(world: WorldState): KitLineView[] {
       goodWeeksLeft:
         ceiling !== undefined && ceiling < WORN_AT ? null : goodWeeksLeftFor(line, grade, age[line]),
       rungs: KIT_GRADES.map((g) => {
-        const priceCents = kitLinePriceCents(bg, line, g)
+        const priceCents = kitLinePriceCents(line, g)
         return {
           grade: g,
           label: ECONOMY.equipment.gradeCopy[g][line].label,

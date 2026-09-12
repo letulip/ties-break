@@ -41,7 +41,7 @@
 //
 // PURE, ZERO RNG. Wear is arithmetic over purchase weeks that the gear sub-streams already decide.
 
-import { ECONOMY, weeksSinceGear, type GearCategory } from './economy'
+import { ECONOMY, gearPriceBandCents, weeksSinceGear, type GearCategory } from './economy'
 import type { FamilyBackground, KitGrade, KitGrades, KitLine, KitState } from '../shared/protocol'
 import type { MatchPlayer } from './match/types'
 
@@ -82,17 +82,32 @@ export function defaultKitState(): KitState {
   return { grade: { ...DEFAULT_KIT_GRADES }, sinceWeek: { strings: 0, frame: 0, shoes: 0 } }
 }
 
-/** WHAT ONE PURCHASE OF `line` COSTS at `grade`, in cents. The MID of the background's own band from
- *  `ECONOMY.gear` times the rung's price factor - so the wealth corridor still sets the base (a
- *  wealthy family's frames were always dearer) and the rung multiplies it, exactly as the brief asks.
+/** WHAT ONE PURCHASE OF `line` COSTS at `grade`, in cents: THE MID OF THE RUNG'S OWN BAND.
+ *
+ *  ⚠⚠ IT LOST ITS `background` PARAMETER IN ROUND 41 P1, AND THAT LOSS IS THE WHOLE SLICE. It used to
+ *  read the mid of the BACKGROUND's band and multiply by `grades[grade].priceFactor`, so one named
+ *  rung carried three prices – the owner, 12.09: «на рынке цены для всех сословий одинаковые, просто
+ *  каждый покупает те товары, которые может… получается, что топовая ракетка для рабочей семьи стоит
+ *  около 1к долларов, а для богатой 2.2к… Мне кажется это немного странно». A rung is one object and
+ *  it has one price. The parameter was DELETED rather than left dead on purpose: a dead argument is
+ *  an invitation for the next caller to pass a background here and believe it still matters, and
+ *  deleting it made the compiler name every call site instead.
+ *
+ *  ⚠ AND THE ARITHMETIC MOVED INTO THE TABLE, so there is nothing left here to disagree with it.
+ *  `ECONOMY.gear[...].price` carries explicit cents per rung (the old diagonal, written out), and the
+ *  shop window and the recurring till both read that ONE band through `gearPriceBandCents`.
  *
  *  ⚠ DETERMINISTIC AND DRAW-FREE, deliberately. The recurring bill `resolveGear` charges is a real
  *  draw off `seed:gear:<category>` and stays one; this is the SHOP WINDOW, and a price that re-rolled
  *  every time the screen re-rendered would be a price nobody could act on. Same argument
  *  `vacationPriceCents` makes for quoting from a fixed (seed, week) key. */
-export function kitLinePriceCents(background: FamilyBackground, line: KitLine, grade: KitGrade): number {
-  const [lo, hi] = ECONOMY.gear[LINE_GEAR_CATEGORY[line]].priceCents[background]
-  return Math.round(((lo + hi) / 2) * ECONOMY.equipment.grades[grade].priceFactor)
+export function kitLinePriceCents(line: KitLine, grade: KitGrade): number {
+  // ⚠ THE BACKGROUND PASSED HERE IS THROWN AWAY AND MUST BE. Every line this function can be asked
+  // about is on the ladder (`LINE_GEAR_CATEGORY` maps only the three), so `gearPriceBandCents` takes
+  // its `by: 'rung'` branch every time – the argument exists to satisfy the shared resolver's shape,
+  // and `tests/equipment.test.ts` pins that all three backgrounds answer the same cents.
+  const [lo, hi] = gearPriceBandCents(LINE_GEAR_CATEGORY[line], 'middle', grade)
+  return Math.round((lo + hi) / 2)
 }
 
 /** Wear per line, 0 = as new, 1 = at the end of its service life.

@@ -50,6 +50,12 @@ import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
 import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/economy'
+// ⚠ ROUND 41 P1 – TWO PURE LOOK-UPS AND NOTHING ELSE FROM THE COACH MODULE. `corridorBandFor` is
+// the single predicate that says where the wealth corridor stops, and `coachTierById` answers
+// «which rung is this id» off the roster literal without rebuilding a roster. The screen still
+// derives no PRICE of its own – it reads the same band the till reads (see `weeklyBand`), which is
+// what tests/round36-u03-coach-billing.test.ts's negative claim is about: no bill GENERATOR here.
+import { coachTierById, corridorBandFor } from '../../engine/coach'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
@@ -124,11 +130,19 @@ function togglePhysio(): void {
   game.setPhysio(!physioActive.value)
 }
 /** One band, corridor-scaled to the family's means, as the `$lo-hi/wk` the toggle prints. Both rates
- *  go through it so the two figures on this panel are computed the same way. */
+ *  go through it so the two figures on this panel are computed the same way.
+ *
+ *  ⚠⚠ ROUND 41 P1 – IT READS THE RUNG NOW, AND IT HAD TO. The medical corridor stops at the top of
+ *  the coach ladder (the owner, 12.09: «в про карьере с большими чеками цены для всех должны быть
+ *  равны»), and this panel derives its own band – so left alone it would have become a second,
+ *  WRONGER spelling of `medicalBillCents`, quoting a wealthy family with an elite coach $54-91/wk
+ *  against an engine that bills her $45-70. It now reads `corridorBandFor`, the ONE predicate the
+ *  till reads, through `coachTierById` – a roster look-up that spends no draw, no seed and no age.
+ *  The sentence around the number is untouched; only the number is. */
 function weeklyBand(band: readonly [number, number]): string {
   const background = game.snapshot?.profile.background
   if (!background) return ''
-  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
+  const [cLo, cHi] = corridorBandFor(background, coachTierById(game.snapshot?.coachId ?? null))
   return `$${Math.round((band[0] * cLo) / 100)}-${Math.round((band[1] * cHi) / 100)}/wk`
 }
 const physioCostLabel = computed(() => weeklyBand(ECONOMY.physio.retainerPerWeekCents))
@@ -682,14 +696,19 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
 // 19.08: «Перед ценами на карточках Bills написать "Around", тогда точно не будет вопросов "почему
 // ракетка стоит 920, а мы заплатили 1070?"»
 //
-// HIS TWO NUMBERS RECONCILE EXACTLY, and that is what makes this a copy fix rather than a bug.
-// `kitLinePriceCents` quotes the MID of the family's band times the rung factor: middle family,
+// HIS TWO NUMBERS RECONCILED EXACTLY, and that is what made this a copy fix rather than a bug.
+// `kitLinePriceCents` quoted the MID of the family's band times the rung factor: middle family,
 // `pro` frame = mid($180-280) x 4 = $920.00, which is the figure on his card to the cent. The
-// RECURRING bill is a different arithmetic on the same band - `gearHitsUpTo` draws a fresh
-// `pickInt($180, $280)` per replacement and world.ts multiplies it by the same rung factor - so
-// $1,070 is a $267.50 draw, comfortably inside the band. His own ledger shows the same swing on the
-// line that replaces fastest: four restrings at $127.40 / $136.72 / $160.20 / $156.84 against a card
-// that says $146.00.
+// RECURRING bill is a different arithmetic on the same band - `gearHitsUpTo` draws a fresh `pickInt`
+// per replacement - so $1,070 was a $267.50 draw, comfortably inside the band. His own ledger showed
+// the same swing on the line that replaces fastest: four restrings at $127.40 / $136.72 / $160.20 /
+// $156.84 against a card that says $146.00.
+//
+// ⚠ ROUND 41 P1 RE-PRICED BOTH SIDES AND CHANGED NEITHER ARGUMENT. The band is the RUNG's now and
+// identical for every family, so the middle family's `pro` frame card reads $2,260 rather than $920
+// and a replacement still lands anywhere in [$1,920, $2,600]. The quote and the bill are still two
+// readings of ONE band, which is the whole of why this word is here - the figures above are kept as
+// he reported them, because they are what the qualifier was written from.
 //
 // ⚠ THE ONE THING THIS WORD MUST NOT BE READ AS. Buying UP a rung from this button charges
 // `kitLinePriceCents` to the cent (`setKitGrade`), so the confirm dialog names an exact price and

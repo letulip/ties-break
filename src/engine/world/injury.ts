@@ -20,7 +20,7 @@ import { kitInjuryFactor, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { knockLive, knockTauFactor, loadedPartShares, pushedParts } from '../knock'
 import { planWeek } from '../plan'
-import { coachById, physioRecoveryFactor, physioRiskFactor, tierOf } from '../coach'
+import { coachById, coachTierById, corridorBandFor, physioRecoveryFactor, physioRiskFactor, tierOf } from '../coach'
 import type { InjurySeverity } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { ageAtWeek, kidAgeYears } from './age'
@@ -362,11 +362,26 @@ export const SEVERITY_DESCRIPTOR: Record<InjurySeverity, string> = {
 }
 
 /** One medical bill in cents: draw the MIDDLE-anchored base from `band`, then map ONE uniform
- *  roll from the same physio generator into the background's medical corridor (mirrors
- *  travelBgFactor: same roll, disjoint corridors, so working < middle < wealthy per bill). */
+ *  roll from the same physio generator into the medical corridor this rung is priced in (mirrors
+ *  travelBgFactor: same roll, disjoint corridors, so working < middle < wealthy per bill).
+ *
+ *  ⭐⭐ THE CORRIDOR STOPS AT THE TOP OF THE COACH LADDER SINCE ROUND 41 P1 (the owner, 12.09:
+ *  «Коридор ±25–30% остаётся только на сервисах… и то только на нижних тирах… в про карьере с
+ *  большими чеками цены для всех должны быть равны»). The physio was never a free-standing service –
+ *  `coachIncludesPhysio` says she has one because a coach was hired, and `PHYSIO_QUALITY` says how
+ *  good that team is BY RUNG – so the medical bill was already the coach ladder's bill wearing
+ *  another name, and it takes the coach ladder's cut. Under a budget or middle rung it is a
+ *  municipal clinic against a private one and the corridor is real; under `high`/`elite` it is the
+ *  tour's own medical team and there is one price list.
+ *
+ *  ⚠ ONE PREDICATE, NOT A SECOND COPY: `corridorBandFor` is the same function the weekly coaching
+ *  bill reads, so the two services cannot part company on where the corridor ends.
+ *
+ *  ⚠ AND THE ROLL IS STILL SPENT – `uniformCorridor` is `[1, 1]`, so `seed:physio:<week>` walks
+ *  exactly the positions it always walked at every rung and on every background. */
 export function medicalBillCents(world: WorldState, rng: Rng, band: readonly [number, number]): number {
   const base = pickInt(rng, band[0], band[1])
-  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[world.profile.background]
+  const [cLo, cHi] = corridorBandFor(world.profile.background, coachTierById(world.coachId))
   const roll = rng()
   return Math.round(base * (cLo + roll * (cHi - cLo)))
 }
