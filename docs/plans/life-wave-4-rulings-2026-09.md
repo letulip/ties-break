@@ -173,3 +173,29 @@ T4 had to place the read and asked for the call. **Confirmed as built**, on its 
 
 ⚠ Cheap to move – it is 4 heading cells plus 2 feed rows – so T6 or the owner's вычитка may relocate
 it without touching the mechanic.
+
+## J. Her `'ended'` line must stay READ-NEUTRAL, and that is now a lint rather than a habit
+
+**Found by the architect's read of T6's matrix (12.09).** `ENDED_HER_LINE` is keyed
+`Record<Temperament, Record<EndsRegister, PresenceCell>>` – **no read axis.** The heading DOES carry
+the read (ruling I). So her line and the heading are two surfaces of one card that vary
+independently, and a line that leans on space-vs-company contradicts the heading **half the time**.
+
+⚠ **T6's sixteen lines are safe, and the reason is a distinction worth naming**, because it is what a
+later editor has to preserve. The two lines that sound like a signal – fiery's «No, I don't want to
+go through it» and deep's «I'd rather not say more» – are about **RECOUNTING**, not about solitude.
+The read is about **PRESENCE**. «Don't make me explain it, but don't leave me alone» is one coherent
+person, so those lines sit honestly under a `company` heading.
+
+**What would NOT be safe**: «I'd rather be on my own», «just stay a while», «I don't want to be
+alone» – any line taking a position on whether she wants somebody there. Under the opposite read the
+card would then argue with itself, in a pool whose register-neutrality note already trained the
+reader to think the axes were handled.
+
+⚠ The pool's existing ⚠⚠ note covers REGISTER-neutrality only. It taught the reader that the axes
+were thought about, which is exactly what makes the missing one easy to walk past.
+
+**Ruled**: the invariant is stated at the pool AND enforced by a phrase lint in the wave-3
+banned-tails style (`tests/helpers/bannedTails.ts` is the precedent – a list, a helper, and a test
+that fails on a new pool member). The owner's вычитка is the most likely place a leaning line gets
+written, so the lint must be live before he reads.
