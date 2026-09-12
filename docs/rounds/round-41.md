@@ -36,13 +36,63 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
 
 ---
 
-- [ ] **1. «При клике на ранг на главной She has two rankings, их явно три, надо этот попап
+- [x] **1. «При клике на ранг на главной She has two rankings, их явно три, надо этот попап
   обновить»** – **build.** The line is `src/components/RankHelpDialog.vue:79` («She has two rankings
   and they are counted separately – national results and Junior Tour results»). The professional
   ranking exists since the pro era and the dialog never learned it. Plan: enumerate the ranking
   systems the engine actually runs (recon in flight) and rewrite the dialog – preferably derived
   from her stage so a fourth system cannot rot it the same way. New copy = DRAFT for his read; the
   dialog grows, so it gets the round-20 #3 phone-fit assertion.
+
+  **SHIPPED** (bundle C, `2af68937`). Root cause as filed: `RankHelpDialog.vue:46` hardcoded
+  `(['domestic','itf'] as LadderTrack[])` and the lede at :79 counted that array rather than the
+  game. Rows now derive from `LADDER_TRACKS` (itself derived from `LADDER_LABEL`, a TOTAL Record –
+  StatsScreen's round-15 move), labels from `LADDER_LABEL` (National / International / Professional –
+  never «WTA»), and the per-table copy is a total `Record<LadderTrack, string>` too, so a fourth
+  table fails to COMPILE rather than rendering a block with no explanation in it.
+
+  ⚠ **The shared rule line was WRONG before it was incomplete.** It said «the last 52 weeks» of every
+  table; the National ladder has counted THIS SEASON since round 23 #12 at the owner's own ruling
+  («6 лучших ЗА СЕЗОН»). With three tables one line had three windows and three best-Ns to carry, so
+  it moved into the blocks. Every number read off the engine: `BEST_N_BY_TRACK` (6/6/18),
+  `WINDOW_BY_TRACK` (seasonToDate/rolling52/rolling52), `RANKABLE_MIN` (3 tournaments or 10 points).
+
+  **DRAFT COPY (verbatim, for his read).** The lede, REWRITTEN (this is the item):
+
+  > `She has three rankings and they are counted separately – a result pays into one table only, and the totals never add up together.`
+
+  Three NEW per-table lines, one under each block's heading:
+
+  > National: `Her best 6 results this season – the race restarts every January.`
+  > International: `Her best 6 Junior Tour results from the last 52 weeks.`
+  > Professional: `Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.`
+
+  One NEW empty-table note (the other two are unchanged):
+
+  > Professional: `Nothing here until she plays a W-series event – junior points do not cross over.`
+
+  One REWORDED rule line (it was false for the National table as it stood):
+
+  > was: `Results older than 52 weeks drop out of the window – points must be defended.`
+  > now: `On the International and Professional tables, results older than 52 weeks drop out – points must be defended.`
+
+  One rule line REMOVED, because each block now states its own window and best-N:
+
+  > removed: `Each ranking = the sum of her best results from the last 52 weeks in that table – the best 6, or the best 18 on the Pro table.`
+
+  The other two rule lines («A new result only raises the total…», «National points are what open her
+  next tier…») are **untouched**.
+
+  *Evidence* – `tests/component/round41-rank-help.test.ts`, 5 mounted arms. It pins the DERIVATION
+  rather than the count: one block per `LADDER_TRACKS` member, each headed from `LADDER_LABEL`; the
+  lede's number agrees with the number of blocks; each block's line carries its own
+  `BEST_N_BY_TRACK` and the right window per `WINDOW_BY_TRACK` (and the pro block carries
+  `RANKABLE_MIN`'s two numbers); the empty professional table explains itself; and the phone bound is
+  re-measured on the longer card. Mutation (re-hardcode the two-track array): **3 red**.
+  ⚠ `tests/component/round36-rank-help-dialog.test.ts` – the a11y shell (role / focus / Tab / Escape
+  / fit) – is **green and unmodified**; its own note that the copy is only read and never asserted is
+  why no pin moved with the rewrite. `r2-07-dialog-shell`, `a11y-sweep`, `template-copy-rules`,
+  `template-comment-terminators`, `design-tokens`, `stylesheet-integrity`, `pin-hygiene` green.
 
 - [ ] **2. «Не убрали paid from water на заказанных, надо и другие категории проверить»** –
   **build, probably `[!]` reopened.** `git grep -i "paid from" -- src` is EMPTY, so the leftover
@@ -358,10 +408,29 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   желтых плашек?»** – **build.** A wildcard entry gets its own accent on the tournament card –
   token-based, distinct from the yellow family; the pick lands here as DRAFT for his eye.
 
-- [ ] **17. «у некоторых соперниц в про лиге нет флага, проверь там логику пожалуйста»** –
+- [x] **17. «у некоторых соперниц в про лиге нет флага, проверь там логику пожалуйста»** –
   **build (bug).** Recon is locating where rival nationality is assigned (cohort/conveyor) and where
   the flag renders; the fix closes the exact class of players affected, with a test that every pro
   row renders a flag.
+
+  **SHIPPED** (bundle C, `20d0168e`). Root cause exactly as recon called it: `pendingView`'s nation
+  arm was `world.cohort.find((c) => c.id === oppId)?.nation ?? ''` (world/snapshot.ts) and
+  `world.cohort` holds the ~200 juniors – every W-track draw is filled from `fieldProsOf` (`fp-…`
+  ids), so a professional opponent fell through to `''` and `flagEmoji('')` drew nothing. The rank
+  arm nine lines below had special-cased `isFieldProId` since living-field phase W; the nation arm
+  never learned it. Fix: `playerNation(world, id)` beside `playerShortName`, same two populations,
+  same single `.find` (`fieldProsOf` is season-stable and memoised, so the lookup scans an array
+  that is already built – no Map needed for a once-per-snapshot read). `entrantNationAt` and the
+  round-23 #10 domestic re-flag rule are untouched; only what they are handed moved. No UI change –
+  `TournamentFlow.vue:968/:1166` already render `pending.opponent.nation`.
+
+  *Evidence* – `tests/round41-pro-flag.test.ts`, 4 arms: a W15 pending run against a real
+  `fieldProsOf` row asserts a 2-letter nation and a non-empty `flagEmoji`; a J300 run against a real
+  cohort row (the population was not traded); a National run asserting the domestic re-flag still
+  wins; and `playerNation` over both populations plus a stranger. Mutation (drop the `isFieldProId`
+  arm): **2 red / 2 green** – the pro arm and the `playerNation` arm red, the cohort and domestic
+  arms correctly unaffected. `tests/season/domestic-nation.test.ts` green unmodified.
+  *No new player-facing strings.*
 
 - [ ] **18. «у девочки в 16 лет в топ-100 свежекупленный бренд почему-то упал в цене на вторую
   неделю и остался там и дальше на долго. Начал потихоньку расти только после победы на w500. Надо
@@ -371,17 +440,102 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   a mechanical defect ships as a fix with a bench; a working-as-designed curve ships as an answer
   with the formula and its numbers.
 
-- [ ] **19. «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели. Видимо
+- [x] **19. «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели. Видимо
   массажист очень хорошо работает, но в этом случае вообще на экране травмы можно писать сколько
   реально займет восстановление с текущим тиром массажиста»** – **build.** The injury screen quotes
   the base weeks; the physio-adjusted expectation is what he plans against. If the adjusted duration
   is deterministic it prints exactly; if stochastic, a range. String = DRAFT for his read.
 
-- [ ] **20. «при выбранном отпуске надпись о exhausted с карточки будущего турнира ушла, а при
+  **SHIPPED** (bundle C, `57e57f94`). Reproduced to the week: the announced 7 already carries the
+  PHYSIO's cut, the masseur's weeks arrive afterwards one cadence step at a time in `rollInjury`, and
+  the daily rung (`rehabExtraEveryNWeeks: 1`) turns 7 into 4 exactly.
+
+  Build: `Snapshot.injury.expectedWeeks`, derived as `weeksRemaining − masseurRehabWeeksAhead(world)`
+  – **`masseurRehabWeeksAhead` reused, never re-derived**, so the rung's N, the `totalWeeks > 2`
+  niggle guard, the `weeksRemaining > 0` check and the future's own stand-downs (a booked holiday,
+  the college freeze) are honoured by construction. Absent when it would say nothing, on
+  `weeksSaved`'s own rule, so the card can never print «more like 7» under «~7».
+
+  ⚠ **NO SCHEMA MOVE, AND THE COMPILER IS WHY.** `WorldState.injury` is typed `SnapshotInjury`, so
+  widening THAT interface would have made a forecast serialisable. The field lives on a new wire type
+  `InjuryView extends SnapshotInjury` that only `Snapshot.injury` uses. `SAVE_SCHEMA_VERSION` = 74,
+  unmoved; no migration; no fixture. Zero RNG.
+
+  ⚠ **The display ruling at `world/injury.ts:616` (and its twin at `world/masseur.ts:249`) is
+  superseded BY the owner's 12.09 word, for the DIALOG ONLY.** Both comments are amended in place and
+  name this round – the history is kept, then amended. The COUNTDOWN does not move:
+  `weeksRemaining` is still the clinic's number and every «bought a week back» receipt still prints,
+  so «recovery you can watch» survives. What changed is the ANNOUNCEMENT, which is the week he plans
+  against.
+
+  **DRAFT COPY (verbatim, for his read).** One line, added inside the existing «Out for» cell under
+  the unchanged `~7 wks – back around W…`, rendered only when the engine sent a projection:
+
+  > `With the masseur – more like 4 wks, back around W22 '33.`
+
+  (`{n} wk`/`wks` pluralised; the week is `weekLabel(week + expectedWeeks)`. The rung is not named –
+  «the masseur» is who the parent hired; the three rungs give 6 / 5 / 4 off the same line.)
+
+  *Evidence* – `tests/round41-injury-forecast.test.ts` (7 arms) and
+  `tests/component/round41-injury-forecast.test.ts` (6 arms), sharing
+  `tests/helpers/r41InjuryForecast.ts`. Engine: announced 7 + daily → view says 4; no masseur →
+  field ABSENT (not equal-to-total); a 2-week niggle → absent at every rung; **the forecast is
+  HONEST** – the walk runs the real `rollInjury` to the end and she is back in exactly the promised
+  4; the three rungs forecast `{2: 6, 4: 5, 7: 4}`; the persisted object gains no key; the weekly
+  receipt still prints and `weeksSaved` still moves. Surface: both numbers and both return weeks
+  render; a masseur-less career renders the row it always did (`.injury-stop-projection` ABSENT, not
+  empty); the countdown line still starts `~7 wks`. Mutation (`expectedWeeks` ← `totalWeeks`): unit
+  **4 red**, mounted **1 red**.
+
+  **Phone fit** (the dialog grew a line): its own 375x667 and 320x568 arms over the longest card that
+  can now ship – retirement + two cancelled rows + refund + the projection – with the
+  `max-height: none` mutation proof beside them, all green. `injury-cancelled-row`,
+  `injury-surfacing`, `injury-report`, `injuries`, `masseur`, `round34-masseur-withdrawal`,
+  `migrations`, `goldenSaves` all green.
+
+- [x] **20. «при выбранном отпуске надпись о exhausted с карточки будущего турнира ушла, а при
   попытке оставить на него заявку всё ещё предлагает продавить.»** – **build (bug).** Two surfaces
   answer one question with two projections – the card already counts the planned vacation's
   recovery, the entry flow does not. The fix is one shared projection, the repo's own
   two-sides-one-question class.
+
+  **SHIPPED** (bundle C, `5905f6d9`). Both sites confirmed: the CARD is vacation-aware through
+  `availabilityStatus`'s inline `world.condition + bookedRestGainBetween(...)` (round 34 #9); the
+  COACH's two reads – `coachWarnsEntry(coachLoad, floor)` (whether he speaks) and
+  `coachEntryLine(e.tier, world.condition)` (which of his three sentences) – were on TODAY's
+  condition, so his line survived the holiday that silenced the card and `askEnter`'s
+  `e.coachCaution ? 'Enter anyway' : 'Enter'` flipped the button over a card with no warning on it.
+
+  Fix: **one projection, three readers.** `projectedConditionAt(world, week)` (world/medical.ts) is
+  the gate's own arithmetic lifted out unchanged, term for term; the snapshot call site spends it on
+  both coach reads. `bookedRestGainBetween` had exactly one reader when the round opened – adding the
+  second and third inline is when an expression stops being safe, so it became a function.
+
+  ⚠ **`coachLoad.ts` was NOT touched – byte-identical to HEAD**, confirmed by `git status`. The
+  projection reaches him BY VALUE (`{ ...coachLoad, condition: projected }`) at the one call site, so
+  wave-3 T16b's escalation machinery (`coachEscalates`/`strainOf`, deciding THIS week's knock) never
+  sees a forecast. **`tests/coach-load.test.ts`: 19/19 green, file unmodified**; `knock-escalation`
+  (the T16b bars) green too. No UI file moved – the confirm label is already a function of the two
+  engine fields. The doctor's veto is still denied the forecast (round 34 #9's ruling, one function
+  later).
+
+  *Evidence* – `tests/round41-vacation-entry-warning.test.ts` (8 arms) and the mounted
+  `tests/component/round41-vacation-entry.test.ts` (5 arms, the real SeasonScreen + the real
+  ConfirmDialog). Fixture shared by both (`tests/helpers/r41EntryWarning.ts`): National, floor 40,
+  condition 25, event 6 weeks out, hired middle coach.
+  * **(a)** holiday +26 → card quiet, `coachCaution` undefined, **confirm reads «Enter»**;
+  * **(b)** no holiday → «Exhausted» + «She is empty» + «Push through» (unchanged);
+  * **(c)** holiday +18 clears the RUNG but not his ENTRY_MARGIN → he still speaks, but the MILD
+    sentence about the girl who will arrive at 43, not «She is empty» about today's 25. Pinned as its
+    own arm so nobody later reads it as a leftover: his bar sits 8 points above the floor by design;
+  * **(d)** holiday +10 → both surfaces still warn, now about the same projected body;
+  * **(e)** `coachLoadViewOf(world).condition` is still TODAY (the escalation path sees no forecast).
+  Mutation (revert both coach reads to `world.condition`): unit **3 red**, mounted **2 red** – the
+  mounted one reads «expected 'Enter anyway' to be 'Enter'», which is the screen he photographed.
+
+  ⚠ `planner.ts:280`'s practice-booking caution is the recon's low-confidence second candidate and
+  is **left alone** – it is a friendly, outside item 20's scope.
+  *No new player-facing strings* – all three coach sentences and both confirm labels already existed.
 
 - [ ] **21. «А что у нас со стоимостью всех вещей в bills? Мне кажется, что для семьи с большим
   достатком цены сильно выше, чем для других, хотя вроде бы вещи всегда для всех стоят одинаково.»**
@@ -411,11 +565,53 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   of the two is lying; recon is finding the charge loop. The fix is whichever side the arithmetic
   convicts.
 
-- [ ] **26. «в тайле под аватаркой professional #3 а реальный в таблице #4»** – **build (bug).**
+- [x] **26. «в тайле под аватаркой professional #3 а реальный в таблице #4»** – **build (bug).**
   The tile and the standings caption say #3 while the sorted table seats her 4th (8081 pts under
   8555 above). Two aggregates answer one question – recon is naming both code paths (stored rank vs
   the table's sort; counted best-18 vs raw points). The fix makes both surfaces read one source, and
   the test pins the agreement, not either number.
+
+  **SHIPPED** (bundle C, `ec02b294`). Verified: `computeLadderView` filled `rank` from
+  `kidLadderRank` → `rankIn` → the persisted cache (`world.kidRankWta`), while `standings` beside it
+  is a fresh `rankingFor` fold at snapshot time. One aggregate, two evaluation moments. Fix is the
+  recon's structural one: `kidLadderRankFolded` (world/ladder.ts) takes her place off the same fold
+  the standings window. **The memo makes the second fold free**, so the one-line rank change
+  sufficed – `rankingFor`'s key folds `fieldSeasonPoints` itself (`fieldPointsToken`), which is
+  precisely why the CACHE field goes stale and the FOLD does not; `computeStandings` keeps its
+  signature and its call is a memo hit on the same key.
+
+  ⚠ **`PendingView.kidRank` moved with it**, and that is not scope creep: its own note reads the
+  cache for ONE stated reason – «off the same cache `ladders[track].rank` reads, so the overlay can
+  never print a different place for her than the screens behind it». Once the premise moved,
+  honouring the sentence meant following it; leaving it would have re-opened the same two-moments
+  split one screen further in. Both girls' numbers on the VS card now come off the one fold `ranks`
+  was already built from. The note is amended in place, not deleted.
+
+  ⚠ **`world.kidRankWta` STAYS and no engine reader moved** – `homeWildCardPlace`, the acceptance
+  cuts, the entry gates, and the recap's `rankClimbed` pair (which must stay cache-vs-cache or it
+  would invent climbs from a fresh-vs-stale subtraction). Only the projection layer changed. H1/H2/H3
+  tick orderings untouched, as instructed. «Unranked is not a number» is the same `kidPoints > 0`
+  guard, byte for byte.
+
+  **The tile's other consumers all read the same view field** – `composables/kidIdentity.ts:107-114`
+  (`ladder.value?.rank` → `rankText`) and `StatsScreen.vue:105` (`ladder.value?.rank`) both index
+  `ladders[track].rank`, so no UI file needed touching for the tile, the chip or the Stats caption.
+
+  *Evidence* – `tests/round41-rank-agreement.test.ts`, 4 arms. (a) The **season-wrap week**
+  reproduced to its shape: cache written with `fieldSeasonPoints` present (phaseAiWeek :503), tally
+  cleared after (:512) – the two moments then genuinely differ (#638 vs #646), and the view agrees
+  with its own table. (b) The engine still reads the cache and the snapshot writes nothing over it.
+  (c) A **130-week real career** asserting agreement on all three ladders EVERY week, including the
+  reveal weeks the tick defers the recompute on (discriminators: >5 reveal weeks, >50 ranked weeks,
+  both satisfied), plus `pending.kidRank === ladders[pending.ladder].rank`. (d) Null-ness unchanged.
+  Mutations: **M1** revert `computeLadderView.rank` to `kidLadderRank` → 3 red, messages «the wta
+  tile says #638, the table seats her #646» and «the domestic tile says #4, the table seats her #7»
+  (the owner's exact shape); **M2** revert only `pendingView.kidRank` → 1 red, «the VS card and the
+  domestic tile disagree». `condition.test.ts` (including its `ladders.itf.rank === kidRank` alias
+  pin and the frozen capture) green; `ladder-separation`, `ladder`, `ladder-floor`, `dead-rungs`,
+  `unranked-sentinel`, `snapshot-contract`, `seasonWrapUp`, `college-league`, `long-career-ledgers`,
+  `goldenSaves`, and the four component suites that read `ladders.*.rank` all green.
+  *No new player-facing strings.*
 
 - [ ] **27. «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда она в
   первый раз на w серию приходит? это же всё таки ее призовые»** – **ask.** Batched with 15 into
