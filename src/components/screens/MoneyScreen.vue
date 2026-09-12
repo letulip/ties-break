@@ -1165,6 +1165,13 @@ function requiresLabel(row: ShopRowView): string {
  *  интерфейсе»); the wait itself is whole weeks and the due date the row prints once ordered is the
  *  engine's own. */
 function buildWaitLine(row: ShopRowView): string {
+  // ⚠ ROUND 41 #24: the academy's stages build in WEEKS (courts 6, staff 3), and rounding 6 weeks
+  // gave «about 1 months» – the wrong scale wearing broken grammar. Builds under ~2 months speak
+  // in weeks; the months and years sentences stay byte-identical for boats and planes (their
+  // shortest build is 52 weeks, so the weeks branch cannot reach them).
+  if (row.buildWeeks < 9) {
+    return `Built to order – about ${row.buildWeeks} ${row.buildWeeks === 1 ? 'week' : 'weeks'} from the week it is ordered.`
+  }
   const months = Math.round((row.buildWeeks / 52) * 12)
   if (months < 24) return `Built to order – about ${months} months from the week it is ordered.`
   return `Built to order – about ${Math.round(months / 12)} years from the week it is ordered.`
@@ -2636,11 +2643,12 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                    honest face of it (R10-16: a disabled control and a refused click tell one
                    story). What the row says instead is the date, which is the whole point of a
                    commission. -->
-              <!-- ⚠⚠ ROUND 41 #2 – THE `paid $N` META IS GONE. The owner, 12.09: «Не убрали paid
-                   from water на заказанных, надо и другие категории проверить» – this is the exact
-                   leftover round 39 #4 removed from the owned card above; his report supersedes the
-                   round-36 reasoning kept in the note above `SHELF_NO_PAID_META` in the script
-                   block. No `:meta` at all now, rather than an empty one - StatRow's own rule
+              <!-- ⚠⚠ ROUND 41 #2 – THE `paid $N` META IS GONE. The owner's 12.09 report (quoted
+                   verbatim on the ledger item and in the script block above `SHELF_NO_PAID_META` -
+                   not here, the copy law bans Cyrillic inside a template, comments included) reads
+                   this exact caption as the leftover round 39 #4 removed from the owned card
+                   above; his report supersedes that reasoning. No `:meta` at all now, rather than
+                   an empty one - StatRow's own rule
                    (`v-if="meta || $slots.meta"`) is what keeps a blank prop from drawing a hairline
                    nobody asked for. UNCONDITIONAL, so water (boats) and air (planes) both lose it at
                    once - the only two families that reach this card today. -->

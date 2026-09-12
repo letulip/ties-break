@@ -1388,4 +1388,28 @@ exit codes from files) → `/house-review` pass → `/pull-request` with this le
 Older open items that share a surface with this round's bundles get folded in per `/fix-round`
 step 3 (candidates from the README: round-16 #8 kit wear on holiday beside item 20's vacation
 logic; round-33's Stats header tile beside item 26's Stats work) – folded only where the file is
-already open under an agent's hands, listed here when it happens.
+already open under an agent's hands, listed here when it happens. Neither fold happened: round-16
+#8 needs a design of its own (asked four times, never specced) and item 20's fix never opened the
+equipment files; round-33's tile waits on his label choice and item 26's fix stayed in the
+snapshot seam. An honest zero, not a quiet one.
+
+## The coordinator's tail (12.09, after all six bundles)
+
+Leftovers the bundles flagged across each other's fences, fixed at the seam:
+
+* **Item 2's second pin** – `tests/component/round29-shop-elite.test.ts:208` still asserted the
+  ordered yacht said `paid $12,000,000` (bundle M re-aimed `r39-owned-shelf-paid`; this one hid in
+  round 29's own file and bundle E found it red). Re-aimed to assert the ABSENCE, ⚠ note carrying
+  the supersession chain. Green.
+* **Item 24's stale prophecy** – `world/endings.ts`'s epilogue comment called delivered-vs-owned
+  hypothetical («§3g gives the stages no buildWeeks»); #24 made it live, and the comment now says
+  so instead of aging into a lie.
+* **Item 24's wait line** – `buildWaitLine` rounded a 6-week build to «about 1 months» (wrong
+  scale wearing broken grammar). Builds under ~2 months speak in weeks; boats and planes keep
+  their months/years sentences byte-identical (their shortest build is 52 weeks, unreachable by
+  the weeks branch). **DRAFT for his read:** `Built to order – about 6 weeks from the week it is
+  ordered.` (courts; staff reads `…about 3 weeks…`).
+* **Two template comments** (bundles A and M) carried the owner's Cyrillic quotes inside
+  `<template>` – the copy law bans Cyrillic there, comments included, and `template-copy-rules`
+  went red for exactly that. The quotes became pointers to this ledger and the script blocks;
+  the law's own test is green again (4/4).

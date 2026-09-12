@@ -1010,10 +1010,10 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
 
       <!-- THE COACH'S READ + THE BUTTON THAT STARTS IT. -->
       <Card class="tf-brief">
-        <!-- ⭐ ROUND 41 #7 – HIS FACE, ON HIS OWN TILE. The owner: «на экране перед матчем если
-             тренер есть давай может вот на этой нижней плитке со словами коуча ... поставим ее
-             картинку тоже слева как на главной на тайле стоит?» (quoted here rather than in the
-             template - tests/round13-nav.test.ts bans Cyrillic inside one). Home's exact idiom
+        <!-- ⭐ ROUND 41 #7 – HIS FACE, ON HIS OWN TILE. The owner's ask is quoted verbatim on the
+             ledger item (docs/rounds/round-41.md #7) and beside coachPhoto in the script block -
+             NOT here, because the copy law bans Cyrillic anywhere inside a template, comments
+             included (tests/template-copy-rules.test.ts). Home's exact idiom
              (`.coach-art`/`.coach-art img`, HomeScreen.vue): absolute, flush to the card's left
              edge, height-driven with no vertical crop (28.07 ruling), a 90deg mask fading him into
              the card rather than a hard edge. `v-if` on the coach existing, his own words - a
