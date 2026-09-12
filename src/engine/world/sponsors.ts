@@ -20,7 +20,7 @@ import { netTravelCents, travelCoverShare } from '../academy'
 // The rung ladder, for the cameo's coach cut. coach.ts is a leaf (it imports ECONOMY and rng and
 // nothing else), so this runs one way exactly as every other import in this file does.
 import { COACH_TIERS } from '../coach'
-import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
+import { AD_CATEGORIES, activeAdDeals, activeKitDeal, adBandFor, adCapstoneTerms, adFeeFor, adJuniorAt, adJuniorOpen, adJuniorTerms, adLetterRng, adLifetimeTerms, adSpokenFor, adTermsForCategory, adWritesAt, chooseShootWeeks, contractEndWeek, dealEndingWithSeason, dealUnderReview, endDealWithSeason, isSponsorWindowCloseWeek, isSponsorWindowWeek, kitTravelShare, lastSignedAdBrand, letDownThisWindow, pickAdHouse, raiseAdOffer, raiseKitEndLetter, raiseKitOffers, raiseKitRenewal, refuseOffer as refuseOfferIn, signOffer as signOfferIn, sponsorWindowOpensAt, standingClears, type SponsorStanding } from '../offers'
 import type { SeasonEvent, TierId } from '../season/types'
 import { LADDER_LABEL, type AdOfferTerms, type CoachTier, type KitEndReason, type KitOfferTerms, type Offer, type WorldEventCategory } from '../../shared/protocol'
 import { accrueKidShare, addEvent } from './ledger'
@@ -625,9 +625,20 @@ export function capstoneSeasonsOf(world: WorldState): number {
  *  re-roll anybody's dice. */
 export function reviewAdOffer(world: WorldState): void {
   const s = ECONOMY.advertising
-  // FROM EIGHTEEN («от 18+ лет начиная») – her real age, `kidAgeYears` through `kidAgeAt`, the
-  // one-clock ruling: never the band's clock, never a birthday approximation.
-  if (kidAgeAt(world, world.week) < s.fromAgeYears) return
+  // FROM SIXTEEN SINCE ROUND 41 #15 – her real age, `kidAgeYears` through `kidAgeAt`, the one-clock
+  // ruling: never the band's clock, never a birthday approximation.
+  //
+  // ⚠⚠ IT SAID «FROM EIGHTEEN («от 18+ лет начиная»)» AND THAT QUOTE WAS BEING ASKED TO CARRY A
+  // RULING IT NEVER MADE – the whole exhibit is on `ECONOMY.advertising.fromAgeYears`. The owner,
+  // 12.09: «А рекламных контрактов правда не предлагают до 18 лет или это наше ноу-хау? кажется
+  // молодые тоже в рекламах снимаются», and then, on option A1: «реклама открывается с 16
+  // (юниорские суммы, реже) … согласен».
+  const ageYears = kidAgeAt(world, world.week)
+  if (ageYears < s.fromAgeYears) return
+  // ⭐⭐ AND THE TWO YEARS IT OPENED ARE THEIR OWN SHELF – two categories, half the cheque, half the
+  // arrivals, one year. From her eighteenth birthday this is false and every line below is the
+  // shipped code, byte for byte.
+  const junior = adJuniorAt(ageYears)
   // RESULTS ONLY: a counting professional standing inside a band of the gradient. The `wtaRanked`
   // guard is the brand ladder's own – a floor tie is not a standing, and `adBandFor` holds it. The
   // band sets every category's cheque at once (§8: the cheque is the only axis that scales).
@@ -643,6 +654,15 @@ export function reviewAdOffer(world: WorldState): void {
     // other <trade> campaign while that runs») untrue – the same argument the one-post rule always
     // made, now made per slot.
     if (adSpokenFor(world.offers, world.week, category)) continue
+    // ⭐⭐ ROUND 41 #15 – THE JUNIOR SHELF IS TWO CATEGORIES WIDE. Before eighteen a watch, a car, an
+    // airline and a fragrance write nothing at all, and neither do the two crowns (whose own tenure
+    // gates could not be met at seventeen either – refused twice on purpose, because an unreachable
+    // gate is a gate somebody deletes).
+    if (junior && !adJuniorOpen(category)) continue
+    // ⚠ «РЕЖЕ» IS THE ARRIVAL BAR AND NOTHING ELSE – the SAME sub-stream at a lower threshold, so the
+    // draw count, the stream and its position are untouched at every age. A career that crosses
+    // eighteen mid-week does not re-roll anything; it simply starts clearing the adult bar.
+    const chance = junior ? (s.offerChance * s.junior.chanceBps) / 10_000 : s.offerChance
     let terms: AdOfferTerms | null = null
     if (category === 'capstone') {
       // ⭐⭐ THE CAPSTONE GATE IS TENURE, NOT TODAY'S RANK – four seasons ENDED inside the top 10
@@ -653,7 +673,7 @@ export function reviewAdOffer(world: WorldState): void {
       if (capstoneSeasonsOf(world) < s.capstone.seasonsInTop10) continue
       const kit = activeKitDeal(world.offers, world.week)
       const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
-      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      if (!adWritesAt(world.seed, world.week, chance, category)) continue
       terms = adCapstoneTerms(author)
     } else if (category === 'lifetime') {
       // ⭐⭐⭐ ROUND 39 #3 – THE LIFETIME LETTER («А некоторые и пожизненно»), once per career. The
@@ -673,7 +693,7 @@ export function reviewAdOffer(world: WorldState): void {
       if (capstoneSeasonsOf(world) < s.lifetime.seasonsInTop10) continue
       const kit = activeKitDeal(world.offers, world.week)
       const author = kit ? (kit.terms as KitOfferTerms).brand : ECONOMY.sponsorship.icon.brand
-      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      if (!adWritesAt(world.seed, world.week, chance, category)) continue
       terms = adLifetimeTerms(author)
     } else {
       // A `null` fee cell IS the category's gate at this band – watches/cars/drinks/clothing from
@@ -688,7 +708,7 @@ export function reviewAdOffer(world: WorldState): void {
         if (!kit) continue
         author = (kit.terms as KitOfferTerms).brand
       }
-      if (!adWritesAt(world.seed, world.week, s.offerChance, category)) continue
+      if (!adWritesAt(world.seed, world.week, chance, category)) continue
       // The letter's own dice, split from the arrival roll by scope: the author (P6's churn – at
       // the top band the previous signed house steps back, `pickAdHouse`) and the term (1–3
       // years, the research's non-endemic law).
@@ -709,6 +729,15 @@ export function reviewAdOffer(world: WorldState): void {
       const ladder = s.bands[band]
       const years = ladder.termYearsMin + Math.floor(rng() * (ladder.termYearsMax - ladder.termYearsMin + 1))
       terms = adTermsForCategory(category, band, years, author)
+      // ⭐⭐⭐ ROUND 41 #15 – AND THE JUNIOR PAPER IS THE ADULT PAPER, RE-SIZED. Half the cheque, one
+      // year, everything else the band's own.
+      //
+      // ⚠⚠ IT RUNS **AFTER** THE TERM DRAW AND NOT INSTEAD OF IT, and that is round 39 #3's own
+      // lesson applied one item later: the uniform is spent at every band precisely so the letter
+      // rng's draw ORDER never depends on a branch. Forcing one year by skipping the draw would
+      // shift every subsequent value on this stream, and a seventeen-year-old's stream is the same
+      // one her eighteen-year-old self reads.
+      if (junior && terms) terms = adJuniorTerms(terms)
     }
     if (!terms) continue
     // Terms are frozen at arrival from the catalogue – the snapshot rule – and the deadline gives

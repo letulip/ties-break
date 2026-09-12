@@ -1906,6 +1906,72 @@ export function adFeeFor(category: AdTradeCategory, band: number): number | null
   return ECONOMY.advertising.categories[category].feeCentsByBand[band] ?? null
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 41 #15 – THE JUNIOR BAND. «РЕКЛАМА ОТКРЫВАЕТСЯ С 16 (ЮНИОРСКИЕ СУММЫ, РЕЖЕ)»
+// =================================================================================================
+//
+// THE OWNER'S QUESTION, 12.09: «А рекламных контрактов правда не предлагают до 18 лет или это наше
+// ноу-хау? кажется молодые тоже в рекламах снимаются.» AND HIS RULING the same day, option A1:
+// «реклама открывается с 16 (юниорские суммы, реже), а призовые падают на её счёт с первого старта
+// W-серии независимо от возраста – согласен».
+//
+// ⚠⚠ THREE FUNCTIONS AND NOT THREE INLINE EXPRESSIONS, because there are TWO readers and they must
+// agree: `reviewAdOffer` writes the letter and `toSnapshot` draws the shelf the player decides
+// against. A shelf promising $80,000 over a letter that brings $40,000 is this repo's most-caught
+// defect – two sides asking different functions about one question – and it would be invisible until
+// a sixteen-year-old signed one.
+//
+// ⚠ EVERY ONE OF THEM IS PURE AND NONE OF THEM DRAWS. The junior band changes a THRESHOLD and a
+// FIGURE; it adds no die anywhere, and the arrival roll it scales is the category's own shipped
+// sub-stream (`seed:ad:<category>:<week>`) read at a lower bar. ZERO MAIN draws, and an age is world
+// state rather than player input, so input-independence is untouched: nothing a parent chooses can
+// move a career across this line.
+
+/** ⭐⭐ IS SHE INSIDE THE JUNIOR BAND THIS WEEK – real age in [16, 18), her own clock. The caller
+ *  must have passed the age gate first; this answers «and is the shelf the junior one». */
+export function adJuniorAt(ageYears: number): boolean {
+  const s = ECONOMY.advertising
+  return ageYears >= s.fromAgeYears && ageYears < s.junior.untilAgeYears
+}
+
+/** ⭐⭐ MAY THIS CATEGORY BE WRITTEN BEFORE EIGHTEEN – the two cheapest rungs of the shelf and
+ *  nothing else («drinks» is the ≤400 band's own cell, «clothing» is the kit house's second
+ *  programme and already needs a live kit deal). The capstone and the lifetime letter are refused
+ *  here as well as by their own tenure gates. */
+export function adJuniorOpen(category: AdCategory): boolean {
+  return (ECONOMY.advertising.junior.categories as readonly string[]).includes(category)
+}
+
+/** ⭐⭐ THE JUNIOR CHEQUE – «юниорские суммы», a share of the adult cell at the same band, so a
+ *  retune of the category table moves both shelves together. Rounded ONCE, here, because cents are
+ *  integers everywhere in this engine. */
+export function adJuniorFeeCents(adultCents: number): number {
+  return Math.round((adultCents * ECONOMY.advertising.junior.feeBps) / 10_000)
+}
+
+/** ⭐⭐ THE JUNIOR LETTER – an adult paper, re-sized and held to one year. It takes FINISHED TERMS
+ *  rather than a band and a category, which is what keeps it from being a second `adTermsForCategory`
+ *  with its own idea of what a letter says: the author, the trade, the shoot count and the
+ *  category all come through untouched, and exactly two fields move.
+ *
+ *  ⚠ THE SHOOT COUNT IS DELIBERATELY NOT SCALED. It is the band's own `shootWeeksPerYear`, which is
+ *  1 at every band a sixteen-year-old can realistically stand in, and inventing a junior shoot rule
+ *  would be answering a question he did not ask. What a junior deal costs her in TIME is the band's
+ *  figure, unchanged.
+ *
+ *  ⚠ A LIFETIME PAPER WOULD BE MANGLED BY THIS (it declares `termWeeks: 0` and no `termYears`), and
+ *  that is unreachable rather than guarded: `adJuniorOpen` refuses the category before any terms
+ *  exist. Said out loud because the two functions are only safe together. */
+export function adJuniorTerms(terms: AdOfferTerms): AdOfferTerms {
+  const years = ECONOMY.advertising.junior.termYears
+  return {
+    ...terms,
+    cashCents: adJuniorFeeCents(terms.cashCents),
+    termYears: years,
+    termWeeks: years * WEEKS_PER_YEAR,
+  }
+}
+
 /** ⭐ P6'S CHURN – WHICH HOUSE OF THE CATEGORY WRITES THIS LETTER. One draw off the letter's own
  *  rng, over the category's 2–4 names, with the ruling's one exclusion: AT THE TOP BAND a house
  *  does not write twice running – the previous signed deal's author steps back and a different

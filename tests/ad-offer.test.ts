@@ -63,6 +63,16 @@ import { lookAheadFor, type CalendarWeekFacts } from '../src/composables/weekDay
 import { DEFAULT_PROFILE, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠⚠ ROUND 41 #15 (12.09) – THE AGE THE **ADULT** SHELF OPENS AT, and every fixture in this file
+ *  that used to spell it `AD.fromAgeYears` now spells it this, re-aimed one by one rather than by a
+ *  rename. The owner opened the letters at SIXTEEN – «реклама открывается с 16 (юниорские суммы,
+ *  реже) … согласен» – so `fromAgeYears` is 16 and it no longer means what this file meant by it:
+ *  the watches anchor, the term ladder, the churn and the manager's cut are all claims about the
+ *  ADULT paper, and a sixteen-year-old is written a drink at half the money for one year.
+ *  ⚠ NOT ONE ASSERTION IN THIS FILE MOVED – the careers below are walked to exactly the week they
+ *  were walked to before the item, so every number they measure is byte-identical. The junior band
+ *  is `tests/round41-ad-junior.test.ts`'s subject, and the two files share no arm. */
+const ADULT_AGE = AD.junior.untilAgeYears
 /** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
  *  P6/§8), so the shipped rung's numbers have moved twice and this file tracks them by their
  *  identity, not their address. Every claim here is about the WATCHES letter at the bottom band –
@@ -131,7 +141,7 @@ function pushBook(world: WorldState): void {
 function adultPro(seed: string) {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
   const rng = resumeMain(world.rngMain)
-  while (ageOf(world) < AD.fromAgeYears) tickWeek(world, rng)
+  while (ageOf(world) < ADULT_AGE) tickWeek(world, rng)
   pushBook(world)
   world.onRampCleared = { itf: true, wta: true }
   recomputeKidRank(world)
@@ -157,7 +167,7 @@ const life = (() => {
 
 describe('the fixture is what it claims to be', () => {
   it('eighteen-plus, a counting W standing inside the bar, and dice that say yes inside the window', () => {
-    expect(ageOf(life.eligible)).toBeGreaterThanOrEqual(AD.fromAgeYears)
+    expect(ageOf(life.eligible)).toBeGreaterThanOrEqual(ADULT_AGE)
     const standing = sponsorStandingOf(life.eligible)
     expect(standing.wtaRanked).toBe(true)
     expect(standing.wtaRank).toBeLessThanOrEqual(WATCH.maxWtaRank)
@@ -432,26 +442,46 @@ function probeWorld(seed: string, week: number, rank: number | undefined, ranked
   return world
 }
 
-describe('the gate: results only, from eighteen, and the dice', () => {
+describe('the gate: results only, from the gate age, and the dice', () => {
   const SEED = 'ad-gates'
-  // A true-roll week where she is under eighteen for EVERY birth date (age < 18 holds for all weeks
-  // under 205: whole years = weekYear - birthYear - (0|1) <= 17 there), and one safely past her
-  // nineteenth (week 260+) – so the two arms differ in age and in nothing else.
-  const underAgeTrue = firstRollFrom(SEED, 60, 140)
+  // ⚠⚠ RE-AIMED BY ROUND 41 #15 (12.09), AND THE PROBE WEEK HAD TO MOVE WITH THE GATE. What stood
+  // here was «a true-roll week where she is under EIGHTEEN for EVERY birth date (age < 18 holds for
+  // all weeks under 205)», with the bound read by hand off the arithmetic – and the owner then
+  // opened the letters at sixteen: «реклама открывается с 16 (юниорские суммы, реже) … согласен».
+  // A week at seventeen is no longer a refusal, it is the JUNIOR SHELF, so a probe left where it was
+  // would have been asserting the opposite of the engine's own rule.
+  // ⚠ THE WEEK IS FOUND BY HER AGE NOW AND NOT BY A HAND-READ BOUND, which is what makes the fixture
+  // survive the NEXT move of this constant: the search asks the same clock the gate asks.
+  // ⚠ The junior band itself is `tests/round41-ad-junior.test.ts`'s subject; this arm's claim is
+  // narrower and unchanged – below the gate, nothing is written at all.
+  const ageAt = (week: number): number => {
+    const w = createWorld(SEED, { ...DEFAULT_PROFILE, coachTier: 'self' })
+    w.week = week
+    return ageOf(w)
+  }
+  const underAgeTrue = (() => {
+    for (let w = 1; w < 400; w++) {
+      if (ageAt(w) < AD.fromAgeYears && adWritesAt(SEED, w, AD.offerChance, 'watches')) return w
+    }
+    return -1
+  })()
+  // ...and one safely past the ADULT age, so the two arms differ in age and in nothing else.
   const adultTrue = firstRollFrom(SEED, 260, 80)
 
   it('fixture facts: both probe weeks exist and sit where the argument needs them', () => {
     expect(underAgeTrue).toBeGreaterThan(0)
-    expect(underAgeTrue).toBeLessThan(205)
     expect(adultTrue).toBeGreaterThanOrEqual(260)
     const world = createWorld(SEED, { ...DEFAULT_PROFILE, coachTier: 'self' })
     world.week = underAgeTrue
-    expect(ageOf(world)).toBeLessThan(AD.fromAgeYears)
+    expect(ageOf(world), 'the under-age probe really is under the gate').toBeLessThan(AD.fromAgeYears)
     world.week = adultTrue
-    expect(ageOf(world)).toBeGreaterThanOrEqual(AD.fromAgeYears)
+    // ⚠ THE ADULT PROBE CLEARS THE **ADULT** BAR AND NOT MERELY THE GATE, which is the assertion
+    // that keeps every watches claim below it honest: at seventeen this career would be written a
+    // drink, not a watch.
+    expect(ageOf(world)).toBeGreaterThanOrEqual(ADULT_AGE)
   })
 
-  it('no letter before eighteen – same standing, same true roll, only the age differs', () => {
+  it('no letter below the gate age – same standing, same true roll, only the age differs', () => {
     const under = probeWorld(SEED, underAgeTrue, 150, true)
     reviewAdOffer(under)
     expect(adPost(under)).toEqual([])

@@ -1508,9 +1508,19 @@ export const ECONOMY = {
   // grows. A share that only counted beside the wallet would be a number, not a mechanic, and «это
   // всё-таки её карьера» is an argument about whose money it is.
   kidShare: {
-    /** The birthday the transfers start on. Her own bank account is the eighteenth's gift. */
+    /** The birthday the RAMP starts climbing on. Her own bank account is the eighteenth's gift.
+     *
+     *  ⚠⚠ ROUND 41 #27 (12.09) – IT IS NO LONGER THE AGE THE TRANSFERS START AT, and the field is
+     *  renamed in MEANING rather than in spelling because every reader of it still wants this same
+     *  week. The owner: «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента,
+     *  когда она в первый раз на w серию приходит? это же всё таки ее призовые», and then «призовые
+     *  падают на её счёт с первого старта W-серии независимо от возраста – согласен». Below this
+     *  birthday she now keeps `startBps` flat; from it the ladder climbs exactly as it always did.
+     *  See `kidPrizeShareBps` for why «с первого старта W-серии» needs no gate of its own. */
     fromAgeYears: 18,
-    /** What she keeps of every cheque in that first year – 10%, the bottom of his own «10-20%». */
+    /** What she keeps of every cheque in that first year – 10%, the bottom of his own «10-20%».
+     *  ⭐ ROUND 41 #27: and what she keeps of every cheque BELOW it, which is the same number by
+     *  ruling rather than by coincidence – the curve is continuous across her eighteenth. */
     startBps: 1000,
     /** ...and what each birthday after it adds. Five points a year is his «наращивать год к году». */
     stepBps: 500,
@@ -1582,6 +1592,12 @@ export const ECONOMY = {
   // brand ever writes. In practice the professional rungs open at WTA #200 and the advertising
   // ladder at eighteen, so a pre-eighteen sponsor cheque is close to unreachable – but where one
   // exists, the money is hers minus the fee, not the family's whole.
+  // ⚠⚠ ROUND 41 #15 MADE THAT LAST SENTENCE'S «CLOSE TO UNREACHABLE» LESS TRUE AND THE RULING MORE
+  // LOAD-BEARING, which is why the paragraph is amended rather than left to rot. The advertising
+  // ladder opens at SIXTEEN now (his «реклама открывается с 16 … согласен»), so a junior drinks or
+  // clothing letter is a real pre-eighteen sponsor cheque – and this constant is what decides where
+  // it lands. It lands the way he ruled it: hers at full value, the parent earning the fee. Measured
+  // reach for the junior band is in `docs/specs/ad-portfolio-2026-08.md`'s round-41 section.
   managerCommission: {
     /** ⚠ PROVISIONAL AND HIS TO MOVE – the midpoint of his own «10-20% например», picked because he
      *  named a band and not a number. It is ONE constant and every sentence on every screen reads
@@ -1614,12 +1630,71 @@ export const ECONOMY = {
   // opens for does not decay, and the ladder is on `houses` below, with the owner's own words, the
   // sourced comparison it was checked against, and the measured shares it is built from.
   advertising: {
-    /** The age the owner scoped advertising mechanics to («какие у нас могут быть механики этих
-     *  контрактов дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's
-     *  threshold age – `kidShare.fromAgeYears` above starts her own prize split there, school is
-     *  over by 18.92 for every birth month, the junior rungs shut – so the boundary exists and this
-     *  reads the same clock (`kidAgeYears`, the one-clock ruling of 09.08). */
-    fromAgeYears: 18,
+    /** ⭐⭐⭐ ROUND 41 #15 (12.09) – SIXTEEN, AND THE EIGHTEEN THAT STOOD HERE WAS OUR READING RATHER
+     *  THAN HIS RULING. That is the whole of the item and it is written down first, because the
+     *  paragraph below is the evidence against itself.
+     *
+     *  ⚠⚠ WHAT THE SHIPPED COMMENT SAID, KEPT VERBATIM BECAUSE IT IS THE EXHIBIT: «The age the owner
+     *  scoped advertising mechanics to («какие у нас могут быть механики этих контрактов
+     *  дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's threshold age –
+     *  `kidShare.fromAgeYears` above starts her own prize split there, school is over by 18.92 for
+     *  every birth month, the junior rungs shut – so the boundary exists and this reads the same
+     *  clock (`kidAgeYears`, the one-clock ruling of 09.08).» ⚠ HIS SENTENCE ASKED WHAT EXTRA
+     *  MECHANICS EXIST FROM 18 ONWARD. It was read as an ELIGIBILITY GATE, which is a different
+     *  claim, and the three supporting facts are all true and none of them is about advertising.
+     *
+     *  HE CAUGHT IT HIMSELF, 12.09: «А рекламных контрактов правда не предлагают до 18 лет или это
+     *  наше ноу-хау? кажется молодые тоже в рекламах снимаются.» AND HIS RULING, the same day, on
+     *  the round's option A1: «реклама открывается с 16 (юниорские суммы, реже), а призовые падают
+     *  на её счёт с первого старта W-серии независимо от возраста – согласен».
+     *
+     *  ⚠ THE CLOCK IS UNCHANGED – her REAL age through `kidAgeAt`, never the band's, the one-clock
+     *  ruling of 09.08. Only the number moved, and the two years it opened carry the `junior` block
+     *  below rather than the adult shelf. */
+    fromAgeYears: 16,
+    /** ⭐⭐⭐ ROUND 41 #15 – THE JUNIOR BAND, and it is a BAND rather than four scattered multipliers
+     *  on purpose: «юниорские суммы, реже» is one design sentence and it should be readable as one
+     *  block. It governs exactly the real ages [16, 18); from her eighteenth birthday the shelf is
+     *  byte-identical to what shipped, which is the property the bench arm is built to prove.
+     *
+     *  ⚠⚠ TWO CATEGORIES AND NOT SIX, AND THE PAIR IS THE SHELF'S OWN CHEAPEST RUNGS RATHER THAN A
+     *  TASTE. `drinks` is the one category open at the very foot of the ladder (the ≤400 band's own
+     *  cell – round 34's «a kit patch and a drink»), and `clothing` is the kit brand's second
+     *  programme, which ALREADY requires a live kit deal to be written at all («двойной программой»,
+     *  `reviewAdOffer`). So the junior shelf is: the drink she is photographed with, and the house
+     *  that already dresses her putting her on a poster. A watch, a car, an airline and a fragrance
+     *  are adult money for an adult face, and the real sport agrees – a fifteen-year-old signs an
+     *  apparel deal, not a fragrance campaign.
+     *
+     *  ⚠ THE CAPSTONE AND THE LIFETIME LETTER ARE NOT ON THE LIST EITHER, and their own gates would
+     *  refuse them anyway (four seasons ENDED inside the top 10 cannot exist at seventeen). Named
+     *  rather than left to arithmetic: a gate that is unreachable today is a gate somebody deletes
+     *  tomorrow.
+     *
+     *  ⚠ HALF THE CHEQUE AND HALF THE ARRIVALS – «юниорские суммы, реже», the two halves of his
+     *  sentence, one number each. They are expressed in bps against the ADULT cell rather than as a
+     *  junior price table, so the two shelves cannot drift apart on a retune: a new category cell,
+     *  or a re-sized band, moves the junior figure with it by construction.
+     *
+     *  ⚠⚠ ONE YEAR, NEVER MORE, AND IT IS NOT A MULTIPLIER BUT A CEILING THE PAPER IS HELD TO. A
+     *  multi-year deal signed for a minor is the thing his own round-34 complaint was about at the
+     *  foot of the adult ladder («в 18 лет предлагают подписать копеечные контракты на 2 и 3 года»),
+     *  and it is worse at sixteen: it would bind a career through the two years it changes most.
+     *  ⚠ The bands a sixteen-year-old can actually reach write one year anyway (≤400 and ≤200 are
+     *  both `termYearsMin: 1, termYearsMax: 1`), so this ceiling binds only a prodigy inside the top
+     *  100 – which is exactly the case that needed deciding rather than left to a band table. */
+    junior: {
+      /** the real age the junior band ENDS at – [16, 18), her own clock */
+      untilAgeYears: 18,
+      /** the only categories a letter may be written in before eighteen */
+      categories: ['drinks', 'clothing'] as readonly AdTradeCategory[],
+      /** the junior cheque as a share of the adult cell at the same band – «юниорские суммы» */
+      feeBps: 5000,
+      /** the junior arrival rate as a share of the adult chance – «реже» */
+      chanceBps: 5000,
+      /** every junior term, in years – a ceiling and not a draw */
+      termYears: 1,
+    },
     /** ⭐⭐⭐ ROUND 29 PART TWO #19/#20 – THE LADDER, WHICH IS WHAT THIS CATALOGUE DID NOT HAVE.
      *
      *  HIS TWO QUESTIONS, and the second one invited correction: «я не увидел наш список спонсоров
@@ -5842,11 +5917,41 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
 /** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.
  *
  *  `ECONOMY.kidShare` holds all four numbers; this is the ramp read off them and nothing else, so a
- *  retune moves the whole game and this function does not change. Zero before the threshold birthday,
- *  and flat once the cap is reached (age 26 on the shipped ladder):
+ *  retune moves the whole game and this function does not change. Flat once the cap is reached (age
+ *  26 on the shipped ladder):
  *
- *      18   19   20   21   22   23   24   25   26+
- *      10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *      <18  18   19   20   21   22   23   24   25   26+
+ *      10%  10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *
+ *  ⭐⭐⭐ ROUND 41 #27 (12.09) – THE FIRST COLUMN IS NEW AND IT USED TO BE A ZERO.
+ *
+ *  HIS QUESTION: «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда
+ *  она в первый раз на w серию приходит? это же всё таки ее призовые» – and his ruling, option A1,
+ *  the same day: «призовые падают на её счёт с первого старта W-серии независимо от возраста –
+ *  согласен».
+ *
+ *  ⚠⚠ «С ПЕРВОГО СТАРТА W-СЕРИИ» NEEDS NO GATE HERE, AND THAT IS A FACT ABOUT THE CATALOGUE RATHER
+ *  THAN A SHORTCUT. Prize money exists on the PROFESSIONAL TRACK ONLY: every `wta`-track tier in
+ *  `calendar.ts` carries a `prize` array and not one domestic or ITF-junior rung does (junior tennis
+ *  pays nothing, ever – ITF Juniors Reg 31 a) i), quoted at the finalize site). `finalizeTournament`
+ *  splits inside `if (prize > 0)`, so THE SPLIT IS REACHED ONLY ON A W-SERIES RESULT – «her share of
+ *  every prize cheque, at any age» and «her share from her first W-series start» describe exactly the
+ *  same set of cheques. A `wtaEverCounted`-shaped gate on top would be a second predicate that can
+ *  only ever answer true where it is asked, and this repo has dug out nine dead guards in three days.
+ *  ⚠ IT IS ALSO THE STRICTER READING OF HIS SENTENCE. `wtaEverCounted` means «a W result has ever
+ *  SCORED», not «she has ever COME» – a W15 first-round exit pays $130 and zero points – so a gate
+ *  built on it would have refused her the first cheque she ever earned.
+ *
+ *  ⚠ THE LADDER FROM EIGHTEEN IS UNTOUCHED TO THE POINT, which is what keeps round 23 #18 and round
+ *  35 #9 whole: the curve is CONTINUOUS at the birthday (10% either side of it), the cap still lands
+ *  at 26, and every figure the shipped surfaces quote from eighteen onward is the figure they quoted
+ *  before this item. What changed is that the two years under it are 10% instead of nothing.
+ *
+ *  ⚠⚠ AND THE MERCH BRAND MOVES WITH IT, BY ROUND 35 #9'S OWN RULE RATHER THAN BY ACCIDENT: «доход
+ *  от ее бренда давай тоже как проценты с призовых будем делить» – the brand rides THIS function, so
+ *  a sixteen-year-old whose family owns her brand now keeps a tenth of its week too. It is the
+ *  faithful reading of «как с призовых» and it can only ever ADD to her account; the alternative –
+ *  a second ramp for the brand – is the drift that ruling exists to prevent.
  *
  *  ⚠ IT TAKES HER REAL AGE IN WHOLE YEARS (`kidAgeYears`), never the ITF band's – the one-clock
  *  ruling of 09.08. A December girl is 18 for the last three weeks of the season her band turned 19
@@ -5856,7 +5961,7 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *  Pure integer arithmetic on a persisted-nowhere input: no draw, no state, no schema. */
 export function kidPrizeShareBps(ageYears: number): number {
   const { fromAgeYears, startBps, stepBps, capBps } = ECONOMY.kidShare
-  if (ageYears < fromAgeYears) return 0
+  if (ageYears < fromAgeYears) return startBps
   return Math.min(capBps, startBps + (Math.floor(ageYears) - fromAgeYears) * stepBps)
 }
 

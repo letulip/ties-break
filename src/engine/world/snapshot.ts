@@ -21,7 +21,7 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, hasLiveOffer, seasonLastWeek } from '../offers'
+import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -1597,7 +1597,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a
     // junior (`reviewAdOffer`'s own age gate, read through the same constant).
     adPortfolio: (() => {
-      if (kidAgeAt(world, world.week) < ECONOMY.advertising.fromAgeYears) return []
+      const adAge = kidAgeAt(world, world.week)
+      if (adAge < ECONOMY.advertising.fromAgeYears) return []
+      // ⭐⭐⭐ ROUND 41 #15 – THE SHELF KNOWS ABOUT THE JUNIOR BAND, AND IT HAS TO. The owner opened
+      // the letters at sixteen with «юниорские суммы, реже», so between sixteen and eighteen the
+      // engine writes two categories at half the cheque – and a shelf that went on quoting the adult
+      // figure would be promising $80,000 over a letter that brings $40,000. Two sides asking
+      // different functions about one question is this repo's most-caught defect; both sides ask
+      // `adJuniorOpen` and `adJuniorFeeCents`.
+      const junior = adJuniorAt(adAge)
       const standing = sponsorStandingOf(world)
       const band = adBandFor(standing)
       const rows: AdPortfolioRow[] = []
@@ -1656,9 +1664,21 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
           continue
         }
         const def = ECONOMY.advertising.categories[category]
-        const fee = band === null ? null : adFeeFor(category, band)
+        // ⚠⚠ ROUND 41 #15 – A CATEGORY THE JUNIOR BAND DOES NOT WRITE IS CLOSED WITH NO RANK HINT,
+        // AND THAT IS THE HONEST ROW RATHER THAN A CONVENIENT ONE. `opensAtRank` answers «how far up
+        // the ladder does this open», which is TRUE and NOT THE REASON here: a sixteen-year-old
+        // inside WTA #180 meets the watch band's rank and is still refused, on her age. So the row
+        // falls through to the shelf's own existing «Not open yet» – the string the template has
+        // carried since round 29 for exactly a closed row with nothing more to say, so this item
+        // adds no player-facing copy and needs no template edit.
+        const adultFee = band === null ? null : adFeeFor(category, band)
+        const fee = junior && !adJuniorOpen(category) ? null : adultFee
         if (fee !== null) {
-          rows.push({ category, label: def.label, state: 'open', openCashCents: fee })
+          // ⚠ AND THE OPEN ROW QUOTES THE JUNIOR CHEQUE, off the same function the letter is written
+          // with, so the promise on the shelf is the money in the envelope.
+          rows.push({ category, label: def.label, state: 'open', openCashCents: junior ? adJuniorFeeCents(fee) : fee })
+        } else if (junior && !adJuniorOpen(category)) {
+          rows.push({ category, label: def.label, state: 'closed' })
         } else {
           // the weakest band whose cell is priced = the standing the category opens at
           const openIdx = def.feeCentsByBand.findIndex((c) => c !== null)

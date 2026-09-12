@@ -66,6 +66,14 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdCategory, type AdOfferTerms, type KitOfferTerms, type Offer, type SeasonHistoryEntry } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠⚠ ROUND 41 #15 (12.09) – THE AGE THE **ADULT** SHELF OPENS AT, and this file's careers are all
+ *  about the adult ladder. The owner opened the letters at SIXTEEN – «реклама открывается с 16
+ *  (юниорские суммы, реже) … согласен» – so `fromAgeYears` is 16 and no longer means what this
+ *  fixture meant by it.
+ *  ⚠ NOT ONE ASSERTION MOVED: every career below is walked to exactly the week it was walked to
+ *  before the item, so every number it measures is byte-identical. The junior band is
+ *  `tests/round41-ad-junior.test.ts`'s subject, and the two files share no arm. */
+const ADULT_AGE = AD.junior.untilAgeYears
 
 const ageOf = (w: WorldState): number => kidAgeYears(w.week, w.profile.birthMonth, w.profile.birthDay)
 const post = (w: WorldState, c: AdCategory): Offer[] =>
@@ -440,7 +448,7 @@ describe('P9 – the winter is the shoot season, and its cost is the rest it dis
     // signature through the engine's own commands – then the paper is read back.
     const world = createWorld('p4a-winter', { ...DEFAULT_PROFILE, coachTier: 'self' })
     const rng = resumeMain(world.rngMain)
-    while (ageOf(world) < AD.fromAgeYears) tickWeek(world, rng)
+    while (ageOf(world) < ADULT_AGE) tickWeek(world, rng)
     // ...to season offset 44 of the CURRENT season year: just before the winter, with the whole
     // window still ahead of the lead.
     while (world.week % WEEKS_PER_YEAR !== 44) tickWeek(world, rng)
@@ -467,7 +475,7 @@ describe('P9 – the winter is the shoot season, and its cost is the rest it dis
     function through(shoot: boolean): { condition: number; base: number } {
       const world = createWorld('p4a-winter-cost', { ...DEFAULT_PROFILE, coachTier: 'self' })
       const rng = resumeMain(world.rngMain)
-      while (ageOf(world) < AD.fromAgeYears) tickWeek(world, rng)
+      while (ageOf(world) < ADULT_AGE) tickWeek(world, rng)
       while (world.week % WEEKS_PER_YEAR !== 48) tickWeek(world, rng)
       const target = world.week + 1 // season offset 49 – deep winter, event-free by the calendar
       expect(isWinterShootWeek(target)).toBe(true)
@@ -525,7 +533,7 @@ describe('the permanent law: signing the whole shelf never touches MAIN', () => 
     const build = () => {
       const world = createWorld(SEED, { ...DEFAULT_PROFILE, coachTier: 'self' })
       const rng = resumeMain(world.rngMain)
-      while (ageOf(world) < AD.fromAgeYears) tickWeek(world, rng)
+      while (ageOf(world) < ADULT_AGE) tickWeek(world, rng)
       world.results.push({ playerId: KID_ID, week: world.week, points: 400, tier: 'w100' })
       world.onRampCleared = { itf: true, wta: true }
       recomputeKidRank(world)
