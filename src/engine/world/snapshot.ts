@@ -104,7 +104,7 @@ import { alternatePlacesOpen } from '../season/tournament'
 import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medical'
+import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
@@ -595,11 +595,30 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
       // decision stops being blind). Precedence is BODY FIRST and it is not a coin toss: one of them
       // is about getting hurt and the other is about a wasted week. He says one thing, because a
       // card with two coach lines on it is a dialog, and he is a person.
+      // ⭐⭐⭐ ROUND 41 #20 – AND HE READS THE WEEK SHE IS ACTUALLY TRAVELLING IN. The owner: «при
+      // выбранном отпуске надпись о exhausted с карточки будущего турнира ушла, а при попытке
+      // оставить на него заявку всё ещё предлагает продавить.» Both reads below were
+      // `world.condition`, i.e. TODAY's, while the gate above has counted a booked holiday's recovery
+      // since round 34 #9 – so a family that put a week away between her and the W50 watched
+      // «Exhausted» leave the card while the coach's sentence stayed on it and flipped the confirm
+      // button to «Enter anyway» over a card carrying no warning at all.
+      //
+      // ⚠ ONE PROJECTION, BOTH SITES, AND IT IS THE GATE'S OWN (`projectedConditionAt` in
+      // world/medical.ts) rather than a third copy of the arithmetic. `coachWarnsEntry` decides
+      // WHETHER he speaks and `coachEntryLine` decides WHICH of his three sentences it is; they are
+      // two halves of one opinion about one week, and handing them different conditions is how halves
+      // drift apart.
+      //
+      // ⚠ AND IT REACHES HIM BY VALUE, so `coachLoad.ts` stays pure and the T16b escalation machinery
+      // never sees a forecast. `coachEscalates`/`strainOf` read `view.condition` for a decision about
+      // THIS week's knock, which is a fact and not a projection; only this per-event copy moves, and
+      // only for the card he is speaking on.
+      const projected = projectedConditionAt(world, e.week)
       const bodySay =
         gate.level !== 'blocked' &&
         coachLoad !== null &&
-        coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
-          ? coachEntryLine(e.tier, world.condition)
+        coachWarnsEntry({ ...coachLoad, condition: projected }, ECONOMY.availability.minConditionToEnter[e.tier])
+          ? coachEntryLine(e.tier, projected)
           : null
       // The same "only about trips she can take" rule the body arm has always had, and the same
       // "nobody is being paid to have a view" one: a self-coached career hears nothing, from either.
