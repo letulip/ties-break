@@ -1,16 +1,24 @@
 // THE FROZEN CAREERS, THE RUNGS BELOW – v61 down to P5/v49.
 //
-// ⚠ THE OTHER HALF OF ONE LADDER, NOT A SECOND ONE. tests/coach-travel-edge.test.ts holds the live
-// hashes and v62 – v67; this file holds every rung beneath them. Both read the same
-// `careerHashAtSchema` out of tests/coachTravelEdgeFixtures.ts, where the eighteen constants, the
-// walk and the per-key protocol live, and both carry the ORIGINAL describe name deliberately
-// unchanged – a chain is only append-only if every rung below the top still reproduces, and these
-// ten are those rungs.
+// ⚠ THE BOTTOM OF ONE LADDER, NOT A SECOND ONE. tests/coach-travel-edge.test.ts holds the live
+// hashes and v71 – v74, tests/coach-travel-edge-mid-schemas.test.ts holds v69 – v62, and this file
+// holds every rung beneath those. All three read the same `careerHashAtSchema` out of
+// tests/coachTravelEdgeFixtures.ts, where the eighteen constants, the walk and the per-key protocol
+// live, and all three carry the ORIGINAL describe name deliberately unchanged – a chain is only
+// append-only if every rung below the top still reproduces, and these ten are those rungs.
 //
-// ⚠ WHY THERE ARE THREE FILES – the 62,889 ms CI stall with all 43 tests green, the measurement
-// that put 98.5 % of the cost in ONE describe, and why cutting the behaviour off it would not have
-// been enough – is in the fixtures module's header. Nothing was trimmed on the way across: same
-// walk, same 156 weeks, same constants, same test names.
+// ⚠ WHY THERE IS MORE THAN ONE FILE – the 62,889 ms CI stall with all 43 tests green, the
+// measurement that put 98.5 % of the cost in ONE describe, and why cutting the behaviour off it
+// would not have been enough – is in the fixtures module's header; the 12.09 cut that made the
+// third file is in tests/coach-travel-edge-mid-schemas.test.ts's. Nothing was trimmed on the way
+// across either one: same walk, same 156 weeks, same constants, same test names.
+//
+// ⚠ AND THIS FILE IS THE NEXT ONE TO CROSS, measured so nobody has to re-derive it under pressure.
+// It was not cut on 12.09 because it did not need to be – 19.47 / 19.48 / 19.80 s solo across three
+// runs, which is 43.6 s at this ladder's 2.24x, 73 % of birpc's window and a 1.38x stretch from it.
+// It has ten cases at ~1.95 s each and no describe left to move, so the cut, when it comes, is the
+// same arithmetic seam the mid file was born from: five rungs each, ~10 s a file. Do that before
+// trimming a walk from any of them.
 
 import { describe, it, expect } from 'vitest'
 import {
