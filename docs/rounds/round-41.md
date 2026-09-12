@@ -94,11 +94,29 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   why no pin moved with the rewrite. `r2-07-dialog-shell`, `a11y-sweep`, `template-copy-rules`,
   `template-comment-terminators`, `design-tokens`, `stylesheet-integrity`, `pin-hygiene` green.
 
-- [ ] **2. «Не убрали paid from water на заказанных, надо и другие категории проверить»** –
-  **build, probably `[!]` reopened.** `git grep -i "paid from" -- src` is EMPTY, so the leftover
+- [x] **2. «Не убрали paid from water на заказанных, надо и другие категории проверить»** –
+  **build.** `git grep -i "paid from" -- src` is EMPTY, so the leftover
   label lives under different words – recon is finding the exact string, the earlier round item that
   asked for its removal, and the census across ALL bill categories (his own steer: «и другие
   категории проверить» is part of the item, not an afterthought).
+
+  **SHIPPED** on `round/41` (`ee4c943a`). The string was the unconditional `meta` on the «On order»
+  StatRow in `MoneyScreen.vue` – one template site, so removing it fixed Water (boats) AND Air
+  (planes) at once, the only two families that reach the ordered state today. Round 39 #4 KEPT
+  this meta deliberately ("that card has no Worth now and no gain line, so the paid figure is the
+  ONLY money on it") and the comment beside `SHELF_NO_PAID_META` recorded it - his 12.09 report
+  supersedes that reasoning, and the comment is AMENDED IN PLACE to name round 41 #2 (history kept,
+  supersession added, nothing deleted). Owned-card `paid $N` on investment/business
+  (`shopRowPaidMeta` + `SHELF_NO_PAID_META`) was never his target and stays untouched.
+
+  *No new player-facing strings - this item only removes one.*
+
+  *Evidence* - `tests/component/r39-owned-shelf-paid.test.ts`: the round 39 ordered-boat pin is
+  RE-AIMED (was `toContain('paid $900,000')`; now `not.toContain('paid $')`), with a note quoting
+  the 12.09 supersession, plus a NEW arm proving the ordered PLANE loses the same caption at the same
+  unconditional site - the census his own words asked for. Mutation-verified: restoring the `:meta`
+  attribute reddens the boat and the plane arms simultaneously (one template site, one mutation
+  point, two families); reverted, both green.
 
 - [ ] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answer first.** The capstone is
   the 8-year ad deal (`src/engine/economy.ts:1872-1889`). Recon is finding what «4 → 3» was ruled
@@ -603,10 +621,33 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   green, unmodified by this item.
   *No new player-facing strings.*
 
-- [ ] **14. «На Bills на все выбранные позиции добавить в скобках сколько недель осталось»** –
+- [x] **14. «На Bills на все выбранные позиции добавить в скобках сколько недель осталось»** –
   **build.** Every selected bills position gets «(N weeks left)». Recon is confirming the remaining
   term is derivable from existing state for EVERY category (no schema move allowed this round). The
   suffix string = DRAFT for his read.
+
+  **SHIPPED** on `round/41` (`b85e8c98`). Recon's derivability census held exactly: buildable where
+  a real term exists (the kit deal card, a filled ad portfolio row), refused where none does (the
+  physio retainer - a weekly toggle; the academy scholarship - reviewed at the season boundary, no
+  end week; the lifetime ad row - "for life", never lapses BY CONSTRUCTION, round-39.md:296-297).
+  One function, `weeksLeftBracket(untilWeek, week)`, feeds both buildable surfaces so the two cannot
+  drift apart. The kit rungs' own prior art (`({{ view.goodWeeksLeft }} left)`) is untouched.
+
+  **DRAFT COPY (verbatim, for his read).**
+  > `(14 weeks left)` - the plural, any N > 1.
+  > `(1 week left)` - singular.
+  > `(last week)` - his final week, in place of `(0 weeks left)`: nobody counts down to a number
+  > that means "gone". `activeKitDeal`/`activeAdDeals` are both inclusive of `untilWeek` itself, so
+  > this is the boundary rather than the day after.
+
+  *Evidence* - `tests/component/round41-kit-weeks-left.test.ts`, 5 mounted arms on real signed offers
+  (`kitTermsFor`/`adTermsForCategory`/`adLifetimeTerms` + `signOffer`, never a hand-built view): the
+  kit deal card in the plural, the singular, and the final week; a filled ad row carrying the same
+  bracket off the same function; the lifetime row carrying none. Mutation-verified: `weeksLeftBracket`
+  forced to return `''` reddens all four positive arms at once (one function, one mutation point, two
+  surfaces); narrowing `left <= 0` to `left < 0` reddens the final-week arm ALONE (it prints
+  "(0 weeks left)" instead of "(last week)"), the other three staying green - proving that arm pins
+  the edge word rather than merely "a bracket exists". Both reverted, all green.
 
 - [ ] **15. «А рекламных контрактов правда не предлагают до 18 лет или это наше ноу-хау? кажется
   молодые тоже в рекламах снимаются.»** – **answer, then ask.** Recon is reading the actual gate.
@@ -797,10 +838,37 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   времени, а не сразу быть готовы?»** – **ask.** Yes by design instinct – but construction state is
   almost certainly a save-schema move, and v75 is claimed. See «The asks».
 
-- [ ] **25. «даже тикер в 12к годовых на форму заканчивается раньше года, в августе уже 0»** –
+- [x] **25. «даже тикер в 12к годовых на форму заканчивается раньше года, в августе уже 0»** –
   **measure, then build.** The annual-form retainer's depletion math vs its «per year» label – one
   of the two is lying; recon is finding the charge loop. The fix is whichever side the arithmetic
   convicts.
+
+  **SHIPPED** on `round/41` (`9362ec1f`). The answer half is above, in "Recon verdicts folded" - the
+  ticker is the icon kit deal's SEASON allowance, working as designed, not a bug. This is the build
+  half he was owed: the forecast. `kitAllowanceProjectedEmptyWeek` (MoneyScreen.vue): pace =
+  `spentCents` this season / weeks elapsed since `seasonStartWeek` (world/ledger.ts's own definition
+  of "this season" for money - the same clock `spentCents` itself resets on). Renders only when a
+  deal is live, the allowance is not yet spent, the pace is positive, at least four weeks of the
+  season have gone by (a two-week-old season would extrapolate garbage off one purchase), and the
+  projected week still lands inside the season - past the boundary the allowance resets
+  (`rolloverKitAllowance`, sponsors.ts:104-108) and "runs out" would be a lie about a week that was
+  never going to happen.
+
+  **DRAFT STRING (verbatim, for his read).**
+  > `At this pace it runs out around W31.` - the week is rendered with the screen's own `weekLabel`,
+  > which also carries the season year (e.g. `W31 '46`), exactly as every other week already printed
+  > on this card does (`dealTerm`'s span, a filled ad row's "runs to") - flagged here rather than
+  > silently narrowed, since the item's own draft showed the bare week number.
+
+  *Evidence* - `tests/component/round41-allowance-projection.test.ts`, 3 mounted arms on a real
+  signed icon kit deal (`kitTermsFor` + `signOffer`; `coveredCents` poked directly afterwards -
+  exactly as `r39-owned-shelf-paid.test.ts`'s own fixture pokes `fundsCents`, a raw persisted number
+  read back by the engine's own `kitDealView`, never a hand-built derived figure): a heavy burner
+  mid-season shows the line at the hand-computed week; a light burner whose projection would land
+  past the season end shows nothing; an early season (two weeks in) shows nothing however heavy the
+  spend. Mutation-verified: dropping the season-boundary guard reddens the light-burner arm alone;
+  dropping the four-week floor reddens the early-season arm alone; forcing the computed to `null`
+  reddens the heavy-burner arm. All reverted, all green.
 
 - [x] **26. «в тайле под аватаркой professional #3 а реальный в таблице #4»** – **build (bug).**
   The tile and the standings caption say #3 while the sorted table seats her 4th (8081 pts under
