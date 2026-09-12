@@ -418,6 +418,12 @@ describe('wave 3 T8 B – a silent home takes ZERO draws', () => {
     expect(lifeLogOf(world).length, 'and it really was a hit').toBe(1)
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:ends:*` is WAVE 4's and may not be
     // created early (brief §3); the arrival's three are the other file's.
+    //
+    // ⚠⚠ RE-AIMED 12.09 BY WAVE 4's T2, ASSERTION UNTOUCHED. `seed:life:ends:<week>` now exists, in
+    // lifeBeat §8, so the message «wave 4 has not started early» is the half that has expired – wave
+    // 4 has started, on purpose and in its own function. What the line HOLDS is unchanged and is the
+    // part that was always load-bearing: `rollSmallTalk` derives its own key and no sibling's. A
+    // green here after T2 is the split-key law surviving the arrival of the very thing it names.
     expect(lifeKeys().some((k) => k.includes(':ends:')), 'wave 4 has not started early').toBe(false)
   })
 })

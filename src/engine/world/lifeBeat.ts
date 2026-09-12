@@ -79,7 +79,10 @@ import { addEvent, seasonIndexOf } from './ledger'
 // They moved verbatim to the leaf and nothing about either of them changed.
 // ⭐ v74 T6 ADDS `knownPartner` TO THE SAME IMPORT – «does he KNOW», the second question that leaf
 // asks of the list, and the one the delivery below fires on.
-import { activeEpisode, knownPartner, loveEpisodesOf } from './loveEpisodes'
+// ⭐⭐ v75 T2 ADDS `endEpisode`, THE LEAF'S FIRST WRITER – the ONE line in the engine that sets
+// `endedWeek`. §8 below owns the hazard that decides WHETHER it is called; the leaf owns what an
+// ending IS, beside the selector that stops reporting her as attached the moment it is written.
+import { activeEpisode, endEpisode, knownPartner, loveEpisodesOf } from './loveEpisodes'
 // ⚠ FROM ./constants, NOT ./endings, AND IT IS A CYCLE FIX RATHER THAN A PREFERENCE – the same swap
 // `world/entries.ts` records at its own import. `endings.ts` imports THIS module (it raises the
 // fork-opinion row and asks `pendingLifeBeat` before it will answer the fork), so an import back
@@ -1682,6 +1685,13 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
 // SPLIT KEYS, ONE VALUE PER KEY (the 09.09 stream law), so a read added to one of them later can
 // never shift a neighbour's value. `seed:life:smalltalk:<week>` is T8's and `seed:life:ends:*` is
 // WAVE 4's – neither exists on this tree and neither may be created early.
+// ⚠ RE-AIMED 12.09 BY WAVE 4's T2, NOT DELETED, because half of that last sentence has come true and
+// a reader has to be able to tell WHICH half. `seed:life:smalltalk:<week>` landed in T8 (§7) and
+// `seed:life:ends:<week>` lands in §8 below – so both now exist on this tree, on their own keys,
+// derived in their own functions. What the sentence was written to forbid is intact and is the part
+// that still binds: NO SECTION MAY READ ANOTHER SECTION'S KEY, and `seed:life:ends:<week>:react` (T4)
+// is still unwritten and may not be created early. `rollArrival` below derives the three keys named
+// above and no others, which is what its own count-keys pin asserts.
 //
 // ⚠⚠ ZERO DRAWS ON MAIN, AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is CLAUDE.md invariant 2
 // and is structural: nothing here takes an `Rng`, so the frozen capture (41550 / e6b0c709) cannot
@@ -1886,6 +1896,13 @@ export function rollArrival(world: WorldState): void {
 // ⚠⚠ ZERO DRAWS, AND THE SHAPE IS WHY: this function reads facts the world already holds
 // (`loveEpisodes`, `lifeLog`, `week`) and takes no `Rng` and derives no stream. `seed:life:smalltalk:*`
 // is T8's and `seed:life:ends:*` is wave 4's; neither exists on this tree.
+// ⚠ RE-AIMED 12.09 BY WAVE 4's T2: both of those keys exist now (§7 and §8). THE CLAIM ABOUT THIS
+// FUNCTION IS UNCHANGED and is the one that mattered – delivery derives no stream at all, on any
+// wave. ⚠ AND T4 IS ABOUT TO RE-AIM THIS SECTION FOR REAL: ruling B turns the tail read below into a
+// scan and gives it the told-late branch, because an ended row is the normal case from this commit
+// on. T2 deliberately leaves that alone – it writes `endedWeek` and nothing else – so on THIS tree an
+// episode that ends before its `knownWeek` still tells the parent nothing at all, which is a gap the
+// next commit closes and not a reading anybody should build on.
 //
 // ⚠ AND IT DUPLICATES NONE OF THE QUEUE. `raiseLifeBeat` appends the row, `pendingLifeBeat` finds it,
 // the `'life'` StopReason stops the week and `answerLifeBeat` re-validates the answer – all four are
@@ -1968,6 +1985,10 @@ export function deliverKnownPartner(world: WorldState): void {
 //
 // (seed, calendar)-keyed like the other three, so a player cannot manufacture a conversation by
 // playing the week differently. `seed:life:ends:*` is WAVE 4's and does not exist on this tree.
+// ⚠ RE-AIMED 12.09 BY WAVE 4's T2: `seed:life:ends:<week>` now DOES exist, in §8 below, and this
+// section still does not derive it – which is the claim the sentence was making and the one the
+// count-keys pin in tests/wave3-small-talk.test.ts §B holds `rollSmallTalk` to. `:ends:<week>:react`
+// is T4's and is still unwritten.
 //
 // ⚠⚠ ZERO DRAWS ON MAIN AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is structural (nothing here
 // takes an `Rng`, so the frozen capture 41550 / e6b0c709 cannot see this file). The second is T3's
@@ -2083,4 +2104,127 @@ export function rollSmallTalk(world: WorldState): void {
   // it is what `lifeBeatSaid` selects her opener with. The heading reads the register one line above
   // it, so the card's frame and her line are about the same small thing BY CONSTRUCTION.
   raiseLifeBeat(world, 'small-talk', smallTalkSubjectFor(register))
+}
+
+// =================================================================================================
+// 8. THE END – ⚠⚠ THE WEEK IT IS OVER (the private life, wave 4: T2)
+// =================================================================================================
+//
+// `docs/plans/life-wave-4-builder-2026-09.md` §2 T2, constants in `ECONOMY.life` (who-she-is §4's
+// `end` column). §5 above decides whether someone appears; this decides whether they are still there,
+// and it is the step that makes the attachment an ARC instead of a state a career enters once.
+//
+// ⚠ IT IS §8 AND NOT §5b, AND THE POSITION IS A COMPROMISE RATHER THAN A READING. It belongs beside
+// the arrival by subject – they are one hazard asked twice – and it is appended at the end because
+// renumbering four sections would rewrite every «§6» and «§7» reference in this file and in the six
+// test files that quote them, for no gain a reader could feel. The ORDER THAT MATTERS is the call
+// site's, and that one is not a matter of taste: see `world/phaseHerWeek.ts`.
+//
+// ⚠⚠ THE FIFTH STREAM, AND IT IS THE ONE §5 AND §7 HAVE BEEN RESERVING SINCE WAVE 3:
+//
+//     seed:life:ends:<week>                does it end, this week
+//
+// (seed, calendar)-keyed like the other four, so a player cannot end a romance by playing the week
+// differently – and keyed on the WEEK alone, never on the episode, so the hazard is a property of the
+// calendar rather than of the row it happens to be reading. ⚠ `seed:life:ends:<week>:react` is T4's
+// sibling on the same week (wave-4 brief §3, ruling G) and does not exist on this tree; those two are
+// the wave's whole table and no third may be invented.
+//
+// ⚠⚠ ZERO DRAWS ON MAIN AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is structural – nothing here
+// takes an `Rng`, so the frozen capture (41550 / e6b0c709) cannot see this file, and T2 could not move
+// it if it tried. The second is §5's load-bearing rule inherited whole: `endsEligible` decides
+// everything and `rollEnds` returns on it BEFORE the stream is derived. A career with nobody in it
+// takes no draw at all; it never compares one against a hazard it was never going to clear.
+//
+// ⚠ AND THE TEST FOR THAT IS A KEY COUNT, NOT AN ALIGNMENT COMPARISON – wave 3's finding, now the
+// wave-4 brief's §0.1 LAW for every zero-draw claim. Every key here carries its own week, so a
+// discarded draw shifts no other week's value and «two worlds produce identical later verdicts» stays
+// green under the very draw-and-discard mutation it would be written to catch.
+// `tests/wave4-ends.test.ts` §B counts the keys the gate reached, in an array the code under test
+// cannot see, with a positive control.
+//
+// ⚠⚠ NO FEED LAG FOR AN ENDING, v1 – A DESIGN NOTE AND NOT AN OVERSIGHT (the wave-4 brief says it in
+// those words). An arrival is shy and a break-up is loud: the lag exists because a girl decides when
+// to mention that somebody exists, and there is no matching decision here – the parent of a girl who
+// has just been left finds out because she is in the house. The told-LATE scene the plan wants comes
+// from endings that predate `knownWeek` – the romance he was never told about, already over by the
+// time he hears of it – and never from lagging the ending itself. Adding a symmetrical
+// `endKnownWeek` would produce a fourth date on the row and a scene nobody asked for.
+//
+// ⚠ IT RAISES NOTHING AND WRITES NO ROW – not a beat, not a feed line, not a spirit point, not
+// `spiritShock`. T3 is the shock, T4 is the `'ended'` beat and its told-late branch, T5 is the feed
+// row and the `lifeKind` stamp. The commit order IS the design: ship the hazard alone and let the
+// derived readings fall out of it, so that anything which moves in the frozen careers moved because
+// somebody's romance ended and for no other reason.
+
+/** ⭐⭐ THE GATE – ONE CLAUSE, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
+ *
+ *  ⚠⚠ A PREDICATE OF ITS OWN FOR `arrivalEligible`'s AND `smallTalkEligible`'s STATED REASON, and the
+ *  reason survives the clause count going down to one: a reader has to be able to see, in one place,
+ *  that the whole of eligibility is decided before any stream exists. Pure, zero draws, no writes.
+ *
+ *  ⚠ THE WHOLE OF IT IS «IS SOMEBODY THERE», and it is `activeEpisode`'s answer rather than a second
+ *  spelling of it. Two things follow that are worth naming because both are easy to add by accident:
+ *
+ *  1. ⚠⚠ IT COUNTS FROM `sinceWeek`, NEVER FROM `knownWeek`. `activeEpisode` reads `endedWeek` and
+ *     nothing else, so a romance the parent has not been told about is exactly as endable as one he
+ *     has – which is the premise of wave 4's told-late scene and would be destroyed by an innocent
+ *     `knownPartner` here. There is no bar above this line and there must never be one.
+ *  2. AND THERE IS NO AGE GATE. `arrivalEligible` has one because sixteen is when somebody may first
+ *     APPEAR; by the time a row exists she has already passed it, so a second reading of the same
+ *     ruling here would be dead code that looked like a rule. */
+export function endsEligible(world: WorldState): boolean {
+  return activeEpisode(world) !== null
+}
+
+/** THE WEEKLY END HAZARD, as one probability (who-she-is §4: base 1.2%/wk times the temperament's
+ *  `end` multiplier). Takes the TEMPERAMENT rather than the world – `arrivalHazardFor`'s own
+ *  primitives doctrine – so the corridor tests and T7's census can sweep the table directly instead
+ *  of posing a world per cell.
+ *
+ *  ⚠⚠ IT READS `endsMult` AND NOT `temperamentMult`, WHICH IS RULING E AND IS THE ONE LINE IN THIS
+ *  SECTION MOST LIKELY TO BE «SIMPLIFIED» BY A LATER READER. They are two columns of one table in the
+ *  spec and they are different numbers: arrival is sunny 1.2 · fiery 1.6 · quiet 0.6 · deep 0.5, and
+ *  this is sunny 0.6 · fiery 1.5 · quiet 0.35 · deep 0.9. Sharing the record would have shifted every
+ *  break-up rate in the game by a factor nobody would have noticed, because both values look right.
+ *
+ *  ⚠ NO AGE TERM, unlike the arrival's – §4's end column is one rate for the whole life. See the
+ *  constant's own note in `economy.ts` for why a second row is not this file's to invent. */
+export function endsHazardFor(temperament: Temperament): number {
+  return ECONOMY.life.endsPerWeek * ECONOMY.life.endsMult[temperament]
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE caller of `endEpisode`.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED. An ineligible week takes ZERO
+ *  draws – never draw-and-discard – which is the wave's load-bearing rule, inherited from §5 word for
+ *  word. The line order below IS the rule; moving the roll above the gate would break it silently,
+ *  because every key here carries its own week and a discarded draw changes no other week's value.
+ *  That is why the net for it counts keys instead of comparing worlds (§0.1 of the wave-4 brief).
+ *
+ *  ⚠⚠ IT RUNS BEFORE `rollArrival` IN THE TICK, AND TWO RULINGS REST ON THAT ORDER (the wave-4
+ *  rulings, F and A). The row this week's arrival is about to append DOES NOT EXIST YET when this
+ *  line runs, so an attachment can never end in its own arrival week: `endedWeek >= sinceWeek + 1` by
+ *  construction and the shortest romance the engine can produce is exactly one week. And because
+ *  `endEpisode` writes the date before `arrivalEligible` is next asked, the cooldown refuses
+ *  same-tick re-arrival by construction too – the slot is free and the clock is already running, so
+ *  nobody arrives on the afternoon of a break-up. Both are pinned in tests/wave4-ends.test.ts §E;
+ *  the ORDER itself is pinned in tests/spirit.test.ts.
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollArrival`'s own note: `rngFromSeed` can return exactly 0, and a hazard of
+ *  0 must be impossible rather than merely unlikely. No row in `endsMult` is zero today – so unlike
+ *  §7's gate this comparison is not standing in for a short-circuit – but a temperament priced at
+ *  «she never leaves» is the kind of row a later spec adds, and it would have to mean never.
+ *
+ *  ⚠ IT TAKES NO `Rng` AND WRITES NOTHING BUT THE DATE. The shock is T3's, the beat is T4's, the feed
+ *  row is T5's. A `world.spirit`, `world.spiritShock` or `lifeLog` line appearing in this function is
+ *  the defect this note exists to make visible. */
+export function rollEnds(world: WorldState): void {
+  if (!endsEligible(world)) return
+  const hazard = endsHazardFor(temperamentOf(world))
+  // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament, so the four girls read
+  // the SAME uniform against four different hazards. That is what makes the multiplier a pure scale
+  // rather than four unrelated dice, and it is the property the nesting pin holds them to.
+  if (rngFromSeed(`${world.seed}:life:ends:${world.week}`)() >= hazard) return
+  endEpisode(world, world.week)
 }

@@ -1003,6 +1003,35 @@ describe('the fence this step is judged by', () => {
     // life's three weekly calls, so a FOURTH statement sliding into the gap, a reorder of these
     // three, or a removal of any one of them is red.
     //
+    // ⚠⚠ RE-AIMED A SIXTH TIME, TO FOUR – 12.09, WAVE 4's T2, AND IT WENT RED EXACTLY AS THE NOTE
+    // ABOVE PROMISED A FOURTH STATEMENT WOULD («expected [ 'rollEnds(world)', …(3) ] to deeply equal
+    // [ 'rollArrival(world)', …(2) ]»). WHAT MOVED: `rollEnds(world)` – the weekly END hazard
+    // (`engine/world/lifeBeat.ts` §8), and it is FIRST of the four rather than last.
+    //
+    // WHY IT BELONGS THERE, AND WHY IN THAT POSITION SPECIFICALLY. It is not a reading preference;
+    // two of wave 4's rulings are consequences of this one line sitting above `rollArrival(world)`
+    // (docs/plans/life-wave-4-rulings-2026-09.md, F and A):
+    //
+    //   · the row this week's arrival may append DOES NOT EXIST YET when the ends hazard rolls, so an
+    //     attachment can never end in its own arrival week – `endedWeek >= sinceWeek + 1` and the
+    //     shortest romance the engine can produce is exactly ONE week. Ruling A's told-late
+    //     discriminator rests on that premise;
+    //   · and `endEpisode` writes the date before `arrivalEligible` is next asked, so the cooldown
+    //     (shipped dormant in wave 3, live from this commit) refuses same-tick re-arrival by
+    //     construction – the slot is free and the clock already reads zero.
+    //
+    // Swapped, BOTH of those silently stop being true and nothing else in the tree objects, which is
+    // precisely why the order is pinned here rather than described in a comment at the call site.
+    // ⚠ AND BEFORE `accrueSpirit` for `rollArrival`'s own reason: the week an attachment ends is the
+    // week the effective baseline drops back to the flat one, through the standing return rule and
+    // through no new code. It writes one date, takes no `Rng` and raises nothing – the shock is T3,
+    // the beat T4, the feed row T5 – so `accrueSpirit`'s own reading is untouched by its presence.
+    //
+    // ⚠ NOTHING IS WEAKENED: the form is the same ORDERED LIST, one element LONGER, so a FIFTH
+    // statement sliding into the gap, a reorder of these four, or a removal of any one of them is
+    // still red. The behavioural half of the same order lives in tests/wave4-ends.test.ts §E, which
+    // reads this very span out of the source and runs the two rolls in the order it finds them.
+    //
     // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
     // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
     // the two can be reordered – a third statement appearing here goes red just as a swap does.
@@ -1016,7 +1045,8 @@ describe('the fence this step is judged by', () => {
     const j = code.indexOf('accrueSpirit(world)')
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
-    expect(code.slice(i + 1, j), 'only the private life\'s three weekly calls separate them').toEqual([
+    expect(code.slice(i + 1, j), 'only the private life\'s four weekly calls separate them').toEqual([
+      'rollEnds(world)',
       'rollArrival(world)',
       'deliverKnownPartner(world)',
       'rollSmallTalk(world)',

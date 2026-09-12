@@ -3592,10 +3592,42 @@ export const ECONOMY = {
      *  the same table («fiery ~4–6 romances, quiet first arrival median ~18») are what T11 measures,
      *  so a number moved here moves an acceptance bar and is never a local tweak. */
     temperamentMult: { sunny: 1.2, fiery: 1.6, quiet: 0.6, deep: 0.5 },
+    /** ⭐⭐⭐ v75 (the private life, wave 4 – T2) – THE BASE WEEKLY **END** HAZARD, before temperament
+     *  (who-she-is §4, verbatim: «end 1.2%/wk»). Per WEEK while an attachment is ACTIVE, and it
+     *  counts from `sinceWeek` and never from `knownWeek`: a romance can end before the parent ever
+     *  knew it existed, which is the whole of the told-late scene wave 4 is built on.
+     *
+     *  ⚠ ONE NUMBER AND NO AGE STEP, unlike `arrivalPerWeek` one row up. §4's end column is a single
+     *  rate: whether she is sixteen or twenty-two changes how often somebody APPEARS, and the spec
+     *  says nothing about it changing how long it lasts. A second row invented here would be a design
+     *  decision wearing a constant. */
+    endsPerWeek: 0.012,
+    /** ...and how hard each girl leans on THAT (who-she-is §4's `end` column, verbatim).
+     *
+     *  ⚠⚠ A TABLE OF ITS OWN AND **NEVER** `temperamentMult` OVERLOADED – the architect's ruling E
+     *  (docs/plans/life-wave-4-rulings-2026-09.md), and it is the kind of mistake that ships. The two
+     *  columns are genuinely different numbers in the same table: reusing the arrival record would
+     *  make a fiery girl's break-ups ×1.6 instead of ×1.5 and a deep girl's ×0.5 instead of ×0.9,
+     *  silently, with both values looking plausible to a reader who never opened the spec.
+     *
+     *  ⚠ AND THE TWO COLUMNS DO NOT EVEN AGREE ON THEIR ORDER, which is the design speaking: openness
+     *  owns the MEETING (fiery and sunny meet people often), intensity owns the BREAKING (fiery ×1.5
+     *  and deep ×0.9 are the two intense girls, quiet ×0.35 the one who holds on). §4's «expected
+     *  biography» column is this table's other face – fiery ~0.7 seasons against quiet ~3 – so a
+     *  number moved here moves a census bar in T7 and is never a local tweak. */
+    endsMult: { sunny: 0.6, fiery: 1.5, quiet: 0.35, deep: 0.9 },
     /** THE WEEKS AFTER AN ENDING BEFORE ANYONE MAY APPEAR AGAIN (who-she-is §4, the `cooldown`
-     *  column). ⚠ UNREACHABLE IN WAVE 3 AND SHIPPED ANYWAY: nothing in this wave writes
-     *  `endedWeek`, so no career can ever be inside a cooldown – it lands now, with its tests, so
-     *  that wave 4 (which writes the endings) changes nothing here. */
+     *  column).
+     *
+     *  ⭐⭐ LIVE SINCE v75 (wave 4, T2), AND THE NOTE IS RE-AIMED RATHER THAN DELETED so the dormant
+     *  year cannot be mistaken for a cancellation. It read «UNREACHABLE IN WAVE 3 AND SHIPPED ANYWAY:
+     *  nothing in this wave writes `endedWeek`, so no career can ever be inside a cooldown – it lands
+     *  now, with its tests, so that wave 4 (which writes the endings) changes nothing here.» That is
+     *  exactly what happened: `endEpisode` (world/loveEpisodes.ts) now writes the date, clause 3 of
+     *  `arrivalEligible` bites for the first time, and NOT ONE CHARACTER of the gate or of this row
+     *  had to move for it. ⚠ The ordering does the rest by construction – `rollEnds` runs BEFORE
+     *  `rollArrival` in the same tick, so the week an attachment ends is a week the cooldown already
+     *  refuses, and nobody can arrive on the afternoon of a break-up. */
     cooldownWeeks: { fiery: 12, sunny: 26, quiet: 39, deep: 52 },
     /** THE RAW FEED LAG, in weeks, by her OPENNESS REGISTER (who-she-is §4, «Feed lag», verbatim:
      *  open – 0 with p 0.70, else uniform 1..4; private – 0 with p 0.10, else uniform 2..12).

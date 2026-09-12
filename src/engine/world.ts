@@ -353,8 +353,12 @@ export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthd
 // out in full in that leaf's own banner: `engine/spirit.ts` reads `activeEpisode` for the effective
 // baseline and `lifeBeat.ts` imports `spirit.ts` at runtime. The two NAMES on this barrel did not
 // move, which is the half that matters here (CLAUDE.md: the public API must not change).
-import { activeEpisode, knownPartner, loveEpisodesOf } from './world/loveEpisodes'
-export { activeEpisode, knownPartner, loveEpisodesOf }
+// ⭐⭐ v75 (the private life, wave 4 – T2) ADDS THE LEAF'S FIRST WRITER: `endEpisode` is the ONE line
+// in the engine that sets `endedWeek`, and it arrives on the barrel for the same reason the three
+// selectors did – «an attachment is over» must have exactly one spelling, and a second one written
+// against `loveEpisodes` directly would desync from the derivation that reads it.
+import { activeEpisode, endEpisode, knownPartner, loveEpisodesOf } from './world/loveEpisodes'
+export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // ⭐⭐ v74 (the private life, wave 3 – T3/T5) adds the ARRIVAL half: `rollArrival` is the weekly roll
 // the tick calls, and `arrivalEligible` / `arrivalHazardFor` / `drawPartnerWants` / `drawRawLag` /
 // `shaveLag` are the pure pieces it is assembled from – exported under the historical convention so
@@ -381,8 +385,15 @@ export { activeEpisode, knownPartner, loveEpisodesOf }
 // `LIFE_BEAT_BLOCKING` is the per-kind registry both halves of the block contract now read through
 // `pendingLifeBeat`. All three are exported for the same reason the rest of this import is: the pins
 // walk them directly rather than posing a world per cell.
-import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
-export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
+// ⭐⭐⭐ v75 T2 ADDS THE ENDING HALF, AND IT IS THE ARRIVAL'S MIRROR IN EVERY RESPECT: `rollEnds` is the
+// weekly roll the tick calls FIRST of the four (world/phaseHerWeek.ts – the order is rulings F and A
+// and is pinned in tests/spirit.test.ts), and `endsEligible` / `endsHazardFor` are the pure pieces it
+// is assembled from, on `arrivalHazardFor`'s own primitives doctrine so the corridor tests and T7's
+// census sweep the table without posing a world per cell. ⚠ `endsHazardFor` READS `ECONOMY.life
+// .endsMult` AND NEVER `temperamentMult` (ruling E) – two columns of one spec table, different
+// numbers, and the reason the ends multipliers got a record of their own.
+import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
+export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
