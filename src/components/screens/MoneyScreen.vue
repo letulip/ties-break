@@ -1730,10 +1730,19 @@ function shopRowArtWide(row: ShopRowView): boolean {
 // line, so what was paid is still X - Y.
 //
 // ⚠ THAT LEAVES `paid $N` ON `investment` AND `business` ONLY – still unnamed, still kept. And the
-// `On order` row (water and air are BUILT to order) keeps its own `paid $N` untouched, as it was
-// under round 36: on that card there is no `Worth now` and no gain line, so the paid figure is the
-// ONLY money on it – removing it there fails the very check that let it go here, and «Ordered, not
-// bought» is the shelf's own word for a rung that is not yet an owned one.
+// `On order` row (water and air are BUILT to order) kept its own `paid $N` untouched THROUGH ROUND
+// 40, as it was under round 36: on that card there was no `Worth now` and no gain line, so the paid
+// figure was the ONLY money on it – removing it there would have failed the very check that let it
+// go here, and «Ordered, not bought» is the shelf's own word for a rung that is not yet an owned one.
+//
+// ⚠⚠ ROUND 41 #2 SUPERSEDES THIS FOR THE `On order` ROW ONLY, and the history above is kept rather
+// than deleted because the reasoning was sound at the time. The owner, 12.09: «Не убрали paid from
+// water на заказанных, надо и другие категории проверить» – he read the ordered card's `paid $N` as
+// the SAME leftover round 39 #4 removed from the owned card, not as a figure this screen had
+// deliberately kept. His report is the newer ruling, so the meta is now gone from the `On order`
+// StatRow too – see the template, `label="On order"`, no `:meta` any more. It is one unconditional
+// site, so water (boats) and air (planes) both lose it at once, which is the "other categories"
+// half of his ask; `investment` and `business` were never his target and are untouched by this.
 const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy', 'boat', 'plane']
 /** ⚙ ROUND 35 #7, HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки
  *  убрать совсем, раз прибавка и так видна. – верно.» The `Worth now` row's VALUE has always been
@@ -2549,11 +2558,18 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                    honest face of it (R10-16: a disabled control and a refused click tell one
                    story). What the row says instead is the date, which is the whole point of a
                    commission. -->
+              <!-- ⚠⚠ ROUND 41 #2 – THE `paid $N` META IS GONE. The owner, 12.09: «Не убрали paid
+                   from water на заказанных, надо и другие категории проверить» – this is the exact
+                   leftover round 39 #4 removed from the owned card above; his report supersedes the
+                   round-36 reasoning kept in the note above `SHELF_NO_PAID_META` in the script
+                   block. No `:meta` at all now, rather than an empty one - StatRow's own rule
+                   (`v-if="meta || $slots.meta"`) is what keeps a blank prop from drawing a hairline
+                   nobody asked for. UNCONDITIONAL, so water (boats) and air (planes) both lose it at
+                   once - the only two families that reach this card today. -->
               <div v-if="isBuilding(row)" class="shop-row-owned is-building">
                 <StatRow
                   class="money-row"
                   label="On order"
-                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
                   :value="weekLabel(row.readyWeek ?? 0)"
                   tone="plain"
                 />

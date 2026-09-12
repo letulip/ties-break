@@ -6,18 +6,27 @@
 // same one line: `SHELF_NO_PAID_META` in MoneyScreen.vue grows `boat` and `plane`, and the meta
 // simply stops being passed. Nothing on the card is re-worded, moved or restyled.
 //
-// WHAT LEGITIMATELY KEEPS THE CAPTION, and why each keeps it:
-//   * the `On order` card – water and air are BUILT to order, and on that card the paid figure is
-//     the ONLY money figure (no «Worth now», no gain line), so removing it would LOSE the number –
-//     the exact check round 36 documented before the caption could go from an owned card. «Ordered,
-//     not bought» is the shelf's own word for it, and round 36 never touched that row either;
+// WHAT LEGITIMATELY KEPT THE CAPTION AT THE TIME, and why each kept it:
+//   * the `On order` card – water and air are BUILT to order, and on that card the paid figure was
+//     the ONLY money figure (no «Worth now», no gain line), so removing it would have LOST the
+//     number – the exact check round 36 documented before the caption could go from an owned card.
+//     «Ordered, not bought» is the shelf's own word for it, and round 36 never touched that row
+//     either. ⚠⚠ ROUND 41 #2 SUPERSEDES THIS BULLET – see the re-aimed arm below;
 //   * `investment` and `business` – the two families no round has named. Invariant 4 does not let
-//     the change spread on its own; `round35-shop.test.ts` holds the brand's witness arm.
+//     the change spread on its own; `round35-shop.test.ts` holds the brand's witness arm. STILL
+//     TRUE, untouched by round 41.
 //
 // ⚠ MUTATION-VERIFIED (08.09, logged in docs/rounds/round-39.md item 4): `'boat'` removed from
 // `SHELF_NO_PAID_META` -> the owned-yacht arm red; `'plane'` removed -> the owned-plane arm red;
 // both restored -> green. The PRESENT arms below are what keeps either mutation from being
 // satisfiable by deleting the caption everywhere.
+//
+// ⚠⚠ MUTATION-VERIFIED AGAIN (12.09, round 41 #2, logged in docs/rounds/round-41.md item 2): the
+// `On order` StatRow's removed `:meta` restored -> BOTH the re-aimed boat arm and the new plane arm
+// below go red simultaneously (one unconditional template site, one mutation point, two families);
+// reverted -> green. This is the OPPOSITE mutation direction from the one above it – 08.09 proved
+// the caption could not be deleted from EVERYWHERE by accident, 12.09 proves it cannot be RESTORED
+// to the On-order card by accident either. Both stand.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ The runner-sized ceiling, round36-review.test.ts's own arithmetic: real engine weeks under a
 // 2-core CI runner measured 4-5x this machine. The walk is hoisted out of the cases; 30s can only
@@ -67,13 +76,14 @@ function rich(seed: string, weeks = 20): WorldState {
  * ⚠ WALKED ONCE, OUTSIDE THE CASES – round36-review.test.ts's lesson. The snapshot is read-only
  * data, so one career serves every arm.
  *
- * The four rungs, and why each shape:
+ * The five rungs, and why each shape:
  *   * `yacht` / `plane-small` DELIVERED, written directly: an owned row with no `readyWeek` is what
  *     «delivered» means (shared/protocol/profile.ts), and walking 52-156 real weeks in a component
  *     suite would buy nothing these assertions need – round29-shop-elite.test.ts's own recipe. They
- *     are written BEFORE the two buys below, which append.
- *   * `boat-launch` bought for real, so it draws the `On order` card – the surface that KEEPS its
- *     `paid $N`.
+ *     are written BEFORE the three buys below, which append.
+ *   * `boat-launch` AND `plane` bought for real, so each draws its own `On order` card – water and
+ *     air, round 41 #2's exact census (⚠ THIS caption's history moved on 12.09 – see the re-aimed
+ *     arm below, it no longer "keeps" anything).
  *   * `merch-brand` bought for real (business delivers instantly) – the family he did not name.
  */
 function fixture(): Snapshot {
@@ -83,6 +93,7 @@ function fixture(): Snapshot {
     { id: 'plane-small', boughtWeek: 0, paidCents: 7_000_000_00, valueCents: 7_000_000_00 },
   ]
   buyAsset(w, 'boat-launch')
+  buyAsset(w, 'plane')
   buyAsset(w, 'merch-brand')
   return toSnapshot(w)
 }
@@ -125,13 +136,33 @@ describe('round 39 #4 – an owned boat or plane no longer names what was paid',
     wrapper.unmount()
   })
 
-  it('⚠ the On order card still says what was paid – there the figure has nowhere else to live', async () => {
+  // ⚠⚠ RE-AIMED BY ROUND 41 #2, NOT LOOSENED. This arm used to assert the OPPOSITE – that the
+  // ordered card KEPT `paid $900,000` because "no «Worth now» and no gain line on this card, so
+  // `paid $N` is the only money on it". That reasoning was sound on 08.09 and is kept, amended, at
+  // MoneyScreen.vue's `SHELF_NO_PAID_META` comment block. It stopped being the ruling on 12.09: the
+  // owner read this exact card as the SAME leftover round 39 #4 removed from the owned card above –
+  // «Не убрали paid from water на заказанных, надо и другие категории проверить» – so the figure is
+  // now gone from the `On order` StatRow unconditionally, and this arm asserts the ABSENCE instead.
+  it('⚠⚠ round 41 #2 – the On order card no longer says what was paid', async () => {
     const wrapper = await mountShop()
     const ordered = await shelfRow(wrapper, 'The sailing boat')
     expect(ordered.text(), 'a fresh boat is a contract, not a boat').toContain('On order')
-    // No «Worth now» and no gain line on this card, so `paid $N` is the only money on it and it
-    // STAYS – removing it here fails the very check that let it go from the owned card above.
-    expect(ordered.text(), 'the ordered boat still names what was paid').toContain('paid $900,000')
+    // The date is still the point of the card (round 29 #5, §3f) – only the caption is gone.
+    expect(ordered.text(), 'the delivery date is still on the card').toMatch(/W\d+ '\d+/)
+    expect(ordered.text(), 'the ordered boat no longer names what was paid').not.toContain('paid $')
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ ROUND 41 #2 – HIS OWN STEER, «и другие категории проверить» is part of the item, not an
+  // afterthought. The template site the arm above pins is UNCONDITIONAL (no `family` check at all),
+  // so air has to lose the caption with no code of its own asking for it – this arm is the census
+  // half of the item, proving the same fix reaches the second (and last) family that can ever be
+  // "on order" today.
+  it('⚠⚠ round 41 #2 – and so does the ordered plane (air), the same unconditional site', async () => {
+    const wrapper = await mountShop()
+    const plane = await shelfRow(wrapper, 'The plane')
+    expect(plane.text(), 'a fresh plane is a contract, not a plane').toContain('On order')
+    expect(plane.text(), 'the ordered plane no longer names what was paid').not.toContain('paid $')
     wrapper.unmount()
   })
 
