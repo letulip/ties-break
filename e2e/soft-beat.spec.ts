@@ -27,9 +27,13 @@
 //
 // ⚠ AND IT NEEDS ITS OWN FIXTURE, which is the other half of why it is here – the same shape of
 // problem `unheard` solved one tier up. A soft row is live for three weeks (`liveSoftBeat`, derived
-// from `week − row.week`), and no committed career was parked inside one: measured over the seven,
-// six carry `'small-talk'` rows – 40 of them, all unanswered – and EVERY one is expired, the closest
-// miss being `junior`'s youngest at 4 weeks against a window of 3. So `soft` is that career: week 9,
+// from `week − row.week`), and no committed career was parked inside one: measured over the ten
+// (12.09), NINE carry `'small-talk'` rows – 62 of them, all unanswered – and EVERY one outside `soft`
+// is expired, the closest miss being `junior`'s youngest at 4 weeks against a window of 3. ⚠ THE
+// FIGURES READ «the seven … six … 40» UNTIL 12.09: that census was taken before `breakup` and
+// `belated` joined the corpus carrying 7 and 14 rows of their own, and re-counting is what found it
+// stale. `soft` is still the ONLY fixture of the ten holding a LIVE row, which is the fact this
+// sentence exists for. So `soft` is that career: week 9,
 // the row raised on the week it is parked on, nothing blocking in front of it. See FIXTURE_NAMES in
 // tools/e2e-fixtures-read.ts and the recipe in tools/e2e-fixtures.ts, whose clauses are what keep it
 // that career through the next regeneration.

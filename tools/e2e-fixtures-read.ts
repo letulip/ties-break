@@ -26,7 +26,7 @@
  * whole point of the fixture set: a fixture cannot disagree with what the app reads. The generator
  * imports these definitions back and re-exports them, so there is still exactly one of each.
  *
- * See docs/plans/e2e-fixtures.md for what the five fixtures are and how they are made.
+ * See docs/plans/e2e-fixtures.md for what the ten fixtures are and how they are made.
  */
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -64,7 +64,22 @@ export const MANIFEST_FILE = `${FIXTURE_DIR}manifest.json`
 // closest miss is `junior`, whose youngest row is **4 weeks** old against a window of 3 – one week
 // outside it. So the tier-1 case had nowhere to start until this career existed, which is the same
 // argument one tier down that `unheard` makes about the blocking beat.
-export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft'] as const
+// ⚠⚠ `breakup` AND `belated` ARE THE SAME PIECE OF NEWS IN THE TWO REGISTERS THE ENGINE HAS FOR IT,
+// AND THAT IS WHY THERE ARE TWO OF THEM (v75 T8, 12.09). `breakup` parks on an ordinary week with a
+// live attachment the parent HAS been told about, one tick before the hazard ends it: pressing the
+// week button fires the ending, drops her Mood and raises the told-NOW card. `belated` parks one tick
+// before a `knownWeek` whose episode is ALREADY over, so the same press raises the told-LATE card –
+// «there was someone, and it is already over» – and no `'met'` beat is ever raised for that episode.
+// ⚠ THE TWO CANNOT BE ONE FIXTURE, and the reason is the mechanic rather than the budget: the
+// register is decided by ruling A's `'met'` RECEIPT, which an episode either carries or does not, so
+// one career on one week can only ever be one of the two scenes. `pro` settles which one the corpus
+// had: its four endings all carry a receipt (weeks 171 / 221 / 307 / 371, every one told-now), so the
+// told-late branch – the scene ruling A exists for, the one that goes wrong QUIETLY – had no browser
+// anywhere in the suite until `belated`.
+// ⚠ MEASURED BEFORE EITHER RECIPE WAS WRITTEN, not assumed: no committed fixture holds a live known
+// episode at all (`pro` is the only one with a love life past its arrival, and its tail row `p:400`
+// is known but never ends inside the walk), so neither state had anywhere to start.
+export const FIXTURE_NAMES = ['fresh', 'junior', 'pro', 'sinking', 'broke', 'ending', 'unheard', 'soft', 'breakup', 'belated'] as const
 export type FixtureName = (typeof FIXTURE_NAMES)[number]
 
 /** The header layout `encodeExportFile` writes: MAGIC(8) | schemaVersion u32 BE | sha256(32) | gzip.

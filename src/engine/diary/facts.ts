@@ -224,6 +224,19 @@ export interface DiaryWorldView {
    *  Required rather than optional, for the reason `vacationPackageId` spells out at length: it
    *  selects COPY, and a view that forgot it would build, pass, and quietly say nobody is there. */
   partnerKnown: boolean
+  /** ⭐⭐ v75 (the private life, wave 4 – T6) – IS THE MARK OF AN ENDING STILL ON HER? The ONE
+   *  predicate, `world.spiritShock !== null && kind === 'breakup'`, asked at snapshot time and carried
+   *  – exactly the shape `partnerKnown` above and `coachTravelled` before it record, and for the same
+   *  reason: the week note and the engine's own recovery arithmetic must not be able to disagree about
+   *  whether she is still carrying it.
+   *
+   *  Required rather than optional, for the reason `vacationPackageId` spells out at length: it selects
+   *  COPY, and a view that forgot it would build, pass, and quietly sweep the ordinary week instead.
+   *
+   *  ⚠ IT IS NOT `partnerKnown` INVERTED. That fact is about DISCLOSURE and goes false the instant an
+   *  episode ends; this one is about HER, and is true for weeks on end after an ending the parent may
+   *  never have heard of. See the field's note in `shared/protocol/narrative.ts`. */
+  freshBreakup: boolean
   /** W2: `plan.train` – the percentage of the week the PLAYER put on court. */
   trainPct: number
   /** W4: the live knock's decision, or null – `'rest'` on the week she is spending off the training

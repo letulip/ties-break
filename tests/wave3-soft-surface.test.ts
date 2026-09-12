@@ -193,11 +193,16 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
     // which is exactly the event a total record is supposed to force somebody to type. ARM 10 (tier 1
     // marked blocking) still goes red on this line, and a `'fork-counsel': false` would too – which
     // is the whole of the counsel arc's mechanism, since `answerFork` refuses on BLOCKING rows.
+    // ⚠ RE-AIMED AGAIN BY v75 T4 (12.09), NOT WEAKENED, AND FOR THE IDENTICAL REASON ONE UNION-MEMBER
+    // LATER: `'ended'` is the fifth kind – the week the attachment is over – and it is TRUE, because
+    // §5b prices it as tier 2 exactly as it prices «there is someone». Once again the only thing that
+    // moved is that somebody had to type a sentence, which is what a total record is for.
     expect(LIFE_BEAT_BLOCKING, 'the ruled table: tier 2 blocks, tier 1 does not').toEqual({
       'fork-opinion': true,
       met: true,
       'small-talk': false,
       'fork-counsel': true,
+      ended: true,
     })
   })
 

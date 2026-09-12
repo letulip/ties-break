@@ -66,6 +66,10 @@ import {
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
 import { SPIRIT_BANDS, bondBandOf, moodRegisterOf, spiritBandOf } from '../src/engine/spirit'
+// ⚠ v75 T4 – THE SHARED DRAIN, AND IT IS THE POINT OF THE MODULE: this file's own copy of «answer a
+// beat nobody is measuring» was the zero-hunt that wave 4's `'ended'` kind retires. See the note on
+// `drainOtherBeats`.
+import { drainLifeBeats } from '../tools/_lifeBeats'
 import { engineModuleSource } from './worldSource'
 import { region } from './helpers/source'
 import { readFileSync } from 'node:fs'
@@ -74,7 +78,7 @@ import { migrateSave } from '../src/engine/migrations'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
-import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type LifeBeatKind, type MoodRegister } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, STOP_PRECEDENCE, type BondBand, type MoodRegister } from '../src/shared/protocol'
 
 // Several blocks walk a real career to its fork (242 weeks). Deterministic but slow, and the suite
 // runs many files in parallel – the same generous file-level timeout r2-13 and round11 carry.
@@ -111,12 +115,25 @@ function career(seed: string): { world: WorldState; rng: Rng } {
  *  ⚠ THE DRAIN IS BOND-NEUTRAL ON PURPOSE. It answers with the option whose delta is ZERO, so a beat
  *  this file never meant to live cannot move the number every block below measures. Asserted rather
  *  than assumed – `neutralAnswerFor` throws if a kind has no such option, because a silently missing
- *  zero row would make every bond assertion in this file wrong by an unknown amount. */
-function neutralAnswerFor(kind: LifeBeatKind): string {
-  const free = LIFE_BEAT_OPTIONS[kind].find((o) => o.bond === 0)
-  if (!free) throw new Error(`${kind} has no bond-neutral answer – this fixture cannot drain it without moving the number`)
-  return free.id
-}
+ *  zero row would make every bond assertion in this file wrong by an unknown amount.
+ *
+ *  ⚠⚠ RE-AIMED AGAIN FOR v75 (wave 4, T4 – 12.09), AND THE PARAGRAPH ABOVE IS KEPT WHOLE BECAUSE IT
+ *  IS THE THING THAT MOVED. `neutralAnswerFor` was a PRIVATE COPY of the zero-hunt that
+ *  `tools/_lifeBeats.ts` retired one commit earlier, and wave 4's `'ended'` beat is the kind with no
+ *  zero under any reading – so this copy threw, inside `walkToFork`, exactly as T3b's commit message
+ *  predicted the hunt would («it throws inside forty benches, `npm run e2e:fixtures` and every walked
+ *  test AT ONCE»).
+ *
+ *  WHAT REPLACES IT: `drainLifeBeats(world, 'fork-opinion')` – the SHARED helper, whose `except` list
+ *  is this function's own «stop at the fork's own row» rule and whose registry answer is
+ *  read-INDEPENDENT rather than free. There is one implementation of «answer a beat nobody is
+ *  measuring» again, which is what that module exists for.
+ *
+ *  ⚠⚠ AND THE NEUTRALITY THIS FILE NEEDS IS UNHARMED, WHICH IS WHY THIS IS NOT A WEAKENING. Every
+ *  bond claim below is a **DELTA** measured after `atTheFork()` returns – `world.bond - before` – and
+ *  every drain happens INSIDE the walk, before that window opens. An `'ended'` row drained on the way
+ *  past moves the starting number by a known −1 and moves no measured difference at all. The two
+ *  reachable kinds this walk actually meets (`'met'`, `'fork-counsel'`) still drain at exactly 0. */
 
 /** Tick until the tick that opens the fork – which is the tick that raises her opinion of it. Reveals
  *  are resolved, knocks answered and OTHER KINDS OF BEAT drained on the way, so none of them becomes
@@ -138,16 +155,11 @@ function walkToFork(world: WorldState, rng: Rng): void {
   drainOtherBeats(world)
 }
 
-/** Every pending beat that is NOT the fork's own, answered neutrally. ⚠ IT STOPS AT A
+/** Every pending beat that is NOT the fork's own, answered by the registry. ⚠ IT STOPS AT A
  *  `'fork-opinion'` ROW – that row is the subject of this file and answering it here would delete
- *  the thing every block below is about. */
+ *  the thing every block below is about, which is exactly what `except` means in the shared helper. */
 function drainOtherBeats(world: WorldState): void {
-  for (let guard = 0; guard < 50; guard++) {
-    const row = pendingLifeBeat(world)
-    if (row === null || row.kind === 'fork-opinion') return
-    answerLifeBeat(world, neutralAnswerFor(row.kind))
-  }
-  throw new Error('a beat queue that will not drain')
+  drainLifeBeats(world, 'fork-opinion')
 }
 
 /** A career standing exactly where wave 2 exists to be measured: the fork is open, her opinion of it

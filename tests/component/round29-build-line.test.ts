@@ -118,7 +118,13 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // fixtures regenerated), never by this line's item. The claim above – «the BUILD-LINE wave moved
     // no schema» – is untouched, and the pin still follows the ladder's head so the sentence over it
     // stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(74)
+    // ⚠ AND AGAIN AT v75 (12.09, the private life's wave 4 – `spiritShock`, the mark an ending leaves
+    // on her until she is back within two points of her own line), NOT WEAKENED, for the TENTH time
+    // and for the reason verbatim: 75 was moved by that wave with its full four-part move (bump,
+    // append-only migration back-filling `null`, golden fixture v75, e2e fixtures regenerated), never
+    // by this line's item. The claim above – «the BUILD-LINE wave moved no schema» – is untouched, and
+    // the pin still follows the ladder's head so the sentence over it stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(75)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

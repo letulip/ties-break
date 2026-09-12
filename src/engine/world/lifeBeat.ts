@@ -77,9 +77,18 @@ import { addEvent, seasonIndexOf } from './ledger'
 // here by T1; T4 gave `engine/spirit.ts` a reader for `activeEpisode` (the effective baseline), and
 // this module imports `../spirit` at runtime, so leaving them here would have closed a value loop.
 // They moved verbatim to the leaf and nothing about either of them changed.
-// ⭐ v74 T6 ADDS `knownPartner` TO THE SAME IMPORT – «does he KNOW», the second question that leaf
-// asks of the list, and the one the delivery below fires on.
-import { activeEpisode, knownPartner, loveEpisodesOf } from './loveEpisodes'
+// ⭐ v74 T6 ADDED `knownPartner` TO THE SAME IMPORT – «does he KNOW», the second question that leaf
+// asks of the list, and the one the delivery fired on.
+// ⚠⚠ AND v75 T4 TOOK IT BACK OFF THIS LINE, WHICH IS RECORDED RATHER THAN QUIETLY DELETED (ruling B).
+// `knownPartner` answers «is someone there now AND has he been told», and the second half of that is
+// exactly what a told-late ending cannot satisfy – it returned null for precisely the episodes the
+// scene is about. §6 walks `loveEpisodesOf` itself now. The SELECTOR is untouched and still exported
+// from the leaf: `DiaryFacts.partnerKnown` reads it through `world/snapshot.ts`, which is the reading
+// it was written for, and nothing about it changed.
+// ⭐⭐ v75 T2 ADDS `endEpisode`, THE LEAF'S FIRST WRITER – the ONE line in the engine that sets
+// `endedWeek`. §8 below owns the hazard that decides WHETHER it is called; the leaf owns what an
+// ending IS, beside the selector that stops reporting her as attached the moment it is written.
+import { activeEpisode, endEpisode, loveEpisodesOf } from './loveEpisodes'
 // ⚠ FROM ./constants, NOT ./endings, AND IT IS A CYCLE FIX RATHER THAN A PREFERENCE – the same swap
 // `world/entries.ts` records at its own import. `endings.ts` imports THIS module (it raises the
 // fork-opinion row and asks `pendingLifeBeat` before it will answer the fork), so an import back
@@ -137,6 +146,12 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // opinion is answered holds the fork shut until the coach has been heard – no new guard, no new
   // ordering rule, and the same mechanical-order trick her own row has used since wave 2.
   'fork-counsel': true,
+  // ⭐⭐⭐ v75 T4 – TRUE, AND IT IS TIER 2's OWN PRICE RATHER THAN A NEW RULE. §5b prices «the news
+  // that someone exists» as a week the parent must answer before time may move; the week it is over
+  // is the same beat from the other end, and a career that could tick past it would answer her by
+  // walking away. ⚠ IT BLOCKS IN BOTH REGISTERS – a told-LATE ending is still something she has just
+  // said out loud, and the lateness is hers rather than a reason to hear it less.
+  ended: true,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -1084,6 +1099,232 @@ const SMALL_TALK_HEADING: Record<MoodRegister, string> = {
  *  person, no plan, no number). What is left is the one thing the world actually holds: she came. */
 const SMALL_TALK_CARD = 'She came by with something small.'
 
+// =================================================================================================
+// 3e. `'ended'` – THE WEEK HE LEARNS IT IS OVER (wave 4, T4). EVERY WORD BELOW IS A DRAFT.
+// =================================================================================================
+//
+// `docs/plans/life-wave-4-builder-2026-09.md` §2 T4 and the wave-4 rulings A, B and G. §8 below
+// decides WHEN an attachment ends; this is the conversation that follows, and it is the other end of
+// the arc §3b opened.
+//
+// ⚠⚠ TWO REGISTERS, AND THEY ARE THE WHOLE SUBJECT OF RULING A. Told-NOW is the ending of a romance
+// the parent already knew about – there is a `'met'` row for this episode in the `lifeLog`, and the
+// news is that it is over. Told-LATE is the scene the episode schema was re-cut for on 09.09: there
+// was someone, he was never told, and the first he hears of it is that it has already finished.
+//
+// ⚠⚠ THE DISCRIMINATOR IS THE `'met'` RECEIPT AND **NEVER** `endedWeek < knownWeek` (ruling A, and
+// it is a DEPARTURE from the brief's literal words with the reason stated there). The two readings
+// agree everywhere except `endedWeek === knownWeek`, and there the literal one calls the episode
+// *known* – so the same tick would raise `'ended'` from §8 and `'met'` from §6, two contradictory
+// beats about one girl in one week, which is the exact outcome the brief forbids two lines above its
+// own rule. It is reachable rather than theoretical: ruling F makes `endedWeek >= sinceWeek + 1`, so
+// the collision needs only a lag of one or more and the hazard landing on that week.
+//
+// ⚠⚠ AND THE REGISTER IS DERIVED, NEVER STORED (`beatEndsRegister`). The receipt is already in the
+// record and is already the dedupe key, so a second field saying the same thing is the `pending`
+// boolean rule 2 refuses at the top of this file. It stays re-derivable for the life of the career
+// because a `'met'` row can never appear AFTER an `'ended'` row for one episode: the told-late path
+// in §6 raises no `'met'`, ever, and §6 delivers each episode exactly once.
+//
+// ⚠⚠ THE LADDER IS TWO RUNGS AND NOT `'met'`'s THREE, and that is T6's own matrix rather than a
+// shortcut: the brief's string list is «4 voices x {roof, away} x {told-now, told-late}, plus the
+// strained/cold dry card pair» – sixteen voiced cells and two dry ones, with no `mention` rung in
+// it. So this pool reads `speaksInHerOwnVoice`, the FORK's two-rung channel, and the dry card is the
+// shared fallback at `strained`/`cold`. ⚠ A `mention` rung is T6's to add if the architect wants one;
+// it is not omitted for want of room.
+//
+// ⚠⚠ PRESENCE FROM DAY ONE (the wave-4 brief §0.3, and it is an absolute): every cell below ships
+// its roof AND its away frame. An attachment can end when she is twenty-four in her own flat, and
+// wave 3 shipped two pools with one column each and had to be corrected by the owner's own вычитка.
+// No single-register pools, ever again.
+//
+// ⚠⚠ AND THE READ – WHAT SHE WANTS FROM HIM THIS WEEK – REACHES THE PLAYER THROUGH THE HEADING AND
+// THE TOLD-LATE FEED LINE, AND THROUGH NOTHING ELSE. That is the brief's «surfaced ONLY in the
+// prompt's and feed row's wording» taken literally, and the heading is the surface it is put on for
+// two reasons worth writing down. (1) The heading is the PARENT'S frame over the card, which is
+// where «what she seems to want from us» belongs – her own line is her, and she is not narrating her
+// own needs. (2) The heading is carried at EVERY bond band, so the dry card at `strained`/`cold`
+// carries the read too – `MET_DRY`'s own argument verbatim: a rule only half the ladder can read is
+// a hidden number, and the flip prices a cold home's answers exactly as it prices a close one's.
+// ⚠ T6 OWNS THE FULL MATRIX and may move the read onto her line instead; that is a wording decision
+// and this is the draft that renders.
+
+/** WHICH SCENE THIS IS – derived from the `'met'` receipt (ruling A), never stored on the row. */
+export type EndsRegister = 'told-now' | 'told-late'
+
+/** ⚠ BOTH REGISTERS AS A LIST, so the completeness pin can walk them without transcribing the union –
+ *  `PARTNER_WANTS`' own shape, and `satisfies` is what keeps the two from parting. */
+export const ENDS_REGISTERS = ['told-now', 'told-late'] as const satisfies readonly EndsRegister[]
+
+/** ⭐⭐⭐ WHAT SHE WANTS FROM HIM WHILE IT IS RAW – the space-vs-company read, drawn once on the
+ *  ending week (`seed:life:ends:<endedWeek>:react`) and re-derived wherever it is needed.
+ *
+ *  ⚠ IT IS HER `wants`' SIBLING AND NOT A SECOND AXIS ON IT. `LoveEpisode.wants` is what she asked
+ *  be done with the NEWS that somebody exists; this is what she wants from her parent in the weeks
+ *  after it stops. Two facts, two streams, two names – who-she-is §4's own «her `wants` reads
+ *  (private/open, space/company)» row lists them side by side for exactly that reason. */
+export type EndsRead = 'space' | 'company'
+
+export const ENDS_READS = ['space', 'company'] as const satisfies readonly EndsRead[]
+
+/** ⭐⭐ HER LINE, BY VOICE, BY REGISTER, IN BOTH PRESENCES – 16 drafts, and the THIRD table in this
+ *  file indexed by temperament (the fence's own shape: the wording knows who she is, nothing else
+ *  does).
+ *
+ *  The bible each voice is written to, in a phrase, and the wave-4 brief's own reminders for THIS
+ *  pool: `sunny` says the whole thing evenly and will name the ordinary feeling; `fiery`'s fire may
+ *  go FLAT here – the tired keeper's register, which is the one place her speed stops being speed;
+ *  `quiet` says the ARRANGEMENTS («the racquets», «the weekend»), never the feeling, and the parent
+ *  reads the week off what she talked about instead; `deep` contracts, and cracks only under the
+ *  WORN kind of breakage (the T17 read, now a precedent).
+ *
+ *  ⚠⚠ THE TWO-TIER HONESTY LAW BINDS THIS POOL AS HARD AS §3b's AND FOR THE SAME REASON: the sim
+ *  holds no name, no gender, no place and no reason, so not one line below names a person, a fault,
+ *  a reason or a channel the world does not have. «It is over» is the entire consequential fact any
+ *  of them may assert, and the told-late column adds exactly one more – that it had been over for a
+ *  while. ⚠ NO FAULT AND NO REASON ANYWHERE, which is not delicacy: a break-up the sim never modelled
+ *  a cause for cannot have one printed beside it.
+ *
+ *  ⚠ THE QUOTED SPAN IS SHARED BETWEEN THE TWO PRESENCES, by the presence law («цитаты ... общие с
+ *  домашними рамками»): what distance changes is the FRAME she is standing in, never the sentence
+ *  inside the quotation marks.
+ *
+ *  ⭐⭐⭐ RE-CUT BY v75 T6 (12.09) AGAINST THE BIBLE, AND THE FOUR FINDINGS ARE RECORDED HERE RATHER
+ *  THAN QUIETLY REPAIRED, because each of them is a rule a later writer will meet again:
+ *
+ *  1. ⚠ THE NARRATOR'S ADVERB. «plainly», «straight out», «flatly» (twice) and «for once she was not
+ *     in a hurry» all interpreted her DELIVERY, which the craft law bans in as many words – «short
+ *     words ARE the tiredness; a frame that says so has failed». Every frame now carries a fact or an
+ *     object the parent saw (a short call, a bag put down slowly, a bag open on the floor) and lets it
+ *     do the work. ⚠ `fiery`'s slow bag is KEPT BYTE-IDENTICAL: it is an observed action, not a manner
+ *     word, and the fire gone flat is shown by it rather than named.
+ *  2. ⚠⚠ THE UNLICENSED DURATION, AND IT WAS FALSE ON A REACHABLE WEEK. All four told-late quotes said
+ *     «a while ago» / «for a while», and `ENDED_DRY` said it a fifth time – but ruling A's own
+ *     collision (`endedWeek === knownWeek`, which that ruling argues is a certainty across a census)
+ *     falls through to the told-late branch with ZERO weeks between the ending and the telling. A
+ *     duration is a first-tier consequential fact and the world does not license this one. What the
+ *     told-late column may assert instead is what is true on BOTH paths: he is hearing of the person
+ *     and of the ending in one breath, and she is saying why she had not mentioned it.
+ *  3. ⚠⚠ TWO `deep` FRAMES WERE BYTE-IDENTICAL TO `MET_HER_LINE.deep.open`'s – «She waited until the
+ *     house was quiet, then said it once.» and «She called late, when the day was done, and said it
+ *     once.» So one girl's career staged the same scene for «there is someone» and for «it is over»,
+ *     which is the one pairing in this file that must not share a sentence. Both are new here.
+ *  4. ⚠ `quiet`'s away frame said «She wrote to say…». The channel palette rule is «the corpus avoids
+ *     «wrote» entirely»; it is a text now, with the arrangements first and the news under them.
+ *
+ *  ⭐⭐ AND THE CONTRACTION SPLIT IN `deep` IS DERIVED, NOT PREFERRED. §Contractions licenses `deep`
+ *  «lightly», and T17's precedent says WHERE: her contraction cracks under the WORN kind of breakage
+ *  (`HER_STOP_LINE.deep.worn` – «I'm tired. Not this week. All of it.»), while her `own` column stays
+ *  formal. The told-now card is inside that window BY CONSTRUCTION – the shock lands −22/−34 on a
+ *  baseline of 70 (lifted 75), so her spirit is 36-53 and `worn > 0.15` is `spirit < 59.5` – so her
+ *  told-now line contracts. The told-late card carries NO such guarantee (the shock cleared seasons
+ *  before `knownWeek` on the ordinary path), so her told-late line stays uncontracted. One rule, two
+ *  columns, and the difference is a fact about the week rather than an editor's ear.
+ *
+ *  ⚠⚠ AND THAT SAME ARITHMETIC IS WHY THIS POOL IS WRITTEN AT TWO DIFFERENT REGISTERS THOUGH IT READS
+ *  NONE. `lifeBeatSaid` hands this card no `MoodRegister` (see the case below), so the composition
+ *  rule's SPIRIT axis has to be satisfied by the writing rather than by a lookup. TOLD-NOW is the low
+ *  register by construction, for the arithmetic above, and is written to it. TOLD-LATE is not: on the
+ *  ordinary path the ending is seasons old and her week can be bright, level or low, and only the
+ *  collision case lands it in a flat week. So every told-late line is written REGISTER-NEUTRAL – true
+ *  of a girl who has recovered and of one who has not – and a told-late line that leaned on her being
+ *  flat would be this pool contradicting the Mood word beside it. */
+const ENDED_HER_LINE: Record<Temperament, Record<EndsRegister, PresenceCell>> = {
+  sunny: {
+    'told-now': {
+      roof: 'She said it at the table and stayed sitting there afterwards. "It\'s over. I\'m alright. I will be, anyway."',
+      away: 'She called that evening and said it before anything else. "It\'s over. I\'m alright. I will be, anyway."',
+    },
+    'told-late': {
+      roof: 'She raised it herself on an ordinary evening, out of nothing. "There was someone. It\'s finished, and I should have said."',
+      away: 'She came home for the weekend and said it before she went back. "There was someone. It\'s finished, and I should have said."',
+    },
+  },
+  fiery: {
+    'told-now': {
+      roof: 'She came in, put her bag down slowly, and sat. "It\'s finished. No, I don\'t want to go through it."',
+      away: 'She rang, and it was a short call. "It\'s finished. No, I don\'t want to go through it."',
+    },
+    'told-late': {
+      roof: 'She said it on her way through the kitchen and did not stop. "There was someone. It\'s done. I wasn\'t going to make a thing of it."',
+      away: 'She put it in a voice note about something else entirely. "There was someone. It\'s done. I wasn\'t going to make a thing of it."',
+    },
+  },
+  quiet: {
+    'told-now': {
+      roof: 'She took her racquets out of the hall and re-stacked them by the door. "The weekend\'s free now. That\'s finished."',
+      away: 'She texted the week\'s plans through, and this was under them. "The weekend\'s free now. That\'s finished."',
+    },
+    'told-late': {
+      roof: 'She had the weekend bag open on the floor when she said it. "There was someone. It didn\'t need saying at the time."',
+      away: 'She put it in the family chat, after the travel dates were settled. "There was someone. It didn\'t need saying at the time."',
+    },
+  },
+  deep: {
+    'told-now': {
+      roof: 'She let the week finish before she said anything at all. "It\'s over. I\'d rather not say more."',
+      away: 'She let the message sit a while, and answered it with this. "It\'s over. I\'d rather not say more."',
+    },
+    'told-late': {
+      roof: 'She said it to the window rather than to the room. "There was someone. It is over. That was mine to keep."',
+      away: 'She said it at the door on a visit home, already leaving. "There was someone. It is over. That was mine to keep."',
+    },
+  },
+}
+
+/** ⭐ `strained` / `cold` – THE DRY CARD, one per register and not one word of hers in it. The
+ *  parent knows because a household knows, and the loss is the whole content of the line.
+ *
+ *  ⚠ IT IS `MET_DRY`'s SHAPE AND NOT ITS SENTENCE. That pool says how the news SURFACED; these say
+ *  what the week holds, because by this rung the parent was never the person it was told to.
+ *
+ *  ⚠ AND IT CARRIES NO READ, WHICH IS WHY THE READ LIVES IN THE HEADING. A dry card that read her
+ *  wants would be a home at this distance being told what she needs, which is the one thing the rung
+ *  is defined by not having. The heading above it carries the read at every band – see the banner. */
+// ⭐⭐ RE-CUT BY v75 T6, AND BOTH ROWS MOVED FOR A REASON THE COMMENT ABOVE HAD ALREADY WRITTEN DOWN.
+// ⚠ `told-now` SAID HOW THE NEWS SURFACED («She did not say so, and the house worked it out»), which
+// is exactly what this pool's own note says it does NOT do – that is `MET_DRY`'s job, and closing on
+// the house a third time is the repetition the 11.09 вычитка took out of `MET_DRY` itself. It states
+// what the WEEK HOLDS now, which is the loss: she is carrying on, and not talking about it.
+// ⚠⚠ `told-late` LOST «for a while» – the unlicensed duration, false on ruling A's collision week.
+// See finding 2 in `ENDED_HER_LINE`'s note. «Already over» is true on both paths by construction:
+// `rollEnds` writes `endedWeek` before `deliverKnownPartner` reads it, in the same tick.
+const ENDED_DRY: Record<EndsRegister, string> = {
+  'told-now': 'It is over. She is getting on with the week and not talking about it.',
+  'told-late': 'There was someone in her life, and it is already over. Nobody was told at the time.',
+}
+
+/** The parent's frame over the card – by register, and by HER READ. ⚠ THE READ IS HERE AND NOWHERE
+ *  ELSE ON THIS CARD, which is the banner's own decision: the heading is the only surface carried at
+ *  every bond band, and a read only half the ladder could see would be a hidden number.
+ *
+ *  ⚠ NOT ONE OF THE FOUR NAMES AN ANSWER. «She wants the room» is what the parent can see; which of
+ *  the four things to say about it is his, and a heading that recommended one would be the meter this
+ *  layer refuses to build, spelled in words. */
+const ENDED_HEADING: Record<EndsRegister, Record<EndsRead, string>> = {
+  'told-now': {
+    space: 'It is over, and she wants the room to herself',
+    company: 'It is over, and she does not want to be on her own with it',
+  },
+  'told-late': {
+    // ⚠ NOT «leave it there» – the past tense of that phrase is a BANNED TAIL and the present tense
+    // is the same narrator move one conjugation away. See `ENDED_LATE_EVENT` below.
+    // ⚠ RE-CUT 12.09, HIS WORD ON THE AXIS («давай попробуем»): the told-late headings used to state
+    // the read as RECOUNTING («would rather not go into it» / «is not done talking about it») while
+    // both registers' answers price PRESENCE – the reader argued about talking and the buttons
+    // offered company. Both cells (and the two told-late feed rows) now speak the presence axis the
+    // told-now pair already speaks; e2e pins the shared prefix, so the pin survived by construction.
+    space: 'There was someone, it is already over, and she wants the room to herself',
+    // ⚠⚠ RE-CUT BY v75 T6. It read «and she has been round more since», and that cell asserted TWO
+    // things the world does not hold: a count of VISITS (the sim models none, at any stage) and a
+    // SPAN, on a card raised in the very week the news lands, when «since» is empty. It is also the
+    // one reading that cannot survive the stages – a thirty-year-old in her own household is not
+    // «round». The read itself is a persisted draw and IS licensed, so what the heading carries now
+    // is the read and nothing round it, in the parent's own frame.
+    company: 'There was someone, it is already over, and she does not want to be on her own with it',
+  },
+}
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -1179,6 +1420,37 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'heard', label: 'Thank the coach for saying it plainly', bond: 0 },
     { id: 'weigh', label: 'Say we will sit with it', bond: 0 },
   ],
+  /** ⭐⭐⭐ v75 T4 – THE FOUR THE ENDING OFFERS (build plan §5's shape, ruling G's prices). ⚠ THIS IS
+   *  THE LIST AS A GIRL WHO WANTS **SPACE** PRICES IT, which is `LIFE_BEAT_OPTIONS`' own doctrine
+   *  applied to the second read in this file: the base column here is `'space'` exactly as it is
+   *  `'open'` for `'met'`, and `ENDED_BOND_COMPANY` is the overlay. `lifeBeatOptionsFor` is the only
+   *  road to the priced set either way.
+   *
+   *  ⚠⚠ THE FIRST KIND WITH NO FREE ANSWER, and that is the whole of the 12.09 drain amendment's
+   *  reason for existing (wave-4 brief §0.2). Nothing here costs zero under any reading. What keeps
+   *  a harness safe instead is that `fix-it` and `blame` are READ-INDEPENDENT – the overlay below
+   *  names neither – so `DRAIN_ANSWER['ended'] = 'fix-it'` charges −1 whatever she wanted, which is
+   *  an arithmetic a bench can print (`tools/_lifeBeats.ts`, `drainSkewLine`).
+   *
+   *  ⚠ THE LABELS NAME NO GENDER AND NO PERSON, the schema being obeyed rather than a style choice:
+   *  `LoveEpisode` persists no name and no gender, so «them» is the only honest word for whoever is
+   *  gone. ⚠ AND NO NUMBER, NO PRICE, NO METER in any of them (the fence) – and, per ruling G, the
+   *  LABELS ARE UNTOUCHED BY THE FLIP: same four sentences, same order, same ids, both readings. A
+   *  button that changed its words with its price would be the meter one step removed.
+   *
+   *  ⭐ T6 READ ALL FOUR AND KEPT THEM BYTE-IDENTICAL, WHICH IS A DECISION AND NOT AN OMISSION. They
+   *  are gender-free by «them» (the schema persists no name and no gender), carry no number, no price
+   *  and no meter, and – the test a label has to pass that a sentence does not – EACH ONE READS AS A
+   *  PLAUSIBLE PARENT IN BOTH READINGS, because the flip moves the price and never the words. «Give
+   *  her room, and say we are here» is the kind answer when she wants space and a distant one when she
+   *  wants company; «Keep her company, and stay close this week» is warmth one way and crowding the
+   *  other. A label that only worked under one read would be the read leaking onto the button. */
+  ended: [
+    { id: 'space', label: 'Give her room, and say we are here', bond: ECONOMY.bond.delta.endedMatched },
+    { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.bond.delta.endedMismatched },
+    { id: 'fix-it', label: 'Offer to help put it right', bond: ECONOMY.bond.delta.endedFixIt },
+    { id: 'blame', label: 'Say they were never worth it', bond: ECONOMY.bond.delta.endedBlame },
+  ],
 }
 
 /** ⭐⭐⭐ v74 T7 – THE WANTS FLIP, AS AN OVERLAY AND NEVER AS A SECOND TABLE. A girl whose drawn
@@ -1201,6 +1473,26 @@ const MET_BOND_PRIVATE: Readonly<Record<string, number | undefined>> = {
   silent: ECONOMY.bond.delta.metSilentPrivate,
 }
 
+/** ⭐⭐⭐ v75 T4 – THE ENDING'S FLIP, AND IT IS `MET_BOND_PRIVATE`'s SHAPE DELIBERATELY, DOWN TO THE
+ *  ARGUMENT FOR THE ABSENCES. A girl whose drawn read is `'company'` wants her parent near her; the
+ *  base list is the other read, so the only two rows that move are the two the read is ABOUT.
+ *
+ *  ⚠⚠ THE ABSENCE OF `fix-it` AND `blame` IS THE LOAD-BEARING HALF, exactly as `wary`'s and `meet`'s
+ *  is one table up. Overlaying two rows makes «−1 always» literally the same −1 in both readings
+ *  rather than two numbers that happen to agree – and `tools/_lifeBeats.ts` drains this kind through
+ *  that −1, with `drainCostOf` refusing outright if the two readings ever disagree. A flip written as
+ *  a COPY of the four rows could drift `fix-it` off −1 in one careless edit and move every bond
+ *  number forty benches measure, with `npm run check` green the whole way, because all of it
+ *  typechecks. `blame` is absent for the ruling's own reason as well: «some things are wrong
+ *  regardless of what she wanted».
+ *
+ *  ⚠ AND NOTHING PRINTS EITHER NUMBER: the read reaches the player through `ENDED_HEADING` and
+ *  `ENDED_LATE_EVENT` – wording, never a mark. */
+const ENDED_BOND_COMPANY: Readonly<Record<string, number | undefined>> = {
+  space: ECONOMY.bond.delta.endedMismatched,
+  company: ECONOMY.bond.delta.endedMatched,
+}
+
 /** ⭐⭐⭐ v74 T7 – THE ANSWER SET **AS THIS GIRL PRICES IT**, and the one road to it. Every reader of
  *  a beat's answers goes through here: `buildLifeBeatPrompt` to render the card, `answerLifeBeat` to
  *  charge it, `pendingLifeBeatOptions` for everything outside the engine. Two readings of one price
@@ -1212,12 +1504,37 @@ const MET_BOND_PRIVATE: Readonly<Record<string, number | undefined>> = {
  *
  *  ⚠ THE LABELS ARE UNTOUCHED BY THE FLIP – same four sentences, same order, same ids, in both
  *  readings. A button that changed its words with the price would be the meter this wave refuses to
- *  build, one step removed. */
-export function lifeBeatOptionsFor(kind: LifeBeatKind, wants: LoveEpisode['wants']): readonly LifeBeatAnswer[] {
+ *  build, one step removed.
+ *
+ *  ⭐⭐⭐ v75 T4 – THE THIRD PARAMETER IS THE ENDING'S READ, AND THE FUNCTION GREW RATHER THAN GAINING
+ *  A SIBLING (ruling G.3, in its own words: «`lifeBeatOptionsFor` stays the ONE road to a priced
+ *  answer set. It grows the kind; it does not grow a sibling»). `pendingLifeBeatOptions`,
+ *  `buildLifeBeatPrompt`, `answerLifeBeat` and `tools/_lifeBeats.ts` all keep reaching prices through
+ *  here, so «what would this answer cost» has exactly one reading no matter which kind is asking.
+ *
+ *  ⚠ IT DEFAULTS TO `'space'` FOR `wants`' OWN REASON, and the default is a SHIPPED reading rather
+ *  than a neutral stand-in: `LIFE_BEAT_OPTIONS.ended` is the `'space'` column, so a caller that has
+ *  no read to hand gets the base table and never a price nobody chose. Every real call comes through
+ *  `beatEndsRead`, which derives it from the episode's own `endedWeek`.
+ *
+ *  ⚠⚠ THE TWO AXES ARE INDEPENDENT AND EACH REACHES ONE KIND. `wants` is meaningless on `'ended'`
+ *  (her attachment's disclosure preference is not what she needs the week after it stops) and the
+ *  read is meaningless on `'met'`; neither is merely unused on the other, and pretending one axis
+ *  could serve both would be the `endsMult`/`temperamentMult` collapse (ruling E) in the copy layer. */
+export function lifeBeatOptionsFor(
+  kind: LifeBeatKind,
+  wants: LoveEpisode['wants'],
+  read: EndsRead = 'space',
+): readonly LifeBeatAnswer[] {
   const base = LIFE_BEAT_OPTIONS[kind]
-  if (kind !== 'met' || wants !== 'private') return base
+  const overlay = kind === 'met' && wants === 'private'
+    ? MET_BOND_PRIVATE
+    : kind === 'ended' && read === 'company'
+      ? ENDED_BOND_COMPANY
+      : null
+  if (overlay === null) return base
   return base.map((option) => {
-    const flipped = MET_BOND_PRIVATE[option.id]
+    const flipped = overlay[option.id]
     return flipped === undefined ? option : { ...option, bond: flipped }
   })
 }
@@ -1264,6 +1581,39 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
   'fork-counsel': {
     heard: 'Her coach called about her wanting to stop. We said thank you for the plain answer.',
     weigh: 'Her coach called about her wanting to stop. We said we would sit with it.',
+  },
+  /** ⭐⭐⭐ v75 T4 – AND THE ENDING WRITES ONE, for `'fork-counsel'`'s reason rather than tier 1's:
+   *  a break-up the parent met well and one he met badly are two different biographies, and only the
+   *  row can tell them apart seasons later when the feed is what the career is read back through.
+   *
+   *  ⚠ FOUR LINES, ONE PER ANSWER, AND NO READ AXIS. What the ROW records is what the parent DID,
+   *  which is the same act whichever way her read came out; whether it was the thing she wanted is
+   *  the card's own surface (`ENDED_HEADING`) and the told-late delivery row's. A feed line that
+   *  scored the answer would be the meter, written down. ⚠ T6 owns the full matrix and may split it.
+   *
+   *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD (rule 4), no name, no gender, no fault and no
+   *  reason – the two-tier honesty law, which binds this pool exactly as hard as the card's.
+   *
+   *  ⭐ T6 READ ALL FOUR AND KEPT THEM BYTE-IDENTICAL, AND THE ONE THING IT WOULD HAVE CHANGED IS ON
+   *  THE OWNER'S DESK INSTEAD. All four open on the same clause, and the kept `'ended'` row directly
+   *  above them in the feed has just given the same news – so within the sixty weeks before
+   *  `pruneEvents` takes the answer row, the pair reads as a restatement. ⚠ IT IS KEPT BECAUSE THE
+   *  SHIPPED `met` FOUR DO EXACTLY THE SAME THING («There is someone in her life. We …»), so the
+   *  repeated subject clause is this pool's established shape rather than this draft's slip, and
+   *  breaking the parallel on one kind is a wording decision about a SHIPPED pool. Flagged in T6's
+   *  package as a question; invariant 4 makes the answer his.
+   *
+   *  ⚠ AND THERE IS STILL NO READ AXIS HERE, which T6 re-confirmed against a contradiction rather than
+   *  inheriting. The wave-4 brief's §2 T6 line reads «ANSWER_EVENT feed lines x4 (the read surfaces
+   *  here in wording ONLY)»; ruling I (12.09, later) puts the read on «the HEADING and the told-late
+   *  feed row» and enumerates its surfaces as «4 heading cells plus 2 feed rows», which is this pool
+   *  excluded by count. The ruling wins on date and on arithmetic, and the row's own argument stands:
+   *  what it records is what the parent DID, which is the same act whichever way her read came out. */
+  ended: {
+    space: 'Her relationship ended. We gave her room, and said we were there.',
+    company: 'Her relationship ended. We kept her company through the week.',
+    'fix-it': 'Her relationship ended. We offered to help put it right.',
+    blame: 'Her relationship ended. We said they were never worth it.',
   },
 }
 
@@ -1330,6 +1680,7 @@ export function lifeBeatSaid(
   wants: LoveEpisode['wants'] = 'open',
   stage: DiaryLifeStage = 'school',
   driver: ForkStopDriver = 'own',
+  endsRegister: EndsRegister = 'told-now',
 ): string {
   const presence = presenceOf(stage)
   // ⭐ v74 – THE SECOND KIND, AND THE `switch` IS THE UNION'S WHOLE POINT: a third cannot be added
@@ -1390,6 +1741,18 @@ export function lifeBeatSaid(
       if (root === undefined) throw new Error(`A fork-counsel row carries no driver: ${detail}`)
       return COACH_COUNSEL[root]
     }
+    // ⭐⭐⭐ v75 T4 – THE FIFTH KIND. ⚠ IT READS NO `detail` AND NO `register`, for `'met'`'s own two
+    // reasons: its detail is an episode id (a machine value, never a rendered word) and the Mood
+    // ladder is not this card's axis. What it reads instead is the TOLD-NOW / TOLD-LATE register,
+    // which is derived from the `'met'` receipt one layer up (`beatEndsRegister`) and handed in – the
+    // same shape `driver` arrives in, and for the same reason: this function is pure so the
+    // completeness pin can walk every cell without posing a world.
+    // ⚠⚠ AND IT READS NO `EndsRead`. The read moves the PRICE and the HEADING, never her line – see
+    // the §3e banner, where that decision and its two grounds are written out.
+    case 'ended':
+      return speaksInHerOwnVoice(bond)
+        ? presenceLine(ENDED_HER_LINE[voice][endsRegister], presence)
+        : ENDED_DRY[endsRegister]
   }
 }
 
@@ -1397,7 +1760,18 @@ export function lifeBeatSaid(
  *  the reading rather than an inconsistency: the fork's heading says what the WEEK around the
  *  conversation was like (the Mood register), and this beat's says how far apart the two of them are
  *  when the news lands (the bond band). See `MET_HEADING`. */
-export function lifeBeatHeading(kind: LifeBeatKind, register: MoodRegister, bond: BondBand): string {
+export function lifeBeatHeading(
+  kind: LifeBeatKind,
+  register: MoodRegister,
+  bond: BondBand,
+  // ⭐⭐⭐ v75 T4 – THE ENDING'S TWO AXES, defaulted exactly as `lifeBeatSaid`'s later parameters are,
+  // so every pin waves 2 and 3 wrote keeps calling this with three arguments and keeps asserting the
+  // frames it was written against. ⚠ THE DEFAULTS ARE SHIPPED READINGS AND NOT NEUTRAL STAND-INS:
+  // `'told-now'` is the register an ending the parent already knew about arrives in, and `'space'` is
+  // the column `LIFE_BEAT_OPTIONS.ended` itself is written as.
+  endsRegister: EndsRegister = 'told-now',
+  read: EndsRead = 'space',
+): string {
   switch (kind) {
     case 'met':
       return MET_HEADING[metRegisterOf(bond)]
@@ -1413,6 +1787,12 @@ export function lifeBeatHeading(kind: LifeBeatKind, register: MoodRegister, bond
     // neither axis is a fact about it. See `COUNSEL_HEADING`.
     case 'fork-counsel':
       return COUNSEL_HEADING
+    // ⭐⭐⭐ v75 T4 – TWO AXES, AND NEITHER OF THEM IS A LADDER. The register says which scene this is
+    // and the read says what she seems to want from him; the Mood register is the weather of her week
+    // and the bond band is the distance between the two of them, and neither is a fact about THIS
+    // card. ⚠ THIS IS THE ONE SURFACE THE READ REACHES AT EVERY BOND BAND – see the §3e banner.
+    case 'ended':
+      return ENDED_HEADING[endsRegister][read]
   }
 }
 
@@ -1438,7 +1818,11 @@ export function lifeBeatListenFollowUp(
   // «say nothing, and let HER talk», and the reward of it is more of her. The coach has given a
   // professional read and has no second half of it being withheld; a panel offering one would promise
   // words nobody wrote. The card's two acknowledgments are the whole of the beat.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel') return null
+  // ⚠ AND `'ended'` HAS NONE (v75 T4), for a fourth reason of its own. «Say nothing, and let her
+  // talk» buys more of her because at the fork she came with something she has more of; here she has
+  // said the one fact there is, and GIVING HER ROOM IS ALREADY ONE OF THE FOUR ANSWERS – a detour
+  // promising more of her would be a second, unpriced way of doing the thing the card already offers.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -1461,6 +1845,89 @@ function beatWants(world: WorldState, row: LifeBeatRecord): LoveEpisode['wants']
   return loveEpisodesOf(world).find((episode) => episode.id === row.detail)?.wants ?? 'open'
 }
 
+/** ⭐⭐⭐ v75 T4 – HAS THIS EPISODE BEEN DELIVERED YET, asked of the `lifeLog` and of nothing else.
+ *
+ *  ⚠⚠ THE RECEIPT IS THE RECORD (rule 2 at the head of this file, and `deliverKnownPartner`'s own
+ *  doctrine): there is no `told: true` flag on the episode, because a second boolean beside a record
+ *  that already answers the question is one fact with two sources of truth and they desync. Wave 3
+ *  read this same predicate inline for `'met'` alone; wave 4 needs it in three places – the delivery
+ *  scan, the told-now raise in §8, and the register a card is worded from – so it is named once here
+ *  rather than spelled three ways.
+ *
+ *  ⚠ `kinds` IS A PARAMETER BECAUSE THE THREE CALLERS ASK DIFFERENT QUESTIONS. §8 asks «was he ever
+ *  told there was somebody» (`'met'` alone, ruling A's discriminator); the delivery scan asks «has
+ *  this row produced ANY beat yet» (either kind), because a told-late row that has already surfaced
+ *  must not surface again. Folding them into one predicate would make one of the two wrong. */
+function hasBeatFor(world: WorldState, episodeId: string, kinds: readonly LifeBeatKind[]): boolean {
+  return lifeLogOf(world).some((row) => kinds.includes(row.kind) && row.detail === episodeId)
+}
+
+/** ⭐⭐⭐ v75 T4, RULING A – WHICH SCENE AN `'ended'` CARD IS, DERIVED FROM THE `'met'` RECEIPT.
+ *
+ *  ⚠⚠ THIS IS THE RULING'S DEPARTURE FROM THE BRIEF, IN ONE LINE OF CODE. The brief said told-late
+ *  when `endedWeek < knownWeek`; that reading calls `endedWeek === knownWeek` *known* and therefore
+ *  raises `'ended'` and `'met'` in the same tick – two contradictory beats about one girl, which the
+ *  brief itself forbids two lines earlier. The receipt has neither problem: it is a fact about what
+ *  the parent HAS ACTUALLY BEEN SHOWN, which is the thing «told» was always trying to mean.
+ *
+ *  ⚠ IT STAYS RE-DERIVABLE FOR THE LIFE OF THE CAREER, which is what lets it be derived rather than
+ *  stored. A `'met'` row can never be appended AFTER an `'ended'` row for one episode: the told-late
+ *  path in §6 raises no `'met'`, ever, and §6 delivers each episode exactly once. So the answer this
+ *  gives on the raise week is the answer it gives twenty seasons later, and the album can re-word an
+ *  old card without the row having carried a register it might have disagreed with.
+ *
+ *  ⚠ ANY OTHER KIND READS `'told-now'`, which is the base register and not a neutral stand-in –
+ *  `beatWants`' own shape, and nothing but an `'ended'` row ever asks. */
+function beatEndsRegister(world: WorldState, row: LifeBeatRecord): EndsRegister {
+  if (row.kind !== 'ended') return 'told-now'
+  return hasBeatFor(world, row.detail, ['met']) ? 'told-now' : 'told-late'
+}
+
+/** ⭐⭐⭐ v75 T4 – WHAT SHE WANTS FROM HIM AFTER IT STOPS, on `seed:life:ends:<endedWeek>:react`.
+ *
+ *  ⚠⚠ THE WEIGHTS ARE `drawPartnerWants`' OWN AND THE SPEC SAYS SO IN ONE SENTENCE (who-she-is §4,
+ *  «Wants weights», verbatim): «open girls draw `'open'` / `'company'` at ~70%; private girls
+ *  `'private'` / `'space'` at ~70%». One row, two draws – so this is NOT a coin flip, and a 50/50
+ *  here would have been a silent tuning change dressed as an absent constant. The own-register share
+ *  is `ECONOMY.life.wantsOwnRegister`, the same 0.70 the disclosure draw reads, because §4 gives them
+ *  one number and two numbers would be two facts sharing a sentence.
+ *
+ *  ⚠ (seed, calendar)-KEYED, NEVER (seed, choice)-KEYED, and the calendar week is the ENDING's
+ *  (ruling G.1). On a told-late episode the card is raised seasons after the ending; the key stays
+ *  `endedWeek`, because `seed:life:ends:<week>` and `seed:life:ends:<week>:react` are siblings and a
+ *  pair keyed on two different weeks is two facts sharing a name. MAIN is not reached.
+ *
+ *  ⚠ THE TEMPERAMENT IS A PARAMETER, `endsHazardFor`'s own primitives doctrine – so a census can
+ *  sweep the table without posing a world per cell. */
+export function drawEndsRead(seed: string, endedWeek: number, temperament: Temperament): EndsRead {
+  const own: EndsRead = temperamentOpenness(temperament) === 'open' ? 'company' : 'space'
+  const roll = rngFromSeed(`${seed}:life:ends:${endedWeek}:react`)()
+  if (roll < ECONOMY.life.wantsOwnRegister) return own
+  return own === 'company' ? 'space' : 'company'
+}
+
+/** ⭐⭐⭐ v75 T4, RULING G.2 – THE READ FOR THE ROW IN HAND, `beatWants`' TWIN. Find the episode by
+ *  `row.detail`, take its `endedWeek`, derive the stream.
+ *
+ *  ⚠⚠ RE-DERIVED AND NEVER STORED, which is a correctness requirement and not a preference.
+ *  `answerLifeBeat` re-validates the chosen option against the priced set (rule 3 at the head of this
+ *  file), so the price has to be RECONSTRUCTIBLE at answer time from facts the world holds – and the
+ *  facts it holds are the episode's dates and the seed. A read stamped onto the row at raise time
+ *  would be a second source of truth for one draw, and the two would part the first time a migration
+ *  or a command touched one of them.
+ *
+ *  ⚠ `'space'` WHEN THERE IS NOTHING TO READ – a row whose episode is gone, or an episode with no
+ *  `endedWeek`. Neither is reachable on any state the sim produces (episodes are append-only and
+ *  never pruned, and an `'ended'` row is only ever raised beside a written date), so this is for the
+ *  probe worlds hand-built in tests and benches. It fails onto the BASE table, never onto a price
+ *  nobody chose – `beatWants`' own `'open'` fallback, for its own reason. */
+function beatEndsRead(world: WorldState, row: LifeBeatRecord): EndsRead {
+  if (row.kind !== 'ended') return 'space'
+  const episode = loveEpisodesOf(world).find((e) => e.id === row.detail)
+  if (episode === undefined || episode.endedWeek === null) return 'space'
+  return drawEndsRead(world.seed, episode.endedWeek, temperamentOf(world))
+}
+
 /** ⭐⭐ v74 T7 – THE PRICED ANSWER SET FOR WHATEVER IS PENDING, or null when nothing is. The one
  *  reading of «what would this answer cost» available OUTSIDE the engine, and it exists because
  *  `LIFE_BEAT_OPTIONS` alone is no longer that reading: a caller that reads the base record and
@@ -1472,7 +1939,11 @@ function beatWants(world: WorldState, row: LifeBeatRecord): LoveEpisode['wants']
  *  it is still whatever is genuinely zero FOR THIS ROW, which the base record could not have said. */
 export function pendingLifeBeatOptions(world: WorldState): readonly LifeBeatAnswer[] | null {
   const pending = pendingLifeBeat(world)
-  return pending === null ? null : lifeBeatOptionsFor(pending.kind, beatWants(world, pending))
+  // ⭐ v75 T4 – AND THE ENDING'S READ RIDES THE SAME ROAD (ruling G.3). `tools/_lifeBeats.ts` reaches
+  // `'ended'`'s prices through here, so the −1 it drains with is the −1 the engine charges.
+  return pending === null
+    ? null
+    : lifeBeatOptionsFor(pending.kind, beatWants(world, pending), beatEndsRead(world, pending))
 }
 
 /** The prompt the Snapshot carries, assembled ENGINE-side so the dialog renders what it is handed
@@ -1481,10 +1952,18 @@ export function pendingLifeBeatOptions(world: WorldState): readonly LifeBeatAnsw
  *  ⚠ NULL WHILE NOTHING IS PENDING, which is every week of nearly every career: this is called on
  *  every `toSnapshot`, so it is a `find` over a handful of rows and no more.
  *
- *  ⚠ ZERO DRAWS. Every word of it is selected by (want, voice, register, bond band, wants, stage) –
- *  six facts the world already holds – so the prompt is a pure function of the world and
- *  re-assembling it costs nothing on any stream. That is also what lets `answerLifeBeat` re-derive it
- *  to re-validate the option id (rule 3) without the two readings ever being able to disagree.
+ *  ⚠ ZERO DRAWS ON MAIN, AND THE PROMPT IS STILL A PURE FUNCTION OF THE WORLD. ⭐⭐ RE-AIMED BY v75
+ *  T4 AND NOT RELAXED: this read «ZERO DRAWS. Every word of it is selected by (want, voice, register,
+ *  bond band, wants, stage) – six facts the world already holds». An `'ended'` row adds a seventh
+ *  that is a DERIVED STREAM rather than a stored field – `beatEndsRead`, one uniform on
+ *  `seed:life:ends:<endedWeek>:react`, re-derived at the call site and persisting nothing (CLAUDE.md
+ *  invariant 2's sub-stream rule). What the sentence was written to guarantee is untouched and is the
+ *  half that matters: MAIN is never reached, so the frozen capture cannot see this function; the
+ *  result is a function of (seed, endedWeek, temperament) alone, so re-assembling the prompt on every
+ *  `toSnapshot` yields the identical card; and `answerLifeBeat` re-derives the whole thing to
+ *  re-validate the option id (rule 3) without the two readings ever being able to disagree. ⚠ WHAT
+ *  DID CHANGE: the count is no longer zero on `seed:life:ends:*`, so a net that asserted «assembling
+ *  a prompt derives no key at all» is measuring something this wave deliberately moved.
  *
  *  ⚠⚠ AND THE FLIP REACHES THE SCREEN THROUGH `said` ALONE (v74 T7). `options` carries ids and
  *  LABELS and has never carried a `bond`, so the re-priced number cannot leak onto a button even by
@@ -1506,11 +1985,16 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   const band = bondBandOf(world.bond ?? ECONOMY.bond.start)
   const voice = voiceOf(world)
   const wants = beatWants(world, row)
+  // ⭐⭐⭐ v75 T4 – THE ENDING'S TWO DERIVED FACTS, both read off the world exactly once and then
+  // handed to every assembler below, so the heading, her line and the prices can never be worded and
+  // priced from two different readings of one row.
+  const endsRegister = beatEndsRegister(world, row)
+  const read = beatEndsRead(world, row)
   const followUp = lifeBeatListenFollowUp(row.kind, row.detail, voice, band)
   return {
     week: row.week,
     kind: row.kind,
-    heading: lifeBeatHeading(row.kind, register, band),
+    heading: lifeBeatHeading(row.kind, register, band, endsRegister, read),
     // ⭐ v74 T17 – THE EIGHTH ARGUMENT IS THE DRIVER, AND IT IS THREADED EXACTLY AS `wants` AND
     // `stage` WERE: a parameter with a safe default (`'own'`, which is the shipped reading of a
     // `stop` line and not a neutral stand-in), so every pin wave 2 and wave 3 wrote keeps calling
@@ -1527,11 +2011,17 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       wants,
       lifeStageOf(world),
       forkStopDriverOf(world.spirit ?? ECONOMY.spirit.baseline, world.bond ?? ECONOMY.bond.start),
+      // ⭐ v75 T4 – THE NINTH IS THE ENDING'S REGISTER, threaded exactly as `wants`, `stage` and
+      // `driver` were, and for the same reason: a parameter with a shipped default, so every pin
+      // waves 2 and 3 wrote keeps calling `lifeBeatSaid` with five to eight arguments and keeps
+      // asserting the lines it was written against. ⚠ THE READ IS NOT HANDED IN, because her line
+      // does not carry it – the §3e banner is where that decision lives.
+      endsRegister,
     ),
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
-    options: lifeBeatOptionsFor(row.kind, wants).map((o) => ({ id: o.id, label: o.label })),
+    options: lifeBeatOptionsFor(row.kind, wants, read).map((o) => ({ id: o.id, label: o.label })),
     listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
   }
 }
@@ -1610,9 +2100,18 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   // line up was built from. What she asked for is a fact on the episode, so the charge is re-derived
   // here from the world and never carried in from the screen – a dialog cannot choose its own price
   // any more than it can choose its own option set.
-  const chosen = lifeBeatOptionsFor(rows[target].kind, beatWants(world, rows[target])).find(
-    (o) => o.id === optionId && prompt.options.some((p) => p.id === o.id),
-  )
+  // ⭐⭐⭐ v75 T4 – AND THE ENDING'S READ IS RE-DERIVED ON THIS LINE, WHICH IS RULING G.2's WHOLE
+  // REASON FOR REFUSING TO STORE IT. The price of «give her room» depends on a draw taken on the week
+  // the attachment ended, which may be seasons behind this tick; `beatEndsRead` reconstructs it from
+  // the episode's own date, so the charge below is the charge the card was built with even on a
+  // told-late row answered a year later. A read stamped onto the row would have been a second source
+  // of truth for one draw – and the prompt one line up is re-derived too, so the two would part
+  // silently the first time anything touched one of them.
+  const chosen = lifeBeatOptionsFor(
+    rows[target].kind,
+    beatWants(world, rows[target]),
+    beatEndsRead(world, rows[target]),
+  ).find((o) => o.id === optionId && prompt.options.some((p) => p.id === o.id))
   if (!chosen) throw new Error('That is not one of the answers this beat offered')
   // ⭐⭐⭐ v74 T17 – THE COUNSEL ARC'S ONE DECISION, AND IT IS TAKEN **BEFORE** THE BOND DELTA LANDS.
   //
@@ -1682,6 +2181,16 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
 // SPLIT KEYS, ONE VALUE PER KEY (the 09.09 stream law), so a read added to one of them later can
 // never shift a neighbour's value. `seed:life:smalltalk:<week>` is T8's and `seed:life:ends:*` is
 // WAVE 4's – neither exists on this tree and neither may be created early.
+// ⚠ RE-AIMED 12.09 BY WAVE 4's T2, NOT DELETED, because half of that last sentence has come true and
+// a reader has to be able to tell WHICH half. `seed:life:smalltalk:<week>` landed in T8 (§7) and
+// `seed:life:ends:<week>` lands in §8 below – so both now exist on this tree, on their own keys,
+// derived in their own functions. What the sentence was written to forbid is intact and is the part
+// that still binds: NO SECTION MAY READ ANOTHER SECTION'S KEY. ⚠ RE-AIMED AGAIN 12.09 BY T4: this
+// ended «and `seed:life:ends:<week>:react` (T4) is still unwritten and may not be created early», and
+// T4 is the step it was written to be re-read on – the sixth and last key of the private life now
+// exists, in `drawEndsRead` (§3e), keyed on the ENDING's week. `rollArrival` below derives the three
+// keys named above and no others, which is what its own count-keys pin asserts and which is the claim
+// none of these re-aims has touched.
 //
 // ⚠⚠ ZERO DRAWS ON MAIN, AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is CLAUDE.md invariant 2
 // and is structural: nothing here takes an `Rng`, so the frozen capture (41550 / e6b0c709) cannot
@@ -1886,6 +2395,18 @@ export function rollArrival(world: WorldState): void {
 // ⚠⚠ ZERO DRAWS, AND THE SHAPE IS WHY: this function reads facts the world already holds
 // (`loveEpisodes`, `lifeLog`, `week`) and takes no `Rng` and derives no stream. `seed:life:smalltalk:*`
 // is T8's and `seed:life:ends:*` is wave 4's; neither exists on this tree.
+// ⚠ RE-AIMED 12.09 BY WAVE 4's T2: both of those keys exist now (§7 and §8). ⚠⚠ AND RE-AIMED AGAIN BY
+// T4 THE SAME DAY, WHERE THE CLAIM ITSELF MOVED – recorded rather than rewritten, because a reader has
+// to be able to tell which half changed. The section said «delivery derives no stream at all, on any
+// wave»; ruling B's told-late branch derives ONE, `seed:life:ends:<endedWeek>:react`, to word the row
+// it writes. That is a purpose-scoped sub-stream keyed on (seed, calendar) and re-derived at the call
+// site – CLAUDE.md invariant 2's own shape – and MAIN is still never reached here, which is the part
+// of the sentence that was load-bearing. ⚠ IT IS DERIVED ONLY ON THE BRANCH THAT WRITES A TOLD-LATE
+// ROW: an ordinary `'met'` delivery, and a tick with nothing due, still derive nothing at all.
+// ⚠ T2's own paragraph, kept because it explains the shape of this section: «T2 deliberately leaves
+// that alone – it writes `endedWeek` and nothing else – so on THAT tree an episode that ends before
+// its `knownWeek` told the parent nothing at all, which is a gap the next commit closes.» T4 is that
+// commit.
 //
 // ⚠ AND IT DUPLICATES NONE OF THE QUEUE. `raiseLifeBeat` appends the row, `pendingLifeBeat` finds it,
 // the `'life'` StopReason stops the week and `answerLifeBeat` re-validates the answer – all four are
@@ -1913,10 +2434,97 @@ const MET_EVENT: Record<'told' | 'found-out', Record<LoveEpisode['wants'], strin
   },
 }
 
-/** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW.
+/** ⭐⭐⭐ v75 T5 – THE ENDING'S OWN KEPT ROW, ON THE TOLD-NOW PATH. The album's other half: wave 3
+ *  wrote «there is someone» and this is the week that stops being true, for a parent who already knew
+ *  there was somebody.
  *
- *  ⚠⚠ EXACTLY ONCE PER EPISODE, AND THE RECEIPT IS THE `lifeLog` ITSELF – a `'met'` row whose
- *  `detail` is this episode's id. That is `pendingLifeBeat`'s own doctrine read the other way round
+ *  ⚠⚠ IT IS BUILT HERE RATHER THAN IN T4 BECAUSE THE TREE SAID SO IN NINE PLACES AND THE BRIEF SAID
+ *  SO IN ONE. `rollEnds` carried «NO FEED ROW ON THIS PATH (T5's, per the commit order)», and
+ *  `loveEpisodes.ts`, `phaseHerWeek.ts`, `tests/spirit.test.ts`, `tests/wave4-ends.test.ts` and
+ *  `tests/wave4-ended-beat.test.ts` all said the same thing in their own words. ⚠ THE T5 BRIEF
+ *  NEVERTHELESS CALLS THIS ROW «T4's» and asks only for a STAMP on it – that is the one sentence of
+ *  the brief this step does not build, because the row it names does not exist. Reported rather than
+ *  worked around, which is the wave's standing rule; see the commit message.
+ *
+ *  ⚠⚠ WITHOUT IT THE COLUMN IS SILENT ON THE LOUDEST SCENE THE LAYER HAS. The told-now ending raised
+ *  a card and, once answered, an `'info'` reply row – so the feed said what the PARENT did and never
+ *  what happened. A glyph column bought for navigation («met someone · it ended») that cannot mark
+ *  «it ended» for the common case is a column that half exists.
+ *
+ *  ⚠ ONE LINE, NO READ AXIS, NO BOND COLUMN – and both absences are ruled rather than skipped.
+ *  Ruling I puts her read on «the HEADING and the told-late feed row» and enumerates its own surfaces
+ *  as «4 heading cells plus 2 feed rows»; a read on this row would be a third surface, which is a
+ *  ruling change and not a builder's. The bond band is `MET_EVENT`'s column and `ENDED_LATE_EVENT`
+ *  refused to guess at it for T6 – this refuses the same way, for the same reason.
+ *
+ *  ⚠ IT STATES WHAT THE WEEK HELD AND NOTHING ELSE: no reason, no fault, no channel the sim does not
+ *  hold (the two-tier honesty law), no name, no gender, no `amountCents` and no price in any word of
+ *  it (rule 4). ⚠ A DRAFT, AND T6 OWNS THE MATRIX – invariant 4 makes the final wording the owner's.
+ *
+ *  ⭐⭐⭐ RE-WRITTEN BY T6, AND THE OLD SENTENCE IS NAMED SO THE JUDGMENT CAN BE OVERRULED. It read
+ *  «There was someone in her life, and this week there is not.» Two things were wrong with it and
+ *  neither is a matter of taste.
+ *
+ *  1. ⚠⚠ IT INTRODUCED A PERSON THE ALBUM HAD ALREADY INTRODUCED. This row is the TOLD-NOW one, which
+ *     fires only behind the `'met'` receipt – so a kept `MET_EVENT` row seasons up the same feed has
+ *     already said «there is someone in her life», and both rows are `keep: true`, so they are read
+ *     together for the life of the career. A closing row that opens by announcing the person reads as
+ *     the album meeting her for a second first time. What this row is FOR is closing the earlier one.
+ *  2. ⚠ «and this week there is not» IS A NARRATOR'S FIGURE, not a statement of the week. The antithesis
+ *     performs the loss instead of recording it, which is the move the banned-tail list is a sample of
+ *     rather than the whole of – and the lint's list is literal, so it would never have caught this.
+ *
+ *  ⚠ WHAT THE REPLACEMENT ASSERTS, AND ITS LICENCE FOR EACH HALF. «It ended this week» – `endEpisode`
+ *  wrote `endedWeek = world.week` four lines above this row's write site. «There is nobody in her life
+ *  now» – `activeEpisode` is null by construction once the row is dated, and the cooldown forbids a
+ *  re-arrival on the same tick (T2's own pin), so it is the world's state and not a guess. Nothing
+ *  else: no reason, no fault, no channel, no name, no gender, no duration, no bond band. */
+const ENDED_NOW_EVENT = 'It ended this week, and there is nobody in her life now.'
+
+/** ⭐⭐⭐ v75 T4 – THE TOLD-LATE ROW, AND IT IS THE ROW THAT REPLACES `MET_EVENT` ON THIS PATH rather
+ *  than a row added beside it. An episode that was over before its `knownWeek` arrived used to tell
+ *  the parent NOTHING at all (wave 3 read the ended row through `knownPartner` and got null); ruling
+ *  B turns that gap into the scene the episode schema was re-cut for, and this is the one line of it
+ *  the album keeps.
+ *
+ *  ⚠⚠ ONE ROW AND NEVER TWO. A «she told us there is someone» line followed by «and it is over»
+ *  would be the two contradictory records ruling A exists to prevent, written into the feed instead
+ *  of into the queue. What happened this week is that he learned BOTH facts at once, and one sentence
+ *  is what that is.
+ *
+ *  ⚠ IT CARRIES HER READ (the brief's «surfaced ... in the feed row's wording»), and this is the
+ *  durable half of the two surfaces that do: the card is answered once and gone, and a `keep: true`
+ *  row is what a player who was not listening can still read back seasons later. ⚠ T6 owns the full
+ *  matrix – the bond-band column `MET_EVENT` carries is deliberately not guessed at here.
+ *
+ *  ⚠ NO `amountCents`, NO PRICE, NO NAME, NO GENDER, NO REASON AND NO FAULT (rule 4 and the two-tier
+ *  honesty law). «There was someone, and it is already over» is the whole of what the world holds. */
+const ENDED_LATE_EVENT: Record<EndsRead, string> = {
+  // ⚠ «and she left it there» WAS THIS ROW'S FIRST DRAFT AND THE TAIL-LINT CAUGHT IT
+  // (tests/wave3-tail-lint.test.ts, `BANNED_TAILS`). It is on the list because the owner replaced
+  // the fork's “We listened, and left it there” with a line of his own on 11.09, and the ban is on
+  // the NARRATOR summing her up. The replacement states what the week held instead of what it meant.
+  // ⭐⭐ RE-CUT BY v75 T6, AND THE TAIL IS WHERE BOTH ROWS FAILED. `company` said «and she has been
+  // round more since»: a count of VISITS the sim models nowhere, at a stage where the parent may be
+  // four hundred miles away, plus a «since» that is empty in the week the row is written. `space` said
+  // «and she has not brought it up since» – the same empty span, and one conjugation from a banned
+  // tail besides. ⚠ THE READ ITSELF IS LICENSED and stays: `drawEndsRead` is a persisted draw off her
+  // own openness register, so «what she wants» is a fact of the world here and not the narrator
+  // guessing at her interior. What the two rows carry now is that fact, in the present, with nothing
+  // round it. ⚠ AND «it was over before we heard of it» IS TRUE ON BOTH PATHS: `rollEnds` writes
+  // `endedWeek` at §8 and `deliverKnownPartner` reads it at §6 of the same tick, so even ruling A's
+  // collision week hears of an attachment that had already ended.
+  // ⚠ RE-CUT 12.09 with the heading cells above – the same presence axis, the same ruling.
+  space: 'There had been someone in her life, and it was over before we heard of it. She wants the room to herself.',
+  company: 'There had been someone in her life, and it was over before we heard of it. She does not want to be on her own with it.',
+}
+
+/** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW. ⭐⭐ SINCE v75 T4 IT IS ALSO THE ONE WRITER
+ *  OF A **TOLD-LATE** `'ended'` ROW – the same moment, asked of an episode that is already over.
+ *
+ *  ⚠⚠ EXACTLY ONCE PER EPISODE, AND THE RECEIPT IS THE `lifeLog` ITSELF – a `'met'` or (since T4) an
+ *  `'ended'` row whose `detail` is this episode's id. That is `pendingLifeBeat`'s own doctrine read
+ *  the other way round
  *  («the record IS the queue», rule 2): there is no `told: true` flag on the episode, because a
  *  second boolean beside a record that already answers the question is one fact with two sources of
  *  truth, and they desync.
@@ -1926,18 +2534,71 @@ const MET_EVENT: Record<'told' | 'found-out', Record<LoveEpisode['wants'], strin
  *  instead of losing the news for good. The dedupe above is what makes that safe, and the two
  *  together are the property the pin asserts: it fires on `knownWeek`, and it fires once.
  *
- *  ⚠ IT ASKS `activeEpisode` THROUGH `knownPartner`, so «not ended» has ONE spelling in this layer.
- *  An attachment that ended before its `knownWeek` arrived tells the parent nothing here – wave 4's
- *  endings own that late row, and a fact saying «there is someone» about somebody already gone would
- *  be the one dishonest thing this beat could say.
+ *  ⚠⚠ RE-AIMED BY v75 T4 (ruling B) AND THE OLD SENTENCE IS KEPT SO THE RE-AIM READS AS ONE. It said:
+ *  «IT ASKS `activeEpisode` THROUGH `knownPartner`, so "not ended" has ONE spelling in this layer. An
+ *  attachment that ended before its `knownWeek` arrived tells the parent nothing here – wave 4's
+ *  endings own that late row, and a fact saying "there is someone" about somebody already gone would
+ *  be the one dishonest thing this beat could say.» WHAT MOVED: wave 4's endings own that late row
+ *  FROM HERE, because there is nowhere else it could be raised – the ending week is the wrong week
+ *  for it and §8 has no way to know a future `knownWeek`. WHAT DID NOT: the dishonest sentence is
+ *  still refused. An ended episode does not get «there is someone»; it gets a row and a card that say
+ *  there WAS, and that it is over, in the one breath the parent heard both.
  *
  *  ⚠ THE ROW IS `keep: true` – the brief's «a KEPT feed row». `pruneEvents` drops ordinary rows at
  *  sixty weeks and a career reads its own life back seasons later; the week someone appeared in it
  *  is not a line the album may be missing. */
 export function deliverKnownPartner(world: WorldState): void {
-  const known = knownPartner(world, world.week)
-  if (known === null) return
-  if (lifeLogOf(world).some((row) => row.kind === 'met' && row.detail === known.id)) return
+  // ⭐⭐⭐ v75 T4, RULING B – IT SCANS THE LIST NOW, AND THE TAIL READ IS GONE. This was
+  // `knownPartner(world, world.week)`, which goes `activeEpisode()` -> the tail row -> **and only if
+  // it is still open** – so from the moment endings are real it returns null for exactly the episodes
+  // the told-late scene is about.
+  //
+  // ⚠⚠ WHY A SCAN AND NOT A TAIL READ WITH A GUARD, kept from the ruling because the next reader will
+  // want to «simplify» it back. Today's constants do happen to guarantee the undelivered row is the
+  // tail – a new row cannot be appended before the old one is delivered unless `cooldown <= lag − 1`,
+  // and the tightest pair is fiery's `12 <= 3`, false with nine weeks to spare (sunny `26 <= 3`,
+  // quiet `39 <= 11`, deep `52 <= 11`). But that is an accident of two unrelated constant tables,
+  // either of which the планка-3 session or step 6 may move. The scan costs one loop and is this
+  // layer's own idiom already: `pendingLifeBeat` takes the FIRST unanswered row for the stated reason
+  // that «a queue that answered its newest entry first would lose the oldest».
+  //
+  // ⚠ THE RECEIPT IS BOTH KINDS HERE, and that is the half a reader could get wrong: a row that has
+  // already surfaced as a told-late ending must not surface again, so the dedupe asks «has this
+  // episode produced ANY beat», while ruling A's register asks the narrower «was he told there was
+  // somebody» (`'met'` alone). Two questions, one helper, two argument lists.
+  const due = loveEpisodesOf(world).find(
+    (episode) =>
+      episode.knownWeek !== null &&
+      episode.knownWeek <= world.week &&
+      !hasBeatFor(world, episode.id, ['met', 'ended']),
+  )
+  if (due === undefined) return
+  // ⭐⭐⭐ THE SPLIT, AND IT IS THE WHOLE OF RULING B. An OPEN row takes the `'met'` path below, BYTE
+  // UNCHANGED – same row, same text, same beat, same dedupe; an ENDED one takes the told-late path,
+  // which raises `'ended'` and **no `'met'`, ever**.
+  if (due.endedWeek !== null) {
+    addEvent(world, {
+      week: world.week,
+      type: 'life',
+      keep: true,
+      // ⚠ NO AMOUNT (rule 4), and the read comes off the ENDING's own week – `beatEndsRead`'s twin
+      // through the same derivation, so the row and the card the same tick raises cannot disagree.
+      text: ENDED_LATE_EVENT[
+        drawEndsRead(world.seed, due.endedWeek, temperamentOf(world))
+      ],
+      // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED. `WorldEvent.lifeKind` (T1's field) is what lets the feed's
+      // glyph column tell one life row from another; this is the told-late ENDING row, so `'ended'`.
+      // ⚠ IT IS THE BEAT KIND AND NOT THE REGISTER: told-now and told-late are two wordings of one
+      // piece of news, and a column that marked them differently would be telling the player which of
+      // the two scenes he got, which is a fact about the LAG and not about her life.
+      lifeKind: 'ended',
+    })
+    // ⚠⚠ AND THE REGISTER IS NOT WRITTEN ONTO THE ROW. `beatEndsRegister` asks the `'met'` receipt
+    // and finds none, which is what makes this card the told-late one – now and twenty seasons from
+    // now, because no `'met'` row for this episode can ever be appended after this line runs.
+    raiseLifeBeat(world, 'ended', due.id)
+    return
+  }
   addEvent(world, {
     week: world.week,
     type: 'life',
@@ -1945,13 +2606,19 @@ export function deliverKnownPartner(world: WorldState): void {
     // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
     // keeps `accrueFinance` from ever seeing this row.
     // ⚠ THE EPISODE'S OWN `wants` (v74 T7) – the read, unmarked, in the one row the album keeps.
-    text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'][known.wants],
+    text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'][due.wants],
+    // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED, on wave 3's own arrival row. ⚠⚠ THE SENTENCE ABOVE DID NOT
+    // MOVE AND MUST NOT (invariant 4): this adds a MACHINE-READABLE field beside it, which is exactly
+    // what T1's field comment said the two write sites would do. ⚠ AND IT IS NOT A BACK-FILL: rows
+    // written before this commit stay unstamped for T1's stated reason, and the column's `?? 'met'`
+    // default is what keeps them wearing the same 🤍 they always wore.
+    lifeKind: 'met',
   })
   // ⚠ THE SAME TICK, AND THE ORDER IS THE READING: the feed row is what HAPPENED and the beat is what
   // the parent is being asked about it, so the news is on the record before the card can be answered.
   // ⚠ THE DETAIL IS THE EPISODE ID – machine-readable, never a rendered sentence (`LifeBeatRecord`),
   // and it is also the receipt the dedupe above reads.
-  raiseLifeBeat(world, 'met', known.id)
+  raiseLifeBeat(world, 'met', due.id)
 }
 
 // =================================================================================================
@@ -1968,6 +2635,11 @@ export function deliverKnownPartner(world: WorldState): void {
 //
 // (seed, calendar)-keyed like the other three, so a player cannot manufacture a conversation by
 // playing the week differently. `seed:life:ends:*` is WAVE 4's and does not exist on this tree.
+// ⚠ RE-AIMED 12.09 BY WAVE 4's T2: `seed:life:ends:<week>` now DOES exist, in §8 below, and this
+// section still does not derive it – which is the claim the sentence was making and the one the
+// count-keys pin in tests/wave3-small-talk.test.ts §B holds `rollSmallTalk` to. ⚠ RE-AIMED AGAIN BY
+// T4: `:ends:<week>:react` exists now too (§3e, `drawEndsRead`), and this section still derives
+// neither of them – which is, again, the whole of the claim.
 //
 // ⚠⚠ ZERO DRAWS ON MAIN AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is structural (nothing here
 // takes an `Rng`, so the frozen capture 41550 / e6b0c709 cannot see this file). The second is T3's
@@ -2083,4 +2755,222 @@ export function rollSmallTalk(world: WorldState): void {
   // it is what `lifeBeatSaid` selects her opener with. The heading reads the register one line above
   // it, so the card's frame and her line are about the same small thing BY CONSTRUCTION.
   raiseLifeBeat(world, 'small-talk', smallTalkSubjectFor(register))
+}
+
+// =================================================================================================
+// 8. THE END – ⚠⚠ THE WEEK IT IS OVER (the private life, wave 4: T2)
+// =================================================================================================
+//
+// `docs/plans/life-wave-4-builder-2026-09.md` §2 T2, constants in `ECONOMY.life` (who-she-is §4's
+// `end` column). §5 above decides whether someone appears; this decides whether they are still there,
+// and it is the step that makes the attachment an ARC instead of a state a career enters once.
+//
+// ⚠ IT IS §8 AND NOT §5b, AND THE POSITION IS A COMPROMISE RATHER THAN A READING. It belongs beside
+// the arrival by subject – they are one hazard asked twice – and it is appended at the end because
+// renumbering four sections would rewrite every «§6» and «§7» reference in this file and in the six
+// test files that quote them, for no gain a reader could feel. The ORDER THAT MATTERS is the call
+// site's, and that one is not a matter of taste: see `world/phaseHerWeek.ts`.
+//
+// ⚠⚠ THE FIFTH STREAM, AND IT IS THE ONE §5 AND §7 HAVE BEEN RESERVING SINCE WAVE 3:
+//
+//     seed:life:ends:<week>                does it end, this week
+//
+// (seed, calendar)-keyed like the other four, so a player cannot end a romance by playing the week
+// differently – and keyed on the WEEK alone, never on the episode, so the hazard is a property of the
+// calendar rather than of the row it happens to be reading. ⚠ RE-AIMED BY T4: this said
+// `seed:life:ends:<week>:react` «does not exist on this tree», and it does now – §3e's `drawEndsRead`
+// derives it on the ENDING's week, which is what makes the two genuine siblings (wave-4 brief §3,
+// ruling G.1: «a pair keyed on two different weeks is two facts sharing a name»). Those two are the
+// wave's whole table and no third may be invented. ⚠ THIS FUNCTION DERIVES ONLY THE FIRST OF THEM –
+// the read is worded from, never rolled here, and §B's count-keys net says so.
+//
+// ⚠⚠ ZERO DRAWS ON MAIN AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is structural – nothing here
+// takes an `Rng`, so the frozen capture (41550 / e6b0c709) cannot see this file, and T2 could not move
+// it if it tried. The second is §5's load-bearing rule inherited whole: `endsEligible` decides
+// everything and `rollEnds` returns on it BEFORE the stream is derived. A career with nobody in it
+// takes no draw at all; it never compares one against a hazard it was never going to clear.
+//
+// ⚠ AND THE TEST FOR THAT IS A KEY COUNT, NOT AN ALIGNMENT COMPARISON – wave 3's finding, now the
+// wave-4 brief's §0.1 LAW for every zero-draw claim. Every key here carries its own week, so a
+// discarded draw shifts no other week's value and «two worlds produce identical later verdicts» stays
+// green under the very draw-and-discard mutation it would be written to catch.
+// `tests/wave4-ends.test.ts` §B counts the keys the gate reached, in an array the code under test
+// cannot see, with a positive control.
+//
+// ⚠⚠ NO FEED LAG FOR AN ENDING, v1 – A DESIGN NOTE AND NOT AN OVERSIGHT (the wave-4 brief says it in
+// those words). An arrival is shy and a break-up is loud: the lag exists because a girl decides when
+// to mention that somebody exists, and there is no matching decision here – the parent of a girl who
+// has just been left finds out because she is in the house. The told-LATE scene the plan wants comes
+// from endings that predate `knownWeek` – the romance he was never told about, already over by the
+// time he hears of it – and never from lagging the ending itself. Adding a symmetrical
+// `endKnownWeek` would produce a fourth date on the row and a scene nobody asked for.
+//
+// ⚠⚠ IT RAISES NOTHING AND WRITES NO ROW – not a beat, not a feed line, not a spirit point. ⭐ RE-AIMED
+// BY T3 (12.09) AND NOT RELAXED: this line ended «not `spiritShock`. T3 is the shock…», and T3 is
+// here. The MARK is now written by `rollEnds` – one `{week, kind}` fact on the world – while the
+// POINTS it is worth stay `accrueSpirit`'s, four calls later in the same tick, which keeps that
+// function the only writer of `world.spirit` in the engine. T4 is still the `'ended'` beat and its
+// told-late branch, T5 still the feed row and the `lifeKind` stamp. The commit order IS the design:
+// ship each half alone and let the derived readings fall out of it, so that anything which moves in
+// the frozen careers moved for exactly one nameable reason.
+// ⭐⭐ RE-AIMED AGAIN BY T4 (12.09), AND THE PARAGRAPH ABOVE IS KEPT WHOLE so both re-aims read as one
+// history. WHAT MOVED: `rollEnds` now raises the TOLD-NOW `'ended'` card, and only when the `'met'`
+// receipt already exists (ruling B's split of responsibility). WHAT DID NOT: `world.spirit`, `events`
+// and the `lifeKind` stamp are still not this function's to touch – the POINTS are `accrueSpirit`'s,
+// the ending's own kept feed row and the per-kind glyph are T5's, and any of those appearing here is
+// still the defect this note exists to make visible.
+// ⭐⭐ RE-AIMED A THIRD TIME BY T5 (12.09), AND THE TWO PARAGRAPHS ABOVE ARE KEPT WHOLE. WHAT MOVED:
+// `events` – the told-now ending's kept row and its `lifeKind: 'ended'` stamp are written here now,
+// behind the very same `'met'` receipt as the card, so the album and the queue can never disagree
+// about which scene this week was. WHAT DID NOT: `world.spirit`, which is the one item this note has
+// been guarding since T2 and is the only one left on the list. ⚠ AND THE TOLD-LATE HALF IS NOT HERE AND CANNOT
+// BE: it fires on a week this function has no way to see (`knownWeek`, which may be seasons off), so
+// §6 owns it – see `deliverKnownPartner`.
+
+/** ⭐⭐ THE GATE – ONE CLAUSE, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
+ *
+ *  ⚠⚠ A PREDICATE OF ITS OWN FOR `arrivalEligible`'s AND `smallTalkEligible`'s STATED REASON, and the
+ *  reason survives the clause count going down to one: a reader has to be able to see, in one place,
+ *  that the whole of eligibility is decided before any stream exists. Pure, zero draws, no writes.
+ *
+ *  ⚠ THE WHOLE OF IT IS «IS SOMEBODY THERE», and it is `activeEpisode`'s answer rather than a second
+ *  spelling of it. Two things follow that are worth naming because both are easy to add by accident:
+ *
+ *  1. ⚠⚠ IT COUNTS FROM `sinceWeek`, NEVER FROM `knownWeek`. `activeEpisode` reads `endedWeek` and
+ *     nothing else, so a romance the parent has not been told about is exactly as endable as one he
+ *     has – which is the premise of wave 4's told-late scene and would be destroyed by an innocent
+ *     `knownPartner` here. There is no bar above this line and there must never be one.
+ *  2. AND THERE IS NO AGE GATE. `arrivalEligible` has one because sixteen is when somebody may first
+ *     APPEAR; by the time a row exists she has already passed it, so a second reading of the same
+ *     ruling here would be dead code that looked like a rule. */
+export function endsEligible(world: WorldState): boolean {
+  return activeEpisode(world) !== null
+}
+
+/** THE WEEKLY END HAZARD, as one probability (who-she-is §4: base 1.2%/wk times the temperament's
+ *  `end` multiplier). Takes the TEMPERAMENT rather than the world – `arrivalHazardFor`'s own
+ *  primitives doctrine – so the corridor tests and T7's census can sweep the table directly instead
+ *  of posing a world per cell.
+ *
+ *  ⚠⚠ IT READS `endsMult` AND NOT `temperamentMult`, WHICH IS RULING E AND IS THE ONE LINE IN THIS
+ *  SECTION MOST LIKELY TO BE «SIMPLIFIED» BY A LATER READER. They are two columns of one table in the
+ *  spec and they are different numbers: arrival is sunny 1.2 · fiery 1.6 · quiet 0.6 · deep 0.5, and
+ *  this is sunny 0.6 · fiery 1.5 · quiet 0.35 · deep 0.9. Sharing the record would have shifted every
+ *  break-up rate in the game by a factor nobody would have noticed, because both values look right.
+ *
+ *  ⚠ NO AGE TERM, unlike the arrival's – §4's end column is one rate for the whole life. See the
+ *  constant's own note in `economy.ts` for why a second row is not this file's to invent. */
+export function endsHazardFor(temperament: Temperament): number {
+  return ECONOMY.life.endsPerWeek * ECONOMY.life.endsMult[temperament]
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE caller of `endEpisode`.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED. An ineligible week takes ZERO
+ *  draws – never draw-and-discard – which is the wave's load-bearing rule, inherited from §5 word for
+ *  word. The line order below IS the rule; moving the roll above the gate would break it silently,
+ *  because every key here carries its own week and a discarded draw changes no other week's value.
+ *  That is why the net for it counts keys instead of comparing worlds (§0.1 of the wave-4 brief).
+ *
+ *  ⚠⚠ IT RUNS BEFORE `rollArrival` IN THE TICK, AND TWO RULINGS REST ON THAT ORDER (the wave-4
+ *  rulings, F and A). The row this week's arrival is about to append DOES NOT EXIST YET when this
+ *  line runs, so an attachment can never end in its own arrival week: `endedWeek >= sinceWeek + 1` by
+ *  construction and the shortest romance the engine can produce is exactly one week. And because
+ *  `endEpisode` writes the date before `arrivalEligible` is next asked, the cooldown refuses
+ *  same-tick re-arrival by construction too – the slot is free and the clock is already running, so
+ *  nobody arrives on the afternoon of a break-up. Both are pinned in tests/wave4-ends.test.ts §E;
+ *  the ORDER itself is pinned in tests/spirit.test.ts.
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollArrival`'s own note: `rngFromSeed` can return exactly 0, and a hazard of
+ *  0 must be impossible rather than merely unlikely. No row in `endsMult` is zero today – so unlike
+ *  §7's gate this comparison is not standing in for a short-circuit – but a temperament priced at
+ *  «she never leaves» is the kind of row a later spec adds, and it would have to mean never.
+ *
+ *  ⚠⚠ IT TAKES NO `Rng`, AND SINCE T3 IT WRITES THE DATE **AND THE MARK** – RE-AIMED, NOT RELAXED.
+ *  This note read «writes NOTHING BUT THE DATE. The shock is T3's, the beat is T4's, the feed row is
+ *  T5's», and T3 is the step it was written to be re-read on. WHAT MOVED: the `world.spiritShock`
+ *  line below. WHAT DID NOT: `world.spirit` itself, `lifeLog` and `events` are still not this
+ *  function's to touch – the POINTS are `accrueSpirit`'s (which runs later in the same tick and stays
+ *  the one writer of `world.spirit`), the `'ended'` beat is T4's and the feed row is T5's, and any of
+ *  those three appearing here is still the defect this note exists to make visible.
+ *  ⭐⭐ ...AND T4 IS NOW HERE TOO, SO THE LIST SHORTENS BY ONE AND THE HISTORY IS KEPT. WHAT MOVED: the
+ *  `raiseLifeBeat(world, 'ended', …)` on the last line, guarded by the `'met'` receipt (ruling B).
+ *  WHAT STILL DID NOT: `world.spirit` and `events`. A feed row or a spirit point appearing in this
+ *  function is the defect the note is still watching for; the ending's own kept row is T5's.
+ *  ⭐⭐ ...AND T5 IS THE LAST OF THEM, SO THE LIST IS DOWN TO ONE AND THE WHOLE HISTORY STAYS READABLE.
+ *  WHAT MOVED: `events` – the kept told-now row, stamped `lifeKind: 'ended'`, behind the same receipt
+ *  as the card. WHAT STILL DID NOT AND NEVER WILL: `world.spirit`. `accrueSpirit` is the one writer
+ *  of it in the engine and that is the property these three re-aims have been protecting all along.
+ *
+ *  ⚠⚠ THE MARK IS SET HERE AND THE ARITHMETIC IS DONE THERE, WHICH IS THE WHOLE SPLIT (ruling C, and
+ *  the T3 brief's «who sets it, who applies it»). This function knows the WEEK an attachment ended;
+ *  `accrueSpirit` owns the weekly sum and the intensity scale. So the ending stamps a fact –
+ *  `{week, kind}` – and the spirit pass four calls later reads that fact, applies −22/−34 on the
+ *  week it matches, and clears the stamp again once she is back within `shockClearWithin` of her own
+ *  baseline. No second writer of `world.spirit`, and no spirit arithmetic in the private life's
+ *  hazards.
+ *
+ *  ⚠ IT IS SET ON THE SAME LINE-RUN AS THE DATE AND NEVER CONDITIONALLY, so «an attachment ended this
+ *  week» and «a shock is live» cannot disagree. `endEpisode` is a no-op when there is nothing to end,
+ *  but it cannot be reached in that state from here – the gate above has already found the row. */
+export function rollEnds(world: WorldState): void {
+  if (!endsEligible(world)) return
+  const hazard = endsHazardFor(temperamentOf(world))
+  // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament, so the four girls read
+  // the SAME uniform against four different hazards. That is what makes the multiplier a pure scale
+  // rather than four unrelated dice, and it is the property the nesting pin holds them to.
+  if (rngFromSeed(`${world.seed}:life:ends:${world.week}`)() >= hazard) return
+  // ⭐ v75 T4 – THE ROW IS TAKEN **BEFORE** IT IS DATED, because after `endEpisode` runs
+  // `activeEpisode` is null by construction and there would be no id left to raise the beat about.
+  const over = activeEpisode(world)!
+  endEpisode(world, world.week)
+  // ⭐⭐⭐ v75 T3 – AND THE MARK IT LEAVES ON HER. A fact, never a number: what it costs is
+  // `ECONOMY.spirit.shock.breakup` and `accrueSpirit` is the one place that reads it (see the note
+  // above). The kind is the union's only member today; steps 7–8 add the others.
+  world.spiritShock = { week: world.week, kind: 'breakup' }
+  // ⭐⭐⭐ v75 T4, RULING B – AND THE TOLD-NOW CARD, **ONLY IF HE ALREADY KNEW THERE WAS SOMEBODY**.
+  //
+  // ⚠⚠ THE RECEIPT IS THE WHOLE CONDITION AND IT IS RULING A's DISCRIMINATOR, NOT `knownWeek`. A
+  // `knownWeek <= week` test here would fire on the tick where `endedWeek === knownWeek` – and §6,
+  // four calls later in this same tick, would then deliver the SAME episode and raise `'met'`: two
+  // contradictory beats about one girl in one week, which the brief forbids in as many words. Asking
+  // the receipt instead makes that case fall through to §6, which sees an ended row and raises ONE
+  // told-late card. ⚠ IT IS REACHABLE, NOT A CORNER: ruling F gives `endedWeek >= sinceWeek + 1`, so
+  // the collision needs only a lag of one or more and the hazard landing on that week.
+  //
+  // ⚠ AND THE OTHER SIDE OF THE FALL-THROUGH IS THE TOLD-LATE SCENE ITSELF: an episode that ends
+  // while the lag is still running raises nothing here, waits out its `knownWeek`, and surfaces as
+  // one honest late row. The romance the parent was never told about is not lost – it is deferred to
+  // the week he hears of it, which is the whole reason `loveEpisodes` is a list.
+  //
+  // ⭐⭐ RE-AIMED BY T5 (12.09) AND THE OLD SENTENCE IS KEPT SO THE RE-AIM READS AS ONE HISTORY. It
+  // said «NO FEED ROW ON THIS PATH (T5's, per the commit order) and NO SPIRIT POINT», and T5 is the
+  // step it was written to be re-read on. WHAT MOVED: the kept `'life'` row below, stamped `'ended'`.
+  // WHAT DID NOT: `world.spirit` – the POINTS are still `accrueSpirit`'s, four calls later in this
+  // same tick, and a spirit delta appearing in this function is still the defect the note watches for.
+  //
+  // ⚠⚠ THE ROW AND THE CARD SHARE ONE CONDITION AND MUST GO ON SHARING IT. Behind the receipt they
+  // both fire; without it BOTH wait, and §6 raises the told-late pair on `knownWeek` instead. A row
+  // written here unconditionally would tell a parent about a romance he has never heard of, in the
+  // week it ends – which is precisely the news `deliverKnownPartner` exists to deliver honestly, one
+  // sentence later in her story rather than two.
+  //
+  // ⚠ THE ORDER IS THE READING, as it is in §6: the feed row is what HAPPENED and the card is what he
+  // is being asked about it, so the news is on the record before the card can be answered.
+  if (!hasBeatFor(world, over.id, ['met'])) return
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    // ⚠ KEPT. `pruneEvents` drops ordinary rows at sixty weeks and a career reads its own life back
+    // seasons later; the week it ended is not a line the album may be missing, for `MET_EVENT`'s own
+    // reason one scene on.
+    keep: true,
+    // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
+    // keeps `accrueFinance` from ever seeing this row.
+    text: ENDED_NOW_EVENT,
+    // ⭐ THE KIND, STAMPED – the same `'ended'` the told-late row carries, because it is the same
+    // piece of news in the other register (see that row's note).
+    lifeKind: 'ended',
+  })
+  raiseLifeBeat(world, 'ended', over.id)
 }

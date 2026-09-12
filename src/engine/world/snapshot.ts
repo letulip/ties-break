@@ -1520,6 +1520,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // asked here and carried – `coachTravelsWithHer`'s own shape on the line above. ⚠ It is about
     // DISCLOSURE, not about the attachment: a lifted week can arrive before this turns true.
     partnerKnown: knownPartner(world, world.week) !== null,
+    // ⭐⭐ v75 (the private life, wave 4 – T6): is the mark of an ending still on her? Asked here and
+    // carried, the line above's own shape. ⚠ IT READS THE KIND AND NOT MERELY THE NULLNESS: the union
+    // grows at steps 7-8 (`state.ts`), and a `!== null` test here would silently hand a divorce's or a
+    // bereavement's mark to a band written about a break-up the day the second kind lands.
+    freshBreakup: world.spiritShock?.kind === 'breakup',
     trainPct: world.plan.train,
     // W4: ...and the OTHER decision of his the week can be about. Read off the live knock only – an
     // undecided one is not doing anything to the week yet, it is stopping it, so `plainTraining` must

@@ -3643,6 +3643,44 @@ export const ECONOMY = {
      *  constant had NO reader; T4 re-aimed that guard rather than deleting it, and it now asserts the
      *  read happens in `accrueSpirit`'s return target and in no other place in `src/`. */
     attachmentLift: 5,
+    /** ⭐⭐⭐ v75 (the private life, wave 4 – T3) – WHAT AN ENDING COSTS HER, in points of spirit, by
+     *  the INTENSITY axis (who-she-is §4's spirit-physics table, verbatim: «break-up shock −22 / −34»).
+     *  Keyed by `spiritShock['kind']` so the kinds the build plan's steps 7–8 add land as siblings in
+     *  this record rather than as a second table; `'breakup'` is wave 4's and the only one today.
+     *
+     *  ⚠⚠ THESE TWO NUMBERS ARE **ALREADY INTENSITY-SCALED**, SO THEY GO IN **AFTER** THE SCALE AND
+     *  NEVER THROUGH `perturb` – the architect's ruling C (docs/plans/life-wave-4-rulings-2026-09.md
+     *  §C), and the reconstruction is written out here because it is the one thing a later reader
+     *  cannot recover from the values themselves. They are ONE base of about **−27.5** seen through
+     *  `perturbationScale` above: −27.5 × 0.8 = −22.0 and −27.5 × 1.25 = −34.4. A row added to
+     *  `perturb` would therefore be multiplied a SECOND time, to −17.6 / −42.5 – two numbers that look
+     *  every bit as plausible and are not the design's. `accrueSpirit` adds this on its own line after
+     *  the scaled perturbation; `weekPerturbation` has no row for it and must never grow one, which is
+     *  pinned in tests/spirit.test.ts in `attachmentLift`'s own guard shape.
+     *
+     *  ⚠ −34 AND NEVER THE DERIVED −34.375: §4's own two numbers win on drift (the single-source
+     *  rule), and the −27.5 above is a reconstruction of where they came from, not their definition.
+     *
+     *  ⚠ AND IT IS A ONE-WEEK EVENT WITH NO RECOVERY CURVE ANYWHERE BEHIND IT. She takes this on the
+     *  week the attachment ends – the same week `activeEpisode` goes null and the effective baseline
+     *  drops back to the flat one by itself – and then comes back at `returnPerWeek` and at nothing
+     *  else. §4's own prediction for a lifted 75 is the whole of the shape: ~1–2 weeks under the knee
+     *  for a steady girl, ~6–7 for an intense one. A second return rate here would be a second
+     *  mechanic wearing a constant. */
+    shock: { breakup: { steady: -22, intense: -34 } },
+    /** ⭐⭐ HOW CLOSE TO HER OWN BASELINE COUNTS AS BACK – the gap `accrueSpirit`'s tail clears
+     *  `world.spiritShock` at (the build plan §5 step 4: «clears when spirit ≥ baseline − 2», i.e.
+     *  **68**).
+     *
+     *  ⚠⚠ IT IS SUBTRACTED FROM THE PLAIN `baseline` AND NEVER FROM THE EFFECTIVE ONE – ruling D. The
+     *  mark is a question about HER recovery, not about who is in her life now: read against
+     *  `baseline + attachmentLift` the bar would be 73, and a shock would then be held OPEN LONGER
+     *  precisely because a new romance had arrived, which reads backwards on screen.
+     *
+     *  ⚠ NAMED RATHER THAN INLINED because this module's own law is that `engine/spirit.ts` invents no
+     *  number (its header: «Every constant lives in `ECONOMY.spirit` / `ECONOMY.bond`»). The ruling
+     *  writes the bar as `baseline - 2`; this is that 2, with its source on it. */
+    shockClearWithin: 2,
     /** ⭐⭐ THE MOOD LADDER'S FOUR CUT POINTS – RULED 09.09, and every one of them is anchored to a
      *  MECHANICAL FACT rather than to taste. The five words they divide are the owner's
      *  (`docs/specs/voice-bibles-2026-09.md` §C, approved); the numbers are his ruling of the same
@@ -3658,8 +3696,21 @@ export const ECONOMY = {
      *  measured against who-she-is §4a's own distribution these cuts give Steady 90.98% · Bright
      *  6.07% · Dimmed 2.07% · Glowing 0.88% · Heavy 0.00%. Glowing and Heavy are rare-to-absent
      *  until wave 4's break-up shock (−22 steady / −34 intense) gives them their range – a lifted
-     *  girl at 75 taking −34 lands at 41, which is Heavy for weeks. The bar moved to wave 4 with
-     *  bar 1; see the runbook's §6 list. ⚠ These are not tuning dials: a test that would be easier
+     *  girl taking −34 lands deep in Heavy and stays there for weeks. The bar moved to wave 4 with
+     *  bar 1; see the runbook's §6 list.
+     *
+     *  ⭐ THE SHOCK SHIPPED IN v75's T3 AND THE ARITHMETIC ABOVE WAS ONE WEEK'S RETURN OUT – the
+     *  sentence read «a lifted girl at 75 taking −34 lands at 41», and the MEASURED figure is **38**.
+     *  75 − 34 = 41 forgets that the ending frees the slot BEFORE `accrueSpirit` runs, so the return
+     *  toward the flat 70 happens first (75 → 72 for an intense girl) and the shock lands on that.
+     *  The claim the sentence was making is unchanged and is now a measurement rather than a
+     *  prediction: an intense girl is Heavy for EIGHT weeks (38 41 44 47 50 53 56 59, then 62) and a
+     *  steady one for three (48 53 58, then 63). ⚠ The «lands at 41» in
+     *  `docs/plans/wave-1-the-two-numbers-runbook-2026-09.md` §6 WAS annotated after all
+     *  (`a22e7499`, additively – the 41 kept as wave 1's record of its own prediction), so the
+     *  earlier reading of this sentence («left alone, the architect's to re-date») aged the day it
+     *  was written down; corrected 12.09 by the wave's judge rather than left to mislead.
+     *  ⚠ These are not tuning dials: a test that would be easier
      *  with other numbers is a test to rewrite, not a ladder to move. */
     mood: {
       /** ⭐ THE KNEE ITSELF – below this `spiritMatchFactor` stops being 1.0 and the match starts
@@ -3801,6 +3852,37 @@ export const ECONOMY = {
        *  generalised, brief §2 T7). */
       metWarmPrivate: -1,
       metSilentPrivate: 2,
+      /** ⭐⭐⭐ v75 (the private life, wave 4 – T4) – WHAT HE SAYS THE WEEK HE LEARNS IT IS OVER.
+       *  Four answers – give her space · keep her company · try to fix it · blame – priced from the
+       *  build plan §5's own row, verbatim: «match +3, mismatch −3, fix-it −1, blame −4 always (some
+       *  things are wrong regardless of what she wanted)».
+       *
+       *  ⚠⚠ THE FIRST TWO ARE ONE PAIR READ TWO WAYS AND THAT IS WHY THEY ARE TWO ROWS RATHER THAN
+       *  FOUR. Which of «space» and «company» is the match is HER read, drawn on
+       *  `seed:life:ends:<endedWeek>:react`; the answer that matches costs `endedMatched` and the
+       *  other `endedMismatched`, whichever way round the draw came out. So there is one price for
+       *  «you gave her what she wanted» and one for «you did not», and the flip is an overlay on the
+       *  base list (`world/lifeBeat.ts`'s `ENDED_BOND_COMPANY`) exactly as `'met'`'s is – never a
+       *  second table, so the two rows the flip does not name keep the SAME number in both readings.
+       *
+       *  ⚠⚠ AND `endedBlame` IS THE ONE ROW WITH NO READING AT ALL. «Some things are wrong
+       *  regardless of what she wanted» is the ruling's own sentence: blaming her, or the person who
+       *  is gone, costs −4 whichever way her read came out. `endedFixIt` is read-independent too, and
+       *  that is load-bearing beyond the design – it is the answer `tools/_lifeBeats.ts` drains this
+       *  kind with, and a drain answer whose price moved with a fact the harness is not tracking is
+       *  refused by `drainCostOf` rather than averaged.
+       *
+       *  ⚠ THE FENCE HOLDS HERE TOO (who-she-is §3): one row per ANSWER, never a row per girl.
+       *  Temperament does not reach this table – what varies is what she asked for, which is a fact
+       *  she put on the record herself.
+       *
+       *  ⚠ NOTHING PRINTS ANY OF THE FOUR. The read reaches the player through the card's heading
+       *  and the told-late feed line's WORDING and through nothing else – no meter, no badge, no
+       *  label, no marked option (the `'met'` flip's own law, generalised). */
+      endedMatched: 3,
+      endedMismatched: -3,
+      endedFixIt: -1,
+      endedBlame: -4,
     },
     /** ⭐ THE FOUR BANDS THE DIARY READS (build plan §1e, verbatim): `close` ≥ 80 · `steady` 55..79 ·
      *  `strained` 35..54 · `cold` < 35. Each is the FLOOR of its band, read top-down by `bondBandOf`
@@ -3855,10 +3937,42 @@ export const ECONOMY = {
      *  the same table («fiery ~4–6 romances, quiet first arrival median ~18») are what T11 measures,
      *  so a number moved here moves an acceptance bar and is never a local tweak. */
     temperamentMult: { sunny: 1.2, fiery: 1.6, quiet: 0.6, deep: 0.5 },
+    /** ⭐⭐⭐ v75 (the private life, wave 4 – T2) – THE BASE WEEKLY **END** HAZARD, before temperament
+     *  (who-she-is §4, verbatim: «end 1.2%/wk»). Per WEEK while an attachment is ACTIVE, and it
+     *  counts from `sinceWeek` and never from `knownWeek`: a romance can end before the parent ever
+     *  knew it existed, which is the whole of the told-late scene wave 4 is built on.
+     *
+     *  ⚠ ONE NUMBER AND NO AGE STEP, unlike `arrivalPerWeek` one row up. §4's end column is a single
+     *  rate: whether she is sixteen or twenty-two changes how often somebody APPEARS, and the spec
+     *  says nothing about it changing how long it lasts. A second row invented here would be a design
+     *  decision wearing a constant. */
+    endsPerWeek: 0.012,
+    /** ...and how hard each girl leans on THAT (who-she-is §4's `end` column, verbatim).
+     *
+     *  ⚠⚠ A TABLE OF ITS OWN AND **NEVER** `temperamentMult` OVERLOADED – the architect's ruling E
+     *  (docs/plans/life-wave-4-rulings-2026-09.md), and it is the kind of mistake that ships. The two
+     *  columns are genuinely different numbers in the same table: reusing the arrival record would
+     *  make a fiery girl's break-ups ×1.6 instead of ×1.5 and a deep girl's ×0.5 instead of ×0.9,
+     *  silently, with both values looking plausible to a reader who never opened the spec.
+     *
+     *  ⚠ AND THE TWO COLUMNS DO NOT EVEN AGREE ON THEIR ORDER, which is the design speaking: openness
+     *  owns the MEETING (fiery and sunny meet people often), intensity owns the BREAKING (fiery ×1.5
+     *  and deep ×0.9 are the two intense girls, quiet ×0.35 the one who holds on). §4's «expected
+     *  biography» column is this table's other face – fiery ~0.7 seasons against quiet ~3 – so a
+     *  number moved here moves a census bar in T7 and is never a local tweak. */
+    endsMult: { sunny: 0.6, fiery: 1.5, quiet: 0.35, deep: 0.9 },
     /** THE WEEKS AFTER AN ENDING BEFORE ANYONE MAY APPEAR AGAIN (who-she-is §4, the `cooldown`
-     *  column). ⚠ UNREACHABLE IN WAVE 3 AND SHIPPED ANYWAY: nothing in this wave writes
-     *  `endedWeek`, so no career can ever be inside a cooldown – it lands now, with its tests, so
-     *  that wave 4 (which writes the endings) changes nothing here. */
+     *  column).
+     *
+     *  ⭐⭐ LIVE SINCE v75 (wave 4, T2), AND THE NOTE IS RE-AIMED RATHER THAN DELETED so the dormant
+     *  year cannot be mistaken for a cancellation. It read «UNREACHABLE IN WAVE 3 AND SHIPPED ANYWAY:
+     *  nothing in this wave writes `endedWeek`, so no career can ever be inside a cooldown – it lands
+     *  now, with its tests, so that wave 4 (which writes the endings) changes nothing here.» That is
+     *  exactly what happened: `endEpisode` (world/loveEpisodes.ts) now writes the date, clause 3 of
+     *  `arrivalEligible` bites for the first time, and NOT ONE CHARACTER of the gate or of this row
+     *  had to move for it. ⚠ The ordering does the rest by construction – `rollEnds` runs BEFORE
+     *  `rollArrival` in the same tick, so the week an attachment ends is a week the cooldown already
+     *  refuses, and nobody can arrive on the afternoon of a break-up. */
     cooldownWeeks: { fiery: 12, sunny: 26, quiet: 39, deep: 52 },
     /** THE RAW FEED LAG, in weeks, by her OPENNESS REGISTER (who-she-is §4, «Feed lag», verbatim:
      *  open – 0 with p 0.70, else uniform 1..4; private – 0 with p 0.10, else uniform 2..12).

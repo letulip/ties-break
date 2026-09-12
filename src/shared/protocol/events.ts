@@ -8,6 +8,12 @@
 
 import type { MatchPlayer, Surface } from '../../engine/match/types'
 import type { MatchRecord } from '../../engine/season/types'
+// ⭐ v75: THE LIFE-ROW DISCRIMINATOR, type-only – `LifeBeatKind` lives beside the beats that own the
+// roster (shared/protocol/narrative.ts) and is erased here at compile time, exactly like `MatchRecord`
+// above. ⚠ AND THE EDGE RUNS ONE WAY: narrative.ts imports nothing from this file, so naming it here
+// adds no cycle – checked rather than assumed, because a protocol module that imported the barrel
+// back is the one shape this module set forbids (see the header).
+import type { LifeBeatKind } from './narrative'
 import type { EntryReleaseReason } from './offers'
 
 // --- World events (Package M) ------------------------------------------------
@@ -223,6 +229,52 @@ export interface WorldEvent {
    *  the refund and the feed line – so a reader can total the money and name the tournaments from
    *  the same structured field instead of from two different sentences. */
   entryRef?: WorldEventEntryRef
+  /** ⭐⭐⭐ v75 (the private life, wave 4 – T1) – WHICH PART OF HER LIFE THIS ROW IS ABOUT, so the
+   *  feed's glyph column can mark «they met» differently from «it ended».
+   *
+   *  ⚠⚠ IT EXISTS BECAUSE A SECOND `WorldEventType` MEMBER WOULD HAVE BEEN THE WRONG SHAPE, and the
+   *  file that flagged the choice is the one that now consumes it: `components/screens/lifeRowGlyphs.ts`
+   *  ends its T9 note with «per-kind marks need either new `WorldEventType` members or a field on the
+   *  row – a design call that is his, flagged at T9 and still open», and this is that call landed.
+   *  `'life'` is what the row IS – a row about her life rather than about her tennis or the family's
+   *  money – and every reader that asks that question (`accrueFinance`'s no-cents rule, the Money
+   *  breakdown, the feed's own filters) is right to keep asking it once. WHICH life beat it was is a
+   *  second, finer question, and splitting `'life'` into `'life-met'` / `'life-ended'` / a wedding
+   *  would have made every one of those readers enumerate a growing list to answer the first one.
+   *
+   *  ⚠ THE TYPE IS DELIBERATELY WIDER THAN WHAT CAN APPEAR HERE, and saying so is cheaper than the
+   *  narrower union would be. `LifeBeatKind` carries four members and only some of them ever raise a
+   *  feed row at all – `'small-talk'` explicitly raises none (`world/lifeBeat.ts` §3c: the `lifeLog`
+   *  row IS the record), and the two fork kinds are questions rather than news. A second, narrower
+   *  roster spelled out here would be a list to keep in step with that one, and «two rosters for one
+   *  question» is the desync every note in this file family argues against; ONE roster, with the
+   *  writers deciding which members they use, is the same trade `LIFE_ROW_KINDS` makes against
+   *  `WorldEventType`. So a reader must not infer from the type that every kind can reach a row.
+   *
+   *  ⚠ OPTIONAL, ADDITIVE, AND DELIBERATELY NOT BACK-FILLED – `entryRef`'s own rule above, in its
+   *  situation. Absent means exactly what every historical row already means («this row carries no
+   *  life-kind discriminator»), so the v74 -> v75 step writes nothing here and the glyph map keys on
+   *  `lifeKind ?? 'met'`: a wave-3 row keeps its 🤍 untouched. ⚠ Stamping `'met'` onto the `'life'`
+   *  rows an old save happens to hold would be re-deriving a fact from prose and calling the guess a
+   *  record, which is the mistake the v70 draw back-fill refused for the same reason.
+   *
+   *  ⚠ NOTHING WRITES IT IN T1. The two write sites are T5's – the arrival delivery stamps `'met'`
+   *  and the ending row stamps `'ended'` – and until then this field is inert on every row in every
+   *  career, which is what makes the v75 bump provably empty. It rides that bump only because it
+   *  lands in the same commit: by itself it would have moved no number at all, exactly as commit
+   *  2763caa added the whole `entry` offer family with the version left at 36.
+   *  ⭐⭐ T5 IS HERE (12.09) AND THE COUNT WAS THREE, NOT TWO – the sentence above is kept as T1's own
+   *  record and this is the correction. The ending has a feed row in EACH of its two registers
+   *  (told-now, from `rollEnds`; told-late, from `deliverKnownPartner`), and T4 had shipped only the
+   *  second – so T5 built the first as well as stamping all three. ⚠ BOTH ENDING ROWS CARRY THE SAME
+   *  `'ended'`: the register is a fact about the LAG rather than about her life, and a column that
+   *  marked the two apart would be telling the player which scene he happened to get.
+   *
+   *  ⚠ AND IT REACHES THE UI BY CONSTRUCTION rather than by a wire decision. `snapshotEvents`
+   *  (engine/world/snapshot.ts) puts the event ROWS THEMSELVES on the snapshot – there is no
+   *  field-by-field DTO between the world and the feed – so widening this interface widens
+   *  `Snapshot.events` and `Snapshot.financialEvents` in the same edit. */
+  lifeKind?: LifeBeatKind
 }
 
 /** The season event a `WorldEvent` is ABOUT: enough to name it on a screen without re-reading the

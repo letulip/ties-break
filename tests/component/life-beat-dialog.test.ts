@@ -73,7 +73,7 @@ import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE
 import LifeBeatDialog from '../../src/components/LifeBeatDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import { blockingOverlay } from '../../src/composables/blockingOverlay'
-import { createWorld, toSnapshot } from '../../src/engine/world'
+import { buildLifeBeatPrompt, createWorld, deliverKnownPartner, toSnapshot } from '../../src/engine/world'
 import { DEFAULT_PROFILE, type LifeBeatPrompt, type Snapshot } from '../../src/shared/protocol'
 
 /** A fixture prompt. ⚠ NOT COPY – see the header. Built off the type so this file compiles against
@@ -659,5 +659,120 @@ describe('LifeBeatDialog – the listening detour', () => {
     await narrow.w.vm.$nextTick()
     assertDismissReachable(narrow.card, narrow.card.querySelector('.life-beat-listen-done')!, NARROW_PHONE, 'LifeBeatDialog (listening, 320x568)')
     narrow.w.unmount()
+  })
+})
+
+// =================================================================================================
+// ⚠⚠ v75 T4 – THE ROUND-20 POPUP LAW ON THE **ENDING'S OWN CARD**, WITH THE ENGINE'S REAL WORDS
+// =================================================================================================
+//
+// CLAUDE.md's gotcha applies to a dialog that is EXTENDED as much as to a new one: «any dialog you
+// add or lengthen gets a mounted assertion that its dismiss control's box is inside a 375x667
+// viewport, and prove it by mutating». T4 lengthens this card in two directions at once – a fifth
+// beat kind, and the first one with FOUR answers whose labels are sentences – so the measurement is
+// re-taken against the real pool rather than inherited from the fork's three-button fixture.
+//
+// ⚠⚠ AND THE PROMPT IS THE **ENGINE'S**, NOT A FIXTURE, WHICH IS THE ONE PLACE THIS FILE DEPARTS FROM
+// ITS OWN HEADER RULE. Everything above is measured against `BEAT`, deliberately, so the component
+// compiles against the CONTRACT rather than against the engine half's progress. Here the claim is
+// about the copy's SIZE – «a dialog grows by one honest sentence at a time and nothing objects» – and
+// a fixture's invented sentences would measure a card nobody ships. So this block builds the card the
+// player actually gets, from the pools, through `buildLifeBeatPrompt`.
+describe('⚠⚠ v75 T4 – the ENDING fits a phone, and its last answer can be reached', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  /** The `'ended'` card as the engine assembles it, at `close` – the register that carries HER LINE
+   *  and is therefore the TALLEST of the two the bond ladder can produce. ⚠ A dry card at `cold` is
+   *  shorter, so measuring the close one is the conservative direction. */
+  function endedPrompt(): LifeBeatPrompt {
+    const world = createWorld('life-beat-ended-ui', DEFAULT_PROFILE)
+    world.season = []
+    world.week = 1000
+    world.bond = 90
+    world.loveEpisodes = [
+      { id: 'p:900', sinceWeek: 900, endedWeek: 950, knownWeek: 1000, wants: 'open', partnerId: 'p:900' },
+    ]
+    deliverKnownPartner(world)
+    const prompt = buildLifeBeatPrompt(world)
+    expect(prompt?.kind, 'the engine really raised an ending – nothing below is vacuous').toBe('ended')
+    expect(prompt!.options, 'and it offers its four answers').toHaveLength(4)
+    return prompt!
+  }
+
+  /** The structural precondition, asserted before any measurement – `measureDialog` reads the box off
+   *  the CARD's bottom edge, so the answers must be the last thing in the flow. */
+  function lastAnswer(card: Element): Element {
+    const choices = card.querySelector('.life-beat-choices')!
+    expect(choices, 'the answers are on the card').toBeTruthy()
+    expect(card.lastElementChild, 'the answers are the card\'s last element').toBe(choices)
+    const last = choices.lastElementChild!
+    expect(last.classList.contains('life-beat-choice'), 'and the last of them is an answer').toBe(true)
+    return last
+  }
+
+  it('⭐⭐⭐ the fourth answer is inside a 375x667 phone, and the card is bounded and scrolls', () => {
+    const prompt = endedPrompt()
+    const { w, card } = mountAttached(prompt)
+    // ⚠ THE CARD REALLY CARRIES THE ENGINE'S WORDS – so what is measured is the shipped copy.
+    expect(flat(card.textContent), 'her line is on the card').toContain(prompt.said)
+    for (const option of prompt.options) {
+      expect(flat(card.textContent), `the «${option.id}» answer is drawn`).toContain(option.label)
+    }
+    const fit = assertDismissReachable(card, lastAnswer(card), PHONE, 'LifeBeatDialog (the ending)')
+    expect(fit.cap, 'bounded by the room the scrim leaves').toBe(635)
+    expect(fit.scrollable, 'and what is past the fold can be reached').toBe(true)
+    w.unmount()
+  })
+
+  it('...and on the narrowest screen the app supports', () => {
+    const { w, card } = mountAttached(endedPrompt(), NARROW_PHONE)
+    assertDismissReachable(card, lastAnswer(card), NARROW_PHONE, 'LifeBeatDialog (the ending, 320x568)')
+    w.unmount()
+  })
+
+  it('⚠⚠ MUTATION PROOF – the cap is what holds it, on the ending\'s own copy', () => {
+    // The content-independent arm. Today's ending FITS unaided, so the too-tall mutation cannot run on
+    // it and this one can: take the bound away and the same assertion goes red, which is what says the
+    // card is safe from the next honest sentence rather than from luck.
+    const { w, card } = mountAttached(endedPrompt())
+    const dismiss = lastAnswer(card)
+    expect(
+      measureDialog(card, dismiss, PHONE).contentFloor,
+      'the shipped ending fits unaided, which is why this arm is separate',
+    ).toBeLessThan(635)
+    ;(card as HTMLElement).style.maxHeight = 'none'
+    expect(() => assertDismissReachable(card, dismiss, PHONE, 'LifeBeatDialog (ending, unbounded)')).toThrow(
+      /declares no height bound that fits/,
+    )
+    w.unmount()
+  })
+
+  it('⚠⚠ MUTATION PROOF, THE OTHER HALF – an ending whose copy grew, with round-20 #3 put back', () => {
+    // T6 owns the full string matrix and copy grows; this is the card four sentences from now. With
+    // the cap in place it still lands its fourth answer on the phone; with the cap removed the SAME
+    // assertion goes red, so the net cannot be green for want of a tall enough fixture.
+    const base = endedPrompt()
+    const grown: LifeBeatPrompt = {
+      ...base,
+      said: `${base.said} ${LONG_SENTENCE.repeat(18).trim()}`,
+      options: base.options.map((o) => ({ ...o, label: `${o.label} – ${LONG_SENTENCE.trim()}` })),
+    }
+    const { w, card } = mountAttached(grown)
+    const dismiss = lastAnswer(card)
+    const before = measureDialog(card, dismiss, PHONE)
+    expect(before.contentFloor, 'the grown ending really is taller than the phone').toBeGreaterThan(before.available.height)
+    assertDismissReachable(card, dismiss, PHONE, 'LifeBeatDialog (a long ending)')
+    ;(card as HTMLElement).style.maxHeight = 'none'
+    ;(card as HTMLElement).style.overflowY = 'visible'
+    expect(() => assertDismissReachable(card, dismiss, PHONE, 'LifeBeatDialog (long ending, cap removed)')).toThrow(
+      /taller than the screen|outside the viewport/,
+    )
+    w.unmount()
   })
 })

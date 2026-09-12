@@ -494,7 +494,13 @@ describe('wave 3 T17 D – answering a `stop` puts the coach in front of the for
 
   it('⭐⭐ a harness walks straight past the whole arc – `drainLifeBeats` survives it', () => {
     // The hard requirement, end to end through the SHARED helper: 40 tools, `npm run e2e:fixtures`
-    // and every walked test go this way, and the helper THROWS if a kind has no bond-neutral answer.
+    // and every walked test go this way, and the helper REFUSES rather than guess when it cannot
+    // state what an answer costs.
+    // ⚠ v75 T3b (12.09) – THAT REFUSAL USED TO READ «throws if a kind has no bond-neutral answer».
+    // The law is now READ-INDEPENDENCE: the helper gives each kind its REGISTERED answer
+    // (`DRAIN_ANSWER`) and throws only when that answer's price moves with what she wants. Both of
+    // the ids this walk spends – `listen` and `heard` – are still ruled zero, so the assertions below
+    // are the ones T17 wrote. `tests/wave3-reaction.test.ts` §D is the law's own pin.
     const world = atTheForkWanting('stop', WORN_AT_THE_FORK)
     const bondBefore = world.bond
     const cleared = drainLifeBeats(world)

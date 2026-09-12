@@ -567,7 +567,15 @@ describe('save migrations', () => {
     // step back-filling `[]`, golden fixture v74, e2e fixtures regenerated), the walk below is the
     // same walk, and the claim this line makes – that the chain runs PAST the colliding 64 and
     // through 65 – now has one more rung to cross before it arrives.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 74 – past the colliding 64, through 65').toBe(74)
+    // ⚠ RE-AIMED AT v75 (12.09, the private life wave 4 – `spiritShock`, the mark an ending leaves),
+    // NOT WEAKENED, for the TENTH time and with the claim unchanged once more. What moved is the
+    // LADDER'S HEAD and nothing else: 75 was taken by that wave's own full move (bump, append-only
+    // v74 -> v75 step back-filling `null`, golden fixture v75, e2e fixtures regenerated), the walk
+    // below is the same walk, and the claim this line makes – that the chain runs PAST the colliding
+    // 64 and through 65 – now has one more rung to cross before it arrives. ⚠ v75 carries a SECOND
+    // field, `WorldEvent.lifeKind?`, which this line is not about at all: it is optional, additive
+    // and deliberately not back-filled, so it adds no rung to the chain the walk below crosses.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 75 – past the colliding 64, through 65').toBe(75)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

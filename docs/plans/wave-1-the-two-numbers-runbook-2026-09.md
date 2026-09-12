@@ -172,7 +172,13 @@ who-she-is). Pass bars, all per arm:
   outcome rather than a defect: wave 1 has no life events by its own definition, and the ladder is
   built for the finished layer. Glowing and Heavy get their range from the **wave-4 break-up shock
   (−22 steady / −34 intense)**, where a lifted girl at 75 taking −34 lands at 41 and wears Heavy for
-  weeks. ⚠ The cut points are not tuning dials: a test that would be easier with other numbers is a
+  weeks. ⭐⭐ **MEASURED 12.09.2026 (wave 4, T3), AND THE PREDICTION WAS ONE WEEK'S RETURN OUT: she
+  lands at 38, not 41.** The arithmetic left out that the ending frees the attachment slot BEFORE
+  `accrueSpirit` runs, so the return toward the flat 70 happens first (75 → 72 for an intense girl)
+  and the shock lands on THAT. ⚠ The 41 is kept rather than overwritten because this line is wave 1's
+  record of its own prediction, and a runbook edited to match the answer stops being evidence of what
+  was foreseen. The measured ladder, per intensity, is in `tests/wave4-spirit-shock.test.ts` and the
+  T3 commit; **Heavy is reached either way**, so the bar this paragraph is about is unaffected. ⚠ The cut points are not tuning dials: a test that would be easier with other numbers is a
   test to rewrite (pinned in `tests/spirit.test.ts`).
 * printed for his read (no bars yet): the birthday ask-mix per temperament, weeks under the
   knee, bond outcomes per temperament.

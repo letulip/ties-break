@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,427 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,456 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-447 exported names across 49 owning modules.
+456 exported names across 49 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 41 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 49 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
@@ -47,10 +47,10 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
+| `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 4 |
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
-| `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
 | `src/engine/world/player.ts` | THE KID AS A MATCH PLAYER: turning a career's persisted state into the two numbers the match engine actually consumes | 3 |
 | `src/engine/world/summer.ts` | THE SUMMER TRAINING BLOCK - nine weeks with no school in them, and what the engine does about it | 3 |
@@ -101,9 +101,16 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
+- `drawEndsRead` – `src/engine/world/lifeBeat.ts`
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
 - `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
 - `drawRawLag` – `src/engine/world/lifeBeat.ts`
+- `ENDS_READS` – `src/engine/world/lifeBeat.ts`
+- `ENDS_REGISTERS` – `src/engine/world/lifeBeat.ts`
+- `endsEligible` – `src/engine/world/lifeBeat.ts`
+- `endsHazardFor` – `src/engine/world/lifeBeat.ts`
+- `EndsRead` *(type)* – `src/engine/world/lifeBeat.ts`
+- `EndsRegister` *(type)* – `src/engine/world/lifeBeat.ts`
 - `FORK_STOP_DRIVERS` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_ANSWER` – `src/engine/world/lifeBeat.ts`
 - `FORK_WANT_TILT` – `src/engine/world/lifeBeat.ts`
@@ -128,6 +135,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
+- `rollEnds` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
@@ -642,6 +650,15 @@ THE LEDGER: the two write primitives every world mutation goes through, and the 
 - `seasonIndexOf` – `src/engine/world/ledger.ts`
 - `seasonStartWeek` – `src/engine/world/ledger.ts`
 
+### `src/engine/world/loveEpisodes.ts`
+
+THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now.
+
+- `activeEpisode` – `src/engine/world/loveEpisodes.ts`
+- `endEpisode` – `src/engine/world/loveEpisodes.ts`
+- `knownPartner` – `src/engine/world/loveEpisodes.ts`
+- `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
+
 ### `src/engine/world/state.ts`
 
 ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
@@ -666,14 +683,6 @@ HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are n
 - `announceCampusInterlude` – `src/engine/world/fieldNews.ts`
 - `campusDigestLine` – `src/engine/world/fieldNews.ts`
 - `FIELD_NEWS` – `src/engine/world/fieldNews.ts`
-
-### `src/engine/world/loveEpisodes.ts`
-
-THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now.
-
-- `activeEpisode` – `src/engine/world/loveEpisodes.ts`
-- `knownPartner` – `src/engine/world/loveEpisodes.ts`
-- `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
 
 ### `src/engine/world/phaseObligations.ts`
 

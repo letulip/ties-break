@@ -39,7 +39,10 @@ import { addEvent } from './ledger'
 // SOFT path the owner ruled into the wave. It left for one commit («вариант 3»: the raise reverted,
 // the engine kept) because §5b prices tier 1 «soft – answerable, never lost» and what T8 shipped was
 // tier 2's hard pause; the row it raises now blocks nothing (see the call site below).
-import { deliverKnownPartner, rollArrival, rollSmallTalk } from './lifeBeat'
+// ⭐⭐⭐ AND THE ENDS HAZARD JOINS IT IN v75 T2 (12.09) – `rollEnds`, §8 of the same module. It is the
+// FIRST of the four at the call site and not the last, which is the whole of rulings F and A; the
+// import line's order is alphabetical and says nothing.
+import { deliverKnownPartner, rollArrival, rollEnds, rollSmallTalk } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -246,8 +249,51 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        `seed:life:arrival:<week>` / `seed:life:partner:<sinceWeek>:*` sub-streams, and an
   //        INELIGIBLE week derives none of them at all (world/lifeBeat.ts §5). The frozen capture
   //        (41550 / e6b0c709) is untouched by construction.
+  //
+  // ⭐⭐⭐ 1c-ends (v75, the private life wave 4 – T2): ...AND FIRST, WHETHER THEY ARE STILL THERE.
+  //
+  //        ⚠⚠ IT RUNS **BEFORE** THE ARRIVAL, AND THAT IS A RULING WITH TWO CONSEQUENCES THE LAYER
+  //        LEANS ON RATHER THAN A TIDY READING ORDER (wave-4 rulings F and A). The row this week's
+  //        arrival may be about to append DOES NOT EXIST YET when the ends hazard rolls, so:
+  //
+  //          · AN ATTACHMENT CAN NEVER END IN ITS OWN ARRIVAL WEEK. `endedWeek >= sinceWeek + 1` by
+  //            construction and the shortest romance the engine can produce is exactly one week – the
+  //            premise ruling A's told-late discriminator rests on, and it is a property of THIS LINE
+  //            being above the next one rather than of anything inside either function.
+  //          · AND THE COOLDOWN REFUSES SAME-TICK RE-ARRIVAL BY CONSTRUCTION. `endEpisode` writes the
+  //            date before `arrivalEligible` is next asked, so on the week of a break-up the slot is
+  //            already free AND the clock is already running: clause 3 turns a freed slot down with
+  //            `week − endedWeek = 0`. Nobody arrives on the afternoon somebody left. That clause has
+  //            been unreachable since wave 3 shipped it dormant; this line is what makes it bite.
+  //
+  //        ⚠ AND THE MIRROR ORDER IS DELIBERATE TOO, for `rollArrival`'s own reason one line down:
+  //        running before `accrueSpirit` means the week an attachment ends is the week the effective
+  //        baseline drops back to the flat one – `activeEpisode` goes null the moment the date is
+  //        written and `accrueSpirit` reads it derived, so the lift leaves through the standing weekly
+  //        return rule and through no new code at all (wave 3's T4, and the ZERO-new-code half of
+  //        wave 4's T3).
+  //
+  //        ITS OWN CALL, for `accrueSpirit`'s own reason five lines down – `accrueCondition`'s
+  //        arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts and must not gain a
+  //        parameter. ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:ends:<week>` sub-stream, and a career with nobody in it derives none of it at
+  //        all (world/lifeBeat.ts §8). The frozen capture (41550 / e6b0c709) is untouched by
+  //        construction. ⚠ AND IT WRITES ONE DATE AND NOTHING ELSE – the shock is T3, the `'ended'`
+  //        beat is T4, the feed row is T5; on this tree an ending is silent on every surface.
+  //        ⭐⭐ RE-AIMED AT v75 T5 (12.09) AND THE SENTENCE ABOVE IS KEPT AS THE RECORD OF THE COMMIT
+  //        ORDER. All three steps have landed, so the last clause has stopped being true: this call
+  //        now writes the date, sets `world.spiritShock`, raises the told-now `'ended'` card and
+  //        appends its kept feed row (stamped `lifeKind: 'ended'`) – the last three behind the
+  //        `'met'` receipt, so an ending the parent was never told about is still silent here and
+  //        surfaces at `deliverKnownPartner` instead. ⚠ WHAT IT STILL DOES NOT WRITE IS `world.spirit`
+  //        – `accrueSpirit`, five lines down, stays the one writer of it in the engine.
+  rollEnds(world)
   rollArrival(world)
   // ⭐⭐ 1c-told (v74, the private life wave 3 – T6): AND THE WEEK HE IS TOLD ABOUT IT.
+  //
+  // ⚠ ONE LINE MOVED ABOVE THIS BLOCK IN v75 (wave 4's T2) AND NOTHING ELSE IN THIS PHASE DID – see
+  // 1c-ends, immediately before `rollArrival`. Delivery's own placement argument below is untouched
+  // by it: the ends hazard writes a date and raises nothing, so it cannot put news in front of this.
   //
   //        ⚠⚠ IMMEDIATELY AFTER THE ROLL, AND THE ORDER IS A BEHAVIOUR RATHER THAN A STYLE. A shaved
   //        lag of ZERO is a real and common outcome (an open girl draws it at p 0.45 before the bond
