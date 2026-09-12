@@ -754,6 +754,29 @@ const dealTerm = computed(() => {
   const seasons = SEASON_WORDS[d.seasons] ?? `${d.seasons} seasons`
   return `${seasons} · ${weekLabel(d.fromWeek)} – ${weekLabel(d.untilWeek)}`
 })
+/** ⭐⭐ ROUND 41 #14 – THE BRACKET. His ask, 12.09: «На Bills на все выбранные позиции добавить в
+ *  скобках сколько недель осталось». One function for both surfaces below that carry a REAL term
+ *  (this deal, beside `dealTerm`; a filled ad row, further down) – `untilWeek - week`, never
+ *  re-derived twice. Worded the kit rungs' own way (`({{ view.goodWeeksLeft }} left)`, untouched
+ *  further down) but with two edge words instead of a raw zero: a term in its final week reads
+ *  "(last week)", never "(0 weeks left)" – nobody counts down to a number that means "gone".
+ *
+ *  ⚠ NOT called for the physio retainer (a weekly toggle – no term at all), the academy scholarship
+ *  (reviewed at the season boundary – no end week is ever persisted) or the lifetime ad row
+ *  (`for life`, further down – never lapses BY CONSTRUCTION, round-39.md:296-297). A bracket on any
+ *  of the three would be a countdown this screen invented, not one the engine can honour – recon's
+ *  derivability census, docs/rounds/round-41.md item 14. */
+function weeksLeftBracket(untilWeek: number, atWeek: number): string {
+  const left = untilWeek - atWeek
+  if (left <= 0) return '(last week)'
+  return left === 1 ? '(1 week left)' : `(${left} weeks left)`
+}
+/** The kit deal's own bracket, beside `dealTerm` – both empty together (no live deal), both live
+ *  together (a live deal always carries a real `untilWeek`, `kitDealView`'s own contract). */
+const dealWeeksLeft = computed(() => {
+  const d = kitDeal.value
+  return d ? weeksLeftBracket(d.untilWeek, week.value) : ''
+})
 
 // --- THE ACADEMY, WHICH PAYS AND IS NEVER SEEN (backlog #90, measured 09.08) ----------------------
 //
@@ -2052,7 +2075,10 @@ function shopRowCornerAction(row: ShopRowView): boolean {
         <div v-if="kitDeal" class="kit-deal">
           <div class="kit-deal-head">
             <span class="kit-deal-brand">{{ kitDeal.brand }}</span>
-            <span class="kit-deal-term">{{ dealTerm }}</span>
+            <!-- ⭐⭐ ROUND 41 #14 – the bracket, beside the term it counts down. `dealWeeksLeft` in
+                 the script block carries his ask and the reasoning; `weeksLeftBracket` is the one
+                 function both this row and the ad portfolio's filled rows call. -->
+            <span class="kit-deal-term">{{ dealTerm }} {{ dealWeeksLeft }}</span>
           </div>
           <p class="kit-deal-note">
             They supply her {{ dealCovers }}, and she enters at least
@@ -2221,7 +2247,10 @@ function shopRowCornerAction(row: ShopRowView): boolean {
           <p v-else-if="row.state === 'filled'" class="ad-slot-note">
             {{ formatCents(row.cashCents ?? 0) }} a year ·
             {{ (row.termYears ?? 1) === 1 ? 'one year' : `${row.termYears} years` }} · runs to
-            {{ weekLabel(row.untilWeek ?? 0) }}
+            <!-- ⭐⭐ ROUND 41 #14 – the same bracket the kit deal carries, off the same function
+                 (`weeksLeftBracket`, script block). The lifetime row above has no `untilWeek` at
+                 all and takes the other branch, so it is never asked for one. -->
+            {{ weekLabel(row.untilWeek ?? 0) }} {{ weeksLeftBracket(row.untilWeek ?? 0, week) }}
           </p>
           <p v-else-if="row.state === 'open'" class="ad-slot-note">
             A letter here writes about {{ formatCents(row.openCashCents ?? 0) }} a year at her
