@@ -1,3 +1,11 @@
+---
+type: spec
+status: audit
+area: simulation-and-balance
+canonical: false
+last-reviewed: 2026-09-12
+---
+
 # The world above her – a tour, or a wall?
 
 **Status: an audit (sections 0-8), then the owner's ruling built on top of it (section 9).**
@@ -555,3 +563,301 @@ make careers never end (`expected 0 to be greater than 0`), stop the succession 
 Gates: `vue-tsc -b --force` clean · `npm run test:quiet` **109 files / 2,340 tests green** ·
 `npm run test:sim` **8 files / 80 tests green**. No MAIN draw was added, so the frozen capture is
 unmoved; no schema field moved, so no migration and no golden save.
+
+---
+
+# Round 41 #23 (12.09) – the 2036 win rate, decomposed
+
+**Status: MEASUREMENT ONLY. Zero edits under `src/` or `tests/`; one new bench,
+`tools/r41-winrate-2036.ts`. Nothing here is a recommendation – where a lever looks mistuned the
+number is stated and the move is named as the owner's.**
+
+The owner, playing his own career: *«почему-то в 2036 сезоне упала выигрываемость, даже не смотря
+на лучшего тренера и массажиста, которые с ней ездят»*. His girl is ~19 in 2036 and top-5 on the W
+table by 2037. The complaint is not about a career going wrong; it is about the per-match win rate
+falling while everything a parent can buy is already bought.
+
+⚠ **The calendar first, because the brief this executor was handed had it wrong.** `EPOCH_YEAR` is
+2031 (`src/shared/dates.ts`) and `START_AGE_YEARS` is 14 (`src/engine/world/age.ts`), so **2036 is
+season 5 at age 19 and 2037 is season 6 at age 20**. Both of his facts fall out of that arithmetic
+exactly, which is the confirmation that this is the right window – and it makes the walk seven
+seasons rather than the eleven the brief assumed.
+
+## 10a. The instrument, and its receipt
+
+`npx vite-node tools/r41-winrate-2036.ts -- --careers 64`
+
+The real engine, walked week by week through `econ-bench`'s own career policy (`openCareer` +
+`stepCareerWeek`) – the house's career-walking idiom. Nothing about a draw, a field or a match is
+re-implemented; the only arithmetic the file owns is counting and one shift-share identity.
+
+* **Corpus**: 64 careers, preset `120k · wealthy · elite coach`, policy `player`, masseur hired at
+  the professional gate on the top rung (7 sessions, travels) – the owner's own staffing. Seeds
+  `bench-wealthy-0..63`. 7 seasons = 364 real `tickWeek` weeks each, **23,296 simulated weeks,
+  27,919 captured matches**, 107 s.
+* **The observer**: `stepCareerWeek` closes the week's tournament itself, so the match records are
+  gone by the time it returns. The file installs a **transparent accessor** on
+  `world.pendingTournament` – getter and setter pass the value straight through – and keeps a
+  reference to every object the engine assigns. It observes what the engine built; it cannot change
+  what the engine does.
+* ⭐ **THE RECEIPT, AND IT CAUGHT A REAL DEFECT IN THE FIRST CUT.** A run counts a captured
+  tournament only once `finished === true`, then checks its per-season (wins, losses) against
+  `world.seasonHistory`, which the engine banks from the identical filter (`world.ts:643-652`).
+  Exact agreement on every career, or the run refuses its own tables and exits 1. The first version
+  filed each match under the 52-tick block it was walked in rather than the week it was played in,
+  and the receipt failed immediately: `bench-wealthy-0` captured 23-22 against the engine's banked
+  23-21. `tickWeek` increments the week and runs the season wrap **before** the tournament, so the
+  tick that crosses a boundary banks the old season and then plays a match already in the new one.
+  Deriving the season from the week closes it. **Every table below ran with the receipt green on all
+  64 careers** – that is what makes «the corpus win rate» a complete count rather than a subset.
+* **Opponent strength** is `power()`'s own definition – the mean of the five attributes – read off
+  the `MatchPlayer` the engine actually put on court (surface-styled and condition-scaled by
+  `rivalMatchPlayer`). **E[win]** is the engine's own closed form, `fastMatchProbability`, the same
+  number `playMatch` resolves every AI-AI match on.
+* **RNG**: bench-local. The file draws nothing and persists nothing.
+
+**The corpus is his career.** Median W rank 112 (2035) → **34 (2036)** → **18 (2037)**; five careers
+top-5 in 2036 and seven in 2037. So the dip below is measured on the same shape he is describing,
+not on a bench career that never leaves the juniors.
+
+## 10b. Predicted vs measured
+
+Priors were written into the tool's header before the first run.
+
+| lever | predicted | measured |
+| --- | --- | --- |
+| **C** rank-driven draw difficulty | **the headline** | **✅ the headline, but by TIER PROMOTION, not by seeding.** The round axis explains ~nothing (composition −0.1pp); the opponent-strength axis explains all of it (−5.4pp) |
+| **A** growth hands over at 18 | the undertone | **◑ real, but it is HEADROOM, not the age dial, and it did not start in 2036.** Her gain per season decays smoothly 3.10 → 1.46 → 0.90 → 0.69 → 0.58 → 0.51 from 2032 on; `ageFactor` only steps 0.00310 → 0.00302 across the 18 → 19 boundary |
+| **D** fatigue asymmetry | visible in the condition bands | **❌ refuted, and it moves the OTHER way.** Mean condition at match time rose 84.7 → 91.1 in 2036 and the share under 70 halved (19% → 8%); `conditionMatchFactor` is exactly 1.000 at every condition ≥ 70, so 92% of her 2036 matches carry no condition penalty at all |
+| **B** the field strengthens | the background slope | **❌ nil.** Top-50 professional core 60.79 (2031) → 60.84 (2036) → 60.77 (2037); per-season Δ between −0.08 and +0.07. This is §9e's null, re-measured from her side |
+
+## 10c. The baseline – the dip is real, and it is not confined to 2036
+
+Per-career win rate, corpus mean ± SEM over 64 careers.
+
+| season | age | matches | m/career | win rate | ± SEM | Δ | E[win] | actual − E |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2031 | 14.1 | 3,076 | 48.1 | 63.4% | 1.2 | – | 64.5% | −1.1pp |
+| 2032 | 15.1 | 4,008 | 62.6 | 69.9% | 1.8 | +6.5pp | 74.4% | −4.5pp |
+| 2033 | 16.1 | 4,343 | 67.9 | **76.9%** | 1.2 | +7.0pp | 78.6% | −1.6pp |
+| 2034 | 17.0 | 4,362 | 68.2 | 75.3% | 0.9 | −1.7pp | 76.4% | −1.1pp |
+| 2035 | 18.0 | 4,149 | 64.8 | 72.2% | 0.9 | −3.1pp | 72.8% | −0.6pp |
+| 2036 | 19.1 | 3,838 | 60.0 | **66.9%** | 1.1 | **−5.3pp** | 71.0% | −4.1pp |
+| 2037 | 20.1 | 4,143 | 65.8 | 67.2% | 1.0 | +0.3pp | 69.4% | −2.2pp |
+
+**The fall is a three-season slide from the 2033 peak, −10.0pp in total, and 2036 is its steepest
+single step** (−5.3pp against a SEM of ~1.1, i.e. ~5 standard errors – not noise). It then stops
+dead: 2037 is +0.3pp.
+
+Per career rather than per corpus: 48 of 64 careers (75%) fell in 2036, and **37 of 64 (58%) fell
+while their rank held or improved** – which is exactly the shape of his complaint. But the season
+before was already 34 of 64 (53%) on the same criterion, so the phenomenon is not born in 2036; 2036
+is where it is largest and where a top-50 player is looking hard enough to notice.
+
+## 10d. ⭐ The decomposition – the whole of it is WHO she played
+
+Shift-share, the one piece of arithmetic the file owns and the answer to the question:
+
+    W = Σ_b s_b · p_b        (s_b = share of her matches in band b, p_b = her win rate in it)
+    W₅ − W₄ = Σ_b (s₅_b − s₄_b)·p₄_b  +  Σ_b s₅_b·(p₅_b − p₄_b)
+              \_____ COMPOSITION ____/    \_______ RATE ______/
+
+COMPOSITION is *«she met a different mix»*; RATE is *«she played worse against the same ones»*. The
+identity is exact for every band populated in both seasons; a band populated in only one has no
+honest `p₄` and is reported as uncovered rather than fudged. **Coverage was 100% on every transition
+below.**
+
+| transition | axis | Δ win rate | composition | rate |
+| --- | --- | --- | --- | --- |
+| 2033→2034 | opponent strength | −2.4pp | **−2.9pp** | +0.5pp |
+| 2034→2035 | opponent strength | −3.2pp | **−4.8pp** | +1.5pp |
+| **2035→2036** | **opponent strength** | **−4.2pp** | **−5.4pp** | **+1.3pp** |
+| 2035→2036 | round reached | −4.2pp | −0.1pp | −4.1pp |
+| 2035→2036 | condition band | −4.2pp | +1.0pp | −5.2pp |
+| 2035→2036 | tier | −4.2pp | −1.4pp | −1.3pp |
+| 2036→2037 | opponent strength | −0.2pp | −1.9pp | +1.7pp |
+
+(Pooled Δ differs slightly from §10c's per-career mean because pooling weights careers by matches
+played. §10c's 2037 row folds 63 careers, not 64: one career played no match that season.)
+
+**On every falling transition the opponent-strength composition term is negative and the rate term
+is POSITIVE.** She did not get worse. The people on the other side of the net got better, and the
+composition term is larger than the whole drop – her own improvement is partly offsetting it.
+
+The other three axes are diagnostics that come back empty, and their emptiness is the finding:
+putting the drop on the ROUND axis or the CONDITION axis leaves it entirely in the rate term, i.e.
+those axes do not sort her matches into groups that explain anything.
+
+## 10e. The stratified read – at equal opponent strength she is FLAT OR BETTER
+
+Her win rate, by the opponent's core strength as the engine built it for that match. Cells with
+fewer than 10 matches print their n instead of a rate.
+
+| season | <48 | 48-52 | 52-56 | 56-60 | 60-64 | 64-68 | 68-72 | 72+ |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2031 | 71% n=1668 | 62% n=894 | 54% n=401 | 51% n=103 | 40% n=10 | – | – | – |
+| 2032 | 86% n=2115 | 64% n=870 | 55% n=641 | 56% n=320 | 47% n=60 | (2) | – | – |
+| 2033 | 89% n=2695 | 71% n=608 | 61% n=614 | 54% n=306 | 44% n=101 | 50% n=18 | – | (1) |
+| 2034 | 86% n=2273 | 73% n=745 | 69% n=754 | 57% n=375 | 46% n=167 | 39% n=41 | (5) | (2) |
+| 2035 | 86% n=1394 | 73% n=696 | 69% n=1066 | 62% n=656 | 54% n=240 | 38% n=68 | 42% n=24 | (5) |
+| **2036** | 82% n=514 | 73% n=483 | **70% n=1346** | **66% n=996** | 59% n=336 | 45% n=108 | 28% n=39 | 31% n=16 |
+| 2037 | 90% n=255 | 73% n=485 | 73% n=1473 | 67% n=1238 | 56% n=437 | 48% n=174 | 24% n=54 | 44% n=27 |
+
+...and the same table as the SHARE of her matches, which is the composition shift itself:
+
+| season | <48 | 48-52 | 52-56 | 56-60 | 60-64 | 64-68 | 68-72 | 72+ | mean opponent |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2033 | 62% | 14% | 14% | 7% | 2% | 0% | 0% | 0% | 44.3 |
+| 2034 | 52% | 17% | 17% | 9% | 4% | 1% | 0% | 0% | 46.4 |
+| 2035 | 34% | 17% | 26% | 16% | 6% | 2% | 1% | 0% | 50.2 |
+| **2036** | **13%** | 13% | **35%** | **26%** | 9% | 3% | 1% | 0% | **54.1** |
+| 2037 | 6% | 12% | 36% | 30% | 11% | 4% | 1% | 1% | 55.7 |
+
+Read the two together. In the three bands that carry 70% of her 2036 tennis her win rate went **up**
+every year (52-56: 61 → 69 → 69 → 70 → 73; 56-60: 54 → 57 → 62 → 66 → 67; 60-64: 44 → 46 → 54 → 59).
+Meanwhile the share of her matches against sub-48 opponents collapsed from 62% to 13% and the mean
+opponent rose **+9.8 core points in three seasons**. That is the entire dip.
+
+The tier mix says the same thing in plainer language: in 2035 she was still spread across
+`j30`/`w15`/`w35`/`w50` with 38% of her matches at WTA 250 and above; in 2036 that is **78%** (19%
+WTA 250, 31% WTA 500, 17% WTA 1000, 11% Slam) and the junior and W-series rungs are gone. Her win
+rate *inside* each tier barely moves across the same boundary – WTA 500 74% (2035) → 71% (2036) →
+69% (2037), WTA 1000 65% → 66% → 66%.
+
+## 10f. The round read – the seeding story is NOT the mechanism
+
+The prior said a higher seed meets strong players later, so the per-match rate falls while the
+career improves. **Measured, that is not what happens here.**
+
+| season | R1 | R2 | R3 | R4 | R5 | mean round | matches/entry |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2033 | 77% n=1349 | 80% n=1033 | 78% n=826 | 80% n=635 | 81% n=499 | 2.52 | 3.22 |
+| 2035 | 74% n=1407 | 72% n=1036 | 73% n=750 | 72% n=546 | 73% n=395 | 2.41 | 2.95 |
+| **2036** | 70% n=1386 | 69% n=975 | 68% n=669 | 67% n=454 | 70% n=305 | **2.34** | **2.77** |
+| 2037 | 71% n=1477 | 70% n=1042 | 69% n=727 | 66% n=500 | 62% n=330 | 2.37 | 2.81 |
+
+She goes **less** deep, not more: mean round 2.52 → 2.34 and matches per entry 3.22 → 2.77. Her 2036
+win rate is essentially flat across R1-R5 (70/69/68/67/70), and the drop appears in the **first
+round** as much as anywhere. The seeded-player ramp does exist – her mean opponent runs 53.1 (R1) →
+55.6 (R5) in 2036 – but it existed in 2035 too (49.8 → 50.6) and is far too small to carry −5.3pp.
+**The whole shift is the level of the field she now enters, not her position inside its draw.**
+
+## 10g. Growth (A) – real, earlier than 18, and it is headroom rather than the dial
+
+| season | age | her skills | Δ/season | ceiling | headroom | % realised | opponent met | her − opp |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 2031 | 14.1 | 53.64 | – | 62.87 | 9.22 | 85.3% | 47.62 | +6.02 |
+| 2032 | 15.1 | 56.74 | +3.10 | 62.87 | 6.13 | 90.3% | 45.66 | +11.08 |
+| 2033 | 16.1 | 58.20 | +1.46 | 62.87 | 4.67 | 92.6% | 44.33 | +13.86 |
+| 2034 | 17.0 | 59.10 | +0.90 | 62.87 | 3.77 | 94.0% | 46.38 | +12.73 |
+| 2035 | 18.0 | 59.79 | +0.69 | 62.87 | 3.08 | 95.1% | 50.15 | +9.64 |
+| 2036 | 19.1 | 60.37 | +0.58 | 62.87 | 2.49 | 96.0% | 54.08 | **+6.29** |
+| 2037 | 20.1 | 60.89 | +0.51 | 62.87 | 1.98 | 96.8% | 55.66 | **+5.23** |
+
+`ageFactor` off the shipped curve: 14y 0.00558 · 16y 0.00434 · **18y 0.00310 · 19y 0.00302** · 20y
+0.00294. **The 18 → 19 boundary is a 2.6% step in the rate, not a cliff** – the recon's «zero
+peak-rate growth from 18» overstated it, because `ageFactor`'s 18-to-`plateauStart` branch decays
+`peakRate·(1−growthEase)` = 0.0031 to `plateauRate` = 0.0027 rather than stopping. What actually
+collapses is the OTHER factor in `gain = headroom × rate`: her headroom falls 9.22 → 1.98 and she is
+96% realised by 19. That decay starts in 2032, not 2036.
+
+So the true asymmetry is arithmetic: **she improves +0.58 in 2036 while the field she is promoted
+into improves +3.93.** The gap she plays on closes from +13.86 to +5.23 in four seasons without her
+ever getting worse.
+
+## 10h. Fatigue (D) – refuted, and the masseur is visibly working
+
+| season | mean condition at match time | p10 | share < 70 |
+| --- | --- | --- | --- |
+| 2034 | 81.1 | 50 | 26% |
+| 2035 | 84.7 | 58 | 19% |
+| **2036** | **91.1** | **72** | **8%** |
+| 2037 | 91.2 | 72 | 9% |
+
+2036 is her **freshest** competitive season since she was 14, and it is the first full season with
+the masseur on the top rung travelling with her. `conditionMatchFactor` (`src/engine/condition.ts`)
+is `1` at and above its knee, and the knee is 70:
+
+    100 → 1.000 · 90 → 1.000 · 80 → 1.000 · 70 → 1.000 · 60 → 0.936 · 50 → 0.871
+
+⚠ **THE NUMBER WORTH HIS EYE, AND IT IS HIS CALL, NOT A FIX.** Above condition 70 the strength
+channel of condition is **exactly flat**. In 2036 that covers 92% of her matches, so the six points
+of condition the masseur buys (84.7 → 91.1) are worth **zero** match strength; what they buy is
+availability, injury margin and the retirement hazard (`retireDurability`, which does read condition
+continuously). His sentence *«даже не смотря на... массажиста»* is therefore literally correct about
+the win rate, and the model says so on purpose. Whether the knee belongs at 70 – i.e. whether a
+fresher player should hit harder as well as break less – is a balance decision and it is his.
+
+## 10i. The field (B) – it does not strengthen, and §9e's null holds
+
+| season | top-50 pro core | Δ | top-200 pro core | Δ | her core | her − top-50 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 2031 | 60.79 | – | 52.35 | – | 53.64 | −7.14 |
+| 2033 | 60.91 | +0.07 | 52.36 | −0.00 | 58.20 | −2.71 |
+| 2035 | 60.89 | −0.00 | 52.36 | +0.01 | 59.79 | −1.10 |
+| 2036 | 60.84 | −0.04 | 52.36 | +0.00 | 60.37 | −0.47 |
+| 2037 | 60.77 | −0.08 | 52.33 | −0.03 | 60.89 | **+0.12** |
+
+The professional table is the same height every season, which is §9e re-measured from her side. The
+field she *meets* rises 44.3 → 55.7 entirely because **she** moves up into it.
+
+⚠ **THE SECOND NUMBER WORTH HIS EYE, AND ALSO HIS CALL.** Her rolled ceiling averages **62.87** and
+the top-50 professional core is **60.84** – about two points of headroom over the mean of the people
+she is trying to beat, and she is at 96.8% of that ceiling by 20. Against the 68-72 band she wins
+24-28% and against 64-68 she wins 45-48%. So the game's own answer to *«can she keep climbing past
+the top 20 by getting better»* is *«barely – from here it is draw luck and the 60-64 band»*. Whether
+`rollPotential`'s ceiling should clear the head of the tour by more than two points is a design
+decision with a long tail, not a defect.
+
+## 10j. Actuation – the levers proved to move the output
+
+House law: a null result needs proof the arm was live. Every patch below is applied **in memory**
+inside the bench process; nothing under `src/` was edited and no absurd constant was committed.
+`ageFactor` is pure arithmetic over `ECONOMY.development.ageCurve`, and `growWeek` draws only on its
+own re-derived `seed:growth:<week>` sub-stream, so moving these constants changes her development
+and no stream position.
+
+`npx vite-node tools/r41-winrate-2036.ts -- --careers 6 --actuate`, 6 careers per arm:
+
+| arm | skills @2035 | skills @2036 | win rate @2035 | win rate @2036 | Δ 35→36 |
+| --- | --- | --- | --- | --- | --- |
+| shipped | 57.98 | 58.58 | 72.9% | 64.3% | −8.6pp |
+| `growthEnd` 18→28 | 59.05 | 59.70 | 72.7% | 66.7% | −6.1pp |
+| `peakRate` ×5 (absurd) | 61.49 | 61.49 | 74.1% | 71.2% | −2.9pp |
+
+Both dials move both outputs, so neither arm is dead. Note what the absurd arm does: ×5 growth
+**saturates her at her ceiling** (61.49 in both seasons) and the 2036 dip still does not go away.
+
+### The sized A counterfactual
+
+`--growth-end 28 --careers 32`, paired against the shipped run on the **same 32 seeds**
+(`bench-wealthy-0..31`), same tree, same commit, one process each. At `growthEnd` 28 she runs the
+steep branch through 20, so her rate at 19 is 0.00496 instead of 0.00302 – 64% higher.
+
+| arm | 2035 | 2036 | Δ 35→36 | 2037 | Δ 35→37 | skills @2036 | headroom @2036 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| shipped | 70.7% | 66.8% | **−3.9pp** | 66.9% | −3.8pp | 60.10 | 2.55 |
+| `growthEnd` 28 | 71.6% | 69.5% | **−2.1pp** | 66.8% | **−4.8pp** | 61.12 | 1.52 |
+
+**The A arm halves the 2036 step and then pays it back in 2037.** Over the two seasons together it
+is not better at all – it is slightly worse. The reason is the mechanism itself: growing faster
+promotes her sooner, and the promotion is what costs the win rate. **You cannot buy out of this dip
+with development**, which is the strongest single piece of evidence that C is the cause and A is a
+modifier on its timing.
+
+## 10k. The verdict
+
+**No mechanical defect was found.** The engine is self-consistent throughout: its own closed form
+(`fastMatchProbability`) tracks her actual win rate within 1-4pp every season and moves the same
+direction, the capture reconciles exactly with the engine's own books on all 64 careers, and each
+axis behaves the way its code says it should.
+
+**Why the 2036 win rate fell, in one sentence:** she was promoted two rungs, from junior and
+W-series draws into WTA 250/500/1000 and Slams – 38% of her matches were at WTA 250 or above in 2035
+and 78% in 2036 – so her mean opponent gained 9.8 core points in three seasons while she gained 2.2,
+and **at equal opponent strength her win rate did not fall in a single band; it rose.**
+
+Two dials are reported as mistuned-looking and are explicitly left to the owner: the
+`conditionMatchFactor` knee at 70 (which makes the masseur worth nothing to match strength in the
+regime a well-staffed career lives in) and the ~2-point gap between a career's rolled ceiling and
+the head of the professional table.

@@ -828,11 +828,64 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   persisted or derivable; if marks need NEW persisted state, the item stops here and waits for v76
   (the no-schema rule) – flagged, not silently shipped.
 
-- [ ] **23. «почему-то в 2036 сезоне упала выигрываемость, даже не смотря на лучшего тренера и
+- [x] **23. «почему-то в 2036 сезоне упала выигрываемость, даже не смотря на лучшего тренера и
   массажиста, которые с ней ездят»** – **measure.** A bench aimed at season 2036 (she is ~19 there):
   cohort/conveyor field strength by year, calendar load, draw difficulty as her rank rises –
   predicted vs measured, the numbers land here. A mechanical defect ships; a tuning move is his
   call with the table in front of him.
+
+  **MEASURED** (bundle T). Instrument `tools/r41-winrate-2036.ts`, tables in
+  `docs/specs/world-strength-audit-2026-08.md` §10. **No mechanical defect found** – nothing shipped
+  under `src/` or `tests/`, which is what «measure» meant.
+
+  > **Ответ коротко.** Выигрываемость по матчам упала потому, что **она сменила лигу, а не потому,
+  > что стала играть хуже.** В 2035 у неё 38% матчей на WTA 250 и выше, в 2036 – **78%** (юниорские
+  > и W-рунги почти исчезли: 19% WTA 250, 31% WTA 500, 17% WTA 1000, 11% Slam). Средний соперник за
+  > три сезона (2033→2036) вырос с 44.3 до 54.1 «очков силы», а она сама – с 58.2 до 60.4. **При
+  > РАВНОМ сопернике она не просела ни в одной полосе – она выросла** (полоса 52-56 по годам
+  > 2033-2037: 61% → 69% → 69% → 70% → 73%; полоса 56-60: 54% → 57% → 62% → 66% → 67%). Разложение
+  > падения 2035→2036 (−4.2 п.п.): состав соперников **−5.4 п.п.**, её собственная игра **+1.3 п.п.**
+  >
+  > **Тренер и массажист работают – просто не в ту колонку, куда он смотрит.** 2036 – её самый
+  > свежий боевой сезон с 14 лет: средняя кондиция на корте 84.7 → **91.1**, доля матчей ниже 70
+  > упала 19% → 8%. Но `conditionMatchFactor` равен ровно 1.000 на всём диапазоне ≥ 70, то есть
+  > **выше 70 кондиция не добавляет силы удара вообще** – она покупает доступность, запас по травмам
+  > и снижение риска сняться по ходу матча. Его фраза «даже не смотря на массажиста» буквально верна,
+  > и модель так и задумана.
+  >
+  > **Возраст 18 – не обрыв.** Темп роста на границе 18 → 19 падает всего на 2.6% (0.00310 →
+  > 0.00302). Что действительно кончается – это ЗАПАС: к 19 она реализовала 96% собственного потолка
+  > (остаток 9.22 → 2.49 за пять сезонов), и это началось в 2032, а не в 2036. Контр-арм
+  > (`growthEnd` 18→28, те же 32 сида) вдвое уменьшает провал 2036 (−3.9 → −2.1 п.п.) **и полностью
+  > возвращает его в 2037** – быстрее растёшь, быстрее попадаешь в тот же тур. **Из этого провала
+  > нельзя вырасти.**
+  >
+  > **Поле сверху не усиливается**: ядро топ-50 профи 60.79 (2031) → 60.84 (2036) → 60.77 (2037).
+  > Это §9e этого же документа, пере-измеренное с её стороны стола.
+
+  Corpus: 64 careers, preset `120k · wealthy · elite coach`, `player` policy, masseur on the top rung
+  travelling – 23,296 real `tickWeek` weeks, **27,919 captured matches**, 107 s. Season win rate
+  76.9% (2033) → 75.3 → 72.2 → **66.9% (2036)** → 67.2 (2037), SEM 0.9-1.2pp, so 2036's −5.3pp step
+  is ~5 standard errors and the slide is three seasons long rather than one. 48 of 64 careers fell in
+  2036 and 37 of 64 fell while their rank held or improved. The corpus reproduces his career: median
+  W rank 34 in 2036 and 18 in 2037, seven careers top-5.
+
+  ⚠ **The capture carries a receipt and it earned its keep.** Per-season (wins, losses) is checked
+  against `world.seasonHistory`, which the engine banks from the identical filter – exact agreement
+  on all 64 careers or the run refuses its own tables. The first cut failed it (`23-22` captured
+  against `23-21` banked) because `tickWeek` runs the season wrap **before** the week's tournament,
+  so a boundary tick plays a match that already belongs to the next season.
+
+  ⚠ **TWO DIALS LOOK MISTUNED AND BOTH ARE HIS CALL, NOT OURS** – stated as numbers, with no fix
+  attached: (1) the `conditionMatchFactor` knee at **70**, which makes freshness worth zero match
+  strength across 92% of a well-staffed career's matches; (2) her rolled ceiling averages **62.87**
+  against a top-50 professional core of **60.84** – about two points of headroom over the mean of the
+  people she is trying to beat, and she is at 96.8% of it by twenty (she wins 24-28% against the
+  68-72 band). Whether either should move is a balance decision with a long tail.
+
+  ⚠ `tools/README.md` is **stale and was already stale before this bundle** (bundle A's
+  `tools/r41-ad-gate-16.ts` is not listed either). It is a generated index outside bundle T's fence –
+  one `npm run tools:registry` at the gate covers both new tools.
 
 - [ ] **24. «может быть для Академии корты, клубный дом и стафф тоже должны сколько-то строиться по
   времени, а не сразу быть готовы?»** – **ask.** Yes by design instinct – but construction state is
