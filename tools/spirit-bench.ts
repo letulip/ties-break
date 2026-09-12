@@ -9,6 +9,18 @@
 // bar grid ends at week 208 with bar 3's own reading at week 156. `--fork` walks past 242 to price
 // the deltas where they land; that row is a diagnostic and is not a bar.
 //
+// ⚠⚠⚠ AND ONE ROW OF `--fork` RUNS IN A **BENCH-ONLY MODE** – section [3c], v74 T16b point 4. T17's
+// walked grid measured the drivers at the fork as `worn 0 · strained 26 · own 226`: no career on the
+// grid is `worn` there, so the whole `worn` column of the copy (her four lines and the coach's read)
+// is carried by unit tests and by nothing walked. [3c] therefore POKES `world.spirit` TOOL-SIDE into
+// the worn band on the week before the fork opens – `tools/life-arrival.ts`'s own precedent, one
+// field written by the bench on the bench's own world – so the column renders at least once inside a
+// real walk. It takes NO draw, derives NO stream and changes NO engine code, and MAIN is untouched
+// (the frozen capture 41550 / e6b0c709 lives in `tests/condition.test.ts` and cannot see this file).
+// ⚠⚠ THE POKED CAREERS ARE A SEPARATE LIST AND ENTER NO OTHER SECTION. Nothing in [1]–[6], in [3] or
+// in [3b] sees them: the walked census keeps printing its honest `worn 0`, which is the FINDING, and
+// [3c] prints the two rows side by side under a banner so that no reader can take one for the other.
+//
 // ⚠⚠ WHAT THIS FILE IS FOR, AND WHAT IT IS FORBIDDEN TO DO. CLAUDE.md invariant 5 - «tuning is
 // measured, not guessed» - and the runbook's own sentence: **a bar that fails is a finding for the
 // owner, never a licence to touch a constant.** This tool reads `ECONOMY.spirit` / `ECONOMY.bond`
@@ -133,6 +145,14 @@ import {
   FORK_WANTS,
   FORK_WANT_TILT,
   FORK_STOP_DRIVERS,
+  // ⚠⚠ v74 T16b point 4 – THE TWO THE POKED ARM [3c] NEEDS, AND THEY ARE BOTH READS. The poked arm
+  // must assert the STRING the walk selected and not merely that a string came back, so it captures
+  // `buildLifeBeatPrompt(world).said` – the exact line a screen would draw, off the world in hand –
+  // and then asks `lifeBeatSaid` (the engine's own pure assembler) for the SAME girl's `worn` and
+  // `own` readings. Equal to the first and different from the second is the whole proof; a bench that
+  // re-typed either pool would be asserting its own copy of the copy. ⚠ NEITHER TAKES A DRAW.
+  buildLifeBeatPrompt,
+  lifeBeatSaid,
   // ⚠ v74 – the engine's own refusal string, so the drain below can tell a terminal latch (which is
   // tolerated) from a beat kind with no bond-neutral answer (which must never be swallowed here).
   CAREER_ENDED_REFUSAL,
@@ -148,6 +168,13 @@ import type { ForkStopDriver, ForkWant, Temperament, WorldState } from '../src/e
 // `knockGoverns` is the engine's OWN answer to "is this week one the push is being paid for", so the
 // governed-week count below is the rule itself rather than a bench re-derivation of 3 weeks a push.
 import { knockGoverns, KNOCK_PUSH_WEEKS, KNOCK_REST_GROWTH } from '../src/engine/knock'
+// ⚠ [3c] READS THE THREE LADDERS OFF THE LEAF THAT OWNS THEM, `tools/life-arrival.ts`'s own
+// direct-to-leaf import repeated: `lifeBeatPromptFor` words a line from (voice, register, band) and
+// the poked arm has to ask `lifeBeatSaid` for the same girl, so it derives the register and the band
+// through the ENGINE'S functions at the instant the prompt was built rather than by cutting its own.
+// ⚠ AND IF EITHER DERIVATION IS EVER WRONG, THE ASSERTION GOES RED – it compares the captured string
+// against them – which is the safe direction for a second reading to fail in.
+import { bondBandOf, moodRegisterOf, spiritBandOf } from '../src/engine/spirit'
 import { drainLifeBeats } from './_lifeBeats'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
@@ -186,6 +213,44 @@ const FORK_WEEK = schoolEndWeek(DEFAULT_PROFILE.birthMonth)
  *  is week 156 in both and the two walks are byte-identical up to week 208. */
 const FORK_MODE = process.argv.includes('--fork')
 const WEEKS = FORK_MODE ? FORK_WEEK + 1 : SEASONS * WEEKS_PER_YEAR
+
+// =================================================================================================
+// ⚠⚠⚠ [3c]'s POKE – THE BENCH-ONLY ARM, ITS DEPTH, AND WHY EACH NUMBER IS DERIVED
+// =================================================================================================
+//
+// The walked grid cannot reach the `worn` driver (T17 measured `worn 0` over 252 careers that stated
+// a want), so the copy keyed on it never renders in a walk. [3c] writes ONE FIELD – `world.spirit` –
+// on the week before the fork opens, and that is the whole of the poke: no draw, no stream, no
+// engine change, and no second field. `tools/life-arrival.ts`'s `endedWeek` poke is the precedent,
+// down to the banner it prints over its own table.
+
+/** ⚠⚠ HOW DEEP, AND IT IS DERIVED FROM THE ENGINE'S OWN TWO NUMBERS RATHER THAN CHOSEN. The driver
+ *  line is `ECONOMY.life.forkStopDriverFrom` (worn > 0.15); the poke lands at THREE TIMES it, which
+ *  is the shallowest depth the opening tick cannot undo: `accrueSpirit` walks her back toward the
+ *  baseline by at most `max(ECONOMY.spirit.returnPerWeek)` a week, and the margin below is many
+ *  times that. The arithmetic is printed in [3c] rather than asserted, so a constant that moves
+ *  moves the print.
+ *
+ *  ⚠ IT IS A LEGAL SPIRIT AND NOT A SENTINEL: `min <= POKED_SPIRIT <= max`, a state the game itself
+ *  can hold. A poke to an impossible number would be measuring a world the engine cannot produce. */
+const POKE_WORN_MULTIPLE = 3
+const POKED_SPIRIT =
+  ECONOMY.spirit.baseline - POKE_WORN_MULTIPLE * ECONOMY.life.forkStopDriverFrom * (ECONOMY.spirit.baseline - ECONOMY.spirit.min)
+/** The spirit at which the driver line itself sits – printed beside the poke so the margin is visible. */
+const DRIVER_LINE_SPIRIT = ECONOMY.spirit.baseline - ECONOMY.life.forkStopDriverFrom * (ECONOMY.spirit.baseline - ECONOMY.spirit.min)
+const MAX_RETURN_PER_WEEK = Math.max(...Object.values(ECONOMY.spirit.returnPerWeek))
+
+/** ⚠ ONE PARENTING POLICY, AND `care` IS IT. The poked arm's job is to RENDER the worn column inside
+ *  a walk, not to compare two parentings: a second policy would double a diagnostic whose bar is «at
+ *  least once», and – worse – would hand the reader a second bond column to line up against the
+ *  walked grid's, which is exactly the confusion the banner exists to prevent. `care` is the policy
+ *  whose bond at the fork sits highest (measured 72.2 against grind's 56.6 at 4 seeds), and bond is
+ *  what decides whether HER OWN VOICE speaks at all – below the flat-pool cut she says the pool's
+ *  line and the driver reaches the player only through the coach. */
+const POKED_ARM: Arm = 'care'
+/** ⚠ SMALL ON PURPOSE, AND CAPPED RATHER THAN FIXED so `--seeds=1` still walks a poked career. This
+ *  arm proves a column renders; it is not a rate and has no denominator worth widening. */
+const POKED_SEEDS = Math.min(8, SEED_COUNT)
 
 /** `--seeds=N` for a smoke run; the grid the bars are read off is the runbook's 32. */
 function seedCount(): number {
@@ -254,9 +319,47 @@ interface Career {
   weeks: number
   /** null when she played all four seasons; the ending's own type when she did not */
   endedAs: string | null
+  /** ⚠⚠ [3c] ONLY – true on a career walked in the BENCH-ONLY poked arm, false on every career any
+   *  other section of this file reads. The separation is structural rather than a filter: the poked
+   *  careers live in [3c]'s own local list and are never pushed into `careers`, which is the list
+   *  every bar and every census reads. The flag is what the WALK itself asks (`if (career.poked)`)
+   *  before it pokes a field or captures a string, so a career that was never meant to be poked
+   *  cannot be, and a reader of any row can see which population it came from. */
+  poked: boolean
+  /** the spirit the ENGINE had on the week the poke overwrote it, and `null` when the poke never
+   *  fired (the career ended before the fork week). «The poke moved the state» is this number beside
+   *  `forkRoots.worn`, and a poke that silently did nothing is visible as an unmoved pair. */
+  spiritBeforePoke: number | null
+  /** ⭐⭐⭐ WHAT THE WALK ACTUALLY RENDERED, captured in the poked arm alone – the trap this step is
+   *  written against is «a poked arm renders a line without proving it is the right one». */
+  render: ForkRender | null
 }
 
-function runCareer(seed: string, arm: Arm, temperament: Temperament): Career {
+/** ⭐⭐⭐ [3c]'s EVIDENCE ROW. Every field is either a string the WALK produced (`said`) or the
+ *  ENGINE'S OWN reading of the same girl under a named driver (`worn` / `own`), so the assertion is a
+ *  comparison of two things this file did not write.
+ *
+ *  ⚠⚠ AND THE `own` READING IS NOT DECORATION – IT IS THE DISCRIMINATOR. At a bond below the flat-pool
+ *  cut her line is the pool's line whatever the driver is, so `said === worn` ALONE would pass on a
+ *  career whose worn copy never rendered. `worn !== own` is what says the driver is visible in this
+ *  girl's line at all; `worn === own` is the honest «flat pool spoke» reading, counted apart and
+ *  never as a render. The coach's read is keyed on the driver at EVERY band, so his pair always
+ *  differs – and if it ever does not, [3c] throws rather than counting it. */
+interface ForkRender {
+  /** her line, as `buildLifeBeatPrompt` assembled it for a screen this week */
+  herSaid: string
+  herWorn: string
+  herOwn: string
+  /** the coach's counsel, null when the want was not `stop` (no counsel is raised, by the ruling) */
+  coachSaid: string | null
+  coachWorn: string | null
+  coachOwn: string | null
+  /** the spirit and bond the two readings above were derived at – the instant the prompt was built */
+  spiritAtRead: number
+  bondAtRead: number
+}
+
+function runCareer(seed: string, arm: Arm, temperament: Temperament, poked = false): Career {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, background: 'wealthy' })
   // ⚠ THE ONE FIELD THE BENCH WRITES. See the header: paired arms, zero draws moved.
   world.temperament = temperament
@@ -285,6 +388,9 @@ function runCareer(seed: string, arm: Arm, temperament: Temperament): Career {
     counselRows: 0,
     weeks: 0,
     endedAs: null,
+    poked,
+    spiritBeforePoke: null,
+    render: null,
   }
 
   for (let i = 0; i < WEEKS; i++) {
@@ -295,6 +401,24 @@ function runCareer(seed: string, arm: Arm, temperament: Temperament): Career {
     world.plan = { ...planFor(world, arm) }
     // --- the ordinary entry policy, the SAME one in both arms ------------------------------------
     enterWhatSheCan(world)
+
+    // --- ⚠⚠ THE POKE. BENCH-ONLY, [3c] ONLY. ONE FIELD, NEVER A STREAM, NEVER THE ENGINE. --------
+    //
+    // The only line in this file that writes to a world after `temperament`, and it writes to the
+    // bench's own copy. It fires on the week BEFORE the fork opens, because the tick below is the one
+    // that opens it: `tickWeek` increments the week first and `raiseForkOpinion` READS `world.spirit`
+    // when it draws her want (world/endings.ts §7c), so a poke landing after the tick would colour
+    // the wording of a want that was drawn off an unpoked girl – two readings of one moment, which is
+    // the defect this file keeps catching in itself.
+    // ⚠ `accrueSpirit` runs inside that same tick and walks her back toward the baseline by at most
+    // `MAX_RETURN_PER_WEEK`; `POKED_SPIRIT` sits many times that below the driver line, which is why
+    // the depth is derived from the constants instead of chosen. [3c] prints the margin.
+    // ⚠ IT IS CONFINED TO ONE WEEK OF ONE CAREER IN ONE ARM: every career in every other section of
+    // this file walks with `poked === false` and never enters this branch.
+    if (career.poked && world.week + 1 === FORK_WEEK) {
+      career.spiritBeforePoke = world.spirit
+      world.spirit = POKED_SPIRIT
+    }
 
     const bondBefore = world.bond
     tickWeek(world, rng)
@@ -469,6 +593,10 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
     strained: Math.min(1, Math.max(0, (b.start - world.bond) / (b.start - b.min))),
   }
   career.forkDriver = forkStopDriverOf(world.spirit, world.bond)
+  // ⭐⭐⭐ v74 T16b point 4 – AND IN THE POKED ARM, THE WORDS THEMSELVES, CAPTURED BEFORE THE ANSWER.
+  // Same reason the driver above is read here: the answer's bond delta lands one line down and it
+  // moves the very band `lifeBeatPromptFor` selects her pool with. `captureHerWords` takes no draw.
+  if (career.poked) captureHerWords(world, career)
   const said = arm === 'care' ? 'back' : 'press'
   try {
     answerLifeBeat(world, said)
@@ -476,6 +604,10 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
   } catch {
     /* a terminal latch – `guardNotEndedForGood` refuses, and the row stays open for nobody */
   }
+  // ⭐⭐ ...AND THE COACH, WHILE HIS ROW IS STILL UP. The drain three lines down ANSWERS the counsel
+  // bond-neutrally, which clears it – so the only moment his read exists to be read is here, between
+  // the answer that raised him and the drain that clears him.
+  if (career.poked) captureTheCoachsWords(world, career)
   // ⭐⭐⭐ v74 T17 – AND THE SECOND DRAIN IS NOT A TIDY-UP, IT IS THE FIX FOR A BENCH THAT WOULD HAVE
   // LIED AGAIN. Answering a `'stop'` opinion raises `'fork-counsel'` (the coach's read, blocking), and
   // `answerTheForkTheWayThisArmWould` one line below has a `catch {}` around `answerFork` – so every
@@ -493,6 +625,80 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
   // counsel rows is a run in which nothing happened, and the two numbers printed together is what
   // makes that impossible to miss.
   career.counselRows = lifeLogOf(world).filter((row) => row.kind === 'fork-counsel').length
+}
+
+/** ⭐⭐⭐ [3c] – HER LINE AS THE WALK RENDERED IT, BESIDE THE ENGINE'S OWN TWO READINGS OF THE SAME
+ *  GIRL. This is the answer to the trap this step was written against: **a poked arm can render a
+ *  line without proving the line is the right one.**
+ *
+ *  ⚠⚠ `herSaid` IS THE SCREEN'S OWN STRING. `buildLifeBeatPrompt` is what the worker hands a dialog,
+ *  so the captured line is the line a player would read this week – not a pool entry this file
+ *  looked up and hoped the walk agrees with.
+ *
+ *  ⚠⚠ AND THE TWO READINGS BESIDE IT ARE THE ENGINE'S, DIFFERING IN THE DRIVER AND IN NOTHING ELSE.
+ *  Same kind, same row detail, same voice, same register, same band – so `herWorn !== herOwn` is
+ *  «the driver is visible in this girl's line» and `herSaid === herWorn` is «and the walk selected
+ *  the worn one». Without the first half the second is worth nothing: below the flat-pool cut both
+ *  readings collapse to the pool's line and an equality check would pass on a career whose worn copy
+ *  never appeared. [3c] counts those apart and never as a render.
+ *
+ *  ⚠ THE REGISTER AND THE BAND ARE DERIVED THROUGH THE ENGINE'S OWN LADDERS at the instant the
+ *  prompt was built, which is the only instant they agree with it. `wants` and `stage` are the
+ *  assembler's own defaults and reach no fork line (its case reads neither – the fork is roof-only by
+ *  construction); if that ever stops being true the equality below goes RED, which is the direction a
+ *  second reading has to fail in. */
+function captureHerWords(world: WorldState, career: Career): void {
+  const prompt = buildLifeBeatPrompt(world)
+  if (prompt === null || prompt.kind !== 'fork-opinion') {
+    throw new Error(
+      `${career.seed}/${career.temperament}: the poked arm found ${prompt === null ? 'no prompt' : `a '${prompt.kind}' prompt`} where her ` +
+        'fork-opinion row should be – the capture would have measured a different beat',
+    )
+  }
+  const want = forkWantOf(world)
+  if (want === null) throw new Error(`${career.seed}/${career.temperament}: a fork-opinion prompt whose row carries no want`)
+  const register = moodRegisterOf(spiritBandOf(world.spirit))
+  const band = bondBandOf(world.bond)
+  career.render = {
+    herSaid: prompt.said,
+    herWorn: lifeBeatSaid('fork-opinion', want, career.temperament, register, band, 'open', 'school', 'worn'),
+    herOwn: lifeBeatSaid('fork-opinion', want, career.temperament, register, band, 'open', 'school', 'own'),
+    coachSaid: null,
+    coachWorn: null,
+    coachOwn: null,
+    spiritAtRead: world.spirit,
+    bondAtRead: world.bond,
+  }
+}
+
+/** ⭐⭐ [3c] – THE COACH'S READ, CAPTURED IN THE ONE WEEK IT EXISTS. Answering a `stop` raises
+ *  `'fork-counsel'`; the bond-neutral drain two lines later answers it; between those two lines is
+ *  the only moment `buildLifeBeatPrompt` returns it.
+ *
+ *  ⚠ NOTHING IS OWED ON A `college` OR A `tour` – no counsel is raised at all, which is the ruling's
+ *  own boundary and not a gap – and nothing is owed when her row was never answered (a terminal latch
+ *  refuses; [3c] prints that as «stops answered X/Y» rather than counting the difference as a miss).
+ *
+ *  ⚠ HIS PAIR IS KEYED ON THE DRIVER AND ON NOTHING ELSE – no voice, no register, no band – so it
+ *  cannot collapse the way hers can, and `coachWorn === coachOwn` would mean the copy has lost its
+ *  key. [3c] throws on it rather than printing a render it cannot tell apart. */
+function captureTheCoachsWords(world: WorldState, career: Career): void {
+  if (career.render === null || career.forkWant !== 'stop' || career.beatAnswers.length === 0) return
+  const prompt = buildLifeBeatPrompt(world)
+  if (prompt === null || prompt.kind !== 'fork-counsel') {
+    throw new Error(
+      `${career.seed}/${career.temperament}: she stated 'stop' and was answered, but the row waiting is ` +
+        `${prompt === null ? 'nothing' : `'${prompt.kind}'` } – the counsel arc did not fire`,
+    )
+  }
+  // ⚠ THE SAME GIRL HIS READ IS ABOUT, and that is why the two ladders are re-derived off the numbers
+  // recorded WITH her line rather than off the world as it stands now: `applyBondDelta` has landed
+  // between the two captures, and a reading taken after it would describe the parent's answer.
+  const register = moodRegisterOf(spiritBandOf(career.render.spiritAtRead))
+  const band = bondBandOf(career.render.bondAtRead)
+  career.render.coachSaid = prompt.said
+  career.render.coachWorn = lifeBeatSaid('fork-counsel', 'worn', career.temperament, register, band)
+  career.render.coachOwn = lifeBeatSaid('fork-counsel', 'own', career.temperament, register, band)
 }
 
 /** ⭐⭐ WHAT HE DOES, priced against the want the ENGINE recorded rather than against a want the
@@ -2202,9 +2408,201 @@ rule('[3b] THE STOP WANT – the pure P(stop) grid, and the walked share with no
         `       all stops ${stops.length}/${reached.length} = ${((100 * stops.length) / reached.length).toFixed(1)}%\n` +
         `       ⚠ THE COUNSEL COUNT ABOVE IS THE PROOF THE ARC RAN: it must equal the number of stops (${stops.length}).` +
         `${counsel === stops.length ? '' : ' ⚠⚠ IT DOES NOT – the arc did not fire on every stop.'}` +
-        `${reached.filter((c) => c.forkDriver === 'worn').length === 0 ? '\n       ⚠⚠ AND NO CAREER ON THIS GRID WAS `worn` AT THE FORK, so the worn column of the copy is NOT exercised by this walk.' : ''}`,
+        `${reached.filter((c) => c.forkDriver === 'worn').length === 0 ? '\n       ⚠⚠ AND NO CAREER ON THIS GRID WAS `worn` AT THE FORK, so the worn column of the copy is NOT exercised by this walk.\n          ⚠ THAT READING STANDS AND IS NOT REPAIRED BY [3c] BELOW: [3c] POKES a girl into the band to render the copy, and\n            this row keeps saying what the GAME does. Two arms, two meanings – see [3c]\'s banner.' : ''}`,
     )
   }
+}
+
+// --- 3c. THE WORN COLUMN, RENDERED UNDER A POKE (v74 T16b point 4) --------------------------------
+//
+// ⚠⚠⚠ EVERYTHING IN THIS SECTION IS BENCH-ONLY. See the banner it prints and the header of this file.
+// The section walks its own small arm with `poked = true`, keeps those careers in a list of its own,
+// and asserts – rather than hopes – that the poke moved the state, that the ENGINE derived the `worn`
+// driver from it, and that the STRING the walk selected is the one the engine words from that driver.
+if (!FORK_MODE) {
+  rule('[3c] THE WORN COLUMN UNDER A POKE – NOT RUN (this is the four-season grid)')
+  console.log(
+    `    The poke lands on the week before the fork (${FORK_WEEK - 1}) and this grid ends at week ${WEEKS}, so there is\n` +
+      `    nothing here to poke. Run \`npm run bench:spirit -- --fork\` for it.`,
+  )
+} else {
+  rule('[3c] THE WORN COLUMN, RENDERED – ⚠⚠ A BENCH-ONLY POKED ARM, AND IT IS NOT THE GAME')
+  // ⚠ THE WALKED HALF IS READ OFF `careers` – THE SAME LIST [3b] READ – AND IS COMPUTED BEFORE THE
+  // BANNER SO THE BANNER CAN QUOTE IT RATHER THAN ASSERT IT. The day a walked career IS `worn` at the
+  // fork, the sentence below changes by itself instead of becoming a lie nobody re-read.
+  const walkedReached = careers.filter((c) => c.forkWant !== null)
+  const walkedStops = walkedReached.filter((c) => c.forkWant === 'stop')
+  const drivers = (cs: readonly Career[], d: ForkStopDriver) => cs.filter((c) => c.forkDriver === d).length
+  const walkedWorn = drivers(walkedReached, 'worn')
+  console.log('    ⚠⚠⚠ THE ROW MARKED «poked» BELOW RUNS IN A **BENCH-ONLY MODE**. IT IS NOT SHIPPED BEHAVIOUR.')
+  console.log(`         The walked grid above reached the fork ${walkedReached.length}× and read the driver \`worn\` on ${walkedWorn} of them.`)
+  console.log(
+    walkedWorn === 0
+      ? '         Her four worn lines and the coach\'s worn read are therefore exercised by NO walk at all. This arm'
+      : '         ⚠ THE WALK NOW REACHES THE BAND ITSELF, so this is no longer the only place the column renders. This arm',
+  )
+  console.log(`         POKES \`world.spirit\` TOOL-SIDE to ${POKED_SPIRIT.toFixed(2)} on week ${FORK_WEEK - 1} – ONE FIELD, written by the`)
+  console.log('         bench, on the bench\'s own world – so the column renders inside a real walk at least once.')
+  console.log('         NO draw, NO stream, NO engine change, NO second field. `tools/life-arrival.ts` is the precedent.')
+  console.log('       ⚠ DO NOT READ THE POKED ROW AS THE GAME. The walked row beside it is the game; its `worn` column')
+  console.log('         is the FINDING, and this arm does not move it – it exercises the copy the finding leaves dark.')
+  console.log('')
+  console.log(
+    `    the depth, DERIVED and not chosen: the driver line is worn > ${ECONOMY.life.forkStopDriverFrom} (spirit < ${DRIVER_LINE_SPIRIT.toFixed(2)}); the poke lands at\n` +
+      `    ${POKE_WORN_MULTIPLE}× the line – worn ${(POKE_WORN_MULTIPLE * ECONOMY.life.forkStopDriverFrom).toFixed(2)}, spirit ${POKED_SPIRIT.toFixed(2)} – a margin of ${(DRIVER_LINE_SPIRIT - POKED_SPIRIT).toFixed(2)} points against \`accrueSpirit\`'s own\n` +
+      `    return of ≤ ${MAX_RETURN_PER_WEEK}/week, which is the most the opening tick can walk back before the want is drawn.`,
+  )
+
+  const pokeStarted = Date.now()
+  const poked: Career[] = []
+  for (const temperament of TEMPERAMENTS) {
+    for (let s = 0; s < POKED_SEEDS; s++) poked.push(runCareer(`spirit-${s}`, POKED_ARM, temperament, true))
+  }
+  // ⚠ THE POKED LIST IS NEVER MERGED INTO THE WALKED ONE. The two rows below are two populations and
+  // the table says which is which; `careers` is untouched by this section from end to end.
+  const pokedReached = poked.filter((c) => c.forkWant !== null)
+  const pokedStops = pokedReached.filter((c) => c.forkWant === 'stop')
+  // ⭐⭐ THE THREE RENDER CLASSES, AND THEY ARE DECIDED BY COMPARING TWO STRINGS THE BENCH DID NOT
+  // WRITE. `worn` = the driver is visible in her line AND the walk selected it. `flat` = the two
+  // readings are the same string, so her pool does not carry the driver at this bond (below the
+  // flat-pool cut, or a want that is not `stop`) – an honest reading, never a render. `wrong` = the
+  // walk selected something neither reading produces, which is the instrument broken and throws below.
+  const herWornRenders = pokedStops.filter((c) => c.render !== null && c.render.herWorn !== c.render.herOwn && c.render.herSaid === c.render.herWorn)
+  const herFlat = pokedStops.filter((c) => c.render !== null && c.render.herWorn === c.render.herOwn && c.render.herSaid === c.render.herWorn)
+  const herWrong = pokedStops.filter((c) => c.render === null || (c.render.herSaid !== c.render.herWorn && c.render.herSaid !== c.render.herOwn) || (c.render.herWorn !== c.render.herOwn && c.render.herSaid === c.render.herOwn))
+  const answeredStops = pokedStops.filter((c) => c.beatAnswers.length > 0)
+  const coachWornRenders = answeredStops.filter(
+    (c) => c.render !== null && c.render.coachWorn !== null && c.render.coachWorn !== c.render.coachOwn && c.render.coachSaid === c.render.coachWorn,
+  )
+  const coachWrong = answeredStops.filter((c) => c.render === null || c.render.coachSaid === null || c.render.coachSaid !== c.render.coachWorn || c.render.coachWorn === c.render.coachOwn)
+
+  console.log('')
+  console.log(
+    `    ${pad('arm', 26)}${padL('careers', 9)}${padL('reached', 9)}${padL('stops', 7)}${padL('worn', 6)}${padL('strained', 10)}${padL('own', 6)}` +
+      `${padL('counsel', 9)}${padL('her worn', 10)}${padL('flat pool', 11)}${padL('coach worn', 12)}`,
+  )
+  console.log(`    ${'─'.repeat(115)}`)
+  console.log(
+    `    ${pad('walked (THE GAME)', 26)}${padL(careers.length, 9)}${padL(walkedReached.length, 9)}${padL(walkedStops.length, 7)}` +
+      `${padL(drivers(walkedReached, 'worn'), 6)}${padL(drivers(walkedReached, 'strained'), 10)}${padL(drivers(walkedReached, 'own'), 6)}` +
+      `${padL(careers.reduce((a, c) => a + c.counselRows, 0), 9)}${padL('–', 10)}${padL('–', 11)}${padL('–', 12)}`,
+  )
+  console.log(
+    `    ${pad('poked worn (BENCH-ONLY)', 26)}${padL(poked.length, 9)}${padL(pokedReached.length, 9)}${padL(pokedStops.length, 7)}` +
+      `${padL(drivers(pokedReached, 'worn'), 6)}${padL(drivers(pokedReached, 'strained'), 10)}${padL(drivers(pokedReached, 'own'), 6)}` +
+      `${padL(poked.reduce((a, c) => a + c.counselRows, 0), 9)}${padL(herWornRenders.length, 10)}${padL(herFlat.length, 11)}${padL(coachWornRenders.length, 12)}`,
+  )
+  console.log(`    ${'─'.repeat(115)}`)
+  // ⚠⚠ AND THE ONE SENTENCE THAT KEEPS AN UNMEASURED CELL FROM READING AS A ZERO. The walked arm
+  // captures no strings at all – the capture is `poked`-only by construction – so its three
+  // right-hand cells are NOT «it rendered nothing», they are «this instrument was never pointed at
+  // it». A `0` in those columns would mean something entirely different from the `–` printed there.
+  console.log('    ⚠ `–` IS «NOT CAPTURED», NOT «ZERO»: the string capture runs in the poked arm alone, so the walked')
+  console.log('      row has no render columns to report. Its `worn 0` IS measured, and it is this file\'s finding.')
+  console.log(`    ⚠ the two rows are two populations: ${POKED_SEEDS} seeds × 4 temperaments × the \`${POKED_ARM}\` policy, walked separately and`)
+  console.log('      merged into nothing. No bar, no census and no table in this file reads a poked career.')
+
+  // --- ACTUATION, BEFORE ANY OF IT IS BELIEVED ---------------------------------------------------
+  //
+  // ⚠⚠ THIS FILE HAS TWICE THIS WAVE EXITED 0 WHILE MEASURING NOTHING (842 beats raised and none
+  // answered; a `catch {}` that would have printed `bondAtFork: NaN` for every stopping career). A
+  // poke that silently failed would print a `worn` row full of `own` copy and look exactly like a
+  // working one, so the numbers that prove it fired are printed BESIDE the row and asserted below it.
+  const fired = poked.filter((c) => c.spiritBeforePoke !== null)
+  const spiritsAtRead = pokedReached.map((c) => c.render?.spiritAtRead ?? Number.NaN)
+  const wornAtRead = pokedReached.map((c) => c.forkRoots?.worn ?? Number.NaN)
+  console.log('')
+  console.log('    ACTUATION – what the poke actually did, career by career:')
+  console.log(
+    `       the poke fired on ${fired.length}/${poked.length} careers` +
+      `${fired.length === poked.length ? '' : ` (${poked.length - fired.length} ended before week ${FORK_WEEK - 1} and never reached it)`}\n` +
+      `       spirit the ENGINE held the week it fired: mean ${mean(fired.map((c) => c.spiritBeforePoke ?? Number.NaN)).toFixed(2)} · ` +
+      `min ${Math.min(...fired.map((c) => c.spiritBeforePoke ?? Number.NaN)).toFixed(2)} · max ${Math.max(...fired.map((c) => c.spiritBeforePoke ?? Number.NaN)).toFixed(2)}   ← what it OVERWROTE\n` +
+      `       spirit at the read, one tick later: mean ${mean(spiritsAtRead).toFixed(2)} · min ${Math.min(...spiritsAtRead).toFixed(2)} · ` +
+      `max ${Math.max(...spiritsAtRead).toFixed(2)}   (poked to ${POKED_SPIRIT.toFixed(2)}, the tick's own return walks her up)\n` +
+      `       worn at the read: mean ${mean(wornAtRead).toFixed(3)} · min ${Math.min(...wornAtRead).toFixed(3)} vs the driver line ${ECONOMY.life.forkStopDriverFrom}\n` +
+      `       wants drawn under the poke: ${FORK_WANTS.map((w) => `${w} ${pokedReached.filter((c) => c.forkWant === w).length}`).join(' · ')}\n` +
+      `       stops answered ${answeredStops.length}/${pokedStops.length} · 'fork-counsel' rows raised ${poked.reduce((a, c) => a + c.counselRows, 0)}` +
+      // ⚠⚠ AND «0 = 0» IS NOT «THE ARC FIRED». A zero-stop arm satisfies the equality trivially, which
+      // is the shape of every silent stall this file has recorded – so the no-stop case says so in its
+      // own words instead of borrowing the reassuring one. (The red arms below throw on it either way.)
+      `${pokedStops.length === 0 ? '  ⚠⚠ NO STOP WAS DRAWN AT ALL, so there was nothing for the arc to fire on – this arm measured NOTHING' : poked.reduce((a, c) => a + c.counselRows, 0) === pokedStops.length ? '  ← equal to the stops, so the arc fired on every one' : '  ⚠⚠ NOT EQUAL TO THE STOPS – the arc did not fire on every one'}`,
+  )
+
+  // --- THE STRINGS, AND THE ASSERTION THAT THEY ARE THE RIGHT ONES -------------------------------
+  console.log('')
+  console.log('    THE COPY THE WALK SELECTED. Each line below is `buildLifeBeatPrompt`\'s own string – what a screen')
+  console.log('    would have drawn that week – asserted EQUAL to the engine\'s reading of the same girl under `worn`')
+  console.log('    and DIFFERENT from its reading under `own`. The second half is what makes the first worth anything.')
+  for (const t of TEMPERAMENTS) {
+    const mine = herWornRenders.filter((c) => c.temperament === t)
+    const first = mine[0]
+    console.log(
+      `\n       ${pad(t, 8)}${padL(`${mine.length} career(s)`, 13)}  ${first === undefined ? '⚠ no worn line rendered in this voice on this arm' : '✓ worn column, and it is not the `own` line'}`,
+    )
+    if (first !== undefined && first.render !== null) {
+      console.log(`         said : ${first.render.herSaid}`)
+      console.log(`         own  : ${first.render.herOwn}   ← the line the SAME girl would have got under the shipped driver`)
+    }
+  }
+  const coachFirst = coachWornRenders[0]
+  console.log(
+    `\n       ${pad('coach', 8)}${padL(`${coachWornRenders.length} career(s)`, 13)}  ` +
+      `${coachFirst === undefined ? '⚠ the counsel never rendered its worn read' : '✓ worn read, and it is not the `own` read'}`,
+  )
+  if (coachFirst !== undefined && coachFirst.render !== null) {
+    console.log(`         said : ${coachFirst.render.coachSaid}`)
+    console.log(`         own  : ${coachFirst.render.coachOwn}   ← his read of the same stop under the shipped driver`)
+  }
+
+  // --- THE RED ARMS. An UNMEASURED row exits NON-ZERO; it may never be mistaken for a measured one.
+  //
+  // ⚠⚠ THESE ARE NOT BARS AND THE DISTINCTION IS THIS FILE'S OWN. A bar that misses is a FINDING for
+  // the owner and the run still exits 0 (invariant 5). Everything below is the INSTRUMENT: a poke
+  // that did not fire, a driver the poke did not produce, or a string the engine does not word from
+  // that driver mean this section measured nothing, and a section that measured nothing must not be
+  // able to exit 0 – `tools/life-arrival.ts`' rule 3, and the two silent stalls this wave recorded.
+  const wrongDriver = pokedReached.filter((c) => c.forkDriver !== 'worn')
+  if (fired.length === 0) {
+    throw new Error(`the bench-only poke never fired on any of ${poked.length} careers – every row above is the shipped walk with a poked label`)
+  }
+  if (wrongDriver.length > 0) {
+    const w = wrongDriver[0]
+    throw new Error(
+      `the poke did not move the state: ${wrongDriver.length}/${pokedReached.length} poked careers stated a want under driver ` +
+        `${FORK_STOP_DRIVERS.map((d) => `${d} ${wrongDriver.filter((c) => c.forkDriver === d).length}`).join(' · ')} – e.g. ${w.seed}/${w.temperament}, spirit before ${w.spiritBeforePoke} → ` +
+        `at the read ${w.render?.spiritAtRead}, worn ${w.forkRoots?.worn.toFixed(3)} against the line ${ECONOMY.life.forkStopDriverFrom}`,
+    )
+  }
+  if (herWrong.length > 0) {
+    const w = herWrong[0]
+    throw new Error(
+      `${w.seed}/${w.temperament}: the walk rendered a stop line the engine does not word from this girl's driver – ` +
+        `said «${w.render?.herSaid}» · worn «${w.render?.herWorn}» · own «${w.render?.herOwn}»`,
+    )
+  }
+  if (coachWrong.length > 0) {
+    const w = coachWrong[0]
+    throw new Error(
+      `${w.seed}/${w.temperament}: the counsel rendered a read the engine does not word from 'worn' – ` +
+        `said «${w.render?.coachSaid}» · worn «${w.render?.coachWorn}» · own «${w.render?.coachOwn}»`,
+    )
+  }
+  if (herWornRenders.length === 0 || coachWornRenders.length === 0) {
+    throw new Error(
+      `the worn column did not render: her line ${herWornRenders.length}× and the coach's read ${coachWornRenders.length}× over ` +
+        `${pokedStops.length} stops in ${poked.length} poked careers (flat pool ${herFlat.length}) – this section measured nothing`,
+    )
+  }
+  console.log('')
+  console.log(
+    `    ✓ THE POKE FIRED, THE ENGINE DERIVED \`worn\` FROM IT ON ${drivers(pokedReached, 'worn')}/${pokedReached.length} CAREERS THAT STATED A WANT, and the\n` +
+      `      worn column rendered ${herWornRenders.length}× in her own voice and ${coachWornRenders.length}× in the coach's – each string EQUAL to the engine's\n` +
+      `      \`worn\` reading and DIFFERENT from its \`own\` reading. ${herFlat.length} stop(s) spoke the flat pool, where her line\n` +
+      `      carries no driver at all (bond below the cut) and only the coach's read reaches the player.\n` +
+      `    ⚠ AND THE WALKED GRID IS UNCHANGED BY ALL OF IT: its worn column is still ${drivers(walkedReached, 'worn')}. Two arms, two meanings.\n` +
+      `    ${((Date.now() - pokeStarted) / 1000).toFixed(1)}s for the poked arm`,
+  )
 }
 
 // --- 4. NO CLAMPED MEDIANS -----------------------------------------------------------------------
