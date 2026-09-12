@@ -306,7 +306,17 @@ describe('§1 a cash sponsor deal', () => {
     offer.deadlineWeek = world.week + AD.decideWeeks - 1
     expect(ageOf(world), 'the arm really is under eighteen').toBeLessThan(ECONOMY.kidShare.fromAgeYears)
 
-    expect(kidPrizeShareBps(ageOf(world)), 'and the PRIZE ramp really is dormant at this age').toBe(0)
+    // ⚠⚠ RE-AIMED BY ROUND 41 #27 (12.09), AND THE PREMISE WAS RESTATED RATHER THAN DELETED. This
+    // read «and the PRIZE ramp really is dormant at this age» with `toBe(0)`, which was the contrast
+    // that made the arm mean something: one rule had a birthday in it and the other did not. The
+    // owner has since ruled that her prize share starts at her first W-series cheque whatever her
+    // age – «призовые падают на её счёт с первого старта W-серии независимо от возраста – согласен»
+    // – so the ramp has a FLOOR below eighteen instead of a zero. The contrast survives intact: the
+    // prize share is still a function of her age (it climbs to a cap at 26) and the manager's fee
+    // still has no age argument at all.
+    expect(kidPrizeShareBps(ageOf(world)), 'the PRIZE ramp still moves with her age').toBeLessThan(
+      kidPrizeShareBps(26),
+    )
 
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents

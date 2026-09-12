@@ -649,10 +649,84 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   "(0 weeks left)" instead of "(last week)"), the other three staying green - proving that arm pins
   the edge word rather than merely "a bracket exists". Both reverted, all green.
 
-- [ ] **15. «А рекламных контрактов правда не предлагают до 18 лет или это наше ноу-хау? кажется
+- [x] **15. «А рекламных контрактов правда не предлагают до 18 лет или это наше ноу-хау? кажется
   молодые тоже в рекламах снимаются.»** – **answer, then ask.** Recon is reading the actual gate.
   Real-world juniors do sign endorsements (racquet/apparel deals commonly land mid-teens). Batched
   with item 27 into the round's money question – see «The asks» below.
+
+  **SHIPPED** (bundle E, `043d49e1`). His ruling, option A1: «реклама открывается с 16 (юниорские
+  суммы, реже) … согласен».
+
+  ⚠⚠ **THE EIGHTEEN WAS OUR READING AND NOT HIS RULING, AND THE SHIPPED COMMENT IS THE EXHIBIT.**
+  `ECONOMY.advertising.fromAgeYears` said in as many words that it came from «какие у нас могут быть
+  механики этих контрактов дополнительные от 18+ лет начиная и дальше» – a question about what EXTRA
+  mechanics exist above eighteen, read as an eligibility gate. Its three supporting facts (the prize
+  ramp started at 18, school ends by 18.92, the junior rungs shut) are all true and none of them is
+  about advertising. The paragraph is kept **verbatim** in the constant, under the correction.
+
+  **WHAT SHIPPED.** `fromAgeYears: 16`, plus an explicit `junior` block governing the real ages
+  [16, 18): **`drinks` and `clothing` only** (the shelf's own cheapest rungs – `drinks` is the ≤400
+  band's own cell and `clothing` already needs a live kit deal, which is «двойной программой» making
+  a natural junior shape), **half** the adult cheque (`feeBps: 5000`), **half** the arrival chance
+  (`chanceBps: 5000`), **one year** and never more. The capstone and the lifetime letter are refused
+  twice – by the list and by their own tenure gates. From her eighteenth the shelf is byte-identical
+  to what shipped, and that is what §4 of the new test exists to hold.
+
+  ⚠ **RNG: ZERO NEW DRAWS, and input-independence holds.** «Реже» is the SAME purpose-scoped
+  sub-stream (`seed:ad:<category>:<week>`) read at a lower bar – the draw, the stream and its
+  position are untouched at every age – and the one-year ceiling is applied **after** the letter rng
+  has spent its uniform, which is round 39 #3's own discipline, so no stream shifts by one. An age is
+  world state, not player input: nothing a parent chooses moves a career across this line.
+  `tests/condition.test.ts` is **green and unmodified** (41550 / `e6b0c709`); `SAVE_SCHEMA_VERSION`
+  stays **74**.
+
+  **NO NEW PLAYER-FACING STRING, AND IT WAS CHECKED RATHER THAN ASSUMED** (the shelf question the
+  brief asked to settle): the empty-state sentence reads the constant, so «the categories open at
+  {{ adFromAgeYears }}» now says **open at 16** by itself; and a category the junior band does not
+  write renders `state: 'closed'` with **no** `opensAtRank`, which falls through to the template's
+  own shipped «Not open yet». That is deliberate – `opensAtRank` answers «how far up the ladder»,
+  which is TRUE and NOT THE REASON for a sixteen-year-old who already meets the watch band's rank.
+  **No `MoneyScreen.vue` edit is owed.**
+
+  ⚠ The SHELF and the LETTER are two readers of one question, so both ask the same three functions
+  (`adJuniorAt` / `adJuniorOpen` / `adJuniorFeeCents`) – a shelf promising $80,000 over a letter that
+  brings $40,000 would have been invisible until a sixteen-year-old signed one.
+
+  *Bench* – `tools/r41-ad-gate-16.ts`, 216 careers per arm, **predictions written into the header
+  before the first run**, recorded in `docs/specs/ad-portfolio-2026-08.md` §5:
+
+  | | predicted | organic | staged |
+  | --- | --- | ---: | ---: |
+  | careers signing any ad deal before 18 | 4% | **0.0%** | **61.6%** |
+  | her account at 18, mean delta | under $10,000 | $0 | **+$25,185** |
+  | ...conditional on signing | $40,000–$80,000 | – | **$40,902** |
+  | the family's funds at 18, mean delta | under $2,000 | $0 | **+$3,862** |
+
+  **Two populations, because the organic zero alone would have been a null nobody could read.** The
+  ORGANIC corpus writes no letters in either arm – and the diagnostic says why: **0.0% of bench
+  careers ever stand in an advertising band before eighteen at all**, so the STANDING binds and not
+  the gate (which is what `tests/ad-offer.test.ts` has said since round 24 in its own words). The
+  null was actuation-checked: `--absurd` (junior fee at 10x, arrival certain) moves nothing on it.
+  The STAGED corpus – a counting W standing from her sixteenth, which is the owner's own save, a girl
+  in the top 100 at sixteen – signs 160 letters, and **every one is a drink**: no bench career holds
+  a kit deal, so the clothing slot never opens.
+
+  ⚠ A **non-finding**, recorded because it was nearly reported as one: at 27 careers the family's
+  mean read **−$5,645** and the shoot weeks were the obvious suspect; at 216 the sign flips to
+  **+$3,862**. The small run was noise.
+
+  *Evidence* – `tests/round41-ad-junior.test.ts`, 11 arms in five sections. Mutations, each applied
+  alone and **read off the run**: `fromAgeYears` back to 18 → **7 red** (§4, the adult shelf, stays
+  green – it is the arm that says nothing above eighteen moved); the junior list widened → 2 red;
+  `adJuniorTerms` made the identity → 2 red; the junior re-size dropped from `reviewAdOffer` **only**
+  → 2 red, and that is the arm written for the two-readers defect – the shelf keeps promising the
+  junior cheque while the envelope carries the adult one; `chanceBps` 5000 → 10000 → 1 red.
+  ⚠ **Re-aimed pins, each with its note**: five adult fixtures that spelled «eighteen» as
+  `AD.fromAgeYears` now spell it `AD.junior.untilAgeYears` (`ad-offer`, `round28-sponsor-cut`,
+  `round29p2-ad-ladder`, `round29p4-ad-portfolio`, `tools/ad-shoot-bench`) – **not one assertion in
+  them moved**, the careers walk to exactly the week they always did; and `ad-offer`'s under-age
+  probe is now FOUND BY HER AGE instead of a hand-read week bound, so the next move of this constant
+  re-aims it by itself.
 
 - [x] **16. «мне достался wild card на шлем в 16 лет - это очень круто! А давай этот wild card
   как-то другим цветом на карточке выделим, чтобы он прямо в глаза бросался и отличался от наших
@@ -710,13 +784,80 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   arms correctly unaffected. `tests/season/domestic-nation.test.ts` green unmodified.
   *No new player-facing strings.*
 
-- [ ] **18. «у девочки в 16 лет в топ-100 свежекупленный бренд почему-то упал в цене на вторую
+- [x] **18. «у девочки в 16 лет в топ-100 свежекупленный бренд почему-то упал в цене на вторую
   неделю и остался там и дальше на долго. Начал потихоньку расти только после победы на w500. Надо
   проверить логику. И снова потом упал в цене внезапно.»** – **measure, then build what the
   mechanism owes.** Recon is extracting the exact weekly price rule (round 32: the brand reads FAME
   on a two-year half-life, not the results table – round 38 #2's answer). The diagnosis decides:
   a mechanical defect ships as a fix with a bench; a working-as-designed curve ships as an answer
   with the formula and its numbers.
+
+  **SHIPPED** (bundle E, `9f3795ad`). The diagnosis came back **both**: three of the four things he
+  saw are the model working, and the fourth is a real defect.
+
+  **THE THREE THAT ARE DESIGN, and the new tests PIN them so a later reader does not «fix» them:**
+  the dip after the buy (the row opens at what was PAID – round 38 #16's sell-and-rebuy law – and a
+  sixteen-year-old's derived worth is far below it), the long flat stretch (`worthRampHalfLife` is
+  ≈266 weeks at low fame) and the rise after the W500 (fame climbs and the target crosses the row).
+
+  **THE ONE THAT WAS A DEFECT – «и снова потом упал в цене внезапно» – AND IT WAS IN THE SPAN.**
+  `assetWorthCents` passed `(paidCents, week − boughtWeek, H_today)`: the half-life was recomputed
+  from TODAY's fame and then applied to the WHOLE holding period, so a fame that fell re-read every
+  week the family had already lived. **A valuation that can rewrite its own past is not a valuation.**
+
+  **THE FIX.** One week's step from the row's own current value at this week's pace –
+  `value += (derived − value)·(1 − 0.5^(1/H_now))`. The accumulator is `owned.valueCents`, which
+  `revalueAssets` has written every week since slice 1, so **no new persisted field, no migration,
+  `SAVE_SCHEMA_VERSION` stays 74**, and a save mid-hold simply keeps walking from the value it was
+  saved with. ⚠ It is the **same curve**: for a constant half-life the weekly product telescopes to
+  the shipped closed form exactly, so every number round 38 #16 measured still describes this path –
+  measured drift over 416 weekly roundings, **four cents on $156,250**.
+
+  ⚠⚠ **THE ONE PROPERTY IT COSTS IS IDEMPOTENCE, ON ONE FAMILY, AND IT IS PAID KNOWINGLY.**
+  `revalueAssets` run twice in a week now double-steps a brand. The tick is its only caller
+  (`world/phaseObligations.ts`, after the week is incremented and after `deliverAssets`); the warning
+  is written on `revalueAssets`' own header where a reader adding a second caller will see it, and
+  §5 of the new test **states it out loud** rather than leaving it to be discovered. Every other
+  family is unchanged and still order-free, which §5 also asserts. ⚠ The academy arm was deliberately
+  NOT moved: its driver (`academyReputationOf`) starts at 1 and can only ADD, so its half-life can
+  only shorten and the retroactive hazard cannot arise there.
+
+  *Bench* – `tools/r41-brand-ramp.ts`, the recon's worked example reproduced OLD vs NEW (held 100
+  weeks, paid $250,000, derived $2,000,000, fame 25.6 → 12.8), **predictions written first**:
+
+  | | predicted | measured |
+  | --- | --- | ---: |
+  | the OLD arm's move at the fame halving | about −29% | **−28.13%** |
+  | the NEW arm's move at the same event | under 1% | **+0.20%** |
+  | his own scenario's first week, OLD vs NEW | identical | **identical** (and the first eight) |
+
+  ```
+    week                   OLD             NEW
+    99              $1,532,348      $1,532,348
+    100             $1,101,359      $1,535,454     <- the fame halves
+    160             $1,397,558      $1,688,572
+  ```
+
+  The OLD column is his report exactly: a cliff, then a slow climb out of it. ⚠ The two arms agree
+  to **$0** at week 99, which is what makes this one path measured twice rather than two models.
+  Recorded in `docs/specs/brand-inertia-2026-08.md` §20 – the spec whose title is «a built brand must
+  not evaporate with this year's noise».
+
+  *Evidence* – `tests/round41-brand-inertia.test.ts`, 10 arms in five sections. Mutations, read off
+  the run: the business arm reverted to the closed form → **3 red**; the week-zero identity deleted →
+  **6 red** across three files (that guard is what holds the sell-and-rebuy loop shut); the ramp
+  deleted → **9 red**. ⚠⚠ **The first draft of the engine-level arm stayed GREEN under the revert**,
+  and that is written into the file: a smoothly decaying fame makes the OLD form fall smoothly too,
+  so «no jumps» alone cannot separate the arms – **where the row ends up** can, and the discriminator
+  now compares the walked row against the re-read one on the same world.
+  ⚠ **Re-aimed pins, each with its note**: `round30-brand-value`'s `after()` helper and #24's arm
+  **walk** the weeks instead of naming one (a backdated clock is not a lived path); three exact
+  figures there gain a one-dollar tolerance for the walk's own rounding, measured at four cents;
+  `r39-brand-rebuy`'s convergence fixture spends its 416 weeks instead of claiming them; and §3's
+  «two quiet seasons» band is **re-measured 0.5385 → 0.7065** (band 0.40–0.60 → 0.55–0.80) – nothing
+  about fame, the multiple or the income moved, a fading brand simply stopped having its past
+  re-read, which is «падение должно быть более плавным» arriving properly three rounds after he
+  asked for it.
 
 - [x] **19. «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели. Видимо
   массажист очень хорошо работает, но в этом случае вообще на экране травмы можно писать сколько
@@ -887,9 +1028,59 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   `tools/r41-ad-gate-16.ts` is not listed either). It is a generated index outside bundle T's fence –
   one `npm run tools:registry` at the gate covers both new tools.
 
-- [ ] **24. «может быть для Академии корты, клубный дом и стафф тоже должны сколько-то строиться по
+- [x] **24. «может быть для Академии корты, клубный дом и стафф тоже должны сколько-то строиться по
   времени, а не сразу быть готовы?»** – **ask.** Yes by design instinct – but construction state is
   almost certainly a save-schema move, and v75 is claimed. See «The asks».
+
+  **SHIPPED** (bundle E, `1638aa71`), in this round on his own ruling: «сроки ок, в этот же раунд
+  заводи пожалуйста».
+
+  ⭐⭐⭐ **THE CAVEAT WAS WRONG AND NO SCHEMA MOVED.** The commissioning road has been shipped
+  machinery since round 29 #5 – `buildWeeks` on the catalogue row, `readyWeek` on the owned row,
+  `deliverAssets` as a tick phase, «Ordered:» / «On order» on the card – and it was built for the
+  boats. The academy rows simply joined it. **`SAVE_SCHEMA_VERSION` stays 74**, no migration, no
+  fixture, and an academy in an old save is standing because an absent `readyWeek` already means
+  «delivered» (asserted, §4).
+
+  **THE THREE NUMBERS, his:** courts **6**, clubhouse **12**, staff **3** (his band was «2–4» and one
+  number came out of the middle of it, because a range is not a field). ⚠ **The LAND does not build**
+  – he named three things and the deeds are not among them; a field is bought rather than built.
+
+  ⚠⚠ **NOT ONE LINE OF MACHINERY MOVED, WHICH IS THE FINDING.** Every reader of academy ownership
+  already gated on `deliveredAssets` – the income (`assetWeeklyIncomeCents`' own first line), the
+  epilogue's stage count, the sale, the upkeep meter – and the **worth** needed no gate either:
+  `buyAsset` writes `basisWeek = readyWeek` and two existing clamps hold a building site at exactly
+  what was paid, which is the boats' behaviour to the cent. `academyEpilogueOf`'s own note predicted
+  this item in as many words («if a wait is ever added to a stage, «a contract is not a business»
+  keeps holding here for free») and §2 collects on the promise rather than trusting it.
+
+  **NO NEW PLAYER-FACING STRING** – «Ordered:» and «is on order – due W…» are round 29's own, and the
+  item only changed which rungs reach them.
+
+  *Bench-light, as the brief asked, and stated rather than skipped:* **no balance corridor moved** –
+  not one price, rate, income figure or band changed – so what is measurable is arithmetic, and it is
+  held by a test rather than by a corpus run that could only rediscover multiplication. Measured on a
+  career at reputation 1.0 ordering all four stages in one week: the whole academy is **$7,250 a
+  week**; it banks **$47,150** across the twelve-week build (staff from w+3, courts from w+6,
+  clubhouse from w+12) against **$87,000** had it all arrived at once, so the wait defers **$39,850,
+  once** – **0.33%** of the $12M the shelf charges. Full record in
+  `docs/specs/academy-worth-2026-09.md` §6.
+
+  *Evidence* – `tests/round41-academy-build.test.ts`, 8 arms: the order writes the date and starts
+  the value clock at delivery; the ordered row is the BOATS row **field for field** (`Object.keys`
+  equality – one branch writes both); the ledger says it twice; a real career walks the wait
+  (silent at w+3 and w+5, earning at w+6, and the delivery row prints); nothing can be sold out of a
+  building site and the epilogue counts one stage, then two; the shelf shows the date and quotes no
+  income; and an old-shaped row is delivered and earning. Mutations, read off the run: `buildWeeks`
+  removed → **8 red**; `deliverAssets` never clearing `readyWeek` → 4 red; the income gate widened to
+  `ownedAssets` → 3 red; `basisWeek` written at the order instead of the delivery → 3 red.
+  ⚠ **Re-aimed pins, each with its note**: `round29-shop-elite`'s «arrives at once» catalogue arm
+  (now **four numbers by name**, including the land's zero – strictly stronger than the single zero
+  it replaced); `round38-academy-worth`'s harness never delivered what it bought, so it calls
+  `deliverAssets` and six spans read the row's own `basisWeek` (⚠ the LAND's figures are
+  byte-identical across the change, which makes the pair its own control – only the courts moved,
+  by their six weeks); `round29p5-business`'s two harnesses wait the build out; and the
+  business-surfaces fixture likewise.
 
 - [x] **25. «даже тикер в 12к годовых на форму заканчивается раньше года, в августе уже 0»** –
   **measure, then build.** The annual-form retainer's depletion math vs its «per year» label – one
@@ -971,10 +1162,91 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   `goldenSaves`, and the four component suites that read `ladders.*.rank` all green.
   *No new player-facing strings.*
 
-- [ ] **27. «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда она в
+- [x] **27. «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда она в
   первый раз на w серию приходит? это же всё таки ее призовые»** – **ask.** Batched with 15 into
   the money question – see «The asks». Whatever he picks ships with a bench (income timing moves
   the family economy) and predicted-vs-measured in the spec.
+
+  **SHIPPED** (bundle E – the ramp in `043d49e1`, its readers in `72d05196`). His ruling, option A1:
+  «призовые падают на её счёт с первого старта W-серии независимо от возраста – согласен».
+
+  **WHAT SHIPPED.** `kidPrizeShareBps` answers a flat `startBps` (10%) below eighteen instead of
+  zero. The ladder from eighteen is untouched to the point: the curve is **continuous** across her
+  birthday, +5 a birthday, the cap still lands at 26.
+
+  ⭐⭐⭐ **THE «WTAEVERCOUNTED» VERDICT THE BRIEF ASKED FOR, AND IT IS THE ITEM'S FINDING.**
+
+  1. **The semantics.** `wtaEverCounted` means «a W result has ever **SCORED**»: it folds
+     `bestFinishByTier` against each tier's **points** table and asks whether the best finish pays
+     more than zero. It is **not** «she has ever come to a W series». A W15 first-round exit is
+     `points[5] = 0` and `prizeCents[5] = $130` – so a career whose only W start is that exit has
+     «never counted» while holding a cheque, and a trigger built on it **would have refused her a
+     share of the first money she ever earned**. Pinned in
+     `tests/round41-kid-share-first-w.test.ts` §1.
+  2. **The durable «ever STARTED» fact does exist** – a `wta`-track tier having ANY recorded finish,
+     written at every finalise (`world.ts:603`) and never pruned – and it is **not needed**.
+  3. **Because the catalogue is already the gate.** Prize money exists on the **professional track
+     only**: every `wta` tier carries a `prizeCents` table and not one domestic or ITF-junior rung
+     does (junior tennis pays nothing, ever), and `finalizeTournament` splits inside
+     `if (prize > 0)`. So «her share of every prize cheque, at any age» and «her share from her first
+     W-series start» describe **the same set of cheques**, and a predicate on top could only ever
+     answer true where it was asked. §1 asserts the equivalence **in both directions**, so a domestic
+     rung that gained a prize table tomorrow reddens there – which is exactly the day this item would
+     need a real trigger.
+
+  ⚠ **The merch brand moves with it, by round 35 #9's own rule** («доход от ее бренда давай тоже как
+  проценты с призовых будем делить»): the brand rides this one function, so a sixteen-year-old whose
+  family owns her brand now keeps a tenth of its week too. It can only ADD to her account, and the
+  alternative – a second ramp for the brand – is the drift that ruling exists to prevent. **Flagged
+  for his read**, because it follows from his ruling rather than being asked for.
+
+  ⚠ **Her page follows the ACCOUNT now, not the birthday.** `ownAccountNote` returned '' whenever the
+  rate was zero, which was every age below eighteen; the rate is never zero now, so left alone it
+  would have explained the terms of an empty account to a ten-year-old. The gate is «from eighteen
+  exactly as always, and earlier only once money has actually reached her» – **no career loses a
+  sentence it had**, and `MoneyScreen.vue` needed **no edit**: its strip already falls through to
+  this string (its own comment says so, and the mounted arm proves it).
+
+  **NO SCHEMA MOVE** (`kidFundsCents` is v54; version stays **74**), **zero draws**, **no new
+  player-facing string**. ⚠ The ledger rows at `world.ts:739-753` were checked and stay TRUE for a
+  sixteen-year-old – «less her 10% share» is what she is now paid – and not one of them was reworded.
+
+  *Bench* – `tools/r41-kid-share-early.ts`, **predictions written first**, recorded in
+  `docs/specs/the-shop-2026-08.md` §17 beside round 23's own record:
+
+  | | predicted | at 18 (216 careers) | at 26 (72 careers) |
+  | --- | --- | ---: | ---: |
+  | careers holding a non-zero account | over 60% | **9.7%** (OFF 0.5%) | 20.8% (OFF 18.1%) |
+  | her account, mean | $2,000–$20,000 | **$65** | +$292 |
+  | the family's wallet, mean delta | under −$5,000 | **−$112** | **−$247** |
+  | the family's prize total at 26 | under −3% | – | +2.14% (noise, see below) |
+
+  **P3 was right and P1/P2 were wrong by two orders**, for the same reason the advertising bench
+  found: a junior standing in the professional table is RARE and a junior cheque is small. Total
+  junior money transferred: **$65 a career** by eighteen, **$96** by twenty-six – **0.6%** of the
+  $6,588 she ends up holding. Which is the shape his ruling asks for: it is about **whose money it
+  is**, not about how much. ⚠ Her first cheque reaches her at **fifteen** at the earliest and
+  **sixteen** in the median career. ⚠ The +2.14% prize line is arm divergence, not a finding: the two
+  arms play the same tournaments on 96.8% of careers at eighteen and 91.7% at twenty-six.
+  ⚠ **The OFF arm is a reversal at the site rather than a constant flip**, and the tool says why: the
+  item changed a BRANCH and no setting of `kidShare`'s four constants reproduces the old rule without
+  also moving the ladder above eighteen. It walks the shipped engine and moves the junior cents back
+  the week they land – the old money to the cent, with no second implementation of anything.
+
+  *Evidence* – `tests/round41-kid-share-first-w.test.ts`, 9 arms in five sections. Mutations, read
+  off the run: the ramp reverted to zero below eighteen → **12 red** (7 here, 5 in round 23) – ⚠ §1's
+  catalogue arm stays green, which is right: «only the professional track pays» is a fact about the
+  tiers and not about the ramp; the note's balance clause deleted → 3 red; the junior floor set to
+  `capBps` → 9 red, and the one that matters is §2's **continuity** line.
+  ⚠ **Re-aimed pins, each with its note**: `round23-kid-share`'s «NOT ONE CENT BEFORE HER EIGHTEENTH»
+  is **inverted by his own ruling** into «every cent she is paid before eighteen came off a W-series
+  cheque» – a stronger claim, measured through the ledger rather than through a predicate; its A/B
+  horizon is shortened from five years to two (with the divergence measured: $247,800 against
+  $654,850 – the old horizon compares two lives now); its realised-share bound is re-measured
+  0.25 → 1.1 with the new table written out, and **nine of the thirteen years are now exact to the
+  cent** where five of nine were; `round28-sponsor-cut`'s «the prize ramp is dormant at this age»
+  premise is restated as «it still moves with her age»; and the kid page, the money strip and the
+  week-recap fixtures follow.
 
 ---
 
