@@ -1413,3 +1413,28 @@ Leftovers the bundles flagged across each other's fences, fixed at the seam:
   `<template>` – the copy law bans Cyrillic there, comments included, and `template-copy-rules`
   went red for exactly that. The quotes became pointers to this ledger and the script blocks;
   the law's own test is green again (4/4).
+* **The frozen-career re-stamp items 15+27 owed** – both coach-travel-edge files were red (15+10
+  arms): every schema rung's hash for ONE career, `8k · self-coached · player`, moved, both
+  grinders untouched. The protocol ran before the re-freeze: `tools/frozen-key-diff.ts --preset 0
+  --policy 1` on `origin/life/wave-3` vs `round/41` – **13 keys moved** (careerTotals, events,
+  financeWeeks, fundsCents, kidFundsCents, kidRankWta, lastSeasonSummary, nextEventId, offers,
+  prevKidRankWta, results, seasonHistory, trophiesByTier) and **`rngMain` is byte-identical,
+  `d84bcbf0c481` on both trees** – the stop condition held: A1 moved values (a junior ad letter
+  accepted by the policy, its shoot weeks shifting results/rank/trophies; the under-18 prize split
+  moving the money), never the stream. 25 constants re-stamped from the colourless failure pairs
+  (24 unique; `selfTravelling` shares one value across two adjacent rungs, both arms agree on the
+  new value). Both files now 27/27 green.
+
+## The unit-heavy diagnosis (the owner's side ask, PR #135)
+
+Measured, not guessed, on a control at `origin/life/wave-3` (worktree `../tb-w3fix`, the round's
+own changes excluded): the heavy list did not change in wave 3, but two of its residents grew past
+the wall on real TEST time – **goldenSaves 41.6 s and economy 33.7 s** of pure test time locally,
+and CI runs ~1.9× local on two cores, so both project over birpc's unraisable 60 s window (~79 s
+and ~64 s) – the all-green-non-zero stall, retried once by units.mjs, stalled twice, exit 1: the
+exact shape of PR #135's four red attempts (582 s step, blank annotation). The engine itself is
+NOT slower – one clean 156-week walk via `tools/frozen-key-diff.ts` reads 1.9 s at wave-3 head vs
+2.5 s at main (noise) – the files' own work grew (v74's 26,838-line golden joined the
+migrate-every-fixture walk; economy's arms). Fix per the radar/fatigue-bench-policy/coach-travel-
+edge precedent, ON `life/wave-3` so his merge unblocks: cut the two FILES – same tests, same
+seeds, more processes – re-measure each half solo, update `scripts/heavy-tests.mjs`.
