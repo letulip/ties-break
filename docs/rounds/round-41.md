@@ -1877,3 +1877,22 @@ $38.29M. What it says about the round:
   arrival hazard opens the week he loads post-merge, as designed.
 * Nothing new broken found: events capped at 406 rows, no negative balances, car depreciation
   honest ($60k → $43.7k), the building boat worth exactly paid.
+
+## The final gate, and the delivery (12.09, night)
+
+The union tree (this round + wave 4 folded in) passed the whole chain, exit codes from files, all
+mtimes inside the run windows: `CHECK_EXIT=0` (twice – at the merge head and re-earned at the a11y
+head; 175 files / 1884 tests, engine purity ok), `TESTSIM_EXIT=0` (13 files, 365 s),
+`E2E_EXIT=0` (**116 passed** – after the gate's own last catch: two colour-contrast debts on the
+coach market PAID rather than re-baselined, `.tier-count`'s baselined 4.388:1 flipped by the
+padding token's layout nudge and the blocked rows the elite shelf newly created at 4.13:1 – both
+took the baseline's own prescribed one-token fix and their baseline entries retired),
+`CAP_EXIT=0` (41550 / `e6b0c709`, `tests/condition.test.ts` byte-untouched all round). Build line
+`cdedc37` baked into `dist/assets/index-BHXcSGBF.js`, verified.
+
+⚠ A watch-note from the merge forensics, recorded so it cannot surprise anyone: `walkFrozenCareer`'s
+staff-share guard refuses pair 7/1 («no staff share row in any frozen career») – its stated
+reasoning was always incomplete for a COACHED player preset, and round-41's kid-share rows («…'s
+share of the prize money») match its substring, saved today only by the `type === 'expense'`
+check. No shipped test runs that walk, nothing is red – but it is one loosened predicate away from
+a false red, and this line is where the next reader finds that out cheaply.
