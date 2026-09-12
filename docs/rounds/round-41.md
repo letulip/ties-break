@@ -1662,8 +1662,11 @@ $38.29M. What it says about the round:
 * **27**: career prize gross $16.1M against her $38.3M account – the account was always fed by the
   UNGATED sponsor/appearance/bonus cheques; the A1 change adds the prize side from the first W
   cheque. Her share at 21.0 reads 25% – the shipped ladder to the point.
-* **25**: no live kit deal at w405 (the Aurelia term ended) – his August report was an earlier
-  season; the projection line will speak on the next deal.
+* **25**: ⚠ CORRECTED – the probe's first draft read a field that does not exist (`w.kitDeal`;
+  P1's agent caught it, check:tools went red on the never-set read). Through the engine's own
+  `activeKitDeal`: **a live deal stands at w405 with the allowance spent to the cent – $12,000 of
+  $12,000.** His «тикер закончился в августе» is THIS save's current season, live on load; the
+  projection line speaks from his next season's first covered purchase.
 * **18, live and enormous**: `merch-brand` paid $250k, worth **$31.75M** at rank 8 – the retro-H
   defect was rewriting history on THIS position; the «sudden drops» he saw were millions. The
   incremental walk lands exactly here.
