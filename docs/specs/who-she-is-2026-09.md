@@ -365,7 +365,8 @@ seed-pairs per intensity, **47.8 / 37.5**. That is T3's design working exactly a
 effective baseline drops back to 70 by itself – ZERO new code»); it was simply never priced into
 this table's prose.
 
-⭐ **AND THE COUNTING CONVENTION IS RULED INCLUSIVE (architect, 12.09)**, which is the other half of
+⭐ **AND THE COUNTING CONVENTION IS RULED INCLUSIVE (the architect's recommendation, confirmed by
+the owner 12.09: «делай оба по рекомендации»)**, which is the other half of
 why the old row read low. T7 found that §4 and T3 had been counting different weeks under one name:
 excluding the landing week reproduces T3's **2 / 7** exactly, including it gives **3 / 8**.
 **Inclusive is the truthful count**, because `spiritMatchFactor` reads her spirit on the landing week
@@ -1448,12 +1449,12 @@ why bar S1b misses by exactly one week in both arms.
 | --- | --- | --- | --- | --- |
 | S1a | median weeks to baseline, **steady 5 ± 1** | §4: back ~week 5 · engine's closed form: 48 → 70 at 5/wk = **5** | **5.0** (n 128) | **HIT** |
 | S1a | ...**intense 12 ± 2** | §4: back ~week 12 · closed form: 38 → 70 at 3/wk = **11** | **11.5** (n 128) | **HIT** |
-| S1b | weeks under the knee, **steady 1–2** | §4: **2** off 53 · off the engine's 48 it is **3** | **3.0** (n 128) | **MISS** |
-| S1b | ...**intense 6 ± 1** | §4: **7** off 41 · off the engine's 38 it is **8** | **8.0** (n 128) | **MISS** |
+| S1b | weeks under the knee, **steady 3** (bar moved by the ruling – was 1–2) | §4's corrected row: **3** off the engine's 48, counted inclusive | **3.0** (n 128) | **HIT** |
+| S1b | ...**intense 8** (was 6 ± 1) | **8** off the engine's 38, inclusive | **8.0** (n 128) | **HIT** |
 | S2a | paired match-win drop over the post-shock window, **inside [1, 8] pp**, steady | – (no closed form; the channel is `spiritMatchFactor` alone) | **1.260 pp** ± 0.646 (n 64 seeds) | **HIT** |
 | S2a | ...intense | – | **1.114 pp** ± 0.724 (n 64 seeds) | **HIT** |
-| S2b | ...and **> 2 × SEM**, steady | – | 1.260 against 2×SEM **1.291** | **MISS** |
-| S2b | ...intense | – | 1.114 against 2×SEM **1.448** | **MISS** |
+| S2b | ...and **> 2 × SEM**, steady | – | 1.260 against 2×SEM **1.291** | **MISS** – ×4 corpus ruled (owner 12.09), re-run pending below |
+| S2b | ...intense | – | 1.114 against 2×SEM **1.448** | **MISS** – same re-run |
 | S3 | after recovery, paired difference **inside 1 × SEM**, steady | 0 – weather, not a scar | **0.423 pp**, SEM 0.567 | **HIT** |
 | S3 | ...intense | 0 | **0.908 pp**, SEM 0.778 | **MISS** (1.17 × SEM) |
 | S4 | the **±1.5 pp lifetime fairness corridor**, re-read on these arms | «well under 1 pp – inside the corridor without help» | **worst pair 0.054 pp** | **HIT** |
