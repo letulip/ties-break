@@ -12,6 +12,9 @@
 //
 //   * TITLES, dated – `trophiesByTier[tier].titles` (weeks, append-only, schema v31);
 //   * LOST SLAM FINALS, dated – the same ledger's `finals` at 'slam';
+//   * HER FIRST SLAM MAIN DRAW, dated – the `keep: true` milestone row `SLAM_DEBUT_KEY`, which
+//     `pruneEvents` may never sacrifice (round 41 #18 part two, 12.09: «У нее был вайлдкард на Шлем,
+//     когда она была #155» – until then that week was worth nothing at all);
 //   * LOST FINALS AT EVERY OTHER PROFESSIONAL TIER, dated – the same ledger's `finals`, worth
 //     `ECONOMY.fame.finalFloorShare` of the tier's own title step (round 34 #17, 03.09: sixteen
 //     dated runner-up plates on the owner's save had been read by nothing at all);
@@ -35,6 +38,11 @@ import { ECONOMY } from '../economy'
 // straight one and not a cycle.
 import { activeAdDeals, adBandOfTerms } from '../offers'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+// ⭐ ROUND 41 #18 PART TWO – the milestone key that dates her first Slam main draw. `world/constants`
+// is the bottom of the world package's graph and imports nothing at runtime, so this edge is a
+// straight one and this file's zero-draw claim is untouched (the key's own header says why it does
+// not live beside `COACH_TRAVEL_OPEN_KEY` in `world/milestones.ts`).
+import { SLAM_DEBUT_KEY } from './constants'
 import type { TierId } from '../season/types'
 import type { AdOfferTerms } from '../../shared/protocol'
 import type { WorldState } from '../world'
@@ -100,6 +108,31 @@ export function seasonFloorDecayAt(deltaWeeks: number): number {
   return Math.pow(0.5, deltaWeeks / ECONOMY.fame.seasonHalfLifeWeeks)
 }
 
+/** ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – THE WEEK SHE FIRST PLAYED A GRAND SLAM MAIN DRAW, or `null`
+ *  for a career that never has (and for every career that reached one before this shipped).
+ *
+ *  ⚠⚠ THE `keep: true` MILESTONE ROW IS THE LEDGER, AND THAT IS THE WHOLE DESIGN. The alternative on
+ *  the table was an optional `mainDraws?: number[]` on `trophiesByTier.slam` under `entryRef`'s
+ *  widening precedent; it was refused because `TierTrophies` is the SILVERWARE cabinet – its contract
+ *  is «titles and finals, disjoint» and every reader in the game (the fame floor, `brandSignalsOf`'s
+ *  five terms, the Trophies screen, `fameEventWeeks`) folds over exactly those two arrays. A third
+ *  array of a different KIND of fact inside it would have to be excluded by name in six places, which
+ *  is the shape `slamFinalFloor`'s own «excluded by name rather than by arithmetic» note warns about.
+ *  A milestone is already the game's «this happened once and the ledger keeps it» channel, it is
+ *  already dated, it is already idempotent by key, and it survives the prune by law.
+ *
+ *  ⚠ WHICH IS THE PROPERTY THIS FUNCTION DEPENDS ON: `pruneEvents` (`world/bookkeeping.ts`) splits the
+ *  feed into `kept` / her matches / everything else and splices `kept` back WHOLE – it is not in either
+ *  trimmed class, at any career length. A career that loses its debut row loses it only by losing the
+ *  save.
+ *
+ *  ⚠ O(events) AND THE FEED IS CAPPED AT 400, so this is a bounded scan and not a growing one. It is
+ *  called once per `fameFloorOf`, which `brandStrengthAt` calls once per entry of `fameEventWeeks`. */
+export function slamDebutWeekOf(world: WorldState): number | null {
+  const row = (world.events ?? []).find((e) => e.milestoneKey === SLAM_DEBUT_KEY)
+  return row ? row.week : null
+}
+
 /** ⭐ THE FLOOR – what the court earned, decayed to `week`, clamped to the cap. Zero for a career
  *  the world has not noticed, which is every junior and most of the tour: the fame ladder starts
  *  at the professional tiers because the world does not read junior draws. */
@@ -121,6 +154,18 @@ export function fameFloorOf(world: WorldState, week: number): number {
   // the one runner-up plate the world remembers – `finals` means she LOST the final (the trophy
   // ledger's own contract), so a Slam title never counts twice.
   for (const w of world.trophiesByTier?.slam?.finals ?? []) floor += F.slamFinalFloor * decayAt(week - w)
+  // ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – AND THE FIRST TIME SHE WALKED INTO ONE AT ALL, once, on the
+  // TITLE clock. The owner: «У нее был вайлдкард на Шлем, когда она была #155» – and until this line
+  // that week left no trace in the stock whatever, because the three terms above pay only the
+  // champion and the runner-up. The date is the milestone row's (`slamDebutWeekOf`), so a debut in
+  // the future contributes nothing by `decayAt`'s own rule and a debut she has not had contributes
+  // nothing because there is no row.
+  //
+  // ⚠ ONE STEP FOR THE WHOLE CAREER, NOT ONE PER APPEARANCE – see `ECONOMY.fame.slamDebutFloor` for
+  // the double-counting argument. The idempotence is the ROW's (`fireMilestone` refuses a second row
+  // with this key), so this fold cannot double it however it is called.
+  const slamDebut = slamDebutWeekOf(world)
+  if (slamDebut !== null) floor += F.slamDebutFloor * decayAt(week - slamDebut)
   // Seasons ended inside a band the world notices, decaying from each season's own wrap – the wrap
   // fires on the season's last week, so the date is the row's own identity and nothing new is
   // stored. ⚠ BEST MATCHING BAND ONLY, once per season: `academy.reputationBands`' own rule, so a
@@ -263,6 +308,12 @@ export function fameEventWeeks(world: WorldState): number[] {
     for (const w of world.trophiesByTier?.[tier]?.finals ?? []) seen.add(w)
   }
   for (const w of world.trophiesByTier?.slam?.finals ?? []) seen.add(w)
+  // ⭐⭐ ROUND 41 #18 PART TWO – AND THE WEEK OF HER FIRST SLAM MAIN DRAW, for the reason this
+  // function's header states in so many words: a source added to `fameFloorOf` has to be added here,
+  // or `brandStrengthAt` walks a list that no longer contains every week fame can rise on and
+  // under-reads the peak. On the reference career it is the earliest week fame rises at all.
+  const slamDebut = slamDebutWeekOf(world)
+  if (slamDebut !== null) seen.add(slamDebut)
   // ⭐⭐ ROUND 38 #18 – AND THE WEEKS A CAMPAIGN STARTS, because the stock now reads contract reach
   // too. This is the coupling the header three lines up demands in so many words: a source added to
   // what the stock can see has to be added here, or `brandStrengthAt` walks a list that no longer

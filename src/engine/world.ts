@@ -295,8 +295,8 @@ import { vacationForWeek, practiceForWeek } from './world/bookings'
 export { vacationForWeek, practiceForWeek }
 import { inTrack, fieldProsOf, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars } from './world/ladder'
 export { inTrack, recomputeKidRank, refreshDerivedRankCaches, kidPoints, kidDomesticPoints, isTierEligible, acceptanceRank, tableSize, tierOpenFor, tierFloorOpen, tierOutgrown, outgrewTier, hasOutgrown, bookClosedTo, entryCouldNotMove, captureEntryRow, proDoors, juniorAccessOpen, yearEndJuniorRank, homeWildCardPlace, PLAY_DOWN, playDownBars }
-import { KID_ID } from './world/constants'
-export { KID_ID }
+import { KID_ID, SLAM_DEBUT_KEY } from './world/constants'
+export { KID_ID, SLAM_DEBUT_KEY }
 // ⭐⭐ ROUND 24, E2 – THE TWO SENTENCES THE COMMAND GUARD CAN SAY, and the guard that lets the college
 // freeze through. Re-exported off the barrel for the same reason `COLLEGE_REVEAL_REFUSAL` is exported
 // beside `resumeFromCollege`: they are PLAYER-FACING copy that reaches a toast through the worker's
@@ -403,8 +403,8 @@ export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave
 // ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
 // BUSINESSES (merch follows fame, the academy's stages follow reputation – world/business.ts).
 // Re-exported under the historical convention; zero draws anywhere behind these names.
-import { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt } from './world/fame'
-export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt }
+import { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt, slamDebutWeekOf } from './world/fame'
+export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt, slamDebutWeekOf }
 // ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK (world/brandStrength.ts). Income keeps reading fame;
 // the WORTH reads this. Zero draws, nothing written per week – see the module header.
 import { brandStrengthAt, strengthDecayAt } from './world/brandStrength'
@@ -1044,6 +1044,30 @@ function finalizeTournament(world: WorldState): void {
     })
   }
   if (kidFinish === 0) fireMilestone(world, 'first-title', `🏆 First career title: ${tier.label}!`)
+  // ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – AND THE FIRST GRAND SLAM MAIN DRAW, WHICHEVER ROUND IT ENDS
+  // IN. The owner: «да, делаем fame за основу Шлема… У нее был вайлдкард на Шлем, когда она была
+  // #155.» Until this line the biggest week of a climbing career left no durable trace anywhere: the
+  // fame floor pays the champion and the runner-up and nobody else, `world.results` prunes at 52
+  // weeks, and the tournament summary row is an ordinary feed row the 400-cap eats. So the WEEK is
+  // recorded here, once, as the ledger's own kind of fact – and `world/fame.ts` reads it back.
+  //
+  // ⚠ EVERY SLAM RUN THAT REACHES THIS LINE IS A MAIN DRAW, AND THAT IS A PROPERTY OF THE GAME
+  // RATHER THAN AN ASSUMPTION: qualifying is not modelled at any rung («a qualifier earns her place
+  // in a draw we do not run» – `season/tournament.ts`), so the eight reserved wildcard chairs
+  // (`WILD_CARD`) and the direct acceptances are the only two ways in. His case was the wildcard.
+  //
+  // ⚠ AT THE COMMIT POINT, beside the two milestones around it, which is what makes it mean «she
+  // PLAYED it»: `finalizeTournament` is not reached by a skipped event, by the walkover branch or by
+  // a medical withdrawal (the three WITHDRAWALS this function's prize-money note enumerates), and it
+  // returns at its first line once `p.finished`. A retirement mid-match DOES reach it and does count
+  // – she took the court, which is the rulebooks' own distinguishing question.
+  //
+  // ⚠ IDEMPOTENT BY THE ROW, NOT BY A FLAG: `fireMilestone` returns when the feed already carries
+  // `SLAM_DEBUT_KEY`, so the second Slam and the two-hundredth write nothing and the date stays the
+  // first one. ZERO RNG – one array scan and one push.
+  if (event.tier === 'slam') {
+    fireMilestone(world, SLAM_DEBUT_KEY, '🏆 First Grand Slam main draw – from this week the world knows her name.')
+  }
   // D10: the durable ledger remembers the FIRST title and the FIRST final per tier, at the moment
   // they land. A title week captures both – reaching the final is part of winning it.
   if (kidFinish === 0) captureMilestone(world, { type: 'title', week: world.week, tier: event.tier })

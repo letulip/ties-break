@@ -2240,6 +2240,38 @@ export const ECONOMY = {
      *  which is not `finalFloorShare` below, and the difference is the argument the constant was
      *  written on. A Slam final is a global broadcast in its own right. */
     slamFinalFloor: 12,
+    /** ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – WHAT HER FIRST GRAND SLAM MAIN DRAW IS WORTH, once, dated
+     *  at the week she played it and decaying on the TITLE clock like every other result.
+     *
+     *  THE OWNER, 12.09: «да, делаем fame за основу Шлема, надо полностью с математикой бренда
+     *  разобраться, чтобы этот вопрос уже не поднимался… У нее был вайлдкард на Шлем, когда она была
+     *  #155.»
+     *
+     *  ⚠⚠ THE DEFECT IT ENDS. Before this line a Slam main draw was worth EXACTLY ZERO fame unless
+     *  she reached the final: `titleFloor.slam` pays the champion, `slamFinalFloor` pays the runner-up,
+     *  and the other 126 women in the draw – including a #155 wildcard playing the biggest tournament
+     *  of her life in front of the largest audience in the sport – left no trace in the stock at all.
+     *  On the reference career the Slam DEBUT at ~w130 moved nothing; her brand woke 36 weeks later
+     *  on a World Tour 500 title, which is the plateau he reported as item 18.
+     *
+     *  ⚠⚠ THE DEBUT AND NOT THE APPEARANCE, which is the whole sizing argument. A regular's Slam
+     *  weeks are already paid for – she wins rounds, she reaches finals, she ends seasons in a band,
+     *  and every one of those is a term above. Paying per appearance would price the same career
+     *  twice and would grow without bound for a top-20 player who plays four a year for a decade.
+     *  What NOTHING above can see is the first one: the week the world learns the name. That is a
+     *  singular event, so it is a singular step.
+     *
+     *  ⚠ 4, AND THE LADDER IS WHY. Against `titleFloor` – slam title 25, wta1000 14, wta500 8,
+     *  wta250 4 – a Slam main draw is worth one World Tour 250 title. That is deliberately modest:
+     *  she has won nothing, and the claim is only that the world has now seen her. It is also ~16% of
+     *  the Slam title's own step, which keeps «выиграть Шлем» an order of magnitude above «сыграть
+     *  Шлем». docs/specs/the-fame-and-the-brand-2026-09.md §2 carries predicted against measured.
+     *
+     *  ⚠ IT NEEDS A DATED ROW AND IT HAS ONE WITHOUT A SCHEMA MOVE: the `keep: true` milestone
+     *  `SLAM_DEBUT_KEY` fired in `finalizeTournament`, which `pruneEvents` can never drop. Careers
+     *  that reached a Slam BEFORE this shipped carry no row and get no retroactive credit – stated in
+     *  the spec's §6 rather than papered over. */
+    slamDebutFloor: 4,
     /** ⭐⭐⭐ ROUND 34 #17 (03.09) – WHAT A LOST FINAL AT EVERY OTHER PROFESSIONAL TIER IS WORTH, as a
      *  SHARE of that tier's own title step. Approved by the owner at 0.4.
      *
