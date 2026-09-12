@@ -4,14 +4,20 @@ import { decodeExportFile, decompressWorld, sha256 } from '../src/engine/saveCod
 import {
   SAVE_SCHEMA_VERSION,
   STARTING_FUNDS_CENTS,
+  activeEpisode,
   advanceRefusal,
   answerFork,
+  lifeLogOf,
+  loveEpisodesOf,
   maxMainDraws,
   pendingLifeBeat,
   schoolEndWeek,
+  tickWeek,
+  toSnapshot,
   FORK_UNHEARD_REFUSAL,
 } from '../src/engine/world'
-import { mainStateConsistent } from '../src/engine/rng'
+import { mainStateConsistent, resumeMain } from '../src/engine/rng'
+import { MOOD_WORD, SPIRIT_BANDS } from '../src/engine/spirit'
 import { ENDINGS } from '../src/engine/ending'
 import { isSponsorWindowWeek } from '../src/engine/offers'
 import { FIRST_NAMES, SURNAMES } from '../src/engine/season/cohort'
@@ -44,7 +50,7 @@ import {
 //
 // ⚠ NOT tests/goldenSaves.test.ts, AND THE DIFFERENCE IS THE POINT. The golden corpus is one raw
 // world per schema version and it proves MIGRATIONS work – it must keep old shapes for ever, and its
-// v19 file is deliberately ancient. These five are playable STATES at the CURRENT version and they
+// v19 file is deliberately ancient. These ten are playable STATES at the CURRENT version and they
 // prove a browser has somewhere to start; when the schema moves they are regenerated, not migrated.
 // Neither can do the other's job: a golden save has no funds worth asserting on, and a fixture at
 // the current version proves nothing about v12.
@@ -87,7 +93,7 @@ function trademarkOffenders(json: string): string[] {
 }
 
 describe('e2e fixtures: the manifest and the files agree', () => {
-  it('carries exactly the five fixtures the plan asks for', () => {
+  it('carries exactly the ten fixtures the plan asks for, in the registry\'s order', () => {
     expect(manifest.fixtures.map((f) => f.name)).toEqual([...FIXTURE_NAMES])
   })
 
@@ -336,5 +342,128 @@ describe('e2e fixtures: each is the state its name promises', () => {
     expect(world.fork, 'the fork is meant to be open behind her').not.toBeNull()
     expect(world.fork!.answer).toBeNull()
     expect(() => answerFork(world, 'continue')).toThrow(FORK_UNHEARD_REFUSAL)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ v75 T8 – THE TWO ENDING FIXTURES, AND THEY ARE ASSERTED HERE BECAUSE THE BROWSER IS NOT ON
+  // THE GATE. `npm run check` does not run Playwright (CLAUDE.md's command list), so a fixture whose
+  // CLAIM had rotted would sail through every gate and fail in the nightly e2e job with a timeout on
+  // a card that never came up. `unheard`'s own block one scene up makes the same argument; these two
+  // carry a STATE THAT IS ONE TICK AWAY rather than one that is already on the world, so both blocks
+  // below tick the career forward exactly as the browser's first press does.
+  //
+  // ⚠ THE TICK IS THE PRODUCT'S OWN, RESUMED FROM THE SAVE'S OWN MAIN POSITION – `resumeMain`, never
+  // a fresh `rngFromSeed`, which is the serializer rule these fixtures are written under
+  // (tools/e2e-fixtures.ts's header). A raw tap here would walk a different sequence from the one the
+  // worker walks and the whole claim would be about a week nobody will ever see.
+  // ===============================================================================================
+
+  /** The rung of the Mood ladder the Kid screen would be showing, 0 = `Glowing` … 4 = `Heavy`, −1 if
+   *  the tile is not speaking a spirit word at all. `tools/e2e-fixtures.ts`' `moodRung`, asked the
+   *  same way and for the reasons its own note gives – through `toSnapshot`, which is the wire the
+   *  browser reads, and never through `spiritBandOf`, which would miss the channel decision. */
+  const moodRung = (world: Parameters<typeof toSnapshot>[0]): number => {
+    const word = toSnapshot(world).diary.facts.moodWord
+    return word === null ? -1 : SPIRIT_BANDS.findIndex((band) => MOOD_WORD[band] === word)
+  }
+
+  it('breakup is one press from the end of an attachment he was told about, and from her Mood dropping', async () => {
+    const world = await decodeExportFile(readFixtureBytes('breakup.tsave'))
+    expect(world.ending, 'the breakup fixture is meant to be a career still being played').toBeNull()
+
+    // ⭐ THE WEEK IT BOOTS ON IS ORDINARY, which is the half e2e/breakup.spec.ts presses. Asked of the
+    // engine's own gate rather than of a list of things that might be standing there.
+    expect(pendingLifeBeat(world), 'it is meant to boot with nothing to answer').toBeNull()
+    expect(advanceRefusal(world), 'and with nothing stopping the week').toBeNull()
+
+    // ⭐⭐⭐ SOMEBODY IS THERE AND HE HAS BEEN TOLD – the two facts that make the next tick's card the
+    // TOLD-NOW one. ⚠ IT IS THE `'met'` RECEIPT AND NEVER `knownWeek <= endedWeek` (ruling A): the
+    // receipt is what `rollEnds` asks, the two readings disagree on a reachable week, and a fixture
+    // classified by the other rule would be a fixture for a scene the browser never shows.
+    const live = activeEpisode(world)
+    expect(live, 'the breakup fixture is meant to hold a LIVE attachment').not.toBeNull()
+    expect(
+      lifeLogOf(world).some((row) => row.kind === 'met' && row.detail === live!.id),
+      'and one the parent has already been told about – without the receipt the next tick raises the ' +
+        'TOLD-LATE card instead, which is the other fixture',
+    ).toBe(true)
+    expect(world.spiritShock, 'nothing has happened to her yet').toBeNull()
+
+    const before = moodRung(world)
+    expect(before, 'her Mood tile is meant to be speaking a SPIRIT word, so the rungs are comparable').toBeGreaterThanOrEqual(0)
+
+    // ⭐⭐⭐ ONE TICK – the browser's first press – AND THE WHOLE SCENE ARRIVES.
+    tickWeek(world, resumeMain(world.rngMain))
+    const raised = pendingLifeBeat(world)
+    expect(raised, 'the tick after this fixture is meant to end it and ask about it').not.toBeNull()
+    expect(raised!.kind).toBe('ended')
+    expect(raised!.detail, 'and about THIS attachment – the row\'s detail is the episode id').toBe(live!.id)
+    expect(world.spiritShock).toEqual({ week: world.week, kind: 'breakup' })
+    expect(
+      loveEpisodesOf(world).find((e) => e.id === live!.id)!.endedWeek,
+      'the row stays and is dated – nothing is nulled (`endEpisode`)',
+    ).toBe(world.week)
+
+    // ...AND HER MOOD IS TWO RUNGS LOWER. The ladder runs top-down, so a dip is a LARGER index.
+    // ⚠⚠ TWO AND NOT ONE, AND THE REASON IS A MEASUREMENT RATHER THAN A MARGIN: with the shock
+    // summand removed from `accrueSpirit` this career still moves ONE rung, because the attachment
+    // lift comes off on the same tick (spirit 75 -> 72) and the tile then falls back to the BODY
+    // ladder's «Steady» – the one word the two ladders share, by the owner's ruling. The bar is the
+    // shock's own size, and `tools/e2e-fixtures.ts` enforces it on the fixture so the browser spec
+    // can assert it honestly without being able to see `moodWord`'s nullability.
+    const after = moodRung(world)
+    expect(after, 'and her Mood tile is still speaking a spirit word on the week it ended').toBeGreaterThanOrEqual(0)
+    expect(
+      after - before,
+      `her Mood read ${MOOD_WORD[SPIRIT_BANDS[before]]} before the ending and ` +
+        `${after < 0 ? 'a body word' : MOOD_WORD[SPIRIT_BANDS[after]]} after it. The shock is ` +
+        '`ECONOMY.spirit.shock.breakup`; one rung of that is the attachment lift alone.',
+    ).toBeGreaterThanOrEqual(2)
+  })
+
+  it('belated is one press from news that arrives already over, and no arrival card is ever raised for it', async () => {
+    const world = await decodeExportFile(readFixtureBytes('belated.tsave'))
+    expect(world.ending, 'the belated fixture is meant to be a career still being played').toBeNull()
+    expect(pendingLifeBeat(world), 'it is meant to boot with nothing to answer').toBeNull()
+    expect(advanceRefusal(world), 'and with nothing stopping the week').toBeNull()
+
+    // ⭐⭐⭐ THE STATE, IN THE SCHEMA'S OWN TERMS: a row that is ALREADY OVER, whose news is owed next
+    // week, and which has never produced a beat of either kind. This is exactly the row
+    // `deliverKnownPartner` scans for (ruling B) and the reason `loveEpisodes` is a LIST rather than a
+    // nullable slot – wave 3's own re-cut, made visible.
+    const due = loveEpisodesOf(world).find(
+      (episode) =>
+        episode.endedWeek !== null &&
+        episode.knownWeek === world.week + 1 &&
+        !lifeLogOf(world).some((row) => (row.kind === 'met' || row.kind === 'ended') && row.detail === episode.id),
+    )
+    expect(
+      due,
+      'the belated fixture is meant to hold an episode that ended BEFORE its knownWeek and has never ' +
+        'been delivered. If this is the only red test after a regeneration, the recipe stopped ' +
+        'finding one: it is the rarest state in the corpus – it needs a lag that survived the bond ' +
+        'shave AND the end hazard landing inside it.',
+    ).not.toBeUndefined()
+    expect(due!.endedWeek!, 'and it ended before he was ever told').toBeLessThan(due!.knownWeek!)
+
+    tickWeek(world, resumeMain(world.rngMain))
+    const raised = pendingLifeBeat(world)
+    expect(raised, 'the tick after this fixture is meant to deliver the news').not.toBeNull()
+    expect(raised!.kind).toBe('ended')
+    expect(raised!.detail).toBe(due!.id)
+
+    // ⭐⭐⭐ AND NO `'met'` BEAT, EVER – the brief's «no `'met'` beat fires for a finished episode»,
+    // asserted on a career rather than on a reading of the code. ⚠ THIS IS THE QUIET FAILURE RULING A
+    // WAS WRITTEN FOR: the variant that goes wrong does NOT produce a loud double row – it raises the
+    // card, lets delivery see a receipt and skip, and the week's news never reaches the album at all.
+    expect(
+      lifeLogOf(world).filter((row) => row.detail === due!.id).map((row) => row.kind),
+      'the delivery raised an arrival beat for an episode that was already over',
+    ).toEqual(['ended'])
+
+    // ...and the album has the one honest late row, stamped with the kind the glyph column reads.
+    const rows = world.events.filter((e) => e.week === world.week && e.type === 'life')
+    expect(rows.map((e) => e.lifeKind), 'ONE feed row and never two, and it is the ending\'s').toEqual(['ended'])
+    expect(rows[0].amountCents, 'a life beat is never a purchase').toBeUndefined()
   })
 })

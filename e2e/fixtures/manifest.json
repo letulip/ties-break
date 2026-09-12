@@ -394,6 +394,104 @@
           "n": 7191
         }
       }
+    },
+    {
+      "name": "breakup",
+      "file": "breakup.tsave",
+      "purpose": "A live attachment the parent was told about, one press from the end of it – the told-now card, and her Mood two rungs lower behind it.",
+      "seed": "e2e-breakup-0",
+      "careerId": "c-e2e-breakup",
+      "slot": "auto:c-e2e-breakup:a",
+      "targetWeek": 157,
+      "schemaVersion": 75,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Rina",
+        "kidLastName": "Bhatia",
+        "country": "US"
+      },
+      "bytes": 62876,
+      "payloadBytes": 62832,
+      "sha256": "52544939920396e6dc6228dd588ed004cb524b1995c4a8538e5a4830e7117e1f",
+      "seedsTried": 1,
+      "facts": {
+        "week": 157,
+        "seasonIndex": 3,
+        "ageYears": 16,
+        "fundsCents": 121104,
+        "kidRank": 31,
+        "rankedDomestic": false,
+        "rankedItf": true,
+        "rankedWta": false,
+        "domesticPoints": 0,
+        "itfPoints": 118,
+        "wtaPoints": 0,
+        "seasonsPlayed": 3,
+        "resultRows": 2187,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": false,
+        "openKitLetters": 0,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": -2007601107,
+          "n": 125452
+        }
+      }
+    },
+    {
+      "name": "belated",
+      "file": "belated.tsave",
+      "purpose": "An attachment that was over before he heard of it – one press from the told-late card, and no arrival card is ever raised for it.",
+      "seed": "e2e-belated-472",
+      "careerId": "c-e2e-belated",
+      "slot": "auto:c-e2e-belated:a",
+      "targetWeek": 363,
+      "schemaVersion": 75,
+      "background": "middle",
+      "coachTier": "middle",
+      "policy": "player",
+      "profile": {
+        "kidName": "Marta",
+        "kidLastName": "Urban",
+        "country": "US"
+      },
+      "bytes": 80114,
+      "payloadBytes": 80070,
+      "sha256": "d6e8d6ec9b194b5f494718c647e5ab629e1b132ce2da3d1ecd7949b61e405f75",
+      "seedsTried": 473,
+      "facts": {
+        "week": 363,
+        "seasonIndex": 6,
+        "ageYears": 20,
+        "fundsCents": 49409227,
+        "kidRank": 79,
+        "rankedDomestic": false,
+        "rankedItf": false,
+        "rankedWta": true,
+        "domesticPoints": 0,
+        "itfPoints": 0,
+        "wtaPoints": 1288,
+        "seasonsPlayed": 7,
+        "resultRows": 2214,
+        "feedEvents": 400,
+        "financeWeeks": 60,
+        "cohortSize": 199,
+        "endingType": null,
+        "debtWeeks": 0,
+        "inSponsorWindow": true,
+        "openKitLetters": 1,
+        "hasActiveKitDeal": false,
+        "rngMain": {
+          "s": -1370219726,
+          "n": 290063
+        }
+      }
     }
   ]
 }
