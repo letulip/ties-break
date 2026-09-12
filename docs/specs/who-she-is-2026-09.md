@@ -1354,6 +1354,51 @@ default grid measures and owes its own before/after – but a record that reads 
 would have survived another wave unlooked-at. That is twice this wave the same
 bench has been caught reporting a stall as a measurement.
 
+⭐⭐⭐ **AND THE DEBT WAS PAID THE SAME DAY (12.09, wave 4, T9) – ALL FIVE ARE GONE.** The sentence
+above ruled it «left standing rather than ripped out mid-wave … removing a swallow changes what the
+default grid measures and owes its own before/after»; this is that before/after. Each of the five
+became either a **tested precondition** – `bookTheFamilyWeeks` (the latch, and `vacationForWeek`,
+the reader `assertPlannable` itself consults) and `enterWhatSheCan` (`enterEvent`'s own four
+refusals, asked in `enterEvent`'s own order and through `entryStatus`, the same function it
+re-validates with) – or a **narrow re-throwing catch keyed on an engine-exported refusal constant**
+– `answerTheBirthday`, `answerTheLifeBeat` and `answerTheForkTheWayThisArmWould`, on
+`CAREER_ENDED_REFUSAL` (plus `COLLEGE_FREEZE_REFUSAL` at the fork). ⚠ `FORK_UNHEARD_REFUSAL` is
+deliberately **not** tolerated: it is the engine saying the bond-neutral drain did not clear her
+row, so the day the drain stops clearing, the bench now dies with that sentence instead of printing
+`bondAtFork: NaN`. Everything either shape tolerates is counted into a printed table, **[7] THE
+REFUSAL LEDGER**, plus a per-career `refused` column in the wave-2 census – the row that used to
+print `bond @ fork: –` with nothing beside it.
+
+| the before/after it owed | before | after |
+| --- | --- | --- |
+| the six bars | PASS · PASS · PASS · **FAIL 3** (gap 5.15, 2×SEM 1.643) · PASS · PASS · PASS | **identical** |
+| exit code, read from the log | 0 | 0 |
+| careers / resolved weeks / full | 256 / 53,128 / 252 | **identical** |
+
+**Nothing moved, and that is the expected answer.** The tests reproduce `enterEvent`'s and
+`bookVacation`'s own refusals exactly, and the two ANSWER sites cannot run on a four-season grid at
+all – the fork opens at week 242 and the grid ends at 208. The whole `before`↔`after` log diff is 40
+lines: the new column, the new section, the summary line and the elapsed seconds. The
+`--fork --seeds=2` pair, where the fork IS reached, is likewise identical line for line –
+`bond @ fork` 75.00 / 57.13 in both.
+
+⚠⚠ **WHAT THE SWALLOW HAD BEEN HIDING IS A NUMBER, AND IT IS NOT SMALL: 222,304** suppressed
+`enterEvent` calls on the default grid, never once counted – 97,682 «she is already entered in a
+tournament that week», 72,541 «the entry gate is blocked», 52,081 «the entry deadline has passed».
+The deadline row is **structural** rather than occasional: entries close at `week − 2` and the entry
+loop's horizon opens at `world.week + 1`, so the nearest event in the window is always past its
+deadline. The `entryStatus` row is an event she was simply **not ranked for** – a strictly stronger
+gate than the `availabilityStatus` policy line the arms are defined by, refused by the engine, in
+silence. Neither changes a measured number; both were invisible, which is the property that was
+actually wrong.
+
+⚠ **Two findings reported rather than fixed by T9.** (1) `npm run bench:spirit -- --fork --seeds=N`
+always exits 1 for small N – reproduced on the pre-change file at `6723c5bc` – because [3c]'s
+`POKED_SEEDS = min(8, SEED_COUNT)` shrinks with `--seeds` while its «the worn column did not render»
+throw does not, and at 2 seeds no `stop` want is drawn. (2) `--shock`'s banner claimed «NO try/catch
+in this block. Not one»: true of the lines written there, and the shock walk nonetheless inherited
+**three** of the five swallows through the shared helpers it calls. Corrected in place.
+
 ⚠ **The `strained` driver is narrow in HER voice**: `speaksInHerOwnVoice` is false below bond 55 and
 the driver starts below 59.5, so she speaks a `strained` line only in the bottom ~4.5 points of the
 `steady` band. The root still reaches the player at every band **through the coach**, whose counsel

@@ -21,6 +21,17 @@
 // in [3b] sees them: the walked census keeps printing its honest `worn 0`, which is the FINDING, and
 // [3c] prints the two rows side by side under a banner so that no reader can take one for the other.
 //
+// ⭐⭐⭐ WHAT v75 T9 PAID OFF, AND IT IS THE OLDEST DEBT IN THIS FILE. Five calls here stood inside a
+// bare `catch {}` – `bookVacation`, `enterEvent`, `chooseGift`, `answerLifeBeat`, `answerFork` – and
+// two of them ARE the history above: the `'met'` row that left 842 beats raised and zero answered,
+// and the `FORK_UNHEARD_REFUSAL` that printed `bondAtFork: NaN` in both arms. who-she-is §4a's
+// wave-3 entry called the second «found and fixed»; the 12.09 correction (`8388c070`) records that
+// the fix was a DRAIN placed in front of the catch, and that the catch stayed. Each of the five is
+// now either a TESTED precondition or a narrow catch keyed on an engine-exported refusal constant,
+// and every refusal either shape tolerates is counted into **[7] THE REFUSAL LEDGER** – printed on
+// every mode, printed when it is empty, and summarised in one line on the verdict sheet. A stall can
+// no longer reach this file's output wearing a number.
+//
 // ⚠⚠ WHAT THIS FILE IS FOR, AND WHAT IT IS FORBIDDEN TO DO. CLAUDE.md invariant 5 - «tuning is
 // measured, not guessed» - and the runbook's own sentence: **a bar that fails is a finding for the
 // owner, never a licence to touch a constant.** This tool reads `ECONOMY.spirit` / `ECONOMY.bond`
@@ -156,6 +167,17 @@ import {
   // ⚠ v74 – the engine's own refusal string, so the drain below can tell a terminal latch (which is
   // tolerated) from a beat kind with no bond-neutral answer (which must never be swallowed here).
   CAREER_ENDED_REFUSAL,
+  // ⚠⚠ v75 T9 – THE FOUR THE REFUSAL LEDGER NEEDS, AND EVERY ONE OF THEM IS THE ENGINE'S OWN ANSWER
+  // TO A QUESTION THIS FILE USED TO SWALLOW. `COLLEGE_FREEZE_REFUSAL` is the second half of
+  // `guardNotEnded`'s pair, so a narrow catch can name BOTH latches instead of keying on one and
+  // letting the other read as an unknown throw. `vacationForWeek` and `entryStatus` are the readers
+  // the planner and the entry command validate with – asked HERE, before the call, so the bench does
+  // not need a sentence of the engine's copy to know what the refusal would have been.
+  // ⚠ THEY ARE READS. No draw, no stream, no write – `entryStatus` is the same function `enterEvent`
+  // itself consults, which is exactly what keeps this from being a second reading of one rule.
+  COLLEGE_FREEZE_REFUSAL,
+  vacationForWeek,
+  entryStatus,
   // ⚠⚠ T12 – the attachment slot, read for ONE purpose: `accrueSpirit` walks toward
   // `baseline + attachmentLift` while it returns a row, so "weeks under the baseline" has to know
   // how many of the pair's weeks were lived above a LIFTED target. It is also an invariance probe –
@@ -189,7 +211,10 @@ import { bondBandOf, moodRegisterOf, spiritBandOf, spiritMatchFactor } from '../
 import { drainLifeBeats, drainLifeBeatsTallied, drainSkewLine, emptyDrainCounts } from './_lifeBeats'
 import { rngFromSeed, type Rng } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
-import { isExamWeek, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+// ⚠ v75 T9 – `TIERS` joins them for ONE read: the entry fee `enterEvent` refuses on. It is the
+// engine's own table, asked at the call site, and it is the last of the four facts the entry policy
+// now tests for instead of catching. Same direct-to-leaf shape this file already uses for `ECONOMY`.
+import { isExamWeek, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { schoolIsOver, schoolEndWeek } from '../src/engine/kidLife'
 import { DEFAULT_PROFILE, WEEK_PLAN_PRESETS } from '../src/shared/protocol'
 
@@ -275,6 +300,90 @@ const VACATION_OFFSETS = [50, 51]
 const VACATION_PACKAGE = 'staycation'
 
 // =================================================================================================
+// ⭐⭐⭐ [7] THE REFUSAL LEDGER – v75 T9, AND IT IS THE FIVE BARE `catch {}` BLOCKS BEING PAID OFF
+// =================================================================================================
+//
+// ⚠⚠ WHAT STOOD HERE, AND WHY THE RECORD OF IT WAS WRONG. Until this step five calls in this file
+// sat inside `} catch {` with an EMPTY body – `bookVacation`, `enterEvent`, `chooseGift`,
+// `answerLifeBeat` and `answerFork` – and every one of them swallowed every throw the engine could
+// raise. Two of the five ARE this file's history: `'That is not one of the answers this beat
+// offered'` (wave 3's `'met'` row – 842 beats raised, ZERO answered, exit 0) and
+// `FORK_UNHEARD_REFUSAL` (`bondAtFork` NaN in both arms, with no error anywhere). who-she-is §4a's
+// wave-3 fourth entry called the second one «found and fixed with a second bond-neutral drain»; the
+// correction of 12.09 (`8388c070`) records what actually happened – **the drain was added IN FRONT
+// of the catch and the catch stayed** – so the day the drain stopped clearing, the swallow was still
+// sitting there ready to print NaN in silence. This block is that debt paid, not re-described.
+//
+// ⚠⚠ THE RULE IT INSTALLS IS THE SHOCK BLOCK'S OWN INSTRUMENT LAW READ ONTO THE REST OF THE FILE
+// ([S]'s «NO try/catch IN THIS BLOCK. Not one … the one refusal a walk can legitimately meet is
+// TESTED, never caught»), and the `--push` block's `knocksLatched` column is its precedent: a
+// refusal the walk is entitled to meet is COUNTED and PRINTED rather than caught. Every guarded call
+// below is now exactly one of two shapes:
+//
+//   TESTED  the bench asks the ENGINE'S OWN reader first and does not make the call. ⚠⚠ THE CALL
+//           BEHIND THE TEST STAYS **BARE**, which is the whole reason a test here is not a second
+//           reading of the engine's rule: a test that is too PERMISSIVE lets the engine throw and
+//           STOPS THE RUN, and a test that is too STRICT shows up as a count in this table that
+//           nobody can explain. Neither direction can be silent, which is the one property the
+//           swallow denied us.
+//   CAUGHT  a narrow catch keyed on one of the engine's own EXPORTED refusal constants – the shape
+//           `drainEveryBeat` and the two `drainLifeBeats` sites already use, and the reason those
+//           three are untouched by this step. Anything else is rethrown, with the site and the
+//           career prefixed onto the message, so the run dies where the swallow used to shrug.
+//
+// ⚠ THE ARM-DEFINING **POLICY** SKIP IS NOT A REFUSAL AND IS DELIBERATELY NOT IN HERE.
+// `enterWhatSheCan` passing over an event whose `availabilityStatus` is not `ok` is the family
+// reading the caution and waiting – it is the header's decision (a), it is identical in both arms,
+// and it was never a swallowed throw. Counting it would bury the rows this table exists for under
+// thousands of rows of the entry policy working exactly as ruled.
+
+type RefusalHow = 'tested' | 'caught'
+
+interface RefusalRow {
+  /** the bench function that met it – two sites meeting one sentence stay two rows */
+  site: string
+  how: RefusalHow
+  /** the ENGINE'S own sentence (`caught`), or the state its own reader answered (`tested`) */
+  because: string
+  count: number
+  /** seed / temperament / week of the FIRST one: a count with no example is not reproducible */
+  firstAt: string
+}
+
+const REFUSALS = new Map<string, RefusalRow>()
+
+/** Where a refusal happened, in the one spelling every row uses. ⚠ `world.temperament` is the field
+ *  this bench overwrites itself, which is what makes it the right label here: it names the arm the
+ *  row came from without a call site having to be handed a `Career` it does not otherwise need
+ *  (`bookTheFamilyWeeks` and `answerTheBirthday` take shapes, on purpose – see their own notes). */
+function refusalAt(world: WorldState): string {
+  return `${world.seed}/${world.temperament} w${world.week}`
+}
+
+function noteRefusal(site: string, how: RefusalHow, because: string, at: string): void {
+  const key = `${site}|${how}|${because}`
+  const row = REFUSALS.get(key)
+  if (row === undefined) REFUSALS.set(key, { site, how, because, count: 1, firstAt: at })
+  else row.count++
+}
+
+/** ⭐⭐ THE NARROW CATCH, SPELLED ONCE. Tolerates ONLY the engine's own exported refusal constants the
+ *  call site names, counts what it tolerated, and RETHROWS everything else – the same error object,
+ *  so the stack still points at the engine, with the site and the career prefixed onto its message.
+ *
+ *  ⚠⚠ `allowed` IS A LIST OF ENGINE CONSTANTS AND MAY NEVER BECOME A LIST OF LITERALS. A sentence
+ *  retyped here is a copy of the engine's copy: it rots silently the first time the engine rewords
+ *  one, and a tolerance that has rotted is a swallow again. Every caller below passes
+ *  `CAREER_ENDED_REFUSAL` and/or `COLLEGE_FREEZE_REFUSAL`, both imported from the barrel. */
+function tolerate(site: string, at: string, e: unknown, allowed: readonly string[]): void {
+  if (!(e instanceof Error) || !allowed.includes(e.message)) {
+    if (e instanceof Error) e.message = `${site} @ ${at}: ${e.message}`
+    throw e
+  }
+  noteRefusal(site, 'caught', e.message, at)
+}
+
+// =================================================================================================
 // ONE CAREER
 // =================================================================================================
 
@@ -327,6 +436,14 @@ interface Career {
   forkRoots: { worn: number; strained: number } | null
   /** `'fork-counsel'` rows this career ever held - 0 on every want but `stop`, 1 on a stop */
   counselRows: number
+  /** ⭐⭐⭐ v75 T9 – REFUSALS THE TWO **ANSWER** SITES TOLERATED ON THIS CAREER, so the census in [3]
+   *  carries the number in the row that once printed `bondAtFork: NaN`. The ledger in [7] is the
+   *  whole run's and covers all five sites; this is the per-career half, and it exists because «her
+   *  row was answered» and «her row refused and nobody said so» are the two readings the wave-2
+   *  census cannot otherwise tell apart. ⚠ A non-zero cell here does NOT mean a bug – it means the
+   *  terminal latch landed on the same week as her row – but a non-zero cell beside a `–` in
+   *  `bond @ fork` is the exact shape of the stall this file has shipped twice. */
+  refusals: number
   weeks: number
   /** null when she played all four seasons; the ending's own type when she did not */
   endedAs: string | null
@@ -397,6 +514,7 @@ function runCareer(seed: string, arm: Arm, temperament: Temperament, poked = fal
     forkDriver: null,
     forkRoots: null,
     counselRows: 0,
+    refusals: 0,
     weeks: 0,
     endedAs: null,
     poked,
@@ -479,22 +597,48 @@ function planFor(world: WorldState, arm: Arm) {
   return arm === 'care' ? WEEK_PLAN_PRESETS.light : WEEK_PLAN_PRESETS.grind
 }
 
-/** The care arm's family weeks, booked a season ahead into the off-season. Swallows the planner's
- *  refusals the way the screen does: an unbookable week is simply a week the family does not get.
+/** The care arm's family weeks, booked a season ahead into the off-season.
+ *
+ *  ⚠⚠ v75 T9 – THE SWALLOW IS GONE AND THE CALL IS BARE. This doc read «Swallows the planner's
+ *  refusals the way the screen does: an unbookable week is simply a week the family does not get» –
+ *  a true sentence about a SCREEN and the wrong one for an instrument. The screen shows the parent a
+ *  lock; the `catch {}` showed nobody anything, and it stood over `guardNotEnded`, seven
+ *  `assertPlannable` refusals, an unknown package id and the funds check alike.
+ *
+ *  Two TESTS replace it and the call behind them is bare (see [7]'s header for why that is the point
+ *  and not a risk):
+ *    · the LATCH, which is the shape the rest of the house uses – every caller of this function
+ *      already breaks its loop on `world.ending !== null`, and testing it here too costs nothing and
+ *      makes the function honest on its own rather than on its callers' behaviour;
+ *    · the week already being SPOKEN FOR, asked through `vacationForWeek` – the engine's own reader,
+ *      the very one `assertPlannable` consults, rather than a re-derivation of the rule.
+ *
+ *  ⚠ AND EVERYTHING ELSE `assertPlannable` CAN REFUSE IS A FINDING THAT STOPS THE RUN – an exam week,
+ *  a tournament entered that week, a practice booking, the funds. The care arm books off-season
+ *  offsets 50/51, which hold no tournament (the header's decision (c)) and no exam (`examWeeks` is
+ *  offsets 23–24), for a `wealthy` family taking `staycation`, which is free at every band. If one of
+ *  those ever refuses, the header of this file has stopped being true – and a silent `vacations`
+ *  column is the last place anybody would have looked for it.
  *
  *  ⚠ THE COUNTER IS TAKEN STRUCTURALLY (`{ vacations: number }`) RATHER THAN AS A `Career`, so T12's
  *  pair below books its family weeks through THIS function instead of growing a second copy of the
- *  off-season rule. Nothing about the care arm changed: a `Career` still satisfies the shape. */
+ *  off-season rule. Nothing about the care arm changed: a `Career` still satisfies the shape. ⚠ It is
+ *  also why this site's refusals live in [7]'s run-wide ledger and in no per-career column: the shape
+ *  is the whole point, and widening it to carry a counter would undo it. */
 function bookTheFamilyWeeks(world: WorldState, career: { vacations: number }): void {
+  if (world.ending !== null) {
+    noteRefusal('bookTheFamilyWeeks', 'tested', 'the career has a latched ending', refusalAt(world))
+    return
+  }
   for (const offset of VACATION_OFFSETS) {
     const week = world.week + offset
     if (week >= WEEKS) continue
-    try {
-      bookVacation(world, week, VACATION_PACKAGE)
-      career.vacations++
-    } catch {
-      /* the week is already spoken for - the parent would see the lock */
+    if (vacationForWeek(world, week) !== undefined) {
+      noteRefusal('bookTheFamilyWeeks', 'tested', 'that week is already a family vacation', refusalAt(world))
+      continue
     }
+    bookVacation(world, week, VACATION_PACKAGE)
+    career.vacations++
   }
 }
 
@@ -503,17 +647,56 @@ function bookTheFamilyWeeks(world: WorldState, career: { vacations: number }): v
  *  levels are the engine's own opinion of an entry - `blocked` is the doctor's veto and the tour's
  *  closed doors, `caution` is "Exhausted - racing risks injury", and `ok` is the rest. Taking only
  *  `ok` is the family that reads the caution and waits a week; see the header for what taking
- *  `caution` as well was measured to do to her. */
+ *  `caution` as well was measured to do to her.
+ *
+ *  ⚠⚠ v75 T9 – AND THE `catch {}` AROUND IT IS GONE, REPLACED BY `enterEvent`'S OWN FOUR REFUSALS
+ *  ASKED IN `enterEvent`'S OWN ORDER. The old comment named three of them («not affordable, not
+ *  eligible, deadline gone») and the catch covered everything, including a policy call that threw.
+ *  The FOUR that this walk can actually meet are now tested, counted into [7] and skipped:
+ *
+ *    deadline    `world.week > e.deadlineWeek`. ⚠ THIS ONE FIRES ON EVERY CAREER, EVERY WEEK, AND
+ *                WAS INVISIBLE: entries close at `week − 2` (season/calendar.ts), and this loop's
+ *                horizon opens at `world.week + 1`, so the nearest event in the window is ALWAYS
+ *                past its deadline. The swallow was carrying a structural miss as if it were an
+ *                occasional lock.
+ *    one a week  she has one body and one week – `enterEvent`'s own ladder-up rule.
+ *    funds       the tier's entry fee against the family's cash.
+ *    the gate    `entryStatus(...).level === 'blocked'` – THE SAME FUNCTION `enterEvent`
+ *                re-validates with, so this is not a second reading of the rule. ⚠ It is a STRICTLY
+ *                STRONGER gate than the policy line above it: `availabilityStatus` answers «can she
+ *                play at all this week», `entryStatus` is band + availability, so an event she is
+ *                simply not ranked for passed the policy and was refused by the engine, silently.
+ *
+ *  ⚠ THE POLICY LINE ITSELF IS UNTOUCHED AND STILL FIRST. It is arm-defining (header (a)) and it is
+ *  a SKIP, never a caught throw, so it is not in [7]'s ledger – see that block's own note. It is also
+ *  now OUTSIDE any catch: if `availabilityStatus` ever throws, the run stops instead of quietly
+ *  entering nobody for a season.
+ *  ⚠ THE LATCH NEEDS NO TEST HERE: every caller breaks its loop on `world.ending !== null` on the
+ *  line before, and `enterEvent`'s `guardNotEnded` is therefore unreachable. If that ever stops being
+ *  true the guard throws and the run stops, which is the direction this whole block chooses. */
 function enterWhatSheCan(world: WorldState): void {
   for (const e of world.season) {
     if (e.week <= world.week || e.week > world.week + 4) continue
     if (world.entries.includes(e.id)) continue
-    try {
-      if (availabilityStatus(world, e).level !== 'ok') continue
-      enterEvent(world, e.id)
-    } catch {
-      /* not affordable, not eligible, deadline gone - the player would see the lock */
+    if (availabilityStatus(world, e).level !== 'ok') continue
+    const at = refusalAt(world)
+    if (world.week > e.deadlineWeek) {
+      noteRefusal('enterWhatSheCan', 'tested', 'the entry deadline has passed', at)
+      continue
     }
+    if (world.season.some((x) => x.week === e.week && world.entries.includes(x.id))) {
+      noteRefusal('enterWhatSheCan', 'tested', 'she is already entered in a tournament that week', at)
+      continue
+    }
+    if (world.fundsCents < TIERS[e.tier].entryFeeCents) {
+      noteRefusal('enterWhatSheCan', 'tested', 'not enough funds for the entry fee', at)
+      continue
+    }
+    if (entryStatus(world, e).level === 'blocked') {
+      noteRefusal('enterWhatSheCan', 'tested', 'the entry gate is blocked (entryStatus: band + availability)', at)
+      continue
+    }
+    enterEvent(world, e.id)
   }
 }
 
@@ -532,8 +715,18 @@ function answerTheBirthday(world: WorldState, career: { asks: string[] }): void 
   const granted = options.some((g) => g.id === askedId) ? askedId : options[0].id
   try {
     chooseGift(world, granted)
-  } catch {
-    /* a latch we cannot answer behind - the row simply does not appear */
+  } catch (e) {
+    // ⚠⚠ v75 T9 – NARROW AND RE-THROWING, KEYED ON THE ENGINE'S OWN EXPORTED CONSTANT. It read
+    // `catch { /* a latch we cannot answer behind */ }`, and the comment described ONE of the three
+    // things `chooseGift` throws. The other two are already TESTED two lines up and must never be
+    // tolerated: «there is no birthday to answer this week» cannot fire behind `pendingBirthday`
+    // returning non-null, and «that is not one of this birthday's four options» cannot fire on an id
+    // taken from `birthdayOfferFor`'s OWN list – unless the offer and the re-validation have stopped
+    // agreeing about the college band, which is a defect in the engine's one-function rule and not a
+    // birthday the family does not get. Either of them now stops the run.
+    // ⚠ `guardNotEndedForGood`, so the freeze is NOT a tolerance here: a college week is exactly when
+    // this command is supposed to work (round 24's ruling – the third member of that list).
+    tolerate('answerTheBirthday', refusalAt(world), e, [CAREER_ENDED_REFUSAL])
   }
 }
 
@@ -558,7 +751,9 @@ function answerTheBirthday(world: WorldState, career: { asks: string[] }): void 
 // ⚠⚠ AND THE SAME PARAGRAPH IS WHY v74 NEARLY KILLED THIS FILE IN SILENCE. Wave 3's T6 added a
 // second beat kind, `'met'`, raised on `knownWeek` – any week from her sixteenth on, which is inside
 // this bench's own four seasons. `'back'` and `'press'` are not among ITS answers, so every attempt
-// threw, the `try/catch` below swallowed the throw, and the row stayed open forever: `answerFork`
+// threw, the `try/catch` below swallowed the throw (⚠ v75 T9: it does not any more – the latch is
+// tolerated by name and counted, every other sentence stops the run), and the row stayed open
+// forever: `answerFork`
 // refuses behind an unanswered beat, so from her sixteenth birthday on this bench answered NOTHING
 // and measured NOTHING, while exiting 0. Measured on a 4-seed grid before the repair:
 //
@@ -617,8 +812,21 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
   try {
     answerLifeBeat(world, said)
     career.beatAnswers.push(said)
-  } catch {
-    /* a terminal latch – `guardNotEndedForGood` refuses, and the row stays open for nobody */
+  } catch (e) {
+    // ⭐⭐⭐ v75 T9 – THIS IS THE SWALLOW THE BLOCK ABOVE IS ABOUT, AND IT IS NOW THE SAME NARROW
+    // SHAPE AS THE TWO DRAINS EITHER SIDE OF IT. It read
+    // `catch { /* a terminal latch – guardNotEndedForGood refuses */ }` and the comment was HALF the
+    // truth: `answerLifeBeat` also throws «That is not one of the answers this beat offered», which
+    // is BYTE-FOR-BYTE what wave 3's `'met'` row did to this bench – 842 rows raised, zero answered,
+    // `bond @ fork` empty, exit 0. The drain above is what stops a `'met'` row reaching this line
+    // today; the `catch {}` is what made it invisible when it did, and it is the thing that would
+    // make the NEXT kind invisible too. The latch is tolerated BY NAME and counted; that sentence,
+    // and every other, now stops the run with the site and the career on the front of it.
+    // ⚠ THE LATCH IS REACHABLE HERE and is not a theoretical tolerance: `pendingLifeBeat` does not
+    // read `world.ending`, so a tick that latched an ending while a blocking row was open leaves
+    // exactly this state – her row up, and `guardNotEndedForGood` refusing to answer it.
+    tolerate('answerTheLifeBeat', refusalAt(world), e, [CAREER_ENDED_REFUSAL])
+    career.refusals++
   }
   // ⭐⭐ ...AND THE COACH, WHILE HIS ROW IS STILL UP. The drain three lines down ANSWERS the counsel
   // bond-neutrally, which clears it – so the only moment his read exists to be read is here, between
@@ -626,9 +834,15 @@ function answerTheLifeBeat(world: WorldState, arm: Arm, career: Career): void {
   if (career.poked) captureTheCoachsWords(world, career)
   // ⭐⭐⭐ v74 T17 – AND THE SECOND DRAIN IS NOT A TIDY-UP, IT IS THE FIX FOR A BENCH THAT WOULD HAVE
   // LIED AGAIN. Answering a `'stop'` opinion raises `'fork-counsel'` (the coach's read, blocking), and
-  // `answerTheForkTheWayThisArmWould` one line below has a `catch {}` around `answerFork` – so every
+  // `answerTheForkTheWayThisArmWould` one line below HAD a `catch {}` around `answerFork` – so every
   // stopping career would have had `forkCongruence: null` and `bondAtFork: NaN` with no error
   // anywhere, which is byte-for-byte the failure mode this file's own header records from T6b.
+  // ⚠⚠ v75 T9 – THE DRAIN IS STILL THE FIX AND IS NOT REDUNDANT, BUT IT IS NO LONGER THE ONLY THING
+  // STANDING BETWEEN THIS FILE AND THAT LIE. The swallow it was added in front of is gone: the site
+  // below now rethrows `FORK_UNHEARD_REFUSAL` by name, so the day THIS drain stops clearing her
+  // counsel the run dies with the engine's own sentence instead of printing a mean over the careers
+  // that happened to work. That ordering – symptom cured in T17, cause paid in T9 – is exactly what
+  // who-she-is §4a's 12.09 correction was written to stop anyone from having to rediscover.
   // ⚠ IT IS THE BOND-NEUTRAL DRAIN, so the counsel cannot move the number either arm is measuring –
   // both of its answers are zero by construction, which is what makes it drainable at all.
   try {
@@ -741,8 +955,25 @@ function answerTheForkTheWayThisArmWould(world: WorldState, arm: Arm, career: Ca
     answerFork(world, answer)
     career.forkCongruence = answer === hers ? 'with' : 'against'
     career.bondAtFork = world.bond
-  } catch {
-    /* her row is still open, or the fork closed under us - either way nothing was answered */
+  } catch (e) {
+    // ⭐⭐⭐ v75 T9 – AND THIS IS THE ONE THE RECORD LIED ABOUT. It read `catch { /* her row is still
+    // open, or the fork closed under us - either way nothing was answered */ }`, which names the
+    // failure and then declines to report it: «her row is still open» IS `FORK_UNHEARD_REFUSAL`, and
+    // it is precisely the state that printed `forkCongruence: null` and `bondAtFork: NaN` for every
+    // stopping career in v74. who-she-is §4a's wave-3 entry called that «found and fixed with a
+    // second bond-neutral drain»; the drain went in FRONT of this catch and this catch stayed, which
+    // the 12.09 correction (`8388c070`) is the record of.
+    //
+    // ⚠⚠ SO `FORK_UNHEARD_REFUSAL` IS NOT TOLERATED HERE AND NEVER CAN BE. It is the engine saying
+    // the drain two calls up did not clear her row, and the whole of this debt is that the bench must
+    // then STOP rather than print a mean over the careers that happened to work. The day the drain
+    // stops clearing, this line is what says so – loudly, with the seed and the week.
+    // ⚠ «the fork closed under us» is likewise TESTED, on the first line of this function
+    // (`world.fork === null || world.fork.answer !== null`), so «The fork is not open» is a finding
+    // too. What is left, and all that is left, is `guardNotEnded`'s pair: a tick that ended the
+    // career – or froze it at college – in the same week the fork stood open.
+    tolerate('answerTheForkTheWayThisArmWould', refusalAt(world), e, [CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL])
+    career.refusals++
   }
 }
 
@@ -797,6 +1028,42 @@ function verdict(pass: boolean): string {
 
 function rule(title: string): void {
   console.log(`\n${'='.repeat(100)}\n${title}\n${'='.repeat(100)}`)
+}
+
+/** ⭐⭐⭐ [7]'s TABLE – EVERY SUPPRESSED CALL ON THIS RUN, AS A NUMBER. See the ledger block's header
+ *  for the two dispositions and why a `tested` row is not a second reading of an engine rule.
+ *
+ *  ⚠ PRINTED AT THE END OF EACH MODE AND NOT BESIDE ITS HEADER, for a structural reason rather than
+ *  a cosmetic one: [3c] walks a population of its own AFTER the bar grid, so a ledger printed early
+ *  would be missing the poked arm's rows and would read as a smaller number than the run produced.
+ *
+ *  ⚠⚠ AND IT IS PRINTED WHEN IT IS EMPTY. «Nothing was refused» is the claim a reader of this file
+ *  came for after wave 3, and a blank space is not that claim – it is the absence of one, which is
+ *  the whole of what the five `catch {}` blocks used to offer (`drainSkewLine`'s own argument). */
+function printRefusalLedger(): void {
+  rule('[7] THE REFUSAL LEDGER – every call this file suppressed, counted · ⚠ NOT A BAR, AND A COUNT IS NOT A FAILURE')
+  const rows = [...REFUSALS.values()].sort((a, b) => (a.site === b.site ? b.count - a.count : a.site < b.site ? -1 : 1))
+  const total = rows.reduce((a, r) => a + r.count, 0)
+  console.log(
+    `    ${pad('site', 32)}${pad('how', 8)}${padL('count', 9)}   ${pad("the engine's own sentence, or the state its own reader answered", 64)}first seen`,
+  )
+  console.log(`    ${'─'.repeat(140)}`)
+  if (rows.length === 0) console.log('    NOTHING WAS REFUSED ON THIS RUN – every guarded call went through.')
+  for (const r of rows) {
+    console.log(`    ${pad(r.site, 32)}${pad(r.how, 8)}${padL(r.count, 9)}   ${pad(r.because, 64)}${r.firstAt}`)
+  }
+  console.log(`    ${'─'.repeat(140)}`)
+  console.log(`    ${pad('TOTAL', 32)}${pad('', 8)}${padL(total, 9)}`)
+  console.log('')
+  console.log('    ⚠ `tested` = the bench asked the ENGINE\'S OWN reader and did not make the call. The call behind every test is')
+  console.log('      still BARE, so a test that is too permissive lets the engine throw and STOPS THE RUN, and a test that is too')
+  console.log('      strict shows up here as a count nobody can explain. Neither direction can be silent, which is the point.')
+  console.log('    ⚠ `caught` = a narrow catch keyed on an EXPORTED refusal constant (`CAREER_ENDED_REFUSAL`,')
+  console.log('      `COLLEGE_FREEZE_REFUSAL`). Every other sentence is rethrown with the site and the career prefixed – there is')
+  console.log('      no longer a throw in this file that nobody sees.')
+  console.log('    ⚠⚠ A ZERO IS NOT A PASS EITHER. What a zero in a row means is that the state that row names never happened on')
+  console.log('       this grid – which for the two ANSWER sites is exactly what a four-season walk predicts, because the fork')
+  console.log('       opens later than the grid ends. Read this table BESIDE [3]\'s census, never instead of it.')
 }
 
 // =================================================================================================
@@ -2079,6 +2346,10 @@ function runPushPair(): void {
       `      coach-decided knocks ${armTotals.rest.coach + armTotals.push.coach} · knocks unaccounted for 0 · ` +
       `bond moved at the decisions ${armTotals.rest.bondMeasured.toFixed(1)} / ${armTotals.push.bondMeasured.toFixed(1)}.`,
   )
+  // ⚠ v75 T9 – THIS PAIR WALKS THROUGH THE SAME THREE SHARED HELPERS the bar grid does
+  // (`bookTheFamilyWeeks`, `enterWhatSheCan`, `answerTheBirthday`), so it inherits their refusals and
+  // prints them under its own prices rather than leaving them in a table it never shows.
+  printRefusalLedger()
   console.log(`\n    ${((Date.now() - startedPair) / 1000).toFixed(1)}s`)
 }
 
@@ -2151,17 +2422,27 @@ if (PUSH_MODE) {
 //     career-ending injury latching inside the tick – is TESTED (`world.ending !== null` breaks the
 //     loop before anything is answered), never caught. The walk answers her through
 //     `drainLifeBeatsTallied` bare, and calls neither `answerLifeBeat` nor `answerFork` directly.
-//     ⚠⚠ AND THAT IS DELIBERATE ROUTING RATHER THAN STYLE, BECAUSE THE REST OF THIS FILE STILL HAS
-//     FIVE BARE `catch {}` BLOCKS AND T7 LEAVES THEM FOR A RULING: `bookTheFamilyWeeks`,
+//     ⚠⚠ AND THAT IS DELIBERATE ROUTING RATHER THAN STYLE. It was written when the rest of this file
+//     still had FIVE BARE `catch {}` BLOCKS that T7 left for a ruling: `bookTheFamilyWeeks`,
 //     `enterWhatSheCan`, `answerTheBirthday`, `answerTheLifeBeat`'s `answerLifeBeat` and
-//     `answerTheForkTheWayThisArmWould`'s `answerFork`. The last two are the exact swallow this
-//     file's own history is about – who-she-is §4a's wave-3 fourth entry records the `answerFork`
-//     one being «found and fixed with a second bond-neutral drain», and the DRAIN is what was added:
-//     the `catch {}` in front of which it stands is still there, so the day the drain stops clearing
-//     the file returns to printing `bondAtFork: NaN` in silence. Three others (`drainEveryBeat` and
-//     the two `drainLifeBeats` sites) are narrow and RE-THROW anything but the terminal latch, which
-//     is a different thing entirely. Removing a swallow changes what the DEFAULT grid measures, so it
-//     is a task with its own before/after and not a tidy-up inside this one.
+//     `answerTheForkTheWayThisArmWould`'s `answerFork`. The last two were the exact swallow this
+//     file's own history is about – who-she-is §4a's wave-3 fourth entry recorded the `answerFork`
+//     one as «found and fixed with a second bond-neutral drain», and the DRAIN is all that was
+//     added: the `catch {}` in front of which it stood was still there, so the day the drain stopped
+//     clearing, the file would have gone back to printing `bondAtFork: NaN` in silence.
+//     ⭐⭐⭐ v75 T9 PAID THAT DEBT AND ALL FIVE ARE GONE – see [7], THE REFUSAL LEDGER, above the
+//     grid. Each became either a TESTED precondition (the shape this very paragraph argues for) or a
+//     narrow catch keyed on an exported refusal constant, and every refusal either shape tolerates
+//     is COUNTED into a printed table. The routing here is UNCHANGED and is still the stronger
+//     statement: this block calls neither `answerLifeBeat` nor `answerFork` at all.
+//     ⚠ AND ONE SENTENCE ABOVE NEEDED CORRECTING RATHER THAN KEEPING (T9): «NO try/catch IN THIS
+//     BLOCK. Not one» was true of the lines written here, and this walk nonetheless inherited THREE
+//     of the five swallows through the shared helpers it calls – `bookTheFamilyWeeks`,
+//     `enterWhatSheCan` and `answerTheBirthday`. It does not any more, and the block's own ledger
+//     print at the end of [S] is where their counts land.
+//     Three sites are untouched by T9 and were never part of the debt (`drainEveryBeat` and the two
+//     `drainLifeBeats` calls): they are narrow and RE-THROW anything but the terminal latch, which is
+//     a different thing entirely, and they are the shape T9 copied.
 //   · PER-TEMPERAMENT ACTUATION, printed and asserted: arrivals forced, endings landed, shocks
 //     stamped, `'ended'` cards drained. A zero in any of those columns is a FAILED RUN and exits
 //     non-zero – it is never a result of zero.
@@ -2921,6 +3202,14 @@ function runShockPair(): void {
   console.log('')
   console.log(`    ⚠ EXIT CODES: 0 = measured (bars may have missed, and the misses are above); 2 = the instrument`)
   console.log(`      could not measure and printed no bar. «Exited 0» means «measured», never «passed».`)
+  // ⚠⚠ v75 T9 – AND THE ONE HONEST CORRECTION TO THIS BLOCK'S OWN BANNER. «NO try/catch IN THIS
+  // BLOCK» was true of the lines written here and NOT of the walk: `runShockCareer` calls
+  // `bookTheFamilyWeeks`, `enterWhatSheCan` and `answerTheBirthday`, and until T9 all three carried
+  // a bare `catch {}` of their own. The routing claim – that the shock walk answers her through
+  // `drainLifeBeatsTallied` and calls neither `answerLifeBeat` nor `answerFork` – was and is exact;
+  // what it did not cover was the three shared helpers this walk inherits. They are now tested and
+  // counted, and this is where the count lands.
+  printRefusalLedger()
   console.log(`\n    ${((Date.now() - startedShock) / 1000).toFixed(1)}s`)
 }
 
@@ -3084,11 +3373,18 @@ for (const arm of ARMS) {
 // answered her differently and it was worth nothing" from "the answering code never executed". These
 // counters can, and they are printed beside the bar rather than in a comment for exactly that reason.
 console.log(`\n    ⭐ WAVE 2 – THE BEAT ARMS, COUNTED (care backs and matches · grind presses and contradicts)`)
+// ⭐⭐⭐ v75 T9 – AND THE `refused` COLUMN IS THE NEWEST OF THEM, IN THE ROW THAT ONCE LIED. Until
+// this step `answerLifeBeat` and `answerFork` both stood inside a bare `catch {}`, so «her row was
+// answered» and «her row REFUSED and nobody said so» produced the same census: zeroes in `back` and
+// `press`, a `–` in `bond @ fork`, and no error. This column is the difference between those two
+// readings. ⚠ A COUNT HERE IS NOT A DEFECT – it is the terminal latch landing on the same week as her
+// row, which is a real outcome – but a count BESIDE a `–` in `bond @ fork` is the exact shape of the
+// stall this file has shipped twice, and it can no longer be reached without printing.
 console.log(
   `    ${pad('arm', 8)}${padL('careers', 9)}${padL('beats', 8)}${padL('back', 7)}${padL('press', 7)}${padL('listen', 8)}` +
-    `${padL('fork with', 11)}${padL('fork against', 14)}${padL('bond @ fork', 13)}`,
+    `${padL('fork with', 11)}${padL('fork against', 14)}${padL('bond @ fork', 13)}${padL('refused', 9)}`,
 )
-console.log(`    ${'─'.repeat(77)}`)
+console.log(`    ${'─'.repeat(86)}`)
 const bondAtFork: Record<Arm, number[]> = { care: perSeed('care', (c) => c.bondAtFork), grind: perSeed('grind', (c) => c.bondAtFork) }
 for (const arm of ARMS) {
   const cs = of(arm)
@@ -3099,10 +3395,11 @@ for (const arm of ARMS) {
       `${padL(answers.filter((a) => a === 'back').length, 7)}${padL(answers.filter((a) => a === 'press').length, 7)}` +
       `${padL(answers.filter((a) => a === 'listen').length, 8)}` +
       `${padL(cs.filter((c) => c.forkCongruence === 'with').length, 11)}${padL(cs.filter((c) => c.forkCongruence === 'against').length, 14)}` +
-      `${padL(forkBond.length === 0 ? '–' : mean(forkBond).toFixed(2), 13)}`,
+      `${padL(forkBond.length === 0 ? '–' : mean(forkBond).toFixed(2), 13)}` +
+      `${padL(cs.reduce((a, c) => a + c.refusals, 0), 9)}`,
   )
 }
-console.log(`    ${'─'.repeat(77)}`)
+console.log(`    ${'─'.repeat(86)}`)
 const beatsFired = careers.reduce((a, c) => a + c.beatsRaised, 0)
 // ⭐⭐ THE ARITHMETIC OF WHAT WAVE 2 IS WORTH, OFF THE CONSTANTS AND NOT OFF A GUESS. Both deltas are
 // per-career and one-shot, so the separation they can add to the gap is a single subtraction.
@@ -3677,6 +3974,11 @@ console.log('      the season\'s zero-vacation −3 landing beside the regressio
 console.log('      it is what the shared entry policy costs – and it is printed because it is worth more per event than')
 console.log('      any row that IS.')
 
+// --- 7. THE REFUSAL LEDGER -----------------------------------------------------------------------
+//
+// ⚠ LAST, AND AFTER [3c], because [3c] walks a population of its own – see `printRefusalLedger`.
+printRefusalLedger()
+
 // --- THE VERDICT ---------------------------------------------------------------------------------
 rule('THE SIX BARS')
 const bars: [string, boolean, string][] = [
@@ -3690,4 +3992,14 @@ const bars: [string, boolean, string][] = [
 ]
 for (const [label, ok, note] of bars) console.log(`    ${verdict(ok)}  ${pad(label, 46)}${note}`)
 console.log(`\n    ⚠ A FAILED BAR IS A FINDING FOR THE OWNER. This tool changed no constant and proposes none.`)
+// ⚠⚠ v75 T9 – AND THE SHEET SAYS WHAT THE WALK SUPPRESSED, so a bar can never again be read off a
+// run that did not fully happen without the reader being told. The table itself is [7], above.
+{
+  const refusalRows = [...REFUSALS.values()]
+  const refusalTotal = refusalRows.reduce((a, r) => a + r.count, 0)
+  console.log(
+    `    ⚠ REFUSALS ON THIS RUN: ${refusalTotal} over ${refusalRows.length} site/sentence pair(s) – the table is [7]. ` +
+      `${refusalTotal === 0 ? 'Nothing was suppressed.' : 'None of them was silent.'}`,
+  )
+}
 console.log(`\n    ${((Date.now() - started) / 1000).toFixed(1)}s`)
