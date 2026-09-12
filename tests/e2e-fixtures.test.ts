@@ -8,6 +8,7 @@ import {
   advanceRefusal,
   answerFork,
   lifeLogOf,
+  liveSoftBeat,
   loveEpisodesOf,
   maxMainDraws,
   pendingLifeBeat,
@@ -17,6 +18,7 @@ import {
   FORK_UNHEARD_REFUSAL,
 } from '../src/engine/world'
 import { mainStateConsistent, resumeMain } from '../src/engine/rng'
+import { ECONOMY } from '../src/engine/economy'
 import { MOOD_WORD, SPIRIT_BANDS } from '../src/engine/spirit'
 import { ENDINGS } from '../src/engine/ending'
 import { isSponsorWindowWeek } from '../src/engine/offers'
@@ -45,8 +47,16 @@ import {
 // So every claim the manifest makes is re-derived here, from the file, through the PRODUCT'S OWN
 // reader – `decodeExportFile`, which is the untrusted-input door with the full guard chain and the
 // real migration ladder behind it. Nothing in this file parses a save by hand. It runs on the PR
-// gate with the rest of the unit project, in well under a second, which is what makes it the right
-// place for this alarm rather than the nightly e2e job.
+// gate with the rest of the unit project, in well under a second – and, unlike the browser suite, it
+// runs in `npm run check` too, which is what makes it the right place for this alarm.
+//
+// ⚠ CORRECTED 12.09, MEASURED. That sentence used to end «rather than the nightly e2e job», and
+// there is no nightly e2e job: `.github/workflows/ci.yml` is «CI (pull requests)», `on:
+// pull_request`, and its e2e job runs `npm run test:e2e` unconditionally (:274), so the fixtures ARE
+// covered before a merge. simulation.yml's Monday sim run is the only cron in the repo. What the
+// browser suite is absent from is `npm run check`, the LOCAL pre-push gate, which excludes it on
+// purpose (scripts/e2e.mjs's own header). So what this file buys is the LENGTH OF THE FEEDBACK LOOP –
+// green on the builder's machine, red later in a browser – and never coverage that was missing.
 //
 // ⚠ NOT tests/goldenSaves.test.ts, AND THE DIFFERENCE IS THE POINT. The golden corpus is one raw
 // world per schema version and it proves MIGRATIONS work – it must keep old shapes for ever, and its
@@ -344,11 +354,109 @@ describe('e2e fixtures: each is the state its name promises', () => {
     expect(() => answerFork(world, 'continue')).toThrow(FORK_UNHEARD_REFUSAL)
   })
 
+  it('soft is parked on a live tier-1 row on a week the engine never stopped', async () => {
+    // ⚠⚠ WHY THIS BLOCK EXISTS, AND THE REASON IS A LOCAL GATE RATHER THAN A MISSING ONE.
+    // e2e/soft-beat.spec.ts already presses this fixture in front of every pull request –
+    // `.github/workflows/ci.yml` is «CI (pull requests)», `on: pull_request`, and its e2e job runs
+    // `npm run test:e2e` unconditionally (:274) – so `soft.tsave` is covered before a merge, and any
+    // claim that it is not (this file carried two, corrected 12.09) is worth checking against the
+    // workflow before it is repeated.
+    //
+    // ⭐ WHAT IS MISSING IS THE SHORT LOOP. `npm run check` – the pre-push gate – deliberately
+    // excludes the browser suite (scripts/e2e.mjs's own header: «NOT PART OF `npm run check`, ON
+    // PURPOSE», because the gate is already ~7 minutes). So a builder who regenerates the corpus
+    // sees green on their own machine and learns nothing until PR time, in a browser, through a
+    // timeout on a card that never came up. This block re-derives the claim in the unit project
+    // `npm run check` DOES run (`node scripts/units.mjs`), in well under a second, so the rot is
+    // caught before the push instead of after it. That is the hole T8 closed for `breakup` and
+    // `belated`, and `soft` – wave 3's T15 fixture – was the one left out of it.
+    const world = await decodeExportFile(readFixtureBytes('soft.tsave'))
+    expect(world.ending, 'the soft fixture is meant to be a career still being played').toBeNull()
+
+    // ⚠⚠ THE ROW IS PROVEN PRESENT BEFORE ANYTHING IS ASSERTED TO BE NULL, and that ordering is the
+    // whole reason this block is not three assertions that cannot fail. `pendingLifeBeat`,
+    // `advanceRefusal` and `world.ending` are ALL null on a career carrying no life rows at all – so
+    // read on their own they would be satisfied by a fixture that had lost the state entirely, which
+    // is precisely the regeneration failure this block is here to catch. The tier-1 row is therefore
+    // read straight off the log FIRST, and without the selector, so that every null below is a claim
+    // about a row that demonstrably exists.
+    const soft = lifeLogOf(world).filter((row) => row.kind === 'small-talk')
+    expect(soft.length, 'the soft fixture is meant to hold exactly one tier-1 row').toBe(1)
+    expect(soft[0].answer, 'and nobody is meant to have answered it').toBeNull()
+
+    // ...AND IT IS INSIDE ITS WINDOW, ASKED AS ARITHMETIC RATHER THAN THROUGH THE SELECTOR. The
+    // window is DERIVED (`ECONOMY.life.smallTalkTtlWeeks`, 3 = the raise week and the two after it)
+    // and never stored, and this is the one fact that separates `soft` from the rest of the corpus.
+    //
+    // ⚠ COUNTED OVER THE TEN, NOT QUOTED FROM THE SEVEN (CLAUDE.md: «count it, do not quote it»).
+    // e2e/soft-beat.spec.ts's header records «six carry `'small-talk'` rows – 40 of them» and that
+    // census is STALE – it predates `breakup` and `belated`, which carry 7 and 14 of their own.
+    // Re-measured over the current corpus: NINE of the ten carry `'small-talk'` rows, 62 in all,
+    // every one of them unanswered, and `soft` is the ONLY fixture of the ten holding a LIVE one –
+    // every other row is expired, the closest miss being `junior`'s youngest at 4 weeks against a
+    // window of 3. So a regeneration that parked on any other career would sail straight through the
+    // existence check above and fail HERE, which is the discrimination the fixture exists to make.
+    const age = world.week - soft[0].week
+    expect(age, 'a row from the future is not a live one').toBeGreaterThanOrEqual(0)
+    expect(age, 'and an expired row is the state every OTHER fixture in the corpus is already in').toBeLessThan(
+      ECONOMY.life.smallTalkTtlWeeks,
+    )
+
+    // ⭐ AND THE ENGINE'S OWN SELECTOR AGREES, ON THAT SAME ROW. `liveSoftBeat` is what
+    // `buildSoftBeatInvite` asks, which is what `snapshot.softBeat` carries, which is what Home's
+    // card is drawn from – so this is the assertion that says a browser booting here really will see
+    // an invitation. ⚠ It is asserted AGAINST the row read above rather than instead of it: the two
+    // independent readings AGREEING is the claim, where either one alone would largely be a property
+    // of its own definition.
+    const live = liveSoftBeat(world)
+    expect(live, 'the soft fixture is meant to hold a LIVE tier-1 row').not.toBeNull()
+    expect(live!.week, 'and the selector is meant to be looking at that same row').toBe(soft[0].week)
+
+    // ⭐⭐⭐ AND THE WEEK WAS NEVER STOPPED – THE WHOLE CLAIM OF TIER 1, AND THEREFORE OF THIS FIXTURE.
+    // ⚠ `pendingLifeBeat` returning null is NOT a contradiction of the live row three lines up, it is
+    // the MECHANISM: `LIFE_BEAT_BLOCKING['small-talk']` is false, so the queue's blocking half never
+    // returns the row and the week ticks on regardless (§5b's «soft – answerable, never lost»). With
+    // the row proven present, this now reads «the one thing standing here does not block» instead of
+    // «nothing is standing here», and those are different sentences.
+    expect(pendingLifeBeat(world), 'a tier-1 row is not a blocking beat').toBeNull()
+    expect(advanceRefusal(world), 'and nothing at all is stopping the week').toBeNull()
+
+    // ⭐⭐⭐ AND SHE IS STILL WAITING ONE TICK LATER, PROVEN THE WAY THE RECIPE'S OWN LOOK-AHEAD PROVES
+    // IT – clone, tick, and ask `liveSoftBeat` for the SAME row back (tools/e2e-fixtures.ts's
+    // `after === null || after.week !== row.week` clause, verbatim in intent). This is a SEPARATE
+    // claim and not a restatement: a career parked ON its raise week is live now and says nothing
+    // about being live after the press, and e2e/soft-beat.spec.ts's second step – «the week moved and
+    // she is still waiting» – is the half that needs it. It is also the half its own ARM B found, by
+    // shrinking the window to `<= 0` and watching step 1 stay green.
+    //
+    // ⚠ THE TICK IS THE PRODUCT'S OWN, RESUMED FROM THE SAVE'S OWN MAIN POSITION – `resumeMain`,
+    // never a fresh `rngFromSeed`, which is the serializer rule these fixtures are written under
+    // (tools/e2e-fixtures.ts's header). A raw tap here would walk a different sequence from the one
+    // the worker walks, and the claim would be about a week nobody will ever see.
+    const probe = structuredClone(world)
+    tickWeek(probe, resumeMain(probe.rngMain))
+    expect(probe.week, 'the week must actually move, or the tick above asserted nothing').toBe(world.week + 1)
+    const after = liveSoftBeat(probe)
+    expect(after, 'her row is meant to survive the week the browser presses past').not.toBeNull()
+    expect(after!.week, 'and be the SAME row, not a fresh one raised on the way').toBe(soft[0].week)
+  })
+
   // ===============================================================================================
   // ⭐⭐⭐ v75 T8 – THE TWO ENDING FIXTURES, AND THEY ARE ASSERTED HERE BECAUSE THE BROWSER IS NOT ON
-  // THE GATE. `npm run check` does not run Playwright (CLAUDE.md's command list), so a fixture whose
-  // CLAIM had rotted would sail through every gate and fail in the nightly e2e job with a timeout on
-  // a card that never came up. `unheard`'s own block one scene up makes the same argument; these two
+  // THE **LOCAL** GATE. `npm run check` does not run Playwright – deliberately (scripts/e2e.mjs's own
+  // header) – so a fixture whose CLAIM had rotted stays green in front of the builder who broke it,
+  // and only goes red later, in a browser, through a timeout on a card that never came up.
+  //
+  // ⚠ CORRECTED 12.09, MEASURED. This used to say the rot «would sail through every gate and fail in
+  // the nightly e2e job», and both halves were wrong: `.github/workflows/ci.yml` is «CI (pull
+  // requests)», `on: pull_request`, and line 274 runs `npm run test:e2e` unconditionally, so these
+  // fixtures are covered BEFORE a merge; and there is no nightly e2e job in this repo at all –
+  // simulation.yml's Monday sim run is the only cron. What is bought here is the length of the
+  // feedback loop, not coverage that was otherwise absent. The error is worth the correction rather
+  // than a quiet edit: it travelled from a wave report into this file and then back out of it into a
+  // task brief, because a comment naming the wrong gate reads exactly like one naming the right one.
+  //
+  // `unheard`'s and `soft`'s own blocks above make the same argument; these two
   // carry a STATE THAT IS ONE TICK AWAY rather than one that is already on the world, so both blocks
   // below tick the career forward exactly as the browser's first press does.
   //
