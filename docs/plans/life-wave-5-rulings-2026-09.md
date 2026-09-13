@@ -907,3 +907,60 @@ paired arms are the only instrument that prices anything here.
 **A cosmetic debt, recorded not fixed**: `tests/wave5-psychologist-listen.test.ts` still titles a
 case «house style on all forty-eight» while walking the 40 that survived ruling O. Green, correct,
 misnamed – T11's to sweep up.
+
+## Ruling S – T12 refused a line of its brief on a spec I had not named, and the refusal is upheld
+
+Ruling H asked T12 to make four axes readable, among them **the personal edge placement** inside
+the tier's corridor. T12 refused that one and cited
+[coach-match-edge](../specs/coach-match-edge.md) §4: «**His own number is NOT on the card.**» – and
+§9c: «what it buys is still a third of a corridor and **never a number**.» ⚠ **The third itself is
+the protected quantity**, so a profile naming it would make the market readable at a glance – worse
+than hire-look-fire, because it costs nothing. **Upheld, and the refusal is pinned** (a case reds on
+any card printing an individual figure or naming a third), so a later change of mind has to argue
+with the spec rather than slip past it.
+
+⚠ Gating it on `revealed` instead would read `coachSinceWeek` – mutable – which is the defect
+ruling E exists for, one seat over.
+
+**And three of ruling H's four axes were already on the card.** The fit is the `.fit-pill` plus the
+style; physio is `coachLoadNote`'s four sentences; the uplift is the number the owner commissioned.
+«Axes the card never says out loud» was true of exactly one – the one that must stay unsaid. What
+T12 actually shipped is the **JOIN** the card never made: the four existing axes read against each
+other, and against the parent's own free hours.
+
+### T10's bench line, corrected before T10 runs it
+
+Ruling H asked that «profile labels partition the existing axes with no two profiles identical on
+all shown axes». **A four-valued label cannot partition sixteen people**, so as written the bar is
+unmeetable. Measured and true instead: **(tier, style) is unique over the whole roster**, and the
+style is printed beside the pill, so **no two CARDS are identical on the shown axes**; the label
+alone separates 4 classes of the 12 (tier, fit) cells. T10 runs that claim.
+
+Measured distribution, for T10 to predict against: 64 cards = **above 16 · level 32 · under 8 ·
+under-self 8**; per style aggressive 4/8/2/2 · counterpuncher 4/4/4/4 · serve-first 4/8/2/2 ·
+all-court 4/12/0/0.
+
+### ⚠ A balance fact for the owner, found in passing and NOT touched
+
+The paragraph above `ECONOMY.coach.fitFactor` still says the fit is «deliberately SMALL next to the
+rung ladder» and works its example at `0.95 × 1.05`. At the **shipped** `1.25 / 1.00 / 0.75`
+(`economy.ts:642`) the fit span is **1.67×** while the hireable rung ladder is **1.21×** – so the
+style match now matters MORE than which rung you buy, and the comment describes a balance the game
+no longer has. Out of scope for this wave, flagged rather than edited, and it is the owner's call
+whether the numbers or the sentence is the thing that is wrong.
+
+### The «unable to fail» family, sighting six
+
+T12's byte-identity pin shipped a defect its own arm caught: it compared `Object.keys()` of the
+**control** arm only, so a lens that ADDED a key was invisible – and the arm written to catch
+exactly that came back **green**. Fixed to the union of both key sets. ⚠ Six sightings in one wave,
+each in a different costume: two arms moved together, a spot check on one week, a walk that cannot
+reach the case, an expectation calling the function under test, a threshold that passes on 0 and 1,
+and now a key-set comparison that can only see deletions.
+
+### Two smaller corrections
+
+* Ruling H's `coach.ts:384` points at `coachFitFor`; `coachFactor` is at `:398`.
+* «Derived from (seed, coachId) exactly as the roster itself is» is **vacuous**: measured, the seed
+  touches only NAME, RATE and the protected EDGE. Every unprotected axis is a function of `coachId`
+  alone – and the fit needs her `playStyle`, a career constant with no engine write site.
