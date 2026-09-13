@@ -82,6 +82,12 @@ re-run this wave's benches on the union), the C-queue diary work, or anything el
 | T9 | the strings | drafts → the architect's read → his playtest (standing delegation) |
 | T10 | the benches | the 4×3 grid, the never-fired corridor, census v3, fairness re-read |
 | T11 | e2e + frozen + gate | the mechanic case, fixtures v76, per-key protocol, handoff |
+| T12 | coach profiles (owner, 13.09) | a derived LENS on the market's existing axes – ruling H |
+| T13 | the elite gate goes ON (owner, 13.09) | the built flag flips, surfaces re-proven – ruling H |
+
+⚠ T12–T13 were added mid-wave by the owner's 13.09 word; their full task text is **ruling H in
+[life-wave-5-rulings-2026-09](life-wave-5-rulings-2026-09.md)** – they run after T9, before
+T10–T11 (T10 gains their bench lines, T11's gate covers them), and nothing above renumbers.
 
 ## 2. The tasks, expanded
 
@@ -356,4 +362,6 @@ no on-court conduct (named later beats, their own specs); no travel and no fare 
 byte-identity pin is the fence; no spirit write outside T4's slope inside `accrueSpirit`; no
 walls surface, no leaning on any screen, no flip announcement; no temperament rewrite ever –
 identity is immutable; no paywall on repair – the free road is benched with the seat empty; no
-`ECONOMY.bond` retune (планка-3's session owns it); no wording change outside T9's draft set.
+`ECONOMY.bond` retune (планка-3's session owns it); no wording change outside T9's draft set
+plus ruling H's card strings. And for T12: **no new coach lever** – the profile is words over
+axes that already exist; the skill-lean idea stays out of v1 by the ruling's own text.

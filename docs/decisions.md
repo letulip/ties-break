@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 106 dated entries, newest 2026-09-13. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 107 dated entries, newest 2026-09-13. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -32,7 +32,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | --- | ---: | --- | --- |
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
-| coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
+| coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 14 | [ROUND 41 P1 (c): THE ELITE SHELF GOES UP – ONE PRICE, AND IT IS WHAT THE WEALTHY USED TO PAY](#12092026--round-41-p1-c-the-elite-shelf-goes-up--one-price-and-it-is-what-the-wealthy-used-to-pay) | 2026-09-12 |
 | general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
@@ -4330,3 +4330,31 @@ The brief: [life-wave-5-builder-2026-09](plans/life-wave-5-builder-2026-09.md), 
 whoever lands second takes the next number). The owner launches the builder himself; the
 architect holds the final gate. планка-3 / bond-memory stays its own session with the owner
 after his playtest – it moves `ECONOMY.bond`, and the wave-4 coordination note stands.
+
+## 13.09.2026 – NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED
+
+The owner asked whether the game needs different TYPES of coaches («нужно ли нам вводить разные
+типы тренеров… Если нет - то обоснуй»). The architect's answer, accepted: **no new seats** – by
+seats the team is already typed along legibility seams (coach / bundled physio / masseur /
+psychologist), every number has an owner, and a new role would be decoration or a second lever
+on someone's number; the real gap is that the ONE coach's existing individuality (style×fit →
+development, edge placement, physio, uplift) is invisible on the card. His rulings, verbatim:
+
+1. «профили тренеров давай в эту волну после психолога, elite gate включим здесь же, добавишь в
+   спеку билдеру?» – **T12 (profiles as a derived lens, no new lever, no schema) and T13 (the
+   built `eliteGate` flag goes ON) join wave 5**, ruling H in
+   [life-wave-5-rulings-2026-09](plans/life-wave-5-rulings-2026-09.md) (H, not C – the
+   builder's own rulings C–G landed in the same hour).
+2. On the sparring partner being the one role with a free number (form, parked 10.08): «а вот
+   это видимо как раз пришло время, надо сделать спеку и разложить по косточкам» – **form is
+   unparked**: [the-form-and-the-sparring-2026-09](specs/the-form-and-the-sparring-2026-09.md)
+   (two channels – results residual and rhythm; the slump is the psychologist's patient, the
+   rust is the sparring partner's; O1–O8 await his word). form-and-slump.md keeps the finding,
+   the yardstick and the adopted driver – built on, not superseded.
+3. He also brought real tour-team economics («и вот это может нам пригодиться, заодно ревью
+   наших реалий можно сделать») – condensed with the audit in
+   [team-economics-2026-09](research/team-economics-2026-09.md): travel and retainer shapes
+   match reality by construction; the two real findings are the pro-era coach contract (reality
+   re-prices by HER rank and cuts 10% of EVERY cheque; ours prices by tier×age and pays
+   10%/5% at titles/finals only) and the soft elite tail of staff costs – both his to rule,
+   both bench-first, neither commissioned yet.

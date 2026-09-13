@@ -218,3 +218,42 @@ here so no later brief repeats them.
 `CHECK_EXIT=1`. This is exactly the CLAUDE.md rule about never trusting a notification's exit code,
 observed rather than recited. Every verdict in this wave is read from a log file the command itself
 appended, with its mtime checked against the run's start.
+
+## Ruling H – the owner grows the wave: coach profiles (T12) and the elite gate (T13)
+
+*(The architect's, 13.09 – appended while the builder's own rulings C–G were landing, which is
+why the letter is H and the earlier cross-references say so.)*
+
+His word, 13.09, in the coach-types discussion (the full reasoning is the discussion's record in
+decisions.md; the reality audit it produced is
+[team-economics-2026-09](../research/team-economics-2026-09.md)): «профили тренеров давай в эту
+волну после психолога, elite gate включим здесь же, добавишь в спеку билдеру?» Both run AFTER
+T9 and BEFORE T10–T11; T10 gains their bench lines, T11's gate covers them; nothing renumbers.
+
+### T12 – coach profiles: a LENS on axes that already exist, never a new lever
+
+The market already differentiates coaches on real axes the card never says out loud: `style`
+(`PlayStyle`: aggressive / counterpuncher / serve-first / all-court) × her style → `StyleFit`
+great/good/off → a DEVELOPMENT multiplier (`coachFitFor` → `coachFactor`, coach.ts:384); the
+personal edge placement within the tier's corridor (`coachEdgePlacement` lower/middle/upper);
+physio inclusion; the season uplift projection. T12 makes those axes READABLE as a profile – a
+short label plus one line on the market card and the room note reading the fit in words –
+**derived from (seed, coachId) exactly as the roster itself is: NO schema, NO new mechanic, NO
+skill-lean** (the lean idea from the discussion is deliberately NOT in v1 – it would be a new
+lever, and the label must first prove the existing differences alone change hiring decisions).
+Strings are drafts (invariant 4); the card follows the mounted-test law; the bench line in T10:
+profiles must be DISTINGUISHABLE – across a seeded roster sweep, profile labels partition the
+existing axes with no two profiles identical on all shown axes, and the fit sentence agrees
+with `coachFitFor` (a label that says nothing the axes do not hold is decoration, the masseur
+§4 law read for words).
+
+### T13 – the elite gate goes ON
+
+`ECONOMY.coach.eliteGate` = `{ enabled: false, minPoints: 150 }` – built, tested, waiting; his
+word turns the flag. The builder's job is the flip PLUS the proof the built surfaces still tell
+one story (`coachHireable` is asked by the market row state, the hire refusal and the screen
+lock – the R10-16 doctrine; the locked-row copy exists from the original build – verify, never
+rewrite). ⚠ Expect frozen-career consequences: any preset that hires an elite coach before 150
+points now walks differently – per-key protocol, diff FIRST, `rngMain` byte-identity the STOP
+condition; e2e gains the locked-row case. If no preset trips the gate, say so in the record –
+a null result with the arm named.
