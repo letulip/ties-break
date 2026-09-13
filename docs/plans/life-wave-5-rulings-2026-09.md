@@ -496,3 +496,55 @@ material: paid weeks with nothing left to buy.
   caption for a number the player can already see – without it the year is genuinely invisible,
   which is the travelling-team §4 failure by name. My brief guessed the opposite and the guess was
   wrong in the direction that makes the line MORE load-bearing.
+
+## Ruling N – the leaning's SIGN, and the one direction each girl can flip in
+
+The wave brief's T7 describes the drift in three bullets that are individually clear and jointly
+ambiguous: «−wallsRisePerWeek (walls up)», «+wallsRepairPerWeek toward 0 and NOT past it», «beyond
+0 – toward the opposite pole … clamp at 0 for born-open/born-steady, nowhere to grow». Read
+quickly, that supports two incompatible sign conventions, and a build against the wrong one looks
+correct and is inside-out. Ruled before T7, so nobody guesses.
+
+**The lean is ABSOLUTE, not relative to birth. Zero is her nature.**
+
+| axis | negative | 0 | positive |
+| --- | --- | --- | --- |
+| `open` | more private – walls up, she stops telling | born-open or born-private, as drawn | more open – beyond her baseline |
+| `reg` | more intense – dysregulated, she braces | as drawn | more steady – tools her temperament never gave her |
+
+Buckets, for the mapping: `sunny = open+steady · fiery = open+intense · quiet = private+steady ·
+deep = private+intense` (`spirit.ts:87`).
+
+**⚠ Each girl has exactly ONE armable direction per axis, and BIRTH decides which.** A flip means
+«the expressed pole on that axis is the opposite of birth», so there must be an opposite pole to
+reach:
+
+| birth on the axis | arms at | the other direction |
+| --- | --- | --- |
+| open | **−`flipArm`** – walls up, expressed-private | positive is clamped at 0: she is already open, there is nowhere to grow |
+| private | **+`flipArm`** – her own work, expressed-open | negative accumulates as REAL WALLS and arms **nothing** – there is no pole more private than private |
+| steady | **−`flipArm`** – dysregulated, expressed-intense | positive clamped at 0 |
+| intense | **+`flipArm`** – regulation learned, expressed-steady | negative accumulates and arms nothing |
+
+**And the direction that cannot flip is not wasted – it is the whole of «repair is free, growth is
+work».** A born-private girl who was kicked for seasons carries a negative lean that changes no
+bucket and shows on no surface, and she must be walked back to 0 before a single point of growth
+can be bought. Neglect costs her the LADDER even where it cannot change who she is read as. That is
+the honest shape of the law, and it is why the lean is persisted rather than derived.
+
+**What scales what, so the two multipliers do not get swapped:**
+* the rung's **×1 / ×1.5 / ×2** applies to the flip hazard in the **beyond-baseline (positive)
+  direction ONLY** – the seat accelerates her own work and never her collapse;
+* O6's **×0.75** at a retained rung ≥ 2 slows the **negative DRIFT**, not the hazard – a good
+  psychologist in the house makes the walls rise slower; he does not make a flip less likely once
+  they are up.
+
+**Hysteresis, stated as state rather than as a rule of thumb:** a flip does NOT reset the lean. The
+flip is a separate boolean and the lean keeps drifting under it. The un-flip arms only once
+`|lean| <= flipRelease`; the band between `flipRelease` and `flipArm` is a dead zone that arms
+nothing **in either direction**.
+
+**And `expressedTemperamentOf` reads `wallsFlipped` ALONE, never the lean** (T1 built it that way).
+The lean is invisible to every reader, every surface and every draw except the hazard it arms –
+which is what lets it be gradual, rare and honest without becoming the continuous model who-she-is
+§2a rejected.
