@@ -92,7 +92,12 @@ import {
 // the same direct import `endings-bench.ts` takes on `engine/ending`. `bondBandOf` is the band the
 // shave is keyed on and `temperamentOpenness` is the register the lag table is keyed on; asking the
 // engine for both is what stops this file growing a second copy of either rule.
-import { bondBandOf, temperamentOpenness } from '../src/engine/spirit'
+// ⭐⭐⭐ CENSUS v3 (v76, wave 5's T10) – the walls readers. `expressedTemperamentOf` is the ONE
+// function that turns `wallsFlipped` into a bucket (who-she-is §2a), `WALLS_AXES` is the pair
+// `driftWalls` visits, and the two axis readers are what ruling N's «one armable direction per axis»
+// is spelled from. All four are the engine's own; this file re-derives none of them.
+import { bondBandOf, expressedTemperamentOf, temperamentIntensity, temperamentOpenness, WALLS_AXES, type WallsAxis } from '../src/engine/spirit'
+import { matchesEverPlayed } from '../src/engine/world/coachMarket'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -217,6 +222,21 @@ interface CareerRow {
    *  the `'met'` receipt (ruling B), so the two numbers are different questions and both are counted. */
   endedCards: number
   bondFinal: number
+  /** ⭐⭐⭐ CENSUS v3 (v76 T10) – HER WALLS, read off the engine's own two fields as the walk runs.
+   *  Every one of these is a TRANSITION count or a range, never an end state, for ruling K's reason:
+   *  the drift CONVERGES (repair walks back to 0), and a terminal read cannot see a career that went
+   *  away and came home. */
+  flips: Record<WallsAxis, number>
+  unflips: Record<WallsAxis, number>
+  leanMin: Record<WallsAxis, number>
+  leanMax: Record<WallsAxis, number>
+  leanFinal: Record<WallsAxis, number>
+  /** who she is READ AS at the horizon – `expressedTemperamentOf`, against the constant `temperament`
+   *  column above it. ⚠ Identity is immutable; this is expression over an unchanging nature. */
+  expressed: Temperament
+  /** ⭐ the fairness corridor's two numbers, read at the horizon off the engine's own counters. */
+  matches: number
+  wins: number
 }
 
 interface WalkOpts {
@@ -227,6 +247,15 @@ interface WalkOpts {
   /** does the parent take the optional decisions (the knock, the birthday)? */
   decides: boolean
   weeks: number
+  /** ⭐⭐ CENSUS v3's THIRD ARM, and it is the bench's OWN construction rather than a shipped policy –
+   *  said plainly because inventing a parent is exactly the kind of thing that has to be labelled. A
+   *  parent who GRINDS and then CHANGES: `policy` until this week, `policyAfter.policy` from it.
+   *  who-she-is §2a promises «the road back always exists – a closed-again girl can be opened again …
+   *  A career can round-trip; that sentence is earned drama», and NEITHER shipped policy can produce
+   *  one, because neither ever changes its mind: the grinder's bond never recovers and the player's
+   *  never falls. Without an arm that turns around, the round-trip column would read 0 and would be
+   *  saying something about `econ-bench`'s two policies rather than about her. */
+  policyAfter?: { week: number; policy: Policy }
 }
 
 /** THE CENSUS ARM'S OWN PARENT, and `--policy grinder` is the other one.
@@ -279,7 +308,16 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     endedWalked: 0,
     endedCards: 0,
     bondFinal: Number.NaN,
+    flips: { open: 0, reg: 0 },
+    unflips: { open: 0, reg: 0 },
+    leanMin: { open: 0, reg: 0 },
+    leanMax: { open: 0, reg: 0 },
+    leanFinal: { open: 0, reg: 0 },
+    expressed: temperament,
+    matches: 0,
+    wins: 0,
   }
+  let prevFlipped: Record<WallsAxis, boolean> = { open: false, reg: false }
   const openness = temperamentOpenness(temperament)
   /** bond entering the week – the value `rollArrival` shaves with, because the roll runs before
    *  `accrueSpirit` (see the call-site note in `world/phaseHerWeek.ts`) and `accrueSpirit` is what
@@ -292,8 +330,26 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     // ⚠ `drainKnocks: false` – `decides` IS AN ARM OF THIS BENCH, so the shared drain may not answer
     // a knock this walk deliberately leaves open (the T6b law). The `opts.decides` branch below calls
     // `drainKnock` itself, which keeps the arm exactly where it was.
-    stepCareerWeek(world, rng, opts.policy, opts.veto, { drainKnocks: false })
+    stepCareerWeek(
+      world,
+      rng,
+      opts.policyAfter !== undefined && world.week >= opts.policyAfter.week ? opts.policyAfter.policy : opts.policy,
+      opts.veto,
+      { drainKnocks: false },
+    )
     row.weeks++
+    // ⭐⭐⭐ CENSUS v3 – THE WALLS, READ EVERY WEEK. The flips are counted off the TRANSITION and the
+    // lean off its RANGE, so «she closed and came back» is visible; an end-state read would show an
+    // ordinary girl and would be the blind diff ruling K names.
+    for (const ax of WALLS_AXES) {
+      if (world.wallsFlipped[ax] !== prevFlipped[ax]) {
+        if (world.wallsFlipped[ax]) row.flips[ax]++
+        else row.unflips[ax]++
+      }
+      row.leanMin[ax] = Math.min(row.leanMin[ax], world.wallsLean[ax])
+      row.leanMax[ax] = Math.max(row.leanMax[ax], world.wallsLean[ax])
+    }
+    prevFlipped = { open: world.wallsFlipped.open, reg: world.wallsFlipped.reg }
     // --- what the week appended to her life ----------------------------------------------------
     //
     // ⚠⚠ IT RUNS **BEFORE** THE ENDING BREAK, AND THAT ORDER IS A REPAIR (v75 T7, 12.09) RATHER THAN
@@ -378,6 +434,10 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
   row.endWeek = world.week
   row.endedAs = world.ending === null ? null : world.ending.type
   row.bondFinal = world.bond
+  row.leanFinal = { open: world.wallsLean.open, reg: world.wallsLean.reg }
+  row.expressed = expressedTemperamentOf(world)
+  row.matches = matchesEverPlayed(world)
+  row.wins = world.seasonWins + world.seasonHistory.reduce((sum, h) => sum + h.wins, 0)
   for (const beat of lifeLogOf(world)) {
     if (beat.kind === 'met') {
       row.metRaised++
@@ -975,6 +1035,269 @@ for (const t of TEMPERAMENTS) {
   console.log(
     `    ${pad(t, 13)}${padL(String(s.xs.length), 29)}${padL(`${((100 * carried) / s.xs.length).toFixed(1)}%`, 20)}${padL(`${(100 * (1 - endsHazardFor(t)) ** WEEKS_PER_YEAR).toFixed(1)}%`, 14)}`,
   )
+}
+
+// =================================================================================================
+// §6a. CENSUS v3 – HER WALLS: raised, lowered, and the round trip   (v76, wave 5's T10)
+// =================================================================================================
+//
+// who-she-is §4: «Once §2a's walls ship, the census adds the drift prints: walls-raised and
+// walls-lowered shares under a caring arm and a grinding arm, and the end-of-career EXPRESSED
+// distribution beside the constant birth one – the convergence guard made numbers.»
+//
+// ⚠⚠ THE THREE ARMS, AND THE THIRD IS THIS BENCH'S OWN CONSTRUCTION, SAID PLAINLY:
+//   · CARING   – the main grid above, `player`, already walked. Measured: the bond sits at `steady`
+//                for a whole career, so this is the care pole with nothing added.
+//   · GRINDING – `grinder`, a dedicated grid of its own (its n is printed and it is smaller).
+//                Measured: the bond collapses to `strained`/`cold`, so this is the kick pole.
+//   · TURNED   – ⚠ NOT A SHIPPED POLICY. `grinder` to the halfway week, then `player`. It exists
+//                because §2a promises a ROUND TRIP («a closed-again girl can be opened again … that
+//                sentence is earned drama») and NEITHER shipped policy can produce one: neither ever
+//                changes its mind. Without a parent who turns around, a 0 in the round-trip column
+//                would be a fact about `econ-bench`'s two policies and not about her.
+//
+// ⚠ EVERY NUMBER IS A TRANSITION OR A RANGE, NEVER AN END STATE – ruling K, applied to the one
+// mechanic in this wave that is designed to converge: the free repair walks the lean back to 0, so a
+// career that went away and came home reads as an ordinary girl in a terminal diff.
+
+/** ⚠⚠ RULING N's «ONE ARMABLE DIRECTION PER AXIS», as the predicate this section counts by. It is
+ *  `spirit.ts`'s module-private `wallsGrowable` re-spelled off the two exported axis readers, and it
+ *  is named as a copy rather than hidden as one. True = a born-PRIVATE girl on `open` or a born-
+ *  INTENSE one on `reg`: the two who have an opposite pole to reach, so the two whose POSITIVE lean
+ *  means anything. For the other two the positive side is clamped at 0 and a flip is a COLLAPSE. */
+function wallsGrowableHere(birth: Temperament, axis: WallsAxis): boolean {
+  return axis === 'open' ? temperamentOpenness(birth) === 'private' : temperamentIntensity(birth) === 'intense'
+}
+
+/** How many careers per temperament the two extra arms walk. ⚠ SMALLER THAN THE MAIN GRID AND
+ *  PRINTED AS SUCH: the caring arm is the 200-a-temperament census itself and costs nothing extra;
+ *  these two are new walks and are sized so census v3 adds minutes rather than half an hour. */
+const WALLS_CAREERS = flag('--walls', 20)
+const GRINDING_ARM: WalkOpts = { policy: POLICIES[0], decides: true, weeks: WEEKS }
+const TURNED_ARM: WalkOpts = { policy: POLICIES[0], decides: true, weeks: WEEKS, policyAfter: { week: Math.floor(WEEKS / 2), policy: POLICIES[1] } }
+
+rule('§6a. CENSUS v3 – WALLS RAISED, WALLS LOWERED, AND THE ROUND TRIP   ⚠ PRINTED, NO BAR')
+console.log('    who-she-is §2a\'s drift, made numbers. The definitions, once, so no column is read as another:')
+console.log(`      walls RAISED   : the lean reached −${ECONOMY.life.walls.flipArm} on some axis – deep enough to ARM a flip in the`)
+console.log('                       direction birth left open (a born-open girl) or to be real walls that arm')
+console.log('                       nothing and still have to be walked back (a born-private one).')
+console.log('      walls LOWERED  : the lean reached 0 again after having been raised – the free road home.')
+console.log('      ROUND TRIP     : raised AND lowered, in one career. §2a\'s «earned drama», as a share.')
+console.log('      FLIP / UN-FLIP : `wallsFlipped` actually toggled – the thing `expressedTemperamentOf` reads.')
+console.log('')
+{
+  interface WallsRow {
+    arm: string
+    n: number
+    raised: number
+    lowered: number
+    roundTrip: number
+    beyond: number
+    flips: number
+    unflips: number
+    flipRoundTrip: number
+    growthFlips: number
+    collapseFlips: number
+    /** ⚠⚠ THE COLUMN THAT MAKES «LOWERED» AND «ROUND TRIP» READABLE. The walls come home on CARE
+     *  weeks, so a grinding arm that shows any round trip at all is saying that its careers STOPPED
+     *  BEING KICKED at some point – and the only honest way to show that is the bond the career
+     *  actually ended on. Without it a reader has to guess whether the road home was the parent
+     *  changing or the ladder collapsing under him. */
+    careBandAtEnd: number
+    bondFinals: number[]
+  }
+  function fold(arm: string, rows: readonly CareerRow[]): WallsRow {
+    const out: WallsRow = { arm, n: rows.length, raised: 0, lowered: 0, roundTrip: 0, beyond: 0, flips: 0, unflips: 0, flipRoundTrip: 0, growthFlips: 0, collapseFlips: 0, careBandAtEnd: 0, bondFinals: [] }
+    for (const r of rows) {
+      const endBand = bondBandOf(r.bondFinal)
+      if (endBand === 'close' || endBand === 'steady') out.careBandAtEnd++
+      out.bondFinals.push(r.bondFinal)
+      const raised = WALLS_AXES.some((ax) => r.leanMin[ax] <= -ECONOMY.life.walls.flipArm)
+      const lowered = raised && WALLS_AXES.some((ax) => r.leanMin[ax] <= -ECONOMY.life.walls.flipArm && r.leanFinal[ax] >= 0)
+      if (raised) out.raised++
+      if (lowered) out.lowered++
+      if (raised && lowered) out.roundTrip++
+      if (WALLS_AXES.some((ax) => r.leanMax[ax] > 0)) out.beyond++
+      const flips = WALLS_AXES.reduce((a, ax) => a + r.flips[ax], 0)
+      const unflips = WALLS_AXES.reduce((a, ax) => a + r.unflips[ax], 0)
+      out.flips += flips
+      out.unflips += unflips
+      if (flips > 0 && unflips > 0) out.flipRoundTrip++
+      for (const ax of WALLS_AXES) {
+        if (r.flips[ax] === 0) continue
+        if (wallsGrowableHere(r.temperament, ax)) out.growthFlips += r.flips[ax]
+        else out.collapseFlips += r.flips[ax]
+      }
+    }
+    return out
+  }
+  const grindRows: CareerRow[] = []
+  const turnedRows: CareerRow[] = []
+  for (const t of TEMPERAMENTS) {
+    for (let i = 0; i < WALLS_CAREERS; i++) {
+      grindRows.push(walk(`walls-g-${i}`, t, GRINDING_ARM))
+      turnedRows.push(walk(`walls-t-${i}`, t, TURNED_ARM))
+    }
+  }
+  const arms: WallsRow[] = [
+    fold(`caring (${CENSUS_POLICY.label})`, careers),
+    fold('grinding (grinder)', grindRows),
+    fold('turned (grinder→player)', turnedRows),
+  ]
+  console.log(
+    `    ${pad('arm', 26)}${padL('n', 6)}${padL('raised', 9)}${padL('lowered', 10)}${padL('round trip', 12)}${padL('beyond 0', 10)}${padL('flips', 8)}${padL('un-flips', 10)}${padL('flip r/trip', 13)}`,
+  )
+  for (const a of arms) {
+    const pc = (hits: number): string => `${((100 * hits) / Math.max(1, a.n)).toFixed(1)}%`
+    console.log(
+      `    ${pad(a.arm, 26)}${padL(String(a.n), 6)}${padL(pc(a.raised), 9)}${padL(pc(a.lowered), 10)}${padL(pc(a.roundTrip), 12)}${padL(pc(a.beyond), 10)}` +
+        `${padL(String(a.flips), 8)}${padL(String(a.unflips), 10)}${padL(pc(a.flipRoundTrip), 13)}`,
+    )
+  }
+  console.log('')
+  console.log(`    ${pad('arm', 26)}${padL('growth flips', 14)}${padL('collapse flips', 16)}${padL('care band at end', 18)}${padL('median bond', 13)}   ← ruling N: each girl flips in ONE direction, and birth picks it`)
+  for (const a of arms) {
+    const bf = sample(`§6a bond at end · ${a.arm}`, a.bondFinals, 1)
+    console.log(
+      `    ${pad(a.arm, 26)}${padL(String(a.growthFlips), 14)}${padL(String(a.collapseFlips), 16)}` +
+        `${padL(`${((100 * a.careBandAtEnd) / Math.max(1, a.n)).toFixed(1)}%`, 18)}${padL(med(bf).toFixed(1), 13)}`,
+    )
+  }
+  console.log('')
+  console.log('    !! READ THE «CARE BAND AT END» COLUMN BEFORE THE «LOWERED» ONE. The walls only come home on')
+  console.log('       care weeks, so a GRINDING arm with any round trip in it is saying its careers stopped being')
+  console.log('       kicked – and the parent did not change his mind, so something else did. That is the number')
+  console.log('       to take to the architect, not the round-trip share on its own.')
+  console.log('')
+  // ⚠⚠ THE ACTUATION CLAUSE. A table of zeroes is what a walls model that never ran looks like, and
+  //    it is indistinguishable from a walls model that held. The GRINDING arm is the one that must
+  //    move: a career kicked for ten years and still at lean 0 would mean `driftWalls` never ran.
+  const grind = arms[1]
+  if (grind.raised === 0) {
+    console.log('')
+    console.log('    ⚠⚠ RED – TEN YEARS OF GRINDING RAISED NO WALLS ON ANY CAREER. `driftWalls` did not run, or the')
+    console.log('       bond never reached a kicked band. The table above is UNMEASURED, not a null result.')
+    throw new Error('census v3: the grinding arm raised zero walls – the walls pass never reached a kicked week')
+  }
+  console.log('    !! WHAT THIS SAYS ABOUT THE ROUND TRIP is the finding, not the share: under the two SHIPPED')
+  console.log('       parents it is unreachable by construction, because a shipped policy never changes its mind.')
+  console.log('       The «turned» arm is what makes §2a\'s sentence a measurable claim at all, and it is this')
+  console.log('       bench\'s construction – the architect\'s to accept or to replace with a better parent.')
+}
+
+// =================================================================================================
+// §6b. CENSUS v3 – WHO SHE IS READ AS, against who she was born   (the convergence guard)
+// =================================================================================================
+//
+// ⚠⚠ IDENTITY IS IMMUTABLE. `world.temperament` is BIRTH and no mechanic in the game writes it; what
+// this table shows is EXPRESSION – `expressedTemperamentOf`, which reads `wallsFlipped` alone and
+// never the lean. A row that is 100% on its own diagonal is a girl whose walls never flipped, which
+// under a caring parent is the DESIGN and not a dead arm (§2a: «without HER chosen work, her nature
+// holds»). The convergence guard is the opposite corner: if every column collapsed onto one bucket,
+// the four personalities would have become one and the census would be the only reader that could
+// say so.
+
+rule('§6b. CENSUS v3 – the end-of-career EXPRESSED distribution, beside the constant BIRTH one')
+{
+  console.log(`    the caring arm (the main grid, ${CAREERS_PER_TEMPERAMENT} careers per girl, '${CENSUS_POLICY.label}'). Rows are BIRTH, columns EXPRESSED.`)
+  console.log('')
+  console.log(`    ${pad('born', 12)}${TEMPERAMENTS.map((t) => padL(t, 11)).join('')}${padL('unchanged', 12)}`)
+  let offDiagonal = 0
+  for (const t of TEMPERAMENTS) {
+    const rows = byT(t)
+    const s = sample(`§6b expressed · ${t}`, rows.map((r) => r.weeks), 1)
+    const cells = TEMPERAMENTS.map((e) => rows.filter((r) => r.expressed === e).length)
+    const same = rows.filter((r) => r.expressed === t).length
+    offDiagonal += rows.length - same
+    console.log(
+      `    ${pad(t, 12)}${cells.map((c) => padL(`${((100 * c) / s.xs.length).toFixed(1)}%`, 11)).join('')}${padL(`${((100 * same) / s.xs.length).toFixed(1)}%`, 12)}`,
+    )
+  }
+  console.log('')
+  console.log(`    careers read as somebody else at 24 : ${offDiagonal}/${careers.length} (${((100 * offDiagonal) / careers.length).toFixed(1)}%)`)
+  console.log('    !! A 100% DIAGONAL UNDER A CARING PARENT IS THE MODEL WORKING, not a dead column: the walls')
+  console.log('       only move under kicks or under HER chosen work, and this arm does neither. §6a\'s grinding')
+  console.log('       row is where the off-diagonal lives, and its collapse-flip count is printed there.')
+}
+
+// =================================================================================================
+// §6c. CENSUS v3 – THE ±1.5 pp FAIRNESS CORRIDOR, RE-READ ON BIRTH COHORTS
+// =================================================================================================
+//
+// who-she-is §4, the not-a-difficulty-setting bar: «paired lifetime deltas across temperaments must
+// land inside ±1.5 pp of career match-win rate.»
+//
+// ⚠⚠ THE COHORTS ARE **BIRTH** AND THE FENCE IS WHY. §3 of who-she-is fixes the census identity at
+// birth («the voice bibles read birth alone»), and this file ASSIGNS `world.temperament` before the
+// walk – so the four columns are birth cohorts by construction and the same seeds are played four
+// times over. Re-reading the corridor on EXPRESSED cohorts would be a different measurement wearing
+// the same name: the expressed bucket is an OUTCOME of how the career went, so grouping by it would
+// sort careers by their own history and then report the sorting as a fairness gradient. §6b prints
+// the expressed distribution precisely so a reader can see the two are not the same partition.
+//
+// ⚠ THE PAIRED MEAN IS THE STATISTIC, not the difference of two pooled rates: spirit moves a
+// THRESHOLD and not a tap, so an individual career can swing hard while the population does not move
+// at all (wave 4 measured max |Δ| 5.178 pp against a mean of 0.054). ⚠ AND THE ARM CARRIES ITS OWN
+// NON-VACUITY CONTROL: if no pair ever differed the corridor would be signing an equality between a
+// thing and itself, which is the 17.08 defect CLAUDE.md records.
+
+rule('§6c. CENSUS v3 – the ±1.5 pp lifetime fairness corridor, re-read on BIRTH cohorts')
+{
+  const seeds = [...new Set(careers.map((c: CareerRow) => c.seed))]
+  const rate = (r: CareerRow): number => (r.matches === 0 ? Number.NaN : (100 * r.wins) / r.matches)
+  const byKey = new Map<string, CareerRow>()
+  for (const c of careers) byKey.set(`${c.seed}|${c.temperament}`, c)
+  let worst = 0
+  let worstPair = '–'
+  let diverged = 0
+  let compared = 0
+  const rows: string[] = []
+  for (let i = 0; i < TEMPERAMENTS.length; i++) {
+    for (let j = i + 1; j < TEMPERAMENTS.length; j++) {
+      const a = TEMPERAMENTS[i]
+      const b = TEMPERAMENTS[j]
+      const deltas: number[] = []
+      for (const seed of seeds) {
+        const ra = byKey.get(`${seed}|${a}`)
+        const rb = byKey.get(`${seed}|${b}`)
+        if (ra === undefined || rb === undefined) continue
+        const x = rate(ra)
+        const y = rate(rb)
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue
+        deltas.push(x - y)
+        compared++
+        if (x !== y) diverged++
+      }
+      const s = sample(`§6c ${a} vs ${b}`, deltas, 1)
+      const m = mean([...s.xs])
+      const sd = s.xs.length < 2 ? Number.NaN : Math.sqrt(s.xs.reduce((acc, x) => acc + (x - m) ** 2, 0) / (s.xs.length - 1))
+      const se = Number.isFinite(sd) ? sd / Math.sqrt(s.xs.length) : Number.NaN
+      const maxAbs = Math.max(...s.xs.map((x) => Math.abs(x)))
+      if (Math.abs(m) > Math.abs(worst)) {
+        worst = m
+        worstPair = `${a} vs ${b}`
+      }
+      rows.push(
+        `    ${pad(`${a} vs ${b}`, 22)}${padL(String(s.xs.length), 6)}${padL(m.toFixed(3), 11)}${padL(Number.isFinite(se) ? se.toFixed(3) : '–', 9)}${padL(maxAbs.toFixed(3), 12)}`,
+      )
+    }
+  }
+  console.log(`    ${pad('pair', 22)}${padL('n', 6)}${padL('mean Δ pp', 11)}${padL('SEM', 9)}${padL('max |Δ|', 12)}`)
+  for (const r of rows) console.log(r)
+  console.log('')
+  if (compared === 0) throw new Error('§6c compared ZERO career pairs – the corridor would be an equality between two empty lists')
+  if (diverged === 0) {
+    throw new Error(
+      '§6c: NOT ONE pair of temperament arms produced a different lifetime win rate – the four columns are ' +
+        'the same career and the corridor below would be comparing a thing with itself (CLAUDE.md, 17.08)',
+    )
+  }
+  const ok = Math.abs(worst) <= 1.5
+  console.log(`    worst pair : ${worstPair} at ${worst.toFixed(3)} pp against the ±1.5 pp bar   ${verdict('§6c fairness corridor (BIRTH cohorts)', ok, `worst paired mean ${worst.toFixed(3)} pp on ${worstPair}`)}`)
+  console.log(`    not vacuous: the arms genuinely diverged on a lifetime win rate in ${diverged} of ${compared} career pairs.`)
+  console.log('    ⚠ FOUR OF THE SIX PAIRS SHARE AN INTENSITY and are near-replicas rather than samples (wave 4\'s')
+  console.log('      own note): `temperamentIntensity` is the only thing `accrueSpirit` reads, so the informative')
+  console.log('      comparisons are the four steady-vs-intense pairs. All six are printed; read those four.')
 }
 
 // =================================================================================================

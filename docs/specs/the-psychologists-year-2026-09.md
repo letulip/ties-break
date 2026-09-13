@@ -147,7 +147,200 @@ parity run on the staff card. Every player-facing word – the focus names, the 
 card copy – is his (invariant 4), delivered as drafts with the wave.
 
 **Done when:** O1–O7 are ruled (⭐ done 13.09, per recommendation), the grid's bars are
-accepted (pending – the wave's bench), and the build-plan's step-5 row points here (it does,
-since 09.09). Step 5's schema move also carries the walls-leanings – the build plan's §6a
-records it. The builder brief is
+accepted (⭐ MEASURED 13.09 – §8 below; **eight bars missed and the owner's word is what a miss is
+for**), and the build-plan's step-5 row points here (it does, since 09.09). Step 5's schema move
+also carries the walls-leanings – the build plan's §6a records it. The builder brief is
 [life-wave-5-builder-2026-09](../plans/life-wave-5-builder-2026-09.md).
+
+---
+
+## 8. ⭐⭐⭐ The measured grid – T10, predicted vs measured (13.09)
+
+`npm run bench:psy` (`tools/psy-grid.ts`), 20 seeds per temperament on the two cheap arms and 8 on
+the two full-career ones, PAIRED – the same seeds in every arm of a cell, so a difference between
+two columns is the rung and not which careers landed where. Every prediction below is **derived
+from `ECONOMY`'s own constants or from a ruling by name, and printed before its measurement**;
+every result carries its n and its SEM; every arm prints the count that proves it reached its own
+subject. The run exits **non-zero** with eight bars missed – deliberately: «a bench that always
+exits 0 is a report, not a gate», and no bench runs inside `npm run check`, so the red is a
+**ruling request on §6's proposals** and not a blocked gate.
+
+⚠ **The frozen corpus priced none of this and could not have** (the wave's rulings K and R): it
+compares end states and cannot reach this wave's – 0 love episodes, 0 endings, no shock, no hire at
+156 weeks on all nine cells. The paired arms are the whole instrument.
+
+### 8a. «Back on her feet» – weeks under the knee, paired per rung  ⚠ **SIX MISSES**
+
+Prediction = the return arithmetic with no weather in it (`returnPerWeek[intensity] +
+recoverySlope[rung]` from a lifted 75), so a measured column SHORTER than its prediction is
+`weekPerturbation` and not a defect. **The bar is the ladder, not the level**: strictly fewer weeks
+under the knee than the arm below, by more than 2 × SEM (the masseur §4 law).
+
+| girl | arm | predicted | measured mean | SEM | paired Δ vs the arm below | × SEM | verdict |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| **steady** (sunny · quiet) | no seat | 2 | 1.900 | 0.143 | – | – | – |
+| | rung 0 | 1 | 1.900 | 0.100 | **0.000** | 0.00 | **MISS** |
+| | rung 1 | 1 | 1.700 | 0.147 | −0.200 | 1.71 | **MISS** |
+| | rung 2 | 1 | 1.650 | 0.131 | −0.050 | 0.57 | **MISS** |
+| **intense** (fiery · deep) | no seat | 7 | 4.700 | 0.363 | – | – | – |
+| | rung 0 | 4 | 3.700 | 0.128 | −1.000 | 3.34 | HIT |
+| | rung 1 | 4 | 3.200 | 0.172 | −0.500 | 4.36 | HIT |
+| | rung 2 | 3 | 2.800 | 0.092 | −0.400 | 2.18 | HIT |
+
+⭐ **The finding, and it is the biggest number this bench has to send back: `recoverySlope [2, 3, 4]`
+is a real ladder for an INTENSE girl and INVISIBLE for a STEADY one.** A steady girl is under the
+knee for 1.9 weeks with nobody hired; the entry rung buys her **exactly nothing** (Δ 0.000), and the
+whole ladder from no-seat to the top rung buys her **a quarter of a week**. The reason is
+arithmetic rather than tuning: from a lifted 75 a steady girl's shock is −22 and she returns at 5 a
+week, so she is under the knee for **one or two weeks whatever the family pays** – there is no room
+on an integer count of weeks for three rungs to separate. The 23.08 slope-blur problem §1 says the
+focus model dissolves is **still here, inside the recovery focus, for half the roster**.
+
+⚠ sunny==quiet and fiery==deep **to the digit, by arithmetic rather than by luck**: `accrueSpirit`
+spends the temperament three ways and all three are `temperamentIntensity`. The four columns are
+two measurements printed twice; the informative comparison is steady-vs-intense.
+
+### 8b. «Cool head» – one held season against a training-only control  ⚠ **RULING M's 0.9× IS WRONG**
+
+| rung | predicted (ruling M, 0.9 × card) | measured Δ vs the training-only arm | SEM | × SEM | realised ÷ card | vs the rung below | verdict |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 0 | 1.35 | **0.9687** | 0.0120 | 81.0 | **0.646** | – | HIT |
+| 1 | 2.25 | **1.5749** | 0.0179 | 87.9 | **0.630** | +0.606 (36.3 × SEM) | HIT |
+| 2 | 3.15 | **2.1317** | 0.0551 | 38.7 | **0.609** | +0.557 (12.2 × SEM) | HIT |
+
+Every bar HIT – the focus works, and each rung beats the one below by 12 to 36 × SEM. **But the
+prediction ruling M binds T10 to is wrong by a third**, and the decomposition says exactly where:
+
+* **a held season is not 52 worked weeks – it is ≈ 38.7.** The seat stands down on a booked family
+  week and inside a college freeze, and the modelled reasonable parent books enough of them that
+  **21–23 % of post-hire weeks are suspended**. That is ×0.744 before any headroom argument starts.
+* **ruling M's own mechanism is right and its size is ≈ 0.86, not 0.9** – measured against the term
+  actually spent rather than against the card: `growWeek`'s gain is `rate × HEADROOM × luck × aim`,
+  so a girl he has lifted has less headroom for the training that follows.
+* 0.744 × 0.86 = **0.64**, which is what the grid reads.
+
+⭐ So ruling M's «a held season delivers ~0.9× the card number» is a statement about a **probe world
+with no stand-downs**; in a walked career the number is **0.61–0.65**. If the card is meant to be
+honest about what a season buys, the constants are ~1.55× too high – or the stand-down rule is what
+wants re-reading. **The owner's call; nothing was touched.**
+
+* **Zero at the ceiling: HIT, exactly.** 48 at-or-above-ceiling states swept over the engine's own
+  `coolheadGain`, **0 non-zero** – and 48 of 240 seat-arm careers (**20 %**) START the season inside
+  one top-rung season of the ceiling, so ruling M's second number is reachable and reached.
+* ⚠ **Cool head is the one focus with NO natural clientele.** All four temperament rows are
+  identical to four decimals, because `growWeek` reads her skills, her ceiling, her age, the plan
+  and one luck draw – and not who she is. §5 claims a clientele for the other three; it does not
+  hold here, and §8a is the proof the assignment is live.
+
+### 8c. «Learning to listen» – the realised clarity, and the bond fence  ✔ all HIT
+
+Prediction = the constants themselves. Bar = the realised share inside the 95 % CI of its own
+target, and the share monotone in rung.
+
+| rung | target | realised (pooled) | n | verdict |
+| --- | ---: | ---: | ---: | --- |
+| 0 | 0.60 | **61.7 %** | 405 | HIT |
+| 1 | 0.80 | **81.0 %** | 405 | HIT |
+| 2 | 0.95 | **96.1 %** | 408 | HIT |
+
+Monotone: HIT. Every per-temperament cell is inside its own CI. **The no-seat arms carry ZERO
+stamps** – the instrument refuses to run if any appears, because a stamp without a seat would mean
+the focus is not what decides the wording.
+
+⭐ **The bond fence, re-proven on the same runs, and the control is the DIAL rather than the hire.**
+Measured first: hiring moves `fundsCents`, the entry policy reads a reserve off the ledger, and
+three careers in four then diverge from their unhired twin – so «hired vs not hired» prices the
+WALLET and would have reported a wording change as a bond change. The honest toggle is
+`listenClarity` poked to 0 on the same seat, same money, same week: **16 of 16 pairs byte-identical
+across the whole bond series**, with the positive control live (**175 rows read plainly on, 0 off**).
+
+### 8d. «Working on herself» – the dam, and the ladder that is not the flip count  ⚠ **TWO MISSES**
+
+⭐ **The anti-«hugged into an extravert» dam HOLDS, exactly.** The caring no-focus arm shows
+**0 beyond-baseline weeks and 0 beyond-baseline flips** in all four temperaments, against 42 408
+beyond-baseline weeks and 96 flips in the seat arms. This is the one hard invariant in the grid and
+it is met.
+
+⚠ **The flip COUNT cannot rank the rungs and misses twice** (1.000 → 1.000 → 1.000 flips a career,
+Δ 0.000 ± 0.180): the lean saturates at ±`leanMax` and then sits armed for hundreds of weeks, so at
+every rung the flip is a near-certainty and the count is capped by **how many growable axes she
+has**. What ×1 / ×1.5 / ×2 buys is the **WAIT**, and on that reading the ladder is clean:
+
+| rung | hazard/wk | predicted median (`ln 0.5 / ln(1 − p)`) | measured median | mean | SEM | verdict |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 0 | 0.0500 | 13.5 | 19.0 | 21.69 | 3.52 | – |
+| 1 | 0.0750 | 8.9 | 12.5 | 17.44 | 2.82 | HIT |
+| 2 | 0.1000 | 6.6 | 4.5 | 9.31 | 1.66 | HIT |
+
+⭐⭐ **And one girl in four can never buy this focus at all.** A **sunny** girl is born open AND
+steady, so ruling N clamps her positive lean at 0 on both axes: measured, **0 beyond-baseline weeks
+across every sunny seat arm at every rung**. §5's «the drift focus only means anything where a
+leaning has room to move» makes that the design – but a quarter of the roster paying a year's
+retainer for a focus that can buy NOTHING is the never-fired corridor at its sharpest, and no card
+says so. Reported, not fixed.
+
+### 8e. O6's ×0.75 against the tenths grid  ✔ HIT, to four decimals
+
+Ruling M's fourth number, confirmed: the lean is stored to one decimal, so a slowed kicked week
+moves it by `roundTenth(1.5 × 0.75) = 1.1` and the realised slow-down is **×0.7333, never ×0.75**.
+Measured **×0.7333** (1.5000 ± 0.0000 over 1 624 kicked axis-weeks against 1.1000 ± 0.0000 over
+1 960).
+
+⚠ **The arm this needed is not a grinding career, and the first draft proved it**: two columns
+identical to four decimals and a ratio of exactly ×1.0000, because the walls saturate about 67
+kicked weeks in and the pro gate opens later than that – every unsaturated kicked week happened
+before there was anybody to pay. The measurable arm is the parent who **hires him and then starts
+kicking** (caring to week 200, grinding after), which is also the sentence O6 is for.
+
+### 8f. The never-fired corridor – §4's own watch, PRINTED
+
+Per focus, the share of **paid** weeks (`psychologistWorksThisWeek`) with nothing to do. Rung 1.
+
+| focus | paid weeks | never fired | stood down | what it is measured on |
+| --- | ---: | ---: | ---: | --- |
+| recovery | 11 006 | **96.2 %** | 23.1 % | two forced shocks in a career – the generous case |
+| listen | 6 532 | **93.8 %** | 20.4 % | the forced-churn arm – the most generous case there is |
+| herself | 10 960 | **56.2 %** | 22.5 % | 100 % for a sunny girl, 41.6 % for the other three |
+| cool head | 5 348 | **75.7 %** | 16.7 % | idle = at the ceiling |
+
+⚠ **This is the academy-fares failure (round 23 #16) in its new coat, and it is large.** §4 predicts
+the SHAPE – «cool head and the drift focus do slow work every held week, so never-fired is mostly
+the recovery focus's exposure» – and the shape holds; the SIZE does not flatter it. Every focus is
+idle for most of the weeks it is billed for, and **17–23 % of held weeks are suspended on top**, so
+the retainer is also a smaller bill than the card implies. No bar is drawn: what corridor is
+acceptable is the owner's ruling, and inventing one here would be the defect ruling S names.
+
+⚠ The `'herself'` row carries its own cross-check – the state read against the lean's own
+transition – and it **caught two defects in this bench before either printed a number**: a predicate
+blind to the saturated lean (25.0 % against 64.1 %), and a paid-week counter running **one week
+ahead of the engine's billing predicate** (54 disagreeing weeks in 346, every one a week the counter
+called paid and the engine had stood down). Both fixed; the two readings now agree at **56.2 % and
+56.2 %**.
+
+### 8g. Actuation – the proof each arm reached its subject
+
+320 shocks stamped by `rollEnds` · 218 recovery receipts printed · 228 seat arms hired before the
+shock · 240 held seasons read · 48 seasons that started at the ceiling · 1 218 read-bearing rows
+stamped · 970 rows read plainly · 96 beyond-baseline flips · 42 408 beyond-baseline weeks · 20
+walls-UP flips. **A zero in any of those columns ends the run non-zero**: it is the instrument
+saying it never reached its own subject, which is never a result of zero.
+
+MAIN is untouched. The two dials the file moves – the arrival/ending thresholds and `listenClarity`
+– are restored and **checked** restored, so the frozen capture (41550 / `e6b0c709`) cannot see it.
+
+### 8h. Two lines the same bench ships that are not this spec's subject
+
+`bench:psy` also carries the wave's other two measured claims, because ruling H folded T12 and T13
+into this wave after the brief was written. Neither belongs in the psychologist's spec and both are
+in the run:
+
+* **T12, ruling S's corrected claim** (§3 of the run): over the 64 cards the market can ever draw,
+  **above 16 · level 32 · under 8 · under-self 8 – predicted and measured identical** – and
+  `(tier, style)` is unique over the whole roster, so no two CARDS read alike on the shown axes.
+  The personal edge placement is **not** touched; `coach-match-edge` §4 keeps it off the card.
+* **T13, the number the owner's open question needs** (§4 of the run): the share of careers an
+  Elite coach would REFUSE, by tenth of the career – **58.4 % · 74.1 % · 100 % · 100 % · 100 % ·
+  100 % · 100 % · 100 % · 100 % · 100 %**. Every career clears the gate once (32/32, first crossing
+  median week 28) and **every career is refused for the whole back eight tenths of its life**,
+  because `kidPoints(world, 'domestic')` is a rolling 52-week best-6 and a professional stops
+  feeding it. REPORTED, not acted on – the constant is the owner's.

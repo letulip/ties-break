@@ -51,6 +51,7 @@
     "tools/prologue-balance-bench.ts",
     "tools/prologue-court-bench.ts",
     "tools/prologue-handover-bench.ts",
+    "tools/psy-grid.ts",
     "tools/r31-age-curve.ts",
     "tools/radar-bench.ts",
     "tools/retired-college-rule.ts",
