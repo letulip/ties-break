@@ -37,7 +37,21 @@ import { nextTick } from 'vue'
 import '../../src/style.css'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { createWorld, hirePsychologist, setPsychologistRung, toSnapshot, PSYCHOLOGIST_LOCKED_DETAIL } from '../../src/engine/world'
+import {
+  createWorld,
+  hirePsychologist,
+  setPsychologistRung,
+  toSnapshot,
+  PSYCHOLOGIST_LOCKED_DETAIL,
+  // v76 T3 – the year-focus catalogue and the two refusal sentences these cases render. Imported
+  // from the engine that authors them, never retyped, so the вычитка moves the draft and the pin.
+  PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL,
+  PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
+  PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+  PSY_FOCUSES,
+  PSY_FOCUS_LABEL,
+  PSY_FOCUS_LINE,
+} from '../../src/engine/world'
 import { ECONOMY } from '../../src/engine/economy'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { formatCents } from '../../src/shared/money'
@@ -204,6 +218,123 @@ describe('the psychologist card on screen T', () => {
     expect(outAfter).toContain(`${formatCents(snapshot.coachBilling.household.outgoingCents)} out`)
     expect(snapshot.psychologistSalaryCents).toBe(ECONOMY.psychologist.rungs[2].salaryCents)
     after.unmount()
+  })
+
+  // ===============================================================================================
+  // §9-§11 – ⭐⭐ THE YEAR'S WORK (v76 T3), the second radio group under this seat
+  // ===============================================================================================
+  //
+  // ⭐⭐ THIS IS THE READER RULING G DEMANDED. `psychologistFocus` was kept OFF the wire in T2 because
+  // E-07's contract test («a Snapshot member with no reader is a promise to the UI that nothing
+  // collects») refuses a member nobody reads – so the field and this row ship in one commit, and
+  // these three cases are the «its reader» half of that sentence.
+  //
+  // ⚠ AND EVERY FACT IN THE ROW IS THE ENGINE'S, which is stricter here than on the dial above: the
+  // consent gates read the bond BAND, and the fog law forbids `bond` reaching the UI in any shape, so
+  // this card CANNOT derive which options are live. It is handed `psychologistFocusOpen` and
+  // `psychologistFocusDetail` and renders exactly them – the R10-16 doctrine, where a disabled button
+  // and the click it refuses come from one function (`psychologistFocusRefusal`).
+  it('§9 – ⭐ the row appears with the HIRE and not before it', async () => {
+    // A year of work with nobody on the payroll is refused engine-side, so a row offered before the
+    // hire would be a control lying about itself (round-20 #1, and the travel switch's own rule).
+    const { pro, hired } = snapshots()
+    const unhired = await mountCard(pro)
+    expect(unhired.find(`${SEAT} .staff-focus`).exists(), 'nothing to work on without somebody to work it')
+      .toBe(false)
+    unhired.unmount()
+
+    const wrapper = await mountCard(hired)
+    const row = wrapper.find(`${SEAT} .staff-focus`)
+    expect(row.exists(), 'hired, and the year is now a question').toBe(true)
+    // Round 40's conventions, the dial's own one block up.
+    expect(row.attributes('role')).toBe('radiogroup')
+    const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
+    expect(options.length, 'the spec §2`s four').toBe(PSY_FOCUSES.length)
+    for (const [i, focus] of PSY_FOCUSES.entries()) {
+      expect(options[i].attributes('role')).toBe('radio')
+      expect(options[i].text()).toBe(PSY_FOCUS_LABEL[focus])
+      expect(options[i].attributes('aria-checked'), 'nothing is chosen yet').toBe('false')
+    }
+    // ⚠ AND THE RUNG DIAL IS UNTOUCHED BESIDE IT – three buttons, not seven. The two groups are
+    // deliberately different classes: `.staff-rung` is the roster, `.staff-focus-option` is the year,
+    // and the masseur's own pins sweep the first by name.
+    expect(wrapper.findAll(`${SEAT} .staff-rung`).length).toBe(ECONOMY.psychologist.rungs.length)
+    wrapper.unmount()
+  })
+
+  it('§10 – ⭐⭐ the live options are the ENGINE`s, and the row prints the ENGINE`s sentence', async () => {
+    const { hired } = snapshots()
+    // A RUNNING YEAR: the snapshot says nothing may be chosen and why, and the card obeys both.
+    const running = {
+      ...hired,
+      psychologistFocus: 'coolhead' as const,
+      psychologistFocusOpen: [],
+      psychologistFocusDetail: PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+    }
+    const wrapper = await mountCard(running)
+    const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
+    expect(options[0].attributes('aria-checked'), 'the running year is the checked one').toBe('true')
+    for (const [i, focus] of PSY_FOCUSES.entries()) {
+      expect(options[i].attributes('disabled'), `${focus} is withheld`).toBeDefined()
+    }
+    expect(wrapper.find(`${SEAT} .staff-focus-note`).text(), 'the engine`s own words').toBe(
+      PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+    )
+    wrapper.unmount()
+
+    // AND THE OPEN STATE: four live buttons, and the note says what the running year is FOR – the
+    // catalogue's line, never a sentence this screen composed.
+    const open = {
+      ...hired,
+      psychologistFocus: 'listen' as const,
+      psychologistFocusOpen: [...PSY_FOCUSES],
+      psychologistFocusDetail: '',
+    }
+    const second = await mountCard(open)
+    for (const b of second.findAll(`${SEAT} .staff-focus-option`)) {
+      expect(b.attributes('disabled'), 'every year is on offer').toBeUndefined()
+    }
+    expect(second.find(`${SEAT} .staff-focus-note`).text()).toBe(PSY_FOCUS_LINE.listen)
+    second.unmount()
+  })
+
+  it('§11 – ⭐⭐ HER CONSENT REACHES THE CARD AS A SENTENCE AND NEVER AS A NUMBER', async () => {
+    // ⚠⚠ THE FOG LAW ON THE SURFACE IT PROTECTS. Both consent gates read the bond BAND; the card is
+    // told only which buttons are live and what to say. So this case mounts the two consent states
+    // and asserts the ROW, then asserts the negative that matters: no band word and no figure.
+    const { hired } = snapshots()
+    // Under 18 at a strained bond: `herself` alone is closed, and the card says she is not ready.
+    const notReady = {
+      ...hired,
+      psychologistFocusOpen: ['coolhead', 'recovery', 'listen'] as const,
+      psychologistFocusDetail: PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
+    }
+    const wrapper = await mountCard({ ...notReady, psychologistFocusOpen: [...notReady.psychologistFocusOpen] })
+    const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
+    const herself = PSY_FOCUSES.indexOf('herself')
+    expect(options[herself].attributes('disabled'), 'the one year she has to want').toBeDefined()
+    for (const [i] of PSY_FOCUSES.entries()) {
+      if (i !== herself) expect(options[i].attributes('disabled'), 'the other three stay hers to be given').toBeUndefined()
+    }
+    expect(wrapper.find(`${SEAT} .staff-focus-note`).text()).toBe(PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL)
+    const seatText = wrapper.find(SEAT).text()
+    for (const band of ['strained', 'cold', 'steady', 'close', 'bond']) {
+      expect(seatText.toLowerCase(), `the card never prints «${band}»`).not.toContain(band)
+    }
+    wrapper.unmount()
+
+    // From 18 at the same bond: she declines the whole decision, and that is the sentence shown.
+    const declined = {
+      ...hired,
+      psychologistFocusOpen: [],
+      psychologistFocusDetail: PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL,
+    }
+    const second = await mountCard(declined)
+    for (const b of second.findAll(`${SEAT} .staff-focus-option`)) {
+      expect(b.attributes('disabled'), 'she declines any set or change').toBeDefined()
+    }
+    expect(second.find(`${SEAT} .staff-focus-note`).text()).toBe(PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL)
+    second.unmount()
   })
 
   // ===============================================================================================

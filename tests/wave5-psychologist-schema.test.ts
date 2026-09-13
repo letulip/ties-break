@@ -601,16 +601,37 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       expect(named.some((p) => p.includes('diary') || p.includes('voice') || p.includes('lifeBeat')), `${key}`)
         .toBe(false)
     }
-    // ⚠ AND THE FOCUS HAS NO READER AT ALL ON THIS TREE, which is T3's whole surface area. E-07's
-    // contract test is what kept it off the wire; this says the same thing about `src/` as a whole,
-    // so a focus reader appearing before T3's command is a finding rather than a tuning miss.
+    // ⚠⚠ RE-AIMED BY T3 AT THE READERS THE YEAR-FOCUS WAS ALWAYS GOING TO GET, AND THE SENTENCE IT
+    // REPLACES IS WHY. This case ended: «AND THE FOCUS HAS NO READER AT ALL ON THIS TREE, which is
+    // T3's whole surface area … so a focus reader appearing before T3's command is a finding rather
+    // than a tuning miss.» T3 is that command. The four files below are the three writers plus
+    // exactly the road the wave designed – the leaf that decides (`world/psychologist.ts`), the
+    // builder that puts it on the wire, the wire itself, and the ONE surface that reads it. Holding
+    // it to «writer-only» now would assert that T3 never happened; holding it to THIS list is
+    // stricter than it looks, because a fifth reader is still a finding.
+    //
+    // ⚠ `includes('psychologistFocus')` MATCHES `psychologistFocusSeason`, `psychologistFocusOpen`
+    // and `psychologistFocusDetail` TOO, by substring – which is the honest superset for this claim
+    // and the reason the list below is not the snapshot's member list.
     const focusNamed = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('psychologistFocus'))
       .map(([path]) => path)
-    expect(focusNamed, 'the year-focus is still writer-only').toEqual([
+    expect(focusNamed, 'the year-focus is read where T3 put it, and nowhere else').toEqual([
+      'components/SupportStaffTab.vue',
       'engine/migrations.ts',
+      'engine/world/psychologist.ts',
+      'engine/world/snapshot.ts',
       'engine/world/state.ts',
       'engine/world.ts',
+      'shared/protocol/snapshot.ts',
     ])
+    // ⭐ AND THE HALF THAT WAS ALWAYS THE POINT SURVIVES THE RE-AIM, restated so it cannot be lost
+    // with the list above: no VOICE, DIARY or LIFEBEAT file has started asking what the seat is
+    // working on – §3's fence in its own costume, and the loop over `SEAT_KEYS` above says it for
+    // each key individually.
+    expect(
+      focusNamed.some((p) => p.includes('diary') || p.includes('voice') || p.includes('lifeBeat')),
+      'a staffing decision is still nothing any of her words may read',
+    ).toBe(false)
   })
 })

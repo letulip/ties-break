@@ -32,12 +32,24 @@
 // import (erased at compile time), so world.ts imports these values with no runtime cycle, and
 // everything needed at runtime comes from SIBLING leaves – ledger, ladder, college, bookings,
 // constants. The same four the masseur reaches for, and for the same reasons.
+//
+// ⚠ T3 ADDS SIX IMPORTS AND NO NEW ARROW INTO THIS FILE, which is worth one line because the year's
+// focus is the first thing here that reads anything about HER. `bondBandOf` (the consent band),
+// `kidAgeExact` (the joint-choice age), `isBlackoutWeek` + `schoolIsOver` (the off-season window) and
+// `seasonIndexOf` (the once-a-season fact) are all leaves `spirit.ts` already reaches for in exactly
+// this combination, so the direction of every arrow is unchanged: sideways, into leaves, never back
+// into `world.ts`.
 import { ECONOMY } from '../economy'
-import { addEvent } from './ledger'
+import { addEvent, seasonIndexOf } from './ledger'
 import { guardNotEnded } from './constants'
 import { activeLadderOf } from './ladder'
 import { inCollege } from './college'
 import { vacationForWeek } from './bookings'
+import { kidAgeExact } from './age'
+import { bondBandOf } from '../spirit'
+import { schoolIsOver } from '../kidLife'
+import { isBlackoutWeek } from '../season/calendar'
+import type { PsyFocus } from './state'
 import type { WorldState } from '../world'
 
 /** THE GATE, `masseurUnlocked`'s twin on the SAME one-way door (the travelling-team §2 ruled table:
@@ -225,4 +237,193 @@ export function resolvePsychologist(world: WorldState): void {
     text: 'Psychologist – weekly salary',
     amountCents: -cost,
   })
+}
+
+// =================================================================================================
+// THE YEAR-FOCUS (wave 5 T3) – WHAT THE SEAT IS WORKING ON, CHOSEN ONE YEAR AT A TIME
+// =================================================================================================
+//
+// ⭐⭐ THE RECONCILIATION THIS WHOLE SEAT IS BUILT ON, in the spec's own sentence
+// (`docs/specs/the-psychologists-year-2026-09.md` §1): «THE YEAR-FOCUS is the choice of channel; the
+// RUNG is how well the chosen work goes». The rung dial above buys WHO takes the call; this buys what
+// the call is FOR. Everything the four focuses actually DO is T4-T7 – T3 is the decision, its
+// refusals and the row that shows them.
+//
+// ⚠⚠ AND THE DECISION IS THE PARENT'S STAFFING DECISION, NOT A LIFE BEAT. Named here so nobody adds
+// them later: a pick writes NO `lifeLog` row (the wave brief's own rule – it is not something that
+// happened to her), NO bond delta of any kind (the pick is not a parenting act and the price list is
+// universal), NO money beyond the retainer that is already running, and NO feed row at all. The
+// hire and the rung change write ledger lines because the BILL moves; nothing about the bill moves
+// here, and the standing legibility law is answered by each focus's own receipt as it lands (T4's
+// clear line, T5's growth, T6's wording), never by a line announcing an intention.
+
+/** ⭐ THE FOUR, IN THE ORDER THE CARD RENDERS THEM. A list rather than a re-typed union so the
+ *  engine, the wire and the screen iterate ONE order – and `Record<PsyFocus, …>` below is total by
+ *  type, so the fifth focus the spotlight wave may bring (O7) is a compile error here and not a
+ *  silently missing option. ⚠ It is also the id re-validation list: `setPsychologistFocus` refuses
+ *  anything not in it, the roster dial's own discipline one function up. */
+export const PSY_FOCUSES: readonly PsyFocus[] = ['coolhead', 'recovery', 'listen', 'herself']
+
+/** The four names, DRAFTS (invariant 4) – the spec §2's own working names, which the wave brief
+ *  names as the base for the вычитка. */
+export const PSY_FOCUS_LABEL: Record<PsyFocus, string> = {
+  coolhead: 'Cool head',
+  recovery: 'Back on her feet',
+  listen: 'Learning to listen',
+  herself: 'Working on herself',
+}
+
+/** ...and what each year is FOR, one line each, DRAFTS.
+ *
+ *  ⚠ THEY SAY WHAT THE WORK IS AIMED AT AND NEVER WHAT IT HAS ACHIEVED, which is the card's standing
+ *  rule one block up («a hired line boasting today would be "вы заплатили и не можете этого
+ *  заметить" written the other way round»): the effects arrive with T4-T7 and each brings its own
+ *  receipt. ⚠ `listen` is written as the PARENT's year deliberately – the 09.09 re-cut: the seat
+ *  coaches you and never reports her sessions. */
+export const PSY_FOCUS_LINE: Record<PsyFocus, string> = {
+  coolhead: 'The year goes on the big points – the head she takes into them.',
+  recovery: 'The year goes on the weeks after something breaks – the walk back up.',
+  listen: 'The year goes on your own ear for her – the sessions themselves stay hers.',
+  herself: 'The year goes on the things she never says out loud – and she has to want it.',
+}
+
+/** The stale-screen refusal: a year of work with nobody to work it. DRAFT. */
+export const PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL =
+  'Nobody is taking the call – a year of work needs somebody on the payroll first.'
+
+/** The roster refusal's twin for the focus id – `setPsychologistRung`'s own shape, so a stale screen
+ *  can no more invent a year than it can invent a specialist. DRAFT. */
+export const PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL =
+  'No such year of work – there are four, and that is not one of them.'
+
+/** ⭐⭐ O1 MADE MECHANICAL – «в ближайший год» is the owner's own grain, so a focus is not a dial.
+ *  ONE sentence for both halves of the rule (the off-season WINDOW and the once-a-season FACT),
+ *  because they are one story and the R10-16 doctrine forbids two sentences racing: whichever half
+ *  refused, what is true is that the year already has its work and the next choice is an off-season
+ *  one, once. DRAFT. */
+export const PSYCHOLOGIST_FOCUS_SEASON_REFUSAL =
+  'The year already has its work – the next one is chosen in the off-season, once a season.'
+
+/** ⭐⭐ FROM 18 THE CHOICE IS JOINT, AND AT A STRAINED OR COLD BOND SHE DECLINES IT (ruled 09.09 –
+ *  «в зрелости рычаг – влияние через отношения», made mechanical). HER line, and the register is the
+ *  FLAT POOL's by the bibles' own law rather than by a choice of mine: the decline exists ONLY at
+ *  `strained` and `cold`, and `docs/specs/voice-bibles-2026-09.md` («The flat pool») rules that at
+ *  those two bands the four voices collapse into one shared pool – «the player cannot reliably tell
+ *  which girl this is from the reply». So there is ONE sentence here and not four, which is what the
+ *  wave brief means by «the flat-pool law applies by construction». ⚠ A per-voice set would have to
+ *  be complete over all four temperaments AND would be a voice speaking where the bibles say the
+ *  voice is obscured – the completeness law and the pool law pointing the same way. DRAFT. */
+export const PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL =
+  'This is her call as much as yours now – and she is not saying yes to it.'
+
+/** ⭐ `'herself'` NEEDS HER READINESS AT ANY AGE (the spec §2's ruled line: «⚠ Requires HER
+ *  readiness: at a strained/cold bond the card says she is not ready»). Its own sentence and its own
+ *  gate: it closes ONE option where the decline above closes the whole row. DRAFT. */
+export const PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL =
+  'She is not ready for that one – it is the year she has to want first.'
+
+/** ⚠⚠ CONSENT IS A BAND READ AND NOTHING ELSE – §0.4 of the wave's laws, and the gravest thing this
+ *  task could get wrong. NO DRAW, EVER: her yes is never dice, so the same band gives the same answer
+ *  on every call, on every world, for ever. `bondBandOf` is the ONE reader of the number (spirit.ts),
+ *  and the number itself never crosses to the UI – the card is handed the SENTENCE, never the band
+ *  and never the figure (the fog law, `Snapshot`'s own). */
+function bondWithholdsConsent(world: WorldState): boolean {
+  const band = bondBandOf(world.bond ?? ECONOMY.bond.start)
+  return band === 'strained' || band === 'cold'
+}
+
+/** ⭐⭐ WHAT WOULD HAPPEN IF THIS FOCUS WERE SET THIS WEEK – the sentence `setPsychologistFocus`
+ *  would throw, or `null` when it would be accepted. ONE function, because the R10-16 one-story
+ *  doctrine is only cheap when there is literally one place the story is written: the command throws
+ *  what this returns, and the card prints what this returns (through the snapshot's
+ *  `psychologistFocusOpen` / `psychologistFocusDetail`). A disabled option and the click it refuses
+ *  cannot tell two stories when neither of them owns a sentence.
+ *
+ *  THE ORDER IS THE RULE, and each step is load-bearing:
+ *
+ *  1. **NOT HIRED** – the year belongs to the seat, so there is no year without one.
+ *  2. **⚠⚠ THE JOINT DECLINE IS THE OUTER GATE AND WINS.** At 18+ with a strained/cold bond she
+ *     declines ANY set or change, so `'herself'` never reaches its own readiness test and the two
+ *     sentences never race. The overlap is real – both gates read the same two bands – and this is
+ *     where it is resolved, once.
+ *  3. **`'herself'` READINESS**, at any age – the per-OPTION gate, the only one that closes a single
+ *     row member rather than the row.
+ *  4. **⚠⚠ THE FIRST PICK IS FREE, AND «FREE» MEANS `psychologistFocus === null`, NEVER «just
+ *     hired».** The year starts when the work starts – but firing keeps the focus as a dead letter
+ *     (`hirePsychologist`'s own ⚠⚠ note and the field's in state.ts), so if a re-hire counted as a
+ *     fresh free pick, fire-and-re-hire would be a free mid-season switch and O1 would be
+ *     decorative. Once a focus exists, a change is a change.
+ *  5. **THE WINDOW**, `isBlackoutWeek(week, schoolIsOver(...))` – the season's own edge.
+ *  6. **ONCE A SEASON**, `psychologistFocusSeason` against `seasonIndexOf(week)` – so the three-week
+ *     window cannot be spent twice, and so a pick made at hire cannot be revised in the off-season
+ *     of the very season it was made in.
+ *
+ *  Pure read, ZERO draws – see `bondWithholdsConsent`. */
+export function psychologistFocusRefusal(world: WorldState, focus: PsyFocus): string | null {
+  if (!(world.psychologistHired ?? false)) return PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL
+  const withheld = bondWithholdsConsent(world)
+  if (withheld && kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay) >= 18) {
+    return PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL
+  }
+  if (withheld && focus === 'herself') return PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL
+  if ((world.psychologistFocus ?? null) === null) return null
+  if (!isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
+    return PSYCHOLOGIST_FOCUS_SEASON_REFUSAL
+  }
+  if ((world.psychologistFocusSeason ?? -1) === seasonIndexOf(world.week)) {
+    return PSYCHOLOGIST_FOCUS_SEASON_REFUSAL
+  }
+  return null
+}
+
+/** WHICH OF THE FOUR THE ENGINE WOULD ACCEPT THIS WEEK – the card disables everything else, so the
+ *  screen can never offer a permission the engine does not hold. `[]` means the row is closed
+ *  outright. Zero draws. */
+export function psychologistFocusOpen(world: WorldState): PsyFocus[] {
+  return PSY_FOCUSES.filter((f) => psychologistFocusRefusal(world, f) === null)
+}
+
+/** ...AND THE ROW'S OWN SENTENCE, `''` while all four are open.
+ *
+ *  ⚠ `'coolhead'` IS THE ROW PROBE, and the reason is a property of the gates rather than a
+ *  preference: every refusal except the readiness one is ROW-LEVEL and identical for all four
+ *  focuses (not hired · the joint decline · the season rule), so asking any non-`'herself'` member
+ *  answers for the row. `'herself'`'s own refusal is asked second, because the ONE case where the
+ *  row is open and something is still closed is exactly the not-ready one.
+ *
+ *  ⚠ AND IT IS `''` RATHER THAN THE CHOSEN FOCUS'S LINE WHEN NOTHING IS REFUSED: what the year IS
+ *  belongs to `PSY_FOCUS_LINE`, a static catalogue the card reads directly, and duplicating it onto
+ *  the wire would be a second source for one sentence. Zero draws. */
+export function psychologistFocusDetailOf(world: WorldState): string {
+  if (!(world.psychologistHired ?? false)) return ''
+  return psychologistFocusRefusal(world, 'coolhead') ?? psychologistFocusRefusal(world, 'herself') ?? ''
+}
+
+/** ⭐⭐ THE PICK. Re-validated engine-side like every command (invariant 1), and it writes exactly two
+ *  fields: the year, and the season that priced it.
+ *
+ *  ⚠ `guardNotEnded` FIRST, and NO NEW SENTENCE IS DRAFTED FOR THE COLLEGE FREEZE – the latch throws
+ *  the existing `COLLEGE_FREEZE_REFUSAL`, exactly as `hirePsychologist` and `setPsychologistRung`
+ *  document, and `tests/round24-college-refusals.test.ts` holds this command to the same table as
+ *  theirs («no specialist decision should reach a girl the programme is coaching»).
+ *
+ *  ⚠ RE-CHOOSING THE YEAR ALREADY RUNNING IS A NO-OP AND NOT A REFUSAL – `setPsychologistRung`'s own
+ *  idempotence, for its own reason: nothing is being decided, so nothing may be charged, written or
+ *  thrown. It is deliberately BEFORE the refusal read: a stale screen pressing the live option must
+ *  not be told the year is locked, because from the player's side nothing was asked for.
+ *
+ *  ZERO draws on any stream. */
+export function setPsychologistFocus(world: WorldState, focus: PsyFocus): void {
+  // ⚠ W2-ENDINGS: the engine re-validates every command – a tab left open behind the epilogue must
+  // not be able to start a year of work for a girl who has retired.
+  guardNotEnded(world)
+  if (!PSY_FOCUSES.includes(focus)) throw new Error(PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL)
+  if ((world.psychologistFocus ?? null) === focus) return
+  const refusal = psychologistFocusRefusal(world, focus)
+  if (refusal) throw new Error(refusal)
+  world.psychologistFocus = focus
+  // ⚠ STAMPED ON EVERY ACCEPTED PICK, the free first one included – that is what makes the free pick
+  // start a YEAR rather than an open season: the off-season of the season it was made in is already
+  // spent, so the next choice is the next season's.
+  world.psychologistFocusSeason = seasonIndexOf(world.week)
 }

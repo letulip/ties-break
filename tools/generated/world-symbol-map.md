@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,513 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,516 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-467 exported names across 50 owning modules.
+479 exported names across 50 owning modules.
 
 ## Areas
 
@@ -19,6 +19,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
+| `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
@@ -29,7 +30,6 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
-| `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 10 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
 | `src/engine/world/fame.ts` | ⭐⭐ FAME – round 29 part four P7/P8, the first implementation of docs/specs/fame-and-the-shoots-2026-08.md | 8 |
 | `src/engine/world/knock.ts` | THE KNOCK: she comes off court sore, and the parent rests it or sends her back out | 8 |
@@ -246,6 +246,33 @@ THE LADDER: where she stands, and what that standing opens.
 - `tierOpenFor` – `src/engine/world/ladder.ts`
 - `tierOutgrown` – `src/engine/world/ladder.ts`
 
+### `src/engine/world/psychologist.ts`
+
+THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2).
+
+- `hirePsychologist` – `src/engine/world/psychologist.ts`
+- `PSY_FOCUS_LABEL` – `src/engine/world/psychologist.ts`
+- `PSY_FOCUS_LINE` – `src/engine/world/psychologist.ts`
+- `PSY_FOCUSES` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_CHANGE_KEY` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_SEASON_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_LOCKED_DETAIL` – `src/engine/world/psychologist.ts`
+- `psychologistFocusDetailOf` – `src/engine/world/psychologist.ts`
+- `psychologistFocusOpen` – `src/engine/world/psychologist.ts`
+- `psychologistFocusRefusal` – `src/engine/world/psychologist.ts`
+- `psychologistRungOf` – `src/engine/world/psychologist.ts`
+- `psychologistUnlocked` – `src/engine/world/psychologist.ts`
+- `psychologistWeeklyCents` – `src/engine/world/psychologist.ts`
+- `psychologistWorksInWeek` – `src/engine/world/psychologist.ts`
+- `psychologistWorksThisWeek` – `src/engine/world/psychologist.ts`
+- `resolvePsychologist` – `src/engine/world/psychologist.ts`
+- `setPsychologistFocus` – `src/engine/world/psychologist.ts`
+- `setPsychologistRung` – `src/engine/world/psychologist.ts`
+
 ### `src/engine/world/medical.ts`
 
 THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
@@ -445,21 +472,6 @@ THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6).
 - `quotaPlayedIn` – `src/engine/world/mandatory.ts`
 - `quotaShortfallAt` – `src/engine/world/mandatory.ts`
 - `suspensionWeeksLeft` – `src/engine/world/mandatory.ts`
-
-### `src/engine/world/psychologist.ts`
-
-THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2).
-
-- `hirePsychologist` – `src/engine/world/psychologist.ts`
-- `PSYCHOLOGIST_CHANGE_KEY` – `src/engine/world/psychologist.ts`
-- `PSYCHOLOGIST_LOCKED_DETAIL` – `src/engine/world/psychologist.ts`
-- `psychologistRungOf` – `src/engine/world/psychologist.ts`
-- `psychologistUnlocked` – `src/engine/world/psychologist.ts`
-- `psychologistWeeklyCents` – `src/engine/world/psychologist.ts`
-- `psychologistWorksInWeek` – `src/engine/world/psychologist.ts`
-- `psychologistWorksThisWeek` – `src/engine/world/psychologist.ts`
-- `resolvePsychologist` – `src/engine/world/psychologist.ts`
-- `setPsychologistRung` – `src/engine/world/psychologist.ts`
 
 ### `src/engine/world/age.ts`
 

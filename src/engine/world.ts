@@ -142,8 +142,11 @@ export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek,
 // import from `engine/world` and that public API is what a leaf's move must not change. Shorter than
 // the masseur's by exactly what ruling Б removed: no fare, no travel stance, no tour relief, no
 // per-match week, no room note yet (the note is a FOCUS's receipt and arrives with T4's focus).
-import { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL } from './world/psychologist'
-export { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL }
+// ⭐ v76 T3 – THE YEAR-FOCUS joins the same two lines: the command, the three read-only derivations
+// the card is built on (`psychologistFocusRefusal` is the one story both the throw and the row are
+// written from) and the string catalogue. Nothing else about the barrel moves.
+import { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, setPsychologistFocus, psychologistFocusRefusal, psychologistFocusOpen, psychologistFocusDetailOf, PSY_FOCUSES, PSY_FOCUS_LABEL, PSY_FOCUS_LINE, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL, PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL } from './world/psychologist'
+export { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, setPsychologistFocus, psychologistFocusRefusal, psychologistFocusOpen, psychologistFocusDetailOf, PSY_FOCUSES, PSY_FOCUS_LABEL, PSY_FOCUS_LINE, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL, PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'

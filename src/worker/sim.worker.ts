@@ -24,6 +24,7 @@ import {
   setMasseurTravels,
   hirePsychologist,
   setPsychologistRung,
+  setPsychologistFocus,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
   setKitGrade,
@@ -435,6 +436,13 @@ async function handle(msg: ToWorker): Promise<ToUI> {
       // inside the freeze (guardNotEnded first) – the worker is not the gate.
       return mutate(msg.id, msg.baseRevision, (world) => setPsychologistRung(world, msg.rung))
     }
+    case 'setPsychologistFocus': {
+      // v76 T3, the year-focus. Every refusal is the ENGINE's – the id, the hire, her consent (a
+      // deterministic bond-band read, never a draw) and the once-a-season off-season window – and the
+      // card is handed the same sentences through `psychologistFocusOpen` / `psychologistFocusDetail`
+      // on the snapshot, so a disabled option and a refused click tell one story (R10-16).
+      return mutate(msg.id, msg.baseRevision, (world) => setPsychologistFocus(world, msg.focus))
+    }
     case 'setCoachOnEventWeeks': {
       return mutate(msg.id, msg.baseRevision, (world) => setCoachOnEventWeeks(world, msg.on))
     }
@@ -795,6 +803,7 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   setMasseurTravels  mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   hirePsychologist   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPsychologistRung mutation    mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setPsychologistFocus mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision

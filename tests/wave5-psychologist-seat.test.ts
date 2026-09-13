@@ -490,12 +490,21 @@ describe('wave 5 T2 D – the household strip follows the payroll', () => {
     )
   })
 
-  it('the FOUR card facts are the ENGINE`s and follow the world', () => {
-    // ⚠⚠ FOUR AND NOT THE BRIEF'S FIVE, AND A SHIPPED GATE DECIDED IT. `psychologistFocus` was on the
-    // wire in T2's first draft, exactly as the brief lists it – and `tests/snapshot-contract.test.ts`
-    // (E-07: «a Snapshot member with no reader is a promise to the UI that nothing collects») named
-    // it, alone, as unread. The focus ROW that reads it is T3's, so the field ships in T3 WITH its
-    // reader, which is this repo's own rule and the call `spiritShock` got one wave down.
+  it('the SEAT`s card facts are the ENGINE`s and follow the world', () => {
+    // ⚠⚠ THIS CASE SHIPPED AS «the FOUR card facts» AND T3 RE-AIMED IT – NOT WEAKENED, AND THE STORY
+    // IS WORTH THE LINES. `psychologistFocus` was on the wire in T2's first draft, exactly as the
+    // brief lists it, and `tests/snapshot-contract.test.ts` (E-07: «a Snapshot member with no reader
+    // is a promise to the UI that nothing collects») named it, alone, as unread. So T2 shipped four
+    // facts and this case pinned the absence with `'psychologistFocus' in idle === false`, saying in
+    // its own words that «T3 brings it with its reader». T3 did: the chosen year, the set of years
+    // the engine would accept this week and the sentence for whatever is closed, all read by the
+    // focus row on the staff card. The negative is therefore RETIRED – it was a pin on a commit
+    // boundary, and the boundary has been crossed – and what replaces it is the positive claim it
+    // was standing in for: the seat's facts are the ENGINE's.
+    //
+    // ⚠ AND THE TITLE LOST ITS NUMBER ON THE HOUSE RULE (CLAUDE.md: «Count it, do not quote it»).
+    // A count typed into a test name rots the moment a fact joins, which is exactly what happened
+    // here one commit later – the same lesson round 24's own table wrote down at v76.
     const world = pro('psy-snapshot-facts')
     const idle = toSnapshot(world)
     expect(idle.psychologistHired).toBe(false)
@@ -504,8 +513,12 @@ describe('wave 5 T2 D – the household strip follows the payroll', () => {
     expect(idle.psychologistSalaryCents).toBe(
       ECONOMY.psychologist.rungs[ECONOMY.psychologist.defaultRung].salaryCents,
     )
-    expect('psychologistFocus' in idle, 'the focus is NOT on the wire yet – T3 brings it with its reader')
-      .toBe(false)
+    // The year-focus and its two derived companions, arriving in T3 with the row that reads them.
+    // What they DO is pinned in tests/wave5-psychologist-focus.test.ts §E; what matters here is that
+    // an unhired seat carries an empty year, which is the state this file's whole world is in.
+    expect(idle.psychologistFocus, 'nobody has been asked what the year is for').toBeNull()
+    expect(idle.psychologistFocusOpen, 'and nothing is on offer without a hire').toEqual([])
+    expect(idle.psychologistFocusDetail, '...so the row has nothing to explain').toBe('')
     expect(toSnapshot(junior('psy-snapshot-junior')).psychologistUnlocked, 'and the gate reaches the wire').toBe(false)
 
     hirePsychologist(world, true)

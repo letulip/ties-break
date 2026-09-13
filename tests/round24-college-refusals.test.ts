@@ -55,6 +55,7 @@ import {
   setMasseurTravels,
   hirePsychologist,
   setPsychologistRung,
+  setPsychologistFocus,
   inCollege,
   latchEnding,
   pendingBirthday,
@@ -256,6 +257,13 @@ function refusedCommands(world: WorldState, kind: 'college' | 'ended' = 'college
     // his pro-career gate too, so the freeze answers first, which is the order the sentence needs.
     ['hirePsychologist', () => hirePsychologist(world, true)],
     ['setPsychologistRung', () => setPsychologistRung(world, 2)],
+    // ⚠ v76 T3, THE THIRD OF THE SEAT'S COMMANDS AND THE SAME WIDENING ONCE MORE (ruling G.4: «every
+    // new command joins this guard SET»). The year-focus is the most specialist decision of the
+    // three – it is what the retainer is FOR – so the clause covers it most directly of all, and
+    // `guardNotEnded` runs ahead of the hire check, her consent and the season window, which is the
+    // order the college sentence needs: a parent at the freeze is told where she is, not that
+    // nobody is on the payroll.
+    ['setPsychologistFocus', () => setPsychologistFocus(world, 'coolhead')],
     ['setCoachOnEventWeeks', () => setCoachOnEventWeeks(world, true)],
     ['setCoachOnJuniorEvents', () => setCoachOnJuniorEvents(world, true)],
     ['answerFork', () => answerFork(world, 'continue')],

@@ -7,6 +7,10 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { LadderTrack, TierId } from '../../engine/season/types'
+// ⭐ v76 T3: the year-focus union, `Temperament`'s own precedent in `./narrative` – an ENGINE fact
+// the wire happens to carry, imported TYPE-ONLY so the arrow stays engine -> shared and is erased at
+// compile time. Declared beside the world field it types (`engine/world/state.ts`).
+import type { PsyFocus } from '../../engine/world/state'
 import type { CollegeOffer, CollegeState, EndingView, RetirementOffer } from './career'
 import type { ArrivalPreview, EntryCapUsage, LossStreak, PendingView, SeasonHistoryEntry, SeasonSummary, SeasonSupply, TierOpenMap, TierRefusal, TierTrophies, UpcomingEvent } from './competition'
 import type { CareerTotals, DebtView, FinanceWeekPoint, FinanceWindow, StopReason, WorldEvent } from './events'
@@ -261,14 +265,33 @@ export interface Snapshot {
    *  `ECONOMY.psychologist.rungs` (0 counsellor · 1 sport psychologist · 2 tour-grade), NOT a
    *  quantity. That is the whole difference from `masseurSessionsPerWeek` above, which is a count. */
   psychologistRung: number
-  /** ⚠⚠ `psychologistFocus` IS DELIBERATELY NOT HERE, AND A SHIPPED GATE IS WHY. The wave-5 brief
-   *  lists it among T2's snapshot fields, and T2 was written that way – then E-07's contract test
-   *  («a Snapshot member with no reader is a promise to the UI that nothing collects») went red on
-   *  exactly one name: this one. The focus ROW on the staff card is T3's, so T3 is the commit where
-   *  the field arrives WITH its reader, which is this repo's own rule and the same call
-   *  `spiritShock` got one wave down («the old note expected T3 to carry a snapshot field with its
-   *  reader, and T3's reader turned out not to need one»). Nothing about T3 gets harder: the field
-   *  is one line here and one line in `world/snapshot.ts`, next to the four above. */
+  /** ⭐⭐ v76 T3 – WHAT THE SEAT IS WORKING ON THIS YEAR, or null while nobody has picked.
+   *
+   *  ⚠⚠ IT ARRIVED IN T3 AND NOT IN T2, AND A SHIPPED GATE DECIDED THAT. The wave-5 brief lists it
+   *  among T2's snapshot fields and T2 was written that way – then E-07's contract test («a Snapshot
+   *  member with no reader is a promise to the UI that nothing collects») went red on exactly one
+   *  name: this one. The focus ROW on the staff card is T3's, so this is the commit where the field
+   *  arrives WITH its reader, which is this repo's own rule and the same call `spiritShock` got one
+   *  wave down. The note that stood here through T2 said exactly that would happen; it is kept as
+   *  this paragraph because it turned out to be right. */
+  psychologistFocus: PsyFocus | null
+  /** ...WHICH OF THE FOUR THE ENGINE WOULD ACCEPT THIS WEEK. `[]` means the row is closed outright
+   *  (she declines, or the year is already running); a shorter list than four means one option is
+   *  closed on its own (`'herself'` needs her readiness at any age).
+   *
+   *  ⚠⚠ IT IS ON THE WIRE BECAUSE THE CARD MAY NOT DERIVE IT, and that is the FOG LAW rather than a
+   *  convenience: both consent gates read the BOND BAND, and `bond` may never cross to the UI as a
+   *  number or as a band (`lifeBeatPrompt`'s own note below). So the engine answers the only question
+   *  the screen has – which buttons are live – and keeps the reason to itself. Derived per snapshot
+   *  from `psychologistFocusOpen`, which is the very function the command's refusal is written from,
+   *  so a disabled option and a refused click cannot tell two stories (R10-16). */
+  psychologistFocusOpen: PsyFocus[]
+  /** ...AND THE SENTENCE FOR WHATEVER IS CLOSED, `''` when all four are open. Literally the string
+   *  `setPsychologistFocus` throws (`psychologistFocusDetailOf`), never a second wording of it: the
+   *  R10-16 one-story doctrine, the same shape `PSYCHOLOGIST_LOCKED_DETAIL` has for the lock above –
+   *  except that this one is DERIVED rather than a constant, because which of the three sentences
+   *  applies is a fact about the week and the bond. Every one of them is a DRAFT (invariant 4). */
+  psychologistFocusDetail: string
   /** W4 – THE UNANSWERED KNOCK, or null. Non-null on exactly the weeks a decision is outstanding
    *  (`knock.choice === null`), which is the same condition `advanceWeeks` blocks on – so the dialog
    *  and the engine can never disagree about whether the career is waiting for him.

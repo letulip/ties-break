@@ -67,7 +67,18 @@ import HouseholdStrip from './HouseholdStrip.vue'
 import { MASSEUR_LOCKED_DETAIL } from '../engine/world/masseur'
 // v76 – the second seat's refusal, from the engine that throws it (the R10-16 doctrine, the masseur's
 // import one line up asked of the next seat over).
-import { PSYCHOLOGIST_LOCKED_DETAIL } from '../engine/world/psychologist'
+// ⭐ v76 T3 – and the year-focus catalogue beside it. `PSY_FOCUSES` is the ORDER the row renders in,
+// `PSY_FOCUS_LABEL` the four names and `PSY_FOCUS_LINE` what each year is for: a STATIC catalogue in
+// the same register as `ECONOMY.masseur.rungs` next door, keyed on nothing the world decides, so
+// reading it here leaks no derivation the snapshot should own. Everything that IS a derivation – the
+// chosen year, which options are live, and the sentence for whatever is closed – comes off the wire.
+import {
+  PSYCHOLOGIST_LOCKED_DETAIL,
+  PSY_FOCUSES,
+  PSY_FOCUS_LABEL,
+  PSY_FOCUS_LINE,
+} from '../engine/world/psychologist'
+import type { PsyFocus } from '../engine/world/state'
 // v59 step 2 - the dial's option table. A static market catalogue in the same register as
 // `COACH_TIER_LABEL` next door: labels and prices keyed on nothing the world decides, so reading it
 // here cannot leak a derivation the snapshot should own (the card's own price stays the
@@ -100,7 +111,11 @@ interface StaffRung {
  *  ⚠ v76, MEASURED AGAINST THE REAL SECOND SEAT: the TRAVEL half of that sentence held exactly
  *  (ruling Б, «стоит только зарплату») and he carries no `travel` at all. The DIAL half did not – he
  *  has three rungs of his own (the spec's §3 roster) – so what the optionality really buys is a seat
- *  that may skip EITHER control, which is what the header's ⚠⚠ note above records at length. */
+ *  that may skip EITHER control, which is what the header's ⚠⚠ note above records at length.
+ *
+ *  ⚠ AND T3 ADDED A THIRD OPTIONAL CONTROL RATHER THAN WIDENING EITHER OF THE TWO: the YEAR'S WORK
+ *  (`focus`), which only the remote seat has – the masseur's hands do one job and there is nothing
+ *  for him to choose. Optionality earning its keep in the other direction, one seat later. */
 interface StaffMember {
   /** Stable id – the v-for key, the `data-staff` hook a test addresses one member by, and what the
    *  two confirms below are keyed on so one dialog serves the whole list. */
@@ -117,6 +132,17 @@ interface StaffMember {
   setHired: (hire: boolean) => Promise<void>
   dial?: { label: string; active: number; rungs: StaffRung[]; set: (value: number) => Promise<void> }
   travel?: { title: string; sub: string; on: boolean; onLabel: string; offLabel: string; toggle: () => Promise<void> }
+  /** ⭐ v76 T3 – THE YEAR'S WORK, and the third optional control on a seat (the masseur has no such
+   *  thing: his hands do one job). `chosen` is the snapshot's, `options` carry their own `open` flag
+   *  straight off the engine's `psychologistFocusOpen`, and `note` is either the ENGINE's refusal
+   *  sentence or the chosen year's catalogue line – never a sentence this file composed. */
+  focus?: {
+    label: string
+    chosen: PsyFocus | null
+    options: { value: PsyFocus; label: string; open: boolean }[]
+    note: string
+    set: (value: PsyFocus) => Promise<void>
+  }
 }
 
 // --- the masseur (v59, the travelling team step 1) -----------------------------------------------
@@ -233,6 +259,26 @@ async function setPsychologistRungIndex(rung: number): Promise<void> {
   await game.setPsychologistRung(rung)
 }
 const psychologistRungLabel = computed(() => PSYCHOLOGIST_RUNGS[psychologistRung.value]?.label ?? '')
+// ⭐⭐ v76 T3 – THE YEAR'S WORK. Three facts off the wire and not one of them derivable here, which is
+// the whole reason they are on it: the CHOSEN year, the set of years the engine would accept this
+// week, and the sentence for whatever is closed. ⚠ Both consent gates read the bond BAND, and the fog
+// law forbids `bond` crossing to the UI in any shape – so this card is told which buttons are live
+// and what to print, and never why (see `psychologistFocusRefusal`, the one place either is decided).
+const psychologistFocus = computed(() => game.snapshot?.psychologistFocus ?? null)
+const psychologistFocusOpen = computed(() => game.snapshot?.psychologistFocusOpen ?? [])
+// The line under the row: the ENGINE's refusal while anything is closed, otherwise what the running
+// year is for – and nothing at all before the first pick, because the four labelled options already
+// say what is on offer and a placeholder sentence would be this file inventing copy.
+const psychologistFocusNote = computed(() => {
+  const detail = game.snapshot?.psychologistFocusDetail ?? ''
+  if (detail) return detail
+  const chosen = psychologistFocus.value
+  return chosen ? PSY_FOCUS_LINE[chosen] : ''
+})
+async function setPsychologistFocusChoice(focus: PsyFocus): Promise<void> {
+  if (focus === psychologistFocus.value) return
+  await game.setPsychologistFocus(focus)
+}
 // The one line under his name, by state – the masseur's three-state shape exactly. LOCKED prints the
 // ENGINE's own refusal (PSYCHOLOGIST_LOCKED_DETAIL – the sentence `hirePsychologist` throws), the
 // R10-16 doctrine. HIRED and UNHIRED both print what the retainer IS, because that is all that is
@@ -263,6 +309,17 @@ const psychologist = computed<StaffMember>(() => ({
     })),
     set: setPsychologistRungIndex,
   },
+  focus: {
+    label: 'Psychologist – the year\'s work',
+    chosen: psychologistFocus.value,
+    options: PSY_FOCUSES.map((f) => ({
+      value: f,
+      label: PSY_FOCUS_LABEL[f],
+      open: psychologistFocusOpen.value.includes(f),
+    })),
+    note: psychologistFocusNote.value,
+    set: setPsychologistFocusChoice,
+  },
 }))
 
 /** ⭐ THE LIST. Two entries since v76, and the psychologist arrived exactly as this line promised he
@@ -285,6 +342,9 @@ async function pressRung(m: StaffMember, value: number): Promise<void> {
 }
 async function pressTravel(m: StaffMember): Promise<void> {
   await m.travel?.toggle()
+}
+async function pressFocus(m: StaffMember, value: PsyFocus): Promise<void> {
+  await m.focus?.set(value)
 }
 const hiringMember = computed(() => members.value.find((m) => m.id === hiring.value) ?? null)
 const releasingMember = computed(() => members.value.find((m) => m.id === releasing.value) ?? null)
@@ -363,6 +423,31 @@ async function doRelease(): Promise<void> {
         <span class="rung-price">{{ r.priceLabel }}/wk</span>
       </button>
     </div>
+    <!-- ⭐⭐ v76 T3: THE YEAR'S WORK - the second radio group under this seat, and the one that says
+         what the retainer is FOR (the spec's own reconciliation: the RUNG buys who takes the call,
+         the FOCUS buys what the call is about). Round 40's conventions, the dial's own above.
+         ⚠ ONLY WHILE HIRED, and the engine agrees rather than the screen deciding: a year of work
+         with nobody on the payroll is refused engine-side, so a row offered before the hire would be
+         a control lying about itself (the round-20 #1 defect, and the travel switch's own rule).
+         ⚠ AN OPTION IS LIVE ONLY IF THE ENGINE SAYS SO - `open` is `psychologistFocusOpen`, the very
+         function the refusal is written from, so a disabled button and the click it refuses cannot
+         tell two stories (R10-16). The note under the row is the engine's sentence whenever anything
+         is closed, so the card EXPLAINS with the words the command throws. -->
+    <div v-if="m.focus && m.hired" class="staff-focus" role="radiogroup" :aria-label="m.focus.label">
+      <button
+        v-for="f in m.focus.options"
+        :key="f.value"
+        class="staff-focus-option"
+        :class="{ active: m.focus.chosen === f.value }"
+        role="radio"
+        :aria-checked="m.focus.chosen === f.value ? 'true' : 'false'"
+        :disabled="game.busy || !f.open"
+        @click="pressFocus(m, f.value)"
+      >
+        {{ f.label }}
+      </button>
+    </div>
+    <p v-if="m.focus && m.hired && m.focus.note" class="cm-load staff-focus-note">{{ m.focus.note }}</p>
     <!-- ...AND THE SEAT (the owner's ruling B: the masseur travels) - the coach's own switch idiom
          one tab over, asked of the next seat over. Only while HIRED: with nobody on the payroll
          the switch would send nobody anywhere, and a row that looked live would be the control
@@ -468,6 +553,37 @@ async function doRelease(): Promise<void> {
 }
 .staff-travel {
   margin-top: 8px;
+}
+/* ⭐ v76 T3 - the year's work. The dial's own pills, with ONE difference that is the content's and
+   not a taste: there are FOUR of them and their names are two and three words long, so the row WRAPS
+   into two-by-two rather than squeezing four labels into 375px of phone. `flex-basis` is half the row
+   minus the gap, which is what makes the wrap land on 2x2 instead of 3+1. */
+.staff-focus {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.staff-focus-option {
+  flex: 1 1 calc(50% - 3px);
+  padding: 6px 4px;
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: none;
+  font-size: 11px;
+  line-height: 1.2;
+}
+.staff-focus-option.active {
+  border-color: var(--accent, #4da3ff);
+  color: var(--accent, #4da3ff);
+}
+/* A closed option is dimmed rather than hidden: which years exist is a fact about the game, and
+   which are open this week is a fact about this week - the note under the row says which. */
+.staff-focus-option:disabled {
+  opacity: 0.5;
+}
+.staff-focus-note {
+  margin-top: 6px;
 }
 /* ⭐ ROUND-28 #8's follow-up – the frame the household strip sits in at the head of this tab. It
    borrows `.budget-meter` (global) for the padding and the radius so the two tabs' strips are the

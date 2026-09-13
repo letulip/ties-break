@@ -22,6 +22,10 @@ import {
   type WeekPlan,
   type WorkerErrorCode,
 } from '../shared/protocol'
+// ⭐ v76 T3: the year-focus union. TYPE-ONLY and from the engine leaf that declares it, because the
+// protocol barrel does not re-export it – `Temperament`'s own arrangement, where the wire carries the
+// type and consumers import it from where it lives.
+import type { PsyFocus } from '../engine/world/state'
 
 // W1-INTEGRITY-A: the store is the worker pipeline's UI-side ledger. It tracks the committed
 // `revision` off every response and hands it back as `baseRevision` on every mutation, so a
@@ -515,6 +519,18 @@ export const useGameStore = defineStore('game', {
       await this.run(async () => {
         const res = this.takeOk(
           await request({ type: 'setPsychologistRung', rung, baseRevision: this.revision }),
+        )
+        this.applySnapshot(res)
+      })
+    },
+    /** v76 T3: the YEAR-FOCUS – what the seat works on for a season. Every refusal is the engine's
+     *  (the id, the hire, her consent, the once-a-season off-season window) and every one of them
+     *  arrives as a thrown sentence on the error channel – the same sentence the card is already
+     *  printing under the row, because both come from `psychologistFocusRefusal`. */
+    async setPsychologistFocus(focus: PsyFocus) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setPsychologistFocus', focus, baseRevision: this.revision }),
         )
         this.applySnapshot(res)
       })
