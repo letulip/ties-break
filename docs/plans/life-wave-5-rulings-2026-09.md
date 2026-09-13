@@ -710,6 +710,27 @@ block.
 is stored to one decimal, so a slowed week is `roundTenth(1.5 × 0.75) = 1.1` and the REALISED
 slow-down is ≈ **×0.733**. A bench that predicts 0.75 will read a correct implementation as a miss.
 
+### Ruling A, verified against the file – five sites, all five identified right, and one count wrong
+
+T7 re-measured the table before trusting it, as the brief asked. **Ruling A's five `temperamentOf`
+sites are the right five and the three/two split is right**; only the line numbers had moved (the
+ruling's :1928 / :2263 / :2362 / :2587 / :2918 are now :2169 / :2526 / :2625 / :2988 / :3326). The
+same for `accrueSpirit`'s intensity read and for `birthday.ts:1351`.
+
+**One number in it is wrong and it is worth correcting because the ruling leans on it rhetorically:
+`voiceOf` has FOUR call sites, not one** (:2227, :2981, :3009, :3375 – T6's three `heard` frames
+joined the original). Nothing about the ruling changes: all four are voice sites and all four stay on
+birth. But «ONE call site» was the line that made the split look tidy, and it stopped being true one
+task before the ruling was written.
+
+**And the table is missing a sixth reader, correctly left alone: `world/snapshot.ts:1467` puts
+`world.temperament` on the wire.** It is the diary's own view (`diary.ts:165` ->
+`diary/weekNotes.ts:273`, `inHerVoice`), so it is a VOICE read and §3's fence keeps it on birth – but
+a later wave looking for «everything that reads who she is» would not find it from ruling A alone.
+The whole census outside `engine/spirit.ts` is now: `lifeBeat.ts`'s `voiceOf` (4 sites, birth) and
+`temperamentOf` (2 sites, birth) plus 3 expressed sites · `birthday.ts:1351` (birth) ·
+`snapshot.ts:1467` (birth, to the diary) · `migrations.ts:2446` (the derivation).
+
 ### Ruling P, confirmed – and what T7 measured about the frozen corpus
 
 **Ruling P held exactly as written.** `driftWalls(world, psychologistWorks)` lives beside
