@@ -22,6 +22,8 @@ import {
   hireMasseur,
   setMasseurSessions,
   setMasseurTravels,
+  hirePsychologist,
+  setPsychologistRung,
   setCoachOnEventWeeks,
   setCoachOnJuniorEvents,
   setKitGrade,
@@ -421,6 +423,18 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'setMasseurTravels': {
       return mutate(msg.id, msg.baseRevision, (world) => setMasseurTravels(world, msg.on))
     }
+    case 'hirePsychologist': {
+      // v76, the psychologist's year (wave 5 T2) – the masseur's own case one seat over. Re-validated
+      // engine-side like every command: the pro-career gate and the college freeze both refuse inside
+      // `hirePsychologist` (guardNotEnded first), so a stale screen cannot put a psychologist on a
+      // junior's – or a student's – payroll.
+      return mutate(msg.id, msg.baseRevision, (world) => hirePsychologist(world, msg.hire))
+    }
+    case 'setPsychologistRung': {
+      // The roster dial. `setPsychologistRung` refuses an index the roster does not hold and refuses
+      // inside the freeze (guardNotEnded first) – the worker is not the gate.
+      return mutate(msg.id, msg.baseRevision, (world) => setPsychologistRung(world, msg.rung))
+    }
     case 'setCoachOnEventWeeks': {
       return mutate(msg.id, msg.baseRevision, (world) => setCoachOnEventWeeks(world, msg.on))
     }
@@ -779,6 +793,8 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   hireMasseur        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setMasseurSessions mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setMasseurTravels  mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   hirePsychologist   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setPsychologistRung mutation    mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnEventWeeks mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setCoachOnJuniorEvents mutation mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   cancelPractice     mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision

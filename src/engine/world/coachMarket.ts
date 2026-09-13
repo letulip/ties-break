@@ -41,6 +41,12 @@ import { coachTravelFareFor, supportedTravelCents, travelCostFor } from './spons
 // import nothing from this file (masseur: economy/condition/ledger/constants/ladder/college/bookings;
 // shop: economy/calendar/ladder/endings/ledger/money), so there is no runtime cycle to make here.
 import { masseurWeeklyCents } from './masseur'
+// ⭐ v76, the psychologist's year (wave 5 T2) – THE THIRD SEAT THE HOUSEHOLD'S WEEK HAS TO KNOW
+// ABOUT, and this line is what the block below predicted («A PSYCHOLOGIST joins as one more line in
+// this list and nothing else moves»). Same leaf discipline as the masseur beside it – it imports
+// economy/ledger/constants/ladder/college/bookings and nothing from this file – so there is no
+// runtime cycle to make here either.
+import { psychologistWeeklyCents } from './psychologist'
 // ⚠ REPOINTED AT THE LEAF AT ROUND 29 #5 – same functions, same behaviour. `world/assets.ts` holds
 // the shelf's pure reads and `world/shop.ts` re-exports them, so this is a shorter path to the same
 // symbols and not a change: this file only ever asked the shelf questions.
@@ -675,7 +681,13 @@ const RETAINERS_A_YEAR = 4
  *
  *  Pure: zero MAIN draws, derived at snapshot time like everything else on this screen. */
 export function householdWeekly(world: WorldState, trainingCents: number): HouseholdWeekly {
-  const staffCents = (world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0
+  // ⭐ v76 – AND THE SECOND SEAT IS THAT ONE MORE LINE, gated on the hire for the identical reason
+  // the note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college
+  // freeze or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing
+  // those weeks) without him vanishing from the family's standing budget.
+  const staffCents =
+    ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
+    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
   // WHAT ONE MORE WEEK OF HOLDING DOES TO THE SHELF, signed, summed over what the family owns.
   let shelfCents = 0
   for (const owned of ownedAssets(world)) {

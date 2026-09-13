@@ -4826,6 +4826,59 @@ export const ECONOMY = {
     returnSessionBonus: 1,
   },
 
+  // --- THE PSYCHOLOGIST (the psychologist's year, docs/specs/the-psychologists-year-2026-09.md) ---
+  // THE SECOND SALARIED SEAT, and the asymmetry with the masseur above IS the design rather than a
+  // saving (the travelling-team plan's §2, the owner's ruling Б: «массажист ездит, психолог работает
+  // дистанционно и стоит только зарплату»). So: pro-career gated and cancellable weekly like him,
+  // and then NO FARE, NO TRAVEL STANCE AND NO RESULTS SHARE – `staffSeatFareCents` is never asked
+  // for this seat and `staffShare` above stays `'coach' | 'masseur'` (O3, ruled 13.09: he is not in
+  // the box on match day; his product is the year, not the title).
+  //
+  // ⚠⚠ AND THE DIAL IS A DIFFERENT KIND OF THING FROM THE MASSEUR'S, which is why the rung is an
+  // INDEX and not a quantity. His dial buys a BUSIER CALENDAR (2/4/7 sessions a week, and the bill
+  // is sessions × a rate). This one is ONE SESSION A WEEK AT EVERY RUNG – the spec's own «the rung
+  // buys WHO comes to the call» – so there is no quantity to multiply and the price is simply the
+  // person's weekly retainer. A rung here is a position in a three-member roster, `0 | 1 | 2`.
+  //
+  // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight: the four
+  // focus tables (`recoverySlope` T4, `coolheadPerSeason` T5, `listenClarity` T6, the walls'
+  // beyond-baseline hazard scale T7 – all four ruled in the spec's §2 and quoted in the wave-5
+  // brief's §4) land with the passes that READ them. T2 ships the seat and the seat's price, and a
+  // constant with no reader is a constant nobody can be wrong about yet.
+  psychologist: {
+    // ⚠⚠ PROPOSALS, NOT RULINGS – bench-priced, predicted-first, THE OWNER'S WORD AFTER T10, in the
+    // same register the spec marks O5 with. The wave-5 brief's §4 lists them under «Proposals – NONE
+    // ruled»: $100 / $200 / $400 a week. What they are sized AGAINST is the game's own scale and the
+    // spec's §3 table: the counsellor sits BELOW the masseur's entry rung ($150/wk – a weekly hour,
+    // not a specialist), the sport psychologist between his entry and default rungs ($300/wk) and is
+    // the DEFAULT, and the tour-grade specialist lands in the high coach's neighbourhood ($500/wk).
+    // The travelling-team plan's own sizing sketch («psychologist salary ≈ a third» of a coach rung)
+    // is what those three land on when it is read against the roster the game actually sells.
+    //
+    // ⚠ A FLAT CONTRACT PER RUNG: no corridor, no jitter, NO DRAW ON ANY STREAM – the masseur's own
+    // legibility argument, which is stronger here because there is not even a session count to
+    // multiply. The ledger row is the number on the card, every week.
+    //
+    // ⚠ EACH RUNG MUST MEASURABLY BEAT THE ONE BELOW **AT THE CHOSEN FOCUS** or it is re-priced (the
+    // masseur spec's §4 law, applied per focus by the spec's §3). That is T10's 4×3 grid; T2 can
+    // only make the ladder exist.
+    rungs: [
+      { label: 'Counsellor', salaryCents: 100_00 },
+      { label: 'Sport psychologist', salaryCents: 200_00 },
+      { label: 'Tour-grade specialist', salaryCents: 400_00 },
+    ],
+    // What a fresh hire (and every pre-v76 save) stands on: the MIDDLE rung – the professional
+    // default the prices above are anchored to, and meaningless until somebody is hired. A LITERAL 1
+    // in the v76 migration, by the house rule (a shipped step must never change what it back-fills
+    // because somebody later retuned a constant); keep the two in step.
+    //
+    // ⚠ TYPED `0 | 1 | 2` RATHER THAN `number` because `createWorld` assigns it straight into
+    // `WorldState.psychologistRung`, whose type is the union. Widening it here would push a cast onto
+    // the reader, which is the shape this repo keeps out of `createWorld` (the literal it replaces
+    // needed none).
+    defaultRung: 1 as 0 | 1 | 2,
+  },
+
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
   // ONE shared catalogue; money is the only gate. A vacation week is a hard blackout (nothing
   // enterable) that pays a condition gain on top of a FREE week's recovery, and the two top

@@ -500,6 +500,25 @@ export const useGameStore = defineStore('game', {
         this.applySnapshot(res)
       })
     },
+    /** v76, the psychologist's year (wave 5 T2): the second salaried seat on or off the payroll. The
+     *  engine re-validates the pro-career gate and the college freeze; this is a thin RPC like every
+     *  other command. */
+    async hirePsychologist(hire: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'hirePsychologist', hire, baseRevision: this.revision }))
+        this.applySnapshot(res)
+      })
+    },
+    /** v76: the roster dial – which of the three takes the weekly call. The engine refuses an index
+     *  the roster does not hold. */
+    async setPsychologistRung(rung: number) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setPsychologistRung', rung, baseRevision: this.revision }),
+        )
+        this.applySnapshot(res)
+      })
+    },
     /** Buy the coach for competition weeks too, or send him home for them. */
     async setCoachOnEventWeeks(on: boolean) {
       await this.run(async () => {

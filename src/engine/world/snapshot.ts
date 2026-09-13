@@ -110,6 +110,7 @@ import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
+import { psychologistUnlocked, psychologistWeeklyCents } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
@@ -1778,6 +1779,27 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       }
       return { masseurTravelFareCents, masseurTravelTrips }
     })(),
+    // ⭐ v76, the psychologist's year (wave 5 T2) – the second seat's card facts, all derived, and
+    // SHORTER THAN THE MASSEUR'S BY EXACTLY WHAT RULING Б REMOVED: no travel stance, no as-if fare,
+    // no booked trips. The flag, the same one-way gate, the flat retainer at the chosen rung, the
+    // rung index itself – FOUR FACTS, and nothing else, because nothing else about him is true yet.
+    //
+    // ⚠ `psychologistFocus` IS NOT AMONG THEM even though the brief lists it: E-07's contract
+    // test refuses a `Snapshot` member nobody reads, and the focus row that reads it is T3's.
+    // The reasoning is written out beside the gap in shared/protocol/snapshot.ts. His room note
+    // is missing for a different reason and it is not a gap either: a note is a FOCUS's receipt
+    // and arrives with the focus that earns it (T4).
+    //
+    // ⚠ THE SALARY JOINS `outgoingCents` AND NOTHING ON THIS FILE'S SIDE MOVES FOR IT – the promise
+    // at the head of `HouseholdView` (shared/protocol/snapshot.ts), MEASURED rather than quoted, and
+    // it cost exactly one term in `householdWeekly`'s `staffCents` (world/coachMarket.ts), because
+    // that figure names its seats instead of totalling the week's `category: 'staff'` rows. The ⚠
+    // note beside the promise records the correction; the test that the strip moves by exactly the
+    // salary is tests/wave5-psychologist-seat.test.ts §D.
+    psychologistHired: world.psychologistHired ?? false,
+    psychologistUnlocked: psychologistUnlocked(world),
+    psychologistSalaryCents: psychologistWeeklyCents(world),
+    psychologistRung: world.psychologistRung ?? ECONOMY.psychologist.defaultRung,
     // W4: the knock, and the question it is asking. Both DERIVED (the prompt's copy is assembled per
     // snapshot off `seed:knockread:<sinceWeek>`, its own sub-stream); only `world.knock` itself is
     // persisted, and only because `choice` is the player's decision.

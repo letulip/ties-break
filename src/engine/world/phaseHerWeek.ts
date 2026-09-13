@@ -54,6 +54,7 @@ import { accrueCondition, arrivalStatus, medicalClearance, withheldFreeWeekRecov
 import { summerConditionCost } from './summer'
 import { inCollege } from './college'
 import { resolveMasseur, resolveMasseurReturn } from './masseur'
+import { resolvePsychologist } from './psychologist'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -569,4 +570,24 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
   // non-played week after it gets one extra session's worth of recovery, receipt included.
   resolveMasseurReturn(world, playedThisWeek)
+  // 1c-psychologist (v76, the psychologist's year – wave 5 T2). THE SECOND SALARIED SEAT, settled in
+  // this same arm and immediately after the masseur's, because it is the same kind of line: a flat
+  // weekly retainer on the family payroll, zero draws on any stream, suspended – not cancelled – at
+  // college and on booked family weeks (the SAME stand-down pair, mirrored rather than re-derived;
+  // see `psychologistWorksInWeek`).
+  //
+  // ⚠⚠ AND THE BOARD-WEEK STAND-DOWN THE BLOCK ABOVE SPENDS ITS LAST FOUR LINES ON DOES NOT EXIST
+  // HERE, which is the one thing to read before believing these two rows are the same row. The
+  // masseur's weekly bill steps aside on the week he BOARDS because the fare replaced it
+  // (`pendingTournament.masseurThere`, and finalize bills the week per match). This seat NEVER
+  // boards – the travelling-team §2's ruling Б, «психолог работает дистанционно и стоит только
+  // зарплату» – so there is no such week, no `masseurThere` twin to read and no exception to make:
+  // the retainer runs on a tournament week exactly as the coach's does.
+  //
+  // ⚠ HE IS BILLED AND HE DOES NOTHING YET, and that is this commit rather than a defect: every
+  // effect arrives with the FOCUS that names it (T4-T7). The one thing that must be true today is
+  // that the money and the stand-downs are already honest, because a seat whose bill and whose weeks
+  // disagree is the «вы заплатили и не можете этого заметить» failure the travelling-team plan bans
+  // specialists for.
+  resolvePsychologist(world)
 }

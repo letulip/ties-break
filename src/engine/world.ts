@@ -137,6 +137,13 @@ import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryT
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
 import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
 export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+// ⭐ v76, the psychologist's year (wave 5 T2): THE SECOND SALARIED SEAT, on the line above's own
+// pattern – the import list and the re-export list carry the SAME names, because hundreds of files
+// import from `engine/world` and that public API is what a leaf's move must not change. Shorter than
+// the masseur's by exactly what ruling Б removed: no fare, no travel stance, no tour relief, no
+// per-match week, no room note yet (the note is a FOCUS's receipt and arrives with T4's focus).
+import { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL } from './world/psychologist'
+export { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -1645,16 +1652,22 @@ export function createWorld(
     // a dial has to read something, the shipped default is the only answer that invents no decision,
     // and it is meaningless until `psychologistHired` is true.
     //
-    // ⚠ AND IT IS THE LITERAL `1` RATHER THAN AN `ECONOMY` READ, WHICH IS A DECISION AND NOT AN
-    // OVERSIGHT. The masseur's line above reads `ECONOMY.masseur.defaultSessions` because his dial
-    // holds a TUNABLE VALUE (2 / 4 / 7 sessions); this field holds a rung INDEX into a three-member
-    // roster, and «the middle one» is a structural fact of that roster rather than a number anybody
-    // benches. `ECONOMY.psychologist` – the salaries and the four focus tables – is T2/T4-T7's block
-    // (wave-5 brief §4) and T1 does not open it: a constants home with one structural key in it would
-    // have to be moved the moment its real contents arrive. ⚠ The v75 -> v76 migration writes the same
-    // literal, which is v59's own shape verbatim (`createWorld` reads the constant, the migration
-    // writes `4`) and is the stronger rule of the two: a shipped migration must not change what it
-    // back-fills because somebody later retuned a constant.
+    // ⚠⚠ RE-AIMED BY T2 AT `ECONOMY.psychologist.defaultRung`, AND THE PARAGRAPH IT REPLACES IS WHY
+    // THE NOTE STAYS. T1 wrote the literal `1` here and argued it: «the masseur's line above reads
+    // `ECONOMY.masseur.defaultSessions` because his dial holds a TUNABLE VALUE (2 / 4 / 7 sessions);
+    // this field holds a rung INDEX … `ECONOMY.psychologist` is T2/T4-T7's block and T1 does not open
+    // it: a constants home with one structural key in it would have to be moved the moment its real
+    // contents arrive.» The second clause was the load-bearing one and T2 is exactly the step that
+    // ends it – the block now exists and carries the three rungs' prices – so the first clause loses
+    // its reason: the masseur's precedent is `defaultSessions` beside `rungs`, and `defaultRung`
+    // beside `rungs` is that precedent followed rather than argued away. Nothing about the VALUE
+    // moved; one literal became a read of the constant that means it.
+    //
+    // ⚠ THE v75 -> v76 MIGRATION STILL WRITES THE LITERAL `1` AND MUST, which is v59's own shape
+    // verbatim (`createWorld` reads the constant, the migration writes `4`) and is the stronger rule
+    // of the two: a shipped migration must not change what it back-fills because somebody later
+    // retuned a constant. Keep the two in step – the constant's own comment says the same thing from
+    // the other end.
     //
     // ⚠ NOW THE LAST KEYS OF THE LITERAL, IN THIS ORDER, and `spiritShock` above has stopped being the
     // last – the same handover `loveEpisodes` made to it, `lifeLog` to `loveEpisodes` and `assets` to
@@ -1664,7 +1677,7 @@ export function createWorld(
     // dropping exactly the keys appended since, so every key must stay in the order it was appended in
     // (`careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts peels in reverse, newest first).
     psychologistHired: false,
-    psychologistRung: 1,
+    psychologistRung: ECONOMY.psychologist.defaultRung,
     psychologistFocus: null,
     psychologistFocusSeason: null,
     // ⚠ TWO OBJECTS AND NOT FOUR FLAT NUMBERS/BOOLEANS, deliberately: the two axes are one model and

@@ -529,10 +529,20 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       .toBe(false)
   })
 
-  it('⭐⭐ the six keys are named in three files in src/ – the seat, the back-fill and the literal, plus ONE reader', () => {
+  it('⭐⭐ the WALLS keys are named in three files in src/ – the seat, the back-fill and the literal, plus ONE reader', () => {
     // The T1 brief's «inert by construction», made mechanical the way wave 4's §E did for
     // `spiritShock`. Three files per key: the declaration, the migration step and `createWorld`'s
-    // literal. Anything else is a reader, and T1 ships exactly one.
+    // literal. Anything else is a reader.
+    //
+    // ⚠⚠ RE-AIMED BY T2 AT THE TWO WALLS KEYS ALONE, AND THE PARAGRAPH THIS PIN ENDED WITH IS WHY.
+    // It read «the six keys» and finished: «T2 puts the seat's read-only face on `Snapshot` when it
+    // ships the card that needs it; the WALLS never go on the wire at all (§2a: no reader and no
+    // line ever sees the leaning), and that is a rule rather than an omission.» T2 is that commit.
+    // The four SEAT keys acquired their readers exactly as predicted – the leaf, the household
+    // figure, the snapshot and the staff card – so holding them to a three-file census now would
+    // assert that T2 never happened. The WALLS half is untouched and is the half that was ever
+    // load-bearing: it is the pin that says T7 has not started early, and it is STRICTER for being
+    // said about the keys it is really about.
     //
     // ⚠ THE ORDER IS THE WALK'S, NOT AN ALPHABET'S: `srcFiles` recurses a directory where it meets
     // it, so `engine/world/` is exhausted before `engine/world.ts` («world» sorts before «world.ts»).
@@ -541,7 +551,8 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       'engine/world/state.ts', // the seat itself
       'engine/world.ts', // `createWorld`'s literal
     ]
-    for (const key of V76_KEYS) {
+    const WALLS_KEYS = ['wallsLean', 'wallsFlipped'] as const
+    for (const key of WALLS_KEYS) {
       const named = srcFiles()
         .filter(([, text]) => codeOnly(text).includes(key))
         .map(([path]) => path)
@@ -549,23 +560,57 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       // RATHER THAN AN UNTIDINESS. `expressedTemperamentOf` (engine/spirit.ts) reads the FLIP and
       // nothing else: the leaning is T7's slow accumulator, the flip is the state a mechanic asks
       // about, and putting the threshold in the reader as well as in the hazard would be the flicker
-      // the hysteresis exists to abolish. So five of the six have no reader at all on this tree, and
-      // the sixth has exactly one – which is a stronger statement than «three files each» and is
-      // why the two lists are written out separately instead of averaged into one.
+      // the hysteresis exists to abolish. So the leaning has no reader at all on this tree and the
+      // flip has exactly one – which is a stronger statement than «three files each» and is why the
+      // two lists are written out separately instead of averaged into one.
       const expected = key === 'wallsFlipped'
         ? [WRITERS[0], 'engine/spirit.ts', WRITERS[1], WRITERS[2]]
         : WRITERS
       expect(named, `${key}`).toEqual(expected)
     }
-    // ...and none of the six is on the wire, which is the other half of the same claim: no component,
-    // store or composable can be reading a field the snapshot does not carry. T2 puts the seat's
-    // read-only face on `Snapshot` when it ships the card that needs it; the WALLS never go on the
-    // wire at all (§2a: «no reader and no line ever sees the leaning»), and that is a rule rather
-    // than an omission.
+    // ...and neither wall is on the wire, which is the other half of the same claim: no component,
+    // store or composable can be reading a field the snapshot does not carry. §2a is explicit that
+    // this is a RULE and not an omission – «no reader and no line ever sees the leaning» – so unlike
+    // the seat's four keys these two never become a T-something's snapshot field.
     const anySurface = srcFiles()
-      .filter(([, text]) => V76_KEYS.some((k) => codeOnly(text).includes(k)))
+      .filter(([, text]) => WALLS_KEYS.some((k) => codeOnly(text).includes(k)))
       .map(([path]) => path)
       .filter((p) => p.startsWith('components/') || p.startsWith('stores/') || p.startsWith('composables/'))
-    expect(anySurface, 'no surface names any of the six').toEqual([])
+    expect(anySurface, 'no surface names either wall').toEqual([])
+    // ⚠ AND THE POSITIVE CONTROL FOR THE SWEEP ABOVE, added with the re-aim so «no surface» cannot go
+    // vacuous: the same filter over the SEAT's flag finds the staff card, which is where T2 put it.
+    const seatSurfaces = srcFiles()
+      .filter(([, text]) => codeOnly(text).includes('psychologistHired'))
+      .map(([path]) => path)
+      .filter((p) => p.startsWith('components/'))
+    expect(seatSurfaces, 'the sweep really can see a surface when there is one').toEqual([
+      'components/SupportStaffTab.vue',
+    ])
+  })
+
+  it('⭐ ...and the SEAT keys are named only where T2 put them – no voice file, no diary, no stray reader', () => {
+    // ⚠ WHAT SURVIVES OF THE SIX-KEY CENSUS FOR THE FOUR SEAT KEYS, written as the claim that is
+    // still true rather than dropped. T2 gave three of them readers; the thing worth pinning is that
+    // the readers are the ones the wave designed, and in particular that no VOICE or DIARY file has
+    // started asking about a staffing decision – §3's fence in its own costume, one field group over.
+    const SEAT_KEYS = ['psychologistHired', 'psychologistRung', 'psychologistFocus', 'psychologistFocusSeason'] as const
+    for (const key of SEAT_KEYS) {
+      const named = srcFiles()
+        .filter(([, text]) => codeOnly(text).includes(key))
+        .map(([path]) => path)
+      expect(named.some((p) => p.includes('diary') || p.includes('voice') || p.includes('lifeBeat')), `${key}`)
+        .toBe(false)
+    }
+    // ⚠ AND THE FOCUS HAS NO READER AT ALL ON THIS TREE, which is T3's whole surface area. E-07's
+    // contract test is what kept it off the wire; this says the same thing about `src/` as a whole,
+    // so a focus reader appearing before T3's command is a finding rather than a tuning miss.
+    const focusNamed = srcFiles()
+      .filter(([, text]) => codeOnly(text).includes('psychologistFocus'))
+      .map(([path]) => path)
+    expect(focusNamed, 'the year-focus is still writer-only').toEqual([
+      'engine/migrations.ts',
+      'engine/world/state.ts',
+      'engine/world.ts',
+    ])
   })
 })

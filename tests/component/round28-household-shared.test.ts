@@ -228,7 +228,13 @@ describe('§3 pressing a rung moves the household figure on the same tab', () =>
     const outBefore = stripText(wrapper)
     expect(outBefore).toContain(`${formatCents(store.snapshot!.coachBilling.weeklyCents + before)} out`)
 
-    const buttons = wrapper.findAll('.staff-rung')
+    // ⚠ SCOPED TO THE MASSEUR'S OWN BLOCK SINCE v76, AND THE ASSERTION IS STRICTER FOR IT, NOT
+    // WEAKER. The tab is a v-for over `members` and the psychologist is the second entry with a
+    // three-rung dial of his own, so an unscoped `.staff-rung` sweep now collects six buttons and
+    // presses whichever the DOM happens to order last. `[data-staff="masseur"]` is the hook the tab
+    // renders for exactly this – see its `:data-staff="m.id"` – and it makes the claim say what it
+    // always meant: THIS seat's dial has this many rungs, and pressing its dearest moves the strip.
+    const buttons = wrapper.findAll('[data-staff="masseur"] .staff-rung')
     expect(buttons.length).toBe(rungs.length)
     await buttons[rungs.length - 1].trigger('click')
     await nextTick()

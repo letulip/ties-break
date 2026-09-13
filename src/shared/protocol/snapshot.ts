@@ -30,6 +30,13 @@ import type { CoachEdgePlacement, PlayerProfile, PracticeBooking, VacationBookin
  *  what does the whole household take in and pay out in a week, the masseur included. A seat added
  *  later – the psychologist he names next – joins `outgoingCents` and NOTHING else has to move.
  *
+ *  ⚠ MEASURED WHEN THAT SEAT ACTUALLY ARRIVED (v76, wave 5 T2), AND THE SENTENCE ABOVE IS KEPT WITH
+ *  ITS PRICE WRITTEN BESIDE IT: the psychologist cost `householdWeekly` (world/coachMarket.ts) ONE
+ *  TERM in `staffCents`, because that figure NAMES its seats rather than totalling the week's
+ *  `category: 'staff'` rows. Everything downstream of it – this type, `HouseholdStrip`, both tabs
+ *  that mount it – did move by itself, which is the half the promise was really about; but «nothing
+ *  has to move» read literally was one line short, and a later seat should budget for the same line.
+ *
  *  ⚠ A STANDING QUOTE, NOT LAST WEEK'S RECEIPT, and that is what makes it a budget rather than a
  *  history. The training line is `coachBilling.weeklyCents` – the same midpoint quote the rows on
  *  this screen are priced at, with no week jitter and no corridor roll – so the figure a player reads
@@ -237,6 +244,31 @@ export interface Snapshot {
    *  hands did lately – the rehab he is working, the layoff that ended early, the quiet weeks –
    *  quoting no figure, '' when nobody is hired. See `masseurRoomNote`. */
   masseurNote: string
+  /** ⭐ v76, the psychologist's year (wave 5 T2): is the SECOND salaried seat on the payroll. The
+   *  masseur's flag one seat over, and the same stand-down pair behind it – suspends (does not
+   *  cancel) at college and on booked family weeks. */
+  psychologistHired: boolean
+  /** ...whether the hire is even on offer – the SAME one-way door as the masseur's (the
+   *  travelling-team §2 ruled table: both seats unlock with the professional career). The card locks
+   *  with `PSYCHOLOGIST_LOCKED_DETAIL` until this is true, so the disabled state and the refused
+   *  click can never tell two stories. */
+  psychologistUnlocked: boolean
+  /** ...the weekly retainer at the family's chosen rung, in cents. FLAT, and with nothing to
+   *  multiply it by: one session a week at every rung, so the person's retainer IS the week (the
+   *  spec's «the rung buys WHO comes to the call»). The card's quote IS the ledger's row. */
+  psychologistSalaryCents: number
+  /** ⭐ THE ROSTER DIAL – which of the three takes the call: an INDEX into
+   *  `ECONOMY.psychologist.rungs` (0 counsellor · 1 sport psychologist · 2 tour-grade), NOT a
+   *  quantity. That is the whole difference from `masseurSessionsPerWeek` above, which is a count. */
+  psychologistRung: number
+  /** ⚠⚠ `psychologistFocus` IS DELIBERATELY NOT HERE, AND A SHIPPED GATE IS WHY. The wave-5 brief
+   *  lists it among T2's snapshot fields, and T2 was written that way – then E-07's contract test
+   *  («a Snapshot member with no reader is a promise to the UI that nothing collects») went red on
+   *  exactly one name: this one. The focus ROW on the staff card is T3's, so T3 is the commit where
+   *  the field arrives WITH its reader, which is this repo's own rule and the same call
+   *  `spiritShock` got one wave down («the old note expected T3 to carry a snapshot field with its
+   *  reader, and T3's reader turned out not to need one»). Nothing about T3 gets harder: the field
+   *  is one line here and one line in `world/snapshot.ts`, next to the four above. */
   /** W4 – THE UNANSWERED KNOCK, or null. Non-null on exactly the weeks a decision is outstanding
    *  (`knock.choice === null`), which is the same condition `advanceWeeks` blocks on – so the dialog
    *  and the engine can never disagree about whether the career is waiting for him.

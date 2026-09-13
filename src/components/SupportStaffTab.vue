@@ -19,11 +19,29 @@
 // is no `psychologistHired` on the snapshot, and inventing one would be the "salary the player
 // cannot see working" that the plan's own §5 names as its failure mode.
 //
+// ⚠⚠ v76 – HE EXISTS NOW, AND THE PARAGRAPH ABOVE IS KEPT WORD FOR WORD BECAUSE IT PREDICTED ITS OWN
+// ENDING CORRECTLY. `psychologistHired` IS on the snapshot (wave 5 T2, the psychologist's year), the
+// engine holds the seat, and he cost this file exactly what that paragraph promised: one entry in
+// `members`, one computed block, and one field rename on the shared rung descriptor. ⚠ AND THE
+// FAILURE MODE IT NAMES IS STILL THE LAW – the card claims NOTHING he cannot yet do. His effects
+// arrive per focus (T4-T7); a hired line boasting today would be «you paid and you cannot tell»
+// written the other way round.
+//
 // ⭐ WHAT THE DESCRIPTOR HAS TO CARRY IS DECIDED BY THE ASYMMETRY, which is the plan's §2 and the
 // owner's own ruling Б: «массажист ездит, психолог работает дистанционно и стоит только зарплату».
 // So the travel switch and the sessions dial are OPTIONAL on a member – a remote seat has neither,
 // and the two ARE the design rather than a saving. Everything else (the lock, the line, the price,
 // the two confirms) every seat has, which is why those are required fields.
+//
+// ⚠⚠ v76 – HE ARRIVED, AND ONE HALF OF THAT PARAGRAPH WAS RIGHT AND THE OTHER HALF WAS NOT. The
+// travel switch is exactly as optional as it says, and he has none: ruling Б held word for word. The
+// DIAL is the half that did not survive contact – `docs/specs/the-psychologists-year-2026-09.md` §3
+// gives him THREE RUNGS (a counsellor · a sport psychologist · a tour-grade specialist), so he does
+// have a three-way selector under his card. What he has no version of is the thing the masseur's
+// dial actually SELLS: a busier calendar. His is one session a week at every rung and the rung buys
+// WHO takes the call, so the row is a ROSTER and not a quantity – `StaffRung.value` below carries the
+// rung INDEX where the masseur's carries a session COUNT, which is why that field stopped being
+// called `sessions` when the second seat arrived. Nothing about the masseur's card changed with it.
 //
 // WHAT THIS FILE DOES NOT DECIDE. Every fact below is the SNAPSHOT's – the flag, the gate, the flat
 // salary, the room note, the as-if fare – so the card cannot invent a number the engine did not
@@ -47,6 +65,9 @@ import ConfirmDialog from './ConfirmDialog.vue'
 // this strip was written to fix one level down – see the component's own header.
 import HouseholdStrip from './HouseholdStrip.vue'
 import { MASSEUR_LOCKED_DETAIL } from '../engine/world/masseur'
+// v76 – the second seat's refusal, from the engine that throws it (the R10-16 doctrine, the masseur's
+// import one line up asked of the next seat over).
+import { PSYCHOLOGIST_LOCKED_DETAIL } from '../engine/world/psychologist'
 // v59 step 2 - the dial's option table. A static market catalogue in the same register as
 // `COACH_TIER_LABEL` next door: labels and prices keyed on nothing the world decides, so reading it
 // here cannot leak a derivation the snapshot should own (the card's own price stays the
@@ -56,10 +77,17 @@ import { formatCents } from '../shared/money'
 
 const game = useGameStore()
 
-/** One rung of a member's sessions dial. `priceLabel` is formatted here because the catalogue is
- *  static: what the FAMILY pays is `priceLabel` on the member below, and that one is the snapshot's. */
+/** One rung of a member's dial. `priceLabel` is formatted here because the catalogue is static: what
+ *  the FAMILY pays is `priceLabel` on the member below, and that one is the snapshot's.
+ *
+ *  ⚠ `value` IS WHATEVER THAT SEAT'S DIAL IS KEYED ON, and the two seats mean different things by it
+ *  – the masseur's sessions per week (2 / 4 / 7), the psychologist's rung index (0 / 1 / 2). It is
+ *  only ever compared with `dial.active` and handed back to that member's own `set`, so the card
+ *  never has to know which kind it is holding. ⚠ RENAMED FROM `sessions` WHEN THE SECOND SEAT
+ *  ARRIVED (v76): a field called `sessions` holding a roster position would be the masseur's own
+ *  vocabulary imposed on a seat that has no sessions dial at all. */
 interface StaffRung {
-  sessions: number
+  value: number
   label: string
   priceLabel: string
 }
@@ -67,7 +95,12 @@ interface StaffRung {
 /** ⭐ ONE SEAT ON THE PAYROLL. Required: the lock, the sentence, the price and the two directions –
  *  every seat has those. Optional: the dial and the travel switch, because the psychologist has
  *  neither by the owner's ruling Б and a descriptor that demanded them would force a remote seat to
- *  fake one. */
+ *  fake one.
+ *
+ *  ⚠ v76, MEASURED AGAINST THE REAL SECOND SEAT: the TRAVEL half of that sentence held exactly
+ *  (ruling Б, «стоит только зарплату») and he carries no `travel` at all. The DIAL half did not – he
+ *  has three rungs of his own (the spec's §3 roster) – so what the optionality really buys is a seat
+ *  that may skip EITHER control, which is what the header's ⚠⚠ note above records at length. */
 interface StaffMember {
   /** Stable id – the v-for key, the `data-staff` hook a test addresses one member by, and what the
    *  two confirms below are keyed on so one dialog serves the whole list. */
@@ -82,7 +115,7 @@ interface StaffMember {
   hireMessage: string
   releaseMessage: string
   setHired: (hire: boolean) => Promise<void>
-  dial?: { label: string; active: number; rungs: StaffRung[]; set: (sessions: number) => Promise<void> }
+  dial?: { label: string; active: number; rungs: StaffRung[]; set: (value: number) => Promise<void> }
   travel?: { title: string; sub: string; on: boolean; onLabel: string; offLabel: string; toggle: () => Promise<void> }
 }
 
@@ -153,7 +186,7 @@ const masseur = computed<StaffMember>(() => ({
     label: 'Masseur sessions per week',
     active: masseurSessions.value,
     rungs: MASSEUR_RUNGS.map((r) => ({
-      sessions: r.sessions,
+      value: r.sessions,
       label: r.label,
       priceLabel: formatCents(r.sessions * ECONOMY.masseur.perSessionCents),
     })),
@@ -170,9 +203,73 @@ const masseur = computed<StaffMember>(() => ({
   },
 }))
 
-/** ⭐ THE LIST. One entry today; the psychologist is a second entry here and his own computed block
- *  above, and nothing else on this tab has to move for him. */
-const members = computed<StaffMember[]>(() => [masseur.value])
+// --- the psychologist (v76, the psychologist's year – wave 5 T2) ---------------------------------
+// ⭐ THE SECOND SEAT, AND THE ENTRY THIS WHOLE CHAPTER WAS SHAPED FOR (the header's own «adding him
+// is ONE ENTRY in that array plus his own computed block» – which is what this is, and nothing else
+// on the tab moved for him beyond the dial field's rename).
+//
+// Every fact is the SNAPSHOT's, the masseur's rule one block up: the flag, the gate, the flat
+// retainer and the chosen rung all come off the wire, so the card cannot invent a number the engine
+// did not derive and every click is a command the worker re-validates (invariant 1).
+//
+// ⚠ NO TRAVEL SWITCH – ruling Б, and the descriptor's optional `travel` is what makes its absence a
+// design rather than a gap. ⚠ AND NO ROOM NOTE, which is the one place his card is QUIETER than the
+// masseur's on purpose: `masseurNote` is the plan's §4 sentence about what his hands DID lately, and
+// this seat has done nothing yet – every effect he has arrives with the FOCUS that names it (T4-T7).
+// A hired line claiming an effect today would be «вы заплатили и не можете этого заметить» written
+// the other way round: the card boasting before the engine can pay for it.
+const psychologistHired = computed(() => game.snapshot?.psychologistHired ?? false)
+const psychologistUnlocked = computed(() => game.snapshot?.psychologistUnlocked ?? false)
+const psychologistSalary = computed(() => formatCents(game.snapshot?.psychologistSalaryCents ?? 0))
+// The roster catalogue, read here for the same reason `MASSEUR_RUNGS` is: it is STATIC – labels and
+// prices keyed on nothing the world decides – so reading it on the screen leaks no derivation the
+// snapshot should own. The ACTIVE rung and the headline price are both the snapshot's.
+const PSYCHOLOGIST_RUNGS = ECONOMY.psychologist.rungs
+const psychologistRung = computed(
+  () => game.snapshot?.psychologistRung ?? ECONOMY.psychologist.defaultRung,
+)
+async function setPsychologistRungIndex(rung: number): Promise<void> {
+  if (rung === psychologistRung.value) return
+  await game.setPsychologistRung(rung)
+}
+const psychologistRungLabel = computed(() => PSYCHOLOGIST_RUNGS[psychologistRung.value]?.label ?? '')
+// The one line under his name, by state – the masseur's three-state shape exactly. LOCKED prints the
+// ENGINE's own refusal (PSYCHOLOGIST_LOCKED_DETAIL – the sentence `hirePsychologist` throws), the
+// R10-16 doctrine. HIRED and UNHIRED both print what the retainer IS, because that is all that is
+// true of him today; the focus row that will say what he WORKS ON is T3's.
+const psychologistLine = computed(() => {
+  if (!psychologistUnlocked.value) return PSYCHOLOGIST_LOCKED_DETAIL
+  if (psychologistHired.value) return 'On retainer – one call a week, wherever she is.'
+  return 'A call a week for her head – the year\'s work is chosen one year at a time.'
+})
+const psychologist = computed<StaffMember>(() => ({
+  id: 'psychologist',
+  name: 'Psychologist',
+  unlocked: psychologistUnlocked.value,
+  hired: psychologistHired.value,
+  line: psychologistLine.value,
+  priceLabel: psychologistSalary.value,
+  // Both directions ask, the screen's own doctrine – see the masseur's pair above.
+  hireMessage: `Put a psychologist on the payroll at ${psychologistSalary.value} a week (${psychologistRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
+  releaseMessage: 'Let the psychologist go? The weekly salary stops, and the calls end with the week.',
+  setHired: (hire: boolean) => game.hirePsychologist(hire),
+  dial: {
+    label: 'Psychologist – who takes the weekly call',
+    active: psychologistRung.value,
+    rungs: PSYCHOLOGIST_RUNGS.map((r, i) => ({
+      value: i,
+      label: r.label,
+      priceLabel: formatCents(r.salaryCents),
+    })),
+    set: setPsychologistRungIndex,
+  },
+}))
+
+/** ⭐ THE LIST. Two entries since v76, and the psychologist arrived exactly as this line promised he
+ *  would: one entry here, one computed block above, nothing else on the tab moved. ⚠ THE MASSEUR
+ *  STAYS FIRST – he is the seat the owner commissioned, paid a wave for and then could not find, and
+ *  the order on this screen is the one thing this chapter exists to get right. */
+const members = computed<StaffMember[]>(() => [masseur.value, psychologist.value])
 
 // ⚠ ONE CONFIRM PER DIRECTION FOR THE WHOLE LIST, keyed on the member id rather than a boolean per
 // person: two seats would otherwise mean four flags and four dialogs in the template, which is the
@@ -183,8 +280,8 @@ const releasing = ref<string | null>(null)
 // narrows `m.dial` / `m.travel` for the bindings it READS, but an inline handler is generated as its
 // own closure and the narrowing does not always reach inside it. A member without the control simply
 // has nothing to call, which is the same answer the `v-if` already gave.
-async function pressRung(m: StaffMember, sessions: number): Promise<void> {
-  await m.dial?.set(sessions)
+async function pressRung(m: StaffMember, value: number): Promise<void> {
+  await m.dial?.set(value)
 }
 async function pressTravel(m: StaffMember): Promise<void> {
   await m.travel?.toggle()
@@ -254,13 +351,13 @@ async function doRelease(): Promise<void> {
     <div v-if="m.dial && m.unlocked" class="staff-dial" role="radiogroup" :aria-label="m.dial.label">
       <button
         v-for="r in m.dial.rungs"
-        :key="r.sessions"
+        :key="r.value"
         class="staff-rung"
-        :class="{ active: m.dial.active === r.sessions }"
+        :class="{ active: m.dial.active === r.value }"
         role="radio"
-        :aria-checked="m.dial.active === r.sessions ? 'true' : 'false'"
+        :aria-checked="m.dial.active === r.value ? 'true' : 'false'"
         :disabled="game.busy"
-        @click="pressRung(m, r.sessions)"
+        @click="pressRung(m, r.value)"
       >
         <span class="rung-label">{{ r.label }}</span>
         <span class="rung-price">{{ r.priceLabel }}/wk</span>
