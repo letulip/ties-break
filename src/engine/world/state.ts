@@ -1118,11 +1118,19 @@ export interface WorldState {
    *  cleared on fire would make «fire and re-hire» a free way round a once-a-season rule, which is
    *  the exploit `brandFounded` one field group up exists to close in its own shape. */
   psychologistFocus: PsyFocus | null
-  /** ⭐ THE SEASON THE FOCUS WAS SET IN (v76) – `seasonIndexOf(week)` at the week of the pick, or null
-   *  while no pick has ever been made. The once-a-season fact, RECORDED rather than re-derived: a
-   *  «weeks since» arithmetic over the calendar would have to guess what a season boundary means for
-   *  a pick made inside a college freeze, and this engine records decisions (the round-21 #2 «asked
-   *  once, carried» doctrine). Read by `setPsychologistFocus` (T3) and by nothing else. */
+  /** ⭐ THE SEASON THE FOCUS WAS BOUGHT FOR (v76) – `psychologistFocusSeasonFor(week)` at the week of
+   *  the pick, or null while no pick has ever been made. The once-a-season fact, RECORDED rather than
+   *  re-derived: a «weeks since» arithmetic over the calendar would have to guess what a season
+   *  boundary means for a pick made inside a college freeze, and this engine records decisions (the
+   *  round-21 #2 «asked once, carried» doctrine). Written by `setPsychologistFocus` and read by
+   *  `psychologistFocusRefusal` (both T3), and by nothing else.
+   *
+   *  ⚠⚠ IT IS THE YEAR THE CHOICE IS *FOR*, NOT THE WEEK THE CLICK HAPPENED IN (T3b, ruling I), and
+   *  the difference is one +1 that decides how long a parent is held to a free pick. The off-season
+   *  is the LAST THREE weeks of a 52-week block while `seasonIndexOf` is `floor(week / 52)`, so the
+   *  off-season sits inside the index of the year it ENDS; stamping `seasonIndexOf(week)` therefore
+   *  made a mid-season hire wait for the next block's off-season – up to two years. The expression
+   *  lives once, in `world/psychologist.ts`, and the guard compares against that same call. */
   psychologistFocusSeason: number | null
   /** ⭐⭐⭐ v76 – HER WALLS AND HER REGULATION, the two §2a leanings (`docs/specs/who-she-is-2026-09.md`
    *  §2a verbatim, the 09.09 third-sitting re-cut). One decimal like `spirit`, both starting at 0.

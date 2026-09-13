@@ -18,6 +18,12 @@
 // snapshot carries and the string the command throws – never the prose itself. The архитектор's
 // вычитка moves the draft and the test moves with it.
 //
+// ⚠⚠ T3b (ruling I) RE-CUT THE SEASON RULE AND NOTHING ELSE. Two edits, both in §C's ground: the
+// WINDOW is `isOffSeasonWeek(week)` rather than `isBlackoutWeek(week, schoolIsOver(...))`, and the
+// STAMP is `psychologistFocusSeasonFor(week)` – the season the choice is FOR – read by the setter
+// and the guard alike. No string moved, no field joined the schema, no snapshot member changed. §C
+// is the section that carries the whole of it, row by row against the ruling's own table.
+//
 // =================================================================================================
 // ⚠⚠ THE ARM LEDGER – every net below was watched fail, and what it said is written here
 // =================================================================================================
@@ -80,6 +86,57 @@
 //          player can actually press it. **2 RED**, both in tests/component/psychologist-card.test.ts
 //          (§10's disabled sweep and §11's consent cases). ⚠ THE COMPONENT REDS ARE THE ONES THAT
 //          MATTER: they are the only arms measured on the surface a parent reads.
+//
+// =================================================================================================
+// ⚠⚠ T3b's ARM LEDGER – ruling I's two edits, and the drift the shared expression forbids
+// =================================================================================================
+//
+//   ⚠ SEVEN MUTATIONS, RUN 13.09.2026, CONTROL GREEN FIRST (96 tests across five files: this one,
+//   wave5-psychologist-seat, wave5-psychologist-schema, round24-college-refusals and the mounted
+//   tests/component/psychologist-card) AND RE-EDITED BACK BY SCRIPT – never `git checkout` – with
+//   psychologist.ts's md5 asserted back to pristine (24a72f26…) after EVERY arm. ⚠ All seven arms'
+//   reds land inside THIS file, which is why the counts are comparable with T3's despite the wider
+//   scope. Three of the seven are T3's own arms re-run, to say whether its nets moved:
+//
+//     ARM 9  1 RED      ARM 10  5 RED      ARM 11  5 RED      ARM 12  4 RED
+//     ARM 1  5 RED (was 4)   ARM 5  3 RED (was 2)   ARM 6  3 RED (was 2)
+//
+//   ARM 9  ⚠⚠ EDIT 1 PUT BACK: the window returns to `isBlackoutWeek(week, schoolIsOver(...))`.
+//          **1 RED – §C's exam-fortnight case, and NOTHING ELSE COULD GO RED**, which is the entry
+//          worth reading rather than a thin result. The two predicates differ on exactly one kind of
+//          week – an exam fortnight while school is not over – so every other case in the file is
+//          green by construction under both, the same structural miss T3's ARM 3 records one
+//          paragraph up. The message is the defect in one line: «week 179: expected [Function] to
+//          throw an error». That is a still-at-school professional changing her year in JUNE.
+//
+//   ARM 10 ⚠⚠ EDIT 2 PUT BACK: `psychologistFocusSeasonFor` returns `seasonIndexOf(week)`, which is
+//          the stamp T3 shipped – both readers move together, so this is the honest revert rather
+//          than a drift. **5 RED** – four §C cases (the mid-season pick's first reopening slides
+//          from +7 weeks to +59: «expected 309 to be 257»; the off-season free pick's stamp reads
+//          the ending year; the second change in one window; the laundering re-aim) and §C's exam
+//          case, where the door she DOES get slides a year off too: «expected 205 to be 153». ⭐ The
+//          exam case therefore answers under both edits, which is why it carries the acceptance
+//          alongside the refusals rather than the refusals alone.
+//
+//   ARM 11 ⚠⚠ THE DRIFT, AND IT IS WHY THE EXPRESSION IS A FUNCTION. The GUARD is re-typed as
+//          `seasonIndexOf(world.week)` while the stamp keeps `psychologistFocusSeasonFor` – two
+//          readers of one rule, written twice, disagreeing by one. **5 RED.** ⭐ Note it takes down
+//          the same four §C cases as ARM 10 PLUS the exam case: a rule written twice is not a
+//          weaker version of the rule, it is a different rule.
+//
+//   ARM 12 the drift the other way round – the STAMP re-typed as `seasonIndexOf(world.week)` while
+//          the guard keeps the shared expression. **4 RED.**
+//
+//   ARM 1  (T3's, re-run) the season stamp deleted. **5 RED, was 4** – §A's free-pick case and the
+//          four §C cases that lean on the stamp. The net grew with §C, it did not move.
+//
+//   ARM 5  (T3's, re-run) the window check deleted – now `isOffSeasonWeek`. **3 RED, was 2** – §C's
+//          outside-the-window sweep, §E's detail identity (T3's two) and now §C's exam case.
+//
+//   ARM 6  (T3's, re-run) the once-a-season check deleted. **3 RED, was 2** – the second-change
+//          case, the off-season free pick and the laundering case. ⚠ ARMS 5 and 6 STILL TAKE ONE
+//          HALF DOWN EACH AND NEVER BOTH, which is T3's own claim re-measured on the new rule: the
+//          window and the once-a-season fact remain independent.
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's, wave 4's and T2's §B apparatus, verbatim and for
@@ -113,14 +170,22 @@ import {
   psychologistFocusDetailOf,
   psychologistFocusOpen,
   psychologistFocusRefusal,
+  psychologistFocusSeasonFor,
+  psychologistUnlocked,
   resolvePhysio,
   setPsychologistFocus,
   setPsychologistRung,
   toSnapshot,
 } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
-import { seasonIndexOf } from '../src/engine/world/ledger'
-import { isBlackoutWeek } from '../src/engine/season/calendar'
+import { seasonIndexOf, seasonStartWeek } from '../src/engine/world/ledger'
+import {
+  OFF_SEASON_WEEKS,
+  WEEKS_PER_YEAR,
+  isBlackoutWeek,
+  isExamWeek,
+  isOffSeasonWeek,
+} from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { PsyFocus, WorldState } from '../src/engine/world'
@@ -144,10 +209,33 @@ function ageAt(world: WorldState): number {
 }
 
 /** Is this week inside the off-season window the change rule is written against? Asked through the
- *  engine's own two functions, never re-derived – `isBlackoutWeek(week, schoolIsOver(...))` is the
- *  architect's named seam and the command reads exactly this pair. */
+ *  engine's own predicate, never re-derived.
+ *
+ *  ⚠⚠ T3b MOVED THIS OFF `isBlackoutWeek(week, schoolIsOver(...))` (ruling I, problem 1). The wider
+ *  predicate is the off-season OR an exam fortnight while school is not over, and §C's exam case is
+ *  the one that says why that mattered. */
 function inWindow(world: WorldState): boolean {
-  return isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))
+  return isOffSeasonWeek(world.week)
+}
+
+/** THE FIRST WEEK FROM `from` ONWARD AT WHICH THE ENGINE WOULD ACCEPT A CHANGE, or `-1`. The world's
+ *  own week is restored, so a scan is a pure question.
+ *
+ *  ⚠ IT IS THE MEASUREMENT RULING I TURNS ON, and it is deliberately a SCAN rather than a probe at a
+ *  week somebody chose: «up to two years locked» is a claim about the first reopening, and only a
+ *  walk over the weeks can say where that is. `'listen'` is the probe focus because no case here
+ *  runs it as the live year and it is never the readiness gate's own option. */
+function firstReopening(world: WorldState, from: number, to: number): number {
+  const saved = world.week
+  try {
+    for (let week = from; week <= to; week++) {
+      world.week = week
+      if (psychologistFocusRefusal(world, 'listen') === null) return week
+    }
+    return -1
+  } finally {
+    world.week = saved
+  }
 }
 
 // The bond numbers the bands are cut at (ECONOMY.bond.band: close ≥ 80 · steady 55..79 ·
@@ -162,13 +250,20 @@ const COLD = ECONOMY.bond.band.strained - 1
 // A. THE PICK – the free first one, the id, and everything a pick deliberately is not
 // =================================================================================================
 describe('wave 5 T3 A – the pick, and what a pick is not', () => {
-  it('⭐⭐ THE FIRST PICK IS FREE, and it stamps the season it was made in', () => {
+  it('⭐⭐ THE FIRST PICK IS FREE, and it stamps the season the choice is FOR', () => {
     const world = hired('psy-focus-first')
     expect(world.psychologistFocus, 'nobody has been asked yet').toBeNull()
     expect(inWindow(world), 'and the fixture is deliberately NOT in the off-season window').toBe(false)
     setPsychologistFocus(world, 'coolhead')
     expect(world.psychologistFocus, 'the year starts when the work starts').toBe('coolhead')
-    expect(world.psychologistFocusSeason, '...and the season it started in is recorded').toBe(
+    // ⚠ T3b: the stamp is `psychologistFocusSeasonFor(week)` and not `seasonIndexOf(week)` – asked
+    // through the engine's own function, which is the point of the function existing (ruling I).
+    // Mid-season the two AGREE, and saying so here is what makes §C's off-season cases readable as
+    // a difference rather than as a second rule.
+    expect(world.psychologistFocusSeason, '...and the year it buys is recorded').toBe(
+      psychologistFocusSeasonFor(world.week),
+    )
+    expect(psychologistFocusSeasonFor(world.week), 'mid-season, the year bought IS the year standing in').toBe(
       seasonIndexOf(world.week),
     )
   })
@@ -344,45 +439,134 @@ describe('wave 5 T3 B – the year-focus takes ZERO draws, on any stream', () =>
 })
 
 // =================================================================================================
-// C. ⭐⭐ THE SEASON GUARD – both directions, and the laundering path a player would find
+// C. ⭐⭐ THE SEASON GUARD – every row of ruling I's table, and the laundering path a player would find
 // =================================================================================================
 //
 // O1, made mechanical: «в ближайший год» is the owner's own grain, so a change is an OFF-SEASON
-// decision and a once-a-season one. The window is `isBlackoutWeek(week, schoolIsOver(...))` and the
-// once-a-season fact is `psychologistFocusSeason` against `seasonIndexOf(week)`.
+// decision and a once-a-season one. T3b re-cuts both halves against the arithmetic (ruling I):
+//
+//   the WINDOW is `isOffSeasonWeek(week)` – the last three weeks of the 52-week block
+//   (`OFF_SEASON_WEEKS = 3`, offsets 49-51) and NOTHING ELSE. An exam fortnight is not a season
+//   boundary, and the exam case below is the one that says so;
+//
+//   the FACT is `psychologistFocusSeason` against `psychologistFocusSeasonFor(week)` – the season a
+//   pick made in that week is FOR, which is `seasonIndexOf(week) + (isOffSeasonWeek(week) ? 1 : 0)`
+//   written ONCE in the engine and read by the stamp and the guard alike.
+//
+// ⚠⚠ WHY THE SECOND HALF MOVED, BECAUSE IT IS THE HALF THAT LOOKS LIKE A DETAIL. The off-season
+// sits INSIDE the season index of the year it ends (`seasonIndexOf` is `floor(week / 52)`, the
+// off-season is offsets 49-51), so a stamp of `seasonIndexOf(week)` made a mid-season hire wait for
+// the NEXT block's off-season – 50 to 101 weeks behind a FREE pick taken before the player knew
+// anything. `firstReopening` is the instrument that measures that claim, and it is a scan rather
+// than a probe at a week somebody chose.
 describe('wave 5 T3 C – the year changes at the season`s edge, once', () => {
-  it('⭐⭐ a change INSIDE the window in a NEW season is accepted', () => {
+  it('⭐⭐⭐ A MID-SEASON PICK OPENS AT THE COMING OFF-SEASON – and the change buys the year AFTER it', () => {
+    // Ruling I's rows 1 and 3 in one walk: hire mid-season in block N, and the boundary that opens
+    // is N's own, seven weeks later – not N+1's, fifty-nine weeks later.
     const world = hired('psy-focus-change-ok')
     setPsychologistFocus(world, 'coolhead')
-    expect(world.psychologistFocusSeason).toBe(seasonIndexOf(250))
-    world.week = 309 // season 5's off-season tail (5 × 52 + 49)
+    expect(world.psychologistFocusSeason, 'the free pick buys the year it is standing in').toBe(
+      psychologistFocusSeasonFor(world.week),
+    )
+    expect(world.psychologistFocusSeason, '...which mid-season is the calendar season too').toBe(seasonIndexOf(250))
+
+    // ⚠⚠ THE MEASUREMENT, NOT A PROBE AT A WEEK I PICKED. The first week the engine would accept a
+    // change is the off-season of the SAME block – derived from the calendar's own constants, so a
+    // re-tuned `OFF_SEASON_WEEKS` moves the pin with it rather than rotting against a literal.
+    const reopens = firstReopening(world, 251, 250 + 2 * WEEKS_PER_YEAR)
+    expect(reopens, 'the coming off-season of her own season, not the next one`s').toBe(
+      seasonStartWeek(250) + WEEKS_PER_YEAR - OFF_SEASON_WEEKS,
+    )
+    expect(isOffSeasonWeek(reopens), 'it really is the off-season').toBe(true)
+    expect(seasonIndexOf(reopens), '...and really is still the block the pick was made in').toBe(seasonIndexOf(250))
+    expect(reopens - 250, 'weeks held to a free pick – ruling I`s «49 − k», not a year and a half').toBe(7)
+    expect(reopens - 250, 'and under a season in any case').toBeLessThan(WEEKS_PER_YEAR)
+
+    world.week = reopens
     expect(inWindow(world), 'the fixture really is in the window').toBe(true)
-    expect(seasonIndexOf(world.week), '...and really is a new season').not.toBe(seasonIndexOf(250))
     setPsychologistFocus(world, 'recovery')
     expect(world.psychologistFocus).toBe('recovery')
-    expect(world.psychologistFocusSeason, 'and the new year is stamped with ITS season').toBe(
-      seasonIndexOf(309),
+    // ⭐ ROW 3: the change is stamped for the year it BUYS – the one about to start.
+    expect(world.psychologistFocusSeason, 'the new year is the year the off-season is selling').toBe(
+      psychologistFocusSeasonFor(reopens),
+    )
+    expect(world.psychologistFocusSeason, '...which is one past the block the click happened in').toBe(
+      seasonIndexOf(reopens) + 1,
+    )
+    expect(world.psychologistFocusSeason, 'and NOT the block the click happened in – ruling I`s whole +1').not.toBe(
+      seasonIndexOf(reopens),
     )
   })
 
-  it('⭐⭐ a change inside the window in the SAME season is refused – the pick spends its own season', () => {
-    // ⚠ THIS IS THE HALF THAT MAKES THE FREE PICK A YEAR RATHER THAN AN OPEN SEASON: hire in week
-    // 250, choose, and the off-season three weeks later is already spent.
-    const world = hired('psy-focus-change-same')
+  it('⭐⭐ A SECOND CHANGE INSIDE THE SAME OFF-SEASON IS REFUSED – the window cannot be spent twice', () => {
+    // Ruling I's row 4, and the half that keeps «one choice a year» a year. ⚠ It is also the case
+    // that proves the stamp and the guard read ONE expression, and it catches the drift in BOTH
+    // directions (measured – ARMS 11 and 12): re-type the GUARD as `seasonIndexOf(week)` and the
+    // legitimate first change below is refused outright; re-type the STAMP instead and every week
+    // of the window opens again.
+    const world = hired('psy-focus-change-twice')
     setPsychologistFocus(world, 'coolhead')
-    world.week = 257 // season 4's own off-season tail
-    expect(inWindow(world), 'in the window').toBe(true)
-    expect(seasonIndexOf(world.week), '...and in the season the pick was made in').toBe(
-      world.psychologistFocusSeason,
-    )
-    expect(() => setPsychologistFocus(world, 'listen')).toThrow(PSYCHOLOGIST_FOCUS_SEASON_REFUSAL)
-    expect(world.psychologistFocus, 'and the running year is untouched').toBe('coolhead')
+    const reopens = seasonStartWeek(250) + WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    world.week = reopens
+    setPsychologistFocus(world, 'recovery')
+    const bought = world.psychologistFocusSeason
+
+    for (let week = reopens + 1; week < seasonStartWeek(250) + WEEKS_PER_YEAR; week++) {
+      world.week = week
+      expect(inWindow(world), `week ${week} is still the off-season`).toBe(true)
+      expect(psychologistFocusSeasonFor(week), `week ${week} still sells the same year`).toBe(bought)
+      expect(() => setPsychologistFocus(world, 'listen'), `week ${week}`).toThrow(
+        PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+      )
+    }
+    expect(world.psychologistFocus, 'the year the family just bought is the year').toBe('recovery')
+
+    // ...and the NEXT boundary is a full year on – which is what «once a year» means from the
+    // inside of the window rather than from the outside.
+    const next = firstReopening(world, reopens + 1, reopens + 2 * WEEKS_PER_YEAR)
+    expect(next, 'one year, to the week').toBe(reopens + WEEKS_PER_YEAR)
   })
 
-  it('⭐⭐ a change OUTSIDE the window is refused, however many seasons have passed', () => {
+  it('⭐⭐ A FREE PICK TAKEN INSIDE THE OFF-SEASON BUYS THE NEXT YEAR – and waits a full one', () => {
+    // Ruling I's row 2. The free pick is free because it is the FIRST, not because it is unstamped:
+    // taken in the off-season it buys the year about to start, and the year about to start is the
+    // one it then has to run.
+    const offSeasonHire = seasonStartWeek(250) + WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    const world = hired('psy-focus-offseason-hire', offSeasonHire)
+    expect(world.psychologistFocus, 'nobody has been asked yet – this pick is still the free one').toBeNull()
+    expect(inWindow(world), 'and the hire lands inside the off-season').toBe(true)
+
+    setPsychologistFocus(world, 'coolhead')
+    expect(world.psychologistFocusSeason, 'the year the off-season is selling').toBe(
+      seasonIndexOf(offSeasonHire) + 1,
+    )
+    expect(world.psychologistFocusSeason, 'and not the block the click happened in').not.toBe(
+      seasonIndexOf(offSeasonHire),
+    )
+
+    const reopens = firstReopening(world, offSeasonHire + 1, offSeasonHire + 2 * WEEKS_PER_YEAR)
+    expect(reopens - offSeasonHire, 'one year, to the week – the next block`s own off-season').toBe(WEEKS_PER_YEAR)
+    expect(isOffSeasonWeek(reopens)).toBe(true)
+    expect(seasonIndexOf(reopens), 'the block after the one she was hired in').toBe(seasonIndexOf(offSeasonHire) + 1)
+  })
+
+  it('⭐⭐ a change OUTSIDE the window is refused – every mid-season week of a whole season', () => {
+    // Ruling I's row 5, swept rather than sampled: from the first week of the block after the pick
+    // to the last week before its off-season, there is no door at all.
     const world = hired('psy-focus-change-outside')
     setPsychologistFocus(world, 'coolhead')
-    for (const week of [251, 300, 400, 500]) {
+    const from = seasonStartWeek(250) + WEEKS_PER_YEAR
+    const to = from + WEEKS_PER_YEAR - OFF_SEASON_WEEKS - 1
+    expect(to - from + 1, 'a whole season minus its off-season tail').toBe(WEEKS_PER_YEAR - OFF_SEASON_WEEKS)
+    for (let week = from; week <= to; week++) {
+      world.week = week
+      expect(inWindow(world), `week ${week} is mid-season`).toBe(false)
+      expect(() => setPsychologistFocus(world, 'listen'), `week ${week}`).toThrow(
+        PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+      )
+    }
+    // ...and the far side of a career says the same – the rule is not about how long it has been.
+    for (const week of [400, 500]) {
       world.week = week
       expect(inWindow(world), `week ${week} is mid-season`).toBe(false)
       expect(() => setPsychologistFocus(world, 'listen'), `week ${week}`).toThrow(
@@ -392,12 +576,77 @@ describe('wave 5 T3 C – the year changes at the season`s edge, once', () => {
     expect(world.psychologistFocus).toBe('coolhead')
   })
 
+  it('⭐⭐⭐ AN EXAM FORTNIGHT IS NOT A SEASON BOUNDARY – the school`s calendar buys no second window', () => {
+    // ⚠⚠ THE ROW T3b EXISTS FOR (ruling I, problem 1). T3 shipped the window as
+    // `isBlackoutWeek(week, schoolIsOver(...))` because the wave brief named that predicate – and
+    // `isBlackoutWeek` is the off-season OR an exam fortnight while school is not over. The
+    // professional unlock can precede school's end, so a still-at-school professional got a SECOND
+    // change window in June: mid-season switching, which is exactly what O1 forbids.
+    //
+    // ⚠ THE FIXTURE IS THE CLAIM, so it is asserted rather than described: a hired professional
+    // (`psychologistUnlocked` reads the never-pruned W-series mark, and `TIERS.w15.minAgeYears` is
+    // 14) who is STILL AT SCHOOL (`schoolEndWeek` lands at 18.0-19.0 for every birth month the game
+    // can generate). The combination is ordinary, not contrived: measured over `DEFAULT_PROFILE`,
+    // FIVE exam fortnights fall while she is still at school (weeks 23/24, 75/76, 127/128, 179/180,
+    // 231/232 – ages 14.0 through 18.0), and the pro door can open at 14.
+    const pickWeek = 150 // block 2, offset 46 – mid-season, and she is sixteen
+    const world = hired('psy-focus-exam', pickWeek)
+    expect(psychologistUnlocked(world), 'a professional – the seat would not open otherwise').toBe(true)
+    expect(schoolIsOver(pickWeek, world.profile.birthMonth), '...and still at school').toBe(false)
+    expect(ageAt(world), 'sixteen, which is where this collision lives').toBeLessThan(18)
+    setPsychologistFocus(world, 'coolhead')
+    const bought = world.psychologistFocusSeason
+
+    // The exam fortnight of the NEXT block – next, so that the once-a-season FACT cannot be what
+    // refuses and the window is left alone on the stand.
+    const examBlock = seasonIndexOf(pickWeek) + 1
+    const examWeeks = ECONOMY.availability.examWeeks.flatMap(([lo, hi]) =>
+      Array.from({ length: hi - lo + 1 }, (_, i) => examBlock * WEEKS_PER_YEAR + lo + i),
+    )
+    expect(examWeeks.length, 'a fortnight is two weeks').toBe(2)
+
+    for (const week of examWeeks) {
+      const schoolOver = schoolIsOver(week, world.profile.birthMonth)
+      world.week = week
+      expect(isExamWeek(week, schoolOver), `week ${week} is an exam blackout`).toBe(true)
+      expect(schoolOver, `week ${week}: and she is still at school`).toBe(false)
+      expect(isOffSeasonWeek(week), `week ${week} is NOT the off-season`).toBe(false)
+      // ⚠⚠ THE COUNTERFACTUAL, NAMED IN THE TEST RATHER THAN IN A COMMIT MESSAGE: the predicate T3
+      // shipped calls this week a window. This line is why the case cannot pass under both.
+      expect(isBlackoutWeek(week, schoolOver), 'the WIDER predicate would have opened it').toBe(true)
+      // ...and the season FACT is not what refuses either – by the stamp's own arithmetic this week
+      // sells a different year, so only the window is left to say no.
+      expect(psychologistFocusSeasonFor(week), `week ${week} sells a year she has not bought`).not.toBe(bought)
+      expect(() => setPsychologistFocus(world, 'listen'), `week ${week}`).toThrow(
+        PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
+      )
+      expect(world.psychologistFocus, `week ${week}: the running year is untouched`).toBe('coolhead')
+    }
+
+    // ⭐ AND THE DOOR SHE DOES GET IS THE REAL ONE – a refusal test that never shows the acceptance
+    // is a test that would pass on a function returning a refusal for everything.
+    const reopens = firstReopening(world, pickWeek + 1, pickWeek + 2 * WEEKS_PER_YEAR)
+    expect(reopens, 'the off-season of her own block, and nothing before it').toBe(
+      seasonStartWeek(pickWeek) + WEEKS_PER_YEAR - OFF_SEASON_WEEKS,
+    )
+    expect(isOffSeasonWeek(reopens)).toBe(true)
+    expect(schoolIsOver(reopens, world.profile.birthMonth), 'still at school there too – school is not the rule').toBe(
+      false,
+    )
+  })
+
   it('⭐⭐⭐ FIRE AND RE-HIRE DOES NOT LAUNDER A CHANGE – «free» means never picked, not «just hired»', () => {
     // ⚠⚠ THE HOLE, PINNED EXPLICITLY BECAUSE IT IS THE ONE A PLAYER WOULD FIND. The first pick is
     // free because the year starts when the work starts – but firing keeps the focus as a dead
     // letter (T2's rule), so if a re-hire counted as a fresh free pick, fire-and-re-hire would be a
     // free mid-season switch and O1 would be decorative. Both halves are measured: mid-season, and
-    // inside the window of the season the year was already picked in.
+    // inside an off-season whose one change has already been taken.
+    //
+    // ⚠ T3b RE-AIMED THE SECOND HALF, and the re-aim is the ruling rather than a convenience. T3
+    // measured it «in the window, same season», where the refusal came from a lock ruling I has
+    // since removed: that window is now a real boundary and the change is legitimately accepted. So
+    // the laundering attempt is measured where a refusal still stands – on the SECOND change inside
+    // one off-season.
     const world = hired('psy-focus-launder')
     setPsychologistFocus(world, 'coolhead')
     const stamped = world.psychologistFocusSeason
@@ -411,14 +660,23 @@ describe('wave 5 T3 C – the year changes at the season`s edge, once', () => {
       PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
     )
 
-    world.week = 257
+    const reopens = seasonStartWeek(250) + WEEKS_PER_YEAR - OFF_SEASON_WEEKS
+    world.week = reopens
+    setPsychologistFocus(world, 'listen') // the change ruling I gives back, spent honestly
+    expect(world.psychologistFocusSeason).toBe(psychologistFocusSeasonFor(reopens))
+
+    world.week = reopens + 1
     hirePsychologist(world, false)
     hirePsychologist(world, true)
-    expect(inWindow(world), 'and now in the window, where only the season fact stands between').toBe(true)
-    expect(() => setPsychologistFocus(world, 'listen'), 'in the window, same season, after a re-hire').toThrow(
+    expect(inWindow(world), 'still inside the off-season whose change is already spent').toBe(true)
+    expect(world.psychologistFocus, 'the re-hire resumed the year it did not reopen').toBe('listen')
+    expect(world.psychologistFocusSeason, '...and the stamp came back with it').toBe(
+      psychologistFocusSeasonFor(world.week),
+    )
+    expect(() => setPsychologistFocus(world, 'recovery'), 'a second change in one window, after a re-hire').toThrow(
       PSYCHOLOGIST_FOCUS_SEASON_REFUSAL,
     )
-    expect(world.psychologistFocus, 'the year the family paid for is still the year').toBe('coolhead')
+    expect(world.psychologistFocus, 'the year the family paid for is still the year').toBe('listen')
   })
 })
 

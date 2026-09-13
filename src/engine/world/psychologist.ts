@@ -33,12 +33,22 @@
 // everything needed at runtime comes from SIBLING leaves – ledger, ladder, college, bookings,
 // constants. The same four the masseur reaches for, and for the same reasons.
 //
-// ⚠ T3 ADDS SIX IMPORTS AND NO NEW ARROW INTO THIS FILE, which is worth one line because the year's
+// ⚠ T3 ADDS FIVE IMPORTS AND NO NEW ARROW INTO THIS FILE, which is worth one line because the year's
 // focus is the first thing here that reads anything about HER. `bondBandOf` (the consent band),
-// `kidAgeExact` (the joint-choice age), `isBlackoutWeek` + `schoolIsOver` (the off-season window) and
-// `seasonIndexOf` (the once-a-season fact) are all leaves `spirit.ts` already reaches for in exactly
+// `kidAgeExact` (the joint-choice age), `isOffSeasonWeek` (the off-season window) and
+// `seasonIndexOf` (the season arithmetic) are all leaves `spirit.ts` already reaches for in exactly
 // this combination, so the direction of every arrow is unchanged: sideways, into leaves, never back
 // into `world.ts`.
+//
+// ⚠⚠ AND IT IS `isOffSeasonWeek` RATHER THAN `isBlackoutWeek`, WHICH IS T3b's FIRST EDIT (ruling I,
+// problem 1). T3 took the wider predicate from its brief; `isBlackoutWeek` is the off-season OR an
+// exam fortnight while school is not over, and the professional unlock can precede school's end
+// (`TIERS.w15.minAgeYears` is 14 in `season/calendar.ts`, while `kidLife.ts`'s `schoolEndWeek`
+// lands at 18.0-19.0 for every birth month the game can generate). A still-at-school
+// professional therefore got a SECOND change window in June – mid-season switching, which is
+// exactly what O1 forbids. The window is the TRUE off-season and nothing else, which also retires
+// the `schoolIsOver` plumbing the wider predicate needed: this file no longer imports `../kidLife`
+// at all.
 import { ECONOMY } from '../economy'
 import { addEvent, seasonIndexOf } from './ledger'
 import { guardNotEnded } from './constants'
@@ -47,8 +57,7 @@ import { inCollege } from './college'
 import { vacationForWeek } from './bookings'
 import { kidAgeExact } from './age'
 import { bondBandOf } from '../spirit'
-import { schoolIsOver } from '../kidLife'
-import { isBlackoutWeek } from '../season/calendar'
+import { isOffSeasonWeek } from '../season/calendar'
 import type { PsyFocus } from './state'
 import type { WorldState } from '../world'
 
@@ -322,6 +331,27 @@ export const PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL =
 export const PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL =
   'She is not ready for that one – it is the year she has to want first.'
 
+/** ⭐⭐ THE SEASON A PICK MADE IN THIS WEEK IS *FOR* – T3b's second edit, and the whole of ruling I's
+ *  problem 2. It is written ONCE and read by both the stamp and the guard, which is the only reason
+ *  the two can never drift: `setPsychologistFocus` writes what this returns and
+ *  `psychologistFocusRefusal` refuses when the stored stamp already equals it.
+ *
+ *  ⚠⚠ WHY IT IS NOT `seasonIndexOf(week)`, IN THE ARITHMETIC RATHER THAN IN THE INTENTION.
+ *  `isOffSeasonWeek` is the LAST THREE weeks of the 52-week block (offsets 49-51,
+ *  `OFF_SEASON_WEEKS = 3`) and `seasonIndexOf` is `floor(week / WEEKS_PER_YEAR)` – so the off-season
+ *  sits INSIDE the same season index as the year it ends. T3 stamped the week the click happened in,
+ *  and a mid-season hire therefore could not change until the NEXT block's off-season: between 50
+ *  and 101 weeks after a FREE pick made before the player knew anything. «Мы ни за что не
+ *  наказываем» governs, and an up-to-two-year lock is a punishment by arithmetic.
+ *
+ *  The +1 says the thing the field was always named for: a pick taken in the off-season buys the
+ *  year that is about to start, not the one that is ending. A mid-season pick buys the year it is
+ *  standing in, so its own coming off-season is a real boundary and opens normally. Pure, total,
+ *  zero draws. */
+export function psychologistFocusSeasonFor(week: number): number {
+  return seasonIndexOf(week) + (isOffSeasonWeek(week) ? 1 : 0)
+}
+
 /** ⚠⚠ CONSENT IS A BAND READ AND NOTHING ELSE – §0.4 of the wave's laws, and the gravest thing this
  *  task could get wrong. NO DRAW, EVER: her yes is never dice, so the same band gives the same answer
  *  on every call, on every world, for ever. `bondBandOf` is the ONE reader of the number (spirit.ts),
@@ -353,10 +383,13 @@ function bondWithholdsConsent(world: WorldState): boolean {
  *     (`hirePsychologist`'s own ⚠⚠ note and the field's in state.ts), so if a re-hire counted as a
  *     fresh free pick, fire-and-re-hire would be a free mid-season switch and O1 would be
  *     decorative. Once a focus exists, a change is a change.
- *  5. **THE WINDOW**, `isBlackoutWeek(week, schoolIsOver(...))` – the season's own edge.
- *  6. **ONCE A SEASON**, `psychologistFocusSeason` against `seasonIndexOf(week)` – so the three-week
- *     window cannot be spent twice, and so a pick made at hire cannot be revised in the off-season
- *     of the very season it was made in.
+ *  5. **THE WINDOW**, `isOffSeasonWeek(week)` – the TRUE off-season and nothing else (ruling I,
+ *     problem 1: the exam fortnight is not a season boundary, and a still-at-school professional
+ *     must not get a second change window in June).
+ *  6. **ONCE A SEASON**, `psychologistFocusSeason` against `psychologistFocusSeasonFor(week)` – the
+ *     SAME expression the stamp is written from, so the three-week window cannot be spent twice.
+ *     ⚠ Read it as «is the year this week would buy the year already bought»: inside one off-season
+ *     every week answers the same, and the answer only changes a year later.
  *
  *  Pure read, ZERO draws – see `bondWithholdsConsent`. */
 export function psychologistFocusRefusal(world: WorldState, focus: PsyFocus): string | null {
@@ -367,10 +400,8 @@ export function psychologistFocusRefusal(world: WorldState, focus: PsyFocus): st
   }
   if (withheld && focus === 'herself') return PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL
   if ((world.psychologistFocus ?? null) === null) return null
-  if (!isBlackoutWeek(world.week, schoolIsOver(world.week, world.profile.birthMonth))) {
-    return PSYCHOLOGIST_FOCUS_SEASON_REFUSAL
-  }
-  if ((world.psychologistFocusSeason ?? -1) === seasonIndexOf(world.week)) {
+  if (!isOffSeasonWeek(world.week)) return PSYCHOLOGIST_FOCUS_SEASON_REFUSAL
+  if ((world.psychologistFocusSeason ?? -1) === psychologistFocusSeasonFor(world.week)) {
     return PSYCHOLOGIST_FOCUS_SEASON_REFUSAL
   }
   return null
@@ -422,8 +453,9 @@ export function setPsychologistFocus(world: WorldState, focus: PsyFocus): void {
   const refusal = psychologistFocusRefusal(world, focus)
   if (refusal) throw new Error(refusal)
   world.psychologistFocus = focus
-  // ⚠ STAMPED ON EVERY ACCEPTED PICK, the free first one included – that is what makes the free pick
-  // start a YEAR rather than an open season: the off-season of the season it was made in is already
-  // spent, so the next choice is the next season's.
-  world.psychologistFocusSeason = seasonIndexOf(world.week)
+  // ⚠ STAMPED ON EVERY ACCEPTED PICK, the free first one included – and it is the season the choice
+  // is FOR, never the week the click happened in (ruling I, and `psychologistFocusSeasonFor`'s own
+  // note). The guard above compares against THIS function and not against a re-typed copy of it,
+  // which is what makes «one choice a year» one rule instead of two that can disagree.
+  world.psychologistFocusSeason = psychologistFocusSeasonFor(world.week)
 }
