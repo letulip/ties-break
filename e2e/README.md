@@ -232,8 +232,15 @@ To get a trace for something that passes on CI and fails for you, run it with `-
 
 ## The journeys, and the one rule for adding another
 
-Twelve spec files. `smoke` and `seeded-careers` prove the harness; the other ten are the journeys,
-and each one's header names the seam it owns and why no cheaper layer reaches it:
+**Twenty-three spec files**, and the enumerating list is NOT this one – it is
+`docs/specs/e2e-coverage.md` §2, which `coverage-map.spec.ts` checks against the filesystem in both
+directions. ⚠ This paragraph said «twelve» until wave 5 T11 counted them: the table below is the
+original ten journeys, it stopped being the whole set eleven specs ago, and a hand-kept second list
+is exactly the rot the coverage map exists to prevent. Read it as what it is – the first ten seams,
+with the argument for each – and read the map for the set.
+
+`smoke` and `seeded-careers` prove the harness; each journey's header names the seam it owns and why
+no cheaper layer reaches it:
 
 | file | seam |
 |---|---|

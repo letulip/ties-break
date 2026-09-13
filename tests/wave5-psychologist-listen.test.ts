@@ -395,7 +395,9 @@ describe('wave 5 T6 A – one uniform per read-bearing beat, and what it is keye
 })
 
 // =================================================================================================
-// B. THE 48 DRAFTS – the rectangle, the four voices, and ⚠⚠ the confidentiality lint
+// B. THE 40 DRAFTS – the rectangle, the four voices, and ⚠⚠ the confidentiality lint
+//    (⚠ 40 AND NOT 48 SINCE RULING O – the told-now half of `ENDED_EVENT_HEARD` never existed; this
+//     heading and the case title below were the two places the old count outlived the cut. T11.)
 // =================================================================================================
 
 /** Every legible string the focus can print, walked as a rectangle rather than transcribed – so a
@@ -559,7 +561,7 @@ describe('wave 5 T6 B – the legible drafts, and the one thing they may never s
     }
   })
 
-  it('⚠ house style on all forty-eight: short dash only, no Cyrillic, no number, no price', () => {
+  it('⚠ house style on all forty: short dash only, no Cyrillic, no number, no price', () => {
     for (const cell of everyLegible()) {
       expect(cell.text, `${cell.where}: the long dash is never used in this repo's copy`).not.toMatch(/—/)
       expect(cell.text, `${cell.where}: Cyrillic in a shipped string`).not.toMatch(/[Ѐ-ӿ]/)
