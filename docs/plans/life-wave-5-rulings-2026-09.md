@@ -821,3 +821,57 @@ the same trap as the cool-head 0.9×, from a different cause.
 
 ⚠ And the notification lied a **ninth** time: «exit code 0» over a unit run whose own log read
 `UNIT_EXIT=1`, with four failures.
+
+## Ruling Q – the shock register stays, and it is STAMPED for ruling E's reason
+
+T8 found that design call 3 and §0.5 collide as I wrote them, and asked rather than choosing.
+`lifeBeatSaid` is pure and receives `detail`, so a shock can reach the wording only through (a) a
+tenth parameter – a shape change §0.5 forbids – or (b) the detail. It took (b):
+`detail = '<register>:<driver>'`, parsed in the kind's own case with two validated lookups and a
+throw, at the cost of a 9-line case against `'fork-counsel'`'s 3.
+
+**Ruled: keep it.** Three reasons, in increasing order of weight.
+
+1. **It is the point of the beat.** «A girl under her line, and a girl under her line because
+   somebody left» is what this seat exists to tell apart (`spirit.ts`'s own promise). Without the
+   register `'fork-psy'` is a second coach with a different name, which is the decorative-staff
+   failure the travelling-team §4 law is named for.
+2. **T8 measured that the shock is the COMMON case here, not a corner.** The T17 fork walk arrives
+   at its fork with `spiritShock` already live, because `WORN_AT_THE_FORK` pins spirit at 0 and the
+   clear bar is `baseline − 2`. So a register-free beat would say the plain thing on most of the
+   occasions it ever fires – exactly backwards. (⚠ That also made T8's first «no shock» control a
+   false arm; both arms are poked symmetrically now. The null-arm family, third sighting this wave.)
+3. **⚠ And the detail encoding is not a workaround – it is ruling E applied.** The register is
+   STAMPED at the raise, so the wording is reconstructible from persisted facts forever. Re-deriving
+   it from `world.spiritShock` at answer time would put a mutable world fact under a persisted
+   sentence – exactly the defect ruling E exists to prevent for T6's legibility. The nine lines buy
+   the same correctness property, and the three-line version would have been the cheaper, wronger
+   one.
+
+### Four things T8 measured that correct me or the record
+
+* **The glyph gate is not tripped and there is NO question for the owner from T8.** I warned that a
+  new `LifeBeatKind` «may force a glyph pick». It cannot: the per-kind record has been a
+  `Partial<…>` since 12.09, when the owner picked a subset (♡ for `'ended'`, deliberately nothing
+  for `'met'`). The «empty or total» union is one storey up, over `LIFE_ROW_KINDS`. A compile arm
+  shows the gate still REFUSES a pick for a kind that writes no life row.
+* **`'fork-counsel'`'s `ANSWER_EVENT` is not a write site.** Every kind's answer line goes through
+  ONE shared `addEvent` at the foot of `answerLifeBeat` (`type: 'info'`, no `lifeKind`). So there is
+  no per-kind row to get wrong, and **the class of defect T4 nearly shipped is structurally
+  unreachable for any new beat kind.** My brief told T8 to mirror a row that does not exist.
+* **The ruled blocking table exists in TWO copies** (`wave3-soft-surface` §A and `wave3-small-talk`
+  §H), and a narrow discriminating run could not see the second – only the full `npm run check`
+  found it. ⚠ A pin duplicated across files is a pin that can be half-re-aimed and stay green.
+* **⚠ `tools/econ-bench.ts` never calls `answerLifeBeat`**, so the raise site is UNREACHABLE in the
+  frozen corpus's walker. T8's «0 keys moved on five cells» is therefore a statement about a walker
+  that cannot enter the code path, not a measurement of the change. **This is the null-arm family
+  that cost wave 4 a whole proof obligation** (its T3b: an obligation I had put in every brief was
+  measured and found to be a null arm). Ruling K's discipline caught it here because the builder
+  applied it rather than quoting it.
+
+**And ruling J's practical weight is exactly one test.** T8's ARM 1 – the gate swapped back to my
+own brief's `world.psychologistHired` – is **1 red**, on the college-freeze line, with every other
+case in the file passing under both readings. That is precisely why it had to be a ruling and not a
+builder's inference: nothing else in the wave would have caught it.
+
+⚠ The notification lied a **tenth** time: «exit code 0» over a log reading `CHECK_EXIT=1`.
