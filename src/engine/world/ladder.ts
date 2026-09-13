@@ -1264,3 +1264,40 @@ export function prevRankIn(world: WorldState, track: LadderTrack): number | null
 export function kidLadderRank(world: WorldState, track: LadderTrack): number | null {
   return kidPoints(world, track) > 0 ? rankIn(world, track) : null
 }
+
+/** ⭐⭐ HER PLACE AS THE TABLE ITSELF HAS IT THIS INSTANT – round 41 #26, and what every rank SURFACE
+ *  reads now.
+ *
+ *  The owner, 12.09: «в тайле под аватаркой professional #3 а реальный в таблице #4». Both numbers
+ *  were right; they were taken at different MOMENTS. `kidLadderRank` above reads the persisted cache
+ *  (`world.kidRankWta` through `rankIn`), written by `recomputeRankAndMilestones` during the tick;
+ *  the standings printed beside it are a fresh `rankingFor` fold at snapshot time. One aggregate, two
+ *  evaluation moments – and the tick has at least three places where the second moves after the first
+ *  has been taken: the season wrap clears `world.fieldSeasonPoints` AFTER the weekly recompute (one
+ *  week a season, exactly the era he photographed), the reveal week defers the recompute to
+ *  `finalizeTournament` (`kidLadderRank`'s own note above says so in as many words), and
+ *  `settleMandatoryQuota` writes later still.
+ *
+ *  ⚠ SO THE FIX IS NOT A REORDERING OF THE TICK. All three orderings are deliberate and moving one
+ *  reprices engine behaviour; what was wrong is that the VIEW asked the question twice. The tile, the
+ *  Stats caption and the table are now one fold, so the disagreement he photographed is
+ *  unrepresentable rather than merely unlikely.
+ *
+ *  ⚠ AND IT COSTS NOTHING, for the same reason the bug exists: `rankingFor` is memoised on a key that
+ *  folds `world.fieldSeasonPoints` itself (`fieldPointsToken`), which is precisely why the CACHE FIELD
+ *  goes stale while the FOLD does not. `computeLadderView` therefore asks for the table and hands
+ *  `computeStandings` nothing – the second call is a memo hit on the same key.
+ *
+ *  ⚠⚠ THE CACHE STAYS, AND EVERY ENGINE READER STAYS ON IT. `world.kidRankWta` still decides home
+ *  wild-card places (`homeWildCardPlace`), the acceptance cuts and the entry gates, where a rank is a
+ *  DECISION the tick made and must not be re-folded underneath it. Only the projection layer moved.
+ *
+ *  ⚠ «UNRANKED IS NOT A NUMBER» IS THE SAME GUARD, BYTE FOR BYTE (`kidPoints > 0`, exactly as
+ *  `kidLadderRank` asks it), so `rank === null` still means "she holds nothing in this table" and the
+ *  screens that lean on that property are untouched. The `?? null` beyond it is a tripwire, not a
+ *  path: `rankingFor`'s roster is `[...cohortIds(world), KID_ID]` and the merged W table keeps every
+ *  live row, so she is in her own table by construction. */
+export function kidLadderRankFolded(world: WorldState, track: LadderTrack): number | null {
+  if (kidPoints(world, track) <= 0) return null
+  return rankingFor(world, track).find((r) => r.playerId === KID_ID)?.rank ?? null
+}

@@ -205,7 +205,13 @@ describe('§2 – an ordered thing draws a date, and no Sell', () => {
     const wrapper = await mountShop(snap)
     const yacht = (await rowFor(wrapper, 'The yacht'))
     expect(yacht.text()).toContain('On order')
-    expect(yacht.text()).toContain('paid $12,000,000')
+    // ⚠ RE-AIMED BY ROUND 41 #2 (12.09), NOT LOOSENED: this arm used to assert the ordered card
+    // still said `paid $12,000,000` – round 39 #4's own reasoning («there the figure has nowhere
+    // else to live»). The owner then read that exact caption in play as the leftover he had asked
+    // round 39 to remove – «Не убрали paid from water на заказанных» – so the figure is gone from
+    // the On-order StatRow unconditionally, and this arm asserts the absence, the same way
+    // r39-owned-shelf-paid.test.ts was re-aimed by bundle M.
+    expect(yacht.text(), 'round 41 #2 – the ordered card carries no paid figure').not.toContain('paid $')
     expect(yacht.text()).toContain('cannot be sold before it is delivered')
     // ⚠ AND NO SELL CONTROL AT ALL, which is R10-16: `sellableAsset` refuses it, so the screen may
     // not offer it. A greyed-out Sell would be the same lie with an extra click in it.

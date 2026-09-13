@@ -26,11 +26,11 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo } from '../src/engine/economy'
+import { ECONOMY, GEAR_CATEGORIES, gearHitsUpTo, gearPriceBandCents } from '../src/engine/economy'
 import { kitTermsFor, standingClears } from '../src/engine/offers'
 import { sponsorNeedMet, sponsorStandingOf } from '../src/engine/world/sponsors'
 import { rngFromSeed } from '../src/engine/rng'
-import { COACH_TIERS, coachWeeklyBandCents, facilityRateCents, weeklyBillSplit } from '../src/engine/coach'
+import { COACH_TIERS, coachWeeklyBandCents, corridorAppliesAt, facilityRateCents, weeklyBillSplit } from '../src/engine/coach'
 import { DEFAULT_PROFILE, type CoachTier, type FamilyBackground } from '../src/shared/protocol'
 
 /** The first week of the season a kit deal signed in the first off-season actually COVERS.
@@ -451,7 +451,11 @@ describe('gear cadence (round-7 a) – each category fires within its window', (
       it(`${background}/${category}: gaps and prices stay inside the configured ranges`, () => {
         const line = ECONOMY.gear[category]
         const [cadLo, cadHi] = line.cadenceWeeks[background]
-        const [prLo, prHi] = line.priceCents[background]
+        // ⚠ RE-AIMED BY ROUND 41 P1 – `GearLine.priceCents` became `GearLine.price`, a union of a
+        // RUNG-keyed table (the three laddered lines) and a background-keyed one (apparel alone).
+        // `gearHitsUpTo` below passes no rung, so the band it drew from is the identity rung's, and
+        // this reads the same resolver rather than a second spelling of the table.
+        const [prLo, prHi] = gearPriceBandCents(category, background, null)
         const hits = gearHitsUpTo(`gear-cadence-${background}`, category, background, HORIZON)
         expect(hits.length).toBeGreaterThan(0)
         let prev = 0
@@ -546,14 +550,26 @@ describe('the coaching bill is priced in the family\'s own market (the wealth co
     return rows.reduce((s, e) => s - (e.amountCents ?? 0), 0)
   }
 
-  it('orders working < middle < wealthy for the SAME rung, per week, off the same roll', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 41 P1 (12.09). The ordering claim below is the owner's own round-2 ruling
+  // («для 8к все тиры стоят согласно их коридору…») and it survives WHERE HE LEFT IT – on the rungs
+  // a junior's family actually shops in. He narrowed it himself the same day the gear prices went
+  // uniform: «Коридор ±25–30% остаётся… только на нижних тирах… в про карьере с большими чеками цены
+  // для всех должны быть равны». So the test now asserts the ordering below the cut and EQUALITY
+  // above it, which is a stronger claim than the one it replaces – the old version could not have
+  // failed on a corridor that quietly stopped applying.
+  it('orders working < middle < wealthy below the cut, and charges all three alike above it', () => {
     // The corridors are disjoint (≤0.80 < 0.95..1.05 < 1.20≤) and the roll is shared, so the
     // ordering holds every week rather than only on average. Asserted at EVERY rung, because the
-    // claim is that the whole ladder is priced in every market and not just the middle of it.
+    // claim is that the whole ladder is priced in the market that rung is sold in.
     for (const tier of COACH_TIERS) {
       const costs = BACKGROUNDS.map((bg) => weekOneCoaching('coach-market', bg, tier))
-      expect(costs[0]).toBeLessThan(costs[1])
-      expect(costs[1]).toBeLessThan(costs[2])
+      if (corridorAppliesAt(tier)) {
+        expect(costs[0], tier).toBeLessThan(costs[1])
+        expect(costs[1], tier).toBeLessThan(costs[2])
+      } else {
+        expect(costs[1], tier).toBe(costs[0])
+        expect(costs[2], tier).toBe(costs[0])
+      }
       // ...and each bill sits inside its rung's weekly envelope for ITS market.
       BACKGROUNDS.forEach((bg, i) => {
         const world = createWorld('coach-market', { ...DEFAULT_PROFILE, background: bg, coachTier: tier })

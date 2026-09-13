@@ -40,11 +40,43 @@ describe('economy calibration – 52-week net burn (no tournaments, unsponsored 
     // Middle on top is not an accident: it buys the rung with the widest gap between what the family
     // earns and what its academy charges. And wealthy at the top of the market spends its whole
     // income on the coach alone, before a single trip - which is the design, stated as a number.
+    //
+    // ⚠⚠⚠ RE-AIMED A THIRD TIME BY ROUND 41 P1 (12.09), AND **THE ORDERING IS THE HALF THAT DID NOT
+    // MOVE.** Measured on the same batch after his two rulings: middle -8,039 < working -5,667 <
+    // wealthy -4,917 – the chain above holds cell for cell, and the sentence about WHY middle sits
+    // on top is unchanged. What broke is the last line: the wealthy cell is no longer a burn, so
+    // «the only one that BURNS» has no member. Its $11,197 swing decomposes as gear -$3,309 and the
+    // corridor fade -$7,888 (tests/economyCalibration.ts's `BANDS` block carries the control and
+    // both arms). **THIS IS A FINDING AWAITING HIS WORD, NOT A RE-TUNE** – the two levers that could
+    // restore the burn are the wealthy income and the elite rate band, and neither was touched. The
+    // line is inverted rather than deleted precisely so that a re-tune of either goes RED here and
+    // is re-pinned deliberately.
+    //
+    // ⭐⭐⭐ AND IT DID, WITHIN THE DAY. THE INVERSION IS SPENT – THE LAST LINE IS RESTORED (12.09,
+    // the owner, choosing between the two levers above):
+    //
+    //     «единая элит-полка вверх - верно»
+    //
+    // He took the ELITE RATE BAND and raised it to a single shelf: `ECONOMY.coach.hourlyRateCents.elite`
+    // × 1.25, the midpoint of the wealthy corridor P1 retired, so the uniform price everybody now pays
+    // is exactly what the wealthy family used to pay. THE RE-PIN IS THE POINT OF THE INVERSION – this
+    // line went red on his retune and is being re-aimed deliberately, which is the whole reason P1
+    // inverted it instead of deleting it. Measured on the same batch, the same 16 seeds:
+    //
+    //   middle  · middle  -$8,039   saves the MOST – unmoved to the cent, its rung kept the corridor
+    //   working · budget  -$5,667   unmoved to the cent, same reason
+    //   wealthy · elite   **+$2,970**   the only one that BURNS, again
+    //
+    // ⚠ THE CHAIN ABOVE IS UNTOUCHED FOR THE THIRD TIME and the sentence about why middle sits on
+    // top still stands: the only thing that moved is the wealthy cell's SIGN, back to where round 7's
+    // «premium everything must hurt» put it. The decomposition, the prediction (+$2,971, missed by
+    // $1.06) and his ruling in full are in tests/economyCalibration.ts's `BANDS` block and
+    // docs/specs/one-market-2026-09.md §3.
     const w = mean(batchBurns('working', { excludeSponsor: true }))
     const m = mean(batchBurns('middle'))
     const rich = mean(batchBurns('wealthy'))
     expect(m).toBeLessThan(w)
     expect(w).toBeLessThan(rich)
-    expect(rich).toBeGreaterThan(0) // the only cell in the table that is a burn at all
+    expect(rich, '⚠ the wealthy cell BURNS again – his «единая элит-полка вверх», 12.09').toBeGreaterThan(0)
   })
 })

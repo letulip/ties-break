@@ -28,7 +28,7 @@ import ThisWeekScreen from '../../src/components/screens/ThisWeekScreen.vue'
 import MoreScreen from '../../src/components/screens/MoreScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { ageAtWeek, createWorld, kidAgeYears, toSnapshot } from '../../src/engine/world'
-import { coachBillRangeCents, coachById } from '../../src/engine/coach'
+import { coachBillRangeCents, coachById, tierOf } from '../../src/engine/coach'
 import { DEFAULT_PROFILE, type CareerMeta, type Snapshot } from '../../src/shared/protocol'
 
 /** The week the two clocks straddle a coach rate row: `ageAtWeek` is 17 here and a December girl is
@@ -77,13 +77,14 @@ describe('the planned-spend quote reads the MARKET clock, never the printed age'
 
     // The engine's own envelope, at the age `resolveBaseCosts` bills through (world.ts:913).
     const market = coachById(snap.seed, ageAtWeek(snap.week), snap.coachId)!
-    const [lo, hi] = coachBillRangeCents(market.rateCents, snap.plan, snap.profile.background)
+    // ⚠ `tierOf` added by round 41 P1 – the envelope is rung-aware now (the corridor stops at high).
+    const [lo, hi] = coachBillRangeCents(market.rateCents, snap.plan, snap.profile.background, tierOf(market))
     expect(shown).toBe(`$${Math.round(lo / 100)}–$${Math.round(hi / 100)}`)
 
     // ...and it is NOT the envelope her printed age would have bought, which is the failure this
     // file exists for: the screen read `snap.ageYears` and that used to be the band.
     const hers = coachById(snap.seed, snap.ageYears, snap.coachId)!
-    const [wrongLo, wrongHi] = coachBillRangeCents(hers.rateCents, snap.plan, snap.profile.background)
+    const [wrongLo, wrongHi] = coachBillRangeCents(hers.rateCents, snap.plan, snap.profile.background, tierOf(hers))
     expect(shown, 'quoting her age would be a price no week ever bills').not.toBe(
       `$${Math.round(wrongLo / 100)}–$${Math.round(wrongHi / 100)}`,
     )

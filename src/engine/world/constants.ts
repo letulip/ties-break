@@ -106,6 +106,29 @@ export function guardNotEndedForGood(world: WorldState): void {
   if (world.ending && world.ending.type !== 'college') throw new Error(CAREER_ENDED_REFUSAL)
 }
 
+/** ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – THE TAG ON HER FIRST GRAND SLAM MAIN DRAW, and the only
+ *  thing that dates it. The owner: «да, делаем fame за основу Шлема… У нее был вайлдкард на Шлем,
+ *  когда она была #155.»
+ *
+ *  ⚠⚠ IT IS THE MILESTONE ROW'S KEY AND THEREFORE THE WHOLE MECHANISM. `finalizeTournament` fires
+ *  `fireMilestone(world, SLAM_DEBUT_KEY, …)` the first time a Slam run is completed, and
+ *  `world/fame.ts` reads the row's WEEK back out to date the debut floor. Nothing is persisted that
+ *  was not persisted before: the feed already carried `milestoneKey`, and a `keep: true` row is the
+ *  one class `pruneEvents` may never sacrifice (`world/bookkeeping.ts` – `kept` is spliced back
+ *  whole, before the two trimmed classes). So `SAVE_SCHEMA_VERSION` does not move and the date is
+ *  durable for the life of the career.
+ *
+ *  ⚠ THE ROW'S OWN EXISTENCE IS THE FIRED-CHECK – `fireMilestone` returns at its first line when a
+ *  row with this key is already on the feed – so the write is idempotent and the FIRST slam run is
+ *  the one that dates it, however many follow.
+ *
+ *  ⚠ IT LIVES IN THIS LEAF AND NOT BESIDE `COACH_TRAVEL_OPEN_KEY` IN `world/milestones.ts`, WHICH IS
+ *  THE ONE PLACE THIS FILE'S OWN PRECEDENT APPLIES. Two modules need it – `world.ts` fires it and
+ *  `world/fame.ts` reads it – and `milestones.ts` imports `engine/diary`, so pointing the fame leaf
+ *  at it would drag the diary (and `rngFromSeed`) into the runtime graph of a file whose whole claim
+ *  is that it draws nothing. `CAREER_ENDED_REFUSAL` above was moved here for exactly this reason. */
+export const SLAM_DEBUT_KEY = 'first-slam-main-draw'
+
 export const SEASON_MIN_FUTURE = 26 // always keep at least this many future weeks scheduled
 export const SEASON_CHUNK = 52 // generate the calendar one deterministic year-block at a time
 export const RESULTS_WINDOW = 52 // ranking window; results older than this never count → prunable

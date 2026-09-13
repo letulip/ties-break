@@ -499,6 +499,32 @@ export function bookedRestGainBetween(world: WorldState, week: number): number {
   return gain
 }
 
+/** ⭐⭐ WHAT SHE WILL ARRIVE AT, as far as it is honestly knowable – round 41 #20, and the ONE
+ *  projection every surface that judges a FUTURE week's fatigue now reads.
+ *
+ *  The owner, 12.09: «при выбранном отпуске надпись о exhausted с карточки будущего турнира ушла, а
+ *  при попытке оставить на него заявку всё ещё предлагает продавить.» Two surfaces, one question,
+ *  two different projections – the repo's most-caught defect class. The CARD had been vacation-aware
+ *  since round 34 #9 (the arithmetic was written inline in `availabilityStatus`, just below);
+ *  the hired COACH's read of the same trip was `world.condition`, today's, so his sentence survived
+ *  the holiday that had just silenced the card and flipped the confirm button to «Enter anyway» over
+ *  a card with no warning on it.
+ *
+ *  ⚠ SO IT IS A FUNCTION AND NOT A SECOND COPY. `bookedRestGainBetween` above had exactly ONE reader
+ *  when this round opened; the fix adds a second and a third, which is precisely when an inline
+ *  expression stops being safe. Extracting it changes no number at all – `availabilityStatus` below
+ *  spends the same three terms in the same order it always did.
+ *
+ *  ⚠ AND IT IS THE SOFT GATES ONLY. The doctor's veto (`medicalBlock`) is deliberately NOT given
+ *  this forecast, for the reason `availabilityStatus` states in full: a hard refusal is about a body that is
+ *  not cleared TODAY, and a medical floor lifted by a holiday that has not happened yet would be the
+ *  game promising clearance it cannot give. What the holiday may quiet is the CAUTION, which is what
+ *  he asked about, and nothing else. */
+export function projectedConditionAt(world: WorldState, week: number): number {
+  const c = ECONOMY.condition
+  return clamp(world.condition + bookedRestGainBetween(world, week), c.min, c.max)
+}
+
 export function availabilityStatus(
   world: WorldState,
   // ⚠ WIDENED TO WHAT IT READS (PR-09): this function touches `event.tier` and `event.week` and
@@ -677,10 +703,12 @@ export function availabilityStatus(
   // about a body that is not cleared TODAY, the owner asked about the Exhausted caution, and a
   // medical floor lifted by a holiday that has not happened yet would be the game promising
   // clearance it cannot give.
+  // ⚠ THE ARITHMETIC LEFT THIS LINE FOR `projectedConditionAt` IN ROUND 41 #20, unchanged term for
+  // term. It gained a second and a third reader – the hired coach's two entry reads – and a forecast
+  // written out at three sites is the two-sides-one-question defect this card's own fix was about.
   const conditionFloor = ECONOMY.availability.minConditionToEnter[event.tier]
   if (world.condition < conditionFloor) {
-    const c = ECONOMY.condition
-    const restored = clamp(world.condition + bookedRestGainBetween(world, event.week), c.min, c.max)
+    const restored = projectedConditionAt(world, event.week)
     if (restored < conditionFloor) {
       return { level: 'caution', reason: 'fatigued', detail: 'Exhausted – racing risks injury.' }
     }

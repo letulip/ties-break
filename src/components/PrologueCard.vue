@@ -58,6 +58,7 @@
 // the two read lines read, so the picture cannot disagree with the sentence under it, and there is
 // no `mood` column in the card table for anybody to keep in sync by hand.
 import { computed, ref, useTemplateRef } from 'vue'
+import IconButton from './ui/IconButton.vue'
 import { prologueArtUrl, prologueFacePoint, type PrologueOutcome } from '../art/prologue'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../composables/countries'
@@ -132,6 +133,26 @@ const props = defineProps<{
    *  container offers it on the first one only, because a skip that follows you to the eighth year is
    *  a screen asking whether you would rather be somewhere else. */
   skipLabel?: string
+  /** ⭐⭐⭐ ROUND 41 #9 – THE WAY ON OFF A CARD THAT IS ANSWERED BY SELECTING, and it is a LABEL for
+   *  the same reason `skipLabel` is: this component holds no copy and no predicate. The container
+   *  decides whether the card is finished (`cardFinished`, ChildhoodPrologue.vue) and hands the word
+   *  down when it is, so «hidden until every radio is answered» is one reading of the run rather
+   *  than a second one kept in step here. Absent on the six, the seven and every result scene – they
+   *  select nothing, so they keep the way on they already have. */
+  proceedLabel?: string
+  /** ⭐⭐ ROUND 41 #8 – ...and the way back to the card before this one: true when the container says
+   *  the earlier year can still be re-answered (`canGoBack`, ChildhoodPrologue.vue), false otherwise.
+   *  It shares the foot of the column with `skipLabel`, which is the first card's and only the first
+   *  card's.
+   *
+   *  ⚠⚠ IT IS A PREDICATE AND NOT A LABEL, WHICH IS THE ONE PLACE THIS PROP DIFFERS FROM THE TWO
+   *  ABOVE IT, AND THE LAW IS WHY (owner, 30.07: «Для back я просил везде сделать один компонент и
+   *  его консистентно использовать, просто иконка с белым fill»). A control whose job is «go back» is
+   *  the app's ONE component – `IconButton variant="bare" icon="back"` – and a bare icon has no copy
+   *  to hand down: its accessible name is the house's own `Back`, the word `CoachMarketScreen`
+   *  already gives the same control. So this card holds no back copy either, and `WALK_COPY` is one
+   *  DRAFT string lighter than it was when the control was a word. */
+  canGoBack?: boolean
   busy?: boolean
 }>()
 
@@ -140,6 +161,14 @@ const emit = defineEmits<{
    *  beat it is one of `TOURNAMENT_ANSWER`'s two ids – the container knows which beat it is on,
    *  because it is the one that put the `ask` prop there. */
   (e: 'answer', id: string | null): void
+  /** ⭐⭐⭐ ROUND 41 #9 – the answered card's way on, and it is its OWN emit rather than an `answer`
+   *  carrying null. The two say different things: `answer` reports what the player CHOSE, and this
+   *  reports that they are done choosing. Overloading null would have made the way on off a quiet
+   *  card and the Proceed off an answered one indistinguishable at the container, which is exactly
+   *  the branch `answer()` no longer has to make. */
+  (e: 'proceed'): void
+  /** ⭐⭐ ROUND 41 #8 – the player wants the card before this one back */
+  (e: 'back'): void
   /** the player would rather have the wizard */
   (e: 'skip'): void
   /** a field of the identity was edited – the whole of it, so the container stays the owner */
@@ -615,6 +644,31 @@ useDialogFocus(cardEl)
           </div>
         </template>
 
+        <!-- ⭐⭐⭐ ROUND 41 #9 - THE YELLOW BUTTON, AFTER EVERY QUESTION THIS CARD ASKS AND BEFORE
+             THE WAY OUT. The owner's sentence is in docs/rounds/round-41.md, item 9, where his
+             Russian is allowed to live; the short of it is that a radio only ever selects, and when
+             every radio on the card is answered the way on appears.
+
+             ⚠ ITS PLACE IN THE COLUMN IS LOAD-BEARING IN THREE DIFFERENT PLACES. After the ask
+             group, because a way on drawn above a question the player has not reached yet would be
+             offering to leave a screen that is still asking; and BEFORE the way out of the story,
+             because `e2e/smoke.spec.ts` takes the skip as the LAST control on the five and the round
+             -20 #3 fit measurement reads the card's way out off its bottom edge.
+
+             ⚠ IT IS `.prologue-answer` AND NOT A SELECTION, deliberately - r40 #1 made that class
+             mean «advance and nothing else» (see the style block), and this is the one control on an
+             answered card that advances. It carries no mark, no `aria-checked` and no group, which
+             is that item's negative arm still holding: what LOOKS like a choice must BE one. -->
+        <button
+          v-if="proceedLabel"
+          class="prologue-answer prologue-proceed"
+          type="button"
+          :disabled="busy"
+          @click="emit('proceed')"
+        >
+          <span class="prologue-answer-label">{{ proceedLabel }}</span>
+        </button>
+
         <!-- ⭐ PHASE 4, §6 - THE OTHER PATH. Inside `.prologue-answers` and last within it, which is
              what keeps `.prologue-answers` the card's last element: the fit measurement reads the
              way out off the card's bottom edge, and a control added anywhere after it would make
@@ -630,6 +684,34 @@ useDialogFocus(cardEl)
         >
           <span class="prologue-answer-label">{{ skipLabel }}</span>
         </button>
+
+        <!-- ⭐⭐ ROUND 41 #8 - AND THE WAY BACK, IN THE SAME SLOT AS THE WAY OUT. The owner pressed a
+             radio on the second card and did not expect to be moved on; item 9 stops the move and
+             this is the other half of his ask - the card before this one, with what he answered on
+             it still answered.
+
+             ⚠ THE SLOT IS SHARED AND THE TWO CAN NEVER COLLIDE: the way out is the FIRST card's and
+             this is offered on no card but the ones after it, so the column ends in exactly one
+             quiet control either way and `.prologue-answers` stays the card's last element.
+
+             ⚠⚠ AND IT IS THE APP'S ONE BACK CONTROL, NOT A SECOND DESIGN OF ONE. The owner's
+             sentence of 30.07 is in `IconButton.vue`'s own header and in docs/rounds/round-41.md
+             (item 8) - the copy law bans Cyrillic inside a template, comments included, so it is
+             pointed at rather than quoted here. It shipped as a hand-written text button and
+             `tests/ui-control-system.test.ts` refused it on exactly that sentence: anything whose
+             job is "go back" is `IconButton variant="bare" icon="back"`, the same control the four
+             screen headers carry. The GATE is untouched - `canGoBack` is still the container's
+             `run.opens` safety, so a year whose weekend has been played still offers nothing. The
+             class stays as the column's own hook. -->
+        <IconButton
+          v-if="canGoBack"
+          class="prologue-back"
+          variant="bare"
+          icon="back"
+          label="Back"
+          :disabled="busy"
+          @click="emit('back')"
+        />
       </div>
     </div>
   </div>
@@ -1214,6 +1296,15 @@ useDialogFocus(cardEl)
 .prologue-skip:hover:not(:disabled) {
   background: var(--accent-wash);
 }
+
+/* ⭐⭐ ROUND 41 #8 – THE WAY BACK HAS NO TREATMENT HERE, AND THAT IS THE POINT OF IT.
+   It shipped as a text button in `.prologue-answer`'s clothes and needed three declarations to undo
+   them (transparent border, no wash, the skip's padding); it is `IconButton variant="bare"
+   icon="back"` now – the app's one back control, owner 30.07 – which draws itself, is 32px either
+   side, takes no wash and is held to no `.prologue-answer` rule because it is not one. `IconButton`'s
+   own sheet carries the colour and the hover, so a second opinion about either would be the drift the
+   component exists to stop. The class survives only as the column's hook (round 40's «one way on»
+   arm counts the buttons in this slot and excludes the way back by it). */
 
 .prologue-answer-label {
   font-size: 15px;

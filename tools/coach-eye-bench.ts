@@ -423,8 +423,8 @@ function billToAge(tier: CoachTier, bg: FamilyBackground, toAge: number): number
     const [lo, hi] = coachRateBandCents(tier, ageYears)
     total +=
       tier === 'self'
-        ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(plan) * coachCorridorMid(bg))
-        : coachWeeklyCents((lo + hi) / 2, plan, bg)
+        ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(plan) * coachCorridorMid(bg, tier))
+        : coachWeeklyCents((lo + hi) / 2, plan, bg, tier)
   }
   return total
 }

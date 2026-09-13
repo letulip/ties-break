@@ -91,6 +91,10 @@ import { DRAW_NOT_MADE_NOTE, fieldChanceLabel, fieldChanceTitle, firstMatchLabel
 // scale IN the call: this number is a 0..1 chance, not a 0..100 percentage, and the signature will
 // not let the two be confused.
 import { readingColor } from '../../composables/readingColor'
+// ⭐ ROUND 41 #16 – the wild-card chip, on this screen's own copy of the same card (round 21 #2b put
+// it on Season's; this marker takes `UpcomingEvent` unchanged off the same `snap.upcoming` row via
+// `preferredWeekEvent`, so `marker.wildCard` is already the engine's flag – nothing to wire).
+import { WILD_CARD } from '../../engine/season/tournament'
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
 import PaperNote from '../ui/PaperNote.vue'
@@ -277,6 +281,11 @@ function enterMarker(e: UpcomingEvent): void {
 // the Season screen, listed as still open by two reviews running; the name this file used is the
 // name the module took, so nothing at the call sites below reads differently.
 const { academyCoverPct, fundsShort, surfaceVerdict, venueUrl } = useEventCard()
+
+// ⭐ ROUND 41 #16 – the marker card's own wild-card chip reads the engine's own count, exactly as
+// SeasonScreen's does, so a bench that sweeps `WILD_CARD.slots` cannot leave a stale number on
+// either surface.
+const wildCardSlots = WILD_CARD.slots
 
 // --- (b) THE DAYS CROSS THEMSELVES OUT ----------------------------------------------------------
 //
@@ -573,6 +582,17 @@ const showGo = computed(() => !game.snapshot?.pending)
           <span class="entry-fee">{{ entryFeeLabel(marker.entryFeeCents) }}</span>
           <span class="pill">closes {{ weekLabel(marker.deadlineWeek) }}</span>
           <span v-if="marker.entered" class="pill ok">Entered</span>
+          <!-- ⭐ ROUND 41 #16 – THE WILD CARD, ON THIS SCREEN'S OWN COPY OF THE SAME CARD. Round 21
+               #2b put this exact chip (flag, tooltip and words) on Season's event card; this marker
+               IS that card again (see the note at `cal-card-days` above), so it was the one surface
+               still silent about it. Same flag, same count, same words - never restated. -->
+          <span
+            v-if="marker.wildCard"
+            class="pill wildcard-chip"
+            :title="`One of the ${wildCardSlots} places this tournament holds for players of the host nation – she is outside the acceptance list.`"
+          >
+            wild card
+          </span>
         </div>
 
         <div class="cal-card-odds">
@@ -847,6 +867,30 @@ const showGo = computed(() => !game.snapshot?.pending)
   color: var(--paper-ink);
 }
 
+/* ⭐ ROUND 41 #12 – LARGER TYPE ON THE PLATES, PAST 768. The owner: «на календаре на цветных
+   плашках на десктоп и планшет сделать шрифт крупнее» (quoted here rather than in the template –
+   tests/template-copy-rules.test.ts bans Cyrillic inside one). 8.5px was fitted against the 375px
+   phone's ~40px-wide column (the comment at `.cal-time` above); it never had to be read from a
+   tablet or a desktop, where the same seven columns split a card several times as wide.
+   ⚠ CLIPPING WAS THE THING TO CHECK, NOT GUESS AT – `overflow: hidden` and `word-break: break-word`
+   both stay exactly as they were, so a label that cannot fit still clips rather than spilling out of
+   its plate. And the risk runs the OTHER way from what a bare font bump suggests: `.cal-time-cols`
+   is `repeat(7, 1fr)` across the card's own width, so the SAME seven columns are wider at 768 and
+   wider again at 1024 – more room per column, not less – while only the font grew. The longest label
+   in the catalogue ("Road-trip home", 14 characters – composables/weekGrid.ts) was checked against
+   that wider column at both steps. */
+@media (min-width: 768px) {
+  .cal-block {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-block {
+    font-size: 11px;
+  }
+}
+
 /* THE PALETTE, one static rule per block kind, and it is the WALLET'S palette (see the `--cat-*`
    block in src/style.css for why the two screens share one). Written out rather than composed from
    the kind at runtime for the reason the surface tints above give: a `var(--cat-${kind})` built in a
@@ -1009,6 +1053,30 @@ const showGo = computed(() => !game.snapshot?.pending)
 .cal-note {
   margin: 14px 0 0 4px;
   max-width: 280px;
+}
+
+/* ⭐ ROUND 41 #10 – WIDER PAST 768, WHICH THE DESIGN'S OWN 280PX NEVER HAD TO ANSWER FOR. The owner:
+   «на экране с анимацией прохода недели давай записочку под таблицей недели сделаем по-шире на
+   дестоп и планшетах?» (quoted here rather than in the template - tests/template-copy-rules.test.ts
+   bans Cyrillic inside one). A flat cap that reads as a scrap beside a 343px phone card reads as a
+   sliver under the full-width `.cal-time` grid once the screen has room to spare - the same
+   contrast WeekRecapCard.vue's own note-beside-photo item measured in words: 280px "reads as half a
+   scrap at 768 and a quarter at 1280".
+   ⚠ `min(px, %)` RATHER THAN A BARE PERCENTAGE, on purpose: the scrap carries one short sentence
+   (the corpus caps at 56 characters, tests/calendar-grid.test.ts), and a percentage alone would keep
+   stretching a one-line sentence into a banner on a very wide window. The percentage does the work
+   at 768-900, where the column itself is still modest; the px figure takes over past that and holds
+   the note to a size that still reads as a note. */
+@media (min-width: 768px) {
+  .cal-note {
+    max-width: min(420px, 62%);
+  }
+}
+
+@media (min-width: 1024px) {
+  .cal-note {
+    max-width: min(480px, 54%);
+  }
 }
 
 .cal-note :deep(.tb-paper) {

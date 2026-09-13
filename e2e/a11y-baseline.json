@@ -21,18 +21,6 @@
         "nodes": 8,
         "why": "DEBT. The same eight `.tb-statrow-meta` elements as at 375 - the screen is one column at both widths, so the defect is width-independent and is entered twice because the baseline key is per width. Same one-token fix."
       }
-    },
-    "CoachMarketScreen.vue@375": {
-      "color-contrast": {
-        "nodes": 6,
-        "why": "DEBT. `.tier-count` (src/components/screens/CoachMarketScreen.vue:960, the 'N coaches' count on each tier heading) is `var(--ink-dim)` at 10.5px on the page ground: 4.388:1 against AA's 4.5:1. Smaller than Money's, same colour, same cause. Same one-token fix."
-      }
-    },
-    "CoachMarketScreen.vue@1280": {
-      "color-contrast": {
-        "nodes": 6,
-        "why": "DEBT. The same six `.tier-count` elements as at 375, entered twice for the same per-width-key reason. Same one-token fix."
-      }
     }
   }
 }

@@ -23,8 +23,18 @@
 //   * `accrueKidShare` writes through `accrueFinance` instead      -> the "outside the sum" arm.
 //   * `accrueKidShare` given `kidPrizeShareCents(prize, age)` re-derived from a rounded gross
 //                                                                  -> the "to the cent" arm.
-//   * the `if (herShare > 0)` guard dropped in world.ts            -> the under-eighteen arm.
+//   * the `if (herShare > 0)` guard dropped in world.ts            -> the first-W-cheque arm (its
+//     junior-only half: a guard that fires on a zero share writes a row on a weekend that paid
+//     nothing).
 //   * `Math.round(bps / 100)` -> `bps / 100` in `financeSeries`    -> the whole-percent arm.
+//
+// ⚠⚠ ROUND 41 #27 MOVED THE SECOND ARM'S PREMISE, NOT ITS CLAIM (items 15+27, the owner's ruling A1:
+// «призовые падают на её счёт с первого старта W-серии независимо от возраста – согласен»). The ramp's
+// first column used to be a ZERO, so "writes nothing before her eighteenth" was a true sentence about
+// a walked junior career; it is now 10%, and the same walk pays her from her first W-series cheque.
+// What the arm was always FOR – the memo cannot appear out of nowhere – is re-aimed onto the gate
+// that really governs it: `finalizeTournament` splits inside `if (prize > 0)`, and junior tennis pays
+// no prize at all, so the boundary is her first W-SERIES CHEQUE rather than a birthday.
 import { describe, it, expect } from 'vitest'
 import {
   KID_ID,
@@ -38,7 +48,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
-import { kidPrizeShareBps } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps } from '../src/engine/economy'
 import { kidAgeYears } from '../src/engine/world/age'
 import { TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type FinanceWeek } from '../src/shared/protocol'
@@ -78,14 +88,26 @@ interface Credit {
 const kidRows = (w: WorldState): Map<number, number> =>
   new Map(w.financeWeeks.filter((x) => x.kidShare).map((x) => [x.week, x.kidShare!.cents]))
 
-function walkPayingCareer(seed: string, seasons: number): { world: WorldState; credits: Credit[] } {
+function walkPayingCareer(
+  seed: string,
+  seasons: number,
+  /** ⭐ ROUND 41 #27 – WHICH DOORS THE WALK IS ALLOWED TO OPEN. Default: all of them, which is every
+   *  arm this file had before the ruling. The junior-only filter below is what makes «nothing before
+   *  her first W-series cheque» a measurement rather than a re-reading of the ramp. */
+  enterable: (event: SeasonEvent) => boolean = () => true,
+): { world: WorldState; credits: Credit[] } {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, birthMonth: 1, birthDay: 5 })
   const rng = rngFromSeed(world.seed)
   const credits: Credit[] = []
   while (world.week < WEEKS_PER_YEAR * seasons) {
     world.fundsCents = Math.max(world.fundsCents, 5_000_000_00)
     const next = world.season.find(
-      (e) => e.week > world.week && e.week <= world.week + 4 && world.week <= e.deadlineWeek && !world.entries.includes(e.id),
+      (e) =>
+        e.week > world.week &&
+        e.week <= world.week + 4 &&
+        world.week <= e.deadlineWeek &&
+        !world.entries.includes(e.id) &&
+        enterable(e),
     )
     if (next) {
       try {
@@ -136,26 +158,52 @@ describe('her cut is carried on the durable ledger, not reconstructed', () => {
       if (!row.kidShare) continue
       const age = kidAgeYears(row.week, world.profile.birthMonth, world.profile.birthDay)
       expect(row.kidShare.bps, `week ${row.week}: the rate the till used`).toBe(kidPrizeShareBps(age))
-      expect(age, 'and nothing is credited before her eighteenth').toBeGreaterThanOrEqual(18)
+      // ⚠ ROUND 41 ITEMS 15+27 (ruling A1): this line used to read «and nothing is credited before
+      // her eighteenth», and it was true only while the ramp's first column was a zero. It stayed
+      // GREEN through the ruling by luck rather than by law – `pruneFinanceWeeks` drops rows older
+      // than sixty weeks, so a twelve-season walk has none of her junior rows left to look at. The
+      // claim that survives is the LADDER's own floor: no week is ever credited below `startBps`.
+      expect(row.kidShare.bps, `week ${row.week}: never below the ladder's floor`).toBeGreaterThanOrEqual(
+        ECONOMY.kidShare.startBps,
+      )
     }
   })
 
-  it('writes nothing at all before her eighteenth, on a career walked through the junior years', () => {
-    // ⚠ THE GATE IS THE PRIZE EVENT'S OWN (`if (herShare > 0)`), not a second copy of the age rule –
-    // so this arm is what proves the memo can never appear in a junior season, whatever the tennis
-    // paid. `kidPrizeShareBps` is 0 below `ECONOMY.kidShare.fromAgeYears` and the rest follows.
-    const { world, credits } = walkPayingCareer('kid-share-junior', 4)
+  it('writes nothing before her first W-series prize cheque, on a career walked through the junior years', () => {
+    // ⚠⚠ ROUND 41 ITEMS 15+27, THE OWNER'S RULING A1 – THE PREMISE MOVED AND THE CLAIM DID NOT.
+    // «Nothing before her eighteenth» died with the ruling («призовые падают на её счёт с первого
+    // старта W-серии независимо от возраста – согласен»): the ramp's first column is 10% now, so a
+    // junior career that reaches the paying rungs pays her. The gate is still the prize event's own
+    // (`if (prize > 0)` around the split), not a second copy of any age rule – and junior tennis
+    // pays no prize at all, so the boundary this arm walks up to is her first W-SERIES START.
+    const juniorOnly = (event: SeasonEvent) => TIERS[event.tier as TierId].track !== 'wta'
+    const { world, credits } = walkPayingCareer('kid-share-junior', 4, juniorOnly)
     const age = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
     expect(age, 'the arm really stops short of the threshold birthday').toBeLessThan(18)
-    // ⭐ AND THE ARM IS NOT VACUOUS: this career banked $665,370 of prize money before her
-    // eighteenth (measured, not assumed – she reaches the paying rungs years before the ramp
-    // starts). So the silence below is the AGE GATE doing its work and not an absence of cheques,
-    // which is the only version of this test worth having.
-    expect(world.careerTotals.prizeCents, 'real cheques were cashed in the junior years').toBeGreaterThan(0)
+    // ⭐ AND THE ARM IS NOT VACUOUS FROM EITHER SIDE. Below: she really played four seasons of
+    // domestic and junior tennis and was paid for none of it (rule 1 of prize-money.test.ts – «the
+    // junior tour pays nothing, ever»), so the silence is the CHEQUE GATE doing its work.
+    expect(world.events.some((e) => e.type === 'tournament'), 'she really played those four seasons').toBe(true)
+    expect(world.careerTotals.prizeCents, 'and junior tennis paid her family nothing to split').toBe(0)
     expect(credits, 'her account was never touched and no row was written').toEqual([])
     expect(world.financeWeeks.some((w) => w.kidShare), 'no ledger row carries a cut').toBe(false)
     // ...and the ledger is not empty for an unrelated reason – the family really was spending.
     expect(world.financeWeeks.length, 'the fixture is a real career with a real ledger').toBeGreaterThan(10)
+
+    // ...and above: the SAME seed with the W-series door open pays her from the first cheque it
+    // takes, years before the birthday the ladder used to start on. This half is what stops the
+    // silence above being green because nothing in this fixture ever splits anything.
+    const open = walkPayingCareer('kid-share-junior', 4)
+    const first = open.credits[0]
+    expect(first, 'the open walk really reached a W-series cheque inside four seasons').toBeTruthy()
+    const firstAge = kidAgeYears(first.week, open.world.profile.birthMonth, open.world.profile.birthDay)
+    expect(firstAge, 'and she is still a junior when it lands').toBeLessThan(ECONOMY.kidShare.fromAgeYears)
+    expect(first.bps, 'the rate the till used is the ramp at her real age').toBe(kidPrizeShareBps(firstAge))
+    expect(first.bps, 'which below the birthday is the ladder`s flat floor – his A1').toBe(ECONOMY.kidShare.startBps)
+    // ...and the durable ledger carries what the account received, to the cent, on that week too.
+    expect(first.ledgerDelta, 'carried, not reconstructed – the file`s own claim, on a junior week').toBe(
+      first.fundsDelta,
+    )
   })
 })
 

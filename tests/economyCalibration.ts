@@ -155,10 +155,82 @@ export const CALIBRATION_TIER: Record<FamilyBackground, CoachTier> = {
 // between all three and are due a design decision rather than another re-pin. The bench is where
 // the real question lives now - tools/econ-bench.ts walks each family up its own corridor and
 // reports which rungs it survives.
+//
+// ⚠⚠⚠ ROUND 41 P1 MOVED TWO OF THESE THREE, AND THE WEALTHY CELL CHANGED SIGN. **THIS IS A FINDING
+// FOR THE OWNER AND NOT A RE-TUNE**: the band below CHARACTERISES what his own two rulings of 12.09
+// produce, it was measured rather than chosen, and the design question it raises is stated here
+// rather than answered. MEASURED on the 16-seed batch, arms built in this worktree and each one
+// verified to contain its change before it was read (positive = a burn, negative = a saving):
+//
+//     arm                                     working      middle     wealthy
+//     CONTROL (`b07f01ba`, src reverted)     -5,666.67   -7,192.06   **+6,280.22**
+//     P1 part A only (gear uniform)          -5,666.67   -8,039.47   **+2,971.11**
+//     P1 full (A + the corridor fade)        -5,666.67   -8,039.47   **-4,916.82**
+//
+//   * WORKING IS BYTE-IDENTICAL ACROSS ALL THREE ARMS. The uniform `composite` band IS the old
+//     working band cent for cent, and a budget coach keeps its corridor. Its band is untouched.
+//   * MIDDLE moves -$847 (gear only; its coach rung keeps the corridor) and STAYS INSIDE its band.
+//     Untouched.
+//   * WEALTHY swings **$11,197**, of which the gear half is -$3,309 and **the corridor fade is
+//     -$7,888 – 70% of it**. Its idle year is no longer a burn.
+//
+// ⚠⚠ WHAT THAT COSTS, SAID PLAINLY: the cell's own sentence one file over – «premium everything
+// hurts again», the round-7 item-1d principle – IS NO LONGER TRUE, and the ordering cell's «the only
+// one that BURNS» has no member. **The ORDERING itself survives untouched** (middle saves most,
+// then working, then wealthy: -8,039 < -5,667 < -4,917), so the shape of the ladder is intact and
+// only the wealthy cell's SIGN flipped. Both halves of the flip are the mechanical consequence of
+// rulings he gave in his own words – «на рынке цены для всех сословий одинаковые» and «в про карьере
+// с большими чеками цены для всех должны быть равны» – so neither is reversible here.
+//
+// **THE QUESTION THAT IS HIS, and the two levers, neither touched:** should a wealthy family with an
+// elite coach still run a deficit in an idle year? If yes, the honest lever is the WEALTHY INCOME
+// (`ECONOMY.parentIncomeCents.wealthy`, $750/wk – the elite coach used to cost exactly that at the
+// wealthy corridor and now costs $800 flat, so the cell is close) or the ELITE RATE BAND. Re-pinning
+// this number a third time is not a lever, which is what the note above already says.
+//
+// =================================================================================================
+// ⭐⭐⭐ HE ANSWERED, 12.09 – «единая элит-полка вверх - верно». THE SECOND LEVER, AND UPWARDS.
+// =================================================================================================
+//
+// Of the two levers above he picked the ELITE RATE BAND, and he picked the direction. It rises by the
+// midpoint of the corridor P1 retired – `WEALTH_CORRIDOR.wealthy` is `[1.2, 1.3]`, so ×1.25 – which
+// makes the new uniform-for-everyone price EXACTLY what the wealthy family used to pay:
+// `ECONOMY.coach.hourlyRateCents.elite` goes $96-144 → $120-180 (12-16), $128-192 → $160-240 (17-22),
+// $160-240 → $200-300 (23+), i.e. a weekly shelf of $750 / $1,000 / $1,250 at the balanced plan for
+// EVERY background. `high` is untouched (his word was «элит»); every corridored rung is untouched.
+//
+// ⚠ IT IS NOT A THIRD RE-PIN OF THIS NUMBER, which is what the paragraph above forbids. The number
+// below moved because an ENGINE CONSTANT moved, on his ruling, and the band is re-measured after it.
+//
+// PREDICTED BEFORE THE BATCH RAN (docs/specs/one-market-2026-09.md §3's resolution block): the lever
+// restores precisely the component the corridor fade removed (−$7,888) and nothing else, so the cell
+// should return to ≈ **+$2,971** – P1's own «part A only» row – rather than to the +$6,280 control,
+// because the GEAR half of the swing is his other ruling and stays. MEASURED, same 16 seeds, same
+// walk, the arm verified to contain the change before it was read:
+//
+//     cell                control (P1 full)   PREDICTED    MEASURED     miss
+//     working · budget      -5,666.67          -5,666.67   -5,666.67    0 – byte-identical
+//     middle  · middle      -8,039.47          -8,039.47   -8,039.47    0 – byte-identical
+//     wealthy · elite       **-4,916.82**      **+2,971**  **+2,970.05**  **$1.06**
+//
+//   * THE TWO CELLS BELOW THE CUT DID NOT MOVE ONE CENT, and that is the lever's shape read back:
+//     `CALIBRATION_TIER` puts working on `budget` and middle on `middle`, and neither rung is elite.
+//   * THE $1.06 MISS IS `pickInt`'s ROUNDING and is understood rather than tolerated: a coach's rate
+//     is `lo + floor(u × (hi - lo + 1))`, so scaling the band scales the drawn rate to within a cent
+//     an hour rather than exactly. The corridor's own week-to-week spread is gone, not averaged –
+//     the roll now lands on exactly 1.0 – so the remainder is the integer band and nothing else.
+//   * SO «PREMIUM EVERYTHING MUST HURT» IS FUNDED AGAIN – the round-7 item-1d principle, for the
+//     family it was written about – and the ordering cell's «the only one that BURNS» has a member.
+//     That line was INVERTED by P1 rather than deleted precisely so this retune would go red and be
+//     re-pinned deliberately; it is restored, with his quote, in
+//     tests/economy-calibration-ordering.test.ts.
 export const BANDS: Record<FamilyBackground, [number, number]> = {
   working: [-6_500, -4_800],
   middle: [-8_500, -6_000],
-  wealthy: [4_500, 8_000],
+  // ⚠ MEASURED (+2,970.05), NOT CHOSEN – see the resolution block above. Same ±1,750 half-width the
+  // working band carries, so it is a characterisation with the same tightness, not a widened net,
+  // and the sign is back where round 7 put it.
+  wealthy: [1_200, 4_700],
 }
 
 /** Per-seed tolerance around each band. The corridor roll moves the coaching line every week, so a

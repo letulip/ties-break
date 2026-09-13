@@ -517,8 +517,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
       <p v-if="life?.ownAccount" class="hint kid-grid-note kid-note-account">{{ life.ownAccount }}</p>
 
       <!-- ========================== 3. THE SKILLS RADAR ==========================
-           decisions.md #11, finally built. No numbers anywhere on it, ever. -->
-      <Card class="kid-panel">
+           decisions.md #11, finally built. No numbers anywhere on it, ever.
+           ⭐ ROUND 41 #5 – `kid-panel-radar` IS THE DESKTOP HOOK ONLY. All three panels on this
+           screen share `.kid-panel`; this is the one card that moves beside the photo at ≥1024
+           (see the media block at the foot of the style), and it needs its own selector because
+           nothing else about it – its padding, its border, its place in a phone's column – differs
+           from the other two. -->
+      <Card class="kid-panel kid-panel-radar">
         <Eyebrow as="h2">Skills</Eyebrow>
         <!-- R15-7: no pronoun names the coach - women are on every roster by construction. R15-15:
              this sentence names the two SHAPES; the key for the two LINES lives with the drawing, in
@@ -1030,6 +1035,74 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   letter-spacing: -0.01em;
   color: var(--ink-dim);
   font-variant-numeric: tabular-nums;
+}
+
+/* =================================================================================================
+   ⭐ ROUND 41 #5 – THE DESKTOP LAYOUT, HOME'S OWN IDIOM TRANSPLANTED.
+   =================================================================================================
+   The owner: «на десктоп на экране ребенка (по клику на аватар в углу) давай тоже сделаем как на
+   главной примерно: кватратная картинка полная, все карточки останутся внизу, а вот эти ее Skills
+   может быть вполне влезут возле фото справа.» (quoted here rather than in the template –
+   tests/round13-nav.test.ts bans Cyrillic inside one).
+
+   ⚠ SAME TOKENS, SAME SHAPE, NEVER A SECOND NUMBER. `--hero-max`/`--hero-aspect` are the tokens
+   HomeScreen.vue's own `.diary-hero` reads at this exact breakpoint (src/style.css) – reusing them
+   rather than picking new ones is what makes "как на главной" true by construction instead of by
+   two screens' authors agreeing to the same literal twice.
+
+   ⚠ EXPLICIT PLACEMENT, NOT A REORDER. The Skills panel is the LAST of six blocks in the DOM (after
+   the attribute grid, the two footnotes and the moments strip in source) and has to render FIRST,
+   visually, beside the photo – reordering the template would change the reading and tab order for
+   every width, including the phone this round may not touch. `grid-column: 2; grid-row: 1` places
+   it beside the hero without moving one element in the markup; everything else keeps its source
+   order and simply wraps full-width below, exactly as `.card-pair`/`.strip-pair` do on Home.
+
+   ⚠ THE IMAGE ITSELF DOES NOT MOVE. `.kid-hero-img` keeps its `object-fit: cover` and
+   `object-position: 50% 22%` from the base rule above – the standing ruling is that this art is
+   shown WHOLE (see the note at `.kid-age`), and only the FRAME around it changes shape here.
+
+   ⚠ NOTHING BELOW 1024 IS TOUCHED. Every rule in this block lives inside the query; the phone
+   cascade every existing pin measures (round23-kid-page, round21-school-cutoff, wave1-mood-word,
+   wave3-graduated-portrait, round15-surfaces, round36-error-surfaces) is untouched by construction. */
+@media (min-width: 1024px) {
+  :deep(.tb-screen-body) {
+    display: grid;
+    grid-template-columns: minmax(0, var(--hero-max)) minmax(310px, 1fr);
+    gap: 11px;
+  }
+
+  /* Square-ish and capped, Home's own shape: `height: auto` is what lets `aspect-ratio` size the
+     box at all – the base rule's `height: 392px` would otherwise win outright, since a box with
+     both dimensions already definite never consults its ratio. */
+  .kid-hero {
+    height: auto;
+    aspect-ratio: var(--hero-aspect);
+    max-width: var(--hero-max);
+    margin: 0;
+    border-radius: var(--radius-frame);
+    grid-row: span 2;
+    align-self: start;
+  }
+
+  /* Everything else on the page wraps to a full-width row below the hero/Skills pair – the same
+     move Home's `.card-pair`/`.strip-pair` make in the identical spot. `.error` joins the list for
+     the reason Home's own copy of this block states: `StoreError` renders before the hero in the
+     DOM, and an unplaced single-column item would auto-fill the hero's own cell on the one page
+     load that shows it. */
+  .kid-grid,
+  .kid-grid-note,
+  .kid-panel,
+  .error {
+    grid-column: 1 / -1;
+  }
+
+  /* ...and THIS is the one exception – see the note above the template's own `kid-panel-radar`
+     class. Declared after the general rule so the tie it shares with `.kid-panel` (one class each,
+     same scoped attribute) resolves by source order rather than by hoping specificity helps. */
+  .kid-panel-radar {
+    grid-column: 2;
+    grid-row: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

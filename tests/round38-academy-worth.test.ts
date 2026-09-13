@@ -55,6 +55,7 @@ import {
   assetWorthCents,
   buyAsset,
   createWorld,
+  deliverAssets,
   ownedAssets,
   revalueAssets,
   sellAsset,
@@ -66,7 +67,7 @@ import {
 import { academyPremiumX, rampedWorthCents, worthRampHalfLife } from '../src/engine/world/assets'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE, type SeasonHistoryEntry } from '../src/shared/protocol'
+import { DEFAULT_PROFILE, type OwnedAsset, type SeasonHistoryEntry } from '../src/shared/protocol'
 
 const A = ECONOMY.business.academy
 /** ⭐ ROUND 38 #16 – the ramp's own constants. The premium is a PROCESS on the reputation's clock
@@ -105,15 +106,36 @@ function seasonAt(index: number, endRank: number | undefined): SeasonHistoryEntr
 
 const ownedOf = (w: WorldState, id: string) => ownedAssets(w).find((a) => a.id === id)
 
-/** Buy the stages in build order (`requiresId` chains them) and park the clock `weeks` later. */
+/** Buy the stages in build order (`requiresId` chains them) and park the clock `weeks` later.
+ *
+ *  ⚠⚠ RE-AIMED BY ROUND 41 #24 (12.09), AND THE ADDED LINE IS `deliverAssets`, NOT A LOOSENING.
+ *  Three of the four stages are BUILT TO ORDER now – the owner: «может быть для Академии корты,
+ *  клубный дом и стафф тоже должны сколько-то строиться по времени, а не сразу быть готовы?», and
+ *  «сроки ок, в этот же раунд заводи пожалуйста» – so a career that orders them owns a CONTRACT for
+ *  6 / 12 / 3 weeks, exactly as it has owned a contract for a yacht since round 29 #5. This harness
+ *  parks the clock YEARS later and never ticked, so nothing was removing `readyWeek`: the stages sat
+ *  undelivered forever, which is not a thing a career can be. One call fixes it, and it is the same
+ *  call the tick makes. ⚠ It runs AFTER the clock moves and BEFORE the revalue, which is the tick's
+ *  own order (`deliverAssets` then `revalueAssets`, world.ts). */
 function built(seed: string, stages: string[], weeks = 0, seasons: (number | undefined)[] = []): WorldState {
   const world = still(seed)
   world.seasonHistory = seasons.map((r, i) => seasonAt(i, r))
   for (const id of stages) buyAsset(world, id)
   world.week += weeks
+  deliverAssets(world)
   revalueAssets(world)
   return world
 }
+
+/** ⚠⚠ ROUND 41 #24 – THE SPAN THE ENGINE DEPRECIATES OVER, WHICH IS NO LONGER `boughtWeek` ON EVERY
+ *  ACADEMY ROW. `buyAsset` starts a commissioned row's value clock at DELIVERY (`basisWeek =
+ *  readyWeek` – «a contract that depreciated would be a punishment for waiting»), so the courts, the
+ *  clubhouse and the staff are held for six, twelve and three weeks FEWER than they have been owned.
+ *  Every expectation in this file that wrote `w.week − owned.boughtWeek` asks this instead, which is
+ *  `assetHeldWeeks`' own expression written out: not one arm's CLAIM changed, and they now read the
+ *  same clock the engine reads. ⚠ The LAND has no wait – a field is bought, not built – so its
+ *  numbers are byte-identical to round 38's, which is what makes the pair a control. */
+const heldWeeks = (w: WorldState, owned: OwnedAsset): number => w.week - (owned.basisWeek ?? owned.boughtWeek)
 
 // =================================================================================================
 // §1 – HALF ONE: THE DRIFT, WHICH IS «КАК С ДОМАМИ» AND IS ONE FIELD FOUR TIMES
@@ -166,7 +188,7 @@ describe('§2 the premium – option C, and it starts at exactly zero', () => {
     // two functions return the same integer, byte for byte, on a career that has won nothing.
     for (const owned of ownedAssets(w)) {
       const item = shopItem(owned.id)!
-      const drift = assetValueCents(item, owned.paidCents, w.week - owned.boughtWeek)
+      const drift = assetValueCents(item, owned.paidCents, heldWeeks(w, owned))
       expect(assetWorthCents(w, owned, item), `${owned.id} carries no premium at all`).toBe(drift)
     }
   })
@@ -193,13 +215,21 @@ describe('§2 the premium – option C, and it starts at exactly zero', () => {
     // holding = 1.583 half-lives, so 66.629% of the gap closed):
     //   academy-land   drift $2,185,454 -> WAS $2,808,308, IS $2,600,456
     //   academy-courts drift $3,278,181 -> WAS $4,212,463, IS $3,900,684
+    //
+    // ⚠⚠ RE-MEASURED BY ROUND 41 #24 (12.09), AND ONE OF THE TWO ROWS MOVED – WHICH IS THE WHOLE
+    // FACT THE ITEM ADDS. The courts are BUILT TO ORDER now (six weeks, his «сроки ок»), so at the
+    // same wall-clock week they have been HELD for 150 weeks rather than 156: the value clock starts
+    // at delivery. The LAND has no wait and its two numbers above are byte-identical, which is what
+    // makes the pair its own control.
+    //   academy-land   drift $2,185,454 -> $2,600,456   (unmoved, to the cent)
+    //   academy-courts drift $3,267,019 -> $3,874,006   (was $3,278,181 -> $3,900,684 at 156 weeks)
     const half = worthRampHalfLife(rep - 1, R.medianReputationOver1)
     for (const owned of ownedAssets(w)) {
       const item = shopItem(owned.id)!
-      const drift = assetValueCents(item, owned.paidCents, w.week - owned.boughtWeek)
+      const drift = assetValueCents(item, owned.paidCents, heldWeeks(w, owned))
       const destination = Math.round(drift * (1 + A.premiumPerRep * (rep - 1)))
       expect(assetWorthCents(w, owned, item), `${owned.id} is priced at its own way to drift x premium`)
-        .toBe(rampedWorthCents(drift, destination, w.week - owned.boughtWeek, half))
+        .toBe(rampedWorthCents(drift, destination, heldWeeks(w, owned), half))
       // ⚠ AND IT REALLY IS ABOVE THE DRIFT – the arm that fails when the premium is deleted.
       expect(assetWorthCents(w, owned, item)).toBeGreaterThan(drift)
       // ⚠⚠ ...AND STILL BELOW THE DESTINATION, which is the arm that fails when the RAMP is deleted:
@@ -265,7 +295,7 @@ describe('§3 the floor – the cost is a floor and that is the whole of option 
       expect(academyReputationOf(w), `${why}: this really is the floor of the fold`).toBe(1)
       for (const owned of ownedAssets(w)) {
         const item = shopItem(owned.id)!
-        const floor = assetValueCents(item, owned.paidCents, w.week - owned.boughtWeek)
+        const floor = assetValueCents(item, owned.paidCents, heldWeeks(w, owned))
         expect(assetWorthCents(w, owned, item), `${why}: ${owned.id} is never under paid x drift`)
           .toBeGreaterThanOrEqual(floor)
         // ...and never under what was PAID either, which is the sentence he will read it as.
@@ -293,7 +323,7 @@ describe('§3 the floor – the cost is a floor and that is the whole of option 
       const owned = ownedOf(w2, 'academy-land')!
       const item = shopItem('academy-land')!
       expect(assetWorthCents(w2, owned, item), 'so the floor holds even here')
-        .toBe(assetValueCents(item, owned.paidCents, w2.week - owned.boughtWeek))
+        .toBe(assetValueCents(item, owned.paidCents, heldWeeks(w2, owned)))
       expect(assetWorthCents(w2, owned, item)).toBeGreaterThan(owned.paidCents)
     } finally {
       ;(A as { reputationBands: typeof A.reputationBands }).reputationBands = bands
@@ -330,7 +360,7 @@ describe('§4 the rest of the shelf – §4 step 1`s NEGATIVE claim', () => {
     expect(academyPremiumX(w), 'the premium really is switched on for this world').toBeGreaterThan(1)
     for (const owned of ownedAssets(w)) {
       const item = shopItem(owned.id)!
-      const drift = assetValueCents(item, owned.paidCents, w.week - owned.boughtWeek)
+      const drift = assetValueCents(item, owned.paidCents, heldWeeks(w, owned))
       if (item.family === 'academy') {
         expect(owned.valueCents, `${owned.id} carries the premium`).toBeGreaterThan(drift)
       } else {

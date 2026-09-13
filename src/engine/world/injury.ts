@@ -20,7 +20,7 @@ import { kitInjuryFactor, kitWearAt } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { knockLive, knockTauFactor, loadedPartShares, pushedParts } from '../knock'
 import { planWeek } from '../plan'
-import { coachById, physioRecoveryFactor, physioRiskFactor, tierOf } from '../coach'
+import { coachById, coachTierById, corridorBandFor, physioRecoveryFactor, physioRiskFactor, tierOf } from '../coach'
 import type { InjurySeverity } from '../../shared/protocol'
 import { addEvent } from './ledger'
 import { ageAtWeek, kidAgeYears } from './age'
@@ -362,11 +362,26 @@ export const SEVERITY_DESCRIPTOR: Record<InjurySeverity, string> = {
 }
 
 /** One medical bill in cents: draw the MIDDLE-anchored base from `band`, then map ONE uniform
- *  roll from the same physio generator into the background's medical corridor (mirrors
- *  travelBgFactor: same roll, disjoint corridors, so working < middle < wealthy per bill). */
+ *  roll from the same physio generator into the medical corridor this rung is priced in (mirrors
+ *  travelBgFactor: same roll, disjoint corridors, so working < middle < wealthy per bill).
+ *
+ *  ⭐⭐ THE CORRIDOR STOPS AT THE TOP OF THE COACH LADDER SINCE ROUND 41 P1 (the owner, 12.09:
+ *  «Коридор ±25–30% остаётся только на сервисах… и то только на нижних тирах… в про карьере с
+ *  большими чеками цены для всех должны быть равны»). The physio was never a free-standing service –
+ *  `coachIncludesPhysio` says she has one because a coach was hired, and `PHYSIO_QUALITY` says how
+ *  good that team is BY RUNG – so the medical bill was already the coach ladder's bill wearing
+ *  another name, and it takes the coach ladder's cut. Under a budget or middle rung it is a
+ *  municipal clinic against a private one and the corridor is real; under `high`/`elite` it is the
+ *  tour's own medical team and there is one price list.
+ *
+ *  ⚠ ONE PREDICATE, NOT A SECOND COPY: `corridorBandFor` is the same function the weekly coaching
+ *  bill reads, so the two services cannot part company on where the corridor ends.
+ *
+ *  ⚠ AND THE ROLL IS STILL SPENT – `uniformCorridor` is `[1, 1]`, so `seed:physio:<week>` walks
+ *  exactly the positions it always walked at every rung and on every background. */
 export function medicalBillCents(world: WorldState, rng: Rng, band: readonly [number, number]): number {
   const base = pickInt(rng, band[0], band[1])
-  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[world.profile.background]
+  const [cLo, cHi] = corridorBandFor(world.profile.background, coachTierById(world.coachId))
   const roll = rng()
   return Math.round(base * (cLo + roll * (cHi - cLo)))
 }
@@ -617,6 +632,19 @@ export function onsetInjury(
   // the clinic's dealt number and his weeks keep arriving one receipt at a time – that is the whole
   // legible difference between him and the physio (world/masseur.ts), and folding the forecast into
   // the field would delete it. The forecast governs the one decision that cannot be undone later.
+  //
+  // ⚠⚠ ROUND 41 #19 AMENDS THE PARAGRAPH ABOVE – ITS SECOND HALF ONLY, and knowingly. The owner,
+  // 12.09: «мне написали, что травма отнимет 7 недель, а в итогах года было 4 недели … можно писать
+  // сколько реально займет восстановление с текущим тиром массажиста.» So the forecast is no longer
+  // confined to the withdrawal sweep: the ANNOUNCEMENT carries it too, as
+  // `Snapshot.injury.expectedWeeks` – a derived WIRE field (`InjuryView`), printed beside the
+  // clinic's number rather than instead of it.
+  //
+  // Everything the sentence above protects is intact: `weeksRemaining` is untouched, the «bought a
+  // week back» receipt still prints on every cadence week, and nothing in this function moved. What
+  // the report overturns is the narrower claim that the forecast may not be SHOWN at onset, and his
+  // argument is the one the ruling had no answer to – the week he is told «7» is the week he plans
+  // against, and by the time the receipts have corrected it the plan is already made.
   const rehabAhead = masseurRehabWeeksAhead(world)
   for (const id of [...world.entries]) {
     const e = eventById(world, id)

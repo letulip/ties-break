@@ -120,10 +120,22 @@ describe('round 39 #5 §2 – a REPEAT founding is priced at the market, and the
     winTitles(w, 'slam', [2, 4, 6])
     buyAsset(w, MERCH)
     // A brand held long enough to converge – his own was 235 weeks in; eight half-lives leave 0.4%
-    // of the gap. Aging the row backwards is the fixture idiom for «held for years» without walking
-    // eight seasons of world; `revalueAssets` then stores what the engine itself says it is worth.
-    ownedOf(w, MERCH)!.boughtWeek -= 8 * R.minHalfLifeWeeks
-    revalueAssets(w)
+    // of the gap.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 41 #18 (12.09), AND THE OLD FIXTURE IDIOM STOPPED WORKING RATHER THAN
+    // STOPPING BEING TRUE. It read «aging the row backwards is the fixture idiom for held for years
+    // without walking eight seasons of world» – `boughtWeek -= 8 × minHalfLife` and ONE
+    // `revalueAssets`. That worked while the worth was a closed form over the whole holding period,
+    // and it cannot work now: the brand's value is an ACCUMULATOR, stepped one week at a time from
+    // the row's own current value (the owner's «и снова потом упал в цене внезапно» – a pace
+    // recomputed from today's fame must not reach backwards). A backdated clock is not a lived path.
+    // ⚠ SO THE FIXTURE SPENDS THE WEEKS INSTEAD OF CLAIMING THEM – the same number of steps, through
+    // the same shipped writer, with the world held still so the target and the pace are the ones the
+    // old one-shot call used. For a constant half-life the two agree to the rounding, which is what
+    // keeps every number below unmoved.
+    const heldWeeks = 8 * R.minHalfLifeWeeks
+    ownedOf(w, MERCH)!.boughtWeek -= heldWeeks
+    for (let i = 0; i < heldWeeks; i++) revalueAssets(w)
     const proceeds = ownedOf(w, MERCH)!.valueCents
     const before = w.fundsCents
     sellAsset(w, MERCH)

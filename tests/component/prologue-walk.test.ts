@@ -31,7 +31,8 @@ import { assertLegible } from './contrast'
 import { assertDismissReachable, boxOf, lengthPx, measureDialog, setViewport, PHONE, NARROW_PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
 import { WELCOME_AGES, prologueArtUrl } from '../../src/art/prologue'
-import { PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../../src/prologue/cards'
+import { CARD_AGES, PROLOGUE_CARDS, TWELFTH_WANTS_MORE, type PrologueCard } from '../../src/prologue/cards'
+import { WALK_COPY } from '../../src/prologue/handover'
 import { OPENING_IDENTITY } from '../../src/prologue/identity'
 import {
   EMPTY_RUN,
@@ -51,13 +52,40 @@ const CARRIED_ROAD: Record<number, string> = { 8: 'club', 9: 'one-to-one', 10: '
 /** Mount one card the way the player meets it: attached to the document, so the cascade being
  *  measured is the real one, and with the viewport set FIRST – happy-dom resolves lengths at
  *  `getComputedStyle` time, so a viewport set after the mount measures the previous screen. */
-function mountCard(card: PrologueCard, run: PrologueRun, vp: { width: number; height: number }) {
+function mountCard(
+  card: PrologueCard,
+  run: PrologueRun,
+  vp: { width: number; height: number },
+  /** ⭐⭐⭐ ROUND 41 #8 AND #9 – THE CARD AT ITS TALLEST, which is the state the player actually
+   *  decides from and the one this file could not see before. An answered card carries two controls
+   *  it does not carry on arrival: the disclosed tournament pair where the row has one (round 40 #2)
+   *  and the way ON (round 41 #9), plus the way BACK on every card but the first (round 41 #8). The
+   *  fit numbers below are about the card the player meets, so they have to be taken here too – a
+   *  ceiling measured only on arrival is a ceiling measured one row short. */
+  answered = false,
+) {
   setViewport(vp)
+  const choices = card.origins ?? card.options
   const wrapper = mount(PrologueCardView, {
     attachTo: document.body,
     props: {
       card,
       warmth: warmthAt(card.age, run),
+      // ⚠ EVERY CONTROL THE CONTAINER WOULD BE HANDING DOWN AT THAT MOMENT, and each one read the
+      // way `ChildhoodPrologue.vue` reads it: the ask is on the card from the moment it arrives
+      // (`askOn`) and is DRAWN once the year is answered, the way out is the first card's and the
+      // way back is every other card's, and Proceed is on a card whose questions are all answered.
+      ask: answered ? card.tournament : undefined,
+      picked: answered ? choices?.[0].id : undefined,
+      entry: answered && card.tournament ? TOURNAMENT_ANSWER.enter : undefined,
+      proceedLabel: answered && (choices || card.tournament) ? WALK_COPY.proceed : undefined,
+      skipLabel: card.age === CARD_AGES[0] ? WALK_COPY.skip : undefined,
+      // ⚠ A PREDICATE AND NOT A LABEL, because the way back is the app's ONE back control – a bare
+      // icon with no copy (owner, 30.07; `tests/ui-control-system.test.ts`). It is passed exactly
+      // where the container passes it, so the card measured below is still the card the player meets:
+      // the control is 32px where the text button it replaced was a full-width row, which can only
+      // make these fit numbers smaller.
+      canGoBack: card.age !== CARD_AGES[0],
       // ⭐ PHASE 7 – THE PICTURE, and it is passed exactly where the container passes it. `mood` is
       // required on the component precisely so a mount that forgot it cannot compile: a card with no
       // painting is a quarter of a screen of height this file would otherwise never measure.
@@ -458,13 +486,82 @@ describe('⭐ what the walk shows about her – and it is nothing numeric', () =
     wrapper.unmount()
   })
 
-  it('a quiet card offers exactly one way on, and a decision card offers its answers', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 41 #8 AND #9, NOT LOOSENED – AND IT IS TWO COUNTS NOW BECAUSE THE COLUMN
+  // HAS TWO STATES. It read «a quiet card offers exactly one way on, and a decision card offers its
+  // answers», counted as `(origins ?? options)?.length ?? 1`, and that number was the whole column
+  // because the walk's other two controls were never passed to this mount. They are now, because a
+  // fit measurement that leaves controls out is a ceiling measured short:
+  //
+  //   ON ARRIVAL   the card's own answers (or its one way on), plus the quiet control at the foot –
+  //                the way OUT on the five (§6) and the way BACK on every card after it (round 41
+  //                #8, his «возможность вернуться … со второго экрана»).
+  //   ANSWERED     the same, plus the tournament pair where the row carries one (round 40 #2's
+  //                disclosure), plus Proceed (round 41 #9: «при выборе всех будет появляться наша
+  //                желтая кнопка proceed»).
+  //
+  // ⚠ THE QUIET CARDS ARE THE NEGATIVE ARM AND THEY DO NOT MOVE: the six and the seven select
+  // nothing, so answering them adds no Proceed – their count is the same in both states.
+  //
+  // ⚠⚠ AND THE FOOT IS COUNTED IN TWO PIECES SINCE THE WAY BACK BECAME THE HOUSE CONTROL. It was one
+  // number – «the way out on the five, the way back on the rest» – while both were `.prologue-answer`
+  // text buttons. The standing law (owner, 30.07: «Для back я просил везде сделать один компонент…»)
+  // makes the way back an `IconButton variant="bare" icon="back"`, which is not an answer and carries
+  // no answer class, so it is asserted by the name the law gives it. The claim is unchanged and is if
+  // anything sharper: the column holds exactly its own answers plus the way out, and the way back is
+  // present on every card but the first.
+  it('every card carries exactly the controls it should, on arrival and once it is answered', () => {
     for (const { card, run } of walk(CARRIED_ROAD, 'middle')) {
-      const { wrapper } = mountCard(card, run, PHONE)
-      const buttons = wrapper.findAll('.prologue-answer')
-      const expected = (card.origins ?? card.options)?.length ?? 1
-      expect(buttons.length, `age ${card.age}`).toBe(expected)
-      wrapper.unmount()
+      const own = (card.origins ?? card.options)?.length ?? 1
+      const first = card.age === CARD_AGES[0]
+      const foot = first ? 1 : 0 // the way OUT is the five's and is answer-shaped; the way back is an icon
+      const arrival = mountCard(card, run, PHONE)
+      expect(arrival.wrapper.findAll('.prologue-answer').length, `age ${card.age} on arrival`).toBe(own + foot)
+      expect(
+        arrival.wrapper.find('button[aria-label="Back"]').exists(),
+        `age ${card.age} on arrival: the way back is the first card's only absence`,
+      ).toBe(!first)
+      expect(
+        arrival.wrapper.find('.prologue-proceed').exists(),
+        `age ${card.age} offers a way on before it is answered`,
+      ).toBe(false)
+      arrival.wrapper.unmount()
+
+      // ⚠ THE THIRTEENTH HAS NO DECISION OF ITS OWN (`sameAsLastYear`), so its `own` is the 1 the
+      // fallback gives – and that 1 is not a control: the card synthesises no way on while its ask
+      // is up (round 35 #4). Answered, its column is the ask's pair, Proceed and the way back.
+      const pair = card.tournament ? 2 : 0
+      const synthesised = card.origins ?? card.options ? own : card.tournament ? 0 : 1
+      const proceed = card.origins ?? card.options ?? card.tournament ? 1 : 0
+      const done = mountCard(card, run, PHONE, true)
+      expect(done.wrapper.findAll('.prologue-answer').length, `age ${card.age} answered`).toBe(
+        synthesised + pair + proceed + foot,
+      )
+      expect(
+        done.wrapper.find('button[aria-label="Back"]').exists(),
+        `age ${card.age} answered: the way back is still there`,
+      ).toBe(!first)
+      done.wrapper.unmount()
+    }
+  })
+
+  // ⭐⭐⭐ ROUND 41 #8 AND #9 – AND THE ROUND-20 #3 RULE IS RE-MEASURED IN THAT SECOND STATE, which
+  // is the one the player is looking at when they decide. Two controls were added to this column in
+  // one round; the card that carries the most of them is the eleventh and the twelfth (two answers,
+  // a disclosed pair, Proceed, and the way back), and the tallest is still the five.
+  //
+  // ⚠ MEASURED, NOT ASSUMED – the printed numbers are in the round's ledger. MUTATION-VERIFIED: the
+  // gap on `.prologue-answers` raised from 8px to 40px reddens this on the five at 320x568 while the
+  // arrival arm above stays green, which is exactly the failure a fit test taken one state too early
+  // cannot see.
+  it('⭐⭐⭐ …and every card still fits once it is answered, with Proceed and the way back on it', () => {
+    for (const vp of [PHONE, NARROW_PHONE]) {
+      for (const [name, road] of [['the light road', LIGHT_ROAD], ['the carried road', CARRIED_ROAD]] as const) {
+        for (const { card, run } of walk(road as Record<number, string>, 'middle')) {
+          const { wrapper, el, answers } = mountCard(card, run, vp, true)
+          assertDismissReachable(el, answers, vp, `answered, ${name}, age ${card.age} at ${vp.width}`)
+          wrapper.unmount()
+        }
+      }
     }
   })
 

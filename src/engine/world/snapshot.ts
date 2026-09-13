@@ -21,7 +21,7 @@ import { formatShortName } from '../../shared/format'
 import { coachById, tierOf } from '../coach'
 import { coachManagesLoad, coachWarnsEntry } from '../coachLoad'
 import { buildKnockPrompt, knockGoverns, knockLive } from '../knock'
-import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, hasLiveOffer, seasonLastWeek } from '../offers'
+import { AD_CATEGORIES, activeAdDealIn, activeAdDeals, adBandFor, adFeeFor, adJuniorAt, adJuniorFeeCents, adJuniorOpen, hasLiveOffer, seasonLastWeek } from '../offers'
 import { travelCoverShare } from '../academy'
 import { buildDiarySnapshot, lastKidTitleOf } from '../diary'
 import { buildKidLife, FRIENDS_WINDOW, nextAcademicYearStart, schoolEndWeek, schoolIsOver } from '../kidLife'
@@ -101,15 +101,15 @@ import { finishLabel, stageLabel } from './labels'
 import { entryCapUsage, proEntryCapUsage, isCappedProTier, isCappedTier } from './entryCaps'
 import { alternateQueuePosition } from './ladder'
 import { alternatePlacesOpen } from '../season/tournament'
-import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
+import { acceptanceRank, activeLadderOf, fieldProsOf, hasOutgrown, homeWildCardPlace, inTrack, kidLadderRank, kidLadderRankFolded, kidPoints, prevRankIn, rankIn, rankingFor, tierOpenFor, wtaEverCounted } from './ladder'
 import { aiSelectionRanking } from './weekField'
 export { activeLadderOf, wtaEverCounted }
-import { arrivalStatus, entryStatus, layoffCovering, tierVerdict } from './medical'
+import { arrivalStatus, entryStatus, layoffCovering, projectedConditionAt, tierVerdict } from './medical'
 import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
-import { masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
+import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
@@ -595,11 +595,30 @@ export function upcomingEvents(world: WorldState): UpcomingEvent[] {
       // decision stops being blind). Precedence is BODY FIRST and it is not a coin toss: one of them
       // is about getting hurt and the other is about a wasted week. He says one thing, because a
       // card with two coach lines on it is a dialog, and he is a person.
+      // ⭐⭐⭐ ROUND 41 #20 – AND HE READS THE WEEK SHE IS ACTUALLY TRAVELLING IN. The owner: «при
+      // выбранном отпуске надпись о exhausted с карточки будущего турнира ушла, а при попытке
+      // оставить на него заявку всё ещё предлагает продавить.» Both reads below were
+      // `world.condition`, i.e. TODAY's, while the gate above has counted a booked holiday's recovery
+      // since round 34 #9 – so a family that put a week away between her and the W50 watched
+      // «Exhausted» leave the card while the coach's sentence stayed on it and flipped the confirm
+      // button to «Enter anyway» over a card carrying no warning at all.
+      //
+      // ⚠ ONE PROJECTION, BOTH SITES, AND IT IS THE GATE'S OWN (`projectedConditionAt` in
+      // world/medical.ts) rather than a third copy of the arithmetic. `coachWarnsEntry` decides
+      // WHETHER he speaks and `coachEntryLine` decides WHICH of his three sentences it is; they are
+      // two halves of one opinion about one week, and handing them different conditions is how halves
+      // drift apart.
+      //
+      // ⚠ AND IT REACHES HIM BY VALUE, so `coachLoad.ts` stays pure and the T16b escalation machinery
+      // never sees a forecast. `coachEscalates`/`strainOf` read `view.condition` for a decision about
+      // THIS week's knock, which is a fact and not a projection; only this per-event copy moves, and
+      // only for the card he is speaking on.
+      const projected = projectedConditionAt(world, e.week)
       const bodySay =
         gate.level !== 'blocked' &&
         coachLoad !== null &&
-        coachWarnsEntry(coachLoad, ECONOMY.availability.minConditionToEnter[e.tier])
-          ? coachEntryLine(e.tier, world.condition)
+        coachWarnsEntry({ ...coachLoad, condition: projected }, ECONOMY.availability.minConditionToEnter[e.tier])
+          ? coachEntryLine(e.tier, projected)
           : null
       // The same "only about trips she can take" rule the body arm has always had, and the same
       // "nobody is being paid to have a view" one: a self-coached career hears nothing, from either.
@@ -805,7 +824,13 @@ export function computeLadderView(world: WorldState, track: LadderTrack): Ladder
     // as a single digit. The screens have always papered over that by asking `countingResults.length
     // > 0` themselves; making it null HERE means they cannot forget, and the two questions ("where
     // is she?" and "is she ranked at all?") stop being one field.
-    rank: kidLadderRank(world, track),
+    // ⭐⭐ ROUND 41 #26 – AND IT COMES OFF THE SAME FOLD `standings` BELOW WINDOWS. The owner: «в тайле
+    // под аватаркой professional #3 а реальный в таблице #4». This read `kidLadderRank`, i.e. the
+    // persisted cache, while the rows two lines down were folded fresh – one aggregate answered at two
+    // moments, which the tick opens a gap between at least three times a career-year. The whole
+    // argument, the three stale paths and why the cache STAYS for every engine reader are on
+    // `kidLadderRankFolded` in ./ladder.ts.
+    rank: kidLadderRankFolded(world, track),
     points,
     standings: computeStandings(world, track),
     countingResults: counting,
@@ -890,6 +915,29 @@ export function playerShortName(world: WorldState, id: string): string {
   }
   const ai = world.cohort.find((c) => c.id === id)
   return formatShortName(ai?.name ?? id)
+}
+
+/** ⭐ ANY ID -> HER FLAG, over BOTH populations a draw can be made of (round 41 #17, the owner:
+ *  «у некоторых соперниц в про лиге нет флага, проверь там логику пожалуйста»).
+ *
+ *  ⚠ WHAT WAS WRONG. The VS card's nation was a cohort-only lookup –
+ *  `world.cohort.find((c) => c.id === oppId)?.nation ?? ''` – and `world.cohort` is the ~200 JUNIORS.
+ *  Every W-track draw is filled from `fieldProsOf` instead (`fp-…` ids, living-field phase W), so a
+ *  professional opponent fell through to `''`, `flagEmoji('')` renders nothing, and the class
+ *  affected is the majority of every W-series opponent she ever meets. The pros HAVE nations – the
+ *  generator gives every one of them one, and `computeStandings` above has always read them for the
+ *  Stats table's `meta` map.
+ *
+ *  ⚠ THE SHAPE IS DELIBERATELY `playerShortName`'s, one function up: same two populations, same
+ *  `isFieldProId` discriminator, same single `.find` (`fieldProsOf` is season-stable and memoised, so
+ *  a lookup costs a scan of an array that is already built). `pendingView`'s RANK arm nine lines
+ *  below its nation arm already special-cased `isFieldProId` for exactly this reason – the nation arm
+ *  simply never learned it, which is how one population ended up answered two different ways.
+ *
+ *  Empty for an id belonging to neither, which is what every caller's own `?? ''` already meant. */
+export function playerNation(world: WorldState, id: string): string {
+  if (isFieldProId(id)) return fieldProsOf(world).find((p) => p.id === id)?.nation ?? ''
+  return world.cohort.find((c) => c.id === id)?.nation ?? ''
 }
 
 /**
@@ -1022,11 +1070,10 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // `season/tournament.ts` where the whole argument for it lives (see `entrantNationAt`: a filter is
   // unfillable at every playable country, so the domestic ladder re-labels rather than re-deals).
   // `AiPlayer.nation` is untouched: the same girl carries her own flag at a J event next week.
-  const oppNation = entrantNationAt(
-    event.tier,
-    world.cohort.find((c) => c.id === oppId)?.nation ?? '',
-    world.profile.country,
-  )
+  // ⚠ AND THE LOOKUP UNDER IT IS `playerNation` SINCE ROUND 41 #17 – it was a cohort-only `.find`,
+  // which is why a professional opponent rendered no flag at all. The re-labelling rule above is
+  // unchanged; what changed is that the nation handed to it now exists for a `fp-…` id.
+  const oppNation = entrantNationAt(event.tier, playerNation(world, oppId), world.profile.country)
   const oppAge = p.players[oppId]?.age
   const kidFinish = p.result.finishes[KID_ID] ?? Math.log2(tier.drawSize)
   // UNRANKED IS NOT A NUMBER, for either girl, and it is the same rule `computeLadderView` applies to
@@ -1043,6 +1090,15 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // the rank recompute to `finalizeTournament` while the week's AI results are already banked); a
   // one-place drift between two different players' numbers is invisible, whereas a drift in HERS
   // between two screens is the bug.
+  //
+  // ⭐⭐ ROUND 41 #26 – AND THE ASYMMETRY IS NOW GONE, because the premise above moved. That paragraph
+  // reads the cache for ONE stated reason: it is what `ladders[track].rank` reads. Round 41 #26 moved
+  // `ladders[track].rank` onto the fresh `rankingFor` fold (see `kidLadderRankFolded`), so honouring
+  // the SENTENCE means following it rather than keeping the line it used to justify - leaving
+  // `kidLadderRank` here would have re-opened the same two-moments split one screen further in. Both
+  // girls' numbers on the VS card now come off the one fold `ranks` is already built from, which is
+  // strictly more agreement than this note ever promised: the reveal-week place the paragraph calls
+  // invisible is no longer there to be invisible.
   // A FIELD PRO IS ALWAYS RANKED (living-field phase W, 01.08): her points are virtual, so the
   // ledger fold below would read 0 and print her "unranked" – on the very row the merged table
   // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
@@ -1078,7 +1134,7 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // ⭐⭐⭐ ROUND 27 #6 – NOTHING STANDS WHERE THE TABLE'S NAME IS, BECAUSE THE TABLE HAS A NAME. The
     // pairing this field's docstring pins: `ladder` non-null, note null, in one literal.
     ladderNote: null,
-    kidRank: kidLadderRank(world, track),
+    kidRank: kidLadderRankFolded(world, track),
     opponent: {
       name: formatShortName((p.players[oppId] ?? fallbackPlayer(oppId)).name),
       nation: oppNation,
@@ -1376,6 +1432,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
   // would deliver the fade as three visible jumps instead of a slope, which is the opposite of what
   // §4a is for. `tests/condition-boundary.test.ts` is the guard.
   const shownCondition = Math.round(world.condition)
+  // ⭐ ROUND 41 #19 – ONCE PER SNAPSHOT, not once per reader. `masseurRehabWeeksAhead` walks the whole
+  // remaining layoff, so the `injury` view below asks it exactly one time and spends the answer twice
+  // (the guard and the number). 0 for every healthy career, by its own first line.
+  const rehabAhead = masseurRehabWeeksAhead(world)
   // Diary-1: the facts + the selected lines, assembled from a narrow view of the world. Selection
   // draws only from `seed:diary:*` / `seed:memory:*` sub-streams at SNAPSHOT time – zero MAIN
   // draws, so the frozen capture (41550 / e6b0c709) is untouched by construction.
@@ -1542,7 +1602,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // filled/open/closed, every number the engine's own. Empty before eighteen: no shelf for a
     // junior (`reviewAdOffer`'s own age gate, read through the same constant).
     adPortfolio: (() => {
-      if (kidAgeAt(world, world.week) < ECONOMY.advertising.fromAgeYears) return []
+      const adAge = kidAgeAt(world, world.week)
+      if (adAge < ECONOMY.advertising.fromAgeYears) return []
+      // ⭐⭐⭐ ROUND 41 #15 – THE SHELF KNOWS ABOUT THE JUNIOR BAND, AND IT HAS TO. The owner opened
+      // the letters at sixteen with «юниорские суммы, реже», so between sixteen and eighteen the
+      // engine writes two categories at half the cheque – and a shelf that went on quoting the adult
+      // figure would be promising $80,000 over a letter that brings $40,000. Two sides asking
+      // different functions about one question is this repo's most-caught defect; both sides ask
+      // `adJuniorOpen` and `adJuniorFeeCents`.
+      const junior = adJuniorAt(adAge)
       const standing = sponsorStandingOf(world)
       const band = adBandFor(standing)
       const rows: AdPortfolioRow[] = []
@@ -1601,9 +1669,21 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
           continue
         }
         const def = ECONOMY.advertising.categories[category]
-        const fee = band === null ? null : adFeeFor(category, band)
+        // ⚠⚠ ROUND 41 #15 – A CATEGORY THE JUNIOR BAND DOES NOT WRITE IS CLOSED WITH NO RANK HINT,
+        // AND THAT IS THE HONEST ROW RATHER THAN A CONVENIENT ONE. `opensAtRank` answers «how far up
+        // the ladder does this open», which is TRUE and NOT THE REASON here: a sixteen-year-old
+        // inside WTA #180 meets the watch band's rank and is still refused, on her age. So the row
+        // falls through to the shelf's own existing «Not open yet» – the string the template has
+        // carried since round 29 for exactly a closed row with nothing more to say, so this item
+        // adds no player-facing copy and needs no template edit.
+        const adultFee = band === null ? null : adFeeFor(category, band)
+        const fee = junior && !adJuniorOpen(category) ? null : adultFee
         if (fee !== null) {
-          rows.push({ category, label: def.label, state: 'open', openCashCents: fee })
+          // ⚠ AND THE OPEN ROW QUOTES THE JUNIOR CHEQUE, off the same function the letter is written
+          // with, so the promise on the shelf is the money in the envelope.
+          rows.push({ category, label: def.label, state: 'open', openCashCents: junior ? adJuniorFeeCents(fee) : fee })
+        } else if (junior && !adJuniorOpen(category)) {
+          rows.push({ category, label: def.label, state: 'closed' })
         } else {
           // the weakest band whose cell is priced = the standing the category opens at
           const openIdx = def.feeCentsByBand.findIndex((c) => c !== null)
@@ -1648,6 +1728,23 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
           // v59: present only while the masseur has taken weeks off THIS layoff – the projection
           // mirrors the persisted shape, absent-for-none included.
           ...(world.injury.weeksSaved !== undefined ? { weeksSaved: world.injury.weeksSaved } : {}),
+          // ⭐⭐⭐ ROUND 41 #19 – AND WHAT HE IS ON COURSE TO TAKE OFF ALTOGETHER. The owner: «мне
+          // написали, что травма отнимет 7 недель, а в итогах года было 4 недели … можно писать
+          // сколько реально займет восстановление с текущим тиром массажиста.» Both numbers were
+          // right: the clinic's 7 already carries the physio's cut, and the masseur's weeks arrive
+          // afterwards, one receipt at a time – so the announcement and the year-end total were
+          // never describing the same arithmetic.
+          //
+          // ⚠ `masseurRehabWeeksAhead` AND NOT A SECOND SPELLING OF THE CADENCE. It is the forward
+          // replay round 34 #21 already trusts for the withdrawal sweep, so the rung's N, the
+          // `totalWeeks > 2` niggle guard, the `weeksRemaining > 0` check and the future's own
+          // stand-downs (a booked holiday, the college freeze) are all honoured by construction.
+          // Pure, and it spends nothing on any stream – this file may never draw.
+          //
+          // ⚠ ABSENT WHEN IT WOULD SAY NOTHING, on `weeksSaved`'s rule one line up: no masseur, a
+          // layoff too short, or a rung that saves nothing over what is left. The dialog can then
+          // render its second line on presence alone, and can never print «more like 7» under «~7».
+          ...(rehabAhead > 0 ? { expectedWeeks: world.injury.weeksRemaining - rehabAhead } : {}),
         }
       : null,
     // ⭐ R2-02: and WHAT IT DID, as facts. See `buildInjuryReport` for why the surface may no longer
@@ -1869,10 +1966,16 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     //
     // THE THIRD IS BUILT EXACTLY LIKE THE OTHER TWO – same call, same argument, no special case –
     // which is the whole reason `LadderTrack` was widened rather than the adult rungs folded into
-    // `itf`. Nothing here decides whether the player SEES it: the Stats and rank-help screens still
-    // list two tabs by hand, because a fourteen-year-old with an empty professional table is noise
-    // and the week it stops being noise is the handover at 19 (docs/specs/adult-tour-and-endings.md
-    // §4), which is a slice of its own. The view exists and is correct from week 0 regardless.
+    // `itf`. Nothing here decides whether the player SEES it: that was always a surface question,
+    // and both surfaces have since answered it the same way – Stats derived its switch from
+    // `LADDER_LABEL` in round 15, and `RankHelpDialog` its blocks from `LADDER_TRACKS` in round 41
+    // #1, at the owner's own report («их явно три»).
+    // ⚠ THIS NOTE USED TO SAY THEY «still list two tabs by hand», on the argument that a
+    // fourteen-year-old with an empty professional table is noise and that the week it stops being
+    // noise is the handover at 19 (docs/specs/adult-tour-and-endings.md §4). He opened the card and
+    // disagreed; an empty table that explains itself turned out to be the better answer. The view
+    // exists and is correct from week 0 regardless, which is what let both surfaces change their
+    // minds without this line moving.
     ladders: {
       domestic: computeLadderView(world, 'domestic'),
       itf: computeLadderView(world, 'itf'),

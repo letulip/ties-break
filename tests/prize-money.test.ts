@@ -14,7 +14,8 @@ import {
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
-import { ECONOMY } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareCents } from '../src/engine/economy'
+import { kidAgeYears } from '../src/engine/world/age'
 import type { FamilyBackground } from '../src/shared/protocol'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
 import type { TierId } from '../src/engine/season/types'
@@ -219,12 +220,27 @@ describe('A2/3 — the cheque does NOT scale with the wealth corridor', () => {
     const events = new Set<string>()
     for (const background of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
       const { world, tier, finish } = playOneAdultEvent('prize-real', background)
-      const prize = world.events.filter((e) => e.category === 'prize').reduce((s, e) => s + (e.amountCents ?? 0), 0)
+      const banked = world.events.filter((e) => e.category === 'prize').reduce((s, e) => s + (e.amountCents ?? 0), 0)
       const travel = world.events.filter((e) => e.category === 'travel').reduce((s, e) => s + (e.amountCents ?? 0), 0)
-      expect(prize, `${background} was paid`).toBeGreaterThan(0)
+      expect(banked, `${background} was paid`).toBeGreaterThan(0)
+      // ⚠⚠ ROUND 41 ITEMS 15+27 (the owner's ruling A1) – THE CHEQUE IS THE GROSS, AND SINCE THE
+      // RULING THE LEDGER ROW IS NOT IT. Her share leaves the family wallet from her first W-series
+      // start at any age («призовые падают на её счёт с первого старта W-серии независимо от
+      // возраста – согласен»), so the `prize` row is what the FAMILY banked – deliberately, by
+      // `finalizeTournament`'s own note – and this fixture's girl is a junior. The wealth-corridor
+      // claim is untouched and is asserted where it lives: on the CHEQUE, re-assembled from the two
+      // balances the split writes, the family's row plus the cents her account received.
+      const week = world.events.find((e) => e.category === 'prize')!.week
+      const hers = world.financeWeeks.find((w) => w.week === week)?.kidShare?.prize?.cents ?? 0
+      const prize = banked + hers
       // THE CLAIM: the cheque is a pure function of (tier, finish) and knows nothing about family.
       expect(prize, `${background} was paid the catalogue value for a finish of ${finish}`).toBe(
         prizeCentsFor(tier, finish),
+      )
+      // ...and the split of it is the engine's own helper at her real age, never a second ladder –
+      // so a retune of `ECONOMY.kidShare` moves this arm with the game and changes no claim here.
+      expect(hers, `${background}: her ruled share of that cheque`).toBe(
+        kidPrizeShareCents(prize, kidAgeYears(week, world.profile.birthMonth, world.profile.birthDay)),
       )
       byFinish.set(finish, (byFinish.get(finish) ?? new Set<number>()).add(prize))
       spent.add(travel)
@@ -290,7 +306,7 @@ describe('A2/4 — the payout lands where the points do, and nowhere else', () =
 // =================================================================================================
 describe('R15-5 — the first prize money is a milestone, once per career', () => {
   it('captures {type: prize, tier} and fires the feed line once, with the real figure on it', () => {
-    const { world } = playOneAdultEvent('prize-milestone', 'middle')
+    const { world, tier, finish } = playOneAdultEvent('prize-milestone', 'middle')
     const cheques = world.events.filter((e) => e.category === 'prize')
     expect(cheques.length).toBeGreaterThan(0)
 
@@ -302,9 +318,22 @@ describe('R15-5 — the first prize money is a milestone, once per career', () =
 
     // The feed line fires once, and it carries the actual amount – "$130 for a first-round exit"
     // and "$2,200 for the title" are different memories, so the figure is the cheque's own.
+    //
+    // ⚠⚠ ROUND 41 ITEMS 15+27 (the owner's ruling A1) – AND «THE CHEQUE'S OWN» IS THE GROSS. READ
+    // THE ENGINE, NOT THE LEDGER: the fire site is `formatCents(prize)` in `finalizeTournament`, and
+    // `prize` there is `prizeCentsFor(tier, finish)` before any hand takes a share – the milestone
+    // did not move under the ruling and its string is not a wording change. What moved is only the
+    // arithmetic on THIS side: her share now leaves the wallet at any age, so the `prize` ROW the
+    // expectation used to be rebuilt from is the family's part, smaller than the memory by her cut.
+    // The figure is reassembled the way the split wrote it – the row plus the cents her account got.
+    const week = cheques[0].week
+    const hers = world.financeWeeks.find((w) => w.week === week)?.kidShare?.prize?.cents ?? 0
+    expect(hers, 'her share really is flowing – the row and the memory are different numbers here').toBeGreaterThan(0)
+    const gross = (cheques[0].amountCents ?? 0) + hers
+    expect(gross, 'and the two halves re-add to the catalogue cheque for her finish').toBe(prizeCentsFor(tier, finish))
     const fired = world.events.filter((e) => e.milestoneKey === 'first-prize')
     expect(fired).toHaveLength(1)
-    const amount = `$${Math.round((cheques[0].amountCents ?? 0) / 100).toLocaleString('en-US')}`
+    const amount = `$${Math.round(gross / 100).toLocaleString('en-US')}`
     expect(fired[0].text).toBe(`💰 First prize money – ${amount} at the World Tour 15!`)
     expect(fired[0].text).not.toContain('—')
 

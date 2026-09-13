@@ -830,10 +830,11 @@ export function wasThereAChild(_world: WorldState): boolean {
 
 /** ⭐ ROUND 29 PART TWO #10 – the epilogue's academy facts, or null when no stage was ever built.
  *
- *  DELIVERED stages, though today the two reads agree by construction (§3g gives the stages no
- *  `buildWeeks`, so an owned stage IS delivered): if a wait is ever added to a stage, «a contract
- *  is not a business» keeps holding here for free, the same way it already does in the income
- *  arithmetic this shares (`assetWeeklyIncomeCents` gates on the same predicate).
+ *  DELIVERED stages – and since round 41 #24 (12.09) the distinction is LIVE, not hypothetical:
+ *  the courts, the clubhouse and the staff carry `buildWeeks` now (the land alone does not), so an
+ *  owned stage under construction is not yet a delivered one. «A contract is not a business»
+ *  keeps holding here for free, exactly as this comment predicted, the same way it already does
+ *  in the income arithmetic this shares (`assetWeeklyIncomeCents` gates on the same predicate).
  *
  *  ⚠ `totalStages` COUNTS THE CATALOGUE rather than quoting 4, for `CollegeProgressView
  *  .totalYears`' own reason: the copy must never say «four» from a template, and a fifth stage

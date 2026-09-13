@@ -30,8 +30,10 @@ import {
   academyWeeklyIncomeCents,
   buyAsset,
   createWorld,
+  deliverAssets,
   merchFamilyWeeklyIncomeCents,
   merchWeeklyIncomeCents,
+  shopCatalogue,
   toSnapshot,
   KID_ID,
   type WorldState,
@@ -86,6 +88,17 @@ function businessWorld(seed = 'p5a-surfaces'): WorldState {
   world.fundsCents = 500_000_000_00
   buyAsset(world, 'merch-brand')
   for (const id of ['academy-land', 'academy-courts', 'academy-building', 'academy-staff']) buyAsset(world, id)
+  // ⚠⚠ RE-AIMED, ROUND 41 #24 (12.09) – AND THE FIXTURE FAILED THE WAY THE ONE ABOVE DID: with an
+  // empty academy rather than with a wrong figure. The owner: «может быть для Академии корты,
+  // клубный дом и стафф тоже должны сколько-то строиться по времени, а не сразу быть готовы?», then
+  // «сроки ок, в этот же раунд заводи пожалуйста» – so three of the four stages arrive 6 / 12 / 3
+  // weeks after the money leaves, and a family that has just paid owns contracts. Every arm below
+  // is about what a WORKING academy quotes and banks, so this fixture waits the build out.
+  // ⚠ The wait is read off the catalogue and never typed, and the delivery is the engine's own tick
+  // phase rather than a deleted key – `tests/round41-academy-build.test.ts` is where the WAIT
+  // itself is the subject.
+  world.week += Math.max(0, ...shopCatalogue().filter((i) => i.family === 'academy').map((i) => i.buildWeeks ?? 0))
+  deliverAssets(world)
   return world
 }
 

@@ -236,7 +236,15 @@ describe('P2-5 – the week story past 768', () => {
    *  out at 216.2px – still under the band's 286, so the card is unmoved. The headroom is real
    *  (94.7px of scrap against a 286px band) and that is the honest reading; what the second
    *  assertion below guards is the day it stops being. */
-  const CARD_H_BEFORE: Record<number, number> = { 768: 984.85, 900: 984.85, 1280: 984.85 }
+  /** ⚠⚠ RE-MEASURED, ROUND 41 #11b – THE CARD GENUINELY DID GROW, AND ON PURPOSE. The four recap
+   *  tiles dropped their hardcoded `pad="12px 13px"` so they take Card's own default padding, which
+   *  is `--tb-card-pad` now (src/style.css: 14px base, 16px past 768, 18px past 1024) instead of a
+   *  fixed 14px fallback – his own ask, «на этом же экране для всех плашек... можно чуть больше
+   *  паддинги сделать». Re-run against the tree AFTER that change: the model reads 1016.85 at both
+   *  768 and 900 (the same `--tb-card-pad: 16px` step covers both) and 1032.85 at 1280 (the
+   *  `18px` step). The precision stays `toBeCloseTo(..., 0)` – tightened, never loosened, to match
+   *  the honest new number rather than widen the tolerance around the old one. */
+  const CARD_H_BEFORE: Record<number, number> = { 768: 1016.85, 900: 1016.85, 1280: 1032.85 }
 
   it.each(WIDE)('⭐⭐ the photograph takes half the card at $width, and is cropped to fill it', async (vp) => {
     assertSheetPresent()

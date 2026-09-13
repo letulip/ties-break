@@ -3,7 +3,7 @@ type: spec
 status: draft
 area: economy
 canonical: false
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-12
 ---
 
 # The shop, the assets and the broker – the buildable spec
@@ -1310,3 +1310,76 @@ The line is now **«Neither gains nor loses»** – the zero of the sentence its
 6% a season», «Gains about 7% a season»), which cannot be read as a slow slide. ⭐ And the row he was
 most likely reading it on is gone from that branch entirely: the merch brand is priced as a business
 by §16b, which is his own next sentence.
+
+---
+
+## 17. ⭐⭐⭐ HER SHARE STARTS AT HER FIRST W-SERIES CHEQUE – round 41 #27 (12.09.2026)
+
+**HIS QUESTION:** «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда
+она в первый раз на w серию приходит? это же всё таки ее призовые» **AND HIS RULING, option A1, the
+same day:** «призовые падают на её счёт с первого старта W-серии независимо от возраста – согласен».
+
+**What shipped, in one line.** `kidPrizeShareBps` answers a flat `startBps` (10%) below eighteen
+instead of zero. The ladder from eighteen is untouched to the point: the curve is **continuous**
+across her birthday, +5 a birthday, capped at 50% at 26.
+
+⚠⚠ **«С ПЕРВОГО СТАРТА W-СЕРИИ» NEEDED NO GATE, AND THAT IS THE ITEM'S FINDING.** Prize money exists
+on the **professional track only** – every `wta` tier in `calendar.ts` carries a `prizeCents` table
+and not one domestic or ITF-junior rung does (junior tennis pays nothing, ever) – and
+`finalizeTournament` splits inside `if (prize > 0)`. So «her share of every prize cheque, at any age»
+and «her share from her first W-series start» describe **the same set of cheques**. A predicate on
+top could only ever answer true where it was asked, which is a dead guard by construction.
+
+⚠⚠ **AND `wtaEverCounted` WOULD HAVE BEEN THE WRONG FACT, which is worth recording because it was the
+obvious candidate and the round's own plan named it.** It means «a W result has ever **SCORED**»: it
+reads `bestFinishByTier` against the tier's **points** table, and a W15 first-round exit is
+`points[5] = 0` while `prizeCents[5] = $130`. A trigger built on it would have refused her a share of
+the first cheque she ever earned. The durable «she has ever STARTED one» fact does exist – a
+`wta`-track tier having ANY recorded finish, written for every finalised event and never pruned – and
+it is not needed, for the reason above.
+
+⚠ **The merch brand moves with it, by round 35 #9's own rule** («доход от ее бренда давай тоже как
+проценты с призовых будем делить»): the brand rides this one function, so a sixteen-year-old whose
+family owns her brand now keeps a tenth of its week too. It can only ADD to her account.
+
+⚠ **Her page follows the ACCOUNT rather than the birthday now.** `ownAccountNote` used to return ''
+whenever the rate was zero, which was every age below eighteen; the rate is never zero now, so the
+gate became «from eighteen as always, and earlier only once money has actually reached her». No
+career loses a sentence it had, and `MoneyScreen.vue` needed no edit – its strip already falls
+through to this string.
+
+**NO SCHEMA MOVE** (`kidFundsCents` is a v54 field; `SAVE_SCHEMA_VERSION` stays 74), **zero draws**,
+**no new player-facing string**.
+
+### Predicted vs measured (`tools/r41-kid-share-early.ts`)
+
+The four numbers were written into the tool's header **before the first run**. Round 23's own bench
+measured the 18-gate at **−36% family mean at 28**, which is the yardstick these are small against.
+
+| | predicted | measured at 18 (216 careers) | measured at 26 (72 careers) |
+| --- | --- | ---: | ---: |
+| P1 careers holding a non-zero account | over 60% | **9.7%** (OFF 0.5%) | 20.8% (OFF 18.1%) |
+| P2 her account, mean | $2,000 – $20,000 | **$65** | $6,588 (OFF $6,295, **+$292**) |
+| P3 the family's wallet, mean delta | under −$5,000 | **−$112** | **−$247** |
+| P4 the family's prize total at 26, delta | under −3% | – | **+2.14%** (noise: see below) |
+
+**P3 was right and P1/P2 were wrong by two orders, and the reason is the same one the advertising
+bench found**: a junior standing in the professional table is RARE, so most careers never earn a
+junior cheque at all. Where one is earned it is small – a W15 first-round exit pays $130 and her cut
+of it is $13. Total junior cents transferred across 216 careers: **$13,922**, sixty-five dollars a
+career; across 72 careers to twenty-six, **$6,904**, ninety-six dollars a career against her own
+$6,588 account. **The junior window is 0.6% of what she ends up holding** – which is exactly the
+shape his ruling asks for: it is about **whose money it is**, not about how much.
+
+⚠ **P4's positive sign is arm divergence and not a finding.** The two arms play the same tournaments
+on 96.8% of careers at eighteen and 91.7% at twenty-six; the rest have diverged (a lighter wallet
+takes different entries), so a prize total compared across eight more years is measuring two lives.
+The number that is NOT subject to that – the junior cents actually transferred – is the $96 above.
+
+⚠ **The first cheque reaches her at fifteen at the earliest and at sixteen in the median career**,
+which is the sentence his question was really about.
+
+⚠ **The OFF arm is a reversal at the site, not a constant flip**, and the tool says why: the item
+changed a BRANCH and no setting of `kidShare`'s four constants reproduces the old rule without also
+moving the ladder above eighteen. The OFF arm walks the shipped engine and moves the junior cents
+back to the family the week they land – the old money to the cent, with no second implementation.

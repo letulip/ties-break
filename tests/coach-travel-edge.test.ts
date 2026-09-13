@@ -243,8 +243,28 @@ describe('the byte-identity of a career that does not travel', () => {
     //      `underTheWindowRule`: **1 case red**, on «25k · middle coach · player: expected
     //      '23ba204dc0ca…' to be 'de9a7dda7916…'» – the broken reconstruction against the hash the
     //      engine itself produced with the old rule compiled in.
-    const elite = windowRuleWitness(8, 1) // 120k wealthy · elite coach · PLAYER policy
-    const mid152 = elite.kitLetters.find((o) => o.id === 'kit-152')
+    //
+    // ⭐⭐⭐ AND ARM 2 FIRED FOR REAL ON 12.09.2026, THE SAME DAY IT WAS BUILT – THE UNION MERGE OF
+    // ROUND 41 INTO WAVE 4 (round 41 x wave 4). The witness above, `windowRuleWitness(8, 1)`, walked
+    // into the merge holding `kit-152` and came out holding `kit-47` and `kit-151`, both on slot 0 –
+    // and this case went RED on the precondition three lines down, «expected undefined to be 152»,
+    // which is the sentence arm 2 exists to produce. Nine days of silence last time; one test run
+    // this time. The witness is re-pointed at preset 6 / policy 1 below, at the SAME letter and the
+    // SAME two deadlines.
+    //
+    // ⚠ WHAT MOVED HER IS BISECTED, NOT GUESSED, AND IT IS NOT THE PRIVATE LIFE AND NOT THE JUNIOR AD
+    // LETTER. Four trees walked with one probe, then the 59 commits between them binary-searched on
+    // «does 8/1 hold kit-152?» in six runs: the merge base `3dda7566` holds it, wave 4 `af6007da`
+    // holds it (so the private life never touched her), round 41 `bdab3c64` does not, and the union
+    // tree does not. **The commit is `bea3d58e` «round 41 P1 – one market, different baskets»** – a
+    // PRICE change reaching a `PLAYER`-policy career through her wallet: her accepted entries inside
+    // the sponsor window went from one to five, `kidRankWta` moved 310 -> 539 with them, and
+    // `windowLadder(standing)` is read fresh every week of the window, so a different rung cleared and
+    // the slot-1 letter was never raised. The A1 junior ad letter (`043d49e1`) lands earlier in the
+    // bisect with the witness still intact, and 8/1 receives no `ad` letter on any of the four trees.
+    // The full sweep, the eight-career engine A/B and the naming rule are over `PRE_R28B`.
+    const high = windowRuleWitness(6, 1) // 25k middle · HIGH coach · PLAYER policy
+    const mid152 = high.kitLetters.find((o) => o.id === 'kit-152')
     expect(mid152?.week, 'the witness letter exists and landed MID-window (slot 1, not the opening week)').toBe(152)
     expect(mid152?.slot, '...which is the whole reason the two rules can disagree about it').toBe(1)
     expect(mid152?.deadlineWeek, 'THE LETTER RULE, which is what the engine writes since the ruling').toBe(156)
@@ -252,8 +272,8 @@ describe('the byte-identity of a career that does not travel', () => {
     expect(mid152?.state, '...so under the letter rule it is still OPEN at the horizon instead of expired').toBe('open')
     // ...and only NOW is the negative worth asserting, because the two lines above prove its target
     // exists. A case whose two arms cannot differ is the failure this whole re-aim is about.
-    expect(elite.underTheWindowRule, 'the two rules produce DIFFERENT careers here').not.toBe(elite.live)
-    expect(elite.underTheWindowRule, '120k · elite coach · player - the pre-ruling career').toBe(PRE_R28B.elitePlayer)
+    expect(high.underTheWindowRule, 'the two rules produce DIFFERENT careers here').not.toBe(high.live)
+    expect(high.underTheWindowRule, '25k · high coach · player - the pre-ruling career').toBe(PRE_R28B.highPlayer)
 
     // ⭐ AND THE OTHER BRANCH OF THE RECONSTRUCTION, which is a letter that had ALREADY lapsed by the
     // horizon: moving its deadline moves the week it lapsed WITH it, and rewriting one without the

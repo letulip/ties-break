@@ -3,7 +3,7 @@ type: spec
 status: current
 area: economy
 canonical: false
-last-reviewed: 2026-08-29
+last-reviewed: 2026-09-12
 ---
 
 # The advertising portfolio (round 29 part four P6/P7/P9, built 29.08.2026)
@@ -101,3 +101,88 @@ fee, its 1–3-year term, its CATEGORY-scoped exclusivity and the winter-first s
 confirm caps the named dates at six and counts the rest (the capstone's sixteen would out-grow a
 phone – round-20 #3's rule, mounted against 375×667). `Snapshot.adShoot` became `adShoots` (one row
 per live deal); the calendar, week-ahead and week-days surfaces read the union.
+
+## 5. Round 41 #15 (12.09.2026) – THE LETTERS OPEN AT SIXTEEN, ON A JUNIOR SHELF
+
+**HIS QUESTION:** «А рекламных контрактов правда не предлагают до 18 лет или это наше ноу-хау?
+кажется молодые тоже в рекламах снимаются.» **HIS RULING, option A1, the same day:** «реклама
+открывается с 16 (юниорские суммы, реже), а призовые падают на её счёт с первого старта W-серии
+независимо от возраста – согласен».
+
+⚠⚠ **The eighteen was OUR reading, not his ruling, and the exhibit is the shipped comment itself.**
+`ECONOMY.advertising.fromAgeYears` said in as many words that it came from «какие у нас могут быть
+механики этих контрактов дополнительные от 18+ лет начиная и дальше» – a question about what EXTRA
+mechanics exist above eighteen, read as an eligibility gate. The three facts it leaned on (the prize
+ramp started at 18, school ends by 18.92, the junior rungs shut) are all true and none of them is
+about advertising. The paragraph is kept verbatim in the constant, under the correction.
+
+### What shipped
+
+| | junior band, real age [16, 18) | from eighteen |
+| --- | --- | --- |
+| categories written | `drinks`, `clothing` only | the whole shelf |
+| cheque | **half** the adult cell at her band (`junior.feeBps` 5000) | the adult cell |
+| arrival | **half** the weekly chance (`junior.chanceBps` 5000) | `offerChance` |
+| term | **1 year**, always | the band's own ladder (1–5) |
+| shoot weeks | the band's own, unscaled | the band's own |
+
+The pair is the shelf's own cheapest rungs rather than a taste: `drinks` is the only category open at
+the very foot of the ladder (round 34's «a kit patch and a drink»), and `clothing` already requires a
+live kit deal to be written at all (the «двойной программой» rule), which is a natural junior shape.
+The capstone and the lifetime letter are refused twice – by the junior list and by their own tenure
+gates, which cannot be met at seventeen.
+
+⚠ **RNG: zero new draws.** «Реже» is the SAME purpose-scoped sub-stream (`seed:ad:<category>:<week>`)
+read at a lower bar, and the one-year ceiling is applied AFTER the letter rng has spent its uniform –
+round 39 #3's own discipline – so no stream shifts by one draw at any age. An age is world state, not
+player input, so input-independence is untouched; the frozen MAIN capture (41550 / `e6b0c709`) cannot
+see any of it and `tests/condition.test.ts` is green and unmodified. **No schema move**;
+`SAVE_SCHEMA_VERSION` stays 74.
+
+⚠ **No new player-facing string, and this was checked rather than assumed.** The empty-state sentence
+reads the constant (`Nothing to show yet – the categories open at {{ adFromAgeYears }}…`), so it now
+says «open at 16» by itself. A category the junior band does not write renders `state: 'closed'` with
+**no** `opensAtRank`, which falls through to the shelf's own shipped «Not open yet» – deliberately,
+because `opensAtRank` answers «how far up the ladder» and that is true-but-not-the-reason for a
+sixteen-year-old who already meets the watch band's rank. No `MoneyScreen.vue` edit is owed.
+
+### Predicted vs measured (`tools/r41-ad-gate-16.ts`, 216 careers per arm, walked to her eighteenth)
+
+The four numbers were written into the tool's header **before the first run**:
+
+| | predicted | measured (organic) | measured (staged) |
+| --- | --- | ---: | ---: |
+| P1 careers signing any ad deal before 18 | 4% (single digits) | **0.0%** | **61.6%** |
+| P2 her account at 18, mean delta (whole corpus) | under $10,000 | **$0** | **+$25,185** |
+| P3 ...conditional on a career that signed one | $40,000 – $80,000 | – | **$40,902** |
+| P4 the family's funds at 18, mean delta | under $2,000 | **$0** | **+$3,862** |
+
+**Two populations, because reporting only the first would be a null result nobody could read.**
+
+* **ORGANIC** – the careers `econ-bench` actually produces. **Zero letters in either arm**, and the
+  diagnostic says why: **0.0% of them ever stand in an advertising band before eighteen at all.** The
+  gate is not what stops them – the STANDING is. That reproduces what `tests/ad-offer.test.ts` has
+  said since round 24 in its own words («an organic crossing would need eight-plus entered seasons
+  per arm and still not be guaranteed by the calibration – first points 17-18, top-100 about 4.5
+  years later»), and it is why the bench carries a second arm. ⚠ **The null was actuation-checked**:
+  `--absurd` (junior fee at 10x the adult cell, arrival certain) moves nothing on the organic corpus,
+  which is the proof that the band and not the dice is the binding constraint.
+* **STAGED** – the pro-fixture idiom, a counting W-series standing written from her sixteenth. This
+  is the population the item is FOR, and it is the owner's own save: a girl in the top 100 at sixteen
+  is the opening sentence of round 41 #18. Here 61.6% of careers sign at least one letter, 160
+  letters in all, and **every one of them is a drink** – no bench career holds a kit deal, so the
+  clothing slot never opens, which is the «двойной программой» rule doing its job unprompted.
+
+**Where the prediction was wrong, and it is instructive both ways.** P3 landed inside its band at the
+bottom ($40,902 against $40,000–$80,000). P1 was too HIGH for the organic corpus (0% against 4%) and
+far too low for the staged one, which says the prediction was about the wrong population – the honest
+reading is «rare because the STANDING is rare, not because the letters are». P4 was too low by 1.9x
+(+$3,862 against under $2,000): the arithmetic checks out (160 letters × ≈$40,000 gross × the
+manager's 15%, over 216 careers ≈ $4,400), so what was underestimated was the number of letters, not
+the split.
+
+⚠ **A non-finding, recorded because it was nearly reported as a finding.** A first pass at 27 careers
+read the family's mean funds as **−$5,645** in the ON arm and the shoot weeks were the obvious
+suspect (a junior deal costs in-season weeks that recover like travel weeks). At 216 careers the sign
+flips to **+$3,862** and the median moves +$102. The 27-career reading was noise, and it is written
+down here because a bench small enough to run quickly is a bench big enough to invent a mechanism.

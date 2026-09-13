@@ -812,7 +812,10 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
            training tile beside it uses the same `.recap-rows` / `.recap-row-key` idiom, so «the
            column that must add up» is not addressable without it – and part two #1's whole evidence
            is reading these figures off the screen and summing them. -->
-      <Card class="recap-tile recap-finance" pad="12px 13px">
+      <!-- ⭐ ROUND 41 #11 – NO HARDCODED PADDING: this tile now takes Card's own default
+           (`--tb-card-pad`, src/style.css), which steps at 768/1024 like every other card that
+           does not ask for something of its own. -->
+      <Card class="recap-tile recap-finance">
         <Eyebrow>Finances</Eyebrow>
         <!-- ⭐⭐⭐ ROUND 31 #2 – INCOME / FAMILY INCOME / SPENT, AND THE BALANCE UNDER THE HAIRLINE:
              the owner's own four lines, in his own order. His words are in the script block above and
@@ -882,8 +885,9 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 
       <!-- TRAINING. The week's training DECISION, what it is starting to do to her, and the days it
            bought. D lists skill gains in the middle slot; we say what moved WITHOUT saying by how
-           much, because a number there would unpick the radar on screen C – see the script. -->
-      <Card class="recap-tile" pad="12px 13px">
+           much, because a number there would unpick the radar on screen C – see the script.
+           ⭐ ROUND 41 #11 – padding rides Card's own default now, see the Finances tile above. -->
+      <Card class="recap-tile">
         <Eyebrow>Training</Eyebrow>
         <div class="recap-rows">
           <div class="recap-row">
@@ -910,8 +914,8 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
         </div>
       </Card>
 
-      <!-- MOOD -->
-      <Card class="recap-tile" pad="12px 13px">
+      <!-- MOOD – ⭐ ROUND 41 #11: padding rides Card's own default now, see the Finances tile above. -->
+      <Card class="recap-tile">
         <Eyebrow>Mood</Eyebrow>
         <div class="recap-mood">
           <img class="recap-face" :src="moodCropUrl" alt="" />
@@ -926,8 +930,8 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
         </div>
       </Card>
 
-      <!-- HIGHLIGHTS -->
-      <Card class="recap-tile" pad="12px 13px">
+      <!-- HIGHLIGHTS – ⭐ ROUND 41 #11: padding rides Card's own default now, see Finances above. -->
+      <Card class="recap-tile">
         <Eyebrow>Highlights</Eyebrow>
         <ul v-if="highlights.length" class="recap-beats">
           <li v-for="(h, i) in highlights" :key="i" class="recap-beat">
@@ -1215,6 +1219,30 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
   }
 }
 
+/* ⭐ ROUND 41 #13 – THE DESKTOP BAND CUTS HEADS OFF, AND THE SHAPE IS WHY. From 768 (P2-5 above) this
+   box is WIDER than it is tall (384x286 at 768, up to 640x286 at 1280) while most of what rotates
+   through it is square or near-square (the training/off-1..3 weeks, the travel-home and rehab
+   masters – src/art/weeks.ts), so under `cover` the overflow is spent almost entirely on the
+   VERTICAL axis and the shared rule's default 50% 50% (`.week-art img`, style.css) throws away as
+   much off the top of a portrait as the bottom. Same reasoning `MatchScene.vue`'s
+   `.scene--fill .scene-art` already banked on its own wide box ("TOP, NOT BOTTOM… anchoring at the
+   top keeps her head complete and spends the crop at the foot"): bias the window upward so a head
+   near the top of the frame survives and the crop lands on whatever is beneath it instead.
+   ⚠ GATED TO THE SAME 768 THIS CARD'S OWN RECTANGLE STARTS AT – below it the band is close to its
+   own 390/286 shape (343x251 at 375) and nothing here was asked to move; the phone cascade is
+   untouched by construction rather than by a second breakpoint number to keep in step.
+   ⚠ AND IT IS THE DEFAULT, NOT A REPLACEMENT FOR THE VACATION STEER RIGHT BELOW. `object-position`
+   takes one axis pair, so a scene that needs the HORIZONTAL steer (`.recap-art-vacation img`) still
+   has to win outright rather than blend with this one. Both selectors are scoped to this file and
+   carry the identical `[data-v-*]` bump, so they tie on specificity with each other – it is SOURCE
+   ORDER that settles it, which is why this rule stays above that one: the vacation scene's own
+   steer is declared last and wins the tie. */
+@media (min-width: 768px) {
+  .recap-art img {
+    object-position: 50% 20%;
+  }
+}
+
 /* ⭐ ROUND-17 #26 – the vacation weeks, and only those. Scoped, so it beats the shared
    `.week-art img` rule in style.css without either of them having to know about the other. */
 .recap-art-vacation img {
@@ -1401,15 +1429,31 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
 
 /* item 5b's day column (dot + Mon–Sun letter), now the bottom half of the Training card. It is
    pushed to the foot of the card so the two tiles in the top row rule off at the same height. */
-/* `margin` in full, not `margin-top`: the round-7 rule of the same name is still in `src/style.css`
-   (it belongs to this component and this wave may not edit that sheet – see the report), and its
-   `12px 0 6px` shorthand would otherwise leave a stray 6px under the dots. */
+/* `margin` in full, not `margin-top`: a round-7 rule of the same name lived in `src/style.css`
+   until round 41 #11 deleted it – it was shadowed by this scoped one (the DOM never read it) and
+   its own `12px 0 6px` shorthand would have left a stray 6px under the dots had anything ever read
+   it. See the note at the ≥768 rule below for why this wave DOES touch that sheet after all. */
 .recap-days {
   display: flex;
   justify-content: space-between;
   gap: 4px;
   margin: auto 0 0;
   padding-top: 12px;
+}
+
+/* ⭐ ROUND 41 #11a – THE DOTS PULL TOGETHER PAST 768. The owner: «точки с буквами о днях тренировки
+   на плашке на week recap давай чуть кучнее соберем на планшетах и десктопах, а то они сильно
+   широко друг от друга, не очень читаются» (quoted here rather than in the template –
+   tests/template-copy-rules.test.ts bans Cyrillic inside one). `space-between` spreads seven dots
+   edge to edge of whatever the tile is worth, which reads as one group on a 168px phone tile and as
+   seven unrelated marks once the tile is several hundred px wide (item 11(b)/(d) below widen the
+   tile's own padding, which only makes the spread worse). A fixed, tighter gap reads as the row of
+   seven it is, at any width past the phone. */
+@media (min-width: 768px) {
+  .recap-days {
+    justify-content: flex-start;
+    gap: 14px;
+  }
 }
 
 .recap-day {

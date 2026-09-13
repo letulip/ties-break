@@ -50,10 +50,23 @@ import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
 import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/economy'
+// ⚠ ROUND 41 P1 – TWO PURE LOOK-UPS AND NOTHING ELSE FROM THE COACH MODULE. `corridorBandFor` is
+// the single predicate that says where the wealth corridor stops, and `coachTierById` answers
+// «which rung is this id» off the roster literal without rebuilding a roster. The screen still
+// derives no PRICE of its own – it reads the same band the till reads (see `weeklyBand`), which is
+// what tests/round36-u03-coach-billing.test.ts's negative claim is about: no bill GENERATOR here.
+import { coachTierById, corridorBandFor } from '../../engine/coach'
 // STARTING_FUNDS_CENTS: the ENGINE's own number, not a hand copy – see `startingBudget` below.
 // world.ts is already in the UI chunk (PracticeFlow/BracketTabs import from it), so this costs
 // nothing at bundle time and removes a "must match" comment that was one retune away from a lie.
-import { ASSET_NAME_MAX_CHARS, STARTING_FUNDS_CENTS } from '../../engine/world'
+// ⭐⭐ ROUND 41 #25 – `seasonStartWeek` JOINS THE SAME IMPORT, for the same reason. world/ledger.ts
+// calls it «THE ONE definition of 'this season' for money: the Money screen's "This season" window
+// … reads it» – so the allowance projection below reads the screen's own clock rather than a second
+// modulo this file would own alone.
+import { ASSET_NAME_MAX_CHARS, seasonStartWeek, STARTING_FUNDS_CENTS } from '../../engine/world'
+// ⭐ ROUND 41 #25 – the season's length, read the same way StatsScreen.vue and CollegeYearCard.vue
+// already do (`WEEKS_PER_YEAR` off the calendar module, never a second literal 52).
+import { WEEKS_PER_YEAR } from '../../engine/season/calendar'
 // ⭐⭐ U-03 (05.09 review): the bill's arithmetic USED to be imported here, so the note under the
 // breakdown could quote the number the engine charges rather than a mirror of it. It is now READ off
 // the snapshot instead - same rule, one fewer copy of the sum. See `coachBilling` in
@@ -71,7 +84,7 @@ import type {
 // ⭐ ROUND 34 #19 – the chart's four windows are a VALUE from the protocol, so the picker here and
 // the series length in `shopView` read one table.
 import { SHOP_PRICE_RANGE_MONTHS } from '../../shared/protocol'
-import { monthLabel, seasonYear, weekLabel } from '../../shared/dates'
+import { monthLabel, seasonYear, weekLabel, weeksLeftBracket } from '../../shared/dates'
 import { formatCents, formatCentsSigned } from '../../shared/money'
 import { venueArtUrl } from '../../art/venues'
 import { vacationArtUrl } from '../../art/weeks'
@@ -97,6 +110,7 @@ import Card from '../ui/Card.vue'
 import Eyebrow from '../ui/Eyebrow.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import IconButton from '../ui/IconButton.vue'
+import ProgressRing from '../ui/ProgressRing.vue'
 import Polaroid from '../ui/Polaroid.vue'
 import PrimaryPill from '../ui/PrimaryPill.vue'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -116,11 +130,19 @@ function togglePhysio(): void {
   game.setPhysio(!physioActive.value)
 }
 /** One band, corridor-scaled to the family's means, as the `$lo-hi/wk` the toggle prints. Both rates
- *  go through it so the two figures on this panel are computed the same way. */
+ *  go through it so the two figures on this panel are computed the same way.
+ *
+ *  ⚠⚠ ROUND 41 P1 – IT READS THE RUNG NOW, AND IT HAD TO. The medical corridor stops at the top of
+ *  the coach ladder (the owner, 12.09: «в про карьере с большими чеками цены для всех должны быть
+ *  равны»), and this panel derives its own band – so left alone it would have become a second,
+ *  WRONGER spelling of `medicalBillCents`, quoting a wealthy family with an elite coach $54-91/wk
+ *  against an engine that bills her $45-70. It now reads `corridorBandFor`, the ONE predicate the
+ *  till reads, through `coachTierById` – a roster look-up that spends no draw, no seed and no age.
+ *  The sentence around the number is untouched; only the number is. */
 function weeklyBand(band: readonly [number, number]): string {
   const background = game.snapshot?.profile.background
   if (!background) return ''
-  const [cLo, cHi] = ECONOMY.physio.medicalBgFactor[background]
+  const [cLo, cHi] = corridorBandFor(background, coachTierById(game.snapshot?.coachId ?? null))
   return `$${Math.round((band[0] * cLo) / 100)}-${Math.round((band[1] * cHi) / 100)}/wk`
 }
 const physioCostLabel = computed(() => weeklyBand(ECONOMY.physio.retainerPerWeekCents))
@@ -674,14 +696,19 @@ const ledgerGroups = computed<LedgerGroup[]>(() => {
 // 19.08: «Перед ценами на карточках Bills написать "Around", тогда точно не будет вопросов "почему
 // ракетка стоит 920, а мы заплатили 1070?"»
 //
-// HIS TWO NUMBERS RECONCILE EXACTLY, and that is what makes this a copy fix rather than a bug.
-// `kitLinePriceCents` quotes the MID of the family's band times the rung factor: middle family,
+// HIS TWO NUMBERS RECONCILED EXACTLY, and that is what made this a copy fix rather than a bug.
+// `kitLinePriceCents` quoted the MID of the family's band times the rung factor: middle family,
 // `pro` frame = mid($180-280) x 4 = $920.00, which is the figure on his card to the cent. The
-// RECURRING bill is a different arithmetic on the same band - `gearHitsUpTo` draws a fresh
-// `pickInt($180, $280)` per replacement and world.ts multiplies it by the same rung factor - so
-// $1,070 is a $267.50 draw, comfortably inside the band. His own ledger shows the same swing on the
-// line that replaces fastest: four restrings at $127.40 / $136.72 / $160.20 / $156.84 against a card
-// that says $146.00.
+// RECURRING bill is a different arithmetic on the same band - `gearHitsUpTo` draws a fresh `pickInt`
+// per replacement - so $1,070 was a $267.50 draw, comfortably inside the band. His own ledger showed
+// the same swing on the line that replaces fastest: four restrings at $127.40 / $136.72 / $160.20 /
+// $156.84 against a card that says $146.00.
+//
+// ⚠ ROUND 41 P1 RE-PRICED BOTH SIDES AND CHANGED NEITHER ARGUMENT. The band is the RUNG's now and
+// identical for every family, so the middle family's `pro` frame card reads $2,260 rather than $920
+// and a replacement still lands anywhere in [$1,920, $2,600]. The quote and the bill are still two
+// readings of ONE band, which is the whole of why this word is here - the figures above are kept as
+// he reported them, because they are what the qualifier was written from.
 //
 // ⚠ THE ONE THING THIS WORD MUST NOT BE READ AS. Buying UP a rung from this button charges
 // `kitLinePriceCents` to the cent (`setKitGrade`), so the confirm dialog names an exact price and
@@ -753,6 +780,64 @@ const dealTerm = computed(() => {
   if (!d) return ''
   const seasons = SEASON_WORDS[d.seasons] ?? `${d.seasons} seasons`
   return `${seasons} · ${weekLabel(d.fromWeek)} – ${weekLabel(d.untilWeek)}`
+})
+/** ⭐⭐ ROUND 41 #14 – THE BRACKET. His ask, 12.09: «На Bills на все выбранные позиции добавить в
+ *  скобках сколько недель осталось». One function for both surfaces below that carry a REAL term
+ *  (this deal, beside `dealTerm`; a filled ad row, further down) – `untilWeek - week`, never
+ *  re-derived twice. Worded the kit rungs' own way (`({{ view.goodWeeksLeft }} left)`, untouched
+ *  further down) but with two edge words instead of a raw zero: a term in its final week reads
+ *  "(last week)", never "(0 weeks left)" – nobody counts down to a number that means "gone".
+ *
+ *  ⚠ NOT called for the physio retainer (a weekly toggle – no term at all), the academy scholarship
+ *  (reviewed at the season boundary – no end week is ever persisted) or the lifetime ad row
+ *  (`for life`, further down – never lapses BY CONSTRUCTION, round-39.md:296-297). A bracket on any
+ *  of the three would be a countdown this screen invented, not one the engine can honour – recon's
+ *  derivability census, docs/rounds/round-41.md item 14.
+ *
+ *  ⚠ THE FUNCTION ITSELF MOVED TO `shared/dates.ts` beside `weekLabel` (the round's own gate found
+ *  it): the R11-6 week-numbering sweep blesses interpolations by shared-formatter prefix, and a
+ *  formatter defined in one screen is invisible to that list – the same road `monthLabel` took in
+ *  round 34 #19. Imported above; the notes on who gets NO bracket stay here, where the calls are. */
+/** The kit deal's own bracket, beside `dealTerm` – both empty together (no live deal), both live
+ *  together (a live deal always carries a real `untilWeek`, `kitDealView`'s own contract). */
+const dealWeeksLeft = computed(() => {
+  const d = kitDeal.value
+  return d ? weeksLeftBracket(d.untilWeek, week.value) : ''
+})
+
+/** ⭐⭐ ROUND 41 #25 – THE PROJECTED-EMPTY LINE. His report, 12.09: «даже тикер в 12к годовых на
+ *  форму заканчивается раньше года, в августе уже 0» – recon (docs/rounds/round-41.md, "recon
+ *  verdicts folded", item 25) found the ticker working exactly as designed: a SEASON allowance, not
+ *  a subscription, and the corpus reproduces his August to the week (Aurelia's icon rung, wealthy x
+ *  pro, ≈$388/wk -> ≈31 weeks). What the design owed him was never a fix – it was the FORECAST: a
+ *  parent burning the allowance at a steady rate should be told before it hits zero, not after.
+ *
+ *  pace = what she has spent this season / how many weeks of the season have gone by –
+ *  `seasonStartWeek` (world/ledger.ts) is "THE ONE definition of 'this season' for money", the same
+ *  clock `spentCents` itself resets on (`rolloverKitAllowance`, sponsors.ts:104-108, fires on
+ *  `week % WEEKS_PER_YEAR === 0`). Weeks elapsed is read 0-based off that boundary (the season's own
+ *  first week is a zero-week-old season), which is also why the guard below reads `< 4` and not `< 5`.
+ *
+ *  ⚠ THE FOUR-WEEK FLOOR IS PART OF THE DESIGN, NOT A NICETY. `spentCents` over one or two weeks is
+ *  noise – a single racquet bought in week one would print a pace nothing about her real season
+ *  supports, and a parent who checked the card that week would be told a number this screen could
+ *  not stand behind. Refusing to forecast is the honest answer until there is enough season to read.
+ *
+ *  ⚠ AND A PROJECTION PAST THE SEASON'S OWN END IS SILENCE, NOT A LONGER COUNTDOWN. The allowance
+ *  resets at the boundary (`rolloverKitAllowance` again), so a pace that would not empty the pot
+ *  before the reset never actually runs out – "at this pace it runs out" would be a sentence about a
+ *  week that was never going to happen. */
+const kitAllowanceProjectedEmptyWeek = computed<number | null>(() => {
+  const d = kitDeal.value
+  if (!d || d.remainingCents <= 0) return null
+  const seasonStart = seasonStartWeek(week.value)
+  const weeksElapsed = week.value - seasonStart
+  if (weeksElapsed < 4) return null
+  const pace = d.spentCents / weeksElapsed
+  if (pace <= 0) return null
+  const projectedWeek = week.value + Math.ceil(d.remainingCents / pace)
+  if (projectedWeek >= seasonStart + WEEKS_PER_YEAR) return null
+  return projectedWeek
 })
 
 // --- THE ACADEMY, WHICH PAYS AND IS NEVER SEEN (backlog #90, measured 09.08) ----------------------
@@ -1083,6 +1168,35 @@ function canBuy(row: ShopRowView): boolean {
 function isBuilding(row: ShopRowView): boolean {
   return row.readyWeek !== null
 }
+/** ⭐ ROUND 41 #28 – THE BUILD RING. «добавим в уголке картинки наш круглый гаудж… чтобы он
+ *  показывал в процентах прогресс стройки от 0 до 100» – the export's own ProgressRing (Home's
+ *  condition ring), at the NEW 36px he asked for («чуть меньше размером, чем на главной»), on the
+ *  art corner of every tile that builds to order – academy stages, boats, planes alike, because
+ *  the predicate is the engine's `readyWeek`/`buildWeeks` pair and never a family list.
+ *  Progress is derived, zero state: the weeks already served over the row's own `buildWeeks`.
+ *  Clamped both ends – a row seen on its order week reads 0, never a negative.
+ *
+ *  ⚠ AND IT HIDES AT 100%, his second word on the item: «когда заполнен на 100% (построено) больше
+ *  не надо показывать, только в процессе стройки». The markup's `v-if` carries it. The quote lives
+ *  HERE rather than beside that `v-if` because `tests/template-copy-rules.test.ts` forbids Cyrillic
+ *  anywhere in the markup block – strings and comments alike – and its own failure message names
+ *  this remedy: move the owner's quote to the script side.
+ *
+ *  ⚠⚠ AND THE OPENING TAG MAY NOT BE SPELLED IN THIS FILE'S SCRIPT AT ALL, which is the second half
+ *  of the same lesson and cost a red run to learn. That test slices from the FIRST literal opening
+ *  tag to the LAST closing one, so one in a script comment moves the start marker up and hands the
+ *  scan ~670 lines of script – whereupon every owner quote in this block reads as an offender. Same
+ *  family as round 36 P2-1's «neither HTML comment delimiter may be spelled inside one». */
+function buildProgress(row: ShopRowView): number {
+  if (row.readyWeek === null || !row.buildWeeks) return 0
+  const served = row.buildWeeks - (row.readyWeek - week.value)
+  return Math.max(0, Math.min(1, served / row.buildWeeks))
+}
+/** The ring's spoken sentence – the visible figure is the ring's own default slot (N%). DRAFT for
+ *  the owner's read, listed on the ledger item. Week through `weekLabel`, per R11-6. */
+function buildRingLabel(row: ShopRowView): string {
+  return `${Math.round(buildProgress(row) * 100)}% built – ready ${weekLabel(row.readyWeek ?? 0)}`
+}
 /** The stage this rung is waiting on, by NAME – the label off the row it names, never an id on
  *  screen. Empty when the requirement is met or there is none. */
 function requiresLabel(row: ShopRowView): string {
@@ -1100,6 +1214,13 @@ function requiresLabel(row: ShopRowView): string {
  *  интерфейсе»); the wait itself is whole weeks and the due date the row prints once ordered is the
  *  engine's own. */
 function buildWaitLine(row: ShopRowView): string {
+  // ⚠ ROUND 41 #24: the academy's stages build in WEEKS (courts 6, staff 3), and rounding 6 weeks
+  // gave «about 1 months» – the wrong scale wearing broken grammar. Builds under ~2 months speak
+  // in weeks; the months and years sentences stay byte-identical for boats and planes (their
+  // shortest build is 52 weeks, so the weeks branch cannot reach them).
+  if (row.buildWeeks < 9) {
+    return `Built to order – about ${row.buildWeeks} ${row.buildWeeks === 1 ? 'week' : 'weeks'} from the week it is ordered.`
+  }
   const months = Math.round((row.buildWeeks / 52) * 12)
   if (months < 24) return `Built to order – about ${months} months from the week it is ordered.`
   return `Built to order – about ${Math.round(months / 12)} years from the week it is ordered.`
@@ -1730,10 +1851,19 @@ function shopRowArtWide(row: ShopRowView): boolean {
 // line, so what was paid is still X - Y.
 //
 // ⚠ THAT LEAVES `paid $N` ON `investment` AND `business` ONLY – still unnamed, still kept. And the
-// `On order` row (water and air are BUILT to order) keeps its own `paid $N` untouched, as it was
-// under round 36: on that card there is no `Worth now` and no gain line, so the paid figure is the
-// ONLY money on it – removing it there fails the very check that let it go here, and «Ordered, not
-// bought» is the shelf's own word for a rung that is not yet an owned one.
+// `On order` row (water and air are BUILT to order) kept its own `paid $N` untouched THROUGH ROUND
+// 40, as it was under round 36: on that card there was no `Worth now` and no gain line, so the paid
+// figure was the ONLY money on it – removing it there would have failed the very check that let it
+// go here, and «Ordered, not bought» is the shelf's own word for a rung that is not yet an owned one.
+//
+// ⚠⚠ ROUND 41 #2 SUPERSEDES THIS FOR THE `On order` ROW ONLY, and the history above is kept rather
+// than deleted because the reasoning was sound at the time. The owner, 12.09: «Не убрали paid from
+// water на заказанных, надо и другие категории проверить» – he read the ordered card's `paid $N` as
+// the SAME leftover round 39 #4 removed from the owned card, not as a figure this screen had
+// deliberately kept. His report is the newer ruling, so the meta is now gone from the `On order`
+// StatRow too – see the template, `label="On order"`, no `:meta` any more. It is one unconditional
+// site, so water (boats) and air (planes) both lose it at once, which is the "other categories"
+// half of his ask; `investment` and `business` were never his target and are untouched by this.
 const SHELF_NO_PAID_META: ShopRowView['family'][] = ['house', 'car', 'academy', 'boat', 'plane']
 /** ⚙ ROUND 35 #7, HIS RULING, 03.09: «в строке "worth now" показывать текущую цену, а цену покупки
  *  убрать совсем, раз прибавка и так видна. – верно.» The `Worth now` row's VALUE has always been
@@ -2043,7 +2173,10 @@ function shopRowCornerAction(row: ShopRowView): boolean {
         <div v-if="kitDeal" class="kit-deal">
           <div class="kit-deal-head">
             <span class="kit-deal-brand">{{ kitDeal.brand }}</span>
-            <span class="kit-deal-term">{{ dealTerm }}</span>
+            <!-- ⭐⭐ ROUND 41 #14 – the bracket, beside the term it counts down. `dealWeeksLeft` in
+                 the script block carries his ask and the reasoning; `weeksLeftBracket` is the one
+                 function both this row and the ad portfolio's filled rows call. -->
+            <span class="kit-deal-term">{{ dealTerm }} {{ dealWeeksLeft }}</span>
           </div>
           <p class="kit-deal-note">
             They supply her {{ dealCovers }}, and she enters at least
@@ -2056,6 +2189,13 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             :value="formatCents(kitDeal.remainingCents)"
             :tone="kitDeal.remainingCents > 0 ? 'positive' : 'negative'"
           />
+          <!-- ⭐⭐ ROUND 41 #25 – THE PROJECTED-EMPTY LINE. `kitAllowanceProjectedEmptyWeek` in the
+               script block carries his report, the recon and the two guards (four weeks of season
+               read, the projection still inside it); mutually exclusive with the spent-out note
+               below by construction (one wants `remainingCents > 0`, the other `=== 0`). -->
+          <p v-if="kitAllowanceProjectedEmptyWeek !== null" class="kit-deal-note is-projected">
+            At this pace it runs out around {{ weekLabel(kitAllowanceProjectedEmptyWeek) }}.
+          </p>
           <p v-if="kitDeal.remainingCents === 0" class="kit-deal-note is-spent">
             The season's allowance is spent. Her {{ dealCovers }} are billed to the family at full
             price until the new season starts – the deal still keeps them fresh, and it still pays
@@ -2212,7 +2352,10 @@ function shopRowCornerAction(row: ShopRowView): boolean {
           <p v-else-if="row.state === 'filled'" class="ad-slot-note">
             {{ formatCents(row.cashCents ?? 0) }} a year ·
             {{ (row.termYears ?? 1) === 1 ? 'one year' : `${row.termYears} years` }} · runs to
-            {{ weekLabel(row.untilWeek ?? 0) }}
+            <!-- ⭐⭐ ROUND 41 #14 – the same bracket the kit deal carries, off the same function
+                 (`weeksLeftBracket`, script block). The lifetime row above has no `untilWeek` at
+                 all and takes the other branch, so it is never asked for one. -->
+            {{ weekLabel(row.untilWeek ?? 0) }} {{ weeksLeftBracket(row.untilWeek ?? 0, week) }}
           </p>
           <p v-else-if="row.state === 'open'" class="ad-slot-note">
             A letter here writes about {{ formatCents(row.openCashCents ?? 0) }} a year at her
@@ -2457,6 +2600,22 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             <div v-if="shelfArtUrl(row.id)" class="card-art shop-row-art">
               <img :src="shelfArtUrl(row.id) ?? undefined" alt="" />
               <span class="card-art-scrim" aria-hidden="true"></span>
+              <!-- ROUND 41 #28 – the build ring, top-right of the painting, only while the engine
+                   says the thing is still being built. The corner choice is the coordinator's
+                   (the scrim's name gradient owns the bottom) – one line to move if his eye says
+                   otherwise. ⚠ AND NEVER AT 100%: a full circle is not progress, it is a delivery
+                   the tick has not banked yet (the stale over-due load) – the tile goes clean
+                   instead of wearing a finished dial. His second word on the item, verbatim, is on
+                   the script side above `buildProgress` (this file's templates carry no Cyrillic –
+                   tests/template-copy-rules.test.ts). -->
+              <ProgressRing
+                v-if="isBuilding(row) && row.buildWeeks && buildProgress(row) < 1"
+                class="build-ring"
+                :size="36"
+                :value="buildProgress(row)"
+                :label="buildRingLabel(row)"
+                on-art
+              />
             </div>
             <div class="shop-row-body">
               <div class="shop-row-head">
@@ -2549,11 +2708,19 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                    honest face of it (R10-16: a disabled control and a refused click tell one
                    story). What the row says instead is the date, which is the whole point of a
                    commission. -->
+              <!-- ⚠⚠ ROUND 41 #2 – THE `paid $N` META IS GONE. The owner's 12.09 report (quoted
+                   verbatim on the ledger item and in the script block above `SHELF_NO_PAID_META` -
+                   not here, the copy law bans Cyrillic inside a template, comments included) reads
+                   this exact caption as the leftover round 39 #4 removed from the owned card
+                   above; his report supersedes that reasoning. No `:meta` at all now, rather than
+                   an empty one - StatRow's own rule
+                   (`v-if="meta || $slots.meta"`) is what keeps a blank prop from drawing a hairline
+                   nobody asked for. UNCONDITIONAL, so water (boats) and air (planes) both lose it at
+                   once - the only two families that reach this card today. -->
               <div v-if="isBuilding(row)" class="shop-row-owned is-building">
                 <StatRow
                   class="money-row"
                   label="On order"
-                  :meta="`paid ${formatCents(row.paidCents ?? 0)}`"
                   :value="weekLabel(row.readyWeek ?? 0)"
                   tone="plain"
                 />
@@ -3808,6 +3975,15 @@ function shopRowCornerAction(row: ShopRowView): boolean {
   position: absolute;
   inset: 0;
   background: linear-gradient(180deg, rgb(0 0 0 / 0%) 55%, rgb(0 0 0 / 45%) 100%);
+}
+
+/* ROUND 41 #28 – the build ring rides the painting's top-right corner (the scrim's name gradient
+   owns the bottom); `.card-art`'s own `position: relative` is the anchor, `on-art` brings the
+   ring's photograph shadow. */
+.card-art .build-ring {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 
 /* On the two Bills cards the band sits inside a padded card, so it cancels that padding to reach

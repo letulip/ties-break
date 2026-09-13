@@ -92,6 +92,14 @@ import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type AdOfferTerms, type KitOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠⚠ ROUND 41 #15 (12.09) – THE AGE THE **ADULT** SHELF OPENS AT, and this file's careers are all
+ *  about the adult ladder. The owner opened the letters at SIXTEEN – «реклама открывается с 16
+ *  (юниорские суммы, реже) … согласен» – so `fromAgeYears` is 16 and no longer means what this
+ *  fixture meant by it.
+ *  ⚠ NOT ONE ASSERTION MOVED: every career below is walked to exactly the week it was walked to
+ *  before the item, so every number it measures is byte-identical. The junior band is
+ *  `tests/round41-ad-junior.test.ts`'s subject, and the two files share no arm. */
+const ADULT_AGE = AD.junior.untilAgeYears
 /** ⚠ THE CATALOGUE BECAME A LADDER (round 29 part two #19/#20) AND THEN A PORTFOLIO (part four
  *  P6/§8). Every claim in this file is about the shipped watch deal's SHAPE – a watchmaker,
  *  $20,000, two shoot weeks over a one-year term – and papers exactly like it are persisted in
@@ -134,7 +142,7 @@ function pushBook(world: WorldState): void {
 function adultPro(seed: string) {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
   const rng = resumeMain(world.rngMain)
-  while (ageOf(world) < AD.fromAgeYears) tickWeek(world, rng)
+  while (ageOf(world) < ADULT_AGE) tickWeek(world, rng)
   pushBook(world)
   world.onRampCleared = { itf: true, wta: true }
   recomputeKidRank(world)
@@ -298,7 +306,17 @@ describe('§1 a cash sponsor deal', () => {
     offer.deadlineWeek = world.week + AD.decideWeeks - 1
     expect(ageOf(world), 'the arm really is under eighteen').toBeLessThan(ECONOMY.kidShare.fromAgeYears)
 
-    expect(kidPrizeShareBps(ageOf(world)), 'and the PRIZE ramp really is dormant at this age').toBe(0)
+    // ⚠⚠ RE-AIMED BY ROUND 41 #27 (12.09), AND THE PREMISE WAS RESTATED RATHER THAN DELETED. This
+    // read «and the PRIZE ramp really is dormant at this age» with `toBe(0)`, which was the contrast
+    // that made the arm mean something: one rule had a birthday in it and the other did not. The
+    // owner has since ruled that her prize share starts at her first W-series cheque whatever her
+    // age – «призовые падают на её счёт с первого старта W-серии независимо от возраста – согласен»
+    // – so the ramp has a FLOOR below eighteen instead of a zero. The contrast survives intact: the
+    // prize share is still a function of her age (it climbs to a cap at 26) and the manager's fee
+    // still has no age argument at all.
+    expect(kidPrizeShareBps(ageOf(world)), 'the PRIZE ramp still moves with her age').toBeLessThan(
+      kidPrizeShareBps(26),
+    )
 
     const kidBefore = world.kidFundsCents ?? 0
     const fundsBefore = world.fundsCents

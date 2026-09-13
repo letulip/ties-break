@@ -88,7 +88,9 @@ if (!CSV) {
 }
 
 for (const bg of BACKGROUNDS) {
-  const mid = coachCorridorMid(bg)
+  // ⚠ round 41 P1: the corridor is rung-dependent now. This header line describes the corridored
+  // rungs (self/budget/middle); the per-rung rows below carry their own factor.
+  const mid = coachCorridorMid(bg, 'middle')
   if (!CSV) {
     console.log('')
     console.log(`  ${bg.toUpperCase()} corridor  (x${mid.toFixed(3)} — band [${ECONOMY.wealthCorridor[bg].join(', ')}])`)
@@ -202,7 +204,7 @@ for (const bg of BACKGROUNDS) {
 // The CSV arm: one row per cell, everything, for diffing across a re-price.
 if (CSV) {
   for (const bg of BACKGROUNDS) {
-    const mid = coachCorridorMid(bg)
+    const mid = coachCorridorMid(bg, 'middle')
     const inc0 = meanIncome(bg, 0)
     const inc4 = meanIncome(bg, 4)
     for (const { age, label } of AGES) {

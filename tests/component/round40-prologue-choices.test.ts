@@ -46,8 +46,8 @@ import '../../src/style.css'
 import { assertLegible, contrastRatio, effectiveBackground, parseColor } from './contrast'
 import { setViewport, PHONE } from './fits'
 import PrologueCardView from '../../src/components/PrologueCard.vue'
-import ChildhoodPrologue, { PROLOGUE_LANDING_MS } from '../../src/components/ChildhoodPrologue.vue'
-import { landing } from './prologueLanding'
+import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
+import { finishCard } from './prologueLanding'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import {
@@ -576,10 +576,13 @@ describe('⭐⭐⭐ item 2 – the second group appears when the first is answer
   async function press(wrapper: ReturnType<typeof mount>, label: string): Promise<void> {
     const button = wrapper.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
     expect(button, `no «${label}»: ${wrapper.text().slice(0, 140)}`).toBeTruthy()
-    // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED – the item this same file's third block builds.
-    // An answer that FINISHES a card is held for `PROLOGUE_LANDING_MS` before the walk advances, so
-    // this helper steps that clock instead of waiting on it.
-    await landing(() => button!.trigger('click'))
+    // ⚠⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED – and the item it used to serve is the one this same
+    // file's third block builds, which round 41 has now retired. The 200 ms hold is gone: a radio
+    // only selects, so a finished card waits on Proceed instead of on a clock. This presses the
+    // answer and then the Proceed it produced (`finishCard`). ⚠ ITEM 2'S OWN CLAIM IS UNTOUCHED –
+    // the disclosure still happens on the press, with no Proceed in between: see the acceptance
+    // below, which asserts the ask arrives while the card is still up.
+    await finishCard(wrapper, () => button!.trigger('click'))
     await Promise.resolve()
     await wrapper.vm.$nextTick()
   }
@@ -696,36 +699,50 @@ describe('⭐⭐⭐ item 2 – the second group appears when the first is answer
 })
 
 // =================================================================================================
-// ⭐⭐⭐ ITEM 3 – THE CARD LANDS BEFORE IT LEAVES
+// ⭐⭐⭐ ITEM 3, RE-RULED BY ROUND 41 #9 – THE CARD DOES NOT LEAVE AT ALL UNTIL Proceed IS PRESSED
 // =================================================================================================
 //
-// THE OWNER, 08.09, once wave A2 had painted the ball: the card should «land» rather than vanish,
-// and he named the size of the hold himself. His sentence is in docs/rounds/round-40.md, item 3,
-// which is where his Russian is allowed to live.
+// ⚠⚠ WHAT THIS BLOCK USED TO ASSERT, AND WHY IT IS RE-AIMED RATHER THAN DELETED OR LOOSENED.
+// Round 40 #3 was the LANDING HOLD: the owner asked, on 08.09, that the card «land» rather than
+// vanish, and the fix held a finished card for `PROLOGUE_LANDING_MS` (200) so the ball a press had
+// just filled could be seen. The diagnosis was the promo recorder's – on the eight, the nine and
+// the ten the card's one question IS the card, so the answer that filled the ball was the answer
+// that moved the screen, and the affordance was never on screen for a frame.
 //
-// ⚠⚠ AND IT WAS THE PROMO RECORDER WHO MET IT, NOT A TESTER, which is the whole diagnosis. On the
-// eight, the nine and the ten the card's ONE question IS the card, so the answer that fills the ball
-// is the same answer that moves the screen: the affordance the two waves above built was never on
-// screen long enough for a camera – or a player – to see it register.
+// ⭐ ROUND 41 #9 ANSWERS THE SAME COMPLAINT WITH A CONTROL INSTEAD OF A CLOCK, AND IT IS HIS OWN
+// RULING, NOT AN AGENT'S READ – «8+9 as cut, верно» (docs/rounds/round-41.md, «The owner's
+// rulings»). His sentence for the item: «радиобатон на прологе не должен переключать сразу, он
+// только про выбор … при выборе всех будет появляться наша желтая кнопка proceed». A radio that
+// never advances makes the hold unreachable by construction: the taken answer stays on screen for
+// as long as the player looks at it, which is strictly more than 200 ms, and the player – rather
+// than a timer – decides when the card leaves. So the ITEM survives, the MECHANISM is retired, and
+// the four arms below are re-aimed onto what replaced it rather than dropped.
 //
-// ⚠ THE CLAIMS ARE NARROW ON PURPOSE, because the hold is presentation and nothing else. The answer
-// is written into the run the instant the control is pressed and `cardAnswered` decides on its own
-// that the card is finished; what is deferred is the ADVANCE. So the four arms are: the taken state
-// is on screen while the card has NOT moved; it moves when the hold elapses and not a millisecond
-// before; an unmount mid-hold cancels it and creates nothing; and a press that does not finish a
-// card is not held at all.
+// ⚠ THE FOUR ARMS, RE-AIMED ONE FOR ONE:
+//   * the eight  – the press that answers the card now schedules NOTHING and moves NOTHING; the
+//                  ball is filled, the card is still there, and Proceed has appeared. Pressing
+//                  Proceed is what advances.
+//   * the eleven – the year's answer only DISCLOSES (item 2, unchanged, and still no Proceed while
+//                  the ask is open); the ask's answer FINISHES the card, and that press too leaves
+//                  the card standing with Proceed under it.
+//   * the six    – the way on off a quiet card is untouched and advances on the press. It is the
+//                  proof Proceed did not leak onto a card that selects nothing, which is round 40
+//                  #1's negative arm still holding.
+//   * the last   – an unmount after the answering press advances nothing and creates nothing,
+//                  because there is nothing in flight to outlive the screen; and the career is made
+//                  by the Proceed on the thirteenth and by nothing else.
 //
 // ⚠ MUTATION-VERIFIED, like everything above it:
-//   * the hold removed (`land(...)` replaced by `await advanceYear(age)`) -> the eight's arm goes
-//     red on «the card left before the answer could be seen», and the eleventh's second half with
-//     it.
-//   * `onUnmounted(clearLanding)` deleted -> the unmount arm goes red twice: the timer is still
-//     pending after the card is gone, and the career gets created for a childhood nobody is in.
-//   * the hold applied to EVERY finished-or-not press (the `cardAnswered` guard moved below `land`)
-//     -> the disclosure arm goes red: the second question waits on a clock.
-//   * the hold applied to the way on as well (the `id === null` arm deleted) -> the quiet-card arm
-//     goes red on a timer that should not exist.
-describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answer to be seen', () => {
+//   * the landing hold put back (`land(() => void advanceYear(age))` at the foot of `answer()`) ->
+//     the eight's arm goes red on «the card advanced on the answer itself», and the last card's on
+//     a career created by a press that should only select.
+//   * `cardFinished` loosened to `cardAnswered` alone -> the five would offer Proceed before an
+//     origin is taken; asserted by name in the block below.
+//   * the `id !== null` return deleted from `answer()` (i.e. a selection advancing again) -> the
+//     eight's and the eleven's arms both go red.
+//   * Proceed rendered unconditionally (its `v-if` dropped) -> the quiet-card arm goes red on a
+//     second way on, and the eleven's on a Proceed offered while the ask is still open.
+describe('⭐⭐⭐ item 3, re-ruled – a radio never advances, and Proceed is what does', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     document.body.innerHTML = ''
@@ -740,12 +757,21 @@ describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answe
   const titleOf = (age: number) => PROLOGUE_CARDS.find((c) => c.age === age)!.title
   const onScreen = (wrapper: ReturnType<typeof mount>) => wrapper.find('.prologue-title').text()
   /** ⚠ ONLY `setTimeout` / `clearTimeout` – `vi.useFakeTimers()` with no argument also takes `Date`,
-   *  `performance` and `requestAnimationFrame`, none of which this item touches. */
+   *  `performance` and `requestAnimationFrame`, none of which this item touches.
+   *
+   *  ⚠⚠ AND IT IS KEPT AFTER ROUND 41 RETIRED THE HOLD, WHICH IS THE POINT OF KEEPING IT. The arms
+   *  below assert `getTimerCount() === 0` on presses that used to schedule one, so the fake clock is
+   *  now the instrument that proves the hold is GONE rather than moved somewhere else. A mutation
+   *  that put `land(...)` back is caught here and nowhere else in the repository. */
   const holdTheClock = () => vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
 
-  /** Answer whatever card is up the cheapest way there is, and let it land. ⚠ THE ASK IS ALWAYS
+  /** Answer whatever card is up the cheapest way there is, and finish it. ⚠ THE ASK IS ALWAYS
    *  DECLINED, so this road buys no tennis: a weekend is a takeover with the real match viewer on it
-   *  and none of the arms below is about weekends. */
+   *  and none of the arms below is about weekends.
+   *
+   *  ⚠ RE-AIMED BY ROUND 41 #9: `finishCard` presses the Proceed the answer produced, where it
+   *  produced one. On a card with two questions the first call only discloses and the second is what
+   *  finishes it, so the loop in `walkTo` reaches every card the same way it always did. */
   async function answerCurrent(wrapper: ReturnType<typeof mount>): Promise<void> {
     const groups = wrapper.findAll('[role="radiogroup"]')
     const target = groups.length
@@ -756,7 +782,7 @@ describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answe
         })()
       : wrapper.findAll('.prologue-answer')[0]
     expect(target, `nothing to press: ${wrapper.text().slice(0, 140)}`).toBeTruthy()
-    await landing(() => target.trigger('click'))
+    await finishCard(wrapper, () => target.trigger('click'))
     await wrapper.vm.$nextTick()
   }
 
@@ -769,41 +795,69 @@ describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answe
     throw new Error(`the walk never reached the card at ${age}: ${wrapper.text().slice(0, 140)}`)
   }
 
-  // ⭐⭐⭐ THE ACCEPTANCE, ON THE FIRST OF THE THREE CARDS THE RECORDER NAMED.
-  it('⭐⭐⭐ the eight shows the answer it took, and only then moves on', async () => {
+  // ⭐⭐⭐ THE ACCEPTANCE, ON THE FIRST OF THE THREE CARDS THE RECORDER NAMED – and on round 41's
+  // reading of it, the card the OWNER named too: «я на радиобатон нажал и не ожидал, что меня
+  // переключит дальше сразу» (item 8, which is the same surprise from the other side).
+  it('⭐⭐⭐ the eight takes the answer, keeps the card, and offers Proceed', async () => {
     stubStore()
     const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
     await walkTo(wrapper, 8)
+    expect(wrapper.find('.prologue-proceed').exists(), 'Proceed is up before anything is answered').toBe(false)
 
     holdTheClock()
     await wrapper.findAll('.prologue-choice')[1].trigger('click')
     await nextTick()
 
-    // 1. THE ANSWER IS TAKEN AND THE CARD IS STILL THERE – which is the defect, stated as a pass.
-    expect(onScreen(wrapper), 'the card left before the answer could be seen').toBe(titleOf(8))
+    // 1. THE ANSWER IS TAKEN AND THE CARD IS STILL THERE – which is his complaint, stated as a pass.
+    expect(onScreen(wrapper), 'the radio advanced the walk on its own').toBe(titleOf(8))
     expect(
       wrapper.findAll('.prologue-choice')[1].attributes('aria-checked'),
-      'the card is held, but the ball it is holding is empty',
+      'the card stayed, but the ball it is showing is empty',
     ).toBe('true')
-    // ...and the thing holding it is one timer, so the hold is a hold and not a slow render.
-    expect(vi.getTimerCount(), 'nothing is actually holding the card').toBe(1)
+    // ⚠ AND NOTHING IS IN FLIGHT. This is the round-40 hold's retirement asserted rather than
+    // assumed: a press that only selects schedules no advance at all, so there is no timer that
+    // could move the screen after the fact.
+    expect(vi.getTimerCount(), 'something is still holding the card on a clock').toBe(0)
 
-    // 2. AND IT LANDS ON THE NUMBER THE COMPONENT DECLARES, not on a number this file invented.
-    vi.advanceTimersByTime(PROLOGUE_LANDING_MS - 1)
+    // 2. AND THE WAY ON HAS APPEARED, which is the whole of item 9.
+    const proceed = wrapper.find('.prologue-proceed')
+    expect(proceed.exists(), 'the card is answered and offers no way on').toBe(true)
+    expect(proceed.attributes('role'), 'Proceed is drawn as a choice').toBeUndefined()
+    expect(proceed.attributes('aria-checked'), 'Proceed reports a taken state it does not have').toBeUndefined()
+    await proceed.trigger('click')
     await nextTick()
-    expect(onScreen(wrapper), 'the hold is shorter than the constant says it is').toBe(titleOf(8))
-    vi.advanceTimersByTime(1)
-    await nextTick()
-    expect(onScreen(wrapper), 'the card never advanced at all – the hold is a stall').not.toBe(titleOf(8))
-    expect(vi.getTimerCount(), 'the hold did not clean up after itself').toBe(0)
+    expect(onScreen(wrapper), 'Proceed did not advance the walk').not.toBe(titleOf(8))
     wrapper.unmount()
   })
 
-  // ⚠⚠ ONLY WHERE THERE IS SOMETHING TO HOLD FOR. The eleventh carries two questions, so the year's
-  // own answer leaves the card standing and DISCLOSES the second one (item 2, above): a hold there
-  // would be 200ms of nothing before a screen that was never going to move. The same card's second
-  // answer does finish it, and is held – so this arm is both halves of the rule on one screen.
-  it('⚠⚠ a press that only discloses the second question is not held – and the one that finishes it is', async () => {
+  // ⚠⚠ AND THE FIVE IS THE ONE CARD WHOSE PREDICATE IS NOT `cardAnswered` – see `cardFinished` in
+  // ChildhoodPrologue.vue. That function reads true for the five from the moment it arrives (the
+  // card has no `options`, so `yearAt` returns its own row), and the five's real decision is its
+  // ORIGIN. Keyed on `cardAnswered` alone the very first screen of the game would offer a way on
+  // before the player had chosen where the family is from.
+  // MUTATION: `cardFinished` reduced to `cardAnswered(age, run)` -> this reddens on the first line.
+  it('⚠⚠ the five offers Proceed only once the family has an origin', async () => {
+    stubStore()
+    const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
+    await nextTick()
+    expect(onScreen(wrapper), 'the walk is not on the five').toBe(titleOf(5))
+    expect(wrapper.find('.prologue-proceed').exists(), 'the five offers a way on with no origin taken').toBe(false)
+
+    await wrapper.findAll('.prologue-choice')[1].trigger('click')
+    await nextTick()
+    expect(onScreen(wrapper), 'the origin advanced the walk on its own').toBe(titleOf(5))
+    expect(wrapper.find('.prologue-proceed').exists(), 'the origin is taken and there is no way on').toBe(true)
+    wrapper.unmount()
+  })
+
+  // ⚠⚠ THE CARD WITH TWO QUESTIONS, AND Proceed WAITS FOR BOTH. The eleventh's own answer only
+  // DISCLOSES the tournament question (item 2, above and untouched), so a way on offered there would
+  // be inviting the player off a screen that is still asking. The ask's answer is what finishes the
+  // card – and that press, too, leaves the card exactly where it is.
+  // ⚠ THE HALF THIS ARM USED TO MAKE – «the disclosure is not held, the finishing press is» – is the
+  // same claim with the clock taken out of it: NEITHER press moves anything, and what tells them
+  // apart now is whether Proceed is on the screen afterwards.
+  it('⚠⚠ the eleventh discloses on one answer and offers Proceed only after the other', async () => {
     stubStore()
     const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
     await walkTo(wrapper, 11)
@@ -812,34 +866,52 @@ describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answe
     await wrapper.findAll('.prologue-choice')[0].trigger('click')
     await nextTick()
     expect(vi.getTimerCount(), 'the disclosure was put behind a clock').toBe(0)
-    expect(wrapper.find('.prologue-ask').exists(), 'the second question is waiting on a timer').toBe(true)
+    expect(wrapper.find('.prologue-ask').exists(), 'the second question did not arrive').toBe(true)
     expect(onScreen(wrapper), 'answering the year left the card').toBe(titleOf(11))
+    expect(
+      wrapper.find('.prologue-proceed').exists(),
+      'the card offers a way on while its second question is still open',
+    ).toBe(false)
 
     // ...and the ask's own answer, which IS the one that finishes this card
     await wrapper.findAll('.prologue-choice')[3].trigger('click')
     await nextTick()
-    expect(vi.getTimerCount(), 'the answer that finishes the card is not held').toBe(1)
-    expect(onScreen(wrapper), 'the card left before the answer could be seen').toBe(titleOf(11))
+    expect(vi.getTimerCount(), 'the finishing answer was put behind a clock').toBe(0)
+    expect(onScreen(wrapper), 'the finishing answer advanced the walk on its own').toBe(titleOf(11))
     expect(
       wrapper.findAll('.prologue-choice')[3].attributes('aria-checked'),
-      'the card is held with nothing marked on it',
+      'the card stayed with nothing marked on it',
     ).toBe('true')
-    vi.advanceTimersByTime(PROLOGUE_LANDING_MS)
+    const proceed = wrapper.find('.prologue-proceed')
+    expect(proceed.exists(), 'both questions are answered and there is no way on').toBe(true)
+    await proceed.trigger('click')
     await nextTick()
-    expect(onScreen(wrapper), 'both questions were answered and the card never moved').not.toBe(titleOf(11))
+    expect(onScreen(wrapper), 'both questions were answered, Proceed pressed, and the card never moved').not.toBe(
+      titleOf(11),
+    )
     wrapper.unmount()
   })
 
-  // ⚠⚠ AND THE CONTROL THAT ONLY ADVANCES IS NOT HELD EITHER – item 1's negative arm arriving from
-  // the other side. A quiet card's way on carries no `aria-checked`, no mark and no group, so there
-  // is no taken state for a hold to show; delaying it would only make the walk feel slow.
-  it('⚠⚠ the way on off a quiet card is not held – it has no taken state to show', async () => {
+  // ⚠⚠ AND THE QUIET CARD IS UNTOUCHED, WHICH IS THE ARM THAT PROVES Proceed DID NOT LEAK. The six
+  // selects nothing, so there is nothing for a way on to wait behind: it keeps the ONE control it
+  // always had, that control still advances on the press, and no second way on appeared beside it.
+  // Item 1's negative arm, still holding after two rounds have rewritten the column around it.
+  it('⚠⚠ the way on off a quiet card is untouched – one control, and it still advances', async () => {
     stubStore()
     const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
     await walkTo(wrapper, 6)
-    const ways = wrapper.findAll('.prologue-answers button')
-    expect(ways, 'the six is not the quiet card this arm is about').toHaveLength(1)
+    // ⚠ «ONE CONTROL» IS NOW «ONE WAY ON», AND THE DIFFERENCE IS ROUND 41 #8 RATHER THAN A LOOSENING.
+    // The six is the second card, so it also carries the way BACK (`.prologue-back`) – a quiet
+    // control at the foot of the column, in the slot the first card gives to the way out. What this
+    // arm is about is unchanged: the card that SELECTS NOTHING has exactly one control that moves
+    // the walk forward, and it is not a Proceed.
+    const ways = wrapper.findAll('.prologue-answers button').filter((b) => !b.classes('prologue-back'))
+    expect(ways, 'the six is not the one-way-on card this arm is about').toHaveLength(1)
     expect(ways[0].attributes('role'), 'the way on is a choice on this card').toBeUndefined()
+    expect(
+      wrapper.find('.prologue-proceed').exists(),
+      'Proceed leaked onto a card that selects nothing – there are two ways on',
+    ).toBe(false)
 
     holdTheClock()
     await ways[0].trigger('click')
@@ -849,10 +921,15 @@ describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answe
     wrapper.unmount()
   })
 
-  // ⚠⚠ AND IT CANNOT OUTLIVE THE SCREEN IT BELONGS TO. Measured on the LAST card, because that is
-  // where the advance has a consequence outside this component: it creates the career. A hold that
-  // survived its own unmount would make a career for a childhood the player had walked out of.
-  it('⚠⚠ a walk unmounted mid-hold advances nothing, creates nothing and warns about nothing', async () => {
+  // ⚠⚠ AND THE CAREER IS MADE BY Proceed AND BY NOTHING ELSE. Measured on the LAST card, because
+  // that is where the advance has a consequence outside this component: it creates the career.
+  //
+  // ⚠ THIS ARM USED TO ASSERT THAT AN UNMOUNT MID-HOLD CANCELLED THE TIMER (`onUnmounted
+  // (clearLanding)`). Round 41 retired the hold, so the same hazard is asserted at its root instead:
+  // after the answering press there is nothing in flight AT ALL, so a walk the player leaves cannot
+  // make a career for a childhood nobody is in – and the thing that does make one is a press the
+  // player has to take deliberately.
+  it('⚠⚠ answering the last card creates nothing – pressing Proceed on it is what makes the career', async () => {
     const game = stubStore()
     const wrapper = mount(ChildhoodPrologue, { attachTo: document.body })
     await walkTo(wrapper, 13)
@@ -863,18 +940,32 @@ describe('⭐⭐⭐ item 3 – a finished card is held long enough for the answe
     holdTheClock()
     await wrapper.findAll('.prologue-choice')[1].trigger('click')
     await nextTick()
-    expect(vi.getTimerCount(), 'the last card is not held like every other').toBe(1)
-    expect(game.newCareer, 'the career was made before the card had even landed').not.toHaveBeenCalled()
+    expect(vi.getTimerCount(), 'the last card put an advance on a clock').toBe(0)
+    expect(game.newCareer, 'answering the last card made the career by itself').not.toHaveBeenCalled()
+    expect(wrapper.find('.prologue-proceed').exists(), 'the last card is answered and offers no way on').toBe(true)
 
-    // the player leaves while the card is still landing
+    // the player leaves the walk instead of pressing it
     wrapper.unmount()
-    expect(vi.getTimerCount(), 'the hold outlived its card and will fire into nothing').toBe(0)
-    vi.advanceTimersByTime(PROLOGUE_LANDING_MS * 5)
+    expect(vi.getTimerCount(), 'something outlived the card and will fire into nothing').toBe(0)
     await nextTick()
     expect(game.newCareer, 'a career was created for a childhood the player had left').not.toHaveBeenCalled()
-    expect(warn.mock.calls, 'the hold warned after its component was gone').toEqual([])
-    expect(error.mock.calls, 'the hold errored after its component was gone').toEqual([])
+    expect(warn.mock.calls, 'the walk warned after its component was gone').toEqual([])
+    expect(error.mock.calls, 'the walk errored after its component was gone').toEqual([])
     warn.mockRestore()
     error.mockRestore()
+    vi.useRealTimers()
+
+    // ...and on a walk that stays, it is Proceed that creates it.
+    document.body.innerHTML = ''
+    const stayed = mount(ChildhoodPrologue, { attachTo: document.body })
+    await walkTo(stayed, 13)
+    await stayed.findAll('.prologue-choice')[1].trigger('click')
+    await nextTick()
+    expect(game.newCareer, 'the second walk made a career without pressing Proceed').not.toHaveBeenCalled()
+    await stayed.find('.prologue-proceed').trigger('click')
+    await nextTick()
+    await Promise.resolve()
+    expect(game.newCareer, 'Proceed on the thirteenth did not create the career').toHaveBeenCalled()
+    stayed.unmount()
   })
 })

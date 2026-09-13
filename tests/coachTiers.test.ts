@@ -9,6 +9,7 @@ import {
   coachHoursForPlan,
   coachIncludesPhysio,
   coachRateBandCents,
+  corridorAppliesAt,
   coachSeasonUplift,
   coachWeeklyBandCents,
   coachWeeklyCents,
@@ -181,11 +182,21 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     }
   })
 
-  it('reproduces the owner\'s per-hour table in the MIDDLE corridor: 30 / 50 / 80 / 120 at 12-16', () => {
+  it('reproduces the owner\'s per-hour table in the MIDDLE corridor: 30 / 50 / 80 at 12-16, and elite at his own x1.25', () => {
     // ⚠ RE-AIMED (Round 2). This used to pin his WEEKLY table ($120/$200/$320/$480 at four hours);
     // with the corridor back on coaching a weekly figure is a figure per MARKET, so the invariant
     // moved down to the unit he actually priced in - dollars an hour, in an ordinary academy.
     // Middle's corridor is [0.95, 1.05], centred on 1.0, so his table IS the middle market's price.
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY HIS RULING OF 12.09 – «единая элит-полка вверх - верно» – AND ONLY THE
+    // ELITE ROW MOVES. P1 took the corridor off `high` and `elite`, and the measured consequence was
+    // that a wealthy family's idle year stopped burning; of the two levers the calibration put in
+    // front of him he chose the elite band and chose UP. The row is his OWN 29.07 midpoint times the
+    // midpoint of the corridor that rung lost (`WEALTH_CORRIDOR.wealthy` = [1.2, 1.3] -> 1.25), so
+    // the single shelf everybody pays is what the WEALTHY family used to pay: 120 x 1.25 = 150.
+    //   ⭐ His table is therefore not contradicted, it is re-anchored: the three rungs below the cut
+    //   still reproduce it to the dollar, and elite reproduces its WEALTHY column instead of its
+    //   middle one - which is the arithmetic statement of «единая элит-полка».
     const midHourly = (tier: CoachTier) => {
       const [lo, hi] = coachRateBandCents(tier, 14)
       return (lo + hi) / 2 / 100
@@ -193,27 +204,48 @@ describe('rates – the owner\'s per-hour ladder, by age', () => {
     expect(midHourly('budget')).toBe(30)
     expect(midHourly('middle')).toBe(50)
     expect(midHourly('high')).toBe(80)
-    expect(midHourly('elite')).toBe(120)
+    expect(midHourly('elite')).toBe(150)
+    // ...and that 150 is not a chosen number: it is his 120 in the corridor P1 retired, to the cent.
+    const [wLo, wHi] = ECONOMY.wealthCorridor.wealthy
+    expect(midHourly('elite')).toBe(120 * ((wLo + wHi) / 2))
     // ...and self sits below Budget, which is where the spec puts the parent's rung.
     expect(midHourly('self')).toBeLessThan(midHourly('budget'))
     // The middle corridor really is the neutral one: a quote there is his hourly rate x the hours.
-    expect(coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle')).toBe(250_00)
+    // ⚠ `'middle'` TWICE SINCE ROUND 41 P1, and they are two different words: the family's
+    // background and the RUNG she trains at. The rung is what decides whether there is a corridor
+    // at all now, and `middle` is one of the three that keep it.
+    expect(coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle', 'middle')).toBe(250_00)
   })
 
-  it('prices every rung in every market, and the wealthy family pays MORE for the same rung', () => {
-    // The owner's correction, as arithmetic: «для 8к все тиры стоят согласно их коридору, для 25к -
-    // свои цены, для 120к стоят дороже всего». Same coach, same hours, three markets.
+  // ⚠⚠ RE-AIMED BY ROUND 41 P1, AND THE RE-AIM IS THE RULING (the owner, 12.09: «Коридор ±25–30%
+  // остаётся только на сервисах… и то только на нижних тирах, мне кажется что в про карьере с
+  // большими чеками цены для всех должны быть равны»). His round-2 correction below is UNCHANGED at
+  // the bottom of the ladder, which is where he made it – «для 8к все тиры стоят согласно их
+  // коридору» was written about the market a junior's family trains in – and it stops at `high`.
+  // The old test asserted working < middle < wealthy at EVERY rung and did not read `tier` at all;
+  // it now asserts the corridor where the corridor is and EQUALITY where he removed it, which is a
+  // strictly stronger claim than the one it replaces.
+  it('prices every rung in the market that rung is sold in – corridored below, equal at the top', () => {
     for (const tier of COACH_TIERS) {
-      const w = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'working')
-      const m = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle')
-      const r = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'wealthy')
-      expect(w).toBeLessThan(m)
-      expect(m).toBeLessThan(r)
-      // ...and the rung's envelope moves with the market too.
+      const w = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'working', tier)
+      const m = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'middle', tier)
+      const r = coachWeeklyCents(50_00, WEEK_PLAN_PRESETS.balanced, 'wealthy', tier)
       const [wLo] = coachWeeklyBandCents(tier, 14, WEEK_PLAN_PRESETS.balanced, 'working')
       const [rLo] = coachWeeklyBandCents(tier, 14, WEEK_PLAN_PRESETS.balanced, 'wealthy')
-      expect(wLo).toBeLessThan(rLo)
+      if (corridorAppliesAt(tier)) {
+        expect(w, tier).toBeLessThan(m)
+        expect(m, tier).toBeLessThan(r)
+        // ...and the rung's envelope moves with the market too.
+        expect(wLo, tier).toBeLessThan(rLo)
+      } else {
+        // «цены для всех должны быть равны» – to the cent, quote and envelope alike.
+        expect(w, tier).toBe(m)
+        expect(m, tier).toBe(r)
+        expect(wLo, tier).toBe(rLo)
+      }
     }
+    // ...and the cut is where he put it, named rather than implied.
+    expect(COACH_TIERS.filter((t) => !corridorAppliesAt(t))).toEqual(['high', 'elite'])
   })
 
   it('every drawn bill lands inside its rung\'s weekly band', () => {
@@ -256,7 +288,9 @@ describe('fit and development – what the rung is worth', () => {
     // ...while the price climbs the other way: each rung costs more than the last, by more.
     const price = COACH_TIERS.map((t) => {
       const [lo, hi] = coachRateBandCents(t, 14)
-      return coachWeeklyCents((lo + hi) / 2, WEEK_PLAN_PRESETS.balanced, 'middle')
+      // ⚠ round 41 P1: the fourth argument is the RUNG being priced, so each rung is quoted in its
+      // own market – which is what makes this a price ladder rather than a corridor comparison.
+      return coachWeeklyCents((lo + hi) / 2, WEEK_PLAN_PRESETS.balanced, 'middle', t)
     })
     for (let i = 1; i < price.length; i++) expect(price[i]).toBeGreaterThan(price[i - 1])
   })
@@ -970,10 +1004,16 @@ describe('the coach market slice', () => {
     expect(rows).toHaveLength(16)
     expect(rows.filter((r) => r.current)).toHaveLength(1)
     expect(rows.find((r) => r.current)!.tier).toBe('budget')
-    // Working prices are the working corridor's, so every row is cheaper than the same row would be
-    // for a wealthy family - the corridor is the market, and it applies to the whole ladder.
+    // ⚠ RE-AIMED BY ROUND 41 P1: «the corridor applies to the whole ladder» was true when this was
+    // written and is the exact sentence the owner retired on 12.09 – «только на нижних тирах». A
+    // working family's card is cheaper than a wealthy family's on the rungs that kept the corridor
+    // and IDENTICAL on `high`/`elite`, which is the market she is now shopping in.
     const rich = coachMarket(createWorld('market', { ...DEFAULT_PROFILE, background: 'wealthy', coachTier: 'budget' }))
-    rows.forEach((r, i) => expect(r.weeklyCents).toBeLessThan(rich[i].weeklyCents))
+    rows.forEach((r, i) => {
+      if (corridorAppliesAt(r.tier)) expect(r.weeklyCents, r.tier).toBeLessThan(rich[i].weeklyCents)
+      else expect(r.weeklyCents, r.tier).toBe(rich[i].weeklyCents)
+    })
+    expect(rows.some((r) => !corridorAppliesAt(r.tier)), 'the roster really does reach the uniform rungs').toBe(true)
     // Nothing is locked while the elite gate is off.
     expect(rows.every((r) => r.lockedPoints === null)).toBe(true)
     // Over-budget is measured against the WEEK'S INCOME, and an 8k family cannot carry an Elite.

@@ -98,16 +98,71 @@ export interface VacationPackage {
   freeOnceGranted?: boolean
 }
 
+/** ⭐⭐⭐ ONE MARKET, DIFFERENT BASKETS – HOW A GEAR LINE IS PRICED (round 41 P1, the owner 12.09:
+ *  «на рынке цены для всех сословий одинаковые, просто каждый покупает те товары, которые может…
+ *  получается, что топовая ракетка для рабочей семьи стоит около 1к долларов, а для богатой 2.2к…
+ *  Мне кажется это немного странно»).
+ *
+ *  ⚠⚠ WHAT HE WAS LOOKING AT WAS A PRICE WITH TWO AXES, AND THE SECOND ONE WAS INVISIBLE. Until this
+ *  slice a purchase cost `mid(band[background]) × grades[grade].priceFactor`, so the SAME NAMED rung
+ *  – «Kestra Pro Stock» – cost $360 in a working family's shop and $2,260 in a wealthy one, for an
+ *  item the equipment model treats as literally identical (same `startWear`, same `lifeFactor`, same
+ *  effect on her arm). That is not a corridor pricing a SERVICE in the market she trains in; it is
+ *  one object with two price tags, which is precisely the thing he could not read.
+ *
+ *  SO THERE ARE TWO SHAPES NOW, and which one a line carries is decided by ONE question: does the
+ *  quality ladder NAME this line's product?
+ *
+ *    * `by: 'rung'` – strings, frames and shoes. The ladder names them (`ECONOMY.equipment
+ *      .gradeCopy`), the player buys them by name, and a name may have exactly one price. Identical
+ *      for every background: the $90 club frame is $90 in a wealthy family's shop and the $2,260
+ *      tour frame is $2,260 in a working one. His sentence, by construction rather than by tuning.
+ *    * `by: 'basket'` – apparel, and it is the ONE line with no ladder. Its three bands are three
+ *      DIFFERENT products that no rung names («club basics» / «brand kit» / «full designer kit»), so
+ *      a background-keyed price here is a background-keyed BASKET rather than a background-keyed
+ *      price for one thing. «просто каждый покупает те товары, которые может» IS this line, and it
+ *      is therefore left alone. If a ladder is ever offered on apparel, this shape goes with it.
+ *
+ *  ⚠ CADENCE IS NOT PRICE AND STAYS PER-BACKGROUND. A wealthy family replaces its frames every
+ *  10-12 weeks and a working one every 14-18: that is BEHAVIOUR – what a family does – and not a
+ *  different price for the same act. It is the other half of «different baskets», and P1 does not
+ *  touch it. */
+export type GearPricing =
+  | { by: 'rung'; cents: Record<KitGrade, [number, number]> }
+  | { by: 'basket'; cents: Record<FamilyBackground, [number, number]> }
+
 export interface GearLine {
   /** breakdown category this line reports under */
   breakdown: 'gear' | 'stringing'
   /** [min,max] weeks between purchases, drawn per purchase from the gear sub-stream
    *  (min === max ⇒ a fixed cadence, e.g. stringing / quarterly apparel) */
   cadenceWeeks: Record<FamilyBackground, [number, number]>
-  /** [min,max] price in whole cents, drawn per purchase */
-  priceCents: Record<FamilyBackground, [number, number]>
+  /** [min,max] price in whole cents, drawn per purchase – see `GearPricing` for which axis prices it */
+  price: GearPricing
   /** event flavor naming the item tier (owner: "Restring – tour gut" vs "budget synthetic") */
   flavor: Record<FamilyBackground, string>
+}
+
+/** ⚠ THE RUNG A CALLER WITH NO KIT STATE IS PRICED AT – the ladder's identity element, the same
+ *  value `engine/equipment.ts` exports as `DEFAULT_KIT_GRADES` and the v37 migration back-fills on
+ *  every line. It is spelled a second time HERE because this module may not import equipment.ts
+ *  (that edge is the runtime cycle: equipment imports economy), and the two are pinned equal in
+ *  tests/equipment.test.ts so the copy cannot drift. */
+export const LADDER_IDENTITY_GRADE: KitGrade = 'composite'
+
+/** THE BAND ONE PURCHASE OF `category` IS DRAWN FROM – the single source of truth for what gear
+ *  costs, read by the recurring till (`gearHitsUpTo`) and by the shop window (`kitLinePriceCents`).
+ *
+ *  `grade` is the rung she is standing on for this line, or `null` for a caller that has no kit
+ *  state (and for apparel, which has no rung to stand on). See `GearPricing` for why a laddered line
+ *  ignores `background` and the one un-laddered line ignores `grade`. */
+export function gearPriceBandCents(
+  category: GearCategory,
+  background: FamilyBackground,
+  grade: KitGrade | null,
+): readonly [number, number] {
+  const price = ECONOMY.gear[category].price
+  return price.by === 'rung' ? price.cents[grade ?? LADDER_IDENTITY_GRADE] : price.cents[background]
 }
 
 // THE app-level wealth-price corridor (owner canon, 25.07): the same [lo, hi] factor band per
@@ -130,15 +185,40 @@ export interface GearLine {
 // bill split, docs/specs/split-the-bill-2026-08.md - the FACILITY line that came out of it. The last
 // of those is the corridor at its most literal: the same court costs less in a working-class club
 // than in a premium academy, and the family can now see the number.
+//
+// ⭐⭐⭐ AND SINCE ROUND 41 P1 IT HAS A CEILING: THE CORRIDOR PRICES THE LOWER TIERS OF A SERVICE AND
+// STOPS. The owner, 12.09, ruling on the gear complaint and then narrowing the corridor himself:
+// «Коридор ±25–30% остаётся только на сервисах (физио, перелёты, тренер) и то только на нижних
+// тирах, мне кажется что в про карьере с большими чеками цены для всех должны быть равны. По крайней
+// мере элит тренеры и массажисты мне кажется вполне могут стоить одинаково для всех.»
+//
+// So the framing above survives exactly where it was ever true – a working-class club and a premium
+// academy really are two different rooms at the bottom of the market – and stops where it stops
+// being a fiction: an elite coach's week and a tour clinic's hour are ONE product with ONE price,
+// and a family that has reached them is in the big-cheque era he is describing. See
+// `UNIFORM_CORRIDOR` and `coach.corridorAppliesAt` for the rungs, and
+// docs/specs/one-market-2026-09.md §4 for what stays corridored and why.
 const WEALTH_CORRIDOR = {
   working: [0.7, 0.8],
   middle: [0.95, 1.05],
   wealthy: [1.2, 1.3],
 } as Record<FamilyBackground, [number, number]>
 
+/** ⚠ THE BAND A UNIFORM TIER IS PRICED IN, AND IT IS A BAND RATHER THAN A SKIPPED MULTIPLY ON
+ *  PURPOSE (round 41 P1). Every corridor customer in this engine spends ONE uniform roll mapped into
+ *  `lo + roll * (hi - lo)`; with `lo === hi === 1` that roll is still spent and still lands on
+ *  exactly 1.0, so a tier going uniform changes the ARITHMETIC and not the SHAPE of any sub-stream.
+ *  Skipping the draw instead would shift `seed:coachbg:<week>` / `seed:physio:<week>` by one position
+ *  for half the tier ladder – a stream change dressed as a price change, and the kind of thing
+ *  invariant 2 exists to refuse. */
+const UNIFORM_CORRIDOR: [number, number] = [1, 1]
+
 export const ECONOMY = {
   /** The canonical wealth-price corridor – see WEALTH_CORRIDOR above. */
   wealthCorridor: WEALTH_CORRIDOR,
+
+  /** The corridor a tier that has left it is priced in: exactly 1.0, same roll. See UNIFORM_CORRIDOR. */
+  uniformCorridor: UNIFORM_CORRIDOR,
 
   /** ⭐ THE WAR CHEST THE FAMILY OPENS WITH, and the game's own three pictures of what a family HAS.
    *
@@ -316,12 +396,35 @@ export const ECONOMY = {
     // priced at exactly the court rental §3 quotes, $10-30/h, and takes the MIDDLE of that band: it
     // has no roster and nobody to be dearer than. A $0 rung would hand the working family the single
     // largest line in the game.
+    // ⭐⭐⭐ THE ELITE ROW IS THE OWNER'S SHELF AND IT IS HIS TABLE × 1.25 (round 41, 12.09, after P1:
+    // «единая элит-полка вверх - верно»). P1 took the corridor off `high` and `elite` – one price for
+    // everybody – and the measured consequence was that a wealthy family's idle year stopped burning
+    // (+$6,280 -> -$4,917 on the 16-seed batch, 70% of it the corridor fade). Of the two levers the
+    // calibration put in front of him – the wealthy INCOME or this band – he picked this one, and he
+    // picked the direction: UP, to a single shelf.
+    //
+    // THE ARITHMETIC IS NOT A TUNING, IT IS AN IDENTITY: the new uniform price is what the WEALTHY
+    // family paid under the corridor P1 retired, so the row is his own 29.07 midpoints times
+    // `WEALTH_CORRIDOR.wealthy`'s midpoint, `(1.2 + 1.3) / 2 = 1.25`, to the dollar -
+    //   12-16  $120 -> $150/h     17-22  $160 -> $200/h     23+  $200 -> $250/h
+    // - and at the balanced plan's five sessions that is a weekly shelf of $750 / $1,000 / $1,250 for
+    // EVERY background. docs/specs/one-market-2026-09.md §3's resolution block carries the table and
+    // the predicted-vs-measured; `tests/economyCalibration.ts`'s `BANDS` block carries the burn.
+    //
+    // ⚠ `high` IS DELIBERATELY NOT HERE. His word was «элит», and P1's own «по крайней мере» note
+    // already records that widening the cut was a floor rather than a bound - widening the PRICE is a
+    // second decision and he did not make it.
+    //
+    // ⚠ ZERO RNG. `pickInt` spends exactly one `rng()` call whatever its bounds, so a wider band moves
+    // the cents a coach charges and never a position on `seed:coaches`; the corridor roll still lands
+    // on exactly 1.0 at this rung. Every elite rate scales monotonically, so `bestFitCoachAt`'s
+    // cheapest-among-equals tie-break hires the same man at the same seed.
     hourlyRateCents: {
       self: [[10_00, 30_00], [11_00, 33_00], [12_00, 36_00]],
       budget: [[24_00, 36_00], [28_00, 42_00], [32_00, 48_00]],
       middle: [[40_00, 60_00], [48_00, 72_00], [52_00, 78_00]],
       high: [[64_00, 96_00], [80_00, 120_00], [96_00, 144_00]],
-      elite: [[96_00, 144_00], [128_00, 192_00], [160_00, 240_00]],
+      elite: [[120_00, 180_00], [160_00, 240_00], [200_00, 300_00]],
     } as Record<CoachTier, [number, number][]>,
 
     // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).
@@ -1258,11 +1361,43 @@ export const ECONOMY = {
 
   // Recurring gear purchases, scheduled DETERMINISTICALLY off a purpose-scoped sub-stream per
   // category (never the main weekly stream). Cadence + price are drawn from that sub-stream.
+  //
+  // ⭐⭐⭐ THE PRICES BELOW ARE RUNG-KEYED SINCE ROUND 41 P1 – see `GearPricing` for the owner's
+  // ruling and for why apparel alone keeps a background-keyed band.
+  //
+  // ⚠⚠ THE CALIBRATION IS THE OLD DIAGONAL, AND IT IS AN ARITHMETIC FACT RATHER THAN A NEW TUNE.
+  // Each rung's band is the band of the background whose FLAVOUR already described that rung's
+  // product, scaled by that rung's shipped `priceFactor`:
+  //
+  //     alloy        := working band × 0.55     («used, off the classifieds» × the starter rung)
+  //     composite    := working band × 1.00     – the ladder's identity element, untouched arithmetic
+  //     performance  := middle  band × 2.20     («current retail model»)
+  //     pro          := wealthy band × 4.00     («custom pro stock»)
+  //
+  // So a working family's recurring bill is BYTE-IDENTICAL to the shipped game at every hit (its band
+  // and the composite band are the same numbers), and the top of the ladder still costs the $2,260
+  // the owner himself quoted – now to everybody. What the diagonal could NOT preserve is measured and
+  // reported rather than hidden: every career in this game starts on `composite` (`DEFAULT_KIT_GRADES`
+  // – there has never been a per-background starting rung), so a middle or wealthy family's DEFAULT
+  // basket falls to the working family's price, because it was always the same object. The spec
+  // docs/specs/one-market-2026-09.md §3 carries the measured weekly figure and the one-line retunes.
+  //
+  // ⚠ NOTHING HERE MOVES PLAY. A rung's `startWear` / `lifeFactor` / `frameInjuryRise` are untouched,
+  // no background's DEFAULT rung moves, and `priceFactor` is gone from the arithmetic entirely: it
+  // survives only as the number these bands were derived WITH, written out above.
   gear: {
     rackets: {
       breakdown: 'gear',
       cadenceWeeks: { working: [14, 18], middle: [12, 16], wealthy: [10, 12] },
-      priceCents: { working: [60_00, 120_00], middle: [180_00, 280_00], wealthy: [480_00, 650_00] },
+      price: {
+        by: 'rung',
+        cents: {
+          alloy: [33_00, 66_00],
+          composite: [60_00, 120_00],
+          performance: [396_00, 616_00],
+          pro: [1920_00, 2600_00],
+        },
+      },
       flavor: {
         working: 'New racket – used, off the classifieds',
         middle: 'New racket – current retail model',
@@ -1272,7 +1407,15 @@ export const ECONOMY = {
     stringing: {
       breakdown: 'stringing',
       cadenceWeeks: { working: [4, 4], middle: [3, 3], wealthy: [2, 2] },
-      priceCents: { working: [18_00, 30_00], middle: [28_00, 45_00], wealthy: [45_00, 70_00] },
+      price: {
+        by: 'rung',
+        cents: {
+          alloy: [9_90, 16_50],
+          composite: [18_00, 30_00],
+          performance: [61_60, 99_00],
+          pro: [180_00, 280_00],
+        },
+      },
       flavor: {
         working: 'Restring – budget synthetic',
         middle: 'Restring – multifilament',
@@ -1282,7 +1425,15 @@ export const ECONOMY = {
     shoes: {
       breakdown: 'gear',
       cadenceWeeks: { working: [10, 14], middle: [10, 14], wealthy: [10, 14] },
-      priceCents: { working: [60_00, 90_00], middle: [100_00, 150_00], wealthy: [170_00, 240_00] },
+      price: {
+        by: 'rung',
+        cents: {
+          alloy: [33_00, 49_50],
+          composite: [60_00, 90_00],
+          performance: [220_00, 330_00],
+          pro: [680_00, 960_00],
+        },
+      },
       flavor: {
         working: "New shoes – last season's model",
         middle: 'New shoes – mid-range performance',
@@ -1292,7 +1443,12 @@ export const ECONOMY = {
     apparel: {
       breakdown: 'gear',
       cadenceWeeks: { working: [13, 13], middle: [13, 13], wealthy: [13, 13] },
-      priceCents: { working: [40_00, 70_00], middle: [110_00, 160_00], wealthy: [260_00, 380_00] },
+      // ⚠ THE ONE LINE WITH NO LADDER, so the only one still priced by the family's own basket –
+      // three different products, three prices, and nothing here claims they are the same thing.
+      price: {
+        by: 'basket',
+        cents: { working: [40_00, 70_00], middle: [110_00, 160_00], wealthy: [260_00, 380_00] },
+      },
       flavor: {
         working: 'Apparel refresh – club basics',
         middle: 'Apparel refresh – brand kit',
@@ -1508,9 +1664,19 @@ export const ECONOMY = {
   // grows. A share that only counted beside the wallet would be a number, not a mechanic, and «это
   // всё-таки её карьера» is an argument about whose money it is.
   kidShare: {
-    /** The birthday the transfers start on. Her own bank account is the eighteenth's gift. */
+    /** The birthday the RAMP starts climbing on. Her own bank account is the eighteenth's gift.
+     *
+     *  ⚠⚠ ROUND 41 #27 (12.09) – IT IS NO LONGER THE AGE THE TRANSFERS START AT, and the field is
+     *  renamed in MEANING rather than in spelling because every reader of it still wants this same
+     *  week. The owner: «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента,
+     *  когда она в первый раз на w серию приходит? это же всё таки ее призовые», and then «призовые
+     *  падают на её счёт с первого старта W-серии независимо от возраста – согласен». Below this
+     *  birthday she now keeps `startBps` flat; from it the ladder climbs exactly as it always did.
+     *  See `kidPrizeShareBps` for why «с первого старта W-серии» needs no gate of its own. */
     fromAgeYears: 18,
-    /** What she keeps of every cheque in that first year – 10%, the bottom of his own «10-20%». */
+    /** What she keeps of every cheque in that first year – 10%, the bottom of his own «10-20%».
+     *  ⭐ ROUND 41 #27: and what she keeps of every cheque BELOW it, which is the same number by
+     *  ruling rather than by coincidence – the curve is continuous across her eighteenth. */
     startBps: 1000,
     /** ...and what each birthday after it adds. Five points a year is his «наращивать год к году». */
     stepBps: 500,
@@ -1582,6 +1748,12 @@ export const ECONOMY = {
   // brand ever writes. In practice the professional rungs open at WTA #200 and the advertising
   // ladder at eighteen, so a pre-eighteen sponsor cheque is close to unreachable – but where one
   // exists, the money is hers minus the fee, not the family's whole.
+  // ⚠⚠ ROUND 41 #15 MADE THAT LAST SENTENCE'S «CLOSE TO UNREACHABLE» LESS TRUE AND THE RULING MORE
+  // LOAD-BEARING, which is why the paragraph is amended rather than left to rot. The advertising
+  // ladder opens at SIXTEEN now (his «реклама открывается с 16 … согласен»), so a junior drinks or
+  // clothing letter is a real pre-eighteen sponsor cheque – and this constant is what decides where
+  // it lands. It lands the way he ruled it: hers at full value, the parent earning the fee. Measured
+  // reach for the junior band is in `docs/specs/ad-portfolio-2026-08.md`'s round-41 section.
   managerCommission: {
     /** ⚠ PROVISIONAL AND HIS TO MOVE – the midpoint of his own «10-20% например», picked because he
      *  named a band and not a number. It is ONE constant and every sentence on every screen reads
@@ -1614,12 +1786,71 @@ export const ECONOMY = {
   // opens for does not decay, and the ladder is on `houses` below, with the owner's own words, the
   // sourced comparison it was checked against, and the measured shares it is built from.
   advertising: {
-    /** The age the owner scoped advertising mechanics to («какие у нас могут быть механики этих
-     *  контрактов дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's
-     *  threshold age – `kidShare.fromAgeYears` above starts her own prize split there, school is
-     *  over by 18.92 for every birth month, the junior rungs shut – so the boundary exists and this
-     *  reads the same clock (`kidAgeYears`, the one-clock ruling of 09.08). */
-    fromAgeYears: 18,
+    /** ⭐⭐⭐ ROUND 41 #15 (12.09) – SIXTEEN, AND THE EIGHTEEN THAT STOOD HERE WAS OUR READING RATHER
+     *  THAN HIS RULING. That is the whole of the item and it is written down first, because the
+     *  paragraph below is the evidence against itself.
+     *
+     *  ⚠⚠ WHAT THE SHIPPED COMMENT SAID, KEPT VERBATIM BECAUSE IT IS THE EXHIBIT: «The age the owner
+     *  scoped advertising mechanics to («какие у нас могут быть механики этих контрактов
+     *  дополнительные от 18+ лет начиная и дальше»). Eighteen is already the engine's threshold age –
+     *  `kidShare.fromAgeYears` above starts her own prize split there, school is over by 18.92 for
+     *  every birth month, the junior rungs shut – so the boundary exists and this reads the same
+     *  clock (`kidAgeYears`, the one-clock ruling of 09.08).» ⚠ HIS SENTENCE ASKED WHAT EXTRA
+     *  MECHANICS EXIST FROM 18 ONWARD. It was read as an ELIGIBILITY GATE, which is a different
+     *  claim, and the three supporting facts are all true and none of them is about advertising.
+     *
+     *  HE CAUGHT IT HIMSELF, 12.09: «А рекламных контрактов правда не предлагают до 18 лет или это
+     *  наше ноу-хау? кажется молодые тоже в рекламах снимаются.» AND HIS RULING, the same day, on
+     *  the round's option A1: «реклама открывается с 16 (юниорские суммы, реже), а призовые падают
+     *  на её счёт с первого старта W-серии независимо от возраста – согласен».
+     *
+     *  ⚠ THE CLOCK IS UNCHANGED – her REAL age through `kidAgeAt`, never the band's, the one-clock
+     *  ruling of 09.08. Only the number moved, and the two years it opened carry the `junior` block
+     *  below rather than the adult shelf. */
+    fromAgeYears: 16,
+    /** ⭐⭐⭐ ROUND 41 #15 – THE JUNIOR BAND, and it is a BAND rather than four scattered multipliers
+     *  on purpose: «юниорские суммы, реже» is one design sentence and it should be readable as one
+     *  block. It governs exactly the real ages [16, 18); from her eighteenth birthday the shelf is
+     *  byte-identical to what shipped, which is the property the bench arm is built to prove.
+     *
+     *  ⚠⚠ TWO CATEGORIES AND NOT SIX, AND THE PAIR IS THE SHELF'S OWN CHEAPEST RUNGS RATHER THAN A
+     *  TASTE. `drinks` is the one category open at the very foot of the ladder (the ≤400 band's own
+     *  cell – round 34's «a kit patch and a drink»), and `clothing` is the kit brand's second
+     *  programme, which ALREADY requires a live kit deal to be written at all («двойной программой»,
+     *  `reviewAdOffer`). So the junior shelf is: the drink she is photographed with, and the house
+     *  that already dresses her putting her on a poster. A watch, a car, an airline and a fragrance
+     *  are adult money for an adult face, and the real sport agrees – a fifteen-year-old signs an
+     *  apparel deal, not a fragrance campaign.
+     *
+     *  ⚠ THE CAPSTONE AND THE LIFETIME LETTER ARE NOT ON THE LIST EITHER, and their own gates would
+     *  refuse them anyway (four seasons ENDED inside the top 10 cannot exist at seventeen). Named
+     *  rather than left to arithmetic: a gate that is unreachable today is a gate somebody deletes
+     *  tomorrow.
+     *
+     *  ⚠ HALF THE CHEQUE AND HALF THE ARRIVALS – «юниорские суммы, реже», the two halves of his
+     *  sentence, one number each. They are expressed in bps against the ADULT cell rather than as a
+     *  junior price table, so the two shelves cannot drift apart on a retune: a new category cell,
+     *  or a re-sized band, moves the junior figure with it by construction.
+     *
+     *  ⚠⚠ ONE YEAR, NEVER MORE, AND IT IS NOT A MULTIPLIER BUT A CEILING THE PAPER IS HELD TO. A
+     *  multi-year deal signed for a minor is the thing his own round-34 complaint was about at the
+     *  foot of the adult ladder («в 18 лет предлагают подписать копеечные контракты на 2 и 3 года»),
+     *  and it is worse at sixteen: it would bind a career through the two years it changes most.
+     *  ⚠ The bands a sixteen-year-old can actually reach write one year anyway (≤400 and ≤200 are
+     *  both `termYearsMin: 1, termYearsMax: 1`), so this ceiling binds only a prodigy inside the top
+     *  100 – which is exactly the case that needed deciding rather than left to a band table. */
+    junior: {
+      /** the real age the junior band ENDS at – [16, 18), her own clock */
+      untilAgeYears: 18,
+      /** the only categories a letter may be written in before eighteen */
+      categories: ['drinks', 'clothing'] as readonly AdTradeCategory[],
+      /** the junior cheque as a share of the adult cell at the same band – «юниорские суммы» */
+      feeBps: 5000,
+      /** the junior arrival rate as a share of the adult chance – «реже» */
+      chanceBps: 5000,
+      /** every junior term, in years – a ceiling and not a draw */
+      termYears: 1,
+    },
     /** ⭐⭐⭐ ROUND 29 PART TWO #19/#20 – THE LADDER, WHICH IS WHAT THIS CATALOGUE DID NOT HAVE.
      *
      *  HIS TWO QUESTIONS, and the second one invited correction: «я не увидел наш список спонсоров
@@ -2032,6 +2263,38 @@ export const ECONOMY = {
      *  which is not `finalFloorShare` below, and the difference is the argument the constant was
      *  written on. A Slam final is a global broadcast in its own right. */
     slamFinalFloor: 12,
+    /** ⭐⭐⭐ ROUND 41 #18 PART TWO (12.09) – WHAT HER FIRST GRAND SLAM MAIN DRAW IS WORTH, once, dated
+     *  at the week she played it and decaying on the TITLE clock like every other result.
+     *
+     *  THE OWNER, 12.09: «да, делаем fame за основу Шлема, надо полностью с математикой бренда
+     *  разобраться, чтобы этот вопрос уже не поднимался… У нее был вайлдкард на Шлем, когда она была
+     *  #155.»
+     *
+     *  ⚠⚠ THE DEFECT IT ENDS. Before this line a Slam main draw was worth EXACTLY ZERO fame unless
+     *  she reached the final: `titleFloor.slam` pays the champion, `slamFinalFloor` pays the runner-up,
+     *  and the other 126 women in the draw – including a #155 wildcard playing the biggest tournament
+     *  of her life in front of the largest audience in the sport – left no trace in the stock at all.
+     *  On the reference career the Slam DEBUT at ~w130 moved nothing; her brand woke 36 weeks later
+     *  on a World Tour 500 title, which is the plateau he reported as item 18.
+     *
+     *  ⚠⚠ THE DEBUT AND NOT THE APPEARANCE, which is the whole sizing argument. A regular's Slam
+     *  weeks are already paid for – she wins rounds, she reaches finals, she ends seasons in a band,
+     *  and every one of those is a term above. Paying per appearance would price the same career
+     *  twice and would grow without bound for a top-20 player who plays four a year for a decade.
+     *  What NOTHING above can see is the first one: the week the world learns the name. That is a
+     *  singular event, so it is a singular step.
+     *
+     *  ⚠ 4, AND THE LADDER IS WHY. Against `titleFloor` – slam title 25, wta1000 14, wta500 8,
+     *  wta250 4 – a Slam main draw is worth one World Tour 250 title. That is deliberately modest:
+     *  she has won nothing, and the claim is only that the world has now seen her. It is also ~16% of
+     *  the Slam title's own step, which keeps «выиграть Шлем» an order of magnitude above «сыграть
+     *  Шлем». docs/specs/the-fame-and-the-brand-2026-09.md §2 carries predicted against measured.
+     *
+     *  ⚠ IT NEEDS A DATED ROW AND IT HAS ONE WITHOUT A SCHEMA MOVE: the `keep: true` milestone
+     *  `SLAM_DEBUT_KEY` fired in `finalizeTournament`, which `pruneEvents` can never drop. Careers
+     *  that reached a Slam BEFORE this shipped carry no row and get no retroactive credit – stated in
+     *  the spec's §6 rather than papered over. */
+    slamDebutFloor: 4,
     /** ⭐⭐⭐ ROUND 34 #17 (03.09) – WHAT A LOST FINAL AT EVERY OTHER PROFESSIONAL TIER IS WORTH, as a
      *  SHARE of that tier's own title step. Approved by the owner at 0.4.
      *
@@ -5425,6 +5688,38 @@ export const ECONOMY = {
       // boats and the planes; the academy's own sentence is «each stage is a decision and a bill»,
       // and a stage IS the wait.
       //
+      // ⭐⭐⭐ ROUND 41 #24 (12.09) – THE OWNER GAVE THE FILE WHAT §3g HAD NOT, AND THE PARAGRAPH
+      // ABOVE IS AMENDED RATHER THAN DELETED: it recorded, correctly, that the wait was never ours
+      // to invent. He asked for it himself – «может быть для Академии корты, клубный дом и стафф
+      // тоже должны сколько-то строиться по времени, а не сразу быть готовы?» – and then ruled the
+      // proposed timings and the round in one line: «сроки ок, в этот же раунд заводи пожалуйста».
+      // So three of the four stages now carry §3f's own `buildWeeks`, and the UPKEEP half of the
+      // sentence still stands untouched: he asked about building time, not about a maintenance
+      // line, and the spec's §2 refusal of a land/building split is the reason inventing one here
+      // would be worse than silence.
+      //
+      // ⚠⚠ THE LAND DOES NOT BUILD, AND THAT IS HIS OWN LIST READ LITERALLY: «корты, клубный дом и
+      // стафф» names three things and the deeds are not among them. A field is BOUGHT rather than
+      // BUILT – there is nothing to wait for once the money has moved – so `academy-land` carries no
+      // `buildWeeks` and a career that orders it owns it the same week, exactly as it always has.
+      //
+      // ⚠⚠ THE THREE NUMBERS ARE THE ROUND'S PROPOSAL, WHICH IS WHAT HE APPROVED: courts 6 weeks,
+      // the clubhouse 12, the staff 3. His band for the hire was «2–4» and the round proposed ONE
+      // number out of it – 3, the middle – because a range is not a field. The two builds are the
+      // shortest waits on this shelf by a long way (`boat-launch`'s 52 is the next one up), and that
+      // is the point rather than an oversight: sixteen courts and a clubhouse are a season's work in
+      // a way a yacht is not, and the whole of §3g's «a half-built academy is a real state the
+      // player can sit in» is that the stages are LIVED through rather than waited out.
+      //
+      // ⚠⚠⚠ AND NOT ONE LINE OF MACHINERY MOVED FOR THIS. Every reader of academy ownership already
+      // asks `deliveredAssets` – the income (`assetWeeklyIncomeCents`'s own first line), the ending's
+      // stage count, the sale, the upkeep meter – and the WORTH falls out of the clamps two
+      // functions already carry (`buyAsset` writes `basisWeek = readyWeek`, and both
+      // `assetValueCents` and `rampedWorthCents` clamp a negative span to zero), so a stage under
+      // construction is worth exactly what was paid for it, which is the boats' own behaviour to the
+      // cent. A wait that needed a new guard would have needed a new persisted field; this one needs
+      // neither, and `SAVE_SCHEMA_VERSION` does not move.
+      //
       // ⭐⭐⭐ ROUND 38 #8 (07.09) – THE FOUR RATES MOVED 0 -> +300 bps, WHICH IS THE HOUSES' OWN
       // NUMBER, AND THE OWNER ASKED FOR EXACTLY THAT COMPARISON: «а что насчёт стоимости и индексации
       // этой стоимости с годами? Как с домами, например.»
@@ -5477,6 +5772,8 @@ export const ECONOMY = {
         entryCents: 3_000_000_00,
         annualRateBps: 300,
         requiresId: 'academy-land',
+        // ROUND 41 #24 – «корты… должны сколько-то строиться по времени»; his «сроки ок».
+        buildWeeks: 6,
       },
       {
         id: 'academy-building',
@@ -5487,6 +5784,8 @@ export const ECONOMY = {
         entryCents: 4_000_000_00,
         annualRateBps: 300,
         requiresId: 'academy-courts',
+        // ROUND 41 #24 – «клубный дом», the longest of the three: gym, kitchen and forty beds.
+        buildWeeks: 12,
       },
       {
         id: 'academy-staff',
@@ -5497,6 +5796,9 @@ export const ECONOMY = {
         entryCents: 3_000_000_00,
         annualRateBps: 300,
         requiresId: 'academy-building',
+        // ROUND 41 #24 – the STAFF is a hire rather than a build, and his band was «2–4» weeks.
+        // One number out of the middle of it: notice periods, not concrete.
+        buildWeeks: 3,
       },
     ],
     /** ⭐⭐ ROUND 29 #5, §3f – WHAT THE FAMILY'S OWN PLANE TAKES OFF A FARE, as a share of it.
@@ -5638,10 +5940,16 @@ export function gearHitsUpTo(
   category: GearCategory,
   background: FamilyBackground,
   uptoWeek: number,
+  grade: KitGrade | null = null,
 ): GearHit[] {
   const line = ECONOMY.gear[category]
   const [cadLo, cadHi] = line.cadenceWeeks[background]
-  const [prLo, prHi] = line.priceCents[background]
+  // ⚠ THE RUNG PRICES THE PURCHASE (round 41 P1) AND THE STREAM CANNOT FEEL IT. `pickInt` spends
+  // exactly ONE `rng()` call whatever its bounds, so moving this band from the background's to the
+  // rung's changes the VALUE drawn and never the position after it – the cadence walk, and therefore
+  // every purchase WEEK a career has ever had, is byte-identical. That is what lets `weeksSinceGear`
+  // below stay rung-blind and still agree with this function to the week.
+  const [prLo, prHi] = gearPriceBandCents(category, background, grade)
   const rng = rngFromSeed(`${seed}:gear:${category}`)
   const hits: GearHit[] = []
   let w = 0
@@ -5806,7 +6114,6 @@ export function weeksSinceGear(
 ): number {
   const line = ECONOMY.gear[category]
   const [cadLo, cadHi] = line.cadenceWeeks[background]
-  const [prLo, prHi] = line.priceCents[background]
   const rng = rngFromSeed(`${seed}:gear:${category}`)
   let w = 0
   let last = 0
@@ -5815,7 +6122,12 @@ export function weeksSinceGear(
     if (w > week) break
     // The price draw must be spent even though it is unused here, or the NEXT cadence draw would
     // read a different number than `gearHitsUpTo` reads and the two functions would drift apart.
-    pickInt(rng, prLo, prHi)
+    //
+    // ⚠ AND ITS BAND IS IRRELEVANT, WHICH IS WHY THIS FUNCTION NEEDED NO RUNG WHEN ROUND 41 P1 MADE
+    // THE PRICE RUNG-KEYED. `pickInt` spends exactly one `rng()` call whatever its bounds, so the
+    // stream position after the discard does not depend on which band is passed; the degenerate band
+    // says that out loud rather than quoting a rung this function has no business knowing.
+    pickInt(rng, 0, 0)
     last = w
   }
   return week - last
@@ -5827,8 +6139,9 @@ export function gearHitForWeek(
   category: GearCategory,
   background: FamilyBackground,
   week: number,
+  grade: KitGrade | null = null,
 ): GearHit | null {
-  return gearHitsUpTo(seed, category, background, week).find((h) => h.week === week) ?? null
+  return gearHitsUpTo(seed, category, background, week, grade).find((h) => h.week === week) ?? null
 }
 
 /**
@@ -5917,11 +6230,41 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
 /** ⭐⭐ ROUND-23 #18 – WHAT SHARE OF A CHEQUE IS HERS, in basis points, at a given age.
  *
  *  `ECONOMY.kidShare` holds all four numbers; this is the ramp read off them and nothing else, so a
- *  retune moves the whole game and this function does not change. Zero before the threshold birthday,
- *  and flat once the cap is reached (age 26 on the shipped ladder):
+ *  retune moves the whole game and this function does not change. Flat once the cap is reached (age
+ *  26 on the shipped ladder):
  *
- *      18   19   20   21   22   23   24   25   26+
- *      10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *      <18  18   19   20   21   22   23   24   25   26+
+ *      10%  10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *
+ *  ⭐⭐⭐ ROUND 41 #27 (12.09) – THE FIRST COLUMN IS NEW AND IT USED TO BE A ZERO.
+ *
+ *  HIS QUESTION: «может быть начать отчисления не в 18, а в 16 лет уже или вообще с момента, когда
+ *  она в первый раз на w серию приходит? это же всё таки ее призовые» – and his ruling, option A1,
+ *  the same day: «призовые падают на её счёт с первого старта W-серии независимо от возраста –
+ *  согласен».
+ *
+ *  ⚠⚠ «С ПЕРВОГО СТАРТА W-СЕРИИ» NEEDS NO GATE HERE, AND THAT IS A FACT ABOUT THE CATALOGUE RATHER
+ *  THAN A SHORTCUT. Prize money exists on the PROFESSIONAL TRACK ONLY: every `wta`-track tier in
+ *  `calendar.ts` carries a `prize` array and not one domestic or ITF-junior rung does (junior tennis
+ *  pays nothing, ever – ITF Juniors Reg 31 a) i), quoted at the finalize site). `finalizeTournament`
+ *  splits inside `if (prize > 0)`, so THE SPLIT IS REACHED ONLY ON A W-SERIES RESULT – «her share of
+ *  every prize cheque, at any age» and «her share from her first W-series start» describe exactly the
+ *  same set of cheques. A `wtaEverCounted`-shaped gate on top would be a second predicate that can
+ *  only ever answer true where it is asked, and this repo has dug out nine dead guards in three days.
+ *  ⚠ IT IS ALSO THE STRICTER READING OF HIS SENTENCE. `wtaEverCounted` means «a W result has ever
+ *  SCORED», not «she has ever COME» – a W15 first-round exit pays $130 and zero points – so a gate
+ *  built on it would have refused her the first cheque she ever earned.
+ *
+ *  ⚠ THE LADDER FROM EIGHTEEN IS UNTOUCHED TO THE POINT, which is what keeps round 23 #18 and round
+ *  35 #9 whole: the curve is CONTINUOUS at the birthday (10% either side of it), the cap still lands
+ *  at 26, and every figure the shipped surfaces quote from eighteen onward is the figure they quoted
+ *  before this item. What changed is that the two years under it are 10% instead of nothing.
+ *
+ *  ⚠⚠ AND THE MERCH BRAND MOVES WITH IT, BY ROUND 35 #9'S OWN RULE RATHER THAN BY ACCIDENT: «доход
+ *  от ее бренда давай тоже как проценты с призовых будем делить» – the brand rides THIS function, so
+ *  a sixteen-year-old whose family owns her brand now keeps a tenth of its week too. It is the
+ *  faithful reading of «как с призовых» and it can only ever ADD to her account; the alternative –
+ *  a second ramp for the brand – is the drift that ruling exists to prevent.
  *
  *  ⚠ IT TAKES HER REAL AGE IN WHOLE YEARS (`kidAgeYears`), never the ITF band's – the one-clock
  *  ruling of 09.08. A December girl is 18 for the last three weeks of the season her band turned 19
@@ -5931,7 +6274,7 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *  Pure integer arithmetic on a persisted-nowhere input: no draw, no state, no schema. */
 export function kidPrizeShareBps(ageYears: number): number {
   const { fromAgeYears, startBps, stepBps, capBps } = ECONOMY.kidShare
-  if (ageYears < fromAgeYears) return 0
+  if (ageYears < fromAgeYears) return startBps
   return Math.min(capBps, startBps + (Math.floor(ageYears) - fromAgeYears) * stepBps)
 }
 

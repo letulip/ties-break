@@ -335,12 +335,26 @@ describe('§4 – §3g, the academy: four stages, in order, and a half-built one
     // ⚠ THE ASSERTION IS NOT WEAKENED, it is re-pointed: it still names every stage individually and
     // still fails if any one of them drifts away from its siblings.
     for (const s of stages) expect(s.annualRatePct, `${s.id} indexes like a house`).toBe(3)
-    // ...nor a wait, nor an upkeep: §3f's «время постройки» and «годовое обслуживание» are said of
-    // the boats and the planes.
-    for (const s of stages) {
-      expect(s.buildWeeks, `${s.id} arrives at once`).toBe(0)
-      expect(s.upkeepCents, `${s.id} costs nothing to keep`).toBe(0)
+    // ...nor an upkeep: §3f's «годовое обслуживание» is said of the boats and the planes.
+    for (const s of stages) expect(s.upkeepCents, `${s.id} costs nothing to keep`).toBe(0)
+    // ⚠⚠ RE-AIMED BY ROUND 41 #24 (12.09), AND IT IS THE OWNER'S OWN RULING THAT MOVED IT, EXACTLY
+    // AS ROUND 38 #8 MOVED THE RATE ONE LINE UP. What stood here was «...nor a wait: §3f's «время
+    // постройки» is said of the boats and the planes», with `buildWeeks === 0` on all four – and
+    // that was true of round 29 and was never a rule: §3g gave no wait, and now HE has given one.
+    // «может быть для Академии корты, клубный дом и стафф тоже должны сколько-то строиться по
+    // времени, а не сразу быть готовы?», then «сроки ок, в этот же раунд заводи пожалуйста».
+    // ⚠ THE ASSERTION IS STRICTLY STRONGER, NOT LOOSER: it used to pin ONE number four times and now
+    // pins FOUR numbers by name, so a stage that drifts to any other wait – including back to zero –
+    // reddens here. ⚠⚠ And the LAND's zero is pinned as hard as the other three, because it is the
+    // half of his sentence that is easiest to lose: he named courts, clubhouse and staff, and a
+    // field is bought rather than built.
+    const waits: Record<string, number> = {
+      'academy-land': 0,
+      'academy-courts': 6,
+      'academy-building': 12,
+      'academy-staff': 3,
     }
+    for (const s of stages) expect(s.buildWeeks, `${s.id} is built to order`).toBe(waits[s.id])
   })
 
   it('⭐⭐ a stage cannot be built before the one under it, and the refusal NAMES it', () => {

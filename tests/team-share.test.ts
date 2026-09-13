@@ -34,6 +34,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { ECONOMY, kidPrizeShareCents, staffPrizeShareCents, staffResultShareBps } from '../src/engine/economy'
+import { kidAgeYears } from '../src/engine/world/age'
 import { TIERS } from '../src/engine/season/calendar'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -166,12 +167,30 @@ function drivenFinish(prefix: string, finish: number, staff: { coach?: boolean; 
 const shareRows = (world: WorldState, who: 'Coach' | 'Masseur') =>
   world.events.filter((e) => e.week === world.week && e.text.startsWith(`${who}'s share of the prize money`))
 
+/** ⭐⭐ ROUND 41 ITEMS 15+27 (the owner's ruling A1) – THE FOURTH HAND ON THE CHEQUE, AT THE AGE THE
+ *  FIXTURE REALLY IS. «Призовые падают на её счёт с первого старта W-серии независимо от возраста –
+ *  согласен», so the ramp's first column is a flat `startBps` where it used to be a zero: the
+ *  thirteen-year-old these arms drive now keeps a tenth of every W cheque, and the funds equations
+ *  below moved by exactly that. It is the ENGINE'S OWN HELPER at her real age (`kidAgeYears`, the
+ *  one-clock ruling of 09.08) and never a second copy of the ladder, so a retune of `ECONOMY.kidShare`
+ *  moves these arms with the game.
+ *
+ *  ⚠⚠ AND IT CHANGED NOTHING ABOUT THE TEAM, WHICH IS WHY EVERY GROSS-BASED CLAIM IN THIS FILE IS
+ *  UNTOUCHED – verified against `finalizeTournament` itself (world.ts, the `if (prize > 0)` block):
+ *  `coachShare` and `masseurShare` are still `staffPrizeShareCents(role, prize, kidFinish)` off the
+ *  GROSS `prize`, computed after her share and unaffected by it. What the family banks is the
+ *  remainder of all three. */
+const herShareOf = (world: WorldState, prizeCents: number): number =>
+  kidPrizeShareCents(prizeCents, kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay))
+
 describe('the finalize wiring – gross, expense rows, the exact funds arithmetic', () => {
   it('⭐⭐ a coached W title pays the coach 10% of the GROSS cheque as a coaching expense row', () => {
     const { world } = drivenFinish('coach-title', 0, { coach: true })
     expect(world.coachId).not.toBeNull()
     const prize = TIERS.w15.prizeCents![0]
     const before = world.fundsCents
+    const kidBefore = world.kidFundsCents ?? 0
+    const hers = herShareOf(world, prize)
     const spentBefore = world.careerTotals.spentCents
     skipTournament(world)
     const rows = shareRows(world, 'Coach')
@@ -179,9 +198,16 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
     expect(rows[0].category, 'the wrap`s coaching line absorbs it through addEvent – no second tally').toBe('coaching')
     expect(rows[0].amountCents).toBe(-staffPrizeShareCents('coach', prize, 0))
     expect(rows[0].text).toBe(`Coach's share of the prize money – 10% of the ${TIERS.w15.label} cheque`)
-    // The funds moved by exactly familyShare − coachShare: she is 13, so her ramp is 0 and the
-    // family banked the whole cheque before the coach's slice came off it.
-    expect(world.fundsCents - before).toBe(prize - staffPrizeShareCents('coach', prize, 0))
+    // The funds moved by exactly familyShare − coachShare. ⚠ ROUND 41 ITEMS 15+27 (ruling A1): the
+    // comment here used to read «she is 13, so her ramp is 0 and the family banked the whole cheque
+    // before the coach's slice came off it», and the ruling ended that – she is 13 and her ramp is
+    // the flat floor, so the family's part is the cheque less HER share as well. The coach's own
+    // line above is unmoved and is asserted against the GROSS two lines up, which is the claim this
+    // arm is named for.
+    expect(world.fundsCents - before).toBe(prize - hers - staffPrizeShareCents('coach', prize, 0))
+    // ...and the cents that left the family's part really went to her, so the arm cannot go green on
+    // a cheque that simply shrank.
+    expect((world.kidFundsCents ?? 0) - kidBefore, 'her share reached her own account').toBe(hers)
     expect(world.careerTotals.spentCents - spentBefore, 'the album`s denominator counts it as spend').toBe(
       staffPrizeShareCents('coach', prize, 0),
     )
@@ -192,6 +218,7 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
     const { world } = drivenFinish('both-title', 0, { coach: true, masseur: true })
     const prize = TIERS.w15.prizeCents![0]
     const before = world.fundsCents
+    const hers = herShareOf(world, prize) // ⚠ round 41 items 15+27 (A1) – see `herShareOf`
     skipTournament(world)
     const masseurRows = shareRows(world, 'Masseur')
     expect(masseurRows).toHaveLength(1)
@@ -199,8 +226,10 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
     expect(masseurRows[0].amountCents).toBe(-staffPrizeShareCents('masseur', prize, 0))
     expect(masseurRows[0].text).toBe(`Masseur's share of the prize money – 3% of the ${TIERS.w15.label} cheque`)
     expect(shareRows(world, 'Coach')).toHaveLength(1)
+    // Both slices are still off the GROSS and both are asserted against it above; what the family
+    // banks is the remainder of three hands – the two seats' and hers.
     expect(world.fundsCents - before).toBe(
-      prize - staffPrizeShareCents('coach', prize, 0) - staffPrizeShareCents('masseur', prize, 0),
+      prize - hers - staffPrizeShareCents('coach', prize, 0) - staffPrizeShareCents('masseur', prize, 0),
     )
     closeTournament(world)
   })
@@ -221,10 +250,15 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
     const prize = TIERS.w15.prizeCents![2]
     expect(prize, 'the semifinal cheque exists – there really was something to not share').toBeGreaterThan(0)
     const before = world.fundsCents
+    const hers = herShareOf(world, prize) // ⚠ round 41 items 15+27 (A1) – see `herShareOf`
     skipTournament(world)
     expect(shareRows(world, 'Coach')).toHaveLength(0)
     expect(shareRows(world, 'Masseur')).toHaveLength(0)
-    expect(world.fundsCents - before, 'the family banks the whole cheque').toBe(prize)
+    // ⚠ «THE WHOLE CHEQUE» IS NOW «THE WHOLE CHEQUE THE TEAM DID NOT TOUCH». Her ramp is not a staff
+    // share and has no finish gate – it bites on every W cheque at any age since ruling A1 – so the
+    // claim this arm makes, that NEITHER SEAT was paid below a final, is the two lines above plus a
+    // family part in which no staff share appears.
+    expect(world.fundsCents - before, 'the family banks the whole cheque, less only her own share').toBe(prize - hers)
     closeTournament(world)
   })
 
@@ -234,23 +268,28 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
     expect(world.masseurHired).toBe(false)
     const prize = TIERS.w15.prizeCents![0]
     const before = world.fundsCents
+    const hers = herShareOf(world, prize) // ⚠ round 41 items 15+27 (A1) – see `herShareOf`
     skipTournament(world)
     expect(shareRows(world, 'Coach')).toHaveLength(0)
     expect(shareRows(world, 'Masseur')).toHaveLength(0)
-    expect(world.fundsCents - before).toBe(prize)
+    // Two empty seats owe nothing, so the only hand on this cheque besides the family's is hers.
+    expect(world.fundsCents - before).toBe(prize - hers)
     closeTournament(world)
   })
 
   it('⭐ OFF THE GROSS beside her ramp: with the kid`s share flowing, the coach still takes 10% of the FULL cheque', () => {
-    // The house idiom for an arm: ECONOMY patched in place, restored in a finally. Pulling her
-    // threshold down to the fixture`s age is what makes "gross, not net" a falsifiable claim here –
-    // a share computed off the family`s part would come back 10% of 90%.
-    const saved = ECONOMY.kidShare.fromAgeYears
-    Object.assign(ECONOMY.kidShare, { fromAgeYears: 13 })
-    try {
+    // ⚠⚠ ROUND 41 ITEMS 15+27 (the owner's ruling A1) – THE PATCH IS GONE AND THE ARM IS STRONGER
+    // FOR IT. This used to read «the house idiom for an arm: ECONOMY patched in place, restored in a
+    // finally. Pulling her threshold down to the fixture's age is what makes "gross, not net" a
+    // falsifiable claim here» – and since «призовые падают на её счёт с первого старта W-серии
+    // независимо от возраста – согласен» her ramp flows at thirteen on the SHIPPED ladder, so the
+    // patch changed nothing and would have aged into a dead guard beside a sentence explaining why
+    // it was load-bearing. What made the claim falsifiable is unchanged: a share computed off the
+    // family's part would come back 10% of 90%, and the assertions below are the same ones.
+    {
       const { world } = drivenFinish('gross-title', 0, { coach: true })
       const prize = TIERS.w15.prizeCents![0]
-      const hers = kidPrizeShareCents(prize, 13)
+      const hers = herShareOf(world, prize)
       expect(hers, 'her ramp really is flowing in this arm').toBeGreaterThan(0)
       const before = world.fundsCents
       const kidBefore = world.kidFundsCents ?? 0
@@ -264,8 +303,6 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
       expect(familyDelta + kidDelta + staffPrizeShareCents('coach', prize, 0)).toBe(prize)
       expect(kidDelta, 'her ramp is untouched beside the team`s shares').toBe(hers)
       closeTournament(world)
-    } finally {
-      Object.assign(ECONOMY.kidShare, { fromAgeYears: saved })
     }
   })
 

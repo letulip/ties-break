@@ -41,6 +41,14 @@ import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type AdCategory, type AdOfferTerms, type Offer } from '../src/shared/protocol'
 
 const AD = ECONOMY.advertising
+/** ⚠⚠ ROUND 41 #15 (12.09) – THE AGE THE **ADULT** SHELF OPENS AT, and this file's careers are all
+ *  about the adult ladder. The owner opened the letters at SIXTEEN – «реклама открывается с 16
+ *  (юниорские суммы, реже) … согласен» – so `fromAgeYears` is 16 and no longer means what this
+ *  fixture meant by it.
+ *  ⚠ NOT ONE ASSERTION MOVED: every career below is walked to exactly the week it was walked to
+ *  before the item, so every number it measures is byte-identical. The junior band is
+ *  `tests/round41-ad-junior.test.ts`'s subject, and the two files share no arm. */
+const ADULT_AGE = AD.junior.untilAgeYears
 const BANDS = AD.bands
 
 const ageOf = (world: WorldState): number =>
@@ -62,7 +70,7 @@ const POINT_STEPS = [40, 80, 150, 300, 400, 600, 800, 1_200, 2_000, 3_000, 4_000
 function adultAt(seed: string, band: number) {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
   const rng = resumeMain(world.rngMain)
-  while (ageOf(world) < AD.fromAgeYears) tickWeek(world, rng)
+  while (ageOf(world) < ADULT_AGE) tickWeek(world, rng)
   world.onRampCleared = { itf: true, wta: true }
   for (const points of POINT_STEPS) {
     world.results = world.results.filter((r) => !(r.playerId === KID_ID && r.tier === 'w100'))
@@ -103,7 +111,7 @@ const LIVES = [0, 1, 2, 3, 4].map((band) => {
 describe('the five fixtures stand where they claim to stand', () => {
   it.each(LIVES)('band $band: eighteen-plus, a real W standing, and dice that say yes', ({ band, world, hit }) => {
     const standing = sponsorStandingOf(world)
-    expect(ageOf(world)).toBeGreaterThanOrEqual(AD.fromAgeYears)
+    expect(ageOf(world)).toBeGreaterThanOrEqual(ADULT_AGE)
     expect(standing.wtaRanked).toBe(true)
     expect(standing.wtaRank).toBeLessThanOrEqual(BANDS[band].maxWtaRank)
     expect(adBandFor(standing), `band ${band}: the fixture stands in the wrong band`).toBe(band)

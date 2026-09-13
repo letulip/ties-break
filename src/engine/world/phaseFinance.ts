@@ -437,7 +437,11 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
-  const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background)
+  // ⚠ ROUND 41 P1 – THE RUNG DECIDES WHETHER THERE IS A CORRIDOR AT ALL. `high` and `elite` are
+  // priced at exactly 1.0 for every background (the owner's «в про карьере с большими чеками цены
+  // для всех должны быть равны»), and the roll is still spent, so `seed:coachbg:<week>` walks the
+  // same positions it always walked.
+  const corridor = coachCorridorFactor(world.seed, world.week, world.profile.background, tier)
   // ⚠ THE RETAINER RUNS ON A COMPETITION WEEK (owner, 08.08) - a REVERSAL of R4, whose argument used
   // to sit here. «сейчас я говорю про еженедельное списание тренерских сумм на неделях турниров -
   // тренер продолжает работать там и давать прогресс». A weekly retainer does not stop being owed
@@ -626,22 +630,30 @@ function resolveGear(world: WorldState): void {
   const forLife = lifetimeKitHouse(world.offers, world.week)
   const forLifeBrand = forLife ? (forLife.terms as AdOfferTerms).brand : null
   for (const category of GEAR_CATEGORIES) {
-    const hit = gearHitForWeek(world.seed, category, bg, world.week)
+    const kitLine = GEAR_CATEGORY_LINE[category]
+    // ⚠ AND THE RUNG PRICES THE BILL (W3-KIT), THROUGH THE DRAW RATHER THAN AFTER IT (round 41 P1).
+    // Until P1 this line drew the BACKGROUND's band and multiplied the result by
+    // `grades[grade].priceFactor`; the band is the RUNG's own now, so the draw comes out already
+    // priced and there is exactly one place cents are decided. Apparel has no line and no ladder, so
+    // `null` sends it down `GearPricing`'s basket branch and it is charged as it always was.
+    //
+    // ⚠ THE STREAM CANNOT FEEL THE CHANGE. `pickInt` spends one `rng()` call whatever its bounds, so
+    // `seed:gear:<category>` walks the same cadence draws in the same order and every purchase WEEK
+    // in every career is byte-identical – only the cents on the ledger move. Invariant 2 holds
+    // without a capture update.
+    //
+    // The consequence that makes the ladder a decision rather than a slider survives, and it is
+    // bigger than it was: a `pro` frame is $2,260 EVERY TIME the cadence comes round, for everybody.
+    const hit = gearHitForWeek(
+      world.seed,
+      category,
+      bg,
+      world.week,
+      kitLine && world.kit ? world.kit.grade[kitLine] : null,
+    )
     if (!hit) continue
     const line = ECONOMY.gear[category]
-    const kitLine = GEAR_CATEGORY_LINE[category]
-    // ⚠ AND THE RUNG PRICES THE BILL (W3-KIT). The draw is untouched - `gearHitForWeek` still walks
-    // `seed:gear:<category>` exactly as it always did and returns exactly the same cents - and the
-    // rung MULTIPLIES what comes out of it. So the wealth corridor still sets the base (a wealthy
-    // family's frames were always dearer) and the choice multiplies it, which is the shape
-    // ECONOMY.gear already had. Apparel has no line and no ladder, so it is charged as it always was.
-    //
-    // The consequence is the one that makes this a decision rather than a slider: `pro` frames cost
-    // four times as much EVERY TIME the cadence comes round, so the choice is a standing commitment
-    // to a bigger recurring bill, not a one-off purchase.
-    const gradeFactor =
-      kitLine && world.kit ? ECONOMY.equipment.grades[world.kit.grade[kitLine]].priceFactor : 1
-    const amountCents = Math.round(hit.amountCents * gradeFactor)
+    const amountCents = hit.amountCents
     // What the brand picks up of this line: everything, up to whatever is left of the allowance -
     // and ONLY if the deal actually covers this line. That is the brand ladder arriving at the till:
     // a local deal pays her restringing and leaves the racket on the family, a national one adds the

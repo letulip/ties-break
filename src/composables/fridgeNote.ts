@@ -95,7 +95,7 @@ export const FRIDGE_NOTES: readonly string[] = [
   'Apples in the bowl. Eat one.',
   'Please tidy your room today.',
   'Your bag is by the stairs.',
-  'Charge your phone. It was on two per cent again.',
+  'Charge your phone. It was on two percent again.',
   'Love you. Have a good day.',
   'Text me when you get home.',
   'Sandwiches are in the blue box.',

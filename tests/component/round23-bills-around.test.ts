@@ -21,7 +21,7 @@ import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot, acceptOffer, setKitGrade, type WorldState } from '../../src/engine/world'
 import { raiseKitOffers, sponsorWindowOpensAt } from '../../src/engine/offers'
 import { kitLinePriceCents } from '../../src/engine/equipment'
-import { gearHitsUpTo } from '../../src/engine/economy'
+import { gearHitsUpTo, gearPriceBandCents } from '../../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type KitOfferTerms, type Snapshot } from '../../src/shared/protocol'
 
@@ -69,24 +69,33 @@ function sponsoredCareer(): WorldState {
 describe('Round 23 #17 – the Bills kit prices say they are estimates', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⚠ the confusion is real: the card quotes $920 and a replacement can bill $1,070', () => {
-    // The card's number, from the engine's own pricer – the mid of the band times the rung factor.
-    const quoted = kitLinePriceCents('middle', 'frame', 'pro')
-    expect(quoted, "the owner's 920, re-derived rather than quoted").toBe(920_00)
+  // ⚠⚠ RE-AIMED BY ROUND 41 P1 (12.09), AND THE COMPLAINT IT GUARDS IS UNTOUCHED. Round 23 #17 was
+  // never about the SIZE of the pro frame's price – it was about a CARD quoting one number and the
+  // ledger billing another, which is why every rung price on the card says «Around $». P1 made the
+  // rung's price uniform (the owner: «на рынке цены для всех сословий одинаковые»), so the middle
+  // family's pro frame is the $2,260 everybody pays instead of the $920 he was looking at in August,
+  // and the till's draw comes out of the RUNG's band already priced instead of being multiplied by
+  // `priceFactor` afterwards. His two historical numbers are kept in the test's own prose because
+  // they are what the guard was written from; the arithmetic is re-derived, never quoted.
+  it('⚠ the confusion is real: the card quotes one number and a replacement bills another', () => {
+    // The card's number, from the engine's own pricer – the mid of the rung's own band.
+    const quoted = kitLinePriceCents('frame', 'pro')
+    expect(quoted, 'the uniform pro frame, re-derived rather than quoted').toBe(2_260_00)
 
-    // ...and what the till actually bills on a replacement: a draw from the SAME band, which
-    // world.ts then multiplies by the same rung factor. Every hit is a different number, and the
-    // spread straddles the quote in both directions – which is the whole complaint.
-    const factor = 4 // ECONOMY.equipment.grades.pro.priceFactor, the multiplier world.ts applies
-    const bills = gearHitsUpTo('round23-around', 'rackets', 'middle', 20 * WEEKS_PER_YEAR).map(
-      (h) => h.amountCents * factor,
+    // ...and what the till actually bills on a replacement: a draw from the SAME band. Every hit is
+    // a different number, and the spread straddles the quote in both directions – the whole
+    // complaint, and the reason the qualifier below has to be on every rung.
+    const bills = gearHitsUpTo('round23-around', 'rackets', 'middle', 20 * WEEKS_PER_YEAR, 'pro').map(
+      (h) => h.amountCents,
     )
     expect(bills.length, 'twenty seasons produce a run of replacements').toBeGreaterThan(10)
     expect(Math.min(...bills), 'some replacements come in under the quote').toBeLessThan(quoted)
-    expect(Math.max(...bills), 'and some come in over it – the owner saw $1,070').toBeGreaterThan(quoted)
-    // The band's own bounds, so nothing here can drift away from ECONOMY.gear.
-    expect(Math.min(...bills)).toBeGreaterThanOrEqual(180_00 * factor)
-    expect(Math.max(...bills)).toBeLessThanOrEqual(280_00 * factor)
+    expect(Math.max(...bills), 'and some come in over it – he saw $1,070 against a $920 card').toBeGreaterThan(quoted)
+    // The band's own bounds, read through the engine's resolver so nothing here can drift away from
+    // ECONOMY.gear – and read at a DIFFERENT background from the draw above, which is P1's own claim.
+    const [lo, hi] = gearPriceBandCents('rackets', 'working', 'pro')
+    expect(Math.min(...bills)).toBeGreaterThanOrEqual(lo)
+    expect(Math.max(...bills)).toBeLessThanOrEqual(hi)
   })
 
   it('every rung price on the Bills card carries the qualifier', async () => {

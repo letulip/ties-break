@@ -380,8 +380,20 @@ describe('round 30 #9 §3 – ⭐⭐ IT FALLS', () => {
     // income squares its argument, so a floor worth `retention` of the stock now buys `retention²` =
     // 0.90 of the income instead of 0.61: the hold is about a HALF. The claim is unchanged and the
     // arm below – that it beats its own fame-priced control – is what still proves it.
-    expect(twoOn / atPeak).toBeGreaterThan(0.40)
-    expect(twoOn / atPeak).toBeLessThan(0.60)
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 41 #18 (12.09), AND THE HOLD ROSE BECAUSE THE FALL STOPPED REACHING
+    // BACKWARDS. The band was (0.40, 0.60) against a measured 0.5385, and the measured hold is now
+    // **0.7065**. Nothing about fame, the multiple or the income moved: what moved is that a half-life
+    // recomputed from TODAY's fame is no longer applied to the WHOLE holding period. Under the old
+    // closed form a fading brand had its own past re-read every week – a falling fame lengthened the
+    // half-life, which pulled the row back toward what was PAID for it, and on the worked example
+    // that was a 29% drop in a single week with nothing having happened to the brand (the owner: «и
+    // снова потом упал в цене внезапно»). The row now steps one week at a time toward that week's
+    // target, so two quiet seasons cost about three tenths of the asset instead of about a half.
+    // ⚠ THE CLAIM IS UNCHANGED AND THE ARM IS NOT WEAKER: it still falls (asserted three lines up),
+    // it still falls further than a fame-priced brand would (asserted three lines down), and the
+    // band is still two-sided – a brand that stopped fading at all reads 1.0 and reddens above.
+    expect(twoOn / atPeak).toBeGreaterThan(0.55)
+    expect(twoOn / atPeak).toBeLessThan(0.80)
     // ⚠ AND IT IS ABOVE ITS OWN PRE-#4 CONTROL ON THE SAME FIXTURE, so «about a fifth» is a
     // measurement of the feature and not of its absence. `fameClock` is round 32 #3's arithmetic
     // read off this same walk, with the stock neutralised.
@@ -426,9 +438,29 @@ describe('round 30 #9 §4 – the floor is the mark', () => {
     const held = ownedOf(w, MERCH)!
     const mark = Math.round(PRICE * ECONOMY.shop.businessValueFloorShare)
     const R = ECONOMY.shop.worthRamp
-    /** what the row is worth `weeks` from now, through the same function `revalueAssets` asks. */
-    const after = (world: WorldState, row: typeof held, weeks: number): number =>
-      assetWorthCents({ ...world, week: world.week + weeks } as WorldState, row, shopItem(MERCH)!)
+    /** what the row is worth `weeks` from now, through the same function `revalueAssets` asks.
+     *
+     *  ⚠⚠ RE-AIMED BY ROUND 41 #18 (12.09): IT WALKS THE WEEKS NOW INSTEAD OF NAMING ONE. The brand's
+     *  worth is an ACCUMULATOR – each week steps from the row's own current value toward that week's
+     *  target at that week's pace – because the closed form recomputed the pace from TODAY's fame and
+     *  applied it to the whole holding period, which let a fame fall rewrite history (the owner: «и
+     *  снова потом упал в цене внезапно»). So «what it is worth in N weeks» is N steps, not one call
+     *  with N in it, and this helper spends them through the SAME shipped function `revalueAssets`
+     *  spends them through.
+     *  ⚠ AND THE NUMBERS BELOW DID NOT MOVE, which is the point: for a constant half-life the weekly
+     *  product telescopes to the old closed form exactly, so a fixture whose fame is held still reads
+     *  what it always read. Only the per-step rounding differs, and §1 of
+     *  `tests/round41-brand-inertia.test.ts` is where that equivalence is asserted rather than assumed. */
+    const after = (world: WorldState, row: typeof held, weeks: number): number => {
+      // ⚠ `i + 1` AND NOT `i`: the row's own week-zero identity returns `paidCents` untouched (a rung
+      // bought this week is worth what was paid for it), so a walk that started at offset 0 would
+      // spend its first iteration standing still and land one step short of the span it was asked for.
+      let value = row.valueCents
+      for (let i = 0; i < weeks; i++) {
+        value = assetWorthCents({ ...world, week: world.week + i + 1 } as WorldState, { ...row, valueCents: value }, shopItem(MERCH)!)
+      }
+      return value
+    }
     // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS «worth the mark ON THE BUYING WEEK», IS «walks DOWN to
     // the mark, and never under it». The owner: «он неизменно для первого открытия стоит 250к, а
     // потом МОЖЕТ набрать свои 5млн, но не за 1 день, т.к. это процесс», and the same curve runs the
@@ -439,9 +471,22 @@ describe('round 30 #9 §4 – the floor is the mark', () => {
     // ON THE CLAMP – `maxHalfLifeWeeks`, 416 weeks, because `worthRampHalfLife` cannot divide by a
     // fame of zero and «медленно» is not «никогда» (the constant's own note). MEASURED to the cent:
     // $234,438 after one season, $156,250 after 416 weeks, $68,359 after five of them.
-    expect(after(w, held, R.maxHalfLifeWeeks), 'one half-life, exactly half the way to the mark')
-      .toBe(Math.round((PRICE + mark) / 2))
-    expect(after(w, held, 5 * R.maxHalfLifeWeeks), 'five half-lives, and still not there').toBe(6_835_938)
+    // ⚠⚠ WITHIN A DOLLAR SINCE ROUND 41 #18, AND IT USED TO BE EXACT. The worth is walked one week
+    // at a time now and every step rounds to the cent, so 416 steps carry a drift the closed form
+    // never had. MEASURED on this fixture: $156,249.96 against the closed form's $156,250.00 – FOUR
+    // CENTS over eight years of weekly rounding, on a figure of $156,250. ⚠ The bound is a dollar
+    // rather than four cents so a second rounding site does not have to move it again, and it is
+    // still four orders of magnitude tighter than any claim this arm is making.
+    expect(
+      Math.abs(after(w, held, R.maxHalfLifeWeeks) - Math.round((PRICE + mark) / 2)),
+      'one half-life, half the way to the mark, within the walk`s own rounding',
+    ).toBeLessThanOrEqual(100)
+    // ⚠ AND THE SAME DOLLAR, FOR THE SAME REASON – 2,080 weekly roundings now stand between this
+    // figure and the closed form that named it: $68,359.41 against $68,359.38, three cents.
+    expect(
+      Math.abs(after(w, held, 5 * R.maxHalfLifeWeeks) - 6_835_938),
+      'five half-lives, and still not there',
+    ).toBeLessThanOrEqual(100)
     expect(after(w, held, 5 * R.maxHalfLifeWeeks), 'the mark is a floor and it is never crossed')
       .toBeGreaterThan(mark)
     expect(mark).toBeGreaterThan(0)
@@ -1171,10 +1216,25 @@ describe('round 30 #24 – a top-20 who never wins is no longer invisible to her
     expect(brandGrossWorthCents(brandSignalsOf(unknown), base), 'a career nobody has heard of earns nothing')
       .toBe(0)
     expect(ownedOf(unknown, MERCH)!.valueCents, 'she still pays the sticker for it').toBe(PRICE)
-    unknown.week += ECONOMY.shop.worthRamp.maxHalfLifeWeeks
-    revalueAssets(unknown)
-    expect(ownedOf(unknown, MERCH)!.valueCents, 'one half-life down toward a name nobody knows')
-      .toBe(Math.round((PRICE + mark) / 2))
+    // ⚠⚠ RE-AIMED BY ROUND 41 #18 (12.09): THE WEEKS ARE WALKED, NOT NAMED. The brand's worth is an
+    // accumulator now – one step a week from the row's own value – so advancing the clock by a
+    // half-life and revaluing ONCE takes one step, not a half-life's worth. The fixture spends the
+    // weeks instead; for a constant pace the walk and the old closed form agree to the rounding, and
+    // the number below is unmoved but for that drift.
+    for (let i = 0; i < ECONOMY.shop.worthRamp.maxHalfLifeWeeks; i++) {
+      unknown.week += 1
+      revalueAssets(unknown)
+    }
+    // ⚠⚠ WITHIN A DOLLAR SINCE ROUND 41 #18, AND IT USED TO BE EXACT. The worth is walked one week
+    // at a time now and every step rounds to the cent, so 416 steps carry a drift the closed form
+    // never had. MEASURED on this fixture: $156,249.96 against the closed form's $156,250.00 – FOUR
+    // CENTS over eight years of weekly rounding, on a figure of $156,250. ⚠ The bound is a dollar
+    // rather than four cents so a second rounding site does not have to move it again, and it is
+    // still four orders of magnitude tighter than any claim this arm is making.
+    expect(
+      Math.abs(ownedOf(unknown, MERCH)!.valueCents - Math.round((PRICE + mark) / 2)),
+      'one half-life down toward a name nobody knows, within the walk`s own rounding',
+    ).toBeLessThanOrEqual(100)
     expect(ownedOf(unknown, MERCH)!.valueCents, '...and it is a fall, which is the direction')
       .toBeLessThan(PRICE)
     // ⚠⚠ AND THE MARK IS WHERE THE FALL STOPS, which is the sentence the paragraph above is about

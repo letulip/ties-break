@@ -160,6 +160,24 @@ export type { ShopItem }
  *  as short as it can be – there is no basis to restate any more, so a holding's whole history is
  *  one number and the week.
  *
+ *  ⚠⚠⚠ ROUND 41 #18 BROKE THAT SENTENCE FOR **ONE FAMILY**, KNOWINGLY, AND THIS IS WHERE A READER
+ *  ADDING A SECOND CALLER WILL SEE IT. The merch brand's worth is an ACCUMULATOR now: each week it
+ *  steps from `owned.valueCents` toward this week's derived value at this week's half-life, because
+ *  the closed form recomputed the pace from TODAY's fame and applied it to the WHOLE holding period
+ *  – so a fame that fell rewrote history and dropped the row 29% in a single week (the owner, 12.09:
+ *  «И снова потом упал в цене внезапно»). See `assetWorthCents`' business arm for the whole argument.
+ *
+ *  ⚠⚠ SO THIS FUNCTION MUST RUN **EXACTLY ONCE A WEEK**, and today it does: `phaseObligations.ts` is
+ *  its only caller in the engine, after `world.week` has been incremented and after `deliverAssets`.
+ *  A SECOND CALLER WOULD DOUBLE-STEP EVERY BRAND – the same hazard `reportMarketSeason` names about
+ *  its own once-a-season predicate, real now rather than hypothetical. A caller that needs a
+ *  valuation WITHOUT advancing one should read `owned.valueCents`, which is what `shopView`,
+ *  `sellAsset` and the ledger already do.
+ *
+ *  ⚠ EVERY OTHER FAMILY IS UNCHANGED and the paragraph above still describes it exactly: a car, a
+ *  house, a boat, a plane, an academy stage and a fund are all still functions of (paid, basis, week)
+ *  or of (units, week, seed).
+ *
  *  ⭐⭐ ROUND 29 PART THREE #16 KEPT THAT TRUE AND IT IS WHY THE MARKET IS A PATH RATHER THAN A DRIFT.
  *  The note here used to say idempotence «stops being true in slice 2, when drift accumulates». It
  *  does not: a market that ACCUMULATES would have to be rolled once per week, which makes the value

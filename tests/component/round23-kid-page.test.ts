@@ -82,7 +82,20 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
     expect(school, 'the cell is headed School while she is at school').toBeTruthy()
     expect(school!.findAll('.kid-tile-line')[0].text()).toMatch(/ grade$/)
     expect(w.find('.kid-note-college').exists()).toBe(false)
-    expect(w.find('.kid-note-account').exists(), 'and there is no account before eighteen').toBe(false)
+    // ⚠⚠ RE-AIMED BY ROUND 41 #27 (12.09), AND IT IS THE OWNER WHO INVERTED IT. This line read «and
+    // there is no account before eighteen» and asserted the note was ABSENT – true while the ramp
+    // started on her eighteenth birthday. His ruling: «призовые падают на её счёт с первого старта
+    // W-серии независимо от возраста – согласен». `careerAt` plants a balance of $512,835 on every
+    // world it builds («a balance she could only have from her own share», its own comment), and a
+    // fourteen-year-old holding half a million of her own prize money is exactly the career his
+    // ruling creates – so the page has to say so.
+    expect(w.find('.kid-note-account').exists(), 'a junior with a balance is told about it').toBe(true)
+    // ⚠ AND THE OTHER SIDE OF THE GATE, which is what keeps the note off a page that has nothing to
+    // explain: the same age with an EMPTY account says nothing at all. Without this the arm above
+    // would pass with the balance clause deleted.
+    const empty = careerAt(30)
+    const w2 = mountKid({ ...empty, life: { ...empty.life, ownAccount: '' } })
+    expect(w2.find('.kid-note-account').exists(), 'an empty account is not a subject').toBe(false)
     w.unmount()
   })
 

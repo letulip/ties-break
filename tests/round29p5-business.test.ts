@@ -34,12 +34,15 @@ import {
   brandWeeklyGrossCents,
   buyAsset,
   createWorld,
+  deliverAssets,
   fameAt,
   fameFloorOf,
   fameShootMultOf,
   kidAgeYears,
   merchFamilyWeeklyIncomeCents,
   merchWeeklyIncomeCents,
+  shopCatalogue,
+  shopItem,
   shopView,
   tickWeek,
   toSnapshot,
@@ -53,6 +56,13 @@ import { DEFAULT_PROFILE, type AdOfferTerms, type Offer, type SeasonHistoryEntry
 
 const FAME = ECONOMY.fame
 const BIZ = ECONOMY.business
+
+/** ⚠ ROUND 41 #24 – HOW LONG THE WHOLE ACADEMY TAKES TO BUILD, off the catalogue and never typed:
+ *  the longest single stage, which is what a family that orders all four in one week waits for. */
+const ACADEMY_BUILD_WEEKS = Math.max(
+  0,
+  ...shopCatalogue().filter((i) => i.family === 'academy').map((i) => i.buildWeeks ?? 0),
+)
 
 const ageOf = (w: WorldState): number => kidAgeYears(w.week, w.profile.birthMonth, w.profile.birthDay)
 
@@ -361,11 +371,23 @@ describe('§2 the merch brand – income follows fame', () => {
 // 3 – THE ACADEMY THAT EARNS: EACH DELIVERED STAGE, TIMES REPUTATION
 // =================================================================================================
 describe('§3 the academy – «нам нужна академия, которая зарабатывает»', () => {
+  /** ⚠⚠ RE-AIMED BY ROUND 41 #24 (12.09) – THE STAGES ARE ORDERED NOW, AND THIS WAITS FOR THEM.
+   *  The owner: «может быть для Академии корты, клубный дом и стафф тоже должны сколько-то
+   *  строиться по времени, а не сразу быть готовы?», then «сроки ок, в этот же раунд заводи
+   *  пожалуйста». So three of the four rungs carry `buildWeeks` and a career that has just PAID owns
+   *  a contract rather than a courts – which is precisely what the arm below the next one has always
+   *  said («a stage still on order earns nothing – a contract is not a business»), now reachable
+   *  without hand-planting a `readyWeek`.
+   *  ⚠ THE WAIT IS READ OFF THE CATALOGUE AND NEVER TYPED, so a retune of his timings does not
+   *  silently make this harness measure an undelivered academy again; and the DELIVERY is the
+   *  engine's own function, never a deleted key. */
   function withStages(seed: string, stages: string[], seasons: number[] = []): WorldState {
     const world = still(seed)
     world.seasonHistory = seasons.map((endRank, i) => seasonAt(i, endRank))
     world.fundsCents = 15_000_000_00
     for (const id of stages) buyAsset(world, id)
+    world.week += Math.max(0, ...stages.map((id) => shopItem(id)?.buildWeeks ?? 0))
+    deliverAssets(world)
     return world
   }
 
@@ -482,13 +504,26 @@ describe('§4 the ledger rows and the strip total – round 28 #8\'s law', () =>
     const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
     const rng = resumeMain(world.rngMain)
     while (ageOf(world) < 18) tickWeek(world, rng)
-    world.trophiesByTier.wta1000.titles.push(world.week - 4)
-    world.seasonHistory = OWNERS_SEASONS.map((r, i) => seasonAt(i, r))
     if (buy) {
       world.fundsCents = Math.max(world.fundsCents, 15_000_000_00)
       buyAsset(world, 'merch-brand')
       for (const id of ['academy-land', 'academy-courts', 'academy-building', 'academy-staff']) buyAsset(world, id)
     }
+    // ⚠⚠ ROUND 41 #24 – AND THEN THE CAREER LIVES THE WEEKS THE ACADEMY TAKES TO BUILD, THROUGH REAL
+    // TICKS, WHICH IS THE ONLY WAY `deliverAssets` EVER RUNS IN A CAREER. His «сроки ок» put 6 / 12 /
+    // 3 weeks on the courts, the clubhouse and the staff, so a family that has just paid owns four
+    // contracts and the till has nothing to book.
+    // ⚠⚠ THE LOOP IS OUTSIDE THE `if (buy)` ON PURPOSE, AND IT IS THE HOUSE-STRIP ARM BELOW THAT
+    // FORCES IT: that arm builds `grown(seed, false)` and `grown(seed, true)` and subtracts them, so
+    // the two worlds must differ by the PURCHASES and by nothing else – a wait lived in one arm only
+    // would make it measure twelve extra weeks of career as well. Both arms tick the same count, and
+    // the buy itself draws nothing (no purchase touches MAIN), so the two still walk one sequence.
+    // ⚠ The trophies and the banked seasons are planted AFTER the wait rather than before it, where
+    // they stood: a season boundary inside those twelve weeks would have `wrapSeason` write over the
+    // history this fixture is built on.
+    for (let i = 0; i < ACADEMY_BUILD_WEEKS; i++) tickWeek(world, rng)
+    world.trophiesByTier.wta1000.titles.push(world.week - 4)
+    world.seasonHistory = OWNERS_SEASONS.map((r, i) => seasonAt(i, r))
     return { world, rng }
   }
 

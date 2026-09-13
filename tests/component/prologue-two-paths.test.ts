@@ -31,7 +31,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import '../../src/style.css'
 import { setViewport, PHONE } from './fits'
 import ChildhoodPrologue from '../../src/components/ChildhoodPrologue.vue'
-import { landing } from './prologueLanding'
+import { finishCard } from './prologueLanding'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot } from '../../src/engine/world'
 import { CARD_AGES, LOCAL_OPEN_COPY, PROLOGUE_CARDS, TOURNAMENT_ANSWER } from '../../src/prologue/cards'
@@ -72,11 +72,12 @@ function stubStore() {
 async function answer(wrapper: ReturnType<typeof mount>, label: string): Promise<void> {
   const button = wrapper.findAll('.prologue-answer').find((b) => b.text().startsWith(label))
   expect(button, `no control labelled «${label}» on this card: ${wrapper.text().slice(0, 120)}`).toBeTruthy()
-  // ⚠ RE-AIMED BY ROUND 40 #3, NOT LOOSENED. An answer that FINISHES a card is now held for
-  // `PROLOGUE_LANDING_MS` before the walk advances, so this helper steps that clock instead of
-  // waiting on it – see tests/component/prologueLanding.ts. Every claim in this file is unchanged:
-  // it presses, and then reads the screen the press produced.
-  await landing(() => button!.trigger('click'))
+  // ⚠⚠ RE-AIMED BY ROUND 41 #9, NOT LOOSENED, AND THE THIRD ROUND TO AIM IT. Round 40 #3 held a
+  // finished card 200 ms before advancing and this stepped that clock; round 41 #9 retired the hold
+  // – a radio only selects now, so the card stays until Proceed is pressed. This presses the answer
+  // and then the Proceed it produced (`finishCard`). Every claim in this file is unchanged: it
+  // presses, and then reads the screen the press produced.
+  await finishCard(wrapper, () => button!.trigger('click'))
   await Promise.resolve()
   await wrapper.vm.$nextTick()
 }

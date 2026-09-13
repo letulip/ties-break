@@ -546,8 +546,8 @@ function section0(): void {
         const mid = (lo + hi) / 2
         const weekly =
           tier === 'self'
-            ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(plan) * coachCorridorMid(bg))
-            : coachWeeklyCents(mid, plan, bg)
+            ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(plan) * coachCorridorMid(bg, tier))
+            : coachWeeklyCents(mid, plan, bg, tier)
         row += pad(`${money(weekly)}/wk`, ageYears === 25 ? 13 : 15)
       }
     }
@@ -565,8 +565,8 @@ function section0(): void {
       const [lo, hi] = coachRateBandCents(tier, ageYears)
       total +=
         tier === 'self'
-          ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(plan) * coachCorridorMid(bg))
-          : coachWeeklyCents((lo + hi) / 2, plan, bg)
+          ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(plan) * coachCorridorMid(bg, tier))
+          : coachWeeklyCents((lo + hi) / 2, plan, bg, tier)
     }
     return total
   }
@@ -612,8 +612,8 @@ function section0(): void {
     })
     const seasonBill =
       tier === 'self'
-        ? Math.round(facilityRateCents(14, tier) * coachHoursForPlan(plan) * coachCorridorMid('middle')) * WEEKS_PER_YEAR
-        : coachWeeklyCents((coachRateBandCents(tier, 14)[0] + coachRateBandCents(tier, 14)[1]) / 2, plan, 'middle') * WEEKS_PER_YEAR
+        ? Math.round(facilityRateCents(14, tier) * coachHoursForPlan(plan) * coachCorridorMid('middle', tier)) * WEEKS_PER_YEAR
+        : coachWeeklyCents((coachRateBandCents(tier, 14)[0] + coachRateBandCents(tier, 14)[1]) / 2, plan, 'middle', tier) * WEEKS_PER_YEAR
     const mid = (lo + hi) / 2
     console.log(
       `  ${padEnd(tier, 10)}${pad(`${lo.toFixed(2)} – ${hi.toFixed(2)}%   (mid ${mid.toFixed(2)}%)`, 42)}` +
@@ -628,8 +628,8 @@ function section0(): void {
     const b = COACH_TIERS[i]
     const billOf = (t: CoachTier): number =>
       t === 'self'
-        ? Math.round(facilityRateCents(19, t) * coachHoursForPlan(plan) * coachCorridorMid('middle')) * WEEKS_PER_YEAR
-        : coachWeeklyCents((coachRateBandCents(t, 19)[0] + coachRateBandCents(t, 19)[1]) / 2, plan, 'middle') * WEEKS_PER_YEAR
+        ? Math.round(facilityRateCents(19, t) * coachHoursForPlan(plan) * coachCorridorMid('middle', t)) * WEEKS_PER_YEAR
+        : coachWeeklyCents((coachRateBandCents(t, 19)[0] + coachRateBandCents(t, 19)[1]) / 2, plan, 'middle', t) * WEEKS_PER_YEAR
     const dDev = (ECONOMY.coach.developmentFactor[b] / ECONOMY.coach.developmentFactor[a] - 1) * 100
     const dBill = billOf(b) - billOf(a)
     console.log(
@@ -910,7 +910,7 @@ function section2(): Career[] {
   const all: Career[] = []
   for (const bg of ['working', 'middle', 'wealthy'] as FamilyBackground[]) {
     console.log(`\n  ${'-'.repeat(108)}`)
-    console.log(`  ${bg.toUpperCase()} – parent wage ${money(ECONOMY.parentIncomeCents[bg])}/wk at week 0, corridor x${coachCorridorMid(bg).toFixed(2)}`)
+    console.log(`  ${bg.toUpperCase()} – parent wage ${money(ECONOMY.parentIncomeCents[bg])}/wk at week 0, corridor x${coachCorridorMid(bg, 'middle').toFixed(2)} (corridored rungs; high/elite are x1.00 since round 41 P1)`)
     console.log(`  ${'-'.repeat(108)}`)
     console.log(armHeader())
     const block: Career[] = []
@@ -1181,7 +1181,7 @@ function section5(): void {
       const ageYears = 14 + w / WEEKS_PER_YEAR
       if (ageYears < fromAge) continue
       const [lo, hi] = coachRateBandCents('elite', ageYears)
-      total += coachWeeklyCents(((lo + hi) / 2) * factor, plan, 'middle')
+      total += coachWeeklyCents(((lo + hi) / 2) * factor, plan, 'middle', 'elite')
     }
     return total
   }
@@ -1383,8 +1383,8 @@ async function section6(paths: string[]): Promise<void> {
       const [lo, hi] = coachRateBandCents(tier, ageYears)
       const weekly =
         tier === 'self'
-          ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(w.plan) * coachCorridorMid(w.profile.background))
-          : coachWeeklyCents((lo + hi) / 2, w.plan, w.profile.background)
+          ? Math.round(facilityRateCents(ageYears, tier) * coachHoursForPlan(w.plan) * coachCorridorMid(w.profile.background, tier))
+          : coachWeeklyCents((lo + hi) / 2, w.plan, w.profile.background, tier)
       console.log(
         `    ${padEnd(tier, 10)}${pad(`${money(weekly)}/wk`, 14)}${pad(`${money(weekly * WEEKS_PER_YEAR)}/yr`, 16)}` +
           `${pad(`${((100 * weekly * WEEKS_PER_YEAR) / Math.max(1, w.fundsCents)).toFixed(1)}% of her funds`, 24)}` +

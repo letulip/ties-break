@@ -3,7 +3,7 @@ type: spec
 status: current
 area: economy
 canonical: false
-last-reviewed: 2026-09-07
+last-reviewed: 2026-09-12
 ---
 
 # What the academy is worth – round 38 #8
@@ -170,3 +170,56 @@ re-exports it under its historical name, so `engine/world`, three tools and
 the same distance, for the same reason, and its own note in `world/assets.ts` spells out the argument
 this is the second instance of. `tests/import-cycles.test.ts` is the mechanical half of the claim and
 is green.
+
+## 6. Round 41 #24 (12.09.2026) – THE STAGES ARE BUILT TO ORDER, AND A BUILDING SITE IS WORTH WHAT WAS PAID
+
+**HIS ASK, 12.09:** «может быть для Академии корты, клубный дом и стафф тоже должны сколько-то
+строиться по времени, а не сразу быть готовы?» **AND HIS RULING, the same day, on the round's
+proposal of courts ~6 weeks, clubhouse ~12, staff hire 2–4:** «сроки ок, в этот же раунд заводи
+пожалуйста».
+
+**What shipped: three fields.** `buildWeeks` on `academy-courts` (6), `academy-building` (12) and
+`academy-staff` (3). The LAND carries none – «корты, клубный дом и стафф» names three things and a
+field is bought rather than built, so the deeds still arrive with the money.
+
+⚠⚠ **NOT ONE LINE OF MACHINERY MOVED, AND THAT IS THE FINDING RATHER THAN A CONVENIENCE.** The
+commissioning road has been shipped since round 29 #5 (`buildWeeks` → `readyWeek` → `deliverAssets`
+→ the «On order» card), and every reader of academy ownership already gated on `deliveredAssets`:
+the income (`assetWeeklyIncomeCents`' own first line), the epilogue's stage count
+(`academyEpilogueOf`), the sale (`sellableAsset`), the upkeep meter. The **worth** needed no gate at
+all: `buyAsset` writes `basisWeek = readyWeek` on a commissioned row, and both `assetValueCents` and
+`rampedWorthCents` clamp a negative span to zero – so a stage under construction is worth exactly
+what was paid for it, drift and premium both held at the door, which is the yacht's own behaviour to
+the cent.
+
+⚠ **NO SCHEMA MOVE.** `readyWeek` and `basisWeek` are round-29 persisted fields.
+`SAVE_SCHEMA_VERSION` stays **74**; no migration, no fixture. A save written before this item holds
+academy rows with no `readyWeek`, and `assetDelivered`'s rule is that an absent key MEANS delivered –
+so a loaded career finds its academy standing, which is what its owner left behind.
+
+### What it costs, measured (no bench arm is owed and here is why)
+
+**Invariant 5 asks for a bench where a balance corridor moves. None did:** not one price, rate,
+income figure or reputation band changed, so the only measurable effect is arithmetic – the delay
+shifts the start of the academy's income by each stage's own wait. Rather than run a corpus that
+could only rediscover multiplication, the number is **measured in a test that holds it**
+(`tests/round41-academy-build.test.ts` §3), on a career at reputation 1.0 that orders all four
+stages in one week:
+
+| | cents a week |
+| --- | ---: |
+| the whole academy, once built | **$7,250** |
+| banked over the 12-week build (staff from w+3, courts from w+6, clubhouse from w+12) | **$47,150** |
+| had all four arrived at once, as they did before this item | **$87,000** |
+| **deferred by the wait** | **$39,850**, once |
+
+**PREDICTED before the run:** «the delay shifts income start by weeks; a career loses on the order of
+one to two months of the academy's weekly line, once, and nothing recurring». **MEASURED:** $39,850,
+45.8% of the build window, paid once in a career – against a $12,000,000 shelf price, 0.33% of the
+purchase. The corridor is untouched: a career that waits the build out is in exactly the state it
+was in before, one quarter later.
+
+⚠ **The three stages now hold three different clocks inside one academy**, which is the one genuinely
+new fact and is why `tests/round38-academy-worth.test.ts` re-aimed six expectations from
+`w.week − boughtWeek` to the row's own `basisWeek`. The LAND's numbers in that file are byte-identical
+across this item, which is what makes the pair its own control.

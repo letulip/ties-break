@@ -126,6 +126,9 @@ describe('round 29 P3 §1 – the rule is one constant and every surface reads i
     // «контракт на полную сумму ребенку» has no birthday in it. ⚠ THIS IS THE HALF THAT MOVED MOST
     // MONEY: under her ramp the family kept 100% of every sponsor cheque before her eighteenth, and
     // that is most of what made the measured 63.1% so much higher than the 50% everybody quoted.
+    // ⚠ THAT SENTENCE IS HISTORY AND STAYS PHRASED AS HISTORY (round 41 items 15+27, ruling A1): the
+    // ramp it describes is the one P3 replaced for sponsor money, and #27 has since moved the ramp's
+    // own first column off zero. Neither touches the commission, which is what this arm is about.
     const young = probe('p3-age-young')
     const old = probe('p3-age-old')
     old.week = WEEKS_PER_YEAR * 12 // she is twenty-six-ish; the exact age is asserted below
@@ -137,10 +140,17 @@ describe('round 29 P3 §1 – the rule is one constant and every surface reads i
     )
     // ⚠ THE ARM CONTAINS THE THING IT IS MEASURING: the PRIZE ramp really does differ between these
     // two worlds, so a green here is age-independence of the COMMISSION and not two identical inputs.
-    expect(kidPrizeShareBps(kidAgeYears(young.week, young.profile.birthMonth, young.profile.birthDay))).toBe(0)
-    expect(
-      kidPrizeShareBps(kidAgeYears(old.week, old.profile.birthMonth, old.profile.birthDay)),
-    ).toBeGreaterThan(0)
+    //
+    // ⚠⚠ ROUND 41 ITEMS 15+27 (the owner's ruling A1) – THE YOUNG RUNG IS NO LONGER A ZERO AND THE
+    // CONTRAST IS UNHARMED. «Призовые падают на её счёт с первого старта W-серии независимо от
+    // возраста – согласен» made the ramp's first column a flat `startBps`, so the fourteen-year-old's
+    // PRIZE rate is 10% rather than nothing – and the twenty-six-year-old's is still the cap. What
+    // this precondition is for is that the two really differ, which is asserted as the relation
+    // rather than against a literal, off the engine's own ladder.
+    const youngBps = kidPrizeShareBps(kidAgeYears(young.week, young.profile.birthMonth, young.profile.birthDay))
+    const oldBps = kidPrizeShareBps(kidAgeYears(old.week, old.profile.birthMonth, old.profile.birthDay))
+    expect(youngBps, 'below the birthday the ramp is its flat floor').toBe(ECONOMY.kidShare.startBps)
+    expect(oldBps, 'and the older world really is on a different rung of it').toBeGreaterThan(youngBps)
 
     const a = bankSponsorCheque(young, 40_000_00, { category: 'income', text: 'a fee' })
     const b = bankSponsorCheque(old, 40_000_00, { category: 'income', text: 'a fee' })
