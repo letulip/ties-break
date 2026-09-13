@@ -66,7 +66,12 @@
 // the standing). `applyBondDelta` is the only writer this file calls.
 import { pickInt, rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
-import { applyBondDelta, bondBandOf, moodRegisterOf, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
+// ⚠⚠ `expressedTemperamentOf` JOINS THE LINE IN v76's T7, AND IT DOES NOT REPLACE `temperamentFor`
+// OR THE PRIVATE `temperamentOf` BELOW – the architect's RULING A. Three of this file's five
+// temperament reads are MECHANICS and move to expression; two are RE-DERIVATIONS of a persisted
+// price and must stay on BIRTH. Each of the five carries its own ⚠ comment naming the ruling, and
+// `temperamentOf`'s own body is untouched precisely so the split is visible per CALL SITE.
+import { applyBondDelta, bondBandOf, expressedTemperamentOf, moodRegisterOf, spiritBandOf, temperamentFor, temperamentOpenness, type Temperament } from '../spirit'
 import { kidAgeExact } from './age'
 // ⭐ `seasonIndexOf` JOINS `addEvent` HERE IN v74 T8 – the engine's ONE definition of «this season»,
 // and the season the tier-1 cap is counted within (`smallTalkThisSeason`, §7). `ledger.ts` is a leaf
@@ -2166,6 +2171,18 @@ function beatEndsRead(world: WorldState, row: LifeBeatRecord): EndsRead {
   if (row.kind !== 'ended') return 'space'
   const episode = loveEpisodesOf(world).find((e) => e.id === row.detail)
   if (episode === undefined || episode.endedWeek === null) return 'space'
+  // ⚠⚠ BIRTH, AND IT MUST NOT MOVE TO `expressedTemperamentOf` – v76's T7, THE ARCHITECT'S RULING A,
+  // which is the ⚠⚠ block above this function restated in the walls' own terms. The read is
+  // RE-DERIVED at answer time from the episode's dates and the seed, and it PRICES the option set
+  // (`'ended'`'s space/company delta is +3 or −3 BY IT). Expression is a fact about the world's
+  // CURRENT week, not about the episode, so a read that consulted it would be reconstructed against
+  // a different girl the moment a flip landed – and `answerLifeBeat` would then charge the opposite
+  // sign of what the player chose. ⚠ The limit of the hazard, stated honestly: it is LATENT, not
+  // live, because `LIFE_BEAT_BLOCKING.ended === true` stops the week between the raise and the
+  // answer and no leaning pass can run in the gap. The trap is for the album (step 6+), which is
+  // promised a read of the arc «later». ⚠ THIS SITE AND THE TOLD-LATE ROW IN §6 ARE TWINS BY DESIGN
+  // – «the row and the card the same tick raises cannot disagree» – so they move together or not at
+  // all, and ruling A says not at all.
   return drawEndsRead(world.seed, episode.endedWeek, temperamentOf(world))
 }
 
@@ -2478,7 +2495,21 @@ function kidAgeNow(world: WorldState): number {
 /** WHO SHE IS, with `accrueSpirit`'s own courtesy for probe worlds hand-built in tests and benches:
  *  the field is required on every career that was created or migrated, and re-deriving it from the
  *  seed is the SAME function `createWorld` drew it with, so the fallback cannot invent a different
- *  girl from the one the save holds. */
+ *  girl from the one the save holds.
+ *
+ *  ⚠⚠ THIS BODY MUST NEVER BE RE-POINTED AT `expressedTemperamentOf`, AND v76's T7 IS THE WAVE THAT
+ *  HAD THE CHANCE TO (the architect's RULING A). Re-pointing here would have been one line instead
+ *  of three, and it would have been wrong: of the five call sites this function had, THREE are
+ *  mechanics evaluated now and read expression, and TWO re-derive a persisted price and must read
+ *  BIRTH. A single body cannot be both. So the swaps are per CALL SITE – `rollArrival`,
+ *  `arrivalEligible`'s cooldown and `rollEnds` now call `expressedTemperamentOf` directly; this
+ *  function survives as the BIRTH reading and keeps exactly the two callers ruling A left it
+ *  (`beatEndsRead` and the told-late row in §6), each carrying its own ⚠⚠ note.
+ *
+ *  ⚠ IT IS NOT `voiceOf`, WHICH IS ALSO BIRTH AND IS A DIFFERENT LAW. `voiceOf` is «who she is, for
+ *  the WORDING alone» – who-she-is §3's fence, «the voice bibles read birth alone». This one is
+ *  birth because of ruling A's re-derivation rule. Two reasons, two functions, and merging them
+ *  would lose the distinction the next wave needs. */
 function temperamentOf(world: WorldState): Temperament {
   return world.temperament ?? temperamentFor(world.seed)
 }
@@ -2523,7 +2554,13 @@ export function arrivalEligible(world: WorldState): boolean {
   if (kidAgeNow(world) < life.ageGate) return false
   if (activeEpisode(world) !== null) return false
   const ended = lastEndedWeek(world)
-  if (ended !== null && world.week - ended < life.cooldownWeeks[temperamentOf(world)]) return false
+  // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A. The cooldown is EVALUATED NOW and
+  // stored nowhere: `lastEndedWeek` is the persisted fact and this only asks how long a girl like
+  // her waits. So it reads the girl she is this week, and a `quiet` girl whose walls came down waits
+  // the shorter `sunny`/`fiery` span from the very next tick – which is the point of the re-point.
+  // ⚠ It is the MEETING half of the cooldown (who-she-is §1: openness owns «the meeting»), which is
+  // why it is here and not beside the ends hazard.
+  if (ended !== null && world.week - ended < life.cooldownWeeks[expressedTemperamentOf(world)]) return false
   return true
 }
 
@@ -2622,7 +2659,15 @@ export function shaveLag(raw: number, band: BondBand): number {
  *  gate's clause 2 are together why the list can only ever end in at most one open row. */
 export function rollArrival(world: WorldState): void {
   if (!arrivalEligible(world)) return
-  const temperament = temperamentOf(world)
+  // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A, and this is the site the ruling
+  // is easiest to get wrong at because ONE read feeds three things. `arrivalHazardFor` is evaluated
+  // now; `drawPartnerWants` and `drawRawLag` are STAMPED onto the episode row (`wants`, `knownWeek`)
+  // at the week they were true. Ruling A's law: «a draw whose RESULT IS PERSISTED may read
+  // EXPRESSION – it is stamped at the week it was true», so all three read the girl she is THIS
+  // week. A girl behind walls meets fewer people and tells later; that is the walls doing exactly
+  // what §2a says they do. ⚠ The two `drawEndsRead` sites (`beatEndsRead`, and the told-late row in
+  // §6) are the other half of the same ruling and stay on BIRTH – see their own notes.
+  const temperament = expressedTemperamentOf(world)
   const hazard = arrivalHazardFor(kidAgeNow(world), temperament)
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY. `<` and not `<=`: a hazard of 0 must be impossible rather
   // than merely unlikely, and `rngFromSeed` can return exactly 0.
@@ -2985,6 +3030,13 @@ export function deliverKnownPartner(world: WorldState): void {
       keep: true,
       // ⚠ NO AMOUNT (rule 4), and the read comes off the ENDING's own week – `beatEndsRead`'s twin
       // through the same derivation, so the row and the card the same tick raises cannot disagree.
+      // ⚠⚠ BIRTH, AND IT MUST NOT MOVE TO `expressedTemperamentOf` – v76's T7, THE ARCHITECT'S
+      // RULING A. The sentence directly above is the whole argument: this row and `beatEndsRead`'s
+      // card are TWINS, the card's read is a PRICE INPUT that `answerLifeBeat` re-derives, and twins
+      // that read two different girls would print one wording and charge another. The TEXT here is
+      // persisted; the READ behind it is not, and re-derivation against a moved expression would
+      // rewrite history. ⚠ THE TEMPERAMENT-INDEXED POOLS BESIDE IT READ BIRTH FOR THE OTHER REASON
+      // (§0.2's fence, `voiceOf` above) – two different laws landing on one line, both saying birth.
       text: endedKeptRow('told-late', drawEndsRead(world.seed, due.endedWeek, temperamentOf(world)), frameEnd),
       // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED. `WorldEvent.lifeKind` (T1's field) is what lets the feed's
       // glyph column tell one life row from another; this is the told-late ENDING row, so `'ended'`.
@@ -3323,7 +3375,12 @@ export function endsHazardFor(temperament: Temperament): number {
  *  but it cannot be reached in that state from here – the gate above has already found the row. */
 export function rollEnds(world: WorldState): void {
   if (!endsEligible(world)) return
-  const hazard = endsHazardFor(temperamentOf(world))
+  // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A. The hazard is EVALUATED NOW and
+  // nothing about it is stored: what `endEpisode` writes is a DATE. So the multiplier is the one
+  // belonging to the girl she is this week. ⚠ AND IT IS THE INTENSITY AXIS THAT OWNS THIS ONE
+  // (who-she-is §1: «INTENSITY owns how hard things land and how long feelings hold – … an
+  // attachment's end-hazard»), which is why a `reg` flip is the axis that moves it.
+  const hazard = endsHazardFor(expressedTemperamentOf(world))
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament, so the four girls read
   // the SAME uniform against four different hazards. That is what makes the multiplier a pure scale
   // rather than four unrelated dice, and it is the property the nesting pin holds them to.

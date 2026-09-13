@@ -209,10 +209,22 @@ export function temperamentFromAxes(openness: 'open' | 'private', intensity: 'st
  * state, armed past ±`flipArm` and released only inside ±`flipRelease` (T7). Reading the leaning
  * directly would be the flicker the hysteresis exists to abolish – «a flip is an event of seasons,
  * never a flicker» – and would put a threshold in two places at once.
- */
+ *
+ * ⚠⚠ THE TWO `??` COURTESIES ARE T7's AND THEY ARE A REQUIREMENT OF THE ZERO-DIFF PIN RATHER THAN A
+ * TIDINESS. T1 could read both fields raw because NOTHING CALLED THIS. T7 re-points five mechanics
+ * onto it, and the reads it replaces were themselves defensive – `world/lifeBeat.ts`'s private
+ * `temperamentOf` is `world.temperament ?? temperamentFor(world.seed)` and `accrueSpirit` spelled the
+ * same fallback inline, both for the probe worlds hand-built in tests and benches. Dropping the
+ * fallback at the swap would have changed those sites' behaviour on exactly those worlds – a
+ * temperament-less probe reads `'deep'` through the raw form (`undefined` is neither `'sunny'` nor
+ * `'fiery'`, and neither `'sunny'` nor `'quiet'`) where it used to read the seed's own girl – which
+ * is the opposite of what a re-point is allowed to do. `wallsFlipped` gets the same courtesy for the
+ * harder version of the same reason: a probe world that predates v76 has no such key at all, so the
+ * raw `flipped.open` would THROW rather than merely disagree. Every real world – created or migrated
+ * – carries both, so neither branch is reachable in play. */
 export function expressedTemperamentOf(world: WorldState): Temperament {
-  const birth = world.temperament
-  const flipped = world.wallsFlipped
+  const birth = world.temperament ?? temperamentFor(world.seed)
+  const flipped = world.wallsFlipped ?? { open: false, reg: false }
   const openness = flipped.open
     ? temperamentOpenness(birth) === 'open'
       ? 'private'
@@ -631,7 +643,21 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
 export function accrueSpirit(world: WorldState, psychologistWorks: boolean): void {
   const s = ECONOMY.spirit
   const b = ECONOMY.bond
-  const intensity = temperamentIntensity(world.temperament ?? temperamentFor(world.seed))
+  // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A («`accrueSpirit`'s intensity read
+  // is evaluated now ⇒ expressed»). It is spent three ways on this pass – `returnPerWeek[intensity]`,
+  // `perturbationScale[intensity]` and `shock[kind][intensity]` – and not one of the three is stored,
+  // so all three are about the girl she is THIS week. An `intense` girl who learned to regulate takes
+  // the world at ×0.8 and comes back at 5/wk from the tick after her flip, and that is what «she
+  // learned to breathe» has to mean arithmetically or it means nothing.
+  // ⚠⚠ AND IT IS READ EXACTLY ONCE, HERE AT THE HEAD, WHICH IS RULING F AND IS WHY `driftWalls` IS A
+  // SIBLING OF THIS FUNCTION RATHER THAN A BLOCK IN ITS TAIL (ruling P). The week's perturbation was
+  // experienced by the girl she was ALL week; a flip that fired mid-pass would price half the week as
+  // one person and half as another. Do not re-read it after this line, and never thread a new value
+  // into the same tick.
+  // ⚠ `expressedTemperamentOf` CARRIES THE `?? temperamentFor(world.seed)` COURTESY INSIDE IT, so the
+  // probe-world fallback this line used to spell out has not been dropped – it has moved one level
+  // down and is shared by all five re-pointed sites. See its own ⚠⚠ note.
+  const intensity = temperamentIntensity(expressedTemperamentOf(world))
   // ⚠ ASKED ONCE AND HANDED TO BOTH, so the two numbers can never disagree about whether the family
   // had a holiday this season – the same "asked once, carried" doctrine the masseur's fare follows.
   const wrapWithNoVacation = seasonWrapsWithNoVacation(world)

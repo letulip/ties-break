@@ -507,26 +507,70 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
 // F. THE CENSUS – who may name the six keys, and who may call the function
 // =================================================================================================
 describe('wave 5 T1 F – the readers, exhaustively', () => {
-  it('⭐⭐⭐ `expressedTemperamentOf` has ZERO call sites in src/ outside its own module', () => {
+  it('⭐⭐⭐ `expressedTemperamentOf` is named in exactly TWO files, and ruling A\'s 3/2 split is exact', () => {
     // ⚠⚠ THE BRIEF'S OWN CONDITION FOR LANDING THIS FUNCTION IN T1, MADE MECHANICAL (§0.2 and the T1
     // block: «In T1 it has ZERO call sites in `src/` outside its own module – the mechanics are
     // re-pointed in T7»). This is the pin that makes the zero-diff claim airtight: it is not merely
     // that the function returns birth today, it is that NOTHING ASKS IT. A reader added before T7
     // would be a re-point nobody reviewed, and the cheapest way to notice one is to pin the set.
     //
+    // ⚠⚠ RE-AIMED 13.09 BY WAVE 5's T7, AND STRENGTHENED RATHER THAN RENUMBERED – which is this
+    // file's own duty and the thing the paragraph below already promised would happen («When T7
+    // re-points its sites this list grows»). WHAT MOVED: the census is now TWO files, because T7 is
+    // the commit that re-points the mechanics. WHY BUMPING THE LIST FROM ONE ENTRY TO TWO AND
+    // STOPPING THERE WOULD HAVE BEEN A WEAKENING: the old pin's real claim was «the set of readers is
+    // known and reviewed», and a two-element file list says nothing about WHICH of `lifeBeat.ts`'s
+    // five temperament reads moved. RULING A's whole content is the 3/2 SPLIT inside that one file –
+    // three mechanics to expression, two re-derived prices to birth – so the split itself is what
+    // this pin now asserts, per call site, by counting both spellings. A future editor who
+    // «tidies up» by re-pointing `temperamentOf`'s body (one line, and the exact mistake ruling A
+    // exists to forbid) leaves the FILE list untouched and goes red here on 3 → 5 and 2 → 0.
+    //
     // ⚠ `codeOnly`, because `state.ts` and this wave's own prose NAME the function in comments, and a
     // pin that tripped on an explanation would be repaired by deleting the explanation.
     const named = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('expressedTemperamentOf'))
       .map(([path]) => path)
-    expect(named, 'the function exists in exactly one file, and is called from none').toEqual(['engine/spirit.ts'])
+    expect(named, 'the reader set is exactly the two modules T7 re-pointed')
+      .toEqual(['engine/spirit.ts', 'engine/world/lifeBeat.ts'])
+    // ⭐⭐ RULING A, COUNTED. `lifeBeat.ts` held FIVE `temperamentOf(world)` calls before T7. Three are
+    // evaluated-now mechanics (`rollArrival`'s hazard/wants/lag, `arrivalEligible`'s cooldown,
+    // `rollEnds`'s hazard) and read EXPRESSION; two re-derive the `'ended'` card's PRICE
+    // (`beatEndsRead`, and the told-late kept row) and must read BIRTH, because `answerLifeBeat`
+    // re-validates the chosen option against a set that has to be reconstructible from persisted
+    // facts – and expression is a fact about the current week, not about the episode.
+    const beats = codeOnly(readFileSync(`${SRC}engine/world/lifeBeat.ts`, 'utf8'))
+    expect(beats.split('expressedTemperamentOf(world)').length - 1, '⚠ ruling A: THREE mechanics read expression')
+      .toBe(3)
+    // ⚠ THE TWO COUNTS DO NOT OVERLAP, WHICH WAS MEASURED RATHER THAN ASSUMED (the first drafting of
+    // this line subtracted 3 for the expected overlap and went red at −1). `expressedTemperamentOf`
+    // spells the shared tail with a CAPITAL T – `…TemperamentOf(world)` – so a search for
+    // `temperamentOf(world)` cannot see it, and neither can the declaration
+    // `temperamentOf(world: WorldState)`, whose next character is a colon. Two independent counts.
+    expect(beats.split('temperamentOf(world)').length - 1, '⚠ ruling A: TWO re-derived prices read birth')
+      .toBe(2)
+    // ...and the private birth reader still EXISTS, so the count above cannot go green by the
+    // function having been deleted and its two callers inlined.
+    expect(beats, 'the birth reading is still a function of its own').toContain('function temperamentOf(world: WorldState)')
+    // ⭐ AND `accrueSpirit`'s OWN read is the fifth swap, in the other file – ruling A's tail («the
+    // intensity read is evaluated now ⇒ expressed»). Pinned by its neighbours rather than by a line
+    // number: the birth spelling it replaced must be gone from the weekly pass.
+    const spirit = codeOnly(readFileSync(`${SRC}engine/spirit.ts`, 'utf8'))
+    expect(spirit, '⚠ the weekly pass reads the EXPRESSED intensity')
+      .toContain('temperamentIntensity(expressedTemperamentOf(world))')
+    expect(spirit, '⚠ ...and the birth spelling it replaced is not still standing beside it')
+      .not.toContain('temperamentIntensity(world.temperament ?? temperamentFor(world.seed))')
     // ⚠⚠ AND THE FENCE, WHICH IS THE HALF T7 MUST NOT BREAK EITHER (who-she-is §3, wave-5 brief §0.2).
     // The MECHANICS may read expression; the VOICES read BIRTH and only birth – the bibles, the
-    // tier-0/1 pools, the prompt registers and the birthday-ask weighting. When T7 re-points its
-    // sites this list grows, and the sentence that must stay true is the one below: a voice file
-    // appearing here is a finding, not a tuning miss.
+    // tier-0/1 pools, the prompt registers and the birthday-ask weighting. A voice file appearing
+    // here is a finding, not a tuning miss.
     expect(named.some((p) => p.includes('diary') || p.includes('voice') || p.startsWith('components/')))
       .toBe(false)
+    // ⭐ THE NAMED HALF OF THE SAME FENCE, because «no diary and no voice FILE» is weaker than the
+    // rule: `birthday.ts`'s ask weighting is §0.2's own worked example of a read that stays on birth
+    // and lives in a file that is not called «voice» anything.
+    expect(named, '⚠ the birthday ask weighting reads BIRTH – §0.2\'s named fence')
+      .not.toContain('engine/world/birthday.ts')
   })
 
   it('⭐⭐ the WALLS keys are named in three files in src/ – the seat, the back-fill and the literal, plus ONE reader', () => {
