@@ -107,7 +107,7 @@
 
 import { spawn } from 'node:child_process'
 import { availableParallelism } from 'node:os'
-import { classify, recoveredNote } from './lib/stall.mjs'
+import { classify, lateAckNote, lateAckOnly, recoveredNote } from './lib/stall.mjs'
 // ⚠ IMPORTED, NOT A SECOND COPY (round-22 review). This file used to carry its own hand-maintained
 // duplicate of the list vite.config.ts declared – measured, commented and correct, and with nothing
 // but discipline keeping the two in step. A file added to one and not the other either runs twice
@@ -122,6 +122,7 @@ const started = Date.now()
 const failed = []
 const stalled = []
 const recovered = []
+const lateAcks = []
 
 // ⚠ `spawn` AND A PROMISE, WHERE THIS WAS `spawnSync` (P-13, 05.09). Nothing about one shard
 // changed – same argv, same buffered stdio, same `classify` on the same exit code – but the caller
@@ -168,11 +169,23 @@ function once(args, env) {
 // the line is the only thing a CI log carries – so the shard's name and its verdict have to leave
 // this function together. The order is completion order rather than list order, which is why every
 // line names its shard.
-async function run(label, args, env = {}) {
+// ⚠ 13.09 – `acceptLateAck` IS THE BULK POOL'S FLAG AND NOBODY ELSE'S. When the buffer PROVES the
+// non-zero exit is birpc's own late ack over an all-green run (`lateAckOnly` – vitest's unhandled
+// count line present, every counted error stamped `[vitest-worker]`), the shard is GREEN, loudly,
+// with no retry: deploy runs #135/#137 showed the retry re-rolling the same ~11-minute dice and
+// burning 23 minutes to report a cosmetic timeout twice. The heavy shards NEVER pass this flag –
+// there a file is the unit, the 60 s window is per file, and a late ack means the file is ON the
+// wall and must be cut: the radar law (11.08) holds exactly where it was learned.
+async function run(label, args, env = {}, opts = {}) {
   let line = `  unit  ${label} … `
   let r = await once(args, env)
 
   if (r.stalled) {
+    if (opts.acceptLateAck && lateAckOnly(r.out)) {
+      lateAcks.push({ label, secs: r.secs })
+      console.log(line + `green with a late ack (${r.secs}s) – birpc's own timeout, accepted, no retry`)
+      return
+    }
     line += `stalled (${r.secs}s, every test green) – retrying once … `
     const first = r
     r = await once(args, env)
@@ -182,6 +195,11 @@ async function run(label, args, env = {}) {
       return
     }
     if (r.stalled) {
+      if (opts.acceptLateAck && lateAckOnly(r.out)) {
+        lateAcks.push({ label, secs: r.secs })
+        console.log(line + `green with a late ack (${r.secs}s) – birpc's own timeout, accepted`)
+        return
+      }
       stalled.push({ label, out: r.out })
       console.log(line + `STALLED TWICE (${r.secs}s) – runner, not tests`)
       return
@@ -303,14 +321,18 @@ async function runHeavy(files) {
   await Promise.all(Array.from({ length: lanes }, lane))
 }
 
-if (only !== 'heavy') await run('bulk', [], { TB_UNIT_SKIP_HEAVY: '1' })
+if (only !== 'heavy') await run('bulk', [], { TB_UNIT_SKIP_HEAVY: '1' }, { acceptLateAck: true })
 if (only !== 'bulk') await runHeavy(HEAVY_UNIT_FILES)
 
 const total = ((Date.now() - started) / 1000).toFixed(0)
 for (const r of recovered) console.error(recoveredNote(r.label, r.firstSecs))
+for (const r of lateAcks) console.error(lateAckNote(r.label, r.secs))
 
 if (failed.length === 0 && stalled.length === 0) {
-  const tail = recovered.length ? ` (${recovered.length} recovered after a stall)` : ''
+  const parts = []
+  if (recovered.length) parts.push(`${recovered.length} recovered after a stall`)
+  if (lateAcks.length) parts.push(`${lateAcks.length} green with a late ack`)
+  const tail = parts.length ? ` (${parts.join(', ')})` : ''
   console.log(`  unit: green in ${total}s${tail}`)
 } else {
   for (const f of [...failed, ...stalled]) console.error(`\n===== ${f.label} =====\n${f.out}`)

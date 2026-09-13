@@ -57,3 +57,52 @@ export function recoveredNote(label, firstSecs) {
     `\n    own. Check load and swap before trusting any timing figure from this run.`
   )
 }
+
+// ⚠⚠ 13.09 – THE LATE ACK, told apart from the wedge, and the day that forced the distinction.
+// Deploy runs #135 and #137 (and #136's first attempt) went red on the bulk pool with EVERY test
+// green – and the durations said nothing ever hung: 692 s and 682 s against a healthy run's 681 s.
+// The pool ran to completion; ONE reporter ack crossed birpc's unraisable 60 s window somewhere
+// inside ~11 minutes of saturated workers; vitest logged it as an unhandled error and exited 1.
+// `classify` correctly calls that shape infrastructure – but the retry it prescribes re-rolls the
+// same ~11-minute dice, and on a day when the odds are bad the gate burns 23 minutes to report a
+// cosmetic timeout twice. The radar law (a shard that stalls twice is OVER the wall and its FILE
+// must be cut) still holds where a file IS the unit – the heavy shards – and unit-bulk keeps it
+// for every OTHER shape too. The leniency below exists ONLY for the shape the buffer itself can
+// prove harmless.
+//
+// ⚠ AND IT READS THE ERROR TEXT DELIBERATELY, where the header above says classification must
+// not. The header's concern is version drift making STALL DETECTION miss – failing unsafe. This
+// check runs the OTHER way: it must prove every unhandled error is vitest's own transport
+// timeout before it may be LENIENT, so an unrecognised text falls back to the strict path.
+// Version drift here fails SAFE: unknown error shapes never read as green.
+
+/** vitest's own worker-RPC timeout – the one error a green suite may carry and still be green.
+ *  The family is `Timeout calling "onTaskUpdate"` / `"onCollected"` / …, always stamped
+ *  `[vitest-worker]`. Nothing an app's own code throws wears that prefix. */
+const INFRA_ACK_ERROR = /\[vitest-worker\]: Timeout calling "on[A-Za-z]+"/g
+
+/** TRUE only when the buffer PROVES the run's unhandled errors are all birpc late acks: vitest's
+ *  own count line is present, and at least that many infra-stamped timeout lines exist. A foreign
+ *  unhandled error (a real defect in app code) makes the count exceed the infra matches and the
+ *  verdict falls back to strict. No count line (a runner that died mid-report) is strict too –
+ *  silence must never read as green, the module's standing law. */
+export function lateAckOnly(output) {
+  const caught = output.match(/Vitest caught (\d+) unhandled errors? during the test run/)
+  if (!caught) return false
+  const n = Number(caught[1])
+  if (!(n >= 1)) return false
+  const infra = output.match(INFRA_ACK_ERROR)?.length ?? 0
+  return infra >= n
+}
+
+/** The sentence for an accepted late ack – loud on purpose: a gate that quietly forgives a
+ *  timeout rebuilds the recoveredNote lie one level down. Printed once per accepted shard. */
+export function lateAckNote(label, secs) {
+  return (
+    `\n  ⚠ ${label} finished green in ${secs}s and exited non-zero on birpc's own late ack –` +
+    `\n    every unhandled error in the buffer is vitest's transport timeout, none is the app's.` +
+    `\n    Accepted as green without a retry. If this line becomes a regular guest, the pool is` +
+    `\n    living on the 60 s wall and the next step is fewer workers per core, measured` +
+    `\n    (scripts/heavy-tests.mjs carries the prescription) – never fewer tests.`
+  )
+}
