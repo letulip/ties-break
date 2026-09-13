@@ -339,3 +339,74 @@ rested on the same lock. Both re-aimed with the ⚠ note; ARM 2's hole stays cov
 
 ⚠ **And the notification lied a third time in this wave** – a deliberately killed sim came back as
 «exit code 0» while its own log read `SIM_EXIT=143`.
+
+## Ruling J – the effect rides the billing predicate, and how `spirit.ts` is allowed to ask
+
+T4 shipped the recovery slope gated on `psychologistHired && focus === 'recovery'` and then handed
+the question back rather than guessing. It was right to: **the gate is wrong, and the file's own
+twin says so.**
+
+**Measured.** `resolvePsychologist` opens with `if (!psychologistWorksThisWeek(world)) return` – so
+on a college-freeze week and on a booked family week the parent is **not billed**. T4's
+`shockBeingWorked` reads only `psychologistHired` and the focus, so on exactly those weeks the
+slope still ran. Pay nothing, receive the work – the travelling-team §4 legibility law read
+backwards.
+
+**The precedent is one seat over and it is explicit.** `world/medical.ts:62` imports
+`masseurWorksThisWeek` directly and spends it inside `accrueCondition`; `phaseHerWeek`'s own comment
+states the rule in words: «His effects ride the same predicate». The psychologist was built as that
+man's twin and must be a twin here too.
+
+**Why the twin's own method is closed to `spirit.ts`, measured rather than assumed.** Importing the
+seat from `spirit.ts` closes a real value cycle:
+`spirit → psychologist → college → player → spirit` (`world/player.ts:15` imports
+`spiritMatchFactor`). Cutting the `bondBandOf` arrow T3 added would remove only one of the two
+edges; the `inCollege` arrow T2 added closes it anyway. And moving `inCollege` to a cycle-free leaf
+is a **23-file** change – a plumbing refactor inflating a wave that is about a psychologist.
+
+**The ruling: dependency inversion at the caller, which already holds both facts.**
+`phaseHerWeek.ts` imports `accrueSpirit` (`:27`), `inCollege` (`:55`) and `resolvePsychologist`
+(`:57`). So the call becomes
+
+```
+accrueSpirit(world, psychologistWorksThisWeek(world))
+```
+
+self-describing at the call site, one implementation, no new arrow, no cycle. **The same parameter
+serves T7's O6 retainer slow-down** – a standing-down seat slows nothing either, for the same
+reason – so it is added once and read twice.
+
+⚠ **Two guard pins re-aim, and the re-aim must STRENGTHEN rather than renumber.**
+`tests/spirit.test.ts:929` asserts `accrueSpirit.length === 1` under the heading «neither weekly
+function takes an Rng at all – the strongest form of the same claim», and `:1053` pins the call text
+`accrueSpirit(world)` as appearing exactly once. A `boolean` parameter leaves the pins' PURPOSE
+untouched, so bumping 1 to 2 and calling it done would trade a real claim for a number. The re-aim
+carries the ⚠ note naming this ruling AND keeps the no-Rng claim alive by asserting it of the
+signature directly; the zero-draw test immediately above it is the net that actually catches a
+draw.
+
+⚠ **T5, T6 and T7's other readers do NOT have this cycle** and must use the twin's own method – a
+direct import of `psychologistWorksThisWeek`, exactly as `medical.ts` does. The parameter is
+`spirit.ts`'s exception, not the wave's pattern.
+
+## Ruling B, corrected a second time – `FROZEN` holds THREE cells
+
+T4 measured what T1, T2, T3, T3b and I had all been repeating loosely: **`FROZEN` carries three
+cells** – `middleGrinder` 5/0, `eliteGrinder` 8/0, `selfTravelling` 0/1. `PRE_R28B` is the rung that
+carries five, with `highPlayer` 6/1 and `middlePlayer` 5/1. The five-cell key counts (85 · 84 · 86 ·
+84 · 85 after v76) are counts of the CAREERS a diff walks, not of one constant's members. Ruling B's
+⚠ stands and gets sharper: measure the rung you are actually peeling.
+
+## Ruling K – what the frozen corpus cannot see, named before it misleads someone
+
+T4's §E pin first hashed the FINAL world after a walk and reported `spirit` unmoved – because spirit
+returns to baseline either way, and a terminal diff cannot see that one arm got there four weeks
+sooner. The pin now hashes every key every week.
+
+⚠ **The frozen-career corpus is diffed the blind way**: it compares end states. So «0 keys moved»
+is strong evidence about a change that shifts an end state and **weak evidence about a change that
+converges** – a faster walk to the same place, a different route to the same wallet. Every
+convergent effect this wave ships (the recovery slope, the composure walk toward a ceiling she
+reaches anyway, the walls repairing to 0) is exactly that shape. The corpus is not the instrument
+for them; T10's paired arms are, and a zero from the corpus must never be reported as if it were
+one from the bench.
