@@ -565,6 +565,17 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // – this file's own ARM 2 is the recorded proof of what happens when an expectation is read out of
   // the thing under test.
   ended: { id: 'fix-it', bond: -1 },
+  // ⚠ RE-AIMED 13.09 BY v76 T8, AND IT IS THE TOTAL RECORD DOING EXACTLY WHAT IT IS FOR: the union
+  // grew by `'fork-psy'` and somebody had to type a number. WHAT MOVED: one row. WHAT DID NOT: the
+  // law, which is still «the SAME price under every reading» and not «zero». ⚠ THE NUMBER IS THE
+  // RULING'S LITERAL, transcribed from the wave-5 brief's T8 («mirror `'fork-counsel'`'s option and
+  // pricing shape exactly») and from v74 T17's own «counsel is information, not a test» – never read
+  // off `LIFE_BEAT_OPTIONS['fork-psy']`, which is this file's ARM 2 story.
+  // ⚠⚠ AND THE READ-INDEPENDENCE OF THIS ONE IS THE STRONGEST IN THE RECORD RATHER THAN THE WEAKEST,
+  // which is worth a line because the kind's whole point is that it READS something. The psychologist
+  // reads `spiritShock` for the WORDING COLUMN of his card; `lifeBeatOptionsFor` carries no overlay
+  // for this kind, so the priced list is the same object under every `wants` and every ends-read.
+  'fork-psy': { id: 'straight', bond: 0 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -593,6 +604,12 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // ⚠ RE-AIMED BY v75 T4: the ending's `detail` is the EPISODE ID, exactly as `'met'`'s is – ruling
   // G.2's «machine-readable, never a rendered sentence», and the id `raised` above builds.
   ended: 'p:892',
+  // ⚠ RE-AIMED BY v76 T8: the psychologist's `detail` is TWO fields, `'<register>:<driver>'` – his
+  // shock column and the coach's own driver – so the fixture writes the detail his card can actually
+  // be worded from. `'plain:own'` is «nothing sitting on her, and the stop is hers», which is the
+  // register a career with no live `spiritShock` raises. ⚠ A row carrying a detail its kind cannot
+  // read is a fixture defect dressed as a finding, which is this helper's own note one block up.
+  'fork-psy': 'plain:own',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.

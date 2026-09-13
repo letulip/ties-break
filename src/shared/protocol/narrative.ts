@@ -204,6 +204,36 @@ export interface SoftBeatInvite {
  *  blocking in the same way, answered before the fork like this one – and layer 3 (the pressed-through
  *  stop remembered and re-read later) is wave 5's with him. Nothing here anticipates either; this
  *  note is the pointer wave 5 is meant to find.
+ *  ⭐⭐⭐ v76 (wave 5 – T8) IS THAT WAVE, AND THE NOTE ABOVE IS KEPT AS THE POINTER IT WAS RATHER THAN
+ *  REWRITTEN: `'fork-psy'` is the row it promised, and it arrived exactly as promised – raised from
+ *  the same place in `answerLifeBeat`, blocking in the same way, answered before the fork. Layer 3 is
+ *  still nobody's.
+ *
+ *  ⭐⭐⭐ v76 (wave 5 – T8) ADDS `'fork-psy'`: THE PSYCHOLOGIST'S READ ON THE SAME `stop`, raised one
+ *  line after the coach's and only while the seat is WORKING that week.
+ *
+ *  ⚠⚠ THE GATE IS `psychologistWorksThisWeek`, NOT `world.psychologistHired` – the architect's ruling
+ *  J, which the wave brief's own «gated `world.psychologistHired`» is superseded by. A seat stood down
+ *  by a college freeze or a booked family week is NOT BILLED that week, so it gives no counsel that
+ *  week either: pay nothing, receive nothing. The flag survives both, so the call resumes by itself.
+ *
+ *  ⚠ NO FOCUS IS REQUIRED. The fork is the SEAT and not a year-focus – any focus, or none, as long as
+ *  somebody is being paid to be there. `psychologistWorkingRung` is the OTHER question («is he working
+ *  THIS focus») and belongs to the focus passes, not here.
+ *
+ *  ⚠⚠ ITS `detail` IS TWO FACTS AND NOT ONE – `'<register>:<driver>'`. The driver half is the coach's
+ *  own, the same reading her line was worded from; the register half is `spiritShock`'s KIND, or
+ *  `'plain'` when nothing is sitting on her. That second half is the whole of why this seat exists –
+ *  «a girl under her line, and a girl under her line because somebody left» is what he is there to
+ *  tell apart – and it is spent on WORDING AND NOTHING ELSE: both of his answers are priced zero in
+ *  both registers, so the priced option set is byte-identical with a shock live and with none.
+ *
+ *  ⚠ STAMPED AT THE RAISE, on `'fork-counsel'`'s own argument rather than a new one: the row records
+ *  the girl the parent has just been reading about, and a re-derivation from a later world could hand
+ *  him a psychologist explaining a different week.
+ *
+ *  ⚠ AND IT CARRIES NO READ, so no `heard` stamp and no listen interaction – see that field's own
+ *  note below, where it joins the three kinds that have nothing to be plain about.
  *
  *  ⭐⭐⭐ v75 (the private life, wave 4 – T4) ADDS `'ended'`: THE WEEK HE LEARNS IT IS OVER. Its
  *  `detail` is the `LoveEpisode.id`, exactly as `'met'`'s is – machine-readable, never a rendered
@@ -223,7 +253,7 @@ export interface SoftBeatInvite {
  *  reading – which is why `tools/_lifeBeats.ts` stopped hunting a zero one commit before this kind
  *  existed and reads a registry instead. `DRAIN_ANSWER['ended']` is `fix-it`, whose −1 is the same −1
  *  under every read: read-INDEPENDENT, which is what the drain law actually needed. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended'
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.
@@ -268,8 +298,12 @@ export interface LifeBeatRecord {
    *  was back-filled `[]` at v73 and has been carried whole ever since.
    *
    *  ⚠ ONLY THE READ-BEARING KINDS EVER CARRY IT – `'met'` (her drawn `wants`) and `'ended'` (the
-   *  space-vs-company read). A `'fork-opinion'`, `'small-talk'` or `'fork-counsel'` row has no read to
-   *  be plain about, so the key is absent on all three by construction. */
+   *  space-vs-company read). A `'fork-opinion'`, `'small-talk'`, `'fork-counsel'` or `'fork-psy'` row
+   *  has no read to be plain about, so the key is absent on all four by construction. ⚠ v76 T8 ADDED
+   *  THE FOURTH AND IT IS THE ONE WORTH SAYING OUT LOUD: `'fork-psy'` is the psychologist's OWN beat,
+   *  so «the seat is working» is true at its raise by construction – and it still takes no stamp,
+   *  because the stamp is about a READ being missed or caught and his card carries none. The coin is
+   *  for read-bearing beats; a beat of his own is not automatically one of them. */
   heard?: boolean
 }
 

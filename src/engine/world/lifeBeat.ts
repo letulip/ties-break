@@ -110,7 +110,17 @@ import { guardNotEndedForGood } from './constants'
 // (`import type` and all-`type` named clauses excluded), `world/psychologist.ts` reaches THIS file by
 // **ZERO** paths – the same walk that returns seven to `engine/development.ts`, which is why T5's
 // site could not ask either. The rule is the college arrow, not «`spirit.ts` is special».
-import { psychologistWorkingRung } from './psychologist'
+// ⭐⭐⭐ v76 T8 ADDS `psychologistWorksThisWeek` TO THE SAME LINE, AND IT IS A NAME ON AN ARROW THAT
+// ALREADY EXISTS rather than a new edge – T6 opened this import one task ago and the walk above is
+// the measurement for both. RE-RUN AT T8 rather than inherited (the brief's own ⚠), on the tree's own
+// value imports with `import type` and all-`type` named clauses excluded and `export … from` counted:
+// `world/psychologist.ts` reaches THIS file by **ZERO** paths, `engine/development.ts` by SEVEN and
+// `engine/spirit.ts` by TWO – the same three numbers T4b and T6 measured, so nothing about the graph
+// has moved under them. ⚠ THE TWO PREDICATES ANSWER DIFFERENT QUESTIONS and both are wanted here:
+// `psychologistWorkingRung(world, 'listen')` is «is he working THIS focus, and at what rung», which is
+// a focus pass's question; `psychologistWorksThisWeek` is «is anybody being paid to be there at all»,
+// which is the SEAT's, and the counsel fork is the seat's rather than any focus's.
+import { psychologistWorkingRung, psychologistWorksThisWeek } from './psychologist'
 // ⭐⭐ THE PRESENCE AXIS' TWO IMPORTS (11.09, the вычитка fold) – and both of them are «ask the one
 // copy» rather than «re-type the rule». `awayVoice` is R2-18 / ARCH-07's single spelling of «she
 // lives elsewhere and the parent HEARS about the week»; `diaryLifeStageFor` is the single spelling
@@ -168,6 +178,12 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // walking away. ⚠ IT BLOCKS IN BOTH REGISTERS – a told-LATE ending is still something she has just
   // said out loud, and the lateness is hers rather than a reason to hear it less.
   ended: true,
+  // ⭐⭐⭐ v76 T8 – TRUE, AND IT IS `'fork-counsel'`'s ONE WORD REPEATED, WHICH IS THE WHOLE OF THIS
+  // BEAT'S MECHANISM. `answerFork` refuses while ANY blocking row is unanswered and the queue answers
+  // in `lifeLog` order, so a psy row raised one line after the coach's holds the fork shut until both
+  // have been heard, in the order they called. No new guard, no new ordering rule and no plumbing –
+  // the reserved comment's own promise, kept by typing one word.
+  'fork-psy': true,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -741,6 +757,84 @@ const COACH_COUNSEL: Record<ForkStopDriver, string> = {
  *  hers, and this card is a phone call from somebody else. ⚠ It also says why the fork is still shut,
  *  which is R10-16's doctrine (a control held back with no reason on screen is the bug). */
 const COUNSEL_HEADING = 'She wants to stop, and her coach has asked for a word before we answer'
+
+// =================================================================================================
+// 3f. `'fork-psy'` – THE PSYCHOLOGIST'S READ ON THE SAME `stop` (wave 5, T8). EVERY WORD IS A DRAFT.
+// =================================================================================================
+//
+// ⭐⭐⭐ THE SECOND TABLE §3d PROMISED, AND NOT A REWRITE OF THE FIRST. The banner above ends «This
+// pool is deliberately shaped so that adding him is a second table and not a rewrite of this one» –
+// this is that table. Not one byte of `COACH_COUNSEL` or `COUNSEL_HEADING` moved for it.
+//
+// ⚠⚠ THE SEAT AND NOT A FOCUS. The gate is `psychologistWorksThisWeek` – the architect's ruling J,
+// superseding the wave brief's own «gated `world.psychologistHired`»: a seat stood down by a college
+// freeze or a booked family week is NOT BILLED, so it gives no counsel either. Any focus, or none: a
+// retainer buys the man, and the man has a view about the biggest week of the career whatever year he
+// is working on.
+//
+// ⚠⚠ HE READS `spiritShock` FOR THE **WORDING REGISTER ONLY**, and that fence is the whole reason he
+// is allowed to read it at all (the architect, 13.09). «A girl under her line, and a girl under her
+// line because somebody left» is exactly what he exists to tell apart – `engine/spirit.ts`' own
+// promise – so the shock picks WHICH COLUMN of the table below is read and nothing else. Never a
+// weight, never the option set, never a price: both of his answers are priced ZERO in both columns,
+// so the priced set `answerLifeBeat` re-validates against is byte-identical with a shock live and
+// with none. It is `forkStopDriverOf`'s own fence (§3, applied one level in) for a second reading.
+//
+// ⚠⚠ AND HE NEVER NAMES WHAT LANDED. The two-tier honesty law binds him harder than it binds the
+// coach, for a reason neither of them chose: a told-LATE ending means `spiritShock` is live on a
+// career where the parent has not yet been told there was anybody at all. A line naming a break-up
+// would put a fact on screen that the player does not hold and that she has not said. So the shock
+// column says «something outside the court, and it has not lifted» and stops – which is also what the
+// 09.09 ruling requires of him («listen coaches the parent and never reports her sessions»).
+//
+// ⚠ NOT INDEXED BY HER VOICE AND NOT BY THE BOND BAND, for `COACH_COUNSEL`'s reasons exactly: he is
+// supporting cast (who-she-is §5c) and he is not in the relationship the band measures.
+
+/** ⭐⭐ WHICH COLUMN OF HIS TABLE IS READ – `'plain'`, or the kind of shock sitting on her.
+ *
+ *  ⚠⚠ DERIVED FROM THE SCHEMA'S OWN UNION rather than written out, which is what makes the table
+ *  below total by TYPE over something that is still growing: `spiritShock.kind` has one member today
+ *  and the build plan's steps 7–8 add the others, and the day one lands this record is a compile
+ *  error until somebody writes the column. That is `DRIVER_TOTAL`'s and `WANTS_TOTAL`'s guarantee,
+ *  taken from a field instead of from a local type. */
+type PsyRegister = 'plain' | NonNullable<WorldState['spiritShock']>['kind']
+
+const PSY_REGISTER_TOTAL: Record<PsyRegister, true> = { plain: true, breakup: true }
+const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
+
+/** ⭐⭐ WHAT THE PSYCHOLOGIST SAYS – 6 drafts, his register x the coach's driver.
+ *
+ *  ⚠ THE SHARED OPENING PER COLUMN IS THE POINT OF THE FAMILY, exactly as «The tennis is not the
+ *  question» is of the coach's: the first thing the man paid to read her says is whether anything is
+ *  sitting on top of this week. Everything after it is the driver, read his way.
+ *
+ *  ⚠ THE NARRATION SAYS «after the coach» BECAUSE IT ALWAYS IS. Both rows are raised on one condition
+ *  (`counselDriver !== null`) and his is raised second, so the coach's card has always just been
+ *  answered when this one opens. It is a fact about the queue, not a hope about it.
+ *
+ *  ⚠ THE HONESTY LAW: he may name what he can see and what he cannot reach; never a duration, a date,
+ *  a count, a result, another person, or one word of what she said in a session. */
+const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string>> = {
+  plain: {
+    worn: 'Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. She is tired the way a long season makes a person tired, and tired has an end to it."',
+    strained:
+      'Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. What she is short of is a room where the answer is already yes, and that is not a room I can build from a call."',
+    own: 'Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. She is clear, she has been clear for a while, and being clear is not a symptom."',
+  },
+  breakup: {
+    worn: 'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. Underneath it she is also tired, and those are two different things to be."',
+    strained:
+      'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has been carrying it a long way from home, and distance makes a weight feel permanent when it is not."',
+    own: 'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a want stated this month is partly the month."',
+  },
+}
+
+/** The parent's frame over his card. ONE line and not a register table, `COUNSEL_HEADING`'s own call:
+ *  the week's weather is hers and this is a second phone call from somebody else. ⚠ It says why the
+ *  fork is STILL shut after the coach has been answered, which is R10-16's doctrine – a control held
+ *  back with no reason on screen is the bug, and the second card is exactly where a player would
+ *  otherwise wonder. */
+const PSY_HEADING = 'She wants to stop, and her psychologist has asked for a word too, before we answer'
 
 // =================================================================================================
 // 3b. `'met'` – THE WEEK HE IS TOLD THERE IS SOMEONE (wave 3, T6). EVERY WORD BELOW IS A DRAFT.
@@ -1659,6 +1753,28 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'heard', label: 'Thank the coach for saying it plainly', bond: 0 },
     { id: 'weigh', label: 'Say we will sit with it', bond: 0 },
   ],
+  /** ⭐⭐⭐ v76 T8 – TWO ACKNOWLEDGMENTS, BOTH PRICED ZERO, AND THE PAIR ABOVE'S RULING REPEATED
+   *  RATHER THAN RE-ARGUED: «counsel is information, not a test». The psychologist is not a person the
+   *  parent can answer wrongly either, and a priced reply would make a second phone call about his
+   *  daughter into a thing to be played correctly. No third option and no `listen` detour.
+   *
+   *  ⚠⚠ AND THE ZEROES ARE WHAT KEEP HIS READ A WORDING REGISTER. He reads `spiritShock` for the
+   *  column of `PSY_COUNSEL` and nothing else (§3f) – so this list is the SAME two rows, the same two
+   *  ids and the same two zeroes with a shock live and with none. There is no overlay for this kind in
+   *  `lifeBeatOptionsFor`, which is the strongest form that statement can take: the priced set is not
+   *  «equal in both registers», it is the same object.
+   *
+   *  ⚠ NEITHER LABEL PROMISES AN OUTCOME – the fork is one card later, and a button reading «tell the
+   *  psychologist she will keep playing» would be a second, unpriced fork.
+   *
+   *  ⚠⚠ AND NO PRONOUN FOR THE PSYCHOLOGIST, here or in the feed rows below. R15-7's rule, swept over
+   *  every literal in `src/` by `tests/coach-voice.test.ts`: the sim holds no gender for a member of
+   *  staff, so «thank him» is a fact the world does not have. The coach's pool records the same guard
+   *  catching the same mistake on its first draft. */
+  'fork-psy': [
+    { id: 'straight', label: 'Thank the psychologist for the straight read', bond: 0 },
+    { id: 'keep', label: 'Say we will keep it in mind when we answer', bond: 0 },
+  ],
   /** ⭐⭐⭐ v75 T4 – THE FOUR THE ENDING OFFERS (build plan §5's shape, ruling G's prices). ⚠ THIS IS
    *  THE LIST AS A GIRL WHO WANTS **SPACE** PRICES IT, which is `LIFE_BEAT_OPTIONS`' own doctrine
    *  applied to the second read in this file: the base column here is `'space'` exactly as it is
@@ -1821,6 +1937,23 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     heard: 'Her coach called about her wanting to stop. We said thank you for the plain answer.',
     weigh: 'Her coach called about her wanting to stop. We said we would sit with it.',
   },
+  // ⭐⭐⭐ v76 T8 – AND HIS CALL WRITES ONE TOO, for `'fork-counsel'`'s reason exactly: this fires at
+  // most once in a career, on the biggest week of it, and a stop the seat had a view about and a stop
+  // it was never asked about are two different biographies that only the row can tell apart later.
+  // ⚠ IT IS AN `'info'` ROW AND CARRIES NO `lifeKind`, WHICH IS NOT A CHOICE THIS POOL MAKES – every
+  // kind's answer line goes through the ONE `addEvent` at the foot of `answerLifeBeat`, typed `'info'`
+  // since wave 2, and `tests/wave4-life-row-stamp.test.ts` §A pins that the answer row is deliberately
+  // not a life row. So this kind adds NO `type: 'life'` write site, the glyph column is not asked a
+  // question it cannot answer, and `LIFE_BEAT_ROW_KINDS` does not grow. Measured, not assumed.
+  // ⚠ NO `amountCents` AND NO PRICE IN EITHER LINE (rule 4), and neither names what the read was –
+  // the read was the card's, and the feed records that the call happened and what the parent did.
+  // ⚠ AND NEITHER NAMES THE SHOCK. The register that worded the card does not reach the feed at all:
+  // a kept row saying «after the break-up» would outlive the card and tell a parent who was never told
+  // there was anybody a thing the game has not told him.
+  'fork-psy': {
+    straight: 'Her psychologist called about her wanting to stop. We said thank you for the straight read.',
+    keep: 'Her psychologist called about her wanting to stop. We said we would keep it in mind.',
+  },
   /** ⭐⭐⭐ v75 T4 – AND THE ENDING WRITES ONE, for `'fork-counsel'`'s reason rather than tier 1's:
    *  a break-up the parent met well and one he met badly are two different biographies, and only the
    *  row can tell them apart seasons later when the feed is what the career is read back through.
@@ -1980,6 +2113,23 @@ export function lifeBeatSaid(
       if (root === undefined) throw new Error(`A fork-counsel row carries no driver: ${detail}`)
       return COACH_COUNSEL[root]
     }
+    // ⭐⭐⭐ v76 T8 – THE SIXTH KIND, AND IT READS ITS OWN `detail` EXACTLY AS THE COACH DOES. Two
+    // fields rather than one, `'<register>:<driver>'`: the driver half is the same reading her own
+    // line was worded from, and the register half is the shock that was live at the raise. ⚠ BOTH ARE
+    // STAMPED AND NEITHER IS RE-DERIVED, which is `'fork-counsel'`'s own argument and not a new one –
+    // this function is called on EVERY snapshot, so a re-derived register would re-decide the card's
+    // wording after every command, and the row must stay reconstructible for the life of the career.
+    // ⚠ IT READS NO `voice`, NO `bond` AND NO `register`: he is not her, he is not the relationship,
+    // and the week is hers – see the §3f banner.
+    case 'fork-psy': {
+      const [column, root] = detail.split(':')
+      const psyRegister = PSY_REGISTERS.find((r) => r === column)
+      const psyRoot = FORK_STOP_DRIVERS.find((d) => d === root)
+      if (psyRegister === undefined || psyRoot === undefined) {
+        throw new Error(`A fork-psy row carries no register and driver: ${detail}`)
+      }
+      return PSY_COUNSEL[psyRegister][psyRoot]
+    }
     // ⭐⭐⭐ v75 T4 – THE FIFTH KIND. ⚠ IT READS NO `detail` AND NO `register`, for `'met'`'s own two
     // reasons: its detail is an episode id (a machine value, never a rendered word) and the Mood
     // ladder is not this card's axis. What it reads instead is the TOLD-NOW / TOLD-LATE register,
@@ -2033,6 +2183,13 @@ export function lifeBeatHeading(
     // neither axis is a fact about it. See `COUNSEL_HEADING`.
     case 'fork-counsel':
       return COUNSEL_HEADING
+    // ⭐ v76 T8 – ONE FRAME, KEYED ON NOTHING, for the line above's reasons exactly. ⚠ AND NOT KEYED
+    // ON HIS REGISTER EITHER, which is the decision worth writing down: the shock picks the column of
+    // what he SAYS, and a heading that also moved with it would put the parent's own frame on an axis
+    // he has not been told about. Ruling O's principle read one step out – a reading may change how a
+    // surface reads; it may not quietly acquire a second surface.
+    case 'fork-psy':
+      return PSY_HEADING
     // ⭐⭐⭐ v75 T4 – TWO AXES, AND NEITHER OF THEM IS A LADDER. The register says which scene this is
     // and the read says what she seems to want from him; the Mood register is the weather of her week
     // and the bond band is the distance between the two of them, and neither is a fact about THIS
@@ -2068,7 +2225,11 @@ export function lifeBeatListenFollowUp(
   // talk» buys more of her because at the fork she came with something she has more of; here she has
   // said the one fact there is, and GIVING HER ROOM IS ALREADY ONE OF THE FOUR ANSWERS – a detour
   // promising more of her would be a second, unpriced way of doing the thing the card already offers.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended') return null
+  // ⚠ AND `'fork-psy'` HAS NONE (v76 T8), for the coach's third reason word for word: the listening
+  // detour is «say nothing, and let HER talk», and what it buys is more of her. A professional has
+  // given a read and has no second half of it being withheld, so a panel offering one would promise
+  // words nobody wrote. His two acknowledgments are the whole of the beat.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -2421,6 +2582,26 @@ export function answerLifeBeat(world: WorldState, optionId: string): void {
   // `raiseLifeBeat` on the same condition with the same driver; the queue answers them in log order,
   // the fork waits for both, and nothing about this file changes shape to take him.
   if (counselDriver !== null) raiseLifeBeat(world, 'fork-counsel', counselDriver)
+  // ⭐⭐⭐ v76 T8 – ...AND THE SEAT CALLS, ONE LINE LATER, WHICH IS THE COMMENT ABOVE CASHED IN. The
+  // whole of the psy arc is this line plus a `true` in `LIFE_BEAT_BLOCKING` and its rows in the two
+  // pools: the queue already answers in `lifeLog` order, `answerFork` already waits for every blocking
+  // row, and neither of them changed by a byte.
+  //
+  // ⚠⚠ `psychologistWorksThisWeek` AND NOT `world.psychologistHired` – the architect's ruling J, which
+  // supersedes the wave brief's own wording. `resolvePsychologist` opens with this same predicate, so
+  // a seat stood down by a college freeze or a booked family week is not billed that week and must not
+  // work that week either: pay nothing, receive nothing (the travelling-team §4 legibility law read
+  // the right way round). The flag survives both stand-downs, so the call resumes by itself after.
+  // ⚠ NO FOCUS IS ASKED FOR. The fork is the SEAT's, not a year-focus's – the retainer buys the man,
+  // and the man has a view about the biggest week of the career whatever he is working on this year.
+  //
+  // ⚠⚠ AND THE SHOCK IS READ HERE, AT THE RAISE, FOR THE WORDING COLUMN AND NOTHING ELSE (§3f). It
+  // goes into the `detail` beside the driver because this row must stay reconstructible for the life
+  // of the career – `'fork-counsel'`'s own argument – and because a price is never derived from it:
+  // `LIFE_BEAT_OPTIONS['fork-psy']` has no overlay in `lifeBeatOptionsFor`, so the priced set the
+  // answer is re-validated against is the same object in both columns.
+  if (counselDriver !== null && psychologistWorksThisWeek(world))
+    raiseLifeBeat(world, 'fork-psy', `${world.spiritShock?.kind ?? 'plain'}:${counselDriver}`)
   // ⭐⭐ v74 T8 – AND A KIND MAY WRITE NO ROW AT ALL. `'small-talk'`'s entry in `ANSWER_EVENT` is
   // `null`, deliberately and by the record's own totality: tier 1 leaves its trace in `lifeLog` and
   // nowhere else, because four «we asked her to say more» rows a season would bury the private-life
