@@ -174,6 +174,8 @@ describe('rankClimbed – the owner\'s "good loss" softener (earned climbs only,
       coachTravelled: false,
       // ⭐ v74 T6 – nobody has been mentioned to this parent; see `DiaryWorldView.partnerKnown`.
       partnerKnown: false,
+      // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryWorldView.freshBreakup`.
+      freshBreakup: false,
       trainPct: 75,
       // ⚠ W4: no knock on this view - see the DiaryFacts note in tests/week-notes.test.ts.
       knockChoice: null,
@@ -278,6 +280,8 @@ function makeFacts(input: {
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).
     partnerKnown: false,
+    // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryWorldView.freshBreakup`.
+    freshBreakup: false,
     injured,
     travelled: s === 'tournament' || s === 'travelOnly',
     playedTournament: s === 'tournament',

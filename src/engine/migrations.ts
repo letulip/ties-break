@@ -2519,6 +2519,51 @@ export function migrateSave(raw: unknown): WorldState {
     v = 74
   }
 
+  // ⭐⭐⭐ v74 -> v75 – THE PRIVATE LIFE, WAVE 4: IT ENDS.
+  //
+  // World `+spiritShock` – `{week, kind}` while an ending is still sitting on her, `null` otherwise.
+  // One key again, for the reason the two steps above each give in their own words: the DROP and the
+  // RECOVERY are the standing spirit physics and neither is stored, so there is nothing here but the
+  // mark itself. A second field recording «how far she fell» would be a copy of a number `spirit`
+  // already holds, which is the desync `loveEpisodes` refuses a «current partner» slot for.
+  //
+  // ⚠⚠ THE BACK-FILL IS `null` AND IT IS EXACTLY TRUE, in v73's and v74's sense one rung further on.
+  // v29 and v31 wrote nothing because the evidence had been PRUNED away and a confident wrong answer
+  // is worse than a partial one; v26 and v32 wrote nothing because fabricating rows would mean
+  // fabricating DECISIONS the player never made. Here, again, the simplest reason available: **a
+  // career that predates this layer carries no live shock, because nothing in its past could have
+  // shocked her.** The hazard that ends an attachment is T2's and runs on the tick; every tick such a
+  // career has already taken happened before endings existed. Null is not a placeholder for the true
+  // value – it IS the true value.
+  //
+  // ⚠ AND `null` IS ALSO THE VALUE `??=` TESTS FOR, WHICH COSTS THIS STEP NOTHING AND IS WORTH SAYING
+  // OUT LOUD. `save.spiritShock ??= null` cannot tell «absent» from «already null» and does not need
+  // to: both mean «no shock on record», so the re-write is a no-op on the second walk and the step is
+  // idempotent in the strongest sense – the only shape it can ever change is an ABSENT key. A save
+  // that already carries a live shock keeps it whole, which is what wave 4's own careers will look
+  // like the moment T3 lands.
+  //
+  // ⚠⚠ AND `WorldEvent.lifeKind?` IS OWED NO BACK-FILL HERE, STATED SO THE NEXT READER DOES NOT THINK
+  // IT WAS FORGOTTEN. v75 carries two fields and only one of them is in this step. `lifeKind` is
+  // OPTIONAL and additive on a feed ROW rather than on the world: absent means exactly what every
+  // historical row already means – «this row carries no life-kind discriminator» – and nothing writes
+  // it before T5, so there is no shape for a migration to repair and no row anywhere whose truth
+  // would improve by being stamped. Back-filling `'met'` onto the `'life'` rows an old save happens
+  // to hold would be this file's oldest mistake in a new costume: re-deriving a fact from prose and
+  // calling the guess a record. The glyph column reads `lifeKind ?? 'met'` for exactly that reason,
+  // so an unstamped row keeps its 🤍 and nothing downstream needs an `undefined` branch it did not
+  // already have.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE: one `??=` on a key nothing else in the chain touches, gated on
+  // `v === 74`, writing a literal. No sub-stream is reached at all on this path, so MAIN cannot move
+  // and the frozen capture (41550 / e6b0c709) is untouched by construction. Full move:
+  // `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v75.json, and the
+  // mechanically-checked schema sentence in docs/context/saves-and-worker.md.
+  if (v === 74) {
+    save.spiritShock ??= null
+    v = 75
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

@@ -11,12 +11,24 @@ last-reviewed: 2026-08-08
 
 ## Current truth
 
-- **Seven committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
+- **Ten committed career states** – `fresh` (w0) · `junior` (w120) · `pro` (w412, inside the
   sponsor window) · **`sinking` (halfway through a debt spell)** · `broke` (one week short of the
   bankruptcy latch) · `ending` (past the fork at nineteen) · **`unheard` (the same week as `ending`,
-  stopped one answer earlier – her life beat is raised and nobody has answered her)**. 438 KiB in
-  total, written by the shipped `saveCodec` so a fixture can never disagree with what the product
-  reads.
+  stopped one answer earlier – her life beat is raised and nobody has answered her)** · `soft` (a
+  live tier-1 row on a week the engine never stopped) · **`breakup` and `belated` (v75 T8 – the two
+  registers of an ending, each parked one press away from its own card)**. Written by the shipped
+  `saveCodec` so a fixture can never disagree with what the product reads.
+- ⚠⚠ **THE `.tsave` CORPUS IS THE ONE GENERATED ARTIFACT IN THIS REPO WITH NO GATE OF ITS OWN, and
+  that is how it goes stale** (measured twice now: `ending.tsave` in wave 3, `pro.tsave` in wave 4).
+  Every other generated file is checked by `npm run check` – `world-symbol-map.md` by
+  `map:world:check`, the pin baseline by `pins:check`, the context baseline by `context:audit`, the
+  frozen careers by the unit suite. These are checked only against their own MANIFEST: the rot alarm
+  re-derives `factsOf` from the file and compares, so a fixture and its row can never disagree, and
+  neither of them is ever compared with the CURRENT ENGINE. A feed-row string re-cut therefore leaves
+  the corpus stale with every gate green – which is exactly what happened at v75 T6, where
+  `ENDED_NOW_EVENT` moved and `pro.tsave` kept four rows of the old sentence for three commits. **So
+  the freshness check is a standing manual step at every wave gate**: run `npm run e2e:fixtures` and
+  confirm nothing moves, and treat mtimes as worthless – a restored file carries a fresh one.
 - **Found, not forced.** Every state is reached by walking a real career under a real policy and
   stopping when the engine says so – `broke` is `bankruptcyGraceWeeks - 1`, not "week 88". A fixture
   that could not have happened in play would test nothing.
@@ -38,32 +50,48 @@ last-reviewed: 2026-08-08
   is what a spec may import; `tools/e2e-fixtures.ts` imports the engine, self-executes as a CLI, and
   re-exports the reader so every existing import path still resolves.
 - **This is not the golden-save corpus.** `tests/fixtures/saves/` is one save per schema version, for
-  ever, proving *migrations work*. This is eight states at the current version, regenerated rather than
+  ever, proving *migrations work*. This is ten states at the current version, regenerated rather than
   migrated, providing *somewhere for a browser to start*. Neither can do the other's job.
 **This is the build of §3 of `docs/plans/playwright.md`** – the load-bearing idea of the whole
 Playwright integration: *a test starts at week 412 instead of clicking through 412 weeks.* Nothing
-here needs a browser, and none of it depends on the harness; it is a node tool, eight binaries, a
+here needs a browser, and none of it depends on the harness; it is a node tool, ten binaries, a
 manifest and a test.
 
 ```bash
-npm run e2e:fixtures                 # regenerate all eight (~4 s, byte-identical every time)
-npm run e2e:fixtures -- --only pro   # one of them; the other seven keep their manifest rows
+npm run e2e:fixtures                 # regenerate all ten (byte-identical every time)
+npm run e2e:fixtures -- --only pro   # one of them; the other nine keep their manifest rows
 npm run e2e:fixtures -- --budget 40  # how many seeds a search may try before it gives up
 ```
 
 | file | what it is |
 |---|---|
 | `tools/e2e-fixtures.ts` | the generator, and the reader the harness and the test both come through |
-| `e2e/fixtures/*.tsave` | eight career saves in the app's own export format |
+| `e2e/fixtures/*.tsave` | ten career saves in the app's own export format |
 | `e2e/fixtures/manifest.json` | seed, week, schema version and the facts a spec may assert on |
 | `tests/e2e-fixtures.test.ts` | the rot alarm, in the `unit` project, on the PR gate |
 
-## The eight
+## The ten
 
 Generated 08.08.2026, regenerated 09.08 and again 10.08 when the sixth was added; `unheard` joined
-them on 09.09 and `soft` on 11.09. All but `junior`, `unheard` and `soft` were found on the FIRST
-seed tried – these are ordinary careers, not lottery tickets, and `junior` is the one carrying three
-requirements at once.
+them on 09.09, `soft` on 11.09, and `breakup` and `belated` on 12.09. All but `junior`, `unheard`,
+`soft` and `belated` were found on the FIRST or second seed tried – these are ordinary careers, not
+lottery tickets, and `junior` is the one carrying three requirements at once.
+
+⚠⚠ **`belated` IS THE EXCEPTION AND IT IS A DIFFERENT KIND OF ONE, which is why `DEFAULT_BUDGET`
+moved from 200 to 900 with it.** `junior` is rare by CONJUNCTION – three requirements on one week,
+each of them ordinary – and the answer to that has always been a recipe decision. `belated` is rare
+because the MODEL makes it rare: an attachment can only end behind the parent's back inside its
+disclosure lag, and `bondShave` halves that lag at `steady` (a walked career sits at bond 70) while an
+open girl draws a lag of zero outright 70% of the time. Measured over 100 careers on the recipe's own
+settings: **1.7–2.1 attachments per career, and 1.5% of them end before `knownWeek`** – so about 3% of
+seeds hold the state at all. ⭐⭐ AND THE SEARCH MEASURED THE REST: the accepted seed was **the 473rd**,
+and of the eight careers before it that DID hold the state, **every one** was thrown out by a TOURNAMENT
+REVEAL on or just after the delivery tick. That is structural rather than unlucky – a reveal is a
+takeover and a life beat is not in `INTERRUPTS`, so her card is held behind it, and the told-late scene
+needs an arrival, which needs sixteen, which puts it in the years she is entered in something most
+weeks. No recipe decision can make a rare fact common without poking a world into shape, which is the
+one thing this tool may never do; what the recipe DOES do is walk through the two doorways the suite
+already has (`answerOpeningKnock`, `dismissTourBriefing`), which recovered four of the eight.
 
 ⚠ THIS LINE USED TO CARRY THE SCHEMA VERSION AND WAS STALE WITHIN A DAY – it said v43 while
 `e2e/fixtures/manifest.json` said v45, because the fixtures were regenerated with the schema and the
@@ -83,6 +111,8 @@ the manifest at runtime and none of it is read from here.
 | `ending` | `e2e-ending-0` | 282 | 19 | $6,822 | 41 | 77.0 KiB | past the fork at nineteen, racket down, career read-only |
 | `unheard` | `e2e-unheard-0` | 242 | 18 | $6,450 | 5 | 79.8 KiB | the week a **life beat** stops – she has said what she wants at the fork and nobody has answered her, so `answerFork` refuses behind her card |
 | `soft` | `e2e-soft-1` | 9 | 13 | $25,324 | 127 | 34.1 KiB | the week she came by with something **small** – a tier-1 row live inside its three-week window, unanswered, on a week the engine never stopped |
+| `breakup` | `e2e-breakup-0` | 157 | 16 | $1,211 | 31 | 61.4 KiB | the week **before it ends** – a live attachment the parent was told about (`p:146`, met at 147), one press from the told-NOW card, her Mood two rungs lower behind it |
+| `belated` | `e2e-belated-472` | 363 | 20 | $494,092 | 79 | 78.2 KiB | the week before he **hears of it** – an attachment that was over before its `knownWeek` came round, one press from the told-LATE card, and no `'met'` beat is ever raised for it |
 
 **438 KiB of saves**, the largest single file 80 KiB. That is not a nuisance and there is no
 trade to propose: for comparison, the golden-save corpus these sit next to is **9.8 MB** of

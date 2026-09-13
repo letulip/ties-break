@@ -1003,6 +1003,41 @@ describe('the fence this step is judged by', () => {
     // life's three weekly calls, so a FOURTH statement sliding into the gap, a reorder of these
     // three, or a removal of any one of them is red.
     //
+    // ⚠⚠ RE-AIMED A SIXTH TIME, TO FOUR – 12.09, WAVE 4's T2, AND IT WENT RED EXACTLY AS THE NOTE
+    // ABOVE PROMISED A FOURTH STATEMENT WOULD («expected [ 'rollEnds(world)', …(3) ] to deeply equal
+    // [ 'rollArrival(world)', …(2) ]»). WHAT MOVED: `rollEnds(world)` – the weekly END hazard
+    // (`engine/world/lifeBeat.ts` §8), and it is FIRST of the four rather than last.
+    //
+    // WHY IT BELONGS THERE, AND WHY IN THAT POSITION SPECIFICALLY. It is not a reading preference;
+    // two of wave 4's rulings are consequences of this one line sitting above `rollArrival(world)`
+    // (docs/plans/life-wave-4-rulings-2026-09.md, F and A):
+    //
+    //   · the row this week's arrival may append DOES NOT EXIST YET when the ends hazard rolls, so an
+    //     attachment can never end in its own arrival week – `endedWeek >= sinceWeek + 1` and the
+    //     shortest romance the engine can produce is exactly ONE week. Ruling A's told-late
+    //     discriminator rests on that premise;
+    //   · and `endEpisode` writes the date before `arrivalEligible` is next asked, so the cooldown
+    //     (shipped dormant in wave 3, live from this commit) refuses same-tick re-arrival by
+    //     construction – the slot is free and the clock already reads zero.
+    //
+    // Swapped, BOTH of those silently stop being true and nothing else in the tree objects, which is
+    // precisely why the order is pinned here rather than described in a comment at the call site.
+    // ⚠ AND BEFORE `accrueSpirit` for `rollArrival`'s own reason: the week an attachment ends is the
+    // week the effective baseline drops back to the flat one, through the standing return rule and
+    // through no new code. It writes one date, takes no `Rng` and raises nothing – the shock is T3,
+    // the beat T4, the feed row T5 – so `accrueSpirit`'s own reading is untouched by its presence.
+    // ⭐⭐ ALL THREE HAVE LANDED (T5, 12.09) AND THE SENTENCE ABOVE IS KEPT AS THE RECORD OF THE COMMIT
+    // ORDER RATHER THAN EDITED AWAY. `rollEnds` now also sets `world.spiritShock`, raises the told-now
+    // `'ended'` card and appends its kept feed row. ⚠ WHAT THIS PIN IS ABOUT IS UNCHANGED BY ANY OF
+    // THAT, which is why the assertion did not move: none of the three touches `world.spirit`, so
+    // `accrueSpirit` is still the one writer of it and still reads a world no earlier call in the gap
+    // has perturbed. A spirit delta appearing in `rollEnds` is the thing this note still watches for.
+    //
+    // ⚠ NOTHING IS WEAKENED: the form is the same ORDERED LIST, one element LONGER, so a FIFTH
+    // statement sliding into the gap, a reorder of these four, or a removal of any one of them is
+    // still red. The behavioural half of the same order lives in tests/wave4-ends.test.ts §E, which
+    // reads this very span out of the source and runs the two rolls in the order it finds them.
+    //
     // The claim this pin makes is therefore unchanged and the form is still exact: the gap between
     // the two calls is asserted as an ORDERED LIST, so nothing else can slide into it and neither of
     // the two can be reordered – a third statement appearing here goes red just as a swap does.
@@ -1016,7 +1051,8 @@ describe('the fence this step is judged by', () => {
     const j = code.indexOf('accrueSpirit(world)')
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === 'accrueSpirit(world)'), 'and it is called exactly once').toHaveLength(1)
-    expect(code.slice(i + 1, j), 'only the private life\'s three weekly calls separate them').toEqual([
+    expect(code.slice(i + 1, j), 'only the private life\'s four weekly calls separate them').toEqual([
+      'rollEnds(world)',
       'rollArrival(world)',
       'deliverKnownPartner(world)',
       'rollSmallTalk(world)',
@@ -1133,5 +1169,46 @@ describe('the fence this step is judged by', () => {
     // ...and it IS declared, at the value the design named – the other half of the same claim, kept
     // verbatim from the pin this replaces.
     expect(ECONOMY.spirit.attachmentLift).toBe(5)
+  })
+
+  it('⚠⚠ the break-up shock is read ONCE, OUTSIDE the scale, and never inside weekPerturbation', () => {
+    // ⚠⚠ THE ARCHITECT'S RULING C AS A STRUCTURAL PIN (docs/plans/life-wave-4-rulings-2026-09.md §C),
+    // and it is deliberately the TWIN of the `attachmentLift` guard above rather than a new shape –
+    // the two constants fail in the same direction and the same three ways. who-she-is §4's −22 / −34
+    // are ALREADY intensity-scaled: one base of about −27.5 seen through `perturbationScale`'s ×0.8
+    // and ×1.25. A row inside `weekPerturbation` would multiply them a SECOND time, to −17.6 / −42.5 –
+    // two numbers that look every bit as plausible and are not the design's.
+    //
+    // ⚠ THE BEHAVIOURAL HALF IS tests/wave4-spirit-shock.test.ts §C, which reads the literal 48 / 36
+    // from a flat 70 against the 52.4 / 27.5 the double-scale would produce. This half is here because
+    // this is where the constant's ONE legal reader lives, and because a structural pin refuses the
+    // defect at the line that would introduce it rather than at the number that would come out.
+    const owners = srcFiles()
+      // ⚠ A READ, NOT A MENTION – `codeOnly` for `attachmentLift`'s own stated reason: the constant is
+      // discussed in prose in `economy.ts`, in `accrueSpirit`'s note and in `world/lifeBeat.ts`, and a
+      // pin that tripped on an explanation would be repaired by deleting the explanation.
+      .filter(([, text]) => codeOnly(text).includes('.shock'))
+      .map(([path]) => path)
+    expect(owners, 'exactly one file in src/ reads it').toEqual(['engine/spirit.ts'])
+    const accrue = codeOnly(engineModuleFunction('spirit', 'accrueSpirit'))
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0)
+    const reads = accrue.filter((l) => l.includes('.shock['))
+    expect(reads, 'one read, and it is inside accrueSpirit').toHaveLength(1)
+    // ⚠⚠ AND IT IS NOT ON THE SCALED LINE. This is the whole of ruling C in one assertion: the term is
+    // built on its own line, so nothing can multiply it on the way past.
+    expect(reads[0], 'the shock term is never multiplied by the perturbation scale')
+      .not.toContain('perturbationScale')
+    // ...and the sum that lands adds it as its own summand, beside the scaled perturbation.
+    const moved = accrue.filter((l) => l.includes('weekPerturbation(world'))
+    expect(moved, 'the week\'s movement is still one expression').toHaveLength(1)
+    expect(moved[0], 'the perturbation is still the thing that is scaled').toContain('perturbationScale')
+    // ⚠⚠ AND NOT ONE POINT OF THE SHOCK REACHES THE WEEK'S OWN EVENTS – `attachmentLift`'s own last
+    // line, restated for the constant that would be scaled twice instead of decaying.
+    expect(codeOnly(engineModuleFunction('spirit', 'weekPerturbation'))).not.toContain('.shock')
+    // ...and both rows ARE declared, at the values §4 named – asserted as literals, because a
+    // comparison built out of the constant cannot see the constant move.
+    expect(ECONOMY.spirit.shock.breakup).toEqual({ steady: -22, intense: -34 })
   })
 })

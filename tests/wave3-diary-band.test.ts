@@ -94,6 +94,8 @@ function week(over: Partial<DiaryFacts>): DiaryFacts {
     moodRegister: 'level',
     bondBand: 'steady',
     partnerKnown: false,
+    // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryFacts.freshBreakup`.
+    freshBreakup: false,
     injured: null,
     travelled: false,
     playedTournament: false,

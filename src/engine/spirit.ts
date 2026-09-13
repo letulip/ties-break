@@ -21,6 +21,14 @@
 //                     (pure arithmetic, ZERO draws on any stream), read ONLY by `spiritMatchFactor`
 //                     at the match seam (`world/player.ts`). No meter, no tile, no bar, no arrow.
 //
+//   `spiritShock`   – THE MARK AN ENDING LEFT (v75, wave 4's T3), `{week, kind}` or null. SET by
+//                     `rollEnds` (world/lifeBeat.ts §8) on the week an attachment ends, and CLEARED
+//                     here, in `accrueSpirit`'s tail, once she is back within `shockClearWithin` of
+//                     her plain baseline. ⚠ This file owns the second half only: the points it is
+//                     worth are the weekly rule's, the fact itself is the hazard's. It exists so that
+//                     wave 5's psychologist can tell a girl who is under her line from a girl who is
+//                     under her line BECAUSE somebody left – 48 looks the same either way.
+//
 //   `bond`          – THE STANDING. 0..100 in steps of 0.5, start 70. Moves ONLY on parent
 //                     DECISIONS – never on a scoreline, never on the weather – and then regresses
 //                     toward 70 at 0.5/week. That regression rides `accrueSpirit`'s own pass: one
@@ -347,9 +355,32 @@ function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): numbe
  * (80) by construction – pinned in tests/spirit.test.ts – so being attached is not a permanent
  * residence in the top Mood band.
  *
+ * ⭐⭐⭐ AND SINCE v75's T3 (12.09) IT IS ALSO WHERE AN ENDING IS PAID FOR – **ADDED AFTER THE SCALE,
+ * ON ITS OWN TERM, AND THAT IS THE ARCHITECT'S RULING C RATHER THAN A PLACEMENT PREFERENCE**
+ * (docs/plans/life-wave-4-rulings-2026-09.md §C). who-she-is §4's −22 steady / −34 intense are ALREADY
+ * intensity-scaled – one base of about −27.5 seen through the two `perturbationScale` values
+ * (−27.5 × 0.8 = −22.0, −27.5 × 1.25 = −34.4) – so a row inside `weekPerturbation` would scale them a
+ * SECOND time, to −17.6 / −42.5. The constant's own note in `economy.ts` carries the reconstruction;
+ * this is the site that obeys it. Same weekly arithmetic, one extra summand, no second curve and no
+ * second multiplication.
+ *
+ * ⚠⚠ IT READS A FACT `rollEnds` WROTE AND OWNS THE NUMBER ITSELF, which is what keeps this function
+ * the ONE writer of `world.spirit` in the engine. The ending (world/lifeBeat.ts §8, four calls
+ * earlier in the same tick) stamps `world.spiritShock = {week, kind}`; this pass applies the kind's
+ * delta on exactly the week that matches, and clears the stamp in its tail once she is back within
+ * `shockClearWithin` of her PLAIN baseline (68 – ruling D). The stamp is a mark and never the
+ * physics: a spirit of 48 looks identical whichever way it got there, and what it buys is wave 5's
+ * psychologist being able to ask why.
+ *
+ * ⚠⚠ AND THERE IS NO RECOVERY CURVE, ANYWHERE, BY DESIGN. She comes back at `returnPerWeek` toward a
+ * baseline the lift has just stopped lifting – the standing weekly rule and nothing else. A second
+ * return rate, a «recovering» flag or a taper read off `spiritShock` would all be the same mistake,
+ * and §4's own prediction (from a lifted 75: ~1–2 weeks under the knee for a steady girl, ~6–7 for an
+ * intense one) is a MEASUREMENT of this arithmetic rather than a target to be engineered toward.
+ *
  * ⚠ ZERO DRAWS, ON ANY STREAM. Pure arithmetic over facts the world already holds, which is the
  * strongest possible answer to invariant 2 – the frozen capture (41550 / e6b0c709) cannot see this
- * function.
+ * function. The shock term does not change that: it reads a persisted field, not a stream.
  *
  * ⚠ THE `??` COURTESIES are the same one `accrueFinance` extends to `careerTotals`: probe worlds
  * hand-built in tests and tools predate these three fields, and a defensive read costs nothing while
@@ -372,7 +403,13 @@ export function accrueSpirit(world: WorldState): void {
   const target = s.baseline + (activeEpisode(world) === null ? 0 : s.attachmentLift)
   const returned = stepToward(world.spirit ?? s.baseline, target, s.returnPerWeek[intensity])
   // 2. ...and THEN what this week did to her, scaled by how hard things land on this girl.
-  const moved = returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity]
+  // 2b. ⭐⭐⭐ AND WHAT AN ENDING DID TO HER (v75 T3), ON ITS OWN TERM AND **OUTSIDE** THE SCALE – the
+  //     ⚠⚠ note above the function argues it in full; the arithmetic is the one line below. The
+  //     `?? null` is the same courtesy the three fields above get, for hand-built probe worlds.
+  const shock = world.spiritShock ?? null
+  const shocked = shock !== null && shock.week === world.week ? s.shock[shock.kind][intensity] : 0
+  const moved =
+    returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked
   world.spirit = roundTenth(clamp(moved, s.min, s.max))
 
   // 3. AND THE STANDING, ON THE SAME PASS – one weekly function, two numbers. Same shape, same
@@ -381,6 +418,12 @@ export function accrueSpirit(world: WorldState): void {
   const settled = stepToward(world.bond ?? b.start, b.start, b.regressionPerWeek)
   world.bond = roundHalf(clamp(settled, b.min, b.max))
   if (wrapWithNoVacation) applyBondDelta(world, b.delta.seasonWithNoVacation)
+
+  // 4. ⭐⭐ AND THE MARK CLEARS WHEN SHE IS BACK – v75 T3's one line in this tail, read against the
+  //    PLAIN baseline (70 − 2 = 68) and never the effective one, which is ruling D and is argued on
+  //    `shockClearWithin` itself. It is checked AFTER the write above, so the week a shock lands is
+  //    judged on the spirit it produced rather than on the one it replaced.
+  if (shock !== null && world.spirit >= s.baseline - s.shockClearWithin) world.spiritShock = null
 }
 
 /** THE ONE WRITER for every `bond` delta – clamped to 0..100 and rounded onto the 0.5 grid, so no

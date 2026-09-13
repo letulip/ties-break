@@ -292,6 +292,14 @@ describe('wave 3 T3 B – an ineligible week takes ZERO draws', () => {
     ])
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:smalltalk:*` is T8's and
     // `seed:life:ends:*` is WAVE 4's; neither may be created early (brief §3).
+    //
+    // ⚠⚠ THE NOTE IS RE-AIMED 12.09 BY WAVE 4's T2 AND THE ASSERTION IS UNTOUCHED, which is worth
+    // saying out loud because a reader meeting the two together will wonder. Both of those keys DO
+    // exist on the tree now – `:smalltalk:` since T8 (lifeBeat §7) and `:ends:` since T2 (§8) – and
+    // the claim this line makes was never «nobody has one»: it is that `rollArrival` derives the
+    // three keys named above and NO OTHER, which is the split-key law read as a count. It is now
+    // strictly stronger than it was when both siblings were hypothetical, because both of them are
+    // real functions that a careless edit could reach from here.
     expect(lifeKeys().some((k) => k.includes(':smalltalk:') || k.includes(':ends:'))).toBe(false)
   })
 

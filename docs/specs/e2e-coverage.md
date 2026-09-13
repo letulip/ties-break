@@ -186,7 +186,7 @@ produced a *defect list* instead of a workaround list.
 |---|---|---|
 | `smoke.spec.ts` | the app boots, a new career starts, week 1 renders | 1 |
 | `prologue.spec.ts` | the childhood's nine cards run, the handover draws her, «go on» starts the career – and no tour follows it | 1, 5 |
-| `seeded-careers.spec.ts` | seven of the eight fixtures boot into the state their manifest describes – the eighth, `soft`, is booted and asserted by `soft-beat.spec.ts`, the wave that added it | 1, 2 |
+| `seeded-careers.spec.ts` | seven of the ten fixtures boot into the state their manifest describes – the other three (`soft`, `breakup`, `belated`) are booted and asserted by the specs of the waves that added them, because each exists for a state this walk has no way to name | 1, 2 |
 | `week-advance.spec.ts` | a decision on the table stops the week; answering it starts it, and the answer comes back as news | 1 |
 | `week-advance.spec.ts` | a week that ends a season: the wrap-up card, then Home and the money screen move together | 1, 5 |
 | `week-advance.spec.ts` | a week that stops **without** ending: the reason, the engine's own count, and which notice it is | 1 |
@@ -215,6 +215,8 @@ produced a *defect list* instead of a workaround list.
 | `parity.spec.ts` | the week pager's ARROWS are the second and last exempt region (owner's ruling, round 36 phase 7 – they are drawn only where a strip overflows, which depends on the width) – bounded the same four ways: asserted by CONTAINER, that container may hold nothing but the two arrows, only the arrows are taken (the strip, the cards and their controls stay in the check), and the HONEST HALF – a strip that DOES overflow at a width must have them | 4 |
 | `life-beat.spec.ts` | she says what she wants at the college fork and the week stops for it: her card has no way out that is not an answer, the fork's three answers are nowhere on the page until hers is recorded, and only when BOTH are answered does a press move the week | 1, 5 |
 | `soft-beat.spec.ts` | she comes by with something small and the week does NOT stop for it: the invitation sits on the hub, the advance bar is pressed and the next week arrives with her card still on it, and tapping the card opens the same `LifeBeatDialog` – answered in one press, gone for good, and still gone after a reload | 1, 5 |
+| `breakup.spec.ts` | it ends on the week he presses: her card arrives over the press, the Mood word on her page is a rung lower behind it, his answer crosses the wire and comes back as news, and the week is ordinary again after it – six engine steps and one snapshot, which is the thing a mocked boundary can stage in any order because there is nothing there to object | 1, 5 |
+| `breakup.spec.ts` | the told-late register: an attachment that was over before its `knownWeek` came round arrives as ONE card saying both facts, and the arrival card is never raised for it – ruling A's quiet failure, which is a MISSING row rather than a duplicate one | 1, 5 |
 | `a11y.spec.ts` | axe (WCAG 2 A/AA) over every screen at 375 and 1280 and over four overlays, against an explicit per-rule per-screen debt baseline | 4 |
 | `a11y.spec.ts` | the blocking overlays hold the keyboard: focus lands inside, Tab and Shift+Tab stay inside, Escape follows each card's documented policy, and a confirm returns focus to its opener | 4, 5 |
 | `r37-frame.spec.ts` | the frame at real sizes: the match takes the width it is given from 880 fluid to 1024 and the room goes to the commentary, the tournament flow's lone control stops at 500 and is centred, and the rail's insets match | 4 |
@@ -333,6 +335,7 @@ what kind of coverage each row has rather than only whether it has any.
 | Skills, radar and development | [skills-radar.md](skills-radar.md) | no | **unit** – pure engine arithmetic with a read-only surface |
 | The junior conveyor and the living field | [junior-conveyor.md](junior-conveyor.md) | no | **unit + sim** – a population model; there is nothing to click |
 | Academy and equipment | [academy-support.md](academy-support.md) | no | **unit** – priced by the engine, surfaced as read-only rows |
+| Her private life – arrivals, endings and the cards they raise | [who-she-is-2026-09.md](who-she-is-2026-09.md) | yes – `life-beat`, `soft-beat`, `breakup` | **e2e** – all three claims are ORDERS ACROSS THE WIRE rather than pictures: a beat outranking the fork, a tier-1 row that does NOT stop the week, and an ending that fires, spends the shock and raises its card inside one press. A mounted screen is handed a snapshot and can stage any of them in any order |
 | The first-run tour of the interface | [onboarding-tour.md](onboarding-tour.md) | yes – `onboarding-tour` | **e2e** – the whole defect was about what survives a reload, so a mounted test cannot hold it; the marks' copy, the walk and the card's box on a phone stay in `tests/component/onboarding-tour.test.ts` |
 <!-- /COVERAGE-MAP:MECHANICS -->
 

@@ -107,6 +107,9 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).
     partnerKnown: false,
+    // ⭐ v75 T6 – and nothing of hers has recently ended (see `DiaryFacts.freshBreakup`). The
+    // `sweepStages` calendars below are the only place the axis is turned on, for R2-18's reason.
+    freshBreakup: false,
     injured: null,
     travelled: false,
     playedTournament: false,
@@ -239,6 +242,18 @@ function* sweepStages(): Generator<DiaryFacts> {
     // claiming `bright` would be licensed there at 'level' and fail `HOLDS.register`); this one is
     // what makes the claim's true state reachable, which is the other half of the same guard.
     { partnerKnown: true, moodRegister: 'bright' as const },
+    // ⭐ v75 T6 – THE ENDING'S MARK, ON THE SAME SWEEP AND FOR THE SAME R2-18 REASON as the two
+    // shapes above: `sweepWeeks` and `sweepVoices` both hold `freshBreakup` at false on every
+    // fixture, so all four lines of the new band would be licensed in NO fixture of ANY sweep and
+    // the honesty pin would prove nothing whatever about them.
+    { freshBreakup: true },
+    // ⭐⭐ ...AND AT `low`, WHICH IS THE OTHER HALF AND IS NOT THE SAME SHAPE. The band's fourth line
+    // claims `register: 'low'` as well, and `homeWeek` holds the register at `level`; without this
+    // row that line alone would be unreachable here, exactly as T10's two «lighter» lines were.
+    // ⚠ THE ROW ABOVE IS STILL THE ONE THAT CATCHES A MISSING REGISTER LICENCE – a line claiming
+    // `low` while licensed at `level` fails `HOLDS.register` there – so the two rows arm opposite
+    // halves of one guard and neither replaces the other.
+    { freshBreakup: true, moodRegister: 'low' as const },
   ]
   for (const lifeStage of STAGES) {
     const schoolOver = lifeStage !== 'school'
@@ -444,6 +459,23 @@ const HOLDS: Record<string, (f: DiaryFacts, value: unknown) => boolean> = {
   // law. The `{ partnerKnown: true }` shape in `sweepStages` is what keeps the axis from being the
   // R2-18 failure itself: without it every such line would be licensed in NO fixture of ANY sweep.
   partnerKnown: (f) => f.partnerKnown,
+  // ⭐⭐ v75 (the private life, wave 4 – T6) – THE MARK AN ENDING LEFT ON HER, re-derived off the FACT
+  // and not off the licence in weekNotes.ts that produced the line, which is this whole table's
+  // method. An identity for `partnerKnown`'s own stated reason: the fact is already a boolean the
+  // engine computed, and a valued claim's second spelling (`bodyGroup`, `rail`) has nothing here to
+  // re-derive from.
+  //
+  // ⚠⚠ AND WHAT IT DOES **NOT** LICENSE IS THE HALF WORTH READING. It is not a claim about the
+  // PARENT: `rollEnds` stamps the shock whether or not he has ever been told there was anybody, so a
+  // line licensed on this is selectable across a whole band of weeks in which he knows of no person
+  // and no ending. «We know it is over» and «She told us it ended» are both unlicensed here, and
+  // neither would be caught by any mechanical check – the claim carries the mark on her, the reviewer
+  // carries the rest. It licenses no CAUSE either: the engine writes a date and models no reason.
+  //
+  // ⚠ THE CONSUMING LICENCE IS T6's OWN (the four lines in `weekNotes.ts`) and lands in this same
+  // task – R2-18's law. The two `{ freshBreakup: … }` shapes in `sweepStages` are what keep the axis
+  // from being the R2-18 failure itself, and the case below counts the visits.
+  freshBreakup: (f) => f.freshBreakup,
 }
 
 describe('W2 — the ordinary week note is HONEST', () => {
@@ -501,6 +533,69 @@ describe('W2 — the ordinary week note is HONEST', () => {
       }
     }
     expect(licensed, 'no line claims the fact – then HOLDS.partnerKnown proves nothing').toBeGreaterThan(0)
+  })
+
+  it('⭐ v75 T6 – and `HOLDS.freshBreakup` is REACHED, not decoration', () => {
+    // T10's case above, one wave on, and for the same reason: a checker for a claim nothing makes is
+    // green exactly as an empty pool is, and the sweep would pass identically with the band deleted.
+    let licensed = 0
+    // ⭐⭐ AND IT COUNTS PER LINE, NOT JUST IN TOTAL, WHICH IS THE HALF T10's CASE DOES NOT HAVE.
+    // A total above zero is satisfied by ONE reachable line, so a band whose register-scoped line is
+    // licensed in no fixture of any sweep would pass on its three neighbours – which is precisely the
+    // R2-18 failure this case is named after, surviving inside its own guard. The fourth line claims
+    // `register: 'low'` and only the second `{ freshBreakup: … }` shape in `sweepStages` reaches it;
+    // remove that shape and this goes red BY LINE rather than staying quietly green.
+    const seen = new Set<string>()
+    const band = WEEK_NOTES.filter((n) => n.claims.freshBreakup !== undefined)
+    for (const f of sweepAll()) {
+      for (const note of WEEK_NOTES) {
+        if (!note.license(f) || note.claims.freshBreakup === undefined) continue
+        licensed++
+        seen.add(render(note, f))
+        expect(
+          HOLDS.freshBreakup(f, true),
+          `"${render(note, f)}" claims freshBreakup on a career where nothing of hers has ended`,
+        ).toBe(true)
+      }
+    }
+    expect(licensed, 'no line claims the fact – then HOLDS.freshBreakup proves nothing').toBeGreaterThan(0)
+    expect(seen.size, 'every line of the band is licensed in SOME fixture of SOME sweep').toBe(band.length)
+  })
+
+  it('⭐⭐⭐ v75 T6 – THE BAND IS SELECTABLE WHILE THE PARENT KNOWS NOTHING, which is the whole finding', () => {
+    // ⚠⚠ THE PROPERTY, AND WHY NO OTHER CASE IN THIS FILE HOLDS IT. `rollEnds` stamps `spiritShock`
+    // on `endedWeek` whether or not the parent has ever been told there was anybody, and the
+    // told-late scene is built on exactly that gap – so `freshBreakup` is TRUE across a reachable
+    // band of weeks where `partnerKnown` is FALSE and he knows of no person and no ending. Every one
+    // of the four lines is written to be true there. A later editor who "tidies" the licence by
+    // adding `&& f.partnerKnown`, or who rewrites a line into «we know it is over», is making the
+    // band false on its commonest week – and this is the case that says so by name.
+    //
+    // ⚠ THE POSITIVE CONTROL COMES FIRST AND IS NOT THE SAME ASSERTION. Proving «no line does X» over
+    // an empty band passes forever, so the band's existence is established before anything about it
+    // is denied.
+    const band = WEEK_NOTES.filter((n) => n.claims.freshBreakup !== undefined)
+    expect(band.length, 'the band has to exist before anything is claimed about it').toBeGreaterThanOrEqual(3)
+    for (const n of band) {
+      expect(n.claims.partnerKnown, `${render(n, homeWeek({}))}: the two facts are not one`).toBeUndefined()
+      expect(n.claims.domestic, `${render(n, homeWeek({}))}: the hazard runs at every stage`).toBeUndefined()
+    }
+    // ...and it is really SELECTABLE in that state, at every stage, which is the licence half.
+    for (const lifeStage of STAGES) {
+      const f = homeWeek({
+        lifeStage,
+        schoolOver: lifeStage !== 'school',
+        ageYears: lifeStage === 'school' ? 15 : 24,
+        freshBreakup: true,
+        partnerKnown: false,
+        moodRegister: 'low',
+      })
+      const live = band.filter((n) => n.license(f))
+      expect(live.length, `${lifeStage}: the band is unreachable while he knows nothing`).toBe(band.length)
+    }
+    // ...and it is NOT selectable when the mark has cleared – the other side of the same licence.
+    const healed = homeWeek({ freshBreakup: false, partnerKnown: false, moodRegister: 'low' })
+    expect(band.filter((n) => n.license(healed)), 'a cleared shock still speaks').toEqual([])
   })
 
   it('⚠ W6c: NO LINE NAMES A BODY PART THAT IS NOT HERS – read the sentence, not the claim', () => {

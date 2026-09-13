@@ -86,7 +86,8 @@ import { playSfx } from '../../audio/sfx'
 // country would have had to be added in two files with nothing to say so.
 import { flagEmoji } from '../../composables/countries'
 // ⭐ T9 – the feed's life-row glyph column, empty until the owner's picks (who-she-is §5a).
-import { LIFE_ROW_EMOJI } from './lifeRowGlyphs'
+// ⭐ v75 T5 – and `lifeRowGlyph`, the per-KIND storey over it (`WorldEvent.lifeKind`, T1's field).
+import { LIFE_ROW_EMOJI, lifeRowGlyph } from './lifeRowGlyphs'
 
 // The shell owns `tab`; the notecards that are doors ASK it to move. One event, no router.
 // `recapFresh` is App.vue's own This-week dot rule (composables/weekRecap) – it left the bottom bar
@@ -1081,9 +1082,19 @@ const EVENT_EMOJI: Record<string, string | undefined> = {
  *
  *  ⚠ A KIND WITH NO GLYPH DRAWS NOTHING – not an empty string and then a space. The space belongs
  *  to the glyph and travels with it, which is why it is built here and not left in the template
- *  between two interpolations. */
-function eventPrefix(type: string): string {
-  const glyph = EVENT_EMOJI[type]
+ *  between two interpolations.
+ *
+ *  ⭐⭐⭐ v75 T5 – IT TAKES THE **ROW** NOW, NOT THE TYPE, AND THAT IS THE WHOLE OF THE WIRING. A life
+ *  row's mark is a question about its `lifeKind` («which life beat was this»), and a signature that
+ *  only ever saw `e.type` could not ask it. Every other kind is unchanged: same map, same lookup,
+ *  same single space.
+ *
+ *  ⚠ THE LIFE BRANCH IS THE ONE ROAD, and `...LIFE_ROW_EMOJI` above is deliberately still spread into
+ *  `EVENT_EMOJI` rather than removed: that map is the feed's whole picture of its own marks, and a
+ *  `'life'` key missing from it would read as «life rows have none». `lifeRowGlyph` reaches the very
+ *  same `PICKS` record for its fallback, so the two can never disagree about what a life row wears. */
+function eventPrefix(e: WorldEvent): string {
+  const glyph = e.type === 'life' ? lifeRowGlyph(e.lifeKind) : EVENT_EMOJI[e.type]
   return glyph ? `${glyph} ` : ''
 }
 interface NewsGroup {
@@ -1732,7 +1743,7 @@ async function leaveCollege(): Promise<void> {
                       <span class="watch-cue">Watch</span>
                     </button>
                   </td>
-                  <td v-else>{{ eventPrefix(e.type) }}{{ e.text }}</td>
+                  <td v-else>{{ eventPrefix(e) }}{{ e.text }}</td>
                 </tr>
               </tbody>
             </table>

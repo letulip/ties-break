@@ -188,6 +188,15 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // else the pool cannot re-derive, so `sinceWeek`, «how long» and any reading of `wants` are
     // deliberately absent rather than forgotten.
     partnerKnown: view.partnerKnown,
+    // ⭐⭐ v75 (the private life, wave 4 – T6). Carried, not re-derived, on `partnerKnown`'s own rule
+    // one line up: the diary owns no reading of `spiritShock` any more than it owns a calendar, and
+    // `world.spiritShock` is the engine's single spelling of «the mark is still on her».
+    //
+    // ⚠ R2-18's LAW AGAIN, AND IT IS WHY THIS BOOLEAN IS THE WHOLE OF IT. The consuming band lands in
+    // this same task (`weekNotes.ts`, the four lines licensed on it) together with the honesty
+    // checker's re-derivation; the week it ended, the read and any reason are deliberately absent
+    // rather than forgotten, because no line may assert one.
+    freshBreakup: view.freshBreakup,
     injured: view.injury,
     travelled: travelCents < 0,
     playedTournament: thisWeek.some(

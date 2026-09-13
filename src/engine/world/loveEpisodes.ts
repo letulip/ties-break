@@ -1,6 +1,15 @@
 // THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is
 // there right now.
 //
+// ⭐⭐ AND SINCE v75 (wave 4, T2) THERE IS ALSO ONE WRITER HERE, WHICH IS A CHANGE OF CHARACTER AND SO
+// IS SAID OUT LOUD. This module held nothing but derivations for two waves; `endEpisode` below is the
+// first line in it that moves a byte. It is here rather than in `world/lifeBeat.ts` because it is the
+// mirror of `activeEpisode` – the selector answers «is someone there NOW» by reading `endedWeek`, and
+// the writer is the ONE place that field is ever set – and a writer parked away from the reading it
+// invalidates is how two spellings of «over» get born. The HAZARD that decides whether it is called
+// stays in `lifeBeat.ts` §8, beside the arrival's, because that is a question about the week and not
+// about the list.
+//
 // ⚠⚠ DEPENDENCY DIRECTION, AND IT IS THE WHOLE REASON THIS FILE EXISTS (wave 3, T4 – 11.09). These
 // two selectors were declared in `world/lifeBeat.ts` when T1 shipped them, which was the right home
 // while the only readers were the beat machinery and the arrival hazard. T4 gives `engine/spirit.ts`
@@ -77,6 +86,49 @@ export function loveEpisodesOf(world: WorldState): readonly LoveEpisode[] {
 export function activeEpisode(world: WorldState): LoveEpisode | null {
   const last = loveEpisodesOf(world).at(-1) ?? null
   return last !== null && last.endedWeek === null ? last : null
+}
+
+/** ⭐⭐⭐ v75 (the private life, wave 4 – T2) – IT ENDS. The ONE writer of `endedWeek` in the engine,
+ *  and the whole of what an ending IS: a week written onto the row that was open.
+ *
+ *  ⚠⚠ THE ROW STAYS. NOTHING IS NULLED AND NOTHING IS PRUNED, and that is the ruling rather than an
+ *  implementation detail – `loveEpisodesOf`'s own append-only law read from the other end. The album
+ *  and the census read a whole life back seasons later, so an attachment that is over is a row with a
+ *  second date on it, never a row that stopped existing. `knownWeek`, `wants` and both ids are left
+ *  exactly as they were: whether the parent was ever told is a FACT about the past and an ending does
+ *  not un-tell it, and wave 4's told-late scene (T4) is built by reading those two dates against each
+ *  other. A step that tidied `knownWeek` to null here would delete the scene.
+ *
+ *  ⚠⚠ AND THE ACTIVE SLOT EMPTIES BY ITSELF, WHICH IS WHY THIS FUNCTION IS FOUR LINES. `activeEpisode`
+ *  is DERIVED – read its own ⚠⚠ notes above – so writing the date is the whole of «she is single
+ *  again»: the selector goes null on the same tick, `arrivalEligible`'s clause 2 opens, its clause 3
+ *  (the cooldown, shipped dormant in wave 3 and LIVE from this commit) starts counting from this very
+ *  week, and `accrueSpirit`'s effective baseline drops back to the flat one by the same reading. Not
+ *  one of those four is written here, and none of them can desync from this date, because none of
+ *  them is stored.
+ *
+ *  ⚠ IT ENDS THE **ACTIVE** ROW AND NEVER A NAMED ONE, so «which attachment is over» has exactly one
+ *  spelling in this layer and it is the same one «is someone there» has. A future caller that wanted
+ *  to end some older row would be asking a question this layer does not have – rows are appended in
+ *  calendar order and only the tail can ever be open (`arrivalEligible` clause 2 is what makes that
+ *  true), so there is never a second candidate.
+ *
+ *  ⚠ NOTHING TO END IS A QUIET NO-OP RATHER THAN A THROW, on `deliverKnownPartner`'s own precedent
+ *  one module over: the weekly tick asks its questions of whatever world it is handed, and a probe
+ *  world or a career that never met anybody is not an error condition. The CALLER gates first
+ *  (`endsEligible`, world/lifeBeat.ts §8) so that an ineligible week takes zero draws; this line is
+ *  the second lock on the same door and costs nothing.
+ *
+ *  ⚠ IT WRITES `endedWeek` AND **NOTHING ELSE ANYWHERE**. The spirit shock is T3's, the `'ended'` beat
+ *  is T4's and the feed row is T5's – that commit order is the design, not a staging convenience, and
+ *  a spirit or `lifeLog` line appearing in this function is the red flag it was written to make
+ *  visible. ⚠ ALL THREE HAVE LANDED (T5, 12.09) AND THIS CLAIM IS UNCHANGED BY THAT, which is the
+ *  point of having written it: the mark, the card and the kept row are all `rollEnds`' own lines,
+ *  one call up, and this function still writes exactly one date. */
+export function endEpisode(world: WorldState, week: number): void {
+  const open = activeEpisode(world)
+  if (open === null) return
+  open.endedWeek = week
 }
 
 /** ⭐⭐ v74 (wave 3, T6) – THE ATTACHMENT THE PARENT HAS ACTUALLY BEEN TOLD ABOUT, or null. The

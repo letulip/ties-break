@@ -117,6 +117,8 @@ const view = (over: Partial<DiaryWorldView> = {}): DiaryWorldView => ({
   coachTravelled: false,
   // ⭐ v74 T6 – nobody has been mentioned to this parent; see `DiaryWorldView.partnerKnown`.
   partnerKnown: false,
+  // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryWorldView.freshBreakup`.
+  freshBreakup: false,
   trainPct: 75,
   knockChoice: null,
   birthdayAge: null,

@@ -418,6 +418,12 @@ describe('wave 3 T8 B – a silent home takes ZERO draws', () => {
     expect(lifeLogOf(world).length, 'and it really was a hit').toBe(1)
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:ends:*` is WAVE 4's and may not be
     // created early (brief §3); the arrival's three are the other file's.
+    //
+    // ⚠⚠ RE-AIMED 12.09 BY WAVE 4's T2, ASSERTION UNTOUCHED. `seed:life:ends:<week>` now exists, in
+    // lifeBeat §8, so the message «wave 4 has not started early» is the half that has expired – wave
+    // 4 has started, on purpose and in its own function. What the line HOLDS is unchanged and is the
+    // part that was always load-bearing: `rollSmallTalk` derives its own key and no sibling's. A
+    // green here after T2 is the split-key law surviving the arrival of the very thing it names.
     expect(lifeKeys().some((k) => k.includes(':ends:')), 'wave 4 has not started early').toBe(false)
   })
 })
@@ -904,11 +910,16 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // ⚠ RE-AIMED BY v74 T17 (11.09), NOT WEAKENED: `'fork-counsel'` is the fourth kind (the coach's
     // read on a `stop`) and it declares TRUE. The claim – «total by type, and the other kinds are
     // pinned in the same breath so none can be flipped quietly» – is unchanged and now covers four.
+    // ⚠ RE-AIMED AGAIN BY v75 T4 (12.09), NOT WEAKENED: `'ended'` is the fifth kind (the week the
+    // attachment is over) and it declares TRUE – tier 2 from the other end of the same arc. The claim
+    // still covers every declared kind, which is the half that matters, and tier 1 is still the only
+    // `false` in the table.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
       'small-talk': false,
       'fork-counsel': true,
+      ended: true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

@@ -127,7 +127,7 @@ test('week 412 is on screen', async ({ page, careerAt }) => {
 })
 ```
 
-`careerAt(name)` writes one of the six committed careers (`docs/plans/e2e-fixtures.md`) straight
+`careerAt(name)` writes one of the ten committed careers (`docs/plans/e2e-fixtures.md`) straight
 into IndexedDB before the app's first script runs, then loads the app and returns the manifest entry
 so the spec can assert on the fixture's own facts. **Measured: 0.43–0.57 s to a week-412 career on
 screen – the same as walking the wizard to an empty week-0 career (0.35–0.68 s).** The UI route to
