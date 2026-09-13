@@ -257,3 +257,56 @@ rewrite). ⚠ Expect frozen-career consequences: any preset that hires an elite 
 points now walks differently – per-key protocol, diff FIRST, `rngMain` byte-identity the STOP
 condition; e2e gains the locked-row case. If no preset trips the gate, say so in the record –
 a null result with the arm named.
+
+## Ruling I – the off-season window is the TRUE off-season, and the stamp is the year the choice is FOR
+
+T3 shipped against the wave brief's named seam and then reported two problems with it. Both are
+real, both are the same arithmetic, and the measurement settles them.
+
+**Measured:** `isOffSeasonWeek(week)` (`season/calendar.ts:1705`) is true for the **last three
+weeks of the 52-week block** (`OFF_SEASON_WEEKS = 3`, offsets 49–51), and
+`seasonIndexOf(week) = Math.floor(week / WEEKS_PER_YEAR)` (`world/ledger.ts:203`). So **the
+off-season sits INSIDE the same season index as the year it ends.**
+
+**Problem 1 – the window was too wide.** `isBlackoutWeek` is the off-season **or an exam fortnight
+while school is not over**, and the pro unlock can precede school's end. A still-at-school
+professional therefore gets a second change window in June, which is mid-season switching – exactly
+what O1 («at the season boundary only … mid-season switching would make focuses a dial») forbids.
+**The window is `isOffSeasonWeek(week)`.** It takes one argument, which also retires the
+`schoolIsOver` plumbing the wider predicate needed.
+
+**Problem 2 – a free pick locked up to two years.** With the stamp written as
+`seasonIndexOf(week)`, a hire at offset k in block N stamps N; every off-season week of block N is
+STILL N, so the first change lands in block N+1's off-season – **between 50 and 101 weeks later**.
+A parent who picks before knowing anything is held to it for up to two years. That is «наказание»
+by arithmetic rather than by design, and the standing rule says we punish for nothing.
+
+**The ruling: the stamp is the season the choice is FOR, not the week the click happened in.**
+
+```
+psychologistFocusSeason = seasonIndexOf(week) + (isOffSeasonWeek(week) ? 1 : 0)
+```
+
+and the change guard compares against that same expression. The whole behaviour falls out:
+
+| case | stamp | next change allowed |
+| --- | --- | --- |
+| hire mid-season N (free pick) | N | the coming off-season of N (stamps N+1) – 49−k weeks |
+| hire during N's off-season (free pick) | N+1 | N+1's off-season – one year |
+| change in N's off-season | N+1 | N+1's off-season – one year |
+| a SECOND change in the same off-season | – | refused: the stamp already reads N+1 |
+| any mid-season attempt | – | refused by the window |
+
+Exactly one choice per year, taken at the year boundary, with no trap at either end. ⚠ The free
+pick still spends nothing extra: it is free because it is the first, not because it is unstamped.
+
+**Accepted as shipped, no change:** T3's (a) a pick writes no ledger row – nothing about the bill
+moves; (b) during a college freeze `guardNotEnded` throws the existing sentence, identical to the
+rung dial; (c) is what this ruling replaces.
+
+**And T3 was right to overrule my fence.** I wrote «if the decline set is per-voice it must be
+complete over all four». The premise fails: the decline exists ONLY at `strained`/`cold`, which is
+exactly where the bibles collapse the four voices into the flat pool, so a VOICED decline would be
+a voice speaking where the bibles say it is obscured. One flat sentence is correct, and the wave
+brief's own §2 T3 parenthesis already said so – my two documents disagreed and the builder found
+the one that was right.
