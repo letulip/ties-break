@@ -93,3 +93,128 @@ dated `decisions.md` entry without regenerating the index block above the archiv
 `decisions:check` is step 5 of `npm run check`, so nothing after it ran. Measured at the base in a
 throw-away worktree, fixed in its own two-line commit (`89850de2`). The lesson is the house rule
 this repo already has and the architect skipped: **a doc commit is gated like any other.**
+## Ruling C – the recovery receipt counts the weeks he actually worked, and the counter is a key on the shock
+
+**The gap, found before T4 was briefed.** The brief asks the T4 receipt to print «only when the
+focus was held for at least half the shock's weeks (`spiritShock.week` gives the span)». The span
+it does give: `world.week - shock.week` at the clear. **What it does not give is the HELD half** –
+the world persists nothing from which «the slope actually applied on week W» can be recovered.
+
+The cheap proxy is `psychologistFocusSeason` plus «hired now»: the focus can only change at a
+season boundary (T3), so «held since season S» is exact FOR THE FOCUS. It is not exact for the
+HIRE – a parent who fires him mid-shock and re-hires at the clear reads identically. A receipt
+whose sentence says «he worked it» while its code checks «a focus was set in some season and he is
+on the payroll today» is the wave-4 monitor's own defect: **a check whose MESSAGE claims more than
+its CODE verifies.** Rejected.
+
+**The ruling: `spiritShock` gains an optional `weeks?: number`**, incremented inside `accrueSpirit`
+on exactly the weeks the slope applied (shock live ∧ hired ∧ `focus === 'recovery'`), and the
+receipt prints iff `weeks >= 1 && weeks * 2 >= world.week - shock.week`. The `weeks >= 1` half is
+not decoration: a shock that lands and clears in one week has span 0, and `0 * 2 >= 0` would print
+the receipt for work nobody did.
+
+**No schema bump is owed, and that is the house rule rather than a convenience.**
+`pendingTournament.masseurThere?: boolean` (state.ts, v59 step 2) is the precedent: an optional key
+on a TRANSIENT record – one created and discarded inside play – back-fills to absent, and absent is
+exactly true here («no week of this shock was ever counted», which is what a pre-counter shock is).
+`injury.weeksSaved` is the same instrument for the masseur's own claim, one seat over. ⚠ The
+increment lives INSIDE `accrueSpirit` – §0.1 forbids a `world.spirit` write elsewhere, and this is
+not one, but it must not migrate into `psychologist.ts` either.
+
+Frozen careers cannot move on this: they never hire, so the key never appears.
+
+## Ruling D – T5's site, measured, and the term's shape
+
+The wave brief says the composure walk is «applied in the weekly development pass as its OWN named
+term beside training growth, never by mutating the plan». **Measured, that pass is
+`growWeek` in `src/engine/development.ts`**, reached from `growAndLive` (`world/phaseGrowth.ts:50`,
+step 3b) and drawing on `seed:growth:<week>` – its own stream, which is why the frozen capture
+cannot move. `SKILL_KEYS` is at `development.ts:72` and `isPhysicalSkill` is literally
+`k !== 'composure'` (`:83`), so composure is already the one non-physical skill the file knows how
+to treat apart. Put the term there and name it; do not add a key to `SKILL_KEYS` and do not touch
+`isPhysicalSkill`.
+
+## Ruling E – T6's legibility is STAMPED on the row, and why that is not ruling A reversed
+
+Ruling A forbids stamping the ends READ and insists it be re-derived. This ruling stamps T6's
+legibility on the same row. Both are right, and the line between them is the point.
+
+**The key's `<week>` is the beat's RAISE week** (`LifeBeatRecord.week` – the row carries it,
+`narrative.ts:237`), never `world.week`. Without that the stream is not reconstructible at all.
+
+**But the raise week is not enough, because the seat is not a persisted fact of the row.** The
+listen coin reads `psychologistHired`, `psychologistFocus` and – through `listenClarity[rung]` –
+the RUNG. All three are mutable by command. And `buildLifeBeatPrompt(world)` is rebuilt **on every
+snapshot** (`world/snapshot.ts:1815`), so a re-derived heading is re-derived after every command,
+not once per beat. Fire him, or drop him a rung, with a beat pending, and the heading's wording
+flips from legible to ambiguous under the player's eyes – while the kept feed row, whose TEXT was
+persisted at the raise, still says the legible thing. One piece of news, two wordings.
+
+⚠ **Measured limit: the ENGINE permits this; whether today's UI does is T6's to measure.** The
+blocking dialog sits over a scrim on Home and may well be undismissable, in which case the path is
+closed by the surface rather than by the rule. The ruling does not depend on it.
+
+**Why stamping is allowed here and forbidden there.** `beatEndsRead`'s ⚠⚠ block forbids stamping
+because the read is a PRICE input – `'ended'`'s space/company delta is +3 or −3 by it, and
+`answerLifeBeat` re-validates the chosen option against a priced set that must be reconstructible.
+**T6's legibility is not a price input at all**: its own pin is that the bond arithmetic, the read
+draw and the priced option set are byte-identical with the focus on or off. Stamping a wording
+choice creates no second source of truth for any price. So:
+
+**`LifeBeatRecord` gains an optional `heard?: boolean`**, written at the raise, read by both the
+prompt heading and the kept feed row. Absent = «nobody was teaching you to listen», which is
+exactly true of every row that predates the seat – the same back-fill honesty as ruling C, and no
+schema bump owed for the same house rule.
+
+## Ruling F – the leaning pass runs at the TAIL of `accrueSpirit`, so a flip never bites its own week
+
+T4 adds a term to the return step at the head of `accrueSpirit`; T7 adds the weekly leaning pass to
+the same function («one weekly function, two numbers» becomes three). That puts a flip and the
+arithmetic it changes inside one tick, and the order decides whether the flip's first week is
+arithmetically special.
+
+**It must not be.** `accrueSpirit` reads `intensity` ONCE at its head and spends it on
+`returnPerWeek[intensity]`, `perturbationScale[intensity]` and `shock[kind][intensity]`. The week's
+perturbation was experienced by the girl she was all week. A flip that fired mid-pass would price
+half the week as one person and half as another – the same defect the 09.09 ORDER FIX corrected for
+the return-vs-event order, and a cousin of «no second curve, no taper, no flag».
+
+So: **the leaning drift and the flip hazard run after step 4's shock clear, at the tail**, and the
+new expression is first read on the NEXT tick. The `intensity` const at the head stays a single
+read for the whole pass – do not re-read it after the pass, and do not thread the new value into
+the same tick.
+
+Two axes arm independently, so an armed week can draw twice – `seed:life:walls:open:<week>` and
+`seed:life:walls:reg:<week>`, one value per key, §1f satisfied by the axis being IN the key.
+
+## Ruling G – what T2 measured that binds every task after it
+
+Five of these are corrections to the wave brief, found by building against it. They are recorded
+here so no later brief repeats them.
+
+1. **A `Snapshot` member ships WITH its reader, never before it.** `tests/snapshot-contract.test.ts`
+   (E-07, the 05.09 engine review: «a Snapshot member with no reader is a promise to the UI that
+   nothing collects») went red on `psychologistFocus` alone. So the seat's wire carries FOUR facts
+   in T2 and the focus joins in T3, beside the card that reads it – the same discipline
+   `spiritShock` was held to in wave 4.
+2. **The seat DOES get a rung selector.** «No dial and no travel switch» was half wrong: ruling Б
+   covers the TRAVEL switch only, and the spec's §3 gives him three rungs. `StaffRung.sessions`
+   became `StaffRung.value` – an index, not a count – and one radio group renders both seats.
+3. **The college-freeze refusal is NOT a new string and must not be drafted.** `guardNotEnded`
+   throws the existing `COLLEGE_FREEZE_REFUSAL` first; a second sentence would break the R10-16
+   one-story doctrine and invariant 4 at once. ⚠ T9's string list asks for a draft that must not be
+   written – strike that row.
+4. **Every new command joins `tests/round24-college-refusals.test.ts`.** It is a guard SET the
+   masseur's commands joined in v59, and it was in no file list of mine. T3's `setPsychologistFocus`
+   joins it too.
+5. **`householdWeekly` names its seats; it does not total `'staff'` rows.** My brief quoted
+   `snapshot.ts` promising that a salary «joins `outgoingCents` and NOTHING else has to move». The
+   promise that was true is twenty lines away in `world/coachMarket.ts:688`, whose own block says a
+   psychologist «joins as one more line in this list». One term was required. Everything downstream
+   did follow by itself.
+
+⚠ **And the process hazard fired twice in one session, live.** The background-task notice reported
+«exit code 0» over a run whose log said `CHECK_EXIT=2`, and again over one that said
+`CHECK_EXIT=1`. This is exactly the CLAUDE.md rule about never trusting a notification's exit code,
+observed rather than recited. Every verdict in this wave is read from a log file the command itself
+appended, with its mtime checked against the run's start.
