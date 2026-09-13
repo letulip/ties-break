@@ -548,3 +548,59 @@ nothing **in either direction**.
 The lean is invisible to every reader, every surface and every draw except the hazard it arms –
 which is what lets it be gradual, rare and honest without becoming the continuous model who-she-is
 §2a rejected.
+
+## Ruling O – a focus changes HOW a surface reads, never WHICH surfaces exist
+
+T6 built the legible told-now ending row carrying the space/company read, flagged it as the one
+thing it wanted ruled, and was right to stop there: it is a ruling change, not a builder's call.
+
+**Measured.** `ENDED_NOW_EVENT` (`world/lifeBeat.ts:2779`) is a SINGLE string –
+«It ended this week, and there is nobody in her life now.» – while `ENDED_LATE_EVENT[read]` is
+indexed. Wave-4 ruling I fixed the read's surfaces at «4 heading cells plus 2 feed rows», and the
+told-now row's own note **refuses a read there** on purpose: the prompt is raised the same tick, so
+the heading already tells the parent what she wants, and a row repeating it would be one piece of
+news told twice.
+
+**The ruling: the told-now ending row stays read-free in BOTH arms, and gets no legible variant.**
+Under the listen focus an ending told NOW makes the **heading** legible and leaves the feed row
+exactly as it stands; an ending told LATE makes its row legible, because for a late telling that
+row is the only surface the read has.
+
+The principle, general to the wave and to whatever adds a focus later: **a focus may change how an
+existing surface reads. It may not create a surface.** Giving the told-now row a read adds
+information it has never carried – which is invariant 4's territory and the owner's, not a wave
+about a psychologist. `ENDED_EVENT_HEARD` therefore loses its told-now half (16 → 8 cells), and the
+wave's new string count falls from 48 to 40.
+
+### Ruling L, amended by T6 – the value check must not call the function under test
+
+T6 found ruling L's prescription insufficient **as written**, and the correction matters more than
+the original. I wrote «pair it with a value-level check – a key-by-key world hash over a walked
+career **with the focus off**». That arm cannot see a consumed draw, because with the focus off no
+draw happens at all. The catching instrument is the **positive** arm.
+
+And the positive arm only works if its expectation is derived **independently of the code under
+test**. T6's first version compared the stamp against `drawListenHeard` itself – so an arm that
+made the function draw twice moved BOTH sides and walked straight through it (1 red, in the wrong
+place). The fix re-derives the stream's raw first value inside the test. ⚠ This is the «unable to
+fail» family again, in its purest form: **an equality comparing two arms is invisible to a mutation
+that moves both.** The amended rule: *pair the key net with a value check whose expectation does
+not call the function under test*, and widen the walk – a consumed value only flips a coin-shaped
+outcome about half the time, so three samples can pass by luck (T6 widened from 3 to 8).
+
+### Two smaller things T6 settled, recorded so they are not re-litigated
+
+* **The voice axis on parent's-frame copy is a deliberate fence extension.** `MET_MENTION`'s note
+  says only the girl's-voice pools are temperament-indexed. The legible lines are the parent's
+  frame and ARE indexed by her temperament – because what they carry is **his read of her**, so it
+  varies with which girl is being read, not with how the parent speaks. Named at the pool; the
+  ambiguous pools stay untouched.
+* **No legible cell may assert a telling.** The heading is carried at every bond band, and at
+  `strained`/`cold` she never spoke – so a line like «the easy telling is the whole of it» is false
+  on a third of the ladder. Six drafts were re-cut to name a standing habit of hers plus the drawn
+  read, both true of a week she said nothing. ⚠ The lint that catches this was itself unable to
+  fail at first – its banned entry `the telling` missed `the easy telling`; widened to `telling`,
+  the same arm reds.
+* **`heard` is three-state and must stay so**: absent = nobody was teaching you, `false` = he was
+  and this one got past, `true` = the legible arm. A blanket `false` on every raise breaks
+  whole-row deep-equals in `tests/wave3-soft-surface.test.ts` (measured, 7 red).
