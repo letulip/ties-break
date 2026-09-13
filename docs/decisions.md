@@ -4301,3 +4301,32 @@ Two rulings on wave 4's strings package, both his, both same-day:
    back-fill, a met pick would repaint every historical life row), so the totality gate on
    `LifeBeatGlyphs` was re-cut from «empty-or-total» to keys-only-guarded subset – the re-cut note
    at the type records the supersession rather than erasing the first shape.
+
+## 13.09.2026 – THE PSYCHOLOGIST'S YEAR IS COMMISSIONED: O1–O7 RULED, WAVE 5 BRIEFED
+
+Both PRs merged by the owner (#136 `life/wave-4`, #137 `round/41`; `main` at `4ceb7c0d`), his
+word: «мержу оба, вернусь с плейтестом. А пока давай посмотрим и спланируем для билдера пошагово
+следующую волну». The architect presented the wave-5 plan (T1–T11 against
+[the-psychologists-year-2026-09](specs/the-psychologists-year-2026-09.md)) plus nine questions
+with recommendations; his ruling, verbatim: «окей, бриф пиши, а билдера я сам запущу» – all nine
+per recommendation:
+
+- **O1** – the focus changes at the season boundary only («в ближайший год» is his own grain).
+- **O2** – every focus available at every rung; the rung scales quality, never unlocks menu rows.
+- **O3** – no results share: his product is the year, not the title; `staffResultShareBps` stays
+  `'coach' | 'masseur'`.
+- **O4** – remote in v1, ruling Б untouched; re-asked only if a playtest wants him at a Slam.
+- **O5** – the cool-head numbers (+1.5/+2.5/+3.5 per season, own-ceiling cap) are bench-first
+  proposals, measured against a training-only control before any ruling.
+- **O6** – a retained seat at rung ≥ 2 slows the walls' RISE even without the matching focus –
+  small, priced at the census: the second legible thing the retainer buys.
+- **O7** – «The public life» (the fifth focus) ships WITH the spotlight wave, never before it has
+  something to shrink.
+- The walls-leanings (who-she-is §2a) ride wave 5's schema move – their designated home.
+- The rung prices ($100/$200/$400 a week) are proposals for the bench, not rulings.
+
+The brief: [life-wave-5-builder-2026-09](plans/life-wave-5-builder-2026-09.md), branch
+`life/wave-5` from post-merge `main`, schema **v76** (round 41's parked #22 also aims at 76 –
+whoever lands second takes the next number). The owner launches the builder himself; the
+architect holds the final gate. планка-3 / bond-memory stays its own session with the owner
+after his playtest – it moves `ECONOMY.bond`, and the wave-4 coordination note stands.

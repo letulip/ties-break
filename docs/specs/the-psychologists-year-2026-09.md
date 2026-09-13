@@ -1,9 +1,9 @@
 ---
 type: spec
-status: draft
+status: current
 area: life
 canonical: false
-last-reviewed: 2026-09-09
+last-reviewed: 2026-09-13
 ---
 
 # The psychologist's year – reconciling his three rulings into one seat
@@ -124,6 +124,10 @@ subscription.
 
 ## 6. Open questions for the owner – each with a recommendation
 
+⭐ **RULED 13.09 – all seven per the recommendations below** (his «окей» on the architect's
+nine-point list; decisions.md entry of the day). The numbers marked bench-first (O5, the rung
+prices, every walls constant) stay proposals until measured – the ruling is the SHAPE.
+
 | # | question | recommendation |
 | --- | --- | --- |
 | O1 | when can the focus change? | at the season boundary only – «в ближайший год» is his own grain; mid-season switching would make focuses a dial |
@@ -142,6 +146,8 @@ the drift focus needs the leaning), one branch, its own schema move (numbers re-
 parity run on the staff card. Every player-facing word – the focus names, the four sentences, the
 card copy – is his (invariant 4), delivered as drafts with the wave.
 
-**Done when:** O1–O7 are ruled, the grid's bars are accepted, and the build-plan's step-5 row
-points here (it does, since 09.09). Step 5's schema move also carries the walls-leanings – the
-build plan's §6a records it.
+**Done when:** O1–O7 are ruled (⭐ done 13.09, per recommendation), the grid's bars are
+accepted (pending – the wave's bench), and the build-plan's step-5 row points here (it does,
+since 09.09). Step 5's schema move also carries the walls-leanings – the build plan's §6a
+records it. The builder brief is
+[life-wave-5-builder-2026-09](../plans/life-wave-5-builder-2026-09.md).
