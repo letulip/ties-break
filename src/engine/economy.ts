@@ -4847,6 +4847,8 @@ export const ECONOMY = {
   // constant with no reader is a constant nobody can be wrong about yet.
   // ⭐ T4 (v76) LANDED THE FIRST OF THE FOUR – `recoverySlope`, below, with `accrueSpirit`'s own
   // reader in the same commit, exactly as the rule above requires. Three remain.
+  // ⭐ T5 (v76) LANDED THE SECOND – `coolheadPerSeason`, below, with `growWeek`'s own reader in the
+  // same commit. Two remain (`listenClarity` T6, the walls' hazard scale T7).
   psychologist: {
     // ⚠⚠ PROPOSALS, NOT RULINGS – bench-priced, predicted-first, THE OWNER'S WORD AFTER T10, in the
     // same register the spec marks O5 with. The wave-5 brief's §4 lists them under «Proposals – NONE
@@ -4904,6 +4906,34 @@ export const ECONOMY = {
      *  strictly better than the one below on weeks-under-the-knee, by more than 2×SEM, or the
      *  masseur §4 law re-prices the RUNG and not this row. */
     recoverySlope: [2, 3, 4],
+    /** ⭐⭐⭐ «COOL HEAD» – THE BOUNDED COMPOSURE WALK, BY RUNG (v76, wave 5's T5). The spec's §2 row,
+     *  verbatim: «bounded composure growth: **+1.5 / +2.5 / +3.5 per held season by rung**, toward
+     *  HER EXISTING CEILING only – it accelerates the work, it never breaks the cap». Points of
+     *  `composure` per SEASON; `growWeek` spends `coolheadPerSeason[rung] / WEEKS_IN_SEASON` on each
+     *  week he actually works it, and nowhere else.
+     *
+     *  ⚠⚠ A SEASON RATE READ WEEKLY, AND THE FRACTION IS THE MECHANIC RATHER THAN A ROUNDING
+     *  ACCIDENT. 3.5 / 52 = 0.0673 of a point a week, and `KidSkills` fields are plain `number`s that
+     *  `growWeek` never rounds – measured before the term was written, because an integer skill would
+     *  have made the whole focus dead on arrival (every week's term would truncate to nothing). The
+     *  owner's own anchor sizes it: her measured 7-point composure hole is two to three seasons of
+     *  rung-2 work, «not a purchase» (the spec's ⚠ under the table).
+     *
+     *  ⚠⚠ DECIMALS, NOT AN INDEX – and the collision with the row above is worth naming once, as
+     *  that row names its own: `recoverySlope` is POINTS OF SPIRIT PER WEEK, this is POINTS OF A
+     *  SKILL PER SEASON. Both are indexed by the same rung (`0 | 1 | 2`, the roster position), and
+     *  the two must never be read into each other's arithmetic.
+     *
+     *  ⚠ PROPOSALS INSIDE A RULED SHAPE – O5, the spec's §6: «the +1.5/+2.5/+3.5 season rates and the
+     *  own-ceiling cap are bench proposals; measured against the training-only control before any
+     *  ruling». So T10's grid PRICES these three numbers (growth against a training-only arm, more
+     *  than 2×SEM per rung, zero at the ceiling proven) while the shape they sit in – a per-week
+     *  summand beside training growth, clamped at her own ceiling – is ruled and stays.
+     *
+     *  ⚠ MONOTONE BY CONSTRUCTION BELOW THE CEILING: the three are strictly increasing and the term
+     *  is `min(rate, headroom)`, so a higher rung is never worth less than a lower one on any week –
+     *  the equality case is the ceiling, where all three are 0 and the focus is finished. */
+    coolheadPerSeason: [1.5, 2.5, 3.5],
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

@@ -22,7 +22,28 @@
 import type { Rng } from '../rng'
 import type { WorldState } from './state'
 import { driftCohort } from '../season/cohort'
-import { ageCurveOf, growWeek, physicalMean } from '../development'
+import {
+  ageCurveOf,
+  coolheadCrossedAPoint,
+  coolheadGain,
+  growWeek,
+  physicalMean,
+  COOLHEAD_RECEIPT,
+} from '../development'
+import { addEvent } from './ledger'
+// ⭐⭐ v76 T5 – THE SEAT, ASKED DIRECTLY, WHICH IS THE HALF OF RULING J THAT APPLIES HERE. The
+// architect's ruling J as corrected by T4b: a focus pass sitting UNDER `world/college.ts` in the
+// value-import graph must be HANDED the fact (that is `spirit.ts`, and it is why `accrueSpirit` takes
+// a boolean); one that does not may import the predicate, the masseur's own way. Measured here before
+// it was relied on, over the tree's own value-import graph with `import type` excluded and re-run with
+// `export … from` counted as edges – same answer both ways:
+//   · `world/psychologist.ts` reaches THIS file by **ZERO** paths, so the import below closes nothing;
+//   · it reaches `engine/development.ts` by SEVEN, the shortest `psychologist → college →
+//     development`, closing on a VALUE (`world/college.ts` importing `SKILL_KEYS`) – which is why the
+//     rung travels the last step as a `growWeek` ARGUMENT and not as an import over there.
+// So the fact is computed at the caller that already holds every piece, and `growWeek` gains one
+// optional field: no arity change, no pin re-aim, no new arrow into a module that cannot take one.
+import { psychologistWorkingRung } from './psychologist'
 // ⚠ THE ONE ANSWER TO "HOW MANY WEEKS HAS THIS BODY LOST", and not a second one taken off
 // `careerTotals` directly: `weeksLostSoFar` is the max of the monotone v40 total and what the pruned
 // `injuryHistory` still holds, which is the reading the career-ending injury already judges her by.
@@ -89,6 +110,18 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   const matchesThisWeek = world.events.filter(
     (e) => e.week === world.week - 1 && e.type === 'match' && !e.friendly,
   ).length
+  // ⭐⭐⭐ v76 T5 – AND IS THIS THE PSYCHOLOGIST'S YEAR FOR HER HEAD, AT WHICH RUNG. `undefined` on
+  //     every week the seat is empty, hired for another focus, or stood down – see
+  //     `psychologistWorkingRung`, which asks the predicate the BILL asks.
+  //     ⚠ THE TWO LOCALS BELOW ARE THE RECEIPT'S WHOLE APPARATUS and they store nothing: the term is
+  //     a pure function of her composure at the head of the week, her ceiling and the rung, so the
+  //     caller can compute exactly what `growWeek` will add and compare the two deltas afterwards
+  //     (`coolheadCrossedAPoint`, at 3b-ter). ⚠ ONE HOME FOR THE ARITHMETIC: this is the SAME
+  //     `coolheadGain` the loop inside `growWeek` spends, called with the same three numbers, never a
+  //     re-spelling of it. ⚠ ZERO DRAWS – three reads and a multiply.
+  const coolheadRung = psychologistWorkingRung(world, 'coolhead')
+  const composureBefore = world.skills.composure
+  const coolhead = coolheadGain(composureBefore, world.potential.composure, coolheadRung)
   world.skills = growWeek({
     skills: world.skills,
     potential: world.potential,
@@ -152,6 +185,13 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     // the training court, so she cannot also be on it twice a day), so exactly one of these is ever
     // different from 1. ZERO draw implications - `growWeek` keeps `seed:growth:<week>`, one pull.
     loadFactor: (knockRestWeek(world.knock, world.week) ? KNOCK_REST_GROWTH : 1) * summerLoadFactor(world),
+    // ⭐⭐⭐ v76 T5 – «COOL HEAD». The one field the psychologist's year hands this pass, and it is
+    // `undefined` on every week of every career that is not paying for exactly this work this week,
+    // so growth is byte-identical to what it has always been. See `coolheadGain` in
+    // engine/development.ts for the arithmetic, the own-ceiling clamp and the zero at the ceiling.
+    // ⚠ ZERO DRAW IMPLICATIONS – `growWeek` keeps `seed:growth:<week>`, one pull, in its own position
+    // before the per-skill loop; the term is a summand written after it.
+    coolheadRung,
   })
 
   // 3b-bis. ⭐⭐⭐ ...AND THE BEST HER BODY HAS EVER BEEN IS REMEMBERED (v62, the long goodbye step 1 –
@@ -174,6 +214,32 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   // ⚠ ZERO DRAWS ON ANY STREAM – a comparison over state `growWeek` has already computed. The frozen
   //   MAIN capture (41550 / e6b0c709) cannot see this line.
   world.peakPhysical = Math.max(world.peakPhysical, physicalMean(world.skills))
+
+  // 3b-ter. ⭐⭐⭐ ...AND THE ONE WEEK IN A SEASON OR THREE WHEN THE YEAR ON HER HEAD SHOWS (v76 T5).
+  //     The travelling-team §4 legibility law: «you paid, and you cannot tell» is the failure, and
+  //     this focus is the one with NO other channel – the radar carries a fogged estimate into a
+  //     polygon and never a number, so a composure point that arrives silently arrives invisibly.
+  //
+  // ⚠⚠ IT FIRES ONLY WHEN **HIS** TERM CARRIED HER OVER A WHOLE POINT – training raises composure
+  //   too, and a line that fired on training's work would be claiming his credit. The test is the
+  //   counterfactual, not the total: `floor(before + training) < floor(before + training + his)`, one
+  //   expression in `coolheadCrossedAPoint`. At 1.5–3.5 points a season it lands one to three times a
+  //   year, which is a sign rather than a subscription.
+  //
+  // ⚠ NO STORED STATE AT ALL, deliberately – T4's receipt needed a counter on the shock (ruling C);
+  //   this one asks a question about a single week's arithmetic inside that week and remembers
+  //   nothing. No schema field, no migration, no fixture.
+  //
+  // ⚠ AFTER 3b-bis AND NOT BETWEEN IT AND `growWeek`: that line's own ⚠ says why it must sit
+  //   IMMEDIATELY after the assignment. Nothing here touches `skills`, so the order is free either
+  //   way and the peak's note stays literally true.
+  //
+  // ⚠ A LIFE LINE IS NEVER A PURCHASE (the wave-3 brief §0.5): `addEvent` with NO `amountCents`, no
+  //   category, no figure in the string – so it writes no money row and folds into no ledger.
+  //   ZERO DRAWS: a floor comparison over numbers this phase already holds.
+  if (coolheadCrossedAPoint(world.skills.composure, coolhead)) {
+    addEvent(world, { week: world.week, type: 'info', text: COOLHEAD_RECEIPT })
+  }
 
   // 3c. W4 – AND SHE CAME OFF COURT SORE. Deliberately LAST of the things that happen to her body,
   //     and after `growWeek`: the week's work is done and banked, and the knock is what she is left

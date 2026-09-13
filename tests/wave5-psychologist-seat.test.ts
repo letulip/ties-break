@@ -282,12 +282,20 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     // yet, and the block's own note said in as many words that they «land with the passes that READ
     // them». T4 is the first of those passes, so `recoverySlope` joins here and `coolheadPerSeason`
     // (T5), `listenClarity` (T6) and the walls' hazard scale (T7) will join it in turn.
+    // ⚠ RE-AIMED AGAIN BY T5, WHICH IS THE LINE ABOVE COMING TRUE ON SCHEDULE: `coolheadPerSeason`
+    // joins WITH its reader (`growWeek`'s own term, engine/development.ts) in the same commit, which
+    // is the rule this block is keeping – a constant lands with the pass that reads it. Two remain.
     //
     // ⭐ THE CLAIM IS UNCHANGED AND STILL EXACT: the list is still a closed set, so a fare, a stance
     // or a share landing in this block is still red on the line below – which is the whole of what
     // ruling Б and O3 need from it. What is NOT re-aimed is the `staffShare` line above: that one is
     // about a union this wave may never widen, and it stays at two roles for ever.
-    expect(Object.keys(ECONOMY.psychologist).sort()).toEqual(['defaultRung', 'recoverySlope', 'rungs'])
+    expect(Object.keys(ECONOMY.psychologist).sort()).toEqual([
+      'coolheadPerSeason',
+      'defaultRung',
+      'recoverySlope',
+      'rungs',
+    ])
     // ⚠ AND THE NEGATIVE SAID AS A NEGATIVE, so the growing list above cannot quietly admit the one
     // thing it exists to refuse: no key of this seat's block may name a fare, a trip or a share.
     expect(Object.keys(ECONOMY.psychologist).filter((k) => /fare|travel|share|board/i.test(k)), 'ruling Б')

@@ -219,6 +219,32 @@ export function psychologistWorksInWeek(hired: boolean, frozen: boolean, bookedO
   return hired && !frozen && !bookedOff
 }
 
+/** ⭐⭐ THE RUNG HE IS WORKING **THIS** FOCUS AT THIS WEEK, or `undefined` when he is not working it
+ *  at all – not hired, hired for a different year, or stood down. The three questions a focus pass
+ *  has to ask, answered once, in the file that owns all three of their answers (v76 T5).
+ *
+ *  ⚠⚠ THE WORKING WEEK IS THE BILLING WEEK – the architect's ruling J, and the same predicate
+ *  `resolvePsychologist` opens with, so a college freeze and a booked family week stand the WORK down
+ *  exactly as they stand the INVOICE down. Pay nothing, receive nothing; and the flag survives both,
+ *  so the work resumes by itself the first week after. A focus pass that spelled
+ *  `psychologistHired && focus === …` instead would be T4's own defect, corrected one commit later.
+ *
+ *  ⚠ THE `??` FALLBACK IS `psychologistRungOf`'s, MIRRORED for exactly its reason: the rung is
+ *  validated at its one writer (`setPsychologistRung`), but a hand-built probe world may hold
+ *  anything, so an unknown value reads as the DEFAULT rung rather than poisoning a reader's
+ *  arithmetic. ⚠ And `undefined` here means ONE thing – «he is not working this focus» – which is why
+ *  a missing rung falls back rather than returning `undefined` and silently switching the effect off.
+ *
+ *  ⚠ WHY THIS LIVES HERE AND `recoverySlopeFor` DOES NOT. `spirit.ts` cannot import this file – the
+ *  cycle ruling J measured – so T4's focus had to re-spell the rung read in its own module; T5's
+ *  caller (`world/phaseGrowth.ts`) reaches this file by zero paths and can simply ask. One home for
+ *  the answer wherever the graph allows one. Pure read, ZERO draws. */
+export function psychologistWorkingRung(world: WorldState, focus: PsyFocus): 0 | 1 | 2 | undefined {
+  if (!psychologistWorksThisWeek(world)) return undefined
+  if ((world.psychologistFocus ?? null) !== focus) return undefined
+  return world.psychologistRung ?? ECONOMY.psychologist.defaultRung
+}
+
 /** WEEKLY SALARY (charged once per tick, in `resolveBodyAndPlanner` beside the masseur's row). A
  *  flat retainer per RUNG in cents, deliberately not a corridor draw and not jittered, so the line
  *  on the ledger is the number on the card, every week, and the player can read the deal he signed.
