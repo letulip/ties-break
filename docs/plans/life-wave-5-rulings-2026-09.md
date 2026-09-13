@@ -631,3 +631,33 @@ passes on 0 **and** on 1.
   against `metKeptRow(…, frame(…))` – the function under test on both sides – so an arm moved both
   and walked through. Twice in one task is not a coincidence; it is what this shape of test does by
   default, and the amended rule has to be applied deliberately every time.
+
+## Ruling P – the walls pass is a SIBLING of `accrueSpirit`, not a block inside it
+
+Ruling F put T7's leaning pass «at the tail of `accrueSpirit`, after step 4's shock clear». Its
+REASON was ordering – a flip must not bite its own week. Its LOCATION was a guess, and measuring
+before T7 shows the guess was the wrong half.
+
+**Measured.** `accrueSpirit` today reaches **no stream at all** – there is no `rngFromSeed` and no
+`pickInt` anywhere in its body. The only pin about this is `tests/spirit.test.ts:918`, which asserts
+`world.rngMain` is unchanged, and a purpose-scoped sub-stream would not break it. But T4b wrote the
+stronger fact into the code one commit ago – `phaseHerWeek.ts`: «A `boolean`, never an `Rng`:
+`accrueSpirit`'s **zero-draw contract** is untouched» – and T7's flip hazard is a draw.
+
+**The ruling: the drift and the hazard live in `driftWalls(world, psychologistWorks)`, exported
+from `spirit.ts` beside `accrueSpirit`, and called from `phaseHerWeek` immediately after it.**
+
+* Ruling F's requirement is satisfied **more exactly**, not less: «after `accrueSpirit` returns» is
+  unambiguous where «at the tail» is a place someone can drift away from, and the `intensity` const
+  read at the head of `accrueSpirit` stays one read for that whole pass.
+* `accrueSpirit` stays provably draw-free, which three pins and a freshly-written comment lean on.
+* The wave's first draw inside this file is **scoped to one function**, so the count-keys net and
+  ruling L's value check have an exact subject instead of a whole weekly pass.
+* The file's «one weekly function, two numbers» law is about the spirit/bond PAIR – two weekly
+  readings. The walls are a third number of a different kind: persisted displacement with its own
+  stream and its own hysteresis. A sibling in the same file honours the law's intent – one weekly
+  pass over her inner state, in one place – without smuggling a draw into a function whose
+  draw-freeness is load-bearing elsewhere.
+
+⚠ `driftWalls` takes the same `psychologistWorks` boolean, for ruling J's reason: O6's ×0.75 is the
+seat's work and a standing-down seat slows nothing.
