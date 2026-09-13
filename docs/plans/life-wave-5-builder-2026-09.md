@@ -100,8 +100,10 @@ On `WorldState` (`state.ts`, the masseur v59 block's style – flat seat fields,
   the masseur's middle-rung precedent; meaningless until hired)
 * `psychologistFocus: PsyFocus | null` where
   `PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself'` (back-fill `null`)
-* `psychologistFocusSeason: number | null` – `seasonIndexOf(week)` at the week the focus was
-  set (T3's one-change-per-season fact; back-fill `null`)
+* `psychologistFocusSeason: number | null` – the season the focus was set FOR (T3's
+  one-change-per-season fact; back-fill `null`). ⚠ AMENDED BY RULING I after T3 measured it:
+  `psychologistFocusSeasonFor(week)`, not `seasonIndexOf(week)` – the off-season is the last three
+  weeks of the block it ENDS, so the plain index locked a mid-season hire for up to 101 weeks
 * `wallsLean: { open: number; reg: number }` – the two §2a leanings, one decimal like spirit;
   0 = expression equals nature (back-fill `{ open: 0, reg: 0 }`)
 * `wallsFlipped: { open: boolean; reg: boolean }` – the hysteresis state: `true` = the
@@ -150,7 +152,10 @@ discipline, same guard set, ZERO draws on any stream – a salary is a negotiate
 
 * `setPsychologistFocus(world, focus)` engine-side, id re-validated: refused when not hired;
   **the first pick at hire is free** (the year starts when the work starts); **a CHANGE is
-  allowed only in the off-season window** (`isBlackoutWeek`) **and once per season**
+  allowed only in the off-season window** (`isOffSeasonWeek` – ⚠ AMENDED BY RULING I; the brief
+  first named `isBlackoutWeek`, which is the off-season OR an exam fortnight while school is not
+  over, and that gave a still-at-school professional a second window in June) **and once per
+  season**
   (`psychologistFocusSeason` guards it) – O1's «season boundary only», made mechanical. Refusal
   sentences are drafts, printed by card and throw alike.
 * **From 18 the choice is JOINT** (`kidAgeExact ≥ 18`, ruled 09.09): at a `strained`/`cold`

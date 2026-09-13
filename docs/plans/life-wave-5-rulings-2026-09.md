@@ -310,3 +310,32 @@ exactly where the bibles collapse the four voices into the flat pool, so a VOICE
 a voice speaking where the bibles say it is obscured. One flat sentence is correct, and the wave
 brief's own §2 T3 parenthesis already said so – my two documents disagreed and the builder found
 the one that was right.
+
+### Ruling I, addendum – what T3b measured building it
+
+**The exam-fortnight pin needs the pick and the exam week in DIFFERENT season blocks.** Inside one
+block the once-a-season fact refuses first, so the case passes under `isBlackoutWeek` and
+`isOffSeasonWeek` alike – a test that proves nothing while looking correct. The shipped case is
+built across a boundary and goes red on the old predicate (ARM 9, one red: the two predicates
+differ on exactly one kind of week, so nothing else in the file CAN see the change).
+
+**Reachability, with the run/read line drawn honestly.** School end: RUN – a probe over all twelve
+birth months through `schoolEndWeek`/`kidAgeExact` gives week 242 (months 1–8) or 294 (9–12), ages
+18.03–18.96, no month escaping the band. The exam weeks: RUN – a 900-week walk returns exactly ten
+for the default profile, at ages 14.00 through 17.99. `TIERS.w15.minAgeYears = 14`: **READ, not
+run**, off `season/calendar.ts:466` – and it nearly went in as 13, which is what a comment at
+`economy.ts:4528` says about a different tier. ⚠ **The gap, stated as a gap:** no simulated career
+was run that actually WINS a counting W-series result before week 179; the fixture sets
+`bestFinishByTier.w15` directly. What is proved is that the engine's own unlock predicate accepts
+the state and the age gate permits it at 14 against a school end of 18+.
+
+**Ruling I's arithmetic survived intact** – every number re-checked against the source, and the
+«50 to 101 weeks» lock reproduced as a measured instance (a pick at week 250 reopened at 309 under
+the old stamp: 59 = 101−42; under the new one at 257: 7 = 49−42).
+
+**Two of T3's cases could not be kept**, and that is the house rule working rather than a loss: one
+asserted precisely the behaviour this ruling overturns, and the laundering case's second half
+rested on the same lock. Both re-aimed with the ⚠ note; ARM 2's hole stays covered.
+
+⚠ **And the notification lied a third time in this wave** – a deliberately killed sim came back as
+«exit code 0» while its own log read `SIM_EXIT=143`.
