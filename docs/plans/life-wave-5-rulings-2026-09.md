@@ -563,8 +563,14 @@ news told twice.
 
 **The ruling: the told-now ending row stays read-free in BOTH arms, and gets no legible variant.**
 Under the listen focus an ending told NOW makes the **heading** legible and leaves the feed row
-exactly as it stands; an ending told LATE makes its row legible, because for a late telling that
-row is the only surface the read has.
+exactly as it stands; an ending told LATE makes its row legible.
+
+⚠ **My stated reason for that second half was wrong, and T6b corrected it while building.** I
+wrote «for a late telling that row is the read's only surface» – false: `ENDED_HEADING['told-late']`
+is read-indexed too, so BOTH registers' headings carry it. The load-bearing test is the one this
+ruling states two paragraphs down and should have stated here: **did this surface already carry the
+read?** `ENDED_LATE_EVENT` has been read-indexed since wave 4; `ENDED_NOW_EVENT` never was. What
+the told-late row alone is, is the surface that OUTLIVES the card.
 
 The principle, general to the wave and to whatever adds a focus later: **a focus may change how an
 existing surface reads. It may not create a surface.** Giving the told-now row a read adds
@@ -604,3 +610,24 @@ outcome about half the time, so three samples can pass by luck (T6 widened from 
 * **`heard` is three-state and must stay so**: absent = nobody was teaching you, `false` = he was
   and this one got past, `true` = the legible arm. A blanket `false` on every raise breaks
   whole-row deep-equals in `tests/wave3-soft-surface.test.ts` (measured, 7 red).
+
+### Ruling O, two measured consequences and two blind spots T6b exposed
+
+**The ruling bought back a stream it never claimed.** T6's legible told-now arm derived
+`seed:life:ends:<week>:react` at the raise. Nothing does now: the told-now raise reaches an
+**identical key list** with the focus on and off. §E's third case moved from
+`toBeLessThanOrEqual(1)` to `toEqual([])` – and the old form was itself unable to fail, since it
+passes on 0 **and** on 1.
+
+**Two blind spots in the value apparatus, both found by arms rather than by review:**
+
+* **A forty-week walk that contains no told-now ending at all.** `plantLife` gives every even-`k`
+  episode an `endedWeek` before its `knownWeek`, so every planted ending is told LATE – and a
+  change that rewrote every told-now legible row left the walk's digest byte-identical. ⚠ Same
+  family as wave 4's last debt («the default grid CANNOT exercise the two sites the debt was
+  about»): **a fixture that cannot reach the case is a green that means nothing.** Before trusting
+  a walk, prove it contains the thing.
+* **Ruling L's amendment, sighted a second time.** §C's «heard» case asserted the engine's row
+  against `metKeptRow(…, frame(…))` – the function under test on both sides – so an arm moved both
+  and walked through. Twice in one task is not a coincidence; it is what this shape of test does by
+  default, and the amended rule has to be applied deliberately every time.
