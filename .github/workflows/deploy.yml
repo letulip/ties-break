@@ -19,8 +19,37 @@ name: Test, build and deploy to GitHub Pages
 # uploaded, adding nothing. (A full "re-run all jobs" still re-uploads - if a run is ever
 # poisoned again, push a commit rather than re-running everything.)
 #
-# The gate does not move: nothing is uploaded until vue-tsc, the whole suite and the production
-# build have all passed inside `build`.
+# ⚠⚠ AND WHY THE TESTS LEFT `build` FOR TWO JOBS OF THEIR OWN (13.09) - the same surgery
+# ci.yml had on 30.08, arriving here a fortnight late and only after the dice came up bad three
+# runs out of four. The evidence, from this workflow's own history:
+#
+#   #132  wave-3 merge     GREEN at 32m58s - the bulk pool stalled on birpc's unraisable 60 s
+#                            reporter window, scripts/units.mjs retried the WHOLE pool, the retry
+#                            passed. Nobody saw it: a green run's duration is invisible.
+#   #133  wave-4 merge     green 19m38s    - the lucky roll.
+#   #134  round-41 merge   RED   20m57s    - a 17-second file crossed its 20 s per-test budget
+#                            in the contended pool (moved to HEAVY_UNIT_FILES by PR #138).
+#   #135  PR #138 merge    RED   33m2s     - «unit: 1 stalled twice (runner, not tests)»:
+#                            5,067/5,067 tests GREEN and the run still failed - the reporter RPC
+#                            starved, twice, and this job had no ceiling, so the family's
+#                            playtest build simply did not ship.
+#
+# The disease was never the tests - it was this job's shape: the FULL `npm test` (bulk pool +
+# heavy files, sequentially) on ONE two-core runner, and with `--verbose` at that, which ci.yml
+# dropped on 05.09 because the quiet reporter keeps far fewer `onTaskUpdate` acks in flight
+# inside the same 60 s window («running the unit shards verbose was betting against the wall»).
+# The baseline had crept 12-13 min (round-29 era) -> 19-20 min as the suite grew; every merge to
+# main rolled the birpc dice for the privilege of re-testing, in a worse configuration, a tree
+# the pull request's split CI had already tested. So: `unit-bulk` and `unit-heavy` below are
+# ci.yml's jobs verbatim (same ceilings, same quiet reporter through scripts/units.mjs, one
+# source of shard truth in scripts/heavy-tests.mjs), they run IN PARALLEL with `build`, and
+# `deploy` needs ALL THREE.
+#
+# ⭐ The 29.07 gate survives with one word moved: nothing is DEPLOYED until vue-tsc, the whole
+# suite and the production build have all passed. The artifact may now exist before the suite
+# finishes - an artifact is not a deployment - and the poisoning shape above stays impossible:
+# a failed unit job re-runs ALONE and uploads nothing; only "re-run all jobs" re-uploads, and
+# the rule for that is already written two paragraphs up.
 
 on:
   push:
@@ -37,8 +66,40 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ⭐ THE LONG POLE, ALONE - ci.yml's job, verbatim. ⚠ No `--verbose`: the quiet reporter is the
+  # safer one inside birpc's window - ci.yml's own measured note (05.09) carries the numbers.
+  unit-bulk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/units.mjs --only=bulk
+
+  # The heavy files, one process each, serial on two cores by units.mjs's own parallelism rule
+  # (availableParallelism()/4 -> 1 on a GitHub runner - the derivation is ci.yml's note).
+  unit-heavy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node scripts/units.mjs --only=heavy
+
   build:
     runs-on: ubuntu-latest
+    # ⚠ A HUNG JOB MUST DIE, NOT BURN THE AFTERNOON (19.08's law, reaching this file on 13.09 -
+    # run #135 burned 33 unbounded minutes). Sized well above the honest worst case: npm ci +
+    # the forced vue-tsc + vite build + upload run ~7-8 min here.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -49,15 +110,9 @@ jobs:
       # --force: vue-tsc -b trusts its incremental cache, which has hidden real type errors
       # (a duplicate-import TS2300 shipped past a cached build on 25.07). Full check, always.
       - run: npx vue-tsc -b --force
-      # ⚠ The `unit` project only. The Monte-Carlo calibration runs on its own schedule - see
-      # .github/workflows/simulation.yml. A deploy must not be blocked by a statistical sweep.
-      - run: npm test
       # ⚠ `npx vite build`, NOT `npm run build` – the same second typecheck ci.yml dropped (T-06 /
-      # P-19, 05.09). `npm run build` is `vue-tsc -b && vite build`, so this step re-ran the check
-      # `:51` above has already run in its forced, trustworthy mode. The forced check still gates
-      # this job, and it still gates it BEFORE anything is uploaded, which is what the header's
-      # "nothing is uploaded until vue-tsc, the whole suite and the production build have all
-      # passed" means.
+      # P-19, 05.09). `npm run build` is `vue-tsc -b && vite build`, so this step would re-run the
+      # check the forced pass above has already run in its trustworthy mode.
       - run: npx vite build
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
@@ -67,7 +122,9 @@ jobs:
           path: dist
 
   deploy:
-    needs: build
+    # ⭐ THE GATE, in one line: nothing deploys until the whole suite AND the typechecked build
+    # are green. This `needs` is what the 29.07 header's promise means since 13.09.
+    needs: [build, unit-bulk, unit-heavy]
     runs-on: ubuntu-latest
     environment:
       name: github-pages
