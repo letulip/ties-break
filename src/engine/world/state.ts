@@ -392,7 +392,39 @@ import type { AcademySupport } from '../academy'
 //
 // Full move: this constant, the v74 -> v75 step in migrations.ts, tests/fixtures/saves/v75.json, and
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-export const SAVE_SCHEMA_VERSION = 75
+// ⭐⭐⭐ v76 – THE PSYCHOLOGIST'S YEAR, WAVE 5: THE SEAT, AND HER WALLS. World `+psychologistHired`,
+// `+psychologistRung`, `+psychologistFocus`, `+psychologistFocusSeason`, `+wallsLean` and
+// `+wallsFlipped` – SIX keys in one append (`docs/plans/life-wave-5-builder-2026-09.md` §2 T1, the
+// walls model verbatim from `docs/specs/who-she-is-2026-09.md` §2a). The first four are the staff
+// seat, shaped on v59's masseur block; the last two are the §2a leanings and their hysteresis state.
+//
+// ⚠⚠ SIX KEYS IN ONE VERSION, AND THEY ARE TWO DIFFERENT KINDS OF THING RIDING ONE BUMP – said here
+// so the next reader does not look for a single story. The seat is a STAFFING DECISION (hired, at
+// which rung, working on which focus, set in which season); the walls pair is a FACT ABOUT HER that
+// no player ever chooses. They land together because the wave that reads them is one wave and a
+// schema move costs a fixture, a peel rung and ten e2e regenerations whether it carries one key or
+// six – v72's own three-in-one-append precedent, for the same reason.
+//
+// ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT ONE OF THEM IS A BARGAIN, in v73's / v74's / v75's own
+// sense one rung further on. `false` – the seat did not exist, so nobody was ever hired into it.
+// `1` – the DEFAULT rung, meaningless until hired, and the masseur's middle-rung precedent verbatim
+// (v59 back-filled `4` sessions onto careers that had never met a masseur, for the same reason: a
+// dial has to read something and the shipped default is the only non-invented answer). `null` twice
+// – no focus was ever picked, and no season ever held a pick. `{open: 0, reg: 0}` – ZERO IS THE
+// IDENTITY, not a placeholder for one: a leaning of 0 means «expression equals nature», which is
+// exactly what every career that predates the walls has always been. `{open: false, reg: false}` –
+// nothing has flipped, because nothing could have.
+//
+// ⚠⚠ AND THE ZERO BACK-FILL IS WHY A MIGRATED CAREER PLAYS BYTE-IDENTICAL TENNIS. `wallsLean` 0 with
+// nothing flipped makes `expressedTemperamentOf` (engine/spirit.ts) return BIRTH – so every mechanic
+// T7 re-points reads exactly the value it reads today, which is the zero-diff proof T1 ships and T7
+// stands on. Nothing on this tree calls that function outside its own module; the seat has no writer
+// at all (T2), no focus command (T3) and no leaning pass (T7), so this version is INERT by
+// construction, which is all a schema move should ever be, and the frozen careers prove it.
+//
+// Full move: this constant, the v75 -> v76 step in migrations.ts, tests/fixtures/saves/v76.json, and
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
+export const SAVE_SCHEMA_VERSION = 76
 
 
 
@@ -416,6 +448,24 @@ export interface PendingTournament {
    *  which is what every pre-step-2 save means by not having the key. */
   masseurThere?: boolean
 }
+
+/** ⭐⭐⭐ THE YEAR-FOCUS (v76, the psychologist's year – `docs/specs/the-psychologists-year-2026-09.md`
+ *  §2 is the ruled table, `docs/plans/life-wave-5-builder-2026-09.md` §2 T3 the mechanics). What the
+ *  seat WORKS ON for a season: `'coolhead'` composure, `'recovery'` the walk back from a shock,
+ *  `'listen'` the parent's own reading of her, `'herself'` her deliberate work beyond her nature's
+ *  baseline. One a season, changed only in the off-season window.
+ *
+ *  ⚠ A UNION AND NEVER FOUR BOOLEANS, the argument `spiritShock.kind` makes one field up: exactly one
+ *  focus is live at a time (the spec's own «1 session a week at every rung – the rung buys WHO comes
+ *  to the call»), and a union makes that unrepresentable-otherwise rather than merely documented. A
+ *  fifth member is the spotlight wave's to add if the owner ever rules one – O7 says «The public
+ *  life» ships there and NOT here – and it widens in place, going red at every exhaustive read.
+ *
+ *  ⚠ DECLARED HERE RATHER THAN IN `shared/protocol`, on `Temperament`'s own precedent: this is an
+ *  ENGINE fact that the wire happens to carry later (T2 puts it on the snapshot), and
+ *  `shared/protocol/narrative.ts` already imports `Temperament` type-only from `engine/spirit` for
+ *  exactly that shape. The arrow stays engine -> shared, never the other way. */
+export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself'
 
 export interface WorldState {
   schemaVersion: number
@@ -1035,6 +1085,82 @@ export interface WorldState {
    *  opposite case and needs no such decision: the feed ships the event ROWS THEMSELVES
    *  (`snapshotEvents`, world/snapshot.ts), so widening the row widens the wire by construction. */
   spiritShock: { week: number; kind: 'breakup' } | null
+  /** ⭐⭐⭐ v76 – THE PSYCHOLOGIST IS ON THE PAYROLL (the psychologist's year, wave 5;
+   *  `docs/plans/life-wave-5-builder-2026-09.md` §2 T2, the seat's ruled shape from
+   *  `docs/plans/the-travelling-team-2026-08.md` §2 ruling Б). `masseurHired`'s twin one seat over,
+   *  and false for every earlier save for the identical reason: the seat did not exist.
+   *
+   *  ⚠ HIS RETAINER SUSPENDS RATHER THAN CANCELS at college and on a family vacation week – the
+   *  masseur's stand-down pair mirrored byte-for-byte in shape (T2's `psychologistWorksInWeek`) – so
+   *  the flag survives the freeze exactly as `masseurHired` does.
+   *
+   *  ⚠ T1 SHIPS THE SEAT AND NO WRITER AT ALL. `hirePsychologist` is T2's; nothing on this tree can
+   *  set this to `true` except a test poking the world, which is what «the schema move is inert»
+   *  means and what the frozen careers measure. */
+  psychologistHired: boolean
+  /** ⭐ THE RUNG (v76) – WHO COMES TO THE CALL, which is the whole of what the price buys (the spec's
+   *  own «1 session a week at every rung – the rung buys WHO comes to the call»). `0 | 1 | 2` indexes
+   *  `ECONOMY.psychologist.rungs`, T2's block.
+   *
+   *  ⚠ THE BACK-FILL AND THE FRESH-CAREER DEFAULT ARE BOTH `1`, THE MIDDLE RUNG, and that is v59's
+   *  `masseurSessionsPerWeek` precedent quoted rather than re-argued: a dial has to read something,
+   *  the sport psychologist is the professional default the rung prices are anchored to, and it is
+   *  MEANINGLESS UNTIL HIRED – so no career is handed a decision it never made. Persisted because it
+   *  is a CHOICE, like `kit`, `coachId` and the masseur's dial; this engine never re-derives one.
+   *  Validated at its one writer, `setPsychologistRung` (T2). */
+  psychologistRung: 0 | 1 | 2
+  /** ⭐⭐ WHAT HE IS WORKING ON THIS YEAR (v76) – `PsyFocus` above, or null while nobody was ever
+   *  asked. The first pick is free at hire; a CHANGE is off-season only and once a season (T3, O1's
+   *  «season boundary only» made mechanical, guarded by `psychologistFocusSeason` below).
+   *
+   *  ⚠ FIRING KEEPS IT AS A DEAD LETTER rather than nulling it (T3's own rule): re-hiring mid-season
+   *  resumes the year that was already started, and the season guard still refuses a change. A field
+   *  cleared on fire would make «fire and re-hire» a free way round a once-a-season rule, which is
+   *  the exploit `brandFounded` one field group up exists to close in its own shape. */
+  psychologistFocus: PsyFocus | null
+  /** ⭐ THE SEASON THE FOCUS WAS SET IN (v76) – `seasonIndexOf(week)` at the week of the pick, or null
+   *  while no pick has ever been made. The once-a-season fact, RECORDED rather than re-derived: a
+   *  «weeks since» arithmetic over the calendar would have to guess what a season boundary means for
+   *  a pick made inside a college freeze, and this engine records decisions (the round-21 #2 «asked
+   *  once, carried» doctrine). Read by `setPsychologistFocus` (T3) and by nothing else. */
+  psychologistFocusSeason: number | null
+  /** ⭐⭐⭐ v76 – HER WALLS AND HER REGULATION, the two §2a leanings (`docs/specs/who-she-is-2026-09.md`
+   *  §2a verbatim, the 09.09 third-sitting re-cut). One decimal like `spirit`, both starting at 0.
+   *
+   *  ⚠⚠ THIS IS DISPLACEMENT OF EXPRESSION AND NEVER A REWRITE OF HER – the one sentence of §2a that
+   *  must survive every later reader. `temperament` above is BIRTH, FOREVER: the voice bibles, her
+   *  humour, her syntax and the census identity all read it and always will (§3's fence). What moves
+   *  here is how much of her reaches the parent – kicks raise walls («she stopped telling you
+   *  things»), care lowers them back to HER OWN nature and no further. `open` is the openness axis,
+   *  `reg` the regulation (intensity) one.
+   *
+   *  ⚠ SIGN CONVENTION, WRITTEN DOWN ONCE AND HERE: NEGATIVE is walls UP – expression pulled toward
+   *  `private` / `intense`, the closed and dysregulated poles – and POSITIVE is past her own baseline
+   *  toward `open` / `steady`. 0 is nature. Repair walks toward 0 and stops there for free; the
+   *  positive side is BEYOND her baseline and is her own deliberate work (the `'herself'` focus at a
+   *  close bond), which is the anti-«hugged into an extravert» gate §2a names.
+   *
+   *  ⚠ NEVER ON ANY SURFACE, v1 – no leaning, no number, no line, and that absence is designed (§2a:
+   *  «no reader and no line ever sees the leaning – it exists purely so change can be gradual, rare
+   *  and honest»). The four buckets stay the only expressed truth; the existing surfaces – the face,
+   *  the Mood word, the diary bands, the feed's silence – ARE the telegraph. */
+  wallsLean: { open: number; reg: number }
+  /** ⭐⭐⭐ v76 – THE HYSTERESIS STATE (who-she-is §2a; wave-5 brief §2 T7). `true` on an axis means the
+   *  EXPRESSED pole there is the opposite of birth. Both false back-fill, and both false on week 0.
+   *
+   *  ⚠⚠ A FLIP IS AN EVENT OF SEASONS AND THIS BOOLEAN IS WHY. A leaning read directly would flicker
+   *  every time the bond band wobbled across a threshold; the flip arms past ±`flipArm`, fires on a
+   *  purpose-scoped hazard, and un-arms only once the leaning is back inside ±`flipRelease` – the
+   *  band between them is a dead zone that arms nothing. So the bucket a mechanic reads is a STATE
+   *  the world carries, not a comparison it recomputes.
+   *
+   *  ⚠ THE ONE READER IS `expressedTemperamentOf` (engine/spirit.ts), which inverts each flipped axis
+   *  and maps back through the same four buckets. In T1 that function has ZERO call sites in `src/`
+   *  outside its own module: the mechanics are re-pointed in T7 and the voices NEVER are (§0.2's
+   *  fence – the bibles, the tier-0/1 pools, the prompt registers and the birthday-ask weighting all
+   *  keep reading BIRTH). While both booleans are false it returns birth, which is the whole of the
+   *  zero-diff proof T1 ships. */
+  wallsFlipped: { open: boolean; reg: boolean }
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

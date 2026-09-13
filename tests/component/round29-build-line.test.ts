@@ -124,7 +124,13 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // append-only migration back-filling `null`, golden fixture v75, e2e fixtures regenerated), never
     // by this line's item. The claim above – «the BUILD-LINE wave moved no schema» – is untouched, and
     // the pin still follows the ladder's head so the sentence over it stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(75)
+    // ⚠ AND AGAIN AT v76 (13.09, the psychologist's year – the seat's four keys and the two walls
+    // keys of who-she-is §2a), NOT WEAKENED, for the ELEVENTH time and for the reason verbatim: 76 was
+    // moved by that wave with its full four-part move (bump, append-only migration back-filling six
+    // literals, golden fixture v76, e2e fixtures regenerated), never by this line's item. The claim
+    // above – «the BUILD-LINE wave moved no schema» – is untouched, and the pin still follows the
+    // ladder's head so the sentence over it stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(76)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

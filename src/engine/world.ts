@@ -484,8 +484,13 @@ import { ensureSeason, housekeep, recomputeRankAndMilestones } from './world/boo
 // ⭐ ROUND 35 #14 – the two ends of the published draw. `tickWeek` calls both; nothing else does.
 import { recordDrawnFirstRounds, pruneDrawnFirstRounds } from './world/draw'
 export { ensureSeason }
-import type { BrandStrengthSeed, PendingTournament, WorldState } from './world/state'
-export type { BrandStrengthSeed, PendingTournament, WorldState }
+// ⭐ v76 (the psychologist's year, wave 5): `PsyFocus` joins the barrel's type surface beside the
+// three that were already here – the year-focus union, declared in state.ts with the field it types.
+// The barrel is a COMPATIBILITY contract (hundreds of files import from `engine/world`), so a new
+// engine type that the seat's commands and T2's snapshot will both name belongs on it from the day it
+// exists rather than being reached for through `engine/world/state` by whoever needs it first.
+import type { BrandStrengthSeed, PendingTournament, PsyFocus, WorldState } from './world/state'
+export type { BrandStrengthSeed, PendingTournament, PsyFocus, WorldState }
 import { SAVE_SCHEMA_VERSION } from './world/state'
 export { SAVE_SCHEMA_VERSION }
 
@@ -1628,6 +1633,45 @@ export function createWorld(
     // keys appended since, so every key must stay in the order it was appended in
     // (`careerHashAtSchema` peels in reverse, newest first).
     spiritShock: null,
+    // ⭐ v76 (the psychologist's year, wave 5): NOBODY IS ON THE PAYROLL, NO YEAR HAS BEEN CHOSEN, AND
+    // HER EXPRESSION IS HER NATURE. On week 0 every one of the six is its own identity element and not
+    // a placeholder for one: she is eight, the seat unlocks with the professional career, and a
+    // leaning of 0 means «expression equals nature», which is what a girl who has lived no seasons
+    // has always been. All six are exactly what the v75 -> v76 migration back-fills on every older
+    // save, so a migrated career and a fresh one are the same shape at the moment they load.
+    //
+    // ⚠ THE RUNG OPENS ON THE MIDDLE ONE (1) WHILE NOBODY IS HIRED, which is the masseur dial's own
+    // precedent five keys up (`masseurSessionsPerWeek`, the middle rung, on a career with no masseur):
+    // a dial has to read something, the shipped default is the only answer that invents no decision,
+    // and it is meaningless until `psychologistHired` is true.
+    //
+    // ⚠ AND IT IS THE LITERAL `1` RATHER THAN AN `ECONOMY` READ, WHICH IS A DECISION AND NOT AN
+    // OVERSIGHT. The masseur's line above reads `ECONOMY.masseur.defaultSessions` because his dial
+    // holds a TUNABLE VALUE (2 / 4 / 7 sessions); this field holds a rung INDEX into a three-member
+    // roster, and «the middle one» is a structural fact of that roster rather than a number anybody
+    // benches. `ECONOMY.psychologist` – the salaries and the four focus tables – is T2/T4-T7's block
+    // (wave-5 brief §4) and T1 does not open it: a constants home with one structural key in it would
+    // have to be moved the moment its real contents arrive. ⚠ The v75 -> v76 migration writes the same
+    // literal, which is v59's own shape verbatim (`createWorld` reads the constant, the migration
+    // writes `4`) and is the stronger rule of the two: a shipped migration must not change what it
+    // back-fills because somebody later retuned a constant.
+    //
+    // ⚠ NOW THE LAST KEYS OF THE LITERAL, IN THIS ORDER, and `spiritShock` above has stopped being the
+    // last – the same handover `loveEpisodes` made to it, `lifeLog` to `loveEpisodes` and `assets` to
+    // the wave-1 three. Six keys in ONE append, peeled in one destructure for the reason the wave-1
+    // three are: they arrived together, in this order, and object rest preserves the relative order of
+    // everything it keeps. The frozen-career identities reproduce each older schema's hashes by
+    // dropping exactly the keys appended since, so every key must stay in the order it was appended in
+    // (`careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts peels in reverse, newest first).
+    psychologistHired: false,
+    psychologistRung: 1,
+    psychologistFocus: null,
+    psychologistFocusSeason: null,
+    // ⚠ TWO OBJECTS AND NOT FOUR FLAT NUMBERS/BOOLEANS, deliberately: the two axes are one model and
+    // T7's weekly pass moves both in one step, so a shape that can hold one and forget the other is
+    // the desync `accrueSpirit`'s «one weekly function, two numbers» rule refuses one layer down.
+    wallsLean: { open: 0, reg: 0 },
+    wallsFlipped: { open: false, reg: false },
   }
   addEvent(world, {
     week: 0,

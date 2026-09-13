@@ -114,6 +114,89 @@ export function temperamentOpenness(temperament: Temperament): 'open' | 'private
   return temperament === 'sunny' || temperament === 'fiery' ? 'open' : 'private'
 }
 
+/** ⭐ THE COMPOSITION – the inverse of the two projections above, and the ONE spelling of it (v76,
+ *  the psychologist's year). Two axis poles in, one of the four buckets out.
+ *
+ *  ⚠⚠ EXTRACTED RATHER THAN COPIED, and the reason is the ⚠⚠ block on `temperamentFor` directly
+ *  below, applied to the OTHER half of the mapping. That note refuses a second spelling of the
+ *  seed-to-girl derivation; this refuses a second spelling of the pole-to-bucket table, which v76's
+ *  `expressedTemperamentOf` would otherwise have had to write out a second time. `temperamentFor`
+ *  now composes through here, so the birth draw and the expressed read agree by construction instead
+ *  of by two authors' care. ⚠ NOT A BEHAVIOUR CHANGE: the same conditional, the same order, the same
+ *  two `pickInt` calls in front of it – the section header's own table («sunny = open + steady ·
+ *  fiery = open + intense · quiet = private + steady · deep = private + intense»), written once.
+ *
+ *  ⚠ NAMED `temperamentFromAxes` AND NOT `temperamentOf`, WHICH WAS THE FIRST SPELLING AND HAD TO
+ *  GO: `world/lifeBeat.ts` already has a PRIVATE `temperamentOf(world)` of its own – a different
+ *  signature answering a different question (the defensive `?? temperamentFor(seed)` read of the v72
+ *  field). Nothing collided at compile time, since that one is not exported and this one is not on
+ *  the `engine/world` barrel; the collision would have been in a READER's head, and in
+ *  `node scripts/world-map.mjs <symbol>`, which is the tool the repo keeps for exactly that
+ *  question. One name, one meaning. */
+export function temperamentFromAxes(openness: 'open' | 'private', intensity: 'steady' | 'intense'): Temperament {
+  return openness === 'open'
+    ? intensity === 'steady'
+      ? 'sunny'
+      : 'fiery'
+    : intensity === 'steady'
+      ? 'quiet'
+      : 'deep'
+}
+
+/**
+ * ⭐⭐⭐ WHAT THE MECHANICS READ (v76, the psychologist's year – who-she-is §2a, the 09.09 third-sitting
+ * re-cut: «identity is IMMUTABLE – what drifts is WALLS AND REGULATION, expression over an unchanging
+ * nature»). Her BIRTH temperament with each FLIPPED axis inverted, mapped back through the same four
+ * buckets by the one composition above.
+ *
+ * ⚠⚠ IT IS NOT A SECOND TEMPERAMENT AND IT NEVER WRITES ONE. `world.temperament` is BIRTH, FOREVER –
+ * this function does not touch it, and no caller may store what this returns. A career hashes the
+ * same girl at week 0 and at retirement; what this reads is `world.wallsFlipped`, the hysteresis
+ * state T7 maintains, and the inversion is recomputed from it on every call.
+ *
+ * ⚠⚠ THE FENCE (§3, and the wave-5 brief §0.2) – WHO MAY CALL THIS AND WHO MUST NEVER. The MECHANICS
+ * read expression: the arrival and ends hazard multipliers and their cooldowns, the feed-lag and
+ * wants draws, `returnPerWeek` and `perturbationScale`. The VOICES read birth and only birth – the
+ * voice bibles, the tier-0/1 pools, the prompt registers and the birthday-ask weighting – because
+ * «the voice bibles read birth alone» is §3's own sentence and a quiet girl behind walls still has a
+ * quiet girl's syntax. A call from a voice site is a finding, not a tuning miss.
+ *
+ * ⚠⚠ AND IN T1 IT HAS ZERO CALL SITES IN `src/` OUTSIDE THIS MODULE, WHICH IS THE POINT OF LANDING IT
+ * HERE. Wave 5's T7 re-points the mechanics one swap at a time, each with its own ⚠ comment; this
+ * exists first so the zero-diff proof («leanings 0, nothing flipped, and every temperament read is
+ * still birth») has something to be proved ABOUT before any reader moves, and so those swaps have a
+ * floor to stand on. While `wallsFlipped` is `{open: false, reg: false}` – which is what `createWorld`
+ * writes and what the v75 -> v76 migration back-fills on every older save – this returns birth
+ * unchanged, and a migrated career therefore plays byte-identical tennis.
+ *
+ * ⚠ THE ZERO ARM IS TRUE BY CONSTRUCTION AND IS WORTH NOTHING ON ITS OWN. Both flags false means the
+ * two projections round-trip, so `expressedTemperamentOf(w) === w.temperament` is arithmetic rather
+ * than evidence. What makes it mean anything is the POSITIVE control beside it – flip an axis by hand
+ * and the bucket must MOVE, to the specific right one, for all four births on each axis and on both
+ * at once. That enumeration is in tests/wave5-psychologist-schema.test.ts §C and it is why §D's zero
+ * arm is admissible at all.
+ *
+ * ⚠ `wallsLean` IS DELIBERATELY NOT READ HERE. The leaning is the slow accumulator; the FLIP is the
+ * state, armed past ±`flipArm` and released only inside ±`flipRelease` (T7). Reading the leaning
+ * directly would be the flicker the hysteresis exists to abolish – «a flip is an event of seasons,
+ * never a flicker» – and would put a threshold in two places at once.
+ */
+export function expressedTemperamentOf(world: WorldState): Temperament {
+  const birth = world.temperament
+  const flipped = world.wallsFlipped
+  const openness = flipped.open
+    ? temperamentOpenness(birth) === 'open'
+      ? 'private'
+      : 'open'
+    : temperamentOpenness(birth)
+  const intensity = flipped.reg
+    ? temperamentIntensity(birth) === 'steady'
+      ? 'intense'
+      : 'steady'
+    : temperamentIntensity(birth)
+  return temperamentFromAxes(openness, intensity)
+}
+
 /**
  * ⚠⚠ THE ONE DERIVATION. `createWorld` calls this and the v71 -> v72 migration calls THIS SAME
  * FUNCTION on the career's own seed – which is the entire reason a career already in flight simply
@@ -130,12 +213,17 @@ export function temperamentOpenness(temperament: Temperament): 'open' | 'private
  * construction rather than by a four-way table that would have to be kept summing to one. Openness
  * is drawn first, then intensity; the order is fixed here for ever, because changing it would
  * re-assign every existing career's temperament without changing a single stored byte.
+ *
+ * ⚠ v76: THE FOUR-WAY CONDITIONAL MOVED INTO `temperamentFromAxes` ABOVE AND THE DRAWS DID NOT MOVE AT ALL.
+ * Two `pickInt` calls, in this order, off this key – byte for byte what they were. What changed is
+ * that the pole-to-bucket table is now written once instead of twice, which is this function's own
+ * ⚠⚠ note applied to the half of the mapping it did not already own.
  */
 export function temperamentFor(seed: string): Temperament {
   const r = rngFromSeed(`${seed}:temperament`)
   const open = pickInt(r, 0, 1) === 0
   const steady = pickInt(r, 0, 1) === 0
-  return open ? (steady ? 'sunny' : 'fiery') : steady ? 'quiet' : 'deep'
+  return temperamentFromAxes(open ? 'open' : 'private', steady ? 'steady' : 'intense')
 }
 
 // =================================================================================================

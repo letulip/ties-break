@@ -195,7 +195,16 @@ function endsOnAQuietRun(temperament: Temperament, run = 24): { world: WorldStat
 // =================================================================================================
 describe('wave 4 T1 A – v75, the three-part move', () => {
   it('bumps the version and ships a golden fixture of its own shape', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(75)
+    // ⚠ RE-AIMED AT v76 (13.09, the psychologist's year took the next rung – the seat's four keys and
+    // the two §2a walls keys), NOT LOOSENED, and on `tests/wave3-love-episodes.test.ts`'s own
+    // precedent one version down, verbatim – which took it from `tests/wave2-life-beat.test.ts`, which
+    // took it from `tests/spirit.test.ts` below that. This case is about v75's OWN RUNG – that the
+    // move happened and left a fixture of ITS OWN SHAPE behind – and never about the ladder's head,
+    // which moves with every wave. So the head is asserted as a FLOOR and the two claims that actually
+    // belong to this rung (the fixture says 75, and it carries the key 75 added) are asserted exactly
+    // as before. The head's own guard – «a bump forces a new golden save» – lives in
+    // tests/goldenSaves.test.ts and is the only place that should ever name a number that changes.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(75)
     const v75 = JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8'))
     expect(v75.schemaVersion).toBe(75)
     // ⚠ `toBeNull` rather than `toBeUndefined`, and the difference is the whole shape: the key must be
@@ -219,7 +228,18 @@ describe('wave 4 T1 A – v75, the three-part move', () => {
     // (ARM 5). ⚠ This line is the one the NEXT wave will have to re-aim, exactly as this wave re-aimed
     // v74's and wave 3 re-aimed v73's: `migrateSave` always walks to the LADDER'S HEAD, so the direct
     // equality holds only while 75 IS the head. The re-aim is the converging form, not a deletion.
-    expect(JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8'))).toEqual(migrated)
+    //
+    // ⚠⚠ AND IT CAME DUE AT v76 (13.09, the psychologist's year), EXACTLY AS THE LINE ABOVE PREDICTED
+    // IT WOULD – the move wave 4 made to wave 3's line and wave 3 to wave 2's, verbatim and for the
+    // identical reason. `migrateSave` walks to the head, so the moment the head moved past 75 the
+    // migrated payload stopped being a v75 save and the direct equality could never hold again. The
+    // claim is unchanged and is made where it stays true: the v75 FIXTURE and the migrated v74 payload
+    // CONVERGE at the head, byte for byte, which is «the fixture is the migration's own output»
+    // carried one rung forward. A hand edit to either file still goes red here (ARM 5), which is the
+    // whole point of the line; v75's own shape is pinned by the case above (`schemaVersion` 75,
+    // `spiritShock` present and null), and v76's own «produced by the real migration» equality lives
+    // at its own rung, in tests/wave5-psychologist-schema.test.ts.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8')))).toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a shock a save already has', () => {

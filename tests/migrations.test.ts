@@ -575,7 +575,16 @@ describe('save migrations', () => {
     // 64 and through 65 – now has one more rung to cross before it arrives. ⚠ v75 carries a SECOND
     // field, `WorldEvent.lifeKind?`, which this line is not about at all: it is optional, additive
     // and deliberately not back-filled, so it adds no rung to the chain the walk below crosses.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 75 – past the colliding 64, through 65').toBe(75)
+    // ⚠ RE-AIMED AT v76 (13.09, the psychologist's year – the staff seat's four keys and the two §2a
+    // walls keys), NOT WEAKENED, for the ELEVENTH time and with the claim unchanged once more. What
+    // moved is the LADDER'S HEAD and nothing else: 76 was taken by that wave's own full move (bump,
+    // append-only v75 -> v76 step back-filling six literals, golden fixture v76, e2e fixtures
+    // regenerated), the walk below is the same walk, and the claim this line makes – that the chain
+    // runs PAST the colliding 64 and through 65 – now has one more rung to cross before it arrives.
+    // ⚠ v76 is the first step in this chain to carry SIX keys where every one since v72 carried one,
+    // which this line is not about either: six `??=` on absent keys add exactly one rung to the walk,
+    // the same as one does.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 76 – past the colliding 64, through 65').toBe(76)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.
