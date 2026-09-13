@@ -289,6 +289,21 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     // WITH its reader (`drawListenHeard`, engine/world/lifeBeat.ts §3f) in the same commit. ONE
     // remains – the walls' beyond-baseline hazard scale, T7's.
     //
+    // ⚠⚠ AND A FOURTH TIME BY T7, WHICH IS THE LAST OF THEM AND THE ONE THAT ARRIVED THREE WIDE
+    // RATHER THAN ONE. `wallsHazardScale` is the key the note above was waiting for; `wallsRetentionSlow`
+    // (O6) and `wallsHerselfRepair` land beside it because they are the OTHER two things that are
+    // genuinely the SEAT's in the walls model, and all three come with their one reader – `driftWalls`,
+    // engine/spirit.ts §4 – in the same commit, which is the rule this block has been keeping all wave.
+    //
+    // ⚠⚠ AND WHAT DID **NOT** ARRIVE IS THE HALF WORTH PINNING, so it is pinned below rather than
+    // described. The wave-5 brief's §4 gives this block as the home for every walls constant; T7
+    // departed from that on purpose and the departure is now mechanical. The SEVEN universal walls
+    // numbers – the rise, the repair, the growth, the two thresholds, the hazard and the cap – live in
+    // `ECONOMY.life.walls`, because they are read on EVERY career including the great majority that
+    // never hire anybody: walls rise from neglect itself and repair is FREE (§2a, and the wave brief's
+    // own §0.3). A constant whose reader runs on a seatless career, filed under the seat's price list,
+    // would read as a paywall in the one place the layer's law says there is none.
+    //
     // ⭐ THE CLAIM IS UNCHANGED AND STILL EXACT: the list is still a closed set, so a fare, a stance
     // or a share landing in this block is still red on the line below – which is the whole of what
     // ruling Б and O3 need from it. What is NOT re-aimed is the `staffShare` line above: that one is
@@ -299,7 +314,32 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
       'listenClarity',
       'recoverySlope',
       'rungs',
+      'wallsHazardScale',
+      'wallsHerselfRepair',
+      'wallsRetentionSlow',
     ])
+    // ⭐⭐ THE SPLIT, MADE MECHANICAL. Every walls key in the SEAT's block is a multiplier on something
+    // the free model already does; not one of them is a rate, a threshold or a cap the model needs to
+    // run. Asserted from both ends, so a later editor cannot «tidy» the universal constants in here.
+    const seatWalls = Object.keys(ECONOMY.psychologist).filter((k) => k.startsWith('walls'))
+    expect(seatWalls.sort(), 'the seat owns exactly its three multipliers')
+      .toEqual(['wallsHazardScale', 'wallsHerselfRepair', 'wallsRetentionSlow'])
+    expect(Object.keys(ECONOMY.life.walls).sort(), '...and the model\'s own seven live one block over')
+      .toEqual([
+        'flipArm',
+        'flipHazardPerWeek',
+        'flipRelease',
+        'growthPerWeek',
+        'leanMax',
+        'repairPerWeek',
+        'risePerWeek',
+      ])
+    // ⚠ AND THE ONE THAT MAKES «REPAIR IS FREE» A PROPERTY OF THE CONSTANTS AND NOT ONLY OF THE CODE:
+    // no key of the seat's block is named for the repair or the rise themselves – it may only scale
+    // them. `wallsHerselfRepair` is the acceleration and `wallsRetentionSlow` the slow-down; a
+    // `repairPerWeek` or a `risePerWeek` appearing here would mean the walk home had moved indoors.
+    expect(seatWalls.filter((k) => k === 'wallsRepairPerWeek' || k === 'wallsRisePerWeek'), '§0.3')
+      .toEqual([])
     // ⚠ AND THE NEGATIVE SAID AS A NEGATIVE, so the growing list above cannot quietly admit the one
     // thing it exists to refuse: no key of this seat's block may name a fare, a trip or a share.
     expect(Object.keys(ECONOMY.psychologist).filter((k) => /fare|travel|share|board/i.test(k)), 'ruling Б')

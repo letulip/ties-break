@@ -24,7 +24,7 @@ import { rivalField } from './weekField'
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { accrueSpirit, applyBondDelta } from '../spirit'
+import { accrueSpirit, applyBondDelta, driftWalls } from '../spirit'
 import { KNOCK_REST_CONDITION, knockRestWeek } from '../knock'
 import { TIERS } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking } from '../season/ranking'
@@ -369,6 +369,44 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        already writes for the twin seat. ⚠ A `boolean`, never an `Rng`: `accrueSpirit`'s
   //        zero-draw contract is untouched and tests/spirit.test.ts asserts that of the signature.
   accrueSpirit(world, psychologistWorksThisWeek(world))
+  // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
+  //
+  //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is
+  //        WALLS AND REGULATION – two slow leanings of EXPRESSION away from an unchanging nature,
+  //        plus the hysteresis state a flip lives in. `engine/spirit.ts` §4 carries the whole model.
+  //
+  //        ⚠⚠ ITS OWN CALL, **IMMEDIATELY AFTER** `accrueSpirit` AND NOT INSIDE IT – the architect's
+  //        RULING P (13.09), which corrected ruling F's guess about the LOCATION while keeping its
+  //        reason whole. The reason: `accrueSpirit` reads `intensity` ONCE at its head and spends it
+  //        three ways, so a flip that fired mid-pass would price half the week as one person and half
+  //        as another – the 09.09 ORDER FIX's own defect in a second costume. «After `accrueSpirit`
+  //        returns» satisfies that more exactly than «at its tail», which is a place an editor can
+  //        drift away from. And the location buys the property the tail could not: `accrueSpirit`
+  //        reaches NO stream at all, this pass's flip hazard is a DRAW, and the zero-draw contract
+  //        two lines up is the thing three pins lean on. ⚠ SO WHATEVER FLIPS HERE IS FIRST READ ON
+  //        THE **NEXT** TICK: every reader of `expressedTemperamentOf` in this tick has already run.
+  //
+  //        ⚠⚠ THE SECOND ARGUMENT IS THE SAME BILLING PREDICATE, AND IT IS THE SAME CALL – ruling J's
+  //        law and ruling P's own ⚠ («a standing-down seat slows nothing»). All three of the seat's
+  //        walls effects ride it: O6's ×0.75 on the rise, the `'herself'` ×1.5 on the repair, and the
+  //        beyond-baseline hazard scale. ⚠ THE DRIFT ITSELF DOES NOT: walls rise from neglect and
+  //        fall for free on EVERY week of EVERY career, hire or no hire, college freeze or not –
+  //        §2a's «no purchase, no work», and §0.3's «repair is free».
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:walls:<axis>:<week>` sub-streams, and an UNARMED axis-week derives none of them
+  //        at all. The frozen capture (41550 / e6b0c709) is untouched by construction.
+  //        ⚠ AND NO SURFACE SHOWS ANY OF IT – no leaning, no flip line, nothing on the wire. The
+  //        face, the Mood word, the diary's bands and the feed's silence ARE the telegraph.
+  //
+  //        ⚠ THE PREDICATE IS ASKED A SECOND TIME RATHER THAN HOISTED INTO A LOCAL, AND THAT IS
+  //        DELIBERATE: it is pure, it reads three facts (the flag, `inCollege`, the week's booking)
+  //        and NOTHING runs between these two lines, so the two answers are one answer by
+  //        construction. A local would have re-spelled the `accrueSpirit` call as
+  //        `accrueSpirit(world, psychologistWorks)` – and the exact text of that call is PINNED in
+  //        tests/spirit.test.ts precisely so the raw flag can never be handed down in the
+  //        predicate's place (ruling J's own hole). Cheaper to ask twice than to weaken that pin.
+  driftWalls(world, psychologistWorksThisWeek(world))
   // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
   //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
   //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a

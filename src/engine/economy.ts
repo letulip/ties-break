@@ -4099,6 +4099,81 @@ export const ECONOMY = {
      *  the wording claims a root only where the arithmetic actually leaned on one. Below it she is
      *  the Barty case and the copy says so. */
     forkStopDriverFrom: 0.15,
+    /** ⭐⭐⭐ HER WALLS AND HER REGULATION – who-she-is §2a's leanings, their hysteresis and the hazard
+     *  that flips a pole (v76, wave 5's T7). The one reader is `driftWalls` (engine/spirit.ts).
+     *
+     *  ⚠⚠ THE HOME IS `ECONOMY.life` AND NOT `ECONOMY.psychologist`, AND THAT IS A DELIBERATE
+     *  DEPARTURE FROM THE WAVE-5 BRIEF'S §4 HEADING («home: `ECONOMY.psychologist`, one block beside
+     *  `ECONOMY.masseur`»), REPORTED RATHER THAN DONE QUIETLY. The seven numbers below are read on
+     *  EVERY career, including the great majority that never hire anybody – walls rise from neglect
+     *  itself, «no purchase, no work» (§2a), and repair is FREE (§0.3: «the seat only ever
+     *  ACCELERATES the road home. Gating any part of that road behind the retainer is a design
+     *  violation»). A constant whose reader runs on a seatless career, filed under the seat's price
+     *  list, would read as a paywall in the one place the layer's own law says there is none. The
+     *  three numbers that really ARE the seat's – the O6 slow-down, the `'herself'` acceleration and
+     *  the beyond-baseline hazard scale – are in `ECONOMY.psychologist` beside `recoverySlope`, where
+     *  they belong, and each names this block.
+     *
+     *  ⚠⚠ ALL SEVEN ARE PROPOSALS AND NONE IS RULED – the wave-5 brief §4's «Proposals – NONE ruled,
+     *  all bench-priced predicted-first, his word after». Six are the brief's own; `leanMax` is the
+     *  seventh and it is the BUILDER's, argued at its own entry.
+     *
+     *  ⚠ THE SIGN CONVENTION IS THE ARCHITECT'S RULING N AND IS NOT NEGOTIABLE HERE: the lean is
+     *  ABSOLUTE and zero is her NATURE. Negative = more private / more intense (walls up,
+     *  dysregulated); positive = more open / more steady (beyond her own baseline). `driftWalls`
+     *  carries the whole of it; these are only the magnitudes. */
+    walls: {
+      /** ⚠ WALLS UP, PER WEEK AT A `strained`/`cold` bond – §2a's «walls RISE from neglect itself»,
+       *  applied to BOTH axes (kicks close her AND dysregulate her). Subtracted from the lean, so it
+       *  also eats a positive lean first: «если она стала более открытой, а ее начали пинать, то она
+       *  вполне может и назад откатиться» (the owner, 09.09) is this one sign doing that work.
+       *  ⚠ 1.5/wk against `flipArm` 60 is ~40 held weeks to arm – «a flip is an event of seasons». */
+      risePerWeek: 1.5,
+      /** ⚠ THE WALK HOME, PER WEEK AT A `close`/`steady` bond – toward 0 and NEVER PAST IT. Slower
+       *  than the rise on purpose: coming back is longer than going away, and it is FREE (no hire,
+       *  no focus, no money – §0.3's law, benched with `psychologistHired === false`). */
+      repairPerWeek: 1.0,
+      /** ⚠ BEYOND HER OWN BASELINE, PER WEEK – the slowest of the three, because it is the only one
+       *  she has to WORK for: it runs ONLY while the `'herself'` focus is held AND the bond is
+       *  `close`/`steady` (§2a's «BEYOND her baseline is her own work»), and ONLY on the axis that
+       *  has somewhere to grow. That gate is the anti-«hugged into an extravert» dam and it is a HARD
+       *  invariant, not a corridor: a caring career with no focus produces zero of this, ever. */
+      growthPerWeek: 0.5,
+      /** ⚠ WHERE AN AXIS ARMS, in the ONE direction birth left open to it (ruling N): a born-OPEN or
+       *  born-STEADY girl arms at −this (walls up, the expressed pole inverts); a born-PRIVATE or
+       *  born-INTENSE one arms at +this (her own work). The other direction arms NOTHING – for the
+       *  first pair it is clamped at 0 (nowhere to grow), for the second it accumulates as real walls
+       *  that change no bucket and still have to be walked back before a point of growth can be
+       *  bought. That asymmetry is «repair is free, growth is work» in the arithmetic. */
+      flipArm: 60,
+      /** ⚠ WHERE A FLIPPED AXIS ARMS THE UN-FLIP – strictly inside `flipArm`, and the band between
+       *  the two is the HYSTERESIS DEAD ZONE that arms nothing in either direction. It is what makes
+       *  a flip an event of seasons rather than a flicker: at `repairPerWeek` the 20 points between
+       *  60 and 40 are twenty held weeks before the un-flip can even be rolled for. */
+      flipRelease: 40,
+      /** ⚠ THE HAZARD ON AN ARMED AXIS-WEEK – one uniform on `seed:life:walls:<axis>:<week>`, p =
+       *  this. 0.05 gives a median ~13 armed weeks (ln 0.5 / ln 0.95 = 13.5), which is the wave-5
+       *  brief's own «~40 weeks of sustained pattern to arm, then a median ~13 armed weeks».
+       *  ⚠ NEVER GUARANTEED IN EITHER DIRECTION (§2a): two identical patterns can differ by a season. */
+      flipHazardPerWeek: 0.05,
+      /** ⚠⚠ THE MAGNITUDE CAP ON THE LEAN, ±. **THE BUILDER'S ADDITION, NOT THE BRIEF'S** – §4 names
+       *  six walls numbers and this is a seventh, added because without it §2a's own law is
+       *  ARITHMETICALLY FALSE and reported to the architect as such rather than slipped in.
+       *
+       *  §2a: «the road back always exists – a closed-again girl can be opened again … A career can
+       *  round-trip; that sentence is earned drama». Unbounded, a career that grinds 300 weeks at a
+       *  `strained` bond reaches −450, and the walk home is then 450 weeks at `repairPerWeek` – about
+       *  nine years, which is longer than the game. The round trip would be a sentence in a spec and
+       *  unreachable in play, and nothing in the engine would ever say so.
+       *
+       *  ⚠ 100 IS SIZED AGAINST THE TWO THRESHOLDS IT HAS TO LEAVE ROOM FOR, not picked round: the
+       *  deepest hole is 100 weeks of free repair back to nature (~two seasons) and 60 weeks back to
+       *  the release band, so neglect still costs her real seasons of the LADDER – ruling N's «she
+       *  must be walked back to 0 before a single point of growth can be bought» keeps its teeth –
+       *  while the round trip stays inside one career. It is also the reason the accumulator cannot
+       *  drift into a serialised number nobody bounded. A PROPOSAL like the six above; T10 prices it. */
+      leanMax: 100,
+    },
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
@@ -4956,6 +5031,61 @@ export const ECONOMY = {
      *  T10's grid MEASURES this ladder (the realised clarity inside the CI of each number, the
      *  matched-reaction share monotone in rung) rather than pricing it. */
     listenClarity: [0.6, 0.8, 0.95],
+    /** ⭐⭐⭐ «WORKING ON HERSELF» – THE BEYOND-BASELINE FLIP HAZARD'S SCALE, BY RUNG (v76, wave 5's
+     *  T7). The psychologist spec's §2 row, verbatim: «rung scales the armed hazard ×1 / ×1.5 / ×2».
+     *  Read by `driftWalls` (engine/spirit.ts) and by nothing else.
+     *
+     *  ⚠⚠ IN THE BEYOND-BASELINE DIRECTION ONLY, AND NEVER ON AN UN-FLIP – the architect's ruling N,
+     *  and the sentence that decides it is «the seat accelerates her own work and never her
+     *  collapse». So the scale applies to exactly one draw in the whole model: the FLIP of an axis
+     *  that has somewhere to grow. A born-open girl's walls-up flip, and every un-flip in either
+     *  direction, are ×1 whatever the family is paying – a better psychologist does not make a
+     *  collapse likelier, and he is not what un-does one either (repair is free and needs no dice
+     *  scaled for it).
+     *
+     *  ⚠ IT RIDES THE BILLING PREDICATE, like everything else of his (ruling J, ruling P's ⚠): a
+     *  college-freeze week and a booked family week stand the scale down with the bill.
+     *
+     *  ⚠ RULED, NOT PROPOSED – the wave-5 brief §4 lists «the beyond-baseline hazard scale [1, 1.5,
+     *  2]» under «Ruled by the spec §2», so T10's grid MEASURES this ladder (flip medians monotone in
+     *  rung) rather than pricing it. ⚠ INDEXED BY RUNG (`0 | 1 | 2`), the fourth spelling in this
+     *  block: `recoverySlope` is POINTS OF SPIRIT PER WEEK, `coolheadPerSeason` POINTS OF A SKILL PER
+     *  SEASON, `listenClarity` a SHARE OF BEATS, and this a MULTIPLIER ON A PROBABILITY. */
+    wallsHazardScale: [1, 1.5, 2],
+    /** ⭐⭐ O6, RULED 13.09 – A RETAINED SEAT AT RUNG ≥ 2 SLOWS THE WALLS' RISE, ANY FOCUS. The
+     *  multiplier on `ECONOMY.life.walls.risePerWeek` on a `strained`/`cold` week: «a good
+     *  psychologist in the house makes the walls rise slower» (ruling N).
+     *
+     *  ⚠⚠ IT SLOWS THE NEGATIVE **DRIFT** AND NEVER THE HAZARD – ruling N's own warning about the two
+     *  multipliers being swapped. Once the walls are up and the axis is armed, he does not make the
+     *  flip less likely; what he buys is the seasons it takes to get there.
+     *
+     *  ⚠ RUNG ≥ 2 AND ANY FOCUS: this is the second legible thing the RETAINER buys, so it must not
+     *  read off `psychologistFocus` – a family working on «cool head» still has him in the house.
+     *  ⚠ AND IT RIDES THE BILLING PREDICATE (ruling P's ⚠: «a standing-down seat slows nothing»).
+     *  ⚠ A PROPOSAL – the wave-5 brief §4's «retention slow-down ×0.75 (rung ≥ 2)», priced at the
+     *  census, his word after.
+     *
+     *  ⚠⚠ AND THE TENTHS GRID EATS A LITTLE OF IT, WHICH T10 MUST PREDICT OR IT WILL READ A CORRECT
+     *  IMPLEMENTATION AS A MISS (ruling M's lesson, one focus over). The lean is stored to ONE
+     *  DECIMAL, so a slowed week is `roundTenth(1.5 × 0.75) = roundTenth(1.125) = 1.1` and the
+     *  REALISED slow-down is ≈ ×0.733 rather than ×0.75. Measured, not derived after the fact:
+     *  tests/wave5-psychologist-walls.test.ts §F asserts the rounded value and says so. The grid is
+     *  the field's own (spirit's, one concept over) and the arithmetic is not going to be un-rounded
+     *  for a multiplier's sake – so the number to predict is 0.733. */
+    wallsRetentionSlow: 0.75,
+
+    /** ⭐⭐ THE `'herself'` REPAIR ACCELERATION – the multiplier on
+     *  `ECONOMY.life.walls.repairPerWeek` while that focus is held at a `close`/`steady` bond.
+     *
+     *  ⚠⚠ AN ACCELERATION AND NEVER A GATE, which is §0.3's law («repair is free … the seat only ever
+     *  ACCELERATES the road home») made arithmetic: the repair term runs at ×1 with nobody hired, and
+     *  this multiplies a walk that was already happening. A version of this number that was required
+     *  for the walk would be the design violation the brief names, not a tuning miss.
+     *
+     *  ⚠ IT RIDES THE BILLING PREDICATE for ruling J's reason – pay nothing, receive nothing extra.
+     *  ⚠ A PROPOSAL – the brief §4's «`'herself'` repair acceleration ×1.5». */
+    wallsHerselfRepair: 1.5,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

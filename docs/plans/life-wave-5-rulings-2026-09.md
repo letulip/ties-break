@@ -661,3 +661,90 @@ from `spirit.ts` beside `accrueSpirit`, and called from `phaseHerWeek` immediate
 
 ⚠ `driftWalls` takes the same `psychologistWorks` boolean, for ruling J's reason: O6's ×0.75 is the
 seat's work and a standing-down seat slows nothing.
+
+### Ruling N, corrected by T7 – the un-flip's threshold is SIGNED, and there is a seventh constant
+
+Ruling N is the spine of T7 and it survived contact with the engine almost whole. Two things in it
+did not, and both were found by building against it rather than by reading it again.
+
+**1. «The un-flip arms only once `|lean| <= flipRelease`» produces a reachable stuck state, and the
+signed reading does not.** On three quarters of the cases the ruling's own examples reach, the two
+readings are IDENTICAL: a born-open girl's lean is clamped at 0, so her flip and her un-flip both
+live on the negative side and `|lean|` and the signed form agree everywhere. They part in exactly
+one place – a born-PRIVATE (or born-INTENSE) girl who GREW past +`flipArm`, flipped to
+expressed-open, and was then kicked all the way through the release band and past −`flipRelease`.
+
+Under `|lean|` she is stuck EXPRESSED-OPEN with deep walls, and nothing can arm the un-flip until
+she is walked back UP to −40: the girl who has stopped telling anybody anything, still read by every
+mechanic as the open one, for as long as the grinding lasts. It is not a corner: at
+`risePerWeek` 1.5 the release band is ~53 weeks wide, so a 5 %/week hazard misses the whole
+crossing about 6.6 % of the time.
+
+**Shipped: the threshold is read along the girl's own ARMABLE DIRECTION** (`toward`, positive =
+displaced toward the pole she can reach), so `armed = flipped ? toward <= flipRelease : toward >=
+flipArm`. Every sentence of ruling N is preserved – the dead zone still arms nothing in either
+direction, the flip still does not reset the lean – and the collapse now un-does the flip it was a
+collapse from, which is what walls are for. The divergence is named at the line and pinned.
+
+**2. §2a's «the road back always exists» is arithmetically false without a cap on the lean, so T7
+added one: `ECONOMY.life.walls.leanMax = 100`, a seventh walls constant the brief's §4 does not
+name.** Unbounded, a career that grinds 300 weeks at a `strained` bond reaches −450 and the free
+walk home is then 450 weeks – about nine years, longer than the game. «A career can round-trip; that
+sentence is earned drama» would have been a sentence in a spec and unreachable in play, with nothing
+in the engine ever saying so. 100 is sized against the two thresholds it has to leave room for: the
+deepest hole is ~2 seasons of free repair back to nature and 60 weeks back to the release band, so
+neglect still costs her real seasons of the ladder (ruling N's «she must be walked back to 0 before
+a single point of growth can be bought» keeps its teeth) while the round trip fits inside a career.
+A PROPOSAL like the other six; T10 prices it. **Flagged rather than slipped in.**
+
+**3. The constants' HOME is `ECONOMY.life.walls`, not `ECONOMY.psychologist`** – a deliberate
+departure from the wave-5 brief's §4 heading. The seven walls numbers are read on EVERY career,
+including the great majority that never hire anybody: walls rise from neglect itself, «no purchase,
+no work», and repair is free. A constant whose reader runs on a seatless career, filed under the
+seat's price list, reads as a paywall in the one place the layer's own law says there is none. The
+three numbers that really ARE the seat's – `wallsRetentionSlow` (O6), `wallsHerselfRepair` and
+`wallsHazardScale` – are in `ECONOMY.psychologist` beside `recoverySlope`, and each names the other
+block.
+
+**4. And a number for T10, in ruling M's family: the tenths grid eats part of O6's ×0.75.** The lean
+is stored to one decimal, so a slowed week is `roundTenth(1.5 × 0.75) = 1.1` and the REALISED
+slow-down is ≈ **×0.733**. A bench that predicts 0.75 will read a correct implementation as a miss.
+
+### Ruling P, confirmed – and what T7 measured about the frozen corpus
+
+**Ruling P held exactly as written.** `driftWalls(world, psychologistWorks)` lives beside
+`accrueSpirit` and is called on the line after it; `accrueSpirit` stayed provably draw-free (pinned);
+the flip hazard is the file's first draw and is scoped to one function. The predicate is asked twice
+rather than hoisted into a local, deliberately: nothing runs between the two lines so the answers are
+one answer by construction, and a local would have re-spelled the `accrueSpirit` call whose exact
+text is pinned precisely so the raw flag can never be handed down in the predicate's place.
+
+**⚠ The brief's frozen-career expectation is FALSE as measured, and the measurement is the useful
+part.** The brief says «these careers never hire, but they DO have bond bands, so the drift itself
+will run on them and the leanings may move even though nothing flips – that is this wave's own
+expected diff». The pass does run on them. The leanings do not move: over 156 weeks, all five cells
+(`middleGrinder` · `eliteGrinder` · `selfTravelling` · `highPlayer` · `middlePlayer`) spend **ZERO
+weeks below the `steady` band** – the minimum bond reached anywhere in the corpus is **58.5** against
+a cut of 55 – so the kick row is never reached and the repair row is a no-op at a lean of 0. Per-key
+diff against the change NEUTRALISED IN PLACE (the `driftWalls` call commented out, `tools/frozen-key-diff.ts`
+on all five preset/policy pairs): **0 keys moved, on every cell.** `rngMain` byte-identical, the
+`e6b0c709` capture unmoved, and **no constant re-stamped**.
+
+⚠ **Ruling K binds what that zero is worth.** It says the corpus's careers never leave the caring
+band; it says nothing about a grinding one, and the corpus is an END-STATE diff in any case. The
+walls' own behaviour is measured in `tests/wave5-psychologist-walls.test.ts`, key by key over a walk,
+and priced at T10.
+
+### Two instrument findings from T7's arms, general enough to be worth the wave's attention
+
+* **⚠⚠ A HAZARD PIN THAT SPOT-CHECKS ONE WEEK IS THE «UNABLE TO FAIL» FAMILY WEARING A
+  PROBABILITY.** T7's arm 10 – the rung's scale applied where ruling N forbids it – came in at
+  **0 RED** against the first drafting of the case that exists to catch it, because p = 0.05 and two
+  different hazards agree on about nineteen weeks in twenty. Widened to a 240-week vector, the arm
+  reds. This is ruling L's «widen the walk» amendment in a second costume, and it is cheaper to obey
+  than to re-find: **every hazard claim in the wave should be a vector, never a week.**
+* **Two arms came in at 0 RED for an honest reason and are declared rather than dropped.** «A
+  born-open girl can never go positive» is enforced TWICE – by the growth branch's `growable &&` and
+  by the clamp below it – so removing either alone leaves the claim true and neither alone is
+  catchable. The arm that removes BOTH goes 3 RED. Defence in depth is not redundancy to be tidied
+  away, but it has to be measured as a pair or the ledger is a lie.

@@ -719,10 +719,223 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean): voi
     }
     world.spiritShock = null
   }
-  // ⚠⚠ NOTHING GOES BELOW THIS LINE – the architect's ruling F reserves the tail after the clear for
-  // T7's weekly leaning pass, so that a flip never bites its own week. `intensity` is read ONCE at the
-  // head of this function and spent three ways; the week was lived by the girl she was all week, so a
-  // flip that fires here is first read on the NEXT tick and must never be threaded back into this one.
+  // ⚠⚠ NOTHING GOES BELOW THIS LINE, AND THE LEANING PASS IS NOT WHAT GOES HERE – ruling F reserved
+  // this tail for it and RULING P (13.09) moved it out again, to `driftWalls` immediately below,
+  // called from `phaseHerWeek` the line after this function returns. Ruling F's REQUIREMENT is met
+  // more exactly by the sibling than it was by the tail: «after `accrueSpirit` returns» is a place
+  // nobody can drift away from. What the ruling protects is unchanged and is the reason both notes
+  // exist: `intensity` is read ONCE at the head of this function and spent three ways, the week was
+  // lived by the girl she was all week, and a flip is first read on the NEXT tick. ⚠ And what the
+  // move buys is this function's ZERO-DRAW CONTRACT, which three pins and `phaseHerWeek`'s own
+  // comment lean on: the flip hazard is a draw, and it is scoped to the function beside this one.
+}
+
+// =================================================================================================
+// 4. ⭐⭐⭐ HER WALLS AND HER REGULATION – v76's T7 (who-she-is §2a, the 09.09 third-sitting re-cut)
+// =================================================================================================
+//
+// «IDENTITY IS IMMUTABLE – WHAT DRIFTS IS WALLS AND REGULATION, EXPRESSION OVER AN UNCHANGING
+// NATURE.» `world.temperament` is BIRTH, forever; this section maintains `world.wallsLean` – two slow
+// accumulators of DISPLACEMENT from her own baseline – and `world.wallsFlipped`, the hysteresis state
+// `expressedTemperamentOf` (§1) reads. Nothing here ever writes `temperament`, and nothing anywhere
+// stores what `expressedTemperamentOf` returns.
+//
+// ⚠⚠ THE SIGN IS THE ARCHITECT'S RULING N AND EVERYTHING ELSE FOLLOWS FROM IT. **The lean is
+// ABSOLUTE, and zero is her nature**:
+//
+//   axis    negative                                   0                positive
+//   open    more private – walls up, she stops telling  as drawn        more open than her baseline
+//   reg     more intense – dysregulated, she braces     as drawn        more steady than her baseline
+//
+// ⚠⚠ AND EACH GIRL HAS EXACTLY **ONE ARMABLE DIRECTION PER AXIS**, DECIDED AT BIRTH, because a flip
+// means «the expressed pole is the opposite of birth» and there has to BE an opposite pole to reach:
+//
+//   born open    arms at −`flipArm` (expressed-private)   · positive is CLAMPED AT 0 – nowhere to grow
+//   born private arms at +`flipArm` (expressed-open)      · negative accumulates and arms NOTHING
+//   born steady  arms at −`flipArm` (expressed-intense)   · positive is CLAMPED AT 0
+//   born intense arms at +`flipArm` (expressed-steady)    · negative accumulates and arms NOTHING
+//
+// ⭐ THE DIRECTION THAT CANNOT FLIP IS NOT WASTED – IT IS THE WHOLE OF «REPAIR IS FREE, GROWTH IS
+// WORK». A born-private girl who was kicked for seasons carries a negative lean that changes no
+// bucket and shows on no surface, and she must be walked back to 0 before a single point of growth
+// can be bought. Neglect costs her the LADDER even where it cannot change who she is read as. That is
+// why the lean is PERSISTED rather than derived.
+//
+// ⚠⚠ NO SURFACE SHOWS ANY OF THIS, AND THE ABSENCE IS DELIBERATE AND NAMED SO NOBODY ADDS ONE (the
+// wave-5 brief's T7, in bold): no leaning on any screen, no flip line, no announcement, nothing on
+// the wire – `wallsLean` and `wallsFlipped` are not on `Snapshot` and never become so. The existing
+// surfaces ARE the telegraph: her face dims, the Mood word cools, the diary goes guarded, the feed
+// goes quiet, for seasons before a flip lands. The album reads the arc later (step 6+).
+//
+// ⚠ WHAT THIS SECTION DOES NOT DO: it writes no feed row, raises no beat, moves no `bond` and no
+// `spirit`, and reads no string. It is two numbers, two booleans and one hazard.
+
+/** THE TWO AXES, as the ids the leanings, the flips and the streams are keyed by. `open` is the
+ *  openness axis (`temperamentOpenness`), `reg` the regulation one (`temperamentIntensity`) – the
+ *  field names `world.wallsLean` / `world.wallsFlipped` already carry, written down once here so a
+ *  sweep can walk the pair by name. */
+export type WallsAxis = 'open' | 'reg'
+
+/** Both, in the order `driftWalls` visits them – exported so the tests and the census walk the set
+ *  instead of re-listing it (`TEMPERAMENTS`' own argument, one concept over). */
+export const WALLS_AXES: readonly WallsAxis[] = ['open', 'reg']
+
+/** ⭐⭐ HAS THIS GIRL ANYWHERE TO GROW ON THIS AXIS – ruling N's table, as one predicate, and the ONE
+ *  spelling of it. True for a born-PRIVATE girl on `open` and a born-INTENSE one on `reg`: those are
+ *  the two who have an opposite pole to reach, so those are the two whose POSITIVE lean means
+ *  anything. False for born-open and born-steady, whose positive side is clamped at 0.
+ *
+ *  ⚠ IT IS ALSO THE SIGN OF THE ARMABLE DIRECTION (`+1` when true, `−1` when false), which is why it
+ *  is one predicate and not two: the direction a girl can flip in and the direction she can grow in
+ *  are the same direction, by construction – that is what «beyond her baseline» means. */
+function wallsGrowable(birth: Temperament, axis: WallsAxis): boolean {
+  return axis === 'open' ? temperamentOpenness(birth) === 'private' : temperamentIntensity(birth) === 'intense'
+}
+
+/**
+ * ⭐⭐⭐ THE WEEKLY LEANING PASS AND THE FLIP HAZARD – a SIBLING of `accrueSpirit`, never a block
+ * inside it (the architect's RULING P, 13.09), called from `world/phaseHerWeek.ts` on the line
+ * immediately after it.
+ *
+ * ⚠⚠ WHY A SIBLING, WHICH IS THE HALF RULING F GUESSED WRONG AND RULING P MEASURED. Ruling F put this
+ * pass «at the tail of `accrueSpirit`» and its REASON – a flip must not bite its own week – is
+ * untouched and is honoured here more exactly: «after `accrueSpirit` returns» is not a place a later
+ * editor can drift away from, and the `intensity` const at that function's head stays ONE read for
+ * that whole pass. What the location buys is the other property: `accrueSpirit` today reaches no
+ * stream at all, `phaseHerWeek` states its **zero-draw contract** in a comment one commit old, and
+ * THIS function's flip hazard is a draw. Keeping the draw out of it leaves that contract provable and
+ * gives the count-keys net an exact subject instead of a whole weekly pass.
+ *
+ * ⚠⚠ THE ORDER INSIDE IS DRIFT FIRST, THEN THE HAZARD, and both are per axis. The week's pattern is
+ * priced onto the lean, and only then do the dice ask whether it showed – so the week a lean reaches
+ * the arm can be the week it fires. Ruling F is satisfied by the CALL SITE and not by this order:
+ * whatever flips here is first READ on the next tick, because every reader of
+ * `expressedTemperamentOf` in the tick has already run.
+ *
+ * ⚠⚠ ZERO DRAWS UNLESS AN AXIS IS ARMED, AND THAT IS THE LOAD-BEARING SHAPE RATHER THAN A SAVING:
+ * the whole leaning arithmetic is deterministic, and `rngFromSeed` is not reached at all on an
+ * unarmed axis-week – never derive-and-discard. Two axes arm independently on two keys
+ * (`seed:life:walls:open:<week>` / `…:reg:<week>`), so §1f's one-value-per-key law is satisfied by
+ * the axis being IN the key. MAIN is untouched: the frozen capture (41550 / e6b0c709) cannot see this
+ * function.
+ *
+ * ⚠⚠ `psychologistWorks` IS THE SEAT'S BILLING PREDICATE, HANDED DOWN – ruling J's law and ruling P's
+ * own ⚠ («O6's ×0.75 is the seat's work and a standing-down seat slows nothing»). It is the SAME
+ * value `accrueSpirit` was given on the line above, which is the same answer `resolvePsychologist`
+ * gives itself later in the tick. All THREE of the seat's walls effects ride it – the O6 slow-down,
+ * the `'herself'` acceleration and the beyond-baseline hazard scale – so there is no week on which
+ * the family pays nothing and receives any of them. ⚠ `psychologistFocus` and `psychologistRung` are
+ * read straight off the world for `shockBeingWorked`'s own reason: a CHOICE and a DIAL are not a
+ * working week and no predicate owns them.
+ *
+ * ⚠⚠ AND THE DRIFT ITSELF RUNS ON EVERY WEEK OF EVERY CAREER, INCLUDING A COLLEGE FREEZE AND A
+ * BOOKED FAMILY WEEK. Only the seat stands down. The walls are a fact about her life and her parent,
+ * not about a retainer – §2a's «walls RISE from neglect itself – no purchase, no work» – so the bond
+ * band is asked every week and the free repair runs every week. This is also why the frozen careers,
+ * which never hire, still drift: that is this wave's own expected diff, not a leak.
+ *
+ * ⚠ IT WRITES `world.wallsLean` AND `world.wallsFlipped` AND NOTHING ELSE. No `spirit`, no `bond`, no
+ * `events`, no `lifeLog`, no string. `accrueSpirit` stays the one writer of `world.spirit`.
+ */
+export function driftWalls(world: WorldState, psychologistWorks: boolean): void {
+  const w = ECONOMY.life.walls
+  const p = ECONOMY.psychologist
+  // ⚠ THE `??` COURTESIES ARE `accrueSpirit`'s, for its reason: every real world – created or
+  // migrated – carries all of these, and a probe world hand-built in a test or a bench predates them.
+  const birth = world.temperament ?? temperamentFor(world.seed)
+  const band = bondBandOf(world.bond ?? ECONOMY.bond.start)
+  // ⭐ THE TWO HALVES OF THE LADDER, AND THEY EXHAUST IT – `bondBandOf` returns exactly these four, so
+  // every week of every career is either a kick week or a care week and the lean always moves.
+  const kicked = band === 'strained' || band === 'cold'
+  const rung = world.psychologistRung ?? p.defaultRung
+  // ⚠ ALL THREE SEAT TERMS ASK `psychologistWorks` FIRST, so a stood-down week is a ×1 week.
+  const retained = psychologistWorks && rung >= 2
+  const herself = psychologistWorks && (world.psychologistFocus ?? null) === 'herself'
+  const lean = world.wallsLean ?? { open: 0, reg: 0 }
+  const flipped = world.wallsFlipped ?? { open: false, reg: false }
+
+  for (const axis of WALLS_AXES) {
+    const growable = wallsGrowable(birth, axis)
+    let value = lean[axis] ?? 0
+
+    // 1. THE DRIFT, BY THE CURRENT BOND BAND (§2a's three bullets, in ruling N's signs).
+    if (kicked) {
+      // ⚠⚠ WALLS UP ON **BOTH** AXES, AND WITH NO CLAMP AT 0 ON THE WAY DOWN – kicks close her and
+      // dysregulate her, and a positive lean is eaten first. That is the owner's 09.09 re-cut in
+      // arithmetic: «если она стала более открытой, а ее начали пинать, то она вполне может и назад
+      // откатиться». The one-way door was the thesis half-applied.
+      // ⚠ O6: a RETAINED seat at rung ≥ 2 slows the RISE, any focus. It does not touch the hazard.
+      value -= w.risePerWeek * (retained ? p.wallsRetentionSlow : 1)
+    } else if (value < 0) {
+      // ⚠⚠ REPAIR IS FREE AND STOPS AT HER NATURE. `Math.min(0, …)` is «toward 0 and NOT past it» –
+      // the walk home ends at her own baseline, and going further is a different thing that has to be
+      // bought with her own work. ⚠ THE TERM RUNS WITH NOBODY HIRED: `psychologistWorks` appears only
+      // inside the ×1.5, never in front of the step. Gating any part of this road behind the retainer
+      // is a design violation and not a tuning miss (§0.3, «мы ни за что не наказываем»).
+      value = Math.min(0, value + w.repairPerWeek * (herself ? p.wallsHerselfRepair : 1))
+    } else if (growable && herself) {
+      // ⚠⚠ BEYOND HER BASELINE – AND THIS BRANCH IS THE ANTI-«HUGGED INTO AN EXTRAVERT» DAM. Reaching
+      // it needs ALL THREE at once: a `close`/`steady` bond (the `else` of `kicked`), the `'herself'`
+      // focus actually being worked this week, and an axis with somewhere to grow. A caring career
+      // with no focus produces ZERO beyond-baseline movement, ever – a hard invariant, not a corridor
+      // (§2a: «without HER chosen work, her nature holds and only the relationship opens»).
+      value += w.growthPerWeek
+    }
+    // ⚠ AND THE FOURTH CASE IS «NOTHING», WHICH IS A ROW OF THE TABLE AND NOT A GAP IN IT: a POSITIVE
+    // lean on a caring week with no focus held simply STAYS. What she has built does not decay under
+    // care – it decays under kicks, which is the branch above. §2a's only decay rule is «walls RISE
+    // from neglect itself»; there is no «growth fades» row anywhere in the model, and inventing one
+    // would make the `'herself'` year a subscription rather than a year's work.
+
+    // 2. THE CLAMPS. ⚠ A GIRL WITH NOWHERE TO GROW NEVER GOES POSITIVE – ruling N's «positive is
+    //    clamped at 0: she is already open, there is nowhere to grow». It is belt-and-braces beside
+    //    the branch above (which never adds for her) and it is the line that makes the claim true of
+    //    a POKED world too, which is where a test can reach it.
+    if (!growable) value = Math.min(0, value)
+    value = roundTenth(clamp(value, -w.leanMax, w.leanMax))
+    lean[axis] = value
+
+    // 3. IS THE AXIS ARMED – ruling N's hysteresis, as STATE rather than as a rule of thumb. A flip
+    //    does NOT reset the lean; the boolean and the accumulator are independent and the lean keeps
+    //    drifting under a flip.
+    //
+    //    ⚠⚠ THE THRESHOLD IS READ ALONG THE GIRL'S OWN ARMABLE DIRECTION (`toward`, below) AND NOT AS
+    //    `|lean|`, AND THE DIFFERENCE IS MEASURED RATHER THAN STYLISTIC. Ruling N writes the un-flip
+    //    as «`|lean| <= flipRelease`», and on the three-quarters of cases the ruling's own examples
+    //    reach the two readings are IDENTICAL – a born-open girl's lean is clamped at 0, so her only
+    //    flip and her only un-flip both live on the negative side. They part in exactly one place: a
+    //    born-PRIVATE (or born-INTENSE) girl who GREW past +`flipArm`, flipped, and was then kicked
+    //    all the way through the release band and past −`flipRelease`. Under `|lean|` she is stuck
+    //    EXPRESSED-OPEN with deep walls and nothing can arm the un-flip until she is walked back up
+    //    to −40 – the girl who stopped telling you anything, still read by every mechanic as the open
+    //    one. Under the signed reading the collapse un-does the flip it was a collapse from, which is
+    //    what the walls are for. ⚠ CARRIED BACK TO THE ARCHITECT AS A CORRECTION TO RULING N.
+    //
+    //    `toward` is the lean measured in the direction birth left open: positive means «displaced
+    //    toward the pole she can reach», negative «displaced the other way, where nothing arms».
+    const toward = growable ? value : -value
+    const armed = flipped[axis] ? toward <= w.flipRelease : toward >= w.flipArm
+    // ⚠⚠ THE DEAD ZONE IS THE `else` OF THIS LINE AND IT ARMS NOTHING IN EITHER DIRECTION: unflipped
+    //    below `flipArm`, or flipped above `flipRelease`. It is what makes a flip «an event of
+    //    seasons» rather than a flicker, and it is the whole of the hysteresis.
+    if (!armed) continue
+    // ⚠⚠ THE RUNG SCALES THE BEYOND-BASELINE **FLIP** AND NOTHING ELSE – ruling N: «the seat
+    //    accelerates her own work and never her collapse». So: not on a walls-up flip, not on ANY
+    //    un-flip (`!flipped[axis]` is the whole of it), and not on a week the seat stands down.
+    const scale = !flipped[axis] && growable && psychologistWorks ? (p.wallsHazardScale[rung] ?? 1) : 1
+    // ⭐ ONE UNIFORM, ONE AXIS, ONE WEEK, ITS OWN KEY – and `<` rather than `<=`, `rollArrival`'s own
+    //    reason: a hazard of 0 must be impossible rather than merely unlikely, since `rngFromSeed`
+    //    can return exactly 0.
+    if (rngFromSeed(`${world.seed}:life:walls:${axis}:${world.week}`)() < w.flipHazardPerWeek * scale) {
+      flipped[axis] = !flipped[axis]
+    }
+  }
+
+  // ⚠ THE TWO OBJECTS ARE WRITTEN BACK RATHER THAN MUTATED IN PLACE ALONE, so a probe world that
+  // carried neither key ends the pass carrying both – the same courtesy `rollArrival`'s `??=` extends
+  // to `loveEpisodes`, and the reason the `??` reads above cannot silently drop a week's drift.
+  world.wallsLean = lean
+  world.wallsFlipped = flipped
 }
 
 /** THE ONE WRITER for every `bond` delta – clamped to 0..100 and rounded onto the 0.5 grid, so no

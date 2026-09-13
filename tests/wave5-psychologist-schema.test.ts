@@ -94,6 +94,26 @@
 // maps two births onto one bucket, not a branch that quietly does nothing. The per-birth
 // `.not.toBe(birth)` lines are what catch that, and they are why they are there.
 //
+// ⚠⚠ AND T7 RE-AIMED THREE CASES IN THIS FILE, 13.09 – RECORDED HERE BECAUSE THE LEDGER ABOVE IS T1's
+// AND MUST NOT BE REWRITTEN TO LOOK LIKE IT ALWAYS SAID THIS. `driftWalls` is the pass T1 promised
+// would come, and it WRITES two of the six keys, so three cases that were exactly right on T1's tree
+// went red on T7's. Each is re-aimed at its site with its own ⚠⚠ note:
+//
+//   · §F's CALL-SITE CENSUS – one file to two, and STRENGTHENED: it now counts ruling A's 3/2 split
+//     inside `lifeBeat.ts` per spelling, so the one-line «tidy-up» that re-points `temperamentOf`'s
+//     body goes red on 3 -> 5 and 2 -> 0 while leaving the file list untouched.
+//   · §E's NEUTRALISED-CONTROL WALK – the two walls keys are stripped off BOTH ends, and what
+//     replaces the deleted assertion asserts the pass's own output on that career, so «the A arm grew
+//     them back» cannot hide «and put something in them». The four SEAT keys carry the original
+//     claim whole.
+//   · §F's WALLS-KEY CENSUS – `wallsLean` gained its writer and its only reader in one commit, both
+//     `engine/spirit.ts`, so the two lists are now identical and both are still EXACT.
+//
+// ⚠ A FOURTH CASE STAYED GREEN AND HAD ITS **PROSE** RE-AIMED, which is the one worth naming: §E's
+// «no writer» case said «NO LEANING PASS EXISTS YET» and went on passing after the pass landed,
+// because that career's bond never leaves the caring band. A green line with a lying comment is worse
+// than a red one, so the condition it really holds under is now asserted beside it.
+//
 // ⚠ ARM 1 IS RE-ARMED RATHER THAN RE-DISCOVERED – wave 3's and wave 4's own trap, third instance.
 // `migrateSave` MUTATES ITS PAYLOAD IN PLACE, so an idempotency line that compares the result with
 // the very field the step just replaced compares a thing with itself and stays green under the
@@ -111,6 +131,9 @@ import {
 import { createWorld, tickWeek, skipTournament, closeTournament, SAVE_SCHEMA_VERSION, type WorldState } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { migrateSave } from '../src/engine/migrations'
+// ⚠ T7: `ECONOMY.bond.band` is read by §E's re-aimed second case, which now states the CONDITION its
+// two walls assertions hold under instead of asserting them into a comment that stopped being true.
+import { ECONOMY } from '../src/engine/economy'
 
 const SAVES = fileURLToPath(new URL('./fixtures/saves', import.meta.url))
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
@@ -458,9 +481,20 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     //
     // ⚠ WHAT IT PROVES AND WHAT IT DOES NOT. It proves that nothing in the weekly tick consults the
     // six keys or `expressedTemperamentOf`, over 156 weeks of a real career including its matches,
-    // its money and its draws. It does NOT prove anything about T7's leaning pass, which does not
-    // exist here – that pass will move these worlds on purpose, and the frozen careers are where it
-    // will be measured.
+    // its money and its draws.
+    //
+    // ⚠⚠ RE-AIMED 13.09 BY WAVE 5's T7, AND THE RE-AIM IS THIS PIN DOING ITS JOB RATHER THAN BEING
+    // REPAIRED AROUND IT. It went RED – «the two arms end with the same key set once the six are off:
+    // expected […76] to deeply equal […74]» – the moment `driftWalls` landed, because that pass
+    // WRITES two of the six and an A arm that starts without them ends carrying them. The note above
+    // predicted exactly this («that pass will move these worlds on purpose»). WHAT CHANGES: the two
+    // WALLS keys are stripped off both ends, and what replaces the deleted assertion is STRONGER
+    // than a smaller key list – the pass's own output on this career is asserted, so «the A arm grew
+    // them back» cannot hide «and put something in them».
+    //
+    // ⚠ THE FOUR SEAT KEYS ARE UNTOUCHED BY THE RE-AIM and carry the original claim whole: nothing in
+    // 156 weeks of tick consults `psychologistHired`, the rung, the focus or the focus season on a
+    // career that never hired. That was always the larger half of what this case was for.
     const withKeys = walk(createWorld('wave5-walk'), 156)
 
     const stripped = createWorld('wave5-walk') as unknown as Record<string, unknown>
@@ -470,11 +504,22 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     }
     const withoutKeys = walk(stripped as unknown as WorldState, 156) as unknown as Record<string, unknown>
 
+    // ⭐⭐ WHAT T7's PASS PUT BACK, AND WHAT IS IN IT. `driftWalls` reads both keys defensively and
+    // writes them, so the A arm ends carrying them – and on a career whose bond never leaves the
+    // caring band the content is her own nature, which is the wave's expected diff on this world
+    // being exactly nil. Asserted on BOTH arms, so the strip below cannot launder a difference.
+    const WALLS = ['wallsLean', 'wallsFlipped'] as const
+    for (const [name, arm] of [['B', withKeys as unknown as Record<string, unknown>], ['A', withoutKeys]] as const) {
+      expect(arm.wallsLean, `${name}: the leaning pass ran and left her at her nature`).toEqual({ open: 0, reg: 0 })
+      expect(arm.wallsFlipped, `${name}: and nothing armed, so nothing flipped`).toEqual({ open: false, reg: false })
+    }
+
     const b = JSON.parse(JSON.stringify(withKeys)) as Record<string, unknown>
     for (const key of V76_KEYS) {
       expect(b[key], `the B arm carries ${key} through the walk`).toBeDefined()
       delete b[key]
     }
+    for (const key of WALLS) delete withoutKeys[key]
     expect(Object.keys(withoutKeys).sort(), 'the two arms end with the same key set once the six are off')
       .toEqual(Object.keys(b).sort())
     for (const key of Object.keys(b)) {
@@ -493,13 +538,24 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     // The other direction of the same claim, and the one that would catch a tick that WROTE one of
     // them: `hirePsychologist` is T2, the focus command T3, the leaning pass and the flip hazard T7,
     // so after 156 weeks every one of the six must still read its week-0 identity value.
+    //
+    // ⚠⚠ RE-AIMED 13.09 BY WAVE 5's T7 IN ITS PROSE AND NOT IN ITS ASSERTIONS, WHICH IS WORTH SAYING
+    // OUT LOUD: the two walls lines stayed GREEN when `driftWalls` landed, and a green line with a
+    // lying comment is worse than a red one. They used to say «NO LEANING PASS EXISTS YET». The pass
+    // exists; what keeps these two at their identity values is that this career's bond never leaves
+    // the CARING band, where a lean already at 0 has nothing to repair and no focus is held to buy
+    // growth with. That is the anti-«hugged into an extravert» dam (§2a) observed from the outside,
+    // and it is why the frozen corpus's own diff for this wave is small rather than universal.
     const world = walk(createWorld('wave5-no-writer'), 156)
     expect(world.psychologistHired, 'nobody hired him').toBe(false)
     expect(world.psychologistRung, 'the dial did not move').toBe(1)
     expect(world.psychologistFocus, 'no year was chosen').toBeNull()
     expect(world.psychologistFocusSeason, 'so no season holds a pick').toBeNull()
-    expect(world.wallsLean, '⚠ NO LEANING PASS EXISTS YET – T7 builds it').toEqual({ open: 0, reg: 0 })
-    expect(world.wallsFlipped, '⚠ AND NO FLIP HAZARD – also T7').toEqual({ open: false, reg: false })
+    expect(world.wallsLean, '⚠ the pass ran every week and she never left her nature').toEqual({ open: 0, reg: 0 })
+    expect(world.wallsFlipped, '⚠ so nothing ever armed, and nothing flipped').toEqual({ open: false, reg: false })
+    // ⚠ AND THE BOND IS WHY, stated rather than implied – the claim above is about a caring career and
+    // would be false of a grinding one, which is T7's own test file's business.
+    expect(world.bond, 'her bond never left the caring band').toBeGreaterThanOrEqual(ECONOMY.bond.band.steady)
   }, 120_000)
 })
 
@@ -607,10 +663,18 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       // the hysteresis exists to abolish. So the leaning has no reader at all on this tree and the
       // flip has exactly one – which is a stronger statement than «three files each» and is why the
       // two lists are written out separately instead of averaged into one.
-      const expected = key === 'wallsFlipped'
-        ? [WRITERS[0], 'engine/spirit.ts', WRITERS[1], WRITERS[2]]
-        : WRITERS
-      expect(named, `${key}`).toEqual(expected)
+      //
+      // ⚠⚠ RE-AIMED 13.09 BY WAVE 5's T7, AND THE ASYMMETRY THE PARAGRAPH ABOVE DESCRIBES HAS CLOSED
+      // BY DESIGN. It went RED – «wallsLean: expected [4 entries] to deeply equal [3]» – the week
+      // `driftWalls` landed, because the LEANING acquired its writer and its only reader in the same
+      // commit, and both are `engine/spirit.ts`. So the two lists are now identical: three writers
+      // plus exactly one module that touches either wall. ⚠ WHAT IS NOT WEAKENED: the list is still
+      // EXACT and still ordered, so a second module learning to name either key is red, and the
+      // no-surface sweep below is untouched. What the old text said about the flip having a reader
+      // and the leaning having none was a statement about the WAVE's order, not about the design –
+      // §2a's rule is «no reader and no line ever SEES the leaning», and a pass that maintains it is
+      // not a surface.
+      expect(named, `${key}`).toEqual([WRITERS[0], 'engine/spirit.ts', WRITERS[1], WRITERS[2]])
     }
     // ...and neither wall is on the wire, which is the other half of the same claim: no component,
     // store or composable can be reading a field the snapshot does not carry. §2a is explicit that
