@@ -770,12 +770,19 @@ export function coachEdgePlacement(seed: string, coachId: string | null): CoachE
   return 'upper'
 }
 
-/** THE ELITE GATE, and it is OFF by default (ECONOMY.coach.eliteGate.enabled). The owner asked for
- *  it as an option: an Elite coach does not take a fourteen-year-old with nothing to show, so the
- *  top rung becomes something earned rather than something rich families buy in week 1.
+/** THE ELITE GATE, and it is ON since wave 5 T13 (owner, 13.09: «elite gate включим здесь же»). He
+ *  asked for it as an option first, so it shipped modelled and switched off; the flag is turned now.
+ *  An Elite coach does not take a fourteen-year-old with nothing to show, so the top rung is
+ *  something earned rather than something rich families buy in week 1.
  *
  *  Every surface asks THIS - the market's row state, the hire command's refusal and the screen's
- *  lock - so turning it on is one flag and not a hunt. */
+ *  lock - so turning it on was one flag and not a hunt. That the three agree for every state is
+ *  swept in `tests/wave5-elite-gate.test.ts`, and the screen's own four readers in
+ *  `tests/component/wave5-elite-gate-row.test.ts`.
+ *
+ *  ⚠ IT GATES THE HIRE, NOT THE HAVING. `openingCoachId` never asks it - but the wizard offers only
+ *  `self` and `middle`, so no shipped career opens on the elite rung and the seam is latent. See the
+ *  ⚠ block on `ECONOMY.coach.eliteGate` for the whole of it. */
 export function coachHireable(coach: Coach, kidPoints: number): boolean {
   const gate = ECONOMY.coach.eliteGate
   if (!gate.enabled || coach.tier !== 'elite') return true

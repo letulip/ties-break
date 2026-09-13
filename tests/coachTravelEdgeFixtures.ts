@@ -66,6 +66,44 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⚠ WAVE 5's T13 (13.09.2026) – THE ELITE GATE WENT ON AND **NOT ONE CONSTANT IN THIS FILE MOVED.**
+// NO RE-STAMP. `rngMain` BYTE-IDENTICAL ON ALL FIVE CELLS. THE FROZEN MAIN CAPTURE UNMOVED.
+// =================================================================================================
+//
+// `ECONOMY.coach.eliteGate.enabled` false -> true (the owner's 13.09 word). Per-key diff taken FIRST,
+// with the control the change NEUTRALISED IN PLACE – the flag toggled inside one process, which is
+// this file's own «your commit with your change reverted» for a change that IS one boolean.
+// `tools/frozen-key-diff.ts` on the five live cells, each header read back against its invocation
+// (the zsh word-split this file warns about fired on the first attempt and produced five captures all
+// headed `# preset 0 policy 1`; they were thrown away and re-taken with explicit flags):
+//
+//   · 5/0 `FROZEN.middleGrinder`     – **0 keys of 72. Byte-identical.**
+//   · 8/0 `FROZEN.eliteGrinder`      – **0 keys of 73. Byte-identical.**
+//   · 0/1 `FROZEN.selfTravelling`    – **0 keys of 74. Byte-identical.**
+//   · 6/1 `PRE_R28B.highPlayer`      – **0 keys. Byte-identical.**
+//   · 5/1 `PRE_R28B.middlePlayer`    – **0 keys. Byte-identical.**
+//
+// ⚠⚠ AND RULING K SAYS A ZERO IS ONLY WORTH ITS ARM, SO HERE IS THE ARM, MEASURED. The reason is not
+// that the gate is inert; it is that **the 156-week horizon ends 154 weeks before the corpus reaches
+// the gate at all**:
+//
+//   · three cells never call `hireCoach` in the freeze – 5/0 and 8/0 run the grinder policy, whose
+//     `coachSeasonReview` is false so `reviewCoach` returns on its first line; 0/1 is self-coached
+//     and returns at `born === 'self'`;
+//   · 6/1 and 5/1 call it ONLY to RELEASE (`hireCoach(world, null)` takes the early-return arm and
+//     never reaches the gate), at weeks 83 and 101, and neither was born on the elite rung;
+//   · the ONE pairing that does reach an elite RE-HIRE is **preset 8 x policy 1**, which is not a
+//     frozen cell. It takes an elite coach back on **week 310 at 0 domestic points** – precisely the
+//     case the gate exists for. Run under the same per-key hash: at 156 weeks it moves **0 of 84**
+//     keys; at 400 weeks it moves **30 of 85**, and `rngMain` is byte-identical even there, which is
+//     the STOP condition confirmed from the side where the gate actually bites: a refused hire is a
+//     command, not a roll.
+//
+// So this zero is a coupling detector and nothing more, exactly as rulings K and R say. The gate's
+// own behaviour is pinned in `tests/wave5-elite-gate.test.ts` (§C carries this arm as a case, so it
+// cannot rot into a green that means nothing) and on a real screen in `e2e/elite-gate.spec.ts`.
+
+// =================================================================================================
 // ⭐⭐⭐ RE-STAMPED FOR WAVE 5's T1 (13.09.2026, SCHEMA v76) – ELEVEN CONSTANTS, WHICH IS WHAT A SCHEMA
 // MOVE COSTS IN THIS FILE NOW THAT `PRE_R28B` CARRIES FIVE CAREERS. EVERY `PRE_V*` RUNG HELD,
 // `rngMain` IS BYTE-IDENTICAL ON ALL FIVE CAREERS, `temperament` IS BYTE-IDENTICAL ON ALL FIVE, AND

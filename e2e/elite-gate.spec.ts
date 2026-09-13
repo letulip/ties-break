@@ -1,0 +1,149 @@
+// JOURNEY: THE TOP RUNG IS EARNED – A LOCKED ELITE ROW, IN A REAL BROWSER, ON A REAL CAREER.
+//
+// SEAM OWNED: #5 (the screen reading the engine), with #1 (the worker boundary) carrying it. ⭐ THE
+// ONE NEW CASE WAVE 5 T13 OWES for the elite gate (the owner's 29.08 rule: one e2e case per shipped
+// mechanic), and ruling H names it in as many words: «e2e gains the locked-row case».
+//
+// WHAT ONLY THIS LAYER CAN SAY. Both halves of the mechanic are pinned below already – the engine's
+// three surfaces swept in tests/wave5-elite-gate.test.ts, the screen's four readers mounted in
+// tests/component/wave5-elite-gate-row.test.ts. What neither can say is that the number crosses the
+// WORKER: the gate is evaluated inside the worker's world, travels as `CoachMarketRow.lockedPoints`
+// through a structured clone, and is the thing a player's finger meets. A mounted component is handed
+// a snapshot somebody constructed; this one is handed a career that a worker built from bytes.
+//
+// ⚠ THE BAR IS WRITTEN OUT, NOT IMPORTED. `ECONOMY.coach.eliteGate.minPoints` lives in the engine and
+// tsconfig.e2e.json's own header forbids this project from reaching it («what must never be listed is
+// anything that reaches the engine»). So 150 is longhand here – and the unit layer owns the claim
+// that the constant IS 150, exactly as it owns the arithmetic behind `formatCents`.
+const MIN_POINTS = 150
+
+// ⚠ NO STRING BELOW IS THIS WAVE'S. «{n} pts short» and «locked, {n} ranking points short» were both
+// written when the gate was built; the flip is what made them reachable by a player. They are
+// transcribed here rather than imported for the same reason the plaque sentences are transcribed in
+// tests/component/round21-coach.test.ts: a change to either has to be deliberate.
+//
+// -------------------------------------------------------------------------------------------------
+// ⭐ THE ARMS, WRITTEN DOWN (the standing rule since wave 2). Each was made against the ENGINE, this
+// file RUN in a real browser against it, and then reverted; the red assertion is named. Control green
+// first, and again between each one.
+//
+//   A. `ECONOMY.coach.eliteGate.enabled` back to `false` – the flip undone.
+//      -> RED, 1 of 2, in the FIRST test: no row carries «pts short» and the locked count is 0. The
+//         second test stays GREEN, which is the separation that makes it a control rather than a
+//         copy: `sinking` is above the bar and reads the same screen under either flag.
+//   B. `coachMarket`'s `lockedPoints` pinned to `null` – the row surface alone.
+//      -> RED, 1 of 2, same place and for the same reason as A. This page cannot tell the two apart,
+//         and that is honest: from a finger's point of view they are the same screen.
+//   C. the template's `:disabled` back to `r.current` alone – the BUTTON alone.
+//      -> RED, 1 of 2, on `toBeDisabled()` only: the copy is still right and the name still says
+//         locked, and the row is pressable. That is the R10-16 defect in its purest form, and this
+//         is the assertion with eyes for it.
+//   D. `rowLabel`'s locked arm dropped to the hire word.
+//      -> RED, 1 of 2, on the accessible name alone – the sighted half of the screen is untouched,
+//         which is exactly why the name is asserted separately from the action word.
+//
+// ⚠⚠ AND THE FIXTURE'S REACHABILITY IS ASSERTED BEFORE ANYTHING IS READ OFF THE SCREEN. Ruling O's
+// second blind spot, one layer up: «a fixture that cannot reach the case is a green that means
+// nothing». `junior` holds 0 domestic points at week 120 and `sinking` holds 333 – both read from the
+// MANIFEST, which is generated from the career itself, so neither test can go vacuous if a
+// regeneration moves a fixture across the bar. It would go RED instead, naming the number.
+
+import type { Page } from '@playwright/test'
+import { test, expect } from './careerAt'
+import { answerOpeningKnock, dismissTourBriefing } from './journey'
+
+/** The Coach Market's door on Home – the route a player uses, by role and accessible name (the same
+ *  locator `e2e/stations.ts` walks). */
+const COACH_NOTE = { name: 'Coach note - open the Coach Market' }
+
+/** The market list lives behind the screen's second tab.
+ *
+ *  ⚠ PRESSED EXPLICITLY RATHER THAN RELIED ON. The screen opens on Coaches BY ITSELF for a career
+ *  that has a coach (round-18 #3) – and `junior` has none: the player policy let him go before week
+ *  120, so that career lands on «Her week» and the market is one press away. Discovered by this spec
+ *  failing on a page whose own snapshot said «I coach her myself», which is a better reason to press
+ *  the tab than tidiness: the route has to be the route from wherever the career actually is. */
+async function openCoaches(page: Page): Promise<void> {
+  await page.getByRole('button', { name: 'Coaches', exact: true }).click()
+  await expect(page.getByRole('button', { name: /tier,/ }).first()).toBeVisible()
+}
+
+test.describe('the elite rung is locked until she has results', () => {
+  test('junior: below the bar, every Elite row says how far short and cannot be pressed', async ({
+    page,
+    careerAt,
+  }) => {
+    const { facts } = await careerAt('junior')
+
+    // 1 – THE FIXTURE REACHES THE STATE. Asserted from the manifest, before the screen is opened.
+    expect(
+      facts.domesticPoints,
+      `junior is meant to sit below the elite gate's ${MIN_POINTS}-point bar`,
+    ).toBeLessThan(MIN_POINTS)
+    const short = MIN_POINTS - facts.domesticPoints
+
+    // 2 – the route a player takes. ⚠ THE DOORWAY FIRST: `junior` boots holding an unanswered knock
+    // (that is what the fixture is FOR – see journey.ts's own note), and the modal intercepts every
+    // click on Home. Stepped through, never asserted here; week-advance.spec.ts owns that canary.
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+    await page.getByRole('button', COACH_NOTE).click()
+    await expect(page.getByRole('heading', { name: 'Coach Market', level: 2 })).toBeVisible()
+    await openCoaches(page)
+
+    // 3 – THE LOCKED ROWS. Found by the accessible name, which is the reading a screen reader gets,
+    // and there is more than one of them: the roster carries four Elite coaches and every one of them
+    // is short the same number, because the bar is about HER and not about the man.
+    const locked = page.getByRole('button', { name: new RegExp(`locked, ${short} ranking points short`) })
+    const count = await locked.count()
+    expect(count, 'the screen really drew locked rows').toBeGreaterThan(0)
+
+    for (let i = 0; i < count; i++) {
+      const row = locked.nth(i)
+      // ...it is an Elite row, and nothing else is locked: the name carries the tier.
+      await expect(row).toHaveAccessibleName(/Elite tier/)
+      // ...the sighted half says the same thing, in the card's own shorter words.
+      await expect(row).toContainText(`${short} pts short`)
+      // ...and R10-16's own half: a refused control is actually refused.
+      await expect(row).toBeDisabled()
+    }
+
+    // 4 – AND ONLY ELITE. A lock on a rung the gate is not about would be the same defect pointing the
+    // other way, and the count is what says so: every locked row on this screen is one of the four.
+    const anyLocked = page.getByRole('button', { name: /locked, \d+ ranking points short/ })
+    expect(await anyLocked.count(), 'nothing below the top rung is gated').toBe(count)
+  })
+
+  test('sinking: past the bar, the same screen locks nothing – the money is a separate refusal', async ({
+    page,
+    careerAt,
+  }) => {
+    const { facts } = await careerAt('sinking')
+
+    // 1 – THE CONTROL REACHES ITS OWN STATE, and it is the other side of the same bar.
+    expect(
+      facts.domesticPoints,
+      `sinking is meant to sit at or above the elite gate's ${MIN_POINTS}-point bar`,
+    ).toBeGreaterThanOrEqual(MIN_POINTS)
+
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+    await page.getByRole('button', COACH_NOTE).click()
+    await expect(page.getByRole('heading', { name: 'Coach Market', level: 2 })).toBeVisible()
+    await openCoaches(page)
+
+    // 2 – THE RUNG IS ON THE SCREEN. Without this the absence below would prove nothing at all: a
+    // market that drew no Elite row would pass an assertion about no Elite row being locked.
+    const elite = page.getByRole('button', { name: /Elite tier/ })
+    expect(await elite.count(), 'the market really offers the rung the gate is about').toBeGreaterThan(0)
+
+    // 3 – ...and not one row is locked. She has results; the bar is behind her.
+    await expect(page.getByRole('button', { name: /ranking points short/ })).toHaveCount(0)
+    await expect(page.getByText(/pts short/)).toHaveCount(0)
+
+    // 4 – THE MONEY IS STILL A REFUSAL AND IT IS A DIFFERENT ONE. `sinking` is a working family under
+    // water, so the top rung is over budget – flagged, never gated (round 21 #12's own ruling). Two
+    // refusals, two sentences, and this is the career that proves they are not the same sentence.
+    await expect(page.getByRole('button', { name: /over budget by/ }).first()).toBeVisible()
+  })
+})

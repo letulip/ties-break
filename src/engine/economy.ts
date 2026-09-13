@@ -645,23 +645,39 @@ export const ECONOMY = {
     // plays, so he is never wrong for it and never a specialist in it.
     selfFit: 'good' as 'great' | 'good' | 'off',
 
-    // THE ELITE GATE - A HOOK, AND IT IS OFF. Owner: «элит, кстати, могу вообще стать доступны для
-    // туров, как вариант и стоит соответствующе». The idea is that an Elite coach does not take a
-    // fourteen-year-old with nothing to show, which would turn the top rung from "what rich families
-    // buy in week 1" into something earned - the same shape as the academy scholarship.
+    // THE ELITE GATE - AND IT IS ON (owner, 13.09: «elite gate включим здесь же», wave 5 T13).
+    // Owner, when it was built: «элит, кстати, могу вообще стать доступны для туров, как вариант и
+    // стоит соответствующе». The idea is that an Elite coach does not take a fourteen-year-old with
+    // nothing to show, which would turn the top rung from "what rich families buy in week 1" into
+    // something earned - the same shape as the academy scholarship.
     //
-    // He asked for it to be an OPTION, so it is modelled and switched off: flip `enabled` and the
-    // gate is live everywhere at once (the market's hireable check, the hire command's refusal and
-    // the screen's locked row all read `coachHireable`). `minPoints` is her EARNED ranking points,
-    // the same number the tier ladder gates on, and 150 is national-tier eligibility - "she has
-    // results" stated in the currency the rest of the game already uses.
+    // He asked for it to be an OPTION first, so it was modelled and switched off, and this is the
+    // flag being turned: the gate is live everywhere at once (the market's hireable check, the hire
+    // command's refusal and the screen's locked row all read `coachHireable`). `minPoints` is her
+    // EARNED ranking points, the same number the tier ladder gates on, and 150 is national-tier
+    // eligibility - "she has results" stated in the currency the rest of the game already uses.
+    //
+    // ⚠ IT GATES THE HIRE, NOT THE HAVING - a latent seam, and it is named because it was CHECKED
+    // rather than assumed. `coachHireable` is asked by `hireCoach`, by the market row's `lockedPoints`
+    // and by the screen's lock: all three are surfaces of the HIRING DECISION. `openingCoachId` asks
+    // nothing - it reads `bestFitCoachAt` and stops - so a career that OPENED on the elite rung would
+    // keep its coach through the flip.
+    //
+    // ⭐ AND NO SHIPPED CAREER CAN: `OnboardingWizard`'s `COACH_OPTIONS` offers exactly two rungs,
+    // `self` and `middle`, so the top rung has never been something a player could pick in week 1 -
+    // which is why this is a seam and not a hole, and why T13 leaves it alone. The only trees that
+    // reach it are `tools/econ-bench.ts`'s presets (a bench sets `coachTier` at birth) and a v22-or-
+    // older save whose profile carried a rung this wizard does not offer. If the wizard ever grows an
+    // Elite tile, this is the line that has to be read first - onboarding would need its own answer
+    // (a refusal, a fallback rung, or the rung hidden until she has results), which is a second
+    // mechanic and the owner's call, not this flag's.
     //
     // ⚠ DOMESTIC POINTS, since the two ladders landed. 150 is literally
     // TIERS.national.enterPointBand[0], so the domestic table is the one that keeps this number
     // meaning what it was written to mean. Do not repoint it at the ITF table without moving the
     // threshold too: an ITF gate would make the Elite rung reachable only by families who could
     // already afford to fly, which is the shape the gate exists to prevent.
-    eliteGate: { enabled: false, minPoints: 150 },
+    eliteGate: { enabled: true, minPoints: 150 },
 
     // WHAT A RUNG IS WORTH TO HER, RIGHT NOW - the projection screen T prints on every coach row.
     // Owner: «"budget может добавить 0-2%", "middle 1-3%", "high 2-4%" но всё зависит от ребенка».
