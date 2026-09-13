@@ -769,3 +769,55 @@ and priced at T10.
   by the clamp below it – so removing either alone leaves the claim true and neither alone is
   catchable. The arm that removes BOTH goes 3 RED. Defence in depth is not redundancy to be tidied
   away, but it has to be measured as a pair or the ledger is a lie.
+
+## The architect's acceptance of T7's three changes (13.09)
+
+T7 changed three things I had ruled. All three are **accepted**, and the record should say so
+rather than leave a builder's assertion standing beside an architect's ruling that contradicts it.
+
+**1. The un-flip threshold is SIGNED along her own armable direction – accepted, and it fixes a
+hole I put there.** Ruling N said `|lean| <= flipRelease`. On three quarters of the cases my own
+examples reach, the absolute and signed readings are identical, which is why it read as correct.
+They part in exactly one place: a born-private girl who **grew** past +`flipArm`, flipped to
+expressed-open, and was then kicked down through the release band and past −`flipRelease`. Under
+the absolute reading she is **stuck expressed-open with deep walls** – the girl who stopped telling
+anyone anything, still read by every mechanic as the open one – until she is walked back UP to −40.
+And it is not a corner: the release band is ~53 weeks wide at `risePerWeek`, so a 5%/week hazard
+misses the whole crossing about **6.6%** of the time. Every sentence of ruling N survives; the
+collapse now un-does the flip it was a collapse from.
+
+**2. `ECONOMY.life.walls.leanMax = 100` – accepted as a PROPOSAL, and the finding behind it goes to
+the owner.** ⚠ **who-she-is §2a's «the road back always exists» is arithmetically false without a
+cap.** Unbounded, 300 grinding weeks reach a lean of −450 and the free walk home is about nine
+years – longer than the game. The cap is sized so the deepest hole is ~2 seasons of free repair
+plus ~60 weeks back to the release band, which keeps ruling N's «walked back to 0 before a point of
+growth can be bought» meaning something. This is a correction to the SPEC, not to the brief, so it
+is the owner's to confirm: **the promise he ruled on was unreachable as written, and the cap is
+what makes it true.**
+
+**3. The universal constants live in `ECONOMY.life.walls`, not `ECONOMY.psychologist` – accepted,
+and the reasoning is better than my §4 heading.** The seven walls numbers run on **every** career,
+including every career that never hires. Filed under the seat's price list they would read as a
+paywall in the one place §0.3 says there is none («repair is free»). The three that really are the
+seat's – the ×0.75, the ×1.5 and the hazard scale – stay in `ECONOMY.psychologist`, and T2's census
+pin was re-aimed to make the split mechanical in both directions.
+
+### And a fourth number for ruling M's list, which T10 must predict
+
+**The tenths grid eats part of O6's ×0.75**: `roundTenth(1.5 × 0.75) = 1.1`, so the realised
+slow-down is **≈ ×0.733**. A bench predicting 0.75 will read a correct implementation as a miss –
+the same trap as the cool-head 0.9×, from a different cause.
+
+### Two instrument lessons T7 paid for, worth more than either
+
+* **A hazard pin that spot-checks ONE week is the «unable to fail» family wearing a probability.**
+  ARM 10 came in at **0 red** against a single-week check: at p = 0.05 two different hazard
+  constants agree on ~19 weeks in 20, so the spot check passes against the wrong constant almost
+  always. Widened to a 240-week vector, the same arm reds. Ruling L's «widen the walk» in a second
+  costume.
+* **Ruling L's blind spot, measured a THIRD time.** ARM 7 – a second `rng()` on the SAME key –
+  went 3 red on the value checks while **the count-keys net stayed green**. Three sightings in one
+  wave is not a quirk of one test; it is what the instrument does.
+
+⚠ And the notification lied a **ninth** time: «exit code 0» over a unit run whose own log read
+`UNIT_EXIT=1`, with four failures.
