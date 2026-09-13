@@ -410,3 +410,38 @@ convergent effect this wave ships (the recovery slope, the composure walk toward
 reaches anyway, the walls repairing to 0) is exactly that shape. The corpus is not the instrument
 for them; T10's paired arms are, and a zero from the corpus must never be reported as if it were
 one from the bench.
+
+### Ruling J, corrected by T4b – the rule is the college arrow, not `spirit.ts`
+
+Ruling J closed with «T5, T6 and T7's other readers do NOT have this cycle». **Measured and false.**
+T4b walked the tree's own value-import graph (type-only clauses excluded, re-run with
+`export … from` counted as edges – same answer):
+
+* `engine/development.ts` – **T5's site** – closes **six** cycle paths, the shortest
+  `psychologist → college → development`, and it closes on a VALUE: `world/college.ts:23` imports
+  `SKILL_KEYS` and spends it at `:173`.
+* `world/lifeBeat.ts` (T6) and `world/medical.ts` close **zero**.
+
+So the rule is not «`spirit.ts` is special». It is: **a focus pass that sits UNDER `world/college.ts`
+in the import graph must be handed the fact; one that does not may import
+`psychologistWorksThisWeek` directly, the masseur's own way.** T4b confirmed the `spirit.ts` cycle
+rather than taking it from me – both back-edges live, and cutting `bondBandOf` leaves the college
+one, measured by cutting it and re-walking.
+
+⚠ **T5's shape is probably cheaper than `spirit.ts`'s and must be verified before it is assumed.**
+`growWeek` takes an **object** argument (`development.ts:682`), and `growAndLive` lives in
+`world/phaseGrowth.ts:50` – which is not under `college.ts`. So the fact can be computed in
+`growAndLive` and handed down as one more field, with **no arity change and no pin re-aim
+anywhere**. T5 runs the same graph walk before relying on this.
+
+**And «two guard pins re-aim» was wrong: there are FOUR.** `tests/wave4-ends.test.ts:610` and
+`tests/wave4-ended-beat.test.ts:257` carry the same `code.indexOf('accrueSpirit(world)')` anchor
+inside helpers several cases call – found by an arm going red, not by a grep of mine.
+
+**The re-aim held its purpose rather than its number.** The arity line stayed but the no-Rng claim
+moved onto the signature itself: an arm that retyped the parameter `boolean → Rng` **with arity
+unchanged at 2** goes red on the signature assertion and green on a renumbered arity pin. That is
+the difference between a pin and a number.
+
+⚠ And the notification lied a fifth and sixth time this wave – twice over killed `check` runs, the
+second with its own log reading `CHECK_EXIT=143`.
