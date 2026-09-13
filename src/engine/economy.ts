@@ -618,11 +618,17 @@ export const ECONOMY = {
       'all-court': ['aggressive', 'counterpuncher', 'serve-first'],
     } as Record<PlayStyle, PlayStyle[]>,
 
-    // ...and what a pill is worth on the development rate. Deliberately SMALL next to the rung
-    // ladder (which spans 1.40 end to end): fit is a reason to prefer one affordable coach over
-    // another, never a reason to buy up a rung. At these values a Budget coach who is great for her
-    // (0.95 x 1.05 = 0.998) just edges a Middle coach who is wrong for her (1.04 x 0.94 = 0.978),
-    // which is exactly the size of trade the pills are meant to be advertising.
+    // ...and what a pill is worth on the development rate. WIDER than the rung ladder since round
+    // 38 #17, not smaller: fit spans x1.67 (1.25/0.75) against x1.21 across the hireable rungs
+    // (0.95 -> 1.15) and x1.40 across the whole ladder including the parent (0.82 -> 1.15). So the
+    // pill REORDERS the market rather than breaking ties inside it, and in BOTH directions. A
+    // Budget coach who is great for her (0.95 x 1.25 = 1.1875) out-teaches a Good-fit Elite coach
+    // (1.15 x 1.00 = 1.15), so the match is now a reason NOT to buy up a rung; and an Off-style
+    // coach on the bottom two rungs (0.7125, 0.78) teaches SLOWER than the parent's own 0.82 while
+    // being billed every week for it. The second of those is the `under-self` band the coach card
+    // prints; the first is the join that card cannot make, since it shows the two multiplicands
+    // separately and multiplies them nowhere - see the profile lens in engine/world/coachMarket.ts.
+    // All twelve cells are pinned in tests/wave5-coach-profiles.test.ts §A.
     /** ⭐⭐⭐ ROUND 38 #17 (07.09) – THE SPAN WIDENS 1.05/0.94 -> 1.25/0.75, AND IT IS THE HALF THAT
      *  MAKES THE THREE ROUTES DIFFERENT.
      *
