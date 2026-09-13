@@ -479,6 +479,28 @@ export const HEAVY_UNIT_FILES = [
   'tests/goldenSaves.test.ts',
   'tests/goldenSaves-quote.test.ts',
   'tests/goldenSaves-peak.test.ts',
+  // ⚠ 13.09: THE NEXT ONE CROSSED, AGAIN – the third firing of the prediction above, and this one
+  // was ALREADY ON THE TABLE: round26-world-speaks is the «31.9 -> 12» row of the 08.09 reading,
+  // measured AT the ~32 s line and left in the pool because its solo was 12 s. The deploy gate
+  // (deploy.yml runs the FULL `npm test` on two cores) failed on main at `4ceb7c0d` – the first
+  // full run after BOTH merges (#136 wave 4, #137 round 41) – on exactly one test, «round 26 #5b …
+  // names the cents that left», timed out at 20 s with ZERO assertion failures: the infrastructure
+  // outcome the birthday-career block above names, with its remedy (a process, never a raised
+  // per-test timeout). Measured before moving, solo, `npx vitest run --project unit`:
+  //
+  //     4ceb7c0d (main, both merges in)   16.8 s
+  //     f45ae259 (before either merge)    17.5 s
+  //
+  // The two merges cost this file NOTHING solo – the A/B says so – and the growth from 12 s to
+  // ~17 s predates them (wave 3's per-tick life hazards walk all twelve seasons of the #5b career).
+  // What crossed the line today is the POOL: the failing run held 267 files / 5,079 tests, the two
+  // branches' suites newly in it, and a 17-second twelve-season walk in a contended two-core pool
+  // is past a 20-second per-test budget on scheduling luck alone. Solo it projects ~32–38 s at
+  // CI's ~1.9–2.24x – under birpc's 60 s window with margin – so the file moves WHOLE, no seam cut.
+  // ⚠ An in-pool re-measure was NOT taken for this entry: the wave-5 builder was live on this
+  // machine, and an in-pool number under agent load is the documented false-verdict shape – the
+  // deploy log's own timeout IS the in-pool reading that counts.
+  'tests/round26-world-speaks.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.
