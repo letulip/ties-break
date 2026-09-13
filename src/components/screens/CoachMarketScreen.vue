@@ -55,7 +55,12 @@ import { COACH_TIER_LABEL, coachHoursForPlan, HIREABLE_TIERS, styleFitBetween, t
 // wrote the room note with, read here so the split cannot drift from the join. Neither touches a world,
 // draws anything, or knows what a career is - see their notes in the engine for why the blurb could not
 // simply ride on `CoachMarketRow` this wave.
-import { coachBlurb, coachRoomBand } from '../../engine/world/coachMarket'
+// ⭐⭐ WAVE 5 T12 – `coachProfileNote` JOINS THEM, AND IT IS THE SAME KIND OF THING: a pure lookup
+// keyed on data the row already carries (`r.tier`, and the fit the pill is drawn from), with no world
+// in it and no draw behind it. It is imported rather than composed here for `coachRoomBand`'s own
+// reason – the sentence is the engine's, this file prints it – and it is SPLIT with the same splitter,
+// so the card grows no second `indexOf` on a string it does not own.
+import { coachBlurb, coachProfileNote, coachRoomBand } from '../../engine/world/coachMarket'
 // ⭐ ROUND 29 #13 – the ONE function that answers "what does a finish pay the staff", imported for the
 // same reason `coachBlurb` above is: it is a pure read of `ECONOMY` with no world in it, and the
 // alternative is typing two percentages into a template where nothing could ever check them against
@@ -468,15 +473,28 @@ function toggleSort(): void {
 // --- rows ---------------------------------------------------------------------------------------
 interface Row extends CoachMarketRow {
   fitNow: StyleFit
+  /** ⭐⭐ WAVE 5 T12 – THE PROFILE, SPLIT THE ROOM NOTE'S WAY. Two view fields and not a protocol
+   *  member: the sentence is a pure function of `tier` and `fitNow`, both of which this row already
+   *  holds, so putting it on `CoachMarketRow` would ship a field whose value the screen can compute
+   *  and would freeze it against the STYLE LENS - the preview would keep saying what her own game
+   *  reads while the pill beside it said something else. `fitNow` is the lens's own value, which is
+   *  what makes the two halves one answer. */
+  profileBand: string
+  profileTail: string
 }
 const FIT_RANK: Record<StyleFit, number> = { great: 0, good: 1, off: 2 }
 
 const rows = computed<Row[]>(() =>
-  (game.snapshot?.coachMarket ?? []).map((r) => ({
-    ...r,
+  (game.snapshot?.coachMarket ?? []).map((r) => {
     // Her own style is the engine's answer; any other style is the same rule, re-read here.
-    fitNow: styleLens.value === null ? r.fit : styleFitBetween(r.style, lensStyle.value),
-  })),
+    const fitNow = styleLens.value === null ? r.fit : styleFitBetween(r.style, lensStyle.value)
+    // ⚠ THE SPLIT IS `roomBand` / `roomTail`'s, to the character: the label is the engine's own first
+    // clause and the tail is the REST OF THE ENGINE'S STRING, separator and all, so `band + tail`
+    // is the note the engine wrote and a test can assert exactly that.
+    const note = coachProfileNote(r.tier, fitNow)
+    const profileBand = coachRoomBand(note)
+    return { ...r, fitNow, profileBand, profileTail: note.slice(profileBand.length) }
+  }),
 )
 
 interface TierGroup {
@@ -1041,6 +1059,22 @@ function scrollToTier(tier: CoachTier): void {
                  the engine cuts both from the tier table without reading a coach id. §4 holds. -->
             <span v-if="r.edgeTravelPct" class="cm-edge-travel">{{ formatEdgeTravel(r.edgeTravelPct) }}</span>
           </span>
+          <!-- ⭐⭐ WAVE 5 T12 – THE PROFILE, AND IT IS THE CAPTION OF THE FIGURE ABOVE IT.
+               The season band is `coachSeasonUplift`, which multiplies the rung by the fit and then
+               CLAMPS the loser at zero - so an off-style coach at the bottom two rungs prints
+               "+0.0-0.0% a season" and the card has never said why. This line says it, out of the
+               same two factor tables and no others, and it sits directly under the figures because
+               that is what it explains. The label is bold and the rest is the engine's own sentence,
+               split the way the room note above the list is split - see `profileBand`.
+
+               ⚠ IT IS NOT AND MAY NEVER BE THE EDGE PLACEMENT. docs/specs/coach-match-edge.md §4
+               and §9c keep WHERE IN HIS BRACKET a coach fell off every unhired card - «still a third
+               of a corridor and never a number» is what a season of employing one buys - and a
+               profile that leaked it would make the whole market readable by looking. Nothing here
+               reads a coach id, exactly as `edgePct` beside it reads none. -->
+          <span class="cm-profile"
+            ><strong class="cm-profile-band">{{ r.profileBand }}</strong>{{ r.profileTail }}</span
+          >
           <!-- WHEN THAT SECOND FIGURE APPLIES, said once and on her own coach's card only. The
                helping follows the FARE, which stays home for the rungs that pay no prize money unless
                the family has opened that stance too - so "the corridor is doubled" would be a claim
@@ -1132,5 +1166,28 @@ function scrollToTier(tier: CoachTier): void {
   font-size: 10.5px;
   line-height: 1.35;
   color: var(--muted);
+}
+/* ⭐⭐ WAVE 5 T12 – THE PROFILE TAKES `.cm-load`'s TREATMENT, to the value, for `.cm-blurb`'s own
+   reason one rule up: it is quiet prose under the figures and it must not argue with the uplift,
+   which is still the card's headline. The ONE difference from `.cm-blurb` is the 2px above, copied
+   from `.cm-load`: this line separates itself from the FIGURES it captions, exactly as the load note
+   separates itself from the block above it.
+
+   ⚠ THE LABEL IS BOLD AND NOTHING ELSE MOVES. `.cm-room-band` one screen up carries no rule of its
+   own either - a `<strong>` is the whole device, which is what round-23 #1 asked for (the owner's
+   words are beside `coachRoomNote` in the engine) and what keeps the two split lines reading as one
+   idiom. ⚠⚠ AND THIS COMMENT CARRIES NO CYRILLIC, THOUGH THE HOUSE RULE ALLOWS IT IN A STYLE BLOCK:
+   `tests/round13-nav.test.ts` cuts THIS screen's template with `after(market, '<template>')`, which
+   runs to the END OF THE FILE - so the style block is swept as though it were template. That file's
+   own note predicted it («the idiom elsewhere in this suite slices to the end of the file, which
+   happens to work only because those components have no Cyrillic in their `<style>`»), and this
+   would have been the first rule to make it bite. No colour step and no accent either: an
+   off-style verdict painted in the accent would read as good news, and a profile that praised or
+   blamed would break the register `PLACEMENT_PHRASE` is held to one card element away. */
+.cm-profile {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--muted);
+  margin-top: 2px;
 }
 </style>
