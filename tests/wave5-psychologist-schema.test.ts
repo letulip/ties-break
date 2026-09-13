@@ -613,12 +613,23 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // ⚠ `includes('psychologistFocus')` MATCHES `psychologistFocusSeason`, `psychologistFocusOpen`
     // and `psychologistFocusDetail` TOO, by substring – which is the honest superset for this claim
     // and the reason the list below is not the snapshot's member list.
+    //
+    // ⚠⚠ RE-AIMED AGAIN BY T4, AND THE EIGHTH ENTRY IS THE ONE THE NOTE ABOVE PROMISED WOULD COME.
+    // WHAT MOVED: `engine/spirit.ts` joined the list. WHY: T3 shipped a decision that did nothing,
+    // and its own comment said so – «the recovery slope inside `accrueSpirit` (T4), the bounded
+    // composure walk (T5) …». T4 is the first of the four to land, and `accrueSpirit` is where the
+    // wave brief and §0.1 both put it («the ONE writer of `world.spirit`»), so the focus gains its
+    // FIRST EFFECT reader and it is exactly the file the design named. T5's is `engine/development.ts`
+    // (ruling D) and T6's is `world/lifeBeat.ts` – ⚠ and THAT one will have to be argued against the
+    // fence below rather than merely added, because the fence is about what her WORDS may read and
+    // T6's draw is about the parent's ears. A ninth entry arriving anywhere else is still a finding.
     const focusNamed = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('psychologistFocus'))
       .map(([path]) => path)
-    expect(focusNamed, 'the year-focus is read where T3 put it, and nowhere else').toEqual([
+    expect(focusNamed, 'the year-focus is read where T3 put it, and where T4 spends it').toEqual([
       'components/SupportStaffTab.vue',
       'engine/migrations.ts',
+      'engine/spirit.ts',
       'engine/world/psychologist.ts',
       'engine/world/snapshot.ts',
       'engine/world/state.ts',

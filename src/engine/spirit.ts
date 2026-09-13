@@ -21,13 +21,16 @@
 //                     (pure arithmetic, ZERO draws on any stream), read ONLY by `spiritMatchFactor`
 //                     at the match seam (`world/player.ts`). No meter, no tile, no bar, no arrow.
 //
-//   `spiritShock`   – THE MARK AN ENDING LEFT (v75, wave 4's T3), `{week, kind}` or null. SET by
-//                     `rollEnds` (world/lifeBeat.ts §8) on the week an attachment ends, and CLEARED
+//   `spiritShock`   – THE MARK AN ENDING LEFT (v75, wave 4's T3), `{week, kind, weeks?}` or null. SET
+//                     by `rollEnds` (world/lifeBeat.ts §8) on the week an attachment ends, and CLEARED
 //                     here, in `accrueSpirit`'s tail, once she is back within `shockClearWithin` of
 //                     her plain baseline. ⚠ This file owns the second half only: the points it is
 //                     worth are the weekly rule's, the fact itself is the hazard's. It exists so that
 //                     wave 5's psychologist can tell a girl who is under her line from a girl who is
 //                     under her line BECAUSE somebody left – 48 looks the same either way.
+//                     ⭐ v76's T4 IS THE WAVE THAT CASHED THAT SENTENCE IN, and the optional `weeks`
+//                     is the counter it needed (ruling C): the number of weeks the recovery focus
+//                     actually worked this shock, incremented here and read once, at the clear.
 //
 //   `bond`          – THE STANDING. 0..100 in steps of 0.5, start 70. Moves ONLY on parent
 //                     DECISIONS – never on a scoreline, never on the weather – and then regresses
@@ -51,8 +54,24 @@
 // player-facing word is his). ⭐ THE PASS HAPPENED: `docs/specs/voice-bibles-2026-09.md` is approved
 // and the ladder's four cut points were ruled 09.09. So this module now also owns the two pure
 // READINGS of the numbers – `spiritBandOf` / `bondBandOf` – and the five approved words the first of
-// them names. Still no line, no pool and no component: the diary owns those, and it is handed a
-// word, a register and a band.
+// them names. Still no pool and no component: the diary owns those, and it is handed a word, a
+// register and a band.
+//
+// ⚠⚠ AND SINCE v76's T4 THIS MODULE WRITES EXACTLY ONE FEED ROW, WHICH IS THE ONE SENTENCE OF THE
+// BANNER ABOVE THAT HAD TO MOVE («still no LINE» is no longer true). It is `RECOVERY_RECEIPT`, and
+// it is here for a reason that is a property of the code rather than a preference: the recovery
+// focus's receipt is owed AT THE CLEAR, the clear happens in `accrueSpirit`'s tail, and
+// `world.spiritShock` is null by the time any caller could look. Writing it anywhere else would mean
+// a second reader re-deciding «did she come back this week», which is the shape this file refuses
+// everywhere else. ⚠ WHAT DID **NOT** MOVE: the row is written through `addEvent` like every other,
+// it carries no `amountCents` and no figure (the no-cents law), and this module still owns no pool,
+// no register table and no component – one line, at one moment, and `resolveMasseurReturn` one seat
+// over is the same idiom.
+//
+// ⚠ AND IT STILL IMPORTS NOTHING FROM `world/psychologist.ts`, WHICH IS MEASURED AND NOT ASSUMED:
+// that module imports `bondBandOf` from THIS file at runtime (its consent gate), so an import back
+// would close the value loop the `activeEpisode` note below records being caught once already. The
+// seat's three fields are read straight off `WorldState` here instead – see `shockBeingWorked`.
 import { ECONOMY } from './economy'
 import { clamp } from './condition'
 import { pickInt, rngFromSeed } from './rng'
@@ -61,7 +80,11 @@ import { schoolIsOver } from './kidLife'
 import { isBlackoutWeek, isExamWeek, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from './season/calendar'
 import { birthdayTurning } from './world/age'
 import { vacationForWeek } from './world/bookings'
-import { seasonStartWeek } from './world/ledger'
+// ⚠ `addEvent` JOINS THE `seasonStartWeek` IMPORT IN v76's T4 AND OPENS NO NEW ARROW – `world/ledger.ts`
+// is the leaf this file already reaches for, it knows `WorldState` as a TYPE ONLY, and it draws on no
+// stream (its own banner). The receipt the recovery focus prints at the clear is the one player-facing
+// ROW this module has ever written; see the ⚠⚠ note beside `RECOVERY_RECEIPT` for why it is here.
+import { addEvent, seasonStartWeek } from './world/ledger'
 // ⚠⚠ FROM `world/loveEpisodes` AND DELIBERATELY NOT FROM `world/lifeBeat`, WHICH IS WHERE IT WAS
 // DECLARED UNTIL T4. `lifeBeat.ts` imports six values from THIS file at runtime (`applyBondDelta`,
 // `bondBandOf`, `moodRegisterOf`, `spiritBandOf`, `temperamentFor`, `temperamentOpenness`), so an
@@ -411,6 +434,91 @@ function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): numbe
   return d
 }
 
+// =================================================================================================
+// 3b. ⭐⭐⭐ «BACK ON HER FEET» – THE RECOVERY FOCUS, v76's T4 (wave 5, the psychologist's year)
+// =================================================================================================
+//
+// THE WHOLE OF THE MECHANIC: while a shock the seat has ALREADY had a week to work on is live and the
+// family is paying a psychologist whose chosen year is `'recovery'`, her weekly return is
+// `returnPerWeek[intensity] + recoverySlope[rung]` instead of `returnPerWeek[intensity]`. One step,
+// the same `stepToward` clamp, the same tenths rounding, and it dies with the clear because the
+// predicate below reads the live mark. The spec's §2 row and the wave-5 brief's §2 T4.
+//
+// ⚠⚠ ONE PREDICATE, AND IT IS ONE RATHER THAN TWO ON THE ARCHITECT'S OWN CORRECTION. The first
+// drafting of ruling C said «the slope applies while a shock is live» and «the counter counts the
+// weeks it applied» – two sentences that name DIFFERENT SETS, and the difference is the landing week.
+// It matters twice, so the predicate carries `shock.week < world.week` and both readers ask THIS
+// function:
+//
+//   · THE RETURN RUNS OFF LAST WEEK'S VALUE, BEFORE THIS WEEK'S SHOCK LANDS – the 09.09 ORDER FIX is
+//     the whole reason `accrueSpirit` is shaped the way it is. On the landing week the psychologist
+//     would therefore be working a shock that has not happened yet; if she was already under her line
+//     for some other reason, that is a real and wrong speed-up of a recovery from something else.
+//   · A SHOCK CAN LAND AND CLEAR IN THE SAME WEEK – 90 − 22 = 68 is exactly the clear bar. Counting
+//     the landing week would give `weeks = 1` on a shock that cost her nothing, and the receipt would
+//     print «she came back sooner than last time» for work nobody did. The `weeks >= 1` half of
+//     `recoveryReceiptEarned` exists for precisely that world.
+
+/** ⚠⚠ THE ONE PREDICATE – the shock the seat is working THIS week, or null. Both the slope term and
+ *  the `weeks` counter read this and nothing else, which is what makes «the counter counts the weeks
+ *  the slope applied» a fact about the code rather than a claim about two conditions that happen to
+ *  be typed the same today.
+ *
+ *  ⚠ IT RETURNS THE MARK RATHER THAN A BOOLEAN so the counter can increment the very object the term
+ *  was priced from – no second lookup, no narrowing dance, and no way for the two to disagree about
+ *  WHICH shock was worked.
+ *
+ *  ⚠ `psychologistHired` AND `psychologistFocus` ARE READ STRAIGHT OFF THE WORLD, and that is the
+ *  dependency direction rather than a shortcut: `world/psychologist.ts` imports `bondBandOf` from
+ *  this file at runtime, so importing its predicates back would close a value loop (the banner's own
+ *  measurement, and the hazard the `activeEpisode` import note records being caught once already).
+ *  ⚠ THE HONEST LIMIT OF THAT, NAMED: `psychologistWorksThisWeek` ALSO stands the seat down at
+ *  college and on a booked family week, and its own comment predicts every focus pass will read it.
+ *  This one cannot, so it reads what the brief and ruling C both specify – `hired`. Carried to the
+ *  architect rather than decided here; T5-T7 live in modules with no such loop and can ask the real
+ *  predicate. Pure read, ZERO draws. */
+function shockBeingWorked(world: WorldState): WorldState['spiritShock'] {
+  const shock = world.spiritShock ?? null
+  if (shock === null || shock.week >= world.week) return null
+  if (!(world.psychologistHired ?? false)) return null
+  return (world.psychologistFocus ?? null) === 'recovery' ? shock : null
+}
+
+/** HOW MANY POINTS A WEEK OF HIS WORK IS WORTH – `ECONOMY.psychologist.recoverySlope` at the rung the
+ *  family is paying for.
+ *
+ *  ⚠ THE `??` FALLBACK IS `psychologistRungOf`'s, MIRRORED: the rung is validated at its one writer
+ *  (`setPsychologistRung`), but a hand-built probe world may hold anything, and an unknown value
+ *  falls back to the DEFAULT RUNG rather than to `undefined` arithmetic that would poison the whole
+ *  weekly sum. ⚠ The two spellings are pinned as an EQUIVALENCE in the T4 suite rather than trusted:
+ *  the slope's index and the rung `psychologistRungOf` returns are asked to agree over all three.
+ *  Pure read, ZERO draws. */
+function recoverySlopeFor(world: WorldState): number {
+  const p = ECONOMY.psychologist
+  return p.recoverySlope[world.psychologistRung ?? p.defaultRung] ?? p.recoverySlope[p.defaultRung]
+}
+
+/** ⭐⭐ MAY THE RECEIPT BE PRINTED for a shock that has just cleared – the architect's ruling C, as
+ *  one expression, exported so the pin reads the engine's own rule instead of re-typing it.
+ *
+ *  «HELD FOR AT LEAST HALF THE SHOCK'S WEEKS», where the span is `week − shock.week` at the clear and
+ *  the HELD half is the counter. ⚠ THE `weeks >= 1` GUARD IS NOT DECORATION: a shock that lands and
+ *  clears in one week has span 0, and `0 * 2 >= 0` would print a receipt for work nobody did. Pure,
+ *  total, zero draws. */
+export function recoveryReceiptEarned(shock: NonNullable<WorldState['spiritShock']>, week: number): boolean {
+  const weeks = shock.weeks ?? 0
+  return weeks >= 1 && weeks * 2 >= week - shock.week
+}
+
+/** ⭐⭐ THE RECEIPT – one no-cents feed line at the clear week, and the travelling-team §4 legibility
+ *  law made audible for this focus («you paid, and you cannot tell» is the failure).
+ *
+ *  ⚠⚠ DRAFT (CLAUDE.md invariant 4), and it is the spec's §2 own working sentence for this focus
+ *  transcribed rather than invented. NO FIGURE IN IT – the no-cents law (the wave-3 brief §0.5): the
+ *  receipt says the work showed, never what it cost or how many points it was worth. No pronoun for
+ *  the psychologist, short dash idiom, and nothing that names a session. */
+export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
+
 /**
  * ⭐⭐ THE WEEK, FOR BOTH NUMBERS. Its own call in `resolveBodyAndPlanner`, immediately after
  * `accrueCondition(world, playedThisWeek)` – never a parameter of it, because that function's
@@ -488,8 +596,17 @@ export function accrueSpirit(world: WorldState): void {
   //    ⭐ THE ONE READ OF `attachmentLift` IN THE ENGINE (T4): the target rises by it for exactly as
   //    long as `activeEpisode` returns a row, and drops back the week it stops. A target, never a
   //    bump – see the ⚠⚠ note above.
+  //    ⭐⭐⭐ AND SINCE v76's T4 THE **RATE** HAS A SECOND SUMMAND – «Back on her feet», §3b above.
+  //    ⚠⚠ IT IS THE RATE AND NOT THE TARGET, which is the whole difference between a faster return
+  //    and a second mechanic: the psychologist does not move where she is going, he shortens the walk.
+  //    The same `stepToward` still clamps it to the gap, so the slope can no more overshoot the
+  //    baseline than the standing rate can. ⚠ ONE CALL, so the term and the counter below are
+  //    provably about the same week and the same mark.
+  const worked = shockBeingWorked(world)
+  if (worked !== null) worked.weeks = (worked.weeks ?? 0) + 1
   const target = s.baseline + (activeEpisode(world) === null ? 0 : s.attachmentLift)
-  const returned = stepToward(world.spirit ?? s.baseline, target, s.returnPerWeek[intensity])
+  const rate = s.returnPerWeek[intensity] + (worked === null ? 0 : recoverySlopeFor(world))
+  const returned = stepToward(world.spirit ?? s.baseline, target, rate)
   // 2. ...and THEN what this week did to her, scaled by how hard things land on this girl.
   // 2b. ⭐⭐⭐ AND WHAT AN ENDING DID TO HER (v75 T3), ON ITS OWN TERM AND **OUTSIDE** THE SCALE – the
   //     ⚠⚠ note above the function argues it in full; the arithmetic is the one line below. The
@@ -511,7 +628,30 @@ export function accrueSpirit(world: WorldState): void {
   //    PLAIN baseline (70 − 2 = 68) and never the effective one, which is ruling D and is argued on
   //    `shockClearWithin` itself. It is checked AFTER the write above, so the week a shock lands is
   //    judged on the spirit it produced rather than on the one it replaced.
-  if (shock !== null && world.spirit >= s.baseline - s.shockClearWithin) world.spiritShock = null
+  if (shock !== null && world.spirit >= s.baseline - s.shockClearWithin) {
+    // ⭐⭐⭐ v76 T4 – AND THE RECEIPT, AT THE CLEAR AND NOWHERE ELSE. Ruling C's test, asked of the
+    //    counter this pass has been keeping: he is credited only if he worked at least HALF the weeks
+    //    the mark was on her.
+    //    ⚠ IT READS THE CAPTURED `shock`, NOT `world.spiritShock`, AND THAT IS WHAT MAKES THE ORDER
+    //    HERE FREE – measured, because the first version of this note claimed the opposite («read
+    //    BEFORE the nulling, the only order that works»). ARM 6 swapped the two statements and went
+    //    **0 RED**: the local still points at the record after the field is nulled, so nothing about
+    //    the receipt depends on which line runs first. What the receipt DOES depend on is that the
+    //    counter was kept on the record rather than in a variable this function throws away, which is
+    //    ARM 3's ground. A later editor may move the null; they may NOT re-point this read at the
+    //    field.
+    //    ⚠ A FIRE-AND-RE-HIRE AT THE CLEAR CANNOT MANUFACTURE THIS: the test is arithmetic over weeks
+    //    already worked and asks nothing about who is on the payroll today, which is the hole ruling C
+    //    exists to close.
+    if (recoveryReceiptEarned(shock, world.week)) {
+      addEvent(world, { week: world.week, type: 'info', text: RECOVERY_RECEIPT })
+    }
+    world.spiritShock = null
+  }
+  // ⚠⚠ NOTHING GOES BELOW THIS LINE – the architect's ruling F reserves the tail after the clear for
+  // T7's weekly leaning pass, so that a flip never bites its own week. `intensity` is read ONCE at the
+  // head of this function and spent three ways; the week was lived by the girl she was all week, so a
+  // flip that fires here is first read on the NEXT tick and must never be threaded back into this one.
 }
 
 /** THE ONE WRITER for every `bond` delta – clamped to 0..100 and rounded onto the 0.5 grid, so no

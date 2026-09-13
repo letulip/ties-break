@@ -1083,8 +1083,28 @@ export interface WorldState {
    *  getting – `DiaryFacts.freshBreakup`, T6's – travels on `diary.facts`, which is already on the
    *  wire. A `spiritShock` beside it would be a second road to one fact. `WorldEvent.lifeKind` is the
    *  opposite case and needs no such decision: the feed ships the event ROWS THEMSELVES
-   *  (`snapshotEvents`, world/snapshot.ts), so widening the row widens the wire by construction. */
-  spiritShock: { week: number; kind: 'breakup' } | null
+   *  (`snapshotEvents`, world/snapshot.ts), so widening the row widens the wire by construction.
+   *
+   *  ⭐⭐⭐ v76 T4 – `weeks?` JOINS IT, AND NO SCHEMA BUMP IS OWED (the architect's ruling C,
+   *  `docs/plans/life-wave-5-rulings-2026-09.md`). HOW MANY WEEKS OF THIS SHOCK THE PSYCHOLOGIST
+   *  ACTUALLY WORKED – incremented inside `accrueSpirit` on exactly the weeks the recovery slope
+   *  applied, and read ONCE, at the clear, by the receipt that says «she came back sooner».
+   *
+   *  ⚠⚠ IT EXISTS BECAUSE THE SPAN IS NOT THE HELD HALF. `week` gives the span (`world.week − week`
+   *  at the clear) and the world persists nothing else from which «the slope applied on week W» can
+   *  be recovered. The cheap proxy – `psychologistFocusSeason` plus «on the payroll today» – reads
+   *  IDENTICALLY for a parent who paid throughout and one who fired him for the shock and re-hired
+   *  at the clear: a sentence claiming more than its code checks, which is the wave-4 monitor's own
+   *  defect. So the weeks are COUNTED as they are worked.
+   *
+   *  ⚠ OPTIONAL ON A TRANSIENT RECORD, WHICH IS THE HOUSE RULE AND NOT A CONVENIENCE.
+   *  `pendingTournament.masseurThere?` (v59 step 2) is the precedent: a key on a record created and
+   *  discarded inside play back-fills to ABSENT, and absent is EXACTLY TRUE here – «no week of this
+   *  shock was ever worked», which is what a shock predating the counter is. `injury.weeksSaved` is
+   *  the same instrument one seat over, for the same seat's neighbour's claim. No migration step, no
+   *  fixture rung, nothing for the frozen corpus to peel: a career that never hires never grows the
+   *  key. */
+  spiritShock: { week: number; kind: 'breakup'; weeks?: number } | null
   /** ⭐⭐⭐ v76 – THE PSYCHOLOGIST IS ON THE PAYROLL (the psychologist's year, wave 5;
    *  `docs/plans/life-wave-5-builder-2026-09.md` §2 T2, the seat's ruled shape from
    *  `docs/plans/the-travelling-team-2026-08.md` §2 ruling Б). `masseurHired`'s twin one seat over,

@@ -4845,6 +4845,8 @@ export const ECONOMY = {
   // beyond-baseline hazard scale T7 – all four ruled in the spec's §2 and quoted in the wave-5
   // brief's §4) land with the passes that READ them. T2 ships the seat and the seat's price, and a
   // constant with no reader is a constant nobody can be wrong about yet.
+  // ⭐ T4 (v76) LANDED THE FIRST OF THE FOUR – `recoverySlope`, below, with `accrueSpirit`'s own
+  // reader in the same commit, exactly as the rule above requires. Three remain.
   psychologist: {
     // ⚠⚠ PROPOSALS, NOT RULINGS – bench-priced, predicted-first, THE OWNER'S WORD AFTER T10, in the
     // same register the spec marks O5 with. The wave-5 brief's §4 lists them under «Proposals – NONE
@@ -4877,6 +4879,31 @@ export const ECONOMY = {
     // the reader, which is the shape this repo keeps out of `createWorld` (the literal it replaces
     // needed none).
     defaultRung: 1 as 0 | 1 | 2,
+    /** ⭐⭐⭐ «BACK ON HER FEET» – THE RECOVERY SLOPE, BY RUNG (v76, wave 5's T4). The spec's §2 row,
+     *  verbatim: «the recovery slope while a shock is live: **+2 / +3 / +4 per week by rung** (the
+     *  23.08 design, preserved whole as ONE focus)». Points of spirit per week, ADDED TO
+     *  `ECONOMY.spirit.returnPerWeek[intensity]` inside `accrueSpirit`'s return step and nowhere
+     *  else.
+     *
+     *  ⚠⚠ IT IS A FASTER RETURN AND NEVER A SECOND CURVE, which is the one thing a later reader
+     *  cannot recover from the three numbers. `accrueSpirit`'s own ⚠⚠ note («THERE IS NO RECOVERY
+     *  CURVE, ANYWHERE, BY DESIGN … a second return rate, a «recovering» flag or a taper read off
+     *  `spiritShock` would all be the same mistake») still governs: this is a SUMMAND on the
+     *  standing rate, it goes through the same `stepToward` clamp and the same tenths rounding, and
+     *  it dies with the clear because the predicate that gates it reads the live mark. No taper, no
+     *  flag, no second target.
+     *
+     *  ⚠ INDEXED BY RUNG (`0 | 1 | 2`), WHICH IS A DIFFERENT SPELLING FROM `returnPerWeek`'s and the
+     *  collision is worth naming once: `ECONOMY.spirit.returnPerWeek` is an OBJECT keyed by the
+     *  intensity NAME (`{steady, intense}`) and this is an ARRAY indexed by the roster position.
+     *  The two are summed on one line in `accrueSpirit` and a reader who mixes them gets
+     *  `undefined`; the rungs are the same `0 | 1 | 2` that indexes `rungs` above.
+     *
+     *  ⚠ RULED, NOT PROPOSED – unlike the salaries above. The wave-5 brief's §4 lists it under
+     *  «Ruled by the spec §2», so T10's grid MEASURES this ladder rather than pricing it: each rung
+     *  strictly better than the one below on weeks-under-the-knee, by more than 2×SEM, or the
+     *  masseur §4 law re-prices the RUNG and not this row. */
+    recoverySlope: [2, 3, 4],
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
