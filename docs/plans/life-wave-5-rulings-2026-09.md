@@ -875,3 +875,35 @@ case in the file passing under both readings. That is precisely why it had to be
 builder's inference: nothing else in the wave would have caught it.
 
 ⚠ The notification lied a **tenth** time: «exit code 0» over a log reading `CHECK_EXIT=1`.
+
+## Ruling R – the вычитка's own corrections, and what the frozen corpus could not reach
+
+**My proof obligation named the wrong instruments.** I told T9b that T6's confidentiality and
+no-telling lints must still sweep the counsel pool. They do not and **could not**: their banned list
+contains `psychologist`, and every `PSY_COUNSEL` cell opens «Her psychologist rang that evening» by
+design – the pool is the parent narrating a phone call, not a legible read. Had those lints swept
+it, the pool would have been red before the вычитка touched it. The right instruments are the
+counsel pool's own two sweeps (`wave5-psy-counsel` §F, and the house-style case), and those are
+green. ⚠ **Naming the wrong instrument in a proof obligation is the same defect as a check whose
+message claims more than its code verifies** – it asks for a green from something that was never
+looking.
+
+**A consequence of change 1 that the вычитка did not name, and it hardens the wave.** Gating the
+receipt on an earlier ending made every fixture that poked a `spiritShock` onto a world with an
+EMPTY `loveEpisodes` into what it always was: **a career the engine cannot produce.** The mark has
+exactly one writer (`rollEnds`, on the same line-run as `endEpisode`), so a shock without a dated
+episode is a state no tick can reach. Six cases plus the walked-career fixture now write the dates
+the mark implies.
+
+**And the frozen corpus is worth even less here than ruling K says.** Measured at 156 weeks on all
+nine cells: **zero love episodes, zero endings, no shock ever** – the arrival age gate refuses every
+week of the walk. Ruling K says the corpus is blind to a CONVERGENT change; here it cannot **reach**
+the state at all, and T8 measured the same for the counsel path (`econ-bench` never calls
+`answerLifeBeat`). So a zero from it says only that no accidental coupling leaked in – an import, a
+load-order effect – and nothing whatever about behaviour. ⚠ **Three tasks in a row have now had to
+say this out loud. The corpus is a coupling detector for this wave, not a measurement**, and T10's
+paired arms are the only instrument that prices anything here.
+
+**A cosmetic debt, recorded not fixed**: `tests/wave5-psychologist-listen.test.ts` still titles a
+case «house style on all forty-eight» while walking the 40 that survived ruling O. Green, correct,
+misnamed – T11's to sweep up.
