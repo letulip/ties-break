@@ -54,7 +54,7 @@ import { accrueCondition, arrivalStatus, medicalClearance, withheldFreeWeekRecov
 import { summerConditionCost } from './summer'
 import { inCollege } from './college'
 import { resolveMasseur, resolveMasseurReturn } from './masseur'
-import { resolvePsychologist } from './psychologist'
+import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -351,7 +351,24 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        the identical reason the knock's credit and the summer block's bill below are their own
   //        lines. Pure arithmetic, ZERO draws on any stream. See engine/spirit.ts for both rules,
   //        and in particular for the order the weekly one runs in (return first, then this week).
-  accrueSpirit(world)
+  //
+  //        ⚠⚠ AND THE SECOND ARGUMENT IS THE PSYCHOLOGIST'S WORKING WEEK, HANDED DOWN – the
+  //        architect's ruling J (13.09, T4b), and it is dependency inversion rather than a
+  //        convenience. T4's recovery slope gated itself on `psychologistHired`, which is TRUE on a
+  //        college-freeze week and on a booked family week – the two weeks `resolvePsychologist`
+  //        (1c-psy below, same tick) bills NOTHING for, its own opening line. So the family paid
+  //        nothing and received the work. `engine/spirit.ts` cannot ask the predicate itself: an
+  //        import of it closes a measured value cycle (`spirit -> psychologist -> college -> player
+  //        -> spirit`, through `world/player.ts`'s `spiritMatchFactor`), and cutting the
+  //        `bondBandOf` edge leaves the `inCollege` one closing it anyway. THIS function already
+  //        holds every piece – it imports `accrueSpirit`, `inCollege` and `resolvePsychologist` –
+  //        so the fact travels down the stack instead of the arrow travelling up it.
+  //        ⚠ IT IS THE SAME CALL THE BILL MAKES, four calls later in this same tick and off this
+  //        same week, so the week he is paid for and the week his work lands are ONE set by
+  //        construction – «his effects ride the same predicate», the sentence 1c-masseur below
+  //        already writes for the twin seat. ⚠ A `boolean`, never an `Rng`: `accrueSpirit`'s
+  //        zero-draw contract is untouched and tests/spirit.test.ts asserts that of the signature.
+  accrueSpirit(world, psychologistWorksThisWeek(world))
   // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
   //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
   //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a

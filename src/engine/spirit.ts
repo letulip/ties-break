@@ -70,8 +70,14 @@
 //
 // ⚠ AND IT STILL IMPORTS NOTHING FROM `world/psychologist.ts`, WHICH IS MEASURED AND NOT ASSUMED:
 // that module imports `bondBandOf` from THIS file at runtime (its consent gate), so an import back
-// would close the value loop the `activeEpisode` note below records being caught once already. The
-// seat's three fields are read straight off `WorldState` here instead – see `shockBeingWorked`.
+// would close the value loop the `activeEpisode` note below records being caught once already – and
+// since 13.09 the SECOND back-edge is measured too (`psychologist -> college -> player -> spirit`),
+// so cutting the consent gate would not open the door either. What the seat's own reads look like
+// here is therefore split, and the split is ruling J's: the WORKING WEEK arrives as `accrueSpirit`'s
+// `psychologistWorks` parameter, handed down by `world/phaseHerWeek.ts` from the same
+// `psychologistWorksThisWeek` that decides the bill; `psychologistFocus` and `psychologistRung` –
+// the CHOICE and the DIAL, which no predicate owns – are still read straight off `WorldState`. Both
+// halves are argued over `shockBeingWorked`.
 import { ECONOMY } from './economy'
 import { clamp } from './condition'
 import { pickInt, rngFromSeed } from './rng'
@@ -443,6 +449,11 @@ function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): numbe
 // `returnPerWeek[intensity] + recoverySlope[rung]` instead of `returnPerWeek[intensity]`. One step,
 // the same `stepToward` clamp, the same tenths rounding, and it dies with the clear because the
 // predicate below reads the live mark. The spec's §2 row and the wave-5 brief's §2 T4.
+// ⚠⚠ «IS PAYING» IS LITERAL SINCE 13.09 (ruling J, T4b) AND IT USED TO BE A FIGURE OF SPEECH: T4's
+// gate was `psychologistHired`, which is TRUE on the two weeks `resolvePsychologist` charges nothing
+// for. A college freeze and a booked family week now stand the WORK down exactly as they stand the
+// BILL down – one predicate for both, the masseur's own shape – and the flag survives both, so the
+// slope comes back by itself the first week after.
 //
 // ⚠⚠ ONE PREDICATE, AND IT IS ONE RATHER THAN TWO ON THE ARCHITECT'S OWN CORRECTION. The first
 // drafting of ruling C said «the slope applies while a shock is live» and «the counter counts the
@@ -468,19 +479,45 @@ function weekPerturbation(world: WorldState, wrapWithNoVacation: boolean): numbe
  *  was priced from – no second lookup, no narrowing dance, and no way for the two to disagree about
  *  WHICH shock was worked.
  *
- *  ⚠ `psychologistHired` AND `psychologistFocus` ARE READ STRAIGHT OFF THE WORLD, and that is the
- *  dependency direction rather than a shortcut: `world/psychologist.ts` imports `bondBandOf` from
- *  this file at runtime, so importing its predicates back would close a value loop (the banner's own
- *  measurement, and the hazard the `activeEpisode` import note records being caught once already).
- *  ⚠ THE HONEST LIMIT OF THAT, NAMED: `psychologistWorksThisWeek` ALSO stands the seat down at
- *  college and on a booked family week, and its own comment predicts every focus pass will read it.
- *  This one cannot, so it reads what the brief and ruling C both specify – `hired`. Carried to the
- *  architect rather than decided here; T5-T7 live in modules with no such loop and can ask the real
- *  predicate. Pure read, ZERO draws. */
-function shockBeingWorked(world: WorldState): WorldState['spiritShock'] {
+ *  ⚠⚠ THE SEAT'S WORKING WEEK ARRIVES AS A PARAMETER AND IS NOT READ OFF THE WORLD – the architect's
+ *  ruling J (13.09), and it CORRECTS what T4 shipped one commit earlier. T4 gated the slope on
+ *  `world.psychologistHired` alone, so on a college-freeze week and on a booked family week – the two
+ *  weeks `resolvePsychologist` charges NOTHING for, its own first line – the slope still ran. Pay
+ *  nothing, receive the work: the travelling-team §4 legibility law read backwards. The masseur is
+ *  this seat's twin and rides one predicate for both halves (`world/medical.ts` spends
+ *  `masseurWorksThisWeek` inside `accrueCondition`; `phaseHerWeek`'s own comment says it in words –
+ *  «His effects ride the same predicate»), and the psychologist is a twin here too.
+ *
+ *  ⚠⚠ WHY A PARAMETER RATHER THAN THE TWIN'S OWN DIRECT IMPORT, MEASURED RATHER THAN ASSUMED. A
+ *  `psychologistWorksThisWeek` import from this file closes a real value cycle, and BOTH of its
+ *  back-edges are live – walked over the tree's own import graph, `import type` excluded:
+ *    · `world/psychologist.ts` -> `engine/spirit.ts`                                  (T3's `bondBandOf`)
+ *    · `world/psychologist.ts` -> `world/college.ts` -> `world/player.ts` -> `engine/spirit.ts`
+ *      (T2's `inCollege`, closing through `player.ts`'s `spiritMatchFactor`)
+ *  Cutting the first removes one edge and the second still closes the loop, and moving `inCollege` to
+ *  a cycle-free leaf is a 23-file change. `spirit.ts` reaches `psychologist.ts` by ZERO paths today,
+ *  so the import would be the closing edge and nothing else would be.
+ *
+ *  ⚠ SO THE CALLER ANSWERS IT, BECAUSE THE CALLER ALREADY HOLDS THE FACT: `world/phaseHerWeek.ts`
+ *  imports `accrueSpirit`, `inCollege` AND `resolvePsychologist`, and hands down
+ *  `psychologistWorksThisWeek(world)` at the call site where it is self-describing. One
+ *  implementation, no new arrow, no cycle. ⚠ `psychologistFocus` is still read straight off the
+ *  world – it is a CHOICE and not a working week, no predicate owns it, and no import is involved.
+ *  ⚠⚠ AND THE EXCEPTION IS WIDER THAN RULING J BELIEVED – MEASURED ON THE SAME GRAPH, for every
+ *  module the wave names, and carried back rather than decided here. Ruling J closes «T5, T6 and T7's
+ *  other readers do NOT have this cycle and must use the twin's own method». Two of the three:
+ *    · `engine/development.ts` (T5's site, ruling D) closes **SIX** cycle paths, the shortest being
+ *      `psychologist -> college -> development` – and it closes on a VALUE, `world/college.ts:23`
+ *      importing `SKILL_KEYS` and spending it at `:173`. T5 meets this same wall.
+ *    · `world/lifeBeat.ts` (T6/T7) closes **ZERO** and may import the predicate directly, exactly as
+ *      ruling J says – and `world/medical.ts` closes zero too, which is WHY the masseur's method
+ *      works there and is a method rather than a coincidence.
+ *  So the rule is not «spirit.ts is special»: it is that a focus pass living UNDER `world/college.ts`
+ *  must be handed the fact, and one living beside it may ask. Pure read, ZERO draws. */
+function shockBeingWorked(world: WorldState, psychologistWorks: boolean): WorldState['spiritShock'] {
   const shock = world.spiritShock ?? null
   if (shock === null || shock.week >= world.week) return null
-  if (!(world.psychologistHired ?? false)) return null
+  if (!psychologistWorks) return null
   return (world.psychologistFocus ?? null) === 'recovery' ? shock : null
 }
 
@@ -582,8 +619,16 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
  * hand-built in tests and tools predate these three fields, and a defensive read costs nothing while
  * a crash on a bench world costs an afternoon. Every real world – created or migrated – carries all
  * three.
+ *
+ * ⚠⚠ `psychologistWorks` IS THE SEAT'S BILLING PREDICATE, HANDED DOWN – ruling J (13.09), argued in
+ * full over `shockBeingWorked`. It is `psychologistWorksThisWeek(world)` at the one engine call site,
+ * which is the same answer `resolvePsychologist` gives itself four calls later in the same tick, so
+ * the week the family is charged and the week the work lands are ONE set by construction and can
+ * never drift apart. ⚠ IT IS A `boolean` AND NEVER AN `Rng`: the zero-draw contract this function has
+ * always carried is untouched, and tests/spirit.test.ts asserts that of the SIGNATURE rather than of
+ * the arity, precisely so a parameter like this one cannot quietly retire the claim.
  */
-export function accrueSpirit(world: WorldState): void {
+export function accrueSpirit(world: WorldState, psychologistWorks: boolean): void {
   const s = ECONOMY.spirit
   const b = ECONOMY.bond
   const intensity = temperamentIntensity(world.temperament ?? temperamentFor(world.seed))
@@ -602,7 +647,7 @@ export function accrueSpirit(world: WorldState): void {
   //    The same `stepToward` still clamps it to the gap, so the slope can no more overshoot the
   //    baseline than the standing rate can. ⚠ ONE CALL, so the term and the counter below are
   //    provably about the same week and the same mark.
-  const worked = shockBeingWorked(world)
+  const worked = shockBeingWorked(world, psychologistWorks)
   if (worked !== null) worked.weeks = (worked.weeks ?? 0) + 1
   const target = s.baseline + (activeEpisode(world) === null ? 0 : s.attachmentLift)
   const rate = s.returnPerWeek[intensity] + (worked === null ? 0 : recoverySlopeFor(world))

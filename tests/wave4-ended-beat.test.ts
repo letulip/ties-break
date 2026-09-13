@@ -254,7 +254,14 @@ function lifeCallsInSourceOrder(): { names: string[]; run: (world: WorldState) =
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
   const i = code.indexOf('accrueCondition(world, playedThisWeek)')
-  const j = code.indexOf('accrueSpirit(world)')
+  // ⚠ RE-AIMED 13.09 BY WAVE 5's T4b (ruling J): the closing anchor is now
+  // `accrueSpirit(world, psychologistWorksThisWeek(world))` – the psychologist's working week is
+  // handed down at the call site rather than read inside `engine/spirit.ts`, which cannot import the
+  // predicate without closing a value cycle. NOTHING about this pin's claim moves: it is still «the
+  // life calls sit between the body's pass and the spirit's, in this order», and an array `indexOf`
+  // that misses returns −1, which the `> i` below is red on. ⚠ Ruling J named two pins to re-aim and
+  // this is a THIRD – the same anchor, in a wave-4 file.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const names = code.slice(i + 1, j).filter((l) => l in LIFE_CALLS)

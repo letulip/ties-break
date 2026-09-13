@@ -102,6 +102,48 @@
 //          ⚠ RUNG 1 IS GREEN UNDER IT BY CONSTRUCTION, which is the reason §A walks all three rungs
 //          instead of «the default and one other».
 //
+// =================================================================================================
+// ⚠⚠ T4b's OWN LEDGER (13.09.2026, the architect's ruling J) – §F, AND WHAT EACH ARM SAID
+// =================================================================================================
+//
+//   NINE MUTATIONS, NINE RED, NO NULLS. Control green first – 326 over the ten discriminating files,
+//   and 25 then 26 over this one as §F's zero-draw case joined it – each applied and undone BY THE
+//   INVERSE STRING EDIT – never `git checkout` –
+//   with the mutated file's md5 asserted back to pristine after every one. The discriminating set for
+//   §F is this file plus tests/wave5-psychologist-seat.test.ts, tests/spirit.test.ts,
+//   tests/wave4-ends.test.ts and tests/wave4-ended-beat.test.ts.
+//
+//   ARM 1  ⚠⚠ T4's DEFECT RESTORED – `shockBeingWorked` reads `world.psychologistHired ?? false`
+//          again instead of its parameter. **3 RED** · the college week («expected 39 to be 35»), the
+//          family week («expected 43 to be 39») and the receipt case, whose free arm walks
+//          `[61, 74, 70]` instead of `[57, 66, 70]`. ⚠ The LAYOFF case stays green under it, correctly:
+//          an injury is not a stand-down, so the flag and the predicate agree there and there is
+//          nothing for this arm to move.
+//   ARM 2  the COLLEGE half deleted from `psychologistWorksInWeek` (`hired && !bookedOff`). **3 RED** ·
+//          §F's college case and T2's two. ⭐ THE FAMILY CASE STAYS GREEN, which is the isolation.
+//   ARM 3  the FAMILY half deleted (`hired && !frozen`). **4 RED** · §F's family case, the receipt case
+//          and T2's two. ⭐ THE COLLEGE CASE STAYS GREEN – the mirror of ARM 2, and the pair is what
+//          makes «both weeks» a measurement rather than one case standing in for two.
+//   ARM 4  the COUNTER pulled off the predicate – incremented on every live week while the slope keeps
+//          riding the parameter. **6 RED** · three of them are §F's `weeks` assertions, so «the counter
+//          does not tick on a stood-down week» is pinned SEPARATELY from «the slope does not apply».
+//   ARM 5  ⚠⚠ THE NO-Rng CLAIM, and the arm the re-aim exists for: `accrueSpirit`'s second parameter
+//          retyped `boolean -> Rng`, arity UNCHANGED at 2. **1 RED**, in tests/spirit.test.ts:
+//          «accrueSpirit must take no Rng, whatever else it takes: expected 'export function
+//          accrueSpirit(world: W…' not to match /\brng\b/i». ⭐ A renumbered arity pin would have been
+//          GREEN under this arm – which is the whole argument for asserting it of the signature.
+//   ARM 6  the CALL SITE reverted to the raw flag (`accrueSpirit(world, world.psychologistHired ??
+//          false)`). **4 RED** across three files, all «the accrueSpirit call moved: expected -1 to be
+//          greater than 4» – ⚠ and TWO of those four are pins ruling J did not name (wave4-ends,
+//          wave4-ended-beat), which is how they were found.
+//   ARM 7  the stand-down made to CANCEL the hire instead of suspending it. **5 RED** · both §F
+//          «SUSPENDED, NOT CANCELLED» lines, the receipt case, and §E's two isolation walks.
+//   ARM 8  a THIRD parameter added to `accrueSpirit`. **1 RED** («expected 3 to be 2») – the arity line
+//          is retained beside the signature assertion and still bites on its own.
+//   ARM 9  a draw taken on a stood-down week (`rngFromSeed` on the `!psychologistWorks` branch).
+//          **3 RED** · §F's zero-draw case and BOTH of §B's, so the count-keys net is confirmed alive
+//          over the new road rather than assumed to still cover it.
+//
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's, wave 4's and T2's §B apparatus, verbatim. Every
 // call is delegated to the real `rngFromSeed`, so any number this file measures is the engine's own;
 // the mock exists only so §B can COUNT the keys the pass reached. Hoisted, because `vi.mock`'s
@@ -130,7 +172,10 @@ import {
   TEMPERAMENTS,
   type Temperament,
 } from '../src/engine/spirit'
-import { createWorld, psychologistRungOf, type WorldState } from '../src/engine/world'
+// ⭐ T4b (ruling J): the seat's OWN billing predicate, which is now the thing the slope rides. It is
+// imported here and handed to `accrueSpirit` exactly as `world/phaseHerWeek.ts` does it – the engine
+// call site's shape, not a re-spelling of it.
+import { createWorld, psychologistRungOf, psychologistWorksThisWeek, type WorldState } from '../src/engine/world'
 import { ECONOMY } from '../src/engine/economy'
 import { isBlackoutWeek } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
@@ -193,6 +238,33 @@ function carrying(
   return { world, week }
 }
 
+/**
+ * ⚠⚠ ONE WEEK OF THE PASS, WITH THE SEAT'S WORKING WEEK HANDED DOWN – `world/phaseHerWeek.ts`'s own
+ * call shape since the architect's ruling J (13.09, T4b), and this file's ONE translation of it.
+ *
+ * WHAT MOVED: `accrueSpirit` no longer reads `world.psychologistHired`; the working week arrives as
+ * its second argument, because a college freeze and a booked family week bill NOTHING and must
+ * therefore buy nothing (`resolvePsychologist`'s own first line, the masseur's shape).
+ *
+ * ⚠ AND THE TRANSLATION OF EVERY T4 CASE IS PROVED RATHER THAN ASSUMED, which is the whole reason
+ * this is a function and not a second argument typed out 12 times. Every case below poses the
+ * payroll on the FLAG and none of them is frozen or on holiday, so the flag and the predicate must
+ * agree on these worlds – and the line below MEASURES that agreement on every single tick instead of
+ * trusting it. If a future fixture in this file ever freezes a career or books a week, this goes red
+ * rather than silently re-basing a measured ladder.
+ *
+ * ⚠ §F IS THE SECTION WHERE THE TWO DELIBERATELY DISAGREE and it therefore calls `accrueSpirit`
+ * directly, with the real predicate. That is not a gap in this helper – it is what this helper is
+ * drawing the boundary of.
+ */
+function spiritWeek(world: WorldState): void {
+  const works = psychologistWorksThisWeek(world)
+  expect(works, 'this fixture is neither frozen nor booked off – the flag IS the predicate here').toBe(
+    world.psychologistHired ?? false,
+  )
+  accrueSpirit(world, works)
+}
+
 /** Walk `weeks` ticks of the weekly rule and hand back the spirit ladder, the weeks the mark was
  *  live, and every receipt row the walk produced. */
 function walk(world: WorldState, from: number, weeks: number) {
@@ -200,7 +272,7 @@ function walk(world: WorldState, from: number, weeks: number) {
   const live: boolean[] = []
   for (let k = 0; k < weeks; k++) {
     world.week = from + k
-    accrueSpirit(world)
+    spiritWeek(world)
     spirit.push(world.spirit)
     live.push(world.spiritShock !== null)
   }
@@ -215,7 +287,7 @@ function walkToClear(world: WorldState, from: number, hired: (k: number) => bool
     world.week = from + k
     world.psychologistHired = hired(k)
     const before = world.spiritShock
-    accrueSpirit(world)
+    spiritWeek(world)
     if (before !== null && world.spiritShock === null) {
       return {
         clearedAt: from + k,
@@ -297,12 +369,12 @@ describe('wave 5 T4 A – the recovery slope, by rung and by intensity', () => {
     // simply not spent.
     const { world, week } = carrying('t4-clamp', 'sunny', 69, { hired: true, rung: 2, focus: 'recovery' })
     world.week = week
-    accrueSpirit(world)
+    spiritWeek(world)
     expect(world.spirit, 'a 9-wide step into a 1-wide gap still lands on 70').toBe(70)
     // ...and from the baseline itself, a held focus moves nothing at all.
     const settled = carrying('t4-clamp-settled', 'sunny', 70, { hired: true, rung: 2, focus: 'recovery' })
     settled.world.week = settled.week
-    accrueSpirit(settled.world)
+    spiritWeek(settled.world)
     expect(settled.world.spirit, 'nothing to walk back from, nothing bought').toBe(70)
   })
 
@@ -366,7 +438,7 @@ describe('wave 5 T4 B – the recovery focus takes ZERO draws, on any stream', (
     delete (world as Partial<WorldState>).temperament
     world.week = quietRunFrom(world, 400, 2)
     rngKeys.length = 0
-    accrueSpirit(world)
+    spiritWeek(world)
     expect(rngKeys, 'the courtesy read, and nothing the focus added').toEqual([`${world.seed}:temperament`])
   })
 })
@@ -393,7 +465,7 @@ describe('wave 5 T4 C – the week a shock lands is not a week anybody worked', 
     world.psychologistHired = true
     world.psychologistRung = 2
     world.psychologistFocus = 'recovery'
-    accrueSpirit(world)
+    spiritWeek(world)
     // 60 returns 5 toward 70 and then takes the steady shock: 65 − 22 = 43. WITH the slope it would
     // have been 69 − 22 = 47 – a real speed-up of a recovery from something else entirely.
     expect(world.spirit, 'her own return rate, and not one point of his').toBe(43)
@@ -401,7 +473,7 @@ describe('wave 5 T4 C – the week a shock lands is not a week anybody worked', 
     // ...and from the NEXT week it is his to work, which is what makes the case above a boundary and
     // not a switch that is simply off.
     world.week = week + 1
-    accrueSpirit(world)
+    spiritWeek(world)
     expect(world.spirit, 'her 5 plus the top rung’s 4, from 43').toBe(52)
     expect(world.spiritShock?.weeks, 'the first week he is credited with').toBe(1)
   })
@@ -421,7 +493,7 @@ describe('wave 5 T4 C – the week a shock lands is not a week anybody worked', 
     world.psychologistHired = true
     world.psychologistRung = 2
     world.psychologistFocus = 'recovery'
-    accrueSpirit(world)
+    spiritWeek(world)
     expect(world.spirit, '95 returns to 90 and the shock takes it to exactly the bar').toBe(68)
     expect(world.spiritShock, 'so it lands and clears inside one tick').toBeNull()
     expect(world.events.filter((e) => e.text === RECOVERY_RECEIPT), '⭐ and nobody is thanked for it').toEqual([])
@@ -432,7 +504,7 @@ describe('wave 5 T4 C – the week a shock lands is not a week anybody worked', 
     under.week = quietRunFrom(under, 400, 4)
     under.spirit = 94
     under.spiritShock = { week: under.week, kind: 'breakup' }
-    accrueSpirit(under)
+    spiritWeek(under)
     expect(under.spirit, 'one point lower and the mark stays on').toBe(67)
     expect(under.spiritShock, 'the mark survives its own setting tick, as wave 4 pinned').not.toBeNull()
   })
@@ -448,7 +520,7 @@ describe('wave 5 T4 C – the week a shock lands is not a week anybody worked', 
       world.week = week + k
       world.psychologistHired = paid[k]
       const before = world.spirit
-      accrueSpirit(world)
+      spiritWeek(world)
       if (paid[k]) expected++
       // the step she actually took says whether the term was spent: 3 alone, 6 with rung 1's slope
       expect(world.spirit - before, `week +${k}: the step`).toBe(paid[k] ? 6 : 3)
@@ -728,4 +800,149 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
         .toEqual([0, 1, 2, 3, 4, 5].map((k) => Math.min(70, start + rate * (k + 1))))
     }
   }, 60_000)
+})
+
+// =================================================================================================
+// F. ⭐⭐⭐ THE STAND-DOWN PAIR – T4b, THE ARCHITECT'S RULING J: THE EFFECT RIDES THE BILLING PREDICATE
+// =================================================================================================
+//
+// ⚠⚠ THE DEFECT THIS SECTION EXISTS FOR, IN ONE LINE. `resolvePsychologist` opens with
+// `if (!psychologistWorksThisWeek(world)) return`, so on a college-freeze week and on a booked family
+// week THE PARENT IS NOT BILLED. T4's `shockBeingWorked` gated the slope on `psychologistHired` and
+// the focus alone – so on exactly those two weeks the slope still ran and the counter still ticked.
+// Pay nothing, receive the work: the travelling-team §4 legibility law read backwards, and the
+// masseur one seat over has never had it («His effects ride the same predicate» – `phaseHerWeek`'s
+// own comment over `resolveMasseur`, and `world/medical.ts` spends `masseurWorksThisWeek` inside
+// `accrueCondition` to mean it).
+//
+// ⚠ THESE CASES CALL `accrueSpirit` DIRECTLY AND NOT THROUGH `spiritWeek`, and that is the point
+// rather than an inconsistency: this is the one section where the FLAG and the PREDICATE disagree,
+// which is the whole of ruling J. The helper's own assertion draws that boundary for every other
+// case in the file.
+//
+// ⚠ THE VACATION WEEK ALSO CARRIES `perturb.vacationResolved` (+5 raw, ×0.8 for a steady girl = +4),
+// because a booked holiday is a thing that happens to her as well as a week nobody is paid for. Every
+// literal below carries it, and it is named here so the numbers are read rather than guessed at.
+describe('wave 5 T4b F – the two weeks the family is not billed are two weeks nobody worked', () => {
+  it('⭐⭐⭐ A COLLEGE FREEZE: no slope, no count, the hire survives, and both come back the week after', () => {
+    // The seat's own stand-down fixture from tests/wave5-psychologist-seat.test.ts §C, asked of the
+    // EFFECT half instead of the billing half. `inCollege` is `college !== null && week < untilWeek`,
+    // so the freeze covers `week` and has ended by `week + 1`.
+    const { world, week } = carrying('t4b-college', 'sunny', 30, { hired: true, rung: 2, focus: 'recovery' })
+    world.college = { fromWeek: week - 10, untilWeek: week + 1, doneWeek: null, years: [], pendingCallUp: null, pendingLeague: null }
+
+    world.week = week
+    expect(psychologistWorksThisWeek(world), 'the predicate the BILL reads says he is stood down').toBe(false)
+    accrueSpirit(world, psychologistWorksThisWeek(world))
+    expect(world.spirit, 'her own 5 and not one point of the top rung’s 4').toBe(35)
+    expect(world.spiritShock?.weeks, '⭐ and the counter never opened – absent, not zero').toBeUndefined()
+    expect(world.psychologistHired, '⭐ SUSPENDED, NOT CANCELLED – the flag survives the freeze').toBe(true)
+    expect(world.psychologistFocus, '...and so does the year’s pick').toBe('recovery')
+
+    // ...and the first week out of the freeze he is working again, by himself, with no re-hire.
+    world.week = week + 1
+    expect(psychologistWorksThisWeek(world), 'the freeze is over').toBe(true)
+    accrueSpirit(world, psychologistWorksThisWeek(world))
+    expect(world.spirit, 'her 5 plus the top rung’s 4, from 35').toBe(44)
+    expect(world.spiritShock?.weeks, 'the first week he is credited with').toBe(1)
+  })
+
+  it('⭐⭐⭐ A BOOKED FAMILY WEEK: the same four claims, and the holiday’s own +4 is still hers', () => {
+    const { world, week } = carrying('t4b-vacation', 'sunny', 30, { hired: true, rung: 2, focus: 'recovery' })
+    world.vacations = [{ week, packageId: 'beach', paidCents: 50_00 }]
+
+    world.week = week
+    expect(psychologistWorksThisWeek(world), 'booked off – the week the bill is not charged').toBe(false)
+    accrueSpirit(world, psychologistWorksThisWeek(world))
+    // 30 returns 5 to 35, and the holiday itself is +5 × 0.8 = +4. WITH the slope it would have been
+    // 39 + 4 = 43 – a week the family paid nothing for, buying four points.
+    expect(world.spirit, 'her own 5, plus the holiday, and nothing of his').toBe(39)
+    expect(world.spiritShock?.weeks, 'the counter never opened').toBeUndefined()
+    expect(world.psychologistHired, 'SUSPENDED, NOT CANCELLED').toBe(true)
+    expect(world.psychologistFocus).toBe('recovery')
+
+    world.week = week + 1
+    expect(psychologistWorksThisWeek(world), 'the week after the holiday he is back').toBe(true)
+    accrueSpirit(world, psychologistWorksThisWeek(world))
+    expect(world.spirit, 'her 5 plus the top rung’s 4, from 39, and no holiday row').toBe(48)
+    expect(world.spiritShock?.weeks, 'the first week he is credited with').toBe(1)
+  })
+
+  it('⚠⚠ THE RECEIPT TIGHTENS, AND THAT IS THE FIX BEING VISIBLE – the same walk, the same span, no thanks', () => {
+    // ⚠⚠ THE DELIBERATE CONSEQUENCE, PINNED SO IT IS NOT DISCOVERED LATER. The receipt's test is
+    // «held for at least HALF the shock's weeks» – `weeks * 2 >= span` – and T4b removes weeks from
+    // the numerator without touching the denominator. A shock that spans two booked holidays is
+    // therefore a shock the family did NOT hold her through, and the line is correctly withheld.
+    //
+    // ⚠⚠ AND THE TWO ARMS WALK THE IDENTICAL SPIRIT LADDER, WHICH IS RULING K MADE INTO A CASE. The
+    // holiday's +4 and the top rung's +4 are the same size, so 48 → 57 → 66 → 70 either way, the mark
+    // clears on the same week and the span is 3 in both. NOTHING an end-state diff can see has moved –
+    // not even the whole `spirit` trajectory – and yet one career is thanked and the other is not.
+    const paid = { spirit: [] as number[], receipts: 0, weeks: 0 }
+    const free = { spirit: [] as number[], receipts: 0, weeks: 0 }
+    for (const [arm, booked] of [[paid, false], [free, true]] as const) {
+      const { world, week } = carrying(`t4b-receipt-${booked}`, 'sunny', 48, { hired: true, rung: 2, focus: 'recovery' })
+      // ⚠ `carrying` STAMPS THE MARK ON `week − 1`, so the walk opens the week AFTER it landed and
+      // the span at the clear is 3 while only 3 weeks are walked – which is what makes the two arms
+      // comparable at all: the denominator is fixed by the fixture and only the numerator moves.
+      if (booked) world.vacations = [{ week, packageId: 'beach', paidCents: 0 }, { week: week + 1, packageId: 'beach', paidCents: 0 }]
+      for (let k = 0; k < 3; k++) {
+        world.week = week + k
+        const before = world.spiritShock
+        accrueSpirit(world, psychologistWorksThisWeek(world))
+        arm.spirit.push(world.spirit)
+        if (before !== null && world.spiritShock === null) arm.weeks = before.weeks ?? 0
+      }
+      arm.receipts = world.events.filter((e) => e.text === RECOVERY_RECEIPT).length
+    }
+    expect(paid.spirit, 'three worked weeks: +9, +9, and the clamp into the gap').toEqual([57, 66, 70])
+    expect(free.spirit, '...and two stood-down weeks plus the holiday land on exactly the same three').toEqual([57, 66, 70])
+    expect(paid.weeks, 'the family held her through all three').toBe(3)
+    expect(free.weeks, 'the family held her through one of the three').toBe(1)
+    expect(paid.receipts, '⭐ 3 × 2 >= 3 – she came back sooner than last time, and they paid for it').toBe(1)
+    expect(free.receipts, '⭐⭐ 1 × 2 < 3 – the same walk, and nobody is thanked for it').toBe(0)
+    // ...and the bar itself agrees, asked directly, so the case above is arithmetic rather than luck.
+    expect(recoveryReceiptEarned({ week: 0, kind: 'breakup', weeks: 3 }, 3)).toBe(true)
+    expect(recoveryReceiptEarned({ week: 0, kind: 'breakup', weeks: 1 }, 3)).toBe(false)
+  })
+
+  it('⭐⭐ AND A STOOD-DOWN WEEK DERIVES NOTHING EITHER – §B’s counter, aimed at the new road', () => {
+    // ⚠ THE HALF THE COUNT-KEYS LAW IS ACTUALLY ABOUT, asked of T4b's own addition: the predicate now
+    // runs INSIDE the weekly pass on every career, so if it reached a stream a family's stream
+    // position would depend on whether their daughter was at college – CLAUDE.md invariant 2's exact
+    // failure mode. `inCollege` and `vacationForWeek` are both pure reads and this MEASURES it rather
+    // than restating it. §B's own instrument, re-aimed; not a second law.
+    for (const [seed, pose] of [
+      ['t4b-draws-college', (w: WorldState, k: number) => { w.college = { fromWeek: k - 10, untilWeek: k + 2, doneWeek: null, years: [], pendingCallUp: null, pendingLeague: null } }],
+      ['t4b-draws-vacation', (w: WorldState, k: number) => { w.vacations = [{ week: k, packageId: 'beach', paidCents: 0 }, { week: k + 1, packageId: 'beach', paidCents: 0 }] }],
+    ] as const) {
+      const { world, week } = carrying(seed, 'deep', 38, { hired: true, rung: 2, focus: 'recovery' })
+      pose(world, week)
+      rngKeys.length = 0
+      let stoodDown = 0
+      for (let k = 0; k < 6; k++) {
+        world.week = week + k
+        if (!psychologistWorksThisWeek(world)) stoodDown++
+        accrueSpirit(world, psychologistWorksThisWeek(world))
+      }
+      expect(stoodDown, `${seed}: the walk really met the stand-down`).toBe(2)
+      expect(rngKeys, `${seed}: the predicate, the stand-down and the resume on no stream`).toEqual([])
+    }
+  })
+
+  it('⚠ A LAYOFF IS STILL NOT A STAND-DOWN – the seat has exactly two, and an injury is not one of them', () => {
+    // The other direction of the same claim, and the reason it is here: T4b hands the slope a
+    // PREDICATE, so anything that predicate refuses now stops the work too. `psychologistWorksInWeek`
+    // takes three booleans and an injury is none of them – «an injury is when the head needs the call
+    // most» (tests/wave5-psychologist-seat.test.ts §C). A third stand-down appearing in that predicate
+    // would silently retire the slope on layoff weeks, and this is the case that says so.
+    const { world, week } = carrying('t4b-layoff', 'sunny', 30, { hired: true, rung: 2, focus: 'recovery' })
+    world.week = week
+    world.injury = { kind: 'knee', severity: 'moderate', weeksRemaining: 8, totalWeeks: 10, sinceWeek: week - 2 } as WorldState['injury']
+    expect(psychologistWorksThisWeek(world), 'a layoff does not stand him down').toBe(true)
+    accrueSpirit(world, psychologistWorksThisWeek(world))
+    // her 5 + the top rung's 4, and then the laid-up week's own row (−1 × 0.8 = −0.8, to one tenth).
+    expect(world.spirit, 'the slope is spent on a week she cannot play').toBe(38.2)
+    expect(world.spiritShock?.weeks, 'and the week is counted').toBe(1)
+  })
 })
