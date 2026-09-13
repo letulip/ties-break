@@ -285,6 +285,9 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     // ⚠ RE-AIMED AGAIN BY T5, WHICH IS THE LINE ABOVE COMING TRUE ON SCHEDULE: `coolheadPerSeason`
     // joins WITH its reader (`growWeek`'s own term, engine/development.ts) in the same commit, which
     // is the rule this block is keeping – a constant lands with the pass that reads it. Two remain.
+    // ⚠ AND A THIRD TIME BY T6, on the same schedule and under the same rule: `listenClarity` joins
+    // WITH its reader (`drawListenHeard`, engine/world/lifeBeat.ts §3f) in the same commit. ONE
+    // remains – the walls' beyond-baseline hazard scale, T7's.
     //
     // ⭐ THE CLAIM IS UNCHANGED AND STILL EXACT: the list is still a closed set, so a fare, a stance
     // or a share landing in this block is still red on the line below – which is the whole of what
@@ -293,6 +296,7 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     expect(Object.keys(ECONOMY.psychologist).sort()).toEqual([
       'coolheadPerSeason',
       'defaultRung',
+      'listenClarity',
       'recoverySlope',
       'rungs',
     ])

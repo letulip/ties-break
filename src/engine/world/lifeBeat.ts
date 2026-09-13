@@ -95,6 +95,17 @@ import { activeEpisode, endEpisode, loveEpisodesOf } from './loveEpisodes'
 // into `endings.ts` would close a runtime loop. `constants.ts` is the bottom of the package's graph
 // and `endings.ts` re-exports the guard from there anyway, so nothing about the semantics moves.
 import { guardNotEndedForGood } from './constants'
+// ⭐⭐⭐ v76 T6 – THE SEAT, ASKED DIRECTLY, WHICH IS THE MASSEUR'S OWN WAY (`world/medical.ts:62`
+// spends `masseurWorksThisWeek` inside `accrueCondition` exactly like this). `psychologistWorkingRung`
+// answers three questions in one – not hired · hired for a different year · stood down by a college
+// freeze or a booked family week – and the working week IS the billing week (ruling J).
+// ⚠ NO PARAMETER AND NO INVERSION, AND IT IS MEASURED RATHER THAN ASSUMED. `accrueSpirit` has to be
+// HANDED the fact because `spirit.ts` sits under `world/college.ts` in the value-import graph and the
+// import would close a live cycle; this module does not. Walked over the tree's own value imports
+// (`import type` and all-`type` named clauses excluded), `world/psychologist.ts` reaches THIS file by
+// **ZERO** paths – the same walk that returns seven to `engine/development.ts`, which is why T5's
+// site could not ask either. The rule is the college arrow, not «`spirit.ts` is special».
+import { psychologistWorkingRung } from './psychologist'
 // ⭐⭐ THE PRESENCE AXIS' TWO IMPORTS (11.09, the вычитка fold) – and both of them are «ask the one
 // copy» rather than «re-type the rule». `awayVoice` is R2-18 / ARCH-07's single spelling of «she
 // lives elsewhere and the parent HEARS about the week»; `diaryLifeStageFor` is the single spelling
@@ -1325,6 +1336,228 @@ const ENDED_HEADING: Record<EndsRegister, Record<EndsRead, string>> = {
   },
 }
 
+// =================================================================================================
+// 3f. «LEARNING TO LISTEN» – ⚠⚠ THE SAME NEWS, READ PLAINLY (wave 5, T6). EVERY WORD BELOW IS A DRAFT.
+// =================================================================================================
+//
+// `docs/specs/the-psychologists-year-2026-09.md` §2, the «Learning to listen» row: on a week the
+// family is paying a psychologist whose chosen year is `'listen'`, one uniform per read-bearing beat
+// against `ECONOMY.psychologist.listenClarity[rung]` decides whether the card's HEADING and the KEPT
+// FEED ROW say plainly what she wants. Success is the LEGIBLE wording below; failure is the standing
+// wording, byte for byte, which is why not one shipped string moved for this step.
+//
+// ⚠⚠⚠ HE COACHES THE PARENT AND NEVER REPORTS HER SESSIONS – the owner's re-cut of 09.09, and the
+// gravest wording failure this section can produce. Every legible line below is written as the
+// PARENT'S OWN TRAINED READING of his daughter. A line of the form «the psychologist says she wants…»
+// would be a confidentiality leak AND a category error: what the seat sells is an ear, not a report,
+// and the spec's own sentence for the focus is «He is teaching you to hear what she does not say».
+// Not one string in this file may name him, quote him or attribute a reading to him.
+//
+// ⚠⚠ AND THE BOND ARITHMETIC IS UNTOUCHED ON BOTH SIDES OF THE COIN. The deltas, her drawn `wants`,
+// the space-vs-company read and the priced option set are the same bytes with the focus on or off –
+// `lifeBeatOptionsFor` never sees this value and has no parameter that could carry it. That is what
+// makes the focus a communication coach rather than a purchase (the spec: «never a purchase and
+// never a leak of her sessions (`bond` untouched)»), and it is pinned by deep-equalling the priced
+// sets across the toggle rather than by reading this comment.
+//
+// ⚠⚠ THE LEGIBLE POOLS ARE THE FIRST PARENT'S-FRAME COPY IN THIS FILE INDEXED BY TEMPERAMENT, and
+// the fence it extends is named here rather than quietly crossed. `MET_MENTION`'s note states the
+// standing rule – «It is the PARENT'S narration and the fence keeps temperament out of that –
+// `HER_LINE` and `MET_HER_LINE` are the only pools in this file a girl's voice indexes» (with
+// `ENDED_HER_LINE` the third since wave 4). What is being bought HERE is a reading of THIS daughter:
+// the legible half of the card is the parent saying what he has learned about how she asks for
+// things, and a reading that did not know which girl it was about would be exactly the generic
+// wording the focus exists to replace. The AMBIGUOUS pools are untouched and the fence still holds
+// over every one of them.
+//
+// ⚠ SO EVERY LEGIBLE CELL IS A RULE ABOUT HER, NEVER A CLAIM ABOUT THIS WEEK'S TELLING. The heading
+// is carried at EVERY bond band (the §3e banner), and on the dry rung she said nothing at all – the
+// house found out. A legible frame that read «she closed the subject fast» would therefore be FALSE
+// on a third of the ladder while looking careful. What the frames name instead is her standing habit
+// (`world.temperament` is a persisted fact of the world) and her drawn read (a persisted draw), and
+// both are true whether or not she opened her mouth this week.
+//
+// ⚠⚠ AND THAT RULE IS A LINT RATHER THAN THIS SENTENCE, because the first draft broke it in SIX
+// places while this comment claimed it did not – four headings and two rows, «the easy telling is
+// the whole of it», «it was given to us to keep», «we heard it the way she meant it». A note that
+// claims more than the copy delivers is the shape ruling C rejected, one layer over. The sweep is in
+// `tests/wave5-psychologist-listen.test.ts` §B beside the confidentiality one, in the `BANNED_TAILS`
+// style: a list, all forty-eight cells, and a positive control first.
+//
+// ⚠ AND NOT ONE OF THEM NAMES AN ANSWER, which is `ENDED_HEADING`'s own rule inherited whole: «what
+// she wants» is what the parent can see; which of the four things to say about it is his, and a
+// heading that recommended one would be the meter this layer refuses to build, spelled in words.
+
+/** ⭐⭐⭐ THE COIN – DID THE PARENT READ HER PLAINLY, THIS BEAT. One uniform on
+ *  `seed:psy:listen:<kind>:<week>` against `ECONOMY.psychologist.listenClarity[rung]` (the spec §2's
+ *  ruled 0.6 / 0.8 / 0.95).
+ *
+ *  ⚠⚠ THE KIND IS IN THE KEY, which is §1f's one-value-per-key law satisfied by construction rather
+ *  than by luck: two read-bearing beats CAN share a week – an ending raised in §8 and a delivery
+ *  raised in §6 of the same tick – and a key without the kind in it would hand them one value and one
+ *  outcome for two unrelated pieces of news.
+ *
+ *  ⚠ THE WEEK IS THE RAISE WEEK, never an episode's date and never a later `world.week`: the row
+ *  carries its own `week` (`LifeBeatRecord`), so the value is reconstructible for the life of the
+ *  career even though nothing ever re-derives it (the stamp is written once – ruling E).
+ *
+ *  ⚠ (seed, calendar, kind)-KEYED AND NEVER (seed, choice)-KEYED, like every stream in this file.
+ *  MAIN is not reached, so the frozen capture cannot see this. ⚠ THE RUNG IS A PARAMETER,
+ *  `drawEndsRead`'s own primitives doctrine – a census can sweep the ladder without posing a world. */
+export function drawListenHeard(seed: string, kind: LifeBeatKind, week: number, rung: 0 | 1 | 2): boolean {
+  return rngFromSeed(`${seed}:psy:listen:${kind}:${week}`)() < ECONOMY.psychologist.listenClarity[rung]
+}
+
+/** ⭐⭐ THE SEAT'S ANSWER FOR THIS WEEK'S RAISE, or `null` when nobody is teaching him to listen.
+ *
+ *  ⚠⚠ A `null` HERE IS **ZERO DRAWS**, not a discarded one – `arrivalEligible`'s own law, and the
+ *  count-keys net is what holds it. `psychologistWorkingRung` short-circuits on three questions in
+ *  one (not hired · hired for a different year · stood down by a college freeze or a booked family
+ *  week), and the stream is not derived until all three have been answered.
+ *
+ *  ⚠⚠ IT ASKS THE BILLING PREDICATE THROUGH THAT HELPER, which is ruling J: the working week IS the
+ *  billing week, so a college freeze and a booked family week stand this down exactly as they stand
+ *  the invoice down. Pay nothing, receive nothing.
+ *
+ *  ⚠ AND IT IMPORTS THE SEAT DIRECTLY, the masseur's own way (`world/medical.ts`), rather than taking
+ *  the fact as a parameter the way `accrueSpirit` must. Measured rather than assumed, on the tree's
+ *  own value-import graph: `world/psychologist.ts` reaches THIS module by **ZERO** paths (the same
+ *  walk that finds seven from it to `engine/development.ts`, which is why T5's site could not ask).
+ *  The rule is the college arrow, not «`spirit.ts` is special» – the wave-5 rulings, J as corrected
+ *  by T4b. */
+function listenHeardNow(world: WorldState, kind: LifeBeatKind): boolean | null {
+  const rung = psychologistWorkingRung(world, 'listen')
+  if (rung === undefined) return null
+  return drawListenHeard(world.seed, kind, world.week, rung)
+}
+
+/** ⭐ WHOSE READING THIS IS – the two facts a legible frame cannot be assembled without.
+ *
+ *  ⚠⚠ ONE PARAMETER RATHER THAN THREE DEFAULTED ONES, AND THAT IS THE COMPLETENESS LAW PAYING FOR
+ *  ITSELF. `lifeBeatSaid`'s later axes are positional with shipped defaults, and that idiom is right
+ *  where the default is a real reading (`'told-now'`, `'space'`, `'open'`). Here it would be a trap:
+ *  a defaulted `voice` would let a caller ask for the legible frame without saying which girl it is
+ *  about, and silently hand a `deep` girl a `sunny` girl's reading – the exact silent-fallback defect
+ *  §5b's completeness pin exists to make impossible. `null` is the standing ambiguous frame; anything
+ *  else must name the voice, so there is no cell a caller can reach by forgetting. */
+export interface HeardRead {
+  /** her BIRTH temperament (`world.temperament`) – §0.2's fence: the voices read birth, never the
+   *  expressed reading T7 builds. What the parent learned is how THIS daughter asks for things, and
+   *  who she is does not change. */
+  voice: Temperament
+  /** her drawn `wants` for the episode in hand – read by `'met'` only, `'ended'` reads `read`. */
+  wants: LoveEpisode['wants']
+}
+
+/** ⭐⭐ `'met'` READ PLAINLY, BY VOICE, BY WHAT SHE ASKED FOR – 8 drafts.
+ *
+ *  ⚠ THE STANDING HEADING CARRIES NO READ AT ALL (`MET_HEADING`: three frames on the bond ladder,
+ *  and not one of them says what she wants done with the news). The `wants` axis reaches the standing
+ *  card through her LINE and through the kept row; a parent who was not listening pays for it over
+ *  months. These eight are what a parent who was taught to listen hears instead: the same news, with
+ *  the ask said out loud.
+ *
+ *  ⚠ NO BOND COLUMN, DELIBERATELY, and the standing pool's own argument is the reason. The read is
+ *  drawn at every band and the flip prices a cold home's four answers exactly as it prices a close
+ *  home's, so a legible frame only half the ladder could read would be the hidden number `MET_DRY`
+ *  refuses to be. What the band governs is HOW the news arrived, and that is carried by the line
+ *  under this frame, which does still move with it.
+ *
+ *  The bible each voice is read through, in a phrase: `sunny` gives context unasked, so the ask lives
+ *  in what she left out; `fiery` reaches the verdict first, so the ask is where she drew the line;
+ *  `quiet` puts a thing down beside something ordinary, so the ask is in the placing; `deep` gives a
+ *  thing its exact size, so the ask is in what she did not add. */
+const MET_HEADING_HEARD: Record<Temperament, Record<LoveEpisode['wants'], string>> = {
+  sunny: {
+    open: 'There is someone, and there is no ask hidden in it – she does not mind who knows',
+    private: 'There is someone, and the ask is the part she leaves out – she wants it kept between us',
+  },
+  fiery: {
+    open: 'There is someone, and she has drawn no line round it – she does not mind who knows',
+    private: 'There is someone, and she has drawn a line round it – she wants it to go no further',
+  },
+  quiet: {
+    open: 'There is someone, and it is not a thing she is keeping – it can be ordinary news',
+    private: 'There is someone, and it is to stay where it is – with us, and no further',
+  },
+  deep: {
+    open: 'There is someone, and that is the whole of it – she is not asking us to keep anything',
+    private: 'There is someone, and it is hers to keep – never ours to pass on',
+  },
+}
+
+/** ⭐⭐ `'ended'` READ PLAINLY, BY VOICE, BY REGISTER, BY HER READ – 16 drafts, and the shape is
+ *  `ENDED_HER_LINE`'s (voice × register × a two-member leaf) rather than a new one.
+ *
+ *  ⚠⚠ THE STANDING HEADING ALREADY NAMES THE READ, so what legibility adds here is NOT the fact – it
+ *  is the RULE that stops the fact being disbelieved. Her line and her read point opposite ways often
+ *  enough that wave 4 had to lint her pool read-NEUTRAL (the wave-4 rulings, J): «No, I don't want to
+ *  go through it» is about RECOUNTING and says nothing about PRESENCE, and a parent who has not been
+ *  taught the difference hears a door closing. Each cell below names the surface that misleads and
+ *  then the read, so the card stops arguing with itself for a parent who was coached.
+ *
+ *  ⚠ THE TAIL OF EVERY CELL IS THE STANDING POOL'S OWN WORDING OF THE READ, kept deliberately: the
+ *  fact is the same fact, and inventing a second way to say «she wants the room to herself» would put
+ *  two sentences into the album for one draw. What is new is the clause in front of it.
+ *
+ *  ⚠ AND NOT ONE OF THE SIXTEEN CLAIMS SHE SPOKE THIS WEEK – see the §3f banner. On the dry rung
+ *  nobody was told; the rule named in each clause is a standing fact about her, and it is as true of
+ *  a week she said nothing as of a week she said everything. */
+const ENDED_HEADING_HEARD: Record<Temperament, Record<EndsRegister, Record<EndsRead, string>>> = {
+  sunny: {
+    'told-now': {
+      space: 'It is over. Being alright comes first with her, and the asking after – she wants the room to herself',
+      company: 'It is over. Being alright comes first with her, and the asking after – she does not want to be on her own with it',
+    },
+    'told-late': {
+      space: 'There was someone and it is already over. With her the alright comes first – she wants the room to herself',
+      company: 'There was someone and it is already over. With her the alright comes first – she does not want to be on her own with it',
+    },
+  },
+  fiery: {
+    'told-now': {
+      space: 'It is over. A subject shut fast is shut with her – she wants the room to herself',
+      company: 'It is over. A subject shut fast is not a door shut, with her – she does not want to be on her own with it',
+    },
+    'told-late': {
+      space: 'There was someone and it is already over. A shut subject is shut with her – she wants the room to herself',
+      company: 'There was someone and it is already over. A shut subject is not a shut door with her – she does not want to be on her own with it',
+    },
+  },
+  quiet: {
+    'told-now': {
+      space: 'It is over. The arrangements are where she puts herself – and what she wants is the room to herself',
+      company: 'It is over. The arrangements are where she puts herself – and what she wants is somebody in the room',
+    },
+    'told-late': {
+      space: 'There was someone and it is already over. The arrangements always come first with her – she wants the room to herself',
+      company: 'There was someone and it is already over. The arrangements always come first with her – she wants somebody in the room',
+    },
+  },
+  deep: {
+    'told-now': {
+      space: 'It is over. With her the size of a thing is never the size of the words – she wants the room to herself',
+      company: 'It is over. With her the size of a thing is never the size of the words – she does not want to be on her own with it',
+    },
+    'told-late': {
+      space: 'There was someone and it is already over. Few words are not a small thing with her – she wants the room to herself',
+      company: 'There was someone and it is already over. Few words are not a small thing with her – she wants somebody in the room',
+    },
+  },
+}
+
+/** ⭐ THE FRAME, ONE FUNCTION, so «which heading does a card wear» has exactly one spelling and the
+ *  ambiguous arm can be proven byte-identical to what shipped. `null` is the standing frame. */
+function metHeadingFor(band: BondBand, heard: HeardRead | null): string {
+  return heard === null ? MET_HEADING[metRegisterOf(band)] : MET_HEADING_HEARD[heard.voice][heard.wants]
+}
+
+function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: HeardRead | null): string {
+  return heard === null
+    ? ENDED_HEADING[endsRegister][read]
+    : ENDED_HEADING_HEARD[heard.voice][endsRegister][read]
+}
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -1771,10 +2004,17 @@ export function lifeBeatHeading(
   // the column `LIFE_BEAT_OPTIONS.ended` itself is written as.
   endsRegister: EndsRegister = 'told-now',
   read: EndsRead = 'space',
+  // ⭐⭐⭐ v76 T6 – THE SIXTH IS WHOSE READING THIS IS, and `null` – the default – is the STANDING
+  // ambiguous frame, byte for byte what shipped. It is one object rather than the two defaulted
+  // positionals the later axes above are, for the reason `HeardRead` carries: a defaulted voice is a
+  // silent fallback onto another girl's reading, which is the one thing the completeness law forbids.
+  // ⚠ THE READ-BEARING KINDS ARE THE ONLY ONES THAT LOOK AT IT: `'fork-opinion'`, `'small-talk'` and
+  // `'fork-counsel'` have no read to be plain about, so a non-null here is simply not consulted.
+  heard: HeardRead | null = null,
 ): string {
   switch (kind) {
     case 'met':
-      return MET_HEADING[metRegisterOf(bond)]
+      return metHeadingFor(bond, heard)
     // ⭐ v74 T8 – TIER 1 KEYS ON THE MOOD REGISTER, which is the FORK's axis and not the `'met'`
     // card's: this beat is about her week, and there is no distance in it to read (a `strained` or
     // `cold` home never raises one).
@@ -1792,7 +2032,7 @@ export function lifeBeatHeading(
     // and the bond band is the distance between the two of them, and neither is a fact about THIS
     // card. ⚠ THIS IS THE ONE SURFACE THE READ REACHES AT EVERY BOND BAND – see the §3e banner.
     case 'ended':
-      return ENDED_HEADING[endsRegister][read]
+      return endedHeadingFor(endsRegister, read, heard)
   }
 }
 
@@ -1990,11 +2230,23 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   // priced from two different readings of one row.
   const endsRegister = beatEndsRegister(world, row)
   const read = beatEndsRead(world, row)
+  // ⭐⭐⭐ v76 T6 – AND THE SEVENTH IS **READ OFF THE ROW**, never re-derived here, which is the whole
+  // of ruling E. This function is called on EVERY `toSnapshot`, and hire, release and the rung dial
+  // are all commands that produce one – so a re-derived legibility would be re-decided after every
+  // command, and firing him with a beat pending would flip this heading from legible to ambiguous
+  // under the player's eyes while the kept feed row, whose text was persisted at the raise, still
+  // said the other thing. The stamp is written once, by `raiseLifeBeat`, on the week it was true.
+  // ⚠ `=== true` AND NOT A TRUTHY READ: absent means «nobody was teaching him to listen» and false
+  // means «he was, and this one got past him», and both wear the standing wording (see the field's
+  // own note in `shared/protocol/narrative.ts`).
+  // ⚠ THE VOICE IS BIRTH – `voiceOf` above, «who she is, for the WORDING alone» (§0.2's fence): the
+  // voices read `world.temperament` and never the expressed reading T7 builds.
+  const heard: HeardRead | null = row.heard === true ? { voice, wants } : null
   const followUp = lifeBeatListenFollowUp(row.kind, row.detail, voice, band)
   return {
     week: row.week,
     kind: row.kind,
-    heading: lifeBeatHeading(row.kind, register, band, endsRegister, read),
+    heading: lifeBeatHeading(row.kind, register, band, endsRegister, read, heard),
     // ⭐ v74 T17 – THE EIGHTH ARGUMENT IS THE DRIVER, AND IT IS THREADED EXACTLY AS `wants` AND
     // `stage` WERE: a parameter with a safe default (`'own'`, which is the shipped reading of a
     // `stop` line and not a neutral stand-in), so every pin wave 2 and wave 3 wrote keeps calling
@@ -2054,9 +2306,19 @@ export function buildSoftBeatInvite(world: WorldState): SoftBeatInvite | null {
  *
  *  ⚠ IT TAKES THE DETAIL RATHER THAN COMPUTING IT, so every beat kind's own trigger owns its own
  *  draw and this stays the plumbing. `raiseForkOpinion` (world/endings.ts's caller) is the first. */
-export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: string): void {
+export function raiseLifeBeat(world: WorldState, kind: LifeBeatKind, detail: string, heard?: boolean): void {
   world.lifeLog ??= []
-  world.lifeLog.push({ week: world.week, kind, detail, answer: null })
+  const row: LifeBeatRecord = { week: world.week, kind, detail, answer: null }
+  // ⭐⭐⭐ v76 T6 – THE STAMP, AND THE KEY IS WRITTEN ONLY WHEN SOMEBODY WAS ACTUALLY TEACHING HIM TO
+  // LISTEN (ruling E). `undefined` leaves the row the exact four-field object every row before this
+  // commit was, so a career with no psychologist in it produces byte-identical `lifeLog` rows – which
+  // is half of why no schema bump is owed and why the frozen corpus cannot see this step.
+  // ⚠ THE VALUE IS DECIDED BY THE CALLER, ON THE SAME LINE-RUN AS THE FEED ROW IT SHARES A COIN WITH.
+  // One uniform per raise, two consumers: the kept row's TEXT (persisted here and now) and this stamp
+  // (read back by every later prompt). A second draw for the second consumer would be one fact with
+  // two sources of truth, and they would part the first week a rung changed.
+  if (heard !== undefined) row.heard = heard
+  world.lifeLog.push(row)
 }
 
 /** ⚠ THE ONLY WAY A PENDING ROW CLEARS, and until it runs `advanceWeeks` refuses to tick – the
@@ -2434,6 +2696,41 @@ const MET_EVENT: Record<'told' | 'found-out', Record<LoveEpisode['wants'], strin
   },
 }
 
+/** ⭐⭐ v76 T6 – THE SAME WEEK, WRITTEN DOWN BY A PARENT WHO WAS TAUGHT TO READ HER – 8 drafts, and
+ *  the durable half of the focus. The card is answered once and gone; this row is `keep: true`, so
+ *  what a coached parent understood is what the album still says twenty seasons later.
+ *
+ *  ⚠ NO BOND COLUMN, WHICH IS `ENDED_LATE_EVENT`'s refusal inherited rather than re-decided: that
+ *  pool «deliberately did not guess at» the told / found-out column, and the reason holds harder
+ *  here. The standing row's two columns record HOW the news surfaced; what these eight record is what
+ *  she wanted done with it, which is the same fact on every rung of the ladder.
+ *
+ *  ⚠⚠ AND NOT ONE OF THEM CLAIMS SHE SPOKE – the §3f banner's rule, and this pool is where it bites
+ *  hardest, because the standing row it replaces has a column that says she did NOT
+ *  (`'found-out'`). Every clause below is either the drawn read or a standing habit of hers.
+ *
+ *  ⚠ THE SECOND SENTENCE IS THE PARENT'S OWN, AND IT IS THE WHOLE OF WHAT THE SEAT SOLD HIM. It
+ *  records that he heard her – never who taught him, never a session, never a word of hers he was
+ *  told second-hand. The focus coaches the parent; her sessions are hers. */
+const MET_EVENT_HEARD: Record<Temperament, Record<LoveEpisode['wants'], string>> = {
+  sunny: {
+    open: 'There is someone in her life, and she does not mind who knows. There was no ask hidden in it.',
+    private: 'There is someone in her life, and it is to stay between us. The ask was in the part she left out.',
+  },
+  fiery: {
+    open: 'There is someone in her life. No line drawn round it, and we took it as it came.',
+    private: 'There is someone in her life. She drew a line round it, and we read the line.',
+  },
+  quiet: {
+    open: 'There is someone in her life, and it was never a thing she was keeping. That was understood.',
+    private: 'There is someone in her life, and it is to go no further than us. That was understood.',
+  },
+  deep: {
+    open: 'There is someone in her life. She asks nothing of us about it, and nothing needed adding.',
+    private: 'There is someone in her life. It is hers to keep, and we knew it without being asked.',
+  },
+}
+
 /** ⭐⭐⭐ v75 T5 – THE ENDING'S OWN KEPT ROW, ON THE TOLD-NOW PATH. The album's other half: wave 3
  *  wrote «there is someone» and this is the week that stops being true, for a parent who already knew
  *  there was somebody.
@@ -2519,6 +2816,94 @@ const ENDED_LATE_EVENT: Record<EndsRead, string> = {
   company: 'There had been someone in her life, and it was over before we heard of it. She does not want to be on her own with it.',
 }
 
+/** ⭐⭐ v76 T6 – THE ENDING'S KEPT ROW AS A COACHED PARENT WRITES IT – 16 drafts, ONE TABLE FOR BOTH
+ *  REGISTERS, which is `ENDED_HER_LINE`'s own shape (voice × register × a two-member leaf) rather
+ *  than a new one. `ENDED_NOW_EVENT` and `ENDED_LATE_EVENT` are two wordings of one piece of news and
+ *  their legible halves belong in one place, keyed the way the card that raises them already is.
+ *
+ *  ⚠⚠ THE TOLD-NOW HALF IS THE ONE PLACE THIS STEP PUTS THE READ SOMEWHERE IT HAS NEVER BEEN, AND IT
+ *  IS FLAGGED RATHER THAN SLIPPED IN. The wave-4 ruling I enumerates the read's surfaces as «4 heading
+ *  cells plus 2 feed rows», and `ENDED_NOW_EVENT`'s own note refuses a read on the told-now row –
+ *  «a third surface, which is a ruling change and not a builder's». That refusal is untouched: the
+ *  STANDING told-now row is the same single sentence it has always been, carries no read, and is what
+ *  every career without this focus still gets. What is new lives entirely inside the legible arm,
+ *  which exists only on a week the family is paying for it – and the wave-5 brief's own T6 sentence
+ *  («the prompt heading and the kept feed row use the LEGIBLE wording») is what asks for it. ⚠ Named
+ *  in the handoff as a question for the architect; invariant 4 makes the wording the owner's anyway.
+ *
+ *  ⚠ THE READ HALF OF EVERY CELL IS THE STANDING POOL'S OWN WORDING, kept deliberately: «she wants
+ *  the room to herself» / «she does not want to be on her own with it» is one fact with one sentence,
+ *  and a second way of saying it would put two readings of one draw into the album.
+ *
+ *  ⚠ AND THE CLAUSE IN FRONT OF IT IS A STANDING HABIT OF HERS, never this week's telling – the §3f
+ *  banner's rule. `sunny` puts being alright first and the asking after; `fiery`'s heat is never the
+ *  measure of a thing; `quiet` puts the arrangements in front of herself; `deep` gives a thing its
+ *  exact size, so few words are never a small thing. */
+const ENDED_EVENT_HEARD: Record<Temperament, Record<EndsRegister, Record<EndsRead, string>>> = {
+  sunny: {
+    'told-now': {
+      space: 'It ended this week, and there is nobody in her life now. The alright always comes first with her – she wants the room to herself.',
+      company: 'It ended this week, and there is nobody in her life now. The alright always comes first with her – she does not want to be on her own with it.',
+    },
+    'told-late': {
+      space: 'There had been someone in her life, and it was over before we heard of it. The alright always comes first with her – she wants the room to herself.',
+      company: 'There had been someone in her life, and it was over before we heard of it. The alright always comes first with her – she does not want to be on her own with it.',
+    },
+  },
+  fiery: {
+    'told-now': {
+      space: 'It ended this week, and there is nobody in her life now. With her the heat is never the measure of it – she wants the room to herself.',
+      company: 'It ended this week, and there is nobody in her life now. With her the heat is never the measure of it – she does not want to be on her own with it.',
+    },
+    'told-late': {
+      space: 'There had been someone in her life, and it was over before we heard of it. The heat is never the measure of it – she wants the room to herself.',
+      company: 'There had been someone in her life, and it was over before we heard of it. The heat is never the measure of it – she does not want to be on her own with it.',
+    },
+  },
+  quiet: {
+    'told-now': {
+      space: 'It ended this week, and there is nobody in her life now. The arrangements always come first with her – she wants the room to herself.',
+      company: 'It ended this week, and there is nobody in her life now. The arrangements always come first with her – she does not want to be on her own with it.',
+    },
+    'told-late': {
+      space: 'There had been someone in her life, and it was over before we heard of it. The arrangements always come first with her – she wants the room to herself.',
+      company: 'There had been someone in her life, and it was over before we heard of it. The arrangements always come first with her – she does not want to be on her own with it.',
+    },
+  },
+  deep: {
+    'told-now': {
+      space: 'It ended this week, and there is nobody in her life now. Few words are never a small thing with her – she wants the room to herself.',
+      company: 'It ended this week, and there is nobody in her life now. Few words are never a small thing with her – she does not want to be on her own with it.',
+    },
+    'told-late': {
+      space: 'There had been someone in her life, and it was over before we heard of it. Few words are never a small thing with her – she wants the room to herself.',
+      company: 'There had been someone in her life, and it was over before we heard of it. Few words are never a small thing with her – she does not want to be on her own with it.',
+    },
+  },
+}
+
+/** ⭐ THE KEPT ROW, ONE FUNCTION PER KIND, so «which sentence does the album keep» has exactly one
+ *  spelling and the ambiguous arm is provably the bytes that shipped. `null` is the standing row.
+ *
+ *  ⚠ THEY TAKE THE SAME `HeardRead | null` THE HEADING TAKES, because the row and the card raised in
+ *  the same tick read ONE coin – the raise site draws it once and hands it to both. Two calls would
+ *  be two values on one key's worth of meaning, and the surfaces would disagree.
+ *
+ *  ⚠ EXPORTED FOR THE COMPLETENESS PIN, `lifeBeatSaid`'s own reason: these pools are module-private
+ *  `const`s and the confidentiality lint has to reach EVERY cell of them without posing a world per
+ *  cell. The tail-lint reads this file's source for exactly this problem; a pure reader is exact
+ *  where a source cut is fragile. */
+export function metKeptRow(band: BondBand, wants: LoveEpisode['wants'], heard: HeardRead | null = null): string {
+  return heard === null
+    ? MET_EVENT[metRegisterOf(band) === 'dry' ? 'found-out' : 'told'][wants]
+    : MET_EVENT_HEARD[heard.voice][wants]
+}
+
+export function endedKeptRow(endsRegister: EndsRegister, read: EndsRead, heard: HeardRead | null = null): string {
+  if (heard !== null) return ENDED_EVENT_HEARD[heard.voice][endsRegister][read]
+  return endsRegister === 'told-late' ? ENDED_LATE_EVENT[read] : ENDED_NOW_EVENT
+}
+
 /** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW. ⭐⭐ SINCE v75 T4 IT IS ALSO THE ONE WRITER
  *  OF A **TOLD-LATE** `'ended'` ROW – the same moment, asked of an episode that is already over.
  *
@@ -2576,16 +2961,24 @@ export function deliverKnownPartner(world: WorldState): void {
   // ⭐⭐⭐ THE SPLIT, AND IT IS THE WHOLE OF RULING B. An OPEN row takes the `'met'` path below, BYTE
   // UNCHANGED – same row, same text, same beat, same dedupe; an ENDED one takes the told-late path,
   // which raises `'ended'` and **no `'met'`, ever**.
+  // ⭐⭐⭐ v76 T6 – ONE COIN PER RAISE, DRAWN HERE AND SPENT TWICE. `seed:psy:listen:<kind>:<week>`
+  // decides whether the kept row below and the card raised beside it say plainly what she wants; the
+  // row's TEXT is persisted now and the card's heading is re-assembled on every snapshot, so the two
+  // must come off ONE value or they will part the first week a rung changes (ruling E). `null` when
+  // nobody is teaching him to listen – and it is a null with ZERO DRAWS behind it, not a discarded
+  // one. ⚠ THE KIND IS THE ONE BEING RAISED, which is why the two branches ask separately.
   if (due.endedWeek !== null) {
+    const heardEnd = listenHeardNow(world, 'ended')
+    // ⚠ THE VOICE IS `voiceOf` AND NOT `temperamentOf` – «who she is, for the WORDING alone», which
+    // is §0.2's fence: the voices read BIRTH and T7's expressed reading never reaches a pool.
+    const frameEnd: HeardRead | null = heardEnd === true ? { voice: voiceOf(world), wants: due.wants } : null
     addEvent(world, {
       week: world.week,
       type: 'life',
       keep: true,
       // ⚠ NO AMOUNT (rule 4), and the read comes off the ENDING's own week – `beatEndsRead`'s twin
       // through the same derivation, so the row and the card the same tick raises cannot disagree.
-      text: ENDED_LATE_EVENT[
-        drawEndsRead(world.seed, due.endedWeek, temperamentOf(world))
-      ],
+      text: endedKeptRow('told-late', drawEndsRead(world.seed, due.endedWeek, temperamentOf(world)), frameEnd),
       // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED. `WorldEvent.lifeKind` (T1's field) is what lets the feed's
       // glyph column tell one life row from another; this is the told-late ENDING row, so `'ended'`.
       // ⚠ IT IS THE BEAT KIND AND NOT THE REGISTER: told-now and told-late are two wordings of one
@@ -2596,9 +2989,17 @@ export function deliverKnownPartner(world: WorldState): void {
     // ⚠⚠ AND THE REGISTER IS NOT WRITTEN ONTO THE ROW. `beatEndsRegister` asks the `'met'` receipt
     // and finds none, which is what makes this card the told-late one – now and twenty seasons from
     // now, because no `'met'` row for this episode can ever be appended after this line runs.
-    raiseLifeBeat(world, 'ended', due.id)
+    // ⚠ THE LEGIBILITY **IS** WRITTEN ONTO IT, and the two are not in tension: the register is
+    // re-derivable from facts the world keeps for ever, and the seat is not (hire, release and the
+    // rung dial all move under a pending beat). Ruling E is the whole of that distinction.
+    raiseLifeBeat(world, 'ended', due.id, heardEnd ?? undefined)
     return
   }
+  // ⭐ THE SAME COIN, ON THE OTHER PATH AND ON ITS OWN KEY – `'met'` rather than `'ended'`, so a week
+  // that raises both (§8's ending and this delivery in one tick) can never hand one value to two
+  // unrelated pieces of news. §1f's one-value-per-key law, satisfied by the kind being IN the key.
+  const heardMet = listenHeardNow(world, 'met')
+  const frameMet: HeardRead | null = heardMet === true ? { voice: voiceOf(world), wants: due.wants } : null
   addEvent(world, {
     week: world.week,
     type: 'life',
@@ -2606,7 +3007,7 @@ export function deliverKnownPartner(world: WorldState): void {
     // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
     // keeps `accrueFinance` from ever seeing this row.
     // ⚠ THE EPISODE'S OWN `wants` (v74 T7) – the read, unmarked, in the one row the album keeps.
-    text: MET_EVENT[metRegisterOf(bondBandOf(world.bond ?? ECONOMY.bond.start)) === 'dry' ? 'found-out' : 'told'][due.wants],
+    text: metKeptRow(bondBandOf(world.bond ?? ECONOMY.bond.start), due.wants, frameMet),
     // ⭐⭐⭐ v75 T5 – THE KIND, STAMPED, on wave 3's own arrival row. ⚠⚠ THE SENTENCE ABOVE DID NOT
     // MOVE AND MUST NOT (invariant 4): this adds a MACHINE-READABLE field beside it, which is exactly
     // what T1's field comment said the two write sites would do. ⚠ AND IT IS NOT A BACK-FILL: rows
@@ -2618,7 +3019,7 @@ export function deliverKnownPartner(world: WorldState): void {
   // the parent is being asked about it, so the news is on the record before the card can be answered.
   // ⚠ THE DETAIL IS THE EPISODE ID – machine-readable, never a rendered sentence (`LifeBeatRecord`),
   // and it is also the receipt the dedupe above reads.
-  raiseLifeBeat(world, 'met', due.id)
+  raiseLifeBeat(world, 'met', due.id, heardMet ?? undefined)
 }
 
 // =================================================================================================
@@ -2958,6 +3359,13 @@ export function rollEnds(world: WorldState): void {
   // ⚠ THE ORDER IS THE READING, as it is in §6: the feed row is what HAPPENED and the card is what he
   // is being asked about it, so the news is on the record before the card can be answered.
   if (!hasBeatFor(world, over.id, ['met'])) return
+  // ⭐⭐⭐ v76 T6 – THE THIRD AND LAST RAISE SITE OF A READ-BEARING BEAT, and it reads the coin exactly
+  // as §6's two do: one uniform on `seed:psy:listen:ended:<week>`, spent on the kept row's text below
+  // and on the card's stamp underneath it. ⚠ IT IS DRAWN **AFTER** THE RECEIPT GATE, so an ending
+  // that raises nothing here derives nothing either – the told-late path in §6 owns that episode and
+  // draws its own coin on the week the parent actually hears of it.
+  const heardNow = listenHeardNow(world, 'ended')
+  const frameNow: HeardRead | null = heardNow === true ? { voice: voiceOf(world), wants: over.wants } : null
   addEvent(world, {
     week: world.week,
     type: 'life',
@@ -2967,10 +3375,19 @@ export function rollEnds(world: WorldState): void {
     keep: true,
     // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
     // keeps `accrueFinance` from ever seeing this row.
-    text: ENDED_NOW_EVENT,
+    // ⚠ THE READ IS ON THIS ROW **ONLY IN THE LEGIBLE ARM** – see `ENDED_EVENT_HEARD`'s ⚠⚠ note. The
+    // standing sentence is the one that shipped, byte for byte, on every career without the focus.
+    // ⚠⚠ AND THE READ IS DERIVED ONLY WHEN A LEGIBLE ROW WILL PRINT IT, which is STREAM discipline
+    // rather than thrift. `seed:life:ends:<endedWeek>:react` is not reached on this path today – the
+    // standing row carries no read – so deriving it unconditionally would put a new key into every
+    // ending of every career, the frozen corpus included, for a value nothing would have printed. The
+    // `'space'` handed over in the ambiguous arm is the base table and is never read: `endedRowFor`
+    // returns `ENDED_NOW_EVENT` whole on a null frame, `beatEndsRead`'s own fallback idiom one
+    // section up.
+    text: endedKeptRow('told-now', frameNow === null ? 'space' : drawEndsRead(world.seed, world.week, temperamentOf(world)), frameNow),
     // ⭐ THE KIND, STAMPED – the same `'ended'` the told-late row carries, because it is the same
     // piece of news in the other register (see that row's note).
     lifeKind: 'ended',
   })
-  raiseLifeBeat(world, 'ended', over.id)
+  raiseLifeBeat(world, 'ended', over.id, heardNow ?? undefined)
 }

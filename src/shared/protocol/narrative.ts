@@ -243,6 +243,34 @@ export interface LifeBeatRecord {
   detail: string
   /** the option id the parent chose, or null while she is still waiting to be answered */
   answer: string | null
+  /** ⭐⭐⭐ v76 T6 – DID THE PARENT READ HER PLAINLY, on the week this beat was raised (the wave-5
+   *  rulings, E). `true` – the psychologist's «Learning to listen» year was being worked and the
+   *  uniform on `seed:psy:listen:<kind>:<week>` came in under `ECONOMY.psychologist.listenClarity`,
+   *  so the heading and the kept feed row say plainly what she wants; `false` – he was working it and
+   *  the parent missed it anyway; **absent – nobody was teaching him to listen**, which is exactly
+   *  true of every row that predates the seat and of every row raised without the focus.
+   *
+   *  ⚠⚠ STAMPED AT THE RAISE AND NEVER RE-DERIVED, WHICH IS THE OPPOSITE CALL FROM THE ENDS READ ONE
+   *  FIELD OVER, and the line between them is the whole of ruling E. `buildLifeBeatPrompt` is
+   *  rebuilt on EVERY snapshot (`world/snapshot.ts`), and hire, release and rung change are all
+   *  commands that produce one – so a re-derived heading would be re-derived after every command, and
+   *  firing him with a beat pending would flip the wording under the player's eyes while the kept feed
+   *  row, whose TEXT was persisted at the raise, still said the other thing. One piece of news, two
+   *  wordings. The ends READ may not be stamped for the mirror-image reason: it is a PRICE input and
+   *  `answerLifeBeat` re-validates against a set that must be reconstructible. This is not a price
+   *  input – the bond arithmetic is byte-identical on both sides of it – so stamping creates no
+   *  second source of truth for any number.
+   *
+   *  ⚠ NO SCHEMA BUMP IS OWED, and that is the house rule rather than a convenience:
+   *  `pendingTournament.masseurThere?` and `spiritShock.weeks?` are the precedents – an optional key
+   *  that is never back-filled, whose ABSENCE is a true statement about every older row. Nothing in
+   *  `migrations.ts` or `tests/goldenSaves.test.ts` reads a `lifeLog` row's shape; the list itself
+   *  was back-filled `[]` at v73 and has been carried whole ever since.
+   *
+   *  ⚠ ONLY THE READ-BEARING KINDS EVER CARRY IT – `'met'` (her drawn `wants`) and `'ended'` (the
+   *  space-vs-company read). A `'fork-opinion'`, `'small-talk'` or `'fork-counsel'` row has no read to
+   *  be plain about, so the key is absent on all three by construction. */
+  heard?: boolean
 }
 
 /** ⭐⭐⭐ v74 – SOMEONE EXISTS. One row per attachment this career has lived, append-only and never

@@ -4934,6 +4934,28 @@ export const ECONOMY = {
      *  is `min(rate, headroom)`, so a higher rung is never worth less than a lower one on any week –
      *  the equality case is the ceiling, where all three are 0 and the focus is finished. */
     coolheadPerSeason: [1.5, 2.5, 3.5],
+    /** ⭐⭐⭐ «LEARNING TO LISTEN» – THE CHANCE THE PARENT READS HER PLAINLY, BY RUNG (v76, wave 5's
+     *  T6). The spec's §2 row, verbatim: «the feed line's wording becomes legible with probability
+     *  **0.6 / 0.8 / 0.95 per beat by rung** – a matched reaction becomes the parent's skill, never a
+     *  purchase and never a leak of her sessions (`bond` untouched)».
+     *
+     *  ⚠⚠ IT PRICES A WORDING AND NOTHING ELSE, which is the one thing three decimals cannot say for
+     *  themselves. One uniform on `seed:psy:listen:<kind>:<week>` decides whether the card's heading
+     *  and the kept feed row say plainly what she wants; the bond deltas, her drawn `wants`, the
+     *  space-vs-company read and the priced option set are the SAME BYTES on both sides of it
+     *  (`tests/wave5-psychologist-listen.test.ts` §D deep-equals the priced sets across the toggle).
+     *  A rung that bought a better PRICE would be the purchase the spec's own sentence forbids.
+     *
+     *  ⚠ A PROBABILITY, NOT A RATE AND NOT AN INDEX – the third spelling in this block and the
+     *  collision is worth naming once, as its two neighbours name theirs: `recoverySlope` is POINTS
+     *  OF SPIRIT PER WEEK, `coolheadPerSeason` is POINTS OF A SKILL PER SEASON, and this is a SHARE
+     *  OF BEATS, 0..1, compared against one uniform. All three are indexed by the same rung
+     *  (`0 | 1 | 2`, the roster position) and none of their arithmetic may be read into another's.
+     *
+     *  ⚠ RULED, NOT PROPOSED – the wave-5 brief's §4 lists it under «Ruled by the spec §2», so
+     *  T10's grid MEASURES this ladder (the realised clarity inside the CI of each number, the
+     *  matched-reaction share monotone in rung) rather than pricing it. */
+    listenClarity: [0.6, 0.8, 0.95],
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
