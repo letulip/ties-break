@@ -1382,7 +1382,8 @@ const ENDED_HEADING: Record<EndsRegister, Record<EndsRead, string>> = {
 // the whole of it», «it was given to us to keep», «we heard it the way she meant it». A note that
 // claims more than the copy delivers is the shape ruling C rejected, one layer over. The sweep is in
 // `tests/wave5-psychologist-listen.test.ts` §B beside the confidentiality one, in the `BANNED_TAILS`
-// style: a list, all forty-eight cells, and a positive control first.
+// style: a list, all FORTY cells, and a positive control first. ⚠ Forty and not forty-eight since
+// T6b: ruling O took the legible told-now kept row out (`ENDED_EVENT_HEARD`, 16 → 8).
 //
 // ⚠ AND NOT ONE OF THEM NAMES AN ANSWER, which is `ENDED_HEADING`'s own rule inherited whole: «what
 // she wants» is what the parent can see; which of the four things to say about it is his, and a
@@ -2754,6 +2755,13 @@ const MET_EVENT_HEARD: Record<Temperament, Record<LoveEpisode['wants'], string>>
  *  ruling change and not a builder's. The bond band is `MET_EVENT`'s column and `ENDED_LATE_EVENT`
  *  refused to guess at it for T6 – this refuses the same way, for the same reason.
  *
+ *  ⭐⭐⭐ AND THE REFUSAL WAS TESTED AND UPHELD – wave-5 ruling O (13.09), after T6 built a legible
+ *  told-now row behind the listen focus and flagged it. **A focus may change how an existing surface
+ *  reads; it may not create a surface.** The prompt goes up on this same tick and its heading already
+ *  carries the read, so a row repeating it is one piece of news told twice. This sentence is what the
+ *  album keeps for a told-now ending on EVERY career, coached or not – see `endedKeptRow`'s first
+ *  line, where that is one branch and one pin.
+ *
  *  ⚠ IT STATES WHAT THE WEEK HELD AND NOTHING ELSE: no reason, no fault, no channel the sim does not
  *  hold (the two-tier honesty law), no name, no gender, no `amountCents` and no price in any word of
  *  it (rule 4). ⚠ A DRAFT, AND T6 OWNS THE MATRIX – invariant 4 makes the final wording the owner's.
@@ -2816,20 +2824,35 @@ const ENDED_LATE_EVENT: Record<EndsRead, string> = {
   company: 'There had been someone in her life, and it was over before we heard of it. She does not want to be on her own with it.',
 }
 
-/** ⭐⭐ v76 T6 – THE ENDING'S KEPT ROW AS A COACHED PARENT WRITES IT – 16 drafts, ONE TABLE FOR BOTH
- *  REGISTERS, which is `ENDED_HER_LINE`'s own shape (voice × register × a two-member leaf) rather
- *  than a new one. `ENDED_NOW_EVENT` and `ENDED_LATE_EVENT` are two wordings of one piece of news and
- *  their legible halves belong in one place, keyed the way the card that raises them already is.
+/** ⭐⭐ v76 T6 – THE ENDING'S KEPT ROW AS A COACHED PARENT WRITES IT – 8 drafts, THE TOLD-LATE ROW
+ *  ALONE, keyed voice × her read.
  *
- *  ⚠⚠ THE TOLD-NOW HALF IS THE ONE PLACE THIS STEP PUTS THE READ SOMEWHERE IT HAS NEVER BEEN, AND IT
- *  IS FLAGGED RATHER THAN SLIPPED IN. The wave-4 ruling I enumerates the read's surfaces as «4 heading
- *  cells plus 2 feed rows», and `ENDED_NOW_EVENT`'s own note refuses a read on the told-now row –
- *  «a third surface, which is a ruling change and not a builder's». That refusal is untouched: the
- *  STANDING told-now row is the same single sentence it has always been, carries no read, and is what
- *  every career without this focus still gets. What is new lives entirely inside the legible arm,
- *  which exists only on a week the family is paying for it – and the wave-5 brief's own T6 sentence
- *  («the prompt heading and the kept feed row use the LEGIBLE wording») is what asks for it. ⚠ Named
- *  in the handoff as a question for the architect; invariant 4 makes the wording the owner's anyway.
+ *  ⚠⚠⚠ RE-CUT BY T6b UNDER RULING O (13.09), AND THE HALF THAT CAME OUT IS RECORDED SO THE JUDGMENT
+ *  CAN BE RE-OPENED RATHER THAN RE-DISCOVERED. T6 shipped this pool as voice × REGISTER × read – 16
+ *  cells, the told-now half of them putting the space-vs-company read on a row that has never carried
+ *  it – and flagged it as the one thing it wanted ruled. The architect ruled it OUT:
+ *
+ *    **A focus may change how an existing surface reads. It may not create a surface.**
+ *
+ *  The told-now card's prompt is raised on the SAME TICK as this row, and the heading already tells
+ *  the parent what she wants; a row repeating it is one piece of news told twice, and giving it a read
+ *  adds information it has never carried – invariant 4's territory and the owner's, not a wave about
+ *  a psychologist. So `ENDED_NOW_EVENT`'s own refusal («a third surface, which is a ruling change and
+ *  not a builder's») now holds in BOTH arms: heard or not, the told-now row is that one sentence, and
+ *  `endedKeptRow` returns it whatever frame it is handed. Wave-4 ruling I's enumeration – «4 heading
+ *  cells plus 2 feed rows» – is therefore intact, and what the focus moved on the ending is the
+ *  HEADING (`ENDED_HEADING_HEARD`, 16 cells) plus THIS row, which is ruling I's second feed row.
+ *
+ *  ⚠ THE TOLD-LATE HALF STAYS, and the asymmetry is the ruling's own test rather than an exception to
+ *  it. The question is «did this surface already carry the read»: `ENDED_LATE_EVENT` is indexed BY THE
+ *  READ and has been since wave 4, so a legible version changes how an existing surface reads and
+ *  creates nothing; `ENDED_NOW_EVENT` is one string and never carried it. The same test one pool over:
+ *  `MET_EVENT_HEARD` is allowed because the met kept row already carried her `wants`. ⚠ AND WHAT IS
+ *  UNIQUE ABOUT THIS ROW IS DURABILITY, NOT EXCLUSIVITY – both registers' HEADINGS carry the read too;
+ *  what the told-late row alone is, is the surface that OUTLIVES the card (`keep: true` against a card
+ *  answered once and gone), which is `ENDED_LATE_EVENT`'s own stated reason for carrying it.
+ *
+ *  ⚠ NO BOND COLUMN – `ENDED_LATE_EVENT`'s refusal inherited rather than re-decided.
  *
  *  ⚠ THE READ HALF OF EVERY CELL IS THE STANDING POOL'S OWN WORDING, kept deliberately: «she wants
  *  the room to herself» / «she does not want to be on her own with it» is one fact with one sentence,
@@ -2839,46 +2862,22 @@ const ENDED_LATE_EVENT: Record<EndsRead, string> = {
  *  banner's rule. `sunny` puts being alright first and the asking after; `fiery`'s heat is never the
  *  measure of a thing; `quiet` puts the arrangements in front of herself; `deep` gives a thing its
  *  exact size, so few words are never a small thing. */
-const ENDED_EVENT_HEARD: Record<Temperament, Record<EndsRegister, Record<EndsRead, string>>> = {
+const ENDED_EVENT_HEARD: Record<Temperament, Record<EndsRead, string>> = {
   sunny: {
-    'told-now': {
-      space: 'It ended this week, and there is nobody in her life now. The alright always comes first with her – she wants the room to herself.',
-      company: 'It ended this week, and there is nobody in her life now. The alright always comes first with her – she does not want to be on her own with it.',
-    },
-    'told-late': {
-      space: 'There had been someone in her life, and it was over before we heard of it. The alright always comes first with her – she wants the room to herself.',
-      company: 'There had been someone in her life, and it was over before we heard of it. The alright always comes first with her – she does not want to be on her own with it.',
-    },
+    space: 'There had been someone in her life, and it was over before we heard of it. The alright always comes first with her – she wants the room to herself.',
+    company: 'There had been someone in her life, and it was over before we heard of it. The alright always comes first with her – she does not want to be on her own with it.',
   },
   fiery: {
-    'told-now': {
-      space: 'It ended this week, and there is nobody in her life now. With her the heat is never the measure of it – she wants the room to herself.',
-      company: 'It ended this week, and there is nobody in her life now. With her the heat is never the measure of it – she does not want to be on her own with it.',
-    },
-    'told-late': {
-      space: 'There had been someone in her life, and it was over before we heard of it. The heat is never the measure of it – she wants the room to herself.',
-      company: 'There had been someone in her life, and it was over before we heard of it. The heat is never the measure of it – she does not want to be on her own with it.',
-    },
+    space: 'There had been someone in her life, and it was over before we heard of it. The heat is never the measure of it – she wants the room to herself.',
+    company: 'There had been someone in her life, and it was over before we heard of it. The heat is never the measure of it – she does not want to be on her own with it.',
   },
   quiet: {
-    'told-now': {
-      space: 'It ended this week, and there is nobody in her life now. The arrangements always come first with her – she wants the room to herself.',
-      company: 'It ended this week, and there is nobody in her life now. The arrangements always come first with her – she does not want to be on her own with it.',
-    },
-    'told-late': {
-      space: 'There had been someone in her life, and it was over before we heard of it. The arrangements always come first with her – she wants the room to herself.',
-      company: 'There had been someone in her life, and it was over before we heard of it. The arrangements always come first with her – she does not want to be on her own with it.',
-    },
+    space: 'There had been someone in her life, and it was over before we heard of it. The arrangements always come first with her – she wants the room to herself.',
+    company: 'There had been someone in her life, and it was over before we heard of it. The arrangements always come first with her – she does not want to be on her own with it.',
   },
   deep: {
-    'told-now': {
-      space: 'It ended this week, and there is nobody in her life now. Few words are never a small thing with her – she wants the room to herself.',
-      company: 'It ended this week, and there is nobody in her life now. Few words are never a small thing with her – she does not want to be on her own with it.',
-    },
-    'told-late': {
-      space: 'There had been someone in her life, and it was over before we heard of it. Few words are never a small thing with her – she wants the room to herself.',
-      company: 'There had been someone in her life, and it was over before we heard of it. Few words are never a small thing with her – she does not want to be on her own with it.',
-    },
+    space: 'There had been someone in her life, and it was over before we heard of it. Few words are never a small thing with her – she wants the room to herself.',
+    company: 'There had been someone in her life, and it was over before we heard of it. Few words are never a small thing with her – she does not want to be on her own with it.',
   },
 }
 
@@ -2900,8 +2899,16 @@ export function metKeptRow(band: BondBand, wants: LoveEpisode['wants'], heard: H
 }
 
 export function endedKeptRow(endsRegister: EndsRegister, read: EndsRead, heard: HeardRead | null = null): string {
-  if (heard !== null) return ENDED_EVENT_HEARD[heard.voice][endsRegister][read]
-  return endsRegister === 'told-late' ? ENDED_LATE_EVENT[read] : ENDED_NOW_EVENT
+  // ⭐⭐⭐ RULING O, AND IT IS SPELT AS THE FIRST LINE OF THIS FUNCTION BECAUSE THAT IS WHERE IT CAN BE
+  // PINNED. The told-now row is READ-FREE IN BOTH ARMS – one string, whatever frame the raise site
+  // hands over – so «is this row legible» has the same answer on a coached week as on any other, and
+  // the pin is a byte-identity across the toggle rather than a promise in a comment. See
+  // `ENDED_EVENT_HEARD`'s ⚠⚠⚠ note for the ruling and `ENDED_NOW_EVENT`'s for what the sentence
+  // asserts. ⚠ THE `read` ARGUMENT IS DELIBERATELY NOT CONSULTED HERE and the register is tested
+  // FIRST: a branch order that asked about `heard` first would put the legible arm in front of the
+  // ruling, which is precisely the shape that shipped and had to be re-cut.
+  if (endsRegister === 'told-now') return ENDED_NOW_EVENT
+  return heard === null ? ENDED_LATE_EVENT[read] : ENDED_EVENT_HEARD[heard.voice][read]
 }
 
 /** ⭐⭐⭐ THE DELIVERY, AND THE ONE WRITER OF A `'met'` ROW. ⭐⭐ SINCE v75 T4 IT IS ALSO THE ONE WRITER
@@ -3375,16 +3382,18 @@ export function rollEnds(world: WorldState): void {
     keep: true,
     // ⚠ NO AMOUNT – a life beat is never a purchase (rule 4), and the absence of the field is what
     // keeps `accrueFinance` from ever seeing this row.
-    // ⚠ THE READ IS ON THIS ROW **ONLY IN THE LEGIBLE ARM** – see `ENDED_EVENT_HEARD`'s ⚠⚠ note. The
-    // standing sentence is the one that shipped, byte for byte, on every career without the focus.
-    // ⚠⚠ AND THE READ IS DERIVED ONLY WHEN A LEGIBLE ROW WILL PRINT IT, which is STREAM discipline
-    // rather than thrift. `seed:life:ends:<endedWeek>:react` is not reached on this path today – the
-    // standing row carries no read – so deriving it unconditionally would put a new key into every
-    // ending of every career, the frozen corpus included, for a value nothing would have printed. The
-    // `'space'` handed over in the ambiguous arm is the base table and is never read: `endedRowFor`
-    // returns `ENDED_NOW_EVENT` whole on a null frame, `beatEndsRead`'s own fallback idiom one
-    // section up.
-    text: endedKeptRow('told-now', frameNow === null ? 'space' : drawEndsRead(world.seed, world.week, temperamentOf(world)), frameNow),
+    // ⚠⚠ NO READ ON THIS ROW IN EITHER ARM – RULING O, and T6b took the legible half back out. The
+    // sentence below is the one that shipped, byte for byte, on a coached week and an uncoached one
+    // alike; the read the parent bought reaches the TOLD-NOW ending through the card's heading, which
+    // `lifeBeatPromptFor` raises on this same tick. `endedKeptRow` is where that is decided and
+    // pinned, so `frameNow` is handed over here exactly as §6's two raise sites hand theirs over –
+    // one function answers «which sentence does the album keep», and a re-cut has one place to touch.
+    // ⚠⚠ SO `seed:life:ends:<week>:react` IS NOT DERIVED HERE ON EITHER ARM, which is the stream
+    // discipline the ruling bought back: the told-now path never reached that key before this wave,
+    // and deriving it «for the legible arm» would have put a new key into every ending of every
+    // career, the frozen corpus included. The `'space'` handed over is the base table and is never
+    // read – `beatEndsRead`'s own fallback idiom one section up.
+    text: endedKeptRow('told-now', 'space', frameNow),
     // ⭐ THE KIND, STAMPED – the same `'ended'` the told-late row carries, because it is the same
     // piece of news in the other register (see that row's note).
     lifeKind: 'ended',

@@ -7,10 +7,24 @@
 // `ECONOMY.psychologist.listenClarity[rung]` decides whether the card's HEADING and the KEPT FEED ROW
 // say plainly what she wants. Failure is the standing wording, byte for byte.
 //
+// ⭐⭐⭐ RE-CUT BY T6b UNDER WAVE-5 RULING O (13.09). T6 made the TOLD-NOW ending's kept feed row
+// legible, flagged it as the one thing it wanted ruled, and the architect ruled it out: **a focus may
+// change how an existing surface reads; it may not create a surface.** The prompt goes up on the same
+// tick and its heading already carries the read, so a row repeating it is one piece of news told
+// twice. `ENDED_EVENT_HEARD` lost its told-now half (16 → 8 cells), the rectangle is FORTY rather than
+// forty-eight, and the told-now row is now pinned BYTE-IDENTICAL ACROSS THE TOGGLE – §B's ruling-O
+// case, which is the one net that can see the deleted half coming back. ⚠ THE TOLD-LATE HALF STAYS,
+// AND THE TEST THAT SEPARATES THEM IS «did this surface already carry the read»: `ENDED_LATE_EVENT` is
+// indexed BY THE READ and has been since wave 4, so legibility changes how an existing surface reads;
+// `ENDED_NOW_EVENT` is one string and never was. (Both registers' HEADINGS carry the read too – what
+// the told-late ROW is uniquely is the surface that outlives the card, `keep: true` against a card
+// answered once and gone.)
+//
 // WHAT THIS FILE IS ORGANISED AROUND, in the order the risks rank:
 //   §A  the coin – its constant, its key, and ⚠ the KIND being IN the key (§1f's one value per key)
-//   §B  the 48 legible drafts – the rectangle, the four voices, and ⚠⚠ THE CONFIDENTIALITY LINT:
-//       he coaches the PARENT and never reports her sessions, so no legible line may name him
+//   §B  the 40 legible drafts – the rectangle, the four voices, ⚠⚠⚠ RULING O's byte-identity on the
+//       told-now row, and ⚠⚠ THE CONFIDENTIALITY LINT: he coaches the PARENT and never reports her
+//       sessions, so no legible line may name him
 //   §C  the stamp – written once at the raise, read by BOTH surfaces, and the ruling-E defect posed:
 //       fire him with a beat pending and the wording must not flip under the player
 //   §D  ⚠⚠ BYTE IDENTITY. The deltas, the read draw and the priced option set are the same bytes with
@@ -23,7 +37,10 @@
 // FIFTEEN MUTATION ARMS, FIFTEEN RED – every one applied and undone by the INVERSE edit (never
 // `git checkout`), with every touched file's md5 asserted back to pristine afterwards, the control
 // green first (35/35 here), and every number below re-measured on the tree that shipped. ⚠ ONE OF
-// THEM WAS A NULL FIRST AND IS RECORDED AS ONE – see ARM 13. What each red SAID:
+// THEM WAS A NULL FIRST AND IS RECORDED AS ONE – see ARM 13. ⚠ T6b RE-RAN THE SIX ARMS ITS RE-CUT
+// COULD HAVE BLUNTED (7a · 7b · 8 · 11 · 12 · 13) AND ADDED SEVEN OF ITS OWN (O1 · O2 · O3 · 8b ·
+// 12b · 13c · 14); NOT ONE OF T6's WENT GREEN AND TWO GOT SHARPER. Where a count moved, T6's is
+// kept beside T6b's so the ledger reads as one history. What each red SAID:
 //
 //   ARM 1  the coin reads `psychologistHired && focus === 'listen'` instead of the billing
 //          predicate – T4's own defect, posed one focus over.                          **4 RED**
@@ -52,11 +69,28 @@
 //          stamp breaks wave 3's own whole-row deep-equals.
 //   ARM 7a a heard beat pays a different bond (`chosen.bond + 1`).                      **1 RED**
 //          ⚠⚠ THE FENCE: «warm: a coached parent pays what an uncoached one pays: expected 80 to
-//          be 79».
+//          be 79». ⭐ RE-RUN BY T6b, STILL 1 RED, SAME SENTENCE – the fence did not move with the pool.
 //   ARM 7b the priced SET moves with the stamp (`+1` on every option of a heard row).   **2 RED**
 //          «open: the priced set does not know about the seat», on `'met'` and on `'ended'`.
-//   ARM 8  the coin switches the HEADING only – the kept row stays ambiguous.           **2 RED**
-//          «and so does the row the album keeps» and the walked digest.
+//          ⭐ RE-RUN BY T6b, STILL 2 RED, the same two cases.
+//   ARM 8  the coin switches the HEADING only – the kept rows stay ambiguous. T6 measured this at the
+//          THREE RAISE SITES (`null` where the frame is handed over), which is the honest form of it,
+//          and T6b re-ran that exact form.                       T6: **2 RED**, T6b: **4 RED**
+//          T6's two survive verbatim – «and so does the row the album keeps: expected 'She told us
+//          there is someone in her l…' to be 'There is someone in her life, and it …'» and the walk
+//          digest «expected cc16797e6366 to be 002099f9e455» – and two more land on the re-cut tree:
+//          §D's «and the legible one carries the SAME read» and «⚠⚠ a wording and a stamp: expected
+//          ['lifeLog'] to deeply equal ['events','lifeLog']».
+//   ARM 8b ⚠⚠ THE SAME IDEA MOVED INTO THE POOL FUNCTIONS (`metKeptRow` / `endedKeptRow` ignore the
+//          frame) IS A DIFFERENT ARM AND IT IS WORTH THE LINE.                          **7 RED**
+//          «and not one cell repeats another: expected 28 to be 40», «met row/open: expected 1 to be
+//          4», BOTH lints' positive controls, «met row sunny/open claims a telling: «she told» in …»
+//          – the ambiguous row the arm falls back to says so itself – the effect-keys walk and the
+//          digest. ⚠ AND THE ONE CASE IT DOES **NOT** RED IS THE FINDING: §C's «heard» case asserts
+//          the engine's row against `metKeptRow(…, frame(…))`, so a mutation inside that function
+//          moves BOTH SIDES and the case walks through it. Ruling L's amendment – «an equality
+//          comparing two arms is invisible to a mutation that moves both» – with a second sighting,
+//          and the reason the ruling-O pin above transcribes its expected string as a literal.
 //   ARM 9  ⚠⚠ RULING L's ARM – `drawListenHeard` CONSUMES a value on the SAME key (`r(); return
 //          r()`), so no key list can see it.                                            **4 RED**
 //          THE KEY LISTS STAYED GREEN – the count-keys net and «one raise, one coin» both passed –
@@ -69,20 +103,57 @@
 //          «{"hired":false}: a false here means ZERO DRAWS, not a discarded one», «one raise, one
 //          coin», and «every other stream is reached identically».
 //   ARM 11 the legible pool reads `MET_HEADING_HEARD.sunny` whatever the voice – the silent fallback
-//          `HeardRead` exists to make impossible.                                       **3 RED**
-//          «and not one cell repeats another: expected 42 to be 48», «met heading/open: expected 1
-//          to be 4», and the telling lint's own positive control stopped finding its cell.
+//          `HeardRead` exists to make impossible.  T6: **3 RED**, T6b: **4 RED**
+//          T6 read «expected 42 to be 48»; on the forty-cell rectangle the same arm reds as «and not
+//          one cell repeats another: expected 10 to be 40» (the ended ROW axis lost its register, so
+//          the collapse is sharper), «met heading/open: expected 1 to be 4», and BOTH lints' positive
+//          controls now stop finding their cells rather than one of them.
 //   ARM 12 `rollEnds` derives the ends read unconditionally – a new key on the AMBIGUOUS arm. **1 RED**
 //          «nobody is teaching him – nothing to be plain about: expected ['t6-react:life:ends:
-//          1104:react'] to deeply equal []».
+//          1104:react'] to deeply equal []». ⭐ RE-RUN BY T6b, still 1 RED, same sentence.
+//   ARM 12b ⚠⚠ T6b's OWN – THE SHAPE T6 ACTUALLY SHIPPED put back: the read derived at the raise
+//          **only on the legible arm** (`frameNow === null ? 'space' : drawEndsRead(…)`).  **1 RED**
+//          «⚠⚠ ruling O: the focus buys a heading, so the raise reaches nothing new: expected
+//          ['t6-react:life:ends:1104:react'] to deeply equal []». This is the stream half of ruling O
+//          and it is why §E's third arm went from `toBeLessThanOrEqual(1)` to `toEqual([])`.
 //   ARM 13 ⚠⚠ A MEASURED NULL, THEN A RED, AND BOTH HALVES ARE THE FINDING. The first draft's
 //          «with her the easy telling is the whole of it» put back – a cell that claims she spoke,
 //          on a heading carried at a bond band where she did not.       **0 RED, then 1 RED**
 //          The telling lint held `the telling`, and the draft's own adjective sat in the middle, so
 //          the arm walked through a lint written for it. Widened to the shortest honest substring
 //          (`telling`), the same arm is «met heading sunny/open claims a telling: «telling» in …».
+//          ⭐ RE-RUN BY T6b ON THE SHRUNKEN POOL: still 1 RED, the same sentence – shrinking the
+//          rectangle did not put the lint's own arm out of its reach.
 //   ARM 13b the other first-draft offender – «it was given to us to keep».               **1 RED**
 //          «met heading deep/private claims a telling: «was given to us» in …».
+//   ARM 13c ⚠ T6b's OWN, and the question the brief asked: does the no-telling lint still SWEEP the
+//          pool that shrank? «the telling was hers» planted in `ENDED_EVENT_HEARD.deep.space`. **1 RED**
+//          «ended row told-late/deep/space claims a telling: «telling» in …» – so the surviving eight
+//          cells are swept, not merely counted.
+//   ARM 14 ⚠ T6b's OWN, the same question for the CONFIDENTIALITY lint: «According to the session»
+//          planted in `ENDED_EVENT_HEARD.deep.company`.                                 **1 RED**
+//          «ended row told-late/deep/company reports a session: «session» in …».
+//
+// ⭐⭐⭐ AND T6b's FOUR RULING-O ARMS, which are the ones that hold the deleted half out:
+//   ARM O1 the legible told-now row RESTORED – `endedKeptRow` rebuilds T6's deleted cell for a heard
+//          told-now ending (standing sentence + the habit clause + the read).           **3 RED**
+//          ⚠⚠ THE BYTE-IDENTITY PIN IS THE FIRST OF THEM: «sunny/space: a coached parent's album says
+//          what an uncoached one's says: expected 'It ended this week, and there is nobody in her life
+//          now. The alright always comes first with her – she wants the room to herself.' to be 'It
+//          ended this week, and there is nobody in her life now.'», plus «ended row/told-now/space:
+//          expected 4 to be 1» and the §C end-to-end case through the engine.
+//   ARM O2 the BRANCH ORDER flipped back – `heard` asked before the register, so a told-now legible
+//          row prints the TOLD-LATE sentence.                                           **3 RED**
+//          «sunny/space: … expected 'There had been someone in her life, a…' to be 'It ended this
+//          week, and there is nobo…'», the voice-count case and the §C case. ⚠ This is why the
+//          register is tested FIRST in that function and why the order is commented there.
+//   ARM O3 the told-now HEADING stops being legible (`heard === null || endsRegister === 'told-now'`)
+//          – the surface that now CARRIES the read for a told-now ending.               **4 RED**
+//          «and not one cell repeats another: expected 34 to be 40», «ended heading/told-now/space:
+//          expected 1 to be 4», «sunny/told-now/space: expected 'It is over, and she wants the room
+//          to…' not to be …», and §C's «and the two frames are two strings: expected true to be
+//          false». ⚠ THIS IS THE ARM THAT MAKES RULING O SAFE: the read did not leave the ending, it
+//          left the ROW, and this proves the heading still does the work.
 //
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's, wave 4's and T2/T4/T5's §B apparatus, verbatim.
 // Every call is delegated to the real `rngFromSeed`, so any number this file measures is the engine's
@@ -328,7 +399,13 @@ describe('wave 5 T6 A – one uniform per read-bearing beat, and what it is keye
 // =================================================================================================
 
 /** Every legible string the focus can print, walked as a rectangle rather than transcribed – so a
- *  cell that is never written is a compile error and a cell that is never SWEPT is impossible. */
+ *  cell that is never written is a compile error and a cell that is never SWEPT is impossible.
+ *
+ *  ⚠⚠⚠ THE ENDING'S KEPT ROW IS WALKED ON `'told-late'` ALONE, AND THAT ABSENCE IS RULING O RATHER
+ *  THAN A GAP IN THE SWEEP. There is no legible told-now row to walk: `endedKeptRow` returns the
+ *  standing sentence for that register whatever frame it is handed. Its absence from this set is not
+ *  taken on trust either – the ruling-O case below asserts the byte-identity directly, for all four
+ *  voices and both reads, which is the net that would catch the deleted half being restored. */
 function everyLegible(): { where: string; text: string }[] {
   const out: { where: string; text: string }[] = []
   for (const voice of TEMPERAMENTS) {
@@ -339,19 +416,55 @@ function everyLegible(): { where: string; text: string }[] {
     for (const register of ENDS_REGISTERS) {
       for (const read of ENDS_READS) {
         out.push({ where: `ended heading ${voice}/${register}/${read}`, text: lifeBeatHeading('ended', 'level', 'close', register, read, frame(voice)) })
-        out.push({ where: `ended row ${voice}/${register}/${read}`, text: endedKeptRow(register, read, frame(voice)) })
       }
+    }
+    for (const read of ENDS_READS) {
+      out.push({ where: `ended row told-late/${voice}/${read}`, text: endedKeptRow('told-late', read, frame(voice)) })
     }
   }
   return out
 }
 
 describe('wave 5 T6 B – the legible drafts, and the one thing they may never say', () => {
-  it('⭐ the rectangle is complete and it is FORTY-EIGHT – 8 + 8 met, 16 + 16 ended', () => {
+  it('⭐ the rectangle is complete and it is FORTY – 8 + 8 met, 16 heading + 8 row ended', () => {
+    // ⚠ FORTY AND NOT FORTY-EIGHT SINCE T6b (ruling O): the told-now ending's kept row has no legible
+    // half, so the ended ROW axis is `voice × read` where the ended HEADING axis is
+    // `voice × register × read`. ⚠⚠ THE COUNT IS A RE-STATEMENT OF THE TYPES AND NEVER THE GUARANTEE:
+    // every pool is a `Record` total in its own axes, so a missing cell is a COMPILE error and this
+    // line only asserts that the sweep below reaches as many of them as exist.
     const all = everyLegible()
-    expect(all.length, 'the sweep walks every cell of both surfaces').toBe(48)
-    expect(new Set(all.map((c) => c.text)).size, 'and not one cell repeats another').toBe(48)
+    expect(all.length, 'the sweep walks every cell of both surfaces').toBe(
+      TEMPERAMENTS.length * (PARTNER_WANTS.length * 2 + ENDS_REGISTERS.length * ENDS_READS.length + ENDS_READS.length),
+    )
+    expect(all.length, 'and the arithmetic above really is forty').toBe(40)
+    expect(new Set(all.map((c) => c.text)).size, 'and not one cell repeats another').toBe(40)
     for (const cell of all) expect(cell.text.length, cell.where).toBeGreaterThan(20)
+  })
+
+  it('⭐⭐⭐ RULING O – the TOLD-NOW ending row is BYTE-IDENTICAL ACROSS THE TOGGLE, on every voice', () => {
+    // ⚠⚠⚠ THE WHOLE OF T6b, AS ONE PIN. «A focus may change how an existing surface reads; it may not
+    // create a surface.» The told-now card's prompt is raised on the SAME TICK as this row and its
+    // heading already carries the space-vs-company read, so a row repeating it is one piece of news
+    // told twice – and giving the row a read would add information it has never carried, which is
+    // invariant 4's territory and the owner's. T6 built that legible row; this is the net that keeps
+    // it out.
+    for (const voice of TEMPERAMENTS) {
+      for (const read of ENDS_READS) {
+        expect(endedKeptRow('told-now', read, frame(voice)), `${voice}/${read}: a coached parent's album says what an uncoached one's says`)
+          .toBe(endedKeptRow('told-now', read))
+        // ...and both of them are the sentence that shipped, transcribed rather than asked for twice:
+        // an equality between two arms is invisible to a mutation that moves BOTH (ruling L, amended).
+        expect(endedKeptRow('told-now', read, frame(voice)), `${voice}/${read}: and it is the shipped sentence`)
+          .toBe('It ended this week, and there is nobody in her life now.')
+      }
+    }
+    // ⚠ AND THE READ IS NOT ON IT IN EITHER ARM – the standing pool's two wordings of the draw, which
+    // every legible TOLD-LATE row does end on, appear nowhere in the told-now row.
+    for (const voice of TEMPERAMENTS) {
+      const row = endedKeptRow('told-now', 'company', frame(voice)).toLowerCase()
+      expect(row, `${voice}: no read on the told-now row`).not.toContain('she wants the room to herself')
+      expect(row, `${voice}: no read on the told-now row`).not.toContain('she does not want to be on her own with it')
+    }
   })
 
   it('⭐⭐ the four voices are FOUR on every axis – no girl silently receives another girl\'s reading', () => {
@@ -362,8 +475,14 @@ describe('wave 5 T6 B – the legible drafts, and the one thing they may never s
     for (const register of ENDS_REGISTERS) {
       for (const read of ENDS_READS) {
         expect(new Set(TEMPERAMENTS.map((v) => lifeBeatHeading('ended', 'level', 'close', register, read, frame(v)))).size, `ended heading/${register}/${read}`).toBe(4)
-        expect(new Set(TEMPERAMENTS.map((v) => endedKeptRow(register, read, frame(v)))).size, `ended row/${register}/${read}`).toBe(4)
       }
+    }
+    for (const read of ENDS_READS) {
+      expect(new Set(TEMPERAMENTS.map((v) => endedKeptRow('told-late', read, frame(v)))).size, `ended row/told-late/${read}`).toBe(4)
+      // ⚠ AND ONE ON THE OTHER REGISTER, WHICH IS THE SAME LAW READ THE OTHER WAY (ruling O): where
+      // there is no legible row there is nothing for a voice to vary, and four girls share one
+      // sentence rather than three of them silently receiving a fourth's.
+      expect(new Set(TEMPERAMENTS.map((v) => endedKeptRow('told-now', read, frame(v)))).size, `ended row/told-now/${read}`).toBe(1)
     }
   })
 
@@ -375,8 +494,9 @@ describe('wave 5 T6 B – the legible drafts, and the one thing they may never s
       for (const register of ENDS_REGISTERS) {
         expect(lifeBeatHeading('ended', 'level', 'close', register, 'space', frame(voice)), `${voice}/${register}: ended heading`)
           .not.toBe(lifeBeatHeading('ended', 'level', 'close', register, 'company', frame(voice)))
-        expect(endedKeptRow(register, 'space', frame(voice)), `${voice}/${register}: ended row`).not.toBe(endedKeptRow(register, 'company', frame(voice)))
       }
+      // ⚠ THE ROW, ON THE ONE REGISTER THAT HAS A LEGIBLE ONE (ruling O).
+      expect(endedKeptRow('told-late', 'space', frame(voice)), `${voice}: ended row`).not.toBe(endedKeptRow('told-late', 'company', frame(voice)))
     }
   })
 
@@ -460,8 +580,12 @@ describe('wave 5 T6 B – the legible drafts, and the one thing they may never s
         for (const read of ENDS_READS) {
           expect(lifeBeatHeading('ended', 'level', 'close', register, read, frame(voice)), `${voice}/${register}/${read}`)
             .not.toBe(lifeBeatHeading('ended', 'level', 'close', register, read))
-          expect(endedKeptRow(register, read, frame(voice)), `${voice}/${register}/${read}`).not.toBe(endedKeptRow(register, read))
         }
+      }
+      // ⚠ THE ROW, TOLD-LATE ONLY – the told-now register's two arms are the SAME bytes on purpose and
+      // are pinned that way by the ruling-O case above, which is this claim's deliberate exception.
+      for (const read of ENDS_READS) {
+        expect(endedKeptRow('told-late', read, frame(voice)), `${voice}/told-late/${read}`).not.toBe(endedKeptRow('told-late', read))
       }
     }
   })
@@ -474,11 +598,9 @@ describe('wave 5 T6 B – the legible drafts, and the one thing they may never s
       company: 'she does not want to be on her own with it',
     }
     for (const voice of TEMPERAMENTS) {
-      for (const register of ENDS_REGISTERS) {
-        for (const read of ENDS_READS) {
-          expect(endedKeptRow(register, read, frame(voice)).toLowerCase(), `${voice}/${register}/${read}`)
-            .toContain(tail[read])
-        }
+      for (const read of ENDS_READS) {
+        expect(endedKeptRow('told-late', read, frame(voice)).toLowerCase(), `${voice}/told-late/${read}`)
+          .toContain(tail[read])
       }
     }
   })
@@ -595,7 +717,10 @@ describe('wave 5 T6 C – the outcome is stamped on the row (ruling E)', () => {
     expect(heardKeys(), 'the prompt reads the stamp and never re-draws it').toEqual([])
   })
 
-  it('⭐ the told-now ending stamps its own row, and the read reaches its kept line only there', () => {
+  it('⭐⭐⭐ RULING O END TO END – the told-now ending stamps its row, moves the HEADING, and leaves the row alone', () => {
+    // ⚠⚠ THE SURFACE THAT CARRIES THE LEGIBILITY FOR A TOLD-NOW ENDING IS THE HEADING, so it is PROVEN
+    // here rather than assumed: the row is the shipped sentence whichever way the coin lands, and the
+    // card raised on the same tick is where a coached parent reads what she wants.
     const week = 1000
     const world = posed('t6-now', week, { hired: true, rung: 2, focus: 'listen' }, 'deep')
     world.bond = bondFor('close')
@@ -618,11 +743,19 @@ describe('wave 5 T6 C – the outcome is stamped on the row (ruling E)', () => {
     expect(ended.heard, 'the told-now raise carries its own coin').toBe(heard)
     const row = lifeRows(world).at(-1)!
     expect(row.lifeKind).toBe('ended')
-    expect(row.text, heard ? 'the legible told-now row' : 'the standing told-now row').toBe(
-      heard
-        ? endedKeptRow('told-now', drawEndsRead('t6-now', endWeek, 'deep'), frame('deep'))
-        : 'It ended this week, and there is nobody in her life now.',
-    )
+    // ⚠⚠ RULING O, THROUGH THE ENGINE RATHER THAN THROUGH THE POOL: the coin landed, the stamp says so,
+    // and the row the album keeps is the sentence every career has always got.
+    expect(row.text, 'the told-now row is the shipped sentence on both arms')
+      .toBe('It ended this week, and there is nobody in her life now.')
+    // ⭐⭐ AND THE HEADING IS WHERE THE MONEY WENT. Same tick, same episode, the read derived by
+    // `beatEndsRead` from the ending's own week – legible when the coin landed, standing when it did
+    // not, and the two are different strings either way.
+    const read = drawEndsRead('t6-now', endWeek, 'deep')
+    const heading = buildLifeBeatPrompt(world)!.heading
+    expect(heading, heard ? 'the told-now heading reads her plainly' : 'the standing told-now heading')
+      .toBe(lifeBeatHeading('ended', 'level', 'close', 'told-now', read, heard ? frame('deep') : null))
+    expect(heading === lifeBeatHeading('ended', 'level', 'close', 'told-now', read), 'and the two frames are two strings')
+      .toBe(!heard)
   })
 })
 
@@ -749,11 +882,15 @@ describe('wave 5 T6 E – zero draws while nobody is teaching, and the values un
     expect('heard' in lifeLogOf(off)[0]).toBe(false)
   })
 
-  it('⚠⚠ the AMBIGUOUS told-now ending derives no ends-read key – the standing row carries no read', () => {
-    // The guard at `rollEnds`' row, asserted rather than commented. The told-now row has never
-    // carried the space-vs-company read, so `seed:life:ends:<week>:react` is not on that path – and
-    // deriving it unconditionally «for the legible arm» would put a new key into every ending of
-    // every career, the frozen corpus included, for a value nothing would print.
+  it('⚠⚠⚠ RULING O IN THE STREAM – the told-now RAISE derives no ends-read key on EITHER arm', () => {
+    // ⭐⭐ RE-CUT BY T6b, AND THE RE-CUT IS THE STRONGER CLAIM. T6 had to allow the legible arm ONE
+    // `:react` key, because its told-now row printed the read; ruling O took that row out, so the
+    // told-now raise now derives the same keys with the focus on as with it off – NONE. That key has
+    // never been on this path, and deriving it here would put a new one into every ending of every
+    // career, the frozen corpus included.
+    // ⚠ THE HEADING STILL READS IT, one tick later and on both arms alike: `lifeBeatPromptFor` calls
+    // `beatEndsRead` on every `toSnapshot`, which is wave 4's behaviour and is deliberately outside
+    // this window – what is measured below is the RAISE.
     function endingAt(seat: Seat): string[] {
       const world = posed('t6-react', 1000, seat, 'deep')
       world.bond = bondFor('close')
@@ -769,9 +906,12 @@ describe('wave 5 T6 E – zero draws while nobody is teaching, and the values un
     }
     expect(endingAt({ hired: false }), 'nobody is teaching him – nothing to be plain about').toEqual([])
     expect(endingAt({ hired: true, rung: 1, focus: 'recovery' }), 'and a seat working another year is the same').toEqual([])
-    // ⭐ THE POSITIVE CONTROL – the legible arm DOES need the read, and derives it exactly once.
-    expect(endingAt({ hired: true, rung: 2, focus: 'listen' }).length, 'the legible row reads it once')
-      .toBeLessThanOrEqual(1)
+    // ⭐⭐ AND THE WORKING SEAT – the arm that used to be the exception. ⚠ THE FIXTURE IS CHECKED FOR
+    // HAVING FIRED before the null is believed: a seat that never read the beat would satisfy an empty
+    // list for the wrong reason, which is this wave's own «unable to fail» family.
+    expect(endingAt({ hired: true, rung: 2, focus: 'listen' }), '⚠⚠ ruling O: the focus buys a heading, so the raise reaches nothing new')
+      .toEqual([])
+    expect(heardKeys().length, 'and the coin really was spent on this ending').toBe(1)
   })
 
   it('⭐⭐⭐ VALUE-LEVEL, KEY BY KEY OVER A WALKED CAREER – with the focus off, NOTHING moves', () => {
