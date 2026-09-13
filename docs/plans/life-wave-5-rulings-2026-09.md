@@ -445,3 +445,54 @@ the difference between a pin and a number.
 
 ⚠ And the notification lied a fifth and sixth time this wave – twice over killed `check` runs, the
 second with its own log reading `CHECK_EXIT=143`.
+
+## Ruling L – the count-keys net has a blind spot, and T5 measured it
+
+Wave-4 §0.1 made the **count-keys net** the LAW for zero-draw claims: prove eligibility
+short-circuits with a key COUNTER the code cannot see, plus a positive control. It is still the
+law. But T5's ARM 7a found what it cannot do, and the finding is general enough that every later
+task must know it.
+
+**The arm:** one extra `rng()` call inserted before `luck` inside `growWeek` – **same key, same key
+count.** The key list stayed **GREEN**. What moved was a value: `serve` 53.6324 → 53.5834, because
+four physical skills share the week's luck draw and every one of them shifted down the sequence.
+
+**So: a key counter sees KEYS, never CONSUMED VALUES.** It proves a stream was not REACHED. It
+cannot prove a stream was not ADVANCED. A term added inside a function that already draws – which
+is exactly where T5's term, T6's listen coin and T7's flip hazard all live – can silently consume a
+value on an existing key and the net will not blink.
+
+⚠ **The rule this wave adopts: when a new term lives INSIDE a drawing function, the count-keys net
+is necessary and not sufficient. Pair it with a value-level check** – a key-by-key world hash over
+a walked career, or the skills object itself – and mutation-verify with an arm that consumes a draw
+**without** adding a key. An arm that only deletes the term tests nothing about this.
+
+## Ruling M – two numbers T10 must predict, or its own bars will read as failures
+
+Both measured by T5 over five seeds, and both are arithmetic rather than defects.
+
+**1. A held season delivers ~90% of the number on the card: 1.35 / 2.25 / 3.15 against the
+constants' 1.5 / 2.5 / 3.5.** `growWeek`'s gain is `rate × HEADROOM × luck × aim`, so a girl he has
+already lifted has marginally less headroom for the training that follows. ⚠ This is the OPPOSITE
+of the double-charge the spec's own ⚠ worries about – the two channels add to slightly LESS than
+their sum, never more. **T10's grid predicts 0.9×**, or a correct implementation will be reported
+as a miss.
+
+**2. At or within one week's rate of her ceiling, all three rungs collapse to exactly 0.** So a
+strict-monotonicity bar must segment or exclude careers sitting at the ceiling – a ten-season hold
+reached it and stopped buying anything. That same fact is this focus's **never-fired corridor**
+material: paid weeks with nothing left to buy.
+
+### Two smaller corrections, recorded so they are not re-found
+
+* **T4b's «six cycle paths» was seven** – its enumerator returned early at its own `limit = 6`, so
+  the six was the cap, not a count. The ruling is untouched (the shortest path and its closing
+  value are the same), but a number that is really a limit is worth naming: it is the same family
+  as reading a verdict off a pipe.
+* **`inCollege` ignores `fromWeek`** – `college.ts:165` is `college !== null && week < untilWeek`.
+  A freeze fixture built on the other reading measures a different week set while looking correct.
+* **The composure number is on NO screen.** The radar carries a fogged `shownValue` into a polygon
+  and prints no text (decisions.md #11, «axes without numbers»). So the cool-head sentence is not a
+  caption for a number the player can already see – without it the year is genuinely invisible,
+  which is the travelling-team §4 failure by name. My brief guessed the opposite and the guess was
+  wrong in the direction that makes the line MORE load-bearing.
