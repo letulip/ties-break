@@ -144,6 +144,33 @@
 //          **3 RED** · §F's zero-draw case and BOTH of §B's, so the count-keys net is confirmed alive
 //          over the new road rather than assumed to still cover it.
 //
+// =================================================================================================
+// ⚠⚠ T9b's OWN LEDGER (13.09.2026, the architect's вычитка) – §G, AND WHAT EACH ARM SAID
+// =================================================================================================
+//
+//   THREE MUTATIONS, THREE RED, NO NULLS. Control green first – 209 passed over this file,
+//   tests/spirit.test.ts, tests/wave4-spirit-shock.test.ts, tests/wave5-psy-counsel.test.ts,
+//   tests/wave5-psychologist-listen.test.ts and tests/coach-voice.test.ts – each arm applied and
+//   undone BY THE INVERSE STRING EDIT – never `git checkout` – with `spirit.ts`'s md5 asserted back
+//   to pristine after every one (`1a5731954b0eb07be16471362b7835dd`, three times).
+//
+//   ARM A  the вычитка UNDONE – `&& hadAnEarlierEnding(world, shock.week)` deleted, i.e. exactly the
+//          trigger T9 found. **3 RED** · §D's вычитка case («a career's FIRST shock has no last time
+//          to be sooner than: expected true to be false»), §G's first-shock walk («expected [ { id: 1,
+//          week: 420, …} ] to deeply equal []») and §G's pair case. ⭐ IT BITES ON THE FIRST-SHOCK
+//          CASE, which is the whole claim: an arm that only moved the second one would mean the new
+//          clause was doing nothing on the world it was written for.
+//   ARM B  the clause INVERTED (`!hadAnEarlierEnding`). **11 RED**, and the one that matters is §G's
+//          second-shock walk («and the sentence is one the career can support: expected +0 to be 1»).
+//          ⚠ THE OTHER TEN ARE THE POINT OF THE FIXTURE CHANGE, not noise: every positive receipt
+//          case in the file now walks a girl who HAS a last time, so an inverted clause silences all
+//          of them – §B's clear, §D's half / whole-shock / bar / row, §E's isolation (which sees the
+//          footprint shrink from four keys to three) and §F's receipt pair.
+//   ARM C  `<` weakened to `<=`. ⭐ THE DEFECT WEARING ONE CHARACTER: the mark's own episode is dated
+//          `shock.week` by `rollEnds`' line-run, so at `<=` it answers the question with itself and
+//          every first shock prints again. **3 RED** – the same three as ARM A, and that identity is
+//          the measurement: `<=` IS the defect restored, by a different edit.
+//
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's, wave 4's and T2's §B apparatus, verbatim. Every
 // call is delegated to the real `rngFromSeed`, so any number this file measures is the engine's own;
 // the mock exists only so §B can COUNT the keys the pass reached. Hoisted, because `vi.mock`'s
@@ -207,6 +234,44 @@ function quietRunFrom(world: WorldState, from: number, run: number): number {
 }
 
 /**
+ * ⭐⭐⭐ THE ATTACHMENT HISTORY A POKED MARK IMPLIES – the architect's вычитка, 13.09, and the fixture
+ * half of it. `endedWeeks` are the weeks attachments ended, oldest first, and the LAST of them is the
+ * one this mark is about.
+ *
+ * ⚠⚠ WHY EVERY POSED SHOCK NOW NEEDS ONE. `recoveryReceiptEarned` gained a third clause – there must
+ * have BEEN a last time for «She came back sooner than last time» to be about anything – and it reads
+ * that off `loveEpisodes`' own dates, because `rollEnds` stamps the mark on the same line-run as
+ * `endEpisode(world, world.week)`. A world with a `spiritShock` and an empty episode list is
+ * therefore a world the ENGINE cannot produce, and a fixture that poses one is posing an impossible
+ * career. This function makes the poke honest rather than working around the new clause.
+ *
+ * ⚠ `knownWeek` IS NULL ON EVERY ROW, AND THAT IS DELIBERATE TWICE OVER. It is legal (an attachment
+ * the parent was never told about is the told-late scene's whole premise), and it keeps
+ * `deliverKnownPartner` off these worlds – a delivered row would raise a life beat and put rows in
+ * `lifeLog` and `events` that no case here is about. ⚠ Every row is ENDED, so `activeEpisode` is null
+ * and no `attachmentLift` moves one literal in this file's ladders.
+ */
+function withEndings(world: WorldState, endedWeeks: readonly number[]): WorldState {
+  world.loveEpisodes = endedWeeks.map((ended) => ({
+    id: `p:${ended - 10}`,
+    sinceWeek: ended - 10,
+    endedWeek: ended,
+    knownWeek: null,
+    wants: 'private',
+    partnerId: `p:${ended - 10}`,
+  }))
+  return world
+}
+
+/** ⚠⚠ THE FIXTURE REALLY CONTAINS THE THING BEING READ OFF IT – asserted, never assumed (the
+ *  architect's own instruction after T6b measured a forty-week walk that could not reach its case).
+ *  Hands back the count of endings STRICTLY BEFORE the mark's week, which is the exact quantity the
+ *  receipt's third clause is a `> 0` test on. */
+function endingsBefore(world: WorldState, shockWeek: number): number {
+  return (world.loveEpisodes ?? []).filter((e) => e.endedWeek !== null && e.endedWeek < shockWeek).length
+}
+
+/**
  * A girl carrying a shock from LAST week, on a quiet run, with the seat in whatever state the case
  * is about.
  *
@@ -218,6 +283,11 @@ function quietRunFrom(world: WorldState, from: number, run: number): number {
  * ⚠ `shock.week` IS `week − 1` ON PURPOSE: the landing week is the one week the slope must NOT apply
  * (the one predicate, §C), so a fixture that stamped the current week would silently measure a
  * different claim in every case that is not about the landing week.
+ *
+ * ⚠⚠ AND SINCE THE ВЫЧИТКА IT ALSO CARRIES THE HISTORY, `priors` ENDINGS DEEP. The default of 1 is
+ * «this is not her first» – which is what every case here except §G is about, so that a case which
+ * measures the ARITHMETIC of the receipt is not silently also measuring its history clause. §G is the
+ * section that varies it, and it is the only one that passes `priors: 0`.
  */
 function carrying(
   seed: string,
@@ -225,6 +295,7 @@ function carrying(
   spirit: number,
   seat: { hired: boolean; rung?: 0 | 1 | 2; focus?: 'recovery' | 'coolhead' | null },
   run = 22,
+  priors = 1,
 ): { world: WorldState; week: number } {
   const world = createWorld(seed)
   world.temperament = temperament
@@ -232,6 +303,8 @@ function carrying(
   world.week = week
   world.spirit = spirit
   world.spiritShock = { week: week - 1, kind: 'breakup' }
+  // this mark's own ending, dated the week it landed, plus `priors` older ones behind it
+  withEndings(world, [...Array.from({ length: priors }, (_, i) => week - 1 - 40 * (priors - i)), week - 1])
   world.psychologistHired = seat.hired
   if (seat.rung !== undefined) world.psychologistRung = seat.rung
   world.psychologistFocus = seat.focus ?? null
@@ -490,6 +563,12 @@ describe('wave 5 T4 C – the week a shock lands is not a week anybody worked', 
     world.week = week
     world.spirit = 95
     world.spiritShock = { week, kind: 'breakup' }
+    // ⚠⚠ THE HISTORY IS POSED SO THE SILENCE BELOW IS THE `weeks >= 1` GUARD'S AND NOTHING ELSE. Since
+    // the вычитка the receipt has a third clause, and a case that left the episode list empty would go
+    // quiet for the WRONG reason – and would stay quiet under a mutation that deleted the guard, which
+    // is ARM 4's red going missing without anybody noticing.
+    withEndings(world, [week - 60, week])
+    expect(endingsBefore(world, week), 'this is not her first, so only the guard can withhold it').toBe(1)
     world.psychologistHired = true
     world.psychologistRung = 2
     world.psychologistFocus = 'recovery'
@@ -614,6 +693,8 @@ describe('wave 5 T4 D – the receipt counts the weeks he actually worked', () =
     world.week = week
     world.spirit = 60
     world.spiritShock = { week, kind: 'breakup' }
+    withEndings(world, [week - 60, week])
+    expect(endingsBefore(world, week), 'and there IS a last time for the receipt to be sooner than').toBe(1)
     world.psychologistHired = true
     world.psychologistRung = 2
     world.psychologistFocus = 'recovery'
@@ -633,8 +714,13 @@ describe('wave 5 T4 D – the receipt counts the weeks he actually worked', () =
   it('⭐⭐ THE BAR ITSELF – `recoveryReceiptEarned`, over the table ruling C wrote', () => {
     // ⚠ THE ENGINE'S OWN PREDICATE, asked directly, so the boundary is pinned once at the arithmetic
     // rather than five times through worlds that have to be built to land on it.
+    // ⚠⚠ THE WORLD IS THE ВЫЧИТКА'S THIRD CLAUSE AND IS HELD CONSTANT ACROSS THIS TABLE – every row
+    // below is a SECOND shock, so the only thing varying is the arithmetic ruling C wrote. The history
+    // half has its own rows underneath, where the arithmetic is held constant instead.
+    const second = withEndings(createWorld('t4-bar-second'), [60, 100])
     const at = (weeks: number | undefined, span: number) =>
-      recoveryReceiptEarned({ week: 100, kind: 'breakup', ...(weeks === undefined ? {} : { weeks }) }, 100 + span)
+      recoveryReceiptEarned(second, { week: 100, kind: 'breakup', ...(weeks === undefined ? {} : { weeks }) }, 100 + span)
+    expect(endingsBefore(second, 100), 'the table is asked of a girl who has been here before').toBe(1)
     expect(at(undefined, 0), 'a shock that predates the counter, cleared on its own week').toBe(false)
     expect(at(0, 6), 'a focus that was never held').toBe(false)
     expect(at(undefined, 6), '...and absent reads the same as zero').toBe(false)
@@ -643,6 +729,36 @@ describe('wave 5 T4 D – the receipt counts the weeks he actually worked', () =
     expect(at(4, 7), 'over half').toBe(true)
     expect(at(6, 6), 'every week of it').toBe(true)
     expect(at(1, 0), '⚠ a one-week span he did work – the only span-0 world the guard lets through').toBe(true)
+  })
+
+  it('⭐⭐⭐ THE ВЫЧИТКА’S OWN CLAUSE – «sooner than last time» needs a last time, asked at the predicate', () => {
+    // ⚠⚠ THE ARITHMETIC IS HELD AT ITS MOST GENEROUS (`weeks = 6` against a span of 6 – every week of
+    // it worked) so that nothing below can go false for ruling C's reason. What varies is the list.
+    const earned = (world: WorldState) =>
+      recoveryReceiptEarned(world, { week: 100, kind: 'breakup', weeks: 6 }, 106)
+
+    const first = withEndings(createWorld('t4-bar-first'), [100])
+    expect(endingsBefore(first, 100), 'her first ever ending, and it IS the one this mark is about').toBe(0)
+    expect(first.loveEpisodes?.length, '⚠ the list is not empty – the mark’s own row is in it').toBe(1)
+    expect(earned(first), '⭐⭐ a career’s FIRST shock has no last time to be sooner than').toBe(false)
+
+    const second = withEndings(createWorld('t4-bar-again'), [60, 100])
+    expect(endingsBefore(second, 100), 'one ending behind this one').toBe(1)
+    expect(earned(second), '⭐⭐ and the second one is a comparison the sentence can make').toBe(true)
+
+    // ⚠ THE BOUNDARY IS STRICT, AND IT IS THE WHOLE DEFECT WEARING ONE CHARACTER: the mark's own
+    // episode is dated `shock.week` by `rollEnds`' own line-run, so at `<=` it would answer the
+    // question with itself and every first shock would print again.
+    const sameWeek = withEndings(createWorld('t4-bar-same-week'), [100, 100])
+    expect(endingsBefore(sameWeek, 100), 'two rows dated the mark’s own week, and neither is BEFORE it').toBe(0)
+    expect(earned(sameWeek), '⭐ nothing ended earlier, so nothing is claimed').toBe(false)
+
+    // ⚠ AN EMPTY LIST IS A WORLD THE ENGINE CANNOT PRODUCE (the mark is written on the same line-run
+    // as the date), and the predicate is total over it anyway – the `?? []` courtesy every selector in
+    // this layer extends to hand-built probe worlds.
+    const bare = createWorld('t4-bar-bare')
+    bare.loveEpisodes = []
+    expect(earned(bare), 'no episodes at all, and no throw').toBe(false)
   })
 
   it('⭐⭐ THE ROW – one line, no figure, at the clear week, and it is the exported draft', () => {
@@ -712,6 +828,12 @@ describe('wave 5 T4 E – with the seat empty, a walked career is byte-identical
     for (let w = 0; w < 120; w++) stepCareerWeek(world, rng, POLICIES[1])
     world.spirit = 40
     world.spiritShock = { week: world.week, kind: 'breakup' }
+    // ⚠⚠ THE HISTORY THE MARK IMPLIES, POSED WITH IT (the вычитка). It is IDENTICAL in both arms of
+    // every comparison below, so it moves no key and shifts no diff; what it does is make the isolation
+    // case's positive control reachable at all – a walked career carries an EMPTY episode list at this
+    // age (measured: `arrivalEligible`'s own age gate refuses every week of the walk), so a mark poked
+    // onto it without its dates is a career where the receipt could never honestly print.
+    withEndings(world, [world.week - 60, world.week])
     seat(world)
     const weekly: Record<string, string>[] = []
     for (let w = 0; w < weeks; w++) {
@@ -902,8 +1024,12 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
     expect(paid.receipts, '⭐ 3 × 2 >= 3 – she came back sooner than last time, and they paid for it').toBe(1)
     expect(free.receipts, '⭐⭐ 1 × 2 < 3 – the same walk, and nobody is thanked for it').toBe(0)
     // ...and the bar itself agrees, asked directly, so the case above is arithmetic rather than luck.
-    expect(recoveryReceiptEarned({ week: 0, kind: 'breakup', weeks: 3 }, 3)).toBe(true)
-    expect(recoveryReceiptEarned({ week: 0, kind: 'breakup', weeks: 1 }, 3)).toBe(false)
+    // ⚠ Asked of a world that HAS a last time, so the вычитка's third clause is true on both rows and
+    // the only thing separating them is `weeks * 2 >= span`.
+    const held = withEndings(createWorld('t4b-bar'), [-60, 0])
+    expect(endingsBefore(held, 0), 'the two rows below vary the counter and nothing else').toBe(1)
+    expect(recoveryReceiptEarned(held, { week: 0, kind: 'breakup', weeks: 3 }, 3)).toBe(true)
+    expect(recoveryReceiptEarned(held, { week: 0, kind: 'breakup', weeks: 1 }, 3)).toBe(false)
   })
 
   it('⭐⭐ AND A STOOD-DOWN WEEK DERIVES NOTHING EITHER – §B’s counter, aimed at the new road', () => {
@@ -944,5 +1070,73 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
     // her 5 + the top rung's 4, and then the laid-up week's own row (−1 × 0.8 = −0.8, to one tenth).
     expect(world.spirit, 'the slope is spent on a week she cannot play').toBe(38.2)
     expect(world.spiritShock?.weeks, 'and the week is counted').toBe(1)
+  })
+})
+
+// =================================================================================================
+// G. ⭐⭐⭐ THE ВЫЧИТКА – «SOONER THAN LAST TIME» NEEDS A LAST TIME, WALKED ON BOTH SIDES OF IT
+// =================================================================================================
+//
+// ⚠⚠ THE DEFECT, AND WHO FOUND IT. T9 collected the wave's 82 strings and flagged this one: the
+// engine keeps no shock history, `recoveryReceiptEarned` asked only about THIS shock's weeks, and so
+// «She came back sooner than last time.» printed on a career's FIRST EVER shock. The architect ruled
+// at the delivery gate (13.09) that the SENTENCE does not move – it is one of the nine ruled rows,
+// the spec §2's own wording, and CLAUDE.md invariant 4 binds it – and that the TRIGGER does.
+//
+// ⚠⚠ AND IT IS DERIVED, NOT COUNTED. No new field and no schema move: `world.spiritShock` is written
+// in exactly one place (`rollEnds`) on the same line-run as `endEpisode(world, world.week)`, so the
+// mark's own episode is dated `shock.week` and «there was an earlier one» is a DATE RELATION over
+// `loveEpisodes` – some row with a non-null `endedWeek` STRICTLY BELOW it. A count of two rows would
+// be the same claim only if endings were strictly sequential, and an open row beside an ended one is
+// a girl in her first break-up with somebody new already there.
+//
+// ⚠ BOTH ARMS BELOW ARE WALKED THROUGH THE WEEKLY PASS AND BOTH EARN EVERYTHING ELSE – the same girl,
+// the same shock, the same rung, the same held year, the same span and the same counter. The only
+// difference in the two worlds is one row in `loveEpisodes`, and the only difference in the two
+// outcomes is one sentence in the feed. That is what makes this a two-case proof rather than two
+// unrelated walks.
+describe('wave 5 T9b G – a first shock is not «sooner than last time», and a second one is', () => {
+  /** Walk a posed mark to its clear with the year held throughout, over `priors` earlier endings. */
+  function walked(seed: string, priors: number) {
+    const { world, week } = carrying(seed, 'deep', 38, { hired: true, rung: 2, focus: 'recovery' }, 22, priors)
+    const out = walkToClear(world, week, () => true)
+    return { ...out, week, world }
+  }
+
+  it('⭐⭐⭐ HER FIRST EVER SHOCK EARNS EVERYTHING ELSE AND PRINTS NOTHING', () => {
+    const first = walked('t9b-first', 0)
+    // ⚠⚠ THE FIXTURE IS ASSERTED BEFORE ANYTHING IS READ OFF IT (the architect's instruction, after
+    // T6b measured a forty-week walk that could not reach the case it was testing). The list is NOT
+    // empty – the mark's own ending is in it – and nothing in it predates the mark.
+    expect(first.world.loveEpisodes?.length, 'the ending that caused this mark is on the record').toBe(1)
+    expect(endingsBefore(first.world, first.week - 1), '⭐ and there is nothing behind it').toBe(0)
+    // ...and every OTHER half of the condition is satisfied, so the silence is the new clause's.
+    expect(first.weeks >= 1, 'the counter opened').toBe(true)
+    expect(first.weeks * 2 >= first.span, `ruling C's own bar: ${first.weeks} × 2 >= ${first.span}`).toBe(true)
+    expect(first.receipts, '⭐⭐⭐ and nothing is printed – there is no last time to be sooner than').toEqual([])
+  })
+
+  it('⭐⭐⭐ HER SECOND ONE PRINTS – the identical walk, one older ending behind it', () => {
+    const second = walked('t9b-second', 1)
+    expect(endingsBefore(second.world, second.week - 1), '⭐ one ending strictly before this mark').toBe(1)
+    expect(second.weeks >= 1 && second.weeks * 2 >= second.span, 'the same bar, cleared the same way').toBe(true)
+    expect(second.receipts.length, '⭐⭐⭐ and the sentence is one the career can support').toBe(1)
+    expect(second.receipts[0].text, '⚠ INVARIANT 4: the owner’s ruled words, byte for byte').toBe(RECOVERY_RECEIPT)
+  })
+
+  it('⚠⚠ THE TWO WALKS ARE ONE WALK – same ladder, same span, same counter, and only the row differs', () => {
+    // ⭐ RULING K MADE INTO A CASE, `§F`'s own idiom: if the two arms diverged anywhere else, «the
+    // receipt withheld» would be a claim about two different careers instead of about one condition.
+    const first = walked('t9b-pair', 0)
+    const second = walked('t9b-pair', 1)
+    expect({ span: second.span, weeks: second.weeks }, 'the arithmetic half is identical in both')
+      .toEqual({ span: first.span, weeks: first.weeks })
+    expect(second.clearedAt - second.week, 'and the mark comes off on the same week of the walk')
+      .toBe(first.clearedAt - first.week)
+    expect(second.world.spirit, '...off the same spirit').toBe(first.world.spirit)
+    expect(
+      second.world.events.length - first.world.events.length,
+      '⭐⭐ exactly one row of difference between a first break-up and a second',
+    ).toBe(1)
   })
 })

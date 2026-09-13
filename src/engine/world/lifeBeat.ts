@@ -813,7 +813,25 @@ const PSY_REGISTERS = Object.keys(PSY_REGISTER_TOTAL) as readonly PsyRegister[]
  *  answered when this one opens. It is a fact about the queue, not a hope about it.
  *
  *  ⚠ THE HONESTY LAW: he may name what he can see and what he cannot reach; never a duration, a date,
- *  a count, a result, another person, or one word of what she said in a session. */
+ *  a count, a result, another person, or one word of what she said in a session.
+ *
+ *  ⚠⚠ TWO CELLS CARRY THE ARCHITECT'S ВЫЧИТКА (13.09) AND HIS WORDING, VERBATIM. Both were replaced
+ *  at the delivery gate, both in the `breakup` column, and the reasons are kept here because the next
+ *  editor is the person who could put either back:
+ *    · `strained` CLAIMED A DISTANCE THE DRIVER DOES NOT CARRY. It read «She has been carrying it a
+ *      long way from home, and distance makes a weight feel permanent when it is not» – and
+ *      `strained` is `stopRootsOf`'s BOND reading, the distance BELOW `ECONOMY.bond.start`, i.e. a
+ *      strained HOME. The beat is reachable on a girl who still lives under the roof and has never
+ *      been far from it, so the line was true-sounding and false on part of the ladder – exactly the
+ *      family of error the legible pools' own lints were built for. The replacement keeps the best
+ *      clause («feel permanent when it is not») and says what the driver actually means: nowhere to
+ *      set it down. ⚠ A GEOGRAPHIC READING MAY NOT COME BACK HERE unless a driver is added that
+ *      carries one; this pool is keyed on `ForkStopDriver` and nothing in that union is a place.
+ *    · `own`'s closing clause read «only that a want stated this month is partly the month», which
+ *      was flagged by its own author as clumsy for a reading that is correct. The reading is
+ *      unchanged – the month is doing some of the wanting – and only the phrasing moved.
+ *  ⚠ The other four cells did not move, and the shared openings are the point of the family (above),
+ *  not a thing to harmonise away. */
 const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string>> = {
   plain: {
     worn: 'Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. She is tired the way a long season makes a person tired, and tired has an end to it."',
@@ -824,8 +842,8 @@ const PSY_COUNSEL: Record<PsyRegister, Record<ForkStopDriver, string>> = {
   breakup: {
     worn: 'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. Underneath it she is also tired, and those are two different things to be."',
     strained:
-      'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has been carrying it a long way from home, and distance makes a weight feel permanent when it is not."',
-    own: 'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a want stated this month is partly the month."',
+      'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has nowhere easy to set it down, and a weight with nowhere to go starts to feel permanent when it is not."',
+    own: 'Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a month like this one does some of the wanting."',
   },
 }
 

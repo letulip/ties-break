@@ -97,7 +97,10 @@ import { addEvent, seasonStartWeek } from './world/ledger'
 // import of it here would close a value loop – the brief flagged the hazard and it was real. The
 // selector moved verbatim to a leaf whose only import is a type; the arrow stays one-way and
 // `src/engine/world/*` still has no runtime cycles. See that module's banner for the whole of it.
-import { activeEpisode } from './world/loveEpisodes'
+// ⚠ `loveEpisodesOf` JOINS IT AT THE ARCHITECT'S ВЫЧИТКА (13.09) AND OPENS NO NEW ARROW EITHER – it
+// is the SAME leaf, the list `activeEpisode` is a question about, and the receipt's «was there a last
+// time» is the other question asked of it. See `hadAnEarlierEnding` below.
+import { activeEpisode, loveEpisodesOf } from './world/loveEpisodes'
 import type { BondBand, MoodRegister } from '../shared/protocol'
 // ⚠ TYPE-ONLY, so this leaf adds no runtime edge back into the integration core – the same shape
 // `academy.ts` uses one floor up and every `world/*.ts` module uses beside it.
@@ -547,16 +550,61 @@ function recoverySlopeFor(world: WorldState): number {
   return p.recoverySlope[world.psychologistRung ?? p.defaultRung] ?? p.recoverySlope[p.defaultRung]
 }
 
-/** ⭐⭐ MAY THE RECEIPT BE PRINTED for a shock that has just cleared – the architect's ruling C, as
- *  one expression, exported so the pin reads the engine's own rule instead of re-typing it.
+/** ⭐⭐⭐ WAS THERE A LAST TIME – the ARCHITECT'S ВЫЧИТКА, 13.09, and the half of the receipt's
+ *  condition that is about HER HISTORY rather than about this shock's weeks.
+ *
+ *  ⚠⚠ THE DEFECT IT CLOSES, SAID ONCE. `RECOVERY_RECEIPT` is «She came back sooner than last time.»
+ *  and T9's string sweep found it printing on a career's FIRST EVER shock, where there is no last time
+ *  to be sooner than. The sentence is one of the wave's nine RULED rows – the spec §2's own wording –
+ *  so it does not move. The TRIGGER does, and this is it.
+ *
+ *  ⚠⚠ DERIVED FROM DATES THE WORLD ALREADY PERSISTS, AND NOT FROM A NEW COUNTER (the architect's own
+ *  fence: «no new field, no schema move»). The chain that makes it exact:
+ *    · `world.spiritShock` is written in ONE place in the engine – `rollEnds` (`world/lifeBeat.ts`),
+ *      `kind: 'breakup'`, on the SAME LINE-RUN as `endEpisode(world, world.week)` and never
+ *      conditionally (that function's own ⚠). So this mark's episode has `endedWeek === shock.week`,
+ *      and «an ending» and «a shock» are the same event seen from two fields.
+ *    · Rows are appended in calendar order, only the tail is ever open (`arrivalEligible` clause 2)
+ *      and `endEpisode` dates the ACTIVE row alone – so at most one episode ends in any one week.
+ *  Therefore «there was an earlier shock» IS «some episode carries a non-null `endedWeek` STRICTLY
+ *  BELOW this mark's week», which is what the line below asks.
+ *
+ *  ⚠ STRICTLY BELOW, NEVER `<=`: at `<=` the mark's OWN episode – dated `shock.week` by the run above
+ *  – answers the question with itself, and every first shock prints again. It is the whole defect
+ *  wearing one character.
+ *
+ *  ⚠ A DATE RELATION AND NOT A COUNT, on the architect's own instruction: «a count of two is the same
+ *  claim only if endings are strictly sequential». `loveEpisodes.length >= 2` is satisfied by an open
+ *  row beside an ended one, which is a girl in her FIRST break-up with somebody new already there.
+ *
+ *  ⚠ IT ASKS NOTHING ABOUT `knownWeek`. Whether the PARENT was told there was anybody is a different
+ *  question (`activeEpisode`'s own note), `rollEnds` stamps the mark either way, and a receipt about
+ *  HER coming back may not be gated on his knowledge – the told-late scene exists precisely because
+ *  those two facts come apart. Pure, total, zero draws. */
+function hadAnEarlierEnding(world: WorldState, shockWeek: number): boolean {
+  return loveEpisodesOf(world).some((episode) => episode.endedWeek !== null && episode.endedWeek < shockWeek)
+}
+
+/** ⭐⭐ MAY THE RECEIPT BE PRINTED for a shock that has just cleared – the architect's ruling C and
+ *  his 13.09 вычитка, as ONE expression, exported so the pin reads the engine's own rule instead of
+ *  re-typing it.
  *
  *  «HELD FOR AT LEAST HALF THE SHOCK'S WEEKS», where the span is `week − shock.week` at the clear and
  *  the HELD half is the counter. ⚠ THE `weeks >= 1` GUARD IS NOT DECORATION: a shock that lands and
- *  clears in one week has span 0, and `0 * 2 >= 0` would print a receipt for work nobody did. Pure,
- *  total, zero draws. */
-export function recoveryReceiptEarned(shock: NonNullable<WorldState['spiritShock']>, week: number): boolean {
+ *  clears in one week has span 0, and `0 * 2 >= 0` would print a receipt for work nobody did.
+ *
+ *  ⚠⚠ AND THE THIRD CLAUSE IS THE SENTENCE'S OWN CLAIM, NOT A SECOND RULE ABOUT THE WORK. The first
+ *  two ask «did he earn it»; `hadAnEarlierEnding` asks whether the thing the line says is true at all.
+ *  They are deliberately ANDed in one function rather than split across the call site, so that «the
+ *  receipt's condition» keeps one spelling and a pin cannot assert half of it and believe it has the
+ *  rule. ⚠ IT TAKES THE WORLD FOR THAT CLAUSE AND FOR NOTHING ELSE. Pure, total, zero draws. */
+export function recoveryReceiptEarned(
+  world: WorldState,
+  shock: NonNullable<WorldState['spiritShock']>,
+  week: number,
+): boolean {
   const weeks = shock.weeks ?? 0
-  return weeks >= 1 && weeks * 2 >= week - shock.week
+  return weeks >= 1 && weeks * 2 >= week - shock.week && hadAnEarlierEnding(world, shock.week)
 }
 
 /** ⭐⭐ THE RECEIPT – one no-cents feed line at the clear week, and the travelling-team §4 legibility
@@ -565,7 +613,14 @@ export function recoveryReceiptEarned(shock: NonNullable<WorldState['spiritShock
  *  ⚠⚠ DRAFT (CLAUDE.md invariant 4), and it is the spec's §2 own working sentence for this focus
  *  transcribed rather than invented. NO FIGURE IN IT – the no-cents law (the wave-3 brief §0.5): the
  *  receipt says the work showed, never what it cost or how many points it was worth. No pronoun for
- *  the psychologist, short dash idiom, and nothing that names a session. */
+ *  the psychologist, short dash idiom, and nothing that names a session.
+ *
+ *  ⚠⚠ THE SENTENCE SURVIVED THE ARCHITECT'S ВЫЧИТКА (13.09) AND ITS TRIGGER DID NOT, which is the
+ *  right way round and is worth the line: T9's sweep found the row printing on a career's FIRST ever
+ *  shock, and «sooner than last time» is false there. A builder's instinct is to soften the words;
+ *  invariant 4 forbids it and the fix is better – the WORDS are the owner's and stay byte-identical,
+ *  and `recoveryReceiptEarned` now asks `hadAnEarlierEnding` so the state where the line would lie is
+ *  a state where it does not print. ⭐ A string is not a place to hedge a condition. */
 export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
 
 /**
@@ -714,7 +769,10 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean): voi
     //    ⚠ A FIRE-AND-RE-HIRE AT THE CLEAR CANNOT MANUFACTURE THIS: the test is arithmetic over weeks
     //    already worked and asks nothing about who is on the payroll today, which is the hole ruling C
     //    exists to close.
-    if (recoveryReceiptEarned(shock, world.week)) {
+    //    ⚠⚠ AND SINCE THE ARCHITECT'S ВЫЧИТКА (13.09) THE TEST ALSO ASKS WHETHER THE SENTENCE IS
+    //    TRUE – «sooner than last time» needs a last time, and `hadAnEarlierEnding` reads it off
+    //    `loveEpisodes`' own dates. The predicate takes the world for that clause alone.
+    if (recoveryReceiptEarned(world, shock, world.week)) {
       addEvent(world, { week: world.week, type: 'info', text: RECOVERY_RECEIPT })
     }
     world.spiritShock = null

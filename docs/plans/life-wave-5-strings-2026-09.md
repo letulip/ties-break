@@ -14,6 +14,29 @@ feeds – **every word below is the owner's, the вычитка is the architect
 here was collection and the lints, never judgment.** Not one string was rewritten, shortened or
 "fixed" to build this document (CLAUDE.md invariant 4).
 
+> ## ⭐⭐⭐ THE ВЫЧИТКА RAN ON 13.09, AND IT MOVED THREE THINGS
+>
+> The architect read all 82 and ruled. **Three changes, and no others** – the other 79 stand as
+> drafted, the near-duplicates of §8.5–7 and the `deep` voice's two tails included: those are
+> variation and they are ruled fine. This table is the record AFTER the pass, so the rows below are
+> what the code holds today.
+>
+> 1. **The recovery receipt's TRIGGER, not its words** (§3). «She came back sooner than last time.»
+>    is one of the nine RULED rows and **does not change** – §8.3's finding was true and the answer
+>    was the condition, not the sentence. `recoveryReceiptEarned` now also asks
+>    `hadAnEarlierEnding`: at least one `loveEpisode` with a non-null `endedWeek` **strictly earlier**
+>    than the mark's own week. Derived from dates the world already persists – no new field, no
+>    schema move – because `rollEnds` writes `spiritShock` on the same line-run as
+>    `endEpisode(world, world.week)`, so «an earlier ending» and «an earlier shock» are one fact.
+> 2. **`PSY_COUNSEL.breakup/strained`** (§6.5) – REPLACED. §8.4's finding was a true defect: the
+>    clause claimed a distance `strained` does not carry (it is `stopRootsOf`'s BOND reading, a
+>    strained HOME, reachable on a girl still under the roof). The architect's replacement keeps the
+>    original's best clause and says what the driver means.
+> 3. **`PSY_COUNSEL.breakup/own`** (§6.6) – REPLACED. §8.1's own flag: the reading was correct and
+>    the phrasing clumsy. The reading is unchanged; only the closing clause moved.
+>
+> The owner's playtest is still final on all 82 (the 10.09 rule). Nothing else in `src/` was touched.
+
 **Provenance.** Collected from the diff `4ceb7c0d..HEAD` – the wave's base to its head – and never
 from a task report or from memory. Every added line of `src/` was swept for string literals, and
 every literal the sweep found is either a row below or is named in §9 with the reason it is not one.
@@ -88,7 +111,7 @@ pill. ⚠ Two of the spec §2's four sentences were NOT transcribed – see §8.
 
 | # | home (`file` + constant) | when the player sees it | the string, verbatim | |
 | ---: | --- | --- | --- | --- |
-| 1 | `src/engine/spirit.ts` · `RECOVERY_RECEIPT` | a no-cents feed row on the week a shock clears, if the recovery year was held for at least half the shock's weeks (`recoveryReceiptEarned`) | She came back sooner than last time. | `ruled` |
+| 1 | `src/engine/spirit.ts` · `RECOVERY_RECEIPT` | a no-cents feed row on the week a shock clears, if the recovery year was held for at least half the shock's weeks **and an attachment had already ended before this one** – all three clauses of `recoveryReceiptEarned` (the 13.09 вычитка: a career's FIRST ever break-up prints nothing, because there is no last time to be sooner than) | She came back sooner than last time. | `ruled` |
 
 ## 4. T5 – «Cool head»: the sentence
 
@@ -164,8 +187,8 @@ expressed reading).
 | 2 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.plain/strained` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. What she is short of is a room where the answer is already yes, and that is not a room I can build from a call." | `draft` |
 | 3 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.plain/own` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Nothing is sitting on top of this one. She is clear, she has been clear for a while, and being clear is not a symptom." | `draft` |
 | 4 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.breakup/worn` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. Underneath it she is also tired, and those are two different things to be." | `draft` |
-| 5 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.breakup/strained` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has been carrying it a long way from home, and distance makes a weight feel permanent when it is not." | `draft` |
-| 6 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.breakup/own` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a want stated this month is partly the month." | `draft` |
+| 5 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.breakup/strained` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. She has nowhere easy to set it down, and a weight with nowhere to go starts to feel permanent when it is not." | `draft`, вычитка 13.09 |
+| 6 | `src/engine/world/lifeBeat.ts` · `PSY_COUNSEL.breakup/own` | his card, raised the same tick as the coach's after the parent answers her `stop` row, while the seat is WORKING that week – the register half is the live `spiritShock.kind` or `plain`, the driver half the coach's own read | Her psychologist rang that evening, after the coach. "Something outside the court landed on her and has not lifted. What she wants is her own and I would not argue it – only that a month like this one does some of the wanting." | `draft`, вычитка 13.09 |
 | 7 | `src/engine/world/lifeBeat.ts` · `PSY_HEADING` | the parent's frame over that card, keyed on nothing | She wants to stop, and her psychologist has asked for a word too, before we answer | `draft` |
 | 8 | `src/engine/world/lifeBeat.ts` · `LIFE_BEAT_OPTIONS['fork-psy'][0].label` | the first button on that card (priced 0 in both registers) | Thank the psychologist for the straight read | `draft` |
 | 9 | `src/engine/world/lifeBeat.ts` · `LIFE_BEAT_OPTIONS['fork-psy'][1].label` | the second button on that card (priced 0 in both registers) | Say we will keep it in mind when we answer | `draft` |
@@ -225,11 +248,18 @@ command itself appended.
 | `node scripts/doc-facts.mjs` | `doc facts: ok – schema v76, live wave round 41` · `DOC_FACTS_EXIT=0` |
 | `npm run context:audit` | `result: ok` · `CONTEXT_AUDIT_EXIT=0` – 394 Markdown files, `0 grandfathered docs edited without classifying (136 of 136 hashed)`. Its size lines are the standing WARNINGS the script itself calls «warnings, never a failure»; this wave adds `src/engine/world/psychologist.ts - 25,119 comment characters over 20,000` and `src/engine/world/lifeBeat.ts - 3,641 lines over 1,000` to them. |
 
-## 8. Flagged for the architect's read – NOT fixed, NOT touched
+## 8. Flagged for the architect's read – as T9 filed them, with his ruling beside each
+
+⚠ **T9 fixed nothing here; the вычитка did.** Each item below is T9's finding as written, with the
+architect's 13.09 verdict appended in bold – **RULED** where the wording moved, **STANDS** where he
+read it and left it. The head note is the summary; this is the per-item record.
 
 1. ⚠ **`PSY_COUNSEL.breakup.own`, the clause «only that a want stated this month is partly the
    month»** – already on the architect's list (the reading is right, the phrasing clumsy). Carried
    here unchanged.
+   **RULED 13.09 – REPLACED.** The closing clause now reads «only that a month like this one does
+   some of the wanting». The reading is unchanged; only the phrasing moved. §6 row 6 is the landed
+   text.
 2. ⚠ **`PSY_HEADING`'s «too»** – already on the architect's list, and load-bearing on the coach
    always calling first. For the read: the shipped `COUNSEL_HEADING` is «She wants to stop, and her
    coach has asked for a word before we answer»; the psy heading inserts «too» and a comma before
@@ -244,12 +274,28 @@ command itself appended.
    «were at least half this shock's weeks worked», so the line prints on a career's **first ever**
    shock, where there is no last time to be sooner than. This is the class of error T6 found six of.
    It is the spec §2's own sentence, so the fix is a ruling, not a builder's edit.
+   **RULED 13.09 – THE SENTENCE STANDS, THE TRIGGER MOVED.** «a ruling, not a builder's edit» was the
+   right call, and the ruling went the other way from a rewrite: invariant 4 keeps the owner's words
+   byte-identical and `recoveryReceiptEarned` gained a third clause instead, so the state where the
+   line would lie is a state where it does not print. It is DERIVED, never counted – at least one
+   `loveEpisode` with a non-null `endedWeek` **strictly below** the mark's own week – and the
+   derivation is exact because `rollEnds` is the engine's ONE writer of `spiritShock` and stamps it
+   on the same line-run as `endEpisode(world, world.week)`. ⚠ **STRICTLY** below: the mark's own
+   episode carries that very date, so `<=` would answer the question with itself. No new field and no
+   schema move, as the вычитка required. `tests/wave5-psychologist-recovery.test.ts` §G walks both
+   cases – a first shock that earns everything else and prints nothing, a second that prints – and
+   three arms (the clause deleted · inverted · `<` weakened to `<=`) are measured red in its ledger.
 4. ⚠⚠ **`PSY_COUNSEL.breakup.strained`'s clause «She has been carrying it a long way from home, and
    distance makes a weight feel permanent when it is not» asserts a distance the driver does not
    carry.** `strained` is a BOND reading and nothing else – `stopRootsOf` computes it as the
    distance BELOW `ECONOMY.bond.start`, i.e. a strained HOME. The beat is reachable at every life
    stage, including a girl still living under the roof who has never been far from it. Same family
    as the T6 telling errors: true-sounding, false on part of the ladder.
+   **RULED 13.09 – A TRUE DEFECT, AND REPLACED.** The cell now reads «She has nowhere easy to set it
+   down, and a weight with nowhere to go starts to feel permanent when it is not» – the original's
+   best clause kept, and what `strained` actually means said in place of the geography. §6 row 5 is
+   the landed text. ⚠ The pool's own note now carries the reason, so a geographic reading cannot come
+   back without a driver that carries one.
 5. **The told-late ending says the same observation twice in one tick, under the listen focus.** The
    card's heading (`ENDED_HEADING_HEARD[voice]['told-late'][read]`) and the album's row
    (`ENDED_EVENT_HEARD[voice][read]`) are raised together, and for three of the four voices the
@@ -258,13 +304,18 @@ command itself appended.
    the one that differs outright. Both surfaces then close on the SAME read tail by the pools' own
    deliberate rule. Ruling O settled which surfaces exist – this is a question about the words on
    the two that do.
+   **STANDS 13.09.** Read and left: the near-duplication is variation, and the `deep` voice's two
+   different tails across registers are variation too. Neither is to be harmonised.
 6. **`PSY_COUNSEL`'s six cells share a two-clause opening** – «Her psychologist rang that evening,
    after the coach.» on all six, plus a per-column second clause shared by three («Nothing is
    sitting on top of this one.» / «Something outside the court landed on her and has not lifted.»).
    The pool's own note calls this «the point of the family», the coach's «The tennis is not the
    question» read across. Reported, not judged.
+   **STANDS 13.09.** The shared openings are the point of the family and survive the two replacements
+   unchanged – both new cells open on the same two clauses the other four do.
 7. **`ANSWER_EVENT['fork-psy']`'s two rows share their first sentence** («Her psychologist called
    about her wanting to stop.»), which is `'fork-counsel'`'s established shape one pool over.
+   **STANDS 13.09.**
 8. **Two strings are never painted** – `psychologist.dial.label` and `psychologist.focus.label` are
    `:aria-label` on the two radiogroups and reach no pixel. They are still copy, and assistive tech
    reads them, so they are in the table; the вычитка should know it cannot see them in a playtest.
