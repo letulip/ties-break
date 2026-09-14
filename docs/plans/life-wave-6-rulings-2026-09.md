@@ -791,3 +791,34 @@ phase on twins differing by one stamp, both news at the week under test, so the 
 measured and never the gate. A big-stage title in W is charged at W+1 and **charged at all** – the
 assertion that was false – at 3.6 for a steady·private girl; the early exit at 4.8; and neither is
 charged at W. **All six were RED under T3's shipped spelling and are green now.**
+
+## Q – habituation is a SIBLING, it runs after the pass, and it reads the wave's one horizon
+
+Three things the brief leaves open at T4, each of which has exactly one right answer once the
+question is asked out loud.
+
+**1. The writer is a sibling of `accrueSpirit`, not a block in its tail.** `growHabituation(world, …)`
+is called from `world/phaseHerWeek.ts` on the line **immediately after** `accrueSpirit` – wave 5's
+ruling P precedent, verbatim, and `driftWalls` already sits on exactly that line. Three reasons, and
+the second is the load-bearing one:
+
+* `accrueSpirit` stays the one writer of `world.spirit` and gains no second field to own.
+* **The ORDER becomes a property of the call site rather than of a comment.** The scale must be read
+  with the habituation she CAME INTO the week holding; a growth that ran first would discount this
+  week's own exposure by this week's own growth – an off-by-one that no test would name and that
+  reads as «the constants are slightly too weak». Calling it after the pass makes that unspellable.
+* A sibling keeps `spirit.ts`'s import list closed, which §0.1 requires.
+
+**2. It reads `world.week − 1`, the same horizon as the pressure.** Ruling P gave this wave one
+clock and it stays one clock: a reader that asked `sheIsNewsAt(world, world.week)` while the
+pressure asked `world.week − 1` would be a second clock in the same pass, and «which week is this
+about» is exactly the question that cost us two dead kinds. ⚠ It also happens to be the same ANSWER
+at step 4 – fame is derived from stamps written in earlier weeks – which is why the coherent
+spelling is free.
+
+**3. Habituation 0 must scale to exactly 1.0.** `habituationScale = 1 − (1 − habituationFloor) ×
+(spotlightHabituation / habituationFullWeeks)` is 1 at 0 by construction, and that is worth a
+BYTE-IDENTITY pin and not just an endpoint assertion: every career that has never been news must
+play exactly the tennis it played before T4 existed, and the T3 literal `1` this task replaces is
+what made that true yesterday. Pin it against a world that HAS been news too – grown habituation,
+then walls flipped – so the pin cannot pass by never having grown anything.
