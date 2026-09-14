@@ -74,6 +74,7 @@ import {
   matchesEverPlayed,
   psychologistFocusRefusal,
   psychologistUnlocked,
+  psychologistWorksThisWeek,
   setPsychologistFocus,
   setPsychologistRung,
   TEMPERAMENTS,
@@ -314,6 +315,12 @@ interface Career {
   bondByWeek: number[]
   leanByWeek: { open: number; reg: number }[]
   flippedByWeek: { open: boolean; reg: boolean }[]
+  /** §1f (14.09) – was the seat WORKING this week (`psychologistWorksThisWeek`): the repair
+   *  acceleration rides the billing predicate exactly as O6 does, and a stood-down week is a ×1
+   *  week that would dilute the multiplier if pooled. Recorded off the engine's own predicate,
+   *  never inferred from the step's value – inferring the cut from the output being measured is
+   *  the «expectation from the function under test» family. */
+  workingByWeek: boolean[]
   pointsByWeek: number[]
   composureByWeek: number[]
   ceilingByWeek: number[]
@@ -380,6 +387,7 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
     bondByWeek: [],
     leanByWeek: [],
     flippedByWeek: [],
+    workingByWeek: [],
     pointsByWeek: [],
     composureByWeek: [],
     ceilingByWeek: [],
@@ -453,6 +461,7 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
     c.composureByWeek[w] = world.skills.composure
     c.ceilingByWeek[w] = world.potential.composure
     c.pointsByWeek[w] = kidPoints(world, 'domestic')
+    c.workingByWeek[w] = psychologistWorksThisWeek(world)
     for (const ax of WALLS_AXES) {
       if (world.wallsFlipped[ax] !== prevFlipped[ax]) {
         if (world.wallsFlipped[ax]) c.flipsUp[ax]++
@@ -1445,6 +1454,115 @@ let o6Collapses = 0
   console.log(`    realised slow-down  : ×${num(realised, 4)}   predicted ×${num(O6_PREDICTED, 4)}   ${v}`)
   console.log(`    retained arms hired : ${retainedHired}/${retainedCareers} (${hiredBeforeTurn} before the turn)   ← a family that never reaches the pro gate buys nothing`)
   console.log(`    walls-UP flips seen : ${o6Collapses}   ← the collapse direction, which no CARING arm in this file can produce`)
+}
+
+// =================================================================================================
+// §1f. THE FIFTH CELL – `'herself'` repair ×1.5, the one §4 number T10 shipped unpriced
+// =================================================================================================
+//
+// Commissioned 14.09 by the owner («делаем, ждем числа») on the handoff's own debt row: «pricing it
+// needs an arm that holds `'herself'` against a caring no-focus twin over a repair walk – a fifth
+// grid cell». The schedule is §1e's INVERTED: grinding to the turn – deep walls, the pro gate
+// cleared, the seat hired – then caring in BOTH columns, which is the sentence the multiplier is
+// for: the parent who came back, with and without the year of work.
+//
+// ⚠ THE PREDICTION IS ×1.5000 EXACTLY, AND THE TENTHS GRID DOES NOT BITE HERE – ruling M's family
+// check run BEFORE the measurement rather than after a miss: `roundTenth(repairPerWeek ×
+// wallsHerselfRepair) = roundTenth(1.5) = 1.5`, so unlike O6's ×0.7333 the realised and the
+// constant coincide. A measured value off 1.5000 implicates the branch, never the grid.
+//
+// ⚠ THE FOCUS LANDS LATE AND THE CUT KNOWS IT: `'herself'` is refused at a strained/cold bond
+// («she is not ready»), so the arm's focus takes only once the caring phase has walked the bond
+// back to `steady` – `focusRefusals` counts the refusals and the step cut starts at `focusWeek`,
+// on weeks the seat was WORKING (`workingByWeek`, the billing predicate O6 already rides).
+rule(`§1f. THE FIFTH CELL – 'herself' repair acceleration   [×${ECONOMY.psychologist.wallsHerselfRepair} = PROPOSAL, the last unpriced §4 number]`)
+{
+  const R_TURN = 156
+  /** The mean lean step on an unclamped REPAIR week – §1e's `riseSteps`, run up the other slope:
+   *  caring band, a negative lean walking home, the final clip into 0 excluded (there the step is
+   *  whatever is left of the gap, not the rate). */
+  function repairSteps(c: Career, since: number, requireWorking: boolean): number[] {
+    const out: number[] = []
+    const clip = ECONOMY.life.walls.repairPerWeek * ECONOMY.psychologist.wallsHerselfRepair + 0.05
+    for (let w = Math.max(1, since); w < c.leanByWeek.length; w++) {
+      const now = c.leanByWeek[w]
+      const before = c.leanByWeek[w - 1]
+      const band = c.bondByWeek[w - 1]
+      if (now === undefined || before === undefined || band === undefined) continue
+      const caring = bondBandOf(band) === 'steady' || bondBandOf(band) === 'close'
+      if (!caring) continue
+      if (requireWorking && c.workingByWeek[w] !== true) continue
+      for (const ax of WALLS_AXES) {
+        if (before[ax] >= -clip) continue
+        const step = now[ax] - before[ax]
+        if (step > 0) out.push(step)
+      }
+    }
+    return out
+  }
+  /** Weeks from the turn until BOTH leans are home at 0 – the corridor the cap was sized for. */
+  function weeksHome(c: Career): number | null {
+    for (let w = R_TURN; w < c.leanByWeek.length; w++) {
+      const lean = c.leanByWeek[w]
+      if (lean !== undefined && lean.open >= 0 && lean.reg >= 0) return w - R_TURN
+    }
+    return null
+  }
+  const bare: number[] = []
+  const held: number[] = []
+  const homeBare: number[] = []
+  const homeHeld: number[] = []
+  const sunnySaved: number[] = []
+  let focusLanded = 0
+  let armCareers = 0
+  for (const t of TEMPERAMENTS) {
+    const homeB: number[] = []
+    const homeH: number[] = []
+    for (let i = 0; i < Math.max(2, Math.round(WALLS_CAREERS / 2)); i++) {
+      const seed = `psy-repair-${i}`
+      const schedule = { policy: GRINDING, policyAfter: { week: R_TURN, policy: CARING }, weeks: WEEKS }
+      const a = walk(seed, t, { ...schedule, focus: null, rung: null })
+      const b = walk(seed, t, { ...schedule, focus: 'herself', rung: 1 })
+      armCareers++
+      if (b.focusWeek >= 0) focusLanded++
+      bare.push(...repairSteps(a, R_TURN, false))
+      if (b.focusWeek >= 0) held.push(...repairSteps(b, b.focusWeek, true))
+      const hA = weeksHome(a)
+      const hB = weeksHome(b)
+      if (hA !== null) { homeBare.push(hA); homeB.push(hA) }
+      if (hB !== null) { homeHeld.push(hB); homeH.push(hB) }
+    }
+    if (t === 'sunny' && homeB.length > 0 && homeH.length > 0) {
+      sunnySaved.push(med(sample('§1f sunny bare', homeB)) - med(sample('§1f sunny held', homeH)))
+    }
+  }
+  if (held.length === 0) {
+    stall('§1f: ZERO worked repair weeks in the focus arm', 'the focus never landed or the seat never worked a caring week – the cell cannot reach its subject')
+  }
+  const sBare = sample('§1f repair step, no focus', bare, 30)
+  const sHeld = sample('§1f repair step, herself held', held, 30)
+  const realised = avg(sHeld) / avg(sBare)
+  const PREDICTED = ECONOMY.psychologist.wallsHerselfRepair
+  const ok = Math.abs(realised - PREDICTED) < 0.02
+  const v = verdict(
+    '§1f herself repair acceleration',
+    ok,
+    `realised ×${num(realised, 4)} against the predicted ×${num(PREDICTED, 4)} – implicates ECONOMY.psychologist.wallsHerselfRepair ${PREDICTED} and ECONOMY.life.walls.repairPerWeek ${ECONOMY.life.walls.repairPerWeek}`,
+  )
+  console.log(`    THE ARM: '${GRINDING.label}' to week ${R_TURN} – deep walls, the gate cleared – then '${CARING.label}' in BOTH columns;`)
+  console.log(`    the focus lands only once the bond is back at steady (refused «not ready» until then), and the cut starts there.`)
+  console.log('')
+  console.log(`    ${pad('arm', 30)}${padL('repair axis-weeks', 19)}${padL('mean step', 11)}${padL('SEM', 9)}`)
+  console.log(`    ${pad('turned back, no seat', 30)}${padL(String(sBare.xs.length), 19)}${padL(num(avg(sBare), 4), 11)}${padL(num(sem(sBare), 4), 9)}`)
+  console.log(`    ${pad('turned back, herself held', 30)}${padL(String(sHeld.xs.length), 19)}${padL(num(avg(sHeld), 4), 11)}${padL(num(sem(sHeld), 4), 9)}`)
+  console.log('')
+  console.log(`    realised acceleration : ×${num(realised, 4)}   predicted ×${num(PREDICTED, 4)}   ${v}`)
+  console.log(`    weeks home (median)   : ${homeBare.length ? num(med(sample('§1f home bare', homeBare)), 1) : '–'} bare vs ${homeHeld.length ? num(med(sample('§1f home held', homeHeld)), 1) : '–'} held  (from the turn, both leans back at 0)`)
+  console.log(`    focus landed          : ${focusLanded}/${armCareers} careers  ← «not ready» holds it out until the bond is back at steady`)
+  if (sunnySaved.length > 0) {
+    console.log(`    !! QUESTION 4's NUMBER (the sunny girl): a KICKED sunny career saves a median ${num(sunnySaved[0], 1)} weeks of the`)
+    console.log(`       walk home with the year held – the focus's real product for the quarter of the roster with no growable axis.`)
+  }
 }
 
 rule('§2. THE NEVER-FIRED CORRIDOR – paid weeks with nothing to do, per focus (rung 1, the default)')

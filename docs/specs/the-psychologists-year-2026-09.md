@@ -113,14 +113,36 @@ bench, not a taste.
   #16) in a new coat. The focus model shrinks this risk by construction: cool head and the drift
   focus do slow work every held week, so «never fired» is mostly the recovery focus's exposure.
 
-## 5. Temperament interplay – priced, not new machinery
+## 5. Temperament interplay – MEASURED, and two of the three predicted gradients did not survive
 
-Who-she-is gives every focus a natural clientele: an `intense` girl's shocks are deeper, so
-recovery buys more weeks back; a `private` girl's wants are harder to read unaided, so
-understanding-her is worth more exactly for her; the drift focus only means anything where a
-leaning has room to move. The benches carry per-temperament arms and print these gradients – they
-are expected, and they make the hire read as a decision about THIS daughter rather than a stat
-subscription.
+⚠⚠ **RE-CUT 14.09 on T10's grid** (his ruling on the wave's question 8: «переписать §5 под
+измеренное; механику не трогать») – the first draft predicted a natural clientele for every
+focus, the bench printed the gradients, and the house rule is that a missed prediction is
+corrected in the spec rather than tuned into the engine. What the grid measured, per focus:
+
+* **Recovery – the intense girl's, MORE starkly than predicted.** Her shocks are deeper (−34
+  against −22) and the ladder is clean for her at every step; for a **steady** girl the whole
+  ladder buys about a quarter of a week, because −22 at a return of 5/week is one or two weeks
+  under the knee whatever the family pays. Ruled 14.09: accepted as the design – her nature does
+  the work a specialist would («принимаем»), and the steady daughter's own psychological product
+  arrives with the form layer's slump focus (the form spec §5).
+* **Listen – the prediction was BACKWARDS.** «A private girl's wants are harder to read unaided,
+  so understanding-her is worth more exactly for her» is false as measured: the focus fires
+  LEAST for private girls (never-fired 97.3% quiet / 97.6% deep against 86.4% fiery), because
+  she meets fewer people at all – fewer read-bearing beats, fewer coins. The worth-per-fired-beat
+  may still lean her way; the worth-per-paid-week leans away from her, and the card reads the
+  latter.
+* **Cool head – NO clientele.** All four temperament rows are identical to four decimals: the
+  composure walk reads her ceiling and her calendar, and temperament touches neither (§3's fence
+  doing exactly what it says).
+* **Herself – the one gradient that held**, and sharper than written: the focus only means
+  anything where a leaning has room to move, and a `sunny` girl (born open+steady) has NO
+  growable axis – her whole product from this focus is the repair acceleration after neglect,
+  which is the fifth grid cell's measurement (§8).
+
+The per-temperament arms stay in the bench and the gradients stay printed – what changed is that
+the spec now records the measured ones, and a future focus's clientele line is a PREDICTION until
+its grid cell says otherwise.
 
 ## 6. Open questions for the owner – each with a recommendation
 
@@ -272,12 +294,14 @@ has**. What ×1 / ×1.5 / ×2 buys is the **WAIT**, and on that reading the ladd
 | 1 | 0.0750 | 8.9 | 12.5 | 17.44 | 2.82 | HIT |
 | 2 | 0.1000 | 6.6 | 4.5 | 9.31 | 1.66 | HIT |
 
-⭐⭐ **And one girl in four can never buy this focus at all.** A **sunny** girl is born open AND
-steady, so ruling N clamps her positive lean at 0 on both axes: measured, **0 beyond-baseline weeks
-across every sunny seat arm at every rung**. §5's «the drift focus only means anything where a
-leaning has room to move» makes that the design – but a quarter of the roster paying a year's
-retainer for a focus that can buy NOTHING is the never-fired corridor at its sharpest, and no card
-says so. Reported, not fixed.
+⭐⭐ **And one girl in four can never buy the GROWTH half of this focus.** A **sunny** girl is born
+open AND steady, so ruling N clamps her positive lean at 0 on both axes: measured, **0
+beyond-baseline weeks across every sunny seat arm at every rung**. ⚠⚠ **CORRECTED 14.09 by the
+fifth cell (§8e2): «can buy NOTHING» was the caring-arms artifact.** The repair half is hers too –
+a KICKED sunny career with the year held walks home a median **12.5 weeks sooner** – so the focus
+is empty only for a sunny girl who was never wronged, which is the never-fired corridor's ordinary
+meaning rather than its sharpest case. The card stays temperament-silent (his 14.09 read of the
+options: closing it would tell the player her temperament, which no screen has ever shown).
 
 ### 8e. O6's ×0.75 against the tenths grid  ✔ HIT, to four decimals
 
@@ -291,6 +315,25 @@ identical to four decimals and a ratio of exactly ×1.0000, because the walls sa
 kicked weeks in and the pro gate opens later than that – every unsaturated kicked week happened
 before there was anybody to pay. The measurable arm is the parent who **hires him and then starts
 kicking** (caring to week 200, grinding after), which is also the sentence O6 is for.
+
+### 8e2. The fifth cell – `'herself'` repair ×1.5, the last §4 number, priced 14.09  ✔ HIT exactly
+
+Commissioned by the owner on the handoff's own debt row («делаем, ждем числа»). The arm is §8e's
+INVERTED schedule: **grinding to week 156** – deep walls, the pro gate cleared, the seat hired –
+then **caring in both columns**: the parent who came back, with and without the year of work. The
+focus lands only once the bond is back at `steady` (refused «not ready» until then – 12 of 16
+careers landed it), and the step cut starts at the landing, on weeks the seat was WORKING.
+
+* **Realised acceleration ×1.5000 against the predicted ×1.5000 – HIT, exactly**: 1.0000 ± 0.0000
+  over 1,504 bare repair axis-weeks against 1.5000 ± 0.0000 over 848 worked ones. ⚠ The tenths
+  grid does NOT bite here, checked before the measurement rather than after a miss (ruling M's
+  family): `roundTenth(1.0 × 1.5) = 1.5` exactly, unlike O6's 1.1.
+* **Weeks home (median, from the turn, both leans back at 0): 61.0 bare vs 48.5 held** – the year
+  buys about a season's quarter of the walk home. The ratio is ~0.80 and not 2/3 because the
+  acceleration cannot start before the bond itself is repaired to `steady` – the early walk is
+  bare in both arms, honestly.
+* **The sunny girl's number** (question 4 of the wave's file): a kicked sunny career saves a
+  median **12.5 weeks** – the paragraph above §8e carries what this corrects.
 
 ### 8f. The never-fired corridor – §4's own watch, PRINTED
 

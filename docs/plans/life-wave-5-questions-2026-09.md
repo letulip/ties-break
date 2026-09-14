@@ -15,6 +15,16 @@ Each carries what was MEASURED, so the answer is a choice between numbers rather
 
 Nothing below is a request to change code. Where a recommendation exists it is marked as one.
 
+> ⭐⭐⭐ **RULED 14.09** – the owner walked all ten with the architect (options → outcomes →
+> consequences per point) and the verbatim record is decisions.md's «THE WAVE'S TEN QUESTIONS
+> RULED» entry. In brief: **1** the high-water mark, SHIPPED in-wave (`peakDomesticPoints`, the
+> seventh v76 key; §A2 of the gate suite pins it) · **2** «принимаем» · **3** «оставляем 1.55» ·
+> **4** answered by the fifth cell: a kicked sunny saves a median 12.5 weeks – the card stays
+> temperament-silent · **5** `leanMax` = 100 confirmed · **6** the album's sentence, for the
+> living player · **7** awaiting his playtest with the T12 lens · **8** §5 re-cut to the measured
+> gradients · **9** clarification asked (which card) – the proposal waits on his word · **10**
+> holds; the fifth cell (spec §8e2) closed the one unpriced number at ×1.5000 exactly.
+
 ---
 
 ## 1. ⚠⚠ The elite gate's currency DECAYS – and it now refuses every career for the back eight tenths of its life
