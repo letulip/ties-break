@@ -160,3 +160,125 @@ bench arms actuate on a small minority of weeks. The wave-5 instrument law stand
 printed per temperament and `–` is never written as `0.0%` – and a bench that reports near-zero
 actuation at 30 and healthy actuation at 15 has not failed; it has produced this wave's most
 useful number.
+
+## F – `stageTierMin` is not a number, the ladder is a LIST, and a hand-written set has burned this repo before
+
+The brief proposes `stageTierMin 500`. **There is no numeric tier scale to compare that against.**
+
+**Measured, 14.09:** `TierId` (`src/engine/season/types.ts:19`) is a string union of sixteen names –
+`local · regional · national · j30 · j60 · j300 · w15 · w35 · w50 · w75 · w100 · wta125 · wta250 ·
+wta500 · wta1000 · slam`. Nothing anywhere maps them to numbers, and `wta125` would break such a
+map if anything tried.
+
+The canonical ordering exists and is exported: **`TIER_LADDER`** (`src/engine/season/calendar.ts:1564`),
+written for exactly this use – its own comment says the arithmetic «moves with the list rather than
+with a number anybody edited», and records a sixteen-rung widening that cost «adding four names to
+this array and nothing else».
+
+**⚠ And the alternative's failure is recorded in this repo, in its own words.** `src/art/venues.ts:150`:
+a hand-written tier array whose `indexOf(t)` «was −1 for every one of them, the lower-tier walk
+never» ran – silent, because `indexOf` does not throw. A hand-written `['wta500','wta1000','slam']`
+in `spotlight.ts` is that defect pre-booked: the week a rung joins `TIER_LADDER` the spotlight
+quietly stops seeing it.
+
+**The ruling.** `ECONOMY.spotlight.stageTierMin` is a **`TierId`** – `'wta500'` – and the test is
+`TIER_LADDER.indexOf(tier) >= TIER_LADDER.indexOf(ECONOMY.spotlight.stageTierMin)`. Never a number,
+never a hand-written set of names. A unit test asserts the bar resolves to an index `> -1`, so a
+renamed rung goes red with a sentence instead of turning the spotlight off.
+
+## G – ⚠ `'publicLoss'` is the one exposure kind NOT licensed by a permanent fact, and its horizon is 52 weeks
+
+The brief says the five kinds are «each licensed by facts the world already records». Four are. The
+fifth is recorded on a list that is pruned.
+
+**Measured, 14.09, at tournament finalize (`src/engine/world.ts:636–668`)** exactly two things are
+week-stamped: `trophiesByTier[tier].titles` (`kidFinish === 0`) and `.finals` (`kidFinish === 1`).
+`bestFinishByTier` is a HIGH-WATER MARK and carries no week at all – the file says so. **An early
+exit is stamped nowhere permanent.** Its only record is `world.results`, and that array **prunes at
+52 weeks** – stated twice in the engine's own comments (`world.ts:646`: «`results` prunes at 52
+weeks, `events` at 400»; `world.ts:1087`, in the fame context, again).
+
+**The ruling, in three parts:**
+
+1. `'stage'` reads `trophiesByTier` – permanent, exact, and it is `titles ∪ finals` at or above the
+   bar, which is precisely «a title or final at a big stage this week».
+2. `'publicLoss'` reads `world.results` – and `exposureEventsOf` is therefore **honest only inside
+   a 52-week horizon**. That asymmetry is written into the function's own comment and **pinned by a
+   test**: craft a world whose big-stage early exit is 60 weeks old, assert the kind is absent, and
+   name the prune as the reason. An asymmetry nobody wrote down is an asymmetry the next wave
+   discovers as a bug.
+3. The weekly tick asks in-week by construction, so T3 is unaffected. **T9's benches must ask
+   in-week too** – a bench that walks a career and asks `exposureEventsOf(world, oldWeek)`
+   retrospectively will see every `'stage'` and no `'publicLoss'`, and will report a shape that is
+   an artefact of the prune rather than a fact about her life.
+
+## H – walls freeze habituation on EITHER axis, and the flag is `wallsFlipped` – settled, not a builder question
+
+The brief leaves this open («if the builder reads §2a differently, that is a question to the
+architect»). It is answerable from the spec, so it is answered here and T4 does not spend a round
+trip on it.
+
+**The spec's own sentence** (who-she-is §3c): «sustained fame slowly shrinks her own pressure scale
+(she learns to live known) – **unless walls are up: walls freeze habituation**. A veteran star from
+a good home shrugs at cameras that once cost her sleep.»
+
+**Either axis, because «up» is the spec's word for the FLIPPED state and both axes are walls.** §2a
+gives kicks that «raise walls» on two axes – the openness wall makes her expressed-closed, the
+regulation wall makes her dysregulated – and both are «behind walls» in the spec's vocabulary.
+Confirming it mechanically: the pressure ALREADY reads both axes (openness through the ×0.75/×1.5
+scale, intensity through the standing `perturbationScale`), so a habituation that froze on one axis
+only would be acclimating a girl the same pass has just charged double.
+
+**The ruling.** `×0` while `wallsFlipped.open || wallsFlipped.reg`. **The FLAG, never the lean** –
+`wallsLean` is a continuous leaning and a girl leaning toward walls has not raised them; the spec
+says «up», and `wallsFlipped` is the state that means up. T4's pin grows a walled and an unwalled
+twin at equal fame and moves only one.
+
+## I – ⚠ the leak hazard keeps its FAME factor: the spec names it, and a gate cannot express it
+
+**The drift.** who-she-is §3c-bis: «**The leak hazard** (sub-stream per episode, zero MAIN) **scales
+by fame × EXPRESSED openness** – more lenses on a bigger star, and an open girl is simply seen».
+The brief's T6 drops the fame term – `leakBasePerWeek × leakOpennessMult(expressed openness)` – and
+justifies it as «more lenses on a bigger star is already priced by the news gate».
+
+**Measured, it is not priced by the gate.** Above the proposed bar the fame range is **30 → 100**,
+and the personal-save corpus spends 4.6% of all weeks above 40 against 6.9% above 30 – so the band
+above the bar is wide and real. Under the brief's model a girl at fame 100 leaks at **exactly** the
+rate of a girl at 30. That is not a smaller version of the spec's claim; it is a different claim,
+and the brief's own single-source rule settles which one ships: «The wave builds against who-she-is
+§3c and §3c-bis – THE spec, and on any drift IT wins».
+
+**The ruling.** The hazard is
+
+```
+leakBasePerWeek × leakOpennessMult(expressed openness) × (fameAt(world, week) / ECONOMY.fame.cap)
+```
+
+It **adds no new tunable** – `ECONOMY.fame.cap` is 100 and is read, never written (§8 stands) – it
+is monotone in fame, and it restores the sentence the spec wrote. The factor spans 0.30–1.00 above
+the proposed bar, so `leakBasePerWeek` re-prices by roughly 2× at the median; that re-pricing is
+T9's to measure and the owner's to rule, exactly like every other §4 number.
+
+**⚠ The draw count does not move.** Still one uniform per episode-week while eligible, on the same
+key. The count-keys net is unaffected, and so is MAIN.
+
+## J – the defaulted trailing parameter is CORRECT in `buildCommentary`, and ruling A does not reach it
+
+Stated because ruling A says the opposite thing about a different function, and a builder applying
+one law in the wrong place is how a wave loses a day.
+
+**Measured, `src/viz/commentary.ts:1310`:** `buildCommentary(match, playerA, playerB, event = null,
+coach = null)`. Both trailing parameters are optional and default to `null`, and each carries a note
+saying why in the same words: «every caller that passes nothing gets exactly the log this function
+returned before he existed. The ladder only ever adds.» **No `.length` pin guards this function** –
+what is pinned is the byte-identity of the old log, which the default is what PRESERVES.
+
+`accrueSpirit` is the opposite case: a pin counts its parameters, so a default would hide the change
+from the counter (ruling A). **The rule is not «defaults are bad»; it is «a default must not walk
+past a pin that counts».** T7's packet joins `buildCommentary` as a sixth optional parameter
+defaulting to `null`, on `coach`'s precedent, with `coach`'s own note.
+
+**⚠ And T7's variety comes from `variant`, not a draw.** `commentary.ts` already owns
+`variant(pointIndex, n)` – «deterministic phrase variety with no RNG: an integer hash of the point
+index, folded to n», Knuth's constant. That is how the booth's beat gets more than one wording
+while `src/viz` keeps zero draws, which the brief calls this wave's gravest possible finding.
