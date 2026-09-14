@@ -206,7 +206,11 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   her continuation IN-DIALOG (her voice, per temperament, from the same table family as
   `HER_CONTINUATION`) and closes on «Let her finish»; the other options keep single-step but land
   under item 8's select+Proceed. New lines = DRAFT in this file. Evidence: mounted test – choosing
-  «say more» renders a continuation block and does NOT dispatch until the close.
+  «say more» renders a continuation block and does NOT dispatch until the close. ⭐ SPEC WRITTEN
+  14.09 at his ask («сделай спеку, может подробно ветки диалогов и сами вариации распиши»):
+  [the-small-talk-exchange-2026-09](../specs/the-small-talk-exchange-2026-09.md) – the exchange
+  (opener → lean → her reaction), 36 reaction drafts, the situation pool named as its own later
+  wave; bundles with item 24. Awaiting his read before the bundle builds.
 
 - [ ] **16. «За всё время до 18 пришёл 1 спонсор на 40к на год, сейчас #126 и нет никого. Надо
   проверить систему»** – **measure, with the mechanism already in hand.** At #126 she clears
@@ -325,7 +329,10 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   opener for 25 years. Fix: 2–3 variants per cell, drawn on `seed:life:smalltalk:line:<week>`
   (purpose-keyed, deterministic, MAIN untouched), same register per cell so the voice bibles hold;
   all new lines DRAFT in this file. Evidence: a distribution test over weeks proving >1 opener per
-  cell fires and the draw is keyed (same seed+week ⇒ same line).
+  cell fires and the draw is keyed (same seed+week ⇒ same line). ⭐ Its design is §4 (F-a) of
+  [the-small-talk-exchange-2026-09](../specs/the-small-talk-exchange-2026-09.md) – bundled with
+  item 15, one file and one draw; the situation layer (F-b) is the «main feature» he gestured at,
+  its own later wave.
 
 - [ ] **25. «может быть нам с 18 не по 5, а по 10% в год ей добавлять стоит?»** – **build + bench.**
   Today: 10% at 18, +5 pp per birthday, cap 50% at 26 (`ECONOMY.kidShare`, `economy.ts:1696-1717`
