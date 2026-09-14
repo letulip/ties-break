@@ -146,6 +146,36 @@ describe('the psychologist card on screen T', () => {
     wrapper.unmount()
   })
 
+  it('§3b – ⭐ THE RUNNING YEAR LIVES ON THE HIRED LINE (the owner, 14.09 – wave-5 question 9)', async () => {
+    // The four PSY_FOCUS_LINE sentences were readable ~3 weeks a year (the focus row's note is
+    // correctly the engine's refusal the other 49 – R10-16, untouched). His «да, вписывай строку
+    // с годом» gives them the surface that is visible all 52: the hired line splices the running
+    // year's own sentence after the retainer's opening, first letter lowered.
+    //
+    // ⚠ THE EXPECTATION IS THE IMPORTED CONSTANT SPLICED HERE, NEVER RETYPED – this file's own
+    //   doctrine (§1's note), so a вычитка pass over PSY_FOCUS_LINE moves this pin with it.
+    // ⚠ ARM (watched red before landing): the splice dropped from `psychologistLine`'s hired arm
+    //   – the with-focus half fails on the exact composed sentence; the no-focus half stays
+    //   green, which is why BOTH halves are asserted.
+    const { hired } = snapshots()
+    expect(hired.psychologistFocus, 'the plain-hire fixture really has no year chosen').toBeNull()
+    const plain = await mountCard(hired)
+    expect(plain.find(SEAT).text()).toContain('On retainer – one call a week, wherever she is.')
+    plain.unmount()
+
+    const focused = { ...hired, psychologistFocus: 'coolhead' as const }
+    const year = PSY_FOCUS_LINE.coolhead
+    const wrapper = await mountCard(focused)
+    const text = wrapper.find(SEAT).text()
+    expect(text, 'the hired line carries the running year, spliced').toContain(
+      `On retainer – ${year.charAt(0).toLowerCase()}${year.slice(1)}`,
+    )
+    expect(text, 'and the plain retainer line stepped aside').not.toContain(
+      'On retainer – one call a week, wherever she is.',
+    )
+    wrapper.unmount()
+  })
+
   it('§4 – ⭐ the roster dial: three rungs, prices off the catalogue, ACTIVE off the snapshot, radio semantics', async () => {
     const { pro } = snapshots()
     const doctored = { ...pro, psychologistRung: 2 }

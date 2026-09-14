@@ -285,7 +285,20 @@ async function setPsychologistFocusChoice(focus: PsyFocus): Promise<void> {
 // true of him today; the focus row that will say what he WORKS ON is T3's.
 const psychologistLine = computed(() => {
   if (!psychologistUnlocked.value) return PSYCHOLOGIST_LOCKED_DETAIL
-  if (psychologistHired.value) return 'On retainer – one call a week, wherever she is.'
+  // ⭐ THE RUNNING YEAR LIVES HERE (the owner, 14.09: «да, вписывай строку с годом» – wave-5
+  // question 9). The four PSY_FOCUS_LINE sentences were on screen ~3 weeks a year, because the
+  // note under the focus row correctly prints the engine's refusal whenever a change is closed
+  // (R10-16 – that behaviour stays). The hired line is the surface that is visible all 52, so it
+  // carries the year: the focus sentence spliced after the retainer's own opening, its first
+  // letter lowered – «On retainer – the year goes on …». No focus chosen keeps the plain line.
+  if (psychologistHired.value) {
+    const focus = psychologistFocus.value
+    if (focus !== null) {
+      const year = PSY_FOCUS_LINE[focus]
+      return `On retainer – ${year.charAt(0).toLowerCase()}${year.slice(1)}`
+    }
+    return 'On retainer – one call a week, wherever she is.'
+  }
   return 'A call a week for her head – the year\'s work is chosen one year at a time.'
 })
 const psychologist = computed<StaffMember>(() => ({

@@ -4439,8 +4439,10 @@ laid out per point) and ruled all ten. His words, verbatim where they decide:
 8. **Spec §5 – re-cut to the measured gradients** («надо сделать»): listen's clientele was
    backwards (private girls meet fewer people – fewer coins), cool head has none, herself's
    held; the mechanics untouched by the ruling's own text.
-9. **The running year's home – NOT yet ruled**: his answer was the question «о какой карточке мы
-   говорим?», and a question is not a yes. The card is the Support-staff tab's psychologist entry
-   (the hired line under his name); the proposal – that line carries the running year – waits on
-   his word after the clarification.
+9. **The running year's home – RULED after the clarification** (the card named: the Support-staff
+   tab's psychologist entry, the hired line under his name): «да, вписывай строку с годом и
+   финалим ПР волны по скиллу». Shipped same-day: the hired line splices the running year
+   («On retainer – the year goes on …», the focus sentence with its first letter lowered), the
+   plain line standing whenever no focus is chosen; §3b of the card suite pins the splice off the
+   imported constant, arm watched red. The strings table carries the amendment.
 10. **§4 table – holds as measured**; the fifth cell (point 5) closes its one white space.

@@ -37,6 +37,16 @@ here was collection and the lints, never judgment.** Not one string was rewritte
 >
 > The owner's playtest is still final on all 82 (the 10.09 rule). Nothing else in `src/` was touched.
 
+> ⭐ **14.09, THE OWNER'S QUESTION-9 RULING moved one more surface** («да, вписывай строку с
+> годом»): §1 row 11 – the hired line – now SPLICES the running year's own sentence after its
+> opening once a focus is chosen: «On retainer – the year goes on …» (`PSY_FOCUS_LINE[focus]`,
+> first letter lowered; composed in `psychologistLine`, no new literal). With no focus chosen the
+> row's original text stands verbatim. The reason: the four §2 rows 5–8 were on screen only the
+> three off-season weeks a change is open (the note under the focus row is correctly the engine's
+> refusal the other 49 – R10-16 untouched), and the hired line is the surface visible all 52.
+> Pinned by `tests/component/psychologist-card.test.ts` §3b, expectation spliced from the
+> imported constant, arm watched red.
+
 **Provenance.** Collected from the diff `4ceb7c0d..HEAD` – the wave's base to its head – and never
 from a task report or from memory. Every added line of `src/` was swept for string literals, and
 every literal the sweep found is either a row below or is named in §9 with the reason it is not one.
