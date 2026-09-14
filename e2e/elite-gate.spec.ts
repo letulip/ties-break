@@ -44,9 +44,16 @@ const MIN_POINTS = 150
 //
 // ⚠⚠ AND THE FIXTURE'S REACHABILITY IS ASSERTED BEFORE ANYTHING IS READ OFF THE SCREEN. Ruling O's
 // second blind spot, one layer up: «a fixture that cannot reach the case is a green that means
-// nothing». `junior` holds 0 domestic points at week 120 and `sinking` holds 333 – both read from the
-// MANIFEST, which is generated from the career itself, so neither test can go vacuous if a
-// regeneration moves a fixture across the bar. It would go RED instead, naming the number.
+// nothing». The facts are read from the MANIFEST, which is generated from the career itself, so no
+// test here can go vacuous if a regeneration moves a fixture across the bar – it goes RED instead,
+// naming the number. ⚠⚠ AND THAT IS EXACTLY WHAT HAPPENED ON 14.09, and the red was the RULING
+// arriving rather than a defect: the owner re-ruled the gate's currency to the CAREER («это про
+// КАРЬЕРУ, а не про неделю»), and `junior` – 0 live domestic points at week 120, which this file
+// used as «below the bar» – turned out to hold a banked high-water of 251 on an ITF career whose
+// domestic window had simply emptied behind her. Under the ruling her Elite rows are OPEN, this
+// case's locked-row count read 0, and the fixture that honestly sits below the bar is `fresh`:
+// week 0, no result ever played, so live and peak are BOTH 0 by construction and no regeneration
+// can quietly separate them. `junior` moved to the third case, where being open is the assertion.
 
 import type { Page } from '@playwright/test'
 import { test, expect } from './careerAt'
@@ -69,24 +76,25 @@ async function openCoaches(page: Page): Promise<void> {
 }
 
 test.describe('the elite rung is locked until she has results', () => {
-  test('junior: below the bar, every Elite row says how far short and cannot be pressed', async ({
+  test('fresh: below the bar, every Elite row says how far short and cannot be pressed', async ({
     page,
     careerAt,
   }) => {
-    const { facts } = await careerAt('junior')
+    // ⚠ RE-AIMED 14.09 from `junior` by the owner's gate ruling – the header carries the story.
+    // `fresh` is the one career that cannot drift across the bar: week 0, nothing ever played,
+    // live and banked standing both 0 by construction.
+    const { facts } = await careerAt('fresh')
 
     // 1 – THE FIXTURE REACHES THE STATE. Asserted from the manifest, before the screen is opened.
     expect(
       facts.domesticPoints,
-      `junior is meant to sit below the elite gate's ${MIN_POINTS}-point bar`,
-    ).toBeLessThan(MIN_POINTS)
+      `fresh is meant to sit below the elite gate's ${MIN_POINTS}-point bar, at zero exactly`,
+    ).toBe(0)
     const short = MIN_POINTS - facts.domesticPoints
 
-    // 2 – the route a player takes. ⚠ THE DOORWAY FIRST: `junior` boots holding an unanswered knock
-    // (that is what the fixture is FOR – see journey.ts's own note), and the modal intercepts every
-    // click on Home. Stepped through, never asserted here; week-advance.spec.ts owns that canary.
-    await answerOpeningKnock(page)
-    await dismissTourBriefing(page)
+    // 2 – the route a player takes. ⚠ THE DOORWAY FIRST: a fresh career boots into the onboarding
+    // tour (the owner's first-run sentence), and the overlay intercepts Home until it is answered.
+    await page.getByRole('button', { name: 'Skip tour' }).click()
     await page.getByRole('button', COACH_NOTE).click()
     await expect(page.getByRole('heading', { name: 'Coach Market', level: 2 })).toBeVisible()
     await openCoaches(page)
@@ -145,5 +153,36 @@ test.describe('the elite rung is locked until she has results', () => {
     // water, so the top rung is over budget – flagged, never gated (round 21 #12's own ruling). Two
     // refusals, two sentences, and this is the career that proves they are not the same sentence.
     await expect(page.getByRole('button', { name: /over budget by/ }).first()).toBeVisible()
+  })
+
+  test('⭐ junior: the market remembers – an empty window behind a banked peak locks nothing (14.09)', async ({
+    page,
+    careerAt,
+  }) => {
+    // THE RULING'S OWN e2e PIN. `junior` is a rank-63 fifteen-year-old on the ITF ladder whose
+    // domestic window has emptied behind her – 0 LIVE points at week 120 – and whose banked
+    // high-water (251, probed off the fixture the day this case was written) is far past the bar.
+    // As the gate shipped she was refused an Elite coach; the owner's word is the case's title.
+    const { facts } = await careerAt('junior')
+
+    // 1 – the state, from the manifest: the live fold really is empty, and the career really has
+    // outgrown the domestic table. The PEAK is deliberately not a manifest fact – what this case
+    // asserts is the SCREEN's verdict, and the unit suite (§A2) owns the standing's arithmetic.
+    expect(facts.domesticPoints, 'the live window is empty – the state the old gate refused').toBe(0)
+    expect(facts.rankedItf, 'and she is a real ITF player, not a fresh career').toBe(true)
+
+    await answerOpeningKnock(page)
+    await dismissTourBriefing(page)
+    await page.getByRole('button', COACH_NOTE).click()
+    await expect(page.getByRole('heading', { name: 'Coach Market', level: 2 })).toBeVisible()
+    await openCoaches(page)
+
+    // 2 – the rung is offered at all (the sinking case's own vacancy guard, reused).
+    const elite = page.getByRole('button', { name: /Elite tier/ })
+    expect(await elite.count(), 'the market really offers the rung the gate is about').toBeGreaterThan(0)
+
+    // 3 – and NOTHING is locked: the door her career already opened stays open on an empty window.
+    await expect(page.getByRole('button', { name: /ranking points short/ })).toHaveCount(0)
+    await expect(page.getByText(/pts short/)).toHaveCount(0)
   })
 })
