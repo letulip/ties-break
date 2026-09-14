@@ -101,6 +101,22 @@
 // last bit. ⚠ REQUIRED AND NOT DEFAULTED ON PURPOSE – a defaulted trailing boolean would let a future
 // caller drop the seat silently, which is the shape ruling J spent a wave correcting on `recovery`.
 // The acceleration's own cases live in tests/wave6-spotlight-focus.test.ts, not here.
+//
+// ⚠⚠ RE-AIMED UNDER THE OWNER'S **D1 / D2 (14.09)**, two rulings and two cuts:
+//   · **D1** – the gate stopped reading fame: `sheIsNewsAt(world, week)` is gone, and the caller
+//     now hands `growHabituation` the boolean `newsStandingOf(world) === 'known'` – habituation
+//     grows ONLY in the top band («a girl the light only visits never gets used to it»,
+//     `newsStandingOf`'s own band map). The function's signature did not move, so every direct
+//     boolean call in this file stands untouched; what re-aimed is the FIXTURES (`makeNews`'s
+//     old-Slam-titles fame became `standHerAt`'s standing, and the two walking fixtures stand on
+//     the REAL fold, since a real tick re-derives the rank cache) and §F's one-clock case, whose
+//     week axis D1 removed – its re-cut carries its own ⚠ note. ARM 20's «news gate dropped» and
+//     ARM 23's «horizon at `world.week`» name the FAME-gate tree they were run against (their
+//     mutation lines no longer exist to re-run); the counts stay that build's measurement.
+//   · **D2** («да») – the fifth focus earned a RECEIPT: `PUBLIC_LIFE_RECEIPT` prints when, on a
+//     grown week, `habituationScale` first crosses `ECONOMY.psychologist.publicLifeReceiptAt` from
+//     above AND the year is being worked that week. The NEW §H holds the crossing, the once-ever,
+//     the spent-crossing law and the unworked silence, mutation-verified (its own arm notes).
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -124,6 +140,7 @@ import {
   accrueSpirit,
   growHabituation,
   habituationScale,
+  PUBLIC_LIFE_RECEIPT,
   temperamentIntensity,
   temperamentOpenness,
   type Temperament,
@@ -131,7 +148,10 @@ import {
 import {
   closeTournament,
   createWorld,
-  sheIsNewsAt,
+  KID_ID,
+  kidPoints,
+  newsStandingOf,
+  recomputeKidRank,
   skipTournament,
   tickWeek,
   type ExposureEvent,
@@ -144,6 +164,7 @@ import { ECONOMY } from '../src/engine/economy'
 import { isBlackoutWeek } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
 import { birthdayTurning } from '../src/engine/world/age'
+import { standHerAt } from './helpers/newsStanding'
 
 const SRC = fileURLToPath(new URL('../src/', import.meta.url))
 
@@ -198,13 +219,29 @@ function probe(seed = 'spotlight-habituation', temperament: Temperament = GIRL, 
   return world
 }
 
-/** Make her news at every week from `world.week` back – two OLD Slam titles in the cabinet, the
- *  construction T3's §B and §F both use. ⚠ THE STAMPS ARE OLD ON PURPOSE: a fixture whose fame comes
- *  from the very week under test would measure the gate instead of the thing being asked about
- *  (ruling E-bis's own warning). */
-function makeNews(world: WorldState, at = world.week): WorldState {
-  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-  slam.titles.push(at - 40, at - 41)
+/** Stand her `'known'` where she is parked – `standHerAt`, the wave's one shared fixture helper.
+ *  ⚠ D1 (14.09): this used to be `makeNews` – two OLD Slam titles buying fame past the struck bar.
+ *  The craft it carried (the standing's source is never also an exposure event) survives whole:
+ *  the helper's row is a `wta250`, below the stage bar, unreadable as any kind. Enough for every
+ *  fixture that hands `growHabituation` its boolean directly and for the REAL PHASE, which reads
+ *  the rank CACHE – only the two walking fixtures need more, see `knownThroughTheFold`. */
+function known(world: WorldState): WorldState {
+  standHerAt(world, 'known', world.week)
+  return world
+}
+
+/** ...and stand her `'known'` through the REAL FOLD, for fixtures that WALK real ticks. ⚠ D1
+ *  (14.09): a tick re-derives `world.kidRankWta` from the ledger every week
+ *  (`recomputeRankAndMilestones`), so `standHerAt`'s written rank dies on the first re-fold and a
+ *  walked career must EARN its band – a row big enough that the merged W table itself ranks her
+ *  inside `newsRankKnown`. 2000 points measured rank 23 of the merged table (14.09, this tree), a
+ *  wide margin under the bar of 100; the fixture check in each walk asserts the band rather than
+ *  trusting this note. The row sits AT `world.week`, so it stays inside the rolling 52-week window
+ *  for every tick of a 52-week walk – one week longer and the standing would decay mid-walk, which
+ *  is D1's own design and not a fixture for these cases. */
+function knownThroughTheFold(world: WorldState): WorldState {
+  world.results.push({ playerId: KID_ID, week: world.week, points: 2000, tier: 'wta250' })
+  recomputeKidRank(world)
   return world
 }
 
@@ -357,13 +394,19 @@ describe('wave 6 T4 C – a career that was never news plays the tennis it playe
     expect(withKey.events.length, '...and really lived a career').toBeGreaterThan(10)
   }, 120_000)
 
-  it('⭐⭐⭐ ⚠ THE NULL-ARM CHECK – the same construction on a NEWS career DIVERGES', () => {
+  it('⭐⭐⭐ ⚠ THE NULL-ARM CHECK – the same construction on a KNOWN career DIVERGES', () => {
     // ⚠⚠ RULING Q ASKS FOR THIS BY NAME: «pin it against a world that HAS been news as well … so the
     // pin cannot pass by never having grown anything». Without it the case above could be measuring a
     // world the mechanic can never reach, which is the «unable to fail» family this pair of waves has
-    // now found more than a dozen times. Same seed, same walk, one cabinet apart.
-    const withKey = walk(makeNews(probe('habituation-news-walk')), 52)
-    const stripped = makeNews(probe('habituation-news-walk')) as unknown as Record<string, unknown>
+    // now found more than a dozen times. Same seed, same walk, one standing apart. ⚠ D1 (14.09): a
+    // WALKED career must earn its band through the real fold – the tick re-derives the rank cache
+    // every week, so `standHerAt`'s written rank would die on the first tick and this arm would be
+    // the null it exists to rule out. `knownThroughTheFold` is that construction; the guard below
+    // proves the band before a single week is walked.
+    const seeded = knownThroughTheFold(probe('habituation-news-walk'))
+    expect(newsStandingOf(seeded), 'the fixture really ranks inside the known band').toBe('known')
+    const withKey = walk(seeded, 52)
+    const stripped = knownThroughTheFold(probe('habituation-news-walk')) as unknown as Record<string, unknown>
     delete stripped.spotlightHabituation
     const withoutKey = walk(stripped as unknown as WorldState, 52) as unknown as Record<string, unknown>
 
@@ -383,26 +426,28 @@ describe('wave 6 T4 C – a career that was never news plays the tennis it playe
 // confirmation is that the pressure ALREADY reads both axes, so a one-axis freeze would acclimatise
 // a girl the same pass has just charged double.
 //
-// ⚠⚠ EQUAL FAME IN BOTH ARMS AND BOTH PROVED NEWS, which is the ⚠ the task attaches to this pin:
-// grow a walled and an unwalled twin at EQUAL fame, or the pin passes because neither grew.
+// ⚠⚠ EQUAL STANDING IN BOTH ARMS AND BOTH PROVED KNOWN (⚠ D1, 14.09: «equal fame» became «equal
+// standing» – the coin the gate reads moved, the duty did not), which is the ⚠ the task attaches
+// to this pin: grow a walled and an unwalled twin at EQUAL standing, or the pin passes because
+// neither grew.
 describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
-  /** Twins that differ by ONE boolean and nothing else – same seed, same week, same cabinet. */
+  /** Twins that differ by ONE boolean and nothing else – same seed, same week, same standing. */
   function twins(flip: 'open' | 'reg'): { walled: WorldState; free: WorldState } {
-    const free = makeNews(probe('habituation-walls'))
-    const walled = makeNews(probe('habituation-walls'))
+    const free = known(probe('habituation-walls'))
+    const walled = known(probe('habituation-walls'))
     walled.wallsFlipped = { ...walled.wallsFlipped, [flip]: true }
     return { walled, free }
   }
 
-  it('⭐⭐⭐ the fixture is not vacuous: BOTH twins are news at the week the pass asks about', () => {
-    // ⚠⚠ THE CASE THE WHOLE SECTION RESTS ON. A freeze pin whose walled twin simply was not famous
-    // enough to grow is a pin that measures the news gate and reports the walls. Both arms are
-    // asserted news at the SAME week, so the only difference the cases below can be reading is the
-    // flag itself.
+  it('⭐⭐⭐ the fixture is not vacuous: BOTH twins are known while the pass runs', () => {
+    // ⚠⚠ THE CASE THE WHOLE SECTION RESTS ON. A freeze pin whose walled twin simply did not stand
+    // high enough to grow is a pin that measures the news gate and reports the walls. Both arms are
+    // asserted `'known'` – the ONE band habituation grows in (⚠ D1, 14.09) – so the only difference
+    // the cases below can be reading is the flag itself.
     for (const axis of ['open', 'reg'] as const) {
       const { walled, free } = twins(axis)
-      expect(sheIsNewsAt(free, free.week), `${axis}: the unwalled twin is news`).toBe(true)
-      expect(sheIsNewsAt(walled, walled.week), `${axis}: and so is the walled one`).toBe(true)
+      expect(newsStandingOf(free), `${axis}: the unwalled twin is known`).toBe('known')
+      expect(newsStandingOf(walled), `${axis}: and so is the walled one`).toBe('known')
     }
   })
 
@@ -430,7 +475,7 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
     // leaning and a girl leaning toward walls has not raised them». The leaning is invisible on every
     // surface and moves every week of every career; a freeze keyed on it would stop habituation for
     // almost everybody almost always, silently.
-    const leaning = makeNews(probe('habituation-lean'))
+    const leaning = known(probe('habituation-lean'))
     leaning.wallsLean = { open: ECONOMY.life.walls.flipArm, reg: ECONOMY.life.walls.flipArm }
     leaning.wallsFlipped = { open: false, reg: false }
     growHabituation(leaning, true, false)
@@ -449,7 +494,7 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
     // goes 1.2 -> 0.9 on a double flip, because `'quiet'` expressed behind both walls is steady·
     // private read as intense·open). Asserting the cost here would have made one case about two
     // mechanics and tied the freeze's pin to wave 5's inversion table.
-    const held = makeNews(probe('habituation-pause'))
+    const held = known(probe('habituation-pause'))
     held.spotlightHabituation = FULL
     held.wallsFlipped = { open: true, reg: true }
     growHabituation(held, true, false)
@@ -464,7 +509,7 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
 // =================================================================================================
 describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
   it('⭐⭐⭐ one known week counts exactly one', () => {
-    const world = makeNews(probe('habituation-rate'))
+    const world = known(probe('habituation-rate'))
     growHabituation(world, true, false)
     expect(world.spotlightHabituation).toBe(1)
   })
@@ -473,14 +518,14 @@ describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
     // The gate every mechanic in this wave shares: «an unknown girl has no spotlight, whatever she
     // wins», so there is nothing for her to get used to.
     const world = probe('habituation-unknown')
-    expect(sheIsNewsAt(world, world.week), 'the fixture really is unknown').toBe(false)
+    expect(newsStandingOf(world), 'the fixture really is unknown – ⚠ D1 (14.09), the standing\'s word for it').toBe('quiet')
     growHabituation(world, false, false)
     expect(world.spotlightHabituation).toBe(0)
   })
 
   it('⭐⭐⭐ it is MONOTONE in weeks held – more known weeks is always more habituation', () => {
-    const short = makeNews(probe('habituation-monotone'))
-    const long = makeNews(probe('habituation-monotone'))
+    const short = known(probe('habituation-monotone'))
+    const long = known(probe('habituation-monotone'))
     for (let i = 0; i < 10; i++) growHabituation(short, true, false)
     for (let i = 0; i < 30; i++) growHabituation(long, true, false)
     expect(short.spotlightHabituation).toBe(10)
@@ -494,7 +539,7 @@ describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
     // ⚠ AND THE SECOND ASSERTION IS WHY THE CLAMP MATTERS: the scale divides by the same constant, so
     // an uncapped counter would drive it below the floor and, far enough, through zero into a
     // spotlight that PAYS her. The cap is the only thing standing between.
-    const veteran = makeNews(probe('habituation-clamp'))
+    const veteran = known(probe('habituation-clamp'))
     for (let i = 0; i < FULL * 3; i++) growHabituation(veteran, true, false)
     expect(veteran.spotlightHabituation, 'the counter stops at the span').toBe(FULL)
     expect(habituationScale(veteran.spotlightHabituation), '...and the scale rests exactly on the floor').toBe(FLOOR)
@@ -504,8 +549,8 @@ describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
     // The two halves of the mechanic met: the counter grows, the scale reads it, and the SAME event
     // costs a veteran a quarter of what it cost the newcomer. Computed from `ECONOMY` so a re-tune
     // of either constant moves both sides.
-    const newcomer = makeNews(probe('habituation-discount-a'))
-    const veteran = makeNews(probe('habituation-discount-b'))
+    const newcomer = known(probe('habituation-discount-a'))
+    const veteran = known(probe('habituation-discount-b'))
     veteran.spotlightHabituation = FULL
     const first = costOf(newcomer, events('publicLoss'))
     const later = costOf(veteran, events('publicLoss'))
@@ -519,11 +564,11 @@ describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
 // =================================================================================================
 //
 // ⚠ EVERY CASE HERE RUNS `resolveBodyAndPlanner`, the function that HOLDS the call site, and not a
-// hand-spelled composition of `sheIsNewsAt` and `growHabituation`. A case that re-spells the call
-// site proves the spelling it wrote; these run the statements that ship.
+// hand-spelled composition of `newsStandingOf` and `growHabituation`. A case that re-spells the
+// call site proves the spelling it wrote; these run the statements that ship.
 describe('wave 6 T4 F – the sibling, in the phase that calls it', () => {
   it('⭐⭐⭐ a known week is counted by the weekly phase itself', () => {
-    const world = makeNews(probe('habituation-phase'))
+    const world = known(probe('habituation-phase'))
     resolveBodyAndPlanner(world)
     expect(world.spotlightHabituation, 'the tick counted the week she lived known').toBe(1)
   })
@@ -545,11 +590,14 @@ describe('wave 6 T4 F – the sibling, in the phase that calls it', () => {
     // `ECONOMY`; the FIXTURE CHECK asserts the two orders are distinguishable at all after the pass's
     // single `roundTenth` – without it a quantised tie would let this case pass on either order.
     const held = 40
-    const world = makeNews(probe('habituation-order'))
+    const world = known(probe('habituation-order'))
     world.spotlightHabituation = held
     const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
     slam.titles.push(world.week - 1)
-    expect(sheIsNewsAt(world, world.week - 1), '⚠ the fixture is news at the week that closed').toBe(true)
+    // ⚠ D1 (14.09): the gate reads her STANDING, present-tense – «news at the week that closed»
+    // became «known while the pass runs». The horizon under test is untouched: the EXPOSURE is
+    // still derived at `world.week − 1`, where the title above is stamped.
+    expect(newsStandingOf(world), '⚠ the fixture is known while the pass runs').toBe('known')
 
     const per = preT4Product('stage')
     const round = (x: number): number => Math.round(x * 10) / 10
@@ -562,24 +610,38 @@ describe('wave 6 T4 F – the sibling, in the phase that calls it', () => {
     expect(world.spotlightHabituation, '...and the week she just lived is counted after it').toBe(held + 1)
   })
 
-  it('⭐⭐⭐ ⚠ ONE CLOCK – the gate is asked about the LAST CLOSED week, exactly like the pressure', () => {
-    // ⚠⚠ RULING Q PART 2, MEASURED RATHER THAN READ OFF THE CALL TEXT. The fixture is a girl whose
-    // fame arrives in the week she is parked in and in no earlier one: `fameAt` derives from stamps,
-    // and `decayAt` returns 0 for anything in the future, so she is news AT `world.week` and NOT at
-    // `world.week − 1`. A pass that asked about `world.week` would count this week; the shipped one
-    // must not, because ruling P gave this wave one clock and the pressure reads the closed week.
+  it('⭐⭐⭐ ⚠ ONE CLOCK – the standing the pass reads is the LAST CLOSED fold, never the week being lived', () => {
+    // ⚠⚠ RE-CUT UNDER D1 (14.09), AND THE LAW IT HOLDS IS STILL RULING Q PART 2's – NOT WEAKENED,
+    // RE-TENSED. The old fixture posed fame arriving in the parked week (news AT `world.week`, not
+    // at `world.week − 1`) and proved the gate was asked about the closed week; D1 removed the week
+    // axis, so that fixture is unposable – `newsStandingOf` is present-tense BECAUSE the cached
+    // rank's one writer runs AFTER `playHerWeek`, which makes the cache itself «as of the last
+    // closed fold» (the predicate's own ⚠⚠ carries this argument). Same claim, measured through
+    // the cache: a girl whose ranking week is being lived RIGHT NOW – points already on the ledger
+    // (the live belt sees them), the fold that would rank her top-100 not yet closed – must count
+    // NOTHING in this pass, and count from the very next one.
     const world = probe('habituation-horizon')
-    makeNews(world, world.week + 40)
-    expect(sheIsNewsAt(world, world.week), 'she is news this week').toBe(true)
-    expect(sheIsNewsAt(world, world.week - 1), '...and was not last week').toBe(false)
+    world.results.push({ playerId: KID_ID, week: world.week, points: 2000, tier: 'wta250' })
+    expect(kidPoints(world, 'wta'), 'the live fold already sees the points – the belt is open').toBeGreaterThan(0)
+    expect(newsStandingOf(world), '...but the standing reads the cache, and the cache is last week\'s nobody').toBe('quiet')
     resolveBodyAndPlanner(world)
-    expect(world.spotlightHabituation, 'the pass reads the week that CLOSED, not the one being lived').toBe(0)
+    expect(world.spotlightHabituation, 'the pass counted nothing – the week being lived has not closed').toBe(0)
+
+    // ...and when the fold closes – `recomputeRankAndMilestones` runs exactly this after the play
+    // phase – the SAME points make her known, and the NEXT pass counts the first week.
+    recomputeKidRank(world)
+    expect(world.kidRankWta, 'the fixture really ranks her inside the known band')
+      .toBeLessThanOrEqual(ECONOMY.spotlight.newsRankKnown)
+    expect(newsStandingOf(world)).toBe('known')
+    world.week++
+    resolveBodyAndPlanner(world)
+    expect(world.spotlightHabituation, 'the closed week is the one that counts').toBe(1)
   })
 
   it('⚠ the pass writes `spotlightHabituation` and NOTHING else, key by key', () => {
     // `driftWalls`'s own §H shape, applied to the wave's second slow counter: a pass that quietly
     // moved spirit, bond or a leaning would be a second writer of a field with exactly one.
-    const world = makeNews(probe('habituation-writes'))
+    const world = known(probe('habituation-writes'))
     const before = JSON.parse(JSON.stringify(world)) as Record<string, unknown>
     growHabituation(world, true, false)
     const after = world as unknown as Record<string, unknown>
@@ -602,7 +664,7 @@ describe('wave 6 T4 G – what T4 deliberately does not do', () => {
   it('⚠⚠ NO DECAY – the counter never falls, not even after seasons out of the light', () => {
     // v1, brief §0.5: «she does not unlearn living known». The girl is grown to the cap, then the
     // gate is closed for two full seasons; the counter must still read the cap.
-    const world = makeNews(probe('habituation-no-decay'))
+    const world = known(probe('habituation-no-decay'))
     for (let i = 0; i < FULL; i++) growHabituation(world, true, false)
     expect(world.spotlightHabituation, 'she is a veteran').toBe(FULL)
     for (let i = 0; i < 104; i++) growHabituation(world, false, false)
@@ -623,7 +685,7 @@ describe('wave 6 T4 G – what T4 deliberately does not do', () => {
   })
 
   it('⚠ ZERO DRAWS – the pass derives no stream and MAIN is where it was', () => {
-    const world = makeNews(probe('habituation-draws'))
+    const world = known(probe('habituation-draws'))
     const before = JSON.stringify(world.rngMain)
     rngKeys.length = 0
     growHabituation(world, true, false)
@@ -637,5 +699,109 @@ describe('wave 6 T4 G – what T4 deliberately does not do', () => {
       .filter(([, text]) => /world\.spotlightHabituation\s*=[^=]/.test(codeOnly(text)))
       .map(([p]) => p)
     expect(writers.sort(), 'one writer, one file').toEqual(['engine/spirit.ts'])
+  })
+})
+
+// =================================================================================================
+// H. ⭐⭐ D2 (14.09, «да») – THE RECEIPT: «The cameras stopped costing her sleep.»
+// =================================================================================================
+//
+// NEW WITH THE OWNER'S D2 (14.09), pinned off the shipped `growHabituation` TAIL (engine/spirit.ts
+// step 5) rather than off the strings doc's proposal: on a GROWN week – both of the pass's gates
+// already behind it – `PUBLIC_LIFE_RECEIPT` prints when `habituationScale` crosses
+// `ECONOMY.psychologist.publicLifeReceiptAt` from above, AND ONLY IF the fifth focus is working
+// that week (`rung !== undefined`) – it is the FOCUS's receipt and not the counter's. `type:
+// 'info'`, no cents, no keep: `RECOVERY_RECEIPT`'s exact shape at its own site. ⚠ ONCE-EVER BY
+// MONOTONICITY, NOT BY A STAMP: the counter never decays (§0.5), so before/after can straddle the
+// point at most once per career and no schema field is spent remembering it – which also yields
+// the SPENT-CROSSING law this section holds from both sides: a career that crosses on an unworked
+// week has spent its one crossing silently, and no amount of later work buys the sentence back
+// («he worked it, not a subscription stamp» – wave 5 T4's doctrine, applied to the fifth focus).
+//
+// ⚠⚠ MUTATION-VERIFIED, THE HOUSE DUTY – both arms run 14.09 by string edit, UNDONE by the inverse
+// edit, spirit.ts md5 pristine after each (68f07b1e…), counts MEASURED against a green control:
+//
+//   ARM D2-1  the worked-week guard widened (`rung !== undefined`   1 RED  the spent-crossing case –
+//             -> always on)                                                the unworked crossing
+//                                                                          printed. ⚠ the other
+//                                                                          three stay green,
+//                                                                          correctly: their walks
+//                                                                          all WORK the year
+//   ARM D2-2  the crossing halved to its arrival side alone         2 RED  the once-ever case (a
+//             (`scale(held) > point` dropped)                              receipt every worked week
+//                                                                          past the point) and the
+//                                                                          spent-crossing case (the
+//                                                                          post-hire weeks print).
+//                                                                          ⚠ the shape case stays
+//                                                                          green – it reads the
+//                                                                          FIRST row, which is the
+//                                                                          right one under either
+//                                                                          spelling
+describe('wave 6 T4 H – the fifth focus\'s receipt (D2, 14.09)', () => {
+  const POINT = ECONOMY.psychologist.publicLifeReceiptAt
+
+  /** A known girl with the year bought: focus set, rung 0, the billing boolean handed per call –
+   *  this file's own idiom since T5 widened the signature. Rung 0 deliberately: the cheapest seat's
+   *  accelerated grid (×1.5) steps over the crossing rather than onto it, so the case proves the
+   *  STRADDLE (`> point` before, `<= point` after) and not a lucky equality. */
+  function yearBought(seed: string): WorldState {
+    const world = known(probe(seed))
+    world.psychologistFocus = 'publicLife'
+    world.psychologistRung = 0
+    return world
+  }
+
+  /** Every receipt row the career has printed so far – by exact text, the row's one identity. */
+  function receipts(world: WorldState): number {
+    return world.events.filter((e) => e.text === PUBLIC_LIFE_RECEIPT).length
+  }
+
+  it('⭐⭐⭐ crossing the point on a WORKED week prints the receipt – and EXACTLY once, ever', () => {
+    // ⚠ THE FIXTURE CHECK COMES FIRST, because a mis-tuned point makes this case pass empty (the
+    // «unable to fire» family): a point at or below the floor is never crossed, a point at or
+    // above 1 is crossed before the first week. 0.5 sits inside the scale's open interval.
+    expect(POINT, 'the point is reachable – strictly above the floor').toBeGreaterThan(FLOOR)
+    expect(POINT, '...and not already spent at week zero').toBeLessThan(1)
+    // The whole road walked at the worked rate – three times the span, so «once» is about the
+    // monotonicity and not about the walk stopping early.
+    const world = yearBought('receipt-once')
+    for (let i = 0; i < FULL * 3; i++) growHabituation(world, true, true)
+    expect(world.spotlightHabituation, 'the walk really reached the cap').toBe(FULL)
+    expect(receipts(world), 'one crossing, one sentence, whole career').toBe(1)
+  })
+
+  it('⭐⭐ the row is the recovery receipt\'s exact shape: info, this week, no cents, no keep', () => {
+    const world = yearBought('receipt-shape')
+    for (let i = 0; i < FULL * 3 && receipts(world) === 0; i++) growHabituation(world, true, true)
+    const row = world.events.find((e) => e.text === PUBLIC_LIFE_RECEIPT)
+    expect(row, 'the walk crossed and the receipt printed').toBeDefined()
+    expect(row?.type, '`info` – the recovery receipt\'s register, not a life row').toBe('info')
+    expect(row?.week, 'dated the week the crossing was lived').toBe(world.week)
+    expect(row?.amountCents, 'no cents – the no-cents law').toBeUndefined()
+    expect(row?.keep, 'and no keep – it prunes like the row it is modelled on').toBeUndefined()
+    expect(row?.lifeKind, 'and no lifeKind – the camera mark belongs to the exposure row, not here').toBeUndefined()
+  })
+
+  it('⭐⭐⭐ crossing on an UNWORKED week prints nothing – and the spent crossing never comes back', () => {
+    // Both halves of the spent-crossing law. The year is BOUGHT but stood down (`psychologistWorks`
+    // false is a college freeze, a booked family week, or no seat at all – ruling J's billing
+    // predicate, handed down), so she grows at ×1 and crosses in silence. THEN the seat works the
+    // year to the cap – still silence, for ever: `habituationScale(held) > POINT` is false on every
+    // later week by the counter's own monotonicity, and no stamp exists to catch the receipt up.
+    // He has to have worked the CROSSING week, not merely some week.
+    const world = yearBought('receipt-spent')
+    while (habituationScale(world.spotlightHabituation ?? 0) > POINT) growHabituation(world, true, false)
+    expect(receipts(world), 'the unworked crossing is silent').toBe(0)
+    for (let i = 0; i < FULL * 3; i++) growHabituation(world, true, true)
+    expect(world.spotlightHabituation, 'the worked years still walk her to the cap').toBe(FULL)
+    expect(receipts(world), '...and the sentence never prints – the one crossing was spent').toBe(0)
+  })
+
+  it('⚠ no crossing, no receipt – a career short of the point prints nothing', () => {
+    const world = yearBought('receipt-none')
+    for (let i = 0; i < 10; i++) growHabituation(world, true, true)
+    expect(habituationScale(world.spotlightHabituation ?? 0), 'the fixture really stayed above the point')
+      .toBeGreaterThan(POINT)
+    expect(receipts(world)).toBe(0)
   })
 })

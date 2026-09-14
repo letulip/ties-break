@@ -136,10 +136,10 @@ import {
   psychologistFocusRefusal,
   psychologistWeeklyCents,
   psychologistWorksThisWeek,
+  newsStandingOf,
   resolvePsychologist,
   setPsychologistFocus,
   setPsychologistRung,
-  sheIsNewsAt,
   toSnapshot,
   type ExposureEvent,
   type ExposureKind,
@@ -147,6 +147,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { psychologistWorkingRung } from '../src/engine/world/psychologist'
+import { standHerAt } from './helpers/newsStanding'
 import { resolveBodyAndPlanner } from '../src/engine/world/phaseHerWeek'
 import { engineModuleFunction } from './worldSource'
 import { ECONOMY } from '../src/engine/economy'
@@ -217,13 +218,16 @@ function probe(seed = 'spotlight-focus', temperament: Temperament = GIRL, week =
   return world
 }
 
-/** Make her news at every week from `at` back – two OLD Slam titles in the cabinet, the construction
- *  T3's §B, T4's §D and §F all use. ⚠ THE STAMPS ARE OLD ON PURPOSE: a fixture whose fame comes from
- *  the very week under test would measure the news gate instead of the thing being asked about
- *  (ruling E-bis's own warning). */
+/** Make her news – ⚠ D1 (14.09): «news» is a STANDING now (`newsStandingOf` – live professional
+ *  points and a cached rank against the owner's top-100/top-200 bars), never the cabinet, so this
+ *  fixture poses the standing at `'known'` – the ONE band habituation grows in («a girl the light
+ *  only visits never gets used to it», the predicate's own map) and the band every case here means
+ *  by the word. The old two-Slam construction fed a fame bar this file's subject never reads twice:
+ *  fame stayed in the LEAK's hazard (ruling I) and nothing in the pressure, the habituation or the
+ *  seat's two ladders is priced by it. The row sits one week back – inside the fold's 52-week window
+ *  for every fixture week this file uses, none of which sweeps `world.week` itself. */
 function makeNews(world: WorldState, at = world.week): WorldState {
-  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-  slam.titles.push(at - 40, at - 41)
+  standHerAt(world, 'known', at - 1)
   return world
 }
 
@@ -611,7 +615,7 @@ describe('wave 6 T5 E – what a year on her public life does to the weeks she l
     for (const rung of RUNGS) {
       const world = withSeat(makeNews(probe(`t5-hab-monotone-${rung}`)), FOCUS, rung)
       expect(psychologistWorkingRung(world, FOCUS), `rung ${rung}: the seat really is working it`).toBe(rung)
-      expect(sheIsNewsAt(world, world.week), `rung ${rung}: and she really is news`).toBe(true)
+      expect(newsStandingOf(world), `rung ${rung}: and she really lives known (⚠ D1, 14.09)`).toBe('known')
       growOn(world, true)
       expect(world.spotlightHabituation, `rung ${rung}: the exact acceleration`).toBe(expected[rung])
       expect(world.spotlightHabituation, `rung ${rung} counts more than the rung below`).toBeGreaterThan(previous)
@@ -636,7 +640,7 @@ describe('wave 6 T5 E – what a year on her public life does to the weeks she l
       const world = withSeat(makeNews(probe(`t5-walls-${axis}`)), FOCUS, 2)
       world.wallsFlipped = { ...world.wallsFlipped, [axis]: true }
       expect(psychologistWorkingRung(world, FOCUS), `${axis}: the seat IS working it, at the top rung`).toBe(2)
-      expect(sheIsNewsAt(world, world.week), `${axis}: and she IS news`).toBe(true)
+      expect(newsStandingOf(world), `${axis}: and she IS known (⚠ D1, 14.09)`).toBe('known')
       growOn(world, true)
       expect(world.spotlightHabituation, `${axis}: behind walls the year buys her nothing`).toBe(0)
     }
@@ -647,7 +651,7 @@ describe('wave 6 T5 E – what a year on her public life does to the weeks she l
     // returns, and a mutation that moved the multiplier above only ONE of them must redden a case of
     // its own rather than hide behind the other's assertion failing first.
     const world = withSeat(probe('t5-hab-unknown'), FOCUS, 2)
-    expect(sheIsNewsAt(world, world.week), 'the fixture really is unknown').toBe(false)
+    expect(newsStandingOf(world), 'the fixture really is quiet (⚠ D1, 14.09)').toBe('quiet')
     expect(psychologistWorkingRung(world, FOCUS), '...and the seat really is working the year').toBe(2)
     growOn(world, false)
     expect(world.spotlightHabituation, 'there is no spotlight for a year of work to shorten').toBe(0)
@@ -694,7 +698,7 @@ describe('wave 6 T5 F – the phase applies both halves of the year', () => {
       const slam = (w.trophiesByTier.slam ??= { titles: [], finals: [] })
       slam.titles.push(w.week - 1)
     }
-    expect(sheIsNewsAt(held, held.week - 1), '⚠ the fixture is news at the week that closed').toBe(true)
+    expect(newsStandingOf(held), '⚠ the fixture lives known – present-tense since D1 (14.09), the cached rank IS the closed fold').toBe('known')
     expect(psychologistWorkingRung(held, FOCUS), 'the held arm really is working this year').toBe(2)
     expect(psychologistWorkingRung(other, FOCUS), '...and the control arm really is not').toBeUndefined()
 
@@ -712,7 +716,7 @@ describe('wave 6 T5 F – the phase applies both halves of the year', () => {
     // pass every case in §D and §E.
     const held = withSeat(makeNews(probe('t5-phase-habit')), FOCUS, 2)
     const other = withSeat(makeNews(probe('t5-phase-habit')), 'coolhead', 2)
-    expect(sheIsNewsAt(held, held.week - 1), '⚠ the fixture is news at the week that closed').toBe(true)
+    expect(newsStandingOf(held), '⚠ the fixture lives known – present-tense since D1 (14.09)').toBe('known')
     resolveBodyAndPlanner(held)
     resolveBodyAndPlanner(other)
     expect(other.spotlightHabituation, 'the control counted the plain week').toBe(1)
@@ -746,7 +750,7 @@ describe('wave 6 T5 G – the idle weeks, named so nobody reads them as a bug', 
     // which is exactly why ruling J made that predicate the thing the effects ride.
     const idle = withSeat(probe('t5-idle'), FOCUS, 2)
     const control = withSeat(probe('t5-idle'), 'coolhead', 2)
-    expect(sheIsNewsAt(idle, idle.week - 1), 'she is nobody`s news').toBe(false)
+    expect(newsStandingOf(idle), 'she is nobody`s news – quiet (⚠ D1, 14.09)').toBe('quiet')
     resolveBodyAndPlanner(idle)
     resolveBodyAndPlanner(control)
     resolvePsychologist(idle)

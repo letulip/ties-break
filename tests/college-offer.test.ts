@@ -16,7 +16,6 @@
 //      INSTITUTIONAL aid to get back under it.
 import { describe, it, expect } from 'vitest'
 import {
-  COLLEGE_OFFER,
   JUNIOR_RUNGS,
   athleticShareOf,
   collegeOfferFor,

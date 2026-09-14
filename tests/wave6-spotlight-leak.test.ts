@@ -3,10 +3,13 @@
 // §2 T6, the architect's rulings I (the fame factor), M (the slot) and P (the wave's one horizon).
 //
 // WHAT THIS FILE IS ABOUT, IN ONE LINE: an attachment nobody outside the family knows of draws, every
-// week she is news, against a hazard that scales by fame and by her EXPRESSED openness; on a fire the
-// world learns, the story lands true or wrong on its own key, the album keeps the world's version,
-// and – if the parent had not been told yet – he learns it from the headline through the STANDING
-// delivery, in that same tick.
+// week her STANDING is non-quiet (the owner's D1, 14.09 – the fame bar is out of the gate), against a
+// hazard that scales by fame, by her EXPRESSED openness, by the band (× `noticedLeakScale` at
+// `'noticed'` – D1) and by the episode's youth (× `leakFreshMult` while it is at most `leakFreshWeeks`
+// old – the owner's D5, his «давай попробуем»); on a fire the world learns, the story lands true or
+// wrong on its own key, the album keeps the world's version under the spotlight family's own 📸 mark
+// (D3), and – if the parent had not been told yet – he learns it from the headline through the
+// STANDING delivery, in that same tick.
 //
 // =================================================================================================
 // THE ARMS – every case below was watched to FAIL on the mutation it is written for
@@ -16,10 +19,14 @@
 //           overturned («a girl at fame 100 leaks at exactly the rate of a girl at 30»).
 //           **2 RED** · §A's factor case and §D's twins.
 //
-//   ARM 2   the gate asks `sheIsNewsAt(world, world.week)` instead of `world.week − 1` – the second
-//           clock ruling P refused. **2 RED** · §H's two horizon cases, and it takes BOTH of them:
-//           the first goes red because the gate opens where it must not, the second because it shuts
-//           where it must not, which is why the mirror is worth its own fixture.
+//   ARM 2   ⚠ RE-AIMED BY D1 (14.09) – the mutation it named cannot be written any more: the gate
+//           lost its week argument with the fame bar, `newsStandingOf` is present-tense by its own
+//           contract (the cached rank IS the last closed fold, ruling P kept by construction). What
+//           survives of ruling P here is the HAZARD's fame read at `world.week − 1`, and §H's
+//           crafted-uniform case is its net now: a spelling that reads the week being lived fires on
+//           a week the shipped code provably cannot. §H's other two cases pin the two halves D1
+//           separated – fame without standing derives nothing, standing without fame derives its key
+//           and can never fire.
 //
 //   ARM 3   ⚠⚠ the hazard drawn and DISCARDED before the real read (`const g = rngFromSeed(key);
 //           g(); if (g() < hazard)`) – the exact blind spot ruling L names, invisible to a key
@@ -62,6 +69,14 @@
 //           source law and `wave5-psy-counsel.test.ts`'s write-site count. It is the proof that T6's
 //           one named exception in those two files is KEYED on the leak row's own text and is not a
 //           blanket relaxation – a licence nobody can widen by accident.
+//
+// ⚠⚠ RE-AIMED 14.09 UNDER THE OWNER'S D1/D3/D5. Every fixture that used FAME to open the gate now
+// poses the STANDING (`standHerAt`, tests/helpers/newsStanding.ts) and keeps fame as what D1 left it:
+// the hazard's own factor (ruling I untouched – §D stands word for word). §I (the freshness lever,
+// D5) and §J (the noticed band, D1) are ADDITIONS of that re-aim, built on §C's own technique – the
+// decision pinned against uniforms drawn in this file at crafted weeks, so both are exact by
+// construction rather than statistical; their mutations (the fresh multiplier dropped, the window's
+// edge off by one, the band scale dropped) each move a week this file names out loud.
 //
 // =================================================================================================
 // THE GUARDS T6 RE-AIMED, AND WHICH OF THEM WENT RED ON CONTACT
@@ -113,12 +128,13 @@ import {
   leakWrongShareFor,
   lifeLogOf,
   loveEpisodesOf,
+  newsStandingOf,
   raiseLifeBeat,
   rollArrival,
   rollLeak,
-  sheIsNewsAt,
   type WorldState,
 } from '../src/engine/world'
+import { standHerAt } from './helpers/newsStanding'
 import type { LoveEpisode } from '../src/shared/protocol/narrative'
 import { resolveBodyAndPlanner } from '../src/engine/world/phaseHerWeek'
 import { fameAt } from '../src/engine/world/fame'
@@ -153,19 +169,35 @@ function probe(seed: string, temperament: Temperament = 'quiet', week = 210): Wo
   return world
 }
 
-/** ⭐ MAKE HER NEWS AND KEEP HER THERE – a Slam title every `every` weeks across `[from, to]`.
+/** ⭐ KEEP HER FAME UP – a Slam title every `every` weeks across `[from, to]`.
+ *
+ *  ⚠ D1 (14.09) RENAMED WHAT THIS BUYS WITHOUT MOVING A LINE OF IT: fame is OUT of the gate and
+ *  stays in the HAZARD (ruling I, untouched), so this fixture no longer opens anything – it is the
+ *  dial on `fameAt`, the «more lenses on a bigger star» factor, and every sweep that wants a fire at
+ *  all still needs it beside `standHerAt`. A world with standing and no cabinet derives its key and
+ *  can never fire (§H pins exactly that).
  *
  *  ⚠ THE STAMPS ARE SPREAD RATHER THAN PILED AT ONE WEEK, and it is a fixture correctness matter
  *  rather than a flourish: `decayAt` has a 104-week half-life, so two titles at one old week carry a
- *  career for about forty weeks and then quietly drop under the bar – a sweep built that way would
- *  be measuring the gate for most of its length and would report the silence as a property of the
- *  hazard. Measured 14.09: piled at `week − 40`, fame reads 38.4 at the week under test and 0.0 four
+ *  career for about forty weeks and then quietly fall to nothing – a sweep built that way would be
+ *  measuring a dead hazard for most of its length and would report the silence as a property of the
+ *  formula. Measured 14.09: piled at `week − 40`, fame reads 38.4 at the week under test and 0.0 four
  *  hundred weeks later. `every` is the ONE dial this fixture has, and §D's twins are two values of
  *  it. */
 function keepNews(world: WorldState, every: number, from = 100, to = 1400): WorldState {
   const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
   for (let t = from; t <= to; t += every) slam.titles.push(t)
   return world
+}
+
+/** ⭐ ...AND KEEP HER STANDING THERE – `standHerAt`, laid along a sweep. ⚠ D1 (14.09): the standing's
+ *  points half (`kidPoints(world, 'wta') > 0`) folds a rolling 52-WEEK window, so one row cannot hold
+ *  a gate open across an 800-week sweep – it lapses and the silence would read as a property of the
+ *  hazard, the exact fixture defect `keepNews`'s own banner records for fame. A row every 40 weeks
+ *  keeps the latest one inside the window at every step; the RANK half is a cached write and never
+ *  decays (nothing these suites drive calls `recomputeKidRank`). */
+function standAcross(world: WorldState, band: 'noticed' | 'known', from: number, to: number): void {
+  for (let w = from; w <= to; w += 40) standHerAt(world, band, w)
 }
 
 /** ⚠ A ROW BUILT BY HAND, and only where the case is about the HAZARD rather than about the arrival.
@@ -209,15 +241,32 @@ function fireWeeks(world: WorldState, from: number, to: number): number[] {
   return out
 }
 
+/** ⚠ D1 (14.09), RE-STATED FROM `ECONOMY` AND NOT READ THROUGH `newsStandingOf` – the band's factor
+ *  on the hazard, as the ruling spells it: 1 at `'known'` (rank ≤ `newsRankKnown`),
+ *  `noticedLeakScale` at `'noticed'` (≤ `newsRankNoticed`), and 0 for `'quiet'` – which is not a
+ *  threshold but the gate itself: a quiet week derives nothing, so no uniform can be under it. */
+function bandScaleOf(world: WorldState): number {
+  const rank = world.kidRankWta ?? Number.MAX_SAFE_INTEGER
+  if (rank <= SPOT.newsRankKnown) return 1
+  if (rank <= SPOT.newsRankNoticed) return SPOT.noticedLeakScale
+  return 0
+}
+
 /** ⚠⚠ THE EXPECTATION THAT DOES NOT CALL THE CODE UNDER TEST – ruling L's pairing, spelled out. The
  *  uniform comes from the real `rngFromSeed` at the key the SPEC names, and the hazard is
  *  re-derived here from `ECONOMY` rather than from `leakHazardFor`, so this function is an
- *  independent statement of who-she-is §3c-bis's own formula and not a mirror of the engine's. */
-function expectedFireWeeks(world: WorldState, episodeId: string, from: number, to: number): number[] {
+ *  independent statement of who-she-is §3c-bis's own formula and not a mirror of the engine's.
+ *  ⚠ D1/D5 (14.09): the threshold now carries the band's scale and the freshness multiplier –
+ *  `× noticedLeakScale` at `'noticed'`, `× leakFreshMult` while `w − sinceWeek <= leakFreshWeeks` –
+ *  both re-stated here from `ECONOMY`, same single uniform, same key: only the threshold moved. */
+function expectedFireWeeks(world: WorldState, episodeId: string, sinceWeek: number, from: number, to: number): number[] {
   const openness = temperamentOpenness(expressedTemperamentOf(world))
   const out: number[] = []
   for (let w = from; w < to; w++) {
-    const hazard = SPOT.leakBasePerWeek * SPOT.leakOpennessMult[openness] * (fameAt(world, w - 1) / ECONOMY.fame.cap)
+    const fresh = w - sinceWeek <= SPOT.leakFreshWeeks ? SPOT.leakFreshMult : 1
+    const hazard =
+      SPOT.leakBasePerWeek * SPOT.leakOpennessMult[openness] * (fameAt(world, w - 1) / ECONOMY.fame.cap) *
+      bandScaleOf(world) * fresh
     if (rngFromSeed(`${world.seed}:life:leak:${episodeId}:${w}`)() < hazard) out.push(w)
   }
   return out
@@ -291,38 +340,46 @@ describe('wave 6 T6 B – an ineligible week takes ZERO draws, on both streams',
     return rngKeys.filter((k) => k.includes(':life:leak:story:'))
   }
 
-  it('⭐⭐⭐ NO LEAK BELOW THE NEWS BAR, HOWEVER LONG THE EPISODE RUNS – 200 weeks, not one key', () => {
+  it('⭐⭐⭐ NO LEAK WHILE SHE IS QUIET, HOWEVER LONG THE EPISODE RUNS – 200 weeks, not one key', () => {
+    // ⚠ D1 (14.09): the gate reads her STANDING now, never her fame – so the fixture is a girl the
+    // ladder has never heard of (rank past every bar, no live points), posed by `standHerAt`.
     // ⚠⚠ THE VACUITY GUARD IS THE FIRST HALF OF THE CASE, because «no draws» is what an empty career
     // produces too: the episode is asserted OPEN and still PRIVATE at the end, and the girl is
-    // asserted NOT news at every week swept. Without those three the case would pass on a fixture
+    // asserted QUIET at every week swept. Without those three the case would pass on a fixture
     // with nobody in it, which is the shape this suite's §0 warns about.
     const world = probe('leak-below-bar')
+    standHerAt(world, 'quiet', 200)
     const row = episode(world, 150, 9999)
     rngKeys.length = 0
     for (let w = 200; w < 400; w++) {
       world.week = w
-      expect(sheIsNewsAt(world, w - 1), `⚠ the fixture really is unknown at ${w - 1}`).toBe(false)
+      expect(newsStandingOf(world), `⚠ the fixture really is quiet at ${w}`).toBe('quiet')
       rollLeak(world)
     }
-    expect(leakKeys(), '200 weeks under the bar, not one key on either stream').toEqual([])
+    expect(leakKeys(), '200 quiet weeks, not one key on either stream').toEqual([])
     expect(row.endedWeek, '⚠ and the episode was LIVE throughout – the case is not about an empty career').toBeNull()
     expect(row.publicWeek, '...and it is still nobody\'s business but the family\'s').toBeNull()
     expect(activeEpisode(world), '...and the engine agrees somebody is there').not.toBeNull()
   })
 
-  it('⭐⭐ a career with nobody in it derives no stream at all, news or not', () => {
+  it('⭐⭐ a career with nobody in it derives no stream at all, standing or not', () => {
+    // ⚠ D1 (14.09): the positive half is the STANDING – the fixture is `'known'` (and famous, for
+    // completeness), so the only clause missing is the attachment itself.
     const world = keepNews(probe('leak-nobody'), 10)
+    standHerAt(world, 'known', 300)
     rngKeys.length = 0
     for (let w = 300; w < 352; w++) {
       world.week = w
       rollLeak(world)
     }
-    expect(sheIsNewsAt(world, 320), '⚠ the positive half: she IS news here').toBe(true)
-    expect(leakKeys(), '52 famous weeks with nobody there, not one key').toEqual([])
+    world.week = 320
+    expect(newsStandingOf(world), '⚠ the positive half: she IS known here').toBe('known')
+    expect(leakKeys(), '52 known weeks with nobody there, not one key').toEqual([])
   })
 
   it('⭐⭐ a story that has ALREADY run derives no stream – the stamp is the once-ness', () => {
     const world = keepNews(probe('leak-already-out'), 10)
+    standHerAt(world, 'known', 320) // ⚠ D1 (14.09): the gate is the standing, so the shut clause under test is the stamp alone
     const row = episode(world, 150, 9999)
     row.publicWeek = 300
     rngKeys.length = 0
@@ -341,6 +398,7 @@ describe('wave 6 T6 B – an ineligible week takes ZERO draws, on both streams',
     // air about somebody long gone, because the booth READS the stamp and never re-judges it. The
     // gate is `activeEpisode`, `endsEligible`'s own spelling. Carried to the architect in the report.
     const world = keepNews(probe('leak-ended'), 10)
+    standHerAt(world, 'known', 300) // ⚠ D1 (14.09): standing open, so the silence below is the narrowing's own
     const row = episode(world, 150, 200, 260)
     rngKeys.length = 0
     for (let w = 300; w < 352; w++) {
@@ -357,6 +415,7 @@ describe('wave 6 T6 B – an ineligible week takes ZERO draws, on both streams',
     // without this case – and it is precisely the reading §3c-bis's overtake dies on, since the
     // scene is a parent who had NOT been told.
     const world = keepNews(probe('leak-untold'), 10)
+    standHerAt(world, 'known', 333) // ⚠ D1 (14.09)
     episode(world, 150, 9999)
     rngKeys.length = 0
     world.week = 333
@@ -369,6 +428,7 @@ describe('wave 6 T6 B – an ineligible week takes ZERO draws, on both streams',
     // HAS a story may ask, and a spelling that drew it every week would be invisible to a combined
     // count. ARM 5 is that mutation and it reddens here.
     const world = keepNews(probe('leak-miss'), 10)
+    standAcross(world, 'known', 300, 700) // ⚠ D1 (14.09): held open along the walk `firstMiss` may take
     const row = episode(world, 150, 9999)
     const week = firstMiss(world, 300)
     rngKeys.length = 0
@@ -380,6 +440,7 @@ describe('wave 6 T6 B – an ineligible week takes ZERO draws, on both streams',
 
   it('⭐⭐⭐ a week that FIRES takes exactly TWO, the hazard then the story, in that order', () => {
     const world = keepNews(probe('leak-hit'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09): held open along the walk `firstHit` may take
     const row = episode(world, 150, 9999)
     const week = firstHit(world, 300)
     rngKeys.length = 0
@@ -416,10 +477,16 @@ function firstHit(world: WorldState, from: number): number {
 // in §B.
 describe('wave 6 T6 C – the exact value behind every decision', () => {
   it('⭐⭐⭐ the fire weeks are EXACTLY the weeks whose own uniform is under the hazard', () => {
+    // ⚠ D1/D5 (14.09): the expectation's threshold now carries the band scale and the freshness
+    // multiplier – re-derived from `ECONOMY` in `expectedFireWeeks`, never by calling `rollLeak`.
+    // On THIS fixture the band is `'known'` (scale 1) and the episode is 150 weeks old at the
+    // sweep's first step (the fresh window never opens); §I and §J are where each factor is walked
+    // through its other value, on crafted uniforms.
     const world = keepNews(probe('leak-values', 'sunny'), 10)
+    standAcross(world, 'known', 300, 1100)
     episode(world, 150, 9999)
     const measured = fireWeeks(world, 300, 1100)
-    const expected = expectedFireWeeks(world, 'p:150', 300, 1100)
+    const expected = expectedFireWeeks(world, 'p:150', 150, 300, 1100)
     // ⚠ THE NON-VACUITY GUARD: a sweep that fired nothing would satisfy `[] === []` for ever.
     expect(expected.length, '⚠ the fixture really does leak').toBeGreaterThan(5)
     expect(measured, 'week for week, and the expectation never calls the roll').toEqual(expected)
@@ -427,6 +494,7 @@ describe('wave 6 T6 C – the exact value behind every decision', () => {
 
   it('⭐⭐⭐ ...and so is every WRONG story, on its own key and its own share', () => {
     const world = keepNews(probe('leak-values-wrong', 'sunny'), 10)
+    standAcross(world, 'known', 300, 1400) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const openness = temperamentOpenness(expressedTemperamentOf(world))
     const measured: [number, boolean][] = []
@@ -465,14 +533,21 @@ describe('wave 6 T6 D – more lenses on a bigger star', () => {
     // equal and the case would pass on the brief's spelling too.
     const low = keepNews(probe('leak-twins', 'sunny'), 60)
     const high = keepNews(probe('leak-twins', 'sunny'), 6)
+    // ⚠ D1 (14.09): the gate is the STANDING now and both twins hold the SAME band, so the band's
+    // scale cancels between them and the only factor that differs is the fame the case is about –
+    // ruling I untouched, which is exactly why this pin stands word for word.
+    standAcross(low, 'known', 300, 1300)
+    standAcross(high, 'known', 300, 1300)
     episode(low, 150, 9999)
     episode(high, 150, 9999)
-    // ⚠⚠ THE FOUR VACUITY GUARDS COME FIRST. Both twins must be NEWS across the sweep (or the case
-    // is about the gate), their fames must actually DIFFER (or it is about nothing), and the dimmer
-    // one must fire at all (or «a superset» is a statement about an empty set).
+    // ⚠⚠ THE FOUR VACUITY GUARDS COME FIRST. Both twins must be IN THE LIGHT across the sweep (or
+    // the case is about the gate), their fames must actually DIFFER (or it is about nothing), and
+    // the dimmer one must fire at all (or «a superset» is a statement about an empty set).
     for (const w of [400, 700, 1000]) {
-      expect(sheIsNewsAt(low, w), `⚠ the dim twin is news at ${w}`).toBe(true)
-      expect(sheIsNewsAt(high, w), `⚠ the bright twin is news at ${w}`).toBe(true)
+      low.week = w
+      high.week = w
+      expect(newsStandingOf(low), `⚠ the dim twin is known at ${w}`).toBe('known')
+      expect(newsStandingOf(high), `⚠ the bright twin is known at ${w}`).toBe('known')
     }
     for (const w of [400, 700, 1000]) {
       expect(fameAt(high, w), `the bright twin is really brighter at ${w}`).toBeGreaterThan(fameAt(low, w) + 15)
@@ -490,15 +565,21 @@ describe('wave 6 T6 D – more lenses on a bigger star', () => {
   it('⭐⭐ ⚠ AND THE POLICY DECIDES FAME, NOT THE MONEY – ruling E-bis, inherited as a fixture law', () => {
     // ⚠⚠ WRITTEN DOWN HERE BECAUSE IT IS HOW A LATER READER WOULD BUILD A BROKEN ARM. Ruling E-bis
     // measured preset 8 peaking at 0.0 fame under policy 0 and 53.2 under policy 1 – the same family,
-    // coach and wallet. A fixture that never crosses the bar measures nothing and reports it as «the
-    // spotlight does not move her», which is the «unable to fail» family wearing a bench's clothes.
-    // This suite therefore never builds fame from money at all: `keepNews` stamps the CABINET, which
-    // is the record `fameAt` actually reads, and this case is the proof that the dial works.
+    // coach and wallet. A fixture whose hazard never leaves zero measures nothing and reports it as
+    // «the spotlight does not move her», which is the «unable to fail» family wearing a bench's
+    // clothes. This suite therefore never builds fame from money at all: `keepNews` stamps the
+    // CABINET, which is the record `fameAt` actually reads, and this case is the proof that the dial
+    // works – and, since D1 (14.09), the proof that it is ONLY the hazard's dial: a shelf of Slams no
+    // longer opens the gate, the STANDING does, and the two are two fixtures on purpose.
     const unknown = probe('leak-unknown')
-    expect(sheIsNewsAt(unknown, unknown.week - 1), 'a girl with an empty cabinet is nobody').toBe(false)
+    expect(newsStandingOf(unknown), 'a girl with an empty career is quiet').toBe('quiet')
     expect(fameAt(unknown, unknown.week - 1)).toBe(0)
     const known = keepNews(probe('leak-known'), 10)
-    expect(sheIsNewsAt(known, 700), '...and one with a shelf of Slams is news').toBe(true)
+    known.week = 700
+    expect(fameAt(known, 699), 'a shelf of Slams is the hazard\'s fame').toBeGreaterThan(0)
+    expect(newsStandingOf(known), '⚠ D1: ...and by itself opens NOTHING – fame is out of the gate').toBe('quiet')
+    standHerAt(known, 'known', 700)
+    expect(newsStandingOf(known), '...the standing is what opens it').toBe('known')
   })
 })
 
@@ -511,6 +592,7 @@ describe('wave 6 T6 E – the two publicity facts', () => {
     // null – a story that was never told cannot have been told wrong». The sweep asks it of every
     // week, leaked or not, on a career famous enough to leak.
     const world = keepNews(probe('leak-flag-licence', 'sunny'), 10)
+    standAcross(world, 'known', 300, 900) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     let leaks = 0
     for (let w = 300; w < 900; w++) {
@@ -526,6 +608,7 @@ describe('wave 6 T6 E – the two publicity facts', () => {
 
   it('⭐⭐ the leak writes the two stamps and leaves the BOOTH\'s two alone – T7 owns those', () => {
     const world = keepNews(probe('leak-stamps', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const week = firstHit(world, 300)
     rollFresh(world, week)
@@ -542,6 +625,7 @@ describe('wave 6 T6 E – the two publicity facts', () => {
     // week && publicWrong`. This case proves T6's write reaches it, which is the join the two tasks
     // share and neither owns alone.
     const world = keepNews(probe('leak-exposure', 'sunny'), 10)
+    standAcross(world, 'known', 300, 1400) // ⚠ D1 (14.09) – and the ledger it lands in is gated on the same standing
     const row = episode(world, 150, 9999)
     let wrongWeek: number | null = null
     let trueWeek: number | null = null
@@ -596,6 +680,7 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
 
   it('⭐⭐⭐ the overtake delivers the SAME week – `knownWeek === publicWeek`', () => {
     const world = keepNews(probe('leak-overtake', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const week = firstHit(world, 300)
     rollFresh(world, week)
@@ -608,6 +693,7 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
     // is what makes it a claim about the SHIPPED call site: the leak sits between `rollArrival` and
     // `deliverKnownPartner`, and moving it after the delivery (ARM 11) reddens this case.
     const world = keepNews(probe('leak-overtake-phase', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const week = firstHit(world, 300)
     row.publicWeek = null
@@ -633,6 +719,7 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
     // famous girl's week with an unknown girl's, and the spirit the pass leaves behind is an input
     // to `said` – a difference the case is not about and could not have told apart from the one it is.
     const headline = keepNews(probe('leak-twin-cards', 'sunny'), 10)
+    standAcross(headline, 'known', 300, 4300) // ⚠ D1 (14.09)
     const hRow = episode(headline, 150, 9999)
     const week = firstHit(headline, 300)
     hRow.publicWeek = null
@@ -640,12 +727,12 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
     hRow.knownWeek = 9999
     headline.week = week
 
-    // the ordinary twin is the SAME girl at the same week with an ordinary lag – and she is not news,
-    // so her week holds no headline for the card to be framed by.
+    // the ordinary twin is the SAME girl at the same week with an ordinary lag – and her standing is
+    // quiet (⚠ D1, 14.09), so her week holds no headline for the card to be framed by.
     const ordinary = probe('leak-twin-cards', 'sunny')
     const oRow = episode(ordinary, 150, week)
     ordinary.week = week
-    expect(sheIsNewsAt(ordinary, week - 1), '⚠ the ordinary twin is nobody the papers follow').toBe(false)
+    expect(newsStandingOf(ordinary), '⚠ the ordinary twin is nobody the papers follow').toBe('quiet')
 
     resolveBodyAndPlanner(headline)
     resolveBodyAndPlanner(ordinary)
@@ -666,6 +753,7 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
 
   it('⭐⭐ a parent who ALREADY KNOWS is not un-told – the date never moves later', () => {
     const world = keepNews(probe('leak-already-told', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     const row = episode(world, 150, 200)
     const week = firstHit(world, 300)
     rollFresh(world, week)
@@ -679,6 +767,7 @@ describe('wave 6 T6 F – the parent learns it from the headline', () => {
     // a psychologist for. ARM 10 is that mutation. The claim is asserted at the pool's own boundary:
     // with a `heard` frame the heading is one of the eight legible lines and never the headline one.
     const world = keepNews(probe('leak-coached', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const week = firstHit(world, 300)
     rollFresh(world, week)
@@ -705,6 +794,7 @@ describe('wave 6 T6 G – the album keeps what the papers printed', () => {
 
   it('⭐⭐⭐ one KEPT life row on the leak week, and its words are the WORLD\'s version', () => {
     const world = keepNews(probe('leak-row', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const week = firstHit(world, 300)
     world.events = []
@@ -722,6 +812,7 @@ describe('wave 6 T6 G – the album keeps what the papers printed', () => {
 
   it('⭐⭐ both versions really are reachable, and they are two different sentences', () => {
     const world = keepNews(probe('leak-row-both', 'sunny'), 10)
+    standAcross(world, 'known', 300, 1400) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     const seen = new Set<string>()
     for (let w = 300; w < 1400; w++) {
@@ -732,61 +823,106 @@ describe('wave 6 T6 G – the album keeps what the papers printed', () => {
     expect(seen.size, 'a true row and a wrong row, and nothing else').toBe(2)
   })
 
-  it('⚠ no `lifeKind` – §8 forbids a new `LifeBeatKind`, so the row carries none (T3\'s finding)', () => {
+  it('⭐ ⚠ D3 (14.09): the row wears the spotlight family\'s own mark – `lifeKind: \'exposure\'`', () => {
+    // The owner's «да» to 📸: the leak row and the EXPOSURE_ROW share one `lifeKind` and
+    // `lifeRowGlyphs` maps it to his camera. T3's old finding (no `lifeKind`, the 🤍 fallback –
+    // «who-she-is §5a forbids an agent picking a glyph unasked») is ANSWERED by that ruling, not
+    // deleted: the glyph exists now because he was asked and picked one. This pin used to assert
+    // the absence; it now asserts his answer.
     const world = keepNews(probe('leak-row-kind', 'sunny'), 10)
+    standAcross(world, 'known', 300, 4300) // ⚠ D1 (14.09)
     episode(world, 150, 9999)
     const week = firstHit(world, 300)
     world.events = []
     rollFresh(world, week)
     const printed = world.events.filter((e) => e.text.startsWith('It is in the papers'))[0]!
-    expect((printed as { lifeKind?: string }).lifeKind, 'unstamped, and it falls through to the life glyph').toBeUndefined()
+    expect((printed as { lifeKind?: string }).lifeKind, 'stamped with the family mark the owner picked').toBe('exposure')
   })
 })
 
 // =================================================================================================
-// H. ⚠⚠ ONE CLOCK – the gate asks about the LAST CLOSED week (ruling P)
+// H. ⚠⚠ THE GATE AND THE CLOCK AFTER D1 – fame out of the gate, ruling P kept in the hazard
 // =================================================================================================
-describe('wave 6 T6 H – the wave\'s one horizon, read by a third caller', () => {
-  it('⭐⭐⭐ news THIS week but not LAST – the hazard does not fire, and derives nothing', () => {
-    // ⚠⚠ T4's `habituation-horizon` fixture, aimed at the leak. `fameAt` derives from stamps and
-    // `decayAt` returns 0 for the future, so a cabinet stamped AT `world.week` makes her news this
-    // week and not last. A gate reading `world.week` would draw here; the shipped one must not,
-    // because ruling P gave this wave one clock and the pressure reads the closed week.
-    const world = probe('leak-horizon')
+//
+// ⚠⚠ RE-AIMED 14.09 (D1). The two horizon fixtures that used to live here – «news this week but not
+// last» and its mirror – cannot be POSED any more: `newsStandingOf` takes no week, because the cached
+// rank IS the last closed fold (its own contract), so ruling P's one-horizon law holds at the gate by
+// construction rather than by a fixture. What D1 left to pin is sharper, and it is three cases now:
+// the two halves it separated (fame opens nothing; the standing opens everything, even at zero fame),
+// and the ONE place a week argument survives – the hazard's fame read at `world.week − 1` – nailed
+// with a crafted uniform, because a case that merely «could» catch the in-week spelling is a case
+// that usually does not.
+describe('wave 6 T6 H – fame out of the gate (D1), and the hazard\'s own closed-week clock', () => {
+  it('⭐⭐⭐ ⚠ D1 (14.09): FAME ALONE OPENS NOTHING – a cabinet bright enough for any old bar, zero keys', () => {
+    // The regression this catches by name: a fame clause creeping back into `leakEligible`. The girl
+    // below out-shines every fixture in this file – six Slam titles landed THIS week – and her
+    // standing is quiet, so the gate is shut and not one stream is derived, however long she glows.
+    const world = probe('leak-fame-not-gate')
     const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-    slam.titles.push(world.week, world.week)
+    for (let i = 0; i < 6; i++) slam.titles.push(world.week)
+    standHerAt(world, 'quiet', world.week)
     episode(world, 150, 9999)
-    expect(sheIsNewsAt(world, world.week), 'she is news this week').toBe(true)
-    expect(sheIsNewsAt(world, world.week - 1), '...and was not last week').toBe(false)
+    expect(fameAt(world, world.week), '⚠ she really is blinding').toBeGreaterThan(0)
+    expect(newsStandingOf(world), '...and the ladder has never heard of her').toBe('quiet')
     expect(leakEligible(world), 'so the gate is shut').toBe(false)
     rngKeys.length = 0
     rollLeak(world)
     expect(rngKeys.filter((k) => k.includes(':life:leak:')), 'and nothing was derived').toEqual([])
   })
 
-  it('⭐⭐⭐ ...and news LAST week but not THIS – the hazard DOES draw. The exact mirror.', () => {
-    // ⚠⚠ THE MIRROR IS WHAT MAKES THE CASE ABOVE A STATEMENT ABOUT WHICH WEEK RATHER THAN ABOUT THE
-    // FIXTURE. Fame only FALLS between the weeks that stamp it (`fameEventWeeks`' own argument), so
-    // an old cabinet crosses the bar downward exactly once – and the crossing week is a week she was
-    // news in and is no longer. ⚠ IT IS FOUND BY ASKING, never assumed: the loop below walks until
-    // both halves are true, and the two assertions then say which fixture was found. A gate reading
-    // `world.week` would be SILENT here, which is the half the case above cannot claim.
-    const world = probe('leak-horizon-mirror')
-    const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-    slam.titles.push(300, 301)
-    let crossing = -1
-    for (let w = 302; w < 1200; w++) {
-      if (sheIsNewsAt(world, w - 1) && !sheIsNewsAt(world, w)) { crossing = w; break }
-    }
-    expect(crossing, '⚠ the cabinet really does cross the bar').toBeGreaterThan(0)
-    world.week = crossing
-    expect(sheIsNewsAt(world, crossing - 1), 'she was news last week').toBe(true)
-    expect(sheIsNewsAt(world, crossing), '...and is not this week').toBe(false)
-    episode(world, 150, 9999)
-    expect(leakEligible(world), 'so the gate is OPEN – the closed week is the one it reads').toBe(true)
+  it('⭐⭐⭐ ...and the STANDING alone opens it – a ranked girl with no fame derives her key and can never fire', () => {
+    // ⚠⚠ THE EXACT MIRROR, and it is where D1's split of gate and hazard is visible in one fixture:
+    // the gate (standing) admits her, so the week's key IS derived – and the hazard's fame factor is
+    // 0, so `rngFromSeed(key)() >= 0` refuses every uniform there is (`<` and not `<=`, the roll's
+    // own note: a hazard of 0 must be impossible rather than merely unlikely, and it is REACHABLE
+    // exactly here). One key, no story stream, no stamp.
+    const world = probe('leak-standing-no-fame')
+    standHerAt(world, 'known', world.week)
+    const row = episode(world, 150, 9999)
+    expect(fameAt(world, world.week - 1), '⚠ not one lens is pointed at her').toBe(0)
+    expect(newsStandingOf(world), '...and the table says top-100').toBe('known')
+    expect(leakEligible(world), 'so the gate is OPEN – D1\'s whole point').toBe(true)
     rngKeys.length = 0
     rollLeak(world)
-    expect(rngKeys.filter((k) => k.includes(':life:leak:'))).toEqual([`${world.seed}:life:leak:p:150:${crossing}`])
+    expect(rngKeys.filter((k) => k.includes(':life:leak:')), 'the week\'s key was derived')
+      .toEqual([`${world.seed}:life:leak:p:150:${world.week}`])
+    expect(row.publicWeek, '...and a zero hazard fired nothing').toBeNull()
+  })
+
+  it('⭐⭐⭐ ⚠ RULING P\'s SURVIVING HALF: the hazard reads the CLOSED week\'s fame – a crafted uniform proves which', () => {
+    // ⚠⚠ THE WEEK IS SEARCHED FOR SO THE CASE CANNOT MISS (§C's technique). Fame is stamped AT the
+    // week under test and nowhere earlier, so `fameAt(W − 1)` is 0 (`decayAt` returns 0 for the
+    // future) while `fameAt(W)` sits at the cap – and W is chosen, by reading the real uniform at
+    // the spec's own key, so that an in-week spelling's hazard would CATCH that uniform. Under the
+    // shipped read the hazard is exactly 0 and the fire is impossible; under `world.week` it fires
+    // on this very week. One fixture, two spellings, opposite outcomes – deterministically.
+    const world = probe('leak-hazard-horizon', 'sunny')
+    standAcross(world, 'known', 300, 3300)
+    episode(world, 150, 9999)
+    const openness = temperamentOpenness(expressedTemperamentOf(world))
+    // the trap band, re-derived from ECONOMY (never from `leakHazardFor`): the in-week hazard at
+    // capped fame, shaved a tenth so the fame the stamps actually buy has room to sit under the cap.
+    const trap = SPOT.leakBasePerWeek * SPOT.leakOpennessMult[openness] * 0.9
+    let W = -1
+    for (let w = 300; w < 3300; w++) {
+      if (rngFromSeed(`${world.seed}:life:leak:p:150:${w}`)() < trap) { W = w; break }
+    }
+    expect(W, '⚠ a week whose uniform sits under the in-week hazard exists').toBeGreaterThan(0)
+    const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
+    while (fameAt(world, W) < ECONOMY.fame.cap * 0.9) slam.titles.push(W)
+    expect(fameAt(world, W - 1), '⚠ the closed week saw none of it').toBe(0)
+    const inWeekHazard =
+      SPOT.leakBasePerWeek * SPOT.leakOpennessMult[openness] * (fameAt(world, W) / ECONOMY.fame.cap)
+    expect(rngFromSeed(`${world.seed}:life:leak:p:150:${W}`)(), '⚠ the trap really is set')
+      .toBeLessThan(inWeekHazard)
+    world.week = W
+    expect(newsStandingOf(world), '⚠ and the gate is open, so only the clock is under test').toBe('known')
+    rngKeys.length = 0
+    rollLeak(world)
+    expect(rngKeys.filter((k) => k.includes(':life:leak:')), 'the key was derived – the gate admitted her')
+      .toEqual([`${world.seed}:life:leak:p:150:${W}`])
+    expect(loveEpisodesOf(world)[0]!.publicWeek, 'and the CLOSED week\'s zero fame refused the uniform an in-week read would have taken')
+      .toBeNull()
   })
 
   it('⭐⭐⭐ the `wrongStory` pressure lands in the NEXT tick – one clock, working as ruled', () => {
@@ -794,6 +930,7 @@ describe('wave 6 T6 H – the wave\'s one horizon, read by a third caller', () =
     // asks about `world.week − 1`, so a story that breaks in W is priced in the pass at W+1. The
     // case drives the REAL phase on both weeks and reads the spirit delta.
     const world = keepNews(probe('leak-pressure', 'sunny'), 10)
+    standAcross(world, 'known', 300, 1400) // ⚠ D1 (14.09)
     const row = episode(world, 150, 9999)
     let week: number | null = null
     for (let w = 300; w < 1400; w++) {
@@ -813,5 +950,149 @@ describe('wave 6 T6 H – the wave\'s one horizon, read by a third caller', () =
       .not.toContain('wrongStory')
     expect(exposureEventsOf(world, week! + 1 - 1).map((e) => e.kind), '...and the pass at W+1 can')
       .toContain('wrongStory')
+  })
+})
+
+// =================================================================================================
+// I. ⚠⚠ NEW COUPLES GET CAUGHT – the freshness lever (the owner's D5, 14.09, «давай попробуем»)
+// =================================================================================================
+//
+// The founding scene fired 0 times in 93 leaks across 160 bench careers under a flat hazard
+// (`ECONOMY.spotlight.leakFreshWeeks`' own note), so D5 runs the hazard `leakFreshMult` hotter while
+// the episode is at most `leakFreshWeeks` old. ⚠ SAME KEY, SAME SINGLE UNIFORM – only the threshold
+// moves, which is what makes every case here EXACT: twins on one seed with one episode id read the
+// SAME uniform against two thresholds (§D's own property, reused), so «hotter» is a strict-superset
+// relation over a horizon this file CRAFTS by reading the uniforms first, never a statistic.
+describe('wave 6 T6 I – the first dinners are where the lenses are (D5)', () => {
+  /** The engine-free base threshold at `w` for this section's fixtures – known band (scale 1), old
+   *  enough openness read, fame off the world's own cabinet. Re-derived from `ECONOMY` (ruling L). */
+  function baseHazardAt(world: WorldState, w: number): number {
+    const openness = temperamentOpenness(expressedTemperamentOf(world))
+    return SPOT.leakBasePerWeek * SPOT.leakOpennessMult[openness] * (fameAt(world, w - 1) / ECONOMY.fame.cap)
+  }
+
+  it('⭐⭐⭐ twin episodes, one young and one old – the fresh fire set is a STRICT superset, and only inside the window', () => {
+    // ⚠⚠ THE HORIZON IS SEARCHED FOR (§C's technique): a window start S where at least one uniform in
+    // [S, S + leakFreshWeeks] lands BETWEEN the two thresholds – at or above the flat hazard, under
+    // the fresh one – so the mutation this section exists for (the multiplier dropped) has a named
+    // week to go red on, deterministically.
+    const old = keepNews(probe('leak-fresh', 'sunny'), 10)
+    const fresh = keepNews(probe('leak-fresh', 'sunny'), 10)
+    standAcross(old, 'known', 300, 3100)
+    standAcross(fresh, 'known', 300, 3100)
+    episode(old, 150, 9999)
+    const freshRow = episode(fresh, 150, 9999)
+
+    let S = -1
+    for (let s = 300; s < 3000 && S < 0; s++) {
+      for (let w = s; w <= s + SPOT.leakFreshWeeks; w++) {
+        const base = baseHazardAt(old, w)
+        const u = rngFromSeed(`${old.seed}:life:leak:p:150:${w}`)()
+        if (u >= base && u < Math.min(1, base * SPOT.leakFreshMult)) { S = s; break }
+      }
+    }
+    expect(S, '⚠ a horizon where the uniform sits between the two thresholds exists').toBeGreaterThan(0)
+    // ⚠ THE ID IS PINNED AND ONLY THE AGE MOVES: `sinceWeek` is re-stamped on the SAME row, so the
+    // two twins keep reading the same uniforms – the whole exactness of the section hangs on it.
+    freshRow.sinceWeek = S
+    expect(S - 150, '⚠ the old twin really is past the window everywhere swept').toBeGreaterThan(SPOT.leakFreshWeeks)
+
+    const inWindow: [number, number] = [S, S + SPOT.leakFreshWeeks + 1]
+    const oldFires = fireWeeks(old, ...inWindow)
+    const freshFires = fireWeeks(fresh, ...inWindow)
+    expect(oldFires.every((w) => freshFires.includes(w)), 'every week the old twin leaks, the young one does too').toBe(true)
+    expect(freshFires.length, '...and the young one leaks on weeks the old one survives – STRICTLY more').toBeGreaterThan(oldFires.length)
+    // ...and the exact arithmetic, both twins, never by calling the roll (ruling L).
+    expect(freshFires, 'the young twin, week for week').toEqual(expectedFireWeeks(fresh, 'p:150', S, ...inWindow))
+    expect(oldFires, 'the old twin, week for week').toEqual(expectedFireWeeks(old, 'p:150', 150, ...inWindow))
+    // ⚠ AND THE LEVER TURNS OFF WITH THE WINDOW: past `leakFreshWeeks` the twins are one girl again.
+    expect(fireWeeks(fresh, S + SPOT.leakFreshWeeks + 1, S + 61), 'outside the window the two sets are identical')
+      .toEqual(fireWeeks(old, S + SPOT.leakFreshWeeks + 1, S + 61))
+  })
+
+  it('⭐⭐ ⚠ BOTH EDGES OF THE WINDOW, because an off-by-one here is invisible in play', () => {
+    // The booth window's own doctrine (`newsWindowWeeks`' note), applied to D5: the comparison is
+    // `world.week − sinceWeek <= leakFreshWeeks`, so an episode of EXACTLY that age still runs hot
+    // and one week older never does. Each edge gets a crafted uniform that the wrong spelling would
+    // answer differently – found by reading the stream, proven by rolling the engine.
+    const world = keepNews(probe('leak-fresh-edge', 'sunny'), 10)
+    standAcross(world, 'known', 300, 3100)
+    const row = episode(world, 150, 9999)
+
+    // the FAR edge, inclusive: age exactly `leakFreshWeeks`, uniform between the two thresholds –
+    // the shipped `<=` fires it, an exclusive spelling would sit silent.
+    let atEdge = -1
+    for (let s = 300; s < 3000; s++) {
+      const w = s + SPOT.leakFreshWeeks
+      const base = baseHazardAt(world, w)
+      const u = rngFromSeed(`${world.seed}:life:leak:p:150:${w}`)()
+      if (u >= base && u < Math.min(1, base * SPOT.leakFreshMult)) { atEdge = s; break }
+    }
+    expect(atEdge, '⚠ the far-edge trap exists').toBeGreaterThan(0)
+    row.sinceWeek = atEdge
+    expect(rollFresh(world, atEdge + SPOT.leakFreshWeeks), 'an episode of exactly the window\'s age still runs hot')
+      .toBe(atEdge + SPOT.leakFreshWeeks)
+
+    // ...and ONE WEEK OLDER, on a uniform only the widened window would catch: the shipped code
+    // refuses it, a `<= leakFreshWeeks + 1` spelling would fire.
+    let past = -1
+    for (let s = 300; s < 3000; s++) {
+      const w = s + SPOT.leakFreshWeeks + 1
+      const base = baseHazardAt(world, w)
+      const u = rngFromSeed(`${world.seed}:life:leak:p:150:${w}`)()
+      if (u >= base && u < Math.min(1, base * SPOT.leakFreshMult)) { past = s; break }
+    }
+    expect(past, '⚠ the near-miss trap exists').toBeGreaterThan(0)
+    row.sinceWeek = past
+    expect(rollFresh(world, past + SPOT.leakFreshWeeks + 1), '...and one week older is furniture again')
+      .toBeNull()
+  })
+})
+
+// =================================================================================================
+// J. ⚠⚠ THE NOTICED BAND – D1's «иногда» made a number, and the number is a pure scale
+// =================================================================================================
+//
+// At 101–200 the world glances rather than watches: the hazard runs at `noticedLeakScale`, on the
+// SAME key and the same single uniform (`rollLeak`'s own D1 note). So twins on one seed at rank 150
+// and rank 50 read identical uniforms against two thresholds, and «half weight» is set arithmetic
+// rather than an average: the noticed girl's fire set is exactly the weeks whose uniform is under
+// `scale × hazard`, a subset of the known girl's, and every week that separates them carries a
+// uniform in `[scale × hazard, hazard)` – which is the assertion, not an illustration.
+describe('wave 6 T6 J – rank 150 against rank 50, the same dice, half the threshold (D1)', () => {
+  it('⭐⭐⭐ the noticed hazard is EXACTLY the known one × `noticedLeakScale`, week for week', () => {
+    const known = keepNews(probe('leak-band', 'sunny'), 10)
+    const noticed = keepNews(probe('leak-band', 'sunny'), 10)
+    standAcross(known, 'known', 300, 1300)
+    standAcross(noticed, 'noticed', 300, 1300)
+    episode(known, 150, 9999)
+    episode(noticed, 150, 9999)
+    // ⚠ THE TWINS DIFFER BY THE CACHED RANK AND NOTHING ELSE – same seed, same cabinet, same rows,
+    // same episode id – so the band scale is the only line between their thresholds.
+    known.week = 700
+    noticed.week = 700
+    expect(newsStandingOf(known), '⚠ one girl lives known').toBe('known')
+    expect(newsStandingOf(noticed), '⚠ ...and her twin is only noticed').toBe('noticed')
+    expect(fameAt(known, 699), '⚠ and their fame is one number').toBe(fameAt(noticed, 699))
+
+    const kFires = fireWeeks(known, 300, 1300)
+    const nFires = fireWeeks(noticed, 300, 1300)
+    // the exact arithmetic on both arms (ruling L: the expectation never calls the roll; the band
+    // factor inside it is re-stated from ECONOMY off the rank, never read through the engine).
+    expect(kFires, 'the known girl, week for week').toEqual(expectedFireWeeks(known, 'p:150', 150, 300, 1300))
+    expect(nFires, 'the noticed girl, week for week').toEqual(expectedFireWeeks(noticed, 'p:150', 150, 300, 1300))
+    // ...and the relation between them is the scale itself, stated on the uniforms.
+    expect(nFires.every((w) => kFires.includes(w)), 'a glance never catches what a stare misses').toBe(true)
+    expect(nFires.length, '⚠ the noticed girl does leak – «иногда» is not «никогда»').toBeGreaterThan(0)
+    expect(kFires.length, '...and strictly less often than her known twin').toBeGreaterThan(nFires.length)
+    const openness = temperamentOpenness(expressedTemperamentOf(known))
+    for (const w of kFires.filter((x) => !nFires.includes(x))) {
+      const hazard =
+        SPOT.leakBasePerWeek * SPOT.leakOpennessMult[openness] * (fameAt(known, w - 1) / ECONOMY.fame.cap)
+      const u = rngFromSeed(`${known.seed}:life:leak:p:150:${w}`)()
+      expect(u, `week ${w}: the separating uniform sits under the full hazard...`).toBeLessThan(hazard)
+      expect(u, `week ${w}: ...and at or above the noticed one – the scale is exact`)
+        .toBeGreaterThanOrEqual(hazard * SPOT.noticedLeakScale)
+    }
   })
 })

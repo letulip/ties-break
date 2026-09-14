@@ -1,5 +1,5 @@
 // =================================================================================================
-// WAVE 6, T2 – THE EXPOSURE LEDGER: THE NEWS BAR, THE FIVE KINDS, AND THE 52-WEEK HORIZON
+// WAVE 6, T2 – THE EXPOSURE LEDGER: THE STANDING GATE, THE FIVE KINDS, AND THE 52-WEEK HORIZON
 // =================================================================================================
 //
 // `docs/plans/life-wave-6-builder-2026-09.md` §2 T2; the model is `docs/specs/who-she-is-2026-09.md`
@@ -10,6 +10,18 @@
 // `TierId` compared through `TIER_LADDER`, never a number), **G** (`'publicLoss'` is honest only
 // inside a 52-week horizon, because its only record prunes) and **K** (the public loss is read off
 // the POINTS, and a skipped mandatory is not one).
+//
+// ⚠⚠ RE-AIMED UNDER THE OWNER'S **D1 (14.09)**: THE GATE STOPPED READING FAME. `sheIsNewsAt(world,
+// week)` is gone; the one predicate is now `newsStandingOf(world)` – three bands off her
+// PROFESSIONAL standing (`'known'` at WTA ≤ newsRankKnown, `'noticed'` at ≤ newsRankNoticed,
+// `'quiet'` past both), with the «unranked is not rank one» belt (live `kidPoints(world, 'wta')`
+// beside the cached rank). His words are quoted at `ECONOMY.spotlight.newsRankKnown`; the struck
+// fame bar's history lives in the questions doc §1 and the 14.09 decision-log entry. What that
+// re-cut this file: §B became the STANDING suite (the fame-decay case died with the week
+// parameter – the read is PRESENT-TENSE by design, `newsStandingOf`'s own ⚠⚠), the crafted worlds
+// stand on `standHerAt` (tests/helpers/newsStanding.ts) instead of fame-past-30 trophies, and the
+// ARM table below re-words the two rows that named the dead symbol to today's spelling – the
+// COUNTS stay the original build's measurement, run against the fame-gate tree.
 //
 // ⚠⚠ TWO OF THE FIVE KINDS HAD NO WRITER WHEN THIS FILE WAS WRITTEN, AND §C CRAFTS THEM RATHER THAN
 // WAITING FOR ONE. ⭐ BOTH WRITERS HAVE SINCE LANDED (14.09) – `'wrongStory'` reads `publicWeek` +
@@ -31,7 +43,8 @@
 //     ARM 7  1 · ARM 8  2 · ARM 9  2 · ARM 10 5 · ARM 11 1
 //
 //   ARM 1  the news gate deleted from `exposureEventsOf`         5 RED  §D's five below-the-bar
-//          (`if (!sheIsNewsAt(world, week)) return out`)                 cases, one per kind.
+//          (today `if (newsStandingOf(world) === 'quiet') return         cases, one per kind.
+//          out` – re-worded under D1, 14.09)
 //                                                                       ⚠⚠ IT REDDENED **ONCE**
 //                                                                       BEFORE §D WAS SPLIT, and
 //                                                                       that is the measurement
@@ -75,8 +88,9 @@
 //                                                                       clamped, never re-derived –
 //                                                                       a quantity the system is
 //                                                                       not actively pulling back
-//   ARM 9  a DRAW planted in `sheIsNewsAt`                        2 RED  §E's key-counter case and
-//          (`rngFromSeed(`${world.seed}:spotlight:${week}`)`)            §E's source census – the
+//   ARM 9  a DRAW planted in the news gate (today                 2 RED  §E's key-counter case and
+//          `newsStandingOf` – re-worded under D1, 14.09;                 §E's source census – the
+//          `rngFromSeed(`${world.seed}:spotlight:${week}`)`)
 //                                                                       same defect measured in
 //                                                                       KEYS and in SOURCE, which
 //                                                                       is the shape wave-4 §0.1
@@ -116,8 +130,9 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
   }
 })
 
-import { completedShootWeeks, createWorld, exposureEventsOf, fameAt, sheIsNewsAt } from '../src/engine/world'
+import { completedShootWeeks, createWorld, exposureEventsOf, kidPoints, newsStandingOf } from '../src/engine/world'
 import { housekeep } from '../src/engine/world/bookkeeping'
+import { standHerAt } from './helpers/newsStanding'
 import { KID_ID, RESULTS_WINDOW } from '../src/engine/world/constants'
 import { TIERS, TIER_LADDER } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
@@ -137,26 +152,25 @@ function codeOnly(text: string): string {
   return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '')
 }
 
-/** A world nobody is watching: fame 0 at every week, which is where every career starts. */
+/** A world nobody is watching: no professional points, a rank past every bar – where every career
+ *  starts, and `'quiet'` under D1's belt whatever rank a case fabricates onto it. */
 function unknown(seed = 'spotlight-unknown'): WorldState {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
   world.week = WEEK
   return world
 }
 
-/** ...and the same career the world IS watching – a Slam title and a lost Slam final, both stamped
- *  three weeks BEFORE the week under test.
+/** ...and the same career the world IS watching – stood in the `'known'` band by `standHerAt`.
  *
- *  ⚠ THREE WEEKS BEFORE, AND THAT IS THE WHOLE OF THE FIXTURE'S CRAFT. The trophies are what make
- *  her news (measured: `fameAt` is 36.27 at WEEK, against a bar of 30 – 37 undecayed, faded by three
- *  weeks of the title clock); stamped ON the week under test they would ALSO be `'stage'` events and
- *  every positive case in §C would be reading its own fixture. The offset buys a famous girl with an
- *  empty week. */
-function famous(seed = 'spotlight-famous'): WorldState {
+ *  ⚠ RE-CUT UNDER D1 (14.09): this fixture used to be `known()` – a Slam title and a lost final
+ *  three weeks back, fame 36.27 against the struck bar of 30. The gate stopped reading fame, so the
+ *  standing is now posed the one shared way: a `wta250` results row (BELOW `stageTierMin`, so the
+ *  fixture can never read back as a `'publicLoss'` of its own making – the same craft the old
+ *  three-week offset bought against `'stage'`) and a mid-band rank. A known girl with an empty
+ *  week, exactly as before – only the currency of «known» moved, from fame to standing. */
+function known(seed = 'spotlight-known'): WorldState {
   const world = unknown(seed)
-  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-  slam.titles.push(WEEK - 3)
-  slam.finals.push(WEEK - 3)
+  standHerAt(world, 'known', WEEK)
   return world
 }
 
@@ -259,66 +273,77 @@ describe('wave 6 T2 A – ECONOMY.spotlight, and the tier bar that is a name rat
     }
   })
 
-  it('carries a news bar inside the fame scale, and it is the wave\'s own constant', () => {
-    // ⚠ THE VALUE IS 30 AND IT IS UNRULED – ruling E struck the brief's anchor («`fameCap` is 30,
-    // the ad market's own famous bar»: that constant is the CONTRACTS TERM's ceiling, and it does
-    // not even live under `fame`) and left the number standing until the owner rules on T9's sweep.
-    // Measured, `>= 30` is 6.9% of 15 408 career weeks and 8 of 33 personal saves. What this case
-    // pins is only that the bar is a point on the SCALE – between an unknown girl and its ceiling.
-    expect(ECONOMY.spotlight.newsFameMin).toBe(30)
-    expect(ECONOMY.spotlight.newsFameMin).toBeGreaterThan(0)
-    expect(ECONOMY.spotlight.newsFameMin).toBeLessThan(ECONOMY.fame.cap)
+  it('⭐⭐ carries the two rank bands, and they are THE OWNER\'S OWN numbers – D1 (14.09)', () => {
+    // ⚠ RE-AIMED UNDER D1 (14.09): this case used to pin `newsFameMin` at 30 – unruled, «a point on
+    // the SCALE», measured at 6.9% of career weeks. D1 struck the fame bar entirely and put two RANK
+    // bands in its place, and unlike the number they replace THESE ARE RULED – top-100 «вполне
+    // уверенно», top-200 «иногда», his sentence verbatim at the constant, «прямая аналогия –
+    // спонсорская лестница». So this pin asserts the VALUES, which nothing else in this block may
+    // do: a drift here is somebody re-tuning the owner's own words.
+    expect(ECONOMY.spotlight.newsRankKnown).toBe(100)
+    expect(ECONOMY.spotlight.newsRankNoticed).toBe(200)
+    // ...the bands NEST – known inside noticed – or `newsStandingOf`'s two comparisons stop being
+    // three bands at all...
+    expect(ECONOMY.spotlight.newsRankKnown).toBeLessThan(ECONOMY.spotlight.newsRankNoticed)
+    // ...and the fame bar is GONE, not merely unread: a constant left standing is a constant some
+    // later wave re-reads as an oversight (the economy block's own «a constant with no reader» law).
+    expect('newsFameMin' in ECONOMY.spotlight, 'D1 removed newsFameMin from the block').toBe(false)
   })
 })
 
 // =================================================================================================
-// B. THE NEWS BAR – `sheIsNewsAt`, the one gate every public surface in this wave shares
+// B. THE STANDING – `newsStandingOf`, the one gate every public surface in this wave shares
 // =================================================================================================
-describe('wave 6 T2 B – is she news', () => {
-  it('says no for a career the world has not noticed, at every week of it', () => {
+//
+// ⚠⚠ THE WHOLE SECTION RE-AIMED UNDER D1 (14.09) – the fame bar became two RANK bands, and two of
+// the old cases died WITH their subject rather than being weakened: «says yes exactly AT the bar»
+// (a fame arithmetic that no longer exists – its boundary duty passes to the rank pins below) and
+// «is a question about a WEEK, and the answer fades» (the read is PRESENT-TENSE by design now –
+// `newsStandingOf` takes no week, because the cached rank is already «as of the last closed fold»
+// and a week parameter would promise a rank history nobody keeps; the predicate's own ⚠⚠ carries
+// the argument). Recorded here so the deletions are choices with a ruling behind them, not drift.
+describe('wave 6 T2 B – where the world stands on her', () => {
+  it('says quiet for a career the world has not noticed, and a fabricated rank alone cannot change it', () => {
+    // ⚠⚠ THE BELT CASE – «unranked is not rank one», the same guard every rank reader in
+    // `world/ladder.ts` carries one at a time. A fresh career's cached rank is `tableSize` – a
+    // POSITIVE number – so a gate that read the rank alone would call the bottom of the table
+    // «ranked»; and a fixture (or a stale cache) that says rank 1 with zero live professional
+    // points must still read quiet. Both halves of D1's predicate, held apart.
     const world = unknown()
-    for (const week of [0, 50, WEEK, 900]) {
-      expect(sheIsNewsAt(world, week), `week ${week}`).toBe(false)
-      expect(fameAt(world, week)).toBe(0)
+    expect(kidPoints(world, 'wta'), 'the fixture really holds no professional points').toBe(0)
+    expect(newsStandingOf(world)).toBe('quiet')
+    world.kidRankWta = 1
+    expect(newsStandingOf(world), '⚠ D1 (14.09): rank one with no points is nobody – points first').toBe('quiet')
+    world.kidRankWta = 50
+    expect(newsStandingOf(world), 'and mid-band is no better without the points').toBe('quiet')
+  })
+
+  it('⭐⭐ the boundaries sit exactly ON the owner\'s bars – 100 known, 101 noticed, 200 noticed, 201 quiet', () => {
+    // ⚠ RE-AIMED UNDER D1 (14.09): this duty belonged to «says yes exactly AT the bar» – fame
+    // 14 + 8 + 8 = exactly 30. The boundary is worth an exact case in the new currency too, and
+    // BOTH comparisons are `<=`, so each bar itself is still inside its band. Computed from
+    // `ECONOMY` rather than written out, so the constants pin in §A is the ONE place the owner's
+    // numbers are asserted as numbers.
+    const s = ECONOMY.spotlight
+    const bars: [number, string, string][] = [
+      [s.newsRankKnown, 'known', 'the top-100 bar itself lives known'],
+      [s.newsRankKnown + 1, 'noticed', 'one place past it the light only visits'],
+      [s.newsRankNoticed, 'noticed', 'the top-200 bar itself is still noticed'],
+      [s.newsRankNoticed + 1, 'quiet', 'one place past both bars is nobody'],
+    ]
+    for (const [rank, want, why] of bars) {
+      const world = unknown(`spotlight-bar-${rank}`)
+      standHerAt(world, 'noticed', WEEK) // the row – live points; the rank under test is set below
+      world.kidRankWta = rank
+      expect(newsStandingOf(world), `rank ${rank}: ${why}`).toBe(want)
     }
   })
 
-  it('⭐⭐ says yes exactly AT the bar, not only above it', () => {
-    // ⚠ A PROBE WORLD AND NOT A CAREER: three titles in ONE week is impossible on a calendar that
-    // runs one tournament a week. It is crafted because the boundary is worth an exact case rather
-    // than a nearby one – `titleFloor` pays 14 at wta1000 and 8 at wta500, undecayed on their own
-    // week, so this world's fame is 14 + 8 + 8 = **exactly 30**, the bar itself.
-    const world = unknown('spotlight-bar')
-    trophy(world, 'wta1000', 'titles', WEEK)
-    trophy(world, 'wta500', 'titles', WEEK)
-    trophy(world, 'wta500', 'titles', WEEK)
-    expect(fameAt(world, WEEK)).toBe(ECONOMY.spotlight.newsFameMin)
-    expect(sheIsNewsAt(world, WEEK), 'the comparison is >=, so the bar itself is news').toBe(true)
-
-    // ...and one rung of that stack short of it is not news. Same world, one W500 title fewer.
-    const under = unknown('spotlight-bar')
-    trophy(under, 'wta1000', 'titles', WEEK)
-    trophy(under, 'wta500', 'titles', WEEK)
-    expect(fameAt(under, WEEK)).toBeLessThan(ECONOMY.spotlight.newsFameMin)
-    expect(sheIsNewsAt(under, WEEK)).toBe(false)
-  })
-
-  it('is a question about a WEEK, and the answer fades with the fame that bought it', () => {
-    // The bar is asked of `fameAt(world, week)`, which decays on the title clock – so the same
-    // career is news in the season she wins and unknown again five half-lives later. This is what
-    // makes `week` a required parameter rather than a defaulted one: a caller that asks about the
-    // wrong week gets a confidently wrong answer, and there is no default here to hide behind.
-    const world = famous()
-    expect(sheIsNewsAt(world, WEEK)).toBe(true)
-    expect(sheIsNewsAt(world, WEEK + 520), 'ten seasons later the world has moved on').toBe(false)
-    expect(sheIsNewsAt(world, WEEK - 60), 'and it had not happened yet, so it bought nothing').toBe(false)
-  })
-
-  it('⭐ is the ONLY gate: a famous week with nothing in it is empty, and an empty week is not news', () => {
-    // A famous girl whose week held nothing produces NO events – the ledger is about what happened,
-    // not about her standing. The pair with §D is the licence read both ways: fame without a fact is
-    // silent here, and a fact without fame is silent there.
-    expect(kinds(famous())).toEqual([])
+  it('⭐ is the ONLY gate: a known week with nothing in it is empty, and an empty week is no standing question', () => {
+    // A known girl whose week held nothing produces NO events – the ledger is about what happened,
+    // not about her standing. The pair with §D is the licence read both ways: standing without a
+    // fact is silent here, and a fact without standing is silent there.
+    expect(kinds(known())).toEqual([])
   })
 })
 
@@ -327,7 +352,7 @@ describe('wave 6 T2 B – is she news', () => {
 // =================================================================================================
 describe('wave 6 T2 C – what put her in the light', () => {
   it('\'stage\' – a TITLE at a big stage this week', () => {
-    const world = famous()
+    const world = known()
     trophy(world, 'wta1000', 'titles', WEEK)
     expect(kinds(world)).toEqual(['stage'])
   })
@@ -336,8 +361,21 @@ describe('wave 6 T2 C – what put her in the light', () => {
     // ⚠ `finals` MEANS SHE LOST IT (the cabinet's own contract – the two arrays are disjoint, so a
     // title is never counted twice). §3c's sentence is «a title or a final on a big stage», so the
     // kind is `titles ∪ finals` – ruling G part 1.
-    const world = famous()
+    const world = known()
     trophy(world, 'slam', 'finals', WEEK)
+    expect(kinds(world)).toEqual(['stage'])
+  })
+
+  it('⭐ \'stage\' – and the NOTICED band sees it too: both non-quiet bands see every kind – D1 (14.09)', () => {
+    // ⚠ ADDED WITH D1 (14.09), because the ruling created a band the old gate did not have and «what
+    // each band buys» is decided at the callers: a noticed girl's occasions ARE occasions – her
+    // discounts live at the leak (`noticedLeakScale`) and at habituation (growth is `'known'`-only),
+    // never here. A gate that dimmed the KINDS for the middle band would be a third place the band
+    // map lived, free to drift from the one at `newsStandingOf`.
+    const world = unknown('spotlight-noticed')
+    standHerAt(world, 'noticed', WEEK)
+    trophy(world, 'wta1000', 'titles', WEEK)
+    expect(newsStandingOf(world), 'the fixture sits in the middle band').toBe('noticed')
     expect(kinds(world)).toEqual(['stage'])
   })
 
@@ -346,13 +384,13 @@ describe('wave 6 T2 C – what put her in the light', () => {
     // w)` answers «lived STRICTLY BEFORE w», so `…(world, week).includes(week)` is false for every
     // world at every week and the kind could never fire. The ledger asks with `week + 1`; §D pins
     // the phase from the other side.
-    const world = famous()
+    const world = known()
     plantShoots(world, [WEEK])
     expect(kinds(world)).toEqual(['shoot'])
   })
 
   it('\'publicLoss\' – an early exit at a big stage, read off the POINTS (ruling K)', () => {
-    const world = famous()
+    const world = known()
     result(world, { points: TIERS.wta500.points[Math.log2(TIERS.wta500.drawSize) - 1] })
     expect(kinds(world)).toEqual(['publicLoss'])
 
@@ -371,7 +409,7 @@ describe('wave 6 T2 C – what put her in the light', () => {
 
   it('\'publicLoss\' – at every big stage, on each stage\'s own threshold', () => {
     for (const tier of ['wta500', 'wta1000', 'slam'] as TierId[]) {
-      const world = famous(`spotlight-loss-${tier}`)
+      const world = known(`spotlight-loss-${tier}`)
       const def = TIERS[tier]
       result(world, { tier, points: def.points[Math.log2(def.drawSize) - 1] })
       expect(kinds(world), tier).toEqual(['publicLoss'])
@@ -382,18 +420,18 @@ describe('wave 6 T2 C – what put her in the light', () => {
     // ⚠⚠ CRAFTED FROM THE v77 FIELDS BECAUSE T7 IS THE ONLY WRITER AND T7 HAS NOT LANDED. On this
     // tree `airedMetWeek` is null on every row in the game, so this world cannot arise from play –
     // and a kind proven only by its absence is a kind that ships unproven.
-    const met = famous('spotlight-aired-met')
+    const met = known('spotlight-aired-met')
     met.loveEpisodes = [episode({ publicWeek: WEEK - 10, airedMetWeek: WEEK })]
     expect(kinds(met)).toEqual(['aired'])
 
-    const ended = famous('spotlight-aired-ended')
+    const ended = known('spotlight-aired-ended')
     ended.loveEpisodes = [episode({ endedWeek: WEEK - 2, publicWeek: WEEK - 10, airedEndedWeek: WEEK })]
     expect(kinds(ended)).toEqual(['aired'])
   })
 
   it('⭐⭐ \'wrongStory\' – a leak that landed WRONG, on the week it landed', () => {
     // Same construction and the same reason: T6 writes `publicWeek` / `publicWrong`, T6 is not here.
-    const world = famous('spotlight-wrong')
+    const world = known('spotlight-wrong')
     world.loveEpisodes = [episode({ publicWeek: WEEK, publicWrong: true })]
     expect(kinds(world)).toEqual(['wrongStory'])
   })
@@ -402,7 +440,7 @@ describe('wave 6 T2 C – what put her in the light', () => {
     // T3 sums the week's events, so a week that held two is not a week that held one. The ORDER is
     // the declaration order (stage · shoot · publicLoss · aired · wrongStory), which is what lets
     // every case in this file deep-equal the list instead of sorting it.
-    const world = famous('spotlight-two')
+    const world = known('spotlight-two')
     trophy(world, 'slam', 'titles', WEEK)
     plantShoots(world, [WEEK])
     world.loveEpisodes = [episode({ publicWeek: WEEK, publicWrong: true })]
@@ -414,10 +452,15 @@ describe('wave 6 T2 C – what put her in the light', () => {
 // D. THE LICENCE, BOTH WAYS – every kind is silent below the bar, and silent off its own week
 // =================================================================================================
 describe('wave 6 T2 D – an unknown girl has no spotlight, whatever she wins', () => {
-  // ⚠⚠ THE SAME FIVE FACTS AS §C, ON A WORLD WITH NO FAME – the brief's own sentence made mechanical
-  // («Every kind fires only when `sheIsNewsAt` – an unknown girl has no spotlight, whatever she
-  // wins»). Each fixture is built exactly as its §C twin, so what differs between the two describes
-  // is the fame and nothing else.
+  // ⚠⚠ THE SAME FIVE FACTS AS §C, ON A WORLD WITH NO STANDING – the brief's own sentence made
+  // mechanical («an unknown girl has no spotlight, whatever she wins» – the gate is
+  // `newsStandingOf` since D1, 14.09, and `'quiet'` closes every kind). Each fixture is built
+  // exactly as its §C twin, so what differs between the two describes is the standing and nothing
+  // else. ⚠ These five are all quiet by the BELT's route: even the fixture that pushes a scoring
+  // row pushes ONE point, which `RANKABLE_MIN` folds to zero (§VIII.A.2.b – one point is not on
+  // the list at all), so `kidPoints` reads 0 and the rank is never consulted. The BAND's route –
+  // real points against a rank past both bars – is §B's 201 boundary arm; between them the two
+  // halves of D1's predicate are each held where they decide.
   //
   // ⚠ ONE CASE PER KIND AND NOT ONE CASE WITH FIVE ASSERTIONS, AND THAT IS A MEASURED CHOICE. Written
   // as a single case it reddened ONCE under arm 1 (the gate deleted) – vitest counts CASES, and the
@@ -455,28 +498,28 @@ describe('wave 6 T2 D – an unknown girl has no spotlight, whatever she wins', 
   })
 
   it('\'stage\' is silent below the tier bar and off its own week', () => {
-    const small = famous('d-small')
+    const small = known('d-small')
     trophy(small, 'wta250', 'titles', WEEK)
     expect(kinds(small), 'a W250 title is not a big stage').toEqual([])
 
-    const elsewhere = famous('d-elsewhere')
+    const elsewhere = known('d-elsewhere')
     trophy(elsewhere, 'slam', 'titles', WEEK - 1)
     expect(kinds(elsewhere), 'last week is not this week').toEqual([])
   })
 
   it('⭐⭐ \'shoot\' asks about THIS week – the phase, pinned from both sides', () => {
-    const before = famous('d-shoot-before')
+    const before = known('d-shoot-before')
     plantShoots(before, [WEEK - 1])
     expect(kinds(before), 'the cameras were here last week').toEqual([])
 
-    const after = famous('d-shoot-after')
+    const after = known('d-shoot-after')
     plantShoots(after, [WEEK + 1])
     expect(kinds(after), 'and a booked shoot is a promise, not a photograph').toEqual([])
 
     // ⚠⚠ AND THE HELPER'S OWN CONTRACT, ASSERTED, because it is what makes the `week + 1` argument
     // in `spotlight.ts` correct rather than an off-by-one: `completedShootWeeks(world, w)` never
     // contains `w`. A reader who «fixes» the +1 will find this case waiting with the reason.
-    const onIt = famous('d-shoot-on')
+    const onIt = known('d-shoot-on')
     plantShoots(onIt, [WEEK])
     expect(completedShootWeeks(onIt, WEEK)).toEqual([])
     expect(completedShootWeeks(onIt, WEEK + 1)).toEqual([WEEK])
@@ -487,37 +530,37 @@ describe('wave 6 T2 D – an unknown girl has no spotlight, whatever she wins', 
     // not points, and she was never at the tournament. A girl who did not play did not lose in front
     // of anyone, and charging her for it would be a success tax on an ABSENCE – which §0.4 forbids
     // twice over.
-    const world = famous('d-mandatory')
+    const world = known('d-mandatory')
     result(world, { points: 0, mandatoryMiss: true })
     expect(kinds(world)).toEqual([])
   })
 
   it('\'publicLoss\' is silent for a deep run, for a small stage, for a tier-less row and for somebody else', () => {
-    const deep = famous('d-deep')
+    const deep = known('d-deep')
     result(deep, { points: TIERS.wta500.points[3] })
     expect(kinds(deep), 'a quarter-final is not a heavily public loss').toEqual([])
 
-    const small = famous('d-loss-small')
+    const small = known('d-loss-small')
     result(small, { tier: 'wta250', points: 1 })
     expect(kinds(small)).toEqual([])
 
-    const tierless = famous('d-loss-tierless')
+    const tierless = known('d-loss-tierless')
     tierlessResult(tierless)
     expect(kinds(tierless), 'an unknown stage is not a big one').toEqual([])
 
-    const rival = famous('d-loss-rival')
+    const rival = known('d-loss-rival')
     result(rival, { playerId: 'ai-7', points: 1 })
     expect(kinds(rival), 'the spotlight is hers, not the draw\'s').toEqual([])
   })
 
   it('\'publicLoss\' asks about THIS week and not about the window (arm 11)', () => {
-    const world = famous('d-loss-lastweek')
+    const world = known('d-loss-lastweek')
     result(world, { week: WEEK - 1, points: 1 })
     expect(kinds(world)).toEqual([])
   })
 
   it('\'aired\' is silent when the booth spoke in another week', () => {
-    const world = famous('d-aired-elsewhere')
+    const world = known('d-aired-elsewhere')
     world.loveEpisodes = [episode({ publicWeek: WEEK - 20, airedMetWeek: WEEK - 5 })]
     expect(kinds(world)).toEqual([])
   })
@@ -526,15 +569,15 @@ describe('wave 6 T2 D – an unknown girl has no spotlight, whatever she wins', 
     // ⚠ `publicWrong` IS MEANINGLESS WHILE `publicWeek` IS NULL – the field's own contract in
     // `protocol/narrative.ts`. A story that was never told cannot have been told wrong, and this is
     // the case that holds the `&&` (arm 6).
-    const neverTold = famous('d-wrong-never')
+    const neverTold = known('d-wrong-never')
     neverTold.loveEpisodes = [episode({ publicWeek: null, publicWrong: true })]
     expect(kinds(neverTold)).toEqual([])
 
-    const toldRight = famous('d-wrong-right')
+    const toldRight = known('d-wrong-right')
     toldRight.loveEpisodes = [episode({ publicWeek: WEEK, publicWrong: false })]
     expect(kinds(toldRight), 'a true story this week is the leak\'s own row, not this kind').toEqual([])
 
-    const toldElsewhere = famous('d-wrong-elsewhere')
+    const toldElsewhere = known('d-wrong-elsewhere')
     toldElsewhere.loveEpisodes = [episode({ publicWeek: WEEK - 30, publicWrong: true })]
     expect(kinds(toldElsewhere), 'the sting lands on the week it landed').toEqual([])
   })
@@ -550,7 +593,7 @@ describe('wave 6 T2 E – a derivation and nothing else', () => {
     // through the very function this file mocks. If the recorder were dead, this number would be 0
     // and the assertion below would pass for the wrong reason.
     rngKeys.length = 0
-    const world = famous('e-keys')
+    const world = known('e-keys')
     expect(rngKeys.length, 'the recorder sees the engine\'s own keys').toBeGreaterThan(0)
 
     trophy(world, 'slam', 'titles', WEEK)
@@ -559,21 +602,26 @@ describe('wave 6 T2 E – a derivation and nothing else', () => {
     world.loveEpisodes = [episode({ publicWeek: WEEK, publicWrong: true, airedMetWeek: WEEK })]
     rngKeys.length = 0
     for (let week = WEEK - 5; week <= WEEK + 5; week++) {
-      sheIsNewsAt(world, week)
+      // ⚠ D1 (14.09): the gate lost its week parameter – `newsStandingOf` is present-tense, and it
+      // now walks the LADDER fold (`kidPoints`), which is exactly why it stays inside this loop:
+      // the fold and its memoisation must be draw-free too, and this is the case that measures it.
+      newsStandingOf(world)
       exposureEventsOf(world, week)
     }
     expect(rngKeys, 'the ledger draws on no stream at all').toEqual([])
   })
 
   it('⭐⭐ leaves the world byte-for-byte identical, `rngMain` included', () => {
-    const world = famous('e-writes')
+    const world = known('e-writes')
     trophy(world, 'slam', 'titles', WEEK)
     plantShoots(world, [WEEK])
     result(world, { points: 1 })
     world.loveEpisodes = [episode({ publicWeek: WEEK, publicWrong: true, airedEndedWeek: WEEK })]
     const before = JSON.stringify(world)
     for (let week = WEEK - 5; week <= WEEK + 5; week++) {
-      sheIsNewsAt(world, week)
+      // ⚠ D1 (14.09): `newsStandingOf` replaces the weekly fame read – same purity duty, now owed
+      // by the rank fold it walks (the memo cache lives OFF the world, and this is the pin).
+      newsStandingOf(world)
       exposureEventsOf(world, week)
     }
     expect(JSON.stringify(world)).toBe(before)
@@ -582,7 +630,7 @@ describe('wave 6 T2 E – a derivation and nothing else', () => {
   it('answers the same question with the same answer, however often it is asked', () => {
     // The other half of «pure»: no memo, no cursor, no first-call special case. Two reads of one
     // week agree, and they agree on a FRESH array each time (nothing shared for a caller to mutate).
-    const world = famous('e-repeat')
+    const world = known('e-repeat')
     trophy(world, 'slam', 'titles', WEEK)
     const first = exposureEventsOf(world, WEEK)
     const second = exposureEventsOf(world, WEEK)
@@ -623,18 +671,26 @@ describe('wave 6 T2 F – the asymmetry, written down and pinned', () => {
     expect(old, 'the fact is older than the window').toBeLessThan(WEEK - RESULTS_WINDOW)
 
     const world = unknown('f-horizon')
-    // she was news THAT week – the trophies are stamped on it, so `fameAt(world, old)` is 37
+    // ⚠ D1 (14.09): the gate is her standing NOW, not her fame THEN – `newsStandingOf` has no week
+    // axis, so «she was news that week» became «the world is looking at her while it is asked».
+    // The standing row is DELIBERATELY recent (`standHerAt` at WEEK): stood at `old` it would fall
+    // out of the rolling fold at world.week and the case would measure the gate, not the horizon.
+    standHerAt(world, 'known', WEEK)
     trophy(world, 'slam', 'titles', old)
     trophy(world, 'slam', 'finals', old)
     result(world, { week: old, points: 1 })
-    expect(sheIsNewsAt(world, old)).toBe(true)
+    expect(newsStandingOf(world), '⚠ D1 (14.09): the gate reads her standing, present-tense').toBe('known')
     // BEFORE the prune both facts answer: two stage events (the title and the lost final) and the loss
     expect(kinds(world, old)).toEqual(['stage', 'stage', 'publicLoss'])
 
     // ...and then the engine's OWN pruner runs – not a hand-deletion, so what this case measures is
     // the housekeeping the game does every week and not a fixture of the test's own making.
     housekeep(world)
-    expect(world.results.filter((r) => r.playerId === KID_ID), 'the row is gone, and the prune took it').toEqual([])
+    // ⚠ D1 (14.09) RE-AIM, NOT A WEAKENING: the filter narrows to the OLD week because the fixture
+    // now carries a SECOND kid row – `standHerAt`'s recent one, which the prune rightly keeps (it
+    // is 0 weeks old). What the case asserts is unchanged: the loss's own record is gone.
+    expect(world.results.filter((r) => r.playerId === KID_ID && r.week === old), 'the row is gone, and the prune took it').toEqual([])
+    expect(newsStandingOf(world), 'and the prune did not close the gate – the standing row survived it').toBe('known')
     expect(kinds(world, old), 'the cabinet still remembers; the results ledger does not').toEqual(['stage', 'stage'])
   })
 
@@ -644,6 +700,7 @@ describe('wave 6 T2 F – the asymmetry, written down and pinned', () => {
     // never meets the edge either. ⚠ T9's benches must stay inside the window too, or they will
     // report the prune as if it were a fact about her life.
     const world = unknown('f-inside')
+    standHerAt(world, 'known', WEEK) // ⚠ D1 (14.09): the gate is her standing, posed the shared way
     trophy(world, 'slam', 'titles', WEEK - 4)
     trophy(world, 'slam', 'finals', WEEK - 4)
     result(world, { week: WEEK - 4, points: 1 })

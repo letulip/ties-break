@@ -3,13 +3,14 @@
 // `docs/plans/life-wave-6-builder-2026-09.md` §2 T7, the architect's rulings J (the seam), M and P
 // (the horizon) and T (the licence reads a stamp and never re-judges it).
 //
-// WHAT THIS FILE IS ABOUT, IN ONE LINE: on a big-stage match week, while she is news, a public fact
-// about her private life that has not aired yet and is still inside the news window gets voiced –
-// the episode is STAMPED, the week carries an `'aired'` exposure event, the snapshot ships two bits,
-// and `buildCommentary` turns them into ONE beat at a changeover. Once aired, never again.
+// WHAT THIS FILE IS ABOUT, IN ONE LINE: on a big-stage match week, while her STANDING is non-quiet
+// (the owner's D1, 14.09 – the gate reads the ladder now, never the cabinet), a public fact about her
+// private life that has not aired yet and is still inside the news window gets voiced – the episode
+// is STAMPED, the week carries an `'aired'` exposure event, the snapshot ships two bits, and
+// `buildCommentary` turns them into ONE beat at a changeover. Once aired, never again.
 //
 // ⚠⚠ THE HONESTY BOUNDARY IS §D AND IT IS THE PIN THAT MATTERS MOST: a fact only the family holds is
-// never voiced, at any fame. Everything else here is mechanism; that one is the promise.
+// never voiced, at any fame or standing. Everything else here is mechanism; that one is the promise.
 //
 // =================================================================================================
 // THE ARMS – every case below was watched to FAIL on the mutation it is written for
@@ -21,7 +22,8 @@
 //           `sinceWeek: 120`, four hundred weeks old, so the NEWS WINDOW refused the row and the
 //           cases were measuring a rule they were not about. Dates moved inside the window, and the
 //           arm now reddens what it names. **4 RED** · §A's family-only case, §A's «an ending needs
-//           both», §D's «the world is watching» and §D's «watching HARD».
+//           both», §D's `'noticed'` and `'known'` arms (the bands D1 renamed «the world is watching»
+//           and «watching HARD» into, 14.09).
 //
 //   ARM 2   the window dropped – `stillNews` true for every age. **3 RED** · §C's far edge, §C's
 //           «a stamp in the future» and §C's read-off-the-constant case.
@@ -36,11 +38,12 @@
 //   ARM 5   met and ended swapped – the ended pass walked first.
 //           **1 RED** · §B's «met before ended».
 //
-//   ARM 6   the news gate asked at `world.week` instead of `world.week − 1` – the second clock
-//           ruling P refused. **2 RED** · §E's two horizon cases. ⚠ IT TOOK A FIXTURE TO GET THE
-//           SECOND ONE: on the first draft the mirror used a `famous()` career, which is news at
-//           BOTH weeks, so the in-week spelling still spoke and only one direction went red. See
-//           `crossingDown`.
+//   ARM 6   ⚠ RE-AIMED BY D1 (14.09) – the mutation it named cannot be written any more: the gate
+//           lost its week argument with the fame bar (`newsStandingOf` is present-tense by its own
+//           contract – the cached rank IS the last closed fold, so ruling P holds by construction,
+//           and `crossingDown`, the fixture built to split the two weeks, went with it). §E's two
+//           horizon cases are now the two halves D1 separated: fame without standing is never
+//           voiced, and the standing alone speaks – at `'noticed'` too, with an empty cabinet.
 //
 //   ARM 7   the big-stage gate deleted (`atOrAboveStageBar` ignored). **1 RED** · §B's junior week.
 //
@@ -71,9 +74,10 @@ import {
   boothPrivateLifeAt,
   createWorld,
   exposureEventsOf,
-  sheIsNewsAt,
+  newsStandingOf,
   type WorldState,
 } from '../src/engine/world'
+import { standHerAt } from './helpers/newsStanding'
 import { resolveBodyAndPlanner } from '../src/engine/world/phaseHerWeek'
 import { worldFunction } from './worldSource'
 import { region } from './helpers/source'
@@ -110,15 +114,15 @@ function unknown(seed = 'booth-unknown'): WorldState {
   return world
 }
 
-/** ...and the same career the world IS watching – a Slam title and a lost Slam final, both stamped
- *  three weeks before the week under test (the ledger suite's own `famous`, and measured the same
- *  way: `fameAt` 36.27 at WEEK against a bar of 30). ⚠ The trophies sit BEFORE the week so the
- *  fixture's fame is never also a `'stage'` exposure event of the week being measured. */
-function famous(seed = 'booth-famous', at = WEEK - 3): WorldState {
+/** ...and the same career the world IS watching – her STANDING posed at `'known'` (⚠ D1, 14.09: the
+ *  gate reads the LADDER now, never the cabinet – top-100 «вполне уверенно», the sponsor ladder's own
+ *  analogy). `standHerAt` lays the row two weeks back, inside the fold's 52-week window at every week
+ *  this file asks about. ⚠ The old Slam pair is gone WITH the fame bar it fed, and so is its old ⚠
+ *  about the trophies doubling as a `'stage'` exposure event: the standing row is a `wta250` below
+ *  `stageTierMin` by the helper's own design, so it can never be one. */
+function famous(seed = 'booth-famous'): WorldState {
   const world = unknown(seed)
-  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-  slam.titles.push(at)
-  slam.finals.push(at)
+  standHerAt(world, 'known', WEEK - 2)
   return world
 }
 
@@ -140,22 +144,11 @@ function episode(over: Partial<LoveEpisode> = {}): LoveEpisode {
   }
 }
 
-/** ⭐ A CAREER WHOSE FAME CROSSES THE BAR **BETWEEN** THE CLOSED WEEK AND THE WEEK BEING LIVED –
- *  news at `WEEK − 1`, nobody at `WEEK`. It exists because the wave's ONE horizon is only pinnable
- *  with a fixture the two spellings disagree about, and a `famous()` career is news at both.
- *
- *  ⚠ FOUND BY WALKING, NOT BY A HARD-CODED OFFSET, so a §4 re-tune of `newsFameMin` or of the fame
- *  decay moves the fixture with it instead of quietly making this case vacuous. Measured 14.09 at
- *  today's constants: the plates land 32 weeks back and fame reads 30.09 at `WEEK − 1` against 29.89
- *  at `WEEK`. ⚠ It THROWS rather than returning a world it could not build – a fixture that silently
- *  fell back on `famous()` would be a green case measuring nothing. */
-function crossingDown(seed: string): WorldState {
-  for (let back = 1; back < 400; back++) {
-    const world = famous(seed, WEEK - back)
-    if (sheIsNewsAt(world, WEEK - 1) && !sheIsNewsAt(world, WEEK)) return world
-  }
-  throw new Error('no crossing week exists at this bar – the horizon fixture is unbuildable')
-}
+// ⚠ D1 (14.09) RETIRED `crossingDown` – the fixture whose fame crossed the bar BETWEEN the closed
+// week and the week being lived. It existed because the old gate took a week and the two spellings
+// needed a world to disagree about; `newsStandingOf` takes none (the cached rank IS the last closed
+// fold, ruling P by construction), so the fixture is unbuildable and the two §E horizon cases now
+// pin the two halves D1 separated instead – see their own banners.
 
 /** A famous career carrying one episode the world learned about `ago` weeks ago. */
 function newsWithFact(over: Partial<LoveEpisode> = {}, seed = 'booth-news'): WorldState {
@@ -225,10 +218,11 @@ describe('wave 6 T7 B – `airBoothMention`, and what it refuses', () => {
     expect(world.loveEpisodes[0].airedMetWeek).toBe(WEEK)
   })
 
-  it('an unknown girl is never talked about – the ONE gate every public surface shares', () => {
+  it('a quiet girl is never talked about – the ONE gate every public surface shares (D1, 14.09)', () => {
     const world = unknown('booth-unknown-girl')
+    standHerAt(world, 'quiet', WEEK)
     world.loveEpisodes = [episode({ publicWeek: WEEK - 2 })]
-    expect(sheIsNewsAt(world, WEEK - 1), 'the fixture really is nobody\'s news').toBe(false)
+    expect(newsStandingOf(world), 'the fixture really is nobody the ladder has heard of').toBe('quiet')
     airBoothMention(world, BIG)
     expect(world.loveEpisodes[0].airedMetWeek).toBeNull()
   })
@@ -238,18 +232,15 @@ describe('wave 6 T7 B – `airBoothMention`, and what it refuses', () => {
     // ONCE, which is the whole of the once-ness claim. The fact stays inside nobody's window for
     // long, so the walk also crosses the window's far edge with the fact already spent.
     const world = newsWithFact({}, 'booth-once')
+    // ⚠ D1 (14.09): the standing is kept for the whole walk – the points half of it folds a rolling
+    // 52-week window, so a row every 40 weeks means a silent week is never silence bought by a
+    // lapsed ledger (the exact fixture defect the old fame plates existed to rule out).
+    for (let w = WEEK + 38; w < WEEK + 100; w += 40) standHerAt(world, 'known', w)
     const stamped: number[] = []
     const aired: number[] = []
     for (let w = WEEK; w < WEEK + 100; w++) {
       world.week = w
-      // Fame is kept above the bar for the whole walk – a new plate every few weeks – so a silent
-      // week is never silence bought by decay.
-      if (w % 4 === 0) {
-        const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-        slam.titles.push(w - 3)
-        slam.finals.push(w - 3)
-      }
-      expect(sheIsNewsAt(world, w - 1), `she is news at ${w - 1}`).toBe(true)
+      expect(newsStandingOf(world), `she is known at ${w}`).toBe('known')
       airBoothMention(world, BIG)
       if (world.loveEpisodes[0].airedMetWeek === w) stamped.push(w)
       for (const e of exposureEventsOf(world, w)) if (e.kind === 'aired') aired.push(w)
@@ -323,28 +314,31 @@ describe('wave 6 T7 C – the news window, at both of its edges', () => {
 })
 
 // =================================================================================================
-// D. ⭐⭐⭐ THE HONESTY BOUNDARY – §0 delta 3, asked at two fames
+// D. ⭐⭐⭐ THE HONESTY BOUNDARY – §0 delta 3, asked at every band of the standing
 // =================================================================================================
 //
 // «The booth and every public surface may voice ONLY facts with `publicWeek !== null`, at a fame that
 // makes her news – the honest boundary is the world's own PUBLICITY, not the family's walls (C4,
 // ruled 10.09). A fact only the family holds is never voiced, AT ANY FAME.»
 //
-// So the claim is pinned as a PAIR: the same family-only row, on a world nobody is watching and on a
-// world everybody is. The second arm is the one that matters – it is the shape a later wave could
-// break by reasoning «she is famous enough that it would be out by now».
-describe('wave 6 T7 D – a fact only the family holds, at any fame', () => {
+// ⚠ D1 (14.09) MOVED THE GATE UNDER THAT SENTENCE WITHOUT MOVING THE SENTENCE: «at a fame that makes
+// her news» is a STANDING now (`newsStandingOf`, the sponsor ladder's own analogy), so «at any fame»
+// is pinned as «at any band» – the same family-only row at `'quiet'`, `'noticed'` and `'known'`. The
+// top band is the arm that matters – it is the shape a later wave could break by reasoning «she is
+// followed enough that it would be out by now».
+describe('wave 6 T7 D – a fact only the family holds, at any standing', () => {
   for (const [name, make] of [
-    ['nobody is watching', () => unknown('booth-d-quiet')],
-    ['the world is watching', () => famous('booth-d-loud')],
-    ['the world is watching HARD', () => {
-      const w = famous('booth-d-star')
-      for (let i = 1; i <= 6; i++) {
-        const slam = (w.trophiesByTier.slam ??= { titles: [], finals: [] })
-        slam.titles.push(WEEK - i)
-      }
+    ['quiet – nobody is watching', () => {
+      const w = unknown('booth-d-quiet')
+      standHerAt(w, 'quiet', WEEK)
       return w
     }],
+    ['noticed – the world glances (rank 150, D1\'s «иногда»)', () => {
+      const w = unknown('booth-d-noticed')
+      standHerAt(w, 'noticed', WEEK - 2)
+      return w
+    }],
+    ['known – the world is watching (rank 50, «вполне уверенно»)', () => famous('booth-d-star')],
   ] as [string, () => WorldState][]) {
     it(`⭐ ${name}: the family's own fact is never voiced`, () => {
       const world = make()
@@ -359,10 +353,10 @@ describe('wave 6 T7 D – a fact only the family holds, at any fame', () => {
     })
   }
 
-  it('...and the fame arm is not vacuous: the SAME world with a public fact does air', () => {
+  it('...and the standing arms are not vacuous: the SAME world with a public fact does air', () => {
     // ⚠ THE CONTROL THE THREE CASES ABOVE NEED. Without it they would all pass on a booth that never
     // speaks at all, which is exactly the «unable to fail» shape this pair of waves has found
-    // sixteen times.
+    // sixteen times. (`'known'` here; §E's second horizon case is the `'noticed'` control.)
     const world = famous('booth-d-loud')
     world.loveEpisodes = [episode({ sinceWeek: WEEK - 3, knownWeek: WEEK - 2, publicWeek: WEEK - 1, publicWrong: true })]
     airBoothMention(world, BIG)
@@ -419,36 +413,41 @@ describe('wave 6 T7 E – where the stamp is written, and which week it asks abo
     expect(airBoothMention.length).toBe(2)
   })
 
-  // ⚠⚠ THE HORIZON IS TWO CASES AND NOT ONE, which is T6's own lesson written down in its §H: several
-  // fixtures under one title stop at the FIRST failing assertion, so a mutation that breaks one
-  // direction reddens one case and the other direction is never measured. The two fixtures are
-  // mirrors – famous THIS week only, and famous LAST week only – and the in-week spelling is wrong in
-  // both, in opposite directions. Measured 14.09: a Slam title + lost final stamped at `world.week`
-  // pays 37 at that week and 0 the week before.
-  it('⭐⭐⭐ NEWS ONLY TODAY: the booth stays silent, because the gate asks about the closed week', () => {
+  // ⚠⚠ RE-AIMED 14.09 (D1). The horizon pair – famous THIS week only against famous LAST week only –
+  // measured which WEEK the fame gate read, and D1 took the week argument away with the fame bar:
+  // `newsStandingOf` is present-tense because the cached rank IS the last closed fold (ruling P by
+  // construction, its own contract). What the pair re-states in BANDS is the two halves D1 pulled
+  // apart, and it is still two cases and not one, for T6's own §H lesson: a mutation that re-adds a
+  // fame clause reddens the first, one that shuts the `'noticed'` band out of the booth reddens the
+  // second, and neither failure can hide behind the other.
+  it('⭐⭐⭐ FAME WITHOUT STANDING: the booth stays silent, however bright the cabinet (D1, 14.09)', () => {
+    // The regression this catches by name: «she is famous enough to talk about» creeping back into
+    // the gate. Blinding – a Slam title and a lost final stamped this very week – and quiet, because
+    // the ladder has never heard of her; the fame that used to open this gate now opens nothing.
     const today = unknown('booth-horizon-today')
     const slam = (today.trophiesByTier.slam ??= { titles: [], finals: [] })
     slam.titles.push(WEEK)
     slam.finals.push(WEEK)
+    standHerAt(today, 'quiet', WEEK)
     today.loveEpisodes = [episode({ publicWeek: WEEK - 1 })]
-    expect(sheIsNewsAt(today, WEEK), 'news today').toBe(true)
-    expect(sheIsNewsAt(today, WEEK - 1), 'and nobody last week').toBe(false)
+    expect(fameAt(today, WEEK), '⚠ she really is blinding').toBeGreaterThan(0)
+    expect(newsStandingOf(today), '...and the ladder says nobody').toBe('quiet')
     airBoothMention(today, BIG)
-    expect(today.loveEpisodes[0].airedMetWeek, 'the booth read the week being lived').toBeNull()
+    expect(today.loveEpisodes[0].airedMetWeek, 'the booth read her fame, not her standing').toBeNull()
   })
 
-  it('⭐⭐⭐ ...and NEWS LAST WEEK ONLY: it speaks, though today she is already under the bar', () => {
-    // ⚠⚠ THE MIRROR, AND THE FIXTURE IS SEARCHED FOR RATHER THAN GUESSED. A `famous()` career is news
-    // at BOTH weeks, so under the in-week spelling it would still speak and this case would stay
-    // green – ARM 6 measured exactly that on the first draft, reddening one direction of two. What is
-    // needed is a career whose fame crosses the bar BETWEEN the two weeks, and `crossingDown` finds
-    // it by walking rather than by hard-coding the offset the constants happen to produce today.
-    const closed = crossingDown('booth-horizon-closed')
+  it('⭐⭐⭐ ...and STANDING WITHOUT FAME: `\'noticed\'` speaks, with not a trophy in the cabinet', () => {
+    // ⚠⚠ THE MIRROR, and it carries D1's second half: BOTH non-quiet bands may be voiced (the
+    // booth's own big-stage requirement already makes every mention an occasion – the shipped
+    // comment's words), so rank 150 with zero fame is enough. A spelling that gated the booth on
+    // `'known'` alone – or that kept any fame clause – goes red here and nowhere else.
+    const closed = unknown('booth-horizon-closed')
+    standHerAt(closed, 'noticed', WEEK - 2)
     closed.loveEpisodes = [episode({ publicWeek: WEEK - 1 })]
-    expect(fameAt(closed, WEEK - 1), 'news on the week that closed').toBeGreaterThanOrEqual(ECONOMY.spotlight.newsFameMin)
-    expect(fameAt(closed, WEEK), 'and under the bar on the week being lived').toBeLessThan(ECONOMY.spotlight.newsFameMin)
+    expect(fameAt(closed, WEEK - 1), '⚠ not one lens is pointed at her').toBe(0)
+    expect(newsStandingOf(closed), '...and the table says top-200 – D1\'s «иногда»').toBe('noticed')
     airBoothMention(closed, BIG)
-    expect(closed.loveEpisodes[0].airedMetWeek, 'the closed week is the one that counts').toBe(WEEK)
+    expect(closed.loveEpisodes[0].airedMetWeek, 'the standing is the one gate that counts').toBe(WEEK)
   })
 })
 

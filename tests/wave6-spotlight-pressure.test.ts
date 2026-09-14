@@ -105,6 +105,22 @@
 // a scripted string edit with UNIQUE mutation text and undone by the inverse edit, never
 // `git checkout`, with the md5 of every touched file verified pristine after each one and a mismatch
 // a HARD STOP – T3's harness, kept.
+//
+// ⚠⚠ RE-AIMED UNDER THE OWNER'S **D1 / D1b / D3 (14.09)**, three rulings and three cuts:
+//   · **D1** – the gate stopped reading fame: `sheIsNewsAt(world, week)` is gone, the predicate is
+//     `newsStandingOf(world)` (three bands off her WTA rank, plus the «unranked is not rank one»
+//     belt), so every fixture that bought its news with old Slam titles now stands on `standHerAt`
+//     (tests/helpers/newsStanding.ts) and every `news` assertion reads the standing. The no-tax
+//     law itself did not move: §0.4 forbids a standing DRAIN – the gate reading rank is D1's own
+//     design, and §B's twins still prove the drain is nowhere.
+//   · **D1b** («ок») – the feed row gained a floor: `EXPOSURE_ROW` prints only when the week's
+//     summed charge clears `ECONOMY.spotlight.rowMinCharge` (absolute, after all five factors).
+//     It OVERRIDES ruling N's events-not-points gate for the ROW ALONE – the charge lands at any
+//     size. §H's tiny-dip case is re-worded to say what it now proves, and the NEW §I holds both
+//     sides of the floor, mutation-verified (its own arm note).
+//   · **D3** («да» to 📸) – the row carries `lifeKind: 'exposure'` and wears the camera. §H's
+//     «white heart by fallback» finding-case – written to be re-aimed the day he ruled – is
+//     re-aimed to the mark.
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -125,9 +141,10 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
   }
 })
 
-import { accrueSpirit, EXPOSURE_ROW, TEMPERAMENTS, temperamentIntensity, temperamentOpenness, type Temperament } from '../src/engine/spirit'
-import { createWorld, exposureEventsOf, sheIsNewsAt } from '../src/engine/world'
+import { accrueSpirit, EXPOSURE_ROW, habituationScale, TEMPERAMENTS, temperamentIntensity, temperamentOpenness, type Temperament } from '../src/engine/spirit'
+import { createWorld, exposureEventsOf, newsStandingOf } from '../src/engine/world'
 import { resolveBodyAndPlanner } from '../src/engine/world/phaseHerWeek'
+import { standHerAt } from './helpers/newsStanding'
 import { KID_ID } from '../src/engine/world/constants'
 import { ECONOMY } from '../src/engine/economy'
 import { lifeRowGlyph } from '../src/components/screens/lifeRowGlyphs'
@@ -263,31 +280,35 @@ describe('wave 6 T3 A – ECONOMY.spotlight gains exactly the two constant famil
 //
 // §0.4, and «мы ни за что не наказываем» (09.09) is the ruling it operationalises: pressure lands on
 // EXPOSURE EVENTS only – never as a standing weekly drain, never keyed on rank, prize or fame.
+// ⚠ D1 (14.09) SHARPENED WHAT THAT SENTENCE FORBIDS RATHER THAN BENDING IT: the GATE now reads her
+// rank – that is his design – and what stays forbidden is a DRAIN keyed on any of it. These twins
+// are exactly the net that tells the two apart.
 //
 // ⚠⚠ THE TWINS ARE THE CONSTRUCTION, AND RULING N IS WHY. A quiet world walked with an empty list
 // proves nothing about this wave – it is a world the wave cannot see. So the claim is measured
-// between a FAMOUS career and an otherwise byte-identical unknown one: same seed, same profile, same
-// week, same everything except a Slam title in the cabinet. If any part of the term ever keyed on
-// fame, the famous twin's spirit would drift from her twin's and this goes red.
-describe('wave 6 T3 B – a week with no exposure event, on a FAMOUS world', () => {
+// between a KNOWN career and an otherwise byte-identical unknown one: same seed, same profile, same
+// week, same everything except the standing (⚠ D1, 14.09: `standHerAt`'s results row and rank, where
+// a Slam title in the cabinet used to sit – fame no longer opens the gate). If any part of the term
+// ever keyed on the standing, the known twin's spirit would drift from her twin's and this goes red.
+describe('wave 6 T3 B – a week with no exposure event, on a KNOWN world', () => {
   /** The twins: identical careers, one of which the world is watching. */
   function twins(): { famous: WorldState; unknown: WorldState } {
     const unknown = probe('sunny', 'spotlight-twins')
     const famous = probe('sunny', 'spotlight-twins')
-    const slam = (famous.trophiesByTier.slam ??= { titles: [], finals: [] })
-    slam.titles.push(famous.week - 3)
-    slam.finals.push(famous.week - 3)
+    standHerAt(famous, 'known', famous.week) // ⚠ D1 (14.09): the standing, posed the shared way
     return { famous, unknown }
   }
 
-  it('⭐⭐⭐ the fixture is not vacuous: one twin IS news at this week and the other is not', () => {
+  it('⭐⭐⭐ the fixture is not vacuous: one twin IS known at this week and the other is not', () => {
     // ⚠⚠ THE CASE THE WHOLE SECTION RESTS ON. Ruling N: «run that pin against a FAMOUS world (fame
     // above the bar, no exposure event this week), not a quiet one, or it proves nothing about this
-    // wave». A byte-identity that held only because neither world could ever reach the mechanic would
-    // be the «unable to fail» family wearing a pin's clothes.
+    // wave» – read through D1 (14.09), where «famous» became «known»: the standing is the gate now,
+    // so the twin under the light is stood in the `'known'` band. A byte-identity that held only
+    // because neither world could ever reach the mechanic would be the «unable to fail» family
+    // wearing a pin's clothes.
     const { famous, unknown } = twins()
-    expect(sheIsNewsAt(famous, famous.week), 'the world is watching her').toBe(true)
-    expect(sheIsNewsAt(unknown, unknown.week), 'and not her twin').toBe(false)
+    expect(newsStandingOf(famous), 'the world is watching her').toBe('known')
+    expect(newsStandingOf(unknown), 'and not her twin').toBe('quiet')
   })
 
   it('⭐⭐⭐ 52 weeks of a famous career and of her unknown twin move spirit identically', () => {
@@ -304,15 +325,18 @@ describe('wave 6 T3 B – a week with no exposure event, on a FAMOUS world', () 
     }
     // ⚠ ASSERTED AS THE WHOLE SERIES AND NOT AS THE ENDPOINT: a drain that cancelled out against the
     // return by the last week would pass an endpoint check and fail this one.
-    expect(famousSeries, 'fame costs her nothing by itself, on any of 52 weeks').toEqual(unknownSeries)
+    expect(famousSeries, 'being known costs her nothing by itself, on any of 52 weeks').toEqual(unknownSeries)
   })
 
-  it('⭐⭐ ...and the WHOLE WORLD is byte-identical afterwards, cabinet aside', () => {
+  it('⭐⭐ ...and the WHOLE WORLD is byte-identical afterwards, the standing aside', () => {
     // ⚠ THE STRONGER FORM OF THE SAME CLAIM, and the reason it is a second case rather than a second
     // assertion: `bond`, `events`, `rngMain` and every other key are in it, so a term that wrote a
     // feed row or moved the standing on a no-exposure week is red here even though the spirit series
-    // above is untouched. The cabinet is removed because it is the only thing that makes them twins
-    // rather than one world.
+    // above is untouched. ⚠ D1 (14.09) RE-AIM, NOT A WEAKENING: the strip nulls `results` and
+    // `kidRankWta` – the two fields `standHerAt` poses – where it used to null the cabinet, because
+    // those are now the only thing that makes them twins rather than one world. Everything the old
+    // strip compared is still compared; the cabinet is back IN the comparison, which is strictly
+    // more world under the pin than before.
     const { famous, unknown } = twins()
     for (let i = 0; i < 52; i++) {
       accrueSpirit(famous, false, [])
@@ -320,11 +344,11 @@ describe('wave 6 T3 B – a week with no exposure event, on a FAMOUS world', () 
       famous.week++
       unknown.week++
     }
-    const strip = (w: WorldState) => JSON.stringify({ ...w, trophiesByTier: null })
+    const strip = (w: WorldState) => JSON.stringify({ ...w, results: null, kidRankWta: null })
     expect(strip(famous)).toBe(strip(unknown))
   })
 
-  it('⚠ and an empty list writes NO feed row, at any fame', () => {
+  it('⚠ and an empty list writes NO feed row, at any standing', () => {
     const { famous } = twins()
     const before = famous.events.length
     accrueSpirit(famous, false, [])
@@ -527,13 +551,15 @@ const STAMP_WEEK = (() => {
   return w
 })()
 
-/** One of §F's twins: a famous career parked at `STAMP_WEEK`, made news by two OLD Slam titles that
- *  BOTH twins carry – so the stamp under test is never also the thing that lifts her over the bar. */
+/** One of §F's twins: a KNOWN career parked at `STAMP_WEEK`, stood in the band by `standHerAt` on a
+ *  row BOTH twins carry – so the stamp under test is never also the thing that opens the gate.
+ *  ⚠ D1 (14.09): this used to be two OLD Slam titles buying fame past the bar; the craft survives
+ *  the re-cut whole – the standing row is a `wta250` (below the stage bar, unreadable as any kind)
+ *  and the rank is written, so the only exposure either twin can ever derive is the stamp itself. */
 function horizonWorld(): WorldState {
   const world = probe(HORIZON_TEMPERAMENT, HORIZON_SEED)
   world.week = STAMP_WEEK
-  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-  slam.titles.push(STAMP_WEEK - 40, STAMP_WEEK - 41)
+  standHerAt(world, 'known', STAMP_WEEK)
   return world
 }
 
@@ -572,7 +598,9 @@ function acrossThePhase(
     cost: Math.round((control.spirit - treated.spirit) * 1000) / 1000,
     control: control.spirit,
     treated: treated.spirit,
-    news: sheIsNewsAt(treated, STAMP_WEEK),
+    // ⚠ D1 (14.09): the gate lost its week axis – «news at STAMP_WEEK» became «known while the
+    // pass runs», which is the same non-vacuity duty in the standing's own tense.
+    news: newsStandingOf(treated) === 'known',
   }
 }
 
@@ -629,10 +657,10 @@ function productOf(kind: ExposureKind): number {
 // wrote; this one runs the statement that ships, in the function that ships it, so the wiring is
 // under test rather than restated.
 //
-// ⚠ AND THE STAMP IS NEVER ALSO THE THING THAT MAKES HER NEWS (ruling E-bis, which measured that the
-// POLICY decides fame and not the money – preset 8 peaks at 0.0 under policy 0 and 53.2 under policy
-// 1). Both twins carry the same two OLD Slam titles and both are asserted news at the week under
-// test, so what the cases measure is the HORIZON and never the gate.
+// ⚠ AND THE STAMP IS NEVER ALSO THE THING THAT OPENS THE GATE (ruling E-bis's craft, carried across
+// D1, 14.09: the gate reads her STANDING now, so both twins carry the same `standHerAt` row and
+// rank, and both are asserted `'known'` while the pass runs). What the cases measure is the HORIZON
+// and never the gate – the one thing that differs between the twins is the stamp.
 describe('wave 6 T3 F – the tick order, and the horizon ruling P set from it', () => {
   it('⚠⚠ `accrueSpirit`\'s phase runs BEFORE the phase that stamps a trophy or a result', () => {
     const tick = worldFunction('tickWeek')
@@ -749,18 +777,18 @@ describe('wave 6 T3 F – the tick order, and the horizon ruling P set from it',
 
   it('⚠ and a NEGATIVE week is answered with an empty list, never thrown – stated, not lucky', () => {
     // ⚠⚠ THE GUARD IS A LAW AND NOT A REPAIR, AND THE DISTINCTION IS MEASURED. Asked about −1 the
-    // ledger's own readers already answer with nothing – `decayAt` returns 0 for anything in the
-    // future, so `fameAt(world, −1)` is 0 and the news gate alone closes the door, and no record in
-    // the world carries a negative week. That emptiness is a coincidence of three separate rules, any
-    // one of which a later wave could retune, so `exposureEventsOf` states the answer out loud at its
-    // head instead of inheriting it. ⚠ THE BEHAVIOURAL HALF CANNOT BE MUTATED RED (deleting the guard
-    // leaves the list empty anyway, which is the honest finding), so the STATEMENT is pinned beside
-    // the behaviour and the arm is run against that.
+    // ledger's own readers already answer with nothing – no record in the world carries a negative
+    // week, because every writer stamps a week that is 0 or more. ⚠ D1 (14.09) made the guard MORE
+    // load-bearing, not less: the old fame gate closed the −1 door by itself (`fameAt(world, −1)`
+    // was 0), and the standing gate has no week axis to close it with – this KNOWN world sails
+    // straight past the gate, so the emptiness below rests on the guard and the writers' stamps
+    // alone. Still a coincidence of separate rules a later wave could retune, so `exposureEventsOf`
+    // states the answer out loud at its head instead of inheriting it. ⚠ THE BEHAVIOURAL HALF
+    // CANNOT BE MUTATED RED (deleting the guard leaves the list empty anyway, which is the honest
+    // finding), so the STATEMENT is pinned beside the behaviour and the arm is run against that.
     const world = probe('quiet')
-    const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
-    slam.titles.push(world.week - 3)
-    slam.finals.push(world.week - 3)
-    expect(sheIsNewsAt(world, world.week), 'a world with something to find in it').toBe(true)
+    standHerAt(world, 'known', world.week) // ⚠ D1 (14.09): the open gate, posed the shared way
+    expect(newsStandingOf(world), 'a world with something to find in it').toBe('known')
     expect(() => exposureEventsOf(world, -1), 'a week that never happened is a question, not a crash').not.toThrow()
     expect(exposureEventsOf(world, -1), 'and its answer is nothing').toEqual([])
     const ledger = codeOnly(readFileSync(`${SRC}engine/world/spotlight.ts`, 'utf8'))
@@ -865,13 +893,19 @@ describe('wave 6 T3 H – the feed row (DRAFT: T8 and the architect\'s вычи�
     expect(JSON.stringify(world.financeWeeks)).toBe(ledger)
   })
 
-  it('⚠⚠ the row prints even when the number barely moves – ruling N\'s measurement as a rule', () => {
-    // ⚠⚠ THE CASE THAT STOPS THE OBVIOUS «OPTIMISATION». Ruling N measured the term's worst
-    // contribution to a calm open girl at 2.40 against a 2.50 distance to the `dimmed` edge, and a
-    // habituated, focus-held one taking three tenths – so a row gated on «did the Mood word move»
-    // would go silent on exactly the weeks the player most needs the sentence. The gate is the
-    // EVENTS, and the shallowest kind for the girl who pays least is the case that proves it.
+  it('⚠⚠ the row prints for a dip no Mood word will ever show – the floor is the CHARGE, not the word', () => {
+    // ⚠ RE-AIMED UNDER D1b (14.09), AND THE CLAIM IT KEEPS IS NAMED SO THE RE-AIM IS NOT A QUIET
+    // WEAKENING. As written (ruling N) this case said «the gate is the EVENTS» – any charge, however
+    // small, bought a sentence. D1b OVERRODE that for the row alone: the sentence now has a floor,
+    // `ECONOMY.spotlight.rowMinCharge`, and the below-floor half of the old claim moved to §I where
+    // it is asserted the other way round. What SURVIVES here is the half ruling N measured: a 1.2
+    // dip moves no Mood word (2.5 to the `dimmed` edge), so a row gated on «did the word move»
+    // would still go silent on exactly this week – the floor is the charge itself, and this charge
+    // clears it. The fixture check makes the licence explicit rather than lucky.
     const world = probe('sunny')
+    const s = ECONOMY.spotlight
+    const charge = Math.abs(s.pressureBase.shoot) * ECONOMY.spirit.perturbationScale.steady * s.opennessScale.open
+    expect(charge, 'the fixture sits ABOVE the row floor – §I holds the other side').toBeGreaterThanOrEqual(s.rowMinCharge)
     const before = world.events.length
     accrueSpirit(world, false, events('shoot'))
     expect(ECONOMY.spirit.baseline - world.spirit, 'a tiny dip').toBeLessThan(2)
@@ -903,20 +937,105 @@ describe('wave 6 T3 H – the feed row (DRAFT: T8 and the architect\'s вычи�
     expect(newRows(world, before)[0].keep).toBe(true)
   })
 
-  it('⚠⚠ MEASURED AND CARRIED BACK: an unstamped life row wears the owner\'s white heart', () => {
-    // ⚠⚠ A FINDING, RECORDED RATHER THAN FIXED. The feed's glyph column reads
-    // `lifeRowGlyph(row.lifeKind)` and resolves an unstamped row through `?? 'met'` to the owner's
-    // 11.09 white heart – the ROMANCE thread's own mark. This row carries no `lifeKind` because §8
-    // forbids a new `LifeBeatKind` member and who-she-is §5a forbids an agent picking a glyph
-    // unasked, so the exposure row will draw 🤍 in the feed beside «they met» and «it ended».
-    // ⚠ IT IS NOT T3's TO DECIDE: the fixes are his (a new kind and a new pick, or no mark at all),
-    // and this case exists so the consequence is chosen rather than discovered in a playtest.
+  it('⭐⭐ THE FINDING CAME BACK RULED – the row is stamped \'exposure\' and wears his camera (D3, 14.09)', () => {
+    // ⚠ RE-AIMED UNDER D3 (14.09, his «да» to 📸) – and this is the one case in the file that was
+    // WRITTEN to be re-aimed: its first form recorded the finding (no `lifeKind`, 🤍 by the romance
+    // thread's fallback) «so the consequence is chosen rather than discovered in a playtest», and he
+    // chose. The row now carries `lifeKind: 'exposure'` – a ROW kind and deliberately NOT a
+    // `LifeBeatKind` member, so §8's ban stands (the field's own note in `shared/protocol/events.ts`
+    // carries the argument) – and the glyph column resolves it to the camera instead of falling
+    // through `?? 'met'` to the heart. Asserted against `lifeRowGlyph`, the same one road the feed
+    // reads, so a re-pick by the owner moves the test's answer with the screen's.
     const world = probe('sunny')
     const before = world.events.length
     accrueSpirit(world, false, events('stage'))
     const [row] = newRows(world, before)
-    expect(row.lifeKind, 'the row carries no kind – §8 forbids a new member').toBeUndefined()
-    expect(lifeRowGlyph(row.lifeKind), 'so the column falls back to the romance thread\'s mark').toBe('🤍')
+    expect(row.lifeKind, 'the spotlight family\'s own stamp – D3 (14.09)').toBe('exposure')
+    expect(lifeRowGlyph(row.lifeKind), 'and the column draws his pick, not the fallback').toBe('📸')
+    expect(lifeRowGlyph(undefined), '...while an unstamped row still wears the heart – the fallback did not move').toBe('🤍')
+  })
+})
+
+// =================================================================================================
+// I. ⭐⭐ D1b (14.09, «ок») – THE ROW'S FLOOR: the sentence needs a dip worth a sentence
+// =================================================================================================
+//
+// The owner's D1b overrides ruling N's events-not-points gate FOR THE ROW ALONE: `EXPOSURE_ROW`
+// prints only when the week's summed charge clears `ECONOMY.spotlight.rowMinCharge` (absolute,
+// after all five factors), because ruling N's own measurement – a habituated, focus-held girl
+// taking −0.33 from a camera week – made «every dip explainable» read backwards: a sentence over a
+// dip nobody can see explains nothing. ⚠ THE CHARGE IS UNTOUCHED AT ANY SIZE; only the sentence has
+// a floor, and both halves of that split are held below.
+//
+// ⚠⚠ MUTATION-VERIFIED, THE HOUSE DUTY, on the shipped comparison (`Math.abs(pressured) >=
+// ECONOMY.spotlight.rowMinCharge`, engine/spirit.ts block 2d). ARM D1b-1 flips `>=` to `<` –
+// applied by a string edit, run 14.09, UNDONE by the inverse edit, spirit.ts md5 pristine after
+// (68f07b1e…): **9 RED, measured** – both §I cases (the silent week prints, the loud week goes
+// silent) and all seven §H row-reading cases (one-per-week, type-and-sentence, no-cents, the
+// re-worded tiny-dip, both keep-rule cases, D3's stamp – every row they read stopped printing;
+// two more than the five predicted, because the keep-rule pair reads rows too and a prediction is
+// not a count). Both §I cases red under the arm and green on the shipped line is exactly «each arm
+// reddens»; the fixture guards inside each case keep the two worlds on their own sides of the
+// floor when a §4 re-tune moves the constants.
+describe('wave 6 T3 I – the row floor (D1b, 14.09)', () => {
+  /** The girl ruling N measured, posed exactly: habituated to the cap AND the fifth focus held at
+   *  the top rung – the two discounts that shrink a real camera week below the floor. */
+  function shruggedWorld(): WorldState {
+    const world = probe('sunny')
+    world.spotlightHabituation = ECONOMY.spotlight.habituationFullWeeks
+    world.psychologistFocus = 'publicLife'
+    world.psychologistRung = 2
+    return world
+  }
+
+  /** The week's summed charge for `n` events of `kind` on that girl, spelled factor for factor as
+   *  the engine's own product (base × intensity × openness × habituation-at-cap × top-rung shrink),
+   *  the habituation through `habituationScale` ITSELF (one spelling, no drift), and SUMMED the
+   *  engine's way – a loop, not a `× n`, so the float path is the same one `exposurePressure` walks
+   *  and a `toBe` on the written spirit stays exact. */
+  function shruggedCharge(kind: ExposureKind, n: number): number {
+    const s = ECONOMY.spotlight
+    const per =
+      s.pressureBase[kind] *
+      ECONOMY.spirit.perturbationScale.steady *
+      s.opennessScale.open *
+      habituationScale(s.habituationFullWeeks) *
+      ECONOMY.psychologist.publicLifeShrink[2]
+    let total = 0
+    for (let i = 0; i < n; i++) total += per
+    return total
+  }
+
+  it('⭐⭐ a charge below the floor lands in full and prints NOTHING – the quiet week his «ок» bought', () => {
+    // The exact world of ruling N's measurement: cameras at a shoot, shrugged down to −0.165. Before
+    // D1b this week carried a sentence over a dip the screen renders as nothing; now it lives
+    // quietly – and the CHARGE still lands, which is the half a cheaper «skip the term below the
+    // floor» would break. ⚠ The fixture guard keeps this arm on its own side of the floor under any
+    // §4 re-tune of the discounts.
+    const world = shruggedWorld()
+    const charge = shruggedCharge('shoot', 1)
+    expect(Math.abs(charge), 'the fixture really sits under the floor').toBeLessThan(ECONOMY.spotlight.rowMinCharge)
+    const before = world.events.length
+    accrueSpirit(world, true, events('shoot'))
+    expect(newRows(world, before), 'no sentence over a dip nobody can see').toEqual([])
+    expect(world.spirit, 'and the charge landed whole – only the SENTENCE has a floor')
+      .toBe(Math.round((ECONOMY.spirit.baseline + charge) * 10) / 10)
+    expect(world.spirit, 'the week really did cost her something').toBeLessThan(ECONOMY.spirit.baseline)
+  })
+
+  it('⭐⭐ ...and a charge at the floor or past it prints, stamped \'exposure\' – the same girl, a louder week', () => {
+    // ⚠ THE SAME SHRUGGED GIRL, deliberately: the floor is about the CHARGE, never about her
+    // discounts – a veteran with the seat working her year still gets the sentence when the week is
+    // genuinely loud. Four public losses clear the floor even at both discounts' deepest.
+    const world = shruggedWorld()
+    const charge = shruggedCharge('publicLoss', 4)
+    expect(Math.abs(charge), 'the fixture really clears the floor').toBeGreaterThanOrEqual(ECONOMY.spotlight.rowMinCharge)
+    const before = world.events.length
+    accrueSpirit(world, true, events('publicLoss', 4))
+    const rows = newRows(world, before)
+    expect(rows, 'one row, one week – the floor changed when it prints, not how often').toHaveLength(1)
+    expect(rows[0].text).toBe(EXPOSURE_ROW)
+    expect(rows[0].lifeKind, 'and it carries the spotlight\'s own stamp (D3, 14.09)').toBe('exposure')
   })
 })
 
