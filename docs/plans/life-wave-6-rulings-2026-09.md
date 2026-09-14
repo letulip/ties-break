@@ -1072,3 +1072,64 @@ album rows a season instead of one.
 ANOTHER SESSION started 13 s into it. Contention produces false REDS and never false greens, so the
 green stands; but the other session on this checkout is now running TESTS and not only writing docs.
 T10's gate must be the only thing alive on the machine.
+
+## W – what the benches said, including two places where they corrected me
+
+**Ruling N is confirmed for the quadrant it names and REFUTED as a general claim.** Measured, the
+share of charged weeks on which the spotlight DECIDES the Mood word: **sunny 2.3%** (against a 20.9%
+ordinary-week control) · fiery 15.5% · quiet 19.3% · **deep 33.9%**. I wrote «invisible to a whole
+quadrant» and that half stands exactly; «the spotlight alone never crosses the band» does not, for
+three quarters of the roster. Two further readings I did not predict and would not have: **the
+median recovery is ONE week in every cohort** – the 5/wk return swamps a 1–3 point charge – and the
+mean dip on a charged week is **positive for a deep girl (+0.46)**, so the ordinary weather outweighs
+the cameras even in the cohort where the spotlight tips the band most often.
+
+**I mis-read T9's own log and sent it a wrong instruction.** I told it the acceleration half «has no
+subject», quoting its receipt line. Measured: the accelerator is fully measured and **all six steps
+HIT past 2×SEM** – 105.0 → 77.3 → 61.5 → 51.7 news weeks to the cap against predictions 104.0 /
+69.3 / 52.0 / 41.6. The «never moved» sentence is the message that prints when the count is zero,
+and the count beside it was 32. The habituation curve HITs too: rung 2 reaches the cap in **49**
+weeks against 104 with no seat, the 7-week gap from prediction being the hire and consent delay
+rather than a weak accelerator.
+
+**And the five §1g misses were the instrument's fault, which T9 found before I did.** My diagnosis
+was «underpowered at n=8»; the truth is worse and more useful – it **pooled four temperaments into
+one sample**, and cost/event runs −0.90 for sunny against −2.82 for deep BY CONSTRUCTION (the
+×0.75/×1.5 openness and ×0.8/×1.25 intensity factors), so the pooled SEM was measuring the roster's
+spread and never the rung's step. Per cell the same run is monotone to three decimals at exactly
+**×0.822 / ×0.679 / ×0.581**. The verdict is now paired – same seed, same temperament, two rungs –
+with the pooled table kept underneath carrying no verdict. **A bench that pools across the axis its
+own mechanic scales by is the «unable to decide» family, and it is the nineteenth sighting.**
+
+### Two findings that become questions to the owner
+
+**⚠⚠ THE OVERTAKE NEVER FIRES – 0 of 93 leaks across 160 careers.** Ruling T found the brief's
+spelling unreachable and corrected it to the spec's; **the corrected spelling does not fire either.**
+The parent's own disclosure lag is short relative to the time a leak needs, so he always knows first.
+The founding scene of §3c-bis – «a parent learning about a boyfriend from a photograph», which the
+design plan §0 names as its origin – **does not occur in play at the shipped lag table.** The
+mechanism is built, correct and unreachable; what is unruled is the lag table it races against.
+
+**⚠ The walls freeze has no subject on an ordinary arm, and that is a finding about §3c's premise.**
+The walled arm reached **13.5 news weeks and 0 frozen ones** – a parent who grinds hard enough to
+raise her walls destroys the fame that would make her news. The only famous-and-walled girl this
+engine produces is the **repaired** arm, which regains fame while the wall is still coming down
+(26.3 frozen news weeks). So «a veteran star behind walls» exists here only as a transient during
+repair, and §3c's "a walled-up girl carries fame worst" has almost no population.
+
+### Three verdicts that HIT, and one number worth keeping
+
+The **fairness corridor's high-fame column HITS** – worst pair 0.188 pp against a ±1.5 pp bar, eight
+times inside, non-vacuous (34 of 48 pairs diverged). ⚠ And the number under it is the interesting
+one: the wave costs a deep girl **−162.8** against a sunny girl's **−52.2**, three times as much, and
+the lifetime win rate is 71.9 / 71.9 / 71.9 / 71.8%. **It reaches the tennis in neither.**
+
+All three of §3c-bis's leak verdicts HIT – open leaks often (25.5%), early (median lag 24) and true
+(11.3% wrong); private rarely (15.9%), late (102) and wrong (68.2%). **Ruling I's fame factor is
+visible in the realised rate**: 0.00611 at fame 30–44 rising to **0.01186 at 80+**, which is the
+sentence the spec wrote and the brief had dropped.
+
+And the never-fired corridor, per EFFECT as T5 required: at rung 0 the shrink idles **92.2%** of paid
+weeks and the accelerator **87.3%**, but both idle together only **82.1%** – **the two effects idle
+on different weeks, so the intersection understates what the year fails to buy by a full ten
+points.** A corridor printed per week rather than per effect would have flattered the seat.

@@ -185,3 +185,41 @@ And one that was **annotated, not corrected**: a v74 block in the frozen-fixture
 with `knownWeek: 139` where the live row reads 137. That block is a record of what wave 3 measured;
 correcting the number in place would falsify a record to fix a fact. The note names the cause –
 commit `72b37671`, 11.09, which moved the open register and re-stamped this file in the same commit.
+
+## 11. ⚠⚠ The founding scene does not occur in play
+
+§3c-bis exists around one image – «a parent learning about a boyfriend from a photograph», which the
+design plan §0 names as its own founding scene. The mechanism is built and correct. **It fires zero
+times: 0 overtakes in 93 leaks across 160 careers.**
+
+The reason is not a bug. The parent's own disclosure lag (the §4 «Feed lag» table – open 0 with
+p 0.70 else 1..4, private 0 with p 0.10 else 2..12) is **short relative to the time a leak needs**,
+so he always hears first. The brief's original spelling could never have fired at all (an engine-born
+row never holds a null `knownWeek`); the corrected spelling can fire and does not.
+
+**The question: is the scene worth the lag table moving for it?** The two levers are the private
+register's feed lag (today median 2–12 weeks) and `leakBasePerWeek`. Nothing else needs to change –
+the delivery path, the beat and the headline register are already built and tested.
+
+## 12. ⚠ A walled-up famous girl barely exists
+
+§3c says «a walled-up girl carries fame worst, a repaired one carries it better – the parent is in
+the loop». Measured: the walled arm reached **13.5 news weeks and 0 frozen ones**. A parent who
+grinds hard enough to raise her walls destroys the fame that would have made her news, so the
+habituation freeze has almost no population. The only famous-and-walled girl this engine produces is
+the **repaired** one, transiently, while the wall is still coming down (26.3 frozen news weeks).
+
+**The question: is that the design?** It is a coherent reading – the two costs are alternatives, and
+a parent pays one or the other. But it means the freeze is a rule about a state the game rarely
+reaches, and §3c's sentence describes a girl who is mostly hypothetical.
+
+## 13. The wave costs a deep girl three times what it costs a sunny one, and reaches the tennis in neither
+
+The fairness corridor's high-fame column **HITS**: worst pair 0.188 pp against a ±1.5 pp bar, eight
+times inside, non-vacuous. Lifetime win rate 71.9 / 71.9 / 71.9 / 71.8%.
+
+Underneath it, the total spotlight charge over a career: **sunny −52.2 · deep −162.8.** Three times
+the weight, and the tennis does not move for either. **That is the wave working as specified** –
+spirit is bounded, recoverable, and the match factor's floor stands – but it is worth your eye,
+because «costs three times as much and changes nothing measurable» is also a description of a
+mechanic that is not yet doing work.
