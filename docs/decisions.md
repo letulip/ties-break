@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 109 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 110 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -38,7 +38,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | general | 5 | [THE WAVE'S TEN QUESTIONS RULED, AND THE GATE LEARNS TO REMEMBER](#14092026--the-waves-ten-questions-ruled-and-the-gate-learns-to-remember) | 2026-09-14 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 10 | [WAVE 5 IS BUILT AND GATED: THE PSYCHOLOGIST'S YEAR, THE WALLS, AND TEN QUESTIONS BACK](#14092026--wave-5-is-built-and-gated-the-psychologists-year-the-walls-and-ten-questions-back) | 2026-09-14 |
+| life-and-morale | 11 | [WAVE 5 MERGED AND DEPLOYED; THE PRIVATE LIFE'S SPOTLIGHT WAVE IS COMMISSIONED](#14092026--wave-5-merged-and-deployed-the-private-lifes-spotlight-wave-is-commissioned) | 2026-09-14 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -4446,3 +4446,27 @@ laid out per point) and ruled all ten. His words, verbatim where they decide:
    plain line standing whenever no focus is chosen; §3b of the card suite pins the splice off the
    imported constant, arm watched red. The strings table carries the amendment.
 10. **§4 table – holds as measured**; the fifth cell (point 5) closes its one white space.
+
+## 14.09.2026 – WAVE 5 MERGED AND DEPLOYED; THE PRIVATE LIFE'S SPOTLIGHT WAVE IS COMMISSIONED
+
+Wave 5 merged (PR #142, `main` `c3c63ddd`), CI green on his word, and the live bundle confirmed
+carrying the merge stamp on the sixth poll – his playtest runs on the deployed build. Asked what
+remains in the private-life layer, he took the roadmap and commissioned the next small wave the
+same hour: «давай тогда для 1. Волна прожектора (§3c who-she-is) может спеку билдеру распишем?»
+
+**The commission**: [life-wave-6-builder-2026-09](plans/life-wave-6-builder-2026-09.md), same
+contract as wave 5 – he launches the builder himself, the architect holds the final gate. Scope,
+drawn from the already-ruled sources rather than re-decided: the exposure-event pressure family
+reading EXPRESSED openness (who-she-is §3c, his 09.09 ask), habituation frozen by walls, the
+psychologist's fifth focus «The public life» (O7, ruled 13.09 to ship here), the leak hazard with
+`publicWeek` and the accuracy-by-openness gem (§3c-bis), and the booth's private-life mention
+wired as an exposure event – his 10.09 Wimbledon ruling made mechanical, the commentary and the
+pressure one system. Deliberately OUT, each to its own owner: the booth personas and variety
+(C4's wave), the press-question and correction beats (§3c-bis's own landing says wave-6+ on the
+beat machinery), any fame retune (fame-presence owns that ground). Schema takes v77; the
+episode publicity fields make the frozen protocol's first NESTED peel. Every §4 number in the
+brief is a bench-priced proposal – his word after the numbers, the standing law.
+
+**Standing beside it, unblocked by his own gate**: the планка-3 / bond-memory session was parked
+«after his playtest» – the playtest now running makes it the next owner-architect session once
+he returns with impressions.
