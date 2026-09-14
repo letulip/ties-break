@@ -732,30 +732,33 @@ export const EXPOSURE_ROW = 'People were talking about her last week.'
  * second read of a girl wave 5 ruled is one girl for the whole week. Taking the two poles as
  * arguments makes that structural instead of disciplined.
  *
- * ⚠⚠ THE LAST TWO FACTORS ARE **1** AND THEY ARE SPELLED OUT RATHER THAN OMITTED, which is the task's
- * own instruction and `ECONOMY.spotlight`'s own idiom one file over («a constant with no reader is a
- * constant nobody can be wrong about yet»):
- *   · `habituation` is **T4's** – the slow shrink as she learns to live known, 1 down to
- *     `habituationFloor`, frozen while a wall is flipped. It does not exist yet.
+ * ⚠⚠ THE FOURTH FACTOR IS **A PARAMETER SINCE v77's T4**, AND THE FIFTH IS STILL `1`:
+ *   · `habituation` is T4's, and it is now REAL – `habituationScale(world.spotlightHabituation)`,
+ *     read by `accrueSpirit` off the world and handed down here as a plain number. ⚠⚠ IT IS A
+ *     PARAMETER AND NOT A WORLD READ FOR RULING L PART 3's OWN REASON, which is the same reason
+ *     `intensity` and `openness` are parameters: a helper that could reach the world could re-derive
+ *     a fact the pass has already fixed for the week, and the pin below («no world reaches the
+ *     term») is what makes that structural instead of disciplined. T4 obeys the rule it found rather
+ *     than amending it.
  *   · `focus` is **T5's** – the fifth psychologist focus «The public life», `publicLifeShrink[rung]`.
- *     It does not exist yet either.
- * Neither is invented early and neither gets a constant here (§8: «no habituation and no focus
- * constants – T4's and T5's»). They are written as `1` so the PRODUCT's shape is visible to the two
- * tasks that replace them, and so a reader can see that T3 ships the term and not the model.
+ *     It does not exist yet, so it is still written out as `1` rather than omitted, exactly as T3
+ *     wrote BOTH of them: the PRODUCT's shape stays visible to the task that replaces it, and §8
+ *     («no focus constants – T5's») is why no number is invented here early.
  *
  * ⚠ ZERO DRAWS, PURE, TOTAL. Arithmetic over a list, and an empty list returns exactly `0` – which
- * is what makes §0.4's byte-identity claim arithmetic rather than a promise.
+ * is what makes §0.4's byte-identity claim arithmetic rather than a promise. ⭐ AND THE EMPTY LIST IS
+ * WHY T4 CANNOT DISTURB A QUIET WEEK: `habituation` is a factor INSIDE the loop, so a week with no
+ * exposure is `0` at every habituation, and «a career that has never been news plays the tennis it
+ * played before T4 existed» is arithmetic here rather than a promise there.
  */
 function exposurePressure(
   exposure: readonly ExposureEvent[],
   intensity: 'steady' | 'intense',
   openness: 'open' | 'private',
+  habituation: number,
 ): number {
   const s = ECONOMY.spirit
   const p = ECONOMY.spotlight
-  // ⚠ T4's HABITUATION SCALE LANDS HERE. 1 until it exists – she has not learned to live known,
-  // because nothing is yet counting the weeks she has lived known.
-  const habituation = 1
   // ⚠ T5's FIFTH-FOCUS SHRINK LANDS HERE. 1 until it exists – no seat is working her public life,
   // because the focus is not on the roster yet.
   const focus = 1
@@ -765,6 +768,128 @@ function exposurePressure(
       p.pressureBase[event.kind] * s.perturbationScale[intensity] * p.opennessScale[openness] * habituation * focus
   }
   return total
+}
+
+// =================================================================================================
+// 3c-hab. ⭐⭐⭐ HABITUATION – v77's T4 (wave 6, who-she-is §3c: «unless walls are up»)
+// =================================================================================================
+//
+// THE SPEC'S OWN SENTENCE, and the whole model is in it: «sustained fame slowly shrinks her own
+// pressure scale (she learns to live known) – unless walls are up: walls freeze habituation. A
+// veteran star from a good home shrugs at cameras that once cost her sleep.»
+//
+// TWO FUNCTIONS AND ONE FIELD. `growHabituation` counts the weeks she has actually lived known onto
+// `world.spotlightHabituation`; `habituationScale` reads that count back as the fourth factor of
+// T3's product. They are in one file and one section on purpose – a growth whose reader lives
+// somewhere else is how a cap and a denominator come to disagree.
+//
+// ⚠⚠ IT ONLY EVER GROWS, AND THAT IS v1 SPEAKING RATHER THAN AN OVERSIGHT (brief §0.5): **she does
+// not unlearn living known.** There is no decay term here, no half-life, no «quiet season» rule, and
+// none is coming without a ruling. It is written down because a missing decay is exactly the kind of
+// absence a later reader repairs as an obvious omission – and repairing it would be a design change
+// nobody asked for.
+//
+// ⚠⚠ AND NOTHING PRINTS IT – THE FOG LAW, `wallsLean`'s own absence one section down and for the
+// same reason. No meter, no bar, no line, no snapshot field, no diary sentence: the spotlight is
+// READ through the feed's plain words, the Mood dips, the diary and the booth. A habituation
+// printout would turn a weather system into a progress bar, which is the one shape §3c forbids. The
+// wave's §8 names it twice («no publicity meter, no habituation surface»).
+
+/** ⭐⭐⭐ WHAT BEING USED TO IT SAVES HER – the fourth factor of T3's product, linear from 1 at zero
+ *  weeks down to `habituationFloor` at `habituationFullWeeks`.
+ *
+ *      habituationScale = 1 − (1 − habituationFloor) × (habituation / habituationFullWeeks)
+ *
+ *  ⚠⚠ ZERO SCALES TO EXACTLY `1`, BY CONSTRUCTION AND NOT BY ROUNDING – the architect's ruling Q
+ *  part 3, and it is the property the whole task is pinned against: a career that has never been
+ *  news must play EXACTLY the tennis it played before T4 existed, because `1` is the literal this
+ *  function replaces. Byte-identity, not «close enough»: the subtracted product is `× 0`, so the
+ *  expression is `1 − 0` and no float tail exists to round.
+ *
+ *  ⚠ NO CLAMP HERE, AND THAT IS DELIBERATE RATHER THAN FORGOTTEN. The formula is the ruled one
+ *  verbatim, and it is total and exact on `[0, habituationFullWeeks]` – the interval the ONE writer
+ *  keeps the counter inside by its own clamp, which is pinned. A second clamp here would be a second
+ *  place the floor is decided, and the two could disagree; worse, it would let a broken writer pass
+ *  unnoticed. The coupling is real and is written out on `habituationFloor` itself so a future second
+ *  writer meets it before it meets this line.
+ *
+ *  ⚠ IT TAKES THE COUNT AND NEVER THE WORLD, for `exposurePressure`'s own reason (ruling L part 3):
+ *  the pass reads the world once and hands values down, so no helper can re-derive a fact the week
+ *  has already fixed. */
+export function habituationScale(habituation: number): number {
+  const p = ECONOMY.spotlight
+  return 1 - (1 - p.habituationFloor) * (habituation / p.habituationFullWeeks)
+}
+
+/** ⭐⭐⭐ THE WEEK SHE LIVED KNOWN, COUNTED – `+1` per week while she is news, `×0` while a wall is
+ *  up, clamped at `habituationFullWeeks`. The ONE writer of `world.spotlightHabituation`.
+ *
+ *  ⚠⚠ A SIBLING OF `accrueSpirit` AND NOT A BLOCK IN ITS TAIL, AND IT RUNS **AFTER** IT – the
+ *  architect's RULING Q part 1, and the middle reason is the load-bearing one:
+ *    · `accrueSpirit` stays the one writer of `world.spirit` and gains no second field to own;
+ *    · **THE SCALE MUST BE READ WITH THE HABITUATION SHE CAME INTO THE WEEK HOLDING.** A growth that
+ *      ran first would discount THIS week's own exposure by THIS week's own growth – an off-by-one
+ *      no test would ever name, which reads from the outside as «the constants are slightly too
+ *      weak». Calling it after the pass makes that defect unspellable rather than merely absent;
+ *    · a sibling keeps `engine/spirit.ts`'s import list closed, which §0.1 requires.
+ *
+ *  ⚠⚠ AND IT RUNS **BEFORE** `driftWalls`, WHICH IS THE SECOND HALF OF THE SAME LAW AND IS NOT IN
+ *  RULING Q. `driftWalls` is the pass that FLIPS a wall, and its own ⚠ says «whatever flips here is
+ *  first read on the NEXT tick: every reader of `expressedTemperamentOf` in this tick has already
+ *  run». This function is a new reader of `wallsFlipped` in that same tick, so it has to sit on the
+ *  same side of the drift as the pressure it is the scale for – otherwise a girl who flipped THIS
+ *  week would be CHARGED as the girl she was all week (the expression `accrueSpirit` read at its
+ *  head) and FROZEN as the girl she became at the end of it. Wave 5's «one girl for the whole week»
+ *  is the rule; this is that rule applied to a third reader.
+ *
+ *  ⚠⚠ THE NEWS GATE ARRIVES AS A **BOOLEAN**, handed down at the caller – §0.1's dependency
+ *  inversion, ruling J's shape, and the third use of it in this file (after `psychologistWorks` and
+ *  the exposure list). `engine/spirit.ts` gains no arrow to `world/spotlight.ts`, and the WEEK the
+ *  gate is asked about stays visible at the call site, one line under the horizon the pressure uses.
+ *  ⚠ Ruling Q part 2: it is `world.week − 1`, the SAME horizon, because ruling P gave this wave one
+ *  clock and «which week is this about» is the question that cost the wave two dead kinds. At step 3
+ *  of the tick it is also the same ANSWER – fame derives from stamps written in earlier weeks – so
+ *  the coherent spelling is free.
+ *
+ *  ⚠⚠ EITHER AXIS FREEZES HER, AND IT IS THE **FLAG** AND NEVER THE LEAN – the architect's ruling H,
+ *  settled and not a builder question. «Up» is the spec's word for the FLIPPED state, both axes are
+ *  walls (the openness wall makes her expressed-closed, the regulation wall dysregulated), and the
+ *  pressure ALREADY reads both axes – so a one-axis freeze would acclimatise a girl the same pass
+ *  has just charged double. `wallsLean` is a continuous leaning and a girl leaning toward walls has
+ *  not raised them.
+ *
+ *  ⚠ THE FIFTH FOCUS'S ACCELERATION LANDS HERE AND IS STILL `1` – T5's `publicLifeAccel[rung]`,
+ *  written out rather than omitted for the reason T3 wrote out both of ITS missing factors: the
+ *  shape stays visible to the task that replaces it, and §8 («no focus constants – T5's») is why no
+ *  number is invented early.
+ *
+ *  ⚠ ZERO DRAWS AND NO CLOCK: three reads and one assignment. The frozen MAIN capture cannot see it.
+ *  ⚠ AND IT WRITES NOTHING ON A WEEK IT DOES NOT COUNT – the early returns are what keep a quiet
+ *  career's world byte-identical to the one it had before this pass existed. */
+export function growHabituation(world: WorldState, isNews: boolean): void {
+  const p = ECONOMY.spotlight
+  // ⚠ THE `??` COURTESY IS `accrueSpirit`'s and `driftWalls`'s, for their reason: every real world –
+  // created or migrated – carries the field, and a probe world hand-built in a test or a bench
+  // predates it. ⭐ `0` is the IDENTITY here and not a placeholder for one (T1's own ⭐): it counts
+  // weeks she has actually lived known, and a world that never had the field has lived none.
+  const held = world.spotlightHabituation ?? 0
+  // 1. SHE HAS TO BE KNOWN TO GET USED TO BEING KNOWN. An unknown girl acclimatises to nothing –
+  //    there is no spotlight on her to acclimatise to, which is the same gate every other mechanic
+  //    in this wave sits behind.
+  if (!isNews) return
+  // 2. ⭐⭐⭐ AND WALLS FREEZE IT – §3c verbatim, ruling H's EITHER-axis, on the FLAG.
+  const flipped = world.wallsFlipped ?? { open: false, reg: false }
+  if (flipped.open || flipped.reg) return
+  // 3. ⚠ THE CAP IS A `Math.min` AND NOT AN `if (held < full)`, so a counter already at the ceiling
+  //    is written back unchanged rather than skipped – the two behave identically today and the
+  //    `Math.min` stays correct if the step ever stops being 1. `habituationFullWeeks` is BOTH this
+  //    cap and `habituationScale`'s denominator, which is what makes the floor exactly reachable and
+  //    never passable.
+  // ⚠ T5's FIFTH-FOCUS ACCELERATION LANDS HERE – `publicLifeAccel[rung]`, and `1` until it exists,
+  //    written out rather than omitted exactly as T3 wrote out the two factors it was missing: the
+  //    shape stays visible to the task that replaces it, and §8 is why no number is invented early.
+  const focusAccel = 1
+  world.spotlightHabituation = roundTenth(Math.min(held + 1 * focusAccel, p.habituationFullWeeks))
 }
 
 /**
@@ -922,7 +1047,16 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //     recorded defect on `spirit.shock`'s constants, repeated on new numbers. An empty list is
   //     exactly 0, so a no-exposure week's arithmetic is byte-identical to what it was before this
   //     line existed – §0.4's «no success tax», as a property of the addition rather than a promise.
-  const pressured = exposurePressure(exposure, intensity, openness)
+  //     ⭐⭐⭐ AND SINCE v77's T4 THE FOURTH FACTOR OF THAT PRODUCT IS REAL: `habituationScale` reads
+  //     the weeks she has ALREADY lived known and shrinks every event of this week by them. ⚠⚠ THE
+  //     COUNT IS THE ONE SHE CAME INTO THE WEEK HOLDING, and that is a property of the CALL SITE
+  //     rather than of this comment – `growHabituation` is a SIBLING of this function and runs on the
+  //     line after it (the architect's ruling Q part 1, `world/phaseHerWeek.ts`). A growth that ran
+  //     first would discount this week's own exposure by this week's own growth, which is an
+  //     off-by-one no test would name and which reads as «the constants are slightly too weak».
+  //     ⚠ AT ZERO IT IS EXACTLY `1`, so a career that has never been news takes the identity factor
+  //     T3 shipped as a literal – ruling Q part 3, pinned as BYTE-IDENTITY and not as an endpoint.
+  const pressured = exposurePressure(exposure, intensity, openness, habituationScale(world.spotlightHabituation ?? 0))
   const moved =
     returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked + pressured
   // ⚠⚠ ONE `roundTenth`, ONE `clamp`, AT THE END, ON THE SUM – ruling L part 2, and the reason the

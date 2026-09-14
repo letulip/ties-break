@@ -402,6 +402,16 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     // draws. It says nothing yet about T4's growth pass, which is exactly the wave that will move
     // these worlds on purpose – and when it does, this case goes red and is RE-AIMED with the pass's
     // own output asserted on both arms, which is what wave 5's T7 did to its twin one version down.
+    //
+    // ⚠⚠ T4 LANDED (14.09) AND THIS CASE DID **NOT** GO RED – measured, and the prediction above was
+    // wrong for a reason worth keeping rather than deleting. `growHabituation` is gated on
+    // `sheIsNewsAt`, and ruling D measured the frozen corpus's peak fame at 0.00–3.43 against a bar
+    // of 30: this career is never news at any of its 156 weeks, so the pass runs every week and
+    // counts nothing, and BOTH arms end without the key ever moving. The assertions are therefore
+    // untouched – re-aiming a pin that did not move would be a diff with no claim behind it (T3b's
+    // own lesson) – and what IS re-aimed is this note, because a green case under a comment that
+    // predicts red is how a pin stops being read. ⚠ The day a fixture in this file becomes news, the
+    // prediction above comes back into force exactly as written.
     const withKey = walk(createWorld('wave6-walk'), 156)
 
     const stripped = createWorld('wave6-walk') as unknown as Record<string, unknown>
@@ -486,8 +496,15 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     // The other direction of the same claim, and the one that would catch a tick that WROTE one of
     // them: the growth pass is T4, the leak T6 and the booth stamps T7, so after 156 weeks the world
     // key and every row field must still read its birth value.
+    //
+    // ⚠⚠ RE-AIMED IN ITS PROSE AND NOT IN ITS ASSERTIONS BY T4 (14.09) – wave 5's own practice, for
+    // wave 5's reason: «a green line with a lying comment is worse than a red one». The growth pass
+    // EXISTS now and runs on every week of this walk; what keeps the counter at 0 is that this career
+    // is never news (ruling D: the corpus peaks at 3.43 against a bar of 30), so the pass counts
+    // nothing. The line below therefore still reads 0 – but not because «nothing on this tree grows
+    // it», which stopped being true the moment `growHabituation` landed.
     const world = walk(createWorld('wave6-no-writer'), 156)
-    expect(world.spotlightHabituation, 'nothing on this tree grows it').toBe(0)
+    expect(world.spotlightHabituation, '⚠ the pass ran every week and she was never news').toBe(0)
     for (const row of world.loveEpisodes) {
       expect(row.publicWeek, `${row.id}: no leak exists to make her news`).toBeNull()
       expect(row.publicWrong).toBe(false)
@@ -501,16 +518,28 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
 // E. THE READER CENSUS – WHAT MAY NAME THE FIVE FIELDS, EXHAUSTIVELY
 // =================================================================================================
 describe('wave 6 T1 E – nothing reads them yet, and that is pinned rather than promised', () => {
-  it('⭐⭐ `spotlightHabituation` is named in `src/` by exactly three files, and every one of them WRITES or DECLARES it', () => {
+  it('⭐⭐ `spotlightHabituation` is named in `src/` by exactly four files – three that WRITE or DECLARE it, and T4\'s pass, which does BOTH', () => {
     // ⚠ THE WHOLE-TREE FORM AND NOT A GREP OVER A FOLDER: «no reader» is a claim about `src/`, and a
     // census scoped to `src/engine/` would be silent about a component that reached for it. Comments
     // are stripped first – a pin that reads prose is a pin the next writer repairs by deleting a
     // sentence.
+    //
+    // ⚠⚠ RE-AIMED BY WAVE 6's T4 (habituation), NOT WEAKENED, AND IT IS THE PIN DOING ITS JOB – the
+    // twin of what T2 did to the row-fields case below. `engine/spirit.ts` is the FIRST and ONLY
+    // reader-and-writer: `growHabituation` counts the weeks she lived known onto the field and
+    // `accrueSpirit` reads it back through `habituationScale`. ⚠ `world/phaseHerWeek.ts` is NOT on
+    // this list and that is the line worth reading: the call site hands down a BOOLEAN and names the
+    // field nowhere, which is §0.1's dependency inversion visible as an absence. ⚠ The claim stays
+    // TOTAL (a full `toEqual`, never a `toContain`), so a fifth file reaching for the field still
+    // reddens here; only the list grew, by exactly one name, in the commit that earned it. ⚠ And the
+    // case's TITLE moved with it – «every one of them WRITES or DECLARES it» stopped being the whole
+    // truth the moment a reader existed, and a title that lies is how a pin stops being read.
     const named = srcFiles()
       .filter(([, source]) => codeOnly(source).includes('spotlightHabituation'))
       .map(([path]) => path)
-    expect(named.sort(), 'the declaration, the birth value, and the migration – and nothing else').toEqual([
+    expect(named.sort(), 'the declaration, the birth value, the migration – and T4\'s growth and read').toEqual([
       'engine/migrations.ts',
+      'engine/spirit.ts',
       'engine/world.ts',
       'engine/world/state.ts',
     ])

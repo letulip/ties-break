@@ -24,7 +24,7 @@ import { rivalField } from './weekField'
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { accrueSpirit, applyBondDelta, driftWalls } from '../spirit'
+import { accrueSpirit, applyBondDelta, driftWalls, growHabituation } from '../spirit'
 import { KNOCK_REST_CONDITION, knockRestWeek } from '../knock'
 import { TIERS } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking } from '../season/ranking'
@@ -60,7 +60,11 @@ import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 // import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
 // of §0.1's dependency inversion: this file calls the derivation and hands the LIST to
 // `accrueSpirit`, so `engine/spirit.ts` gains no arrow of its own.
-import { exposureEventsOf } from './spotlight'
+// ⭐ v77's T4 TAKES THE SECOND NAME OFF THE SAME MODULE AND FOR THE SAME REASON: `sheIsNewsAt` is
+// asked HERE and handed to `growHabituation` as a boolean, so the habituation pass lives beside the
+// pressure it scales (`engine/spirit.ts`) while the GATE stays where it was derived. One arrow, two
+// facts, no new edge in the graph.
+import { exposureEventsOf, sheIsNewsAt } from './spotlight'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -429,6 +433,45 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        case, by its own stated guard rather than by luck; both halves are pinned
   //        (tests/wave6-spotlight-pressure.test.ts §F).
   accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))
+  // ⭐⭐⭐ 1c-hab (v77, the spotlight – T4): AND WHAT THE WEEK ADDED TO WHAT SHE IS USED TO.
+  //
+  //        who-she-is §3c: «sustained fame slowly shrinks her own pressure scale (she learns to live
+  //        known) – unless walls are up: walls freeze habituation.» `engine/spirit.ts`'s §3c-hab
+  //        carries the whole model; the two numbers are `ECONOMY.spotlight`'s.
+  //
+  //        ⚠⚠ ITS OWN CALL, **IMMEDIATELY AFTER** `accrueSpirit` AND NOT INSIDE IT – the architect's
+  //        RULING Q part 1, and the reason is an off-by-one rather than a taste: the scale the pass
+  //        above applied must be read with the habituation she CAME INTO the week holding. A growth
+  //        that ran first would discount this week's own exposure by this week's own growth –
+  //        invisible to every test, and legible only as «the constants came out slightly too weak».
+  //        Calling it AFTER makes that unspellable. It also keeps `accrueSpirit` the one writer of
+  //        `world.spirit`, and keeps `engine/spirit.ts`'s import list closed (§0.1).
+  //
+  //        ⚠⚠ AND **BEFORE** `driftWalls`, WHICH RULING Q DOES NOT SAY AND WHICH IS LOAD-BEARING.
+  //        The line below is the pass that FLIPS a wall, and its own ⚠ promises that «whatever flips
+  //        here is first read on the NEXT tick». This is a new reader of `wallsFlipped` inside the
+  //        same tick, so it must sit on THIS side of the drift or that promise stops being true: a
+  //        girl who flips this very week would then be CHARGED as the girl she was all week (the
+  //        expression `accrueSpirit` read at its head) and FROZEN as the girl she became at the end
+  //        of it. Wave 5's «one girl for the whole week», applied to a third reader.
+  //        ⚠ THE COST OF THAT PLACEMENT IS ONE RE-AIMED PIN AND IT IS PAID OUT LOUD: wave 5's own
+  //        ruling P case asserted `driftWalls` was the VERY NEXT statement (`toBe(i + 1)`). It now
+  //        asserts that the ONLY statement between the two is this one, by a total list equality –
+  //        as strict as before against anything else sliding in, and red on a re-order of these
+  //        three. See tests/wave5-psychologist-walls.test.ts's §H.
+  //
+  //        ⚠⚠ THE GATE IS ASKED **HERE** AND HANDED DOWN AS A BOOLEAN – §0.1's dependency inversion
+  //        for the third time on this phase (`psychologistWorks`, the exposure list, and now the news
+  //        gate). `engine/spirit.ts` gains no arrow to `world/spotlight.ts`.
+  //        ⚠⚠ AND IT IS `world.week - 1`, THE SAME HORIZON AS THE LINE ABOVE – ruling Q part 2, and
+  //        ruling P's one clock kept as one clock. A reader that asked about `world.week` here while
+  //        the pressure asked about `world.week - 1` would put two clocks in one pass, and «which
+  //        week is this about» is exactly the question that cost this wave two dead kinds. ⚠ At this
+  //        phase it is also the same ANSWER – `fameAt` derives from stamps written in earlier weeks,
+  //        and nothing between the two lines writes one – so the coherent spelling costs nothing.
+  //        ⚠ A NEGATIVE WEEK IS SAFE FOR THE SAME REASON IT IS ABOVE: the first tick asks about week
+  //        0 (step 0 increments first), and `fameAt` answers a future week with 0 in any case.
+  growHabituation(world, sheIsNewsAt(world, world.week - 1))
   // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
   //
   //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is

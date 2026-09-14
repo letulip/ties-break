@@ -5126,14 +5126,16 @@ export const ECONOMY = {
   //
   // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight – the
   // psychologist block's own rule one concern up, and for its reason («a constant with no reader is
-  // a constant nobody can be wrong about yet»): `habituationFullWeeks` / `habituationFloor` land
-  // with T4's growth; `leakBasePerWeek` / `leakOpennessMult` / `wrongShare` with T6's hazard;
-  // `newsWindowWeeks` with T7's booth. The fifth focus's two ladders (`publicLifeShrink`,
-  // `publicLifeAccel`) are T5's and join `ECONOMY.psychologist` beside the other four focus tables,
-  // NOT this block.
-  // ⭐ T3 IS HERE (14.09) AND IT TOOK EXACTLY THE TWO THIS SENTENCE PROMISED IT: `pressureBase` and
-  // `opennessScale` below. The other five names above are still absent and still T4's, T6's and
-  // T7's – the list is edited as each lands rather than kept as a stale forecast.
+  // a constant nobody can be wrong about yet»): `leakBasePerWeek` / `leakOpennessMult` /
+  // `wrongShare` land with T6's hazard; `newsWindowWeeks` with T7's booth. The fifth focus's two
+  // ladders (`publicLifeShrink`, `publicLifeAccel`) are T5's and join `ECONOMY.psychologist` beside
+  // the other four focus tables, NOT this block.
+  // ⭐ T3 IS HERE (14.09) AND IT TOOK EXACTLY THE TWO THAT SENTENCE PROMISED IT: `pressureBase` and
+  // `opennessScale` below.
+  // ⭐ AND T4 IS HERE (14.09) WITH THE TWO IT WAS PROMISED: `habituationFullWeeks` and
+  // `habituationFloor`, which are struck from the list above rather than left standing in it – the
+  // list is edited as each task lands rather than kept as a stale forecast. What is still absent is
+  // T6's three and T7's one.
   spotlight: {
     /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – the fame at which the world starts calling her
      *  news. ONE constant behind ONE predicate (`sheIsNewsAt`, `world/spotlight.ts`): every exposure
@@ -5241,6 +5243,43 @@ export const ECONOMY = {
      *  expressed-open one before habituation. T3's pin asserts the RATIO rather than either number,
      *  precisely so a §4 re-tune of `pressureBase` cannot silently break the shape it is about. */
     opennessScale: { open: 0.75, private: 1.5 },
+    /** ⭐⭐⭐ HOW MANY WEEKS OF LIVING KNOWN IT TAKES TO BE FULLY USED TO IT – the denominator of
+     *  `habituationScale` (engine/spirit.ts) and the CAP `growHabituation` clamps the counter at.
+     *  104, two full seasons of being news, which is the brief's own gloss on the number.
+     *
+     *  ⚠⚠ IT IS A DENOMINATOR AND A CAP AT THE SAME TIME, AND THAT IS WHY IT IS ONE CONSTANT AND NOT
+     *  TWO. `spotlightHabituation` is clamped here by the writer, and the reader divides by the same
+     *  value – so the scale reaches `habituationFloor` exactly when the counter reaches its ceiling
+     *  and never travels past it. Two constants could disagree; one cannot.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**, exactly like the bar and the bases above. The brief's §4
+     *  lists it under «Proposals – NONE ruled, all bench-priced predicted-first, his word after»
+     *  («`habituationFullWeeks 104` (two seasons of living known)»), and T4 ships the SHAPE – linear,
+     *  floored, frozen by walls, capped – with the size left for T9's benches and the owner's word.
+     *  ⚠ Nothing in T4's pins asserts 104: they read this constant, so a re-tune moves both sides of
+     *  every expectation together and the shape stays guarded. */
+    habituationFullWeeks: 104,
+    /** ⭐⭐⭐ THE MOST BEING USED TO IT CAN EVER SAVE HER – the floor of `habituationScale`. At a full
+     *  `habituationFullWeeks` a veteran pays 0.25 of what the same week cost her the first time.
+     *
+     *  ⚠⚠ THE FLOOR IS THE POINT, NOT THE DISCOUNT. who-she-is §3c's own sentence is «a veteran star
+     *  from a good home shrugs at cameras that once cost her sleep» – a SHRUG and not an immunity.
+     *  A floor of 0 would make a long-famous girl free of the spotlight entirely, and the mechanic
+     *  would quietly switch itself off in exactly the careers it was written for; the brief's §4 says
+     *  the same thing in its own words («the floor keeps the cameras from ever costing exactly
+     *  nothing»).
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. «`habituationFloor 0.25`» sits in the same «NONE ruled»
+     *  list as everything else in this block bar `opennessScale`, and T9 prices it.
+     *
+     *  ⚠ AND THE FLOOR IS GUARANTEED BY THE **WRITER'S** CLAMP AND BY NOTHING IN THE READER, which
+     *  is stated out loud because it is a coupling across two functions: `habituationScale` is the
+     *  ruled formula verbatim and carries no second clamp, so it is total and correct on
+     *  `[0, habituationFullWeeks]` – the interval `growHabituation` is pinned to keep the counter
+     *  inside. A counter forced past the cap by some future second writer would drive the scale
+     *  below this floor and, far enough, through zero into a spotlight that PAYS her. The one writer
+     *  and its cap pin are what stand between; a second writer must re-read this note. */
+    habituationFloor: 0.25,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

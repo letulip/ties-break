@@ -903,10 +903,29 @@ describe('wave 5 T7 H – what the pass touches, and what it must never', () => 
     // statement after the spirit pass, still on the same predicate, and `toBe(i + 1)` is still red on
     // any statement sliding between them – ⚠ including the one wave-6 ruling P refuses by name,
     // moving `accrueSpirit` itself down the phase to where a trophy is already written.
+    // ⚠⚠ RE-AIMED A **THIRD** TIME 14.09 BY WAVE 6's **T4**, AND THIS ONE MOVES AN ASSERTION RATHER
+    // THAN AN ANCHOR – so what it may NOT do is weaken, and it does not. WHAT MOVED: `toBe(i + 1)`
+    // becomes a TOTAL list equality over everything between the two passes. WHY: the architect's
+    // ruling Q puts `growHabituation` on the line immediately after `accrueSpirit`, which is the slot
+    // `toBe(i + 1)` reserved – ruling Q says «wave 5's ruling P precedent, where `driftWalls` already
+    // sits» without noticing that the precedent is PINNED AS EXCLUSIVE. It has to be there and not
+    // below `driftWalls`: habituation reads `wallsFlipped`, `driftWalls` WRITES it, and the pass
+    // below promises in its own ⚠ that «whatever flips here is first read on the NEXT tick». A
+    // habituation pass under it would freeze a girl the pass above has just charged as the girl she
+    // was all week.
+    // ⚠ WHY THIS IS THE SAME STRENGTH AND NOT A SOFTENING: `toEqual([...])` on the whole slice is red
+    // on ANY other statement sliding between the two, red on a re-order of the three, and red if the
+    // habituation pass is deleted or moved – strictly MORE than `toBe(i + 1)` said, since that form
+    // said nothing about what sits on the line after. It is the shape tests/spirit.test.ts's own
+    // ordered-list pin already uses for the four private-life calls. ARM 18 is the statement slid in
+    // between, ARM 19 the habituation pass moved below the walls pass; both red here.
     const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
     const j = code.indexOf('driftWalls(world, psychologistWorksThisWeek(world))')
     expect(i, 'the spirit pass is where it was').toBeGreaterThan(-1)
-    expect(j, 'and the walls pass is the very next statement').toBe(i + 1)
+    expect(j, 'and the walls pass still follows it').toBeGreaterThan(i)
+    expect(code.slice(i + 1, j), '⚠ and ONLY v77 T4\'s habituation pass separates them – ruling Q').toEqual([
+      'growHabituation(world, sheIsNewsAt(world, world.week - 1))',
+    ])
     expect(code.filter((l) => l.startsWith('driftWalls(')), 'called exactly once, and on the predicate')
       .toEqual(['driftWalls(world, psychologistWorksThisWeek(world))'])
     // ...and `accrueSpirit` did NOT swallow it, which is the other half of ruling P.
