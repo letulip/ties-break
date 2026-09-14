@@ -23,7 +23,6 @@ import {
   coveredShareOf,
   fundingBandOf,
   juniorRecordScore,
-  needShareOf,
   COLLEGE_TIERS,
   COLLEGE_TIER_ORDER,
   canAfford,
@@ -32,7 +31,6 @@ import {
   COLLEGE_ODDS_MEASURED_AT,
   COLLEGE_ODDS_MEASURED_AT_BEFORE_HOME_RULING,
   familyCanPayPerYearCents,
-  familyPositionCents,
   recruitedAtAll,
   // ⚠ `tierOpenTo`, `tierShutFor`, `quoteShutFor`, `COLLEGE_SHUT_DETAIL` and `CollegeShutReason` were
   // imported here for round 24 #2a's refusal machinery. Round 26 #2's second pass deleted all five
@@ -209,13 +207,15 @@ describe('B. nothing removes the third answer', () => {
     for (const q of one.quotes) expect('open' in q, `${q.tier}: no shut flag survives`).toBe(false)
   })
 
-  // ⚠⚠ AND THE COUNTRY RULE THAT SURVIVED IS A PRICE, NEVER A DOOR. `needShareOf` still pays the
-  // need-based layer to an American family only (34 CFR §668.33 – federal student AID, which is about
-  // who may receive a US grant rather than about who may enrol). That is the one country test the
-  // round left standing, and this is the line that says what it may and may not do: the Australian
-  // family is quoted the SAME place at the SAME sticker and pays more of it. A refusal removes a row;
-  // a price does not.
-  it('⭐⭐ the surviving country rule changes the BILL and never the list', () => {
+  // ⭐⭐⭐ D8 (14.09, «значит давай похороним»): THE NEED LAYER IS BURIED, and this case is the pin
+  // that replaced the two the layer carried (the US-only country rule and the bill it split). The
+  // tombstone at `COLLEGE_OFFER.assetSpreadYears` tells the cause of death – knots calibrated to
+  // round 21's fork incomes, three economy waves of drift, zero real recipients ever after – and
+  // this asserts the burial's whole visible surface: the SAME family pays the SAME bill whatever
+  // its passport, and `needShare` is 0 on every quote for the view that once maximally qualified.
+  // ⚠ The old cases' guards die WITH the mechanism they guarded, not silently: taper monotonicity,
+  // the asset shield and the trim-order rule are properties of a function that no longer exists.
+  it('D8: the buried need layer separates nobody and pays nobody', () => {
     const bests = { j300: 3 }
     const us = collegeOfferFor(view(bests, 'working', 'US'), rngFromSeed('same-die'))
     const au = collegeOfferFor(view(bests, 'working', 'AU'), rngFromSeed('same-die'))
@@ -224,9 +224,11 @@ describe('B. nothing removes the third answer', () => {
       const a = au.quotes.find((q) => q.tier === tier)!
       expect(a.costPerYearCents, `${tier}: same sticker`).toBe(h.costPerYearCents)
       expect(a.athleticShare, `${tier}: same merit award`).toBeCloseTo(h.athleticShare, 12)
-      expect(a.familyPerYearCents, `${tier}: and she pays more of it`).toBeGreaterThan(h.familyPerYearCents)
+      expect(a.familyPerYearCents, `${tier}: and the same bill – the buried layer split nothing`).toBe(h.familyPerYearCents)
+      expect(h.needShare, `${tier}: zero for the once-maximally-qualifying view`).toBe(0)
     }
   })
+
 
   // ⚠ AN EMPTY RECORD IS A WALK-ON, NOT A CLOSED DOOR. She enrols and pays; the answer is still
   // there. `programme: null` is the narrow route stated honestly (nobody offered her money), never a
@@ -249,16 +251,19 @@ describe('B. nothing removes the third answer', () => {
     }
   })
 
-  // ⚠ AND THE NEED LAYER STILL REACHES HER, because it was never an athletics thing. A poor American
-  // family gets means-tested aid whether or not a coach ever called.
-  it('gives an unfunded walk-on the need-based layer anyway', () => {
+  // ⚠ D8's SECOND HALF: the view that used to earn `maxNeedShare` IN THIS SUITE (income 0, US,
+  // working) – while no REAL family had reached the taper since the economy outgrew its knots –
+  // now pays the full sticker like everybody else. The crafted-input life the layer led after its
+  // real death is exactly why the burial needed a ruling and not a bugfix.
+  it('D8: the once-maximally-qualifying walk-on pays the full price', () => {
     const offer = collegeOfferFor(view({}, 'working', 'US'), rngFromSeed('nobody'))
     for (const q of offer.quotes) {
       expect(q.athleticShare, q.tier).toBe(0)
-      expect(q.needShare, q.tier).toBe(COLLEGE_OFFER.needTest.maxNeedShare)
-      expect(q.familyPerYearCents, q.tier).toBeLessThan(COLLEGE_TIERS[q.tier].costPerYearCents)
+      expect(q.needShare, q.tier).toBe(0)
+      expect(q.familyPerYearCents, q.tier).toBe(COLLEGE_TIERS[q.tier].costPerYearCents)
     }
   })
+
 
   // A better junior record only ever buys MORE. Monotone, which is the direction that makes this
   // impossible to read as a punishment for playing.
@@ -293,104 +298,9 @@ describe('C. the two layers, one ceiling', () => {
     }
   })
 
-  // ⚠ AND THE TRIM FALLS ON THE NEED LAYER. 15.1.3's own remedy is to reduce institutional aid – and
-  // trimming the athletics award instead would make a merit number move with family wealth, which is
-  // block A's property. So this case is A's second half rather than a duplicate of it.
-  it('trims the need layer, not the award, when the two would overflow', () => {
-    const bare = athleticShareOf('state', 26, rngFromSeed('rich-kid'))
-    const poor = collegeOfferFor(view({ j300: 0, j60: 0, j30: 0 }, 'working', 'US', 15), rngFromSeed('rich-kid'))
-    const q = poor.quotes[0]
-    expect(q.tier).toBe('state')
-    expect(q.athleticShare).toBeCloseTo(bare, 12)
-    expect(q.athleticShare + q.needShare).toBeCloseTo(1, 6)
-    expect(q.needShare).toBeLessThan(COLLEGE_OFFER.needTest.maxNeedShare)
-    expect(q.familyPerYearCents).toBe(0)
-  })
 
-  // ⚠⚠ THE NATIONALITY SPLIT, WHICH IS PRIMARY LAW AND NOT A BALANCE CHOICE. 34 CFR §668.33 bars
-  // federal student aid to anyone in the US "for a temporary purpose", which a student visa is; NAFSA
-  // calls institutional aid to undergraduate internationals "uncommon". The athletics award is
-  // untouched – nothing in Bylaw 15 conditions it on nationality, and 62-66% of D-I women's tennis
-  // rosters are international.
-  it('shuts the need layer to a non-American and leaves her award alone', () => {
-    const bests = { j300: 3 }
-    const home = collegeOfferFor(view(bests, 'working', 'US'), rngFromSeed('same'))
-    const away = collegeOfferFor(view(bests, 'working', 'RU'), rngFromSeed('same'))
-    // ⚠ THE AWARD IS UNTOUCHED AT EVERY PLACE, which is the half of this that is Bylaw 15's.
-    for (const tier of COLLEGE_TIER_ORDER) {
-      const h = home.quotes.find((q) => q.tier === tier)!
-      const a = away.quotes.find((q) => q.tier === tier)!
-      expect(a.athleticShare, tier).toBeCloseTo(h.athleticShare, 12)
-      expect(h.needShare, tier).toBeGreaterThan(0)
-      expect(a.needShare, tier).toBe(0)
-    }
-    expect(needShareOf({ country: 'RU', familyIncomeCents: 0, familyAssetsCents: 0 })).toBe(0)
-    // ⭐⭐⭐ RE-AIMED BY ROUND 26 #2 (second pass), AND THE RE-AIM IS THE BEHAVIOUR CHANGE. It used to
-    // read «AND THE CHEAPEST PLACE OPEN TO HER IS A DEARER ONE, because a non-resident alien is never
-    // in-state» and assert exactly that – the Russian family's cheapest place was the $50,920 one.
-    // The owner overruled the rule («в каждой стране есть домашний универ»), so **both families now
-    // reach the same $30,990 place** and what separates them is the need layer alone, which is what
-    // this case was always about. That is the whole of the change stated as one pair of assertions.
-    expect(home.quotes[0].costPerYearCents).toBe(COLLEGE_TIERS.state.costPerYearCents)
-    expect(away.quotes[0].costPerYearCents, 'the home place is the cheapest for her too now').toBe(
-      COLLEGE_TIERS.state.costPerYearCents,
-    )
-    // ⚠ AND WHAT THE MISSING LAYER COSTS HER, ON THE SAME PLACE: strictly more of the same bill, and
-    // never a different bill. A price, not a refusal.
-    expect(away.quotes[0].familyPerYearCents, 'she pays more for the same place').toBeGreaterThan(
-      home.quotes[0].familyPerYearCents,
-    )
-  })
 
-  // ⚠⚠ RE-AIMED IN ROUND 21 FROM THE LABEL TO THE POSITION, and it now asserts MORE than it did.
-  //
-  // It used to read `needShareOf('working'|'middle'|'wealthy', 'US')` – three lookups in a table, so
-  // the only thing it could fail on was somebody editing the table out of order. The layer is now a
-  // phase-out over the family's real income and savings at enrolment, so the property worth guarding
-  // is the one the owner's question is actually about: **a family with more money gets less help, at
-  // every point on the axis, and never the other way round.** A table cannot express that; a sweep
-  // over the measured range can.
-  it('is means-tested on the family position, monotonically and in the right direction', () => {
-    const us = (income: number, assets = 0) => needShareOf({ country: 'US', familyIncomeCents: income, familyAssetsCents: assets })
-    let last = Infinity
-    for (let income = 0; income <= 70_000_00; income += 1_000_00) {
-      const share = us(income)
-      expect(share, `need share rose at income ${income}`).toBeLessThanOrEqual(last)
-      last = share
-    }
-    expect(us(0)).toBe(COLLEGE_OFFER.needTest.maxNeedShare)
-    expect(us(70_000_00)).toBe(0)
 
-    // ⭐ AND SAVINGS COUNT TOO, which is the half the label could never see. Same income, more in the
-    // bank, less help – «Копят деньги и оплачивают» is the owner's own framing of it. The shield is
-    // real: below it, savings do not price her at all.
-    const income = 22_000_00
-    expect(us(income, COLLEGE_OFFER.needTest.assetShieldCents)).toBe(us(income, 0))
-    expect(us(income, 200_000_00)).toBeLessThan(us(income, 0))
-    expect(us(income, 500_000_00)).toBe(0)
-  })
-
-  // ⭐⭐ THE THREE MEASURED FAMILIES, AND THIS IS THE ROW THAT REPLACES THE OLD LABEL ORDERING.
-  //
-  // ⚠ THE POSITIONS ARE MEASURED, NOT CHOSEN: median annualised parent income and median savings at
-  // the fork, per background, n = 53 (`college-price-probe --seeds 6 --all`, arm A at 6575a35). So
-  // this case says the shipped population still orders the way the owner expects – WITHOUT the rule
-  // being told which family is which.
-  it('still orders the three shipped families correctly, reading no label at all', () => {
-    const at = (income: number, assets: number) => needShareOf({ country: 'US', familyIncomeCents: income, familyAssetsCents: assets })
-    const working = at(18_255_00, 19_650_00)
-    const middle = at(31_531_00, 26_414_00)
-    const wealthy = at(55_153_00, 15_518_00)
-    expect(working).toBeGreaterThan(middle)
-    expect(middle).toBeGreaterThan(wealthy)
-    expect(wealthy).toBe(0)
-
-    // ⚠⚠ AND THE CASE THE LABEL GOT WRONG, WHICH IS WHY ROUND 21 EXISTS. Measured, a WORKING family
-    // at p75 has saved $57,555 by the fork while a WEALTHY one has saved $21,297 – the wealthy career
-    // burned its capital on the tennis. Under the old table that working family was still paid the
-    // full 45% because the label said "working". It is now priced on what it has.
-    expect(at(18_862_00, 57_555_00)).toBeLessThan(COLLEGE_OFFER.needTest.maxNeedShare)
-  })
 })
 
 // ⭐⭐ D. THE FUNDING BAND – round 21's second, named ladder («понятные ступени»).
@@ -481,18 +391,14 @@ describe('E. a tier is a place with a price, and the player picks it', () => {
 
   // ⭐⭐ CAN SHE PAY FOR IT? A FACT, NEVER A REFUSAL – the family goes into debt, not away.
   //
-  // ⚠ AND THE AFFORDABILITY NUMBER IS NOT THE MEANS TEST. `familyPositionCents` shields the first
-  // $25,000 of savings; this one does not, because a family deciding whether it can pay counts its
-  // cushion. Two questions, two numbers, and conflating them would have priced the dear place out of
-  // reach of exactly the family that saved for it («есть деньги на счете»).
+  // ⚠ THE AFFORDABILITY NUMBER SURVIVED D8 – it was never the means test. The shielded
+  // `familyPositionCents` died with the buried layer (the tombstone at
+  // `COLLEGE_OFFER.assetSpreadYears`); what a family can PAY counts its whole cushion and still
+  // does, on the same four-year spread the tombstone kept alive.
   it('counts the whole cushion when asking whether the family can pay', () => {
     const income = 31_531_00
     const saved = 100_000_00
     expect(familyCanPayPerYearCents({ familyIncomeCents: income, familyAssetsCents: saved })).toBe(income + saved / 4)
-    // ⚠ THE SHIELD IS THE DIFFERENCE, and it is what makes these two different questions.
-    expect(familyPositionCents({ country: 'US', familyIncomeCents: income, familyAssetsCents: saved })).toBeLessThan(
-      familyCanPayPerYearCents({ familyIncomeCents: income, familyAssetsCents: saved }),
-    )
     // a family in debt can still enrol; it just cannot call the debt income
     expect(familyCanPayPerYearCents({ familyIncomeCents: 0, familyAssetsCents: -40_000_00 })).toBe(0)
   })

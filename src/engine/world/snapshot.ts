@@ -112,7 +112,7 @@ import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLad
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
-import { shopView } from './shop'
+import { shopView, reachableFundsCents } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
 // ledger cannot disagree about whether the split is running.
 import { merchWeeklyIncomeCents } from './business'
@@ -1496,7 +1496,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     spirit: world.spirit,
     bond: world.bond,
     temperament: world.temperament,
-    fundsCents: world.fundsCents,
+    // ⭐ D7/Q15 (14.09): the diary's money worry reads the money the family can REACH – measured
+    // before the fix, `tight` fired on 11.9% of a parked working career's weeks against 0.0%
+    // unparked, licensing worry lines over a family holding its whole fortune. Her voice must not
+    // lie; the wallet's own number stays on the Money screen where it is a ledger fact.
+    fundsCents: reachableFundsCents(world),
     injury: world.injury
       ? {
           kind: world.injury.kind,

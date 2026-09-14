@@ -61,6 +61,7 @@ import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEn
 // in `world/entries.ts` and must go on living in exactly one place. This edge is only legal because
 // `guardNotEnded` moved to the leaf above it; see the note beside its definition.
 import { releaseEntry } from './entries'
+import { reachableFundsCents } from './shop'
 import type { WorldState } from '../world'
 
 /** ⚠ THE GUARD, RE-AIMED RATHER THAN ADDED TO EVERY CALLER'S BODY. Every mutating engine command
@@ -105,7 +106,9 @@ export function autoEndingViewOf(world: WorldState): AutoEndingView {
   return {
     week: world.week,
     ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
-    fundsCents: world.fundsCents,
+    // ⭐ D7 (14.09): the ending judges the money she can REACH – the same fact the spell above
+    // latches on, so the view and the latch cannot disagree about what «broke» means.
+    fundsCents: reachableFundsCents(world),
     debtSinceWeek: world.debtSinceWeek,
     cheapestEntryFeeCents: cheapestEntryFeeCents(world),
     freshInjurySeverity:
@@ -296,7 +299,17 @@ export function resolveEndings(world: WorldState): void {
   //     Money screen keeps telling the truth about a career that went under.
   //     ⚠ ONE SOLVENT WEEK CLEARS IT. That is what makes bankruptcy a spell rather than a floor,
   //     and it is the reason a single catastrophic medical bill can never end a career on its own.
-  if (world.fundsCents < 0) world.debtSinceWeek ??= world.week
+  //     ⭐⭐⭐ D7 (14.09, the owner's «давай попробуем» on the questions doc's §14): THE SPELL READS
+  //     THE MONEY SHE CAN **REACH**, never the wallet alone. Measured before the fix: a family that
+  //     parked everything at week 0 and took a $10,000 shock was declared bankrupt in 8 of 8
+  //     careers, both backgrounds, while the deposit still held $8,106 / $25,332 – a career ENDED,
+  //     irreversibly, over money the family had. «Мы ни за что не наказываем» is nowhere stronger
+  //     than at the one ending nobody can undo. The raw wallet stays the ledger's and the display's
+  //     number; the SPELL – and through it the Money strip's countdown and the ending – judges
+  //     `reachableFundsCents` (T12's own helper: wallet + the catalogue-marked cash-parking rows).
+  //     ⚠ The strip's copy survives unchanged and TRUE: it never named the wallet – «below zero»
+  //     now means below zero of what she can reach, which is the honest zero.
+  if (reachableFundsCents(world) < 0) world.debtSinceWeek ??= world.week
   else world.debtSinceWeek = null
 
   if (world.ending) return

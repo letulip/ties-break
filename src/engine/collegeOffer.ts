@@ -459,62 +459,26 @@ export const COLLEGE_OFFER = {
    *  tuition-fees-housing-food bill (`[I]` from Figure CP-9's own numbers) = ~31% of the sticker – but
    *  that figure includes merit discounting and institutional tuition discounts, and this layer models
    *  only the need-based part. `docs/specs/what-the-college-place-costs-2026-08.md` §2c. */
-  needTest: {
-    /** ⚠ THE CEILING IS THE ONE ROW WITH A REAL ANCHOR UNDER IT AND IT DOES NOT MOVE IN ROUND 21.
-     *  Maximum Pell is **$7,395** in 2025-26 `[S]`, which is **23.9%** of the $30,990 in-state
-     *  sticker `[I]` – so roughly half of this number is a sourced federal entitlement and the rest
-     *  is the institutional need grant that sits on top of it. Round 21 changes WHO reaches this
-     *  ceiling, not where the ceiling is: one thing at a time, the same discipline that left the
-     *  award bases alone when the programme bands were re-shaped. */
-    maxNeedShare: 0.45,
-    /** ⚠⚠ AT OR BELOW THIS POSITION SHE GETS THE WHOLE LAYER; at or above `noNeedAboveCents`, none of
-     *  it; between them it tapers straight.
-     *
-     *  THE SHAPE IS SOURCED AND THE TWO NUMBERS ARE OURS, and the difference matters. Federal need
-     *  aid genuinely has this shape – a floor band that receives the maximum, a taper, and a cut
-     *  above which nothing is paid – and Trends 2025 names both of its inputs in one clause: most
-     *  recipients get less than the maximum because *"their family incomes and assets reduce their
-     *  aid eligibility"* `[S]`.
-     *
-     *  ⚠⚠ BUT THE DOLLARS CANNOT BE BORROWED, AND THIS IS THE HONEST LIMIT OF THE MODEL. Our income
-     *  axis is `parentIncomeForWeekCents x 52` – the parents' contribution to the TENNIS, which
-     *  measures $17.5k / $31k / $57k at the fork against a US median family income of $105,800 `[S]`.
-     *  Laying a real federal threshold over that axis would put EVERY family in this game inside
-     *  Pell's floor band and hand all three of them the full 45%, which deletes the owner's question
-     *  instead of answering it – the identical failure `needShareByBackground.middle` was written to
-     *  avoid. So the knots are set on the game's own measured distribution (spec §3), calibrated to
-     *  reproduce the shipped population's three medians, and what changes is that a family is priced
-     *  on its own position instead of on the median of its label.
-     *
-     *  ⚠ AND THE TWO KNOTS ARE THE MEASURED BANDS' OWN EDGES, NOT NUMBERS I LIKED. Annualised parent
-     *  income at the fork, n = 53 (`college-price-probe --seeds 6 --all`, arm A at 6575a35):
-     *
-     *      working  p25 $17,621 · median $18,255 · p75 $18,862
-     *      middle   p25 $31,277 · median $31,531 · p75 $32,751
-     *      wealthy  p25 $54,035 · median $55,153 · p75 $56,919
-     *
-     *  **The floor is the top of the working band and the cut is the top of the middle band**, rounded
-     *  out: a working family with ordinary savings receives the whole layer, a middle family sits
-     *  inside the taper where its savings decide how much of it it keeps, and a wealthy family is out
-     *  of the taper on income alone. Every one of the three is a measured consequence rather than an
-     *  assignment, which is the difference between this table and the one it replaces. */
-    fullNeedBelowCents: 20_000_00,
-    noNeedAboveCents: 35_000_00,
-    /** ⭐⭐ SAVINGS COUNT, AND THEY COUNT AS "HOW MANY YEARS OF THIS COULD YOU PAY FOR" – which is the
-     *  arithmetic a parent actually does, and it is in the same unit as the bill.
-     *
-     *  ⚠ WHY NOT THE FEDERAL RATE. The real formula converts parental assets to an annual figure at
-     *  a few per cent. Measured on our scale that term is worth **$688 a year to the median family**
-     *  – invisible beside a $17,500 income axis – so importing the rate would import the WORD
-     *  "assets" without the effect, and «копят деньги» is the owner's own verb for the thing being
-     *  modelled. Savings above the shield are spread over the four years she will be enrolled.
-     *
-     *  ⚠ THE SHIELD IS THE RESERVE A FAMILY IS NOT EXPECTED TO LIQUIDATE, and $25,000 is the middle
-     *  preset's own starting capital – an ordinary family's whole cushion, taken from the game rather
-     *  than from a formula. Below it, savings do not price her at all. */
-    assetShieldCents: 25_000_00,
-    assetSpreadYears: 4,
-  },
+  /** ⭐⭐⭐ D8 (14.09): THE NEED LAYER IS BURIED, AND THIS IS ITS TOMBSTONE – the owner's word,
+   *  «значит давай похороним», given the measurement in wave 6's questions doc §16.
+   *
+   *  ⚠⚠ THE HONEST CAUSE OF DEATH IS DRIFT, NOT STILLBIRTH. The taper's knots were calibrated at
+   *  round 21 against the game's OWN fork-income distribution of that day (working median $18,255,
+   *  middle $31,531 – the old block quoted `college-price-probe` at 6575a35), and they worked.
+   *  Then three economy waves moved parent income and nobody re-anchored: measured 14.09 over 200
+   *  seeds, the LOWEST parent income any family reaches by 18 is $41,282 – above the $35k cut – so
+   *  `needShareOf` returned 0 for every background at every seed at the week it was asked. A layer
+   *  that needs re-calibration every time the economy moves, to keep paying anybody at all, is a
+   *  maintenance liability the design can shed: the athletic layer carries the fork alone, and
+   *  measurably does. Re-anchoring was the road not taken, by his word.
+   *
+   *  What remains of the block is the ONE constant `familyCanPayPerYearCents` also read – the
+   *  stock-to-flow spread – promoted to `assetSpreadYears` below. The quote's `needShare` FIELD
+   *  stays on the wire at a constant 0 (a wire shape is not re-cut to bury a number); the card has
+   *  rendered 0% for every real family for months, which is how nobody noticed the death. */
+  /** Years a savings stock is spread over to compare against yearly income – `familyCanPayPerYearCents`'s
+   *  own unit conversion, formerly `needTest.assetSpreadYears`, kept alive by D8's tombstone above. */
+  assetSpreadYears: 4,
 
   /** ⚠⚠ THE FUNDING BANDS' LOWER EDGES – ours, and set on the MEASURED distribution of `covered`
    *  rather than on round numbers (spec §3b has the run). `full` is not here because it is not ours:
@@ -679,36 +643,10 @@ export function athleticShareOf(tier: CollegeTier, juniorScore: number, rng: Rng
  *  on nationality – its only nationality clause, 15.2.6.3, expressly contemplates the international
  *  case – and 62–66% of D-I women's tennis rosters are international `[WEAK]`. **The money that reads
  *  merit reaches her; the money that reads her family does not.** */
-export type NeedTestView = Pick<CollegeRecruitView, 'country' | 'familyIncomeCents' | 'familyAssetsCents'>
-
-/** ⭐⭐ WHAT THE MEANS TEST READS, AS ONE NUMBER – income plus what the savings can carry.
- *
- *  ⚠ THE ASSET TERM IS SPREAD OVER THE YEARS SHE WILL BE THERE, so it is in the same unit as the
- *  income beside it: both are "dollars available in a year". Adding a stock to a flow without that
- *  division would have made a family with $120,000 banked look like it earned $120,000, and the
- *  knots would then be measuring nothing in particular.
- *
- *  ⚠ AND THE SHIELD FLOORS AT ZERO RATHER THAN GOING NEGATIVE. A family $40,000 in debt is priced at
- *  its income, not at a negative position that would push it below a floor the taper already gives
- *  it – `fullNeedBelowCents` is the maximum this layer pays and there is nothing under it. Debt is
- *  represented by getting the whole layer, which is all this layer has. */
-export function familyPositionCents(view: NeedTestView): number {
-  const spare = Math.max(0, view.familyAssetsCents - COLLEGE_OFFER.needTest.assetShieldCents)
-  return view.familyIncomeCents + Math.round(spare / COLLEGE_OFFER.needTest.assetSpreadYears)
-}
-
-export function needShareOf(view: NeedTestView): number {
-  if (view.country !== COLLEGE_OFFER.usCountryCode) return 0
-  const { fullNeedBelowCents, noNeedAboveCents, maxNeedShare } = COLLEGE_OFFER.needTest
-  const position = familyPositionCents(view)
-  if (position <= fullNeedBelowCents) return maxNeedShare
-  if (position >= noNeedAboveCents) return 0
-  const taper = (noNeedAboveCents - position) / (noNeedAboveCents - fullNeedBelowCents)
-  // Rounded to whole percentage points of the bill: the card prints percentages, the ledger charges
-  // a rounded weekly figure off the result, and a share carrying twelve decimals of a linear
-  // interpolation is precision the rest of the pipeline throws away anyway.
-  return Math.round(maxNeedShare * taper * 100) / 100
-}
+// ⚠ D8 (14.09): `NeedTestView`, `familyPositionCents` and `needShareOf` lived here and are buried –
+// the tombstone at `COLLEGE_OFFER.assetSpreadYears` carries the story and the measurement. The
+// country-rule scholarship (34 CFR §668.33, NAFSA) died with the layer that carried it; the athletic
+// award never read nationality and still does not.
 
 /** ⭐⭐ WHICH FUNDING BAND – derived from what the two layers together cover, and nothing else.
  *
@@ -747,7 +685,7 @@ export function coveredShareOf(quote: Pick<CollegeQuote, 'athleticShare' | 'need
  *  still enrol (nothing removes the college answer); what it cannot do is call the debt income. */
 export function familyCanPayPerYearCents(view: Pick<CollegeRecruitView, 'familyIncomeCents' | 'familyAssetsCents'>): number {
   const savings = Math.max(0, view.familyAssetsCents)
-  return Math.max(0, view.familyIncomeCents + Math.round(savings / COLLEGE_OFFER.needTest.assetSpreadYears))
+  return Math.max(0, view.familyIncomeCents + Math.round(savings / COLLEGE_OFFER.assetSpreadYears))
 }
 
 /** ⭐⭐ ONE PLACE, PRICED FOR THIS GIRL AND THIS FAMILY. One draw per quote, on the sub-stream the
@@ -766,9 +704,10 @@ export function familyCanPayPerYearCents(view: Pick<CollegeRecruitView, 'familyI
 export function quoteFor(tier: CollegeTier, view: CollegeRecruitView, rng: Rng): CollegeQuote {
   const costPerYearCents = COLLEGE_TIERS[tier].costPerYearCents
   const athleticShare = athleticShareOf(tier, juniorRecordScore(view), rng)
-  // ⚠ AND THE NEED-BASED LAYER REACHES A WALK-ON TOO, because it was never an athletics thing. Pell is
-  // means-tested aid to a STUDENT; a poor American family gets it whether or not a coach ever called.
-  const needShare = Math.min(needShareOf(view), 1 - athleticShare)
+  // ⭐ D8 (14.09): the need layer is buried – the tombstone at `COLLEGE_OFFER.assetSpreadYears`.
+  // The FIELD survives at 0 so the wire and the card do not move; they have shown 0 for every real
+  // family since the economy outgrew the round-21 knots anyway.
+  const needShare = 0
   const covered = coveredShareOf({ athleticShare, needShare })
   return {
     tier,
