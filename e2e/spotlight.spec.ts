@@ -40,12 +40,21 @@
 // ⚠⚠ EVERY STATION IS PROVED REACHABLE BEFORE IT IS ASSERTED ON – wave 5's most expensive lesson,
 // inherited verbatim («a fixture that cannot reach the case is a green that means nothing»).
 //
-// ⚠ MEASURED, NOT HOPED, on the fixture corpus regenerated at head by this very task:
-//   * `pro` wakes at week 412 with `fameAt` **59.20**, against `ECONOMY.spotlight.newsFameMin` 30 –
-//     it is the ONLY fixture of the ten that is news at all;
-//   * its feed carries **six** exposure rows – two kept (w315, w369) and four ordinary
-//     (w404, w408, w410, **w412**) – so the row this walk reads is the CURRENT week's and needs no
-//     press to produce;
+// ⚠ MEASURED, NOT HOPED, on the committed fixture corpus, read at head against the re-cut engine:
+//   * ⚠ D1 (14.09): the news gate reads her RANK now, not her fame. `sheIsNewsAt` is gone;
+//     `newsStandingOf(world)` returns `'quiet' | 'noticed' | 'known'` off `world.kidRankWta` against
+//     the sponsor-ladder bands (`newsRankKnown` 100, `newsRankNoticed` 200 – his words: top-100
+//     «вполне уверенно», top-200 «иногда»). `pro` wakes at week 412 ranked **17**, firmly inside the
+//     top band, so it reads **'known'** and is the ONLY fixture of the ten that is news at all – its
+//     exposure rows fire and the nine others' do not;
+//   * ⚠ D1b (14.09): the row prints only when the week's summed |charge| clears
+//     `ECONOMY.spotlight.rowMinCharge` (1.0), so the visible count is MEASURED, not assumed. Read at
+//     head, the last-60-events window (weeks 407–412, tables W44–W49 '38) carries **three** exposure
+//     rows – weeks **412, 410, 408** (W49, W47, W45 '38) – and w412 is one of them, so the row this
+//     walk reads is the CURRENT week's and needs no press to produce. The pre-floor prose's «six / two
+//     kept (w315, w369) / four ordinary» is superseded: a low-charge camera week no longer prints a
+//     row, and an exposure row carries no `match`, so `snapshotEvents` surfaces it only inside the
+//     60-event window and never as an old kept row;
 //   * `spotlightHabituation` stands at **98**, so the career has genuinely lived the mechanic rather
 //     than merely satisfied its gate;
 //   * it holds 3,649 W-series points, so `activeLadderOf` is `'wta'` and the psychologist's
@@ -181,10 +190,12 @@ test.describe('the spotlight reaches the player', () => {
     // ⚠⚠ SCOPED TO THE FIXTURE'S OWN WEEK, AND THE FIRST DRAFT WAS NOT – it asked `page.getByText`
     // globally and died on a STRICT-MODE VIOLATION naming **three** matching cells: W49, W47 and W45,
     // which are weeks 412, 410 and 408. That red is a measurement rather than a nuisance: the corpus
-    // does not merely scrape past this case, it holds four exposure weeks in the visible feed at
-    // once. Scoping to `weekLabel(facts.week)` – the app's OWN formatter, which is why it is one of
-    // the three non-e2e modules tsconfig.e2e.json lets this project import – makes the claim the one
-    // the brief asked for: an EXPOSURE WEEK's feed line, on the week it belongs to.
+    // does not merely scrape past this case, it holds **three** exposure weeks in the visible feed at
+    // once (⚠ D1b, 14.09: measured at head under the `rowMinCharge` floor – the three of the window's
+    // camera weeks whose summed charge clears it). Scoping to `weekLabel(facts.week)` – the app's OWN
+    // formatter, which is why it is one of the three non-e2e modules tsconfig.e2e.json lets this
+    // project import – makes the claim the one the brief asked for: an EXPOSURE WEEK's feed line, on
+    // the week it belongs to.
     const thisWeeksNews = page.getByRole('table', { name: `News – ${weekLabel(facts.week)}` })
     await expect(thisWeeksNews, 'the current week really has a news group to read').toBeVisible()
     await expect(
@@ -203,13 +214,18 @@ test.describe('the spotlight reaches the player', () => {
       rowText.replace(/\s+/g, ' ').trim(),
       '...and what is actually painted is that sentence and the general LIFE-ROW glyph, never a figure beside it',
     ).toMatch(/^\S*\s*People were talking about her last week\.$/u)
-    // ⚠ AND THE GLYPH IS MEASURED RATHER THAN ASSUMED, because it is the subject of an open question
-    // to the owner. The cell paints `🤍 People were talking…` – `LIFE_ROW_EMOJI.life`, HIS OWN 11.09
-    // pick for the `'life'` row kind, reached through `lifeRowGlyph`'s `?? 'met'` fallback because
-    // §8 forbids this row a `LifeBeatKind` of its own. It is NOT the romance thread's mark (that
-    // table's `'met'` cell is empty). Whether the spotlight deserves a mark of its own is his –
-    // docs/plans/life-wave-6-questions-2026-09.md §5 – so nothing here pins the character: the
-    // pattern above accepts any single glyph, and this note records what it is today.
+    // ⚠ AND THE GLYPH IS MEASURED RATHER THAN ASSUMED. ⚠⚠ D3 (14.09): the spotlight family wears its
+    // own mark, his pick – `KIND_PICKS.exposure` is 📸 (src/components/screens/lifeRowGlyphs.ts), so a
+    // `lifeKind: 'exposure'` row written LIVE now paints the camera through `lifeRowGlyph`. BUT §1
+    // reads a SEEDED career – ARM A's own seam – and these exposure rows were written before the D3
+    // stamp: they carry NO `lifeKind`, so `lifeRowGlyph`'s `?? 'met'` resolves them through
+    // `LIFE_ROW_EMOJI.life`, his 11.09 white heart. MEASURED at head, the cell paints exactly
+    // `🤍 People were talking…`, NOT 📸 – this station can only ever see what the writer of these bytes
+    // wrote, which is the whole of §1's honest claim. So the pattern above is left deliberately loose –
+    // any single glyph, never a figure – and stays green whether the cell holds the seeded 🤍 today or
+    // the ruled 📸 after a regeneration under the D3 engine restamps this row's kind (and reddens the
+    // corpus's own record, not this line). This note records which of the two it is today: the
+    // fallback 🤍, because the bytes predate his 📸.
 
     // ⚠ NOT A PURCHASE, EITHER – rule 4, at the one layer that can confuse the two lists. A life row
     // carries no `amountCents`, so it never reaches the Money ledger; if it ever did, the same
