@@ -28,7 +28,6 @@ import { useGameStore } from '../stores/game'
 // the same place. It is NOT the save spine's `MAX_ID_CHARS` any more – see that constant's own note
 // in shared/protocol/profile.ts for why the import gate deliberately stayed at 200.
 import { DEFAULT_PROFILE, PROFILE_NAME_MAX_CHARS, type CoachTier, type FamilyBackground, type PlayerProfile, type PlayStyle } from '../shared/protocol'
-import { SURNAMES } from '../engine/season/cohort'
 import { daysInBirthMonth } from '../shared/dates'
 import { onboardingHeroUrl, portraitUrl } from '../art/preload'
 import ScreenShell from './ui/ScreenShell.vue'
@@ -44,6 +43,13 @@ import { COUNTRIES, COUNTRY_NAMES, POPULAR_COUNTRIES, flagEmoji } from '../compo
 // her birthday, her country) and invariant 4 says it must ask them in the same words, so there
 // is now ONE declaration and both surfaces read it. Not a string on this screen changed.
 import { IDENTITY_COPY, MONTHS } from '../composables/identityCopy'
+// ⚠ AND NEITHER IS THE NAME POOL, SINCE 14.09 – see the header of composables/identityDice.ts. The
+// two dice below are the owner's «кубики», and the prologue's age-5 card grew a pair of its own
+// after creation moved there; a private `const NAMES` here would have made one label mean two
+// different sets. `randomName` / `randomSurname` are the SAME functions under the same names, read
+// from one home – which is also where the SURNAMES import went, through `season/names` rather than
+// through cohort's re-export.
+import { randomName, randomSurname } from '../composables/identityDice'
 
 const game = useGameStore()
 
@@ -58,12 +64,6 @@ const game = useGameStore()
 // build/webp-only: both go through a shared url builder, so neither can drift into a 404 again.
 const SUMMARY_ART = portraitUrl('jun', 'norm')
 const HERO_ART = onboardingHeroUrl()
-
-const NAMES = [
-  'Vera', 'Alexandra', 'Maria', 'Elena', 'Sofia', 'Anna', 'Iga', 'Coco', 'Aryna', 'Mirra',
-  'Emma', 'Olivia', 'Zoe', 'Lea', 'Carla', 'Bianca', 'Naomi', 'Yuki', 'Ines', 'Petra',
-  'Milena', 'Dana', 'Lucia', 'Amelie',
-]
 
 const BACKGROUNDS: { id: FamilyBackground; label: string; budget: string; blurb: string }[] = [
   { id: 'wealthy', label: 'Wealthy', budget: '$120,000', blurb: 'Top academies are within reach.' },
@@ -205,14 +205,6 @@ const STEP_HEADS: { title: string; sub: string }[] = [
 /** The pose art for a style, addressed BY ITS ID – see the ⚠ on PLAY_STYLES for why that is safe. */
 function poseUrl(id: PlayStyle): string {
   return `${import.meta.env.BASE_URL}icons/styles/${id}.svg`
-}
-
-function randomName(): string {
-  return NAMES[Math.floor(Math.random() * NAMES.length)]
-}
-
-function randomSurname(): string {
-  return SURNAMES[Math.floor(Math.random() * SURNAMES.length)]
 }
 
 const STEP_COUNT = 6
