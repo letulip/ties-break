@@ -346,3 +346,27 @@ TIERS[tier].points[log2(drawSize) − 1]` – 60 at wta500, 65 at wta1000, 70 at
    girl who did not play did not lose in front of anyone, and charging her spotlight pressure for
    it would be a success tax on an absence, which §0.4 forbids twice over. The kind's test crafts
    that row and proves it silent.
+
+## D-bis – ruling D was one line short, and T1 measured the missing line
+
+**The architect's correction, recorded because a ruling that is quietly patched stops being a
+record.** Ruling D says the expected frozen diff is «`schemaVersion` plus the nested peel's four
+episode fields on `FROZEN.eliteGrinder`, and NOTHING ELSE». **It is also `spotlightHabituation`
+appearing on all five cells** – `createWorld` writes the new world key, so every career grows it.
+That is v76's own «keys APPEARING» shape and I should have named it.
+
+**T1's measurement, which is now the record:** four cells move exactly **2** lines – `schemaVersion`
+(`f74efabef12e`→`a88a7902cb4e`) and `spotlightHabituation` arriving at `5feceb66ffc8`.
+`eliteGrinder` moves **3**: those two plus `loveEpisodes` (`d447eb28e502`→`8c5884c15bcd`). 85 / 83 /
+86 / 84 / 85 other keys byte-identical, `rngMain` included. The bar was never approached, which is
+the half of ruling D that matters and which held exactly.
+
+**And ruling C was UNDER-stated.** T1's arm 6 (the nested peel neutered) reddens **three rungs, not
+one** – v77, v76 and v75, all through `eliteGrinder`, because every rung from 74 up keeps
+`loveEpisodes` in its shape and 73 drops it. The peel has more witnesses than I found; the cell that
+carries them is still the one I named.
+
+**The standing rule this produced, placed where its next reader will be standing** (a note at the
+v77 step in `src/engine/migrations.ts`, 14.09): the golden save corpus cannot witness a per-row
+back-fill – all 77 fixtures carry `loveEpisodes` empty or not at all – so **a step that writes into
+a row writes its own witness.** Parking that as «we will remember» is how it gets rediscovered.

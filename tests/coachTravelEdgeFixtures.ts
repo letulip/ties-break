@@ -2583,6 +2583,16 @@ export const FROZEN = {
    *  lag – her bond is 50 by then, which is `strained`, so the shave divides by 1 and the raw draw
    *  was 2. Open register, open wants. Nothing invented and nobody named.
    *
+   *  ⚠ ANNOTATED 14.09 BY THE ARCHITECT, ON WAVE 6 T1's FINDING, AND DELIBERATELY NOT REWRITTEN. The LIVE row now reads
+   *  `knownWeek: 137` – no lag at all – so the printed row above is one re-tune out of date. The
+   *  cause is named rather than guessed: `72b37671` (11.09, wave 3's T5, «the open lag row moves»)
+   *  moved the OPEN register from `{zeroChance: 0.45, min: 1, max: 5}` to
+   *  `{zeroChance: 0.70, min: 1, max: 4}` on the census miss, this row is `wants: 'open'` so it
+   *  draws from exactly that register, and the same commit re-stamped the constants in this file –
+   *  which is what a moved draw requires and what a bare constant change could not have caused.
+   *  ⚠⚠ THE BLOCK ABOVE IS A RECORD OF WHAT WAVE 3 MEASURED, so correcting the number in place
+   *  would falsify a record to fix a fact. The record stands; this note carries the fact.
+   *
    *  ⚠⚠ AND `rngMain` IS BYTE-IDENTICAL, which is the load-bearing half: `rollArrival` takes no
    *  `Rng` and pulls only from `seed:life:arrival:<week>` and the two `seed:life:partner:*` keys.
    *  The frozen MAIN capture is unmoved and NOT re-pinned – 41550 / e6b0c709, green on this tree.

@@ -2717,6 +2717,22 @@ export function migrateSave(raw: unknown): WorldState {
     v = 77
   }
 
+  // ⚠⚠ A STANDING NOTE FOR THE NEXT ROW-LEVEL STEP, MEASURED 14.09 AND PLACED HERE BECAUSE THIS IS
+  // WHERE ITS AUTHOR WILL BE STANDING. **THE GOLDEN SAVE CORPUS CANNOT WITNESS A PER-ROW BACK-FILL.**
+  // All 77 fixtures in tests/fixtures/saves were read: everything below v74 predates `loveEpisodes`
+  // entirely, and v74, v75, v76 and v77 each carry it as an EMPTY ARRAY. No golden save has ever
+  // held one entry, so the `for` loop above executes ZERO times on every fixture in the corpus, and
+  // a regeneration that goes green proves nothing about it whatsoever.
+  //
+  // What proves it is a CRAFTED world – wave 6 T1's `tests/wave6-spotlight-schema.test.ts` builds a
+  // v76 world carrying a live row and an ended one and asserts all four fields arrive on both, with
+  // a mutation arm (the loop skipping its first row) that is red there and INVISIBLE to every
+  // fixture. The frozen corpus is only marginally better: exactly one of its five careers
+  // (`FROZEN.eliteGrinder`) reaches a single episode at all.
+  //
+  // So: **a step that writes into a row writes its own witness.** The corpus is not the check, and
+  // the next author does not get to rediscover that.
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
