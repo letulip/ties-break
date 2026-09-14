@@ -310,3 +310,39 @@ Ruling E warns that at a bar of 30 most arms actuate rarely. T9 needs to know wh
 3. **The window is thin at 30 and comfortable at 15** – 11–15% of a long career against 24–43%.
    That is a second, independent argument for ruling E's bar sweep, arrived at from the bench side
    rather than from the save corpus, and the two agree.
+
+## K – `'publicLoss'` is derived from POINTS, never from a round, and a skipped mandatory is not a loss
+
+Ruling G found that an early exit lives only in `world.results`. This ruling says what can actually
+be read off that row, because the brief asks for «round ≤ R2» and the row does not carry a round.
+
+**Measured, 14.09.** `SeasonResult` (`src/engine/season/ranking.ts:31`) is
+`{ playerId, week, points, tier?, mandatoryMiss? }` – **no finish index, no round, nothing about
+the draw.** `points` is the only signal, and `WINDOW_WEEKS = 52` in the same file is ruling G's
+prune.
+
+**And points identify the round exactly, measured on the four tiers this wave can reach:**
+
+| tier | draw | points |
+| --- | ---: | --- |
+| wta250 | 32 | `[250, 163, 98, 54, 30, 1]` |
+| wta500 | 32 | `[500, 325, 195, 108, 60, 1]` |
+| wta1000 | 64 | `[1000, 650, 390, 215, 120, 65, 10]` |
+| slam | 128 | `[2000, 1300, 780, 430, 240, 130, 70, 10]` |
+
+Each array is strictly decreasing and holds exactly `log2(drawSize) + 1` entries, so the finish
+index and the payout are in bijection and **a points threshold is exactly a round threshold**.
+«Lost in the first or second round» is index `>= log2(drawSize) − 1`, i.e. `points <=
+TIERS[tier].points[log2(drawSize) − 1]` – 60 at wta500, 65 at wta1000, 70 at a slam.
+
+**The ruling, in two parts:**
+
+1. **Read the threshold, never invert the array.** `points.indexOf(row.points)` is exact only while
+   every value in every array is distinct – true today, guarded by nothing, and silently wrong
+   (`indexOf` returns −1, which compares as «very early exit») the day a tier is re-priced with a
+   repeat. The comparison is `<=` against the named slot.
+2. **⚠ `mandatoryMiss === true` is NOT a public loss.** That flag marks the scoreless row a SKIPPED
+   mandatory writes – the tour takes a slot, not points – and she was never at the tournament. A
+   girl who did not play did not lose in front of anyone, and charging her spotlight pressure for
+   it would be a success tax on an absence, which §0.4 forbids twice over. The kind's test crafts
+   that row and proves it silent.
