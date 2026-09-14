@@ -882,3 +882,47 @@ own file rather than extending T3's, and it is a warning for T5: a factor that s
 **A flipped wall also inverts the EXPRESSED axis**, so a walled girl's spirit cost moves 1.2 → 0.9
 for reasons that have nothing to do with habituation. T4's pause case therefore pins the SCALE and
 not the cost – a cost-level pin there would have measured two effects and named one.
+
+## S – T5's findings, and the false sentence ruled
+
+**The brief's central T5 instruction could not be obeyed as written, and T5 was right to refuse it.**
+It says both effects «ride `psychologistWorkingRung(world, 'publicLife')`». They cannot: both live in
+`engine/spirit.ts`, and wave 5's ruling J **measured** that importing `world/psychologist.ts` from
+there closes a value cycle on two live back-edges – the psychologist module says so on that very
+function. T5 took the house answer (the billing predicate handed down, focus and rung read off the
+world) and then **pinned the equivalence against the real `psychologistWorkingRung` across the whole
+grid**, with a non-vacuity case proving the oracle returns all three rungs and `undefined`. That is
+the correct shape: when you cannot call the authority, you pin yourself against it.
+
+**⚠⚠ Ruling O is narrower than it reads, and T5 has the null to prove it.** Dropping the fifth focus
+from `PSY_FOCUSES` (type, label and line intact) reddens 5 unit cases and **0 of 15 against the
+mounted card** – because every count in the component test derives from `PSY_FOCUSES` too. **The
+component layer is blind to ruling O's hole for exactly the reason the array is.** So the re-aimed
+membership oracle is not one net among several; on this tree it is the ONLY one.
+
+**⚠ And the widening reaches a file the gate cannot see.** `e2e/psychologist.spec.ts` carried three
+hard-coded `4`s and a hand-typed label list, and **e2e is not part of `npm run check`** – it would
+have stayed green and silent until T10's own gate. T5 swept it. **Standing note for any future
+roster widening: the compiler forces two sites, the membership oracle forces the third, and the e2e
+suite is forced by nobody – sweep it by hand.**
+
+### The sentence that is now false – ruled: T8 fixes it, and that is not an invariant-4 breach
+
+`PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL` reads «No such year of work – **there are four**, and that is
+not one of them.» There are five. T5 flagged it and did not touch it, which was right.
+
+**Measured before ruling:** it is thrown by `setPsychologistFocus` only when
+`!PSY_FOCUSES.includes(focus)`, and the UI offers exactly `psychologistFocusOpen`, which filters that
+same roster. **No action the interface permits can produce it** – it guards a programming error or a
+malformed worker message, unlike its siblings (`..._SEASON_`, `..._NOT_READY_`), which fire on
+legitimate player acts and are genuinely player-facing.
+
+**The ruling.** Invariant 4 protects the player's screen from silent redesign; this sentence cannot
+reach that screen, and the task that made it false is this one. Compare the stale `knownWeek: 139`
+row of T1: that text was a RECORD of a measurement, so it was annotated; **this text is an ASSERTION
+about the present state, so it is corrected.**
+
+**And the count comes OUT rather than being bumped to five**: «No such year of work – that is not one
+of them.» A number in that sentence rots on every roster change and has now done so once; removing it
+retires the class instead of resetting the clock. It ships **as a draft in T8**, in the wave's draft
+set, under the same вычитка and the same playtest as every other string here.
