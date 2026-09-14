@@ -308,10 +308,24 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     // or a share landing in this block is still red on the line below – which is the whole of what
     // ruling Б and O3 need from it. What is NOT re-aimed is the `staffShare` line above: that one is
     // about a union this wave may never widen, and it stays at two roles for ever.
+    // ⚠⚠ AND A FIFTH TIME BY **WAVE 6's T5** (14.09) – the first re-aim from outside wave 5, and the
+    // rule it keeps is the same one every re-aim above kept: a constant lands with the pass that reads
+    // it. «The public life» is the FIFTH year-focus (O7, ruled 13.09, «ships WITH the spotlight wave,
+    // not before it has something to shrink»), and its two ladders `publicLifeShrink` and
+    // `publicLifeAccel` arrive with their one reader – `engine/spirit.ts`, the exposure-pressure term
+    // and the habituation growth – in the same commit. ⚠ THEY ARE THE SEAT'S AND NOT THE SPOTLIGHT'S,
+    // which is a boundary worth one line: `ECONOMY.spotlight` holds what is true of a career with
+    // nobody hired (the news bar, the bases, the habituation span and floor) and this block holds what
+    // the RUNG buys. A `publicLife…` key in the spotlight block would have priced a mechanic every
+    // career runs against a roster most careers never open.
+    // ⭐ THE CLAIM IS UNCHANGED AND STILL EXACT: still a closed set, so a fare, a stance or a share
+    // landing in this block is still red on the line below.
     expect(Object.keys(ECONOMY.psychologist).sort()).toEqual([
       'coolheadPerSeason',
       'defaultRung',
       'listenClarity',
+      'publicLifeAccel',
+      'publicLifeShrink',
       'recoverySlope',
       'rungs',
       'wallsHazardScale',

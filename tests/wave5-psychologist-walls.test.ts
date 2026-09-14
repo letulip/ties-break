@@ -923,8 +923,19 @@ describe('wave 5 T7 H – what the pass touches, and what it must never', () => 
     const j = code.indexOf('driftWalls(world, psychologistWorksThisWeek(world))')
     expect(i, 'the spirit pass is where it was').toBeGreaterThan(-1)
     expect(j, 'and the walls pass still follows it').toBeGreaterThan(i)
+    // ⚠⚠ RE-AIMED A **FOURTH** TIME 14.09 BY WAVE 6's **T5**, AND IT IS AN ANCHOR MOVE AGAIN RATHER
+    // THAN AN ASSERTION ONE – the shape T4 installed is exactly what a fourth re-aim should cost.
+    // WHAT MOVED: `growHabituation` gained a THIRD ARGUMENT, `psychologistWorksThisWeek(world)` – the
+    // seat's billing predicate, the same expression the two passes on either side of it are given.
+    // WHY: «The public life» (O7) is the psychologist's fifth year-focus and it ACCELERATES this
+    // counter by rung while it is held, so the growth has to know whether the seat is working and
+    // being paid this week; and `engine/spirit.ts` cannot import `./psychologist` to ask (ruling J's
+    // two live back-edges), so the caller answers. ⚠ NOTHING ABOUT RULING P OR RULING Q MOVES: the
+    // habituation pass is still the ONLY statement between the two, still above `driftWalls` so the
+    // walls it reads are the ones the girl wore all week, and this equality is still red on any other
+    // statement sliding in, on a re-order, and on the pass being deleted or moved.
     expect(code.slice(i + 1, j), '⚠ and ONLY v77 T4\'s habituation pass separates them – ruling Q').toEqual([
-      'growHabituation(world, sheIsNewsAt(world, world.week - 1))',
+      'growHabituation(world, sheIsNewsAt(world, world.week - 1), psychologistWorksThisWeek(world))',
     ])
     expect(code.filter((l) => l.startsWith('driftWalls(')), 'called exactly once, and on the predicate')
       .toEqual(['driftWalls(world, psychologistWorksThisWeek(world))'])

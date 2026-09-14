@@ -471,7 +471,18 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        and nothing between the two lines writes one – so the coherent spelling costs nothing.
   //        ⚠ A NEGATIVE WEEK IS SAFE FOR THE SAME REASON IT IS ABOVE: the first tick asks about week
   //        0 (step 0 increments first), and `fameAt` answers a future week with 0 in any case.
-  growHabituation(world, sheIsNewsAt(world, world.week - 1))
+  //        ⭐⭐⭐ AND SINCE v77's T5 IT CARRIES THE SEAT'S BILLING PREDICATE TOO – the third argument,
+  //        `psychologistWorksThisWeek(world)`, exactly the expression `accrueSpirit` is given one
+  //        line up and `driftWalls` one line down. «The public life» (O7, the fifth year-focus)
+  //        ACCELERATES this counter by rung while it is held, and the acceleration has to stand down
+  //        on a college-freeze week and a booked family week with the invoice – ruling J, pay nothing
+  //        and receive nothing. ⚠ IT IS HANDED DOWN RATHER THAN READ INSIDE for the same reason the
+  //        news gate is: `engine/spirit.ts` cannot import `./psychologist` at all (ruling J's two live
+  //        back-edges, argued at that file's §3c-psy), so the caller answers what the caller already
+  //        holds. ⚠ THE THREE CALLS NOW SPELL THE SAME PREDICATE THREE TIMES AND NOT INTO A LOCAL,
+  //        which is `driftWalls`'s own note one block down: a local would let a stale flag be threaded
+  //        where a live read belongs, and the call TEXT of all three is pinned.
+  growHabituation(world, sheIsNewsAt(world, world.week - 1), psychologistWorksThisWeek(world))
   // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
   //
   //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is

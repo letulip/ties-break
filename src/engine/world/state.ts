@@ -495,19 +495,33 @@ export interface PendingTournament {
  *  §2 is the ruled table, `docs/plans/life-wave-5-builder-2026-09.md` §2 T3 the mechanics). What the
  *  seat WORKS ON for a season: `'coolhead'` composure, `'recovery'` the walk back from a shock,
  *  `'listen'` the parent's own reading of her, `'herself'` her deliberate work beyond her nature's
- *  baseline. One a season, changed only in the off-season window.
+ *  baseline, `'publicLife'` the weight of being looked at. One a season, changed only in the
+ *  off-season window.
  *
- *  ⚠ A UNION AND NEVER FOUR BOOLEANS, the argument `spiritShock.kind` makes one field up: exactly one
+ *  ⭐⭐⭐ AND SINCE v77's T5 THERE IS A FIFTH: `'publicLife'` – «The public life», the spotlight focus
+ *  (O7, ruled 13.09: «ships WITH the spotlight wave, not before it has something to shrink»). While
+ *  it is held, wave 6's exposure pressure shrinks by rung and habituation accelerates by rung – both
+ *  in `engine/spirit.ts`, and neither is a new kind of thing: the year machinery below is wave 5's,
+ *  byte for byte, and this member inherits it whole.
+ *
+ *  ⚠ A UNION AND NEVER FIVE BOOLEANS, the argument `spiritShock.kind` makes one field up: exactly one
  *  focus is live at a time (the spec's own «1 session a week at every rung – the rung buys WHO comes
- *  to the call»), and a union makes that unrepresentable-otherwise rather than merely documented. A
- *  fifth member is the spotlight wave's to add if the owner ever rules one – O7 says «The public
- *  life» ships there and NOT here – and it widens in place, going red at every exhaustive read.
+ *  to the call»), and a union makes that unrepresentable-otherwise rather than merely documented.
+ *  ⚠⚠ AND WIDENING IT DOES **NOT** GO RED AT EVERY READ, WHICH IS THE SENTENCE v76 GOT WRONG AND THE
+ *  ARCHITECT'S RULING O MEASURED. The two `Record<PsyFocus, string>` catalogues in
+ *  `world/psychologist.ts` are total and DO go red; `PSY_FOCUSES` – the array the seat iterates, the
+ *  refusal filter walks and the string tests read – is a `readonly PsyFocus[]`, and an array of four
+ *  is a perfectly valid array of a five-member union. So the one site that decides whether a focus is
+ *  ever OFFERED is the one the compiler will not defend. Wave 5 left the tripwire for it and wave 6's
+ *  T5 re-aimed it to a MEMBERSHIP oracle against the type-forced Record
+ *  (`tests/wave5-psychologist-focus.test.ts` §A) – a length is not a membership, and the compiler
+ *  already holds the complete list.
  *
  *  ⚠ DECLARED HERE RATHER THAN IN `shared/protocol`, on `Temperament`'s own precedent: this is an
  *  ENGINE fact that the wire happens to carry later (T2 puts it on the snapshot), and
  *  `shared/protocol/narrative.ts` already imports `Temperament` type-only from `engine/spirit` for
  *  exactly that shape. The arrow stays engine -> shared, never the other way. */
-export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself'
+export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself' | 'publicLife'
 
 export interface WorldState {
   schemaVersion: number

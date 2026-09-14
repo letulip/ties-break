@@ -92,6 +92,15 @@
 // habituation 0, where the shipped scale and the literal T3 wrote are the same number. T3's suite is
 // blind to the factor by construction, so a T4 that added cases there would have been adding them to
 // a file that cannot see the change.
+//
+// ⚠⚠ WIDENED MECHANICALLY BY v77's **T5**, AND NOT ONE CLAIM IN THIS FILE MOVED. `growHabituation`
+// gained a REQUIRED third parameter – the seat's billing predicate, which «The public life» (O7, the
+// fifth year-focus) needs in order to accelerate the counter by rung. Every call below was given
+// `false`, which is «no seat is working her public life this week» and therefore the ×1 this file was
+// already measuring: T4's numbers, gates, freezes, clamp and byte-identity walk are unchanged to the
+// last bit. ⚠ REQUIRED AND NOT DEFAULTED ON PURPOSE – a defaulted trailing boolean would let a future
+// caller drop the seat silently, which is the shape ruling J spent a wave correcting on `recovery`.
+// The acceleration's own cases live in tests/wave6-spotlight-focus.test.ts, not here.
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -399,8 +408,8 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
 
   it('⭐⭐⭐ the OPENNESS wall freezes her while her twin at equal fame grows', () => {
     const { walled, free } = twins('open')
-    growHabituation(walled, true)
-    growHabituation(free, true)
+    growHabituation(walled, true, false)
+    growHabituation(free, true, false)
     expect(walled.spotlightHabituation, 'behind walls she acclimatises to nothing').toBe(0)
     expect(free.spotlightHabituation, '...and her twin lived the same week known').toBe(1)
   })
@@ -410,8 +419,8 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
     // reading ruling H refuses, and a mutation that ships it must redden a case of its own rather
     // than hide behind the openness arm's assertion failing first (T2's ARM 1, measured).
     const { walled, free } = twins('reg')
-    growHabituation(walled, true)
-    growHabituation(free, true)
+    growHabituation(walled, true, false)
+    growHabituation(free, true, false)
     expect(walled.spotlightHabituation, 'dysregulated is behind walls too').toBe(0)
     expect(free.spotlightHabituation).toBe(1)
   })
@@ -424,7 +433,7 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
     const leaning = makeNews(probe('habituation-lean'))
     leaning.wallsLean = { open: ECONOMY.life.walls.flipArm, reg: ECONOMY.life.walls.flipArm }
     leaning.wallsFlipped = { open: false, reg: false }
-    growHabituation(leaning, true)
+    growHabituation(leaning, true, false)
     expect(leaning.spotlightHabituation, 'leaning is not up').toBe(1)
   })
 
@@ -443,7 +452,7 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
     const held = makeNews(probe('habituation-pause'))
     held.spotlightHabituation = FULL
     held.wallsFlipped = { open: true, reg: true }
-    growHabituation(held, true)
+    growHabituation(held, true, false)
     expect(held.spotlightHabituation, 'the walls froze it where it stood').toBe(FULL)
     expect(habituationScale(held.spotlightHabituation), 'and the veteran still reads the veteran\'s scale')
       .toBe(FLOOR)
@@ -456,7 +465,7 @@ describe('wave 6 T4 D – walls freeze habituation, on either axis', () => {
 describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
   it('⭐⭐⭐ one known week counts exactly one', () => {
     const world = makeNews(probe('habituation-rate'))
-    growHabituation(world, true)
+    growHabituation(world, true, false)
     expect(world.spotlightHabituation).toBe(1)
   })
 
@@ -465,15 +474,15 @@ describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
     // wins», so there is nothing for her to get used to.
     const world = probe('habituation-unknown')
     expect(sheIsNewsAt(world, world.week), 'the fixture really is unknown').toBe(false)
-    growHabituation(world, false)
+    growHabituation(world, false, false)
     expect(world.spotlightHabituation).toBe(0)
   })
 
   it('⭐⭐⭐ it is MONOTONE in weeks held – more known weeks is always more habituation', () => {
     const short = makeNews(probe('habituation-monotone'))
     const long = makeNews(probe('habituation-monotone'))
-    for (let i = 0; i < 10; i++) growHabituation(short, true)
-    for (let i = 0; i < 30; i++) growHabituation(long, true)
+    for (let i = 0; i < 10; i++) growHabituation(short, true, false)
+    for (let i = 0; i < 30; i++) growHabituation(long, true, false)
     expect(short.spotlightHabituation).toBe(10)
     expect(long.spotlightHabituation, 'and the longer-known girl is further along').toBeGreaterThan(
       short.spotlightHabituation,
@@ -486,7 +495,7 @@ describe('wave 6 T4 E – +1 per week lived known, capped at the span', () => {
     // an uncapped counter would drive it below the floor and, far enough, through zero into a
     // spotlight that PAYS her. The cap is the only thing standing between.
     const veteran = makeNews(probe('habituation-clamp'))
-    for (let i = 0; i < FULL * 3; i++) growHabituation(veteran, true)
+    for (let i = 0; i < FULL * 3; i++) growHabituation(veteran, true, false)
     expect(veteran.spotlightHabituation, 'the counter stops at the span').toBe(FULL)
     expect(habituationScale(veteran.spotlightHabituation), '...and the scale rests exactly on the floor').toBe(FLOOR)
   })
@@ -572,7 +581,7 @@ describe('wave 6 T4 F – the sibling, in the phase that calls it', () => {
     // moved spirit, bond or a leaning would be a second writer of a field with exactly one.
     const world = makeNews(probe('habituation-writes'))
     const before = JSON.parse(JSON.stringify(world)) as Record<string, unknown>
-    growHabituation(world, true)
+    growHabituation(world, true, false)
     const after = world as unknown as Record<string, unknown>
     expect(Object.keys(after).sort(), 'no key appears or disappears').toEqual(Object.keys(before).sort())
     for (const key of Object.keys(before)) {
@@ -594,9 +603,9 @@ describe('wave 6 T4 G – what T4 deliberately does not do', () => {
     // v1, brief §0.5: «she does not unlearn living known». The girl is grown to the cap, then the
     // gate is closed for two full seasons; the counter must still read the cap.
     const world = makeNews(probe('habituation-no-decay'))
-    for (let i = 0; i < FULL; i++) growHabituation(world, true)
+    for (let i = 0; i < FULL; i++) growHabituation(world, true, false)
     expect(world.spotlightHabituation, 'she is a veteran').toBe(FULL)
-    for (let i = 0; i < 104; i++) growHabituation(world, false)
+    for (let i = 0; i < 104; i++) growHabituation(world, false, false)
     expect(world.spotlightHabituation, 'and two quiet seasons take none of it back').toBe(FULL)
   })
 
@@ -617,7 +626,7 @@ describe('wave 6 T4 G – what T4 deliberately does not do', () => {
     const world = makeNews(probe('habituation-draws'))
     const before = JSON.stringify(world.rngMain)
     rngKeys.length = 0
-    growHabituation(world, true)
+    growHabituation(world, true, false)
     expect(rngKeys, 'three reads and one assignment').toEqual([])
     expect(JSON.stringify(world.rngMain), 'and MAIN is untouched').toBe(before)
   })

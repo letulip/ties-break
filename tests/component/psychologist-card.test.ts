@@ -176,6 +176,44 @@ describe('the psychologist card on screen T', () => {
     wrapper.unmount()
   })
 
+  it('§3c – ⭐⭐ v77 T5: THE FIFTH YEAR SPLICES TOO, and the card is where that is provable', async () => {
+    // ⚠⚠ THE ONE THING T5's ENGINE SUITE CANNOT SAY. «The public life» (O7) brings a new
+    // `PSY_FOCUS_LINE` row, and the owner's Q9 ruling (14.09) means every row has to read in TWO
+    // frames: alone, as the focus row's note, and spliced after «On retainer – » with its first
+    // letter lowered. A catalogue test can check the second frame's ARITHMETIC; only a mounted card
+    // can check that the splice the SCREEN performs lands on the sentence the reader sees, which is
+    // this file's own doctrine («prefer a mounted test to a source pin»).
+    //
+    // ⚠ THE EXPECTATION IS THE IMPORTED CONSTANT SPLICED HERE, NEVER RETYPED – §3b's rule, so T8's
+    // вычитка moves this pin with the draft.
+    const { hired } = snapshots()
+    const focused = { ...hired, psychologistFocus: 'publicLife' as const }
+    const year = PSY_FOCUS_LINE.publicLife
+    const wrapper = await mountCard(focused)
+    const text = wrapper.find(SEAT).text()
+    expect(text, 'the hired line carries the fifth year, spliced').toContain(
+      `On retainer – ${year.charAt(0).toLowerCase()}${year.slice(1)}`,
+    )
+    // ⚠ AND THE SPLICE REALLY DID SOMETHING – a line already starting lowercase, or starting on a
+    // digit or a quotation mark, would satisfy the `toContain` above while reading as nonsense in the
+    // OTHER frame. So: the first character is a cased letter that the splice actually lowers.
+    expect(year.charAt(0), 'the line opens on a capital, so it reads alone as a sentence')
+      .not.toBe(year.charAt(0).toLowerCase())
+    wrapper.unmount()
+
+    // ...AND THE SAME LINE ALONE, in the note, which is the frame it was written for first.
+    const open = {
+      ...hired,
+      psychologistFocus: 'publicLife' as const,
+      psychologistFocusOpen: [...PSY_FOCUSES],
+      psychologistFocusDetail: '',
+    }
+    const second = await mountCard(open)
+    expect(second.find(`${SEAT} .staff-focus-note`).text(), 'and unspliced it is the catalogue`s own row')
+      .toBe(year)
+    second.unmount()
+  })
+
   it('§4 – ⭐ the roster dial: three rungs, prices off the catalogue, ACTIVE off the snapshot, radio semantics', async () => {
     const { pro } = snapshots()
     const doctored = { ...pro, psychologistRung: 2 }
@@ -279,7 +317,9 @@ describe('the psychologist card on screen T', () => {
     // Round 40's conventions, the dial's own one block up.
     expect(row.attributes('role')).toBe('radiogroup')
     const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
-    expect(options.length, 'the spec §2`s four').toBe(PSY_FOCUSES.length)
+    // ⚠ THE COUNT IS THE ROSTER'S AND ALWAYS WAS, so v77's fifth focus («The public life», O7) moved
+    // this line's MESSAGE and not its assertion – the card renders whatever `PSY_FOCUSES` holds.
+    expect(options.length, 'one option per focus on the roster – five since v77 T5').toBe(PSY_FOCUSES.length)
     for (const [i, focus] of PSY_FOCUSES.entries()) {
       expect(options[i].attributes('role')).toBe('radio')
       expect(options[i].text()).toBe(PSY_FOCUS_LABEL[focus])
@@ -334,9 +374,15 @@ describe('the psychologist card on screen T', () => {
     // and asserts the ROW, then asserts the negative that matters: no band word and no figure.
     const { hired } = snapshots()
     // Under 18 at a strained bond: `herself` alone is closed, and the card says she is not ready.
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T5, AND THE FIXTURE IS NOW DERIVED RATHER THAN TYPED. «The public
+    // life» (O7) joined `PsyFocus`, so a hand-typed three-item open set turned this case into «the
+    // readiness gate closes `herself` AND the fifth focus», which is a claim the engine does not make
+    // and nobody meant. The list is what `psychologistFocusOpen` really returns in this state –
+    // everything but `herself` – so a SIXTH focus needs no edit here and cannot silently fall out of
+    // the offer. The assertions below are unchanged; only the message's count moved with the roster.
     const notReady = {
       ...hired,
-      psychologistFocusOpen: ['coolhead', 'recovery', 'listen'] as const,
+      psychologistFocusOpen: PSY_FOCUSES.filter((f) => f !== 'herself'),
       psychologistFocusDetail: PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
     }
     const wrapper = await mountCard({ ...notReady, psychologistFocusOpen: [...notReady.psychologistFocusOpen] })
@@ -344,7 +390,7 @@ describe('the psychologist card on screen T', () => {
     const herself = PSY_FOCUSES.indexOf('herself')
     expect(options[herself].attributes('disabled'), 'the one year she has to want').toBeDefined()
     for (const [i] of PSY_FOCUSES.entries()) {
-      if (i !== herself) expect(options[i].attributes('disabled'), 'the other three stay hers to be given').toBeUndefined()
+      if (i !== herself) expect(options[i].attributes('disabled'), 'every other year stays hers to be given').toBeUndefined()
     }
     expect(wrapper.find(`${SEAT} .staff-focus-note`).text()).toBe(PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL)
     const seatText = wrapper.find(SEAT).text()

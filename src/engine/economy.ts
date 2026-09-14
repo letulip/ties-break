@@ -4954,6 +4954,14 @@ export const ECONOMY = {
   // reader in the same commit, exactly as the rule above requires. Three remain.
   // ⭐ T5 (v76) LANDED THE SECOND – `coolheadPerSeason`, below, with `growWeek`'s own reader in the
   // same commit. Two remain (`listenClarity` T6, the walls' hazard scale T7).
+  // ⭐⭐ AND THE LIST IS CLOSED: v76's T6 and T7 landed the last two, and **v77's T5 adds a FIFTH
+  // FOCUS the wave-5 forecast could not name** – «The public life» (O7, ruled 13.09), whose two
+  // ladders `publicLifeShrink` and `publicLifeAccel` land at the foot of this block with their one
+  // reader (`engine/spirit.ts` – the pressure term and the habituation growth) in the same commit,
+  // which is the rule this block has kept since T2. ⚠ THEY LIVE HERE AND NOT IN `ECONOMY.spotlight`
+  // by the spotlight block's own instruction: they are the SEAT's price list, keyed on the rung the
+  // family is paying for, and `ECONOMY.spotlight` holds only what is true of a career with nobody
+  // hired.
   psychologist: {
     // ⚠⚠ PROPOSALS, NOT RULINGS – bench-priced, predicted-first, THE OWNER'S WORD AFTER T10, in the
     // same register the spec marks O5 with. The wave-5 brief's §4 lists them under «Proposals – NONE
@@ -5116,6 +5124,63 @@ export const ECONOMY = {
      *  ⚠ IT RIDES THE BILLING PREDICATE for ruling J's reason – pay nothing, receive nothing extra.
      *  ⚠ A PROPOSAL – the brief §4's «`'herself'` repair acceleration ×1.5». */
     wallsHerselfRepair: 1.5,
+
+    /** ⭐⭐⭐ «THE PUBLIC LIFE» – WHAT A YEAR ON THE SPOTLIGHT TAKES OFF EVERY EXPOSURE EVENT, BY RUNG
+     *  (v77, wave 6's T5 – O7, ruled 13.09: «ships WITH the spotlight wave, not before it has
+     *  something to shrink»). The FIFTH factor of `exposurePressure`'s product (engine/spirit.ts),
+     *  and `1` on every week the seat is not working this focus.
+     *
+     *  ⚠⚠ A SHRINK AND NEVER A SHIELD, which is the one thing three decimals cannot say for
+     *  themselves. Every entry is strictly between 0 and 1: the cameras cost her LESS while somebody
+     *  is working the year with her, and they never cost her nothing. A `0` here would switch the
+     *  whole spotlight off for anyone who can afford a retainer, which is the shape who-she-is §3c
+     *  forbids in its own words about the habituation floor one block over («a SHRUG and not an
+     *  immunity») – and the two multiply, so the seat and the veteran together must still leave a
+     *  cost standing.
+     *
+     *  ⚠ STRICTLY DECREASING, OR THE RUNG IS RE-PRICED – the masseur spec's §4 law, which the wave
+     *  brief applies per focus. T9's psy-grid benches the fifth column against the rung below AND
+     *  against no-seat; `tests/wave6-spotlight-focus.test.ts` §A holds the SHAPE so a re-tune cannot
+     *  quietly flatten a step.
+     *
+     *  ⚠ A MULTIPLIER ON A SPIRIT TERM, indexed by rung (`0 | 1 | 2`, the roster position) – the
+     *  FIFTH spelling in this block and the collision is worth naming once, as its four neighbours
+     *  name theirs: `recoverySlope` is POINTS OF SPIRIT PER WEEK, `coolheadPerSeason` POINTS OF A
+     *  SKILL PER SEASON, `listenClarity` a SHARE OF BEATS, `wallsHazardScale` a MULTIPLIER ON A
+     *  PROBABILITY, and this a MULTIPLIER ON A COST.
+     *
+     *  ⚠ UNRULED – the wave-6 brief's §4 lists «`publicLifeShrink [0.85, 0.70, 0.55]`» under
+     *  «Proposals – NONE ruled, all bench-priced predicted-first, his word after», and the architect's
+     *  ruling N adds the measurement that makes the size a real question rather than a formality: at
+     *  the drafted bases a calm, open, habituated girl holding this focus at the top rung takes
+     *  `−4 × 0.8 × 0.75 × 0.25 × 0.55 = −0.33` from the worst week of her public life – three tenths,
+     *  which the screen renders as nothing. Not one pin below asserts these three numbers; every
+     *  expectation is computed from this row, so a re-tune moves both sides together. */
+    publicLifeShrink: [0.85, 0.7, 0.55],
+    /** ⭐⭐⭐ «THE PUBLIC LIFE» – HOW MUCH FASTER SHE LEARNS TO LIVE KNOWN, BY RUNG (v77, wave 6's T5).
+     *  The multiplier on `growHabituation`'s weekly `+1` (engine/spirit.ts), and `1` on every week the
+     *  seat is not working this focus.
+     *
+     *  ⚠⚠ AN ACCELERATION AND NEVER A GATE – `wallsHerselfRepair`'s own law one row up, and §0.3's
+     *  («repair is free … the seat only ever ACCELERATES the road home») read onto this focus: the
+     *  counter grows at `+1` a week with nobody hired, and this multiplies a walk that was already
+     *  happening. Every entry is ≥ 1 for that reason; a value below 1 would make the seat a BRAKE on
+     *  her own acclimatising, which is the same defect `wallsHazardScale`'s ⚠⚠ names in the other
+     *  direction.
+     *
+     *  ⚠⚠ AND IT CANNOT OUT-RUN THE WALLS, BY CONSTRUCTION RATHER THAN BY SIZE: `growHabituation`
+     *  returns BEFORE this factor is read when she is not news or when either wall is flipped, so ×0
+     *  beats any accelerator and no `Math.max` is reachable from here. That composition is where a
+     *  builder reaches for one, so it is pinned (`tests/wave6-spotlight-focus.test.ts` §D).
+     *
+     *  ⚠ STRICTLY INCREASING, OR THE RUNG IS RE-PRICED – the masseur §4 law again, benched by T9
+     *  against the §3c habituation curve. ⚠ THE CAP IS UNMOVED: `habituationFullWeeks` is still both
+     *  the clamp and `habituationScale`'s denominator, so a faster walk arrives at the same floor
+     *  sooner and never past it.
+     *
+     *  ⚠ UNRULED – the brief's §4 «`publicLifeAccel [1.5, 2.0, 2.5]`», in the same «NONE ruled» list
+     *  as its sibling above. T9 prices it; no pin below asserts the three numbers. */
+    publicLifeAccel: [1.5, 2, 2.5],
   },
 
   // --- The spotlight: the weight of being known (who-she-is §3c / §3c-bis, wave 6) ---------
@@ -5127,9 +5192,12 @@ export const ECONOMY = {
   // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight – the
   // psychologist block's own rule one concern up, and for its reason («a constant with no reader is
   // a constant nobody can be wrong about yet»): `leakBasePerWeek` / `leakOpennessMult` /
-  // `wrongShare` land with T6's hazard; `newsWindowWeeks` with T7's booth. The fifth focus's two
-  // ladders (`publicLifeShrink`, `publicLifeAccel`) are T5's and join `ECONOMY.psychologist` beside
-  // the other four focus tables, NOT this block.
+  // `wrongShare` land with T6's hazard; `newsWindowWeeks` with T7's booth.
+  // ⭐ AND T5 KEPT THE PROMISE THIS NOTE MADE FOR IT (14.09): the fifth focus's two ladders
+  // (`publicLifeShrink`, `publicLifeAccel`) landed in `ECONOMY.psychologist` beside the other focus
+  // tables and NOT in this block – they are the seat's price list, and this block holds only what is
+  // true of a career with nobody hired. Nothing of T5's is here, which is why nothing of T5's is
+  // struck from the list above.
   // ⭐ T3 IS HERE (14.09) AND IT TOOK EXACTLY THE TWO THAT SENTENCE PROMISED IT: `pressureBase` and
   // `opennessScale` below.
   // ⭐ AND T4 IS HERE (14.09) WITH THE TWO IT WAS PROMISED: `habituationFullWeeks` and

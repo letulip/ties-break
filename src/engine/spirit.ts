@@ -701,6 +701,100 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
  *  вычитка own the words, and what T3b owes is a plain sentence that is TRUE. */
 export const EXPOSURE_ROW = 'People were talking about her last week.'
 
+// =================================================================================================
+// 3c-psy. ⭐⭐⭐ «THE PUBLIC LIFE» – v77's T5 (wave 6, the psychologist's fifth focus, O7 ruled 13.09)
+// =================================================================================================
+//
+// THE SPEC'S OWN ROW (`docs/specs/the-psychologists-year-2026-09.md` §2): «while held, the
+// spotlight's pressure shrinks by rung and habituation accelerates». Two effects, ONE question –
+// «is the seat working HER PUBLIC LIFE this week, and at what rung» – and therefore one function to
+// answer it, spent twice: `publicLifeShrinkAt` in `exposurePressure`'s product below, and
+// `publicLifeAccelAt` in `growHabituation`'s growth further down.
+//
+// ⚠⚠ THE BRIEF SAYS BOTH EFFECTS «RIDE `psychologistWorkingRung(world, 'publicLife')`» AND THIS FILE
+// CANNOT CALL IT – measured, carried back to the architect, and spelled the way the house already
+// answers this exact wall. `psychologistWorkingRung` lives in `world/psychologist.ts`, and ruling J
+// measured that an import of that module FROM HERE closes a real value cycle by TWO live back-edges
+// (`psychologist -> spirit` through `bondBandOf`, and `psychologist -> college -> player -> spirit`
+// through `inCollege`). `world/psychologist.ts` says so in its own words on that function: «`spirit.ts`
+// cannot import this file – the cycle ruling J measured – so T4's focus had to re-spell the rung read
+// in its own module». So the fact that cannot be imported is HANDED DOWN (the billing predicate,
+// already a parameter of `accrueSpirit` since ruling J and now of `growHabituation` too), and the two
+// facts that CAN be read are read straight off the world – which is ruling J's own closing sentence:
+// «`psychologistFocus` is still read straight off the world – it is a CHOICE and not a working week,
+// no predicate owns it, and no import is involved».
+//
+// ⚠⚠ AND THE RE-SPELLING IS **PINNED AS AN EQUIVALENCE** RATHER THAN TRUSTED – wave 5's own practice
+// on `recoverySlopeFor` («the two spellings are pinned as an EQUIVALENCE in the T4 suite rather than
+// trusted: the slope's index and the rung `psychologistRungOf` returns are asked to agree over all
+// three»). `tests/wave6-spotlight-focus.test.ts` §C asks both spellings the same question over the
+// whole grid – three rungs × five focuses × hired/unhired × the two stand-downs – so a future edit to
+// either one goes red instead of quietly giving the family two answers.
+//
+// ⚠ ONE FUNCTION AND NOT TWO COPIES OF THE CONDITION, which is the defect `psychologistWorkingRung`
+// was created to close one wave ago («a focus pass that spelled `psychologistHired && focus === …`
+// instead would be T4's own defect, corrected one commit later»). Both of T5's effects ask THIS.
+
+/** ⭐⭐ THE RUNG THE SEAT IS WORKING **HER PUBLIC LIFE** AT THIS WEEK, or `undefined` when it is not
+ *  working that focus at all – not hired, stood down, or hired for a different year.
+ *  `psychologistWorkingRung(world, 'publicLife')` re-spelled in this module for the cycle's sake (the
+ *  section note above), and pinned equal to it.
+ *
+ *  ⚠⚠ THE STAND-DOWNS COME IN THROUGH THE PARAMETER AND ARE NOT RE-SPELLED HERE, which is the whole
+ *  of ruling J: `psychologistWorks` is `psychologistWorksThisWeek(world)` at the one engine call
+ *  site, so a college freeze and a booked family week stand this focus's TWO EFFECTS down exactly as
+ *  they stand the INVOICE down. Pay nothing, receive nothing. A version of this function that asked
+ *  `world.psychologistHired` would be the defect ruling J corrected one wave ago, on a different
+ *  focus, one commit after it shipped.
+ *
+ *  ⚠ THE `??` FALLBACK IS `recoverySlopeFor`'s AND `psychologistWorkingRung`'s, MIRRORED for their
+ *  reason: the rung is validated at its one writer (`setPsychologistRung`), but a hand-built probe
+ *  world may hold anything, so an unknown value reads as the DEFAULT rung rather than poisoning a
+ *  multiplier. ⚠ And `undefined` means ONE thing here – «he is not working her public life» – which
+ *  is why a missing rung falls back rather than switching the effect off. Pure read, ZERO draws. */
+function publicLifeRung(world: WorldState, psychologistWorks: boolean): 0 | 1 | 2 | undefined {
+  if (!psychologistWorks) return undefined
+  if ((world.psychologistFocus ?? null) !== 'publicLife') return undefined
+  return world.psychologistRung ?? ECONOMY.psychologist.defaultRung
+}
+
+/** ⭐⭐⭐ WHAT A YEAR ON HER PUBLIC LIFE TAKES OFF EVERY EXPOSURE EVENT – the FIFTH factor of
+ *  `exposurePressure`'s product, and **exactly `1`** on every week the seat is not working this
+ *  focus.
+ *
+ *  ⚠⚠ THE `1` IS THE IDENTITY AND NOT A DEFAULT, which is what makes «a career with nobody on this
+ *  focus plays exactly the tennis it played before T5 existed» arithmetic rather than a promise – the
+ *  same claim ruling Q part 3 made of habituation at zero, and it is pinned the same way (§E of the
+ *  T5 suite, byte-identity against a live world). `undefined` in, `1` out.
+ *
+ *  ⚠ IT TAKES THE RUNG AND NEVER THE WORLD, for `exposurePressure`'s own reason (ruling L part 3):
+ *  the pass reads the world once and hands values down, so no helper can re-derive a fact the week
+ *  has already fixed. Pure, total, ZERO draws. */
+export function publicLifeShrinkAt(rung: 0 | 1 | 2 | undefined): number {
+  if (rung === undefined) return 1
+  const p = ECONOMY.psychologist
+  return p.publicLifeShrink[rung] ?? p.publicLifeShrink[p.defaultRung]
+}
+
+/** ⭐⭐⭐ HOW MUCH FASTER SHE LEARNS TO LIVE KNOWN WHILE THE YEAR IS HELD – the multiplier on
+ *  `growHabituation`'s weekly `+1`, and **exactly `1`** on every week the seat is not working this
+ *  focus.
+ *
+ *  ⚠⚠ IT NEVER REACHES A WALLED OR AN UNKNOWN GIRL, AND THAT IS THE CALLER'S EARLY RETURNS RATHER
+ *  THAN A NUMBER IN THIS ROW. `growHabituation` returns before this is read when she is not news or
+ *  when either wall is flipped, so ruling H's `×0` beats any accelerator by construction and there is
+ *  no `Math.max` to reach for. The composition is pinned (§D of the T5 suite) precisely because it is
+ *  the place a builder would reach for one.
+ *
+ *  ⚠ AND IT CANNOT OUT-RUN THE CAP: `growHabituation` clamps at `habituationFullWeeks`, which is also
+ *  `habituationScale`'s denominator, so a faster walk reaches the same floor sooner and never passes
+ *  it. Pure, total, ZERO draws. */
+export function publicLifeAccelAt(rung: 0 | 1 | 2 | undefined): number {
+  if (rung === undefined) return 1
+  const p = ECONOMY.psychologist
+  return p.publicLifeAccel[rung] ?? p.publicLifeAccel[p.defaultRung]
+}
+
 /**
  * ⭐⭐⭐ WHAT THE WEEK'S EXPOSURE COST HER, in spirit points – the whole of T3's arithmetic, as one
  * pure fold over the list the caller handed down.
@@ -732,18 +826,21 @@ export const EXPOSURE_ROW = 'People were talking about her last week.'
  * second read of a girl wave 5 ruled is one girl for the whole week. Taking the two poles as
  * arguments makes that structural instead of disciplined.
  *
- * ⚠⚠ THE FOURTH FACTOR IS **A PARAMETER SINCE v77's T4**, AND THE FIFTH IS STILL `1`:
- *   · `habituation` is T4's, and it is now REAL – `habituationScale(world.spotlightHabituation)`,
- *     read by `accrueSpirit` off the world and handed down here as a plain number. ⚠⚠ IT IS A
- *     PARAMETER AND NOT A WORLD READ FOR RULING L PART 3's OWN REASON, which is the same reason
- *     `intensity` and `openness` are parameters: a helper that could reach the world could re-derive
- *     a fact the pass has already fixed for the week, and the pin below («no world reaches the
- *     term») is what makes that structural instead of disciplined. T4 obeys the rule it found rather
- *     than amending it.
- *   · `focus` is **T5's** – the fifth psychologist focus «The public life», `publicLifeShrink[rung]`.
- *     It does not exist yet, so it is still written out as `1` rather than omitted, exactly as T3
- *     wrote BOTH of them: the PRODUCT's shape stays visible to the task that replaces it, and §8
- *     («no focus constants – T5's») is why no number is invented here early.
+ * ⚠⚠ ALL FIVE FACTORS ARE REAL SINCE v77's T5, AND THE LAST TWO ARE **PARAMETERS** RATHER THAN WORLD
+ * READS:
+ *   · `habituation` is T4's – `habituationScale(world.spotlightHabituation)`, read by `accrueSpirit`
+ *     off the world and handed down here as a plain number.
+ *   · `focus` is T5's – the fifth psychologist focus «The public life»,
+ *     `publicLifeShrinkAt(publicLifeRung(world, psychologistWorks))`, read by `accrueSpirit` the same
+ *     way and **exactly `1`** on every week no seat is working that year. T3 wrote it out as a
+ *     literal `1` with a note naming this task; the literal is gone and the product's shape is
+ *     unchanged, which is what writing it out bought.
+ *   ⚠⚠ BOTH ARE PARAMETERS AND NOT WORLD READS FOR RULING L PART 3's OWN REASON, which is the same
+ *   reason `intensity` and `openness` are: a helper that could reach the world could re-derive a fact
+ *   the pass has already fixed for the week, and the pin below («no world reaches the term») is what
+ *   makes that structural instead of disciplined. T4 obeyed the rule it found rather than amending
+ *   it, and T5 obeys it for the one factor that genuinely wanted the world – the seat's year and its
+ *   rung are read ONCE, at the pass's own line, and arrive here as a number.
  *
  * ⚠ ZERO DRAWS, PURE, TOTAL. Arithmetic over a list, and an empty list returns exactly `0` – which
  * is what makes §0.4's byte-identity claim arithmetic rather than a promise. ⭐ AND THE EMPTY LIST IS
@@ -756,12 +853,10 @@ function exposurePressure(
   intensity: 'steady' | 'intense',
   openness: 'open' | 'private',
   habituation: number,
+  focus: number,
 ): number {
   const s = ECONOMY.spirit
   const p = ECONOMY.spotlight
-  // ⚠ T5's FIFTH-FOCUS SHRINK LANDS HERE. 1 until it exists – no seat is working her public life,
-  // because the focus is not on the roster yet.
-  const focus = 1
   let total = 0
   for (const event of exposure) {
     total +=
@@ -858,15 +953,29 @@ export function habituationScale(habituation: number): number {
  *  has just charged double. `wallsLean` is a continuous leaning and a girl leaning toward walls has
  *  not raised them.
  *
- *  ⚠ THE FIFTH FOCUS'S ACCELERATION LANDS HERE AND IS STILL `1` – T5's `publicLifeAccel[rung]`,
- *  written out rather than omitted for the reason T3 wrote out both of ITS missing factors: the
- *  shape stays visible to the task that replaces it, and §8 («no focus constants – T5's») is why no
- *  number is invented early.
+ *  ⭐⭐⭐ THE FIFTH FOCUS'S ACCELERATION IS REAL SINCE v77's T5 – `publicLifeAccel[rung]` while «The
+ *  public life» is the year being worked (O7), and exactly `1` otherwise. T4 wrote it out as a
+ *  literal `1` with a note naming T5; the literal is gone and the growth's shape is unchanged, which
+ *  is what writing it out bought.
  *
- *  ⚠ ZERO DRAWS AND NO CLOCK: three reads and one assignment. The frozen MAIN capture cannot see it.
+ *  ⚠⚠ THE SEAT ARRIVES AS THE **THIRD BOOLEAN PARAMETER** AND NOT AS A WORLD READ – the same
+ *  dependency inversion the news gate above uses, and for the harder reason: `psychologistWorksThisWeek`
+ *  cannot be imported into this file at all (ruling J's two live back-edges, argued at §3c-psy). So
+ *  the billing predicate is handed down at the call site, one line under the horizon and the same
+ *  expression `accrueSpirit` and `driftWalls` are given on the lines around it. ⚠ A college-freeze
+ *  week and a booked family week therefore stand the ACCELERATION down with the bill, exactly as they
+ *  stand the shrink and the invoice down.
+ *
+ *  ⚠⚠ AND THE ACCELERATOR IS READ **AFTER** BOTH GATES, WHICH IS THE COMPOSITION AND NOT A TIDINESS:
+ *  a girl who is not news, or who has either wall up, has already returned – so ruling H's `×0` beats
+ *  any accelerator by construction, a walled girl holding this focus grows exactly NOTHING, and no
+ *  `Math.max` is reachable from here. That is where a builder reaches for one, so §D of the T5 suite
+ *  pins it.
+ *
+ *  ⚠ ZERO DRAWS AND NO CLOCK: four reads and one assignment. The frozen MAIN capture cannot see it.
  *  ⚠ AND IT WRITES NOTHING ON A WEEK IT DOES NOT COUNT – the early returns are what keep a quiet
  *  career's world byte-identical to the one it had before this pass existed. */
-export function growHabituation(world: WorldState, isNews: boolean): void {
+export function growHabituation(world: WorldState, isNews: boolean, psychologistWorks: boolean): void {
   const p = ECONOMY.spotlight
   // ⚠ THE `??` COURTESY IS `accrueSpirit`'s and `driftWalls`'s, for their reason: every real world –
   // created or migrated – carries the field, and a probe world hand-built in a test or a bench
@@ -885,10 +994,11 @@ export function growHabituation(world: WorldState, isNews: boolean): void {
   //    `Math.min` stays correct if the step ever stops being 1. `habituationFullWeeks` is BOTH this
   //    cap and `habituationScale`'s denominator, which is what makes the floor exactly reachable and
   //    never passable.
-  // ⚠ T5's FIFTH-FOCUS ACCELERATION LANDS HERE – `publicLifeAccel[rung]`, and `1` until it exists,
-  //    written out rather than omitted exactly as T3 wrote out the two factors it was missing: the
-  //    shape stays visible to the task that replaces it, and §8 is why no number is invented early.
-  const focusAccel = 1
+  // 4. ⭐⭐⭐ AND «THE PUBLIC LIFE» MAKES THE WALK SHORTER (v77's T5, O7) – `publicLifeAccel[rung]`
+  //    while that year is being worked and paid for, `1` otherwise. ⚠ IT IS READ HERE AND NOT AT THE
+  //    HEAD: both gates above have already returned, so this multiplier is only ever reached on a
+  //    week that was going to count one anyway.
+  const focusAccel = publicLifeAccelAt(publicLifeRung(world, psychologistWorks))
   world.spotlightHabituation = roundTenth(Math.min(held + 1 * focusAccel, p.habituationFullWeeks))
 }
 
@@ -1056,7 +1166,22 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //     off-by-one no test would name and which reads as «the constants are slightly too weak».
   //     ⚠ AT ZERO IT IS EXACTLY `1`, so a career that has never been news takes the identity factor
   //     T3 shipped as a literal – ruling Q part 3, pinned as BYTE-IDENTITY and not as an endpoint.
-  const pressured = exposurePressure(exposure, intensity, openness, habituationScale(world.spotlightHabituation ?? 0))
+  //     ⭐⭐⭐ AND SINCE v77's T5 THE **FIFTH** FACTOR IS REAL TOO: «The public life», the psychologist's
+  //     fifth year-focus (O7), shrinks every event of this week by the rung the family is paying for.
+  //     ⚠⚠ THE SEAT'S YEAR IS READ **HERE**, AT THE PASS'S OWN LINE, AND HANDED DOWN AS A NUMBER –
+  //     ruling L part 3's law applied to the one factor that wanted the world, and §3c-psy's own note
+  //     argues why the rung is re-spelled in this file rather than imported (ruling J's cycle).
+  //     ⚠ AND IT RIDES `psychologistWorks`, THE BILLING PREDICATE THIS PASS ALREADY HOLDS, so a
+  //     college-freeze week and a booked family week stand the shrink down with the bill – pay
+  //     nothing, receive nothing (ruling J). With no seat, no year, or a different year, it is exactly
+  //     `1` and this line is byte-identical to what T4 shipped.
+  const pressured = exposurePressure(
+    exposure,
+    intensity,
+    openness,
+    habituationScale(world.spotlightHabituation ?? 0),
+    publicLifeShrinkAt(publicLifeRung(world, psychologistWorks)),
+  )
   const moved =
     returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked + pressured
   // ⚠⚠ ONE `roundTenth`, ONE `clamp`, AT THE END, ON THE SUM – ruling L part 2, and the reason the

@@ -348,8 +348,15 @@ describe('wave 5 T8 A – the seat calls, one line after the coach', () => {
       expect(row?.kind, `focus ${focus ?? 'none'}: the call happens`).toBe('fork-psy')
       details.push(row!.detail)
     }
-    expect(details.length, 'five seats were walked – four focuses and none').toBe(5)
-    expect(new Set(details).size, '⚠ and the focus reaches the row not at all – one detail, five times').toBe(1)
+    // ⚠ RE-AIMED 14.09 BY WAVE 6's T5 AND **STRENGTHENED IN THE SAME EDIT**: «The public life» joins
+    // `PsyFocus` (O7), so the walk is six seats and not five. The literal `5` was the weaker half of
+    // this pair anyway – it named a number a reader checks against the roster, while the claim is
+    // that the walk covered EVERY focus and the seatless arm. So the count is now read off
+    // `PSY_FOCUSES` itself and a SIXTH focus forgotten here can no longer pass by arithmetic. The
+    // second assertion is untouched and is the one that carries the design call.
+    expect(details.length, 'every focus on the roster was walked, and the seatless arm too')
+      .toBe(PSY_FOCUSES.length + 1)
+    expect(new Set(details).size, '⚠ and the focus reaches the row not at all – one detail, every time').toBe(1)
   })
 })
 
