@@ -1,4 +1,5 @@
-// THE PSYCHOLOGIST'S GRID – 4 focuses x 3 rungs, paired, predicted-first (v76, wave 5's T10).
+// THE PSYCHOLOGIST'S GRID – 5 focuses x 3 rungs, paired, predicted-first (v76's T10; the FIFTH column
+// is v77's T9, wave 6 – «The public life», O7, ruled 13.09).
 //
 // Run: `npm run bench:psy`  (`--careers N` scales every arm; `--walls N` the walls arms alone).
 //
@@ -86,14 +87,27 @@ import {
 // the three focus passes ask, `coolheadGain` the exact term `growWeek` spends, and the walls axes and
 // the expressed read are `spirit.ts`'s. Asking the engine for all of them is what stops this file
 // growing a second copy of any rule it is measuring.
-import { psychologistWorkingRung } from '../src/engine/world/psychologist'
+import { psychologistWorkingRung, PSY_FOCUSES } from '../src/engine/world/psychologist'
+// ⭐⭐⭐ v77's T9 – THE FIFTH COLUMN'S READER, AND THE PRODUCT IS SPELLED IN ONE FILE FOR BOTH BENCHES.
+// `tools/_spotlight.ts` carries ruling G's in-week ledger read and the one copy of `exposurePressure`'s
+// multiplication (that function is module-private, because ruling L forbids it re-deriving its own
+// inputs). `tools/spotlight-bench.ts` imports the same two, so the two benches cannot come to disagree
+// about what a week cost or about WHEN the ledger was asked.
+import { chargeAt, eventsChargedAt, readSpotWeek, type SpotWeek } from './_spotlight'
 import { coolheadGain } from '../src/engine/development'
+// ⚠ `exposureEventsOf` IS THE FIFTH COLUMN'S «DID THE SHRINK HAVE ANYTHING TO SHRINK» READ, and it is
+// the ENGINE's own list rather than a re-derivation – asked about `world.week − 1` AFTER the tick,
+// which is exactly the list `accrueSpirit` was handed one line earlier in the same tick (ruling P's one
+// horizon) and one week old, deep inside `world.results`' 52-week prune (ruling G).
+import { exposureEventsOf } from '../src/engine/world'
 import {
   bondBandOf,
   expressedTemperamentOf,
   RECOVERY_RECEIPT,
   temperamentIntensity,
   temperamentOpenness,
+  publicLifeAccelAt,
+  publicLifeShrinkAt,
   WALLS_AXES,
   type WallsAxis,
 } from '../src/engine/spirit'
@@ -127,6 +141,10 @@ const CAREERS = flag('--careers', 20)
 /** ...and for the two EXPENSIVE ones (listen, herself – both need most of a career: a flip is «an
  *  event of seasons» and the listen churn needs the cooldown to turn over several times). */
 const WALLS_CAREERS = flag('--walls', Math.max(4, Math.round(CAREERS * 0.4)))
+/** ...and for the FIFTH column alone (v77's T9). ⚠ ITS OWN FLAG BECAUSE ITS LADDER IS THE THINNEST IN
+ *  THE FILE: the shrink step between two rungs is ~0.16 spirit points on a cost of ~1.4, so the arm
+ *  needs the seeds to resolve it even PAIRED. `--public N`. */
+const PUBLIC_CAREERS = flag('--public', WALLS_CAREERS)
 
 const AGE_AT = (week: number): number => kidAgeExact(week, DEFAULT_PROFILE.birthMonth, DEFAULT_PROFILE.birthDay)
 /** ⚠ HER AGE IS ASKED OF THE ENGINE AND NEVER COMPUTED HERE – `life-arrival.ts`'s own rule and its
@@ -283,6 +301,9 @@ interface WalkOpts {
   /** the week at or after which a `spiritShock` counts as THE shock this walk is about – so an
    *  earlier forced ending (the «last time» T4's receipt needs) cannot be mistaken for the subject. */
   shockFrom?: number
+  /** ⭐⭐⭐ v77's T9 – record the spotlight's week-by-week ledger (`tools/_spotlight.ts`). OFF for the
+   *  four wave-5 columns, so their cost is byte-identical to what it was; ON for §1g alone. */
+  spotlight?: boolean
   /** stop this many weeks after the pro gate opened. ⚠ IT IS A COST CUT AND NEVER A MEASUREMENT
    *  CHOICE: §1b reads ONE held season and the four hundred weeks after it are walked for nothing.
    *  The cut is keyed on the career's OWN unlock week, which is identical in both arms of a pair (it
@@ -341,6 +362,16 @@ interface Career {
   matches: number
   wins: number
   fundsCents: number
+  /** ⭐⭐⭐ v77's T9 – one row per CLOSED week, read IN-WEEK (ruling G). Empty unless `spotlight`. */
+  spot: SpotWeek[]
+  /** ⭐⭐⭐ THE NEVER-FIRED CORRIDOR, PER **EFFECT** AND NOT PER WEEK – T5's own finding, and the whole
+   *  reason this focus gets three counters where the other four get one. «The public life» buys TWO
+   *  things at once and they idle on DIFFERENT weeks: a veteran already at the habituation cap gets
+   *  nothing from the accelerator while the same week's pressure is still being shrunk, and a quiet
+   *  week with no exposure is the mirror. A single «idle» boolean folded over both would report the
+   *  intersection and call it the corridor, which is a lie about what the family is paying for. */
+  spotShrinkIdle: number
+  spotAccelIdle: number
 }
 
 /** ⚠⚠ HAS THIS GIRL ANYWHERE TO GROW ON THIS AXIS – ruling N's table. It is `spirit.ts`'s own
@@ -404,6 +435,9 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
     matches: 0,
     wins: 0,
     fundsCents: 0,
+    spot: [],
+    spotShrinkIdle: 0,
+    spotAccelIdle: 0,
   }
   let prevFlipped = { open: false, reg: false }
 
@@ -439,6 +473,10 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
       composure: world.skills.composure,
       ceiling: world.potential.composure,
       lean: leanBefore,
+      // ⭐ v77's T9 – the counter she comes into the week holding. `growHabituation` runs after
+      //   `accrueSpirit` (ruling Q), so the growth this week produces is observed as a DIFFERENCE
+      //   rather than re-spelled from its three gates.
+      hab: world.spotlightHabituation ?? 0,
     }
 
     stepCareerWeek(
@@ -451,7 +489,17 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
     if (workingRung !== undefined) {
       c.paidWeeks++
       if (idleThisWeek(world, opts.focus as PsyFocus, workingRung, stateBefore)) c.idleWeeks++
+      // ⭐⭐⭐ v77's T9 – AND THE TWO EFFECTS ARE COUNTED SEPARATELY, because they idle on different
+      //    weeks (see `Career.spotShrinkIdle`'s own ⚠⚠). Both reads are OBSERVATIONAL: the shrink
+      //    fired iff the pass was handed a non-empty list, the accelerator fired iff the counter
+      //    actually moved.
+      if (opts.focus === 'publicLife') {
+        const work = publicLifeWork(world, stateBefore.hab)
+        if (!work.shrink) c.spotShrinkIdle++
+        if (!work.accel) c.spotAccelIdle++
+      }
     }
+    if (opts.spotlight === true) c.spot[world.week] = readSpotWeek(world)
 
     const w = world.week
     c.spiritByWeek[w] = world.spirit
@@ -535,6 +583,29 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
   return c
 }
 
+/** ⭐⭐⭐ v77's T9 – DID «THE PUBLIC LIFE» BUY ANYTHING THIS WEEK, ASKED PER EFFECT.
+ *
+ *  ⚠⚠ TWO ANSWERS AND NOT ONE, AND THAT IS T5's FINDING RATHER THAN A CONVENIENCE. This focus buys a
+ *  SHRINK on the week's pressure and an ACCELERATION on habituation, and the two idle independently:
+ *  a girl at the habituation cap gets nothing from the accelerator on a week whose cameras are still
+ *  being discounted, and a quiet week discounts nothing while the counter keeps walking. A single
+ *  boolean folded over both would print their INTERSECTION and call it the corridor.
+ *
+ *  ⚠ BOTH READS ARE OBSERVATIONAL AND NEITHER RE-SPELLS A GATE. The shrink fired iff `accrueSpirit`
+ *  was handed a non-empty list – asked of `exposureEventsOf(world, world.week − 1)`, which is the
+ *  exact expression the caller used one line earlier in this same tick (ruling P's one horizon) and
+ *  is one week old, deep inside `world.results`' 52-week prune (ruling G). The accelerator fired iff
+ *  `world.spotlightHabituation` actually MOVED, which folds all three of `growHabituation`'s gates –
+ *  not news, a flipped wall, already at the cap – into the one thing they decide.
+ *
+ *  ⚠ IT IS A READ AND NEVER A WRITE. */
+function publicLifeWork(world: WorldState, habBefore: number): { shrink: boolean; accel: boolean } {
+  return {
+    shrink: exposureEventsOf(world, world.week - 1).length > 0,
+    accel: (world.spotlightHabituation ?? 0) > habBefore + 1e-9,
+  }
+}
+
 /** ⭐ DID THE CHOSEN FOCUS HAVE ANYTHING AT ALL TO DO THIS WEEK – the never-fired corridor's numerator,
  *  asked of the WORLD before the tick and per focus:
  *
@@ -553,7 +624,7 @@ function idleThisWeek(
   world: WorldState,
   focus: PsyFocus,
   rung: Rung,
-  before: { shock: WorldState['spiritShock']; composure: number; ceiling: number; lean: Record<WallsAxis, number> },
+  before: { shock: WorldState['spiritShock']; composure: number; ceiling: number; lean: Record<WallsAxis, number>; hab: number },
 ): boolean {
   if (focus === 'recovery') {
     // `shockBeingWorked`'s own two clauses, mirrored: a mark that is not there, and the LANDING week
@@ -582,6 +653,14 @@ function idleThisWeek(
       (ax) => before.lean[ax] < 0 || (growable(world.temperament ?? 'sunny', ax) && before.lean[ax] < ECONOMY.life.walls.leanMax),
     )
   }
+  if (focus === 'publicLife') {
+    // ⚠⚠ THE INTERSECTION, AND IT IS THE **WRONG** NUMBER TO READ ALONE – see `publicLifeWork` above.
+    //    It is spelled here so the §2 table keeps one column per focus and stays comparable, and §1g
+    //    prints the two honest halves beside it. A reader who takes this row as «what the year did
+    //    not buy» is reading the weeks that bought NOTHING AT ALL, which is a much smaller set.
+    const work = publicLifeWork(world, before.hab)
+    return !work.shrink && !work.accel
+  }
   // listen: decided in §2 off the rows' own weeks – the raise is inside the tick and cannot be asked
   // for before it. Counted as NOT idle here so this denominator is never the listen corridor's.
   return false
@@ -605,7 +684,7 @@ console.log('     proposals, never a blocked gate. Every miss is re-printed in �
 console.log('')
 
 rule('§0. THE GRID')
-console.log(`    seeds/temperament  : ${CAREERS} (recovery, cool head) · ${WALLS_CAREERS} (listen, herself – full-career arms)`)
+console.log(`    seeds/temperament  : ${CAREERS} (recovery, cool head) · ${WALLS_CAREERS} (listen, herself, the public life – full-career arms)`)
 console.log(`    arms per cell      : ${ARMS.map(armLabel).join(' · ')}   ← PAIRED: the same seeds in every arm`)
 console.log(`    temperaments       : ${TEMPERAMENTS.join(' · ')}   ← assigned after createWorld, never drawn`)
 console.log(`    family             : wealthy · ${DEFAULT_PROFILE.birthMonth}/${DEFAULT_PROFILE.birthDay} birth date · the engine's own calendar`)
@@ -613,6 +692,9 @@ console.log(`    caring parent      : the '${CARING.label}' policy – measured 
 console.log(`    grinding parent    : the '${GRINDING.label}' policy – measured to collapse it to strained/cold`)
 console.log(`    horizon            : week 0 → ${WEEKS} (she is ${AGE_AT(0).toFixed(2)} → 24) · the pro gate opens the seat`)
 console.log(`    the ladder         : salaries $${ECONOMY.psychologist.rungs.map((r) => (r.salaryCents / 100).toFixed(0)).join(' / $')} a week · one session at every rung`)
+console.log(`    the focuses        : ${PSY_FOCUSES.join(' · ')}   ← the FIFTH is v77's (O7, ruled 13.09) and §1g prices it`)
+console.log(`    the news bar       : fame ≥ ${ECONOMY.spotlight.newsFameMin} (\`newsFameMin\`, §4 PROPOSAL and UNRULED) – §1g measures NOTHING below it,`)
+console.log('                         and `npm run bench:spotlight` sweeps the bar itself at 10/15/20/25/30 (ruling E).')
 console.log('')
 console.log('    !! THE SEAT IS HIRED THE FIRST WEEK `psychologistUnlocked` IS TRUE (the pro career, the')
 console.log('       travelling-team ruled gate) AND THE FOCUS IS SET THE FIRST WEEK THE ENGINE ALLOWS IT.')
@@ -1565,6 +1647,362 @@ rule(`§1f. THE FIFTH CELL – 'herself' repair acceleration   [×${ECONOMY.psyc
   }
 }
 
+// =================================================================================================
+// §1g. ⭐⭐⭐ THE FIFTH COLUMN – «THE PUBLIC LIFE» (v77's T9, wave 6)
+// =================================================================================================
+//
+// O7, ruled 13.09: the fifth focus «ships WITH the spotlight wave, not before it has something to
+// shrink». It buys TWO things, both through `psychologistWorkingRung(world, 'publicLife')`, and the
+// masseur spec's §4 law asks the same question of each: **each rung measurably better than the one
+// below at the chosen focus, or the rung is re-priced** – and «measurably» is this file's own
+// `> 2×SEM per step`.
+//
+//   · THE SHRINK – `publicLifeShrink[rung]`, the fifth factor of the pressure product;
+//   · THE ACCELERATION – `publicLifeAccel[rung]`, the multiplier on habituation's weekly `+1`.
+//
+// ⚠⚠ AND THE LADDER IS READ ON **COST PER EVENT**, NOT ON COST PER CAREER, which is the one choice in
+// this cell that decides whether it measures anything. The arms DIVERGE – a different spirit is a
+// different `spiritMatchFactor`, a different result, a different fame and therefore a different NUMBER
+// OF CAMERAS – so a career-total would be reading the divergence as if it were the rung. Cost per
+// event divides that out and leaves the two factors the rung actually moves. The career total is
+// PRINTED beside it, unsigned, because what the family pays for is the total and the owner is owed it.
+//
+// ⚠ THE PER-EVENT LADDER IS PARTLY ARITHMETIC AND IT IS SAID OUT LOUD. `publicLifeShrink` is a
+// multiplier on every event, so a monotone per-event cost is half a foregone conclusion; what is NOT
+// foregone is the SIZE, and what is genuinely uncertain is the second factor pulling the same way –
+// a faster habituation walk means a lower `habituationScale` on every later event, so the rungs
+// separate by MORE than their own multipliers. The predicted column is the multiplier alone; the gap
+// between predicted and measured IS the acceleration showing up in the shrink's own number.
+//
+// ⚠⚠ THE ACCELERATION IS READ ON **NEWS WEEKS TO THE CAP**, not on calendar weeks and not on the
+// counter itself. `growHabituation` only moves on a week she is actually news, so two careers that
+// spent 40 and 400 weeks in the light are not two speeds of one walk; and reading the counter back
+// would be reading `publicLifeAccel` off its own product.
+//
+// ⚠⚠⚠ THE CORRIDOR IS PER **EFFECT**, AND PRINTING IT ANY OTHER WAY IS A LIE ABOUT WHAT HE IS PAYING
+// FOR – T5's finding, and the reason this cell has three idle columns where §2's table has one. A
+// veteran at the habituation cap gets NOTHING from the accelerator while the same week's pressure is
+// still being shrunk; a quiet week shrinks nothing while the counter keeps walking. The intersection
+// – weeks that bought nothing at all – is the smallest of the three and is the only one §2 can hold.
+
+rule(`§1g. «THE PUBLIC LIFE» – the fifth column   [shrink [${ECONOMY.psychologist.publicLifeShrink.join(', ')}] and accel [${ECONOMY.psychologist.publicLifeAccel.join(', ')}] = PROPOSALS, UNRULED]`)
+interface PublicCell {
+  temperament: Temperament
+  arm: Arm
+  n: number
+  focusSet: number
+  focusRefusals: number
+  events: number
+  chargedWeeks: number
+  /** one observation per career */
+  perEvent: number[]
+  /** ⭐⭐⭐ THE SAME NUMBERS KEYED BY SEED INDEX, `null` where the career met no event at all – which is
+   *  what makes the ladder's verdict PAIRABLE. See the ⚠⚠ on the shrink ladder for why the pooled
+   *  column below it cannot decide anything. */
+  perEventBySeed: (number | null)[]
+  perCareer: number[]
+  newsWeeks: number[]
+  finalHab: number[]
+  newsToCap: number[]
+  capReached: number
+  paid: number
+  shrinkIdle: number
+  accelIdle: number
+  bothIdle: number
+  held: number
+}
+const publicCells: PublicCell[] = []
+{
+  const cap = ECONOMY.spotlight.habituationFullWeeks
+  for (const t of TEMPERAMENTS) {
+    for (const arm of ARMS) {
+      const cell: PublicCell = {
+        temperament: t,
+        arm,
+        n: 0,
+        focusSet: 0,
+        focusRefusals: 0,
+        events: 0,
+        chargedWeeks: 0,
+        perEvent: [],
+        perEventBySeed: [],
+        perCareer: [],
+        newsWeeks: [],
+        finalHab: [],
+        newsToCap: [],
+        capReached: 0,
+        paid: 0,
+        shrinkIdle: 0,
+        accelIdle: 0,
+        bothIdle: 0,
+        held: 0,
+      }
+      for (let i = 0; i < PUBLIC_CAREERS; i++) {
+        const c = walk(`psy-public-${i}`, t, {
+          policy: CARING,
+          focus: arm === null ? null : 'publicLife',
+          rung: arm,
+          weeks: WEEKS,
+          spotlight: true,
+        })
+        cell.n++
+        cell.paid += c.paidWeeks
+        cell.shrinkIdle += c.spotShrinkIdle
+        cell.accelIdle += c.spotAccelIdle
+        cell.bothIdle += c.idleWeeks
+        cell.held += c.hireWeek >= 0 ? c.weeks - c.hireWeek : 0
+        if (c.focusWeek >= 0) cell.focusSet++
+        cell.focusRefusals += c.focusRefusals
+        let news = 0
+        let charge = 0
+        let events = 0
+        let toCap = -1
+        for (let w = 0; w < c.spot.length; w++) {
+          const week = c.spot[w]
+          if (week === undefined) continue
+          if (week.news) news++
+          if (toCap < 0 && week.habituation >= cap - 1e-9) toCap = news
+          const ch = chargeAt(c.spot, w)
+          if (ch !== 0) cell.chargedWeeks++
+          charge += ch
+          events += eventsChargedAt(c.spot, w)
+        }
+        cell.events += events
+        cell.newsWeeks.push(news)
+        cell.perCareer.push(charge)
+        cell.perEventBySeed[i] = events > 0 ? charge / events : null
+        if (events > 0) cell.perEvent.push(charge / events)
+        const last = [...c.spot].reverse().find((x) => x !== undefined)
+        cell.finalHab.push(last?.habituation ?? 0)
+        if (toCap >= 0) {
+          cell.newsToCap.push(toCap)
+          cell.capReached++
+        }
+      }
+      publicCells.push(cell)
+    }
+  }
+}
+{
+  const seat = publicCells.filter((c) => c.arm !== null)
+  if (seat.reduce((s, c) => s + c.events, 0) === 0) {
+    stall(
+      '§1g: ZERO exposure events across every seat arm',
+      'no career on this grid ever crossed `newsFameMin`, so the fifth focus had nothing to shrink – ruling E-bis: the POLICY decides fame, not the money, and a bar of ' +
+        `${ECONOMY.spotlight.newsFameMin} may simply be out of this grid's reach`,
+    )
+  }
+  if (seat.reduce((s, c) => s + c.focusSet, 0) === 0) {
+    stall('§1g: the focus was NEVER set in any seat arm', 'every column below would be the free road wearing a rung label')
+  }
+}
+console.log(
+  `    ${pad('temperament', 12)}${pad('arm', 9)}${padL('n', 4)}${padL('focus set', 11)}${padL('news wks', 10)}${padL('events', 8)}${padL('charged wks', 13)}${padL('cost/event', 12)}${padL('SEM', 8)}${padL('cost/career', 13)}${padL('final hab', 11)}`,
+)
+for (const t of TEMPERAMENTS) {
+  for (const arm of ARMS) {
+    const cell = publicCells.find((c) => c.temperament === t && c.arm === arm)
+    if (cell === undefined) throw new Error('missing publicLife cell')
+    const news = sample(`§1g ${t}/${armLabel(arm)} news`, cell.newsWeeks, 1)
+    const hab = sample(`§1g ${t}/${armLabel(arm)} hab`, cell.finalHab, 1)
+    const pe = cell.perEvent.length > 0 ? sample(`§1g ${t}/${armLabel(arm)} per-event`, cell.perEvent, 1) : null
+    const pc = sample(`§1g ${t}/${armLabel(arm)} per-career`, cell.perCareer, 1)
+    console.log(
+      `    ${pad(t, 12)}${pad(armLabel(arm), 9)}${padL(String(cell.n), 4)}${padL(`${cell.focusSet}/${cell.n}`, 11)}${padL(num(avg(news), 1), 10)}` +
+        `${padL(String(cell.events), 8)}${padL(String(cell.chargedWeeks), 13)}${padL(pe === null ? '–' : num(avg(pe), 3), 12)}${padL(pe === null ? '–' : num(sem(pe), 3), 8)}` +
+        `${padL(num(avg(pc), 1), 13)}${padL(num(avg(hab), 1), 11)}`,
+    )
+  }
+}
+console.log('')
+{
+  // --- ⚠⚠⚠ THE SHRINK LADDER, **PAIRED** – and the pooled version underneath it, which CANNOT decide -
+  //
+  // ⚠⚠⚠ THE FIRST DRAFT POOLED THE FOUR TEMPERAMENTS INTO ONE SAMPLE AND MISSED EVERY STEP, AND THE
+  // POOLING WAS THE DEFECT RATHER THAN THE LADDER. Measured at 4 seeds: the pooled SEM came out at
+  // 0.235 against steps of 0.17-0.31, so every step read «inside the noise» – while the SAME run's
+  // per-temperament cells were monotone to three decimals with SEMs of 0.016-0.36 and a cost ratio of
+  // exactly ×0.822 in all four cohorts. The pooled spread is not noise: cost/event runs -0.90 for a
+  // sunny girl and -2.82 for a deep one BY CONSTRUCTION (the openness ×0.75/×1.5 and the intensity
+  // ×0.8/×1.25 are the two middle factors of the product), so a pooled SEM measures THE ROSTER'S
+  // SPREAD and never the rung's step. It is the census's own lesson one concept over: «the paired mean
+  // is the statistic, not the difference of two pooled rates».
+  //
+  // So the VERDICT is taken on the PAIRED delta – the same seed and the same temperament at two rungs,
+  // one observation per (seed, temperament) – and the pooled table is printed underneath as context.
+  // ⚠ THE PAIRING DOES NOT MAKE THE ARMS IDENTICAL: two rungs of one seed are still two CAREERS (the
+  // seat costs money, the spirit differs, the tennis diverges), so the delta carries real variance and
+  // the bar is still a bar. What the pairing removes is the part of the spread that is who she is.
+  console.log('    THE SHRINK LADDER – what one exposure event COSTS. ⚠⚠ THE VERDICT IS **PAIRED** (same seed, same')
+  console.log('    temperament, two rungs); the pooled row beneath each is context and cannot decide – see the ⚠⚠ in source.')
+  console.log(`    ${pad('step', 22)}${padL('paired n', 10)}${padL('mean Δ cost', 13)}${padL('SEM', 9)}${padL('2×SEM', 9)}${padL('predicted Δ×', 14)}  verdict`)
+  const cellOf = (arm: Arm, t: Temperament): PublicCell => {
+    const c = publicCells.find((x) => x.temperament === t && x.arm === arm)
+    if (c === undefined) throw new Error('missing publicLife cell')
+    return c
+  }
+  /** |cost| at `hi` minus |cost| at `lo`, one observation per (seed, temperament) that met an event in
+   *  BOTH arms. Negative = the higher rung is cheaper, which is the direction the ladder claims. */
+  function pairedDelta(hi: Arm, lo: Arm): number[] {
+    const out: number[] = []
+    for (const t of TEMPERAMENTS) {
+      const a = cellOf(hi, t)
+      const b = cellOf(lo, t)
+      for (let i = 0; i < PUBLIC_CAREERS; i++) {
+        const x = a.perEventBySeed[i]
+        const y = b.perEventBySeed[i]
+        if (x === null || x === undefined || y === null || y === undefined) continue
+        out.push(Math.abs(x) - Math.abs(y))
+      }
+    }
+    return out
+  }
+  for (const arm of ARMS) {
+    if (arm === null) continue
+    // ⚠ RUNG 0's TWO COMPARISONS ARE ONE COMPARISON – `armBelow(0)` IS the free road – so the second
+    //   row is dropped rather than printed twice. (It was printed twice in the 16:49 record; the rows
+    //   were byte-identical, and this is display-only.)
+    const steps: [string, Arm, number][] = [
+      [`rung ${arm} vs ${armLabel(armBelow(arm))}`, armBelow(arm), publicLifeShrinkAt(arm) / (armBelow(arm) === null ? 1 : publicLifeShrinkAt(armBelow(arm) as Rung))],
+    ]
+    if (armBelow(arm) !== null) steps.push([`rung ${arm} vs no seat`, null, publicLifeShrinkAt(arm)])
+    for (const [label, lo, predicted] of steps) {
+      const xs = pairedDelta(arm, lo)
+      if (xs.length === 0) {
+        console.log(`    ${pad(label, 22)}${padL('0', 10)}${padL('–', 13)}${padL('–', 9)}${padL('–', 9)}${padL(num(predicted, 3), 14)}  UNMEASURED`)
+        verdict(`§1g publicLife shrink, ${label}`, false, 'no (seed, temperament) met an exposure event in BOTH arms – the step is UNMEASURED rather than flat')
+        continue
+      }
+      const sm = sample(`§1g paired ${label}`, xs, 1)
+      const d = avg(sm)
+      const se = sem(sm)
+      const ok = d < 0 && Number.isFinite(se) && Math.abs(d) > 2 * se
+      const v = verdict(
+        `§1g publicLife shrink, ${label}`,
+        ok,
+        `paired mean Δ cost/event ${num(d, 4)} ± ${num(se, 4)} (n=${sm.xs.length}) is not cheaper by more than 2×SEM – the masseur §4 law asks for a rung measurably better than the one below; implicates ECONOMY.psychologist.publicLifeShrink [${ECONOMY.psychologist.publicLifeShrink.join(', ')}]`,
+      )
+      console.log(
+        `    ${pad(label, 22)}${padL(String(sm.xs.length), 10)}${padL(num(d, 4), 13)}${padL(num(se, 4), 9)}${padL(num(2 * se, 4), 9)}${padL(`×${num(predicted, 3)}`, 14)}  ${v}`,
+      )
+    }
+  }
+  console.log('')
+  console.log('    ...and the POOLED columns, printed as context and carrying NO verdict:')
+  console.log(`    ${pad('arm', 10)}${padL('n careers', 11)}${padL('cost/event', 12)}${padL('SEM', 9)}${padL('shipped ×', 11)}${padL('measured × vs free', 20)}`)
+  const pooled = new Map<string, Sample>()
+  for (const arm of ARMS) {
+    const xs = publicCells.filter((c) => c.arm === arm).flatMap((c) => c.perEvent)
+    pooled.set(armLabel(arm), sample(`§1g pooled ${armLabel(arm)}`, xs, 1))
+  }
+  const free = pooled.get('no seat')!
+  for (const arm of ARMS) {
+    const here = pooled.get(armLabel(arm))!
+    console.log(
+      `    ${pad(armLabel(arm), 10)}${padL(String(here.xs.length), 11)}${padL(num(avg(here), 3), 12)}${padL(num(sem(here), 3), 9)}` +
+        `${padL(arm === null ? '1.000' : num(publicLifeShrinkAt(arm), 3), 11)}${padL(`×${num(Math.abs(avg(here)) / Math.abs(avg(free)), 3)}`, 20)}`,
+    )
+  }
+  console.log('')
+  console.log('    !! READ THE MEASURED RATIO AGAINST THE SHIPPED MULTIPLIER, not against zero. The multiplier is')
+  console.log('       what the rung takes off ONE event; the measured ratio is that TIMES whatever the faster')
+  console.log('       habituation walk has already taken off the same event, and DIVIDED by whatever the arms')
+  console.log('       diverged into – a rung that ends up less famous meets fewer cameras and habituates less. A')
+  console.log('       measured ratio deeper than the shipped one is the acceleration showing up inside the shrink;')
+  console.log('       a shallower one is the divergence. Neither can be priced one at a time, which is the finding.')
+}
+console.log('')
+{
+  // --- THE ACCELERATION LADDER -------------------------------------------------------------------
+  console.log('    THE ACCELERATION LADDER – NEWS weeks spent before the habituation cap, against the rung below AND no seat.')
+  console.log(`    ${pad('arm', 10)}${padL('predicted', 11)}${padL('reached cap', 13)}${padL('news wks to cap', 17)}${padL('SEM', 9)}${padL('vs rung below', 15)}${padL('vs no seat', 13)}  verdicts`)
+  const capSample = new Map<string, number[]>()
+  for (const arm of ARMS) capSample.set(armLabel(arm), publicCells.filter((c) => c.arm === arm).flatMap((c) => c.newsToCap))
+  const reached = new Map<string, string>()
+  for (const arm of ARMS) {
+    const cells = publicCells.filter((c) => c.arm === arm)
+    reached.set(armLabel(arm), `${cells.reduce((s, c) => s + c.capReached, 0)}/${cells.reduce((s, c) => s + c.n, 0)}`)
+  }
+  const freeXs = capSample.get('no seat')!
+  for (const arm of ARMS) {
+    const xs = capSample.get(armLabel(arm))!
+    const predicted = arm === null ? ECONOMY.spotlight.habituationFullWeeks : ECONOMY.spotlight.habituationFullWeeks / publicLifeAccelAt(arm)
+    if (xs.length === 0) {
+      console.log(`    ${pad(armLabel(arm), 10)}${padL(num(predicted, 1), 11)}${padL(reached.get(armLabel(arm))!, 13)}${padL('–', 17)}${padL('–', 9)}${padL('–', 15)}${padL('–', 13)}  UNMEASURED`)
+      if (arm !== null) {
+        verdict(
+          `§1g publicLife acceleration, rung ${arm}`,
+          false,
+          'not one career in this arm reached the habituation cap, so the acceleration could not be measured at all – the arm is UNMEASURED rather than flat',
+        )
+      }
+      continue
+    }
+    const here = sample(`§1g cap ${armLabel(arm)}`, xs, 1)
+    let vBelow = '    '
+    let vFree = '    '
+    let dBelowTxt = '–'
+    let dFreeTxt = '–'
+    if (arm !== null) {
+      const belowXs = capSample.get(armLabel(armBelow(arm)))!
+      if (belowXs.length > 0) {
+        const below = sample(`§1g cap below ${armLabel(arm)}`, belowXs, 1)
+        const d = avg(here) - avg(below)
+        const se = Math.sqrt(sem(here) ** 2 + sem(below) ** 2)
+        const ok = d < 0 && Number.isFinite(se) && Math.abs(d) > 2 * se
+        dBelowTxt = `${num(d, 1)}±${num(se, 1)}`
+        vBelow = verdict(
+          `§1g publicLife acceleration, rung ${arm} vs ${armLabel(armBelow(arm))}`,
+          ok,
+          `news weeks to the cap ${num(avg(below), 1)} → ${num(avg(here), 1)} (Δ ${num(d, 1)} ± ${num(se, 1)}) is not shorter by more than 2×SEM – implicates ECONOMY.psychologist.publicLifeAccel [${ECONOMY.psychologist.publicLifeAccel.join(', ')}]`,
+        )
+      }
+      if (freeXs.length > 0) {
+        const fs = sample('§1g cap free', freeXs, 1)
+        const dF = avg(here) - avg(fs)
+        const seF = Math.sqrt(sem(here) ** 2 + sem(fs) ** 2)
+        const okF = dF < 0 && Number.isFinite(seF) && Math.abs(dF) > 2 * seF
+        dFreeTxt = `${num(dF, 1)}±${num(seF, 1)}`
+        vFree = verdict(
+          `§1g publicLife acceleration, rung ${arm} vs no seat`,
+          okF,
+          `news weeks to the cap ${num(avg(fs), 1)} → ${num(avg(here), 1)} (Δ ${num(dF, 1)} ± ${num(seF, 1)}) – a rung that does not measurably shorten the walk against the FREE ROAD buys nothing; implicates ECONOMY.psychologist.publicLifeAccel`,
+        )
+      }
+    }
+    console.log(
+      `    ${pad(armLabel(arm), 10)}${padL(num(predicted, 1), 11)}${padL(reached.get(armLabel(arm))!, 13)}${padL(num(avg(here), 1), 17)}${padL(num(sem(here), 1), 9)}` +
+        `${padL(dBelowTxt, 15)}${padL(dFreeTxt, 13)}  ${vBelow} ${vFree}`,
+    )
+  }
+}
+console.log('')
+{
+  // --- ⚠⚠⚠ THE NEVER-FIRED CORRIDOR, PER EFFECT ---------------------------------------------------
+  console.log('    ⚠⚠ THE NEVER-FIRED CORRIDOR, PER **EFFECT** – T5\'s finding, and the only honest shape for this focus.')
+  console.log('       «shrink idle» = a paid week whose pass was handed NO exposure. «accel idle» = a paid week the')
+  console.log('       counter did not move on (not news, a wall up, or already at the cap). «both» is the intersection –')
+  console.log('       the weeks that bought nothing at all, which is the only column §2\'s one-per-focus table can hold.')
+  console.log('')
+  console.log(`    ${pad('arm', 10)}${padL('paid wks', 10)}${padL('shrink idle', 13)}${padL('accel idle', 12)}${padL('BOTH idle', 11)}${padL('stood down', 12)}`)
+  for (const arm of ARMS) {
+    if (arm === null) continue
+    const cells = publicCells.filter((c) => c.arm === arm)
+    const paid = cells.reduce((s, c) => s + c.paid, 0)
+    const held = cells.reduce((s, c) => s + c.held, 0)
+    console.log(
+      `    ${pad(armLabel(arm), 10)}${padL(String(paid), 10)}${padL(pctS(share(`§1g ${armLabel(arm)} shrink idle`, cells.reduce((s, c) => s + c.shrinkIdle, 0), paid, 1)), 13)}` +
+        `${padL(pctS(share(`§1g ${armLabel(arm)} accel idle`, cells.reduce((s, c) => s + c.accelIdle, 0), paid, 1)), 12)}` +
+        `${padL(pctS(share(`§1g ${armLabel(arm)} both idle`, cells.reduce((s, c) => s + c.bothIdle, 0), paid, 1)), 11)}` +
+        `${padL(pctS(held === 0 ? Number.NaN : (100 * (held - paid)) / held), 12)}`,
+    )
+  }
+  console.log('')
+  console.log(`    focus refusals : ${publicCells.filter((c) => c.arm !== null).reduce((s, c) => s + c.focusRefusals, 0)} (the consent gates – the 18+ joint decline, and a strained bond)`)
+  console.log('    !! NO BAR IS DRAWN ON THE CORRIDOR. The spec asks for the number PRINTED; what corridor is')
+  console.log('       acceptable is the owner\'s ruling and not a bench\'s.')
+}
+
 rule('§2. THE NEVER-FIRED CORRIDOR – paid weeks with nothing to do, per focus (rung 1, the default)')
 console.log('    the spec §4 predicts the SHAPE: «cool head and the drift focus do slow work every held week,')
 console.log('    so never-fired is mostly the recovery focus\'s exposure». That is the prediction; below is the number.')
@@ -1668,6 +2106,27 @@ console.log('')
       held += h
     }
     corridors.push({ focus: 'coolhead', paid, idle, held, note: 'its own whole-career grid – idle = AT THE CEILING (ruling M)' })
+  }
+
+  // --- the public life, off §1g's rung-1 arm -----------------------------------------------------
+  // ⚠⚠ THIS ROW IS THE **INTERSECTION** AND THE TABLE CANNOT SAY SO IN A COLUMN, so it says so here
+  //    and §1g prints the two honest halves. «The public life» buys a shrink AND an acceleration, and
+  //    they idle on different weeks; a week counted here bought NOTHING AT ALL, which is a much
+  //    smaller set than «the year did not fire». Reading this cell as the corridor would understate
+  //    what the family is paying for by exactly the weeks one effect carried alone.
+  {
+    let paid = 0
+    let idle = 0
+    let held = 0
+    for (const t of TEMPERAMENTS) {
+      const cell = publicCells.find((c) => c.temperament === t && c.arm === 1)
+      if (cell === undefined) throw new Error('missing publicLife cell')
+      push('publicLife', t, cell.paid, cell.bothIdle, cell.held)
+      paid += cell.paid
+      idle += cell.bothIdle
+      held += cell.held
+    }
+    corridors.push({ focus: 'publicLife', paid, idle, held, note: '§1g\'s runs – ⚠ the INTERSECTION of two effects; §1g splits it' })
   }
 
   console.log(`    ${pad('focus', 10)}${pad('temperament', 12)}${padL('paid wks', 10)}${padL('never fired', 13)}${padL('stood down', 14)}`)
@@ -1863,6 +2322,14 @@ rule('§5. THE ACTUATION RECEIPT – every arm reached its subject, and the dial
   //    §1d is entirely CARING, so a walls-UP flip is impossible there by construction and the guard
   //    fired on a zero that was the design. The collapse direction lives where the kicks are.
   const collapses = o6Collapses + herselfCells.reduce((s, c) => s + c.collapseFlips.reduce((a, b) => a + b, 0), 0)
+  // ⭐⭐⭐ v77's T9 – THE FIFTH COLUMN'S FOUR RECEIPTS. Every one of them is a way §1g can be a table
+  //    of zeros that LOOKS like a measurement: a grid that never crosses the bar, a focus the consent
+  //    gates never let land, a ledger that never answers, a counter that never moves.
+  const publicSeat = publicCells.filter((c) => c.arm !== null)
+  const publicEvents = publicSeat.reduce((s, c) => s + c.events, 0)
+  const publicNews = publicSeat.reduce((s, c) => s + c.newsWeeks.reduce((a, b) => a + b, 0), 0)
+  const publicFocusSet = publicSeat.reduce((s, c) => s + c.focusSet, 0)
+  const publicHabGrew = publicSeat.reduce((s, c) => s + c.finalHab.filter((h) => h > 0).length, 0)
   const lines: [string, number, string][] = [
     ['shocks stamped by `rollEnds`', recShocks, '§1a would otherwise be reading an unshocked career'],
     ['recovery receipts printed', recReceipts, 'T4\'s clear line – zero means the focus never visibly worked'],
@@ -1874,6 +2341,10 @@ rule('§5. THE ACTUATION RECEIPT – every arm reached its subject, and the dial
     ['beyond-baseline flips (seat arms)', selfFlips, '§1d\'s ladder has nothing to rank without them'],
     ['beyond-baseline weeks (seat arms)', selfBeyond, 'the growth branch ran'],
     ['walls-UP flips (collapses, §1e)', collapses, 'the other direction fired too – the model is not one-sided'],
+    ['exposure events met (§1g)', publicEvents, 'v77 – the fifth column had nothing to shrink; ruling E-bis: the POLICY decides fame'],
+    ['news weeks walked (§1g)', publicNews, 'v77 – not one career crossed `newsFameMin`, so §1g is a zero about nothing'],
+    ['the fifth focus SET (§1g)', publicFocusSet, 'v77 – every rung column would be the free road wearing a label'],
+    ['habituation grew (§1g careers)', publicHabGrew, 'v77 – `growHabituation` never moved, so the acceleration ladder has no subject'],
   ]
   for (const [what, n, why] of lines) {
     console.log(`    ${pad(what, 38)}${padL(String(n), 8)}   ${n === 0 ? '!! ZERO – ' : ''}${why}`)
