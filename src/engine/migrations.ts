@@ -6,6 +6,11 @@ import {
   type FinanceWeek,
   type KitGrades,
   type KitLine,
+  // ⚠ v77 (the spotlight, wave 6 – T1) – TYPE-ONLY, for the FIRST step in this ladder that back-fills
+  // fields on the ROWS of a list rather than keys on the world. The cast it feeds
+  // (`Partial<LoveEpisode>[]`) is what lets `??=` run on a required field, which is the same courtesy
+  // v33's `terms` cast and v66's `{ id?: unknown }[]` cast take, one and eleven versions down.
+  type LoveEpisode,
   type Milestone,
   type SeasonHistoryEntry,
   type SessionKind,
@@ -2637,6 +2642,79 @@ export function migrateSave(raw: unknown): WorldState {
     // the W-professional arm, so a migrated career is never worse off than under the live fold.
     save.peakDomesticPoints ??= 0
     v = 76
+  }
+
+  // ⭐⭐⭐ v76 -> v77 – THE SPOTLIGHT, WAVE 6: WHAT LIVING KNOWN COSTS HER, AND WHAT THE WORLD KNOWS.
+  //
+  // ⚠⚠ THE FIRST STEP IN THIS ENTIRE LADDER THAT BACK-FILLS FIELDS ON THE ROWS OF A LIST, and that is
+  // the sentence the next reader needs before any other. Seventy-six steps of history are `??=` on a
+  // key of `save`; four of this version's five fields live on `LoveEpisode` ENTRIES inside
+  // `save.loveEpisodes`, which no top-level assignment can reach. So this step WALKS the list. A
+  // career with two attachments needs both rows repaired, and a step that repaired only the world key
+  // would leave every historical row missing four fields while every test that reads a FRESH world
+  // stayed green – the golden corpus cannot catch it either, because all 77 goldens carry
+  // `loveEpisodes: []` (measured 14.09, v74 / v75 / v76 each an empty array and everything below them
+  // predates the field). The witness is CRAFTED in tests/wave6-spotlight-schema.test.ts §B rather than
+  // borrowed from a fixture, for exactly that reason.
+  //
+  // ⚠⚠ EVERY BACK-FILL IS EXACTLY TRUE AND NOT ONE OF THEM IS A BARGAIN, which is v73's / v74's /
+  // v75's / v76's own claim one rung further on. v29 and v31 wrote nothing because the evidence had
+  // been PRUNED and a confident wrong answer is worse than a partial one; v26 and v32 wrote nothing
+  // because fabricating rows would mean fabricating DECISIONS the player never made. Here, five times
+  // over, the simplest reason available:
+  //
+  //   `spotlightHabituation = 0` – ⭐ ZERO IS THE IDENTITY AND NOT A PLACEHOLDER FOR ONE. It counts
+  //                                «known weeks» actually lived toward `habituationFullWeeks`, and a
+  //                                career that predates the spotlight has lived none of them: nothing
+  //                                was counting, and there was no pressure to acclimate to. This is
+  //                                `wallsLean`'s `{open: 0, reg: 0}` one version down, verbatim in its
+  //                                own situation.
+  //   `publicWeek = null`         – the world never learned. Null is that, and it is emphatically not
+  //                                «week 0»: the press did not exist as a mechanic, so no story ever
+  //                                ran about anybody.
+  //   `publicWrong = false`       – no story ran, so no story ran wrong. The flag is meaningless while
+  //                                `publicWeek` is null (the type's own note), and `false` is the only
+  //                                value that invents no tabloid.
+  //   `airedMetWeek = null`       – ...and the booth has voiced neither fact, because there was no
+  //   `airedEndedWeek = null`        channel for it to voice one through. The stamps ARE the once-ness,
+  //                                so «never aired» must be null and never a week.
+  //
+  // ⚠⚠ AND THAT IS WHAT MAKES A MIGRATED CAREER PLAY BYTE-IDENTICAL TENNIS, this step's strongest
+  // property and the wave's first pin. Every wave-6 mechanic is gated on `sheIsNewsAt` (T2) or on a
+  // non-null `publicWeek` (T6/T7), and at these five values not one of them can fire. The migration
+  // is not «the girl acquires a public life»; it is «nothing about her was ever public, and she has
+  // never lived a week known», written down for the first time – v76's `temperament` note in a third
+  // costume.
+  //
+  // ⚠⚠ `??=` AND NEVER `||=`, for the reason v76's block gives one screen up and one field makes
+  // sharper here: `publicWrong ||= false` is a no-op that looks like a write, and `publicWeek ||= null`
+  // would overwrite a live `0`-shaped week. `??=` tests for absent-or-null alone – so a row that
+  // already carries a leak keeps it whole, which is what every wave-6 career will look like the
+  // moment T6 lands, and a second walk over the same payload is a no-op. ⚠ `publicWeek` and the two
+  // aired stamps back-fill to `null`, which is also the value `??=` tests for; that costs the step
+  // nothing, because «absent» and «already null» mean the same thing here (v75's own note on
+  // `spiritShock`).
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE: one `??=` on a world key and four per row, gated on `v === 76`,
+  // writing literals. No sub-stream is reached at all on this path, so MAIN cannot move and the
+  // frozen capture (41550 / e6b0c709) is untouched by construction. Full move: `SAVE_SCHEMA_VERSION`
+  // in world/state.ts, this step, tests/fixtures/saves/v77.json, and the mechanically-checked schema
+  // sentence in docs/context/saves-and-worker.md.
+  if (v === 76) {
+    save.spotlightHabituation ??= 0
+    // ⚠ THE GUARD AND THE CAST ARE BOTH v33's `terms` LOOP, verbatim in a newer situation. `Array.isArray`
+    // because a hand-built probe world is not a save and may carry nothing here; `Partial<LoveEpisode>`
+    // because the four fields are REQUIRED on the shipped type, and `??=` on a required field is a
+    // compile error rather than a no-op (TS 5.6's «right operand is unreachable»). The cast says «this
+    // row predates these fields», which is precisely what a migration is looking at.
+    for (const episode of Array.isArray(save.loveEpisodes) ? (save.loveEpisodes as Partial<LoveEpisode>[]) : []) {
+      if (!episode || typeof episode !== 'object') continue
+      episode.publicWeek ??= null
+      episode.publicWrong ??= false
+      episode.airedMetWeek ??= null
+      episode.airedEndedWeek ??= null
+    }
+    v = 77
   }
 
   if (v !== SAVE_SCHEMA_VERSION) {

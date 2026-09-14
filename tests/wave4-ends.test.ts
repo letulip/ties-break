@@ -183,7 +183,7 @@ function weekAtAge(world: WorldState, years: number): number {
 
 /** A row of the v74 shape. `endedWeek: null` is «still going». */
 function episode(sinceWeek: number, knownWeek: number | null = null, endedWeek: number | null = null): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}` }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
 }
 
 /** A career, parked at `week`, with whatever love life the case needs. ⚠ A REAL `createWorld` rather
@@ -487,8 +487,27 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
     expect(world.loveEpisodes[0], 'the row is the same row with one more date on it')
       .toEqual({ ...before, endedWeek: 420 })
     expect(world.loveEpisodes[0].knownWeek, 'what he was told is a fact about the past and an ending does not un-tell it').toBe(402)
+    // ⚠ RE-AIMED AT THE v77 SHAPE (14.09, the spotlight – wave 6 T1), NOT WEAKENED, in step with
+    // tests/wave3-arrival.test.ts's twin one wave down and for the identical reason: v77 appends
+    // `publicWeek`, `publicWrong`, `airedMetWeek` and `airedEndedWeek` to `LoveEpisode`, so the total
+    // key set is four longer. The CLAIM is untouched and is the stronger half of this case – `endEpisode`
+    // writes ONE date and invents nothing – and it stays a total `toEqual` so a field added by accident
+    // still goes red here. ⚠ The `{ ...before, endedWeek: 420 }` line above needed nothing: `before` is
+    // a deep copy of the live row, so it carries the four new fields already and asserts they are
+    // PRESERVED across an ending, which is a claim this case did not previously get to make.
     expect(Object.keys(world.loveEpisodes[0]).sort(), 'and no field was invented')
-      .toEqual(['endedWeek', 'id', 'knownWeek', 'partnerId', 'sinceWeek', 'wants'])
+      .toEqual([
+        'airedEndedWeek',
+        'airedMetWeek',
+        'endedWeek',
+        'id',
+        'knownWeek',
+        'partnerId',
+        'publicWeek',
+        'publicWrong',
+        'sinceWeek',
+        'wants',
+      ])
   })
 
   it('⭐⭐ the row STAYS – nothing is nulled, nothing is pruned, and the ACTIVE SLOT empties by itself', () => {

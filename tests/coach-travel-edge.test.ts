@@ -49,9 +49,41 @@ import {
   PRE_V74,
   PRE_V75,
   PRE_V76,
+  PRE_V77,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v77: rolling the schema back to 76 – dropping the world key AND the four fields v77 put on every `loveEpisodes` ROW – reproduces the v76 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE SPOTLIGHT, STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY – the v76
+    // case directly below, repeated one version up, except that this one is NOT the same shape as its
+    // predecessor and that is the point of it. v77 appends ONE key to `createWorld`'s literal
+    // (`spotlightHabituation`) and FOUR fields to the `LoveEpisode` ROW (`publicWeek`, `publicWrong`,
+    // `airedMetWeek`, `airedEndedWeek`). Peel the key, MAP THE LIST and rest each row, roll the number
+    // back, and the ENTIRE serialisation returns byte for byte: `rngMain`, `results`, `events`, the
+    // wallet, the body, `temperament`, the walls, all eighty-odd.
+    //
+    // ⭐⭐⭐ THIS IS THE PROTOCOL'S FIRST NESTED PEEL, AND `eliteGrinder` IS ITS ONLY WITNESS IN THE
+    // WHOLE FILE. Measured 14.09: of the five cells this apparatus walks, four carry `loveEpisodes: []`
+    // and exactly one carries a row – hers, from week 137, the attachment wave 3's hazard gives her.
+    // So the line BELOW that matters most is the middle one: on the other two the nested half of the
+    // peel maps an empty array and proves nothing at all, while hers proves the map restores each row's
+    // six v74 fields in their original order. `JSON.stringify` key order is what the whole identity
+    // rests on, at both levels, and object rest preserves it for everything it keeps.
+    //
+    // ⚠⚠ AND THE IDENTITY VALUES ARE A FACT ABOUT THE TREE, NOT ABOUT THESE CAREERS – v74's, v75's and
+    // v76's caveat one rung further on. T1 ships five seats, the migration and NO READER AT ALL:
+    // `sheIsNewsAt` and the exposure ledger are T2, the pressure T3, habituation T4, the leak that
+    // could set `publicWeek` T6, the booth stamps T7. So this case does not yet say «a leak cannot
+    // reach a 156-week career». It says the schema move is inert, which is all a schema move should
+    // ever be. ⚠ And ruling D of 14.09 says the corpus could not answer the other question anyway:
+    // peak `fameAt` here is 0.00 / 0.00 / 3.43 / 1.85 / 3.25 against a proposed news bar of 30, so
+    // every wave-6 mechanic is unreachable in these careers by an order of magnitude.
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    expect(careerHashAtSchema(5, 0, 76), '25k · middle coach · grinder').toBe(PRE_V77.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 76), '120k · elite coach · grinder – THE ONE ROW-CARRYING CELL').toBe(PRE_V77.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 76), '8k · self-coached · player').toBe(PRE_V77.selfTravelling)
+  })
+
   it('⭐⭐⭐ v76: rolling the schema back to 75 – and dropping the SIX keys v76 added – reproduces the v75 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PSYCHOLOGIST'S YEAR, STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
     // the v75 case directly below, repeated one version up. v76 appends SIX keys to `createWorld`'s

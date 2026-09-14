@@ -142,6 +142,11 @@ const SRC = fileURLToPath(new URL('../src/', import.meta.url))
  *  payload would let one case decide what the next one sees. Wave 4's own helper, one rung up. */
 const v75 = (): Record<string, unknown> => JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8'))
 
+/** ⚠ ADDED 14.09 BY WAVE 6's T1, for §B's re-aim and nothing else: the rungs ABOVE v76 are measured
+ *  rather than named, and «what they add» is what they add to a v76 payload. Same deep-copy rule as
+ *  `v75` above – `migrateSave` mutates in place. */
+const v76 = (): Record<string, unknown> => JSON.parse(readFileSync(`${SAVES}/v76.json`, 'utf8'))
+
 /** The six keys v76 appends, in `createWorld`'s literal order – which is also the order
  *  `careerHashAtSchema` peels them in reverse. Written out ONCE here and read by four cases, so a
  *  seventh key arriving in some later wave cannot quietly slip past one of them. */
@@ -205,7 +210,17 @@ function walk(world: WorldState, weeks: number): WorldState {
 // =================================================================================================
 describe('wave 5 T1 A – v76, the three-part move', () => {
   it('bumps the version and ships a golden fixture of its own shape', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(76)
+    // ⚠ RE-AIMED AT v77 (14.09, the spotlight took the next rung – `spotlightHabituation` and the four
+    // publicity fields on `LoveEpisode`), NOT LOOSENED, and on `tests/wave4-spirit-shock.test.ts`'s
+    // own precedent one version down, verbatim – which took it from `tests/wave3-love-episodes.test.ts`,
+    // which took it from `tests/wave2-life-beat.test.ts`, which took it from `tests/spirit.test.ts`
+    // below that. This case is about v76's OWN RUNG – that the move happened and left a fixture of ITS
+    // OWN SHAPE behind – and never about the ladder's head, which moves with every wave. So the head is
+    // asserted as a FLOOR and the two claims that actually belong to this rung (the fixture says 76,
+    // and it carries the six keys 76 added) are asserted exactly as before. The head's own guard – «a
+    // bump forces a new golden save» – lives in tests/goldenSaves.test.ts and is the only place that
+    // should ever name a number that changes.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(76)
     const v76 = JSON.parse(readFileSync(`${SAVES}/v76.json`, 'utf8'))
     expect(v76.schemaVersion).toBe(76)
     // ⚠ `in` FIRST AND THE VALUE SECOND, and the difference is the whole shape: a key must be
@@ -251,7 +266,18 @@ describe('wave 5 T1 A – v76, the three-part move', () => {
     // (ARM 5). ⚠ This line is the one the NEXT wave will have to re-aim, exactly as this wave re-aimed
     // v75's and wave 4 re-aimed v74's: `migrateSave` always walks to the LADDER'S HEAD, so the direct
     // equality holds only while 76 IS the head. The re-aim is the converging form, not a deletion.
-    expect(JSON.parse(readFileSync(`${SAVES}/v76.json`, 'utf8'))).toEqual(migrated)
+    //
+    // ⚠⚠ AND IT CAME DUE AT v77 (14.09, the spotlight), EXACTLY AS THE LINE ABOVE PREDICTED IT WOULD –
+    // the move wave 5 made to wave 4's line, wave 4 to wave 3's and wave 3 to wave 2's, verbatim and
+    // for the identical reason. `migrateSave` walks to the head, so the moment the head moved past 76
+    // the migrated payload stopped being a v76 save and the direct equality could never hold again.
+    // The claim is unchanged and is made where it stays true: the v76 FIXTURE and the migrated v75
+    // payload CONVERGE at the head, byte for byte, which is «the fixture is the migration's own
+    // output» carried one rung forward. A hand edit to either file still goes red here (ARM 5), which
+    // is the whole point of the line; v76's own shape is pinned by the case above (`schemaVersion` 76,
+    // the six keys present at their identity values), and v77's own «produced by the real migration»
+    // equality lives at its own rung, in tests/wave6-spotlight-schema.test.ts.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v76.json`, 'utf8')))).toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a seat or a leaning a save already has', () => {
@@ -324,19 +350,38 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     const before = v75()
     const after = migrateSave(v75()) as unknown as Record<string, unknown>
 
+    // ⚠⚠ RE-AIMED AT v77 (14.09, the spotlight), NOT WEAKENED, AND THE RE-AIM WAS PREDICTED BY THE
+    // SIBLING LINE THIS FILE ALREADY CARRIES: `migrateSave` walks to the LADDER'S HEAD, so the keys a
+    // v75 payload gains are v76's seven PLUS everything every rung above v76 adds. The alternative –
+    // hard-coding `spotlightHabituation` into this list – would have made a case about v76's OWN RUNG
+    // carry a maintenance debt for every future wave, and would have said nothing about which rung
+    // added what. So the later rungs are MEASURED rather than named: what the chain above v76 adds is
+    // exactly what it adds to a v76 payload, and v76's own seven stay asserted BY NAME beside it.
+    // The claim is unchanged, it is still EXACT (a `toEqual` over a total set, not a `toContain`), and
+    // a v78 that quietly added an eighth key to v76's shipped step would still go red here.
+    const laterRungs = Object.keys(migrateSave(v76()) as unknown as Record<string, unknown>)
+      .filter((k) => !(k in v76()))
+
     const added = Object.keys(after).filter((k) => !(k in before))
-    expect(added.sort(), 'exactly seven keys arrive, and they are these seven').toEqual([...V76_KEYS].sort())
+    expect(added.sort(), 'exactly v76\'s seven plus whatever the rungs above it add, and nothing else')
+      .toEqual([...V76_KEYS, ...laterRungs].sort())
+    expect(laterRungs.sort(), 'and the rungs above v76 are the ones this wave knows about')
+      .toEqual(['spotlightHabituation'])
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 
     // ⚠ EVERY OTHER KEY BYTE-IDENTICAL, compared through `JSON.stringify` per key rather than through
     // one whole-object equality, so a failure NAMES the key instead of printing a 570 kB diff.
     // `schemaVersion` is the one key that is expected to move and is asserted separately, in §A.
+    // ⚠ This loop covers the WHOLE chain from 75 to the head rather than v76's step alone, and that is
+    // deliberate: a later rung that MOVED a pre-existing key would go red here, which is exactly what
+    // this case should do. v77 moves none – its own per-row walk touches `loveEpisodes`, and this
+    // fixture carries `[]`.
     for (const key of Object.keys(before)) {
       if (key === 'schemaVersion') continue
       expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(before[key]))
     }
     expect(before.schemaVersion, 'the control really was a v75 payload').toBe(75)
-    expect(after.schemaVersion, '...and the one key that moved, moved').toBe(76)
+    expect(after.schemaVersion, '...and the chain ran to the head').toBe(SAVE_SCHEMA_VERSION)
   })
 
   it('⚠ leaves `temperament` exactly where it found it – identity is IMMUTABLE (who-she-is §2a)', () => {

@@ -584,7 +584,16 @@ describe('save migrations', () => {
     // ⚠ v76 is the first step in this chain to carry SIX keys where every one since v72 carried one,
     // which this line is not about either: six `??=` on absent keys add exactly one rung to the walk,
     // the same as one does.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 76 – past the colliding 64, through 65').toBe(76)
+    // ⚠ RE-AIMED AT v77 (14.09, the spotlight – `spotlightHabituation` and the four publicity fields
+    // on `LoveEpisode`), NOT WEAKENED, for the TWELFTH time and with the claim unchanged once more.
+    // What moved is the LADDER'S HEAD and nothing else: 77 was taken by that wave's own full move
+    // (bump, append-only v76 -> v77 step, golden fixture v77, e2e fixtures regenerated), the walk
+    // below is the same walk, and the claim this line makes – that the chain runs PAST the colliding
+    // 64 and through 65 – now has one more rung to cross before it arrives. ⚠ v77 is the first step in
+    // this chain that back-fills fields on the ROWS of a list rather than keys on the world, which
+    // this line is not about either: a loop over `loveEpisodes` inside one `if (v === 76)` adds
+    // exactly one rung to the walk, the same as a single `??=` does.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 77 – past the colliding 64, through 65').toBe(77)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

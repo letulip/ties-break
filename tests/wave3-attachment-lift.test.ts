@@ -141,7 +141,7 @@ function probeWorld(temperament: Temperament, spirit: number, seed = 'lift-probe
 /** An attachment row of the v74 shape. `endedWeek` null is «someone is there»; a number is «it is
  *  over» – which wave 3 never writes and wave 4 will (T4's brief: write the unit now). */
 function episode(sinceWeek: number, endedWeek: number | null): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek: sinceWeek, wants: 'open', partnerId: `p:${sinceWeek}` }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek: sinceWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
 }
 
 /** Where the weekly return PARKS her: the same quiet week, accrued until nothing moves any more.

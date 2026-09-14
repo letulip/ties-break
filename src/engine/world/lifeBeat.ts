@@ -2883,7 +2883,28 @@ export function rollArrival(world: WorldState): void {
   // is when the identity of the ROW and the identity of the PERSON stop being the same thing, and a
   // schema that had conflated them could not tell them apart afterwards (the T1 note on the type).
   const id = `p:${sinceWeek}`
-  world.loveEpisodes.push({ id, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: id })
+  // ⚠⚠ THE FOUR v77 FIELDS ARE WRITTEN HERE AT THEIR BIRTH VALUES AND THIS IS NOT A WRITER (the
+  // spotlight, wave 6 – T1). `createWorld`'s literal is where a new WORLD key gets its identity
+  // value; a `LoveEpisode` has no `createWorld`, and this push is the ONE place a row is ever born
+  // («the ONE writer of a `loveEpisodes` row», the block at the head of this section) – so it is the
+  // exact counterpart, and the four values are the same four the v76 -> v77 migration back-fills on
+  // every historical row. A new attachment starts private to the family and unvoiced: the world has
+  // not learned (`publicWeek: null`), so no story has run and none has run wrong
+  // (`publicWrong: false`), and the booth has voiced neither fact (`airedMetWeek` / `airedEndedWeek`
+  // null). The LEAK that can set `publicWeek` is T6 and the booth stamp is T7; nothing on this tree
+  // moves any of the four off these values.
+  world.loveEpisodes.push({
+    id,
+    sinceWeek,
+    endedWeek: null,
+    knownWeek,
+    wants,
+    partnerId: id,
+    publicWeek: null,
+    publicWrong: false,
+    airedMetWeek: null,
+    airedEndedWeek: null,
+  })
 }
 
 // =================================================================================================

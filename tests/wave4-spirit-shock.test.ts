@@ -146,7 +146,7 @@ function srcFiles(dir = SRC, prefix = ''): [string, string][] {
 
 /** A row of the v74 shape, still open. */
 function episode(sinceWeek: number): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek, wants: 'open', partnerId: `p:${sinceWeek}` }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek: sinceWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
 }
 
 /** Does `week` fire NO row of the perturbation table for this girl? `tests/spirit.test.ts`'s `quiet`,

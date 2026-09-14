@@ -675,7 +675,7 @@ describe('wave 5 T8 G – the listen coin is for read-bearing beats, and this is
     const control = withSeat(createWorld('t8-listen-control', DEFAULT_PROFILE), 'listen')
     control.season = []
     control.week = 900
-    control.loveEpisodes = [{ id: 'p:880', sinceWeek: 880, endedWeek: null, knownWeek: 890, wants: 'open', partnerId: 'p:880' }]
+    control.loveEpisodes = [{ id: 'p:880', sinceWeek: 880, endedWeek: null, knownWeek: 890, wants: 'open', partnerId: 'p:880', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
     rngKeys.length = 0
     deliverKnownPartner(control)
     expect(rngKeys.filter((k) => k.includes(':psy:listen:')).length, '⚠⚠ the recorder really sees a listen key').toBe(1)

@@ -1693,6 +1693,21 @@ export function createWorld(
     // the desync `accrueSpirit`'s «one weekly function, two numbers» rule refuses one layer down.
     wallsLean: { open: 0, reg: 0 },
     wallsFlipped: { open: false, reg: false },
+    // ⭐ v77 (the spotlight, wave 6): SHE HAS NEVER LIVED A WEEK KNOWN, and on week 0 she could not
+    // have – she is eight, and the counter only moves while `sheIsNewsAt` (T2). Zero is the identity
+    // here in the plainest sense and not a placeholder for one, and it is exactly what the
+    // v76 -> v77 migration back-fills on every older save, so a migrated career and a fresh one are
+    // the same shape at the moment they load.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `wallsFlipped` above has stopped being it – the same
+    // handover the wave-5 six made to it, `spiritShock` to them, `loveEpisodes` to `spiritShock` and
+    // `lifeLog` to `loveEpisodes`. The frozen-career identities reproduce each older schema's hashes
+    // by dropping exactly the keys appended since, so every key must stay in the order it was
+    // appended in (`careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts peels in reverse, newest
+    // first). ⚠⚠ v77's OTHER FOUR FIELDS ARE NOT HERE AND CANNOT BE: they live on `LoveEpisode`
+    // ROWS, written at the one `loveEpisodes.push` in world/lifeBeat.ts, which is why that version is
+    // the first this ladder has ever had to peel INSIDE a list.
+    spotlightHabituation: 0,
   }
   addEvent(world, {
     week: 0,

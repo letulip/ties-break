@@ -259,6 +259,10 @@ function withEndings(world: WorldState, endedWeeks: readonly number[]): WorldSta
     knownWeek: null,
     wants: 'private',
     partnerId: `p:${ended - 10}`,
+    publicWeek: null,
+    publicWrong: false,
+    airedMetWeek: null,
+    airedEndedWeek: null,
   }))
   return world
 }

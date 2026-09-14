@@ -84,7 +84,7 @@ function toldSnapshot(band: BondBand, seed = 'met-card'): Snapshot {
   world.season = []
   world.week = 900
   world.bond = bondFor(band)
-  world.loveEpisodes = [{ id: 'p:890', sinceWeek: 890, endedWeek: null, knownWeek: 900, wants: 'open', partnerId: 'p:890' }]
+  world.loveEpisodes = [{ id: 'p:890', sinceWeek: 890, endedWeek: null, knownWeek: 900, wants: 'open', partnerId: 'p:890', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
   deliverKnownPartner(world)
   const snap = toSnapshot(world)
   expect(snap.lifeBeatPrompt, `${band}: the engine really raised a card`).not.toBeNull()

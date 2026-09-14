@@ -345,6 +345,50 @@ export interface LoveEpisode {
    *  fictional name the identity of the ROW and the identity of the PERSON stop being the same
    *  thing, and a schema that had conflated them could not tell them apart afterwards. */
   partnerId: string
+  /** ⭐⭐⭐ v77 – THE WEEK THE **WORLD** LEARNED, or null while only the family holds it (the
+   *  spotlight, wave 6; `docs/plans/life-wave-6-builder-2026-09.md` §2 T1, the boundary ruled in
+   *  `docs/plans/the-way-she-sounds-2026-09.md` C4 on 10.09).
+   *
+   *  ⚠⚠ IT LIVES BESIDE `knownWeek` AND THE TWO NEVER MERGE, which is the whole decision in the
+   *  field. `knownWeek` is when the PARENT found out; this is when the PRESS did. They are different
+   *  facts about different audiences and either can come first – the founding scene of §3c-bis is a
+   *  parent reading a headline about a daughter who never told him, which is `publicWeek` set while
+   *  `knownWeek` is still null. One field could not hold both without losing that scene.
+   *
+   *  ⚠ THE BOOTH AND EVERY PUBLIC SURFACE MAY VOICE ONLY A FACT WITH `publicWeek !== null` – «the
+   *  honest boundary is the world's own PUBLICITY, not the family's walls» (C4). A fact only the
+   *  family holds is never voiced, at any fame. ⚠ v77 SHIPS THE FIELD AND NO WRITER: the leak hazard
+   *  that sets it is T6 and the booth that reads it is T7, so nothing on this tree can make it
+   *  non-null. */
+  publicWeek: number | null
+  /** ⭐⭐ v77 – THE STORY LANDED WRONG (the tabloid misattribution flag; who-she-is §3c-bis, the
+   *  films' own gem: an open girl leaks roughly TRUE, a private one late and WRONG).
+   *
+   *  ⚠ MEANINGLESS WHILE `publicWeek` IS NULL, and that is a licence rather than a shape: a story
+   *  that was never told cannot have been told wrong. Every reader gates on `publicWeek` first, and
+   *  the pin that says so lives with the hazard in T6. ⚠ A BOOLEAN AND NOT A NULLABLE ONE, on
+   *  `WorldEvent.keep`'s own precedent: «not wrong» and «no story yet» are already distinguished by
+   *  the field beside it, and a second null would only give two ways to spell the same state.
+   *
+   *  ⚠ v77 SHIPS IT WITH NO WRITER – T6 is the wave that can set it, and the correction beat that
+   *  would ever clear it is explicitly a LATER wave's (brief §8). */
+  publicWrong: boolean
+  /** ⭐⭐ v77 – THE BOOTH'S ONCE-NESS STAMPS: the week each public fact about this episode was first
+   *  voiced on air, or null for never (`airedMetWeek` = «someone is there», `airedEndedWeek` = «it
+   *  is over»). T7's commentary channel, C4's boundary.
+   *
+   *  ⚠⚠ THE STAMPS **ARE** THE ONCE-NESS AND THERE IS NO SECOND BOOLEAN, which is the same shape
+   *  `lifeLog`'s `answer: null` uses one file up: a nullable week says both «has it aired» and
+   *  «when», so the two can never disagree. Once aired, never again.
+   *
+   *  ⚠ TWO FIELDS AND NOT ONE, because they are two facts that become public at different weeks and
+   *  air independently – the world can learn she is with somebody long before it learns it ended,
+   *  and the booth's licence for the second reads `endedWeek !== null && publicWeek !== null`.
+   *
+   *  ⚠ v77 SHIPS BOTH WITH NO WRITER: the engine stamp is T7's, and `src/viz` never writes anything
+   *  (the wave's own §8). */
+  airedMetWeek: number | null
+  airedEndedWeek: number | null
 }
 
 /** ⭐ ONE ROW PER BIRTHDAY (v48). The DIARY reads it and nothing else does: no morale, no condition,
