@@ -1198,11 +1198,51 @@ describe('the fence this step is judged by', () => {
       }
     }
     // ...and the weekly rules and the match seam stay engine-only: nothing outside can move either.
+    //
+    // ⚠⚠ ALIGNED 14.09 BY WAVE 6's T10, ON THE ARCHITECT'S RULING U, AND IT IS NOT A WEAKENING.
+    // This line was TEXT-BASED while its two immediate neighbours – the `temperament` rule directly
+    // below and the `attachmentLift` rule below that – both strip comments first with `codeOnly` and
+    // both say why in the same words: «a pin that tripped on the prose explaining the rule would be
+    // repaired by deleting the explanation, which is the wrong repair». Same file, same screen,
+    // three rules, one of them measuring something else.
+    //
+    // WHAT IT COST: wave 6's T7 reddened this on an ENGLISH PROSE mention of `accrueSpirit` inside a
+    // comment in `src/viz/commentary.ts` – a file that calls nothing – and reworded its own note
+    // rather than re-aim another task's guard mid-task, which was the right call and is why the
+    // finding reached the architect instead of a quiet edit.
+    //
+    // ⚠ THE CLAIM IS UNCHANGED AND THE INSTRUMENT NOW MATCHES IT. The claim is «no CODE outside
+    // `engine/` calls these three»; the old form was a proxy that also fired on English, and a proxy
+    // that fires on the documentation is repaired by deleting documentation. `codeOnly` makes the
+    // test measure the claim. A real call is still red – it is code – and the aliased-import hole the
+    // helper's own docstring names is the reason this file has never used a bare `includes`.
+    //
+    // ⭐ THREE ARMS, RUN 14.09, EACH REVERTED BY HAND WITH `src/viz/commentary.ts`'s md5 CHECKED BACK
+    // TO PRISTINE (`aec08ecf…`) – because an alignment that cannot be shown to keep its teeth is a
+    // weakening whatever its note says:
+    //
+    //   U-a  an ENGLISH PROSE mention of `accrueSpirit` appended as a `//` comment to
+    //        `src/viz/commentary.ts` – exactly the shape T7 hit. **0 RED.** That is the claim.
+    //   U-a′ THE CONTROL FOR IT, and the half that makes U-a mean anything: the same prose, with this
+    //        line reverted to `.test(text)`. **1 RED** – «expected [ 'viz/commentary.ts' ] to deeply
+    //        equal []». So the old form really did fire on English, measured rather than argued.
+    //   U-b  a real CODE occurrence outside `engine/` – `const ARM_U_B = { spiritMatchFactor: 1 }` in
+    //        the same file, no comment anywhere near it. **1 RED**, the same sentence. The rule still
+    //        bites on the thing it is about.
     const outsideTheEngine = srcFiles()
       .filter(([path]) => !path.startsWith('engine/'))
-      .filter(([, text]) => /\b(accrueSpirit|spiritMatchFactor|applyBondDelta)\b/.test(text))
+      .filter(([, text]) => /\b(accrueSpirit|spiritMatchFactor|applyBondDelta)\b/.test(codeOnly(text)))
       .map(([path]) => path)
     expect(outsideTheEngine).toEqual([])
+    // ⚠ AND THE STRIP IS NOT ALLOWED TO HAVE EATEN THE RULE. `codeOnly` on a corpus it happened to
+    // blank would make the sweep pass for ever – so the positive control is asked out loud: inside
+    // `engine/` these three names are still there to be found, in code, after the same strip.
+    const insideTheEngine = srcFiles()
+      .filter(([path]) => path.startsWith('engine/'))
+      .filter(([, text]) => /\b(accrueSpirit|spiritMatchFactor|applyBondDelta)\b/.test(codeOnly(text)))
+      .map(([path]) => path)
+    expect(insideTheEngine.length, '⚠⚠ the strip left nothing to sweep – this rule would pass on an empty corpus')
+      .toBeGreaterThan(1)
   })
 
   it('⚠⚠ NO LABEL, EVER: `temperament` reaches the facts and no surface at all', () => {

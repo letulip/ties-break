@@ -334,14 +334,18 @@ describe('wave 6 T5 A – the seat`s two new ladders, and the shape each has to 
 })
 
 // =================================================================================================
-// B. THE ROSTER – the fifth focus is OFFERED, and its line reads in BOTH frames
+// B. THE ROSTER – the fifth focus is OFFERED, and its line SPLICES in both frames
 // =================================================================================================
 //
 // ⚠⚠ RULING O's GROUND. The membership oracle itself lives in tests/wave5-psychologist-focus.test.ts
 // §A, where wave 5 left the tripwire and where T5 re-aimed it – one claim, one home. What this
 // section asks is the half a roster array cannot answer: does the ENGINE actually offer it, and does
 // the sentence it brings survive the two frames the owner's Q9 ruling put it in.
-describe('wave 6 T5 B – the fifth focus is really on the card, and its sentence works twice', () => {
+//
+// ⚠⚠ AND THE HEADING SAID «READS» UNTIL 14.09, WHEN RULING V MADE IT SAY «SPLICES». The difference
+// is the whole of what this section can and cannot hold – the measurement is in the splice case's own
+// banner below, and the gate for the half it cannot hold is §5's ladder, not a stricter regex.
+describe('wave 6 T5 B – the fifth focus is really on the card, and its sentence splices twice', () => {
   it('⭐⭐⭐ the engine OFFERS it – open at every rung, and a pick is accepted', () => {
     // ⚠ ASKED THROUGH `psychologistFocusOpen` AND `setPsychologistFocus`, never through
     // `PSY_FOCUSES.includes` – the array is the thing ruling O says the compiler does not defend, so
@@ -375,12 +379,35 @@ describe('wave 6 T5 B – the fifth focus is really on the card, and its sentenc
       .toContain(FOCUS)
   })
 
-  it('⭐⭐⭐ EVERY line reads in BOTH frames – alone, and spliced after «On retainer – »', () => {
+  it('⭐⭐⭐ EVERY line SPLICES in both frames – alone, and after «On retainer – »', () => {
     // ⚠⚠ THE OWNER'S Q9 RULING (14.09) MADE MECHANICAL. `SupportStaffTab.vue` composes the hired
     // card's line as «On retainer – » + the focus's sentence with its first letter LOWERED, and that
     // surface is on screen all 52 weeks against the note's ~3. So a line has to be a sentence alone
     // AND a clause after a dash. What a test can hold is the structural half, and it is total over
     // the roster rather than aimed at the new row – a sixth focus inherits the pin.
+    //
+    // =============================================================================================
+    // ⚠⚠ RE-NOTED 14.09 BY T10 ON THE ARCHITECT'S RULING V – WHAT THIS CASE DOES **NOT** PROVE.
+    // =============================================================================================
+    //
+    // It was written claiming the line «reads naturally in both frames». **It cannot tell you that,
+    // and T8 measured the counter-example rather than arguing it**: a line opening on a PROPER NOUN
+    // splices to «On retainer – fleet Street …» and every structural clause below still holds – no
+    // doubled space, no doubled dash, the tail byte-identical – **because the lowering is exactly
+    // what removes the stray capital**. The instrument cannot separate «reads naturally» from
+    // «splices structurally», so the title of this case now says the second and only the second.
+    //
+    // ⚠ AND THE GATE THAT DOES HOLD IT IS NAMED RATHER THAN INVENTED. Naturalness is a JUDGMENT, and
+    // the wave's §5 ladder already owns judgments: **the builder drafts → the architect's вычитка is
+    // the delivery gate → the owner's playtest is final.** Every line swept here is a DRAFT under
+    // invariant 4 and reaches him that way.
+    //
+    // ⚠ TWO FIXES WERE REFUSED, EACH FOR ITS OWN REASON (ruling V). A mechanical proper-noun detector
+    // needs a dictionary and would still be wrong on the words this game invents; inverting the
+    // constant to store the lowercase form changes wave-5 machinery for a test's convenience. **A
+    // test that claims a judgment it cannot make is worse than one that claims less** – it tells the
+    // next reader the question is already answered. This is ruling U's move a second time: aim the
+    // test at its own claim.
     for (const focus of PSY_FOCUSES) {
       const line = PSY_FOCUS_LINE[focus]
       // Frame 1, alone: a real sentence, opening on a capital and closing on a full stop.
@@ -389,7 +416,8 @@ describe('wave 6 T5 B – the fifth focus is really on the card, and its sentenc
         .not.toBe(line.charAt(0).toLowerCase())
       expect(line.endsWith('.'), `${focus}: ends where a sentence ends`).toBe(true)
       // Frame 2, spliced: the lowering changes exactly the first character and nothing else, and the
-      // composed sentence still reads as one – no stray capital, no doubled dash, no doubled space.
+      // join is CLEAN – no stray capital, no doubled dash, no doubled space. ⚠ «Clean» is the whole
+      // claim; whether the clause then reads well is the вычитка's and the playtest's (the banner).
       const spliced = `On retainer – ${line.charAt(0).toLowerCase()}${line.slice(1)}`
       expect(spliced, `${focus}: the splice composes`).toContain(line.slice(1))
       expect(spliced, `${focus}: no doubled space survives the join`).not.toMatch(/ {2}/)

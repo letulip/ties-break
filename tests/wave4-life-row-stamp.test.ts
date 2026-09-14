@@ -73,6 +73,28 @@
 //   ARMS 6, 7, 8 and the three COMPILE arms are the column's own and live in the ledger of
 //   tests/component/wave4-feed-glyph-kind.test.ts.
 //
+// -------------------------------------------------------------------------------------------------
+// ⭐⭐⭐ v77 T10, 14.09.2026 – THE SCOPE WIDENED FROM A MODULE TO THE LAYER (ruling T), TWO ARMS RUN.
+// -------------------------------------------------------------------------------------------------
+//
+//   ARM 11  ⚠⚠ THE SCOPE NARROWED BACK – `engineSource()` swapped for `worldSource()`, the whole
+//           rest of the case left exactly as it is. **1 RED**, and it is the case this widening
+//           exists for: «⚠ exactly one row is licensed to be unstamped as `EXPOSURE_ROW` – §8 is
+//           why: expected [] to have a length of 1 but got +0».
+//           ⭐ THAT RED IS THE MEASUREMENT WORTH KEEPING, and it is not the one predicted. **A
+//           DECLARED EXCEPTION IS ALSO A POSITIVE CONTROL ON THE CORPUS**: it cannot be satisfied by
+//           a file the sweep is not reading, so naming T3's row is what makes the scope self-proving.
+//           ⚠ AND THE COUNT IS 1 RATHER THAN THE 2 THIS LEDGER FIRST WROTE, because a vitest CASE
+//           stops at its first failed assertion – the «`spirit.ts` is INSIDE the sweep» line is in
+//           the same `it` and never ran. A census of ASSERTIONS is not a census of REDS; T3b learned
+//           the same thing one level up.
+//   ARM 12  ⚠ THE STAMP DROPPED FROM T5's TOLD-NOW ROW **with the new scope in place** – the
+//           regression control for the widening, because a wider corpus that had quietly stopped
+//           parsing would go green on everything. **4 RED**, exactly the four ARM 3 measured before
+//           the widening: §A's three-path case, §A's SOURCE sweep («expected [ Array(1) ] to deeply
+//           equal []»), §C's «one kept row of its own», and tests/wave4-ended-beat.test.ts §A. The
+//           law lost nothing by getting bigger.
+//
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -88,7 +110,7 @@ import {
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE, type LoveEpisode, type WorldEvent } from '../src/shared/protocol'
 import { LIFE_BEAT_ROW_KINDS } from '../src/components/screens/lifeRowGlyphs'
-import { worldSource } from './worldSource'
+import { engineSource } from './worldSource'
 import { codeOf } from './helpers/source'
 
 // -------------------------------------------------------------------------------------------------
@@ -124,6 +146,34 @@ function seedEndingOn(prefix: string, week: number, temperament: (typeof TEMPERA
 
 const lifeRows = (world: WorldState): WorldEvent[] => world.events.filter((e) => e.type === 'life')
 
+/** ⭐⭐ v77 T10 – THE WHOLE OBJECT LITERAL A `type: 'life'` OCCURRENCE SITS IN, braces WALKED rather
+ *  than excluded. The predecessor cut sites with `/\{[^{}]*type:\s*'life'[^{}]*\}/`, which cannot
+ *  span a nested object and therefore **skipped** T3's row (it spreads `...(cond ? { keep: true } :
+ *  {})`) – a site the sweep never sees is a silent pass, the `indexOf`-returns-−1 family again.
+ *  ⚠ IT THROWS on an unbalanced or absent enclosing brace, on `tests/helpers/source.ts`'s own law: a
+ *  region helper that returns a short string turns every negative assertion into a tautology. */
+function rowLiteralAt(code: string, at: number): string {
+  let depth = 0
+  let open = -1
+  for (let i = at; i >= 0; i--) {
+    if (code[i] === '}') depth++
+    else if (code[i] === '{') {
+      if (depth === 0) {
+        open = i
+        break
+      }
+      depth--
+    }
+  }
+  if (open < 0) throw new Error(`no enclosing object literal for the \`type: 'life'\` at ${at}`)
+  depth = 0
+  for (let j = open; j < code.length; j++) {
+    if (code[j] === '{') depth++
+    else if (code[j] === '}' && --depth === 0) return code.slice(open, j + 1)
+  }
+  throw new Error(`the object literal opening at ${open} is never closed`)
+}
+
 /** ⭐ WHAT WAVE 3's DELIVERY ROW SAYS – transcribed from its pool so that «the sentence did not move»
  *  is a CLAIM here rather than a hope. ⚠ INVARIANT 4: this sentence is not T5's to touch and the
  *  assertion exists to prove it was not touched. */
@@ -135,7 +185,8 @@ const MET_TOLD_OPEN = 'She told us there is someone in her life.'
 //
 // ⚠⚠ TWO INSTRUMENTS, AND THEY CATCH DIFFERENT MISTAKES. The behavioural case below walks the three
 // shipped paths and reads what landed in `events`; the SOURCE case sweeps every `type: 'life'`
-// literal in the world module set, which is the only one of the two that can see a FOURTH write site
+// literal in **the whole engine layer** (widened from the world module set by v77's T10, ruling T –
+// see that case's own note), which is the only one of the two that can see a FOURTH write site
 // somebody adds later and forgets to stamp. A net that only walked today's paths would go on passing
 // over the row it was written to catch.
 describe('wave 4 T5 A – every life row carries its kind', () => {
@@ -180,56 +231,126 @@ describe('wave 4 T5 A – every life row carries its kind', () => {
     // ⚠ COMMENTS STRIPPED FIRST. This repo quotes its own code in prose – the `lifeKind` notes above
     // each write site say `type: 'life'` in as many words – and a sweep that counted them would be
     // measuring the documentation.
-    const code = codeOf(worldSource())
+    // ⚠⚠ WIDENED 14.09 BY WAVE 6's **T10**, ON THE ARCHITECT'S RULING T, AND THE LAW IS STRICTLY
+    // STRONGER FOR IT. It read `worldSource()` – world.ts plus world/*.ts – which is the scope of a
+    // MODULE, while the sentence above it is about a LAYER. T6 found the hole and was right not to
+    // widen it mid-task; T3's `EXPOSURE_ROW` in `src/engine/spirit.ts` is a `type: 'life'` write site
+    // one directory over that this pin **could not see** – not «did not»: the corpus it read did not
+    // contain the file. A guard whose scope is narrower than its claim is the «unable to fail» family
+    // wearing a source pin's clothes. `engineSource()` is every `.ts` under `src/engine/`, so the
+    // NEXT unstamped row is caught wherever in the engine it lands, and the reason the widening is
+    // safe to make is the sentence ruling T ends on: **a law with a written exception is worth more
+    // than a law that silently cannot look.**
+    const layer = engineSource()
+    const code = codeOf(layer)
     // ⚠⚠ THE POSITIVE CONTROL COMES FIRST, because a sweep that found NO write sites passes forever,
     // which is how the last several dead pins in this layer died. The floor is the three shipped
     // rows; a fourth is welcome and must bring its own stamp.
-    const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBeGreaterThanOrEqual(3)
-    // ⚠⚠ AND THE EXTRACTOR MUST ACCOUNT FOR EVERY OCCURRENCE, WHICH IS THE LINE THAT STOPS THIS PIN
-    // JOINING THE «UNABLE TO FAIL» FAMILY. `[^{}]*` cannot cross a brace, so a future write site that
-    // happened to carry a NESTED object (`entryRef: {…}`, say) would not match the pattern at all –
-    // and an unstamped site the sweep never sees is a silent pass, which is the same failure shape as
-    // the `indexOf` slice that returns −1. Counting the raw occurrences and demanding the same number
-    // of captured sites turns that miss into a red line here instead.
-    const occurrences = [...code.matchAll(/type:\s*'life'/g)].length
-    expect(sites.length, `the sweep captured ${sites.length} of ${occurrences} \`type: 'life'\` occurrences – one is shaped so the pattern cannot see it`)
-      .toBe(occurrences)
-    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6 AND THE LAW IS UNCHANGED – what it gains is ONE NAMED
-    // EXCEPTION WITH CUSTODY, on the tail-lint's `KNOWN_VIOLATIONS` precedent rather than a relaxed
-    // regex. WHAT MOVED: §9's leak prints the WORLD's version of her private life as a kept row
-    // (`LEAK_EVENT`) and carries no `lifeKind`, because the stamp's type is `LifeBeatKind` and wave
-    // 6's §8 forbids a new member of it – so the only alternatives were an honest absence or somebody
-    // else's mark, and the absence is the one that cannot lie. It wears `LIFE_ROW_EMOJI.life` through
-    // `lifeRowGlyph`'s `?? 'met'` fallback, the owner's own 11.09 pick; whether the spotlight deserves
-    // a mark of its own is HIS (§5a), and it goes to him with the wave's strings.
+    const occurrences = [...code.matchAll(/type:\s*'life'/g)]
+    expect(occurrences.length, 'the sweep really found the life-row write sites').toBeGreaterThanOrEqual(3)
+    // ⚠⚠ AND THE EXTRACTOR WALKS BRACES RATHER THAN REFUSING THEM, WHICH IS ARM 10b's LESSON PAID
+    // FOR RATHER THAN RESTATED. The old cut was `/\{[^{}]*type:\s*'life'[^{}]*\}/` and its own note
+    // predicted its death: «a future write site that happened to carry a NESTED object would not
+    // match the pattern at all». T3's row is that site – it spreads a conditional
+    // (`...(firstOfSeason ? { keep: true } : {})`), so `[^{}]*` cannot span it and the old sweep
+    // returned ONE FEWER SITE THAN THERE ARE ROWS – measured, on the first run of this widening.
+    // The count-equality line caught it, which is exactly what it was written for; but a pin that can
+    // only report «I cannot see one of them» is a pin that has stopped being a law. `rowLiteralAt`
+    // walks out to the enclosing brace and back to its match, so every occurrence yields its whole
+    // literal and an absent enclosing brace THROWS – the marker helpers' own rule, never a short
+    // string.
     //
-    // ⚠⚠ AND T6 FOUND THAT THIS SWEEP HAS A SCOPE HOLE, which is recorded here rather than silently
-    // widened: it reads `worldSource()`, so `engine/spirit.ts` is outside it – and T3's `EXPOSURE_ROW`
-    // is a `type: 'life'` write site with no `lifeKind` that this pin has never seen. Widening the
-    // sweep would redden a row another task shipped under the same §8 reasoning, which is the
-    // architect's call and not this re-aim's; the finding is carried to him with the report.
+    // ⚠ SO THE LINE BELOW HAS CHANGED JOBS AND IS KEPT ON PURPOSE. Under the walker it can no longer
+    // be the net that catches a shape the extractor cannot see – the THROW is that net now, and it is
+    // louder. What it still does is hold the two counts to each other, so a future extractor that
+    // went back to FILTERING (any `.filter`, any conditional `continue`) is red here instead of
+    // silently sweeping a subset. The case below it arms the walker on a fixture; this is the
+    // accounting.
+    const sites = occurrences.map((m) => rowLiteralAt(code, m.index))
+    expect(sites.length, `the sweep captured ${sites.length} of ${occurrences.length} \`type: 'life'\` occurrences`)
+      .toBe(occurrences.length)
+    // ⚠⚠ TWO NAMED EXCEPTIONS WITH CUSTODY, on the tail-lint's `KNOWN_VIOLATIONS` precedent rather
+    // than a relaxed regex, and they are the SAME exception twice for the SAME reason.
     //
-    // ⚠ THE EXCEPTION IS KEYED ON THE ROW'S OWN TEXT and is asserted to be EXACTLY ONE, so a second
-    // unstamped site cannot hide behind it.
-    const licensed = sites.filter((site) => site.includes('LEAK_EVENT['))
-    expect(licensed, '⚠ exactly one row is licensed to be unstamped – the spotlight\'s, and §8 is why')
-      .toHaveLength(1)
-    const unstamped = sites.filter((site) => !/lifeKind:\s*'/.test(site) && !site.includes('LEAK_EVENT['))
+    //   `LEAK_EVENT`    (T6, §9) – the WORLD's version of her private life, as a kept row.
+    //   `EXPOSURE_ROW`  (T3, the spirit pass) – «People were talking about her last week.»
+    //
+    // Neither carries a `lifeKind`, because the stamp's type is `LifeBeatKind` and wave 6's §8
+    // forbids a new member of it – so the only choices were an honest absence or somebody else's
+    // mark, and the absence is the one that cannot lie. Both wear `LIFE_ROW_EMOJI.life` through
+    // `lifeRowGlyph`'s `?? 'met'` fallback, which is **the owner's own 11.09 pick for the `'life'`
+    // ROW KIND** and not the romance thread's mark (the architect's correction to T3's report: the
+    // per-kind table's `'met'` cell is EMPTY, so the fallback resolves to the general life mark that
+    // every unstamped life row has always worn).
+    //
+    // ⚠ AND THE QUESTION THAT IS STILL OPEN IS HIS, NOT THIS PIN'S: **does the spotlight deserve a
+    // mark of its own?** who-she-is §5a forbids an agent picking a glyph unasked, so none was picked;
+    // it goes to the owner in `docs/plans/life-wave-6-questions-2026-09.md` §5 with the wave's
+    // strings. The day he answers, one of these two names leaves this list and a `lifeKind` arrives
+    // in its place – which is the whole reason the exceptions are named rather than the regex
+    // loosened.
+    //
+    // ⚠ EACH EXCEPTION IS KEYED ON THE ROW'S OWN TEXT and is asserted to be EXACTLY ONE, so a second
+    // unstamped site cannot hide behind either of them.
+    const LICENSED_UNSTAMPED = ['LEAK_EVENT[', 'EXPOSURE_ROW'] as const
+    const isLicensed = (site: string): boolean => LICENSED_UNSTAMPED.some((name) => site.includes(name))
+    for (const name of LICENSED_UNSTAMPED) {
+      expect(sites.filter((site) => site.includes(name)), `⚠ exactly one row is licensed to be unstamped as \`${name}\` – §8 is why`)
+        .toHaveLength(1)
+    }
+    const unstamped = sites.filter((site) => !/lifeKind:\s*'/.test(site) && !isLicensed(site))
     expect(unstamped, '⚠⚠ a `\'life\'` feed row is written with no `lifeKind` – the glyph column would lie about it')
       .toEqual([])
     // ...and every kind it stamps is one the glyph column can actually mark. A write site stamping a
     // kind outside the roster would draw NOTHING once a per-kind glyph lands (the `?? 'met'` default
     // only covers ABSENT, never a kind nobody registered).
-    // ⚠ THE LICENSED ROW IS OUT OF THIS WALK TOO (T6's re-aim above): it stamps nothing, so asking
-    // «is its kind on the roster» would be asking about `undefined`, which the `?? 'met'` fallback
-    // already answers one layer down.
+    // ⚠ THE LICENSED ROWS ARE OUT OF THIS WALK TOO: they stamp nothing, so asking «is its kind on the
+    // roster» would be asking about `undefined`, which the `?? 'met'` fallback already answers one
+    // layer down.
     const stamped = sites
-      .filter((site) => !site.includes('LEAK_EVENT['))
+      .filter((site) => !isLicensed(site))
       .map((site) => /lifeKind:\s*'([a-z-]+)'/.exec(site)?.[1])
     for (const kind of stamped) {
       expect(LIFE_BEAT_ROW_KINDS as readonly string[], `«${kind}» is a kind the feed's column knows`).toContain(kind)
     }
+    // ⭐ AND THE SCOPE IS REALLY THE LAYER AND NOT THE OLD MODULE – the half of T10's widening that
+    // a green sweep cannot otherwise prove. `engine/spirit.ts` is the file the pin could not see
+    // yesterday, so its presence in the corpus is asserted by name; a helper quietly narrowed back to
+    // `worldSource()` reddens here with a sentence instead of going on passing over the row it was
+    // widened to reach.
+    // ⚠ ASKED OF `layer` AND NOT OF `code`: `engineSource()`'s per-file markers are `//` comments and
+    // `codeOf` is exactly the thing that removes them. Asking the stripped string would have been a
+    // pin that could never pass – the «unable to fail» family's mirror image, and it went red on its
+    // first run, which is the argument for running every net before believing it.
+    expect(layer, '⚠⚠ `engine/spirit.ts` is INSIDE the sweep – the scope hole ruling T closed')
+      .toContain('==== src/engine/spirit.ts ====')
+    expect(layer, '...and so is the world module set the sweep has always read')
+      .toContain('==== src/engine/world/lifeBeat.ts ====')
+  })
+
+  it('⭐⭐ the extractor really walks NESTED braces – the instrument, armed on a fixture', () => {
+    // ⚠⚠ ARM 10b's PROPERTY, MOVED FROM A COUNT TO A DIRECT MEASUREMENT (v77 T10). The count-equality
+    // line above used to be the only thing standing between a nested write site and a silent pass,
+    // and by the time it fires the law has already stopped being able to look. This asks the
+    // extractor itself, on a crafted literal shaped exactly like T3's shipped row – so the claim is
+    // «the instrument can see this shape», not «nothing has gone wrong yet».
+    //
+    // ⚠ AND THE OLD PATTERN IS KEPT HERE AS THE NEGATIVE HALF. It is the one place in the tree where
+    // `[^{}]*` still appears, and it is there to be shown FAILING: a reader who reverts the walker
+    // «to simplify» meets the measurement that says why it was replaced.
+    const fixture = "addEvent(world, { week: world.week, type: 'life', text: ROW, ...(first ? { keep: true } : {}) })"
+    const OLD = /\{[^{}]*type:\s*'life'[^{}]*\}/
+    expect(OLD.test(fixture), '⚠ the pre-T10 pattern cannot see a nested site at all – this is the defect')
+      .toBe(false)
+    const at = fixture.indexOf("type: 'life'")
+    expect(rowLiteralAt(fixture, at), 'the walker returns the WHOLE literal, spread and all')
+      .toBe("{ week: world.week, type: 'life', text: ROW, ...(first ? { keep: true } : {}) }")
+    // ...and a flat literal is unchanged by the new reach, so the widening took nothing away.
+    const flat = "addEvent(world, { week: 1, type: 'life', lifeKind: 'met' })"
+    expect(rowLiteralAt(flat, flat.indexOf("type: 'life'"))).toBe("{ week: 1, type: 'life', lifeKind: 'met' }")
+    // ...and an occurrence with no enclosing literal THROWS rather than answering with a short string.
+    expect(() => rowLiteralAt("type: 'life'", 0), '⚠ the absent-brace case is an error, not an empty region')
+      .toThrow(/no enclosing object literal/)
   })
 
   it('⚠ the ANSWER row is deliberately NOT a life row, and is therefore deliberately unstamped', () => {

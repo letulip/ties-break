@@ -334,9 +334,29 @@ export interface LoveEpisode {
   /** the week it ended, or null while it is still going. ⚠ Wave 4 writes it; THIS wave always
    *  leaves it null, and the cooldown that reads it is shipped now so wave 4 changes nothing here. */
   endedWeek: number | null
-  /** the week the PARENT found out – `sinceWeek` plus the shaved lag (wave 3 T5) – or null while he
-   *  has not been told. ⚠ It is a fact about disclosure and never about the attachment: a row can
-   *  begin and end with this still null, which is exactly the late-row case above. */
+  /** the week the PARENT found out – `sinceWeek` plus the shaved lag (wave 3 T5). ⚠ It is a fact
+   *  about disclosure and never about the attachment: a row can begin AND end before this week
+   *  arrives, which is exactly the late-row case above.
+   *
+   *  ⚠⚠ CORRECTED 14.09 BY v77's T10 (ruling T, on T6's measurement). This said «or null while he
+   *  has not been told», and **no engine-born row has ever held a null here.** Measured at the one
+   *  writer: `rollArrival` sets `knownWeek = sinceWeek + shaveLag(raw, band)` and `shaveLag` is
+   *  TOTAL – it returns a number for every input – so the field is written at the row's BIRTH and
+   *  merely sits in the future until the lag runs out; asked of the real `rollArrival` over 60
+   *  careers and 20+ rows, none was null. The second writer, T6's overtake, writes `world.week`.
+   *  The false half was load-bearing, not decorative: the wave-6 brief spelled the founding scene
+   *  («a parent reading a headline about a daughter who never told him») as `knownWeek === null` and
+   *  that branch could never have been entered – the sixteenth «unable to fire» of this pair of
+   *  waves. What ships instead is «has he been told YET», `knownWeek === null || knownWeek >
+   *  world.week`, which contains the old spelling as a sub-case and fires on the case that exists.
+   *  By ruling S this is an ASSERTION about the present state, so it is corrected rather than
+   *  annotated – the stale `knownWeek: 139` row one file over was a RECORD of a measurement, which
+   *  is the other half of the same rule.
+   *
+   *  ⚠ SO WHAT DOES `null` STILL MEAN, AND WHY DOES THE TYPE KEEP IT? A row that was MIGRATED or
+   *  CRAFTED – a save carried up from a hand-edited or imported world, and the test fixtures that
+   *  build an episode by hand. The sim cannot produce it; the type allows it; so every reader gates
+   *  on it, and none of them may treat it as unreachable. */
   knownWeek: number | null
   /** her drawn preference about being told: `'private'` keeps it to herself, `'open'` says it out
    *  loud (wave 3 T5). Hers, not his. */
@@ -352,8 +372,13 @@ export interface LoveEpisode {
    *  ⚠⚠ IT LIVES BESIDE `knownWeek` AND THE TWO NEVER MERGE, which is the whole decision in the
    *  field. `knownWeek` is when the PARENT found out; this is when the PRESS did. They are different
    *  facts about different audiences and either can come first – the founding scene of §3c-bis is a
-   *  parent reading a headline about a daughter who never told him, which is `publicWeek` set while
-   *  `knownWeek` is still null. One field could not hold both without losing that scene.
+   *  parent reading a headline about a daughter who never told him, which is `publicWeek` landing
+   *  BEFORE `knownWeek` has arrived. One field could not hold both without losing that scene.
+   *
+   *  ⚠ THAT SENTENCE READ «…while `knownWeek` is still null» UNTIL 14.09 (v77 T10, ruling T) AND THE
+   *  SCENE IT DESCRIBED WAS UNREACHABLE. `rollArrival` writes `knownWeek` at the row's birth, so an
+   *  engine-born row is never null there – see that field's own note for the measurement. The
+   *  founding scene is real; its discriminator is «has he been told yet», not a null.
    *
    *  ⚠ THE BOOTH AND EVERY PUBLIC SURFACE MAY VOICE ONLY A FACT WITH `publicWeek !== null` – «the
    *  honest boundary is the world's own PUBLICITY, not the family's walls» (C4). A fact only the

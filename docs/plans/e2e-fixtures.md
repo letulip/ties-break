@@ -32,6 +32,24 @@ last-reviewed: 2026-08-08
 - **Found, not forced.** Every state is reached by walking a real career under a real policy and
   stopping when the engine says so – `broke` is `bankruptcyGraceWeeks - 1`, not "week 88". A fixture
   that could not have happened in play would test nothing.
+- ⚠⚠ **A KNOWN CROSSING, 23 WEEKS AHEAD OF `pro` – RECORDED SO IT IS NOT DISCOVERED** (v77 T6's
+  measurement, entered here by T10). Of the ten fixtures only `pro` is NEWS – fame **59.57** against
+  wave 6's `ECONOMY.spotlight.newsFameMin` of 30 – and it is the only one carrying a live episode the
+  world has not learned of. Its leak hazard is drawn per episode-week on
+  `seed:life:leak:<episodeId>:<week>`, and **its first leak week is 435**. The fixture sits at
+  **412**. No spec advances a career that far today, so the corpus is clean by 23 weeks and every
+  `publicWeek` in it is `null`. **A future `npm run e2e:fixtures` whose `pro` target week walks past
+  435 WILL produce a leak** – a `publicWeek`, possibly a `publicWrong`, a kept `LEAK_EVENT` row in
+  the feed and, one tick later, an exposure charge. That is the engine working; what would be a
+  defect is meeting it as a mystery. ⚠ The number is a property of THIS seed: change `pro`'s seed or
+  its policy and 435 is not the number any more, so re-measure rather than re-quote.
+- ⚠ **AND `pro` IS NOW AN EXPOSURE-WEEK FIXTURE, WHICH IS LOAD-BEARING FOR ONE SPEC.** Regenerated at
+  v77 T10 it wakes at week 412 holding **six** «People were talking about her last week.» rows (two
+  kept, at w315 and w369; four ordinary, at w404 / w408 / w410 / w412) and a
+  `spotlightHabituation` of **98**. `e2e/spotlight.spec.ts` reads the week-412 row off Home's News,
+  so a regeneration that lands `pro` on a quiet week reddens that spec by name – which is the
+  intended alarm, not a flake. The row is the engine's, not the harness's: nothing in
+  `tools/e2e-fixtures.ts` forces an exposure.
 - **`tests/e2e-fixtures.test.ts` is the rot alarm**, on the PR gate: each fixture loads through BOTH
   doors (export file and database), its manifest facts are re-derived, and one assertion **goes red
   deliberately on the next schema bump** – otherwise a stale fixture would pass everything else and

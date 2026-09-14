@@ -64,6 +64,41 @@ export function diarySource(): string {
 }
 
 // -------------------------------------------------------------------------------------------------
+// ⚠⚠ AND A THIRD SCOPE, FOR THE LAWS THAT ARE ABOUT THE **LAYER** RATHER THAN ABOUT ONE MODULE –
+// v77 T10, ruling T.
+//
+// THE FAILURE IT EXISTS TO STOP, and it was live for a day. `tests/wave4-life-row-stamp.test.ts`
+// carries the law «no `type: 'life'` feed row leaves the engine without a `lifeKind`», and it swept
+// `worldSource()` – world.ts plus world/*.ts. That is the scope of a MODULE, and the law is about a
+// LAYER: wave 6's T3 wrote a life row in `src/engine/spirit.ts`, one directory over, and the pin
+// could not see it. Not «did not»: COULD NOT. A guard whose scope is narrower than its sentence is
+// the «unable to fail» family wearing a source pin's clothes, and this repo has now met that family
+// twenty times.
+//
+// ⚠ WHY THE WHOLE DIRECTORY AND NOT A NAMED LIST OF TWO. A list of modules rots exactly the way the
+// old scope rotted – the third module to write a life row is invisible again, and nothing goes red
+// to say so. `readdirSync` recursing over `src/engine/` is total by construction, which is the same
+// argument `worldSource()` itself makes one screen up about the decomposition.
+// -------------------------------------------------------------------------------------------------
+
+/** EVERY `.ts` under `src/engine/`, recursively, with a marker before each file – for laws that are
+ *  about the engine LAYER rather than about one module. Sorted, so the concatenation is stable.
+ *  ⚠ POSITIVE AND NEGATIVE claims are both honest against it: it is the whole layer, not a sample. */
+export function engineSource(): string {
+  const read = (dir: URL, prefix: string): string[] => {
+    const out: string[] = []
+    for (const entry of readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
+      if (entry.isDirectory()) out.push(...read(new URL(`${entry.name}/`, dir), `${prefix}${entry.name}/`))
+      else if (entry.name.endsWith('.ts')) {
+        out.push(`\n// ==== src/engine/${prefix}${entry.name} ====\n` + readFileSync(new URL(entry.name, dir), 'utf8'))
+      }
+    }
+    return out
+  }
+  return read(ROOT, '').join('')
+}
+
+// -------------------------------------------------------------------------------------------------
 // ⚠ AND THE SAME PROBLEM ARRIVED FOR COMPONENTS. Splitting a 2,300-line SFC means moving logic into
 // `src/composables/*.ts`, and a pin that reads only the `.vue` then asserts against half a component.
 // `componentSource` follows the SFC's own composable imports, so a pin keeps covering the whole

@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 111 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 112 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 5 | [THE WAVE'S TEN QUESTIONS RULED, AND THE GATE LEARNS TO REMEMBER](#14092026--the-waves-ten-questions-ruled-and-the-gate-learns-to-remember) | 2026-09-14 |
+| general | 6 | [WAVE 6 IS BUILT AND GATED: THE SPOTLIGHT, AND EVERY NUMBER IN IT IS STILL A PROPOSAL](#14092026--wave-6-is-built-and-gated-the-spotlight-and-every-number-in-it-is-still-a-proposal) | 2026-09-14 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 11 | [WAVE 5 MERGED AND DEPLOYED; THE PRIVATE LIFE'S SPOTLIGHT WAVE IS COMMISSIONED](#14092026--wave-5-merged-and-deployed-the-private-lifes-spotlight-wave-is-commissioned) | 2026-09-14 |
@@ -4493,3 +4493,65 @@ sweep of every other need-verdict on the wallet (the broke-ending pair and the d
 worry named as candidates; academy and college aid stay on the anketa by their own ruled
 design), the bar itself untouched – only the input widens. Repro tests in both his arms
 (working AND middle), the spec's instrument re-run as the control.
+
+## 14.09.2026 – WAVE 6 IS BUILT AND GATED: THE SPOTLIGHT, AND EVERY NUMBER IN IT IS STILL A PROPOSAL
+
+The wave he commissioned the same day («давай тогда для 1. Волна прожектора (§3c who-she-is) может
+спеку билдеру распишем?») is complete on `life/wave-6` – **schema v77**, T1–T12 plus two
+corrections, with the two microfixes he added mid-wave from his live playtest (the prologue dice,
+the deposit exploit). The builder's record is
+[life-wave-6-handoff-2026-09](plans/life-wave-6-handoff-2026-09.md); the questions back to him are
+[life-wave-6-questions-2026-09](plans/life-wave-6-questions-2026-09.md); the copy set is
+[life-wave-6-strings-2026-09](plans/life-wave-6-strings-2026-09.md).
+
+**What shipped.** The exposure ledger and its five kinds behind one predicate (`sheIsNewsAt`) · the
+pressure as a fourth summand inside `accrueSpirit`, scaled by EXPRESSED openness and intensity off
+one read · habituation as a sibling of that pass, frozen by either wall · the psychologist's fifth
+focus «The public life», shrinking the cameras and accelerating the learning by rung · the leak
+hazard with the spec's fame factor restored, accuracy by openness, and the overtake · the booth's
+private-life mention as an ENGINE fact registered as exposure, rendered by a `src/viz` that still
+takes no draw · 14 new player-facing strings, all drafts · three benches.
+
+**The frozen corpus moved exactly three lines and `rngMain` moved on none.** Measured base → head
+on all five cells: `schemaVersion`, `spotlightHabituation` appearing at its identity value on all
+five, and `loveEpisodes` on `FROZEN.eliteGrinder` alone – 85 / 83 / 86 / 84 / 85 other keys
+byte-identical. **The MAIN capture (41550 / `e6b0c709`) did not move once**:
+`git log c3c63ddd..HEAD -- tests/condition.test.ts` is EMPTY across the whole wave. Both of this
+wave's streams are sub-streams by construction.
+
+**What the wave learned about its own instruments**, recorded in
+[life-wave-6-rulings-2026-09](plans/life-wave-6-rulings-2026-09.md) (rulings A–X):
+
+* **The «unable to fire» family took SIX more costumes in one wave, and four of them were in the
+  BRIEF rather than in the build**: `'shoot'` spelled against a predicate that excludes its own week
+  (T2) · `'stage'` and `'publicLoss'` ASKED at a tick step where their records do not yet exist,
+  which cost a whole correction task (T3 → ruling P → T3b) · the overtake conditioned on a
+  `knownWeek === null` no engine-born row has ever held (T6) · a splice pin that cannot fail on the
+  one opening that would break the card (T8) · a guard whose SCOPE was one directory narrower than
+  its own sentence (T6 → ruling T → T10) · and **an e2e assertion over a seeded fixture, which
+  cannot fail on a change to the engine that wrote the fixture's rows** (T10's ARM A, 0 RED with the
+  write deleted).
+* **A law with a written exception is worth more than a law that silently cannot look** (ruling T).
+  Two feed rows now ship unstamped under named exceptions with custody, because §8 forbids a new
+  `LifeBeatKind` member – and the exception's own «exactly one» assertion turns out to be a POSITIVE
+  CONTROL on the corpus, which is what makes the widened scope prove itself.
+* **A test that claims a judgment it cannot make is worse than one that claims less** (ruling V):
+  «reads naturally» became «splices structurally», and the judgment went where judgments already go –
+  the builder drafts, the вычитка is the delivery gate, his playtest is final.
+* **A bench that pools across the axis its own mechanic scales by cannot decide anything** (ruling W).
+  Five «misses» were the instrument: per cell the same run is monotone to three decimals.
+* **The background notification lied EIGHT times**, over logs reading `CHECK_EXIT=1` and `=2`. Every
+  verdict in the wave was read from a file the command itself appended.
+
+**Two findings that are older and larger than this wave, and both go to him with numbers.** The
+college NEED layer has returned **0 % for every player at every seed since round 21** – `needTest`
+tapers to zero above $35,000/yr and the lowest parent income any family reaches by age 18 over 200
+seeds is $41,282. And a family holding **$8,106 in a deposit** is declared bankrupt 8 careers out of
+8: the mirror of the exploit he reported, with the career ENDING too early instead of help arriving
+too early. Neither shipped – both change persisted semantics or a rendered sentence that is true
+today.
+
+**Every §4 number is in the tree at its drafted value and UNRULED**, which is the contract. The two
+that decide the most are one decision in two halves: the news bar (at 30 the wave does not exist for
+five of the eight careers in his own save corpus) and the drafted bases (the spotlight decides the
+Mood word for 2.3 % of a sunny girl's charged weeks and 33.9 % of a deep girl's).
