@@ -971,3 +971,57 @@ leak – T10 records that as the known crossing rather than discovering it.
 
 **⚠ And the background notification lied twice more** – «exit code 0» over logs reading
 `CHECK_EXIT=2` and then `=1`, both real failures. Six lies in one wave.
+
+## U – ruling P's FIX stands and its MECHANISM was wrong: the results are written outside the tick entirely
+
+**T7's finding, and it corrects my own correction.** Ruling P said `finalizeTournament` is «reached
+from `revealTournamentRound` / `skipTournament`, at or after step 6» – I inferred those ran inside
+the tick. **Measured: they are WORKER COMMANDS** (`sim.worker.ts:390/393`), never called from
+`tickWeek` at all. The trophy shelf and the result row are written **outside the tick**, after the
+player presses Watch or Skip.
+
+**The fix is not weakened by this; it is strengthened.** A licence that waited for «this week's
+result» would have waited for something no tick produces at ANY step – not merely a late step, but a
+different process. Ruling P's `week − 1` remains exactly right, and for a better reason than ruling P
+gave: the pending run must finalize before the week can close (`PendingTournament`'s own doctrine –
+«the week that spawned it is not closed until the run finalizes»), so by the NEXT tick's step 4 last
+week's results are written, always. **One horizon, and now it rests on a property of the flow rather
+than on a step number I mis-read.**
+
+And T7 drew the right conclusion for its own licence: the only honest in-tick reading of «a big
+stage this week» is the **entered event's rung**, handed down so the function cannot be called from a
+matchless phase at all.
+
+## What T7 caught in its own work, and what it carried to me
+
+**⚠ The pin that matters most came back GREEN on its first draft.** T7's honesty boundary – «a fact
+only the family holds is never voiced, at any fame» – passed because its fixtures used the episode
+helper's default `sinceWeek: 120`, four hundred weeks stale, so the NEWS WINDOW refused the row and
+four cases were measuring a rule they were not about. Dates moved inside the window; the arm reddens
+four. **That is the «unable to fail» family caught by a builder in its own test, before it shipped** –
+the pattern this pair of waves has now met seventeen times.
+
+**Two narrowings T7 measured rather than assumed.** «At most one fact a week» was a property of the
+CALL COUNT and not of the function – a second call in the same week stamped the ending, so the guard
+is now asked through one spelling. And the packet as the brief specifies it would have printed the
+mention at up to six changeovers of one tournament week, because a run mounts the viewer once per
+revealed match off the same pending view – hence the first-match gate, which narrows the VIEW and
+never the fact: the pressure lands whatever the player chose to watch.
+
+**And a measured reason for a refusal**: a lost changeover collision is unrecoverable here, because
+the stamp is already spent and the pressure already charged. Over 300 corpus matches, 300/300
+mentions survive when the booth takes a free changeover and 294/300 when it competes for one. So the
+booth declines a contested changeover rather than fighting for it – six lost mentions a season is a
+fact the player would never be told about.
+
+### The fog rule goes to T10, aligned with its own neighbours
+
+`tests/spirit.test.ts`'s rule – `accrueSpirit|spiritMatchFactor|applyBondDelta` must not appear
+outside `engine/` – is **text-based, where its two immediate neighbours strip comments first with
+`codeOnly`** and say why in their own note: «Comments are stripped first, so this file's own prose
+about `Rng` cannot fire it». T7 hit it on a PROSE mention inside a viz comment and reworded its own
+text rather than re-aim another task's guard, which was the right call mid-task.
+
+**T10 aligns it.** This is not a weakening: the rule's CLAIM is «no code outside `engine/` calls
+these», and `codeOnly` makes the test measure that claim instead of a proxy that also fires on
+English. The file already records the reasoning one screen above, on a sibling.
