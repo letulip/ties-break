@@ -20,6 +20,7 @@
 // The first case is that proof: the takeover is in the DOM, the college bar has stood down, and the
 // global week bar's resume press is on screen. If any one of those three were false the career would
 // stand in front of a question with no way to answer it, which is worse than the item.
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from '../helpers/career'
@@ -47,7 +48,6 @@ import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   answerFork,
-  chooseGift,
   closeTournament,
   callUpRevealOpen,
   collegeLeagueRevealOpen,
@@ -132,7 +132,7 @@ function walkToTheChampionship(seed: string): { world: WorldState; rng: Rng } {
       skipTournament(world)
       closeTournament(world)
     }
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a championship')
@@ -327,7 +327,7 @@ describe('⭐⭐⭐ #7 – and the replay is still there afterwards, in the feed
         skipTournament(world)
         closeTournament(world)
       }
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     for (let i = 0; i < 60; i++) {
       tickWeek(world, rng)

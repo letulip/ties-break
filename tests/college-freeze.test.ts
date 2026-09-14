@@ -30,6 +30,7 @@
 // ⚠ THE FACTS ARE PINNED, NOT THE STRINGS. Every assertion below is a property of the world – the
 // calendar has future events, the ledger has rows, the table has somebody holding a point, the fee
 // came back, no week ticked – so a re-tuned calendar or a re-worded feed row cannot make it lie.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
@@ -40,7 +41,6 @@ import {
   tickWeek,
   enterEvent,
   answerFork,
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   revealTournamentRound,
@@ -188,7 +188,7 @@ function spendTheYears(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
 }
 
@@ -198,7 +198,7 @@ function spendOneYear(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
 }
 

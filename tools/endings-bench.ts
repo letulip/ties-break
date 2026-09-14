@@ -18,6 +18,7 @@
 // each candidate N the first week a spell reached it. "When would N have fired" is then exact, and
 // what the arm cannot claim – how the rest of the career would have differed afterwards – it does
 // not claim.
+import { answerBirthdayNeutral } from './_birthday'
 import {
   PRESETS,
   POLICIES,
@@ -31,7 +32,6 @@ import {
 import {
   answerFork,
   answerRetirement,
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   kidAgeYears,
@@ -322,7 +322,7 @@ function answerWhateverIsOpen(
     // press is press-answer-press.
     for (let press = 0; press < 3 && (world.college?.years.length ?? 0) === 0 && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
   }
   if (world.retirementOffer !== null) {

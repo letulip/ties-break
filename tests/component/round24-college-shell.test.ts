@@ -22,6 +22,7 @@
 // ⚠ AND THE SHELL IS MOUNTED, NOT PINNED. `round19-wrapup` established that App.vue mounts here. The
 // claim is "this takeover is NOT in the DOM while that state is", and only a mount can make it – a
 // source pin goes green on a gate that reads the right field and renders anyway.
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // ⚠ A RUNNER-SIZED CEILING, AND THE ARITHMETIC IS THE POINT (24.08). Every case here mounts the
@@ -55,7 +56,6 @@ import { useGameStore } from '../../src/stores/game'
 import {
   skipTournament,
   answerFork,
-  chooseGift,
   closeTournament,
   createWorld,
   endCollegeEarly,
@@ -255,7 +255,7 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
       resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       drainLifeBeats(world)
     }
     drainLifeBeats(world)
@@ -307,7 +307,7 @@ describe('⭐⭐ #4 – graduation is the last college screen, and it hands back
       resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       drainLifeBeats(world)
     }
     drainLifeBeats(world)

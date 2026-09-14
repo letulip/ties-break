@@ -20,6 +20,7 @@
 // That is what is measured, and the mutation at the foot of the file puts `.next-week-btn`'s own
 // `min-width: 206px` back on them and watches the same assertion go red. A test that cannot fail on
 // the broken version is not this test.
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeEach } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from '../helpers/career'
@@ -37,7 +38,6 @@ import {
   skipTournament,
   pendingBirthday,
   collegeLeagueRevealOpen,
-  chooseGift,
   answerFork,
   closeTournament,
   createWorld,
@@ -250,7 +250,7 @@ function walkedCollegeSnapshot(): Snapshot {
       skipTournament(world)
       closeTournament(world)
     }
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {

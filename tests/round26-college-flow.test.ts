@@ -27,6 +27,7 @@
 //      rows in it, and the calendar has never held a past match of any kind, tour ones included.
 //
 // This file pins the fix for both, over careers walked through the real engine.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -38,7 +39,6 @@ import {
   callUpRevealOpen,
   collegeLeagueRevealOpen,
   createWorld,
-  chooseGift,
   measureCollegeOffer,
   pendingBirthday,
   resumeFromCollege,
@@ -109,7 +109,7 @@ function pressToTheChampionship(world: WorldState, rng: Rng): { stops: string[];
     // ⚠ ROUND 27 #6: a career whose enrolment week falls between the two fixtures meets the tie
     // first, so the walk has to be able to step past one to reach a championship.
     if (callUpRevealOpen(world)) answerTheReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walk never reached a championship')
@@ -168,7 +168,7 @@ describe('#6 the championship stops the year instead of being reported after it'
       // answer is unconditional and only the count is gated. A walk that answered one reveal and not
       // the other would stall on the first call-up and report one championship a career.
       answerTheReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(world.college!.years, 'she graduated – the reveals never stranded the career').toHaveLength(
       ENDINGS.collegeYears,
@@ -216,7 +216,7 @@ describe('#6 the stop, and round 24 rule 2 still holding underneath it', () => {
       expect(world.pendingTournament, 'no tour reveal, on any press, in any college year').toBeNull()
       answerTheReveal(world)
       expect(world.pendingTournament, 'and none after answering one either').toBeNull()
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
   })
@@ -409,7 +409,7 @@ describe('#6 v59 -> v60: nothing is back-filled and nothing is halted', () => {
         sawOne = true
         answerTheReveal(world)
       }
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(sawOne, 'the next championship it plays is walked like everyone else`s').toBe(true)
   })
@@ -429,7 +429,7 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerTheReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(world.college!.years, 'four years really lived').toHaveLength(ENDINGS.collegeYears)
 
@@ -461,7 +461,7 @@ describe('#7 a kept match row stays reachable in the feed, however long the care
     for (let press = 0; press < 6 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerTheReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     for (let i = 0; i < 40; i++) {
       tickWeek(world, rng)

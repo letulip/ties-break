@@ -62,6 +62,7 @@
 //   ARM 7  the portrait override deleted – `portraitUrl` always builds the band painting
 //          3 RED · §B's three positive arms (Home on the graduation week, the leaver case's own
 //          control arm, and the Kid screen), each «expected '/images/…' to be '/images/…'»
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeAll, beforeEach, vi } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from '../helpers/career'
@@ -81,7 +82,6 @@ import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   answerFork,
-  chooseGift,
   closeTournament,
   createWorld,
   endCollegeEarly,
@@ -150,7 +150,7 @@ function graduate(seed: string): WorldState {
     resumeFromCollege(world, rng)
     skipTournament(world)
     closeTournament(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
   expect(world.ending, 'she came out the other side – the latch is off for good').toBeNull()
   expect(world.college?.years).toHaveLength(ENDINGS.collegeYears)
@@ -168,7 +168,7 @@ function leaveEarly(seed: string): WorldState {
     resumeFromCollege(world, rng)
     skipTournament(world)
     closeTournament(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
   endCollegeEarly(world)
   expect(world.college?.years.length, 'she really did leave short of the degree').toBeLessThan(ENDINGS.collegeYears)

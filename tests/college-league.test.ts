@@ -25,6 +25,7 @@
 //   THE PRICE    it awards nothing. She is an amateur while she is there; a student fixture paying
 //                ranking points would make four years of college a ranking route and the fork would
 //                stop being a real choice.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect, beforeAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -35,7 +36,6 @@ import {
   closeTournament,
   createWorld,
   answerFork,
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   collegeLeagueMatchId,
@@ -129,7 +129,7 @@ function walkFourYears(seed: string, tier?: CollegeTier): WorldState {
   for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
   return world
 }
@@ -139,7 +139,7 @@ function spendYears(world: WorldState, rng: Rng, years: number): void {
   for (let press = 0; press < 5 * years && world.college!.years.length < years && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
 }
 
@@ -546,7 +546,7 @@ describe('⭐⭐⭐ ROUND 27 #2 – «will the next press end at the championshi
         if (opened) played++
 
         answerCollegeReveal(world)
-        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+        if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       }
 
       // Not vacuous: four years, four championships, and the predicate fired on four presses.
@@ -714,7 +714,7 @@ describe('the freeze still behaves', () => {
     const yearEnds = college.week + WEEKS_PER_YEAR
     for (let press = 0; press < 4 && college.week < yearEnds; press++) {
       resumeFromCollege(college, rngA)
-      if (pendingBirthday(college) !== null) chooseGift(college, 'day')
+      if (pendingBirthday(college) !== null) answerBirthdayNeutral(college)
     }
     while (control.week < college.week) tickWeek(control, rngB)
     expect(college.week).toBe(control.week)
@@ -761,7 +761,7 @@ describe('a career migrated mid-college', () => {
     for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     const banked = world.college!.years
     expect(banked.length).toBe(before + 1)

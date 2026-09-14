@@ -15,6 +15,7 @@
 //   3. INPUT-INDEPENDENCE SURVIVES ALL OF IT. `tests/ending.test.ts` already proves that going to
 //      college cannot move the MAIN sequence; this file proves the same of the years INSIDE it, one
 //      call at a time, because the number of commands changed and the property must not have.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
   skipTournament,
@@ -25,7 +26,6 @@ import {
   advanceWeeks,
   tickWeek,
   answerFork,
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   endCollegeEarly,
@@ -105,7 +105,7 @@ function spendYear(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 4 && world.college!.years.length === before && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
 }
 
@@ -114,7 +114,7 @@ function spendCourse(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
 }
 
@@ -438,7 +438,7 @@ function collegeYearsWithACall(seed: string): { world: WorldState; stops: string
       presses.push(list)
       for (const s of list) seen.add(s)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     stops.push((STOP_PRECEDENCE as readonly string[]).filter((r) => seen.has(r)))
   }
@@ -536,7 +536,7 @@ describe('⭐⭐⭐ the college competition is played', () => {
     for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, before.rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(world.results.filter((r) => r.playerId === KID_ID), 'her column of the ledger is empty').toHaveLength(0)
     expect(world.entries).toHaveLength(0)
@@ -715,7 +715,7 @@ describe('⚠ P5 – the college years cost the MAIN stream nothing', () => {
       // ⚠ ROUND 26 #6: the championship pauses the year too, and answering it must cost MAIN nothing
       // either – which makes this arm stronger again rather than different.
       answerCollegeReveal(college)
-      if (pendingBirthday(college) !== null) chooseGift(college, 'day')
+      if (pendingBirthday(college) !== null) answerBirthdayNeutral(college)
     }
     while (control.week < college.week) tickWeek(control, rngB)
 

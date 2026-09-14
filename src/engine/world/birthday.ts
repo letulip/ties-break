@@ -187,10 +187,16 @@ function askWeightFor(gift: BirthdayGift, temperament: Temperament | null): numb
  *  in the list that costs the parent something he actually has, which is why it has to read as one
  *  of the good choices rather than as the absence of one.
  *
- *  ⚠ ITS ASK NAMES ALL THREE UNITS (round-18 #10b) because the day is offered in EVERY band, so it
- *  sits beside the trip at eighteen and beside the week at home from twenty-two on. "One day, not a
- *  week, not a trip" is the whole discrimination, and it has to be in the ask rather than left to
- *  the row, because the row is what the player is choosing BETWEEN. */
+ *  ⚠ ITS ASK NAMES ALL THREE UNITS (round-18 #10b) because the day is offered in every band IT
+ *  REACHES, so it sits beside the trip at eighteen and beside the week at home from twenty-two on.
+ *  "One day, not a week, not a trip" is the whole discrimination, and it has to be in the ask
+ *  rather than left to the row, because the row is what the player is choosing BETWEEN.
+ *
+ *  ⭐ ROUND 42 #1 (RULED A, 15.09) NARROWS THE 11.08 ALWAYS-ON: the day-ask starts at SIXTEEN. The
+ *  owner, on his own 14-year-old's card: «на 14 лет девочка просит "всего 1 день вместе", мне
+ *  кажется это неуместно» – the sentence is written from tour-life scarcity, and a girl under
+ *  sixteen still lives at home; the younger bands offer a FOURTH material row instead, so the card
+ *  keeps its four rows and `seed:birthday:<age>` keeps its exactly-four draws at every age. */
 const DAY_TOGETHER: BirthdayGift = {
   id: 'day',
   label: 'Just the day together',
@@ -200,6 +206,10 @@ const DAY_TOGETHER: BirthdayGift = {
   ask: 'When we asked, she shook her head: no thing. One day – not a week, not a trip. One day, with nothing else in the calendar.',
   short: BIRTHDAY_DAY_NOUN,
 }
+
+/** The age the day-together ask reaches the card – round 42 #1 (ruled A, 15.09; the ⭐ note on
+ *  `DAY_TOGETHER` carries the owner's words). Read by `birthdayOffer` and by nothing else. */
+export const DAY_TOGETHER_FROM_AGE = 16
 
 /** One age band's gifts. `from`/`to` inclusive; the last band is open-ended. */
 interface Band {
@@ -913,11 +923,15 @@ function subsetsOf(gifts: readonly BirthdayGift[], k: number): BirthdayGift[][] 
 // ⚠ A CALLER WITH NO WORLD PASSES NOTHING and falls back to the age, so every catalogue sweep in the
 // tests asks the question it always did. The rotation applies to them too – it is a property of the
 // cycle, not of a career – so what they sweep is the real order.
-function materialFor(seed: string, band: Band, index: number): BirthdayGift[] {
-  const cycle = subsetsOf(band.gifts, MATERIAL_OPTIONS)
+function materialFor(seed: string, band: Band, index: number, rows: number = MATERIAL_OPTIONS): BirthdayGift[] {
+  // ⭐ ROUND 42 #1: under sixteen the card holds FOUR material rows (no day-ask), so the caller may
+  // ask for 4. The cycle stays on its own `:birthday:cycle:` stream either way – the age stream's
+  // four-draw law is untouched by the subset size.
+  const cycle = subsetsOf(band.gifts, rows)
   // Total: a band with fewer gifts than rows has no combination of that size. Every band has at
-  // least three (a sweep in tests/birthday-gifts.test.ts holds that), so this is a crash guard.
-  if (cycle.length === 0) return band.gifts.slice(0, MATERIAL_OPTIONS)
+  // least three (a sweep in tests/birthday-gifts.test.ts holds that), and the 15 band holds exactly
+  // four – C(4,4) = 1, one combination shuffled, which is fine for a band with one birthday in it.
+  if (cycle.length === 0) return band.gifts.slice(0, rows)
   const order = shuffled(cycle, rngFromSeed(`${seed}:birthday:cycle:${bandKey(band)}`))
   if (band === COLLEGE_BAND) {
     // Total: `at` is -1 only if no combination holds the row, which cannot happen while the band
@@ -1143,9 +1157,13 @@ export function birthdayOffer(
   // ⚠ ROUND 26 #4 (second pass) CHANGED THE INDEX, NOT THE DRAW COUNT: at college the walk advances
   // per college birthday rather than per year of her life.
   const walkIndex = band === COLLEGE_BAND && collegeIndex !== null ? collegeIndex : age
-  const material = materialFor(seed, band, walkIndex)
+  // ⭐ ROUND 42 #1 (ruled A, 15.09): the day-ask reaches the card from sixteen; younger cards carry
+  // a fourth material row instead. BOTH arms hold four rows, so the shuffle below draws three and
+  // the ask draws one at every age – the exactly-four law on `seed:birthday:<age>` stands.
+  const dayOffered = age >= DAY_TOGETHER_FROM_AGE
+  const material = materialFor(seed, band, walkIndex, dayOffered ? MATERIAL_OPTIONS : MATERIAL_OPTIONS + 1)
   const rng = rngFromSeed(`${seed}:birthday:${age}`)
-  const options = shuffled([...material, DAY_TOGETHER], rng)
+  const options = shuffled(dayOffered ? [...material, DAY_TOGETHER] : [...material], rng)
   // ⚠ THE DAY TOGETHER IS NEVER SPENT. Every other option is a THING she now owns, and asking for it
   // twice is the bug; a day with her parents is not a possession and she may want one every year of
   // her life. Excluding it here would also make the best case the scene has (§2ab) unreachable for

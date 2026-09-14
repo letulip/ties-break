@@ -35,6 +35,7 @@ import {
   birthdayOptions,
   chooseGift,
   createWorld,
+  DAY_TOGETHER_FROM_AGE,
   decideKnock,
   giftNoun,
   pendingBirthday,
@@ -61,7 +62,7 @@ import type { BirthdayGift } from '../src/engine/world/birthdayGift'
 // answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
 // can be raised any week from her sixteenth on, so every hand-written call site threw. See
 // `drainLifeBeats`.
-import { drainLifeBeats } from './helpers/career'
+import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
 
 /** Every gift that can be on screen together: a band's own list plus the day, which is offered in
  *  every band (spec §2a). Three of a band's gifts are drawn, so ANY pair of them can co-occur and
@@ -71,6 +72,9 @@ function poolOf(band: (typeof BIRTHDAY_BANDS)[number]): BirthdayGift[] {
 }
 
 const bandName = (b: (typeof BIRTHDAY_BANDS)[number]) => `band ${b.from}-${b.to}`
+
+// ⚠ `answerBirthdayNeutral` moved to its one home the same day it was written – 26 walks needed
+// it (tools/_birthday.ts; re-exported by tests/helpers/career.ts).
 
 // =================================================================================================
 // RULE 1 – A ROW NAMES A THING
@@ -373,7 +377,7 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
       if (week < 0) break
       const age = pendingBirthday(world)!
       if (age >= 19) break
-      chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+      answerBirthdayNeutral(world)
       tickWeek(world, rng)
     }
     expect(pendingBirthday(world), 'the fixture has to reach the independence band').toBeGreaterThanOrEqual(19)
@@ -461,7 +465,11 @@ describe('⚠ the copy work costs the stream nothing', () => {
       // college band's own draw count load-bearing.
       const atCollege = band === BIRTHDAY_COLLEGE_BAND
       const age = Math.max(band.from, 14)
-      const population = combinations(band.gifts, 3)
+      // ROUND 42 #1: under sixteen the card is FOUR material rows and no day, so the mirror walks
+      // C(n,4); from sixteen it is the shipped C(n,3) + the day. Both arms still shuffle four rows
+      // and draw the ask, so the age stream's exactly-four law below holds at every age.
+      const rows = age >= DAY_TOGETHER_FROM_AGE ? 3 : 4
+      const population = combinations(band.gifts, rows)
 
       let cycleDraws = 0
       const cycleRng = rngFromSeed(`draws:birthday:cycle:${atCollege ? 'college' : `${band.from}-${band.to}`}`)
@@ -471,7 +479,7 @@ describe('⚠ the copy work costs the stream nothing', () => {
       }
       const order = shuffle(population, countedCycle)
       const material = order[age % order.length]
-      expect(cycleDraws, `${bandName(band)}: one Fisher-Yates over C(n,3) combinations`)
+      expect(cycleDraws, `${bandName(band)}: one Fisher-Yates over C(n,rows) combinations`)
         .toBe(population.length - 1)
 
       let draws = 0
@@ -480,7 +488,7 @@ describe('⚠ the copy work costs the stream nothing', () => {
         draws++
         return rng()
       }
-      const options = shuffle([...material, BIRTHDAY_DAY_TOGETHER], counted)
+      const options = shuffle(rows === 3 ? [...material, BIRTHDAY_DAY_TOGETHER] : [...material], counted)
       // ⚠ THE ASK IS REPLAYED TOO, AND THAT IS WHAT MAKES THE COUNT LOAD-BEARING. The first draft
       // compared only the four ids, so an extra `rng()` AFTER the shuffles moved the ask and nothing
       // noticed. The ask is the last draw on the stream: shift it by one and it lands elsewhere.
@@ -787,7 +795,7 @@ describe('ROUND 26 #4 – the wish is licensed by what the family has', () => {
             const found = toSnapshot(world).birthdayPrompt!
             if (found.options.some((o) => o.id === 'neverbuy')) return found
           }
-          chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+          answerBirthdayNeutral(world)
         }
         tickWeek(world, rng)
       }
@@ -882,7 +890,12 @@ describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () 
     const failures: string[] = []
     for (let s = 0; s < 40; s++) {
       for (const atCollege of [false, true]) {
-        for (let age = 15; age <= 40; age++) {
+        // ROUND 42 #1 re-aim: the college arm sweeps from NINETEEN. College is an 18+ fact, so an
+        // under-16 college offer is a probe artifact - and at 14->15 it met the young four-row card
+        // over the college band's four gifts, whose C(4,4) single combination repeats by arithmetic.
+        // The non-college arm keeps its full sweep (its young pairs cross band boundaries anyway).
+        const fromAge = atCollege ? 19 : 15
+        for (let age = fromAge; age <= 40; age++) {
           const prev = birthdayOffer(`walk-${s}`, age - 1, [], atCollege)
           const now = birthdayOffer(`walk-${s}`, age, [], atCollege)
           const a = prev.options.map((o) => o.id).sort().join('|')
@@ -1025,7 +1038,16 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
         expect(cold.options.map((o) => o.id), `${bandName(band)}: the offer moved`).toEqual(
           warm.options.map((o) => o.id),
         )
-        expect(cold.options.map((o) => o.id), 'the day left the card').toContain(DAY)
+        // RE-AIMED BY ROUND 42 #1 (ruled A, 15.09): the 11.08 always-on narrowed to sixteen-plus,
+        // by the owner's own word on his 14-year-old's card. From sixteen the cooldown still never
+        // touches the OFFER (the claim this case has always made); under sixteen the day is not on
+        // the card at all - asserted, so the gate cannot quietly widen back.
+        if (age >= DAY_TOGETHER_FROM_AGE) {
+          expect(cold.options.map((o) => o.id), 'the day left the card').toContain(DAY)
+        } else {
+          expect(cold.options.map((o) => o.id), 'the day reached a young card').not.toContain(DAY)
+          expect(cold.options, 'a young card still holds four rows').toHaveLength(4)
+        }
       }
     }
   })
@@ -1194,7 +1216,7 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
     const rng = rngFromSeed(world.seed)
     for (let i = 0; i < 700; i++) {
       if (pendingKnock(world)) decideKnock(world, 'rest')
-      if (pendingBirthday(world) !== null) chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       if (world.ending) break
       tickWeek(world, rng)
     }

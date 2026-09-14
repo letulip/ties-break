@@ -358,8 +358,8 @@ import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning }
 // ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
-import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
-export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
+import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE } from './world/birthday'
+export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE }
 // ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` arrive on the barrel too –
 // the ACTIVE attachment is a question asked of `loveEpisodes`, never a field, so every reader in the
 // repo has to arrive at it through this one function or the derivation acquires a second spelling.

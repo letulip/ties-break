@@ -65,6 +65,7 @@
 // IndexedDB while it evaluates, so the fake has to be installed before that dynamic import – and a
 // bare `import 'x'` is also the only form that does not need the package's own typings, which
 // `fake-indexeddb`'s "exports" map hides from `moduleResolution: bundler`.
+import { answerBirthdayNeutral } from './_birthday'
 import 'fake-indexeddb/auto'
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
@@ -280,7 +281,7 @@ async function walkCollege(
     }
     resumeFromCollege(world, rng)
     // Round 24: the year pauses on her birthday week; answer it so the next press finishes the year.
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     if (trip !== 'none' && world.ending?.type === 'college') {
       world = trip === 'export'
         ? await decodeExportFile(await encodeExportFile(world))
@@ -344,7 +345,7 @@ function walkWithStaleEntry(at: AtFork, weeksOut: number, finishReveal: boolean)
   for (let y = 0; y < 16 && world.ending?.type === 'college'; y++) {
     resumeFromCollege(world, rng)
     // Round 24: the year pauses on her birthday week; answer it so the next press finishes the year.
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   }
   if (finishReveal && world.pendingTournament) {
     for (let i = 0; i < 40 && world.pendingTournament && !world.pendingTournament.finished; i++) {

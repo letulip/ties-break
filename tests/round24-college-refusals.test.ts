@@ -23,6 +23,7 @@
 // ⚠ AND THE SPELLINGS ARE IMPORTED, NOT TYPED. Both sentences are player-facing copy that reaches a
 // toast through the worker's error channel; a literal copied into a test is a rename that breaks a
 // report in silence. Same precedent as `RELEASE_LINE_PREFIX` and `COLLEGE_REVEAL_REFUSAL`.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
   skipTournament,
@@ -153,7 +154,7 @@ function careerAtCollege(seed: string): { world: WorldState; rng: Rng } {
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     drainLifeBeats(world)
   }
   expect(world.ending?.type, 'the latch is back on with the next year under it').toBe('college')
@@ -209,7 +210,7 @@ function careerAtCollegeWithBookings(seed: string): { world: WorldState; vacWeek
   for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
     resumeFromCollege(world, rng)
     answerCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     drainLifeBeats(world)
   }
   expect(world.ending?.type).toBe('college')
@@ -346,7 +347,7 @@ describe('the family may take back a booking it made before the fork', () => {
     for (let press = 0; press < 4 && world.college!.years.length === 0; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
 
     // The friendly's own record, keyed by the week it was booked for – `resolvePractice` writes it.

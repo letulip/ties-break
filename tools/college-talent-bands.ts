@@ -30,6 +30,7 @@
 // the B arm's cut and the identity checked rather than assumed (it is asserted below).
 //
 // ⚠ MEASUREMENT ONLY. Nothing is patched, no engine constant is written, and no career leaves here.
+import { answerBirthdayNeutral } from './_birthday'
 import {
   openCareer,
   stepCareerWeek,
@@ -233,7 +234,7 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     // Round 24: the year pauses on her birthday week – press, answer, press again.
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     graduated = world.ending === null
     endedInCollege = world.ending ? world.ending.type : null

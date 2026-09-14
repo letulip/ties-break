@@ -64,7 +64,6 @@ import {
   callUpRevealOpen,
   collegeLeagueRevealOpen,
   answerFork,
-  chooseGift,
   closeTournament,
   createWorld,
   decideKnock,
@@ -79,6 +78,7 @@ import {
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { resumeMain, type Rng } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
+import { answerBirthdayNeutral } from '../tools/_birthday'
 import { drainLifeBeats } from './helpers/career'
 
 /** ⭐⭐⭐ ROUND 26 #6 RE-AIM – THE PRESS THAT ANSWERS THE CHAMPIONSHIP. `resumeFromCollege` now
@@ -110,12 +110,16 @@ export function finishAnyReveal(world: WorldState): void {
   if (world.pendingTournament) closeTournament(world)
 }
 
-/** Any pending birthday, answered with the one option EVERY birthday offers – the day together is
- *  never spent and never filtered (see `birthdayOffer`), so this is always a legal answer. */
+/** Any pending birthday, answered neutrally. ⚠ RE-AIMED BY ROUND 42 #1 (ruled A, 15.09): the day
+ *  together reaches the card from SIXTEEN now, so «the one option every birthday offers» stopped
+ *  being true of the young warm-up birthdays these walks pass through on their way to college. From
+ *  sixteen the answer stays the day (never spent, never filtered); under sixteen it is the card's
+ *  first row – a young band's gift, which no college band re-offers, so the college suites' own
+ *  premises are untouched. */
 export function answerBirthday(world: WorldState): number {
   const age = pendingBirthday(world)
   expect(age, 'the fixture called answerBirthday with nothing pending').not.toBeNull()
-  chooseGift(world, 'day')
+  answerBirthdayNeutral(world)
   return age!
 }
 

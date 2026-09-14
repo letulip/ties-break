@@ -54,7 +54,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 
 ---
 
-- [ ] **1. «на 14 лет девочка просит "всего 1 день вместе", мне кажется это неуместно, надо тоже
+- [x] **1. «на 14 лет девочка просит "всего 1 день вместе", мне кажется это неуместно, надо тоже
   починить»** – **ask**, because it collides with an earlier ruling of his own. The ask is
   `DAY_TOGETHER` (`birthday.ts:194-202`, id `'day'`, «One day – not a week, not a trip…»), and it
   is injected into EVERY band with no age test (`birthday.ts:1148`) – **by the owner's explicit
@@ -64,7 +64,19 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   but the ask COPY gets a younger voice for &lt;16 (wording his, DRAFT). Architect recommends **A**:
   the sentence he saw is written from tour-life scarcity, and a 14-year-old still lives at home.
   ⭐ **RULED 15.09: A** – the always-on day-ask starts at 16+; the 11.08 ruling narrows by his own
-  word. Build-class now.
+  word. ⭐ **BUILT the same day (architect's hand, sequential mode).** `DAY_TOGETHER_FROM_AGE = 16`
+  beside the gift; under sixteen the card holds FOUR material rows (`materialFor` gained a rows
+  parameter; the cycle stays on its own stream) so `seed:birthday:<age>` keeps its exactly-four
+  draws at every age and the card its four rows. The ripple was the real work: «answer every
+  birthday with the day» was a repo-wide walk idiom, 53 call sites across 27 test/tool files – all
+  moved to ONE home, `tools/_birthday.ts` `answerBirthdayNeutral` (day when offered, first row
+  under sixteen; `drainLifeBeats`' own arrangement, re-exported by `tests/helpers/career.ts`),
+  orphaned imports swept by the tsc net, `tsconfig.app.json` lists the new tool. Re-aimed with ⚠
+  notes: the draw-count mirror (C(n,rows)), the never-repeat sweep (the college arm sweeps from 19
+  – an under-16 «college» offer is a probe artifact whose C(4,4) single combination repeats by
+  arithmetic), the day-on-card case (present 16+, ABSENT under 16 – pinned both ways so the gate
+  cannot quietly widen back). Green: birthday-ask 40/40, college trio 58/58, nine swapped unit
+  suites 219/219, seven component 92/92.
 
 - [ ] **2. «на 14 летие показали картинку радости с призом в руке, хотя она пока вообще ничего не
   выиграла… Связана ли эта картинка с тем, что я "угадал" подарок?»** – **build** (one root cause
