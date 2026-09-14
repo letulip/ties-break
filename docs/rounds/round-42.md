@@ -380,9 +380,49 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 
 *(item 30 is folded into 21 above – one audit, one answer.)*
 
+- [?] **31. «посмотри на этот сид целиком, с чем пришла, на сколько прокачалась, на сколько
+  соответствует модели. Интересно, что тренер по итогу пролога сказал что-то вроде "такая же как
+  все в этом возрасте", хотя там явно был очень большой сектор на старте»** – **answer (the full
+  seed audit, reconstructed exactly) + ask (the wording half).**
+
+  The audit – both draws are seeded, so her birth reconstructs to four decimals against the save
+  (`startingSkills(seed)` + `withHeadStart` + `rollPotential`, validated Δ=0.0000 on all five
+  ceilings):
+
+  | key | birth | +head start | ceiling | now (w517) | room | taken | realised |
+  | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+  | serve | 55.0 | 55.7 | 66.65 | 65.12 | 11.65 | 9.42 | 81% |
+  | return | 53.0 | 53.7 | 58.53 | 57.77 | 5.53 | 4.07 | 74% |
+  | composure | 53.0 | 53.7 | **77.63** | 77.63 | **24.63** | 23.93 | 97% |
+  | stamina | 53.0 | 53.7 | 60.37 | 59.91 | 7.37 | 6.21 | 84% |
+  | groundstrokes | 47.0 | 47.7 | 63.53 | 62.53 | 16.53 | 14.83 | 90% |
+
+  Born strong (mean 52.2 against bands topping at 55–60; serve 55 of [40,58]); the composure roll
+  came up **24.63 of the [4,26] band – nearly the maximal ceiling the game can deal**, and THAT is
+  his «очень большой сектор». Career: 58.45 of 65.71 room taken = **88.9%**, against 97.66%
+  reachable at the best coaching money can buy – an 11% ≈ 7-point tithe paid to the self-coached
+  start, the coach churn and the injuries; #15 / slam SF on a 65.3-mean-ceiling build carried by
+  the 77.6 composure. **The model holds end to end** – nothing in this career is off-book.
+  (Curiosity, harmless: composure prints 0.0003 ABOVE its ceiling – the age-creep clamp's float
+  dust; the builder may pin the clamp while passing.)
+
+  The handover line – and his instinct caught a KNOWN, deliberately-parked wording debt. The base
+  band measures «what the nine childhood years added to her own room» (round 40 #4:
+  `handoverRealisation`, cuts p20/p80 = −5%…+3.6%, `coachMarket.ts:2037-2057`) – her prologue
+  landed in the middle 60%, so the READING «the childhood held her level» was correct, and it says
+  nothing about talent: the big sector is the ROOM half, which the second handover line owns. But
+  the SENTENCE still speaks the OLD comparative register («She is where most girls her age are»),
+  and `handover.ts:176`'s own ⚠ note records exactly this: the bottom band was re-voiced by his
+  08.09 ruling into the realisation register («Most of what she has, she was born with…»), the
+  upper two were left byte-identical, «whether the upper two should follow it is his to say» – and
+  it was never asked. Asked now, the round's fourth word: **A** – re-voice `ahead`/`level` into
+  the realisation register to match his own `behind` pair (recommended; two DRAFT lines, e.g.
+  level ≈ «The years kept her level with what she brought» register); **B** – keep the
+  comparative sentences as they are.
+
 ---
 
-## The ask batch (three, one pass – everything else ships as DRAFT/bench under his gate)
+## The ask batch (four, one pass – everything else ships as DRAFT/bench under his gate)
 
 1. **Item 1** – the day-together ask at young ages: **A** gate it 16+ (recommended) / **B** keep
    all-ages, re-voice the young copy.
@@ -391,6 +431,9 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
    re-earn.
 3. **Item 20** – the soft chip vs Proceed: **A** hard-block the week / **B** one-line leave-anyway
    guard + the pulsing chip (recommended – keeps «she can be missed» true).
+4. **Item 31** – the handover's upper two lines: **A** re-voice into the realisation register,
+   matching his own 08.09 `behind` pair (recommended – the cheapest word in the batch) / **B**
+   keep the comparative sentences.
 
 ## Execution notes (for the round's own run, after wave 6 lands)
 
