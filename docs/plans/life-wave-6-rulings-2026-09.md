@@ -370,3 +370,59 @@ carries them is still the one I named.
 v77 step in `src/engine/migrations.ts`, 14.09): the golden save corpus cannot witness a per-row
 back-fill – all 77 fixtures carry `loveEpisodes` empty or not at all – so **a step that writes into
 a row writes its own witness.** Parking that as «we will remember» is how it gets rediscovered.
+
+## L – T3's term is a FOURTH SUMMAND, it scales by intensity exactly once, and it reads the head's expression
+
+Three parts, all of them measured off `accrueSpirit`'s own body and its own recorded history.
+
+**The shape, measured** (`src/engine/spirit.ts`, the pass's arithmetic):
+
+```ts
+const moved =
+  returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked
+world.spirit = roundTenth(clamp(moved, s.min, s.max))
+```
+
+**1. It goes in as its own summand, NEVER as a row inside `weekPerturbation` – and the file records
+why in the voice of an incident.** The shock is added outside that multiplication because its
+constants are already intensity-scaled, and the note says what the alternative did: «one base of
+about −27.5 seen through the two `perturbationScale` values (−27.5 × 0.8 = −22.0, −27.5 × 1.25 =
+−34.4) – so **a row inside `weekPerturbation` would scale them a SECOND time**, to −17.6 / −42.5».
+The spotlight's bases are drafted «−2..−4 **before scaling**», so they take `perturbationScale`
+exactly once, in their own summand, and a row inside `weekPerturbation` would repeat the recorded
+defect on new numbers.
+
+**2. It does not round itself.** There is ONE `roundTenth` and one `clamp` in the pass, at the end,
+on the sum. A term that rounds its own tenths quantises the small values first – and a single
+exposure at ×0.75 × a deep habituation discount is exactly where small values live.
+
+**3. It reads the expression the HEAD already read, and never calls for it again.** The pass takes
+`expressedTemperamentOf(world)` once, at the top, and the file's ⚠⚠ is explicit: «IT IS READ EXACTLY
+ONCE, HERE AT THE HEAD, WHICH IS RULING F … Do not re-read it after this line, and never thread a
+new value into the same tick.» T3 needs BOTH axes, so it hoists the expressed temperament into one
+local and derives `temperamentIntensity` and `temperamentOpenness` from that one value. A second
+`expressedTemperamentOf(world)` call is a second read, and wave 5 ruled that the girl who
+experienced the week is one girl.
+
+## M – the ORDER is a ruling, not an accident: everything that stamps an exposure runs BEFORE `accrueSpirit`
+
+`'aired'` (T7) and `'wrongStory'` (T6) are exposure events of the week they land in. They are only
+visible to T3's term if their stamps are already written when `accrueSpirit` runs.
+
+**Measured** – the tick's own order is pinned by two tests (`wave4-ended-beat.test.ts:264`,
+`wave4-ends.test.ts:616`): the private life's calls sit **between** `accrueCondition` and
+`accrueSpirit`, in the order `rollEnds → rollArrival → deliverKnownPartner → rollSmallTalk`. So the
+life block already runs before the spirit pass, by a property two pins defend.
+
+**The ruling.** T6's leak hazard joins that block (it is a life call and belongs among its
+siblings), and **T7's booth stamp must also be written before `accrueSpirit`** – it is not free to
+sit in the viz, in the snapshot, or in a later phase, because «the mention IS an exposure event»
+(§0 delta 2, and the owner's 10.09 ruling that the commentary and the pressure are one system) is
+only true if the stamp exists when the pressure is summed. A stamp written after the spirit pass
+buys an exposure event that is one week late, silently, for ever.
+
+**⚠ And the caller keeps its double ask.** `phaseHerWeek.ts` asks `psychologistWorksThisWeek(world)`
+twice on purpose – once for `accrueSpirit`, once for `driftWalls` – and the file explains that
+hoisting it into a local would let a raw flag be handed down in the predicate's place, «ruling J's
+own hole». T3 APPENDS its third argument and changes nothing else about that line; the two re-aimed
+text pins then read the new call verbatim.
