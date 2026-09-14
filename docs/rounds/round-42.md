@@ -35,6 +35,9 @@ wave branch») and its BUILD work starts after the wave's own gate. The owner's 
   drafting is licensed – every new line lands in this file verbatim as DRAFT, his playtest final.
 * **Invariant 2**: nothing here touches MAIN. New wording variety (item 24) draws on purpose-keyed
   sub-streams only; the capture (41550 / `e6b0c709`) must not move.
+* ⭐ **THE OWNER'S EXECUTION RULING (15.09): STRICTLY SEQUENTIAL.** Asked A/B with the bundles
+  option recommended; his word: «Строго последовательно» – one agent at a time for this round's
+  build, the gate once at the end. Recorded so nobody «optimises» the round back into a fan-out.
 * **Gate once, on a quiet machine** – wave 6's builder is running; nothing gates until every agent
   on this round AND the wave's builder are done. Exit codes from files with fresh mtimes, never a
   pipe, never a notification.
@@ -60,6 +63,8 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   bands offer only their material rows; the 11.08 ruling narrows); **B** – it stays at every age
   but the ask COPY gets a younger voice for &lt;16 (wording his, DRAFT). Architect recommends **A**:
   the sentence he saw is written from tour-life scarcity, and a 14-year-old still lives at home.
+  ⭐ **RULED 15.09: A** – the always-on day-ask starts at 16+; the 11.08 ruling narrows by his own
+  word. Build-class now.
 
 - [ ] **2. «на 14 летие показали картинку радости с призом в руке, хотя она пока вообще ничего не
   выиграла… Связана ли эта картинка с тем, что я "угадал" подарок?»** – **build** (one root cause
@@ -282,7 +287,8 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   guard: first Proceed press while the chip is live asks one line («She wanted a minute – leave
   anyway?») and a second press leaves; the chip also pulses (item 8). Architect recommends **B**:
   he keeps his protection from accidental skips, the layer keeps «being missable» as a fact of
-  the home. One word decides.
+  the home. One word decides. ⭐ **RULED 15.09: B** – the leave-anyway one-liner + the pulsing chip; «she can
+  be missed» stays true. The blocking-beat grey-out ships beside it as planned.
 
 - [~] **21 + 30. «Вообще не вижу часть правок из предыдущей волны опять, проверь всё по пунктам» /
   «ещё раз прошу проверить предыдущий раунд правок»** – **answered with the audit, and one
@@ -572,3 +578,10 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   and must be proven not to move a single RNG draw;
   (C) shard the four heavy files so each runs under the ceiling on the runner; more matrix jobs,
   restructures the benches. Architect recommends **A**.
+  ⭐ **RULED 15.09: A**, and BUILT the same hour by the architect's own hand (sequential mode, the
+  smallest item first): `sim.mjs`'s re-stall branch now ACCEPTS a proven-green second stall as
+  recovered-infra – `classify` can only ever hand it `stalled` with a zero-failed summary (silence
+  reads as `failed`, pinned) – printed loud through the new `stalledTwiceNote` (`stall.mjs`), and
+  only a retry that comes back FAILED ends the run. The radar law stays the unit pool's: a sim
+  bench's minutes are its statistical power and cannot be «cut». Safety invariant + the note pinned
+  in `tests/units-stall-classifier.test.ts` (the new ROUND 42 #33 block).

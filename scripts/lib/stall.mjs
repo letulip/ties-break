@@ -95,6 +95,24 @@ export function lateAckOnly(output) {
   return infra >= n
 }
 
+/** ⭐ THE SENTENCE FOR A SIM RE-STALL ACCEPTED AS GREEN – the owner's round-42 #33 ruling (A,
+ *  15.09). A sim bench that stalls TWICE is proven green both times (`classify` returns `stalled`
+ *  only with a summary that says zero failed; silence reads as `failed`), so the retry has done its
+ *  one job – confirm the file ran green – and re-running a minutes-long Monte-Carlo a third time to
+ *  chase a clean reporter ack only burns the runner. The radar law (a shard that stalls twice is
+ *  OVER the wall and its FILE must be cut) is the UNIT pool's, where a file IS the unit and can be
+ *  split; a sim bench's minutes are its statistical power and cannot be. Loud on purpose – a gate
+ *  that quietly forgives a stall rebuilds the recoveredNote lie one level down. */
+export function stalledTwiceNote(label, firstSecs, secs) {
+  return (
+    `\n  ⚠ ${label} stalled at ${firstSecs}s AND ${secs}s, every test green both times – accepted.` +
+    `\n    That is birpc's 60s reporter ack crossed on a slow runner, not a defect: the summary` +
+    `\n    reported zero failed on both runs (a run that DIED mid-report reads as a failure, never` +
+    `\n    this). If a bench becomes a regular guest here it is living on the wall and the next step` +
+    `\n    is fewer seeds or a split of that file, measured – never a looser assertion.`
+  )
+}
+
 /** The sentence for an accepted late ack – loud on purpose: a gate that quietly forgives a
  *  timeout rebuilds the recoveredNote lie one level down. Printed once per accepted shard. */
 export function lateAckNote(label, secs) {

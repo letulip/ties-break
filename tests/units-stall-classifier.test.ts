@@ -10,7 +10,7 @@
 //   * `infra >= n` loosened to `infra >= 1`        -> the FOREIGN-MIXED arm fails.
 //   * the caught-line guard dropped               -> the SILENT-DEATH arm fails.
 import { describe, expect, it } from 'vitest'
-import { classify, lateAckOnly, summaryOf } from '../scripts/lib/stall.mjs'
+import { classify, lateAckOnly, stalledTwiceNote, summaryOf } from '../scripts/lib/stall.mjs'
 
 const GREEN_SUMMARY = ` Test Files  266 passed (266)
       Tests  5067 passed (5067)
@@ -78,5 +78,35 @@ describe('lateAckOnly – the buffer must prove the errors are all birpc', () =>
   it('NO SUMMARY: a runner that died before reporting is a real failure (the standing law)', () => {
     expect(classify(1, 'segfault, nothing printed')).toEqual({ stalled: false, failed: true })
     expect(lateAckOnly('segfault, nothing printed')).toBe(false)
+  })
+})
+
+// ROUND 42 #33 (the owner's ruling A, 15.09) – sim.mjs ACCEPTS a re-stall as green instead of
+// failing, because a re-stall is proven green. This block pins the SAFETY INVARIANT the accept
+// rests on (a stall is only ever a green summary) and the loud note sim.mjs prints for it. The
+// accept-decision itself lives in sim.mjs's loop, which spawns real vitest and is not unit-testable
+// here; what IS testable – and what makes the decision safe – is that `classify` can never hand
+// sim.mjs a `stalled` verdict without vitest having reported zero failed.
+describe('a sim re-stall is accepted as green, and only ever when proven green', () => {
+  const GREEN_STALL =
+    'Test Files  1 passed (1)\n Tests  61 passed (61)\n Errors  1 error\n' +
+    'Error: [vitest-worker]: Timeout calling "onTaskUpdate"'
+
+  it('the accept rests on classify: a stall requires a zero-failed summary', () => {
+    // The exact shape sim.mjs sees on a heavy bench that ran green but crossed birpc's 60s ack.
+    expect(classify(1, GREEN_STALL)).toEqual({ stalled: true, failed: false })
+    // ...and the two shapes that must NEVER be accepted stay strict: a real assertion and a silent death.
+    expect(classify(1, 'Tests  60 passed | 1 failed (61)').failed).toBe(true)
+    expect(classify(1, 'nothing printed').failed).toBe(true)
+  })
+
+  it('the note names both stalls, says green both times, and says accepted (loud, never swallowed)', () => {
+    const note = stalledTwiceNote('tests/econ-bench.test.ts', '80', '190')
+    expect(note).toContain('80s')
+    expect(note).toContain('190s')
+    expect(note).toContain('green both times')
+    expect(note).toContain('accepted')
+    // The direction that must stay scary: a run that DIED reads as a failure, never this note's path.
+    expect(note).toMatch(/DIED mid-report reads as a failure/)
   })
 })
