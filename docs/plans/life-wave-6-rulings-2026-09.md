@@ -642,3 +642,81 @@ ROMANCE thread's mark in the feed's glyph column, beside «they met» and «it e
 forbids an agent picking a glyph unasked, so T3 picked none and pinned the consequence instead
 (§H's last case), so it is chosen rather than discovered in a playtest. The fix, whichever it is, is
 his.
+
+## P – ⚠⚠ ruling M was measured on the wrong half of the tick, and two of five kinds are dead as shipped
+
+**T3's finding, re-derived independently before it was ruled on.** `tickWeek`'s own statement order
+(`src/engine/world.ts:1891`):
+
+| # | step |
+| --- | --- |
+| 1 | `recordDrawnFirstRounds` |
+| 2 | `seasonBoundaryAndObligations` |
+| 3 | `weeklyFinance` |
+| **4** | **`resolveBodyAndPlanner`** – the life block, then `accrueSpirit` |
+| 5 | `deriveWeekField` |
+| **6** | **`playHerWeek`** – the week's tournament is played |
+| 7 | `growAndLive` |
+| 8 | `closeTheWeek` |
+
+`finalizeTournament` is the only writer of `trophiesByTier[t].titles` / `.finals`
+(`world.ts:673-674`) and of `world.results` (`world.ts:1039`) – both stamped with `world.week` – and
+it is reached from `revealTournamentRound` / `skipTournament`, at or after step 6.
+
+**So when `accrueSpirit` asks `exposureEventsOf(world, world.week)` at step 4, this week's title,
+final or early exit has not been written yet.** `'stage'` and `'publicLoss'` return nothing, every
+week, for ever – the fifteenth «unable to fail» of this pair of waves, and this one is mine: ruling
+M measured the LIFE block's position, correctly, and declared the order settled without ever
+measuring the tournament's.
+
+**⚠ And it reaches past those two kinds.** T7's booth mention is about a MATCH, and the match is
+played at step 6 – so `'aired'` cannot honestly be stamped before step 4 either. Ruling M asked T7
+for something the tick cannot deliver.
+
+**The ruling: ONE horizon, and it is the last CLOSED week.** `exposureEventsOf(world, world.week −
+1)` for all five kinds, its pressure applied in the pass that follows.
+
+**Why this and not the alternatives, each refused for its own reason:**
+
+* **Move `accrueSpirit` after `playHerWeek`** – refused. It is the ONE writer of `world.spirit`, the
+  life block must sit between `accrueCondition` and it, and six pins defend that position.
+* **A split horizon** – tournament kinds at `week − 1`, life kinds at `week` – refused. It makes
+  `exposureEventsOf` lie about its own parameter and puts two clocks in one ledger.
+* **Carry the week's exposure forward in a field** – refused. That is another schema move, for a
+  lag that is free.
+* **And the lag is not a compromise, it is the truer reading.** The cameras were on her at the
+  weekend; the week she pays for it is the week after. «Мы ни за что не наказываем» is untouched –
+  nothing about the SIZE changes, only which pass carries it.
+
+**What this does and does not disturb:** T6's leak and T7's stamp keep their natural homes and are
+seen one tick later · ruling G's 52-week horizon is untouched, `week − 1` sits deep inside it · the
+no-exposure byte-identity pin and the ×2 openness ratio pin are unaffected · the feed row names the
+week that closed rather than «this week», and that row is a DRAFT, so T8 owns the sentence.
+
+**This ships as its own correction task (T3b), not folded into T4** – wave 5's practice, for wave
+5's reason: a correction carried inside the next build is a correction nobody can review.
+
+## Corrections from T3
+
+**Ruling A undercounted by three, and mis-stated two facts.** The tree holds **six** sites that read
+`accrueSpirit`'s signature or its call text, not three: `spirit.test.ts` carries a third
+(`:1085`, the call string) that I never found, `tests/wave5-psychologist-walls.test.ts:883` carries a
+fourth – **on its FIRST re-aim, not its second, because it was born in wave 5 already holding the
+anchor** – and ruling L forced a sixth in `wave5-psychologist-schema.test.ts`, which now pins that
+`expressedTemperamentOf(world)` appears **exactly once** in the pass. `wave4-ends.test.ts`'s pin is
+at **635**, not the 616 I quoted. The new signature is **119 characters on one line**, as ruling A
+required and measured.
+
+**The ratio pin cannot be read at one event on the INTENSITY axis.** T3 measured it: `roundTenth`
+quantises, so a `'fiery'` girl's single `'publicLoss'` reads 3.7 against a true 3.75 and the ratio
+comes out 1.5417 instead of 1.5625. **The ×2 OPENNESS ratio is exact at one event on every kind**,
+which is the ratio ruling N asked to be pinned – so the pin stands where it was aimed, and the
+intensity ratio is read over eight events that land on exact tenths.
+
+**The glyph, restated more precisely than the report put it.** T3 flagged that the exposure row
+wears 🤍 «the romance thread's mark». Measured: `LIFE_BEAT_EMOJI['met']` is EMPTY, so
+`lifeRowGlyph(undefined)` falls through to `LIFE_ROW_EMOJI.life` – **which is the owner's own 11.09
+pick for the `'life'` ROW KIND**, worn by every life row that has no per-kind mark. So the row is
+not mistaken for a romance beat; it wears the mark he chose for life rows. **The open question is
+narrower and still his**: whether the spotlight deserves a mark of its own. §5a stands – no agent
+picks a glyph – so nothing was picked, and it goes to him with the strings.
