@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,560 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,561 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-498 exported names across 51 owning modules.
+499 exported names across 51 owning modules.
 
 ## Areas
 
@@ -39,12 +39,12 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
+| `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 7 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
-| `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 6 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
@@ -600,6 +600,18 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `sellAsset` – `src/engine/world/shop.ts`
 - `shopView` – `src/engine/world/shop.ts`
 
+### `src/engine/world/spotlight.ts`
+
+⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK.
+
+- `atOrAboveStageBar` – `src/engine/world/spotlight.ts`
+- `boothPrivateLifeAt` – `src/engine/world/spotlight.ts`
+- `ExposureEvent` *(type)* – `src/engine/world/spotlight.ts`
+- `exposureEventsOf` – `src/engine/world/spotlight.ts`
+- `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
+- `NewsStanding` *(type)* – `src/engine/world/spotlight.ts`
+- `newsStandingOf` – `src/engine/world/spotlight.ts`
+
 ### `src/engine/world/business.ts`
 
 ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает».
@@ -654,17 +666,6 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `shootClashOpen` – `src/engine/world/shootClash.ts`
 - `shootClashWeek` – `src/engine/world/shootClash.ts`
 - `shootMoveTarget` – `src/engine/world/shootClash.ts`
-
-### `src/engine/world/spotlight.ts`
-
-⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK.
-
-- `atOrAboveStageBar` – `src/engine/world/spotlight.ts`
-- `boothPrivateLifeAt` – `src/engine/world/spotlight.ts`
-- `ExposureEvent` *(type)* – `src/engine/world/spotlight.ts`
-- `exposureEventsOf` – `src/engine/world/spotlight.ts`
-- `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
-- `sheIsNewsAt` – `src/engine/world/spotlight.ts`
 
 ### `src/engine/world/means.ts`
 
