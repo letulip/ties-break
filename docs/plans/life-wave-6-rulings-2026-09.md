@@ -926,3 +926,48 @@ about the present state, so it is corrected.**
 of them.» A number in that sentence rots on every roster change and has now done so once; removing it
 retires the class instead of resetting the clock. It ships **as a draft in T8**, in the wave's draft
 set, under the same вычитка and the same playtest as every other string here.
+
+## T – T6's findings: the overtake could never have fired, the narrowing is upheld, and a guard's scope hole goes to T10
+
+**⚠⚠ The overtake's condition, as the brief and the field's own note spell it, is unreachable in
+play – the sixteenth «unable to fire» of this pair of waves.** Both say `knownWeek === null`.
+Measured at the one writer: `rollArrival` sets `knownWeek = sinceWeek + shaveLag(raw, band)` and
+`shaveLag` is TOTAL, so an engine-born row never holds a null there – T6 asked the real `rollArrival`
+over 60 careers and 20+ rows and found none. The founding scene would have been spelled into a
+branch no played career can enter.
+
+**Upheld: T6 shipped the SPEC's sentence instead**, «`publicWeek` can land BEFORE `knownWeek`»,
+spelled «has he been told yet», which contains the brief's wording as a sub-case. ARM 6 reddens four
+cases on the brief's version. ⚠ **And the field comment on `knownWeek` («or null while he has not
+been told») is itself false for engine-born rows** – `null` survives only for migrated or crafted
+ones. That is an ASSERTION about the present, so by ruling S it is corrected rather than annotated;
+it joins T10's sweep.
+
+**Upheld, and for a stronger reason than the report gives: the hazard runs on the ACTIVE episode.**
+Read literally the brief leaks a romance that ended three years ago – and because T7's licence READS
+the stamp and never re-judges it, the booth would then put «a face in the players' box» on air about
+somebody long gone. The narrowing is also the brief's own structure: it already says an episode that
+ends while PUBLIC needs no second hazard, which only makes sense if ending while PRIVATE simply stays
+private. **A relationship the world never learned of is a relationship the world never learned of** –
+that is true to the model and true to life, and a retrospective leak is a different beat in a later
+wave, not a wider condition in this one.
+
+**The guard's scope hole goes to T10, widened WITH a named exception.**
+`tests/wave4-life-row-stamp.test.ts`'s law – every life row stamps a `lifeKind` – reads
+`worldSource()`, so `engine/spirit.ts` sits outside it and **T3's `EXPOSURE_ROW` is an unstamped
+`type: 'life'` row the pin has never been able to see.** T6 was right not to widen it mid-task.
+**T10 widens the scope** (so the next unstamped row IS caught) and names T3's row as the one declared
+exception, carrying its reason – §8 forbids a new `LifeBeatKind` – and the owner's still-open
+question about whether the spotlight deserves a mark of its own. A law with a written exception is
+worth more than a law that silently cannot look.
+
+**Two smaller things worth keeping.** The `'wrongStory'` feed row is the only one that may name «a
+mystery man»: the schema deliberately persists no partner gender, so the TRUE row stays gender-free
+and **the fabrication is what licenses the phrase** – the wrongness is doing the work, which is
+exactly §3c-bis's gem. And the e2e corpus is clean today by **23 weeks**: only the `pro` fixture is
+news (fame 59.57) with a live unleaked episode, its first leak lands at week **435**, and the fixture
+sits at **412**. ⚠ A future `npm run e2e:fixtures` regeneration that walks past 435 will produce a
+leak – T10 records that as the known crossing rather than discovering it.
+
+**⚠ And the background notification lied twice more** – «exit code 0» over logs reading
+`CHECK_EXIT=2` and then `=1`, both real failures. Six lies in one wave.
