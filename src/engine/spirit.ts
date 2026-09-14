@@ -701,6 +701,11 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
  *  вычитка own the words, and what T3b owes is a plain sentence that is TRUE. */
 export const EXPOSURE_ROW = 'People were talking about her last week.'
 
+/** ⭐⭐ THE FIFTH FOCUS'S RECEIPT – the spec §2's own sentence, commissioned by the owner's D2
+ *  (14.09, «да») on the strings doc's trigger proposal. A DRAFT under invariant 4 like its two
+ *  siblings above. */
+export const PUBLIC_LIFE_RECEIPT = 'The cameras stopped costing her sleep.'
+
 // =================================================================================================
 // 3c-psy. ⭐⭐⭐ «THE PUBLIC LIFE» – v77's T5 (wave 6, the psychologist's fifth focus, O7 ruled 13.09)
 // =================================================================================================
@@ -998,8 +1003,25 @@ export function growHabituation(world: WorldState, isNews: boolean, psychologist
   //    while that year is being worked and paid for, `1` otherwise. ⚠ IT IS READ HERE AND NOT AT THE
   //    HEAD: both gates above have already returned, so this multiplier is only ever reached on a
   //    week that was going to count one anyway.
-  const focusAccel = publicLifeAccelAt(publicLifeRung(world, psychologistWorks))
-  world.spotlightHabituation = roundTenth(Math.min(held + 1 * focusAccel, p.habituationFullWeeks))
+  const rung = publicLifeRung(world, psychologistWorks)
+  const focusAccel = publicLifeAccelAt(rung)
+  const grown = roundTenth(Math.min(held + 1 * focusAccel, p.habituationFullWeeks))
+  world.spotlightHabituation = grown
+  // 5. ⭐⭐ THE RECEIPT (D2, 14.09, his «да»): «The cameras stopped costing her sleep» prints on the
+  //    week the habituation SCALE first crosses `psychologist.publicLifeReceiptAt` – and only if the
+  //    year is being worked that week, because it is the FOCUS's receipt and not the counter's.
+  //    ⚠ ONCE-EVER BY MONOTONICITY, NOT BY A STAMP: this counter never decays (v1's own law two
+  //    notes up), so before/after can straddle the point at most once per career and no schema
+  //    field is spent remembering it. A career that crosses the point on an unworked week spends
+  //    the crossing silently – the receipt is earned by the year that did the work, which is
+  //    `RECOVERY_RECEIPT`'s own «he worked it, not a subscription stamp» doctrine (wave 5 T4).
+  //    ⚠ `type: 'info'`, no cents, no keep – the recovery receipt's exact shape at its own site.
+  if (rung !== undefined) {
+    const point = ECONOMY.psychologist.publicLifeReceiptAt
+    if (habituationScale(held) > point && habituationScale(grown) <= point) {
+      addEvent(world, { week: world.week, type: 'info', text: PUBLIC_LIFE_RECEIPT })
+    }
+  }
 }
 
 /**
@@ -1189,12 +1211,13 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   // other weather is how three tenths become nothing.
   world.spirit = roundTenth(clamp(moved, s.min, s.max))
   // 2d. ⭐⭐ THE LEGIBILITY LAW – ONE ROW, ON AN EXPOSURE WEEK, IN PLAIN WORDS (§3c: «every dip
-  //     explainable»). ⚠⚠ IT IS GATED ON THE **EVENTS** AND NEVER ON THE POINTS, which is deliberate
-  //     and is ruling N's measurement turned into a rule: the term's worst contribution for a calm
-  //     open girl is 2.40 against a 2.50 distance to the `dimmed` edge, and a habituated one takes
-  //     three tenths – so a row gated on «did the number move visibly» would go silent on exactly
-  //     the weeks the player most needs the sentence. A week the light was on is a week the feed
-  //     says so.
+  //     explainable»). ⭐⭐ RE-CUT BY THE OWNER'S D1b (14.09, «ок»),
+  //     WHICH OVERRIDES RULING N's EVENTS-NOT-POINTS GATE FOR THE ROW ALONE: the row prints only
+  //     when the week's summed charge clears `ECONOMY.spotlight.rowMinCharge` (absolute, after all
+  //     five factors). Ruling N's own measurement is what made the case – a habituated, focus-held
+  //     girl takes −0.33 from a camera week, and a sentence over a dip nobody can see is «every dip
+  //     explainable» read backwards. The CHARGE is untouched at any size; only the sentence has a
+  //     floor. N's events-gate is kept in the history as what stood before his word.
   //     ⚠⚠ AND THE ROW IS DATED BY WHEN IT PRINTS, WHICH IS ONE WEEK AFTER WHAT IT NAMES – ruling P
   //     (v77 T3b). The list handed down describes `world.week − 1`; the row is stamped `world.week`
   //     because a feed row is dated by the week the player reads it, exactly like the pressure it
@@ -1205,13 +1228,11 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //     held a title, a shoot and a wrong story is charged three times and printed once.
   //     ⚠ NO `amountCents` AND NO FIGURE (the no-cents law, wave-3 §0.5): the row says the light was
   //     on, never what it cost – the fog law forbids the number as firmly here as on any screen.
-  //     ⚠ AND NO `lifeKind`. The stamp's type is `LifeBeatKind` and §8 forbids a new member of it,
-  //     so this row carries none. ⚠⚠ AND THE CONSEQUENCE IS MEASURED RATHER THAN LEFT TO A PLAYTEST:
-  //     `lifeRowGlyph(undefined)` resolves through `?? 'met'` to `LIFE_ROW_EMOJI.life`, the owner's
-  //     own 11.09 white heart, so this row wears the ROMANCE thread's mark in the feed's glyph
-  //     column. who-she-is §5a forbids an agent picking a glyph unasked, so none was picked – the
-  //     T3 suite's §H pins the fallback and the finding is carried to the architect.
-  if (exposure.length > 0) {
+  //     ⭐ D3 (14.09): THE OLD FINDING HERE (no `lifeKind`, 🤍 by fallback, carried to the owner)
+  //     CAME BACK RULED – his «да» to 📸. The row carries `lifeKind: 'exposure'` (a ROW kind, not a
+  //     `LifeBeatKind` – §8's ban intact, the field's own note in `shared/protocol/events.ts`) and
+  //     wears the camera; the T3 suite's §H re-aims from the fallback to the mark.
+  if (exposure.length > 0 && Math.abs(pressured) >= ECONOMY.spotlight.rowMinCharge) {
     // ⚠ THE KEEP FLAG IS §4's OWN PROPOSAL AND IT IS UNRULED: «keep the first exposure row of a
     // season, drop repeats». The first exposure week of a season leaves a permanent trace (the album
     // can find the thread seasons later); the repeats are ordinary rows and prune with everything
@@ -1221,7 +1242,7 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
     // one spelling in this module.
     const from = seasonStartWeek(world.week)
     const firstOfSeason = !world.events.some((e) => e.week >= from && e.text === EXPOSURE_ROW)
-    addEvent(world, { week: world.week, type: 'life', text: EXPOSURE_ROW, ...(firstOfSeason ? { keep: true } : {}) })
+    addEvent(world, { week: world.week, type: 'life', lifeKind: 'exposure', text: EXPOSURE_ROW, ...(firstOfSeason ? { keep: true } : {}) })
   }
 
   // 3. AND THE STANDING, ON THE SAME PASS – one weekly function, two numbers. Same shape, same

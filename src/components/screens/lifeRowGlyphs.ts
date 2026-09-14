@@ -124,7 +124,12 @@ export type LifeBeatRowKind = (typeof LIFE_BEAT_ROW_KINDS)[number]
  *  so the compile gate now guards the half that is still law: every KEY must be a markable kind –
  *  a typo'd or off-roster key still fails `vue-tsc` – and the unpicked kinds are carried by the
  *  fallback, which the reader's own tests hold load-bearing. */
-export type LifeBeatGlyphs = Partial<Record<LifeBeatRowKind, string>>
+/** The kinds a feed mark can be picked for: the two beat row kinds plus the spotlight family's own
+ *  `'exposure'` – a row kind that is deliberately NOT a `LifeBeatKind` (D3, 14.09; the field's own
+ *  note in `shared/protocol/events.ts` carries the argument). */
+export type LifeRowMarkKind = LifeBeatRowKind | 'exposure'
+
+export type LifeBeatGlyphs = Partial<Record<LifeRowMarkKind, string>>
 
 // ⚠⚠ THE OWNER'S PER-KIND PICKS GO HERE AND NOWHERE ELSE, AND IT SHIPS **EMPTY** – who-she-is §5a,
 // «the set is his to pick, and no agent adds or swaps one unasked», which CLAUDE.md's invariant 4
@@ -172,14 +177,18 @@ export type LifeBeatGlyphs = Partial<Record<LifeBeatRowKind, string>>
 // stays unpicked on purpose: T1 took no back-fill, so a met glyph would repaint every historical
 // life row in every save ever written – that consequence stays chosen-not-discovered, and 🤍
 // remains the fallback the unpicked kinds wear.
-const KIND_PICKS = { ended: '♡' } satisfies LifeBeatGlyphs
+// ⭐ HIS SECOND PICK, 14.09 (D3, «да» to the architect's 📸): the spotlight family – the exposure
+// row and the leak rows – wears the camera. Scope note: the leak rows joined the family by the
+// architect's reading of «the spotlight's own mark» (one thread, one mark); the strings doc flags
+// that half for his вычитка, and un-picking it is one word and one line here.
+const KIND_PICKS = { ended: '♡', exposure: '📸' } satisfies LifeBeatGlyphs
 
 /** The per-kind column the feed reads. ⚠ TYPED OVER THE **WHOLE** `LifeBeatKind`, not over the
  *  narrow roster, and that is the reader/writer split the file already makes one storey up: a caller
  *  holds `WorldEvent.lifeKind`, which is any of the five, and a map that refused to be asked about
  *  `'small-talk'` would force a cast at the only call site. `KIND_PICKS` carries the gate for the
  *  WRITER over the narrow roster; this is the honest type for the READER. */
-export const LIFE_BEAT_EMOJI: Partial<Record<LifeBeatKind, string>> = KIND_PICKS
+export const LIFE_BEAT_EMOJI: Partial<Record<LifeBeatKind | 'exposure', string>> = KIND_PICKS
 
 /** ⭐⭐⭐ WHAT A `'life'` ROW WEARS – the one road, and the `?? 'met'` in it is T1's own promise kept.
  *
@@ -190,6 +199,6 @@ export const LIFE_BEAT_EMOJI: Partial<Record<LifeBeatKind, string>> = KIND_PICKS
  *  the `'met'` cell, which is empty, which falls back to the white heart it already wore. The
  *  fallback is what makes the default harmless; a `'met'` pick landing one day is the moment to look
  *  at this line again, and the test file says so beside its arm. */
-export function lifeRowGlyph(lifeKind: LifeBeatKind | undefined): string | undefined {
+export function lifeRowGlyph(lifeKind: LifeBeatKind | 'exposure' | undefined): string | undefined {
   return LIFE_BEAT_EMOJI[lifeKind ?? 'met'] ?? LIFE_ROW_EMOJI.life
 }

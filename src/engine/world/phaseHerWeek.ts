@@ -69,11 +69,11 @@ import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 // import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
 // of §0.1's dependency inversion: this file calls the derivation and hands the LIST to
 // `accrueSpirit`, so `engine/spirit.ts` gains no arrow of its own.
-// ⭐ v77's T4 TAKES THE SECOND NAME OFF THE SAME MODULE AND FOR THE SAME REASON: `sheIsNewsAt` is
+// ⭐ v77's T4 TAKES THE SECOND NAME OFF THE SAME MODULE AND FOR THE SAME REASON: the news gate is
 // asked HERE and handed to `growHabituation` as a boolean, so the habituation pass lives beside the
 // pressure it scales (`engine/spirit.ts`) while the GATE stays where it was derived. One arrow, two
 // facts, no new edge in the graph.
-import { exposureEventsOf, sheIsNewsAt } from './spotlight'
+import { exposureEventsOf, newsStandingOf } from './spotlight'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -530,7 +530,7 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        holds. ⚠ THE THREE CALLS NOW SPELL THE SAME PREDICATE THREE TIMES AND NOT INTO A LOCAL,
   //        which is `driftWalls`'s own note one block down: a local would let a stale flag be threaded
   //        where a live read belongs, and the call TEXT of all three is pinned.
-  growHabituation(world, sheIsNewsAt(world, world.week - 1), psychologistWorksThisWeek(world))
+  growHabituation(world, newsStandingOf(world) === 'known', psychologistWorksThisWeek(world))
   // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
   //
   //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is

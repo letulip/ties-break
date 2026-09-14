@@ -5181,6 +5181,14 @@ export const ECONOMY = {
      *  ⚠ UNRULED – the brief's §4 «`publicLifeAccel [1.5, 2.0, 2.5]`», in the same «NONE ruled» list
      *  as its sibling above. T9 prices it; no pin below asserts the three numbers. */
     publicLifeAccel: [1.5, 2, 2.5],
+    /** ⭐⭐ WHERE THE FIFTH FOCUS'S RECEIPT PRINTS – the habituation-SCALE point whose first crossing,
+     *  with the year being worked that week, prints «The cameras stopped costing her sleep.» The
+     *  owner's D2 (14.09, «да»), on the strings doc's own trigger proposal and `RECOVERY_RECEIPT`'s
+     *  13.09 precedent: the sentence stood, the TRIGGER was the design decision. 0.5 = halfway from
+     *  first-news to the shrug. ⚠ ONCE-EVER BY MONOTONICITY, NOT BY A STAMP: `spotlightHabituation`
+     *  never decays (v1's own law), so the crossing happens at most once per career and no schema
+     *  field is spent on remembering it. ⚠ A PROPOSAL – the POINT is benchable, his word after. */
+    publicLifeReceiptAt: 0.5,
   },
 
   // --- The spotlight: the weight of being known (who-she-is §3c / §3c-bis, wave 6) ---------
@@ -5213,46 +5221,39 @@ export const ECONOMY = {
   // booth copy lives, its placement is that file's own `PRIORITY` table, and the mention is
   // DETERMINISTIC by design (the wave's §3) – so there is no chance, no cooldown and no per-week cap
   // to price here. The once-ness is the episode's two stamps and not a number.
+  // ⭐ D5 (14.09) LATER ADDED TWO BESIDE T6's THREE – `leakFreshWeeks`/`leakFreshMult`, the
+  // owner's own word on the founding scene – and D1 replaced the fame bar with the two rank bands.
   // ⚠ AND T6 ADDED NO FOURTH, which is worth saying because ruling I
   // gives the hazard a FAME factor the brief had dropped: the factor is `ECONOMY.fame.cap`, which
   // this block READS and never writes, so the ruling restored a term of the spec's own formula
   // without opening a tunable the owner would have to price.
   spotlight: {
-    /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – the fame at which the world starts calling her
-     *  news. ONE constant behind ONE predicate (`sheIsNewsAt`, `world/spotlight.ts`): every exposure
-     *  kind, the pressure term, habituation's growth, the leak hazard and the booth's licence are
-     *  gated on it, so an unknown girl has no spotlight whatever she wins.
+    /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – and since the owner's D1 (14.09) it reads her
+     *  RANK, never her fame. His words, verbatim, because they are the design: «у нас % достижения
+     *  топ-100 огромный, вот уже с топ-200 можно иногда начинать что-то говорить, а в топ-100 так и
+     *  вполне уверенно, прямая аналогия – спонсорская лестница». So membership is a STANDING, the
+     *  sponsor ladder's own currency (its tour rung gates at WTA ≤ 200 in this same file), with
+     *  three bands read by ONE predicate (`newsStandingOf`, `world/spotlight.ts`):
      *
-     *  ⚠⚠ MEASURED, NOT ANCHORED ON A NEIGHBOUR, AND THE ANCHOR IT SHIPPED WITH IS STRUCK (the
-     *  architect's ruling E, 14.09). The wave brief proposed 30 «anchored on `fameCap` – the ad
-     *  market's own famous bar»; that constant is the CONTRACTS TERM's own ceiling («the most the
-     *  whole term may ever add», `business.merch.contracts.fameCap` – ⚠ NOT under `fame`, which is
-     *  where both the brief and the ruling place it), the top of ONE contributor and not a band on
-     *  the total. There are no fame BANDS in this codebase at all. The scale's own ceiling is
-     *  `ECONOMY.fame.cap = 100` and `fameAt` is continuous between them.
+     *      'known'    – WTA rank ≤ newsRankKnown:  she lives known; every kind, habituation grows
+     *      'noticed'  – WTA rank ≤ newsRankNoticed: the light finds her only on her occasions;
+     *                   every kind may fire, the leak runs at `noticedLeakScale`, and habituation
+     *                   does NOT grow – an occasional guest of the light never gets used to it
+     *      'quiet'    – everything else: no spotlight, whatever she wins
      *
-     *  What replaces the anchor is the measurement, 33 personal saves read through the game's own
-     *  import door, 15 408 career weeks (nothing committed, only the aggregate):
+     *  ⚠⚠ FAME IS OUT OF THE GATE AND STAYS IN THE LEAK – deliberately both. The gate's history
+     *  (ruling E's struck anchor, the 33-save measurement that showed a fame bar of 30 excludes
+     *  five of eight of the owner's own careers) is preserved in the questions doc §1 and the
+     *  decision log's 14.09 entry; fame remains the brand economy's number and the leak hazard's
+     *  «more lenses on a bigger star» factor (ruling I, below), which D1 did not touch.
      *
-     *      bar   share of ALL career weeks   saves that ever reach it
-     *      ≥ 5            48.6%                    –
-     *      ≥ 10           29.2%                    –
-     *      ≥ 15           12.1%                    –
-     *      ≥ 20           10.9%                    –
-     *      ≥ 25            8.5%                    –
-     *      ≥ 30 (this)     6.9%                    8 of 33
-     *      ≥ 40            4.6%                    –
-     *
-     *  Five of the eight careers in that corpus never reach 30 at any week of their lives. At this
-     *  bar the wave is dead for most of the game, which is a fact about the number and not about the
-     *  mechanic.
-     *
-     *  ⚠⚠ AND IT IS UNRULED. The value stays 30 until the owner rules – shipping a guess in the
-     *  other direction is the same error mirrored – and T9's `bench:spotlight` SWEEPS it at
-     *  10 / 15 / 20 / 25 / 30 and prints coverage per arm, so he rules on a table rather than on a
-     *  neighbouring constant's ceiling. A bench arm that reports near-zero actuation at 30 and
-     *  healthy actuation at 15 has not failed; it has produced this wave's most useful number. */
-    newsFameMin: 30,
+     *  ⚠⚠ THE TWO NUMBERS ARE THE OWNER'S OWN (top-100 / top-200 are his sentence, not a proposal) –
+     *  what stays benchable is their EFFECT: T9's news-week shares re-print per band under
+     *  `bench:spotlight`. ⚠ And the read carries the house belt: «unranked is not rank one» –
+     *  `newsStandingOf` requires live professional points beside the cached rank, the same guard
+     *  every rank reader in `world/ladder.ts` carries. */
+    newsRankKnown: 100,
+    newsRankNoticed: 200,
     /** ⭐⭐⭐ WHAT COUNTS AS A BIG STAGE – the lowest rung whose title, final or early exit puts her
      *  in the light. `'wta500'`, so the set is {wta500, wta1000, slam} today and the slam fortnight
      *  counts by construction.
@@ -5324,6 +5325,13 @@ export const ECONOMY = {
      *  expressed-open one before habituation. T3's pin asserts the RATIO rather than either number,
      *  precisely so a §4 re-tune of `pressureBase` cannot silently break the shape it is about. */
     opennessScale: { open: 0.75, private: 1.5 },
+    /** ⭐⭐ THE ROW'S OWN BAR – the smallest week charge (absolute, AFTER all five factors) the feed
+     *  names out loud. The owner's D1b (14.09), «ок» to the architect's recommendation, and it
+     *  OVERRIDES ruling N's events-not-points gate for the ROW ONLY: a habituated, focus-held girl
+     *  taking −0.33 from a camera week now lives that week quietly, and «every dip explainable»
+     *  reads forwards again – a row prints only where there is a dip worth a sentence. ⚠ THE CHARGE
+     *  IS UNTOUCHED: the term still lands whatever its size; only the SENTENCE has a floor. */
+    rowMinCharge: 1.0,
     /** ⭐⭐⭐ HOW MANY WEEKS OF LIVING KNOWN IT TAKES TO BE FULLY USED TO IT – the denominator of
      *  `habituationScale` (engine/spirit.ts) and the CAP `growHabituation` clamps the counter at.
      *  104, two full seasons of being news, which is the brief's own gloss on the number.
@@ -5369,7 +5377,7 @@ export const ECONOMY = {
      *
      *  ⚠⚠ THE THIRD FACTOR IS THE ARCHITECT'S **RULING I** AND IT IS NOT OPTIONAL. The wave brief
      *  dropped the fame term on the grounds that «more lenses on a bigger star is already priced by
-     *  the news gate»; measured, it is not – above `newsFameMin` the scale runs 30 → 100, so under
+     *  the news gate»; measured, it is not – inside the news bands fame still runs the whole scale, so under
      *  the brief's spelling a girl at 100 leaked at EXACTLY the rate of a girl at 30. That is a
      *  different claim, not a smaller one, and who-she-is §3c-bis's own sentence («scales by fame ×
      *  EXPRESSED openness – more lenses on a bigger star») wins under the wave's single-source rule.
@@ -5380,6 +5388,17 @@ export const ECONOMY = {
      *  the fame factor re-prices the median by roughly 2× against a fameless spelling, and that
      *  re-pricing is T9's to measure and the owner's to rule. */
     leakBasePerWeek: 0.008,
+    /** ⭐⭐⭐ NEW COUPLES GET CAUGHT – the owner's D5 (14.09, «давай попробуем как ты предлагаешь»):
+     *  the leak hazard runs `leakFreshMult` times hotter while the episode is at most
+     *  `leakFreshWeeks` old (`world.week − sinceWeek <= leakFreshWeeks`). The design's own reason:
+     *  the founding scene («a parent learning about a boyfriend from a photograph») fired 0 times
+     *  in 93 leaks across 160 bench careers, because the parent's disclosure lag is short against
+     *  the time a flat hazard needs – and the girl whose untold window is LONG is exactly the
+     *  private girl the scene is about. First dinners are where the lenses are; an old couple is
+     *  furniture. ⚠ BOTH §4-CLASS PROPOSALS, bench-priced predicted-first (T9 prints the overtake
+     *  share per arm), his word after the numbers – the MECHANISM is ruled, the sizes are not. */
+    leakFreshWeeks: 8,
+    leakFreshMult: 4,
     /** ⭐⭐⭐ WHO IS SIMPLY SEEN – the multiplier on the leak hazard, read off her EXPRESSED openness
      *  (§0.6: mechanics read expression, voices read birth). §3c-bis: «an open girl is simply seen
      *  (dinner, a hand held at an airport)», a private one is not.
@@ -5393,6 +5412,11 @@ export const ECONOMY = {
      *  leaked and median lag per temperament (§3c-bis's own expectation: «open leaks often/true,
      *  private rarely/late/wrong»). */
     leakOpennessMult: { open: 2.0, private: 0.5 },
+    /** ⭐⭐ THE NOTICED BAND'S DISCOUNT ON THE LEAK – D1's «иногда» made a number: at 101–200 the
+     *  world glances rather than watches, so the hazard runs at half weight; at ≤ 100 the scale is
+     *  1 by construction (the band check multiplies by this only at 'noticed'). ⚠ A PROPOSAL –
+     *  the bands are the owner's, this discount is the architect's, T9 prices it. */
+    noticedLeakScale: 0.5,
     /** ⭐⭐⭐ HOW WRONG THE WORLD GETS IT – the share of leaks that land as a WRONG story, by
      *  EXPRESSED openness. who-she-is §3c-bis's own gem: «openness controls not only the SPEED of a
      *  leak but its ACCURACY. An open girl's life leaks EARLY and roughly TRUE – the world saw it,

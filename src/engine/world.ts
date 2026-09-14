@@ -459,8 +459,8 @@ export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fam
 // the one question `'stage'` already asks about a rung) and `boothPrivateLifeAt` (what the booth
 // touched at a week, read off the episode's stamps for the snapshot). Both are pure reads, like
 // everything else in that module.
-import { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind } from './world/spotlight'
-export { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind }
+import { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, newsStandingOf, type ExposureEvent, type ExposureKind, type NewsStanding } from './world/spotlight'
+export { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, newsStandingOf, type ExposureEvent, type ExposureKind, type NewsStanding }
 // ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK (world/brandStrength.ts). Income keeps reading fame;
 // the WORTH reads this. Zero draws, nothing written per week – see the module header.
 import { brandStrengthAt, strengthDecayAt } from './world/brandStrength'
@@ -1718,7 +1718,8 @@ export function createWorld(
     wallsLean: { open: 0, reg: 0 },
     wallsFlipped: { open: false, reg: false },
     // ⭐ v77 (the spotlight, wave 6): SHE HAS NEVER LIVED A WEEK KNOWN, and on week 0 she could not
-    // have – she is eight, and the counter only moves while `sheIsNewsAt` (T2). Zero is the identity
+    // have – she is eight, and the counter only moves while she LIVES known (`newsStandingOf ===
+    // 'known'` since D1, 14.09). Zero is the identity
     // here in the plainest sense and not a placeholder for one, and it is exactly what the
     // v76 -> v77 migration back-fills on every older save, so a migrated career and a fresh one are
     // the same shape at the moment they load.

@@ -458,7 +458,8 @@ import type { AcademySupport } from '../academy'
 //
 // ⚠⚠ AND THAT IS WHY A MIGRATED CAREER PLAYS BYTE-IDENTICAL TENNIS, which is this step's strongest
 // property and the wave's first pin. Every wave-6 mechanic – the five exposure kinds, the pressure
-// term, habituation's growth, both leak streams and the booth's stamp – is gated on `sheIsNewsAt`
+// term, habituation's growth, both leak streams and the booth's stamp – is gated on `newsStandingOf`
+// (the rank bands, D1 14.09)
 // (T2) or on a non-null `publicWeek` (T6/T7), and at the back-fills NONE of them can fire. T1 ships
 // five seats and NO READER AT ALL: `world/spotlight.ts` is T2, the pressure T3, habituation T4, the
 // fifth focus T5, the leak T6 and the booth channel T7 – so this version is INERT by construction,
@@ -1261,7 +1262,8 @@ export interface WorldState {
    *  «known weeks» toward `habituationFullWeeks`, one decimal like `spirit` and `wallsLean`.
    *
    *  ⚠⚠ IT ONLY EVER GROWS, AND THAT IS v1 SPEAKING RATHER THAN AN OVERSIGHT (brief §0.5): she does
-   *  not unlearn living known. It grows only while she is actually news (`sheIsNewsAt`, T2), not at
+   *  not unlearn living known. It grows only while she LIVES known – `newsStandingOf === 'known'`,
+   *  the top band alone since D1 (14.09; a 'noticed' girl the light only visits never habituates) – not at
    *  all while either wall is flipped – walls freeze habituation, §3c verbatim, ruled EITHER-axis on
    *  14.09 – and faster while the fifth focus is held (T5). No decay term exists and none is coming
    *  without a ruling, which is said here so nobody adds one as an obvious omission.

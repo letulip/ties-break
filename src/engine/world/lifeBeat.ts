@@ -123,7 +123,7 @@ import { guardNotEndedForGood } from './constants'
 import { psychologistWorkingRung, psychologistWorksThisWeek } from './psychologist'
 // ⭐⭐⭐ v77 T6 – THE SPOTLIGHT'S ONE GATE AND THE STOCK BEHIND IT, both READ and neither written
 // (the wave's §8: this wave only reads `fameAt`, and `ECONOMY.fame` is fame-presence's ground).
-// §9 below is the whole of what uses them: `sheIsNewsAt` decides whether the world is looking at all
+// §9 below is the whole of what uses them: `newsStandingOf` (D1, 14.09) decides whether the world is looking at all
 // and `fameAt` is ruling I's third factor in the hazard's product.
 // ⚠ NO CYCLE, AND IT IS MEASURED RATHER THAN ASSUMED – the walk `psychologistWorkingRung`'s own note
 // above describes, re-run at T6 over the tree's value imports with `import type` and all-`type` named
@@ -137,7 +137,7 @@ import { fameAt } from './fame'
 // `'stage'` and `'publicLoss'` are built on. A second spelling here would drift from
 // `ECONOMY.spotlight.stageTierMin` the first time the bar moved – see that function's own note. The
 // walk above is unchanged by it: still zero paths back from `world/spotlight.ts` to this file.
-import { atOrAboveStageBar, boothPrivateLifeAt, sheIsNewsAt } from './spotlight'
+import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from './spotlight'
 // ⭐⭐ THE PRESENCE AXIS' TWO IMPORTS (11.09, the вычитка fold) – and both of them are «ask the one
 // copy» rather than «re-type the rule». `awayVoice` is R2-18 / ARCH-07's single spelling of «she
 // lives elsewhere and the parent HEARS about the week»; `diaryLifeStageFor` is the single spelling
@@ -3800,7 +3800,9 @@ export function rollEnds(world: WorldState): void {
 //
 // ⚠⚠ THE GATE ASKS ABOUT THE **LAST CLOSED WEEK**, WHICH IS THE ARCHITECT'S RULING P APPLIED TO THIS
 // CHANNEL AND NOT A SECOND CLOCK. The pressure reads `exposureEventsOf(world, world.week − 1)` and
-// habituation reads `sheIsNewsAt(world, world.week − 1)`; so does this. Three reasons, and the first
+// habituation read the same gate; so did this. ⭐ D1 (14.09) moved the gate to the STANDING, which
+// is present-tense by its own contract (the cached rank already describes the last closed fold),
+// so the one-horizon law below is kept by construction now. Three reasons, and the first
 // is the ruling's own:
 //
 //   1. ONE HORIZON PER WAVE. A leak gated at `world.week` whose own consequence – the `'wrongStory'`
@@ -3893,7 +3895,10 @@ const LEAK_EVENT: Record<'true' | 'wrong', string> = {
 export function leakEligible(world: WorldState): boolean {
   const open = activeEpisode(world)
   if (open === null || open.publicWeek !== null) return false
-  return sheIsNewsAt(world, world.week - 1)
+  // ⭐ D1 (14.09): the standing read replaces the fame bar. Present-tense by the predicate's own
+  // contract – the cached rank already describes the last closed fold, so ruling P's one-horizon
+  // law is kept by construction rather than by a week argument.
+  return newsStandingOf(world) !== 'quiet'
 }
 
 /** ⭐⭐⭐ THE WEEKLY LEAK HAZARD, as one probability – who-she-is §3c-bis's own formula, restored in
@@ -3902,7 +3907,7 @@ export function leakEligible(world: WorldState): boolean {
  *      leakBasePerWeek × leakOpennessMult[openness] × (fame / ECONOMY.fame.cap)
  *
  *  ⚠⚠ THE FAME FACTOR IS THE RULING AND IT IS WHAT THE BRIEF DROPPED. «More lenses on a bigger star»
- *  is a term of the spec's sentence, not a restatement of the news gate: above `newsFameMin` the
+ *  is a term of the spec's sentence, not a restatement of the news gate: inside the bands the
  *  scale runs 30 → 100, so a spelling without this factor has a girl at 100 leaking at exactly the
  *  rate of a girl at 30. See `ECONOMY.spotlight.leakBasePerWeek`'s own note for the measurement, and
  *  the leak suite's §D for the pin – twin careers at equal openness and different fame, where the
@@ -3958,7 +3963,16 @@ export function rollLeak(world: WorldState): void {
   const openness = temperamentOpenness(expressedTemperamentOf(world))
   // ⚠ THE HORIZON IS READ ONCE AND SPENT ONCE, on the same week the gate asked about – a second read
   // at `world.week` would be the split clock ruling P refused, hiding inside one function.
-  const hazard = leakHazardFor(openness, fameAt(world, world.week - 1))
+  let hazard = leakHazardFor(openness, fameAt(world, world.week - 1))
+  // ⭐ D1 (14.09): at 'noticed' the world glances rather than watches – the hazard runs at
+  // `noticedLeakScale`; at 'known' the scale is 1 by construction. The BAND is read once here,
+  // beside the one fame read, so the roll composes exactly what the gate admitted.
+  if (newsStandingOf(world) === 'noticed') hazard *= ECONOMY.spotlight.noticedLeakScale
+  // ⭐⭐ D5 (14.09, the founding scene's lever, his «давай попробуем»): new couples get caught –
+  // the first `leakFreshWeeks` of an episode run `leakFreshMult` hotter. Same key, same single
+  // uniform, no draw-count change: only the threshold the same value is compared against moves,
+  // which is what keeps the frozen protocol's diff a stamped expectation and not a re-shuffle.
+  if (world.week - episode.sinceWeek <= ECONOMY.spotlight.leakFreshWeeks) hazard *= ECONOMY.spotlight.leakFreshMult
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament and no fame, so two
   // girls read the SAME uniform against two different hazards. That is what makes both multipliers
   // pure scales rather than unrelated dice, and it is the property §D's monotonicity pin rests on.
@@ -3981,10 +3995,14 @@ export function rollLeak(world: WorldState): void {
   // `lifeRowGlyph(undefined)` resolves through `?? 'met'` to `LIFE_ROW_EMOJI.life` – the owner's own
   // 11.09 pick for life rows. who-she-is §5a forbids an agent picking a glyph unasked, so none was
   // picked; whether the spotlight deserves a mark of its own goes to him with the strings.
+  // ⭐ D3 (14.09, his «да» to 📸): the spotlight FAMILY wears its own mark – `lifeKind: 'exposure'`
+  // joins this row and the EXPOSURE_ROW alike, and `lifeRowGlyphs` maps it to his camera. The old
+  // finding (no lifeKind, 🤍 by fallback) is answered, not deleted – see the note above.
   addEvent(world, {
     week: world.week,
     type: 'life',
     keep: true,
+    lifeKind: 'exposure',
     text: LEAK_EVENT[episode.publicWrong ? 'wrong' : 'true'],
   })
   // ⭐⭐⭐ THE OVERTAKE – THE FOUNDING SCENE, AND IT IS ONE ASSIGNMENT. «A parent learning about a
@@ -4044,7 +4062,7 @@ export function rollLeak(world: WorldState): void {
 // medical veto right a second time – four rules with two spellings, which is the defect ruling P
 // spent a whole task removing, rebuilt one concern over. At step 5 the match is IN HAND: the caller
 // holds the event she is actually about to play, and it passes the tier down (§0.1's dependency
-// inversion, the same move `psychologistWorksThisWeek` and `sheIsNewsAt` already make).
+// inversion, the same move `psychologistWorksThisWeek` and `newsStandingOf` already make).
 //
 // ⚠⚠ AND THAT IS NOT A SECOND CLOCK – RULING P's ONE HORIZON IS UNTOUCHED. The stamp names THIS week
 // (the week the booth spoke), exactly as §9's `publicWeek` does; T3's pass asks
@@ -4120,7 +4138,7 @@ export function boothMentionDue(
  *  convenience. ⚠ REQUIRED AND NOT DEFAULTED: a default would let a caller in a matchless phase
  *  compile, which is the one mistake this parameter exists to make impossible.
  *
- *  ⚠⚠ AND THE NEWS GATE ASKS ABOUT THE **LAST CLOSED WEEK** – `sheIsNewsAt(world, world.week − 1)`,
+ *  ⚠⚠ AND THE NEWS GATE DESCRIBES THE **LAST CLOSED WEEK** – `newsStandingOf`'s cached rank,
  *  the same spelling `leakEligible` uses one section up and the same horizon T3's pressure and T4's
  *  habituation read. ONE horizon per wave (ruling P); the gate asks about the week that produced the
  *  lenses and the stamp records the week they aired, which is §9's own sentence about `publicWeek`.
@@ -4131,7 +4149,9 @@ export function boothMentionDue(
  *  FACT and not a cooldown on the booth. */
 export function airBoothMention(world: WorldState, tier: TierId): void {
   if (!atOrAboveStageBar(tier)) return
-  if (!sheIsNewsAt(world, world.week - 1)) return
+  // ⭐ D1 (14.09): the booth's «fame band that makes her news» is the STANDING now – both non-quiet
+  // bands may be voiced (its own big-stage requirement already makes every mention an occasion).
+  if (newsStandingOf(world) === 'quiet') return
   // ⚠⚠ ONE FACT A WEEK, AND IT IS A PROPERTY OF THE **WEEK** RATHER THAN OF THE CALL COUNT. The tick
   // reaches this line once a week today (one entered event, one play arm), so this guard fires for
   // nobody – which is exactly why it is here: «at most one fact per week» is a claim about the

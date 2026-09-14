@@ -2680,7 +2680,8 @@ export function migrateSave(raw: unknown): WorldState {
   //                                so «never aired» must be null and never a week.
   //
   // ⚠⚠ AND THAT IS WHAT MAKES A MIGRATED CAREER PLAY BYTE-IDENTICAL TENNIS, this step's strongest
-  // property and the wave's first pin. Every wave-6 mechanic is gated on `sheIsNewsAt` (T2) or on a
+  // property and the wave's first pin. Every wave-6 mechanic is gated on the news standing (T2;
+  // `newsStandingOf` since the owner's D1, 14.09 – the rank bands replaced the fame bar) or on a
   // non-null `publicWeek` (T6/T7), and at these five values not one of them can fire. The migration
   // is not «the girl acquires a public life»; it is «nothing about her was ever public, and she has
   // never lived a week known», written down for the first time – v76's `temperament` note in a third

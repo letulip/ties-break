@@ -33,7 +33,8 @@
 import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER } from '../season/calendar'
 import { KID_ID } from './constants'
-import { completedShootWeeks, fameAt } from './fame'
+import { completedShootWeeks } from './fame'
+import { kidPoints } from './ladder'
 import { loveEpisodesOf } from './loveEpisodes'
 import type { BoothPrivateLife } from '../../shared/protocol/narrative'
 import type { TierId } from '../season/types'
@@ -55,21 +56,41 @@ export interface ExposureEvent {
   kind: ExposureKind
 }
 
-/** ⭐⭐⭐ IS SHE NEWS AT `week`? – THE ONE GATE EVERY PUBLIC SURFACE IN THIS WAVE SHARES. The
- *  pressure, habituation's growth, the leak hazard, the booth's licence and all five exposure kinds
- *  sit behind this single predicate: an unknown girl has no spotlight, whatever she wins.
- *
- *  ⚠ `week` IS REQUIRED AND NOT DEFAULTED TO `world.week`, unlike `fameAt`'s own trailing parameter.
- *  This wave's benches ask about weeks that are not today (T9), and a default is what lets a caller
- *  silently ask about the wrong one – the same argument ruling A makes about `accrueSpirit`'s third
- *  parameter, applied where it costs nothing: every call site states the week out loud.
- *
- *  ⚠ THE BAR IS `ECONOMY.spotlight.newsFameMin` AND IT IS UNRULED – see that constant for the 33-save
- *  measurement that replaced the brief's struck anchor, and for T9's own sweep of it. */
-export function sheIsNewsAt(world: WorldState, week: number): boolean {
-  return fameAt(world, week) >= ECONOMY.spotlight.newsFameMin
-}
+/** The three bands of being known – the owner's D1 (14.09), the sponsor ladder's own analogy. */
+export type NewsStanding = 'quiet' | 'noticed' | 'known'
 
+/** ⭐⭐⭐ IS THE WORLD LOOKING AT HER – THE ONE GATE EVERY PUBLIC SURFACE IN THIS WAVE SHARES, and
+ *  since the owner's D1 (14.09) it reads her PROFESSIONAL STANDING, never her fame. His ruling,
+ *  verbatim at `ECONOMY.spotlight.newsRankKnown`: top-100 «вполне уверенно», top-200 «иногда»,
+ *  «прямая аналогия – спонсорская лестница». The pressure, habituation's growth, the leak hazard,
+ *  the booth's licence and all five exposure kinds sit behind this single read: an unknown girl has
+ *  no spotlight, whatever she wins.
+ *
+ *  ⚠⚠ WHAT EACH BAND BUYS is decided at the CALLERS and recorded here so the map has one home:
+ *  `'known'` – everything, and habituation grows (`phaseHerWeek` passes `=== 'known'` down);
+ *  `'noticed'` – every kind may fire on her OCCASIONS, the leak runs at `noticedLeakScale`, and
+ *  habituation does not grow (a girl the light only visits never gets used to it);
+ *  `'quiet'` – nothing.
+ *
+ *  ⚠⚠ PRESENT-TENSE ON PURPOSE, AND NO `week` PARAMETER – the one deliberate difference from the
+ *  fame read it replaces. Her cached rank (`world.kidRankWta`, one writer, `recomputeKidRank`) is
+ *  already «as of the last closed fold»: the tick re-folds AFTER `playHerWeek`, so at the spirit
+ *  pass the rank describes exactly the closed week ruling P's horizon asks about, and a week
+ *  parameter here would promise a rank history nobody keeps. Benches walk careers forward and read
+ *  the standing live, which is the same claim.
+ *
+ *  ⚠ THE BELT IS THE HOUSE'S OWN: «unranked is not rank one» – the cached rank falls back to
+ *  `tableSize` for a girl who is not on the table, and this read ALSO requires live professional
+ *  points, the same guard every rank reader in `world/ladder.ts` carries one at a time. */
+export function newsStandingOf(world: WorldState): NewsStanding {
+  if (kidPoints(world, 'wta') <= 0) return 'quiet'
+  const rank = world.kidRankWta
+  if (typeof rank !== 'number' || rank <= 0) return 'quiet'
+  const s = ECONOMY.spotlight
+  if (rank <= s.newsRankKnown) return 'known'
+  if (rank <= s.newsRankNoticed) return 'noticed'
+  return 'quiet'
+}
 /** Is this tier at or above the big-stage bar? `TIER_LADDER`'s index and nothing else – ruling F.
  *
  *  ⭐ EXPORTED SINCE v77's T7, WHICH IS THE ONE CHANGE THAT TASK MAKES TO THIS FILE. The booth's
@@ -95,7 +116,7 @@ export function atOrAboveStageBar(tier: TierId): boolean {
 }
 
 /** ⭐⭐⭐ WHAT PUT HER IN THE LIGHT THIS WEEK – five kinds, every one of them licensed by a fact the
- *  world already records, every one of them gated on `sheIsNewsAt`.
+ *  world already records, every one of them gated on the news standing (`newsStandingOf`, D1 14.09).
  *
  *  §3c's own sentence is the list: «the weeks that put her in the light – a title or a final on a big
  *  stage, a shoot week, a heavily public loss – carry a pressure perturbation», plus the booth's
@@ -144,14 +165,16 @@ export function exposureEventsOf(world: WorldState, week: number): ExposureEvent
   // (`decayAt` returns 0 for anything in the future, so `fameAt(world, −1)` is 0 and the news gate
   // alone would close the door), and that is exactly why it is written down: the emptiness would
   // otherwise be a coincidence of three separate rules, any one of which a later wave could retune.
-  // Nothing indexes, nothing throws, and nothing depends on `newsFameMin` being above zero. ⚠ IT IS
+  // Nothing indexes, nothing throws, and the standing gate closes the door on its own. ⚠ IT IS
   // NOT A SIXTH GATE: it answers a week that never existed, and every KIND is still gated in exactly
   // one place, one line down.
   if (week < 0) return out
   // ⚠⚠ THE GATE COMES BEFORE EVERY KIND, AND IT GATES EVERY KIND – «an unknown girl has no spotlight,
   // whatever she wins» (the brief's T2, in those words). It is deliberately not five separate checks:
-  // one predicate, one place, so no kind can be added later that quietly forgets it.
-  if (!sheIsNewsAt(world, week)) return out
+  // one predicate, one place, so no kind can be added later that quietly forgets it. ⭐ D1 (14.09):
+  // the predicate reads her STANDING now – both non-quiet bands see every kind (a noticed girl's
+  // occasions ARE occasions; her discounts live at the leak and at habituation, not here).
+  if (newsStandingOf(world) === 'quiet') return out
 
   // 'stage' – A TITLE OR A FINAL AT A BIG STAGE THIS WEEK. Ruling G part 1: the cabinet is the
   // permanent, exact record, written at `finalizeTournament` (`world.ts:673-674`) where `kidFinish
