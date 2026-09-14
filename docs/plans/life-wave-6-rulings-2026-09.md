@@ -426,3 +426,54 @@ twice on purpose – once for `accrueSpirit`, once for `driftWalls` – and the 
 hoisting it into a local would let a raw flag be handed down in the predicate's place, «ruling J's
 own hole». T3 APPENDS its third argument and changes nothing else about that line; the two re-aimed
 text pins then read the new call verbatim.
+
+## N – ⚠⚠ at the drafted bases the spotlight is invisible to a whole quadrant of the roster, and it misses by one tenth
+
+Ruling E measured HOW OFTEN the wave fires. This one measures WHAT THE PLAYER SEES when it does,
+because «every dip explainable» (§3c's legibility law) is a promise about a screen, not about a
+float.
+
+**The scale, measured 14.09:** `ECONOMY.spirit` – baseline **70**, return **5**/wk steady and
+**3**/wk intense, `perturbationScale` **0.8 / 1.25**, and the Mood bands are `heavy < 60 · dimmed <
+67.5 · steady 67.5–72.5 · bright ≥ 72.5 · glowing ≥ 80`. **Baseline sits in the middle of `steady`,
+2.5 points above the `dimmed` boundary.** For scale, the break-up shock is **−22 steady / −34
+intense**, already intensity-scaled.
+
+**What one exposure does to a girl at baseline, at the brief's own drafted bases:**
+
+| event | steady·open | steady·private | intense·open | intense·private |
+| --- | ---: | ---: | ---: | ---: |
+| `'shoot'` −2 | −1.20 → 68.8 **steady** | −2.40 → 67.6 **steady** | −1.88 → 68.1 **steady** | −3.75 → 66.3 dimmed |
+| `'stage'` −3 | −1.80 → 68.2 **steady** | −3.60 → 66.4 dimmed | −2.81 → 67.2 dimmed | −5.63 → 64.4 dimmed |
+| `'publicLoss'` −4 | **−2.40 → 67.6 steady** | −4.80 → 65.2 dimmed | −3.75 → 66.3 dimmed | −7.50 → 62.5 dimmed |
+
+**An expressed-open steady girl never leaves her Mood band on ANY single exposure.** The deepest one
+the wave has – a heavily public loss at a slam – puts her at **67.6**, which is **one tenth of a
+point** above the `dimmed` boundary. The feed will print «the cameras were everywhere this week» and
+the Mood word will say exactly what it said the week before.
+
+**⚠ And every other dial in the wave points the same way.** Habituation multiplies DOWN (1 → the
+`habituationFloor` 0.25) and the fifth focus multiplies DOWN again (0.85 → 0.55). A calm, open,
+habituated girl with the focus held takes `−4 × 0.8 × 0.75 × 0.25 × 0.55 = −0.33` from the worst
+week of her public life – **three tenths**, which `roundTenth` renders as 0.3 and the screen renders
+as nothing.
+
+**For scale against the system this one is modelled on:** the spotlight's worst single event is
+**7.50** against a break-up's **34** – between one twenty-third and one third of a break-up,
+depending on who she is.
+
+**The ruling – and it is NOT a re-tune, because tuning is measured and then RULED, in that order.**
+
+1. **No constant moves in this wave on my word.** §4's numbers are the owner's, and a bar and a base
+   changed together by an architect who has measured neither against a played career is the guess
+   ruling E refuses in the other direction.
+2. **T3 pins the SHAPE, never the size** – the ×2 private/open ratio (1.5 / 0.75), monotonicity in
+   habituation, monotonicity in rung. The brief already asks for the ratio pin; this is why it
+   matters: every one of these numbers is going to move, and the pins must survive that.
+3. **T9 measures what the player SEES, not only what the float does.** The `bench:spotlight` record
+   carries, per birth temperament and per arm: the share of exposure weeks that **cross a Mood
+   band**, the mean dip depth, and the weeks-to-recover. A wave whose feed line explains a dip the
+   Mood word never shows has broken the legibility law while every unit test stays green.
+4. **This goes to the owner beside ruling E, as one question with one table** – how often it fires,
+   and what it does when it fires, are halves of the same decision and he should not be handed one
+   without the other.
