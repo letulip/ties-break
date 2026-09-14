@@ -20,9 +20,9 @@
         "kidLastName": "Cieslak",
         "country": "US"
       },
-      "bytes": 24169,
-      "payloadBytes": 24125,
-      "sha256": "f2257efc316dfc54e669309dc0a69ab26084ab3dd078364392511eda9c26506a",
+      "bytes": 24176,
+      "payloadBytes": 24132,
+      "sha256": "69e5dc90b1d44f3f0985879496c7656e4012400a79cba20f49ef27cf6577db56",
       "seedsTried": 1,
       "facts": {
         "week": 0,
@@ -69,9 +69,9 @@
         "kidLastName": "Kaminski",
         "country": "US"
       },
-      "bytes": 57384,
-      "payloadBytes": 57340,
-      "sha256": "f4f0bae97597d0b1772d339a659e988d11fce0d2f7ab582802a14706f8f636e4",
+      "bytes": 57394,
+      "payloadBytes": 57350,
+      "sha256": "20293a07fe5e431f8f3ace3472ad1ce1e7c8dfe856fda0f73b25e66926ceef8b",
       "seedsTried": 20,
       "facts": {
         "week": 120,
@@ -118,9 +118,9 @@
         "kidLastName": "Ostrowski",
         "country": "US"
       },
-      "bytes": 81807,
-      "payloadBytes": 81763,
-      "sha256": "5ca4a5862b59bdd7f3d4b84c1eee8b091135ee530b2c89d29c45533736cf6356",
+      "bytes": 81817,
+      "payloadBytes": 81773,
+      "sha256": "4b1833fe7eff873b30af11104d4b7f550e1497335fb5d6505c62e8370e281294",
       "seedsTried": 1,
       "facts": {
         "week": 412,
@@ -167,9 +167,9 @@
         "kidLastName": "Fujimoto",
         "country": "US"
       },
-      "bytes": 62210,
-      "payloadBytes": 62166,
-      "sha256": "cedef9ab0d6cfc8f752ee654de3a944c6b285aaff0b147e06a2b2f7b03d0cd4b",
+      "bytes": 62220,
+      "payloadBytes": 62176,
+      "sha256": "e7e5b54f4c5d7b03a809e03272da196d6fa711c472abd1326594866c688d1141",
       "seedsTried": 1,
       "facts": {
         "week": 96,
@@ -216,9 +216,9 @@
         "kidLastName": "Kern",
         "country": "US"
       },
-      "bytes": 60289,
-      "payloadBytes": 60245,
-      "sha256": "f181ebf00f20f06a902c4bd174754043965801d7cc7394c5acf0510fe68f7a55",
+      "bytes": 60299,
+      "payloadBytes": 60255,
+      "sha256": "32325ff7c5c158b7eb350be456d26401fc5d30ee20bf79fbe7a39632c02f0c16",
       "seedsTried": 1,
       "facts": {
         "week": 94,
@@ -265,9 +265,9 @@
         "kidLastName": "Kobayashi",
         "country": "US"
       },
-      "bytes": 82713,
-      "payloadBytes": 82669,
-      "sha256": "b92413c97b7830b36c2062d75caf6b76a198c8bb2c1e281dca3489317f28ae63",
+      "bytes": 82721,
+      "payloadBytes": 82677,
+      "sha256": "d7b802509e2a14a7815a72207ab6610a0a74b55c4c61bee1fb58af92c700bdac",
       "seedsTried": 1,
       "facts": {
         "week": 242,
@@ -314,9 +314,9 @@
         "kidLastName": "Adeyemi",
         "country": "US"
       },
-      "bytes": 83034,
-      "payloadBytes": 82990,
-      "sha256": "f8d3430252e4098afd43743655091456df58c4b3591598ffa0de51c955f2eb5f",
+      "bytes": 83043,
+      "payloadBytes": 82999,
+      "sha256": "e4e18fd57a422233ef2b63fbc9392c69029b78946b9aff29c47e8a1a18676dd3",
       "seedsTried": 2,
       "facts": {
         "week": 242,
@@ -363,9 +363,9 @@
         "kidLastName": "Lombardi",
         "country": "US"
       },
-      "bytes": 35018,
-      "payloadBytes": 34974,
-      "sha256": "fc1cc8edfc0e9efb203a89c7a156eaa0e24aaadf720ef0c0e297a917b68bdf19",
+      "bytes": 35027,
+      "payloadBytes": 34983,
+      "sha256": "63c2dfc4f79a9d183b61829c879c204d2f1b9b57ac83ee9f10503b96b786d536",
       "seedsTried": 2,
       "facts": {
         "week": 9,
@@ -412,9 +412,9 @@
         "kidLastName": "Bhatia",
         "country": "US"
       },
-      "bytes": 63723,
-      "payloadBytes": 63679,
-      "sha256": "8f8071fef40de58f48aaa221f8f72f9ad86581ecf78c9da2e8b084bf23ff2cfb",
+      "bytes": 63731,
+      "payloadBytes": 63687,
+      "sha256": "5dcb8f26cccc0380b4fe8985da840f7047d9dcb03eca15d90cf38bfc4ae85fc8",
       "seedsTried": 1,
       "facts": {
         "week": 157,
@@ -461,9 +461,9 @@
         "kidLastName": "Gallo",
         "country": "US"
       },
-      "bytes": 81521,
-      "payloadBytes": 81477,
-      "sha256": "c7112d22fc9c068a3a32ca0417eba2c81dc180f875c6712da12af7a31d92067d",
+      "bytes": 81531,
+      "payloadBytes": 81487,
+      "sha256": "73966b235048aef6326d5d3b7c83689c377b313bdf56f32b65fa92fe8a807fab",
       "seedsTried": 672,
       "facts": {
         "week": 246,
