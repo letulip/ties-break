@@ -1133,3 +1133,73 @@ And the never-fired corridor, per EFFECT as T5 required: at rung 0 the shrink id
 weeks and the accelerator **87.3%**, but both idle together only **82.1%** – **the two effects idle
 on different weeks, so the intersection understates what the year fails to buy by a full ten
 points.** A corridor printed per week rather than per effect would have flattered the seat.
+
+## X – T12's four findings ruled, and one claim of its own corrected
+
+**⚠ The correction first, because it would mislead the next builder.** T12 reports «`npm run check`
+does not include the unit project — line 11 runs `test:component`, not `test`». **It is wrong.**
+`npm run check` contains `node scripts/units.mjs`, and that script's own banner reads «THE UNIT
+SUITE: the light 252 in one pool, the heavy 20 a process each». Every other builder in this wave
+reported «unit green in ~345s» from inside their `npm run check`, which is the same receipt. T12's
+extra `npm run test:quiet` was harmless (it ran the units twice) but the claim must not stand –
+**this wave's gates are exactly as strong as they read.**
+
+### (a) The broke ending – REAL, severe, and it does not ship here
+
+**Measured:** a family that parks at week 0 and takes a $10,000 shock is declared bankrupt **8 of 8
+careers, both backgrounds**, while the deposit still holds **$8,106** (working) / **$25,332**
+(middle). A working family whose REACHABLE funds are **+$1,474** has its career ENDED for having no
+money.
+
+**⚠ This is the exact mirror of the bug the owner reported.** He found help arriving too early; this
+is the career ending too early, from the same blindness in the opposite direction – and ending a
+career is the most irreversible thing this game does. «Мы ни за что не наказываем» is nowhere
+stronger than here.
+
+**It still does not ship in this wave, and T12 was right not to take it.** The fix is not one read:
+`bankruptcyDue` reads the view, but the twelve-week spell is latched separately at
+`world/endings.ts:299` off `world.fundsCents < 0`, and that latch feeds `DebtView` → the Money
+screen's countdown, a sentence that is **true today**. Move the ending alone and the sentence becomes
+false; move the latch too and you change persisted-state semantics AND a rendered warning – §8 and
+invariant 4 both. **It goes to the owner as its own task, with its numbers and its severity marked.**
+
+### (b) and (c) – two hardship licences reachable by PARKING, and the bigger one was not on the brief
+
+**(b) `diary.ts:216` `fundsPressure`** – `tight` fires on **11.9%** of a parked working career's
+weeks against **0.0%** unparked (middle 5.8% vs 0.0%), licensing four diary lines.
+
+**(c) ⚠ `world/means.ts:87` `householdWalletCents` → the birthday-gift hardship licence – NOT on the
+brief, and the largest of all four.** `tight` reads on **51.0%** of a parked working career's weeks
+against **0.0%** unparked (middle 25.5% vs 0.0%). That is **round 26 #4 reopened through a new
+parking place**: «She was looking fares home at two in the morning» printed over a family holding its
+whole fortune – the precise defect that file was written to kill. Its own note says the licence must
+not become reachable «by being worded differently»; it is now reachable **by parking**.
+
+**Both change which sentence prints, so both are the owner's** (invariant 4), and both go up with
+their measurements rather than as proposals I could have quietly taken.
+
+### (d) The college layer – the brief is wrong twice, and the second half is a finding of its own
+
+The brief says the college need layer «reads BACKGROUND by ruled design». **Measured, it does not**:
+`world/college.ts:102` passes `familyAssetsCents: world.fundsCents` – the raw wallet – into
+`familyPositionCents` / `needShareOf` / `familyCanPayPerYearCents`. Round 21 deliberately moved it
+OFF the anketa on the owner's own 17.08 word.
+
+**And the exploit cannot land there anyway, for a reason that is its own question: the need layer is
+DEAD.** `needTest` tapers to zero above **$35,000/yr**, and the LOWEST parent income any family
+reaches by age 18 over 200 seeds is **$41,282** (working) – $71,611 middle, $126,373 wealthy. So
+`needShareOf` returns **0% for every background, at every seed, at the week it is asked**, assets
+irrelevant. At week 0 a working parent earns $12,740 and would qualify; the fork fires at 18.0–18.9,
+by which time income has compounded past the ceiling. **The twentieth «spelled so it could never
+fire» of this pair of waves** – and this one is not ours, it has been shipped since round 21.
+`familyCanPayPerYearCents` has no such ceiling, is live, and IS wrong on parked cash.
+
+### What T12 got right that is worth keeping
+
+Cash-parking is marked on the CATALOGUE (`ShopItem.cashParking?`) and never matched by id at a call
+site – «the defect being closed was created by exactly that kind of forgetting». It is deliberately
+not `family === 'investment'`: that is a filing category and this is a claim about **liquidity**, and
+a buy-to-let would file as the first without being the second. The tick order is now pinned –
+`revalueAssets` in phase 1, the cameo in phase 2 – so the worth the gate reads is this week's. And
+the wall came back to the decimal: REACHABLE floor **81.5** against the shipped bar 62, wallet-only
+floor **−2.5**, every cell, every seed.

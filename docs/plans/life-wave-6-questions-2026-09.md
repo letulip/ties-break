@@ -223,3 +223,55 @@ the weight, and the tennis does not move for either. **That is the wave working 
 spirit is bounded, recoverable, and the match factor's floor stands – but it is worth your eye,
 because «costs three times as much and changes nothing measurable» is also a description of a
 mechanic that is not yet doing work.
+
+## 14. ⚠⚠ The mirror of your own exploit report: a solvent family's career is ENDED
+
+You found help arriving too early. The same blindness runs the other way, and this direction is
+irreversible.
+
+**Measured:** a family that parks everything at week 0 and takes a $10,000 shock is declared bankrupt
+in **8 of 8 careers, both backgrounds**, while the deposit still holds **$8,106** (working) /
+**$25,332** (middle). A working family whose reachable funds are **+$1,474** has its career ended for
+having no money.
+
+It did not ship with T12 because it is not one read: the twelve-week spell is latched separately off
+`world.fundsCents < 0`, and that latch feeds the Money screen's countdown – a sentence that is TRUE
+today and would become false if only the ending moved. Fixing it properly touches persisted state and
+a rendered warning, which is your call twice over.
+
+**The question: does this become its own task now?** My recommendation is yes, and ahead of the §4
+tuning – «мы ни за что не наказываем» is nowhere stronger than at the one ending nobody can undo.
+
+## 15. Two hardship voices that parking makes false – and the bigger one was not on the brief
+
+Both print sentences, so both are yours.
+
+* **The diary's money worry** – `tight` fires on **11.9%** of a parked working career's weeks against
+  **0.0%** unparked (middle 5.8% vs 0.0%), licensing four lines.
+* **⚠ The birthday-gift hardship licence** – `tight` reads on **51.0%** of a parked working career's
+  weeks against 0.0% unparked (middle 25.5%). **This is round 26 #4 reopened through a new parking
+  place**: «She was looking fares home at two in the morning», over a family holding its whole
+  fortune. That file's own note says the licence must not become reachable «by being worded
+  differently» – it is now reachable by **parking**.
+
+Both take the same one-line widening T12 shipped for the cameo gate. **The question is only whether
+the widened read is what you want in her voice**, since it changes which sentence prints.
+
+## 16. ⚠ The college NEED layer has been dead since round 21
+
+Not a spotlight finding and not caused by this wave – found while sweeping for the parking exploit,
+and it outlives the wave.
+
+`needTest` tapers to zero above **$35,000/yr**. The **lowest** parent income any family reaches by
+age 18, over 200 seeds: **$41,282** working · $71,611 middle · $126,373 wealthy. So `needShareOf`
+returns **0% for every background, at every seed, at the week it is asked** – the family's assets
+never enter the answer. At week 0 a working parent earns $12,740 and would qualify; the fork fires at
+18.0–18.9, by which time income has compounded past the ceiling.
+
+**The question: was the aid layer meant to reach anybody?** Either the ceiling moves to where family
+incomes actually are at eighteen, or the layer is honestly retired. As shipped it is a mechanic that
+has never once produced a number.
+
+(`familyCanPayPerYearCents` has no such ceiling, is live, and reads the raw wallet – so parking makes
+a family look poorer on affordability. That half rides item 15's widening.)
+
