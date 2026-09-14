@@ -4,7 +4,7 @@
 //
 // `docs/plans/life-wave-6-builder-2026-09.md` §2 T1; the model is `docs/specs/who-she-is-2026-09.md`
 // §3c and §3c-bis, the booth's boundary `docs/plans/the-way-she-sounds-2026-09.md` C4. T1 ships FIVE
-// seats and deliberately no reader for any of them: `world/spotlight.ts` and `sheIsNewsAt` are T2,
+// seats and deliberately no reader for any of them: `world/spotlight.ts` and `newsStandingOf` are T2,
 // the pressure term inside `accrueSpirit` is T3, habituation's growth T4, the fifth focus T5, the
 // leak that could set `publicWeek` T6, and the booth stamps that could set the aired weeks T7.
 //
@@ -405,7 +405,7 @@ describe('wave 6 T1 D – a career walks the same weeks it walked before', () =>
     //
     // ⚠⚠ T4 LANDED (14.09) AND THIS CASE DID **NOT** GO RED – measured, and the prediction above was
     // wrong for a reason worth keeping rather than deleting. `growHabituation` is gated on
-    // `sheIsNewsAt`, and ruling D measured the frozen corpus's peak fame at 0.00–3.43 against a bar
+    // the news standing (`newsStandingOf`, D1's rank bands), and ruling D measured the frozen corpus's peak fame at 0.00–3.43 against a bar
     // of 30: this career is never news at any of its 156 weeks, so the pass runs every week and
     // counts nothing, and BOTH arms end without the key ever moving. The assertions are therefore
     // untouched – re-aiming a pin that did not move would be a diff with no claim behind it (T3b's

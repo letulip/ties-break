@@ -935,7 +935,7 @@ describe('wave 5 T7 H – what the pass touches, and what it must never', () => 
     // walls it reads are the ones the girl wore all week, and this equality is still red on any other
     // statement sliding in, on a re-order, and on the pass being deleted or moved.
     expect(code.slice(i + 1, j), '⚠ and ONLY v77 T4\'s habituation pass separates them – ruling Q').toEqual([
-      'growHabituation(world, sheIsNewsAt(world, world.week - 1), psychologistWorksThisWeek(world))',
+      'growHabituation(world, newsStandingOf(world) === \'known\', psychologistWorksThisWeek(world))',
     ])
     expect(code.filter((l) => l.startsWith('driftWalls(')), 'called exactly once, and on the predicate')
       .toEqual(['driftWalls(world, psychologistWorksThisWeek(world))'])

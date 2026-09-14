@@ -134,7 +134,7 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 //
 // ⚠⚠ AND RULING D OF 14.09 IS WHY NO WAVE-6 BEHAVIOUR MAY EVER BE CITED FROM THESE CONSTANTS. Peak
 // `fameAt` across the 156 weeks is 0.00 · 0.00 · 3.43 · 1.85 · 3.25 on the five cells, against this
-// wave's proposed news bar of 30. Every mechanic wave 6 ships is gated on `sheIsNewsAt`, so this
+// wave's proposed news bar of 30. Every mechanic wave 6 ships is gated on the news standing (`newsStandingOf`, the rank bands since D1 14.09), so this
 // corpus cannot even REACH the states the wave adds – it is an order of magnitude away on every
 // career at every week. That makes it a coupling detector here and nothing more (rulings K and R,
 // one wave down), and it makes a stamped diff on these cells a STOP rather than an expectation:
@@ -2953,7 +2953,7 @@ export const FROZEN = {
  *  ⚠ THE PEEL REMOVES FIELDS AND NEVER A VALUE, and on this rung that is a fact about THE TREE rather
  *  than about these careers – v74's, v75's and v76's caveat, one rung further on and in its own
  *  situation. T1 ships five seats, the migration and **no reader at all**: `world/spotlight.ts` and
- *  `sheIsNewsAt` are T2, the pressure term T3, habituation's growth T4, the leak that could set
+ *  `newsStandingOf` are T2, the pressure term T3, habituation's growth T4, the leak that could set
  *  `publicWeek` T6, the booth stamps that could set the aired weeks T7. So her row carries
  *  `publicWeek: null` and the rest not because 156 weeks is too short to reach a leak but because
  *  there is nothing in the tree that could write one – which is also why this rung says nothing yet
