@@ -5110,6 +5110,81 @@ export const ECONOMY = {
     wallsHerselfRepair: 1.5,
   },
 
+  // --- The spotlight: the weight of being known (who-she-is §3c / §3c-bis, wave 6) ---------
+  // ⚠⚠ THIS BLOCK READS FAME AND NEVER TUNES IT. `ECONOMY.fame` is fame-presence's ground
+  // (docs/specs/fame-presence-2026-09.md) and the spotlight wave may not touch a number in it – the
+  // wave's §8, proven at the final gate by a grep. What lives here is the wave's OWN two questions:
+  // where the world starts calling her news, and what counts as a big stage.
+  //
+  // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight – the
+  // psychologist block's own rule one concern up, and for its reason («a constant with no reader is
+  // a constant nobody can be wrong about yet»): `pressureBase` and the openness scale land with T3's
+  // term inside `accrueSpirit`; `habituationFullWeeks` / `habituationFloor` with T4's growth;
+  // `leakBasePerWeek` / `leakOpennessMult` / `wrongShare` with T6's hazard; `newsWindowWeeks` with
+  // T7's booth. The fifth focus's two ladders (`publicLifeShrink`, `publicLifeAccel`) are T5's and
+  // join `ECONOMY.psychologist` beside the other four focus tables, NOT this block.
+  spotlight: {
+    /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – the fame at which the world starts calling her
+     *  news. ONE constant behind ONE predicate (`sheIsNewsAt`, `world/spotlight.ts`): every exposure
+     *  kind, the pressure term, habituation's growth, the leak hazard and the booth's licence are
+     *  gated on it, so an unknown girl has no spotlight whatever she wins.
+     *
+     *  ⚠⚠ MEASURED, NOT ANCHORED ON A NEIGHBOUR, AND THE ANCHOR IT SHIPPED WITH IS STRUCK (the
+     *  architect's ruling E, 14.09). The wave brief proposed 30 «anchored on `fameCap` – the ad
+     *  market's own famous bar»; that constant is the CONTRACTS TERM's own ceiling («the most the
+     *  whole term may ever add», `business.merch.contracts.fameCap` – ⚠ NOT under `fame`, which is
+     *  where both the brief and the ruling place it), the top of ONE contributor and not a band on
+     *  the total. There are no fame BANDS in this codebase at all. The scale's own ceiling is
+     *  `ECONOMY.fame.cap = 100` and `fameAt` is continuous between them.
+     *
+     *  What replaces the anchor is the measurement, 33 personal saves read through the game's own
+     *  import door, 15 408 career weeks (nothing committed, only the aggregate):
+     *
+     *      bar   share of ALL career weeks   saves that ever reach it
+     *      ≥ 5            48.6%                    –
+     *      ≥ 10           29.2%                    –
+     *      ≥ 15           12.1%                    –
+     *      ≥ 20           10.9%                    –
+     *      ≥ 25            8.5%                    –
+     *      ≥ 30 (this)     6.9%                    8 of 33
+     *      ≥ 40            4.6%                    –
+     *
+     *  Five of the eight careers in that corpus never reach 30 at any week of their lives. At this
+     *  bar the wave is dead for most of the game, which is a fact about the number and not about the
+     *  mechanic.
+     *
+     *  ⚠⚠ AND IT IS UNRULED. The value stays 30 until the owner rules – shipping a guess in the
+     *  other direction is the same error mirrored – and T9's `bench:spotlight` SWEEPS it at
+     *  10 / 15 / 20 / 25 / 30 and prints coverage per arm, so he rules on a table rather than on a
+     *  neighbouring constant's ceiling. A bench arm that reports near-zero actuation at 30 and
+     *  healthy actuation at 15 has not failed; it has produced this wave's most useful number. */
+    newsFameMin: 30,
+    /** ⭐⭐⭐ WHAT COUNTS AS A BIG STAGE – the lowest rung whose title, final or early exit puts her
+     *  in the light. `'wta500'`, so the set is {wta500, wta1000, slam} today and the slam fortnight
+     *  counts by construction.
+     *
+     *  ⚠⚠ A `TierId` AND NEVER A NUMBER, which is the architect's ruling F and corrects the brief's
+     *  own `stageTierMin 500`. THERE IS NO NUMERIC TIER SCALE to compare 500 against: `TierId`
+     *  (`season/types.ts`) is a string union of sixteen names – local · regional · national · j30 ·
+     *  j60 · j300 · w15 · w35 · w50 · w75 · w100 · wta125 · wta250 · wta500 · wta1000 · slam – and
+     *  `wta125` would break any map anybody built from the digits.
+     *
+     *  ⚠⚠ THE COMPARISON IS `TIER_LADDER`'s OWN INDEX, never a hand-written set of names. The ladder
+     *  (`season/calendar.ts`) is the canonical ordering and its own comment says the arithmetic
+     *  «moves with the list rather than with a number anybody edited» – it recorded a sixteen-rung
+     *  widening that cost «adding four names to this array and nothing else». The alternative's
+     *  failure is recorded in this repo in its own words (`src/art/venues.ts:150`): a hand-written
+     *  tier array whose `indexOf(t)` «was −1 for every one of them, the lower-tier walk never» ran –
+     *  silent, because `indexOf` does not throw. A `['wta500','wta1000','slam']` here is that defect
+     *  pre-booked: the week a rung joins the ladder the spotlight quietly stops seeing it.
+     *  `tests/wave6-spotlight-ledger.test.ts` §A asserts this value resolves to an index > -1, so a
+     *  renamed rung goes red with a sentence instead of turning the spotlight off.
+     *
+     *  ⚠ A PROPOSAL, LIKE THE BAR ABOVE – the brief's §4 lists it under «Proposals – NONE ruled»,
+     *  and what ruling F settles is its TYPE, not its rung. T9 prices where the bar belongs. */
+    stageTierMin: 'wta500' as TierId,
+  },
+
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
   // ONE shared catalogue; money is the only gate. A vacation week is a hard blackout (nothing
   // enterable) that pays a condition gain on top of a FREE week's recovery, and the two top

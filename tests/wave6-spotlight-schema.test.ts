@@ -516,19 +516,31 @@ describe('wave 6 T1 E – nothing reads them yet, and that is pinned rather than
     ])
   })
 
-  it('⭐⭐ the four row fields are named in `src/` by exactly three files, and every one of them WRITES or DECLARES them', () => {
+  it('⭐⭐ the four row fields are named in `src/` by exactly four files – three that WRITE or DECLARE them, and T2\'s ledger, which READS', () => {
     // ⚠ `lifeBeat.ts` IS ON THIS LIST AND `loveEpisodes.ts` IS NOT, which is the line worth reading.
     // The one place a row is ever born is `rollArrival`'s push (world/lifeBeat.ts), so that file
     // states the four birth values out loud; the file that READS the list – `loveEpisodesOf`,
     // `activeEpisode`, `knownPartner` – does not name them at all, because nothing derives from them
     // yet. T6's leak joins the first list and T7's booth joins the second.
+    //
+    // ⚠⚠ RE-AIMED BY T2 (the exposure ledger), NOT WEAKENED, AND IT IS THE PIN DOING ITS JOB.
+    // `world/spotlight.ts` is the FIRST READER of all four fields: `exposureEventsOf` derives
+    // `'aired'` from the two booth stamps and `'wrongStory'` from `publicWeek` + `publicWrong`.
+    // T1's own sentence above predicted the shape of this day and named the wrong task – it said the
+    // booth (T7) would join, and what actually joined first is the DERIVATION that reads the stamps
+    // T7 will write. The claim stays TOTAL (a full `toEqual`, not a `toContain`), so a fifth file
+    // reaching for these fields still reddens here; only the list grew, by exactly one name, in the
+    // commit that earned it. ⚠ The case's TITLE moved with it: «every one of them WRITES or DECLARES»
+    // stopped being true the moment a reader existed, and a title that lies is how a pin stops being
+    // read.
     for (const field of V77_ROW_FIELDS) {
       const named = srcFiles()
         .filter(([, source]) => codeOnly(source).includes(field))
         .map(([path]) => path)
-      expect(named.sort(), `${field}: the protocol declaration, the one writer, and the migration`).toEqual([
+      expect(named.sort(), `${field}: the protocol declaration, the one writer, the migration, and T2's ledger`).toEqual([
         'engine/migrations.ts',
         'engine/world/lifeBeat.ts',
+        'engine/world/spotlight.ts',
         'shared/protocol/narrative.ts',
       ])
     }

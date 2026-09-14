@@ -437,6 +437,12 @@ export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave
 // Re-exported under the historical convention; zero draws anywhere behind these names.
 import { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt, slamDebutWeekOf } from './world/fame'
 export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt, slamDebutWeekOf }
+// ⭐⭐⭐ WAVE 6 T2 – THE SPOTLIGHT'S LEDGER (world/spotlight.ts): is she news, and what put her in the
+// light this week. It READS fame and never tunes it (the wave's §8), and like the stock above it
+// draws nothing and writes nothing – a week's exposure is a question asked of records the world
+// already keeps. Re-exported under the historical convention so the barrel stays the one door.
+import { exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind } from './world/spotlight'
+export { exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind }
 // ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK (world/brandStrength.ts). Income keeps reading fame;
 // the WORTH reads this. Zero draws, nothing written per week – see the module header.
 import { brandStrengthAt, strengthDecayAt } from './world/brandStrength'

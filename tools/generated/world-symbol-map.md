@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,536 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,542 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-485 exported names across 50 owning modules.
+489 exported names across 51 owning modules.
 
 ## Areas
 
@@ -50,6 +50,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 4 |
+| `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
@@ -702,6 +703,15 @@ THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's e
 - `endEpisode` – `src/engine/world/loveEpisodes.ts`
 - `knownPartner` – `src/engine/world/loveEpisodes.ts`
 - `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
+
+### `src/engine/world/spotlight.ts`
+
+⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK.
+
+- `ExposureEvent` *(type)* – `src/engine/world/spotlight.ts`
+- `exposureEventsOf` – `src/engine/world/spotlight.ts`
+- `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
+- `sheIsNewsAt` – `src/engine/world/spotlight.ts`
 
 ### `src/engine/kidLife.ts`
 
