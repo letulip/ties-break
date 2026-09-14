@@ -477,3 +477,44 @@ depending on who she is.
 4. **This goes to the owner beside ruling E, as one question with one table** – how often it fires,
    and what it does when it fires, are halves of the same decision and he should not be handed one
    without the other.
+
+## O – the fifth focus is forced into two of its three roster sites and NOT into the third
+
+**Measured, 14.09 – what actually goes red when `PsyFocus` gains a member:**
+
+| site | `psychologist.ts` | type-forced? |
+| --- | --- | --- |
+| `PSY_FOCUS_LABEL` | 304 | **yes** – `Record<PsyFocus, string>` is total |
+| `PSY_FOCUS_LINE` | 318 | **yes** – same |
+| `PSY_FOCUSES` | 300 | **NO** – `readonly PsyFocus[]` is an ARRAY, and an array of four is a perfectly valid array of a five-member union |
+
+Everything else that mentions `PsyFocus` – `messages.ts:230`, `snapshot.ts:277/288`, `game.ts:530`,
+the `world.ts` barrel – carries it in a POSITION, not in an exhaustive read, and stays green.
+
+**So the one site the compiler will not defend is the one that decides whether the focus is ever
+offered at all.** A `PSY_FOCUSES` left at four means the fifth focus exists in the type, has a label
+and a line, and is never in the roster the seat iterates, the refusal filter walks, or the string
+tests read (`wave5-psychologist-focus.test.ts:353` maps its strings off that very array). Nothing
+goes red. That is the «unable to fail» family's thirteenth costume: a type that guards two of three
+siblings and leaves the load-bearing one to a human.
+
+**⚠ Wave 5 saw it coming and left the tripwire.** `tests/wave5-psychologist-focus.test.ts:273`:
+
+```ts
+expect(PSY_FOCUSES.length, 'four at step 5; the fifth is the spotlight wave`s (O7)').toBe(4)
+```
+
+The message names this wave. T5 re-aims it to `5` and rewrites the message – a guard pin re-aimed
+with a ⚠ note, never weakened.
+
+**The ruling: the re-aim STRENGTHENS, because a length is not a membership.** An array of five with
+a duplicate passes `toBe(5)`. The compiler already holds a complete list of the union – the
+type-forced `Record` – so use it as the oracle:
+
+```ts
+expect([...PSY_FOCUSES].sort()).toEqual(Object.keys(PSY_FOCUS_LABEL).sort())
+```
+
+That is total by construction, it goes red the day a sixth focus is added to the type and forgotten
+in the roster, and it costs one line. The length assertion stays beside it: it still names the
+number a reader is checking against the spec.
