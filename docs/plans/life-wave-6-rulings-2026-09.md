@@ -282,3 +282,31 @@ defaulting to `null`, on `coach`'s precedent, with `coach`'s own note.
 `variant(pointIndex, n)` – «deterministic phrase variety with no RNG: an integer hash of the point
 index, folded to n», Knuth's constant. That is how the booth's beat gets more than one wording
 while `src/viz` keeps zero draws, which the brief calls this wave's gravest possible finding.
+
+## E-bis – the bench CAN actuate this wave, and the arm that decides it is the POLICY, not the money
+
+Ruling E warns that at a bar of 30 most arms actuate rarely. T9 needs to know whether they actuate
+**at all** before it designs a single cell, so it is measured here rather than discovered there.
+
+**Measured, 14.09, 520-week walks:**
+
+| preset / policy | label | peak fame | weeks ≥ 10 | ≥ 15 | ≥ 20 | ≥ 30 |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| 8 / 0 | 120k · wealthy · elite coach | **0.0** | 0 | 0 | 0 | 0 |
+| **8 / 1** | 120k · wealthy · elite coach | **53.2** | 175 | 124 | 118 | **77** |
+| 7 / 1 | 120k · wealthy · high coach | 13.2 | 71 | 0 | 0 | 0 |
+| **6 / 1** | 25k · middle · high coach | **47.9** | 227 | 222 | 218 | **56** |
+
+**Three readings, all of them T9's:**
+
+1. **No fame-forcing harness is needed.** Two ordinary bench cells cross the bar for 56–77 weeks of
+   a 520-week walk. `bench:spotlight`'s high-fame arms are built from preset/policy pairs, not from
+   a patched world – and a patched world would have been the weaker instrument anyway.
+2. **⚠ THE POLICY DECIDES, NOT THE MONEY.** Preset 8 reaches **0.0** under policy 0 and **53.2**
+   under policy 1 – the same family, the same coach, the same wallet. A T9 arm built on policy 0
+   measures nothing at all and would report it as «the spotlight does not move her», which is the
+   «unable to fail» family wearing a bench's clothes. It is also why ruling D found five zeros:
+   three of the five frozen cells are policy 0.
+3. **The window is thin at 30 and comfortable at 15** – 11–15% of a long career against 24–43%.
+   That is a second, independent argument for ruling E's bar sweep, arrived at from the bench side
+   rather than from the save corpus, and the two agree.
