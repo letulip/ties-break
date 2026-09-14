@@ -547,3 +547,28 @@ owns 3; WeekRecapCard owns 4; economy constants own 5/13/25 (+9's comment); birt
 snapshot/ladder own 7/14; offers own 16's probe; SupportStaffTab owns 18 (⚠ wave-6 T5 moves the
 same file – this bundle REBASES on the wave, never races it); 19 is its own later bundle. Gate
 once, quiet machine, exit codes from files; every DRAFT line lands in this file before the PR.
+
+- [ ] **33. (screenshot) «Simulation calibration #8» на main c3c63dd красный – четыре sim-джоба
+  падают** – **measure → build.** The weekly cron (`simulation.yml`, on: schedule) is red, and the
+  screenshot's own durations classify it: `econ-bench` (3m10s), `econ-reach` (3m36s), `econ-reach-pro`
+  (2m50s), `fatigue-bench-planner` (2m29s) FAILED; the lighter variants (~1m) passed. **Confirmed the
+  birpc reporter stall, not a corridor.** Proof, airtight: all four run GREEN locally (econ-bench 80s,
+  econ-reach 75s, econ-reach-pro 89s, fatigue-bench-planner 63s in this session's `test:sim`), and
+  the benches are seed-deterministic – identical arithmetic on any machine – so an assertion that
+  passes locally cannot fail on the runner; the only machine-dependent thing is TIMING. No perf/time
+  assertion exists in any of the four (grepped). On the 2-core runner they run ~2.4× slower (63-89s →
+  2.5-3.6m), blocking the event loop past birpc's hard-coded 60s reporter-RPC ceiling, so
+  `Timeout calling "onTaskUpdate"` fires; `sim.mjs` classifies it as an all-green stall and retries
+  once, and the retry re-runs 2.5-3.6m and stalls again → the job fails. This is the documented
+  «birpc stall is NOT fixed» (CLAUDE.md), chronic on the cron since run #3 (the header's own log),
+  invisible only because the sim-health Issue step was 403'ing 17.08-07.09. NOT wave-6's doing – it
+  is on main, 13 hours before this branch. **Three fixes weighed, his to pick (ask below):**
+  (A) accept a proven-green re-stall – `sim.mjs`'s classifier already knows «every test green, only
+  the reporter RPC timed out» (`stalled`, read off vitest's own summary), so a retry that comes back
+  `stalled` again is PROVEN green and should report recovered-infra, not fail; the deploy.yml
+  `lateAckOnly` precedent exactly, smallest and safest, touches no bench;
+  (B) the root fix – the Monte-Carlo loops `await` a macrotask every N iterations so the event loop
+  services the birpc ping and the reporter never stalls; cleanest but touches the four bench loops
+  and must be proven not to move a single RNG draw;
+  (C) shard the four heavy files so each runs under the ceiling on the runner; more matrix jobs,
+  restructures the benches. Architect recommends **A**.
