@@ -397,6 +397,10 @@ import type { AcademySupport } from '../academy'
 // `+wallsFlipped` – SIX keys in one append (`docs/plans/life-wave-5-builder-2026-09.md` §2 T1, the
 // walls model verbatim from `docs/specs/who-she-is-2026-09.md` §2a). The first four are the staff
 // seat, shaped on v59's masseur block; the last two are the §2a leanings and their hysteresis state.
+// ⭐ AMENDED PRE-MERGE 14.09 – `+peakDomesticPoints` makes SEVEN: the owner's elite-gate ruling
+// («фраза про карьеру, а не про неделю»), added to this SAME unshipped step rather than a v77
+// because no v76 save exists outside this branch; the field's own docblock beside
+// `bestFinishByTier` carries the measurement and the doctrine.
 //
 // ⚠⚠ SIX KEYS IN ONE VERSION, AND THEY ARE TWO DIFFERENT KINDS OF THING RIDING ONE BUMP – said here
 // so the next reader does not look for a single story. The seat is a STAFFING DECISION (hired, at
@@ -596,6 +600,16 @@ export interface WorldState {
   /** best (smallest) finish index the kid has ever reached per tier (v10); updated at
    *  tournament finalize. Drives the Home season strip's real tier progress. */
   bestFinishByTier: Partial<Record<TierId, number>>
+  /** ⭐ v76 (amended pre-merge, 14.09 – the owner's ruling on the elite gate's currency): the best
+   *  domestic best-6 sum she has EVER held – `bestFinishByTier`'s sibling, and the same doctrine
+   *  its own docblock names: a HIGH-WATER MARK. `kidPoints` is a rolling 52-week window over a
+   *  ledger that prunes, so «has she ever proved herself» is a question the live fold LOSES the
+   *  answer to – measured: every 400-week career ends at 0 domestic points, and the shipped gate
+   *  refused a $4.9M professional. Written in `recomputeKidRank` (the only place the fold can
+   *  rise), read by the elite gate through `eliteGateStandingOf` alongside the pro one-way door.
+   *  Backfills 0: an old save's pruned past cannot be invented (the v46 byTrack doctrine) – the
+   *  W-professional arm covers migrated pros, and a live junior re-earns it on her next fold. */
+  peakDomesticPoints: number
   /** THE TITLES LEDGER (v31): every title and every LOST final of her career, per tier, as the
    *  absolute weeks they happened in. Written beside `bestFinishByTier` at tournament finalize;
    *  behind the Trophy Cabinet. Full shape and the `finals` warning: `TierTrophies` in protocol.ts.

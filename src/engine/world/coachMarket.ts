@@ -108,6 +108,27 @@ export function practiceCoachRateFor(world: WorldState, week: number): number {
  *
  *  `null` fires the parent back onto the court, which must always be allowed: a family that cannot
  *  pay has to be able to stop paying. */
+/** ⭐ THE ELITE GATE'S CURRENCY, re-ruled 14.09 (the owner, on T13's own measurement): «"берёт
+ *  игроков с результатами" — это про КАРЬЕРУ, а не про неделю». `kidPoints` is a rolling 52-week
+ *  best-6 over a pruning ledger, so it DECAYS – measured over 400-week walks, every career ends at
+ *  0 domestic points and the shipped gate refused the `pro` fixture ($4.9M banked) an Elite coach.
+ *  The standing is therefore the career's HIGH-WATER, two arms, both one-way:
+ *    * `peakDomesticPoints` – banked in `recomputeKidRank`, the never-decaying max of the same
+ *      fold the live number comes from (one currency, one exchange rate);
+ *    * the W-professional door – `activeLadderOf === 'wta'` is the never-pruned mark the masseur's
+ *      own unlock reads («the gate can never close behind a layoff or a pruned window», the house
+ *      one-way-door doctrine this gate violated as shipped). It answers as the BAR itself, not a
+ *      bigger number, so a shortfall can never print a negative and a migrated professional (whose
+ *      backfilled peak is honestly 0) walks through the door her career already opened.
+ *  `coachHireable`/`eliteGateShortfall` keep their signatures and their meaning – what changed is
+ *  WHICH number is her standing, and all three surfaces (row state, hire refusal, screen lock)
+ *  inherit it through the same two functions, so the one-story doctrine holds untouched. */
+export function eliteGateStandingOf(world: WorldState): number {
+  const live = kidPoints(world, 'domestic')
+  const peak = Math.max(live, world.peakDomesticPoints ?? 0)
+  return activeLadderOf(world) === 'wta' ? Math.max(peak, ECONOMY.coach.eliteGate.minPoints) : peak
+}
+
 export function hireCoach(world: WorldState, coachId: string | null): void {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
@@ -140,7 +161,7 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
   // preserves its meaning. Reading ITF points here would also make the Elite rung strictly
   // downstream of money (no international travel, no ITF points, no Elite coach ever), which is the
   // opposite of the "earned rather than bought" shape the owner asked the gate for.
-  const short = eliteGateShortfall(coach, kidPoints(world, 'domestic'))
+  const short = eliteGateShortfall(coach, eliteGateStandingOf(world))
   if (short !== null) {
     throw new Error(`${coach.name} only takes players with results – ${short} more ranking points`)
   }
@@ -736,7 +757,7 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
  *  events already use, and the reason two surfaces can never disagree about what a coach costs. */
 export function coachMarket(world: WorldState): CoachMarketRow[] {
   const age = ageAtWeek(world.week)
-  const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
+  const points = eliteGateStandingOf(world) // ⚠ the Elite gate's currency – see hireCoach above
   // ⭐ ROUND-21 #12: every stream that arrives every week, not the parents' line alone. See
   // `familyWeeklyIncomeCents` for the measurement that made this a bug rather than a wording fix.
   const weeklyIncome = familyWeeklyIncomeCents(world)

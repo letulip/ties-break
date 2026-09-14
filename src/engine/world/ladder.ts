@@ -229,6 +229,12 @@ export function recomputeKidRank(world: WorldState): void {
   const wta = rankingFor(world, 'wta').find((r) => r.playerId === KID_ID)
   // ⚠ THE W TABLE IS 564 ROWS, NOT 200 – see `tableSize`. The other two are unchanged in value.
   world.kidRankWta = wta?.rank ?? tableSize(world, 'wta')
+  // ⭐ v76 pre-merge amendment (14.09, the owner's elite-gate ruling): the HIGH-WATER of her
+  // domestic best-6, banked here because this is the one function the fold can rise through –
+  // every write to `results` that could move `kidPoints` re-folds the tables through this pass,
+  // and on the weeks nothing moved the window can only shrink, which a max ignores. Zero draws,
+  // pure arithmetic over the same memoised fold the rank above already paid for.
+  world.peakDomesticPoints = Math.max(world.peakDomesticPoints ?? 0, kidDomesticPoints(world))
   latchOnRamps(world)
 }
 

@@ -49,8 +49,10 @@ import {
   KID_ID,
   coachMarket,
   createWorld,
+  eliteGateStandingOf,
   hireCoach,
   kidPoints,
+  recomputeKidRank,
   type WorldState,
 } from '../src/engine/world'
 import {
@@ -164,6 +166,77 @@ describe('T13 §A – the gate bites, and it bites in both directions', () => {
       GATE.enabled = SHIPPED
     }
     expect(coachHireable(elite, 0), 'and it is back on afterwards').toBe(false)
+  })
+})
+
+// =================================================================================================
+describe('§A2 – the 14.09 ruling: the gate reads the CAREER, and a door once opened never closes', () => {
+  // ⚠⚠ THE RE-RULING THIS SECTION PINS (the owner, 14.09, on T13's own by-tenth measurement –
+  // 58/74/100…/100% refusals, the `pro` fixture with $4.9M refused): «"берёт игроков с
+  // результатами" — это про КАРЬЕРУ, а не про неделю». `eliteGateStandingOf` is the one new fold:
+  // max(live best-6, banked high-water), with the W-professional door answering as the bar itself.
+  // `coachHireable`/`eliteGateShortfall` kept their signatures – §A above still holds verbatim,
+  // because a fresh career's standing IS its live points. What this section adds is the memory.
+  //
+  // ⚠ MUTATION ARMS, each watched red before landing (run by sed-toggle, restored by reverse sed –
+  // never `git checkout --`, the house's own concurrent-checkout lesson):
+  //   ARM A2-1  the banker line deleted from `recomputeKidRank`      -> 3 RED (never-closes, the
+  //             standing unit case, §C's horizon – the ruling's whole chain dies with the banker)
+  //   ARM A2-2  the wta clause dropped from `eliteGateStandingOf`    -> 2 RED (professional door,
+  //             the standing's wta arm)
+  //   ARM A2-3  the standing's `Math.max` inverted to `Math.min`     -> 5 RED
+  it('⭐⭐⭐ the door never closes: a banked 150 outlives the window that earned it', () => {
+    const world = careerAt(GATE.minPoints, 't13-highwater')
+    // The fold that banks the peak is the rank pass – in play it runs on every week the ledger
+    // moves; the fixture calls it once, honestly, at the week the result exists.
+    recomputeKidRank(world)
+    expect(world.peakDomesticPoints, 'the high-water is banked at the bar').toBe(GATE.minPoints)
+
+    // Two years later the rolling window has emptied – the exact decay T13 measured (every
+    // 400-week career ends at 0 domestic points). The peak is why that no longer closes the door.
+    world.week += 104
+    recomputeKidRank(world)
+    expect(kidPoints(world, 'domestic'), 'the live fold really decayed to nothing').toBe(0)
+    expect(world.peakDomesticPoints, '...and the high-water did not').toBe(GATE.minPoints)
+
+    const elite = rosterAt14(world.seed).find((c) => c.tier === 'elite')!
+    expect(refusalFor(world, elite.id), 'the market remembers her').toBeNull()
+    const row = coachMarket(world).find((r) => r.id === elite.id)!
+    expect(row.lockedPoints, 'and the row agrees – the one-story doctrine, third reader').toBeNull()
+  })
+
+  it('the professional door: a W-track career walks in whatever the domestic table forgot', () => {
+    // The `pro` fixture's own shape in miniature: zero domestic points, and the never-pruned mark
+    // `activeLadderOf` reads – `wtaEverCounted` over `bestFinishByTier`, the masseur's one-way door
+    // one seat over, set the way `finalizeTournament` sets it (T3b's own fixture idiom).
+    // ⚠ NOT a thin results row: `rankableTotal` holds the real tour's rule that a professional
+    // total below the rankable minimum reads 0, so one 1-point W row opens nothing – measured
+    // first, and worth the line so nobody re-finds it.
+    const world = careerAt(0, 't13-wta-door')
+    world.bestFinishByTier = { ...world.bestFinishByTier, w15: 0 }
+    expect(kidPoints(world, 'domestic'), 'nothing domestic to her name').toBe(0)
+    expect(kidPoints(world, 'wta'), 'and nothing rankable in the live W window either').toBe(0)
+
+    const elite = rosterAt14(world.seed).find((c) => c.tier === 'elite')!
+    expect(refusalFor(world, elite.id), 'the door her career already opened').toBeNull()
+    const row = coachMarket(world).find((r) => r.id === elite.id)!
+    expect(row.lockedPoints, 'no shortfall is printed for a professional').toBeNull()
+  })
+
+  it('the standing itself: live, banked and professional arms, and never a negative shortfall', () => {
+    const live = careerAt(40, 't13-standing')
+    expect(eliteGateStandingOf(live), 'a fresh career: standing IS the live fold').toBe(40)
+
+    recomputeKidRank(live)
+    live.week += 104
+    recomputeKidRank(live)
+    expect(eliteGateStandingOf(live), 'after decay: standing is the banked peak').toBe(40)
+
+    live.bestFinishByTier = { ...live.bestFinishByTier, w15: 0 }
+    // ⚠ THE BAR AND NOT A BIGGER NUMBER: the professional arm answers as `minPoints` itself, so a
+    // migrated pro (whose backfilled peak is honestly 0) opens the gate while `eliteGateShortfall`
+    // can never print a negative «-110 more ranking points» on any surface.
+    expect(eliteGateStandingOf(live), 'the professional arm answers as the bar').toBe(GATE.minPoints)
   })
 })
 
@@ -363,8 +436,21 @@ describe('T13 §C – the frozen corpus, and what its zero is worth', () => {
 
     const armOn = armWalk(true)
     GATE.enabled = SHIPPED
-    expect(armOn.hiredAt, 'with the gate on that hire never happens').toBeNull()
-    expect(armOn.world.coachId, '...and the career finishes the walk self-coached').toBeNull()
+    // ⚠⚠ RE-AIMED 14.09 BY THE OWNER'S RULING, AND THE FLIP IS THE RULING MADE VISIBLE. As T13
+    // shipped it this line read «with the gate on that hire never happens» – the walker's live
+    // points had decayed to 0 by week 310, so the gate refused a career that crossed 150 back in
+    // its first season. That refusal IS the by-tenth table the ruling was made on (58/74/100…%),
+    // and «"берёт игроков с результатами" — это про КАРЬЕРУ, а не про неделю» inverts it: the
+    // banked high-water opens the door the live window closed. The discriminating pair below is
+    // the whole story – live points below the bar AND the hire going through – so a regression to
+    // the decaying read cannot pass this case by accident.
+    expect(armOn.hiredAt, 'with the gate on the hire now HAPPENS – the market remembers her').not.toBeNull()
+    expect(armOn.hiredAt!.points, '...at live points still below the bar – the PEAK is what opened it')
+      .toBeLessThan(GATE.minPoints)
+    expect(armOn.world.peakDomesticPoints, 'and the banked high-water is the fact that did it')
+      .toBeGreaterThanOrEqual(GATE.minPoints)
+    expect(armOn.world.coachId, '...and she finishes the walk WITH him – the door stayed open').not.toBeNull()
+    expect(coachTierById(armOn.world.coachId!), 'an ELITE coach, kept').toBe('elite')
   })
 })
 

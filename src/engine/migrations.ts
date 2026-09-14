@@ -2609,14 +2609,15 @@ export function migrateSave(raw: unknown): WorldState {
   // constant, and the two spellings are allowed to diverge precisely because one is a default and the
   // other is history.
   //
-  // ⚠⚠ `??=` ON ALL SIX, AND THE THREE THAT CAN BE `false`/`0`-SHAPED ARE WHY IT IS `??=` AND NEVER
+  // ⚠⚠ `??=` ON ALL SEVEN (six at T1; `peakDomesticPoints` joined pre-merge, 14.09 – its own note
+  // below), AND THE ONES THAT CAN BE `false`/`0`-SHAPED ARE WHY IT IS `??=` AND NEVER
   // `||=`. `psychologistHired ||= false` is a no-op that looks like a write; `wallsLean ||= …` would
   // replace a live `{open: 0, reg: 0}` object every load. `??=` tests for absent-or-null alone, so a
   // save that already carries a hire, a rung, a focus, a season, a leaning or a flip keeps it whole –
   // which is what every wave-5 career will look like the moment T2 and T7 land – and a second walk
   // over the same payload is a no-op. The only shape this step can ever change is an ABSENT key.
   //
-  // ⚠ IDEMPOTENT and DRAW-FREE: six `??=` on keys nothing else in the chain touches, gated on
+  // ⚠ IDEMPOTENT and DRAW-FREE: seven `??=` on keys nothing else in the chain touches, gated on
   // `v === 75`, writing literals. No sub-stream is reached at all on this path, so MAIN cannot move
   // and the frozen capture (41550 / e6b0c709) is untouched by construction. Full move:
   // `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v76.json, and the
@@ -2628,6 +2629,13 @@ export function migrateSave(raw: unknown): WorldState {
     save.psychologistFocusSeason ??= null
     save.wallsLean ??= { open: 0, reg: 0 }
     save.wallsFlipped ??= { open: false, reg: false }
+    // ⭐ THE SEVENTH KEY, ADDED TO AN UNSHIPPED STEP (14.09, the owner's elite-gate ruling). v76
+    // has never reached main or a deployed build, so nobody holds a v76 save and append-only does
+    // not bind this step yet – the same reading state.ts's v59 note gives «never reached a player».
+    // Backfill 0 and NOT a reconstruction: `results` prunes at 52 weeks, so a past peak cannot be
+    // invented (the v46 byTrack doctrine one screen up); the gate reads max(current, peak) plus
+    // the W-professional arm, so a migrated career is never worse off than under the live fold.
+    save.peakDomesticPoints ??= 0
     v = 76
   }
 

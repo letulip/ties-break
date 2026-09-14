@@ -152,6 +152,12 @@ const V76_KEYS = [
   'psychologistFocusSeason',
   'wallsLean',
   'wallsFlipped',
+  // ⚠ THE SEVENTH, added to the SAME unshipped step pre-merge (14.09, the owner's elite-gate
+  // ruling – state.ts's amendment note carries why no v77 is owed). Unlike the six it has a
+  // WRITER from birth (`recomputeKidRank` banks the high-water), so §E treats it like the walls
+  // pair – re-grown by the walk and asserted on both arms – and the no-writer case asserts it
+  // MOVED, as the banker's own positive control.
+  'peakDomesticPoints',
 ] as const
 
 /** Source with every comment removed – `tests/spirit.test.ts`'s own helper verbatim, for §F: a pin
@@ -274,6 +280,9 @@ describe('wave 5 T1 A – v76, the three-part move', () => {
       psychologistFocusSeason: 0,
       wallsLean: { open: -42.5, reg: 0 },
       wallsFlipped: { open: true, reg: false },
+      // 14.09 – the seventh key's sentinel: a banked peak must survive a re-load untouched, and 0
+      // is exactly the value `||=` would clobber, which is this case's whole subject.
+      peakDomesticPoints: 0,
     }
     const lived = { ...v75(), schemaVersion: 75, ...JSON.parse(JSON.stringify(kept)) }
     const out = migrateSave(lived) as unknown as Record<string, unknown>
@@ -316,7 +325,7 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     const after = migrateSave(v75()) as unknown as Record<string, unknown>
 
     const added = Object.keys(after).filter((k) => !(k in before))
-    expect(added.sort(), 'exactly six keys arrive, and they are these six').toEqual([...V76_KEYS].sort())
+    expect(added.sort(), 'exactly seven keys arrive, and they are these seven').toEqual([...V76_KEYS].sort())
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 
     // ⚠ EVERY OTHER KEY BYTE-IDENTICAL, compared through `JSON.stringify` per key rather than through
@@ -513,14 +522,26 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
       expect(arm.wallsLean, `${name}: the leaning pass ran and left her at her nature`).toEqual({ open: 0, reg: 0 })
       expect(arm.wallsFlipped, `${name}: and nothing armed, so nothing flipped`).toEqual({ open: false, reg: false })
     }
+    // ⚠ 14.09 – the seventh key re-grows the same way the walls pair does: `recomputeKidRank`
+    // banks the high-water on every fold, so BOTH arms carry it after the walk, with the same
+    // value (this career's real best), and it is stripped off both below exactly as the walls
+    // are. Asserted equal-and-positive here so «the A arm grew it back» cannot hide «and put a
+    // different number in it» – the same reasoning the walls re-aim wrote one screen up.
+    expect((withoutKeys as Record<string, unknown>).peakDomesticPoints, 'A: the banker ran on the stripped arm too')
+      .toEqual((withKeys as unknown as Record<string, unknown>).peakDomesticPoints)
+    // ⚠ EQUALITY AND NOT `> 0`, measured before assumed: a NO-ACTION walk enters no tournaments
+    // (entries are the parent's), so this career earns nothing and its honest peak is 0 on both
+    // arms. The banker's positive control – a peak banked, held through decay, opening the gate –
+    // lives on a career with results: `tests/wave5-elite-gate.test.ts` §A2.
 
     const b = JSON.parse(JSON.stringify(withKeys)) as Record<string, unknown>
     for (const key of V76_KEYS) {
       expect(b[key], `the B arm carries ${key} through the walk`).toBeDefined()
       delete b[key]
     }
-    for (const key of WALLS) delete withoutKeys[key]
-    expect(Object.keys(withoutKeys).sort(), 'the two arms end with the same key set once the six are off')
+    const REGROWN = [...WALLS, 'peakDomesticPoints'] as const
+    for (const key of REGROWN) delete withoutKeys[key]
+    expect(Object.keys(withoutKeys).sort(), 'the two arms end with the same key set once the v76 keys are off')
       .toEqual(Object.keys(b).sort())
     for (const key of Object.keys(b)) {
       expect(JSON.stringify(withoutKeys[key]), `${key} is byte-identical across the two arms`)
@@ -553,6 +574,12 @@ describe('wave 5 T1 E – a career walks the same weeks it walked before', () =>
     expect(world.psychologistFocusSeason, 'so no season holds a pick').toBeNull()
     expect(world.wallsLean, '⚠ the pass ran every week and she never left her nature').toEqual({ open: 0, reg: 0 })
     expect(world.wallsFlipped, '⚠ so nothing ever armed, and nothing flipped').toEqual({ open: false, reg: false })
+    // ⚠ 14.09 – the seventh key is the DELIBERATE exception to this case's title: it ships WITH a
+    // writer (`recomputeKidRank` banks the domestic high-water). On THIS career the identity value
+    // survives for the honest reason that a no-action walk enters nothing and earns nothing – so
+    // the assertion documents the boundary rather than the banker; the banker's own control (a
+    // peak banked, held through decay, opening the gate) is wave5-elite-gate §A2's.
+    expect(world.peakDomesticPoints, '⚠ a no-action career banks nothing – 0 is its true peak').toBe(0)
     // ⚠ AND THE BOND IS WHY, stated rather than implied – the claim above is about a caring career and
     // would be false of a grinding one, which is T7's own test file's business.
     expect(world.bond, 'her bond never left the caring band').toBeGreaterThanOrEqual(ECONOMY.bond.band.steady)
