@@ -763,3 +763,31 @@ landed – the row is stamped with the week it PRINTS in, and what it names is t
 It now reads «…**last week**.» ⚠ DELIBERATELY NOT POLISHED and deliberately NOT PINNED as wording:
 T8 and the вычитка own the sentence, and a T3b pin on its words would have taken that away. The only
 reader is the §H case that asserts the row carries `EXPOSURE_ROW`, which moves with it.
+
+## Corrections from T3b – and a correction of my own correction brief
+
+**T3b's brief said six pins read the call text. Four do.** I relayed T3's list of six without
+separating what each site actually reads. Measured by T3b with a declared-null control (CONTROL 12c:
+the horizon mutation run against the schema suite → **0 RED of 20 cases**): the arity pin, its
+signature sibling and `wave5-psychologist-schema.test.ts`'s reader census all read
+`engine/spirit.ts`, whose declaration and whose single `expressedTemperamentOf` read T3b never
+touches. They were left exactly as T3 wrote them – re-aiming them would have been a diff with no
+claim behind it. **Ruling P itself is uncontradicted in every part.**
+
+**Week 0 is not the hole it looked like.** `tickWeek` runs `world.week += 1` as **step 0**, before
+`resolveBodyAndPlanner` – so a career born at week 0 runs its first spirit pass at `world.week === 1`
+and asks the ledger for week **0**, never −1. That increment's position had never been read by
+anything; it is now pinned, because it is the one thing standing between the new horizon and a
+negative first tick.
+
+⚠ **And the negative guard is honestly labelled a LAW rather than a repair.** `spotlight.ts` answers
+`week < 0` with an empty list, but `decayAt` returns 0 for the future, so `fameAt(world, -1)` is 0
+and the news gate had already closed that door. Deleting the guard therefore reddens the STATED half
+of its pin and not the behavioural one – T3b wrote that limit into the case instead of claiming an
+arm it did not have.
+
+**The before/after evidence is the part that matters, and it exists**: six cases run through the real
+phase on twins differing by one stamp, both news at the week under test, so the horizon is what is
+measured and never the gate. A big-stage title in W is charged at W+1 and **charged at all** – the
+assertion that was false – at 3.6 for a steady·private girl; the early exit at 4.8; and neither is
+charged at W. **All six were RED under T3's shipped spelling and are green now.**
