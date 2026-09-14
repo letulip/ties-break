@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 112 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 113 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -38,7 +38,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | general | 6 | [WAVE 6 IS BUILT AND GATED: THE SPOTLIGHT, AND EVERY NUMBER IN IT IS STILL A PROPOSAL](#14092026--wave-6-is-built-and-gated-the-spotlight-and-every-number-in-it-is-still-a-proposal) | 2026-09-14 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 11 | [WAVE 5 MERGED AND DEPLOYED; THE PRIVATE LIFE'S SPOTLIGHT WAVE IS COMMISSIONED](#14092026--wave-5-merged-and-deployed-the-private-lifes-spotlight-wave-is-commissioned) | 2026-09-14 |
+| life-and-morale | 12 | [THE PRIVATE LIFE'S SIXTEEN ANSWERED: EIGHT DECISIONS, AND THE NEWS BAR READS THE RANK](#14092026--the-private-lifes-sixteen-answered-eight-decisions-and-the-news-bar-reads-the-rank) | 2026-09-14 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -4555,3 +4555,40 @@ today.
 that decide the most are one decision in two halves: the news bar (at 30 the wave does not exist for
 five of the eight careers in his own save corpus) and the drafted bases (the spotlight decides the
 Mood word for 2.3 % of a sunny girl's charged weeks and 33.9 % of a deep girl's).
+
+## 14.09.2026 – THE PRIVATE LIFE'S SIXTEEN ANSWERED: EIGHT DECISIONS, AND THE NEWS BAR READS THE RANK
+
+Wave 6's builder handed back sixteen questions with measurements; the architect ruled four
+(Q6 bench pairing commissioned round-side · Q7 spec-over-brief override upheld · Q10 the
+sentence-repair method upheld · Q13 the corridor holding IS the design) and packaged twelve as
+eight decisions. The owner answered all eight in one pass, verbatim where they decide:
+
+1. **D1a – the news bar reads the RANK, not fame:** «у нас % достижения топ-100 огромный, вот
+   уже с топ-200 можно иногда начинать что-то говорить, а в топ-100 так и вполне уверенно,
+   прямая аналогия – спонсорская лестница». The membership rule re-cuts to standing bands:
+   top-100 = she lives known (full wave), 101–200 = noticed (the light finds her only on her
+   occasions), below = quiet. `newsFameMin` dies; fame stays the brand economy's number.
+2. **D1b – the row-keep threshold: «ок»** – the exposure feed row prints only at a week charge
+   ≥ 1.0 after all scaling; a habituated, focused −0.33 week lives quietly.
+3. **D1c – the sunny girl: «ок»** – lightness is her reward; the weather layers pass over her by
+   nature, and her own product arrives with the form layer. Ruled, no compensation content.
+4. **D2 – the fifth focus's receipt: «да»** – commissioned per the strings doc's trigger.
+5. **D3 – the spotlight's mark: «да»** – 📸, the wave's own feed glyph.
+6. **D4 – the wrong story: «оставляем пока»** – keeps its price before the correction beat
+   exists; rare by construction, revisited when the beat arrives.
+7. **D5 – the founding scene: «давай попробуем как ты предлагаешь»** – the freshness multiplier:
+   the leak hazard runs hotter in an episode's first weeks (new couples get caught), benched
+   predicted-first; the private girl's long untold window is exactly where the overtake lives.
+8. **D6 – the walled-famous population: «давай по рекомендации попробуем и фразу поправим»** –
+   accepted as design (walls and fame are alternative costs; the freeze's living population is
+   the repairing girl in transit) and §3c's sentence amended to say that truth.
+9. **D7 – the broke-ending twin: «давай попробуем»** – commissioned as the wave's own tail
+   (T13), ahead of §4 tuning: the ending spell, the diary money-worry and the birthday hardship
+   licence all move to the reachable-money read; the Money countdown sentence re-drafts. «Мы ни
+   за что не наказываем» is nowhere stronger than at the one ending nobody can undo.
+10. **D8 – the college need layer: «значит давай похороним»** – dead since round 21 (its $35k
+    taper ceiling sits below every family's at-18 income), retired honestly with a
+    byte-identical proof; `familyCanPayPerYearCents` stays live and joins the reachable read.
+
+The close: «закончи сам пожалуйста эту волну и заводи ПР по скиллу» – the architect implements
+the ruled package, gates, and assembles the PR; the round-42 work follows as its own second PR.
