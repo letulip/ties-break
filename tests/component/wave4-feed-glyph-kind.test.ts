@@ -250,8 +250,15 @@ describe('T5 §C – the roster, and the gate that cannot be half-filled', () =>
     // ever left the roster, every historical row would resolve to a cell no pick can be made for and
     // the `?? 'met'` promise would be quietly unkeepable.
     expect(LIFE_BEAT_ROW_KINDS as readonly string[], 'the `?? \'met\'` default is a markable kind').toContain('met')
+    // ⚠ D3 (14.09): the markable set grew by ONE that is NOT a `LifeBeatKind`. The owner gave the
+    // spotlight family its own 📸, and its rows carry `lifeKind: 'exposure'` – a ROW kind declared on
+    // `WorldEvent.lifeKind`'s widened type (`LifeRowMarkKind = LifeBeatRowKind | 'exposure'`,
+    // `lifeRowGlyphs.ts`), never a member of `LifeBeatKind` (wave 6's §8 forbids that). So a picked
+    // glyph is for a beat-row kind OR the exposure mark; `LIFE_BEAT_ROW_KINDS` above stays exactly
+    // `['met', 'ended']` because that roster is the LifeBeatKind one and did not move.
+    const MARKABLE = [...LIFE_BEAT_ROW_KINDS, 'exposure'] as readonly string[]
     for (const key of Object.keys(LIFE_BEAT_EMOJI)) {
-      expect(LIFE_BEAT_ROW_KINDS as readonly string[], `«${key}» is a kind a life row can carry`).toContain(key)
+      expect(MARKABLE, `«${key}» is a kind a life row can carry`).toContain(key)
     }
   })
 
