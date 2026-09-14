@@ -822,3 +822,63 @@ BYTE-IDENTITY pin and not just an endpoint assertion: every career that has neve
 play exactly the tennis it played before T4 existed, and the T3 literal `1` this task replaces is
 what made that true yesterday. Pin it against a world that HAS been news too – grown habituation,
 then walls flipped – so the pin cannot pass by never having grown anything.
+
+## R – the slot ruling Q gave away was held, the reason it must be held is the half I did not state, and the clamp stays out of the read
+
+**Ruling Q, corrected twice by T4, and the second correction is the load-bearing one.**
+
+**1. The line was not free.** I wrote «the line immediately after `accrueSpirit` – wave 5's ruling P
+precedent, where `driftWalls` already sits», as if the neighbour were a landmark. It is a **pin**:
+`tests/wave5-psychologist-walls.test.ts` §H asserts `expect(j).toBe(i + 1)` and its own comment says
+it is «red on any statement sliding between them». Taking that line is a pin move, and T4 made it
+one – re-aimed to a **total slice equality** naming the one statement now allowed there, which is
+strictly stronger than `toBe(i + 1)`: the old form said nothing about WHAT occupied the next line.
+
+**2. ⚠⚠ It must run BEFORE `driftWalls`, and that is the half ruling Q never gave a reason for.**
+`driftWalls` writes `wallsFlipped` and promises that whatever flips there is first read on the NEXT
+tick. Put the growth below it and a girl who flips in week W is **charged** as the pre-flip girl and
+**frozen** as the post-flip one – wave 5's «one girl for the whole week» broken by a third reader,
+in the same week, silently. Ruling Q got the placement right by accident of the neighbour it named;
+**the placement's reason is this, and it is now written down.** Two arms redden it.
+
+**3. The T1 zero-diff pin's own prediction was wrong, and T4 measured it instead of inheriting it.**
+That pin's note said T4's growth would turn it red. It stayed green – the walked career is never
+news (ruling D: peak 3.43 against a bar of 30). **The prose was re-aimed and the assertions were
+not touched**, which is the right answer: re-aiming a pin that did not move would be a diff with no
+claim behind it.
+
+## The clamp T4 carried to me rather than shipping – ruled: it stays OUT of the read
+
+`habituationScale` ships the ruled formula literally, with no `Math.max(floor, …)`. Its floor is
+therefore guaranteed by the WRITER's cap, not by the reader – so a future second writer that pushed
+the counter past `habituationFullWeeks` would drive the scale below the floor and eventually
+through zero, into a spotlight that PAYS her. T4 named the hole and declined to invent the guard
+(§8). Correct call, and here is the ruling it was waiting for.
+
+**The guard stays out, because the house idiom is to clamp where you WRITE and trust where you
+READ,** and this pass is the file that demonstrates it twice in four lines:
+
+```ts
+world.spirit = roundTenth(clamp(moved, s.min, s.max))
+world.bond   = roundHalf(clamp(settled, b.min, b.max))
+```
+
+`growHabituation` already clamps at its own write with the `Math.min` at the cap, it is the ONE
+writer of the field, and both facts are pinned (§E's cap case, §G's one-writer case). A second
+clamp in the reader would be a branch that cannot fire under any reachable state – untestable by
+construction, and it would quietly move the invariant from «one writer, capped, both pinned» to «the
+reader will cope», which is the weaker of the two and the one nobody maintains.
+
+⚠ **What DOES ship is the sentence**: `habituationScale`'s comment names the writer as the
+guarantor, so the next author who reaches for a second writer meets the reason before the bug.
+
+## Two measurements from T4 worth keeping
+
+**T3's entire pressure suite is blind to the habituation factor** – every fixture in it sits at
+habituation 0, so flattening the scale leaves it wholly green (ARM 22). That is why T4 needed its
+own file rather than extending T3's, and it is a warning for T5: a factor that ships as a literal
+`1` has no witnesses until its own task builds them.
+
+**A flipped wall also inverts the EXPRESSED axis**, so a walled girl's spirit cost moves 1.2 → 0.9
+for reasons that have nothing to do with habituation. T4's pause case therefore pins the SCALE and
+not the cost – a cost-level pin there would have measured two effects and named one.
