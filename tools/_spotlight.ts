@@ -29,7 +29,20 @@
 // `stepCareerWeek`'s own `skipTournament`/`closeTournament` tail, AFTER `tickWeek` has returned. A
 // read taken before the step, or from inside it, would be a read of a week whose results do not
 // exist yet – which is exactly the shape ruling P found starving two of the five kinds.
-import { exposureEventsOf, fameAt, psychologistWorksThisWeek, sheIsNewsAt, type ExposureKind, type WorldState } from '../src/engine/world'
+//
+// ⚠⚠ D1 (14.09) – `sheIsNewsAt` IS GONE AND THE GATE IS A **STANDING**, NEVER A FAME BAR. The
+// owner's own ruling («top-200 иногда, top-100 уверенно, прямая аналогия – спонсорская лестница»):
+// `newsStandingOf(world)` reads live WTA points plus the cached rank against
+// `ECONOMY.spotlight.newsRankKnown`/`newsRankNoticed` and answers 'quiet' | 'noticed' | 'known' –
+// PRESENT-TENSE, with no week argument to pass, because the cached rank is already «as of the last
+// closed fold» (the predicate's own contract in `world/spotlight.ts`). So `SpotWeek` records the
+// BAND (`standing`) and keeps `news` beside it as the plain boolean (`standing !== 'quiet'`) the
+// existing aggregations read; `fame` STAYS recorded, because D1 took fame out of the GATE and left
+// it in the LEAK hazard – ruling I's «more lenses on a bigger star» factor is untouched. ⚠ THE ONE
+// READ A BENCH MUST NOT MISCOUNT AFTER D1 IS HABITUATION: it grows ONLY at 'known'
+// (`phaseHerWeek` hands `growHabituation` the boolean `newsStandingOf(world) === 'known'`), so
+// «a week the counter could have grown on» is a fact about `standing`, never about `news`.
+import { exposureEventsOf, fameAt, newsStandingOf, psychologistWorksThisWeek, type ExposureKind, type NewsStanding, type WorldState } from '../src/engine/world'
 import { expressedTemperamentOf, habituationScale, publicLifeShrinkAt, temperamentIntensity, temperamentOpenness, WALLS_AXES } from '../src/engine/spirit'
 import { psychologistWorkingRung } from '../src/engine/world/psychologist'
 import { ECONOMY } from '../src/engine/economy'
@@ -39,7 +52,12 @@ export const EXPOSURE_KINDS: readonly ExposureKind[] = ['stage', 'shoot', 'publi
 
 /** ONE WEEK OF HER PUBLIC LIFE, recorded as the walk runs and indexed by the week that has CLOSED. */
 export interface SpotWeek {
-  /** `sheIsNewsAt(world, week)` at whatever bar this arm walked under */
+  /** `newsStandingOf(world)` the instant the week closed – D1's band, the one gate every public
+   *  surface shares. Present-tense by the predicate's own contract; see the header's D1 paragraph. */
+  standing: NewsStanding
+  /** `standing !== 'quiet'` – kept beside the band so the existing «was she in the light at all»
+   *  aggregations keep reading one flag. ⚠ NOT the habituation gate since D1: the counter grows only
+   *  at `'known'`, so growth is counted on `standing` and never on this boolean. */
   news: boolean
   fame: number
   /** ⚠⚠ IN-WEEK (ruling G) – the events of THIS week, asked the instant the week closed. */
@@ -67,8 +85,10 @@ export interface SpotWeek {
 export function readSpotWeek(world: WorldState): SpotWeek {
   const week = world.week
   const expressed = expressedTemperamentOf(world)
+  const standing = newsStandingOf(world)
   return {
-    news: sheIsNewsAt(world, week),
+    standing,
+    news: standing !== 'quiet',
     fame: fameAt(world, week),
     exposure: exposureEventsOf(world, week).map((e) => e.kind),
     habituation: world.spotlightHabituation ?? 0,

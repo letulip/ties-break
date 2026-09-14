@@ -1,21 +1,24 @@
 // THE SPOTLIGHT BENCH – what being known costs her, how often it fires, and what the PLAYER SEES.
 // (v77, wave 6's T9. `docs/plans/life-wave-6-builder-2026-09.md` §2 T9 · `docs/specs/who-she-is-2026-09.md`
-// §3c and §3c-bis · the architect's rulings E, E-bis, G, I and N in `life-wave-6-rulings-2026-09.md`.)
+// §3c and §3c-bis · the architect's rulings E-bis, G, I and N in `life-wave-6-rulings-2026-09.md` ·
+// the owner's D1 and D5, 14.09.)
 //
-// Run: `npm run bench:spotlight`   (`--careers N` scales the main grid · `--sweep N` the bar sweep ·
-// `--curve N` the habituation and walls arms).
+// Run: `npm run bench:spotlight`   (`--careers N` scales the main grid · `--curve N` the habituation
+// and walls arms).
 //
-// WHAT THIS MEASURES AND WHY IT IS THE ONLY INSTRUMENT THAT CAN. **Every §4 number in this wave is
-// UNRULED** – the bar, the five bases, the two habituation dials, the leak pair, the wrong shares and
-// the booth window – and the owner rules them off a record, not off a neighbouring constant. Two of
-// the architect's rulings say the drafted numbers may be in the wrong place entirely, and each names
-// a measurement this file is the only place in the repo that can take:
+// WHAT THIS MEASURES AND WHY IT IS THE ONLY INSTRUMENT THAT CAN. **Almost every §4 number in this
+// wave is UNRULED** – the five bases, the two habituation dials, the leak pair, the wrong shares and
+// the booth window – and the owner rules them off a record, not off a neighbouring constant. The one
+// number that STOPPED being a proposal is the gate itself, and that is this header's own correction:
 //
-//   · RULING E – `newsFameMin 30` was anchored on `ECONOMY.business.merch.contracts.fameCap`, which
-//     is the MERCH TERM's own ceiling and not a band on fame at all. Measured over 33 personal saves
-//     / 15 408 career weeks: ≥30 is 6.9% of weeks and 8 of 33 saves; ≥25 8.5%; ≥20 10.9%; ≥15 12.1%;
-//     ≥10 29.2%. **Five of eight careers never reach 30 at any week of their lives.** §1 below sweeps
-//     the bar at 10/15/20/25/30 and prints coverage, events and charged pressure per arm.
+//   · ⚠⚠ D1 (14.09) – THE BAR BECAME THE OWNER'S OWN TWO RANK NUMBERS, AND THE SWEEP DIED WITH IT.
+//     `newsFameMin` is gone; `newsStandingOf` (engine/world) reads live WTA points plus the cached
+//     rank against `newsRankKnown` 100 / `newsRankNoticed` 200 («top-200 иногда, top-100 уверенно,
+//     прямая аналогия – спонсорская лестница») and answers 'quiet' | 'noticed' | 'known'. Ruling E's
+//     fame-bar measurement is history now, preserved in the decision log; there is nothing left to
+//     sweep – the bands are HIS – so §1 stops being a five-arm re-walk and prints what stays
+//     measured: their EFFECT. Coverage, event counts and leak attribution PER BAND, and D5's
+//     freshness lever (`leakFreshWeeks`/`leakFreshMult`) with its own evidence line – the overtake.
 //   · RULING N – at the drafted bases the spotlight's own worst contribution to an expressed-open
 //     steady girl is **2.40**, and the distance from baseline (70) to the `dimmed` edge (67.5) is
 //     **2.50**. So the spotlight ALONE never moves her Mood word; it tips a week the ordinary weather
@@ -43,12 +46,11 @@
 // measured. A bench that prints only what it measured cannot be wrong, and this wave has met the
 // «unable to fail» family eighteen times.
 //
-// ⚠⚠ ZERO NEW RNG, AND MAIN IS NOT TOUCHED. This file derives no stream. It drives the engine's own
-// walk (`stepCareerWeek` from `econ-bench.ts`) and moves exactly ONE dial – `ECONOMY.spotlight.newsFameMin`,
-// the bar §1 sweeps – restored and CHECKED restored at §6. That poke moves a THRESHOLD and never a
-// stream: `rollLeak` still derives `seed:life:leak:<id>:<week>` at its own call site, so a bar that
-// closes the gate costs the stream nothing and a bar that opens it draws on the same key. The frozen
-// capture (41550 / `e6b0c709`) cannot see this file.
+// ⚠⚠ ZERO NEW RNG, MAIN IS NOT TOUCHED, AND – SINCE D1 – **NO DIAL IS MOVED AT ALL**. This file
+// derives no stream and writes nothing into `ECONOMY`: the one poke it ever made was the bar the
+// sweep moved, and the bar died with the sweep. `rollLeak` still derives
+// `seed:life:leak:<id>:<week>` at its own call site, and the frozen capture (41550 / `e6b0c709`)
+// cannot see this file.
 //
 // ⚠⚠⚠ RULING G – THE LEDGER IS ASKED **IN-WEEK**, NEVER RETROSPECTIVELY, AND THAT IS A CORRECTNESS
 // PROPERTY OF THIS FILE RATHER THAN A STYLE. Four of the five exposure kinds read facts kept forever;
@@ -80,6 +82,7 @@ import {
   setPsychologistRung,
   TEMPERAMENTS,
   type ExposureKind,
+  type NewsStanding,
   type Temperament,
 } from '../src/engine/world'
 // ⚠ NOT ON THE `engine/world` BARREL, imported from the leaves that own them – `life-arrival.ts`'s own
@@ -110,10 +113,8 @@ function flag(name: string, fallback: number): number {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback
 }
 
-/** Seeds per BIRTH temperament for the main high-fame grid – §2's Mood column and §3's corridor. */
+/** Seeds per BIRTH temperament for the main grid – §1's band tables, §2's Mood column, §3's corridor. */
 const CAREERS = flag('--careers', 6)
-/** ...for the bar sweep, which walks the whole grid FIVE times over (once per bar). */
-const SWEEP_CAREERS = flag('--sweep', 3)
 /** ...and for the habituation curve and the walls loop, which need the grinding arm as well. */
 const CURVE_CAREERS = flag('--curve', 3)
 
@@ -140,22 +141,13 @@ const WEEKS = weekSheTurns(24)
 const CARING: Policy = POLICIES[1]
 const GRINDING: Policy = POLICIES[0]
 
-// ⚠ THE ONE SEAM FOR A DIAL, and it is `spirit-bench.ts`'s and `psy-grid.ts`'s: `ECONOMY` is `as
-// const` at the TYPE level only, so a bench that means to move a number says so here, once, in a
-// named cast. ⚠⚠ AND THE POKE IS VERIFIED TO HAVE TAKEN (`setBar` below) rather than assumed – a
-// frozen or re-exported constant would leave every sweep row a copy of the shipped bar and the table
-// would look like a finding about fame.
-const SPOTLIGHT_DIAL = ECONOMY.spotlight as unknown as { newsFameMin: number }
-const SHIPPED_BAR = ECONOMY.spotlight.newsFameMin
-function setBar(bar: number): void {
-  SPOTLIGHT_DIAL.newsFameMin = bar
-  if (ECONOMY.spotlight.newsFameMin !== bar) {
-    throw new Error(`the bar poke did not take: asked for ${bar}, ECONOMY.spotlight.newsFameMin reads ${ECONOMY.spotlight.newsFameMin}`)
-  }
-}
+// ⚠ THERE IS NO DIAL SEAM IN THIS FILE ANY MORE, and the absence is D1's and deliberate: the sweep's
+// named cast (`SPOTLIGHT_DIAL`), its verified `setBar` poke and §6's restore-and-check all died with
+// `newsFameMin`. `ECONOMY` is read-only here now. A reader who wants the seam back should first want
+// a constant that is a PROPOSAL again – the bands are the owner's own two numbers, not this bench's.
 
-/** RULING E's own sweep set, and the shipped value is the last row so the table reads upward into it. */
-const BARS = [10, 15, 20, 25, 30] as const
+/** D1's three bands, in falling order of the light – the rows of every per-band table below. */
+const STANDINGS: readonly NewsStanding[] = ['known', 'noticed', 'quiet']
 
 const RUNGS = [0, 1, 2] as const
 type Rung = (typeof RUNGS)[number]
@@ -264,8 +256,11 @@ interface Career {
   wk: SpotWeek[]
   matches: number
   wins: number
-  /** the leak rows, read back at the horizon – §1's leak column and the census's own subject */
-  leaks: { sinceWeek: number; publicWeek: number; wrong: boolean }[]
+  /** the leak rows, read back at the horizon – §1's leak column and the census's own subject.
+   *  ⚠ `knownWeek` rides along for D5's overtake read: after `rollLeak`'s one-sided pull an
+   *  overtaken row holds `knownWeek === publicWeek`, and a parent who was told first holds
+   *  `knownWeek < publicWeek`. `null` is unreachable for engine-born rows and guarded anyway. */
+  leaks: { sinceWeek: number; publicWeek: number; knownWeek: number | null; wrong: boolean }[]
   episodes: number
 }
 
@@ -337,7 +332,7 @@ function walk(seed: string, birth: Temperament, opts: WalkOpts): Career {
   c.wins = world.seasonWins + world.seasonHistory.reduce((s, h) => s + h.wins, 0)
   for (const e of loveEpisodesOf(world)) {
     c.episodes++
-    if (e.publicWeek !== null) c.leaks.push({ sinceWeek: e.sinceWeek, publicWeek: e.publicWeek, wrong: e.publicWrong })
+    if (e.publicWeek !== null) c.leaks.push({ sinceWeek: e.sinceWeek, publicWeek: e.publicWeek, knownWeek: e.knownWeek, wrong: e.publicWrong })
   }
   return c
 }
@@ -346,7 +341,7 @@ console.log('')
 console.log('====================================================================================================')
 console.log('  THE SPOTLIGHT BENCH – npm run bench:spotlight')
 console.log('  docs/specs/who-she-is-2026-09.md §3c/§3c-bis · docs/plans/life-wave-6-builder-2026-09.md §2 T9')
-console.log('  the architect\'s rulings E (the bar), E-bis (the policy), G (in-week), I (fame) and N (the band)')
+console.log('  the owner\'s D1 (the bands) and D5 (the fresh leak), 14.09 · rulings E-bis (the policy), G (in-week), I (fame), N (the Mood band)')
 console.log('====================================================================================================')
 console.log('')
 console.log('  !! NO try/catch ANYWHERE IN THIS FILE. Every engine refusal is asked of its own predicate first.')
@@ -362,17 +357,19 @@ rule('§0. THE GRID, AND EVERY PREDICTION – WRITTEN BEFORE THE RUN')
 console.log(`    horizon            : week 0 → ${WEEKS} (she is ${AGE_AT(0).toFixed(2)} → 24)`)
 console.log(`    family             : wealthy · ${DEFAULT_PROFILE.coachTier} coach · the engine's own calendar`)
 console.log(`    temperaments       : ${TEMPERAMENTS.join(' · ')}   ← assigned after createWorld, never drawn (BIRTH cohorts)`)
-console.log(`    seeds/temperament  : ${CAREERS} main · ${SWEEP_CAREERS} bar sweep (×${BARS.length} bars) · ${CURVE_CAREERS} curve + walls`)
+console.log(`    seeds/temperament  : ${CAREERS} main · ${CURVE_CAREERS} curve + walls`)
 console.log(`    the caring parent  : '${CARING.label}' – ruling E-bis's actuating arm (policy 0 peaks at fame 0.0, policy 1 at 53.2)`)
 console.log(`    the grinding one   : '${GRINDING.label}' – used ONLY where a wall is the subject`)
 console.log('')
-console.log(`    the bar (shipped)  : newsFameMin ${SHIPPED_BAR}   [§4 PROPOSAL, UNRULED – ruling E]`)
+console.log(`    the bands (D1)     : known ≤ ${ECONOMY.spotlight.newsRankKnown} WTA · noticed ≤ ${ECONOMY.spotlight.newsRankNoticed} WTA, live points required   [THE OWNER'S OWN two numbers – NOT proposals]`)
 console.log(`    the bases          : ${EXPOSURE_KINDS.map((k) => `${k} ${ECONOMY.spotlight.pressureBase[k]}`).join(' · ')}   [PROPOSALS]`)
 console.log(`    openness scale     : open ×${ECONOMY.spotlight.opennessScale.open} / private ×${ECONOMY.spotlight.opennessScale.private}   [ANCHORED by the spec – the one ruled pair]`)
 console.log(`    intensity scale    : steady ×${ECONOMY.spirit.perturbationScale.steady} / intense ×${ECONOMY.spirit.perturbationScale.intense}   [the STANDING perturbationScale, not a new constant]`)
-console.log(`    habituation        : full at ${ECONOMY.spotlight.habituationFullWeeks} news-weeks · floor ×${ECONOMY.spotlight.habituationFloor}   [PROPOSALS]`)
+console.log(`    habituation        : full at ${ECONOMY.spotlight.habituationFullWeeks} weeks lived 'known' · floor ×${ECONOMY.spotlight.habituationFloor}   [PROPOSALS · D1: grows ONLY at 'known']`)
 console.log(`    the fifth focus    : shrink [${ECONOMY.psychologist.publicLifeShrink.join(', ')}] · accel [${ECONOMY.psychologist.publicLifeAccel.join(', ')}]   [PROPOSALS]`)
 console.log(`    the leak           : base ${ECONOMY.spotlight.leakBasePerWeek}/wk × openness (open ×${ECONOMY.spotlight.leakOpennessMult.open} / private ×${ECONOMY.spotlight.leakOpennessMult.private}) × fame/${ECONOMY.fame.cap}   [ruling I]`)
+console.log(`                         × ${ECONOMY.spotlight.noticedLeakScale} at 'noticed' (D1) · × ${ECONOMY.spotlight.leakFreshMult} while the episode is ≤ ${ECONOMY.spotlight.leakFreshWeeks} weeks old (D5)   [PROPOSALS]`)
+console.log(`    the row's floor    : |charge| ≥ ${ECONOMY.spotlight.rowMinCharge} before the feed names the week out loud (D1b) – the CHARGE is untouched, so no table here moves`)
 console.log(`    the Mood ladder    : heavy <${ECONOMY.spirit.mood.heavyBelow} · dimmed <${ECONOMY.spirit.mood.dimmedBelow} · steady · bright ≥${ECONOMY.spirit.mood.brightFrom} · glowing ≥${ECONOMY.spirit.mood.glowingFrom}   (baseline ${ECONOMY.spirit.baseline})`)
 console.log('')
 
@@ -408,7 +405,8 @@ const PRED = {
     publicLifeShrinkAt(2),
   /** the fifth focus's ladder, as the multiplier a rung takes off every event */
   shrink: RUNGS.map((r) => publicLifeShrinkAt(r)),
-  /** ...and the NEWS-WEEKS to a full habituation at each rung, `habituationFullWeeks / accel[rung]`. */
+  /** ...and the 'KNOWN' WEEKS to a full habituation at each rung, `habituationFullWeeks /
+   *  accel[rung]` – D1's clock: the counter moves only on a week she lives `'known'`. */
   capWeeks: RUNGS.map((r) => ECONOMY.spotlight.habituationFullWeeks / publicLifeAccelAt(r)),
   capWeeksNoSeat: ECONOMY.spotlight.habituationFullWeeks,
 }
@@ -420,13 +418,17 @@ console.log('          the SPOTLIGHT TIPPED should be small and should be concen
 console.log(`      worst single event, anybody (private+intense): ${num(PRED.worstAnyone)} points   · a break-up is ${num(PRED.breakupSteady)} steady / ${num(PRED.breakupIntense)} intense`)
 console.log(`      the quietest week the wave can produce        : ${num(PRED.quietest)} points (habituated, top rung) – the screen renders it as nothing`)
 console.log(`      the fifth focus takes off                     : rung 0 ×${num(PRED.shrink[0], 2)} · rung 1 ×${num(PRED.shrink[1], 2)} · rung 2 ×${num(PRED.shrink[2], 2)}`)
-console.log(`      NEWS-weeks to a full habituation              : no seat ${num(PRED.capWeeksNoSeat, 1)} · rung 0 ${num(PRED.capWeeks[0], 1)} · rung 1 ${num(PRED.capWeeks[1], 1)} · rung 2 ${num(PRED.capWeeks[2], 1)}`)
+console.log(`      'known'-weeks to a full habituation           : no seat ${num(PRED.capWeeksNoSeat, 1)} · rung 0 ${num(PRED.capWeeks[0], 1)} · rung 1 ${num(PRED.capWeeks[1], 1)} · rung 2 ${num(PRED.capWeeks[2], 1)}`)
 console.log('')
-console.log('    PREDICTION (ruling E, from the 33-save corpus): the share of career weeks that are news should')
-console.log('      rise steeply as the bar falls – the corpus reads 6.9% at 30, 8.5% at 25, 10.9% at 20, 12.1% at')
-console.log('      15 and 29.2% at 10. ⚠ THIS GRID IS NOT THAT CORPUS: these are WEALTHY careers under a policy')
-console.log('      chosen to reach the top, so the absolute shares are expected to be HIGHER here. What the two')
-console.log('      have to agree on is the SHAPE, and a disagreement about the shape is the finding.')
+console.log('    PREDICTION (D1): the bands are the owner\'s own two numbers, so there is no coverage left to rule –')
+console.log('      what §1 must show is their EFFECT. Habituation moves ONLY on \'known\' weeks; every exposure kind')
+console.log('      may fire in BOTH non-quiet bands; and events on a recorded \'quiet\' week should be rare boundary')
+console.log('      cases (a reveal-week rank re-fold crossing a band edge between the tick\'s own gate and this')
+console.log('      file\'s end-of-step read).')
+console.log('    PREDICTION (D5, written before the run): under the flat hazard the founding scene fired 0 times in')
+console.log(`      93 leaks across 160 bench careers. At ×${ECONOMY.spotlight.leakFreshMult} for the first ${ECONOMY.spotlight.leakFreshWeeks} episode-weeks the fresh window now carries`)
+console.log(`      roughly ${ECONOMY.spotlight.leakFreshMult}× its flat-hazard mass, so a visible share of leaks should land FRESH – and at least one`)
+console.log('      should reach the parent as a headline (the overtake, §1\'s own D5 verdict).')
 console.log('')
 console.log('    PREDICTION (the masseur §4 law, benched in psy-grid): pressure-shrink and habituation-acceleration')
 console.log('      monotone in rung, each step > 2×SEM. This file prices the same ladder from the SPOTLIGHT side –')
@@ -434,183 +436,170 @@ console.log('      the habituation curve of §4 – and psy-grid\'s fifth column
 console.log('')
 
 // =================================================================================================
-// §1. ⚠⚠ THE BAR SWEEP – RULING E, AND THE TABLE THE OWNER RULES THE BAR OFF
+// §1. ⚠⚠ THE BANDS – D1's TWO RANK NUMBERS, AND WHAT EACH BAND ACTUALLY HELD
 // =================================================================================================
 //
-// ⚠⚠ EACH BAR IS A FULL RE-WALK AND NOT A RE-READ OF ONE CAREER, and the difference is the whole
-// honesty of the table. `sheIsNewsAt` is a threshold on `fameAt`, so «the share of weeks that are
-// news» could be re-derived from a single walk – but the EVENTS and the PRESSURE could not: a lower
-// bar opens the leak hazard earlier, which changes `publicWeek`, which changes the `'wrongStory'`
-// kind, which changes the spirit, which changes the tennis. The arms therefore diverge, and each row
-// below is the career that bar actually produced. The SEEDS are identical across the five rows,
-// which is what makes them paired.
+// ⚠⚠ THE SWEEP THAT USED TO LIVE HERE IS GONE, AND THE ABSENCE IS THE RULING BEING HONOURED: the bar
+// became the owner's own two rank numbers (D1, 14.09 – the sponsor ladder's own analogy) and a bench
+// does not sweep a ruling. What stays measured is their EFFECT, on ONE walked grid: how much of a
+// career each band holds, which kinds fire in it, where the leaks land – and D5's freshness lever,
+// whose evidence line (the overtake) this section owns. The five-arm re-walk, its `BarRow`s and the
+// dial it poked are all deleted rather than parked, because a sweep with nothing to sweep is dead
+// infrastructure wearing a section number.
 //
-// ⚠ THE POKE IS RESTORED AND CHECKED AT §6, and `setBar` above verifies each write took.
+// ⚠ ATTRIBUTION IS BY THE RECORDED WEEK'S OWN BAND. `readSpotWeek` takes `newsStandingOf(world)` at
+// the end of the step; the tick's gates read the same predicate mid-tick, so on a reveal week whose
+// step-tail rank re-fold crossed a band edge the two can disagree. Such weeks are boundary cases by
+// construction, and the 'quiet' row of the kind table below is exactly where they would show.
+//
+// ⚠ THE CHARGE ROWS ARE INDEXED BY THE EXPOSURE WEEK'S BAND, NOT THE CHARGE WEEK'S: `chargeAt(wk, w)`
+// pays for week `w − 1`'s cameras (ruling P), so the band that EARNED the charge is `wk[w − 1]`'s.
 
-rule('§1. ⚠⚠ THE BAR SWEEP – newsFameMin at 10 / 15 / 20 / 25 / 30   [RULING E · the wave\'s most decision-relevant table]')
+rule("§1. ⚠⚠ THE BANDS – 'known' / 'noticed' / 'quiet' coverage, events and leaks   [D1 14.09 · the owner's own two numbers]")
 
-interface BarRow {
-  bar: number
-  careers: Career[]
-}
-const barRows: BarRow[] = []
-for (const bar of BARS) {
-  setBar(bar)
-  const careers: Career[] = []
-  for (const t of TEMPERAMENTS) {
-    for (let i = 0; i < SWEEP_CAREERS; i++) {
-      careers.push(walk(`spot-bar-${i}`, t, { policy: CARING, rung: null, focus: null, weeks: WEEKS }))
-    }
+const mainCareers: Career[] = []
+for (const t of TEMPERAMENTS) {
+  for (let i = 0; i < CAREERS; i++) {
+    mainCareers.push(walk(`spot-main-${i}`, t, { policy: CARING, rung: null, focus: null, weeks: WEEKS }))
   }
-  barRows.push({ bar, careers })
 }
-setBar(SHIPPED_BAR)
 
-console.log(
-  `    ${pad('bar', 7)}${padL('careers', 9)}${padL('ever news', 11)}${padL('news weeks', 12)}${padL('events', 9)}${padL('ev/career', 11)}${padL('charged wks', 13)}${padL('mean/event', 12)}${padL('mean/career', 13)}${padL('leaks', 7)}`,
-)
-for (const row of barRows) {
+/** A zeroed per-kind counter – built off `EXPOSURE_KINDS` so a sixth kind cannot be silently missed. */
+function kindZero(): Record<ExposureKind, number> {
+  const z = {} as Record<ExposureKind, number>
+  for (const k of EXPOSURE_KINDS) z[k] = 0
+  return z
+}
+
+{
+  interface BandRow {
+    weeks: number
+    events: number
+    chargedWeeks: number
+    perEvent: number[]
+    leaks: number
+    byKind: Record<ExposureKind, number>
+  }
+  const bandRow = (): BandRow => ({ weeks: 0, events: 0, chargedWeeks: 0, perEvent: [], leaks: 0, byKind: kindZero() })
+  const bands: Record<NewsStanding, BandRow> = { quiet: bandRow(), noticed: bandRow(), known: bandRow() }
   let weeksTotal = 0
-  let newsWeeks = 0
-  let events = 0
-  let chargedWeeks = 0
+  let eventsTotal = 0
   let everNews = 0
-  let leaks = 0
-  const perEvent: number[] = []
-  const perCareer: number[] = []
-  for (const c of row.careers) {
-    let careerCharge = 0
+  for (const c of mainCareers) {
     let sawNews = false
     for (let w = 0; w < c.wk.length; w++) {
       const week = c.wk[w]
       if (week === undefined) continue
       weeksTotal++
-      if (week.news) {
-        newsWeeks++
-        sawNews = true
-      }
-      events += week.exposure.length
+      const band = bands[week.standing]
+      band.weeks++
+      band.events += week.exposure.length
+      eventsTotal += week.exposure.length
+      for (const k of week.exposure) band.byKind[k]++
+      if (week.news) sawNews = true
       const charge = chargeAt(c.wk, w)
       if (charge !== 0) {
-        chargedWeeks++
-        careerCharge += charge
-        // ⚠ PER EVENT AND NOT PER WEEK: a week that held two events is two charges, and the table
-        //   says «what one exposure costs» rather than «what a busy week costs».
-        const n = eventsChargedAt(c.wk, w)
-        if (n > 0) perEvent.push(charge / n)
+        // ⚠ THE CHARGE BELONGS TO THE EXPOSURE WEEK'S BAND (ruling P: week `w`'s pass pays for week
+        //   `w − 1`'s cameras), and PER EVENT rather than per week – a week that held two events is
+        //   two charges, and the column says «what one exposure costs», not «what a busy week costs».
+        const owner = c.wk[w - 1]
+        if (owner !== undefined) {
+          const ob = bands[owner.standing]
+          ob.chargedWeeks++
+          const n = eventsChargedAt(c.wk, w)
+          if (n > 0) ob.perEvent.push(charge / n)
+        }
       }
     }
     if (sawNews) everNews++
-    perCareer.push(careerCharge)
-    leaks += c.leaks.length
-  }
-  const evS = sample(`§1 bar ${row.bar} per-event`, perEvent, 1)
-  const ccS = sample(`§1 bar ${row.bar} per-career`, perCareer, 1)
-  console.log(
-    `    ${pad(String(row.bar), 7)}${padL(String(row.careers.length), 9)}${padL(`${everNews}/${row.careers.length}`, 11)}` +
-      `${padL(pctS(share(`§1 bar ${row.bar} news`, newsWeeks, weeksTotal)), 12)}${padL(String(events), 9)}${padL(num(events / row.careers.length, 1), 11)}` +
-      `${padL(String(chargedWeeks), 13)}${padL(num(avg(evS)), 12)}${padL(num(avg(ccS), 1), 13)}${padL(String(leaks), 7)}`,
-  )
-}
-console.log('')
-console.log('    ...and the same sweep broken out by KIND, because the bar decides which kinds are reachable at all:')
-console.log('    ⚠⚠ `shoot` IS STRUCTURALLY UNREACHABLE ON THIS HARNESS AND THE COLUMN IS NOT A FINDING ABOUT THE BAR.')
-console.log('       The kind fires on a DELIVERED shoot week, and a shoot week only exists on a SIGNED ad letter –')
-console.log('       `stepCareerWeek` (econ-bench\'s parent) signs none, at any preset, at any policy. So every event')
-console.log('       count in the table above is a LOWER BOUND, short by exactly the SHALLOWEST kind the wave has')
-console.log(`       (\`pressureBase.shoot\` ${ECONOMY.spotlight.pressureBase.shoot} against ${ECONOMY.spotlight.pressureBase.publicLoss} for a public loss). \`tools/ad-shoot-bench.ts\` is the instrument that signs`)
-console.log('       letters, and pairing the two is a task this bench deliberately did not invent for itself.')
-console.log(`    ${pad('bar', 7)}${EXPOSURE_KINDS.map((k) => padL(k, 12)).join('')}`)
-for (const row of barRows) {
-  const byKind: Record<string, number> = {}
-  for (const k of EXPOSURE_KINDS) byKind[k] = 0
-  for (const c of row.careers) for (const week of c.wk) if (week !== undefined) for (const k of week.exposure) byKind[k]++
-  console.log(`    ${pad(String(row.bar), 7)}${EXPOSURE_KINDS.map((k) => padL(String(byKind[k]), 12)).join('')}`)
-}
-console.log('')
-console.log('')
-// ⚠⚠ RULING N PART 4 – «THIS GOES TO THE OWNER BESIDE RULING E, AS ONE QUESTION WITH ONE TABLE: how
-// often it fires, and what it does when it fires, are halves of the same decision and he should not be
-// handed one without the other.» So the Mood reading is taken PER BAR here as well as per temperament
-// in §2 – and it costs no extra walking, because it is a second read of the careers §1 already has.
-console.log('    ...and what the PLAYER SEES at each bar – ruling N\'s half of the same question, on the same careers:')
-console.log(
-  `    ${pad('bar', 7)}${padL('charged wks', 13)}${padL('mean charge', 13)}${padL('band CHANGED', 14)}${padL('SPOTLIGHT tipped', 18)}${padL('control: ordinary', 19)}${padL('clamped', 9)}`,
-)
-for (const row of barRows) {
-  let charged = 0
-  let changed = 0
-  let tipped = 0
-  let clamped = 0
-  let ctrl = 0
-  let ctrlChanged = 0
-  const charges: number[] = []
-  for (const c of row.careers) {
-    for (let w = 1; w < c.wk.length; w++) {
-      const now = c.wk[w]
-      const before = c.wk[w - 1]
-      if (now === undefined || before === undefined) continue
-      const charge = chargeAt(c.wk, w)
-      const moved = spiritBandOf(now.spirit) !== spiritBandOf(before.spirit)
-      if (charge === 0) {
-        ctrl++
-        if (moved) ctrlChanged++
-        continue
-      }
-      charged++
-      charges.push(charge)
-      if (moved) changed++
-      if (now.spirit <= ECONOMY.spirit.min + 1e-9 || now.spirit >= ECONOMY.spirit.max - 1e-9) clamped++
-      else if (spiritBandOf(now.spirit - charge) !== spiritBandOf(now.spirit)) tipped++
+    for (const l of c.leaks) {
+      const at = c.wk[l.publicWeek]
+      if (at !== undefined) bands[at.standing].leaks++
     }
   }
-  const judged = charged - clamped
-  console.log(
-    `    ${pad(String(row.bar), 7)}${padL(String(charged), 13)}${padL(charges.length > 0 ? num(avg(sample(`§1 bar ${row.bar} charges`, charges))) : '–', 13)}` +
-      `${padL(charged > 0 ? pctS(share(`§1 bar ${row.bar} changed`, changed, charged)) : '–', 14)}` +
-      `${padL(judged > 0 ? pctS(share(`§1 bar ${row.bar} tipped`, tipped, judged)) : '–', 18)}` +
-      `${padL(ctrl > 0 ? pctS(share(`§1 bar ${row.bar} control`, ctrlChanged, ctrl)) : '–', 19)}${padL(String(clamped), 9)}`,
-  )
-}
-console.log('')
-console.log('    !! THE TWO HALVES, IN ONE PLACE. The first table says how much of her life the wave touches at each')
-console.log('       bar; this one says what the touch LOOKS LIKE on the one surface that carries it. A bar that makes')
-console.log('       the wave fire often and still never moves the Mood word buys a feed row and nothing else; a bar')
-console.log('       that fires rarely and moves the word when it does is a different design with the same constants.')
 
-{
-  const shipped = barRows.find((r) => r.bar === SHIPPED_BAR)
-  if (shipped === undefined) stall('§1: the shipped bar is not in the sweep', `BARS = [${BARS.join(', ')}], shipped = ${SHIPPED_BAR}`)
-  const events = shipped.careers.reduce((s, c) => s + c.wk.reduce((a, w) => a + (w?.exposure.length ?? 0), 0), 0)
-  if (events === 0) {
-    stall(
-      `§1: ZERO exposure events at the shipped bar ${SHIPPED_BAR}`,
-      'every row below would be a fact about this grid never reaching the bar – ruling E-bis: check the POLICY, not the money',
+  console.log(`    grid : ${mainCareers.length} careers · ${weeksTotal} recorded weeks · ${everNews}/${mainCareers.length} careers ever left 'quiet'`)
+  console.log('')
+  console.log(
+    `    ${pad('band', 10)}${padL('weeks', 9)}${padL('share', 9)}${padL('events', 9)}${padL('ev/100wk', 10)}${padL('charged wks', 13)}${padL('mean/event', 12)}${padL('leaks', 7)}`,
+  )
+  for (const s of STANDINGS) {
+    const b = bands[s]
+    console.log(
+      `    ${pad(s, 10)}${padL(String(b.weeks), 9)}${padL(pctS(share(`§1 ${s} weeks`, b.weeks, weeksTotal)), 9)}` +
+        `${padL(String(b.events), 9)}${padL(b.weeks > 0 ? num((100 * b.events) / b.weeks, 1) : '–', 10)}` +
+        `${padL(String(b.chargedWeeks), 13)}${padL(b.perEvent.length > 0 ? num(avg(sample(`§1 ${s} per-event`, b.perEvent))) : '–', 12)}` +
+        `${padL(String(b.leaks), 7)}`,
     )
   }
-  // THE BAR IS NOT A PASS/FAIL – it is the owner's to rule. What IS a bar here is MONOTONICITY: a
-  // lower bar must not produce FEWER news weeks, or the sweep is measuring its own noise.
-  let monotone = true
-  for (let i = 1; i < barRows.length; i++) {
-    const lo = barRows[i - 1]
-    const hi = barRows[i]
-    const shareOf = (r: BarRow): number => {
-      let n = 0
-      let d = 0
-      for (const c of r.careers) for (const w of c.wk) if (w !== undefined) { d++; if (w.news) n++ }
-      return d === 0 ? Number.NaN : n / d
-    }
-    if (shareOf(lo) < shareOf(hi)) monotone = false
+  console.log('')
+  console.log('    ...and the same grid broken out by KIND, because the bands decide where each kind can fire at all:')
+  console.log('    ⚠⚠ `shoot` IS STRUCTURALLY UNREACHABLE ON THIS HARNESS AND THE COLUMN IS NOT A FINDING ABOUT THE BANDS.')
+  console.log('       The kind fires on a DELIVERED shoot week, and a shoot week only exists on a SIGNED ad letter –')
+  console.log('       `stepCareerWeek` (econ-bench\'s parent) signs none, at any preset, at any policy. So every event')
+  console.log('       count in the table above is a LOWER BOUND, short by exactly the SHALLOWEST kind the wave has')
+  console.log(`       (\`pressureBase.shoot\` ${ECONOMY.spotlight.pressureBase.shoot} against ${ECONOMY.spotlight.pressureBase.publicLoss} for a public loss). \`tools/ad-shoot-bench.ts\` is the instrument that signs`)
+  console.log('       letters, and pairing the two is a task this bench deliberately did not invent for itself.')
+  console.log(`    ${pad('band', 10)}${EXPOSURE_KINDS.map((k) => padL(k, 12)).join('')}`)
+  for (const s of STANDINGS) {
+    console.log(`    ${pad(s, 10)}${EXPOSURE_KINDS.map((k) => padL(String(bands[s].byKind[k]), 12)).join('')}`)
   }
+  console.log('      ⚠ THE \'quiet\' ROW IS A BOUNDARY COUNTER, NOT A HOLE IN THE GATE: every kind is gated on a non-quiet')
+  console.log('        standing INSIDE the tick, so a non-zero here is a reveal week whose step-tail rank re-fold crossed')
+  console.log('        a band edge between the tick\'s own gate and this file\'s end-of-step read. Rare by construction.')
+  console.log('')
+  if (eventsTotal === 0) {
+    stall(
+      '§1: ZERO exposure events on the whole grid',
+      'not one camera found her – ruling E-bis: check the POLICY, not the money (policy 0 peaks at fame 0.0)',
+    )
+  }
+
+  // --- D5's OWN EVIDENCE LINE – the fresh leak, and the overtake ---------------------------------
+  //
+  // ⚠⚠ THE OVERTAKE IS READ OFF THE ROWS, NEVER RE-DERIVED: `rollLeak`'s pull is one-sided
+  // (`knownWeek` never moves later), so an overtaken row holds `knownWeek === publicWeek` and a
+  // parent who was told first holds `knownWeek < publicWeek`. ⚠ ONE HONEST AMBIGUITY, stated rather
+  // than hidden: a scheduled disclosure landing on the LEAK's own week also reads `knownWeek ===
+  // publicWeek` – the engine breaks that tie as «already told» (its condition is `knownWeek >
+  // world.week`) – so this count can overstate by exactly those same-week coincidences: a one-week
+  // window against a multi-week lag distribution. Stated, not corrected.
+  const SPOT = ECONOMY.spotlight
+  const leaks = mainCareers.flatMap((c) => c.leaks)
+  console.log("    ...and D5's freshness lever, on the same careers – the founding scene's own evidence line:")
+  if (leaks.length === 0) {
+    console.log('      leaks landed : 0 – the lever is UNMEASURED on this grid. No share is printed off an empty')
+    console.log("                     denominator (instrument law 4), and §6's actuation receipt stalls on exactly")
+    console.log('                     this zero, with the stack attached.')
+  } else {
+    const ages = leaks.map((l) => l.publicWeek - l.sinceWeek)
+    const fresh = leaks.filter((l) => l.publicWeek - l.sinceWeek <= SPOT.leakFreshWeeks)
+    const overtakes = leaks.filter((l) => l.knownWeek !== null && l.publicWeek <= l.knownWeek)
+    console.log(
+      `      leaks landed : ${leaks.length} · FRESH (age ≤ ${SPOT.leakFreshWeeks} wks at landing): ${fresh.length} (${pctS(share('§1 D5 fresh', fresh.length, leaks.length))}) · median age at landing ${num(median([...ages]), 0)} wks`,
+    )
+    console.log(
+      `      the OVERTAKE : ${overtakes.length} of ${leaks.length} (${pctS(share('§1 D5 overtake', overtakes.length, leaks.length))}) reached the parent as a headline – «a parent learning about a boyfriend from a photograph»`,
+    )
+    console.log(
+      `      the founding scene fires on this grid   ${verdict('§1 D5 – the founding scene fires', overtakes.length > 0, `0 overtakes in ${leaks.length} leaks – the flat-hazard result (0 in 93) survived leakFreshWeeks ${SPOT.leakFreshWeeks} / leakFreshMult ${SPOT.leakFreshMult}; implicates ECONOMY.spotlight.leakFreshWeeks and leakFreshMult`)}`,
+    )
+  }
+  console.log('')
+
+  // --- the section's own bar ---------------------------------------------------------------------
+  // THE BANDS ARE NOT A PASS/FAIL – they are the owner's own numbers. What IS a bar here is
+  // ACTUATION: a band with zero weeks leaves its own constants (`noticedLeakScale`, habituation's
+  // 'known'-only gate) unmeasured, and an unmeasured lever must not read as a quiet pass.
+  const bothWalked = bands.known.weeks > 0 && bands.noticed.weeks > 0
   console.log(
-    `    news-week share falls as the bar rises   ${verdict('§1 bar sweep monotonicity', monotone, 'a LOWER bar produced FEWER news weeks – the sweep is reading its own divergence, not the bar')}`,
+    `    both non-quiet bands were actually walked   ${verdict('§1 D1 – both bands occur on this grid', bothWalked, `known ${bands.known.weeks} wks · noticed ${bands.noticed.weeks} wks – a band with zero weeks leaves its own levers unmeasured on this grid; implicates the GRID (policy, horizon) before any constant`)}`,
   )
   console.log('')
-  console.log('    !! WHAT THIS TABLE IS FOR, and it is the only thing in this wave the owner cannot rule without it:')
-  console.log('       every mechanic in the wave sits behind ONE predicate and this is its coverage. The 33-save')
-  console.log('       corpus says 6.9% of weeks are news at 30 and that FIVE OF EIGHT careers never reach it at all.')
-  console.log('       The grid above is deliberately the other extreme – a wealthy family under the policy that wins –')
-  console.log('       so read the two together: the corpus is what most of the game looks like, this is the ceiling.')
+  console.log('    !! WHAT THIS TABLE IS FOR. Every mechanic in the wave sits behind ONE predicate and these are its')
+  console.log("       three answers. The bands themselves are the owner's (D1) and are not on trial; what he reads here")
+  console.log("       is what each band BUYS – 'known' grows habituation, 'noticed' discounts the leak, 'quiet' is")
+  console.log('       nothing – and whether the freshness lever (D5) finally makes the founding scene reachable.')
 }
 
 // =================================================================================================
@@ -641,12 +630,7 @@ console.log('       that fires rarely and moves the word when it does is a diffe
 
 rule('§2. ⚠⚠ WHAT THE PLAYER SEES – the Mood band on charged weeks, per BIRTH temperament   [RULING N]')
 
-const mainCareers: Career[] = []
-for (const t of TEMPERAMENTS) {
-  for (let i = 0; i < CAREERS; i++) {
-    mainCareers.push(walk(`spot-main-${i}`, t, { policy: CARING, rung: null, focus: null, weeks: WEEKS }))
-  }
-}
+// ⚠ THE CAREERS ARE §1's – one grid, walked once, read three times (§1 bands, §2 Mood, §3 corridor).
 
 interface BandCell {
   temperament: Temperament
@@ -918,22 +902,23 @@ rule('§3. THE FAIRNESS CORRIDOR\'S HIGH-FAME COLUMN – ±1.5 pp of lifetime ma
 //     was there first and stopped being there. So this arm is CARING to the turn and GRINDING after
 //     it, and the turn is late enough that she is already news when the wall goes up.
 //
-// ⚠ THE X AXIS IS **NEWS WEEKS**, NOT CALENDAR WEEKS, and that is what makes the three arms
-// comparable: the counter only moves on a week she is actually news, so a career that spent 40 weeks
-// in the light and one that spent 400 are not two speeds of the same walk.
+// ⚠ THE X AXIS IS **'KNOWN' WEEKS**, NOT CALENDAR WEEKS AND NOT `news` ONES – D1's own clock: since
+// 14.09 the counter moves ONLY on a week she lives 'known' (a girl the light merely visits at
+// 'noticed' never gets used to it), so a career that spent 40 weeks known and one that spent 400
+// are not two speeds of the same walk, and a 'noticed' season is not on this axis at all.
 
-rule('§4. THE HABITUATION CURVE – news-weeks to the floor, walled vs unwalled vs focus-held')
+rule("§4. THE HABITUATION CURVE – 'known'-weeks to the floor, walled vs unwalled vs focus-held")
 
 interface CurveCell {
   label: string
   arm: 'unwalled' | 'focus-held' | 'walled'
-  newsToCap: number[]
+  knownToCap: number[]
   capReached: number
   n: number
   finalHab: number[]
-  newsWeeks: number[]
+  knownWeeks: number[]
   walledWeeks: number[]
-  frozenNewsWeeks: number[]
+  frozenKnownWeeks: number[]
 }
 const curveCells: CurveCell[] = []
 {
@@ -948,12 +933,12 @@ const curveCells: CurveCell[] = []
     },
   ]
   for (const a of arms) {
-    const cell: CurveCell = { label: a.label, arm: a.arm, newsToCap: [], capReached: 0, n: 0, finalHab: [], newsWeeks: [], walledWeeks: [], frozenNewsWeeks: [] }
+    const cell: CurveCell = { label: a.label, arm: a.arm, knownToCap: [], capReached: 0, n: 0, finalHab: [], knownWeeks: [], walledWeeks: [], frozenKnownWeeks: [] }
     for (const t of TEMPERAMENTS) {
       for (let i = 0; i < CURVE_CAREERS; i++) {
         const c = walk(`spot-curve-${i}`, t, { ...a.opts, weeks: WEEKS })
         cell.n++
-        let news = 0
+        let known = 0
         let walledW = 0
         let frozen = 0
         let toCap = -1
@@ -961,24 +946,27 @@ const curveCells: CurveCell[] = []
         for (let w = 0; w < c.wk.length; w++) {
           const week = c.wk[w]
           if (week === undefined) continue
-          // ⚠⚠ THE GATE IS READ AT `w − 1`, NOT AT `w`, AND THE FIRST DRAFT WAS OFF BY ONE BECAUSE OF
-          //    IT. `growHabituation` is handed `sheIsNewsAt(world, world.week − 1)` (ruling Q part 2 –
-          //    the wave's one horizon), so the weeks the counter can grow on are the weeks whose
-          //    PREVIOUS week was news. Counted at `w` the no-seat arm read 105 against a shipped cap
-          //    of 104, which looks like a defect in the cap and is a defect in the counter.
+          // ⚠⚠ THE GATE IS 'known' AT `w − 1` – ONE CORRECTION PER RULING, BOTH LOAD-BEARING. D1
+          //    (14.09): `growHabituation` is handed `newsStandingOf(world) === 'known'`, so a
+          //    'noticed' week grows NOTHING and a counter keyed on `news` would overshoot the cap
+          //    exactly the way the first draft's off-by-one did (105 against a shipped 104). And the
+          //    `w − 1`: the pass reads the standing whose cached rank is «as of the last closed
+          //    fold» (the predicate's own contract), which at week `w`'s pass is the fold this file
+          //    recorded at the END of step `w − 1` – so «a week the counter could have grown on» is
+          //    a fact about the PREVIOUS recorded week's BAND.
           const gate = c.wk[w - 1]
-          if (gate !== undefined && gate.news) news++
+          if (gate !== undefined && gate.standing === 'known') known++
           if (week.walled) walledW++
-          if (gate !== undefined && gate.news && week.walled) frozen++
-          if (toCap < 0 && week.habituation >= cap - 1e-9) toCap = news
+          if (gate !== undefined && gate.standing === 'known' && week.walled) frozen++
+          if (toCap < 0 && week.habituation >= cap - 1e-9) toCap = known
         }
-        cell.newsWeeks.push(news)
+        cell.knownWeeks.push(known)
         cell.walledWeeks.push(walledW)
-        cell.frozenNewsWeeks.push(frozen)
+        cell.frozenKnownWeeks.push(frozen)
         const last = [...c.wk].reverse().find((x) => x !== undefined)
         cell.finalHab.push(last?.habituation ?? 0)
         if (toCap >= 0) {
-          cell.newsToCap.push(toCap)
+          cell.knownToCap.push(toCap)
           cell.capReached++
         }
       }
@@ -986,14 +974,14 @@ const curveCells: CurveCell[] = []
     curveCells.push(cell)
   }
 }
-console.log(`    ${pad('arm', 44)}${padL('n', 4)}${padL('news wks', 10)}${padL('walled wks', 12)}${padL('FROZEN news wks', 17)}${padL('final hab', 11)}${padL('reached cap', 13)}${padL('news wks to cap', 17)}${padL('predicted', 11)}`)
+console.log(`    ${pad('arm', 44)}${padL('n', 4)}${padL('known wks', 11)}${padL('walled wks', 12)}${padL('FROZEN known wks', 18)}${padL('final hab', 11)}${padL('reached cap', 13)}${padL('known wks to cap', 18)}${padL('predicted', 11)}`)
 for (const cell of curveCells) {
   const predicted = cell.arm === 'unwalled' ? PRED.capWeeksNoSeat : cell.arm === 'focus-held' ? PRED.capWeeks[2] : Number.NaN
   console.log(
-    `    ${pad(cell.label, 44)}${padL(String(cell.n), 4)}${padL(num(avg(sample(`§4 ${cell.arm} news`, cell.newsWeeks)), 1), 10)}` +
-      `${padL(num(avg(sample(`§4 ${cell.arm} walled`, cell.walledWeeks)), 1), 12)}${padL(num(avg(sample(`§4 ${cell.arm} frozen`, cell.frozenNewsWeeks)), 1), 17)}` +
+    `    ${pad(cell.label, 44)}${padL(String(cell.n), 4)}${padL(num(avg(sample(`§4 ${cell.arm} known`, cell.knownWeeks)), 1), 11)}` +
+      `${padL(num(avg(sample(`§4 ${cell.arm} walled`, cell.walledWeeks)), 1), 12)}${padL(num(avg(sample(`§4 ${cell.arm} frozen`, cell.frozenKnownWeeks)), 1), 18)}` +
       `${padL(num(avg(sample(`§4 ${cell.arm} final`, cell.finalHab)), 1), 11)}${padL(`${cell.capReached}/${cell.n}`, 13)}` +
-      `${padL(cell.newsToCap.length > 0 ? num(median([...cell.newsToCap]), 0) : '–', 17)}${padL(num(predicted, 1), 11)}`,
+      `${padL(cell.knownToCap.length > 0 ? num(median([...cell.knownToCap]), 0) : '–', 18)}${padL(num(predicted, 1), 11)}`,
   )
 }
 console.log('')
@@ -1001,19 +989,19 @@ console.log('')
   const un = curveCells.find((c) => c.arm === 'unwalled')!
   const fo = curveCells.find((c) => c.arm === 'focus-held')!
   const wa = curveCells.find((c) => c.arm === 'walled')!
-  if (un.newsToCap.length === 0 && fo.newsToCap.length === 0) {
+  if (un.knownToCap.length === 0 && fo.knownToCap.length === 0) {
     stall('§4: NOT ONE career reached the habituation cap in any arm', 'the curve has no end point and «the veteran shrugs» cannot be priced')
   }
-  // THE ACCELERATION, measured the only way that is not the multiplier read back to itself: NEWS
+  // THE ACCELERATION, measured the only way that is not the multiplier read back to itself: 'KNOWN'
   // WEEKS SPENT, not calendar weeks and not the counter. ⚠ The two arms are the same seeds.
-  if (un.newsToCap.length > 0 && fo.newsToCap.length > 0) {
-    const u = sample('§4 unwalled news-to-cap', un.newsToCap, 1)
-    const f = sample('§4 focus news-to-cap', fo.newsToCap, 1)
+  if (un.knownToCap.length > 0 && fo.knownToCap.length > 0) {
+    const u = sample('§4 unwalled known-to-cap', un.knownToCap, 1)
+    const f = sample('§4 focus known-to-cap', fo.knownToCap, 1)
     const d = avg(f) - avg(u)
     const se = Math.sqrt(sem(u) ** 2 + sem(f) ** 2)
     const ok = d < 0
     console.log(
-      `    the seat SHORTENS the walk : ${num(avg(u), 1)} → ${num(avg(f), 1)} news weeks (Δ ${num(d, 1)} ± ${num(se, 1)})   ${verdict('§4 habituation acceleration, rung 2 vs no seat', ok, `the focus-held arm did not reach the cap sooner – implicates ECONOMY.psychologist.publicLifeAccel [${ECONOMY.psychologist.publicLifeAccel.join(', ')}]`)}`,
+      `    the seat SHORTENS the walk : ${num(avg(u), 1)} → ${num(avg(f), 1)} 'known' weeks (Δ ${num(d, 1)} ± ${num(se, 1)})   ${verdict('§4 habituation acceleration, rung 2 vs no seat', ok, `the focus-held arm did not reach the cap sooner – implicates ECONOMY.psychologist.publicLifeAccel [${ECONOMY.psychologist.publicLifeAccel.join(', ')}]`)}`,
     )
     const clears = Number.isFinite(se) && Math.abs(d) > 2 * se
     console.log(
@@ -1025,22 +1013,22 @@ console.log('')
       console.log('         reaches the match only under the knee), so the arms are REPLICAS and not samples. The step is')
       console.log('         EXACT, which is a stronger statement than «separated», but it is not the statistical one.')
     }
-    console.log('      ⚠ AND THE PREDICTED COLUMN ASSUMES THE YEAR IS HELD FROM HER FIRST NEWS WEEK, WHICH NO CAREER CAN DO.')
-    console.log('        The seat cannot be hired before `psychologistUnlocked` and the focus waits on the consent gates, so')
-    console.log('        the first stretch of news weeks grows at ×1 whatever the rung. A measured walk LONGER than the')
+    console.log('      ⚠ AND THE PREDICTED COLUMN ASSUMES THE YEAR IS HELD FROM HER FIRST \'known\' WEEK, WHICH NO CAREER CAN')
+    console.log('        DO. The seat cannot be hired before `psychologistUnlocked` and the focus waits on the consent gates,')
+    console.log('        so the first stretch of \'known\' weeks grows at ×1 whatever the rung. A measured walk LONGER than the')
     console.log('        prediction is that delay, not a weak accelerator; the gap between them is what the delay costs.')
   } else {
     console.log('    the seat SHORTENS the walk : – (one of the two arms never reached the cap; the comparison is UNMEASURED)')
     verdict('§4 habituation acceleration, rung 2 vs no seat', false, 'one of the two arms never reached the cap – the comparison could not be taken')
   }
-  // THE FREEZE. ⚠ IT IS A COUNT OF **NEWS WEEKS SPENT WALLED**, which is the number ruling H's ×0
-  //    actually consumes, and it is the actuation receipt for this arm at the same time.
-  const frozenTotal = wa.frozenNewsWeeks.reduce((a, b) => a + b, 0)
+  // THE FREEZE. ⚠ IT IS A COUNT OF **'KNOWN' WEEKS SPENT WALLED**, which is the number ruling H's ×0
+  //    actually consumes since D1, and it is the actuation receipt for this arm at the same time.
+  const frozenTotal = wa.frozenKnownWeeks.reduce((a, b) => a + b, 0)
   console.log(
-    `    the walls FREEZE it        : the grinding arm spent ${frozenTotal} news weeks behind a flipped wall, and the counter did not move on one of them (ruling H, ×0 on EITHER axis).`,
+    `    the walls FREEZE it        : the grinding arm spent ${frozenTotal} 'known' weeks behind a flipped wall, and the counter did not move on one of them (ruling H, ×0 on EITHER axis).`,
   )
   if (frozenTotal === 0) {
-    console.log('      !! ZERO – the grinding arm never met a news week with a wall up, so this line is a statement about')
+    console.log('      !! ZERO – the grinding arm never met a \'known\' week with a wall up, so this line is a statement about')
     console.log('         the ARM and not about the freeze. The freeze itself is pinned engine-side (T4); what is missing')
     console.log('         here is a career that is famous AND walled, which is exactly the girl §3c is written about.')
   }
@@ -1078,8 +1066,8 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
   interface LoopCell {
     label: string
     finalHab: number[]
-    newsWeeks: number[]
-    frozenNews: number[]
+    knownWeeks: number[]
+    frozenKnown: number[]
     totalCharge: number[]
     meanPerEvent: number[]
     flippedAtEnd: number
@@ -1091,8 +1079,8 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
     const cell: LoopCell = {
       label: armed ? `caring → grinding ${WALL_ON} → caring ${REPAIR_ON} (repaired)` : `caring → grinding ${WALL_ON} (stays walled)`,
       finalHab: [],
-      newsWeeks: [],
-      frozenNews: [],
+      knownWeeks: [],
+      frozenKnown: [],
       totalCharge: [],
       meanPerEvent: [],
       flippedAtEnd: 0,
@@ -1114,7 +1102,7 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
             : [{ from: WALL_ON, policy: GRINDING }],
         })
         cell.n++
-        let news = 0
+        let known = 0
         let frozen = 0
         let charge = 0
         let events = 0
@@ -1122,12 +1110,13 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
         for (let w = 0; w < c.wk.length; w++) {
           const week = c.wk[w]
           if (week === undefined) continue
-          // ⚠ THE GATE IS `w − 1`, §4's own correction applied here too: `growHabituation` reads
-          //   `sheIsNewsAt(world, world.week − 1)`, so «a news week the counter could have grown on»
-          //   is a fact about the PREVIOUS week.
+          // ⚠ THE GATE IS 'known' AT `w − 1`, §4's own two corrections applied here too: since D1
+          //   `growHabituation` is handed `newsStandingOf(world) === 'known'`, and the fold that
+          //   read describes is the one recorded at the END of the previous step – so «a week the
+          //   counter could have grown on» is a fact about the PREVIOUS recorded week's BAND.
           const gate = c.wk[w - 1]
-          if (gate !== undefined && gate.news) news++
-          if (gate !== undefined && gate.news && week.walled) frozen++
+          if (gate !== undefined && gate.standing === 'known') known++
+          if (gate !== undefined && gate.standing === 'known' && week.walled) frozen++
           if (week.spirit < ECONOMY.spirit.knee) uk++
           const ch = chargeAt(c.wk, w)
           charge += ch
@@ -1135,8 +1124,8 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
         }
         const last = [...c.wk].reverse().find((x) => x !== undefined)
         cell.finalHab.push(last?.habituation ?? 0)
-        cell.newsWeeks.push(news)
-        cell.frozenNews.push(frozen)
+        cell.knownWeeks.push(known)
+        cell.frozenKnown.push(frozen)
         cell.totalCharge.push(charge)
         cell.underKnee.push(uk)
         if (events > 0) cell.meanPerEvent.push(charge / events)
@@ -1145,11 +1134,11 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
     }
     cells.push(cell)
   }
-  console.log(`    ${pad('arm', 44)}${padL('n', 4)}${padL('news wks', 10)}${padL('frozen news', 13)}${padL('final hab', 11)}${padL('walled at end', 15)}${padL('mean/event', 12)}${padL('spirit-wks < knee', 19)}`)
+  console.log(`    ${pad('arm', 44)}${padL('n', 4)}${padL('known wks', 11)}${padL('frozen known', 14)}${padL('final hab', 11)}${padL('walled at end', 15)}${padL('mean/event', 12)}${padL('spirit-wks < knee', 19)}`)
   for (const cell of cells) {
     console.log(
-      `    ${pad(cell.label, 44)}${padL(String(cell.n), 4)}${padL(num(avg(sample(`§5 ${cell.label} news`, cell.newsWeeks)), 1), 10)}` +
-        `${padL(num(avg(sample(`§5 ${cell.label} frozen`, cell.frozenNews)), 1), 13)}${padL(num(avg(sample(`§5 ${cell.label} hab`, cell.finalHab)), 1), 11)}` +
+      `    ${pad(cell.label, 44)}${padL(String(cell.n), 4)}${padL(num(avg(sample(`§5 ${cell.label} known`, cell.knownWeeks)), 1), 11)}` +
+        `${padL(num(avg(sample(`§5 ${cell.label} frozen`, cell.frozenKnown)), 1), 14)}${padL(num(avg(sample(`§5 ${cell.label} hab`, cell.finalHab)), 1), 11)}` +
         `${padL(`${cell.flippedAtEnd}/${cell.n}`, 15)}${padL(cell.meanPerEvent.length > 0 ? num(avg(sample(`§5 ${cell.label} per-event`, cell.meanPerEvent))) : '–', 12)}` +
         `${padL(num(avg(sample(`§5 ${cell.label} knee`, cell.underKnee)), 1), 19)}`,
     )
@@ -1168,19 +1157,19 @@ rule('§5. THE WALLS LOOP – a walled-up famous girl against a repaired one   [
   console.log('')
   console.log('    !! ⚠ THE ARMS DIVERGE IN MORE THAN THE WALL, and it is said rather than hidden: the repair changes the')
   console.log('       ENTRY POLICY too, so the repaired career also plays a different calendar from the repair week on and')
-  console.log('       can reach a different fame. The «news wks» column is printed for exactly that reason – read the')
+  console.log('       can reach a different standing. The «known wks» column is printed for exactly that reason – read the')
   console.log('       habituation delta against it, and treat a repaired arm that is merely MORE FAMOUS as an unproven')
   console.log('       claim rather than a confirmed one. The arms ARE byte-identical up to the wall week, which is what')
   console.log(`       makes the comparison worth taking at all: they are one career until week ${REPAIR_ON}.`)
 }
 
 // =================================================================================================
-// §6. THE ACTUATION RECEIPT – proof each arm reached its own subject, and the dial restored
+// §6. THE ACTUATION RECEIPT – proof each arm reached its own subject
 // =================================================================================================
 
-rule('§6. THE ACTUATION RECEIPT – every arm reached its subject, and the bar is back')
+rule('§6. THE ACTUATION RECEIPT – every arm reached its subject, and no dial was ever poked')
 {
-  const allCareers = [...mainCareers, ...barRows.flatMap((r) => r.careers)]
+  const allCareers = mainCareers
   const newsWeeks = allCareers.reduce((s, c) => s + c.wk.filter((w) => w !== undefined && w.news).length, 0)
   const events = allCareers.reduce((s, c) => s + c.wk.reduce((a, w) => a + (w?.exposure.length ?? 0), 0), 0)
   const charged = mainCareers.reduce((s, c) => {
@@ -1196,7 +1185,7 @@ rule('§6. THE ACTUATION RECEIPT – every arm reached its subject, and the bar 
   for (const k of EXPOSURE_KINDS) kinds.set(k, 0)
   for (const c of allCareers) for (const w of c.wk) if (w !== undefined) for (const k of w.exposure) kinds.set(k, (kinds.get(k) ?? 0) + 1)
   const lines: [string, number, string][] = [
-    ['news weeks walked', newsWeeks, 'zero means not one career ever crossed the bar – ruling E-bis: check the POLICY'],
+    ['news weeks walked', newsWeeks, "zero means not one career ever left 'quiet' – ruling E-bis: check the POLICY"],
     ['exposure events fired', events, 'the ledger never answered – every table above would be a zero about nothing'],
     ['weeks the pressure was CHARGED', charged, '§2\'s whole column has no rows without these'],
     ['love episodes lived', episodes, 'the leak has nothing to get out about'],
@@ -1217,11 +1206,7 @@ rule('§6. THE ACTUATION RECEIPT – every arm reached its subject, and the bar 
   if (zeroes.length > 0) {
     stall(`§6: ${zeroes.length} actuation column(s) read ZERO`, zeroes.map(([w]) => w).join(' · '))
   }
-  SPOTLIGHT_DIAL.newsFameMin = SHIPPED_BAR
-  if (ECONOMY.spotlight.newsFameMin !== SHIPPED_BAR) {
-    throw new Error('the bar did not restore – a later reader of ECONOMY in this process would see a poked constant')
-  }
-  console.log(`    dial restored and CHECKED : ECONOMY.spotlight.newsFameMin = ${ECONOMY.spotlight.newsFameMin} (shipped ${SHIPPED_BAR})`)
+  console.log('    no dial to restore        : D1 removed the one poke this file ever made – ECONOMY was read-only for the whole run.')
   console.log('    MAIN is untouched by every arm above – the frozen capture (41550 / e6b0c709) cannot see this file.')
 }
 

@@ -693,8 +693,8 @@ console.log(`    grinding parent    : the '${GRINDING.label}' policy – measure
 console.log(`    horizon            : week 0 → ${WEEKS} (she is ${AGE_AT(0).toFixed(2)} → 24) · the pro gate opens the seat`)
 console.log(`    the ladder         : salaries $${ECONOMY.psychologist.rungs.map((r) => (r.salaryCents / 100).toFixed(0)).join(' / $')} a week · one session at every rung`)
 console.log(`    the focuses        : ${PSY_FOCUSES.join(' · ')}   ← the FIFTH is v77's (O7, ruled 13.09) and §1g prices it`)
-console.log(`    the news bar       : fame ≥ ${ECONOMY.spotlight.newsFameMin} (\`newsFameMin\`, §4 PROPOSAL and UNRULED) – §1g measures NOTHING below it,`)
-console.log('                         and `npm run bench:spotlight` sweeps the bar itself at 10/15/20/25/30 (ruling E).')
+console.log(`    the news gate      : her STANDING – known ≤ ${ECONOMY.spotlight.newsRankKnown} / noticed ≤ ${ECONOMY.spotlight.newsRankNoticed} WTA, live points required (the owner's D1, 14.09,`)
+console.log("                         never a fame bar) – §1g measures NOTHING at 'quiet', and `npm run bench:spotlight` §1 prints the bands' own coverage.")
 console.log('')
 console.log('    !! THE SEAT IS HIRED THE FIRST WEEK `psychologistUnlocked` IS TRUE (the pro career, the')
 console.log('       travelling-team ruled gate) AND THE FOCUS IS SET THE FIRST WEEK THE ENGINE ALLOWS IT.')
@@ -1788,8 +1788,8 @@ const publicCells: PublicCell[] = []
   if (seat.reduce((s, c) => s + c.events, 0) === 0) {
     stall(
       '§1g: ZERO exposure events across every seat arm',
-      'no career on this grid ever crossed `newsFameMin`, so the fifth focus had nothing to shrink – ruling E-bis: the POLICY decides fame, not the money, and a bar of ' +
-        `${ECONOMY.spotlight.newsFameMin} may simply be out of this grid's reach`,
+      "no career on this grid ever left 'quiet' standing with a camera on her, so the fifth focus had nothing to shrink – ruling E-bis: the POLICY decides the standing, not the money, and WTA ≤ " +
+        `${ECONOMY.spotlight.newsRankNoticed} (the owner's D1) may simply be out of this grid's reach`,
     )
   }
   if (seat.reduce((s, c) => s + c.focusSet, 0) === 0) {
@@ -2342,7 +2342,7 @@ rule('§5. THE ACTUATION RECEIPT – every arm reached its subject, and the dial
     ['beyond-baseline weeks (seat arms)', selfBeyond, 'the growth branch ran'],
     ['walls-UP flips (collapses, §1e)', collapses, 'the other direction fired too – the model is not one-sided'],
     ['exposure events met (§1g)', publicEvents, 'v77 – the fifth column had nothing to shrink; ruling E-bis: the POLICY decides fame'],
-    ['news weeks walked (§1g)', publicNews, 'v77 – not one career crossed `newsFameMin`, so §1g is a zero about nothing'],
+    ['news weeks walked (§1g)', publicNews, "v77 – not one career ever left 'quiet' standing (D1), so §1g is a zero about nothing"],
     ['the fifth focus SET (§1g)', publicFocusSet, 'v77 – every rung column would be the free road wearing a label'],
     ['habituation grew (§1g careers)', publicHabGrew, 'v77 – `growHabituation` never moved, so the acceleration ladder has no subject'],
   ]
