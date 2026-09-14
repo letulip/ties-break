@@ -135,7 +135,12 @@ New leaf `src/engine/world/spotlight.ts` – pure derivation, ZERO draws, ZERO w
     slam fortnight counts by construction). Derivation: this week's finish facts, the same
     ground `fameEventWeeks` (`fame.ts:301`) reads – but ⚠ NOT `fameEventWeeks` itself: that
     list includes w15 titles and season-end stamps, which are nobody's spotlight.
-  - `'shoot'` – a delivered shoot week (`completedShootWeeks`, `fame.ts:212`).
+  - `'shoot'` – a delivered shoot week. ⚠ CORRECTED BY T2 (14.09, the wave's rulings doc): the
+    brief first grounded this on `completedShootWeeks(world, week)` containing `week`, and that
+    function returns weeks lived STRICTLY BEFORE `week` – spelled that way the kind could never
+    fire once. The ground is `completedShootWeeks(world, week + 1)` (`fame.ts:212` – keeping
+    fame.ts's single predicate and its college-freeze rule), and T2's ARM 3 pins the literal
+    spelling red.
   - `'publicLoss'` – an early exit at a big stage while she is news (round ≤ R2 at
     `stageTierMin`+; the heavily public loss of §3c).
   - `'aired'` – the booth touched her private life this week (T7's stamp; reading the stamp
@@ -360,8 +365,9 @@ pressure drafts live in «−2..−4 before scaling» (§3c) · the intensity sc
 `perturbationScale` – not a new constant.
 
 **Proposals – NONE ruled, all bench-priced predicted-first, his word after:**
-`newsFameMin 30` (anchor: `ECONOMY.fame.contracts.fameCap` is 30 – the ad market's own «famous»
-bar; a proposal, not a derivation) · `stageTierMin 500` · `pressureBase { stage: −3, shoot: −2,
+`newsFameMin 30` (anchor ⚠ CORRECTED BY T2, 14.09: the 30 lives at
+`ECONOMY.business.merch.contracts.fameCap` – the merch/brand-reach model's own bar, one system
+further from «the ad market» than the brief first said; a proposal, not a derivation) · `stageTierMin 500` · `pressureBase { stage: −3, shoot: −2,
 publicLoss: −4, aired: −3, wrongStory: −4 }` · `newsWindowWeeks 6` · `habituationFullWeeks 104`
 (two seasons of living known) · `habituationFloor 0.25` · `publicLifeShrink [0.85, 0.70, 0.55]`
 · `publicLifeAccel [1.5, 2.0, 2.5]` · `leakBasePerWeek 0.008` · `leakOpennessMult ×2.0
