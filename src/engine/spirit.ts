@@ -68,6 +68,14 @@
 // no register table and no component – one line, at one moment, and `resolveMasseurReturn` one seat
 // over is the same idiom.
 //
+// ⚠⚠ AND SINCE v77's T3 IT IS **TWO** ROWS, WHICH IS THE PARAGRAPH ABOVE CORRECTED RATHER THAN
+// REWRITTEN. The second is `EXPOSURE_ROW` (§3c below), and it is here for the same KIND of reason
+// the first is: the week's exposure list is summed inside `accrueSpirit`'s own pass and nowhere
+// else, so «was this an exposure week» is a question this function is already holding the answer to,
+// and a second reader re-deciding it from the world is the shape this file refuses everywhere. ⚠ Two
+// rows is now the count, and it is the whole count: both go through `addEvent`, neither carries
+// `amountCents` or a figure, and this module still owns no pool, no register table, no component.
+//
 // ⚠ AND IT STILL IMPORTS NOTHING FROM `world/psychologist.ts`, WHICH IS MEASURED AND NOT ASSUMED:
 // that module imports `bondBandOf` from THIS file at runtime (its consent gate), so an import back
 // would close the value loop the `activeEpisode` note below records being caught once already – and
@@ -104,7 +112,15 @@ import { activeEpisode, loveEpisodesOf } from './world/loveEpisodes'
 import type { BondBand, MoodRegister } from '../shared/protocol'
 // ⚠ TYPE-ONLY, so this leaf adds no runtime edge back into the integration core – the same shape
 // `academy.ts` uses one floor up and every `world/*.ts` module uses beside it.
-import type { WorldState } from './world'
+// ⚠⚠ `ExposureEvent` JOINS IT AT v77's T3 AND OPENS **NO NEW ARROW AT ALL**, which is the wave-6
+// brief's §0.1 in its own words («`spirit.ts` imports nothing new»). It is not a second import line:
+// the type is widened onto the ONE type-only import this module already had, it comes off the
+// `engine/world` BARREL (the historical convention, `world.ts:445`) rather than off `world/spotlight`
+// directly, and `import type` is erased at compile time – so there is no runtime edge to `world/` in
+// either direction and the leaf is the leaf it was. ⭐ THE VALUE that fills this list is never
+// imported here: `exposureEventsOf` is called by `world/phaseHerWeek.ts` and the LIST is handed down,
+// which is ruling J's dependency inversion applied a second time, to a second fact.
+import type { ExposureEvent, WorldState } from './world'
 
 // =================================================================================================
 // 1. WHO SHE IS
@@ -623,6 +639,114 @@ export function recoveryReceiptEarned(
  *  a state where it does not print. ⭐ A string is not a place to hedge a condition. */
 export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
 
+// =================================================================================================
+// 3c. ⭐⭐⭐ THE SPOTLIGHT'S PRESSURE – v77's T3 (wave 6, who-she-is §3c / §3c-bis)
+// =================================================================================================
+//
+// THE OWNER, 09.09: «давление известности и как она с ним справляется (и справляется ли вообще).»
+//
+// THE WHOLE OF THE MECHANIC: the weeks that put her in the light cost her spirit, priced per event,
+// summed over the week, applied as ONE named summand inside `accrueSpirit`'s own pass. The LIST of
+// events is not derived here – `world/spotlight.ts` answers «what put her in the light this week»
+// and `world/phaseHerWeek.ts` hands the answer down, which is §0.1's dependency inversion and the
+// second use of ruling J's shape in this file.
+//
+// ⚠⚠ IT IS WEATHER, NOT A SHOCK, AND THAT IS THE WAVE'S OWN §8 RATHER THAN A PLACEMENT PREFERENCE.
+// Nothing here writes `world.spiritShock`, nothing here touches the return curve, and no new shock
+// kind exists: the break-up stays the ONE shock in the game. What recovers a pressured week is the
+// standing return toward baseline, at her own rate, exactly as it recovers a bad exam fortnight.
+//
+// ⚠⚠ AND THERE IS NO SUCCESS TAX ANYWHERE IN IT (§0.4, «мы ни за что не наказываем», 09.09). The
+// term is keyed on EVENTS and never on rank, prize, fame or a standing weekly drain: a week with no
+// exposure event contributes exactly `0` and is byte-identical to wave-5 behaviour, whatever her
+// fame. That is a pin (§B of the T3 suite) and not a claim, and it is run against a FAMOUS world,
+// because run against a quiet one it would prove nothing about this wave.
+
+/** ⭐⭐ THE DRAFT ROW – one no-cents feed line on an exposure week, and the legibility law made
+ *  audible (§3c: «every dip explainable»).
+ *
+ *  ⚠⚠ A DRAFT UNDER CLAUDE.md INVARIANT 4, AND IT IS T8's AND THE ARCHITECT'S ВЫЧИТКА TO SETTLE –
+ *  the wave's §5 binds every player-facing word in T8's list, and this is row 2 of that list. It is
+ *  deliberately NOT polished here: what T3 owes is an honest plain sentence in the right register,
+ *  and the register is the row's neighbours (`RECOVERY_RECEIPT` above, the met/ended rows in
+ *  `world/lifeBeat.ts`) – quiet, no figure, no exclamation, short dash idiom, nothing gendered.
+ *
+ *  ⚠⚠ AND THE ONE REAL CONSTRAINT ON IT IS THAT **ONE SENTENCE HAS TO COVER FIVE KINDS**, which is
+ *  the legibility law's own «one row per week, not per event» (§3c: the feed is not a ledger). The
+ *  brief's territory line is «The cameras were everywhere this week»; it reads true of `'stage'`,
+ *  `'shoot'` and `'publicLoss'` and reads oddly of `'aired'` (a commentary booth) and `'wrongStory'`
+ *  (a tabloid), and a week can hold any mixture of the five. So the draft below names the ATTENTION
+ *  rather than the lens, which is the one thing all five weeks have in common. ⚠ CARRIED TO THE
+ *  ARCHITECT AS A QUESTION rather than decided here: if he wants the cameras named, the honest
+ *  shape is a row per kind, and that is a second sentence in the feed's budget, not a word swap. */
+export const EXPOSURE_ROW = 'People were talking about her this week.'
+
+/**
+ * ⭐⭐⭐ WHAT THE WEEK'S EXPOSURE COST HER, in spirit points – the whole of T3's arithmetic, as one
+ * pure fold over the list the caller handed down.
+ *
+ * THE PRODUCT, per event, and it is the spec's own five factors in the spec's own order:
+ *
+ *     base[kind] × perturbationScale[intensity] × opennessScale[openness] × habituation × focus
+ *
+ * ⚠⚠ `perturbationScale` IS THE **STANDING** SCALE AND NEVER A NEW CONSTANT (§4, «the intensity
+ * scale is the STANDING `perturbationScale`»), and it is applied EXACTLY ONCE, here, because
+ * `pressureBase` is drafted «−2..−4 BEFORE scaling». That is the architect's ruling L part 1, and
+ * the defect it refuses is recorded in this file already: `spirit.shock`'s constants are ALREADY
+ * intensity-scaled, so they are added OUTSIDE `weekPerturbation`'s multiplication – and a row for
+ * the spotlight placed INSIDE that function would scale these bases a SECOND time (−4 × 0.8 × 0.8).
+ * A future editor tempted by the tidiness of one more `perturb` row is looking at the same mistake
+ * on new numbers.
+ *
+ * ⚠⚠ IT DOES NOT ROUND ITSELF – ruling L part 2. There is ONE `roundTenth` and one `clamp` in the
+ * weekly pass, at the end, on the sum. A term that rounded its own tenths would quantise the small
+ * values FIRST, and a single event at ×0.75 through a deep habituation discount is exactly where
+ * this term's small values live: ruling N measured a habituated, focus-held, calm, open girl taking
+ * −0.33 from the worst week of her public life. Rounded here that is −0.3 before it ever meets the
+ * week's other weather; left alone it is the 0.33 the sum deserves.
+ *
+ * ⚠⚠ BOTH AXES ARE PARAMETERS AND NEITHER IS READ OFF THE WORLD – ruling L part 3, and it is why
+ * this function does not take `world` at all. `accrueSpirit` reads `expressedTemperamentOf(world)`
+ * EXACTLY ONCE at its head (its own ⚠⚠: «Do not re-read it after this line»), and T3 needs BOTH
+ * projections of that one value; a second `expressedTemperamentOf(world)` call here would be a
+ * second read of a girl wave 5 ruled is one girl for the whole week. Taking the two poles as
+ * arguments makes that structural instead of disciplined.
+ *
+ * ⚠⚠ THE LAST TWO FACTORS ARE **1** AND THEY ARE SPELLED OUT RATHER THAN OMITTED, which is the task's
+ * own instruction and `ECONOMY.spotlight`'s own idiom one file over («a constant with no reader is a
+ * constant nobody can be wrong about yet»):
+ *   · `habituation` is **T4's** – the slow shrink as she learns to live known, 1 down to
+ *     `habituationFloor`, frozen while a wall is flipped. It does not exist yet.
+ *   · `focus` is **T5's** – the fifth psychologist focus «The public life», `publicLifeShrink[rung]`.
+ *     It does not exist yet either.
+ * Neither is invented early and neither gets a constant here (§8: «no habituation and no focus
+ * constants – T4's and T5's»). They are written as `1` so the PRODUCT's shape is visible to the two
+ * tasks that replace them, and so a reader can see that T3 ships the term and not the model.
+ *
+ * ⚠ ZERO DRAWS, PURE, TOTAL. Arithmetic over a list, and an empty list returns exactly `0` – which
+ * is what makes §0.4's byte-identity claim arithmetic rather than a promise.
+ */
+function exposurePressure(
+  exposure: readonly ExposureEvent[],
+  intensity: 'steady' | 'intense',
+  openness: 'open' | 'private',
+): number {
+  const s = ECONOMY.spirit
+  const p = ECONOMY.spotlight
+  // ⚠ T4's HABITUATION SCALE LANDS HERE. 1 until it exists – she has not learned to live known,
+  // because nothing is yet counting the weeks she has lived known.
+  const habituation = 1
+  // ⚠ T5's FIFTH-FOCUS SHRINK LANDS HERE. 1 until it exists – no seat is working her public life,
+  // because the focus is not on the roster yet.
+  const focus = 1
+  let total = 0
+  for (const event of exposure) {
+    total +=
+      p.pressureBase[event.kind] * s.perturbationScale[intensity] * p.opennessScale[openness] * habituation * focus
+  }
+  return total
+}
+
 /**
  * ⭐⭐ THE WEEK, FOR BOTH NUMBERS. Its own call in `resolveBodyAndPlanner`, immediately after
  * `accrueCondition(world, playedThisWeek)` – never a parameter of it, because that function's
@@ -694,8 +818,31 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
  * never drift apart. ⚠ IT IS A `boolean` AND NEVER AN `Rng`: the zero-draw contract this function has
  * always carried is untouched, and tests/spirit.test.ts asserts that of the SIGNATURE rather than of
  * the arity, precisely so a parameter like this one cannot quietly retire the claim.
+ *
+ * ⭐⭐⭐ AND SINCE v77's T3 THE THIRD ARGUMENT IS THE WEEK'S EXPOSURE – what put her in the light,
+ * derived by `world/spotlight.ts` and HANDED DOWN by `world/phaseHerWeek.ts`, which is §0.1 of the
+ * wave-6 brief and the second use of ruling J's dependency inversion in this signature. The list is
+ * computed by a leaf this module never imports; `spirit.ts` gains no arrow, only a type widened onto
+ * the one type-only import it already had (see that import's ⚠⚠).
+ *
+ * ⚠⚠ IT IS **REQUIRED AND NEVER DEFAULTED**, AND THAT IS THE ARCHITECT'S RULING A RATHER THAN A
+ * STYLE. `Function.length` counts the parameters BEFORE the first one carrying a default, so
+ * `exposure: readonly ExposureEvent[] = []` would leave `tests/spirit.test.ts`'s arity pin reading
+ * **2** – GREEN through the exact change it exists to notice, and the next wave inheriting a counter
+ * that has quietly stopped counting. That is the «unable to fail» family in its eleventh costume and
+ * this wave is not adding a twelfth for convenience. Required also makes every one of the call sites
+ * state «no exposure this week» out loud, which is the honest spelling, and the churn is paid by the
+ * compiler: `vue-tsc -b --force` names all of them. ⚠ `tools/spirit-bench.ts` passes `[]` at both of
+ * its sites deliberately – a bench that quietly gained exposure would stop measuring what it says it
+ * measures.
+ *
+ * ⚠ AND THE DECLARATION STAYS ON ONE LINE. The same pin reads this line as TEXT and asserts it
+ * contains `{`, precisely so it can prove it is not reading a wrapped fragment – a signature broken
+ * across lines makes its sibling assertion («must take no Rng, whatever else it takes») pass on a
+ * truncated string. Measured: this line is 119 characters, the repository carries no prettier or
+ * eslint width config, and this file already holds lines of 163.
  */
-export function accrueSpirit(world: WorldState, psychologistWorks: boolean): void {
+export function accrueSpirit(world: WorldState, psychologistWorks: boolean, exposure: readonly ExposureEvent[]): void {
   const s = ECONOMY.spirit
   const b = ECONOMY.bond
   // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A («`accrueSpirit`'s intensity read
@@ -712,7 +859,16 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean): voi
   // ⚠ `expressedTemperamentOf` CARRIES THE `?? temperamentFor(world.seed)` COURTESY INSIDE IT, so the
   // probe-world fallback this line used to spell out has not been dropped – it has moved one level
   // down and is shared by all five re-pointed sites. See its own ⚠⚠ note.
-  const intensity = temperamentIntensity(expressedTemperamentOf(world))
+  // ⚠⚠ v77's T3 HOISTS THE CALL INTO A LOCAL AND TAKES **BOTH** PROJECTIONS OFF IT – the architect's
+  // ruling L part 3, and it is the ⚠⚠ directly above obeyed rather than amended. The spotlight's
+  // pressure scales by openness as well as by intensity (§3c's ×0.75 / ×1.5), and a second
+  // `expressedTemperamentOf(world)` call for the second axis would be a SECOND READ of the girl this
+  // pass is about – wave 5 ruled that the girl who experienced the week is one girl. One call, one
+  // value, two projections: the two axes can now no more disagree about who she was this week than
+  // the return rate and the perturbation scale can.
+  const expressed = expressedTemperamentOf(world)
+  const intensity = temperamentIntensity(expressed)
+  const openness = temperamentOpenness(expressed)
   // ⚠ ASKED ONCE AND HANDED TO BOTH, so the two numbers can never disagree about whether the family
   // had a holiday this season – the same "asked once, carried" doctrine the masseur's fare follows.
   const wrapWithNoVacation = seasonWrapsWithNoVacation(world)
@@ -739,9 +895,49 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean): voi
   //     `?? null` is the same courtesy the three fields above get, for hand-built probe worlds.
   const shock = world.spiritShock ?? null
   const shocked = shock !== null && shock.week === world.week ? s.shock[shock.kind][intensity] : 0
+  // 2c. ⭐⭐⭐ AND WHAT BEING LOOKED AT DID TO HER (v77 T3) – §3c above, as a **FOURTH SUMMAND** and
+  //     for the shock's own reason, which is the architect's RULING L part 1: `pressureBase` is
+  //     drafted «before scaling», `exposurePressure` applies `perturbationScale` exactly once inside
+  //     itself, and a row inside `weekPerturbation` would therefore scale it a SECOND time – the
+  //     recorded defect on `spirit.shock`'s constants, repeated on new numbers. An empty list is
+  //     exactly 0, so a no-exposure week's arithmetic is byte-identical to what it was before this
+  //     line existed – §0.4's «no success tax», as a property of the addition rather than a promise.
+  const pressured = exposurePressure(exposure, intensity, openness)
   const moved =
-    returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked
+    returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked + pressured
+  // ⚠⚠ ONE `roundTenth`, ONE `clamp`, AT THE END, ON THE SUM – ruling L part 2, and the reason the
+  // term above does not round itself: quantising a single small exposure before it meets the week's
+  // other weather is how three tenths become nothing.
   world.spirit = roundTenth(clamp(moved, s.min, s.max))
+  // 2d. ⭐⭐ THE LEGIBILITY LAW – ONE ROW, ON AN EXPOSURE WEEK, IN PLAIN WORDS (§3c: «every dip
+  //     explainable»). ⚠⚠ IT IS GATED ON THE **EVENTS** AND NEVER ON THE POINTS, which is deliberate
+  //     and is ruling N's measurement turned into a rule: the term's worst contribution for a calm
+  //     open girl is 2.40 against a 2.50 distance to the `dimmed` edge, and a habituated one takes
+  //     three tenths – so a row gated on «did the number move visibly» would go silent on exactly
+  //     the weeks the player most needs the sentence. The week the light was on is the week the feed
+  //     says so.
+  //     ⚠ ONE ROW PER WEEK AND NOT ONE PER EVENT – §3c's own «the feed is not a ledger». A week that
+  //     held a title, a shoot and a wrong story is charged three times and printed once.
+  //     ⚠ NO `amountCents` AND NO FIGURE (the no-cents law, wave-3 §0.5): the row says the light was
+  //     on, never what it cost – the fog law forbids the number as firmly here as on any screen.
+  //     ⚠ AND NO `lifeKind`. The stamp's type is `LifeBeatKind` and §8 forbids a new member of it,
+  //     so this row carries none. ⚠⚠ AND THE CONSEQUENCE IS MEASURED RATHER THAN LEFT TO A PLAYTEST:
+  //     `lifeRowGlyph(undefined)` resolves through `?? 'met'` to `LIFE_ROW_EMOJI.life`, the owner's
+  //     own 11.09 white heart, so this row wears the ROMANCE thread's mark in the feed's glyph
+  //     column. who-she-is §5a forbids an agent picking a glyph unasked, so none was picked – the
+  //     T3 suite's §H pins the fallback and the finding is carried to the architect.
+  if (exposure.length > 0) {
+    // ⚠ THE KEEP FLAG IS §4's OWN PROPOSAL AND IT IS UNRULED: «keep the first exposure row of a
+    // season, drop repeats». The first exposure week of a season leaves a permanent trace (the album
+    // can find the thread seasons later); the repeats are ordinary rows and prune with everything
+    // else, so a famous career does not fill its save with a hundred identical sentences. ⚠ THE
+    // QUESTION IS ASKED OF THE SEASON AND OF THIS ROW'S OWN TEXT, through `seasonStartWeek` – the
+    // same helper `seasonWrapsWithNoVacation` above already reads, so «which season is this» keeps
+    // one spelling in this module.
+    const from = seasonStartWeek(world.week)
+    const firstOfSeason = !world.events.some((e) => e.week >= from && e.text === EXPOSURE_ROW)
+    addEvent(world, { week: world.week, type: 'life', text: EXPOSURE_ROW, ...(firstOfSeason ? { keep: true } : {}) })
+  }
 
   // 3. AND THE STANDING, ON THE SAME PASS – one weekly function, two numbers. Same shape, same
   //    order: the regression toward 70 first, then the week's own event. The zero-vacations row is

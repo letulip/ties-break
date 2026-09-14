@@ -1250,7 +1250,7 @@ function healWeeksForMinus25(): number {
   world.bond = ECONOMY.bond.start - 25
   for (let w = 1; w <= HEAL_CAP; w++) {
     const before = world.bond
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     if (world.bond >= ECONOMY.bond.start) return w
     if (world.bond === before) return Number.POSITIVE_INFINITY
   }
@@ -1270,7 +1270,7 @@ function effectiveBondStep(): number {
   world.week = 5
   world.bond = ECONOMY.bond.start - 25
   const before = world.bond
-  accrueSpirit(world, false)
+  accrueSpirit(world, false, [])
   return world.bond - before
 }
 

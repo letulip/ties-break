@@ -261,7 +261,15 @@ function lifeCallsInSourceOrder(): { names: string[]; run: (world: WorldState) =
   // life calls sit between the body's pass and the spirit's, in this order», and an array `indexOf`
   // that misses returns −1, which the `> i` below is red on. ⚠ Ruling J named two pins to re-aim and
   // this is a THIRD – the same anchor, in a wave-4 file.
-  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
+  // ⚠⚠ RE-AIMED A **SECOND** TIME 14.09 BY WAVE 6's T3 (the architect's ruling A, which names this
+  // file by line): the closing anchor now carries a third argument,
+  // `exposureEventsOf(world, world.week)` – the week's exposure list, derived by
+  // `world/spotlight.ts` and handed down at the call site because `engine/spirit.ts` may not reach
+  // for it (§0.1's dependency inversion, ruling J's own shape applied to a second fact). NOTHING
+  // about this pin's claim moves: it is still «the life calls sit between the body's pass and the
+  // spirit's, in this order», the anchor is still the call's EXACT text, and an array `indexOf` that
+  // misses still returns −1, which the `> i` below is red on.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const names = code.slice(i + 1, j).filter((l) => l in LIFE_CALLS)

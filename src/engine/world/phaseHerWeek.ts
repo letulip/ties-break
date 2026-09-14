@@ -55,6 +55,12 @@ import { summerConditionCost } from './summer'
 import { inCollege } from './college'
 import { resolveMasseur, resolveMasseurReturn } from './masseur'
 import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
+// ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
+// `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
+// import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
+// of §0.1's dependency inversion: this file calls the derivation and hands the LIST to
+// `accrueSpirit`, so `engine/spirit.ts` gains no arrow of its own.
+import { exposureEventsOf } from './spotlight'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -368,7 +374,36 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        construction – «his effects ride the same predicate», the sentence 1c-masseur below
   //        already writes for the twin seat. ⚠ A `boolean`, never an `Rng`: `accrueSpirit`'s
   //        zero-draw contract is untouched and tests/spirit.test.ts asserts that of the signature.
-  accrueSpirit(world, psychologistWorksThisWeek(world))
+  //
+  //        ⭐⭐⭐ AND THE THIRD ARGUMENT IS THE WEEK'S EXPOSURE, HANDED DOWN THE SAME WAY (v77 T3,
+  //        wave-6 brief §0.1) – what put her in the light this week, derived by `world/spotlight.ts`
+  //        and summed into one named term inside the spirit pass. It is ruling J's inversion applied
+  //        a second time to a second fact, and it costs no arrow: `engine/spirit.ts` imports the
+  //        LIST's type off the barrel it already read and never the function that builds it.
+  //        ⚠ THE DOUBLE ASK ON THIS LINE IS DELIBERATE AND DID NOT MOVE – ruling M's own ⚠. The
+  //        argument is APPENDED and nothing else about the statement changed, because hoisting
+  //        `psychologistWorksThisWeek(world)` into a local is exactly what would let a raw flag be
+  //        handed down in the predicate's place («ruling J's own hole»), and three pins read this
+  //        line's text verbatim.
+  //        ⚠ REQUIRED, NEVER DEFAULTED (ruling A): `Function.length` stops counting at the first
+  //        default, so an `= []` would leave the arity pin reading 2 and green through the very
+  //        change it exists to notice.
+  //
+  //        ⚠⚠ AND A MEASUREMENT T3 CARRIES BACK, BECAUSE IT IS INVISIBLE FROM THE LEDGER'S OWN FILE.
+  //        `exposureEventsOf` is asked about `world.week`, which is what §0.1 and ruling M both
+  //        specify (a stamp read one week late «buys an exposure event that is one week late,
+  //        silently, for ever») – and on THIS tree two of the five kinds cannot reach it from here.
+  //        `'stage'` and `'publicLoss'` are stamped by `finalizeTournament`, whose only writers are
+  //        `cabinet.titles.push(world.week)` / `world.results.push({ week: world.week, … })`
+  //        (`world.ts:673-674` and `:1039`), and that function runs in `playHerWeek` – **tick step 5,
+  //        two phases AFTER this one** (`tickWeek`: step 3 is `resolveBodyAndPlanner`, step 5 is
+  //        `playHerWeek`). So her week-W silverware is written after week W's spirit pass has closed,
+  //        and week W+1's pass asks about week W+1. The ledger is right, the two kinds are right, and
+  //        the PLACEMENT starves them. ⚠ IT IS NOT T3's TO FIX: the fixes are a one-week lag (which
+  //        breaks ruling M for `'aired'`/`'wrongStory'`, stamped earlier in THIS phase) or moving
+  //        this call after step 5 (which three pins, ruling M and §8 all refuse). Pinned in
+  //        tests/wave6-spotlight-pressure.test.ts §F and reported to the architect.
+  accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))
   // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
   //
   //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is

@@ -632,7 +632,14 @@ function weeklyRollsInSourceOrder(): ((world: WorldState) => void)[] {
   // cycle. The claim is untouched («ends before arrival, both between the two accruals»), and an
   // array `indexOf` that misses returns −1, which the `> i` below is red on. ⚠ Ruling J named two
   // pins to re-aim and this is a FOURTH – the same anchor again, one wave-4 file over.
-  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
+  // ⚠⚠ RE-AIMED A **SECOND** TIME 14.09 BY WAVE 6's T3 (the architect's ruling A, which names this
+  // file – ⚠ at line 616; the anchor is at 635 on this tree, and the ruling's other two line numbers
+  // are exact). WHAT MOVED: the closing anchor carries a third argument,
+  // `exposureEventsOf(world, world.week)` – the week's exposure list, handed down at the call site
+  // for `psychologistWorks`' own reason (§0.1's dependency inversion). The claim is untouched («ends
+  // before arrival, both between the two accruals»), the anchor is still the call's EXACT text, and
+  // an `indexOf` that misses still returns −1, which the `> i` below is red on.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const span = code.slice(i + 1, j).filter((l) => l in LIFE_ROLLS)

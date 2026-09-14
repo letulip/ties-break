@@ -880,7 +880,20 @@ describe('wave 5 T7 H – what the pass touches, and what it must never', () => 
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
-    const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T3, AND IT IS THE **FIRST** RE-AIM OF THIS ONE – the two wave-4
+    // text pins were re-aimed once already on 13.09 and are on their second, but this case was BORN
+    // in wave 5 carrying the anchor, so its counter starts here. WHAT MOVED: `accrueSpirit` takes a
+    // third argument, `exposureEventsOf(world, world.week)` – the week's exposure list, handed down
+    // at the call site (§0.1's dependency inversion, ruling J's shape applied to a second fact).
+    // NOTHING about ruling P's claim moves: the walls pass is still asserted to be the VERY NEXT
+    // statement after the spirit pass, still on the same predicate, and `toBe(i + 1)` is red on any
+    // statement sliding between them. ⚠ `driftWalls` is deliberately NOT given the list: the leaning
+    // pass is not a spirit term and §8 keeps `accrueSpirit` the one place the pressure is summed.
+    //
+    // ⚠ THIS PIN IS THE **FIFTH** SITE AND RULING A's TABLE NAMES THREE. Measured on the tree: the
+    // arity/signature case and the ordered-list case in tests/spirit.test.ts, the two wave-4 text
+    // pins, and this one. Carried back to the architect rather than quietly re-aimed.
+    const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))')
     const j = code.indexOf('driftWalls(world, psychologistWorksThisWeek(world))')
     expect(i, 'the spirit pass is where it was').toBeGreaterThan(-1)
     expect(j, 'and the walls pass is the very next statement').toBe(i + 1)

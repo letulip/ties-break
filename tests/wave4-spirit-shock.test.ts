@@ -369,7 +369,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
       expect(world.spiritShock, `${t}: the hazard stamped the mark on the week it ended`)
         .toEqual({ week, kind: 'breakup' })
       world.spirit = 75
-      accrueSpirit(world, false)
+      accrueSpirit(world, false, [])
       landed[t] = world.spirit
     }
     expect(landed.sunny, 'sunny is steady').toBe(48)
@@ -392,7 +392,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     for (const t of TEMPERAMENTS) {
       const { world } = endsOnAQuietRun(t)
       world.spirit = 70
-      accrueSpirit(world, false)
+      accrueSpirit(world, false, [])
       const intense = temperamentIntensity(t) === 'intense'
       expect(world.spirit, `${t}: the shock is not scaled a second time (that would read ${intense ? 27.5 : 52.4})`)
         .toBe(intense ? 36 : 48)
@@ -420,11 +420,11 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     // than a break-up: from 48 the next steady week must read 53 (the return, +5) and nothing else.
     const { world } = endsOnAQuietRun('sunny')
     world.spirit = 75
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     expect(world.spirit, 'the ending week').toBe(48)
     expect(world.spiritShock, 'and the mark is still live – she is nowhere near back').not.toBeNull()
     world.week += 1
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     expect(world.spirit, 'the NEXT week is the return rule alone – 48 + 5, not 48 + 5 − 22').toBe(53)
   }, 60_000)
 
@@ -434,7 +434,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     const { world } = endsOnAQuietRun('fiery')
     world.spirit = 75
     world.bond = 64
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     expect(world.spirit, 'she takes the shock').toBe(38)
     // ⚠ The 0.5/week regression toward 70 is the STANDING weekly rule and fires on every tick; what is
     // asserted is that the ending added nothing to it. 64 + 0.5 = 64.5 and not one half-point more.
@@ -468,7 +468,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
     for (const t of TEMPERAMENTS) {
       const { world, week } = endsOnAQuietRun(t)
       world.spirit = 75
-      accrueSpirit(world, false)
+      accrueSpirit(world, false, [])
       expect(world.spiritShock, `${t}: the mark survives its own setting tick`).toEqual({ week, kind: 'breakup' })
       expect(world.spirit, `${t}: and it is a long way under 68`).toBeLessThan(68)
     }
@@ -500,7 +500,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
       const live: boolean[] = []
       for (let k = 0; k < TRACE[intensity].length; k++) {
         world.week = week + k
-        accrueSpirit(world, false)
+        accrueSpirit(world, false, [])
         trace.push(world.spirit)
         live.push(world.spiritShock !== null)
       }
@@ -532,7 +532,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
     world.loveEpisodes = [episode(w - 20)]
     world.spiritShock = { week: w - 30, kind: 'breakup' }
     world.spirit = 64.5
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     expect(world.spirit, 'a steady girl returns five points toward the LIFTED target of 75').toBe(69.5)
     expect(world.spiritShock, '⭐ 69.5 is past 68, so the mark comes off – it is a question about HER').toBeNull()
   })
@@ -547,7 +547,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
     world.week = w
     world.spirit = 40
     world.spiritShock = null
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     expect(world.spirit, 'she returns three points and nothing happens to her').toBe(43)
     expect(world.spiritShock, 'and no mark is invented for a girl who is merely low').toBeNull()
   })
@@ -630,7 +630,7 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     for (const t of TEMPERAMENTS) {
       const { world } = endsOnAQuietRun(t)
       world.spirit = 75
-      accrueSpirit(world, false)
+      accrueSpirit(world, false, [])
       const band = spiritBandOf(world.spirit)
       expect(band, `${t}: 48 and 38 are both under the knee, which is where «Heavy» lives`).toBe('heavy')
       expect(MOOD_WORD[band], `${t}: and the word is the owner's own`).toBe('Heavy')

@@ -148,7 +148,7 @@ function episode(sinceWeek: number, endedWeek: number | null): LoveEpisode {
  *  ⚠ THE WEEK NEVER ADVANCES, on purpose – a fixed quiet week means `weekPerturbation` contributes
  *  exactly zero every time, so what this measures is the RETURN's target and nothing else. */
 function hoversAt(world: WorldState, weeks = 40): number {
-  for (let i = 0; i < weeks; i++) accrueSpirit(world, false)
+  for (let i = 0; i < weeks; i++) accrueSpirit(world, false, [])
   return world.spirit
 }
 
@@ -157,7 +157,7 @@ function hoversAt(world: WorldState, weeks = 40): number {
 function walk(world: WorldState, weeks: number): number[] {
   const out: number[] = []
   for (let i = 0; i < weeks; i++) {
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     out.push(world.spirit)
   }
   return out
@@ -271,7 +271,7 @@ describe('wave 3 T4 B – a moved target, not a one-off bump', () => {
       for (let i = 0; i < 12; i++) {
         if (i === 3) world.loveEpisodes = [episode(world.week, null)]
         if (i === 8) world.loveEpisodes = [episode(world.week, world.week)]
-        accrueSpirit(world, false)
+        accrueSpirit(world, false, [])
         worst = Math.max(worst, Math.abs(world.spirit - prev))
         prev = world.spirit
       }

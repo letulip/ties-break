@@ -683,9 +683,30 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // ⭐ AND `accrueSpirit`'s OWN read is the fifth swap, in the other file – ruling A's tail («the
     // intensity read is evaluated now ⇒ expressed»). Pinned by its neighbours rather than by a line
     // number: the birth spelling it replaced must be gone from the weekly pass.
+    //
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T3, AND STRENGTHENED RATHER THAN WEAKENED – and it went RED on
+    // contact, which is this pin doing exactly the job it was built for. WHAT MOVED: the call is
+    // HOISTED into a local, `const expressed = expressedTemperamentOf(world)`, and both axes are
+    // taken off that one value. WHY IT HAD TO: T3's pressure term scales by her EXPRESSED OPENNESS as
+    // well as by intensity (§3c's ×0.75 / ×1.5), and the architect's ruling L part 3 forbids a second
+    // call for the second axis – `accrueSpirit`'s own ⚠⚠ is «IT IS READ EXACTLY ONCE, HERE AT THE
+    // HEAD … Do not re-read it after this line», and wave 5 ruled that the girl who experienced the
+    // week is ONE girl. An inline second `expressedTemperamentOf(world)` would have kept this pin
+    // green while breaking the ruling it stands for.
+    //
+    // ⚠ THE CLAIM IS UNCHANGED AND NOW ASSERTED IN THREE PIECES INSTEAD OF ONE: the pass reads
+    // EXPRESSION (the hoist), the intensity axis comes off THAT read (so the spelling cannot drift
+    // back to birth), and the birth spelling it replaced is still gone. ⭐ AND ONE PIECE IS NEW AND
+    // STRICTLY STRONGER – the read is COUNTED, at exactly one, so ruling L part 3 is guarded by
+    // arithmetic rather than by a substring. `expressedTemperamentOf(world)` with a closing bracket
+    // cannot match its own declaration, whose next character is a colon.
     const spirit = codeOnly(readFileSync(`${SRC}engine/spirit.ts`, 'utf8'))
-    expect(spirit, '⚠ the weekly pass reads the EXPRESSED intensity')
-      .toContain('temperamentIntensity(expressedTemperamentOf(world))')
+    expect(spirit, '⚠ the weekly pass reads the EXPRESSED temperament')
+      .toContain('const expressed = expressedTemperamentOf(world)')
+    expect(spirit, '⚠ ...and the intensity axis is a projection of that one read')
+      .toContain('temperamentIntensity(expressed)')
+    expect(spirit.split('expressedTemperamentOf(world)').length - 1, '⚠ ruling L part 3: ONE read, at the head')
+      .toBe(1)
     expect(spirit, '⚠ ...and the birth spelling it replaced is not still standing beside it')
       .not.toContain('temperamentIntensity(world.temperament ?? temperamentFor(world.seed))')
     // ⚠⚠ AND THE FENCE, WHICH IS THE HALF T7 MUST NOT BREAK EITHER (who-she-is §3, wave-5 brief §0.2).

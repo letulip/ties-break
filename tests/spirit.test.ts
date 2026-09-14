@@ -82,7 +82,7 @@ function probeWorld(temperament: Temperament, week = 10, seed = 'spirit-probe'):
 
 /** The spirit delta one `accrueSpirit` produces from baseline, for a world the caller has posed. */
 function deltaFromBaseline(world: WorldState): number {
-  accrueSpirit(world, false)
+  accrueSpirit(world, false, [])
   return Math.round((world.spirit - ECONOMY.spirit.baseline) * 10) / 10
 }
 
@@ -315,18 +315,18 @@ describe('⚠⚠ the weekly rule – RETURN FIRST, THEN THIS WEEK (the 09.09 ord
 
         const low = probeWorld(temperament, calm)
         low.spirit = 40
-        accrueSpirit(low, false)
+        accrueSpirit(low, false, [])
         expect(low.spirit).toBe(40 + rate)
 
         const high = probeWorld(temperament, calm)
         high.spirit = 90
-        accrueSpirit(high, false)
+        accrueSpirit(high, false, [])
         expect(high.spirit).toBe(90 - rate)
 
         // ...and the step never overshoots the baseline into an oscillation.
         const nearly = probeWorld(temperament, calm)
         nearly.spirit = ECONOMY.spirit.baseline - 1
-        accrueSpirit(nearly, false)
+        accrueSpirit(nearly, false, [])
         expect(nearly.spirit).toBe(ECONOMY.spirit.baseline)
       })
 
@@ -335,18 +335,18 @@ describe('⚠⚠ the weekly rule – RETURN FIRST, THEN THIS WEEK (the 09.09 ord
         const floorTest = probeWorld(temperament, week)
         floorTest.spirit = 0
         floorTest.injury = { kind: 'knee', severity: 'major', weeksRemaining: 9, totalWeeks: 9, sinceWeek: week }
-        accrueSpirit(floorTest, false)
+        accrueSpirit(floorTest, false, [])
         expect(floorTest.spirit).toBeGreaterThanOrEqual(0)
 
         const ceilTest = probeWorld(temperament, week)
         ceilTest.spirit = 100
         ceilTest.vacations = [{ week, packageId: 'seaside', paidCents: 0 }]
-        accrueSpirit(ceilTest, false)
+        accrueSpirit(ceilTest, false, [])
         expect(ceilTest.spirit).toBeLessThanOrEqual(100)
 
         const tenths = probeWorld(temperament, week)
         tenths.injury = { kind: 'knee', severity: 'minor', weeksRemaining: 2, totalWeeks: 3, sinceWeek: week - 1 }
-        accrueSpirit(tenths, false)
+        accrueSpirit(tenths, false, [])
         expect(tenths.spirit * 10).toBe(Math.round(tenths.spirit * 10))
       })
     })
@@ -359,16 +359,16 @@ describe('⚠⚠ the weekly rule – RETURN FIRST, THEN THIS WEEK (the 09.09 ord
     for (const w of [steady, intense]) {
       w.injury = { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: week }
     }
-    accrueSpirit(steady, false)
-    accrueSpirit(intense, false)
+    accrueSpirit(steady, false, [])
+    accrueSpirit(intense, false, [])
     expect(intense.spirit).toBeLessThan(steady.spirit)
 
     const backSteady = probeWorld('sunny', week)
     const backIntense = probeWorld('fiery', week)
     backSteady.spirit = 40
     backIntense.spirit = 40
-    accrueSpirit(backSteady, false)
-    accrueSpirit(backIntense, false)
+    accrueSpirit(backSteady, false, [])
+    accrueSpirit(backIntense, false, [])
     expect(backSteady.spirit).toBeGreaterThan(backIntense.spirit)
   })
 
@@ -379,7 +379,7 @@ describe('⚠⚠ the weekly rule – RETURN FIRST, THEN THIS WEEK (the 09.09 ord
       world.spirit = 12
       for (let i = 0; i < 60; i++) {
         world.week = weekWhere((w) => quiet(base, w), world.week + 1)
-        accrueSpirit(world, false)
+        accrueSpirit(world, false, [])
       }
       expect(world.spirit, t).toBe(ECONOMY.spirit.baseline)
     }
@@ -391,16 +391,16 @@ describe('bond – the standing, and the memory property', () => {
     const calm = weekWhere((w) => quiet(createWorld('spirit-probe'), w), 5)
     const low = probeWorld('sunny', calm)
     low.bond = 50
-    accrueSpirit(low, false)
+    accrueSpirit(low, false, [])
     expect(low.bond).toBe(50 + ECONOMY.bond.regressionPerWeek)
 
     const high = probeWorld('sunny', calm)
     high.bond = 90
-    accrueSpirit(high, false)
+    accrueSpirit(high, false, [])
     expect(high.bond).toBe(90 - ECONOMY.bond.regressionPerWeek)
 
     const settled = probeWorld('sunny', calm)
-    accrueSpirit(settled, false)
+    accrueSpirit(settled, false, [])
     expect(settled.bond).toBe(ECONOMY.bond.start)
   })
 
@@ -411,7 +411,7 @@ describe('bond – the standing, and the memory property', () => {
     let weeks = 0
     while (world.bond < ECONOMY.bond.start && weeks < 200) {
       world.week = weekWhere((w) => quiet(base, w), world.week + 1)
-      accrueSpirit(world, false)
+      accrueSpirit(world, false, [])
       weeks += 1
     }
     expect(weeks).toBe(50)
@@ -460,7 +460,7 @@ describe('bond – the standing, and the memory property', () => {
     // one week of regression moves exactly the constant, at a bond value already on the grid.
     const world = probeWorld('sunny', 5)
     world.bond = ECONOMY.bond.start - 10
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     expect(world.bond).toBe(ECONOMY.bond.start - 10 + regressionPerWeek)
   })
 
@@ -920,7 +920,7 @@ describe('the fence this step is judged by', () => {
     world.week = 40
     world.injury = { kind: 'ankle', severity: 'minor', weeksRemaining: 3, totalWeeks: 3, sinceWeek: 40 }
     const before = JSON.stringify(world.rngMain)
-    accrueSpirit(world, false)
+    accrueSpirit(world, false, [])
     applyBondDelta(world, -3)
     expect(JSON.stringify(world.rngMain)).toBe(before)
   })
@@ -938,7 +938,23 @@ describe('the fence this step is judged by', () => {
     // nothing to do with randomness. The arity line stays (a THIRD parameter is still red, and that is
     // worth keeping), and the claim itself is now asserted OF THE SIGNATURE, where it can still fail:
     // give either function an `Rng` and this goes red on the text of the declaration.
-    expect(accrueSpirit.length).toBe(2)
+    //
+    // ⚠⚠ RE-AIMED A SECOND TIME 14.09 BY WAVE 6's T3 (the architect's ruling A), AND IT WENT RED ON
+    // CONTACT, WHICH IS THE SENTENCE ABOVE COMING TRUE: «a THIRD parameter is still red, and that is
+    // worth keeping». WHAT MOVED: `accrueSpirit` gained `exposure: readonly ExposureEvent[]` – the
+    // week's exposure list, derived by `world/spotlight.ts` and handed down by `world/phaseHerWeek.ts`
+    // (§0.1's dependency inversion, ruling J's shape applied to a second fact). Neither DELETED nor
+    // WEAKENED: the number moves from 2 to 3, a FOURTH parameter is still red, and the `toContain`
+    // list below grows the new name so the claim is about the signature that exists.
+    //
+    // ⚠⚠ AND THE PARAMETER IS REQUIRED **BECAUSE OF THIS LINE** – ruling A in one sentence, recorded
+    // where the counter lives. `Function.length` counts the parameters BEFORE the first one carrying
+    // a default, so `exposure: readonly ExposureEvent[] = []` would have left this reading 2: GREEN
+    // through the exact change it exists to notice, and the next wave inheriting a counter that had
+    // quietly stopped counting. That is the «unable to fail» family in its eleventh costume. The cost
+    // of requiring it was 49 mentions across 9 files, every one of them named by `vue-tsc -b --force`,
+    // which is why required is the CHEAP option and not the expensive one.
+    expect(accrueSpirit.length).toBe(3)
     expect(applyBondDelta.length).toBe(2)
     // ⚠ THROUGH `lineAt`, WHICH THROWS ON AN ABSENT MARKER – the raw `indexOf` form would hand back a
     // `-1` slice and the pin would go green on a function it could no longer find (CLAUDE.md's own
@@ -950,7 +966,16 @@ describe('the fence this step is judged by', () => {
       expect(signature, `${fn}'s declaration must fit on the line this pin reads`).toContain('{')
     }
     // ...and the pin can see a signature at all, so neither assertion above is vacuous.
+    // ⚠⚠ AND THE SECOND NAME IS WAVE 6's T3 – ruling A's own instruction («the re-aim adds the new
+    // parameter to the same pin's `toContain` list beside `psychologistWorks: boolean`»). ⭐ THE
+    // SIBLING ASSERTION ABOVE IS WHY BOTH NAMES HAVE TO FIT ON ONE LINE: `.toContain('{')` proves
+    // this pin is not reading a WRAPPED fragment, because a signature broken across lines would make
+    // «must take no Rng, whatever else it takes» pass on a truncated string. Measured 14.09: the
+    // three-parameter declaration is 119 characters, the repository carries no prettier or eslint
+    // width config, and `engine/spirit.ts` already holds lines of 163 – so nothing in the toolchain
+    // will wrap it, and a hand-wrapped one goes red here rather than silently hollowing out the pin.
     expect(lineAt(src, 'export function accrueSpirit(')).toContain('psychologistWorks: boolean')
+    expect(lineAt(src, 'export function accrueSpirit(')).toContain('exposure: readonly ExposureEvent[]')
   })
 
   it('⚠ engine/spirit.ts reaches for no clock, no Math.random and no UI', () => {
@@ -1082,7 +1107,22 @@ describe('the fence this step is judged by', () => {
     // ⚠ SO THE EXACT TEXT IS WORTH PINNING, AND THE NEGATIVE BESIDE IT IS WHAT MAKES IT A RULE: the
     // one thing that must never happen here is the raw flag being handed down in the predicate's
     // place, which would reinstate the defect while leaving the signature and every arity pin green.
-    const CALL = 'accrueSpirit(world, psychologistWorksThisWeek(world))'
+    //
+    // ⚠⚠ RE-AIMED A SECOND TIME 14.09 BY WAVE 6's T3, AND NOT WEAKENED BY A CHARACTER. WHAT MOVED:
+    // the call APPENDS a third argument, `exposureEventsOf(world, world.week)` – the week's exposure
+    // list, §0.1's dependency inversion applied to a second fact. WHY THE TEXT IS STILL EXACT: the
+    // negative beside it is the whole rule, and it is now guarding TWO holes rather than one – the
+    // raw flag handed down in the predicate's place (ruling J's own hole, 13.09) and a hoisted or
+    // pre-computed exposure list handed down in the derivation's place. ⚠ THE DOUBLE ASK OF
+    // `psychologistWorksThisWeek(world)` ON THIS LINE IS DELIBERATE AND DID NOT MOVE – ruling M's ⚠:
+    // hoisting it into a local is exactly what would let a raw flag be handed down, so T3 APPENDED
+    // and changed nothing else about the statement.
+    //
+    // ⚠ THIS PIN IS ONE RULING A DID NOT NAME. Its table names three sites (the arity pin above and
+    // the two wave-4 files); measured on the tree there are FIVE, and this is the fourth – a text pin
+    // living in the same file as the arity one. The fifth is tests/wave5-psychologist-walls.test.ts's
+    // ruling-P case. Both are re-aimed with their own notes; carried back to the architect.
+    const CALL = 'accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))'
     const j = code.indexOf(CALL)
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === CALL), 'and it is called exactly once').toHaveLength(1)

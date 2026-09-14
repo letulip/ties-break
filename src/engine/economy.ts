@@ -56,6 +56,14 @@ export interface AdBandDef {
   termYearsMax: number
 }
 import type { TierId } from './season/types'
+// ⚠⚠ TYPE-ONLY, AND IT POINTS AT A MODULE THAT IMPORTS **THIS ONE** AT RUNTIME (`world/spotlight.ts`
+// reads `ECONOMY`), which is exactly why it is spelled `import type` and may never become a value
+// import. `import type` is erased at compile time, so this closes no runtime cycle at all – the same
+// shape `TierId` above uses and the same discipline every `world/*.ts` leaf uses for `WorldState`.
+// What it buys is that `pressureBase` is typed `Record<ExposureKind, number>` and therefore TOTAL:
+// the day a sixth exposure kind joins the union, `vue-tsc` names the missing base instead of letting
+// a kind ship priced at `undefined`, which would poison the whole weekly sum with `NaN`.
+import type { ExposureKind } from './world/spotlight'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
 // nothing, so this direction can never close a cycle.
@@ -5118,11 +5126,14 @@ export const ECONOMY = {
   //
   // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight – the
   // psychologist block's own rule one concern up, and for its reason («a constant with no reader is
-  // a constant nobody can be wrong about yet»): `pressureBase` and the openness scale land with T3's
-  // term inside `accrueSpirit`; `habituationFullWeeks` / `habituationFloor` with T4's growth;
-  // `leakBasePerWeek` / `leakOpennessMult` / `wrongShare` with T6's hazard; `newsWindowWeeks` with
-  // T7's booth. The fifth focus's two ladders (`publicLifeShrink`, `publicLifeAccel`) are T5's and
-  // join `ECONOMY.psychologist` beside the other four focus tables, NOT this block.
+  // a constant nobody can be wrong about yet»): `habituationFullWeeks` / `habituationFloor` land
+  // with T4's growth; `leakBasePerWeek` / `leakOpennessMult` / `wrongShare` with T6's hazard;
+  // `newsWindowWeeks` with T7's booth. The fifth focus's two ladders (`publicLifeShrink`,
+  // `publicLifeAccel`) are T5's and join `ECONOMY.psychologist` beside the other four focus tables,
+  // NOT this block.
+  // ⭐ T3 IS HERE (14.09) AND IT TOOK EXACTLY THE TWO THIS SENTENCE PROMISED IT: `pressureBase` and
+  // `opennessScale` below. The other five names above are still absent and still T4's, T6's and
+  // T7's – the list is edited as each lands rather than kept as a stale forecast.
   spotlight: {
     /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – the fame at which the world starts calling her
      *  news. ONE constant behind ONE predicate (`sheIsNewsAt`, `world/spotlight.ts`): every exposure
@@ -5183,6 +5194,53 @@ export const ECONOMY = {
      *  ⚠ A PROPOSAL, LIKE THE BAR ABOVE – the brief's §4 lists it under «Proposals – NONE ruled»,
      *  and what ruling F settles is its TYPE, not its rung. T9 prices where the bar belongs. */
     stageTierMin: 'wta500' as TierId,
+    /** ⭐⭐⭐ WHAT ONE EXPOSURE EVENT COSTS HER, **BEFORE ANY SCALING** – the spirit points T3's term
+     *  subtracts per event, per kind, keyed by `ExposureKind` so a sixth kind is a design decision
+     *  with a number attached rather than a convenience (`world/spotlight.ts`'s own ⚠).
+     *
+     *  ⚠⚠ «BEFORE SCALING» IS THE LOAD-BEARING HALF OF THE SENTENCE AND IT IS THE ARCHITECT'S RULING
+     *  L. These are §3c's «−2..−4 before scaling», so they take `ECONOMY.spirit.perturbationScale`
+     *  EXACTLY ONCE, inside T3's own summand – which is why that summand sits OUTSIDE
+     *  `weekPerturbation`'s multiplication. The alternative's cost is recorded in this file one
+     *  concern up, on `spirit.shock`: those constants are ALREADY intensity-scaled (−27.5 × 0.8 =
+     *  −22.0, × 1.25 = −34.4), and a row inside `weekPerturbation` would have scaled them a SECOND
+     *  time, to −17.6 / −42.5. A future editor who moves these rows into `perturb` repeats that
+     *  defect on new numbers.
+     *
+     *  ⚠⚠ ALL FIVE ARE §4 PROPOSALS AND NOT ONE OF THEM IS RULED. The brief's own §4 lists them
+     *  under «Proposals – NONE ruled, all bench-priced predicted-first, his word after», and the
+     *  architect's ruling N measured what they put ON SCREEN before anybody tunes them: at these
+     *  bases the deepest single event the wave has – a heavily public loss, expressed-open, steady,
+     *  at baseline 70 – lands at 67.6, which is ONE TENTH above the `dimmed` band edge (67.5). The
+     *  spotlight's own worst contribution for that girl is 2.40 against a 2.50 distance to the edge,
+     *  so it never crosses a Mood band ALONE: it tips a week the ordinary weather had already
+     *  carried to the boundary. For scale, a break-up is −22 / −34 on the same axis. ⚠ Ruling N is
+     *  explicit that this is NOT a re-tune – «no constant moves in this wave on my word» – so what
+     *  T3 ships is the shape, pinned as a RATIO, and T9 prices the sizes.
+     *
+     *  ⚠ THE RANKING IS THE SPEC'S, NOT A GUESS: a wrong public story and a heavily public loss are
+     *  the two deepest (−4), a shoot is the shallowest (−2) because the cameras were invited, and a
+     *  big stage and the booth's mention sit between (−3). */
+    pressureBase: {
+      stage: -3,
+      shoot: -2,
+      publicLoss: -4,
+      aired: -3,
+      wrongStory: -4,
+    } as Record<ExposureKind, number>,
+    /** ⭐⭐⭐ WHO CARRIES IT WELL – the multiplier on every exposure event, read off her EXPRESSED
+     *  openness (§0.6: the mechanics read expression, the voices read birth).
+     *
+     *  ⚠⚠ ANCHORED, NOT PROPOSED – the one pair of numbers in this block that is the SPEC'S OWN.
+     *  who-she-is §3c: an open girl half-feeds on the attention and pays ×0.75; a private one pays
+     *  ×1.5. The brief's §4 lists it under «Anchored by the spec» beside the note that the intensity
+     *  scale is the STANDING `perturbationScale` and never a new constant.
+     *
+     *  ⚠ THE RATIO IS THE SHAPE AND IT IS PINNED AS ONE (ruling N part 2): 1.5 / 0.75 is exactly ×2,
+     *  so the same event costs an expressed-private girl exactly twice what it costs an
+     *  expressed-open one before habituation. T3's pin asserts the RATIO rather than either number,
+     *  precisely so a §4 re-tune of `pressureBase` cannot silently break the shape it is about. */
+    opennessScale: { open: 0.75, private: 1.5 },
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
