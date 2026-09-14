@@ -91,6 +91,24 @@ Run in this order, one at a time, nothing else running. `ps -Ao pid,command | gr
 
 **Every log's mtime is newer than the start stamp written into that same log**, and every exit code was appended by the command itself. The four numbers, in order: `1789387597 > 1789387209` · `1789388404 > 1789387626` · `1789388456 > 1789388419` · `1789388475 > 1789388465`.
 
+⚠ **`npm run check` WAS RUN TWICE AND THE SECOND RUN IS THE ONE THAT COUNTS** – wave 5's practice, for
+wave 5's reason. The first ran while this document was still being written; the second ran on the
+tree that was COMMITTED (`554efcf7`), so no verdict here is a stale green over a tree nobody checked:
+`/tmp/tb-gate-check-head-1789388539.log`, start `12:22:19Z`, mtime **1789388930** (391 s later),
+**`HEADCHECK_EXIT=0`** · `unit: green in 318s` (`bulk … ok (166s, 5549 tests)`) · component
+`180 passed / 1923 passed` · `decision index: ok – 112 entries` · `install size: ok`. **The only text
+not covered by that run is this paragraph and the row it sits under**, which is where the regress has
+to stop.
+
+⚠⚠ **AND ANOTHER SESSION IS LIVE IN THIS CHECKOUT, WHICH IS REPORTED RATHER THAN ASSUMED HARMLESS.**
+Untracked scratch files appeared in the repository ROOT during this task and CHANGED BETWEEN THE TWO
+GATE RUNS – `scratch-w517-read.ts` before the first, `scratch-w517-b.ts` and `scratch-w517-c.ts`
+after the second. They are not this task's and were not touched; every commit here used the pathspec
+form of `git commit` precisely so that somebody else's index cannot ride along (CLAUDE.md's 13.08
+incident). Both gate runs were green with those files present, so nothing they wrote reached the
+gate – but T8 flagged the same neighbour and the brief asked for a quiet machine, and «quiet» was
+true of the CPU and not of the working tree.
+
 ### 2a. This wave's own §6, pin by pin
 
 | §6 asks for | where it is | verdict |
