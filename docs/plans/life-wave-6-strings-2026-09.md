@@ -480,3 +480,18 @@ need a third string move is a QUESTION for the architect, not an edit».
    (`tests/wave5-psychologist-focus.test.ts`'s house-style case) derives its count from
    `PSY_FOCUSES` rather than a literal – so it followed the roster to five on its own, which is why
    T5's re-aim was a strengthening rather than a bump.
+
+## 9. The architect's 14.09 amendments – the eight decisions reach the strings
+
+* **R1 IS BUILT (D2, his «да»)**: `PUBLIC_LIFE_RECEIPT` in `engine/spirit.ts`, printed on the
+  first crossing of `psychologist.publicLifeReceiptAt` (0.5) on a worked week – §8's question 1
+  is closed by the trigger this file proposed. Status: `ruled`, now with a writer.
+* **§8 question 2 (one row or five) – answered by D1b**: ONE row stands, and it gains a FLOOR –
+  `rowMinCharge 1.0` – so the quiet habituated week no longer prints a sentence over an invisible
+  dip. The five per-kind drafts stay parked here for the day he wants the cameras named.
+* **D3 scope flag, for his вычитка**: 📸 was picked for the SPOTLIGHT FAMILY – the exposure row
+  AND the two leak rows («It is in the papers…») – on the one-thread-one-mark reading. If the
+  leak rows should keep 🤍, that is one word and one line in `lifeRowGlyphs.ts`.
+* **§8 question 3 (the diary exposure lines' mechanic)** – NOT commissioned by the eight; the 24
+  cells stay written and parked, and the `SpokenMoment`/`MOMENTS` licence half remains a named
+  later task.

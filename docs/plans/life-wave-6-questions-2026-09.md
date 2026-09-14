@@ -16,6 +16,22 @@ Read in this order: 1 and 2 are one decision in two halves and the rest depend o
 
 ---
 
+⭐⭐⭐ **RULED 14.09 – ALL SIXTEEN CLOSED IN ONE PASS.** The architect ruled Q6/Q7/Q10/Q13 (the
+rulings doc's «architect's pass» section); the remaining twelve went up as eight decisions and the
+owner answered every one – his words verbatim in `docs/decisions.md` («THE PRIVATE LIFE'S SIXTEEN
+ANSWERED») and per-decision in the rulings doc's D-section. The shipped package: D1 the rank bands
+(newsRankKnown 100 / newsRankNoticed 200 – his numbers; `newsStandingOf` replaces `sheIsNewsAt`,
+fame leaves the gate and stays in the leak) · D1b the row floor (`rowMinCharge 1.0`) · D1c the
+sunny girl's lightness is her reward · D2 the receipt built (`PUBLIC_LIFE_RECEIPT`, crossing
+`publicLifeReceiptAt 0.5` on a worked week) · D3 📸 on the spotlight family's rows · D4 the wrong
+story keeps its price · D5 the freshness lever (`leakFreshWeeks 8 × leakFreshMult 4`) · D6
+accepted + §3c's sentence amended · D7 the broke-ending, the diary worry and the birthday licence
+read REACHABLE money · D8 the college need layer buried with its tombstone. Every number that was
+a proposal stays benchable; his playtest remains the final read.
+
+
+---
+
 ## 1. ⚠⚠ The news bar decides WHO gets this wave, not how often
 
 `ECONOMY.spotlight.newsFameMin` is the single predicate every mechanic in the wave sits behind.

@@ -1241,3 +1241,42 @@ scene's lever (Q11, the freshness-multiplier proposal) — D6 the walled-famous 
 accept + amend the spec sentence) — D7 ⚠⚠ the broke-ending twin and the two hardship voices
 (Q14+Q15, recommended commissioned AS THE WAVE'S OWN TAIL, ahead of §4 tuning) — D8 the college
 need layer (Q16, re-anchor bench-first vs honest retirement).
+
+## The owner's answers – all eight, 14.09, and what shipped where
+
+* **D1a – «…с топ-200 можно иногда начинать что-то говорить, а в топ-100 так и вполне уверенно,
+  прямая аналогия – спонсорская лестница».** The bar re-cut to the rank bands: `newsStandingOf`
+  ('quiet'/'noticed'/'known'; belt: live professional points) replaces `sheIsNewsAt`; fame leaves
+  the GATE and stays in the leak's «more lenses» factor (ruling I intact). `newsRankKnown 100` /
+  `newsRankNoticed 200` are HIS numbers; `noticedLeakScale 0.5` is the architect's proposal on his
+  «иногда», benchable. Habituation grows at 'known' alone – a girl the light only visits never
+  gets used to it.
+* **D1b – «ок».** `rowMinCharge 1.0`: the exposure row prints only over a visible dent; the charge
+  itself lands at any size. Overrides ruling N's events-gate for the ROW alone.
+* **D1c – «ок».** The sunny girl's lightness is her reward; her own product arrives with the form
+  layer. No compensation content.
+* **D2 – «да».** `PUBLIC_LIFE_RECEIPT` built on the strings doc's own trigger: prints when
+  `habituationScale` first crosses `publicLifeReceiptAt 0.5` on a week the year is being worked;
+  once-ever by monotonicity, no schema.
+* **D3 – «да» (📸).** The spotlight family's rows carry `lifeKind: 'exposure'` (a ROW kind, not a
+  `LifeBeatKind` – §8's ban intact) and the column maps it to his camera. ⚠ Scope: the architect
+  put the LEAK rows in the family too (one thread, one mark) – flagged in the strings doc for his
+  вычитка; un-picking that half is one line.
+* **D4 – «оставляем пока».** The wrong story keeps −4 before its correction beat exists; rare by
+  construction, revisited with the beat.
+* **D5 – «давай попробуем как ты предлагаешь».** `leakFreshWeeks 8` × `leakFreshMult 4` – the
+  hazard runs hotter while the episode is young; same key, same single uniform, threshold-only.
+  Bench prints the overtake share; both numbers his after the numbers.
+* **D6 – «давай по рекомендации попробуем и фразу поправим».** Accepted as design; who-she-is §3c
+  amended in place – the freeze's living population is the repairing girl in transit.
+* **D7 – «давай попробуем».** The three reads move to REACHABLE money: the debt spell
+  (`resolveEndings`), the ending view (`autoEndingViewOf`), the diary's money worry (the snapshot
+  filler) and the birthday licence (`householdWalletCents` gains the parked cash by the means
+  module's own cycle-safe re-spell, pinned as an equivalence). The Money strip's copy survives
+  verbatim – it never named the wallet, so «below zero» stays true in the honest sense.
+  `familyCanPayPerYearCents`'s view reads reachable too (§16's aside).
+* **D8 – «значит давай похороним».** The college need layer retired with an honest tombstone
+  (`COLLEGE_OFFER.assetSpreadYears` carries the story: calibrated at round 21, killed by three
+  economy waves of income drift, zero real recipients since). The quote's `needShare` field stays
+  on the wire at 0; the college suite's dead guards were replaced by the two burial pins, never
+  silently dropped.

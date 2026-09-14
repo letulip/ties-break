@@ -422,9 +422,12 @@ pressure drafts live in «−2..−4 before scaling» (§3c) · the intensity sc
 `perturbationScale` – not a new constant.
 
 **Proposals – NONE ruled, all bench-priced predicted-first, his word after:**
-`newsFameMin 30` (anchor ⚠ CORRECTED BY T2, 14.09: the 30 lives at
-`ECONOMY.business.merch.contracts.fameCap` – the merch/brand-reach model's own bar, one system
-further from «the ad market» than the brief first said; a proposal, not a derivation) · `stageTierMin 500` · `pressureBase { stage: −3, shoot: −2,
+⚠⚠ AMENDED BY D1 (14.09, post-questions): `newsFameMin` DIED – the bar reads the RANK
+(`newsRankKnown 100` / `newsRankNoticed 200`, the owner's own numbers, the sponsor ladder's
+analogy; `noticedLeakScale 0.5`, `rowMinCharge 1.0`, `leakFreshWeeks 8`/`leakFreshMult 4` and
+`psychologist.publicLifeReceiptAt 0.5` joined with D1b/D5/D2) and fame stays only in the leak
+hazard. What follows is HISTORY: `newsFameMin 30` (anchor corrected by T2 to
+`ECONOMY.business.merch.contracts.fameCap`; a proposal, not a derivation) · `stageTierMin 500` · `pressureBase { stage: −3, shoot: −2,
 publicLoss: −4, aired: −3, wrongStory: −4 }` · `newsWindowWeeks 6` · `habituationFullWeeks 104`
 (two seasons of living known) · `habituationFloor 0.25` · `publicLifeShrink [0.85, 0.70, 0.55]`
 · `publicLifeAccel [1.5, 2.0, 2.5]` · `leakBasePerWeek 0.008` · `leakOpennessMult ×2.0

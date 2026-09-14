@@ -248,6 +248,11 @@ Named now, because «этот слой меняет всю игру» is exactly
 axis – it is a spirit perturbation FAMILY that reads fame the way the §4 table already reads
 injuries and exams.
 
+* ⭐ RULED D1 (14.09): «a high fame band» became a PROFESSIONAL STANDING – his own words: «уже с
+  топ-200 можно иногда начинать что-то говорить, а в топ-100 так и вполне уверенно, прямая
+  аналогия – спонсорская лестница». Top-100 = she lives known (everything, habituation grows);
+  101–200 = noticed (her occasions register, the leak runs at half, habituation waits); below =
+  quiet. Fame stays the leak hazard's «more lenses» factor and the brand economy's number.
 * **Pressure lands on EXPOSURE, never on success itself**: at a high fame band, the weeks that
   put her in the light – a title or a final on a big stage, a shoot week, a heavily public loss
   – carry a pressure perturbation (draft −2..−4 before scaling; bench numbers). ⚠ No standing
@@ -266,7 +271,14 @@ injuries and exams.
   – «и справляется ли вообще» becomes a question about the home, not only the girl.
 * **Habituation – «справляется» has a curve**: sustained fame slowly shrinks her own pressure
   scale (she learns to live known) – unless walls are up: walls freeze habituation. A veteran
-  star from a good home shrugs at cameras that once cost her sleep.
+  star from a good home shrugs at cameras that once cost her sleep. ⭐ AMENDED BY D6 (14.09, his
+  «давай по рекомендации попробуем и фразу поправим») after the wave-6 bench measured who the
+  freeze actually touches: **walls and fame are alternative costs** – a parent who grinds hard
+  enough to raise her walls destroys the fame that would have made her news (13.5 news weeks, 0
+  frozen, in the walled arm) – so the freeze's living population is the REPAIRING girl in
+  transit, famous while the wall is still coming down (26.3 frozen news weeks measured). The
+  sentence above describes the boundary case; the girl it is mostly ABOUT is the one on her way
+  back.
 * **The psychologist's FIFTH focus** («The public life», working name – his «может психолог
   что-то тоже поможет исправить»; the psychologist spec carries it as O7): while held, the
   pressure shrinks by rung and habituation accelerates. Sentence draft: «The cameras stopped
