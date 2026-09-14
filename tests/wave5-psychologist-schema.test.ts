@@ -667,9 +667,19 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // (`beatEndsRead`, and the told-late kept row) and must read BIRTH, because `answerLifeBeat`
     // re-validates the chosen option against a set that has to be reconstructible from persisted
     // facts – and expression is a fact about the current week, not about the episode.
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6, AND STRENGTHENED RATHER THAN RENUMBERED – it went RED on
+    // contact, which is this pin doing exactly the job it was built for. WHAT MOVED: `lifeBeat.ts`
+    // holds a FOURTH mechanic now, §9's `rollLeak`, whose openness read decides both the leak hazard
+    // and the story's accuracy. WHY IT IS AN EXPRESSION READ AND NOT A BIRTH ONE – ruling A's own
+    // test, applied rather than assumed: both draws are EVALUATED NOW and neither RESULT is a price
+    // anything re-derives later (what `rollLeak` persists is two weeks and a boolean, stamped at the
+    // week they were true), so the girl the lenses see is the girl she is THIS week. A girl behind
+    // walls is seen less and misreported more, which is §2a doing exactly what §3c-bis says openness
+    // does. WHAT DID NOT MOVE: the birth count below stays 2 – T6 re-derives no price – so the split
+    // is now 4/2 and every one of the six is still named.
     const beats = codeOnly(readFileSync(`${SRC}engine/world/lifeBeat.ts`, 'utf8'))
-    expect(beats.split('expressedTemperamentOf(world)').length - 1, '⚠ ruling A: THREE mechanics read expression')
-      .toBe(3)
+    expect(beats.split('expressedTemperamentOf(world)').length - 1, '⚠ ruling A: FOUR mechanics read expression')
+      .toBe(4)
     // ⚠ THE TWO COUNTS DO NOT OVERLAP, WHICH WAS MEASURED RATHER THAN ASSUMED (the first drafting of
     // this line subtracted 3 for the expected overlap and went red at −1). `expressedTemperamentOf`
     // spells the shared tail with a CAPITAL T – `…TemperamentOf(world)` – so a search for

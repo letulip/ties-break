@@ -1141,9 +1141,18 @@ describe('the fence this step is judged by', () => {
       code.filter((l) => l.startsWith('accrueSpirit(')),
       '⚠ and there is no OTHER spelling of it – the working week, never the raw flag',
     ).toEqual([CALL])
-    expect(code.slice(i + 1, j), 'only the private life\'s four weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6, AND THE OLD SENTENCE IS KEPT AS THE RECORD: it read «only the
+    // private life's FOUR weekly calls separate them». There are FIVE. The architect's ruling M put
+    // the leak hazard in this block – «it is a life call and belongs among its siblings» – and T6's
+    // own slot argument puts it THIRD, between the arrival and the delivery, because the overtake
+    // writes `knownWeek` and `deliverKnownPartner` is what turns that into the standing `'met'` card
+    // in the same tick. NOTHING about this pin's claim moves and it is not weakened by a character:
+    // it is still «the life calls sit between the body's pass and the spirit's, in THIS ORDER», it is
+    // still an exact list with no wildcard, and a sixth call or a reordering is red here.
+    expect(code.slice(i + 1, j), 'only the private life\'s five weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
+      'rollLeak(world)',
       'deliverKnownPartner(world)',
       'rollSmallTalk(world)',
     ])

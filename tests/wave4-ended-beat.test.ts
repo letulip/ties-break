@@ -143,6 +143,7 @@ import {
   raiseLifeBeat,
   rollArrival,
   rollEnds,
+  rollLeak,
   rollSmallTalk,
   ENDS_READS,
   ENDS_REGISTERS,
@@ -240,9 +241,19 @@ function seedEndingOn(prefix: string, week: number, temperament: (typeof TEMPERA
 // would prove a property of this file rather than of the engine. This is wave 4 T2's §E apparatus
 // widened by one call (`deliverKnownPartner`), for its stated reason: «a walk that hard-coded the
 // order would have proved a property of the test».
+// ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6 AND THE PARAGRAPH ABOVE IS KEPT WHOLE. WHAT MOVED: the block is
+// FIVE calls now, not four – the architect's ruling M put the leak hazard among its siblings and T6's
+// slot argument puts it THIRD. ⚠⚠ AND THIS RE-AIM WAS **NOT FORCED BY A RED**, which is why it is
+// worth a sentence: the walk filters on `l in LIFE_CALLS`, so an unregistered fifth call would have
+// been silently skipped and this pin would have gone on asserting a four-call block that no longer
+// existed – the «a green gate is evidence about what the gate RUNS» family, one level down. Adding
+// the call keeps the walk a walk of the REAL block. ⚠ It changes nothing for this file's fixtures:
+// none of them stamps a trophy, so `leakEligible` is false at every week they visit and the new call
+// is a no-op inside every case below. NOTHING about ruling A's or ruling F's claims moves.
 const LIFE_CALLS: Record<string, (world: WorldState) => void> = {
   'rollEnds(world)': rollEnds,
   'rollArrival(world)': rollArrival,
+  'rollLeak(world)': rollLeak,
   'deliverKnownPartner(world)': deliverKnownPartner,
   'rollSmallTalk(world)': rollSmallTalk,
 }
@@ -283,9 +294,10 @@ function lifeCallsInSourceOrder(): { names: string[]; run: (world: WorldState) =
   const names = code.slice(i + 1, j).filter((l) => l in LIFE_CALLS)
   // ⚠ THE ORDER IS ASSERTED HERE AND THE WALKS BELOW READ IT – so a reversed call site fails with
   // this sentence rather than as four confusing behavioural surprises.
-  expect(names, '⚠⚠ the tick ends, then arrives, then delivers – rulings A and F rest on it').toEqual([
+  expect(names, '⚠⚠ the tick ends, then arrives, then leaks, then delivers – rulings A and F rest on it').toEqual([
     'rollEnds(world)',
     'rollArrival(world)',
+    'rollLeak(world)',
     'deliverKnownPartner(world)',
     'rollSmallTalk(world)',
   ])

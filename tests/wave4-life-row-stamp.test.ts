@@ -195,13 +195,38 @@ describe('wave 4 T5 A – every life row carries its kind', () => {
     const occurrences = [...code.matchAll(/type:\s*'life'/g)].length
     expect(sites.length, `the sweep captured ${sites.length} of ${occurrences} \`type: 'life'\` occurrences – one is shaped so the pattern cannot see it`)
       .toBe(occurrences)
-    const unstamped = sites.filter((site) => !/lifeKind:\s*'/.test(site))
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6 AND THE LAW IS UNCHANGED – what it gains is ONE NAMED
+    // EXCEPTION WITH CUSTODY, on the tail-lint's `KNOWN_VIOLATIONS` precedent rather than a relaxed
+    // regex. WHAT MOVED: §9's leak prints the WORLD's version of her private life as a kept row
+    // (`LEAK_EVENT`) and carries no `lifeKind`, because the stamp's type is `LifeBeatKind` and wave
+    // 6's §8 forbids a new member of it – so the only alternatives were an honest absence or somebody
+    // else's mark, and the absence is the one that cannot lie. It wears `LIFE_ROW_EMOJI.life` through
+    // `lifeRowGlyph`'s `?? 'met'` fallback, the owner's own 11.09 pick; whether the spotlight deserves
+    // a mark of its own is HIS (§5a), and it goes to him with the wave's strings.
+    //
+    // ⚠⚠ AND T6 FOUND THAT THIS SWEEP HAS A SCOPE HOLE, which is recorded here rather than silently
+    // widened: it reads `worldSource()`, so `engine/spirit.ts` is outside it – and T3's `EXPOSURE_ROW`
+    // is a `type: 'life'` write site with no `lifeKind` that this pin has never seen. Widening the
+    // sweep would redden a row another task shipped under the same §8 reasoning, which is the
+    // architect's call and not this re-aim's; the finding is carried to him with the report.
+    //
+    // ⚠ THE EXCEPTION IS KEYED ON THE ROW'S OWN TEXT and is asserted to be EXACTLY ONE, so a second
+    // unstamped site cannot hide behind it.
+    const licensed = sites.filter((site) => site.includes('LEAK_EVENT['))
+    expect(licensed, '⚠ exactly one row is licensed to be unstamped – the spotlight\'s, and §8 is why')
+      .toHaveLength(1)
+    const unstamped = sites.filter((site) => !/lifeKind:\s*'/.test(site) && !site.includes('LEAK_EVENT['))
     expect(unstamped, '⚠⚠ a `\'life\'` feed row is written with no `lifeKind` – the glyph column would lie about it')
       .toEqual([])
     // ...and every kind it stamps is one the glyph column can actually mark. A write site stamping a
     // kind outside the roster would draw NOTHING once a per-kind glyph lands (the `?? 'met'` default
     // only covers ABSENT, never a kind nobody registered).
-    const stamped = sites.map((site) => /lifeKind:\s*'([a-z-]+)'/.exec(site)?.[1])
+    // ⚠ THE LICENSED ROW IS OUT OF THIS WALK TOO (T6's re-aim above): it stamps nothing, so asking
+    // «is its kind on the roster» would be asking about `undefined`, which the `?? 'met'` fallback
+    // already answers one layer down.
+    const stamped = sites
+      .filter((site) => !site.includes('LEAK_EVENT['))
+      .map((site) => /lifeKind:\s*'([a-z-]+)'/.exec(site)?.[1])
     for (const kind of stamped) {
       expect(LIFE_BEAT_ROW_KINDS as readonly string[], `«${kind}» is a kind the feed's column knows`).toContain(kind)
     }

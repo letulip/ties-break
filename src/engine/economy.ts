@@ -5204,6 +5204,12 @@ export const ECONOMY = {
   // `habituationFloor`, which are struck from the list above rather than left standing in it – the
   // list is edited as each task lands rather than kept as a stale forecast. What is still absent is
   // T6's three and T7's one.
+  // ⭐ AND T6 IS HERE (14.09) WITH EXACTLY THE THREE IT WAS PROMISED: `leakBasePerWeek`,
+  // `leakOpennessMult` and `wrongShare`, all struck from the list above. What is still absent is
+  // T7's one (`newsWindowWeeks`). ⚠ AND T6 ADDED NO FOURTH, which is worth saying because ruling I
+  // gives the hazard a FAME factor the brief had dropped: the factor is `ECONOMY.fame.cap`, which
+  // this block READS and never writes, so the ruling restored a term of the spec's own formula
+  // without opening a tunable the owner would have to price.
   spotlight: {
     /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – the fame at which the world starts calling her
      *  news. ONE constant behind ONE predicate (`sheIsNewsAt`, `world/spotlight.ts`): every exposure
@@ -5348,6 +5354,53 @@ export const ECONOMY = {
      *  below this floor and, far enough, through zero into a spotlight that PAYS her. The one writer
      *  and its cap pin are what stand between; a second writer must re-read this note. */
     habituationFloor: 0.25,
+    /** ⭐⭐⭐ HOW OFTEN A PRIVATE LIFE GETS OUT – the BASE weekly probability that the world learns
+     *  about an attachment nobody outside the family knows of (who-she-is §3c-bis, «the leak
+     *  hazard»). It is the bottom of a product and never the rate itself:
+     *
+     *      leakBasePerWeek × leakOpennessMult[openness] × (fameAt(world, week) / ECONOMY.fame.cap)
+     *
+     *  ⚠⚠ THE THIRD FACTOR IS THE ARCHITECT'S **RULING I** AND IT IS NOT OPTIONAL. The wave brief
+     *  dropped the fame term on the grounds that «more lenses on a bigger star is already priced by
+     *  the news gate»; measured, it is not – above `newsFameMin` the scale runs 30 → 100, so under
+     *  the brief's spelling a girl at 100 leaked at EXACTLY the rate of a girl at 30. That is a
+     *  different claim, not a smaller one, and who-she-is §3c-bis's own sentence («scales by fame ×
+     *  EXPRESSED openness – more lenses on a bigger star») wins under the wave's single-source rule.
+     *  ⚠ IT ADDS NO TUNABLE: `ECONOMY.fame.cap` is 100 and this block READS it, never writes it (the
+     *  wave's §8), and the draw COUNT does not move – still one uniform per eligible episode-week.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**, like everything in this block bar `opennessScale`. At 0.008
+     *  the fame factor re-prices the median by roughly 2× against a fameless spelling, and that
+     *  re-pricing is T9's to measure and the owner's to rule. */
+    leakBasePerWeek: 0.008,
+    /** ⭐⭐⭐ WHO IS SIMPLY SEEN – the multiplier on the leak hazard, read off her EXPRESSED openness
+     *  (§0.6: mechanics read expression, voices read birth). §3c-bis: «an open girl is simply seen
+     *  (dinner, a hand held at an airport)», a private one is not.
+     *
+     *  ⚠ IT IS THE MIRROR OF `opennessScale` AND POINTS THE OTHER WAY, which is the whole design and
+     *  is easy to «fix» by accident: the open girl leaks FOUR times as often (×2.0 against ×0.5) and
+     *  pays HALF as much for each exposure (×0.75 against ×1.5). Openness is not a good or a bad
+     *  trait here; it decides which half of the bargain she gets.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. T9's bench prices the pair, and the census prints share
+     *  leaked and median lag per temperament (§3c-bis's own expectation: «open leaks often/true,
+     *  private rarely/late/wrong»). */
+    leakOpennessMult: { open: 2.0, private: 0.5 },
+    /** ⭐⭐⭐ HOW WRONG THE WORLD GETS IT – the share of leaks that land as a WRONG story, by
+     *  EXPRESSED openness. who-she-is §3c-bis's own gem: «openness controls not only the SPEED of a
+     *  leak but its ACCURACY. An open girl's life leaks EARLY and roughly TRUE – the world saw it,
+     *  it is ordinary. A private girl's life leaks LATE and WRONG – the tabloid misattribution
+     *  engine.»
+     *
+     *  ⚠⚠ THE **LATE** HALF IS EMERGENT AND THERE IS NO LAG TERM ANYWHERE – the brief's own ⚠, kept
+     *  here because this is the constant a later reader would reach for to «add the lateness». It
+     *  falls out of `leakOpennessMult` alone: a private girl's hazard is a quarter of an open one's,
+     *  so her story breaks later in the episode by arithmetic and not by a second number. A lag term
+     *  added beside this one would price the same fact twice. T9's census measures the median lag
+     *  rather than setting it.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. */
+    wrongShare: { open: 0.15, private: 0.6 },
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

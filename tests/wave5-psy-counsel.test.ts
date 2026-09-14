@@ -574,10 +574,23 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
 
   it('⚠ no new `type: \'life\'` write site anywhere in the engine', () => {
     // The floor-plus-count shape wave 4's §A ratcheted: a sweep that found nothing would pass forever.
+    //
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6 AND THE CLAIM IS NARROWED BY EXACTLY ONE NAMED ROW, never by a
+    // wildcard. WHAT MOVED: there are FOUR life-row write sites now – §9's leak prints the world's
+    // own version of her private life as a kept row (`LEAK_EVENT`). WHY IT CARRIES NO `lifeKind`:
+    // the stamp's type is `LifeBeatKind` and wave 6's §8 forbids a new member of it, so the choice was
+    // «stamp it with somebody else's kind» or «leave it unstamped», and an honest absence beats a
+    // wrong mark. It therefore wears `LIFE_ROW_EMOJI.life` through `lifeRowGlyph`'s `?? 'met'`
+    // fallback – the owner's own 11.09 pick for life rows – and whether the spotlight deserves a mark
+    // of its own is a question for him (§5a: no agent picks a glyph unasked).
+    // ⚠ THE EXCEPTION IS KEYED ON THE ROW'S OWN TEXT, so a FIFTH unstamped site still reddens here.
     const code = codeOf(worldSource())
     const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(3)
-    expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and every one of them still stamps a kind').toHaveLength(3)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(4)
+    const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
+    expect(spotlight, '⚠ exactly one row is licensed to be unstamped, and this is it').toHaveLength(1)
+    expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and every OTHER one of them still stamps a kind')
+      .toHaveLength(3)
   })
 })
 

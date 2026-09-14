@@ -42,7 +42,11 @@ import { addEvent } from './ledger'
 // ⭐⭐⭐ AND THE ENDS HAZARD JOINS IT IN v75 T2 (12.09) – `rollEnds`, §8 of the same module. It is the
 // FIRST of the four at the call site and not the last, which is the whole of rulings F and A; the
 // import line's order is alphabetical and says nothing.
-import { deliverKnownPartner, rollArrival, rollEnds, rollSmallTalk } from './lifeBeat'
+// ⭐⭐⭐ AND THE LEAK JOINS THEM IN v77 T6 (14.09) – `rollLeak`, §9 of the same module, the
+// architect's ruling M («it is a life call and belongs among its siblings»). It sits THIRD at the
+// call site, between the arrival and the delivery, and that slot is load-bearing in both directions:
+// see the call site below.
+import { deliverKnownPartner, rollArrival, rollEnds, rollLeak, rollSmallTalk } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -300,11 +304,50 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        – `accrueSpirit`, five lines down, stays the one writer of it in the engine.
   rollEnds(world)
   rollArrival(world)
+  // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
+  //
+  //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a
+  //        LIFE call – it reads an episode, writes two stamps on it and appends a life row – so it
+  //        belongs among its siblings between `accrueCondition` and `accrueSpirit`, which is the
+  //        position two pins already defend (`wave4-ended-beat.test.ts`, `wave4-ends.test.ts`).
+  //
+  //          · **BEFORE `deliverKnownPartner`, AND THAT IS A REQUIREMENT RATHER THAN A READING.**
+  //            The overtake writes `knownWeek = world.week` and raises nothing; the delivery one
+  //            line down is what finds the row due and raises the standing `'met'` card in this same
+  //            tick. Placed after it, the founding scene would need its own delivery path – which
+  //            the brief forbids in as many words – or would arrive a week late for ever.
+  //          · **AFTER `rollArrival`**, so the leak sees the row the arrival may have just appended.
+  //            The hazard's gate is `activeEpisode` and the week someone appears is a week they can
+  //            be photographed («a hand held at an airport», §3c-bis); running first would give every
+  //            career a systematic blind week for no reason a player could be told. ⚠ IT IS NOT
+  //            `rollEnds`' MIRROR AND DOES NOT WANT TO BE: that call runs BEFORE the arrival to buy
+  //            two mechanical properties (an attachment cannot end in its own arrival week, and the
+  //            cooldown refuses same-tick re-arrival), and a leak has no such consequence to buy.
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:leak:<episodeId>:<week>` / `:story:` sub-streams, and an INELIGIBLE week
+  //        derives neither of them (world/lifeBeat.ts §9). The frozen capture (41550 / e6b0c709) is
+  //        untouched by construction. ⚠ ITS OWN CALL, for `accrueSpirit`'s own reason below –
+  //        `accrueCondition`'s arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts.
+  //
+  //        ⚠⚠ AND ITS GATE ASKS ABOUT `world.week − 1`, THE WAVE'S ONE HORIZON (ruling P), exactly
+  //        like the pressure four calls down and habituation after it. The consequence is stated so
+  //        nobody reads it as a lag somebody added: a story that breaks this week carries its
+  //        `'wrongStory'` exposure event on `publicWeek`, and the pass that prices it asks about the
+  //        week that closed – so the pressure lands in the NEXT tick. One clock, three readers.
+  rollLeak(world)
   // ⭐⭐ 1c-told (v74, the private life wave 3 – T6): AND THE WEEK HE IS TOLD ABOUT IT.
   //
   // ⚠ ONE LINE MOVED ABOVE THIS BLOCK IN v75 (wave 4's T2) AND NOTHING ELSE IN THIS PHASE DID – see
   // 1c-ends, immediately before `rollArrival`. Delivery's own placement argument below is untouched
   // by it: the ends hazard writes a date and raises nothing, so it cannot put news in front of this.
+  // ⚠⚠ RE-AIMED BY v77's T6 AND THE SENTENCE ABOVE IS KEPT AS THE RECORD. A SECOND line now sits
+  // above this block – 1c-leak – and the difference is worth naming rather than glossed: the ends
+  // hazard could not put news in front of the delivery, and the LEAK DELIBERATELY CAN. The overtake
+  // writes `knownWeek = world.week` and the scan below is what turns that into the card, in this
+  // same tick and through no new code. That is the one thing about this call site that T6 changed,
+  // and delivery's own «immediately after the roll» argument is untouched by it: the leak moves a
+  // date EARLIER and never later, so no week's news is held back by it.
   //
   //        ⚠⚠ IMMEDIATELY AFTER THE ROLL, AND THE ORDER IS A BEHAVIOUR RATHER THAN A STYLE. A shaved
   //        lag of ZERO is a real and common outcome (an open girl draws it at p 0.45 before the bond
