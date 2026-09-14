@@ -561,3 +561,84 @@ re-measured exact: 30 / 60 / 65 / 70.
 `CHECK_EXIT=1` from the file – one case of 5 365, T1's reader census, which the re-aim then fixed –
 while the notice said «exit code 0». That is CLAUDE.md's hazard (c) reproduced on this branch today,
 and it is the reason the exit code is never read from anywhere but the log.
+
+## Corrections from T3 – ruling A undercounted, and the brief PLACED two kinds where they cannot fire
+
+**⚠⚠ The brief's, and it is the wave's fifteenth «unable to fire» – two kinds this time, and the
+defect is the PLACEMENT rather than the spelling.** T2 found `'shoot'` written so it could never
+fire; T3 finds `'stage'` and `'publicLoss'` **asked at a moment in the tick where their records do
+not yet exist**. §0.1 and ruling M both specify the call – `exposureEventsOf(world, world.week)` at
+the `phaseHerWeek` caller – and ruling M's own sentence is that a stamp read one week late «buys an
+exposure event that is one week late, silently, for ever». Measured 14.09:
+
+| fact | its only writer | the week it stamps | the tick step it runs in |
+| --- | --- | --- | --- |
+| `'stage'` | `finalizeTournament`, `cabinet.titles/finals.push(world.week)` (`world.ts:673-674`) | `world.week` | **5** (`playHerWeek`) |
+| `'publicLoss'` | `finalizeTournament`, `world.results.push({…, week: world.week, …})` (`world.ts:1039`) | `world.week` | **5** (`playHerWeek`) |
+| the pressure | `accrueSpirit` | – | **3** (`resolveBodyAndPlanner`) |
+
+`trophiesByTier` has exactly one writer in `src/`. So her week-W silverware is written **after** week
+W's spirit pass has closed, and week W+1's pass asks about week W+1. The reveal flow does not rescue
+it – the tick refuses to advance past an unrevealed tournament, so a late finalize still stamps week
+W. `'shoot'` is unaffected (`shootWeeksLived` reads signed letters and the college window, both
+written long before), and `'aired'` / `'wrongStory'` will be fine, because ruling M puts their stamps
+in the life block, which really does run before this pass.
+
+**Ruling M measured the LIFE block's position and never the TOURNAMENT's** – that is the hole, and it
+is the ruling's own argument turned on the other three kinds. It is not T3's to close: asking
+`world.week − 1` makes `'aired'`/`'wrongStory'` one week late (exactly what M forbids), and moving
+the call after step 5 is refused by M, by §8 and by the five pins that read its position. So T3 ships
+the call as specified, writes the measurement into the call site's own comment, and PINS it
+(`tests/wave6-spotlight-pressure.test.ts` §F: the tick's order, the two stamps' week, and a case
+proving the LEDGER is innocent so the next reader does not go hunting in `world/spotlight.ts`).
+**The decision is the architect's**, and it is the wave's, not this task's.
+
+**⚠⚠ Ruling A, corrected: the table names three pins and the tree has FIVE.** All five are re-aimed,
+none deleted, none weakened – and two of them carry a different history from the one the ruling
+assumes.
+
+| pin | named by A? | re-aims |
+| --- | --- | --- |
+| `tests/spirit.test.ts:941` (arity) + `:953` (signature text) | yes | first |
+| `tests/spirit.test.ts:1085` – the ordered-list `CALL` text pin | **no** | **second** (wave 5's T4b re-aimed it 13.09) |
+| `tests/wave4-ended-beat.test.ts:264` | yes, exact line | second |
+| `tests/wave4-ends.test.ts:635` | yes – ⚠ **the ruling gives 616**; it is 635 | second |
+| `tests/wave5-psychologist-walls.test.ts:883` | **no** | **FIRST** – the case was BORN in wave 5 carrying the anchor, so «their second» is not true of it |
+
+The ruling's «both text pins were re-aimed once already» is right about the two it names and wrong
+about the count: four text pins read that call verbatim today, and the fifth site is the arity pin.
+The rest of ruling A stands exactly: the parameter is REQUIRED (ARM 9 ships the defaulted spelling
+and the arity pin goes red on it), and the declaration fits on one line – **measured at 119
+characters** against the 83 the ruling recorded for the two-parameter form.
+
+**⚠⚠ And a SIXTH pin, which no ruling could have predicted from ruling A because it is ruling L's
+consequence rather than A's.** `tests/wave5-psychologist-schema.test.ts:688` – wave 5's own ruling-A
+reader census – pins `accrueSpirit`'s expression read by its exact spelling,
+`temperamentIntensity(expressedTemperamentOf(world))`. Ruling **L part 3** requires that call to be
+HOISTED into a local so both axes come off one read, so the spelling had to move and this went RED at
+the gate, one case out of 5 407. Re-aimed and STRENGTHENED: it now asserts the hoist, asserts the
+intensity axis is a projection of it, and **counts the read at exactly one** – so ruling L part 3 is
+guarded by arithmetic rather than by a substring, and the inline second call that would have kept the
+old form green is red (ARM 11, 1 RED). ⚠ The lesson for T4 and T5, who both add factors to this same
+product: a ruling that changes a SPELLING inside `accrueSpirit` reaches pins that no census of its
+SIGNATURE will find.
+
+**Ruling L, confirmed in all three parts, with one measurement it did not have.** Part 2's «a term
+that rounds its own tenths quantises small values first» is exact and cheap to see: three `'stage'`
+events for a `'deep'` girl are −16.875, which the pass's single `roundTenth` lands at **53.1** and a
+self-rounding term lands at **53.2**. ⚠ **And the same quantisation is a trap for the ratio pins
+ruling N asks for.** At ONE event the intensity ratio cannot be read off the written spirit: a
+`'fiery'` girl's single `'publicLoss'` is 3.75 points, the write lands at 66.3, the cost reads 3.7,
+and the ratio comes out 1.5417 against a true 1.5625. At EIGHT events both arms land on exact tenths
+(30.0 / 19.2) and the ratio is exact. The ×2 openness ratio is exact at one event on every kind. A
+pin that divided two rounded numbers and called the answer a factor would have been measuring the
+rounding.
+
+**⚠ And one surface consequence of the legibility law, carried rather than decided.** The exposure
+feed row is `type: 'life'` (the brief's own spelling) and carries no `lifeKind`, because §8 forbids a
+new `LifeBeatKind` member. Measured: `lifeRowGlyph(undefined)` resolves through `?? 'met'` to
+`LIFE_ROW_EMOJI.life` – the owner's own 11.09 **white heart** – so an exposure row will wear the
+ROMANCE thread's mark in the feed's glyph column, beside «they met» and «it ended». who-she-is §5a
+forbids an agent picking a glyph unasked, so T3 picked none and pinned the consequence instead
+(§H's last case), so it is chosen rather than discovered in a playtest. The fix, whichever it is, is
+his.
