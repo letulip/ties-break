@@ -447,10 +447,19 @@ intense**, already intensity-scaled.
 | `'stage'` −3 | −1.80 → 68.2 **steady** | −3.60 → 66.4 dimmed | −2.81 → 67.2 dimmed | −5.63 → 64.4 dimmed |
 | `'publicLoss'` −4 | **−2.40 → 67.6 steady** | −4.80 → 65.2 dimmed | −3.75 → 66.3 dimmed | −7.50 → 62.5 dimmed |
 
-**An expressed-open steady girl never leaves her Mood band on ANY single exposure.** The deepest one
-the wave has – a heavily public loss at a slam – puts her at **67.6**, which is **one tenth of a
-point** above the `dimmed` boundary. The feed will print «the cameras were everywhere this week» and
-the Mood word will say exactly what it said the week before.
+**An expressed-open steady girl standing at baseline does not leave her Mood band on any single
+exposure.** The deepest one the wave has – a heavily public loss at a slam – puts her at **67.6**,
+which is **one tenth of a point** above the `dimmed` boundary. The feed will print «the cameras were
+everywhere this week» and the Mood word will say exactly what it said the week before.
+
+**⚠ Stated exactly, because the difference decides the question.** The spotlight term's own worst
+contribution for that girl is **2.40**, and the distance from baseline to the band edge is **2.50**.
+So the spotlight ALONE never crosses it – it crosses only on a week when the ordinary weather
+(`weekPerturbation`, the same summand, which is rarely zero) has already carried her to within one
+tenth of the edge. **The spotlight is not what she sees; it is what tips a week the rest of her life
+had already brought to the boundary.** That may be exactly the design – weather among weather is
+the brief's own framing – but it is not «every dip explainable», because the week the band finally
+moves, the feed row that explains it names the cameras and the cause was mostly everything else.
 
 **⚠ And every other dial in the wave points the same way.** Habituation multiplies DOWN (1 → the
 `habituationFloor` 0.25) and the fifth focus multiplies DOWN again (0.85 → 0.55). A calm, open,
