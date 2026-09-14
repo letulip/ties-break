@@ -432,6 +432,16 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   the realisation register to match his own `behind` pair (recommended; two DRAFT lines, e.g.
   level ≈ «The years kept her level with what she brought» register); **B** – keep the
   comparative sentences as they are.
+  ⭐ **RULED 15.09: A («31 - A»), and BUILT the same hour by the architect's hand.** The upper two
+  pairs re-voiced into the realisation register; the old comparative lines are kept as the record in
+  `handover.ts`'s own note. THE FOUR NEW DRAFTS, verbatim (his вычитка and playtest the final read):
+  ahead-1 «The years added to what she was born with. Somebody did the work.» · ahead-2 «She brings
+  more than she started with – the childhood built it.» · level-1 «She comes with what she was born
+  with. The years neither added nor took.» · level-2 «The childhood held her level with what she
+  brought.» («Somebody did the work» carried over – it was already a sentence about the childhood's
+  work.) The byte-identical guard re-aimed to hold the NEW drafts verbatim + a no-population sweep
+  over both pairs; the p20/60/20 middle-band pin re-worded (the «most» coupling died with the
+  comparative claim). 86/86 across both handover suites.
 
 ---
 
@@ -485,6 +495,9 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   в тур не вернется»). No schema: the college span is already state – the step count derives as
   birthdays-since-18 MINUS birthdays spent in college. Bench prints the family corridor under
   10 pp/50-at-22 · 10 pp/60-at-23 · the college-pause arm; his word lands on the printed table.
+  ⭐ **CONFIRMED 15.09** («подтверждаю связку»): +10 pp/год from 18 → cap **60% at 23** + the
+  college-pause (steps count tour years only, derived, no schema). Ships with the bench print in the
+  economy bundle; the final numbers stay his off the table, per invariant 5.
 * **27 – closed, with a watch:** «ок, я понаблюдаю ещё» – and the knock-dialog single-tap
   (item 8's scope) is the working explanation for pushes he does not remember making.
 * **29 – RULED:** rehab stays on the hero («это ок»); the rest ships as written.
