@@ -485,9 +485,9 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   capstone stays 4; round-41's ledger line updated with the 14.09 quote.
 
 - [?] **32. «по сравнению с предыдущим сейвом Алисы Зоя играет хуже и меньше выигрывает всего.
-  Давай эти два сейва сравним»** – **measure, waiting on the file.** The Alice save is no longer
-  on disk (Downloads checked 14.09: only olivia w413/w464, vera w569, the old zoe-royv w255 and
-  the current career remain) – he re-sends it, and the instrument is ready: the same seeded
+  Давай эти два сейва сравним»** – **measure, waiting on the file.** The Alice save WAS on disk all along
+  (tennis-sim_alice_prologue-pmb8nzwh_w405.tsave – the earlier check read only the tail of the
+  listing, the checker's own miss, owned) – unblocked 14.09; the instrument is ready: the same seeded
   reconstruction that audited Zoe (birth · ceilings · realisation, validated Δ=0.0000) runs on
   both saves plus the results ledgers (titles by tier, rank trajectory, win rate by season).
   Deliverable: the two careers side by side with the model's own explanation of the gap – birth
@@ -519,6 +519,18 @@ NN weeks» – at week 6 of a season NN prints exactly **46**, his mystery numbe
   here.
 
 One word decides; B closes every complaint from both eras at once.
+
+⭐⭐ **RULED 14.09, THE SECOND WORD, RECEIPTS IN HAND: A.** «да, но будет везде корректно, окно в
+52 недели и очки. Мне кажется это правильно.» So: **domestic → rolling-52, uniform with ITF/WTA**
+– one window rule for every table, chosen knowing the 20.08 measurements return (#12's optics –
+points leaving after wins – and #13's calendar churn are ACCEPTED as the correct model's own
+behaviour). The task, build-class now: `WINDOW_BY_TRACK.domestic → 'rolling52'`; the Stats window
+block's seasonToDate arm dies (pure rolling arithmetic everywhere – and the «46 weeks» line
+becomes true); `RankHelpDialog`'s domestic copy re-drafts («the race restarts every January»
+dies – wording licensed by this ruling, DRAFT for his read); the January door-slam dissolves by
+itself (rolling totals never zero at the wrap, so no latch is needed); season-1's total churn
+(prehistory ageing out) returns and is named in the handoff so nobody re-files it as a defect;
+`tools/domestic-season-to-date.ts` re-runs BOTH arms as the evidence print. No schema.
 
 ## Execution notes (for the round's own run, after wave 6 lands)
 
