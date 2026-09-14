@@ -92,6 +92,10 @@ the standing rule.
 | T8 | the strings | drafts → the architect's read → his playtest (standing delegation) |
 | T9 | the benches | psy-grid 5×3, `bench:spotlight`, census high-fame column + leak prints |
 | T10 | e2e + frozen + gate | the mechanic case, fixtures v77, the first NESTED peel, handoff |
+| T11 | the dice come back (owner, 14.09) | two reroll buttons on the prologue identity card – a restore, not a design |
+
+⚠ T11 was added mid-wave by the owner's 14.09 word («докинь микрофикс в эту волну»); it runs any
+time before T10 – its mounted test rides T10's gate – and nothing above renumbers.
 
 ## 2. The tasks, expanded
 
@@ -301,6 +305,38 @@ mutation arms recorded, fixture freshness vs head, the build line) – plus this
 below, and the handoff package: strings tables, bench records, the questions doc, the ledger
 entries in the builder's own voice (`life-wave-6-questions-2026-09.md` /
 `-strings-` / `-handoff-`, the wave-5 files are the templates).
+
+### T11 – the dice come back to her name (owner, 14.09 – added mid-wave)
+
+> «вернуть "кубики" на имя и фамилию при создании, оставив дефолт текущий, у нас они были, но
+> куда-то пропали»
+
+Archaeology first, so nobody hunts a deleter: nothing was deleted. The dice still live in the
+wizard – `reroll()` / `rerollLast()` at `OnboardingWizard.vue:291–296`, the two icon buttons at
+`:375` / `:391` (different pip faces on the two dice, on purpose), the `.ob-dice` styles – but
+creation moved to the prologue, and the age-5 identity card (`PrologueCard.vue:451–473`) was
+built with plain inputs. That is the whole disappearance. The fix is a RESTORE on the card, not
+a design:
+
+* Two icon buttons beside the first/last-name inputs on the identity card – the wizard's own
+  SVG die faces and `aria-label`s VERBATIM («Random first name» / «Random last name»). Zero new
+  visible strings; invariant 4 is untouched by construction.
+* **One pool, two readers.** The first-name pool is the wizard's LOCAL `NAMES`
+  (`OnboardingWizard.vue:62`); surnames are its `SURNAMES` import (`engine/season/cohort`).
+  Lift the pool and the two draw helpers to one importable home (builder's pick) and re-point
+  the wizard at it – NO second copy of any list, the repo's two-sides-one-question defect
+  class.
+* **The default stays prefilled** – `OPENING_IDENTITY` (Alice Martin) untouched, and the ⚠
+  prefill doctrine in `src/prologue/identity.ts` stays TRUE and unedited: the field still
+  STARTS on the default; a roll is the player's own act, which is exactly the difference the
+  doctrine records. `settleIdentity`'s fallback comment also stays true.
+* `Math.random` is legal exactly here: pre-world UI, the wizard's own precedent. No engine
+  file moves, no world stream, no schema, no snapshot – the RNG laws are not in question
+  because nothing they govern is touched.
+* Mounted test in the prologue component suite: both dice render inside the 375 frame beside
+  their inputs, a click lands a POOL member (⚠ assert membership, not ≠ default – a roll may
+  legitimately land the default itself), no click leaves Alice Martin, and
+  `prologue-two-paths` stays green. Mutation-proven per the house rule.
 
 ## 3. The streams of this wave
 
