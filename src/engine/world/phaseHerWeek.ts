@@ -375,35 +375,60 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        already writes for the twin seat. ⚠ A `boolean`, never an `Rng`: `accrueSpirit`'s
   //        zero-draw contract is untouched and tests/spirit.test.ts asserts that of the signature.
   //
-  //        ⭐⭐⭐ AND THE THIRD ARGUMENT IS THE WEEK'S EXPOSURE, HANDED DOWN THE SAME WAY (v77 T3,
-  //        wave-6 brief §0.1) – what put her in the light this week, derived by `world/spotlight.ts`
-  //        and summed into one named term inside the spirit pass. It is ruling J's inversion applied
-  //        a second time to a second fact, and it costs no arrow: `engine/spirit.ts` imports the
-  //        LIST's type off the barrel it already read and never the function that builds it.
+  //        ⭐⭐⭐ AND THE THIRD ARGUMENT IS THE EXPOSURE OF THE LAST CLOSED WEEK, HANDED DOWN THE SAME
+  //        WAY (v77 T3, wave-6 brief §0.1) – what put her in the light, derived by
+  //        `world/spotlight.ts` and summed into one named term inside the spirit pass. It is ruling
+  //        J's inversion applied a second time to a second fact, and it costs no arrow:
+  //        `engine/spirit.ts` imports the LIST's type off the barrel it already read and never the
+  //        function that builds it.
   //        ⚠ THE DOUBLE ASK ON THIS LINE IS DELIBERATE AND DID NOT MOVE – ruling M's own ⚠. The
   //        argument is APPENDED and nothing else about the statement changed, because hoisting
   //        `psychologistWorksThisWeek(world)` into a local is exactly what would let a raw flag be
-  //        handed down in the predicate's place («ruling J's own hole»), and three pins read this
-  //        line's text verbatim.
+  //        handed down in the predicate's place («ruling J's own hole»), and FOUR SITES read this
+  //        line's text verbatim – five CASES, because one of the four holds its anchor in a helper
+  //        two of its cases share (measured by T3b's ARM 12b; a census of the sites is not a census
+  //        of what goes red).
   //        ⚠ REQUIRED, NEVER DEFAULTED (ruling A): `Function.length` stops counting at the first
   //        default, so an `= []` would leave the arity pin reading 2 and green through the very
   //        change it exists to notice.
   //
-  //        ⚠⚠ AND A MEASUREMENT T3 CARRIES BACK, BECAUSE IT IS INVISIBLE FROM THE LEDGER'S OWN FILE.
-  //        `exposureEventsOf` is asked about `world.week`, which is what §0.1 and ruling M both
-  //        specify (a stamp read one week late «buys an exposure event that is one week late,
-  //        silently, for ever») – and on THIS tree two of the five kinds cannot reach it from here.
+  //        ⚠⚠ AND THE WEEK IT ASKS ABOUT IS `world.week − 1`, WHICH IS THE ARCHITECT'S **RULING P**
+  //        (wave 6, 14.09) AND THE FIX FOR A DEFECT T3 SHIPPED CORRECTLY-AS-SPECIFIED. Ruling M had
+  //        said `world.week`; T3 measured that two of the five kinds can NEVER be seen from here at
+  //        that horizon, and ruling P overturned M. THE TICK'S OWN ORDER IS THE WHOLE ARGUMENT and it
+  //        is written out here so the next reader never re-derives it (`tickWeek`, `world.ts`):
+  //
+  //            0 recordDrawnFirstRounds · `world.week += 1`   ⚠ THE INCREMENT IS FIRST
+  //            1 seasonBoundaryAndObligations
+  //            2 weeklyFinance
+  //            3 resolveBodyAndPlanner   ← THIS PHASE. the life block, then `accrueSpirit`
+  //            4 deriveWeekField
+  //            5 playHerWeek             ← `finalizeTournament` is reached from here
+  //            6 growAndLive
+  //            7 closeTheWeek
+  //            8 recordDrawnFirstRounds again – the week closes by writing down its own draw
+  //
   //        `'stage'` and `'publicLoss'` are stamped by `finalizeTournament`, whose only writers are
-  //        `cabinet.titles.push(world.week)` / `world.results.push({ week: world.week, … })`
-  //        (`world.ts:673-674` and `:1039`), and that function runs in `playHerWeek` – **tick step 5,
-  //        two phases AFTER this one** (`tickWeek`: step 3 is `resolveBodyAndPlanner`, step 5 is
-  //        `playHerWeek`). So her week-W silverware is written after week W's spirit pass has closed,
-  //        and week W+1's pass asks about week W+1. The ledger is right, the two kinds are right, and
-  //        the PLACEMENT starves them. ⚠ IT IS NOT T3's TO FIX: the fixes are a one-week lag (which
-  //        breaks ruling M for `'aired'`/`'wrongStory'`, stamped earlier in THIS phase) or moving
-  //        this call after step 5 (which three pins, ruling M and §8 all refuse). Pinned in
-  //        tests/wave6-spotlight-pressure.test.ts §F and reported to the architect.
-  accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))
+  //        `cabinet.titles/finals.push(world.week)` and `world.results.push({ week: world.week, … })`
+  //        (`world.ts:673-674` and `:1039`) – both with the CURRENT week, from step 5, TWO PHASES
+  //        AFTER this one. So at `world.week` those two kinds return nothing here, every week, for
+  //        ever: the ledger is right, the kinds are right, and the MOMENT was starving them. Asked
+  //        about the week that has CLOSED, every record it names is already written.
+  //        ⚠ ONE HORIZON FOR ALL FIVE KINDS, NEVER A SPLIT ONE – ruling P refuses tournament kinds at
+  //        `week − 1` and life kinds at `week`, because that makes `exposureEventsOf` lie about its
+  //        own parameter and puts two clocks in one ledger. T6's leak and T7's booth stamp keep their
+  //        homes in the life block above and are simply seen one tick later.
+  //        ⚠ AND `accrueSpirit` DID NOT MOVE: it is the one writer of `world.spirit`, the life block
+  //        must sit between `accrueCondition` and it, and six pins defend that position – ruling P
+  //        refuses the move by name. The lag is the truer reading anyway: the cameras were on her at
+  //        the weekend and the week she pays for it is the week after. Nothing about the SIZE changes
+  //        («мы ни за что не наказываем» is untouched), only which pass carries it.
+  //        ⚠ THE FIRST TICK ASKS ABOUT WEEK **0**, NOT −1, because step 0 above increments BEFORE
+  //        this phase runs – so the earliest week this line can name is 0, and week 0 holds no
+  //        record of any kind. `exposureEventsOf` answers a negative week with an empty list in any
+  //        case, by its own stated guard rather than by luck; both halves are pinned
+  //        (tests/wave6-spotlight-pressure.test.ts §F).
+  accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))
   // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
   //
   //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is

@@ -54,6 +54,57 @@
 //
 // ⚠ ALL ELEVEN RUN, ALL ELEVEN RED, NONE AT ZERO – so there is no null arm to declare. Control green
 // first on every spec; md5 of every touched file pristine after every arm.
+//
+// ⚠⚠ T3b (14.09, THE SAME DAY) – THE ARCHITECT'S **RULING P**: the horizon moves from `world.week` to
+// `world.week − 1`, the last CLOSED week, for all five kinds. T3 shipped the call site exactly as
+// ruling M specified and PINNED the consequence in §F; ruling P overturned M and §F is now the FIX's
+// evidence rather than the defect's record. What that costs this file: §F is rewritten, four
+// behavioural cases are added (the two starved kinds, each proved to fire AT ALL and proved to fire
+// in the pass AFTER the week it lands in), three week-0 cases join them, and the five call-text pins
+// across four other files are re-aimed a further time.
+//
+//   ARM 12 the horizon reverted to `world.week` – T3's own      7 RED  §F's six behavioural cases and
+//          shipped spelling, which is the PRE-FIX state                §F's call-site pin. ⚠⚠ THE ARM
+//                                                                     THAT MATTERS: every one of the
+//                                                                     six was RED before T3b and is
+//                                                                     green after, which is what
+//                                                                     «this fixes it» has to mean
+//   ARM 12b the same mutation, against the FOUR re-aimed pins   5 RED  ⭐ FIVE, not the four
+//          in four other files                                         predicted, and the extra is a
+//                                                                      measurement worth carrying:
+//                                                                      the call text lives at FOUR
+//                                                                      SITES but reddens FIVE CASES,
+//                                                                      because wave4-ended-beat's
+//                                                                      anchor sits in a helper two
+//                                                                      of its cases share. A census
+//                                                                      of the SITES is not a census
+//                                                                      of what goes red
+//   ARM 13 the horizon at `world.week − 2` – EARLIER but not    5 RED  §F's four «paid at W+1» cases
+//          the last closed week                                        and the call-site pin. ⚠ §F's
+//                                                                      two «not at W» cases stay
+//                                                                      GREEN, correctly: they are
+//                                                                      the half that says «not too
+//                                                                      early», and this arm is too
+//                                                                      LATE. The two halves together
+//                                                                      are what pins ONE week back
+//   ARM 14 the negative-week guard deleted from the ledger      1 RED  §F's negative-week case, on
+//                                                                      its STATED half. ⚠ THE
+//                                                                      BEHAVIOURAL half stays green
+//                                                                      and that is the finding, not
+//                                                                      a weak arm: a week before
+//                                                                      every record already answers
+//                                                                      empty through the news gate,
+//                                                                      so the guard is a LAW and the
+//                                                                      case says so in its own words
+//   ARM 15 `world.week += 1` MOVED below the body phase – the   1 RED  §F's week-0 order case, which
+//          one change that would make the first pass ask −1            is the only thing standing
+//                                                                      between `world.week − 1` and
+//                                                                      a negative first tick
+//
+// ⚠ ALL FIVE RUN, ALL FIVE RED, NONE AT ZERO. Control green first on every spec; every arm applied by
+// a scripted string edit with UNIQUE mutation text and undone by the inverse edit, never
+// `git checkout`, with the md5 of every touched file verified pristine after each one and a mismatch
+// a HARD STOP – T3's harness, kept.
 import { describe, expect, it, vi } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
@@ -75,10 +126,12 @@ vi.mock('../src/engine/rng', async (importOriginal) => {
 })
 
 import { accrueSpirit, EXPOSURE_ROW, TEMPERAMENTS, temperamentIntensity, temperamentOpenness, type Temperament } from '../src/engine/spirit'
-import { createWorld, sheIsNewsAt } from '../src/engine/world'
+import { createWorld, exposureEventsOf, sheIsNewsAt } from '../src/engine/world'
+import { resolveBodyAndPlanner } from '../src/engine/world/phaseHerWeek'
+import { KID_ID } from '../src/engine/world/constants'
 import { ECONOMY } from '../src/engine/economy'
 import { lifeRowGlyph } from '../src/components/screens/lifeRowGlyphs'
-import { isBlackoutWeek, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
+import { isBlackoutWeek, TIERS, WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { schoolIsOver } from '../src/engine/kidLife'
 import { birthdayTurning } from '../src/engine/world/age'
 import { engineModuleFunction, worldFunction } from './worldSource'
@@ -455,31 +508,132 @@ describe('wave 6 T3 E – a fourth summand, rounded once, off one read of who sh
   })
 })
 
+/** §F's girl: `'quiet'` is the steady·private corner, and it is chosen for arithmetic rather than for
+ *  character – every product it makes lands on an EXACT TENTH (3 × 0.8 × 1.5 = 3.6, 4 × 0.8 × 1.5 =
+ *  4.8), so the pass's single `roundTenth` cannot move a twin's value by half a tenth and turn an
+ *  exact claim into an approximate one. T3's own measurement of that trap is in the wave's record. */
+const HORIZON_TEMPERAMENT: Temperament = 'quiet'
+const HORIZON_SEED = 'spotlight-horizon'
+
+/** The week the record is stamped in. Chosen so that it AND the week after are both QUIET, so each
+ *  pass below carries no weather but the exposure – which is what lets the cases assert an absolute
+ *  number (the control twin lands on exactly the baseline) instead of a difference of two noisy ones.
+ *  ⚠ Derived from the engine's own calendar, never written out: a re-cut of the blackout weeks moves
+ *  this and the cases keep working. */
+const STAMP_WEEK = (() => {
+  const world = probe(HORIZON_TEMPERAMENT, HORIZON_SEED)
+  let w = world.week
+  while (!quietWeek(world, w) || !quietWeek(world, w + 1)) w++
+  return w
+})()
+
+/** One of §F's twins: a famous career parked at `STAMP_WEEK`, made news by two OLD Slam titles that
+ *  BOTH twins carry – so the stamp under test is never also the thing that lifts her over the bar. */
+function horizonWorld(): WorldState {
+  const world = probe(HORIZON_TEMPERAMENT, HORIZON_SEED)
+  world.week = STAMP_WEEK
+  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
+  slam.titles.push(STAMP_WEEK - 40, STAMP_WEEK - 41)
+  return world
+}
+
+/** A big-stage TITLE in `week` – the cabinet write `finalizeTournament` makes, by hand and in its own
+ *  spelling (`cabinet.titles.push(world.week)`), because the tournament flow cannot be driven to a
+ *  chosen week inside a unit case. */
+function stampTitle(world: WorldState, week: number): void {
+  const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
+  slam.titles.push(week)
+}
+
+/** A big-stage EARLY EXIT in `week` – `finalizeTournament`'s results row, at the threshold ruling K
+ *  derives (`points <= points[log2(drawSize) − 1]`), read off `TIERS` rather than written out. */
+function stampEarlyExit(world: WorldState, week: number): void {
+  const def = TIERS.slam
+  world.results.push({ playerId: KID_ID, week, points: def.points[Math.log2(def.drawSize) - 1], tier: 'slam' })
+}
+
+/** ⭐⭐⭐ WHAT ONE STAMP COSTS HER **THROUGH THE REAL PHASE**. Two identical famous careers, one of
+ *  them carrying the record in `STAMP_WEEK`, both parked in `opts.pass`, both walked through
+ *  `resolveBodyAndPlanner` – the function that holds the call site. Everything else about the two
+ *  worlds is byte-identical, sub-streams included (they are seeded on the seed and the week), so the
+ *  whole difference in spirit is the term. */
+function acrossThePhase(
+  stamp: (world: WorldState, week: number) => void,
+  opts: { pass: number },
+): { cost: number; control: number; treated: number; news: boolean } {
+  const control = horizonWorld()
+  const treated = horizonWorld()
+  stamp(treated, STAMP_WEEK)
+  control.week = opts.pass
+  treated.week = opts.pass
+  resolveBodyAndPlanner(control)
+  resolveBodyAndPlanner(treated)
+  return {
+    cost: Math.round((control.spirit - treated.spirit) * 1000) / 1000,
+    control: control.spirit,
+    treated: treated.spirit,
+    news: sheIsNewsAt(treated, STAMP_WEEK),
+  }
+}
+
+/** The term's own product for ONE event of `kind` on §F's girl, computed from `ECONOMY` – ruling N's
+ *  rule that a re-tune must move both sides of every expectation together. */
+function productOf(kind: ExposureKind): number {
+  const p = ECONOMY.spotlight
+  const scaled =
+    Math.abs(p.pressureBase[kind]) *
+    ECONOMY.spirit.perturbationScale[temperamentIntensity(HORIZON_TEMPERAMENT)] *
+    p.opennessScale[temperamentOpenness(HORIZON_TEMPERAMENT)]
+  return Math.round(scaled * 1000) / 1000
+}
+
 // =================================================================================================
-// F. ⚠⚠ THE PLACEMENT, MEASURED – TWO OF THE FIVE KINDS CANNOT REACH THE TERM FROM THE CALL SITE
+// F. ⚠⚠ THE HORIZON – THE LAST CLOSED WEEK, AND THE TWO KINDS THAT COULD NOT FIRE BEFORE IT
 // =================================================================================================
 //
-// ⚠⚠ THIS SECTION IS A FINDING CARRIED BACK TO THE ARCHITECT, NOT A DEFECT T3 INTRODUCED AND NOT ONE
-// IT IS FREE TO FIX. The call site asks `exposureEventsOf(world, world.week)`, which is what §0.1 and
-// ruling M both specify – ruling M's own sentence is that a stamp read one week late «buys an
-// exposure event that is one week late, silently, for ever». Measured on this tree, at that moment in
-// the tick, `'stage'` and `'publicLoss'` are not yet written:
+// ⚠⚠ THIS SECTION WAS T3's FINDING AND IS NOW **T3b's FIX** – the architect's RULING P (14.09),
+// which overturned his own ruling M after T3 measured what M had missed. T3 shipped the call site
+// exactly as ruling M specified – `exposureEventsOf(world, world.week)` – and pinned the consequence
+// here rather than fixing it, because the fix was the architect's to make. He made it: ONE horizon,
+// for all five kinds, and it is the week that has CLOSED.
 //
-//   · their ONLY writers are `finalizeTournament`'s `cabinet.titles/finals.push(world.week)` and its
-//     `world.results.push({ …, week: world.week, … })` – both stamped with the CURRENT week;
-//   · `finalizeTournament` runs inside `playHerWeek`, which is `tickWeek` step 5;
-//   · `accrueSpirit` runs inside `resolveBodyAndPlanner`, which is `tickWeek` step 3.
+// THE TICK'S OWN ORDER IS THE WHOLE ARGUMENT, and it is written out so the next reader never
+// re-derives it (`tickWeek`, `src/engine/world.ts`):
 //
-// So her week-W silverware is written after week W's spirit pass has closed, and week W+1's pass asks
-// about week W+1. Ruling M measured the LIFE block's position (T6's leak and T7's booth stamp, both
-// of which really do run before the spirit pass) and never the TOURNAMENT's – that is the hole.
+//   0 recordDrawnFirstRounds · `world.week += 1`     ⚠ THE INCREMENT IS FIRST
+//   1 seasonBoundaryAndObligations
+//   2 weeklyFinance
+//   3 resolveBodyAndPlanner   ← the life block, then `accrueSpirit`
+//   4 deriveWeekField
+//   5 playHerWeek             ← `finalizeTournament` is reached from here
+//   6 growAndLive
+//   7 closeTheWeek
 //
-// ⚠ THE TWO FIXES BOTH LIE OUTSIDE T3: asking about `world.week − 1` would make `'aired'` and
-// `'wrongStory'` – stamped earlier in this very phase – one week late, which is exactly what ruling M
-// forbids; and moving the `accrueSpirit` call after step 5 is refused by ruling M, by §8 and by the
-// five pins that read its position. Pinned here so the day either one changes, this goes red with a
-// sentence instead of the wave quietly starting to work.
-describe('wave 6 T3 F – the tick order, and what it means for two of the kinds', () => {
+// `'stage'` and `'publicLoss'` have exactly one writer between them – `finalizeTournament`'s
+// `cabinet.titles/finals.push(world.week)` and its `world.results.push({ …, week: world.week, … })`,
+// both stamped with the CURRENT week, both reached from step 5, TWO PHASES after the pass that asks.
+// So at `world.week` those two kinds returned nothing here, every week, for ever: five green kinds,
+// two of which could never fire. Ruling M had measured the LIFE block's position (T6's leak and T7's
+// booth stamp, which really do run before the spirit pass) and never the TOURNAMENT's.
+//
+// ⚠⚠ THE FOUR BEHAVIOURAL CASES ARE THE POINT OF THE WHOLE TASK, AND THEY ARE WRITTEN AS THE PAIR
+// THE FIX **INVERTS**: a record stamped in week W is paid for in the pass at week W+1, and NOT in the
+// pass at week W. Under T3's spelling both halves are RED – the W+1 half because the pass saw
+// nothing at all (the defect), the W half because it saw it a week early. A case that could only go
+// green is exactly the shape this wave has now found fifteen times, so each claim gets its own arm
+// and its own `it`: several fixtures under one title stop at the first failing assertion, and a
+// mutation that breaks four things would otherwise redden one (T2's ARM 1, measured).
+//
+// ⚠ THEY RUN THE **REAL PHASE**, `resolveBodyAndPlanner`, and not a hand-spelled composition of
+// `exposureEventsOf` and `accrueSpirit`. A case that re-spells the call site proves the spelling it
+// wrote; this one runs the statement that ships, in the function that ships it, so the wiring is
+// under test rather than restated.
+//
+// ⚠ AND THE STAMP IS NEVER ALSO THE THING THAT MAKES HER NEWS (ruling E-bis, which measured that the
+// POLICY decides fame and not the money – preset 8 peaks at 0.0 under policy 0 and 53.2 under policy
+// 1). Both twins carry the same two OLD Slam titles and both are asserted news at the week under
+// test, so what the cases measure is the HORIZON and never the gate.
+describe('wave 6 T3 F – the tick order, and the horizon ruling P set from it', () => {
   it('⚠⚠ `accrueSpirit`\'s phase runs BEFORE the phase that stamps a trophy or a result', () => {
     const tick = worldFunction('tickWeek')
       .split('\n')
@@ -502,19 +656,116 @@ describe('wave 6 T3 F – the tick order, and what it means for two of the kinds
     expect(results, 'and so does the results row `publicLoss` reads').toContain('week: world.week, points, tier: event.tier')
   })
 
-  it('⚠ the ledger itself is innocent – handed the week those records name, it answers', () => {
-    // ⚠⚠ THE CASE THAT KEEPS THE FINDING HONEST. It would be easy to read the two above as «the
-    // spotlight does not see big stages», which is false and would send the next reader into
-    // `world/spotlight.ts`. The derivation is right; the MOMENT it is asked is what starves it.
-    const world = probe('sunny')
+  it('⭐⭐⭐ so the call site asks about the week that has CLOSED – ruling P, and no other spelling of it', () => {
+    // ⚠⚠ RE-AIMED 14.09 BY T3b – THE RE-AIM AFTER T3's, and this pin asserted the OPPOSITE yesterday
+    // («the call site asks about today»). RULING P's REASON IN ONE SENTENCE: a trophy and a result
+    // row are stamped two phases after this pass, so asked in-week `'stage'` and `'publicLoss'` could
+    // never fire. NOT WEAKENED: the claim is still about the call site's exact text, and it gains a
+    // NEGATIVE the old form did not have – the in-week spelling must be GONE, because a second call
+    // left beside the new one is precisely the split horizon ruling P refuses by name.
+    const src = codeOnly(readFileSync(`${SRC}engine/world/phaseHerWeek.ts`, 'utf8'))
+    expect(src, 'the call site asks about the week that closed').toContain('exposureEventsOf(world, world.week - 1)')
+    expect(src.split('exposureEventsOf(').length - 1, 'and it is asked exactly once in this phase').toBe(1)
+  })
+
+  it('⭐⭐⭐ a big-stage title in week W is paid for in the pass at week W+1 – and it is paid AT ALL', () => {
+    // ⚠⚠ THE CASE THE WHOLE CORRECTION EXISTS FOR. Before ruling P this was FALSE and nothing said
+    // so: the pass at W+1 asked about W+1, where no record stands, so the twins ended the week
+    // identical and `'stage'` was an unfirable kind wearing five green tests.
+    const m = acrossThePhase(stampTitle, { pass: STAMP_WEEK + 1 })
+    expect(m.news, 'the twin under test is news in the week the title lands').toBe(true)
+    expect(m.cost, '⚠⚠ the title costs her spirit at all – the assertion that was false before T3b')
+      .toBeGreaterThan(0)
+  })
+
+  it('⭐⭐ ...and what it costs is the term\'s own product, to the tenth', () => {
+    // ⚠ A SECOND CASE AND NOT A SECOND ASSERTION (T2's ARM 1): «it fires» and «it fires by exactly
+    // this much» are two claims, and a mutation that breaks the size must not hide behind a case that
+    // already failed on the sign. ⚠ COMPUTED FROM `ECONOMY`, never written out, so ruling N's re-tune
+    // moves both sides together.
+    const m = acrossThePhase(stampTitle, { pass: STAMP_WEEK + 1 })
+    expect(m.control, 'the control twin\'s week carried no other weather at all').toBe(ECONOMY.spirit.baseline)
+    expect(m.cost, 'one `stage` event, priced for a steady private girl').toBe(productOf('stage'))
+  })
+
+  it('⭐⭐⭐ ...and NOT in the pass at week W, which is where T3 was made to ask and found nothing', () => {
+    // ⚠⚠ THE OTHER HALF OF THE INVERSION, and the half that makes the pair a horizon rather than a
+    // lag anybody could widen. Under T3's spelling this case is RED the other way round – the title
+    // was charged in its own week. ⚠ MEASURED: the two cases together say «exactly one week back»,
+    // and each half catches a different way of getting it wrong – this one is red on a horizon that
+    // is TOO NEW, the W+1 one on a horizon that is too old (ARM 13, `world.week - 2`, leaves this
+    // case green and reddens that one). Neither half alone pins a week.
+    const m = acrossThePhase(stampTitle, { pass: STAMP_WEEK })
+    expect(m.news, 'she is news in the week under test, so the silence is the horizon and not the gate').toBe(true)
+    expect(m.cost, 'the week it lands in is still being lived; its pass asks about the week before')
+      .toBe(0)
+  })
+
+  it('⭐⭐⭐ a big-stage early exit in week W is paid for in the pass at week W+1 – and it is paid AT ALL', () => {
+    // The second of the two starved kinds, and it reads a different record entirely – `world.results`
+    // rather than the cabinet (ruling G's asymmetry) – so it is its own case and not a parameter of
+    // the one above.
+    const m = acrossThePhase(stampEarlyExit, { pass: STAMP_WEEK + 1 })
+    expect(m.news, 'the twin under test is news in the week the loss lands').toBe(true)
+    expect(m.cost, '⚠⚠ the public loss costs her spirit at all – false before T3b').toBeGreaterThan(0)
+  })
+
+  it('⭐⭐ ...and it too costs exactly the term\'s own product', () => {
+    const m = acrossThePhase(stampEarlyExit, { pass: STAMP_WEEK + 1 })
+    expect(m.control, 'the control twin\'s week carried no other weather at all').toBe(ECONOMY.spirit.baseline)
+    expect(m.cost, 'one `publicLoss` event, priced for a steady private girl').toBe(productOf('publicLoss'))
+  })
+
+  it('⭐⭐⭐ ...and NOT in the pass at week W', () => {
+    const m = acrossThePhase(stampEarlyExit, { pass: STAMP_WEEK })
+    expect(m.news, 'she is news in the week under test').toBe(true)
+    expect(m.cost, 'the loss is charged by the pass that follows it, never by the one it lands in').toBe(0)
+  })
+
+  it('⚠⚠ the first tick asks about week 0 and never about −1 – the increment is step 0', () => {
+    // ⚠⚠ THE WEEK-0 QUESTION, ANSWERED FROM THE TICK RATHER THAN GUESSED. `world.week - 1` reads as
+    // «−1 on the first tick» until the tick is read: `tickWeek` increments BEFORE the body phase, so
+    // a career created at week 0 runs its first spirit pass at `world.week === 1` and the earliest
+    // week this line can ever name is **0**. ⚠ PINNED BECAUSE IT IS LOAD-BEARING AND INVISIBLE: the
+    // day that increment slides below the body phase, the first pass asks about −1.
+    const tick = worldFunction('tickWeek')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
+    const bump = tick.findIndex((l) => l === 'world.week += 1')
+    const body = tick.findIndex((l) => l.startsWith('const playedThisWeek = resolveBodyAndPlanner(world)'))
+    expect(bump, 'the tick still increments the week itself').toBeGreaterThan(-1)
+    expect(body, 'and the body phase is still there').toBeGreaterThan(bump)
+    // ...and a fresh career really does start at 0, so «the first pass asks about 0» is arithmetic.
+    expect(createWorld('week-zero').week, 'a career is born at week 0').toBe(0)
+  })
+
+  it('⚠ week 0 holds no record of any kind, so the first tick charges her nothing', () => {
+    // The honest reading of the horizon's first week: there is no tournament, no letter and no
+    // episode behind a career's week 0, so the pass that follows it has nothing to charge for.
+    const world = createWorld('week-zero')
+    expect(exposureEventsOf(world, 0), 'the week before her first is empty').toEqual([])
+  })
+
+  it('⚠ and a NEGATIVE week is answered with an empty list, never thrown – stated, not lucky', () => {
+    // ⚠⚠ THE GUARD IS A LAW AND NOT A REPAIR, AND THE DISTINCTION IS MEASURED. Asked about −1 the
+    // ledger's own readers already answer with nothing – `decayAt` returns 0 for anything in the
+    // future, so `fameAt(world, −1)` is 0 and the news gate alone closes the door, and no record in
+    // the world carries a negative week. That emptiness is a coincidence of three separate rules, any
+    // one of which a later wave could retune, so `exposureEventsOf` states the answer out loud at its
+    // head instead of inheriting it. ⚠ THE BEHAVIOURAL HALF CANNOT BE MUTATED RED (deleting the guard
+    // leaves the list empty anyway, which is the honest finding), so the STATEMENT is pinned beside
+    // the behaviour and the arm is run against that.
+    const world = probe('quiet')
     const slam = (world.trophiesByTier.slam ??= { titles: [], finals: [] })
     slam.titles.push(world.week - 3)
     slam.finals.push(world.week - 3)
-    expect(sheIsNewsAt(world, world.week), 'and she is news').toBe(true)
-    // The trophy is stamped three weeks back, so asking about ITS week answers and asking about
-    // today's does not – which is the whole of the finding in two lines.
-    const src = codeOnly(readFileSync(`${SRC}engine/world/phaseHerWeek.ts`, 'utf8'))
-    expect(src, 'the call site asks about today').toContain('exposureEventsOf(world, world.week)')
+    expect(sheIsNewsAt(world, world.week), 'a world with something to find in it').toBe(true)
+    expect(() => exposureEventsOf(world, -1), 'a week that never happened is a question, not a crash').not.toThrow()
+    expect(exposureEventsOf(world, -1), 'and its answer is nothing').toEqual([])
+    const ledger = codeOnly(readFileSync(`${SRC}engine/world/spotlight.ts`, 'utf8'))
+    expect(ledger, 'and the ledger says so at its head rather than inheriting it')
+      .toContain('if (week < 0) return out')
   })
 })
 

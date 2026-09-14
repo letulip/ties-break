@@ -647,9 +647,18 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
 //
 // THE WHOLE OF THE MECHANIC: the weeks that put her in the light cost her spirit, priced per event,
 // summed over the week, applied as ONE named summand inside `accrueSpirit`'s own pass. The LIST of
-// events is not derived here – `world/spotlight.ts` answers «what put her in the light this week»
+// events is not derived here – `world/spotlight.ts` answers «what put her in the light» for a week
 // and `world/phaseHerWeek.ts` hands the answer down, which is §0.1's dependency inversion and the
 // second use of ruling J's shape in this file.
+//
+// ⚠⚠ AND THE WEEK IT IS ASKED ABOUT IS THE ONE THAT HAS **CLOSED**, NOT THE ONE BEING LIVED – the
+// architect's RULING P (14.09), which overturned ruling M after T3 measured what M had missed. The
+// caller asks `exposureEventsOf(world, world.week − 1)`, and the argument is the TICK's own order,
+// not a taste: a trophy and a result row are stamped by `finalizeTournament` inside `playHerWeek`,
+// which runs TWO PHASES AFTER this pass, so asked in-week `'stage'` and `'publicLoss'` returned
+// nothing every week for ever. Nothing about the SIZE of the term changed – only which pass carries
+// it – and the lag is the truer reading in any case: the cameras were on her at the weekend and the
+// week she pays for it is the week after. `world/phaseHerWeek.ts` carries the tick table.
 //
 // ⚠⚠ IT IS WEATHER, NOT A SHOCK, AND THAT IS THE WAVE'S OWN §8 RATHER THAN A PLACEMENT PREFERENCE.
 // Nothing here writes `world.spiritShock`, nothing here touches the return curve, and no new shock
@@ -678,8 +687,19 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
  *  (a tabloid), and a week can hold any mixture of the five. So the draft below names the ATTENTION
  *  rather than the lens, which is the one thing all five weeks have in common. ⚠ CARRIED TO THE
  *  ARCHITECT AS A QUESTION rather than decided here: if he wants the cameras named, the honest
- *  shape is a row per kind, and that is a second sentence in the feed's budget, not a word swap. */
-export const EXPOSURE_ROW = 'People were talking about her this week.'
+ *  shape is a row per kind, and that is a second sentence in the feed's budget, not a word swap.
+ *
+ *  ⚠⚠ AND THE SECOND CONSTRAINT IS NEW, IT IS THE ARCHITECT'S **RULING P**, AND IT IS WHY THE DRAFT
+ *  MOVED ONCE ALREADY (v77's T3b). T3 shipped «…about her **this week**», which was true of the week
+ *  the row asked about under ruling M's horizon. Ruling P corrected that horizon: the caller asks
+ *  `exposureEventsOf(world, world.week − 1)`, because the tick stamps a trophy or a result two phases
+ *  AFTER the spirit pass, so `'stage'` and `'publicLoss'` could never be seen in-week. The row is
+ *  still stamped with the week it PRINTS in – the feed's rows are dated by when the player reads
+ *  them – but the attention it names happened in the week that has closed. «this week» was therefore
+ *  a sentence about the wrong week the day the horizon moved, and a row that names the wrong week is
+ *  the legibility law failing quietly. ⚠ STILL A DRAFT AND DELIBERATELY NOT POLISHED: T8 and the
+ *  вычитка own the words, and what T3b owes is a plain sentence that is TRUE. */
+export const EXPOSURE_ROW = 'People were talking about her last week.'
 
 /**
  * ⭐⭐⭐ WHAT THE WEEK'S EXPOSURE COST HER, in spirit points – the whole of T3's arithmetic, as one
@@ -914,8 +934,14 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean, expo
   //     and is ruling N's measurement turned into a rule: the term's worst contribution for a calm
   //     open girl is 2.40 against a 2.50 distance to the `dimmed` edge, and a habituated one takes
   //     three tenths – so a row gated on «did the number move visibly» would go silent on exactly
-  //     the weeks the player most needs the sentence. The week the light was on is the week the feed
+  //     the weeks the player most needs the sentence. A week the light was on is a week the feed
   //     says so.
+  //     ⚠⚠ AND THE ROW IS DATED BY WHEN IT PRINTS, WHICH IS ONE WEEK AFTER WHAT IT NAMES – ruling P
+  //     (v77 T3b). The list handed down describes `world.week − 1`; the row is stamped `world.week`
+  //     because a feed row is dated by the week the player reads it, exactly like the pressure it
+  //     explains, which also lands in THIS week's spirit. So the row sits beside the dip it accounts
+  //     for, which is the legibility law's whole point, and `EXPOSURE_ROW`'s own draft says «last
+  //     week» rather than «this week» so the sentence and the stamp agree.
   //     ⚠ ONE ROW PER WEEK AND NOT ONE PER EVENT – §3c's own «the feed is not a ledger». A week that
   //     held a title, a shoot and a wrong story is charged three times and printed once.
   //     ⚠ NO `amountCents` AND NO FIGURE (the no-cents law, wave-3 §0.5): the row says the light was

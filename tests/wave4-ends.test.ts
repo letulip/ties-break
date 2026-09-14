@@ -639,7 +639,14 @@ function weeklyRollsInSourceOrder(): ((world: WorldState) => void)[] {
   // for `psychologistWorks`' own reason (§0.1's dependency inversion). The claim is untouched («ends
   // before arrival, both between the two accruals»), the anchor is still the call's EXACT text, and
   // an `indexOf` that misses still returns −1, which the `> i` below is red on.
-  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))')
+  // ⚠⚠ RE-AIMED A **THIRD** TIME 14.09 BY WAVE 6's **T3b** – the re-aim AFTER T3's, same day, same
+  // anchor. RULING P's REASON IN ONE SENTENCE: a trophy and a result row are stamped inside
+  // `playHerWeek`, two phases after this pass, so `'stage'` and `'publicLoss'` asked in-week could
+  // never fire and the horizon moves to the week that has CLOSED. WHAT MOVED: the anchor's third
+  // argument is now `exposureEventsOf(world, world.week - 1)`. The claim is untouched («ends before
+  // arrival, both between the two accruals»), the anchor is still the call's EXACT text, and an
+  // `indexOf` that misses still returns −1, which the `> i` below is red on.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const span = code.slice(i + 1, j).filter((l) => l in LIFE_ROLLS)

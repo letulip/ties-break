@@ -637,8 +637,10 @@ describe('wave 6 T2 F – the asymmetry, written down and pinned', () => {
   })
 
   it('keeps the loss readable INSIDE the window, which is where the weekly tick asks', () => {
-    // The tick asks in-week by construction, so T3 never meets the edge; T9's benches must ask
-    // in-week too, or they will report the prune as if it were a fact about her life.
+    // The tick asks about the week that has just CLOSED – `world.week − 1`, the architect's ruling P,
+    // corrected from `world.week` by v77's T3b – which is ONE week inside a 52-week window, so it
+    // never meets the edge either. ⚠ T9's benches must stay inside the window too, or they will
+    // report the prune as if it were a fact about her life.
     const world = unknown('f-inside')
     trophy(world, 'slam', 'titles', WEEK - 4)
     trophy(world, 'slam', 'finals', WEEK - 4)

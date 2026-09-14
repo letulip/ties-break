@@ -893,7 +893,17 @@ describe('wave 5 T7 H – what the pass touches, and what it must never', () => 
     // ⚠ THIS PIN IS THE **FIFTH** SITE AND RULING A's TABLE NAMES THREE. Measured on the tree: the
     // arity/signature case and the ordered-list case in tests/spirit.test.ts, the two wave-4 text
     // pins, and this one. Carried back to the architect rather than quietly re-aimed.
-    const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))')
+    // ⚠⚠ RE-AIMED A **SECOND** TIME 14.09 BY WAVE 6's **T3b** – the re-aim AFTER T3's, on the same
+    // day, and this one's counter runs one behind the wave-4 pair's because it was born in wave 5.
+    // RULING P's REASON IN ONE SENTENCE: `'stage'` and `'publicLoss'` are stamped inside
+    // `playHerWeek`, two phases after this pass, so asked about `world.week` they could never fire
+    // and the horizon moves to the week that has CLOSED. WHAT MOVED: the anchor's third argument is
+    // now `exposureEventsOf(world, world.week - 1)`. NOTHING about wave 5's ruling P (a different
+    // ruling, the same letter, 13.09) moves: the walls pass is still asserted to be the VERY NEXT
+    // statement after the spirit pass, still on the same predicate, and `toBe(i + 1)` is still red on
+    // any statement sliding between them – ⚠ including the one wave-6 ruling P refuses by name,
+    // moving `accrueSpirit` itself down the phase to where a trophy is already written.
+    const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
     const j = code.indexOf('driftWalls(world, psychologistWorksThisWeek(world))')
     expect(i, 'the spirit pass is where it was').toBeGreaterThan(-1)
     expect(j, 'and the walls pass is the very next statement').toBe(i + 1)

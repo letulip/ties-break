@@ -100,9 +100,11 @@ function atOrAboveStageBar(tier: TierId): boolean {
  *  PRUNES AT 52 WEEKS (`RESULTS_WINDOW`, `world/bookkeeping.ts`; the engine says so twice in its own
  *  comments, at `world.ts:652` and again in the fame context at `world.ts:1093`). **So this function
  *  is honest about `'publicLoss'` only inside a 52-week horizon**, and about the other four at any
- *  age. The weekly tick asks in-week by construction, so T3 never meets the edge; T9's benches MUST
- *  ask in-week too – a bench that walks a career and asks retrospectively will see every `'stage'`
- *  and no `'publicLoss'`, and will report the prune as if it were a fact about her life. The pin is
+ *  age. The weekly tick asks about the week that has just CLOSED – `world.week − 1`, the architect's
+ *  ruling P, corrected from `world.week` by v77's T3b – which sits ONE week inside a 52-week window,
+ *  so the tick never meets the edge either; T9's benches MUST stay inside it too – a bench that walks
+ *  a career and asks retrospectively will see every `'stage'` and no `'publicLoss'`, and will report
+ *  the prune as if it were a fact about her life. The pin is
  *  the ledger test's §F: a big-stage title and a big-stage early exit stamped in the SAME old week,
  *  pruned by the engine's own `housekeep`, and only one of the two still answers.
  *
@@ -121,9 +123,22 @@ function atOrAboveStageBar(tier: TierId): boolean {
  *  Pure: reads the world, writes nothing, draws nothing. */
 export function exposureEventsOf(world: WorldState, week: number): ExposureEvent[] {
   const out: ExposureEvent[] = []
-  // ⚠⚠ THE GATE COMES FIRST AND IT GATES EVERY KIND – «an unknown girl has no spotlight, whatever she
-  // wins» (the brief's T2, in those words). It is deliberately not five separate checks: one
-  // predicate, one place, so no kind can be added later that quietly forgets it.
+  // ⚠⚠ A WEEK BEFORE THE CAREER BEGAN HOLDS NOTHING, AND IT IS ANSWERED RATHER THAN REFUSED (v77's
+  // T3b, the architect's ruling P). The weekly caller now asks about `world.week − 1`, so «the week
+  // before week 0» is a question this function has to have an answer to. The honest one is the
+  // EMPTY LIST: a negative week carries no trophy, no result row and no stamp, because every record
+  // this function reads is written with a week that is 0 or more. ⚠ IT IS A STATED LAW AND NOT A
+  // REPAIR – measured 14.09, the readers below already answer a negative week with nothing
+  // (`decayAt` returns 0 for anything in the future, so `fameAt(world, −1)` is 0 and the news gate
+  // alone would close the door), and that is exactly why it is written down: the emptiness would
+  // otherwise be a coincidence of three separate rules, any one of which a later wave could retune.
+  // Nothing indexes, nothing throws, and nothing depends on `newsFameMin` being above zero. ⚠ IT IS
+  // NOT A SIXTH GATE: it answers a week that never existed, and every KIND is still gated in exactly
+  // one place, one line down.
+  if (week < 0) return out
+  // ⚠⚠ THE GATE COMES BEFORE EVERY KIND, AND IT GATES EVERY KIND – «an unknown girl has no spotlight,
+  // whatever she wins» (the brief's T2, in those words). It is deliberately not five separate checks:
+  // one predicate, one place, so no kind can be added later that quietly forgets it.
   if (!sheIsNewsAt(world, week)) return out
 
   // 'stage' – A TITLE OR A FINAL AT A BIG STAGE THIS WEEK. Ruling G part 1: the cabinet is the

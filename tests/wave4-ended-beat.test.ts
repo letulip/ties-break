@@ -269,7 +269,15 @@ function lifeCallsInSourceOrder(): { names: string[]; run: (world: WorldState) =
   // about this pin's claim moves: it is still «the life calls sit between the body's pass and the
   // spirit's, in this order», the anchor is still the call's EXACT text, and an array `indexOf` that
   // misses still returns −1, which the `> i` below is red on.
-  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))')
+  // ⚠⚠ RE-AIMED A **THIRD** TIME 14.09 BY WAVE 6's **T3b** – the re-aim AFTER T3's, same day, same
+  // anchor. RULING P's REASON IN ONE SENTENCE: `'stage'` and `'publicLoss'` are stamped by
+  // `finalizeTournament` inside `playHerWeek`, two phases after this one, so asked about `world.week`
+  // those two kinds could never fire and the horizon moves to the week that has CLOSED. WHAT MOVED:
+  // the anchor's third argument is now `exposureEventsOf(world, world.week - 1)`. NOTHING about this
+  // pin's claim moves: it is still «the life calls sit between the body's pass and the spirit's, in
+  // this order», the anchor is still the call's EXACT text, and an `indexOf` that misses still
+  // returns −1, which the `> i` below is red on.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const names = code.slice(i + 1, j).filter((l) => l in LIFE_CALLS)

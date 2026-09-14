@@ -1122,7 +1122,18 @@ describe('the fence this step is judged by', () => {
     // the two wave-4 files); measured on the tree there are FIVE, and this is the fourth – a text pin
     // living in the same file as the arity one. The fifth is tests/wave5-psychologist-walls.test.ts's
     // ruling-P case. Both are re-aimed with their own notes; carried back to the architect.
-    const CALL = 'accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week))'
+    //
+    // ⚠⚠ RE-AIMED A THIRD TIME 14.09 BY WAVE 6's **T3b**, WHICH IS THE RE-AIM **AFTER T3's** AND ON
+    // THE SAME DAY. RULING P's REASON IN ONE SENTENCE: a trophy and a result row are stamped inside
+    // `playHerWeek`, two phases after this pass, so asked about `world.week` the `'stage'` and
+    // `'publicLoss'` kinds could never fire, and the horizon moves to the week that has CLOSED.
+    // WHAT MOVED: `exposureEventsOf(world, world.week)` -> `exposureEventsOf(world, world.week - 1)`,
+    // and nothing else on the line. NOT WEAKENED BY A CHARACTER: the anchor is still the call's exact
+    // text, `accrueSpirit` is still called exactly once, and the negative below still guards the two
+    // holes it guarded – the raw flag handed down in the predicate's place, and a hoisted list handed
+    // down in the derivation's place. ⚠ It now guards a THIRD: a split horizon, which ruling P refuses
+    // by name, cannot be spelled on this line without going red here.
+    const CALL = 'accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))'
     const j = code.indexOf(CALL)
     expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
     expect(code.filter((l) => l === CALL), 'and it is called exactly once').toHaveLength(1)
