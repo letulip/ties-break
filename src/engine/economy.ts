@@ -5191,8 +5191,10 @@ export const ECONOMY = {
   //
   // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight – the
   // psychologist block's own rule one concern up, and for its reason («a constant with no reader is
-  // a constant nobody can be wrong about yet»): `leakBasePerWeek` / `leakOpennessMult` /
-  // `wrongShare` land with T6's hazard; `newsWindowWeeks` with T7's booth.
+  // a constant nobody can be wrong about yet»): ⭐ NOTHING, SINCE T7 (14.09). The list this note kept
+  // is empty: `leakBasePerWeek` / `leakOpennessMult` / `wrongShare` landed with T6's hazard and
+  // `newsWindowWeeks` with T7's booth, and every one of them is struck below rather than left
+  // standing here as a stale forecast.
   // ⭐ AND T5 KEPT THE PROMISE THIS NOTE MADE FOR IT (14.09): the fifth focus's two ladders
   // (`publicLifeShrink`, `publicLifeAccel`) landed in `ECONOMY.psychologist` beside the other focus
   // tables and NOT in this block – they are the seat's price list, and this block holds only what is
@@ -5205,8 +5207,13 @@ export const ECONOMY = {
   // list is edited as each task lands rather than kept as a stale forecast. What is still absent is
   // T6's three and T7's one.
   // ⭐ AND T6 IS HERE (14.09) WITH EXACTLY THE THREE IT WAS PROMISED: `leakBasePerWeek`,
-  // `leakOpennessMult` and `wrongShare`, all struck from the list above. What is still absent is
-  // T7's one (`newsWindowWeeks`). ⚠ AND T6 ADDED NO FOURTH, which is worth saying because ruling I
+  // `leakOpennessMult` and `wrongShare`, all struck from the list above.
+  // ⭐ AND T7 IS HERE (14.09) WITH THE ONE IT WAS PROMISED AND NO SECOND: `newsWindowWeeks` below,
+  // and NOTHING for the beat itself. The booth's copy lives in `src/viz/commentary.ts` where all
+  // booth copy lives, its placement is that file's own `PRIORITY` table, and the mention is
+  // DETERMINISTIC by design (the wave's §3) – so there is no chance, no cooldown and no per-week cap
+  // to price here. The once-ness is the episode's two stamps and not a number.
+  // ⚠ AND T6 ADDED NO FOURTH, which is worth saying because ruling I
   // gives the hazard a FAME factor the brief had dropped: the factor is `ECONOMY.fame.cap`, which
   // this block READS and never writes, so the ruling restored a term of the spec's own formula
   // without opening a tunable the owner would have to price.
@@ -5401,6 +5408,29 @@ export const ECONOMY = {
      *
      *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. */
     wrongShare: { open: 0.15, private: 0.6 },
+    /** ⭐⭐⭐ HOW LONG A PUBLIC FACT STAYS **NEWS** – the booth's window, in weeks, measured from the
+     *  week the fact itself became public (`publicWeek` for «someone is there», `endedWeek` for «it
+     *  is over»). Inside it the booth may touch the fact once; outside it the fact is old and is
+     *  never voiced at all (T7, `world/lifeBeat.ts` §10).
+     *
+     *  ⚠⚠ IT IS A WINDOW ON THE **FACT**, NOT A COOLDOWN ON THE BOOTH, and the difference is the
+     *  whole design. A cooldown would make the mention a rate the booth is allowed; this makes it a
+     *  property of the STORY – a headline six weeks old is not what a commentator fills a changeover
+     *  with. The once-ness is carried by the two `aired*` stamps and by nothing here, so shortening
+     *  this number can only ever make the booth say LESS, never say it twice.
+     *
+     *  ⚠ INCLUSIVE, AND THE COMPARISON IS `week − factWeek <= newsWindowWeeks` – «a fact OLDER than
+     *  `newsWindowWeeks` is never aired», the brief's own sentence, so a fact of exactly this age
+     *  still airs and one week older never does. Both edges are pinned
+     *  (`tests/wave6-booth-channel.test.ts` §C) precisely because an off-by-one here is invisible in
+     *  play.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**, like everything in this block bar `opennessScale`. The
+     *  brief's §4 lists it under «Proposals – NONE ruled, all bench-priced predicted-first, his word
+     *  after» («`newsWindowWeeks 6`»). Six weeks is the brief's number and T9 prices it; nothing in
+     *  T7's pins asserts the 6 – they read this constant, so a re-tune moves both sides of every
+     *  expectation together. */
+    newsWindowWeeks: 6,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

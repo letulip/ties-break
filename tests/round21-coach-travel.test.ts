@@ -501,9 +501,18 @@ describe('§5 the broadcast knows he is in the corner', () => {
 
   it('and the log a family who stayed home reads is byte-identical to the one before this wave', () => {
     // The whole ladder is additive: passing nothing is the log this builder has always produced.
+    //
+    // ⚠ EXTENDED BY v77's T7 (14.09) TO THE **SIXTH** PARAMETER, AND NOT WEAKENED – the architect's
+    // ruling J, which reads this very case as the thing that guards the seam: «no `.length` pin
+    // guards this function; what is pinned is the byte-identity of the old log, which the default
+    // PRESERVES». The booth's private-life packet joins on `coach`'s precedent, so the claim now has
+    // to hold at every arity the ladder offers, explicitly spelled rather than implied by the last
+    // one. A seventh parameter arriving in a later wave adds its own line here.
     for (let i = 0; i < 20; i++) {
       const { a, b, match } = fixtureMatch(`coach-null-${i}`)
-      expect(buildCommentary(match, a.name, b.name, null, null)).toEqual(buildCommentary(match, a.name, b.name))
+      const bare = buildCommentary(match, a.name, b.name)
+      expect(buildCommentary(match, a.name, b.name, null, null)).toEqual(bare)
+      expect(buildCommentary(match, a.name, b.name, null, null, null)).toEqual(bare)
     }
   })
 })

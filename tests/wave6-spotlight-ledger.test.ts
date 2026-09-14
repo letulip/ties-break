@@ -11,11 +11,12 @@
 // inside a 52-week horizon, because its only record prunes) and **K** (the public loss is read off
 // the POINTS, and a skipped mandatory is not one).
 //
-// ⚠⚠ TWO OF THE FIVE KINDS HAVE NO WRITER IN THE TREE, AND §C CRAFTS THEM RATHER THAN WAITING FOR
-// ONE. `'aired'` reads `airedMetWeek` / `airedEndedWeek` (T7 stamps them) and `'wrongStory'` reads
-// `publicWeek` + `publicWrong` (T6 sets them), so on this tree every row in the game holds `null` /
-// `false` and neither kind can be reached by playing. A kind whose test can never reach it is a kind
-// that ships unproven – this wave has already seen the «unable to fail» family nine times across two
+// ⚠⚠ TWO OF THE FIVE KINDS HAD NO WRITER WHEN THIS FILE WAS WRITTEN, AND §C CRAFTS THEM RATHER THAN
+// WAITING FOR ONE. ⭐ BOTH WRITERS HAVE SINCE LANDED (14.09) – `'wrongStory'` reads `publicWeek` +
+// `publicWrong`, which T6's leak sets, and `'aired'` reads `airedMetWeek` / `airedEndedWeek`, which
+// T7's booth stamps – so the sentence that used to stand here («on this tree every row in the game
+// holds `null` / `false`») is no longer true and is corrected rather than annotated. The CRAFTING
+// stays: a kind whose test can never reach it is a kind that ships unproven – this wave has already seen the «unable to fail» family nine times across two
 // waves, and T1 caught a tenth inside its own arm 9 – so both are crafted from the v77 fields
 // directly, fired, and then mutated back to silence (§D).
 //
@@ -204,7 +205,8 @@ function tierlessResult(world: WorldState): void {
 
 /** A v77 episode row, every one of the ten fields stated out loud – T1's own rule («a field that is
  *  back-filled is a field that is required»), and here it is load-bearing twice over: the four
- *  publicity fields are exactly what §C has to set by hand, there being no writer for them. */
+ *  publicity fields are exactly what §C has to set by hand – written here rather than played into
+ *  existence, which stays the right shape now that T6 and T7 have given them engine writers too. */
 function episode(over: Partial<LoveEpisode> = {}): LoveEpisode {
   return {
     id: 'p:120',
@@ -321,7 +323,7 @@ describe('wave 6 T2 B – is she news', () => {
 })
 
 // =================================================================================================
-// C. THE FIVE KINDS – one crafted world each, and the two with no writer crafted from the v77 fields
+// C. THE FIVE KINDS – one crafted world each, the two publicity kinds posed from the v77 fields
 // =================================================================================================
 describe('wave 6 T2 C – what put her in the light', () => {
   it('\'stage\' – a TITLE at a big stage this week', () => {

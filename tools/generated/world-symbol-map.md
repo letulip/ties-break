@@ -2,20 +2,20 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,551 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,560 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-493 exported names across 51 owning modules.
+497 exported names across 51 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 57 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 59 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
@@ -44,13 +44,13 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
+| `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 6 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
 | `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 4 |
-| `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
@@ -97,9 +97,11 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 
 THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
 
+- `airBoothMention` – `src/engine/world/lifeBeat.ts`
 - `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `arrivalEligible` – `src/engine/world/lifeBeat.ts`
 - `arrivalHazardFor` – `src/engine/world/lifeBeat.ts`
+- `boothMentionDue` – `src/engine/world/lifeBeat.ts`
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
@@ -652,6 +654,17 @@ WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they ad
 - `shootClashWeek` – `src/engine/world/shootClash.ts`
 - `shootMoveTarget` – `src/engine/world/shootClash.ts`
 
+### `src/engine/world/spotlight.ts`
+
+⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK.
+
+- `atOrAboveStageBar` – `src/engine/world/spotlight.ts`
+- `boothPrivateLifeAt` – `src/engine/world/spotlight.ts`
+- `ExposureEvent` *(type)* – `src/engine/world/spotlight.ts`
+- `exposureEventsOf` – `src/engine/world/spotlight.ts`
+- `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
+- `sheIsNewsAt` – `src/engine/world/spotlight.ts`
+
 ### `src/engine/world/means.ts`
 
 WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet.
@@ -707,15 +720,6 @@ THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's e
 - `endEpisode` – `src/engine/world/loveEpisodes.ts`
 - `knownPartner` – `src/engine/world/loveEpisodes.ts`
 - `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
-
-### `src/engine/world/spotlight.ts`
-
-⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK.
-
-- `ExposureEvent` *(type)* – `src/engine/world/spotlight.ts`
-- `exposureEventsOf` – `src/engine/world/spotlight.ts`
-- `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
-- `sheIsNewsAt` – `src/engine/world/spotlight.ts`
 
 ### `src/engine/kidLife.ts`
 

@@ -10,6 +10,10 @@ import type { Surface } from '../../engine/match/types'
 import type { EventPreview } from '../../engine/season/preview'
 import type { LadderTrack, TierId } from '../../engine/season/types'
 import type { WorldMatch } from './events'
+// ⚠ ONE-WAY, LIKE `./events` ABOVE: `protocol/narrative.ts` imports nothing from this file, so the
+// edge closes no cycle. The booth's packet is declared there because it is a fact about her private
+// life; it RIDES here because the only surface that reads it is the live match (see `PendingView`).
+import type { BoothPrivateLife } from './narrative'
 
 /** Structured end-of-season recap (schema v10). Written at wrap-up time (the tick into the
  *  season year's first off-season week) off the world state itself – W-L are counted as the
@@ -354,6 +358,27 @@ export interface PendingView {
    *  also be re-deriving the "and there IS a coach" clause, which is exactly the half a self-coached
    *  career gets wrong. */
   coachTravelled: boolean
+  /** ⭐⭐⭐ v77 (the spotlight, wave 6 – T7) – DID THE BOOTH TOUCH HER PRIVATE LIFE AT THIS MATCH, and
+   *  what may it say? Null on every match it did not, which is almost all of them.
+   *
+   *  It rides here for `coachTravelled`'s own reason one line up, and the reason is sharper again:
+   *  the decision is the ENGINE's – made in the weekly tick, stamped on the episode, registered as
+   *  an exposure event that costs her spirit – and a screen that re-derived «is this airable» would
+   *  be re-deciding a thing the world has already paid for. `boothPrivateLifeAt` is asked once, in
+   *  the engine, and the answer is carried.
+   *
+   *  ⚠⚠ NON-NULL ON THE **FIRST** MATCH OF THE WEEK'S RUN AND ON NO OTHER, which is a property of
+   *  this VIEW and not of the stamp. The stamp is per WEEK and the once-ness is the episode's; a run
+   *  is up to six matches inside one week, so a packet carried on every round would print the booth's
+   *  one mention at six changeovers and make «once aired, never again» visibly false on screen. The
+   *  view hands it to the first match the family watches – which is also where the flow already puts
+   *  every first-watch-only thing (the badge and the shout: «a round's first watch, off every
+   *  re-watch»).
+   *
+   *  ⚠ THE THREE OTHER BUILDERS OF THIS VIEW PASS null BY CONSTRUCTION – the College League and the
+   *  Nations Cup are not tour weeks and the booth's licence never reaches them; see their own lines.
+   */
+  boothPrivateLife: BoothPrivateLife | null
   /** WHICH TABLE THIS TOURNAMENT IS PLAYED ON – `TIERS[tier].track`, carried rather than re-derived.
    *
    *  ⚠ THE BUG THIS CLOSES (31.07, fix/ladder-separation). The owner, after a National: «по итогам

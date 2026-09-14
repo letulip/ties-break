@@ -415,6 +415,11 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // ruling I, restoring who-she-is §3c-bis's own formula against the brief's spelling), which is why it
 // takes two arguments where `endsHazardFor` takes one; `ECONOMY.fame.cap` is READ there and never
 // written, the wave's §8.
+// ⭐⭐⭐ v77 T7 ADDS THE BOOTH – the other half of the same day, and the only name in this layer the
+// tick does NOT call from the life block. `airBoothMention` runs in `playHerWeek`'s play arm (§10's
+// banner carries the measurement: two phases later, where the match she is about to play is in
+// hand), and `boothMentionDue` is the pure licence it is assembled from – the fact, the window and
+// the once-ness stamps, asked of the episode list and answered without a draw.
 // ⭐⭐⭐ v75 T4 ADDS THE ENDING'S CONVERSATION: `drawEndsRead` is the space-vs-company read – the sixth
 // and last key of the private life, keyed on the ENDING's week (ruling G.1) and weighted by
 // who-she-is §4's own «Wants weights» row, so it is `drawPartnerWants`' twin and not a coin flip.
@@ -422,8 +427,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
-export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -450,8 +455,12 @@ export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fam
 // light this week. It READS fame and never tunes it (the wave's §8), and like the stock above it
 // draws nothing and writes nothing – a week's exposure is a question asked of records the world
 // already keeps. Re-exported under the historical convention so the barrel stays the one door.
-import { exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind } from './world/spotlight'
-export { exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind }
+// ⭐ v77's T7 TAKES TWO MORE NAMES OFF THE SAME LEAF: `atOrAboveStageBar` (the booth's licence asks
+// the one question `'stage'` already asks about a rung) and `boothPrivateLifeAt` (what the booth
+// touched at a week, read off the episode's stamps for the snapshot). Both are pure reads, like
+// everything else in that module.
+import { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind } from './world/spotlight'
+export { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, sheIsNewsAt, type ExposureEvent, type ExposureKind }
 // ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK (world/brandStrength.ts). Income keeps reading fame;
 // the WORTH reads this. Zero draws, nothing written per week – see the module header.
 import { brandStrengthAt, strengthDecayAt } from './world/brandStrength'

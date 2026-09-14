@@ -269,6 +269,11 @@ export type BeatKind =
   /** ⭐ ROUND-21 #2: the coach in her corner at a set break – emitted only on a match his family
    *  actually paid to bring him to. See THE COACH IS IN THE CORNER below. */
   | 'coach'
+  /** ⭐⭐⭐ v77 (the spotlight, wave 6 – T7): the booth filling a changeover with the one thing about
+   *  her life the WORLD already knows – emitted only on a match the engine decided it airs at. See
+   *  THE BOOTH TOUCHES HER PRIVATE LIFE below. ⚠ It is the second `BeatKind` that is not about the
+   *  tennis, and like `'coach'` it can never take a row from a beat that is. */
+  | 'booth'
 
 export interface Beat {
   /** index into match.points - the point this beat is anchored to (drives progressive reveal) */
@@ -487,6 +492,14 @@ const PRIORITY: Record<BeatKind, number> = {
   // new set, which is where a `rally` or a `streak` beat can also land; when they collide the TENNIS
   // wins, every time. Presence is a thing the log mentions, never a thing it interrupts a match for.
   coach: 8,
+  // ⭐⭐⭐ v77 T7 – LAST OF ALL, BELOW THE COACH TOO, AND IT CAN NEVER ACTUALLY COLLIDE WITH ANYTHING.
+  // The booth's beat takes a changeover INSIDE a set that no other candidate has claimed (see THE
+  // BOOTH TOUCHES HER PRIVATE LIFE), so this number is a belt on a braced strap: the tennis outranks
+  // it by construction, and if some later wave anchors it somewhere contested the tennis – and the
+  // coach – still win. ⚠ The reason it declines the fight rather than losing it is the once-ness: the
+  // engine has already STAMPED the fact as aired and charged her for it, so a beat that lost a
+  // priority contest would spend a fact that can never be voiced again and print nothing.
+  booth: 9,
 }
 
 const ORDINAL = ['first', 'second', 'third', 'fourth', 'fifth'] as const
@@ -746,6 +759,97 @@ const COACH_AFTER_WIN: readonly ((who: string) => string)[] = [
   (who) => `${who} sits with her coach, a set to the good.`,
   (who) => `Her coach has a word with ${who} at the change of ends.`,
 ]
+
+// =================================================================================================
+// ⭐⭐⭐ v77 T7 – THE BOOTH TOUCHES HER PRIVATE LIFE, AND ONLY AS FAR AS THE WORLD ALREADY KNOWS IT
+// =================================================================================================
+//
+// The owner ruled the hard privacy wall away on 10.09 (`docs/plans/the-way-she-sounds-2026-09.md`
+// C4): «личная жизнь спортсменов часто на виду, т.е. что-то вполне может быть и про частную жизнь,
+// как в Wimbledon фильме в конце было» – so the booth may touch her private life exactly as far as
+// it is publicly known IN-WORLD, and never a fact only the family holds. ⭐⭐ And the loop closes by
+// his design: a booth mention IS an exposure event for the spotlight (who-she-is §3c), so the line
+// below has already cost her spirit by the time anybody reads it.
+//
+// ⚠⚠ THIS FILE DECIDES NOTHING. Whether the booth speaks is an ENGINE fact – the licence, the news
+// window and the once-ness stamps all live in `engine/world/lifeBeat.ts` §10, decided in the weekly
+// tick and written onto the episode. What arrives here is two bits (`CommentaryPrivateLife`), and
+// this file's whole job is HOW it is said. That split is the wave's §0 delta 2 in one sentence, and
+// it is why there is no fame, no week and no episode anywhere in this block.
+//
+// ⚠⚠ AND THE WRONG STORY AIRS WRONG. `wrong` means the world has the story WRONG (who-she-is
+// §3c-bis's own gem: an open girl's life leaks early and roughly true, a private girl's late and
+// misattributed), and the booth repeats the world's version, mistake and all – it has no way of
+// knowing better and no line here pretends it does. That sting is the mechanic working; the
+// CORRECTION is explicitly a later wave's beat, so nothing below hedges, doubts or apologises.
+//
+// ⚠ WHAT IT MAY CLAIM: that there is somebody, or that it is over – the two facts the world was
+// told – plus what a booth can see from its own seat (a face in the box, a seat that is empty, the
+// front pages in front of it). NOTHING about how she feels, nothing about what it has done to her
+// tennis, and no name: the schema persists neither a name nor a gender for a partner
+// (`LoveEpisode`), so a line that reached for one would be inventing the consequential fact this
+// file's honesty rule forbids. ⚠ The one exception is «a mystery man», and the FABRICATION is what
+// licenses it – the architect's ruling T: on a wrong story the invented person is the tabloid's, not
+// the schema's, and the wrongness is doing the work.
+//
+// ⚠ WHY A CHANGEOVER. It is the ninety seconds a booth has to fill with something that is not the
+// point just played – the same argument the coach's beat makes for a set break, one rung quieter.
+// The anchor is deliberately NOT a set break: that one is the coach's, and two off-court beats
+// competing for one point would have cost one of them a row.
+//
+// ⚠⚠ ZERO RNG, LIKE EVERY OTHER LINE IN THIS FILE. The variety comes from `variant()` – the integer
+// hash below – which is what lets the booth have more than one wording while `src/viz` keeps no
+// draw in it at all (the wave's §8, and its gravest possible finding). The mention is DETERMINISTIC
+// by design: the engine's licence fires it, no dice, and the PERSONAS that would vary who says it
+// are C4's own wave and not this one.
+//
+// ⚠ THESE FOUR POOLS ARE DRAFTS, doubly bound: invariant 4 (the owner's words, not an agent's) and
+// booth-legal under C4. What is TRUE here is machine-checked – only a `publicWeek` fact, only inside
+// her news window; how it is SAID is his, through T8's вычитка and his playtest.
+
+/** ⭐ WHAT THE BOOTH IS AIRING, and whose match it is. `buildCommentary` names two players and knows
+ *  nothing about which one the family is watching, so the side is passed in WITH the fact – exactly
+ *  as `CommentaryCoach` does, and for the same reason: it makes it impossible to air her private
+ *  life over the other girl's name. ⚠ The two FACTS come off the wire (`PendingView.boothPrivateLife`,
+ *  the engine's decision); the SIDE is the view's own answer (`kidSide`), which is also what makes a
+ *  rival replay silent by construction – nobody's private life is the family's there. Null (the
+ *  default) is a match the booth said nothing at, which is byte-identical to every log this file
+ *  produced before it could. */
+export interface CommentaryPrivateLife {
+  side: Side
+  /** which public fact: `'met'` = there is somebody, `'ended'` = it is over. */
+  kind: 'met' | 'ended'
+  /** the world's version is WRONG, and the booth repeats it that way. */
+  wrong: boolean
+}
+
+/** «There is somebody», as the world has it RIGHT – the box read, C4's own register for this fact. */
+const BOOTH_MET_TRUE: readonly ((who: string) => string)[] = [
+  (who) => `${who} has somebody in the box this week, and the papers had it before the draw did.`,
+  (who) => `A new face in ${who}'s box, and it has been on the front pages all week.`,
+]
+/** ...and as the world has it WRONG. The booth repeats the story it was given; «a mystery man» is
+ *  the tabloid's invention and the only place in the game a partner may be described at all. */
+const BOOTH_MET_WRONG: readonly ((who: string) => string)[] = [
+  (who) => `The papers have ${who} with a mystery man this week, all of them running the same photograph.`,
+  (who) => `A mystery man on every front page beside ${who}, and no two of them tell it the same way.`,
+]
+/** «It is over», true – the end-titles read. */
+const BOOTH_ENDED_TRUE: readonly ((who: string) => string)[] = [
+  (who) => `The papers say that is over now, and ${who} walks out for this one on her own.`,
+  (who) => `${who}'s box is a seat lighter this week, and the front pages have already explained it.`,
+]
+/** ...and «it is over» as the world got it wrong. */
+const BOOTH_ENDED_WRONG: readonly ((who: string) => string)[] = [
+  (who) => `The papers have ended it for ${who} this week, and no two of them tell it the same way.`,
+  (who) => `A break-up on every front page beside ${who}, and not one of them has the same story.`,
+]
+
+/** The pool for one packet – the two facts crossed, and nothing else decides it. */
+function boothLines(ctx: CommentaryPrivateLife): readonly ((who: string) => string)[] {
+  if (ctx.kind === 'met') return ctx.wrong ? BOOTH_MET_WRONG : BOOTH_MET_TRUE
+  return ctx.wrong ? BOOTH_ENDED_WRONG : BOOTH_ENDED_TRUE
+}
 
 /** Deterministic phrase variety with no RNG: an integer hash of the point index, folded to `n`.
  *  Knuth's multiplicative constant, so consecutive indices do not land on consecutive variants
@@ -1316,6 +1420,17 @@ export function buildCommentary(
    *  OPTIONAL AND DEFAULTED TO null FOR THE SAME REASON `event` IS: every caller that passes nothing
    *  gets exactly the log this function returned before he existed. See THE COACH IS IN THE CORNER. */
   coach: CommentaryCoach | null = null,
+  /** ⭐⭐⭐ v77 T7: the booth is airing the one thing about her private life the world already knows,
+   *  and which side of the net is hers. ⚠ OPTIONAL AND DEFAULTED TO null ON `coach`'s OWN PRECEDENT,
+   *  which is the architect's RULING J stated in full: every caller that passes nothing gets exactly
+   *  the log this function returned before it existed, and the ladder only ever adds. ⚠ RULING A's
+   *  «required, never defaulted» is about the engine's weekly spirit pass, whose parameters a pin
+   *  COUNTS – the rule is «a default must not walk past a pin that counts», and NO `.length` pin
+   *  guards this function. What IS pinned is the byte-identity of the old log
+   *  (`tests/round21-coach-travel.test.ts`), which this default is exactly what preserves. ⚠ The
+   *  engine's function is deliberately not NAMED here: `tests/spirit.test.ts`'s fog rule refuses that
+   *  identifier anywhere outside `engine/`, prose included. See THE BOOTH TOUCHES HER PRIVATE LIFE. */
+  privateLife: CommentaryPrivateLife | null = null,
 ): Beat[] {
   const points = match.points
   if (points.length === 0) return []
@@ -1802,6 +1917,45 @@ export function buildCommentary(
         undefined,
         false,
       )
+    }
+  }
+
+  // --- the booth, if the engine decided it airs ----------------------------------------------
+  // See THE BOOTH TOUCHES HER PRIVATE LIFE above for what this may claim and why it is a changeover.
+  // ONE beat per match, `keyMoment: false` (the 'key' cut is the tennis and this is not it), and the
+  // wording comes off `variant` – no draw, here or anywhere in this file.
+  if (privateLife) {
+    // THE CHANGEOVERS INSIDE A SET: ends change after the first, third, fifth game, so the anchor is
+    // the first point of the game that follows an ODD game total. ⚠ SET BREAKS ARE EXCLUDED, and
+    // that is the coach's beat keeping its own anchor: two off-court beats competing for one point
+    // would cost one of them a row, and this one cannot afford to lose it (the engine has already
+    // spent the fact – see PRIORITY's note).
+    const taken = new Set(cands.map((c) => c.pointIndex))
+    for (const g of s.games) {
+      if (g.setEnd) continue
+      if ((g.gamesAfter[0] + g.gamesAfter[1]) % 2 !== 1) continue
+      const next = g.last + 1
+      if (next > lastIndex) continue
+      // ⚠⚠ THE FIRST FREE ONE, AND THE «FREE» IS THE POINT. `PRIORITY` resolves a collision by
+      // dropping the smaller beat, and a dropped booth beat is a fact that was stamped as aired,
+      // charged to her spirit, and then never said out loud – the one failure this channel cannot
+      // have. So it declines the contest instead of losing it: it takes a changeover the tennis left
+      // alone. A match whose every changeover is spoken for stays silent, which is the honest
+      // outcome of a log that had something better to say at every one of them.
+      if (taken.has(next)) continue
+      const lines = boothLines(privateLife)
+      push(
+        next,
+        'booth',
+        'Off court.',
+        // The bare hash rather than the rotor, for the reason `room` and the coach's beat both give:
+        // this is pushed outside the chronological per-game loop, so "what was just said" would be
+        // the wrong neighbour.
+        lines[variant(next, lines.length)](names[privateLife.side]),
+        undefined,
+        false,
+      )
+      break
     }
   }
 

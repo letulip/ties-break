@@ -46,7 +46,12 @@ import { addEvent } from './ledger'
 // architect's ruling M («it is a life call and belongs among its siblings»). It sits THIRD at the
 // call site, between the arrival and the delivery, and that slot is load-bearing in both directions:
 // see the call site below.
-import { deliverKnownPartner, rollArrival, rollEnds, rollLeak, rollSmallTalk } from './lifeBeat'
+// ⭐⭐⭐ AND THE BOOTH JOINS THEM IN v77 T7 (14.09) – `airBoothMention`, §10 of the same module. ⚠ IT
+// IS THE ONE NAME OFF THIS MODULE THAT IS **NOT** CALLED FROM THE LIFE BLOCK: it runs in
+// `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
+// MATCH and the match does not exist two phases earlier. See the call site for the measurement and
+// for why that is ruling P working rather than a second clock.
+import { airBoothMention, deliverKnownPartner, rollArrival, rollEnds, rollLeak, rollSmallTalk } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -765,6 +770,34 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
     // The presence the fare bought, carried on the run it was bought for. Written only when a fare
     // was actually charged, so absence keeps meaning "he stayed home" for every earlier save.
     if (masseurFare > 0) world.pendingTournament.masseurThere = true
+    // ⭐⭐⭐ 2-booth (v77, the spotlight – T7): AND WHETHER THE BOOTH TOUCHES HER PRIVATE LIFE AT THIS
+    //        ONE. `world/lifeBeat.ts` §10 carries the licence, the window and the once-ness; the
+    //        ruling behind the channel is the-way-she-sounds C4 (10.09) and the loop it closes is the
+    //        owner's own: «a booth mention of her private life IS an exposure event for the
+    //        spotlight». ZERO DRAWS – the mention is deterministic by design (the wave's §3).
+    //
+    //        ⚠⚠ **THIS ARM AND THIS STEP**, WHICH IS THE ARCHITECT'S RULING P ASKED OF T7 («your
+    //        «this week has a big-stage match» read must be honest about which step it runs in»).
+    //        The life block – §5-§9, two phases of this same tick ABOVE (step 3 against this one's
+    //        step 5, with `deriveWeekField` between them) – runs before `enteredThisWeek` exists,
+    //        before the doctor sees her and before the three arms that
+    //        decide whether she plays at all; a licence spelled there would have re-derived the
+    //        match from the calendar and re-stated the injury, college and medical rules a second
+    //        time. Here the match is IN HAND, and the arm is the one where she actually BOARDED: the
+    //        walkover and medical-withdrawal arms above never reach this line, which is right – a
+    //        booth cannot fill a changeover at a match she did not play.
+    //        ⚠ SO THE TIER IS HANDED DOWN AND NOT RE-DERIVED (§0.1's dependency inversion, the third
+    //        time this phase makes the move): `airBoothMention` cannot be called from a matchless
+    //        phase, because there would be nothing to pass it.
+    //        ⚠⚠ AND IT IS NOT A SECOND CLOCK. The stamp names THIS week – the week the booth spoke,
+    //        `rollLeak`'s own rule for `publicWeek` – and T3's pass sees the `'aired'` exposure event
+    //        on the NEXT tick, where `exposureEventsOf(world, world.week − 1)` reads it. Ruling P's
+    //        one horizon, working; nothing about `accrueSpirit`'s position or the life block's moved
+    //        to buy this line.
+    //        ⚠ AFTER THE SHADOW RUN IS STASHED, and deliberately so: the run is what the family is
+    //        about to watch, and a stamp written before it would be a booth speaking at a match that
+    //        `computeShadowTournament` had not yet composed. Nothing here reads `pendingTournament`.
+    airBoothMention(world, enteredThisWeek.tier)
   }
 
   // 1c-masseur, settled HERE since the per-match tour pricing (v59; the step-1 position was beside

@@ -21,17 +21,21 @@
 // behind the same gate and T7 stamps the booth. A reader looking here for an EFFECT is in the wrong
 // file by exactly one commit.
 //
-// ⚠ TWO OF THE FIVE KINDS CANNOT FIRE ON THIS TREE, AND THAT IS ALSO BY CONSTRUCTION. `'aired'`
+// ⚠ TWO OF THE FIVE KINDS READ FIELDS THIS FILE NEVER WRITES, AND THAT IS BY CONSTRUCTION. `'aired'`
 // reads `airedMetWeek` / `airedEndedWeek` and `'wrongStory'` reads `publicWeek` + `publicWrong` –
-// four v77 fields whose only writers are T6 and T7, so today they are `null` / `false` on every row
-// in the game. Reading the STAMP rather than deciding the fact is what keeps this function pure; the
-// two kinds are proven live by crafted worlds that set the fields directly (the ledger test's §C and
-// §D), because a kind whose test can never reach it is a kind that ships unproven.
+// four v77 fields whose only writers are `world/lifeBeat.ts` §9 (the leak) and §10 (the booth).
+// ⭐ CORRECTED 14.09 BY T7: this note used to end «so today they are `null` / `false` on every row in
+// the game», which was true for exactly two commits and is now false in both halves – T6 shipped the
+// leak and T7 the booth, so both kinds are reachable by PLAYING. What has not changed is the
+// doctrine: reading the STAMP rather than deciding the fact is what keeps this function pure, and
+// the crafted worlds of the ledger test's §C and §D stay exactly as they were – a kind proven by a
+// fixture it cannot reach in play is a kind that ships unproven, whoever writes the field now.
 import { ECONOMY } from '../economy'
 import { TIERS, TIER_LADDER } from '../season/calendar'
 import { KID_ID } from './constants'
 import { completedShootWeeks, fameAt } from './fame'
 import { loveEpisodesOf } from './loveEpisodes'
+import type { BoothPrivateLife } from '../../shared/protocol/narrative'
 import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
 
@@ -68,6 +72,14 @@ export function sheIsNewsAt(world: WorldState, week: number): boolean {
 
 /** Is this tier at or above the big-stage bar? `TIER_LADDER`'s index and nothing else – ruling F.
  *
+ *  ⭐ EXPORTED SINCE v77's T7, WHICH IS THE ONE CHANGE THAT TASK MAKES TO THIS FILE. The booth's
+ *  licence asks the same question of the event she is ABOUT to play (`world/lifeBeat.ts` §10, called
+ *  from `playHerWeek`'s play arm) and there is exactly one right way for it to ask: this predicate.
+ *  A second spelling of «what counts as a big stage» – a hand-written tier list, an `indexOf` at a
+ *  call site, a `tier === 'slam' || …` – is the two-sides-one-question defect `src/art/venues.ts:150`
+ *  already records in this repo, and it would drift from `stageTierMin` the first time the bar moved.
+ *  ⚠ THE FUNCTION ITSELF DID NOT CHANGE: same body, same two −1 guards, same ruling behind it.
+ *
  *  ⚠⚠ BOTH SIDES ARE GUARDED AGAINST −1, WHICH IS THE WHOLE POINT OF THE HELPER. `indexOf` does not
  *  throw: it returns −1, and −1 compares as «below every rung» on the left and «above every rung» on
  *  the right. `src/art/venues.ts:150` records what that costs in this repo – a hand-written tier
@@ -75,7 +87,7 @@ export function sheIsNewsAt(world: WorldState, week: number): boolean {
  *  a big stage, and a bar that fails to resolve turns the kind OFF rather than on. ⚠ The bar's own
  *  resolution is pinned by a test (`… §A`, «the bar resolves to an index > -1»), so the second guard
  *  is a belt on a braced constant rather than a silent fallback anybody could come to rely on. */
-function atOrAboveStageBar(tier: TierId): boolean {
+export function atOrAboveStageBar(tier: TierId): boolean {
   const bar = TIER_LADDER.indexOf(ECONOMY.spotlight.stageTierMin)
   const rung = TIER_LADDER.indexOf(tier)
   if (bar < 0 || rung < 0) return false
@@ -242,4 +254,38 @@ export function exposureEventsOf(world: WorldState, week: number): ExposureEvent
   }
 
   return out
+}
+
+/** ⭐⭐⭐ v77's T7 – WHAT THE BOOTH TOUCHED AT `week`, AS THE TWO FACTS A SENTENCE NEEDS AND NOTHING
+ *  ELSE: which fact it is, and whether the world has it wrong. Null on every week the booth said
+ *  nothing, which is almost all of them.
+ *
+ *  ⚠⚠ IT READS THE STAMPS AND DECIDES NOTHING – the same doctrine `'aired'` fifteen lines up is
+ *  written to, and the reason this function is HERE rather than beside the writer. The licence, the
+ *  window and the once-ness live in `world/lifeBeat.ts` §10, where the week is decided once and
+ *  written down; this answers «what was decided», which is a question about a record. So the
+ *  snapshot cannot disagree with the pressure: `exposureEventsOf` and this function read the same
+ *  two fields, and a fact that never got a stamp is invisible to both.
+ *
+ *  ⚠⚠ AND IT IS THE WHOLE OF WHAT CROSSES TO THE UI – the fog law applied to this channel, and the
+ *  narrowness is `DiaryFacts.partnerKnown`'s own law («a fact ships only with the licence that
+ *  consumes it»). No episode object, no id, no `sinceWeek`, no partner – the schema persists no name
+ *  and no gender anyway (`LoveEpisode`), so a beat reaching for one would be inventing a
+ *  consequential fact. What the booth may say rests on these two bits and nothing further.
+ *
+ *  ⚠ `wrong` IS READ OFF `publicWrong` WITHOUT RE-JUDGING IT – the architect's ruling T. The world's
+ *  version is what the booth repeats, mistake and all; the correction is a later wave's beat.
+ *
+ *  ⚠ THE MET STAMP IS ANSWERED BEFORE THE ENDED ONE, matching the writer's own «met before ended».
+ *  Today the pair cannot both name one week – §10 voices at most one fact a week – so the order is a
+ *  statement about the DATA's shape rather than about a case that arises, exactly as the `'aired'`
+ *  kind's two reads above are.
+ *
+ *  Pure: reads the world, writes nothing, draws nothing. */
+export function boothPrivateLifeAt(world: WorldState, week: number): BoothPrivateLife | null {
+  for (const ep of loveEpisodesOf(world)) {
+    if (ep.airedMetWeek === week) return { kind: 'met', wrong: ep.publicWrong }
+    if (ep.airedEndedWeek === week) return { kind: 'ended', wrong: ep.publicWrong }
+  }
+  return null
 }

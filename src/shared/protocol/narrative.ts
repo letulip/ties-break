@@ -391,6 +391,33 @@ export interface LoveEpisode {
   airedEndedWeek: number | null
 }
 
+/** ⭐⭐⭐ v77 – WHAT THE BOOTH TOUCHED, AS THE UI IS EVER ALLOWED TO SEE IT (the spotlight, wave 6's
+ *  T7; the boundary ruled in `docs/plans/the-way-she-sounds-2026-09.md` C4 on 10.09: «the honest
+ *  boundary is the world's own PUBLICITY, not the family's walls»).
+ *
+ *  ⚠⚠ TWO FACTS AND NO STRING, WHICH IS THE WHOLE SHAPE OF THE FIELD. The engine decides WHETHER the
+ *  booth speaks – the licence, the news window and the once-ness stamps are all `world/lifeBeat.ts`
+ *  §10's – and `src/viz/commentary.ts` decides HOW it is said, where every other word the booth says
+ *  already lives. A sentence on the wire would have put player-facing copy in the engine and a
+ *  DECISION in the view, which is the split this channel exists to avoid.
+ *
+ *  ⚠⚠ IT CARRIES NO EPISODE, NO ID AND NO WEEK, and the narrowness is `DiaryFacts.partnerKnown`'s
+ *  own law one file over: a fact ships only with the licence that consumes it. The booth's beat
+ *  needs which fact it is and whether the world has it wrong; it needs nothing else, and the schema
+ *  persists no name and no gender for it to reach for even if it did.
+ *
+ *  ⚠ `wrong` IS THE WORLD'S MISTAKE AND THE BOOTH REPEATS IT – who-she-is §3c-bis. The line that
+ *  airs a wrong story carries the wrong story; that sting is the mechanic working, and the
+ *  correction is explicitly a later wave's beat (the wave's §8). */
+export interface BoothPrivateLife {
+  /** which public fact was voiced: `'met'` = «there is someone», `'ended'` = «it is over». The two
+   *  are separately stamped on the episode and air independently. */
+  kind: 'met' | 'ended'
+  /** the world's version of it is WRONG (`LoveEpisode.publicWrong`, read and never re-judged – the
+   *  architect's ruling T). */
+  wrong: boolean
+}
+
 /** ⭐ ONE ROW PER BIRTHDAY (v48). The DIARY reads it and nothing else does: no morale, no condition,
  *  no mood modifier – that system does not exist yet and this slice only lays the ground (spec §2b,
  *  owner: «мораль и психологи у нас в будущем, так что сейчас можно просто подготовку сделать»).
