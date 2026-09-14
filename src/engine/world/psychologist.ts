@@ -359,17 +359,23 @@ export const PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL =
 /** The roster refusal's twin for the focus id – `setPsychologistRung`'s own shape, so a stale screen
  *  can no more invent a year than it can invent a specialist. DRAFT.
  *
- *  ⚠⚠ AND IT SAYS «FOUR» WHILE THE ROSTER NOW HOLDS FIVE – NAMED HERE RATHER THAN QUIETLY CORRECTED,
- *  and it is v77's T5 carrying a question rather than taking an edit. INVARIANT 4 governs («a label,
- *  tab, button or sentence on screen may only change when the task ASKED for it»), and the wave's own
- *  §8 draws the line in the same place: «the only new on-screen words are the fifth focus's own
- *  label, line and card copy – every existing string stays exactly as it is». This sentence is an
- *  EXISTING string and the T5 brief did not ask for it, so it ships unchanged and the miscount goes
- *  to the architect and the owner with T8's drafts. ⚠ It is also the least visible string in the
- *  block: nothing but a stale screen or a doctored command can produce it, since the card only ever
- *  offers ids out of `PSY_FOCUSES`. */
+ *  ⚠⚠ IT SAID «FOUR» WHILE THE ROSTER HELD FIVE, AND THE ARCHITECT'S **RULING S** (14.09) TOOK THE
+ *  COUNT OUT RATHER THAN BUMPING IT – v77's T8 landing it. T5 flagged the false sentence and did not
+ *  touch it, which was right; the ruling is what licenses the edit, and it turns on TWO facts and not
+ *  on taste. First, reachability: this is thrown by `setPsychologistFocus` only when
+ *  `!PSY_FOCUSES.includes(focus)`, and the card offers exactly `psychologistFocusOpen`, which filters
+ *  that same roster – so **no action the interface permits can produce it**, unlike its `..._SEASON_`
+ *  and `..._NOT_READY_` siblings, which fire on legitimate player acts. Invariant 4 protects the
+ *  player's SCREEN from silent redesign and this sentence cannot reach it. Second, kind: T1's stale
+ *  `knownWeek: 139` row was a RECORD of a measurement, so it was annotated; this is an ASSERTION
+ *  about the present state, so it is corrected – and the task that made it false is this wave.
+ *
+ *  ⚠⚠ AND THE COUNT COMES **OUT**, NEVER BUMPED TO FIVE (ruling S's own words): «a number in that
+ *  sentence rots on every roster change and has now done so once; removing it retires the class
+ *  instead of resetting the clock». A sixth focus can no longer falsify this line. ⚠ It remains a
+ *  DRAFT like every word in this block – the вычитка and the owner's playtest are the gate. */
 export const PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL =
-  'No such year of work – there are four, and that is not one of them.'
+  'No such year of work – that is not one of them.'
 
 /** ⭐⭐ O1 MADE MECHANICAL – «в ближайший год» is the owner's own grain, so a focus is not a dial.
  *  ONE sentence for both halves of the rule (the off-season WINDOW and the once-a-season FACT),
