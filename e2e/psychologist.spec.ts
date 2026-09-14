@@ -87,6 +87,12 @@ const DEFAULT_RUNG_LABEL = 'Sport psychologist'
 // them has to be deliberate, and invariant 4 says a change is the owner's to ask for.
 const SALARY_ROW = 'Psychologist – weekly salary'
 const RETAINER_LINE = 'On retainer – one call a week, wherever she is.'
+/** The hired line once a year is chosen (the owner's question-9 ruling, 14.09): the coolhead
+ *  sentence spliced after the retainer's opening, first letter lowered. ⚠ A deliberate literal,
+ *  like every string this file pins – it is what a player READS; the component suite (§3b of the
+ *  card test) derives the same splice from the imported `PSY_FOCUS_LINE`, so a вычитка move over
+ *  that catalogue reds the pair together rather than only one of them. */
+const RETAINER_YEAR_LINE = 'On retainer – the year goes on the big points – the head she takes into them.'
 const UNHIRED_LINE = 'A call a week for her head – the year\'s work is chosen one year at a time.'
 const COOLHEAD_LABEL = 'Cool head'
 const FOCUS_SEASON_REFUSAL =
@@ -258,6 +264,13 @@ test.describe('the psychologist takes the weekly call', () => {
     await expect(seat, 'the card explains the closed year with the engine\'s own sentence').toContainText(
       FOCUS_SEASON_REFUSAL,
     )
+    // ⭐ 14.09, THE OWNER'S QUESTION-9 RULING, visible the moment the year is picked: the HIRED
+    // line – the one surface on this card that is readable all 52 weeks – now carries the running
+    // year, the focus's own sentence spliced after the retainer's opening. The paragraph above
+    // stays true of the NOTE; this line is the answer it asked for.
+    await expect(seat, 'the hired line carries the running year from the pick on').toContainText(
+      RETAINER_YEAR_LINE,
+    )
     for (const label of FOCUS_LABELS.filter((l) => l !== COOLHEAD_LABEL)) {
       await expect(
         focus.getByRole('radio', { name: label, exact: true }),
@@ -320,7 +333,10 @@ test.describe('the psychologist takes the weekly call', () => {
     await page.getByRole('button', COACH_NOTE).click()
     await openSupportStaff(page)
     await expect(seat.getByRole('button', { name: 'Let go', exact: true })).toBeVisible()
-    await expect(seat, 'still on retainer a week later').toContainText(RETAINER_LINE)
+    // ⚠ RE-AIMED 14.09 by the question-9 ruling that landed mid-file: with a year running, the
+    // hired line IS the year's line now – asserting the plain retainer here went red the honest
+    // way, the same day the splice shipped.
+    await expect(seat, 'still on retainer a week later, wearing the running year').toContainText(RETAINER_YEAR_LINE)
     await expect(
       seat.getByRole('radiogroup', { name: FOCUS_GROUP }).getByRole('radio', {
         name: COOLHEAD_LABEL,
