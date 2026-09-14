@@ -1025,3 +1025,50 @@ text rather than re-aim another task's guard, which was the right call mid-task.
 **T10 aligns it.** This is not a weakening: the rule's CLAIM is «no code outside `engine/` calls
 these», and `codeOnly` makes the test measure that claim instead of a proxy that also fires on
 English. The file already records the reasoning one screen above, on a sibling.
+
+## V – T8's two questions ruled: the splice pin claims more than it can prove, and the receipt does not ship
+
+**⚠ The splice pin cannot fail on the case it exists for – the eighteenth «unable to fail», and it
+is in shipped work.** `wave6-spotlight-focus.test.ts` §B is meant to prove the focus line «reads
+naturally in both frames». T8 measured it: a line opening on a PROPER NOUN splices to «On retainer –
+fleet Street …» and every structural clause still holds, **because the lowering is exactly what
+removes the stray capital**. The pin cannot tell «reads naturally» from «splices structurally».
+
+**The ruling: the pin is re-noted to claim only what it can prove, in T10.** «Reads naturally» is a
+JUDGMENT, and this wave already has the right instrument for judgments – §5's own ladder: the
+builder drafts, the architect's вычитка is the delivery gate, the owner's playtest is final. A
+mechanical proper-noun detector would need a dictionary and would still be wrong; inverting the
+constant to store the lowercase form is a change to wave-5 machinery for a test's convenience.
+**So the pin keeps its structural claim, its note says out loud that naturalness is not in its
+reach and names who holds that gate instead.** A test that claims a judgment it cannot make is
+worse than one that claims less: it tells the next reader the question is already answered. This is
+ruling U's fog-rule move a second time – aim the test at its own claim.
+
+**The fifth focus ships with NO RECEIPT, and that is a question for the owner rather than a gap I
+close.** T8's tally: of the four existing focuses, two carry a receipt constant, one carries a
+channel, one carries nothing – and `publicLife` would be the second with nothing. Unlike `herself`,
+there is no objection to its sentence; the spec even wrote it («The cameras stopped costing her
+sleep»). There is simply no writer, and no task in T9–T12 owns one.
+
+**The ruling: it does not ship in this wave.** A receipt is a feed row on a TRIGGER, and the trigger
+is the whole design decision – wave 5's `RECOVERY_RECEIPT` was ruled by the architect against a
+measured earning condition, never invented by a builder. §8 forbids the new mechanic, and this wave
+is already carrying a dozen unruled numbers; adding an unruled trigger on top inverts the «measure,
+then rule» order the whole wave has kept.
+
+⚠ **And it is not parked.** It goes to the owner in the questions document **with T8's trigger
+proposal attached and the tally beside it**, so one word from him is enough to commission it. A
+ready fix must never be filed as «we will remember» – the sentence exists, the surface exists, only
+the trigger is unruled.
+
+**Two smaller things T8 got right and they are worth naming.** The `EXPOSURE_ROW` was checked at the
+CALL SITE rather than re-drafted off a report – `phaseHerWeek.ts:483` passes `world.week − 1`, the
+row is stamped `world.week`, so «…last week.» agrees with both and **re-drafting it would have been a
+diff with no claim behind it**. And the one-row-or-five verdict is ONE, for a measured reason: the
+keep rule is keyed on the row's own TEXT, so five sentences silently become up to five permanent
+album rows a season instead of one.
+
+⚠ **Flagged, not a finding: T8's gate ran under load 18.8** – a `vitest --project unit` run from
+ANOTHER SESSION started 13 s into it. Contention produces false REDS and never false greens, so the
+green stands; but the other session on this checkout is now running TESTS and not only writing docs.
+T10's gate must be the only thing alive on the machine.
