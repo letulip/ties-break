@@ -5724,6 +5724,12 @@ export const ECONOMY = {
         // roundest possible price. Nothing depends on the number: units are fractional, so a $1,000
         // opening stake buys exactly one and a $1,500 one buys one and a half.
         unitBaseCents: 1_000_00,
+        // ⭐⭐⭐ T12, THE OWNER 14.09 – AND IT IS THE ROW HE CAUGHT. «у рабочей семьи, если вложить
+        // все деньги сразу со стартом карьеры в депозит, сразу же приходят спонсорские деньги.» The
+        // need gate under the cameo sponsor now reads `reachableFundsCents` (world/assets.ts), and
+        // this flag is what tells it that money put here has not left the family. See `ShopItem.
+        // cashParking` for why the mark is on the shelf rather than in the gate.
+        cashParking: true,
       },
       {
         id: 'index-fund',
@@ -5821,6 +5827,18 @@ export const ECONOMY = {
         // ninth and tenth seasons of a career, which is where a family that has been earning long
         // enough to buy at a peak actually is. The market rides either side of that all the way.
         unitBaseCents: 4_000_00,
+        // ⭐⭐⭐ T12, THE OWNER 14.09 – THE SECOND PARKING PLACE, and it is in for the same reason the
+        // deposit is: «Это надо починить, чтобы поддержка приходила реально тогда, когда вообще уже
+        // край и денег нет, а не только кошельком мыслить.» He named the deposit because that is
+        // what he parked in; a fix that saw only the row he happened to use would have been the
+        // same defect with one more week of life in it.
+        //
+        // ⚠ ITS WORTH MOVES AND THAT IS FINE, which is the one thing worth saying out loud about
+        // this row rather than the deposit: `volBps` above means a fund holding can be worth less
+        // than the family put in, and on a bad market year it can fall THROUGH the gate and let the
+        // cameo write. That is not a leak – it is need, correctly seen, because the money the family
+        // can actually reach really did shrink. `revalueAssets` has already priced it for the week.
+        cashParking: true,
       },
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is

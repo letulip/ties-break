@@ -3,7 +3,7 @@ type: spec
 status: current
 area: economy
 canonical: false
-last-reviewed: 2026-08-10
+last-reviewed: 2026-09-14
 ---
 
 # The cameo gates on need, not on background – and the familiar brand writes last
@@ -90,7 +90,7 @@ Three walls, all numbers:
 |---|---|---|
 | **not under ~58** | crossover 55–56 | below it the gate pays the `middle` background MORE than `working` and the difficulty setting inverts. It is the corridor doing it – a middle-market court costs more, so the same balance buys fewer weeks of it. What puts working back on top is the thing that should: it opens the game $17,000 poorer. |
 | **not over ~68** | self cells cross 2% at 72, 10% at 90 | above it the two SELF-COACHED cells start collecting it, and they are the definition of a family that does not need it: they finish four seasons at **+$25,626** and **+$39,001** and neither goes under water once in 50 careers. |
-| **never over 81** | worst week-0 runway 81.5 | **nobody is in need before a ball is struck.** That is round-15 item 16 in one number, and it is the only wall here that is a correctness condition rather than a balance preference. |
+| **never over 81** | worst week-0 runway 81.5 | **nobody is in need before a ball is struck – and parking the wallet does not fake it** (⭐ amended 14.09, §9). That is round-15 item 16 in one number, and it is the only wall here that is a correctness condition rather than a balance preference. |
 
 **62 is the middle of [58, 68].** `tests/economy.test.ts` asserts it stays inside that band, so a
 future retune has to move this measurement with it.
@@ -261,3 +261,100 @@ because before this wave no letter was ever a renewal.
 ⚠ The probe cannot see the week's ±8% jitter without spending a MAIN draw, so it quotes the bill at
 the middle of that band – worth at most half a week of runway at these thresholds, and it moves
 numerator and denominator together.
+
+## 9. ⭐⭐⭐ AMENDED 14.09 – «на счету» MEANS THE MONEY SHE CAN REACH, AND PARKING THE WALLET DOES NOT FAKE IT
+
+From the owner's live playtest of the deployed wave-5 build, the first exploit report of the run:
+
+> «у рабочей семьи, если вложить все деньги сразу со стартом карьеры в депозит, сразу же приходят
+> спонсорские деньги. Это надо починить, чтобы поддержка приходила реально тогда, когда вообще уже
+> край и денег нет, а не только кошельком мыслить»
+
+...and, the same hour, the scope widened by his own guess and confirmed by the code:
+
+> «предполагаю, что у среднего класса так же будет, так что на них тоже распространяется»
+
+**This is an appended section and not an edit to §3, for the reason §5's withdrawal gives: the wall
+above was TRUE when it was measured and the record of how it came apart is the useful artefact.**
+
+### 9.1 Two waves, each correct alone
+
+§3's third wall – «never over 81 · worst week-0 runway 81.5 · **nobody is in need before a ball is
+struck**» – was measured on 10.08 against a wallet that had nowhere to hide. Rounds 29–30 then gave
+it two places (`economy.ts`'s own «WHERE MONEY EARNS NOW»: the deposit and the index fund). A family
+that opens the shop on week 0 and puts its whole starting cash into the deposit reads
+`fundsCents ≈ 0`, a runway of **zero**, and the shop writes to a family holding all of its money.
+Neither wave was wrong about its own subject; the gate simply stopped being able to see the balance
+it was written about.
+
+⚠ **And the owner is right about `middle` BY CONSTRUCTION.** The gate has been background-blind since
+§2 – that was the entire point of it – so the hole was never the working family's. It was every
+family's, and the measurement below shows it in all four cells of the round-15 2x2.
+
+### 9.2 What changed – one read, and the bar did not move
+
+`reachableFundsCents(world)` (`src/engine/world/assets.ts`) = `world.fundsCents` + Σ `valueCents`
+over the rows whose catalogue rung declares `cashParking`. `phaseFinance` hands it to
+`sponsorNeedMet` in place of the bare wallet.
+
+* **Cash-parking is declared ON THE CATALOGUE** (`ShopItem.cashParking`, on the `deposit` and
+  `index-fund` rows), never matched by id at the call site. The defect this amendment closes was
+  created by exactly that kind of forgetting: a third parking place added tomorrow is seen because of
+  what it says about itself. ⚠ It is deliberately not `family === 'investment'` either, though the
+  two coincide to the row today – a buy-to-let would file as an investment and is not parked cash.
+* **Cars, houses, boats, planes, academy stages and the business/brand stay OUT.** They are things,
+  their worth curves are path-dependent, and nobody sells a company to qualify for a $500 cameo.
+* **`ECONOMY.sponsor` is untouched** – `runwayWeeks` 62, the court denominator, `maxCoachTier` and
+  the gift band are exactly what §2.2/§2.3 measured. **Only the INPUT widens.** Nothing in §4, §5 or
+  §5's replacement rule 3' is re-opened, and no schema moved: the helper is derived.
+* ⚠ **No new arithmetic.** `OwnedAsset.valueCents` is re-written by `revalueAssets` in tick phase 1
+  (`world/phaseObligations.ts`) and the cameo is decided in phase 2 (`world/phaseFinance.ts`), so the
+  worth the gate reads is THIS week's. The price path is `world/market.ts`'s and is not re-derived.
+
+### 9.3 Measured – `tools/runway-probe.ts`, 50 seeds x 208 weeks, `--mode cells`
+
+The probe's own balance read widened with the engine's, and it gained `--park`: every career puts its
+whole opening wallet into the deposit before week 0 is ticked. The ceiling block now prints week 0 on
+**both** reads, so the defect and the fix are measured on the same careers with no trajectory
+confound. ⚠ `--park`'s later seasons are NOT comparable with an unparked run – `POLICIES[1]`'s
+reserve reads the wallet, so a parked career stops entering – which is why week 0 is the column that
+matters, and week 0 is where this wall lives.
+
+**THE CONTROL, and it is the whole safety argument: with no `--park`, the run is byte-identical to
+the run before the change.** Neither bench policy ever buys anything, so there is no cash-parking row
+to add and `reachableFundsCents` degenerates to the wallet – the no-deposit family's behaviour is
+provably, not hopefully, unchanged. Every table in §3, §4 and §5 stands re-measured: worst week-0
+COURT runway 99.1 / 196.7 / **81.5** / 237.2 across the four cells, `N < 81.5` unchanged.
+
+**THE DEPOSIT-ALL ARM, predicted and measured**, worst week-0 COURT runway per cell:
+
+| cell | REACHABLE (predicted: unchanged) | REACHABLE (measured) | WALLET-ONLY, what shipped before |
+|---|---|---|---|
+| olivia 8k · self-coached | 99.1 | **99.1** | **−1.0** |
+| ines 25k · middle coach | 196.7 | **196.7** | **−2.5** |
+| control 8k · middle coach | 81.5 | **81.5** | **−2.5** |
+| control 25k · self-coached | 237.2 | **237.2** | **−1.0** |
+
+Prediction and measurement agree to the decimal on all four: parking the wallet moves the widened
+read by nothing at all, because the money did not go anywhere. Against the shipped bar of 62 the
+probe now states the wall itself – **REACHABLE floor 81.5 → the wall HOLDS | wallet-only floor −2.5 →
+THE WALL IS BROKEN** – and the second half is his report in one number. ⚠ Note that it is **every
+cell, every seed, negative**, including both 25k ones: the exploit was never the working family's.
+
+### 9.4 The sweep of the other wallet verdicts, and what was NOT moved
+
+Every `fundsCents` read in `src/engine` was judged; writes and spending caps are not «the family».
+The cameo gate is the only site moved by this amendment. Named here so nobody re-opens them by
+accident, and so the two that are still open stay findable:
+
+* `academy.ts` `needFactor` – reads `background` and holds **no wallet term at all**. Correctly
+  untouched; it is the anketa by its own ruled design.
+* `world.ts` `stops.add('funds')` on `fundsCents < 0` – correctly the WALLET. A parked family whose
+  wallet is under water genuinely does have to act, and «sell something» is the action.
+* Entry fees, purchase guards and every spending cap – correctly the WALLET: parked money cannot pay
+  an entry fee, and `enterEvent` enforces the same test the cap states.
+* **STILL OPEN, escalated to the architect rather than changed here** (each would change a rendered
+  sentence, which is not a builder's to move): the broke-ending pair (`ending.ts` `bankruptcyDue`
+  with the `debtSinceWeek` latch that feeds the Money screen's countdown), the diary's
+  `fundsPressure`, `world/means.ts`'s `householdWalletCents` behind the birthday-gift hardship
+  licence, and the college need layer's `familyAssetsCents`. The measurements are in the T12 handoff.

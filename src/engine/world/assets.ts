@@ -90,6 +90,39 @@ export interface ShopItem {
    *  in week 400 is this times fourteen seasons of the rung's own rate times where the market
    *  stands. His «доля стоила 4к» is this constant; his «через десять лет удвоиться» is the rate. */
   unitBaseCents?: number
+  /** ⭐⭐⭐ T12, THE OWNER 14.09 – THIS RUNG IS PARKED CASH RATHER THAN A THING. Its presence is the
+   *  predicate, the shelf's own habit (`volBps` / `unitBaseCents` / `buildWeeks` / `requiresId`), and
+   *  `reachableFundsCents` below is its one reader.
+   *
+   *  THE OWNER, from his live playtest: «у рабочей семьи, если вложить все деньги сразу со стартом
+   *  карьеры в депозит, сразу же приходят спонсорские деньги. Это надо починить, чтобы поддержка
+   *  приходила реально тогда, когда вообще уже край и денег нет, а не только кошельком мыслить.»
+   *
+   *  ⚠⚠ IT IS ON THE CATALOGUE AND NOT AT THE CALL SITE, WHICH IS THE WHOLE SHAPE OF THE FIX. An
+   *  `id === 'deposit' || id === 'index-fund'` test inside the need gate would be a rule that has to
+   *  be REMEMBERED every time the shelf gains a place to put money – and the defect this field exists
+   *  to close was created by exactly that kind of forgetting: the need gate's correctness wall
+   *  («nobody is in need before a ball is struck», docs/specs/need-not-background-2026-08.md §3) was
+   *  TRUE on 10.08 and was silently broken by the later shop wave that gave the wallet somewhere to
+   *  hide. A third parking place added tomorrow is seen by the gate because of what it SAYS ABOUT
+   *  ITSELF, never because somebody named it in a predicate.
+   *
+   *  ⚠⚠ AND IT IS DELIBERATELY NOT `family === 'investment'`, though today the two coincide to the
+   *  row. «Investment» is what the shelf FILES a rung under; this is a claim about liquidity – money
+   *  the family put somewhere and can take straight back out, at a worth the engine already prints.
+   *  A buy-to-let flat or a stake in somebody else's academy would file as an investment and would
+   *  NOT be this, which is why the two must be allowed to come apart.
+   *
+   *  ⚠ ABSENT ON EVERY CAR, HOUSE, BOAT, PLANE, ACADEMY STAGE AND BUSINESS, and that is a ruling
+   *  rather than an omission: they are things, not parked cash; their worth curves are path-dependent
+   *  (depreciation, upkeep, `earningsMultipleX` off her fame); and nobody sells a company to qualify
+   *  for a $500 cameo.
+   *
+   *  ⚠ `boolean` AND NOT THE LITERAL `true`, which is `retired?`'s own spelling one field down and is
+   *  not a style choice: the catalogue is read straight into `readonly ShopItem[]` by
+   *  `tests/component/round35-shop.test.ts`, and a literal type would make that assignment depend on
+   *  whether the constant happens to be under an `as const`. */
+  cashParking?: boolean
   /** ⭐ §3f – HOW LONG FROM THE ORDER TO THE THING, in weeks. Absent on every rung that arrives the
    *  week it is paid for, which is everything slice 1 shipped. */
   buildWeeks?: number
@@ -196,6 +229,44 @@ export function shopItem(id: string): ShopItem | undefined {
 /** WHAT THE FAMILY OWNS, oldest purchase first. Defensive `?? []` for probe worlds. */
 export function ownedAssets(world: WorldState): OwnedAsset[] {
   return world.assets ?? []
+}
+
+/** ⭐⭐⭐ T12, THE OWNER 14.09 – THE MONEY THIS FAMILY CAN REACH, in cents: the wallet plus every
+ *  CASH-PARKING holding, at the worth the engine printed this week.
+ *
+ *  ⚠⚠ WHAT IT IS FOR, AND IT IS ONE QUESTION ONLY. His 10.08 ruling under the cameo sponsor was
+ *  «порог по деньгам на счету, а не по строчке в анкете»; his 14.09 playtest found what «на счету»
+ *  had quietly come to mean. A working family that opens the shop in week 0 and puts its whole
+ *  $8,000 into the deposit reads `fundsCents ≈ 0` – runway 0 – and the shop writes to a family
+ *  holding all of its starting cash. Two waves, each correct alone: the need gate was built against
+ *  a wallet that had nowhere to hide (10.08), and the shop gave it two places (rounds 29–30,
+ *  `economy.ts`'s own «WHERE MONEY EARNS NOW»). THE BAR DID NOT MOVE – `ECONOMY.sponsor.runwayWeeks`
+ *  is still 62 court weeks and the rung cut is untouched. Only the INPUT widens.
+ *
+ *  ⚠⚠ NO NEW ARITHMETIC AND NO PRICE RE-DERIVATION, WHICH IS WHY THIS IS A READ. `valueCents` is
+ *  re-written for every owned row by `revalueAssets`, and the tick order makes it THIS week's number
+ *  at the moment the cameo is decided: `revalueAssets` runs in phase 1
+ *  (`world/phaseObligations.ts`), the cameo in phase 2 (`world/phaseFinance.ts`). A holding's price
+ *  path – the market, the crash layer, the deposit's dead-flat drift – is `world/market.ts`'s, is
+ *  already agreed between the till and the household meter, and is not re-opened here.
+ *
+ *  ⚠ THE FAMILY WALLET ALONE, NOT THE HOUSEHOLD. `kidFundsCents` stays out: v54 split the two purses
+ *  on purpose («a brand buys her face, not the family's») and the cameo is written to the FAMILY.
+ *  `world/means.ts`'s `householdWalletCents` is the other question and keeps its own answer.
+ *
+ *  ⚠ DERIVED, NEVER STORED – no schema move, nothing to migrate, and a save written before this
+ *  reads exactly as it did. Zero draws of any kind; pure over `world`.
+ *
+ *  ⚠ A FAMILY THAT OWNS NOTHING GETS ITS WALLET BACK TO THE CENT, which is what makes the no-deposit
+ *  career provably unchanged: the loop has no rows to add and the function degenerates to
+ *  `world.fundsCents`. */
+export function reachableFundsCents(world: WorldState): number {
+  let cents = world.fundsCents
+  for (const owned of ownedAssets(world)) {
+    if (shopItem(owned.id)?.cashParking !== true) continue
+    cents += owned.valueCents
+  }
+  return cents
 }
 
 /** WHAT A THING IS WORTH AFTER `weeksHeld` WEEKS, in whole cents.

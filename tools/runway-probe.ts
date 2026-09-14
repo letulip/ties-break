@@ -32,11 +32,25 @@
  * most half a week of runway at these thresholds, and it moves numerator and denominator together.
  *
  * Run:
- *   npx vite-node tools/runway-probe.ts -- [--seeds 50] [--weeks 208] [--mode cells|rungs]
+ *   npx vite-node tools/runway-probe.ts -- [--seeds 50] [--weeks 208] [--mode cells|rungs] [--park]
+ *
+ * ⭐⭐⭐ T12 (14.09) – `--park` IS THE OWNER'S EXPLOIT AS AN ARM. Every career puts its whole
+ * opening wallet into the deposit on week 0 («если вложить все деньги сразу со стартом карьеры в
+ * депозит, сразу же приходят спонсорские деньги») and the ceiling block then prints the week-0
+ * runway on BOTH reads side by side: REACHABLE, which is what the engine now asks
+ * (`reachableFundsCents`), and WALLET, which is what it used to. One arm, two columns – the
+ * defect and the fix on the same careers, with no trajectory confound between them.
+ *
+ * ⚠ `--park` IS NOT A LIKE-FOR-LIKE CAREER, and the report says so out loud: `POLICIES[1]`'s
+ * reserve reads `world.fundsCents`, so a parked career refuses to enter almost anything and its
+ * later seasons are a different story from the unparked one. The WEEK-0 columns are the honest
+ * comparison – week 0 is before any policy has acted – and week 0 is where the wall lives.
  */
 import { rngFromSeed } from '../src/engine/rng'
 import { acceptOffer, ageAtWeek, coachWorksThisWeek, createWorld, type WorldState } from '../src/engine/world'
 import { inCollege } from '../src/engine/world/college'
+// ⭐ T12 – the engine's own balance read, so the instrument and the gate cannot answer differently.
+import { buyAsset, reachableFundsCents } from '../src/engine/world'
 import { coachById, coachCorridorFactor, facilityRateCents, tierOf, weeklyBillSplit } from '../src/engine/coach'
 import { stepCareerWeek, POLICIES } from './econ-bench'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
@@ -86,6 +100,10 @@ function quantile(xs: number[], q: number): number {
 interface WeekRunway {
   total: number
   court: number
+  /** ⭐ T12 – the SAME court runway computed off `world.fundsCents` alone: what the gate read before
+   *  14.09. Identical to `court` for every family that owns no cash-parking row, which is every
+   *  career this bench runs without `--park`. */
+  courtWallet: number
   totalBillCents: number
   courtBillCents: number
 }
@@ -105,11 +123,22 @@ function runwayAt(world: WorldState): WeekRunway {
     background: world.profile.background,
     corridor,
   })
-  const funds = world.fundsCents - (coachWorksThisWeek(world) ? split.totalCents : 0)
+  // ⭐⭐⭐ T12 (14.09) – THE BALANCE IS THE MONEY THE FAMILY CAN REACH, which is what
+  // `phaseFinance` now hands `sponsorNeedMet`. The probe exists to re-derive the ENGINE'S own
+  // quantity rather than to guess at it, so when the engine's read widened this one had to widen
+  // with it – otherwise the instrument that sized the gate would stop measuring the gate.
+  //
+  // ⚠ AND ON EVERY ARM BUT `--park` THIS IS THE SAME NUMBER TO THE CENT, which is the control the
+  // whole change is checked by: neither bench policy ever buys anything, so there is no
+  // cash-parking row to add and `reachableFundsCents` degenerates to the wallet.
+  const bill = coachWorksThisWeek(world) ? split.totalCents : 0
+  const funds = reachableFundsCents(world) - bill
+  const walletFunds = world.fundsCents - bill
   const inf = Number.POSITIVE_INFINITY
   return {
     total: split.totalCents > 0 ? funds / split.totalCents : inf,
     court: split.facilityCents > 0 ? funds / split.facilityCents : inf,
+    courtWallet: split.facilityCents > 0 ? walletFunds / split.facilityCents : inf,
     totalBillCents: split.totalCents,
     courtBillCents: split.facilityCents,
   }
@@ -127,6 +156,8 @@ interface ArmStats {
   /** the runway on week 0, per career – the owner's item 16 ("it paid Olivia in week 2") */
   zeroTotal: number[]
   zeroCourt: number[]
+  /** ⭐ T12 – the same week-0 COURT runway on the OLD wallet-only read. */
+  zeroCourtWallet: number[]
   /** the LOWEST runway each career reaches inside its FIRST season */
   min0Total: number[]
   min0Court: number[]
@@ -134,14 +165,14 @@ interface ArmStats {
   weeksBySeason: number[]
 }
 
-function runArm(arm: Arm, seeds: number, weeks: number): ArmStats {
+function runArm(arm: Arm, seeds: number, weeks: number, park = false): ArmStats {
   const seasons = Math.ceil(weeks / WEEKS_PER_YEAR)
   const st: ArmStats = {
     totals: [], courts: [], totalBills: [], courtBills: [],
     underTotal: CANDIDATES_TOTAL.map(() => 0),
     underCourt: CANDIDATES_COURT.map(() => 0),
     weeks: 0, careers: seeds,
-    zeroTotal: [], zeroCourt: [], min0Total: [], min0Court: [],
+    zeroTotal: [], zeroCourt: [], zeroCourtWallet: [], min0Total: [], min0Court: [],
     underCourtBySeason: CANDIDATES_COURT.map(() => new Array<number>(seasons).fill(0)),
     weeksBySeason: new Array<number>(seasons).fill(0),
   }
@@ -153,6 +184,10 @@ function runArm(arm: Arm, seeds: number, weeks: number): ArmStats {
       coachTier: arm.coach ?? 'self',
     }
     const world: WorldState = createWorld(seed, profile)
+    // ⭐ T12 – his exploit, executed: the whole opening wallet into the deposit before week 0 is
+    // ticked. `buyAsset` draws nothing on any stream, so the careers below tap the identical MAIN
+    // sequence they would have without it (CLAUDE.md invariant 2).
+    if (park) buyAsset(world, 'deposit', world.fundsCents)
     const rng = rngFromSeed(`${seed}:bench`)
     let min0T = Number.POSITIVE_INFINITY
     let min0C = Number.POSITIVE_INFINITY
@@ -181,6 +216,7 @@ function runArm(arm: Arm, seeds: number, weeks: number): ArmStats {
         if (i === 0) {
           st.zeroTotal.push(r.total)
           st.zeroCourt.push(r.court)
+          st.zeroCourtWallet.push(r.courtWallet)
         }
         if (world.week < WEEKS_PER_YEAR) {
           if (r.total < min0T) min0T = r.total
@@ -211,19 +247,27 @@ function main(): void {
   let seeds = DEFAULT_SEEDS
   let weeks = DEFAULT_WEEKS
   let mode = 'cells'
+  let park = false
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--seeds') seeds = Number(args[++i])
     if (args[i] === '--weeks') weeks = Number(args[++i])
     if (args[i] === '--mode') mode = args[++i]
+    if (args[i] === '--park') park = true
   }
   const [lo, hi] = ECONOMY.sponsor.amountCents
   const perHit = (lo + hi) / 2
   const arms = mode === 'rungs' ? SWEEP : CELLS
-  console.log(`runway-probe (${mode}): ${seeds} seeds x ${weeks} weeks (${(weeks / WEEKS_PER_YEAR).toFixed(0)} seasons)`)
+  console.log(`runway-probe (${mode}${park ? ', --park' : ''}): ${seeds} seeds x ${weeks} weeks (${(weeks / WEEKS_PER_YEAR).toFixed(0)} seasons)`)
   console.log(`cameo: ${(100 * ECONOMY.sponsor.rollChance).toFixed(0)}% a week, mean gift ${money(perHit)}\n`)
 
   const all: Array<[Arm, ArmStats]> = []
-  for (const arm of arms) all.push([arm, runArm(arm, seeds, weeks)])
+  for (const arm of arms) all.push([arm, runArm(arm, seeds, weeks, park)])
+  if (park) {
+    console.log('⭐ --park: every career put its WHOLE opening wallet into the deposit on week 0.')
+    console.log('  The ceiling block prints week 0 on both reads. ⚠ Later seasons are NOT comparable')
+    console.log("  with an unparked run - POLICIES[1]'s reserve reads the wallet, so a parked career")
+    console.log('  stops entering. Week 0 is the honest column, and week 0 is where the wall lives.\n')
+  }
 
   const bar = '-'.repeat(104)
   console.log(`${bar}\nTHE BILL AND THE BALANCE, per decided week\n${bar}`)
@@ -258,13 +302,24 @@ function main(): void {
       `  ${arm.label.padEnd(28)} week 0: TOTAL ${quantile(st.zeroTotal, 0.5).toFixed(1).padStart(7)}` +
         ` COURT ${quantile(st.zeroCourt, 0.5).toFixed(1).padStart(7)}` +
         `  |  worst week-0 COURT ${Math.min(...st.zeroCourt).toFixed(1).padStart(7)}` +
+        // ⭐ T12 – the same worst case on the OLD wallet-only read. Equal to the column on its left on
+        // every unparked arm; on `--park` it is the defect, in the wall's own unit.
+        `  (wallet-only ${Math.min(...st.zeroCourtWallet).toFixed(1).padStart(7)})` +
         `  |  lowest COURT in season 0 ${Math.min(...st.min0Court).toFixed(1).padStart(7)}`,
     )
   }
+  const zeroFloorCourtWallet = Math.min(...all.map(([, st]) => Math.min(...st.zeroCourtWallet)))
   const zeroFloorCourt = Math.min(...all.map(([, st]) => Math.min(...st.zeroCourt)))
   const zeroFloorTotal = Math.min(...all.map(([, st]) => Math.min(...st.zeroTotal)))
   console.log(
     `\n  N < ${zeroFloorCourt.toFixed(1)} (COURT) / ${zeroFloorTotal.toFixed(1)} (TOTAL) keeps the gate shut on week 0 for every cell and every seed.`,
+  )
+  // ⭐⭐⭐ T12 – THE WALL, STATED AGAINST THE BAR THAT ACTUALLY SHIPPED, on whichever read is in play.
+  console.log(
+    `  the shipped bar is N = ${ECONOMY.sponsor.runwayWeeks}: REACHABLE floor ${zeroFloorCourt.toFixed(1)}` +
+      ` -> ${zeroFloorCourt > ECONOMY.sponsor.runwayWeeks ? 'the wall HOLDS' : 'THE WALL IS BROKEN'}` +
+      `  |  wallet-only floor ${zeroFloorCourtWallet.toFixed(1)}` +
+      ` -> ${zeroFloorCourtWallet > ECONOMY.sponsor.runwayWeeks ? 'the wall HOLDS' : 'THE WALL IS BROKEN'}`,
   )
 
   if (mode === 'cells') {
