@@ -61,7 +61,7 @@ import { CAREER_ENDED_REFUSAL, COLLEGE_FREEZE_REFUSAL, guardNotEnded, guardNotEn
 // in `world/entries.ts` and must go on living in exactly one place. This edge is only legal because
 // `guardNotEnded` moved to the leaf above it; see the note beside its definition.
 import { releaseEntry } from './entries'
-import { reachableFundsCents } from './shop'
+import { reachableFundsCents } from './assets'
 import type { WorldState } from '../world'
 
 /** ⚠ THE GUARD, RE-AIMED RATHER THAN ADDED TO EVERY CALLER'S BODY. Every mutating engine command

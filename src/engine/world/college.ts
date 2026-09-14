@@ -18,7 +18,7 @@
 // ⚠ RNG: ONE SUB-STREAM, `seed:callup:<week>`, derived at the call site and persisting nothing
 // (CLAUDE.md invariant 2). Everything else here is pure state – a counter, two measurements and an
 // append. The frozen MAIN capture cannot see any of it.
-import { reachableFundsCents } from './shop'
+import { reachableFundsCents } from './assets'
 import { rngFromSeed } from '../rng'
 import { coachFactor } from '../coach'
 import { SKILL_KEYS, type KidSkills } from '../development'

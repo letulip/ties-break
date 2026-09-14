@@ -282,6 +282,9 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     // yet, and the block's own note said in as many words that they «land with the passes that READ
     // them». T4 is the first of those passes, so `recoverySlope` joins here and `coolheadPerSeason`
     // (T5), `listenClarity` (T6) and the walls' hazard scale (T7) will join it in turn.
+    // ⭐ D2 (14.09): the fifth focus's receipt point `publicLifeReceiptAt` joins its two ladders
+    // (`publicLifeShrink`/`publicLifeAccel`) here – the whole «public life» price list lives in the
+    // seat's block, not in `ECONOMY.spotlight`.
     // ⚠ RE-AIMED AGAIN BY T5, WHICH IS THE LINE ABOVE COMING TRUE ON SCHEDULE: `coolheadPerSeason`
     // joins WITH its reader (`growWeek`'s own term, engine/development.ts) in the same commit, which
     // is the rule this block is keeping – a constant lands with the pass that reads it. Two remain.
@@ -325,6 +328,7 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
       'defaultRung',
       'listenClarity',
       'publicLifeAccel',
+      'publicLifeReceiptAt',
       'publicLifeShrink',
       'recoverySlope',
       'rungs',
