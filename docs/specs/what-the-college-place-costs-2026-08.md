@@ -8,6 +8,15 @@ last-reviewed: 2026-08-16
 
 # What the college place costs, and who pays for it (16.08.2026)
 
+> ⚠⚠ **D8 (14.09.2026): THE NEED LAYER IS BURIED** – the owner's word («значит давай похороним»)
+> on wave 6's questions doc §16. Cause of death: drift, not stillbirth – the taper's knots were
+> calibrated to round 21's fork incomes (working median $18,255) and three economy waves later the
+> LOWEST at-18 parent income over 200 seeds is $41,282, above the $35k cut, so the layer paid 0 to
+> every real family at every seed. The athletic layer carries the fork alone; the tombstone lives
+> at `COLLEGE_OFFER.assetSpreadYears` (`src/engine/collegeOffer.ts`) with the whole story. §2c
+> below is HISTORY of a mechanism that no longer runs.
+
+
 **A ninth phase on `wave/round21`, opened the same evening the owner made college an independent
 branch.** That ruling stands and nothing here touches it. What it left behind was a third answer
 offered **unconditionally and free in 100% of careers** – and two sourced facts say that is not a

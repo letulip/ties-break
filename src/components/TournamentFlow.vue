@@ -1150,7 +1150,12 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
            to the same place.
          ⭐ ROUND-21 #2: `coach-travelled` is the broadcast half of the owner's third ask - the same
          engine answer the splash's presence line draws, handed to the running commentary so the two
-         surfaces cannot describe one trip differently. -->
+         surfaces cannot describe one trip differently.
+         ⭐⭐⭐ v77 T7: `booth-private-life` is the same move for the booth's own channel - the engine
+         decided the mention in the weekly tick and stamped it on the episode, and this hands the
+         answer through. The view is non-null on the FIRST match of the run only (the snapshot's own
+         guard, beside the field), which is where this screen already puts everything belonging to a
+         round's first watch. -->
     <MatchViewer
       v-if="replayOpen && annotated && currentMatch"
       :match="annotated"
@@ -1163,6 +1168,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       :temperature-c="pending?.temperatureC ?? null"
       :preview-event="viewerPreviewEvent"
       :coach-travelled="pending?.coachTravelled ?? false"
+      :booth-private-life="pending?.boothPrivateLife ?? null"
       :mode="replayAdvances ? 'live' : 'replay'"
       proceed-label="To the result"
       @finish="endReplay"

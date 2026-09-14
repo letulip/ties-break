@@ -143,6 +143,7 @@ import {
   raiseLifeBeat,
   rollArrival,
   rollEnds,
+  rollLeak,
   rollSmallTalk,
   ENDS_READS,
   ENDS_REGISTERS,
@@ -202,7 +203,7 @@ function careerAt(seed: string, week: number): WorldState {
 /** An attachment, hand-built. ⚠ POKED RATHER THAN ROLLED: T2's hazard decides WHEN it ends and T5's
  *  draws decide when he hears, and neither is under test in this file. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, ...over }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, ...over }
 }
 
 /** The lowest `bond` that still reads as this band – ASKED OF THE LADDER rather than re-derived from
@@ -240,9 +241,19 @@ function seedEndingOn(prefix: string, week: number, temperament: (typeof TEMPERA
 // would prove a property of this file rather than of the engine. This is wave 4 T2's §E apparatus
 // widened by one call (`deliverKnownPartner`), for its stated reason: «a walk that hard-coded the
 // order would have proved a property of the test».
+// ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T6 AND THE PARAGRAPH ABOVE IS KEPT WHOLE. WHAT MOVED: the block is
+// FIVE calls now, not four – the architect's ruling M put the leak hazard among its siblings and T6's
+// slot argument puts it THIRD. ⚠⚠ AND THIS RE-AIM WAS **NOT FORCED BY A RED**, which is why it is
+// worth a sentence: the walk filters on `l in LIFE_CALLS`, so an unregistered fifth call would have
+// been silently skipped and this pin would have gone on asserting a four-call block that no longer
+// existed – the «a green gate is evidence about what the gate RUNS» family, one level down. Adding
+// the call keeps the walk a walk of the REAL block. ⚠ It changes nothing for this file's fixtures:
+// none of them stamps a trophy, so `leakEligible` is false at every week they visit and the new call
+// is a no-op inside every case below. NOTHING about ruling A's or ruling F's claims moves.
 const LIFE_CALLS: Record<string, (world: WorldState) => void> = {
   'rollEnds(world)': rollEnds,
   'rollArrival(world)': rollArrival,
+  'rollLeak(world)': rollLeak,
   'deliverKnownPartner(world)': deliverKnownPartner,
   'rollSmallTalk(world)': rollSmallTalk,
 }
@@ -261,15 +272,32 @@ function lifeCallsInSourceOrder(): { names: string[]; run: (world: WorldState) =
   // life calls sit between the body's pass and the spirit's, in this order», and an array `indexOf`
   // that misses returns −1, which the `> i` below is red on. ⚠ Ruling J named two pins to re-aim and
   // this is a THIRD – the same anchor, in a wave-4 file.
-  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
+  // ⚠⚠ RE-AIMED A **SECOND** TIME 14.09 BY WAVE 6's T3 (the architect's ruling A, which names this
+  // file by line): the closing anchor now carries a third argument,
+  // `exposureEventsOf(world, world.week)` – the week's exposure list, derived by
+  // `world/spotlight.ts` and handed down at the call site because `engine/spirit.ts` may not reach
+  // for it (§0.1's dependency inversion, ruling J's own shape applied to a second fact). NOTHING
+  // about this pin's claim moves: it is still «the life calls sit between the body's pass and the
+  // spirit's, in this order», the anchor is still the call's EXACT text, and an array `indexOf` that
+  // misses still returns −1, which the `> i` below is red on.
+  // ⚠⚠ RE-AIMED A **THIRD** TIME 14.09 BY WAVE 6's **T3b** – the re-aim AFTER T3's, same day, same
+  // anchor. RULING P's REASON IN ONE SENTENCE: `'stage'` and `'publicLoss'` are stamped by
+  // `finalizeTournament` inside `playHerWeek`, two phases after this one, so asked about `world.week`
+  // those two kinds could never fire and the horizon moves to the week that has CLOSED. WHAT MOVED:
+  // the anchor's third argument is now `exposureEventsOf(world, world.week - 1)`. NOTHING about this
+  // pin's claim moves: it is still «the life calls sit between the body's pass and the spirit's, in
+  // this order», the anchor is still the call's EXACT text, and an `indexOf` that misses still
+  // returns −1, which the `> i` below is red on.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const names = code.slice(i + 1, j).filter((l) => l in LIFE_CALLS)
   // ⚠ THE ORDER IS ASSERTED HERE AND THE WALKS BELOW READ IT – so a reversed call site fails with
   // this sentence rather than as four confusing behavioural surprises.
-  expect(names, '⚠⚠ the tick ends, then arrives, then delivers – rulings A and F rest on it').toEqual([
+  expect(names, '⚠⚠ the tick ends, then arrives, then leaks, then delivers – rulings A and F rest on it').toEqual([
     'rollEnds(world)',
     'rollArrival(world)',
+    'rollLeak(world)',
     'deliverKnownPartner(world)',
     'rollSmallTalk(world)',
   ])

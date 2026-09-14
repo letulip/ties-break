@@ -292,20 +292,37 @@ export function resolvePsychologist(world: WorldState): void {
 // here, and the standing legibility law is answered by each focus's own receipt as it lands (T4's
 // clear line, T5's growth, T6's wording), never by a line announcing an intention.
 
-/** ⭐ THE FOUR, IN THE ORDER THE CARD RENDERS THEM. A list rather than a re-typed union so the
- *  engine, the wire and the screen iterate ONE order – and `Record<PsyFocus, …>` below is total by
- *  type, so the fifth focus the spotlight wave may bring (O7) is a compile error here and not a
- *  silently missing option. ⚠ It is also the id re-validation list: `setPsychologistFocus` refuses
- *  anything not in it, the roster dial's own discipline one function up. */
-export const PSY_FOCUSES: readonly PsyFocus[] = ['coolhead', 'recovery', 'listen', 'herself']
+/** ⭐ THE FIVE, IN THE ORDER THE CARD RENDERS THEM (four at v76; `'publicLife'` APPENDED LAST by
+ *  v77's T5). A list rather than a re-typed union so the engine, the wire and the screen iterate ONE
+ *  order. ⚠ It is also the id re-validation list: `setPsychologistFocus` refuses anything not in it,
+ *  the roster dial's own discipline one function up.
+ *
+ *  ⚠⚠ AND THIS LINE IS THE ONE THE COMPILER WILL **NOT** DEFEND – the architect's RULING O, measured
+ *  14.09, and the sentence v76 wrote here («a compile error here and not a silently missing option»)
+ *  was FALSE and is struck. `Record<PsyFocus, …>` below is total and really does go red when the type
+ *  widens; this is a `readonly PsyFocus[]`, and **an array of four is a perfectly valid array of a
+ *  five-member union**. Left at four, a new focus would have a type, a label and a line and would
+ *  never be OFFERED: absent from the seat's iteration, from `psychologistFocusOpen`'s filter, from
+ *  `setPsychologistFocus`'s id list and from the string tests that read their corpus off this very
+ *  array. Nothing would go red.
+ *
+ *  ⚠⚠ SO THE GUARD IS A TEST AND IT IS A **MEMBERSHIP** GUARD, NOT A COUNT. Wave 5 left the tripwire
+ *  (`tests/wave5-psychologist-focus.test.ts` §A, whose message named this wave); T5 re-aimed it to
+ *  `[...PSY_FOCUSES].sort()` against `Object.keys(PSY_FOCUS_LABEL).sort()` – total by construction,
+ *  because the compiler already holds the complete list of the union in the type-forced Record. A
+ *  length is not a membership: five entries with a duplicate pass `toBe(5)`. A SIXTH focus therefore
+ *  goes red the day it is forgotten here. */
+export const PSY_FOCUSES: readonly PsyFocus[] = ['coolhead', 'recovery', 'listen', 'herself', 'publicLife']
 
-/** The four names, DRAFTS (invariant 4) – the spec §2's own working names, which the wave brief
- *  names as the base for the вычитка. */
+/** The five names, DRAFTS (invariant 4) – the spec §2's own working names, which the wave brief
+ *  names as the base for the вычитка. ⚠ `publicLife` is the spec §2's fifth row read verbatim («The
+ *  public life») and is T8's to move. */
 export const PSY_FOCUS_LABEL: Record<PsyFocus, string> = {
   coolhead: 'Cool head',
   recovery: 'Back on her feet',
   listen: 'Learning to listen',
   herself: 'Working on herself',
+  publicLife: 'The public life',
 }
 
 /** ...and what each year is FOR, one line each, DRAFTS.
@@ -314,12 +331,25 @@ export const PSY_FOCUS_LABEL: Record<PsyFocus, string> = {
  *  rule one block up («a hired line boasting today would be "вы заплатили и не можете этого
  *  заметить" written the other way round»): the effects arrive with T4-T7 and each brings its own
  *  receipt. ⚠ `listen` is written as the PARENT's year deliberately – the 09.09 re-cut: the seat
- *  coaches you and never reports her sessions. */
+ *  coaches you and never reports her sessions.
+ *
+ *  ⚠⚠ AND EVERY ONE OF THEM HAS TO READ IN **TWO** FRAMES SINCE THE OWNER'S Q9 RULING (14.09):
+ *  alone, as the focus row's own note, AND SPLICED – `SupportStaffTab.vue` composes the hired card's
+ *  line as «On retainer – » + this sentence with its first letter lowered, which is the surface that
+ *  is on screen all 52 weeks rather than the ~3 the change window is open. So the shape is load-
+ *  bearing and not a habit: each line opens «The year goes on …», which lowers cleanly to «…the year
+ *  goes on …» and reads as one sentence after the dash. A line opening on a proper noun, a figure or
+ *  a quotation mark would splice into nonsense, and no test would say so in words. ⚠ v77's T5 wrote
+ *  `publicLife` to that shape deliberately and pins BOTH frames
+ *  (`tests/wave6-spotlight-focus.test.ts` §B, plus the mounted splice case in
+ *  tests/component/psychologist-card.test.ts). DRAFT, like its four siblings – T8 and the вычитка own
+ *  the words. */
 export const PSY_FOCUS_LINE: Record<PsyFocus, string> = {
   coolhead: 'The year goes on the big points – the head she takes into them.',
   recovery: 'The year goes on the weeks after something breaks – the walk back up.',
   listen: 'The year goes on your own ear for her – the sessions themselves stay hers.',
   herself: 'The year goes on the things she never says out loud – and she has to want it.',
+  publicLife: 'The year goes on the weeks under the cameras – and what being looked at takes out of her.',
 }
 
 /** The stale-screen refusal: a year of work with nobody to work it. DRAFT. */
@@ -327,9 +357,25 @@ export const PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL =
   'Nobody is taking the call – a year of work needs somebody on the payroll first.'
 
 /** The roster refusal's twin for the focus id – `setPsychologistRung`'s own shape, so a stale screen
- *  can no more invent a year than it can invent a specialist. DRAFT. */
+ *  can no more invent a year than it can invent a specialist. DRAFT.
+ *
+ *  ⚠⚠ IT SAID «FOUR» WHILE THE ROSTER HELD FIVE, AND THE ARCHITECT'S **RULING S** (14.09) TOOK THE
+ *  COUNT OUT RATHER THAN BUMPING IT – v77's T8 landing it. T5 flagged the false sentence and did not
+ *  touch it, which was right; the ruling is what licenses the edit, and it turns on TWO facts and not
+ *  on taste. First, reachability: this is thrown by `setPsychologistFocus` only when
+ *  `!PSY_FOCUSES.includes(focus)`, and the card offers exactly `psychologistFocusOpen`, which filters
+ *  that same roster – so **no action the interface permits can produce it**, unlike its `..._SEASON_`
+ *  and `..._NOT_READY_` siblings, which fire on legitimate player acts. Invariant 4 protects the
+ *  player's SCREEN from silent redesign and this sentence cannot reach it. Second, kind: T1's stale
+ *  `knownWeek: 139` row was a RECORD of a measurement, so it was annotated; this is an ASSERTION
+ *  about the present state, so it is corrected – and the task that made it false is this wave.
+ *
+ *  ⚠⚠ AND THE COUNT COMES **OUT**, NEVER BUMPED TO FIVE (ruling S's own words): «a number in that
+ *  sentence rots on every roster change and has now done so once; removing it retires the class
+ *  instead of resetting the clock». A sixth focus can no longer falsify this line. ⚠ It remains a
+ *  DRAFT like every word in this block – the вычитка and the owner's playtest are the gate. */
 export const PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL =
-  'No such year of work – there are four, and that is not one of them.'
+  'No such year of work – that is not one of them.'
 
 /** ⭐⭐ O1 MADE MECHANICAL – «в ближайший год» is the owner's own grain, so a focus is not a dial.
  *  ONE sentence for both halves of the rule (the off-season WINDOW and the once-a-season FACT),
@@ -433,19 +479,21 @@ export function psychologistFocusRefusal(world: WorldState, focus: PsyFocus): st
   return null
 }
 
-/** WHICH OF THE FOUR THE ENGINE WOULD ACCEPT THIS WEEK – the card disables everything else, so the
- *  screen can never offer a permission the engine does not hold. `[]` means the row is closed
- *  outright. Zero draws. */
+/** WHICH OF THE FIVE THE ENGINE WOULD ACCEPT THIS WEEK (four until v77's T5 appended «The public
+ *  life») – the card disables everything else, so the screen can never offer a permission the engine
+ *  does not hold. `[]` means the row is closed outright. ⚠ IT READS `PSY_FOCUSES` AND NEVER A RE-TYPED
+ *  LIST, which is what makes the fifth focus OFFERED by the same line that offered the first four and
+ *  is exactly the property ruling O says the type system does not supply. Zero draws. */
 export function psychologistFocusOpen(world: WorldState): PsyFocus[] {
   return PSY_FOCUSES.filter((f) => psychologistFocusRefusal(world, f) === null)
 }
 
-/** ...AND THE ROW'S OWN SENTENCE, `''` while all four are open.
+/** ...AND THE ROW'S OWN SENTENCE, `''` while every year on the roster is open.
  *
  *  ⚠ `'coolhead'` IS THE ROW PROBE, and the reason is a property of the gates rather than a
- *  preference: every refusal except the readiness one is ROW-LEVEL and identical for all four
- *  focuses (not hired · the joint decline · the season rule), so asking any non-`'herself'` member
- *  answers for the row. `'herself'`'s own refusal is asked second, because the ONE case where the
+ *  preference: every refusal except the readiness one is ROW-LEVEL and identical for every focus on
+ *  the roster (not hired · the joint decline · the season rule), so asking any non-`'herself'` member
+ *  answers for the row – which is why v77's fifth focus needed no line here. `'herself'`'s own refusal is asked second, because the ONE case where the
  *  row is open and something is still closed is exactly the not-ready one.
  *
  *  ⚠ AND IT IS `''` RATHER THAN THE CHOSEN FOCUS'S LINE WHEN NOTHING IS REFUSED: what the year IS

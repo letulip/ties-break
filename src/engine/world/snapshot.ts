@@ -112,7 +112,7 @@ import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLad
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
-import { shopView } from './shop'
+import { shopView, reachableFundsCents } from './shop'
 // ⭐ ROUND 35 #9 – the till's own «does the brand pay this week» predicate, so her page and the
 // ledger cannot disagree about whether the split is running.
 import { merchWeeklyIncomeCents } from './business'
@@ -122,6 +122,10 @@ import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
 import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
 // Round 29 part four P7/P8 – the fame fold (zero draws, nothing persisted; see world/fame.ts).
 import { fameAt } from './fame'
+// ⭐⭐⭐ v77 (the spotlight – T7): the booth's packet, READ off the episode's stamps. A pure derivation
+// out of `world/spotlight.ts` (zero draws, zero writes), so the view assembles a fact rather than
+// deciding one – see `PendingView.boothPrivateLife`.
+import { boothPrivateLifeAt } from './spotlight'
 import { summerDayCapacity } from './summer'
 import type { WorldState } from '../world'
 
@@ -1131,6 +1135,23 @@ export function pendingView(world: WorldState): PendingView | undefined {
     // ⭐ ROUND-21 #2: «Присутствие в потоке ... точно надо (если едет)». Asked ONCE, in the engine,
     // and carried - the same answer the running commentary and the week's story are given.
     coachTravelled: coachTravelsWithHer(world),
+    // ⭐⭐⭐ v77 (the spotlight - T7): AND WHAT THE BOOTH TOUCHED, if it touched anything. The decision
+    // was made in the weekly tick and STAMPED on the episode (`world/lifeBeat.ts` §10); this reads
+    // the stamp and ships the two facts a sentence needs. Asked once, in the engine, carried - the
+    // line above's own shape, and for a sharper version of its reason: the mention has already cost
+    // her spirit through T3's pass, so a screen re-deciding whether it is airable would be
+    // contradicting a week the world has been charged for.
+    //
+    // ⚠⚠ ONLY ON THE FIRST MATCH OF THE RUN, AND THE GUARD IS HERE RATHER THAN IN THE VIEWER. The
+    // stamp is per WEEK; a tournament week is up to six revealed matches, and the same packet handed
+    // to each of them would print the booth's ONE mention at six changeovers - «once aired, never
+    // again» made visibly false on screen by a view that repeated it. `revealedRounds === 0` is her
+    // first match of the week, which is also where the flow already puts everything that belongs to a
+    // round's FIRST watch (the badge and the shout) - so a re-watch is silent too, by the same
+    // sentence. ⚠ IT NARROWS THE VIEW AND NEVER THE FACT: the episode keeps its stamp and T3 prices
+    // the exposure event whatever the player watched, which is the model being honest about a
+    // television broadcast nobody in the family had to be sitting in front of.
+    boothPrivateLife: revealed === 0 ? boothPrivateLifeAt(world, world.week) : null,
     ladder: track,
     // ⭐⭐⭐ ROUND 27 #6 – NOTHING STANDS WHERE THE TABLE'S NAME IS, BECAUSE THE TABLE HAS A NAME. The
     // pairing this field's docstring pins: `ladder` non-null, note null, in one literal.
@@ -1213,6 +1234,12 @@ function collegeLeaguePendingView(world: WorldState): PendingView | undefined {
     // She is at a university and the family is not paying a coach – `collegeCoachFactor` is the
     // programme's staff, not a man on a fare. Nobody travelled with her, and the card says nothing.
     coachTravelled: false,
+    // ⭐ v77 (the spotlight – T7): AND THE BOOTH SAYS NOTHING EITHER, BY CONSTRUCTION RATHER THAN BY
+    // TASTE. `airBoothMention` is called from the TOUR's play arm, gated on a big-stage rung
+    // (`atOrAboveStageBar`); a college fixture is not one and is not reached by that call at all, so
+    // no stamp this view could read can name this week. The literal says so rather than leaving a
+    // reader to work it out – `ladder: null` two lines down is the same discipline.
+    boothPrivateLife: null,
     // ⭐⭐⭐ ROUND 27 #4 – NO TABLE AT ALL, AND THE TYPE CAN SAY SO NOW. The owner: «на экране итогов
     // матча the College League написано Professional ranking – как будто нет».
     //
@@ -1331,6 +1358,10 @@ function callUpPendingView(world: WorldState): PendingView | undefined {
     // She is at a university and the family is not paying a coach, and this week she is not even the
     // university's – she is her federation's. Nobody travelled with her, and the card says nothing.
     coachTravelled: false,
+    // ⭐ v77 (the spotlight – T7): and the booth says nothing either – the college view's own line,
+    // for the same structural reason. A Nations Cup rubber is not a tour rung, so `airBoothMention`
+    // never runs for this week and there is no stamp for this view to read.
+    boothPrivateLife: null,
     // ⭐⭐⭐ ROUND 27 #4's WIDENING IS WHAT MAKES THIS LINE POSSIBLE. The tie is played in none of the
     // three tables (`engine/nationalTeam.ts`: no points, no cheque), and before §4 the type could not
     // say «neither» – so this fixture would have had to name one, exactly as the College League did
@@ -1465,7 +1496,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     spirit: world.spirit,
     bond: world.bond,
     temperament: world.temperament,
-    fundsCents: world.fundsCents,
+    // ⭐ D7/Q15 (14.09): the diary's money worry reads the money the family can REACH – measured
+    // before the fix, `tight` fired on 11.9% of a parked working career's weeks against 0.0%
+    // unparked, licensing worry lines over a family holding its whole fortune. Her voice must not
+    // lie; the wallet's own number stays on the Money screen where it is a ledger fact.
+    fundsCents: reachableFundsCents(world),
     injury: world.injury
       ? {
           kind: world.injury.kind,

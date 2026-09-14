@@ -53,6 +53,10 @@ function episode(sinceWeek: number, endedWeek: number | null): LoveEpisode {
     knownWeek: null,
     wants: 'private',
     partnerId: `p:${sinceWeek}`,
+    publicWeek: null,
+    publicWrong: false,
+    airedMetWeek: null,
+    airedEndedWeek: null,
   }
 }
 

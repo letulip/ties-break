@@ -183,7 +183,7 @@ function weekAtAge(world: WorldState, years: number): number {
 
 /** A row of the v74 shape. `endedWeek: null` is «still going». */
 function episode(sinceWeek: number, knownWeek: number | null = null, endedWeek: number | null = null): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}` }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
 }
 
 /** A career, parked at `week`, with whatever love life the case needs. ⚠ A REAL `createWorld` rather
@@ -487,8 +487,27 @@ describe('wave 4 T2 D – what an ending is, and what it is not', () => {
     expect(world.loveEpisodes[0], 'the row is the same row with one more date on it')
       .toEqual({ ...before, endedWeek: 420 })
     expect(world.loveEpisodes[0].knownWeek, 'what he was told is a fact about the past and an ending does not un-tell it').toBe(402)
+    // ⚠ RE-AIMED AT THE v77 SHAPE (14.09, the spotlight – wave 6 T1), NOT WEAKENED, in step with
+    // tests/wave3-arrival.test.ts's twin one wave down and for the identical reason: v77 appends
+    // `publicWeek`, `publicWrong`, `airedMetWeek` and `airedEndedWeek` to `LoveEpisode`, so the total
+    // key set is four longer. The CLAIM is untouched and is the stronger half of this case – `endEpisode`
+    // writes ONE date and invents nothing – and it stays a total `toEqual` so a field added by accident
+    // still goes red here. ⚠ The `{ ...before, endedWeek: 420 }` line above needed nothing: `before` is
+    // a deep copy of the live row, so it carries the four new fields already and asserts they are
+    // PRESERVED across an ending, which is a claim this case did not previously get to make.
     expect(Object.keys(world.loveEpisodes[0]).sort(), 'and no field was invented')
-      .toEqual(['endedWeek', 'id', 'knownWeek', 'partnerId', 'sinceWeek', 'wants'])
+      .toEqual([
+        'airedEndedWeek',
+        'airedMetWeek',
+        'endedWeek',
+        'id',
+        'knownWeek',
+        'partnerId',
+        'publicWeek',
+        'publicWrong',
+        'sinceWeek',
+        'wants',
+      ])
   })
 
   it('⭐⭐ the row STAYS – nothing is nulled, nothing is pruned, and the ACTIVE SLOT empties by itself', () => {
@@ -613,7 +632,21 @@ function weeklyRollsInSourceOrder(): ((world: WorldState) => void)[] {
   // cycle. The claim is untouched («ends before arrival, both between the two accruals»), and an
   // array `indexOf` that misses returns −1, which the `> i` below is red on. ⚠ Ruling J named two
   // pins to re-aim and this is a FOURTH – the same anchor again, one wave-4 file over.
-  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
+  // ⚠⚠ RE-AIMED A **SECOND** TIME 14.09 BY WAVE 6's T3 (the architect's ruling A, which names this
+  // file – ⚠ at line 616; the anchor is at 635 on this tree, and the ruling's other two line numbers
+  // are exact). WHAT MOVED: the closing anchor carries a third argument,
+  // `exposureEventsOf(world, world.week)` – the week's exposure list, handed down at the call site
+  // for `psychologistWorks`' own reason (§0.1's dependency inversion). The claim is untouched («ends
+  // before arrival, both between the two accruals»), the anchor is still the call's EXACT text, and
+  // an `indexOf` that misses still returns −1, which the `> i` below is red on.
+  // ⚠⚠ RE-AIMED A **THIRD** TIME 14.09 BY WAVE 6's **T3b** – the re-aim AFTER T3's, same day, same
+  // anchor. RULING P's REASON IN ONE SENTENCE: a trophy and a result row are stamped inside
+  // `playHerWeek`, two phases after this pass, so `'stage'` and `'publicLoss'` asked in-week could
+  // never fire and the horizon moves to the week that has CLOSED. WHAT MOVED: the anchor's third
+  // argument is now `exposureEventsOf(world, world.week - 1)`. The claim is untouched («ends before
+  // arrival, both between the two accruals»), the anchor is still the call's EXACT text, and an
+  // `indexOf` that misses still returns −1, which the `> i` below is red on.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const span = code.slice(i + 1, j).filter((l) => l in LIFE_ROLLS)

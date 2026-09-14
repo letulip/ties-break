@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-221 TypeScript files: **36 live**, **185 archival**.
+223 TypeScript files: **38 live**, **185 archival**.
 
 ## Why the split exists
 
@@ -33,6 +33,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | --- | --- |
 | `_knocks.ts` | imported by the test suite |
 | `_lifeBeats.ts` | imported by the test suite |
+| `_spotlight.ts` | imported by a live tool |
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
@@ -66,6 +67,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `snapshot-bench.ts` | `npm run bench:snapshot` |
 | `spirit-bench.ts` | `npm run bench:spirit` |
 | `sponsor-window-bench.ts` | `npm run bench:sponsor` |
+| `spotlight-bench.ts` | `npm run bench:spotlight` |
 | `world-turnover.ts` | `npm run bench:world` |
 
 ## Archival

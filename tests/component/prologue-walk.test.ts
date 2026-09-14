@@ -260,6 +260,24 @@ describe('⭐⭐ nine cards on a 375x667 phone, and the way on is on every one o
   // 2100 leaves ~50px of headroom on this instrument – tighter than the 140 the old number had, and
   // deliberately so: the age-5 card is the one screen in the walk the owner has already called a
   // form, and it should have to argue for every line it grows.
+  //
+  // ⚠⚠ ANNOTATED 14.09.2026 (v77 T10, from T11's finding): **THE «~50px» ABOVE IS STALE BY 46px AND
+  // THE SENTENCE IS LEFT STANDING BECAUSE IT IS A RECORD OF WHAT WAS MEASURED WHEN IT WAS WRITTEN.**
+  // Measured today by arming this very line to 2094: the card is **2094.725px**, so the real
+  // headroom is **5.275px**, not ~50. What ate it is the honest growth the ceiling exists to notice –
+  // the walk has gained copy since round 35 and each addition was argued for on its own.
+  //
+  // ⚠ THE DICE COST NOTHING, which is the half worth writing down because it is the obvious suspect
+  // and it is innocent: T11 put the two reroll buttons back on the identity card in this same wave,
+  // and a control run with the dice-less card measures **2095 too**. The headroom was already gone
+  // before they arrived.
+  //
+  // ⚠⚠ SO THE NEXT HONEST SENTENCE ADDED TO THIS CARD REDDENS THIS GATE, and that is the instrument
+  // working rather than a defect – but it will land on whoever writes the sentence, not on whoever
+  // spent the room. **THE CEILING IS NOT RAISED HERE.** Round 35 lowered it deliberately («leaving
+  // 2200 standing would have left 150px of new copy able to arrive with nothing objecting»), and an
+  // agent quietly restoring the slack would be doing exactly that, in the other direction. A card
+  // that needs the room asks the owner for it – the surface is his (invariant 4).
   // MUTATION-VERIFIED: reopening the country picker (`tiles` returning POPULAR_COUNTRIES when
   // closed) reddens this and the tile count above.
   // ⚠ AND ONE THING THIS INSTRUMENT CANNOT SEE, SAID PLAINLY RATHER THAN CLAIMED: putting the two

@@ -232,7 +232,7 @@ function careerAt(seed: string, week: number): WorldState {
 
 /** An attachment, hand-built – T5's draws decide `wants` in a career and are not under test here. */
 function episode(sinceWeek: number, knownWeek: number, wants: LoveEpisode['wants']): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}` }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }
 }
 
 /** A career on the week it was told, with the beat already raised and waiting. */

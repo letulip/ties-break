@@ -334,9 +334,29 @@ export interface LoveEpisode {
   /** the week it ended, or null while it is still going. ⚠ Wave 4 writes it; THIS wave always
    *  leaves it null, and the cooldown that reads it is shipped now so wave 4 changes nothing here. */
   endedWeek: number | null
-  /** the week the PARENT found out – `sinceWeek` plus the shaved lag (wave 3 T5) – or null while he
-   *  has not been told. ⚠ It is a fact about disclosure and never about the attachment: a row can
-   *  begin and end with this still null, which is exactly the late-row case above. */
+  /** the week the PARENT found out – `sinceWeek` plus the shaved lag (wave 3 T5). ⚠ It is a fact
+   *  about disclosure and never about the attachment: a row can begin AND end before this week
+   *  arrives, which is exactly the late-row case above.
+   *
+   *  ⚠⚠ CORRECTED 14.09 BY v77's T10 (ruling T, on T6's measurement). This said «or null while he
+   *  has not been told», and **no engine-born row has ever held a null here.** Measured at the one
+   *  writer: `rollArrival` sets `knownWeek = sinceWeek + shaveLag(raw, band)` and `shaveLag` is
+   *  TOTAL – it returns a number for every input – so the field is written at the row's BIRTH and
+   *  merely sits in the future until the lag runs out; asked of the real `rollArrival` over 60
+   *  careers and 20+ rows, none was null. The second writer, T6's overtake, writes `world.week`.
+   *  The false half was load-bearing, not decorative: the wave-6 brief spelled the founding scene
+   *  («a parent reading a headline about a daughter who never told him») as `knownWeek === null` and
+   *  that branch could never have been entered – the sixteenth «unable to fire» of this pair of
+   *  waves. What ships instead is «has he been told YET», `knownWeek === null || knownWeek >
+   *  world.week`, which contains the old spelling as a sub-case and fires on the case that exists.
+   *  By ruling S this is an ASSERTION about the present state, so it is corrected rather than
+   *  annotated – the stale `knownWeek: 139` row one file over was a RECORD of a measurement, which
+   *  is the other half of the same rule.
+   *
+   *  ⚠ SO WHAT DOES `null` STILL MEAN, AND WHY DOES THE TYPE KEEP IT? A row that was MIGRATED or
+   *  CRAFTED – a save carried up from a hand-edited or imported world, and the test fixtures that
+   *  build an episode by hand. The sim cannot produce it; the type allows it; so every reader gates
+   *  on it, and none of them may treat it as unreachable. */
   knownWeek: number | null
   /** her drawn preference about being told: `'private'` keeps it to herself, `'open'` says it out
    *  loud (wave 3 T5). Hers, not his. */
@@ -345,6 +365,82 @@ export interface LoveEpisode {
    *  fictional name the identity of the ROW and the identity of the PERSON stop being the same
    *  thing, and a schema that had conflated them could not tell them apart afterwards. */
   partnerId: string
+  /** ⭐⭐⭐ v77 – THE WEEK THE **WORLD** LEARNED, or null while only the family holds it (the
+   *  spotlight, wave 6; `docs/plans/life-wave-6-builder-2026-09.md` §2 T1, the boundary ruled in
+   *  `docs/plans/the-way-she-sounds-2026-09.md` C4 on 10.09).
+   *
+   *  ⚠⚠ IT LIVES BESIDE `knownWeek` AND THE TWO NEVER MERGE, which is the whole decision in the
+   *  field. `knownWeek` is when the PARENT found out; this is when the PRESS did. They are different
+   *  facts about different audiences and either can come first – the founding scene of §3c-bis is a
+   *  parent reading a headline about a daughter who never told him, which is `publicWeek` landing
+   *  BEFORE `knownWeek` has arrived. One field could not hold both without losing that scene.
+   *
+   *  ⚠ THAT SENTENCE READ «…while `knownWeek` is still null» UNTIL 14.09 (v77 T10, ruling T) AND THE
+   *  SCENE IT DESCRIBED WAS UNREACHABLE. `rollArrival` writes `knownWeek` at the row's birth, so an
+   *  engine-born row is never null there – see that field's own note for the measurement. The
+   *  founding scene is real; its discriminator is «has he been told yet», not a null.
+   *
+   *  ⚠ THE BOOTH AND EVERY PUBLIC SURFACE MAY VOICE ONLY A FACT WITH `publicWeek !== null` – «the
+   *  honest boundary is the world's own PUBLICITY, not the family's walls» (C4). A fact only the
+   *  family holds is never voiced, at any fame. ⚠ v77 SHIPS THE FIELD AND NO WRITER: the leak hazard
+   *  that sets it is T6 and the booth that reads it is T7, so nothing on this tree can make it
+   *  non-null. */
+  publicWeek: number | null
+  /** ⭐⭐ v77 – THE STORY LANDED WRONG (the tabloid misattribution flag; who-she-is §3c-bis, the
+   *  films' own gem: an open girl leaks roughly TRUE, a private one late and WRONG).
+   *
+   *  ⚠ MEANINGLESS WHILE `publicWeek` IS NULL, and that is a licence rather than a shape: a story
+   *  that was never told cannot have been told wrong. Every reader gates on `publicWeek` first, and
+   *  the pin that says so lives with the hazard in T6. ⚠ A BOOLEAN AND NOT A NULLABLE ONE, on
+   *  `WorldEvent.keep`'s own precedent: «not wrong» and «no story yet» are already distinguished by
+   *  the field beside it, and a second null would only give two ways to spell the same state.
+   *
+   *  ⚠ v77 SHIPS IT WITH NO WRITER – T6 is the wave that can set it, and the correction beat that
+   *  would ever clear it is explicitly a LATER wave's (brief §8). */
+  publicWrong: boolean
+  /** ⭐⭐ v77 – THE BOOTH'S ONCE-NESS STAMPS: the week each public fact about this episode was first
+   *  voiced on air, or null for never (`airedMetWeek` = «someone is there», `airedEndedWeek` = «it
+   *  is over»). T7's commentary channel, C4's boundary.
+   *
+   *  ⚠⚠ THE STAMPS **ARE** THE ONCE-NESS AND THERE IS NO SECOND BOOLEAN, which is the same shape
+   *  `lifeLog`'s `answer: null` uses one file up: a nullable week says both «has it aired» and
+   *  «when», so the two can never disagree. Once aired, never again.
+   *
+   *  ⚠ TWO FIELDS AND NOT ONE, because they are two facts that become public at different weeks and
+   *  air independently – the world can learn she is with somebody long before it learns it ended,
+   *  and the booth's licence for the second reads `endedWeek !== null && publicWeek !== null`.
+   *
+   *  ⚠ v77 SHIPS BOTH WITH NO WRITER: the engine stamp is T7's, and `src/viz` never writes anything
+   *  (the wave's own §8). */
+  airedMetWeek: number | null
+  airedEndedWeek: number | null
+}
+
+/** ⭐⭐⭐ v77 – WHAT THE BOOTH TOUCHED, AS THE UI IS EVER ALLOWED TO SEE IT (the spotlight, wave 6's
+ *  T7; the boundary ruled in `docs/plans/the-way-she-sounds-2026-09.md` C4 on 10.09: «the honest
+ *  boundary is the world's own PUBLICITY, not the family's walls»).
+ *
+ *  ⚠⚠ TWO FACTS AND NO STRING, WHICH IS THE WHOLE SHAPE OF THE FIELD. The engine decides WHETHER the
+ *  booth speaks – the licence, the news window and the once-ness stamps are all `world/lifeBeat.ts`
+ *  §10's – and `src/viz/commentary.ts` decides HOW it is said, where every other word the booth says
+ *  already lives. A sentence on the wire would have put player-facing copy in the engine and a
+ *  DECISION in the view, which is the split this channel exists to avoid.
+ *
+ *  ⚠⚠ IT CARRIES NO EPISODE, NO ID AND NO WEEK, and the narrowness is `DiaryFacts.partnerKnown`'s
+ *  own law one file over: a fact ships only with the licence that consumes it. The booth's beat
+ *  needs which fact it is and whether the world has it wrong; it needs nothing else, and the schema
+ *  persists no name and no gender for it to reach for even if it did.
+ *
+ *  ⚠ `wrong` IS THE WORLD'S MISTAKE AND THE BOOTH REPEATS IT – who-she-is §3c-bis. The line that
+ *  airs a wrong story carries the wrong story; that sting is the mechanic working, and the
+ *  correction is explicitly a later wave's beat (the wave's §8). */
+export interface BoothPrivateLife {
+  /** which public fact was voiced: `'met'` = «there is someone», `'ended'` = «it is over». The two
+   *  are separately stamped on the episode and air independently. */
+  kind: 'met' | 'ended'
+  /** the world's version of it is WRONG (`LoveEpisode.publicWrong`, read and never re-judged – the
+   *  architect's ruling T). */
+  wrong: boolean
 }
 
 /** ⭐ ONE ROW PER BIRTHDAY (v48). The DIARY reads it and nothing else does: no morale, no condition,

@@ -56,6 +56,14 @@ export interface AdBandDef {
   termYearsMax: number
 }
 import type { TierId } from './season/types'
+// ⚠⚠ TYPE-ONLY, AND IT POINTS AT A MODULE THAT IMPORTS **THIS ONE** AT RUNTIME (`world/spotlight.ts`
+// reads `ECONOMY`), which is exactly why it is spelled `import type` and may never become a value
+// import. `import type` is erased at compile time, so this closes no runtime cycle at all – the same
+// shape `TierId` above uses and the same discipline every `world/*.ts` leaf uses for `WorldState`.
+// What it buys is that `pressureBase` is typed `Record<ExposureKind, number>` and therefore TOTAL:
+// the day a sixth exposure kind joins the union, `vue-tsc` names the missing base instead of letting
+// a kind ship priced at `undefined`, which would poison the whole weekly sum with `NaN`.
+import type { ExposureKind } from './world/spotlight'
 // ⚠ THE SEASON LENGTH COMES FROM THE SHARED DATES LEAF, NOT FROM season/calendar.ts – see the note
 // on `upliftHorizonWeeks` below for the browser crash the old edge caused. `shared/dates.ts` imports
 // nothing, so this direction can never close a cycle.
@@ -4946,6 +4954,14 @@ export const ECONOMY = {
   // reader in the same commit, exactly as the rule above requires. Three remain.
   // ⭐ T5 (v76) LANDED THE SECOND – `coolheadPerSeason`, below, with `growWeek`'s own reader in the
   // same commit. Two remain (`listenClarity` T6, the walls' hazard scale T7).
+  // ⭐⭐ AND THE LIST IS CLOSED: v76's T6 and T7 landed the last two, and **v77's T5 adds a FIFTH
+  // FOCUS the wave-5 forecast could not name** – «The public life» (O7, ruled 13.09), whose two
+  // ladders `publicLifeShrink` and `publicLifeAccel` land at the foot of this block with their one
+  // reader (`engine/spirit.ts` – the pressure term and the habituation growth) in the same commit,
+  // which is the rule this block has kept since T2. ⚠ THEY LIVE HERE AND NOT IN `ECONOMY.spotlight`
+  // by the spotlight block's own instruction: they are the SEAT's price list, keyed on the rung the
+  // family is paying for, and `ECONOMY.spotlight` holds only what is true of a career with nobody
+  // hired.
   psychologist: {
     // ⚠⚠ PROPOSALS, NOT RULINGS – bench-priced, predicted-first, THE OWNER'S WORD AFTER T10, in the
     // same register the spec marks O5 with. The wave-5 brief's §4 lists them under «Proposals – NONE
@@ -5108,6 +5124,337 @@ export const ECONOMY = {
      *  ⚠ IT RIDES THE BILLING PREDICATE for ruling J's reason – pay nothing, receive nothing extra.
      *  ⚠ A PROPOSAL – the brief §4's «`'herself'` repair acceleration ×1.5». */
     wallsHerselfRepair: 1.5,
+
+    /** ⭐⭐⭐ «THE PUBLIC LIFE» – WHAT A YEAR ON THE SPOTLIGHT TAKES OFF EVERY EXPOSURE EVENT, BY RUNG
+     *  (v77, wave 6's T5 – O7, ruled 13.09: «ships WITH the spotlight wave, not before it has
+     *  something to shrink»). The FIFTH factor of `exposurePressure`'s product (engine/spirit.ts),
+     *  and `1` on every week the seat is not working this focus.
+     *
+     *  ⚠⚠ A SHRINK AND NEVER A SHIELD, which is the one thing three decimals cannot say for
+     *  themselves. Every entry is strictly between 0 and 1: the cameras cost her LESS while somebody
+     *  is working the year with her, and they never cost her nothing. A `0` here would switch the
+     *  whole spotlight off for anyone who can afford a retainer, which is the shape who-she-is §3c
+     *  forbids in its own words about the habituation floor one block over («a SHRUG and not an
+     *  immunity») – and the two multiply, so the seat and the veteran together must still leave a
+     *  cost standing.
+     *
+     *  ⚠ STRICTLY DECREASING, OR THE RUNG IS RE-PRICED – the masseur spec's §4 law, which the wave
+     *  brief applies per focus. T9's psy-grid benches the fifth column against the rung below AND
+     *  against no-seat; `tests/wave6-spotlight-focus.test.ts` §A holds the SHAPE so a re-tune cannot
+     *  quietly flatten a step.
+     *
+     *  ⚠ A MULTIPLIER ON A SPIRIT TERM, indexed by rung (`0 | 1 | 2`, the roster position) – the
+     *  FIFTH spelling in this block and the collision is worth naming once, as its four neighbours
+     *  name theirs: `recoverySlope` is POINTS OF SPIRIT PER WEEK, `coolheadPerSeason` POINTS OF A
+     *  SKILL PER SEASON, `listenClarity` a SHARE OF BEATS, `wallsHazardScale` a MULTIPLIER ON A
+     *  PROBABILITY, and this a MULTIPLIER ON A COST.
+     *
+     *  ⚠ UNRULED – the wave-6 brief's §4 lists «`publicLifeShrink [0.85, 0.70, 0.55]`» under
+     *  «Proposals – NONE ruled, all bench-priced predicted-first, his word after», and the architect's
+     *  ruling N adds the measurement that makes the size a real question rather than a formality: at
+     *  the drafted bases a calm, open, habituated girl holding this focus at the top rung takes
+     *  `−4 × 0.8 × 0.75 × 0.25 × 0.55 = −0.33` from the worst week of her public life – three tenths,
+     *  which the screen renders as nothing. Not one pin below asserts these three numbers; every
+     *  expectation is computed from this row, so a re-tune moves both sides together. */
+    publicLifeShrink: [0.85, 0.7, 0.55],
+    /** ⭐⭐⭐ «THE PUBLIC LIFE» – HOW MUCH FASTER SHE LEARNS TO LIVE KNOWN, BY RUNG (v77, wave 6's T5).
+     *  The multiplier on `growHabituation`'s weekly `+1` (engine/spirit.ts), and `1` on every week the
+     *  seat is not working this focus.
+     *
+     *  ⚠⚠ AN ACCELERATION AND NEVER A GATE – `wallsHerselfRepair`'s own law one row up, and §0.3's
+     *  («repair is free … the seat only ever ACCELERATES the road home») read onto this focus: the
+     *  counter grows at `+1` a week with nobody hired, and this multiplies a walk that was already
+     *  happening. Every entry is ≥ 1 for that reason; a value below 1 would make the seat a BRAKE on
+     *  her own acclimatising, which is the same defect `wallsHazardScale`'s ⚠⚠ names in the other
+     *  direction.
+     *
+     *  ⚠⚠ AND IT CANNOT OUT-RUN THE WALLS, BY CONSTRUCTION RATHER THAN BY SIZE: `growHabituation`
+     *  returns BEFORE this factor is read when she is not news or when either wall is flipped, so ×0
+     *  beats any accelerator and no `Math.max` is reachable from here. That composition is where a
+     *  builder reaches for one, so it is pinned (`tests/wave6-spotlight-focus.test.ts` §D).
+     *
+     *  ⚠ STRICTLY INCREASING, OR THE RUNG IS RE-PRICED – the masseur §4 law again, benched by T9
+     *  against the §3c habituation curve. ⚠ THE CAP IS UNMOVED: `habituationFullWeeks` is still both
+     *  the clamp and `habituationScale`'s denominator, so a faster walk arrives at the same floor
+     *  sooner and never past it.
+     *
+     *  ⚠ UNRULED – the brief's §4 «`publicLifeAccel [1.5, 2.0, 2.5]`», in the same «NONE ruled» list
+     *  as its sibling above. T9 prices it; no pin below asserts the three numbers. */
+    publicLifeAccel: [1.5, 2, 2.5],
+    /** ⭐⭐ WHERE THE FIFTH FOCUS'S RECEIPT PRINTS – the habituation-SCALE point whose first crossing,
+     *  with the year being worked that week, prints «The cameras stopped costing her sleep.» The
+     *  owner's D2 (14.09, «да»), on the strings doc's own trigger proposal and `RECOVERY_RECEIPT`'s
+     *  13.09 precedent: the sentence stood, the TRIGGER was the design decision. 0.5 = halfway from
+     *  first-news to the shrug. ⚠ ONCE-EVER BY MONOTONICITY, NOT BY A STAMP: `spotlightHabituation`
+     *  never decays (v1's own law), so the crossing happens at most once per career and no schema
+     *  field is spent on remembering it. ⚠ A PROPOSAL – the POINT is benchable, his word after. */
+    publicLifeReceiptAt: 0.5,
+  },
+
+  // --- The spotlight: the weight of being known (who-she-is §3c / §3c-bis, wave 6) ---------
+  // ⚠⚠ THIS BLOCK READS FAME AND NEVER TUNES IT. `ECONOMY.fame` is fame-presence's ground
+  // (docs/specs/fame-presence-2026-09.md) and the spotlight wave may not touch a number in it – the
+  // wave's §8, proven at the final gate by a grep. What lives here is the wave's OWN two questions:
+  // where the world starts calling her news, and what counts as a big stage.
+  //
+  // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight – the
+  // psychologist block's own rule one concern up, and for its reason («a constant with no reader is
+  // a constant nobody can be wrong about yet»): ⭐ NOTHING, SINCE T7 (14.09). The list this note kept
+  // is empty: `leakBasePerWeek` / `leakOpennessMult` / `wrongShare` landed with T6's hazard and
+  // `newsWindowWeeks` with T7's booth, and every one of them is struck below rather than left
+  // standing here as a stale forecast.
+  // ⭐ AND T5 KEPT THE PROMISE THIS NOTE MADE FOR IT (14.09): the fifth focus's two ladders
+  // (`publicLifeShrink`, `publicLifeAccel`) landed in `ECONOMY.psychologist` beside the other focus
+  // tables and NOT in this block – they are the seat's price list, and this block holds only what is
+  // true of a career with nobody hired. Nothing of T5's is here, which is why nothing of T5's is
+  // struck from the list above.
+  // ⭐ T3 IS HERE (14.09) AND IT TOOK EXACTLY THE TWO THAT SENTENCE PROMISED IT: `pressureBase` and
+  // `opennessScale` below.
+  // ⭐ AND T4 IS HERE (14.09) WITH THE TWO IT WAS PROMISED: `habituationFullWeeks` and
+  // `habituationFloor`, which are struck from the list above rather than left standing in it – the
+  // list is edited as each task lands rather than kept as a stale forecast. What is still absent is
+  // T6's three and T7's one.
+  // ⭐ AND T6 IS HERE (14.09) WITH EXACTLY THE THREE IT WAS PROMISED: `leakBasePerWeek`,
+  // `leakOpennessMult` and `wrongShare`, all struck from the list above.
+  // ⭐ AND T7 IS HERE (14.09) WITH THE ONE IT WAS PROMISED AND NO SECOND: `newsWindowWeeks` below,
+  // and NOTHING for the beat itself. The booth's copy lives in `src/viz/commentary.ts` where all
+  // booth copy lives, its placement is that file's own `PRIORITY` table, and the mention is
+  // DETERMINISTIC by design (the wave's §3) – so there is no chance, no cooldown and no per-week cap
+  // to price here. The once-ness is the episode's two stamps and not a number.
+  // ⭐ D5 (14.09) LATER ADDED TWO BESIDE T6's THREE – `leakFreshWeeks`/`leakFreshMult`, the
+  // owner's own word on the founding scene – and D1 replaced the fame bar with the two rank bands.
+  // ⚠ AND T6 ADDED NO FOURTH, which is worth saying because ruling I
+  // gives the hazard a FAME factor the brief had dropped: the factor is `ECONOMY.fame.cap`, which
+  // this block READS and never writes, so the ruling restored a term of the spec's own formula
+  // without opening a tunable the owner would have to price.
+  spotlight: {
+    /** ⭐⭐⭐ THE BAR THE WHOLE WAVE STANDS BEHIND – and since the owner's D1 (14.09) it reads her
+     *  RANK, never her fame. His words, verbatim, because they are the design: «у нас % достижения
+     *  топ-100 огромный, вот уже с топ-200 можно иногда начинать что-то говорить, а в топ-100 так и
+     *  вполне уверенно, прямая аналогия – спонсорская лестница». So membership is a STANDING, the
+     *  sponsor ladder's own currency (its tour rung gates at WTA ≤ 200 in this same file), with
+     *  three bands read by ONE predicate (`newsStandingOf`, `world/spotlight.ts`):
+     *
+     *      'known'    – WTA rank ≤ newsRankKnown:  she lives known; every kind, habituation grows
+     *      'noticed'  – WTA rank ≤ newsRankNoticed: the light finds her only on her occasions;
+     *                   every kind may fire, the leak runs at `noticedLeakScale`, and habituation
+     *                   does NOT grow – an occasional guest of the light never gets used to it
+     *      'quiet'    – everything else: no spotlight, whatever she wins
+     *
+     *  ⚠⚠ FAME IS OUT OF THE GATE AND STAYS IN THE LEAK – deliberately both. The gate's history
+     *  (ruling E's struck anchor, the 33-save measurement that showed a fame bar of 30 excludes
+     *  five of eight of the owner's own careers) is preserved in the questions doc §1 and the
+     *  decision log's 14.09 entry; fame remains the brand economy's number and the leak hazard's
+     *  «more lenses on a bigger star» factor (ruling I, below), which D1 did not touch.
+     *
+     *  ⚠⚠ THE TWO NUMBERS ARE THE OWNER'S OWN (top-100 / top-200 are his sentence, not a proposal) –
+     *  what stays benchable is their EFFECT: T9's news-week shares re-print per band under
+     *  `bench:spotlight`. ⚠ And the read carries the house belt: «unranked is not rank one» –
+     *  `newsStandingOf` requires live professional points beside the cached rank, the same guard
+     *  every rank reader in `world/ladder.ts` carries. */
+    newsRankKnown: 100,
+    newsRankNoticed: 200,
+    /** ⭐⭐⭐ WHAT COUNTS AS A BIG STAGE – the lowest rung whose title, final or early exit puts her
+     *  in the light. `'wta500'`, so the set is {wta500, wta1000, slam} today and the slam fortnight
+     *  counts by construction.
+     *
+     *  ⚠⚠ A `TierId` AND NEVER A NUMBER, which is the architect's ruling F and corrects the brief's
+     *  own `stageTierMin 500`. THERE IS NO NUMERIC TIER SCALE to compare 500 against: `TierId`
+     *  (`season/types.ts`) is a string union of sixteen names – local · regional · national · j30 ·
+     *  j60 · j300 · w15 · w35 · w50 · w75 · w100 · wta125 · wta250 · wta500 · wta1000 · slam – and
+     *  `wta125` would break any map anybody built from the digits.
+     *
+     *  ⚠⚠ THE COMPARISON IS `TIER_LADDER`'s OWN INDEX, never a hand-written set of names. The ladder
+     *  (`season/calendar.ts`) is the canonical ordering and its own comment says the arithmetic
+     *  «moves with the list rather than with a number anybody edited» – it recorded a sixteen-rung
+     *  widening that cost «adding four names to this array and nothing else». The alternative's
+     *  failure is recorded in this repo in its own words (`src/art/venues.ts:150`): a hand-written
+     *  tier array whose `indexOf(t)` «was −1 for every one of them, the lower-tier walk never» ran –
+     *  silent, because `indexOf` does not throw. A `['wta500','wta1000','slam']` here is that defect
+     *  pre-booked: the week a rung joins the ladder the spotlight quietly stops seeing it.
+     *  `tests/wave6-spotlight-ledger.test.ts` §A asserts this value resolves to an index > -1, so a
+     *  renamed rung goes red with a sentence instead of turning the spotlight off.
+     *
+     *  ⚠ A PROPOSAL, LIKE THE BAR ABOVE – the brief's §4 lists it under «Proposals – NONE ruled»,
+     *  and what ruling F settles is its TYPE, not its rung. T9 prices where the bar belongs. */
+    stageTierMin: 'wta500' as TierId,
+    /** ⭐⭐⭐ WHAT ONE EXPOSURE EVENT COSTS HER, **BEFORE ANY SCALING** – the spirit points T3's term
+     *  subtracts per event, per kind, keyed by `ExposureKind` so a sixth kind is a design decision
+     *  with a number attached rather than a convenience (`world/spotlight.ts`'s own ⚠).
+     *
+     *  ⚠⚠ «BEFORE SCALING» IS THE LOAD-BEARING HALF OF THE SENTENCE AND IT IS THE ARCHITECT'S RULING
+     *  L. These are §3c's «−2..−4 before scaling», so they take `ECONOMY.spirit.perturbationScale`
+     *  EXACTLY ONCE, inside T3's own summand – which is why that summand sits OUTSIDE
+     *  `weekPerturbation`'s multiplication. The alternative's cost is recorded in this file one
+     *  concern up, on `spirit.shock`: those constants are ALREADY intensity-scaled (−27.5 × 0.8 =
+     *  −22.0, × 1.25 = −34.4), and a row inside `weekPerturbation` would have scaled them a SECOND
+     *  time, to −17.6 / −42.5. A future editor who moves these rows into `perturb` repeats that
+     *  defect on new numbers.
+     *
+     *  ⚠⚠ ALL FIVE ARE §4 PROPOSALS AND NOT ONE OF THEM IS RULED. The brief's own §4 lists them
+     *  under «Proposals – NONE ruled, all bench-priced predicted-first, his word after», and the
+     *  architect's ruling N measured what they put ON SCREEN before anybody tunes them: at these
+     *  bases the deepest single event the wave has – a heavily public loss, expressed-open, steady,
+     *  at baseline 70 – lands at 67.6, which is ONE TENTH above the `dimmed` band edge (67.5). The
+     *  spotlight's own worst contribution for that girl is 2.40 against a 2.50 distance to the edge,
+     *  so it never crosses a Mood band ALONE: it tips a week the ordinary weather had already
+     *  carried to the boundary. For scale, a break-up is −22 / −34 on the same axis. ⚠ Ruling N is
+     *  explicit that this is NOT a re-tune – «no constant moves in this wave on my word» – so what
+     *  T3 ships is the shape, pinned as a RATIO, and T9 prices the sizes.
+     *
+     *  ⚠ THE RANKING IS THE SPEC'S, NOT A GUESS: a wrong public story and a heavily public loss are
+     *  the two deepest (−4), a shoot is the shallowest (−2) because the cameras were invited, and a
+     *  big stage and the booth's mention sit between (−3). */
+    pressureBase: {
+      stage: -3,
+      shoot: -2,
+      publicLoss: -4,
+      aired: -3,
+      wrongStory: -4,
+    } as Record<ExposureKind, number>,
+    /** ⭐⭐⭐ WHO CARRIES IT WELL – the multiplier on every exposure event, read off her EXPRESSED
+     *  openness (§0.6: the mechanics read expression, the voices read birth).
+     *
+     *  ⚠⚠ ANCHORED, NOT PROPOSED – the one pair of numbers in this block that is the SPEC'S OWN.
+     *  who-she-is §3c: an open girl half-feeds on the attention and pays ×0.75; a private one pays
+     *  ×1.5. The brief's §4 lists it under «Anchored by the spec» beside the note that the intensity
+     *  scale is the STANDING `perturbationScale` and never a new constant.
+     *
+     *  ⚠ THE RATIO IS THE SHAPE AND IT IS PINNED AS ONE (ruling N part 2): 1.5 / 0.75 is exactly ×2,
+     *  so the same event costs an expressed-private girl exactly twice what it costs an
+     *  expressed-open one before habituation. T3's pin asserts the RATIO rather than either number,
+     *  precisely so a §4 re-tune of `pressureBase` cannot silently break the shape it is about. */
+    opennessScale: { open: 0.75, private: 1.5 },
+    /** ⭐⭐ THE ROW'S OWN BAR – the smallest week charge (absolute, AFTER all five factors) the feed
+     *  names out loud. The owner's D1b (14.09), «ок» to the architect's recommendation, and it
+     *  OVERRIDES ruling N's events-not-points gate for the ROW ONLY: a habituated, focus-held girl
+     *  taking −0.33 from a camera week now lives that week quietly, and «every dip explainable»
+     *  reads forwards again – a row prints only where there is a dip worth a sentence. ⚠ THE CHARGE
+     *  IS UNTOUCHED: the term still lands whatever its size; only the SENTENCE has a floor. */
+    rowMinCharge: 1.0,
+    /** ⭐⭐⭐ HOW MANY WEEKS OF LIVING KNOWN IT TAKES TO BE FULLY USED TO IT – the denominator of
+     *  `habituationScale` (engine/spirit.ts) and the CAP `growHabituation` clamps the counter at.
+     *  104, two full seasons of being news, which is the brief's own gloss on the number.
+     *
+     *  ⚠⚠ IT IS A DENOMINATOR AND A CAP AT THE SAME TIME, AND THAT IS WHY IT IS ONE CONSTANT AND NOT
+     *  TWO. `spotlightHabituation` is clamped here by the writer, and the reader divides by the same
+     *  value – so the scale reaches `habituationFloor` exactly when the counter reaches its ceiling
+     *  and never travels past it. Two constants could disagree; one cannot.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**, exactly like the bar and the bases above. The brief's §4
+     *  lists it under «Proposals – NONE ruled, all bench-priced predicted-first, his word after»
+     *  («`habituationFullWeeks 104` (two seasons of living known)»), and T4 ships the SHAPE – linear,
+     *  floored, frozen by walls, capped – with the size left for T9's benches and the owner's word.
+     *  ⚠ Nothing in T4's pins asserts 104: they read this constant, so a re-tune moves both sides of
+     *  every expectation together and the shape stays guarded. */
+    habituationFullWeeks: 104,
+    /** ⭐⭐⭐ THE MOST BEING USED TO IT CAN EVER SAVE HER – the floor of `habituationScale`. At a full
+     *  `habituationFullWeeks` a veteran pays 0.25 of what the same week cost her the first time.
+     *
+     *  ⚠⚠ THE FLOOR IS THE POINT, NOT THE DISCOUNT. who-she-is §3c's own sentence is «a veteran star
+     *  from a good home shrugs at cameras that once cost her sleep» – a SHRUG and not an immunity.
+     *  A floor of 0 would make a long-famous girl free of the spotlight entirely, and the mechanic
+     *  would quietly switch itself off in exactly the careers it was written for; the brief's §4 says
+     *  the same thing in its own words («the floor keeps the cameras from ever costing exactly
+     *  nothing»).
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. «`habituationFloor 0.25`» sits in the same «NONE ruled»
+     *  list as everything else in this block bar `opennessScale`, and T9 prices it.
+     *
+     *  ⚠ AND THE FLOOR IS GUARANTEED BY THE **WRITER'S** CLAMP AND BY NOTHING IN THE READER, which
+     *  is stated out loud because it is a coupling across two functions: `habituationScale` is the
+     *  ruled formula verbatim and carries no second clamp, so it is total and correct on
+     *  `[0, habituationFullWeeks]` – the interval `growHabituation` is pinned to keep the counter
+     *  inside. A counter forced past the cap by some future second writer would drive the scale
+     *  below this floor and, far enough, through zero into a spotlight that PAYS her. The one writer
+     *  and its cap pin are what stand between; a second writer must re-read this note. */
+    habituationFloor: 0.25,
+    /** ⭐⭐⭐ HOW OFTEN A PRIVATE LIFE GETS OUT – the BASE weekly probability that the world learns
+     *  about an attachment nobody outside the family knows of (who-she-is §3c-bis, «the leak
+     *  hazard»). It is the bottom of a product and never the rate itself:
+     *
+     *      leakBasePerWeek × leakOpennessMult[openness] × (fameAt(world, week) / ECONOMY.fame.cap)
+     *
+     *  ⚠⚠ THE THIRD FACTOR IS THE ARCHITECT'S **RULING I** AND IT IS NOT OPTIONAL. The wave brief
+     *  dropped the fame term on the grounds that «more lenses on a bigger star is already priced by
+     *  the news gate»; measured, it is not – inside the news bands fame still runs the whole scale, so under
+     *  the brief's spelling a girl at 100 leaked at EXACTLY the rate of a girl at 30. That is a
+     *  different claim, not a smaller one, and who-she-is §3c-bis's own sentence («scales by fame ×
+     *  EXPRESSED openness – more lenses on a bigger star») wins under the wave's single-source rule.
+     *  ⚠ IT ADDS NO TUNABLE: `ECONOMY.fame.cap` is 100 and this block READS it, never writes it (the
+     *  wave's §8), and the draw COUNT does not move – still one uniform per eligible episode-week.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**, like everything in this block bar `opennessScale`. At 0.008
+     *  the fame factor re-prices the median by roughly 2× against a fameless spelling, and that
+     *  re-pricing is T9's to measure and the owner's to rule. */
+    leakBasePerWeek: 0.008,
+    /** ⭐⭐⭐ NEW COUPLES GET CAUGHT – the owner's D5 (14.09, «давай попробуем как ты предлагаешь»):
+     *  the leak hazard runs `leakFreshMult` times hotter while the episode is at most
+     *  `leakFreshWeeks` old (`world.week − sinceWeek <= leakFreshWeeks`). The design's own reason:
+     *  the founding scene («a parent learning about a boyfriend from a photograph») fired 0 times
+     *  in 93 leaks across 160 bench careers, because the parent's disclosure lag is short against
+     *  the time a flat hazard needs – and the girl whose untold window is LONG is exactly the
+     *  private girl the scene is about. First dinners are where the lenses are; an old couple is
+     *  furniture. ⚠ BOTH §4-CLASS PROPOSALS, bench-priced predicted-first (T9 prints the overtake
+     *  share per arm), his word after the numbers – the MECHANISM is ruled, the sizes are not. */
+    leakFreshWeeks: 8,
+    leakFreshMult: 4,
+    /** ⭐⭐⭐ WHO IS SIMPLY SEEN – the multiplier on the leak hazard, read off her EXPRESSED openness
+     *  (§0.6: mechanics read expression, voices read birth). §3c-bis: «an open girl is simply seen
+     *  (dinner, a hand held at an airport)», a private one is not.
+     *
+     *  ⚠ IT IS THE MIRROR OF `opennessScale` AND POINTS THE OTHER WAY, which is the whole design and
+     *  is easy to «fix» by accident: the open girl leaks FOUR times as often (×2.0 against ×0.5) and
+     *  pays HALF as much for each exposure (×0.75 against ×1.5). Openness is not a good or a bad
+     *  trait here; it decides which half of the bargain she gets.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. T9's bench prices the pair, and the census prints share
+     *  leaked and median lag per temperament (§3c-bis's own expectation: «open leaks often/true,
+     *  private rarely/late/wrong»). */
+    leakOpennessMult: { open: 2.0, private: 0.5 },
+    /** ⭐⭐ THE NOTICED BAND'S DISCOUNT ON THE LEAK – D1's «иногда» made a number: at 101–200 the
+     *  world glances rather than watches, so the hazard runs at half weight; at ≤ 100 the scale is
+     *  1 by construction (the band check multiplies by this only at 'noticed'). ⚠ A PROPOSAL –
+     *  the bands are the owner's, this discount is the architect's, T9 prices it. */
+    noticedLeakScale: 0.5,
+    /** ⭐⭐⭐ HOW WRONG THE WORLD GETS IT – the share of leaks that land as a WRONG story, by
+     *  EXPRESSED openness. who-she-is §3c-bis's own gem: «openness controls not only the SPEED of a
+     *  leak but its ACCURACY. An open girl's life leaks EARLY and roughly TRUE – the world saw it,
+     *  it is ordinary. A private girl's life leaks LATE and WRONG – the tabloid misattribution
+     *  engine.»
+     *
+     *  ⚠⚠ THE **LATE** HALF IS EMERGENT AND THERE IS NO LAG TERM ANYWHERE – the brief's own ⚠, kept
+     *  here because this is the constant a later reader would reach for to «add the lateness». It
+     *  falls out of `leakOpennessMult` alone: a private girl's hazard is a quarter of an open one's,
+     *  so her story breaks later in the episode by arithmetic and not by a second number. A lag term
+     *  added beside this one would price the same fact twice. T9's census measures the median lag
+     *  rather than setting it.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**. */
+    wrongShare: { open: 0.15, private: 0.6 },
+    /** ⭐⭐⭐ HOW LONG A PUBLIC FACT STAYS **NEWS** – the booth's window, in weeks, measured from the
+     *  week the fact itself became public (`publicWeek` for «someone is there», `endedWeek` for «it
+     *  is over»). Inside it the booth may touch the fact once; outside it the fact is old and is
+     *  never voiced at all (T7, `world/lifeBeat.ts` §10).
+     *
+     *  ⚠⚠ IT IS A WINDOW ON THE **FACT**, NOT A COOLDOWN ON THE BOOTH, and the difference is the
+     *  whole design. A cooldown would make the mention a rate the booth is allowed; this makes it a
+     *  property of the STORY – a headline six weeks old is not what a commentator fills a changeover
+     *  with. The once-ness is carried by the two `aired*` stamps and by nothing here, so shortening
+     *  this number can only ever make the booth say LESS, never say it twice.
+     *
+     *  ⚠ INCLUSIVE, AND THE COMPARISON IS `week − factWeek <= newsWindowWeeks` – «a fact OLDER than
+     *  `newsWindowWeeks` is never aired», the brief's own sentence, so a fact of exactly this age
+     *  still airs and one week older never does. Both edges are pinned
+     *  (`tests/wave6-booth-channel.test.ts` §C) precisely because an off-by-one here is invisible in
+     *  play.
+     *
+     *  ⚠⚠ A §4 PROPOSAL AND **UNRULED**, like everything in this block bar `opennessScale`. The
+     *  brief's §4 lists it under «Proposals – NONE ruled, all bench-priced predicted-first, his word
+     *  after» («`newsWindowWeeks 6`»). Six weeks is the brief's number and T9 prices it; nothing in
+     *  T7's pins asserts the 6 – they read this constant, so a re-tune moves both sides of every
+     *  expectation together. */
+    newsWindowWeeks: 6,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------
@@ -5401,6 +5748,12 @@ export const ECONOMY = {
         // roundest possible price. Nothing depends on the number: units are fractional, so a $1,000
         // opening stake buys exactly one and a $1,500 one buys one and a half.
         unitBaseCents: 1_000_00,
+        // ⭐⭐⭐ T12, THE OWNER 14.09 – AND IT IS THE ROW HE CAUGHT. «у рабочей семьи, если вложить
+        // все деньги сразу со стартом карьеры в депозит, сразу же приходят спонсорские деньги.» The
+        // need gate under the cameo sponsor now reads `reachableFundsCents` (world/assets.ts), and
+        // this flag is what tells it that money put here has not left the family. See `ShopItem.
+        // cashParking` for why the mark is on the shelf rather than in the gate.
+        cashParking: true,
       },
       {
         id: 'index-fund',
@@ -5498,6 +5851,18 @@ export const ECONOMY = {
         // ninth and tenth seasons of a career, which is where a family that has been earning long
         // enough to buy at a peak actually is. The market rides either side of that all the way.
         unitBaseCents: 4_000_00,
+        // ⭐⭐⭐ T12, THE OWNER 14.09 – THE SECOND PARKING PLACE, and it is in for the same reason the
+        // deposit is: «Это надо починить, чтобы поддержка приходила реально тогда, когда вообще уже
+        // край и денег нет, а не только кошельком мыслить.» He named the deposit because that is
+        // what he parked in; a fix that saw only the row he happened to use would have been the
+        // same defect with one more week of life in it.
+        //
+        // ⚠ ITS WORTH MOVES AND THAT IS FINE, which is the one thing worth saying out loud about
+        // this row rather than the deposit: `volBps` above means a fund holding can be worth less
+        // than the family put in, and on a bad market year it can fall THROUGH the gate and let the
+        // cameo write. That is not a leak – it is need, correctly seen, because the money the family
+        // can actually reach really did shrink. `revalueAssets` has already priced it for the week.
+        cashParking: true,
       },
       // ⚙ 26.08, the owner: «давай гэп сделаем скромнее пока что от 60 до 300к». A five-fold spread
       // rather than the twenty-two-fold one the first draft drew – from $60k to $300k every rung is

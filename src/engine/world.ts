@@ -406,6 +406,20 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // census sweep the table without posing a world per cell. ⚠ `endsHazardFor` READS `ECONOMY.life
 // .endsMult` AND NEVER `temperamentMult` (ruling E) – two columns of one spec table, different
 // numbers, and the reason the ends multipliers got a record of their own.
+// ⭐⭐⭐ v77 T6 ADDS THE LEAK – THE FIRST THING IN THIS LAYER THAT IS NOT ABOUT THE FAMILY AT ALL.
+// `rollLeak` is the weekly roll the tick calls THIRD of the five (world/phaseHerWeek.ts – between the
+// arrival and the delivery, and both neighbours are argued at the call site), and `leakEligible` /
+// `leakHazardFor` / `leakWrongShareFor` are the pure pieces it is assembled from, on
+// `arrivalHazardFor`'s own primitives doctrine so T9's bench and the corridor tests sweep the table
+// without posing a world per cell. ⚠ `leakHazardFor` CARRIES A **FAME** FACTOR (the architect's
+// ruling I, restoring who-she-is §3c-bis's own formula against the brief's spelling), which is why it
+// takes two arguments where `endsHazardFor` takes one; `ECONOMY.fame.cap` is READ there and never
+// written, the wave's §8.
+// ⭐⭐⭐ v77 T7 ADDS THE BOOTH – the other half of the same day, and the only name in this layer the
+// tick does NOT call from the life block. `airBoothMention` runs in `playHerWeek`'s play arm (§10's
+// banner carries the measurement: two phases later, where the match she is about to play is in
+// hand), and `boothMentionDue` is the pure licence it is assembled from – the fact, the window and
+// the once-ness stamps, asked of the episode list and answered without a draw.
 // ⭐⭐⭐ v75 T4 ADDS THE ENDING'S CONVERSATION: `drawEndsRead` is the space-vs-company read – the sixth
 // and last key of the private life, keyed on the ENDING's week (ruling G.1) and weighted by
 // who-she-is §4's own «Wants weights» row, so it is `drawPartnerWants`' twin and not a coin flip.
@@ -413,8 +427,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
-export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -428,8 +442,8 @@ export { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS }
 // ⭐⭐⭐ ROUND 29 PART THREE #16 adds §4's moving price – `assetWorthCents` (the ONE thing that turns
 // a holding into a number now that a market is in it), `marketSeasonMove` and `reportMarketSeason`.
 // The path itself is `world/market.ts` and is re-exported one line down.
-import { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents } from './world/shop'
-export { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents }
+import { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reachableFundsCents, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents } from './world/shop'
+export { ASSET_NAME_MAX_CHARS, assetDelivered, assetEarningsRateCents, assetEntryPriceCents, assetHeldWeeks, assetNameOf, assetNameSuggestions, assetUpkeepCents, assetValueCents, assetWorthCents, avgUnitPriceCents, buyAsset, deliverAssets, deliveredAssets, grantedVacationIds, isNameable, marketSeasonMove, nameSuggestionsFor, ownedAssets, ownsDeliveredOfFamily, reachableFundsCents, reportMarketSeason, revalueAssets, sanitiseAssetName, sellAsset, sellableAsset, shopCatalogue, shopItem, shopView, unitPriceCents, unitPriceHistory, weeklyAssetUpkeepCents }
 import { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio } from './world/market'
 export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave, worstCrashFreeRatio, worstMarketRatio }
 // ⭐⭐ ROUND 29 PART FOUR P7 – FAME (the accounted stock, world/fame.ts) and THE PARENT'S
@@ -437,6 +451,16 @@ export { marketCrash, marketCrashFellIn, marketCrashLog, marketIndex, marketWave
 // Re-exported under the historical convention; zero draws anywhere behind these names.
 import { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt, slamDebutWeekOf } from './world/fame'
 export { completedShootsByBand, completedShootWeeks, fameAt, fameEventWeeks, fameFloorOf, fameShootMultOf, shootFloorDecayAt, slamDebutWeekOf }
+// ⭐⭐⭐ WAVE 6 T2 – THE SPOTLIGHT'S LEDGER (world/spotlight.ts): is she news, and what put her in the
+// light this week. It READS fame and never tunes it (the wave's §8), and like the stock above it
+// draws nothing and writes nothing – a week's exposure is a question asked of records the world
+// already keeps. Re-exported under the historical convention so the barrel stays the one door.
+// ⭐ v77's T7 TAKES TWO MORE NAMES OFF THE SAME LEAF: `atOrAboveStageBar` (the booth's licence asks
+// the one question `'stage'` already asks about a rung) and `boothPrivateLifeAt` (what the booth
+// touched at a week, read off the episode's stamps for the snapshot). Both are pure reads, like
+// everything else in that module.
+import { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, newsStandingOf, type ExposureEvent, type ExposureKind, type NewsStanding } from './world/spotlight'
+export { atOrAboveStageBar, boothPrivateLifeAt, exposureEventsOf, newsStandingOf, type ExposureEvent, type ExposureKind, type NewsStanding }
 // ⭐⭐⭐ ROUND 32 #4 – THE BRAND'S SLOW STOCK (world/brandStrength.ts). Income keeps reading fame;
 // the WORTH reads this. Zero draws, nothing written per week – see the module header.
 import { brandStrengthAt, strengthDecayAt } from './world/brandStrength'
@@ -1693,6 +1717,22 @@ export function createWorld(
     // the desync `accrueSpirit`'s «one weekly function, two numbers» rule refuses one layer down.
     wallsLean: { open: 0, reg: 0 },
     wallsFlipped: { open: false, reg: false },
+    // ⭐ v77 (the spotlight, wave 6): SHE HAS NEVER LIVED A WEEK KNOWN, and on week 0 she could not
+    // have – she is eight, and the counter only moves while she LIVES known (`newsStandingOf ===
+    // 'known'` since D1, 14.09). Zero is the identity
+    // here in the plainest sense and not a placeholder for one, and it is exactly what the
+    // v76 -> v77 migration back-fills on every older save, so a migrated career and a fresh one are
+    // the same shape at the moment they load.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `wallsFlipped` above has stopped being it – the same
+    // handover the wave-5 six made to it, `spiritShock` to them, `loveEpisodes` to `spiritShock` and
+    // `lifeLog` to `loveEpisodes`. The frozen-career identities reproduce each older schema's hashes
+    // by dropping exactly the keys appended since, so every key must stay in the order it was
+    // appended in (`careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts peels in reverse, newest
+    // first). ⚠⚠ v77's OTHER FOUR FIELDS ARE NOT HERE AND CANNOT BE: they live on `LoveEpisode`
+    // ROWS, written at the one `loveEpisodes.push` in world/lifeBeat.ts, which is why that version is
+    // the first this ladder has ever had to peel INSIDE a list.
+    spotlightHabituation: 0,
   }
   addEvent(world, {
     week: 0,

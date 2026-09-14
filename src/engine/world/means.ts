@@ -84,7 +84,21 @@ export function meansOfCents(walletCents: number): FamilyMeans {
  *  Defensive `?? 0` because `kidFundsCents` arrived in v54 and probe worlds hand-built in tests
  *  predate it – the same courtesy `accrueFinance` extends to `careerTotals`. */
 export function householdWalletCents(world: WorldState): number {
-  return world.fundsCents + (world.kidFundsCents ?? 0)
+  // ⭐⭐ D7/Q15 (14.09): PLUS THE PARKED CASH – round 26 #4 reopened through a new parking place.
+  // Measured before the fix: the birthday hardship licence read `tight` on 51.0% of a parked
+  // working career's weeks against 0.0% unparked – «She was looking fares home at two in the
+  // morning» over a family holding its whole fortune, the exact sentence this module was built to
+  // refuse. The mark is the catalogue's own `cashParking` flag and the arithmetic mirrors
+  // `reachableFundsCents` (world/assets.ts) rather than importing it – this module's own header
+  // forbids a runtime edge toward world.ts, the same wall ruling J built around spirit.ts, and the
+  // equivalence is PINNED in the means test rather than trusted (the wave-5 re-spell doctrine).
+  let parked = 0
+  for (const owned of world.assets ?? []) {
+    const item = ECONOMY.shop.catalogue.find((i) => i.id === owned.id)
+    if (!item || !('cashParking' in item) || item.cashParking !== true) continue
+    parked += owned.valueCents
+  }
+  return world.fundsCents + parked + (world.kidFundsCents ?? 0)
 }
 
 /** ⭐ THE ONE QUESTION, ASKED ONCE. Same shape as `familyHomeVoice` / `collegeVoice` in

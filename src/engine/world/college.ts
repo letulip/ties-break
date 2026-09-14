@@ -18,6 +18,7 @@
 // ⚠ RNG: ONE SUB-STREAM, `seed:callup:<week>`, derived at the call site and persisting nothing
 // (CLAUDE.md invariant 2). Everything else here is pure state – a counter, two measurements and an
 // append. The frozen MAIN capture cannot see any of it.
+import { reachableFundsCents } from './assets'
 import { rngFromSeed } from '../rng'
 import { coachFactor } from '../coach'
 import { SKILL_KEYS, type KidSkills } from '../development'
@@ -99,7 +100,9 @@ export function collegeRecruitViewOf(world: WorldState): CollegeRecruitView {
     // sub-stream at the call site and persists nothing, and `fundsCents` is a read. The frozen MAIN
     // capture cannot see this (CLAUDE.md invariant 2).
     familyIncomeCents: parentIncomeForWeekCents(world.seed, world.profile.background, world.week) * WEEKS_PER_YEAR,
-    familyAssetsCents: world.fundsCents,
+    // ⭐ D7 (14.09): affordability reads the money the family can REACH – parking used to make a
+    // family look POORER on the college sheet (the questions doc §16's own aside).
+    familyAssetsCents: reachableFundsCents(world),
   }
 }
 

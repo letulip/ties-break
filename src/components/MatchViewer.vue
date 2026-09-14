@@ -12,6 +12,10 @@ import { buildTimeline, computeEndsSwaps, type EndsState } from '../viz/timeline
 import { drawScene, type SceneState } from '../viz/courtRenderer'
 import type { Viewport } from '../viz/geometry'
 import { buildCommentary } from '../viz/commentary'
+// ⭐ v77 T7 – the WIRE shape of the booth's packet, imported rather than re-spelled: this component
+// receives the engine's two facts and adds the one fact it owns (which chair is hers) on the way
+// into the narrator. See the `buildCommentary` call below.
+import type { BoothPrivateLife } from '../shared/protocol'
 import { buildPreview, type PreviewEvent } from '../viz/preview'
 import { buildClockTrack, clockSecondsAt, formatMatchClock, type ClockTrack } from '../viz/matchClock'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
@@ -152,6 +156,16 @@ const props = withDefaults(
      *  and for them "he was not there" is the truth. It also keeps every existing caller's log
      *  byte-identical, which is what makes this additive. */
     coachTravelled?: boolean
+    /** ⭐⭐⭐ v77 (the spotlight – T7): the booth is touching her private life at this match, and what
+     *  it may say. The ENGINE decided it – the licence, the news window and the once-ness stamp are
+     *  all `world/lifeBeat.ts` §10's, carried on `PendingView.boothPrivateLife` – so this component
+     *  hands the answer over and holds no opinion about whether a thing is airable, exactly as it
+     *  does with `coachTravelled`.
+     *
+     *  ⚠ null (default) IS A REAL ANSWER, like `previewEvent`'s: the booth said nothing at this
+     *  match, which is almost every match and every existing caller. It keeps their logs
+     *  byte-identical, which is what makes this additive. */
+    boothPrivateLife?: BoothPrivateLife | null
     /** ⭐ ROUND 39 #15a – ONE QUIET LINE UNDER THE RETIREMENT POPUP'S REASON, for the caller that
      *  knows more about the moment than the model does. The prologue's Local Open passes the
      *  parent's reassurance here (`LOCAL_OPEN_COPY.hurtNote` – a prologue weekend stores no injury,
@@ -164,7 +178,7 @@ const props = withDefaults(
      *  existing caller's popup is byte-identical. */
     hurtNote?: string | null
   }>(),
-  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, hurtNote: null },
+  { rankA: null, rankB: null, finalMatch: false, temperatureC: null, previewEvent: null, proceedLabel: null, coachTravelled: false, boothPrivateLife: null, hurtNote: null },
 )
 // `finish` = "the player is done with this match". ⚠ R17 #10 MOVED WHEN IT FIRES, NOT WHAT IT MEANS:
 // with a `proceedLabel` it waits for the Proceed press, and without one it still fires the instant
@@ -829,8 +843,14 @@ const { playerName, kidSide, heroSide, SIDES, leftSide, rightSide, setCells, cou
 // narrator. Breaking the arguments across lines would defeat a real check for a formatting taste.
 // (And this note may not spell the pinned literal out: the guard's negative arm reads the whole file
 // and would find its own name quoted here. It caught exactly that on the first draft.)
+// ⭐⭐⭐ v77 T7 - AND THE SIXTH IS THE BOOTH'S PRIVATE-LIFE PACKET, on exactly the fifth's principle.
+// The ENGINE decided the mention (`world/lifeBeat.ts` §10: the licence, the news window, the
+// once-ness stamp) and `PendingView.boothPrivateLife` carries the two facts; this line adds the ONE
+// fact the engine cannot know - which chair is hers - and hands the pair over. `kidSide` null is a
+// rival's replay, where nobody's private life is the family's, so the booth is silent there by
+// construction rather than by a rule anybody has to remember.
 const commentary = computed(() =>
-  buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent, props.coachTravelled && kidSide.value !== null ? { side: kidSide.value } : null),
+  buildCommentary(props.match, props.playerA.name, props.playerB.name, props.previewEvent, props.coachTravelled && kidSide.value !== null ? { side: kidSide.value } : null, props.boothPrivateLife && kidSide.value !== null ? { ...props.boothPrivateLife, side: kidSide.value } : null),
 )
 const modeCommentary = computed(() =>
   viewMode.value === 'key' ? commentary.value.filter((b) => b.keyMoment) : commentary.value,

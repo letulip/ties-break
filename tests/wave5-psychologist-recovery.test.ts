@@ -259,6 +259,10 @@ function withEndings(world: WorldState, endedWeeks: readonly number[]): WorldSta
     knownWeek: null,
     wants: 'private',
     partnerId: `p:${ended - 10}`,
+    publicWeek: null,
+    publicWrong: false,
+    airedMetWeek: null,
+    airedEndedWeek: null,
   }))
   return world
 }
@@ -335,7 +339,7 @@ function spiritWeek(world: WorldState): void {
   expect(works, 'this fixture is neither frozen nor booked off – the flag IS the predicate here').toBe(
     world.psychologistHired ?? false,
   )
-  accrueSpirit(world, works)
+  accrueSpirit(world, works, [])
 }
 
 /** Walk `weeks` ticks of the weekly rule and hand back the spirit ladder, the weeks the mark was
@@ -955,7 +959,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
 
     world.week = week
     expect(psychologistWorksThisWeek(world), 'the predicate the BILL reads says he is stood down').toBe(false)
-    accrueSpirit(world, psychologistWorksThisWeek(world))
+    accrueSpirit(world, psychologistWorksThisWeek(world), [])
     expect(world.spirit, 'her own 5 and not one point of the top rung’s 4').toBe(35)
     expect(world.spiritShock?.weeks, '⭐ and the counter never opened – absent, not zero').toBeUndefined()
     expect(world.psychologistHired, '⭐ SUSPENDED, NOT CANCELLED – the flag survives the freeze').toBe(true)
@@ -964,7 +968,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
     // ...and the first week out of the freeze he is working again, by himself, with no re-hire.
     world.week = week + 1
     expect(psychologistWorksThisWeek(world), 'the freeze is over').toBe(true)
-    accrueSpirit(world, psychologistWorksThisWeek(world))
+    accrueSpirit(world, psychologistWorksThisWeek(world), [])
     expect(world.spirit, 'her 5 plus the top rung’s 4, from 35').toBe(44)
     expect(world.spiritShock?.weeks, 'the first week he is credited with').toBe(1)
   })
@@ -975,7 +979,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
 
     world.week = week
     expect(psychologistWorksThisWeek(world), 'booked off – the week the bill is not charged').toBe(false)
-    accrueSpirit(world, psychologistWorksThisWeek(world))
+    accrueSpirit(world, psychologistWorksThisWeek(world), [])
     // 30 returns 5 to 35, and the holiday itself is +5 × 0.8 = +4. WITH the slope it would have been
     // 39 + 4 = 43 – a week the family paid nothing for, buying four points.
     expect(world.spirit, 'her own 5, plus the holiday, and nothing of his').toBe(39)
@@ -985,7 +989,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
 
     world.week = week + 1
     expect(psychologistWorksThisWeek(world), 'the week after the holiday he is back').toBe(true)
-    accrueSpirit(world, psychologistWorksThisWeek(world))
+    accrueSpirit(world, psychologistWorksThisWeek(world), [])
     expect(world.spirit, 'her 5 plus the top rung’s 4, from 39, and no holiday row').toBe(48)
     expect(world.spiritShock?.weeks, 'the first week he is credited with').toBe(1)
   })
@@ -1011,7 +1015,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
       for (let k = 0; k < 3; k++) {
         world.week = week + k
         const before = world.spiritShock
-        accrueSpirit(world, psychologistWorksThisWeek(world))
+        accrueSpirit(world, psychologistWorksThisWeek(world), [])
         arm.spirit.push(world.spirit)
         if (before !== null && world.spiritShock === null) arm.weeks = before.weeks ?? 0
       }
@@ -1049,7 +1053,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
       for (let k = 0; k < 6; k++) {
         world.week = week + k
         if (!psychologistWorksThisWeek(world)) stoodDown++
-        accrueSpirit(world, psychologistWorksThisWeek(world))
+        accrueSpirit(world, psychologistWorksThisWeek(world), [])
       }
       expect(stoodDown, `${seed}: the walk really met the stand-down`).toBe(2)
       expect(rngKeys, `${seed}: the predicate, the stand-down and the resume on no stream`).toEqual([])
@@ -1066,7 +1070,7 @@ describe('wave 5 T4b F – the two weeks the family is not billed are two weeks 
     world.week = week
     world.injury = { kind: 'knee', severity: 'moderate', weeksRemaining: 8, totalWeeks: 10, sinceWeek: week - 2 } as WorldState['injury']
     expect(psychologistWorksThisWeek(world), 'a layoff does not stand him down').toBe(true)
-    accrueSpirit(world, psychologistWorksThisWeek(world))
+    accrueSpirit(world, psychologistWorksThisWeek(world), [])
     // her 5 + the top rung's 4, and then the laid-up week's own row (−1 × 0.8 = −0.8, to one tenth).
     expect(world.spirit, 'the slope is spent on a week she cannot play').toBe(38.2)
     expect(world.spiritShock?.weeks, 'and the week is counted').toBe(1)

@@ -80,6 +80,15 @@ import {
   // banner cannot come to disagree with `ECONOMY.life.endsMult` (its own primitives doctrine: it
   // takes a temperament, not a world, so the census sweeps the table without posing four careers).
   endsHazardFor,
+  // ⭐⭐⭐ v77's T9 (wave 6) – the leak prints. `fameAt` is read IN-WEEK at the leak (never
+  // retrospectively: the stamps fame folds are not all permanent, and a late read would be a
+  // different question), and the two hazard readers are the ENGINE's own so this census cannot grow a
+  // second copy of the rule it is measuring.
+  fameAt,
+  leakEligible,
+  leakHazardFor,
+  leakWrongShareFor,
+  newsStandingOf,
   kidAgeExact,
   loveEpisodesOf,
   lifeLogOf,
@@ -191,6 +200,24 @@ interface EpisodeRow {
    *  late-share miss can be attributed to the table or to the shave rather than guessed at */
   bandAtArrival: BondBand
   endedWeek: number | null
+  /** ⭐⭐⭐ v77's T9 – THE LEAK, read off the engine's own four v77 stamps.
+   *
+   *  ⚠ `publicWeek` IS THE WEEK THE WORLD LEARNED and `knownWeek` the week the PARENT did; they never
+   *  merge (the wave's §0.3), and the whole point of §6d is that the second can come after the first. */
+  publicWeek: number | null
+  publicWrong: boolean
+  /** fame at the leak week, read IN-WEEK – ruling I restored this factor to the hazard, so a census
+   *  that printed only openness would be reporting half the model. */
+  fameAtLeak: number
+  /** ⭐⭐ THE OVERTAKE – «a parent learning about a boyfriend from a photograph», the founding scene.
+   *  ⚠ OBSERVED AND NEVER RE-SPELLED: the flag is «the leak MOVED `knownWeek`», read as a difference
+   *  across the tick, not as a second copy of `rollLeak`'s own `knownWeek === null || knownWeek >
+   *  world.week` condition. A bench that re-spells the condition it is measuring is testing its own
+   *  arithmetic. */
+  overtook: boolean
+  /** the week the parent would have been told ANYWAY – `knownWeek` as it stood before the leak, kept
+   *  so the overtake's SIZE (how many weeks the headline cut off) is readable and not just its count. */
+  knownWeekWithoutLeak: number
 }
 
 interface CareerRow {
@@ -237,6 +264,22 @@ interface CareerRow {
   /** ⭐ the fairness corridor's two numbers, read at the horizon off the engine's own counters. */
   matches: number
   wins: number
+  /** ⭐⭐⭐ v77's T9 – THE LEAK HAZARD'S OWN DENOMINATOR: the weeks a uniform was actually DRAWN, i.e.
+   *  the weeks `leakEligible` held. A «share of episodes leaked» is a fact about the biography; a
+   *  «leaks per drawn week» is a fact about the CONSTANT, and the owner is ruling on the constant.
+   *  ⚠ ASKED OF THE ENGINE'S OWN PREDICATE and never re-spelled – the same reason this file asks
+   *  `endsHazardFor` rather than re-deriving `ECONOMY.life.endsMult`. */
+  leakDrawWeeks: number
+  leakDrawFameSum: number
+  /** ...and the same two split by fame band, which is the ONLY way ruling I's third factor is visible:
+   *  under the brief's dropped-fame spelling a girl at 100 leaked at exactly the rate of a girl at 30,
+   *  so a census that printed openness alone would report a model the engine does not run. */
+  leakDrawByBand: number[]
+  leakFiredByBand: number[]
+  /** ⭐ D1 (14.09) – the same denominator split by the STANDING the gate now reads: at 'noticed' the
+   *  hazard runs at `noticedLeakScale`, at 'known' at full weight. The share of the draw each band
+   *  held is §6d's own context line under the owner's two rank numbers. */
+  leakDrawByStanding: { noticed: number; known: number }
 }
 
 interface WalkOpts {
@@ -280,6 +323,22 @@ interface WalkOpts {
 const CENSUS_POLICY: Policy = process.argv.includes('--policy') && process.argv[process.argv.indexOf('--policy') + 1] === 'grinder' ? POLICIES[0] : POLICIES[1]
 const CENSUS: WalkOpts = { policy: CENSUS_POLICY, decides: true, weeks: WEEKS }
 
+/** ⭐⭐⭐ v77's T9 – THE FAME BANDS THE LEAK IS READ IN, and they are THIS BENCH'S and not the game's:
+ *  there are no fame bands in the codebase at all (the architect's ruling E measured that, back when
+ *  the news gate was still the fame bar `newsFameMin` – D1 has since replaced that gate with the
+ *  standing, and FAME survives only where these bands read it: ruling I's hazard factor). They exist
+ *  here for one purpose – to make that third factor visible – and they are spelled as an open upper
+ *  edge so a re-tuned `ECONOMY.fame.cap` cannot silently drop the top band on the floor. */
+const FAME_BANDS: readonly { label: string; from: number; to: number }[] = [
+  { label: '30–44', from: 30, to: 45 },
+  { label: '45–59', from: 45, to: 60 },
+  { label: '60–79', from: 60, to: 80 },
+  { label: '80+', from: 80, to: Number.POSITIVE_INFINITY },
+]
+function fameBandIndex(fame: number): number {
+  return FAME_BANDS.findIndex((b) => fame >= b.from && fame < b.to)
+}
+
 function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow {
   // ⚠ THE TEMPERAMENT IS ASSIGNED AND NOT DRAWN, which is what makes the four columns PAIRED:
   // the same 200 seeds are played four times over, so a difference between two columns is who she
@@ -316,6 +375,11 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
     expressed: temperament,
     matches: 0,
     wins: 0,
+    leakDrawWeeks: 0,
+    leakDrawFameSum: 0,
+    leakDrawByBand: FAME_BANDS.map(() => 0),
+    leakFiredByBand: FAME_BANDS.map(() => 0),
+    leakDrawByStanding: { noticed: 0, known: 0 },
   }
   let prevFlipped: Record<WallsAxis, boolean> = { open: false, reg: false }
   const openness = temperamentOpenness(temperament)
@@ -325,8 +389,14 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
   let bondEntering = world.bond
   let seen = 0
 
+  /** ⭐ v77's T9 – the parent's own date for every live episode, as it stood at the HEAD of the week.
+   *  The overtake is then a DIFFERENCE observed across the tick rather than a re-spelling of the rule
+   *  that produced it. Keyed by episode id, rebuilt each week – at most a handful of rows. */
+  const knownBefore = new Map<string, number | null>()
   for (let i = 0; i < opts.weeks; i++) {
     bondEntering = world.bond
+    knownBefore.clear()
+    for (const e of loveEpisodesOf(world)) knownBefore.set(e.id, e.knownWeek)
     // ⚠ `drainKnocks: false` – `decides` IS AN ARM OF THIS BENCH, so the shared drain may not answer
     // a knock this walk deliberately leaves open (the T6b law). The `opts.decides` branch below calls
     // `drainKnock` itself, which keeps the arm exactly where it was.
@@ -382,7 +452,59 @@ function walk(seed: string, temperament: Temperament, opts: WalkOpts): CareerRow
         rawLag: drawRawLag(world.seed, e.sinceWeek, openness),
         bandAtArrival: bondBandOf(bondEntering),
         endedWeek: null,
+        publicWeek: null,
+        publicWrong: false,
+        fameAtLeak: Number.NaN,
+        overtook: false,
+        knownWeekWithoutLeak: e.knownWeek,
       })
+    }
+
+    // ⭐⭐⭐ v77's T9 – THE LEAK, CAUGHT IN-WEEK. `rollLeak` stamps `publicWeek = world.week` inside the
+    // life block, so the week it fired is the week to read fame on: `fameAt` folds stamps the engine
+    // prunes on its own schedule, and a retrospective read would be answering a different question
+    // from the one the hazard asked (ruling I's third factor is `fameAt(world, world.week − 1)`).
+    // ⚠ THE ROW IS FOUND BY `sinceWeek`, which is the census's own join key one loop down – an
+    // episode's arrival week is unique within a career by the cooldown's construction.
+    // ⚠⚠ THE DRAW-WEEK COUNT IS TAKEN **AFTER** THE STEP, AND SINCE D1 (14.09) THE GATE IS THE
+    // STANDING: `leakEligible` reads `newsStandingOf(world) !== 'quiet'` – present-tense off the
+    // cached rank, which is «as of the last closed fold» by the predicate's own contract – so this
+    // post-step read is the tick's own expression on almost every week. The two exceptions are named
+    // rather than hidden: a week the leak FIRED on (the stamp it writes closes its own gate – which
+    // is exactly why the `|| leakedNow` below is here and not a courtesy), and a reveal week whose
+    // step-tail rank re-fold crossed a band edge between the tick's gate and this read – boundary by
+    // construction, stated, not corrected.
+    const leakedNow = loveEpisodesOf(world).some((e) => e.publicWeek === world.week)
+    if (leakEligible(world) || leakedNow) {
+      const f = fameAt(world, world.week)
+      row.leakDrawWeeks++
+      row.leakDrawFameSum += f
+      const band = fameBandIndex(f)
+      if (band >= 0) {
+        row.leakDrawByBand[band]++
+        if (leakedNow) row.leakFiredByBand[band]++
+      }
+      // ⭐ D1 – the drawn week's own band, for §6d's context line. A post-step 'quiet' here is the
+      // boundary case above; it lands in neither bucket, so the two may sum a whisker under
+      // `leakDrawWeeks` and that gap IS the boundary count.
+      const st = newsStandingOf(world)
+      if (st === 'noticed') row.leakDrawByStanding.noticed++
+      else if (st === 'known') row.leakDrawByStanding.known++
+    }
+    for (const e of loveEpisodesOf(world)) {
+      if (e.publicWeek !== world.week) continue
+      const mine = row.episodes.find((x) => x.sinceWeek === e.sinceWeek)
+      if (mine === undefined) throw new Error(`${seed}: episode ${e.id} leaked in week ${world.week} and is not in this bench's record`)
+      mine.publicWeek = e.publicWeek
+      mine.publicWrong = e.publicWrong
+      // ⚠ THE HAZARD READS `world.week − 1` (ruling P's one horizon, `rollLeak`'s own line); this
+      //   records the week the STORY RAN, which is what a reader of the table means by «her fame when
+      //   it got out». Both are inside one week of each other and the choice is stated rather than
+      //   silent.
+      mine.fameAtLeak = fameAt(world, world.week)
+      const before = knownBefore.get(e.id)
+      mine.overtook = before !== undefined && before !== e.knownWeek
+      if (before !== undefined && before !== null) mine.knownWeekWithoutLeak = before
     }
 
     // ⚠ THE ENDING IS READ BEFORE ANYTHING IS ANSWERED, and that is what lets this file have no
@@ -1218,6 +1340,173 @@ rule('§6b. CENSUS v3 – the end-of-career EXPRESSED distribution, beside the c
   console.log('    !! A 100% DIAGONAL UNDER A CARING PARENT IS THE MODEL WORKING, not a dead column: the walls')
   console.log('       only move under kicks or under HER chosen work, and this arm does neither. §6a\'s grinding')
   console.log('       row is where the off-diagonal lives, and its collapse-flip count is printed there.')
+}
+
+// =================================================================================================
+// §6d. ⭐⭐⭐ CENSUS v4 – THE LEAK: how often her life gets out, how late, and how wrong (v77's T9)
+// =================================================================================================
+//
+// who-she-is §3c-bis's own claim, and the whole of what this section is for: «openness controls not
+// only the SPEED of a leak but its ACCURACY. An open girl's life leaks EARLY and roughly TRUE – the
+// world saw it, it is ordinary. A private girl's life leaks LATE and WRONG – the tabloid
+// misattribution engine.» Expected shape: **open = often / early / true, private = rare / late /
+// wrong**.
+//
+// ⚠⚠ AND THE HAZARD CARRIES A **FAME** FACTOR – the architect's RULING I, which restored the term the
+// wave brief had dropped:
+//
+//     leakBasePerWeek × leakOpennessMult[openness] × (fameAt(world, week) / ECONOMY.fame.cap)
+//
+// so this census must show FAME's effect and not only openness's. Under the brief's dropped-fame
+// spelling a girl at fame 100 leaked at exactly the rate of a girl at 30 – a different claim, not a
+// smaller one – and a table that printed openness alone would be reporting a model the engine does
+// not run. The band table below is the visible half of that factor.
+//
+// ⚠⚠ THE **LATE** HALF IS EMERGENT AND THERE IS NO LAG TERM. A private girl's hazard is a quarter of
+// an open one's, so her story breaks later in the episode by arithmetic. This section MEASURES the
+// median lag rather than setting it; a lag constant added beside `leakOpennessMult` would price the
+// same fact twice (the constant's own ⚠⚠ says so).
+//
+// ⚠⚠ EVERYTHING HERE SITS BEHIND THE STANDING GATE, WHICH IS THE OWNER'S OWN SINCE D1 (14.09):
+// `newsStandingOf` answers 'known' at WTA ≤ 100, 'noticed' at ≤ 200 (the hazard then runs at
+// `noticedLeakScale`), 'quiet' below – live professional points required either way. The fame BAR
+// this paragraph used to lean on (`newsFameMin`, ruling E's 33-save measurement) is gone: fame
+// stayed in the HAZARD (ruling I's third factor) and left the gate. So a census that prints few
+// leaks is not a census that failed – it is a grid whose careers never stood high enough, which is
+// a fact about the policy and the horizon, not about the leak's constants. `npm run bench:spotlight`
+// §1 prints the bands' own coverage and effect.
+
+rule(`§6d. CENSUS v4 – THE LEAK, per BIRTH temperament   [gate: standing ≠ 'quiet' – known ≤ ${ECONOMY.spotlight.newsRankKnown} / noticed ≤ ${ECONOMY.spotlight.newsRankNoticed} WTA, the owner's D1 14.09]`)
+{
+  const allEps = careers.flatMap((c: CareerRow) => c.episodes)
+  const leaked = allEps.filter((e) => e.publicWeek !== null)
+  console.log(`    the hazard : ${ECONOMY.spotlight.leakBasePerWeek}/wk × openness (open ×${ECONOMY.spotlight.leakOpennessMult.open} / private ×${ECONOMY.spotlight.leakOpennessMult.private}) × fame/${ECONOMY.fame.cap}   [ruling I – all PROPOSALS bar nothing]`)
+  console.log(`    wrong share: open ${ECONOMY.spotlight.wrongShare.open} · private ${ECONOMY.spotlight.wrongShare.private}   [PROPOSALS]`)
+  {
+    const drawTotal = careers.reduce((a: number, c: CareerRow) => a + c.leakDrawWeeks, 0)
+    const drawNoticed = careers.reduce((a: number, c: CareerRow) => a + c.leakDrawByStanding.noticed, 0)
+    const drawKnown = careers.reduce((a: number, c: CareerRow) => a + c.leakDrawByStanding.known, 0)
+    console.log(
+      `    the gate   : standing ≠ 'quiet' (D1) – of ${drawTotal} drawn weeks, 'noticed' held ${drawNoticed}` +
+        ` (${drawTotal > 0 ? `${((100 * drawNoticed) / drawTotal).toFixed(1)}%` : '–'}, hazard ×${ECONOMY.spotlight.noticedLeakScale})` +
+        ` and 'known' ${drawKnown} (${drawTotal > 0 ? `${((100 * drawKnown) / drawTotal).toFixed(1)}%` : '–'})`,
+    )
+  }
+  console.log('')
+  console.log(
+    `    ${pad('birth', 10)}${padL('episodes', 10)}${padL('leaked', 9)}${padL('share', 9)}${padL('median lag', 12)}${padL('wrong', 8)}${padL('wrong share', 13)}${padL('overtakes', 11)}${padL('overtake share', 16)}${padL('weeks cut', 11)}`,
+  )
+  for (const t of TEMPERAMENTS) {
+    const eps = episodesOf(t)
+    const lk = eps.filter((e) => e.publicWeek !== null)
+    const lags = lk.map((e) => (e.publicWeek as number) - e.sinceWeek)
+    const wrong = lk.filter((e) => e.publicWrong).length
+    const over = lk.filter((e) => e.overtook)
+    const cut = over.map((e) => e.knownWeekWithoutLeak - (e.publicWeek as number))
+    console.log(
+      `    ${pad(t, 10)}${padL(String(eps.length), 10)}${padL(String(lk.length), 9)}` +
+        `${padL(eps.length > 0 ? `${((100 * lk.length) / eps.length).toFixed(1)}%` : '–', 9)}` +
+        `${padL(lags.length > 0 ? median([...lags]).toFixed(0) : '–', 12)}${padL(String(wrong), 8)}` +
+        `${padL(lk.length > 0 ? `${((100 * wrong) / lk.length).toFixed(1)}%` : '–', 13)}` +
+        `${padL(String(over.length), 11)}${padL(lk.length > 0 ? `${((100 * over.length) / lk.length).toFixed(1)}%` : '–', 16)}` +
+        `${padL(cut.length > 0 ? median([...cut]).toFixed(0) : '–', 11)}`,
+    )
+  }
+  console.log('')
+  // --- the same, collapsed onto the axis the model is actually keyed on ----------------------------
+  console.log('    ...and collapsed onto BIRTH OPENNESS, which is the axis §3c-bis makes its claim on:')
+  console.log(`    ${pad('openness', 10)}${padL('episodes', 10)}${padL('leaked', 9)}${padL('share', 9)}${padL('median lag', 12)}${padL('wrong share', 13)}${padL('predicted wrong', 17)}${padL('draw weeks', 12)}${padL('leaks/draw wk', 15)}${padL('predicted', 11)}`)
+  for (const openness of ['open', 'private'] as const) {
+    const ts = TEMPERAMENTS.filter((t) => temperamentOpenness(t) === openness)
+    const eps = ts.flatMap((t) => episodesOf(t))
+    const lk = eps.filter((e) => e.publicWeek !== null)
+    const lags = lk.map((e) => (e.publicWeek as number) - e.sinceWeek)
+    const wrong = lk.filter((e) => e.publicWrong).length
+    const cs = careers.filter((c: CareerRow) => ts.includes(c.temperament))
+    const drawWeeks = cs.reduce((a: number, c: CareerRow) => a + c.leakDrawWeeks, 0)
+    const fameSum = cs.reduce((a: number, c: CareerRow) => a + c.leakDrawFameSum, 0)
+    // ⚠ THE PREDICTION IS THE ENGINE'S OWN FUNCTION AT THE MEAN FAME THIS ARM ACTUALLY LIVED, not a
+    //   re-typed formula: `leakHazardFor` is what `rollLeak` compares the uniform against, and the
+    //   mean fame is measured. So predicted-vs-measured here is a statement about the DRAW, not about
+    //   whether two copies of one product agree.
+    const meanFame = drawWeeks > 0 ? fameSum / drawWeeks : Number.NaN
+    const predictedRate = drawWeeks > 0 ? leakHazardFor(openness, meanFame) : Number.NaN
+    console.log(
+      `    ${pad(openness, 10)}${padL(String(eps.length), 10)}${padL(String(lk.length), 9)}` +
+        `${padL(eps.length > 0 ? `${((100 * lk.length) / eps.length).toFixed(1)}%` : '–', 9)}` +
+        `${padL(lags.length > 0 ? median([...lags]).toFixed(0) : '–', 12)}` +
+        `${padL(lk.length > 0 ? `${((100 * wrong) / lk.length).toFixed(1)}%` : '–', 13)}` +
+        `${padL(`${(100 * leakWrongShareFor(openness)).toFixed(1)}%`, 17)}` +
+        `${padL(String(drawWeeks), 12)}` +
+        `${padL(drawWeeks > 0 ? (lk.length / drawWeeks).toFixed(5) : '–', 15)}` +
+        `${padL(Number.isFinite(predictedRate) ? predictedRate.toFixed(5) : '–', 11)}`,
+    )
+  }
+  console.log('')
+  // --- ⚠⚠ RULING I's THIRD FACTOR, MADE VISIBLE ----------------------------------------------------
+  console.log('    ⚠⚠ FAME\'S OWN EFFECT (ruling I) – the realised rate per DRAWN week, by fame band. Under the')
+  console.log('       brief\'s dropped-fame spelling every one of these rows would read the same rate.')
+  console.log(`    ${pad('fame band', 12)}${padL('draw weeks', 12)}${padL('leaks', 8)}${padL('leaks/draw wk', 15)}${padL('predicted open', 16)}${padL('predicted private', 19)}`)
+  for (let b = 0; b < FAME_BANDS.length; b++) {
+    const band = FAME_BANDS[b]
+    const draws = careers.reduce((a: number, c: CareerRow) => a + c.leakDrawByBand[b], 0)
+    const fired = careers.reduce((a: number, c: CareerRow) => a + c.leakFiredByBand[b], 0)
+    const mid = Number.isFinite(band.to) ? (band.from + band.to) / 2 : Math.max(band.from, ECONOMY.fame.cap * 0.9)
+    console.log(
+      `    ${pad(band.label, 12)}${padL(String(draws), 12)}${padL(String(fired), 8)}` +
+        `${padL(draws > 0 ? (fired / draws).toFixed(5) : '–', 15)}` +
+        `${padL(leakHazardFor('open', mid).toFixed(5), 16)}${padL(leakHazardFor('private', mid).toFixed(5), 19)}`,
+    )
+  }
+  console.log('      ⚠ «predicted» is the hazard at the band\'s MIDPOINT, printed as a scale rather than as a bar: the')
+  console.log('        two openness columns bracket what any girl in that band pays, and a realised rate between them')
+  console.log('        is the model working. A realised rate flat ACROSS the bands would be ruling I lost in the build.')
+  console.log('')
+  // --- the shape §3c-bis promises, as three verdicts -----------------------------------------------
+  if (leaked.length === 0) {
+    console.log('    !! ZERO LEAKS ON THE WHOLE GRID. Nothing above is a finding about openness: it is a finding about')
+    console.log(`       the GATE. Not one uniform was drawn – or none landed – in a week her standing was above 'quiet'`)
+    console.log(`       (D1: WTA ≤ ${ECONOMY.spotlight.newsRankNoticed} with live points), which is a fact about how high these careers stand, not`)
+    console.log('       about the leak\'s constants. `npm run bench:spotlight` §1 prints the bands\' own coverage and effect.')
+    console.log('')
+  } else {
+    const openEps = TEMPERAMENTS.filter((t) => temperamentOpenness(t) === 'open').flatMap((t) => episodesOf(t))
+    const privEps = TEMPERAMENTS.filter((t) => temperamentOpenness(t) === 'private').flatMap((t) => episodesOf(t))
+    const openLk = openEps.filter((e) => e.publicWeek !== null)
+    const privLk = privEps.filter((e) => e.publicWeek !== null)
+    if (openEps.length > 0 && privEps.length > 0) {
+      const openShare = (100 * openLk.length) / openEps.length
+      const privShare = (100 * privLk.length) / privEps.length
+      console.log(
+        `    OFTEN : open ${openShare.toFixed(1)}% of episodes leak against private ${privShare.toFixed(1)}%   ${verdict('§6d §3c-bis – the OPEN girl leaks more often', openShare > privShare, `open ${openShare.toFixed(1)}% vs private ${privShare.toFixed(1)}% – implicates ECONOMY.spotlight.leakOpennessMult (open ×${ECONOMY.spotlight.leakOpennessMult.open} / private ×${ECONOMY.spotlight.leakOpennessMult.private})`)}`,
+      )
+    }
+    if (openLk.length > 0 && privLk.length > 0) {
+      const openLag = median(openLk.map((e) => (e.publicWeek as number) - e.sinceWeek))
+      const privLag = median(privLk.map((e) => (e.publicWeek as number) - e.sinceWeek))
+      console.log(
+        `    EARLY : open breaks at a median ${openLag.toFixed(0)} weeks against private ${privLag.toFixed(0)}   ${verdict('§6d §3c-bis – the OPEN girl leaks earlier', openLag <= privLag, `open median lag ${openLag.toFixed(0)} weeks vs private ${privLag.toFixed(0)} – the LATE half is emergent from the hazard alone (there is no lag term), so a miss implicates ECONOMY.spotlight.leakOpennessMult`)}`,
+      )
+      const openWrong = (100 * openLk.filter((e) => e.publicWrong).length) / openLk.length
+      const privWrong = (100 * privLk.filter((e) => e.publicWrong).length) / privLk.length
+      console.log(
+        `    TRUE  : open lands wrong ${openWrong.toFixed(1)}% against private ${privWrong.toFixed(1)}%   ${verdict('§6d §3c-bis – the OPEN girl\'s story lands truer', openWrong <= privWrong, `open wrong ${openWrong.toFixed(1)}% vs private ${privWrong.toFixed(1)}% against the shipped ${(100 * ECONOMY.spotlight.wrongShare.open).toFixed(0)}%/${(100 * ECONOMY.spotlight.wrongShare.private).toFixed(0)}% – implicates ECONOMY.spotlight.wrongShare`)}`,
+      )
+    }
+    console.log('')
+    const over = leaked.filter((e) => e.overtook)
+    console.log(`    THE OVERTAKE : ${over.length} of ${leaked.length} leaks reached the parent FIRST – a parent who met the boyfriend in a headline.`)
+    if (over.length === 0) {
+      console.log('      !! ZERO, and it is a finding rather than a gap: the overtake needs a leak that lands BEFORE the')
+      console.log('         bond shave would have delivered the news, so it is the intersection of a high fame and a long')
+      console.log('         lag. The architect\'s ruling T already found the brief\'s own spelling of this condition could')
+      console.log('         never have fired; this is the corrected one, measured, and still waiting for its case.')
+    }
+  }
+  console.log('')
+  console.log('    !! WHAT THIS SECTION DOES **NOT** DO: it draws no corridor on any leak number. Every constant in the')
+  console.log('       hazard is a §4 PROPOSAL and NONE is ruled – the shape verdicts above test §3c-bis\'s own sentence,')
+  console.log('       which is the spec\'s and not a tuning target, and the sizes go to the owner as a table.')
 }
 
 // =================================================================================================

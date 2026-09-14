@@ -473,7 +473,7 @@ console.log(`    CHEAPEST bills the college branch can produce.`)
 // `offerAthleticShare` below is ALREADY the share a non-American would be given. Only two inputs
 // change, and both are sourced constants rather than judgements: the sticker moves in-state ->
 // out-of-state (a non-resident alien is never in-state anywhere), and the need layer is zero
-// (`needShareOf` returns 0 for any country but 'US'; 34 CFR 668.33 is the citation).
+// (D8, 14.09: the need layer is buried – the tombstone at `COLLEGE_OFFER.assetSpreadYears`).
 {
   const IN = COLLEGE_TIERS.state.costPerYearCents
   const OUT = COLLEGE_TIERS.national.costPerYearCents

@@ -121,6 +121,23 @@ import { guardNotEndedForGood } from './constants'
 // a focus pass's question; `psychologistWorksThisWeek` is «is anybody being paid to be there at all»,
 // which is the SEAT's, and the counsel fork is the seat's rather than any focus's.
 import { psychologistWorkingRung, psychologistWorksThisWeek } from './psychologist'
+// ⭐⭐⭐ v77 T6 – THE SPOTLIGHT'S ONE GATE AND THE STOCK BEHIND IT, both READ and neither written
+// (the wave's §8: this wave only reads `fameAt`, and `ECONOMY.fame` is fame-presence's ground).
+// §9 below is the whole of what uses them: `newsStandingOf` (D1, 14.09) decides whether the world is looking at all
+// and `fameAt` is ruling I's third factor in the hazard's product.
+// ⚠ NO CYCLE, AND IT IS MEASURED RATHER THAN ASSUMED – the walk `psychologistWorkingRung`'s own note
+// above describes, re-run at T6 over the tree's value imports with `import type` and all-`type` named
+// clauses excluded: `world/spotlight.ts` reaches THIS file by **ZERO** paths (11 modules walked) and
+// `world/fame.ts` by **ZERO** (9 walked). Both are leaves of the same kind `world/loveEpisodes.ts`
+// is – they read the world and write nothing – which is what makes the arrow one-directional by
+// construction rather than by luck.
+import { fameAt } from './fame'
+// ⭐⭐⭐ v77 T7 TAKES A SECOND NAME OFF THE SAME LEAF, AND FOR THE «ASK THE ONE COPY» REASON: the
+// booth's licence has to know what a BIG STAGE is, and `atOrAboveStageBar` is already the answer
+// `'stage'` and `'publicLoss'` are built on. A second spelling here would drift from
+// `ECONOMY.spotlight.stageTierMin` the first time the bar moved – see that function's own note. The
+// walk above is unchanged by it: still zero paths back from `world/spotlight.ts` to this file.
+import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from './spotlight'
 // ⭐⭐ THE PRESENCE AXIS' TWO IMPORTS (11.09, the вычитка fold) – and both of them are «ask the one
 // copy» rather than «re-type the rule». `awayVoice` is R2-18 / ARCH-07's single spelling of «she
 // lives elsewhere and the parent HEARS about the week»; `diaryLifeStageFor` is the single spelling
@@ -130,6 +147,9 @@ import { awayVoice } from '../diary/words'
 import { diaryLifeStageFor } from '../diary/facts'
 import { schoolIsOver } from '../kidLife'
 import type { BondBand, DiaryLifeStage, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
+// ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
+// resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
+import type { TierId } from '../season/types'
 import type { WorldState } from '../world'
 
 // =================================================================================================
@@ -1039,6 +1059,25 @@ const MET_HEADING: Record<MetRegister, string> = {
   dry: 'There is someone in her life',
 }
 
+/** ⭐⭐⭐ v77 T6 – THE HEADLINE REGISTER, AND IT IS **ONE LINE ON THE STANDING POOL** rather than a
+ *  fourth column of it (the brief's own boundary: «the one addition is a headline-register intro
+ *  variant on the standing prompt – NO new beat kind, no new delivery path»). The overtake is
+ *  who-she-is §0's founding scene given its mechanism – «a parent learning about a boyfriend from a
+ *  photograph» – and the only thing about the card that may move is the frame the parent reads it
+ *  under. Her line, the options, the follow-up and the `LifeBeatRecord` itself are BYTE-IDENTICAL to
+ *  an ordinary delivery's, which is the property T6's pin asserts by deep-equalling the two.
+ *
+ *  ⚠⚠ IT KEYS ON NOTHING – not the bond band the three standing frames key on, and deliberately.
+ *  `MET_HEADING`'s ladder says how far apart the two of them are when the news lands; this frame
+ *  says WHERE THE NEWS CAME FROM, and that fact outranks the distance in the one week it is true:
+ *  a `her`-band parent who read it in the paper was not told by her either. A per-band headline row
+ *  would be three sentences about one scene, and §5a's rule (no agent widens a pool unasked) is the
+ *  other half of the argument.
+ *
+ *  ⚠ A DRAFT, like every word in this file's pools – T8's вычитка and the owner's playtest are the
+ *  gate (invariant 4, the wave's §5). */
+const MET_HEADING_HEADLINE = 'We read about it before she told us'
+
 // =================================================================================================
 // 3c. `'small-talk'` – TIER 1, THE WEEK SHE COMES WITH SOMETHING SMALL (wave 3, T8). EVERY WORD A DRAFT.
 // =================================================================================================
@@ -1665,9 +1704,22 @@ const ENDED_HEADING_HEARD: Record<Temperament, Record<EndsRegister, Record<EndsR
 }
 
 /** ⭐ THE FRAME, ONE FUNCTION, so «which heading does a card wear» has exactly one spelling and the
- *  ambiguous arm can be proven byte-identical to what shipped. `null` is the standing frame. */
-function metHeadingFor(band: BondBand, heard: HeardRead | null): string {
-  return heard === null ? MET_HEADING[metRegisterOf(band)] : MET_HEADING_HEARD[heard.voice][heard.wants]
+ *  ambiguous arm can be proven byte-identical to what shipped. `null` is the standing frame.
+ *
+ *  ⭐⭐⭐ v77 T6 – AND THE THIRD ARGUMENT IS THE OVERTAKE, ON THE **STANDING** ARM AND NOWHERE ELSE.
+ *  `heard` is tested FIRST and that branch order is the ruling rather than a style: the legible pool
+ *  is what a parent PAID a psychologist to hear, and a headline frame placed in front of it would
+ *  take back, on exactly the weeks the overtake fires, the read he bought (ruling O's own shape at
+ *  `endedKeptRow`, one scene over, argued the same way). So the coached card is byte-identical to
+ *  what shipped, and the new line is what the STANDING card says – which is also the brief's literal
+ *  boundary, «a headline-register intro variant on the standing prompt».
+ *
+ *  ⚠ THE DEFAULT IS `false`, WHICH IS THE SHIPPED READING AND NOT A NEUTRAL STAND-IN: every caller
+ *  that passes nothing gets exactly the frame this function returned before the overtake existed.
+ *  `lifeBeatHeading`'s own later parameters are defaulted for that reason and this is the fourth. */
+function metHeadingFor(band: BondBand, heard: HeardRead | null, fromHeadline = false): string {
+  if (heard !== null) return MET_HEADING_HEARD[heard.voice][heard.wants]
+  return fromHeadline ? MET_HEADING_HEADLINE : MET_HEADING[metRegisterOf(band)]
 }
 
 function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: HeardRead | null): string {
@@ -2185,10 +2237,20 @@ export function lifeBeatHeading(
   // ⚠ THE READ-BEARING KINDS ARE THE ONLY ONES THAT LOOK AT IT: `'fork-opinion'`, `'small-talk'` and
   // `'fork-counsel'` have no read to be plain about, so a non-null here is simply not consulted.
   heard: HeardRead | null = null,
+  // ⭐⭐⭐ v77 T6 – THE SEVENTH IS THE OVERTAKE, and `false` – the default – is the STANDING frame,
+  // byte for byte what shipped. It is defaulted exactly as the fourth, fifth and sixth are, so every
+  // pin waves 2 to 5 wrote keeps calling this with three arguments and keeps asserting the frames it
+  // was written against. ⚠ NO ARITY PIN COUNTS THIS FUNCTION'S PARAMETERS – measured 14.09 (the only
+  // readers are `lifeBeatPromptFor` and six test files, none of which reads `.length`), so ruling A's
+  // «a default must not walk past a pin that counts» does not reach here and ruling J's precedent
+  // (`buildCommentary`'s two optional trailing parameters) is the one that does.
+  // ⚠ `'met'` IS THE ONLY KIND THAT LOOKS AT IT: a fork, a small talk, a counsel and an ending have
+  // no headline to have been read in, so a `true` here is simply not consulted.
+  fromHeadline = false,
 ): string {
   switch (kind) {
     case 'met':
-      return metHeadingFor(bond, heard)
+      return metHeadingFor(bond, heard, fromHeadline)
     // ⭐ v74 T8 – TIER 1 KEYS ON THE MOOD REGISTER, which is the FORK's axis and not the `'met'`
     // card's: this beat is about her week, and there is no distance in it to read (a `strained` or
     // `cold` home never raises one).
@@ -2268,6 +2330,27 @@ export function lifeBeatListenFollowUp(
 function beatWants(world: WorldState, row: LifeBeatRecord): LoveEpisode['wants'] {
   if (row.kind !== 'met') return 'open'
   return loveEpisodesOf(world).find((episode) => episode.id === row.detail)?.wants ?? 'open'
+}
+
+/** ⭐⭐⭐ v77 T6 – DID THE PARENT LEARN IT FROM A HEADLINE? `beatWants`' own shape, asking the row's
+ *  episode a second question, and it is DERIVED rather than stamped for `beatEndsRegister`'s stated
+ *  reason: both dates are on the row for the life of the career, so the answer this gives on the
+ *  raise week is the answer it gives twenty seasons later and the album can re-word an old card.
+ *
+ *  ⚠⚠ THE DISCRIMINATOR IS `publicWeek === knownWeek`, AND IT IS THE OVERTAKE'S OWN SIGNATURE. §9's
+ *  leak is the only writer that can make the two equal: it stamps `publicWeek = world.week` and,
+ *  when the parent has not been told yet, pulls `knownWeek` onto the same week so the STANDING
+ *  delivery raises the card in that very tick. An ordinary delivery leaves `publicWeek` null (never
+ *  equal) or holds a leak week that is strictly LATER than the week he was told – he already knew,
+ *  and the papers caught up. The one overlap is a leak landing on the very week the lag had already
+ *  run out, and «the story broke the week he was told» is honestly a headline week too.
+ *
+ *  ⚠ ANY OTHER KIND IS `false`, which is the standing frame and not a neutral stand-in – `beatWants`'
+ *  own idiom, and nothing but a `'met'` row ever asks. */
+function beatFromHeadline(world: WorldState, row: LifeBeatRecord): boolean {
+  if (row.kind !== 'met') return false
+  const episode = loveEpisodesOf(world).find((ep) => ep.id === row.detail)
+  return episode !== undefined && episode.publicWeek !== null && episode.publicWeek === episode.knownWeek
 }
 
 /** ⭐⭐⭐ v75 T4 – HAS THIS EPISODE BEEN DELIVERED YET, asked of the `lifeLog` and of nothing else.
@@ -2443,7 +2526,12 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   return {
     week: row.week,
     kind: row.kind,
-    heading: lifeBeatHeading(row.kind, register, band, endsRegister, read, heard),
+    // ⭐⭐⭐ v77 T6 – THE SEVENTH ARGUMENT IS THE OVERTAKE, derived off the row's own episode exactly
+    // as `wants` above is, and it reaches NOTHING ELSE in this prompt: `said`, `options` and
+    // `listenFollowUp` are assembled from the same facts they always were, so a card raised by the
+    // leak deep-equals an ordinary one except for this one frame. That equality is the brief's own
+    // boundary and T6's pin asserts it directly rather than trusting this sentence.
+    heading: lifeBeatHeading(row.kind, register, band, endsRegister, read, heard, beatFromHeadline(world, row)),
     // ⭐ v74 T17 – THE EIGHTH ARGUMENT IS THE DRIVER, AND IT IS THREADED EXACTLY AS `wants` AND
     // `stage` WERE: a parameter with a safe default (`'own'`, which is the shipped reading of a
     // `stop` line and not a neutral stand-in), so every pin wave 2 and wave 3 wrote keeps calling
@@ -2883,7 +2971,28 @@ export function rollArrival(world: WorldState): void {
   // is when the identity of the ROW and the identity of the PERSON stop being the same thing, and a
   // schema that had conflated them could not tell them apart afterwards (the T1 note on the type).
   const id = `p:${sinceWeek}`
-  world.loveEpisodes.push({ id, sinceWeek, endedWeek: null, knownWeek, wants, partnerId: id })
+  // ⚠⚠ THE FOUR v77 FIELDS ARE WRITTEN HERE AT THEIR BIRTH VALUES AND THIS IS NOT A WRITER (the
+  // spotlight, wave 6 – T1). `createWorld`'s literal is where a new WORLD key gets its identity
+  // value; a `LoveEpisode` has no `createWorld`, and this push is the ONE place a row is ever born
+  // («the ONE writer of a `loveEpisodes` row», the block at the head of this section) – so it is the
+  // exact counterpart, and the four values are the same four the v76 -> v77 migration back-fills on
+  // every historical row. A new attachment starts private to the family and unvoiced: the world has
+  // not learned (`publicWeek: null`), so no story has run and none has run wrong
+  // (`publicWrong: false`), and the booth has voiced neither fact (`airedMetWeek` / `airedEndedWeek`
+  // null). The LEAK that can set `publicWeek` is T6 and the booth stamp is T7; nothing on this tree
+  // moves any of the four off these values.
+  world.loveEpisodes.push({
+    id,
+    sinceWeek,
+    endedWeek: null,
+    knownWeek,
+    wants,
+    partnerId: id,
+    publicWeek: null,
+    publicWrong: false,
+    airedMetWeek: null,
+    airedEndedWeek: null,
+  })
 }
 
 // =================================================================================================
@@ -3655,4 +3764,411 @@ export function rollEnds(world: WorldState): void {
     lifeKind: 'ended',
   })
   raiseLifeBeat(world, 'ended', over.id, heardNow ?? undefined)
+}
+
+// =================================================================================================
+// 9. THE LEAK – ⚠⚠ THE WEEK THE **WORLD** FINDS OUT (the spotlight, wave 6: T6)
+// =================================================================================================
+//
+// `docs/specs/who-she-is-2026-09.md` §3c-bis, `docs/plans/life-wave-6-builder-2026-09.md` §2 T6,
+// constants in `ECONOMY.spotlight`. Sections 5 to 8 above are one attachment's arc as the FAMILY
+// lives it; this is the only place a third party ever enters it.
+//
+// THE OWNER, 10.09: «слава + комментаторы + пресса + давление + темпераменты – мне кажется у нас
+// как-то тоже можно понимать сколько вообще какой личной информации и куда просачивается у разных
+// характеров… можем какую-то логику запланировать?»
+//
+// ⚠⚠ THE TWO STREAMS OF THIS WAVE, AND THEY ARE THE ONLY TWO IT HAS:
+//
+//     seed:life:leak:<episodeId>:<week>         does this episode get out, this week
+//     seed:life:leak:story:<episodeId>:<week>   ...and did the story land WRONG, at the leak week
+//
+// (seed, calendar)-keyed like the other four life streams, never a choice, so a player cannot
+// manufacture a headline by playing the week differently. ⚠ THE SECOND IS DERIVED ONLY ON THE WEEK
+// THE FIRST FIRES – `rollEnds`' own discipline for `:react`, and the reason it is a second KEY
+// rather than a second read of the first is §1f's one-value-per-key law.
+//
+// ⚠⚠ ZERO DRAWS ON MAIN AND ZERO DRAWS ON AN INELIGIBLE WEEK. The first is structural (nothing here
+// takes an `Rng`, so the frozen capture 41550 / e6b0c709 cannot see this section). The second is the
+// wave's load-bearing rule inherited whole from §5, §7 and §8: `leakEligible` decides EVERYTHING and
+// `rollLeak` returns on it BEFORE either stream is derived. ⚠ AND THE TEST FOR IT IS A KEY COUNT
+// WITH A VALUE CHECK BESIDE IT – the architect's ruling L: a key counter sees KEYS and never
+// CONSUMED VALUES, so it proves a stream was not REACHED and cannot prove it was not ADVANCED.
+// `tests/wave6-spotlight-leak.test.ts` §B counts the keys the gate reached, in an array the code
+// under test cannot see; §C asserts the exact fire set against uniforms drawn in the test from the
+// real `rngFromSeed`, which is an expectation that never calls `rollLeak`.
+//
+// ⚠⚠ THE GATE ASKS ABOUT THE **LAST CLOSED WEEK**, WHICH IS THE ARCHITECT'S RULING P APPLIED TO THIS
+// CHANNEL AND NOT A SECOND CLOCK. The pressure reads `exposureEventsOf(world, world.week − 1)` and
+// habituation read the same gate; so did this. ⭐ D1 (14.09) moved the gate to the STANDING, which
+// is present-tense by its own contract (the cached rank already describes the last closed fold),
+// so the one-horizon law below is kept by construction now. Three reasons, and the first
+// is the ruling's own:
+//
+//   1. ONE HORIZON PER WAVE. A leak gated at `world.week` whose own consequence – the `'wrongStory'`
+//      exposure event – is priced at `world.week − 1` would put two clocks inside one mechanism, and
+//      ruling P refused a split horizon in the ledger for exactly that reason.
+//   2. THE WEEK BEING LIVED HAS NOT HAPPENED YET AT THIS POINT IN THE TICK. `resolveBodyAndPlanner`
+//      is step 4 and `playHerWeek` is step 6, so at this line `world.week` holds no result, no
+//      trophy and no match – asking «is she news THIS week» here is the very shape ruling P found
+//      starving `'stage'` and `'publicLoss'`.
+//   3. AND IT IS THE TRUER READING, in ruling P's own words: the cameras were on her at the weekend
+//      and the story runs the week after. ⚠ THE STAMP STILL NAMES **THIS** WEEK – `publicWeek =
+//      world.week` – because the week the world learned is the week the story ran, and the feed row
+//      is dated by when the parent reads it. The gate asks about the week that produced the lenses;
+//      the stamp records the week they printed.
+//
+// ⚠ SO T3's PASS SEES THE `'wrongStory'` EVENT ONE TICK LATER, and that is the wave's one clock
+// working rather than a lag anybody added: `exposureEventsOf` matches `publicWeek === week`, the
+// pass asks about `world.week − 1`, and the pressure therefore lands in the tick after the headline.
+//
+// ⚠⚠ IT RUNS ON THE **ACTIVE** EPISODE, WHICH IS A NARROWING OF THE BRIEF AND IS STATED RATHER THAN
+// SLIPPED IN. The brief says «per episode-week, while `publicWeek === null` and she is news», which
+// read literally puts every never-public row a career ever lived – four to six of them by §4's own
+// biography table – into the draw every week for ever. Three measured consequences decided it:
+//
+//   * THE BOOTH WOULD BE HANDED A DISHONEST LICENCE. T7 airs `'met'` on `publicWeek !== null &&
+//     airedMetWeek === null`, so a row that went public three years after it ended would put «a face
+//     in the players' box» on air about somebody long gone. The stamp is read, never re-judged
+//     (`world/spotlight.ts`'s own doctrine), so the honesty has to live at the WRITE.
+//   * IT WOULD MOVE WAVE 4's TOLD-LATE SCENE. The overtake below pulls `knownWeek` forward; on an
+//     ended-and-never-told row that is precisely the episode `deliverKnownPartner` is holding for
+//     its one honest late card, and nothing in this wave was asked to re-time it.
+//   * AND §3c-bis's OWN MECHANISM IS A LIVE ONE: «an open girl is simply seen (dinner, a hand held
+//     at an airport)». A lens catches a relationship that is happening.
+//
+// The brief's own sentence agrees from the other side – «an episode that ENDS while public needs no
+// second hazard: the world that knows of them learns of the end with the ending» – which presumes
+// publicity attaches while the row is open. ⚠ AND «PER EPISODE-WEEK» IS UNTOUCHED BY THE NARROWING:
+// at most one row can be active (`activeEpisode`'s own tail rule), so per-episode and per-week
+// coincide, and the KEY still carries the episode id so two attachments can never share a value.
+//
+// ⚠⚠ AND `knownWeek === null` IS NOT REACHABLE, WHICH MOVES THE OVERTAKE'S CONDITION. The brief and
+// the `publicWeek` field's own note both spell the founding scene as «`publicWeek` set while
+// `knownWeek` is still null». Measured 14.09 at the ONE writer of that field: `rollArrival` (§5)
+// sets `knownWeek = sinceWeek + shaveLag(raw, band)`, and `shaveLag` returns a number for every
+// input, so an engine-born row NEVER has a null there – the type allows it, the sim cannot produce
+// it, and a condition written on it would be this wave's next «unable to fire». What the SPEC says
+// is the reachable thing and it is what ships: «for a private girl at high fame, `publicWeek` can
+// land BEFORE `knownWeek` – the parent learns about the boyfriend FROM A HEADLINE». So the
+// discriminator is «has he been told yet», `knownWeek === null || knownWeek > world.week`, which
+// covers the brief's spelling as a sub-case and fires on the case that exists.
+//
+// ⚠ IT WRITES THE TWO PUBLICITY STAMPS, ONE KEPT FEED ROW AND – ON THE OVERTAKE – ONE DATE THAT WAS
+// ALREADY THE ROW'S. `world.spirit` is not touched (the `'wrongStory'` pressure is T3's term inside
+// `accrueSpirit`, and that pass is the one writer of it); no beat is raised here, because the
+// overtake delivers through `deliverKnownPartner` four lines later in the same tick and NO new
+// delivery path exists; `airedMetWeek` / `airedEndedWeek` stay null, because the booth is T7's.
+
+/** ⭐ THE WORLD'S OWN VERSION, AS THE PARENT READS IT – two of them, and which one prints is the
+ *  `story` stream's answer and not a reading of anything the family knows.
+ *
+ *  ⚠ NO `amountCents` AND NO PRICE IN ANY WORD OF IT (rule 4 at the top of this file), and no fact
+ *  about the partner in the TRUE row: the sim holds none, and `LoveEpisode`'s own note says why no
+ *  name and no gender is persisted. ⚠ THE WRONG ROW IS THE ONE PLACE A FIGURE MAY APPEAR AT ALL, and
+ *  that is the point rather than an exception – «a mystery man» is the tabloid's INVENTION (§3c-bis
+ *  names it in those words), so it asserts nothing about who she is actually with. A true story that
+ *  named a man would be the schema breach; a false one that does is the mechanic.
+ *
+ *  ⚠ BOTH ARE DRAFTS AND DELIBERATELY NOT POLISHED – T8's вычитка and the owner's playtest are the
+ *  gate (invariant 4, the wave's §5). */
+const LEAK_EVENT: Record<'true' | 'wrong', string> = {
+  true: 'It is in the papers – there is someone in her life, and they have it right.',
+  wrong: 'It is in the papers – a mystery man, and none of it is what happened.',
+}
+
+/** ⭐⭐ THE GATE – ONE FUNCTION, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one.
+ *
+ *  ⚠⚠ A PREDICATE OF ITS OWN FOR `arrivalEligible`'s, `smallTalkEligible`'s AND `endsEligible`'s
+ *  STATED REASON: a reader has to be able to see, in one place, that the whole of eligibility is
+ *  decided before any stream exists. Pure, zero draws, no writes.
+ *
+ *  THE THREE CLAUSES, each with its own argument in the §9 banner above:
+ *
+ *  1. SOMEBODY IS THERE NOW – `activeEpisode`, the same spelling `endsEligible` uses, so «is there
+ *     an attachment» has ONE reading in this file. This is the narrowing of the brief.
+ *  2. THE WORLD DOES NOT ALREADY KNOW. `publicWeek` is a once-ever stamp like `endedWeek`; a story
+ *     that has run cannot break again, and the booth's second fact (the ending) needs no hazard of
+ *     its own because the world that knows of them learns of the end with the ending.
+ *  3. AND SHE IS NEWS AT THE **LAST CLOSED WEEK** – one horizon per wave, ruling P. See the banner
+ *     for why the closed week and not the one being lived. */
+export function leakEligible(world: WorldState): boolean {
+  const open = activeEpisode(world)
+  if (open === null || open.publicWeek !== null) return false
+  // ⭐ D1 (14.09): the standing read replaces the fame bar. Present-tense by the predicate's own
+  // contract – the cached rank already describes the last closed fold, so ruling P's one-horizon
+  // law is kept by construction rather than by a week argument.
+  return newsStandingOf(world) !== 'quiet'
+}
+
+/** ⭐⭐⭐ THE WEEKLY LEAK HAZARD, as one probability – who-she-is §3c-bis's own formula, restored in
+ *  full by the architect's RULING I:
+ *
+ *      leakBasePerWeek × leakOpennessMult[openness] × (fame / ECONOMY.fame.cap)
+ *
+ *  ⚠⚠ THE FAME FACTOR IS THE RULING AND IT IS WHAT THE BRIEF DROPPED. «More lenses on a bigger star»
+ *  is a term of the spec's sentence, not a restatement of the news gate: inside the bands the
+ *  scale runs 30 → 100, so a spelling without this factor has a girl at 100 leaking at exactly the
+ *  rate of a girl at 30. See `ECONOMY.spotlight.leakBasePerWeek`'s own note for the measurement, and
+ *  the leak suite's §D for the pin – twin careers at equal openness and different fame, where the
+ *  brief's spelling produces two IDENTICAL fire sets and this one produces a strict superset.
+ *
+ *  ⚠ IT TAKES THE PRIMITIVES AND NOT THE WORLD – `arrivalHazardFor`'s and `endsHazardFor`'s own
+ *  doctrine – so T9's bench and a corridor test can sweep the table directly instead of posing a
+ *  world per cell. The caller reads `fameAt` at the horizon it has decided on, once.
+ *
+ *  ⚠ NO CLAMP AND NONE NEEDED: `fameAt` is `Math.min(ECONOMY.fame.cap, …)` of a sum of non-negative
+ *  decayed steps, so the third factor is total on [0, 1] by the reader's own construction. A clamp
+ *  here would be a second guard nobody could ever see fire, and it would hide a real defect if
+ *  `fameAt` ever stopped capping. */
+export function leakHazardFor(openness: 'open' | 'private', fame: number): number {
+  const S = ECONOMY.spotlight
+  return S.leakBasePerWeek * S.leakOpennessMult[openness] * (fame / ECONOMY.fame.cap)
+}
+
+/** ⭐⭐ HOW OFTEN THE STORY LANDS WRONG, by EXPRESSED openness (`ECONOMY.spotlight.wrongShare`).
+ *  Takes the axis rather than the world for `leakHazardFor`'s own reason one function up.
+ *
+ *  ⚠ THE **LATE** HALF OF «late and wrong» IS NOT HERE AND MUST NOT BE ADDED: it is emergent from
+ *  the hazard above, where a private girl draws a quarter of an open one's rate and her story
+ *  therefore breaks later in the episode. T9's census MEASURES the median lag; nothing SETS it. */
+export function leakWrongShareFor(openness: 'open' | 'private'): number {
+  return ECONOMY.spotlight.wrongShare[openness]
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE writer of `publicWeek` and `publicWrong` in the engine.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED – §5, §7 and §8's rule word for
+ *  word. The line order below IS the rule; moving a roll above the gate would break it silently,
+ *  because every key here carries its own week and a discarded draw changes no other week's value.
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollArrival`'s and `rollEnds`' own note: `rngFromSeed` can return exactly 0,
+ *  and a hazard of 0 must be impossible rather than merely unlikely. It is REACHABLE here in a way
+ *  it is not in the other two sections – the fame factor is genuinely 0 below every stamp's reach –
+ *  so this comparison is a short-circuit and not only a belt.
+ *
+ *  ⚠⚠ EXPRESSION, NOT BIRTH, AND ONE READ FEEDS BOTH DRAWS – v76's ruling A. The hazard is EVALUATED
+ *  now and the accuracy is EVALUATED now; what is PERSISTED is two weeks and a boolean, stamped at
+ *  the week they were true. A girl behind walls is seen less and misreported more, which is §2a's
+ *  walls doing exactly what §3c-bis says openness does.
+ *
+ *  ⚠⚠ AND THE OVERTAKE RAISES NOTHING ITSELF. It writes `knownWeek` and stops; `deliverKnownPartner`
+ *  (§6), four calls later in this same tick, finds the row due on `knownWeek <= world.week`, writes
+ *  the `'met'` kept row and raises the `'met'` card through the machinery that has raised every one
+ *  of them since wave 3. NO new `LifeBeatKind`, NO second delivery path, and the card a headline
+ *  raises deep-equals an ordinary one except for the frame `beatFromHeadline` picks. */
+export function rollLeak(world: WorldState): void {
+  if (!leakEligible(world)) return
+  const episode = activeEpisode(world)!
+  const openness = temperamentOpenness(expressedTemperamentOf(world))
+  // ⚠ THE HORIZON IS READ ONCE AND SPENT ONCE, on the same week the gate asked about – a second read
+  // at `world.week` would be the split clock ruling P refused, hiding inside one function.
+  let hazard = leakHazardFor(openness, fameAt(world, world.week - 1))
+  // ⭐ D1 (14.09): at 'noticed' the world glances rather than watches – the hazard runs at
+  // `noticedLeakScale`; at 'known' the scale is 1 by construction. The BAND is read once here,
+  // beside the one fame read, so the roll composes exactly what the gate admitted.
+  if (newsStandingOf(world) === 'noticed') hazard *= ECONOMY.spotlight.noticedLeakScale
+  // ⭐⭐ D5 (14.09, the founding scene's lever, his «давай попробуем»): new couples get caught –
+  // the first `leakFreshWeeks` of an episode run `leakFreshMult` hotter. Same key, same single
+  // uniform, no draw-count change: only the threshold the same value is compared against moves,
+  // which is what keeps the frozen protocol's diff a stamped expectation and not a re-shuffle.
+  if (world.week - episode.sinceWeek <= ECONOMY.spotlight.leakFreshWeeks) hazard *= ECONOMY.spotlight.leakFreshMult
+  // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament and no fame, so two
+  // girls read the SAME uniform against two different hazards. That is what makes both multipliers
+  // pure scales rather than unrelated dice, and it is the property §D's monotonicity pin rests on.
+  if (rngFromSeed(`${world.seed}:life:leak:${episode.id}:${world.week}`)() >= hazard) return
+  // ⭐⭐⭐ THE STAMP NAMES **THIS** WEEK though the gate asked about the last closed one – see the §9
+  // banner's third reason. The week the world learned is the week the story ran.
+  episode.publicWeek = world.week
+  // ⭐⭐⭐ THE FILMS' GEM (§3c-bis): openness controls not only the SPEED of a leak but its ACCURACY.
+  // ⚠ DRAWN ONLY ON THE WEEK THE STORY BREAKS, on its own key – an episode that never gets out never
+  // reaches this stream at all, which is the half of the zero-draw claim §B's second stream counts.
+  episode.publicWrong =
+    rngFromSeed(`${world.seed}:life:leak:story:${episode.id}:${world.week}`)() < leakWrongShareFor(openness)
+  // ⭐⭐ AND THE WORLD'S VERSION GOES IN THE ALBUM. ⚠ KEPT – `pruneEvents` drops ordinary rows at
+  // sixty weeks and a career reads its own life back seasons later; the week it stopped being
+  // private is not a line the album may be missing (`MET_EVENT`'s own reason, two sections up).
+  // ⚠ NO `amountCents` – a headline is never a purchase (rule 4), and the absence of the field is
+  // what keeps `accrueFinance` from ever seeing this row.
+  // ⚠⚠ AND NO `lifeKind`, WHICH IS T3's FINDING INHERITED RATHER THAN A GAP. The stamp's type is
+  // `LifeBeatKind` and the wave's §8 forbids a new member of it, so this row carries none and
+  // `lifeRowGlyph(undefined)` resolves through `?? 'met'` to `LIFE_ROW_EMOJI.life` – the owner's own
+  // 11.09 pick for life rows. who-she-is §5a forbids an agent picking a glyph unasked, so none was
+  // picked; whether the spotlight deserves a mark of its own goes to him with the strings.
+  // ⭐ D3 (14.09, his «да» to 📸): the spotlight FAMILY wears its own mark – `lifeKind: 'exposure'`
+  // joins this row and the EXPOSURE_ROW alike, and `lifeRowGlyphs` maps it to his camera. The old
+  // finding (no lifeKind, 🤍 by fallback) is answered, not deleted – see the note above.
+  addEvent(world, {
+    week: world.week,
+    type: 'life',
+    keep: true,
+    lifeKind: 'exposure',
+    text: LEAK_EVENT[episode.publicWrong ? 'wrong' : 'true'],
+  })
+  // ⭐⭐⭐ THE OVERTAKE – THE FOUNDING SCENE, AND IT IS ONE ASSIGNMENT. «A parent learning about a
+  // boyfriend from a photograph» (the design plan §0) finally given its mechanism, and it is
+  // strongest for exactly the girl whose walls kept him out: a private girl's lag is the longest, so
+  // she is the one the world can get to first.
+  //
+  // ⚠⚠ THE CONDITION IS «HAS HE BEEN TOLD YET» AND NOT `knownWeek === null` – see the §9 banner's
+  // last ⚠⚠ for the measurement. `rollArrival` is the one writer of that field and it always writes
+  // a number, so the brief's spelling could never have fired; this one covers it as a sub-case.
+  //
+  // ⚠ IT NEVER PUSHES `knownWeek` LATER. The comparison is one-sided on purpose: a parent who
+  // already knows is not un-told by a headline, and moving a delivered episode's date would rewrite
+  // a `'met'` receipt's own past.
+  if (episode.knownWeek === null || episode.knownWeek > world.week) episode.knownWeek = world.week
+}
+
+// =================================================================================================
+// 10. THE BOOTH – ⚠⚠ THE WEEK IT SAYS IT OUT LOUD (the spotlight, wave 6: T7)
+// =================================================================================================
+//
+// `docs/plans/the-way-she-sounds-2026-09.md` C4, `docs/plans/life-wave-6-builder-2026-09.md` §2 T7,
+// the window in `ECONOMY.spotlight.newsWindowWeeks`. §9 above is the week the WORLD finds out; this
+// is the week a commentator fills a changeover with it, and the two are one system by the owner's
+// own 10.09 ruling.
+//
+// THE OWNER, 10.09: «личная жизнь спортсменов часто на виду, т.е. что-то вполне может быть и про
+// частную жизнь, как в Wimbledon фильме в конце было» – and the loop that ruling closes: «a booth
+// mention of her private life IS an exposure event for the spotlight», so what is said on air costs
+// her spirit through T3's pass like every other week in the light.
+//
+// ⚠⚠ ZERO DRAWS, ON ANY STREAM, AND IT IS THE WAVE'S DESIGN RATHER THAN A LIMITATION (§3: «the booth
+// mention is DETERMINISTIC by design – the licence conditions fire it, no dice; variety is the
+// persona wave's business»). Nothing below takes an `Rng`, derives a key or reads a clock: the
+// licence is four facts about records the world already keeps, and on a week all four hold, the
+// booth speaks. The frozen MAIN capture (41550 / `e6b0c709`) cannot see this section by
+// construction, and `src/viz` – where the WORDS live – has no draw in it at all.
+//
+// ⚠⚠ AND IT READS THE STAMPS WITHOUT RE-JUDGING THEM – the architect's RULING T, which is T6's
+// narrowing pointing this way. The licence asks «did the world learn of this» (`publicWeek`) and
+// never «is it still true»; that is honest ONLY because §9 leaks the ACTIVE episode alone, so a
+// public fact is a fact about a romance that was live when the world learned of it. If a later wave
+// ever adds a retrospective leak, THIS licence is the second thing it has to re-read: «a face in the
+// players' box» about somebody long gone is exactly what the narrowing prevents.
+//
+// ⚠⚠ WHERE IT RUNS, AND THE STEP IS THE ARCHITECT'S OWN QUESTION (ruling P's ⚠ to this task: «your
+// «this week has a big-stage match» read must be honest about which step it runs in»). MEASURED, and
+// it decides the placement:
+//
+//     step 3  resolveBodyAndPlanner – the life block (§5-§9) and `accrueSpirit`
+//     step 5  playHerWeek           – the entered event, the fares, the shadow run  ← **HERE**
+//
+// At step 3 `world.week` holds no match at all: `enteredThisWeek` has not been resolved, the doctor
+// has not seen her, and the three arms that decide whether she plays (walkover / medical withdrawal
+// / she boards) are two phases away. A licence spelled there would have had to re-derive «is there a
+// big-stage match this week» from the calendar and then get the injury, the college freeze and the
+// medical veto right a second time – four rules with two spellings, which is the defect ruling P
+// spent a whole task removing, rebuilt one concern over. At step 5 the match is IN HAND: the caller
+// holds the event she is actually about to play, and it passes the tier down (§0.1's dependency
+// inversion, the same move `psychologistWorksThisWeek` and `newsStandingOf` already make).
+//
+// ⚠⚠ AND THAT IS NOT A SECOND CLOCK – RULING P's ONE HORIZON IS UNTOUCHED. The stamp names THIS week
+// (the week the booth spoke), exactly as §9's `publicWeek` does; T3's pass asks
+// `exposureEventsOf(world, world.week − 1)` on the NEXT tick and prices the `'aired'` event there.
+// One horizon, one pass, one tick later – the ruling working rather than a lag anybody added. What
+// this placement changes is not WHEN the pressure lands but whether the licence can see a match at
+// all, and nothing in the tick moved to buy it: `accrueSpirit` is where it was, the life block is
+// where it was, and the six pins on that position are untouched.
+//
+// ⚠ A RUN SHE DOES NOT WATCH IS STILL A RUN THAT AIRED. The stamp is spent whether the player
+// reveals the match, skips the tournament or closes the app – which is the model being honest rather
+// than a hole: the booth said it on television, and whether the parent was watching is not the
+// world's business. The pressure lands either way, which is the half the spotlight is actually about.
+
+/** ⭐⭐ WHAT THE BOOTH MAY TOUCH AT `week`, or null – the LICENCE, and a null here means the section
+ *  writes nothing at all.
+ *
+ *  ⚠⚠ ITS OWN PREDICATE FOR `leakEligible`'s STATED REASON: a reader has to be able to see the whole
+ *  of «may it speak» in one place, before anything is written. Pure, zero draws, no writes.
+ *
+ *  THE FOUR CLAUSES, and every one of them is a fact the world already recorded:
+ *
+ *  1. THE WORLD KNOWS – `publicWeek !== null`. §0's delta 3 in its own words: «a fact only the
+ *     family holds is never voiced, at any fame». This is the honesty boundary of the whole channel
+ *     and it is one comparison; there is deliberately no fame, no bond and no wall clause beside it
+ *     that could ever be read as «famous enough to be worth breaking».
+ *  2. IT HAS NOT AIRED – the two `aired*` stamps ARE the once-ness (`LoveEpisode`'s own note), so a
+ *     fact that has been voiced is over with, for ever, and no second rule is needed to say so.
+ *  3. IT IS STILL NEWS – the fact's own age against `ECONOMY.spotlight.newsWindowWeeks`, measured
+ *     from the week the FACT became public (`publicWeek` for «someone is there») or true
+ *     (`endedWeek` for «it is over»). ⚠ A NEGATIVE AGE IS OUT TOO: a stamp in the future cannot be
+ *     aired today, and on a crafted or migrated row that is the difference between silence and a
+ *     booth announcing next season's break-up.
+ *  4. AND THE ENDING NEEDS THE WORLD TO KNOW OF THEM AT ALL – `publicWeek !== null` gates BOTH
+ *     facts, which is the brief's own spelling of the second licence (`endedWeek !== null &&
+ *     publicWeek !== null`). A relationship the world never learned of does not get an obituary.
+ *
+ *  ⚠ MET BEFORE ENDED, AND IT IS TWO PASSES RATHER THAN ONE – the brief's «met before ended if both
+ *  are due», which cannot be spelled as a single walk that returns the first due fact of the first
+ *  due row: on two episodes where the OLDER has a due ending and the NEWER a due «met», a single
+ *  walk would voice the ending first. Two passes say what the sentence says.
+ *
+ *  ⚠ THE EPISODE ORDER IS THE LIST'S OWN – appended in calendar order and never pruned
+ *  (`loveEpisodesOf`), so «the first due row» is the oldest one, deterministically, and two runs of
+ *  the same world can never disagree. */
+export function boothMentionDue(
+  world: WorldState,
+  week: number,
+): { episode: LoveEpisode; kind: 'met' | 'ended' } | null {
+  const window = ECONOMY.spotlight.newsWindowWeeks
+  /** Is a fact stamped at `at` still inside the window at `week`? ⚠ INCLUSIVE at the far edge –
+   *  «a fact OLDER than `newsWindowWeeks` is never aired» – and closed at the near one. */
+  const stillNews = (at: number): boolean => week - at >= 0 && week - at <= window
+  for (const ep of loveEpisodesOf(world)) {
+    if (ep.publicWeek === null || ep.airedMetWeek !== null) continue
+    if (stillNews(ep.publicWeek)) return { episode: ep, kind: 'met' }
+  }
+  for (const ep of loveEpisodesOf(world)) {
+    if (ep.publicWeek === null || ep.endedWeek === null || ep.airedEndedWeek !== null) continue
+    if (stillNews(ep.endedWeek)) return { episode: ep, kind: 'ended' }
+  }
+  return null
+}
+
+/** ⭐⭐⭐ THE WEEKLY BOOTH MENTION, and the ONE writer of `airedMetWeek` and `airedEndedWeek` in the
+ *  engine. Called from `playHerWeek`'s play arm – see the §10 banner for why that step and not the
+ *  life block's.
+ *
+ *  ⚠⚠ `tier` IS THE EVENT SHE IS ABOUT TO PLAY, HANDED DOWN, AND IT IS WHAT MAKES THE STEP HONEST.
+ *  The caller holds it (the arm where she has boarded and the shadow run is stashed); this function
+ *  therefore cannot be called from a phase where the match is unknown, because there would be
+ *  nothing to pass – §0.1's dependency inversion used as a STRUCTURAL guard rather than as a
+ *  convenience. ⚠ REQUIRED AND NOT DEFAULTED: a default would let a caller in a matchless phase
+ *  compile, which is the one mistake this parameter exists to make impossible.
+ *
+ *  ⚠⚠ AND THE NEWS GATE DESCRIBES THE **LAST CLOSED WEEK** – `newsStandingOf`'s cached rank,
+ *  the same spelling `leakEligible` uses one section up and the same horizon T3's pressure and T4's
+ *  habituation read. ONE horizon per wave (ruling P); the gate asks about the week that produced the
+ *  lenses and the stamp records the week they aired, which is §9's own sentence about `publicWeek`.
+ *
+ *  ⚠ AT MOST ONE FACT A WEEK, BY CONSTRUCTION RATHER THAN BY A COUNTER: `boothMentionDue` returns
+ *  one, and the stamp it writes closes that fact for ever. A week that had two due facts voices the
+ *  `'met'` and leaves the ending for a later match – which is also why the window is a window on the
+ *  FACT and not a cooldown on the booth. */
+export function airBoothMention(world: WorldState, tier: TierId): void {
+  if (!atOrAboveStageBar(tier)) return
+  // ⭐ D1 (14.09): the booth's «fame band that makes her news» is the STANDING now – both non-quiet
+  // bands may be voiced (its own big-stage requirement already makes every mention an occasion).
+  if (newsStandingOf(world) === 'quiet') return
+  // ⚠⚠ ONE FACT A WEEK, AND IT IS A PROPERTY OF THE **WEEK** RATHER THAN OF THE CALL COUNT. The tick
+  // reaches this line once a week today (one entered event, one play arm), so this guard fires for
+  // nobody – which is exactly why it is here: «at most one fact per week» is a claim about the
+  // world, and a claim that holds only because nobody calls twice is a claim the next caller breaks
+  // in silence. Asked through `boothPrivateLifeAt`, the same read the snapshot ships, so «has the
+  // booth spoken this week» has ONE spelling and the guard cannot drift from the packet.
+  if (boothPrivateLifeAt(world, world.week) !== null) return
+  const due = boothMentionDue(world, world.week)
+  if (due === null) return
+  // ⭐⭐⭐ THE STAMP IS THE ONCE-NESS – one assignment, and the fact can never be voiced again. There
+  // is no boolean beside it and no «aired count»: a nullable week says both «has it aired» and
+  // «when», so the two can never disagree (`LoveEpisode`'s own note). T2's `'aired'` exposure kind
+  // reads exactly this field, so the mention IS the exposure event with nothing in between.
+  if (due.kind === 'met') due.episode.airedMetWeek = world.week
+  else due.episode.airedEndedWeek = world.week
+  // ⚠ AND NO FEED ROW, WHICH IS DELIBERATE AND NOT AN OMISSION. The exposure week's one legible row
+  // is T3's (`EXPOSURE_ROW`, raised inside the spirit pass on the tick that prices this event), and
+  // §3c's legibility law is «one row per week, not per event – the feed is not a ledger». A second
+  // row here would print the same week twice, in two voices, one tick apart.
 }

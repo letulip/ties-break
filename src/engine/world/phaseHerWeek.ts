@@ -24,7 +24,7 @@ import { rivalField } from './weekField'
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { accrueSpirit, applyBondDelta, driftWalls } from '../spirit'
+import { accrueSpirit, applyBondDelta, driftWalls, growHabituation } from '../spirit'
 import { KNOCK_REST_CONDITION, knockRestWeek } from '../knock'
 import { TIERS } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking } from '../season/ranking'
@@ -42,7 +42,16 @@ import { addEvent } from './ledger'
 // ⭐⭐⭐ AND THE ENDS HAZARD JOINS IT IN v75 T2 (12.09) – `rollEnds`, §8 of the same module. It is the
 // FIRST of the four at the call site and not the last, which is the whole of rulings F and A; the
 // import line's order is alphabetical and says nothing.
-import { deliverKnownPartner, rollArrival, rollEnds, rollSmallTalk } from './lifeBeat'
+// ⭐⭐⭐ AND THE LEAK JOINS THEM IN v77 T6 (14.09) – `rollLeak`, §9 of the same module, the
+// architect's ruling M («it is a life call and belongs among its siblings»). It sits THIRD at the
+// call site, between the arrival and the delivery, and that slot is load-bearing in both directions:
+// see the call site below.
+// ⭐⭐⭐ AND THE BOOTH JOINS THEM IN v77 T7 (14.09) – `airBoothMention`, §10 of the same module. ⚠ IT
+// IS THE ONE NAME OFF THIS MODULE THAT IS **NOT** CALLED FROM THE LIFE BLOCK: it runs in
+// `playHerWeek` below, in the arm where she has actually boarded, because its licence is about a
+// MATCH and the match does not exist two phases earlier. See the call site for the measurement and
+// for why that is ruling P working rather than a second clock.
+import { airBoothMention, deliverKnownPartner, rollArrival, rollEnds, rollLeak, rollSmallTalk } from './lifeBeat'
 import { cohortIds, fieldProsOf, inTrack, rankingFor } from './ladder'
 import { withinAnnualEntryLimit } from './entryCaps'
 import { fallbackPlayer } from './matchNews'
@@ -55,6 +64,16 @@ import { summerConditionCost } from './summer'
 import { inCollege } from './college'
 import { resolveMasseur, resolveMasseurReturn } from './masseur'
 import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
+// ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
+// `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
+// import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
+// of §0.1's dependency inversion: this file calls the derivation and hands the LIST to
+// `accrueSpirit`, so `engine/spirit.ts` gains no arrow of its own.
+// ⭐ v77's T4 TAKES THE SECOND NAME OFF THE SAME MODULE AND FOR THE SAME REASON: the news gate is
+// asked HERE and handed to `growHabituation` as a boolean, so the habituation pass lives beside the
+// pressure it scales (`engine/spirit.ts`) while the GATE stays where it was derived. One arrow, two
+// facts, no new edge in the graph.
+import { exposureEventsOf, newsStandingOf } from './spotlight'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -290,11 +309,50 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        – `accrueSpirit`, five lines down, stays the one writer of it in the engine.
   rollEnds(world)
   rollArrival(world)
+  // ⭐⭐⭐ 1c-leak (v77, the spotlight – T6): AND THE WEEK THE **WORLD** FINDS OUT.
+  //
+  //        ⚠⚠ THE SLOT IS THE ARCHITECT'S RULING M AND BOTH OF ITS NEIGHBOURS ARE ARGUED. It is a
+  //        LIFE call – it reads an episode, writes two stamps on it and appends a life row – so it
+  //        belongs among its siblings between `accrueCondition` and `accrueSpirit`, which is the
+  //        position two pins already defend (`wave4-ended-beat.test.ts`, `wave4-ends.test.ts`).
+  //
+  //          · **BEFORE `deliverKnownPartner`, AND THAT IS A REQUIREMENT RATHER THAN A READING.**
+  //            The overtake writes `knownWeek = world.week` and raises nothing; the delivery one
+  //            line down is what finds the row due and raises the standing `'met'` card in this same
+  //            tick. Placed after it, the founding scene would need its own delivery path – which
+  //            the brief forbids in as many words – or would arrive a week late for ever.
+  //          · **AFTER `rollArrival`**, so the leak sees the row the arrival may have just appended.
+  //            The hazard's gate is `activeEpisode` and the week someone appears is a week they can
+  //            be photographed («a hand held at an airport», §3c-bis); running first would give every
+  //            career a systematic blind week for no reason a player could be told. ⚠ IT IS NOT
+  //            `rollEnds`' MIRROR AND DOES NOT WANT TO BE: that call runs BEFORE the arrival to buy
+  //            two mechanical properties (an attachment cannot end in its own arrival week, and the
+  //            cooldown refuses same-tick re-arrival), and a leak has no such consequence to buy.
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:leak:<episodeId>:<week>` / `:story:` sub-streams, and an INELIGIBLE week
+  //        derives neither of them (world/lifeBeat.ts §9). The frozen capture (41550 / e6b0c709) is
+  //        untouched by construction. ⚠ ITS OWN CALL, for `accrueSpirit`'s own reason below –
+  //        `accrueCondition`'s arity-2, zero-RNG contract is pinned by B1 in tests/condition.test.ts.
+  //
+  //        ⚠⚠ AND ITS GATE ASKS ABOUT `world.week − 1`, THE WAVE'S ONE HORIZON (ruling P), exactly
+  //        like the pressure four calls down and habituation after it. The consequence is stated so
+  //        nobody reads it as a lag somebody added: a story that breaks this week carries its
+  //        `'wrongStory'` exposure event on `publicWeek`, and the pass that prices it asks about the
+  //        week that closed – so the pressure lands in the NEXT tick. One clock, three readers.
+  rollLeak(world)
   // ⭐⭐ 1c-told (v74, the private life wave 3 – T6): AND THE WEEK HE IS TOLD ABOUT IT.
   //
   // ⚠ ONE LINE MOVED ABOVE THIS BLOCK IN v75 (wave 4's T2) AND NOTHING ELSE IN THIS PHASE DID – see
   // 1c-ends, immediately before `rollArrival`. Delivery's own placement argument below is untouched
   // by it: the ends hazard writes a date and raises nothing, so it cannot put news in front of this.
+  // ⚠⚠ RE-AIMED BY v77's T6 AND THE SENTENCE ABOVE IS KEPT AS THE RECORD. A SECOND line now sits
+  // above this block – 1c-leak – and the difference is worth naming rather than glossed: the ends
+  // hazard could not put news in front of the delivery, and the LEAK DELIBERATELY CAN. The overtake
+  // writes `knownWeek = world.week` and the scan below is what turns that into the card, in this
+  // same tick and through no new code. That is the one thing about this call site that T6 changed,
+  // and delivery's own «immediately after the roll» argument is untouched by it: the leak moves a
+  // date EARLIER and never later, so no week's news is held back by it.
   //
   //        ⚠⚠ IMMEDIATELY AFTER THE ROLL, AND THE ORDER IS A BEHAVIOUR RATHER THAN A STYLE. A shaved
   //        lag of ZERO is a real and common outcome (an open girl draws it at p 0.45 before the bond
@@ -368,7 +426,111 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        construction – «his effects ride the same predicate», the sentence 1c-masseur below
   //        already writes for the twin seat. ⚠ A `boolean`, never an `Rng`: `accrueSpirit`'s
   //        zero-draw contract is untouched and tests/spirit.test.ts asserts that of the signature.
-  accrueSpirit(world, psychologistWorksThisWeek(world))
+  //
+  //        ⭐⭐⭐ AND THE THIRD ARGUMENT IS THE EXPOSURE OF THE LAST CLOSED WEEK, HANDED DOWN THE SAME
+  //        WAY (v77 T3, wave-6 brief §0.1) – what put her in the light, derived by
+  //        `world/spotlight.ts` and summed into one named term inside the spirit pass. It is ruling
+  //        J's inversion applied a second time to a second fact, and it costs no arrow:
+  //        `engine/spirit.ts` imports the LIST's type off the barrel it already read and never the
+  //        function that builds it.
+  //        ⚠ THE DOUBLE ASK ON THIS LINE IS DELIBERATE AND DID NOT MOVE – ruling M's own ⚠. The
+  //        argument is APPENDED and nothing else about the statement changed, because hoisting
+  //        `psychologistWorksThisWeek(world)` into a local is exactly what would let a raw flag be
+  //        handed down in the predicate's place («ruling J's own hole»), and FOUR SITES read this
+  //        line's text verbatim – five CASES, because one of the four holds its anchor in a helper
+  //        two of its cases share (measured by T3b's ARM 12b; a census of the sites is not a census
+  //        of what goes red).
+  //        ⚠ REQUIRED, NEVER DEFAULTED (ruling A): `Function.length` stops counting at the first
+  //        default, so an `= []` would leave the arity pin reading 2 and green through the very
+  //        change it exists to notice.
+  //
+  //        ⚠⚠ AND THE WEEK IT ASKS ABOUT IS `world.week − 1`, WHICH IS THE ARCHITECT'S **RULING P**
+  //        (wave 6, 14.09) AND THE FIX FOR A DEFECT T3 SHIPPED CORRECTLY-AS-SPECIFIED. Ruling M had
+  //        said `world.week`; T3 measured that two of the five kinds can NEVER be seen from here at
+  //        that horizon, and ruling P overturned M. THE TICK'S OWN ORDER IS THE WHOLE ARGUMENT and it
+  //        is written out here so the next reader never re-derives it (`tickWeek`, `world.ts`):
+  //
+  //            0 recordDrawnFirstRounds · `world.week += 1`   ⚠ THE INCREMENT IS FIRST
+  //            1 seasonBoundaryAndObligations
+  //            2 weeklyFinance
+  //            3 resolveBodyAndPlanner   ← THIS PHASE. the life block, then `accrueSpirit`
+  //            4 deriveWeekField
+  //            5 playHerWeek             ← `finalizeTournament` is reached from here
+  //            6 growAndLive
+  //            7 closeTheWeek
+  //            8 recordDrawnFirstRounds again – the week closes by writing down its own draw
+  //
+  //        `'stage'` and `'publicLoss'` are stamped by `finalizeTournament`, whose only writers are
+  //        `cabinet.titles/finals.push(world.week)` and `world.results.push({ week: world.week, … })`
+  //        (`world.ts:673-674` and `:1039`) – both with the CURRENT week, from step 5, TWO PHASES
+  //        AFTER this one. So at `world.week` those two kinds return nothing here, every week, for
+  //        ever: the ledger is right, the kinds are right, and the MOMENT was starving them. Asked
+  //        about the week that has CLOSED, every record it names is already written.
+  //        ⚠ ONE HORIZON FOR ALL FIVE KINDS, NEVER A SPLIT ONE – ruling P refuses tournament kinds at
+  //        `week − 1` and life kinds at `week`, because that makes `exposureEventsOf` lie about its
+  //        own parameter and puts two clocks in one ledger. T6's leak and T7's booth stamp keep their
+  //        homes in the life block above and are simply seen one tick later.
+  //        ⚠ AND `accrueSpirit` DID NOT MOVE: it is the one writer of `world.spirit`, the life block
+  //        must sit between `accrueCondition` and it, and six pins defend that position – ruling P
+  //        refuses the move by name. The lag is the truer reading anyway: the cameras were on her at
+  //        the weekend and the week she pays for it is the week after. Nothing about the SIZE changes
+  //        («мы ни за что не наказываем» is untouched), only which pass carries it.
+  //        ⚠ THE FIRST TICK ASKS ABOUT WEEK **0**, NOT −1, because step 0 above increments BEFORE
+  //        this phase runs – so the earliest week this line can name is 0, and week 0 holds no
+  //        record of any kind. `exposureEventsOf` answers a negative week with an empty list in any
+  //        case, by its own stated guard rather than by luck; both halves are pinned
+  //        (tests/wave6-spotlight-pressure.test.ts §F).
+  accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))
+  // ⭐⭐⭐ 1c-hab (v77, the spotlight – T4): AND WHAT THE WEEK ADDED TO WHAT SHE IS USED TO.
+  //
+  //        who-she-is §3c: «sustained fame slowly shrinks her own pressure scale (she learns to live
+  //        known) – unless walls are up: walls freeze habituation.» `engine/spirit.ts`'s §3c-hab
+  //        carries the whole model; the two numbers are `ECONOMY.spotlight`'s.
+  //
+  //        ⚠⚠ ITS OWN CALL, **IMMEDIATELY AFTER** `accrueSpirit` AND NOT INSIDE IT – the architect's
+  //        RULING Q part 1, and the reason is an off-by-one rather than a taste: the scale the pass
+  //        above applied must be read with the habituation she CAME INTO the week holding. A growth
+  //        that ran first would discount this week's own exposure by this week's own growth –
+  //        invisible to every test, and legible only as «the constants came out slightly too weak».
+  //        Calling it AFTER makes that unspellable. It also keeps `accrueSpirit` the one writer of
+  //        `world.spirit`, and keeps `engine/spirit.ts`'s import list closed (§0.1).
+  //
+  //        ⚠⚠ AND **BEFORE** `driftWalls`, WHICH RULING Q DOES NOT SAY AND WHICH IS LOAD-BEARING.
+  //        The line below is the pass that FLIPS a wall, and its own ⚠ promises that «whatever flips
+  //        here is first read on the NEXT tick». This is a new reader of `wallsFlipped` inside the
+  //        same tick, so it must sit on THIS side of the drift or that promise stops being true: a
+  //        girl who flips this very week would then be CHARGED as the girl she was all week (the
+  //        expression `accrueSpirit` read at its head) and FROZEN as the girl she became at the end
+  //        of it. Wave 5's «one girl for the whole week», applied to a third reader.
+  //        ⚠ THE COST OF THAT PLACEMENT IS ONE RE-AIMED PIN AND IT IS PAID OUT LOUD: wave 5's own
+  //        ruling P case asserted `driftWalls` was the VERY NEXT statement (`toBe(i + 1)`). It now
+  //        asserts that the ONLY statement between the two is this one, by a total list equality –
+  //        as strict as before against anything else sliding in, and red on a re-order of these
+  //        three. See tests/wave5-psychologist-walls.test.ts's §H.
+  //
+  //        ⚠⚠ THE GATE IS ASKED **HERE** AND HANDED DOWN AS A BOOLEAN – §0.1's dependency inversion
+  //        for the third time on this phase (`psychologistWorks`, the exposure list, and now the news
+  //        gate). `engine/spirit.ts` gains no arrow to `world/spotlight.ts`.
+  //        ⚠⚠ AND IT IS `world.week - 1`, THE SAME HORIZON AS THE LINE ABOVE – ruling Q part 2, and
+  //        ruling P's one clock kept as one clock. A reader that asked about `world.week` here while
+  //        the pressure asked about `world.week - 1` would put two clocks in one pass, and «which
+  //        week is this about» is exactly the question that cost this wave two dead kinds. ⚠ At this
+  //        phase it is also the same ANSWER – `fameAt` derives from stamps written in earlier weeks,
+  //        and nothing between the two lines writes one – so the coherent spelling costs nothing.
+  //        ⚠ A NEGATIVE WEEK IS SAFE FOR THE SAME REASON IT IS ABOVE: the first tick asks about week
+  //        0 (step 0 increments first), and `fameAt` answers a future week with 0 in any case.
+  //        ⭐⭐⭐ AND SINCE v77's T5 IT CARRIES THE SEAT'S BILLING PREDICATE TOO – the third argument,
+  //        `psychologistWorksThisWeek(world)`, exactly the expression `accrueSpirit` is given one
+  //        line up and `driftWalls` one line down. «The public life» (O7, the fifth year-focus)
+  //        ACCELERATES this counter by rung while it is held, and the acceleration has to stand down
+  //        on a college-freeze week and a booked family week with the invoice – ruling J, pay nothing
+  //        and receive nothing. ⚠ IT IS HANDED DOWN RATHER THAN READ INSIDE for the same reason the
+  //        news gate is: `engine/spirit.ts` cannot import `./psychologist` at all (ruling J's two live
+  //        back-edges, argued at that file's §3c-psy), so the caller answers what the caller already
+  //        holds. ⚠ THE THREE CALLS NOW SPELL THE SAME PREDICATE THREE TIMES AND NOT INTO A LOCAL,
+  //        which is `driftWalls`'s own note one block down: a local would let a stale flag be threaded
+  //        where a live read belongs, and the call TEXT of all three is pinned.
+  growHabituation(world, newsStandingOf(world) === 'known', psychologistWorksThisWeek(world))
   // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
   //
   //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is
@@ -608,6 +770,34 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
     // The presence the fare bought, carried on the run it was bought for. Written only when a fare
     // was actually charged, so absence keeps meaning "he stayed home" for every earlier save.
     if (masseurFare > 0) world.pendingTournament.masseurThere = true
+    // ⭐⭐⭐ 2-booth (v77, the spotlight – T7): AND WHETHER THE BOOTH TOUCHES HER PRIVATE LIFE AT THIS
+    //        ONE. `world/lifeBeat.ts` §10 carries the licence, the window and the once-ness; the
+    //        ruling behind the channel is the-way-she-sounds C4 (10.09) and the loop it closes is the
+    //        owner's own: «a booth mention of her private life IS an exposure event for the
+    //        spotlight». ZERO DRAWS – the mention is deterministic by design (the wave's §3).
+    //
+    //        ⚠⚠ **THIS ARM AND THIS STEP**, WHICH IS THE ARCHITECT'S RULING P ASKED OF T7 («your
+    //        «this week has a big-stage match» read must be honest about which step it runs in»).
+    //        The life block – §5-§9, two phases of this same tick ABOVE (step 3 against this one's
+    //        step 5, with `deriveWeekField` between them) – runs before `enteredThisWeek` exists,
+    //        before the doctor sees her and before the three arms that
+    //        decide whether she plays at all; a licence spelled there would have re-derived the
+    //        match from the calendar and re-stated the injury, college and medical rules a second
+    //        time. Here the match is IN HAND, and the arm is the one where she actually BOARDED: the
+    //        walkover and medical-withdrawal arms above never reach this line, which is right – a
+    //        booth cannot fill a changeover at a match she did not play.
+    //        ⚠ SO THE TIER IS HANDED DOWN AND NOT RE-DERIVED (§0.1's dependency inversion, the third
+    //        time this phase makes the move): `airBoothMention` cannot be called from a matchless
+    //        phase, because there would be nothing to pass it.
+    //        ⚠⚠ AND IT IS NOT A SECOND CLOCK. The stamp names THIS week – the week the booth spoke,
+    //        `rollLeak`'s own rule for `publicWeek` – and T3's pass sees the `'aired'` exposure event
+    //        on the NEXT tick, where `exposureEventsOf(world, world.week − 1)` reads it. Ruling P's
+    //        one horizon, working; nothing about `accrueSpirit`'s position or the life block's moved
+    //        to buy this line.
+    //        ⚠ AFTER THE SHADOW RUN IS STASHED, and deliberately so: the run is what the family is
+    //        about to watch, and a stamp written before it would be a booth speaking at a match that
+    //        `computeShadowTournament` had not yet composed. Nothing here reads `pendingTournament`.
+    airBoothMention(world, enteredThisWeek.tier)
   }
 
   // 1c-masseur, settled HERE since the per-match tour pricing (v59; the step-1 position was beside

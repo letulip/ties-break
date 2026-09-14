@@ -59,7 +59,7 @@ import { inCollege, resolveCollegeBill } from './college'
 import { sponsorNeedMet } from './sponsors'
 // ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
 // this package, which is what keeps the till free of the shop's command-side dependencies.
-import { assetHeldWeeks, assetUpkeepCents, deliveredAssets } from './assets'
+import { assetHeldWeeks, assetUpkeepCents, deliveredAssets, reachableFundsCents } from './assets'
 // The businesses' one arithmetic (round 29 part four P7) – the till charges what these quote, and
 // the household meter quotes the same two functions, so the strip and the ledger cannot disagree.
 import { academyWeeklyIncomeCents, assetKidShareCents, merchWeeklyIncomeCents } from './business'
@@ -562,6 +562,17 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // whole bill, and why the cut is on the rung is written above `sponsorNeedMet` in world/sponsors.ts;
   // the numbers are on `ECONOMY.sponsor`; the measurement is docs/specs/need-not-background-2026-08.md.
   //
+  // ⚠⚠ AND «НА СЧЕТУ» MEANS THE MONEY SHE CAN REACH SINCE T12 (14.09, from his live playtest): «у
+  // рабочей семьи, если вложить все деньги сразу со стартом карьеры в депозит, сразу же приходят
+  // спонсорские деньги… чтобы поддержка приходила реально тогда, когда вообще уже край и денег нет,
+  // а не только кошельком мыслить» – and, the same hour, «предполагаю, что у среднего класса так же
+  // будет». He was right about `middle` by construction: this gate has been background-blind since
+  // the day it was built, so the hole was every background's. The input is `reachableFundsCents`
+  // (world/assets.ts) – the wallet plus the cash-parking rows, at the worth `revalueAssets` wrote
+  // one phase ago. THE BAR IS UNTOUCHED: `runwayWeeks` 62, the court denominator, the rung cut and
+  // the amounts are all exactly what §2.2/§2.3 of the spec measured. Only the INPUT widens, and a
+  // family that owns nothing gets its wallet back to the cent.
+  //
   // ⚠ AND THE DRAW SHAPE IS UNTOUCHED BY IT, WHICH IS THE CONSTRAINT THE WHOLE CHANGE HAD TO FIT
   // INSIDE. The roll is still one `rng()` and the gift is still one `pickInt` taken whenever that
   // roll hits, for EVERY family, before anything is asked about her – so the per-week MAIN count is
@@ -577,7 +588,7 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
     // the fork. That is invariant 2 - player choices may never re-roll the world's dice.
     if (
       !inCollege(world) &&
-      sponsorNeedMet({ fundsCents: world.fundsCents, courtCents: split.facilityCents, tier })
+      sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier })
     ) {
       world.fundsCents += gift
       addEvent(world, {

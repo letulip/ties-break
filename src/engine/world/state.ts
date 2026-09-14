@@ -428,7 +428,46 @@ import type { AcademySupport } from '../academy'
 //
 // Full move: this constant, the v75 -> v76 step in migrations.ts, tests/fixtures/saves/v76.json, and
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-export const SAVE_SCHEMA_VERSION = 76
+// ⭐⭐⭐ v77 – THE SPOTLIGHT, WAVE 6: WHAT LIVING KNOWN COSTS HER, AND WHAT THE WORLD KNOWS OF HER
+// PRIVATE LIFE. World `+spotlightHabituation`, and FOUR fields on the `LoveEpisode` ROW –
+// `+publicWeek`, `+publicWrong`, `+airedMetWeek`, `+airedEndedWeek`
+// (`docs/plans/life-wave-6-builder-2026-09.md` §2 T1; the model is `docs/specs/who-she-is-2026-09.md`
+// §3c and §3c-bis, the booth's boundary `docs/plans/the-way-she-sounds-2026-09.md` C4).
+//
+// ⚠⚠ THE FIRST SCHEMA MOVE IN THIS LADDER THAT WIDENS A ROW INSIDE A LIST RATHER THAN THE WORLD, and
+// that is the sentence a later reader needs before anything else. v73 added `lifeLog`, v74
+// `loveEpisodes`, v75 `spiritShock`, v76 seven world keys – every one of them a key on `WorldState`,
+// which a top-level `??=` back-fills and a top-level object rest peels. FOUR of this version's five
+// fields live on `LoveEpisode` ENTRIES, so the migration must WALK the list and `??=` each row, and
+// the frozen-career peel had to learn to map over an array
+// (`careerHashAtSchema`'s own «THE PROTOCOL'S FIRST NESTED PEEL» note). Neither is difficult; both
+// are silently skipped by the mechanical habits this ladder built up over thirteen flat versions,
+// which is why the shape is named here rather than left to be discovered.
+//
+// ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT ONE OF THEM IS A BARGAIN, in v73's / v74's / v75's /
+// v76's own sense one rung further on. `spotlightHabituation = 0` – ⭐ ZERO IS THE IDENTITY AND NOT A
+// PLACEHOLDER FOR ONE: it counts «known weeks» she has actually lived toward `habituationFullWeeks`,
+// and a career that predates the spotlight has lived none of them, because nothing was counting and
+// no pressure existed to acclimate to. `publicWeek = null` – the world never learned, and null is
+// that rather than «week 0»; the press did not exist as a mechanic, so no story ever ran. `publicWrong
+// = false` – no story ran, so no story ran wrong; the flag is meaningless while `publicWeek` is null
+// and `false` is the only value that invents no tabloid. `airedMetWeek` / `airedEndedWeek = null` –
+// the booth has never voiced a private fact, because there was no channel for it to voice one
+// through. Not one of the five reconstructs anything: this version is «nothing about her private
+// life was ever public, and she has never lived a week known», written down for the first time.
+//
+// ⚠⚠ AND THAT IS WHY A MIGRATED CAREER PLAYS BYTE-IDENTICAL TENNIS, which is this step's strongest
+// property and the wave's first pin. Every wave-6 mechanic – the five exposure kinds, the pressure
+// term, habituation's growth, both leak streams and the booth's stamp – is gated on `newsStandingOf`
+// (the rank bands, D1 14.09)
+// (T2) or on a non-null `publicWeek` (T6/T7), and at the back-fills NONE of them can fire. T1 ships
+// five seats and NO READER AT ALL: `world/spotlight.ts` is T2, the pressure T3, habituation T4, the
+// fifth focus T5, the leak T6 and the booth channel T7 – so this version is INERT by construction,
+// which is all a schema move should ever be, and the frozen careers prove it on five careers.
+//
+// Full move: this constant, the v76 -> v77 step in migrations.ts, tests/fixtures/saves/v77.json, and
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence.
+export const SAVE_SCHEMA_VERSION = 77
 
 
 
@@ -457,19 +496,33 @@ export interface PendingTournament {
  *  §2 is the ruled table, `docs/plans/life-wave-5-builder-2026-09.md` §2 T3 the mechanics). What the
  *  seat WORKS ON for a season: `'coolhead'` composure, `'recovery'` the walk back from a shock,
  *  `'listen'` the parent's own reading of her, `'herself'` her deliberate work beyond her nature's
- *  baseline. One a season, changed only in the off-season window.
+ *  baseline, `'publicLife'` the weight of being looked at. One a season, changed only in the
+ *  off-season window.
  *
- *  ⚠ A UNION AND NEVER FOUR BOOLEANS, the argument `spiritShock.kind` makes one field up: exactly one
+ *  ⭐⭐⭐ AND SINCE v77's T5 THERE IS A FIFTH: `'publicLife'` – «The public life», the spotlight focus
+ *  (O7, ruled 13.09: «ships WITH the spotlight wave, not before it has something to shrink»). While
+ *  it is held, wave 6's exposure pressure shrinks by rung and habituation accelerates by rung – both
+ *  in `engine/spirit.ts`, and neither is a new kind of thing: the year machinery below is wave 5's,
+ *  byte for byte, and this member inherits it whole.
+ *
+ *  ⚠ A UNION AND NEVER FIVE BOOLEANS, the argument `spiritShock.kind` makes one field up: exactly one
  *  focus is live at a time (the spec's own «1 session a week at every rung – the rung buys WHO comes
- *  to the call»), and a union makes that unrepresentable-otherwise rather than merely documented. A
- *  fifth member is the spotlight wave's to add if the owner ever rules one – O7 says «The public
- *  life» ships there and NOT here – and it widens in place, going red at every exhaustive read.
+ *  to the call»), and a union makes that unrepresentable-otherwise rather than merely documented.
+ *  ⚠⚠ AND WIDENING IT DOES **NOT** GO RED AT EVERY READ, WHICH IS THE SENTENCE v76 GOT WRONG AND THE
+ *  ARCHITECT'S RULING O MEASURED. The two `Record<PsyFocus, string>` catalogues in
+ *  `world/psychologist.ts` are total and DO go red; `PSY_FOCUSES` – the array the seat iterates, the
+ *  refusal filter walks and the string tests read – is a `readonly PsyFocus[]`, and an array of four
+ *  is a perfectly valid array of a five-member union. So the one site that decides whether a focus is
+ *  ever OFFERED is the one the compiler will not defend. Wave 5 left the tripwire for it and wave 6's
+ *  T5 re-aimed it to a MEMBERSHIP oracle against the type-forced Record
+ *  (`tests/wave5-psychologist-focus.test.ts` §A) – a length is not a membership, and the compiler
+ *  already holds the complete list.
  *
  *  ⚠ DECLARED HERE RATHER THAN IN `shared/protocol`, on `Temperament`'s own precedent: this is an
  *  ENGINE fact that the wire happens to carry later (T2 puts it on the snapshot), and
  *  `shared/protocol/narrative.ts` already imports `Temperament` type-only from `engine/spirit` for
  *  exactly that shape. The arrow stays engine -> shared, never the other way. */
-export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself'
+export type PsyFocus = 'coolhead' | 'recovery' | 'listen' | 'herself' | 'publicLife'
 
 export interface WorldState {
   schemaVersion: number
@@ -1203,6 +1256,27 @@ export interface WorldState {
    *  keep reading BIRTH). While both booleans are false it returns birth, which is the whole of the
    *  zero-diff proof T1 ships. */
   wallsFlipped: { open: boolean; reg: boolean }
+  /** ⭐⭐⭐ v77 – HOW MUCH OF LIVING KNOWN SHE HAS ALREADY DONE (the spotlight, wave 6;
+   *  `docs/plans/life-wave-6-builder-2026-09.md` §2 T4, the model `docs/specs/who-she-is-2026-09.md`
+   *  §3c: «a veteran star from a good home shrugs at cameras that once cost her sleep»). Accumulated
+   *  «known weeks» toward `habituationFullWeeks`, one decimal like `spirit` and `wallsLean`.
+   *
+   *  ⚠⚠ IT ONLY EVER GROWS, AND THAT IS v1 SPEAKING RATHER THAN AN OVERSIGHT (brief §0.5): she does
+   *  not unlearn living known. It grows only while she LIVES known – `newsStandingOf === 'known'`,
+   *  the top band alone since D1 (14.09; a 'noticed' girl the light only visits never habituates) – not at
+   *  all while either wall is flipped – walls freeze habituation, §3c verbatim, ruled EITHER-axis on
+   *  14.09 – and faster while the fifth focus is held (T5). No decay term exists and none is coming
+   *  without a ruling, which is said here so nobody adds one as an obvious omission.
+   *
+   *  ⚠ NEVER ON ANY SURFACE – the fog law, `wallsLean`'s own absence one field up and for the same
+   *  reason. No meter, no number, no line, no snapshot field: the spotlight is READ through the
+   *  feed's plain words, the Mood dips, the diary and the booth. A habituation printout would turn a
+   *  weather system into a progress bar, which is the one shape §3c forbids.
+   *
+   *  ⚠ v77 SHIPS THE SEAT AND NO WRITER AND NO READER. The growth pass is T4 and the only reader is
+   *  T3's `habituationScale` inside `accrueSpirit`'s own term; nothing on this tree can move it off
+   *  `0`, which is what «the schema move is inert» means and what the frozen careers measure. */
+  spotlightHabituation: number
   /** ⭐⭐⭐ THE BEST HER BODY HAS EVER BEEN (v62, the long goodbye step 1) – `physicalMean` of her
    *  skills, kept as a RUNNING MAXIMUM over the whole career by the growth phase (world/phaseGrowth).
    *  One number, written every tick, read by nothing yet.

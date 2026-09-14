@@ -68,6 +68,14 @@
 // no register table and no component – one line, at one moment, and `resolveMasseurReturn` one seat
 // over is the same idiom.
 //
+// ⚠⚠ AND SINCE v77's T3 IT IS **TWO** ROWS, WHICH IS THE PARAGRAPH ABOVE CORRECTED RATHER THAN
+// REWRITTEN. The second is `EXPOSURE_ROW` (§3c below), and it is here for the same KIND of reason
+// the first is: the week's exposure list is summed inside `accrueSpirit`'s own pass and nowhere
+// else, so «was this an exposure week» is a question this function is already holding the answer to,
+// and a second reader re-deciding it from the world is the shape this file refuses everywhere. ⚠ Two
+// rows is now the count, and it is the whole count: both go through `addEvent`, neither carries
+// `amountCents` or a figure, and this module still owns no pool, no register table, no component.
+//
 // ⚠ AND IT STILL IMPORTS NOTHING FROM `world/psychologist.ts`, WHICH IS MEASURED AND NOT ASSUMED:
 // that module imports `bondBandOf` from THIS file at runtime (its consent gate), so an import back
 // would close the value loop the `activeEpisode` note below records being caught once already – and
@@ -104,7 +112,15 @@ import { activeEpisode, loveEpisodesOf } from './world/loveEpisodes'
 import type { BondBand, MoodRegister } from '../shared/protocol'
 // ⚠ TYPE-ONLY, so this leaf adds no runtime edge back into the integration core – the same shape
 // `academy.ts` uses one floor up and every `world/*.ts` module uses beside it.
-import type { WorldState } from './world'
+// ⚠⚠ `ExposureEvent` JOINS IT AT v77's T3 AND OPENS **NO NEW ARROW AT ALL**, which is the wave-6
+// brief's §0.1 in its own words («`spirit.ts` imports nothing new»). It is not a second import line:
+// the type is widened onto the ONE type-only import this module already had, it comes off the
+// `engine/world` BARREL (the historical convention, `world.ts:445`) rather than off `world/spotlight`
+// directly, and `import type` is erased at compile time – so there is no runtime edge to `world/` in
+// either direction and the leaf is the leaf it was. ⭐ THE VALUE that fills this list is never
+// imported here: `exposureEventsOf` is called by `world/phaseHerWeek.ts` and the LIST is handed down,
+// which is ruling J's dependency inversion applied a second time, to a second fact.
+import type { ExposureEvent, WorldState } from './world'
 
 // =================================================================================================
 // 1. WHO SHE IS
@@ -623,6 +639,391 @@ export function recoveryReceiptEarned(
  *  a state where it does not print. ⭐ A string is not a place to hedge a condition. */
 export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
 
+// =================================================================================================
+// 3c. ⭐⭐⭐ THE SPOTLIGHT'S PRESSURE – v77's T3 (wave 6, who-she-is §3c / §3c-bis)
+// =================================================================================================
+//
+// THE OWNER, 09.09: «давление известности и как она с ним справляется (и справляется ли вообще).»
+//
+// THE WHOLE OF THE MECHANIC: the weeks that put her in the light cost her spirit, priced per event,
+// summed over the week, applied as ONE named summand inside `accrueSpirit`'s own pass. The LIST of
+// events is not derived here – `world/spotlight.ts` answers «what put her in the light» for a week
+// and `world/phaseHerWeek.ts` hands the answer down, which is §0.1's dependency inversion and the
+// second use of ruling J's shape in this file.
+//
+// ⚠⚠ AND THE WEEK IT IS ASKED ABOUT IS THE ONE THAT HAS **CLOSED**, NOT THE ONE BEING LIVED – the
+// architect's RULING P (14.09), which overturned ruling M after T3 measured what M had missed. The
+// caller asks `exposureEventsOf(world, world.week − 1)`, and the argument is the TICK's own order,
+// not a taste: a trophy and a result row are stamped by `finalizeTournament` inside `playHerWeek`,
+// which runs TWO PHASES AFTER this pass, so asked in-week `'stage'` and `'publicLoss'` returned
+// nothing every week for ever. Nothing about the SIZE of the term changed – only which pass carries
+// it – and the lag is the truer reading in any case: the cameras were on her at the weekend and the
+// week she pays for it is the week after. `world/phaseHerWeek.ts` carries the tick table.
+//
+// ⚠⚠ IT IS WEATHER, NOT A SHOCK, AND THAT IS THE WAVE'S OWN §8 RATHER THAN A PLACEMENT PREFERENCE.
+// Nothing here writes `world.spiritShock`, nothing here touches the return curve, and no new shock
+// kind exists: the break-up stays the ONE shock in the game. What recovers a pressured week is the
+// standing return toward baseline, at her own rate, exactly as it recovers a bad exam fortnight.
+//
+// ⚠⚠ AND THERE IS NO SUCCESS TAX ANYWHERE IN IT (§0.4, «мы ни за что не наказываем», 09.09). The
+// term is keyed on EVENTS and never on rank, prize, fame or a standing weekly drain: a week with no
+// exposure event contributes exactly `0` and is byte-identical to wave-5 behaviour, whatever her
+// fame. That is a pin (§B of the T3 suite) and not a claim, and it is run against a FAMOUS world,
+// because run against a quiet one it would prove nothing about this wave.
+
+/** ⭐⭐ THE DRAFT ROW – one no-cents feed line on an exposure week, and the legibility law made
+ *  audible (§3c: «every dip explainable»).
+ *
+ *  ⚠⚠ A DRAFT UNDER CLAUDE.md INVARIANT 4, AND IT IS T8's AND THE ARCHITECT'S ВЫЧИТКА TO SETTLE –
+ *  the wave's §5 binds every player-facing word in T8's list, and this is row 2 of that list. It is
+ *  deliberately NOT polished here: what T3 owes is an honest plain sentence in the right register,
+ *  and the register is the row's neighbours (`RECOVERY_RECEIPT` above, the met/ended rows in
+ *  `world/lifeBeat.ts`) – quiet, no figure, no exclamation, short dash idiom, nothing gendered.
+ *
+ *  ⚠⚠ AND THE ONE REAL CONSTRAINT ON IT IS THAT **ONE SENTENCE HAS TO COVER FIVE KINDS**, which is
+ *  the legibility law's own «one row per week, not per event» (§3c: the feed is not a ledger). The
+ *  brief's territory line is «The cameras were everywhere this week»; it reads true of `'stage'`,
+ *  `'shoot'` and `'publicLoss'` and reads oddly of `'aired'` (a commentary booth) and `'wrongStory'`
+ *  (a tabloid), and a week can hold any mixture of the five. So the draft below names the ATTENTION
+ *  rather than the lens, which is the one thing all five weeks have in common. ⚠ CARRIED TO THE
+ *  ARCHITECT AS A QUESTION rather than decided here: if he wants the cameras named, the honest
+ *  shape is a row per kind, and that is a second sentence in the feed's budget, not a word swap.
+ *
+ *  ⚠⚠ AND THE SECOND CONSTRAINT IS NEW, IT IS THE ARCHITECT'S **RULING P**, AND IT IS WHY THE DRAFT
+ *  MOVED ONCE ALREADY (v77's T3b). T3 shipped «…about her **this week**», which was true of the week
+ *  the row asked about under ruling M's horizon. Ruling P corrected that horizon: the caller asks
+ *  `exposureEventsOf(world, world.week − 1)`, because the tick stamps a trophy or a result two phases
+ *  AFTER the spirit pass, so `'stage'` and `'publicLoss'` could never be seen in-week. The row is
+ *  still stamped with the week it PRINTS in – the feed's rows are dated by when the player reads
+ *  them – but the attention it names happened in the week that has closed. «this week» was therefore
+ *  a sentence about the wrong week the day the horizon moved, and a row that names the wrong week is
+ *  the legibility law failing quietly. ⚠ STILL A DRAFT AND DELIBERATELY NOT POLISHED: T8 and the
+ *  вычитка own the words, and what T3b owes is a plain sentence that is TRUE. */
+export const EXPOSURE_ROW = 'People were talking about her last week.'
+
+/** ⭐⭐ THE FIFTH FOCUS'S RECEIPT – the spec §2's own sentence, commissioned by the owner's D2
+ *  (14.09, «да») on the strings doc's trigger proposal. A DRAFT under invariant 4 like its two
+ *  siblings above. */
+export const PUBLIC_LIFE_RECEIPT = 'The cameras stopped costing her sleep.'
+
+// =================================================================================================
+// 3c-psy. ⭐⭐⭐ «THE PUBLIC LIFE» – v77's T5 (wave 6, the psychologist's fifth focus, O7 ruled 13.09)
+// =================================================================================================
+//
+// THE SPEC'S OWN ROW (`docs/specs/the-psychologists-year-2026-09.md` §2): «while held, the
+// spotlight's pressure shrinks by rung and habituation accelerates». Two effects, ONE question –
+// «is the seat working HER PUBLIC LIFE this week, and at what rung» – and therefore one function to
+// answer it, spent twice: `publicLifeShrinkAt` in `exposurePressure`'s product below, and
+// `publicLifeAccelAt` in `growHabituation`'s growth further down.
+//
+// ⚠⚠ THE BRIEF SAYS BOTH EFFECTS «RIDE `psychologistWorkingRung(world, 'publicLife')`» AND THIS FILE
+// CANNOT CALL IT – measured, carried back to the architect, and spelled the way the house already
+// answers this exact wall. `psychologistWorkingRung` lives in `world/psychologist.ts`, and ruling J
+// measured that an import of that module FROM HERE closes a real value cycle by TWO live back-edges
+// (`psychologist -> spirit` through `bondBandOf`, and `psychologist -> college -> player -> spirit`
+// through `inCollege`). `world/psychologist.ts` says so in its own words on that function: «`spirit.ts`
+// cannot import this file – the cycle ruling J measured – so T4's focus had to re-spell the rung read
+// in its own module». So the fact that cannot be imported is HANDED DOWN (the billing predicate,
+// already a parameter of `accrueSpirit` since ruling J and now of `growHabituation` too), and the two
+// facts that CAN be read are read straight off the world – which is ruling J's own closing sentence:
+// «`psychologistFocus` is still read straight off the world – it is a CHOICE and not a working week,
+// no predicate owns it, and no import is involved».
+//
+// ⚠⚠ AND THE RE-SPELLING IS **PINNED AS AN EQUIVALENCE** RATHER THAN TRUSTED – wave 5's own practice
+// on `recoverySlopeFor` («the two spellings are pinned as an EQUIVALENCE in the T4 suite rather than
+// trusted: the slope's index and the rung `psychologistRungOf` returns are asked to agree over all
+// three»). `tests/wave6-spotlight-focus.test.ts` §C asks both spellings the same question over the
+// whole grid – three rungs × five focuses × hired/unhired × the two stand-downs – so a future edit to
+// either one goes red instead of quietly giving the family two answers.
+//
+// ⚠ ONE FUNCTION AND NOT TWO COPIES OF THE CONDITION, which is the defect `psychologistWorkingRung`
+// was created to close one wave ago («a focus pass that spelled `psychologistHired && focus === …`
+// instead would be T4's own defect, corrected one commit later»). Both of T5's effects ask THIS.
+
+/** ⭐⭐ THE RUNG THE SEAT IS WORKING **HER PUBLIC LIFE** AT THIS WEEK, or `undefined` when it is not
+ *  working that focus at all – not hired, stood down, or hired for a different year.
+ *  `psychologistWorkingRung(world, 'publicLife')` re-spelled in this module for the cycle's sake (the
+ *  section note above), and pinned equal to it.
+ *
+ *  ⚠⚠ THE STAND-DOWNS COME IN THROUGH THE PARAMETER AND ARE NOT RE-SPELLED HERE, which is the whole
+ *  of ruling J: `psychologistWorks` is `psychologistWorksThisWeek(world)` at the one engine call
+ *  site, so a college freeze and a booked family week stand this focus's TWO EFFECTS down exactly as
+ *  they stand the INVOICE down. Pay nothing, receive nothing. A version of this function that asked
+ *  `world.psychologistHired` would be the defect ruling J corrected one wave ago, on a different
+ *  focus, one commit after it shipped.
+ *
+ *  ⚠ THE `??` FALLBACK IS `recoverySlopeFor`'s AND `psychologistWorkingRung`'s, MIRRORED for their
+ *  reason: the rung is validated at its one writer (`setPsychologistRung`), but a hand-built probe
+ *  world may hold anything, so an unknown value reads as the DEFAULT rung rather than poisoning a
+ *  multiplier. ⚠ And `undefined` means ONE thing here – «he is not working her public life» – which
+ *  is why a missing rung falls back rather than switching the effect off. Pure read, ZERO draws. */
+function publicLifeRung(world: WorldState, psychologistWorks: boolean): 0 | 1 | 2 | undefined {
+  if (!psychologistWorks) return undefined
+  if ((world.psychologistFocus ?? null) !== 'publicLife') return undefined
+  return world.psychologistRung ?? ECONOMY.psychologist.defaultRung
+}
+
+/** ⭐⭐⭐ WHAT A YEAR ON HER PUBLIC LIFE TAKES OFF EVERY EXPOSURE EVENT – the FIFTH factor of
+ *  `exposurePressure`'s product, and **exactly `1`** on every week the seat is not working this
+ *  focus.
+ *
+ *  ⚠⚠ THE `1` IS THE IDENTITY AND NOT A DEFAULT, which is what makes «a career with nobody on this
+ *  focus plays exactly the tennis it played before T5 existed» arithmetic rather than a promise – the
+ *  same claim ruling Q part 3 made of habituation at zero, and it is pinned the same way (§E of the
+ *  T5 suite, byte-identity against a live world). `undefined` in, `1` out.
+ *
+ *  ⚠ IT TAKES THE RUNG AND NEVER THE WORLD, for `exposurePressure`'s own reason (ruling L part 3):
+ *  the pass reads the world once and hands values down, so no helper can re-derive a fact the week
+ *  has already fixed. Pure, total, ZERO draws. */
+export function publicLifeShrinkAt(rung: 0 | 1 | 2 | undefined): number {
+  if (rung === undefined) return 1
+  const p = ECONOMY.psychologist
+  return p.publicLifeShrink[rung] ?? p.publicLifeShrink[p.defaultRung]
+}
+
+/** ⭐⭐⭐ HOW MUCH FASTER SHE LEARNS TO LIVE KNOWN WHILE THE YEAR IS HELD – the multiplier on
+ *  `growHabituation`'s weekly `+1`, and **exactly `1`** on every week the seat is not working this
+ *  focus.
+ *
+ *  ⚠⚠ IT NEVER REACHES A WALLED OR AN UNKNOWN GIRL, AND THAT IS THE CALLER'S EARLY RETURNS RATHER
+ *  THAN A NUMBER IN THIS ROW. `growHabituation` returns before this is read when she is not news or
+ *  when either wall is flipped, so ruling H's `×0` beats any accelerator by construction and there is
+ *  no `Math.max` to reach for. The composition is pinned (§D of the T5 suite) precisely because it is
+ *  the place a builder would reach for one.
+ *
+ *  ⚠ AND IT CANNOT OUT-RUN THE CAP: `growHabituation` clamps at `habituationFullWeeks`, which is also
+ *  `habituationScale`'s denominator, so a faster walk reaches the same floor sooner and never passes
+ *  it. Pure, total, ZERO draws. */
+export function publicLifeAccelAt(rung: 0 | 1 | 2 | undefined): number {
+  if (rung === undefined) return 1
+  const p = ECONOMY.psychologist
+  return p.publicLifeAccel[rung] ?? p.publicLifeAccel[p.defaultRung]
+}
+
+/**
+ * ⭐⭐⭐ WHAT THE WEEK'S EXPOSURE COST HER, in spirit points – the whole of T3's arithmetic, as one
+ * pure fold over the list the caller handed down.
+ *
+ * THE PRODUCT, per event, and it is the spec's own five factors in the spec's own order:
+ *
+ *     base[kind] × perturbationScale[intensity] × opennessScale[openness] × habituation × focus
+ *
+ * ⚠⚠ `perturbationScale` IS THE **STANDING** SCALE AND NEVER A NEW CONSTANT (§4, «the intensity
+ * scale is the STANDING `perturbationScale`»), and it is applied EXACTLY ONCE, here, because
+ * `pressureBase` is drafted «−2..−4 BEFORE scaling». That is the architect's ruling L part 1, and
+ * the defect it refuses is recorded in this file already: `spirit.shock`'s constants are ALREADY
+ * intensity-scaled, so they are added OUTSIDE `weekPerturbation`'s multiplication – and a row for
+ * the spotlight placed INSIDE that function would scale these bases a SECOND time (−4 × 0.8 × 0.8).
+ * A future editor tempted by the tidiness of one more `perturb` row is looking at the same mistake
+ * on new numbers.
+ *
+ * ⚠⚠ IT DOES NOT ROUND ITSELF – ruling L part 2. There is ONE `roundTenth` and one `clamp` in the
+ * weekly pass, at the end, on the sum. A term that rounded its own tenths would quantise the small
+ * values FIRST, and a single event at ×0.75 through a deep habituation discount is exactly where
+ * this term's small values live: ruling N measured a habituated, focus-held, calm, open girl taking
+ * −0.33 from the worst week of her public life. Rounded here that is −0.3 before it ever meets the
+ * week's other weather; left alone it is the 0.33 the sum deserves.
+ *
+ * ⚠⚠ BOTH AXES ARE PARAMETERS AND NEITHER IS READ OFF THE WORLD – ruling L part 3, and it is why
+ * this function does not take `world` at all. `accrueSpirit` reads `expressedTemperamentOf(world)`
+ * EXACTLY ONCE at its head (its own ⚠⚠: «Do not re-read it after this line»), and T3 needs BOTH
+ * projections of that one value; a second `expressedTemperamentOf(world)` call here would be a
+ * second read of a girl wave 5 ruled is one girl for the whole week. Taking the two poles as
+ * arguments makes that structural instead of disciplined.
+ *
+ * ⚠⚠ ALL FIVE FACTORS ARE REAL SINCE v77's T5, AND THE LAST TWO ARE **PARAMETERS** RATHER THAN WORLD
+ * READS:
+ *   · `habituation` is T4's – `habituationScale(world.spotlightHabituation)`, read by `accrueSpirit`
+ *     off the world and handed down here as a plain number.
+ *   · `focus` is T5's – the fifth psychologist focus «The public life»,
+ *     `publicLifeShrinkAt(publicLifeRung(world, psychologistWorks))`, read by `accrueSpirit` the same
+ *     way and **exactly `1`** on every week no seat is working that year. T3 wrote it out as a
+ *     literal `1` with a note naming this task; the literal is gone and the product's shape is
+ *     unchanged, which is what writing it out bought.
+ *   ⚠⚠ BOTH ARE PARAMETERS AND NOT WORLD READS FOR RULING L PART 3's OWN REASON, which is the same
+ *   reason `intensity` and `openness` are: a helper that could reach the world could re-derive a fact
+ *   the pass has already fixed for the week, and the pin below («no world reaches the term») is what
+ *   makes that structural instead of disciplined. T4 obeyed the rule it found rather than amending
+ *   it, and T5 obeys it for the one factor that genuinely wanted the world – the seat's year and its
+ *   rung are read ONCE, at the pass's own line, and arrive here as a number.
+ *
+ * ⚠ ZERO DRAWS, PURE, TOTAL. Arithmetic over a list, and an empty list returns exactly `0` – which
+ * is what makes §0.4's byte-identity claim arithmetic rather than a promise. ⭐ AND THE EMPTY LIST IS
+ * WHY T4 CANNOT DISTURB A QUIET WEEK: `habituation` is a factor INSIDE the loop, so a week with no
+ * exposure is `0` at every habituation, and «a career that has never been news plays the tennis it
+ * played before T4 existed» is arithmetic here rather than a promise there.
+ */
+function exposurePressure(
+  exposure: readonly ExposureEvent[],
+  intensity: 'steady' | 'intense',
+  openness: 'open' | 'private',
+  habituation: number,
+  focus: number,
+): number {
+  const s = ECONOMY.spirit
+  const p = ECONOMY.spotlight
+  let total = 0
+  for (const event of exposure) {
+    total +=
+      p.pressureBase[event.kind] * s.perturbationScale[intensity] * p.opennessScale[openness] * habituation * focus
+  }
+  return total
+}
+
+// =================================================================================================
+// 3c-hab. ⭐⭐⭐ HABITUATION – v77's T4 (wave 6, who-she-is §3c: «unless walls are up»)
+// =================================================================================================
+//
+// THE SPEC'S OWN SENTENCE, and the whole model is in it: «sustained fame slowly shrinks her own
+// pressure scale (she learns to live known) – unless walls are up: walls freeze habituation. A
+// veteran star from a good home shrugs at cameras that once cost her sleep.»
+//
+// TWO FUNCTIONS AND ONE FIELD. `growHabituation` counts the weeks she has actually lived known onto
+// `world.spotlightHabituation`; `habituationScale` reads that count back as the fourth factor of
+// T3's product. They are in one file and one section on purpose – a growth whose reader lives
+// somewhere else is how a cap and a denominator come to disagree.
+//
+// ⚠⚠ IT ONLY EVER GROWS, AND THAT IS v1 SPEAKING RATHER THAN AN OVERSIGHT (brief §0.5): **she does
+// not unlearn living known.** There is no decay term here, no half-life, no «quiet season» rule, and
+// none is coming without a ruling. It is written down because a missing decay is exactly the kind of
+// absence a later reader repairs as an obvious omission – and repairing it would be a design change
+// nobody asked for.
+//
+// ⚠⚠ AND NOTHING PRINTS IT – THE FOG LAW, `wallsLean`'s own absence one section down and for the
+// same reason. No meter, no bar, no line, no snapshot field, no diary sentence: the spotlight is
+// READ through the feed's plain words, the Mood dips, the diary and the booth. A habituation
+// printout would turn a weather system into a progress bar, which is the one shape §3c forbids. The
+// wave's §8 names it twice («no publicity meter, no habituation surface»).
+
+/** ⭐⭐⭐ WHAT BEING USED TO IT SAVES HER – the fourth factor of T3's product, linear from 1 at zero
+ *  weeks down to `habituationFloor` at `habituationFullWeeks`.
+ *
+ *      habituationScale = 1 − (1 − habituationFloor) × (habituation / habituationFullWeeks)
+ *
+ *  ⚠⚠ ZERO SCALES TO EXACTLY `1`, BY CONSTRUCTION AND NOT BY ROUNDING – the architect's ruling Q
+ *  part 3, and it is the property the whole task is pinned against: a career that has never been
+ *  news must play EXACTLY the tennis it played before T4 existed, because `1` is the literal this
+ *  function replaces. Byte-identity, not «close enough»: the subtracted product is `× 0`, so the
+ *  expression is `1 − 0` and no float tail exists to round.
+ *
+ *  ⚠ NO CLAMP HERE, AND THAT IS DELIBERATE RATHER THAN FORGOTTEN. The formula is the ruled one
+ *  verbatim, and it is total and exact on `[0, habituationFullWeeks]` – the interval the ONE writer
+ *  keeps the counter inside by its own clamp, which is pinned. A second clamp here would be a second
+ *  place the floor is decided, and the two could disagree; worse, it would let a broken writer pass
+ *  unnoticed. The coupling is real and is written out on `habituationFloor` itself so a future second
+ *  writer meets it before it meets this line.
+ *
+ *  ⚠ IT TAKES THE COUNT AND NEVER THE WORLD, for `exposurePressure`'s own reason (ruling L part 3):
+ *  the pass reads the world once and hands values down, so no helper can re-derive a fact the week
+ *  has already fixed. */
+export function habituationScale(habituation: number): number {
+  const p = ECONOMY.spotlight
+  return 1 - (1 - p.habituationFloor) * (habituation / p.habituationFullWeeks)
+}
+
+/** ⭐⭐⭐ THE WEEK SHE LIVED KNOWN, COUNTED – `+1` per week while she is news, `×0` while a wall is
+ *  up, clamped at `habituationFullWeeks`. The ONE writer of `world.spotlightHabituation`.
+ *
+ *  ⚠⚠ A SIBLING OF `accrueSpirit` AND NOT A BLOCK IN ITS TAIL, AND IT RUNS **AFTER** IT – the
+ *  architect's RULING Q part 1, and the middle reason is the load-bearing one:
+ *    · `accrueSpirit` stays the one writer of `world.spirit` and gains no second field to own;
+ *    · **THE SCALE MUST BE READ WITH THE HABITUATION SHE CAME INTO THE WEEK HOLDING.** A growth that
+ *      ran first would discount THIS week's own exposure by THIS week's own growth – an off-by-one
+ *      no test would ever name, which reads from the outside as «the constants are slightly too
+ *      weak». Calling it after the pass makes that defect unspellable rather than merely absent;
+ *    · a sibling keeps `engine/spirit.ts`'s import list closed, which §0.1 requires.
+ *
+ *  ⚠⚠ AND IT RUNS **BEFORE** `driftWalls`, WHICH IS THE SECOND HALF OF THE SAME LAW AND IS NOT IN
+ *  RULING Q. `driftWalls` is the pass that FLIPS a wall, and its own ⚠ says «whatever flips here is
+ *  first read on the NEXT tick: every reader of `expressedTemperamentOf` in this tick has already
+ *  run». This function is a new reader of `wallsFlipped` in that same tick, so it has to sit on the
+ *  same side of the drift as the pressure it is the scale for – otherwise a girl who flipped THIS
+ *  week would be CHARGED as the girl she was all week (the expression `accrueSpirit` read at its
+ *  head) and FROZEN as the girl she became at the end of it. Wave 5's «one girl for the whole week»
+ *  is the rule; this is that rule applied to a third reader.
+ *
+ *  ⚠⚠ THE NEWS GATE ARRIVES AS A **BOOLEAN**, handed down at the caller – §0.1's dependency
+ *  inversion, ruling J's shape, and the third use of it in this file (after `psychologistWorks` and
+ *  the exposure list). `engine/spirit.ts` gains no arrow to `world/spotlight.ts`, and the WEEK the
+ *  gate is asked about stays visible at the call site, one line under the horizon the pressure uses.
+ *  ⚠ Ruling Q part 2: it is `world.week − 1`, the SAME horizon, because ruling P gave this wave one
+ *  clock and «which week is this about» is the question that cost the wave two dead kinds. At step 3
+ *  of the tick it is also the same ANSWER – fame derives from stamps written in earlier weeks – so
+ *  the coherent spelling is free.
+ *
+ *  ⚠⚠ EITHER AXIS FREEZES HER, AND IT IS THE **FLAG** AND NEVER THE LEAN – the architect's ruling H,
+ *  settled and not a builder question. «Up» is the spec's word for the FLIPPED state, both axes are
+ *  walls (the openness wall makes her expressed-closed, the regulation wall dysregulated), and the
+ *  pressure ALREADY reads both axes – so a one-axis freeze would acclimatise a girl the same pass
+ *  has just charged double. `wallsLean` is a continuous leaning and a girl leaning toward walls has
+ *  not raised them.
+ *
+ *  ⭐⭐⭐ THE FIFTH FOCUS'S ACCELERATION IS REAL SINCE v77's T5 – `publicLifeAccel[rung]` while «The
+ *  public life» is the year being worked (O7), and exactly `1` otherwise. T4 wrote it out as a
+ *  literal `1` with a note naming T5; the literal is gone and the growth's shape is unchanged, which
+ *  is what writing it out bought.
+ *
+ *  ⚠⚠ THE SEAT ARRIVES AS THE **THIRD BOOLEAN PARAMETER** AND NOT AS A WORLD READ – the same
+ *  dependency inversion the news gate above uses, and for the harder reason: `psychologistWorksThisWeek`
+ *  cannot be imported into this file at all (ruling J's two live back-edges, argued at §3c-psy). So
+ *  the billing predicate is handed down at the call site, one line under the horizon and the same
+ *  expression `accrueSpirit` and `driftWalls` are given on the lines around it. ⚠ A college-freeze
+ *  week and a booked family week therefore stand the ACCELERATION down with the bill, exactly as they
+ *  stand the shrink and the invoice down.
+ *
+ *  ⚠⚠ AND THE ACCELERATOR IS READ **AFTER** BOTH GATES, WHICH IS THE COMPOSITION AND NOT A TIDINESS:
+ *  a girl who is not news, or who has either wall up, has already returned – so ruling H's `×0` beats
+ *  any accelerator by construction, a walled girl holding this focus grows exactly NOTHING, and no
+ *  `Math.max` is reachable from here. That is where a builder reaches for one, so §D of the T5 suite
+ *  pins it.
+ *
+ *  ⚠ ZERO DRAWS AND NO CLOCK: four reads and one assignment. The frozen MAIN capture cannot see it.
+ *  ⚠ AND IT WRITES NOTHING ON A WEEK IT DOES NOT COUNT – the early returns are what keep a quiet
+ *  career's world byte-identical to the one it had before this pass existed. */
+export function growHabituation(world: WorldState, isNews: boolean, psychologistWorks: boolean): void {
+  const p = ECONOMY.spotlight
+  // ⚠ THE `??` COURTESY IS `accrueSpirit`'s and `driftWalls`'s, for their reason: every real world –
+  // created or migrated – carries the field, and a probe world hand-built in a test or a bench
+  // predates it. ⭐ `0` is the IDENTITY here and not a placeholder for one (T1's own ⭐): it counts
+  // weeks she has actually lived known, and a world that never had the field has lived none.
+  const held = world.spotlightHabituation ?? 0
+  // 1. SHE HAS TO BE KNOWN TO GET USED TO BEING KNOWN. An unknown girl acclimatises to nothing –
+  //    there is no spotlight on her to acclimatise to, which is the same gate every other mechanic
+  //    in this wave sits behind.
+  if (!isNews) return
+  // 2. ⭐⭐⭐ AND WALLS FREEZE IT – §3c verbatim, ruling H's EITHER-axis, on the FLAG.
+  const flipped = world.wallsFlipped ?? { open: false, reg: false }
+  if (flipped.open || flipped.reg) return
+  // 3. ⚠ THE CAP IS A `Math.min` AND NOT AN `if (held < full)`, so a counter already at the ceiling
+  //    is written back unchanged rather than skipped – the two behave identically today and the
+  //    `Math.min` stays correct if the step ever stops being 1. `habituationFullWeeks` is BOTH this
+  //    cap and `habituationScale`'s denominator, which is what makes the floor exactly reachable and
+  //    never passable.
+  // 4. ⭐⭐⭐ AND «THE PUBLIC LIFE» MAKES THE WALK SHORTER (v77's T5, O7) – `publicLifeAccel[rung]`
+  //    while that year is being worked and paid for, `1` otherwise. ⚠ IT IS READ HERE AND NOT AT THE
+  //    HEAD: both gates above have already returned, so this multiplier is only ever reached on a
+  //    week that was going to count one anyway.
+  const rung = publicLifeRung(world, psychologistWorks)
+  const focusAccel = publicLifeAccelAt(rung)
+  const grown = roundTenth(Math.min(held + 1 * focusAccel, p.habituationFullWeeks))
+  world.spotlightHabituation = grown
+  // 5. ⭐⭐ THE RECEIPT (D2, 14.09, his «да»): «The cameras stopped costing her sleep» prints on the
+  //    week the habituation SCALE first crosses `psychologist.publicLifeReceiptAt` – and only if the
+  //    year is being worked that week, because it is the FOCUS's receipt and not the counter's.
+  //    ⚠ ONCE-EVER BY MONOTONICITY, NOT BY A STAMP: this counter never decays (v1's own law two
+  //    notes up), so before/after can straddle the point at most once per career and no schema
+  //    field is spent remembering it. A career that crosses the point on an unworked week spends
+  //    the crossing silently – the receipt is earned by the year that did the work, which is
+  //    `RECOVERY_RECEIPT`'s own «he worked it, not a subscription stamp» doctrine (wave 5 T4).
+  //    ⚠ `type: 'info'`, no cents, no keep – the recovery receipt's exact shape at its own site.
+  if (rung !== undefined) {
+    const point = ECONOMY.psychologist.publicLifeReceiptAt
+    if (habituationScale(held) > point && habituationScale(grown) <= point) {
+      addEvent(world, { week: world.week, type: 'info', text: PUBLIC_LIFE_RECEIPT })
+    }
+  }
+}
+
 /**
  * ⭐⭐ THE WEEK, FOR BOTH NUMBERS. Its own call in `resolveBodyAndPlanner`, immediately after
  * `accrueCondition(world, playedThisWeek)` – never a parameter of it, because that function's
@@ -694,8 +1095,31 @@ export const RECOVERY_RECEIPT = 'She came back sooner than last time.'
  * never drift apart. ⚠ IT IS A `boolean` AND NEVER AN `Rng`: the zero-draw contract this function has
  * always carried is untouched, and tests/spirit.test.ts asserts that of the SIGNATURE rather than of
  * the arity, precisely so a parameter like this one cannot quietly retire the claim.
+ *
+ * ⭐⭐⭐ AND SINCE v77's T3 THE THIRD ARGUMENT IS THE WEEK'S EXPOSURE – what put her in the light,
+ * derived by `world/spotlight.ts` and HANDED DOWN by `world/phaseHerWeek.ts`, which is §0.1 of the
+ * wave-6 brief and the second use of ruling J's dependency inversion in this signature. The list is
+ * computed by a leaf this module never imports; `spirit.ts` gains no arrow, only a type widened onto
+ * the one type-only import it already had (see that import's ⚠⚠).
+ *
+ * ⚠⚠ IT IS **REQUIRED AND NEVER DEFAULTED**, AND THAT IS THE ARCHITECT'S RULING A RATHER THAN A
+ * STYLE. `Function.length` counts the parameters BEFORE the first one carrying a default, so
+ * `exposure: readonly ExposureEvent[] = []` would leave `tests/spirit.test.ts`'s arity pin reading
+ * **2** – GREEN through the exact change it exists to notice, and the next wave inheriting a counter
+ * that has quietly stopped counting. That is the «unable to fail» family in its eleventh costume and
+ * this wave is not adding a twelfth for convenience. Required also makes every one of the call sites
+ * state «no exposure this week» out loud, which is the honest spelling, and the churn is paid by the
+ * compiler: `vue-tsc -b --force` names all of them. ⚠ `tools/spirit-bench.ts` passes `[]` at both of
+ * its sites deliberately – a bench that quietly gained exposure would stop measuring what it says it
+ * measures.
+ *
+ * ⚠ AND THE DECLARATION STAYS ON ONE LINE. The same pin reads this line as TEXT and asserts it
+ * contains `{`, precisely so it can prove it is not reading a wrapped fragment – a signature broken
+ * across lines makes its sibling assertion («must take no Rng, whatever else it takes») pass on a
+ * truncated string. Measured: this line is 119 characters, the repository carries no prettier or
+ * eslint width config, and this file already holds lines of 163.
  */
-export function accrueSpirit(world: WorldState, psychologistWorks: boolean): void {
+export function accrueSpirit(world: WorldState, psychologistWorks: boolean, exposure: readonly ExposureEvent[]): void {
   const s = ECONOMY.spirit
   const b = ECONOMY.bond
   // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A («`accrueSpirit`'s intensity read
@@ -712,7 +1136,16 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean): voi
   // ⚠ `expressedTemperamentOf` CARRIES THE `?? temperamentFor(world.seed)` COURTESY INSIDE IT, so the
   // probe-world fallback this line used to spell out has not been dropped – it has moved one level
   // down and is shared by all five re-pointed sites. See its own ⚠⚠ note.
-  const intensity = temperamentIntensity(expressedTemperamentOf(world))
+  // ⚠⚠ v77's T3 HOISTS THE CALL INTO A LOCAL AND TAKES **BOTH** PROJECTIONS OFF IT – the architect's
+  // ruling L part 3, and it is the ⚠⚠ directly above obeyed rather than amended. The spotlight's
+  // pressure scales by openness as well as by intensity (§3c's ×0.75 / ×1.5), and a second
+  // `expressedTemperamentOf(world)` call for the second axis would be a SECOND READ of the girl this
+  // pass is about – wave 5 ruled that the girl who experienced the week is one girl. One call, one
+  // value, two projections: the two axes can now no more disagree about who she was this week than
+  // the return rate and the perturbation scale can.
+  const expressed = expressedTemperamentOf(world)
+  const intensity = temperamentIntensity(expressed)
+  const openness = temperamentOpenness(expressed)
   // ⚠ ASKED ONCE AND HANDED TO BOTH, so the two numbers can never disagree about whether the family
   // had a holiday this season – the same "asked once, carried" doctrine the masseur's fare follows.
   const wrapWithNoVacation = seasonWrapsWithNoVacation(world)
@@ -739,9 +1172,78 @@ export function accrueSpirit(world: WorldState, psychologistWorks: boolean): voi
   //     `?? null` is the same courtesy the three fields above get, for hand-built probe worlds.
   const shock = world.spiritShock ?? null
   const shocked = shock !== null && shock.week === world.week ? s.shock[shock.kind][intensity] : 0
+  // 2c. ⭐⭐⭐ AND WHAT BEING LOOKED AT DID TO HER (v77 T3) – §3c above, as a **FOURTH SUMMAND** and
+  //     for the shock's own reason, which is the architect's RULING L part 1: `pressureBase` is
+  //     drafted «before scaling», `exposurePressure` applies `perturbationScale` exactly once inside
+  //     itself, and a row inside `weekPerturbation` would therefore scale it a SECOND time – the
+  //     recorded defect on `spirit.shock`'s constants, repeated on new numbers. An empty list is
+  //     exactly 0, so a no-exposure week's arithmetic is byte-identical to what it was before this
+  //     line existed – §0.4's «no success tax», as a property of the addition rather than a promise.
+  //     ⭐⭐⭐ AND SINCE v77's T4 THE FOURTH FACTOR OF THAT PRODUCT IS REAL: `habituationScale` reads
+  //     the weeks she has ALREADY lived known and shrinks every event of this week by them. ⚠⚠ THE
+  //     COUNT IS THE ONE SHE CAME INTO THE WEEK HOLDING, and that is a property of the CALL SITE
+  //     rather than of this comment – `growHabituation` is a SIBLING of this function and runs on the
+  //     line after it (the architect's ruling Q part 1, `world/phaseHerWeek.ts`). A growth that ran
+  //     first would discount this week's own exposure by this week's own growth, which is an
+  //     off-by-one no test would name and which reads as «the constants are slightly too weak».
+  //     ⚠ AT ZERO IT IS EXACTLY `1`, so a career that has never been news takes the identity factor
+  //     T3 shipped as a literal – ruling Q part 3, pinned as BYTE-IDENTITY and not as an endpoint.
+  //     ⭐⭐⭐ AND SINCE v77's T5 THE **FIFTH** FACTOR IS REAL TOO: «The public life», the psychologist's
+  //     fifth year-focus (O7), shrinks every event of this week by the rung the family is paying for.
+  //     ⚠⚠ THE SEAT'S YEAR IS READ **HERE**, AT THE PASS'S OWN LINE, AND HANDED DOWN AS A NUMBER –
+  //     ruling L part 3's law applied to the one factor that wanted the world, and §3c-psy's own note
+  //     argues why the rung is re-spelled in this file rather than imported (ruling J's cycle).
+  //     ⚠ AND IT RIDES `psychologistWorks`, THE BILLING PREDICATE THIS PASS ALREADY HOLDS, so a
+  //     college-freeze week and a booked family week stand the shrink down with the bill – pay
+  //     nothing, receive nothing (ruling J). With no seat, no year, or a different year, it is exactly
+  //     `1` and this line is byte-identical to what T4 shipped.
+  const pressured = exposurePressure(
+    exposure,
+    intensity,
+    openness,
+    habituationScale(world.spotlightHabituation ?? 0),
+    publicLifeShrinkAt(publicLifeRung(world, psychologistWorks)),
+  )
   const moved =
-    returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked
+    returned + weekPerturbation(world, wrapWithNoVacation) * s.perturbationScale[intensity] + shocked + pressured
+  // ⚠⚠ ONE `roundTenth`, ONE `clamp`, AT THE END, ON THE SUM – ruling L part 2, and the reason the
+  // term above does not round itself: quantising a single small exposure before it meets the week's
+  // other weather is how three tenths become nothing.
   world.spirit = roundTenth(clamp(moved, s.min, s.max))
+  // 2d. ⭐⭐ THE LEGIBILITY LAW – ONE ROW, ON AN EXPOSURE WEEK, IN PLAIN WORDS (§3c: «every dip
+  //     explainable»). ⭐⭐ RE-CUT BY THE OWNER'S D1b (14.09, «ок»),
+  //     WHICH OVERRIDES RULING N's EVENTS-NOT-POINTS GATE FOR THE ROW ALONE: the row prints only
+  //     when the week's summed charge clears `ECONOMY.spotlight.rowMinCharge` (absolute, after all
+  //     five factors). Ruling N's own measurement is what made the case – a habituated, focus-held
+  //     girl takes −0.33 from a camera week, and a sentence over a dip nobody can see is «every dip
+  //     explainable» read backwards. The CHARGE is untouched at any size; only the sentence has a
+  //     floor. N's events-gate is kept in the history as what stood before his word.
+  //     ⚠⚠ AND THE ROW IS DATED BY WHEN IT PRINTS, WHICH IS ONE WEEK AFTER WHAT IT NAMES – ruling P
+  //     (v77 T3b). The list handed down describes `world.week − 1`; the row is stamped `world.week`
+  //     because a feed row is dated by the week the player reads it, exactly like the pressure it
+  //     explains, which also lands in THIS week's spirit. So the row sits beside the dip it accounts
+  //     for, which is the legibility law's whole point, and `EXPOSURE_ROW`'s own draft says «last
+  //     week» rather than «this week» so the sentence and the stamp agree.
+  //     ⚠ ONE ROW PER WEEK AND NOT ONE PER EVENT – §3c's own «the feed is not a ledger». A week that
+  //     held a title, a shoot and a wrong story is charged three times and printed once.
+  //     ⚠ NO `amountCents` AND NO FIGURE (the no-cents law, wave-3 §0.5): the row says the light was
+  //     on, never what it cost – the fog law forbids the number as firmly here as on any screen.
+  //     ⭐ D3 (14.09): THE OLD FINDING HERE (no `lifeKind`, 🤍 by fallback, carried to the owner)
+  //     CAME BACK RULED – his «да» to 📸. The row carries `lifeKind: 'exposure'` (a ROW kind, not a
+  //     `LifeBeatKind` – §8's ban intact, the field's own note in `shared/protocol/events.ts`) and
+  //     wears the camera; the T3 suite's §H re-aims from the fallback to the mark.
+  if (exposure.length > 0 && Math.abs(pressured) >= ECONOMY.spotlight.rowMinCharge) {
+    // ⚠ THE KEEP FLAG IS §4's OWN PROPOSAL AND IT IS UNRULED: «keep the first exposure row of a
+    // season, drop repeats». The first exposure week of a season leaves a permanent trace (the album
+    // can find the thread seasons later); the repeats are ordinary rows and prune with everything
+    // else, so a famous career does not fill its save with a hundred identical sentences. ⚠ THE
+    // QUESTION IS ASKED OF THE SEASON AND OF THIS ROW'S OWN TEXT, through `seasonStartWeek` – the
+    // same helper `seasonWrapsWithNoVacation` above already reads, so «which season is this» keeps
+    // one spelling in this module.
+    const from = seasonStartWeek(world.week)
+    const firstOfSeason = !world.events.some((e) => e.week >= from && e.text === EXPOSURE_ROW)
+    addEvent(world, { week: world.week, type: 'life', lifeKind: 'exposure', text: EXPOSURE_ROW, ...(firstOfSeason ? { keep: true } : {}) })
+  }
 
   // 3. AND THE STANDING, ON THE SAME PASS – one weekly function, two numbers. Same shape, same
   //    order: the regression toward 70 first, then the week's own event. The zero-vacations row is

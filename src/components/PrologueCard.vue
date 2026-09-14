@@ -74,6 +74,14 @@ import { daysInBirthMonth } from '../shared/dates'
 // characters by accident; at twenty (06.09) a real name can meet it, and a refusal a player can
 // reach by typing is the risk E-06 named. Same constant, same effect: the cap is felt, not met.
 import { PROFILE_NAME_MAX_CHARS } from '../shared/protocol'
+// ⚠⚠ AND THE DICE ARE THE WIZARD'S TOO – THE POOL, THE DRAW AND THE TWO WORDS ON THEM. The owner,
+// 14.09: «вернуть "кубики" на имя и фамилию при создании... у нас они были, но куда-то пропали».
+// They never left the wizard; creation left the wizard, and this card was built with plain inputs.
+// So this is a RESTORE: the same two aria-labels, the same two die faces, and the draw read from
+// `composables/identityDice.ts` so there is ONE pool with two readers rather than 24 names written
+// out twice. The default is untouched by it – the fields still OPEN on Alice Martin (see the ⚠
+// prefill doctrine in prologue/identity.ts); a roll is the player's own act.
+import { randomName, randomSurname } from '../composables/identityDice'
 import type { PortraitEmotion } from '../shared/avatarEmotion'
 import { TOURNAMENT_ANSWER } from '../prologue/cards'
 import type { PrologueCard, PrologueOption, TournamentAsk } from '../prologue/cards'
@@ -190,6 +198,19 @@ const emit = defineEmits<{
 function setField<K extends keyof PrologueIdentity>(key: K, value: PrologueIdentity[K]): void {
   if (!props.identity) return
   emit('identity', { ...props.identity, [key]: value })
+}
+
+/** ⭐ THE TWO DICE, AND THEY GO THROUGH `setField` LIKE EVERY OTHER EDIT ON THIS CARD. A roll is
+ *  the player pressing something, so it is worth exactly what typing the same letters would be
+ *  worth: one emit, the container still the owner, and the value still hers to type over
+ *  afterwards. Named for the wizard's own `reroll` / `rerollLast` in spirit but for the field in
+ *  fact, because `rerollLast` only reads as "the surname" beside a `reroll` that has no noun. */
+function rollFirstName(): void {
+  setField('kidName', randomName())
+}
+
+function rollLastName(): void {
+  setField('kidLastName', randomSurname())
 }
 
 /** ⚠ THE DAY LIST FOLLOWS THE MONTH, exactly as it does in the wizard, and the DAY CLAMPS when the
@@ -449,30 +470,56 @@ useDialogFocus(cardEl)
         <div class="prologue-names">
           <div class="prologue-field">
             <label class="prologue-label" for="prologue-first">{{ IDENTITY_COPY.firstName }}</label>
-            <input
-              id="prologue-first"
-              class="prologue-input"
-              type="text"
-              :maxlength="PROFILE_NAME_MAX_CHARS"
-              :value="identity.kidName"
-              :placeholder="IDENTITY_COPY.firstName"
-              autocomplete="off"
-              @input="setField('kidName', ($event.target as HTMLInputElement).value)"
-            />
+            <!-- ⭐ THE DIE IS BACK, AND IT IS THE WIZARD'S (owner, 14.09). Same accessible name, same
+                 face, same draw – see the import note in the script block. The field still OPENS on
+                 the default and this only ever fires on a press, which is the whole difference the
+                 prefill doctrine in prologue/identity.ts records. -->
+            <div class="prologue-field-row">
+              <input
+                id="prologue-first"
+                class="prologue-input"
+                type="text"
+                :maxlength="PROFILE_NAME_MAX_CHARS"
+                :value="identity.kidName"
+                :placeholder="IDENTITY_COPY.firstName"
+                autocomplete="off"
+                @input="setField('kidName', ($event.target as HTMLInputElement).value)"
+              />
+              <button class="prologue-dice" type="button" aria-label="Random first name" @click="rollFirstName">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="4" width="16" height="16" rx="4" />
+                  <circle cx="9" cy="9" r="1.3" fill="currentColor" stroke="none" />
+                  <circle cx="15" cy="9" r="1.3" fill="currentColor" stroke="none" />
+                  <circle cx="9" cy="15" r="1.3" fill="currentColor" stroke="none" />
+                  <circle cx="15" cy="15" r="1.3" fill="currentColor" stroke="none" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div class="prologue-field">
             <label class="prologue-label" for="prologue-last">{{ IDENTITY_COPY.lastName }}</label>
-            <input
-              id="prologue-last"
-              class="prologue-input"
-              type="text"
-              :maxlength="PROFILE_NAME_MAX_CHARS"
-              :value="identity.kidLastName"
-              :placeholder="IDENTITY_COPY.lastName"
-              autocomplete="off"
-              @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
-            />
+            <div class="prologue-field-row">
+              <input
+                id="prologue-last"
+                class="prologue-input"
+                type="text"
+                :maxlength="PROFILE_NAME_MAX_CHARS"
+                :value="identity.kidLastName"
+                :placeholder="IDENTITY_COPY.lastName"
+                autocomplete="off"
+                @input="setField('kidLastName', ($event.target as HTMLInputElement).value)"
+              />
+              <button class="prologue-dice" type="button" aria-label="Random last name" @click="rollLastName">
+                <!-- A different face on the second die, on purpose (the design draws three pips here). -->
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="4" y="4" width="16" height="16" rx="4" />
+                  <circle cx="8.4" cy="8.4" r="1.3" fill="currentColor" stroke="none" />
+                  <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+                  <circle cx="15.6" cy="15.6" r="1.3" fill="currentColor" stroke="none" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -900,6 +947,50 @@ useDialogFocus(cardEl)
 
 .prologue-names .prologue-field {
   min-width: 0;
+}
+
+/* ⭐ THE DIE SITS BESIDE ITS FIELD (owner, 14.09), which is `.ob-field-row` in the wizard and the
+   same two rules: a flex row, and an input that may shrink (`min-width: 0`, against the placeholder
+   pushing the row wider than its half of `.prologue-names`).
+
+   ⚠ STRETCH RATHER THAN A HEIGHT, and it is the one line where this is not a byte-copy of the
+   wizard. `.ob-dice` declares `width: 46px; height: 46px` next to a 46px input; this card's input is
+   smaller (11px of padding against 14px), so a copied number would have drawn a die taller than the
+   field it belongs to. Leaving the cross-axis to `stretch` – the flex default, which is why
+   `align-items` is absent here and `center` in the wizard – makes the die exactly as tall as the
+   input WHATEVER the input is, so the row costs the card no height at all. It is also the honest
+   answer for `tests/component/fits.ts`: an explicit height would have added 18px per field to the
+   content floor for a change that adds none in a browser. */
+.prologue-field-row {
+  display: flex;
+  gap: 6px;
+}
+
+.prologue-field-row .prologue-input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+}
+
+/* The wizard's `.ob-dice` on this card's own scale: the input's radius rather than the wizard's
+   dialog radius, because it stands against `.prologue-input` and not against `.ob-input`. Every
+   colour is a declared token with no fallback, the rule the whole file is under. */
+.prologue-dice {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  padding: 0;
+  border-radius: var(--radius-frame);
+  background: var(--card-top);
+  border: var(--stroke-hair) solid var(--line);
+  color: var(--accent);
+}
+
+.prologue-dice:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .prologue-label {

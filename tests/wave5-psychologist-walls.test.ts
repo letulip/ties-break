@@ -880,10 +880,63 @@ describe('wave 5 T7 H – what the pass touches, and what it must never', () => 
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
-    const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T3, AND IT IS THE **FIRST** RE-AIM OF THIS ONE – the two wave-4
+    // text pins were re-aimed once already on 13.09 and are on their second, but this case was BORN
+    // in wave 5 carrying the anchor, so its counter starts here. WHAT MOVED: `accrueSpirit` takes a
+    // third argument, `exposureEventsOf(world, world.week)` – the week's exposure list, handed down
+    // at the call site (§0.1's dependency inversion, ruling J's shape applied to a second fact).
+    // NOTHING about ruling P's claim moves: the walls pass is still asserted to be the VERY NEXT
+    // statement after the spirit pass, still on the same predicate, and `toBe(i + 1)` is red on any
+    // statement sliding between them. ⚠ `driftWalls` is deliberately NOT given the list: the leaning
+    // pass is not a spirit term and §8 keeps `accrueSpirit` the one place the pressure is summed.
+    //
+    // ⚠ THIS PIN IS THE **FIFTH** SITE AND RULING A's TABLE NAMES THREE. Measured on the tree: the
+    // arity/signature case and the ordered-list case in tests/spirit.test.ts, the two wave-4 text
+    // pins, and this one. Carried back to the architect rather than quietly re-aimed.
+    // ⚠⚠ RE-AIMED A **SECOND** TIME 14.09 BY WAVE 6's **T3b** – the re-aim AFTER T3's, on the same
+    // day, and this one's counter runs one behind the wave-4 pair's because it was born in wave 5.
+    // RULING P's REASON IN ONE SENTENCE: `'stage'` and `'publicLoss'` are stamped inside
+    // `playHerWeek`, two phases after this pass, so asked about `world.week` they could never fire
+    // and the horizon moves to the week that has CLOSED. WHAT MOVED: the anchor's third argument is
+    // now `exposureEventsOf(world, world.week - 1)`. NOTHING about wave 5's ruling P (a different
+    // ruling, the same letter, 13.09) moves: the walls pass is still asserted to be the VERY NEXT
+    // statement after the spirit pass, still on the same predicate, and `toBe(i + 1)` is still red on
+    // any statement sliding between them – ⚠ including the one wave-6 ruling P refuses by name,
+    // moving `accrueSpirit` itself down the phase to where a trophy is already written.
+    // ⚠⚠ RE-AIMED A **THIRD** TIME 14.09 BY WAVE 6's **T4**, AND THIS ONE MOVES AN ASSERTION RATHER
+    // THAN AN ANCHOR – so what it may NOT do is weaken, and it does not. WHAT MOVED: `toBe(i + 1)`
+    // becomes a TOTAL list equality over everything between the two passes. WHY: the architect's
+    // ruling Q puts `growHabituation` on the line immediately after `accrueSpirit`, which is the slot
+    // `toBe(i + 1)` reserved – ruling Q says «wave 5's ruling P precedent, where `driftWalls` already
+    // sits» without noticing that the precedent is PINNED AS EXCLUSIVE. It has to be there and not
+    // below `driftWalls`: habituation reads `wallsFlipped`, `driftWalls` WRITES it, and the pass
+    // below promises in its own ⚠ that «whatever flips here is first read on the NEXT tick». A
+    // habituation pass under it would freeze a girl the pass above has just charged as the girl she
+    // was all week.
+    // ⚠ WHY THIS IS THE SAME STRENGTH AND NOT A SOFTENING: `toEqual([...])` on the whole slice is red
+    // on ANY other statement sliding between the two, red on a re-order of the three, and red if the
+    // habituation pass is deleted or moved – strictly MORE than `toBe(i + 1)` said, since that form
+    // said nothing about what sits on the line after. It is the shape tests/spirit.test.ts's own
+    // ordered-list pin already uses for the four private-life calls. ARM 18 is the statement slid in
+    // between, ARM 19 the habituation pass moved below the walls pass; both red here.
+    const i = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world), exposureEventsOf(world, world.week - 1))')
     const j = code.indexOf('driftWalls(world, psychologistWorksThisWeek(world))')
     expect(i, 'the spirit pass is where it was').toBeGreaterThan(-1)
-    expect(j, 'and the walls pass is the very next statement').toBe(i + 1)
+    expect(j, 'and the walls pass still follows it').toBeGreaterThan(i)
+    // ⚠⚠ RE-AIMED A **FOURTH** TIME 14.09 BY WAVE 6's **T5**, AND IT IS AN ANCHOR MOVE AGAIN RATHER
+    // THAN AN ASSERTION ONE – the shape T4 installed is exactly what a fourth re-aim should cost.
+    // WHAT MOVED: `growHabituation` gained a THIRD ARGUMENT, `psychologistWorksThisWeek(world)` – the
+    // seat's billing predicate, the same expression the two passes on either side of it are given.
+    // WHY: «The public life» (O7) is the psychologist's fifth year-focus and it ACCELERATES this
+    // counter by rung while it is held, so the growth has to know whether the seat is working and
+    // being paid this week; and `engine/spirit.ts` cannot import `./psychologist` to ask (ruling J's
+    // two live back-edges), so the caller answers. ⚠ NOTHING ABOUT RULING P OR RULING Q MOVES: the
+    // habituation pass is still the ONLY statement between the two, still above `driftWalls` so the
+    // walls it reads are the ones the girl wore all week, and this equality is still red on any other
+    // statement sliding in, on a re-order, and on the pass being deleted or moved.
+    expect(code.slice(i + 1, j), '⚠ and ONLY v77 T4\'s habituation pass separates them – ruling Q').toEqual([
+      'growHabituation(world, newsStandingOf(world) === \'known\', psychologistWorksThisWeek(world))',
+    ])
     expect(code.filter((l) => l.startsWith('driftWalls(')), 'called exactly once, and on the predicate')
       .toEqual(['driftWalls(world, psychologistWorksThisWeek(world))'])
     // ...and `accrueSpirit` did NOT swallow it, which is the other half of ruling P.

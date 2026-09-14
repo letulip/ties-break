@@ -273,8 +273,14 @@ export interface WorldEvent {
    *  ⚠ AND IT REACHES THE UI BY CONSTRUCTION rather than by a wire decision. `snapshotEvents`
    *  (engine/world/snapshot.ts) puts the event ROWS THEMSELVES on the snapshot – there is no
    *  field-by-field DTO between the world and the feed – so widening this interface widens
-   *  `Snapshot.events` and `Snapshot.financialEvents` in the same edit. */
-  lifeKind?: LifeBeatKind
+   *  `Snapshot.events` and `Snapshot.financialEvents` in the same edit.
+   *
+   *  ⭐ D3 (14.09, the owner's «да» to 📸): the SPOTLIGHT family's rows ride this same field as the
+   *  literal `'exposure'` – a ROW kind and deliberately NOT a `LifeBeatKind`, because wave 6's §8
+   *  forbids a new beat kind and a feed mark is not a beat: no registry row, no prompt, no answer,
+   *  only what the column draws. Writers: the exposure row (`engine/spirit.ts` 2d) and the leak
+   *  rows (`world/lifeBeat.ts` §9). `lifeRowGlyphs` maps it to his camera. */
+  lifeKind?: LifeBeatKind | 'exposure'
 }
 
 /** The season event a `WorldEvent` is ABOUT: enough to name it on a screen without re-reading the

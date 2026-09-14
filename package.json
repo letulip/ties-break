@@ -48,6 +48,7 @@
     "bench:skill": "vite-node tools/skill-ceiling.ts",
     "bench:snapshot": "vite-node tools/snapshot-bench.ts",
     "bench:spirit": "vite-node tools/spirit-bench.ts",
+    "bench:spotlight": "vite-node tools/spotlight-bench.ts",
     "bench:sponsor": "vite-node tools/sponsor-window-bench.ts",
     "probe:shop": "vite-node tools/shop-probe.ts",
     "bench:world": "vite-node tools/world-turnover.ts",

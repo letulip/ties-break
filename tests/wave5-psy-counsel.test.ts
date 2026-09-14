@@ -348,8 +348,15 @@ describe('wave 5 T8 A – the seat calls, one line after the coach', () => {
       expect(row?.kind, `focus ${focus ?? 'none'}: the call happens`).toBe('fork-psy')
       details.push(row!.detail)
     }
-    expect(details.length, 'five seats were walked – four focuses and none').toBe(5)
-    expect(new Set(details).size, '⚠ and the focus reaches the row not at all – one detail, five times').toBe(1)
+    // ⚠ RE-AIMED 14.09 BY WAVE 6's T5 AND **STRENGTHENED IN THE SAME EDIT**: «The public life» joins
+    // `PsyFocus` (O7), so the walk is six seats and not five. The literal `5` was the weaker half of
+    // this pair anyway – it named a number a reader checks against the roster, while the claim is
+    // that the walk covered EVERY focus and the seatless arm. So the count is now read off
+    // `PSY_FOCUSES` itself and a SIXTH focus forgotten here can no longer pass by arithmetic. The
+    // second assertion is untouched and is the one that carries the design call.
+    expect(details.length, 'every focus on the roster was walked, and the seatless arm too')
+      .toBe(PSY_FOCUSES.length + 1)
+    expect(new Set(details).size, '⚠ and the focus reaches the row not at all – one detail, every time').toBe(1)
   })
 })
 
@@ -567,10 +574,22 @@ describe('wave 5 T8 E – one `info` row, no life row, no glyph forced', () => {
 
   it('⚠ no new `type: \'life\'` write site anywhere in the engine', () => {
     // The floor-plus-count shape wave 4's §A ratcheted: a sweep that found nothing would pass forever.
+    //
+    // ⚠⚠ RE-AIMED 14.09: FIRST by wave 6's T6 (four life-row sites, the leak row left unstamped),
+    // THEN by the owner's D3 the same day. D3 answered the question T6 left open – «whether the
+    // spotlight deserves a mark of its own» – with his 📸, so the leak row (`LEAK_EVENT`) and the
+    // exposure row both carry `lifeKind: 'exposure'`, a ROW kind that is deliberately NOT a member of
+    // `LifeBeatKind` (wave 6's §8 forbids that), declared on `WorldEvent.lifeKind`'s widened type.
+    // So the property flipped from «exactly one licensed-unstamped row» to the STRONGER «every
+    // `type:'life'` site now stamps a kind» – the guard tightened, not loosened.
+    // ⚠ A NEW unstamped site still reddens here (the length stays pinned), which is the ratchet.
     const code = codeOf(worldSource())
     const sites = [...code.matchAll(/\{[^{}]*type:\s*'life'[^{}]*\}/g)].map((m) => m[0])
-    expect(sites.length, 'the sweep really found the life-row write sites').toBe(3)
-    expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and every one of them still stamps a kind').toHaveLength(3)
+    expect(sites.length, 'the sweep really found the life-row write sites').toBe(4)
+    const spotlight = sites.filter((s) => s.includes('LEAK_EVENT['))
+    expect(spotlight, '⚠ the leak row is still one of them – D3 stamped it, it did not remove it').toHaveLength(1)
+    expect(sites.filter((s) => /lifeKind:\s*'/.test(s)), '⚠⚠ and after D3 every one of them stamps a kind')
+      .toHaveLength(4)
   })
 })
 
@@ -675,7 +694,7 @@ describe('wave 5 T8 G – the listen coin is for read-bearing beats, and this is
     const control = withSeat(createWorld('t8-listen-control', DEFAULT_PROFILE), 'listen')
     control.season = []
     control.week = 900
-    control.loveEpisodes = [{ id: 'p:880', sinceWeek: 880, endedWeek: null, knownWeek: 890, wants: 'open', partnerId: 'p:880' }]
+    control.loveEpisodes = [{ id: 'p:880', sinceWeek: 880, endedWeek: null, knownWeek: 890, wants: 'open', partnerId: 'p:880', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null }]
     rngKeys.length = 0
     deliverKnownPartner(control)
     expect(rngKeys.filter((k) => k.includes(':psy:listen:')).length, '⚠⚠ the recorder really sees a listen key').toBe(1)

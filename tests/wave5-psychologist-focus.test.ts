@@ -268,9 +268,27 @@ describe('wave 5 T3 A – the pick, and what a pick is not', () => {
     )
   })
 
-  it('⭐ the four are the four – an id the game does not sell is refused, and writes nothing', () => {
+  it('⭐ the roster is the roster – an id the game does not sell is refused, and writes nothing', () => {
     const world = hired('psy-focus-id')
-    expect(PSY_FOCUSES.length, 'four at step 5; the fifth is the spotlight wave`s (O7)').toBe(4)
+    // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T5, AND **STRENGTHENED RATHER THAN MOVED** – the architect's
+    // RULING O. The old line was wave 5's own tripwire, and its message named this wave: «four at
+    // step 5; the fifth is the spotlight wave`s (O7)». O7 landed, so the number is five – but a
+    // COUNT was never the claim worth making here, and ruling O says why in one sentence: **a length
+    // is not a membership.** `PSY_FOCUSES` is a `readonly PsyFocus[]`, so widening the union does NOT
+    // make this line red (an array of four is a valid array of a five-member union), and an array of
+    // five holding a DUPLICATE would satisfy `toBe(5)` while a real focus went unoffered. That is the
+    // one roster site the compiler will not defend, and it is the site that decides whether a focus is
+    // ever on the card at all.
+    //
+    // ⚠⚠ SO THE ORACLE IS THE TYPE-FORCED `Record` NEXT DOOR. `PSY_FOCUS_LABEL` is
+    // `Record<PsyFocus, string>` – total by type, red at compile time the day the union widens – so
+    // its key set IS the complete list of the union, held by the compiler and not by a human. Sorted
+    // equality against it is total by construction, costs one line, and goes red the day a SIXTH
+    // focus is added to the type and forgotten in the roster. ⚠ THE LENGTH ASSERTION STAYS BESIDE IT
+    // and is not deleted: it still names the number a reader is checking against the spec §2's table.
+    expect([...PSY_FOCUSES].sort(), '⚠ ruling O: the roster IS the union, and the compiler holds the union')
+      .toEqual(Object.keys(PSY_FOCUS_LABEL).sort())
+    expect(PSY_FOCUSES.length, 'five since v77 T5 – the spec §2`s four plus «The public life» (O7)').toBe(5)
     for (const bad of ['spotlight', 'coolHead', '', 'recovery ']) {
       expect(
         () => setPsychologistFocus(world, bad as PsyFocus),
@@ -345,7 +363,7 @@ describe('wave 5 T3 A – the pick, and what a pick is not', () => {
     )
   })
 
-  it('the four names and the four lines are complete, dash-clean and pronoun-free', () => {
+  it('every name and every line is complete, dash-clean and pronoun-free', () => {
     // House law checked here rather than trusted (the short dash `–`, no Cyrillic in player copy),
     // plus R15-7's own rule stated locally: the corpus sweep in tests/coach-voice.test.ts is the
     // real net, and this is the local reminder for whoever rewrites a draft in this file's company.
@@ -358,7 +376,14 @@ describe('wave 5 T3 A – the pick, and what a pick is not', () => {
       PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL,
       PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
     ]
-    expect(strings.length, 'four names, four lines, five refusals').toBe(13)
+    // ⚠ RE-AIMED 14.09 BY WAVE 6's T5 AND **STRENGTHENED IN THE SAME EDIT**: «The public life» (O7)
+    // brings a fifth name and a fifth line, so the corpus is 15. ⚠⚠ AND THE COUNT IS NOW DERIVED
+    // FROM THE ROSTER rather than retyped, for ruling O's reason one section up – a literal here
+    // would have to be hand-edited by every future focus, and a hand-edited number is exactly what
+    // this line exists to stop drifting. The five refusals stay a literal: their number is a design
+    // fact about the gates and has nothing to do with how many focuses the game sells.
+    expect(strings.length, 'a name and a line per focus, plus the five refusals')
+      .toBe(PSY_FOCUSES.length * 2 + 5)
     for (const s of strings) {
       expect(s.length, 'every one of them is real').toBeGreaterThan(0)
       expect(s, 'short dash only').not.toMatch(/—/)
@@ -750,7 +775,7 @@ describe('wave 5 T3 D – her consent is a band read, and the same band always a
     }
   })
 
-  it('⭐⭐ UNDER 18 the same bond closes `herself` ALONE – the other three years are hers to be given', () => {
+  it('⭐⭐ UNDER 18 the same bond closes `herself` ALONE – every other year is hers to be given', () => {
     const world = hired('psy-focus-not-ready', 200)
     expect(ageAt(world), 'the fixture is under eighteen').toBeLessThan(18)
     for (const bond of [STRAINED, COLD]) {
@@ -758,11 +783,15 @@ describe('wave 5 T3 D – her consent is a band read, and the same band always a
       expect(() => setPsychologistFocus(world, 'herself'), `bond ${bond}`).toThrow(
         PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
       )
-      expect(psychologistFocusOpen(world), 'the other three are open').toEqual([
-        'coolhead',
-        'recovery',
-        'listen',
-      ])
+      // ⚠⚠ RE-AIMED 14.09 BY WAVE 6's T5 AND **STRENGTHENED IN THE SAME EDIT**. «The public life»
+      // (O7) joined the roster, so the hand-typed three became a stale four-item claim about a
+      // five-item roster – and that is precisely the shape ruling O warns about, one section up: a
+      // re-typed list does not move with the union. The claim this case makes is «EXACTLY ONE option
+      // is closed, and it is `herself`», so it is now spelled that way and derived from
+      // `PSY_FOCUSES`. It is strictly stronger: a sixth focus wrongly closed by the readiness gate
+      // goes red here without anybody editing this line, which the literal could never do.
+      expect(psychologistFocusOpen(world), 'exactly one option is closed, and it is the one she has to want')
+        .toEqual(PSY_FOCUSES.filter((f) => f !== 'herself'))
       expect(psychologistFocusDetailOf(world), 'and the card says she is not ready').toBe(
         PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL,
       )

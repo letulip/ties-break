@@ -256,7 +256,7 @@ for (const tier of COLLEGE_TIER_ORDER) {
   console.log(`    ${padE(tier, 10)} ${usd(COLLEGE_TIERS[tier].costPerYearCents)}/yr`)
 }
 console.log(
-  `  ⚠ AND THE ONE COUNTRY RULE LEFT IS A PRICE, NOT A DOOR: \`needShareOf\` pays the need layer to a US`,
+  `  ⚠ D8 (14.09): the need layer is BURIED – no country rule remains; every family pays the same`,
 )
 console.log(`    family only (34 CFR 668.33), so the ${COUNTRIES.filter((c) => c !== 'US').join('/')} column above pays more of the SAME bill.`)
 console.log(`  ⚠ Weekly, at the home place: ${usd(Math.round(COLLEGE_TIERS.state.costPerYearCents / WEEKS_PER_YEAR))}/wk of sticker before any award.`)

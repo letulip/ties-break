@@ -20,12 +20,12 @@
 // the thing it was walking for: «a fixture that cannot reach the case is a green that means
 // nothing»). It bit twice in this wave, so each station below is preceded by the assertion that the
 // career can reach it – the ladder from the MANIFEST, the unlock from the card's own control, the
-// consent gates from the four options being live – and each of those goes red NAMING the state
+// consent gates from every option on the roster being live – and each of those goes red NAMING the state
 // rather than letting a click time out somewhere later.
 //
 // ⚠ MEASURED, NOT HOPED, before a line of this file was written (probe on the regenerated fixture):
 // `pro` wakes at week 412 holding 3,649 W-series points (so `activeLadderOf` is `'wta'` and the seat
-// is unlocked), a bond of 71 – `steady` – so all four years of work are open to a 21-year-old under
+// is unlocked), a bond of 71 – `steady` – so every year of work is open to a 21-year-old under
 // the 18+ joint-consent rule, no college freeze, and no blocking decision but the top-50 briefing.
 // One press then bills him: the salary row is stamped with the week the tick ARRIVES at, so a single
 // advance is enough and the booked family holiday sitting on week 412 never comes into it.
@@ -99,7 +99,14 @@ const FOCUS_SEASON_REFUSAL =
   'The year already has its work – the next one is chosen in the off-season, once a season.'
 const RUNG_GROUP = 'Psychologist – who takes the weekly call'
 const FOCUS_GROUP = 'Psychologist – the year\'s work'
-const FOCUS_LABELS = ['Cool head', 'Back on her feet', 'Learning to listen', 'Working on herself']
+/** ⚠ RE-AIMED 14.09 BY WAVE 6's T5: «The public life» (O7, the fifth year-focus) joined the roster,
+ *  so the card offers FIVE years and this list – and every count below that reads it – grew with it.
+ *  ⚠ HAND-TYPED ON PURPOSE, unchanged as a decision: this file is the OUTSIDE view and asserts what
+ *  the screen actually says, so importing `PSY_FOCUS_LABEL` here would let a вычитка move the screen
+ *  and the expectation together and prove nothing. T8's read of the drafts moves this line by hand.
+ *  ⚠ AND THE COUNTS BELOW ARE `FOCUS_LABELS.length` RATHER THAN A LITERAL `4`, so the next focus
+ *  costs one edit here instead of four scattered ones. */
+const FOCUS_LABELS = ['Cool head', 'Back on her feet', 'Learning to listen', 'Working on herself', 'The public life']
 
 /** His own block on the Support-staff tab, addressed by the `data-staff` hook the card was given for
  *  exactly this (SupportStaffTab.vue's own note). Scoped rather than global because the tab is a LIST
@@ -226,11 +233,11 @@ test.describe('the psychologist takes the weekly call', () => {
     const focus = seat.getByRole('radiogroup', { name: FOCUS_GROUP })
     await expect(focus, 'the hire is what puts the year on the card').toBeVisible()
     const options = focus.getByRole('radio')
-    await expect(options, 'the four years of work').toHaveCount(4)
+    await expect(options, 'one radio per year of work on the roster').toHaveCount(FOCUS_LABELS.length)
 
     // ⚠⚠ THE CONSENT GATES ARE PROVED OPEN BEFORE ONE IS PRESSED. Both of them read the bond BAND:
     // from 18 a strained/cold bond declines any pick, and «Working on herself» needs readiness at any
-    // age. `pro` is 21 at a `steady` bond, so all four are live - and if a regeneration ever walks her
+    // age. `pro` is 21 at a `steady` bond, so all five are live - and if a regeneration ever walks her
     // bond down, THIS line names it instead of a click timing out three stations later.
     for (const label of FOCUS_LABELS) {
       await expect(
@@ -238,7 +245,7 @@ test.describe('the psychologist takes the weekly call', () => {
         `«${label}» is open to this career, so pressing it is a real choice`,
       ).toBeEnabled()
     }
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < FOCUS_LABELS.length; i++) {
       await expect(options.nth(i), 'no year is running before one is chosen').toHaveAttribute(
         'aria-checked',
         'false',
@@ -259,7 +266,7 @@ test.describe('the psychologist takes the weekly call', () => {
     // ⚠ MEASURED RATHER THAN EXPECTED, and the first drafting of this file expected the other thing.
     // `PSY_FOCUS_LINE.coolhead` («The year goes on the big points…») is what the note prints only
     // while NOTHING is closed – which, after a pick, is the three off-season weeks of each year and
-    // nothing else. The four focus LINES are therefore reachable on screen for 3 weeks in 52; the
+    // nothing else. The focus LINES are therefore reachable on screen for 3 weeks in 52; the
     // refusal below is what a player sees for the other 49, and it is the honest thing to pin here.
     await expect(seat, 'the card explains the closed year with the engine\'s own sentence').toContainText(
       FOCUS_SEASON_REFUSAL,

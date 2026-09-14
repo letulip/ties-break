@@ -2,22 +2,22 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,521 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,561 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-485 exported names across 50 owning modules.
+499 exported names across 51 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 53 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 59 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
-| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
+| `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
@@ -39,6 +39,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/injury.ts` | INJURIES AND PHYSIO: the weekly roll, the hazard shape behind it, and the recovery the family pays for – plus the sweep that cleans up everything an injury invalidates | 7 |
 | `src/engine/world/planner.ts` | THE SEASON PLANNER: the two things a parent can put on an empty week – a family holiday and a practice match – and what the engine does with them when the week arrives | 7 |
 | `src/engine/world/shop.ts` | ⭐⭐ THE SHOP – the tab, static prices, buy / own / sell, and since round 29 #5 the storeys above | 7 |
+| `src/engine/world/spotlight.ts` | ⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK | 7 |
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
@@ -96,9 +97,11 @@ THE INTEGRATION CORE: what the barrel itself still owns – career creation, the
 
 THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2).
 
+- `airBoothMention` – `src/engine/world/lifeBeat.ts`
 - `answerLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `arrivalEligible` – `src/engine/world/lifeBeat.ts`
 - `arrivalHazardFor` – `src/engine/world/lifeBeat.ts`
+- `boothMentionDue` – `src/engine/world/lifeBeat.ts`
 - `buildLifeBeatPrompt` – `src/engine/world/lifeBeat.ts`
 - `buildSoftBeatInvite` – `src/engine/world/lifeBeat.ts`
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
@@ -125,6 +128,9 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `forkWantOf` – `src/engine/world/lifeBeat.ts`
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
 - `HeardRead` *(type)* – `src/engine/world/lifeBeat.ts`
+- `leakEligible` – `src/engine/world/lifeBeat.ts`
+- `leakHazardFor` – `src/engine/world/lifeBeat.ts`
+- `leakWrongShareFor` – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_BLOCKING` – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
 - `LifeBeatAnswer` *(type)* – `src/engine/world/lifeBeat.ts`
@@ -141,6 +147,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
 - `rollEnds` – `src/engine/world/lifeBeat.ts`
+- `rollLeak` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
@@ -215,6 +222,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `nameSuggestionsFor` – `src/engine/world/assets.ts`
 - `ownedAssets` – `src/engine/world/assets.ts`
 - `ownsDeliveredOfFamily` – `src/engine/world/assets.ts`
+- `reachableFundsCents` – `src/engine/world/assets.ts`
 - `sanitiseAssetName` – `src/engine/world/assets.ts`
 - `shopCatalogue` – `src/engine/world/assets.ts`
 - `shopItem` – `src/engine/world/assets.ts`
@@ -591,6 +599,18 @@ THE SEASON PLANNER: the two things a parent can put on an empty week – a famil
 - `sellableAsset` – `src/engine/world/shop.ts`
 - `sellAsset` – `src/engine/world/shop.ts`
 - `shopView` – `src/engine/world/shop.ts`
+
+### `src/engine/world/spotlight.ts`
+
+⭐⭐⭐ THE SPOTLIGHT'S LEDGER – who the world is looking at, and what put her in the light THIS WEEK.
+
+- `atOrAboveStageBar` – `src/engine/world/spotlight.ts`
+- `boothPrivateLifeAt` – `src/engine/world/spotlight.ts`
+- `ExposureEvent` *(type)* – `src/engine/world/spotlight.ts`
+- `exposureEventsOf` – `src/engine/world/spotlight.ts`
+- `ExposureKind` *(type)* – `src/engine/world/spotlight.ts`
+- `NewsStanding` *(type)* – `src/engine/world/spotlight.ts`
+- `newsStandingOf` – `src/engine/world/spotlight.ts`
 
 ### `src/engine/world/business.ts`
 

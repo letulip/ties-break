@@ -130,7 +130,7 @@ function careerAt(seed: string, week: number): WorldState {
  *  T3's hazard decides WHETHER someone appears and T5's draws decide WHEN he hears – neither is under
  *  test here, and a fixture that had to roll for them would be testing the dice again. */
 function episode(sinceWeek: number, knownWeek: number | null, over: Partial<LoveEpisode> = {}): LoveEpisode {
-  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, ...over }
+  return { id: `p:${sinceWeek}`, sinceWeek, endedWeek: null, knownWeek, wants: 'open', partnerId: `p:${sinceWeek}`, publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null, ...over }
 }
 
 /** A career standing one week short of the news, with the whole machine real except the row. */

@@ -696,7 +696,7 @@ describe('⚠⚠ v75 T4 – the ENDING fits a phone, and its last answer can be 
     world.week = 1000
     world.bond = 90
     world.loveEpisodes = [
-      { id: 'p:900', sinceWeek: 900, endedWeek: 950, knownWeek: 1000, wants: 'open', partnerId: 'p:900' },
+      { id: 'p:900', sinceWeek: 900, endedWeek: 950, knownWeek: 1000, wants: 'open', partnerId: 'p:900', publicWeek: null, publicWrong: false, airedMetWeek: null, airedEndedWeek: null },
     ]
     deliverKnownPartner(world)
     const prompt = buildLifeBeatPrompt(world)
