@@ -1203,3 +1203,41 @@ a buy-to-let would file as the first without being the second. The tick order is
 `revalueAssets` in phase 1, the cameo in phase 2 – so the worth the gate reads is this week's. And
 the wall came back to the decimal: REACHABLE floor **81.5** against the shipped bar 62, wallet-only
 floor **−2.5**, every cell, every seed.
+
+## The architect's rulings on the sixteen (14.09, the second pass) – four ruled here, twelve packaged for the owner
+
+The questions doc stands as written; this section rules what is the architect's to rule and
+records how the rest went to the owner (eight batched decisions, D1–D8 – his answers land here
+when they come).
+
+**Q6 – RULED: the shoot-bench pairing is commissioned, round-side.** A bench blind to one of five
+kinds leaves every §1 count a lower bound forever; `tools/ad-shoot-bench.ts` already signs
+letters, so the pairing is an instrument task (S), not a design one. It does NOT block the wave –
+it lands with round 42's bench work, and until it runs the ledger's own «lower bound» caveat
+stays printed beside the counts.
+
+**Q7 – UPHELD.** The fame factor in the leak hazard is the spec's own sentence («more lenses on a
+bigger star»), the brief's single-source rule says the spec wins on drift, and the builder
+flagged the override instead of hiding it – which is exactly the contract. `leakBasePerWeek ×
+leakOpennessMult × (fameAt / fame.cap)` stands.
+
+**Q10 – UPHELD, both halves.** The two false-now sentences corrected (an assertion about the
+present is fixed), the v74 frozen-fixture block annotated (a record of a measurement is never
+edited to match today) – that is the house rule applied cleanly, including the removed count
+that had already rotted once.
+
+**Q13 – ANSWERED: the corridor working IS the design, and the 3× is her intensity premium.** The
+fairness bar (±1.5 pp on birth cohorts, his §5 ruling) HIT at 0.188 pp – the wave may not be a
+difficulty setting, and it is not. What the deep girl pays 3× in is spirit-weeks – Mood words,
+feed rows, her own voice – the game's texture, priced exactly like her break-up asymmetry
+(−34 vs −22). «Costs three times as much and changes nothing measurable» is false by one word:
+nothing measurable IN THE WIN RATE – the corridor's own definition of fair. The owner's eye is
+invited (D1 carries the loudness half), but nothing here is broken.
+
+**The eight decisions sent up (D1–D8):** D1 membership + loudness (Q1 bar · Q2 row-keep rule ·
+Q3 the sunny girl · Q9 the rest stand as drafts) — D2 the fifth focus's receipt (Q4) — D3 the
+spotlight's mark (Q5) — D4 the wrong story's price before its beat (Q8) — D5 the founding
+scene's lever (Q11, the freshness-multiplier proposal) — D6 the walled-famous population (Q12,
+accept + amend the spec sentence) — D7 ⚠⚠ the broke-ending twin and the two hardship voices
+(Q14+Q15, recommended commissioned AS THE WAVE'S OWN TAIL, ahead of §4 tuning) — D8 the college
+need layer (Q16, re-anchor bench-first vs honest retirement).
