@@ -118,13 +118,16 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   attribute reddens the boat and the plane arms simultaneously (one template site, one mutation
   point, two families); reverted, both green.
 
-- [~] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answered: NOT changed, and
+- [x] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answered: NOT changed, and
   deliberately.** The LIFETIME letter went to 3 top-10 seasons («тогда окей и не вижу причин это
   не сделать»); the capstone stayed at 4 – «tenure without a title… the stricter bar» – and round
   39 parked «capstone left at 4?» as his open question (`round-39.md:248-251`; lowering it was a
   measured corpus no-op at the time). ⚠ Still his to rule, with a number attached: the corpus now
   puts ≥4 top-10 seasons at 16.7% where the capstone was priced against 8% – the deal is no longer
   the top-decile letter it was priced as. One constant if he says the word.
+
+  ⭐ **CLOSED 14.09 by his word in round 42:** «не ждет, я уже говорил, что оставляем текущий» –
+  the capstone stays at 4; nothing was waiting after all.
 
 - [ ] **4. «В прологе проиграли первый турнир "The coach said the first one doesn't count" (или
   что-то вроде того), выиграли второй, а потом снова вылетели в первом раунде 3го турнира, а фраза

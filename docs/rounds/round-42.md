@@ -51,7 +51,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 
 ---
 
-- [?] **1. «на 14 лет девочка просит "всего 1 день вместе", мне кажется это неуместно, надо тоже
+- [ ] **1. «на 14 лет девочка просит "всего 1 день вместе", мне кажется это неуместно, надо тоже
   починить»** – **ask**, because it collides with an earlier ruling of his own. The ask is
   `DAY_TOGETHER` (`birthday.ts:194-202`, id `'day'`, «One day – not a week, not a trip…»), and it
   is injected into EVERY band with no age test (`birthday.ts:1148`) – **by the owner's explicit
@@ -267,7 +267,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   Recommendation: its own bundle AFTER this round's small fixes (or the next economy wave) – his
   word on the slot; the ledger holds it open either way.
 
-- [?] **20. «Когда ребенок "хочет поговорить" надо ещё кнопку proceed дизаблить, пока не
+- [ ] **20. «Когда ребенок "хочет поговорить" надо ещё кнопку proceed дизаблить, пока не
   поговорили»** – **ask, because the two beat kinds want opposite answers.** BLOCKING beats
   (met/fork/counsel) already refuse the week engine-side (`multiWeek.ts:360`) but the button never
   greys – that half is a pure build and ships regardless: Proceed disabled with the reason line
@@ -380,7 +380,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 
 *(item 30 is folded into 21 above – one audit, one answer.)*
 
-- [?] **31. «посмотри на этот сид целиком, с чем пришла, на сколько прокачалась, на сколько
+- [ ] **31. «посмотри на этот сид целиком, с чем пришла, на сколько прокачалась, на сколько
   соответствует модели. Интересно, что тренер по итогу пролога сказал что-то вроде "такая же как
   все в этом возрасте", хотя там явно был очень большой сектор на старте»** – **answer (the full
   seed audit, reconstructed exactly) + ask (the wording half).**
@@ -422,18 +422,103 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 
 ---
 
-## The ask batch (four, one pass – everything else ships as DRAFT/bench under his gate)
+## ⭐⭐ THE OWNER'S SECOND PASS – RULINGS OF 14.09, item-keyed (authoritative over the lines above)
 
-1. **Item 1** – the day-together ask at young ages: **A** gate it 16+ (recommended) / **B** keep
-   all-ages, re-voice the young copy.
-2. **Item 7** – the domestic door: **A** latch cleared floors for the career via
-   `peakDomesticPoints` (recommended – the elite gate's own doctrine) / **B** keep the annual
-   re-earn.
-3. **Item 20** – the soft chip vs Proceed: **A** hard-block the week / **B** one-line leave-anyway
-   guard + the pulsing chip (recommended – keeps «she can be missed» true).
-4. **Item 31** – the handover's upper two lines: **A** re-voice into the realisation register,
-   matching his own 08.09 `behind` pair (recommended – the cheapest word in the batch) / **B**
-   keep the comparative sentences.
+* **1 – RULED: change it.** «да, надо как-то по иному сделать» – the recommended shape ships:
+  the always-on day-ask starts at 16+ (the 11.08 always-on narrows); if the builder finds a
+  cleaner cut, it is a question, not a choice.
+* **3 – RULED + WIDENED.** «портреты были хорошо сделаны до этого… либо чуть расширить, а текст
+  ужать, либо вернуть как было. И проверить на других экранах тоже.» Two roads, builder measures
+  both against the 375 frame and takes the one that keeps faces whole; then the SWEEP: every
+  screen that renders a coach portrait (market, staff tab, pre-match tile, kid page) gets the
+  same check.
+* **⭐ NEW STANDING RULE (process, his word):** «визуальную проверку на всех экранах надо тоже
+  заложить в билдера в спеку при внесении правок» – any UI-touching bundle runs a visual pass
+  across EVERY screen that renders the touched component (the wave gate's parity set
+  375/768/900/1280 plus the component's other hosts), and the handoff names the screens checked.
+  Copied into the execution notes below; future wave briefs carry it too.
+* **4 – RULED: 19px.** «да, 19 хорошо».
+* **6 – RULED, with the law stated:** «всё, со слоем эмоций "всегда" кончились, теперь у нас
+  вариативность везде» – the tile wires to temperament, and «always the same» is now a defect
+  class on ANY her-facing surface (item 24 rides the same law).
+* **7 – see the rewritten item below: his 14.09 word collides with his own measured 20.08 pick;
+  the receipts go back to him – the round's ONE remaining ask.**
+* **8 – RULED, two halves:** «вот не надо нам там фокус и да, надо Proceed добавить» – no
+  auto-focus on any answer control, select+Proceed everywhere. Scope grows: `KnockDialog` is the
+  same single-tap family (two `decide()` buttons, first tap commits – measured at
+  `KnockDialog.vue:85-92`) and joins the confirm pattern; likely the whole story of item 27's
+  «мне казалось я нигде не пушил» (six recorded pushes at weeks 210–350 were single taps).
+* **9 – closed:** «ок, это я значит недопонял».
+* **15 – WIDENED into small-talk v2 (his ask «что думаешь?» answered in the report):** the beat
+  becomes a real exchange – her opener stays; each parent option earns HER REACTION line
+  (option × voice, DRAFT), «say more» earns a continuation block before its close; situation
+  pools may grow per age/theme. S→M, all copy his; the reaction machinery and the bibles already
+  exist – this is writing, not architecture.
+* **16 – RULED + VERIFY:** «надо, чтобы контракты работали с 16, как мы обсуждали» – ads are 16+
+  since round 41 (`sponsors.ts:637` reads `ECONOMY.advertising.fromAgeYears`, the exhibit's own
+  comment); the kit ladder is age-free (standing-gated only). The probe now ALSO proves the age
+  story: if ANY sponsor family still holds an 18 gate, it dies to 16; the thin pre-18 seasons
+  get explained from his save's own timeline (rungs cleared vs letters rolled vs the silencer).
+* **20 – RULED: B.** «надо как-то к самой плашке внимание привлекать, она сейчас максимально
+  незаметная» – the chip gets the pulse and more visual weight; the leave-anyway one-liner
+  ships; no hard block. The blocking-beat grey-out ships regardless (was never in question).
+* **22 – RULED, with his reading quoted:** «его слова о ней точно должны меняться на протяжении
+  роста и карьеры… "никто не учил" я читаю как "а зачем тогда мне вообще тренер"» – the
+  coach-eye lines become stage- and saturation-aware ACROSS the career, not one static sentence
+  per skill. Drafts his.
+* **24 – RULED:** «да, надо больше разнообразия, это же наша главная фича».
+* **25 – RE-SHAPED:** step +10 pp/год stands; his leaning «может даже до 60% к 23»; ⭐ NEW
+  mechanic: **college years PAUSE the growth** – steps count only years ON TOUR («пока она снова
+  в тур не вернется»). No schema: the college span is already state – the step count derives as
+  birthdays-since-18 MINUS birthdays spent in college. Bench prints the family corridor under
+  10 pp/50-at-22 · 10 pp/60-at-23 · the college-pause arm; his word lands on the printed table.
+* **27 – closed, with a watch:** «ок, я понаблюдаю ещё» – and the knock-dialog single-tap
+  (item 8's scope) is the working explanation for pushes he does not remember making.
+* **29 – RULED:** rehab stays on the hero («это ок»); the rest ships as written.
+* **31 – RULED A + THE LAW NAMED:** «это одна из основополагающих фраз в игре… должна реально
+  давать понимание и показывать все перспективы, чтобы ожидание не спорило с реальностью» – the
+  upper two base bands re-voice into the realisation register (his own 08.09 `behind` pair is
+  the model), AND the handover pair (base + room) gets a вычитка pass AS A UNIT against exactly
+  that law: the two sentences together must say both truths – what the childhood did, and how
+  much room she carries. Drafts his.
+* **round-41 #3 – CLOSED by his word:** «не ждет, я уже говорил, что оставляем текущий» – the
+  capstone stays 4; round-41's ledger line updated with the 14.09 quote.
+
+- [?] **32. «по сравнению с предыдущим сейвом Алисы Зоя играет хуже и меньше выигрывает всего.
+  Давай эти два сейва сравним»** – **measure, waiting on the file.** The Alice save is no longer
+  on disk (Downloads checked 14.09: only olivia w413/w464, vera w569, the old zoe-royv w255 and
+  the current career remain) – he re-sends it, and the instrument is ready: the same seeded
+  reconstruction that audited Zoe (birth · ceilings · realisation, validated Δ=0.0000) runs on
+  both saves plus the results ledgers (titles by tier, rank trajectory, win rate by season).
+  Deliverable: the two careers side by side with the model's own explanation of the gap – birth
+  cards, rolled rooms, realisation, and what luck vs build vs play each contributed.
+
+## The ask batch – ONE left open (everything else above is ruled; DRAFTs/benches ship under his gate)
+
+**Item 7 – the domestic table, and two of his own rulings now face each other.** His 14.09 word:
+«я никогда не говорил, чтобы мы это делали… у нас есть окно в неделях… надо сделать по такому
+принципу все». The record: on 20.08 he PICKED season-to-date himself – round-23 #13 laid out
+three options WITH measurements, and rolling-52 was measured producing exactly the two things he
+had complained about: the domestic top turning over completely by the calendar (survivors of the
+week-8 top-10 to season's end: **0.3 of 10** under rolling vs **2.8** under season-to-date; season
+1 turns over 100% as prehistory ages out) and «очки отнялись после моей победы» (#12 – a National
+title row leaving the 52-week window on schedule). Meanwhile his TODAY's pains are real and are
+NOT the window's: the January door-slam (the entry gates re-read live points) and the Stats tab
+SPEAKING window-language on a season table («Counting 6 of a best-6 window… leaves the window in
+NN weeks» – at week 6 of a season NN prints exactly **46**, his mystery number, found). So:
+
+* **A – his literal 14.09 ask**: domestic goes rolling-52, uniform with ITF/WTA. Honest cost,
+  measured on 20.08: the #12/#13 phenomena return – leaders lose their National row mid-season by
+  the calendar, the top rotates, season 1 churns 100%.
+* **B – the synthesis (architect recommends)**: the table STAYS season-to-date (his measured
+  20.08 pick – stable top, no phantom point-loss), and today's two pains are fixed at their own
+  roots: the ENTRY floors latch on `peakDomesticPoints` (once cleared, the door never slams –
+  zero schema, the elite gate's own doctrine), and the Stats window block learns to tell the
+  season table's truth in season words (DRAFT copy; the window sentences stay on the two rolling
+  tables where they are true) – «ожидание не спорило с реальностью», his own 31-item law, applied
+  here.
+
+One word decides; B closes every complaint from both eras at once.
 
 ## Execution notes (for the round's own run, after wave 6 lands)
 
