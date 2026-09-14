@@ -720,3 +720,46 @@ pick for the `'life'` ROW KIND**, worn by every life row that has no per-kind ma
 not mistaken for a romance beat; it wears the mark he chose for life rows. **The open question is
 narrower and still his**: whether the spotlight deserves a mark of its own. §5a stands – no agent
 picks a glyph – so nothing was picked, and it goes to him with the strings.
+
+## Corrections from T3b
+
+**Ruling P holds in every part, and nothing measured contradicts it.** The horizon is one week back,
+for all five kinds, and the two starved ones now fire – proved by the pair of cases the fix INVERTS
+rather than by a case that could only go green: a big-stage title and a big-stage early exit stamped
+in week W are charged in the pass at week **W+1** and NOT in the pass at week W, measured through the
+real phase (`resolveBodyAndPlanner`) on twins that differ by one stamp. All six of those assertions
+were RED under T3's shipped spelling (ARM 12) and are green after. Three corrections to the TASK's
+framing, all measured:
+
+**⚠⚠ THE FIRST TICK ASKS ABOUT WEEK 0, NEVER ABOUT −1.** The correction brief says «`world.week − 1`
+is `-1` on the first tick»; it is not. `tickWeek`'s step 0 runs `world.week += 1` **before**
+`resolveBodyAndPlanner`, so a career born at week 0 runs its first spirit pass at `world.week === 1`
+and the earliest week the call site can ever name is **0** – which holds no trophy, no result row and
+no stamp, so the first tick charges nothing. **−1 is reachable only from outside the tick** (a bench,
+a test, a later caller), and the ledger now answers it with an empty list by a stated guard at its
+head. ⚠ THE GUARD IS A LAW AND NOT A REPAIR, and the distinction is the honest half of the report:
+asked about −1 the four readers already answer with nothing, because `decayAt` returns 0 for anything
+in the future, so `fameAt(world, −1)` is 0 and the news gate alone closes the door. Deleting the
+guard therefore reddens the STATED half of the pin and not the behavioural one (ARM 14) – the
+emptiness was a coincidence of three separate rules, any one of which a later wave could retune, and
+what T3b buys is that it stops being a coincidence. ⭐ AND THE INCREMENT'S POSITION IS NOW PINNED
+(ARM 15): it is the one thing standing between `world.week − 1` and a negative first tick, and it was
+load-bearing while nothing read it.
+
+**⚠⚠ THREE OF THE SIX PINS T3 NAMED DO NOT READ THE CALL TEXT, AND DID NOT MOVE.** The correction
+brief asks for six re-aims «of the pins that read that call's exact text». Measured: only THREE of
+T3's six do – plus a fourth in the wave-5 walls file and the T3 suite's own §F pin. The arity pin
+(`accrueSpirit.length`), its signature sibling and the wave-5 schema suite's reader census all read
+`engine/spirit.ts`, whose declaration and whose one `expressedTemperamentOf` read T3b does not touch;
+they were run and stayed green. **Re-aiming a pin that did not move would have been a diff with no
+claim behind it**, so they were left exactly as T3 wrote them. ⚠ AND THE SITE COUNT IS NOT THE RED
+COUNT: the four call-text sites redden FIVE cases under ARM 12b, because `wave4-ended-beat.test.ts`
+holds its anchor in a helper two of its cases share. A census of the sites is not a census of what
+goes red – the same lesson T3 carried about ruling A's table, one level down.
+
+**⚠ THE DRAFT ROW MOVED BECAUSE THE HORIZON MOVED, AND IT IS STILL A DRAFT.** T3's
+«People were talking about her **this week**.» was true under ruling M and false the moment ruling P
+landed – the row is stamped with the week it PRINTS in, and what it names is the week that closed.
+It now reads «…**last week**.» ⚠ DELIBERATELY NOT POLISHED and deliberately NOT PINNED as wording:
+T8 and the вычитка own the sentence, and a T3b pin on its words would have taken that away. The only
+reader is the §H case that asserts the row carries `EXPOSURE_ROW`, which moves with it.
