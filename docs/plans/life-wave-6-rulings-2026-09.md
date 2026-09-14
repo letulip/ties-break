@@ -527,3 +527,37 @@ expect([...PSY_FOCUSES].sort()).toEqual(Object.keys(PSY_FOCUS_LABEL).sort())
 That is total by construction, it goes red the day a sixth focus is added to the type and forgotten
 in the roster, and it costs one line. The length assertion stays beside it: it still names the
 number a reader is checking against the spec.
+
+## Corrections from T2 – three of mine, and one of the brief's that could never have fired
+
+**The brief's, and it is the wave's fourteenth «unable to fail».** The brief grounds `'shoot'` on
+`completedShootWeeks(world, week)` containing `week`. Measured by T2: that function returns weeks
+lived **strictly before** `week` – `(w, 200) = []` and `(w, 201) = [200]` – so the brief's spelling
+is **false for every world at every week**. A kind that ships exactly as written never fires once,
+and nothing goes red, because there is nothing to be red about. Corrected to `week + 1`, which keeps
+`fame.ts`'s single predicate and its college-freeze rule rather than opening a second one. T2's ARM
+3 is the literal spelling, and it reddens.
+
+**Ruling E, corrected: the anchor's PATH was wrong, and the correction strengthens the ruling.** I
+wrote `ECONOMY.fame.contracts.fameCap`, taking the path from the brief instead of walking it.
+Re-derived independently: the 30 lives at **`ECONOMY.business.merch.contracts.fameCap`**. So it is
+not merely a contract term's ceiling – it is a ceiling inside the **merch and brand-reach** model,
+one system further from «the ad market's famous bar» than I said. Ruling E's argument and every
+measured number in it stand unchanged; only the address was wrong, and it was wrong in the
+direction that made the anchor look better than it is.
+
+**Ruling F, under-stated.** I wrote the ladder guard as `'stage'`'s. Both `'stage'` and
+`'publicLoss'` ask the ladder, so an unresolvable bar turns **both** kinds off at once – T2 predicted
+6 red cases from that arm and measured **9**. The guard is worth more than I priced it at.
+
+**Ruling K, resting on a coupling I did not name.** T2 found it: a losing row reaches `world.results`
+at all only because `world.ts:1039` pushes `if (points > 0)`, and the big tiers happen to pay
+**1 · 1 · 10 · 10** at their first round. **A big tier re-priced to 0 at R1 would stop writing the
+row and silence `'publicLoss'` entirely** – the «unable to fire» family one level below the one
+ruling K was watching. The coupling is now stated in `spotlight.ts` itself. K's thresholds
+re-measured exact: 30 / 60 / 65 / 70.
+
+**⚠ And the background notification lied again, twice, in one task.** T2's first gate read
+`CHECK_EXIT=1` from the file – one case of 5 365, T1's reader census, which the re-aim then fixed –
+while the notice said «exit code 0». That is CLAUDE.md's hazard (c) reproduced on this branch today,
+and it is the reason the exit code is never read from anywhere but the log.
