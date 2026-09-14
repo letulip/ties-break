@@ -93,9 +93,11 @@ the standing rule.
 | T9 | the benches | psy-grid 5×3, `bench:spotlight`, census high-fame column + leak prints |
 | T10 | e2e + frozen + gate | the mechanic case, fixtures v77, the first NESTED peel, handoff |
 | T11 | the dice come back (owner, 14.09) | two reroll buttons on the prologue identity card – a restore, not a design |
+| T12 | need reads reachable money (owner, 14.09) | the cameo gate stops being blind to parked cash – `reachableFundsCents`, the sweep, the wall restored |
 
-⚠ T11 was added mid-wave by the owner's 14.09 word («докинь микрофикс в эту волну»); it runs any
-time before T10 – its mounted test rides T10's gate – and nothing above renumbers.
+⚠ T11 and T12 were added mid-wave by the owner's 14.09 words («докинь микрофикс в эту волну»; the
+deposit exploit from his live playtest); they run any time before T10 – their tests ride T10's
+gate – and nothing above renumbers.
 
 ## 2. The tasks, expanded
 
@@ -342,6 +344,61 @@ a design:
   their inputs, a click lands a POOL member (⚠ assert membership, not ≠ default – a roll may
   legitimately land the default itself), no click leaves Alice Martin, and
   `prologue-two-paths` stays green. Mutation-proven per the house rule.
+
+### T12 – need reads the money she can REACH (owner, 14.09 – added mid-wave, from his live playtest)
+
+> «у рабочей семьи, если вложить все деньги сразу со стартом карьеры в депозит, сразу же приходят
+> спонсорские деньги. Это надо починить, чтобы поддержка приходила реально тогда, когда вообще уже
+> край и денег нет, а не только кошельком мыслить» – and, the same hour: «предполагаю, что у
+> среднего класса так же будет, так что на них тоже распространяется».
+
+**Anatomy, so the fix lands on the true cause.** The cameo sponsor's gate is `sponsorNeedMet`
+(`src/engine/world/sponsors.ts:201`): `fundsCents < runwayWeeks × courtCents`, called from
+`phaseFinance.ts:580` with `world.fundsCents`. Its spec –
+[need-not-background-2026-08](../specs/need-not-background-2026-08.md) – built a correctness
+wall: «nobody is in need before a ball is struck» (worst week-0 runway 81.5 against the bar 62).
+That wall was TRUE on 10.08 and was silently broken by a LATER wave: the deposit and the index
+fund (rounds 29–30, `economy.ts:1668`'s own words – «WHERE MONEY EARNS NOW») gave the wallet two
+parking places the gate cannot see. Park everything at week 0 → `fundsCents ≈ 0` → runway 0 →
+the shop writes to a family holding its whole starting cash. Two waves, each correct alone. ⚠
+And the owner is right about `middle` BY CONSTRUCTION: the gate has been background-blind since
+its own wave (that was the point of it), so the hole is every background's – the fix is one
+read, not per-background patches.
+
+* **The helper – one function, one question.** `reachableFundsCents(world)` in
+  `world/assets.ts`: `world.fundsCents` + Σ `valueCents` over the CASH-PARKING rows.
+  `OwnedAsset.valueCents` is re-written by `revalueAssets` every tick, so no new arithmetic and
+  no price re-derivation – the read is already maintained. Cash-parking = the deposit and the
+  index fund, MARKED ON THE CATALOGUE (a flag on the two `ECONOMY.shop.catalogue` rows, or the
+  mechanism the builder defends in the rulings doc) – never an id string-match at a call site.
+  Cars, gear, the business/brand stay OUT: they are things, not parked cash, their worth curves
+  are path-dependent, and nobody sells a company to qualify for a $500 cameo.
+* **The confirmed site moves**: `sponsorNeedMet`'s caller passes `reachableFundsCents(world)`.
+  The bar itself does not move – `runwayWeeks 62`, the court denominator, the rung cut, the
+  amounts are all UNTOUCHED (§2.2/§2.3 of the spec stand; only the INPUT widens).
+* **The sweep – every need-verdict on the wallet, listed in the handoff.** Run
+  `git grep -n "fundsCents" -- src/engine` and judge each VERDICT read (writes and spending
+  caps are not the family): (a) `ending.ts:239–240` – the broke-ending pair reads raw
+  `fundsCents`; a family with a fat deposit must not be declared «край» by the mirror of the
+  same blindness – verify against how bills and the deposit actually interact and either move
+  it to the helper or bring the architect the reason it stays; (b) `diary.ts:216`
+  `fundsPressure` – mom worrying about money while $30k sits parked is a falsehood in her
+  voice; measure how often it fires on parked-cash worlds and propose; (c) academy
+  `needFactor` and the college need layer read BACKGROUND by their own ruled design (the
+  anketa, not the account) – NOT touched, named here so nobody «fixes» them.
+* **Tests.** The repro as a unit test, both his arms: a `working` AND a `middle` family,
+  week-0, deposit-all → the cameo must NOT fire while the money is parked (walk the full
+  window); then spend the parking down for real → it fires once reachable money is under the
+  bar. Mutation arm: revert the gate to raw `fundsCents` and the test reddens. Control pin: a
+  world with zero asset rows plays byte-identical (the helper degenerates to the wallet there
+  – the no-deposit family's behaviour is provably unchanged).
+* **Bench.** Re-run `tools/runway-probe.ts` (the spec's own instrument) on the widened read:
+  the no-deposit corridors must come back byte-identical (its policies never buy assets – that
+  IS the control), plus one deposit-all arm printed predicted-vs-measured. The spec gets a
+  dated amendment: the wall's sentence gains «…and parking the wallet does not fake it» with
+  the 14.09 story.
+* No wording changes anywhere in T12; no `ECONOMY.sponsor` number moves; no new state – the
+  helper is derived, schema untouched.
 
 ## 3. The streams of this wave
 

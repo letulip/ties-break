@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 110 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 111 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -34,7 +34,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
-| economy-and-money | 14 | [ROUND 41 P1 (c): THE ELITE SHELF GOES UP – ONE PRICE, AND IT IS WHAT THE WEALTHY USED TO PAY](#12092026--round-41-p1-c-the-elite-shelf-goes-up--one-price-and-it-is-what-the-wealthy-used-to-pay) | 2026-09-12 |
+| economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
 | general | 5 | [THE WAVE'S TEN QUESTIONS RULED, AND THE GATE LEARNS TO REMEMBER](#14092026--the-waves-ten-questions-ruled-and-the-gate-learns-to-remember) | 2026-09-14 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
@@ -4470,3 +4470,26 @@ brief is a bench-priced proposal – his word after the numbers, the standing la
 **Standing beside it, unblocked by his own gate**: the планка-3 / bond-memory session was parked
 «after his playtest» – the playtest now running makes it the next owner-architect session once
 he returns with impressions.
+
+## 14.09.2026 – NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR
+
+From his live playtest of the deployed wave-5 build, the first exploit report: «у рабочей семьи,
+если вложить все деньги сразу со стартом карьеры в депозит, сразу же приходят спонсорские деньги.
+Это надо починить, чтобы поддержка приходила реально тогда, когда вообще уже край и денег нет, а
+не только кошельком мыслить» – and, the same hour, the scope widened by his own guess, confirmed
+by the code: «предполагаю, что у среднего класса так же будет, так что на них тоже
+распространяется» (the gate has been background-blind since 10.08, so the hole was every
+background's by construction).
+
+**The ruling this refines is his own 10.08 one** («порог по деньгам на счету, а не по строчке в
+анкете»): «на счету» now means REACHABLE money – the wallet plus the cash-parking rows (the
+deposit and the index fund, the shop's own «where money earns now» pair) – never the wallet
+alone. The anatomy: the cameo gate's correctness wall («nobody is in need before a ball is
+struck») was true when built and was silently broken by the later shop wave that gave the wallet
+parking places; two waves, each correct alone. The fix is T12 of the wave-6 brief, added
+mid-wave at his word beside T11 (the dice returning to the prologue identity card, his other
+14.09 microfix): one derived helper `reachableFundsCents`, the confirmed gate site moved, the
+sweep of every other need-verdict on the wallet (the broke-ending pair and the diary's money
+worry named as candidates; academy and college aid stay on the anketa by their own ruled
+design), the bar itself untouched – only the input widens. Repro tests in both his arms
+(working AND middle), the spec's instrument re-run as the control.
