@@ -2,28 +2,29 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,456 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,521 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-456 exported names across 49 owning modules.
+485 exported names across 50 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 49 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 53 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 26 |
+| `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
+| `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 16 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
-| `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 15 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
@@ -44,11 +45,11 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
+| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 5 |
 | `src/engine/condition.ts` | THE condition math – one rule, everybody | 4 |
 | `src/engine/season/calendar.ts` | Package L – tournament calendar | 4 |
 | `src/engine/world/ledger.ts` | THE LEDGER: the two write primitives every world mutation goes through, and the pure folds that read the finance ledger back out | 4 |
 | `src/engine/world/loveEpisodes.ts` | THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's episodes, and who is there right now | 4 |
-| `src/engine/world/state.ts` | ⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION | 4 |
 | `src/engine/kidLife.ts` | HER LIFE OFF THE COURT - the three tiles of screen C's attribute grid that are not about results | 3 |
 | `src/engine/world/fieldNews.ts` | ⭐⭐⭐ THE TOUR HAS A VOICE – the professional field's succession, said out loud (round 26 #10) | 3 |
 | `src/engine/world/phaseObligations.ts` | ⭐ R2-10 STEP 2, PHASE 1 – THE SEASON BOUNDARY AND THE RECURRING OBLIGATIONS | 3 |
@@ -103,8 +104,10 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `deliverKnownPartner` – `src/engine/world/lifeBeat.ts`
 - `drawEndsRead` – `src/engine/world/lifeBeat.ts`
 - `drawForkWant` – `src/engine/world/lifeBeat.ts`
+- `drawListenHeard` – `src/engine/world/lifeBeat.ts`
 - `drawPartnerWants` – `src/engine/world/lifeBeat.ts`
 - `drawRawLag` – `src/engine/world/lifeBeat.ts`
+- `endedKeptRow` – `src/engine/world/lifeBeat.ts`
 - `ENDS_READS` – `src/engine/world/lifeBeat.ts`
 - `ENDS_REGISTERS` – `src/engine/world/lifeBeat.ts`
 - `endsEligible` – `src/engine/world/lifeBeat.ts`
@@ -121,6 +124,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `ForkWant` *(type)* – `src/engine/world/lifeBeat.ts`
 - `forkWantOf` – `src/engine/world/lifeBeat.ts`
 - `forkWantWeights` – `src/engine/world/lifeBeat.ts`
+- `HeardRead` *(type)* – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_BLOCKING` – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
 - `LifeBeatAnswer` *(type)* – `src/engine/world/lifeBeat.ts`
@@ -130,6 +134,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `lifeBeatSaid` – `src/engine/world/lifeBeat.ts`
 - `lifeLogOf` – `src/engine/world/lifeBeat.ts`
 - `liveSoftBeat` – `src/engine/world/lifeBeat.ts`
+- `metKeptRow` – `src/engine/world/lifeBeat.ts`
 - `PARTNER_WANTS` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
@@ -218,6 +223,34 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `unitPriceHistory` – `src/engine/world/assets.ts`
 - `weeklyAssetUpkeepCents` – `src/engine/world/assets.ts`
 
+### `src/engine/world/psychologist.ts`
+
+THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2).
+
+- `hirePsychologist` – `src/engine/world/psychologist.ts`
+- `PSY_FOCUS_LABEL` – `src/engine/world/psychologist.ts`
+- `PSY_FOCUS_LINE` – `src/engine/world/psychologist.ts`
+- `PSY_FOCUSES` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_CHANGE_KEY` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_SEASON_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL` – `src/engine/world/psychologist.ts`
+- `PSYCHOLOGIST_LOCKED_DETAIL` – `src/engine/world/psychologist.ts`
+- `psychologistFocusDetailOf` – `src/engine/world/psychologist.ts`
+- `psychologistFocusOpen` – `src/engine/world/psychologist.ts`
+- `psychologistFocusRefusal` – `src/engine/world/psychologist.ts`
+- `psychologistFocusSeasonFor` – `src/engine/world/psychologist.ts`
+- `psychologistRungOf` – `src/engine/world/psychologist.ts`
+- `psychologistUnlocked` – `src/engine/world/psychologist.ts`
+- `psychologistWeeklyCents` – `src/engine/world/psychologist.ts`
+- `psychologistWorksInWeek` – `src/engine/world/psychologist.ts`
+- `psychologistWorksThisWeek` – `src/engine/world/psychologist.ts`
+- `resolvePsychologist` – `src/engine/world/psychologist.ts`
+- `setPsychologistFocus` – `src/engine/world/psychologist.ts`
+- `setPsychologistRung` – `src/engine/world/psychologist.ts`
+
 ### `src/engine/world/ladder.ts`
 
 THE LADDER: where she stands, and what that standing opens.
@@ -293,6 +326,27 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
+### `src/engine/world/coachMarket.ts`
+
+THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
+
+- `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts`
+- `coachBilling` – `src/engine/world/coachMarket.ts`
+- `coachEdgeView` – `src/engine/world/coachMarket.ts`
+- `coachLadderNote` – `src/engine/world/coachMarket.ts`
+- `coachMarket` – `src/engine/world/coachMarket.ts`
+- `coachPlaqueLine` – `src/engine/world/coachMarket.ts`
+- `coachRoomNote` – `src/engine/world/coachMarket.ts`
+- `coachSinceWeek` – `src/engine/world/coachMarket.ts`
+- `coachTravelsWithHer` – `src/engine/world/coachMarket.ts`
+- `eliteGateStandingOf` – `src/engine/world/coachMarket.ts`
+- `hireCoach` – `src/engine/world/coachMarket.ts`
+- `matchesEverPlayed` – `src/engine/world/coachMarket.ts`
+- `openingCoachId` – `src/engine/world/coachMarket.ts`
+- `practiceCoachRateFor` – `src/engine/world/coachMarket.ts`
+- `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
+- `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
+
 ### `src/engine/world/masseur.ts`
 
 THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
@@ -333,26 +387,6 @@ HER BIRTHDAY, AND WHAT YOU GIVE HER.
 - `collegeBirthdayIndexOf` – `src/engine/world/birthday.ts`
 - `giftNoun` – `src/engine/world/birthday.ts`
 - `pendingBirthday` – `src/engine/world/birthday.ts`
-
-### `src/engine/world/coachMarket.ts`
-
-THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
-
-- `COACH_EDGE_REVEAL_WEEKS` – `src/engine/world/coachMarket.ts`
-- `coachBilling` – `src/engine/world/coachMarket.ts`
-- `coachEdgeView` – `src/engine/world/coachMarket.ts`
-- `coachLadderNote` – `src/engine/world/coachMarket.ts`
-- `coachMarket` – `src/engine/world/coachMarket.ts`
-- `coachPlaqueLine` – `src/engine/world/coachMarket.ts`
-- `coachRoomNote` – `src/engine/world/coachMarket.ts`
-- `coachSinceWeek` – `src/engine/world/coachMarket.ts`
-- `coachTravelsWithHer` – `src/engine/world/coachMarket.ts`
-- `hireCoach` – `src/engine/world/coachMarket.ts`
-- `matchesEverPlayed` – `src/engine/world/coachMarket.ts`
-- `openingCoachId` – `src/engine/world/coachMarket.ts`
-- `practiceCoachRateFor` – `src/engine/world/coachMarket.ts`
-- `setCoachOnEventWeeks` – `src/engine/world/coachMarket.ts`
-- `setCoachOnJuniorEvents` – `src/engine/world/coachMarket.ts`
 
 ### `src/engine/world/endings.ts`
 
@@ -623,6 +657,16 @@ WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for 
 - `MEANS_BANDS` – `src/engine/world/means.ts`
 - `meansOfCents` – `src/engine/world/means.ts`
 
+### `src/engine/world/state.ts`
+
+⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
+
+- `BrandStrengthSeed` *(type)* – `src/engine/world/state.ts`
+- `PendingTournament` *(type)* – `src/engine/world/state.ts`
+- `PsyFocus` *(type)* – `src/engine/world/state.ts`
+- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
+- `WorldState` *(type)* – `src/engine/world/state.ts`
+
 ### `src/engine/condition.ts`
 
 THE condition math – one rule, everybody.
@@ -658,15 +702,6 @@ THE ATTACHMENT RECORD, AS TWO QUESTIONS ASKED OF A LIST – the private life's e
 - `endEpisode` – `src/engine/world/loveEpisodes.ts`
 - `knownPartner` – `src/engine/world/loveEpisodes.ts`
 - `loveEpisodesOf` – `src/engine/world/loveEpisodes.ts`
-
-### `src/engine/world/state.ts`
-
-⭐ R2-10 STEP 1 – THE PERSISTED SCHEMA, MOVED WITHOUT TOUCHING SERIALISATION.
-
-- `BrandStrengthSeed` *(type)* – `src/engine/world/state.ts`
-- `PendingTournament` *(type)* – `src/engine/world/state.ts`
-- `SAVE_SCHEMA_VERSION` – `src/engine/world/state.ts`
-- `WorldState` *(type)* – `src/engine/world/state.ts`
 
 ### `src/engine/kidLife.ts`
 

@@ -673,6 +673,112 @@ export function aimWeights(week: readonly (readonly SessionKind[])[]): Record<Sk
 // reads a rung of the ladder AND how the COACH SHE HIRED fits the game she plays. The two values it
 // used to return (0.82 parent, 1.15 hired) are unchanged, and are now the ends of that ladder.
 
+// =================================================================================================
+// ⭐⭐⭐ «COOL HEAD» – THE PSYCHOLOGIST'S COMPOSURE WALK, v76's T5 (wave 5, the psychologist's year)
+// =================================================================================================
+//
+// THE WHOLE OF THE MECHANIC: on a week the family is paying a psychologist whose chosen year is
+// `'coolhead'`, her composure gains `ECONOMY.psychologist.coolheadPerSeason[rung] / WEEKS_IN_SEASON`
+// on top of whatever training earned – toward HER OWN CEILING and never past it, and exactly NOTHING
+// once she is at it. The spec's §2 row and the wave-5 brief's §2 T5.
+//
+// ⚠⚠ THIS IS THE ONE PLACE IN THE WHOLE SEAT WHERE A SKILL MOVES, AND THE BOUNDS ARE THE DESIGN
+// (the spec's own ⚠ under the §2 table). So, named once, because the absence of each is the feature:
+//   · `SKILL_KEYS` is untouched – composure has existed since v25 and no key is added, which is what
+//     keeps `seed:potential` and `seed:kid` byte-identical for every career in existence;
+//   · `isPhysicalSkill` is untouched and is ASKED rather than re-spelled – it is literally
+//     `k !== 'composure'` (see its own ⚠⚠ note: one home for the answer), so the term rides the
+//     predicate this file already uses to treat composure apart, and a hand-written `'composure'`
+//     here would be the second home that note forbids;
+//   · `veteranPoise` and the age curve are untouched – he does not change how she ages;
+//   · the CEILING is untouched – `potential` is rolled once per career and read, never written. The
+//     term clamps ITSELF against her ceiling; it does not add a clamp to anybody else's arithmetic.
+//
+// ⚠⚠ AND IT IS A SUMMAND BESIDE TRAINING, NEVER A CHANGE TO TRAINING. The brief's words: «its OWN
+// named term beside training growth, never by mutating the plan». Nothing about `rate`, `aim`,
+// `headroom`, `luck` or the plan moves, so with the seat empty – or the focus not `'coolhead'`, or
+// the seat stood down – every byte of every existing career's growth is what it was. That control
+// arm is in the code rather than only in the bench: `coolheadRung` is `undefined` everywhere else.
+//
+// ⚠⚠ ZERO DRAWS, AND THE STREAM IS THE SHARP RISK. This term lives INSIDE a function that draws
+// (`seed:growth:<week>`, one pull, before the per-skill loop). It adds no key, consumes no value and
+// cannot reorder anything: it is arithmetic over `skills`, `potential` and a constant, and it is
+// written AFTER the draw in a loop the draw does not enter. tests/wave5-psychologist-coolhead.test.ts
+// §C proves it with a key recorder and with the four PHYSICAL skills held byte-identical across the
+// arms – a moved or re-ordered draw would move all five, not one.
+
+/** HOW MUCH OF A POINT THIS WEEK OF HIS WORK IS WORTH – the season rate at the rung the family is
+ *  paying for, divided over the season, and then CLAMPED BY WHAT IS LEFT OF HER OWN CEILING.
+ *
+ *  `rung` is `undefined` on every week he is not working this focus – not hired, hired for another
+ *  year, or stood down (a college freeze, a booked family week) – and the answer there is 0. That is
+ *  the whole gate: this function is total, and a caller that forgets to ask the predicate gets no
+ *  effect rather than a wrong one.
+ *
+ *  ⚠⚠ ZERO AT THE CEILING IS ASSERTED HERE AND IS THE SPEC'S OWN BAR, pinned as an exact 0 rather
+ *  than as a small number: `Math.max(0, ceiling - composure)` is 0 at the ceiling AND above it, and
+ *  above it is a real world rather than a defensive flourish – `veteranPoise` pushes composure past
+ *  `potential.composure` on a long career and nothing clamps it, so the term must not read a negative
+ *  headroom and quietly take points OFF a veteran.
+ *
+ *  ⚠ THE CLAMP IS TAKEN AGAINST THE VALUE COMPOSURE HOLDS AT THE HEAD OF THE WEEK, which is what
+ *  makes the term a pure function of three numbers the CALLER already holds – and that is what pays
+ *  for the receipt in `growAndLive` without storing anything or calling `growWeek` twice. What it
+ *  costs is named honestly rather than hidden: on the one week her headroom is smaller than the
+ *  week's rate, training's own gain still lands on top of a term that has just filled the gap, so
+ *  the week can end a few thousandths of a point above the ceiling (bounded by `rate × headroom ×
+ *  luck × aim` on a headroom already below 0.0673 – under 0.007 at the most extreme week the engine
+ *  can build, measured in the suite's §B). His term never carries her past it; training's asymptote
+ *  is the same asymptote it always was.
+ *
+ *  ⚠ THE `??` FALLBACK IS `psychologistRungOf`'s AND `recoverySlopeFor`'s, MIRRORED: a hand-built
+ *  probe world may hold any rung, and an unknown index falls back to the DEFAULT rung rather than to
+ *  `undefined` arithmetic that would poison the whole week's composure. Pure, total, ZERO draws. */
+export function coolheadGain(composure: number, ceiling: number, rung: 0 | 1 | 2 | undefined): number {
+  if (rung === undefined) return 0
+  const p = ECONOMY.psychologist
+  const perSeason = p.coolheadPerSeason[rung] ?? p.coolheadPerSeason[p.defaultRung]
+  return Math.min(perSeason / WEEKS_IN_SEASON, Math.max(0, ceiling - composure))
+}
+
+/** ⭐⭐ DID HIS TERM CARRY HER OVER A WHOLE POINT THIS WEEK – the receipt's trigger, as one
+ *  expression, exported so the caller reads the engine's own rule instead of re-typing it.
+ *
+ *  «A WHOLE POINT UPWARD, AND HIS TERM IS WHAT CARRIED IT ACROSS»: the crossing happens with his
+ *  delta and would NOT have happened on the training delta alone. Training raises composure too – a
+ *  sentence that fired on training's work would be claiming his credit, which is the travelling-team
+ *  §4 legibility law read backwards. Formally the architect's own:
+ *  `floor(before + training) < floor(before + training + his)`.
+ *
+ *  ⚠ `composureAfter - gain` IS the training-only value, exactly, and that is a measured property of
+ *  `growWeek` rather than an assumption: composure is the one skill that can never FALL (its `loss`
+ *  is 0 by `isPhysicalSkill`, and `gain`, `veteranPoise` and this term are all ≥ 0), so the
+ *  `Math.max(d.floor, …)` at the end of the loop can never bite on it and the sum stays linear.
+ *
+ *  ⚠ NO STORED STATE, BY DESIGN – unlike T4's receipt, which needed ruling C's counter on the shock.
+ *  There is nothing to remember: the question is about one week's arithmetic and it is asked inside
+ *  that week. Pure, total, zero draws. */
+export function coolheadCrossedAPoint(composureAfter: number, gain: number): boolean {
+  if (!(gain > 0)) return false
+  return Math.floor(composureAfter - gain) < Math.floor(composureAfter)
+}
+
+/** ⭐⭐ THE RECEIPT – one no-cents feed line on the week his work carries her over a whole point, and
+ *  the travelling-team §4 legibility law made audible for this focus.
+ *
+ *  ⚠⚠ IT IS THE ONLY CHANNEL THIS FOCUS HAS, MEASURED, which is why it ships even though the wave
+ *  brief's T5 did not ask for one (the spec §2 gives every focus its sentence, and on drift the spec
+ *  wins – the brief's own single-source rule). The screen NEVER shows a composure number: the radar
+ *  carries `shownValue` – a fogged estimate displaced by a per-career misreading – into a polygon
+ *  path and no text, and decisions.md #11 is «axes without numbers». So without this line the player
+ *  pays for a year and genuinely cannot tell, which is the §4 failure by name.
+ *
+ *  ⚠⚠ DRAFT (CLAUDE.md invariant 4) – the spec §2's own working sentence for this focus transcribed
+ *  rather than invented, and the вычитка is T9's. NO FIGURE IN IT (the no-cents law, wave-3 brief
+ *  §0.5): it says the work showed, never what it cost or how many points it was worth, and it names
+ *  neither the psychologist nor a session. */
+export const COOLHEAD_RECEIPT = 'The big points feel slower to her than they used to.'
+
 /** ONE WEEK of development. Pure, total, and the only place skills change.
  *
  *  `matchesThisWeek` is competition: playing teaches things practice cannot, so a match week earns
@@ -728,6 +834,25 @@ export function growWeek(args: {
    *  ⚠ UNDEFINED EVERYWHERE ELSE, so every existing call site is byte-identical and no shipped
    *  career's growth moves. ZERO RNG IMPLICATIONS: two numbers, drawn nowhere near here. */
   bounds?: AgeCurveBounds
+  /** ⭐⭐⭐ THE PSYCHOLOGIST IS WORKING ON HER HEAD THIS WEEK, and this is the rung the family is
+   *  paying for (v76 T5 – «Cool head», the block above). See `coolheadGain` for the arithmetic and
+   *  the bounds.
+   *
+   *  ⚠⚠ THE FACT IS HANDED IN AND NOT READ, and it is measured rather than stylistic: this module
+   *  CANNOT import the seat. Walked over the tree's own value-import graph (`import type` excluded,
+   *  re-run with `export … from` counted as edges – same answer), `world/psychologist.ts` reaches
+   *  `engine/development.ts` by SEVEN paths, the shortest `psychologist → college → development`,
+   *  and it closes on a VALUE (`world/college.ts` imports `SKILL_KEYS` from this file), so an import
+   *  of the predicate here would close a real cycle. `world/phaseGrowth.ts` – the one caller that
+   *  needs this – is reached by ZERO paths and asks the predicate directly, which is the architect's
+   *  ruling J as corrected by T4b: a focus pass sitting UNDER `world/college.ts` must be handed the
+   *  fact; one that does not may ask.
+   *
+   *  ⚠ UNDEFINED EVERYWHERE ELSE, so every existing call site is byte-identical and no shipped
+   *  career's growth moves – `trainFactor`'s own promise, taken deliberately: the optional field with
+   *  a no-op default is this function's standing shape for a fact only some weeks have.
+   *  ZERO RNG IMPLICATIONS: a roster position, drawn nowhere. */
+  coolheadRung?: 0 | 1 | 2
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
@@ -771,7 +896,14 @@ export function growWeek(args: {
     // did; what changed is the shape underneath it. See `ageWeightOf` and `physicalMean`'s header.
     const loss = decline > 0 && isPhysicalSkill(k) ? decline * ageWeightOf(k) * skills[k] : 0
     const veteranPoise = decline > 0 && !isPhysicalSkill(k) ? d.veteranPoise : 0
-    out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise)
+    // ⭐⭐⭐ v76 T5 – AND THE PSYCHOLOGIST'S YEAR, WHEN IT IS THIS ONE. Its OWN named summand beside
+    // the week's training, on the ONE non-physical skill, clamped at her own ceiling: see the
+    // «COOL HEAD» block above for why every one of those clauses is load-bearing. `isPhysicalSkill`
+    // is ASKED here for the same reason `loss` and `veteranPoise` ask it one line up – one home for
+    // "which attribute is the calm one" – and `coolheadGain` returns 0 whenever `coolheadRung` is
+    // undefined, which is every week of every career the seat is not working this focus for.
+    const coolhead = isPhysicalSkill(k) ? 0 : coolheadGain(skills[k], potential[k], args.coolheadRung)
+    out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise + coolhead)
   }
   return out
 }

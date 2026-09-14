@@ -53,6 +53,9 @@ import {
   hireMasseur,
   setMasseurSessions,
   setMasseurTravels,
+  hirePsychologist,
+  setPsychologistRung,
+  setPsychologistFocus,
   inCollege,
   latchEnding,
   pendingBirthday,
@@ -248,6 +251,19 @@ function refusedCommands(world: WorldState, kind: 'college' | 'ended' = 'college
     // v59 step 2: the dial and the seat are the same family of decision, behind the same latch.
     ['setMasseurSessions', () => setMasseurSessions(world, 7)],
     ['setMasseurTravels', () => setMasseurTravels(world, true)],
+    // ⚠ v76, RE-AIMED WIDER AGAIN AND NOT WEAKENED: the psychologist is the second seat of the same
+    // travelling team, so the plan's college clause quoted above covers him word for word – «no
+    // specialist decision should reach a girl the programme is coaching». `guardNotEnded` runs before
+    // his pro-career gate too, so the freeze answers first, which is the order the sentence needs.
+    ['hirePsychologist', () => hirePsychologist(world, true)],
+    ['setPsychologistRung', () => setPsychologistRung(world, 2)],
+    // ⚠ v76 T3, THE THIRD OF THE SEAT'S COMMANDS AND THE SAME WIDENING ONCE MORE (ruling G.4: «every
+    // new command joins this guard SET»). The year-focus is the most specialist decision of the
+    // three – it is what the retainer is FOR – so the clause covers it most directly of all, and
+    // `guardNotEnded` runs ahead of the hire check, her consent and the season window, which is the
+    // order the college sentence needs: a parent at the freeze is told where she is, not that
+    // nobody is on the payroll.
+    ['setPsychologistFocus', () => setPsychologistFocus(world, 'coolhead')],
     ['setCoachOnEventWeeks', () => setCoachOnEventWeeks(world, true)],
     ['setCoachOnJuniorEvents', () => setCoachOnJuniorEvents(world, true)],
     ['answerFork', () => answerFork(world, 'continue')],
@@ -287,7 +303,11 @@ describe('a refused command at college says where she is', () => {
     expect(CAREER_ENDED_REFUSAL).not.toMatch(/[Ѐ-ӿ]/)
   })
 
-  it('⚠ THE REFUSAL DRAWS NOTHING – sixteen of them do not move the MAIN stream', () => {
+  // ⚠ THE COUNT LEFT THIS TITLE AT v76 AND THE HOUSE RULE IS WHY (CLAUDE.md: «Count it, do not
+  // quote it»). It read «sixteen of them» and the list was already NINETEEN before this wave added
+  // two – a number typed into a name rots the moment a row joins, which is exactly what happened.
+  // The claim is about the WHOLE table either way, so it now says so and cannot go stale again.
+  it('⚠ THE REFUSAL DRAWS NOTHING – not one command in the table moves the MAIN stream', () => {
     const { world } = careerAtCollege('e2-rng')
     const before = { ...world.rngMain }
     const fundsBefore = world.fundsCents

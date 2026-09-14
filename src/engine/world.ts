@@ -120,8 +120,8 @@ export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, COACH_EDGE_REVEAL_WEEKS }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. ⚠ `GEAR_CATEGORY_LINE` came back from equipment.ts to this
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
@@ -137,6 +137,20 @@ import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryT
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
 import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
 export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+// ⭐ v76, the psychologist's year (wave 5 T2): THE SECOND SALARIED SEAT, on the line above's own
+// pattern – the import list and the re-export list carry the SAME names, because hundreds of files
+// import from `engine/world` and that public API is what a leaf's move must not change. Shorter than
+// the masseur's by exactly what ruling Б removed: no fare, no travel stance, no tour relief, no
+// per-match week, no room note yet (the note is a FOCUS's receipt and arrives with T4's focus).
+// ⭐ v76 T3 – THE YEAR-FOCUS joins the same two lines: the command, the three read-only derivations
+// the card is built on (`psychologistFocusRefusal` is the one story both the throw and the row are
+// written from) and the string catalogue. Nothing else about the barrel moves.
+// ⭐ T3b adds ONE more, and it is arithmetic rather than a derivation the card reads:
+// `psychologistFocusSeasonFor` is the season a pick made in a given week is FOR (ruling I), written
+// once and read by the stamp and the guard alike – exported so the pins can ask the engine what the
+// rule is instead of re-deriving it beside the engine and drifting from it.
+import { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, setPsychologistFocus, psychologistFocusRefusal, psychologistFocusOpen, psychologistFocusDetailOf, psychologistFocusSeasonFor, PSY_FOCUSES, PSY_FOCUS_LABEL, PSY_FOCUS_LINE, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL, PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL } from './world/psychologist'
+export { hirePsychologist, psychologistUnlocked, psychologistWorksThisWeek, psychologistWorksInWeek, psychologistRungOf, psychologistWeeklyCents, resolvePsychologist, setPsychologistRung, setPsychologistFocus, psychologistFocusRefusal, psychologistFocusOpen, psychologistFocusDetailOf, psychologistFocusSeasonFor, PSY_FOCUSES, PSY_FOCUS_LABEL, PSY_FOCUS_LINE, PSYCHOLOGIST_CHANGE_KEY, PSYCHOLOGIST_LOCKED_DETAIL, PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL, PSYCHOLOGIST_FOCUS_UNKNOWN_REFUSAL, PSYCHOLOGIST_FOCUS_SEASON_REFUSAL, PSYCHOLOGIST_FOCUS_DECLINE_REFUSAL, PSYCHOLOGIST_FOCUS_NOT_READY_REFUSAL }
 import { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX } from './world/entries'
 export { enterEvent, withdrawEvent, releaseEntry, cancelEntry, RELEASE_LINE_PREFIX, INJURY_RELEASE_SUFFIX }
 import { eventById } from './world/bookings'
@@ -399,8 +413,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
-export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
+import { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
+export { answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -484,8 +498,13 @@ import { ensureSeason, housekeep, recomputeRankAndMilestones } from './world/boo
 // ⭐ ROUND 35 #14 – the two ends of the published draw. `tickWeek` calls both; nothing else does.
 import { recordDrawnFirstRounds, pruneDrawnFirstRounds } from './world/draw'
 export { ensureSeason }
-import type { BrandStrengthSeed, PendingTournament, WorldState } from './world/state'
-export type { BrandStrengthSeed, PendingTournament, WorldState }
+// ⭐ v76 (the psychologist's year, wave 5): `PsyFocus` joins the barrel's type surface beside the
+// three that were already here – the year-focus union, declared in state.ts with the field it types.
+// The barrel is a COMPATIBILITY contract (hundreds of files import from `engine/world`), so a new
+// engine type that the seat's commands and T2's snapshot will both name belongs on it from the day it
+// exists rather than being reached for through `engine/world/state` by whoever needs it first.
+import type { BrandStrengthSeed, PendingTournament, PsyFocus, WorldState } from './world/state'
+export type { BrandStrengthSeed, PendingTournament, PsyFocus, WorldState }
 import { SAVE_SCHEMA_VERSION } from './world/state'
 export { SAVE_SCHEMA_VERSION }
 
@@ -1480,6 +1499,7 @@ export function createWorld(
     seasonStartRank: null,
     pendingTournament: null,
     bestFinishByTier: {},
+    peakDomesticPoints: 0,
     // v31: eighteen empty shelves. She has won nothing, and the cabinet says so by showing her all
     // eighteen things she has not won yet.
     trophiesByTier: emptyTrophyLedger(),
@@ -1628,6 +1648,51 @@ export function createWorld(
     // keys appended since, so every key must stay in the order it was appended in
     // (`careerHashAtSchema` peels in reverse, newest first).
     spiritShock: null,
+    // ⭐ v76 (the psychologist's year, wave 5): NOBODY IS ON THE PAYROLL, NO YEAR HAS BEEN CHOSEN, AND
+    // HER EXPRESSION IS HER NATURE. On week 0 every one of the six is its own identity element and not
+    // a placeholder for one: she is eight, the seat unlocks with the professional career, and a
+    // leaning of 0 means «expression equals nature», which is what a girl who has lived no seasons
+    // has always been. All six are exactly what the v75 -> v76 migration back-fills on every older
+    // save, so a migrated career and a fresh one are the same shape at the moment they load.
+    //
+    // ⚠ THE RUNG OPENS ON THE MIDDLE ONE (1) WHILE NOBODY IS HIRED, which is the masseur dial's own
+    // precedent five keys up (`masseurSessionsPerWeek`, the middle rung, on a career with no masseur):
+    // a dial has to read something, the shipped default is the only answer that invents no decision,
+    // and it is meaningless until `psychologistHired` is true.
+    //
+    // ⚠⚠ RE-AIMED BY T2 AT `ECONOMY.psychologist.defaultRung`, AND THE PARAGRAPH IT REPLACES IS WHY
+    // THE NOTE STAYS. T1 wrote the literal `1` here and argued it: «the masseur's line above reads
+    // `ECONOMY.masseur.defaultSessions` because his dial holds a TUNABLE VALUE (2 / 4 / 7 sessions);
+    // this field holds a rung INDEX … `ECONOMY.psychologist` is T2/T4-T7's block and T1 does not open
+    // it: a constants home with one structural key in it would have to be moved the moment its real
+    // contents arrive.» The second clause was the load-bearing one and T2 is exactly the step that
+    // ends it – the block now exists and carries the three rungs' prices – so the first clause loses
+    // its reason: the masseur's precedent is `defaultSessions` beside `rungs`, and `defaultRung`
+    // beside `rungs` is that precedent followed rather than argued away. Nothing about the VALUE
+    // moved; one literal became a read of the constant that means it.
+    //
+    // ⚠ THE v75 -> v76 MIGRATION STILL WRITES THE LITERAL `1` AND MUST, which is v59's own shape
+    // verbatim (`createWorld` reads the constant, the migration writes `4`) and is the stronger rule
+    // of the two: a shipped migration must not change what it back-fills because somebody later
+    // retuned a constant. Keep the two in step – the constant's own comment says the same thing from
+    // the other end.
+    //
+    // ⚠ NOW THE LAST KEYS OF THE LITERAL, IN THIS ORDER, and `spiritShock` above has stopped being the
+    // last – the same handover `loveEpisodes` made to it, `lifeLog` to `loveEpisodes` and `assets` to
+    // the wave-1 three. Six keys in ONE append, peeled in one destructure for the reason the wave-1
+    // three are: they arrived together, in this order, and object rest preserves the relative order of
+    // everything it keeps. The frozen-career identities reproduce each older schema's hashes by
+    // dropping exactly the keys appended since, so every key must stay in the order it was appended in
+    // (`careerHashAtSchema` in tests/coachTravelEdgeFixtures.ts peels in reverse, newest first).
+    psychologistHired: false,
+    psychologistRung: ECONOMY.psychologist.defaultRung,
+    psychologistFocus: null,
+    psychologistFocusSeason: null,
+    // ⚠ TWO OBJECTS AND NOT FOUR FLAT NUMBERS/BOOLEANS, deliberately: the two axes are one model and
+    // T7's weekly pass moves both in one step, so a shape that can hold one and forget the other is
+    // the desync `accrueSpirit`'s «one weekly function, two numbers» rule refuses one layer down.
+    wallsLean: { open: 0, reg: 0 },
+    wallsFlipped: { open: false, reg: false },
   }
   addEvent(world, {
     week: 0,

@@ -48,9 +48,42 @@ import {
   PRE_V73,
   PRE_V74,
   PRE_V75,
+  PRE_V76,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v76: rolling the schema back to 75 – and dropping the SIX keys v76 added – reproduces the v75 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE PSYCHOLOGIST'S YEAR, STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
+    // the v75 case directly below, repeated one version up. v76 appends SIX keys to `createWorld`'s
+    // literal in one append – `psychologistHired`, `psychologistRung`, `psychologistFocus`,
+    // `psychologistFocusSeason`, `wallsLean`, `wallsFlipped` – and every career here carries all six
+    // at their identity values. Peel them, roll the number back, and the ENTIRE serialisation returns
+    // byte for byte: `rngMain`, `results`, `events`, the wallet, the body, `temperament`, all eighty.
+    //
+    // ⚠ SIX WHERE EVERY RUNG SINCE v72 HAS PEELED ONE, in ONE destructure, on `PRE_V72`'s own
+    // precedent: they arrived in one append and object rest preserves the relative order of everything
+    // it keeps, so the v75 shape comes back exactly.
+    //
+    // ⚠⚠ AND THIS RUNG'S SIX IDENTITY VALUES ARE A FACT ABOUT THE TREE, NOT ABOUT THESE CAREERS, which
+    // is v74's and v75's caveat one and two rungs down and the thing a later reader must not misread.
+    // T1 ships six seats, the migration and NO WRITER AT ALL; `hirePsychologist` is T2, the focus
+    // command T3, and the weekly leaning pass with its flip hazard T7. So this case does not yet say
+    // «a hire or a flip cannot reach a 156-week career». It says the schema move is inert, which is all
+    // a schema move should ever be. ⚠ The SEAT could not reach them anyway – it is gated on the
+    // professional ladder and these careers stop at 16.6 – so T7's WALLS are the half to watch here:
+    // their weekly pass is deterministic and reads the bond band, which every career in this file has.
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the wave moved a career and not just a schema.
+    //
+    // ⚠⚠ AND `temperament` BYTE-IDENTICAL IS THIS WAVE'S OWN SENTENCE RATHER THAN A ROUTINE LINE.
+    // Identity is IMMUTABLE (who-she-is §2a's 09.09 re-cut); the walls are expression OVER it, read
+    // through `expressedTemperamentOf` and never stored. A bump that had quietly moved a girl's birth
+    // temperament is the gravest finding this wave could produce, and the per-key diff over `PRE_V76`
+    // is where it is measured not to have happened.
+    expect(careerHashAtSchema(5, 0, 75), '25k · middle coach · grinder').toBe(PRE_V76.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 75), '120k · elite coach · grinder').toBe(PRE_V76.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 75), '8k · self-coached · player').toBe(PRE_V76.selfTravelling)
+  })
+
   it('⭐⭐⭐ v75: rolling the schema back to 74 – and dropping the key v75 added – reproduces the v74 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE PRIVATE LIFE'S WAVE 4 STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY –
     // the v74 case directly below, repeated one version up. v75 appends ONE key to `createWorld`'s

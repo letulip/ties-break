@@ -33,6 +33,7 @@ import {
   enterEvent,
   hireCoach,
   isCompetitionWeek,
+  kidPoints,
   setCoachOnEventWeeks,
   skipTournament,
   // ⭐ ROUND 34 #2b – the birth build the room note now measures FROM, off the barrel it is already
@@ -555,26 +556,33 @@ describe('the roster – a market, not a menu', () => {
     expect(() => hireCoach(poison, id)).not.toThrow()
   })
 
-  it('gates Elite only when the owner turns the gate on, and the shipped state is OFF', () => {
-    // Owner: «элит могу вообще стать доступны для туров, как вариант». Modelled, not switched on.
-    expect(ECONOMY.coach.eliteGate.enabled).toBe(false)
+  // ⚠ RE-AIMED BY WAVE 5 T13 (13.09) – THE ARMS ARE THE SAME, THE SHIPPED STATE IS THE OTHER ONE.
+  // Owner: «элит могу вообще стать доступны для туров, как вариант», and then, once it was modelled,
+  // «elite gate включим здесь же». This case used to open by pinning `enabled === false`; it now pins
+  // `true`, and the toggle below runs in the opposite direction. Nothing about what it CLAIMS moved –
+  // one flag makes the gate live everywhere at once, and only Elite is gated – which is why this is
+  // a re-aim and not a rewrite. The full three-surface sweep is `tests/wave5-elite-gate.test.ts`.
+  it('gates Elite only, the owner has turned the gate ON, and one flag is the whole of it', () => {
+    expect(ECONOMY.coach.eliteGate.enabled).toBe(true)
     const elite = buildCoachRoster('gate', 14).find((c) => c.tier === 'elite')!
-    expect(coachHireable(elite, 0)).toBe(true)
-    expect(eliteGateShortfall(elite, 0)).toBeNull()
-    // ...and one flag makes it live everywhere at once.
     const gate = ECONOMY.coach.eliteGate as { enabled: boolean; minPoints: number }
-    gate.enabled = true
+    expect(coachHireable(elite, 0)).toBe(false)
+    expect(eliteGateShortfall(elite, 0)).toBe(gate.minPoints)
+    expect(coachHireable(elite, gate.minPoints)).toBe(true)
+    const world = createWorld('gate-world', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    expect(() => hireCoach(world, elite.id)).toThrow(/ranking points/)
+    // ...and only Elite is gated.
+    const high = buildCoachRoster(world.seed, 14).find((c) => c.tier === 'high')!
+    expect(() => hireCoach(world, high.id)).not.toThrow()
+    // ...and the flag is what does it: off, the top rung is for sale again, at zero points.
+    gate.enabled = false
     try {
-      expect(coachHireable(elite, 0)).toBe(false)
-      expect(eliteGateShortfall(elite, 0)).toBe(gate.minPoints)
-      expect(coachHireable(elite, gate.minPoints)).toBe(true)
-      const world = createWorld('gate-world', { ...DEFAULT_PROFILE, coachTier: 'self' })
-      expect(() => hireCoach(world, elite.id)).toThrow(/ranking points/)
-      // ...and only Elite is gated.
-      const high = buildCoachRoster(world.seed, 14).find((c) => c.tier === 'high')!
-      expect(() => hireCoach(world, high.id)).not.toThrow()
+      expect(coachHireable(elite, 0)).toBe(true)
+      expect(eliteGateShortfall(elite, 0)).toBeNull()
+      const open = createWorld('gate-world-off', { ...DEFAULT_PROFILE, coachTier: 'self' })
+      expect(() => hireCoach(open, elite.id)).not.toThrow()
     } finally {
-      gate.enabled = false
+      gate.enabled = true
     }
   })
 })
@@ -1014,8 +1022,13 @@ describe('the coach market slice', () => {
       else expect(r.weeklyCents, r.tier).toBe(rich[i].weeklyCents)
     })
     expect(rows.some((r) => !corridorAppliesAt(r.tier)), 'the roster really does reach the uniform rungs').toBe(true)
-    // Nothing is locked while the elite gate is off.
-    expect(rows.every((r) => r.lockedPoints === null)).toBe(true)
+    // ⚠ RE-AIMED BY WAVE 5 T13: this line was «nothing is locked while the elite gate is off», and
+    // the gate is on. The claim that was worth making is the one that survives the flip – the lock
+    // tracks the RUNG and the points, and nothing else on this card. A week-0 career has no results,
+    // so every Elite row is short the whole bar and no other row is short anything.
+    expect(kidPoints(world, 'domestic'), 'a week-0 career has earned nothing yet').toBe(0)
+    const short = ECONOMY.coach.eliteGate.minPoints
+    for (const r of rows) expect(r.lockedPoints, r.tier).toBe(r.tier === 'elite' ? short : null)
     // Over-budget is measured against the WEEK'S INCOME, and an 8k family cannot carry an Elite.
     expect(rows.filter((r) => r.tier === 'elite').every((r) => r.overBudgetCents > 0)).toBe(true)
     expect(rows.filter((r) => r.tier === 'budget').every((r) => r.overBudgetCents === 0)).toBe(true)

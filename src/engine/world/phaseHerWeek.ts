@@ -24,7 +24,7 @@ import { rivalField } from './weekField'
 import { rngFromSeed } from '../rng'
 import { ECONOMY } from '../economy'
 import { clamp } from '../condition'
-import { accrueSpirit, applyBondDelta } from '../spirit'
+import { accrueSpirit, applyBondDelta, driftWalls } from '../spirit'
 import { KNOCK_REST_CONDITION, knockRestWeek } from '../knock'
 import { TIERS } from '../season/calendar'
 import { BEST_N_BY_TRACK, computeRanking } from '../season/ranking'
@@ -54,6 +54,7 @@ import { accrueCondition, arrivalStatus, medicalClearance, withheldFreeWeekRecov
 import { summerConditionCost } from './summer'
 import { inCollege } from './college'
 import { resolveMasseur, resolveMasseurReturn } from './masseur'
+import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
@@ -350,7 +351,62 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        the identical reason the knock's credit and the summer block's bill below are their own
   //        lines. Pure arithmetic, ZERO draws on any stream. See engine/spirit.ts for both rules,
   //        and in particular for the order the weekly one runs in (return first, then this week).
-  accrueSpirit(world)
+  //
+  //        ⚠⚠ AND THE SECOND ARGUMENT IS THE PSYCHOLOGIST'S WORKING WEEK, HANDED DOWN – the
+  //        architect's ruling J (13.09, T4b), and it is dependency inversion rather than a
+  //        convenience. T4's recovery slope gated itself on `psychologistHired`, which is TRUE on a
+  //        college-freeze week and on a booked family week – the two weeks `resolvePsychologist`
+  //        (1c-psy below, same tick) bills NOTHING for, its own opening line. So the family paid
+  //        nothing and received the work. `engine/spirit.ts` cannot ask the predicate itself: an
+  //        import of it closes a measured value cycle (`spirit -> psychologist -> college -> player
+  //        -> spirit`, through `world/player.ts`'s `spiritMatchFactor`), and cutting the
+  //        `bondBandOf` edge leaves the `inCollege` one closing it anyway. THIS function already
+  //        holds every piece – it imports `accrueSpirit`, `inCollege` and `resolvePsychologist` –
+  //        so the fact travels down the stack instead of the arrow travelling up it.
+  //        ⚠ IT IS THE SAME CALL THE BILL MAKES, four calls later in this same tick and off this
+  //        same week, so the week he is paid for and the week his work lands are ONE set by
+  //        construction – «his effects ride the same predicate», the sentence 1c-masseur below
+  //        already writes for the twin seat. ⚠ A `boolean`, never an `Rng`: `accrueSpirit`'s
+  //        zero-draw contract is untouched and tests/spirit.test.ts asserts that of the signature.
+  accrueSpirit(world, psychologistWorksThisWeek(world))
+  // ⭐⭐⭐ 1c-walls (v76, the psychologist's year – T7): AND WHAT THE WEEK DID TO HER WALLS.
+  //
+  //        who-she-is §2a, the 09.09 third-sitting re-cut: identity is IMMUTABLE and what drifts is
+  //        WALLS AND REGULATION – two slow leanings of EXPRESSION away from an unchanging nature,
+  //        plus the hysteresis state a flip lives in. `engine/spirit.ts` §4 carries the whole model.
+  //
+  //        ⚠⚠ ITS OWN CALL, **IMMEDIATELY AFTER** `accrueSpirit` AND NOT INSIDE IT – the architect's
+  //        RULING P (13.09), which corrected ruling F's guess about the LOCATION while keeping its
+  //        reason whole. The reason: `accrueSpirit` reads `intensity` ONCE at its head and spends it
+  //        three ways, so a flip that fired mid-pass would price half the week as one person and half
+  //        as another – the 09.09 ORDER FIX's own defect in a second costume. «After `accrueSpirit`
+  //        returns» satisfies that more exactly than «at its tail», which is a place an editor can
+  //        drift away from. And the location buys the property the tail could not: `accrueSpirit`
+  //        reaches NO stream at all, this pass's flip hazard is a DRAW, and the zero-draw contract
+  //        two lines up is the thing three pins lean on. ⚠ SO WHATEVER FLIPS HERE IS FIRST READ ON
+  //        THE **NEXT** TICK: every reader of `expressedTemperamentOf` in this tick has already run.
+  //
+  //        ⚠⚠ THE SECOND ARGUMENT IS THE SAME BILLING PREDICATE, AND IT IS THE SAME CALL – ruling J's
+  //        law and ruling P's own ⚠ («a standing-down seat slows nothing»). All three of the seat's
+  //        walls effects ride it: O6's ×0.75 on the rise, the `'herself'` ×1.5 on the repair, and the
+  //        beyond-baseline hazard scale. ⚠ THE DRIFT ITSELF DOES NOT: walls rise from neglect and
+  //        fall for free on EVERY week of EVERY career, hire or no hire, college freeze or not –
+  //        §2a's «no purchase, no work», and §0.3's «repair is free».
+  //
+  //        ⚠ ZERO MAIN DRAWS: it takes no `rng` and pulls only from the private
+  //        `seed:life:walls:<axis>:<week>` sub-streams, and an UNARMED axis-week derives none of them
+  //        at all. The frozen capture (41550 / e6b0c709) is untouched by construction.
+  //        ⚠ AND NO SURFACE SHOWS ANY OF IT – no leaning, no flip line, nothing on the wire. The
+  //        face, the Mood word, the diary's bands and the feed's silence ARE the telegraph.
+  //
+  //        ⚠ THE PREDICATE IS ASKED A SECOND TIME RATHER THAN HOISTED INTO A LOCAL, AND THAT IS
+  //        DELIBERATE: it is pure, it reads three facts (the flag, `inCollege`, the week's booking)
+  //        and NOTHING runs between these two lines, so the two answers are one answer by
+  //        construction. A local would have re-spelled the `accrueSpirit` call as
+  //        `accrueSpirit(world, psychologistWorks)` – and the exact text of that call is PINNED in
+  //        tests/spirit.test.ts precisely so the raw flag can never be handed down in the
+  //        predicate's place (ruling J's own hole). Cheaper to ask twice than to weaken that pin.
+  driftWalls(world, psychologistWorksThisWeek(world))
   // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
   //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
   //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a
@@ -569,4 +625,24 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
   // non-played week after it gets one extra session's worth of recovery, receipt included.
   resolveMasseurReturn(world, playedThisWeek)
+  // 1c-psychologist (v76, the psychologist's year – wave 5 T2). THE SECOND SALARIED SEAT, settled in
+  // this same arm and immediately after the masseur's, because it is the same kind of line: a flat
+  // weekly retainer on the family payroll, zero draws on any stream, suspended – not cancelled – at
+  // college and on booked family weeks (the SAME stand-down pair, mirrored rather than re-derived;
+  // see `psychologistWorksInWeek`).
+  //
+  // ⚠⚠ AND THE BOARD-WEEK STAND-DOWN THE BLOCK ABOVE SPENDS ITS LAST FOUR LINES ON DOES NOT EXIST
+  // HERE, which is the one thing to read before believing these two rows are the same row. The
+  // masseur's weekly bill steps aside on the week he BOARDS because the fare replaced it
+  // (`pendingTournament.masseurThere`, and finalize bills the week per match). This seat NEVER
+  // boards – the travelling-team §2's ruling Б, «психолог работает дистанционно и стоит только
+  // зарплату» – so there is no such week, no `masseurThere` twin to read and no exception to make:
+  // the retainer runs on a tournament week exactly as the coach's does.
+  //
+  // ⚠ HE IS BILLED AND HE DOES NOTHING YET, and that is this commit rather than a defect: every
+  // effect arrives with the FOCUS that names it (T4-T7). The one thing that must be true today is
+  // that the money and the stand-downs are already honest, because a seat whose bill and whose weeks
+  // disagree is the «вы заплатили и не можете этого заметить» failure the travelling-team plan bans
+  // specialists for.
+  resolvePsychologist(world)
 }

@@ -118,6 +118,16 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       hireMasseur: { type: 'hireMasseur', hire: false, baseRevision: 0 },
       setMasseurSessions: { type: 'setMasseurSessions', sessions: 0, baseRevision: 0 },
       setMasseurTravels: { type: 'setMasseurTravels', on: false, baseRevision: 0 },
+      // v76, the psychologist's year – the second salaried seat. Same shape as the masseur's pair
+      // above and the same reason the arguments are inert: this loop measures the REPLY contract,
+      // and a refusal is a legitimate arm (a junior career refuses the hire on the pro gate).
+      hirePsychologist: { type: 'hirePsychologist', hire: false, baseRevision: 0 },
+      setPsychologistRung: { type: 'setPsychologistRung', rung: 1, baseRevision: 0 },
+      // v76 T3, the year-focus – the third of the seat's commands, and the `satisfies` above is what
+      // made this row appear rather than a reviewer: the table is compile-bound to `ToWorker`, so a
+      // new command is a type error here until it is sampled. A refusal is a legitimate arm, and this
+      // one refuses on the hire (nobody is on the payroll in the fixture world).
+      setPsychologistFocus: { type: 'setPsychologistFocus', focus: 'coolhead', baseRevision: 0 },
       setKitGrade: { type: 'setKitGrade', line: 'strings', grade: 'composite', baseRevision: 0 },
       bookPractice: { type: 'bookPractice', week: 9999, withCoach: false, baseRevision: 0 },
       cancelPractice: { type: 'cancelPractice', week: 9999, baseRevision: 0 },

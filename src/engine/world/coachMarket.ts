@@ -10,7 +10,10 @@
 // is the market card's own copy, and it had two callers in two different concerns.
 //
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
-import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
+// ⚠ `coachFactor` AND `StyleFit` JOINED FOR T12's PROFILE (wave 5), and they are a READ of the two
+// shipped factor tables rather than a second home for them – see the profile block below.
+import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
+import type { StyleFit } from '../coach'
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
@@ -41,6 +44,12 @@ import { coachTravelFareFor, supportedTravelCents, travelCostFor } from './spons
 // import nothing from this file (masseur: economy/condition/ledger/constants/ladder/college/bookings;
 // shop: economy/calendar/ladder/endings/ledger/money), so there is no runtime cycle to make here.
 import { masseurWeeklyCents } from './masseur'
+// ⭐ v76, the psychologist's year (wave 5 T2) – THE THIRD SEAT THE HOUSEHOLD'S WEEK HAS TO KNOW
+// ABOUT, and this line is what the block below predicted («A PSYCHOLOGIST joins as one more line in
+// this list and nothing else moves»). Same leaf discipline as the masseur beside it – it imports
+// economy/ledger/constants/ladder/college/bookings and nothing from this file – so there is no
+// runtime cycle to make here either.
+import { psychologistWeeklyCents } from './psychologist'
 // ⚠ REPOINTED AT THE LEAF AT ROUND 29 #5 – same functions, same behaviour. `world/assets.ts` holds
 // the shelf's pure reads and `world/shop.ts` re-exports them, so this is a shorter path to the same
 // symbols and not a change: this file only ever asked the shelf questions.
@@ -99,6 +108,27 @@ export function practiceCoachRateFor(world: WorldState, week: number): number {
  *
  *  `null` fires the parent back onto the court, which must always be allowed: a family that cannot
  *  pay has to be able to stop paying. */
+/** ⭐ THE ELITE GATE'S CURRENCY, re-ruled 14.09 (the owner, on T13's own measurement): «"берёт
+ *  игроков с результатами" — это про КАРЬЕРУ, а не про неделю». `kidPoints` is a rolling 52-week
+ *  best-6 over a pruning ledger, so it DECAYS – measured over 400-week walks, every career ends at
+ *  0 domestic points and the shipped gate refused the `pro` fixture ($4.9M banked) an Elite coach.
+ *  The standing is therefore the career's HIGH-WATER, two arms, both one-way:
+ *    * `peakDomesticPoints` – banked in `recomputeKidRank`, the never-decaying max of the same
+ *      fold the live number comes from (one currency, one exchange rate);
+ *    * the W-professional door – `activeLadderOf === 'wta'` is the never-pruned mark the masseur's
+ *      own unlock reads («the gate can never close behind a layoff or a pruned window», the house
+ *      one-way-door doctrine this gate violated as shipped). It answers as the BAR itself, not a
+ *      bigger number, so a shortfall can never print a negative and a migrated professional (whose
+ *      backfilled peak is honestly 0) walks through the door her career already opened.
+ *  `coachHireable`/`eliteGateShortfall` keep their signatures and their meaning – what changed is
+ *  WHICH number is her standing, and all three surfaces (row state, hire refusal, screen lock)
+ *  inherit it through the same two functions, so the one-story doctrine holds untouched. */
+export function eliteGateStandingOf(world: WorldState): number {
+  const live = kidPoints(world, 'domestic')
+  const peak = Math.max(live, world.peakDomesticPoints ?? 0)
+  return activeLadderOf(world) === 'wta' ? Math.max(peak, ECONOMY.coach.eliteGate.minPoints) : peak
+}
+
 export function hireCoach(world: WorldState, coachId: string | null): void {
   // ⚠ W2-ENDINGS: the career must still have a next week. The engine re-validates every command
   // because the worker is not the gate - a tab left open behind the epilogue must not be able to
@@ -131,7 +161,7 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
   // preserves its meaning. Reading ITF points here would also make the Elite rung strictly
   // downstream of money (no international travel, no ITF points, no Elite coach ever), which is the
   // opposite of the "earned rather than bought" shape the owner asked the gate for.
-  const short = eliteGateShortfall(coach, kidPoints(world, 'domestic'))
+  const short = eliteGateShortfall(coach, eliteGateStandingOf(world))
   if (short !== null) {
     throw new Error(`${coach.name} only takes players with results – ${short} more ranking points`)
   }
@@ -675,7 +705,13 @@ const RETAINERS_A_YEAR = 4
  *
  *  Pure: zero MAIN draws, derived at snapshot time like everything else on this screen. */
 export function householdWeekly(world: WorldState, trainingCents: number): HouseholdWeekly {
-  const staffCents = (world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0
+  // ⭐ v76 – AND THE SECOND SEAT IS THAT ONE MORE LINE, gated on the hire for the identical reason
+  // the note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college
+  // freeze or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing
+  // those weeks) without him vanishing from the family's standing budget.
+  const staffCents =
+    ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
+    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
   // WHAT ONE MORE WEEK OF HOLDING DOES TO THE SHELF, signed, summed over what the family owns.
   let shelfCents = 0
   for (const owned of ownedAssets(world)) {
@@ -721,7 +757,7 @@ export function householdWeekly(world: WorldState, trainingCents: number): House
  *  events already use, and the reason two surfaces can never disagree about what a coach costs. */
 export function coachMarket(world: WorldState): CoachMarketRow[] {
   const age = ageAtWeek(world.week)
-  const points = kidPoints(world, 'domestic') // ⚠ the Elite gate's currency – see hireCoach above
+  const points = eliteGateStandingOf(world) // ⚠ the Elite gate's currency – see hireCoach above
   // ⭐ ROUND-21 #12: every stream that arrives every week, not the parents' line alone. See
   // `familyWeeklyIncomeCents` for the measurement that made this a bug rather than a wording fix.
   const weeklyIncome = familyWeeklyIncomeCents(world)
@@ -2201,6 +2237,101 @@ export function coachLoadNote(tier: CoachTier): string {
     case 'elite':
       return 'The best medical team money buys – her body is handled, and you hear about it after.'
   }
+}
+
+// =================================================================================================
+// ⭐⭐ WAVE 5 T12 – THE PROFILE: A LENS ON TWO MULTIPLIERS THE CARD ALREADY CARRIES, NEVER A LEVER
+// =================================================================================================
+//
+// Owner, 13.09: «профили тренеров давай в эту волну после психолога». The gap the ruling names is
+// that a coach's individuality is invisible on the card – and MEASURED AGAINST THIS FILE, three
+// quarters of that is already false. The pill says the fit, `coachLoadNote` says the physio in
+// prose, `upliftPct` is the season projection in figures, and the one axis genuinely not on the
+// card – WHERE HE FELL IN HIS OWN CORRIDOR – is the one docs/specs/coach-match-edge.md §4 forbids
+// putting there («a number on an unhired card turns the market into a shop window»). §9c is
+// blunter still: what a season of employing him buys «is still a third of a corridor and never a
+// number», so the THIRD is the protected quantity and a profile that leaked it would undo the
+// whole anti-shopping rule at a stroke. It is therefore NOT read here, at any rung, in any state.
+//
+// ⚠⚠ SO WHAT IS ACTUALLY MISSING IS A JOIN, NOT A FACT. `coachFactor` is `developmentFactor[tier] x
+// fitFactor[fit]` – two numbers the card shows SEPARATELY (the rung section, the fit pill) and
+// never multiplies. Round 38 #17 widened `fitFactor` to 1.25 / 1.00 / 0.75, which is a wider span
+// than the whole hireable rung ladder (0.95 -> 1.15), so the product reorders the market: a great
+// fit at the budget rung (1.1875) out-teaches a good fit at the elite one (1.15), and an off fit at
+// the budget rung (0.7125) is BELOW the parent's own 0.82. The card cannot say either, because each
+// card is drawn alone and the uplift that would show it is CLAMPED at zero for the losing half
+// («a rung never subtracts», `coachSeasonUplift`) – so today a coach who would teach her slower
+// than her own parent prints «+0.0-0.0% a season» and nothing explains the zero.
+//
+// ⚠ EVERY NUMBER THIS DESCRIBES ALREADY EXISTS AND NONE OF THEM MOVE. The band below is three
+// comparisons of `coachFactor` against itself at the rung's NEUTRAL fit and at the parent's rung.
+// No constant is added, no threshold is written down, and the yardstick is the ladder: retune
+// `developmentFactor` or `fitFactor` and the words follow, because there is nothing else for them
+// to follow.
+//
+// ⚠⚠ AND IT IS A PURE LOOKUP THE SCREEN CALLS, exactly as `coachBlurb` and `coachRoomBand` below and
+// above are, with data the row already carries. No `CoachMarketRow` member, no `Snapshot` member, no
+// schema: the lens is invisible to the engine, and `tests/wave5-coach-profiles.test.ts` §E pins that
+// no module under src/engine imports it. A lens that no engine module can reach cannot be a lever.
+//
+// ⚠ IT TAKES THE FIT AND NEVER HER STYLE, which is what keeps one rule for one question. The screen
+// hands it `fitNow` – `coachFitFor`'s own answer, or the style lens's re-read through the same
+// `styleFitBetween` – so the sentence and the pill are two renderings of ONE value and cannot
+// disagree. A second implementation here would be the defect this whole file is written against.
+//
+// ⚠ DRAFTS (CLAUDE.md invariant 4). Four strings, none of them the owner's yet; the wave's вычитка
+// pass over T12 and T13 is where they are settled. Short dash, no pronoun for the coach (R15-7 –
+// `tests/coach-voice.test.ts` sweeps this file), no figure, and no praise or blame: «Off-style» is
+// already the card's word for the same fact and the profile only says what it is worth.
+
+/** How this coach's teaching reads against the two anchors the player already has: the rung he is
+ *  priced at, and the parent, who is free.
+ *
+ *  `above` / `level` / `under` is the fit's effect on the rung's own rate; `under-self` is the
+ *  corner `under` hides – an off fit at the bottom two rungs falls BELOW `self`, so the family
+ *  would be paying for teaching slower than its own court time. */
+export type CoachProfileBand = 'above' | 'level' | 'under' | 'under-self'
+
+/** THE DERIVATION, and it is three comparisons of one existing function against itself.
+ *
+ *  ⚠ THE NEUTRAL FIT IS `ECONOMY.coach.selfFit` AND NOT THE LITERAL `'good'`. The engine already
+ *  names that value as the read with no specialty in it either direction – «he taught her the game
+ *  she plays, so he is never wrong for it and never a specialist in it» – so asking the rung at the
+ *  neutral fit is asking what the PRICE alone buys. A literal here would be a second place to keep
+ *  that choice in step.
+ *
+ *  ⚠ THE EQUALITY IS EXACT BY CONSTRUCTION, not by tolerance: at `fit === neutral` the two sides are
+ *  the same expression. The two inequalities are safe for the same reason – `x * f` against `x * 1`
+ *  for positive `x` is decided by `f`, whatever the floating-point spelling of `x`.
+ *
+ *  Pure: no world, no seed, no stream. A function of the rung and the fit and nothing else. */
+export function coachProfileBand(tier: CoachTier, fit: StyleFit): CoachProfileBand {
+  const neutral = ECONOMY.coach.selfFit
+  const his = coachFactor(tier, fit)
+  const rung = coachFactor(tier, neutral)
+  const parent = coachFactor('self', neutral)
+  if (his > rung) return 'above'
+  if (his === rung) return 'level'
+  return his < parent ? 'under-self' : 'under'
+}
+
+/** ⚠ THE SHAPE IS `ROOM_BANDS`', down to `ROOM_NOTE_SEP`, so screen T's ONE splitter
+ *  (`coachRoomBand`) sets the label of this line in bold too, and there is no second `indexOf` on a
+ *  card. `band + tail === note` for every one of the four, which is the check that catches a screen
+ *  quietly editing copy it does not own. */
+const PROFILE_NOTE: Record<CoachProfileBand, string> = {
+  above: `Above the rung${ROOM_NOTE_SEP}the style match buys more here than the price does.`,
+  level: `The rung's pace${ROOM_NOTE_SEP}the style adds nothing to it and takes nothing away.`,
+  under: `Under the rung${ROOM_NOTE_SEP}the style gives back much of what the price buys.`,
+  'under-self': `Under your own hours${ROOM_NOTE_SEP}for her game, this teaches slower than you do.`,
+}
+
+/** THE PROFILE, as the card prints it: a short label, a dash, and one line saying what the label is.
+ *
+ *  Derived rather than written down – the words are a table, the CHOICE between them is
+ *  `coachProfileBand` above, and that reads nothing but the two shipped factor tables. */
+export function coachProfileNote(tier: CoachTier, fit: StyleFit): string {
+  return PROFILE_NOTE[coachProfileBand(tier, fit)]
 }
 
 // =================================================================================================

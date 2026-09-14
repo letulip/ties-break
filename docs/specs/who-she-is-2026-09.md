@@ -1790,3 +1790,77 @@ added, and it stands in front of a `catch {}` that is still there. Three other s
 anything but the engine's terminal-latch string and are a different thing entirely. Removing a
 swallow changes what the DEFAULT grid measures, so it needs its own before/after and is left as a
 finding rather than taken inside T7.
+
+---
+
+## §4a – wave 5 measured. T10: census v3 – the walls, the expressed distribution, and the corridor re-read on BIRTH
+
+`npm run bench:life-arrival` (`tools/life-arrival.ts`, census v3), 200 careers per temperament on the
+caring arm – the census's own grid, so the walls prints cost nothing extra – plus two 20-a-temperament
+arms of their own. §4's sentence is the commission: «the census adds the drift prints: walls-raised
+and walls-lowered shares under a caring arm and a grinding arm, and the end-of-career EXPRESSED
+distribution beside the constant birth one – the convergence guard made numbers.»
+
+⚠ **Every number is a TRANSITION or a RANGE, never an end state.** The wave's ruling K applies to
+this mechanic more than to any other in it: the free repair walks the lean back to 0, so a career
+that went away and came home reads as an ordinary girl in a terminal diff.
+
+### The three arms, and the third is the bench's own
+
+| arm | n | raised | lowered | round trip | flips | un-flips | collapse flips | care band at end | median bond |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| caring (`player`) | 800 | **0.0 %** | 0.0 % | 0.0 % | 0 | 0 | 0 | 100.0 % | 73.0 |
+| grinding (`grinder`) | 80 | **95.0 %** | 20.0 % | 20.0 % | 76 | 21 | 76 | 31.3 % | **5.5** |
+| turned (`grinder` → `player` at the halfway week) | 80 | 91.3 % | **86.3 %** | **86.3 %** | 73 | 73 | 73 | 100.0 % | 73.0 |
+
+*raised* = the lean reached −60 on some axis · *lowered* = that axis came back to 0 · *round trip* =
+both, in one career · *collapse flip* = a flip on an axis where birth left no room to grow, i.e.
+walls up rather than her own work.
+
+⭐ **The finding is not the round-trip share – it is that §2a's «a closed-again girl can be opened
+again … that sentence is earned drama» IS NOT REACHABLE UNDER EITHER SHIPPED PARENT**, because
+neither `econ-bench` policy ever changes its mind. The «turned» arm is this bench's own construction
+and is labelled as such; without it the round-trip column would be a fact about `POLICIES` and not
+about her. The architect's to accept or to replace with a better parent.
+
+⚠ **And the grinding arm's 20 % round trip is NOT the parent relenting** – read the «care band at
+end» column beside it. **31.3 %** of grinding careers finish in a care band on a median bond of
+**5.5**: the grind stopped because the career stopped feeding it, not because anybody softened. That
+column exists precisely so the round-trip number cannot be read as mercy.
+
+### The end-of-career EXPRESSED distribution, beside the constant BIRTH one
+
+Under the caring arm, **0 of 800 careers are read as somebody else at 24** – every column is 100 % on
+its own diagonal. **That is the model working and not a dead arm**: the walls move only under kicks
+or under HER chosen work, and this arm does neither (§2a: «without HER chosen work, her nature holds
+and only the relationship opens»). The off-diagonal lives in the grinding arm, whose 76 collapse
+flips are printed above. The convergence guard – four personalities collapsing into one – is the
+opposite corner and is nowhere near.
+
+### The ±1.5 pp fairness corridor, re-read on BIRTH cohorts
+
+| pair | n | mean Δ pp | SEM | max abs Δ |
+| --- | ---: | ---: | ---: | ---: |
+| sunny vs fiery | 200 | 0.066 | 0.056 | 3.828 |
+| sunny vs quiet | 200 | −0.022 | 0.020 | 1.994 |
+| sunny vs deep | 200 | 0.054 | 0.030 | 2.425 |
+| fiery vs quiet | 200 | **−0.088** | 0.057 | 3.828 |
+| fiery vs deep | 200 | −0.012 | 0.054 | 3.942 |
+| quiet vs deep | 200 | 0.076 | 0.028 | 2.425 |
+
+**Worst pair −0.088 pp against the ±1.5 pp bar – HIT, seventeen times inside it.** Not vacuous: the
+arms genuinely diverged on a lifetime win rate in **756 of 1 200 career pairs**, and the per-career
+spread is large (max |Δ| up to 3.9 pp) while the paired mean is ~0.1 – the shape a threshold
+produces, and exactly why the paired mean is the right statistic for a fairness bar.
+
+⚠⚠ **THE COHORTS ARE BIRTH, AND THE FENCE IS WHY.** §3's fence fixes the census identity at birth,
+and this file ASSIGNS `world.temperament` before the walk – so the four columns are birth cohorts by
+construction and the same 200 seeds are played four times over. Re-reading the corridor on EXPRESSED
+cohorts would be **a different measurement wearing the same name**: the expressed bucket is an
+OUTCOME of how the career went, so grouping by it would sort careers by their own history and then
+report the sorting as a fairness gradient. The expressed distribution is printed one section up
+precisely so a reader can see the two are not the same partition.
+
+⚠ Four of the six pairs share an intensity and are near-replicas rather than samples (wave 4's own
+note): `temperamentIntensity` is the only thing `accrueSpirit` reads. All six are printed; the four
+steady-vs-intense pairs are the informative ones.

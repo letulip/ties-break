@@ -914,12 +914,19 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // attachment is over) and it declares TRUE – tier 2 from the other end of the same arc. The claim
     // still covers every declared kind, which is the half that matters, and tier 1 is still the only
     // `false` in the table.
+    // ⚠ RE-AIMED A THIRD TIME BY v76 T8 (13.09), NOT WEAKENED, AND THIS IS THE **SECOND** COPY OF
+    // THE RULED TABLE – `tests/wave3-soft-surface.test.ts` §A carries the other, and both are meant:
+    // that one asks «what does the week wait for» and this one asks «is tier 1 still the only false».
+    // `'fork-psy'` is the sixth kind (the psychologist's read on the same `stop`) and it declares
+    // TRUE, which is the whole mechanism by which the fork waits for him. Tier 1 is still the only
+    // `false` in the table, which is the claim this line has always made.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
       'small-talk': false,
       'fork-counsel': true,
       ended: true,
+      'fork-psy': true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

@@ -150,7 +150,11 @@ describe('the masseur card on screen T', () => {
     lockedWrapper.unmount()
     const doctored = { ...pro, masseurSessionsPerWeek: 7 }
     const wrapper = await mountCard(doctored)
-    const rungs = wrapper.findAll('.staff-rung')
+    // ⚠ SCOPED TO HIS OWN BLOCK SINCE v76 – STRICTER, NOT WEAKER. The psychologist is the tab's
+    // second `members` entry and carries a three-rung dial of his own (a ROSTER, not a session
+    // count), so an unscoped sweep would collect six buttons and this file's subject is one man.
+    // `[data-staff="masseur"]` is the hook the tab renders for exactly this.
+    const rungs = wrapper.findAll('[data-staff="masseur"] .staff-rung')
     expect(rungs.length).toBe(ECONOMY.masseur.rungs.length)
     for (const [i, rung] of ECONOMY.masseur.rungs.entries()) {
       expect(rungs[i].text()).toContain(rung.label)

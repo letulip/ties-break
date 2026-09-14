@@ -8,6 +8,9 @@
 // name below under the historical public path. Nothing here imports that barrel back.
 
 import type { SaveFileErrorCode } from '../../engine/saveGuard'
+// v76 T3: the year-focus union, imported TYPE-ONLY from the engine leaf that declares it beside the
+// field it types – `./narrative`'s `Temperament` precedent, and the same one-way arrow.
+import type { PsyFocus } from '../../engine/world/state'
 import type { CollegeTier, ForkAnswer } from './career'
 import type { KnockChoice } from './health'
 import type { KitGrade, KitLine, ShootClashChoice } from './offers'
@@ -209,6 +212,22 @@ export type ToWorker =
   // inside the freeze.
   | { id: number; type: 'setMasseurSessions'; sessions: number; baseRevision: number }
   | { id: number; type: 'setMasseurTravels'; on: boolean; baseRevision: number }
+  // v76, the psychologist's year (wave 5 T2): the SECOND salaried seat on or off the payroll, and
+  // which of the three takes the weekly call. The engine re-validates both – the same pro-career
+  // gate and the same college freeze (`hirePsychologist` – guardNotEnded first), and
+  // `setPsychologistRung` refuses an index the roster does not hold – so a stale screen can neither
+  // hire before her first counting W result nor buy a person who is not on the list.
+  // ⚠ THERE IS NO `setPsychologistTravels` AND THERE NEVER WILL BE (ruling Б: remote, salary only),
+  // which is why this pair is two commands where the masseur's is three.
+  | { id: number; type: 'hirePsychologist'; hire: boolean; baseRevision: number }
+  | { id: number; type: 'setPsychologistRung'; rung: number; baseRevision: number }
+  // v76 T3, the year-focus: what the seat WORKS ON for a season. The third of the pair's commands,
+  // and the one with the interesting refusals – `setPsychologistFocus` re-validates the id, the hire,
+  // her consent (a deterministic bond-band read; no draw ever) and the once-a-season off-season
+  // window, so a stale screen can neither start a year nobody is being paid for nor slip a mid-season
+  // switch past O1. ⚠ `focus` is the ENGINE's own union rather than a string: a fifth focus (O7's
+  // spotlight year) widens it in one place and goes red at every exhaustive read.
+  | { id: number; type: 'setPsychologistFocus'; focus: PsyFocus; baseRevision: number }
   // W3-KIT: move one line of her kit onto another rung. Moving UP buys the item over the counter
   // (charged at once, and she is holding a new one from this week); moving DOWN is free and takes
   // effect at the next scheduled purchase - nobody is refunded for a racket they own.
@@ -348,6 +367,9 @@ export const REPLY_BY_COMMAND = {
   hireMasseur: 'snapshot',
   setMasseurSessions: 'snapshot',
   setMasseurTravels: 'snapshot',
+  hirePsychologist: 'snapshot',
+  setPsychologistRung: 'snapshot',
+  setPsychologistFocus: 'snapshot',
   setCoachOnEventWeeks: 'snapshot',
   setCoachOnJuniorEvents: 'snapshot',
   cancelPractice: 'snapshot',

@@ -80,13 +80,29 @@ import type { LifeBeatKind } from '../src/shared/protocol'
  *  whose price does not move – ruled −1 under every reading, and written as an ABSENCE from
  *  `ENDED_BOND_COMPANY` rather than as two agreeing numbers, so it is literally the same −1 in both.
  *  A harness that drains N of these can therefore state its skew exactly: −1 x N, which is what
- *  `drainSkewLine` prints and what the zero-hunt could never have produced. */
+ *  `drainSkewLine` prints and what the zero-hunt could never have produced.
+ *
+ *  ⭐⭐⭐ AND v76 T8's `'fork-psy'` -> `straight` IS THE SIXTH ROW, AT **0**, WHICH IS A CHOICE AND
+ *  NOT A DEFAULT. The psychologist's card is `'fork-counsel'`'s twin – two acknowledgments, both
+ *  ruled zero because «counsel is information, not a test» – so BOTH of its ids satisfy this law and
+ *  the registry had to pick one. `straight` is the first option the card offers, which is what the
+ *  three unforced rows above all picked (`listen`, `wary`, `heard` are each their kind's chosen
+ *  acknowledgment rather than its second thought), and a harness that drains one leaves a walk it
+ *  never meant to price exactly where it found it.
+ *
+ *  ⚠⚠ READ-INDEPENDENCE IS NOT MERELY SATISFIED HERE, IT IS UNFALSIFIABLE BY CONSTRUCTION, and that
+ *  is worth one sentence because it is the seat's own fence. The psychologist reads `spiritShock` for
+ *  the wording column of his card; `lifeBeatOptionsFor` has no overlay for this kind, so the priced
+ *  list it returns is the SAME OBJECT under every `wants` and every ends-read – 0 and 0, twice, four
+ *  times over. `drainCostOf('fork-psy')` therefore returns 0 from a one-element spread, which is the
+ *  proof rather than a claim about it. */
 export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   'fork-opinion': 'listen',
   met: 'wary',
   'small-talk': 'more',
   'fork-counsel': 'heard',
   ended: 'fix-it',
+  'fork-psy': 'straight',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 105 dated entries, newest 2026-09-12. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 109 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -32,13 +32,13 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | --- | ---: | --- | --- |
 | age-and-eligibility | 4 | [⭐⭐ THE AGE-ELIGIBILITY RULE BINDS THE FIELD, NOT THE KID ALONE](#19082026---the-age-eligibility-rule-binds-the-field-not-the-kid-alone-waveround22) | 2026-08-19 |
 | calendar-and-season | 4 | [ROUND 31: THE DRAW BECOMES A FACT, AND THE DECLINE GETS A VOICE](#31082026--round-31-the-draw-becomes-a-fact-and-the-decline-gets-a-voice) | 2026-08-31 |
-| coach-and-staff | 4 | [ROUND 41 #24: THE ACADEMY'S COURTS, CLUBHOUSE AND STAFF ARE BUILT TO ORDER](#12092026--round-41-24-the-academys-courts-clubhouse-and-staff-are-built-to-order) | 2026-09-12 |
+| coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 14 | [ROUND 41 P1 (c): THE ELITE SHELF GOES UP – ONE PRICE, AND IT IS WHAT THE WEALTHY USED TO PAY](#12092026--round-41-p1-c-the-elite-shelf-goes-up--one-price-and-it-is-what-the-wealthy-used-to-pay) | 2026-09-12 |
-| general | 4 | [WAVE 3 T8 → T8b → T15: A DRIFT, A DEFERRAL, AND A CROSS-CHECK THAT FAILED USEFULLY](#11092026--wave-3-t8--t8b--t15-a-drift-a-deferral-and-a-cross-check-that-failed-usefully) | 2026-09-11 |
+| general | 5 | [THE WAVE'S TEN QUESTIONS RULED, AND THE GATE LEARNS TO REMEMBER](#14092026--the-waves-ten-questions-ruled-and-the-gate-learns-to-remember) | 2026-09-14 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 8 | [THE PRIVATE LIFE'S ENDING SPEAKS ONE AXIS, AND THE ROW WEARS HIS TEXT HEART](#12092026--the-private-lifes-ending-speaks-one-axis-and-the-row-wears-his-text-heart) | 2026-09-12 |
+| life-and-morale | 10 | [WAVE 5 IS BUILT AND GATED: THE PSYCHOLOGIST'S YEAR, THE WALLS, AND TEN QUESTIONS BACK](#14092026--wave-5-is-built-and-gated-the-psychologists-year-the-walls-and-ten-questions-back) | 2026-09-14 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -4301,3 +4301,148 @@ Two rulings on wave 4's strings package, both his, both same-day:
    back-fill, a met pick would repaint every historical life row), so the totality gate on
    `LifeBeatGlyphs` was re-cut from «empty-or-total» to keys-only-guarded subset – the re-cut note
    at the type records the supersession rather than erasing the first shape.
+
+## 13.09.2026 – THE PSYCHOLOGIST'S YEAR IS COMMISSIONED: O1–O7 RULED, WAVE 5 BRIEFED
+
+Both PRs merged by the owner (#136 `life/wave-4`, #137 `round/41`; `main` at `4ceb7c0d`), his
+word: «мержу оба, вернусь с плейтестом. А пока давай посмотрим и спланируем для билдера пошагово
+следующую волну». The architect presented the wave-5 plan (T1–T11 against
+[the-psychologists-year-2026-09](specs/the-psychologists-year-2026-09.md)) plus nine questions
+with recommendations; his ruling, verbatim: «окей, бриф пиши, а билдера я сам запущу» – all nine
+per recommendation:
+
+- **O1** – the focus changes at the season boundary only («в ближайший год» is his own grain).
+- **O2** – every focus available at every rung; the rung scales quality, never unlocks menu rows.
+- **O3** – no results share: his product is the year, not the title; `staffResultShareBps` stays
+  `'coach' | 'masseur'`.
+- **O4** – remote in v1, ruling Б untouched; re-asked only if a playtest wants him at a Slam.
+- **O5** – the cool-head numbers (+1.5/+2.5/+3.5 per season, own-ceiling cap) are bench-first
+  proposals, measured against a training-only control before any ruling.
+- **O6** – a retained seat at rung ≥ 2 slows the walls' RISE even without the matching focus –
+  small, priced at the census: the second legible thing the retainer buys.
+- **O7** – «The public life» (the fifth focus) ships WITH the spotlight wave, never before it has
+  something to shrink.
+- The walls-leanings (who-she-is §2a) ride wave 5's schema move – their designated home.
+- The rung prices ($100/$200/$400 a week) are proposals for the bench, not rulings.
+
+The brief: [life-wave-5-builder-2026-09](plans/life-wave-5-builder-2026-09.md), branch
+`life/wave-5` from post-merge `main`, schema **v76** (round 41's parked #22 also aims at 76 –
+whoever lands second takes the next number). The owner launches the builder himself; the
+architect holds the final gate. планка-3 / bond-memory stays its own session with the owner
+after his playtest – it moves `ECONOMY.bond`, and the wave-4 coordination note stands.
+
+## 13.09.2026 – NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED
+
+The owner asked whether the game needs different TYPES of coaches («нужно ли нам вводить разные
+типы тренеров… Если нет - то обоснуй»). The architect's answer, accepted: **no new seats** – by
+seats the team is already typed along legibility seams (coach / bundled physio / masseur /
+psychologist), every number has an owner, and a new role would be decoration or a second lever
+on someone's number; the real gap is that the ONE coach's existing individuality (style×fit →
+development, edge placement, physio, uplift) is invisible on the card. His rulings, verbatim:
+
+1. «профили тренеров давай в эту волну после психолога, elite gate включим здесь же, добавишь в
+   спеку билдеру?» – **T12 (profiles as a derived lens, no new lever, no schema) and T13 (the
+   built `eliteGate` flag goes ON) join wave 5**, ruling H in
+   [life-wave-5-rulings-2026-09](plans/life-wave-5-rulings-2026-09.md) (H, not C – the
+   builder's own rulings C–G landed in the same hour).
+2. On the sparring partner being the one role with a free number (form, parked 10.08): «а вот
+   это видимо как раз пришло время, надо сделать спеку и разложить по косточкам» – **form is
+   unparked**: [the-form-and-the-sparring-2026-09](specs/the-form-and-the-sparring-2026-09.md)
+   (two channels – results residual and rhythm; the slump is the psychologist's patient, the
+   rust is the sparring partner's; O1–O8 await his word). form-and-slump.md keeps the finding,
+   the yardstick and the adopted driver – built on, not superseded.
+3. He also brought real tour-team economics («и вот это может нам пригодиться, заодно ревью
+   наших реалий можно сделать») – condensed with the audit in
+   [team-economics-2026-09](research/team-economics-2026-09.md): travel and retainer shapes
+   match reality by construction; the two real findings are the pro-era coach contract (reality
+   re-prices by HER rank and cuts 10% of EVERY cheque; ours prices by tier×age and pays
+   10%/5% at titles/finals only) and the soft elite tail of staff costs – both his to rule,
+   both bench-first, neither commissioned yet.
+
+## 14.09.2026 – WAVE 5 IS BUILT AND GATED: THE PSYCHOLOGIST'S YEAR, THE WALLS, AND TEN QUESTIONS BACK
+
+The wave the owner commissioned on 13.09 («окей, бриф пиши, а билдера я сам запущу») is complete
+on `life/wave-5` – **38 commits, schema v76**, T1–T13 plus four corrections and the вычитка, with
+the two tasks he added mid-wave (coach profiles, the elite gate) and the stale `fitFactor` comment
+he sent separately. The architect's own gate: `CHECK_EXIT=0`, read from
+`/tmp/arch-gate-1789317464.log` with its mtime newer than the run's start. **The frozen MAIN
+capture (41550 / `e6b0c709`) did not move once**: `git log 4ceb7c0d..HEAD -- tests/condition.test.ts`
+is EMPTY across the whole wave, which is a stronger statement than a diff because a diff cannot see
+a move-and-move-back.
+
+**What shipped.** The seat (pro-gated, remote, salary only, suspend-not-cancel) · the year-focus
+with its deterministic consent gates · the recovery slope with a receipt that counts the weeks he
+actually worked · the bounded composure walk toward her own ceiling · the legible-wording draw that
+leaves bond arithmetic byte-identical · the walls (leaning, hysteresis, flips) with the mechanics
+re-pointed onto `expressedTemperamentOf` per call site · the counsel beat at its reserved slot ·
+82 player-facing strings through the architect's вычитка · the 4×3 bench grid, the never-fired
+corridor and census v3 · coach profiles as a derived lens · the elite gate ON.
+
+**What the wave learned about its own instruments**, recorded in
+[life-wave-5-rulings-2026-09](plans/life-wave-5-rulings-2026-09.md) (rulings A–S):
+
+* **The count-keys net sees KEYS, never CONSUMED VALUES** (ruling L). An extra `rng()` on the SAME
+  key with the SAME count left the key list green while a skill moved. Inside a drawing function
+  the net is necessary and NOT sufficient – pair it with a value check **whose expectation does not
+  call the function under test**, and widen the walk.
+* **The frozen corpus is a coupling detector for this layer, not a measurement** (rulings K and R).
+  It compares END states, and for wave-5's careers it cannot even REACH the state: zero love
+  episodes and zero endings at 156 weeks, and `econ-bench` never calls `answerLifeBeat`.
+* **The «unable to fail» family was sighted TEN times in one wave**, each in a different costume:
+  two arms moved together · a spot check on one week (at p=0.05 two hazards agree 19 weeks in 20) ·
+  a walk that could not reach its case · an expectation calling the function under test · a
+  threshold passing on 0 and 1 · a key-set comparison that only sees deletions · a sibling
+  restoring a flag to a literal · a sweep using the function under test as its expectation · a
+  wrapper appending to a recreated log path · a locator satisfied by a page that had not moved.
+* **The background notification lied THIRTEEN times**, twice over logs reading `CHECK_EXIT=143` and
+  `UNIT_EXIT=137`. Every verdict in the wave was read from a file the command itself appended.
+
+**Ten questions go back to him**, assembled in
+[life-wave-5-questions-2026-09](plans/life-wave-5-questions-2026-09.md). The two that are his
+sentences rather than his numbers: **the elite gate's currency decays**, so a gate he just switched
+on refuses every career for the back eight tenths of its life (the `pro` fixture, a WTA
+professional with $4.9M, holds 0 domestic points); and **§2a's «the road back always exists» was
+arithmetically false** without the `leanMax` cap T7 added as a proposal – 300 grinding weeks reached
+a lean of −450 and a nine-year walk home.
+
+## 14.09.2026 – THE WAVE'S TEN QUESTIONS RULED, AND THE GATE LEARNS TO REMEMBER
+
+The owner walked the wave-5 questions file with the architect (options → outcomes → consequences
+laid out per point) and ruled all ten. His words, verbatim where they decide:
+
+1. **The elite gate reads the CAREER – «звучит разумно, давай сделаем».** The high-water mark
+   ships INSIDE the wave, pre-merge: `peakDomesticPoints` as the SEVENTH v76 key (the unshipped
+   step amended – no v77 owed, nobody holds a v76 save), banked in `recomputeKidRank`, read by
+   `eliteGateStandingOf` = max(live, peak) with the W-professional door answering as the bar
+   itself (`activeLadderOf === 'wta'`, the masseur's own one-way-door doctrine). Per-key protocol
+   on all five frozen cells: exactly ONE key moved (the new one), `rngMain` byte-identical, the
+   three canonical fingerprints reproduced; eleven live constants re-stamped; the §C horizon arm
+   re-aimed – with the gate on, the week-310 elite hire now HAPPENS at live points 0, which is
+   the ruling made visible.
+2. **`leanMax` = 100 – «наверное давай 100»** (the plain reading he asked for is now in the
+   spec's own §5/§8 language: kicks dig a hole, care refills it free, the cap keeps the deepest
+   hole at ~2 seasons of refilling instead of nine years).
+3. **Steady recovery – «принимаем»**: the focus is honestly the intense girl's; a steady girl's
+   nature does the specialist's work, and her own product arrives with the form layer's slump
+   focus.
+4. **Cool head – «оставляем 1.55»**: the constants stay as the ceiling of a perfect year; the
+   player sees no number anywhere, and raising them would reward skipping family weeks.
+5. **The fifth grid cell – «делаем, ждем числа»**: §1f added to `tools/psy-grid.ts` – the
+   repair-×1.5 arm (grind to week 156, then caring in both columns, the focus landing once the
+   bond is back at steady), pricing the one unmeasured §4 number and answering the sunny-girl
+   question with a number instead of a guess.
+6. **The round trip – «фраза про живого игрока мне нравится как идея»**: §2a's sentence stays a
+   promise to the human player; the census's «turned» arm remains its labelled instrument; no
+   third policy is built to make prose true.
+7. **Fit vs rung – «окей, ждем моего теста»**: untouched; the playtest watchlist is the
+   architect's hand-off (does the readable fit make style-shopping dominate rung-shopping).
+8. **Spec §5 – re-cut to the measured gradients** («надо сделать»): listen's clientele was
+   backwards (private girls meet fewer people – fewer coins), cool head has none, herself's
+   held; the mechanics untouched by the ruling's own text.
+9. **The running year's home – RULED after the clarification** (the card named: the Support-staff
+   tab's psychologist entry, the hired line under his name): «да, вписывай строку с годом и
+   финалим ПР волны по скиллу». Shipped same-day: the hired line splices the running year
+   («On retainer – the year goes on …», the focus sentence with its first letter lowered), the
+   plain line standing whenever no focus is chosen; §3b of the card suite pins the splice off the
+   imported constant, arm watched red. The strings table carries the amendment.
+10. **§4 table – holds as measured**; the fifth cell (point 5) closes its one white space.

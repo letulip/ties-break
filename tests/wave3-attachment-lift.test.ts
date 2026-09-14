@@ -56,7 +56,7 @@
 //          measured proof that those pins are the guard against exactly this mistake and that this
 //          step left them alone.
 //
-//   ARM 3  the ORDER reversed at the call site – `rollArrival(world)` moved BELOW `accrueSpirit(world)`
+//   ARM 3  the ORDER reversed at the call site – `rollArrival(world)` moved BELOW `accrueSpirit(world, false)`
 //          in `world/phaseHerWeek.ts`
 //          2 RED · §C «⭐⭐ a career that meets somebody in week W is already lifted at the END of
 //          week W: sunny at W=146: expected 70 to be 75» – the lift arriving a week late, exactly the
@@ -148,7 +148,7 @@ function episode(sinceWeek: number, endedWeek: number | null): LoveEpisode {
  *  ⚠ THE WEEK NEVER ADVANCES, on purpose – a fixed quiet week means `weekPerturbation` contributes
  *  exactly zero every time, so what this measures is the RETURN's target and nothing else. */
 function hoversAt(world: WorldState, weeks = 40): number {
-  for (let i = 0; i < weeks; i++) accrueSpirit(world)
+  for (let i = 0; i < weeks; i++) accrueSpirit(world, false)
   return world.spirit
 }
 
@@ -157,7 +157,7 @@ function hoversAt(world: WorldState, weeks = 40): number {
 function walk(world: WorldState, weeks: number): number[] {
   const out: number[] = []
   for (let i = 0; i < weeks; i++) {
-    accrueSpirit(world)
+    accrueSpirit(world, false)
     out.push(world.spirit)
   }
   return out
@@ -271,7 +271,7 @@ describe('wave 3 T4 B – a moved target, not a one-off bump', () => {
       for (let i = 0; i < 12; i++) {
         if (i === 3) world.loveEpisodes = [episode(world.week, null)]
         if (i === 8) world.loveEpisodes = [episode(world.week, world.week)]
-        accrueSpirit(world)
+        accrueSpirit(world, false)
         worst = Math.max(worst, Math.abs(world.spirit - prev))
         prev = world.spirit
       }

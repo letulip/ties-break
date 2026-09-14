@@ -1189,7 +1189,9 @@ export interface CoachMarketRow {
   /** how much his weekly price exceeds the week's parent income, or 0 when it fits */
   overBudgetCents: number
   /** ranking points still needed before he would take her, or null when nothing is stopping her.
-   *  Always null while ECONOMY.coach.eliteGate is off, which is its shipped state. */
+   *  ⚠ NON-NULL ON THE ELITE RUNG SINCE WAVE 5 T13 (13.09): `ECONOMY.coach.eliteGate.enabled` is now
+   *  true, so every screen that reads this field has a locked state to draw. It stays null on every
+   *  other rung and on Elite once she is at the bar. */
   lockedPoints: number | null
   /** [lo, hi] percent of her CURRENT level this rung could add over a season, above what the
    *  parent alone would manage. Computed from her own headroom - see coachSeasonUplift. */

@@ -618,11 +618,17 @@ export const ECONOMY = {
       'all-court': ['aggressive', 'counterpuncher', 'serve-first'],
     } as Record<PlayStyle, PlayStyle[]>,
 
-    // ...and what a pill is worth on the development rate. Deliberately SMALL next to the rung
-    // ladder (which spans 1.40 end to end): fit is a reason to prefer one affordable coach over
-    // another, never a reason to buy up a rung. At these values a Budget coach who is great for her
-    // (0.95 x 1.05 = 0.998) just edges a Middle coach who is wrong for her (1.04 x 0.94 = 0.978),
-    // which is exactly the size of trade the pills are meant to be advertising.
+    // ...and what a pill is worth on the development rate. WIDER than the rung ladder since round
+    // 38 #17, not smaller: fit spans x1.67 (1.25/0.75) against x1.21 across the hireable rungs
+    // (0.95 -> 1.15) and x1.40 across the whole ladder including the parent (0.82 -> 1.15). So the
+    // pill REORDERS the market rather than breaking ties inside it, and in BOTH directions. A
+    // Budget coach who is great for her (0.95 x 1.25 = 1.1875) out-teaches a Good-fit Elite coach
+    // (1.15 x 1.00 = 1.15), so the match is now a reason NOT to buy up a rung; and an Off-style
+    // coach on the bottom two rungs (0.7125, 0.78) teaches SLOWER than the parent's own 0.82 while
+    // being billed every week for it. The second of those is the `under-self` band the coach card
+    // prints; the first is the join that card cannot make, since it shows the two multiplicands
+    // separately and multiplies them nowhere - see the profile lens in engine/world/coachMarket.ts.
+    // All twelve cells are pinned in tests/wave5-coach-profiles.test.ts §A.
     /** ⭐⭐⭐ ROUND 38 #17 (07.09) – THE SPAN WIDENS 1.05/0.94 -> 1.25/0.75, AND IT IS THE HALF THAT
      *  MAKES THE THREE ROUTES DIFFERENT.
      *
@@ -645,23 +651,39 @@ export const ECONOMY = {
     // plays, so he is never wrong for it and never a specialist in it.
     selfFit: 'good' as 'great' | 'good' | 'off',
 
-    // THE ELITE GATE - A HOOK, AND IT IS OFF. Owner: «элит, кстати, могу вообще стать доступны для
-    // туров, как вариант и стоит соответствующе». The idea is that an Elite coach does not take a
-    // fourteen-year-old with nothing to show, which would turn the top rung from "what rich families
-    // buy in week 1" into something earned - the same shape as the academy scholarship.
+    // THE ELITE GATE - AND IT IS ON (owner, 13.09: «elite gate включим здесь же», wave 5 T13).
+    // Owner, when it was built: «элит, кстати, могу вообще стать доступны для туров, как вариант и
+    // стоит соответствующе». The idea is that an Elite coach does not take a fourteen-year-old with
+    // nothing to show, which would turn the top rung from "what rich families buy in week 1" into
+    // something earned - the same shape as the academy scholarship.
     //
-    // He asked for it to be an OPTION, so it is modelled and switched off: flip `enabled` and the
-    // gate is live everywhere at once (the market's hireable check, the hire command's refusal and
-    // the screen's locked row all read `coachHireable`). `minPoints` is her EARNED ranking points,
-    // the same number the tier ladder gates on, and 150 is national-tier eligibility - "she has
-    // results" stated in the currency the rest of the game already uses.
+    // He asked for it to be an OPTION first, so it was modelled and switched off, and this is the
+    // flag being turned: the gate is live everywhere at once (the market's hireable check, the hire
+    // command's refusal and the screen's locked row all read `coachHireable`). `minPoints` is her
+    // EARNED ranking points, the same number the tier ladder gates on, and 150 is national-tier
+    // eligibility - "she has results" stated in the currency the rest of the game already uses.
+    //
+    // ⚠ IT GATES THE HIRE, NOT THE HAVING - a latent seam, and it is named because it was CHECKED
+    // rather than assumed. `coachHireable` is asked by `hireCoach`, by the market row's `lockedPoints`
+    // and by the screen's lock: all three are surfaces of the HIRING DECISION. `openingCoachId` asks
+    // nothing - it reads `bestFitCoachAt` and stops - so a career that OPENED on the elite rung would
+    // keep its coach through the flip.
+    //
+    // ⭐ AND NO SHIPPED CAREER CAN: `OnboardingWizard`'s `COACH_OPTIONS` offers exactly two rungs,
+    // `self` and `middle`, so the top rung has never been something a player could pick in week 1 -
+    // which is why this is a seam and not a hole, and why T13 leaves it alone. The only trees that
+    // reach it are `tools/econ-bench.ts`'s presets (a bench sets `coachTier` at birth) and a v22-or-
+    // older save whose profile carried a rung this wizard does not offer. If the wizard ever grows an
+    // Elite tile, this is the line that has to be read first - onboarding would need its own answer
+    // (a refusal, a fallback rung, or the rung hidden until she has results), which is a second
+    // mechanic and the owner's call, not this flag's.
     //
     // ⚠ DOMESTIC POINTS, since the two ladders landed. 150 is literally
     // TIERS.national.enterPointBand[0], so the domestic table is the one that keeps this number
     // meaning what it was written to mean. Do not repoint it at the ITF table without moving the
     // threshold too: an ITF gate would make the Elite rung reachable only by families who could
     // already afford to fly, which is the shape the gate exists to prevent.
-    eliteGate: { enabled: false, minPoints: 150 },
+    eliteGate: { enabled: true, minPoints: 150 },
 
     // WHAT A RUNG IS WORTH TO HER, RIGHT NOW - the projection screen T prints on every coach row.
     // Owner: «"budget может добавить 0-2%", "middle 1-3%", "high 2-4%" но всё зависит от ребенка».
@@ -4099,6 +4121,81 @@ export const ECONOMY = {
      *  the wording claims a root only where the arithmetic actually leaned on one. Below it she is
      *  the Barty case and the copy says so. */
     forkStopDriverFrom: 0.15,
+    /** ⭐⭐⭐ HER WALLS AND HER REGULATION – who-she-is §2a's leanings, their hysteresis and the hazard
+     *  that flips a pole (v76, wave 5's T7). The one reader is `driftWalls` (engine/spirit.ts).
+     *
+     *  ⚠⚠ THE HOME IS `ECONOMY.life` AND NOT `ECONOMY.psychologist`, AND THAT IS A DELIBERATE
+     *  DEPARTURE FROM THE WAVE-5 BRIEF'S §4 HEADING («home: `ECONOMY.psychologist`, one block beside
+     *  `ECONOMY.masseur`»), REPORTED RATHER THAN DONE QUIETLY. The seven numbers below are read on
+     *  EVERY career, including the great majority that never hire anybody – walls rise from neglect
+     *  itself, «no purchase, no work» (§2a), and repair is FREE (§0.3: «the seat only ever
+     *  ACCELERATES the road home. Gating any part of that road behind the retainer is a design
+     *  violation»). A constant whose reader runs on a seatless career, filed under the seat's price
+     *  list, would read as a paywall in the one place the layer's own law says there is none. The
+     *  three numbers that really ARE the seat's – the O6 slow-down, the `'herself'` acceleration and
+     *  the beyond-baseline hazard scale – are in `ECONOMY.psychologist` beside `recoverySlope`, where
+     *  they belong, and each names this block.
+     *
+     *  ⚠⚠ ALL SEVEN ARE PROPOSALS AND NONE IS RULED – the wave-5 brief §4's «Proposals – NONE ruled,
+     *  all bench-priced predicted-first, his word after». Six are the brief's own; `leanMax` is the
+     *  seventh and it is the BUILDER's, argued at its own entry.
+     *
+     *  ⚠ THE SIGN CONVENTION IS THE ARCHITECT'S RULING N AND IS NOT NEGOTIABLE HERE: the lean is
+     *  ABSOLUTE and zero is her NATURE. Negative = more private / more intense (walls up,
+     *  dysregulated); positive = more open / more steady (beyond her own baseline). `driftWalls`
+     *  carries the whole of it; these are only the magnitudes. */
+    walls: {
+      /** ⚠ WALLS UP, PER WEEK AT A `strained`/`cold` bond – §2a's «walls RISE from neglect itself»,
+       *  applied to BOTH axes (kicks close her AND dysregulate her). Subtracted from the lean, so it
+       *  also eats a positive lean first: «если она стала более открытой, а ее начали пинать, то она
+       *  вполне может и назад откатиться» (the owner, 09.09) is this one sign doing that work.
+       *  ⚠ 1.5/wk against `flipArm` 60 is ~40 held weeks to arm – «a flip is an event of seasons». */
+      risePerWeek: 1.5,
+      /** ⚠ THE WALK HOME, PER WEEK AT A `close`/`steady` bond – toward 0 and NEVER PAST IT. Slower
+       *  than the rise on purpose: coming back is longer than going away, and it is FREE (no hire,
+       *  no focus, no money – §0.3's law, benched with `psychologistHired === false`). */
+      repairPerWeek: 1.0,
+      /** ⚠ BEYOND HER OWN BASELINE, PER WEEK – the slowest of the three, because it is the only one
+       *  she has to WORK for: it runs ONLY while the `'herself'` focus is held AND the bond is
+       *  `close`/`steady` (§2a's «BEYOND her baseline is her own work»), and ONLY on the axis that
+       *  has somewhere to grow. That gate is the anti-«hugged into an extravert» dam and it is a HARD
+       *  invariant, not a corridor: a caring career with no focus produces zero of this, ever. */
+      growthPerWeek: 0.5,
+      /** ⚠ WHERE AN AXIS ARMS, in the ONE direction birth left open to it (ruling N): a born-OPEN or
+       *  born-STEADY girl arms at −this (walls up, the expressed pole inverts); a born-PRIVATE or
+       *  born-INTENSE one arms at +this (her own work). The other direction arms NOTHING – for the
+       *  first pair it is clamped at 0 (nowhere to grow), for the second it accumulates as real walls
+       *  that change no bucket and still have to be walked back before a point of growth can be
+       *  bought. That asymmetry is «repair is free, growth is work» in the arithmetic. */
+      flipArm: 60,
+      /** ⚠ WHERE A FLIPPED AXIS ARMS THE UN-FLIP – strictly inside `flipArm`, and the band between
+       *  the two is the HYSTERESIS DEAD ZONE that arms nothing in either direction. It is what makes
+       *  a flip an event of seasons rather than a flicker: at `repairPerWeek` the 20 points between
+       *  60 and 40 are twenty held weeks before the un-flip can even be rolled for. */
+      flipRelease: 40,
+      /** ⚠ THE HAZARD ON AN ARMED AXIS-WEEK – one uniform on `seed:life:walls:<axis>:<week>`, p =
+       *  this. 0.05 gives a median ~13 armed weeks (ln 0.5 / ln 0.95 = 13.5), which is the wave-5
+       *  brief's own «~40 weeks of sustained pattern to arm, then a median ~13 armed weeks».
+       *  ⚠ NEVER GUARANTEED IN EITHER DIRECTION (§2a): two identical patterns can differ by a season. */
+      flipHazardPerWeek: 0.05,
+      /** ⚠⚠ THE MAGNITUDE CAP ON THE LEAN, ±. **THE BUILDER'S ADDITION, NOT THE BRIEF'S** – §4 names
+       *  six walls numbers and this is a seventh, added because without it §2a's own law is
+       *  ARITHMETICALLY FALSE and reported to the architect as such rather than slipped in.
+       *
+       *  §2a: «the road back always exists – a closed-again girl can be opened again … A career can
+       *  round-trip; that sentence is earned drama». Unbounded, a career that grinds 300 weeks at a
+       *  `strained` bond reaches −450, and the walk home is then 450 weeks at `repairPerWeek` – about
+       *  nine years, which is longer than the game. The round trip would be a sentence in a spec and
+       *  unreachable in play, and nothing in the engine would ever say so.
+       *
+       *  ⚠ 100 IS SIZED AGAINST THE TWO THRESHOLDS IT HAS TO LEAVE ROOM FOR, not picked round: the
+       *  deepest hole is 100 weeks of free repair back to nature (~two seasons) and 60 weeks back to
+       *  the release band, so neglect still costs her real seasons of the LADDER – ruling N's «she
+       *  must be walked back to 0 before a single point of growth can be bought» keeps its teeth –
+       *  while the round trip stays inside one career. It is also the reason the accumulator cannot
+       *  drift into a serialised number nobody bounded. A PROPOSAL like the six above; T10 prices it. */
+      leanMax: 100,
+    },
   },
 
   // The availability gate: the minimum condition to ENTER each tier, and the school-exam blackout
@@ -4824,6 +4921,193 @@ export const ECONOMY = {
     // table working the trip out of her legs. Small and legible on purpose: it is one session, not
     // a second tour-relief channel, and it prints its own receipt (`resolveMasseurReturn`).
     returnSessionBonus: 1,
+  },
+
+  // --- THE PSYCHOLOGIST (the psychologist's year, docs/specs/the-psychologists-year-2026-09.md) ---
+  // THE SECOND SALARIED SEAT, and the asymmetry with the masseur above IS the design rather than a
+  // saving (the travelling-team plan's §2, the owner's ruling Б: «массажист ездит, психолог работает
+  // дистанционно и стоит только зарплату»). So: pro-career gated and cancellable weekly like him,
+  // and then NO FARE, NO TRAVEL STANCE AND NO RESULTS SHARE – `staffSeatFareCents` is never asked
+  // for this seat and `staffShare` above stays `'coach' | 'masseur'` (O3, ruled 13.09: he is not in
+  // the box on match day; his product is the year, not the title).
+  //
+  // ⚠⚠ AND THE DIAL IS A DIFFERENT KIND OF THING FROM THE MASSEUR'S, which is why the rung is an
+  // INDEX and not a quantity. His dial buys a BUSIER CALENDAR (2/4/7 sessions a week, and the bill
+  // is sessions × a rate). This one is ONE SESSION A WEEK AT EVERY RUNG – the spec's own «the rung
+  // buys WHO comes to the call» – so there is no quantity to multiply and the price is simply the
+  // person's weekly retainer. A rung here is a position in a three-member roster, `0 | 1 | 2`.
+  //
+  // ⚠ WHAT IS DELIBERATELY NOT HERE YET, so nobody reads the absence as an oversight: the four
+  // focus tables (`recoverySlope` T4, `coolheadPerSeason` T5, `listenClarity` T6, the walls'
+  // beyond-baseline hazard scale T7 – all four ruled in the spec's §2 and quoted in the wave-5
+  // brief's §4) land with the passes that READ them. T2 ships the seat and the seat's price, and a
+  // constant with no reader is a constant nobody can be wrong about yet.
+  // ⭐ T4 (v76) LANDED THE FIRST OF THE FOUR – `recoverySlope`, below, with `accrueSpirit`'s own
+  // reader in the same commit, exactly as the rule above requires. Three remain.
+  // ⭐ T5 (v76) LANDED THE SECOND – `coolheadPerSeason`, below, with `growWeek`'s own reader in the
+  // same commit. Two remain (`listenClarity` T6, the walls' hazard scale T7).
+  psychologist: {
+    // ⚠⚠ PROPOSALS, NOT RULINGS – bench-priced, predicted-first, THE OWNER'S WORD AFTER T10, in the
+    // same register the spec marks O5 with. The wave-5 brief's §4 lists them under «Proposals – NONE
+    // ruled»: $100 / $200 / $400 a week. What they are sized AGAINST is the game's own scale and the
+    // spec's §3 table: the counsellor sits BELOW the masseur's entry rung ($150/wk – a weekly hour,
+    // not a specialist), the sport psychologist between his entry and default rungs ($300/wk) and is
+    // the DEFAULT, and the tour-grade specialist lands in the high coach's neighbourhood ($500/wk).
+    // The travelling-team plan's own sizing sketch («psychologist salary ≈ a third» of a coach rung)
+    // is what those three land on when it is read against the roster the game actually sells.
+    //
+    // ⚠ A FLAT CONTRACT PER RUNG: no corridor, no jitter, NO DRAW ON ANY STREAM – the masseur's own
+    // legibility argument, which is stronger here because there is not even a session count to
+    // multiply. The ledger row is the number on the card, every week.
+    //
+    // ⚠ EACH RUNG MUST MEASURABLY BEAT THE ONE BELOW **AT THE CHOSEN FOCUS** or it is re-priced (the
+    // masseur spec's §4 law, applied per focus by the spec's §3). That is T10's 4×3 grid; T2 can
+    // only make the ladder exist.
+    rungs: [
+      { label: 'Counsellor', salaryCents: 100_00 },
+      { label: 'Sport psychologist', salaryCents: 200_00 },
+      { label: 'Tour-grade specialist', salaryCents: 400_00 },
+    ],
+    // What a fresh hire (and every pre-v76 save) stands on: the MIDDLE rung – the professional
+    // default the prices above are anchored to, and meaningless until somebody is hired. A LITERAL 1
+    // in the v76 migration, by the house rule (a shipped step must never change what it back-fills
+    // because somebody later retuned a constant); keep the two in step.
+    //
+    // ⚠ TYPED `0 | 1 | 2` RATHER THAN `number` because `createWorld` assigns it straight into
+    // `WorldState.psychologistRung`, whose type is the union. Widening it here would push a cast onto
+    // the reader, which is the shape this repo keeps out of `createWorld` (the literal it replaces
+    // needed none).
+    defaultRung: 1 as 0 | 1 | 2,
+    /** ⭐⭐⭐ «BACK ON HER FEET» – THE RECOVERY SLOPE, BY RUNG (v76, wave 5's T4). The spec's §2 row,
+     *  verbatim: «the recovery slope while a shock is live: **+2 / +3 / +4 per week by rung** (the
+     *  23.08 design, preserved whole as ONE focus)». Points of spirit per week, ADDED TO
+     *  `ECONOMY.spirit.returnPerWeek[intensity]` inside `accrueSpirit`'s return step and nowhere
+     *  else.
+     *
+     *  ⚠⚠ IT IS A FASTER RETURN AND NEVER A SECOND CURVE, which is the one thing a later reader
+     *  cannot recover from the three numbers. `accrueSpirit`'s own ⚠⚠ note («THERE IS NO RECOVERY
+     *  CURVE, ANYWHERE, BY DESIGN … a second return rate, a «recovering» flag or a taper read off
+     *  `spiritShock` would all be the same mistake») still governs: this is a SUMMAND on the
+     *  standing rate, it goes through the same `stepToward` clamp and the same tenths rounding, and
+     *  it dies with the clear because the predicate that gates it reads the live mark. No taper, no
+     *  flag, no second target.
+     *
+     *  ⚠ INDEXED BY RUNG (`0 | 1 | 2`), WHICH IS A DIFFERENT SPELLING FROM `returnPerWeek`'s and the
+     *  collision is worth naming once: `ECONOMY.spirit.returnPerWeek` is an OBJECT keyed by the
+     *  intensity NAME (`{steady, intense}`) and this is an ARRAY indexed by the roster position.
+     *  The two are summed on one line in `accrueSpirit` and a reader who mixes them gets
+     *  `undefined`; the rungs are the same `0 | 1 | 2` that indexes `rungs` above.
+     *
+     *  ⚠ RULED, NOT PROPOSED – unlike the salaries above. The wave-5 brief's §4 lists it under
+     *  «Ruled by the spec §2», so T10's grid MEASURES this ladder rather than pricing it: each rung
+     *  strictly better than the one below on weeks-under-the-knee, by more than 2×SEM, or the
+     *  masseur §4 law re-prices the RUNG and not this row. */
+    recoverySlope: [2, 3, 4],
+    /** ⭐⭐⭐ «COOL HEAD» – THE BOUNDED COMPOSURE WALK, BY RUNG (v76, wave 5's T5). The spec's §2 row,
+     *  verbatim: «bounded composure growth: **+1.5 / +2.5 / +3.5 per held season by rung**, toward
+     *  HER EXISTING CEILING only – it accelerates the work, it never breaks the cap». Points of
+     *  `composure` per SEASON; `growWeek` spends `coolheadPerSeason[rung] / WEEKS_IN_SEASON` on each
+     *  week he actually works it, and nowhere else.
+     *
+     *  ⚠⚠ A SEASON RATE READ WEEKLY, AND THE FRACTION IS THE MECHANIC RATHER THAN A ROUNDING
+     *  ACCIDENT. 3.5 / 52 = 0.0673 of a point a week, and `KidSkills` fields are plain `number`s that
+     *  `growWeek` never rounds – measured before the term was written, because an integer skill would
+     *  have made the whole focus dead on arrival (every week's term would truncate to nothing). The
+     *  owner's own anchor sizes it: her measured 7-point composure hole is two to three seasons of
+     *  rung-2 work, «not a purchase» (the spec's ⚠ under the table).
+     *
+     *  ⚠⚠ DECIMALS, NOT AN INDEX – and the collision with the row above is worth naming once, as
+     *  that row names its own: `recoverySlope` is POINTS OF SPIRIT PER WEEK, this is POINTS OF A
+     *  SKILL PER SEASON. Both are indexed by the same rung (`0 | 1 | 2`, the roster position), and
+     *  the two must never be read into each other's arithmetic.
+     *
+     *  ⚠ PROPOSALS INSIDE A RULED SHAPE – O5, the spec's §6: «the +1.5/+2.5/+3.5 season rates and the
+     *  own-ceiling cap are bench proposals; measured against the training-only control before any
+     *  ruling». So T10's grid PRICES these three numbers (growth against a training-only arm, more
+     *  than 2×SEM per rung, zero at the ceiling proven) while the shape they sit in – a per-week
+     *  summand beside training growth, clamped at her own ceiling – is ruled and stays.
+     *
+     *  ⚠ MONOTONE BY CONSTRUCTION BELOW THE CEILING: the three are strictly increasing and the term
+     *  is `min(rate, headroom)`, so a higher rung is never worth less than a lower one on any week –
+     *  the equality case is the ceiling, where all three are 0 and the focus is finished. */
+    coolheadPerSeason: [1.5, 2.5, 3.5],
+    /** ⭐⭐⭐ «LEARNING TO LISTEN» – THE CHANCE THE PARENT READS HER PLAINLY, BY RUNG (v76, wave 5's
+     *  T6). The spec's §2 row, verbatim: «the feed line's wording becomes legible with probability
+     *  **0.6 / 0.8 / 0.95 per beat by rung** – a matched reaction becomes the parent's skill, never a
+     *  purchase and never a leak of her sessions (`bond` untouched)».
+     *
+     *  ⚠⚠ IT PRICES A WORDING AND NOTHING ELSE, which is the one thing three decimals cannot say for
+     *  themselves. One uniform on `seed:psy:listen:<kind>:<week>` decides whether the card's heading
+     *  and the kept feed row say plainly what she wants; the bond deltas, her drawn `wants`, the
+     *  space-vs-company read and the priced option set are the SAME BYTES on both sides of it
+     *  (`tests/wave5-psychologist-listen.test.ts` §D deep-equals the priced sets across the toggle).
+     *  A rung that bought a better PRICE would be the purchase the spec's own sentence forbids.
+     *
+     *  ⚠ A PROBABILITY, NOT A RATE AND NOT AN INDEX – the third spelling in this block and the
+     *  collision is worth naming once, as its two neighbours name theirs: `recoverySlope` is POINTS
+     *  OF SPIRIT PER WEEK, `coolheadPerSeason` is POINTS OF A SKILL PER SEASON, and this is a SHARE
+     *  OF BEATS, 0..1, compared against one uniform. All three are indexed by the same rung
+     *  (`0 | 1 | 2`, the roster position) and none of their arithmetic may be read into another's.
+     *
+     *  ⚠ RULED, NOT PROPOSED – the wave-5 brief's §4 lists it under «Ruled by the spec §2», so
+     *  T10's grid MEASURES this ladder (the realised clarity inside the CI of each number, the
+     *  matched-reaction share monotone in rung) rather than pricing it. */
+    listenClarity: [0.6, 0.8, 0.95],
+    /** ⭐⭐⭐ «WORKING ON HERSELF» – THE BEYOND-BASELINE FLIP HAZARD'S SCALE, BY RUNG (v76, wave 5's
+     *  T7). The psychologist spec's §2 row, verbatim: «rung scales the armed hazard ×1 / ×1.5 / ×2».
+     *  Read by `driftWalls` (engine/spirit.ts) and by nothing else.
+     *
+     *  ⚠⚠ IN THE BEYOND-BASELINE DIRECTION ONLY, AND NEVER ON AN UN-FLIP – the architect's ruling N,
+     *  and the sentence that decides it is «the seat accelerates her own work and never her
+     *  collapse». So the scale applies to exactly one draw in the whole model: the FLIP of an axis
+     *  that has somewhere to grow. A born-open girl's walls-up flip, and every un-flip in either
+     *  direction, are ×1 whatever the family is paying – a better psychologist does not make a
+     *  collapse likelier, and he is not what un-does one either (repair is free and needs no dice
+     *  scaled for it).
+     *
+     *  ⚠ IT RIDES THE BILLING PREDICATE, like everything else of his (ruling J, ruling P's ⚠): a
+     *  college-freeze week and a booked family week stand the scale down with the bill.
+     *
+     *  ⚠ RULED, NOT PROPOSED – the wave-5 brief §4 lists «the beyond-baseline hazard scale [1, 1.5,
+     *  2]» under «Ruled by the spec §2», so T10's grid MEASURES this ladder (flip medians monotone in
+     *  rung) rather than pricing it. ⚠ INDEXED BY RUNG (`0 | 1 | 2`), the fourth spelling in this
+     *  block: `recoverySlope` is POINTS OF SPIRIT PER WEEK, `coolheadPerSeason` POINTS OF A SKILL PER
+     *  SEASON, `listenClarity` a SHARE OF BEATS, and this a MULTIPLIER ON A PROBABILITY. */
+    wallsHazardScale: [1, 1.5, 2],
+    /** ⭐⭐ O6, RULED 13.09 – A RETAINED SEAT AT RUNG ≥ 2 SLOWS THE WALLS' RISE, ANY FOCUS. The
+     *  multiplier on `ECONOMY.life.walls.risePerWeek` on a `strained`/`cold` week: «a good
+     *  psychologist in the house makes the walls rise slower» (ruling N).
+     *
+     *  ⚠⚠ IT SLOWS THE NEGATIVE **DRIFT** AND NEVER THE HAZARD – ruling N's own warning about the two
+     *  multipliers being swapped. Once the walls are up and the axis is armed, he does not make the
+     *  flip less likely; what he buys is the seasons it takes to get there.
+     *
+     *  ⚠ RUNG ≥ 2 AND ANY FOCUS: this is the second legible thing the RETAINER buys, so it must not
+     *  read off `psychologistFocus` – a family working on «cool head» still has him in the house.
+     *  ⚠ AND IT RIDES THE BILLING PREDICATE (ruling P's ⚠: «a standing-down seat slows nothing»).
+     *  ⚠ A PROPOSAL – the wave-5 brief §4's «retention slow-down ×0.75 (rung ≥ 2)», priced at the
+     *  census, his word after.
+     *
+     *  ⚠⚠ AND THE TENTHS GRID EATS A LITTLE OF IT, WHICH T10 MUST PREDICT OR IT WILL READ A CORRECT
+     *  IMPLEMENTATION AS A MISS (ruling M's lesson, one focus over). The lean is stored to ONE
+     *  DECIMAL, so a slowed week is `roundTenth(1.5 × 0.75) = roundTenth(1.125) = 1.1` and the
+     *  REALISED slow-down is ≈ ×0.733 rather than ×0.75. Measured, not derived after the fact:
+     *  tests/wave5-psychologist-walls.test.ts §F asserts the rounded value and says so. The grid is
+     *  the field's own (spirit's, one concept over) and the arithmetic is not going to be un-rounded
+     *  for a multiplier's sake – so the number to predict is 0.733. */
+    wallsRetentionSlow: 0.75,
+
+    /** ⭐⭐ THE `'herself'` REPAIR ACCELERATION – the multiplier on
+     *  `ECONOMY.life.walls.repairPerWeek` while that focus is held at a `close`/`steady` bond.
+     *
+     *  ⚠⚠ AN ACCELERATION AND NEVER A GATE, which is §0.3's law («repair is free … the seat only ever
+     *  ACCELERATES the road home») made arithmetic: the repair term runs at ×1 with nobody hired, and
+     *  this multiplies a walk that was already happening. A version of this number that was required
+     *  for the walk would be the design violation the brief names, not a tuning miss.
+     *
+     *  ⚠ IT RIDES THE BILLING PREDICATE for ruling J's reason – pay nothing, receive nothing extra.
+     *  ⚠ A PROPOSAL – the brief §4's «`'herself'` repair acceleration ×1.5». */
+    wallsHerselfRepair: 1.5,
   },
 
   // --- Season planner: family vacations (spec §2, owner-approved 25.07) -------------------

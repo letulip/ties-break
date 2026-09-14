@@ -411,9 +411,20 @@ describe('#12 what the gate reads', () => {
     const over = rich.coachMarket.filter((r) => r.tier === 'elite' && r.overBudgetCents > 0)
     expect(over.length, 'the elite rung is out of reach on the parents\' week alone').toBeGreaterThan(0)
     for (const r of over) expect(r.overBudgetCents).toBe(r.weeklyCents - parents)
-    // ⚠⚠ AND NONE OF IT REFUSES HIM ANYTHING – the ranking gate is the only thing that ever locks a
-    // rung, and it is off here exactly as it was before this change.
-    for (const r of elite) expect(r.lockedPoints, 'flagged, never gated').toBeNull()
+    // ⚠⚠ AND MONEY REFUSES HIM NOTHING – over budget is FLAGGED, never GATED, which is this item's
+    // own claim and the reason the two columns are separate.
+    //
+    // ⚠ RE-AIMED BY WAVE 5 T13 (13.09), AND THE RE-AIM IS THE STRONGER FORM. This line used to read
+    // `lockedPoints` as `null` and explain it by «the ranking gate is off here». With the gate ON it
+    // would be pinning the gate's state instead of this item's claim. What #12 is actually about is
+    // that the INCOME has nothing to do with the lock – so the honest assertion is that the million
+    // and the empty account produce identical locks, which is true under either flag and goes red the
+    // moment anybody feeds a balance back into `coachHireable`.
+    expect(broke.coachMarket.map((r) => r.lockedPoints)).toEqual(rich.coachMarket.map((r) => r.lockedPoints))
+    for (const r of elite) {
+      const same = broke.coachMarket.find((b) => b.id === r.id)!
+      expect(same.lockedPoints, 'the ranking gate does not read the wallet').toBe(r.lockedPoints)
+    }
   })
 
   it('and the budget meter draws that cap rather than reverse-engineering one', async () => {

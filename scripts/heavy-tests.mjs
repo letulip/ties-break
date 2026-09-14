@@ -501,6 +501,16 @@ export const HEAVY_UNIT_FILES = [
   // machine, and an in-pool number under agent load is the documented false-verdict shape – the
   // deploy log's own timeout IS the in-pool reading that counts.
   'tests/round26-world-speaks.test.ts',
+  // ⚠ 14.09, THE FOURTH FIRING – and the first one the PR gate caught BEFORE a merge, which is the
+  // system working rather than the prediction merely coming true again. `wave5-elite-gate` carries
+  // the frozen-corpus §C (five preset/policy cells × 156 weeks × both flag states = ten real walks
+  // in ONE case, 7.5 s solo) plus a 400-week horizon arm – coach-travel-edge's own kind of work,
+  // living in the bulk pool only because the wave put it there. The PR's unit-bulk timed the §C
+  // case out at 20 s (655.98 s pool, 5,320/5,321 green – a per-test cross, not a stall). Measured
+  // solo before moving: 9 tests, 16.22 s wall / 15.33 s test time; the big case projects ~17 s in
+  // its own process at the 2.24x factor – under the per-test ceiling with thin margin, and if it
+  // ever crosses THERE, the file splits along the §C seam exactly as coach-travel-edge did.
+  'tests/wave5-elite-gate.test.ts',
 ]
 
 /** The same list in the form a VITEST PROJECT's `include`/`exclude` needs.

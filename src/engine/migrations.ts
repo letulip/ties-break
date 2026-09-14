@@ -2564,6 +2564,81 @@ export function migrateSave(raw: unknown): WorldState {
     v = 75
   }
 
+  // ⭐⭐⭐ v75 -> v76 – THE PSYCHOLOGIST'S YEAR, WAVE 5: THE SEAT, AND HER WALLS.
+  //
+  // SIX keys in one step, where the five above each took one – and they are two different kinds of
+  // thing riding one bump, which is said here rather than left for a reader to reconstruct. Four are
+  // the STAFF SEAT (`psychologistHired`, `psychologistRung`, `psychologistFocus`,
+  // `psychologistFocusSeason`), shaped on v59's masseur block. Two are the §2a WALLS
+  // (`wallsLean`, `wallsFlipped`) – a fact about her that no player ever chooses. They land together
+  // because the wave that reads them is one wave, and because a schema move costs a fixture, a peel
+  // rung and ten e2e regenerations whether it carries one key or six (v72's three-in-one-append is
+  // the precedent, made for the same reason).
+  //
+  // ⚠⚠ EVERY BACK-FILL IS EXACTLY TRUE AND NOT ONE OF THEM IS A BARGAIN, which is v73's / v74's /
+  // v75's own claim one rung further on. v29 and v31 wrote nothing because the evidence had been
+  // PRUNED and a confident wrong answer is worse than a partial one; v26 and v32 wrote nothing
+  // because fabricating rows would mean fabricating DECISIONS the player never made. Here, six times
+  // over, the simplest reason available:
+  //
+  //   `psychologistHired = false`   – the seat did not exist, so nobody was ever hired into it.
+  //   `psychologistRung = 1`        – the middle rung, MEANINGLESS UNTIL HIRED. A dial has to read
+  //                                   something and the shipped default is the only answer that
+  //                                   invents no decision; v59 back-filled `4` sessions onto careers
+  //                                   that had never met a masseur for exactly this reason, and this
+  //                                   step writes the same kind of literal.
+  //   `psychologistFocus = null`    – nobody was ever asked what to work on.
+  //   `psychologistFocusSeason`     – ...so no season holds a pick, and `null` is that and not «0».
+  //   `wallsLean = {open: 0, reg: 0}` – ⭐ ZERO IS THE IDENTITY AND NOT A PLACEHOLDER FOR ONE. A
+  //                                   leaning of 0 means «expression equals nature» (who-she-is §2a),
+  //                                   which is what a career that predates the walls has ALWAYS been:
+  //                                   there is no pattern in its past to have displaced her, because
+  //                                   nothing was reading one.
+  //   `wallsFlipped = {open: false, reg: false}` – nothing has flipped, because nothing could have.
+  //
+  // ⚠⚠ AND THE ZERO BACK-FILL IS WHAT MAKES A MIGRATED CAREER PLAY BYTE-IDENTICAL TENNIS, which is
+  // this step's strongest property and the wave's first pin. `expressedTemperamentOf` (engine/spirit.ts)
+  // returns BIRTH while nothing is flipped, so every mechanic wave 5's T7 re-points reads exactly the
+  // value it reads today. Nothing in `src/` calls that function outside its own module on this tree.
+  // The migration is not «the girl acquires walls»; it is «the girl has always been exactly herself»,
+  // written down for the first time – v72's `temperament` note in a second costume.
+  //
+  // ⚠ THE RUNG LITERAL IS DELIBERATELY NOT `ECONOMY.psychologist.defaultRung`, and the rule is older
+  // than this wave: a SHIPPED migration must never change what it back-fills because somebody later
+  // retuned a constant. v59's step writes `4` for the same reason while `createWorld` reads the
+  // constant, and the two spellings are allowed to diverge precisely because one is a default and the
+  // other is history.
+  //
+  // ⚠⚠ `??=` ON ALL SEVEN (six at T1; `peakDomesticPoints` joined pre-merge, 14.09 – its own note
+  // below), AND THE ONES THAT CAN BE `false`/`0`-SHAPED ARE WHY IT IS `??=` AND NEVER
+  // `||=`. `psychologistHired ||= false` is a no-op that looks like a write; `wallsLean ||= …` would
+  // replace a live `{open: 0, reg: 0}` object every load. `??=` tests for absent-or-null alone, so a
+  // save that already carries a hire, a rung, a focus, a season, a leaning or a flip keeps it whole –
+  // which is what every wave-5 career will look like the moment T2 and T7 land – and a second walk
+  // over the same payload is a no-op. The only shape this step can ever change is an ABSENT key.
+  //
+  // ⚠ IDEMPOTENT and DRAW-FREE: seven `??=` on keys nothing else in the chain touches, gated on
+  // `v === 75`, writing literals. No sub-stream is reached at all on this path, so MAIN cannot move
+  // and the frozen capture (41550 / e6b0c709) is untouched by construction. Full move:
+  // `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v76.json, and the
+  // mechanically-checked schema sentence in docs/context/saves-and-worker.md.
+  if (v === 75) {
+    save.psychologistHired ??= false
+    save.psychologistRung ??= 1
+    save.psychologistFocus ??= null
+    save.psychologistFocusSeason ??= null
+    save.wallsLean ??= { open: 0, reg: 0 }
+    save.wallsFlipped ??= { open: false, reg: false }
+    // ⭐ THE SEVENTH KEY, ADDED TO AN UNSHIPPED STEP (14.09, the owner's elite-gate ruling). v76
+    // has never reached main or a deployed build, so nobody holds a v76 save and append-only does
+    // not bind this step yet – the same reading state.ts's v59 note gives «never reached a player».
+    // Backfill 0 and NOT a reconstruction: `results` prunes at 52 weeks, so a past peak cannot be
+    // invented (the v46 byTrack doctrine one screen up); the gate reads max(current, peak) plus
+    // the W-professional arm, so a migrated career is never worse off than under the live fold.
+    save.peakDomesticPoints ??= 0
+    v = 76
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

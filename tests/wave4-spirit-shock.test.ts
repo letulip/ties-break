@@ -195,7 +195,16 @@ function endsOnAQuietRun(temperament: Temperament, run = 24): { world: WorldStat
 // =================================================================================================
 describe('wave 4 T1 A – v75, the three-part move', () => {
   it('bumps the version and ships a golden fixture of its own shape', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(75)
+    // ⚠ RE-AIMED AT v76 (13.09, the psychologist's year took the next rung – the seat's four keys and
+    // the two §2a walls keys), NOT LOOSENED, and on `tests/wave3-love-episodes.test.ts`'s own
+    // precedent one version down, verbatim – which took it from `tests/wave2-life-beat.test.ts`, which
+    // took it from `tests/spirit.test.ts` below that. This case is about v75's OWN RUNG – that the
+    // move happened and left a fixture of ITS OWN SHAPE behind – and never about the ladder's head,
+    // which moves with every wave. So the head is asserted as a FLOOR and the two claims that actually
+    // belong to this rung (the fixture says 75, and it carries the key 75 added) are asserted exactly
+    // as before. The head's own guard – «a bump forces a new golden save» – lives in
+    // tests/goldenSaves.test.ts and is the only place that should ever name a number that changes.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(75)
     const v75 = JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8'))
     expect(v75.schemaVersion).toBe(75)
     // ⚠ `toBeNull` rather than `toBeUndefined`, and the difference is the whole shape: the key must be
@@ -219,7 +228,18 @@ describe('wave 4 T1 A – v75, the three-part move', () => {
     // (ARM 5). ⚠ This line is the one the NEXT wave will have to re-aim, exactly as this wave re-aimed
     // v74's and wave 3 re-aimed v73's: `migrateSave` always walks to the LADDER'S HEAD, so the direct
     // equality holds only while 75 IS the head. The re-aim is the converging form, not a deletion.
-    expect(JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8'))).toEqual(migrated)
+    //
+    // ⚠⚠ AND IT CAME DUE AT v76 (13.09, the psychologist's year), EXACTLY AS THE LINE ABOVE PREDICTED
+    // IT WOULD – the move wave 4 made to wave 3's line and wave 3 to wave 2's, verbatim and for the
+    // identical reason. `migrateSave` walks to the head, so the moment the head moved past 75 the
+    // migrated payload stopped being a v75 save and the direct equality could never hold again. The
+    // claim is unchanged and is made where it stays true: the v75 FIXTURE and the migrated v74 payload
+    // CONVERGE at the head, byte for byte, which is «the fixture is the migration's own output»
+    // carried one rung forward. A hand edit to either file still goes red here (ARM 5), which is the
+    // whole point of the line; v75's own shape is pinned by the case above (`schemaVersion` 75,
+    // `spiritShock` present and null), and v76's own «produced by the real migration» equality lives
+    // at its own rung, in tests/wave5-psychologist-schema.test.ts.
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v75.json`, 'utf8')))).toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a shock a save already has', () => {
@@ -349,7 +369,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
       expect(world.spiritShock, `${t}: the hazard stamped the mark on the week it ended`)
         .toEqual({ week, kind: 'breakup' })
       world.spirit = 75
-      accrueSpirit(world)
+      accrueSpirit(world, false)
       landed[t] = world.spirit
     }
     expect(landed.sunny, 'sunny is steady').toBe(48)
@@ -372,7 +392,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     for (const t of TEMPERAMENTS) {
       const { world } = endsOnAQuietRun(t)
       world.spirit = 70
-      accrueSpirit(world)
+      accrueSpirit(world, false)
       const intense = temperamentIntensity(t) === 'intense'
       expect(world.spirit, `${t}: the shock is not scaled a second time (that would read ${intense ? 27.5 : 52.4})`)
         .toBe(intense ? 36 : 48)
@@ -400,11 +420,11 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     // than a break-up: from 48 the next steady week must read 53 (the return, +5) and nothing else.
     const { world } = endsOnAQuietRun('sunny')
     world.spirit = 75
-    accrueSpirit(world)
+    accrueSpirit(world, false)
     expect(world.spirit, 'the ending week').toBe(48)
     expect(world.spiritShock, 'and the mark is still live – she is nowhere near back').not.toBeNull()
     world.week += 1
-    accrueSpirit(world)
+    accrueSpirit(world, false)
     expect(world.spirit, 'the NEXT week is the return rule alone – 48 + 5, not 48 + 5 − 22').toBe(53)
   }, 60_000)
 
@@ -414,7 +434,7 @@ describe('wave 4 T3 C – what an ending costs her', () => {
     const { world } = endsOnAQuietRun('fiery')
     world.spirit = 75
     world.bond = 64
-    accrueSpirit(world)
+    accrueSpirit(world, false)
     expect(world.spirit, 'she takes the shock').toBe(38)
     // ⚠ The 0.5/week regression toward 70 is the STANDING weekly rule and fires on every tick; what is
     // asserted is that the ending added nothing to it. 64 + 0.5 = 64.5 and not one half-point more.
@@ -448,7 +468,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
     for (const t of TEMPERAMENTS) {
       const { world, week } = endsOnAQuietRun(t)
       world.spirit = 75
-      accrueSpirit(world)
+      accrueSpirit(world, false)
       expect(world.spiritShock, `${t}: the mark survives its own setting tick`).toEqual({ week, kind: 'breakup' })
       expect(world.spirit, `${t}: and it is a long way under 68`).toBeLessThan(68)
     }
@@ -480,7 +500,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
       const live: boolean[] = []
       for (let k = 0; k < TRACE[intensity].length; k++) {
         world.week = week + k
-        accrueSpirit(world)
+        accrueSpirit(world, false)
         trace.push(world.spirit)
         live.push(world.spiritShock !== null)
       }
@@ -512,7 +532,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
     world.loveEpisodes = [episode(w - 20)]
     world.spiritShock = { week: w - 30, kind: 'breakup' }
     world.spirit = 64.5
-    accrueSpirit(world)
+    accrueSpirit(world, false)
     expect(world.spirit, 'a steady girl returns five points toward the LIFTED target of 75').toBe(69.5)
     expect(world.spiritShock, '⭐ 69.5 is past 68, so the mark comes off – it is a question about HER').toBeNull()
   })
@@ -527,7 +547,7 @@ describe('wave 4 T3 D – when the mark comes off', () => {
     world.week = w
     world.spirit = 40
     world.spiritShock = null
-    accrueSpirit(world)
+    accrueSpirit(world, false)
     expect(world.spirit, 'she returns three points and nothing happens to her').toBe(43)
     expect(world.spiritShock, 'and no mark is invented for a girl who is merely low').toBeNull()
   })
@@ -610,7 +630,7 @@ describe('wave 4 T3 E – the readers, and the Mood surface', () => {
     for (const t of TEMPERAMENTS) {
       const { world } = endsOnAQuietRun(t)
       world.spirit = 75
-      accrueSpirit(world)
+      accrueSpirit(world, false)
       const band = spiritBandOf(world.spirit)
       expect(band, `${t}: 48 and 38 are both under the knee, which is where «Heavy» lives`).toBe('heavy')
       expect(MOOD_WORD[band], `${t}: and the word is the owner's own`).toBe('Heavy')

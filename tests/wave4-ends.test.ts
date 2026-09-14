@@ -607,7 +607,13 @@ function weeklyRollsInSourceOrder(): ((world: WorldState) => void)[] {
     .map((l) => l.trim())
     .filter((l) => l.length > 0 && !l.startsWith('//') && !l.startsWith('*') && !l.startsWith('/*'))
   const i = code.indexOf('accrueCondition(world, playedThisWeek)')
-  const j = code.indexOf('accrueSpirit(world)')
+  // ⚠ RE-AIMED 13.09 BY WAVE 5's T4b (ruling J): the closing anchor is now
+  // `accrueSpirit(world, psychologistWorksThisWeek(world))` – the seat's working week handed down at
+  // the call site, because `engine/spirit.ts` cannot import the predicate without closing a value
+  // cycle. The claim is untouched («ends before arrival, both between the two accruals»), and an
+  // array `indexOf` that misses returns −1, which the `> i` below is red on. ⚠ Ruling J named two
+  // pins to re-aim and this is a FOURTH – the same anchor again, one wave-4 file over.
+  const j = code.indexOf('accrueSpirit(world, psychologistWorksThisWeek(world))')
   expect(i, 'the accrueCondition call moved').toBeGreaterThan(-1)
   expect(j, 'the accrueSpirit call moved').toBeGreaterThan(i)
   const span = code.slice(i + 1, j).filter((l) => l in LIFE_ROLLS)
