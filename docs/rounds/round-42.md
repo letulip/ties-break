@@ -710,7 +710,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   bench's minutes are its statistical power and cannot be «cut». Safety invariant + the note pinned
   in `tests/units-stall-classifier.test.ts` (the new ROUND 42 #33 block).
 
-- [ ] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
+- [?] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
   **measure first, then his ruling.** Entered off item 32's audit, which priced the wing by accident
   and then could not see it work.
 
@@ -758,3 +758,33 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
 
   ⚠ NOT this round's UI work: it is a measurement bundle of its own, alongside item 19's pricing
   audit, and it needs a quiet machine.
+
+  ⭐ **RUN 15.09 on his word («давай посмотрим на бенч сначала, потом решим»), and the prediction
+  above is WRONG in both halves.** Instrument `tools/composure-bench.ts` (paired arms: every arm plays
+  the same 20,000 seeds against the same opponent, one wing moved, nothing else); spec with the full
+  tables: [the-price-of-nerve-2026-09](../specs/the-price-of-nerve-2026-09.md).
+
+  | claim | predicted | measured |
+  | --- | --- | --- |
+  | ±20 composure → win rate | 1–3pp | **0.4–0.6pp** |
+  | ±20 composure → deciding sets | 3–6pp | **0.2–0.6pp** |
+  | ±20 stamina → win rate | «smaller still» | **1.0–1.5pp** – larger than composure, not smaller |
+
+  The arm was proven first (composure 0 vs 100 moves the loop +2.6pp and break points saved 53.6% →
+  56.8%): the wing is wired, it is simply small. **The price list, +20 of one wing on a real build
+  against the standing at #20:** groundstrokes **+18.0pp** · serve **+14.0pp** · return **+13.9pp** ·
+  stamina **+1.5pp** · **composure +0.4pp**. Isolated over the 40 points a career can cover,
+  groundstrokes buys +44.1pp and composure +1.1pp – **forty times**.
+
+  Three findings beyond the headline: (1) composure reaches break points saved and nothing else, and
+  even there **serve moves that statistic five times harder** (+3.3pp against +0.6pp); (2) the
+  close-set retention item 32 read off the two real careers **does not survive a controlled arm** –
+  it was confounded by opponent quality; (3) `ratingOf` is not lying: +4 rating for +20 composure is
+  worth ≈0.6pp at even odds, which is exactly what the loop delivers, so any fix belongs in the point
+  loop and not in the rating.
+
+  **His to rule now** (the spec's §«what a fix would have to be» prices each road): **A** raise the
+  price of nerve – the break-point term needs ≈2.5× to match stamina, ≈8× to be worth a third of a
+  serve point, and that is match physics, so a full bench pass follows it; **B** leave the model and
+  stop advertising the wing in the prologue and the handover; **C** both, in that order.
+
