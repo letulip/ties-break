@@ -17,12 +17,29 @@
 // cuts every `overBudgetCents` from. A free figure that subtracted the payroll would disagree with
 // the over-budget flags on the cards below it. The seats are a LISTING beside the meter.
 //
+// ⚠⚠⚠ ROUND 42 #42 (15.09) – AND THE PARAGRAPH ABOVE IS HISTORY, BY HIS WORD. It is kept verbatim
+// because it is the reasoning, not the verdict. «committed должен это и показывать»: the meter is the
+// payroll now, AND the engine moved with it (`overBudgetCents` is cut from the income less
+// `supportPayrollWeeklyCents`), so the objection above is satisfied rather than overruled – the tile
+// and the cards still describe one budget. §3 below is re-aimed in place and gains the arm that says
+// so; its old form is quoted where it stood.
+//
 // ⚠ MUTATION-VERIFIED – each arm was watched failing. Recorded in the round 42 handoff:
 //   * `seats` returns `[]` unconditionally            -> §1 and §2 go red; §3 stays green.
 //   * `seats` drops its `masseurHired` clause         -> the «hire the masseur» arms go red on BOTH
 //     hosts, alone, which is the item's own sentence.
 //   * `committedCents` becomes the sum of the seats   -> §3 goes red (and round 28 #8's guard with
 //     it), while §1/§2 stay green – the two claims really are separate.
+// ⚠ THAT LAST ROW IS NOW THE SHIPPED BEHAVIOUR (round 42 #42), so it is a description of the change
+//   rather than of a mutation. Its replacement, ⚠ COUNTS READ OFF THE RUNS AND NOT PREDICTED, each
+//   mutation applied alone and reverted (control 30/30 green before and after, over this file plus
+//   round28-household-block and round21-coach):
+//     * `committedCents` back to the coach's row alone  -> **2 red**: §3's FIRST arm here, and round
+//       28 #8's re-aimed §4 guard. §3's SECOND arm stays green.
+//     * the `supportPayrollWeeklyCents` term dropped out of `coachMarket`'s `coachBudgetCents`
+//       -> **1 red**: §3's SECOND arm, alone. §1, §2 and the first arm stay green.
+//   ⭐ THAT SEPARATION IS THE POINT: the tile's figure and the engine's flag are still two claims, and
+//   each has exactly one arm that can tell you which of them broke.
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ A RUNNER-SIZED CEILING – round 26 #16's rule for every mounted case over ~1s.
 vi.setConfig({ testTimeout: 30_000 })
@@ -180,28 +197,67 @@ describe('round 42 #23 – «Team budget», once, off the constant', () => {
 // ⚠⚠ ROUND 28 #8's STANDING GUARD, RESTATED HERE SO THE ITEM OWNS IT. «Can this family afford THIS
 // COACH» is round 21 #12's claim and the cap is the engine's own over-budget denominator, so the
 // seats are information and never a new subtrahend.
-describe('round 42 #23 – the committed figure is still the coach\'s, with a full payroll on screen', () => {
-  it('⭐⭐ free == cap − the COACH alone, with the masseur and the psychologist both hired', async () => {
-    const world = proCareer('r42-23-arith')
+// ⚠⚠⚠ RE-AIMED BY ROUND 42 #42 (15.09), AND THE SECTION NOW ASSERTS THE OPPOSITE OF WHAT IT DID.
+// Its old title was «the committed figure is still the coach's, with a full payroll on screen» and
+// its arm was «⭐⭐ free == cap − the COACH alone, with the masseur and the psychologist both hired».
+// That was item 23's deliberate restraint – the tile listed three people and counted one – and the
+// owner looked at the result and said «committed должен это и показывать». So the restraint is
+// lifted BY HIM, and this arm is the same arithmetic pointed the other way.
+//
+// ⚠ THE REASON THE OLD ARM GAVE IS NOT BEING DISMISSED, IT IS BEING SATISFIED. It said a free figure
+// that subtracted the payroll «would disagree with the engine's own over-budget flags on the cards
+// below it». Item 42 moved the engine with the tile: `coachMarket`'s `overBudgetCents` is cut from
+// `familyWeeklyIncomeCents − supportPayrollWeeklyCents`. So this section gains a SECOND arm holding
+// exactly that – the tile and the cards, on one mounted screen, agreeing about one budget – which is
+// the property the old guard was really protecting.
+describe('round 42 #42 – the committed figure is the WHOLE PAYROLL, and the cards agree with it', () => {
+  it('⭐⭐ committed == every filled seat, and free == cap − that, with all three hired', async () => {
+    const world = proCareer('r42-42-arith')
     hireMasseur(world, true)
     hirePsychologist(world, true)
     const snap = toSnapshot(world)
-    expect(snap.masseurSalaryCents, 'the arm needs a payroll to be wrongly absorbed').toBeGreaterThan(0)
+    expect(snap.masseurSalaryCents, 'the arm needs a payroll to be absorbed at all').toBeGreaterThan(0)
     expect(snap.psychologistSalaryCents).toBeGreaterThan(0)
 
     // ⚠ REBUILT FROM THE SNAPSHOT'S OWN FIELDS, never read back off the component.
     const coach = snap.coachMarket.find((r) => r.current)?.weeklyCents ?? 0
+    const payroll = coach + snap.masseurSalaryCents + snap.psychologistSalaryCents
     const cap = snap.coachBilling.weeklyIncomeCents
     const wrapper = await mountMarket(snap)
 
     const legend = clean(wrapper.find('.budget-legend').text())
-    expect(legend, 'the committed figure silently absorbed the support staff').toContain(
+    expect(legend, 'the committed figure is the payroll his tile lists').toContain(`${formatCents(payroll)} committed`)
+    expect(legend, 'the cap line did not survive the change').toContain(`${formatCents(cap)} weekly cap`)
+    // ...and it is no longer the coach alone, which is the whole of his sentence.
+    expect(legend, 'the coach`s line alone is not what «committed» says any more').not.toContain(
       `${formatCents(coach)} committed`,
     )
-    expect(legend, 'the cap line did not survive the rename').toContain(`${formatCents(cap)} weekly cap`)
-    expect(legend).not.toContain(formatCents(coach + snap.masseurSalaryCents))
+    expect(clean(wrapper.find('.budget-free').text())).toContain(formatCents(Math.max(0, cap - payroll)))
+  })
 
-    expect(clean(wrapper.find('.budget-free').text())).toContain(formatCents(Math.max(0, cap - coach)))
+  it('⭐⭐⭐ ...and the ENGINE agrees: a rung is flagged against the income the payroll has left', async () => {
+    // ⚠ THIS IS THE ARM THE OLD GUARD WAS ACTUALLY ABOUT. Round 28 #8 §4 and item 23's own note both
+    // refused the payroll-inclusive meter on ONE ground: it would disagree with `overBudgetCents`.
+    // So the claim worth pinning is not «which figure is on the tile» but «the tile and the cards are
+    // one budget», and it is asserted here against the engine's own rows.
+    const world = proCareer('r42-42-engine')
+    hireMasseur(world, true)
+    hirePsychologist(world, true)
+    const snap = toSnapshot(world)
+    const payrollSupport = snap.masseurSalaryCents + snap.psychologistSalaryCents
+    expect(payrollSupport, 'there really is a support payroll to subtract').toBeGreaterThan(0)
+    const budget = Math.max(0, snap.coachBilling.weeklyIncomeCents - payrollSupport)
+    for (const row of snap.coachMarket) {
+      expect(row.overBudgetCents, `${row.name}: flagged against income less the payroll`).toBe(
+        Math.max(0, row.weeklyCents - budget),
+      )
+    }
+    // ⚠ AND THE ARM HAS TO CONTAIN THE THING IT IS PROVING: at least one rung must actually be over,
+    // or every line above would pass with the payroll term deleted.
+    expect(
+      snap.coachMarket.filter((r) => r.overBudgetCents > 0).length,
+      'some rung really is over this family`s payroll-adjusted budget',
+    ).toBeGreaterThan(0)
   })
 })
 

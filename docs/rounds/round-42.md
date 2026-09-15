@@ -1744,6 +1744,80 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   line is almost never silent, which answers his «не вижу отчислений» at the root rather than on the
   screen.
 
+  ⭐ **SHIPPED AND MEASURED (round 42 bundle, 15.09).** `ECONOMY.staffShare` gains a third rung per
+  seat and `staffResultShareBps` reads it instead of returning a hard 0 below a final. The coach is
+  **1000 / 1000 / 1000** – ten per cent at every finish, no depth (`finalBps` moved 500 → 1000 with
+  the rest: «за 2е только по-меньше» was a statement about depth, and his ruling removes depth). The
+  masseur is **300 / 150 / 0** – round 24's exact behaviour, now written as a rate. `finalizeTournament`
+  is untouched line for line: same gross base, same single rounding, same family-keeps-the-remainder
+  subtraction, same order (round 41 A1's property is unreopened – every hand cuts the same gross).
+  Full predicted-vs-measured: docs/specs/coach-every-cheque-2026-09.md. Instrument
+  `tools/r42-coach-every-cheque.ts`, which reuses item 25's corridor print (`tools/_corridor.ts`,
+  extracted verbatim) so the two specs' tables read against each other.
+
+  **THE DIRECT COST, which is the part that is exact:**
+
+  | week 400 | BEFORE 10/5/0 | AFTER 10 flat |
+  | --- | ---: | ---: |
+  | the coach's cut, mean per career | $41,207 | **$185,580 · ×4.5** |
+  | his cut as a share of gross prize | 2.03% | **8.48%** |
+  | prize weeks that pay him at all (item 11's memo) | 11.0% | **77.5%** |
+
+  So the family pays a further **6.45 pp of every prize dollar**, and the predicted ×2.2–3.3 MISSED –
+  titles and finals are a far smaller share of a career's prize money than the prediction assumed.
+
+  ⚠⚠ **THE CORRIDOR MEANS AT n=36 ARE NOT RESOLVABLE AND THE SPEC SAYS SO RATHER THAN QUOTING THEM.**
+  The wallet's mean fell 4.0% at week 400 while its MEDIAN rose 6.0%, prize banked rose 5.0% and gross
+  prize 7.9% – a cut cannot make a family richer, and the prediction's own reading key (R9: «prize
+  banked moves under 2%, or entry decisions changed») is what caught it. 2 of 36 pairs played different
+  tournaments and prize money is heavy-tailed enough for two careers to own a 36-career mean.
+
+  ⭐⭐ **THE NEAR-THE-EDGE ANSWER, which IS resolvable because it is a per-career census:**
+
+  * **ZERO careers changed survival state, in either direction.** 0 went under water only in the after
+    arm; 0 ended early only in the after arm; and 0 the other way.
+  * the cohort that was **ever under water before** pays the most in proportion – median wallet
+    **−14.8%**, weeks under water **4.1 → 4.4** – and not one of its fifteen crosses a line it was not
+    already on.
+  * the **poorest quartile moves by $0**, and the reason is the coach and not the balance: only **5 of
+    its 9 careers have a coach at all**. The weight falls on the COACHED mid-career, which is the
+    cohort the item named.
+  * ⚠ «wallet in weeks of its own burn» falls 521 → 276, but that is mostly the DENOMINATOR – the cut
+    is a spending row on every prize week now, so the 12-week burn window books ~10% of any big cheque.
+    The survival census is the safety reading.
+
+  ⚠ **THE MASSEUR – ANSWERED WITH NUMBERS, NOT DECIDED.** Recommendation: **he STAYS a title-and-final
+  bonus.** Priced with both arms hiring him (the first run was a NULL ARM – neither arm ever filled the
+  seat and it printed $0 vs $0; recorded in the spec rather than erased). On the repaired arms, 31 of
+  36 careers pay him: his cut goes **$1,754 → $17,546, ×10, +$15,792 per career** – **11% of what the
+  coach change costs**. Against that: his own research is explicit that the rest of the team is
+  salaried and rarely on a share (the audit marked our masseur ✅ «keep»), and the corridor arms cannot
+  back the change either way because hiring him at all puts 25 of 36 careers under water, which swamps
+  a $16k signal. ⚠ If he wants the masseur to follow, it is ONE number –
+  `ECONOMY.staffShare.masseur.everyBps` 0 → 300 – and nothing else moves.
+
+  ⚠⚠ **AND ONE COPY BLOCKER, HIS TO ANSWER (invariant 4 – nothing was changed).** The coaches page
+  says, at `.cm-share-note`: «Every coach here also takes 10% of a prize cheque when she wins a tour
+  title and 10% when she is runner-up – **nothing below a final**, and nothing on the junior ladder,
+  which pays no prize money.» The bolded clause is now FALSE – the engine pays below a final. The
+  Money screen's own line («10% of a title cheque, 10% of a lost final») is not false but now quotes
+  one number twice. **Both strings are untouched and both pins still assert them verbatim, each with a
+  ⚠ note naming this item.** The wording is his.
+
+  ⚠ **THE FROZEN CAREERS MOVED – TWO OF FIVE CELLS, NOT RE-STAMPED.** Per-key protocol run FIRST
+  (`tools/frozen-key-diff.ts`, control = the change NEUTRALISED IN PLACE, md5 checked back to
+  pristine), full record in `tests/coachTravelEdgeFixtures.ts`'s own dated block:
+  `FROZEN.middleGrinder` (5/0), `FROZEN.eliteGrinder` (8/0) and `PRE_R28B.highPlayer` (6/1) are
+  **byte-identical**; `FROZEN.selfTravelling` (0/1) moves **37 keys of 88** and
+  `PRE_R28B.middlePlayer` (5/1) moves **exactly 5 of 87**. ⭐ Attributed with two further single-change
+  arms: 0/1's 37 are **all #43 and none of #41** (she is self-coached – no coach share can touch her –
+  and she is the working family the cameo pays), and 5/1's 5 are **all #41 and none of #43**, and they
+  are MONEY keys only – `results`, `skills`, `condition`, `bond` and `spirit` are byte-identical, so
+  the coach's cut changed what the family banked and not one match she played. ⚠⚠ `rngMain` is
+  byte-identical on every cell in every arm and `tests/condition.test.ts` is GREEN – the frozen MAIN
+  capture (41550 / e6b0c709) did not move and was not re-pinned. **28 red cases in all, and the stamp
+  is the architect's.**
+
 - [ ] **42. «committed должен это и показывать» (15.09) – the team budget spends against the WHOLE
   payroll.** The tile lists coach + masseur + psychologist but its meter counts only the coach, so
   the three rows add to $843 while «committed» says $343 – one tile disagreeing with itself, which is
@@ -1755,6 +1829,41 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   seat is the wrong cap for three), and the bench prints what it does to hiring across the four
   backgrounds. His numbers off that table.
 
+  ⭐ **SHIPPED AND MEASURED (round 42 bundle, 15.09).** `committedCents` is the sum of the tile's own
+  `seats`, AND the engine moved with it: `coachMarket` cuts every `overBudgetCents` from
+  `familyWeeklyIncomeCents − supportPayrollWeeklyCents` (one new function, also read by
+  `householdWeekly`, so the two sides cannot describe two budgets). The coach's own line survives as
+  `coachWeeklyCents` for the hire confirmation, whose sentence is about the COACHING bill and is
+  untouched to the character. Round 28 #8's §4 guard is re-aimed in place with a ⚠ note naming this
+  item and its old assertion quoted; `round42-team-budget.test.ts` §3 is re-aimed and GAINS the arm
+  the old guard was really about – the tile and the cards agreeing about one budget.
+  Full table: docs/specs/team-budget-payroll-2026-09.md. `tools/r42-team-budget-cap.ts`, 84 market
+  readings, every seat filled the week it unlocks.
+
+  ⚠ **«Who can be hired» is honestly «who is FLAGGED».** `hireCoach` never consults the budget and the
+  row's `:disabled` is `current || lockedPoints`, so this item cannot move a wallet, a ranking or an
+  ending. Every number below is a count of warnings.
+
+  | | BEFORE | AFTER |
+  | --- | ---: | ---: |
+  | rungs flagged over budget | 26.8% | **55.4%** |
+  | her OWN standing coach flagged | 1 of 84 | **22 of 84 · 26.2%** |
+  | payroll as a share of the week's income (median) | – | **88%**; 106–127% in the pro era; **139% working** |
+  | the household's whole OUT over that income (pro era) | – | **104% / 127% / 106%** |
+
+  ⚠⚠ **THE CAP RE-MEASUREMENT ANSWERS THE OPPOSITE QUESTION TO THE ONE ASKED.** The worry was that
+  100% of the week's income is too GENEROUS for three seats. It is too MEAN: the payroll alone is
+  88% of that income at the median and 139% for a working family, because `familyWeeklyIncomeCents`
+  excludes prize money on purpose. Every cap below 1.00 is worse on every column and the sweep has no
+  minimum in it (1.00 → 0.50: flagged 55.4% → 87.1%, own coach 26.2% → 38.1%, median free $98 → −$254).
+
+  ⭐ **PROPOSED CAP: leave it at 1.00 – the week's income, whole.** Round-21 #12's «a weekly bill has
+  to fit the week» is what 1.00 means and it is his own ruling; nothing is refused, so a warning costs
+  a career nothing; and where the flag now fires it is TRUE – the tile was hiding a real overspend.
+  ⚠ **If the 26% bothers him, the cheap fix is not the cap:** exempt the row she is ALREADY ON from
+  the flag (it is a standing arrangement, not an offer, and the card says «Current» rather than a
+  price). That takes the column to 0 at every cap. Behaviour change, therefore his word, not shipped.
+
 - [x] **43. «сними потолок, а кулдаун давай 4» (15.09) – item 5's two numbers, ruled.** `seasonCap`
   goes away entirely and `cooldownWeeks` becomes **4**. ⚠ **One honest consequence, measured and
   stated rather than discovered later:** his original complaint was «раз в 3-4 недели», and a cooldown
@@ -1762,10 +1871,60 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   two- and three-week clusters are gone. If the cadence he reported still reads as too fast in play,
   the floor is one constant.
 
+  ⭐ **SHIPPED AND MEASURED (round 42 bundle, 15.09).** `seasonCap` is gone – the constant AND its
+  reader in `cameoWillingWeeks` – and `cooldownWeeks` is **4**. Re-run of `tools/sponsor-cadence.ts`,
+  **162 careers per arm** (9 presets x 18 seeds) x 4 seasons; the full predicted-vs-measured table is
+  docs/specs/sponsor-cadence-2026-09.md §5.
+
+  | working family | BEFORE (no cooldown, no cap) | **HIS RULING: cooldown 4, no cap** |
+  | --- | ---: | ---: |
+  | cheques a season | 1.29 | **1.09** |
+  | dollars a season | $1,322 | **$1,125 · −15%** |
+  | mean gap | 13.7 wks | **16.4 wks** |
+  | **P(gap ≤ 4 weeks)** | 24.7% | **6.2%** |
+  | smallest measured gap | 1 | **4** |
+  | fullest season any career took | 7 | **5** (the removed cap was 3) |
+
+  ⚠ **DO FOUR-WEEK GAPS COME BACK? YES, ABOUT ONE GAP IN SIXTEEN.** The floor is exactly four and it
+  is REACHED: 6.2% of measured gaps land on it, against 24.7% of gaps at four-or-under before the
+  wave. So one-, two- and three-week gaps are structurally impossible, and «раз в 4 недели» happens
+  roughly as often as his own die allows (`rollChance` 0.06). ⚠ The prediction said 2–4% and missed
+  LOW – the cap had been doing more of the anti-cluster work than the cooldown was.
+
+  ⚠ **The one-word alternative, priced so it needs no new run:** `cooldownWeeks: 5` removes the
+  four-week gap entirely (0.0% of gaps) for two further points of money (−17% against −15%). Stated,
+  not recommended – the number is his.
+
 - [x] **44. «пока не в туре – доля не растёт» (15.09) – the college-pause sentence, his meaning.**
   Item 25's shipped note promises «10 points more every birthday» while the ramp is paused in college,
   which is false for those four years. He gave the sense and the wording is drafted from it; the draft
   lands in this ledger for his read before it ships.
+
+  ⭐ **THE DRAFT, VERBATIM, ONE SENTENCE – NOT SHIPPED.** It replaces the second half of
+  `ownAccountNote`'s non-capped branch (`src/engine/kidLife.ts`); the figures below are the engine's
+  own, shown at a 30%-rung example:
+
+  > **Her own account – $2,400.00. She keeps 30% of every prize cheque now, 10 points more every
+  > birthday she spends on tour, up to 60%.**
+
+  ⚠ **EXACTLY WHAT CHANGES, so the diff can be read rather than trusted.** The shipped clause is
+  «10 points more every birthday up to 60%.» – no comma. The draft inserts **three words, «she spends
+  on tour», plus the comma the insertion requires** to keep the sentence parsable («…every birthday
+  she spends on tour up to 60%» does not read). Nothing else moves: the balance clause, «of every
+  prize cheque», «up to 60%» and the sponsor and brand clauses that follow are the shipped sentence
+  to the character, and both percentages are still read from `kidPrizeShareBps` / `ECONOMY.kidShare`
+  rather than typed, so a retune moves the sentence with the money.
+
+  ⚠ **It states his rule by implication, not by negation.** «пока не в туре – доля не растёт» is a
+  negative sentence; this one ties the growth to tour birthdays and lets the reader draw it. If he
+  wants the negative said out loud, the one-clause extension is «…, up to 60% – the years she is away
+  do not count» – named here so he can choose, NOT drafted as a second wording.
+
+  ⚠⚠ **AND THE SAME FALSEHOOD LIVES IN A SECOND STRING, WHICH THIS ITEM DOES NOT COVER.**
+  `ownAccountCard`'s note (round 42 #10, the Kid page's card) says **«Her share grows 10 points every
+  birthday, up to 60%.»** – the same promise in a different phrasing, equally untrue in college. One
+  drafted sentence cannot repair it without inventing a second wording, which invariant 4 forbids.
+  **His word is needed on whether that card takes the same qualifier.**
 
 - [ ] **45. HIS RULINGS OF 15.09 ON THE THREE OPEN ASKS** – recorded together because they arrived
   together.

@@ -209,12 +209,14 @@ export function sponsorNeedMet(input: { fundsCents: number; courtCents: number; 
 }
 
 // =================================================================================================
-// ⭐⭐⭐ ROUND 42 #5 – WHEN THE SHOP IS WILLING: A COOLDOWN AND A SEASON CAP, DERIVED NOT REMEMBERED
+// ⭐⭐⭐ ROUND 42 #5 – WHEN THE SHOP IS WILLING: A COOLDOWN, DERIVED AND NOT REMEMBERED
+// ⭐⭐⭐ ROUND 42 #43 – ...AND THE SEASON CAP THAT SHIPPED BESIDE IT IS GONE, by his word off the
+//                     printed table: «сними потолок, а кулдаун давай 4».
 // =================================================================================================
 //
-// THE OWNER, 15.09: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели». The numbers, the
-// measurement and the argument for 6 and 3 are on `ECONOMY.sponsor` beside the two constants; this
-// is the mechanism, and the only thing worth explaining here is WHY IT IS A SCHEDULE.
+// THE OWNER, 15.09: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели». The number, the
+// measurement and the argument for 4 are on `ECONOMY.sponsor` beside the constant; this is the
+// mechanism, and the only thing worth explaining here is WHY IT IS A SCHEDULE.
 //
 // ⚠⚠ A COOLDOWN NEEDS A MEMORY, AND THIS CAREER HAS NOWHERE TO PUT ONE. The three roads were:
 //   (a) PERSIST the last cameo week – a save-schema move (invariant 3: bump, append-only migration,
@@ -236,9 +238,11 @@ export function sponsorNeedMet(input: { fundsCents: number; courtCents: number; 
 // per-week draw count pinned in tests/condition.test.ts and tests/rivals.test.ts. See the block at
 // the cameo's site in `world/phaseFinance.ts`, which is written against the same constraint.
 //
-// ⚠ THE SEASON IS THE CAP'S UNIT AND THE SEASON IS WHERE THE WALK STARTS, so the cost is O(52) and
-// not O(week). The cooldown, though, does not respect the wrap – a cheque in week 51 must still
-// silence week 2 – so the PREVIOUS season is walked first and its last willing week is carried in.
+// ⚠ THE SEASON IS WHERE THE WALK STARTS, so the cost is O(52) and not O(week). ⚠ It started there
+// because a sub-stream has to be keyed on something bounded, NOT because the (now removed, #43) cap
+// counted seasons – the walk is unchanged by the cap's removal. The cooldown does not respect the
+// wrap – a cheque in week 51 must still silence week 2 – so the PREVIOUS season is walked first and
+// its last willing week is carried in.
 // ⚠ THAT CARRY IS EXACT TO ONE SEASON AND NOT TO THE WHOLE CAREER, which is a real and named
 // approximation: the previous season is walked with no carry of its own, so a cheque in the last
 // weeks of the season BEFORE it could in principle have pushed that season's first willing week
@@ -254,7 +258,7 @@ export function sponsorNeedMet(input: { fundsCents: number; courtCents: number; 
 /** The weeks of `season` on which a shop is willing, in order. `carry` is the last willing week of
  *  the season before, for the cooldown that crosses the wrap – or null when there is none. */
 function cameoWillingWeeks(seed: string, season: number, carry: number | null): number[] {
-  const { rollChance, cooldownWeeks, seasonCap } = ECONOMY.sponsor
+  const { rollChance, cooldownWeeks } = ECONOMY.sponsor
   const rng = rngFromSeed(`${seed}:sponsor:cameo:${season}`)
   const out: number[] = []
   let last = carry
@@ -262,8 +266,15 @@ function cameoWillingWeeks(seed: string, season: number, carry: number | null): 
     // ⚠ DRAWN FIRST AND UNCONDITIONALLY – see the RNG note above. A draw taken inside the branches
     // would make week `i`'s number depend on how many cheques preceded it, and the schedule would
     // stop being a function of (seed, season).
+    //
+    // ⭐⭐⭐ ROUND 42 #43 – AND THE SEASON CAP THAT STOOD ON THE NEXT LINE IS GONE, by his ruling off
+    // the printed table: «сними потолок, а кулдаун давай 4». It read
+    // `if (out.length >= seasonCap) continue` and it was costing a further fifth of the cameo money
+    // on top of the cooldown (spec §3). ⚠ ITS REMOVAL CANNOT MOVE A DIE: the draw above is taken
+    // before every branch and always was, precisely so the walk's arithmetic and its dice are
+    // independent. The SEASON is still the unit the walk starts from – that is the cost argument in
+    // the block above (O(52) rather than O(week)) and never was a statement about the cap.
     const roll = rng()
-    if (out.length >= seasonCap) continue
     const week = season * WEEKS_PER_YEAR + i
     if (last !== null && week - last < cooldownWeeks) continue
     if (roll >= rollChance) continue

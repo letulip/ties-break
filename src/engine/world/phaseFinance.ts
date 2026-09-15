@@ -586,11 +586,14 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // it, and the frozen capture (41550 / e6b0c709) cannot see this wave. The gate is post-draw
   // arithmetic on `split`, which was computed above off draws that had already happened.
   //
-  // ⭐⭐⭐ ROUND 42 #5 (15.09) – AND THE SHOP NOW HAS A COOLDOWN AND A SEASON CAP, WHICH IS THE ONE
-  // THING THIS BLOCK HAS NEVER HAD. The owner: «Спонсор деньгами реально засыпает рабочую раз в 3-4
-  // недели». The numbers are `ECONOMY.sponsor.cooldownWeeks` / `seasonCap` (proposed, his to
-  // confirm) and the mechanism is `sponsorCameoWilling` in world/sponsors.ts – read its block for
-  // why a cooldown that cannot be persisted has to be DERIVED, and for the price paid below.
+  // ⭐⭐⭐ ROUND 42 #5 (15.09) – AND THE SHOP NOW HAS A COOLDOWN, WHICH IS THE ONE THING THIS BLOCK
+  // HAS NEVER HAD. The owner: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели». The
+  // number is `ECONOMY.sponsor.cooldownWeeks` and the mechanism is `sponsorCameoWilling` in
+  // world/sponsors.ts – read its block for why a cooldown that cannot be persisted has to be
+  // DERIVED, and for the price paid below.
+  // ⭐⭐⭐ ROUND 42 #43 (15.09) – and his ruling off that item's printed table: «сними потолок, а
+  // кулдаун давай 4». The season cap that shipped beside the cooldown is GONE, constant and reader
+  // both, and the cooldown is 4. ⚠ Neither half touches the two dead draws below.
   //
   // ⚠⚠ THE TWO MAIN DRAWS BELOW ARE DELIBERATELY DEAD AND MUST NOT BE DELETED. A cooldown has to
   // look BACKWARD, and a MAIN draw taken in week 340 cannot be re-derived in week 346 – the stream's

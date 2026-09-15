@@ -409,16 +409,20 @@ describe('T13 §C – the frozen corpus, and what its zero is worth', () => {
     // what stops it. If this ever goes green-by-vacancy the zero above becomes worthless, which is
     // why the reachability is asserted rather than described.
     const ARM_WEEKS = 400
+    // ⚠⚠ ROUND 42 #41/#43 – `tier` JOINS `hiredAt`, AND THE REASON IS A REAL MEASUREMENT. See the
+    // ⚠⚠ block under the arm: the rung is now read AT THE HIRE rather than off `world.coachId` at
+    // week 400, because whether the bench's own policy still has him ninety weeks later is a fact
+    // about `econ-bench`'s release rule and not about the gate this case is testing.
     const armWalk = (enabled: boolean) => {
       GATE.enabled = enabled
       const { world, rng } = openCareer(PRESETS[8], 0, POLICIES[1])
-      let hiredAt: { week: number; points: number } | null = null
+      let hiredAt: { week: number; points: number; tier: string } | null = null
       let prev = world.coachId
       for (let w = 0; w < ARM_WEEKS; w++) {
         stepCareerWeek(world, rng, POLICIES[1])
         if (world.coachId !== prev) {
           if (world.coachId !== null && hiredAt === null) {
-            hiredAt = { week: world.week, points: kidPoints(world, 'domestic') }
+            hiredAt = { week: world.week, points: kidPoints(world, 'domestic'), tier: coachTierById(world.coachId) }
           }
           prev = world.coachId
         }
@@ -428,9 +432,27 @@ describe('T13 §C – the frozen corpus, and what its zero is worth', () => {
 
     const armOff = armWalk(false)
     GATE.enabled = SHIPPED
+    // ⚠⚠ RE-AIMED BY ROUND 42 #41 AND #43 (15.09), AND WHAT MOVED IS THE HARNESS, NOT THE GATE. This
+    // read `expect(armOff.world.coachId, 'and with the gate off she ends the walk with him')` plus a
+    // tier read off that same field at week 400. Both went red in the round-42 economy bundle, and
+    // the attribution was run rather than assumed – EITHER change alone is sufficient, and with BOTH
+    // neutralised in place the file is 9/9 green (the control that says the move is real):
+    //
+    //   coach cut on every cheque (#41) live, sponsor cadence (#43) neutralised -> RED
+    //   sponsor cadence live, coach cut neutralised                             -> RED
+    //   both neutralised                                                        -> 9 passed (9)
+    //
+    // WHY: `econ-bench`'s `reviewCoach` releases the coach the moment the trailing 26-week net is
+    // negative AND the cushion is thin, checked EVERY week («letting him go is forced»). #41 puts a
+    // coaching expense on every prize week and #43 re-times the sponsor drip, so a career sitting on
+    // that knife edge at week ~310 now lets him go before 400. ⚠ THAT IS THE BENCH POLICY'S RULE
+    // FIRING CORRECTLY, not the elite gate doing anything – the gate is not consulted on a release.
+    //
+    // ⭐ SO THE RUNG IS READ AT THE HIRE, WHICH IS WHERE THIS CASE'S CLAIM ACTUALLY LIVES, and the
+    // arm is STRONGER for it: «the corpus CAN reach an elite hire below the bar, past the freeze
+    // horizon» no longer depends on a harness decision taken ninety weeks after the fact.
     expect(armOff.hiredAt, 'the corpus CAN reach an elite hire – this is the arm, not a hypothetical').not.toBeNull()
-    expect(armOff.world.coachId, 'and with the gate off she ends the walk with him').not.toBeNull()
-    expect(coachTierById(armOff.world.coachId!), 'an ELITE coach – the rung the gate is about').toBe('elite')
+    expect(armOff.hiredAt!.tier, 'an ELITE coach – the rung the gate is about').toBe('elite')
     expect(armOff.hiredAt!.points, 'taken on below the bar, which is the case the gate exists for').toBeLessThan(GATE.minPoints)
     expect(armOff.hiredAt!.week, 'and it happens well past the 156-week freeze horizon').toBeGreaterThan(FREEZE_WEEKS)
 
@@ -449,8 +471,10 @@ describe('T13 §C – the frozen corpus, and what its zero is worth', () => {
       .toBeLessThan(GATE.minPoints)
     expect(armOn.world.peakDomesticPoints, 'and the banked high-water is the fact that did it')
       .toBeGreaterThanOrEqual(GATE.minPoints)
-    expect(armOn.world.coachId, '...and she finishes the walk WITH him – the door stayed open').not.toBeNull()
-    expect(coachTierById(armOn.world.coachId!), 'an ELITE coach, kept').toBe('elite')
+    // ⚠ ROUND 42 #41/#43 – read at the hire, for the reason written out on the `armOff` half above:
+    // whether the BENCH's release rule still has him at week 400 is not a fact about this gate.
+    expect(armOn.hiredAt!.tier, 'an ELITE coach – the door the banked high-water opened').toBe('elite')
+    expect(armOn.hiredAt!.week, '...past the freeze horizon, like its twin above').toBeGreaterThan(FREEZE_WEEKS)
   })
 })
 

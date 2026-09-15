@@ -120,8 +120,12 @@ export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, COACH_EDGE_REVEAL_WEEKS }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+// ⭐⭐ ROUND 42 #42 – `supportPayrollWeeklyCents` joins the barrel: it is read by `coachMarket`'s own
+// affordability arithmetic and by `householdWeekly`, and the bench that priced the cap
+// (`tools/r42-team-budget-cap.ts`) asks it the same question the screens do rather than summing two
+// salaries a third time.
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. ⚠ `GEAR_CATEGORY_LINE` came back from equipment.ts to this
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
@@ -868,6 +872,20 @@ function finalizeTournament(world: WorldState): void {
     // INDEPENDENT OF ANY TRAVEL SWITCH – «тренер может не ездить, но долю получать … вполне
     // может» – but only a FILLED seat: a self-coached family owes no coach share and an empty
     // table no masseur share.
+    //
+    // ⭐⭐⭐ ROUND 42 #41 (15.09) – AND THE FIRST OF THOSE SENTENCES NO LONGER DESCRIBES THE COACH.
+    // His ruling, off his own research: «10% безусловных отчислений с любых призовых, независимо от
+    // глубины прохода». The coach's `everyBps` is 1000, so `staffPrizeShareCents('coach', …)` is
+    // positive at EVERY finish and the `coaching` row below is written on a first-round cheque too.
+    // ⚠ NOT ONE LINE OF THE ARITHMETIC HERE CHANGED FOR IT, which is the point of the rates living on
+    // `ECONOMY`: the gates (pro tour, filled seat, travel-blind), the gross base, the single rounding
+    // and the family-keeps-the-remainder subtraction are all exactly what round 24 built.
+    // ⚠ THE MASSEUR KEEPS THE TITLE-AND-FINAL SHAPE (`everyBps: 0`), so his block below is still
+    // silent below a final – whether he follows the coach is the owner's open question, measured in
+    // docs/specs/coach-every-cheque-2026-09.md §5 and deliberately not decided here.
+    // ⚠ THE ORDER IS UNTOUCHED AND IT STILL CANNOT MATTER: her share comes off the GROSS above and
+    // both staff shares come off that same GROSS, so no hand shrinks another's base. That is round 41
+    // A1's pinned property and the every-cheque arm rides it rather than reopening it.
     //
     // ⚠ BOTH SHARES OFF THE GROSS, EACH ROUNDED ONCE, THE FAMILY KEEPS THE REMAINDER – the kid
     // ramp's own discipline, fourth and fifth hands on the same cheque: her share is untouched

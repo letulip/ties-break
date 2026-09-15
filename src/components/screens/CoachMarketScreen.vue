@@ -576,6 +576,12 @@ function rowLabel(r: Row): string {
 // the meter would have gone from a wrong number to "$0.00 /week free, $0.00 weekly cap" with a full
 // bar beside it. `coachBilling.weeklyIncomeCents` is the same figure the engine cuts every
 // `overBudgetCents` from, so the meter and the rows cannot disagree.
+// ⭐⭐⭐ ROUND 42 #42 – AND THAT LAST SENTENCE IS THE WHOLE REASON THIS ITEM TOUCHED THE ENGINE. His
+// «committed должен это и показывать» folds the masseur and the psychologist into the committed
+// figure, so the engine's `overBudgetCents` had to be cut from the income LESS that payroll on the
+// very same tick - otherwise the meter would say the week is full while the card under it says the
+// rung fits, which is the exact defect round-21 #12 shipped and this note was written about. One
+// function, `supportPayrollWeeklyCents`, read by both sides.
 const current = computed<Row | null>(() => rows.value.find((r) => r.current) ?? null)
 // ⭐⭐ ROUND 36 PHASE 6 – THE METER'S THREE FIGURES MOVED INTO `composables/coachingBudget.ts`, and
 // nothing about them changed: the same three lines, the same fields, the same comments, carried
@@ -590,7 +596,7 @@ const current = computed<Row | null>(() => rows.value.find((r) => r.current) ?? 
 // the name both come out of the composable, so the meter here and the rail's shortcut on every
 // desktop page say one thing. The arithmetic above is untouched; see the composable's header for why
 // the committed figure stays the coach's.
-const { committedCents, capCents, freeCents, meterPct, seats } = useCoachingBudget()
+const { committedCents, coachWeeklyCents, capCents, freeCents, meterPct, seats } = useCoachingBudget()
 
 /** ⭐ ROUND 29 #13 – WHAT A FINISH PAYS HIM, as a percentage, straight off the engine's own rule.
  *
@@ -636,7 +642,11 @@ const pending = ref<Row | null>(null)
 const confirmMessage = computed(() => {
   const r = pending.value
   if (!r) return ''
-  const now = committedCents.value
+  // ⭐⭐⭐ ROUND 42 #42 – `coachWeeklyCents` AND NOT `committedCents`, WHICH IS NOW THE WHOLE PAYROLL.
+  // The sentence below is his and is untouched to the character: it is about the COACHING bill, so
+  // subtracting the masseur and the psychologist from one rung's price would have made it quote a
+  // number that describes nothing. Same computed this line has always read; it only has a name now.
+  const now = coachWeeklyCents.value
   const delta = r.weeklyCents - now
   const change =
     delta === 0

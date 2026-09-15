@@ -47,6 +47,27 @@ import { useGameStore } from '../stores/game'
 // most-repeated defect wearing a feature's clothes. The household's whole week is a DIFFERENT
 // question and already has its answer one strip down.
 // =================================================================================================
+//
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #42 – ...AND THE PARAGRAPH ABOVE IS NOW HISTORY, BY HIS WORD. IT IS KEPT VERBATIM.
+// =================================================================================================
+//
+// THE OWNER, 15.09: «committed должен это и показывать.» He was looking at the tile item 23 shipped:
+// three rows adding to $843, and a «committed» of $343 under them. One tile disagreeing with itself.
+//
+// ⚠⚠ THE OBJECTION ABOVE WAS NOT WRONG – IT WAS A CONSTRAINT, AND THE CONSTRAINT IS WHAT WAS BUILT.
+// «A free figure that subtracted the support staff would disagree with the engine's own over-budget
+// flags» is exactly right, so the ENGINE MOVED WITH THE TILE: `coachMarket`'s `overBudgetCents` is
+// now cut from `familyWeeklyIncomeCents − supportPayrollWeeklyCents`, one function, one definition,
+// read on both sides. The two surfaces still cannot disagree; they now agree about three seats
+// instead of one. Round 28 #8's §4 guard is re-aimed by THIS item and by his sentence – read its ⚠
+// note – and not by anybody deciding the old guard had been a mistake.
+//
+// ⚠ THE COACH'S OWN LINE DID NOT DISAPPEAR, it moved to `coachWeeklyCents` below, because two
+// readers genuinely want it: the seat row (which must print the coach's price, not the payroll) and
+// the hire confirmation (whose sentence is about the COACHING bill and would otherwise subtract the
+// whole payroll from one rung's price and report a fiction).
+// =================================================================================================
 
 /** ⭐ THE TILE'S NAME, AND IT IS A CONSTANT SO THAT TWO SURFACES CANNOT DRIFT ON IT. The market's
  *  meter and the rail's shortcut both print it; a literal in each template is two spellings waiting
@@ -71,8 +92,15 @@ export interface TeamSeat {
 }
 
 export interface CoachingBudget {
-  /** What the roster row she is on costs, weekly. 0 for a self-coached family. */
+  /** ⭐⭐⭐ ROUND 42 #42 – WHAT THE WHOLE PAYROLL COSTS, weekly: every filled seat in `seats`, summed.
+   *  0 for a family that has hired nobody. His «committed должен это и показывать», and it is the
+   *  same arithmetic the ENGINE now subtracts before it flags a rung over budget
+   *  (`supportPayrollWeeklyCents` in engine/world/coachMarket.ts). */
   committedCents: ComputedRef<number>
+  /** What the roster row she is on costs, weekly. 0 for a self-coached family. ⚠ THIS IS WHAT
+   *  `committedCents` MEANT BEFORE ROUND 42 #42, unchanged and renamed – for the two readers that
+   *  want the coach alone: the seat row and the hire confirmation's «your weekly coaching bill». */
+  coachWeeklyCents: ComputedRef<number>
   /** ⭐ ROUND-21 #12 – the cap is the week's INCOME, «because that is the money the decision is
    *  actually made against - a reserve pays for one week of anything, a weekly bill has to fit the
    *  week». It comes off the snapshot rather than being RECOVERED from whichever row happens to be
@@ -93,18 +121,25 @@ export interface CoachingBudget {
    *  neither of them names a person.
    *
    *  ⚠ EVERY FIGURE IS THE ENGINE'S. The coach's is the roster row's own `weeklyCents` – the same
-   *  one `committedCents` above reads, so the tile cannot print two coaches – and the other two are
+   *  one `coachWeeklyCents` above reads, so the tile cannot print two coaches – and the other two are
    *  `masseurSalaryCents` / `psychologistSalaryCents`, which the snapshot's own docs call FLAT
-   *  contracts at the chosen rung, so «the card's quote IS the ledger's row». Nothing is summed
-   *  here: see the header for why the committed figure and the bar do not move. */
+   *  contracts at the chosen rung, so «the card's quote IS the ledger's row».
+   *  ⭐⭐ ROUND 42 #42 – AND `committedCents` IS NOW THIS LIST, SUMMED. The header says why; the one
+   *  thing to keep true here is that the tile's rows and its meter read the same array, so they can
+   *  never add up to two different payrolls. */
   seats: ComputedRef<TeamSeat[]>
 }
 
 export function useCoachingBudget(): CoachingBudget {
   const game = useGameStore()
-  const committedCents = computed(
+  const coachWeeklyCents = computed(
     () => (game.snapshot?.coachMarket ?? []).find((r) => r.current)?.weeklyCents ?? 0,
   )
+  // ⭐⭐⭐ ROUND 42 #42 – THE METER IS THE PAYROLL. Summed off `seats` itself rather than from the
+  // snapshot a second time, so «the rows add up to the meter» is true by construction and not by a
+  // test. ⚠ `seats` is declared below this line and read inside a computed, which is evaluated
+  // lazily – the const is initialised long before any consumer touches `.value`.
+  const committedCents = computed(() => seats.value.reduce((sum, s) => sum + s.weeklyCents, 0))
   const capCents = computed(() => game.snapshot?.coachBilling.weeklyIncomeCents ?? 0)
   const freeCents = computed(() => Math.max(0, capCents.value - committedCents.value))
   const meterPct = computed(() =>
@@ -122,12 +157,12 @@ export function useCoachingBudget(): CoachingBudget {
     const snap = game.snapshot
     if (!snap) return []
     const out: TeamSeat[] = []
-    if (snap.coachId !== null) out.push({ key: 'coach', label: 'Coach', weeklyCents: committedCents.value })
+    if (snap.coachId !== null) out.push({ key: 'coach', label: 'Coach', weeklyCents: coachWeeklyCents.value })
     if (snap.masseurHired) out.push({ key: 'masseur', label: 'Masseur', weeklyCents: snap.masseurSalaryCents })
     if (snap.psychologistHired) {
       out.push({ key: 'psychologist', label: 'Psychologist', weeklyCents: snap.psychologistSalaryCents })
     }
     return out
   })
-  return { committedCents, capCents, freeCents, meterPct, seats }
+  return { committedCents, coachWeeklyCents, capCents, freeCents, meterPct, seats }
 }

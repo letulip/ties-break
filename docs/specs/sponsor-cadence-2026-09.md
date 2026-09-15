@@ -173,12 +173,56 @@ so the measurement runs about 1.5 pp below the model and the honest band is **�
 
 | | predicted | measured | |
 | --- | --- | --- | --- |
-| Q1 cheques a season, working family | ≈ **1.24** (from 1.54 before; 1.11 at cooldown 6) | | |
-| Q2 dollars a season, working family | ≈ **$1,290**, i.e. −19% to −22% vs BEFORE | | |
-| Q3 mean gap between cheques | ≈ **16–17 weeks** (§3's pooled 12.4 plus the four-week floor) | | |
-| Q4 **P(gap ≤ 4 weeks)** | **2–4%** – and it is NOT zero: see 5.2 | | |
-| Q5 smallest measured gap | **exactly 4** – the floor is reached and never crossed | | |
-| Q6 fullest season any career takes | **4 or more somewhere in the corpus**, or the removed cap was decorative | | |
+| Q1 cheques a season, working family | ≈ **1.24** (from 1.54 before; 1.11 at cooldown 6) | **1.09**, from a BEFORE of 1.29 | ✗ |
+| Q2 dollars a season, working family | ≈ **$1,290**, i.e. −19% to −22% vs BEFORE | **$1,125 · −15%** (from $1,322) | ✗ |
+| Q3 mean gap between cheques | ≈ **16–17 weeks** (§3's pooled 12.4 plus the four-week floor) | **16.4 weeks**, from 13.7 | ✓ |
+| Q4 **P(gap ≤ 4 weeks)** | **2–4%** – and it is NOT zero: see 5.2 | **6.2%**, from 25.3% | ✗ |
+| Q5 smallest measured gap | **exactly 4** – the floor is reached and never crossed | **exactly 4** | ✓ |
+| Q6 fullest season any career takes | **4 or more somewhere in the corpus**, or the removed cap was decorative | **5** | ✓ |
+
+*162 careers per arm (9 presets × 18 seeds) × 4 seasons from fourteen, working-background rows;
+`tools/sponsor-cadence.ts`.*
+
+### 5.1a ⚠ THE THREE MISSES, AND TWO OF THEM ARE THE SAME MISS
+
+**Q1's absolute number is a miss about the BASELINE, not about the dial.** It was anchored on §3's
+1.54, which was measured on 54 careers; at 162 careers the pre-wave baseline is **1.29**. The dial's
+own effect is the RELATIVE column, and that is Q2.
+
+**Q2 is the real miss: the cut is shallower than the renewal model says.** −15% measured against a
+−19% to −22% band. The model over-predicts here in exactly the direction §3's own numbers should have
+warned about: at 162 careers the cooldown-6 arm measures **−23%**, where §3 (54 careers) recorded
+−28%. So §3's figure was itself noisy, and the «measurement runs 1.5 pp below the model» correction
+this prediction leaned on was fitted to noise. The honest statement is that the renewal model is a
+good ordering device (4 → 5 → 6 → 8 is monotone: −15% · −17% · −23% · −32%) and a poor predictor of
+the level, because the need gate opens and closes and a willingness spent on a closed gate is lost.
+
+**Q4 missed HIGH, at 6.2% against a 2–4% band, and that is the number he should read.** The
+prediction reasoned from the cap-bearing arm's 1.8%; with the cap gone, the clusters the cap used to
+truncate come back, and a four-week gap turns out to be **as common as the raw die makes it** –
+P(roll hits on the first allowed week) = `rollChance` = 6%, and the measurement is 6.2%. The cap was
+doing more of the anti-cluster work than the cooldown was.
+
+### 5.1b The whole sweep, so one more word of his moves the number without a new run
+
+| arm | cheques/season | $/season | vs BEFORE | mean gap | min gap | P(gap ≤ 4) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| A · BEFORE, no cooldown, no cap | 1.29 | $1,322 | – | 13.7 | 1 | 24.7% |
+| **B · cooldown 4, no cap (his ruling)** | **1.09** | **$1,125** | **−15%** | **16.4** | **4** | **6.2%** |
+| cooldown 5, no cap | 1.06 | $1,091 | −17% | 17.2 | 5 | 0.0% |
+| cooldown 6, no cap | 0.98 | $1,017 | −23% | 18.4 | 6 | 0.0% |
+| cooldown 8, no cap | 0.85 | $895 | −32% | 20.9 | 8 | 0.0% |
+
+⚠ **Five is the one-word change that removes the four-week gap entirely** – 0.0% of gaps, at a cost
+of two further points of money (−17% against −15%). It is stated here because it is the cheapest
+answer to «still too fast» and it is HIS to take or leave, not a recommendation.
+
+⚠ **The ACTUATION arm's own floor does not hold and the run says so out loud.** At `cooldownWeeks` 40
+the smallest measured gap is 4, not 40, because `sponsorCameoWilling` carries the cooldown across the
+wrap from ONE previous season only – `world/sponsors.ts` names that approximation and calls it «a
+third-order case», which it is at 4 weeks of 52 and is not at 40. The shipped dial is unaffected
+(measured floor exactly 4, never below), and the actuation claim it exists to make – the dial moves
+the output, 1.29 → 1.09 → 0.38 – is unharmed.
 
 ### 5.2 ⚠⚠ THE FOUR-WEEK CADENCE IS STILL LEGAL, AND THAT IS THE HONEST SENTENCE
 
@@ -188,9 +232,10 @@ His original complaint was «раз в 3-4 недели». A cooldown of **4** p
 * one-, two- and three-week gaps are **structurally impossible** – that half of the complaint is gone
   by construction and not by luck;
 * a **four-week gap is legal**, and the shop will produce one whenever its own die lands on the first
-  week the cooldown allows. At `rollChance` 0.06 that is 6% of willingness gaps by construction; the
-  measured share of *paid* gaps is lower because both ends need the family's gate open, and Q4 above
-  is the prediction of it.
+  week the cooldown allows. At `rollChance` 0.06 that is 6% of willingness gaps by construction, and
+  the **measured share of paid gaps is 6.2%** – the prediction that the need gate would thin it was
+  wrong (Q4). So: **about one gap in sixteen is a four-week gap**, against about one in four before
+  the wave. The cluster is gone; the cadence he named survives at the floor, one time in sixteen.
 
 The instrument prints this as its own column (`P(gap=floor)`) rather than leaving it to be inferred.
 If the cadence still reads as too fast in play, `cooldownWeeks` is one constant and nothing else

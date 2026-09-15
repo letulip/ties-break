@@ -1,11 +1,23 @@
-// ROUND 42 #5 – THE LOCAL SPONSOR'S CADENCE: A COOLDOWN AND A SEASON CAP.
+// ROUND 42 #5 – THE LOCAL SPONSOR'S CADENCE: A COOLDOWN (AND, UNTIL #43, A SEASON CAP).
 //
 // THE OWNER, 15.09: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели».
 //
-// ⚠⚠ BOTH NUMBERS ARE A PROPOSAL AND HE HAS NOT SEEN THE PRINT YET, so this file deliberately
-// asserts the SHAPE against `ECONOMY.sponsor` rather than against 6 and 3: a one-word ruling moving
-// either dial must move this suite with it and not break it. The measurement is
-// docs/specs/sponsor-cadence-2026-09.md and `tools/sponsor-cadence.ts`.
+// ⚠⚠ RE-AIMED BY ROUND 42 #43, HIS RULING OFF THE PRINTED TABLE: «сними потолок, а кулдаун давай 4».
+// TWO CLAIMS IN THIS FILE MOVED AND BOTH MOVED BECAUSE THE RULE MOVED, NOT BECAUSE THEY WERE WRONG:
+//   * §2 asserted a season cap. There is no season cap – the constant and its reader are both gone –
+//     so §2 now asserts the OPPOSITE and hunts for the seasons the cap used to forbid. A suite that
+//     merely deleted the section would leave the removal unguarded: re-adding the wall would be
+//     green everywhere.
+//   * §1's second arm asserted «gaps of three to four weeks are structurally impossible». At
+//     `cooldownWeeks` 4 a FOUR-week gap is legal and only one, two and three are impossible. That
+//     consequence is the ledger's own sentence (round 42 #43, «раз в 3-4 недели» – the floor sits on
+//     the four), it is measured in docs/specs/sponsor-cadence-2026-09.md §5, and the arm now asserts
+//     what is actually true PLUS that the four-week gap really occurs – a floor nothing ever reaches
+//     is a claim nobody has tested.
+//
+// ⚠⚠ THE NUMBER IS STILL NOT WRITTEN DOWN HERE. Every assertion reads `ECONOMY.sponsor.cooldownWeeks`
+// rather than 4, so his next one-word ruling moves this suite with it instead of breaking it. The
+// measurement is docs/specs/sponsor-cadence-2026-09.md and `tools/sponsor-cadence.ts`.
 //
 // ⚠⚠ THE ONE THING HERE THAT IS A CLAIM ABOUT THE ENGINE RATHER THAN ABOUT A NUMBER is §3: the
 // cadence is DERIVED and touches no persisted state and no MAIN draw. A cooldown needs a memory;
@@ -19,6 +31,16 @@
 //   N2 the season cap dropped (`out.length >= seasonCap` removed)       -> 1 red
 //   N3 the cross-season carry dropped (`carry` always null)             -> 3 red
 //   N4 the roll moved BELOW the two `continue`s                         -> 3 red
+// ⚠ N2 DESCRIBES A MUTATION THAT CAN NO LONGER BE MADE – #43 removed the cap for real. The line is
+//   kept because a mutation ledger that quietly drops a row stops being a record. RE-MEASURED on this
+//   file's re-aimed form (control 9/9 green before and after, each mutation applied alone, reverted):
+//   N2b `if (out.length >= 3) continue` PUT BACK into `cameoWillingWeeks`   -> **1 red**, §2's arm
+//       alone, which is what says the removal is guarded rather than merely done.
+//   N1b the cooldown branch disabled (`if (false && …)`)                    -> **3 red**, all of §1.
+//   ⭐ §1's second arm reddens under N1b and NOT under N2b, and §2's arm the other way round: the
+//   cooldown and the vanished cap are two claims with one arm each.
+//   ⚠ N4's old spelling still stands as written: the roll is still drawn unconditionally above every
+//   branch, and removing the cap did not touch it – which is the note at the draw site.
 // ⚠⚠ N3 AND N4 BOTH SCORED **0 RED** ON THE FIRST VERSION OF THIS FILE, and that is recorded
 //   rather than erased. Six seeds almost never produce the case N3 breaks – a season whose last
 //   willing week is inside the cooldown of the wrap – so §1's third arm was hoping for it instead of
@@ -70,13 +92,29 @@ describe('§1 the shop will not chip in twice inside its own cooldown', () => {
     expect(tightest, 'some pair really sits on the floor').toBeLessThan(S.cooldownWeeks + 4)
   })
 
-  it('⭐⭐ ...and the gap he named – three to four weeks – is now structurally impossible', () => {
+  it('⭐⭐ ...so the CLUSTER he named is gone – and the four-week gap is legal, which is said out loud', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 42 #43 AND THE OLD LINE IS QUOTED RATHER THAN DELETED. It read
+    // `expect(gap).toBeGreaterThan(4)` under the title «the gap he named – three to four weeks – is
+    // now structurally impossible», which was true at `cooldownWeeks` 6 and is FALSE at 4. His
+    // ruling («сними потолок, а кулдаун давай 4») puts the floor on the four, so «раз в 3-4 недели»
+    // loses its three and keeps its four. The ledger and the spec both say so; this is the arm that
+    // stops it from being a sentence nobody checked.
+    let atFour = 0
+    let pairs = 0
     for (const seed of SEEDS) {
       const weeks = willingWeeks(seed)
       for (let i = 1; i < weeks.length; i++) {
-        expect(weeks[i] - weeks[i - 1], `${seed}: «раз в 3-4 недели»`).toBeGreaterThan(4)
+        const gap = weeks[i] - weeks[i - 1]
+        pairs++
+        // The half of his complaint that IS structurally gone: nothing under the cooldown, ever.
+        expect(gap, `${seed}: weeks ${weeks[i - 1]} and ${weeks[i]}`).toBeGreaterThanOrEqual(S.cooldownWeeks)
+        if (gap === S.cooldownWeeks) atFour++
       }
     }
+    expect(pairs, 'the corpus really holds consecutive cheques to compare').toBeGreaterThan(40)
+    // ⭐ AND THE HONEST HALF: the floor is REACHED. A cooldown nothing ever lands on would make the
+    // ledger's «a four-week gap is still legal» an untested claim about the code.
+    expect(atFour, 'the shop really does chip in again on the first week the cooldown allows').toBeGreaterThan(0)
   })
 
   it('⚠⚠ the cooldown crosses the season boundary – a cheque in week 51 still silences week 2', () => {
@@ -125,50 +163,50 @@ describe('§1 the shop will not chip in twice inside its own cooldown', () => {
 })
 
 // =================================================================================================
-// §2 – THE SEASON CAP
+// §2 – ⭐⭐⭐ ROUND 42 #43: THERE IS NO SEASON CAP, AND THAT IS A CLAIM WITH TEETH
 // =================================================================================================
-describe('§2 and never more than `seasonCap` in one season', () => {
-  it('⭐⭐⭐ no season of any seed holds more willing weeks than the cap', () => {
+//
+// ⚠⚠ WHAT THIS SECTION USED TO BE, QUOTED SO THE CHANGE IS READABLE: «§2 and never more than
+// `seasonCap` in one season», two arms – no season holds more willing weeks than the cap, and the
+// cap does not bind on every season. Round 42 #43 removed the cap entirely («сними потолок»), so
+// both arms describe a rule that no longer exists.
+//
+// ⚠ DELETING THEM WOULD HAVE LEFT THE REMOVAL UNGUARDED. Re-adding `if (out.length >= 3) continue`
+// to `cameoWillingWeeks` would then be green in every suite in the repo, and the item's whole
+// measured cost – the cap was taking a further fifth of the cameo money (spec §3) – would come back
+// silently. So the section asserts the opposite fact: seasons ABOVE the old wall exist.
+//
+// ⚠ MUTATION-VERIFIED, replacing the N2 row of the ledger at the top of this file: restoring the
+// season cap at its old value of 3 reddens the arm below (measured, 1 red) and nothing else in this
+// file moves – which is the same separation the original N2 had, pointing the other way.
+describe('§2 the season has no ceiling any more – his «сними потолок»', () => {
+  /** The wall that stood until round 42 #43. A literal on purpose: it is a HISTORICAL value, not a
+   *  live constant, and reading it off `ECONOMY` is impossible because it is not there. */
+  const REMOVED_SEASON_CAP = 3
+
+  it('⭐⭐⭐ some season somewhere holds more willing weeks than the removed cap allowed', () => {
     let seasons = 0
-    let atCap = 0
+    let overTheOldCap = 0
+    let fullest = 0
     for (const seed of SEEDS) {
       const weeks = willingWeeks(seed)
       for (let s = 0; s * WEEKS_PER_YEAR < WEEKS; s++) {
         const n = weeks.filter((w) => Math.floor(w / WEEKS_PER_YEAR) === s).length
         seasons++
-        if (n === S.seasonCap) atCap++
-        expect(n, `${seed} season ${s}`).toBeLessThanOrEqual(S.seasonCap)
+        fullest = Math.max(fullest, n)
+        if (n > REMOVED_SEASON_CAP) overTheOldCap++
       }
     }
     expect(seasons, 'the corpus really holds seasons').toBeGreaterThan(50)
-    // ⚠ AND THE CAP IS REACHED SOMEWHERE, or it is a wall nothing has ever touched and this arm
-    // would stay green with the cap deleted.
-    expect(atCap, 'some season really takes the cap').toBeGreaterThan(0)
-  })
-
-  it('⚠ the cap is not the ONLY thing shaping the season – seasons under it are ordinary', () => {
-    // If the cap bound EVERY season the mechanic would have flattened into «three a year, every
-    // year», which is the failure the constant's own comment warns about.
-    //
-    // ⚠⚠ MEASURED RATHER THAN ASSUMED, AND THE FIRST READING OF THIS ARM WAS WRONG IN AN
-    // INFORMATIVE WAY. It asserted «most seasons are under the cap» and measured 42%: the cap binds
-    // on a MAJORITY of WILLINGNESS seasons. That is not a contradiction of the bench print, which
-    // measures 18% of seasons at the cap – the two count different things. This chain is what the
-    // SHOP is willing to do; the bench counts cheques that were actually PAID, and a cheque is paid
-    // only where the need gate is open too. So the cap does most of its work in the seasons where
-    // the family needed every one of them, which is exactly the family he was complaining about.
-    let under = 0
-    let seasons = 0
-    for (const seed of SEEDS) {
-      const weeks = willingWeeks(seed)
-      for (let s = 0; s * WEEKS_PER_YEAR < WEEKS; s++) {
-        seasons++
-        if (weeks.filter((w) => Math.floor(w / WEEKS_PER_YEAR) === s).length < S.seasonCap) under++
-      }
-    }
-    // A BAND, because these are proposed constants: the claim is «both sides of the cap happen».
-    expect(under / seasons, 'seasons under the cap are ordinary').toBeGreaterThan(0.2)
-    expect(under / seasons, '...and so are seasons that reach it').toBeLessThan(0.9)
+    expect(
+      overTheOldCap,
+      `no season exceeded ${REMOVED_SEASON_CAP} – either the cap is back, or the corpus is too small to prove its absence`,
+    ).toBeGreaterThan(0)
+    // ...and the ceiling that remains is the COOLDOWN's arithmetic and nothing else: at a four-week
+    // floor no season of 52 weeks can hold more than 13 cheques, whatever the dice do.
+    expect(fullest, 'the cooldown is still the only wall there is').toBeLessThanOrEqual(
+      Math.floor(WEEKS_PER_YEAR / S.cooldownWeeks) + 1,
+    )
   })
 })
 
@@ -230,9 +268,12 @@ describe('§4 what the shop gives, and how often it is willing at all', () => {
       seasons += WEEKS / WEEKS_PER_YEAR
     }
     const perSeason = willing / seasons
-    // ⚠ A BAND AND NOT A NUMBER, because these are proposed constants: the claim is «the mechanic
-    // still happens and has not become a standing order», which holds for any sane pair of dials.
+    // ⚠ A BAND AND NOT A NUMBER, because the dial is his to move: the claim is «the mechanic still
+    // happens and has not become a standing order», which holds for any sane cooldown.
+    // ⭐ ROUND 42 #43 – the upper wall used to be `S.seasonCap + 0.01`, which no longer exists. What
+    // replaces it is the cooldown's OWN arithmetic – a season of 52 weeks cannot hold more than
+    // `52 / cooldownWeeks` cheques – so the band still closes and it closes on the live constant.
     expect(perSeason, 'the shop has not gone silent').toBeGreaterThan(1)
-    expect(perSeason, '...nor become weather').toBeLessThan(S.seasonCap + 0.01)
+    expect(perSeason, '...nor become weather').toBeLessThan(WEEKS_PER_YEAR / S.cooldownWeeks)
   })
 })

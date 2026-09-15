@@ -2,6 +2,12 @@
 //
 // THE OWNER, 15.09: «не вижу отчислений тренеру за победы на w серии нигде… мы это сделали вообще?»
 //
+// ⚠⚠ ROUND 42 #41 (15.09) MOVED THE RULE UNDER THIS FILE. The coach now takes ten per cent of EVERY
+// cheque at every finish, so the «first-round exit is silent» arm became a «first-round exit pays
+// him» arm, quoting its old self in place. The negative half of §1 moved onto the self-coached arm,
+// which is untouched. ⭐ This is the side effect item 41 named out loud: the line is almost never
+// silent now, which answers his «не вижу отчислений» at the root rather than on the screen.
+//
 // ⚠ THE MECHANIC WAS NEVER THE DEFECT. `finalizeTournament` has charged the coach 10% of a title
 // cheque and 5% of a lost final since round 24 – gross, on the pro track, the W-series included –
 // and `tests/team-share.test.ts` pins that wiring row by row, including the exact W15 text. What was
@@ -140,15 +146,23 @@ describe('round 42 #11 – the coach\'s cut is named where the money is counted'
     expect(line).toContain(formatCents(expected))
   })
 
-  it('⚠ …and it is SILENT on a career that has won nothing – there is nothing to name', () => {
-    // The negative half, so the arms above cannot pass on a screen that always draws the line. A
-    // first-round exit pays the coach nothing (`staffPrizeShareCents` returns 0 below a final), and
-    // that is the honest answer rather than a «$0.00» row.
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09), AND IT IS THE CLEAREST PLACE THE ITEM SHOWS. The old arm
+  // was «⚠ …and it is SILENT on a career that has won nothing – there is nothing to name», and it
+  // built a first-round exit precisely because «`staffPrizeShareCents` returns 0 below a final». His
+  // ruling – «10% безусловных отчислений с любых призовых, независимо от глубины прохода» – makes a
+  // first-round exit pay, so the SAME FIXTURE now proves the opposite fact.
+  // ⚠ THE NEGATIVE HALF IS NOT LOST, which is what kept this arm worth having: the self-coached arm
+  // below is the negative now, and it is untouched. Both are needed – one says the line follows the
+  // money, the other says the screen does not always draw it.
+  it('⭐⭐ ROUND 42 #41 – a FIRST-ROUND EXIT pays him too, and the line names those cents', () => {
     const world = titledCareer('early-out', 4, true)
     const snap = toSnapshot(world)
-    expect(staffPrizeShareCents('coach', TIERS.w15.prizeCents![4] ?? 0, 4), 'nothing is owed at this finish').toBe(0)
-    expect(snap.finance.window12w.coachCutCents, 'and the window agrees').toBe(0)
-    expect(shareLine(mountMoney(snap)), 'the screen invented a share nobody was paid').toBeNull()
+    const expected = staffPrizeShareCents('coach', TIERS.w15.prizeCents![4] ?? 0, 4)
+    expect(expected, 'a first-round cheque really pays the coach now').toBeGreaterThan(0)
+    expect(snap.finance.window12w.coachCutCents, 'and the window folds it').toBe(expected)
+    const line = shareLine(mountMoney(snap))
+    expect(line, 'the screen names a share that was really paid').not.toBeNull()
+    expect(line).toContain(formatCents(expected))
   })
 
   it('⚠ a SELF-COACHED family is silent too – an empty seat owes no share', () => {

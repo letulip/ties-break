@@ -66,16 +66,80 @@ further **5.5–7.0 pp of every prize dollar** and his own take multiplies by **
 
 | | predicted | measured | |
 | --- | --- | --- | --- |
-| R1 the coach's cut per career, mean | **×2.2 to ×3.3** | | |
-| R2 his cut as a share of gross prize, after | **8.5–10.0%** (under 10 only by uncoached/junior weeks in the denominator) | | |
-| R3 family wallet at week 400, mean | **−7% to −14%** | | |
-| R4 family wallet at week 600, mean | **−10% to −18%** | | |
-| R5 careers ever under water at 400 | **unchanged, or +1 to +3 of 36** | | |
-| R6 careers that ended before the horizon | **unchanged (±1)** | | |
-| R7 prize weeks that pay him at all (item 11's memo) | **from ~15–25% to ~60–90%** – the denominator holds junior and self-coached weeks | | |
-| R8 poorest quartile vs richest | poorest loses **less in dollars, more as a share of its own wallet** | | |
-| R9 family prize BANKED, mean | **moves under 2%** – the cut is an expense row, not a smaller prize row; a bigger move means ENTRY DECISIONS changed | | |
-| R10 masseur on the same road (§5) | a further **−2% to −5%** of wallet against the coach-only arm | | |
+| R1 the coach's cut per career, mean | **×2.2 to ×3.3** | **×4.5** at week 400 ($41,207 → $185,580); ×3.5 at 600 | ✗ (bigger) |
+| R2 his cut as a share of gross prize, after | **8.5–10.0%** (under 10 only by uncoached/junior weeks in the denominator) | **8.48%** at 400, **8.57%** at 600 (from 2.03% / 2.64%) | ✓ |
+| R3 family wallet at week 400, mean | **−7% to −14%** | **−4.0%** (median **+6.0%**) | ✗ (smaller) |
+| R4 family wallet at week 600, mean | **−10% to −18%** | **−8.6%** (median **+2.1%**) | ✗ (smaller) |
+| R5 careers ever under water at 400 | **unchanged, or +1 to +3 of 36** | **15 of 36 in BOTH arms – unchanged** | ✓ |
+| R6 careers that ended before the horizon | **unchanged (±1)** | **1 of 36 in BOTH arms – unchanged** | ✓ |
+| R7 prize weeks that pay him at all (item 11's memo) | **from ~15–25% to ~60–90%** | **11.0% → 77.5%** at 400; 13.9% → 80.8% at 600 | ✓ |
+| R8 poorest quartile vs richest | poorest loses **less in dollars, more as a share of its own wallet** | ✗ **poorest loses less on BOTH** – see 3.2 | ✗ |
+| R9 family prize BANKED, mean | **moves under 2%** – a bigger move means ENTRY DECISIONS changed | **+5.0%** at 400, +4.1% at 600 | ✗ – and it is the reading key: see 3.1 |
+| R10 masseur on the same road (§5) | a further **−2% to −5%** of wallet against the coach-only arm | **not measurable at this corpus** – the direct cost is +$15,792/career; see §5 | – |
+
+*36 careers per arm (9 presets × 4 seeds), the `player` policy, identical seeds. 34 of 36 pairs played
+the same tournaments at week 400, 32 of 36 at week 600 – the comparability guard, read BEFORE the
+difference. Actuation proven per run: at 50% of every cheque his cut goes $107,221 → $370,543 and the
+family's wallet $1,159,943 → $341,391.*
+
+### 3.1 ⚠⚠ R9 IS THE READING KEY AND IT MISSED, SO THE CORRIDOR ROWS ARE READ THROUGH IT
+
+R9 was the only claim about the CODE, and its own note said what a miss would mean: «if prize banked
+moves more than the entry-policy noise, the wallet is feeding back into what she enters». It moved
+**+5.0%**, and three other rows moved with it in the same impossible direction – gross prize +7.9%,
+her account +4.9%, and the wallet's **median UP 6.0% while its mean is DOWN 4.0%**.
+
+**A cut cannot make a family richer.** What happened is that 2 of 36 pairs played different
+tournaments, and prize money is heavy-tailed enough that two careers dominate a 36-career mean. So:
+
+* **the DIRECT cost is exact and is R1/R2**: the coach's take rises ×4.5 and goes from 2.03% to
+  **8.48% of gross prize money** – the family pays a further **6.45 pp of every prize dollar**;
+* **the corridor deltas at n=36 are not resolvable against entry feedback**, and the report says so
+  rather than quoting −4.0% as the answer. A corpus large enough to resolve a ~6% wallet effect
+  against this variance is the honest next instrument, and it was not run here.
+
+⭐ **What IS resolvable, and is the answer the item actually needed, is §3's census** – survival is
+measured per career and per pair, where two outlying careers cannot hide anything.
+
+### 3.2 ⭐⭐ THE QUESTION THAT PARKED THE ITEM: THE FAMILY ALREADY NEAR THE EDGE
+
+Cohorts cut on the **BEFORE** arm, the same seeds read in both columns (cutting on the after arm
+would select the families the change itself pushed down). Week 400.
+
+| cohort (cut on the BEFORE arm) | wallet BEFORE | wallet AFTER | under water | wks under | ended | coached | his cut AFTER | n |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| working | $2,210,026 | $2,087,604 · **−5.5%** | 6→6 | 1.8→1.8 | 0→0 | 8/12 | $206,903 | 12 |
+| middle | $1,533,217 | $1,527,903 · −0.3% | 7→7 | 2.2→2.3 | 1→1 | 12/16 | $143,236 | 16 |
+| wealthy | $3,489,106 | $3,476,695 · −0.4% | 2→2 | 0.6→1.0 | 0→0 | 7/8 | $238,285 | 8 |
+| ⭐ **ever under water BEFORE** | $1,500,971 | $1,278,215 · **−14.8%** | **15→15** | **4.1→4.4** | 0→0 | 13/15 | $149,677 | 15 |
+| never under water BEFORE | $3,461,965 | $3,442,689 · −0.6% | 0→0 | 0.0→0.0 | 1→1 | 14/21 | $211,225 | 21 |
+| ⭐ poorest quartile BEFORE | $58,021 | $58,021 · +0.0% | 4→4 | 1.7→1.7 | 1→1 | **5/9** | $40,793 | 9 |
+| richest quartile BEFORE | $7,717,214 | $7,338,782 · −4.9% | 2→2 | 1.1→1.2 | 0→0 | 7/9 | $316,589 | 9 |
+
+**SURVIVAL, CAREER BY CAREER (n = 36): ZERO changed state, in either direction.**
+
+* went under water only in the AFTER arm: **0**
+* went under water only in the BEFORE arm: **0**
+* ended early only in the AFTER arm: **0**
+* ended early only in the BEFORE arm: **0**
+
+**So the answer to «does a family already near the edge go under» is NO, on this corpus, with no
+career changing state at all.** The families that were already struggling pay the most in
+proportional terms – the ever-under-water cohort loses **14.8% of its median wallet** and spends
+**4.1 → 4.4 weeks** under water on average – but not one of the fifteen crosses a line it was not
+already on.
+
+⚠ **R8 inverted, and the reason is the coach and not the balance.** The poorest quartile moves by
+**$0** because only **5 of its 9 careers have a coach at all** – a self-coached family owes no coach
+share, and self-coaching is exactly what a family at the bottom does. Its median landed on an
+untouched career, which is why the figure is identical to the cent rather than merely small. The
+change's weight therefore falls on the **coached mid-career**, which is the cohort the item named.
+
+⚠ **THE «WHAT IT BUYS» ROW FELL 47% AND IT IS NOT A SAFETY READING.** Wallet-in-weeks-of-own-burn
+goes 521.1 → 275.9 at week 400. That is mostly the DENOMINATOR: the burn is the last twelve retained
+weeks of spending, and the coach's cut is now a spending row on every prize week, so a window holding
+two big cheques books ~10% of them as burn. A family with 275 weeks of its own burn banked is not a
+family under pressure – the survival census is the safety reading, and it is unchanged.
 
 ⚠ **R9 is the only one that is a claim about the CODE rather than about the numbers.** The coach's
 share lands as a `coaching` EXPENSE row and `careerTotals.prizeCents` is the family's part of the
@@ -116,3 +180,54 @@ The case each way, before the numbers:
 * **He stays.** The research is explicit that the rest of the team is **salaried, rarely on a share**
   («small title bonuses happen») – the audit's own ✅ row. A masseur on every cheque would be the one
   place this wave moved *away* from the document it is built on.
+
+### 5.1 ⚠ THE FIRST RUN OF THIS SECTION WAS A NULL ARM, AND IT IS RECORDED RATHER THAN ERASED
+
+It compared two arms **neither of which ever hired a masseur** – `econ-bench`'s walk fills no support
+seat – and printed **$0 against $0 on 0 of 36 careers**, with the wallet identical to the cent. The
+bench said so out loud («NULL ARM: the seat is never filled on this corpus and §4 proves nothing»)
+rather than reporting a null result, which is what the house rule («a null result is a claim») is for.
+The repaired arms hire him the week his seat unlocks, **in both columns**, so the only difference
+between them is `everyBps`. **31 of 36 careers now pay him a share at all.**
+
+### 5.2 What it costs, measured
+
+| week 400, both arms carry the coach on every cheque and both hire the masseur | masseur 3 / 1.5 / **0** | masseur 3 / 1.5 / **3** |
+| --- | ---: | ---: |
+| the MASSEUR's cut, mean per career | $1,754 | **$17,546 · ×10** |
+| careers whose masseur was paid a share at all | – | **31 of 36** |
+| family wallet – mean | $1,845,045 | $2,162,544 · *+17.2%* |
+| family wallet – median | $901,695 | $1,271,198 · *+41.0%* |
+| careers ever under water | 25 of 36 | 24 of 36 |
+| careers that ended before the horizon | 8 of 36 | 6 of 36 |
+
+⚠⚠ **THE WALLET COLUMNS ARE NOT READABLE AND THE ITALICS SAY SO.** They move the wrong way – the arm
+that pays the masseur MORE ends richer, by 17% on the mean and 41% on the median – which is
+arithmetically impossible as a direct effect and is therefore §3.1's entry feedback again, an order of
+magnitude louder here. It is louder because **hiring the masseur at all is the expensive decision**:
+both §5 arms have 25 of 36 careers under water and 6–8 ended early, against 15 and 1 in §1's arms that
+never hire him. A ±$300k swing cannot resolve a $15,792 signal.
+
+**So one number here is measurement and the rest is noise: his cut goes ×10, +$15,792 per career.**
+
+### 5.3 ⭐ THE RECOMMENDATION – **the masseur STAYS a title-and-final bonus** (his to overrule)
+
+Four reasons, in the order they weigh:
+
+1. **His own research says so, and item 41 exists because his research said so.** §2 of
+   team-economics-2026-09 is explicit that the rest of the team is *salaried, rarely on a share*, and
+   the audit marked our masseur ✅ «ours is a designed line – keep». Moving the coach onto every cheque
+   moves the game TOWARD that document; moving the masseur would be the one step AWAY from it, taken
+   in the same commit, on no citation.
+2. **It buys very little pressure.** +$15,792 per career against the coach change's +$144,373 –
+   **11% as much money for a second departure from the research.**
+3. **It cannot be justified by the corridor, in either direction.** The arms that would have shown it
+   are unreadable at this corpus, and a change that cannot be measured against the thing it is meant
+   to affect should not ship on a hunch. That is invariant 5 applied to a change nobody asked for.
+4. **His pressure is already on the payroll, where it is legible.** Round 42 #42's bench measures the
+   masseur's SALARY at a median of **$500/wk – 46% of the family's whole weekly income**, the largest
+   single non-coach line. He is already the expensive seat; a share of every cheque would move his cost
+   off the tile a parent reads and into the one place he cannot plan for.
+
+⚠ **If the owner wants him to follow anyway, it is one number** – `ECONOMY.staffShare.masseur.everyBps`
+from 0 to 300 – and nothing else in the engine, the tests or this spec needs to move.

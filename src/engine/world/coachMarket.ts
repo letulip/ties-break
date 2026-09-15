@@ -663,6 +663,36 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
  *  `week % (WEEKS_PER_YEAR / 4) === 0`, so it is four, and the two must not drift apart. */
 const RETAINERS_A_YEAR = 4
 
+/** ⭐⭐⭐ ROUND 42 #42 – THE SUPPORT SEATS' STANDING WEEKLY BILL, DEFINED ONCE.
+ *
+ *  THE OWNER, 15.09: «committed должен это и показывать» – the Team-budget tile lists coach, masseur
+ *  and psychologist and its meter counted only the coach, so three rows adding to $843 sat under a
+ *  «committed» of $343.
+ *
+ *  ⚠⚠ THIS IS NOT A DISPLAY HELPER. It is now read in TWO places that must never disagree: the
+ *  household strip below (round 28 #8, where it has always been) and `coachMarket`'s
+ *  `overBudgetCents` (this item, where it is new). That second reader is the whole weight of item 42
+ *  – the coach's affordability is now asked against the income the OTHER SEATS have not already
+ *  spoken for – and two copies of «what does the support payroll cost» is precisely the
+ *  two-surfaces-one-question defect this file exists to keep repeating about.
+ *
+ *  ⚠ GATED ON THE HIRE (`masseurHired` / `psychologistHired`), NOT on whether the seat works this
+ *  week, which is deliberate symmetry with the coach: `coachBilling.weeklyCents` is a standing QUOTE
+ *  that does not consult `coachWorksThisWeek` either, so a college freeze or a booked holiday stands
+ *  a seat down on the LEDGER without it vanishing from the family's standing budget.
+ *
+ *  Pure: zero MAIN draws, derived at snapshot time. */
+export function supportPayrollWeeklyCents(world: WorldState): number {
+  // ⭐ v76 – AND THE SECOND SEAT IS ONE MORE LINE, gated on the hire for the identical reason the
+  // note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college freeze
+  // or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing those
+  // weeks) without him vanishing from the family's standing budget.
+  return (
+    ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
+    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
+  )
+}
+
 /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, and the shape of it is in `HouseholdWeekly`.
  *
  *  THE OWNER, 28.08: «можно совокупную всю цифру показывать с учётом массажиста (и психолога в
@@ -705,13 +735,7 @@ const RETAINERS_A_YEAR = 4
  *
  *  Pure: zero MAIN draws, derived at snapshot time like everything else on this screen. */
 export function householdWeekly(world: WorldState, trainingCents: number): HouseholdWeekly {
-  // ⭐ v76 – AND THE SECOND SEAT IS THAT ONE MORE LINE, gated on the hire for the identical reason
-  // the note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college
-  // freeze or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing
-  // those weeks) without him vanishing from the family's standing budget.
-  const staffCents =
-    ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
-    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
+  const staffCents = supportPayrollWeeklyCents(world)
   // WHAT ONE MORE WEEK OF HOLDING DOES TO THE SHELF, signed, summed over what the family owns.
   let shelfCents = 0
   for (const owned of ownedAssets(world)) {
@@ -761,6 +785,32 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // ⭐ ROUND-21 #12: every stream that arrives every week, not the parents' line alone. See
   // `familyWeeklyIncomeCents` for the measurement that made this a bug rather than a wording fix.
   const weeklyIncome = familyWeeklyIncomeCents(world)
+  // ⭐⭐⭐ ROUND 42 #42 – AND THE OTHER SEATS HAVE ALREADY SPOKEN FOR PART OF IT. The owner:
+  // «committed должен это и показывать». The tile lists three people and its meter counted one, so
+  // the meter and its own rows disagreed – and the fix is NOT a display fix, because the figure the
+  // meter draws is the very denominator this row's `overBudgetCents` is cut from. Folding the
+  // payroll into the tile without folding it in HERE would have produced the round-21 #12 defect in
+  // its purest form: a meter saying the week is full while the card beside it says the rung fits.
+  //
+  // ⚠ ROUND 28 #8'S GUARD SAID THE OPPOSITE AND IT WAS RIGHT AT THE TIME. Its §4 pinned «the
+  // committed figure is still the COACH's line and does not silently absorb the masseur», and a
+  // bundle-7 arm reddened it by trying exactly this. It is re-aimed by THIS item and by his word,
+  // not by an agent deciding the guard was wrong – see the ⚠ note on that suite.
+  //
+  // ⚠ THE CAP ITSELF DOES NOT MOVE HERE. It is still the week's income, whole; what changed is that
+  // the COACH is asked to fit the part of it the payroll has left. Whether 100% of the week's income
+  // is the right ceiling for a three-seat payroll is the cap's own question, measured in
+  // docs/specs/team-budget-payroll-2026-09.md and ruled by the owner, not decided here.
+  //
+  // ⚠ AND IT STILL ONLY COLOURS A CARD. `hireCoach` does not consult the budget at all, so a
+  // narrower denominator warns and never refuses – which is what keeps this inside «мы ни за что не
+  // наказываем». Naming that here because «changes WHO CAN BE HIRED» is the item's own phrase and
+  // the honest version of it is «changes who is FLAGGED».
+  const payrollCents = supportPayrollWeeklyCents(world)
+  // ⚠ FLOORED AT ZERO: a family whose support payroll already exceeds the week's income has no room
+  // at all, and a negative budget would make `overBudgetCents` read LARGER than the coach's price,
+  // which is a figure the card prints («$X over») and a parent can check against the rung beside it.
+  const coachBudgetCents = Math.max(0, weeklyIncome - payrollCents)
   // ⚠ THE QUOTE IS OVER THE WEEKS SHE WILL ACTUALLY HAVE HIM (08.08). Same arithmetic the season
   // price uses, from the same helper, so the card and the bill can never describe different years.
   const coachedWeeks = ECONOMY.coach.upliftHorizonWeeks - coachedWeeksLostToRest(world)
@@ -795,7 +845,11 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // ⭐ ROUND-21 #12: that income is now ALL of it (`familyWeeklyIncomeCents`) and not the
       // parents' line alone. The ruling above is unchanged - the reserve is still not counted - it
       // is the week's income that was being under-read, by more than half on his own save.
-      overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier) - weeklyIncome),
+      // ⭐⭐⭐ ROUND 42 #42: ...less what the OTHER SEATS already cost. See `coachBudgetCents` above.
+      overBudgetCents: Math.max(
+        0,
+        coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier) - coachBudgetCents,
+      ),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
       // ⚠ THE RUNG'S CORRIDOR, NEVER HIS OWN NUMBER (spec §4). A number on an unhired card turns the

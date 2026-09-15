@@ -767,21 +767,27 @@ export const ECONOMY = {
     // stands open every single week – collected ≈ 2.9 payments ≈ $2,940 a season. Three cheques in
     // ten weeks is what a memoryless process looks like; it is also what «засыпает» looks like.
     //
-    // ⚠⚠ BOTH NUMBERS BELOW ARE A PROPOSAL AND HE HAS NOT SEEN THE PRINT. They are named constants
-    // rather than literals precisely so ONE LINE of his moves either one. The prediction was written
+    // ⚠⚠ BOTH NUMBERS BELOW WERE A PROPOSAL AND THE PRINT WENT TO HIM. The prediction was written
     // down BEFORE the arm was run (invariant 5) and lives in docs/specs/sponsor-cadence-2026-09.md;
     // the measured column is beside it in the same table.
-    /** ⭐ THE SHOP'S OWN PATIENCE: no second cheque inside this many weeks of the last one. Six is
-     *  proposed because it puts the floor of the gap PAST the «раз в 3-4 недели» he is pointing at
-     *  with one week to spare, and because at `rollChance` the renewal mean is 1/p + 6 ≈ 22.7 weeks –
-     *  a little over two cheques a season, which is the shape of a shop that helps rather than a
-     *  standing order. */
-    cooldownWeeks: 6,
-    /** ⭐ ...AND A CEILING ON THE SEASON, so a lucky run of draws cannot restore the cluster by
-     *  another road. Three is proposed as the cap that BINDS RARELY – the cooldown alone already
-     *  lands near 2.3 – so it is a wall against the tail rather than a second dial fighting the
-     *  first. A cap that binds often would flatten the mechanic into «three a year, every year». */
-    seasonCap: 3,
+    //
+    // ⭐⭐⭐ ROUND 42 #43 – HIS RULING OFF THAT TABLE, 15.09: «сними потолок, а кулдаун давай 4».
+    // Both halves land here and the second one HAS A CONSEQUENCE HE WAS TOLD ABOUT RATHER THAN LEFT
+    // TO FIND: his original complaint was «раз в 3-4 недели», and a cooldown of four sets the floor
+    // of the gap at EXACTLY four weeks – so a four-week gap is still legal and only the one-, two-
+    // and three-week clusters are structurally gone. The measured share of gaps that land on that
+    // floor is in the spec's §5 ledger. If the cadence still reads as too fast in play, this is one
+    // constant and nothing else moves.
+    //
+    // ⚠ AND `seasonCap` IS GONE ENTIRELY – the constant and its reader. It was never a second
+    // opinion about the cadence, it was a wall against the tail; he took the wall off, so the walk
+    // in `cameoWillingWeeks` no longer counts a season's cheques at all. The cooldown is the whole
+    // mechanism now, which is also why the dial he would move next is unambiguous.
+    /** ⭐ THE SHOP'S OWN PATIENCE: no second cheque inside this many weeks of the last one. FOUR is
+     *  his number (round 42 #43) – at `rollChance` the renewal mean is 1/p + 4 ≈ 20.7 weeks, about
+     *  two and a half cheques in a season that never refuses one. ⚠ The floor it sets is four, not
+     *  five: see the block above. */
+    cooldownWeeks: 4,
 
     /** HOW MANY WEEKS OF COURT HIRE THE BALANCE MUST NO LONGER COVER for a shop to chip in.
      *
@@ -1782,12 +1788,39 @@ export const ECONOMY = {
   // no form, no choice, nothing persisted: computed at `finalizeTournament` from these constants
   // and the finish, exactly like the kid's ramp one block up.
   //
-  // THE SHAPE – «за победы или 2е места», NOT every cheque: a TITLE pays `titleBps`, a FINAL pays
-  // `finalBps` («за 2е только по-меньше» – half), below a final NOTHING. The real-world convention
-  // (5-15% of every cheque, sliding by depth) was researched and shown to him (the plan's §1); his
-  // version is the sharper one and it is the one that ships. Both shares are computed OFF THE
+  // THE SHAPE, ROUND 24 – «за победы или 2е места», NOT every cheque: a TITLE pays `titleBps`, a
+  // FINAL pays `finalBps` («за 2е только по-меньше» – half), below a final NOTHING. The real-world
+  // convention (5-15% of every cheque, sliding by depth) was researched and shown to him (the plan's
+  // §1); his version was the sharper one and it is what shipped. Both shares are computed OFF THE
   // GROSS cheque – the kid's ramp (round-23 #18) is untouched and each share rounds ONCE, the
   // family keeping the remainder to the cent (`staffPrizeShareCents` + the finalize subtraction).
+  //
+  // =================================================================================================
+  // ⭐⭐⭐ ROUND 42 #41 (15.09) – AND THE COACH'S SHAPE IS NOW THE CONVENTION'S, BY HIS OWN RESEARCH
+  // =================================================================================================
+  //
+  // HIS WORD: «я вообще не понял почему мы снова обсуждаем разные проценты, если уже есть
+  // исследование на 10% безусловных отчислений с любых призовых, независимо от глубины прохода. И мы
+  // говорили, что это будет сделано».
+  //
+  // The receipt is his own file – docs/research/team-economics-2026-09.md §2 and finding 3.1: «7–15%,
+  // most commonly 10%, of EVERY cheque» (Rublev pays Vicente fixed + 10% per tournament; Kasatkina
+  // «10% от любого заработка на корте»). The audit's own verdict line on this very constant read «⚠
+  // half-matches: our 10% exists but only at finishIdx 0/1; reality cuts 10% of EVERY cheque». So
+  // round 24's sharper shape is REPLACED for the coach and nothing else about the mechanism moves:
+  // still universal, still nothing persisted, still off the GROSS, still one rounding each, still
+  // `track === 'wta'` and a FILLED seat only.
+  //
+  // ⭐ THE THIRD NUMBER IS THE WHOLE CHANGE. `everyBps` is what a finish BELOW a final pays; the
+  // function one block down (`staffResultShareBps`) reads it instead of returning a hard 0. For the
+  // coach all three are 1000, which is «10% of every prize cheque, at every finish» stated as data
+  // rather than as a branch – and it is why this is still ONE mechanism with two takers.
+  //
+  // ⚠⚠ AND THE MASSEUR IS DELIBERATELY LEFT ON THE ROUND-24 SHAPE (`everyBps: 0`), WHICH IS A
+  // QUESTION FOR THE OWNER AND NOT A DECISION TAKEN HERE. Item 41 names it as the thing the bench has
+  // to answer; the measurement is in docs/specs/coach-every-cheque-2026-09.md §5, and moving him onto
+  // the every-cheque road is exactly one number on this object. The default is «no change» because a
+  // seat he never asked to re-rule should not move while he is reading a table about the coach.
   //
   // WHO PAYS AND WHEN: the family (the parent is the employer – the game's premise), pro tour only
   // (`track === 'wta'` – junior tennis pays no prize money worth sharing and the convention is a
@@ -1800,9 +1833,17 @@ export const ECONOMY = {
   // own worked example (a $3M Slam title): coach $300k, masseur $90k, daughter $900k (at the
   // age-22 rung), family $1.71M «плюс остальные расходы».
   staffShare: {
-    coach: { titleBps: 1000, finalBps: 500 },
-    masseur: { titleBps: 300, finalBps: 150 },
-  } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
+    // ⭐⭐⭐ ROUND 42 #41 – FLAT TEN PER CENT AT EVERY FINISH. The three numbers are equal on purpose:
+    // «10% безусловных отчислений с любых призовых, независимо от глубины прохода» has no depth in
+    // it, so a title, a lost final and a first-round exit all pay the same rate. `finalBps` moved
+    // from 500 to 1000 with the rest of them – round 24's «за 2е только по-меньше» was a statement
+    // about DEPTH, and his 15.09 word removes depth from the coach's line entirely.
+    coach: { titleBps: 1000, finalBps: 1000, everyBps: 1000 },
+    // ⚠ THE MASSEUR IS UNCHANGED, AND `everyBps: 0` IS ROUND 24'S SHAPE SPELLED IN THE NEW FIELD –
+    // a title-and-final bonus, nothing below a final. See the block above: whether he follows the
+    // coach onto every cheque is the owner's to rule off the bench, not an agent's to decide.
+    masseur: { titleBps: 300, finalBps: 150, everyBps: 0 },
+  } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number; everyBps: number }>,
 
   // =================================================================================================
   // ⭐⭐⭐ THE MANAGER'S COMMISSION – round 29 part three P3 (owner, 29.08)
@@ -7034,14 +7075,20 @@ export function kidPrizeShareCents(prizeCents: number, ageYears: number, pausedY
  *  coach and the masseur), because two independent copies of "what does a finish pay" is this
  *  repo's own recurring disease – two surfaces asking different functions about one question.
  *
- *  The owner's shape, not the tour's: «за победы или 2е места» – a TITLE pays `titleBps`, a FINAL
- *  pays `finalBps` («за 2е только по-меньше»), and below a final NOTHING – never a cut of every
- *  cheque. `finishIdx` is the finish index `finalizeTournament` already holds (0 = champion,
- *  1 = finalist). All four numbers live in `ECONOMY.staffShare`; this reads them and nothing
- *  else, so a retune moves the whole game and this function does not change. */
+ *  ⭐⭐⭐ ROUND 42 #41 – AND THE THIRD RUNG IS NOW DATA. It used to `return 0` below a final, which
+ *  hard-wired round 24's «за победы или 2е места» into the FUNCTION; his 15.09 ruling («10%
+ *  безусловных отчислений с любых призовых, независимо от глубины прохода», on his own research)
+ *  needed that road open, and a branch is not a road. So the tail reads `everyBps` off the object,
+ *  the coach's three numbers are all 1000, and the masseur's `everyBps` is 0 – round 24's exact
+ *  behaviour, now spelled as a rate rather than as an absence. The taker whose seat this function
+ *  cannot see, the psychologist, is still not in `ECONOMY.staffShare` at all (O3, ruled 13.09).
+ *
+ *  `finishIdx` is the finish index `finalizeTournament` already holds (0 = champion, 1 = finalist).
+ *  ⚠ ALL SIX NUMBERS LIVE IN `ECONOMY.staffShare`; this reads them and nothing else, so a retune –
+ *  including the masseur's open question – moves the whole game and this function does not change. */
 export function staffResultShareBps(role: 'coach' | 'masseur', finishIdx: number): number {
   const rates = ECONOMY.staffShare[role]
-  return finishIdx === 0 ? rates.titleBps : finishIdx === 1 ? rates.finalBps : 0
+  return finishIdx === 0 ? rates.titleBps : finishIdx === 1 ? rates.finalBps : rates.everyBps
 }
 
 /** A staff member's cut of one cheque, in whole cents – the role's bps applied to the GROSS prize

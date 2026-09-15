@@ -6,6 +6,22 @@
 //
 // THE ANSWER IS YES, and it has been paid since round 24: `finalizeTournament` takes
 // `staffResultShareBps('coach', finishIdx)` of the GROSS cheque – a title pays `titleBps`, a final
+// ⚠ MUTATION-VERIFIED FOR #41, counts read off the runs (control 28/28 green over this file,
+// round29p2-coach-cut-weekly and round42-coach-share-money; each mutation applied alone, reverted):
+//   * `staffResultShareBps`' tail back to a hard `: 0`      -> **3 red**, one in each of the three
+//     files: the semi-final arm here, the memo arm in round29p2, the first-round arm in round42.
+//   * coach `finalBps` back to 500 (the tail left at 1000)  -> **1 red**, §2's «and since #41 they are
+//     equal» arm here, ALONE – which is what says the two claims are separate.
+//   * and in the unit suite, the same two mutations score 3 red and 2 red in tests/team-share.test.ts.
+//
+// ⚠⚠⚠ ROUND 42 #41 (15.09) RE-AIMED TWO ARMS IN THIS FILE AND LEFT A COPY BLOCKER STANDING. The
+// coach now takes ten per cent of EVERY cheque at every finish («10% безусловных отчислений с любых
+// призовых, независимо от глубины прохода»), so §2's «the final is the smaller» and §3's «a
+// semi-final pays NOTHING» both describe the old rule and are re-aimed in place, each quoting its old
+// self. ⚠ THE SCREEN'S OWN SENTENCE STILL SAYS «nothing below a final» AND IS NOT AN AGENT'S TO
+// CHANGE (invariant 4) – the copy pin below is untouched and carries a ⚠ note; the ask is in round
+// 42's handoff.
+//
 // pays `finalBps`, and below a final nothing – on the professional tour only and only when the seat
 // is filled. Nothing on any screen said so, which is what he noticed.
 //
@@ -88,7 +104,13 @@ describe('Round 29 #13 §1 – the share is stated once, for the whole page', ()
     const line = clean(wrapper.get('.cm-share-note').text())
     expect(line).toContain('wins a tour title')
     expect(line).toContain('runner-up')
-    expect(line, 'below a final it is nothing').toContain('nothing below a final')
+    // ⚠⚠⚠ ROUND 42 #41 – THIS CLAUSE IS NOW FALSE ON SCREEN AND THE PIN IS DELIBERATELY UNCHANGED.
+    // The coach takes ten per cent of every cheque since his 15.09 ruling, so «nothing below a final»
+    // describes a rule the engine no longer runs. ⚠ THE STRING IS THE OWNER'S (invariant 4: «запрети
+    // на уровне документации и спекам агентам самовольно изменять вординг»), so it is not an agent's
+    // to repair – round 42's handoff asks him for the replacement and this pin moves WITH his answer,
+    // not ahead of it. Until then this arm honestly records what the screen says.
+    expect(line, '⚠ round 42 #41 – contradicted by the engine, awaiting his wording').toContain('nothing below a final')
     expect(line, 'and the junior ladder pays nothing to take a share of').toContain('junior ladder')
     wrapper.unmount()
   })
@@ -191,12 +213,18 @@ describe('Round 29 #13 §2 – the sentence is pinned to the cheque, not to a co
     closeTournament(world)
   })
 
-  it('the two rates the screen quotes are the two the engine holds, and the final is the smaller', async () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09). The old title was «…and the final is the smaller» and the
+  // last line asserted `final < title` under the quote «за 2е только по-меньше». That was round 24's
+  // ruling and his 15.09 word replaces it: «10% безусловных отчислений с любых призовых, независимо
+  // от глубины прохода». The claim this arm was really built for is UNTOUCHED and is the first two
+  // lines – the screen quotes the ENGINE's numbers and never its own – so what moves is only the
+  // relation between them.
+  it('the two rates the screen quotes are the two the engine holds – and since #41 they are equal', async () => {
     const { title, final } = await pctsOnScreen()
     expect(title).toBe(staffResultShareBps('coach', 0) / 100)
     expect(final).toBe(staffResultShareBps('coach', 1) / 100)
-    // «за 2е только по-меньше» – his own ruling, and the copy would be lying if it inverted.
-    expect(final).toBeLessThan(title)
+    // ⭐ ROUND 42 #41 – no depth in the coach's line any more, so the two figures on screen agree.
+    expect(final).toBe(title)
   })
 })
 
@@ -207,10 +235,25 @@ describe('Round 29 #13 §2 – the sentence is pinned to the cheque, not to a co
 describe('Round 29 #13 §3 – nothing below a final, and nothing on the junior ladder', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('a semi-final pays the coach NOTHING – the clause is a rule and not a softener', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41, AND THE CLAIM INVERTED RATHER THAN SOFTENED. It read «a semi-final
+  // pays the coach NOTHING – the clause is a rule and not a softener» and asserted zero rows. His
+  // 15.09 ruling is that the coach takes ten per cent of EVERY cheque, so a semi-final pays him, and
+  // the arm asserts the row that is actually written – at the engine's own rate, never a typed one.
+  //
+  // ⚠⚠⚠ AND THE SENTENCE ON SCREEN STILL SAYS «nothing below a final». IT IS THE OWNER'S COPY AND
+  // NO AGENT MAY CHANGE IT (invariant 4), so it is untouched here and the arm one describe up still
+  // pins it verbatim – but it is now CONTRADICTED BY THE ENGINE, and round 42's handoff carries the
+  // ask rather than a quiet rewrite. Whoever reads this after his word lands: the string lives at
+  // `.cm-share-note` in `CoachMarketScreen.vue`, and the copy pin is
+  // «…and it says the two things a parent would otherwise discover by not being charged».
+  it('⭐⭐ ROUND 42 #41 – a semi-final DOES pay the coach, at the same flat rate a title pays', () => {
     const world = drivenFinish('semi', 2)
     skipTournament(world)
-    expect(coachRows(world), 'below a final no row is written at all').toHaveLength(0)
+    const rows = coachRows(world)
+    expect(rows, 'below a final a row is now written').toHaveLength(1)
+    const prize = TIERS.w15.prizeCents![2]
+    expect(rows[0].amountCents).toBe(-Math.round((prize * staffResultShareBps('coach', 2)) / 10_000))
+    expect(staffResultShareBps('coach', 2), 'and the rate has no depth in it').toBe(staffResultShareBps('coach', 0))
     closeTournament(world)
   })
 
