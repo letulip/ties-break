@@ -231,6 +231,70 @@ different feel.
 
 ---
 
+
+### 8c. Six more, one per subject, written in full (15.09 – for his вычитка)
+
+The two above cover `good-news`/`deep`/college and `worry`/`fiery`/after-school. These six cover the
+other four subjects and the other two voices, and two of them deliberately REPEAT a subject in a
+different voice and stage – because «one dialogue over and over» is the complaint, and the proof is
+that the same subject does not read the same twice. Drafts throughout; every word is the owner's to
+change.
+
+**`decision` · `quiet` voice · `school` stage · home**
+
+> She waited until the plates were cleared. "I can't decide whether to enter the one in March."
+
+* **Ask what she's weighing** → "It's a long way for a draw that size. And I'd miss the Tuesday session. I keep going round it."
+* **Say how we see it** → "That's more or less where I'd got to. I just wanted to hear it from outside my head."
+* **Say there's no rush** → "No. There isn't. I'll leave it till Sunday."
+
+**`curiosity` · `sunny` voice · `after-school` stage · home**
+
+> She came in still in her kit. "How do you know when you've got a real coach and not just a nice one?"
+
+* **Ask what she wants to know** → "I mean – mine's lovely. Everyone's lovely. I can't tell if that's the same as good."
+* **Answer her honestly** → "Okay. That helps, actually. I'll watch for that."
+* **Say it can wait** → "Fine. I'll ask you again when I've got a better version of the question."
+
+**`observation` · `deep` voice · `independent` stage · on a call**
+
+> Halfway through the call she said it plainly. "The girls who win a lot aren't the ones who talk about winning."
+
+* **Ask her to go on** → "They talk about Tuesday. What they're doing on Tuesday. I've started listening for it."
+* **Say we've noticed it too** → "Then it's not just me making it up."
+* **Just let it sit** → "Mm. I'll keep watching them."
+
+**`story` · `fiery` voice · `school` stage · home**
+
+> Bag still on her shoulder. "You will not believe what happened on court four."
+
+* **Ask what happened next** → "So she serves, right, and the ball hits the net cord, goes up – and lands in a dad's coffee. Full cup. He didn't even move."
+* **Say we're listening** → "Right. Okay. So. The coffee."
+* **Let her tell it her way** → "I'm getting to the good bit, give me a second."
+
+**`worry` · `quiet` voice · `independent` stage · on a call** – the same subject as 8b, four years and one voice away
+
+> A pause on the line, longer than the others. "I don't think I like the new place much."
+
+* **Let her keep going** → "It's fine. It's clean. I've been eating standing up for a week and I hadn't noticed until now."
+* **Tell her what worries us** → "I know. I'm not ignoring it, I'm just tired."
+* **Say she needn't solve it tonight** → "No. I'll look at it properly at the weekend."
+
+**`good-news` · `sunny` voice · `school` stage · home** – the same subject as 8a, in the other register
+
+> She was grinning before the door shut. "I beat someone I've never beaten."
+
+* **Ask what made it good** → "She's beaten me four times. Four! And today I just – didn't panic. That's the whole difference."
+* **Tell her we're glad** → "I know you are. You've got the same face you had at my first one."
+* **Let her enjoy it** → "Oh, I'm going to. All evening."
+
+⚠ **What to look for while reading**, because these are the two claims the build rests on: no branch
+is the right one (each answer meets what the parent actually did, none is rewarded), and the same
+subject in two voices does not share a sentence – compare 8b with the `quiet` worry above, and 8a
+with the `sunny` good news.
+
+---
+
 ## 9. The existing openers – his proposed rewrites
 
 The owner rewrote nine shipped opener lines in the review; because they are his copy, these are his
