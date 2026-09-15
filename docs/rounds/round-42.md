@@ -973,6 +973,15 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   on either surface** – see the wording question in the handoff. Evidence:
   `tests/component/round42-psych-marker.test.ts`, 9 cases, five arms measured (2 / 3 / 5 / 4 / 1 red).
 
+  ⭐ **RULED 15.09 ON THE BUDGET METER: SHOW THE COST, NEVER REFUSE THE HIRE.** His words: «мы не
+  можем запретить нанимать специалистов, если у них есть желание – они нанимают, просто в этом
+  индикаторе мы покажем реальные затраты в неделю». ⚠ And the engine already agrees – `hireCoach`
+  never consults the budget («a narrower cap warns and never refuses», coachMarket.ts:646). The defect
+  is on the SCREEN: an over-budget row swaps its «Hire ›» call to action for «$X over» and takes the
+  `blocked` class, so a hire that is perfectly legal READS as forbidden. Fix: the row keeps «Hire ›»
+  and carries the weekly cost beside it; `blocked` stays for the points lock, which IS a real gate.
+  The cap therefore stays at 1.00 as a WARNING line and nothing is refused.
+
   ⚠ **TWO QUESTIONS LEFT FOR HIM, both small and both reversible** (the round runs on his «делай», so
   neither blocked the build):
   1. **The marker is silent to a screen reader.** The recap dot beside it on Home has a name («A new
@@ -2003,3 +2012,23 @@ its own acceptance bench does not ship because the round is ending.
   ⚠ Deliberately NOT a number on screen: `tourRecoveryPerRound` is a tuning constant and printing it
   would pin copy to a dial. The sentence says the SHAPE («more the further she goes, nothing on a
   first-round exit»), which stays true when the constant moves.
+
+- [ ] **47. «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный
+  этап J серия, там самые большие расходы» (15.09) – the cameo's ORIGINAL intent, recovered.** His
+  memory of what he first asked for supersedes the cadence tuning of #5/#43: the local sponsor was
+  never meant to be a weekly lottery with a spacing rule. It was meant to arrive **at the edge of
+  need, to close a TRIP she cannot pay for** – and the hardest stretch is the J-series, where the
+  travel bill is biggest against the smallest prize money.
+
+  So the mechanic is re-shaped rather than re-tuned:
+  * it fires off an actual unpayable **travel** bill rather than a flat weekly die;
+  * it is sized to **close the gap** rather than a flat $500–1500 draw;
+  * the J-series years are where it should be visible, and the bench must show that it is.
+
+  ⚠ The cooldown and the need gate stay as the floor under it – «help every week» is the defect he
+  reported in the first place, and the wave-6 T12 reachable-money fix (the deposit no longer fooling
+  the gate) is what makes a need test honest at all. ⚠ And one design question is his before it
+  builds: a gap-closing gift is by construction a gift that always saves the trip, which is a
+  different feeling from a gift that sometimes arrives – does he want it to close the gap ALWAYS, or
+  to close it often enough that a missed trip is still possible? The bench prints both.
+  Belongs with the measurement wave (bundle 15), not with a UI bundle.
