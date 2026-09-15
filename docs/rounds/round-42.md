@@ -144,7 +144,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   nowhere in code or docs (only `rolling52` and `seasonToDate`); no screen prints 46 – if he saw a
   46 somewhere, a screenshot reopens that half.
 
-- [ ] **8. «нажал на плашку… не сразу открылась, а потому мой второй автоклик выбрал какой-то пункт…
+- [x] **8. «нажал на плашку… не сразу открылась, а потому мой второй автоклик выбрал какой-то пункт…
   Надо сделать как на прологе "выбор + proceed"» (и «сделать плавно пульсирующей по контуру»)** –
   **build.** Confirmed in code: options answer on FIRST tap with no debounce, no open-delay, and
   `useDialogFocus` puts focus on the first answer button at mount (`LifeBeatDialog.vue:106-130,
@@ -154,6 +154,24 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   answer. Plus the chip: a gentle contour pulse on `.soft-beat-card` (reduced-motion killswitch
   stays). Evidence: mounted test – first tap selects and does NOT dispatch; only Proceed calls
   `answerLifeBeat`; mutation arm reverts to single-tap and the test reddens.
+
+  ⭐ **SHIPPED (bundle 1).** `LifeBeatDialog` answers are radios that only mark; the Proceed under
+  the group is the one control that records, and its word comes off the wire
+  (`LifeBeatPrompt.confirm`, engine-assembled in `lifeBeat.ts` – the dialog still owns no sentence).
+  Focus at open lands on the card, never on an answer (`DialogFocusOptions.focusOn: 'card'`). The
+  selection now STAYS through a refused send – it is what he chose, not a claim the world took it.
+  The `listen` detour keeps its own two-step, and its focus moved to the card too. Mutation arms
+  run and watched red: single-tap restored → 4 red; the focus option dropped → 1 red.
+
+  ⚠ **SCOPE, HIS TO VETO: the same two taps went onto `KnockDialog`** (rest / train through it),
+  which item 8 does not name. The reason is item 27 – his six unremembered `push` choices at weeks
+  210–350 are best explained by fast taps on exactly this card, and it was the last single-tap
+  decision surface in the game. One `v-if` and one handler if he wants it back.
+
+  **DRAFT string (one, both cards):** `Proceed` – the prologue's own shipped confirm vocabulary
+  (`WALK_COPY.proceed`, round 41 #9, «наша желтая кнопка proceed»), reused rather than coined.
+
+  The chip's contour pulse ships with #20 below (same surface, same ruling session).
 
 - [~] **9. «почему на w15 для 15 летней за весь турнир (победа) снялось только 25 энергии?»** –
   **answered: exactly nominal.** A w15 title is 5 matches (draw 32): per match 2 (straight sets)
@@ -246,7 +264,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   muted). Verdict + numbers back to this ledger; any gate change is his call with the print in
   hand.
 
-- [ ] **17. «иногда получается двойная перемотка недели вместо одинарной… не получается на турниры
+- [x] **17. «иногда получается двойная перемотка недели вместо одинарной… не получается на турниры
   заходить вовремя»** – **build, three mechanisms found, all three closed.** (a) NO in-flight
   guard on the press path: `playWeek` (`App.vue:794-839`) never checks `game.busy`, `run()` has no
   re-entry check (`game.ts:219-222/322-329`) – the worker's `baseRevision` refuses only CONCURRENT
@@ -258,6 +276,16 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   consumes its own re-emit window, and focus-restore targets the shell, not the button. Evidence:
   component tests per mechanism – two rapid presses tick ONE week (mutation: remove the latch,
   red); the sweep-window tap ticks zero.
+
+  ⭐ **SHIPPED (bundle 1), all three.** (a) `game.advance` refuses while any command is in flight –
+  one latch where every press converges (Home's bar, the span pill, the calendar's hand-back,
+  SeasonScreen's «Play it and watch»), silent, no toast; (b) `skipSweep` guards on `skippable`
+  instead of `running`, which closes the gap between the last stroke and the arriving snapshot –
+  the mutation arm's failure message is literally «expected 2 to be 1», his double week reproduced;
+  (c) both decision dialogs opt out of the focus hand-back (`restore: false`), so a held Enter
+  cannot re-fire the press that raised them. Residue, deliberately out of scope: Birthday, Fork,
+  Retirement, ShootClash, InjuryStop, SeasonSummary and WeekSpanReport still restore focus to the
+  week button – annual or rare surfaces, one option each if he ever wants them to match.
 
 - [ ] **18. «в пунктах психолога на выбор немного расписать эффект от работы»** – **build, and the
   strings already exist.** The picker renders labels only (`SupportStaffTab.vue:449-462`), while
@@ -288,7 +316,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   Recommendation: its own bundle AFTER this round's small fixes (or the next economy wave) – his
   word on the slot; the ledger holds it open either way.
 
-- [ ] **20. «Когда ребенок "хочет поговорить" надо ещё кнопку proceed дизаблить, пока не
+- [x] **20. «Когда ребенок "хочет поговорить" надо ещё кнопку proceed дизаблить, пока не
   поговорили»** – **ask, because the two beat kinds want opposite answers.** BLOCKING beats
   (met/fork/counsel) already refuse the week engine-side (`multiWeek.ts:360`) but the button never
   greys – that half is a pure build and ships regardless: Proceed disabled with the reason line
@@ -302,6 +330,26 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   the home. One word decides. ⭐ **RULED 15.09: B** – the leave-anyway one-liner + the pulsing chip; «she can
   be missed» stays true. The blocking-beat grey-out ships beside it as planned.
 
+  ⭐ **SHIPPED (bundle 1), all three halves.** The chip pulses on its contour only (border tint, no
+  layout shift, `--accent-soft` and not `--accent`); under `prefers-reduced-motion` the pulse dies
+  and a steady soft-accent edge stays, so the attention survives without the motion. The guard is
+  module state asked by BOTH projections of the press – the shell's `playWeek` before the calendar
+  detour, and the calendar's own CTA before its sweep starts (a refusal after the strokes would
+  leave a crossed-out grid over a week that never moved) – and it is one ask per career:week, so a
+  press chain through the detour costs one tap, not two. A blocking beat greys the button with its
+  reason, after the knock's branch, mirroring the engine's own refusal order; a soft chip disables
+  nothing, which is the ruling.
+
+  **DRAFT strings (two):** `She wanted a minute – leave anyway?` – the guard's one line, declared
+  once in `composables/softLeave.ts` and read by both note slots. `She has something to say –
+  nothing moves until you hear her out.` – the blocking beat's reason under the greyed button, in
+  the knock note's register.
+
+  ⚠ The e2e case «she came by, the week did not stop» met the guard and went red on the first press
+  – re-aimed by hand, not softened: it now presses twice and asserts the ask line in between, which
+  is ruled B stated in a real browser. The claim it always made (a soft row stops nothing) is
+  intact; it costs one honest tap, which is what B means.
+
 - [~] **21 + 30. «Вообще не вижу часть правок из предыдущей волны опять, проверь всё по пунктам» /
   «ещё раз прошу проверить предыдущий раунд правок»** – **answered with the audit, and one
   bookkeeping fix.** Round 41: 28 items – 25 `[x]`, and a six-item spot-check of exactly the
@@ -310,7 +358,9 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   carries – nothing shipped was lost. The three non-`[x]`: **#4 is a STALE MARK** (the prologue
   coach lines shipped in `fe6b4469`, the ledger box was never ticked – fixed by this round, the
   one-line bookkeeping build); **#3** still waits on his capstone word (4 → 3?); **#22** (fund
-  chart purchase marks) waits on v78 – first in that queue. What his feeling most likely tracks:
+  chart purchase marks) waits on v78 – first in that queue. ⭐ **15.09: two of those three are now
+  closed in round 41's own ledger** – #4's box ticked with a note saying WHEN and WHY it sat unticked
+  (`round-41.md:132`), #3 closed by his «оставляем текущий». One left: #22, on v78. What his feeling most likely tracks:
   the two HALVES that genuinely never landed are this round's items 7 (the round-34 latch half)
   and 14 (the ITF-track flag residue) – both now carried as their own items. ⚠ And one ask of his
   was NEVER captured in any ledger: the hero-image complaint – entered now as item 29, the
@@ -405,7 +455,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 
 *(item 30 is folded into 21 above – one audit, one answer.)*
 
-- [ ] **31. «посмотри на этот сид целиком, с чем пришла, на сколько прокачалась, на сколько
+- [x] **31. «посмотри на этот сид целиком, с чем пришла, на сколько прокачалась, на сколько
   соответствует модели. Интересно, что тренер по итогу пролога сказал что-то вроде "такая же как
   все в этом возрасте", хотя там явно был очень большой сектор на старте»** – **answer (the full
   seed audit, reconstructed exactly) + ask (the wording half).**
@@ -579,7 +629,7 @@ snapshot/ladder own 7/14; offers own 16's probe; SupportStaffTab owns 18 (⚠ wa
 same file – this bundle REBASES on the wave, never races it); 19 is its own later bundle. Gate
 once, quiet machine, exit codes from files; every DRAFT line lands in this file before the PR.
 
-- [ ] **33. (screenshot) «Simulation calibration #8» на main c3c63dd красный – четыре sim-джоба
+- [x] **33. (screenshot) «Simulation calibration #8» на main c3c63dd красный – четыре sim-джоба
   падают** – **measure → build.** The weekly cron (`simulation.yml`, on: schedule) is red, and the
   screenshot's own durations classify it: `econ-bench` (3m10s), `econ-reach` (3m36s), `econ-reach-pro`
   (2m50s), `fatigue-bench-planner` (2m29s) FAILED; the lighter variants (~1m) passed. **Confirmed the

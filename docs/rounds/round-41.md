@@ -129,7 +129,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   ⭐ **CLOSED 14.09 by his word in round 42:** «не ждет, я уже говорил, что оставляем текущий» –
   the capstone stays at 4; nothing was waiting after all.
 
-- [ ] **4. «В прологе проиграли первый турнир "The coach said the first one doesn't count" (или
+- [x] **4. «В прологе проиграли первый турнир "The coach said the first one doesn't count" (или
   что-то вроде того), выиграли второй, а потом снова вылетели в первом раунде 3го турнира, а фраза
   та же самая пишется, надо какой-то каунтер завести для этих трех турниров может быть и сделать эти
   фразочки более соответствующими. И в четвертом турнире пролога после вылета в полуфинале я тоже
@@ -138,7 +138,10 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   coach line becomes a deterministic function of (which Local Open this is by count, this result,
   what came before) – zero RNG. All new lines = DRAFT, listed here for his read.
 
-  **SHIPPED** on `round/41` (`fe6b4469`).
+  **SHIPPED** on `round/41` (`fe6b4469`). ⚠ The box above was ticked only on 15.09, by round 42's
+  audit of this ledger (items 21 + 30): the code shipped in August and the mark sat `[ ]` for weeks,
+  which is exactly how «часть правок не вижу» happens on a page that says so itself. The lesson is
+  the round's, not this item's – a ship without its mark is an unshipped item to everyone reading.
 
   **⚠⚠ HIS REPORT CARRIES TWO DIFFERENT DEFECTS, AND ONLY ONE OF THEM IS A COUNTER.**
   1. **REPETITION** – one string served every weekend, so a third first-round exit was told it was

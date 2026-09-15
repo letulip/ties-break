@@ -29,10 +29,19 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 41 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 42 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 41 is the long playtest** ([round-41.md](rounds/round-41.md), 12.09) – 27 items off two
+**Round 42 is the w517 playtest** ([round-42.md](rounds/round-42.md), 14.09) – 33 items off his
+prologue-kbakekls career plus three screenshots and the red weekly sim cron, run strictly one
+bundle at a time on his own ruling («строго последовательно»). Shipped so far: the sim gate that
+stopped failing a proven-green re-stall (#33), the handover's upper pairs re-voiced into the
+realisation register (#31), the day-together ask starting at sixteen (#1), and the dialog-flow
+bundle – select + Proceed on every decision card, the three double-advance mechanisms closed, and
+her soft chip pulsing behind a leave-anyway guard (#8 / #17 / #20). Beside it: wave 6 «the
+spotlight» merged as PR #144, and the small-talk exchange waits on his copy tables.
+
+**Round 41 was the long playtest** ([round-41.md](rounds/round-41.md), 12.09) – 27 items off two
 deployed careers: money (the ad gate that was our own inference, prize money that is «всё-таки её
 призовые», the academy that now builds to order), three clean bugs with found roots (the rank tile
 vs the table, the flagless field pros, the vacation the coach's warning ignores), the prologue's
