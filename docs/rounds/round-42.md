@@ -6,7 +6,7 @@ canonical: false
 last-reviewed: 2026-09-14
 ---
 
-# Round 42 – the wave-5 deployed playtest: the dialogs, the money drip and the screens, 30 items (14.09.2026)
+# Round 42 – the wave-5 deployed playtest: the dialogs, the money drip and the screens, 34 items (14.09.2026)
 
 Status: `[x]` shipped on the branch · `[~]` answered, nothing to build · `[>]` in flight, agent named
 · `[ ]` open · `[?]` waiting on the owner's answer · `[!]` REOPENED (was reported done, was not)
@@ -572,7 +572,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
 * **round-41 #3 – CLOSED by his word:** «не ждет, я уже говорил, что оставляем текущий» – the
   capstone stays 4; round-41's ledger line updated with the 14.09 quote.
 
-- [?] **32. «по сравнению с предыдущим сейвом Алисы Зоя играет хуже и меньше выигрывает всего.
+- [x] **32. «по сравнению с предыдущим сейвом Алисы Зоя играет хуже и меньше выигрывает всего.
   Давай эти два сейва сравним»** – **measure, waiting on the file.** The Alice save WAS on disk all along
   (tennis-sim_alice_prologue-pmb8nzwh_w405.tsave – the earlier check read only the tail of the
   listing, the checker's own miss, owned) – unblocked 14.09; the instrument is ready: the same seeded
@@ -580,6 +580,55 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   both saves plus the results ledgers (titles by tier, rank trajectory, win rate by season).
   Deliverable: the two careers side by side with the model's own explanation of the gap – birth
   cards, rolled rooms, realisation, and what luck vs build vs play each contributed.
+
+  ⭐ **ANSWERED 15.09, and the instrument is now a tool** (`tools/seed-vs-model.ts`, archival, run by
+  hand on a save handed in on the command line; the saves themselves are never copied – only the
+  derived numbers below).
+
+  **They were dealt almost the same talent.** Reconstructed from the seed (both draws are seeded, so
+  her birth is exact rather than remembered): Alice's five wings total 253.0 at birth against a
+  ceiling of 334.6; Zoe's 261.0 against 326.7. **Eight points of ceiling between them.** Alice took
+  91.9% of her room, Zoe 94.3% – neither career is off-book, and neither girl wasted what she had.
+
+  **And they are 192 rating points apart**, because the rooms are in different wings. Alice:
+  groundstrokes 50 → 73.1, return 55 → 69.6, serve 49 → 68.3, composure 39 → 51.6. Zoe: composure
+  53 → 77.6 (the whole 24.6 of the [4,26] band – the biggest nerve draw the game can deal), serve
+  55 → 65.1, groundstrokes 47 → 62.5, return 53 → 57.8. Rested on hard: **Alice 2128, Zoe 1936.**
+
+  **The exchange rate is why, and it is identical at both builds** – rating points per +5 of a wing:
+  `groundstrokes +42/+43 · serve +31 · return +31 · stamina +2/+3 · composure +1`. Zoe's maximal
+  nerve draw is worth about **five rating points**; the ten groundstroke points Alice holds over her
+  are worth about eighty-five.
+
+  **The match model itself is clean.** Every recorded match in the retained feed carries both
+  MatchPlayers frozen as they were on the day (`WorldEvent.match.a/.b`), so the prediction is made
+  from the two girls who actually played, at that week's condition and kit:
+
+  | | matches | actual | model | gap |
+  | --- | ---: | ---: | ---: | --- |
+  | Alice | 263 | 80.6% | 80.9% | −0.7 wins (**0.1σ**) |
+  | Zoe | 253 | 64.8% | 63.5% | +3.4 wins (**0.5σ**) |
+
+  Band by band the same holds (Alice's 80–90 band: 84.6% actual against 85.2% predicted on 136
+  matches). **Her results are the model's own prediction of her results** – there is no winning
+  mechanic misfiring behind either career.
+
+  ⚠ AN EARLIER PASS OF THIS MEASUREMENT WAS WRONG AND IS RECORDED AS SUCH. It matched opponents by
+  the feed's printed «F. Last» against today's universe; 137 short names collide in a universe that
+  size, and it reported a collapsing top band (Zoe 52% where the model said 98%) that does not exist.
+  The frozen pair has no such hole. The lesson is the repo's own: when the instrument has a hole, it
+  finds a defect in the subject.
+
+  **Careers, for the record.** Alice at 21: WTA #8 (the table recomputes to #8 – the ranking is
+  self-consistent), 8,091 points last season, a Slam title and another Slam final, 7 × WTA1000,
+  11 × WTA500, $16.1M in prize money. Zoe at 23: #13 (recomputes to #16 – a season-boundary cache
+  difference worth a look, not a defect claim), best Slam a semifinal, 4 × WTA1000, 6 × WTA500,
+  $7.7M. Age for age Alice was ahead from fourteen (62-12 against 22-21), which is the wealthy
+  family's high-tier coach from week zero as much as the draw.
+
+  ⚠ WHAT THE ANSWER CANNOT REACH: the feed prunes to its last 400 rows, so both samples are the
+  recent window rather than the whole career; and `chanceFromRatings` is the Elo curve the ring
+  quotes, not the point loop. The residual between those two is item **34**'s subject.
 
 ## The ask batch – ONE left open (everything else above is ruled; DRAFTs/benches ship under his gate)
 
@@ -660,3 +709,52 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   only a retry that comes back FAILED ends the run. The radar law stays the unit pool's: a sim
   bench's minutes are its statistical power and cannot be «cut». Safety invariant + the note pinned
   in `tests/units-stall-classifier.test.ts` (the new ROUND 42 #33 block).
+
+- [ ] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
+  **measure first, then his ruling.** Entered off item 32's audit, which priced the wing by accident
+  and then could not see it work.
+
+  **What the audit already established** (`tools/seed-vs-model.ts`, two real careers, 516 recorded
+  matches between them):
+  * The RATING prices nerve at almost nothing, identically at both builds:
+    `groundstrokes +42/+43 · serve +31 · return +31 · stamina +2/+3 · composure +1` per +5 of a wing.
+    Zoe's 24.6-point composure draw – the maximum the game can deal – is worth ≈5 rating points.
+  * The RESIDUAL after the rating is paid is inside noise on real careers: Zoe brought 15+ more nerve
+    than her opponent in 217 of her matches and beat the model by **+1.8pp** (≈0.6σ); Alice's
+    level-nerve band ran −3.8pp on 129. Two careers cannot resolve an effect that small.
+  * The one suggestive shape is the CLOSE sets, and it is confounded: Zoe (composure 78) keeps more
+    of her own edge in deciding sets (−10.4pp against her overall) than Alice (composure 52) does
+    (−17.6pp) – but close sets happen against closer opponents, so the split is not clean.
+
+  **Why it matters beyond balance.** The prologue SHOWS the sector and the handover speaks about it;
+  a girl dealt the largest nerve draw in the game is being promised a talent that the engine then
+  prices at five rating points. That is «ожидание спорит с реальностью» – his own words about the
+  handover line – one layer down, in the numbers rather than the sentence.
+
+  **The bench, predicted-first (invariant 5 – a balance claim ships with a spec recording predicted
+  vs measured).**
+  * **Arms.** One population of seeds, one policy, ONE wing moved: composure ceiling −20 / as dealt /
+    +20, and the same three arms for stamina (the other near-free wing, +2/+5 – same instrument, one
+    run). ⚠ The override lands AFTER `rollPotential` so the arms share a birth and a world; a
+    different seed per arm would measure the seed.
+  * **⚠ Prove the arm before trusting the result** (the house law both ways): set the override to an
+    absurd value first and watch the outputs move. A null result from an arm whose reader is absent
+    is the failure this repo has recorded twice.
+  * **Measured.** Per arm, over the same N careers: per-match win rate at matched opponent quality;
+    deciding-set and tiebreak-set win rate; season W/L; end rank; career prize. The match-level
+    numbers come off the frozen pairs the same way item 32's audit reads them, so the bench and the
+    real-career instrument answer in the same units.
+  * **Predicted, before the run** (so the measurement can embarrass it): a ±20 composure swing moves
+    the per-match win rate by **1–3pp** and the deciding-set rate by **3–6pp**; the rank effect is
+    under ten places; stamina's swing is smaller still. If composure's real price is inside 1pp, the
+    wing is decorative and the finding is a design decision, not a tuning one.
+
+  **Then his ruling, and it is a fork rather than a number:** (A) raise the price of nerve – in the
+  point loop where it already lives, and let the rating follow it, so a nerve talent rates like a
+  talent; (B) leave the model and stop advertising the sector – the prologue and the handover say
+  what the wing really buys; (C) both, in that order. Architect leans **A**, because the game's own
+  fiction is that the head matters – but the number comes first, and nothing moves until the bench
+  has run.
+
+  ⚠ NOT this round's UI work: it is a measurement bundle of its own, alongside item 19's pricing
+  audit, and it needs a quiet machine.
