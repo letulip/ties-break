@@ -1662,8 +1662,12 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   she is like. The old pairs took BOTH words from the style, which is why they duplicated the note and
   read the same for every career with that style.
 
-  All the DRAFT lines – four composure bands × four temperaments – land in this ledger before the
-  gate. Evidence: two careers with the same temperament and different composure read differently; the
+  ⭐ **THE SIXTEEN LINES ARE APPROVED (15.09: «строки я прочел - по ним тоже ок»)** – the first word
+  from her composure band (`Hot-headed` under 45 · `Impatient` 45–60 · `Patient` 60–75 ·
+  `Unshakeable` 75+), the second from her temperament (`fiery` → stubborn · `deep` → single-minded ·
+  `quiet` → self-contained · `sunny` → easy-going). His own two examples fall out of the grid, and
+  his Federer arc is the `deep` row read left to right. The band edges 45/60/75 stay DRAFT – one
+  line moves them. Evidence: two careers with the same temperament and different composure read differently; the
   same career read at 14 and at 22 changes its first word and never its second; and a mutation arm
   binding the first word to SPIRIT instead of composure goes red (the «not the mood field» law).
 
@@ -1815,3 +1819,28 @@ earned again this round), and pushes. The round ends with its own PR through `/p
 ⚠ **What the PR will carry as NOT done**, unless he rules otherwise before it: 19's numbers if the
 bench lands late, and anything in bundle 15 the re-measurement refuses – a physics change that fails
 its own acceptance bench does not ship because the round is ending.
+
+- [ ] **46. «можно как-то показывать игроку преимущества всех ездящих специалистов, что он получает. С
+  главным тренером понятно, а вот с остальными двумя не очень» (15.09)** – **build, and the facts are
+  already in the engine.** The travel switch is a real price (a second fare, every event week) and the
+  game states what it buys for exactly one seat.
+
+  What is true today, measured rather than assumed:
+  * **The coach travelling** – he coaches on event weeks instead of standing down; this is the one the
+    player understands, and its copy exists.
+  * **The masseur travelling** – it buys `masseurTourRelief`: recovery BETWEEN ROUNDS, and the shape is
+    the tellable part – `tourRecoveryPerRound × (matchesPlayed − 1)`, capped by the strain she actually
+    carries. So it pays **nothing on a first-round exit** and most on a deep run. The stay-at-home
+    state already has a sentence («The masseur stays home on tournament weeks – the table waits for her
+    return»); the travelling state has no answering line.
+  * **The psychologist does not travel at all** – there is no switch, and the round found that out by
+    looking. So the honest fix for that seat is not a benefit line but saying so, or the seat quietly
+    reads as a third fare the player might be missing.
+  * **The sparring partner** (bundle 13, on his 15.09 override) – travelling covers the road weeks
+    where a girl between matches goes cold; not travelling covers the home weeks, where most rust is
+    made.
+
+  Fix: each seat's card states what its fare buys, in that seat's own voice – DRAFT lines, his read.
+  ⚠ Deliberately NOT a number on screen: `tourRecoveryPerRound` is a tuning constant and printing it
+  would pin copy to a dial. The sentence says the SHAPE («more the further she goes, nothing on a
+  first-round exit»), which stays true when the constant moves.
