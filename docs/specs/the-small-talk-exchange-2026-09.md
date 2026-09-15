@@ -232,66 +232,166 @@ different feel.
 ---
 
 
-### 8c. Six more, one per subject, written in full (15.09 – for his вычитка)
+### 8c. Six more, one per subject – HIS REVISION OF 15.09, applied
 
-The two above cover `good-news`/`deep`/college and `worry`/`fiery`/after-school. These six cover the
-other four subjects and the other two voices, and two of them deliberately REPEAT a subject in a
-different voice and stage – because «one dialogue over and over» is the complaint, and the proof is
-that the same subject does not read the same twice. Drafts throughout; every word is the owner's to
-change.
+The first drafts of these six went to the owner and came back with a line-by-line review. His verdict
+was «keep the direction, revise several branch connections, and give the story a complete payoff –
+the remaining problems are mostly conversational logic rather than vocabulary», and his priorities
+were: preserve the apartment scene, keep the coach question, complete the fiery story, specify the
+parent's actual opinion in every `respond` branch, and soften the deep observation from a maxim into
+a personal discovery. What follows is his revision, not mine.
 
-**`decision` · `quiet` voice · `school` stage · home**
+**`decision` · `quiet` · `school` · home**
 
-> She waited until the plates were cleared. "I can't decide whether to enter the one in March."
+> She waited until the plates were cleared. "I'm not sure about the March tournament."
 
-* **Ask what she's weighing** → "It's a long way for a draw that size. And I'd miss the Tuesday session. I keep going round it."
-* **Say how we see it** → "That's more or less where I'd got to. I just wanted to hear it from outside my head."
-* **Say there's no rush** → "No. There isn't. I'll leave it till Sunday."
+* **Ask what she's weighing** → "It's a long trip. I'd miss Tuesday training. I'm not sure it's worth it."
+* **Say the travelling matters too** → "That's the bit I keep coming back to."
+* **Say there's time to decide** – *only when the deadline actually permits it* → "I'll look at it again on Sunday."
 
-**`curiosity` · `sunny` voice · `after-school` stage · home**
+⚠ Three of his fixes are in that one exchange. «the one in March» assumed context the player may not
+have. «I keep going round it» repeated what the opener already said. And the old close – "No. There
+isn't." – reads for a beat as disagreement.
+
+**`curiosity` · `sunny` · `after-school` · home**
 
 > She came in still in her kit. "How do you know when you've got a real coach and not just a nice one?"
 
-* **Ask what she wants to know** → "I mean – mine's lovely. Everyone's lovely. I can't tell if that's the same as good."
-* **Answer her honestly** → "Okay. That helps, actually. I'll watch for that."
-* **Say it can wait** → "Fine. I'll ask you again when I've got a better version of the question."
+* **Ask what made her wonder** → "Mine's lovely. Everyone's lovely. I can't tell if that's the same as good."
+* **Say a good coach explains what they're changing** → "Okay. I'll ask why next time, not just what."
+* **Say she doesn't have to work it out now** → "Fine. But I'm coming back to this one."
 
-**`observation` · `deep` voice · `independent` stage · on a call**
+⚠ «Ask what she wants to know» was redundant – she had already asked a specific question. And the old
+close, «a better version of the question», had her revising a prompt rather than talking to a parent.
 
-> Halfway through the call she said it plainly. "The girls who win a lot aren't the ones who talk about winning."
+**`observation` · `deep` · `independent` · on a call**
 
-* **Ask her to go on** → "They talk about Tuesday. What they're doing on Tuesday. I've started listening for it."
-* **Say we've noticed it too** → "Then it's not just me making it up."
-* **Just let it sit** → "Mm. I'll keep watching them."
+> Halfway through the call, she said, "The players I've been watching barely talk about winning."
 
-**`story` · `fiery` voice · `school` stage · home**
+* **Ask her to go on** → "They talk about Tuesday. What they're working on next. I've started noticing that."
+* **Say we've noticed it too** → "You have? I thought I might be reading too much into it."
+* **Let the thought settle** → "Mm. I'll keep watching."
 
-> Bag still on her shoulder. "You will not believe what happened on court four."
+⚠ The first draft opened on a maxim – «the girls who win a lot aren't the ones who talk about
+winning» – a universal claim in a prepared shape. His version is one adult's particular observation,
+which is both truer to her and harder to have read somewhere. ⭐ And he lifted a rule while he was
+here: **the hedge stays**. The old `deep` bible forbade them; «an adult capable of questioning her
+interpretation feels more human than one who always speaks in certainties».
 
-* **Ask what happened next** → "So she serves, right, and the ball hits the net cord, goes up – and lands in a dad's coffee. Full cup. He didn't even move."
-* **Say we're listening** → "Right. Okay. So. The coffee."
-* **Let her tell it her way** → "I'm getting to the good bit, give me a second."
+**`story` · `fiery` · `school` · home** – the shape that changed, not just the words
 
-**`worry` · `quiet` voice · `independent` stage · on a call** – the same subject as 8b, four years and one voice away
+> Her bag was still on her shoulder. "You won't believe what happened on court four."
+
+**The incident is a SHARED continuation** – every route hears it:
+
+> "She serves, the ball catches the net cord – and lands in a dad's coffee. Full cup. He just looked at it."
+
+...and the branches are the aftermath:
+
+* **Ask what he did** → "Took the ball out. Put the lid on. Like that would stop the next one."
+* **Laugh with her** → "Exactly! And then I had to serve. I couldn't look at him."
+* **Let her finish** → "Anyway, nobody wanted the ball back. That's the important part."
+
+⚠⚠ **THIS IS A STRUCTURAL FINDING AND IT BINDS THE BUILD.** In the first draft two of the three
+branches left the player waiting for the punchline: «Ask what happened next» arrived before she had
+said what happened first, and «give me a second» read as though the parent had interrupted her. So a
+`story` is a TWO-BEAT subject – the thing itself is shared, the branch is what the parent does with
+it – and **every route delivers a complete little story**. The joke above is illustrative; the shape
+is not.
+
+**`worry` · `quiet` · `independent` · on a call** – his own verdict: the best scene in the set
 
 > A pause on the line, longer than the others. "I don't think I like the new place much."
 
-* **Let her keep going** → "It's fine. It's clean. I've been eating standing up for a week and I hadn't noticed until now."
-* **Tell her what worries us** → "I know. I'm not ignoring it, I'm just tired."
-* **Say she needn't solve it tonight** → "No. I'll look at it properly at the weekend."
+* **Let her keep going** → "It's fine. It's clean. I've been eating standing up for a week. I only noticed tonight."
+* **Ask whether she's been eating properly** → "I have. Just not sitting down, apparently."
+* **Say she needn't solve it tonight** → "Good. Tomorrow, then. Not tonight."
 
-**`good-news` · `sunny` voice · `school` stage · home** – the same subject as 8a, in the other register
+⚠ «Fine» and «clean» being the wrong measures of whether somewhere is home is the writing he asked to
+keep almost exactly. Two changes: the `respond` branch now ASKS something real instead of gesturing
+at an unheard opinion, and the old «I'm not ignoring it, I'm just tired» was defensive – it invented
+parental pressure the label never applied. «Look at it properly at the weekend» also went: look at
+what – the flat, moving, furniture, how she feels?
 
-> She was grinning before the door shut. "I beat someone I've never beaten."
+**`good-news` · `sunny` · `school` · home**
 
-* **Ask what made it good** → "She's beaten me four times. Four! And today I just – didn't panic. That's the whole difference."
-* **Tell her we're glad** → "I know you are. You've got the same face you had at my first one."
+> She was smiling before the door had closed. "I beat someone I've never beaten."
+
+* **Ask what made it good** → "She's beaten me four times. Four! Today I got nervous – and kept playing."
+* **Tell her we're glad** → "I can tell. You're doing the face."
 * **Let her enjoy it** → "Oh, I'm going to. All evening."
 
-⚠ **What to look for while reading**, because these are the two claims the build rests on: no branch
-is the right one (each answer meets what the parent actually did, none is rewarded), and the same
-subject in two voices does not share a sentence – compare 8b with the `quiet` worry above, and 8a
-with the `sunny` good news.
+⚠ «That's the whole difference» explained the moral of her own scene; stopping earlier trusts the
+player. «The same face you had at my first one» had a lovely family-memory shape and an unclear
+referent – first win, first tournament, first win over her? – so it becomes the shared joke instead.
+⭐ And his note on temperament: the single «Four!» does not make her fiery. **Temperament shapes the
+pattern, not the punctuation.**
+
+---
+
+---
+
+## 8d. The four corrections his review made to the DESIGN, not to the words (15.09)
+
+These came out of the line edits and they outrank the line edits: each one changes what the build
+does, and two of them would have produced a wrong TEST if nobody had said so.
+
+### 1. A `respond` branch must name the parent's actual opinion
+
+Three of the six had the same defect and he named it three times: the label promises a view («Say how
+we see it» · «Answer her honestly» · «Tell her what worries us») and then her reaction answers an
+opinion **the player never heard**. «I'll watch for that» refers to something nobody said.
+
+So §3's table changes: the `respond` stance is **not a generic act**, it is a specific sentence the
+parent can take a position with – «Say the travelling matters too», «Say a good coach explains what
+they're changing», «Ask whether she's been eating properly». ⚠ This is more copy, per situation
+rather than per subject, and that price is the point: a promise of content the game has not written
+is the defect this whole item exists to remove.
+
+### 2. A `story` is two beats, and every route finishes it
+
+The thing itself is a SHARED continuation; the branch is what the parent does with the aftermath. A
+branch that leaves the player waiting for B is the shipped defect wearing a new coat. See 8c's court
+four.
+
+### 3. ⚠⚠ «Different wording proves different voices» IS THE WRONG TEST – and I had written it
+
+My own note under the first draft offered as proof that the fiery worry and the quiet worry «do not
+share a sentence». His correction: those two have different SITUATIONS – a line call and a new flat –
+and different situations produce different words all by themselves. That demonstrates nothing about
+temperament. His test, which is the one the bundle will be built and pinned against:
+
+> **Same event, same facts, same age, same parental choice – four different ways of noticing,
+> disclosing and responding.**
+
+⭐ And «not one shared phrase» is the wrong target anyway: real people all say «Okay», «I know»,
+«Good». The difference lives in context, rhythm and what follows. A test asserting disjoint
+vocabulary would fail honest writing and pass four strangers.
+
+### 4. Ungraded does not mean emotionally interchangeable
+
+Neutral mechanics (no bond, no score, no recommended branch) do not require every answer to be
+equally warm. The three branches may honestly produce **relief · mild resistance · amusement ·
+uncertainty · a boundary · a changed thought**. What must be avoided is scoring, a recommendation cue
+and a consistently superior branch – not difference in feel.
+
+### 5. ⚠⚠ THE FACTUAL BOUNDARY – what she may invent and what she may not
+
+His sharpest build constraint, and it is a law rather than a preference:
+
+* **Generated situation detail is hers, and must stay STABLE across the exchange** – the flat, the
+  coffee, the dad who put the lid back on. Self-contained, invented, consistent from opener to close.
+* **A COMPETITIVE claim touches the authoritative career and needs a real fact behind it** – entering
+  a particular tournament, missing a scheduled session, a decision deadline, beating an opponent,
+  four previous losses to her. She may interpret an outcome however she likes; she may not invent the
+  outcome.
+
+So «I beat someone I've never beaten» may only be drawn on a week where she actually did, against an
+opponent she had actually lost to; «I'm not sure about the March tournament» needs a real pending
+entry; «Say there's time to decide» may only be offered when the deadline really permits it. The
+generator therefore reads the career for the competitive half of its situation pool and invents only
+the domestic half. ⚠ This is the line between flavour and a lie, and it is where a beat that «says
+something about her career» becomes a beat that contradicts the save.
 
 ---
 
