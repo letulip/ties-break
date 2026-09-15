@@ -109,8 +109,10 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           week,
           ageYears: 14 + seasonIndex,
           seasonYear: seasonYear(seasonIndex),
-          // ⚠ ROUND 42 #6 – the view names her temperament now; this file is about the School tile.
+          // ⚠ ROUND 42 #6/#37 – the view names her temperament and her composure now; this file is
+          // about the School tile and asserts about neither.
           temperament: 'quiet',
+          composure: 50,
           playStyle: 'all-court',
           birthMonth: bm,
           injured: false,
@@ -514,8 +516,10 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             week,
             ageYears: Math.floor(kidAgeExact(week, bm, 1)),
             seasonYear: seasonYear(Math.floor(week / WEEKS_PER_YEAR)),
-            // ⚠ ROUND 42 #6 – the view names her temperament now; this file is about the School tile.
+            // ⚠ ROUND 42 #6/#37 – the view names her temperament and her composure now; this file is
+          // about the School tile and asserts about neither.
           temperament: 'quiet',
+          composure: 50,
           playStyle: 'all-court',
             birthMonth: bm,
             injured: false,

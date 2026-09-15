@@ -8,6 +8,11 @@
 // which is untouched. ⭐ This is the side effect item 41 named out loud: the line is almost never
 // silent now, which answers his «не вижу отчислений» at the root rather than on the screen.
 //
+// ⚠⚠ ...AND HIS REPLACEMENT WORDING FOLLOWED IT (the same day, one item on). The memo's own tail –
+// «10% of a title cheque, 10% of a lost final.» – was the doubled percentage that ruling left
+// behind, and repairing it was never an agent's to do (invariant 4). He wrote «10% of every prize
+// cheque»; §1's rule assertion is re-aimed onto it and asserts the absence of the old tail too.
+//
 // ⚠ THE MECHANIC WAS NEVER THE DEFECT. `finalizeTournament` has charged the coach 10% of a title
 // cheque and 5% of a lost final since round 24 – gross, on the pro track, the W-series included –
 // and `tests/team-share.test.ts` pins that wiring row by row, including the exact W15 text. What was
@@ -132,8 +137,17 @@ describe('round 42 #11 – the coach\'s cut is named where the money is counted'
     expect(line, 'the named line does not carry the cents the coach was paid').toContain(formatCents(expected))
     // ...and the rule beside the figure is the ENGINE's, never a typed percentage – round 29 #13's
     // binding rule on the coaches page, applied to the second surface that states it.
-    expect(line).toContain(`${staffResultShareBps('coach', 0) / 100}%`)
-    expect(line).toContain(`${staffResultShareBps('coach', 1) / 100}%`)
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09) – HIS REPLACEMENT WORDING, AND ONE RATE WHERE THERE WERE
+    // TWO. The memo used to end «10% of a title cheque, 10% of a lost final.» and this arm asserted
+    // both indices, which after his flat ruling was the same string asserted twice – it would have
+    // stayed green on a memo that quoted only one of them. His sentence is «10% of every prize
+    // cheque», and the whole clause is pinned rather than the substring, so a drift in either
+    // direction is visible here.
+    expect(line, 'the rule is the every-finish rate, in his own words').toContain(
+      `${staffResultShareBps('coach', 2) / 100}% of every prize cheque.`,
+    )
+    expect(line, 'and the doubled percentage is gone').not.toContain('of a lost final')
   })
 
   it('⭐ a LOST FINAL pays the half rate, and the line follows the cheque rather than the title', () => {

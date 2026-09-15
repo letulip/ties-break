@@ -2118,6 +2118,15 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // rather than about who she is. Swapping this one line for the expressed read (or for anything
       // of this week's mood) is the mutation arm the round-42 fence test is written against.
       temperament: world.temperament,
+      // ⭐⭐⭐ ROUND 42 #37 – THE FIRST WORD OF THE SAME LINE, and it is a SKILL rather than a mood.
+      //
+      // ⚠⚠ `world.skills.composure` AND NEVER `world.spirit`. His re-cut of 15.09: «может быть эти
+      // два слова будут ИНОГДА меняться, как у Федерера… Я не хочу, чтобы это менялось с настроением
+      // и дублировало его, у нас уже есть поле с настроением». Composure grows a few points a season
+      // along her own rolled ceiling, so a band edge is crossed once or twice in a whole career;
+      // spirit moves every week and already owns the Mood tile one cell over. Swapping this line for
+      // the spirit read is the mutation arm #37's tests are written against, and it must redden them.
+      composure: world.skills.composure,
       playStyle: world.profile.playStyle,
       birthMonth: world.profile.birthMonth,
       injured: world.injury !== null,

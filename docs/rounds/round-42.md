@@ -236,6 +236,11 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   the arm scored 0 red before that positive control was added). Keyed on her play style again, or
   frozen to one girl: **4 red**.
 
+  ⚠⚠ **SUPERSEDED BY #37 (15.09) – THE FOUR PAIRS ABOVE ARE HISTORY AND ARE KEPT AS HISTORY.** He read
+  them in play and re-cut the tile: one line of two adjectives, the SECOND word from her temperament
+  (which is this item's claim, intact) and the FIRST from her composure band. `TEMPERAMENT_PERSONALITY`
+  is gone with the pairs; what survives is the key. See #37's own ship note for the sixteen readings.
+
 - [ ] **7. «мы так и не починили дыру… каждый год заново надо набирать национальный ранг… второй раз
   пишу»** – **ask, sharpened – and the archaeology says exactly where the pain is.** The
   season-to-date window IS his own ruling (round 23 #12/#13 «6 лучших ЗА СЕЗОН»;
@@ -628,7 +633,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   Retirement, ShootClash, InjuryStop, SeasonSummary and WeekSpanReport still restore focus to the
   week button – annual or rare surfaces, one option each if he ever wants them to match.
 
-- [ ] **18. «в пунктах психолога на выбор немного расписать эффект от работы»** – **build, and the
+- [x] **18. «в пунктах психолога на выбор немного расписать эффект от работы»** – **build, and the
   strings already exist.** The picker renders labels only (`SupportStaffTab.vue:449-462`), while
   `PSY_FOCUS_LINE` – one owner-gated sentence per focus – sits unused on the options
   (`psychologist.ts:347-353`; today it reaches only the hired line's splice). Fix: each option
@@ -636,6 +641,30 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   focus arrives with wave 6's T5 and inherits the same slot for free. Zero new wording – the lines
   are already in the wave-5 strings table under his read. Evidence: mounted test pinning the
   sub-line off the imported constant (the wave-5 §3b idiom).
+
+  ⭐ **SHIPPED (bundle 10, 15.09), and not one word was written.** Each option in the year's-work
+  picker is a NAME over a SENTENCE now – `StaffMember.focus.options` gained a `line`, filled from
+  `PSY_FOCUS_LINE[f]` at the same call site that fills the label, so the picker and the hired card's
+  splice read one constant and a вычитка pass moves both. The sub-line takes `.cm-blurb`'s treatment
+  to the value (10.5px/1.35, `--muted`) and the button became a two-line flex column; the note UNDER
+  the row is untouched, including its silence before the first pick. Evidence:
+  `tests/component/psychologist-card.test.ts` gains «every option says what its year is FOR», which
+  reads all five sub-lines off the imported constant and asserts they are five DIFFERENT sentences –
+  a picker printing one sentence five times would satisfy every other assertion. §9's option pin is
+  re-aimed with a ⚠ note (it asserted the button's WHOLE text was the label, which this item's own
+  change would have read as a regression).
+
+  ⚠ **MUTATION ARM: `line: ''` – the sub-line dies, i.e. the shipped picker. 1 RED**, the new case
+  alone, which is the separation this item wanted: no other pin on that card can see the sentence.
+  **The visual sweep** (four widths, `fits.ts`, the real cascade): the row's option resolves to
+  **184.5 / 381.0 / 447.0 / 637.0 px** at 375 / 768 / 900 / 1280, two really fit side by side at
+  every width (the 2x2 shape v76 T3 chose), and the tallest option is **72.7 / 58.5 / 58.5 / 44.4 px**
+  – so the five options make a block of roughly **218 px on a phone** and 133 px on a desktop. ⚠ The
+  row's own room is read off the mounted subtree, which carries no app-shell side padding, so the
+  option width is an UPPER bound (the real phone cell is ~16 px narrower a side); what the sweep
+  proves without that caveat is the rule that matters – the sentence's `white-space` is not `nowrap`
+  and its `text-overflow` is not `ellipsis` at any width, which is the only state in which a 60-90
+  character line inside half a phone would have been cut.
 
 - [ ] **19. «элитный стоит 830 в неделю, это 43к в год… за такие деньги их не существует. И то же
   про элит рекавери… 2900»** – **measure → its own priced bundle (M), and the blueprint is his own
@@ -1621,7 +1650,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   (`flex: 1 1 0` removed) came back **0 RED** and that is how the screen's duplicate of MatchScene's
   own fill geometry was found and deleted.
 
-- [ ] **37. «мы делали вроде для разнообразия персоналий, разве нет? мне кажется надо вернуть» (15.09,
+- [x] **37. «мы делали вроде для разнообразия персоналий, разве нет? мне кажется надо вернуть» (15.09,
   on the four play-style pairs item 6 retired)** – **build, and he is right about why they existed.**
   Item 6 replaced a tile keyed on `playStyle` with one keyed on TEMPERAMENT, and four shipped strings
   left the game with the old table: «Impatient / Wants it now» · «Patient / And stubborn» · «Backs
@@ -1680,6 +1709,67 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   same career read at 14 and at 22 changes its first word and never its second; and a mutation arm
   binding the first word to SPIRIT instead of composure goes red (the «not the mood field» law).
 
+  ⭐⭐ **SHIPPED AS HE RE-CUT IT (bundle 10, 15.09) – ONE LINE, TWO ADJECTIVES, SIXTEEN READINGS.**
+  `KidLife.personality` is a STRING now rather than a `KidLifeTile`, and the shape IS the item: the
+  pair's two lines were `nowrap` on a 16-character budget and the longest reading is 29 characters,
+  so the cell wraps one line instead of printing two (`.kid-tile-personality` opts out of the grid's
+  `nowrap` + ellipsis; the other three tiles keep it). `COMPOSURE_BANDS` holds the DRAFT edges as a
+  named constant – no comparison site writes 45, 60 or 75 – and `TEMPERAMENT_WORD` the four second
+  words; `personalityLine(composure, temperament)` is the whole composition, and `toSnapshot` hands
+  `world.skills.composure` beside `world.temperament`. `PLAY_STYLE_LABEL` beside the photo is
+  untouched.
+
+  **THE SIXTEEN, AND FOUR CAREERS READ OFF THEIR OWN PAGES** (`tools/r42-personality-read.ts`, real
+  careers through the real engine, the line taken from `toSnapshot(world).life.personality`):
+
+  | seed | born | composure w30 → w416 | w30 (age 14) | w416 (age 22) |
+  | --- | --- | ---: | --- | --- |
+  | `alice` | fiery | 56.2 → 73.7 | Impatient and stubborn | **Patient and stubborn** |
+  | `zoya` | sunny | 39.3 → 42.9 | Hot-headed and easy-going | Hot-headed and easy-going |
+  | `r42-a` | fiery | 46.7 → 51.8 | Impatient and stubborn | Impatient and stubborn |
+  | `r42-b` | deep | 51.4 → 66.9 | Impatient and single-minded | **Patient and single-minded** |
+
+  ⭐ **THAT TABLE IS HIS «ИНОГДА», MEASURED:** two of four careers cross a band in eight seasons and
+  two never do, and the second word never moves in any of them. `zoya` is the girl the model deals a
+  small nerve draw – 39 to 43 over that whole span – and she reads hot at fourteen and at twenty-two,
+  which is the per-seed variety the item exists for.
+
+  Evidence: `tests/kidLife.test.ts` §2, re-aimed with a ⚠ note and rebuilt around the composition –
+  the sixteen-reading grid, the band ladder's own shape (ordered, ending at a floor so a girl born at
+  35 still has a word), the Federer arc, and the fence. `tests/component/round42-kid-tile-and-account.test.ts`
+  gains the end-to-end arms: two careers with the same temperament and different composure read
+  differently through world → snapshot → the mounted cell; one career read at two composures changes
+  its first word and never its second; and the tile is ONE line (a build that kept the lead/note pair
+  reddens). ⚠ Its `.text()` helper and both fence cases are re-aimed off `personalityLine` rather
+  than off a table, so the spirit arm bites them too. `kidLife.test.ts`'s `TILE_LINE_MAX` sweep no
+  longer covers this line – it is a wrapping sentence and the 16-character budget was written for the
+  `nowrap` cells – and that is stated in place; the copy rules (ASCII, short dash) still sweep all
+  sixteen readings.
+
+  **The visual sweep** (his standing rule of 14.09), measured with `fits.ts` against the real cascade
+  on the worst reading the tables can produce – «Unshakeable and self-contained», 30 characters:
+  grid column **119.7 / 250.7 / 294.7 / 421.3 px** at 375 / 768 / 900 / 1280, tile box **77.0 / 62.6 /
+  62.6 / 62.6 px** against the cell's own 88px floor. So the phone wraps it to two lines and still
+  sits 11px inside the box the export drew; every wider screen keeps it on one. The test asserts the
+  wrap RULE through the cascade too (`white-space` not `nowrap`, `text-overflow` not `ellipsis`),
+  which is the state in which this line would have been cut to «Unshakeable an…».
+
+  ⚠⚠ **THE MUTATION ARMS – EACH APPLIED ALONE, RUN, AND REVERTED with the file's md5 asserted back to
+  pristine.** The counts are MEASURED, not predicted:
+
+  | arm | red |
+  | --- | ---: |
+  | **A1 – `toSnapshot` hands `world.spirit` where the composure goes** (the «не дублировало настроение» law) | **6** |
+  | A2 – the first word frozen: «Patient and …» for everybody (his complaint reproduced) | **4** |
+  | A3 – `.kid-tile-personality` back to `nowrap` (the clip the sweep exists for) | **1** |
+
+  ⭐ **A1 IS THE ARM THIS ITEM EXISTS TO KEEP, AND IT BITES IN BOTH LAYERS:** `kidLife.test.ts`'s
+  end-to-end career plus all five mounted cases – the four-careers sweep, the seedwise case, the arc,
+  and BOTH fences. ⚠ A2 leaves the mood fence green and correctly so (a constant line does not move
+  with her mood either), which is what says the two claims are separate. ⚠ A3 reddens the four-width
+  sweep ALONE: nothing else on the page can see a `white-space` rule, which is why that case is the
+  measurement and «it reads well» is not.
+
 - [ ] **38. «может быть разные девочки в разное время к потолку приходят всё-таки? колледж или нет,
   тренер или нет, хорошо тренировали или нет» (15.09)** – **measure first, then decide.** Raised off
   item 22's finding that at the end of a career all five wings read the saturated register at once,
@@ -1691,7 +1781,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   every girl the same story and that is a development question, not a copy one.
   ⚠ Belongs with the nerve wave (#34): same family, same benches, same quiet machine.
 
-- [ ] **39. «я вообще ничего не понял. Почему остальные контракты работают корректно, а этот нет? Это
+- [~] **39. «я вообще ничего не понял. Почему остальные контракты работают корректно, а этот нет? Это
   надо починить» (15.09, on item 16's answer)** – **the answer was muddled and the real finding is
   narrower than it read.** Restated: nothing misbehaves per contract. A signed KIT deal turns away
   only KIT letters (`offers.ts:1107` gates on `offer.kind === 'kit'`), which is correct – she cannot
@@ -1713,6 +1803,38 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
     renewals are a scene. Proposal: in the LAST season of a running deal the same rung (and only the
     same rung) may write a renewal or a rival approach. That is a real mechanic and it would ship the
     way this round's other tuning does: predicted first, benched, his numbers.
+
+  ⭐ **(a) SHIPPED (bundle 10, 15.09) – the inbox says it, and no mechanic moved.** A line above the
+  list, engine-composed (`contractNote` in `InboxSheet.vue`, off `activeKitDeal` – the engine's own
+  «is she under contract this week» predicate, the one the wear ceiling reads). The brand is the
+  paper's own `terms.brand` and the date is the `untilWeek` **`signOffer` wrote**, never a term this
+  sheet re-derived from `seasons` – the two are different numbers inside a window, which the confirm
+  dialog already learnt the hard way. Empty for every week she is under nobody; above the empty-state
+  hints deliberately, because the quiet winter is exactly the case where the list has nothing in it.
+
+  ⚠ **THE DRAFT, VERBATIM, ONE SENTENCE – SHIPPED BEHIND HIS READ** (the figures are one career's;
+  the brand and the week are whatever the contract holds):
+
+  > **Her kit is String House's until W50 '32 – while it runs, only a bigger name can write.**
+
+  ⚠⚠ **THE SECOND CLAUSE IS DELIBERATELY NOT «nobody writes».** That would be FALSE at every rung but
+  the last – round 29 part two #12 lets a strictly stronger rung interrupt a running term, measured
+  over 191 winters – so the sentence names the one thing true at every rung. At the TOP of the ladder
+  there is no bigger name, which is his four winters said without the screen having to know which
+  rung she is on. ⚠ AND IT IS THE RIGHT CLAUSE UNDER HIS OWN RULING ON (b) – item 45 refuses mid-term
+  letters («кончился контракт - можно свежие слать»), so the post really does stay shut for the term
+  except to a bigger rung, and this sentence says exactly that and nothing more.
+  Evidence: `tests/component/round42-inbox-contract.test.ts`, 6 cases – the brand, the signed week,
+  the clause, the silence before a first deal and after a lapsed one, that the line adds no row to
+  the post, and the four-width sweep.
+
+  ⚠ **MUTATION ARM: `contractNote` returns '' – the silence he reported. 5 RED of the file's 6**, and
+  the sixth (SILENT when nobody is dressing her) stays green by construction, which is what makes it
+  worth having. `round29-inbox-subjects` stays green throughout: the line is new surface, not a change
+  to the list. **The visual sweep**: the note's room is **327 / 720 / 832 / 832 px** at
+  375 / 768 / 900 / 1280 (the takeover caps its own width past ~900), and the sentence's box is
+  **36.3 px on a phone** – two lines – and **18.1 px** everywhere above it. It wraps as prose and is
+  never cut (`white-space` not `nowrap`, `text-overflow` not `ellipsis`, read through the cascade).
 
 - [ ] **40. «юниорские годы тоже заведи пунктом» (15.09)** – **measure, then his number.** Out of item
   16's paper trail: before eighteen his own career held three kit rungs paying **$2,000 · $3,000 ·
@@ -1813,6 +1935,25 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   one number twice. **Both strings are untouched and both pins still assert them verbatim, each with a
   ⚠ note naming this item.** The wording is his.
 
+  ⭐⭐ **HE ANSWERED IT, AND BOTH REPLACEMENTS SHIPPED VERBATIM (bundle 10, 15.09).** The two approved
+  sentences, and they are the only two strings this closes:
+  * `.cm-share-note` (coaches page): **«Every coach here also takes 10% of every prize cheque she
+    collects.»**
+  * the Money screen's coach-share memo: **«Coach's results share – $X this season, already inside
+    Coaching above: 10% of every prize cheque.»** – the rest of that sentence's shape is the shipped
+    line to the character.
+
+  ⚠ **THE PERCENTAGE IS STILL RENDERED, NEVER TYPED**, and it moved to the arm the new sentences are
+  about: `staffResultShareBps('coach', 2)`, the EVERY-FINISH rate – the one that pays a first-round
+  exit. `titleSharePct` / `finalSharePct` are gone from the coaches page with the clause they served.
+  So if a depth is ever put back into `ECONOMY.staffShare`, both lines follow the rate they claim.
+
+  ⚠ **AND THE JUNIOR-LADDER CLAUSE LEFT THE SENTENCE WITHOUT LEAVING THE ENGINE** – it is still true,
+  and `round29-coach-share.test.ts` §3 still proves it (no non-professional rung carries a prize table;
+  the `track === 'wta'` guard is asked with a rung given a cheque for the length of one test). What
+  the copy pin now also asserts is the ABSENCE of both retired clauses, so neither can creep back in
+  unasked. Arms: the old `.cm-share-note` restored → **4 RED**; the old memo tail restored → **1 RED**.
+
   ⚠ **THE FROZEN CAREERS MOVED – TWO OF FIVE CELLS, NOT RE-STAMPED.** Per-key protocol run FIRST
   (`tools/frozen-key-diff.ts`, control = the change NEUTRALISED IN PLACE, md5 checked back to
   pristine), full record in `tests/coachTravelEdgeFixtures.ts`'s own dated block:
@@ -1827,7 +1968,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   capture (41550 / e6b0c709) did not move and was not re-pinned. **28 red cases in all, and the stamp
   is the architect's.**
 
-- [ ] **42. «committed должен это и показывать» (15.09) – the team budget spends against the WHOLE
+- [x] **42. «committed должен это и показывать» (15.09) – the team budget spends against the WHOLE
   payroll.** The tile lists coach + masseur + psychologist but its meter counts only the coach, so
   the three rows add to $843 while «committed» says $343 – one tile disagreeing with itself, which is
   what he is pointing at. ⚠ **This is not a display change**: `committedCents` is the engine's own
@@ -1872,6 +2013,46 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   ⚠ **If the 26% bothers him, the cheap fix is not the cap:** exempt the row she is ALREADY ON from
   the flag (it is a standing arrangement, not an offer, and the card says «Current» rather than a
   price). That takes the column to 0 at every cap. Behaviour change, therefore his word, not shipped.
+
+  ⭐⭐ **HIS RULING SHIPPED (bundle 10, 15.09) – and it answers the 55.4% better than any cap could.**
+  «мы не можем запретить нанимать специалистов… просто в этом индикаторе мы покажем реальные затраты
+  в неделю.» Three lines of screen, no engine move, no constant touched:
+  * the row's `blocked` class is now `!current && lockedPoints !== null` – money is out of the refusal
+    treatment entirely, and the POINTS LOCK keeps it, because that one the engine really enforces;
+  * the `is-over` action chip is gone, so every earned rung reads «Hire ›» whatever the week's income
+    is, with the engine's own `$X/wk` on the line directly above it – which is what «в этом
+    индикаторе покажем реальные затраты» asks the row to say. `.cm-action.is-over` left `style.css`
+    with it (the `.is-locked` declaration is otherwise untouched);
+  * `rowLabel`'s over-budget arm went with the chip it named. ⚠ THIS ONE IS A JUDGEMENT AND IS NAMED
+    AS ONE: leaving «over budget by $487» in the accessible name would tell a listener the row is
+    refused while a sighted player is invited to press it – the same defect in the channel the label
+    exists to serve. The cost is still in that sentence («$830.00 a week»), one clause up.
+
+  ⚠ **NOTHING IN THE ENGINE MOVED, AND THE WARNING DID NOT DISAPPEAR** – it lives where he put it, on
+  the tile: `committed` against `weekly cap`, the payroll's own figures from the half above. What is
+  gone is the row-level refusal of a hire the engine would have accepted. ⚠ One consequence worth
+  stating: `CoachMarketRow.overBudgetCents` is now read by NO UI surface (the meter draws committed
+  vs cap, not the row flags). It stays on the wire and in the engine – it is the affordability
+  question itself, and `round42-team-budget.test.ts` §3 asserts its arithmetic – but nothing prints
+  it any more.
+
+  Evidence: `round42-team-budget.test.ts` §3b – an over-budget row keeps «Hire ›», is not `blocked`,
+  is not `:disabled`, carries the engine's weekly price, has no «$X over» anywhere on the page, has
+  an accessible name ending «– hire», and PRESSING IT opens the hire confirmation naming that coach.
+  A third case holds the other end: a points-locked rung is still `blocked`, still disabled, still
+  «N pts short». Round 21 #11's own guard is re-aimed in place with a ⚠ note naming this item – its
+  control was «other rows are over budget and ARE blocked», which this ruling makes false – and it
+  gains the arm that unaffordable-and-earned rows are not refused, on the fixture built to be over
+  budget.
+
+  ⚠ **MUTATION ARMS, measured and reverted:** «over-budget back inside `blocked`» → **2 RED** (round
+  21 #11's re-aimed control and §3b's first case, and nothing else); «the «$X over» chip back in place
+  of «Hire ›»» → **1 RED** (§3b's first case alone). ⭐ The two arms redden different sets, which is
+  what says the CLASS and the CHIP are two separate halves of his sentence. ⚠ `tests/coach-market.test.ts`'s
+  source pin «carries the three action states, and says the shortfall in MONEY» is re-aimed in place
+  with a ⚠ note: the design's «не по бюджету» stopped being an action state by his ruling, so the pin
+  now holds the two that survive, the weekly price that replaced the third, and `blocked` bound to the
+  points lock alone.
 
 - [x] **43. «сними потолок, а кулдаун давай 4» (15.09) – item 5's two numbers, ruled.** `seasonCap`
   goes away entirely and `cooldownWeeks` becomes **4**. ⚠ **One honest consequence, measured and
@@ -1934,6 +2115,27 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   birthday, up to 60%.»** – the same promise in a different phrasing, equally untrue in college. One
   drafted sentence cannot repair it without inventing a second wording, which invariant 4 forbids.
   **His word is needed on whether that card takes the same qualifier.**
+
+  ⭐⭐ **BOTH SENTENCES SHIPPED (bundle 10, 15.09) – he wrote the second one too.** The approved pair,
+  verbatim, and they are the only two strings this item touched:
+  * `ownAccountNote` (Money): **«She keeps 30% of every prize cheque now, 10 points more every
+    birthday she spends on tour, up to 60%.»**
+  * `ownAccountCard`'s note (Kid page): **«Her share grows 10 points every birthday she spends on
+    tour, up to 60%.»**
+
+  ⚠ **THE DIFF IS THREE WORDS AND A COMMA IN EACH, exactly as the draft promised.** Every figure is
+  still rendered from `kidPrizeShareBps` / `ECONOMY.kidShare` rather than typed, so a retune moves
+  both sentences with the money; the balance clause, «of every prize cheque», the sponsor and brand
+  clauses and the card's three rows are the shipped text to the character; and at the CAP neither
+  sentence takes the qualifier at all – «and the share goes no higher» / «Her share goes no higher.»
+  are untouched, because there is nothing left to promise. Evidence: `round42-kid-share-ramp.test.ts`
+  §5 gains an arm holding both sentences off `ECONOMY.kidShare`, including the NEGATIVE that the old
+  unqualified phrasings are gone (a `toContain` on the new clause alone would stay green on either).
+
+  ⚠ **MUTATION ARMS:** the qualifier dropped from the Money sentence → **1 RED**; dropped from the Kid
+  page's card → **1 RED**; each alone, each the new §5 case. ⚠ Neither arm touches
+  `round23-kid-share`'s own account pins, which is right – they are about the percentages and the
+  gate, not about this clause.
 
 - [ ] **45. HIS RULINGS OF 15.09 ON THE THREE OPEN ASKS** – recorded together because they arrived
   together.

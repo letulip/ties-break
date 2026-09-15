@@ -437,6 +437,8 @@ describe('#18 – the line on her own page', () => {
     // ⚠ ROUND 42 #6 – required by the view since the Personality tile moved onto her temperament.
     // This file is about her ACCOUNT and asserts nothing about that tile.
     temperament: 'quiet',
+    // ⚠ ROUND 42 #37 – the Personality line's first word; this file is about her account.
+    composure: 50,
     playStyle: 'all-court',
     birthMonth: 6,
     injured: false,

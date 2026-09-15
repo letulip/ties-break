@@ -139,7 +139,11 @@ interface StaffMember {
   focus?: {
     label: string
     chosen: PsyFocus | null
-    options: { value: PsyFocus; label: string; open: boolean }[]
+    /** ⭐⭐ ROUND 42 #18 – EACH OPTION CARRIES ITS OWN SENTENCE NOW: «в пунктах психолога на выбор
+     *  немного расписать эффект от работы». `line` is `PSY_FOCUS_LINE[value]` and nothing else – the
+     *  same owner-gated catalogue the hired card splices – so the picker says what a year buys
+     *  BEFORE the choice, where the decision is actually taken. Zero new wording. */
+    options: { value: PsyFocus; label: string; line: string; open: boolean }[]
     note: string
     set: (value: PsyFocus) => Promise<void>
   }
@@ -328,6 +332,10 @@ const psychologist = computed<StaffMember>(() => ({
     options: PSY_FOCUSES.map((f) => ({
       value: f,
       label: PSY_FOCUS_LABEL[f],
+      // ⭐⭐ ROUND 42 #18 – the catalogue sentence, imported and never re-typed. It is the SAME
+      // constant the hired line splices one computed up, so a вычитка pass over `PSY_FOCUS_LINE`
+      // moves the picker and the retainer's line together and they cannot drift apart.
+      line: PSY_FOCUS_LINE[f],
       open: psychologistFocusOpen.value.includes(f),
     })),
     note: psychologistFocusNote.value,
@@ -445,7 +453,12 @@ async function doRelease(): Promise<void> {
          ⚠ AN OPTION IS LIVE ONLY IF THE ENGINE SAYS SO - `open` is `psychologistFocusOpen`, the very
          function the refusal is written from, so a disabled button and the click it refuses cannot
          tell two stories (R10-16). The note under the row is the engine's sentence whenever anything
-         is closed, so the card EXPLAINS with the words the command throws. -->
+         is closed, so the card EXPLAINS with the words the command throws.
+         ⭐⭐ ROUND 42 #18 - AND EACH OPTION NOW SAYS WHAT THE YEAR IS FOR, under its own name. The
+         owner asked for the effect of the work to be spelled out in the choices themselves, and the
+         sentences already existed: `PSY_FOCUS_LINE` reached only the hired line's splice, which is
+         read AFTER the decision rather than while it is being made. Zero new wording - the sub-line
+         is the imported constant, the `.cm-blurb` treatment one tab over. -->
     <div v-if="m.focus && m.hired" class="staff-focus" role="radiogroup" :aria-label="m.focus.label">
       <button
         v-for="f in m.focus.options"
@@ -457,7 +470,8 @@ async function doRelease(): Promise<void> {
         :disabled="game.busy || !f.open"
         @click="pressFocus(m, f.value)"
       >
-        {{ f.label }}
+        <span class="staff-focus-name">{{ f.label }}</span>
+        <span class="staff-focus-blurb">{{ f.line }}</span>
       </button>
     </div>
     <p v-if="m.focus && m.hired && m.focus.note" class="cm-load staff-focus-note">{{ m.focus.note }}</p>
@@ -585,6 +599,25 @@ async function doRelease(): Promise<void> {
   background: none;
   font-size: 11px;
   line-height: 1.2;
+  /* ⭐⭐ ROUND 42 #18 – a name over a sentence, so the two stack inside the one control rather than
+     running together on a line. The button was a single word before this item. */
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+}
+.staff-focus-name {
+  font-weight: 600;
+}
+/* ⭐⭐ ROUND 42 #18 – WHAT THE YEAR IS FOR, in `.cm-blurb`'s treatment to the value (10.5px/1.35,
+   `--muted`): quiet prose under a name it captions, never competing with it. The sentence is
+   `PSY_FOCUS_LINE`'s and wraps as prose – these are 60-90 characters and the cell is half a phone
+   wide, so `nowrap` would be the wrong rule and an ellipsis would hide the half he asked to see. */
+.staff-focus-blurb {
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--muted);
 }
 .staff-focus-option.active {
   border-color: var(--accent, #4da3ff);

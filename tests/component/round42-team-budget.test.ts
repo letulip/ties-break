@@ -262,6 +262,101 @@ describe('round 42 #42 – the committed figure is the WHOLE PAYROLL, and the ca
 })
 
 // =================================================================================================
+// 3b – ⭐⭐⭐ HIS RULING OF 15.09: SHOW THE COST, NEVER REFUSE THE HIRE
+// =================================================================================================
+//
+// «мы не можем запретить нанимать специалистов, если у них есть желание – они нанимают, просто в
+// этом индикаторе мы покажем реальные затраты в неделю.» (Quoted here and not in a template: no
+// Cyrillic may appear inside one, tests/round13-nav.test.ts.)
+//
+// The engine had always agreed – `hireCoach` does not consult the budget at all – so the defect was
+// on the SCREEN, and it was two things at once: an over-budget row swapped its «Hire ›» chip for a
+// shortfall figure, and took `blocked`, which paints a refusal (a dashed grey border, a dimmed
+// portrait, a greyed name and price). A hire the engine would have accepted READ as forbidden.
+//
+// ⚠ THIS SECTION IS THE OTHER HALF OF §3 AND THEY ARE DELIBERATELY BOTH HERE. §3 says the flag is
+// computed against the whole payroll; this says the flag is a WARNING and refuses nothing. Round 21
+// #11's guards (tests/component/round21-coach.test.ts) hold the rest: the coach she HAS is not drawn
+// as a refusal either, and the points lock still is one.
+describe('round 42 #42 – an over-budget rung is a price, not a gate', () => {
+  /** A career with at least one rung over the payroll-adjusted budget, and that rung's row. */
+  async function marketWithAnOverBudgetRung(seed: string) {
+    const world = proCareer(seed)
+    hireMasseur(world, true)
+    hirePsychologist(world, true)
+    const snap = toSnapshot(world)
+    const over = snap.coachMarket.find((r) => !r.current && r.lockedPoints === null && r.overBudgetCents > 0)
+    expect(over, 'the fixture really holds an unaffordable rung she has earned').toBeTruthy()
+    const wrapper = await mountMarket(snap)
+    const row = wrapper
+      .findAll('.cm-row')
+      .find((n) => (n.attributes('aria-label') ?? '').startsWith(`${over!.name},`))
+    expect(row, 'the row is on screen under its own name').toBeTruthy()
+    return { wrapper, snap, over: over!, row: row! }
+  }
+
+  it('⭐⭐⭐ it keeps «Hire», it is not painted as a refusal, and the price is the week`s real cost', async () => {
+    const { wrapper, over, row } = await marketWithAnOverBudgetRung('r42-42-cta')
+    expect(row.find('.cm-action').text(), 'the call to action survives the shortfall').toBe('Hire ›')
+    expect(row.classes(), 'and the refusal treatment is gone from it').not.toContain('blocked')
+    expect(row.attributes('disabled'), 'nothing is disabled on money').toBeUndefined()
+    // ⚠ «WE SHOW THE REAL WEEKLY COST» – and it is the engine's figure, rebuilt rather than read back.
+    expect(clean(row.find('.cm-price').text())).toBe(`${formatCents(over.weeklyCents)}/wk`)
+    // ...and the shortfall chip the row used to wear is gone from the whole page, not just this row.
+    expect(wrapper.findAll('.cm-action.is-over').length, 'no row anywhere says «$X over»').toBe(0)
+    expect(clean(wrapper.text()), 'and no row spells the shortfall in words either').not.toContain(
+      `${formatCents(over.overBudgetCents)} over`,
+    )
+    // THE LISTENER HEARS THE SAME THING, which is the half a sighted reader cannot check: the label
+    // used to end «over budget by $487» while the chip now says «Hire».
+    const label = row.attributes('aria-label') ?? ''
+    expect(label, 'the accessible name ends in the action the chip shows').toMatch(/– hire$/)
+    expect(label, 'and still carries what the week costs').toContain(`${formatCents(over.weeklyCents)} a week`)
+    expect(label, 'the refusal is not whispered to a screen reader either').not.toContain('over budget')
+    wrapper.unmount()
+  })
+
+  it('⭐⭐⭐ ...and pressing it really asks to hire – the engine never consulted the budget', async () => {
+    const { wrapper, over, row } = await marketWithAnOverBudgetRung('r42-42-press')
+    await row.trigger('click')
+    await nextTick()
+    // The market's own confirm, which is the screen's whole answer to a press. A row that refused on
+    // money would raise nothing at all, which is exactly what it used to do.
+    const dialog = wrapper.find('.dialog-card')
+    expect(dialog.exists(), 'the press opened the hire confirmation').toBe(true)
+    expect(clean(dialog.text()), 'and it is about the coach that was pressed').toContain(over.name)
+    wrapper.unmount()
+  })
+
+  it('⚠ the POINTS LOCK is untouched – that one IS a gate, and the engine enforces it', async () => {
+    // The control that keeps the arm above honest: `blocked` did not stop being applied, it stopped
+    // being applied to the wrong thing. A rung she has not earned is still refused, still disabled,
+    // and still says what it is short by.
+    // ⚠ A JUNIOR CAREER AND NOT `proCareer`. `eliteGateStandingOf` floors a professional at
+    // `eliteGate.minPoints`, so a pro fixture has no locked rung to look at at all – measured while
+    // writing this case (the first draft used `proCareer` and found none).
+    const world = createWorld('r42-42-locked', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    const snap = toSnapshot(world)
+    const locked = snap.coachMarket.find((r) => r.lockedPoints !== null)
+    expect(locked, 'the fixture holds a rung she has not earned').toBeTruthy()
+    const wrapper = await mountMarket(snap)
+    // ⚠ THE MARKET IS BEHIND ITS OWN TAB on a career with nobody hired – wave 5 T13's idiom, and the
+    // two cases above reach it without this only because their fixture opens on the coaches list.
+    const pill = wrapper.findAll('.tb-seg .tab-pill').find((b) => b.text() === 'Coaches')
+    await pill!.trigger('click')
+    await nextTick()
+    const row = wrapper
+      .findAll('.cm-row')
+      .find((n) => (n.attributes('aria-label') ?? '').startsWith(`${locked!.name},`))
+    expect(row, 'the locked rung is on screen').toBeTruthy()
+    expect(row!.classes(), 'and it still reads as a refusal').toContain('blocked')
+    expect(row!.attributes('disabled'), 'and cannot be pressed').toBeDefined()
+    expect(row!.find('.cm-action').text()).toBe(`${locked!.lockedPoints} pts short`)
+    wrapper.unmount()
+  })
+})
+
+// =================================================================================================
 // 4 – THE VISUAL SWEEP (his standing rule of 14.09)
 // =================================================================================================
 //

@@ -36,7 +36,7 @@ import {
 } from '../src/engine/world'
 import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents } from '../src/engine/economy'
 import { SAVE_SCHEMA_VERSION } from '../src/engine/world/state'
-import { ownAccountNote, type KidLifeWorldView } from '../src/engine/kidLife'
+import { ownAccountCard, ownAccountNote, type KidLifeWorldView } from '../src/engine/kidLife'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { DEFAULT_PROFILE, type CollegeState } from '../src/shared/protocol'
 
@@ -285,6 +285,8 @@ describe('§5 the page and the till cannot quote two different percentages', () 
       ageYears: 23,
       seasonYear: 2030,
       temperament: 'quiet',
+      // ⚠ ROUND 42 #37 – the Personality line's first word; this file is about the ramp.
+      composure: 50,
       playStyle: 'all-court',
       birthMonth: 6,
       injured: false,
@@ -298,5 +300,60 @@ describe('§5 the page and the till cannot quote two different percentages', () 
     }
     expect(ownAccountNote(base)).toContain(`${(K.startBps + K.stepBps) / 100}% of every prize cheque`)
     expect(ownAccountNote({ ...base, kidSharePausedYears: 0 })).toContain(`${K.capBps / 100}% of every prize cheque`)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐⭐ ROUND 42 #44 – AND BOTH SENTENCES SAY WHICH BIRTHDAYS COUNT
+  // ===============================================================================================
+  //
+  // «пока не в туре – доля не растёт» (15.09). The shipped pair promised «10 points more every
+  // birthday» / «Her share grows 10 points every birthday», which the four college years make false
+  // – the mechanic above is exactly the one that eats them. His two replacement sentences tie the
+  // growth to the birthdays she spends ON TOUR and let the reader draw the negative.
+  //
+  // ⚠ THE WORDS ARE HIS AND THIS PIN MOVES ONLY WITH HIM (invariant 4). What it asserts is the
+  // qualifier and the figures around it, both read off `ECONOMY.kidShare` rather than typed, so a
+  // retune of the ramp moves the assertion with the sentence.
+  it('⭐⭐⭐ #44 – the ramp clause names the birthdays she spends ON TOUR, on both surfaces', () => {
+    const growing: KidLifeWorldView = {
+      seed: 'tour-birthdays',
+      week: 5 * WEEKS_PER_YEAR,
+      ageYears: 20,
+      seasonYear: 2030,
+      temperament: 'quiet',
+      composure: 50,
+      playStyle: 'all-court',
+      birthMonth: 6,
+      injured: false,
+      weeksAway: 0,
+      lossStreak: 0,
+      weeksSinceTitle: null,
+      college: null,
+      kidFundsCents: 2_400_00,
+      kidSharePausedYears: 0,
+      ownsBrand: false,
+    }
+    const note = ownAccountNote(growing)
+    expect(note, 'the Money screen sentence, verbatim to the qualifier').toContain(
+      `${K.stepBps / 100} points more every birthday she spends on tour, up to ${K.capBps / 100}%.`,
+    )
+    const card = ownAccountCard(growing)
+    expect(card, 'her page draws the card at this age').not.toBeNull()
+    expect(card!.note, 'the Kid page card, in its own phrasing and with the same qualifier').toContain(
+      `Her share grows ${K.stepBps / 100} points every birthday she spends on tour, up to ${K.capBps / 100}%.`,
+    )
+    // ⚠ AND NEITHER SURFACE SAYS THE OLD, FALSE THING – the bare promise with no qualifier after it.
+    // This is the arm that reddens if a вычитка pass drops the clause: `toContain` alone would stay
+    // green on «every birthday she spends on tour» AND on «every birthday, up to», so the negative
+    // has to name the shipped phrasing it replaced.
+    expect(note).not.toContain(`points more every birthday up to`)
+    expect(card!.note).not.toContain(`points every birthday, up to`)
+
+    // ⚠ AT THE CAP NEITHER OF THEM PROMISES ANYTHING AT ALL, which is the clause the qualifier does
+    // not touch: «and the share goes no higher» / «Her share goes no higher.»
+    const capped = { ...growing, ageYears: 26 }
+    expect(ownAccountNote(capped)).toMatch(/goes no higher/)
+    expect(ownAccountNote(capped)).not.toContain('she spends on tour')
+    expect(ownAccountCard(capped)!.note).not.toContain('she spends on tour')
   })
 })

@@ -552,15 +552,24 @@ const groups = computed<TierGroup[]>(() =>
  *  row it labels is worse than none. The uplift and the load note are deliberately NOT in it: they
  *  are the card's argument, not its identity, and a name a listener has to sit through is the defect
  *  wearing a different hat. */
+/*  ⭐⭐⭐ ROUND 42 #42 (15.09) – AND THE OVER-BUDGET STATE LEFT THIS LABEL WITH THE CHIP IT NAMES.
+ *  The owner: «мы не можем запретить нанимать специалистов, если у них есть желание – они нанимают,
+ *  просто в этом индикаторе мы покажем реальные затраты в неделю». The screen used to swap «Hire ›»
+ *  for «$487 over» and paint the row as a refusal, while `hireCoach` never consulted the budget at
+ *  all – so a legal hire READ as forbidden. The row keeps its call to action now, and the label has
+ *  to keep it too: leaving «over budget by …» here would tell a listener the row is refused while a
+ *  sighted player is invited to press it, which is the same defect in the channel this label exists
+ *  to serve. ⚠ THE COST IS NOT LOST – it is in this very sentence, «$830.00 a week», one clause up,
+ *  which is what his ruling asks the indicator to say.
+ *
+ *  ⚠ THE POINTS LOCK STAYS, because it is a real gate: `hireCoach` refuses it. */
 function rowLabel(r: Row): string {
   const state =
     r.current
       ? 'her coach now'
       : r.lockedPoints !== null
         ? `locked, ${r.lockedPoints} ranking points short`
-        : r.overBudgetCents > 0
-          ? `over budget by ${formatCents(r.overBudgetCents)}`
-          : 'hire'
+        : 'hire'
   return `${r.name}, ${COACH_TIER_LABEL[r.tier]} tier, ${FIT_LABEL[r.fitNow]}, ${formatCents(r.weeklyCents)} a week – ${state}`
 }
 
@@ -605,13 +614,19 @@ const { committedCents, coachWeeklyCents, capCents, freeCents, meterPct, seats }
  *  её на странице тренеров где-то, думать, что она общая для всех, так что можно где-то в одном месте
  *  написать наверное.»
  *
- *  `finishIdx` is `finalizeTournament`'s own index (0 = champion, 1 = finalist) and these are the
- *  only two the rule pays at all, so the pair below IS the rule rather than a description of it.
- *  Basis points to percent is a display conversion and nothing more - the logic stays in bps, which
- *  is where the engine keeps it. Not computed off a snapshot because it depends on no career: it is
- *  the same sentence for a self-coached family shopping and for one that hired last winter. */
-const titleSharePct = staffResultShareBps('coach', 0) / 100
-const finalSharePct = staffResultShareBps('coach', 1) / 100
+ *  `finishIdx` is `finalizeTournament`'s own index (0 = champion, 1 = finalist, anything else an
+ *  ordinary exit), so what is read below IS the rule rather than a description of it. Basis points to
+ *  percent is a display conversion and nothing more - the logic stays in bps, which is where the
+ *  engine keeps it. Not computed off a snapshot because it depends on no career: it is the same
+ *  sentence for a self-coached family shopping and for one that hired last winter.
+ *
+ *  ⭐⭐⭐ ROUND 42 #41 (15.09) – ONE FIGURE WHERE THERE WERE TWO, and the arm it reads is the one the
+ *  approved sentence is about. His ruling («10% безусловных отчислений с любых призовых, независимо
+ *  от глубины прохода») made the three rates equal, so the honest reader for «every prize cheque» is
+ *  `everyBps` – the arm that pays a first-round exit. A depth put back into `ECONOMY.staffShare`
+ *  would move this line to the rate the sentence actually claims, which is the point of reading it
+ *  rather than typing it. */
+const everySharePct = staffResultShareBps('coach', 2) / 100
 
 // --- and the household beneath it (round-28 #8) ---------------------------------------------------
 // The owner, 28.08, on this exact block: the aggregate figure should be shown with the masseur in it
@@ -962,17 +977,22 @@ function scrollToTier(tier: CoachTier): void {
          about none of them, and would be the second surface for one engine verdict that this repo has
          already paid for four times.
 
-         ⚠⚠ AND THE PERCENTAGES ARE READ OUT OF THE ENGINE, NEVER TYPED HERE. That is the whole
-         difference between a sentence and a claim: `staffResultShareBps('coach', 0 | 1)` is the SAME
-         function `finalizeTournament` calls when it actually pays him, so a retune of
-         `ECONOMY.staffShare` moves this line and the cheque together and they cannot drift apart. Its
-         two conditions are on the paper too, because both of them are things a parent would otherwise
-         discover by not being charged: below a final it is nothing, and the junior ladder pays no
-         prize money to take a share of (`track === 'wta'`). -->
+         ⚠⚠ AND THE PERCENTAGE IS READ OUT OF THE ENGINE, NEVER TYPED HERE. That is the whole
+         difference between a sentence and a claim: `staffResultShareBps` is the SAME function
+         `finalizeTournament` calls when it actually pays him, so a retune of `ECONOMY.staffShare`
+         moves this line and the cheque together and they cannot drift apart.
+
+         ⭐⭐⭐ ROUND 42 #41 (15.09) – AND THE SENTENCE IS HIS, REPLACED BECAUSE IT HAD BECOME FALSE.
+         It read «…when she wins a tour title and 10% when she is runner-up - nothing below a final,
+         and nothing on the junior ladder, which pays no prize money», and his ruling took the depth
+         out of the coach's line entirely: ten per cent of every cheque, whatever the finish. So the
+         old clause described a rule the engine had stopped running. ⚠ THE REPLACEMENT IS HIS OWN
+         WORDING, approved verbatim - an agent may not repair a sentence like this, only ship the one
+         he wrote (invariant 4). The percentage stays RENDERED rather than typed, which is why the
+         line reads the every-finish arm of the very table the till divides by. -->
     <p class="hint cm-share-note">
-      Every coach here also takes <strong>{{ titleSharePct }}%</strong> of a prize cheque when she
-      wins a tour title and {{ finalSharePct }}% when she is runner-up – nothing below a final, and
-      nothing on the junior ladder, which pays no prize money.
+      Every coach here also takes <strong>{{ everySharePct }}%</strong> of every prize cheque she
+      collects.
     </p>
 
     <!-- ⚠ HOW MUCH ROOM IS LEFT IN HER, and it is the context every percentage below is relative to.
@@ -1055,12 +1075,21 @@ function scrollToTier(tier: CoachTier): void {
            has never been the over-budget figure, so nothing was being said by the dimming that is
            not said in words elsewhere. His quotes are in the .ts comments (no Cyrillic in a
            template, tests/round13-nav.test.ts) - see `familyWeeklyIncomeCents` in
-           engine/world/coachMarket.ts and the `.cm-row.current` block in style.css. -->
+           engine/world/coachMarket.ts and the `.cm-row.current` block in style.css.
+
+           ⭐⭐⭐ ROUND 42 #42 (15.09) - AND NOW NO STRANGER IS "BLOCKED" ON MONEY EITHER. His ruling,
+           in the .ts comments beside `rowLabel`: we cannot forbid hiring a specialist, we show what
+           the week really costs. The engine has always agreed - `hireCoach` does not consult the
+           budget at all - so the defect was on this screen: an over-budget row swapped its "Hire" for
+           a shortfall figure and took the refusal treatment, which made a perfectly legal hire READ
+           as forbidden. `blocked` is now the POINTS LOCK alone, which is a real gate: a rung she has
+           not earned cannot be bought at any price. The week's cost is on the row either way - the
+           price line directly above the action, where it always was. -->
       <button
         v-for="r in g.rows"
         :key="r.id"
         class="cm-row"
-        :class="{ current: r.current, blocked: !r.current && (r.overBudgetCents > 0 || r.lockedPoints !== null) }"
+        :class="{ current: r.current, blocked: !r.current && r.lockedPoints !== null }"
         :disabled="r.current || r.lockedPoints !== null"
         :aria-label="rowLabel(r)"
         @click="askHire(r)"
@@ -1151,14 +1180,19 @@ function scrollToTier(tier: CoachTier): void {
                Below the uplift, quieter than it, because the uplift is still the card's headline. -->
           <span class="cm-load">{{ r.loadNote }}</span>
         </span>
+        <!-- ⭐⭐⭐ ROUND 42 #42 - THE WEEK'S COST, THEN THE WAY IN. The price line has carried what
+             the rung costs since the market shipped; what changed is the line under it. It used to
+             become "$487 over" the moment the week's income was short, which is the screen refusing
+             a hire the engine would have accepted - his ruling of 15.09 is that the indicator shows
+             the real weekly cost and the family decides. So an unaffordable stranger reads exactly
+             like an affordable one: his price, and "Hire". The two states that remain are the two
+             that are TRUE about the row - the coach she already has, and a rung she has not
+             earned. -->
         <span class="cm-right">
           <span class="cm-price">{{ formatCents(r.weeklyCents) }}<i>/wk</i></span>
           <span v-if="r.current" class="cm-action is-current">Current</span>
           <span v-else-if="r.lockedPoints !== null" class="cm-action is-locked"
             >{{ r.lockedPoints }} pts short</span
-          >
-          <span v-else-if="r.overBudgetCents > 0" class="cm-action is-over"
-            >{{ formatCents(r.overBudgetCents) }} over</span
           >
           <span v-else class="cm-action is-hire">Hire &rsaquo;</span>
         </span>

@@ -110,6 +110,8 @@ function view(week: number, over: Partial<KidLifeWorldView> = {}): KidLifeWorldV
     // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now; nothing in this file
     // asserts about that tile, so this is just the default girl the view has to name.
     temperament: 'quiet',
+    // ⚠ ROUND 42 #37 – the same tile's first word, off her composure. Nothing here asserts about it.
+    composure: 50,
     playStyle: 'all-court',
     birthMonth,
     injured: false,

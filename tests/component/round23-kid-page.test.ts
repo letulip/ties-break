@@ -150,6 +150,9 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now. This file is about
       // the School/College/account surfaces, so the career's own girl is the honest value to pass.
       temperament: base.diary.facts.temperament,
+      // ⚠ ROUND 42 #37 – and her composure, the Personality line's first word. Nothing in this file
+      // asserts about that tile, so this is the default girl the view has to name.
+      composure: 50,
       playStyle: base.profile.playStyle,
       birthMonth: base.profile.birthMonth,
       injured: false,
@@ -196,6 +199,9 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now. This file is about
       // the School/College/account surfaces, so the career's own girl is the honest value to pass.
       temperament: base.diary.facts.temperament,
+      // ⚠ ROUND 42 #37 – and her composure, the Personality line's first word. Nothing in this file
+      // asserts about that tile, so this is the default girl the view has to name.
+      composure: 50,
       playStyle: base.profile.playStyle,
       birthMonth: 12,
       injured: false,

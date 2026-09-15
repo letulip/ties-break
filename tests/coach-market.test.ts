@@ -25,17 +25,27 @@ describe('screen T renders what the design specified', () => {
     expect(market).toContain('HIREABLE_TIERS')
   })
 
-  it('carries the three action states, and says the shortfall in MONEY', () => {
-    // Design §T: доступен / текущий / не по бюджету. The last one shows "$20 over", never "expensive".
+  // ⚠⚠ RE-AIMED BY ROUND 42 #42 (15.09), AND THE THIRD STATE WAS RETIRED BY THE OWNER RATHER THAN BY
+  // AN AGENT. It read «carries the three action states, and says the shortfall in MONEY» over design
+  // §T's «доступен / текущий / не по бюджету», and asserted `is-over` plus
+  // `formatCents(r.overBudgetCents)` in the template. His ruling: «мы не можем запретить нанимать
+  // специалистов, если у них есть желание – они нанимают, просто в этом индикаторе мы покажем
+  // реальные затраты в неделю.» So «не по бюджету» stopped being an ACTION state – `hireCoach` never
+  // consulted the budget, and a row that swapped its call to action for a shortfall read as a
+  // refusal the engine would not have made.
+  //
+  // ⚠ WHAT THE DESIGN ASKED FOR IS STILL PINNED, in its two surviving states plus the one that
+  // replaced the third: an unaffordable row says what the week COSTS (`cm-price`, the engine's
+  // `weeklyCents`) beside a live «Hire». And `blocked` is pinned to the points lock alone – the gate
+  // the engine really enforces – so the dashed treatment cannot quietly go back to money.
+  it('carries the action states, and an unaffordable row says the week`s COST rather than a refusal', () => {
     expect(market).toContain('is-hire')
     expect(market).toContain('is-current')
-    expect(market).toContain('is-over')
-    expect(market).toContain('overBudgetCents')
-    // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars died with the shared money module — the
-    // fact protected is unchanged (the shortfall is shown in MONEY, off overBudgetCents); only the
-    // formatter's name moved, to src/shared/money's formatCents.
-    expect(market).toContain('formatCents(r.overBudgetCents)')
-    // ...and the over-budget row is dashed and dimmed rather than hidden.
+    expect(market).toContain('is-locked')
+    expect(market, 'the shortfall chip is retired').not.toContain('is-over')
+    expect(market, 'and the row says the weekly price instead').toContain('formatCents(r.weeklyCents)')
+    // ...and the REFUSAL treatment belongs to the points lock, not to the budget.
+    expect(market).toContain('blocked: !r.current && r.lockedPoints !== null')
     expect(css).toContain('.cm-row.blocked')
     expect(css).toMatch(/\.cm-row\.blocked\s*\{[^}]*border-style: dashed/)
   })

@@ -18,9 +18,14 @@
 // coach now takes ten per cent of EVERY cheque at every finish («10% безусловных отчислений с любых
 // призовых, независимо от глубины прохода»), so §2's «the final is the smaller» and §3's «a
 // semi-final pays NOTHING» both describe the old rule and are re-aimed in place, each quoting its old
-// self. ⚠ THE SCREEN'S OWN SENTENCE STILL SAYS «nothing below a final» AND IS NOT AN AGENT'S TO
-// CHANGE (invariant 4) – the copy pin below is untouched and carries a ⚠ note; the ask is in round
-// 42's handoff.
+// self. ⚠ THE SCREEN'S OWN SENTENCE STILL SAID «nothing below a final» AND WAS NOT AN AGENT'S TO
+// CHANGE (invariant 4) – the ask went into round 42's handoff instead of a quiet rewrite.
+//
+// ⭐⭐⭐ AND HE ANSWERED IT (15.09): «Every coach here also takes 10% of every prize cheque she
+// collects.» So the copy blocker is lifted BY HIM, and three more arms move with it – §1's copy pin
+// now holds his sentence (and the ABSENCE of both old clauses), and §2's join reads ONE percentage
+// off the screen instead of two. The junior-ladder clause left the sentence and did NOT leave the
+// engine: §3's two arms still prove it, which is why they are untouched.
 //
 // pays `finalBps`, and below a final nothing – on the professional tour only and only when the seat
 // is filled. Nothing on any screen said so, which is what he noticed.
@@ -99,19 +104,25 @@ describe('Round 29 #13 §1 – the share is stated once, for the whole page', ()
     wrapper.unmount()
   })
 
-  it('...and it says the two things a parent would otherwise discover by not being charged', async () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09) – HIS REPLACEMENT WORDING ARRIVED, AND THE PIN MOVED WITH IT
+  // AND NOT AHEAD OF IT. The previous form of this case pinned «nothing below a final» under a ⚠ note
+  // saying the clause had become false on screen and that repairing it was not an agent's to make
+  // (invariant 4: «запрети на уровне документации и спекам агентам самовольно изменять вординг»).
+  // The round's handoff asked him; he wrote the sentence; this is that sentence.
+  //
+  // ⚠ WHAT THE NEW LINE DOES **NOT** SAY IS PINNED TOO, because two conditions left the paper with
+  // the old clause: «nothing below a final», which the engine had stopped running, and «nothing on
+  // the junior ladder», which is still true of the engine – §3 below still proves it – and simply is
+  // not on this sentence any more. A silent re-arrival of either would be a wording change nobody
+  // asked for, which is the one kind of diff no other test catches.
+  it('...and it says the rule his ruling of 15.09 actually runs – ten per cent of every cheque', async () => {
     const wrapper = await mountCoaches(career('r29-13-copy'))
     const line = clean(wrapper.get('.cm-share-note').text())
-    expect(line).toContain('wins a tour title')
-    expect(line).toContain('runner-up')
-    // ⚠⚠⚠ ROUND 42 #41 – THIS CLAUSE IS NOW FALSE ON SCREEN AND THE PIN IS DELIBERATELY UNCHANGED.
-    // The coach takes ten per cent of every cheque since his 15.09 ruling, so «nothing below a final»
-    // describes a rule the engine no longer runs. ⚠ THE STRING IS THE OWNER'S (invariant 4: «запрети
-    // на уровне документации и спекам агентам самовольно изменять вординг»), so it is not an agent's
-    // to repair – round 42's handoff asks him for the replacement and this pin moves WITH his answer,
-    // not ahead of it. Until then this arm honestly records what the screen says.
-    expect(line, '⚠ round 42 #41 – contradicted by the engine, awaiting his wording').toContain('nothing below a final')
-    expect(line, 'and the junior ladder pays nothing to take a share of').toContain('junior ladder')
+    expect(line).toBe(
+      `Every coach here also takes ${staffResultShareBps('coach', 2) / 100}% of every prize cheque she collects.`,
+    )
+    expect(line, 'the depth is gone from the coach`s line').not.toContain('runner-up')
+    expect(line, 'and so is the clause the engine had stopped running').not.toContain('nothing below a final')
     wrapper.unmount()
   })
 
@@ -129,16 +140,23 @@ describe('Round 29 #13 §1 – the share is stated once, for the whole page', ()
 // 2 – THE NUMBERS ON IT ARE THE ONES THE ENGINE ACTUALLY PAYS
 // =================================================================================================
 
-/** The two percentages, READ OFF THE SCREEN. Everything in §2 is computed from these rather than
- *  from `ECONOMY`, which is what makes it a join between the copy and the cheque instead of two
- *  independent readings of one constant. */
-async function pctsOnScreen(): Promise<{ title: number; final: number }> {
+/** THE PERCENTAGE, READ OFF THE SCREEN. Everything in §2 is computed from this rather than from
+ *  `ECONOMY`, which is what makes it a join between the copy and the cheque instead of two
+ *  independent readings of one constant.
+ *
+ *  ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09) – ONE FIGURE WHERE THERE WERE TWO, and the arity is asserted
+ *  rather than assumed. The old form returned `{ title, final }` off a line that quoted a title rate
+ *  and a final rate; his replacement wording quotes ONE rate, for every cheque, because his ruling
+ *  took depth out of the coach's line. The join is unchanged in kind: the cases below still pay real
+ *  finishes at the rate the SCREEN prints, which is the only thing that can catch a copy that says
+ *  12% while the engine pays 10%. */
+async function pctOnScreen(): Promise<number> {
   const wrapper = await mountCoaches(career('r29-13-pcts'))
   const line = clean(wrapper.get('.cm-share-note').text())
   wrapper.unmount()
   const found = [...line.matchAll(/([\d.]+)%/g)].map((m) => Number(m[1]))
-  expect(found.length, 'the line quotes two percentages – a title rate and a final rate').toBe(2)
-  return { title: found[0], final: found[1] }
+  expect(found.length, 'the line quotes exactly one percentage – the every-cheque rate').toBe(1)
+  return found[0]
 }
 
 /** The condition.test seed trick, as tests/team-share.test.ts uses it: a private injury sub-stream
@@ -189,7 +207,7 @@ describe('Round 29 #13 §2 – the sentence is pinned to the cheque, not to a co
   beforeEach(() => setActivePinia(createPinia()))
 
   it('⭐⭐ a REAL title pays the coach exactly the percentage the screen quotes', async () => {
-    const { title } = await pctsOnScreen()
+    const pct = await pctOnScreen()
     const world = drivenFinish('title', 0)
     const prize = TIERS.w15.prizeCents![0]
     skipTournament(world)
@@ -198,33 +216,37 @@ describe('Round 29 #13 §2 – the sentence is pinned to the cheque, not to a co
     // ⚠ THE EXPECTATION IS BUILT FROM THE SCREEN'S OWN NUMBER. `-Math.round(pct/100 * gross)` is the
     // engine's own arithmetic re-spelled from the printed percentage, so a copy that said 12% while
     // the engine paid 10% fails here and nowhere else in the suite would.
-    expect(rows[0].amountCents).toBe(-Math.round((prize * title) / 100))
+    expect(rows[0].amountCents).toBe(-Math.round((prize * pct) / 100))
     closeTournament(world)
   })
 
-  it('⭐ a REAL runner-up finish pays the smaller one, off that rung`s own cheque', async () => {
-    const { final } = await pctsOnScreen()
+  // ⚠ RE-AIMED BY ROUND 42 #41 (15.09) IN ITS TITLE AND ITS ARITHMETIC, NOT IN ITS CLAIM. It read «a
+  // REAL runner-up finish pays the smaller one» and multiplied by the final rate the screen used to
+  // quote separately. There is no smaller one any more – «10% безусловных отчислений с любых
+  // призовых, независимо от глубины прохода» – so the runner-up is paid at the one rate on screen,
+  // which is what this now asserts. Keeping a second finish is the point: a line that only ever
+  // joined on a title would answer half of his «за победы».
+  it('⭐ a REAL runner-up finish pays the SAME rate, off that rung`s own cheque', async () => {
+    const pct = await pctOnScreen()
     const world = drivenFinish('final', 1)
     const prize = TIERS.w15.prizeCents![1]
     skipTournament(world)
     const rows = coachRows(world)
     expect(rows).toHaveLength(1)
-    expect(rows[0].amountCents).toBe(-Math.round((prize * final) / 100))
+    expect(rows[0].amountCents).toBe(-Math.round((prize * pct) / 100))
     closeTournament(world)
   })
 
-  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09). The old title was «…and the final is the smaller» and the
-  // last line asserted `final < title` under the quote «за 2е только по-меньше». That was round 24's
-  // ruling and his 15.09 word replaces it: «10% безусловных отчислений с любых призовых, независимо
-  // от глубины прохода». The claim this arm was really built for is UNTOUCHED and is the first two
-  // lines – the screen quotes the ENGINE's numbers and never its own – so what moves is only the
-  // relation between them.
-  it('the two rates the screen quotes are the two the engine holds – and since #41 they are equal', async () => {
-    const { title, final } = await pctsOnScreen()
-    expect(title).toBe(staffResultShareBps('coach', 0) / 100)
-    expect(final).toBe(staffResultShareBps('coach', 1) / 100)
-    // ⭐ ROUND 42 #41 – no depth in the coach's line any more, so the two figures on screen agree.
-    expect(final).toBe(title)
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09), TWICE. Its first form asserted «the final is the smaller»
+  // under round 24's «за 2е только по-меньше»; its second asserted that the two rates on screen were
+  // the engine's two and equal. His replacement WORDING (the same ruling, one item on) quotes a
+  // single rate, so the join is now one figure against the whole table – and the table is asserted
+  // flat here, which is where «independent of depth» is actually pinned to the screen.
+  it('the rate the screen quotes is the rate the engine holds, at every depth it pays', async () => {
+    const pct = await pctOnScreen()
+    for (const finishIdx of [0, 1, 2, 7]) {
+      expect(pct, `finish ${finishIdx}`).toBe(staffResultShareBps('coach', finishIdx) / 100)
+    }
   })
 })
 
@@ -232,7 +254,7 @@ describe('Round 29 #13 §2 – the sentence is pinned to the cheque, not to a co
 // 3 – AND THE TWO EXCLUSIONS IT NAMES ARE TRUE
 // =================================================================================================
 
-describe('Round 29 #13 §3 – nothing below a final, and nothing on the junior ladder', () => {
+describe('Round 29 #13 §3 – every cheque, and nothing on the junior ladder', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   // ⚠⚠ RE-AIMED BY ROUND 42 #41, AND THE CLAIM INVERTED RATHER THAN SOFTENED. It read «a semi-final
@@ -240,12 +262,11 @@ describe('Round 29 #13 §3 – nothing below a final, and nothing on the junior 
   // 15.09 ruling is that the coach takes ten per cent of EVERY cheque, so a semi-final pays him, and
   // the arm asserts the row that is actually written – at the engine's own rate, never a typed one.
   //
-  // ⚠⚠⚠ AND THE SENTENCE ON SCREEN STILL SAYS «nothing below a final». IT IS THE OWNER'S COPY AND
-  // NO AGENT MAY CHANGE IT (invariant 4), so it is untouched here and the arm one describe up still
-  // pins it verbatim – but it is now CONTRADICTED BY THE ENGINE, and round 42's handoff carries the
-  // ask rather than a quiet rewrite. Whoever reads this after his word lands: the string lives at
-  // `.cm-share-note` in `CoachMarketScreen.vue`, and the copy pin is
-  // «…and it says the two things a parent would otherwise discover by not being charged».
+  // ⚠⚠⚠ AND THE SENTENCE ON SCREEN HAS CAUGHT UP. This note used to end «the screen still says
+  // "nothing below a final" and no agent may change it (invariant 4) – round 42's handoff carries
+  // the ask rather than a quiet rewrite». He answered: «Every coach here also takes 10% of every
+  // prize cheque she collects.» The copy pin one describe up now holds that sentence, and it asserts
+  // the absence of the old clause so it cannot creep back in unasked.
   it('⭐⭐ ROUND 42 #41 – a semi-final DOES pay the coach, at the same flat rate a title pays', () => {
     const world = drivenFinish('semi', 2)
     skipTournament(world)

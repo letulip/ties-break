@@ -33,7 +33,7 @@
 //   ARM 1  `toSnapshot` hands `world.spirit >= 70 ? 'sunny' : 'deep'` – the tile bound to this
 //          week's mood, which is the defect the fence exists to forbid.
 //          **4 RED**: §1's four-careers case, both fence cases, and kidLife's end-to-end.
-//   ARM 2  `buildKidLife` returns `TEMPERAMENT_PERSONALITY.quiet` for everybody – «always the same»,
+//   ARM 2  `buildKidLife` returns one fixed line for everybody – «always the same»,
 //          the shipped defect in its purest form. **4 RED**: both four-careers cases (here and in
 //          kidLife), the walls fence, and kidLife's end-to-end. ⚠ §1's MOOD fence stayed green, and
 //          correctly: a constant tile does not move with her mood either.
@@ -81,7 +81,7 @@ import {
   availabilityStatus,
 } from '../../src/engine/world'
 import type { WorldState } from '../../src/engine/world'
-import { TEMPERAMENT_PERSONALITY } from '../../src/engine/kidLife'
+import { COMPOSURE_BANDS, TEMPERAMENT_WORD, composureWord, personalityLine } from '../../src/engine/kidLife'
 import { TEMPERAMENTS, expressedTemperamentOf, type Temperament } from '../../src/engine/spirit'
 import { radarViewOf } from '../../src/engine/world/knock'
 import { axisReadings, buildRadar, fillBandOf, shownSkill, ceilingHalfWidth, CEILING_CENTRE_DRIFT, NOTE_MIN_CONFIDENCE } from '../../src/engine/radar'
@@ -165,14 +165,23 @@ function mountKid(snapshot: Snapshot, attach = false) {
   })
 }
 
-/** The Personality tile's two lines, off the mounted screen. */
-function personalityTile(w: ReturnType<typeof mountKid>): string {
+/** The Personality tile's CARD, off the mounted screen – the cell the line has to live inside. */
+function personalityCard(w: ReturnType<typeof mountKid>) {
   const tile = w.findAll('.kid-tile').find((t) => t.find('.kid-tile-label').text() === 'Personality')
   expect(tile, 'the page has a Personality tile at all').toBeTruthy()
-  return tile!.findAll('.kid-tile-line').map((l) => l.text()).join('|')
+  return tile!
 }
 
-describe('⭐⭐ ROUND 42 #6 – the Personality tile is HER, and it is who she was born as', () => {
+/** ⚠ RE-AIMED BY ROUND 42 #37 – ONE LINE, NOT TWO, so the joiner is gone with the pair. It reads
+ *  every `.kid-tile-line` in the cell and asserts there is exactly one, which is itself the item:
+ *  a build that kept the lead/note shape would fail here rather than quietly print two rows. */
+function personalityTile(w: ReturnType<typeof mountKid>): string {
+  const lines = personalityCard(w).findAll('.kid-tile-line')
+  expect(lines.length, 'his re-cut is ONE line of two adjectives').toBe(1)
+  return lines[0].text()
+}
+
+describe('⭐⭐ ROUND 42 #6/#37 – the Personality tile is HER: how steady she has become, and who she was born', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('⭐⭐ four careers, four girls – the tile moves with her temperament, end to end', () => {
@@ -187,15 +196,107 @@ describe('⭐⭐ ROUND 42 #6 – the Personality tile is HER, and it is who she 
       const text = personalityTile(w)
       // ⚠ THE WIRE SAYS BIRTH. This is the pin the fence's mutation arm has to break: a snapshot
       // handing `expressedTemperamentOf(world)` (or anything of her mood) instead of
-      // `world.temperament` puts a different girl's pair on the screen the moment an axis flips.
-      expect(text, world.temperament).toBe(
-        `${TEMPERAMENT_PERSONALITY[world.temperament].lead}|${TEMPERAMENT_PERSONALITY[world.temperament].note}`,
-      )
+      // `world.temperament` puts a different girl's word on the screen the moment an axis flips.
+      // ⚠⚠ ROUND 42 #37 – AND THE FIRST WORD IS HER COMPOSURE, asserted off `world.skills` rather
+      // than off the string, so the arm that binds it to `world.spirit` reddens here.
+      expect(text, world.temperament).toBe(personalityLine(world.skills.composure, world.temperament))
+      expect(text.endsWith(TEMPERAMENT_WORD[world.temperament]), text).toBe(true)
       seen.set(world.temperament, text)
       w.unmount()
     }
     expect(seen.size, 'all four temperaments were reached inside forty seeds').toBe(TEMPERAMENTS.length)
     expect(new Set(seen.values()).size, 'and no two of them read alike on the screen').toBe(TEMPERAMENTS.length)
+  })
+
+  it('⭐⭐⭐ #37 – TWO GIRLS WITH THE SAME TEMPERAMENT READ DIFFERENTLY when their composure differs', () => {
+    // The complaint restated: «а не Patient and stubborn у всех. Они все разные.» Same girl by birth,
+    // two different nerve draws, two different lines – which the pre-#37 tile could not produce at
+    // all. Both worlds are real careers; only the SKILL is posed, and it is posed on the world so
+    // `toSnapshot` still composes the line.
+    const world = quietCareer('r42-37-seedwise', 60)
+    const lines = new Set<string>()
+    for (const composure of COMPOSURE_BANDS.map((b) => b.from)) {
+      world.skills = { ...world.skills, composure }
+      const w = mountKid(toSnapshot(world))
+      const text = personalityTile(w)
+      expect(text, 'the band is the engine table\'s, never this file\'s').toBe(
+        `${composureWord(composure)} and ${TEMPERAMENT_WORD[world.temperament]}`,
+      )
+      lines.add(text)
+      w.unmount()
+    }
+    expect(lines.size, 'four bands, four readings, one temperament').toBe(COMPOSURE_BANDS.length)
+  })
+
+  it('⭐⭐⭐ #37 – HIS FEDERER ARC: the first word may change over a career, the second never does', () => {
+    // «Сначала он был горяч и упёрт, а потом стал спокоен и целеустремлён.» Read one career at two
+    // points of its own composure walk. ⚠ The two ends are posed rather than waited for, because a
+    // career that really crosses an edge takes seasons and this file may not take minutes – what is
+    // real is the CHAIN (world -> toSnapshot -> the cell) and the words at both ends.
+    const world = quietCareer('r42-37-arc', 60)
+    world.skills = { ...world.skills, composure: 39 }
+    const young = mountKid(toSnapshot(world))
+    const youngLine = personalityTile(young)
+    young.unmount()
+
+    world.skills = { ...world.skills, composure: 78 }
+    const grown = mountKid(toSnapshot(world))
+    const grownLine = personalityTile(grown)
+    grown.unmount()
+
+    expect(youngLine, 'the girl who is hot at nineteen').not.toBe(grownLine)
+    expect(youngLine.split(' ')[0], 'reads her low band').toBe(composureWord(39))
+    expect(grownLine.split(' ')[0], 'and her high one once the nerve has grown').toBe(composureWord(78))
+    const second = TEMPERAMENT_WORD[world.temperament]
+    expect(youngLine.endsWith(second) && grownLine.endsWith(second), 'and she is the same girl').toBe(true)
+  })
+
+  it('⭐ #37 – THE LINE FITS THE CELL at 375 / 768 / 900 / 1280, on the longest reading the game has', () => {
+    // ⚠ HIS STANDING RULE OF 14.09 («визуальную проверку на всех экранах надо тоже заложить»), and
+    // the one measurement item 6 stopped at: the pair was `nowrap` in a 115px cell, and this line is
+    // twice as long. The worst case is posed deliberately – the widest band word and the widest
+    // temperament word the tables hold – because a sweep over whatever seed came up would measure
+    // the easy readings.
+    const widest = [...COMPOSURE_BANDS].sort((a, b) => b.word.length - a.word.length)[0]
+    const world = quietCareer('r42-37-fits', 60)
+    world.skills = { ...world.skills, composure: widest.from }
+    world.temperament = [...TEMPERAMENTS].sort((a, b) => TEMPERAMENT_WORD[b].length - TEMPERAMENT_WORD[a].length)[0]
+    for (const vp of SWEEP) {
+      setViewport(vp)
+      const w = mountKid(toSnapshot(world), true)
+      const card = personalityCard(w)
+      const line = card.find('.kid-tile-line').element
+      // ⚠ THE WRAP IS THE FIX AND IS ASSERTED AS ONE. Under the grid's `nowrap` + `ellipsis` rule
+      // this reading would be CUT, and happy-dom reports no truncation – so what is measurable is
+      // the RULE, read through the real cascade, plus the box the wrapped line then needs.
+      const cs = getComputedStyle(line)
+      expect(cs.whiteSpace, `${vp.width}: the personality line is allowed to wrap`).not.toBe('nowrap')
+      expect(cs.textOverflow, `${vp.width}: and is never cut`).not.toBe('ellipsis')
+
+      // ...AND THE WRAPPED STACK FITS THE CELL. ⚠ `availableWidth` WALKS PADDING AND CAPS AND KNOWS
+      // NOTHING ABOUT GRID TRACKS, so reading it on the line would measure the whole row and score
+      // any line as fitting. The column is therefore derived from the grid's own declared template –
+      // three equal tracks and the sheet's own gap – which is the width the cell really draws at.
+      const grid = w.find('.kid-grid').element
+      const gap = parseFloat(getComputedStyle(grid).columnGap || getComputedStyle(grid).gap) || 0
+      const column = (availableWidth(grid, vp) - 2 * gap) / 3
+      expect(column, `${vp.width}: the cell has real width`).toBeGreaterThan(40)
+      const needed = boxOf(card.element, column).h
+      const min = parseFloat(getComputedStyle(card.element).minHeight) || 0
+      expect(needed, `${vp.width}: the tile is ${needed}px against its ${min}px floor`).toBeGreaterThan(0)
+      // ⚠ THE CLAIM IS «IT DOES NOT CLIP», and the cell's floor is a MINIMUM that the grid row
+      // stretches past – so the honest bound is that the wrapped line stays inside the box the
+      // export drew, with the cell's own floor as the allowance. A third rendered line would still
+      // pass; a line that needed a fourth would not, which is where «it reads well» stops being a
+      // measurement.
+      expect(needed, `${vp.width}: the wrapped line outgrew the cell`).toBeLessThanOrEqual(min)
+      if (process.env.R42_SWEEP)
+        console.log(
+          `SWEEP personality ${vp.width}: column ${column.toFixed(1)}px, tile box ${needed.toFixed(1)}px, floor ${min}px, line "${personalityTile(w)}"`,
+        )
+      w.unmount()
+    }
+    setViewport(DESKTOP)
   })
 
   it('⚠⚠ THE FENCE – the tile does not move with her mood, and the Mood tile beside it does', () => {
@@ -238,9 +339,9 @@ describe('⭐⭐ ROUND 42 #6 – the Personality tile is HER, and it is who she 
     ).not.toBe(world.temperament)
     const w = mountKid(walled)
     expect(personalityTile(w), 'and her page still says who she was born as').toBe(
-      `${TEMPERAMENT_PERSONALITY[world.temperament].lead}|${TEMPERAMENT_PERSONALITY[world.temperament].note}`,
+      personalityLine(world.skills.composure, world.temperament),
     )
-    expect(walled.life.personality, 'byte for byte the tile she had before the walls went up').toEqual(
+    expect(walled.life.personality, 'byte for byte the line she had before the walls went up').toBe(
       born.life.personality,
     )
     w.unmount()

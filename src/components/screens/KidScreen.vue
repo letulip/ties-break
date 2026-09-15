@@ -11,10 +11,12 @@
 //
 // THE SIX TILES ARE THE EXPORT'S OWN SIX, and every one of them now has an engine behind it:
 //
-//   Personality   snapshot.life.personality   WHO SHE WAS BORN AS - her temperament, read as a girl
-//                                             (engine/kidLife.ts). Round 42 #6: it was keyed on her
-//                                             play style, so every career read the same. BIRTH and
-//                                             never this week's mood - who-she-is §3's fence.
+//   Personality   snapshot.life.personality   WHO SHE IS, in one line of two adjectives - her
+//                                             COMPOSURE band and her temperament (engine/kidLife.ts).
+//                                             Round 42 #6 took it off her play style, #37 made it one
+//                                             line of sixteen readings. Neither word is this week's
+//                                             mood - who-she-is §3's fence, and his own «не хочу,
+//                                             чтобы это менялось с настроением».
 //   Confidence    snapshot.condition          the ring Home draws, on the same continuous hue
 //   Mood          diary.facts.emotion         as a word and as her own face
 //   School        snapshot.life.school        her LIFE STAGE - a grade while there is one, then the
@@ -415,13 +417,25 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
       </div>
 
       <!-- ======================== 2. THE ATTRIBUTE GRID ========================
-           The export's own six cells, in the export's own order. Personality / School / Friends
-           each print TWO lines out of `snapshot.life` and choose none of the words themselves. -->
+           The export's own six cells, in the export's own order. School and Friends each print TWO
+           lines out of `snapshot.life` and Personality one (round 42 #37) – and none of them chooses
+           a word: every string on this grid is the engine's. -->
       <div class="kid-grid">
+        <!-- ⭐⭐⭐ ROUND 42 #37 – ONE LINE, TWO ADJECTIVES, and the two halves answer two different
+             questions: how steady she has BECOME, and who she was BORN. His words and the whole
+             ruling are in engine/kidLife.ts, because no Cyrillic may appear inside a template
+             (tests/round13-nav.test.ts).
+             ⚠ AND THE SECOND HALF'S ENGINE NAME IS DELIBERATELY NOT WRITTEN HERE: who-she-is §5b
+             forbids that word reaching a component at all, in code OR in a template comment, so the
+             parent learns who she is from how she is spoken about rather than from a label
+             (tests/spirit.test.ts sweeps every file under components/ for it).
+             ⚠ IT IS THE ONE TILE LINE THAT WRAPS. «Unshakeable and single-minded» is 29 characters
+             against the grid's 16-character `nowrap` budget, so this line has its own class and its
+             own rule – see `.kid-tile-personality` in the style block, where the wrap is declared
+             and the measurement that licenses it is written down. -->
         <Card class="kid-tile" pad="11px 9px">
           <p class="kid-tile-label">Personality</p>
-          <p class="kid-tile-line">{{ life?.personality.lead }}</p>
-          <p class="kid-tile-line kid-tile-line-soft">{{ life?.personality.note }}</p>
+          <p class="kid-tile-line kid-tile-personality">{{ life?.personality }}</p>
         </Card>
 
         <Card class="kid-tile kid-tile-ring" pad="11px 9px">
@@ -899,11 +913,13 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   font-variant-numeric: tabular-nums;
 }
 
-/* The export's two 11.5px lines, 4px apart - now on FOUR of the six tiles (Personality, School,
-   Friends, Coach), which is what the export draws. `nowrap` is the export's own rule and it is
-   load-bearing: a wrapped second line pushes the tile out of the row. It is also why every line
-   engine/kidLife.ts can produce is held to TILE_LINE_MAX (17 characters) by a test - the cell is
-   115px wide and the eye is the wrong instrument for finding the line that outgrows it. */
+/* The export's two 11.5px lines, 4px apart - on School, Friends and Coach, which is what the export
+   draws. `nowrap` is the export's own rule and it is load-bearing: a wrapped second line pushes the
+   tile out of the row. It is also why every line engine/kidLife.ts can produce is held to
+   TILE_LINE_MAX (16 characters) by a test - the cell is 115px wide and the eye is the wrong
+   instrument for finding the line that outgrows it.
+   ⚠ PERSONALITY LEFT THAT SET IN ROUND 42 #37. It is one WRAPPING line now rather than a pair of
+   labels, and it opts out of the `nowrap` half below - see `.kid-tile-personality`. */
 .kid-tile-line {
   margin: 9px 0 0;
   font-size: 11.5px;
@@ -923,6 +939,21 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
 .kid-tile-line-soft {
   font-weight: 500;
   color: var(--ink-soft);
+}
+
+/* ⭐⭐⭐ ROUND 42 #37 – THE ONE TILE LINE THAT IS ALLOWED TO WRAP, and it is allowed because it is
+   the only one that is a PHRASE rather than a label. The `nowrap` rule above is the export's own and
+   it stays for the three tiles it was written for; «Unshakeable and single-minded» is 29 characters
+   against that rule's 16-character budget, so under it the line would be cut to «Unshakeable an…».
+   The tile's `min-height` is a MINIMUM and the grid row stretches to its tallest cell, so a second
+   rendered line costs the row a few pixels and clips nothing – measured at 375/768/900/1280 in
+   tests/component/round42-kid-tile-and-account.test.ts, which asserts the wrapped stack against the
+   cell's own box rather than against the eye. */
+.kid-tile-personality {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: break-word;
 }
 
 /* A tile that is a door. The lift is small on purpose - this is a cell in a grid, not a card. */

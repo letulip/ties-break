@@ -276,12 +276,33 @@ describe('#11 the coach she has', () => {
     expect(row.classes(), 'the frame is on').toContain('current')
     expect(row.classes(), 'and the refusal treatment is not').not.toContain('blocked')
 
-    // THE CONTROL: other rows on the same list ARE over budget and ARE blocked, so this is a
-    // statement about the CURRENT row and not about a class that has stopped being applied at all.
+    // THE CONTROL: other rows on the same list ARE blocked, so this is a statement about the CURRENT
+    // row and not about a class that has stopped being applied at all.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #42 (15.09), AND THE CONTROL HAD TO MOVE BECAUSE THE REFUSAL DID.
+    // It read «other rows are OVER BUDGET and are blocked», and compared the blocked count with
+    // `overBudgetCents > 0`. His ruling – «мы не можем запретить нанимать специалистов… просто в
+    // этом индикаторе мы покажем реальные затраты в неделю» – takes money out of `blocked`
+    // altogether: an unaffordable stranger now reads like an affordable one, because `hireCoach`
+    // never consulted the budget and the screen was refusing what the engine would have allowed.
+    // #11's OWN claim is untouched – her coach is not drawn as a refusal – and the control is now
+    // the gate that is still real: a rung she has not earned. The two live side by side in
+    // tests/component/round42-team-budget.test.ts §3b.
     const others = wrapper.findAll('.cm-row').filter((r) => !r.classes().includes('current'))
     const blocked = others.filter((r) => r.classes().includes('blocked'))
-    expect(blocked.length, 'the list still refuses what she cannot afford').toBeGreaterThan(0)
-    expect(snapshot.coachMarket.filter((r) => !r.current && r.overBudgetCents > 0).length).toBe(blocked.length)
+    expect(blocked.length, 'the list still refuses what she has not earned').toBeGreaterThan(0)
+    expect(snapshot.coachMarket.filter((r) => !r.current && r.lockedPoints !== null).length).toBe(blocked.length)
+    // ⚠ AND THE OTHER HALF OF HIS RULING, ON THE SAME MOUNTED LIST: the rows that are over budget and
+    // NOT locked are not refused at all. Asserted here as well as in #42's own file because this is
+    // the fixture built to be over budget, and a control that could pass with money back in `blocked`
+    // would be no control.
+    const overOnly = snapshot.coachMarket.filter((r) => !r.current && r.lockedPoints === null && r.overBudgetCents > 0)
+    expect(overOnly.length, 'the fixture really holds unaffordable-but-earned rungs').toBeGreaterThan(0)
+    for (const r of overOnly) {
+      const el = others.find((n) => (n.attributes('aria-label') ?? '').startsWith(`${r.name},`))
+      expect(el, `${r.name} is on screen`).toBeTruthy()
+      expect(el!.classes(), `${r.name}: unaffordable is not refused`).not.toContain('blocked')
+    }
     wrapper.unmount()
   })
 
@@ -458,6 +479,11 @@ describe('#12 what the gate reads', () => {
     expect(free).toContain(formatCents(snapshot.coachBilling.weeklyIncomeCents - committed))
 
     // ...and no card on the screen tells him he is over budget any more.
+    // ⚠ ROUND 42 #42 (15.09) – THIS LINE IS NOW TRUE BY CONSTRUCTION AND IS KEPT AS A TRIPWIRE. The
+    // `$X over` chip no longer exists on any row at any budget (his ruling: show the cost, never
+    // refuse the hire), so what still carries this case's claim is the `overBudgetCents === 0`
+    // assertion above – the fixture really is a nothing-is-over screen, which is the state the meter
+    // used to reverse-engineer a zero cap from.
     expect(wrapper.findAll('.cm-action.is-over').length).toBe(0)
     wrapper.unmount()
   })

@@ -48,6 +48,8 @@ function snapshotWithGridNote(): Snapshot {
     seasonYear: seasonYear(Math.floor(base.week / 52)),
     // ⚠ ROUND 42 #6 – the view names her temperament now; this file is about the desktop grid.
     temperament: base.diary.facts.temperament,
+    // ⚠ ROUND 42 #37 – and her composure, the Personality line's first word. Nothing here reads it.
+    composure: 50,
     playStyle: base.profile.playStyle,
     birthMonth: base.profile.birthMonth,
     injured: false,

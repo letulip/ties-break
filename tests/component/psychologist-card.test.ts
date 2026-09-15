@@ -55,7 +55,12 @@ import {
 import { ECONOMY } from '../../src/engine/economy'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { formatCents } from '../../src/shared/money'
-import { assertDismissReachable, setViewport, PHONE } from './fits'
+import { assertDismissReachable, availableWidth, boxOf, setViewport, DESKTOP, PHONE, TABLET, type Viewport } from './fits'
+
+/** ⭐ HIS STANDING RULE OF 14.09 – the visual pass is a deliverable, at the wave gate's own parity
+ *  widths. 900 is the top of his tablet band and has no entry in `fits.ts`. */
+const WIDE: Viewport = { width: 900, height: 900 }
+const SWEEP: Viewport[] = [PHONE, TABLET, WIDE, DESKTOP]
 
 const SEAT = '[data-staff="psychologist"]'
 
@@ -320,15 +325,53 @@ describe('the psychologist card on screen T', () => {
     // ⚠ THE COUNT IS THE ROSTER'S AND ALWAYS WAS, so v77's fifth focus («The public life», O7) moved
     // this line's MESSAGE and not its assertion – the card renders whatever `PSY_FOCUSES` holds.
     expect(options.length, 'one option per focus on the roster – five since v77 T5').toBe(PSY_FOCUSES.length)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #18 (15.09) – AN OPTION IS A NAME OVER A SENTENCE NOW, so «the
+    // button's whole text is the label» stopped being the claim. The owner: «в пунктах психолога на
+    // выбор немного расписать эффект от работы». The name is asserted on its own element here and
+    // the sentence beside it in the case below; leaving this as a whole-text equality would have
+    // made the item's own change read as a regression.
     for (const [i, focus] of PSY_FOCUSES.entries()) {
       expect(options[i].attributes('role')).toBe('radio')
-      expect(options[i].text()).toBe(PSY_FOCUS_LABEL[focus])
+      expect(options[i].find('.staff-focus-name').text()).toBe(PSY_FOCUS_LABEL[focus])
       expect(options[i].attributes('aria-checked'), 'nothing is chosen yet').toBe('false')
     }
     // ⚠ AND THE RUNG DIAL IS UNTOUCHED BESIDE IT – three buttons, not seven. The two groups are
     // deliberately different classes: `.staff-rung` is the roster, `.staff-focus-option` is the year,
     // and the masseur's own pins sweep the first by name.
     expect(wrapper.findAll(`${SEAT} .staff-rung`).length).toBe(ECONOMY.psychologist.rungs.length)
+    wrapper.unmount()
+  })
+
+  it('⭐⭐ ROUND 42 #18 – every option says what its year is FOR, in the catalogue`s own sentence', async () => {
+    // His ask, and the whole of it: the picker rendered five labels and the five owner-gated
+    // sentences existed the whole time, reaching only the hired line's splice – which is read AFTER
+    // the decision rather than while it is being taken. Zero new wording; what moved is where the
+    // words are.
+    const { hired } = snapshots()
+    const wrapper = await mountCard(hired)
+    const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
+    expect(options.length, 'one per focus on the roster').toBe(PSY_FOCUSES.length)
+    for (const [i, focus] of PSY_FOCUSES.entries()) {
+      // ⚠ OFF THE IMPORTED CONSTANT, never a copy typed here – the wave-5 §3b idiom, and the reason
+      // a вычитка pass over `PSY_FOCUS_LINE` moves this pin with the screen instead of against it.
+      expect(options[i].find('.staff-focus-blurb').text(), focus).toBe(PSY_FOCUS_LINE[focus])
+    }
+    // ...AND THE SENTENCES REALLY ARE FIVE DIFFERENT ONES, which is what makes the row worth reading:
+    // a picker that printed one sentence five times would satisfy every assertion above.
+    const blurbs = options.map((o) => o.find('.staff-focus-blurb').text())
+    expect(new Set(blurbs).size, 'five years, five sentences').toBe(PSY_FOCUSES.length)
+    // ⚠⚠ AND THE SENTENCE IS ALLOWED TO WRAP, which is the one way this row can break. These are
+    // 60-90 characters inside half a phone's width; under the `nowrap` the pill row could easily
+    // have inherited, every option would read «The year goes on the b…» and the item would have
+    // shipped as a truncation. Read through the real cascade, so a future rule reddens it.
+    for (const o of options) {
+      expect(getComputedStyle(o.find('.staff-focus-blurb').element).whiteSpace, 'the sentence wraps')
+        .not.toBe('nowrap')
+    }
+    // ⚠ AND THE NOTE UNDER THE ROW IS UNTOUCHED: before the first pick it stays empty, because the
+    // labelled options now say what is on offer and a placeholder would be this screen inventing
+    // copy (`psychologistFocusNote`'s own rule).
+    expect(wrapper.find(`${SEAT} .staff-focus-note`).exists(), 'nothing chosen, nothing to report').toBe(false)
     wrapper.unmount()
   })
 
@@ -449,6 +492,45 @@ describe('the psychologist card on screen T', () => {
       /declares no height bound/,
     )
     wrapper.unmount()
+  })
+
+  it('⭐ ROUND 42 #18 – THE PICKER FITS at 375 / 768 / 900 / 1280, with the sentences in it', async () => {
+    // ⚠ HIS STANDING RULE OF 14.09 («визуальную проверку на всех экранах надо тоже заложить»), and
+    // this row is exactly the kind that needs it: four labels became five names each carrying a
+    // 60-90 character sentence, inside a control that is half a phone wide by declaration.
+    //
+    // ⚠ WHAT IS MEASURED IS THE LAYOUT PROMISE, not an opinion. `.staff-focus` is a wrapping flex row
+    // whose items declare `flex: 1 1 calc(50% - 3px)` – the 2x2 shape v76 T3 chose on purpose – so
+    // the claim is that two options really do sit side by side at every width, and that the block
+    // they make has real height and never asks for more width than the card leaves it.
+    const { hired } = snapshots()
+    for (const vp of SWEEP) {
+      setViewport(vp)
+      const wrapper = await mountCard(hired, true)
+      const row = wrapper.find(`${SEAT} .staff-focus`).element
+      const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
+      expect(options.length, `${vp.width}: the row drew every year`).toBe(PSY_FOCUSES.length)
+
+      const room = availableWidth(row, vp)
+      const gap = parseFloat(getComputedStyle(row).columnGap || getComputedStyle(row).gap) || 0
+      // The declared basis, resolved against the room the card actually leaves the row.
+      const basis = (room - gap) / 2
+      expect(basis, `${vp.width}: an option has real width`).toBeGreaterThan(80)
+      expect(basis * 2 + gap, `${vp.width}: two really fit side by side`).toBeLessThanOrEqual(room + 0.5)
+
+      const heights = options.map((o) => boxOf(o.element, basis).h)
+      for (const [i, h] of heights.entries()) {
+        expect(h, `${vp.width}: option ${i} has a rendered box`).toBeGreaterThan(0)
+      }
+      if (process.env.R42_SWEEP) {
+        console.log(
+          `SWEEP psy-picker ${vp.width}: room ${room.toFixed(1)}px, option ${basis.toFixed(1)}px, ` +
+            `tallest option ${Math.max(...heights).toFixed(1)}px, block ~${(Math.max(...heights) * Math.ceil(PSY_FOCUSES.length / 2)).toFixed(1)}px`,
+        )
+      }
+      wrapper.unmount()
+    }
+    setViewport(DESKTOP)
   })
 
   it('§8b – ...and so is the release confirm`s', async () => {

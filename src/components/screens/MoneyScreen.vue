@@ -374,10 +374,21 @@ const coachShareCents = computed(() => activeFinance.value?.coachCutCents ?? 0)
  *  owner's (`This season` is invariant 4's own worked example), so the phrase is built from them
  *  rather than from a third spelling of the same period. */
 const coachShareWindow = computed(() => (breakdownWindow.value === 'season' ? 'this season' : 'in the last 12 weeks'))
+/** ⭐⭐⭐ ROUND 42 #41 (15.09) – ONE PERCENTAGE WHERE THERE WERE TWO, and the words are his.
+ *
+ *  The memo used to end «10% of a title cheque, 10% of a lost final.» – the same rate said twice,
+ *  and said of two finishes out of every finish there is, from the moment his ruling took the depth
+ *  out of the coach's line («10% безусловных отчислений с любых призовых, независимо от глубины
+ *  прохода»). His replacement is «10% of every prize cheque»; the rest of the sentence's shape is
+ *  untouched to the character – the label, the cents, the window and «already inside Coaching above»
+ *  are the shipped line (invariant 4).
+ *
+ *  ⚠ THE FIGURE IS STILL THE ENGINE'S. `staffResultShareBps('coach', 2)` is the every-finish arm –
+ *  the one that pays a first-round exit – so the sentence reads the rate it actually claims. */
 const coachShareNote = computed<string | null>(() =>
   coachShareCents.value > 0
     ? `Coach's results share – ${formatCents(coachShareCents.value)} ${coachShareWindow.value}, already inside Coaching above: ` +
-      `${staffResultShareBps('coach', 0) / 100}% of a title cheque, ${staffResultShareBps('coach', 1) / 100}% of a lost final.`
+      `${staffResultShareBps('coach', 2) / 100}% of every prize cheque.`
     : null,
 )
 
@@ -2085,8 +2096,9 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                ⚠ A MEMO AND NOT A ROW IN THE COLUMN ABOVE – the week recap's own ruling on this exact
                figure: the cents are already a `coaching` expense, so a row would charge one cheque
                twice and would carry a percentage of the spend beside it. The sentence says where the
-               money already is. ⚠ Both percentages come from `staffResultShareBps` through the
-               script; no rate is typed in this template. -->
+               money already is. ⚠ The percentage comes from `staffResultShareBps` through the
+               script; no rate is typed in this template. ⚠ ROUND 42 #41: it is ONE rate now rather
+               than a title/final pair, by his own replacement wording. -->
           <p v-if="coachShareNote" class="money-panel-note money-bill-note money-coach-share">{{ coachShareNote }}</p>
 
           <!-- The jitter, said out loud. It sits UNDER the rows it explains and above the CTA, so a

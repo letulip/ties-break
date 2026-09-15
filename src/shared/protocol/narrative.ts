@@ -848,17 +848,31 @@ export interface DiarySnapshot {
 // exactly like `radar` and `coachMarket` – it persists nothing and bumps no schema.
 
 /** One tile: two short lines, as the design's cells are drawn. Both are `white-space: nowrap` on
- *  screen C, so both are written to a hard 17-character budget (see TILE_LINE_MAX). */
+ *  screen C, so both are written to a hard 17-character budget (see TILE_LINE_MAX).
+ *
+ *  ⚠ ROUND 42 #37 – THREE TILES WEAR THIS SHAPE NOW, not four: the Personality cell left it for one
+ *  wrapping line of two adjectives (see `KidLife.personality`), so the examples below are School's
+ *  and Friends' own. */
 export interface KidLifeTile {
-  /** the first line – the fact ("10th grade", "Patient", "Close to Sofia") */
+  /** the first line – the fact ("10th grade", "Close to Sofia") */
   lead: string
-  /** the second line – what it means or how it is going ("Oldest in class", "And stubborn") */
+  /** the second line – what it means or how it is going ("Oldest in class", "Still close") */
   note: string
 }
 
 export interface KidLife {
-  /** her play style, read as a person and never as tennis. Fixed for the career. */
-  personality: KidLifeTile
+  /** ⭐⭐⭐ ROUND 42 #37 – WHO SHE IS, in one line of two adjectives: «Patient and stubborn»,
+   *  «Unshakeable and single-minded», «Hot-headed and easy-going». Sixteen readings, and neither
+   *  half is about tennis – the paper scrap beside her photo already carries the play style.
+   *
+   *  ⚠ A STRING RATHER THAN A `KidLifeTile`, and the shape IS the item. The owner's re-cut of 15.09
+   *  is one line («эти два слова»), and the longest reading is 29 characters against the tile pair's
+   *  16-character `nowrap` budget – so the cell wraps one line instead of printing two.
+   *
+   *  ⚠⚠ THE FIRST WORD IS HER COMPOSURE BAND, THE SECOND HER TEMPERAMENT, AND NEITHER IS HER MOOD:
+   *  «я не хочу, чтобы это менялось с настроением и дублировало его, у нас уже есть поле с
+   *  настроением». The whole ruling is above `COMPOSURE_BANDS` in engine/kidLife.ts. */
+  personality: string
   /** ⭐⭐ ROUND-23 #6 – HER LIFE STAGE, and it keeps moving after the last bell.
    *
    *  At school: her grade, on a 1-September school year, plus her place in the class by age. Moves

@@ -44,7 +44,11 @@ import type {
   Offer,
   TourLetterTerms,
 } from '../shared/protocol'
-import { SPONSOR_TIERS, apparelBondCost, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
+// ⭐⭐ ROUND 42 #39a – `activeKitDeal` joins the same import, for the reason the four beside it are
+// here: it is the ENGINE's own predicate for «is she under contract this week» – the very function
+// the wear ceiling reads – so the line below cannot claim a deal the engine is not honouring. Pure:
+// no world in it and no draw behind it.
+import { SPONSOR_TIERS, activeKitDeal, apparelBondCost, chooseShootWeeks, dealUntilWeek } from '../engine/offers'
 import { ECONOMY } from '../engine/economy'
 import { weekLabel } from '../shared/dates'
 import { letterDeletable, useInboxMail } from '../composables/inboxMail'
@@ -82,6 +86,37 @@ const letters = computed(() =>
 )
 const live = (o: Offer): boolean => o.state === 'open' && week.value <= o.deadlineWeek
 const open = computed(() => letters.value.filter(live))
+
+/** ⭐⭐ ROUND 42 #39a – WHAT SHE IS UNDER, AND UNTIL WHEN, or '' when nobody is dressing her.
+ *
+ *  THE OWNER, 15.09, on four winters in which no kit letter arrived at all: «я вообще ничего не
+ *  понял. Почему остальные контракты работают корректно, а этот нет? Это надо починить.» Measured:
+ *  nothing misbehaves. `rungTurnedAway` lets only a STRICTLY stronger rung interrupt a running deal,
+ *  and at the top rung there is no stronger rung – so an `icon` contract means four winters of
+ *  silence BY CONSTRUCTION. What was missing is that nothing on screen ever said «you are under
+ *  contract until 2041», and unexplained correct behaviour reads exactly like a bug.
+ *
+ *  ⚠⚠ THIS IS LEGIBILITY AND NOT A MECHANIC. Nothing about the post changes, and nothing is going to:
+ *  item 39b proposed letting a rival court her in a term's last season and he refused it on 15.09 –
+ *  a term runs, and fresh letters come when it ends. This sentence only reports.
+ *
+ *  ⚠ AND IT IS CAREFUL ABOUT WHAT IT PROMISES. «Nobody writes while a deal runs» would be FALSE at
+ *  every rung but the last – a bigger brand can and does interrupt (round 29 part two #12, measured
+ *  over 191 winters) – so the clause names the one thing that is true at every rung: only a bigger
+ *  name can write. At the top of the ladder there is no bigger name, which is his four winters said
+ *  without the screen having to know which rung she is on.
+ *
+ *  ⚠ DRAFT COPY, reported verbatim in the round's handoff for his read.
+ *
+ *  The deal, the brand and the end week are all the ENGINE's: `activeKitDeal` is the predicate, the
+ *  brand is the paper's own `terms.brand`, and `untilWeek` is what `signOffer` wrote onto the offer –
+ *  never a length this sheet worked out from `seasons`. */
+const contractNote = computed(() => {
+  const deal = activeKitDeal(game.snapshot?.offers ?? [], week.value)
+  if (!deal) return ''
+  const terms = deal.terms as KitOfferTerms
+  return `Her kit is ${terms.brand}'s until ${weekLabel(deal.untilWeek ?? week.value)} – while it runs, only a bigger name can write.`
+})
 
 // --- the list ------------------------------------------------------------------------------
 /** WHO WROTE. The letterhead in one line: a brand signs with its own name, and the two desks that
@@ -427,6 +462,15 @@ async function doRefuse(id: string): Promise<void> {
 
       <!-- ══ THE LIST ══ -->
       <template v-else>
+        <!-- ⭐⭐ ROUND 42 #39a – WHAT IS RUNNING, AND UNTIL WHEN. His four empty winters were three
+             long kit contracts and the game never said so, so silence read as a broken system. The
+             sentence is engine-composed (`contractNote` in the script, where his words are quoted -
+             no Cyrillic in a template, tests/round13-nav.test.ts) and empty for every week she is
+             under nobody. ⚠ ABOVE THE EMPTY-STATE HINTS DELIBERATELY: the quiet winter is exactly
+             the case where the list has nothing waiting in it, which is when the explanation is
+             worth the most. No mechanic moves - see the ⚠⚠ note on the computed. -->
+        <p v-if="contractNote" class="hint inbox-contract">{{ contractNote }}</p>
+
         <p v-if="letters.length === 0" class="hint">
           Nothing yet. Sponsors write to players they have been watching for a season.
         </p>
@@ -520,6 +564,14 @@ async function doRefuse(id: string): Promise<void> {
    the parent has no flow to honour. */
 .inbox-back {
   margin: 8px 0 0 -6px;
+}
+
+/* ⭐⭐ ROUND 42 #39a – THE CONTRACT LINE, above the list. It takes the app's `hint` register and adds
+   only its own rhythm: it is an explanation of the post below it, not a row in it, and it wraps as
+   prose (a brand name plus a date is longer than a phone's line). */
+.inbox-contract {
+  margin: 10px 0 0;
+  text-wrap: pretty;
 }
 
 /* THE LIST. Rows separated by a hairline, which is right here and wrong for the letters above: a
