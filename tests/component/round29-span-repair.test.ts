@@ -140,6 +140,26 @@ const LAYOFF = SIX + 1
 function sixWeekGap(seed: string): { world: WorldState; rng: () => number } {
   const world = createWorld(seed, { ...DEFAULT_PROFILE, coachTier: 'self' })
   world.week = WRAP_OFFSET - 3
+  // ⚠⚠ ROUND 42 #7 (15.09) – THE TELEPORT NEEDED ITS LEDGER TELEPORTED TOO, and the ruling is what
+  // exposed it. This fixture puts a FRESH world on week 46 without walking the 46 weeks, so its
+  // ledger held nothing but `generatePreHistory`'s synthetic rows at weeks -51…-1 – a career with no
+  // career behind it. While the domestic table was season-to-date those rows were outside its window
+  // by definition and the table read empty, which is why nothing ever noticed. On the rolling window
+  // the owner ruled for, the rows at weeks -6…-1 COUNT: nine players hold domestic points at week 48
+  // and the kid, on zero, takes the competition rank straight under them – **#10**, which is
+  // `ECONOMY.sponsorship.topMaxRank` exactly. The local shop wrote to her, `advanceWeeks` stopped on
+  // `'offer'` at week 48, and three arms of this file read 48 where they wanted 52.
+  //
+  // ⭐ IT IS THE FIXTURE AND NOT THE ENGINE, measured both ways: a REAL walked career reads domestic
+  // #75 at week 0 and #112 at week 48 under the same rolling rule – nowhere near a sponsor gate –
+  // because 111 rivals hold domestic points by then instead of nine. The nine-player table is an
+  // artefact of the teleport.
+  //
+  // So the ledger is emptied to match the world that was faked: no career, no results. That is
+  // arm-NEUTRAL by construction (an all-zero table sends every row to the bottom in both window
+  // rules, via `assignCompetitionRanks`), so it repairs the fixture without touching what any arm
+  // below measures – which is the span, and never a ranking.
+  world.results = []
   const event: SeasonEvent = {
     id: `${seed}-local`,
     week: world.week + SIX + 1,

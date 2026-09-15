@@ -560,21 +560,26 @@ export function tierOpensWhen(id: TierId, acceptsRank?: number): string {
     // and w15's band is ITF junior points – "age 16 and 120 national pts" was the same wrong-label
     // bug pointsLockNote had, one sentence over.
     //
-    // ⚠⚠ ROUND 34 #1 – ...AND THE WINDOW THE THRESHOLD IS COUNTED OVER, which is the half nobody
+    // ⚠⚠ ROUND 34 #1 – ...AND THE WINDOW THE THRESHOLD IS COUNTED OVER, which was the half nobody
     // said. The owner: «совершенно непонятно как выйти в j уровень». The route to the Junior Tour is
-    // J30's floor, and since round 23 #12/#13 the domestic table is a SEASON RACE
-    // (`WINDOW_BY_TRACK.domestic === 'seasonToDate'`, his own ruling: «да, это мелочь, а будет
-    // хорошо»), so the 250 has to be earned inside ONE season and starts again every January. The
-    // number alone is only half a condition: measured on a real career (tools/r34-domestic-reset.ts)
-    // she reached 106 by week 51, read 0 on week 52, and did not cross 250 until week 77 of the
-    // NEXT season. A parent adding this season's points to last season's is planning against a
-    // total that does not exist.
+    // J30's floor, and under round 23 #12/#13 the domestic table was a SEASON RACE (his own ruling:
+    // «да, это мелочь, а будет хорошо»), so the 250 had to be earned inside ONE season and started
+    // again every January. The number alone was only half a condition: measured on a real career
+    // (tools/r34-domestic-reset.ts) she reached 106 by week 51, read 0 on week 52, and did not cross
+    // 250 until week 77 of the NEXT season. A parent adding this season's points to last season's
+    // was planning against a total that did not exist.
+    //
+    // ⚠⚠ ROUND 42 #7 (15.09) TOOK THE CLAUSE BACK OFF, AND NOT ONE CHARACTER HERE MOVED. He re-ruled
+    // the window to rolling-52 – «тот же механизм — окно в 52 недели ... окно "ползет"» – so the 250
+    // carries across a boundary again and the ternary below evaluates to `''` on its own. Both
+    // rulings landed on this sentence through the constant and neither one edited it, which is the
+    // return on the rule stated immediately below.
     //
     // ⚠ DERIVED FROM `WINDOW_BY_TRACK`, NEVER WRITTEN DOWN. That constant is a plain object exactly
-    // so `tools/domestic-season-to-date.ts` can patch it back to `'rolling52'` for an A/B arm, and a
-    // hardcoded "in one season" here would go on lying through such a run – and through a future
-    // re-ruling. Same discipline as the acceptance cut two clauses up: read the gate, do not restate
-    // it. The ITF/WTA tracks are `'rolling52'`, so W15's clause is untouched.
+    // so `tools/domestic-season-to-date.ts` can patch it for an A/B arm, and a hardcoded "in one
+    // season" here would go on lying through such a run – and through a re-ruling, which is no
+    // longer hypothetical. Same discipline as the acceptance cut two clauses up: read the gate, do
+    // not restate it. Every track is `'rolling52'` now, so no rung carries the clause.
     const track = entryBandTrack(id)
     const window = WINDOW_BY_TRACK[track] === 'seasonToDate' ? ' in one season' : ''
     clauses.push(`${minPoints} ${LADDER_POINTS_LABEL[track]}${window}`)
@@ -909,11 +914,17 @@ export function tierState(id: TierId, input: TierStateInput): TierState {
     // derived from TIERS: "Local, Regional and National" are the player's short names, not the
     // catalogue's labels, and LADDER_LABEL supplies the currency word either way.
     //
-    // ⚠⚠ ROUND 34 #1 – AND THE DOMESTIC SENTENCE NOW SAYS WHEN THE TABLE STARTS AGAIN. Same find as
-    // `tierOpensWhen`'s clause: the domestic total is season-to-date, so «112 / 250» is progress
-    // inside THIS season and reads as progress inside a career. Derived from `WINDOW_BY_TRACK` for
-    // the reason written out there; the ITF sentence is untouched because that table rolls 52 weeks
-    // and genuinely does carry over.
+    // ⚠⚠ ROUND 34 #1 – AND THE DOMESTIC SENTENCE SAID WHEN THE TABLE STARTS AGAIN. Same find as
+    // `tierOpensWhen`'s clause: the domestic total WAS season-to-date, so «112 / 250» was progress
+    // inside THIS season while it read as progress inside a career. Derived from `WINDOW_BY_TRACK`
+    // for the reason written out there; the ITF sentence was untouched because that table rolls 52
+    // weeks and genuinely does carry over.
+    // ⚠⚠ ROUND 42 #7 (15.09) – THE CLAUSE IS GONE AND NOT ONE CHARACTER HERE MOVED TO REMOVE IT. The
+    // owner re-ruled the domestic window to rolling-52, the ternary below evaluates to `'.'`, and
+    // «112 / 250» now IS progress inside a career. That is the whole return on deriving the sentence
+    // instead of writing it: round 34 built this clause, round 42 deleted it, and the cost of the
+    // second ruling was a constant in `season/ranking.ts`. The clause comes back, unprompted and
+    // correct, the day `tools/domestic-season-to-date.ts` patches the constant for its B arm.
     const earnedAt: Record<'domestic' | 'itf', string> = {
       domestic:
         'National points come from Local, Regional and National events' +

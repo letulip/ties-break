@@ -103,46 +103,60 @@ export const BEST_N_BY_TRACK: Record<LadderTrack, number> = { domestic: 6, itf: 
  *  are one decision: "best six of the last 52 weeks" and "best six of this season" are different
  *  games and the pair has to be readable in one glance.
  *
- *  `'rolling52'`   - the last 52 weeks, always. What every table in this game did until round 23.
- *  `'seasonToDate'` - week 0 of the current season up to today. Resets at every wrap.
+ *  `'rolling52'`   - the last 52 weeks, always. What every table in this game does.
+ *  `'seasonToDate'` - week 0 of the current season up to today. Resets at every wrap. NO TRACK USES
+ *  IT since round 42 #7; it survives as the B arm of `tools/domestic-season-to-date.ts`, which is
+ *  what makes the before/after in that ledger a measurement of THIS constant rather than of two
+ *  different trees.
  *
- *  ⚠⚠ THE DOMESTIC TRACK IS SEASON-TO-DATE, AND IT IS THE OWNER'S OWN RULING (round 23 items 12 and
- *  13, 20.08). He reported a rival's national total falling from 600+ to 400+ "right after my win"
- *  and, in the same sentence, said what he thought the table was: «таблица должна просто показывать
- *  6 лучших ЗА СЕЗОН». The measurement (docs/rounds/round-23.md #12, `tools/domestic-ladder-probe.ts`
- *  §C - 6 seeds x 110 weeks) found 51 falls in the domestic top 3, **51 of them a row leaving the
- *  52-week window and 0 unexplained**: his own case was a National title of 200 points, won 53 weeks
- *  earlier, ageing out. Nothing was ever subtracted; the table was simply answering a different
- *  question from the one he was asking it. Item 13 is the same mechanism at scale - a mean of 0.3 of
- *  the week-8 top TEN survived to the season wrap, because 9-10 of that ten stood on a pre-history
- *  row and every pre-history row is outside a 52-week window by week 52.
+ *  ⚠⚠ ALL THREE TRACKS ARE ROLLING-52 AGAIN, AND IT IS THE OWNER'S OWN RULING (round 42 item 7,
+ *  15.09.2026) – the ruling that DELETED a second implementation rather than adding a mechanic. He
+ *  had asked twice («второй раз пишу») about «дыру» in the national ladder: «каждый год заново надо
+ *  набирать национальный ранг». Offered the latch, he named the MECHANISM instead of the outcome:
+ *  «A — защёлка, но такая же, как и на взрослых турнирах, ТОТ ЖЕ МЕХАНИЗМ — окно в 52 недели и
+ *  выбираем лучшие 6 результатов, окно "ползет"». And the second word the same evening, with the
+ *  20.08 receipts in front of him: «да, но будет везде корректно, окно в 52 недели и очки. Мне
+ *  кажется это правильно.»
  *
- *  Shown the three options (leave it / season-to-date / widen the window) he chose season-to-date:
- *  «да, это мелочь, а будет хорошо, мне кажется. Тем более, что первый сезон у нас показательный.»
+ *  ONE RULING DOES TWO JOBS, and both are consequences of there being no calendar boundary left:
+ *    * THE JANUARY CLIFF IS GONE because there is no January any more – a result ages out 52 weeks
+ *      after it was won, one row at a time, not all together on a wrap.
+ *    * THE TIER ENTRY GATES STOP SLAMMING (round 34 #1's undone half, «мне снова закрылся
+ *      регионарный»): `tierFloorOpen` reads `kidPoints(world, 'domestic')` live, and that total no
+ *      longer resets to zero, so Regional's 65 and National's 150 are not re-earned every season.
+ *      The latch on `peakDomesticPoints` that round 42 #7 proposed is WITHDRAWN by this: a floor
+ *      that never falls needs no latch, and no state was added to get it.
  *
- *  ⚠ AND ONLY THE DOMESTIC TRACK. The ITF and WTA tracks model REAL tours that genuinely work this
- *  way - "a rolling, 52-week period" is the WTA rulebook's own phrase (§VIII.A.4.a.i, quoted in full
- *  on `BEST_N_BY_TRACK`), and ITF Juniors Reg 10 is the same shape. Our domestic rungs are an
- *  invention (`economy.ts` says so at the entry-cap comment; `rankableTotal` below says "our domestic
- *  ladder is invented outright"), so they are the one table free to behave the way a player expects
- *  rather than the way a governing body writes it down. A season-to-date ITF table would be a
- *  wrong model of a real ranking; a season-to-date domestic table is our own race, and races reset.
+ *  ⚠ WHAT THE RULING KNOWINGLY BUYS BACK – round 23 #12 and #13, whose phenomena return, ACCEPTED as
+ *  the correct model's own behaviour rather than re-filed as defects. #12: a rival's national total
+ *  falls «right after my win» because a National title of 200 points won 53 weeks earlier ages out
+ *  (measured 20.08: 51 falls in the domestic top 3 over 6 seeds x 110 weeks, 51 of them a row
+ *  leaving the window, 0 unexplained – nothing is ever subtracted). #13: season 1 churns, because
+ *  every pre-history row (weeks -51 … -1) is inside a rolling window at week 0 and outside it by
+ *  week 52, so the opening top ten is replaced across the first year. The season-1 numbers are in
+ *  docs/rounds/round-42.md #7's ship note, measured rather than predicted.
  *
- *  ⚠ BEST-N SURVIVES THE CHANGE - it is still best-6, now of this season. The owner's sentence says
- *  «6 лучших за сезон», so best-6 is the half he was NOT complaining about, and dropping it for a
- *  plain sum of everything would silently answer a question nobody asked. It also keeps the two
- *  domestic-facing numbers explicable together: `computeCountingResults` shows exactly the rows the
- *  total is made of, and a six-row list under a total is a thing a player can check. A full-season
- *  sum would make the table a participation count - twenty-four Locals a season would beat a
- *  National title - which inverts the ladder the three rungs were tuned as.
+ *  ⚠ BEST-N IS UNTOUCHED BY EITHER RULING – still best-6 on both junior tables, eighteen on the
+ *  professional one. «выбираем лучшие 6 результатов» is his own sentence in the 15.09 ruling, and it
+ *  is the same six round 23 kept. What moved, twice, is only WHICH WEEKS they are chosen from.
+ *
+ *  ⚠ THE SUPERSEDED RULING, KEPT BECAUSE THIS FIELD HAS BEEN BOTH VALUES AND WILL BE READ BY SOMEONE
+ *  WHO REMEMBERS THE OTHER ONE. Round 23 #12/#13 (20.08) made `.domestic` season-to-date on his own
+ *  word – «таблица должна просто показывать 6 лучших ЗА СЕЗОН», then «да, это мелочь, а будет
+ *  хорошо, мне кажется. Тем более, что первый сезон у нас показательный». The argument for it was
+ *  that our domestic rungs are an invention (`rankableTotal` below still says "our domestic ladder is
+ *  invented outright") and so are the one table free to behave the way a player expects rather than
+ *  the way a governing body writes it down. Round 42 #7 does not dispute that licence; it says the
+ *  player's expectation turned out to be the adult tour's own mechanism, so the divergence was
+ *  costing a second implementation and buying nothing. The ITF and WTA arms never moved in either
+ *  ruling – "a rolling, 52-week period" is the WTA rulebook's own phrase (§VIII.A.4.a.i, quoted in
+ *  full on `BEST_N_BY_TRACK`) and ITF Juniors Reg 10 is the same shape.
  *
  *  ⚠ A PLAIN OBJECT, NOT `as const`, ON THE SAME LICENCE `BEST_N_BY_TRACK` CARRIES: the A/B arms of
- *  `tools/domestic-season-to-date.ts` patch `.domestic` back to `'rolling52'` and restore it, which
- *  is what makes the before/after in the ledger a measurement of THIS constant rather than of two
- *  different trees. Engine code never writes it. */
+ *  `tools/domestic-season-to-date.ts` patch `.domestic` and restore it. Engine code never writes it. */
 export type RankingWindow = 'rolling52' | 'seasonToDate'
 export const WINDOW_BY_TRACK: Record<LadderTrack, RankingWindow> = {
-  domestic: 'seasonToDate',
+  domestic: 'rolling52',
   itf: 'rolling52',
   wta: 'rolling52',
 }
@@ -552,6 +566,13 @@ export function computeRanking(
   // standings have to get the same answer. This arm is unchanged and still needed: it is the MIXED
   // case (some rows scored, some not) on a season table, which the rule above deliberately leaves
   // alone. On an all-zero table the two agree – every row is already at `last` when this runs.
+  //
+  // ⚠ ROUND 42 #7 (15.09): NO SHIPPED TRACK REACHES THIS ARM ANY MORE – `WINDOW_BY_TRACK` is
+  // rolling-52 on all three. It is kept, unchanged, because `'seasonToDate'` is still a window rule
+  // the fold must answer correctly for: `tools/domestic-season-to-date.ts` patches the constant to
+  // produce its B arm, and a B arm whose all-zero January handed everybody rank 1 would measure the
+  // deletion of this block rather than the window. The all-zero case above it (in
+  // `assignCompetitionRanks`) is a fact about EVERY table and is the one that still runs live.
   if (window !== 'seasonToDate' || !ranked.length) return ranked
   const last = ranked.length
   return ranked.map((r) => (r.points > 0 ? r : { ...r, rank: last }))

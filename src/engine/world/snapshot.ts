@@ -763,7 +763,9 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
   // player reads this list as a league table.
   //
   // ⚠⚠ AND THE WINDOW IS THE TRACK'S SINCE ROUND 23 (`WINDOW_BY_TRACK` – the owner's ruling on items
-  // 12/13 that the DOMESTIC table counts this season, not a rolling 52 weeks). The filter below used
+  // 12/13 that the DOMESTIC table counted this season, not a rolling 52 weeks. ⚠ ROUND 42 #7, 15.09,
+  // re-ruled that table BACK to the rolling window, so all three agree again – and the line below is
+  // byte-identical through both rulings, which is exactly why it reads the constant.) The filter used
   // to be `world.week - r.week <= RESULTS_WINDOW`, i.e. `windowFromWeek(week, 'rolling52')` spelled
   // out by hand – correct while all three tables shared one window and silently wrong the moment one
   // of them stopped. This is the function whose stated contract is that a "plain slice would show
@@ -1134,12 +1136,15 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
   // with nothing; a pro's standing row is never that, by construction (wtaPoints >= 1).
   // ⚠ THE GUARD MUST FOLD THE SAME TABLE `ranks` CAME FROM (round 23 #12/#13). `ranks` is built from
-  // `rankingFor(world, track)`, which counts the domestic table season-to-date now; folding the
-  // guard on the rolling window would print a NUMBER for an opponent the table itself has at the
-  // tie floor - "unranked is not rank one" arriving from the third side. `WINDOW_BY_TRACK[track]` is
-  // how the two stay one question. It does mean more Unranked opponents in the opening weeks of a
-  // domestic season, which is the table honestly saying the season's race has not started - measured
-  // in docs/rounds/round-23.md #12.
+  // `rankingFor(world, track)`, and folding the guard on a DIFFERENT window would print a NUMBER for
+  // an opponent the table itself has at the tie floor - "unranked is not rank one" arriving from the
+  // third side. `WINDOW_BY_TRACK[track]` is how the two stay one question.
+  // ⚠⚠ ROUND 42 #7 (15.09) – AND THE SECOND RULING CAME THROUGH THIS LINE WITHOUT TOUCHING IT. Round
+  // 23 made the domestic table season-to-date and this comment used to add "it does mean more
+  // Unranked opponents in the opening weeks of a domestic season". That cost is GONE with the season
+  // race: the domestic table is rolling-52 again, so its opening weeks carry last year's book like
+  // the other two and nobody arrives at a January table of zeroes. The code is unchanged in both
+  // directions, because the window it folds is the track's and never this file's.
   const oppRankIn = (id: string): number | null =>
     isFieldProId(id) ||
     windowedBestSum(world.results, world.week, id, BEST_N_BY_TRACK[track], inTrack(track), WINDOW_BY_TRACK[track]) > 0

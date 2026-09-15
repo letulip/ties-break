@@ -241,7 +241,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   (which is this item's claim, intact) and the FIRST from her composure band. `TEMPERAMENT_PERSONALITY`
   is gone with the pairs; what survives is the key. See #37's own ship note for the sixteen readings.
 
-- [ ] **7. «мы так и не починили дыру… каждый год заново надо набирать национальный ранг… второй раз
+- [x] **7. «мы так и не починили дыру… каждый год заново надо набирать национальный ранг… второй раз
   пишу»** – **ask, sharpened – and the archaeology says exactly where the pain is.** The
   season-to-date window IS his own ruling (round 23 #12/#13 «6 лучших ЗА СЕЗОН»;
   `WINDOW_BY_TRACK.domestic = 'seasonToDate'`, `ranking.ts:144-148`) – round 34 #1 already
@@ -270,6 +270,112 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   (re-draft, DRAFT for his read), the season-1 prehistory churn has to be named rather than
   discovered, and both probe arms re-run. It supersedes the latch proposal above: a floor that never
   falls needs no latch.
+
+  ⭐ **BUILT (in the tree, not committed – the architect stamps the frozen careers).** One constant:
+  `WINDOW_BY_TRACK.domestic` is `'rolling52'`, and with it **the second implementation is gone** –
+  every fold, gate, screen and sentence that used to branch on the domestic window now reads the one
+  rule the other two tables always read. No schema move (the window is a read over `world.results`,
+  which already holds 52 weeks of rows) and **no latch**: `tierFloorOpen` reads
+  `kidPoints(world, 'domestic')` live, and a live total that no longer falls to zero holds the door
+  open by arithmetic. `peakDomesticPoints` is untouched and still belongs to the elite coach gate.
+
+  **The probe, both arms re-run** (`npx vite-node tools/domestic-season-to-date.ts`, 6 seeds, exit 0;
+  its header prints the shipped arm, now A). **§C, his round-23 symptom:**
+
+  | | falls in the domestic top 3 | by a row leaving the window | at a wrap | mid-season | unexplained | biggest single fall |
+  | --- | --- | --- | --- | --- | --- | --- |
+  | **A rolling52 (ships now)** | 119 | 119 | **0** | 119 | 0 | 200 pts |
+  | B seasonToDate (was) | 36 | 36 | 36 | **0** | 0 | **590 pts** |
+
+  So the trade is named rather than hidden: 36 cliff-falls of up to a whole 590-point book, all on
+  one calendar week, become 119 small ones of at most a single result, each on the week its own row
+  turns 53. **§E, what it does to HER** (6 seeds × 4 seasons): weeks she reads *Unranked* at home
+  **50/208 → 3/208**; weeks Local is open again after she had outgrown it **5 → 0**; the ITF on-ramp
+  latches at mean week **77 → 63**. **§F:** weeks the whole domestic table sits at zero **12/624 → 0**.
+
+  ⭐⭐ **THE SEASON-1 PRE-HISTORY, NAMED WITH NUMBERS BECAUSE IT IS THE UGLY PART.** A 52-week window
+  at week 0 reaches back to week −52, and `generatePreHistory` writes its synthetic rows at weeks
+  −51…−1 – so they COUNT again on the domestic table, which they have not done since round 23.
+  Measured over the same 6 seeds:
+
+  * the opening domestic top ten is **10/10 standing on a pre-history row** (under the season rule
+    that table had **0 scored rows at all** on week 0);
+  * of that week-8 top ten, a mean of **0.5 of 10** is still top ten at the wrap and **0.7 of 10** at
+    the season's last week – i.e. **season 1 churns essentially completely**, which is round 23 #13's
+    own number (0.3/10) arriving again;
+  * the last counting pre-history row leaves the window at **week 51**, so the churn finishes exactly
+    as season 1 does.
+
+  **That is ugly and it is stated rather than smoothed: her first season is played against a table
+  that empties out from under her.** The honest other half is that it restores what the pre-history
+  is FOR – `prehistory.ts`'s own header says it exists so "a fresh career opens on a REAL ranking
+  table instead of a 199-way tie at zero", and under the season rule the domestic table – the only
+  one she competes on in year one – opened at exactly that tie. The entrant percentiles
+  (`entrantPctBand`) read the domestic table for the domestic rungs, so R9-2's «a Regional running in
+  week 1 with a zero-point field» had structurally come back. ⚠ **AI field selection itself did NOT
+  move**: `aiSelectionRanking` (world/weekField.ts) is an all-tracks fold on the default window and
+  never read this constant.
+
+  **DRAFT – the one string this item moves, `RankHelpDialog`'s National rule line, verbatim:**
+
+  | | |
+  | --- | --- |
+  | was | `Her best 6 results this season – the race restarts every January.` |
+  | **DRAFT** | `Her best 6 results from the last 52 weeks.` |
+
+  It keeps «Her best 6 results» untouched and borrows the ITF line's own window phrase
+  (`Her best 6 Junior Tour results from the last 52 weeks.`) rather than coining one, so the two
+  junior tables now say the same thing in the same words – which is what the ruling made true of them.
+
+  ⚠ **ASK, NOT TAKEN – one more sentence on the same card states the old rule and was left alone.**
+  The shared bullet under the three blocks reads «On the International and Professional tables,
+  results older than 52 weeks drop out – points must be defended.» That enumeration EXCLUDES the
+  National table and was true only while it was a season race. The item licensed the domestic block's
+  copy and nothing else, so it is untouched and the re-draft is his call – one word applies it:
+
+  | | |
+  | --- | --- |
+  | is | `On the International and Professional tables, results older than 52 weeks drop out – points must be defended.` |
+  | proposed | `On every table, results older than 52 weeks drop out – points must be defended.` |
+
+  Until he rules, the card states the 52-week window in the National block and omits it from the
+  bullet – incomplete rather than wrong, and flagged in the component's own header.
+
+  **Two sentences disappeared without a string being touched, which is the derivation paying off.**
+  `tierOpensWhen`'s « in one season» and the locked plaque's «, and the table starts again each
+  season.» are both assembled from `WINDOW_BY_TRACK`, so J30 now reads `age 13-18 and 250 national
+  pts` and the plaque's long form ends at «National points come from Local, Regional and National
+  events.» Round 34 built those clauses, round 42 deleted them, and the second ruling cost a constant.
+
+  ⚠⚠ **THE FROZEN CAREERS MOVED, AND THE STAMP IS LEFT TO THE ARCHITECT – NOTHING WAS RE-FROZEN.**
+  Per-key protocol, control captured on the clean tree at `66de62bd` BEFORE the first edit, five
+  cells, headers and key counts verified on all ten captures (flags written out longhand – the zsh
+  word-split warning in `tests/coachTravelEdgeFixtures.ts` is real):
+
+  | cell | keys moved | `rngMain` | `schemaVersion` |
+  | --- | --- | --- | --- |
+  | 5/0 `FROZEN.middleGrinder` | **43 of 87** | byte-identical | byte-identical |
+  | 0/1 `FROZEN.selfTravelling` | **32 of 87** | byte-identical | byte-identical |
+  | 5/1 `PRE_R28B.middlePlayer` | **43 of 87** | byte-identical | byte-identical |
+  | 8/0 `FROZEN.eliteGrinder` | **30 of 86** | byte-identical | byte-identical |
+  | 8/1 `PRE_R28B.elitePlayer` | **37 of 86** | byte-identical | byte-identical |
+
+  `seed`, `week` and `profile` are byte-identical on all five too; three cells gain or lose an
+  optional key (`walkoverWeek`, `medicalWithdrawalWeek`) because the careers diverge. **What the
+  control proves is the stop condition: `rngMain` did not move on any cell.** A ranking window is a
+  pure read over `world.results`; it changes which events she ENTERS – a command, never a roll – so
+  the world's dice are where they were, which is invariant 2's input-independence holding through a
+  whole-world change. `tests/condition.test.ts`'s MAIN capture (41550 / `e6b0c709`) is **unmoved**,
+  and the three `coach-travel-edge*` files are **RED on purpose**, waiting on his stamp.
+
+  ⭐ **The visual sweep, at 375 / 768 / 900 / 1280, on the `broke` fixture (week 94, mid-season two).**
+  Stats → National: no horizontal scroll, nothing clipped, nothing outside the viewport at any width.
+  The before/after is on that screen in one number – the drop line read «leaves the window in **10**
+  weeks» on `main` (52 − 94 % 52, the calendar) and reads «in **19** weeks» here (her oldest counted
+  row is week 60, so it turns 53 at week 113). Her counting list carries week-60 and week-62 rows –
+  last season's – which is «каждый год заново» not happening, on screen. The rank-help card fits and
+  its dismiss control is inside the frame at all four widths; the Tour guide's `Opens at` column
+  carries no season clause at any width.
 
 - [x] **8. «нажал на плашку… не сразу открылась, а потому мой второй автоклик выбрал какой-то пункт…
   Надо сделать как на прологе "выбор + proceed"» (и «сделать плавно пульсирующей по контуру»)** –
