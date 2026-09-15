@@ -61,7 +61,7 @@ import {
   decideKnock,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
   hirePsychologist,
   setPsychologistFocus,
@@ -95,7 +95,10 @@ function tickTo(world: WorldState, week: number): WorldState {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
     const age = pendingBirthday(world)
-    if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    // ⚠ ROUND 42 #26 – THE ENGINE'S OWN SEAM, NOT A REBUILT OFFER. `birthdayOffer(world.seed, age)` is a
+    // SECOND derivation of the four rows and it diverges the moment a given durable leaves the card, so
+    // `chooseGift` refuses the answer – the R2-18 failure `tests/round23-kid-life.test.ts` wrote down.
+    if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
     tickWeek(world, rng)
     if (world.pendingTournament) {
       skipTournament(world)

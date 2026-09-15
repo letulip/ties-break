@@ -32,7 +32,7 @@ import {
   decideKnock,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
 } from '../../src/engine/world'
 import { buildKidLife, STAGE_LABEL } from '../../src/engine/kidLife'
@@ -51,7 +51,7 @@ function careerAt(week: number, seed = 'round23-page'): Snapshot {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
     const age = pendingBirthday(world)
-    if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
     tickWeek(world, rng)
     if (world.pendingTournament) {
       skipTournament(world)
@@ -158,6 +158,9 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       weeksSinceTitle: null,
       college: { studying: true, yearsDone: 1, totalYears: ENDINGS.collegeYears, tier: 'national' },
       kidFundsCents: 512_835_00,
+      // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+      // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+      kidSharePausedYears: 0,
       ownsBrand: false,
     })
     const w = mountKid({ ...base, life })
@@ -201,6 +204,9 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       weeksSinceTitle: null,
       college: { studying: true, yearsDone: 3, totalYears: ENDINGS.collegeYears, tier: 'private' },
       kidFundsCents: 8_909_415_00,
+      // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+      // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+      kidSharePausedYears: 0,
       ownsBrand: false,
     })
     const w = mountKid({ ...base, life })

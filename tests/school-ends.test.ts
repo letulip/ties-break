@@ -119,6 +119,9 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           weeksSinceTitle: null,
           college: null,
           kidFundsCents: 0,
+          // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+          // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+          kidSharePausedYears: 0,
           ownsBrand: false,
         })
         // ⭐ ROUND-23 #6: "School finished" is gone – past the last grade the tile hands over to the
@@ -521,6 +524,9 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             weeksSinceTitle: null,
             college: null,
             kidFundsCents: 0,
+            // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+            // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+            kidSharePausedYears: 0,
             ownsBrand: false,
           })
           // Past her leaving week the tile has left the classroom (round 23 #6 – no grade, and the

@@ -40,7 +40,7 @@ import {
   ordinaryTrainingWeek,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
   rollKnock,
   tickWeek,
@@ -339,7 +339,10 @@ describe('W4 — an unanswered knock BLOCKS time, it does not merely halt it', (
       // must be asked inside its first season" failed on a career that was never asked anything else.
       // A gift moves nothing the knock model reads; it only lets time move.
       const turning = pendingBirthday(world)
-      if (turning !== null) chooseGift(world, birthdayOffer(world.seed, turning).options[0].id)
+      // ⚠ ROUND 42 #26 – THE ENGINE'S OWN SEAM, NOT A REBUILT OFFER. `birthdayOffer(world.seed, age)` is a
+      // SECOND derivation of the four rows and it diverges the moment a given durable leaves the card, so
+      // `chooseGift` refuses the answer – the R2-18 failure `tests/round23-kid-life.test.ts` wrote down.
+      if (turning !== null) chooseGift(world, birthdayOfferFor(world, turning).options[0].id)
     }
     expect(sawKnockStop, 'a grinding career must be asked inside its first season').toBe(true)
   })

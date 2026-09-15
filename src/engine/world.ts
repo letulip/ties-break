@@ -201,6 +201,8 @@ import {
   collegeEpilogueLine,
   collegeLeaguePlayedThisWeek,
   collegeLeagueRevealOpen,
+  // ⭐ ROUND 42 #25 – the paused-step count `finalizeTournament` reads before it splits a cheque.
+  collegePausedShareYears,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
   revealCallUpRubber,
@@ -251,6 +253,7 @@ export {
   collegeNextStop,
   isCollegeLeagueWeek,
   collegeMatchesThisWeek,
+  collegePausedShareYears,
   collegeProgressOf,
   collegeRecruitViewOf,
   inCollege,
@@ -281,13 +284,16 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
 // ⭐ ROUND-28 #15 – the one splitter every sponsor cheque goes through, re-exported for the same
 // reason: a test that wants to know what her cut of a brand's money is must ask the shipped one.
 export { bankSponsorCheque }
+// ⭐ ROUND 42 #5 – the cameo's cadence half, re-exported beside its need half for the same reason
+// `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
+export { sponsorCameoWilling, sponsorCameoCents }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
@@ -773,8 +779,15 @@ function finalizeTournament(world: WorldState): void {
     //
     // ⚠ HER REAL AGE (`kidAgeYears`), never the band's – the one-clock ruling of 09.08. Zero draws:
     // this is integer arithmetic on a cheque that has already been decided.
+    //
+    // ⭐⭐⭐ ROUND 42 #25 – AND THE STEPS COUNT TOUR YEARS ONLY («пока она снова в тур не вернется»),
+    // so the ramp is read at (her age, the birthdays college ate). `collegePausedShareYears` is the
+    // ONE derivation of that count and the rate below, the sentence in the ledger row and the memo
+    // on the recap all go through this one `pausedShare` – two reads of it here would be two
+    // percentages on one cheque, which is the defect round 30 #21 exists to have ended.
     const ageNow = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
-    const herShare = kidPrizeShareCents(prize, ageNow)
+    const pausedShare = collegePausedShareYears(world)
+    const herShare = kidPrizeShareCents(prize, ageNow, pausedShare)
     const familyShare = prize - herShare
     world.fundsCents += familyShare
     world.kidFundsCents = (world.kidFundsCents ?? 0) + herShare
@@ -798,7 +811,7 @@ function finalizeTournament(world: WorldState): void {
       // computation of it, so the two rows can never disagree.
       text:
         herShare > 0
-          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow) / 100}% share (${formatCents(herShare)})`
+          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow, pausedShare) / 100}% share (${formatCents(herShare)})`
           : `${tier.label} prize money – ${finishLabel(kidFinish)}`,
       amountCents: familyShare,
     })
@@ -839,7 +852,7 @@ function finalizeTournament(world: WorldState): void {
       // ⭐⭐⭐ ROUND 30 #21 – tagged `prize`, so the week recap can name HER RAMP («50% of every prize
       // cheque», the rule the budget screen states) instead of averaging it with a brand cheque that
       // splits under a different rule entirely. The rate handed in is unchanged.
-      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize, 'prize')
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow, pausedShare), prize, 'prize')
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем

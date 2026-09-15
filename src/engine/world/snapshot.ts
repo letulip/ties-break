@@ -40,6 +40,8 @@ import {
   callUpRubberId,
   collegeLeagueRevealMatches,
   collegeLeagueRevealOpen,
+  // ⭐ ROUND 42 #25 – her ramp's paused steps, for the kid-life view's own percentage.
+  collegePausedShareYears,
 } from './college'
 import { rngFromSeed } from '../rng'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
@@ -2154,6 +2156,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // ⭐ ROUND-23 #18 – what her own account holds. `?? 0` for the hand-built probe worlds that
       // predate v54, the discipline every optional world field on this view already keeps.
       kidFundsCents: world.kidFundsCents ?? 0,
+      // ⭐⭐ ROUND 42 #25 – and how many of her ramp's steps college ate, so her page quotes the same
+      // percentage the till divides by. `collegePausedShareYears` is the one derivation of it; the
+      // edge snapshot -> college is the one already declared at the head of this file.
+      kidSharePausedYears: collegePausedShareYears(world),
       // ⭐⭐ ROUND 35 #9 – DOES THE BRAND RULE APPLY TO THIS FAMILY AT ALL. Asked of the till's own
       // arithmetic rather than of `world.assets` directly, so the page cannot say «the same share
       // comes off her brand» about a rung that is still on order and paying nothing:

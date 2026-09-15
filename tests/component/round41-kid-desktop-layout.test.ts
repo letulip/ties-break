@@ -56,6 +56,9 @@ function snapshotWithGridNote(): Snapshot {
     weeksSinceTitle: null,
     college: null,
     kidFundsCents: 512_835_00,
+    // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+    // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+    kidSharePausedYears: 0,
     ownsBrand: false,
   })
   return { ...base, life }

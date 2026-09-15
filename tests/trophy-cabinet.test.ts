@@ -20,7 +20,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   advanceWeeks,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
   closeTournament,
   pendingBirthday,
@@ -50,7 +50,10 @@ import type { TierId } from '../src/engine/season/types'
  *  harness measures. It only lets time move. */
 function answerBirthday(world: WorldState): void {
   const age = pendingBirthday(world)
-  if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+  // ⚠ ROUND 42 #26 – THE ENGINE'S OWN SEAM, NOT A REBUILT OFFER. `birthdayOffer(world.seed, age)` is a
+  // SECOND derivation of the four rows and it diverges the moment a given durable leaves the card, so
+  // `chooseGift` refuses the answer – the R2-18 failure `tests/round23-kid-life.test.ts` wrote down.
+  if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
 }
 
 /** A real career, played the way a player plays one: enter what she can, resolve every draw. */

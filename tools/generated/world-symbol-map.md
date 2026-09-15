@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,561 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,574 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-500 exported names across 51 owning modules.
+503 exported names across 51 owning modules.
 
 ## Areas
 
@@ -16,7 +16,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
 | `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 59 |
-| `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 37 |
+| `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
@@ -25,9 +25,9 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 16 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
+| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 16 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
-| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -183,6 +183,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `collegeLeagueWeek` – `src/engine/world/college.ts`
 - `collegeMatchesThisWeek` – `src/engine/world/college.ts`
 - `collegeNextStop` – `src/engine/world/college.ts`
+- `collegePausedShareYears` – `src/engine/world/college.ts`
 - `collegeProgressOf` – `src/engine/world/college.ts`
 - `collegeRecruitViewOf` – `src/engine/world/college.ts`
 - `inCollege` – `src/engine/world/college.ts`
@@ -397,6 +398,27 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
 
+### `src/engine/world/sponsors.ts`
+
+THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
+
+- `acceptOffer` – `src/engine/world/sponsors.ts`
+- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
+- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
+- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
+- `declineOffer` – `src/engine/world/sponsors.ts`
+- `isRetainerWeek` – `src/engine/world/sponsors.ts`
+- `localSponsorCents` – `src/engine/world/sponsors.ts`
+- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
+- `resultBonusFor` – `src/engine/world/sponsors.ts`
+- `reviewAdOffer` – `src/engine/world/sponsors.ts`
+- `reviewSponsors` – `src/engine/world/sponsors.ts`
+- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
+- `sponsorCameoCents` – `src/engine/world/sponsors.ts`
+- `sponsorCameoWilling` – `src/engine/world/sponsors.ts`
+- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
+- `travelCostFor` – `src/engine/world/sponsors.ts`
+
 ### `src/engine/world/endings.ts`
 
 THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped.
@@ -436,25 +458,6 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `spanWeeksFor` – `src/engine/world/multiWeek.ts`
 - `spanWorthOffering` – `src/engine/world/multiWeek.ts`
 - `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
-
-### `src/engine/world/sponsors.ts`
-
-THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
-
-- `acceptOffer` – `src/engine/world/sponsors.ts`
-- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
-- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
-- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
-- `declineOffer` – `src/engine/world/sponsors.ts`
-- `isRetainerWeek` – `src/engine/world/sponsors.ts`
-- `localSponsorCents` – `src/engine/world/sponsors.ts`
-- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
-- `resultBonusFor` – `src/engine/world/sponsors.ts`
-- `reviewAdOffer` – `src/engine/world/sponsors.ts`
-- `reviewSponsors` – `src/engine/world/sponsors.ts`
-- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
-- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
-- `travelCostFor` – `src/engine/world/sponsors.ts`
 
 ### `src/engine/world/kit.ts`
 

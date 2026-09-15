@@ -2,7 +2,7 @@
 // `forkDue` reads kidAgeYears(week, birthMonth) - month only - while `pendingBirthday` reads
 // birthdayTurning(week, birthMonth, birthDay). Two clocks; this measures the gap.
 // Throwaway: run with `npx vite-node tools/fork-birthday-probe.ts`.
-import { birthdayOffer, chooseGift, createWorld, pendingBirthday, tickWeek } from '../src/engine/world'
+import { birthdayOfferFor, chooseGift, createWorld, pendingBirthday, tickWeek } from '../src/engine/world'
 import { drainKnock } from './_knocks'
 import { rngFromSeed } from '../src/engine/rng'
 import { DEFAULT_PROFILE } from '../src/shared/protocol'
@@ -23,8 +23,10 @@ for (const [m, d] of [
     const age = pendingBirthday(world)
     if (age !== null) {
       if (age >= 18) bdays.push(`age${age}@w${world.week}`)
-      const given = world.birthdays.map((b) => b.given).filter((g): g is string => g !== null)
-      chooseGift(world, birthdayOffer(world.seed, age, given).options[0].id)
+      // ⚠ ROUND 42 #26 – the engine's own seam, not a rebuilt offer. See the note in
+      // tests/blocking-overlay.test.ts: a second derivation of the four rows disagrees the moment a
+      // given durable leaves the card, and `chooseGift` rejects the answer.
+      chooseGift(world, birthdayOfferFor(world, age).options[0].id)
     }
     if (world.fork !== null && forkWeek === null) {
       forkWeek = world.fork.askedWeek

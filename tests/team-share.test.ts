@@ -33,7 +33,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { ECONOMY, kidPrizeShareCents, staffPrizeShareCents, staffResultShareBps } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, staffPrizeShareCents, staffResultShareBps } from '../src/engine/economy'
 import { kidAgeYears } from '../src/engine/world/age'
 import { TIERS } from '../src/engine/season/calendar'
 import { rngFromSeed } from '../src/engine/rng'
@@ -76,8 +76,19 @@ describe('the rates – one mechanism, two takers, his numbers', () => {
 describe('the 3M example – «это будет 900к дочери и 300к тренеру плюс остальные расходы»', () => {
   const PRIZE = 3_000_000_00
 
-  it('⭐⭐ at the age-22 rung (30%) with a coach: 900k hers, 300k the coach`s, 1.8M the family`s', () => {
-    const hers = kidPrizeShareCents(PRIZE, 22) // his «скажем 30 для примера» is the shipped age-22 rung
+  // ⚠⚠ THE AGE MOVED AND HIS EXAMPLE DID NOT (round 42 #25, 15.09). His worked example is «скажем
+  // 30 для примера» – a THIRTY PERCENT rung – and this file pinned it at the age that carried
+  // 30% on the round-23 ladder, which was twenty-two. Round 42 #25 made the ladder twice as steep at
+  // his own ask, so 30% is the TWENTY rung now. The example, the arithmetic and every figure below
+  // are untouched; what is re-aimed is which birthday stands under them, and it is read off the
+  // engine rather than typed so the next retune moves it again by itself.
+  const AGE_AT_30 = (() => {
+    for (let age = ECONOMY.kidShare.fromAgeYears; age <= 40; age++) if (kidPrizeShareBps(age) === 3000) return age
+    throw new Error('no age on the shipped ladder carries his 30% example')
+  })()
+
+  it('⭐⭐ at the 30% rung with a coach: 900k hers, 300k the coach`s, 1.8M the family`s', () => {
+    const hers = kidPrizeShareCents(PRIZE, AGE_AT_30) // his «скажем 30 для примера», at the age that carries it
     const coach = staffPrizeShareCents('coach', PRIZE, 0) // his «скажем 10 для примера» is the title rate
     expect(hers).toBe(900_000_00)
     expect(coach).toBe(300_000_00)
@@ -87,7 +98,8 @@ describe('the 3M example – «это будет 900к дочери и 300к т�
   it('...and with the masseur on the payroll his slice is 90k – a third of the coach`s, off the same gross', () => {
     const masseur = staffPrizeShareCents('masseur', PRIZE, 0)
     expect(masseur).toBe(90_000_00)
-    expect(PRIZE - kidPrizeShareCents(PRIZE, 22) - staffPrizeShareCents('coach', PRIZE, 0) - masseur).toBe(1_710_000_00)
+    expect(PRIZE - kidPrizeShareCents(PRIZE, AGE_AT_30) - staffPrizeShareCents('coach', PRIZE, 0) - masseur)
+      .toBe(1_710_000_00)
   })
 
   it('the final pays half the title, on the same example: 150k coach, 45k masseur', () => {

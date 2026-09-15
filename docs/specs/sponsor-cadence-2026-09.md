@@ -1,3 +1,11 @@
+---
+type: spec
+status: reference
+area: economy-and-progression
+canonical: false
+last-reviewed: 2026-09-15
+---
+
 # The local sponsor's cadence – a cooldown and a season cap
 
 **Round 42 #5. 15.09.2026. PROPOSAL: both numbers are the owner's to confirm off the table below.**

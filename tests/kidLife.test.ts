@@ -44,7 +44,7 @@ import {
   toSnapshot,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
   decideKnock,
 } from '../src/engine/world'
@@ -81,6 +81,9 @@ function view(over: Partial<KidLifeWorldView> = {}): KidLifeWorldView {
     // the defaults every pre-#6/#18 case in this file was written against.
     college: null,
     kidFundsCents: 0,
+    // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+    // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+    kidSharePausedYears: 0,
     ownsBrand: false,
     ...over,
   }
@@ -474,7 +477,7 @@ describe('a real career', () => {
       // offered first: a gift moves no skill, no condition, no kit and no money, so it cannot reach
       // any of the three tiles this suite is about – it only lets time move.
       const turning = pendingBirthday(world)
-      if (turning !== null) chooseGift(world, birthdayOffer(world.seed, turning).options[0].id)
+      if (turning !== null) chooseGift(world, birthdayOfferFor(world, turning).options[0].id)
       if (world.pendingTournament) {
         skipTournament(world)
         closeTournament(world)

@@ -55,8 +55,8 @@ import { schoolIsOver } from '../kidLife'
 import { accrueKidShare, addEvent } from './ledger'
 import { ageAtWeek, kidAgeYears } from './age'
 import { vacationForWeek } from './bookings'
-import { inCollege, resolveCollegeBill } from './college'
-import { sponsorNeedMet } from './sponsors'
+import { collegePausedShareYears, inCollege, resolveCollegeBill } from './college'
+import { sponsorCameoCents, sponsorCameoWilling, sponsorNeedMet } from './sponsors'
 // ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
 // this package, which is what keeps the till free of the shop's command-side dependencies.
 import { assetHeldWeeks, assetUpkeepCents, deliveredAssets, reachableFundsCents } from './assets'
@@ -354,7 +354,13 @@ function resolveBusinessIncome(world: WorldState): void {
   if (merchGross > 0) {
     // ⚠ HER REAL AGE (`kidAgeYears`), never the band's – the one-clock ruling of 09.08, and the same
     // call `finalizeTournament` makes before it splits a prize.
-    const herBps = kidPrizeShareBps(kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay))
+    // ⭐ ROUND 42 #25 – ...WITH THE COLLEGE PAUSE, which `assetKidShareCents` one line down also
+    // applies. The rate printed on the row and the cents actually moved must come from one reading
+    // of one ramp, so both sides take `collegePausedShareYears`.
+    const herBps = kidPrizeShareBps(
+      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+      collegePausedShareYears(world),
+    )
     const herCents = assetKidShareCents(world, 'merch-brand')
     const merch = merchGross - herCents
     world.fundsCents += merch
@@ -579,26 +585,43 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // still 3 or 4 base-cost draws exactly as `tests/condition.test.ts` and `tests/rivals.test.ts` pin
   // it, and the frozen capture (41550 / e6b0c709) cannot see this wave. The gate is post-draw
   // arithmetic on `split`, which was computed above off draws that had already happened.
-  if (rng() < ECONOMY.sponsor.rollChance) {
-    const [glo, ghi] = ECONOMY.sponsor.amountCents
-    const gift = pickInt(rng, glo, ghi)
-    // ⚠ AND AN AMATEUR ON A SCHOLARSHIP TAKES NO SPONSOR MONEY (W2-ENDINGS). Same post-draw
-    // discipline as the need clause it rides on: the roll and the gift draw BOTH still happen,
-    // and only the payout is discarded, so the MAIN sequence cannot depend on a player's answer at
-    // the fork. That is invariant 2 - player choices may never re-roll the world's dice.
-    if (
-      !inCollege(world) &&
-      sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier })
-    ) {
-      world.fundsCents += gift
-      addEvent(world, {
-        week: world.week,
-        type: 'income',
-        category: 'sponsor',
-        text: 'A local sponsor chipped in!',
-        amountCents: gift,
-      })
-    }
+  //
+  // ⭐⭐⭐ ROUND 42 #5 (15.09) – AND THE SHOP NOW HAS A COOLDOWN AND A SEASON CAP, WHICH IS THE ONE
+  // THING THIS BLOCK HAS NEVER HAD. The owner: «Спонсор деньгами реально засыпает рабочую раз в 3-4
+  // недели». The numbers are `ECONOMY.sponsor.cooldownWeeks` / `seasonCap` (proposed, his to
+  // confirm) and the mechanism is `sponsorCameoWilling` in world/sponsors.ts – read its block for
+  // why a cooldown that cannot be persisted has to be DERIVED, and for the price paid below.
+  //
+  // ⚠⚠ THE TWO MAIN DRAWS BELOW ARE DELIBERATELY DEAD AND MUST NOT BE DELETED. A cooldown has to
+  // look BACKWARD, and a MAIN draw taken in week 340 cannot be re-derived in week 346 – the stream's
+  // persisted position is a position, not a replay. So the hit test and the gift amount both moved
+  // onto the cameo's own `seed:sponsor:cameo:…` sub-streams, and these two keep their exact slots in
+  // the weekly MAIN sequence so that the per-week count (3 or 4 base-cost draws) and the frozen
+  // capture (41550 / e6b0c709) are byte-identical to what `tests/condition.test.ts` and
+  // `tests/rivals.test.ts` pin. Removing them would be taking a die, which round 42 #5 was told not
+  // to do; leaving them costs one wasted draw a week and nothing else.
+  // ⚠ The void expressions are the only honest spelling of «drawn on purpose, read by nobody».
+  void (rng() < ECONOMY.sponsor.rollChance ? pickInt(rng, ...ECONOMY.sponsor.amountCents) : 0)
+  // ⚠ AND AN AMATEUR ON A SCHOLARSHIP TAKES NO SPONSOR MONEY (W2-ENDINGS). Same post-draw
+  // discipline as the need clause it rides on: the roll and the gift draw BOTH still happen
+  // (one line up, unconditionally of everything below), and only the payout is discarded, so the
+  // MAIN sequence cannot depend on a player's answer at the fork. That is invariant 2 - player
+  // choices may never re-roll the world's dice.
+  if (
+    sponsorCameoWilling(world.seed, world.week) &&
+    !inCollege(world) &&
+    sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier })
+  ) {
+    const gift = sponsorCameoCents(world.seed, world.week)
+    world.fundsCents += gift
+    addEvent(world, {
+      week: world.week,
+      type: 'income',
+      category: 'sponsor',
+      // ⚠ INVARIANT 4 – not one character of this line moved. Round 42 #5 is a cadence item.
+      text: 'A local sponsor chipped in!',
+      amountCents: gift,
+    })
   }
 }
 

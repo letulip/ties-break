@@ -154,7 +154,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   put it back to three lines, which is why his «да, 19 хорошо» is also the measurement's answer.
   Two mutation arms (the ramp restored → 4 red; flat-but-21px → 5 red).
 
-- [ ] **5. «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели»** – **measure + build
+- [~] **5. «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели»** – **measure + build
   proposal.** The cameo is a memoryless weekly Bernoulli: `rollChance 0.06`, $500–1500, and the
   block has **no cooldown and no per-season cap at all** (`economy.ts:753-801`,
   `phaseFinance.ts:582-601`) – P(gap ≤ 4 wks) ≈ 22%, so his 3–4-week clusters are the design's own
@@ -163,6 +163,40 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   INPUT (reachable money – the deposit stops fooling it); this item adds the CADENCE dial: proposal
   `cooldownWeeks 6` + `seasonCap 3` (predicted ≈ $2.4k/season, clusters gone), benched
   predicted-first on `tools/runway-probe.ts` arms, HIS word on both numbers before they ship.
+
+  ⭐ **BUILT AS A PROPOSAL, BENCHED PREDICTED-FIRST (bundle: 5/25/26).** `ECONOMY.sponsor` gains
+  `cooldownWeeks: 6` and `seasonCap: 3` as NAMED constants with the prediction beside them;
+  `sponsorCameoWilling` (world/sponsors.ts) is the cadence half of the gate and `sponsorNeedMet` is
+  untouched. Spec: [sponsor-cadence-2026-09](../specs/sponsor-cadence-2026-09.md); instrument:
+  `tools/sponsor-cadence.ts`. **HIS WORD STILL MOVES EITHER NUMBER – the print is below.**
+
+  **HIS COMPLAINT IS CONFIRMED BY THE BEFORE COLUMN:** a working family banked **1.54 cheques and
+  $1,615 a season** with **P(gap ≤ 4 weeks) = 24.7%** and a smallest measured gap of **one week**.
+
+  | arm | cheques/season | $/season | vs before | P(gap ≤ 4) | min gap |
+  | --- | ---: | ---: | ---: | ---: | ---: |
+  | BEFORE – no cooldown, no cap | 1.54 | $1,615 | – | 24.7% | 1 |
+  | **cooldown 6, cap 3 (shipped)** | **0.83** | **$842** | **−48%** | **0.0%** | **6** |
+  | cooldown 4, cap 3 | 0.94 | $962 | −40% | 1.8% | 4 |
+  | cooldown 8, cap 3 | 0.78 | $837 | −48% | 0.0% | 9 |
+  | cooldown 6, cap 2 | 0.53 | $549 | −66% | 0.0% | 6 |
+  | cooldown 6, **no cap** | 1.11 | $1,156 | −28% | 0.0% | 6 |
+
+  ⚠⚠ **THE PREDICTED ≈$2.4k/SEASON MISSED, AND THE MISS IS INFORMATIVE.** That figure assumed the
+  need gate stands open every week; measured on real careers it is open about HALF the time, so the
+  honest baseline is $1,615 and not $2,940. **The cooldown alone landed exactly on the model** (−28%
+  measured against −26% predicted); what was not predicted is that the CAP takes a further fifth –
+  it binds on only 18% of seasons, but those are the crowded ones where his family needed every
+  cheque. ⭐ So the dial he is choosing on is the cap: off, the cut is −28%; at 2, −66%.
+
+  ⚠ **THE COOLDOWN IS DERIVED, NOT REMEMBERED, AND THAT COST TWO DEAD MAIN DRAWS.** A cooldown needs
+  a memory and this career has nowhere to put one that is not a schema move (the feed is capped at
+  400 rows; `byCategory.sponsor` has five writers). So a season's willing weeks are a pure function
+  of (seed, season) on `seed:sponsor:cameo:<season>`, re-walked every time it is asked – and the two
+  MAIN draws the hit test used to be **stay exactly where they were, unread**, so the per-week count
+  and the frozen capture (41550 / `e6b0c709`) are byte-identical. `tests/condition.test.ts` and
+  `tests/rivals.test.ts` green and unmodified. ⚠ One consequence, named: the cooldown counts the
+  SHOP'S WILLINGNESS, not the cheque – a willing week the family did not need still spends a slot.
 
 - [x] **6. «personality у всех девочек одинаковая… patient and stubborn, мы вроде бы делали
   дифференциацию?»** – **build.** The tile is not wired to who-she-is at all: `KidScreen.vue:414`
@@ -819,14 +853,57 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   item 15, one file and one draw; the situation layer (F-b) is the «main feature» he gestured at,
   its own later wave.
 
-- [ ] **25. «может быть нам с 18 не по 5, а по 10% в год ей добавлять стоит?»** – **build + bench.**
+- [x] **25. «может быть нам с 18 не по 5, а по 10% в год ей добавлять стоит?»** – **build + bench.**
   Today: 10% at 18, +5 pp per birthday, cap 50% at 26 (`ECONOMY.kidShare`, `economy.ts:1696-1717`
   – recomputed from age at payout, no birthday writer, so the change is one constant). His shape:
   `stepBps 500 → 1000` ⇒ 20% at 19, 50% at 22 – the family's prize half shrinks four years
   sooner. Ships WITH the bench print (family wealth corridor at week 400/600 before vs after, the
   what-money-buys arm) so he confirms the number seeing what it does – invariant 5, not a veto.
 
-- [ ] **26. «Если мы уже дарили депозит на её жилье, то его больше не надо вообще показывать»** –
+  ⭐ **BUILT AND BENCHED (bundle: 5/25/26).** `stepBps` 500 → **1000**, `capBps` 5000 → **6000**, cap
+  reached at **23** (derived from the three constants, never written down). The college pause ships
+  with it: `kidPrizeShareBps(ageYears, pausedYears)` and `collegePausedShareYears(world)` – **zero
+  schema**, the count is two `kidAgeYears` calls over the college span the save has held since v51.
+  Spec: [kid-share-ramp-2026-09](../specs/kid-share-ramp-2026-09.md); instrument:
+  `tools/r42-kid-share-ramp.ts`.
+
+  **⭐ THE TABLE HE READS – 36 careers per arm, identical seeds, 34 of 36 pairs played the same
+  tournaments (the comparability guard passing before the difference is read):**
+
+  | | BEFORE 5pp/50@26 | AFTER 10pp/60@23 | delta |
+  | --- | ---: | ---: | ---: |
+  | **week 400** · family wallet, mean | $3,431,131 | $3,082,005 | **−$349,126 · −10.2%** |
+  | week 400 · family prize banked, mean | $4,009,171 | $3,659,204 | −$349,966 · −8.7% |
+  | week 400 · HER account, mean | $834,167 | $1,183,911 | **+$349,744 · +41.9%** |
+  | **week 600** · family wallet, mean | $7,235,035 | $5,496,660 | **−$1,738,375 · −24.0%** |
+  | week 600 · family prize banked, mean | $8,602,586 | $6,854,384 | **−$1,748,203 · −20.3%** |
+  | week 600 · HER account, mean | $3,187,826 | $4,947,996 | **+$1,760,171 · +55.2%** |
+  | *what it buys* · wallet in weeks of its own burn (w600) | 932.7 wks | 701.0 wks | |
+  | careers ever under water (w600) | 16 of 36 | 16 of 36 | **unchanged** |
+
+  **The money moves across, it does not evaporate**: the family loses $1,738,375 and she gains
+  $1,760,171, the same cents to within the entry decisions a lighter wallet took differently. And the
+  two arms bankrupt the SAME 16 careers – the change moves who holds the money, not whether the
+  career survives.
+
+  **⭐ THE COLLEGE-PAUSE ARM, shown separately because four years off the tour is a different career
+  and not a different setting** – 27 careers walked, 25 enrolled, 23 graduated the full four:
+
+  | | WITH the pause | the same careers, no pause |
+  | --- | ---: | ---: |
+  | her share the week she comes back | **20.0%** (25 of 25) | **58.0%** |
+  | her age the week she comes back | 22.8 | 22.8 |
+  | birthdays the freeze ate | median 4, max 4 | – |
+
+  She comes home on the SECOND rung and reaches the cap at twenty-seven instead of twenty-three.
+
+  ⚠ **PREDICTED vs MEASURED, misses named:** family wallet −10/−25% → **−24.0%** ✓; prize banked
+  −15/−25% → **−20.3%** ✓; under water «up a few points» → **unchanged** ✓; her account at 600
+  +30/+50% → **+55.2%** (just over); her account at 400 +70/+110% → **+41.9%** ✗ – the prediction
+  compared the two LADDERS pointwise and forgot that a balance at 21.7 is made mostly of the 18-20
+  years, where the two ladders are 10/10 and 20/15.
+
+- [x] **26. «Если мы уже дарили депозит на её жилье, то его больше не надо вообще показывать»** –
   **build, overriding a recorded design.** The gift `'deposit'` (19–21 band, `birthday.ts:563-570`)
   is marked `repeat: 'durable'` with its own «again» line, and `materialFor` never consults
   `giftUse` – the spec (`birthday-and-gifts.md` §5.2) calls it a «licensed repeat». His word today
@@ -835,6 +912,32 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   exhaustion at the band falls back to the neighbour band's material (builder proves the card
   never renders short). Spec gets the dated amendment. Evidence: unit – give the deposit at 19,
   the 20th/21st cards never contain it.
+
+  ⭐ **BUILT (bundle: 5/25/26).** `materialFor` consults the given set: a `durable` already in the
+  house leaves the four rows for good, `repeatable` is untouched (`again` line and all), and the day
+  is outside every band so his 11.08 ruling cannot be touched. **Zero schema** – `BirthdayRecord.given`
+  has been on every save since v48. Spec amendment: `birthday-and-gifts.md` §8c-bis, dated 15.09.
+
+  **⚠⚠ THE CARD NEVER RENDERS SHORT, AND IT IS PROVEN EXHAUSTIVELY.** A shortened band refills from
+  its NEIGHBOURS – the band above first, then below, then outward – back to **the band's own original
+  size** and not merely to three: refilling to three would leave C(3,3) = ONE dialog and undo round
+  26 #9b's arithmetic. `tests/round42-birthday-durables.test.ts` §2 sweeps **1,240 cards** – every age
+  10-40 × tour and college × four walk indices × five given-sets **including «every gift in the game
+  already given»** – and every one is four distinct rows with the ask among them. ⚠ The refill was
+  needed for a case nobody had noticed: `suitcase` is in both the 15 and 17 bands and `watch` in both
+  17 and 18, so a gift given at fifteen could have stripped a three-row band three years later.
+
+  ⭐ **AND IT REMOVED THE DEFECT ROUNDS 27 AND 39 WERE BUILT TO MITIGATE.** «Every material row owned
+  and the day is the whole pool» – the collapse behind «И снова она просит "One day..."» – is now
+  STRUCTURALLY IMPOSSIBLE: measured on the round-27 sweep, the day goes from **200/200 certain to
+  50/200**, and on two walked careers of 1,000 weeks **no gift is asked twice at all**. Round 27's
+  cooldown still answers 0; the two fixes stack.
+
+  ⚠ **ONE HAZARD IT CREATED AND THE REPO HAD ALREADY WRITTEN DOWN.** Fourteen harnesses answered a
+  birthday by REBUILDING the offer (`birthdayOffer(world.seed, age).options[0].id`) – a second
+  derivation that diverges the moment a given durable leaves the card, and `chooseGift` then refuses
+  it. Identical to the R2-18 failure recorded in `tests/round23-kid-life.test.ts`. All fourteen are
+  repointed at `birthdayOfferFor(world, age)`, the engine's own seam.
 
 - [~] **27. «В 2039 сезоне травмы были очень часто, иногда раз в 2-3 недели»** – **answered from his
   own save (and the word is knocks, not injuries).** Real layoffs: FOUR in ten years – the injury

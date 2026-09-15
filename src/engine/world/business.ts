@@ -30,6 +30,10 @@ import { ECONOMY, kidPrizeShareCents } from '../economy'
 // never the ITF band's (the one-clock ruling of 09.08, which `finalizeTournament` follows to the
 // line). `world/age.ts` is a leaf and imports nothing from this package.
 import { kidAgeYears } from './age'
+// ⭐ ROUND 42 #25 – the prize ramp's college pause, read from the one module that owns the span.
+// ⚠ ONE WAY, CHECKED RATHER THAN ASSUMED (wave 6 had to close a cycle here): `world/college.ts`
+// imports assets / ledger / ladder / age / player and never this file, so this edge closes none.
+import { collegePausedShareYears } from './college'
 // ⭐⭐ ROUND 30 #9 MOVED THE MERCH RATE ONE FILE DOWN, and «one arithmetic» is exactly why. The
 // brand now carries a VALUE as well as an income (`assetWorthCents`), and that valuation lives in
 // `world/assets.ts` – which this file imports, so the rate had to be reachable from there or there
@@ -79,8 +83,10 @@ export function merchWeeklyIncomeCents(world: WorldState): number {
 //
 // ⚠⚠ «КАК С ПРИЗОВЫХ» IS THE RULE AND NOT AN ANALOGY, so this reads `kidPrizeShareBps` – the very
 // function `finalizeTournament` divides a cheque by – rather than a second ramp of its own. There is
-// one age ladder in this game (10% at 18, +5 a birthday, half from 26) and a brand that copied it
-// would be free to drift from it on the first retune.
+// one age ladder in this game (round 42 #25: 10% at 18, +10 a birthday, 60% from 23, and college
+// birthdays do not count) and a brand that copied it would be free to drift from it on the first
+// retune. ⭐ That retune has now happened once and this file did not change for it, which is the
+// claim above being true rather than merely stated.
 //
 // ⚠⚠⚠ AND THE SPLIT IS AT THE BANKING SITE, NEVER IN THE RATE. `assetEarningsRateCents` is the ONE
 // place a career becomes a weekly cheque – and it is also what `brandGrossWorthCents` MULTIPLIES to
@@ -97,8 +103,9 @@ export function merchWeeklyIncomeCents(world: WorldState): number {
 // up on screen.
 //
 // ⚠ NO NEW WAY FOR THE PARENT TO GO NEGATIVE, the standing «мы ни за что не наказываем» check: this
-// is an INCOME line, `herShare <= gross` for every rate the ramp can produce (`capBps` is 5000), so
-// the week can only ever add LESS. It can never subtract.
+// is an INCOME line, `herShare <= gross` for every rate the ramp can produce (`capBps` is 6000 since
+// round 42 #25, and the guard is the inequality rather than the number), so the week can only ever
+// add LESS. It can never subtract.
 //
 // ⚠ ZERO DRAWS, and nothing here is persisted. Integer arithmetic on a figure the fame fold has
 // already decided, so the frozen MAIN capture (41550 / e6b0c709) cannot see it – and a career before
@@ -116,6 +123,9 @@ export function assetKidShareCents(world: WorldState, id: string): number {
   return kidPrizeShareCents(
     assetWeeklyIncomeCents(world, id),
     kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    // ⭐ ROUND 42 #25 – «как с призовых» includes the college pause, for the same reason it includes
+    // the rate: this is the prize ramp, read whole, not a brand ramp that happens to resemble it.
+    collegePausedShareYears(world),
   )
 }
 

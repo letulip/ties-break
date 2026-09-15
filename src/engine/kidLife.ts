@@ -452,7 +452,8 @@ export function collegeNote(view: KidLifeWorldView): string {
  *  for a W-series start – which is his sentence, read off the money instead of off a second
  *  predicate. */
 export function ownAccountNote(view: KidLifeWorldView): string {
-  const bps = kidPrizeShareBps(view.ageYears)
+  // ⭐ ROUND 42 #25 – read at (her age, the birthdays college ate), which is what the till divides by.
+  const bps = kidPrizeShareBps(view.ageYears, view.kidSharePausedYears)
   if (bps <= 0) return ''
   if (view.ageYears < ECONOMY.kidShare.fromAgeYears && view.kidFundsCents <= 0) return ''
   // ⚠⚠ «PRIZE» IS LOAD-BEARING SINCE ROUND 29 P3 AND WAS NOT THERE BEFORE. This sentence said «of
@@ -503,7 +504,9 @@ export function ownAccountNote(view: KidLifeWorldView): string {
  *  every birthday up to fifty percent» is a sentence, and a sentence in the value slot would be a
  *  paragraph wearing a row's geometry. It wraps under the rows, where prose is allowed to. */
 export function ownAccountCard(view: KidLifeWorldView): KidAccountView | null {
-  const bps = kidPrizeShareBps(view.ageYears)
+  // ⭐ ROUND 42 #25 – the same two inputs as `ownAccountNote` one function up, deliberately spelled
+  // the same way: the card and the sentence appear together and must quote one percentage.
+  const bps = kidPrizeShareBps(view.ageYears, view.kidSharePausedYears)
   if (bps <= 0) return null
   if (view.ageYears < ECONOMY.kidShare.fromAgeYears && view.kidFundsCents <= 0) return null
   const rows: KidAccountRow[] = [
@@ -836,6 +839,16 @@ export interface KidLifeWorldView {
   /** ⭐ ROUND-23 #18 – what her own account holds, in cents. Zero until the first cheque after her
    *  eighteenth: `ECONOMY.kidShare` is what fills it and `finalizeTournament` is what moves it. */
   kidFundsCents: number
+  /** ⭐⭐ ROUND 42 #25 – HOW MANY OF HER RAMP'S STEPS COLLEGE ATE («пока она снова в тур не
+   *  вернется»). Zero for every career that never enrolled, which is what keeps this change
+   *  invisible to all of them.
+   *
+   *  ⚠ THE COUNT AND NOT THE RATE, so this page reads `kidPrizeShareBps` exactly as it always has –
+   *  the till's own function, at her own inputs. Handing the page a finished percentage would put a
+   *  second reading of the ramp on the snapshot, and «two spellings of one number is how a stale one
+   *  survives» is this module's own rule two functions down. Composed by `toSnapshot` off
+   *  `collegePausedShareYears`, the one derivation of it. */
+  kidSharePausedYears: number
   /** ⭐⭐ ROUND 35 #9 – does the family hold a DELIVERED merch brand, the one rung whose weekly income
    *  is split on her ramp. A predicate and not a figure: this page states the RULE and never the
    *  money, so what it needs to know is whether the rule applies at all. Composed at snapshot time

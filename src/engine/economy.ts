@@ -754,6 +754,35 @@ export const ECONOMY = {
     rollChance: 0.06,
     amountCents: [500_00, 1500_00] as [number, number],
 
+    // ===============================================================================================
+    // ⭐⭐⭐ ROUND 42 #5 – THE CADENCE DIAL. PROPOSED NUMBERS, HIS TO CONFIRM OFF THE PRINTED TABLE.
+    // ===============================================================================================
+    //
+    // THE OWNER, 15.09: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели».
+    //
+    // ⚠ HIS IMPRESSION IS THE DESIGN'S OWN NOISE AND NOT A DEFECT IN THE GATE. Measured before the
+    // change (tools/sponsor-cadence.ts): the cameo was a MEMORYLESS weekly Bernoulli at
+    // `rollChance` with NO cooldown and NO per-season cap of any kind, so P(gap <= 4 weeks) = 1 −
+    // 0.94⁴ ≈ 22% and a working family – for whom the runway gate has zero hysteresis and therefore
+    // stands open every single week – collected ≈ 2.9 payments ≈ $2,940 a season. Three cheques in
+    // ten weeks is what a memoryless process looks like; it is also what «засыпает» looks like.
+    //
+    // ⚠⚠ BOTH NUMBERS BELOW ARE A PROPOSAL AND HE HAS NOT SEEN THE PRINT. They are named constants
+    // rather than literals precisely so ONE LINE of his moves either one. The prediction was written
+    // down BEFORE the arm was run (invariant 5) and lives in docs/specs/sponsor-cadence-2026-09.md;
+    // the measured column is beside it in the same table.
+    /** ⭐ THE SHOP'S OWN PATIENCE: no second cheque inside this many weeks of the last one. Six is
+     *  proposed because it puts the floor of the gap PAST the «раз в 3-4 недели» he is pointing at
+     *  with one week to spare, and because at `rollChance` the renewal mean is 1/p + 6 ≈ 22.7 weeks –
+     *  a little over two cheques a season, which is the shape of a shop that helps rather than a
+     *  standing order. */
+    cooldownWeeks: 6,
+    /** ⭐ ...AND A CEILING ON THE SEASON, so a lucky run of draws cannot restore the cluster by
+     *  another road. Three is proposed as the cap that BINDS RARELY – the cooldown alone already
+     *  lands near 2.3 – so it is a wall against the tail rather than a second dial fighting the
+     *  first. A cap that binds often would flatten the mechanic into «three a year, every year». */
+    seasonCap: 3,
+
     /** HOW MANY WEEKS OF COURT HIRE THE BALANCE MUST NO LONGER COVER for a shop to chip in.
      *
      *  ⚠ 62 IS THE MIDDLE OF A MEASURED BAND, not a chosen figure, and both of its walls are numbers
@@ -1677,9 +1706,19 @@ export const ECONOMY = {
   // например начать с 10-20% и может быть наращивать год к году», and then, on the ceiling:
   // «да, давай, но может не до 30, а до 40 или 50 вообще, это всё-таки ее карьера?»
   //
-  // So it is a RAMP and not a rate: 10% the year she turns eighteen, five points more every birthday,
-  // and it stops at half. The four numbers live here rather than inside `kidPrizeShareBps` because a
-  // literal in a formula is a balance decision nobody can find – the rule this file exists for.
+  // So it is a RAMP and not a rate: 10% the year she turns eighteen, more every birthday, and it
+  // stops. The four numbers live here rather than inside `kidPrizeShareBps` because a literal in a
+  // formula is a balance decision nobody can find – the rule this file exists for.
+  //
+  // ⭐⭐⭐ ROUND 42 #25 (CONFIRMED 15.09, «подтверждаю связку») – THE RAMP IS STEEPER AND SHORTER, AND
+  // COLLEGE PAUSES IT. His question was «может быть нам с 18 не по 5, а по 10% в год ей добавлять
+  // стоит?», his second pass «может даже до 60% к 23», and the confirmed shape is all three at once:
+  //   * `stepBps` 500 -> 1000 – ten points a birthday, not five;
+  //   * `capBps` 5000 -> 6000, and it is reached at TWENTY-THREE instead of twenty-six;
+  //   * ⭐ and the steps count only years ON TOUR: «пока она снова в тур не вернется». A birthday
+  //     spent at college does not move the ladder. See `collegePausedShareYears` – NO SCHEMA, the
+  //     college span is already state and the step count derives from it.
+  // The measurement that went with it is docs/specs/kid-share-ramp-2026-09.md, predicted-first.
   //
   // ⚠ WHY EIGHTEEN AND NOT THE BANK CARD. Her account is a BIRTHDAY GIFT (`world/birthday.ts`, the
   // eighteenth's `bankcard` row: «Her own bank card and account – she is earning now, it should be in
@@ -1708,12 +1747,23 @@ export const ECONOMY = {
      *  ⭐ ROUND 41 #27: and what she keeps of every cheque BELOW it, which is the same number by
      *  ruling rather than by coincidence – the curve is continuous across her eighteenth. */
     startBps: 1000,
-    /** ...and what each birthday after it adds. Five points a year is his «наращивать год к году». */
-    stepBps: 500,
-    /** The ceiling, reached at 26 – «может не до 30, а до 40 или 50 вообще». Half is the legible
-     *  version of what he asked for: an even split between the girl who won it and the family that
-     *  paid to get her there, arriving in the years she is worth the most. */
-    capBps: 5000,
+    /** ...and what each birthday after it adds. ⭐⭐ ROUND 42 #25: TEN points a year, his own «не по
+     *  5, а по 10% в год», confirmed 15.09. It was five from round 23 until this item.
+     *
+     *  ⚠ A BIRTHDAY SPENT AT COLLEGE ADDS NOTHING – the steps count tour years only («пока она снова
+     *  в тур не вернется»). That is not a fifth constant: `kidPrizeShareBps` takes the paused count
+     *  as an argument and `collegePausedShareYears` derives it off the college span the save already
+     *  holds. */
+    stepBps: 1000,
+    /** The ceiling. ⭐⭐ ROUND 42 #25: 60%, reached at TWENTY-THREE – his «может даже до 60% к 23».
+     *  It was 50% at 26 from round 23 until this item, and both halves of that pair moved together:
+     *  at ten points a birthday the cap is what decides where the ladder stops, and 60 at 23 is the
+     *  shape he confirmed seeing what it does to the family's corridor (the bench print, invariant 5).
+     *
+     *  ⚠ 23 IS NOT WRITTEN ANYWHERE – it is `fromAgeYears + (capBps − startBps) / stepBps` and falls
+     *  out of the three numbers above. Writing the age down as a fourth constant is how a ramp ends
+     *  up with two disagreeing definitions of where it stops. */
+    capBps: 6000,
   },
 
   // =================================================================================================
@@ -6898,10 +6948,30 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *
  *  `ECONOMY.kidShare` holds all four numbers; this is the ramp read off them and nothing else, so a
  *  retune moves the whole game and this function does not change. Flat once the cap is reached (age
- *  26 on the shipped ladder):
+ *  23 on the shipped ladder):
  *
- *      <18  18   19   20   21   22   23   24   25   26+
- *      10%  10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *      <18  18   19   20   21   22   23+
+ *      10%  10%  20%  30%  40%  50%  60%
+ *
+ *  ⭐⭐⭐ ROUND 42 #25 (CONFIRMED 15.09) – THE LADDER ABOVE IS TWICE AS STEEP AND FOUR YEARS SHORTER
+ *  THAN THE ONE ROUND 23 SHIPPED (`10 10 15 20 25 30 35 40 45 50`, capped at 26). His words: «может
+ *  быть нам с 18 не по 5, а по 10% в год ей добавлять стоит?» and «может даже до 60% к 23», then
+ *  «подтверждаю связку». Both numbers are on `ECONOMY.kidShare`; nothing here is a literal.
+ *
+ *  ⭐⭐⭐ ...AND `pausedYears` IS THE OTHER HALF OF THAT RULING: «пока она снова в тур не вернется».
+ *  A birthday spent at college does not move the ladder, so the step count is BIRTHDAYS SINCE
+ *  EIGHTEEN MINUS BIRTHDAYS SPENT AT COLLEGE. A girl who enrols at nineteen and comes back at
+ *  twenty-three is on 20% the week she returns, not 60%, and climbs from there.
+ *
+ *  ⚠ IT IS AN ARGUMENT AND NOT A SECOND LOOKUP, and the default of 0 is what keeps that honest: this
+ *  function stays pure integer arithmetic with no `world` in it, every existing caller and every
+ *  catalogue sweep asks the identical question it always did, and the ONE derivation of «how many
+ *  birthdays did college eat» lives in `collegePausedShareYears` (world/college.ts) where the college
+ *  span is. Two implementations of that count is how the Money screen and the till would come to
+ *  disagree about her cut – the exact failure `kidPrizeShareBps` itself was written to prevent.
+ *
+ *  ⚠ NO SCHEMA. `CollegeState.fromWeek` / `untilWeek` have been on every save since v51; the count is
+ *  read off them and persisted nowhere.
  *
  *  ⭐⭐⭐ ROUND 41 #27 (12.09) – THE FIRST COLUMN IS NEW AND IT USED TO BE A ZERO.
  *
@@ -6922,10 +6992,12 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *  SCORED», not «she has ever COME» – a W15 first-round exit pays $130 and zero points – so a gate
  *  built on it would have refused her the first cheque she ever earned.
  *
- *  ⚠ THE LADDER FROM EIGHTEEN IS UNTOUCHED TO THE POINT, which is what keeps round 23 #18 and round
- *  35 #9 whole: the curve is CONTINUOUS at the birthday (10% either side of it), the cap still lands
- *  at 26, and every figure the shipped surfaces quote from eighteen onward is the figure they quoted
- *  before this item. What changed is that the two years under it are 10% instead of nothing.
+ *  ⚠ THE LADDER FROM EIGHTEEN WAS UNTOUCHED BY ROUND 41 #27 TO THE POINT, which is what kept round 23
+ *  #18 and round 35 #9 whole: the curve is CONTINUOUS at the birthday (10% either side of it) and the
+ *  two years under it are 10% instead of nothing. ⭐ ROUND 42 #25 IS THE ITEM THAT DID MOVE THE
+ *  LADDER, one year later and at his ask – see the table at the top. The continuity across her
+ *  eighteenth is untouched by it: `startBps` did not change, so both sides of that birthday are still
+ *  10%, and round 41 #27's ruling reads exactly as it did.
  *
  *  ⚠⚠ AND THE MERCH BRAND MOVES WITH IT, BY ROUND 35 #9'S OWN RULE RATHER THAN BY ACCIDENT: «доход
  *  от ее бренда давай тоже как проценты с призовых будем делить» – the brand rides THIS function, so
@@ -6939,10 +7011,13 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *  School tile had before it started reading her birthday.
  *
  *  Pure integer arithmetic on a persisted-nowhere input: no draw, no state, no schema. */
-export function kidPrizeShareBps(ageYears: number): number {
+export function kidPrizeShareBps(ageYears: number, pausedYears = 0): number {
   const { fromAgeYears, startBps, stepBps, capBps } = ECONOMY.kidShare
   if (ageYears < fromAgeYears) return startBps
-  return Math.min(capBps, startBps + (Math.floor(ageYears) - fromAgeYears) * stepBps)
+  // Total: a paused count larger than the birthdays she has had cannot happen – it is derived from a
+  // span inside her own life – but a poked save must floor at `startBps` rather than go below it.
+  const steps = Math.max(0, Math.floor(ageYears) - fromAgeYears - Math.max(0, Math.floor(pausedYears)))
+  return Math.min(capBps, startBps + steps * stepBps)
 }
 
 /** Her cut of one cheque, in whole cents – `kidPrizeShareBps` applied and rounded ONCE.
@@ -6951,8 +7026,8 @@ export function kidPrizeShareBps(ageYears: number): number {
  *  second rounding, so the two halves add up to the cheque exactly. A pair of independent
  *  `Math.round`s loses or invents a cent on half the finishes, and this money is booked into two
  *  different balances that a player can add up on screen. */
-export function kidPrizeShareCents(prizeCents: number, ageYears: number): number {
-  return Math.round((prizeCents * kidPrizeShareBps(ageYears)) / 10_000)
+export function kidPrizeShareCents(prizeCents: number, ageYears: number, pausedYears = 0): number {
+  return Math.round((prizeCents * kidPrizeShareBps(ageYears, pausedYears)) / 10_000)
 }
 
 /** ⭐⭐ ROUND-24 – WHAT A FINISH PAYS THE STAFF, in basis points. ONE mechanism, two takers (the

@@ -6,9 +6,18 @@
 //   ...and on the ceiling he was offered: «да, давай, но может не до 30, а до 40 или 50 вообще, это
 //   всё-таки ее карьера?»
 //
-// SO THE SHIPPED LADDER IS 10% AT 18, +5 EVERY BIRTHDAY, 50% FROM 26 – and the table below is
-// written out as LITERALS rather than by calling the function under test, because a ramp checked
+// THE LADDER HE ASKED FOR THEN WAS 10% AT 18, +5 EVERY BIRTHDAY, 50% FROM 26 – and the table below
+// is written out as LITERALS rather than by calling the function under test, because a ramp checked
 // against its own implementation is a tautology with a describe block round it.
+//
+// ⚠⚠⚠ ROUND 42 #25 (15.09) MOVED THE LADDER, AND IT IS THE OWNER WHO MOVED IT. «может быть нам
+// с 18 не по 5, а по 10% в год ей добавлять стоит?», then «может даже до 60% к 23», confirmed
+// «подтверждаю связку». So `HIS_RAMP` below is TEN points a birthday and stops at 60 from
+// twenty-three, and the three realised-share readings that quote percentages were re-measured on the
+// new walk rather than re-derived. ⚠ NOTHING ABOUT THE SHAPE OF THIS FILE'S CLAIMS MOVED: the money
+// still leaves the wallet, it still persists, it still splits to the cent. Only the rungs are new.
+// The item's own measurement is docs/specs/kid-share-ramp-2026-09.md and the pause it also introduced
+// – a college birthday adds no step – lives in `tests/round42-kid-share-ramp.test.ts`.
 //
 // ⭐⭐⭐ ROUND 41 #27 (12.09) OVERTURNED CLAIM 1, AND IT IS THE OWNER WHO OVERTURNED IT.
 //
@@ -62,7 +71,7 @@ import { openCareer, stepCareerWeek, POLICIES, PRESETS } from '../tools/econ-ben
 import {
   answerFork,
   answerRetirement,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
   decideKnock,
   kidAgeYears,
@@ -94,6 +103,8 @@ import { drainLifeBeats } from './helpers/career'
  *  contradiction: this function answers «what share of a prize cheque is hers», and a thirteen-
  *  year-old's answer is hypothetical because junior tennis pays no prize money at all. §1's
  *  W-series arm is where that becomes a claim about a career rather than about a function. */
+// ⚠ RE-AIMED BY ROUND 42 #25 (15.09) – see the header. It was 10 10 15 20 25 30 35 40 45 50, capped
+// at twenty-six, from round 23 until this item.
 const HIS_RAMP: Record<number, number> = {
   13: 10,
   14: 10,
@@ -101,22 +112,22 @@ const HIS_RAMP: Record<number, number> = {
   16: 10,
   17: 10,
   18: 10,
-  19: 15,
-  20: 20,
-  21: 25,
-  22: 30,
-  23: 35,
-  24: 40,
-  25: 45,
-  26: 50,
-  27: 50,
-  33: 50,
+  19: 20,
+  20: 30,
+  21: 40,
+  22: 50,
+  23: 60,
+  24: 60,
+  25: 60,
+  26: 60,
+  27: 60,
+  33: 60,
 }
 
 function answerAll(world: WorldState): void {
   if (pendingKnock(world)) decideKnock(world, 'rest')
   const age = pendingBirthday(world)
-  if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+  if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
   // ⭐ v73: she speaks at the fork and the engine will not answer it until she has been heard.
   // `'listen'` is the harness's answer for the same reason `answerFork`'s no-tier default is the
   // cheapest place: a caller that never asked the player must not put a number on the scale.
@@ -152,13 +163,15 @@ function walk(seedIndex: number, weeks: number, shareOff = false): WorldState {
 // 1 – THE RAMP ITSELF
 // =================================================================================================
 describe('#18 – the ramp, against the numbers he actually asked for', () => {
-  it('⭐⭐ 10% at 18, five points a birthday, and it stops at half', () => {
+  // ⚠ RE-AIMED BY ROUND 42 #25: it read «10% at 18, five points a birthday, and it stops at half».
+  it('⭐⭐ 10% at 18, ten points a birthday, and it stops at sixty', () => {
     for (const [age, pct] of Object.entries(HIS_RAMP)) {
       expect(kidPrizeShareBps(Number(age)), `age ${age}`).toBe(pct * 100)
     }
-    // The cap is REACHED, and it is reached at 26 – «это всё-таки её карьера», in her best years.
-    expect(kidPrizeShareBps(26)).toBe(ECONOMY.kidShare.capBps)
-    expect(kidPrizeShareBps(25)).toBeLessThan(ECONOMY.kidShare.capBps)
+    // The cap is REACHED, and round 42 #25 moved WHERE – twenty-three, his «может даже до 60% к
+    // 23» – while «это всё-таки её карьера», the reason it is reached at all, is untouched.
+    expect(kidPrizeShareBps(23)).toBe(ECONOMY.kidShare.capBps)
+    expect(kidPrizeShareBps(22)).toBeLessThan(ECONOMY.kidShare.capBps)
     // ...and it is monotone and bounded for every age the game can reach.
     let last = -1
     for (let age = 10; age <= 45; age++) {
@@ -356,10 +369,25 @@ describe('#18 – the transfer, on a career that is really played', () => {
       // BANKED, so a year carrying a title pays the coach and the masseur out of the same gross and
       // the denominator shrinks under her numerator. The bound is 1.7x the worst reading (0.6426),
       // exactly as it was before.
-      expect(Math.abs(r.pct - HIS_RAMP[r.age]), `age ${r.age}: realised ${r.pct.toFixed(2)}%`).toBeLessThan(1.1)
+      //
+      // ⚠⚠ RE-AIMED 1.1 -> 0.45 BY ROUND 42 #25 (15.09), AND IT IS THE RE-AIM THAT TIGHTENS RATHER
+      // THAN LOOSENS – which is the tell that the item moved the LADDER and not the arithmetic. The
+      // steeper ramp lands on fewer, larger rungs, so a year's cheques divide onto it more evenly.
+      // Re-measured on the same walk, same seed, same policy, after the change:
+      //
+      //     14  10 exactly     18  10.2644 vs 10     22  50.0645 vs 50    26  60 exactly
+      //     15  10 exactly     19  20 exactly        23  60 exactly
+      //     16  10 exactly     20  30.1548 vs 30     24  60 exactly
+      //     17  10 exactly     21  40.0803 vs 40     25  60 exactly
+      //
+      // NINE of the thirteen years are exact to the last cent, the worst reading is 0.2644 (her
+      // eighteenth, the same thin year and the same team-cut cause), and the bound is 1.7x it – the
+      // file's own convention, kept.
+      expect(Math.abs(r.pct - HIS_RAMP[r.age]), `age ${r.age}: realised ${r.pct.toFixed(2)}%`).toBeLessThan(0.45)
     }
-    // And she really is on the cap by 26, which is the whole of «до 40 или 50 вообще».
-    expect(realised.some((r) => r.age >= 26 && r.pct > 49.9)).toBe(true)
+    // And she really is on the cap by 23, which is the whole of his «может даже до 60% к 23».
+    // ⚠ RE-AIMED BY ROUND 42 #25: it read `age >= 26 && pct > 49.9`, the round-23 cap and its age.
+    expect(realised.some((r) => r.age >= 23 && r.pct > 59.9)).toBe(true)
   })
 })
 
@@ -417,6 +445,9 @@ describe('#18 – the line on her own page', () => {
     weeksSinceTitle: null,
     college: null,
     kidFundsCents: 0,
+    // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+    // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+    kidSharePausedYears: 0,
     // ⭐ ROUND 35 #9 – the DEFAULT is no brand, so every arm above keeps reading the sentence it
     // read before this item; the brand clause is asked for explicitly by the arm that is about it.
     ownsBrand: false,
@@ -434,15 +465,20 @@ describe('#18 – the line on her own page', () => {
     expect(ownAccountNote(view({ ageYears: 17, kidFundsCents: 0 }))).toBe('')
     const at18 = ownAccountNote(view({ ageYears: 18, kidFundsCents: 90_150_00 }))
     expect(at18).toContain('$90,150')
-    expect(at18).toContain('10% of every prize cheque')
-    expect(at18).toContain('50%')
+    expect(at18).toContain(`${ECONOMY.kidShare.startBps / 100}% of every prize cheque`)
+    // ⚠ RE-AIMED BY ROUND 42 #25: it read the literal '50%'. The cap is 60 now, and the literal was
+    // the one number in this arm that was not «the engine's own» – the rule the file states two
+    // tests down and did not keep here.
+    expect(at18).toContain(`${ECONOMY.kidShare.capBps / 100}%`)
     // ⭐ P3's half, read off the engine and never typed – the same rule part-one #13 set for the
     // coach's line: `managerCommissionBps` is the function `bankSponsorCheque` pays by.
     expect(at18, 'and the sponsor money is named as hers, less the fee').toContain(
       `Sponsor cheques are hers, less the manager's ${managerCommissionBps() / 100}%.`,
     )
     const at26 = ownAccountNote(view({ ageYears: 26, kidFundsCents: 8_909_415_00 }))
-    expect(at26).toContain('50% of every prize cheque')
+    // ⚠ RE-AIMED BY ROUND 42 #25, same reason as the line above: at twenty-six she is at the cap
+    // whatever the cap is, and twenty-six is past it on both the old ladder and the new one.
+    expect(at26).toContain(`${ECONOMY.kidShare.capBps / 100}% of every prize cheque`)
     expect(at26, 'at the cap it stops promising more').toMatch(/goes no higher/)
     expect(at26).not.toContain('every birthday')
     // Player copy: short dash only, and no Cyrillic.

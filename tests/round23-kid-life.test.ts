@@ -118,6 +118,9 @@ function view(week: number, over: Partial<KidLifeWorldView> = {}): KidLifeWorldV
     weeksSinceTitle: null,
     college: null,
     kidFundsCents: 0,
+    // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+    // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+    kidSharePausedYears: 0,
     ownsBrand: false,
     ...over,
   }
