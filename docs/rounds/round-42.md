@@ -1715,3 +1715,50 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   career can cover**. If it is near zero the band is decorative and a working family's junior years
   are funded entirely by the parent, which is a design statement worth making on purpose rather than
   by omission. Numbers first, his ruling on the constants after, invariant 5 as ever.
+
+- [ ] **41. «я вообще не понял почему мы снова обсуждаем разные проценты, если уже есть исследование
+  на 10% безусловных отчислений с любых призовых, независимо от глубины прохода. И мы говорили, что
+  это будет сделано» (15.09)** – **RULED: the every-cheque arm ships.** He is right and the receipt is
+  his own research: [team-economics-2026-09](../research/team-economics-2026-09.md) §2 – «7–15%, most
+  commonly 10%, of EVERY cheque» (Rublev pays Vicente fixed + 10% per tournament; Kasatkina «10% от
+  любого заработка на корте») – against our `staffShare.coach = { titleBps: 1000, finalBps: 500 }`,
+  which pays at finish index 0 and 1 and **nothing anywhere else**. The audit's own verdict line said
+  so («⚠ half-matches: our 10% exists but only at finishIdx 0/1; reality cuts 10% of EVERY cheque»)
+  and finding 3.1 parked it under item 19. His word un-parks it.
+
+  **What ships:** the coach takes **10% of every prize cheque**, at every finish, gross, on the pro
+  track – `staffResultShareBps` grows the every-cheque arm and joins `finalizeTournament`'s split
+  ORDER beside the kid's share, where the pieces-re-add-to-the-cent discipline and the
+  kid-share-never-shrinks-staff-cuts order are already pinned (round 41 A1).
+
+  ⚠ **It is a real balance change and it ships the way this round's others do:** predicted first,
+  benched, the family corridor printed before and after, his numbers off the table. Two things the
+  bench has to answer, because they are the reason it was parked rather than built: what it does to
+  a mid-career family that is already near the edge (the coach now takes a cut of every first-round
+  cheque she collects), and whether the masseur's 3%/1.5% should follow the same road or stay a
+  title-and-final bonus. ⭐ Side effect worth naming: once the cut is on every cheque, item 11's memo
+  line is almost never silent, which answers his «не вижу отчислений» at the root rather than on the
+  screen.
+
+- [ ] **42. «committed должен это и показывать» (15.09) – the team budget spends against the WHOLE
+  payroll.** The tile lists coach + masseur + psychologist but its meter counts only the coach, so
+  the three rows add to $843 while «committed» says $343 – one tile disagreeing with itself, which is
+  what he is pointing at. ⚠ **This is not a display change**: `committedCents` is the engine's own
+  affordability question (`overBudgetCents`'s denominator), so folding the payroll into it changes
+  WHO CAN BE HIRED, and round 28 #8's standing guard – which reddened when a bundle-7 arm tried it –
+  exists to stop exactly that happening by accident. So: the guard is re-aimed with a ⚠ note naming
+  this item, the cap's own number is re-measured against the fuller commitment (a cap sized for one
+  seat is the wrong cap for three), and the bench prints what it does to hiring across the four
+  backgrounds. His numbers off that table.
+
+- [x] **43. «сними потолок, а кулдаун давай 4» (15.09) – item 5's two numbers, ruled.** `seasonCap`
+  goes away entirely and `cooldownWeeks` becomes **4**. ⚠ **One honest consequence, measured and
+  stated rather than discovered later:** his original complaint was «раз в 3-4 недели», and a cooldown
+  of 4 sets the floor at exactly four weeks – so a four-week gap is still legal, and only the one-,
+  two- and three-week clusters are gone. If the cadence he reported still reads as too fast in play,
+  the floor is one constant.
+
+- [x] **44. «пока не в туре – доля не растёт» (15.09) – the college-pause sentence, his meaning.**
+  Item 25's shipped note promises «10 points more every birthday» while the ramp is paused in college,
+  which is false for those four years. He gave the sense and the wording is drafted from it; the draft
+  lands in this ledger for his read before it ships.
