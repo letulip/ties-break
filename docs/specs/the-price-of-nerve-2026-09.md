@@ -113,3 +113,63 @@ across a season through fatigue, injury or spirit – the wing may well pay some
 cannot see, and a career-level arm (N careers, the wing overridden after `rollPotential`) is the
 honest way to ask that. It was deliberately not run here: the match-level answer is so one-sided
 (forty times) that a career arm would be measuring a rounding error's descendants.
+
+---
+
+# The build, after his ruling (15.09)
+
+He ruled **A** – raise the price of nerve – and gave the reason the build has to serve: «у нас будет
+честно понятно, что каждый показатель влияет на что-то в игре», with the psychologist wave beside it
+and Federer as the case («в ранние годы был вспыльчив, а потом осознал это и изменился»).
+
+## The three levers, and why these three
+
+**1. The pressure set widens.** Today nerve acts on ONE kind of point: `modifiedPServe` docks the
+server `(1 − composure/100) × BIG_POINT_MAX_PENALTY` on a break point, and break points are a
+measured **11.23%** of served points. Everything else in a match is nerve-blind. The honest way to
+make nerve matter more is to let it act where a tennis player actually feels it – break points, set
+points, match points, every point of a tiebreak, and the deciding set's closing games – rather than
+to make one point monstrous. Rough arithmetic: that takes the pressure set to ~25% of points, a
+**2.2×** on its own, with per-point physics that stay believable.
+
+**2. The term becomes contested.** Today only the SERVER's nerve is read; a calm returner converts no
+better than a nervy one. Making it `(receiver.composure − server.composure)` shaped – the exact form
+`nerveAndLegs` already uses for the same reason – doubles the span for a given gap and, more
+importantly, makes the term **exactly zero when the two are level**. That is what keeps every
+symmetric calibration fixture, the tour's hold rate and the upset corridor untouched by construction
+rather than by luck.
+
+**3. The penalty is scaled to a MEASURED target.** 2.2× from the set and ~2× from the contest is
+≈4.4×; the remaining factor to reach the target comes from `BIG_POINT_MAX_PENALTY` itself
+(0.03 → ≈0.055), which puts a composure-50 server facing a composure-90 returner about 2.2pp of serve
+probability down on a big point. That is inside the existing clamps and reads like tennis.
+
+⚠ **`COMPOSURE_K` IS RE-FITTED, NEVER RE-GUESSED.** It is not a design knob – it is the closed form's
+fitted mirror of what the loop does (its own note records the fit: predicted 1.68e-5 from the flat
+arithmetic, fitted 2.22e-5, the gap being the leverage a break point carries). Move the loop and the
+mirror must be re-fitted with the repo's own instrument: `npx vite-node
+tools/r38-closed-form-residual.ts -- --fit`. Predicted after the change: ≈8× today's value. If the
+residual does not come back to its current rms (0.36pp against a 0.35pp sampling floor), the closed
+form and the loop have been left describing different games – which is the one failure this change
+must not ship.
+
+## The target, and it is the one number still his
+
+Architect proposes **+20 composure ≈ +4pp of match win rate** – against serve's +14pp and
+groundstrokes' +18pp, that makes nerve a real secondary wing without re-cutting the ladder's flow.
+Two reasons not to go bigger: the player cannot train the wing directly (the psychologist is the only
+lever, and item 35 caps it), and a wing worth a serve point would decide careers off the seed draw,
+which is the complaint that started this.
+
+## The re-measurement, which is the deliverable beside the change
+
+Nothing ships until all of these are back, on a quiet machine:
+
+* `tools/r38-closed-form-residual.ts` – the re-fit, and the residual back inside its sampling floor.
+* `tools/composure-bench.ts` – this bench again, as the acceptance test: the price list is the thing
+  being changed, so it is the thing that states whether the change landed.
+* `tools/skill-gap-odds.ts` and the upset corridor – a nerve term that acts on a quarter of the
+  points can move the upset rate, and the upset rate is a published number we match on purpose.
+* `bench:radar`, `bench:econ` – the ladder's flow and the money that follows it.
+* The frozen capture: this touches no draw, so `tests/condition.test.ts` must NOT move. If it does,
+  something took a die it had no business taking.

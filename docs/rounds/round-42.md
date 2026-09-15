@@ -91,7 +91,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   mood moves to the avatar ring). Evidence: mounted test – a birthday week with a bright mood and
   zero fresh results renders the NEUTRAL stage portrait, and the ring carries the joy.
 
-- [ ] **3. «верстка экрана тренеров немного сломалась: все картинки обрезаны сильно… надо сделать
+- [x] **3. «верстка экрана тренеров немного сломалась: все картинки обрезаны сильно… надо сделать
   шире»** – **build.** Root cause measured: on phones `.cm-art` is a 62px absolute strip with NO
   `object-fit` (`style.css:5018-5032`) over 162×264 source art – at the row's real heights the
   image renders ~67–95px wide and the left-edge window cuts the face; the round-36/37/41 widenings
@@ -100,13 +100,51 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   cover; object-position` so the face survives, hired row variant included. Evidence: mounted 375
   test measuring the img's visible box and position – red on the 62px version.
 
-- [ ] **4. «что-то с размером шрифта на week recap на первой записочке… у некоторых шрифт крупнее»**
+  ⭐ **SHIPPED (bundle 2), and the ledger's own numbers above were STALE – the builder re-measured
+  and said so.** In Chromium on the real market with the app's own sheet and self-hosted type, the
+  card's padding box at 375 is **208–239px**, not the 109–155 quoted here, so the picture renders
+  **120–146px** wide inside a 62px strip: the porthole was showing 42–48% of it and the mask faded
+  half of even that. **The strip never changed – the CARD did**, growing with every line later rounds
+  added (the fit pill, two uplift figures, the rung line, the physio note), and the porthole never
+  followed. His «пол головы не видно» is the literal arithmetic.
+
+  ⚠ **HIS SECOND ROAD WAS NOT AVAILABLE, and the reason is measured rather than argued.** The head
+  (hair or cap through the far cheek) spans 8–62% of the picture on ALL SIXTEEN masters – 54% of its
+  width, so 65–79px at 375. No `object-position` fits a 79px head through a 62px window; it was
+  rendered to confirm the sum, head jammed edge to edge. So the road taken is his first one, «чуть
+  расширить, а текст ужать»: strip **62 → 96** at every width (the four band overrides deleted), body
+  74 → 108, row floor 104 → 168, hired 78/90/132 → 112/124/196, and the image gains
+  `object-fit: cover; object-position: 12% 50%`. ⚠ `cover` is NOT a vertical crop here: on a box
+  narrower than the master's ratio the height term wins and every overflowing pixel is spent
+  sideways – the identical clip `overflow: hidden` was already making, with a say in which slice
+  survives. 96 is the fixed point of the widen → wrap → taller → wider loop, swept at 375; 100 costs
+  a card two lines and goes backwards. The floors are re-derived at the honest 162/280 master, paying
+  the debt round 36's P2-7 named and left standing.
+
+  **The all-screens sweep (his new standing rule), before → after, head clearance in px:**
+  375 `+9.64/−28.75 → +5.27/+6.39` · 768 `+9.04/−18.66 → +5.67/+11.30` · 900 `+7.32/−2.23 →
+  +7.12/+29.46` · 1280 `+8.30/−8.32 → +5.67/+11.30`. **Every width was cutting faces** – the tablet
+  and the desktop are fixed too. Costs named: the market list grows 5.1% at 375 and 10.8% at 1280,
+  the text column goes 257 → 223px, and the 168 floor lifts exactly one shape of card (the
+  all-on-one-line row at 900, 149 → 166px). The other two hosts of a coach portrait (Home's
+  `.coach-art`, the pre-match tile) are asserted unchanged at all four widths – the fix did not leak.
+  Five mutation arms, no two reddening the same set; 16 new mounted cases.
+
+- [x] **4. «что-то с размером шрифта на week recap на первой записочке… у некоторых шрифт крупнее»**
   – **build.** Found: `.recap-note-text` is 23px, but `.recap-note--travel` (applied whenever the
   diary carries a travel/week PROSE note – `noteIsProse`, `WeekRecapCard.vue:616-618`) drops it to
   19px – so ledger-flavour notes render visibly bigger than prose ones, ~2 weeks in 3
   (`WEEK_NOTE_CHANCE`). Fix: one size for the note text (builder proposes the size that fits the
   longest corpus line at 375, likely the 19–21px band), the `--travel` modifier keeps layout only.
   Evidence: mounted test pinning equal computed font-size across both note kinds, mutation-proven.
+
+  ⭐ **SHIPPED (bundle 2): `.recap-note-text` is 19px/1.34 flat and the `--travel` SIZE rule is
+  deleted** – the class stays on the note (the `noteIsProse` binding is pinned elsewhere), it simply
+  no longer decides type size. Browser before/after at 375 on the same paper: prose 19px/53px against
+  ledger 23px/62.8px → both 19px/53px; swept at 375/768/900/1280, no overflow, the 80-character cap
+  still two lines. ⚠ 19 was already the size carrying the long line – flattening upward would have
+  put it back to three lines, which is why his «да, 19 хорошо» is also the measurement's answer.
+  Two mutation arms (the ramp restored → 4 red; flat-but-21px → 5 red).
 
 - [ ] **5. «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели»** – **measure + build
   proposal.** The cameo is a memoryless weekly Bernoulli: `rollChance 0.06`, $500–1500, and the
@@ -710,7 +748,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   bench's minutes are its statistical power and cannot be «cut». Safety invariant + the note pinned
   in `tests/units-stall-classifier.test.ts` (the new ROUND 42 #33 block).
 
-- [?] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
+- [>] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
   **measure first, then his ruling.** Entered off item 32's audit, which priced the wing by accident
   and then could not see it work.
 
@@ -788,3 +826,57 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   serve point, and that is match physics, so a full bench pass follows it; **B** leave the model and
   stop advertising the wing in the prologue and the handover; **C** both, in that order.
 
+  ⭐⭐ **RULED 15.09, A – RAISE THE PRICE OF NERVE.** His words: «мне кажется, что нам надо поднять
+  цену нервов, особенно на фоне волны с психологом и возможностью работать с этим. Яркий пример как
+  раз Федерер, который в ранние годы был вспыльчив, а потом осознал это и изменился. […] Да, надо всё
+  перемерить, но у нас будет честно понятно, что каждый показатель влияет на что-то в игре.» The
+  principle is the ruling's own sentence and it binds the build: **every wing has to affect something
+  a player can feel**, and the psychologist seat has to have a wing to work on.
+
+  The build plan, the levers and their arithmetic are in
+  [the-price-of-nerve-2026-09 §the build](../specs/the-price-of-nerve-2026-09.md) – in short: the
+  PRESSURE SET widens (break points today, break/set/match/tiebreak/deciding-set points after), the
+  term becomes CONTESTED (server's nerve against the returner's, zero when level, so the tour's own
+  calibration survives by construction), and the penalty is scaled to a measured target rather than a
+  chosen one. `COMPOSURE_K` is then RE-FITTED, not re-guessed – it is a fitted mirror of the loop and
+  the repo ships the instrument for it (`tools/r38-closed-form-residual.ts -- --fit`).
+
+  ⚠ It is match physics, so the re-measurement is the deliverable beside the change: the residual
+  instrument, `skill-gap-odds`, the upset corridor, `bench:radar`, the econ arms, and this bench again
+  as the acceptance test. Its own bundle, on a quiet machine, after this round's UI work.
+
+  ⚠ ONE NUMBER IS STILL HIS (asked in the spec): the target size. Architect proposes **+20 composure
+  ≈ +4pp of match win rate** – roughly a third of a serve point, which makes nerve a real secondary
+  wing without re-cutting the ladder's flow. Anything much larger starts deciding careers by a wing
+  the player cannot train directly.
+
+
+
+- [?] **35. «может быть даже сделать какую-то возможность превосходить заложенную с сидом выдержку с
+  помощью психолога. Пусть и не сильно, но тем не менее» (15.09)** – **design, and it needs one word
+  from him on each of three numbers.** Born out of #34's ruling: if nerve is going to be worth
+  something, the seat that works on nerve should be able to move it – and his own example is the
+  argument (a player who was hot-headed early and rebuilt himself is a real career, not a fantasy).
+
+  **What it would be.** A small persisted bonus that sits ABOVE the rolled ceiling – the only thing
+  in the game that does – earned by sustained psychologist work rather than bought: while the seat is
+  hired on the nerve focus, composure keeps creeping after the ceiling is reached, slowly, to a hard
+  cap. Everything else about development is untouched: the ceiling still binds every other wing, and
+  a career with no psychologist sees exactly today's model.
+
+  ⚠⚠ **IT IS A SCHEMA MOVE, SO IT IS A v78 CUSTOMER** – this round's standing constraint forbids one
+  (v77 is wave 6's), and round 41 #22 is already first in that queue. The bonus has to persist: it is
+  earned over seasons and must survive a save, and it cannot be re-derived from anything the save
+  already holds (weeks hired are not enough – the focus can change).
+
+  **The three numbers, his to set** (architect's proposals in brackets):
+  1. **The cap** – how far above the ceiling nerve can ever go [**+5 points**, i.e. about a fifth of
+     the biggest draw the game deals, «не сильно» in his own words].
+  2. **The rate** – how long the work takes [**≈+1 point per season** of continuous work on the
+     focus, so the full +5 is a five-season project and nobody buys it in a wave].
+  3. **Whether it holds when the work stops** [**permanent once earned** – his Federer example is a
+     player who changed, not one who rented a mood; the alternative is a slow decay back to the
+     ceiling, which reads as «he was only ever managing it»].
+
+  ⭐ And one thing it buys beyond the wing: the radar finally shows something the player DID rather
+  than something the seed dealt – the first mark on that screen that is the parent's own work.
