@@ -71,7 +71,6 @@ import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
 import {
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   endCollegeEarly,

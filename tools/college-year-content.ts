@@ -25,7 +25,7 @@
 // ⚠ MEASUREMENT ONLY. Nothing under `src/` is touched and no save is written.
 import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import { pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { NATIONAL_TEAM } from '../src/engine/nationalTeam'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'

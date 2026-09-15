@@ -29,7 +29,7 @@
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
+import { pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
 import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 import { skillMeanOf } from '../src/engine/world/college'

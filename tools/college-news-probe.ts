@@ -19,7 +19,6 @@
 import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
 import {
-  chooseGift,
   closeTournament,
   collegeLeagueRevealOpen,
   pendingBirthday,

@@ -22,6 +22,7 @@ import { describe, expect, it } from 'vitest'
 import {
   BIRTHDAY_BANDS,
   BIRTHDAY_DAY_TOGETHER,
+  DAY_TOGETHER_FROM_AGE,
   SAVE_SCHEMA_VERSION,
   advanceWeeks,
   birthdayHeading,
@@ -85,15 +86,23 @@ describe('the birthday popup', () => {
     expect(world.week, 'time moves again').toBeGreaterThan(before)
   })
 
-  it('⚠ FOUR options, in a column, and one of them is always the day together', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #1 – «на 14 лет девочка просит "всего 1 день вместе", мне кажется это
+  // неуместно, надо тоже с 16 лет», ruled A («только с 16+»). The clause this case keeps is the
+  // SHAPE, which is what the spec's §4 actually owns: FOUR different options at every age, in a
+  // column, no short dialog anywhere. What moved is WHICH four – the day together joins the card at
+  // `DAY_TOGETHER_FROM_AGE` and below it the fourth row is one more material gift, so a fourteen
+  // year old is never written asking for a day of her parent's time.
+  it('⚠ FOUR options, in a column, and the day together is one of them from sixteen', () => {
     for (const age of [14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 28, 29, 34]) {
       const { options } = birthdayOffer('four-options', age)
       expect(options.length, `age ${age}`).toBe(4)
       expect(new Set(options.map((o) => o.id)).size, `age ${age}: four DIFFERENT options`).toBe(4)
       expect(
         options.some((o) => o.id === BIRTHDAY_DAY_TOGETHER.id),
-        `age ${age}: "just the day together" is always offered – it has to read as one of the good choices`,
-      ).toBe(true)
+        age >= DAY_TOGETHER_FROM_AGE
+          ? `age ${age}: "just the day together" is offered – it has to read as one of the good choices`
+          : `age ${age}: the day together is NOT on a young card – round 42 #1, his ruling`,
+      ).toBe(age >= DAY_TOGETHER_FROM_AGE)
     }
   })
 

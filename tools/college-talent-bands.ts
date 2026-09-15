@@ -39,7 +39,7 @@ import {
   median,
   type Preset,
 } from './econ-bench'
-import {answerFork, answerRetirement, chooseGift, kidAgeExact, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import {answerFork, answerRetirement, kidAgeExact, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { ceilingOf } from '../src/engine/academy'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
 // world/college.ts could stop importing the aggregate projection layer. Same function.

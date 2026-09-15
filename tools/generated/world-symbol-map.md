@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-499 exported names across 51 owning modules.
+500 exported names across 51 owning modules.
 
 ## Areas
 
@@ -22,9 +22,9 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
+| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 16 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
-| `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 15 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 14 |
@@ -334,6 +334,27 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
+### `src/engine/world/birthday.ts`
+
+HER BIRTHDAY, AND WHAT YOU GIVE HER.
+
+- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
+- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
+- `birthdayHeading` – `src/engine/world/birthday.ts`
+- `birthdayHistory` – `src/engine/world/birthday.ts`
+- `birthdayOffer` – `src/engine/world/birthday.ts`
+- `birthdayOfferFor` – `src/engine/world/birthday.ts`
+- `birthdayOptions` – `src/engine/world/birthday.ts`
+- `birthdayWords` – `src/engine/world/birthday.ts`
+- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
+- `chooseGift` – `src/engine/world/birthday.ts`
+- `collegeBirthdayIndexOf` – `src/engine/world/birthday.ts`
+- `DAY_TOGETHER_FROM_AGE` – `src/engine/world/birthday.ts`
+- `giftNoun` – `src/engine/world/birthday.ts`
+- `pendingBirthday` – `src/engine/world/birthday.ts`
+
 ### `src/engine/world/coachMarket.ts`
 
 THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does.
@@ -375,26 +396,6 @@ THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-te
 - `resolveMasseurReturn` – `src/engine/world/masseur.ts`
 - `setMasseurSessions` – `src/engine/world/masseur.ts`
 - `setMasseurTravels` – `src/engine/world/masseur.ts`
-
-### `src/engine/world/birthday.ts`
-
-HER BIRTHDAY, AND WHAT YOU GIVE HER.
-
-- `BIRTHDAY_BANDS` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_COLLEGE_BAND` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_DAY_TOGETHER` – `src/engine/world/birthday.ts`
-- `BIRTHDAY_TIME_TOGETHER` – `src/engine/world/birthday.ts`
-- `birthdayHeading` – `src/engine/world/birthday.ts`
-- `birthdayHistory` – `src/engine/world/birthday.ts`
-- `birthdayOffer` – `src/engine/world/birthday.ts`
-- `birthdayOfferFor` – `src/engine/world/birthday.ts`
-- `birthdayOptions` – `src/engine/world/birthday.ts`
-- `birthdayWords` – `src/engine/world/birthday.ts`
-- `buildBirthdayPrompt` – `src/engine/world/birthday.ts`
-- `chooseGift` – `src/engine/world/birthday.ts`
-- `collegeBirthdayIndexOf` – `src/engine/world/birthday.ts`
-- `giftNoun` – `src/engine/world/birthday.ts`
-- `pendingBirthday` – `src/engine/world/birthday.ts`
 
 ### `src/engine/world/endings.ts`
 

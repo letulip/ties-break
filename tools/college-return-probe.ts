@@ -21,7 +21,7 @@
 // ⚠ MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
 import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import { pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { COLLEGE_TIER_ORDER, canAfford } from '../src/engine/collegeOffer'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
