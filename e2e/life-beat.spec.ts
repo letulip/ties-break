@@ -195,10 +195,15 @@ test.describe('the life beat at the college fork', () => {
     await expect(page.getByRole('dialog', FORK_CARD)).toHaveCount(0)
 
     // =============================================================================================
-    // 4. HE ANSWERS HER – one press, across the worker boundary
+    // 4. HE ANSWERS HER – select, then Proceed, across the worker boundary
     // =============================================================================================
+    // ⚠ ROUND 42 #8 re-aimed this press: the radio only SELECTS now, and the Proceed it reveals is
+    // what records («выбор + proceed», the owner's ruling after his double-tap answered a beat
+    // before he could read it).
     await herCard.getByRole('radio', { name: HIS_ANSWERS[0], exact: true }).click()
-    await expect(herCard, 'her card stayed up after an answer was pressed').toHaveCount(0)
+    await expect(herCard, 'a selection alone must not close her card').toBeVisible()
+    await herCard.getByRole('button', { name: 'Proceed', exact: true }).click()
+    await expect(herCard, 'her card stayed up after the answer was recorded').toHaveCount(0)
 
     // =============================================================================================
     // 5. AND THE FORK IS NOW ANSWERABLE – the same snapshot that cleared her row raises it

@@ -14,6 +14,13 @@
 // claim this file actually makes about copy is the one in «the dialog owns no sentence» – that the
 // rendered text is EXACTLY what the prompt handed over, whatever that turns out to say.
 //
+// ⚠⚠ ROUND 42 #8 RE-AIMED FOUR CASES IN THIS FILE (select + Proceed, the owner's own ask after his
+// double-tap answered a beat unread): «a press sends», «the press marks», «a double-tap sends ONE»
+// and the no-follow-up detour case all encoded the single-tap contract and now assert the two-tap
+// one. Each re-aimed case carries its own ⚠ note; the arm ledger below predates the re-aim and is
+// kept as the historical record it is – the new pattern's own arms live in
+// round42-select-confirm.test.ts.
+//
 // ⚠⚠ EVERY MUTATION ARM IS WRITTEN DOWN – this wave's standing duty (§6, «the masseur's eight arms,
 // eight catches»). Each was really run against the real component, watched going red, and put back;
 // the count in brackets is how many of the 22 cases that one mutation took, because a mutation that
@@ -95,6 +102,9 @@ const BEAT: LifeBeatPrompt = {
     said: 'FIXTURE continuation, standing in for more of her once he stays quiet.',
     done: 'FIXTURE let her finish',
   },
+  // ⭐⭐ ROUND 42 #8 – the confirm control's label, a fixture like every string above: the component
+  // must print the PROMPT's word on the Proceed, never one of its own.
+  confirm: 'FIXTURE proceed',
 }
 
 /** ⭐ THE TOO-TALL VARIANT, and it is the mutation the round-20 law asks for. A beat is copy, and
@@ -342,7 +352,11 @@ describe('LifeBeatDialog – she said something, and he answers', () => {
   // ===============================================================================================
   // THE PRESS
   // ===============================================================================================
-  it('a press sends the option id and nothing else', async () => {
+  // ⚠ RE-AIMED BY ROUND 42 #8 (select + Proceed): this case used to assert the FIRST tap dispatched
+  // the answer, which is exactly the single-tap contract the owner's double-tap fell into. The claim
+  // it keeps is unchanged – ONE command, carrying the option id and nothing else – and the taps that
+  // produce it are now two: the radio selects, the Proceed records.
+  it('a press SELECTS and does not dispatch; the Proceed sends the option id and nothing else', async () => {
     // Intercept the STORE action rather than the worker: that is the seam this component owns.
     const store = useGameStore()
     store.snapshot = snapshotWith(BEAT)
@@ -352,17 +366,24 @@ describe('LifeBeatDialog – she said something, and he answers', () => {
       await Promise.resolve()
     }
     const w = mount(LifeBeatDialog, { global: { stubs: { teleport: true } } })
+    expect(w.find('.life-beat-proceed').exists(), 'no way on before a selection – nothing to confirm yet').toBe(false)
     await w.findAll('button.life-beat-choice')[1].trigger('click')
-    expect(sent).toEqual([BEAT.options[1].id])
+    expect(sent, 'the first tap recorded NOTHING – it is a selection').toEqual([])
+    const proceed = w.find('.life-beat-proceed')
+    expect(proceed.exists(), 'the way on appeared under the answered group').toBe(true)
+    expect(proceed.text(), 'and its word is the PROMPT\'s – this dialog owns no sentence').toBe(BEAT.confirm)
+    await proceed.trigger('click')
+    expect(sent, 'the Proceed is the one control that records').toEqual([BEAT.options[1].id])
     w.unmount()
   })
 
-  it('⭐ the press marks the answer while it is in flight, and releases it if it did not land', async () => {
-    // The mark exists because the press round-trips through the worker: without it the tap that
-    // stops the week looks like it did nothing. ⚠ AND IT IS RELEASED rather than latched – a refused
-    // command leaves the prompt standing, and a card still asking may not claim a decision the world
-    // never took. Mutation-verified by binding `:aria-checked` to `undefined` (the in-flight arm goes
-    // red) and by dropping the `if (prompt.value) chosen.value = null` line (the release arm does).
+  // ⚠ RE-AIMED BY ROUND 42 #8: the mark used to be an IN-FLIGHT claim (set with the dispatch,
+  // released when the command did not land, because a card still asking could not keep claiming a
+  // decision). Under select+Proceed the mark is the SELECTION – the player's own UI state, honest
+  // while the card is still asking – so it appears with no command at all, and it now STAYS through
+  // a refused send: what he selected is exactly what a retry wants standing. The in-flight lockout
+  // moved to the Proceed press.
+  it('⭐ selecting marks with no command; the Proceed locks the card in flight; a refused send keeps the selection', async () => {
     const store = useGameStore()
     store.snapshot = snapshotWith(BEAT)
     let release: () => void = () => {}
@@ -371,30 +392,29 @@ describe('LifeBeatDialog – she said something, and he answers', () => {
 
     const rows = () => w.findAll('button.life-beat-choice')
     await rows()[0].trigger('click')
-    expect(rows()[0].attributes('aria-checked'), 'his answer, while the worker has it').toBe('true')
+    expect(rows()[0].attributes('aria-checked'), 'his selection, marked at once').toBe('true')
     expect(rows()[1].attributes('aria-checked'), 'and only his').toBe('false')
-    for (const b of rows()) expect(b.attributes('disabled'), 'nothing else can be pressed').toBeDefined()
+    for (const b of rows()) expect(b.attributes('disabled'), 'a selection locks nothing – he can re-choose').toBeUndefined()
+
+    await w.find('.life-beat-proceed').trigger('click')
+    for (const b of rows()) expect(b.attributes('disabled'), 'in flight, nothing else can be pressed').toBeDefined()
+    expect(w.find('.life-beat-proceed').attributes('disabled'), 'the Proceed itself included').toBeDefined()
 
     release()
     await nextTick()
     await nextTick()
     // The prompt is still up (the stub changed no snapshot), so the answer did not take.
-    expect(rows()[0].attributes('aria-checked'), 'released – the card is still asking').toBe('false')
+    expect(rows()[0].attributes('aria-checked'), 'the selection stands for the retry').toBe('true')
     for (const b of rows()) expect(b.attributes('disabled')).toBeUndefined()
+    expect(w.find('.life-beat-proceed').attributes('disabled'), 'and the Proceed is live again').toBeUndefined()
     w.unmount()
   })
 
-  it('⚠ a double-tap sends ONE answer – the second press in the same tick is dropped', async () => {
-    // `answerLifeBeat` throws on a beat that is already answered, so without the guard a fast second
-    // press surfaces an error toast for a decision that actually succeeded.
-    //
-    // ⚠⚠ BOTH CLICKS ARE DISPATCHED IN ONE TICK, AND THAT IS WHAT MAKES THIS A TEST OF THE GUARD.
-    // `sending` is set synchronously but the `disabled` attribute is patched on the next tick, so a
-    // real double-tap arrives at a button the DOM still thinks is live – and `if (busy.value)
-    // return` is the only thing that stops the second. Written with `trigger('click')` and an await
-    // between the two, this case passed with the guard DELETED (measured), because
-    // `DOMWrapper.trigger` returns early on a disabled element: the awaited version was asserting
-    // the `:disabled` binding a case above it already owns.
+  // ⚠⚠ RE-AIMED BY ROUND 42 #8 – AND THIS IS THE OWNER'S OWN DEFECT CASE («мой второй автоклик
+  // выбрал какой-то пункт»). It used to assert a double-tap sent ONE answer; under select+Proceed a
+  // double-tap on the answers sends NONE – the whole point of the pattern – and the in-flight guard
+  // this case used to exercise now lives on the Proceed, where it is exercised the same way.
+  it('⚠ a double-tap on the answers records NOTHING, and a double-tap on the Proceed records ONCE', async () => {
     const store = useGameStore()
     store.snapshot = snapshotWith(BEAT)
     const sent: string[] = []
@@ -405,10 +425,23 @@ describe('LifeBeatDialog – she said something, and he answers', () => {
     }
     const w = mount(LifeBeatDialog, { global: { stubs: { teleport: true } } })
     const rows = w.findAll('button.life-beat-choice')
+    // The owner's double-tap, byte for byte: two clicks in one tick, before the DOM can patch.
     rows[0].element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     rows[1].element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     await nextTick()
-    expect(sent, 'the second press in the same tick is not a second answer').toEqual([BEAT.options[0].id])
+    expect(sent, 'a double-tap answered her before he could read').toEqual([])
+    expect(rows[1].attributes('aria-checked'), 'the second tap is just the later selection').toBe('true')
+
+    // ⚠⚠ BOTH PROCEED CLICKS IN ONE TICK, for the reason the old case recorded: `sending` is set
+    // synchronously but `disabled` is patched on the next tick, so a real double-tap arrives at a
+    // button the DOM still thinks is live – `if (busy.value) return` in `confirm()` is the only
+    // thing that stops the second. (`answerLifeBeat` throws on an answered beat, so without it a
+    // fast second press surfaces an error toast for a decision that actually succeeded.)
+    const proceed = w.find('.life-beat-proceed')
+    proceed.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    proceed.element.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    await nextTick()
+    expect(sent, 'the second Proceed press in the same tick is not a second answer').toEqual([BEAT.options[1].id])
     release()
     w.unmount()
   })
@@ -620,13 +653,20 @@ describe('LifeBeatDialog – the listening detour', () => {
     w.unmount()
   })
 
-  it('⚠ a beat with NO follow-up records on the first tap – the flat home\'s silence stays silent', async () => {
+  // ⚠ RE-AIMED BY ROUND 42 #8: this option used to record on its first tap where the prompt carried
+  // no follow-up (the flat home). «Select never dispatches» now binds EVERY option of every beat –
+  // the flat pool's silence still stays silent (no continuation panel appears), it just takes the
+  // same select+Proceed as its siblings.
+  it('⚠ a beat with NO follow-up: the option is an ordinary radio – select, Proceed, recorded', async () => {
     const w = mountDialog({ ...BEAT, listenFollowUp: null })
     const store = useGameStore()
     const sent: string[] = []
     store.answerLifeBeat = async (optionId: string) => { sent.push(optionId) }
     await pressListen(w)
-    expect(sent, 'the old contract, untouched where she has nothing more').toEqual(['say-nothing'])
+    expect(sent, 'the first tap records nothing here either').toEqual([])
+    expect(w.find('.life-beat-continued').exists(), 'and no continuation appears – she has nothing more').toBe(false)
+    await w.find('.life-beat-proceed').trigger('click')
+    expect(sent, 'the Proceed records the silence').toEqual(['say-nothing'])
     w.unmount()
   })
 

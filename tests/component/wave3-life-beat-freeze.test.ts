@@ -297,9 +297,14 @@ describe('⭐⭐⭐ T2 – the college freeze no longer swallows a life beat', (
     expect(w.findComponent(LifeBeatDialog).exists(), 'her card is up before it is answered').toBe(true)
 
     // ⚠ THE FIRST ANSWER AND NOT THE LAST: the third option is «listen», which opens the listening
-    // detour (a second tap answers it). The first is a one-press answer, which is what this case is
-    // about – the fit case above measures the last CONTROL, which is a different question.
+    // detour (a second tap answers it). The first is a plain answer – the fit case above measures
+    // the last CONTROL, which is a different question.
+    // ⚠ RE-AIMED BY ROUND 42 #8 (select + Proceed): the tap used to record on its own; it is a
+    // selection now, and the Proceed under the group is what reaches `answerLifeBeat`.
     await w.findAll('.life-beat-choice')[0].trigger('click')
+    await flushPromises()
+    expect(pendingLifeBeat(world), 'the selection alone recorded nothing').not.toBeNull()
+    await w.find('.life-beat-proceed').trigger('click')
     await flushPromises()
 
     expect(pendingLifeBeat(world), 'the engine recorded it – nothing is still waiting').toBeNull()

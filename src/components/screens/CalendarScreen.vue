@@ -81,6 +81,9 @@ import { useWeekAction } from '../../composables/weekAction'
 // for (R2-11 / ARCH-06): the crossed/held counters, every timer, the cancel paths and the skip. What
 // is left here is the seven spans that draw it and the three getters the owner is wired to.
 import { useDayCrossSweep } from '../../composables/dayCrossSweep'
+// ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway guard and its one DRAFT line, shared with the shell
+// so the two projections of the week press cannot drift (see the composable's header).
+import { SOFT_LEAVE_LINE, useSoftLeaveGuard } from '../../composables/softLeave'
 import { weekDateLine, weekDayNumbers, weekLabel, weekRange } from '../../shared/dates'
 import { formatCents, entryFeeLabel } from '../../shared/money'
 // D4 (docs/specs/e2e-coverage.md §12): the ONE accessible name for an Enter, shared with Season.
@@ -311,12 +314,20 @@ const sweep = useDayCrossSweep({
 const { crossed, heldIndex, running, strokeMs, skippable } = sweep
 const skipSweep = sweep.skip
 
+// ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway guard, asked HERE before the sweep ever starts,
+// because this screen's press runs the animation first and only then hands the press to the shell:
+// a refusal after the strokes would leave a fully crossed-out grid over a week that never moved.
+// Same module state the shell's `playWeek` asks, so the ask is one per week however the press
+// arrives; the line renders in this screen's own note slot below. Nothing here advances anything.
+const softLeave = useSoftLeaveGuard()
+
 // --- (e) THE MAIN ACTION ------------------------------------------------------------------------
 /** Hand the press to the sweep, which hands it to the shell – after the strokes, or straight away
  *  when there is no sweep to run (off, reduced motion, or a week another surface owns). Nothing about
  *  what a press COSTS lives on this screen. */
 function runWeek(): void {
   if (action.value.disabled || running.value) return
+  if (!softLeave.pass()) return
   sweep.play()
 }
 /** The shell asked for the week to be played here: take the flag off it and run the sweep. See the
@@ -521,6 +532,11 @@ const showGo = computed(() => !game.snapshot?.pending)
           <!-- A SKIP NOBODY IS TOLD ABOUT IS NOT A SKIP. The hint takes the same slot the blocked
                reason does, and the two can never collide: a blocked button cannot start a sweep. -->
           <p v-if="skippable" class="cal-go-note cal-go-skip">Tap anywhere to skip</p>
+          <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, in this screen's own note slot.
+               The line is the shared DRAFT constant; the second press of the same button leaves.
+               Above the blocked reason in the chain because the ask is the fact the press just
+               made, and a blocked button could not have consumed the ask at all. -->
+          <p v-else-if="softLeave.asking.value" class="cal-go-note">{{ SOFT_LEAVE_LINE }}</p>
           <!-- R10-16's doctrine: a disabled control says why, on screen, rather than being dead. -->
           <p v-else-if="action.blockedNote" class="cal-go-note">{{ action.blockedNote }}</p>
           <PrimaryPill

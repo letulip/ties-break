@@ -118,11 +118,16 @@ export function onScreenWeek(week: number): RegExp {
  *
  * `Rest it` and not `Train through it`: resting writes its own diary line ("Resting the hip - a week
  * off the training court"), which is what week-advance.spec.ts follows across the worker boundary.
+ *
+ * ⚠ ROUND 42 #8 – the branches are RADIOS that only select now, and the Proceed under them is what
+ * records (the owner's «выбор + proceed» ruling; KnockDialog.vue's own header carries it). So the
+ * doorway takes two clicks: mark the branch, then the Proceed the selection reveals.
  */
 export async function answerOpeningKnock(page: Page): Promise<void> {
-  const rest = page.getByRole('button', { name: /^Rest it/ })
+  const rest = page.getByRole('radio', { name: /^Rest it/ })
   if (await rest.isVisible().catch(() => false)) {
     await rest.click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Proceed', exact: true }).click()
     // The click is an RPC to the worker; the bar re-enabling is the answer coming back. Web-first,
     // so this is the wait - there is no sleep anywhere in this directory.
     await expect(weekButton(page)).toBeEnabled()

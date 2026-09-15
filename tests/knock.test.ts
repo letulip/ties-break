@@ -759,9 +759,18 @@ describe('W4 — the copy is the parent and the coach, and it carries no numbers
     // question, so a way out that is not an answer would strand the career.
     expect(markup).not.toContain('click.self')
     expect(markup).not.toMatch(/>\s*Continue\s*</)
-    expect(dialog).toContain("decide('rest')")
-    expect(dialog).toContain("decide('push')")
-    // ...and the copy is the ENGINE's, so it can be tested. The template owns the verbs and nothing else.
+    // ⚠ RE-AIMED BY ROUND 42 #8 («выбор + proceed», the owner's ruling): the two branches SELECT
+    // now and the Proceed under them is the one control that records – so the pins name the new
+    // pair. The claim of this case is unchanged: every control is an answer or the recording of
+    // one, and there is still no dismiss. The BEHAVIOUR (first tap records nothing, only the
+    // Proceed decides, mutation-proven) is the mounted net's:
+    // tests/component/round42-select-confirm.test.ts.
+    expect(dialog).toContain("select('rest')")
+    expect(dialog).toContain("select('push')")
+    expect(dialog).toContain('confirm()')
+    expect(dialog).toContain('game.decideKnock(choice)')
+    // ...and the copy is the ENGINE's, so it can be tested. The template owns the verbs, the
+    // Proceed word (the prologue's own shipped confirm vocabulary) and nothing else.
     expect(dialog).toContain('prompt.restCost')
     expect(dialog).toContain('prompt.pushCost')
     // The MARKUP carries no Cyrillic and no em dash - the house rule. A `//` line above it is not

@@ -1074,7 +1074,13 @@ describe('the days cross themselves out', () => {
   it('SKIPPABLE: a tap anywhere ends it at once, and the hint says so', () => {
     expect(screen).toContain('skipSweep')
     const skip = region(sweepSrc, 'function skipSweep(): void {', '\n  /** Is there anything left')
-    expect(skip).toContain('if (!running.value) return') // an ordinary tap costs nothing
+    // ⚠ RE-AIMED BY ROUND 42 #17(b): the guard reads `skippable` now, not `running` alone.
+    // `running` stays true from the last stroke until the new snapshot lands, and in that gap the
+    // old guard let a tap hand the press to the shell a SECOND time – the owner's measured double
+    // week. The claim of this line is unchanged (an ordinary tap costs nothing); the BEHAVIOUR is
+    // owned by the mounted net (tests/component/calendar-sweep.test.ts, the post-sweep-window case,
+    // mutation-proven against exactly the old guard).
+    expect(skip).toContain('if (!skippable.value) return') // an ordinary tap costs nothing
     expect(skip).toContain('finishSweep()')
     expect(skip).toContain('crossed.value = options.week()?.days.length ?? 0')
     expect(template).toContain('Tap anywhere to skip')

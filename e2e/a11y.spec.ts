@@ -173,6 +173,10 @@ interface Overlay {
   blocks: string | null
   /** Does Escape close it? Transcribed from the component's own argument, per the note above. */
   escapeCloses: boolean
+  /** ⚠ ROUND 42 #8 – the SELECTION a two-tap card needs before its way out exists. The knock and
+   *  the life beat answer by «выбор + proceed» now: the radio marks, and only then is there a
+   *  Proceed to press. Absent on every one-tap card. */
+  select?: (page: Page) => Locator
   /** The control that answers it – how the card is closed when Escape is not a way out. */
   dismiss: (page: Page) => Locator
 }
@@ -195,12 +199,15 @@ const OVERLAYS: Record<string, Overlay> = {
     },
     // Its two answers, which are its contract: «there is no third button and no way out that is not
     // a choice». A heading would be the body part, which is the fixture's, not the dialog's.
-    arrived: (page) => page.getByRole('button', { name: /^Rest it/ }),
+    // ⚠ ROUND 42 #8 – the answers are RADIOS that only select now, and the Proceed the selection
+    // reveals is what records (KnockDialog.vue's own header). `select` marks, `dismiss` closes.
+    arrived: (page) => page.getByRole('radio', { name: /^Rest it/ }),
     card: (page) => page.getByRole('dialog').first(),
     region: '[role="dialog"]',
     blocks: 'knock',
     escapeCloses: false,
-    dismiss: (page) => page.getByRole('button', { name: /^Rest it/ }),
+    select: (page) => page.getByRole('radio', { name: /^Rest it/ }),
+    dismiss: (page) => page.getByRole('dialog').getByRole('button', { name: 'Proceed', exact: true }),
   },
 
   // ⭐⭐ THE LIFE BEAT – v73's blocking card, and the SECOND of `advanceRefusal`'s eight states this
@@ -227,11 +234,13 @@ const OVERLAYS: Record<string, Overlay> = {
     escapeCloses: false,
     // ⚠ `radio`, NOT `button` – round 40's conventions: these controls SELECT, so the card draws
     // real radios in a real radiogroup and `getByRole('button')` finds none of them.
-    // ⚠ 10.09 – NOT the listening answer: that one takes TWO taps by the owner's editorial ruling
-    // (she talks, then «let her finish» records it), and the two-tap way out has its own case in
-    // e2e/life-beat.spec.ts. This flow asserts the one-tap contract, so it presses an answer that
-    // still closes in one.
-    dismiss: (page) => page.getByRole('radio', { name: 'Tell her we are behind her', exact: true }),
+    // ⚠ ROUND 42 #8 – and selecting is ALL a radio does now, on every beat kind: the answer records
+    // on the Proceed the selection reveals («выбор + proceed», the owner's ruling). The listening
+    // detour keeps its own separate two-step (she talks, then «let her finish» records) and has its
+    // own case in e2e/life-beat.spec.ts; this flow takes a plain answer's two taps.
+    select: (page) => page.getByRole('radio', { name: 'Tell her we are behind her', exact: true }),
+    dismiss: (page) =>
+      page.getByRole('dialog', { name: /^School is over, and / }).getByRole('button', { name: 'Proceed', exact: true }),
   },
 
   // ⭐⭐ THE TOUR BRIEFING – the card that shipped the career-stopping defect of round 20 #3, and the
@@ -313,8 +322,16 @@ test.describe('the overlays hold the keyboard', () => {
       // 1. FOCUS IS INSIDE. `dialogFocus.ts` moves it to the first control, or to the card itself.
       //    Asked as containment rather than "which element", because which one is the composable's
       //    business and a test that pinned it would break on a re-ordered card.
+      //
+      //    ⚠⚠ RE-AIMED BY ROUND 42 #8, AND THE OLD FORM WAS NOT ASKING WHAT IT SAID. `card.locator
+      //    (':focus')` searches the card's DESCENDANTS – the card itself can never match it – so the
+      //    comment above claimed containment while the assertion silently required focus to be on a
+      //    CONTROL. The moment the decision dialogs stopped opening on an answer («вот не надо нам
+      //    там фокус») both went red for the contract they were built to keep. `:scope:focus` is the
+      //    card-itself arm; the claim is unchanged and now really is containment.
+      const focusHeld = card.locator(':scope:focus, :focus')
       await expect(
-        card.locator(':focus'),
+        focusHeld,
         `${name}: nothing inside the card has focus, so the keyboard is still on the page behind it`,
       ).toHaveCount(1)
 
@@ -324,7 +341,7 @@ test.describe('the overlays hold the keyboard', () => {
       for (let i = 0; i < 10; i++) {
         await page.keyboard.press('Tab')
         await expect(
-          card.locator(':focus'),
+          focusHeld,
           `${name}: Tab press ${i + 1} left the card – the keyboard is behind a modal it cannot see`,
         ).toHaveCount(1)
       }
@@ -332,7 +349,7 @@ test.describe('the overlays hold the keyboard', () => {
       for (let i = 0; i < 3; i++) {
         await page.keyboard.press('Shift+Tab')
         await expect(
-          card.locator(':focus'),
+          focusHeld,
           `${name}: Shift+Tab press ${i + 1} left the card`,
         ).toHaveCount(1)
       }
@@ -349,6 +366,8 @@ test.describe('the overlays hold the keyboard', () => {
           `${name}: Escape closed a card whose every way out is meant to be an answer. ` +
             'See the component\'s own note before changing this expectation – it is a product ruling.',
         ).toBeVisible()
+        // ROUND 42 #8 – a two-tap card selects first; only then does its way out exist.
+        if (overlay.select) await overlay.select(page).click()
         await overlay.dismiss(page).click()
         await expect(card, `${name}: the documented control did not close the card`).toHaveCount(0)
       }

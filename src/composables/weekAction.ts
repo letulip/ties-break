@@ -138,6 +138,26 @@ export function useWeekAction(): ComputedRef<WeekAction> {
         multi: null,
       }
     }
+    // ⭐⭐ ROUND 42 #20 – AND THE UNANSWERED BLOCKING LIFE BEAT, on the knock's own contract. The
+    // engine has refused the tick since v73 (`advanceRefusal` returns 'life', multiWeek.ts) and the
+    // dialog covers the screen - but «the dialog is on top» is cover, not an answer (this file's own
+    // header), and the owner asked for the button itself to tell the truth: «надо ещё кнопку proceed
+    // дизаблить, пока не поговорили». Deliberately AFTER the knock's branch, matching the engine's
+    // own refusal order (knock before life). ⚠ SOFT beats are NOT here and must never be:
+    // `snapshot.softBeat` stops nothing engine-side, and the ruled-B leave-anyway guard
+    // (composables/softLeave.ts) is that chip's whole surface - a disabled button would be the hard
+    // block the owner ruled against. The sentence is a DRAFT (round 42 #20 licenses it; recorded in
+    // the ledger), in the knock note's own register.
+    if (snap?.lifeBeatPrompt) {
+      return {
+        kind,
+        label,
+        mode: 'advance',
+        disabled: true,
+        blockedNote: 'She has something to say – nothing moves until you hear her out.',
+        multi: null,
+      }
+    }
     return {
       kind,
       label,

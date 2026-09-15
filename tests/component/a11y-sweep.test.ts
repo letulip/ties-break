@@ -169,9 +169,15 @@ describe('D1 - a modal says it is one, and holds the keyboard', () => {
     wrapper.unmount()
   })
 
-  it('focus lands INSIDE the dialog when it opens, and comes back when it closes', async () => {
-    // Somewhere to come back to - the app's own case is the week button, which is what had focus
-    // when the player pressed it.
+  // ⚠⚠ RE-AIMED BY ROUND 42 #8 AND #17(c). This case used to assert focus landed on the FIRST
+  // ANSWER («.knock-choice») and came back to the week button on close – and both halves were the
+  // measured defect, not the contract: a held Enter answered the knock on the keydown repeat
+  // («вот не надо нам там фокус»), and the hand-back re-fired the Proceed for a second week
+  // (#17's mechanism c). The claim this keeps is D1's real one – focus lands INSIDE the modal –
+  // and the two halves it re-aims are: inside means THE CARD, and close leaves the keyboard on the
+  // shell, not on the control whose press raised the dialog.
+  it('focus lands on the CARD when it opens – never an answer – and does NOT return to the week button', async () => {
+    // The app's own case: the week button is what had focus when the player pressed it.
     const opener = document.createElement('button')
     opener.textContent = 'Next week'
     document.body.appendChild(opener)
@@ -179,11 +185,15 @@ describe('D1 - a modal says it is one, and holds the keyboard', () => {
     expect(document.activeElement).toBe(opener)
 
     const wrapper = mountKnock()
-    const inside = wrapper.find('.knock-choice').element
-    expect(document.activeElement, 'the dialog opened behind the page it is blocking').toBe(inside)
+    const card = wrapper.find('[role="dialog"]').element
+    expect(document.activeElement, 'the dialog opened behind the page it is blocking').toBe(card)
+    expect(
+      (document.activeElement as HTMLElement).closest('button'),
+      'an arriving keypress must press nothing – focus is not on any control',
+    ).toBeNull()
 
     wrapper.unmount()
-    expect(document.activeElement, 'the keyboard was left on the element the dialog replaced').toBe(opener)
+    expect(document.activeElement, 'a held Enter must not re-fire the week button').not.toBe(opener)
     opener.remove()
   })
 

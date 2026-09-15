@@ -130,6 +130,12 @@ export interface LifeBeatPrompt {
    *  continuation, `done` is the label of the one control that then records `listen` – both
    *  engine-assembled, because this dialog owns no sentence. */
   listenFollowUp: { optionId: string; said: string; done: string } | null
+  /** ⭐⭐ ROUND 42 #8 – THE CONFIRM CONTROL'S LABEL (owner: «надо Proceed добавить», quoted in
+   *  docs/rounds/round-42.md). The answers became radios that only SELECT – his double-tap picked an
+   *  option before he could read – and this is the word on the one control that then dispatches.
+   *  ENGINE-assembled like every other word on the card, because the dialog owns no sentence; the
+   *  word itself is the prologue's own shipped confirm vocabulary (`WALK_COPY.proceed`, round 41 #9). */
+  confirm: string
 }
 
 /** One thing the parent may say back. `id` is what `answerLifeBeat` records, and the engine

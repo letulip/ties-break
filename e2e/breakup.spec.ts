@@ -273,8 +273,10 @@ test.describe('the week it ends', () => {
     // costs this step nothing: `answerLifeBeat` moves BOND and never spirit (the wave-4 brief calls a
     // spirit delta in that function a red flag in as many words), so the word below is the shock and
     // nothing else.
+    // ⚠ ROUND 42 #8 – select, then the Proceed the selection reveals («выбор + proceed»).
     await card.getByRole('radio', { name: HIS_ANSWER, exact: true }).click()
-    await expect(card, 'her card stayed up after an answer was pressed').toHaveCount(0)
+    await card.getByRole('button', { name: 'Proceed', exact: true }).click()
+    await expect(card, 'her card stayed up after the answer was recorded').toHaveCount(0)
 
     // ...and now the story behind it can be left, which is the same door the trial click could not
     // reach one assertion ago. That is the blocking claim seen from the other side.
@@ -381,7 +383,9 @@ test.describe('the week it ends', () => {
 
     // HE ANSWERS, AND THE WEEK MOVES ON – the same four answers, the same feed line, on the other
     // register of the same piece of news.
+    // ⚠ ROUND 42 #8 – the same two taps here.
     await card.getByRole('radio', { name: HIS_ANSWER, exact: true }).click()
+    await card.getByRole('button', { name: 'Proceed', exact: true }).click()
     await expect(card).toHaveCount(0)
     // The week's story is what the press landed on; `Proceed to Home` is the product's own door back
     // to the hub, and the News is where the answer is read back (the first test's own note).

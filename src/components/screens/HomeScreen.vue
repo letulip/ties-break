@@ -2379,6 +2379,24 @@ async function leaveCollege(): Promise<void> {
   font-family: var(--font-body);
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease;
+  /* ⭐⭐ ROUND 42 #20 (ruled B) – THE CHIP EARNS ATTENTION: a gentle contour pulse, the owner's own
+     ask («надо как-то к самой плашке внимание привлекать, она сейчас максимально незаметная» and
+     «сделать плавно пульсирующей по контуру», item 8). ONLY the border tint moves – border-color
+     costs no layout and no paint outside the card's own edge, so nothing under the finger shifts.
+     `--accent-soft` and not `--accent`: an invitation, not an alarm. The killswitch below keeps the
+     house reduced-motion policy and swaps the pulse for a STEADY soft-accent edge, so the chip is
+     still findable by a player who asked the system for less motion. */
+  animation: soft-beat-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes soft-beat-pulse {
+  0%,
+  100% {
+    border-color: var(--card-edge);
+  }
+  50% {
+    border-color: var(--accent-soft);
+  }
 }
 
 .soft-beat-card:hover:not(:disabled),
@@ -2399,6 +2417,10 @@ async function leaveCollege(): Promise<void> {
   .soft-beat-card:focus-visible {
     transition: none;
     transform: none;
+    /* ROUND 42 #20 – the pulse stands down with the rest of the motion; the attention the owner
+       asked for survives as a steady soft-accent contour rather than disappearing with it. */
+    animation: none;
+    border-color: var(--accent-soft);
   }
 }
 

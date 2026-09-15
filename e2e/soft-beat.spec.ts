@@ -197,6 +197,22 @@ test.describe('the tier-1 soft surface', () => {
     // week opens its own story by itself, so the first thing across the boundary is a NAVIGATION the
     // app performed, and `Proceed to Home` is the only door back. Measured the first time this spec
     // ran: without the walk it asserted about a hub the player was no longer on.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #20 (ruled B, 15.09), AND THE RE-AIM IS THE RULING ITSELF. «Надо ещё
+    // кнопку proceed дизаблить, пока не поговорили» was answered B and not A precisely so this
+    // case's claim could survive: a soft row still stops nothing, it costs ONE honest tap. So the
+    // first press asks one line and spends no week, and the second press is the press this case has
+    // always made. (The sentence is declared once, in composables/softLeave.ts, and matched here on
+    // a fragment rather than pinned – the copy is the owner's to move.)
+    await weekButton(page).click()
+    const leaveAsk = page.locator('.next-week-note')
+    await expect(leaveAsk, 'the ruled-B guard did not ask before her week was spent').toBeVisible()
+    await expect(leaveAsk).toHaveText(/leave anyway/i)
+    await expect(
+      page.getByText(onScreenWeek(facts.week)),
+      'the first press spent the week instead of asking – the guard is not on this surface',
+    ).toBeVisible()
+
     await weekButton(page).click()
     await expect(page.getByRole('region', { name: /^Week story/ })).toBeVisible()
     await expect(
@@ -298,12 +314,15 @@ test.describe('the tier-1 soft surface', () => {
     // 4. HE ANSWERS HER, AND THE ROW IS WRITTEN – one press, across the worker boundary
     // =============================================================================================
     //
-    // ⚠ THE FIRST TAP IS THE ANSWER HERE, and that is a per-kind fact rather than an oversight: the
-    // listening detour belongs to the fork's beat, whose `listenFollowUp` carries her continuation.
-    // Tier 1 has none (`lifeBeatListenFollowUp` returns null for `'small-talk'`), so there are three
-    // answers and no fourth control – which the count above has just said.
+    // ⚠ ROUND 42 #8 re-aimed this press (it used to record on the first tap): the radio only
+    // SELECTS now, on every beat kind, small talk included – the ruling's own words – and the
+    // Proceed the selection reveals is what records. The listening detour still belongs to the
+    // fork's beat alone (`lifeBeatListenFollowUp` returns null for `'small-talk'`), so there are
+    // three answers and no fourth control on arrival – which the count above has just said.
     await dialog.getByRole('radio', { name: HIS_ANSWERS[0], exact: true }).click()
-    await expect(dialog, 'her card stayed up after an answer was pressed').toHaveCount(0)
+    await expect(dialog, 'a selection alone must not close her card').toBeVisible()
+    await dialog.getByRole('button', { name: 'Proceed', exact: true }).click()
+    await expect(dialog, 'her card stayed up after the answer was recorded').toHaveCount(0)
 
     // AND THE INVITATION IS GONE WITH IT. This is the assertion that says the row was ANSWERED in the
     // world rather than the dialog merely closed: the card is drawn from `snapshot.softBeat`, which

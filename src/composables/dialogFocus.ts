@@ -41,6 +41,27 @@ function focus(el: HTMLElement | null | undefined): void {
   el?.focus({ preventScroll: true })
 }
 
+/** ⭐⭐ ROUND 42 #8 / #17(c) – the two decisions a DECISION dialog makes differently from a report.
+ *
+ *  `focusOn: 'card'` – focus lands on the card itself (`tabindex="-1"`, named by `aria-labelledby`),
+ *  never on the first answer control. The owner's word: «вот не надо нам там фокус» – his held Enter
+ *  answered a life beat before he could read it, because the first focusable was an answer button
+ *  and a button activates on the keydown repeat. The default stays `'first'`: on a report (Continue)
+ *  or a confirm (Cancel first) the first control commits nothing, and landing on it is the shell's
+ *  own convention.
+ *
+ *  `restore: false` – on close, focus is NOT handed back to the element the dialog replaced. The
+ *  app's own case is the week button: the press that advances the week is what raised the dialog, so
+ *  «back where it came from» is BACK ON PROCEED – and an Enter still held from answering the dialog
+ *  re-fires it, which is one of round 42 #17's three measured double-advance mechanisms. Unmounting
+ *  leaves focus to fall to the shell (`document.body`), where a held key presses nothing. The
+ *  default stays `true`: a dialog OPENED from its own trigger (help, confirm) hands the keyboard
+ *  back to that trigger, which is the ARIA pattern and re-fires nothing that moves time. */
+export interface DialogFocusOptions {
+  focusOn?: 'first' | 'card'
+  restore?: boolean
+}
+
 /**
  * Make `root` a modal dialog's keyboard box for as long as the calling component is mounted.
  *
@@ -50,8 +71,10 @@ function focus(el: HTMLElement | null | undefined): void {
  *                 has no way out that is not an answer (its own header argues that at length), so it
  *                 passes nothing; the wrap-up already closes on a backdrop click, and Escape is the
  *                 keyboard's spelling of that same gesture.
+ * @param options  see `DialogFocusOptions` – both fields defaulted to the shell's own convention, so
+ *                 every existing caller asks exactly the question it always asked.
  */
-export function useDialogFocus(root: Ref<HTMLElement | null>, onEscape?: () => void): void {
+export function useDialogFocus(root: Ref<HTMLElement | null>, onEscape?: () => void, options?: DialogFocusOptions): void {
   let returnTo: HTMLElement | null = null
 
   function onKeydown(event: KeyboardEvent): void {
@@ -98,12 +121,17 @@ export function useDialogFocus(root: Ref<HTMLElement | null>, onEscape?: () => v
     // Capture, on the document: the dialog's own listener would never fire on the one press this
     // guard exists for - the Tab that happens while focus has already escaped the card.
     document.addEventListener('keydown', onKeydown, true)
-    focus(focusables(el)[0] ?? el)
+    // ROUND 42 #8 – 'card' lands on the dialog itself (announced through its `aria-labelledby`),
+    // so an arriving keypress presses nothing; Tab still reaches every control from there.
+    focus(options?.focusOn === 'card' ? el : (focusables(el)[0] ?? el))
   })
 
   onBeforeUnmount(() => {
     if (typeof document === 'undefined') return
     document.removeEventListener('keydown', onKeydown, true)
+    // ROUND 42 #17(c) – a dialog that was raised OVER the week press opts out of the hand-back:
+    // returning focus to Proceed re-fires a held Enter, which was a measured double-advance.
+    if (options?.restore === false) return
     // `isConnected` because the thing that opened the dialog may not have survived it - the week
     // button is re-rendered by every snapshot, and focusing a detached node silently sends focus to
     // <body>, which is where it would have gone anyway.

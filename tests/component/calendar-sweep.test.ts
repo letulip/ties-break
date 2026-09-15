@@ -27,12 +27,18 @@ import { calendarWeekFor } from '../../src/composables/weekDays'
 import { DAY_CROSS_PACE, dayCrossPace, dayCrossSchedule } from '../../src/composables/dayCross'
 import type { Snapshot } from '../../src/shared/protocol'
 
-/** A career on `seed`, ticked `weeks` weeks. The walk is the real engine – nothing here is a stub. */
+/** A career on `seed`, ticked `weeks` weeks. The walk is the real engine – nothing here is a stub.
+ *
+ *  ⚠ ROUND 42 #20 – THE SOFT CHIP IS CLEARED OFF THE FIXTURE, deliberately. The leave-anyway guard
+ *  consumes the FIRST press of the calendar CTA while a soft visit is live, and BEAT_WEEK's real
+ *  snapshot carries one – so without this line the beat-hold case pressed Go and measured the ASK
+ *  instead of the sweep. This file is about the sweep alone; the guard's own behaviour (first press
+ *  asks, second leaves, on this same CTA) is round42-soft-guard.test.ts's subject. */
 function snapshotAt(weeks: number, seed: string): Snapshot {
   const world = createWorld(seed)
   const rng = rngFromSeed(world.seed)
   for (let i = 0; i < weeks; i++) tickWeek(world, rng)
-  return toSnapshot(world)
+  return { ...toSnapshot(world), softBeat: null }
 }
 
 /** ⚠ THE WEEKS ARE CHOSEN, NOT ASSUMED, and the fixture test below proves each choice. Week 3 of this
@@ -302,9 +308,11 @@ describe('the day-cross sweep – the cancel paths, which is the half that can h
     expect(vi.getTimerCount()).toBe(0)
   })
 
-  // ⚠ MUTATION ARM: remove `if (!running.value) return` from `skipSweep` and the first case goes red
-  // (the opening press cancels its own sweep and the week is spent instantly, 5ms after the press –
-  // the measured bug the capture listener exists for).
+  // ⚠ MUTATION ARM: remove the `if (!skippable.value) return` guard from `skipSweep` and the first
+  // case goes red (the opening press cancels its own sweep and the week is spent instantly, 5ms
+  // after the press – the measured bug the capture listener exists for). ⚠ ROUND 42 #17(b) sharpened
+  // that guard from `!running` to `!skippable`; the claim of THIS case is untouched, and the claim
+  // the sharpening exists for has its own case below («the gap after the last stroke»).
   it('A TAP ANYWHERE SKIPS, and the press that STARTS the sweep is not one', async () => {
     const snap = snapshotAt(PLAIN_WEEK, SEED)
     const { plan } = plannedFor(snap)
@@ -342,6 +350,46 @@ describe('the day-cross sweep – the cancel paths, which is the half that can h
     await tick(plan.total * 2)
     expect(advancesEmitted(w), 'the cleared timers fired anyway').toBe(1)
     w.unmount()
+  })
+
+  // ⭐⭐⭐ ROUND 42 #17(b) – THE OWNER'S DOUBLE WEEK, STRONGEST MECHANISM. `running` stays true from
+  // the last stroke until the new snapshot lands – deliberately, so the strokes stay drawn – and in
+  // that gap the old `!running` guard let a shell tap fall straight through to `finishSweep` a
+  // SECOND time: `advance` re-emitted, and one press bought two weeks («иногда получается двойная
+  // перемотка недели вместо одинарной… не получается на турниры заходить вовремя»). The store here
+  // never lands a snapshot, so the gap is held open for as long as this case wants to prod it.
+  // ⚠ MUTATION ARM (run 15.09, red then restored): guard `skipSweep` on `!running.value` again and
+  // BOTH taps below re-emit – expected 1, got 2, twice. The natural-finish tap and the post-skip tap
+  // are separate arms because they arm the gap by different roads.
+  it('⭐⭐⭐ a tap in the gap AFTER the last stroke spends no second week – natural finish and skip both', async () => {
+    const snap = snapshotAt(PLAIN_WEEK, SEED)
+    const { plan } = plannedFor(snap)
+    useGameStore().snapshot = snap
+    const w = mountCalendar()
+    await pressGo(w)
+
+    // Arm 1: the sweep runs to its natural end...
+    await tick(plan.total)
+    expect(advancesEmitted(w), 'the sweep finished and spent the week once').toBe(1)
+    expect(crossedCount(w), 'the strokes stay drawn while the snapshot is awaited').toBe(7)
+    // ...and a tap in the gap – the owner reaching for the tournament – is NOT a second advance.
+    await w.find('.cal').trigger('click')
+    await nextTick()
+    expect(advancesEmitted(w), 'a tap in the post-sweep window spent a second week').toBe(1)
+
+    w.unmount()
+
+    // Arm 2: the gap opened by a SKIP instead of the clock.
+    const w2 = mountCalendar()
+    await pressGo(w2)
+    await tick(plan.at[1])
+    await w2.find('.cal').trigger('click') // the skip – strikes everything, hands the press over
+    await nextTick()
+    expect(advancesEmitted(w2)).toBe(1)
+    await w2.find('.cal').trigger('click') // and the tap after it, in the same gap
+    await nextTick()
+    expect(advancesEmitted(w2), 'a tap after a skip spent a second week').toBe(1)
+    w2.unmount()
   })
 
   it('a second press cannot start a second sweep on top of a running one', async () => {

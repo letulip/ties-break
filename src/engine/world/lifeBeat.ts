@@ -711,6 +711,15 @@ const HER_CONTINUATION: Record<Temperament, Record<ForkWant, string>> = {
  *  a fourth radio. */
 const LISTEN_DONE_LABEL = 'Let her finish'
 
+/** ⭐⭐ ROUND 42 #8 – THE CONFIRM CONTROL under the answers, now that they only SELECT (owner:
+ *  «Надо сделать как на прологе "выбор + proceed"»). DRAFT under invariant 4, and the word is the
+ *  prologue's own shipped confirm vocabulary (`WALK_COPY.proceed`, round 41 #9: «наша желтая кнопка
+ *  proceed») rather than a new coinage – one word, no punctuation, the way on off a card whose
+ *  question is answered. ⚠ ONE STRING FOR EVERY BEAT KIND, small talk included, for the reason
+ *  `WALK_COPY.proceed` gives: a per-kind confirm would be more drafts for the owner to read and more
+ *  places for the same button to drift apart. */
+const CONFIRM_LABEL = 'Proceed'
+
 /** ⭐⭐ THE FLAT POOL – what a `strained` or `cold` home sounds like on the biggest question of her
  *  life (voice bibles §B). One to four words, the parent's own sentence carrying the rest, and no
  *  feature of any of the four voices surviving.
@@ -2560,6 +2569,10 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
     options: lifeBeatOptionsFor(row.kind, wants, read).map((o) => ({ id: o.id, label: o.label })),
     listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
+    // ⭐⭐ ROUND 42 #8 – the confirm control's word, engine-assembled like every other word on the
+    // card. One constant, both entrances (the blocking prompt and the soft invite ride this same
+    // assembler), so the two cards cannot drift apart.
+    confirm: CONFIRM_LABEL,
   }
 }
 

@@ -2260,6 +2260,29 @@ button.primary.risky {
   z-index: 39;
 }
 
+/* ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, floated just above the bar. The visual
+   vocabulary is `.cal-go-note`'s (CalendarScreen.vue), which is the app's established «one line
+   beside the week button» surface – same pill radius, same warning hairline, same 11.5px. Absolute
+   against the bar's own fixed box so the two buttons never move under the finger (no layout shift),
+   and `pointer-events: none` so the press that answers the ask is the same press the bar already
+   takes. */
+.next-week-note {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: calc(100% - 32px);
+  margin: 0;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  border: var(--stroke-hair) solid var(--warning);
+  font-size: 11.5px;
+  color: var(--warning);
+  text-align: center;
+  pointer-events: none;
+}
+
 /* The export's CTA, verbatim: a lime pill, 14.5px/800 ink on lime, 12/26 padding, min-width 206px,
    and the lime glow under it. The same object as "+ Plan week" and "Start Match" in the mockups -
    one button shape for the whole app.
@@ -5488,11 +5511,17 @@ button.linkish:hover:not(:disabled) {
   flex-direction: column;
   gap: 8px;
 }
+/* ⭐⭐⭐ ROUND 42 #8 – THE BRANCH IS A RADIO NOW (select + Proceed, the prologue's round-41 #9 shape
+   on the owner's own ask: his fast taps were committing this card before he read it, item 27's
+   unremembered pushes included). The row gained the house selection mark: the ball sits left of the
+   verb/cost column - the same two declarations `.life-beat-mark` and `.prologue-mark` flip on the
+   same attribute. The verb-and-cost stack moved into `.knock-choice-text`; nothing about the two
+   sentences or their tokens changed. */
 .knock-choice {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: flex-start;
-  gap: 3px;
+  gap: 10px;
   width: 100%;
   padding: 11px 13px;
   text-align: left;
@@ -5502,10 +5531,62 @@ button.linkish:hover:not(:disabled) {
   color: var(--text);
   cursor: pointer;
 }
+.knock-choice-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
+}
+/* THE MARK IS THE BALL - the round-40 selection idiom, byte-for-byte `.life-beat-mark`'s box: the
+   empty ring is the control being findable at all, the filled state is the selection, `aria-hidden`
+   because the state is on the button. Both states share a border box, so nothing moves on a press. */
+.knock-mark {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  background: transparent;
+}
+.knock-choice[aria-checked='true'] .knock-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+/* THE STATE IS THE MARK AND THE EDGE, NEVER A FILL - `.life-beat-choice`'s own rule, kept so the
+   selected branch and the unselected one are read against the SAME ground (the push row keeps its
+   warning wash either way; a selection is the player's own act, not the game recommending). */
+.knock-choice[aria-checked='true'] {
+  border-color: var(--accent);
+}
 .knock-choice:hover:not(:disabled) {
   background: var(--accent-fill);
 }
 .knock-choice:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+/* ⭐ ROUND 42 #8 – THE PROCEED under the branches: the advance idiom (`--accent-wash` on
+   `--accent-soft` is what this app paints a way ON, round 40 #1), the same box metrics as the rows
+   above it, every colour a declared token with no fallback (round-17 #3). It records the selected
+   branch and is the card's last element while rendered - the phone-fit measurement reads the way
+   out off it. */
+.knock-proceed {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 13px;
+  text-align: center;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  background: var(--accent-wash);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.knock-proceed:disabled {
   opacity: 0.55;
   cursor: default;
 }

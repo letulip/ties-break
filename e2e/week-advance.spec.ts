@@ -37,8 +37,10 @@ test.describe('advancing a week', () => {
     // the same predicate; the UI's job is to make that refusal visible BEFORE the player presses
     // anything. So the claim here is not "a button is disabled" - a mounted test could say that from
     // a hand-written snapshot - it is that a real worker's real world state disabled it.
+    // ⚠ ROUND 42 #8: the two branches are RADIOS now (select + Proceed), so the canary asks by that
+    // role – a `button` locator would go red for the wrong reason.
     await expect(
-      page.getByRole('button', { name: /^Rest it/ }),
+      page.getByRole('radio', { name: /^Rest it/ }),
       `the '${profile.kidName}' fixture is expected to boot holding an open knock. If this is the ` +
         'only red test after a fixture regeneration, the new save no longer holds one: move this ' +
         'canary to a fixture that does, or teach tools/e2e-fixtures.ts to search for one.',
@@ -63,8 +65,10 @@ test.describe('advancing a week', () => {
     // and which part of her before the two costs are read out.
     await expect(knock).toHaveAccessibleName(/^(A knock|The same knock again) – W\d+ '\d{2} Her /)
 
-    // Answer it. The button re-enabling is the worker's reply, not a guess about one.
-    await page.getByRole('button', { name: /^Rest it/ }).click()
+    // Answer it – ROUND 42 #8's two taps: mark the branch, then the Proceed the selection reveals.
+    // The button re-enabling is the worker's reply, not a guess about one.
+    await page.getByRole('radio', { name: /^Rest it/ }).click()
+    await knock.getByRole('button', { name: 'Proceed', exact: true }).click()
     await expect(weekButton(page)).toBeEnabled()
 
     await weekButton(page).click()
@@ -236,9 +240,11 @@ test.describe('advancing a week', () => {
     // button to come back as its proof the worker replied - correct at boot, wrong here: the week
     // story has no week button, so the helper waited ten seconds for a control that is not on this
     // screen and failed on the wait rather than on the click. The proof here is the dialog leaving.
-    const knock = page.getByRole('button', { name: /^Rest it/ })
+    const knock = page.getByRole('radio', { name: /^Rest it/ })
     if (await knock.isVisible().catch(() => false)) {
+      // ROUND 42 #8's two taps: select, then the Proceed the selection reveals.
       await knock.click()
+      await page.getByRole('dialog').getByRole('button', { name: 'Proceed', exact: true }).click()
       await expect(page.getByRole('dialog')).toHaveCount(0)
     }
 
