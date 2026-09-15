@@ -5766,7 +5766,25 @@ export const ECONOMY = {
         // The engine makes that movement as of this item, so the second sentence is now a true
         // description of the thing rather than a promise about it.
         blurb: 'A slice of the whole market. It will have bad years – it has never had a bad decade.',
-        entryCents: 5_000_00,
+        // ⭐⭐⭐ ROUND 42 #13 – $5,000 → $1,000, AND THE REASON IS THAT NOTHING EVER DEFENDED THE
+        // $5,000. THE OWNER, 15.09: «в индексный фонд можно только от 5к зайти, мне кажется это
+        // необосновано.» He is right about the record: the deposit's own $1,000 carries an argument
+        // in this file («chosen so the dullest rung on the shelf quotes the roundest possible
+        // price»), and this number carried none at all – it arrived with §3a's liquidity ladder as
+        // a shape, not as a measurement, and no bench, spec or ruling has ever cited it.
+        //
+        // ⚠ ONE FLOOR FOR BOTH OPEN RUNGS NOW, which is what makes this a one-line change: the
+        // shelf's «ONE MINIMUM, NOT TWO» law (`world/shop.ts`) already holds a TOP-UP to the same
+        // floor as the opening stake, so top-ups drop to $1,000 with it and there is no second
+        // threshold anywhere to keep in step.
+        //
+        // ⚠ AND NOTHING ELSE MOVES, BECAUSE FRACTIONAL UNITS ARE ALREADY THE SYSTEM'S OWN
+        // ARITHMETIC. `buyAsset` divides cents by this week's unit price with no rounding and no
+        // floor (`units = paidCents / price`), which is round 30 #14's whole design – «доли дадут
+        // возможность расти на горизонте и будут давать разные точки входа». At `unitBaseCents
+        // 4_000_00` a $1,000 entry is 0.25 of a unit, and the screen already prints two decimals
+        // (`formatUnits`) precisely because a part unit is a real holding.
+        entryCents: 1_000_00,
         // ⭐⭐⭐ ROUND 29 PART THREE #16 – THE DRIFT, AND IT DID NOT MOVE.
         //
         // THE OWNER: «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых

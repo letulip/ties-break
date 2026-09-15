@@ -127,8 +127,17 @@ describe('the shelf itself', () => {
     expect(rows.filter((r) => r.retired).map((r) => r.id)).toEqual(['plane-long'])
     // §3a's two minimums and §3b's four prices are the spec's own numbers, quoted so a retune
     // has to come through this file.
+    // ⚠ RE-AIMED, ROUND 42 #13 – THE FUND READ `5_000_00` AND THIS PIN DID EXACTLY ITS JOB. «в
+    // индексный фонд можно только от 5к зайти, мне кажется это необосновано»: nothing in the file,
+    // the spec or the benches ever defended the $5,000 – it arrived with §3a's liquidity ladder as a
+    // shape – so the fund drops to the deposit's floor and the retune came through here, which is
+    // what «quoted so a retune has to come through this file» exists for.
+    // ⭐ IT STAYS A LITERAL, deliberately: this census is the one place the catalogue's numbers are
+    // checked against something that is not the catalogue. ⭐ And the two minimums are ONE number
+    // now, which is the item's own point – «one minimum, not two» (world/shop.ts) already holds a
+    // top-up to the opening stake's floor, so both open rungs state the same figure at every door.
     expect(shopItem('deposit')!.entryCents).toBe(1_000_00)
-    expect(shopItem('index-fund')!.entryCents).toBe(5_000_00)
+    expect(shopItem('index-fund')!.entryCents).toBe(1_000_00)
     expect(rows.filter((r) => r.family === 'car').map((r) => r.entryCents)).toEqual([
       60_000_00, 110_000_00, 190_000_00, 300_000_00,
     ])
@@ -307,7 +316,13 @@ describe('buying and selling', () => {
     buyAsset(world, 'car-good')
     expect(() => buyAsset(world, 'car-good')).toThrow('already owns')
     expect(() => buyAsset(world, 'no-such-thing')).toThrow('nothing like that')
-    expect(() => buyAsset(world, 'index-fund', 4_999_99)).toThrow('starts at')
+    // ⚠ RE-AIMED, ROUND 42 #13 – WAS THE LITERAL `4_999_99`, ONE CENT UNDER THE FUND'S OLD $5,000
+    // FLOOR. His «в индексный фонд можно только от 5к зайти, мне кажется это необосновано» moved the
+    // floor to $1,000, and a hard-coded cent under the OLD one is simply a legal stake now – the pin
+    // would have gone green on a refusal that never fired. The claim is «a stake under the minimum is
+    // refused», so it is asked one cent under whatever the minimum IS.
+    const fundFloor = shopItem('index-fund')!.entryCents
+    expect(() => buyAsset(world, 'index-fund', fundFloor - 1)).toThrow('starts at')
     world.fundsCents = 10_00
     expect(() => buyAsset(world, 'car-sensible')).toThrow('Not enough funds')
   })

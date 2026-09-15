@@ -479,6 +479,34 @@ export interface FinanceWindow {
   expenseCents: number
   /** income - expense (== the signed sum of byCategory) */
   netCents: number
+  /** ⭐⭐⭐ ROUND 42 #11 – WHAT THE COACH TOOK OFF THIS WINDOW'S TITLE AND FINAL CHEQUES, in cents.
+   *  The window-sized fold of `FinanceWeek.coachCut.cents`, and it inherits that memo's whole
+   *  contract word for word.
+   *
+   *  THE OWNER, 15.09: «не вижу отчислений тренеру за победы на w серии нигде… мы это сделали
+   *  вообще?» We did – 10% of a title cheque, 5% of a lost final, charged at `finalizeTournament`
+   *  since round 24 – and his own save carries the masseur's twin of it. What he could not do is SEE
+   *  it: the cents land as a `coaching` EXPENSE row, so on the Money screen they dissolve into the
+   *  Coaching category with no name on them at all. This field is the name.
+   *
+   *  ⚠⚠ A MEMO AND ALREADY INSIDE `byCategory.coaching`, `expenseCents` AND `netCents` – the exact
+   *  discipline `FinanceWeek.coachCut` is declared under, one interface up, and the exact reason a
+   *  screen may NAME this figure and may never add it to a column. A consumer that adds it has
+   *  charged the family twice for one cheque.
+   *
+   *  ⚠ NOT DERIVABLE FROM `byCategory.coaching` – that key also carries the weekly retainer, the
+   *  travel fare and the facility, so the share cannot be picked back out of it. It is summed from
+   *  the weeks that paid it, never reconstructed.
+   *
+   *  ⚠ 0 ON EVERY WINDOW THAT WON NOTHING, which is most of them: below a final the engine writes
+   *  no share at all, and the junior ladder pays no prize money to take a share of.
+   *
+   *  ⚠ DERIVED, NOT PERSISTED. `FinanceWindow` is folded fresh at snapshot time out of
+   *  `world.financeWeeks`, so this owes no migration, no golden fixture and no
+   *  `SAVE_SCHEMA_VERSION` move. ⚠ It can only see as far back as the ledger itself, which
+   *  `pruneFinanceWeeks` trims to a 60-week trailing window – wider than either window this screen
+   *  folds (12 weeks, and a season that starts at most 51 weeks back). */
+  coachCutCents: number
 }
 
 /** ONE week of the Home budget card's 12-week chart (epic/redesign-home): what came IN and what

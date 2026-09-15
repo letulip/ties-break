@@ -382,8 +382,13 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
   // so the sticker stays honest by construction rather than by restraint (#14's own lesson).
   const paidCents = item.stake === 'open' ? Math.floor(stakeCents ?? 0) : assetEntryPriceCents(world, item)
   // ⚠ ONE MINIMUM, NOT TWO. A top-up is held to the same floor as the opening stake because that
-  // floor is already the sentence on screen («How much, from $5,000») and a second, smaller
+  // floor is already the sentence on screen («How much, from $1,000») and a second, smaller
   // threshold would be a balance number no player could find and no screen states.
+  // ⚠ ROUND 42 #13 – THE QUOTED EXAMPLE USED TO READ «$5,000», which was the index fund's own floor
+  // until his «в индексный фонд можно только от 5к зайти, мне кажется это необосновано» dropped it
+  // to the deposit's $1,000. The LAW is untouched; only the example it quotes would have gone stale,
+  // and a comment quoting a sentence the screen no longer says is the drift this file keeps warning
+  // about. Both open rungs now state the same floor, which is the law's easiest possible case.
   if (item.stake === 'open' && paidCents < item.entryCents) {
     throw new Error(`That one starts at ${formatCents(item.entryCents)}`)
   }

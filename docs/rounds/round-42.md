@@ -290,7 +290,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   | note, at the cap | `Her share goes no higher.` | – |
   | note, with a brand | `… The same share comes off her brand's weekly income.` | – |
 
-- [ ] **11. «не вижу отчислений тренеру за победы на w серии нигде… мы это сделали вообще?»** –
+- [x] **11. «не вижу отчислений тренеру за победы на w серии нигде… мы это сделали вообще?»** –
   **answer + a small build.** It exists and fires: coach 10% of a TITLE cheque / 5% of a lost
   final, masseur 3%/1.5%, gross, pro track (W-series included – `w15.track === 'wta'`), charged at
   `finalizeTournament` (`economy.ts:1752-1755`, `world.ts:869-908`;
@@ -306,6 +306,38 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   half-match row) – so on most weeks there IS nothing to see, by our current design; whether the
   every-cheque arm comes is finding 3.1, decided under item 19.
 
+  ⭐ **BUILT 15.09 – THE FIGURE IS ON THE MONEY SCREEN, AND IT IS A MEMO RATHER THAN A ROW.** The
+  share was already a real `coaching` EXPENSE row written by `finalizeTournament`, so it was inside
+  the Coaching category, inside Spent and inside `careerTotals.spentCents` all along – what it had
+  nowhere was a NAME. Three files: `FinanceWindow` gained `coachCutCents` (the window-sized fold of
+  `FinanceWeek.coachCut.cents`, which the till has written since round 29 part two #13),
+  `financeWindow` sums it beside `byCategory` and never into it, and the Money screen prints one
+  line under the category column.
+
+  ⚠ **NOT A ROW IN THE SPEND COLUMN, AND THE WEEK RECAP ALREADY RULED THAT WAY** on the same figure:
+  «the coach's share IS a family expense … so it is already inside Spent above, and a fourth row
+  would make the column charge one cheque twice» (`WeekRecapCard.vue`). The Money list is that column
+  with percentages on it – a row there would double-count with a share-of-spend beside it – so the
+  line sits under the rows, beside the jitter note, and says where the cents already are. **DRAFT,
+  window-aware, verbatim – this is the line off a real W15 title in the browser, at the 12-week
+  window and then at the season one:**
+  `Coach's results share – $220 in the last 12 weeks, already inside Coaching above: 10% of a title
+  cheque, 5% of a lost final.` and `Coach's results share – $220 this season, already inside Coaching
+  above: 10% of a title cheque, 5% of a lost final.` Only the amount and the period vary; both
+  percentages come from `staffResultShareBps` and neither is typed.
+
+  ⚠ **SILENT ON A WINDOW THAT WON NOTHING**, which is most of them – the discipline every memo on
+  this screen already keeps. **A question for him:** that means the line is invisible exactly when he
+  goes looking after a quiet stretch. A `$0.00` row would always be there and would always be noise;
+  his call, one word.
+
+  Evidence: `tests/component/round42-coach-share-money.test.ts` – a REAL W15 title driven through
+  `finalizeTournament` (`team-share.test.ts`'s own `drivenFinish` harness), the named line carrying
+  `staffPrizeShareCents`' own cents, a lost-final arm at the half rate, two silent arms (a first-round
+  exit, a self-coached family), a no-double-count arm (the Spent cell is still the window's expense
+  total and the list gains no row), the window phrase following the switcher, and the four-width
+  sweep. Zero draws, zero schema: `FinanceWindow` is folded fresh at snapshot time.
+
 - [~] **12. «как часто вообще эти "she came by with something small" плашки появляются? что-то
   редко»** – **answered, with a proposal left on the table.** Design: weekly hazard by bond band –
   close 0.08, steady 0.04, strained/cold 0, cap 4/season, 3-week TTL (`economy.ts:4071-4097`). His
@@ -314,13 +346,41 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   the telegraph. If he wants more of her at good bonds: proposal `steady 0.04 → 0.06` (+50% on the
   middle band, deserts untouched) – his word; no change ships without it.
 
-- [ ] **13. «в индексный фонд можно только от 5к зайти, мне кажется это необосновано»** – **build.**
+- [x] **13. «в индексный фонд можно только от 5к зайти, мне кажется это необосновано»** – **build.**
   `entryCents 5_000_00` (`economy.ts:5745`) against the deposit's $1,000 (`:5689`), and no comment
   defends the 5k – the only nearby argument is the deposit's own. Fix: fund entry → **$1,000**
   (uniform with the deposit; the «one minimum, not two» law – `shop.ts:384-390` – keeps top-ups at
   the same floor, so top-ups drop to $1,000 with it). Note: at `unitBaseCents 4_000_00` a $1,000
   entry buys 0.25 units – fractional units are already the system's own arithmetic
   (`round30-fund-units`), nothing else moves.
+
+  ⭐ **BUILT 15.09 – ONE CONSTANT, AND THE «NOTHING ELSE MOVES» CLAIM WAS WALKED RATHER THAN
+  TRUSTED.** `entryCents 5_000_00 → 1_000_00` in `economy.ts`, with the argument written beside it:
+  the deposit's $1,000 carries a reason in this file («the roundest possible price») and the fund's
+  $5,000 never carried one – it arrived with §3a's liquidity ladder as a SHAPE, and no bench, spec or
+  ruling has ever cited the number.
+
+  **What was measured** (a throwaway probe against the real engine, seed `r42-13-probe`, deleted
+  after the run): the fund's `entryCents` and the deposit's are now the same 100000 cents; `$999.99`
+  is refused at the door with the engine's own sentence «That one starts at $1,000»; **$1,000 buys
+  0.2495 units** at that week's price ($4,009 – the unit rides the market, so 0.25 is the rounded
+  reading rather than the exact one) and the screen prints `0.25` through `formatUnits`' two
+  decimals; the row is `paidCents 100000 / valueCents 100000`, average unit $4,009. **Top-ups ride
+  the same floor**: a $1,000 top-up a year later is accepted (holding 0.49 units, two entries at two
+  prices – round 30 #14's whole point) and $999.99 is refused, so «one minimum, not two» holds at the
+  new number. `shopView` reads the sub-unit holding back without a special case (0.4911 units, avg
+  $4,072.46, $4,138.40 now). **A part sale out of a sub-unit holding works**: selling $400 of a
+  0.2495-unit row leaves 0.1497 units worth $600. The deposit is untouched (1 unit for $1,000).
+
+  Two pins re-aimed and one comment corrected: `shop.test.ts`'s catalogue census (kept a literal – it
+  is the one place the catalogue is checked against something that is not the catalogue) and its
+  under-the-minimum refusal (now `entryCents - 1`, because a hard-coded cent under the OLD floor is a
+  legal stake today and the pin would have gone green on a refusal that never fired); the two
+  `round34-money-shelf` pins that spelled `$5,000` now read the constant; `world/shop.ts`'s «one
+  minimum, not two» comment quoted «How much, from $5,000» as its example and would have been a
+  comment describing a sentence the screen no longer says. `the-shop-2026-08.md` §3a carries the
+  dated amendment. **⚠ No bench:** this is a door price, not a corridor – it changes no rate, no
+  draw and no valuation, and the probe above is the measurement the change actually has.
 
 - [?] **14. «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»** – **build, the
   residue of a half-shipped fix – flag the history honestly.** Round 23 #10 fixed domestic events;
@@ -676,7 +736,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   and the absence lines are untouched. Zero MAIN draws: `buildRadar` runs at snapshot time and the
   new arithmetic adds no stream.
 
-- [ ] **23. «в coaching budget я просил отражать всех активных специалистов… переименовать в Week
+- [x] **23. «в coaching budget я просил отражать всех активных специалистов… переименовать в Week
   budget или team budget»** – **build** (the audit shows the «all specialists» half was never a
   ledger item before – round-36-review #9 was the meter's four figures). `useCoachingBudget`
   reads ONLY the coach row (`coachingBudget.ts:42-53`); masseur/psychologist live elsewhere
@@ -685,6 +745,54 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   rename **«Team budget»** (his own proposed wording – DRAFT, the label is his at the gate).
   Evidence: mounted test – hire the masseur, the tile grows a row; the rename pinned off the
   constant.
+
+  ⭐ **BUILT 15.09 – THE TILE NAMES THE WHOLE TEAM, AND NOT ONE FIGURE OF THE METER MOVED.**
+  `useCoachingBudget` gained two things and changed none: `TEAM_BUDGET_LABEL` (the tile's name, read
+  by BOTH hosts so two spellings are impossible) and `seats` – every FILLED seat with its weekly
+  cost, gated on the same predicates the engine bills through (`coachId !== null`, `masseurHired`,
+  `psychologistHired`, the very flags `householdWeekly` charges on, so the tile and the household's
+  OUT figure cannot disagree about who is on the payroll). A fourth salaried seat joins the array and
+  both surfaces grow the row with no template edit – «the future seats for free», literally.
+
+  **DRAFTS, verbatim, and they are the only new words on the tile:** the title `Team budget`; the
+  seat names `Coach` · `Masseur` · `Psychologist` (the last two are `SupportStaffTab`'s own two names
+  for the two seats, unchanged); and each row's figure as `$343 /wk` – `/wk` being the suffix that
+  same tab already puts on these two salaries. **Nothing else on the tile moved a character:**
+  `/week free`, `committed` and `weekly cap` are untouched.
+
+  ⚠⚠ **THE ARITHMETIC IS DELIBERATELY UNTOUCHED, AND ROUND 28 #8's GUARD IS WHY.** `committedCents`
+  is still the COACH's roster row and `freeCents` is still `cap − coach`, because the cap is the very
+  denominator the ENGINE cuts every `overBudgetCents` from (`world/coachMarket.ts`) – a free figure
+  that subtracted the support staff would disagree with the over-budget flags on the cards directly
+  below it, which is this repo's most-repeated defect wearing a feature's clothes. Round 28 #8 ruled
+  the same question the same way and its guard still stands («the committed figure is still the
+  COACH's line and does not silently absorb the masseur»). **So the seats are a LISTING beside the
+  meter**, which is what this item asked for – ⚠ and it means a reader who adds the three seat
+  figures will not get the free figure. If he wants the budget to be spent against the whole payroll
+  that is a different item and it moves the engine's own affordability question with it: **his word,
+  and it is the one open question here.**
+
+  Evidence: `tests/component/round42-team-budget.test.ts` – hire the masseur and the market's meter
+  grows the row; hire both and the rail's shortcut grows both, with the figures rebuilt from
+  `masseurWeeklyCents` / `psychologistWeeklyCents` rather than read back off the component; the two
+  hosts print an identical list against one world; a self-coached family with no staff lists nothing;
+  both surfaces file the tile under the constant; and free is still `cap − coach` with a full payroll
+  on screen. `round36-rail-dashboard.test.ts`'s three «Coaching budget» pins re-aimed to the constant
+  – including §4, which is now the STRONGER claim the brief asked for: neither template spells the
+  name, they both read `TEAM_BUDGET_LABEL` (mutation-verified – re-typing the literal into either
+  template reddens it).
+
+  **The visual sweep (his standing rule of 14.09), in a real browser** – the components mounted
+  against a seeded fully-staffed career at 375 / 768 / 900 / 1280, measured with
+  `getBoundingClientRect` rather than by eye. The market meter's three seat rows: row width
+  309 / 683 / 815 / 1191 px, all three seats on ONE line at every width, slack 199–1171 px, and
+  `scrollWidth === clientWidth` at all four (no horizontal overflow). The Money screen's named line
+  sits inside the category column at every width (181×67 px at 375 – four lines in a 185 px column,
+  the same column the jitter note already wraps in – then 322×50, 454×34, 830×17). The tile reads
+  «Team budget» on the market meter and on the rail at every width. ⚠ **What the browser could NOT
+  measure:** the rail's 196 px strip needs the full desktop shell, so its seat rows were measured
+  instead with the repo's own `fits.ts` model – 170 px of room against ~60 px of demand, and the arm
+  is mutation-verified to redden («310px of a 170px row»).
 
 - [ ] **24. «Один и тот же диалог из раза в раз "I want to ask you something"»** – **build.**
   Confirmed: intros are a FIXED lookup – voice × subject × presence, one string per cell, zero

@@ -73,7 +73,7 @@ import { WEEK_PLAN_PRESETS, psychologistFocusNudge, type CoachMarketRow, type Co
 import { formatCents } from '../../shared/money'
 // ⭐ ROUND 36 PHASE 6 – the budget meter's own arithmetic, now shared with the rail's dashboard card.
 // See the note at its call site below for why it left this file.
-import { useCoachingBudget } from '../../composables/coachingBudget'
+import { TEAM_BUDGET_LABEL, useCoachingBudget } from '../../composables/coachingBudget'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
@@ -585,7 +585,12 @@ const current = computed<Row | null>(() => rows.value.find((r) => r.current) ?? 
 // This screen has already shipped that exact defect once – the note at `HouseholdStrip` below spells
 // it out – so the shortcut and the meter read one computed or they can disagree on screen, side by
 // side, on a desktop.
-const { committedCents, capCents, freeCents, meterPct } = useCoachingBudget()
+// ⭐⭐⭐ ROUND 42 #23 – AND THE FIFTH THING IT EXPOSES IS THE PAYROLL. «в coaching budget я просил
+// отражать всех активных специалистов… переименовать в Week budget или team budget» – the seats and
+// the name both come out of the composable, so the meter here and the rail's shortcut on every
+// desktop page say one thing. The arithmetic above is untouched; see the composable's header for why
+// the committed figure stays the coach's.
+const { committedCents, capCents, freeCents, meterPct, seats } = useCoachingBudget()
 
 /** ⭐ ROUND 29 #13 – WHAT A FINISH PAYS HIM, as a percentage, straight off the engine's own rule.
  *
@@ -737,7 +742,15 @@ function scrollToTier(tier: CoachTier): void {
     <!-- The budget meter: what she pays now, what a week brings in, and what is left. -->
     <section class="budget-meter">
       <div class="budget-top">
-        <span class="budget-label">Coaching budget</span>
+        <!-- ⭐⭐⭐ ROUND 42 #23 – «Team budget», HIS OWN PROPOSED WORDING, AND IT COMES OFF A
+             CONSTANT. His sentence is quoted in `composables/coachingBudget.ts`, where the house
+             fence allows it: no Cyrillic may appear inside a template, comments included
+             (tests/round13-nav.test.ts). The label is `TEAM_BUDGET_LABEL` rather than a literal
+             because the rail's shortcut prints the same tile on every desktop page, and two
+             spellings of one name is the drift this whole composable exists to make impossible.
+             ⚠ IT IS THE ONLY WORD ON THIS TILE THAT MOVED – invariant 4 binds the rest, so
+             `/week free`, `committed` and `weekly cap` are untouched to the character. -->
+        <span class="budget-label">{{ TEAM_BUDGET_LABEL }}</span>
         <span class="budget-free"
           ><strong>{{ formatCents(freeCents) }}</strong> /week free</span
         >
@@ -746,6 +759,20 @@ function scrollToTier(tier: CoachTier): void {
       <p class="budget-legend">
         <span class="legend-dot committed"></span>{{ formatCents(committedCents) }} committed
         <span class="legend-dot cap"></span>{{ formatCents(capCents) }} weekly cap
+      </p>
+
+      <!-- ⭐⭐ ROUND 42 #23's OTHER HALF – EVERY FILLED SEAT, WITH WHAT IT COSTS A WEEK. The tile
+           was about one of the family's three people; it now names all of them, and a fourth seat
+           added later joins the list without either surface being edited (`seats`).
+           ⚠ INFORMATION BESIDE THE METER, NOT A REWRITE OF IT. The legend above keeps the coaching
+           decision's own two figures for round 21 #12's reason and round 28 #8's standing guard –
+           the committed line is the COACH's and must not silently absorb the support staff, because
+           the cap it is drawn against is the engine's own over-budget denominator.
+           ⚠ `/wk` IS THE SUPPORT STAFF TAB'S OWN SUFFIX on these very two salaries, not a new
+           spelling of «a week». -->
+      <p v-for="seat in seats" :key="seat.key" class="budget-seat" :data-seat="seat.key">
+        <span class="seat-name">{{ seat.label }}</span>
+        <span class="seat-cost">{{ formatCents(seat.weeklyCents) }} /wk</span>
       </p>
 
       <!-- ⭐⭐ ROUND-28 #8 – AND THE WHOLE HOUSEHOLD UNDER IT. The meter above is the coaching

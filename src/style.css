@@ -4844,6 +4844,46 @@ tr.kid-row td {
   background: rgba(255, 255, 255, 0.28);
 }
 
+/* ⭐⭐ ROUND 42 #23 – THE PAYROLL, ONE ROW PER FILLED SEAT. «в coaching budget я просил отражать всех
+   активных специалистов»: the tile named one of the family's three people and now names all of them.
+
+   ⚠ GLOBAL FOR THE HOUSEHOLD STRIP'S OWN REASON, one block down: two surfaces draw this markup (the
+   Coaches tab's meter and the rail's shortcut on every desktop page), and the declarations are the
+   meter's own `.budget-*` family. Splitting one visual family across a sheet and an SFC is how two
+   copies drift apart.
+
+   ⚠ A NAME AND A FIGURE PUSHED APART, so the costs stack into a column a reader can add up by eye.
+   It holds inside the 196px rail strip because there is nothing to wrap: two short spans and no dot
+   to reserve room for – a seat is not a legend entry, which is also why it is its own class. */
+.budget-seat {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  margin: 5px 0 0;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--muted);
+}
+/* The FIRST seat carries the separation from the legend above it – the household strip's own idiom
+   one block down, for the same reason: the gap belongs to the group and not to every row in it.
+   ⚠ IT IS AN ADJACENT-SIBLING RULE AND NOT `:first-of-type`, because both surfaces draw the legend
+   as a `<p>` too – `:first-of-type` counts ELEMENTS, so it would have matched the legend and never a
+   seat, on either host. Written the other way once and caught by reading the DOM, not the CSS. */
+.budget-legend + .budget-seat {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+}
+.seat-name {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.seat-cost {
+  white-space: nowrap;
+}
+
 /* ⭐⭐ ROUND-28 #8 – the household strip. Three figures and a noun, so the parent can read the whole
    week (the masseur and the shelf included) without leaving the screen he is deciding on. It WRAPS:
    on a 375px phone the label takes its own line rather than squeezing the figures, which is the

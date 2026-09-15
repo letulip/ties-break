@@ -49,7 +49,10 @@
 import { computed, nextTick, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
-import { ECONOMY, kidPrizeShareBps, managerCommissionBps } from '../../engine/economy'
+// ⭐ ROUND 42 #11 – `staffResultShareBps` joins the same import, and for the reason round 29 #13
+// gave on the coaches page: the percentage a screen prints must be the one `finalizeTournament`
+// pays through, never a typed copy of it. See `coachShareNote` below.
+import { ECONOMY, kidPrizeShareBps, managerCommissionBps, staffResultShareBps } from '../../engine/economy'
 // ⚠ ROUND 41 P1 – TWO PURE LOOK-UPS AND NOTHING ELSE FROM THE COACH MODULE. `corridorBandFor` is
 // the single predicate that says where the wealth corridor stops, and `coachTierById` answers
 // «which rung is this id» off the roster literal without rebuilding a roster. The screen still
@@ -332,6 +335,51 @@ const trainingBillNote = computed<string | null>(() => {
 const incomeCents = computed(() => activeFinance.value?.incomeCents ?? 0)
 const spentCents = computed(() => activeFinance.value?.expenseCents ?? 0)
 const netCents = computed(() => activeFinance.value?.netCents ?? 0)
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #11 – THE COACH'S RESULT SHARE, NAMED ON THE SCREEN THAT COUNTS THE MONEY
+// =================================================================================================
+//
+// THE OWNER, 15.09: «не вижу отчислений тренеру за победы на w серии нигде… мы это сделали вообще?»
+//
+// ⚠ THE MECHANIC IS SOUND AND ONLY THE TELLING WAS MISSING – round 26 #5b's finding, one seat over.
+// `finalizeTournament` has charged the coach 10% of a title cheque and 5% of a lost final since
+// round 24, gross, on the pro track (the W-series included), and his own save's kept events carry
+// the masseur's twin of it. THREE things hid it from him, and only the third is ours: it pays on
+// titles and finals ALONE, so on most weeks there is nothing to see; the seat must be filled in the
+// title week; and on THIS screen the cents land in a plain `coaching` expense row and dissolve into
+// the Coaching category with no name on them anywhere.
+//
+// ⚠⚠ A MEMO AND NOT A ROW IN THE LIST, WHICH IS THE WEEK RECAP'S OWN RULING ON THE SAME FIGURE
+// (round 29 part two #13, WeekRecapCard.vue): «the coach's share IS a family expense – a real
+// `coaching` row written the same tick – so it is already inside Spent above, and a fourth row would
+// make the column charge one cheque twice.» The rows above are a SPEND COLUMN whose percentages add
+// to a hundred; a row for a figure already inside Coaching would be the double count with a
+// percentage beside it. So it goes where this screen already says things out loud about the rows –
+// under them, beside the jitter note – and the sentence states where the cents already are.
+//
+// ⚠ EVERY FIGURE IS THE ENGINE'S OWN, which is `trainingBillNote`'s rule and round 29 #13's binding
+// one: the cents are `FinanceWindow.coachCutCents`, folded from the very `coachShare` variable the
+// wallet was debited by, and the two percentages are `staffResultShareBps` – the same function
+// `finalizeTournament` pays through. A retune of `ECONOMY.staffShare` moves this line and the cheque
+// together, and no rate is written in this file.
+//
+// ⚠ SILENT ON A WINDOW THAT WON NOTHING, which is the discipline every memo on this screen and the
+// week recap already keep (the shelf line, the upkeep line, the businesses, her cut, his cut): below
+// a final the engine writes no share, so there is nothing to name. ⚠ It therefore cannot be the
+// place the RULE is learned – that sentence lives once, on the coaches page, where he asked for it
+// on 28.08 – and this is the FIGURE, on the screen where the money is counted.
+const coachShareCents = computed(() => activeFinance.value?.coachCutCents ?? 0)
+/** Which window the figure is for, in the switcher's own two words. ⚠ The switcher's labels are the
+ *  owner's (`This season` is invariant 4's own worked example), so the phrase is built from them
+ *  rather than from a third spelling of the same period. */
+const coachShareWindow = computed(() => (breakdownWindow.value === 'season' ? 'this season' : 'in the last 12 weeks'))
+const coachShareNote = computed<string | null>(() =>
+  coachShareCents.value > 0
+    ? `Coach's results share – ${formatCents(coachShareCents.value)} ${coachShareWindow.value}, already inside Coaching above: ` +
+      `${staffResultShareBps('coach', 0) / 100}% of a title cheque, ${staffResultShareBps('coach', 1) / 100}% of a lost final.`
+    : null,
+)
 
 // --- THE CATEGORY LIST -------------------------------------------------------------------------
 // Expense buckets in a fixed order. Positive (income) events never appear here - they roll into one
@@ -2031,6 +2079,16 @@ function shopRowCornerAction(row: ShopRowView): boolean {
             </template>
           </StatRow>
 
+          <!-- ⭐⭐ ROUND 42 #11 – THE COACH'S CUT, NAMED. His words are in the script block above
+               and in tests/component/round42-coach-share-money.test.ts, because no Cyrillic may
+               appear inside a template, comments included (tests/round13-nav.test.ts pins it).
+               ⚠ A MEMO AND NOT A ROW IN THE COLUMN ABOVE – the week recap's own ruling on this exact
+               figure: the cents are already a `coaching` expense, so a row would charge one cheque
+               twice and would carry a percentage of the spend beside it. The sentence says where the
+               money already is. ⚠ Both percentages come from `staffResultShareBps` through the
+               script; no rate is typed in this template. -->
+          <p v-if="coachShareNote" class="money-panel-note money-bill-note money-coach-share">{{ coachShareNote }}</p>
+
           <!-- The jitter, said out loud. It sits UNDER the rows it explains and above the CTA, so a
                reader who has just noticed that Coaching is not the number on the coach's card finds
                the reason in the next line rather than in a help screen. -->
@@ -3447,6 +3505,13 @@ function shopRowCornerAction(row: ShopRowView): boolean {
    room a Card would otherwise have given it. Nothing else about it differs. */
 .money-bill-note {
   margin: 14px 2px 0;
+}
+
+/* ⭐ ROUND 42 #11 – the coach's share and the jitter note are two asides about the SAME row, so they
+   read as a pair rather than as two separate paragraphs: same geometry, half the gap between them.
+   Nothing else about either differs. */
+.money-coach-share + .money-bill-note {
+  margin-top: 8px;
 }
 
 .money-panel .physio-toggle {

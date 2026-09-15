@@ -43,6 +43,9 @@ import SeasonScreen from '../../src/components/screens/SeasonScreen.vue'
 import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { careerSnapshot } from '../helpers/career'
+// ⭐ ROUND 42 #23 – the tile's name is a constant now, and the pins below ask it rather than
+// spelling «Coaching budget» or «Team budget» out. See the re-aim notes on the arms that use it.
+import { TEAM_BUDGET_LABEL } from '../../src/composables/coachingBudget'
 import { createWorld, enterEvent, toSnapshot } from '../../src/engine/world'
 import type { SeasonEvent } from '../../src/engine/season/types'
 import { formatCents } from '../../src/shared/money'
@@ -243,7 +246,13 @@ describe('round 36 phase 6 – each card prints what the screen it shortcuts to 
     home.unmount()
   })
 
-  it('⭐⭐ «Coaching budget» is the Coach Market meter\'s own free figure', async () => {
+  // ⚠ RE-AIMED, ROUND 42 #23 – the card's TITLE became «Team budget» on his «в coaching budget я
+  // просил отражать всех активных специалистов… переименовать в Week budget или team budget», and
+  // BOTH surfaces now read it off `TEAM_BUDGET_LABEL`. The claim below is untouched – the card
+  // prints the meter's own FREE figure, rebuilt from the snapshot – and the title assertion asks the
+  // constant instead of spelling either name out, so the next rename moves the app and the pin
+  // together rather than reddening this arm for telling the truth.
+  it('⭐⭐ the budget card is the Coach Market meter\'s own free figure', async () => {
     const snap = careerSnapshot(6, 'r36-dash-coach')
     const dash = mountDash(snap)
     const market = mount(CoachMarketScreen, { global: { stubs: { teleport: true } } })
@@ -268,7 +277,11 @@ describe('round 36 phase 6 – each card prints what the screen it shortcuts to 
       'the rail card and the budget meter disagree about what is free this week. They read one ' +
         'computed (`composables/coachingBudget.ts`) precisely so they cannot.',
     ).toBe(onMarket)
-    expect(title(dash)[1]).toBe('Coaching budget')
+    expect(title(dash)[1]).toBe(TEAM_BUDGET_LABEL)
+    // ⭐ ROUND 42 #23 – and the market's meter files the SAME tile under the same name, which is the
+    // whole point of the constant: two spellings of one tile is the drift this composable exists to
+    // make impossible, and the owner reads this word on every desktop page.
+    expect(market.find('.budget-label').text()).toBe(TEAM_BUDGET_LABEL)
     dash.unmount()
     market.unmount()
   })
@@ -303,9 +316,11 @@ describe('round 36 phase 6 – each card prints what the screen it shortcuts to 
     const dash = mountDash(snap)
     const season = mount(SeasonScreen, { global: { stubs: { teleport: true } } })
     expect(season.find('.entries-strip').exists(), 'the Season strip is silent').toBe(false)
+    // ⚠ RE-AIMED, ROUND 42 #23 – the second title is the constant now (see the arm above). The claim
+    // is the COUNT and the order, which is what this arm is for.
     expect(title(dash), 'so the rail draws two cards and not three').toEqual([
       'In the account',
-      'Coaching budget',
+      TEAM_BUDGET_LABEL,
     ])
     dash.unmount()
     season.unmount()
@@ -370,10 +385,24 @@ describe('round 36 phase 6 – no new strings beyond the three card titles', () 
       sfc('../../src/components/screens/MoneyScreen.vue'),
       'the Family Budget screen is where «in the account» is already said',
     ).toContain('in the account')
-    expect(
-      sfc('../../src/components/screens/CoachMarketScreen.vue'),
-      'the market\'s meter is where «Coaching budget» is already said',
-    ).toContain('Coaching budget')
+    // ⚠⚠ RE-AIMED, ROUND 42 #23, AND THE RE-AIM IS THE STRONGER CLAIM. The title was «Coaching
+    // budget» in both templates and this pin asked the market's `.vue` to still contain the literal.
+    // His rename («переименовать в Week budget или team budget») moved it to `TEAM_BUDGET_LABEL` in
+    // `composables/coachingBudget.ts`, so the honest form of «it is not a word invented for the
+    // rail» is now that NEITHER file spells it: they both read the one constant. That is exactly
+    // what the round-42 brief asked for – «the rename pinned off the constant rather than off a
+    // literal in the template» – and it is mutation-verified: re-typing the label into either
+    // template reddens this arm.
+    const market = sfc('../../src/components/screens/CoachMarketScreen.vue')
+    const rail = sfc('../../src/components/RailDashboard.vue')
+    expect(market, 'the market\'s meter stopped reading the shared label').toContain('TEAM_BUDGET_LABEL')
+    expect(rail, 'the rail stopped reading the shared label').toContain('TEAM_BUDGET_LABEL')
+    expect(market, 'the market re-typed the tile\'s name instead of reading it').not.toContain(
+      `>${TEAM_BUDGET_LABEL}<`,
+    )
+    expect(rail, 'the rail re-typed the tile\'s name instead of reading it').not.toContain(
+      `>${TEAM_BUDGET_LABEL}<`,
+    )
     expect(
       sfc('../../src/components/screens/SeasonScreen.vue'),
       'the Season strip is where «My entries» is already said',
