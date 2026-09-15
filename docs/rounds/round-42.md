@@ -1793,3 +1793,25 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
     the results channel not at all. Money anchor $50–80k/yr + full travel → $500 / $900 / $1,400 a
     week proposed, no results share. ⚠ It needs `sparringHired` / `sparringRung` persisted, so it is a
     THIRD v78 customer – or it waits for v79, and that is a scheduling call rather than a design one.
+
+---
+
+## ⭐⭐ THE REST OF THE ROUND, PLANNED (15.09, on his «можешь планировать работы дальше и отражать в доке»)
+
+One agent at a time, his standing «строго последовательно»; the architect gates each bundle with the
+full `npm run check` on a quiet machine, commits by FILE pathspec (never a folder – the hazard was
+earned again this round), and pushes. The round ends with its own PR through `/pull-request`.
+
+| bundle | items | why these together | blocked on |
+| --- | --- | --- | --- |
+| **9** (in flight) | 41 · 42 · 43 · 44 | one money surface: the split order, the budget meter, the cameo constants | – |
+| **10** | 18 · 37 · 39a | small surfaces, no engine: the psychologist picker's sub-lines, the personality tile in his new two-word form, the inbox saying what contract is running | 37's sixteen DRAFT lines are with him |
+| **11** | 7 | snapshot/ladder alone: the domestic track takes the professional window (52 weeks, best 6, crawling) – plus the Stats arm that dies with it and the rank-help copy re-draft | – |
+| **12** | **v78, three customers in ONE bump** – 35 (the psychologist past the ceiling) · round 41 #22 (the fund chart's purchase marks) · the sparring seat's two keys | a schema move is a three-part ritual and doing it once for three customers is the whole economy of it | – |
+| **13** | 19 | the elite tail re-priced against the research + the sparring seat built on v78's keys, with BOTH travel stances benched | 19's numbers are his off the table |
+| **14** | 15 · 24 | the small-talk exchange: reactions, continuations, opener variety | his read of the dialogue tables |
+| **15** | 34 · 38 · 40 | the last wave and the only one that moves match physics: the price of nerve, the time-to-ceiling spread, the junior years' sponsor money. Quiet machine, full re-measurement set | – |
+
+⚠ **What the PR will carry as NOT done**, unless he rules otherwise before it: 19's numbers if the
+bench lands late, and anything in bundle 15 the re-measurement refuses – a physics change that fails
+its own acceptance bench does not ship because the round is ending.

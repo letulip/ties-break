@@ -117,9 +117,27 @@ avoid.
   look like a first match back». Both his words, drafts.
 * **The money** (research anchor: $50–80k/yr + full travel): rungs **$500 / $900 / $1,400 a
   week** (proposals – a college hitter · a journeyman pro · a top-100's sparring partner), and
-  **he TRAVELS, always** – travelling is the job, so no travel switch and no remote mode; the
+  ~~**he TRAVELS, always** – travelling is the job, so no travel switch and no remote mode~~; the
   fare rides `staffSeatFareCents` asked once more (the round-22 rule: never a second travel
-  model). **No results share** – research and our union agree; `staffResultShareBps` stays
+  model).
+
+  ⭐⭐ **OVERRULED BY THE OWNER, 15.09.2026 – HE GETS THE SAME TRAVEL SWITCH AS EVERY OTHER SEAT.**
+  His words: «серьезно? даже выбора нет? а если семья в начале пути и на w15 не за что платить? мне
+  кажется это странно, тем более, что у остальных есть галочка "ездит"». He is right twice over.
+  ECONOMICALLY: a family on the w15 rungs cannot carry a second fare, and a seat that forces one is a
+  seat that career can never hire – which is not a design, it is an exclusion. AND IN THE FICTION: a
+  hitting partner at the home club is the ordinary shape of this job for a junior; the travelling
+  version is what a top-100 buys later. So the switch is the same `staffSeatFareCents` switch the
+  masseur already has, and it earns its keep rather than being symmetry for its own sake:
+
+  * **NOT travelling** – he covers the weeks she is at home, which is where most rust is made (an
+    off-season, a layoff, an empty stretch of calendar). Cheap, and it is the junior shape.
+  * **Travelling** – he covers the road weeks too, where a girl between matches at a two-week swing
+    otherwise goes cold. The expensive shape, and what the research's $50–80k + travel anchor prices.
+
+  ⚠ The rung multipliers above are therefore the CEILING of what he cuts, not a flat promise: a seat
+  that does not travel cannot cut the drift of a week it was not at. The bench measures BOTH stances
+  rather than one, and the owner's numbers land on that table. **No results share** – research and our union agree; `staffResultShareBps` stays
   `'coach' | 'masseur'`.
 * **The shape otherwise**: the masseur's twin – pro-career unlock (`activeLadderOf === 'wta'`,
   the ruled table's family), weekly salary in cents, suspend-not-cancel at college and family

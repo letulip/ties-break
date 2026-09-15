@@ -151,3 +151,47 @@ dials so one word from the owner moves either number without a new measurement.
 
 Actuation is proven per run by an absurd arm (`cooldownWeeks` 40): if its cadence does not collapse,
 the dial is not wired and the table is a null.
+
+---
+
+## 5. ⭐⭐⭐ ROUND 42 #43 – HIS RULING OFF THE TABLE ABOVE, AND WHAT IT MEASURES
+
+**15.09.2026. «сними потолок, а кулдаун давай 4».** The cap goes away entirely – the constant and its
+one reader in `cameoWillingWeeks` – and `cooldownWeeks` becomes 4. Nothing else on `ECONOMY.sponsor`
+moves: `rollChance`, the amounts, `runwayWeeks` 62 and `maxCoachTier` are untouched, and the need
+half of the gate is the same predicate it was.
+
+He was choosing off §3's own sweep, which had already priced both halves: `seasonCap` off returned
+the cut from −48% to −28%, and `cooldownWeeks: 4` put it at −40% *with* the cap still on.
+
+### 5.1 ⚠ THE PREDICTION, WRITTEN BEFORE THE ARM WAS RUN (invariant 5)
+
+The renewal model that hit on the cooldown in §3 is the model again: mean gap `1/p + cooldownWeeks`
+= 16.7 + 4 = **20.7 weeks** against the memoryless 16.7, so the rate ratio is 16.7 / 20.7 = **0.81**,
+i.e. **−19%** of the pre-wave money. §3's own cooldown-only arm measured −28% against a model −26%,
+so the measurement runs about 1.5 pp below the model and the honest band is **−19% to −22%**.
+
+| | predicted | measured | |
+| --- | --- | --- | --- |
+| Q1 cheques a season, working family | ≈ **1.24** (from 1.54 before; 1.11 at cooldown 6) | | |
+| Q2 dollars a season, working family | ≈ **$1,290**, i.e. −19% to −22% vs BEFORE | | |
+| Q3 mean gap between cheques | ≈ **16–17 weeks** (§3's pooled 12.4 plus the four-week floor) | | |
+| Q4 **P(gap ≤ 4 weeks)** | **2–4%** – and it is NOT zero: see 5.2 | | |
+| Q5 smallest measured gap | **exactly 4** – the floor is reached and never crossed | | |
+| Q6 fullest season any career takes | **4 or more somewhere in the corpus**, or the removed cap was decorative | | |
+
+### 5.2 ⚠⚠ THE FOUR-WEEK CADENCE IS STILL LEGAL, AND THAT IS THE HONEST SENTENCE
+
+His original complaint was «раз в 3-4 недели». A cooldown of **4** puts the floor of the gap at
+**exactly four weeks**, so:
+
+* one-, two- and three-week gaps are **structurally impossible** – that half of the complaint is gone
+  by construction and not by luck;
+* a **four-week gap is legal**, and the shop will produce one whenever its own die lands on the first
+  week the cooldown allows. At `rollChance` 0.06 that is 6% of willingness gaps by construction; the
+  measured share of *paid* gaps is lower because both ends need the family's gate open, and Q4 above
+  is the prediction of it.
+
+The instrument prints this as its own column (`P(gap=floor)`) rather than leaving it to be inferred.
+If the cadence still reads as too fast in play, `cooldownWeeks` is one constant and nothing else
+moves.
