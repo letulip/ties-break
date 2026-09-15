@@ -4903,8 +4903,25 @@ tr.kid-row td {
      where the mask was still ~43% opaque – a visible hard edge down his side. 104 (= 102px padding
      box) makes "the fade always finishes before the clip" true unconditionally. Measured rows with
      the engine's real load notes are 109-154px tall, so this binds on nothing that ships today; it
-     is the guarantee, not the layout. */
-  min-height: 104px;
+     is the guarantee, not the layout.
+
+     ⭐⭐ ROUND 42 #3 MOVES IT TO 168, AND THE GUARANTEE IS THE SAME SENTENCE READ AGAINST 96px AND
+     AGAINST THE HONEST MASTER. Two things changed under it. The strip is 96px now (see `.cm-art`),
+     and the ratio this floor is derived from is budget-2's 162/280 rather than the roster's 162/264
+     – 280 is the TALLER master, which makes it the NARROWEST picture for a given height, so it is
+     the worst case and the only honest one to bound with. 96 x 280/162 = 165.93px of padding box,
+     hence a 167.93px border box, and 168 is that rounded up ((168-2) x 162/280 = 96.04 >= 96).
+     ⚠ THE 162/264 FORM WAS THE DEBT ROUND 36's P2-7 NAMED AND LEFT STANDING – at the old 104px floor
+     budget-2's real worst case was 59.01px inside a 62px strip, which is the floor failing its own
+     promise by 3px. It is paid here because the floor had to move anyway.
+     ⚠ AND THIS ONE DOES BIND, ON EXACTLY ONE SHAPE OF CARD – which is the guarantee doing its job
+     rather than a cost. Measured in Chromium on the real market, the shortest ordinary padding box
+     anywhere is 149.17px, the all-on-one-line card at 900px wide, and this floor lifts it to 166.
+     Every other width is already past it (the phone's shortest card is 208.34px), and the market's
+     own list at 900 grows 2159px -> 2175px – 0.7%, because those short cards share a grid row with
+     taller ones. Below the floor the picture would be narrower than its window, which is the one
+     state that turns `object-fit: cover` into a VERTICAL crop; that is the thing being bought. */
+  min-height: 168px;
   margin-bottom: 8px;
   padding: 9px 12px 9px 0;
   overflow: hidden;
@@ -4953,7 +4970,11 @@ tr.kid-row td {
 
    ⚠ THIS IS A WINDOW, NOT A SCALE. The image keeps `height: 100%; width: auto` – the A2c/d ruling
    (whole frame on screen, no vertical crop) is untouched, and nothing here stretches a photograph of
-   a person. What widens is the CLIP: `.cm-art` is a 62px porthole onto a portrait that is
+   a person. (⚠ ROUND 42 #3 SPELLS THE SAME PROPERTY DIFFERENTLY: the image is `width: 100%` under an
+   `object-fit: cover` now, which on a box narrower than 162/280 scales by HEIGHT and spends every
+   overflowing pixel sideways – the identical clip, with a say in which slice survives. The sentence
+   above is the ruling; `.cm-art img` below is the proof that the new form keeps it.)
+   What widens is the CLIP: `.cm-art` is a 62px porthole onto a portrait that is
    height-driven at 162/264, so at this row's real height (168.86px measured in
    tests/component/coach-edge-card.test.ts) the picture is ~102px wide and 40 of those px were being
    thrown away. Opening the strip to 78px hands 16 of them back. The visible aspect goes 62:H -> 78:H,
@@ -4971,17 +4992,28 @@ tr.kid-row td {
    ⚠ WHY ONLY THE CURRENT ROW. Every other row is a shop window, and the anti-shopping rule of
    docs/specs/coach-match-edge.md §4 is that an unhired card must not be made more attractive than
    the one she has. A wider portrait on all sixteen would also cost 16px of text column on fifteen
-   rows nobody asked to narrow. */
+   rows nobody asked to narrow.
+
+   ⭐⭐ ROUND 42 #3 – 78/90/132 BECOME 112/124/196, AND THE PARAGRAPH ABOVE IS WHY IT HAD TO MOVE AT
+   ALL. The owner asked for every card's portrait to stop being cut (see `.cm-art` below), which
+   takes the shop window to 96px; §4's anti-shopping rule then says the coach she HAS cannot end up
+   with the narrower window, so the hired strip moves with it and keeps the +16px it has carried
+   since round 21. The ratio he asked for in his own words – «фото пропорционально шире … относительно
+   высоты» – is preserved: 112:H against 96:H is 17% wider on the same height, where 78:62 was 26%.
+   ⚠ AND ITS FLOOR MOVES WITH IT, exactly as this block's own rule says: 112 x 280/162 = 193.58px of
+   padding box, hence 195.58 of border box, and 196 is that rounded up ((196-2) x 162/280 = 112.24
+   >= 112). Measured in Chromium on the real market, the hired card is 197.52-272.69px tall across
+   375/768/900/1280, so this binds on nothing. Move the strip, move this. */
 .cm-row.current {
-  min-height: 132px;
+  min-height: 196px;
 }
 .cm-row.current .cm-art {
-  width: 78px;
+  width: 112px;
 }
 .cm-row.current .cm-body {
-  /* 78 (the strip) + the same 12 of air the ordinary row keeps. The pair is tied by a test, not by
+  /* 112 (the strip) + the same 12 of air the ordinary row keeps. The pair is tied by a test, not by
      this comment – see `.cm-body` below. */
-  margin-left: 90px;
+  margin-left: 124px;
 }
 /* Over budget or gated: dashed, dimmed, and the shortfall stated in money (never "expensive"). */
 .cm-row.blocked {
@@ -5037,32 +5069,107 @@ tr.kid-row td {
    transparent exactly at the clip line: nothing visible is cut, at any row height.
 
    Measured after the change, at 320px and 375px, on the hired card, an available card, a blocked
-   card and a one-line card: strip 62px on all eight, text at 74px, 12px of air on every one. */
+   card and a one-line card: strip 62px on all eight, text at 74px, 12px of air on every one.
+
+   ⭐⭐⭐ ROUND 42 #3 – 62 BECOMES 96, AND THE REASON IS THAT THE CARD GREW AND THE PORTHOLE DID NOT
+   (owner, 14.09: «верстка экрана тренеров немного сломалась: все картинки обрезаны сильно… надо
+   сделать шире», and on his second pass «портреты были хорошо сделаны до этого… либо чуть расширить,
+   а текст ужать, либо вернуть как было. И проверить на других экранах тоже»).
+
+   ⚠⚠ THE STRIP WAS NEVER THE THING THAT CHANGED – THE CARD WAS, AND THAT IS WHY THIS LOOKS LIKE A
+   REGRESSION NOBODY COMMITTED. 62 was sized in round 18 against a card whose picture was 57-75px
+   wide, so the porthole showed nearly the whole man and «портреты были хорошо сделаны». The picture
+   is height-driven, the card's height is its text, and the text has been growing ever since – the
+   fit pill, the two uplift figures, the rung line, the physio note. Measured in Chromium on the real
+   market with the app's own sheet and its own self-hosted type, the card's padding box at 375px is
+   208.34-238.52px, so the picture renders 120.54-146.36px wide: the 62px porthole was showing 42-48%
+   of it, and the mask reaches transparent at the clip, so the right half of even THAT was fading
+   out. His «половина головы не видна» is the literal arithmetic.
+
+   ⚠ 96 IS NOT A TASTE, IT IS THE HEAD'S OWN WIDTH PLUS SLACK. Measured off the sixteen masters on a
+   tenths grid, the head box (hair or cap through the far cheek) spans 8-62% of the picture's width.
+   At 375px that is a 65-79px head against a 62px porthole, which is why the other road his ruling
+   offered could not be taken: KEEPING 62 AND ONLY STEERING THE WINDOW IS ARITHMETICALLY IMPOSSIBLE –
+   no `object-position` fits a 79px head through a 62px window – and rendering it proves what the
+   sum says, the head jammed edge to edge with the mask eating its right third. So the road taken is
+   his first one, «чуть расширить, а текст ужать», and the number is the smallest one that holds the
+   whole head at every card the market draws with slack on BOTH sides.
+
+   ⚠ THE FEEDBACK LOOP IS REAL AND WAS MEASURED THROUGH, not argued around. Widening the strip
+   narrows `.cm-body`, which wraps a line, which makes the card taller, which makes the picture
+   wider – the loop this block's own paragraph above describes. It converges because the strip is
+   FIXED, so each step buys more than the line it costs, until a step buys a SECOND line and goes
+   backwards. Swept at 375px in Chromium; the two figures are how far inside the window the head's
+   left and right edges land on the worst of the sixteen cards, in px of the picture:
+
+       62 (today) +9.64 / -28.75      92 @15%  +2.87 / +4.79
+       84 @13%    +3.11 /  -3.45      96 @12%  +5.27 / +6.39
+       88 @14%    +2.95 /  +0.71     100 @17%  +1.28 / +4.39  <- a card grows two lines here
+
+   84 is eaten by the very line it adds; 100 is past the cliff. 96 is the first width where both
+   margins clear 5px, and it costs nothing over 92 – the market's list is 4610px at either.
+
+   ⚠ WHAT THE TEXT PAYS, SINCE IT IS THE HALF HE NAMED. At 375px the content column goes 257px ->
+   223px and the market's list 4386px -> 4610px (+5.1%). The four-width sweep is in the ≥768 block
+   at the foot of this file, where the numbers it supersedes live.
+
+   ⚠ NOTHING ABOUT THE A2c/d RULING IS SPENT – see `.cm-art img` below for why `object-fit: cover` on
+   this box is a HORIZONTAL clip and nothing else. */
 .cm-art {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 62px;
+  width: 96px;
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
   mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
 }
+/* ⭐⭐ ROUND 42 #3 – THE WINDOW IS AIMED AT THE FACE NOW, AND IT COSTS THE 28.07 RULING NOTHING.
+   `overflow: hidden` on the strip above always kept the LEFT edge of the picture and threw the rest
+   away; a coach painted a little right of centre therefore lost his far cheek before anything else.
+   `object-fit: cover` with an `object-position` is the same clip with a say in WHICH slice survives.
+
+   ⚠⚠ AND IT IS STILL NOT A VERTICAL CROP, WHICH IS THE A2c/d RULING («the whole frame is on screen –
+   no vertical crop») AND THE ONE THING A `cover` ON THIS BOX HAS TO PROVE. `cover` scales by
+   max(boxW/imgW, boxH/imgH). While the box is NARROWER than the picture's own ratio the height term
+   wins, the picture is scaled to exactly the box's height, and every pixel of the overflow is spent
+   sideways – byte for byte the crop `overflow: hidden` was already making. "The box is narrower than
+   the ratio" is precisely what `.cm-row`'s `min-height` floor guarantees, which is why that floor
+   moved with the strip: at 162/280 a 166px padding box supplies 96.04px against a 96px strip, so the
+   no-vertical-crop property holds unconditionally rather than by measurement.
+
+   ⚠ 12% IS A BALANCE POINT, NOT A TASTE. `object-position: p%` puts the window's left edge at
+   p x (picture - strip), so the fraction of the picture it lands on moves with the card's height:
+   a tall card has a narrow window and needs the head centred more carefully than a short one. Write
+   the window as [L, L+w] in picture fractions, w = strip/picture and L = p(1-w); the head box is
+   [0.08, 0.62]. On the tallest card the market draws at 375px (254.52px of padding box, so a
+   156.18px picture, w = 0.6147) containment holds for p in [1.4%, 20.8%], and 11.1% is the p that
+   makes the two margins equal. 12 is that at a round number: +5.27px of picture clear on the left,
+   +6.39px on the right, and the head's centre at ~50% of the strip, which is the mask's own opaque
+   stop – so what fades is the background past his shoulder rather than his jaw.
+   Verified by rendering all sixteen masters through this exact geometry at the tallest card the
+   market draws: sixteen whole heads. */
 .cm-art img {
   display: block;
   height: 100%;
-  width: auto;
+  width: 100%;
+  object-fit: cover;
+  object-position: 12% 50%;
 }
 .cm-body {
   position: relative;
   flex: 1;
   min-width: 0;
-  /* 62 (the strip) + 12 of air. The owner asked for «10-15 пикселей» past the picture and this is
+  /* 96 (the strip) + 12 of air. The owner asked for «10-15 пикселей» past the picture and this is
      now a real guarantee rather than a hope, because the strip above cannot grow into it.
      ⚠ THE TWO NUMBERS ARE TIED BY A TEST, NOT BY A COMMENT: tests/component/round18-coach.test.ts
      reads both off the mounted cascade and fails if the gap leaves the 10-15 band. Move one, move
-     the other. */
-  margin-left: 74px;
+     the other.
+     ⚠ ROUND 42 #3 MOVED BOTH (74 -> 108): the 12 of air is untouched, the strip under it is 96. This
+     is the «текст ужать» half of his own sentence, and its price is measured – at 375px the content
+     column goes 257px -> 223px and the market's list grows 4386px -> 4610px (+5.1%). */
+  margin-left: 108px;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -5406,21 +5513,41 @@ tr.kid-row td {
      be a coin flip between the two engines.
 
      tests/component/round18-coach.test.ts holds all four numbers at 375, 767, 768, 1024 and 1280 and
-     fails on any one of them alone. */
-  .tier-block .cm-row {
-    min-height: 118px;
-  }
-  .tier-block .cm-row.current {
-    min-height: 132px;
-  }
-  .tier-block .cm-art {
-    width: 66px;
-  }
-  .tier-block .cm-body {
-    /* 66 (the strip) + the same 12 of air every other width keeps. The pair is tied by a test, not
-       by this comment – see `.cm-body` above. Move one, move the other. */
-    margin-left: 78px;
-  }
+     fails on any one of them alone.
+
+     ⭐⭐⭐ ROUND 42 #3 SUPERSEDES ALL FOUR OF THOSE NUMBERS AND DELETES THE RULES THAT CARRIED THEM –
+     the band now inherits the base 96/108/168/196, and this whole block is kept as the RECORD of why
+     66 was right when it was written. His own ask includes this band: «И проверить на других экранах
+     тоже», and the check found the same defect here.
+
+     ⚠ THE CEILING TABLE ABOVE IS NOT WRONG, IT IS PRICED AGAINST A CARD THAT NO LONGER EXISTS. Every
+     number in it was measured when the shortest ordinary card was 124.34px and «67 puts a line on
+     four cards» was a real cost against a real gain of one pixel. Re-measured in Chromium on the
+     market as it stands today, the ordinary card's padding box is 195.34-222.52px at 768, so the
+     picture is 113.02-136.55px wide and the head box (8-62% of it – see `.cm-art`) overshoots the
+     66px window by 18.66px: the tablet cuts faces too, and the hired card's 78 misses its own head
+     by 13.57px. The gain is no longer a pixel, it is his complaint, so the line the table was
+     protecting is one this round spends knowingly.
+
+     ⚠ WHAT IT COSTS, MEASURED THE SAME WAY THE TABLE WAS – in Chromium, on the real market, at his
+     own parity set. The two figures are how far inside the window the head's LEFT and RIGHT edges
+     land on the worst card of the sixteen (negative = cut), and then the market list's own height:
+
+         375    +9.64 / -28.75  →  +5.27 / +6.39    list 4386 → 4610  (+5.1%)
+         768    +9.04 / -18.66  →  +5.67 / +11.30   list 2425 → 2538  (+4.7%)
+         900    +7.32 /  -2.23  →  +7.12 / +29.46   list 2159 → 2175  (+0.7%)
+         1280   +8.30 /  -8.32  →  +5.67 / +11.30   list 2245 → 2488  (+10.8%)
+
+     Every width was cutting heads and none is after. 900 pays almost nothing because its cards are
+     the short all-on-one-line ones; 1280 pays the most, and it is also where the old 66 was closest
+     to being enough. The hired card goes -13.57 → +14.89 at 375 and -3.23 → +24.71 at 1280.
+
+     ⚠ THE FLOOR AND THE SPECIFICITY NOTES BELOW ARE SPENT WITH THE RULES. There is one strip at every
+     width now, so there is one floor (168, derived on `.cm-row`) and one reserved hired window (112,
+     derived on `.cm-row.current`), and no `.tier-block`-weight rule left to tie with them. §4's
+     anti-shopping rule still holds by the same arithmetic it always did: 96 < 112 at every width.
+     What stays in this media query is what is genuinely about the GRID – the two-up columns, the
+     tier heading spanning them, and the rows dropping their stacking margin. */
 }
 
 /* ⭐⭐ ROUND 36 PHASE 3 – «2–3 В РЯД, С ПЕРЕНОСОМ» AS A RULE RATHER THAN AS A COUNT. The owner, on

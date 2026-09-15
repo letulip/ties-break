@@ -1404,6 +1404,23 @@ floor supplies 75.2px against a 78px strip. Real rows sit far above both floors,
 visibly broken today – but the guarantees are not the unconditional ones the comments claim. **His
 call whether the phone's floors move.**
 
+⭐⭐ **SUPERSEDED BY ROUND 42 #3 (15.09), AND THE LATENT HOLE ABOVE IS PAID.** He reported the opposite
+complaint – «верстка экрана тренеров немного сломалась: все картинки обрезаны сильно… надо сделать
+шире» – and the cause is one D89 could not have seen: the strip was never the thing that moved, the
+CARD was. Re-measured in Chromium on the market as it stands, the ordinary card is 208-254px of
+padding box at 375 and 195-238 at 768 against the 124-216 this row recorded, so the picture outgrew
+the porthole. The head box – measured off all sixteen masters under a tenths grid, hair or cap at 8%
+of the picture's width through the far cheek at 62% – was overshooting the window by **28.75px at
+375, 18.66 at 768, 8.32 at 1280 and 2.23 at 900**: every width was cutting faces, not only the phone
+he was holding. Shipped: ONE strip at every width, **96 / body 108 / floor 168**, hired
+**112 / 124 / 196**, plus `object-fit: cover` with `object-position: 12% 50%` so the window is aimed
+at the head instead of at the frame's left edge. The `.tier-block` band rules are deleted, so D89's
+66 and its ceiling table are no longer rules – the table stays above as the record of why 66 was
+right when a card was 124px tall. **Both floors are derived at 162/280 now**, which is exactly the
+hole this row flagged, and the price is one shape of card: the all-on-one-line one at 900, lifted
+149.17px → 166. The fixed-point search, the per-width cost and the sweep are in `src/style.css` at
+`.cm-art` and in `tests/component/round42-coach-portrait.test.ts`.
+
 ### D90 `[x]` The shop's paragraph was a comment that quoted its own terminator
 
 | | |

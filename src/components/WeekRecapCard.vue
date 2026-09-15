@@ -1267,10 +1267,28 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
   padding: 16px 62px 18px 26px;
 }
 
+/* ⭐⭐ ROUND 42 #4 – ONE SIZE FOR THE SCRAP, AND IT IS 19 (owner, 14.09: «что-то с размером шрифта
+   на week recap на первой записочке… у некоторых шрифт крупнее», ruled the same day: «да, 19
+   хорошо»). The quote lives here rather than in the template because a .vue template carries no
+   Cyrillic at all – tests/round13-nav.test.ts.
+
+   WHAT HE WAS LOOKING AT. The scrap had TWO sizes and which one he got was a coin flip on the
+   week: 23px here, and 19px under `--travel`, which the template puts on the note whenever the
+   diary carries a prose note (`noteIsProse`). `weekNote` is null roughly two ordinary weeks in
+   three (`WEEK_NOTE_CHANCE`), so most weeks fell through to the LEDGER fragment at 23px and the
+   weeks that had a story about her read four pixels smaller. Same object, same paper, same hand –
+   two type sizes, alternating, with nothing on screen to explain the difference.
+
+   ⚠ 19 IS THE SIZE THAT WAS ALREADY CARRYING THE LONG LINE. The `--travel` note below used to
+   argue this in the other direction – it stepped the PROSE down because a parent's note is two
+   clauses against the ledger's 24 characters – and the measurement it recorded still holds: 19px
+   is where an 80-character note is two lines instead of three. Flattening upward would have put
+   the long line back to three; flattening to 19 keeps the measurement and loses the coin flip,
+   which is the whole of his complaint. The handwriting, the paper and the tilt are unchanged. */
 .recap-note-text {
   margin: 0;
-  font-size: 23px;
-  line-height: 1.32;
+  font-size: 19px;
+  line-height: 1.34;
 }
 
 /* ⚠ THE PARENT'S NOTE IS A LONGER SENTENCE THAN THE LEDGER'S, and the scrap has to stay a scrap.
@@ -1286,19 +1304,22 @@ const practiceWeekLabel = computed(() => weekLabel(week.value))
    week's note is the same length under the same 80-character cap, so it wants the same treatment –
    so the hook is now `noteIsProse` and reads WHICH HAND wrote the scrap rather than which picture is
    above it. Same measurement, same two lines; the name `--travel` stays because the guards in
-   tests/travel-home.test.ts and tests/radar-training.test.ts read this file for it. */
+   tests/travel-home.test.ts and tests/radar-training.test.ts read this file for it.
+   ⚠⚠ AND ROUND 42 #4 IS THE OWNER UNDOING THE STEP, NOT THE MEASUREMENT. Everything above is still
+   true of the long line – it is why the flat size is 19 and not 23 – but the two-size ramp is the
+   defect he reported, so the whole scrap sits at 19 now (see `.recap-note-text` above) and there is
+   no `--travel` size rule left to state. The class stays on the note in the template, untouched:
+   `tests/week-notes.test.ts` pins the `noteIsProse` binding, and the hook is what a future layout
+   difference between the two hands would hang on. It just no longer decides the type size. */
 /* ⭐ ROUND-21 #2: the coach line is the same hand and the same paper, one step quieter and a little
    further down the scrap - it is a postscript to the week's story, not a second story. It only ever
    appears on a come-home week, where `--travel` is already on the note, so it inherits that rule's
-   size and only needs the gap and the drop in weight. */
+   size and only needs the gap and the drop in weight.
+   ⚠ ROUND 42 #4: "that rule's size" is now the one size – `.recap-note-text`'s own 19px – so the
+   postscript matches the story it is a postscript to on every week, not only on a travel one. */
 .recap-note-coach {
   margin-top: 6px;
   opacity: 0.78;
-}
-
-.recap-note--travel .recap-note-text {
-  font-size: 19px;
-  line-height: 1.34;
 }
 
 /* Both doodles are drawn in the paper's own ink (`currentColor` off .tb-paper), pinned to the

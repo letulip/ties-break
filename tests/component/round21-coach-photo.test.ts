@@ -16,6 +16,15 @@
 // column 90, row floor 132) and each is load-bearing for a different reason; this file holds them in
 // one place so that moving one alone reddens.
 //
+// ⚠⚠ ROUND 42 #3 MOVED ALL THREE – 112 / 124 / 196 – AND EVERY MUTATION READING BELOW IS A 2026-08
+// ONE, so read the ledger for its SHAPE and not for its literals. The cause is at `.cm-art` in
+// src/style.css: the card has doubled in height since round 18, the porthole did not, and the owner
+// reported every portrait cut («все картинки обрезаны сильно… надо сделать шире», 14.09). The shop
+// window went to 96px to hold the whole head, and coach-match-edge.md §4 – an unhired card may not
+// be more attractive than the one she has – is what pulls the hired window up with it. The +16px
+// round 21 gave him is unchanged, so the item this file guards is intact; what moved is the pair it
+// is measured from.
+//
 // ⚠ MUTATION-VERIFIED – each applied alone against this file plus round18-coach and coach-edge-card
 // (`|p|` is this file, `|18|` round18-coach.test.ts, `|e|` coach-edge-card.test.ts):
 //
@@ -106,7 +115,12 @@ function careerSnapshot(coachTier: CoachTier, seed = `r21p-${coachTier}`): Snaps
  *  is the owner's own from round 21, and is unchanged here. Only the width they are read at is now
  *  written down instead of inherited. The ≥768 band's counterpart of every one of these claims,
  *  including that the hired row still shows more of its man than the shop does, is the P2-7 block in
- *  round18-coach.test.ts. */
+ *  round18-coach.test.ts.
+ *  ⚠⚠ AND ROUND 42 #3 COLLAPSED THE TWO BANDS BACK INTO ONE: 112/124/196 and 96/108/168 are what
+ *  every width computes now, so the phone this file reads at is no longer a different screen from
+ *  the tablet. `setViewport(PHONE)` stays anyway – it is still the screen the owner reported on, and
+ *  a rule that reintroduced a breakpoint would now be caught by the ARMS table in
+ *  round18-coach.test.ts rather than being invisible here. */
 async function openCoaches(tier: CoachTier = 'middle') {
   setViewport(PHONE)
   const store = useGameStore()
@@ -130,7 +144,13 @@ async function openCoaches(tier: CoachTier = 'middle') {
  *  (budget-2 alone is taller at 280, which makes it NARROWER for a given height, so this is the
  *  worst case). The same constant round-18 #2's floor was derived from. */
 const PORTRAIT_W = 162
-const PORTRAIT_H = 264
+/** ⚠ ROUND 42 #3 TIGHTENS THIS FROM 264 TO 280, and the comment above always said why it should be:
+ *  budget-2.webp is the 280-tall master, so it is the NARROWEST picture for a given height and the
+ *  real worst case, while 264 flatters. Both floors are derived at 162/280 now, so the inequality
+ *  below is asked where it actually binds. It is a tightening – 264 would still pass – and it had to
+ *  happen this round because `object-fit: cover` turns "the box is wider than the picture's ratio"
+ *  from an invisible sliver of background into a VERTICAL crop, which A2c/d forbids. */
+const PORTRAIT_H = 280
 
 // =================================================================================================
 // #1 – THE COACH SHE HAS GETS A WIDER WINDOW
@@ -149,10 +169,20 @@ describe('round-21 #1 – the hired coach\'s photo is proportionally wider', () 
     // laid out to the same rule and the strip is `top: 0; bottom: 0` of the row, so at any given row
     // height the ratio of these two numbers IS the ratio of the two photos' aspect ratios.
     expect(hiredStrip, 'the hired row shows a wider slice of the portrait').toBeGreaterThan(otherStrip)
-    expect(hiredStrip, 'and it is the 78 the floor below is derived from').toBe(78)
-    expect(otherStrip, 'while every other row keeps round-18\'s 62').toBe(62)
-    // 26% wider relative to the same height. Named so a future narrowing reads as what it is.
-    expect(hiredStrip / otherStrip, 'the widening is a quarter, not a rounding').toBeGreaterThan(1.2)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3 – 78/62 BECOME 112/96, AND #1's CLAIM IS THE RATIO, NOT THE PAIR.
+    // The owner reported every portrait cut on the coach screen («все картинки обрезаны сильно», 14.09)
+    // and the shop window had to widen to hold the whole head; §4's anti-shopping rule then forces the
+    // hired window up with it, which is the ONLY reason a number he did not ask about again has moved.
+    // The +16px is exactly the +16px round 21 gave him.
+    // ⚠ AND THE RATIO ASSERTION IS RE-AIMED WITH THE NUMBERS, WHICH IS NOT A LOOSENING. 112/96 is 17%
+    // where 78/62 was 26%, because the same absolute 16px is a smaller share of a bigger window; the
+    // bound moves to 1.15 and still refuses a rounding, a tie and a narrowing – the three states this
+    // line exists to catch. A wider RELATIVE gap would have to be his ask, not ours.
+    expect(hiredStrip, 'and it is the 112 the floor below is derived from').toBe(112)
+    expect(otherStrip, 'while every other row keeps the shop window').toBe(96)
+    expect(hiredStrip - otherStrip, 'the hired row keeps the +16px round 21 gave it').toBe(16)
+    // 17% wider relative to the same height. Named so a future narrowing reads as what it is.
+    expect(hiredStrip / otherStrip, 'the widening is a sixth, not a rounding').toBeGreaterThan(1.15)
 
     wrapper.unmount()
   })
@@ -204,9 +234,12 @@ describe('round-21 #1 – the hired coach\'s photo is proportionally wider', () 
 
     // ...and the hired row's floor really did move, which is the half a pure inequality cannot say:
     // leaving it at 104 would have made the 78px strip show background on the shortest row.
+    // ⚠ ROUND 42 #3: 132/104 become 196/168, derived the same way from the wider strips and from the
+    // honest 162/280 master. The claim – the hired row carries a floor OF ITS OWN, above the shop
+    // card's – is what this pair asserts and it is untouched.
     const hiredFloor = px(getComputedStyle(current.element).minHeight, 'current .cm-row min-height')
-    expect(hiredFloor, 'the hired row carries its own floor').toBe(132)
-    expect(px(getComputedStyle(ordinary.element).minHeight, '.cm-row min-height'), 'the others keep 104').toBe(104)
+    expect(hiredFloor, 'the hired row carries its own floor').toBe(196)
+    expect(px(getComputedStyle(ordinary.element).minHeight, '.cm-row min-height'), 'the others keep the shop floor').toBe(168)
 
     wrapper.unmount()
   })
@@ -216,13 +249,23 @@ describe('round-21 #1 – the hired coach\'s photo is proportionally wider', () 
     const { wrapper, current } = await openCoaches()
     // The A2c/d ruling this treatment inherits, and the reading of the owner's word that this item
     // is NOT: «пропорционально шире» is a wider view of the same photograph, so the image keeps
-    // `height: 100%; width: auto` and the strip does the widening by clipping less. Setting a width
-    // on the image – the obvious way to make a picture wider – would distort a photo of a person,
-    // and `object-fit: cover` would crop him vertically, which A2c/d forbids outright.
+    // `height: 100%` and the strip does the widening by clipping less. Setting a width on the image –
+    // the obvious way to make a picture wider – would distort a photo of a person.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3, AND THE LAST CLAUSE OF THE PARAGRAPH ABOVE WAS WRONG ABOUT THIS BOX.
+    // It read «`object-fit: cover` would crop him vertically, which A2c/d forbids outright», and that
+    // is true of a box WIDER than the picture's own ratio and false of one narrower. `cover` scales by
+    // max(boxW/imgW, boxH/imgH): on a narrow box the height term wins, the picture is scaled to the
+    // box's height exactly, and every overflowing pixel is spent sideways – the same clip
+    // `overflow: hidden` was already making, with a say in which slice survives. `.cm-row`'s floor is
+    // what keeps the box on the narrow side of that line, and the floor test above is what holds it.
+    // So A2c/d is asserted in its new spelling: the height is pinned, nothing is squeezed, and the
+    // steer is read too, because a `cover` with no `object-position` centres the window and loses the
+    // far cheek exactly as the old left-edge clip did.
     const style = getComputedStyle(current.find('.cm-art img').element)
     expect(style.height, 'the image is sized by height').toBe('100%')
-    expect(style.width, 'and takes whatever width that gives it').toBe('auto')
-    expect(style.objectFit === '' || style.objectFit === 'fill', 'nothing crops it').toBe(true)
+    expect(style.objectFit, 'the overflow is clipped, never squeezed').toBe('cover')
+    expect(style.width, 'the image fills its window, which is what makes the clip steerable').toBe('100%')
+    expect(style.objectPosition, 'and the window is aimed at the head').toBe('12% 50%')
     wrapper.unmount()
   })
 

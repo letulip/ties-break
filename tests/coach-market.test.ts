@@ -116,10 +116,22 @@ describe('screen T, round 3', () => {
   it('gives the portrait the full-bleed strip treatment, not a square avatar', () => {
     // The Home card\'s reasoning (A2c/d), applied here: sized by HEIGHT so the whole frame shows
     // with no vertical crop, and masked into the card so the card\'s own gradient shows through.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3 – `width: auto` BECOMES `object-fit: cover` AND THE RULING IS THE
+    // SAME ONE. The owner reported every portrait cut on this screen («все картинки обрезаны
+    // сильно… надо сделать шире», 14.09); the porthole widened to hold the whole head and the image
+    // now fills it under a `cover` with an `object-position`, which on a box NARROWER than the
+    // picture's own ratio scales by height and spends every overflowing pixel sideways – the same
+    // clip `overflow: hidden` was already making, with a say in which slice survives. A2c/d is
+    // therefore still what this line pins, in its new spelling: the height is still 100%, and the
+    // strip's own `min-height` floor (src/style.css, derived at 162/280) is what keeps the box on
+    // the narrow side of that line. The behavioural net is
+    // tests/component/round42-coach-portrait.test.ts, which measures it through a mounted cascade
+    // rather than through this file's source text.
     expect(css).toMatch(/\.cm-art\s*\{[^}]*position: absolute/)
     expect(css).toMatch(/\.cm-art\s*\{[^}]*mask-image: linear-gradient/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*height: 100%/)
-    expect(css).toMatch(/\.cm-art img\s*\{[^}]*width: auto/)
+    expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-fit: cover/)
+    expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-position: /)
     // ...and no fixed square is set on the image any more.
     expect(market).not.toContain('width="46"')
   })

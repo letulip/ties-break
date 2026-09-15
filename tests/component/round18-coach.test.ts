@@ -248,7 +248,16 @@ describe('round-18 #2 – the coach picker moves its text clear of the portrait'
       // text's line count cannot move. All three are fixed, so all three keep it – and the lookup is
       // still a lookup rather than a `toBeGreaterThan(0)`, which would pass on the shrink-wrapped
       // defect this test exists to catch.
-      const expectedStrip = row.classes().includes('current') ? 78 : vp.width >= 768 ? 66 : 62
+      // ⚠ RE-AIMED BY ROUND 42 #3 – TWO NUMBERS AGAIN, AND THE CLAIM IS STILL UNCHANGED. The owner
+      // reported every portrait cut on the coach screen («все картинки обрезаны сильно… надо сделать
+      // шире», 14.09) and the measurement found the cause: the CARD has doubled in height since round
+      // 18 while the porthole stayed at 62, so the window was showing 42-48% of a picture whose head
+      // alone is 54% of it. The strip is 96px now at EVERY width – the ≥768 band's own 66 went with
+      // it, because the tablet was cutting faces too – and the hired card's reserved window is 112.
+      // What #2 defends is still not any literal: it is that the strip HAS a width of its own that
+      // the text's line count cannot move. Both are fixed, so both keep it, and the lookup is still a
+      // lookup rather than a `toBeGreaterThan(0)`.
+      const expectedStrip = row.classes().includes('current') ? 112 : 96
       const strip = px(getComputedStyle(art.element).width, '.cm-art width')
       expect(strip, `the strip has a width of its own at ${vp.width}px`).toBe(expectedStrip)
       // ...and what does not fit inside it is CLIPPED, which is what makes that width the picture's
@@ -279,11 +288,24 @@ describe('round-18 #2 – the coach picker moves its text clear of the portrait'
     assertSheetPresent()
     const wrapper = mountPicker()
     const rows = await openCoaches(wrapper)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3 – THE SPELLING CHANGED AND THE RULING DID NOT, which is the only
+    // reason this is allowed to move. The paragraph above says «switching the image to `object-fit:
+    // cover` at a fixed width would break a ruling to fix a layout bug», and it was right about the
+    // GENERAL case and wrong about this box. `cover` scales by max(boxW/imgW, boxH/imgH): while the
+    // box is NARROWER than the picture's own ratio the height term wins, the picture is scaled to
+    // exactly the box's height, and every overflowing pixel is spent sideways – byte for byte the
+    // crop `overflow: hidden` was already making, with a say in WHICH slice survives. "The box is
+    // narrower than the ratio" is what `.cm-row`'s floor guarantees unconditionally, and the floor
+    // test below is what holds it. So A2c/d is asserted here in its new form rather than dropped:
+    // the height is still 100%, and `object-position` is read because a `cover` with no steer would
+    // centre the window and lose the far cheek exactly as the old left-edge clip did.
     const img = rows[0].find('.cm-art img')
     expect(img.exists(), 'the card draws the portrait as an image').toBe(true)
     const style = getComputedStyle(img.element)
     expect(style.height, 'the image is sized by height').toBe('100%')
-    expect(style.width, 'and takes whatever width that gives it').toBe('auto')
+    expect(style.objectFit, 'and the overflow is a clip, not a squeeze').toBe('cover')
+    expect(style.width, 'the image fills its window, which is what makes the clip steerable').toBe('100%')
+    expect(style.objectPosition, 'and the window is aimed at the head, not at the frame\'s left edge').toBe('12% 50%')
     wrapper.unmount()
   })
 
@@ -328,7 +350,14 @@ describe('round-18 #2 – the coach picker moves its text clear of the portrait'
       // 59.01px inside a 62px strip – and that is a separate item, not this one. The honest 162/280
       // form is asked of the ≥768 pair instead, in the P2-7 block at the foot of this file, where the
       // floor was moved anyway and can carry it.
-      const shortestPortraitWidth = ((floor - 2) * 162) / 264
+      // ⚠⚠ ROUND 42 #3 PAYS THAT DEBT, because the floors moved anyway and a debt is cheapest to pay
+      // while the thing is already open. Both floors are derived at 162/280 now (168 for the 96px
+      // shop window, 196 for the hired 112), so this inequality is asked at the REAL worst case at
+      // every width instead of at the flattering one. It is a tightening, never a loosening: the 264
+      // form would still pass, and the 280 form additionally refuses the state the note above had to
+      // tolerate. `object-fit: cover` is the other reason it had to be honest – below the floor the
+      // box stops being narrower than the picture's ratio and the clip becomes a VERTICAL crop.
+      const shortestPortraitWidth = ((floor - 2) * 162) / 280
       expect(
         shortestPortraitWidth,
         `at ${vp.width}px a ${floor}px row still fills the ${strip}px strip`,
@@ -490,7 +519,13 @@ describe('round 36 phase 2 – the market is two to a row on a tablet, and P2-7 
   // (66 <= 71.94, the shortest row's own supply) and coach-match-edge.md §4 still reserves the wider
   // 78px window for the coach she has (66 < 78). ⚠ 768 is the width at which this costs NOTHING: the
   // card is 364px, its notes have already wrapped, and a strip of up to 72 changes no card's height.
-  it('⚠ …and the portrait strip is 66px, because he asked for the width he could see was there', async () => {
+  // ⚠⚠ RE-AIMED AGAIN BY ROUND 42 #3 – 66 BECOMES 96, AND THE TITLE KEEPS ITS OWN HISTORY. He asked
+  // for the width twice: P2-7 (62 -> 66, the headroom he could see) and then round 42 #3 («все
+  // картинки обрезаны сильно… надо сделать шире», 14.09), which is the same complaint with the cause
+  // finally measured – the card has doubled in height since round 18, so the picture outgrew the
+  // porthole rather than the porthole shrinking. There is ONE strip at every width now; the claim
+  // this test makes is unchanged and is still the pair, not the literal.
+  it('⚠ …and the portrait strip is 96px, because the card outgrew the porthole', async () => {
     assertSheetPresent()
     const wrapper = await coachesAt(TABLET)
     // The ordinary card. `.cm-row.current` is the ONE row allowed the reserved 78px strip and that is
@@ -501,10 +536,10 @@ describe('round 36 phase 2 – the market is two to a row on a tablet, and P2-7 
     for (const row of ordinary) {
       const art = row.find('.cm-art')
       expect(art.exists(), 'every card draws a portrait').toBe(true)
-      expect(px(getComputedStyle(art.element).width, 'the strip at 768'), 'the tablet strip is wider than the phone\'s').toBe(66)
+      expect(px(getComputedStyle(art.element).width, 'the strip at 768'), 'the tablet strip holds the whole head').toBe(96)
       // ...and the 12px of air past it, which is the pair round-18 #2 tied together: move one, move
       // the other. This is that pair, asked again at a width it had never been asked at.
-      const gap = px(getComputedStyle(row.find('.cm-body').element).marginLeft, 'the text inset at 768') - 66
+      const gap = px(getComputedStyle(row.find('.cm-body').element).marginLeft, 'the text inset at 768') - 96
       expect(gap, 'the text still clears the portrait by 10-15px').toBeGreaterThanOrEqual(10)
       expect(gap, 'and not by more').toBeLessThanOrEqual(15)
     }
@@ -552,11 +587,15 @@ describe('round 36 phase 2 – the market is two to a row on a tablet, and P2-7 
     // The arithmetic and the row floor that pays for it are in the P2-7 block at the foot of this file.
     const ordinary = wrapper.findAll('.cm-row').filter((r) => !r.classes().includes('current'))
     expect(ordinary.length, 'the fixture has hireable cards').toBeGreaterThan(0)
+    // ⚠⚠ AND RE-AIMED AGAIN BY ROUND 42 #3 – the desktop still takes exactly what the tablet takes,
+    // and the number both take is 96 now. His own second-pass sentence asked for the sweep («И
+    // проверить на других экранах тоже») and the check found the same cut face here: at 1280 the
+    // head overshot the 66px window by 8.32px of picture.
     for (const row of ordinary) {
       expect(
         px(getComputedStyle(row.find('.cm-art').element).width, 'the strip at 1280'),
         'the desktop strip is the tablet strip',
-      ).toBe(66)
+      ).toBe(96)
     }
     wrapper.unmount()
   })
@@ -661,7 +700,19 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
    *  cards that shrank landed on 138.52 and 124.34, i.e. on values the market already drew. The
    *  shortest ordinary card after #6, at 768/800/850/900/1000/1023/1024/1060/1100/1200/1280/1440:
    *  138.52 padding box at four of them and 124.34 at the other eight, so 126.34 border box stands. */
-  const SHORTEST_ROW_768_PLUS = 126.34
+  // ⚠⚠ RE-MEASURED FOR ROUND 42 #3 AND IT MOVED, 126.34 -> 168, BECAUSE THE FLOOR IS NOW WHAT SETS
+  //  IT. Two things happened. The card grew on its own between August and now (the ordinary padding
+  //  box at 768 measures 208.34-238.52px against the 124.34-216.20px this file recorded), and the
+  //  floor went to 168 to supply a 96px strip – which lifts the ONE short shape left, the
+  //  all-on-one-line card at 900, from 149.17px of padding box to 166. So the shortest ≥768 row and
+  //  the floor are the same number now, and the two bounds below close on it from both sides rather
+  //  than straddling it.
+  //  ⚠ AND THE «IT COSTS NO CARD HEIGHT» READING OF THE SECOND BOUND IS SPENT, DELIBERATELY. It was
+  //  P2-7's own constraint, out of «сохраняя вертикальный размер, вписанный в карточку»; round 42 #3
+  //  is the owner asking for the picture to stop being cut instead, and the cost is measured rather
+  //  than hidden – at 900 the market's list goes 2159px -> 2175px, 0.7%. The bound is kept at its new
+  //  value because it still catches an OVER-paid floor, which is the failure it was written for.
+  const SHORTEST_ROW_768_PLUS = 168
   /** The portraits are 162 wide; fifteen are 264 tall and `budget-2.webp` is 280, which makes IT the
    *  narrowest picture for a given height. Round-18 #2 and round-21 #1 both did this arithmetic at
    *  162/264 and called it the worst case; it is the BEST case, and this file's ≥768 arm uses the
@@ -686,12 +737,20 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
   }
 
   // Every arm the owner named, plus the two that say the change stopped where it was supposed to.
+  // ⚠⚠ RE-AIMED BY ROUND 42 #3, AND THE TABLE IS WHAT CHANGED SHAPE. P2-7's whole point was that the
+  // phone and the ≥768 band differ – 62/74/104 against 66/78/118 – and the two below-breakpoint arms
+  // existed to say «nothing under 768 moved». Round 42 #3 removes the difference: the owner reported
+  // the crop on the phone, the sweep found it at 768, 900 and 1280 as well, and one strip that holds
+  // the whole head serves all five. So every arm reads the same triple now. ⚠ THE ARMS ARE KEPT, ALL
+  // FIVE, and that is deliberate: they are the only mechanical statement that the band-specific rules
+  // really are gone rather than merely edited, and the first widening that reintroduces a breakpoint
+  // here has to come through this table to do it.
   const ARMS = [
-    { vp: PHONE, strip: 62, body: 74, floor: 104, where: 'the phone he plays on' },
-    { vp: WIDE_PHONE, strip: 62, body: 74, floor: 104, where: 'one pixel below the breakpoint' },
-    { vp: TABLET, strip: 66, body: 78, floor: 118, where: 'the tablet he asked about' },
-    { vp: LAPTOP, strip: 66, body: 78, floor: 118, where: 'the narrow desktop' },
-    { vp: DESKTOP, strip: 66, body: 78, floor: 118, where: 'the wide desktop' },
+    { vp: PHONE, strip: 96, body: 108, floor: 168, where: 'the phone he plays on' },
+    { vp: WIDE_PHONE, strip: 96, body: 108, floor: 168, where: 'one pixel below the breakpoint' },
+    { vp: TABLET, strip: 96, body: 108, floor: 168, where: 'the tablet he asked about' },
+    { vp: LAPTOP, strip: 96, body: 108, floor: 168, where: 'the narrow desktop' },
+    { vp: DESKTOP, strip: 96, body: 108, floor: 168, where: 'the wide desktop' },
   ]
 
   for (const arm of ARMS) {
@@ -729,17 +788,21 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
       // ⚠ THE HIRED CARD IS UNTOUCHED AT EVERY WIDTH, and that is coach-match-edge.md §4 rather than
       // an oversight: an unhired card may not be made more attractive than the one she has. Its
       // three numbers are round-21 #1's and the owner did not ask for them again.
+      // ⚠ ROUND 42 #3 MOVED THE HIRED TRIPLE TOO, 78/90/132 -> 112/124/196, and §4 is exactly why it
+      // HAD to move: the shop window went to 96, and an unhired card may not be more attractive than
+      // the one she has. The +16px the hired card has carried since round 21 is unchanged, and so is
+      // the last assertion in this block, which is §4 itself asked as an inequality.
       const art = hired[0].find('.cm-art').element
       const hiredStrip = px(getComputedStyle(art).width, 'current .cm-art width')
-      expect(hiredStrip, `the hired window at ${arm.vp.width}px`).toBe(78)
+      expect(hiredStrip, `the hired window at ${arm.vp.width}px`).toBe(112)
       expect(
         px(getComputedStyle(hired[0].find('.cm-body').element).marginLeft, 'current .cm-body margin-left'),
         `the hired text column at ${arm.vp.width}px`,
-      ).toBe(90)
+      ).toBe(124)
       expect(
         px(getComputedStyle(hired[0].element).minHeight, 'current .cm-row min-height'),
-        `the hired floor at ${arm.vp.width}px – the restated 132, not the shop card's floor`,
-      ).toBe(132)
+        `the hired floor at ${arm.vp.width}px – the reserved window's own floor, not the shop card's`,
+      ).toBe(196)
       expect(hiredStrip, 'and her own coach still shows more of himself than the shop does').toBeGreaterThan(arm.strip)
 
       wrapper.unmount()
@@ -791,13 +854,21 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
     // screen – no vertical crop». The obvious way to make a picture wider is to give the image a
     // width, and it would distort a photograph of a person; `object-fit: cover` would crop him.
     // What widens is the CLIP, and the strip is still pinned to the row's full padding box.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3, EXACTLY AS THE PHONE'S TWIN ABOVE WAS, and the sentence before this
+    // one is the reason the re-aim needed proving rather than asserting. `object-fit: cover` crops
+    // him only when the box is WIDER than the picture's own ratio; below that the height term of
+    // `max(boxW/imgW, boxH/imgH)` wins and the overflow is entirely horizontal. `.cm-row`'s floor is
+    // what keeps the box on the narrow side of that line unconditionally, and the guarantee test
+    // above is what holds the floor. A2c/d is therefore asserted in its new spelling, not dropped.
     assertSheetPresent()
     for (const vp of [TABLET, LAPTOP, DESKTOP]) {
       const wrapper = await coachesAt(vp)
       const row = wrapper.findAll('.cm-row').filter((r) => !r.classes().includes('current'))[0]
       const img = getComputedStyle(row.find('.cm-art img').element)
       expect(img.height, `the image is sized by height at ${vp.width}px`).toBe('100%')
-      expect(img.width, `and takes whatever width that gives it at ${vp.width}px`).toBe('auto')
+      expect(img.objectFit, `the overflow is a clip, not a squeeze, at ${vp.width}px`).toBe('cover')
+      expect(img.width, `the image fills its window at ${vp.width}px`).toBe('100%')
+      expect(img.objectPosition, `and the window is aimed at the head at ${vp.width}px`).toBe('12% 50%')
       const art = getComputedStyle(row.find('.cm-art').element)
       expect(px(art.top, '.cm-art top'), `the strip still fills the row at ${vp.width}px`).toBe(0)
       expect(px(art.bottom, '.cm-art bottom'), `top and bottom both at ${vp.width}px`).toBe(0)
@@ -819,14 +890,20 @@ describe('round 36 pass 2 – P2-7: the market portrait opens past 768, and the 
     expect(tier.exists(), 'the market drew a tier, or this measures nothing').toBe(true)
     const inTier = tier.findAll('.cm-row').filter((r) => !r.classes().includes('current'))
     expect(inTier.length, 'the tier drew shop cards').toBeGreaterThan(0)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3 – THE TIE THIS ARM WAS WATCHING NO LONGER EXISTS, AND THE ARM IS
+    // KEPT BECAUSE THAT IS THE THING WORTH WATCHING NOW. `.tier-block .cm-art` and
+    // `.tier-block .cm-body` are gone: one strip serves every width, so there is no band rule left to
+    // tie with the base one and no source order for two engines to disagree about. What survives is
+    // the OTHER half of the same question, and it is the half §4 depends on – `.cm-row.current
+    // .cm-art` (0,3,0) must still beat the bare `.cm-art` (0,1,0), or the coach she has silently
+    // takes the shop card's window. That is asserted below, and the loop above is now the statement
+    // that a card reached through the tier grid computes the SAME strip as one that is not.
     for (const row of inTier) {
-      expect(px(getComputedStyle(row.find('.cm-art').element).width, '.cm-art width')).toBe(66)
+      expect(px(getComputedStyle(row.find('.cm-art').element).width, '.cm-art width')).toBe(96)
     }
-    // ...and the reserved window still wins, which it can only do on specificity: (0,3,0) over the
-    // (0,2,0) rule above. A tie here would hand the hired card the shop card's 66.
     expect(
       px(getComputedStyle(wrapper.find('.cm-row.current .cm-art').element).width, 'current .cm-art width'),
-    ).toBe(78)
+    ).toBe(112)
     wrapper.unmount()
   })
 })
@@ -961,12 +1038,15 @@ describe('round 37 #6 – the card beside the hired coach stops being stretched 
     }
     // ...and the coach she has still keeps every number that is his, which is the thing this item was
     // explicitly told not to touch.
+    // ⚠ ROUND 42 #3: the triple is 112/124/196 now – see the ARMS table above for why §4 forced it to
+    // move with the shop window. The claim here is untouched: #6 is about the LINE's alignment and
+    // must leave the hired card's own geometry exactly where the round it inherited it from put it.
     const hired = rows.find((r) => r.classes().includes('current'))!
-    expect(px(getComputedStyle(hired.element).minHeight, 'current .cm-row min-height')).toBe(132)
-    expect(px(getComputedStyle(hired.find('.cm-art').element).width, 'current .cm-art width')).toBe(78)
+    expect(px(getComputedStyle(hired.element).minHeight, 'current .cm-row min-height')).toBe(196)
+    expect(px(getComputedStyle(hired.find('.cm-art').element).width, 'current .cm-art width')).toBe(112)
     expect(
       px(getComputedStyle(hired.find('.cm-body').element).marginLeft, 'current .cm-body margin-left'),
-    ).toBe(90)
+    ).toBe(124)
     wrapper.unmount()
   })
 })
