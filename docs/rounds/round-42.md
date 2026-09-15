@@ -883,6 +883,26 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
      if he meant 0.2 of a percentage point of match win rate, the number changes and this line is the
      place it gets corrected.
 
+  ⭐⭐ **AND THE DECAY IS SCOPED TO THE BONUS ALONE – his clarification, 15.09:** «смотри, чтобы у
+  нас обычный естественный прирост тоже работал, т.е. пока она растёт и без психолога у неё всё равно
+  этот навык может тренироваться в зависимости от сида. Т.е. наши "0.2 очка выдержки за простойный
+  сезон" это уже что-то вроде тех сезонов, где она выше своего потолка прыгнула по результатам работы
+  с психологом.» So the −0.2 never touches ordinary development: below the rolled ceiling composure
+  grows exactly as it does today, seed-driven, psychologist or no psychologist. The bonus is a
+  SEPARATE quantity that exists only above the ceiling, and only that quantity decays.
+
+  ⚠ Today's natural growth is not an assumption – item 32's audit measured it on his own two careers:
+  the nerve career took **24.6 of 24.6** points of composure room (100%), the big-shot career 12.6 of
+  13.7 (92%). The wing already trains itself to its ceiling without any help.
+
+  **The mechanism, architect's proposal, one word flips it:** the bonus raises her EFFECTIVE CEILING
+  and ordinary development does the climbing – so a bonus point is earned twice (the seat earns the
+  headroom, the training fills it) and nothing anywhere adds to `skills.composure` behind
+  development's back. On decay the effective ceiling falls and the age-creep clamp that already
+  exists eases her value down with it, which reads as «she slipped back a little». The alternative –
+  adding the bonus straight onto her composure value – is one line shorter and makes the wing jump on
+  a week she did nothing, which is the thing the ceiling exists to prevent.
+
   **Schema: v78 is now free and this item claims it.** The round's standing constraint («no schema
   move, v77 is wave 6's») was written while the wave was unmerged; it merged on 15.09 as PR #144, so
   the next version is available. The three-part move is the house law: bump `SAVE_SCHEMA_VERSION`,
