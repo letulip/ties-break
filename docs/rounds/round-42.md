@@ -1154,7 +1154,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   ⭐ And one thing it buys beyond the wing: the radar finally shows something the player DID rather
   than something the seed dealt – the first mark on that screen that is the parent's own work.
 
-- [ ] **36. «в прологе во время турнира… экран "кто против кого" – в обычном флоу там большая фото
+- [x] **36. «в прологе во время турнира… экран "кто против кого" – в обычном флоу там большая фото
   серьёзной девочки, а в прологе пустота» (15.09), and his correction the same hour: «я просто просил
   сделать флоу турнира таким же до цента, т.е. переиспользовать текущий по максимуму, если он
   отличается где-то, значит наш DRY дырявый в этом месте. Мне не нужно, чтобы вы что-то новое
@@ -1198,3 +1198,59 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   the divergence is named as one of the reasons in (3). Evidence: mounted tests asserting the prologue
   renders the SAME component as the career beat, at 375 and 1280, with the legibility arm on whatever
   ends up over the art.
+
+  ---
+
+  **SHIPPED (15.09) – what was built, and the DRY audit it produced.**
+
+  **Built.** The prologue's pre-match beat is `<MatchScene :stage emotion="serious" :label fill>` –
+  the career's own call, on the career's own component. Her band comes from `portraitStage(kid.age)`
+  rather than from `useKidEmotion()` (which reads a store the prologue does not have); `finaleUrl`
+  IS `portraitUrl`, so the art was never the blocker and the round-35 note that said so is corrected
+  in place. Two smaller reuses came out of the sweep: the weekend's splash draws its surface through
+  `ui/SurfaceMark.vue` instead of printing the bare word (the owner's own «one icon across every
+  screen» ruling, 30.07), and the glass plate's five CSS rules – written out twice already, as
+  `.tf-scene-*` and `.pf-*`, **already drifted from each other by one declaration** – are one shared
+  `.scene-*` block in `src/style.css` that all three callers now read.
+
+  **The tension, resolved by measuring rather than by stepping over it.** The plate may cross the
+  prologue's no-text-on-art line because it BRINGS ITS OWN GROUND: `rgba(10,15,20,.62)` on a clipped
+  `Card variant="photo"`, so the gate composites a real declared stack and not the photograph.
+  Measured through the real cascade: the plate resolves to `rgb(13,19,25)`, `--ink` 17.15:1,
+  `--ink-soft` 6.55:1, `--ink-dim` **4.23:1 – below AA**, which is why the shared rule names
+  `--ink-soft` and why the splash's own `.plo-vs` was NOT reused inside the plate.
+
+  **What could not be reused, each with its reason** – the real audit, and the thing that makes the
+  next divergence impossible to file as an accident:
+  1. **The splash (E brief).** `.tf-hero` / `.tf-facts` / `.tf-first` / `.tf-brief` are inline markup
+     in `TournamentFlow.vue`, not components – there is nothing to call. And three of its four facts
+     are things a rungless weekend has no honest value for (points, cheque, crowd) plus two ranks it
+     has no table for. Smallest honest seam: extract the brief as a component taking a widened
+     `PendingView` (`tier: null`, `drawSize: null`, `ladder: null`), which is the wave round 35
+     already scoped.
+  2. **`ui/TakeoverShell.vue`.** Genuinely store-free and adoptable – the blocker is measured, not
+     structural: `.tournament-flow:has(.mv)` widens the court to 1024 past 768, and round 36 phase 4
+     pinned the prologue's weekend OUT of that rule on purpose. Adopting the shell silently reopens a
+     decision that was measured. Smallest honest seam: adopt it together with a re-run of phase 4's
+     column measurements.
+  3. **The post-match box score.** Also inline in `TournamentFlow`, and it reads `pending` for the
+     stat table's ranks and ladder clause. The prologue already shows the VIEWER's own box score,
+     which is the same component the career's viewer shows; and the owner's own ruling puts the
+     weekend's result on a prologue CARD («а потом уже продолжаем наши прологовые карточки»).
+  4. **The finale poster.** `useKidEmotion()` again, plus `armTrophyFlight` onto a tab bar that does
+     not exist during the prologue and a cabinet with nothing in it. Unchanged from round 35 #1.
+  5. **The round strip and `BracketTabs`.** A prologue weekend is one to three matches and no
+     standings; the strip is «her path so far» in a competition she is inside for one screen.
+  6. **The career's second pre-match button («Skip»).** It resolves the match engine-side; a prologue
+     match must be simulated to exist at all, and the viewer's own «Skip to the result» answers it.
+     A second control here would need a word the owner has never written.
+  7. **Pre-existing, NOT touched:** `.plo-splash` is a bare `<section>`, so the splash still sits in
+     the app's section panel with a 16px inset while the prologue's own ruling is «no backing plates».
+     That is round 36 phase 4's recorded finding and moving it moves a box below 768.
+
+  Files: `src/components/PrologueLocalOpen.vue`, `src/components/TournamentFlow.vue`,
+  `src/components/PracticeFlow.vue`, `src/style.css`, `tests/component/prologue-round42.test.ts`.
+  Green: `test:component` 188 files / 2023 tests, `test:e2e` 121 passed, the touched-source unit set
+  918 tests, `vue-tsc -b --force` clean. Twelve mutation arms run and restored; one of them
+  (`flex: 1 1 0` removed) came back **0 RED** and that is how the screen's duplicate of MatchScene's
+  own fill geometry was found and deleted.
