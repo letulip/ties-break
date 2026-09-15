@@ -202,7 +202,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   the arm scored 0 red before that positive control was added). Keyed on her play style again, or
   frozen to one girl: **4 red**.
 
-- [?] **7. «мы так и не починили дыру… каждый год заново надо набирать национальный ранг… второй раз
+- [ ] **7. «мы так и не починили дыру… каждый год заново надо набирать национальный ранг… второй раз
   пишу»** – **ask, sharpened – and the archaeology says exactly where the pain is.** The
   season-to-date window IS his own ruling (round 23 #12/#13 «6 лучших ЗА СЕЗОН»;
   `WINDOW_BY_TRACK.domestic = 'seasonToDate'`, `ranking.ts:144-148`) – round 34 #1 already
@@ -217,6 +217,20 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   one rung down; **B** – status quo, re-earn entry every season. ⚠ «окно в 46 недель» exists
   nowhere in code or docs (only `rolling52` and `seasonToDate`); no screen prints 46 – if he saw a
   46 somewhere, a screenshot reopens that half.
+
+  ⭐⭐ **RULED 15.09: A, AND HE NAMED THE MECHANISM RATHER THAN THE OUTCOME** – «A — защёлка, но
+  такая же, как и на взрослых турнирах, тот же механизм — окно в 52 недели и выбираем лучшие 6
+  результатов, окно "ползет"». So the domestic track stops being the odd one out: `WINDOW_BY_TRACK
+  .domestic` goes from `'seasonToDate'` to the **rolling 52-week window**, best 6 results, the window
+  crawling exactly as the professional table's does. That is one ruling doing two jobs – the January
+  cliff disappears because there is no January any more (a result ages out 52 weeks after it was won,
+  not on a calendar boundary), and the entry gate stops slamming because the points it reads no
+  longer reset.
+  ⚠ **It is not a one-constant change and the receipts are known:** the Stats screen's
+  `seasonToDate` arm dies with it, `RankHelpDialog`'s domestic copy states the old rule in words
+  (re-draft, DRAFT for his read), the season-1 prehistory churn has to be named rather than
+  discovered, and both probe arms re-run. It supersedes the latch proposal above: a floor that never
+  falls needs no latch.
 
 - [x] **8. «нажал на плашку… не сразу открылась, а потому мой второй автоклик выбрал какой-то пункт…
   Надо сделать как на прологе "выбор + proceed"» (и «сделать плавно пульсирующей по контуру»)** –
@@ -382,7 +396,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   dated amendment. **⚠ No bench:** this is a door price, not a corridor – it changes no rate, no
   draw and no valuation, and the probe above is the measurement the change actually has.
 
-- [?] **14. «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»** – **build, the
+- [~] **14. «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»** – **build, the
   residue of a half-shipped fix – flag the history honestly.** Round 23 #10 fixed domestic events;
   round 41 #17 fixed the VS card (`playerNation`, `snapshot.ts:924-946`, 12.09, INTACT at head).
   The residue his eye keeps catching: `computeStandings` resolves field pros **only on the WTA
@@ -1494,3 +1508,107 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   918 tests, `vue-tsc -b --force` clean. Twelve mutation arms run and restored; one of them
   (`flex: 1 1 0` removed) came back **0 RED** and that is how the screen's duplicate of MatchScene's
   own fill geometry was found and deleted.
+
+- [ ] **37. «мы делали вроде для разнообразия персоналий, разве нет? мне кажется надо вернуть» (15.09,
+  on the four play-style pairs item 6 retired)** – **build, and he is right about why they existed.**
+  Item 6 replaced a tile keyed on `playStyle` with one keyed on TEMPERAMENT, and four shipped strings
+  left the game with the old table: «Impatient / Wants it now» · «Patient / And stubborn» · «Backs
+  herself / Never says so» · «Curious / Tries everything». They were written for variety and they
+  should not be the price of getting variety. Fix: the tile carries BOTH – her temperament pair leads
+  (who she is, read at birth) and the play-style pair follows as the second fact (how she plays), so
+  the tile has **sixteen readings** instead of the four it had this morning or the four it had
+  yesterday. ⚠ The measurement item 6 stopped at is the ask here: both existing lines are `nowrap` in
+  a 115px cell, so a third line needs the taller grid measured at 375 before it ships – and if the
+  taller grid costs something, the honest alternative is to pair them on ONE line and measure that.
+  Evidence: mounted test – two careers with the same temperament and different play styles read
+  differently, and two with the same style and different temperaments read differently.
+
+  ⭐⭐⭐ **HIS SHAPE, RE-CUT 15.09 AFTER HE READ THE FIRST DRAFT – AND THE RE-CUT IS THE ITEM.** His
+  words: «это её основная персоналия на всю игру… я хочу, чтобы эти две строки реально о ней говорили
+  на основе её сида, а не Patient and stubborn у всех. Они все разные. Кто-то будет быстрее сдаваться,
+  кто-то нет, кто-то будет более спокойным и менее… может быть эти два слова будут ИНОГДА меняться,
+  как у Федерера. Сначала он был горяч и упёрт, а потом стал спокоен и целеустремлён… Я не хочу, чтобы
+  это менялось с настроением и дублировало его, у нас уже есть поле с настроением.»
+
+  So the tile is **one line, two adjectives, and the two halves answer two different questions:**
+
+  * **The SECOND word is who she was born** – her temperament (`sunny` / `fiery` / `quiet` / `deep`,
+    rolled at birth and never written again). It does not move, ever. This is the “упёрт” half of his
+    sentence: the thing that is still true about Federer at thirty-five.
+  * **The FIRST word is how steady she has BECOME** – read off her **composure**, in bands. Not
+    spirit. That is the whole of his «не дублировало настроение»: spirit is this week (it moves every
+    week and already owns the Mood field); composure is a SKILL that grows a few points a season along
+    her own rolled ceiling. A band boundary is therefore crossed **once or twice in a whole career, or
+    never** – which is exactly his «ИНОГДА», and it is his Federer arc stated in our own numbers: a
+    girl born at composure 39 reads hot, and the same girl at 62 does not.
+
+  ⚠ **AND IT IS GENUINELY PER-SEED, which is the complaint.** Two careers with the same temperament
+  read differently when their composure ceilings differ – the two audited careers of item 32 are the
+  proof: one was dealt composure 53 → 77.6 (the biggest nerve draw the game deals) and the other
+  39 → 51.6, so they can never read the same line, at any age. «Кто-то будет быстрее сдаваться» is
+  composure in our model too – it is what the point loop spends on break points and what
+  `retireHazard` reads – so the vocabulary is honest rather than decorative.
+
+  ⭐ **AND IT GIVES #34/#35 THEIR PAYOFF.** The psychologist raising composure past the rolled ceiling
+  (#35, +5 over five seasons) can push her across a band – so the seat the owner is paying for
+  literally changes who she is, slowly, visibly, on the page about her. That is the Federer story
+  happening to HIS girl rather than being quoted at her.
+
+  ⚠ The play style keeps its own paper note beside the photo (`PLAY_STYLE_LABEL` – «Counterpuncher»,
+  «Big serve», «Aggressive baseliner», «All-court»): the note says what she plays, the tile says what
+  she is like. The old pairs took BOTH words from the style, which is why they duplicated the note and
+  read the same for every career with that style.
+
+  All the DRAFT lines – four composure bands × four temperaments – land in this ledger before the
+  gate. Evidence: two careers with the same temperament and different composure read differently; the
+  same career read at 14 and at 22 changes its first word and never its second; and a mutation arm
+  binding the first word to SPIRIT instead of composure goes red (the «not the mood field» law).
+
+- [ ] **38. «может быть разные девочки в разное время к потолку приходят всё-таки? колледж или нет,
+  тренер или нет, хорошо тренировали или нет» (15.09)** – **measure first, then decide.** Raised off
+  item 22's finding that at the end of a career all five wings read the saturated register at once,
+  which is monotone even though it is true. His question is the right one and it is measurable with
+  the instruments this round already built: **how long does a girl take to reach 90% of each wing's
+  ceiling, and how far apart are those times across the routes a player actually chooses** – coach
+  tier, college against tour, plan quality, the load she carries. If the spread is already wide, the
+  copy simply needs to speak the ROUTE rather than the rung; if it is narrow, the model is telling
+  every girl the same story and that is a development question, not a copy one.
+  ⚠ Belongs with the nerve wave (#34): same family, same benches, same quiet machine.
+
+- [ ] **39. «я вообще ничего не понял. Почему остальные контракты работают корректно, а этот нет? Это
+  надо починить» (15.09, on item 16's answer)** – **the answer was muddled and the real finding is
+  narrower than it read.** Restated: nothing misbehaves per contract. A signed KIT deal turns away
+  only KIT letters (`offers.ts:1107` gates on `offer.kind === 'kit'`), which is correct – she cannot
+  wear two apparel brands – and advertising is a separate family with its own per-category slots
+  (`adSpokenFor`), which is why his own timeline has an ad letter landing at 17 while a kit contract
+  was running. Every family behaves the same way: one live deal per family, nothing muted outside it.
+
+  **What actually bit him is the TOP of the kit ladder, and it is structural rather than per-contract.**
+  `rungTurnedAway` lets only a STRICTLY stronger rung interrupt a running deal. At the last rung there
+  is no stronger rung, so an `icon` deal means **four winters with no kit letter at all** – by
+  construction, not by accident. Three of his four empty winters are exactly that, and the game never
+  says «you are under contract until 2041», so silence reads as a broken system.
+
+  **Two fixes, and they are different sizes:**
+  * **(a) LEGIBILITY, the build:** the inbox says what is running and until when, so a quiet winter is
+    explained on screen instead of being a mystery. No mechanic moves. DRAFT copy for his read.
+  * **(b) THE DEAD END, his call:** at the top rung nothing can approach her for the whole term. Real
+    sport does not go quiet like that – a rival brand courts a star in her final contract year, and
+    renewals are a scene. Proposal: in the LAST season of a running deal the same rung (and only the
+    same rung) may write a renewal or a rival approach. That is a real mechanic and it would ship the
+    way this round's other tuning does: predicted first, benched, his numbers.
+
+- [ ] **40. «юниорские годы тоже заведи пунктом» (15.09)** – **measure, then his number.** Out of item
+  16's paper trail: before eighteen his own career held three kit rungs paying **$2,000 · $3,000 ·
+  $3,000 a season** and ONE advertising letter ($40,000 at 17.0) – and then the money explodes, five
+  ad deals in the nineteenth year alone and $2.5M a year by twenty-two. His sentence «за всё время до
+  18 пришёл 1 спонсор» is therefore literally true of the junior band, and it is the band's own
+  design rather than a fault: the junior advertising cheque is halved by `ECONOMY.advertising`'s
+  [16,18) band and the `local`/`national` kit rungs are priced for a child.
+
+  The question is whether that is too quiet to play. What to measure before touching a number: the
+  junior years' TOTAL sponsor income against what the family spends in the same years (the coach, the
+  travel, the kit), across all four backgrounds – i.e. **what share of the junior bill a good junior
+  career can cover**. If it is near zero the band is decorative and a working family's junior years
+  are funded entirely by the parent, which is a design statement worth making on purpose rather than
+  by omission. Numbers first, his ruling on the constants after, invariant 5 as ever.
