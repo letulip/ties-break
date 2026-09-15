@@ -845,16 +845,16 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   instrument, `skill-gap-odds`, the upset corridor, `bench:radar`, the econ arms, and this bench again
   as the acceptance test. Its own bundle, on a quiet machine, after this round's UI work.
 
-  ⚠ ONE NUMBER IS STILL HIS (asked in the spec): the target size. Architect proposes **+20 composure
-  ≈ +4pp of match win rate** – roughly a third of a serve point, which makes nerve a real secondary
-  wing without re-cutting the ladder's flow. Anything much larger starts deciding careers by a wing
-  the player cannot train directly.
+  ⭐ **THE TARGET IS RULED (15.09): +20 composure ≈ +4pp of match win rate** («да, +4пп цель»).
+  Against serve's +14pp and groundstrokes' +18pp that makes nerve a real second-echelon wing without
+  re-cutting the ladder's flow. It is the acceptance test: this bench re-run is what says the change
+  landed.
 
 
 
-- [?] **35. «может быть даже сделать какую-то возможность превосходить заложенную с сидом выдержку с
-  помощью психолога. Пусть и не сильно, но тем не менее» (15.09)** – **design, and it needs one word
-  from him on each of three numbers.** Born out of #34's ruling: if nerve is going to be worth
+- [ ] **35. «может быть даже сделать какую-то возможность превосходить заложенную с сидом выдержку с
+  помощью психолога. Пусть и не сильно, но тем не менее» (15.09)** – **RULED the same day, all three
+  numbers his.** Born out of #34's ruling: if nerve is going to be worth
   something, the seat that works on nerve should be able to move it – and his own example is the
   argument (a player who was hot-headed early and rebuilt himself is a real career, not a fantasy).
 
@@ -869,14 +869,25 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   earned over seasons and must survive a save, and it cannot be re-derived from anything the save
   already holds (weeks hired are not enough – the focus can change).
 
-  **The three numbers, his to set** (architect's proposals in brackets):
-  1. **The cap** – how far above the ceiling nerve can ever go [**+5 points**, i.e. about a fifth of
-     the biggest draw the game deals, «не сильно» in his own words].
-  2. **The rate** – how long the work takes [**≈+1 point per season** of continuous work on the
-     focus, so the full +5 is a five-season project and nobody buys it in a wave].
-  3. **Whether it holds when the work stops** [**permanent once earned** – his Federer example is a
-     player who changed, not one who rented a mood; the alternative is a slow decay back to the
-     ceiling, which reads as «he was only ever managing it»].
+  ⭐ **RULED 15.09, verbatim: «+5 потолок, по очку за сезон, постоянный (здесь не уверен, можно всё
+  таки небольшой откат сделать мне кажется, например 0.2пп за сезон без этой тренировки, мне кажется
+  это вполне ок)».** So:
+  1. **Cap: +5 points** above the rolled ceiling – about a fifth of the biggest nerve draw the game
+     deals.
+  2. **Rate: +1 point per season** of continuous work on the focus; the full +5 is a five-season
+     project and nobody buys it inside one wave.
+  3. **Decay: −0.2 per season without the work.** ⚠ HIS WORD SAYS «пп» AND THE BONUS IS IN COMPOSURE
+     POINTS, so this is READ as 0.2 of a point per idle season – a fifth of the earning rate, so a
+     career that stops working keeps almost all of it (a full +5 would take 25 idle seasons to unwind,
+     which is longer than any career). That reading is written down here rather than assumed silently;
+     if he meant 0.2 of a percentage point of match win rate, the number changes and this line is the
+     place it gets corrected.
+
+  **Schema: v78 is now free and this item claims it.** The round's standing constraint («no schema
+  move, v77 is wave 6's») was written while the wave was unmerged; it merged on 15.09 as PR #144, so
+  the next version is available. The three-part move is the house law: bump `SAVE_SCHEMA_VERSION`,
+  append-only migration, golden fixture. Round 41 #22 (the fund chart's purchase marks) is the other
+  v78 customer waiting and is NOT built here – it stays that round's item.
 
   ⭐ And one thing it buys beyond the wing: the radar finally shows something the player DID rather
   than something the seed dealt – the first mark on that screen that is the parent's own work.
