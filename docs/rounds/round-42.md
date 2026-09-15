@@ -1762,3 +1762,34 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   Item 25's shipped note promises «10 points more every birthday» while the ramp is paused in college,
   which is false for those four years. He gave the sense and the wording is drafted from it; the draft
   lands in this ledger for his read before it ships.
+
+- [ ] **45. HIS RULINGS OF 15.09 ON THE THREE OPEN ASKS** – recorded together because they arrived
+  together.
+
+  * **Round 41 #22 rides v78** («41 #22 давай тоже в v78 закинем»). The fund chart's purchase marks
+    (`OwnedAsset.entries` + the micro-popup) have waited a month for a schema move; v78 is claimed by
+    #35 and #22 joins it. One bump, one append-only migration, one golden fixture, TWO customers –
+    which is the cheapest a schema move ever gets. ⚠ Both halves must land in the SAME version or the
+    second one waits for v79.
+
+  * **#39b – NO mid-term letters** («кончился контракт - можно свежие слать. Либо слать в любое
+    время, но чтобы вступали в силу с момента завершения текущего (но это кажется странным)»). Read
+    as: the rule stands as built – nothing writes while a deal is running, and the post re-opens the
+    week the term ends (`dealStartsAt` already makes that seamless: a signed letter takes over the
+    week the old contract stops, with no gap). He named the alternative himself and refused it. **So
+    the dead-end proposal is withdrawn and only #39a ships** – the inbox saying what is running and
+    until when, so a quiet winter is explained rather than mysterious. ⚠ If this reading is wrong the
+    one line to change is here.
+
+  * **#19 is unparked and re-scoped** («у нас есть исследование и бенч, надо просто цифры проверить и
+    актуализировать… Плюс у нас должен был спарринг-тренер появиться какой-то, может быть тоже
+    добавить? на что влияет только я не очень понимаю»). So item 19 becomes a real bundle: re-price
+    the elite tail against [team-economics-2026-09](../research/team-economics-2026-09.md) (finding
+    3.2's warning stands – the raise must hit ONLY the elite tail; mid-careers are priced right), and
+    add the sparring seat from [the-form-and-the-sparring-2026-09](../specs/the-form-and-the-sparring-2026-09.md)
+    §4, whose design answer to his «на что влияет» is one sentence: **the slump is the psychologist's
+    patient, the rust is the sparring partner's** – while hired he cuts the RHYTHM channel's drift by
+    rung (×0.6 / ×0.35 / ×0.15 proposed), so practice weeks stand in for match weeks, and he touches
+    the results channel not at all. Money anchor $50–80k/yr + full travel → $500 / $900 / $1,400 a
+    week proposed, no results share. ⚠ It needs `sparringHired` / `sparringRung` persisted, so it is a
+    THIRD v78 customer – or it waits for v79, and that is a scheduling call rather than a design one.
