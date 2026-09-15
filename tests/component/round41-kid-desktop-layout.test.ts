@@ -46,6 +46,8 @@ function snapshotWithGridNote(): Snapshot {
     week: base.week,
     ageYears: 20,
     seasonYear: seasonYear(Math.floor(base.week / 52)),
+    // ⚠ ROUND 42 #6 – the view names her temperament now; this file is about the desktop grid.
+    temperament: base.diary.facts.temperament,
     playStyle: base.profile.playStyle,
     birthMonth: base.profile.birthMonth,
     injured: false,
@@ -121,14 +123,18 @@ describe('round 41 #5 – the kid screen at 1280: Home’s desktop idiom', () =>
       expect(getComputedStyle(el!).gridColumn, label).toBe('1 / -1')
     }
     fullWidth('.kid-grid', 'the attribute grid')
-    // A REAL rendered note, off `snapshotWithGridNote`'s own fixture – not a claim about a class
-    // name, a claim about an element actually on this screen.
-    fullWidth('.kid-note-account', 'her own-account footnote')
-    // The two panels that are NOT the Skills radar – `.kid-panel` minus `.kid-panel-radar`.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #10 (14.09), AND IT IS THE SAME CLAIM ABOUT THE SAME CONTENT. This
+    // read `.kid-note-account`, the `.hint` paragraph her account used to be; the owner asked for
+    // the family budget's own vocabulary instead («использовать то же, что и в family budget, и
+    // поставить либо перед, либо после counting results»), so the account is a `.kid-panel` CARD now
+    // – which is also why the panel count below is three and no longer two. A REAL rendered card,
+    // off `snapshotWithGridNote`'s own fixture, not a claim about a class name.
+    fullWidth('.kid-account', 'her own-account card')
+    // The panels that are NOT the Skills radar – `.kid-panel` minus `.kid-panel-radar`.
     const otherPanels = [...document.querySelectorAll('.kid-panel')].filter(
       (el) => !el.classList.contains('kid-panel-radar'),
     )
-    expect(otherPanels.length, 'Important moments and Counting results, both on screen').toBe(2)
+    expect(otherPanels.length, 'her account, Important moments and Counting results, all on screen').toBe(3)
     for (const el of otherPanels) {
       expect(getComputedStyle(el).gridColumn, 'a panel that is not the Skills card').toBe('1 / -1')
     }

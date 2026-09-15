@@ -37,7 +37,11 @@ import { isExamWeek, isOffSeasonWeek, isSummerWeek, WEEKS_PER_YEAR } from './sea
 import { kidBirthYear } from './world/age'
 import { seasonYear } from '../shared/dates'
 import { formatCents } from '../shared/money'
-import type { CollegeTier, KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
+// ⭐ ROUND 42 #6 – TYPE-ONLY, so this leaf stays a leaf. `engine/spirit.ts` owns the union and the
+// two axis projections; nothing of its runtime comes here, and the arrow is erased at compile time
+// exactly like `world/*.ts`'s `import type { WorldState }`.
+import type { Temperament } from './spirit'
+import type { CollegeTier, KidAccountRow, KidAccountView, KidLife, KidLifeTile, PlayStyle } from '../shared/protocol'
 
 /** The widest a tile line may be, in characters.
  *
@@ -478,6 +482,51 @@ export function ownAccountNote(view: KidLifeWorldView): string {
   )
 }
 
+/** ⭐⭐ ROUND 42 #10 – THE SAME ACCOUNT, IN THE FAMILY BUDGET'S OWN VOCABULARY.
+ *
+ *  The owner: «информация о ее аккаунте… использовать то же, что и в family budget, и поставить либо
+ *  перед, либо после counting results». The Money screen says money in `StatRow` rows inside a
+ *  `Card`; her page said it in a paragraph of hint text. This composes the rows; `KidScreen` renders
+ *  them and picks nothing but the tone.
+ *
+ *  ⚠ ONE GATE, NOT TWO. It returns null in exactly the cases `ownAccountNote` returns '' – the guard
+ *  is the same two lines, deliberately spelled the same way – so the Kid page's card and the Money
+ *  screen's sentence appear and vanish together. A second predicate here would be the third spelling
+ *  of a rule that already has the one it needs.
+ *
+ *  ⚠ AND EVERY FIGURE IS STILL THE ENGINE'S. `kidPrizeShareBps` is the function the till divides by
+ *  and `managerCommissionBps` is the one `bankSponsorCheque` calls, so the card and the cheque cannot
+ *  quote two different percentages – `ownAccountNote`'s own law, kept by reading the same functions
+ *  rather than by reading `ownAccountNote`'s string back.
+ *
+ *  ⚠ THE RAMP IS A NOTE AND NOT A FOURTH ROW. A `StatRow` is «a name, a figure»; «five points more
+ *  every birthday up to fifty percent» is a sentence, and a sentence in the value slot would be a
+ *  paragraph wearing a row's geometry. It wraps under the rows, where prose is allowed to. */
+export function ownAccountCard(view: KidLifeWorldView): KidAccountView | null {
+  const bps = kidPrizeShareBps(view.ageYears)
+  if (bps <= 0) return null
+  if (view.ageYears < ECONOMY.kidShare.fromAgeYears && view.kidFundsCents <= 0) return null
+  const rows: KidAccountRow[] = [
+    // ⚠ «Balance» IS THE FAMILY BUDGET'S OWN WORD for this figure (MoneyScreen's summary cell), which
+    // is what «использовать то же, что и в family budget» asks for; the card's heading carries «Her
+    // own account», the sentence's own opening, so the row does not say it twice.
+    { key: 'balance', label: 'Balance', value: formatCents(view.kidFundsCents) },
+    // «She keeps N% of every prize cheque» – the same clause, as a label and a figure.
+    { key: 'prize', label: 'Her cut of a prize cheque', value: `${bps / 100}%` },
+    // «Sponsor cheques are hers, less the manager's K%» – the other half of the same sentence.
+    { key: 'manager', label: "Manager's cut of a sponsor cheque", value: `${managerCommissionBps() / 100}%` },
+  ]
+  // The brand clause says «the same share», never a second spelling of the percentage – two spellings
+  // of one number is how a stale one survives (`ownAccountNote`'s own note).
+  const brand = view.ownsBrand ? " The same share comes off her brand's weekly income." : ''
+  const ramp =
+    bps >= ECONOMY.kidShare.capBps
+      ? 'Her share goes no higher.'
+      : `Her share grows ${ECONOMY.kidShare.stepBps / 100} points every birthday, up to ` +
+        `${ECONOMY.kidShare.capBps / 100}%.`
+  return { rows, note: `${ramp}${brand}` }
+}
+
 /**
  * ⭐ ROUND-21 #6 – THE ONE LINE THAT EXPLAINS THE SEPTEMBER, on the tile he found it on.
  *
@@ -516,27 +565,50 @@ export function schoolCutOffNote(view: KidLifeWorldView): string {
 }
 
 // =================================================================================================
-// 2. PERSONALITY - her play style, read as a person
+// 2. PERSONALITY - who she was born as, read by the parent who lives with her
 // =================================================================================================
 //
-// The owner: «personality - это вот её play style отражением может быть». `playStyle` is picked at
-// onboarding and never changes, so this tile is the one fixed thing on the grid - which is right:
-// it is the export's own pairing for the paper scrap on the hero, where the mockup puts
-// "Right-Handed" and we put her style. The scrap names the tennis fact; this names the girl.
+// ⭐⭐ ROUND 42 #6 – THE TILE WAS THE SAME GIRL IN EVERY CAREER, and the owner found it in play:
+// «personality у всех девочек одинаковая… patient and stubborn, мы вроде бы делали дифференциацию?»
+// It was keyed on `playStyle`, which is picked once at onboarding - so one favourite style meant one
+// personality for every career ever started, while `world.temperament` (live since wave 1, the whole
+// point of the who-she-is layer) never reached this screen at all.
+//
+// ⭐ HIS RULING, 14.09, and it is bigger than this tile: «всё, со слоем эмоций "всегда" кончились,
+// теперь у нас вариативность везде». So the tile leads with her TEMPERAMENT, and four careers on
+// four seeds read as four different girls.
+//
+// ⚠⚠ THE FENCE (who-she-is §3, restated at `expressedTemperamentOf`): THE VOICES READ BIRTH AND ONLY
+// BIRTH. This tile is a voice site, not a mechanic - so it reads `world.temperament`, never
+// `expressedTemperamentOf` (walls are how much of her reaches the parent, not who she is) and never
+// her spirit (a tile that drifts with this week's mood is the defect, not the feature: the Mood tile
+// one cell over is the surface that carries the week). «A quiet girl behind walls still has a quiet
+// girl's syntax» is the sentence, and it is pinned in tests/kidLife.test.ts §2.
 //
 // NOT ONE OF THESE LINES IS ABOUT TENNIS. That is the whole instruction and the only way the tile
-// earns its place next to Mood: a counterpuncher who "returns everything" has told the player
-// nothing they cannot read off the scrap two inches above. Register from engine/diary.ts - the
-// parent observing, short, plain, present tense, no adjectives she could not have seen.
-export const PERSONALITY: Record<PlayStyle, KidLifeTile> = {
-  // She goes first and she goes now. A parent's word for it is not "aggressive", it is this.
-  aggressive: { lead: 'Impatient', note: 'Wants it now' },
-  // The one who outlasts the argument. Patient is the compliment; stubborn is what it costs.
-  counterpuncher: { lead: 'Patient', note: 'And stubborn' },
-  // She backs herself - and would never dream of saying so out loud.
-  'serve-first': { lead: 'Backs herself', note: 'Never says so' },
-  // No weapon, no hole: the girl who signs up for everything and is fine at all of it.
-  'all-court': { lead: 'Curious', note: 'Tries everything' },
+// earns its place next to Mood. Register from engine/diary.ts - the parent observing, short, plain,
+// present tense, no adjectives she could not have seen. The four voices they are written against are
+// docs/specs/voice-bibles-2026-09.md §"The four voices"; the pair is ONE thought about her, not a
+// word plus a caption.
+//
+// ⚠ AND THE PLAY STYLE KEEPS ITS OWN SURFACE, two inches up the same screen: `playStyleLabel` on the
+// hero's paper scrap ("Counterpuncher"), which is where the export puts the tennis fact. The tile's
+// two lines are `nowrap` inside a 115px cell (see TILE_LINE_MAX), so a third line for the style
+// flavour would be a new layout risk on the 375 frame AND the two-facts-stapled-together tile his
+// ruling asks not to build. The four play-style pairs it replaces are recorded in the round's ledger.
+export const TEMPERAMENT_PERSONALITY: Record<Temperament, KidLifeTile> = {
+  // open + steady. She volunteers the context before anybody asks, and an ordinary feeling gets
+  // named in the week it happened. The parent's word for that is not "extravert", it is this.
+  sunny: { lead: 'Easy company', note: 'Nothing unsaid' },
+  // open + intense. The verdict arrives before the explanation and the weather changes by Thursday -
+  // both are true, and the second line is the half a parent learns to wait for.
+  fiery: { lead: 'Runs hot', note: 'Then it passes' },
+  // private + steady. She talks about the schedule instead of herself, and nothing moves her much
+  // either way. Privacy is not passivity - she will ask the awkward question outright.
+  quiet: { lead: 'Keeps to herself', note: 'Never rattled' },
+  // private + intense. Late, exact, stripped of its size: the words are expensive and everything
+  // lands hard. Not sullen - that is the flat pool, a different sound.
+  deep: { lead: 'Says little', note: 'Feels all of it' },
 }
 
 // =================================================================================================
@@ -737,6 +809,12 @@ export interface KidLifeWorldView {
    *  the whole app agrees on (shared/dates.ts). Passed in rather than re-derived, so this module
    *  cannot invent a second definition of what year it is. */
   seasonYear: number
+  /** ⭐⭐ ROUND 42 #6 – WHO SHE WAS BORN AS, and the Personality tile's only input.
+   *
+   *  ⚠ BIRTH, NOT EXPRESSION. `toSnapshot` hands `world.temperament` and must never hand
+   *  `expressedTemperamentOf(world)`: this tile is a VOICE site and who-she-is §3's fence puts the
+   *  voices on birth alone. See the ⚠⚠ block above `TEMPERAMENT_PERSONALITY`. */
+  temperament: Temperament
   playStyle: PlayStyle
   /** 1-12 */
   birthMonth: number
@@ -780,12 +858,17 @@ export interface KidLifeCollegeView {
 /** Everything screen C's three derived tiles need. Called once per snapshot. */
 export function buildKidLife(view: KidLifeWorldView): KidLife {
   return {
-    personality: PERSONALITY[view.playStyle] ?? PERSONALITY['all-court'],
+    // ⭐⭐ ROUND 42 #6 – HER TEMPERAMENT, not her play style. See the ⚠⚠ fence above the table: BIRTH,
+    // and the caller hands `world.temperament` for exactly that reason.
+    personality: TEMPERAMENT_PERSONALITY[view.temperament],
     school: lifeStageTile(view),
     schoolLabel: stageLabelOf(view),
     schoolWhy: schoolCutOffNote(view),
     collegeNote: collegeNote(view),
     ownAccount: ownAccountNote(view),
+    // ⭐⭐ ROUND 42 #10 – the same facts as rows, for her own page. The Money screen keeps the
+    // sentence above; this is the card that replaces the hint paragraph on screen C.
+    account: ownAccountCard(view),
     friends: friendsTile(view),
   }
 }

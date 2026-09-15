@@ -290,6 +290,10 @@ export function radarViewOf(world: WorldState): RadarWorldView {
       .filter((e) => e.match !== undefined && !e.friendly)
       .map((e) => e.match!)
       .filter((m) => m.aId === KID_ID || m.bId === KID_ID),
+    // ⭐ ROUND 42 #22 – WHAT THE WEEK IS BUYING, so the coach's eye can say when it is buying
+    // nothing. The PLAN and never her build: it is the family's own setting, the one thing on this
+    // view they can already read perfectly, so nothing about her leaks through it.
+    planWeek: world.plan.week,
   }
 }
 

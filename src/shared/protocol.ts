@@ -158,6 +158,8 @@ export type {
   DiarySnapshot,
   KidLifeTile,
   KidLife,
+  KidAccountRow,
+  KidAccountView,
   RadarAxis,
   TrainingRead,
 } from './protocol/narrative'

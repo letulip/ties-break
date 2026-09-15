@@ -29,7 +29,7 @@ import {
   schoolYearIndex,
   lifeStageTile,
   friendsTile,
-  PERSONALITY,
+  TEMPERAMENT_PERSONALITY,
   SCHOOL_CUTOFF_MONTH,
   SCHOOL_YEAR_TURNS_AT,
   TILE_LINE_MAX,
@@ -52,6 +52,9 @@ import { rngFromSeed } from '../src/engine/rng'
 import { seasonYear } from '../src/shared/dates'
 import { isExamWeek } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
+// ⚠ ROUND 42 #6 – the four temperaments, walked by name rather than re-listed here. `TEMPERAMENTS`
+// is the engine's own array and the sweep below has to be total over it.
+import { TEMPERAMENTS } from '../src/engine/spirit'
 import { DEFAULT_PROFILE, type PlayStyle } from '../src/shared/protocol'
 
 const PLAY_STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
@@ -64,6 +67,10 @@ function view(over: Partial<KidLifeWorldView> = {}): KidLifeWorldView {
     week,
     ageYears: 14 + Math.floor(week / 52),
     seasonYear: seasonYear(Math.floor(week / 52)),
+    // ⚠ ROUND 42 #6: the Personality tile is keyed on her TEMPERAMENT now and no longer on her play
+    // style. `quiet` is just the default girl – every pre-#6 case in this file asserts about School
+    // and Friends and does not care which of the four she is; §2's own cases set it explicitly.
+    temperament: 'quiet',
     playStyle: 'all-court',
     birthMonth: 6,
     injured: false,
@@ -221,15 +228,36 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
 })
 
 // ===========================================================================
-// 2 — PERSONALITY: her play style, read as a person
+// 2 — PERSONALITY: who she was born as, read by the parent who lives with her
 // ===========================================================================
-describe('personality – the play style, read as a girl rather than as a game', () => {
-  it('every play style has a reading, and no two are alike', () => {
-    const readings = PLAY_STYLES.map((s) => `${PERSONALITY[s].lead}|${PERSONALITY[s].note}`)
-    expect(new Set(readings).size).toBe(PLAY_STYLES.length)
-    for (const s of PLAY_STYLES) {
-      expect(PERSONALITY[s].lead.length, s).toBeGreaterThan(0)
-      expect(PERSONALITY[s].note.length, s).toBeGreaterThan(0)
+//
+// ⚠⚠ RE-AIMED BY ROUND 42 #6 (14.09), AND THE CLAIM IS THE OPPOSITE OF THE ONE IT REPLACES.
+// This block used to sweep `PERSONALITY`, a four-row table keyed on `playStyle` – so it proved that
+// four PLAY STYLES read as four different girls while every career that picked the same favourite
+// style got the same personality for twenty years. That is exactly what the owner found in play
+// («personality у всех девочек одинаковая… мы вроде бы делали дифференциацию?»), and his ruling is
+// the law the sweep now enforces: «всё, со слоем эмоций "всегда" кончились, теперь у нас
+// вариативность везде». The tile is keyed on TEMPERAMENT, and the fence below is the other half.
+describe('personality – who she was born as, read as a girl rather than as a game', () => {
+  it('every temperament has a reading, and no two are alike', () => {
+    const readings = TEMPERAMENTS.map((t) => `${TEMPERAMENT_PERSONALITY[t].lead}|${TEMPERAMENT_PERSONALITY[t].note}`)
+    expect(new Set(readings).size).toBe(TEMPERAMENTS.length)
+    for (const t of TEMPERAMENTS) {
+      expect(TEMPERAMENT_PERSONALITY[t].lead.length, t).toBeGreaterThan(0)
+      expect(TEMPERAMENT_PERSONALITY[t].note.length, t).toBeGreaterThan(0)
+    }
+  })
+
+  it('⭐⭐ #6 – FOUR CAREERS, FOUR GIRLS: the tile moves with her temperament and with nothing else', () => {
+    // The item's own evidence, at the engine end: two views differing ONLY in temperament must not
+    // read alike. The play style is held constant precisely because it used to be the whole key.
+    const tiles = TEMPERAMENTS.map((temperament) => buildKidLife(view({ temperament })).personality)
+    expect(new Set(tiles.map((t) => `${t.lead}|${t.note}`)).size).toBe(TEMPERAMENTS.length)
+    // ...and the play style, which used to decide this tile, now decides nothing about it.
+    for (const playStyle of PLAY_STYLES) {
+      expect(buildKidLife(view({ playStyle, temperament: 'deep' })).personality).toEqual(
+        TEMPERAMENT_PERSONALITY.deep,
+      )
     }
   })
 
@@ -237,15 +265,20 @@ describe('personality – the play style, read as a girl rather than as a game',
     // The whole instruction for this tile. A counterpuncher who "returns everything" has told the
     // player nothing they cannot read off the hero's paper scrap.
     const forbidden = /serve|return|baseline|court|rally|ball|racquet|match|point|shot|net|volley|win/i
-    for (const s of PLAY_STYLES) {
-      expect(`${PERSONALITY[s].lead} ${PERSONALITY[s].note}`, s).not.toMatch(forbidden)
+    for (const t of TEMPERAMENTS) {
+      expect(`${TEMPERAMENT_PERSONALITY[t].lead} ${TEMPERAMENT_PERSONALITY[t].note}`, t).not.toMatch(forbidden)
     }
   })
 
-  it('is fixed for the career – it is who she is, not how her week went', () => {
-    for (const playStyle of PLAY_STYLES) {
-      const early = buildKidLife(view({ playStyle, week: 0 })).personality
-      const late = buildKidLife(view({ playStyle, week: 240, injured: true, weeksAway: 9 })).personality
+  it('⚠⚠ #6 THE FENCE – it is who she IS, not how her week went', () => {
+    // who-she-is §3: the voices read BIRTH alone. A tile that drifts with her spirit is the defect,
+    // not the feature – the Mood tile one cell over is the surface that carries the week. Nothing
+    // about a hurt, travelled, losing season may touch this cell.
+    for (const temperament of TEMPERAMENTS) {
+      const early = buildKidLife(view({ temperament, week: 0 })).personality
+      const late = buildKidLife(
+        view({ temperament, week: 240, injured: true, weeksAway: 9, lossStreak: 6 }),
+      ).personality
       expect(late).toEqual(early)
     }
   })
@@ -314,8 +347,10 @@ describe('the copy', () => {
    *  weeks and the whole fact space the licences read. */
   function everyLine(): string[] {
     const out: string[] = []
-    for (const playStyle of PLAY_STYLES) {
-      out.push(PERSONALITY[playStyle].lead, PERSONALITY[playStyle].note)
+    // ⚠ ROUND 42 #6: four temperaments where four play styles used to be – the tile's key moved, the
+    // sweep's job (every line the module can put in a 16-character `nowrap` cell) did not.
+    for (const temperament of TEMPERAMENTS) {
+      out.push(TEMPERAMENT_PERSONALITY[temperament].lead, TEMPERAMENT_PERSONALITY[temperament].note)
     }
     for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
       for (let birthMonth = 1; birthMonth <= 12; birthMonth++) {
@@ -397,7 +432,12 @@ describe('a real career', () => {
     const rng = rngFromSeed(seed)
     const at14 = toSnapshot(world).life
     expect(at14.school.lead).toBe('8th grade')
-    expect(at14.personality).toEqual(PERSONALITY['serve-first'])
+    // ⚠ RE-AIMED BY ROUND 42 #6: the end-to-end claim is unchanged – the snapshot carries the tile
+    // the engine composed – but the key is her temperament, so the expectation reads the world's own
+    // `temperament` rather than the profile's play style. Passing `world.temperament` through is the
+    // fence itself: a snapshot that handed the EXPRESSED read (or her mood) would fail here the
+    // moment a career's walls moved.
+    expect(at14.personality).toEqual(TEMPERAMENT_PERSONALITY[world.temperament])
     expect(at14.friends.lead.length).toBeGreaterThan(0)
 
     // Three seasons of a career that actually plays: enter whatever the gate allows, resolve every

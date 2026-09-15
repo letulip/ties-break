@@ -107,6 +107,9 @@ function view(week: number, over: Partial<KidLifeWorldView> = {}): KidLifeWorldV
     week,
     ageYears: Math.floor(kidAgeExact(week, birthMonth, 15)),
     seasonYear: seasonYear(Math.floor(week / WEEKS_PER_YEAR)),
+    // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now; nothing in this file
+    // asserts about that tile, so this is just the default girl the view has to name.
+    temperament: 'quiet',
     playStyle: 'all-court',
     birthMonth,
     injured: false,

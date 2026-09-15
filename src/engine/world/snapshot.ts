@@ -2085,6 +2085,14 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
       // arithmetic can never disagree with the year the rest of the game prints.
       seasonYear: seasonYear(seasonIndexOf(world.week)),
+      // ⭐⭐ ROUND 42 #6 – WHO SHE WAS BORN AS, and the Personality tile's only input.
+      //
+      // ⚠⚠ `world.temperament` AND NEVER `expressedTemperamentOf(world)`. The tile is a VOICE site,
+      // and who-she-is §3's fence puts the voices on birth alone – a quiet girl behind walls still
+      // has a quiet girl's syntax, and the walls are a fact about how much of her reaches the parent
+      // rather than about who she is. Swapping this one line for the expressed read (or for anything
+      // of this week's mood) is the mutation arm the round-42 fence test is written against.
+      temperament: world.temperament,
       playStyle: world.profile.playStyle,
       birthMonth: world.profile.birthMonth,
       injured: world.injury !== null,

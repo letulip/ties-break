@@ -11,7 +11,10 @@
 //
 // THE SIX TILES ARE THE EXPORT'S OWN SIX, and every one of them now has an engine behind it:
 //
-//   Personality   snapshot.life.personality   her play style, read as a girl (engine/kidLife.ts)
+//   Personality   snapshot.life.personality   WHO SHE WAS BORN AS - her temperament, read as a girl
+//                                             (engine/kidLife.ts). Round 42 #6: it was keyed on her
+//                                             play style, so every career read the same. BIRTH and
+//                                             never this week's mood - who-she-is §3's fence.
 //   Confidence    snapshot.condition          the ring Home draws, on the same continuous hue
 //   Mood          diary.facts.emotion         as a word and as her own face
 //   School        snapshot.life.school        her LIFE STAGE - a grade while there is one, then the
@@ -62,8 +65,12 @@ import { TIER_SHORT } from '../../engine/season/calendar'
 import { BEST_N_BY_TRACK } from '../../engine/season/ranking'
 import type { PortraitEmotion } from '../../shared/avatarEmotion'
 import { COACH_TIER_LABEL } from '../../engine/coach'
-// U0 - the shared components (docs/specs/ui-components.md). StatRow is the ninth, and it is not
-// used here: it belongs to the Money screen, which is where it earned its shape.
+// U0 - the shared components (docs/specs/ui-components.md).
+// ⭐⭐ ROUND 42 #10 – AND StatRow IS NOW ONE OF THEM. This line used to read «it is not used here: it
+// belongs to the Money screen, which is where it earned its shape», which was true until the owner
+// asked for her account to be said the way the family budget says money. Nothing about the component
+// changed: it is the same «label ... figure» row with the same three tones, rendered here by a card
+// whose figures the engine composed.
 import ScreenShell from '../ui/ScreenShell.vue'
 import StoreError from '../ui/StoreError.vue'
 import Card from '../ui/Card.vue'
@@ -71,6 +78,7 @@ import Eyebrow from '../ui/Eyebrow.vue'
 import IconButton from '../ui/IconButton.vue'
 import PaperNote from '../ui/PaperNote.vue'
 import ProgressRing from '../ui/ProgressRing.vue'
+import StatRow from '../ui/StatRow.vue'
 // HER COUNTRY IN WORDS AND AS A FLAG, from `composables/countries.ts`. `flagEmoji` was
 // byte-identical in five components and the name map was written out in two; a twenty-fifth
 // country would have had to be added in two files with nothing to say so.
@@ -503,19 +511,6 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            moment she is out of school. -->
       <p v-if="life?.collegeNote" class="hint kid-grid-note kid-note-college">College – {{ life.collegeNote }}</p>
 
-      <!-- ⭐⭐ ROUND-23 #18 – HER OWN ACCOUNT, on the page that is about her.
-           He asked that once she has her own bank account at eighteen, some share of her prize
-           money start being transferred to her - starting around 10-20% and growing year by year -
-           and then widened the ceiling himself to 40 or 50, "it is her career after all". His words
-           are in tests/round23-kid-share.test.ts, for the Cyrillic reason above. Built as a ramp in
-           `ECONOMY.kidShare` (10% at 18, five points a birthday, half from 26) and paid at the
-           moment the cheque is written, in `finalizeTournament`. This is the ONLY surface that
-           tells a player the rule exists, so it carries the balance and the rule together.
-           ⚠ ENGINE-COMPOSED, figures included (`kidLife.ownAccountNote`): the percentage is read
-           back out of the same function the till divides by, so this line cannot promise a share
-           the engine is not transferring. Empty before her eighteenth. -->
-      <p v-if="life?.ownAccount" class="hint kid-grid-note kid-note-account">{{ life.ownAccount }}</p>
-
       <!-- ========================== 3. THE SKILLS RADAR ==========================
            decisions.md #11, finally built. No numbers anywhere on it, ever.
            ⭐ ROUND 41 #5 – `kid-panel-radar` IS THE DESKTOP HOOK ONLY. All three panels on this
@@ -602,6 +597,38 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
            standings points, so the ranking stops looking like a bug. It is not in the export - it
            predates it - and it stays because it is the proof behind the Rank tile above. Markup
            lives in the shared CountingResultsTable.vue (also used by Home's best-6 popover). -->
+      <!-- ⭐⭐ ROUND 42 #10 – HER OWN ACCOUNT, said the way the family budget says money.
+           The owner found it as a paragraph of hint text under the attribute grid and asked for the
+           Money screen's own vocabulary instead, next to the counting results. His words are in
+           tests/component/round42-kid-tile-and-account.test.ts, for the Cyrillic reason above.
+
+           ⚠ BEFORE the counting results and not after, MEASURED rather than argued: that card ends
+           in a table that runs to `bestN` rows (six on the junior ladders, EIGHTEEN on the
+           professional one), so an account card behind it sits a full screen below the fold on a
+           375 frame exactly when she is earning most. Before it, her money lands one thumb under
+           Important moments and the table keeps the last word - which is also the reading order the
+           page already has, facts about HER first and the working behind her rank last.
+
+           ⚠ ENGINE-COMPOSED, LABELS AND FIGURES BOTH (`kidLife.ownAccountCard`): the percentages
+           come back out of `kidPrizeShareBps` and `managerCommissionBps`, the two functions the till
+           itself divides by, so this card cannot promise a share the engine is not transferring.
+           This screen picks the TONE and nothing else - the balance is the figure the card is about
+           (`accent`), the two rates are numbers with no direction (`plain`). Absent entirely before
+           there is an account, which is the same gate the Money screen's sentence answers to. -->
+      <Card v-if="life?.account" class="kid-panel kid-account">
+        <Eyebrow as="h2">Her own account</Eyebrow>
+        <StatRow
+          v-for="(row, i) in life.account.rows"
+          :key="row.key"
+          class="kid-account-row"
+          :label="row.label"
+          :value="row.value"
+          :tone="row.key === 'balance' ? 'accent' : 'plain'"
+          :divider="i < life.account.rows.length - 1"
+        />
+        <p v-if="life.account.note" class="kid-panel-note kid-account-note">{{ life.account.note }}</p>
+      </Card>
+
       <Card class="kid-panel">
         <Eyebrow as="h2">Counting results (best {{ bestN }})</Eyebrow>
         <!-- THE RANK ITSELF, which used to have a tile of its own. It reads better here than it
@@ -942,6 +969,29 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
   line-height: 1.4;
   color: var(--ink-soft);
   text-wrap: pretty;
+}
+
+/* ⭐⭐ ROUND 42 #10 – HER ACCOUNT CARD. Almost nothing: StatRow arrives with the family budget's own
+   geometry (11px gap, 14px/2px inset, 13.5px/600 on the name, 13.5px/700 on the figure) and that is
+   the whole point of the item - the two screens must look like one vocabulary, so this block may not
+   re-style the row. What is left is the two joints a card adds around a list of rows. */
+.kid-account-row:first-of-type {
+  padding-top: 4px;
+}
+
+/* ⚠ THE LABEL IS ALLOWED TO WRAP HERE and it is NOT on the Money screen, where every label is one or
+   two words. «Manager's cut of a sponsor cheque» is the longest thing this card can say, and at 375
+   it wants the second line rather than an ellipsis - the row's own `flex: 1; min-width: 0` gives it
+   the space and nothing clips. Measured at 375/768/900/1280 for round 42 #10. */
+.kid-account-row :deep(.tb-statrow-label) {
+  white-space: normal;
+  line-height: 1.3;
+}
+
+/* The ramp sits under the rows as prose, never as a fourth row - it is a sentence. Last thing in the
+   card, so it keeps no bottom margin of its own. */
+.kid-account-note {
+  margin: 10px 0 0;
 }
 
 /* The rank, on the card that explains it. Sized like a figure rather than like a tile value: it is

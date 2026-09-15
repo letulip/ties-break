@@ -905,9 +905,39 @@ export interface KidLife {
    *  `kidPrizeShareBps` – the same function the till divides by – so it cannot promise a percentage
    *  the engine is not transferring. */
   ownAccount: string
+  /** ⭐⭐ ROUND 42 #10 – THE SAME FACTS AS A FAMILY-BUDGET CARD, or null when there is no account to
+   *  show (exactly when `ownAccount` is '' – one gate, read twice, so the two can never disagree).
+   *
+   *  The owner, 14.09: «информация о ее аккаунте… использовать то же, что и в family budget, и
+   *  поставить либо перед, либо после counting results». So her page stops carrying a paragraph of
+   *  hint text and renders the Money screen's own vocabulary – `StatRow` rows inside a `Card` –
+   *  with the ramp left as one sentence under them.
+   *
+   *  ⚠ THE ROWS ARE THE ENGINE'S, FIGURES AND LABELS BOTH, for `ownAccountNote`'s own reason: the
+   *  percentages come back out of `kidPrizeShareBps` and `managerCommissionBps`, the two functions
+   *  the till itself divides by, so this card cannot promise a share the engine is not transferring.
+   *  Screen C derives no fact of its own – it picks the tone and nothing else. */
+  account: KidAccountView | null
   /** who she is closest to this school year, and how that is going this week. Deterministic
    *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
   friends: KidLifeTile
+}
+
+/** One row of her account card: a name on the left, a figure on the right – `StatRow`'s own shape. */
+export interface KidAccountRow {
+  /** stable id for the `v-for` key and for a test to reach one row by name, never rendered */
+  key: 'balance' | 'prize' | 'manager'
+  label: string
+  value: string
+}
+
+/** ⭐⭐ ROUND 42 #10 – her account, as the page renders it. */
+export interface KidAccountView {
+  /** balance · her cut of a prize cheque · the manager's cut of a sponsor cheque */
+  rows: readonly KidAccountRow[]
+  /** the ramp (and the brand clause when the family holds one), or '' when there is nothing left to
+   *  add – a sentence under the rows, never a fourth row: it is prose and it wraps. */
+  note: string
 }
 
 // --- the skills radar (docs/specs/skills-radar.md, decisions.md #11) ----------

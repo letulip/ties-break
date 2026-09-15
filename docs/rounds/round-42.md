@@ -164,7 +164,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   `cooldownWeeks 6` + `seasonCap 3` (predicted ≈ $2.4k/season, clusters gone), benched
   predicted-first on `tools/runway-probe.ts` arms, HIS word on both numbers before they ship.
 
-- [ ] **6. «personality у всех девочек одинаковая… patient and stubborn, мы вроде бы делали
+- [x] **6. «personality у всех девочек одинаковая… patient and stubborn, мы вроде бы делали
   дифференциацию?»** – **build.** The tile is not wired to who-she-is at all: `KidScreen.vue:414`
   renders a **static 4-row table keyed on `playStyle`** (`kidLife.ts:531-540`; `counterpuncher →
   Patient / And stubborn`) – with one favourite play style every career reads identically, and
@@ -173,6 +173,34 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   play-style flavour may stay as the second line (builder proposes, drafts in this file before the
   gate). Evidence: mounted test – two careers differing only in temperament render different
   tiles; mutation arm on the fence (expressed vs birth).
+
+  ⭐ **BUILT (bundle: 6/10/22).** `PERSONALITY` (four rows keyed on `playStyle`) is retired and
+  `TEMPERAMENT_PERSONALITY` takes the tile: `KidLifeWorldView` gained `temperament`, `toSnapshot`
+  hands `world.temperament`, and four careers on four seeds now read as four girls end to end.
+
+  ⚠ **THE PLAY-STYLE FLAVOUR DID NOT STAY, AND THE REASON IS THE CELL.** Both tile lines are
+  `nowrap` inside a 115px cell on a 16-character budget (`TILE_LINE_MAX`), so the pair uses the tile
+  up; a third line is a new layout risk on the 375 frame, and a play-style note stapled under a
+  temperament pair is the «two facts stapled together» his own ask warns against. The tennis fact
+  keeps its own surface two inches up the same screen – the hero's paper scrap («All-court»), which
+  is where the export puts it. **The four retired strings, so he can veto the retirement:**
+  `Impatient / Wants it now` · `Patient / And stubborn` · `Backs herself / Never says so` ·
+  `Curious / Tries everything`.
+
+  **DRAFT – the four pairs (lead / note), written against the voice bibles' own four profiles:**
+
+  | temperament | axes | lead | note |
+  | --- | --- | --- | --- |
+  | `sunny` | open + steady | `Easy company` | `Nothing unsaid` |
+  | `fiery` | open + intense | `Runs hot` | `Then it passes` |
+  | `quiet` | private + steady | `Keeps to herself` | `Never rattled` |
+  | `deep` | private + intense | `Says little` | `Feels all of it` |
+
+  ⚠⚠ **THE FENCE IS PINNED BOTH WAYS AND BOTH ARMS BITE.** The tile reads BIRTH – not her mood
+  (bind it to spirit: **4 red**) and not `expressedTemperamentOf` (**2 red**, but only because the
+  test flips both walls axes by hand: with the flags false the two reads agree by arithmetic, and
+  the arm scored 0 red before that positive control was added). Keyed on her play style again, or
+  frozen to one girl: **4 red**.
 
 - [?] **7. «мы так и не починили дыру… каждый год заново надо набирать национальный ранг… второй раз
   пишу»** – **ask, sharpened – and the archaeology says exactly where the pain is.** The
@@ -227,13 +255,40 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   builder: the stale comment at `economy.ts:3549` still shows the pre-reprice arithmetic («= 34») –
   fix the comment, nothing else.
 
-- [ ] **10. «информация о ее аккаунте… использовать то же, что и в family budget, и поставить либо
+- [x] **10. «информация о ее аккаунте… использовать то же, что и в family budget, и поставить либо
   перед, либо после counting results»** – **build.** Today it is a bare `&lt;p class="hint"&gt;`
   (`KidScreen.vue:517`); the Money screen renders money summaries as `StatRow` rows inside a
   `Card.money-summary` (`MoneyScreen.vue:117/1946`). Fix: her account becomes the same StatRow
   card (her balance · her cut % · manager's cut), placed beside the «Counting results (best N)»
   section (`KidScreen.vue:606`) – builder picks before/after against the 375 frame. No new copy
   beyond labels lifted from the existing sentence (DRAFT below the gate).
+
+  ⭐ **BUILT (bundle: 6/10/22).** `KidLife` gained `account: KidAccountView | null` –
+  `kidLife.ownAccountCard` composes three `StatRow` rows and one sentence, and the screen picks the
+  TONE and nothing else (balance `accent`, the two rates `plain`). Every figure still comes back out
+  of `kidPrizeShareBps` and `managerCommissionBps`, the two functions the till itself divides by
+  (arm: quote a literal `10%` instead → **1 red**). The `<p class="hint">` is gone; the Money
+  screen's own sentence (`ownAccount`) is untouched, and both appear and vanish on the same gate.
+
+  ⭐ **BEFORE the counting results, and the choice is measured rather than argued.** That card ends
+  in a table of up to `bestN` rows – EIGHTEEN on the professional ladder – so an account card behind
+  it sits a full screen below the fold exactly when she is earning most. Measured in Chromium on the
+  `pro` fixture at 375: the account card is 343x206 at y≈1010, the counting table below it runs to
+  1,100px. Before it, her money lands one thumb under Important moments and the table keeps the last
+  word, which is also the reading order the page already had.
+
+  **DRAFT – the labels (all lifted from the sentence that was already there, except `Balance`, which
+  is the family budget's own word for this figure on the Money screen):**
+
+  | | label | example |
+  | --- | --- | --- |
+  | card heading | `Her own account` | – |
+  | row 1 | `Balance` | `$1,260,073` |
+  | row 2 | `Her cut of a prize cheque` | `25%` |
+  | row 3 | `Manager's cut of a sponsor cheque` | `15%` |
+  | note | `Her share grows 5 points every birthday, up to 50%.` | – |
+  | note, at the cap | `Her share goes no higher.` | – |
+  | note, with a brand | `… The same share comes off her brand's weekly income.` | – |
 
 - [ ] **11. «не вижу отчислений тренеру за победы на w серии нигде… мы это сделали вообще?»** –
   **answer + a small build.** It exists and fires: coach 10% of a TITLE cheque / 5% of a lost
@@ -412,7 +467,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   was NEVER captured in any ledger: the hero-image complaint – entered now as item 29, the
   round-23 #10 lesson («he asked in conversation, nobody wrote it down») repeating.
 
-- [ ] **22. «Я как видел в начале карьеры, что она подавать и возвращать не умеет, так и вижу сейчас.
+- [x] **22. «Я как видел в начале карьеры, что она подавать и возвращать не умеет, так и вижу сейчас.
   По какому принципу тренер работает?»** – **answer + build.** The principle: growth =
   age × plan × load × coach(tier, fit) × per-skill headroom, where headroom is `potential[k] −
   skills[k]` (`development.ts:788-910`); the coach is a flat multiplier (~0.82–1.15), the DIALS
@@ -426,6 +481,68 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   is as far as the serve goes» register, DRAFT), and the eye may flag paid slots aimed at a
   saturated skill (coach-as-the-eye's own doctrine). Evidence: mounted radar test – saturated vs
   open skill renders different registers, mutation-proven.
+
+  ⭐ **BUILT (bundle: 6/10/22), and the A/B on his own kind of career is the receipt.** The `pro`
+  fixture (week 412, 21, every wing saturated), same career, same week, shipped code against this
+  branch:
+
+  | wing | BEFORE | AFTER |
+  | --- | --- | --- |
+  | Serve | «The serve is the job this year.» | «That serve is as good as it is going to get.» |
+  | Return | «Every serve comes back. That is a whole career on its own.» | «We have taken the return as far as it goes.» |
+  | Composure | «She plays the occasion instead of the ball when it matters.» | «The head is where it is going to stay now.» |
+  | Stamina | «She lasts. A long week still costs her.» | «The legs are as good as they are going to get.» |
+  | Groundstrokes | «She hits through people. That ends points on its own.» | «The ground game is finished. We keep it sharp.» |
+
+  «The serve is the job this year», said of a serve at 100% of its believed ceiling, is the sentence
+  behind «а зачем тогда мне вообще тренер».
+
+  **How it works.** `AxisRead` gained `fill` – the eye's own belief, his SHOWN estimate over the
+  centre of the haze he draws, so it stays a fogged opinion and no true value reaches the pool. Four
+  rungs: `open` < 0.72, `working` 0.72–0.85, `nearly` 0.85–0.90, `done` ≥ 0.90 (his number). At
+  `done` every absence line and every edge verdict is SILENCED and the saturation register speaks
+  instead – that silencing is the half he actually reported (arm: `isDone` always false → **2 red**).
+
+  ⚠ **THE THRESHOLDS ARE MEASURED, NOT CHOSEN.** `rollPotential` deals each wing [4,26] points of
+  room over a build near 50, so a wing is born 0.66–0.93 full and ends a career near 0.96: the whole
+  dynamic range is the top third, and «half full» thresholds would have put every wing of every girl
+  in one band for twenty years. Probe over 4 coach rungs × 3 seeds × 7 sample weeks, readable
+  axis-weeks only: `done` 74% · `working` 14% · `nearly` 11% · `open` 1%. And the movement his
+  ruling asks for: of 60 axis-tracks, **35 cross two or more rungs across a career and 29 cross
+  three**; the 25 that never move are wings born full, where «this is as far as it goes» is true
+  from fifteen and is the honest thing to say.
+
+  ⚠⚠ **ONE CHANGE WAS MEASURED AND THEN DROPPED.** Putting the fill band into `axisNote`'s draw key
+  looked necessary (a rung crossing that only swaps one member of a short list can leave the
+  career-fixed index on the same line). Measured over 4 rungs × 4 seeds × 420 weeks, on the 121 real
+  band crossings: band IN the key = 85 sentences changed; band OUT (as shipped) = **103**. It was
+  worse on its own metric, so the key ships untouched and every career in flight keeps the line it
+  had wherever the read has not moved. Its mutation arm had already scored **0 red**, which is what
+  sent it to the bench. The measurement is written above `axisNote`.
+
+  **DRAFT – the twenty new lines.** Register by rung; the `working` rung deliberately says nothing
+  new (the shipped edge verdicts are its register, and a fourth «she is coming along» beside «the
+  serve is the job this year» is one sentence twice).
+
+  | wing | `open` (real room) | `nearly` (most of it in) | `done` (and the week is not aimed there) | `done` + a paid slot aimed at it |
+  | --- | --- | --- | --- | --- |
+  | Serve | That serve has a long way it can still go. | Most of what she has on serve is in the bank. | That serve is as good as it is going to get. · The serve is finished work. We protect it now. | We are drilling a serve that has nothing left to give. |
+  | Return | There is a lot more return to come out of her. | The return is nearly all the way in now. | The return is as far along as it will go. · We have taken the return as far as it goes. | Those return sessions are buying nothing now. |
+  | Composure | The head has plenty of growing left in it. | Her nerve is close to everything it will be. | She is as steady as she is ever going to be. · The head is where it is going to stay now. | Match play will not make her calmer than this. |
+  | Stamina | The body has a lot more to give than this. | The legs are nearly all the way there. | The legs are as good as they are going to get. · There is no more fitness left to find in her. | The gym has stopped paying us back on those legs. |
+  | Groundstrokes | There is a lot more ball in her than this. | The ground game is nearly all of what it will be. | Off the ground she is as far as she goes. · The ground game is finished. We keep it sharp. | Rally sessions are not adding to that any more. |
+
+  ⭐ **The paid-slot flag is the eye earning its fee.** `RadarWorldView` gained `planWeek` and the
+  read gained `aim`, scored by `aimWeights` – the SAME function `growWeek` multiplies by, so «we are
+  drilling that» and «this week is aimed there» cannot be two different claims. The two `done` arms
+  are total and exclusive, so an aimed saturated wing gets the flag EVERY time rather than one draw
+  in three (arm: `aimedHere` always false → **1 red**). His own plan – three serve slots a week
+  against a serve at 96% – is exactly the case it is written for.
+
+  ⚠ **What this does NOT touch:** the prologue handover renders the same component, and at week 0
+  confidence is ~0.08 (tenure alone), far under `NOTE_MIN_CONFIDENCE` – so no verdict speaks there
+  and the absence lines are untouched. Zero MAIN draws: `buildRadar` runs at snapshot time and the
+  new arithmetic adds no stream.
 
 - [ ] **23. «в coaching budget я просил отражать всех активных специалистов… переименовать в Week
   budget или team budget»** – **build** (the audit shows the «all specialists» half was never a
@@ -549,7 +666,27 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   Three choices behind it, stated so he can overrule any of them: warm above the neutral rung and
   cool below it, so the ladder reads as a ladder; **nothing red**, because `--danger` means stop and a
   heavy week is not an error she made; and their own token family rather than four aliases, so a
-  future ruling on `--warning` cannot silently repaint her face. The ring's halo is stronger than the
+  future ruling on `--warning` cannot silently repaint her face.
+
+  ⭐ **HIS RULINGS ON THE RING AND THE MARKER (15.09), all three built as the bundle's follow-up:**
+  1. **Steady gets a ring after all – the shipped lime, unchanged, and with NO glow** («да, лайм на
+     steady, делай»). So the avatar is always ringed and a CHANGE OF COLOUR means a change of mood,
+     rather than a ring appearing out of nowhere; the app's own lime is what «nothing in particular is
+     happening» looks like, and it adds no fifth hue to the palette.
+  2. **`angry` gets no ring colour, and the reason is that it is not a mood.** He asked («красный или
+     бордовый?»); the code answers: `angry` is returned by the RESULT channel on a run of losses
+     (`lossStreak.losses === angerAt`, his own call in fix/world-trio), so after #29(a) it stays on the
+     HERO – a losing run showing on her face is «картинки только про победы и поражения» working. A
+     ring colour for it would double the hero instead of complementing it, and it would put red in a
+     palette whose rule is that red means stop.
+     ⚠ And the «wider gradations» he remembered are real but they are the OTHER ladder: the eight
+     painted faces and their words (norm «Steady» · happy «Happy» · sad «Low» · serious «Focused» ·
+     tired «Tired» · injury «Hurt» · rehab «On the mend» · angry «Angry»/«Frustrated»). The mood ladder
+     is five words wide because he ruled five; the face ladder is eight because the art is eight.
+  3. **The marker gets its name and reaches the plate too** – «1 - да, добавь, 2 - вкладки достаточно
+     мне кажется, но можно и до плашки довести, в играх часто так делают, хороший паттерн». DRAFT
+     accepted verbatim: **«Her psychologist's next year can be chosen now»**, and the dot goes on the
+     psychologist's own plate inside the Support-staff tab as well as on the tab itself. The ring's halo is stronger than the
   chrome's (0.9 against the shipped 0.55) and that is measured, not styled: behind the chrome halo a
   white court leaves gold at 2.50:1 – the shipped lime itself only reaches 3.06 – and at 0.9 every
   rung clears 5.69. It is its own mutation arm.
@@ -1016,3 +1153,48 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
 
   ⭐ And one thing it buys beyond the wing: the radar finally shows something the player DID rather
   than something the seed dealt – the first mark on that screen that is the parent's own work.
+
+- [ ] **36. «в прологе во время турнира… экран "кто против кого" – в обычном флоу там большая фото
+  серьёзной девочки, а в прологе пустота» (15.09), and his correction the same hour: «я просто просил
+  сделать флоу турнира таким же до цента, т.е. переиспользовать текущий по максимуму, если он
+  отличается где-то, значит наш DRY дырявый в этом месте. Мне не нужно, чтобы вы что-то новое
+  изобретали, у нас уже есть этот экран. Нужно переиспользовать и сделать консистентно.»** –
+  **build, and the ask is REUSE rather than a fix.**
+
+  ⭐⭐ **THE ITEM IS THE DRY HOLE, NOT THE MISSING PICTURE.** The empty screen is a symptom: the
+  prologue's weekend is a SECOND implementation of a flow the app already ships. `PrologueLocalOpen
+  .vue` writes its own splash, its own round transition and its own vs line; `TournamentFlow.vue`
+  writes the career's, and its pre-match beat is `<MatchScene :stage emotion="serious" fill>` – the
+  painting filling the card with the glass plate at its foot. Two files, one flow, and the difference
+  he saw is simply where the copy fell behind the original. ⚠ So a builder who «adds a portrait to the
+  prologue» has made the hole worse: there would then be two implementations that agree today.
+
+  **What to do, in his own order: reuse to the cent, and where reuse is impossible, say what blocked
+  it.**
+  1. **Sweep the two weekends beat for beat** – splash, pre-match, the viewer, the result, whatever
+     follows – and list EVERY divergence, not only the one he saw. That list is the deliverable even
+     where a divergence turns out to be legitimate.
+  2. **Close each one by rendering the career's own component.** The pre-match beat is already a
+     component (`MatchScene`, whose own header says it exists to be «the one place the treatment is
+     written down», three callers today); the prologue just never called it. Anything the prologue
+     genuinely cannot supply – rank, points, prize money, a calendar row – must be ABSENT BY DATA
+     through the same component, never by a second component that does not draw it.
+  3. **Whatever cannot be reused gets a named reason** in the handoff: what the career component
+     assumes, why a prologue weekend cannot supply it, and what the smallest honest seam would be.
+     That list is the real DRY audit and it is what makes the next divergence impossible to file as
+     an accident.
+
+  **The art is there and cannot 404**: `portraitUrl(portraitStage(age), 'serious')` is total over the
+  prologue's ages (`jun` below 11, `young` at 11–16) and `tests/portrait-bands.test.ts` already sweeps
+  every band × emotion against the files on disk. ⭐ `serious` is the owner's own word for this
+  register in this very set («либо serious если в финал выбралась» – she is «not delighted and not
+  finished», which is exactly a match not yet played).
+
+  ⚠ **ONE TENSION TO RESOLVE HONESTLY:** the prologue writes nothing over its paintings on purpose
+  (`PrologueCard.vue`'s contrast argument – `tests/component/contrast.ts` composites through the real
+  cascade and cannot see a photograph, so a title moved onto art leaves the AA gate measuring a
+  background that is not behind it), while `MatchScene`'s glass plate sits over the painting's foot.
+  The career flow ships that plate and measures it; the prologue either measures it the same way or
+  the divergence is named as one of the reasons in (3). Evidence: mounted tests asserting the prologue
+  renders the SAME component as the career beat, at 375 and 1280, with the legibility arm on whatever
+  ends up over the art.

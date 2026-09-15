@@ -406,6 +406,9 @@ describe('#18 – the line on her own page', () => {
     week: 400,
     ageYears: 18,
     seasonYear: 2038,
+    // ⚠ ROUND 42 #6 – required by the view since the Personality tile moved onto her temperament.
+    // This file is about her ACCOUNT and asserts nothing about that tile.
+    temperament: 'quiet',
     playStyle: 'all-court',
     birthMonth: 6,
     injured: false,
