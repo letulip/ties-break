@@ -78,7 +78,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   cannot quietly widen back). Green: birthday-ask 40/40, college trio 58/58, nine swapped unit
   suites 219/219, seven component 92/92.
 
-- [ ] **2. «на 14 летие показали картинку радости с призом в руке, хотя она пока вообще ничего не
+- [x] **2. «на 14 летие показали картинку радости с призом в руке, хотя она пока вообще ничего не
   выиграла… Связана ли эта картинка с тем, что я "угадал" подарок?»** – **build** (one root cause
   with item 29; the mechanism, so the ledger carries it). The save confirms: **zero result rows
   before her week-9 fourteenth birthday** – no title existed. The birthday dialog itself shows no
@@ -90,6 +90,14 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   fallback that should never have owned the hero. Fix = item 29 (hero returns to results-only;
   mood moves to the avatar ring). Evidence: mounted test – a birthday week with a bright mood and
   zero fresh results renders the NEUTRAL stage portrait, and the ring carries the joy.
+
+  ⭐ **SHIPPED with 29 (one bundle, one builder).** The evidence is the test, exactly as written
+  above: `tests/component/round42-hero-and-ring.test.ts` §1 walks a real career to her fourteenth
+  birthday with every tournament skipped – **zero recorded matches**, confirmed in the case – poses a
+  glowing mood, and asserts the hero renders `fem-euro-brunnet-young-norm.webp`. The mechanism he
+  guessed at is confirmed exactly: on that week `facts.emotion` is still `happy` (the mood channel
+  wins the FACE, and the Mood tiles' word depends on that), and `facts.heroEmotion` – the new,
+  narrower read – is `norm`. The ring carries the joy.
 
 - [x] **3. «верстка экрана тренеров немного сломалась: все картинки обрезаны сильно… надо сделать
   шире»** – **build.** Root cause measured: on phones `.cm-art` is a 62px absolute strip with NO
@@ -468,7 +476,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   and the season passed. Nothing ships; if the FEEL stays wrong after this reading, the knock
   cadence becomes a tuning question with a bench arm – his call.
 
-- [ ] **28. «в межсезонье привлекать внимание к выбору новой ветки психолога… маркер жёлтый на
+- [x] **28. «в межсезонье привлекать внимание к выбору новой ветки психолога… маркер жёлтый на
   плашку на home и на support stuff»** – **build.** The machinery exists: the 7px accent dot –
   nav-tab flavour (`.tab-dot`, `style.css:4118`) and in-card flavour (`.note-dot`,
   `HomeScreen.vue:1505`) – and the state is already on the snapshot: `psychologistFocusOpen` ×
@@ -477,7 +485,31 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   computed, not the trophies watermark). Evidence: mounted test across the three states
   (closed/open-unused/open-used), mutation-proven.
 
-- [ ] **29. «не надо менять картинку на главной по любому поводу… Делаем разноцветную светящуюся
+  ⭐ **SHIPPED.** One selector, `psychologistFocusNudge(snapshot)` (`shared/protocol/snapshot.ts`) =
+  `diary.facts.offSeasonWeek && psychologistFocusOpen.length > 0`, read by BOTH surfaces so they
+  cannot disagree: Home's **Coach-note plate** (the only door on Home into the Coach Market) and the
+  **Support-staff segment** of that screen's chapter row. ⚠ The `offSeasonWeek` term is load-bearing
+  and is its own arm: the open list is non-empty MID-SEASON too, while the first pick is still free,
+  so without it a freshly hired seat would wear the dot for fifty-two weeks running.
+
+  The dot is the shipped 7px circle in a new **attention** flavour – `--attention: var(--amber)`
+  (#f5b942), an alias rather than `--warning`, because an open change window is an opportunity with a
+  deadline and `--warning` means «this is a risk». `SegmentedRow` gained ONE optional `dot?: boolean`
+  per option; eight existing rows pass none and are byte-for-box what they were. **No copy was added
+  on either surface** – see the wording question in the handoff. Evidence:
+  `tests/component/round42-psych-marker.test.ts`, 9 cases, five arms measured (2 / 3 / 5 / 4 / 1 red).
+
+  ⚠ **TWO QUESTIONS LEFT FOR HIM, both small and both reversible** (the round runs on his «делай», so
+  neither blocked the build):
+  1. **The marker is silent to a screen reader.** The recap dot beside it on Home has a name («A new
+     week recap is waiting»), the new one has none, because no copy was asked for. DRAFT if he wants
+     the pair consistent, his to change or refuse: **«Her psychologist's next year can be chosen
+     now»**.
+  2. **«на support stuff» was read as the Support-staff TAB**, not the psychologist's own plate
+     inside it – the tab is what leads the player forward, and a dot on a plate he is already looking
+     at adds nothing. One line on `SupportStaffTab.vue` if he meant the plate as well.
+
+- [x] **29. «не надо менять картинку на главной по любому поводу… Делаем разноцветную светящуюся
   обводку вокруг аватарки, для каждого настроения свой цвет, а картинки вернутся к изначальной
   логике только про победы и поражения»** – **build, the round's design centrepiece (item 2 is its
   evidence; never before in any ledger – captured now).** Two halves: (a) HERO: `idleRead` loses
@@ -490,6 +522,79 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   file as tokens, dark/light both), no ring at neutral. Evidence: mounted tests – bright mood +
   no fresh result ⇒ neutral hero + glowing ring; a win ⇒ happy hero regardless of mood;
   reduced-motion and contrast arms on the ring.
+
+  ⭐ **SHIPPED, with one deviation from the brief that the builder was right to make and stated
+  first.** The brief said «`idleRead` loses the mood fallback»; narrowing that reading would have
+  nulled `DiaryFacts.moodWord` on EVERY week of every career (it is licensed on `channel === 'mood'`
+  and nothing else, `diary.ts:180`), handing both Mood tiles back to their own fallback maps
+  permanently – invariant 4 by side effect, and this round's own item 6 defect class. So the channel
+  reading is untouched and the HERO got its own narrower answer off the same decision:
+  `heroFaceOf(read)` = result → the result face · injury → rehab (his ruling) · body|mood → `norm`.
+  Both big portraits move together (Home's hero and the Kid screen's), which is what `kidEmotion.ts`
+  exists to guarantee. No schema move: `DiaryFacts` is derived at snapshot time.
+
+  **THE DRAFT PALETTE, verbatim and his to rule on.** ⚠ The brief asked for both themes and the app
+  has one – `color-scheme: dark`, no `prefers-color-scheme` block anywhere in `src/` – so the ring was
+  measured against the two real GROUNDS instead: the brightest of the 35 paintings and the darkest
+  panel.
+
+  | band | word | token | value | vs painting | vs panel |
+  | --- | --- | --- | --- | ---: | ---: |
+  | glowing | Glowing | `--mood-glowing` | `#f5b942` warm gold | 9.01:1 | 11.23:1 |
+  | bright | Bright | `--mood-bright` | `#6ed39a` fresh mint | 8.67:1 | 10.80:1 |
+  | steady | Steady | – | **no ring at all** | – | – |
+  | dimmed | Dimmed | `--mood-dimmed` | `#6aa8e0` cool blue | 6.28:1 | 7.82:1 |
+  | heavy | Heavy | `--mood-heavy` | `#a98ce0` muted violet | 5.69:1 | 7.09:1 |
+
+  Three choices behind it, stated so he can overrule any of them: warm above the neutral rung and
+  cool below it, so the ladder reads as a ladder; **nothing red**, because `--danger` means stop and a
+  heavy week is not an error she made; and their own token family rather than four aliases, so a
+  future ruling on `--warning` cannot silently repaint her face. The ring's halo is stronger than the
+  chrome's (0.9 against the shipped 0.55) and that is measured, not styled: behind the chrome halo a
+  white court leaves gold at 2.50:1 – the shipped lime itself only reaches 3.06 – and at 0.9 every
+  rung clears 5.69. It is its own mutation arm.
+
+  ⭐ **SHIPPED, both halves.**
+
+  **(a) The hero.** ⚠ `idleRead` was NOT narrowed, and the reason is invariant 4 rather than taste:
+  `DiaryFacts.moodWord` is licensed on `channel === 'mood'` and on nothing else, so a mood channel
+  that could no longer win would null the word on **every week of every career** and hand both Mood
+  tiles back to their own fallback maps – for ever, and identically, which is also the «always the
+  same» defect class ruled in this round's item 6. So the CHANNEL reading is untouched and the hero
+  got a second, narrower answer off the same one decision: `heroFaceOf(read)` (`shared/avatarEmotion.ts`)
+  → `DiaryFacts.heroEmotion`. It is a fresh result's face, the `rehab` painting («это ок»), or the
+  neutral stage portrait – never a mood face, never a fatigue face. Both big portraits (Home's hero
+  and the Kid screen's) read it; the Mood tiles' word and their 36px crop still read `emotion`. No
+  save-schema move: `DiaryFacts` is derived at snapshot time.
+
+  **(b) The ring.** `.diary-avatar-btn.has-mood-ring.mood-<band>` – the band comes off
+  `useKidIdentity()`, so Home's avatar and the desktop rail's cannot disagree. The ring recolours the
+  shipped 1.5px hairline, adds a glow that breathes at 3.4s, and carries a **stronger dark halo**
+  than the chrome one. ⚠ That halo is the half that makes the colours legible and it is measured, not
+  guessed: Home's avatar sits ON the painting, and behind the shipped `rgba(6, 10, 14, 0.55)` halo a
+  white court leaves gold at **2.50:1**. At `0.9` every rung clears 5.69:1 on the same ground.
+
+  ⚠⚠ **THE DRAFT PALETTE – HIS TO RULE. One theme, because the app has one** (`color-scheme: dark`;
+  there is no `prefers-color-scheme` block anywhere in `src/`). What the ring actually sits on is two
+  GROUNDS, and both are measured through the real cascade:
+
+  | Mood band | word | token | value | on the brightest painting | on the darkest panel |
+  | --- | --- | --- | --- | ---: | ---: |
+  | `glowing` | Glowing | `--mood-glowing` | `#f5b942` warm gold | 9.01:1 | 11.23:1 |
+  | `bright` | Bright | `--mood-bright` | `#6ed39a` fresh mint | 8.67:1 | 10.80:1 |
+  | `steady` | Steady | – | **no ring at all** | – | – |
+  | `dimmed` | Dimmed | `--mood-dimmed` | `#6aa8e0` cool blue | 6.28:1 | 7.82:1 |
+  | `heavy` | Heavy | `--mood-heavy` | `#a98ce0` muted violet | 5.69:1 | 7.09:1 |
+
+  (Control: the shipped lime hairline scores 11.01 / 13.72 the same way.) The shape proposed is
+  **warm above the neutral rung, cool below it**, so the ladder reads as a ladder; and **nothing
+  red**, because `--danger` means stop and a heavy week is not an error she has made. Their own
+  family rather than four aliases, so a future ruling on `--warning` or the play-style colours cannot
+  silently repaint her face – moving a rung is one line.
+
+  Evidence: `tests/component/round42-hero-and-ring.test.ts`, 19 cases, five arms measured
+  (4 / 2 / 2 / 1 / 2 red). The reduced-motion arm proves the glow stands down **without going out**;
+  the contrast arm is the table above.
 
 *(item 30 is folded into 21 above – one audit, one answer.)*
 

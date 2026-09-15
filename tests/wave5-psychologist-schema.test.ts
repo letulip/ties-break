@@ -834,10 +834,25 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // (ruling D) and T6's is `world/lifeBeat.ts` – ⚠ and THAT one will have to be argued against the
     // fence below rather than merely added, because the fence is about what her WORDS may read and
     // T6's draw is about the parent's ears. A ninth entry arriving anywhere else is still a finding.
+    // ⚠⚠ RE-AIMED A THIRD TIME BY ROUND 42 #28, AND THE THREE NEW ENTRIES ARE ONE FACT. WHAT MOVED:
+    // `shared/protocol.ts`, `components/screens/HomeScreen.vue` and
+    // `components/screens/CoachMarketScreen.vue` joined. WHY: the owner asked for an off-season
+    // marker drawing attention to the choice of a new psychologist branch – «маркер жёлтый на плашку
+    // на home и на support stuff» – and the marker is up exactly while the ENGINE would accept a
+    // change, so it reads `psychologistFocusOpen` through `psychologistFocusNudge`, the ONE selector
+    // both surfaces share. The barrel is the third entry because it re-exports that name.
+    //
+    // ⚠ IT IS STILL «THE ROAD THE WAVE DESIGNED», WIDENED BY EXACTLY ONE SELECTOR. Neither screen
+    // touches `psychologistFocus` the field, and neither derives an answer of its own: both ask the
+    // same function, which reads the same `psychologistFocusOpen` the card already reads. A TWELFTH
+    // entry arriving anywhere else is still a finding, and the fence below – no voice, no diary, no
+    // lifeBeat – is untouched and is what this case has always been for.
     const focusNamed = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('psychologistFocus'))
       .map(([path]) => path)
     expect(focusNamed, 'the year-focus is read where T3 put it, and where T4 spends it').toEqual([
+      'components/screens/CoachMarketScreen.vue',
+      'components/screens/HomeScreen.vue',
       'components/SupportStaffTab.vue',
       'engine/migrations.ts',
       'engine/spirit.ts',
@@ -846,6 +861,7 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       'engine/world/state.ts',
       'engine/world.ts',
       'shared/protocol/snapshot.ts',
+      'shared/protocol.ts',
     ])
     // ⭐ AND THE HALF THAT WAS ALWAYS THE POINT SURVIVES THE RE-AIM, restated so it cannot be lost
     // with the list above: no VOICE, DIARY or LIFEBEAT file has started asking what the seat is

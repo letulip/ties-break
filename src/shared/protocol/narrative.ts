@@ -10,7 +10,7 @@ import type { SkillKey } from '../../engine/development'
 import type { TierId } from '../../engine/season/types'
 // ⭐ v72: WHO SHE IS, type-only – the four ids live beside the physics that reads them
 // (engine/spirit.ts) and are erased here at compile time, exactly like `TierId` above.
-import type { Temperament } from '../../engine/spirit'
+import type { SpiritBand, Temperament } from '../../engine/spirit'
 import type { AvatarEmotion, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
 
@@ -518,6 +518,21 @@ export interface DiaryFacts {
    *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
    *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */
   emotion: PortraitEmotion
+  /** ⭐⭐ ROUND 42 #29(a) – WHICH PAINTING THE HERO WEARS, which is a NARROWER question than `emotion`
+   *  above and now has its own answer. The owner, 14.09: «не надо менять картинку на главной по
+   *  любому поводу … картинки вернутся к изначальной логике только про победы и поражения», with
+   *  `rehab` kept on the hero by his own «это ок» – an injury is a fact of the body, not a mood.
+   *
+   *  So: a fresh RESULT's face, or the layoff painting, or the neutral stage portrait. Never the
+   *  mood face, never the fatigue face. Round 42 #2 is what it fixes – a girl holding a winner's cup
+   *  on her fourteenth birthday, on a career with zero result rows.
+   *
+   *  ⚠ IT IS DERIVED FROM `emotion`'s OWN DECISION (`heroFaceOf`, shared/avatarEmotion.ts), never a
+   *  second walk: the picture and the word are still ONE reading of one week, which is the property
+   *  the whole diary system is built to keep. And `emotion` above is untouched, deliberately – it
+   *  licenses `moodWord` and the two Mood tiles' 36px face, and narrowing IT would have changed what
+   *  the tiles say, which is CLAUDE.md invariant 4. */
+  heroEmotion: PortraitEmotion
   /** a competitive result from THIS week is on her face (the emotion above is a result emotion) */
   resultFresh: boolean
   /** fresh result: she won her last match this week */
@@ -575,6 +590,20 @@ export interface DiaryFacts {
   /** ...and the same reading collapsed to three, for the line pools. Present on EVERY week, unlike
    *  `moodWord` – see `MoodRegister`. */
   moodRegister: MoodRegister
+  /** ⭐⭐ ROUND 42 #29(b) – THE RUNG ITSELF, because the ring has five colours and the register has
+   *  three. The owner, 14.09: «Делаем разноцветную светящуюся обводку вокруг аватарки, для каждого
+   *  настроения свой цвет» – one colour per band, and no ring at the neutral rung.
+   *
+   *  ⚠ IT IS A BAND AND NEVER THE NUMBER, so the fog law is untouched (`engine/spirit.ts` §2b: «a
+   *  band goes out, the number never does»). `moodRegister` one field up is this same reading
+   *  collapsed for the line pools, and neither is derived from the other in the UI – both come off
+   *  the one `spiritBandOf` call in `assembleDiaryFacts`.
+   *
+   *  ⚠ R2-18's LAW IS SATISFIED BY THE RING ITSELF: a fact ships only with the licence that consumes
+   *  it, in the same round. `composables/kidIdentity.ts` is that licence and the only reader, and it
+   *  prints no word – the ring is colour, and the WORDS stay on the two Mood tiles that already
+   *  have them (`moodWord` above). Nothing on any screen gained a sentence for this. */
+  moodBand: SpiritBand
   /** WHAT THE PARENT HAS BUILT WITH HER, as a band – the channel her voice arrives through, or does
    *  not. `close`/`steady` license her own four voices; `strained` collapses them into the shared
    *  flat pool; `cold` is silence, and the parent's own line stands alone under the painting. */

@@ -69,7 +69,7 @@ import { staffResultShareBps } from '../../engine/economy'
 // ⚠ `MASSEUR_LOCKED_DETAIL` AND `ECONOMY` LEFT WITH HIM (27.08). Both were imported for the masseur
 // card alone and now live in SupportStaffTab.vue; this screen imports no market catalogue, which is
 // the state it was in before v59.
-import { WEEK_PLAN_PRESETS, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
+import { WEEK_PLAN_PRESETS, psychologistFocusNudge, type CoachMarketRow, type CoachTier, type PlayStyle } from '../../shared/protocol'
 import { formatCents } from '../../shared/money'
 // ⭐ ROUND 36 PHASE 6 – the budget meter's own arithmetic, now shared with the rail's dashboard card.
 // See the note at its call site below for why it left this file.
@@ -77,6 +77,8 @@ import { useCoachingBudget } from '../../composables/coachingBudget'
 
 const game = useGameStore()
 const emit = defineEmits<{ back: [] }>()
+// ⭐ ROUND 42 #28 – is the off-season marker up? The SAME selector Home's plate reads (see `TABS`).
+const psychologistNudge = computed(() => psychologistFocusNudge(game.snapshot))
 
 /** THE HALVES OF ONE DECISION: what she does with her week, and who she does it with.
  *
@@ -97,6 +99,18 @@ const TABS = [
   { value: 'coaches', label: 'Coaches' },
   { value: 'staff', label: 'Support staff' },
 ] as const
+
+/** ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER ON THE SUPPORT-STAFF ENTRY. The owner asked for the dot
+ *  on Home's plate AND here; his sentence is quoted on `psychologistFocusNudge`, where Cyrillic is
+ *  allowed. THE SAME SELECTOR Home reads, so a player who followed the dot off the photograph cannot
+ *  arrive to find nothing – and it dies on the same two facts, the pick being made or the window
+ *  closing, because the engine owns both.
+ *
+ *  ⚠ THE THREE LABELS ARE UNTOUCHED – the row is the shipped one with one boolean per option, and
+ *  only the `staff` segment can ever carry it. */
+const tabsWithMarker = computed(() =>
+  TABS.map((t) => (t.value === 'staff' ? { ...t, dot: psychologistNudge.value } : t)),
+)
 
 /** ⭐ ROUND-18 #3 – THE SCREEN CHOOSES ITS LANDING TAB, AND A HIRED COACH LANDS ON THE COACHES
  *  (owner, 13.08: «если тренер выбран, при клике на плашку переходить в список тренеров»).
@@ -703,7 +717,7 @@ function scrollToTier(tier: CoachTier): void {
     <SegmentedRow
       v-model="tab"
       class="cm-tabs"
-      :options="TABS"
+      :options="tabsWithMarker"
       group-label="What this screen is about"
     />
 

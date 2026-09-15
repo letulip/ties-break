@@ -236,6 +236,9 @@ export type {
   HouseholdWeekly,
   Snapshot,
 } from './protocol/snapshot'
+// ⭐ ROUND 42 #28 – a VALUE, not a type: the ONE reading of «is the off-season psychologist marker
+// up this week», shared by Home's plate and the Coach Market's Support-staff tab.
+export { psychologistFocusNudge } from './protocol/snapshot'
 
 // --- messages ------------------------------------------------------------------------------------
 export type {

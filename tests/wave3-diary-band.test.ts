@@ -79,6 +79,10 @@ function week(over: Partial<DiaryFacts>): DiaryFacts {
     ageYears: 17,
     lifeStage: 'school',
     emotion: 'norm',
+    // ⚠ ROUND 42 #29(a) – the HERO's narrower read of the same week (a fresh result, the layoff
+    // painting, or the neutral portrait – never the mood or fatigue face). Unread by this suite;
+    // on an ordinary uninjured week with no fresh result the two answers agree anyway.
+    heroEmotion: 'norm',
     resultFresh: false,
     won: false,
     lostFinal: false,
@@ -92,6 +96,9 @@ function week(over: Partial<DiaryFacts>): DiaryFacts {
     temperament: 'sunny',
     moodWord: null,
     moodRegister: 'level',
+    // ⚠ ROUND 42 #29(b) – the RUNG the register one line up is a collapse of, for the avatar's mood
+    // ring. `steady` is the same opening state the note above describes.
+    moodBand: 'steady',
     bondBand: 'steady',
     partnerKnown: false,
     // ⭐ v75 T6 – and nothing of hers has recently ended; see `DiaryFacts.freshBreakup`.

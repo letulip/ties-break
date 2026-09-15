@@ -25,7 +25,9 @@ import {
   type DiaryClaims,
   type DiaryWorldView,
 } from '../src/engine/diary'
-import { avatarEmotion } from '../src/shared/avatarEmotion'
+// ⚠ ROUND 42 #29(a): `avatarEmotionRead` / `heroFaceOf` join `avatarEmotion` here so the fixture
+// below can carry the new `heroEmotion` fact without writing a second copy of the rule.
+import { avatarEmotion, avatarEmotionRead, heroFaceOf } from '../src/shared/avatarEmotion'
 import type { DiaryFacts, Milestone, WorldEvent } from '../src/shared/protocol'
 import {
   closeTournament,
@@ -243,7 +245,7 @@ function makeFacts(input: {
     input.losses > 0 && input.result && !input.result.won
       ? { losses: input.losses, startWeek: 5, angerAt: input.angerAt ?? 99 }
       : null
-  const emotion = avatarEmotion({
+  const read = avatarEmotionRead({
     week,
     condition: input.condition,
     injured: input.injured,
@@ -253,12 +255,18 @@ function makeFacts(input: {
     rankClimbed: input.rankClimbed,
     runPointsThisWeek: input.runPoints ?? 0,
   })
+  const emotion = read.emotion
   const s = input.scenario
   return {
     week,
     ageYears: 14,
     lifeStage: 'school',
     emotion,
+    // ⚠ ROUND 42 #29(a) – the HERO's narrower read of the SAME decision (results, the layoff
+    // painting, or the neutral portrait). Derived from the one `read` above rather than posed: a
+    // fixture that guessed would be a second copy of `heroFaceOf`, and nothing in `DIARY_POOL` is
+    // licensed on it anyway – it is a picture, not a fact a phrase may assert.
+    heroEmotion: heroFaceOf(read),
     resultFresh: input.result !== null,
     won: input.result?.won ?? false,
     lostFinal: input.result?.lostFinal ?? false,
@@ -276,6 +284,9 @@ function makeFacts(input: {
     temperament: 'sunny',
     moodWord: null,
     moodRegister: 'level',
+    // ⚠ ROUND 42 #29(b) – the RUNG the register above is a collapse of. `steady` is the same opening
+    // state the note above describes (70/70), so the fixture still says one thing about one week.
+    moodBand: 'steady',
     bondBand: 'steady',
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).

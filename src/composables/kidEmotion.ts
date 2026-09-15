@@ -42,6 +42,17 @@ export function useKidEmotion() {
   // the no-snapshot mount gap – every real snapshot carries a diary.
   const emotion = computed<PortraitEmotion>(() => game.snapshot?.diary.facts.emotion ?? 'norm')
 
+  // ⭐⭐ ROUND 42 #29(a) – AND THE PAINTING IS A NARROWER QUESTION SINCE THE OWNER'S 14.09 RULING:
+  // «картинки вернутся к изначальной логике только про победы и поражения», with the layoff painting
+  // kept on the hero by his own «это ок». So the two big portraits (Home's hero and the Kid screen's)
+  // read THIS, and `emotion` above keeps its job: the Mood tiles' word and their 36px face.
+  //
+  // ⚠ IT IS STILL THE ENGINE'S, AND STILL THE SAME DECISION – `heroFaceOf` is applied once, in
+  // `assembleDiaryFacts`, off the very `channel` that produced `emotion`. Deriving it here from
+  // `emotion` alone is not possible and must not be attempted: `happy` is both a win and a glowing
+  // week, and only the channel tells them apart. That is the whole of round 42 #2.
+  const heroEmotion = computed<PortraitEmotion>(() => game.snapshot?.diary.facts.heroEmotion ?? 'norm')
+
   // R9-16: the portrait stage follows her age (jun < 11, young 11-16, teen 17-22, adult 23-30,
   // lateCareer 31+).
   const stage = computed<PortraitStage>(() => portraitStage(game.snapshot?.ageYears ?? 14))
@@ -106,10 +117,11 @@ export function useKidEmotion() {
   // Full-size paintings: public/images/fem-euro-brunnet/fem-euro-brunnet-{stage}-{emotion}.webp
   // (every stage×emotion exists, adult and the painting-only `rehab` included) – or, for one week,
   // the single graduation painting, which has no band and no emotion in its name.
+  // ⭐ ROUND 42 #29(a): `heroEmotion`, not `emotion` – the results-and-big-facts read. See above.
   const portraitUrl = computed(() =>
     graduationWeek.value
       ? graduatedUrl()
-      : `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${emotion.value}.webp`,
+      : `${import.meta.env.BASE_URL}images/fem-euro-brunnet/fem-euro-brunnet-${stage.value}-${heroEmotion.value}.webp`,
   )
 
   /** WHICH PAINTING THE HERO IS FRAMING, as the key art/faceRects files it under. It exists because
@@ -117,8 +129,8 @@ export function useKidEmotion() {
    *  rebuilt that stem by hand would steer the graduation week's crop by the face position of a
    *  painting that is not on screen. One value, so the URL and the framing cannot disagree. */
   const portraitStem = computed(() =>
-    graduationWeek.value ? GRADUATED_ART_STEM : `${portraitAssetStem(stage.value)}-${emotion.value}`,
+    graduationWeek.value ? GRADUATED_ART_STEM : `${portraitAssetStem(stage.value)}-${heroEmotion.value}`,
   )
 
-  return { emotion, stage, cropUrl, moodCropUrl, portraitUrl, portraitStem }
+  return { emotion, heroEmotion, stage, cropUrl, moodCropUrl, portraitUrl, portraitStem }
 }

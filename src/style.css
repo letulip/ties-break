@@ -277,6 +277,58 @@
      table are --orange and --locked; moving to either is this one line.
      ⚠ NEVER `--gold` from docs/design/tokens.css - that file is not imported (see the note above). */
   --wildcard: var(--amber);
+  /* ⭐ ROUND 42 #28 – THE OFF-SEASON MARKER'S YELLOW. The owner: «маркер жёлтый на плашку на home и
+     на support stuff» (quoted here rather than in a template - tests/round13-nav.test.ts bans
+     Cyrillic inside one). ⚠ AN ALIAS OF `--amber`, NOT OF `--warning`, and the distinction is the
+     whole reason it exists: a change window that is OPEN is an opportunity with a deadline, and
+     `--warning` means «this is a risk, and you may still take it». Same hue, different sentence -
+     exactly the split `--wildcard` won one line up, and if he ever re-rules the caution family this
+     marker does not move with it. The `-rgb` twin is the `--accent-rgb` idiom: the dot's glow needs
+     the channels rather than the hex. */
+  --attention: var(--amber);
+  --attention-rgb: 245, 185, 66;
+
+  /* --- ⭐⭐ ROUND 42 #29(b) – THE MOOD RING, ONE COLOUR PER RUNG (DRAFT, HIS TO RULE) -------------
+     The owner, 14.09: «не надо менять картинку на главной по любому поводу … Делаем разноцветную
+     светящуюся обводку вокруг аватарки, для каждого настроения свой цвет» (quoted here rather than
+     in a template - tests/round13-nav.test.ts bans Cyrillic inside one).
+
+     THE LADDER IS THE MOOD LADDER's, five rungs wide (engine/spirit.ts `SpiritBand`), and the middle
+     rung gets NO COLOUR AT ALL: `steady` is the rung most weeks sit on, and a ring that is on all
+     the time is decoration rather than a signal. So four colours, and an unringed avatar draws the
+     shipped chrome exactly - the lime hairline and its dark halo, not one value changed.
+
+     ⚠ ITS OWN FAMILY RATHER THAN FOUR ALIASES, and that is the one decision here. Three of these
+     values sit beside colours the sheet already has (`--amber` at the top, `--style-serve-first`
+     and `--style-all-court` at the bottom) - but a mood is not a caution, not a court surface and
+     not a play style, and aliasing would mean his ruling on one of those families silently re-paints
+     her face. Same argument the four play styles won, and the same shape: one block, one job, and
+     moving a rung is one line. The `-rgb` twins are the `--accent-rgb` idiom - the glow needs the
+     channels, not the hex.
+
+     ⚠⚠ DRAFT - EVERY VALUE BELOW IS THE BUILDER'S PROPOSAL AND NONE OF THEM IS RULED. The shape
+     proposed: WARM ABOVE THE NEUTRAL RUNG, COOL BELOW IT, so the ladder reads as a ladder and not as
+     four unrelated colours, and NOTHING RED - `--danger` means stop, and a heavy week is not an
+     error she has made. The measured constraint they were picked against is in
+     tests/component/round42-mood-ring.test.ts: the ring's immediate neighbour is `--mood-ring-halo`,
+     so each colour is measured against that halo composited over BOTH grounds the avatar sits on -
+     the darkest panel and the brightest paintings. */
+  --mood-glowing: #f5b942;
+  --mood-glowing-rgb: 245, 185, 66;
+  --mood-bright: #6ed39a;
+  --mood-bright-rgb: 110, 211, 154;
+  --mood-dimmed: #6aa8e0;
+  --mood-dimmed-rgb: 106, 168, 224;
+  --mood-heavy: #a98ce0;
+  --mood-heavy-rgb: 169, 140, 224;
+  /* ⚠ DARKER AND MORE OPAQUE THAN THE CHROME HALO (`rgba(6, 10, 14, 0.55)` on `.diary-avatar`), and
+     it is the half that makes the four colours legible at all. Home's avatar sits ON THE PAINTING -
+     thirty-five of them, several sunlit - and a 55% halo over a white court composites to a mid grey
+     that leaves gold at 2.5:1. At 0.9 the same halo composites to near-black whatever is behind it,
+     which is what lifts every rung past 4.5:1 on the worst ground in the app. Measured both ways in
+     the ring's own test; the chrome halo is untouched for an avatar with no ring. */
+  --mood-ring-halo: rgba(6, 10, 14, 0.9);
+
   /* Real photographic paper – the Memory polaroid, and the only light surface in the whole app. */
   --polaroid-paper: #f3f0e8;
 
@@ -3065,6 +3117,87 @@ tr.kid-row td {
   border-color: #ffffff;
 }
 
+/* =================================================================================================
+   ⭐⭐ ROUND 42 #29(b) – THE MOOD RING. His words are on the token block up by `--mood-glowing`.
+   =================================================================================================
+   THE RING IS THE AVATAR'S, SO IT LIVES BESIDE THE AVATAR - and in this file rather than in a scoped
+   block, for the reason the whole section above it exists: the surface has two consumers now
+   (`HomeScreen.vue`'s photograph and `RailIdentity.vue`'s strip), and a scoped rule cannot reach a
+   sibling component.
+
+   ⚠ ADDITIVE, AND THAT IS WHAT MAKES IT SAFE. `.diary-avatar` above is not touched: an avatar with no
+   band draws the lime hairline and the 0.55 halo it always drew, and the four rules below only ever
+   fire under `.has-mood-ring`. There is no state in which this round makes a neutral week look
+   different from the week before it.
+
+   ⚠ THE BAND CLASSES SET TWO PROPERTIES AND DRAW NOTHING. `--mood-ring` is the hex and
+   `--mood-ring-rgb` its channels, because the glow is an alpha of the same colour and CSS makes us
+   write the hue twice - the `--accent` / `--accent-rgb` pair's own reason, one file up. */
+.diary-avatar-btn.mood-glowing {
+  --mood-ring: var(--mood-glowing);
+  --mood-ring-rgb: var(--mood-glowing-rgb);
+}
+
+.diary-avatar-btn.mood-bright {
+  --mood-ring: var(--mood-bright);
+  --mood-ring-rgb: var(--mood-bright-rgb);
+}
+
+.diary-avatar-btn.mood-dimmed {
+  --mood-ring: var(--mood-dimmed);
+  --mood-ring-rgb: var(--mood-dimmed-rgb);
+}
+
+.diary-avatar-btn.mood-heavy {
+  --mood-ring: var(--mood-heavy);
+  --mood-ring-rgb: var(--mood-heavy-rgb);
+}
+
+/* THE RING ITSELF. Three shadows, and the ORDER is the design: the first one paints on top, so the
+   dark halo is the colour's immediate outward neighbour and the glow blooms past it. The drop shadow
+   is `.diary-avatar`'s own, restated because a `box-shadow` list replaces rather than extends. */
+.diary-avatar-btn.has-mood-ring .diary-avatar {
+  border-color: var(--mood-ring);
+  box-shadow:
+    0 0 0 1.5px var(--mood-ring-halo),
+    0 0 9px 1px rgba(var(--mood-ring-rgb), 0.55),
+    0 2px 10px rgba(0, 0, 0, 0.45);
+  animation: mood-ring-breathe 3.4s ease-in-out infinite;
+}
+
+/* ⚠ THE HOVER STATE STAYS THE HOVER STATE. `.diary-avatar-btn:hover .diary-avatar` above turns the
+   border white, and it still does - a ringed avatar under the finger reads as a control first. */
+
+/* «светящуюся» - the glow breathes rather than sitting still, which is the difference between a
+   coloured border and a glow. ONLY the bloom moves: the hue, the hairline and the dark halo are
+   constant, so the ring never disappears and never changes colour mid-cycle. */
+@keyframes mood-ring-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1.5px var(--mood-ring-halo),
+      0 0 7px 0 rgba(var(--mood-ring-rgb), 0.4),
+      0 2px 10px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1.5px var(--mood-ring-halo),
+      0 0 13px 3px rgba(var(--mood-ring-rgb), 0.7),
+      0 2px 10px rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* ⚠⚠ AND IT STANDS DOWN WHEN THE SYSTEM ASKS, WITHOUT GOING OUT. U-05's policy (see `.splash-hint`
+   above) is that an infinite animation carries its own reduce rule; this one does, and what it
+   leaves behind is the whole of the information - the band's colour, its hairline, its halo and a
+   static bloom. Less motion is not less information, which is the rule the trophy dot states in as
+   many words. */
+@media (prefers-reduced-motion: reduce) {
+  .diary-avatar-btn.has-mood-ring .diary-avatar {
+    animation: none;
+  }
+}
+
 /* The one-time callout, moved with the avatar it explains. It hangs under the avatar rather than
    beside it – at 30px there is no room on a 390px screen, and the arrow makes the target obvious. */
 .diary-kid-hint {
@@ -3723,6 +3856,26 @@ tr.kid-row td {
    tap-hover after the tap. Pin the active segment to dark-on-lime (like button.primary). */
 .tab-pill.active:hover:not(:disabled) {
   color: var(--on-lime);
+}
+
+/* ⭐ ROUND 42 #28 – THE SEGMENT'S ACCENT DOT. Same 7px circle, same yellow and same glow as the plate
+   on Home (`.note-dot.is-attention`), because a player who saw the marker on the card and then finds
+   a different-looking one on the tab has been shown two facts instead of one.
+
+   ⚠ INLINE RATHER THAN ABSOLUTE, and that is the difference from the tab bar's own `.tab-dot`. A
+   `.tab-pill` is a text-sized pill with 16px of horizontal padding and NO positioning context of its
+   own; an absolute dot would hang off whichever ancestor happened to be positioned, which on this
+   screen is the page. So it sits after the label and pushes the pill 11px wider - measured against
+   the 375 frame, where the three Coach Market segments still fit on one line with the dot up. */
+.tab-pill-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 6px;
+  vertical-align: 1px;
+  border-radius: 50%;
+  background: var(--attention);
+  box-shadow: 0 0 8px rgba(var(--attention-rgb), 0.6);
 }
 
 /* The 32px round button (see .replay-close), holding its size in the header's flex row. */

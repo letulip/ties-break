@@ -902,3 +902,36 @@ export interface Snapshot {
    *  "since week one" row reads it, and it is what makes the reckoning cheap. */
   careerTotals: CareerTotals
 }
+
+// =================================================================================================
+// ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER, AS ONE SENTENCE TWO SCREENS SHARE
+// =================================================================================================
+//
+// The owner, 14.09: «в межсезонье привлекать внимание к выбору новой ветки психолога … маркер жёлтый
+// на плашку на home и на support stuff» (quoted here rather than in a template –
+// tests/round13-nav.test.ts bans Cyrillic inside one).
+//
+// ⚠ IT IS A SELECTION OVER TWO FIELDS THE WIRE ALREADY CARRIES, and it derives nothing: the ENGINE
+// decides whether a focus change would be accepted (`psychologistFocusOpen`, which is the very
+// function `setPsychologistFocus`'s refusal is written from – not hired, she declines, the window is
+// shut, this season's change is spent: every one of those empties the list), and the ENGINE decides
+// whether this is an off-season week (`diary.facts.offSeasonWeek`). The marker cannot outlive either
+// fact, so «dies on use or on the window closing» is arithmetic rather than a second rule.
+//
+// ⚠⚠ AND THE `offSeasonWeek` TERM IS NOT REDUNDANT, which is the one thing worth reading twice. The
+// open list is non-empty MID-SEASON TOO, on the weeks the first pick is still free
+// (`psychologistFocusRefusal` returns null while `psychologistFocus === null` – «the first pick is
+// free», engine/world/psychologist.ts) – a hired seat with nothing chosen yet would otherwise wear
+// the dot for fifty-two weeks running, which is the opposite of «в межсезонье привлекать внимание».
+//
+// ⚠ ONE FUNCTION, TWO SCREENS. Home's plate and the Coach Market's Support-staff tab read exactly
+// this, so the marker cannot appear on one and not the other – `rankChipTrack`'s own reason, three
+// modules over, and this repo's named recurring disease when it is skipped.
+/** Should the yellow marker be up this week – the off-season nudge towards the psychologist's next
+ *  year of work? Total over a null snapshot (`false`), like every selector in this module set. */
+export function psychologistFocusNudge(
+  snap: Pick<Snapshot, 'psychologistFocusOpen' | 'diary'> | null | undefined,
+): boolean {
+  if (!snap) return false
+  return snap.diary.facts.offSeasonWeek && snap.psychologistFocusOpen.length > 0
+}
