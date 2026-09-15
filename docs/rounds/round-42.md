@@ -2027,8 +2027,17 @@ its own acceptance bench does not ship because the round is ending.
 
   ⚠ The cooldown and the need gate stay as the floor under it – «help every week» is the defect he
   reported in the first place, and the wave-6 T12 reachable-money fix (the deposit no longer fooling
-  the gate) is what makes a need test honest at all. ⚠ And one design question is his before it
-  builds: a gap-closing gift is by construction a gift that always saves the trip, which is a
-  different feeling from a gift that sometimes arrives – does he want it to close the gap ALWAYS, or
-  to close it often enough that a missed trip is still possible? The bench prints both.
-  Belongs with the measurement wave (bundle 15), not with a UI bundle.
+  the gate) is what makes a need test honest at all.
+
+  ⭐⭐ **RULED 15.09 – IT CLOSES 60–80% OF THE GAP, NEVER ALL OF IT** («давай что-то вроде 60-80%
+  закрытия попробуем сделать»). So the gift is `shortfall × U(0.60, 0.80)` on the cameo's own
+  purpose-scoped stream, and the family still has to find the last fifth to two fifths itself. That is
+  the whole design in one number: **help is real, and a missed trip stays possible** – which is what
+  separates a sponsor from a safety net, and keeps the J-series years a place where a decision still
+  costs something.
+
+  ⚠ Three things the bench must therefore print, because a fraction of a gap behaves differently from
+  a flat gift: how often the family closes the remaining share and goes, how often it cannot and the
+  trip is missed anyway, and what the gift is WORTH in dollars a season against today's $1,125 – a
+  percentage of a J-series travel bill may be larger or smaller than the flat draw it replaces, and
+  nobody should be surprised by which. Belongs with the measurement wave (bundle 15).
