@@ -322,7 +322,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   entry buys 0.25 units – fractional units are already the system's own arithmetic
   (`round30-fund-units`), nothing else moves.
 
-- [ ] **14. «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»** – **build, the
+- [?] **14. «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»** – **build, the
   residue of a half-shipped fix – flag the history honestly.** Round 23 #10 fixed domestic events;
   round 41 #17 fixed the VS card (`playerNation`, `snapshot.ts:924-946`, 12.09, INTACT at head).
   The residue his eye keeps catching: `computeStandings` resolves field pros **only on the WTA
@@ -333,6 +333,56 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   season-scope-safe resolve for frozen reveals; the college-league blank (`:1273`) is deliberate
   and stays. Evidence: a standings snapshot test asserting zero `nation: ''` rows on all three
   tables (college excepted), mutation-proven.
+
+  ⭐ **BUILT 15.09, AND THE MEASUREMENT CORRECTS THE RECON ABOVE – ALL THREE PRODUCERS ARE
+  UNREACHABLE AT HEAD.** The recon was a code read of the three syntactic `''`s; walked, none of them
+  can fire, and that is the honest finding to put in front of him before another fix is shipped at a
+  surface he may not be looking at.
+
+  * **Producer 1 (`computeStandings`' WTA-only pre-pass) – real shape, no live input.**
+    `rankingFor` filters the domestic and ITF rosters to `cohortIds(world) + KID_ID`
+    (`world/ladder.ts`), and `runAiTournament` writes NO ledger row for an `fp-` id
+    (`phaseAiWeek.ts:322`), so a derived professional cannot appear on either junior table at all.
+    Measured both ways: 4 seeded careers × 420 weeks and his own week-517 save print **0 blank rows
+    on all three tables**, before and after the change.
+  * **Producer 2 (cross-season frozen reveals) – structurally impossible.** `advanceRefusal` returns
+    `'tournament'` while a reveal is open (`world/multiWeek.ts:333`), so `world.week` cannot cross a
+    season boundary with a `pendingTournament` standing. And an `fp-` id resolves in EVERY season
+    anyway – `fieldProsFor` always mints the same 1,600 chairs `fp-0…fp-1599`, so a season-scope
+    mismatch would hand back the wrong PERSON's nation, never a blank.
+  * **Producer 3 (the Nations Cup `?? ''`) – confirmed unreachable, as its own comment claims.**
+    `playCallUpRubbers` numbers the stored rubbers `0…tiesInTheWeek-1` (`world/college.ts:509`) and
+    the view rebuilds exactly `tiesInTheWeek` shirts, so `nations[current.round]` is always defined.
+  * **And the VS card is clean too**, which matters because it is the ONLY surface in the app that
+    renders a rival's flag – `pending.opponent.nation` at `TournamentFlow.vue:982/:1209`, and
+    `git grep '\.nation'` over `src/components` returns those two lines and nothing else. The Stats
+    table has no flag column (`#`, Player, Age, Pts). A walked instrument that mounts every VS card
+    a career produces: **1,162 cards, 187 of them on the W track, 174 against a field pro, 0 blank
+    nations.**
+
+  **WHAT SHIPPED ANYWAY, and why it is worth the six lines:** the field-pro lookup in
+  `computeStandings` no longer branches on the track – it is a lazy `isFieldProId` map behind
+  `enrich`'s fallback, the same shape `playerNation` / `playerShortName` already use. Behaviour is
+  identical today and the `nation: ''` fallback now has no reachable input on ANY table, which is the
+  `tableSize` class closed one surface along («a later step may never assume an earlier one's
+  post-condition»). ⚠ NO SCHEMA, NO DRAW – `fieldProsOf` is pure and memoised, and
+  `tests/condition.test.ts`'s frozen capture (41550 / `e6b0c709`) is green unmoved.
+
+  **Evidence** – `tests/round42-standings-flags.test.ts`, 3 arms: a walked world prints no blank
+  nation and no row named after its own id on all three tables at week 0 and at each of 60 ticks;
+  the W table's derived rows carry their own nation, name and a non-empty `flagEmoji`; and the junior
+  tables are pinned as admitting no `fp-` row, which is what keeps arm 1 honest.
+  **Mutations, both run:** (A) drop the field-pro resolution entirely → **2 red / 1 green**;
+  (B) restore the shipped `if (track === 'wta')` shape → **3 green**, i.e. the generalisation is not
+  observable, exactly as the measurement predicts. Both arms restored.
+
+  ⚠ **SO THE ITEM IS NOT CLOSED BY THIS, AND THE CHECKBOX STAYS OPEN.** Nothing reachable produces a
+  flagless player on any table or on the tour's VS card. The one surface that genuinely renders a
+  rival with NO flag is the **College League** opponent (`snapshot.ts:1273`), whose blank is
+  deliberate and whose exception this item itself states – and a player walking four college years
+  sees eight such cards a year. **The question that has to go back to him is WHERE he is looking**,
+  because a third fix aimed by inference would be the third one aimed at a surface nobody has
+  confirmed. One screenshot settles it.
 
 - [ ] **15. «выбрал пункт, чтобы она сказала больше, а попап закрылся»** – **build.** Confirmed: the
   small-talk options `more/view/easy` are ALL bond-0, none is the listen detour
@@ -348,7 +398,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   (opener → lean → her reaction), 36 reaction drafts, the situation pool named as its own later
   wave; bundles with item 24. Awaiting his read before the bundle builds.
 
-- [ ] **16. «За всё время до 18 пришёл 1 спонсор на 40к на год, сейчас #126 и нет никого. Надо
+- [~] **16. «За всё время до 18 пришёл 1 спонсор на 40к на год, сейчас #126 и нет никого. Надо
   проверить систему»** – **measure, with the mechanism already in hand.** At #126 she clears
   `tour`/`national`/`local` (WTA ≤200/≤350/any point – `economy.ts:1315/1106/876`), three letters
   at 0.7 each ⇒ P(an empty winter) ≈ 3% – so seasons of silence are not the dice. The two real
@@ -364,6 +414,88 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   «nothing may be offered that cannot be honoured» cuts the other way – nothing honourable may be
   muted). Verdict + numbers back to this ledger; any gate change is his call with the print in
   hand.
+
+  ⭐ **MEASURED 15.09 – `tools/sponsor-silence-probe.ts`** (archival, read-only, run by hand;
+  `--save <path.tsave>` reads a career through `decodeExportFile` and never copies it, `--seed <s>`
+  walks a fresh one, `--ages` prints §D alone). It prints §A the paper trail, §B the winters
+  (per rung: not cleared → not seated → already written → turned away → no terms → the dice, with the
+  roll and the chance as numbers), §B2 the advertising shelf, §C the mute audit, §D the age audit.
+  Run over his own week-517 save and over a walked career at the band this item names.
+
+  ⭐⭐ **THE «40к» DEAL IS FOUND, AND IT IS NOT THE `premium` RUNG.** The recon above guessed the kit
+  ladder; his own save says otherwise. `ad-drinks-194`: **an advertising contract, $40,000 a year, a
+  ONE-year term, signed at week 194 – age 17.0.** Every clause of his sentence lands on it exactly –
+  «до 18» (17.0), «1 спонсор» (it is the only advertising letter before eighteen), «на 40к» ($40,000)
+  and «на год» (`junior.termYears: 1`). It is the junior shelf's own cheque: half the adult cell at
+  her band (`junior.feeBps 5000`), which is the shape round 41 #15 shipped.
+
+  **So «спонсор» in his sentence means a CASH ENDORSEMENT and not the kit ladder** – and the kit
+  ladder was not quiet at all. Before eighteen his career signed three deals and refused a fourth
+  letter: `local` w47 ($2,000/season), `national` w100 (2 seasons, $3,000), a refused `local` at
+  w205, and the `national` renewal at w207. The kit post was empty in **one** of the first five
+  winters (s2), and §C names the reason.
+
+  **PER WINTER, HIS SAVE (10 winters, 4 of them empty):**
+
+  | s | window | age | standing | ladder | what happened |
+  | --- | --- | --- | --- | --- | --- |
+  | 0 | w47 | 14.0 | dom#5 | local | `local` landed, signed |
+  | 1 | w99 | 15.0 | dom#8 itf#27 | national, local | `national` landed, signed (2 seasons) |
+  | 2 | w151 | 16.0 | wta#201 | national, local | **empty** – both rungs turned away by the running `national` |
+  | 3 | w203 | 17.0 | wta#145 | tour, national, local | `tour` missed its roll (0.825 ≥ 0.70); `local` landed and was refused; the `national` renewal signed |
+  | 4 | w255 | 18.0 | wta#98 | tour, national, local | `tour` landed, signed (2 seasons) |
+  | 5 | w307 | 19.0 | wta#19 | premium, global, tour, national | **`premium` landed by the apparel bond, signed – 3 seasons, $38,000/season + $15,000/appearance** |
+  | 6 | w359 | 20.0 | wta#20 | premium … national | **empty** – all four turned away by the running `premium` |
+  | 7 | w411 | 21.0 | wta#15 | premium … national | **empty** – the same term, second year |
+  | 8 | w463 | 22.0 | wta#7 | icon, premium, global, tour | `icon` landed, signed – 4 seasons, $162,000/season |
+  | 9 | w515 | 23.0 | wta#13 | premium … national | **empty** – all four turned away by the running `icon` |
+
+  ⭐ **VERDICT: DESIGN, NOT DICE AND NOT A DEFECT.** §C's audit: **22 mutes across the career, 0 of
+  them outside the muting deal's own term.** Every single silence is a season the parent had already
+  promised to a brand, and `rungTurnedAway`'s own scope test (`untilWeek >= coveredSeasonStart(week)`)
+  is exactly the season the mute applies to. The ⭐ criterion this item set – «mutes rungs the signed
+  deal does not actually cover» – is **not met**, so there is nothing here to fix and no gate to
+  change. Only one winter in ten was silenced by luck (s3's `tour`, and even then two other letters
+  arrived).
+
+  ⚠ **WHAT IS WORTH HIS WORD ANYWAY, because it IS what he is feeling: the top of the ladder is a
+  dead end by construction.** `icon` is the last rung, so a 4-season `icon` deal mutes the ENTIRE
+  ladder for four winters – there is no strictly stronger rung left to write – and `premium`'s
+  3-season term is nearly as total (only `icon` can interrupt it, at WTA ≤10). **Three of his four
+  empty winters are the two BEST contracts he ever signed.** The better the deal, the longer the
+  inbox stays dark, and nothing on screen says «you are under contract, that is why it is quiet».
+  That is a product question (a line in the winter's feed row? the renewal notice arriving earlier?),
+  not a balance bug, and it is his call – the probe is the print to make it on.
+
+  ⭐ **AND THE AGE STORY VERIFIES CLEAN – THERE IS NOTHING TO BUILD** («надо, чтобы контракты
+  работали с 16»). §D walks every family: all six kit rungs are **standing-gated only, no age term
+  anywhere**; the apparel bond inherits the kit rung's gates and adds none; advertising opens at
+  `ECONOMY.advertising.fromAgeYears` = **16**, with the [16, 18) junior band halving the cheque and
+  the arrival rate over two categories (`drinks`, `clothing`). The only 18 left near this money is
+  `ECONOMY.kidShare.fromAgeYears`, which is her PRIZE SPLIT and a different mechanic – and round 41
+  #27 already flattened `startBps` below it. **No sponsor family holds an 18 gate.**
+
+  ⚠ **AND THE JUNIOR SHELF'S OWN ARITHMETIC IS WHY «1 спонсор» IS ORDINARY RATHER THAN BROKEN.** At
+  16–17 the shelf is two categories at 0.025/week each – `clothing` needing a live kit deal to be
+  written at all – so a junior year expects **~2.6 arrivals** before the weeks a live deal shuts the
+  slot. His save's s3 took 90 arrival draws and produced one letter; a walked wealthy/elite career at
+  the same age took 104 and produced one. A sixteen-year-old with exactly one endorsement is the
+  designed rate, not a failure.
+
+  ⭐ **AND AT #126 THE POST IS NOT EMPTY, MEASURED RATHER THAN ARGUED.** The walked arm at the band
+  this item names (`--seed r42w-a`, wealthy/elite, WTA #222 at 16 → **#115 at 17** → #18 at 18): at
+  #115 three rungs cleared and **all three letters landed** – `tour`, `national` and `local`, slots
+  0/1/2 of the same window. The ≈3% figure in the recon above holds.
+
+  ⚠ **TWO NOTES FROM BUILDING THE INSTRUMENT, both stated rather than left to be rediscovered.**
+  (a) `adSpokenFor`'s signed arm is `week <= untilWeek` with NO lower bound – correct for the engine,
+  which only ever asks about today, and wrong for any retrospective walk (a deal signed in season 7
+  shuts its category in season 3). Not player-visible; the probe filters the ledger as-of each week
+  and says so. (b) The save arm's per-winter standing is RECONSTRUCTED from
+  `seasonHistory[].byTrack[].endRank` (the wrap runs two weeks after the window opens), so its rows
+  carry `~`; the `--seed` arm reads the review's own standing on the letter's own Monday and has no
+  such seam. The walked arm never signs anything, so §C is structurally empty on it – the two arms
+  answer two halves.
 
 - [x] **17. «иногда получается двойная перемотка недели вместо одинарной… не получается на турниры
   заходить вовремя»** – **build, three mechanisms found, all three closed.** (a) NO in-flight

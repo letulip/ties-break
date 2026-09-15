@@ -49,7 +49,7 @@ import { previewEvent, eventCrowd, eventTemperature, firstRoundDraw, ratedField,
 import { FRESH_KIT } from '../equipment'
 import type { EventPreview, RatedEntrant } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
-import { isFieldProId, universeForTier } from '../season/fieldPros'
+import { isFieldProId, universeForTier, type FieldPro } from '../season/fieldPros'
 import { entrantNationAt, weekFieldExclusion, JUNIOR_TOUR } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
 import { ratingOf } from '../match/rating'
@@ -870,8 +870,31 @@ export function computeStandings(world: WorldState, track: LadderTrack = 'itf'):
   // fallback below would otherwise print "fp-141" the day the Stats screen grows its World Tour
   // tab. The table itself stays windowed exactly as every table always was (top 10 + around the
   // kid, built a few lines down), so ~500 rows cost the snapshot nothing.
-  if (track === 'wta') {
-    for (const p of fieldProsOf(world)) meta.set(p.id, { name: p.name, nation: p.nation, ageYears: p.ageYears })
+  //
+  // ⭐⭐ ROUND 42 #14 – AND THE LOOKUP NO LONGER BRANCHES ON THE TRACK (the owner, third time of
+  // asking: «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»). It used to be an
+  // eager pre-pass guarded by `if (track === 'wta')`, so an `fp-…` id arriving on ANY other table
+  // fell straight through to `nation: ''` two blocks down and `flagEmoji('')` drew nothing –
+  // `playerNation`'s own bug (round 41 #17) with the population and the surface swapped round.
+  //
+  // ⚠ MEASURED BEFORE IT WAS WRITTEN, AND IT MOVES NOTHING TODAY. `rankingFor` filters the domestic
+  // and ITF rosters to `cohortIds(world) + KID_ID` (world/ladder.ts), so as the code stands no `fp-`
+  // id can reach either table: 4 seeded careers x 420 weeks and the owner's own week-517 save print
+  // ZERO blank rows on all three tables, before and after this change. What it removes is the LATCH –
+  // the same class `tableSize` was caught by («a later step may never assume an earlier one's
+  // post-condition»): the day any non-W table admits a derived row, the flag is already there.
+  //
+  // ⚠ AND IT IS A LAZY MAP RATHER THAN A SECOND PRE-PASS, which is what makes generalising it free.
+  // `isFieldProId` is asked first, so the two junior tables never build it at all; the W table builds
+  // exactly one 1,600-entry map, where it used to write 1,600 entries into `meta`. `fieldProsOf` is
+  // season-stable and memoised (world/ladder.ts) and takes NO draw on any stream – the frozen MAIN
+  // capture (41550 / e6b0c709) cannot see this line.
+  let proRows: Map<string, FieldPro> | null = null
+  const proMeta = (id: string): { name: string; nation: string; ageYears?: number } | undefined => {
+    if (!isFieldProId(id)) return undefined
+    proRows ??= new Map(fieldProsOf(world).map((p) => [p.id, p]))
+    const p = proRows.get(id)
+    return p ? { name: p.name, nation: p.nation, ageYears: p.ageYears } : undefined
   }
   // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
   // ⚠ AND HER AGE IS `kidAgeAt`, THE ONE CLOCK (ruling of 09.08) – off her birth date, so a December
@@ -883,7 +906,7 @@ export function computeStandings(world: WorldState, track: LadderTrack = 'itf'):
     ageYears: kidAgeAt(world, world.week),
   })
   const enrich = (r: RankingRow, gapBefore: boolean): StandingRow => {
-    const m = meta.get(r.playerId) ?? { name: r.playerId, nation: '' }
+    const m = meta.get(r.playerId) ?? proMeta(r.playerId) ?? { name: r.playerId, nation: '' }
     return {
       ...r,
       name: m.name,

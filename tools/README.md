@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-226 TypeScript files: **39 live**, **187 archival**.
+227 TypeScript files: **39 live**, **188 archival**.
 
 ## Why the split exists
 
@@ -119,7 +119,7 @@ the gate now runs – so evidence that stops compiling reddens a pull request in
 - `round17-read.ts` · `round18-read.ts` · `round23-read.ts` · `round26-probe.ts`
 - `runway-probe.ts` · `school-bench.ts` · `season-anchor-read.ts` · `seed-vs-model.ts`
 - `skill-gap-odds.ts` · `slam-difficulty.ts` · `slam-door-cost.ts` · `sponsor-ladder-reach.ts`
-- `summer-bench.ts` · `teen-at-the-top.ts` · `top50-season-probe.ts` · `two-cells.ts`
-- `two-seasons-read.ts` · `two-tour-overlap.ts` · `w-onramp-probe.ts` · `wall-freeze-probe.ts`
-- `wall-l1-bench.ts` · `wallet-audit.ts` · `week-story-trace.ts` · `what-drives-progress.ts`
-- `what-money-buys.ts` · `wild-card-reach.ts` · `winrate-read.ts`
+- `sponsor-silence-probe.ts` · `summer-bench.ts` · `teen-at-the-top.ts` · `top50-season-probe.ts`
+- `two-cells.ts` · `two-seasons-read.ts` · `two-tour-overlap.ts` · `w-onramp-probe.ts`
+- `wall-freeze-probe.ts` · `wall-l1-bench.ts` · `wallet-audit.ts` · `week-story-trace.ts`
+- `what-drives-progress.ts` · `what-money-buys.ts` · `wild-card-reach.ts` · `winrate-read.ts`
