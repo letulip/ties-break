@@ -85,6 +85,9 @@ import type { PsyFocus } from '../engine/world/state'
 // snapshot's `masseurSalaryCents`, asserted in tests/component/masseur-card.test.ts).
 import { ECONOMY } from '../engine/economy'
 import { formatCents } from '../shared/money'
+// ⭐⭐ ROUND 43 #2 – the seat's own face. One builder, in the module that already owns every other
+// portrait path, so the folder is spelled once (`src/art/preload.ts`).
+import { supportPortraitUrl } from '../art/preload'
 
 const game = useGameStore()
 
@@ -121,6 +124,17 @@ interface StaffMember {
    *  two confirms below are keyed on so one dialog serves the whole list. */
   id: string
   name: string
+  /** ⭐⭐ ROUND 43 #2 – THE SEAT'S PORTRAIT STEM, under `public/images/support-stuff/`. A REQUIRED
+   *  field, not an optional one, and that is a claim about the descriptor rather than about today's
+   *  two entries: a payroll card with a name, a price, a lock and no face would be the only card of
+   *  its family without one, and the `dial` / `travel` / `focus` optionality above is reserved for
+   *  controls a seat genuinely does not HAVE (ruling Б). A seat with no art is a seat with no art
+   *  YET, which is a reason to draw one rather than a shape for the type to carry.
+   *
+   *  ⚠ `id` IS NOT REUSED AS THE STEM even though both entries agree today. `id` is the v-for key,
+   *  the `data-staff` hook and the confirm dialogs' selector – a UI identity – and the stem is a
+   *  FILENAME the owner chose. Tying them would make a rename of either silently 404 the other. */
+  portrait: string
   unlocked: boolean
   hired: boolean
   /** The one line under the name, in whatever state he is in. */
@@ -215,6 +229,7 @@ const masseurTravelSub = computed(() => {
 const masseur = computed<StaffMember>(() => ({
   id: 'masseur',
   name: 'Masseur',
+  portrait: 'masseur',
   unlocked: masseurUnlocked.value,
   hired: masseurHired.value,
   line: masseurLine.value,
@@ -320,6 +335,7 @@ const psychologistLine = computed(() => {
 const psychologist = computed<StaffMember>(() => ({
   id: 'psychologist',
   name: 'Psychologist',
+  portrait: 'psychologist',
   unlocked: psychologistUnlocked.value,
   hired: psychologistHired.value,
   line: psychologistLine.value,
@@ -427,7 +443,19 @@ async function doRelease(): Promise<void> {
       <span class="tier-name">{{ m.name }}</span>
       <span class="tier-range">{{ m.priceLabel }} /wk</span>
     </p>
+    <!-- ⭐⭐ ROUND 43 #2: THE SEAT'S FACE, on the coach strip's principle and by his own ruling - the
+         market row's treatment since round 42 #3, at a different aspect ratio. His words are quoted
+         in the script block above, where the house fence allows them; the arithmetic that re-derives
+         the floor for 448x624 is in `.staff-art` below. The strip is `position: absolute`, so it is
+         out of the flex flow and the row's gap never applies to it, exactly as `.cm-art` is.
+         ⚠ EMPTY `alt`, the coach row's own rule. The picture is decoration beside a name the card
+         already prints - a screen reader that read «Masseur» and then «a masseur» would say the seat
+         twice, and there is no fact here that is not already in the text.
+         ⚠ NO `loading="lazy"` UNLIKE THE MARKET ROW, and the difference is the list length: sixteen
+         coach rows are a scroll, two seats are a screen, and a lazy image on a card the player is
+         already looking at buys a blank strip rather than a saved request. -->
     <div class="staff-card" :class="{ locked: !m.unlocked }">
+      <span class="staff-art"><img :src="supportPortraitUrl(m.portrait)" alt="" /></span>
       <span class="staff-body">
         <span class="cm-load staff-line">{{ m.line }}</span>
       </span>
@@ -539,12 +567,110 @@ async function doRelease(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
+  /* ⭐⭐ ROUND 43 #2 – THE RIGHT PADDING STAYS AND THE LEFT ONE GOES, which is `.cm-row`'s own
+     `9px 12px 9px 0`: the strip is flush to the card's inner edge and the text is held off it by
+     `.staff-body`'s margin instead, so one number owns the clearance. */
+  padding: 10px 12px 10px 0;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
   border-radius: 10px;
+  /* ⭐⭐ ROUND 43 #2 – THE PORTRAIT NEEDS A CONTAINING BLOCK AND A FLOOR, and both are here.
+     `position: relative` is what makes `.staff-art`'s `top: 0; bottom: 0` resolve against THIS
+     card's padding box, and `overflow: hidden` is what keeps the strip inside the rounded corner.
+
+     ⚠⚠ 136 IS DERIVED FROM **THIS** RATIO AND IS NOT THE COACH ROW'S 168 COPIED. The guarantee is
+     round-18 #2's, one ratio over: the picture is height-driven, the mask reaches transparent exactly
+     at the strip's right edge, so the clip is invisible only while the picture is at least as wide as
+     the strip. `.staff-art` is `top: 0; bottom: 0` of the PADDING box, so the narrowest picture this
+     layout can produce is (floor - 2 borders) x 448/624.
+         (136 - 2) x 448/624 = 134 x 0.717949 = 96.20 >= 96   <- the strip, filled
+     and 136 is the smallest integer that holds it: 96 x 624/448 + 2 = 135.71.
+     ⚠ THE COACH ROW'S ARITHMETIC IS THE SAME SENTENCE WITH THE OTHER MASTER – (196-2) x 162/280 =
+     112.24 >= 112 – and 162/280 is 0.579 against this 0.718. A wider figure at the same height fills
+     its window sooner, so the floor is LOWER here on a strip of the same width, and reading 168 or
+     196 across would have over-floored this card by 32-60px for no guarantee at all.
+     ⚠⚠ AND THE MEASURED CONSEQUENCE IS THAT THIS FLOOR BINDS EVERYWHERE, which is a real difference
+     from the market row and worth writing down rather than discovering. Swept in Chromium through
+     this file's own shipped rules at 320 / 375 / 768 / 900 / 1280, both seats, hired:
+
+         width      320     375     768     900    1280
+         card       136     136     136     136     136   <- the floor, at every one
+         text col    83.06  138.06  531.06  663.06 1043.06
+         picture     96.21 (everywhere, because the height is the floor's)
+
+     The coach row is text-driven PAST its own floor to 208-238px at 375, so its strip is a real
+     porthole onto a wider picture; this card's text never reaches 136, so the window is the whole
+     96.21px picture and nothing is clipped at all. Both are the same rule - the ratio and the much
+     shorter card are why the outcome differs.
+     ⚠ THE NARROWEST CASE IS THE ONE TO WATCH AND IT IS CLOSE: at 320px the psychologist's longest
+     hired line wraps to 8 lines, 113.4px of text plus 20px of padding and 2 of border = 135.4px,
+     which is 0.6px under this floor. One more sentence on that card and it starts to clip - which is
+     exactly why `.staff-art img` below carries a real `object-position` rather than a default. */
+  position: relative;
+  overflow: hidden;
+  min-height: 136px;
 }
 .staff-card.locked {
+  /* ⚠ ON THE WHOLE CARD AND SO THE PORTRAIT DIMS WITH IT, which is `.cm-row.blocked .cm-art`'s
+     intent reached by the shorter road: a seat the career cannot open yet should read as one
+     picture and all. Nothing here needed a second rule. */
   opacity: 0.75;
+}
+/* ⭐⭐ ROUND 43 #2 – THE STRIP. 96px, the same window the coach roster uses one tab over, and that
+   is a deliberate borrowing rather than a coincidence: this chapter already borrows `.cm-load` and
+   `.cm-action` so the two card families read as one screen, and a third portrait width on the same
+   screen would be the thing that makes them read as two.
+   ⚠ `position: absolute` KEEPS IT OUT OF THE FLEX FLOW, so the card's `gap: 10px` never applies to
+   it and `.staff-body`'s margin is the only thing that decides the clearance - `.cm-art`'s own
+   arrangement, and the reason round-18 #2's feedback loop (a wider strip wraps a line, a taller card
+   widens the picture) cannot start here.
+   ⚠ THE MASK IS THE COACH STRIP'S, STOP FOR STOP. Its stops are percentages of THIS box, so the fade
+   reaches transparent exactly at the clip line - which is what the floor above exists to keep true. */
+.staff-art {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 96px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 52%, transparent 100%);
+}
+/* ⭐⭐ ROUND 43 #2 – AND IT IS A CLIP, NEVER A STRETCH, which is the A2c/d ruling `.cm-art img`
+   inherits and the one thing a `cover` on this box has to prove. `cover` scales by
+   max(boxW/imgW, boxH/imgH); while the box is narrower than the picture's own ratio the height term
+   wins, the picture is scaled to exactly the box's height and every overflowing pixel is spent
+   sideways. "The box is narrower than the ratio" is precisely what the floor above guarantees.
+
+   ⚠⚠ 30% IS MEASURED ON **THESE TWO MASTERS** AND ROUND 42 #3's «8-62%» IS NOT REUSED. That reading
+   was taken off the sixteen coach masters - men framed head-on, short hair - and these are two women
+   with hair well past the jaw, so it does not transfer. Read here off a percentage grid rendered over
+   each 448x624 master, taking the head box as the hair's outline at HEAD height (the top of the hair
+   through the chin) rather than the hair that falls onto the shoulders:
+       masseur        [0.16, 0.58]        psychologist  [0.20, 0.74]
+   so the union both must fit inside is [0.16, 0.74] - 0.58 of the picture's width, against the coach
+   masters' 0.54. ⚠ IT IS A READING OFF A GRID AND NOT A PIXEL TRACE: the edges are quoted to two
+   decimals and are good to about +/-0.02, which is why the margins below are quoted in units the
+   slack swallows.
+   ⚠⚠ 38 IS THE p THAT SURVIVES THE MOST, and it is derived rather than aimed. Write the window as
+   [L, L+w] in picture fractions, w = strip/picture and L = p(1-w). Containment of [a, b] needs
+       (b - w) / (1 - w)  <=  p  <=  a / (1 - w)
+   and those two bounds close on each other as the card grows: they MEET at w = b - a = 0.58, where
+   the only p that works is a/(1-0.58) = 0.16/0.42 = 0.381. So 38% is the single value that holds over
+   the whole reachable range - every window from w = 0.60 (a 160px picture, a 225px card, 1.65x this
+   floor) up to the floor's own w = 0.998 - and any other choice narrows that range from one end or
+   the other. It is round 42 #3's own rule, «the p that makes the two margins equal», evaluated at the
+   worst case rather than at a typical one.
+   ⚠ WHY IT MATTERS AT ALL WHEN NOTHING CLIPS TODAY. At the floor the picture IS the strip and every p
+   from 0 to 100 shows both heads - so this is the one declaration whose default would look perfect
+   now and be wrong the first time a sentence is added (the measured margin at 320px is 0.6px). A card
+   grows by one honest sentence at a time, which is CLAUDE.md's own note about dialogs read one box
+   over. */
+.staff-art img {
+  display: block;
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: 38% 50%;
 }
 .staff-body {
   display: flex;
@@ -552,6 +678,13 @@ async function doRelease(): Promise<void> {
   gap: 4px;
   min-width: 0;
   flex: 1;
+  /* ⭐⭐ ROUND 43 #2 – 96 (the strip) + 12 of air, which is `.cm-body`'s own pair and the 10-15px band
+     the owner negotiated in round-18 (his words are quoted at that rule in src/style.css, and in the
+     script block above, because no rule below the markup in this file may carry them).
+     ⚠ THE TWO NUMBERS ARE TIED BY A TEST AND NOT BY THIS COMMENT:
+     tests/component/round43-staff-portrait.test.ts reads both off the mounted cascade and fails if
+     the gap leaves that band. Move one, move the other. */
+  margin-left: 108px;
 }
 .staff-line {
   margin-top: 0;

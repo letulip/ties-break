@@ -53,6 +53,8 @@ import type { FamilyBackground, TravelHomeScene, TravelHomeMood } from '../share
 const ART_DIR = 'images/fem-euro-brunnet/'
 const NAME = 'fem-euro-brunnet'
 const COACH_DIR = 'images/coaches/'
+/** Round 43 #2 – the support seats' portraits. The folder is the owner's own spelling of it. */
+const SUPPORT_DIR = 'images/support-stuff/'
 
 /**
  * THE TWO SETS, and they are deliberately different sizes (ui/art-rehab-sleepy).
@@ -265,6 +267,29 @@ export function coachPortraitUrl(stem: string): string {
 /** The default coach's portrait for a family background – what the Home coach card renders. */
 export function coachUrlFor(background: FamilyBackground): string {
   return coachPortraitUrl(COACH_BY_BACKGROUND[background])
+}
+
+/** ⭐⭐ ROUND 43 #2 – THE SUPPORT SEATS' OWN PORTRAITS (448x624 webp), and the stem is the seat id.
+ *
+ *  The owner drew four and shipped them himself (round 42 #53, «я положил в images/support stuff
+ *  готовое»); the conversion landed and the PLACEMENT did not, so for one round the files were in
+ *  every install and on no screen – «я не увидел в пришедшем обновлении картинок для support stuff».
+ *  `SupportStaffTab.vue` is the surface now, and this is the one place that spells the path.
+ *
+ *  ⚠ NO `preloadSupportStaffArt`, AND THAT IS NOT THE COACH MARKET'S OMISSION REPEATED. The warming
+ *  functions in this module exist for art that is fetched on demand; round 29 part two #7 put the
+ *  whole of `public/images/**` into the PWA precache, so these two files are on the device before the
+ *  tab can ask for them. A warm here would resolve off the precache and do nothing – which is exactly
+ *  what this module's own header now says about `warm()` generally.
+ *
+ *  ⚠ TWO OF THE FOUR FILES HAVE NO CALLER AND THAT IS CORRECT. `broker` is the owner's own parking
+ *  («брокера пока не знаю»), and `sparring` has no seat to sit on: `sparringHired` / `sparringRung` /
+ *  `sparringTravels` are reserved SAVE KEYS with no reader anywhere on this tree (world/state.ts
+ *  v78/v79 – «THE KEYS ONLY, AND NOTHING READS THEM»), so there is no card to put a face on. This
+ *  module's standing rule is «never preload what cannot be shown», and the same rule read the other
+ *  way is why neither gets a URL here. */
+export function supportPortraitUrl(stem: string): string {
+  return `${base()}${SUPPORT_DIR}${stem}.webp`
 }
 
 /** Warm every roster face - called by the Coach Market and by nothing else, because it is the only
