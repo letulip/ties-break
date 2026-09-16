@@ -5254,7 +5254,7 @@ export const ECONOMY = {
     //     the entry rung $156   $176   $206   $240   $280   $328  a week
     //
     // The pressure he asked for is real and slow: at a constant spend the top rung (7 × the rate)
-    // buys one rung less after about fourteen years, which is «это может нам скомпенсировать все
+    // buys one rung less after fifteen years (M4, measured), which is «это может нам скомпенсировать все
     // ранги» over a career rather than over a season. ⚠ AND THE ONE THING THE BENCH HAD TO PROVE:
     // the ENTRY rung must never drift out of a modest family's reach, or the poor lose the seat to
     // arithmetic instead of to a decision. See the spec's §4 for the measured wallet.

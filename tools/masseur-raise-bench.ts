@@ -266,7 +266,7 @@ function walk(presetIndex: number, seedIndex: number): Run {
     tourBillCents,
     endFundsCents: world.fundsCents,
     endWeek: world.week,
-    ended: world.ending?.kind ?? '–',
+    ended: world.ending?.type ?? 'alive',
     weeksServed: masseurWeeksServed(world),
     endRateCents: masseurSessionCents(world),
   }
@@ -305,7 +305,7 @@ function m5(): void {
           `${padL(money(mean(rs.map((r) => r.salaryCents))), 13)}` +
           `${padL(money(mean(rs.map((r) => r.endFundsCents))), 12)}` +
           `${padL(money(mean(rs.map((r) => r.endRateCents))), 10)}` +
-          `${padL(String(rs.filter((r) => r.ended === 'bankrupt').length), 10)}`,
+          `${padL(String(rs.filter((r) => r.ended === 'bankruptcy').length), 10)}`,
       )
     }
     const a = arms.A
@@ -315,7 +315,7 @@ function m5(): void {
     console.log(
       `   ⭐ the ask costs this household ${lostWeeks.toFixed(1)} weeks of his employment and ` +
         `${extraReleases.toFixed(2)} extra release(s) per career; bankruptcies ` +
-        `${a.filter((r) => r.ended === 'bankrupt').length} → ${b.filter((r) => r.ended === 'bankrupt').length}\n`,
+        `${a.filter((r) => r.ended === 'bankruptcy').length} → ${b.filter((r) => r.ended === 'bankruptcy').length}\n`,
     )
   }
 }

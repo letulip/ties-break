@@ -233,6 +233,12 @@ export function masseurRaiseDue(world: WorldState): boolean {
  *  ⚠ IT MAY CARRY THE FIGURE, unlike `masseurRoomNote`: this is the row whose whole job is the new
  *  price, and `setMasseurSessions` records the same split («the price change is on the next weekly
  *  bill, which is the row that may carry figures»).
+ *  ⚠ NO MASCULINE PRONOUN IN EITHER LINE, which is R15-7's standing order and NOT covered by this
+ *  file's «the pronoun is safe here» note beside `hireMasseur`: that note is about the NOUN, and
+ *  `tests/coach-voice.test.ts` bans `he`/`his`/`him` from every engine literal a player can read.
+ *  The first draft of the bottom-rung line said «to drop him to» and went red there, which is the
+ *  guard doing exactly its job.
+ *
  *  ⚠ AND THE SECOND SENTENCE TELLS THE TRUTH AT THE BOTTOM RUNG. A family already on two sessions a
  *  week has no rung to drop to, and a line offering one would be the screen lying about a choice –
  *  this round's own #5 is about exactly that failure one tab over.
@@ -248,7 +254,7 @@ export function resolveMasseurRaise(world: WorldState): void {
     week: world.week,
     type: 'info',
     text: bottom
-      ? `The masseur asks for more – ${dollars(rate)} a session from this week. There is no shorter week to drop him to.`
+      ? `The masseur asks for more – ${dollars(rate)} a session from this week. There is no shorter week to drop to.`
       : `The masseur asks for more – ${dollars(rate)} a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`,
   })
 }
