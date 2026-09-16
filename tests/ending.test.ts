@@ -7,6 +7,7 @@
 //   2. INPUT-INDEPENDENCE SURVIVES COLLEGE. Going to college suppresses four years of bills, and
 //      every one of those suppressions is POST-DRAW - so a player's answer at the fork cannot move
 //      the MAIN sequence. That is invariant 2 and it is a fairness property, not a tidiness one.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
@@ -42,7 +43,6 @@ import {
   tickWeek,
   answerFork,
   answerRetirement,
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   enterEvent,
@@ -1055,7 +1055,7 @@ describe('#2 college – the only ending that resumes', () => {
       for (let press = 0; press < 4 && world.college!.years.length < year; press++) {
         resumeFromCollege(world, rng)
         answerCollegeReveal(world)
-        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+        if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       }
       expect(world.week, `after year ${year}`).toBe(from + year * WEEKS_PER_YEAR)
       expect(world.college!.years, `one row per year lived`).toHaveLength(year)
@@ -1080,7 +1080,7 @@ describe('#2 college – the only ending that resumes', () => {
     for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     const kidResults = world.results.filter((r) => r.playerId === 'KID')
     expect(kidResults).toHaveLength(0)
@@ -1097,7 +1097,7 @@ describe('#2 college – the only ending that resumes', () => {
     for (let press = 0; press < 4 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     // ⚠ THE SPAN IS [fromWeek, untilWeek): `untilWeek` is her FIRST WEEK BACK, and it is billed like
     // any other, so it is excluded here. `financeWeeks` prunes to 60 weeks, so this is the last
@@ -1176,8 +1176,8 @@ describe('the album – seven pages, every career', () => {
   it('⭐ #10 – the ending view names the academy: stages standing, and what it earns', () => {
     const { world } = freshWorld('ending-academy')
     world.assets = [
-      { id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00 },
-      { id: 'academy-courts', boughtWeek: 120, paidCents: 3_000_000_00, valueCents: 3_000_000_00 },
+      { id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00, entries: [] },
+      { id: 'academy-courts', boughtWeek: 120, paidCents: 3_000_000_00, valueCents: 3_000_000_00, entries: [] },
     ]
     latchEnding(world, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
     const view = buildEndingView(world)!
@@ -1195,7 +1195,7 @@ describe('the album – seven pages, every career', () => {
     // Only the land: a field earns nothing (stageIncomeCents 0) and the sentence must be able to
     // say so – the view carries the honest 0 rather than hiding the stage.
     const { world } = freshWorld('ending-academy-land')
-    world.assets = [{ id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00 }]
+    world.assets = [{ id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00, entries: [] }]
     latchEnding(world, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
     const landOnly = buildEndingView(world)!
     expect(landOnly.academy).not.toBeNull()
@@ -1270,7 +1270,7 @@ describe('⚠ input-independence survives college', () => {
       // ⚠ ROUND 26 #6: and the championship's reveal is answered mid-walk too – the arm now proves
       // that watching a tournament costs the MAIN stream not one draw either.
       answerCollegeReveal(a)
-      if (pendingBirthday(a) !== null) chooseGift(a, 'day')
+      if (pendingBirthday(a) !== null) answerBirthdayNeutral(a)
     }
     while (b.week < a.week) tickWeek(b, rngB)
     expect(a.week).toBe(b.week)

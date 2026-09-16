@@ -1,0 +1,592 @@
+---
+type: spec
+status: draft
+area: life
+canonical: false
+last-reviewed: 2026-09-14
+---
+
+# Small-talk conversations: varied openings and responsive follow-ups
+
+**Status: draft, second pass.** Rewritten 14.09 after the owner's review of the first draft. His
+central verdict, kept at the top because it is the whole point:
+
+> Small talk should reveal her, and the kind of parent the player is being, without becoming a
+> scored test.
+
+His review found the diagnosis right and the direction right, but the first draft's design still
+did not know what the conversation was *about* – so more sentences after a generic opener would
+have made the exchange longer without making it more human. This pass fixes that. Everything below
+is a proposal; every quoted line is a draft for his wording pass.
+
+The two owner asks that raised the work:
+
+> #15: «выбрал пункт, чтобы она сказала больше, а попап закрылся… может быть мы можем какие-то
+> ситуации сгенерировать и сделать всё-таки какие-то продолжения для диалогов и разные варианты
+> реакции ребенка на разные ответы? Сейчас выглядит как "сказала А, но никогда не сказала Б".»
+
+> #24: «Один и тот же диалог из раза в раз "I want to ask you something"… да, надо больше
+> разнообразия, это же наша главная фича.»
+
+---
+
+## 1. The core design
+
+Small talk becomes a two-step conversation. She opens with a concrete subject, in the register of
+her temperament and her life stage. The player then chooses whether to invite more, respond to
+what she said, or give her space.
+
+None of these choices changes bond, and none is marked correct. They stay meaningfully different:
+inviting lets her keep going, responding lets her meet what the parent actually said, and giving
+space closes the subject without punishing either of them. Her follow-up keeps the opener's
+subject, her maturity, and its delivery frame (home or a call), so the conversation stays about the
+one thing she brought.
+
+```
+  1. She opens        a concrete subject, in her voice and at her age
+  2. The parent       invite more  ·  respond  ·  give space   (worded per subject)
+  3. She follows up    invite → a continuation; respond/space → a shorter reaction
+  4. Close             the beat ends; still bond-neutral, still missable
+```
+
+The economy does not change: the beat stays bond-neutral, non-blocking, missable, four a season.
+What it gains is a second line of hers, and a reason for the first line to be different each time.
+
+---
+
+## 2. The subjects – real material, not a speech act
+
+The first draft kept the shipped subjects `worry / joy / question`, and that is the root of the
+repetition the owner keeps hitting. `worry` and `joy` name emotional *material*; `question` names a
+*speech act*. Because the ordinary-mood week always resolves to `question`, the ordinary opener
+always collapses to "I want to ask you something." No amount of paraphrase fixes a taxonomy that
+puts a verb where the other two put a feeling.
+
+So the subjects become six kinds of small thing she might bring:
+
+| subject | what it is |
+| --- | --- |
+| `worry` | something sitting wrong |
+| `good-news` | something that went right |
+| `decision` | a small choice she is turning over |
+| `curiosity` | a question she actually wants answered |
+| `observation` | a thing she noticed, no ask attached |
+| `story` | something that happened, told for its own sake |
+
+Mood sets the **weights**, not the subject. A heavy week leans toward `worry` but can still produce
+a tired `observation` or a small `decision`; a bright week leans toward `good-news` or `story`; an
+ordinary week leans toward `curiosity`, `decision` or `observation`. The pick is a deterministic
+draw on the beat's own `(seed, week)` sub-stream, so two careers meet different small things and any
+one career replays identically. Replacing `smallTalkSubjectFor`'s hard mapping with a weighted draw
+is the one mechanical change in this section; it stays on the existing key family, so MAIN and the
+frozen capture are untouched.
+
+---
+
+## 3. The replies are keyed to the subject
+
+The shipped set – "Ask her to say more" / "Tell her what we think" / "Tell her it can keep" – does
+not mean the same thing around all six subjects. "It can keep" is dismissive over a worry and has
+no referent over good news; "Tell her what we think" promises an opinion about content the game has
+not written. A generic reply set is exactly why the reactions cannot become specific.
+
+So the three stances stay, but each subject words them for itself. The stances are always the same
+three shapes – **invite more · respond · give space** – and never one of them is the right one:
+
+| subject | invite more | respond | give space |
+| --- | --- | --- | --- |
+| `worry` | Let her keep going | Tell her what worries us | Say she needn't solve it tonight |
+| `good-news` | Ask what made it good | Tell her we're glad | Let her enjoy it |
+| `decision` | Ask what she's weighing | Say how we see it | Say there's no rush |
+| `curiosity` | Ask what she wants to know | Answer her honestly | Say it can wait |
+| `observation` | Ask her to go on | Say we've noticed it too | Just let it sit |
+| `story` | Ask what happened next | Say we're listening | Let her tell it her way |
+
+These are the owner's own worry/good-news/curiosity rows from the review, extended to the other
+three subjects in the same spirit. None promises content the game does not have: every "respond"
+label is an *action the parent can take* (say how we see it, answer her honestly), not a claim
+about a specific written opinion. The labels are the owner's to redraft; they are drafts here.
+
+---
+
+## 4. Her follow-up
+
+Two follow-up shapes, both hers, both bond-neutral:
+
+* **Invite more** → a **continuation**: a second sentence that opens the small thing up. This is
+  the `fork-opinion` `listen` detour, generalised – choosing to invite lets her go on, and the
+  reward is simply that she continues.
+* **Respond / give space** → a **reaction**: one line that meets what the parent did and lets the
+  beat close.
+
+The rule that keeps this honest, worded carefully after the review: *none of the choices is marked
+correct and none changes bond, but her response still recognises the difference between curiosity,
+advice and giving space.* Inviting gets more of her; responding gets her meeting the parent's
+actual words; giving space gets a quiet acknowledgement. Different emotional textures, no score.
+
+---
+
+## 5. Life stage, not just presence
+
+Small talk is where age matters most: an eleven-year-old, a college student and a thirty-year-old
+professional should not share a line because their temperament and mood happen to match. The engine
+already carries this – `lifeBeatSaid` receives `DiaryLifeStage` (`school` · `after-school` ·
+`college` · `independent`) – but the shipped small-talk copy throws it away and keys only on
+home/away.
+
+So the copy key becomes **temperament × subject × life-stage × delivery frame**. A `deep` girl with
+a `curiosity` matures across the stages:
+
+> school → "Can I ask you something?"
+> after-school → "I need your take on something."
+> college → "Got a minute? I want to run something by you."
+> independent → "Can I ask you something – properly, not in passing?"
+
+The delivery frame (home / a call) is the innermost split, as it is today.
+
+---
+
+## 6. Situations, composed rather than copied
+
+The owner's biggest point: lexical variety (F-a in the first draft – a few phrasings of "something")
+removes exact duplication but not *conversational* repetition. The player still meets the same empty
+setup. Six real conversational seeds beat thirty-six paraphrases of "something."
+
+The fix is to give each subject a small pool of concrete **situations** – a friend, a song stuck all
+week, a practice that finally clicked, a bad line-call she can't let go – and to compose the beat
+rather than author every branch:
+
+```
+  situation          → supplies the concrete fact and the opener
+  voice × stage      → how she expresses it
+  parent stance      → invite / respond / give space
+  subject × voice × stance → the short reaction (respond / space)
+  situation × voice  → the continuation (invite only)
+```
+
+Only the **continuation** (invite more) needs the exact situation. The short reactions can compose
+at the subject level, because "we're glad" or "there's no rush" reads true of any good-news or any
+decision. That keeps the situation real without writing an isolated screenplay for every branch.
+
+**A situation must be a stable fact.** The chosen situation (a practice, a song, a friend's name)
+has to be identical across the opener, the continuation, the reaction, every re-render of the
+snapshot, and a save/reload. A deterministic `(seed, week)` derivation gives that – the same week
+always names the same small thing – and it must stay **narrative texture only**: a practice that
+felt easy is a mood, never a training gain; a friend mentioned is a name, never a new relationship
+the rest of the engine has to honour. The fog law holds – nothing here writes a consequential fact.
+
+---
+
+## 7. What this actually costs, counted honestly
+
+The first draft counted semantic cells and under-stated the writing. The real units:
+
+| unit | meaning | multiplier |
+| --- | --- | --- |
+| semantic cell | one (subject, voice, stage, stance) slot | the design's shape |
+| quotation | one written line of hers | one per cell |
+| delivery frame | home / a call | ×2 on openers and continuations |
+| authored string | what actually ships in the file | quotations × frames |
+
+So a continuation table of, say, 6 situations × 4 voices needs up to 24 quotations and, with the
+home/away frame, up to **48 authored strings** – before stages multiply it again. This is why the
+delivery order below builds a *small real set* first and expands only after playtest, rather than
+committing to a full corpus sight unseen. The document should never again quote a "cell" count as if
+it were the writing budget.
+
+---
+
+## 8. Two situations, written in full
+
+Real copy, so the texture is reviewable rather than promised. Drafts throughout.
+
+### 8a. A practice that finally clicked (`good-news`, `deep` voice, `college` stage, home)
+
+> She put the kettle on. "Practice finally felt easy today."
+
+* **Ask what made it good** → continuation:
+  > "Nothing I can name. I just stopped fighting it. I wanted to tell someone who'd know that's rare."
+* **Tell her we're glad** → reaction:
+  > "Maybe it doesn't sound like much. It felt like a lot."
+* **Let her enjoy it** → reaction:
+  > "I will. I only wanted to say it out loud once."
+
+Same situation, on a call (delivery frame changes, the fact does not):
+
+> She mentioned it halfway through the call. "Practice finally felt easy today."
+
+### 8b. A line-call she can't let go (`worry`, `fiery` voice, `after-school` stage, home)
+
+> She was straight into it before her bag was down. "There was a call today that was just wrong."
+
+* **Let her keep going** → continuation:
+  > "And I know I'm supposed to move on. I replayed it the whole way home instead."
+* **Tell her what worries us** → reaction:
+  > "I hear you. I don't want it in my head for the next one either."
+* **Say she needn't solve it tonight** → reaction:
+  > "Yeah. Okay. Tomorrow."
+
+Neither branch is the win. Each answer acknowledges what the parent actually did, and each has a
+different feel.
+
+---
+
+
+### 8c. Six more, one per subject – HIS REVISION OF 15.09, applied
+
+The first drafts of these six went to the owner and came back with a line-by-line review. His verdict
+was «keep the direction, revise several branch connections, and give the story a complete payoff –
+the remaining problems are mostly conversational logic rather than vocabulary», and his priorities
+were: preserve the apartment scene, keep the coach question, complete the fiery story, specify the
+parent's actual opinion in every `respond` branch, and soften the deep observation from a maxim into
+a personal discovery. What follows is his revision, not mine.
+
+**`decision` · `quiet` · `school` · home**
+
+> She waited until the plates were cleared. "I'm not sure about the March tournament."
+
+* **Ask what she's weighing** → "It's a long trip. I'd miss Tuesday training. I'm not sure it's worth it."
+* **Say the travelling matters too** → "That's the bit I keep coming back to."
+* **Say there's time to decide** – *only when the deadline actually permits it* → "I'll look at it again on Sunday."
+
+⚠ Three of his fixes are in that one exchange. «the one in March» assumed context the player may not
+have. «I keep going round it» repeated what the opener already said. And the old close – "No. There
+isn't." – reads for a beat as disagreement.
+
+**`curiosity` · `sunny` · `after-school` · home**
+
+> She came in still in her kit. "How do you know when you've got a real coach and not just a nice one?"
+
+* **Ask what made her wonder** → "Mine's lovely. Everyone's lovely. I can't tell if that's the same as good."
+* **Say a good coach explains what they're changing** → "Okay. I'll ask why next time, not just what."
+* **Say she doesn't have to work it out now** → "Fine. But I'm coming back to this one."
+
+⚠ «Ask what she wants to know» was redundant – she had already asked a specific question. And the old
+close, «a better version of the question», had her revising a prompt rather than talking to a parent.
+
+**`observation` · `deep` · `independent` · on a call**
+
+> Halfway through the call, she said, "The players I've been watching barely talk about winning."
+
+* **Ask her to go on** → "They talk about Tuesday. What they're working on next. I've started noticing that."
+* **Say we've noticed it too** → "You have? I thought I might be reading too much into it."
+* **Let the thought settle** → "Mm. I'll keep watching."
+
+⚠ The first draft opened on a maxim – «the girls who win a lot aren't the ones who talk about
+winning» – a universal claim in a prepared shape. His version is one adult's particular observation,
+which is both truer to her and harder to have read somewhere. ⭐ And he lifted a rule while he was
+here: **the hedge stays**. The old `deep` bible forbade them; «an adult capable of questioning her
+interpretation feels more human than one who always speaks in certainties».
+
+**`story` · `fiery` · `school` · home** – the shape that changed, not just the words
+
+> Her bag was still on her shoulder. "You won't believe what happened on court four."
+
+**The incident is a SHARED continuation** – every route hears it:
+
+> "She serves, the ball catches the net cord – and lands in a dad's coffee. Full cup. He just looked at it."
+
+...and the branches are the aftermath:
+
+* **Ask what he did** → "Took the ball out. Put the lid on. Like that would stop the next one."
+* **Laugh with her** → "Exactly! And then I had to serve. I couldn't look at him."
+* **Let her finish** → "Anyway, nobody wanted the ball back. That's the important part."
+
+⚠⚠ **THIS IS A STRUCTURAL FINDING AND IT BINDS THE BUILD.** In the first draft two of the three
+branches left the player waiting for the punchline: «Ask what happened next» arrived before she had
+said what happened first, and «give me a second» read as though the parent had interrupted her. So a
+`story` is a TWO-BEAT subject – the thing itself is shared, the branch is what the parent does with
+it – and **every route delivers a complete little story**. The joke above is illustrative; the shape
+is not.
+
+**`worry` · `quiet` · `independent` · on a call** – his own verdict: the best scene in the set
+
+> A pause on the line, longer than the others. "I don't think I like the new place much."
+
+* **Let her keep going** → "It's fine. It's clean. I've been eating standing up for a week. I only noticed tonight."
+* **Ask whether she's been eating properly** → "I have. Just not sitting down, apparently."
+* **Say she needn't solve it tonight** → "Good. Tomorrow, then. Not tonight."
+
+⚠ «Fine» and «clean» being the wrong measures of whether somewhere is home is the writing he asked to
+keep almost exactly. Two changes: the `respond` branch now ASKS something real instead of gesturing
+at an unheard opinion, and the old «I'm not ignoring it, I'm just tired» was defensive – it invented
+parental pressure the label never applied. «Look at it properly at the weekend» also went: look at
+what – the flat, moving, furniture, how she feels?
+
+**`good-news` · `sunny` · `school` · home**
+
+> She was smiling before the door had closed. "I beat someone I've never beaten."
+
+* **Ask what made it good** → "She's beaten me four times. Four! Today I got nervous – and kept playing."
+* **Tell her we're glad** → "I can tell. You're doing the face."
+* **Let her enjoy it** → "Oh, I'm going to. All evening."
+
+⚠ «That's the whole difference» explained the moral of her own scene; stopping earlier trusts the
+player. «The same face you had at my first one» had a lovely family-memory shape and an unclear
+referent – first win, first tournament, first win over her? – so it becomes the shared joke instead.
+⭐ And his note on temperament: the single «Four!» does not make her fiery. **Temperament shapes the
+pattern, not the punctuation.**
+
+---
+
+---
+
+## 8d. The four corrections his review made to the DESIGN, not to the words (15.09)
+
+These came out of the line edits and they outrank the line edits: each one changes what the build
+does, and two of them would have produced a wrong TEST if nobody had said so.
+
+### 1. A `respond` branch must name the parent's actual opinion
+
+Three of the six had the same defect and he named it three times: the label promises a view («Say how
+we see it» · «Answer her honestly» · «Tell her what worries us») and then her reaction answers an
+opinion **the player never heard**. «I'll watch for that» refers to something nobody said.
+
+So §3's table changes: the `respond` stance is **not a generic act**, it is a specific sentence the
+parent can take a position with – «Say the travelling matters too», «Say a good coach explains what
+they're changing», «Ask whether she's been eating properly». ⚠ This is more copy, per situation
+rather than per subject, and that price is the point: a promise of content the game has not written
+is the defect this whole item exists to remove.
+
+### 2. A `story` is two beats, and every route finishes it
+
+The thing itself is a SHARED continuation; the branch is what the parent does with the aftermath. A
+branch that leaves the player waiting for B is the shipped defect wearing a new coat. See 8c's court
+four.
+
+### 3. ⚠⚠ «Different wording proves different voices» IS THE WRONG TEST – and I had written it
+
+My own note under the first draft offered as proof that the fiery worry and the quiet worry «do not
+share a sentence». His correction: those two have different SITUATIONS – a line call and a new flat –
+and different situations produce different words all by themselves. That demonstrates nothing about
+temperament. His test, which is the one the bundle will be built and pinned against:
+
+> **Same event, same facts, same age, same parental choice – four different ways of noticing,
+> disclosing and responding.**
+
+⭐ And «not one shared phrase» is the wrong target anyway: real people all say «Okay», «I know»,
+«Good». The difference lives in context, rhythm and what follows. A test asserting disjoint
+vocabulary would fail honest writing and pass four strangers.
+
+### 4. Ungraded does not mean emotionally interchangeable
+
+Neutral mechanics (no bond, no score, no recommended branch) do not require every answer to be
+equally warm. The three branches may honestly produce **relief · mild resistance · amusement ·
+uncertainty · a boundary · a changed thought**. What must be avoided is scoring, a recommendation cue
+and a consistently superior branch – not difference in feel.
+
+### 5. ⚠⚠ THE FACTUAL BOUNDARY – what she may invent and what she may not
+
+His sharpest build constraint, and it is a law rather than a preference:
+
+* **Generated situation detail is hers, and must stay STABLE across the exchange** – the flat, the
+  coffee, the dad who put the lid back on. Self-contained, invented, consistent from opener to close.
+* **A COMPETITIVE claim touches the authoritative career and needs a real fact behind it** – entering
+  a particular tournament, missing a scheduled session, a decision deadline, beating an opponent,
+  four previous losses to her. She may interpret an outcome however she likes; she may not invent the
+  outcome.
+
+So «I beat someone I've never beaten» may only be drawn on a week where she actually did, against an
+opponent she had actually lost to; «I'm not sure about the March tournament» needs a real pending
+entry; «Say there's time to decide» may only be offered when the deadline really permits it. The
+generator therefore reads the career for the competitive half of its situation pool and invents only
+the domestic half. ⚠ This is the line between flavour and a lie, and it is where a beat that «says
+something about her career» becomes a beat that contradicts the save.
+
+---
+
+## 9. The existing openers – his proposed rewrites
+
+The owner rewrote nine shipped opener lines in the review; because they are his copy, these are his
+own drafts to apply when the bundle builds. Recorded here so they are not lost:
+
+| shipped | his direction |
+| --- | --- |
+| "I've been worrying at something all week." | "Something's been on my mind all week." |
+| "I'd rather say it than carry it." | "I think I need to say it out loud." |
+| "Something went well. I'm pleased about it." | "Something went right this week. I'm still smiling about it." |
+| "Something's bothering me. It's been bothering me for days." | "Something's bothering me, and I can't leave it alone." |
+| "Today was a good one. A really good one." | "Good day. Really good. I needed one." |
+| "The morning went the way I wanted it to." | "Today went well." |
+| "Something is sitting wrong." | "Something's wrong. I don't know what yet." |
+| "That is all I have." | "That's as far as I've got." |
+| "Good week. I will take it." | "Good week. I needed that." |
+
+Frame fixes he flagged: "past the point of the call", "rang out of turn", "before hello was done"
+and "stacking the shelf" all read as constructed; and `deep` too often waits for a room to go quiet
+or empty, which has become a visible authorial tic. The rewrite pass should vary how `deep` opens,
+not only what she says.
+
+---
+
+## 10. Delivery order (his, adopted)
+
+1. Build the reaction-capable prompt shape (opener → stance → follow-up, select-then-confirm, no
+   auto-answer – this is also round 42 #8's fix).
+2. Replace the generic replies with the subject-specific ones (§3).
+3. Add six concrete situations – two per current subject to start (§6, §8).
+4. Give those situations life-stage-aware opening variants (§5).
+5. Write the response copy and playtest the full trees.
+6. Expand the situation catalogue only after the small set works.
+7. Add further lexical opener variants last – they are the cosmetic layer, not the fix.
+
+This solves the human problem before spending effort on synonym variety, which was the first
+draft's mistake.
+
+---
+
+## 11. The laws it keeps
+
+* Bond-neutral: no reaction, continuation or situation carries a delta; the three stances stay
+  zero, and the existing pin (`wave3-small-talk.test.ts` §C) stays green.
+* Deterministic and private: every draw – subject, situation, opener variant – is on the beat's own
+  `(seed, week)` sub-stream, re-derived at the call site, persisting nothing. The frozen capture
+  must not move.
+* Texture only: a situation is a mood or a name, never a fact the rest of the engine reads.
+* Her voice reads birth; the mechanics that read expression do not touch a word of this.
+* Missable stays missable: round 42 #20's soft-guard (the leave-anyway line and the pulse) is the
+  whole of the beat's urgency.
+
+---
+
+## 12. What needs his word
+
+1. The subject taxonomy and the mood weights (§2) – the one mechanical choice.
+2. The subject-keyed reply labels (§3) – his copy.
+3. The two starter situations per subject (§6/§8), then the full reaction and continuation tables –
+   these are the writing, and they land here for his redaction pass as they are drafted. The first
+   draft's 36-line "sample" was not enough real copy to review; §8 is the format the rest will take.
+4. The opener rewrites (§9) – his own drafts, to apply with the bundle.
+
+---
+
+## 13. WHAT WAS BUILT (round 42 #15/#24) – and every line in it that is NOT his
+
+Built against §1–§12 above, with §8d's five findings treated as binding. This section records two
+things only: where the machinery lives, and – verbatim – every sentence the build needed that this
+spec does not contain. Those are DRAFTS. They are marked as such in the source too.
+
+### What the build did NOT need
+
+No schema move. A `'small-talk'` row's `detail` carries two fields now (`'<subject>:<situation>'`,
+the shape `'fork-psy'` already uses), and a row with no colon is a pre-round-42 row that renders
+through the pool that shipped. No `SAVE_SCHEMA_VERSION` bump, no migration, no fixture.
+
+The three option ids (`more` / `view` / `easy`) are untouched, because an id is persisted in
+`LifeBeatRecord.answer`. Only the words on the buttons change.
+
+### §9's nine opener rewrites – applied verbatim, in both frames of each cell
+
+All nine are in `SMALL_TALK_LINE` (`src/engine/world/lifeBeat.ts` §3c). The quoted span is shared by
+law between the home frame and the call frame, so each rewrite lands twice. The three `question`
+cells – including «I want to ask you something», the sentence #24 is named after – are NOT rewritten,
+because §9 does not rewrite them and the fix for that cell is the situation layer, not a paraphrase.
+
+### The DRAFTS, in full
+
+**1. The mood weights (§2).** §12.1 names these as needing his word. The shape is his – «a heavy week
+leans toward `worry` but can still produce a tired `observation` or a small `decision`; a bright week
+leans toward `good-news` or `story`; an ordinary week leans toward `curiosity`, `decision` or
+`observation`» – and the integers say exactly that and nothing more. No zero anywhere: a zero would
+be the hard mapping back in one cell.
+
+| register | worry | good-news | decision | curiosity | observation | story |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| low | **5** | 1 | 2 | 1 | 2 | 1 |
+| bright | 1 | **5** | 1 | 2 | 2 | **4** |
+| level | 1 | 2 | **3** | **3** | **3** | 2 |
+
+**2. `court-four` in three more voices.** §8c writes the story in `fiery` only, and §8d.3's test –
+«same event, same facts, same age, same parental choice» – cannot be built out of eight situations no
+two of which share an event. So one event is written in all four voices. The facts are deliberately
+identical in every column (the net cord, the coffee, the full cup, the dad who put the lid back on,
+her having to serve next, nobody fetching the ball); the only axis left free is who she is.
+
+> **sunny** · She was halfway out of her shoes and already telling it. "You have to hear what happened on court four."
+> *shared* – "Someone's serve clipped the net cord and went straight into a dad's coffee. A full one. He just sat there holding it."
+> **Ask what he did** → "Put the lid back on. Very carefully. Like the lid was the problem."
+> **Laugh with her** → "I know! And I had to serve after that. I was still going."
+> **Let her finish** → "Anyway. Nobody asked for the ball back. That's my favourite part."
+
+> **quiet** · She said it to the cupboard door, putting things away. "Something happened on court four today."
+> *shared* – "A serve caught the net cord and landed in someone's dad's coffee. A whole cup of it."
+> **Ask what he did** → "He put the lid back on. Then he moved his chair. That was all."
+> **Laugh with her** → "It was quite funny. I didn't laugh at the time. I had to serve."
+> **Let her finish** → "That's it, really. Nobody went to get the ball."
+
+> **deep** · She started it in the doorway and finished it sitting down. "The best thing today had nothing to do with tennis."
+> *shared* – "A serve clipped the net cord and went into a dad's coffee. Full cup. He looked at it for a long time."
+> **Ask what he did** → "Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."
+> **Laugh with her** → "I didn't laugh then. I had to serve next. I have been laughing about it since."
+> **Let her finish** → "That's the whole of it. The ball is probably still there."
+
+`deep` deliberately does not wait for a room to go quiet – §9 flags that as a visible authorial tic.
+
+**3. No new word on the closing control.** The control that records after her reply reuses two
+strings that already ship: a CONTINUATION closes on «Let her finish» (`LISTEN_DONE_LABEL`, the fork's
+own detour control, same shape and same meaning) and a REACTION closes on «Proceed» (`CONFIRM_LABEL`,
+round 42 #8's own word). Nothing was coined. ⚠ `court-four`'s give-space ANSWER is also «Let her
+finish» – his sentence – so that phrase can appear as an answer on one phase and as the closing
+control on the other. Flagged rather than edited.
+
+### Two collisions his copy met, reported and NOT edited
+
+**a. §8b's `respond` label is the generic form §8d.1 forbids.** «Tell her what worries us» is one of
+the three strings §8d.1 names as defective, and her reply «I hear you. I don't want it in my head for
+the next one either.» answers a worry the player never heard. His 15.09 revision rewrote the other
+two and did not reach §8b, so the sentence standing there is his most recent word on it. Left alone
+(invariant 4) and pinned by name in `tests/round42-small-talk-exchange.test.ts` §G, which goes red the
+day a SECOND one appears. A draft for his call, if he wants one: **«Say the worry is it staying with
+her»**.
+
+**b. `new-place`'s frame names nobody.** «A pause on the line, longer than the others.» carries no
+`she` or `her`, which the corpus's shape rule asks for. It is his sentence and his own verdict on that
+scene was «the best in the set», so it is recorded as the ONE named exception rather than edited –
+the way the two «Her …» away frames were in the 11.09 вычитка fold.
+
+**c. The court-four story introduces a man, and R15-7's sweep caught it.** «a dad's coffee… He just
+looked at it», «Ask what he did». `tests/coach-voice.test.ts` forbids a masculine pronoun anywhere a
+player can read one – and its own header says: «If a future feature introduces one – a named father,
+a male opponent's parent – this test is where that conversation has to happen.» The conversation: the
+rule is about GUESSING a gender the sim holds but never decided (the coach, the doctor, drawn from
+rosters with women on them). The dad on court four is not in the sim at all – he is invented by her,
+inside a story, and §8d.5 is explicit that invented domestic detail is hers. The exception is derived
+from the catalogue, one situation wide, and its size is pinned, so a fifth column reopens the
+conversation instead of inheriting it.
+
+### What the catalogue does NOT cover yet
+
+§10.6 is his and is adopted: «Expand the situation catalogue only after the small set works.» Eleven
+voice-columns ship. Two cells fall back to the legacy card – **`sunny` and `fiery` at an away stage**
+(college / independent), because §8's away-framed scenes are `deep`'s and `quiet`'s. On those weeks
+she opens with the pool that shipped (with §9's rewrites) and the beat is the beat that shipped: three
+generic answers, no second line. Naming it here rather than hiding it.
+
+### ⚠⚠ ONE RED THIS ITEM LEAVES STANDING, WITH ITS RECEIPT: the frozen careers moved
+
+`tests/coach-travel-edge.test.ts` is red on five of its rungs – v74 through v78, which are exactly the
+schema rung-downs that RETAIN `lifeLog` (the field arrived in v73). Its two ladder siblings, which
+roll back past v73 and therefore drop the field, are green. That signature is the whole diagnosis: a
+small-talk row's `detail` is what changed, so a walked career's `lifeLog` serialises differently, so
+every hash of a rung that keeps the field moves.
+
+**The per-key diff the protocol demands, taken on all three careers this file freezes** (`npx
+vite-node tools/frozen-key-diff.ts`, 156 weeks, headers read against the invocation), control = this
+same tree with the work stashed:
+
+| career | keys | moved |
+| --- | ---: | --- |
+| preset 5 · policy 0 | 89 | **`lifeLog` only** (`57d26a584219` → `db76fb2c3468`) |
+| preset 8 · policy 0 | 89 | **`lifeLog` only** (`3c5d0e9449b8` → `7b7018942f03`) |
+| preset 0 · policy 1 | 90 | **`lifeLog` only** (`2e93031f62b9` → `a04152ae3c9c`) |
+
+`rngMain` is unmoved on all three – so is `skills`, `potential`, `events`, `results`, the wallet and
+the body. The frozen MAIN capture (41550 draws / `e6b0c709`, `tests/condition.test.ts`) is green,
+which is the same claim from the other side: the two new sub-streams are sub-streams.
+
+**NOT re-frozen here, deliberately, and the file's own doctrine is why.** Its ledger records the case
+exactly: «three agents in this wave moved these careers and each correctly declined to re-freeze
+rather than bake in the others' unattributed movement». Round 42 has further bundles to run against
+the same careers, so the narrow, attributable receipt above is worth more than a re-freeze that the
+next bundle would have to redo. Re-freeze once, at the end of the wave, with this table as the
+attribution for the `lifeLog` line of it.

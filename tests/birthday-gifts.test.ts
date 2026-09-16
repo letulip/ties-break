@@ -22,10 +22,12 @@ import { describe, expect, it } from 'vitest'
 import {
   BIRTHDAY_BANDS,
   BIRTHDAY_DAY_TOGETHER,
+  DAY_TOGETHER_FROM_AGE,
   SAVE_SCHEMA_VERSION,
   advanceWeeks,
   birthdayHeading,
   birthdayOffer,
+  birthdayOfferFor,
   birthdayTurning,
   chooseGift,
   createWorld,
@@ -78,22 +80,30 @@ describe('the birthday popup', () => {
     expect(world.week, 'not one week moved').toBe(before)
 
     // ...and answering is the only thing that unblocks it.
-    const { options } = birthdayOffer(world.seed, pendingBirthday(world)!)
+    const { options } = birthdayOfferFor(world, pendingBirthday(world)!)
     chooseGift(world, options[0].id)
     expect(pendingBirthday(world)).toBeNull()
     expect(advanceWeeks(world, rng, 1).includes('birthday')).toBe(false)
     expect(world.week, 'time moves again').toBeGreaterThan(before)
   })
 
-  it('⚠ FOUR options, in a column, and one of them is always the day together', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #1 – «на 14 лет девочка просит "всего 1 день вместе", мне кажется это
+  // неуместно, надо тоже с 16 лет», ruled A («только с 16+»). The clause this case keeps is the
+  // SHAPE, which is what the spec's §4 actually owns: FOUR different options at every age, in a
+  // column, no short dialog anywhere. What moved is WHICH four – the day together joins the card at
+  // `DAY_TOGETHER_FROM_AGE` and below it the fourth row is one more material gift, so a fourteen
+  // year old is never written asking for a day of her parent's time.
+  it('⚠ FOUR options, in a column, and the day together is one of them from sixteen', () => {
     for (const age of [14, 15, 16, 17, 18, 19, 20, 21, 22, 25, 28, 29, 34]) {
       const { options } = birthdayOffer('four-options', age)
       expect(options.length, `age ${age}`).toBe(4)
       expect(new Set(options.map((o) => o.id)).size, `age ${age}: four DIFFERENT options`).toBe(4)
       expect(
         options.some((o) => o.id === BIRTHDAY_DAY_TOGETHER.id),
-        `age ${age}: "just the day together" is always offered – it has to read as one of the good choices`,
-      ).toBe(true)
+        age >= DAY_TOGETHER_FROM_AGE
+          ? `age ${age}: "just the day together" is offered – it has to read as one of the good choices`
+          : `age ${age}: the day together is NOT on a young card – round 42 #1, his ruling`,
+      ).toBe(age >= DAY_TOGETHER_FROM_AGE)
     }
   })
 
@@ -200,7 +210,7 @@ describe('the birthday popup', () => {
     const world = career('stable')
     const rng = rngFromSeed(world.seed)
     runToBirthday(world, rng)
-    const first = birthdayOffer(world.seed, pendingBirthday(world)!)
+    const first = birthdayOfferFor(world, pendingBirthday(world)!)
     chooseGift(world, first.options[0].id)
     expect(birthdayOffer('stable', 17).askedId).toBe(untouched.askedId)
   })
@@ -257,7 +267,22 @@ describe('the birthday popup', () => {
     // pinned in tests/birthday-ask.test.ts, «ROUND 27 #7 – the day cannot be VOICED two birthdays
     // running», whose first case runs this identical sweep with `lastAsked` set and asserts 0. Read
     // the pair together: without a cooldown the day is certain here, with one it is impossible.
-    expect(reachedDay, 'the day is still askable after it has been given').toBe(200)
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #26 (15.09), AND THE CERTAINTY IS GONE AT ITS ROOT RATHER THAN
+    // MITIGATED. The owner: «Если мы уже дарили депозит на её жилье, то его больше не надо
+    // вообще показывать.» A given durable leaves the card and the band refills from its
+    // neighbours, so «every material gift of the band is spent» can no longer empty the pool: the
+    // four rows always carry material she does not own. Measured on this exact sweep: 50 of 200.
+    // THE CLAIM OF THIS TEST IS UNCHANGED and is the 11.08 ruling – the day is never SPENT, so it is
+    // on every card and can still be the ask. What is no longer true is the certainty, which the
+    // note above had already identified as the shape of a defect.
+    expect(reachedDay, 'the day is still askable after it has been given').toBeGreaterThan(0)
+    expect(reachedDay, '...but the pool no longer collapses onto it – round 42 #26').toBeLessThan(200)
+    // ⚠ AND THE DAY IS STILL ON EVERY ONE OF THOSE CARDS, which is the ruling this arm guards.
+    for (let s = 0; s < 40; s++) {
+      expect(birthdayOffer(`day-again-${s}`, 20, spentEverything).options.map((o) => o.id))
+        .toContain(BIRTHDAY_DAY_TOGETHER.id)
+    }
   })
 
   it('⚠ a band with every gift spent still prints a scene rather than crashing', () => {
@@ -329,7 +354,7 @@ describe('the birthday popup', () => {
     const probe = career('ledger')
     const probeRng = rngFromSeed(probe.seed)
     runToBirthday(probe, probeRng)
-    const ids = birthdayOffer(probe.seed, pendingBirthday(probe)!).options.map((o) => o.id)
+    const ids = birthdayOfferFor(probe, pendingBirthday(probe)!).options.map((o) => o.id)
     expect(ids.length).toBe(4)
 
     for (const id of ids) {
@@ -354,7 +379,7 @@ describe('the birthday popup', () => {
     const world = career('ledger-amount')
     const rng = rngFromSeed(world.seed)
     const week = runToBirthday(world, rng)
-    chooseGift(world, birthdayOffer(world.seed, pendingBirthday(world)!).options[0].id)
+    chooseGift(world, birthdayOfferFor(world, pendingBirthday(world)!).options[0].id)
     for (const e of world.events.filter((x) => x.week === week)) {
       if (/birthday/i.test(e.text)) expect(e.amountCents, e.text).toBeUndefined()
     }
@@ -419,7 +444,7 @@ describe('the birthday popup', () => {
     const probe = career('no-effect')
     const probeRng = rngFromSeed(probe.seed)
     runToBirthday(probe, probeRng)
-    for (const id of birthdayOffer(probe.seed, pendingBirthday(probe)!).options.map((o) => o.id)) {
+    for (const id of birthdayOfferFor(probe, pendingBirthday(probe)!).options.map((o) => o.id)) {
       expect(shape(id), `option ${id}`).toEqual(control)
     }
   })
@@ -449,7 +474,7 @@ describe('the birthday popup', () => {
     const rng = rngFromSeed(world.seed)
     const week = runToBirthday(world, rng)
     const age = pendingBirthday(world)!
-    const { options, askedId } = birthdayOffer(world.seed, age)
+    const { options, askedId } = birthdayOfferFor(world, age)
     // Deliberately give her something she did NOT ask for, which is the middle row of §2ab's table.
     const wrong = options.find((o) => o.id !== askedId)!
     chooseGift(world, wrong.id)
@@ -464,7 +489,7 @@ describe('the birthday popup', () => {
     const world = career('refusals')
     const rng = rngFromSeed(world.seed)
     runToBirthday(world, rng)
-    const { options } = birthdayOffer(world.seed, pendingBirthday(world)!)
+    const { options } = birthdayOfferFor(world, pendingBirthday(world)!)
     expect(() => chooseGift(world, 'not-a-gift')).toThrow(/not one of this birthday/)
     chooseGift(world, options[1].id)
     expect(() => chooseGift(world, options[0].id)).toThrow(/no birthday to answer/i)
@@ -494,7 +519,7 @@ describe('the birthday popup', () => {
     const world = career('round-trip')
     const rng = rngFromSeed(world.seed)
     runToBirthday(world, rng)
-    chooseGift(world, birthdayOffer(world.seed, pendingBirthday(world)!).options[0].id)
+    chooseGift(world, birthdayOfferFor(world, pendingBirthday(world)!).options[0].id)
     const reloaded = migrateSave(JSON.parse(JSON.stringify(world)))
     expect(reloaded.birthdays).toEqual(world.birthdays)
   })
@@ -507,7 +532,7 @@ describe('the birthday popup', () => {
     const rng = rngFromSeed(world.seed)
     runToBirthday(world, rng)
     const age = pendingBirthday(world)!
-    const { options, askedId } = birthdayOffer(world.seed, age)
+    const { options, askedId } = birthdayOfferFor(world, age)
     chooseGift(world, askedId)
 
     const facts = toSnapshot(world).diary.facts

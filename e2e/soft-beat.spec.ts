@@ -96,6 +96,21 @@ const HIS_ANSWERS = [
   'Tell her it can keep',
 ] as const
 
+/** ⭐⭐⭐ ROUND 42 #15/#24 – HOW MANY ANSWERS THE CARD OFFERS, WHICH IS THE PART THAT DID NOT MOVE.
+ *
+ *  The three WORDS did. Since the small-talk exchange the labels are the SITUATION's – «Ask what he
+ *  did», «Say the travelling matters too», «Ask whether she's been eating properly» – because a
+ *  `respond` branch that promises a view the player never heard is the defect the item exists to
+ *  remove (spec §8d.1). So a transcription of three sentences is no longer a claim this file can
+ *  make: which of the eleven situations a career meets is the engine's business, exactly as which of
+ *  the twelve openers it meets always was.
+ *
+ *  ⚠ WHAT IS ASSERTED INSTEAD IS THE SHAPE, and it is the shape the list above was really carrying:
+ *  THREE answers, real radios, none marked on arrival, no fourth control beside them. The words are
+ *  still the owner's and still a draft; `HIS_ANSWERS` is kept because the LEGACY card still wears
+ *  them and the committed fixture is a legacy save – see the note at the answer step. */
+const ANSWER_COUNT = HIS_ANSWERS.length
+
 /** THE INVITATION ON THE HUB, by the shape of the one line the engine gives it (`SMALL_TALK_CARD`).
  *  A `Card as="button"` with no `aria-label`, so its accessible name is its whole text – addressed
  *  by the START of that name, which is `openMoney`'s own idiom in e2e/journey.ts.
@@ -197,6 +212,22 @@ test.describe('the tier-1 soft surface', () => {
     // week opens its own story by itself, so the first thing across the boundary is a NAVIGATION the
     // app performed, and `Proceed to Home` is the only door back. Measured the first time this spec
     // ran: without the walk it asserted about a hub the player was no longer on.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #20 (ruled B, 15.09), AND THE RE-AIM IS THE RULING ITSELF. «Надо ещё
+    // кнопку proceed дизаблить, пока не поговорили» was answered B and not A precisely so this
+    // case's claim could survive: a soft row still stops nothing, it costs ONE honest tap. So the
+    // first press asks one line and spends no week, and the second press is the press this case has
+    // always made. (The sentence is declared once, in composables/softLeave.ts, and matched here on
+    // a fragment rather than pinned – the copy is the owner's to move.)
+    await weekButton(page).click()
+    const leaveAsk = page.locator('.next-week-note')
+    await expect(leaveAsk, 'the ruled-B guard did not ask before her week was spent').toBeVisible()
+    await expect(leaveAsk).toHaveText(/leave anyway/i)
+    await expect(
+      page.getByText(onScreenWeek(facts.week)),
+      'the first press spent the week instead of asking – the guard is not on this surface',
+    ).toBeVisible()
+
     await weekButton(page).click()
     await expect(page.getByRole('region', { name: /^Week story/ })).toBeVisible()
     await expect(
@@ -267,12 +298,18 @@ test.describe('the tier-1 soft surface', () => {
 
     // ROUND 40'S CONVENTIONS, ON THE WIRE: real radios in a real group, nothing marked on arrival.
     // The card may not point at an answer, on a card whose whole subject is that the answer is his.
-    for (const label of HIS_ANSWERS) {
-      const option = dialog.getByRole('radio', { name: label, exact: true })
-      await expect(option, `"${label}" is not on her card`).toBeVisible()
-      await expect(option, `"${label}" arrived already marked`).toHaveAttribute('aria-checked', 'false')
+    // ⚠ RE-AIMED BY ROUND 42 #15/#24 FROM THREE TRANSCRIBED SENTENCES TO THE SHAPE THEY CARRIED –
+    // see `ANSWER_COUNT`. Every radio is still asserted to be a radio, to announce its state, and to
+    // arrive unmarked; what is no longer pinned here is WHICH sentence it wears, because that is now
+    // the situation's and a spec that transcribed it would pin his draft copy in the slowest layer
+    // there is.
+    await expect(dialog.getByRole('radio')).toHaveCount(ANSWER_COUNT)
+    for (let i = 0; i < ANSWER_COUNT; i++) {
+      const option = dialog.getByRole('radio').nth(i)
+      await expect(option, `answer ${i} is not on her card`).toBeVisible()
+      await expect(option, `answer ${i} arrived already marked`).toHaveAttribute('aria-checked', 'false')
+      await expect(option, `answer ${i} carries no words`).not.toHaveAccessibleName('')
     }
-    await expect(dialog.getByRole('radio')).toHaveCount(HIS_ANSWERS.length)
 
     // ⭐ EVERY CONTROL IS AN ANSWER AND THERE IS NO X – and on the SOFT entrance that law is the one
     // thing about the card that did not get smaller. The week was never stopped, so nothing is held
@@ -298,12 +335,45 @@ test.describe('the tier-1 soft surface', () => {
     // 4. HE ANSWERS HER, AND THE ROW IS WRITTEN – one press, across the worker boundary
     // =============================================================================================
     //
-    // ⚠ THE FIRST TAP IS THE ANSWER HERE, and that is a per-kind fact rather than an oversight: the
-    // listening detour belongs to the fork's beat, whose `listenFollowUp` carries her continuation.
-    // Tier 1 has none (`lifeBeatListenFollowUp` returns null for `'small-talk'`), so there are three
-    // answers and no fourth control – which the count above has just said.
-    await dialog.getByRole('radio', { name: HIS_ANSWERS[0], exact: true }).click()
-    await expect(dialog, 'her card stayed up after an answer was pressed').toHaveCount(0)
+    // ⚠ ROUND 42 #8 re-aimed this press (it used to record on the first tap): the radio only
+    // SELECTS now, on every beat kind, small talk included – the ruling's own words – and a second
+    // control is what records.
+    //
+    // ⭐⭐⭐ ROUND 42 #15 RE-AIMED IT AGAIN, AND THE BRANCH BELOW IS THE ITEM ITSELF. «Выбрал пункт,
+    // чтобы она сказала больше, а попап закрылся» – so a situation-backed beat now answers the
+    // selection with a second line of HERS, and the control that then records is the reply's own
+    // (`.life-beat-listen-done`), not the Proceed. A LEGACY row – one raised before this round, which
+    // is exactly what a committed `.tsave` holds – earns no reply and still closes on the Proceed.
+    //
+    // ⚠⚠ BOTH ARMS ARE REAL PRODUCT STATES AND THE SPEC WALKS WHICHEVER THE FIXTURE IS IN, which is
+    // why this is a branch rather than a choice. `e2e/fixtures/soft.tsave` predates round 42, so on
+    // today's committed fixture this walks the LEGACY arm – and that is itself the save-compat claim
+    // this round owes, made end to end: a live soft row from a v78 save still opens, still offers
+    // three answers and still records. Regenerating the fixture (`npm run e2e:fixtures -- --only
+    // soft`) moves it onto the exchange arm, and the assertions below are written so that day needs
+    // no edit here.
+    await dialog.getByRole('radio').first().click()
+    await expect(dialog, 'a selection alone must not close her card').toBeVisible()
+    const reply = dialog.locator('.life-beat-listen-done')
+    const exchange = (await reply.count()) > 0
+    if (exchange) {
+      // THE EXCHANGE: she answered what the parent chose, and the answers made way for her.
+      await expect(
+        dialog.getByRole('radiogroup'),
+        'her reply is up and the answers are still on the card – the reply REPLACES the column, so ' +
+          'the last control in the card\'s flow stays the way out (LifeBeatDialog.vue).',
+      ).toHaveCount(0)
+      await expect(reply, 'the reply phase left no control to close on').toBeVisible()
+      await reply.click()
+    } else {
+      // THE LEGACY CARD: no second line of hers, and the Proceed is what records.
+      await expect(
+        dialog.getByRole('radio', { name: HIS_ANSWERS[0], exact: true }),
+        'a legacy row is expected to wear the three shipped labels – see `HIS_ANSWERS`.',
+      ).toBeVisible()
+      await dialog.getByRole('button', { name: 'Proceed', exact: true }).click()
+    }
+    await expect(dialog, 'her card stayed up after the answer was recorded').toHaveCount(0)
 
     // AND THE INVITATION IS GONE WITH IT. This is the assertion that says the row was ANSWERED in the
     // world rather than the dialog merely closed: the card is drawn from `snapshot.softBeat`, which

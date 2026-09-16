@@ -12,7 +12,7 @@
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 // ⚠ `coachFactor` AND `StyleFit` JOINED FOR T12's PROFILE (wave 5), and they are a READ of the two
 // shipped factor tables rather than a second home for them – see the profile block below.
-import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
+import { bandedRateCents, bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachRetainerBand, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
 import type { StyleFit } from '../coach'
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
@@ -72,7 +72,7 @@ import { ageAtWeek, kidAgeExact, START_AGE_YEARS } from './age'
 // the HEAD-STARTED build (`createWorld`), so subtracting anything else would bill the parent for her
 // birth month. See that function's own note.
 import { startingSkills, withHeadStart } from './player'
-import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
+import { activeLadderOf, bookClosedTo, hasOutgrown, kidLadderRank, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -422,7 +422,11 @@ export function coachBilling(world: WorldState): {
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
+  // ⭐ ROUND 42 #19 – the quote reads the SAME banded rate `resolveBaseCosts` bills at, so the card,
+  // the budget meter and the ledger cannot describe three different retainers. The identity at band 1
+  // is what keeps every career below the tail quoting the cents it always quoted.
+  const band = coachRetainerBandOf(world)
+  const rate = coach ? bandedRateCents(coach.rateCents, age, tierOf(coach), band) : facilityRateCents(age, tierOf(coach))
   // ⚠ THE RUNG, round 41 P1: the quote has to know whether the corridor still prices this week.
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background, tierOf(coach))
   const seasonStart = seasonStartWeek(world.week)
@@ -663,6 +667,51 @@ export function familyWeeklyIncomeCents(world: WorldState): number {
  *  `week % (WEEKS_PER_YEAR / 4) === 0`, so it is four, and the two must not drift apart. */
 const RETAINERS_A_YEAR = 4
 
+/** ⭐⭐⭐ ROUND 42 #42 – THE SUPPORT SEATS' STANDING WEEKLY BILL, DEFINED ONCE.
+ *
+ *  THE OWNER, 15.09: «committed должен это и показывать» – the Team-budget tile lists coach, masseur
+ *  and psychologist and its meter counted only the coach, so three rows adding to $843 sat under a
+ *  «committed» of $343.
+ *
+ *  ⚠⚠ THIS IS NOT A DISPLAY HELPER. It is now read in TWO places that must never disagree: the
+ *  household strip below (round 28 #8, where it has always been) and `coachMarket`'s
+ *  `overBudgetCents` (this item, where it is new). That second reader is the whole weight of item 42
+ *  – the coach's affordability is now asked against the income the OTHER SEATS have not already
+ *  spoken for – and two copies of «what does the support payroll cost» is precisely the
+ *  two-surfaces-one-question defect this file exists to keep repeating about.
+ *
+ *  ⚠ GATED ON THE HIRE (`masseurHired` / `psychologistHired`), NOT on whether the seat works this
+ *  week, which is deliberate symmetry with the coach: `coachBilling.weeklyCents` is a standing QUOTE
+ *  that does not consult `coachWorksThisWeek` either, so a college freeze or a booked holiday stands
+ *  a seat down on the LEDGER without it vanishing from the family's standing budget.
+ *
+ *  Pure: zero MAIN draws, derived at snapshot time. */
+/** ⭐⭐⭐ ROUND 42 #19 – HER PLACE IN THE PROFESSIONAL TABLE, AS A RETAINER MULTIPLIER, in ONE place.
+ *
+ *  The whole argument and the constants are on `ECONOMY.coach.retainerBandByRank`; this is the world
+ *  reader, and it exists so that the quote and the till ask the same question of the same field. It
+ *  is 1 for every junior career and for every professional career outside the top hundred, which is
+ *  the property that makes the middle arithmetically unmoved rather than merely close.
+ *
+ *  ⚠ `kidLadderRank` (the CACHE) and not `kidLadderRankFolded`: round 41 #26 moved only the
+ *  PROJECTION layer onto the fresh fold and left every engine reader on `world.kidRankWta`, «where a
+ *  rank is a DECISION the tick made and must not be re-folded underneath it». A bill is such a
+ *  decision. Zero draws. */
+export function coachRetainerBandOf(world: WorldState): number {
+  return coachRetainerBand(kidLadderRank(world, 'wta'))
+}
+
+export function supportPayrollWeeklyCents(world: WorldState): number {
+  // ⭐ v76 – AND THE SECOND SEAT IS ONE MORE LINE, gated on the hire for the identical reason the
+  // note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college freeze
+  // or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing those
+  // weeks) without him vanishing from the family's standing budget.
+  return (
+    ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
+    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
+  )
+}
+
 /** ⭐⭐ ROUND-28 #8 – THE WHOLE HOUSEHOLD'S WEEK, and the shape of it is in `HouseholdWeekly`.
  *
  *  THE OWNER, 28.08: «можно совокупную всю цифру показывать с учётом массажиста (и психолога в
@@ -705,13 +754,7 @@ const RETAINERS_A_YEAR = 4
  *
  *  Pure: zero MAIN draws, derived at snapshot time like everything else on this screen. */
 export function householdWeekly(world: WorldState, trainingCents: number): HouseholdWeekly {
-  // ⭐ v76 – AND THE SECOND SEAT IS THAT ONE MORE LINE, gated on the hire for the identical reason
-  // the note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college
-  // freeze or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing
-  // those weeks) without him vanishing from the family's standing budget.
-  const staffCents =
-    ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
-    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
+  const staffCents = supportPayrollWeeklyCents(world)
   // WHAT ONE MORE WEEK OF HOLDING DOES TO THE SHELF, signed, summed over what the family owns.
   let shelfCents = 0
   for (const owned of ownedAssets(world)) {
@@ -761,6 +804,32 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // ⭐ ROUND-21 #12: every stream that arrives every week, not the parents' line alone. See
   // `familyWeeklyIncomeCents` for the measurement that made this a bug rather than a wording fix.
   const weeklyIncome = familyWeeklyIncomeCents(world)
+  // ⭐⭐⭐ ROUND 42 #42 – AND THE OTHER SEATS HAVE ALREADY SPOKEN FOR PART OF IT. The owner:
+  // «committed должен это и показывать». The tile lists three people and its meter counted one, so
+  // the meter and its own rows disagreed – and the fix is NOT a display fix, because the figure the
+  // meter draws is the very denominator this row's `overBudgetCents` is cut from. Folding the
+  // payroll into the tile without folding it in HERE would have produced the round-21 #12 defect in
+  // its purest form: a meter saying the week is full while the card beside it says the rung fits.
+  //
+  // ⚠ ROUND 28 #8'S GUARD SAID THE OPPOSITE AND IT WAS RIGHT AT THE TIME. Its §4 pinned «the
+  // committed figure is still the COACH's line and does not silently absorb the masseur», and a
+  // bundle-7 arm reddened it by trying exactly this. It is re-aimed by THIS item and by his word,
+  // not by an agent deciding the guard was wrong – see the ⚠ note on that suite.
+  //
+  // ⚠ THE CAP ITSELF DOES NOT MOVE HERE. It is still the week's income, whole; what changed is that
+  // the COACH is asked to fit the part of it the payroll has left. Whether 100% of the week's income
+  // is the right ceiling for a three-seat payroll is the cap's own question, measured in
+  // docs/specs/team-budget-payroll-2026-09.md and ruled by the owner, not decided here.
+  //
+  // ⚠ AND IT STILL ONLY COLOURS A CARD. `hireCoach` does not consult the budget at all, so a
+  // narrower denominator warns and never refuses – which is what keeps this inside «мы ни за что не
+  // наказываем». Naming that here because «changes WHO CAN BE HIRED» is the item's own phrase and
+  // the honest version of it is «changes who is FLAGGED».
+  const payrollCents = supportPayrollWeeklyCents(world)
+  // ⚠ FLOORED AT ZERO: a family whose support payroll already exceeds the week's income has no room
+  // at all, and a negative budget would make `overBudgetCents` read LARGER than the coach's price,
+  // which is a figure the card prints («$X over») and a parent can check against the rung beside it.
+  const coachBudgetCents = Math.max(0, weeklyIncome - payrollCents)
   // ⚠ THE QUOTE IS OVER THE WEEKS SHE WILL ACTUALLY HAVE HIM (08.08). Same arithmetic the season
   // price uses, from the same helper, so the card and the bill can never describe different years.
   const coachedWeeks = ECONOMY.coach.upliftHorizonWeeks - coachedWeeksLostToRest(world)
@@ -769,6 +838,12 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // about the man on the card, so a row-by-row answer would be the same question asked sixteen times
   // with sixteen chances to disagree. See `edgeTravelPct` below for what it gates.
   const travels = coachTravelsWithHer(world)
+  // ⭐⭐⭐ ROUND 42 #19 – AND THE WHOLE MARKET IS PRICED AT HER BAND. Asked ONCE, for the same reason
+  // the travel stance one line up is: it is a fact about HER standing and not about the man on the
+  // card, so a row-by-row read would be the same question asked sixteen times. The market re-prices
+  // because reality's does - a top-ten player shopping for a coach is not quoted a junior's fee by
+  // anybody - and it keeps the card honest against the bill she will actually be charged.
+  const retainerBand = coachRetainerBandOf(world)
   return buildCoachRoster(world.seed, age).map((coach) => {
     const fit = coachFitFor(coach, world.profile.playStyle)
     const [upliftLo, upliftHi] = coachSeasonUplift({
@@ -787,7 +862,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       name: coach.name,
       style: coach.style,
       fit,
-      weeklyCents: coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier),
+      weeklyCents: coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier),
       current: world.coachId === coach.id,
       // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
       // one week of anything; what the family is actually deciding is whether this bill fits the
@@ -795,7 +870,11 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // ⭐ ROUND-21 #12: that income is now ALL of it (`familyWeeklyIncomeCents`) and not the
       // parents' line alone. The ruling above is unchanged - the reserve is still not counted - it
       // is the week's income that was being under-read, by more than half on his own save.
-      overBudgetCents: Math.max(0, coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier) - weeklyIncome),
+      // ⭐⭐⭐ ROUND 42 #42: ...less what the OTHER SEATS already cost. See `coachBudgetCents` above.
+      overBudgetCents: Math.max(
+        0,
+        coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier) - coachBudgetCents,
+      ),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],
       // ⚠ THE RUNG'S CORRIDOR, NEVER HIS OWN NUMBER (spec §4). A number on an unhired card turns the

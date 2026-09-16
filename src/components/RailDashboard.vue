@@ -28,15 +28,18 @@
 //   In the account   `snapshot.fundsCents` through `formatCents` – the app's ONE money formatter
 //                    (shared/money.ts), the same two lines Home's Family-budget card and the Family
 //                    Budget screen's own «… in the account» line are made of. No arithmetic at all.
-//   Coaching budget  `useCoachingBudget().freeCents` – the SAME computed the Coach Market's meter
-//                    prints beside the words «Coaching budget». Moved into a composable by this
-//                    phase precisely so the rail cannot drift from the meter.
+//   Team budget      `useCoachingBudget().freeCents` – the SAME computed the Coach Market's meter
+//                    prints beside the tile's own name. Moved into a composable by this phase
+//                    precisely so the rail cannot drift from the meter. ⚠ ROUND 42 #23: this line
+//                    said «Coaching budget» until his «переименовать в Week budget или team budget»,
+//                    and the name is `TEAM_BUDGET_LABEL` now – one constant, read by both surfaces.
 //   My entries       `enteredEvents(snapshot.upcoming)` – the SAME predicate the Season screen's
 //                    «My entries» strip filters on, and rendered as the same `label · week` pair.
 //
 // ⚠ AND EVERY TITLE IS TAKEN OFF THE SURFACE THE DATA LIVES ON, not off the frame – the round's rule
-// where the two differ. `In the account` is the Family Budget screen's own phrase, `Coaching budget`
-// is `CoachMarketScreen`'s `.budget-label` verbatim, `My entries` is `SeasonScreen`'s own `<h2>`.
+// where the two differ. `In the account` is the Family Budget screen's own phrase, the budget tile's
+// name is the constant `CoachMarketScreen`'s `.budget-label` also reads (round 42 #23 – it was that
+// screen's own literal until he renamed it), `My entries` is `SeasonScreen`'s own `<h2>`.
 // All three already existed in this app; what is new is that they are titles here too.
 //
 // ⚠ «My entries» IS SILENT WITH NOTHING ENTERED, which is what the strip it shortcuts to already
@@ -57,7 +60,7 @@ import { formatCents } from '../shared/money'
 import { weekLabel } from '../shared/dates'
 import Card from './ui/Card.vue'
 import Eyebrow from './ui/Eyebrow.vue'
-import { useCoachingBudget } from '../composables/coachingBudget'
+import { TEAM_BUDGET_LABEL, useCoachingBudget } from '../composables/coachingBudget'
 import { enteredEvents } from '../composables/seasonEntries'
 
 const game = useGameStore()
@@ -69,7 +72,12 @@ const funds = computed(() => formatCents(fundsCents.value))
 // composable the free figure does. There is no arithmetic in this file, which is the property the
 // header above is about: mutate `composables/coachingBudget.ts` and the market's meter and this card
 // move together, because there is one body of it.
-const { committedCents, capCents, freeCents, meterPct } = useCoachingBudget()
+// ⭐⭐⭐ ROUND 42 #23 – ...AND THE FIFTH IS THE PAYROLL, FOR THE IDENTICAL REASON. «в coaching budget
+// я просил отражать всех активных специалистов… переименовать в Week budget или team budget»: the
+// tile now names every filled seat and carries his own proposed title, and BOTH come out of the
+// composable rather than out of this file, so the rail and the market's meter cannot end up saying
+// two different things about one tile. Still no arithmetic here – the property the header is about.
+const { committedCents, capCents, freeCents, meterPct, seats } = useCoachingBudget()
 const coachingFree = computed(() => formatCents(freeCents.value))
 const coachingCommitted = computed(() => formatCents(committedCents.value))
 const coachingCap = computed(() => formatCents(capCents.value))
@@ -101,7 +109,13 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
          his ruling about what this card's headline number IS, and #9 asked for more beside it, not
          for a different one. -->
     <Card as="article" class="rail-dash-card">
-      <Eyebrow as="h2" class="rail-dash-title">Coaching budget</Eyebrow>
+      <!-- ⭐⭐⭐ ROUND 42 #23 – THE TITLE IS «Team budget» NOW, AND IT IS READ OFF THE CONSTANT. His
+           sentence is in the composable's header, where the house fence allows Cyrillic; a template
+           may carry none. The market's meter prints the same constant, which is what makes the
+           rename one edit instead of two spellings. ⚠ Nothing else on this card changed a
+           character – the free figure, the bar and both legend lines are exactly what round 36
+           review #9 shipped. -->
+      <Eyebrow as="h2" class="rail-dash-title">{{ TEAM_BUDGET_LABEL }}</Eyebrow>
       <p class="rail-dash-figure">{{ coachingFree }}</p>
       <!-- ⚠ THE CLASSES ARE THE METER'S OWN, NOT A SECOND SET. `.budget-bar`, `.budget-legend` and
            `.legend-dot` are declared once in src/style.css and the Coach Market's meter is their
@@ -111,6 +125,15 @@ const entries = computed(() => enteredEvents(game.snapshot?.upcoming ?? []))
       <div class="budget-bar"><i :style="{ width: meterPct + '%' }"></i></div>
       <p class="budget-legend"><span class="legend-dot committed"></span>{{ coachingCommitted }} committed</p>
       <p class="budget-legend"><span class="legend-dot cap"></span>{{ coachingCap }} weekly cap</p>
+      <!-- ⭐⭐ ROUND 42 #23's OTHER HALF – EVERY FILLED SEAT, the same list the market's meter draws
+           and from the same computed. ⚠ `.budget-seat` is a THIRD class alongside `.budget-legend`
+           rather than two more legend lines, because round 36 review #9's own guard counts those
+           («the card gained no legend at all: expected 1 to be 2») and a payroll row is not a legend
+           entry. Silent for a family that has hired nobody. -->
+      <p v-for="seat in seats" :key="seat.key" class="budget-seat" :data-seat="seat.key">
+        <span class="seat-name">{{ seat.label }}</span>
+        <span class="seat-cost">{{ formatCents(seat.weeklyCents) }} /wk</span>
+      </p>
     </Card>
 
     <!-- Silent with nothing entered – the same condition the Season strip carries. -->

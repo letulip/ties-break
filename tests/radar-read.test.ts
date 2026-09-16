@@ -279,12 +279,19 @@ describe('radar – the note', () => {
     // is a function of what the family can see, which is what makes the fog a lie you can act on.
     // (`AxisRead` is the note's ENTIRE input, and it carries no true value at all - the guarantee is
     // structural, and these cases only demonstrate it.)
+    //
+    // ⚠ ROUND 42 #22 ADDED TWO FIELDS TO THESE LITERALS AND CHANGED NOTHING THIS CASE CLAIMS.
+    // `fill` is the eye's BELIEVED saturation - his shown estimate over the centre of the haze he
+    // draws, both of them fogged - so the guarantee above survives intact: still no true value on
+    // the object. 0.78 is the middle rung of the ladder (`working`), which is where the shipped edge
+    // verdicts this case is about are the licensed register. `aim: 1` is an ordinary all-general
+    // week, which is exactly what `aimWeights` says about a view carrying no plan matrix.
     const a = axisNote(
-      { key: 'serve', confidence: 0.9, units: 20, tested: 0.5, shownValue: 70, shownEdge: 12, matchesPlayed: 30 },
+      { key: 'serve', confidence: 0.9, units: 20, tested: 0.5, shownValue: 70, shownEdge: 12, matchesPlayed: 30, fill: 0.78, aim: 1 },
       'note-seed',
     )
     const b = axisNote(
-      { key: 'serve', confidence: 0.9, units: 20, tested: 0.5, shownValue: 70, shownEdge: 12, matchesPlayed: 30 },
+      { key: 'serve', confidence: 0.9, units: 20, tested: 0.5, shownValue: 70, shownEdge: 12, matchesPlayed: 30, fill: 0.78, aim: 1 },
       'note-seed',
     )
     expect(a).toBe(b)
@@ -292,7 +299,7 @@ describe('radar – the note', () => {
     // ...and the opposite edge gets the opposite verdict.
     expect(
       axisNote(
-        { key: 'serve', confidence: 0.9, units: 20, tested: 0.5, shownValue: 30, shownEdge: -12, matchesPlayed: 30 },
+        { key: 'serve', confidence: 0.9, units: 20, tested: 0.5, shownValue: 30, shownEdge: -12, matchesPlayed: 30, fill: 0.78, aim: 1 },
         'note-seed',
       ),
     ).toMatch(/the job|free points/i)
@@ -318,7 +325,7 @@ describe('radar – the note', () => {
   })
 
   it('below the confidence floor a VERDICT is never spoken, however lopsided she looks', () => {
-    const read = { key: 'serve' as SkillKey, confidence: NOTE_MIN_CONFIDENCE - 0.01, units: 3, tested: 0.9, shownValue: 80, shownEdge: 25, matchesPlayed: 3 }
+    const read = { key: 'serve' as SkillKey, confidence: NOTE_MIN_CONFIDENCE - 0.01, units: 3, tested: 0.9, shownValue: 80, shownEdge: 25, matchesPlayed: 3, fill: 0.78, aim: 1 }
     expect(axisNote(read, 'x')).toBeNull()
     expect(axisNote({ ...read, confidence: NOTE_MIN_CONFIDENCE }, 'x')).not.toBeNull()
   })

@@ -365,8 +365,12 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     const added = Object.keys(after).filter((k) => !(k in before))
     expect(added.sort(), 'exactly v76\'s seven plus whatever the rungs above it add, and nothing else')
       .toEqual([...V76_KEYS, ...laterRungs].sort())
+    // ⚠ RE-AIMED BY ROUND 42's v78 BUNDLE (#35 + round 41 #22 + #45's sparring keys), NOT WEAKENED –
+    // the same maintenance the note above predicts for «every future wave», paid for the first time.
+    // The list is the ROSTER of what the ladder has added above v76 to date, so a rung that arrives
+    // without anybody noticing still goes red here; it is not a claim about v76 and never was.
     expect(laterRungs.sort(), 'and the rungs above v76 are the ones this wave knows about')
-      .toEqual(['spotlightHabituation'])
+      .toEqual(['composureBonus', 'sparringHired', 'sparringRung', 'spotlightHabituation'])
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 
     // ⚠ EVERY OTHER KEY BYTE-IDENTICAL, compared through `JSON.stringify` per key rather than through
@@ -376,8 +380,20 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     // deliberate: a later rung that MOVED a pre-existing key would go red here, which is exactly what
     // this case should do. v77 moves none – its own per-row walk touches `loveEpisodes`, and this
     // fixture carries `[]`.
+    //
+    // ⚠⚠ v78 IS THE FIRST RUNG ABOVE v76 THAT REALLY DOES MOVE ONE, and it is let through by NAME
+    // rather than by widening the loop (round 41 #22 – `OwnedAsset.entries`, back-filled `[]` on
+    // every row, and this fixture carries six of them). The exception is MEASURED, never listed: the
+    // same walk one rung up says which keys the tail of the ladder touches, so a v79 that moved
+    // something it should not still reddens this loop, and nothing here needs editing when it lands.
+    const movedAboveV76 = Object.keys(v76()).filter(
+      (k) => JSON.stringify((v76() as Record<string, unknown>)[k])
+        !== JSON.stringify((migrateSave(v76()) as unknown as Record<string, unknown>)[k]),
+    )
+    expect(movedAboveV76.sort(), 'and the only pre-existing key any rung above v76 moves is the asset list')
+      .toEqual(['assets', 'schemaVersion'])
     for (const key of Object.keys(before)) {
-      if (key === 'schemaVersion') continue
+      if (key === 'schemaVersion' || movedAboveV76.includes(key)) continue
       expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(before[key]))
     }
     expect(before.schemaVersion, 'the control really was a v75 payload').toBe(75)
@@ -834,10 +850,25 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
     // (ruling D) and T6's is `world/lifeBeat.ts` – ⚠ and THAT one will have to be argued against the
     // fence below rather than merely added, because the fence is about what her WORDS may read and
     // T6's draw is about the parent's ears. A ninth entry arriving anywhere else is still a finding.
+    // ⚠⚠ RE-AIMED A THIRD TIME BY ROUND 42 #28, AND THE THREE NEW ENTRIES ARE ONE FACT. WHAT MOVED:
+    // `shared/protocol.ts`, `components/screens/HomeScreen.vue` and
+    // `components/screens/CoachMarketScreen.vue` joined. WHY: the owner asked for an off-season
+    // marker drawing attention to the choice of a new psychologist branch – «маркер жёлтый на плашку
+    // на home и на support stuff» – and the marker is up exactly while the ENGINE would accept a
+    // change, so it reads `psychologistFocusOpen` through `psychologistFocusNudge`, the ONE selector
+    // both surfaces share. The barrel is the third entry because it re-exports that name.
+    //
+    // ⚠ IT IS STILL «THE ROAD THE WAVE DESIGNED», WIDENED BY EXACTLY ONE SELECTOR. Neither screen
+    // touches `psychologistFocus` the field, and neither derives an answer of its own: both ask the
+    // same function, which reads the same `psychologistFocusOpen` the card already reads. A TWELFTH
+    // entry arriving anywhere else is still a finding, and the fence below – no voice, no diary, no
+    // lifeBeat – is untouched and is what this case has always been for.
     const focusNamed = srcFiles()
       .filter(([, text]) => codeOnly(text).includes('psychologistFocus'))
       .map(([path]) => path)
     expect(focusNamed, 'the year-focus is read where T3 put it, and where T4 spends it').toEqual([
+      'components/screens/CoachMarketScreen.vue',
+      'components/screens/HomeScreen.vue',
       'components/SupportStaffTab.vue',
       'engine/migrations.ts',
       'engine/spirit.ts',
@@ -846,6 +877,7 @@ describe('wave 5 T1 F – the readers, exhaustively', () => {
       'engine/world/state.ts',
       'engine/world.ts',
       'shared/protocol/snapshot.ts',
+      'shared/protocol.ts',
     ])
     // ⭐ AND THE HALF THAT WAS ALWAYS THE POINT SURVIVES THE RE-AIM, restated so it cannot be lost
     // with the list above: no VOICE, DIARY or LIFEBEAT file has started asking what the seat is

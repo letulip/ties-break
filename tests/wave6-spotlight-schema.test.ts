@@ -146,7 +146,13 @@ function srcFiles(dir = SRC, prefix = ''): [string, string][] {
 // =================================================================================================
 describe('wave 6 T1 A – v77, the three-part move', () => {
   it('bumps the version and ships a golden fixture of its own shape', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(77)
+    // ⚠ RE-AIMED BY ROUND 42's v78 BUNDLE (#35 + round 41 #22 + #45's sparring keys), NOT WEAKENED.
+    // This read `toBe(77)` and the claim it was making is «v77 took a number of its own and shipped
+    // the fixture that number owes» – which is still exactly what is asserted, one rung down the
+    // ladder. What a bare equality could not survive is the very thing it is here to allow: the next
+    // version. `toBeGreaterThanOrEqual` is the converging form the line below it already uses for
+    // the same reason.
+    expect(SAVE_SCHEMA_VERSION, 'v77 shipped, and the ladder has only grown since').toBeGreaterThanOrEqual(77)
     const v77 = JSON.parse(readFileSync(`${SAVES}/v77.json`, 'utf8'))
     expect(v77.schemaVersion).toBe(77)
     // ⚠ `in` FIRST AND THE VALUE SECOND, and the difference is the whole shape: a key must be
@@ -182,7 +188,16 @@ describe('wave 6 T1 A – v77, the three-part move', () => {
     // (ARM 5). ⚠ This line is the one the NEXT wave will have to re-aim, exactly as this wave re-aimed
     // v76's and wave 5 re-aimed v75's: `migrateSave` always walks to the LADDER'S HEAD, so the direct
     // equality holds only while 77 IS the head. The re-aim is the converging form, not a deletion.
-    expect(JSON.parse(readFileSync(`${SAVES}/v77.json`, 'utf8'))).toEqual(migrated)
+    // ⚠⚠ RE-AIMED BY ROUND 42's v78 BUNDLE, AND THIS IS THE RE-AIM ITS OWN NOTE PREDICTED ONE LINE
+    // UP, word for word. `migrateSave` always walks to the LADDER'S HEAD, so `v77.json` stopped
+    // being its output the moment 78 became the head – and the CONVERGING form, which is what that
+    // note asked for, is to compare against the fixture the head owes instead of deleting the claim.
+    // The v77 half is kept and sharpened: migrating `v76.json` and then reading `v77.json` and
+    // migrating THAT must land on the same world, which says the ladder has no shortcut through 77.
+    const head = JSON.parse(readFileSync(`${SAVES}/v${SAVE_SCHEMA_VERSION}.json`, 'utf8'))
+    expect(head, 'the fixture the ladder head owes IS the migration\'s own output').toEqual(migrated)
+    expect(migrateSave(JSON.parse(readFileSync(`${SAVES}/v77.json`, 'utf8'))), 'and v77 is on the path')
+      .toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a habituation or a publicity a save already has', () => {
@@ -356,18 +371,40 @@ describe('wave 6 T1 C – what the step adds, and everything it leaves alone', (
     const before = v76()
     const after = migrateSave(v76()) as unknown as Record<string, unknown>
 
-    const added = Object.keys(after).filter((k) => !(k in before))
+    // ⚠⚠ RE-AIMED BY ROUND 42's v78 BUNDLE (#35 + round 41 #22 + #45), NOT WEAKENED, AND THE RE-AIM IS
+    // THE WHOLE POINT OF THE CASE RATHER THAN A CONCESSION TO IT. `migrateSave` always walks to the
+    // LADDER'S HEAD, so from the day a v78 exists this comparison stops measuring «what the v77 step
+    // did» and starts measuring «what the whole tail of the ladder did» – which is a different claim
+    // and one this file has no business making. Left alone it would have gone red on v78's three world
+    // keys and on `assets` (whose rows gain `entries`), for a reason that has nothing to do with the
+    // spotlight.
+    //
+    // ⭐ THE FIX IS A SECOND WALK, NOT AN EXCLUSION LIST. What every version ABOVE 77 does is measured
+    // by migrating `v77.json` – the same career, one rung up – and the two effects are then subtracted.
+    // So this case goes on saying exactly what it always said, it needs no maintenance when v79 lands,
+    // and a v78 that broke something of v77's would still redden it.
+    const v77Payload = JSON.parse(readFileSync(`${SAVES}/v77.json`, 'utf8')) as Record<string, unknown>
+    const fromV77 = migrateSave(JSON.parse(JSON.stringify(v77Payload))) as unknown as Record<string, unknown>
+    const addedAbove77 = Object.keys(fromV77).filter((k) => !(k in v77Payload))
+    const movedAbove77 = Object.keys(v77Payload).filter(
+      (k) => JSON.stringify(v77Payload[k]) !== JSON.stringify(fromV77[k]),
+    )
+
+    const added = Object.keys(after).filter((k) => !(k in before) && !addedAbove77.includes(k))
     expect(added.sort(), 'exactly one key arrives, and it is this one').toEqual([...V77_WORLD_KEYS].sort())
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 
     // ⚠ EVERY OTHER KEY BYTE-IDENTICAL, compared through `JSON.stringify` per key rather than through
     // one whole-object equality, so a failure NAMES the key instead of printing a 570 kB diff.
+    // ⚠ `movedAbove77` is skipped for the reason above and it is MEASURED, never listed: today it is
+    // `schemaVersion` and `assets`, and whatever a later version moves joins it without an edit here.
     for (const key of Object.keys(before)) {
-      if (key === 'schemaVersion') continue
+      if (key === 'schemaVersion' || movedAbove77.includes(key)) continue
       expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(before[key]))
     }
     expect(before.schemaVersion, 'the control really was a v76 payload').toBe(76)
-    expect(after.schemaVersion, '...and the one key that moved, moved').toBe(77)
+    expect(v77Payload.schemaVersion, '...and the rung this case is about is genuinely v77').toBe(77)
+    expect(after.schemaVersion, '...and the version key moved, to the head of the ladder').toBe(SAVE_SCHEMA_VERSION)
   })
 
   it('⚠ leaves `temperament` and the walls exactly where it found them', () => {

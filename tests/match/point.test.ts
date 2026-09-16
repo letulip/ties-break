@@ -158,15 +158,25 @@ describe('the calibrated closed form is byte-identical for a pair level in both'
     const weak = player({ id: 'b', composure: 30, stamina: 30 })
     expect(calibratedPServe(composed, weak, o)).toBeGreaterThan(calibratedPServe(flat, weak, o))
     expect(calibratedPServe(strong, weak, o)).toBeGreaterThan(calibratedPServe(flat, weak, o))
-    // ...and stamina is the heavier of the two, because the loop spends it through three channels
-    // (per-point fatigue on her serve, on his, and the retirement hazard) against nerve's one.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #34, AND THE ORDERING IT USED TO ASSERT IS NOW THE OTHER WAY ROUND.
+    // Until #34 stamina was the heavier of the two, because the loop spent it through three channels
+    // (per-point fatigue on her serve, on his, and the retirement hazard) against nerve's ONE – the
+    // break point. The owner ruled that one channel too small (“надо поднять цену нервов”, 15.09,
+    // target +4 pp for +20 composure), and the loop now spends nerve on the whole pressure set,
+    // contested. `COMPOSURE_K` is this form's fitted mirror of that loop and was RE-FITTED with it:
+    // 2.2e-5 → 2.2e-4, exactly ten times, by `tools/r38-closed-form-residual.ts -- --fit` over 315
+    // cells × 20,000 matches. `STAMINA_K` did not move, and the same joint fit returning 6.933e-5 for
+    // it is the cross-check that says so.
     const perComposurePoint = calibratedPServe(player({ composure: 51 }), player(), o) - calibratedPServe(player(), player(), o)
     const perStaminaPoint = calibratedPServe(player({ stamina: 51 }), player(), o) - calibratedPServe(player(), player(), o)
-    expect(perComposurePoint).toBeCloseTo(2.2e-5, 12)
+    expect(perComposurePoint).toBeCloseTo(2.2e-4, 12)
     expect(perStaminaPoint).toBeCloseTo(7.0e-5, 12)
     // ⚠ AND BOTH ARE STILL BELOW THE SERVE, which is the same ordering RALLY_K is held to: the serve
-    // is the most valuable shot in tennis and no calibration term may quietly outrank it.
+    // is the most valuable shot in tennis and no calibration term may quietly outrank it. ⭐ This is
+    // the wall #34 had to stay inside, and it is asserted on BOTH terms now that nerve is the bigger
+    // of the two – a composure point is worth 0.138 of a serve point, and it may never reach 1.
     expect(perStaminaPoint).toBeLessThan(SKILL_K)
+    expect(perComposurePoint).toBeLessThan(SKILL_K)
   })
 
   it('the base clamp still holds at the extremes', () => {
@@ -184,14 +194,94 @@ describe('modifiedPServe', () => {
     expect(p).toBeCloseTo(0.63, 12)
   })
 
+  // ⚠ RE-AIMED BY ROUND 42 #34, AND THE CLAIM IS UNCHANGED TO THE LAST BIT – only the fixture moved.
+  // #34 added a SECOND nerve term on the widened pressure set, contested and therefore exactly zero
+  // between two players level in composure. This test is about the FIRST one (Klaassen–Magnus: the
+  // server underperforms on a break point, more so with low nerve), so the receiver is now given the
+  // server's own composure and the new term drops out by construction. That is the honest way to keep
+  // asserting a dock #34 deliberately did not touch – folding the second term into the expected
+  // numbers would have made this test stop being about the dock at all.
   it('applies the big-point (break-point) penalty scaled by composure', () => {
     const bp = ctx({ breakPoint: true })
     // composure 100 -> no penalty
-    expect(modifiedPServe(0.63, player({ composure: 100 }), player(), bp, null)).toBeCloseTo(0.63, 12)
+    expect(modifiedPServe(0.63, player({ composure: 100 }), player({ composure: 100 }), bp, null)).toBeCloseTo(0.63, 12)
     // composure 0 -> exactly 0.03 off on a break point
-    expect(modifiedPServe(0.63, player({ composure: 0 }), player(), bp, null)).toBeCloseTo(0.6, 12)
+    expect(modifiedPServe(0.63, player({ composure: 0 }), player({ composure: 0 }), bp, null)).toBeCloseTo(0.6, 12)
     // no penalty when it is not a break point
-    expect(modifiedPServe(0.63, player({ composure: 0 }), player(), ctx(), null)).toBeCloseTo(0.63, 12)
+    expect(modifiedPServe(0.63, player({ composure: 0 }), player({ composure: 0 }), ctx(), null)).toBeCloseTo(0.63, 12)
+  })
+
+  // ===============================================================================================
+  // ⭐⭐ ROUND 42 #34 – THE PRESSURE SET, AND THE TERM THAT IS SPENT ON IT
+  // ===============================================================================================
+  //
+  // The owner ruled the price of nerve up (15.09, target +4 pp for +20 composure) after
+  // `tools/composure-bench.ts` measured the wing at +0.4 pp against groundstrokes' +18.0 pp. Two
+  // things changed and both are asserted here: WHICH points nerve is spent on, and that the spending
+  // is contested. Nothing below holds a remembered win rate – these are the physics, not a balance.
+  it('⭐ the pressure set is five facts, and an ordinary point is not one of them', () => {
+    const nervy = player({ id: 'a', composure: 40 })
+    const calm = player({ id: 'b', composure: 80 })
+    expect(modifiedPServe(0.63, nervy, calm, ctx(), null), 'an ordinary point is still nerve-blind').toBeCloseTo(0.63, 12)
+    // Each of the five, alone, makes the point a pressure point. The receiver is 40 points calmer, so
+    // the server is docked `0.40 x PRESSURE_NERVE_MAX` on every one of them.
+    const swing = 0.4 * 0.07
+    const cells: Partial<PointContext>[] = [
+      { breakPoint: true },
+      { tiebreak: true },
+      { setPointFor: 1 },
+      { matchPointFor: 1 },
+      { decidingClose: true },
+    ]
+    for (const over of cells) {
+      // The break-point cell carries the Klaassen–Magnus dock as well; every other cell is the new
+      // term alone, which is what makes this a test of the SET rather than of one branch.
+      const dock = over.breakPoint === true ? (1 - nervy.composure / 100) * 0.03 : 0
+      expect(modifiedPServe(0.63, nervy, calm, ctx(over), null), `pressure via ${JSON.stringify(over)}`).toBeCloseTo(
+        0.63 - swing - dock,
+        12,
+      )
+    }
+  })
+
+  it('⭐⭐ the term is CONTESTED – exactly zero when the two are level, on every pressure point', () => {
+    // The property the tour's hold rate, the fairness fixture and the upset corridor stand on, and
+    // the reason #34 could widen the pressure set to ~18.5% of points without re-calibrating a
+    // thing: `x - 0 === x`. Asserted at eleven composure levels against all five facts, with `toBe`
+    // rather than `toBeCloseTo` because the claim is byte-identity and not proximity.
+    const cells: Partial<PointContext>[] = [
+      { tiebreak: true },
+      { setPointFor: 1 },
+      { matchPointFor: 0 },
+      { decidingClose: true },
+      { tiebreak: true, setPointFor: 1, matchPointFor: 1, decidingClose: true },
+    ]
+    for (const c of [0, 12, 25, 37, 50, 61, 73, 84, 92, 99, 100]) {
+      const a = player({ id: 'a', composure: c })
+      const b = player({ id: 'b', composure: c })
+      for (const over of cells) {
+        expect(modifiedPServe(0.63, a, b, ctx(over), null), `composure ${c}, ${JSON.stringify(over)}`).toBe(0.63)
+      }
+      // ...and the break point keeps its own dock, which is a fact about SERVERS and not about a gap.
+      expect(modifiedPServe(0.63, a, b, ctx({ breakPoint: true }), null)).toBeCloseTo(0.63 - (1 - c / 100) * 0.03, 12)
+    }
+  })
+
+  it('⚠ the set is a UNION, never a stack – four facts at once price the same as one', () => {
+    // A match point that is also a break point in a deciding-set tiebreak is ONE pressure point.
+    // Stacking would put the biggest nerve swings exactly where the clamp is nearest, and would make
+    // the wing's price a function of the scoreline's shape rather than of the wing.
+    const nervy = player({ id: 'a', composure: 30 })
+    const calm = player({ id: 'b', composure: 70 })
+    const one = modifiedPServe(0.63, nervy, calm, ctx({ tiebreak: true }), null)
+    const all = modifiedPServe(
+      0.63,
+      nervy,
+      calm,
+      ctx({ tiebreak: true, setPointFor: 1, matchPointFor: 1, decidingClose: true }),
+      null,
+    )
+    expect(all).toBe(one)
   })
 
   it('applies momentum only for streaks of length >= 3, directed by streak side', () => {

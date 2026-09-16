@@ -9,9 +9,16 @@
 //    месте давать бонус, может по-меньше чем тренеру, но давать, давай тоже сделаем»
 //
 // WHAT THIS FILE PINS, in the order the mechanic can fail:
-//   1. THE RATES – title 10% / final 5% (coach), 3% / 1.5% (masseur), below a final NOTHING – as
-//      LITERALS (the round23-kid-share discipline: a ladder checked against the object under test
-//      is a tautology), through the ONE mechanism both takers share.
+//   1. THE RATES – ⭐⭐⭐ RE-AIMED BY ROUND 42 #41 (15.09): the coach is TEN PER CENT AT EVERY FINISH
+//      («10% безусловных отчислений с любых призовых, независимо от глубины прохода», his own
+//      research at docs/research/team-economics-2026-09.md §2), and the masseur is UNCHANGED at
+//      3% / 1.5% / nothing below a final. Still as LITERALS (the round23-kid-share discipline: a
+//      ladder checked against the object under test is a tautology), still through the ONE mechanism
+//      both takers share – which is now the mechanism's whole point, because the two seats read
+//      different rules out of it and a second copy would let them drift.
+//      ⚠ FOUR ARMS IN THIS FILE MOVED AND EVERY ONE OF THEM QUOTES ITS OLD SELF IN PLACE: the rates
+//      arm, his 3M example's final row, the finalize FINAL row, and the below-a-final row (which was
+//      «NOTHING» and is now «his ten per cent, and the masseur nothing» – the strongest arm here).
 //   2. ⭐ HIS OWN 3M EXAMPLE, reproduced to the cent – 900к дочери, 300к тренеру.
 //   3. ROUNDING – every share rounds ONCE, the family keeps the remainder, the pieces re-add.
 //   4. THE FINALIZE WIRING – gross, the expense rows in the seats' own categories, funds moved by
@@ -22,6 +29,14 @@
 //
 // ⚠ RNG: pure arithmetic at finalize on a decided cheque – zero draws on any stream; the frozen
 // MAIN capture (41550 / e6b0c709) in tests/condition.test.ts is the cross-file witness.
+//
+// ⚠ MUTATION-VERIFIED FOR ROUND 42 #41, counts read off the runs (control 14/14 green before and
+// after, each mutation applied alone to src/engine/economy.ts and reverted):
+//   * `staffResultShareBps`' tail back to a hard `: 0`     -> **3 red**: the rates arm, his 3M
+//     example's FINAL row, and the below-a-final row.
+//   * coach `finalBps` back to 500, the tail left at 1000  -> **2 red**: the rates arm and the 3M
+//     example's FINAL row; the below-a-final row stays GREEN, because its cheque is a semifinal and
+//     `finalBps` has nothing to say about it. That separation is the measurement.
 import { describe, it, expect } from 'vitest'
 import {
   createWorld,
@@ -33,7 +48,7 @@ import {
   KID_ID,
   type WorldState,
 } from '../src/engine/world'
-import { ECONOMY, kidPrizeShareCents, staffPrizeShareCents, staffResultShareBps } from '../src/engine/economy'
+import { ECONOMY, kidPrizeShareBps, kidPrizeShareCents, staffPrizeShareCents, staffResultShareBps } from '../src/engine/economy'
 import { kidAgeYears } from '../src/engine/world/age'
 import { TIERS } from '../src/engine/season/calendar'
 import { rngFromSeed } from '../src/engine/rng'
@@ -44,10 +59,19 @@ import type { SeasonEvent } from '../src/engine/season/types'
 // 1 – THE RATES, THROUGH THE ONE MECHANISM
 // =================================================================================================
 describe('the rates – one mechanism, two takers, his numbers', () => {
-  it('⭐ coach: title 10%, final 5% («за 2е только по-меньше» – half), below a final NOTHING', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09), AND THE OLD ARM IS QUOTED RATHER THAN DELETED. It read
+  // «⭐ coach: title 10%, final 5% («за 2е только по-меньше» – half), below a final NOTHING» and
+  // asserted `1000 / 500 / 0`. That was round 24's shape and it was right until his 15.09 word:
+  // «10% безусловных отчислений с любых призовых, независимо от глубины прохода», on his own research
+  // (docs/research/team-economics-2026-09.md §2). The claim below is the same KIND of claim – three
+  // literals through the one mechanism, the round23-kid-share discipline – with his new numbers.
+  it('⭐ coach, ROUND 42 #41: TEN PER CENT AT EVERY FINISH – no depth, «с любых призовых»', () => {
     expect(staffResultShareBps('coach', 0)).toBe(1000)
-    expect(staffResultShareBps('coach', 1)).toBe(500)
-    for (const finish of [2, 3, 4, 5, 6, 7]) expect(staffResultShareBps('coach', finish), `finish ${finish}`).toBe(0)
+    expect(staffResultShareBps('coach', 1)).toBe(1000)
+    for (const finish of [2, 3, 4, 5, 6, 7]) expect(staffResultShareBps('coach', finish), `finish ${finish}`).toBe(1000)
+    // ⭐ AND THE FLATNESS IS THE CLAIM, not the number: a rate that varied by finish anywhere would be
+    // round 24's shape wearing round 42's constant.
+    expect(new Set([0, 1, 2, 3, 4, 5, 6, 7].map((f) => staffResultShareBps('coach', f))).size, 'one rate, every finish').toBe(1)
   })
 
   it('⭐ masseur: title 3%, final 1.5% – «по-меньше чем тренеру», roughly a third at both rungs', () => {
@@ -76,8 +100,19 @@ describe('the rates – one mechanism, two takers, his numbers', () => {
 describe('the 3M example – «это будет 900к дочери и 300к тренеру плюс остальные расходы»', () => {
   const PRIZE = 3_000_000_00
 
-  it('⭐⭐ at the age-22 rung (30%) with a coach: 900k hers, 300k the coach`s, 1.8M the family`s', () => {
-    const hers = kidPrizeShareCents(PRIZE, 22) // his «скажем 30 для примера» is the shipped age-22 rung
+  // ⚠⚠ THE AGE MOVED AND HIS EXAMPLE DID NOT (round 42 #25, 15.09). His worked example is «скажем
+  // 30 для примера» – a THIRTY PERCENT rung – and this file pinned it at the age that carried
+  // 30% on the round-23 ladder, which was twenty-two. Round 42 #25 made the ladder twice as steep at
+  // his own ask, so 30% is the TWENTY rung now. The example, the arithmetic and every figure below
+  // are untouched; what is re-aimed is which birthday stands under them, and it is read off the
+  // engine rather than typed so the next retune moves it again by itself.
+  const AGE_AT_30 = (() => {
+    for (let age = ECONOMY.kidShare.fromAgeYears; age <= 40; age++) if (kidPrizeShareBps(age) === 3000) return age
+    throw new Error('no age on the shipped ladder carries his 30% example')
+  })()
+
+  it('⭐⭐ at the 30% rung with a coach: 900k hers, 300k the coach`s, 1.8M the family`s', () => {
+    const hers = kidPrizeShareCents(PRIZE, AGE_AT_30) // his «скажем 30 для примера», at the age that carries it
     const coach = staffPrizeShareCents('coach', PRIZE, 0) // his «скажем 10 для примера» is the title rate
     expect(hers).toBe(900_000_00)
     expect(coach).toBe(300_000_00)
@@ -87,12 +122,23 @@ describe('the 3M example – «это будет 900к дочери и 300к т�
   it('...and with the masseur on the payroll his slice is 90k – a third of the coach`s, off the same gross', () => {
     const masseur = staffPrizeShareCents('masseur', PRIZE, 0)
     expect(masseur).toBe(90_000_00)
-    expect(PRIZE - kidPrizeShareCents(PRIZE, 22) - staffPrizeShareCents('coach', PRIZE, 0) - masseur).toBe(1_710_000_00)
+    expect(PRIZE - kidPrizeShareCents(PRIZE, AGE_AT_30) - staffPrizeShareCents('coach', PRIZE, 0) - masseur)
+      .toBe(1_710_000_00)
   })
 
-  it('the final pays half the title, on the same example: 150k coach, 45k masseur', () => {
-    expect(staffPrizeShareCents('coach', PRIZE, 1)).toBe(150_000_00)
+  // ⚠ RE-AIMED BY ROUND 42 #41. It read «the final pays half the title, on the same example: 150k
+  // coach, 45k masseur» and asserted $150,000 for the coach. The masseur's half-rate is UNTOUCHED
+  // and is still asserted at $45,000; the coach's is his flat ten per cent now, so on the same $3M
+  // example a lost final pays him the same $300,000 a title does. The two seats diverging here is
+  // the whole of #41, and this arm is where it shows on his own worked number.
+  it('a FINAL, round 42 #41: the coach`s 300k is unchanged by depth, the masseur`s 45k still halves', () => {
+    expect(staffPrizeShareCents('coach', PRIZE, 1)).toBe(300_000_00)
     expect(staffPrizeShareCents('masseur', PRIZE, 1)).toBe(45_000_00)
+    // ⭐ AND A FIRST-ROUND EXIT ON THE SAME CHEQUE PAYS HIM THE SAME – «независимо от глубины прохода»
+    // said as arithmetic. The masseur's own tail is still zero, which is the open question in
+    // docs/specs/coach-every-cheque-2026-09.md §5.
+    expect(staffPrizeShareCents('coach', PRIZE, 5)).toBe(300_000_00)
+    expect(staffPrizeShareCents('masseur', PRIZE, 5)).toBe(0)
   })
 })
 
@@ -234,31 +280,50 @@ describe('the finalize wiring – gross, expense rows, the exact funds arithmeti
     closeTournament(world)
   })
 
-  it('a FINAL pays the half rates – 5% and 1.5%, the same rows', () => {
+  // ⚠ RE-AIMED BY ROUND 42 #41. The old title was «a FINAL pays the half rates – 5% and 1.5%, the
+  // same rows» and it read `'5% of the'` out of the coach's row. Only the coach moved: his rate is
+  // flat now, so his row says 10% at a final too. ⚠ THE PERCENTAGE IS STILL READ OFF
+  // `staffResultShareBps` AND NEVER TYPED – part-one #13's binding rule – so this arm follows his
+  // next retune instead of breaking on it.
+  it('a FINAL, round 42 #41: the coach`s row says his flat rate, the masseur`s still says 1.5%', () => {
     const { world } = drivenFinish('both-final', 1, { coach: true, masseur: true })
     const prize = TIERS.w15.prizeCents![1]
     skipTournament(world)
     expect(shareRows(world, 'Coach')[0].amountCents).toBe(-staffPrizeShareCents('coach', prize, 1))
-    expect(shareRows(world, 'Coach')[0].text).toContain('5% of the')
+    expect(shareRows(world, 'Coach')[0].text).toContain(`${staffResultShareBps('coach', 1) / 100}% of the`)
     expect(shareRows(world, 'Masseur')[0].amountCents).toBe(-staffPrizeShareCents('masseur', prize, 1))
     expect(shareRows(world, 'Masseur')[0].text).toContain('1.5% of the')
     closeTournament(world)
   })
 
-  it('⭐ below a final NOTHING – «за победы или 2е места», not every cheque', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41, AND IT IS THE ARM THE ITEM IS ACTUALLY ABOUT. The old title was
+  // «⭐ below a final NOTHING – «за победы или 2е места», not every cheque» and it asserted that
+  // NEITHER seat was paid on a semifinal. His 15.09 ruling inverts that for the coach – «10%
+  // безусловных отчислений с любых призовых, независимо от глубины прохода» – and leaves it standing
+  // for the masseur. So the arm now asserts BOTH halves at once on one cheque, which is a stronger
+  // claim than either of them alone: the two seats really do read different rules at the same finish.
+  it('⭐⭐ ROUND 42 #41 – a semifinal pays the COACH his ten per cent and the masseur nothing', () => {
     const { world } = drivenFinish('both-sf', 2, { coach: true, masseur: true })
     const prize = TIERS.w15.prizeCents![2]
-    expect(prize, 'the semifinal cheque exists – there really was something to not share').toBeGreaterThan(0)
+    expect(prize, 'the semifinal cheque exists – there really was something to share').toBeGreaterThan(0)
     const before = world.fundsCents
     const hers = herShareOf(world, prize) // ⚠ round 41 items 15+27 (A1) – see `herShareOf`
     skipTournament(world)
-    expect(shareRows(world, 'Coach')).toHaveLength(0)
+    // THE COACH IS PAID, off the same gross and at the same rate a title pays.
+    const coachCut = staffPrizeShareCents('coach', prize, 2)
+    expect(coachCut, 'his cut on a semifinal is real money').toBeGreaterThan(0)
+    expect(shareRows(world, 'Coach')).toHaveLength(1)
+    expect(shareRows(world, 'Coach')[0].amountCents).toBe(-coachCut)
+    expect(shareRows(world, 'Coach')[0].text).toContain(`${staffResultShareBps('coach', 2) / 100}% of the`)
+    // ...AND THE MASSEUR IS NOT – round 24's shape, still standing on his seat alone (the open
+    // question in docs/specs/coach-every-cheque-2026-09.md §5).
     expect(shareRows(world, 'Masseur')).toHaveLength(0)
     // ⚠ «THE WHOLE CHEQUE» IS NOW «THE WHOLE CHEQUE THE TEAM DID NOT TOUCH». Her ramp is not a staff
     // share and has no finish gate – it bites on every W cheque at any age since ruling A1 – so the
-    // claim this arm makes, that NEITHER SEAT was paid below a final, is the two lines above plus a
-    // family part in which no staff share appears.
-    expect(world.fundsCents - before, 'the family banks the whole cheque, less only her own share').toBe(prize - hers)
+    // family's part is the gross less her share and less exactly one staff hand.
+    expect(world.fundsCents - before, 'the family banks the cheque less her share and less his').toBe(
+      prize - hers - coachCut,
+    )
     closeTournament(world)
   })
 

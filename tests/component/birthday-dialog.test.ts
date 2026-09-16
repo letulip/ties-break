@@ -21,7 +21,7 @@ import BirthdayDialog from '../../src/components/BirthdayDialog.vue'
 import KidScreen from '../../src/components/screens/KidScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
-  birthdayOffer,
+  birthdayOfferFor,
   createWorld,
   decideKnock,
   pendingBirthday,
@@ -42,7 +42,10 @@ function birthdaySnapshot(seed = 'bday-ui'): { snap: Snapshot; askedId: string }
   }
   const age = pendingBirthday(world)
   if (age === null) throw new Error('the fixture never reached a birthday')
-  return { snap: toSnapshot(world), askedId: birthdayOffer(world.seed, age).askedId }
+  // ⚠ ROUND 42 #26 – THE ENGINE'S OWN SEAM, NOT A REBUILT OFFER. `birthdayOffer(world.seed, age)` is a
+  // SECOND derivation of the four rows and it diverges the moment a given durable leaves the card, so
+  // `chooseGift` refuses the answer – the R2-18 failure `tests/round23-kid-life.test.ts` wrote down.
+  return { snap: toSnapshot(world), askedId: birthdayOfferFor(world, age).askedId }
 }
 
 function mountDialog(snap: Snapshot) {

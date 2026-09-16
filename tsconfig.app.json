@@ -28,6 +28,7 @@
     "src/**/*.vue",
     "tests/**/*.ts",
     "tools/_knocks.ts",
+    "tools/_birthday.ts",
     "tools/_lifeBeats.ts",
     "tools/_spotlight.ts",
     "tools/ad-shoot-bench.ts",

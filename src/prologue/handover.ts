@@ -146,12 +146,12 @@ export function coachReadFor(band: string, seed: string): string {
  *  band. */
 export const COACH_BASE_READS: Readonly<Record<HandoverBaseBand, readonly string[]>> = {
   ahead: [
-    'She is ahead of most girls her age. Somebody did the work.',
-    'She is further along than the girls she will be playing.',
+    'The years added to what she was born with. Somebody did the work.',
+    'She brings more than she started with – the childhood built it.',
   ],
   level: [
-    'She is where most girls her age are.',
-    'She is level with the girls she will be playing.',
+    'She comes with what she was born with. The years neither added nor took.',
+    'The childhood held her level with what she brought.',
   ],
   /** ⭐⭐ HIS, 08.09, AND THE ONLY TWO LINES ON THIS SCREEN HE HAS RULED ON. Round 40 #4 – variant B,
    *  chosen out of three after «давай смягчим формулировку нижней банды» and shipped verbatim.
@@ -172,11 +172,15 @@ export const COACH_BASE_READS: Readonly<Record<HandoverBaseBand, readonly string
    *  table can produce BY CONSTRUCTION (a p20 cut), on the screen that also says «This is the girl you
    *  raised», so it is a sentence worth reading five times.
    *
-   *  ⚠ ASK, NOT A CHANGE (invariant 4): `ahead` and `level` above still speak in the COMPARATIVE
-   *  register – «most girls her age», «the girls she will be playing» – which the new reading no
-   *  longer measures either. They are byte-identical to what shipped and were left that way
-   *  deliberately: the owner ruled on the bottom band and only the bottom band. Whether the upper two
-   *  should follow it is his to say. */
+   *  ⭐ THE ASK ABOVE WAS ANSWERED – ROUND 42 #31, RULED A (15.09). The upper two pairs spoke the
+   *  COMPARATIVE register («She is ahead of most girls her age. Somebody did the work.» · «She is
+   *  further along than the girls she will be playing.» · «She is where most girls her age are.» ·
+   *  «She is level with the girls she will be playing.» – kept here as the record) while the reading
+   *  had stopped measuring any population; his own 14.09 law – «ожидание не должно спорить с
+   *  реальностью» on «одна из основополагающих фраз в игре» – is what the re-voice serves. The four
+   *  lines above are NEW DRAFTS in the `behind` pair's register (his 08.09 model), recorded verbatim
+   *  in the round-42 ledger, his вычитка and playtest the final read. «Somebody did the work» is the
+   *  one clause carried over: it was already a sentence about the childhood's work. */
   behind: [
     'Most of what she has, she was born with. The years added little to it.',
     'She comes with what she started with – the work has not reached it yet.',

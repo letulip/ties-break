@@ -113,6 +113,16 @@
 //   3. EVERY FIGURE THE RAIL SHOWS MUST EXIST SOMEWHERE AT 375. That keeps the honest half of his
 //      criterion. A card is a SHORTCUT; a number the phone cannot reach at all is a new fact on a
 //      desktop and reddens.
+//      ⚠ ROUND 42 #23 GREW THE CARD AND THIS PART GREW WITH IT. «В coaching budget я просил отражать
+//      всех активных специалистов» put a row per filled seat on the Team-budget card, and both of a
+//      row's leaf spans are declared and checked below rather than exempted – MEASURED on the phone,
+//      through the doors a player uses: `Coach` and `$389 /wk` are both on the Coach Market at 375,
+//      drawn there from the same computed the rail reads. The rename in the same item («Coaching
+//      budget» -> «Team budget», his own wording) moved the two title declarations and nothing else.
+//      ⭐ AND THE DECLARATION WAS MUTATION-VERIFIED BEFORE IT SHIPPED, 16.09, because declaring a
+//      line is one keystroke from exempting it: with `CoachMarketScreen.vue`'s own `.budget-seat`
+//      rows deleted – the seat figure on the desktop and nowhere else – this test went **1 RED**
+//      naming `"$389 /wk"` in the unreachable list. A declaration that cannot fail is the hole.
 //   4. …and the claim is restated in words, above.
 //
 // EXEMPTION 3 – HER IDENTITY BLOCK (the second pass, P2-6), built to the same four-part shape:
@@ -884,6 +894,10 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
     // TOGETHER: an exemption over an empty region is a guard fitted to nothing, and it would pass
     // for ever. So the region is asserted to hold HIS THREE CARDS, by their titles - the set he
     // named, «IN THE ACCOUNT, COACHING BUDGET, MY ENTRIES».
+    // ⚠ RE-AIMED 16.09 BY ROUND 42 #23 – the second card is «TEAM BUDGET» now, and the rename is the
+    // owner's own proposed wording («переименовать в Week budget или team budget»), read by both
+    // surfaces off `TEAM_BUDGET_LABEL`. The DECLARATION moved; the claim did not - this is still the
+    // named set, and a card appearing or leaving still reddens here by name.
     // ⚠ TWO AND NOT THREE, AND IT IS MEASURED RATHER THAN LOOSENED. `pro` boots with nothing
     // entered, and «My entries» is silent then – exactly as the Season strip it shortcuts to is
     // (`v-if="myEntries.length"`). The third card is asserted in its own arm below, on a career that
@@ -892,7 +906,7 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
     expect(
       await page.locator(`${RAIL_DASHBOARD} .rail-dash-title`).allInnerTexts(),
       'the exempt region does not hold the cards this career draws',
-    ).toEqual(['IN THE ACCOUNT', 'COACHING BUDGET'])
+    ).toEqual(['IN THE ACCOUNT', 'TEAM BUDGET'])
   })
 
   test('the exempt region holds no control – it is information, and that is his constraint', async ({
@@ -940,7 +954,9 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
     expect(
       await page.locator(`${RAIL_DASHBOARD} .rail-dash-title`).allInnerTexts(),
       'the third card did not appear, so this second pass measured the first two again',
-    ).toEqual(['IN THE ACCOUNT', 'COACHING BUDGET', 'MY ENTRIES'])
+    // ⚠ RE-AIMED 16.09 BY ROUND 42 #23, with the arm above and for its reason: the second card's
+    // title is «TEAM BUDGET» now. The third card is still what this pass exists to reach.
+    ).toEqual(['IN THE ACCOUNT', 'TEAM BUDGET', 'MY ENTRIES'])
     expect(
       (await rolesInside(page)).filter((r) => INTERACTIVE_ROLES.has(r.split(' ')[0])),
       'a control is inside the rail dashboard once an entry is on the card',
@@ -1000,15 +1016,28 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
       const text = (el: Element): string => (el.textContent ?? '').replace(/\s+/g, ' ').trim()
       const titles = Array.from(root.querySelectorAll('.rail-dash-title')).map(text)
       const figures = Array.from(root.querySelectorAll('.rail-dash-figure')).map(text)
+      // ⭐⭐ ROUND 42 #23 – A THIRD DECLARED KIND OF LINE, AND IT IS DECLARED SO IT CAN BE CHECKED.
+      // «в coaching budget я просил отражать всех активных специалистов» put a row per FILLED SEAT
+      // on the Team-budget card – `Coach · $389 /wk`, and a Masseur and a Psychologist line beside
+      // it once those seats are taken. Each row is two leaf spans, so both fell out of the stray net
+      // below the day the item shipped.
+      // ⚠⚠ THE REPAIR IS NOT «IGNORE `.budget-seat`». Waving the rows through the net would hand
+      // them the exact dodge the net exists to stop - a number in an undeclared span, skipping the
+      // «exists at 375» check at the bottom of this test. So they are DECLARED here, one list for
+      // the seat's name and one for its weekly figure, and both go through that check with the
+      // card figures. ⚠ THEY ARE DELIBERATELY NOT FOLDED INTO `figures`: the count assertion below
+      // holds `titles.length` against the number of CARDS, and a payroll row is not a card.
+      const seatNames = Array.from(root.querySelectorAll('.budget-seat .seat-name')).map(text)
+      const seatCosts = Array.from(root.querySelectorAll('.budget-seat .seat-cost')).map(text)
       // ⚠ AND NOTHING MAY HIDE FROM THIS LIST. Every leaf in the region that carries text must be a
-      // declared title or a declared figure - otherwise a card could print a number in an
-      // undeclared span and skip the check below, which is the same dodge the container boundary
-      // exists to stop one level up.
+      // declared title, a declared figure or a declared seat line - otherwise a card could print a
+      // number in an undeclared span and skip the check below, which is the same dodge the container
+      // boundary exists to stop one level up.
       const strays = Array.from(root.querySelectorAll('*'))
         .filter((el) => el.children.length === 0 && text(el) !== '')
-        .filter((el) => !el.closest('.rail-dash-title, .rail-dash-figure'))
+        .filter((el) => !el.closest('.rail-dash-title, .rail-dash-figure, .budget-seat'))
         .map((el) => `${el.tagName.toLowerCase()}: ${text(el)}`)
-      return { titles, figures, strays }
+      return { titles, figures, seatNames, seatCosts, strays }
     }, RAIL_DASHBOARD)
 
     expect(shown, 'the dashboard was not on the page, so this measured nothing').not.toBeNull()
@@ -1024,6 +1053,17 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
       shown!.titles.length,
       'a card in the dashboard carries no title, so the region is not the set it claims to be',
     ).toBe(await page.locator(`${RAIL_DASHBOARD} .rail-dash-card`).count())
+    // ⚠ AND THE SEAT LIST IS ANTI-VACUOUS TOO, for the same reason as every other floor in this
+    // file: an empty payroll would satisfy every membership test below. `pro` has a coach – measured
+    // at head, one seat, `Coach · $389 /wk` – so a career that walked in here with nobody hired
+    // would mean round 42 #23's own rows are unmeasured rather than passing.
+    expect(
+      shown!.seatCosts.length,
+      'the Team budget card lists no filled seat, so round 42 #23`s rows are not being checked at all',
+    ).toBeGreaterThan(0)
+    expect(shown!.seatNames.length, 'a seat row shows a figure with no name beside it').toBe(
+      shown!.seatCosts.length,
+    )
 
     // Now the phone, screen by screen, through the doors a player uses. Every disclosure is opened
     // on the way (`settleScreen`), so «reachable» here means the same thing it means in the walk.
@@ -1047,7 +1087,17 @@ test.describe("the desktop rail's dashboard is exempt – and the exemption is b
       2_000,
     )
 
-    const unreachable = shown!.figures.filter((figure) => !total.includes(figure))
+    // ⭐⭐ ROUND 42 #23's ROWS GO THROUGH THE SAME DOOR AS THE CARD FIGURES, and this is the half
+    // that makes declaring them a strengthening rather than an exemption. MEASURED at head, on the
+    // phone, through the doors a player uses: `Coach` and `$389 /wk` are both on `CoachMarketScreen`
+    // at 375 – the market's own meter draws `.budget-seat` from the very same computed the rail
+    // reads (`composables/coachingBudget.ts`), which is why the shortcut argument holds for them.
+    // ⚠ EACH PART SEPARATELY AND NOT THE ROW'S WHOLE TEXT: the two spans are laid out as a flex row,
+    // so the phone's `innerText` puts whitespace between them where `textContent` puts none, and
+    // comparing the concatenation would fail on the RENDERING rather than on reachability.
+    const unreachable = [...shown!.figures, ...shown!.seatNames, ...shown!.seatCosts].filter(
+      (figure) => !total.includes(figure),
+    )
     expect(
       unreachable,
       'the rail shows these figures on a desktop and the phone cannot reach them on any screen. ' +

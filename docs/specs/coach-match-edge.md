@@ -152,6 +152,20 @@ slice. Row height at 320px: ordinary card 109.3 -> 122.3 (+13.0, one wrapped lin
 lands. That the clearance held is a debt round-18 #2 paid: before the strip had a width, a taller row
 made the portrait WIDER, and two added lines would have eaten the gap.
 
+⚠ **ROUND 42 #3 (15.09) MOVED THE TWO NUMBERS IN THAT PARAGRAPH AND NOT THE CLAIM.** The owner
+reported every portrait on this screen cut in half; the cause was that the card has roughly doubled
+in height since these readings while the 62px porthole stayed put, so the window was showing 42-48%
+of a picture whose head alone is 54% of it. The strip is **96px** and the first ink **108px** now –
+the same 12.00px of clearance, on every card state at every width of the parity set. The row heights
+above are 2026-08 readings too and moved with the card's own text long before that round; the mounted
+net in `tests/component/coach-edge-card.test.ts` reads them off the cascade rather than from here.
+
+⚠ **AND §9c's ANTI-SHOPPING RULE IS WHY THE HIRED CARD MOVED WITH IT.** An unhired card may not be
+made more attractive than the one she has, so the reserved window went 78 → **112px** (carrying the
+same +16px round-21 #1 gave it) the moment the shop window rose to 96. Nobody asked for the hired
+number again; it is a consequence of the rule, and `tests/component/round42-coach-portrait.test.ts`
+asserts the inequality itself rather than the pair of literals.
+
 ## 5. Invariants this must not break
 
 1. **Zero MAIN draws.** The edge is post-draw arithmetic on a purpose-scoped sub-stream. The frozen

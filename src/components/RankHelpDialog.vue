@@ -60,17 +60,32 @@ const game = useGameStore()
  *
  *  ⚠ EVERY NUMBER HERE IS A REAL CONSTANT AND WAS READ OFF THE ENGINE, not remembered:
  *  `BEST_N_BY_TRACK` = { domestic: 6, itf: 6, wta: 18 } and `WINDOW_BY_TRACK` =
- *  { domestic: 'seasonToDate', itf: 'rolling52', wta: 'rolling52' } (season/ranking.ts), and the
+ *  { domestic: 'rolling52', itf: 'rolling52', wta: 'rolling52' } (season/ranking.ts), and the
  *  professional table's entry bar is §VIII.A.2.b's own `RANKABLE_MIN` = 3 tournaments or 10 points.
  *
- *  ⚠ AND THE NATIONAL TABLE IS THE ONE THE OLD COPY GOT WRONG. The single shared line said «the last
- *  52 weeks» of every table; the domestic ladder has counted THIS SEASON since round 23 #12, at the
- *  owner's own ruling («таблица должна просто показывать 6 лучших ЗА СЕЗОН»), so the card was telling
- *  him the opposite of what he had asked for. That is the second half of this item and not a wording
- *  change of our own: a rule line that names the wrong window is the same defect as an array that
- *  names two tables. */
+ *  ⚠⚠ THE NATIONAL LINE IS A DRAFT UNDER ROUND 42 #7 (15.09), AND IT IS THE SECOND TIME THIS ONE
+ *  SENTENCE HAS FOLLOWED A RULING. Round 41 #1 rewrote it because the old shared line said «the last
+ *  52 weeks» of every table while the domestic ladder had counted THIS SEASON since round 23 #12, at
+ *  the owner's own ruling («таблица должна просто показывать 6 лучших ЗА СЕЗОН»). Round 42 #7 puts
+ *  that table back on the rolling window – «тот же механизм — окно в 52 недели и выбираем лучшие 6
+ *  результатов, окно "ползет"» – so «this season» and «the race restarts every January» are now the
+ *  sentence naming the wrong window, in exactly the way round 41 #1 named a defect. The re-draft
+ *  keeps «Her best 6 results» untouched and borrows the ITF line's own window phrase rather than
+ *  coining one, so the two junior tables say the same thing in the same words, which is what the
+ *  ruling made true of them. The owner rules on the words (invariant 4); this is a DRAFT, reported
+ *  verbatim in docs/rounds/round-42.md #7.
+ *
+ *  ⭐⭐ THE ASK WAS TAKEN, AND THE OWNER APPROVED THE REPLACEMENT VERBATIM (16.09). The shared bullet
+ *  lower down read «On the International and Professional tables, results older than 52 weeks drop
+ *  out» – an enumeration that EXCLUDED the National table and was true only while that table was a
+ *  season race. Item 7 put the domestic ladder on the same rolling window, so the enumeration had
+ *  become the sentence naming the wrong set. It now reads «On every table, results older than 52
+ *  weeks drop out – points must be defended.», which is his own wording and the only word on this
+ *  card that moved. ⚠ ONE SENTENCE AND NO OTHER: the three block lines above, the two bullets beside
+ *  it and every heading are exactly as he last read them (invariant 4 – a string nobody touched
+ *  cannot regress). */
 const LADDER_RULE: Record<LadderTrack, string> = {
-  domestic: 'Her best 6 results this season – the race restarts every January.',
+  domestic: 'Her best 6 results from the last 52 weeks.',
   itf: 'Her best 6 Junior Tour results from the last 52 weeks.',
   wta: 'Her best 18 results from the last 52 weeks. She appears on it after 3 scoring tournaments, or 10 points.',
 }
@@ -122,7 +137,10 @@ const blocks = computed(() =>
         <p class="rank-help-heading">{{ b.label }} – {{ b.rank }} · {{ b.points }} pts</p>
         <!-- ROUND 41 #1: each table says how IT counts. One shared sentence could carry two windows
              and two best-Ns; it could not carry three, and the one it carried was wrong for the
-             National table (season-to-date since round 23 #12, at the owner's own ruling). -->
+             National table (season-to-date under round 23 #12 at the time). ⚠ ROUND 42 #7 re-ruled
+             that window to rolling-52, so the three lines now agree about the window and differ only
+             in best-N and in which events pay into them – which is the per-block shape doing its job
+             rather than an argument for folding them back into one sentence. -->
         <p class="hint rank-help-rule">{{ b.rule }}</p>
         <CountingResultsTable :results="b.results" :empty-note="b.empty" />
       </section>
@@ -135,7 +153,7 @@ const blocks = computed(() =>
              they convert to open ones for a player who has never been in a Slam or a 1000 draw, which
              is every player this dialog is read by until she is inside the top 50. -->
         <li class="hint">A new result only raises the total if it beats the weakest counted one.</li>
-        <li class="hint">On the International and Professional tables, results older than 52 weeks drop out – points must be defended.</li>
+        <li class="hint">On every table, results older than 52 weeks drop out – points must be defended.</li>
         <li class="hint">National points are what open her next tier. The Junior Tour reads her international rank.</li>
       </ul>
     </div>

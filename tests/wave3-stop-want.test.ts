@@ -460,7 +460,8 @@ describe('wave 3 T17 D – answering a `stop` puts the coach in front of the for
     const prompt = buildLifeBeatPrompt(world)!
     expect(prompt.kind, 'the counsel is on the wire, on the ordinary prompt contract').toBe('fork-counsel')
     expect(prompt.options.length, 'two acknowledgments').toBe(2)
-    expect(prompt.listenFollowUp, 'and no listening detour – he has said his piece').toBeNull()
+    // ⚠ RE-AIMED BY ROUND 42 #15/#24: one nullable entry became a list; «none» is now «empty».
+    expect(prompt.followUps, 'and no listening detour – he has said his piece').toEqual([])
 
     answerLifeBeat(world, prompt.options[0].id)
     expect(pendingLifeBeat(world), 'nothing else is raised behind him').toBeNull()

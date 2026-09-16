@@ -3,9 +3,20 @@
 //   npx vite-node tools/domestic-season-to-date.ts [--seeds N] [--weeks N] [--career N]
 //                                                  [--section C|D|E|F] [--arm A|B|AB]
 //
-// He was shown three options for the national table and chose (b): count the season, not a rolling
-// 52 weeks. «да, это мелочь, а будет хорошо, мне кажется. Тем более, что первый сезон у нас
-// показательный.» This is the before/after for that ruling, in the same shapes the ledger already
+// ⚠⚠ THE ARM THAT SHIPS IS **A** NOW, AND THIS FILE IS THE EVIDENCE FOR THE RULING THAT SWAPPED
+// THEM. Round 42 item 7 (15.09.2026): asked twice about «каждый год заново надо набирать национальный
+// ранг», the owner named the MECHANISM rather than the outcome – «A — защёлка, но такая же, как и на
+// взрослых турнирах, тот же механизм — окно в 52 недели и выбираем лучшие 6 результатов, окно
+// "ползет"» – and confirmed it with this probe's own 20.08 receipts in front of him: «да, но будет
+// везде корректно, окно в 52 недели и очки. Мне кажется это правильно.» So `WINDOW_BY_TRACK.domestic`
+// is `'rolling52'`, **A is the shipped arm and B the historical one**, and the header line this file
+// prints says which, live, so a reader never has to remember. Its before/after for round 42 #7 is
+// therefore read RIGHT TO LEFT: B is the before. ⭐ NOTHING ELSE IN THIS FILE CHANGED, deliberately –
+// a probe re-written when the answer flipped could not have been the evidence for flipping it.
+//
+// He was shown three options for the national table in round 23 and chose (b): count the season, not
+// a rolling 52 weeks. «да, это мелочь, а будет хорошо, мне кажется. Тем более, что первый сезон у нас
+// показательный.» This is the before/after for THAT ruling, in the same shapes the ledger already
 // carries so the two are directly comparable:
 //
 //   C. HIS EXACT SYMPTOM (item 12). Every fall in the domestic top 3 over `seeds x weeks`,

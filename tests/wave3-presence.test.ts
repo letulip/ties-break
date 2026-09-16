@@ -103,7 +103,7 @@ import {
   lifeBeatSaid,
   toSnapshot,
   PARTNER_WANTS,
-  SMALL_TALK_SUBJECTS,
+  LEGACY_SMALL_TALK_SUBJECTS,
   TEMPERAMENTS,
   type WorldState,
 } from '../src/engine/world'
@@ -135,11 +135,20 @@ const AWAY: DiaryLifeStage = 'college'
 
 /** Every voiced cell of the two pools the вычитка touched, as (pool, voice, key) – twenty of them,
  *  eight `met` and twelve `small-talk`. Built from the engine's OWN key lists, so a pool that gains
- *  a want or a subject is swept without this file being edited. */
+ *  a want or a subject is swept without this file being edited.
+ *
+ *  ⚠⚠ RE-AIMED BY ROUND 42 #24 ONTO `LEGACY_SMALL_TALK_SUBJECTS`, WHICH IS THE ROSTER THIS FILE WAS
+ *  ALWAYS SWEEPING. `SMALL_TALK_SUBJECTS` is the SIX of spec §2 now, and the six do not key
+ *  `SMALL_TALK_LINE` – the situation catalogue words those, per situation and per voice, and it is
+ *  `tests/round42-small-talk-exchange.test.ts` that sweeps IT. The pool the вычитка's nineteen frames
+ *  live in is the legacy one, it is unchanged in shape, and this file's whole subject is its frames.
+ *  ⚠ THE NINE QUOTED SENTENCES §9 REWROTE ARE INSIDE THOSE FRAMES and every case below reads them
+ *  fresh, so the rewrite is swept rather than pinned – which is why none of these cases quotes a
+ *  sentence of his. */
 type Cell = { pool: 'met' | 'small-talk'; voice: (typeof TEMPERAMENTS)[number]; key: string }
 const CELLS: Cell[] = [
   ...TEMPERAMENTS.flatMap((voice) => PARTNER_WANTS.map((key) => ({ pool: 'met' as const, voice, key }))),
-  ...TEMPERAMENTS.flatMap((voice) => SMALL_TALK_SUBJECTS.map((key) => ({ pool: 'small-talk' as const, voice, key }))),
+  ...TEMPERAMENTS.flatMap((voice) => LEGACY_SMALL_TALK_SUBJECTS.map((key) => ({ pool: 'small-talk' as const, voice, key }))),
 ]
 const MET_CELLS = CELLS.filter((c) => c.pool === 'met')
 const TALK_CELLS = CELLS.filter((c) => c.pool === 'small-talk')

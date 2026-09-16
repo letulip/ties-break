@@ -27,8 +27,9 @@
 // every career that gets there with the college answer on the card (it always is).
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
+import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
+import { pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
 import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 import { skillMeanOf } from '../src/engine/world/college'
@@ -178,7 +179,7 @@ for (let p = 0; p < PRESETS.length; p++) {
         for (let press = 0; press < 3 && at.world.college!.years.length === y && at.world.ending?.type === 'college'; press++) {
           resumeFromCollege(at.world, at.rng)
           answerLeagueReveal(at.world)
-          if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
+          if (pendingBirthday(at.world) !== null) answerBirthdayNeutral(at.world)
         }
         // ⚠⚠ THE LEDGER CHECK IS TAKEN AFTER ONE YEAR AND NOT AFTER FOUR, AND THAT IS THE INSTRUMENT
         // BEING HONEST ABOUT ITS OWN WINDOW. `financeWeeks` keeps a ROLLING 60 WEEKS, so a four-year

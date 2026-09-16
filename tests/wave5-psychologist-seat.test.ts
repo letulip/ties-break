@@ -323,7 +323,22 @@ describe('wave 5 T2 A – the hire, the gate and the roster dial', () => {
     // career runs against a roster most careers never open.
     // ⭐ THE CLAIM IS UNCHANGED AND STILL EXACT: still a closed set, so a fare, a stance or a share
     // landing in this block is still red on the line below.
+    // ⚠⚠ AND A SIXTH TIME BY **ROUND 42 #35** (16.09, v78) – the second re-aim from outside wave 5, and
+    // it keeps the same rule every one above it kept: a constant lands with the pass that reads it.
+    // `composureBonusCap`, `composureBonusPerSeason` and `composureBonusDecayPerSeason` are the owner's
+    // three ruled numbers for «past the ceiling» («+5 потолок, по очку за сезон… 0.2пп за сезон без
+    // этой тренировки») and they arrive with their one reader – `composureBonusAfterWeek` and
+    // `composureCeilingOf`, engine/development.ts – in the same commit. ⚠ THEY ARE THE SEAT'S AND NOT
+    // `ECONOMY.development`'s, which is the same boundary the `publicLife…` note draws one paragraph
+    // up: `ECONOMY.development` holds what is true of every career (the ceiling band, the age curve,
+    // the week's luck), and this block holds what the SEAT buys. A `composureBonus…` key filed under
+    // development would have priced a mechanic only a paying family can reach as if it were the model.
+    // ⭐ THE CLAIM IS UNCHANGED AND STILL EXACT: still a closed set, so a fare, a stance or a share
+    // landing in this block is still red on the line below.
     expect(Object.keys(ECONOMY.psychologist).sort()).toEqual([
+      'composureBonusCap',
+      'composureBonusDecayPerSeason',
+      'composureBonusPerSeason',
       'coolheadPerSeason',
       'defaultRung',
       'listenClarity',

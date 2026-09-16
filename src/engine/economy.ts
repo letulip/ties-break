@@ -91,6 +91,20 @@ export interface VacationPackage {
   conditionGain: number
   /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
   buffFactor: number
+  /** ⭐⭐ ROUND 42 #19 → #49(b) – ONE PRICE FOR EVERY FAMILY on a rung that carries it (round 41 P1's
+   *  ruling, reaching the service ladder).
+   *
+   *  ⚠ THE TWO HIGH TIERS SET IT SINCE #49(b) – `resort` and `elite`, on the owner's 16.09 word
+   *  «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка». It was built
+   *  under #19 and left unset then, refused by a bench (4 of 20 mid-careers moved, worst $178,701)
+   *  whose policy books a clinic week without judging affordability – so what it priced was the
+   *  autopilot's choice, not a player's. The full note, the cost he spent knowingly and the limit no
+   *  bench can pass are on the `elite` package itself and in
+   *  docs/specs/elite-retainer-2026-09.md §9.
+   *
+   *  Optional rather than `false` everywhere so that the four rungs it does NOT reach say so by
+   *  silence, which is what `seaside` and below mean. */
+  uniformPrice?: true
   /** ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – A PACKAGE THE SHELF CAN MAKE FREE. It used to
    *  say «ask before offering me» (the row existed only for a family with a delivered yacht); his
    *  part-two #8 put the row on EVERY family's sheet at a real charter price – «можно просто на
@@ -435,6 +449,55 @@ export const ECONOMY = {
       elite: [[120_00, 180_00], [160_00, 240_00], [200_00, 300_00]],
     } as Record<CoachTier, [number, number][]>,
 
+    // =============================================================================================
+    // ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK. Proposals; the predicted-vs-measured table
+    // is docs/specs/elite-retainer-2026-09.md.
+    // =============================================================================================
+    //
+    // THE OWNER: «элитный стоит 830 в неделю, это 43к в год… за такие деньги их не существует», and
+    // then the commission: «у нас есть исследование и бенч, надо просто цифры проверить и
+    // актуализировать». His research (docs/research/team-economics-2026-09.md §1) prices a head
+    // coach in two parts, and until this round only one of them was sized by anything: a retainer
+    // read off the TIER the parent chose and her AGE band, plus a prize share. Reality sizes the
+    // retainer off THE PLAYER'S RANK - top-100 ≈ $90k/yr, top-10 $150-250k - and re-prices the SAME
+    // man as she climbs. Ours never did, which is finding 3.1 in one sentence.
+    //
+    // ⚠⚠ THE WHOLE POINT OF A RANK GATE IS THAT IT CANNOT REACH THE MIDDLE. Finding 3.2 is explicit
+    // that mid-careers are priced right and that a blanket staff raise «would bankrupt the mid game
+    // the tiers ladder was built to save». A factor read off her live W ranking is 1.0 for every
+    // career that never enters the professional top hundred, so the middle is not measured to be
+    // unmoved - it is ARITHMETICALLY unmoved, `x * 1` on an integer, on every week of every career.
+    // The bench proves it anyway: a claim of «byte-identical» that nobody ran is exactly the null
+    // arm CLAUDE.md warns about.
+    //
+    // ⚠ WHY HER RANK AND NOT HER EARNINGS, when 3.2's own complaint is denominated in money: the
+    // research says rank in as many words («sized by the PLAYER'S RANK»), and a fee that tracked the
+    // wallet would re-price the coach on the week a sponsor cheque landed, which is neither the
+    // fiction nor anything a player could plan around. Measured, the two agree here anyway - a
+    // season inside our top hundred banks a median $330k and a season inside our top ten $2.24M,
+    // which is real top-tour scale (tools/r42-elite-retainer.ts §1).
+    //
+    // ⚠ THE BAND MULTIPLIES HIS LABOUR AND NEVER THE COURT (`bandedRateCents`). A top-ten player
+    // does not make the hall dearer, and keeping the court out of it is also what lets the whole
+    // change be one multiply on one number: `weeklyBillSplit`'s facility half is computed from
+    // `facilityRateCents`, so the coach half absorbs the raise exactly and `coach + facility ===
+    // total` survives untouched.
+    //
+    // ⚠ STEPS AND NOT A RAMP, deliberately. The research's own shape is a band table, and 3.1 asks
+    // for «renegotiation as a scene, not a slider» - a step is the thing a scene can be hung on
+    // later. What ships here is the arithmetic; the scene is its own item.
+    //
+    // ⚠ READ TOP-DOWN, FIRST MATCH WINS, so the rows stay ordered tightest-first. Anything outside
+    // the last row is 1.0 - the identity, and the reason a career below the tail is byte-identical
+    // rather than merely close.
+    retainerBandByRank: [
+      // #1-10. Research: $150-250k/yr. At the elite rung this lands his labour at $172k (17-22) /
+      // $225k (23+) a year, which brackets the research's own midpoint.
+      { atOrBetter: 10, factor: 4.5 },
+      // #11-100. Research: ≈$90k/yr. Lands at $76.5k (17-22) / $100k (23+) - the band around it.
+      { atOrBetter: 100, factor: 2.0 },
+    ] as { atOrBetter: number; factor: number }[],
+
     // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).
     //
     // ⚠ UNTIL 08.08 THE COURT TOOK NO RUNG ARGUMENT AT ALL, so an Elite coach worked on the same
@@ -752,7 +815,66 @@ export const ECONOMY = {
   // Measured in docs/specs/need-not-background-2026-08.md (tools/runway-probe.ts, tools/two-cells.ts).
   sponsor: {
     rollChance: 0.06,
+    /** ⭐⭐⭐ THE CHEQUE, AND IT IS THE CHEQUE AGAIN – ROUND 42 #47, SECOND READING (16.09).
+     *
+     *  ⚠⚠ THE FIRST READING OF HIS RULING WAS WRONG AND THIS BAND IS THE THING IT BROKE. #47 read
+     *  «давай что-то вроде 60-80% закрытия» as the SIZE of the cheque and replaced this band with
+     *  `shortfall × U(0.60, 0.80)`. He meant the FREQUENCY – «помощь должна срабатывать в 80%
+     *  случаев примерно» – and said so plainly on 16.09, along with what was actually broken:
+     *  «у нас был механизм, который нормально давал денег, нормальными суммами, просто делал это без оглядки
+     *  на общий бюджет семьи, а смотрел только на кошелек. Это надо было исправить.»
+     *
+     *  ⭐ WHY THIS BAND IS THE RIGHT SIZE, MEASURED RATHER THAN REMEMBERED. A J-series trip costs
+     *  **$1,100–3,600** before staff fares (`TIERS`, season/calendar.ts: j30 $200 + $900–2,000,
+     *  j60 $250 + $1,100–2,400, j300 $400 + $1,600–3,200), and the J years are the stretch he named
+     *  – «для семьи 8к самый сложный период это J серия, а там стоимость радикально другая». So this band
+     *  covers **a third to a half of one trip**, which is what «нормальные суммы» means; the gap
+     *  fraction paid a median **$129**, or 4–12% of a single trip.
+     *
+     *  ⚠ THE GAP IS STILL THE TRIGGER, IT IS JUST NOT THE SIZE. `unpayableTrip` gates whether a
+     *  cheque is written at all (`world/phaseFinance.ts`) – «в край нужды для закрытия поездок» is his
+     *  and it survives intact. And the cheque is deliberately NOT capped at the gap: a gift sized to
+     *  what a trip costs is the mechanic, and a residual is not.
+     *
+     *  ⚠ The remaining half of his ruling – 60–80% of NEED CASES receiving help, against about 4%
+     *  today – is a CADENCE question that needs a bench, and it ships with the chemistry/sparring
+     *  wave. See docs/specs/cameo-gap-closer-corrected-2026-09.md §3. */
     amountCents: [500_00, 1500_00] as [number, number],
+
+    // ===============================================================================================
+    // ⭐⭐⭐ ROUND 42 #5 – THE CADENCE DIAL. PROPOSED NUMBERS, HIS TO CONFIRM OFF THE PRINTED TABLE.
+    // ===============================================================================================
+    //
+    // THE OWNER, 15.09: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели».
+    //
+    // ⚠ HIS IMPRESSION IS THE DESIGN'S OWN NOISE AND NOT A DEFECT IN THE GATE. Measured before the
+    // change (tools/sponsor-cadence.ts): the cameo was a MEMORYLESS weekly Bernoulli at
+    // `rollChance` with NO cooldown and NO per-season cap of any kind, so P(gap <= 4 weeks) = 1 −
+    // 0.94⁴ ≈ 22% and a working family – for whom the runway gate has zero hysteresis and therefore
+    // stands open every single week – collected ≈ 2.9 payments ≈ $2,940 a season. Three cheques in
+    // ten weeks is what a memoryless process looks like; it is also what «засыпает» looks like.
+    //
+    // ⚠⚠ BOTH NUMBERS BELOW WERE A PROPOSAL AND THE PRINT WENT TO HIM. The prediction was written
+    // down BEFORE the arm was run (invariant 5) and lives in docs/specs/sponsor-cadence-2026-09.md;
+    // the measured column is beside it in the same table.
+    //
+    // ⭐⭐⭐ ROUND 42 #43 – HIS RULING OFF THAT TABLE, 15.09: «сними потолок, а кулдаун давай 4».
+    // Both halves land here and the second one HAS A CONSEQUENCE HE WAS TOLD ABOUT RATHER THAN LEFT
+    // TO FIND: his original complaint was «раз в 3-4 недели», and a cooldown of four sets the floor
+    // of the gap at EXACTLY four weeks – so a four-week gap is still legal and only the one-, two-
+    // and three-week clusters are structurally gone. The measured share of gaps that land on that
+    // floor is in the spec's §5 ledger. If the cadence still reads as too fast in play, this is one
+    // constant and nothing else moves.
+    //
+    // ⚠ AND `seasonCap` IS GONE ENTIRELY – the constant and its reader. It was never a second
+    // opinion about the cadence, it was a wall against the tail; he took the wall off, so the walk
+    // in `cameoWillingWeeks` no longer counts a season's cheques at all. The cooldown is the whole
+    // mechanism now, which is also why the dial he would move next is unambiguous.
+    /** ⭐ THE SHOP'S OWN PATIENCE: no second cheque inside this many weeks of the last one. FOUR is
+     *  his number (round 42 #43) – at `rollChance` the renewal mean is 1/p + 4 ≈ 20.7 weeks, about
+     *  two and a half cheques in a season that never refuses one. ⚠ The floor it sets is four, not
+     *  five: see the block above. */
+    cooldownWeeks: 4,
 
     /** HOW MANY WEEKS OF COURT HIRE THE BALANCE MUST NO LONGER COVER for a shop to chip in.
      *
@@ -1677,9 +1799,19 @@ export const ECONOMY = {
   // например начать с 10-20% и может быть наращивать год к году», and then, on the ceiling:
   // «да, давай, но может не до 30, а до 40 или 50 вообще, это всё-таки ее карьера?»
   //
-  // So it is a RAMP and not a rate: 10% the year she turns eighteen, five points more every birthday,
-  // and it stops at half. The four numbers live here rather than inside `kidPrizeShareBps` because a
-  // literal in a formula is a balance decision nobody can find – the rule this file exists for.
+  // So it is a RAMP and not a rate: 10% the year she turns eighteen, more every birthday, and it
+  // stops. The four numbers live here rather than inside `kidPrizeShareBps` because a literal in a
+  // formula is a balance decision nobody can find – the rule this file exists for.
+  //
+  // ⭐⭐⭐ ROUND 42 #25 (CONFIRMED 15.09, «подтверждаю связку») – THE RAMP IS STEEPER AND SHORTER, AND
+  // COLLEGE PAUSES IT. His question was «может быть нам с 18 не по 5, а по 10% в год ей добавлять
+  // стоит?», his second pass «может даже до 60% к 23», and the confirmed shape is all three at once:
+  //   * `stepBps` 500 -> 1000 – ten points a birthday, not five;
+  //   * `capBps` 5000 -> 6000, and it is reached at TWENTY-THREE instead of twenty-six;
+  //   * ⭐ and the steps count only years ON TOUR: «пока она снова в тур не вернется». A birthday
+  //     spent at college does not move the ladder. See `collegePausedShareYears` – NO SCHEMA, the
+  //     college span is already state and the step count derives from it.
+  // The measurement that went with it is docs/specs/kid-share-ramp-2026-09.md, predicted-first.
   //
   // ⚠ WHY EIGHTEEN AND NOT THE BANK CARD. Her account is a BIRTHDAY GIFT (`world/birthday.ts`, the
   // eighteenth's `bankcard` row: «Her own bank card and account – she is earning now, it should be in
@@ -1708,12 +1840,23 @@ export const ECONOMY = {
      *  ⭐ ROUND 41 #27: and what she keeps of every cheque BELOW it, which is the same number by
      *  ruling rather than by coincidence – the curve is continuous across her eighteenth. */
     startBps: 1000,
-    /** ...and what each birthday after it adds. Five points a year is his «наращивать год к году». */
-    stepBps: 500,
-    /** The ceiling, reached at 26 – «может не до 30, а до 40 или 50 вообще». Half is the legible
-     *  version of what he asked for: an even split between the girl who won it and the family that
-     *  paid to get her there, arriving in the years she is worth the most. */
-    capBps: 5000,
+    /** ...and what each birthday after it adds. ⭐⭐ ROUND 42 #25: TEN points a year, his own «не по
+     *  5, а по 10% в год», confirmed 15.09. It was five from round 23 until this item.
+     *
+     *  ⚠ A BIRTHDAY SPENT AT COLLEGE ADDS NOTHING – the steps count tour years only («пока она снова
+     *  в тур не вернется»). That is not a fifth constant: `kidPrizeShareBps` takes the paused count
+     *  as an argument and `collegePausedShareYears` derives it off the college span the save already
+     *  holds. */
+    stepBps: 1000,
+    /** The ceiling. ⭐⭐ ROUND 42 #25: 60%, reached at TWENTY-THREE – his «может даже до 60% к 23».
+     *  It was 50% at 26 from round 23 until this item, and both halves of that pair moved together:
+     *  at ten points a birthday the cap is what decides where the ladder stops, and 60 at 23 is the
+     *  shape he confirmed seeing what it does to the family's corridor (the bench print, invariant 5).
+     *
+     *  ⚠ 23 IS NOT WRITTEN ANYWHERE – it is `fromAgeYears + (capBps − startBps) / stepBps` and falls
+     *  out of the three numbers above. Writing the age down as a fourth constant is how a ramp ends
+     *  up with two disagreeing definitions of where it stops. */
+    capBps: 6000,
   },
 
   // =================================================================================================
@@ -1732,12 +1875,39 @@ export const ECONOMY = {
   // no form, no choice, nothing persisted: computed at `finalizeTournament` from these constants
   // and the finish, exactly like the kid's ramp one block up.
   //
-  // THE SHAPE – «за победы или 2е места», NOT every cheque: a TITLE pays `titleBps`, a FINAL pays
-  // `finalBps` («за 2е только по-меньше» – half), below a final NOTHING. The real-world convention
-  // (5-15% of every cheque, sliding by depth) was researched and shown to him (the plan's §1); his
-  // version is the sharper one and it is the one that ships. Both shares are computed OFF THE
+  // THE SHAPE, ROUND 24 – «за победы или 2е места», NOT every cheque: a TITLE pays `titleBps`, a
+  // FINAL pays `finalBps` («за 2е только по-меньше» – half), below a final NOTHING. The real-world
+  // convention (5-15% of every cheque, sliding by depth) was researched and shown to him (the plan's
+  // §1); his version was the sharper one and it is what shipped. Both shares are computed OFF THE
   // GROSS cheque – the kid's ramp (round-23 #18) is untouched and each share rounds ONCE, the
   // family keeping the remainder to the cent (`staffPrizeShareCents` + the finalize subtraction).
+  //
+  // =================================================================================================
+  // ⭐⭐⭐ ROUND 42 #41 (15.09) – AND THE COACH'S SHAPE IS NOW THE CONVENTION'S, BY HIS OWN RESEARCH
+  // =================================================================================================
+  //
+  // HIS WORD: «я вообще не понял почему мы снова обсуждаем разные проценты, если уже есть
+  // исследование на 10% безусловных отчислений с любых призовых, независимо от глубины прохода. И мы
+  // говорили, что это будет сделано».
+  //
+  // The receipt is his own file – docs/research/team-economics-2026-09.md §2 and finding 3.1: «7–15%,
+  // most commonly 10%, of EVERY cheque» (Rublev pays Vicente fixed + 10% per tournament; Kasatkina
+  // «10% от любого заработка на корте»). The audit's own verdict line on this very constant read «⚠
+  // half-matches: our 10% exists but only at finishIdx 0/1; reality cuts 10% of EVERY cheque». So
+  // round 24's sharper shape is REPLACED for the coach and nothing else about the mechanism moves:
+  // still universal, still nothing persisted, still off the GROSS, still one rounding each, still
+  // `track === 'wta'` and a FILLED seat only.
+  //
+  // ⭐ THE THIRD NUMBER IS THE WHOLE CHANGE. `everyBps` is what a finish BELOW a final pays; the
+  // function one block down (`staffResultShareBps`) reads it instead of returning a hard 0. For the
+  // coach all three are 1000, which is «10% of every prize cheque, at every finish» stated as data
+  // rather than as a branch – and it is why this is still ONE mechanism with two takers.
+  //
+  // ⚠⚠ AND THE MASSEUR IS DELIBERATELY LEFT ON THE ROUND-24 SHAPE (`everyBps: 0`), WHICH IS A
+  // QUESTION FOR THE OWNER AND NOT A DECISION TAKEN HERE. Item 41 names it as the thing the bench has
+  // to answer; the measurement is in docs/specs/coach-every-cheque-2026-09.md §5, and moving him onto
+  // the every-cheque road is exactly one number on this object. The default is «no change» because a
+  // seat he never asked to re-rule should not move while he is reading a table about the coach.
   //
   // WHO PAYS AND WHEN: the family (the parent is the employer – the game's premise), pro tour only
   // (`track === 'wta'` – junior tennis pays no prize money worth sharing and the convention is a
@@ -1750,9 +1920,17 @@ export const ECONOMY = {
   // own worked example (a $3M Slam title): coach $300k, masseur $90k, daughter $900k (at the
   // age-22 rung), family $1.71M «плюс остальные расходы».
   staffShare: {
-    coach: { titleBps: 1000, finalBps: 500 },
-    masseur: { titleBps: 300, finalBps: 150 },
-  } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number }>,
+    // ⭐⭐⭐ ROUND 42 #41 – FLAT TEN PER CENT AT EVERY FINISH. The three numbers are equal on purpose:
+    // «10% безусловных отчислений с любых призовых, независимо от глубины прохода» has no depth in
+    // it, so a title, a lost final and a first-round exit all pay the same rate. `finalBps` moved
+    // from 500 to 1000 with the rest of them – round 24's «за 2е только по-меньше» was a statement
+    // about DEPTH, and his 15.09 word removes depth from the coach's line entirely.
+    coach: { titleBps: 1000, finalBps: 1000, everyBps: 1000 },
+    // ⚠ THE MASSEUR IS UNCHANGED, AND `everyBps: 0` IS ROUND 24'S SHAPE SPELLED IN THE NEW FIELD –
+    // a title-and-final bonus, nothing below a final. See the block above: whether he follows the
+    // coach onto every cheque is the owner's to rule off the bench, not an agent's to decide.
+    masseur: { titleBps: 300, finalBps: 150, everyBps: 0 },
+  } as Record<'coach' | 'masseur', { titleBps: number; finalBps: number; everyBps: number }>,
 
   // =================================================================================================
   // ⭐⭐⭐ THE MANAGER'S COMMISSION – round 29 part three P3 (owner, 29.08)
@@ -5047,6 +5225,38 @@ export const ECONOMY = {
      *  is `min(rate, headroom)`, so a higher rung is never worth less than a lower one on any week –
      *  the equality case is the ceiling, where all three are 0 and the focus is finished. */
     coolheadPerSeason: [1.5, 2.5, 3.5],
+    /** ⭐⭐⭐ ROUND 42 #35, v78 – PAST THE CEILING: THE THREE NUMBERS ARE THE OWNER'S OWN, RULED
+     *  15.09 and quoted rather than tuned. «+5 потолок, по очку за сезон, постоянный (здесь не
+     *  уверен, можно всё таки небольшой откат сделать мне кажется, например 0.2пп за сезон без этой
+     *  тренировки, мне кажется это вполне ок)».
+     *
+     *  `composureBonusCap` – how far above her rolled ceiling sustained work can carry her, in
+     *  composure points. Five is about a fifth of the biggest nerve draw the game deals
+     *  (`potentialBand` tops out at +26), so the seed still decides who she is and the seat decides
+     *  how much further than that a patient family can take her.
+     *
+     *  `composureBonusPerSeason` – a season of continuous work on the `'coolhead'` focus is worth
+     *  exactly one point of headroom, so the cap is a FIVE-SEASON project and nobody buys it inside
+     *  one wave. ⚠ IT IS FLAT ACROSS THE RUNGS, unlike `coolheadPerSeason` above, and that is the
+     *  design rather than an omission: the rung already prices how fast she CLIMBS to a ceiling, and
+     *  pricing how high the ceiling goes on the same dial would pay the top rung twice for one
+     *  purchase. The owner named one number, not three.
+     *
+     *  `composureBonusDecayPerSeason` – what an idle season costs. ⚠ HIS WORD IS «пп» AND THE BONUS
+     *  IS IN COMPOSURE POINTS, so this is READ as a fifth of a point per idle season – a fifth of
+     *  the earning rate, so a family that stops working keeps almost all of it and a full +5 takes
+     *  twenty-five idle seasons to unwind, which is longer than any career. That reading is written
+     *  down in round 42 #35 rather than assumed silently; if he meant a fifth of a percentage point
+     *  of match win rate, this constant is where the correction lands.
+     *
+     *  ⚠ ALL THREE ARE PER SEASON AND SPENT PER WEEK (`composureBonusAfterWeek` divides by
+     *  `WEEKS_IN_SEASON`), which is `coolheadPerSeason`'s own shape three lines up. A whole season
+     *  worked is exactly +1 and a whole season idle exactly −0.2; a part season is proportional,
+     *  which is what keeps «continuous» from needing an invented threshold on a seat that STANDS
+     *  DOWN by design for a college freeze and a booked family week. */
+    composureBonusCap: 5,
+    composureBonusPerSeason: 1,
+    composureBonusDecayPerSeason: 0.2,
     /** ⭐⭐⭐ «LEARNING TO LISTEN» – THE CHANCE THE PARENT READS HER PLAINLY, BY RUNG (v76, wave 5's
      *  T6). The spec's §2 row, verbatim: «the feed line's wording becomes legible with probability
      *  **0.6 / 0.8 / 0.95 per beat by rung** – a matched reaction becomes the parent's skill, never a
@@ -5566,6 +5776,16 @@ export const ECONOMY = {
         priceCents: [1800_00, 3000_00],
         conditionGain: 40,
         buffFactor: 0.9,
+        // ⭐⭐ ROUND 42 #49(b) – THE SECOND OF THE TWO HIGH TIERS, and it is here because he said
+        // «тиры» in the plural: «высокие тиры восстановлений в одном ценовом коридоре независимо от
+        // достатка». The full ruling and its measurement are on the `elite` row below; this rung is
+        // the other half of the same sentence. $1,800-3,000 a week is not a rung a family on
+        // «200-300 в неделю» reaches either, which is the test his reasoning sets.
+        //
+        // ⚠ THE BAND STOPS HERE AND DOES NOT REACH `seaside` ($600-1,000). That row is the family
+        // hotel a stretched family really does book, so the corridor is doing its job there – the
+        // ruling is about the TOP of the ladder, not about recovery in general.
+        uniformPrice: true,
       },
       {
         id: 'elite',
@@ -5574,6 +5794,58 @@ export const ECONOMY = {
         priceCents: [4000_00, 7000_00],
         conditionGain: 48,
         buffFactor: 0.85,
+        // ⭐⭐ ROUND 42 #49(b) – **SET**, AND THE RULING IS WHAT THE BENCH COULD NOT SEE. His word,
+        // 16.09: «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка…
+        // пользуются этими восстановлениями уже когда деньги реально есть. Вряд ли семья с доходом
+        // 200-300 в неделю туда поедет, а если и поедет – это их выбор.» The #19 note below is kept
+        // VERBATIM underneath, because the measurement in it is still true and is still the cost of
+        // this line – what changed is not the number, it is the question the number answers.
+        //
+        // ⚠⚠ WHY THE 4-OF-20 REFUSAL DOES NOT BIND ANY MORE. `tools/r42-elite-retainer.ts` walks its
+        // corpus under `econ-bench`'s policy, and that policy books the best package inside 10% of
+        // current funds every off-season and every rescue – mechanically, with no view on whether a
+        // family like this one would ever choose a clinic. So the four mid-careers it moved are the
+        // AUTOPILOT's bookings re-priced, not a player's. His sentence is precisely the judgement the
+        // policy does not make, and no arm can supply it: no bench can tell «a family that would
+        // never book this» from «a family whose autopilot books everything». That limit is named in
+        // docs/specs/elite-retainer-2026-09.md §9 rather than quietly re-measured away.
+        //
+        // ⚠ AND THE COST IS STILL THE COST. The re-measurement under #49(b) is in that same §9: the
+        // mid-careers that never enter the rank band still move, because a discretionary week really
+        // did get dearer for them. He has spent it knowingly.
+        //
+        // ---------------------------------------------------------------------------------------
+        // ⭐⭐ ROUND 42 #19 – HIS SECOND NAMED FIGURE, MEASURED AND THEN **NOT TAKEN** (the state
+        // this row was in until #49(b), kept because the measurement is the price of the line above).
+        //
+        // «элитный стоит 830 в неделю… И то же про элит рекавери… 2900». $2,900 is this band's floor
+        // times a WORKING family's 0.725 corridor, so «the clinic the pros use» quotes the poorest
+        // family in the game a third off - and round 41 P1 already ruled on that shape for coaching
+        // («в про карьере с большими чеками цены для всех должны быть равны»). Extending P1 to this
+        // rung is ONE LINE: `uniformPrice: true` here. It was built, it typechecks, and it is what
+        // `tools/r42-elite-retainer.ts`'s clinic arm switches on.
+        //
+        // ⚠⚠ IT WAS REFUSED BY ITS OWN MEASUREMENT, AND BY THE HARDEST CONSTRAINT THIS ITEM HAS.
+        // Finding 3.2 says the raise must reach the elite tail and nothing else, so the bench
+        // partitions its corpus by whether a career ever enters the rank band and reads the wallet
+        // delta for the ones that never do. Over 20 such mid-careers (14->20, 6 seeds x 9 presets):
+        //   the rank band alone     0 of 20 moved, worst $0        - the constraint, satisfied
+        //   the band + this rung    4 of 20 moved, worst $178,701  - the constraint, broken
+        // A clinic week is discretionary and one-off, so «only a rich family could buy it» sounded
+        // right and is not: a stretched family books one after an injury, and the corridor is what
+        // made it reachable. The clean rank gate has no such failure mode because a rank is not a
+        // decision the family can stretch for.
+        //
+        // ⚠ SO THE MECHANISM STAYS AND THE FLAG DOES NOT, and that is the same shape v78's own
+        // `sparringHired` note describes: a reader who finds an unused switch here is reading a
+        // DECISION with a bench behind it, not a half-built feature. The other reading of his $2,900
+        // is on the table too - `resort` at a WEALTHY corridor quotes $2,950, which is nearer his
+        // number than this rung's working-family quote - and which of the two he meant is one word.
+        //
+        // ⚠ ZERO DRAWS EITHER WAY when it is switched on: `corridorPrice` still spends its `pickInt`
+        // and its `rng()` on a purpose-scoped sub-stream that persists nothing; only the multiply
+        // after them changes.
+        uniformPrice: true,
       },
       // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG. docs/specs/the-shop-2026-08.md §3f, the owner's own
       // idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска,
@@ -5766,7 +6038,25 @@ export const ECONOMY = {
         // The engine makes that movement as of this item, so the second sentence is now a true
         // description of the thing rather than a promise about it.
         blurb: 'A slice of the whole market. It will have bad years – it has never had a bad decade.',
-        entryCents: 5_000_00,
+        // ⭐⭐⭐ ROUND 42 #13 – $5,000 → $1,000, AND THE REASON IS THAT NOTHING EVER DEFENDED THE
+        // $5,000. THE OWNER, 15.09: «в индексный фонд можно только от 5к зайти, мне кажется это
+        // необосновано.» He is right about the record: the deposit's own $1,000 carries an argument
+        // in this file («chosen so the dullest rung on the shelf quotes the roundest possible
+        // price»), and this number carried none at all – it arrived with §3a's liquidity ladder as
+        // a shape, not as a measurement, and no bench, spec or ruling has ever cited it.
+        //
+        // ⚠ ONE FLOOR FOR BOTH OPEN RUNGS NOW, which is what makes this a one-line change: the
+        // shelf's «ONE MINIMUM, NOT TWO» law (`world/shop.ts`) already holds a TOP-UP to the same
+        // floor as the opening stake, so top-ups drop to $1,000 with it and there is no second
+        // threshold anywhere to keep in step.
+        //
+        // ⚠ AND NOTHING ELSE MOVES, BECAUSE FRACTIONAL UNITS ARE ALREADY THE SYSTEM'S OWN
+        // ARITHMETIC. `buyAsset` divides cents by this week's unit price with no rounding and no
+        // floor (`units = paidCents / price`), which is round 30 #14's whole design – «доли дадут
+        // возможность расти на горизонте и будут давать разные точки входа». At `unitBaseCents
+        // 4_000_00` a $1,000 entry is 0.25 of a unit, and the screen already prints two decimals
+        // (`formatUnits`) precisely because a part unit is a real holding.
+        entryCents: 1_000_00,
         // ⭐⭐⭐ ROUND 29 PART THREE #16 – THE DRIFT, AND IT DID NOT MOVE.
         //
         // THE OWNER: «Механику фонда надо придумать, да, потому что безрисковые 3 против безрисковых
@@ -6620,9 +6910,21 @@ export function gearHitsUpTo(
 /** One corridor-scaled price: draw the MIDDLE-anchored base from `band`, then map ONE uniform
  *  roll into the background's wealth corridor (same shape as medicalBillCents/travelBgFactor –
  *  same roll, disjoint corridors, so working < middle < wealthy per offer). */
-function corridorPrice(rng: Rng, band: readonly [number, number], background: FamilyBackground): number {
+function corridorPrice(
+  rng: Rng,
+  band: readonly [number, number],
+  background: FamilyBackground,
+  /** ⭐ ROUND 42 #19 – `false` prices this offer at ONE number for every family (`UNIFORM_CORRIDOR`),
+   *  which is round 41 P1's ruling for a top-of-the-market service. Defaults to the corridor every
+   *  caller has always had, so only the row that asks for it moves.
+   *
+   *  ⚠ BOTH DRAWS STILL HAPPEN. `pickInt` and the `rng()` below run whatever this resolves to, the
+   *  same discipline the coach's own corridor keeps: a sub-stream's POSITION may not depend on a
+   *  price decision, or two families would walk `seed:vacation:<week>:<id>` differently. */
+  corridored = true,
+): number {
   const base = pickInt(rng, band[0], band[1])
-  const [cLo, cHi] = WEALTH_CORRIDOR[background]
+  const [cLo, cHi] = corridored ? WEALTH_CORRIDOR[background] : UNIFORM_CORRIDOR
   const roll = rng()
   return Math.round(base * (cLo + roll * (cHi - cLo)))
 }
@@ -6655,7 +6957,15 @@ export function vacationPriceCents(
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
   if (pkg.freeOnceGranted && grantedIds.includes(packageId)) return 0
-  return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
+  // ⭐ ROUND 42 #19 → #49(b) – `uniformPrice` is the flag that opts a rung out of the wealth
+  // corridor, and the two HIGH TIERS (`resort`, `elite`) carry it since his 16.09 ruling. See the
+  // `elite` package for the ruling, the measurement and the limit no bench can pass.
+  return corridorPrice(
+    rngFromSeed(`${seed}:vacation:${week}:${packageId}`),
+    pkg.priceCents,
+    background,
+    !(pkg.uniformPrice ?? false),
+  )
 }
 
 /** THE vacation pre-highlight, as ONE pure rule (Wave-2 tuning, fatigue bench 26.07).
@@ -6880,10 +7190,30 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *
  *  `ECONOMY.kidShare` holds all four numbers; this is the ramp read off them and nothing else, so a
  *  retune moves the whole game and this function does not change. Flat once the cap is reached (age
- *  26 on the shipped ladder):
+ *  23 on the shipped ladder):
  *
- *      <18  18   19   20   21   22   23   24   25   26+
- *      10%  10%  15%  20%  25%  30%  35%  40%  45%  50%
+ *      <18  18   19   20   21   22   23+
+ *      10%  10%  20%  30%  40%  50%  60%
+ *
+ *  ⭐⭐⭐ ROUND 42 #25 (CONFIRMED 15.09) – THE LADDER ABOVE IS TWICE AS STEEP AND FOUR YEARS SHORTER
+ *  THAN THE ONE ROUND 23 SHIPPED (`10 10 15 20 25 30 35 40 45 50`, capped at 26). His words: «может
+ *  быть нам с 18 не по 5, а по 10% в год ей добавлять стоит?» and «может даже до 60% к 23», then
+ *  «подтверждаю связку». Both numbers are on `ECONOMY.kidShare`; nothing here is a literal.
+ *
+ *  ⭐⭐⭐ ...AND `pausedYears` IS THE OTHER HALF OF THAT RULING: «пока она снова в тур не вернется».
+ *  A birthday spent at college does not move the ladder, so the step count is BIRTHDAYS SINCE
+ *  EIGHTEEN MINUS BIRTHDAYS SPENT AT COLLEGE. A girl who enrols at nineteen and comes back at
+ *  twenty-three is on 20% the week she returns, not 60%, and climbs from there.
+ *
+ *  ⚠ IT IS AN ARGUMENT AND NOT A SECOND LOOKUP, and the default of 0 is what keeps that honest: this
+ *  function stays pure integer arithmetic with no `world` in it, every existing caller and every
+ *  catalogue sweep asks the identical question it always did, and the ONE derivation of «how many
+ *  birthdays did college eat» lives in `collegePausedShareYears` (world/college.ts) where the college
+ *  span is. Two implementations of that count is how the Money screen and the till would come to
+ *  disagree about her cut – the exact failure `kidPrizeShareBps` itself was written to prevent.
+ *
+ *  ⚠ NO SCHEMA. `CollegeState.fromWeek` / `untilWeek` have been on every save since v51; the count is
+ *  read off them and persisted nowhere.
  *
  *  ⭐⭐⭐ ROUND 41 #27 (12.09) – THE FIRST COLUMN IS NEW AND IT USED TO BE A ZERO.
  *
@@ -6904,10 +7234,12 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *  SCORED», not «she has ever COME» – a W15 first-round exit pays $130 and zero points – so a gate
  *  built on it would have refused her the first cheque she ever earned.
  *
- *  ⚠ THE LADDER FROM EIGHTEEN IS UNTOUCHED TO THE POINT, which is what keeps round 23 #18 and round
- *  35 #9 whole: the curve is CONTINUOUS at the birthday (10% either side of it), the cap still lands
- *  at 26, and every figure the shipped surfaces quote from eighteen onward is the figure they quoted
- *  before this item. What changed is that the two years under it are 10% instead of nothing.
+ *  ⚠ THE LADDER FROM EIGHTEEN WAS UNTOUCHED BY ROUND 41 #27 TO THE POINT, which is what kept round 23
+ *  #18 and round 35 #9 whole: the curve is CONTINUOUS at the birthday (10% either side of it) and the
+ *  two years under it are 10% instead of nothing. ⭐ ROUND 42 #25 IS THE ITEM THAT DID MOVE THE
+ *  LADDER, one year later and at his ask – see the table at the top. The continuity across her
+ *  eighteenth is untouched by it: `startBps` did not change, so both sides of that birthday are still
+ *  10%, and round 41 #27's ruling reads exactly as it did.
  *
  *  ⚠⚠ AND THE MERCH BRAND MOVES WITH IT, BY ROUND 35 #9'S OWN RULE RATHER THAN BY ACCIDENT: «доход
  *  от ее бренда давай тоже как проценты с призовых будем делить» – the brand rides THIS function, so
@@ -6921,10 +7253,13 @@ export function prologueFundsCents(background: FamilyBackground, spentCents: num
  *  School tile had before it started reading her birthday.
  *
  *  Pure integer arithmetic on a persisted-nowhere input: no draw, no state, no schema. */
-export function kidPrizeShareBps(ageYears: number): number {
+export function kidPrizeShareBps(ageYears: number, pausedYears = 0): number {
   const { fromAgeYears, startBps, stepBps, capBps } = ECONOMY.kidShare
   if (ageYears < fromAgeYears) return startBps
-  return Math.min(capBps, startBps + (Math.floor(ageYears) - fromAgeYears) * stepBps)
+  // Total: a paused count larger than the birthdays she has had cannot happen – it is derived from a
+  // span inside her own life – but a poked save must floor at `startBps` rather than go below it.
+  const steps = Math.max(0, Math.floor(ageYears) - fromAgeYears - Math.max(0, Math.floor(pausedYears)))
+  return Math.min(capBps, startBps + steps * stepBps)
 }
 
 /** Her cut of one cheque, in whole cents – `kidPrizeShareBps` applied and rounded ONCE.
@@ -6933,22 +7268,28 @@ export function kidPrizeShareBps(ageYears: number): number {
  *  second rounding, so the two halves add up to the cheque exactly. A pair of independent
  *  `Math.round`s loses or invents a cent on half the finishes, and this money is booked into two
  *  different balances that a player can add up on screen. */
-export function kidPrizeShareCents(prizeCents: number, ageYears: number): number {
-  return Math.round((prizeCents * kidPrizeShareBps(ageYears)) / 10_000)
+export function kidPrizeShareCents(prizeCents: number, ageYears: number, pausedYears = 0): number {
+  return Math.round((prizeCents * kidPrizeShareBps(ageYears, pausedYears)) / 10_000)
 }
 
 /** ⭐⭐ ROUND-24 – WHAT A FINISH PAYS THE STAFF, in basis points. ONE mechanism, two takers (the
  *  coach and the masseur), because two independent copies of "what does a finish pay" is this
  *  repo's own recurring disease – two surfaces asking different functions about one question.
  *
- *  The owner's shape, not the tour's: «за победы или 2е места» – a TITLE pays `titleBps`, a FINAL
- *  pays `finalBps` («за 2е только по-меньше»), and below a final NOTHING – never a cut of every
- *  cheque. `finishIdx` is the finish index `finalizeTournament` already holds (0 = champion,
- *  1 = finalist). All four numbers live in `ECONOMY.staffShare`; this reads them and nothing
- *  else, so a retune moves the whole game and this function does not change. */
+ *  ⭐⭐⭐ ROUND 42 #41 – AND THE THIRD RUNG IS NOW DATA. It used to `return 0` below a final, which
+ *  hard-wired round 24's «за победы или 2е места» into the FUNCTION; his 15.09 ruling («10%
+ *  безусловных отчислений с любых призовых, независимо от глубины прохода», on his own research)
+ *  needed that road open, and a branch is not a road. So the tail reads `everyBps` off the object,
+ *  the coach's three numbers are all 1000, and the masseur's `everyBps` is 0 – round 24's exact
+ *  behaviour, now spelled as a rate rather than as an absence. The taker whose seat this function
+ *  cannot see, the psychologist, is still not in `ECONOMY.staffShare` at all (O3, ruled 13.09).
+ *
+ *  `finishIdx` is the finish index `finalizeTournament` already holds (0 = champion, 1 = finalist).
+ *  ⚠ ALL SIX NUMBERS LIVE IN `ECONOMY.staffShare`; this reads them and nothing else, so a retune –
+ *  including the masseur's open question – moves the whole game and this function does not change. */
 export function staffResultShareBps(role: 'coach' | 'masseur', finishIdx: number): number {
   const rates = ECONOMY.staffShare[role]
-  return finishIdx === 0 ? rates.titleBps : finishIdx === 1 ? rates.finalBps : 0
+  return finishIdx === 0 ? rates.titleBps : finishIdx === 1 ? rates.finalBps : rates.everyBps
 }
 
 /** A staff member's cut of one cheque, in whole cents – the role's bps applied to the GROSS prize

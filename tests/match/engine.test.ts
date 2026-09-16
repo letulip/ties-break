@@ -155,6 +155,11 @@ describe('simulateMatch — PointContext equivalence to contextOf', () => {
         expect(e.breakPoint).toBe(ref.breakPoint)
         expect(e.setPointFor).toBe(ref.setPointFor)
         expect(e.matchPointFor).toBe(ref.matchPointFor)
+        // ⭐ ROUND 42 #34 – THE FIFTH FACT, and the one the cheap branch could most easily get wrong:
+        // a 5-4 in a third set at 15-0 is neither a game point nor a set point, so `simulateMatch`'s
+        // fast path never reaches `contextOf` on it and has to answer for itself. It calls the same
+        // predicate rather than keeping a copy of the rule, and this line is what says so.
+        expect(e.decidingClose).toBe(ref.decidingClose)
         awardPoint(score, e.winner)
         expect(e.scoreAfter).toBe(formatScore(score))
       }

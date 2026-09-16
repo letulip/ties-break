@@ -428,6 +428,55 @@ removing a decoy the player himself created, not pointing at the one that is rig
 REPLACED rather than appended, so a repeated row is not taller than the others either: a row that
 grew would be a mark by accident.
 
+### 8c-bis. ⭐⭐⭐ AMENDMENT, 15.09.2026 (round 42 #26) – THE LICENCE IS WITHDRAWN FOR DURABLES
+
+**The owner, playing:** «Если мы уже дарили депозит на её жилье, то его больше не надо вообще
+показывать.»
+
+This overrides §8c above, and it overrides it in the one direction §8c argued against. **A `durable`
+gift that has been GIVEN leaves the four rows for good.** The `again` line on a durable is therefore
+no longer a line the game can print in ordinary play, and the row it belonged to is simply not there.
+
+What is **unchanged**:
+
+* **`repeatable` is untouched, `again` line and all.** A day, a week at home, a trip, tickets, paints,
+  another piece for the box – she may want those every year of her life, and the second offer still
+  reads as a tradition. That half of §8c stands exactly as written.
+* **The day together is not in any band**, so his 11.08 ruling – the day is on every card, every
+  year – is untouched by construction.
+* **The ASK side.** Round 17 #18's filter, round 27 #7's cooldown and round 39 #9's career-scope
+  ladder all still apply to what she voices, unchanged.
+* **It is the `given` set and not the `asked` one.** A want she voiced and never got is still a want.
+
+⚠⚠ **AND §8c's TWO OBJECTIONS WERE BOTH REAL. They are ANSWERED, not overruled.**
+
+1. *«four bands hold exactly three material gifts, so removing one ships a three-row dialog»* – true,
+   and worse than §8c knew: `suitcase` sits in both the 15 and 17 bands and `watch` in both 17 and 18,
+   so a gift given at fifteen can strip a band three years later. **`materialFor` now REFILLS a
+   shortened band from its neighbours** – the band above first, then the one below, then outward –
+   **back to the band's own original size**, not merely to three. Refilling only to three would leave
+   C(3,3) = ONE possible dialog and undo round 26 #9b's whole arithmetic; refilling to the band's size
+   keeps the number of cards the catalogue was built to give. And if the whole catalogue could ever
+   fail to seat four rows, the retired rows come back rather than the card losing one – a branch that
+   is unreachable on the shipped 36 gifts and exists because «unreachable» is a measurement that can
+   rot. `tests/round42-birthday-durables.test.ts` §2 proves the four rows exhaustively: every age
+   × every college index × five given-sets including *every gift in the game already given*.
+2. *«filtering before the shuffle would change how many times the sub-stream is drawn»* – it changes
+   the `seed:birthday:cycle:<band>` stream's draw count, which is a purpose-scoped sub-stream
+   re-derived at the call site that persists nothing. **The `seed:birthday:<age>` stream is
+   untouched**: four rows go in, three draws shuffle them, one draws the ask – the exactly-four law
+   of §8d, still pinned in `tests/birthday-ask.test.ts`. MAIN is not reached at all.
+
+⚠ **NO SCHEMA MOVE.** The fact is already persisted: `BirthdayRecord.given` has been on every save
+since v48 and `giftsAlreadyGiven` already read it for the ask.
+
+⚠ **ONE HAZARD THIS CREATED, AND IT BIT IMMEDIATELY.** Any caller that answered a birthday by
+REBUILDING the offer – `birthdayOffer(world.seed, age).options[0].id` – is a second derivation of the
+four rows, and it diverges from the engine's the moment a given durable leaves the card;
+`chooseGift` then rejects the answer, which is invariant 1 working. This is the identical failure
+`tests/round23-kid-life.test.ts` wrote down under R2-18 when `atCollege` was added. Fourteen test and
+tool harnesses were repointed at `birthdayOfferFor(world, age)`, the engine's own seam.
+
 ### 8d. Determinism, checked rather than assumed
 
 Every band keeps exactly the gifts it had and every id is unchanged (they are persisted in

@@ -883,9 +883,14 @@ describe('§5 the card says what the second fare buys', () => {
       // strip that went back to shrink-wrapping the image would drag the corridor with it and a
       // self-referential bound would notice nothing. See tests/component/round21-coach-photo.test.ts,
       // which holds this 78 against the 132px row floor that pays for it.
+      // ⚠⚠ RE-AIMED AGAIN, ROUND 42 #3 – 78 BECOMES 112, same reason, same claim. The owner reported
+      // every portrait on the coach screen cut («все картинки обрезаны сильно», 14.09); the shop
+      // window widened to 96px to hold the whole head and coach-match-edge.md §4 pulled the hired
+      // window up with it, keeping the +16px round 21 gave him. The corridor below is untouched and
+      // is still what this test is about; only the edge it is measured from moved, again.
       const art = current[0].find('.cm-art').element as HTMLElement
       const strip = parseFloat(getComputedStyle(art).width)
-      expect(strip, 'the hired row\'s strip has a width of its own').toBe(78)
+      expect(strip, 'the hired row\'s strip has a width of its own').toBe(112)
       expect(getComputedStyle(art).overflow, 'and clips the picture at it').toContain('hidden')
 
       const inkLeft = (sel: string): number => {

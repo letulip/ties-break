@@ -43,7 +43,7 @@ import StatsScreen from '../../src/components/screens/StatsScreen.vue'
 import { useGameStore } from '../../src/stores/game'
 import { toSnapshot, type WorldState } from '../../src/engine/world'
 import { migrateSave } from '../../src/engine/migrations'
-import { TIERS } from '../../src/engine/season/calendar'
+import { TIERS, WEEKS_PER_YEAR } from '../../src/engine/season/calendar'
 import { LADDER_LABEL, LADDER_TRACKS, type Snapshot } from '../../src/shared/protocol'
 import { setViewport, type Viewport } from './fits'
 
@@ -293,6 +293,72 @@ describe('R37-4 - ⚠⚠ a section that is not on the page is never offered', ()
     // ...and the moment she steps back onto a live table the strip is back, whole.
     await showTrack(wrapper, LADDER_LABEL.domestic)
     expect(entryNames(wrapper)).toEqual(['Season by season', 'National ranking', 'Counting results'])
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 42 #7 – THE WINDOW BLOCK'S DROP DATE, ON EVERY TAB, WITH NO SEASON ARM LEFT TO CATCH IT
+// =================================================================================================
+//
+// The owner's 15.09 ruling puts all three tables on one window – «тот же механизм — окно в 52 недели
+// ... окно "ползет"» – and the Stats window block's `seasonToDate` branch died with it, so
+// `dropInWeeks` is now one line of hand-written rolling arithmetic (`oldest.week + 53 - week`) for
+// every tab. That line had NO test at all: `git grep -l "stats-window-drop\|Next drop"` over tests/
+// and e2e/ returned nothing, which is the coverage this ruling makes load-bearing rather than
+// merely absent. `world/ladder.ts:bookClosedTo` records what a hand-spelled rolling filter cost the
+// last time this constant moved, and the whole point of the ruling is that the arithmetic is ONE
+// rule now, so the net belongs on the screen rather than on the constant.
+//
+// ⚠ MOUNTED, and it reads the rendered sentence against the SNAPSHOT's own counting list – not
+// against a number this file computes a second way. The screen and the fold have to agree about
+// which row leaves next and when, and a test that re-derives the window here would be the second
+// implementation the ruling exists to delete.
+describe('round 42 #7 – the counting window says when the next row drops, on every table', () => {
+  it('⭐ the drop date is the oldest counted row + 53 weeks, and the National tab is no exception', async () => {
+    const snap = goldenSnapshot()
+    const wrapper = mountStats(snap)
+    let checked = 0
+    for (const track of LADDER_TRACKS) {
+      const rows = snap.ladders[track].countingResults
+      if (!rows.length) continue
+      await showTrack(wrapper, LADDER_LABEL[track])
+      const line = wrapper.find('.stats-window-drop')
+      expect(line.exists(), `${LADDER_LABEL[track]}: no drop line on a table with counted rows`).toBe(true)
+      const oldest = rows.reduce((a, b) => (b.week < a.week ? b : a))
+      const expected = oldest.week + 53 - snap.week
+      expect(
+        line.text(),
+        `${LADDER_LABEL[track]}: the screen dates the drop somewhere other than 53 weeks after the row was won`,
+      ).toContain(`${expected} ${expected === 1 ? 'week' : 'weeks'}`)
+      // ...and the row it names is the oldest one, not merely a number that happens to match.
+      expect(line.text(), `${LADDER_LABEL[track]}: the drop line quotes the wrong row's points`).toContain(
+        `${oldest.points} pts`,
+      )
+      checked++
+    }
+    // The discriminator: a fixture with no counted rows anywhere would sail through the loop.
+    expect(checked, 'no table on this fixture has a counting list – the loop proved nothing').toBeGreaterThan(1)
+  })
+
+  it('⚠ ...and the National tab dates it like the other two, because there is one window now', async () => {
+    // ⭐ THE ARM THAT WOULD HAVE GONE RED BEFORE THE RULING. Under round 23's season rule this tab
+    // printed «weeks to the WRAP» – `WEEKS_PER_YEAR - (week % WEEKS_PER_YEAR)` – a number that is a
+    // fact about the calendar and about no row at all. Reading it against the row proves the arm is
+    // gone rather than merely unused.
+    const snap = goldenSnapshot()
+    const rows = snap.ladders.domestic.countingResults
+    expect(rows.length, 'the fixture has no National counting rows – this arm needs one').toBeGreaterThan(0)
+    const wrapper = mountStats(snap)
+    await showTrack(wrapper, LADDER_LABEL.domestic)
+    const oldest = rows.reduce((a, b) => (b.week < a.week ? b : a))
+    const rolling = oldest.week + 53 - snap.week
+    const toTheWrap = WEEKS_PER_YEAR - (snap.week % WEEKS_PER_YEAR)
+    expect(rolling, 'the fixture cannot tell the two rules apart – pick another one').not.toBe(toTheWrap)
+    const said = wrapper.find('.stats-window-drop').text()
+    expect(said, 'the National tab still dates the drop by the calendar').not.toContain(
+      `in ${toTheWrap} ${toTheWrap === 1 ? 'week' : 'weeks'}`,
+    )
+    expect(said).toContain(`in ${rolling} ${rolling === 1 ? 'week' : 'weeks'}`)
   })
 })
 

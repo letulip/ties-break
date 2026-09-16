@@ -281,6 +281,15 @@ describe('round 35 #14 – the published draw is a fact', () => {
 })
 
 describe('round 35 #14 – the recorder', () => {
+  // ⚠ THE WALK LENGTH MOVED 24 → 26 UNDER ROUND 42 #34, AND NOT ONE ASSERTION BELOW MOVED WITH IT.
+  // #34 re-priced composure in the point loop, so this career plays different matches, wins different
+  // ones, and therefore enters a slightly different calendar. At week 24 her `drawnFirstRounds` table
+  // is now EMPTY – she is entered in nothing inside `DRAW_LEAD_WEEKS` – which makes three of the arms
+  // below VACUOUS rather than wrong, and each of them says so in its own message. Measured on this
+  // seed after the change: the table holds 2 rows at week 21, 0 at 23 and 24, and 1–2 at every week
+  // from 25 to 30, so 26 sits inside a stable band rather than on an edge. Every claim is still exact
+  // (`toBe(1)`, `toEqual(before)`), which is what makes this a re-aimed FIXTURE and not a weakened
+  // test.
   function walkedWorld(weeks: number): { world: WorldState; rng: ReturnType<typeof rngFromSeed> } {
     const world = createWorld('r35-recorder', { ...DEFAULT_PROFILE })
     const rng = rngFromSeed('r35-recorder:test')
@@ -298,7 +307,7 @@ describe('round 35 #14 – the recorder', () => {
   }
 
   it('records the entered event whose draw is being shown, and only that', () => {
-    const { world } = walkedWorld(24)
+    const { world } = walkedWorld(26)
     const table = world.drawnFirstRounds ?? {}
     const shown = world.season.filter(
       (e) => e.week > world.week && e.week - world.week <= DRAW_LEAD_WEEKS,
@@ -330,7 +339,7 @@ describe('round 35 #14 – the recorder', () => {
   // RE-DERIVED FROM A MOVED WORLD – with the instrument proved first: with the fact removed, the
   // same card answers differently. Mutating `previewEvent` to ignore its pin now reddens it.
   it('a published draw is not re-derived from a world that has moved', () => {
-    const { world } = walkedWorld(24)
+    const { world } = walkedWorld(26)
     const before = { ...(world.drawnFirstRounds ?? {}) }
     expect(Object.keys(before).length).toBeGreaterThan(0)
     // Move the thing the draw is derived from: the results the selection table folds and the
@@ -363,7 +372,7 @@ describe('round 35 #14 – the recorder', () => {
   })
 
   it('ZERO DRAWS – the recorder cannot move the MAIN stream', () => {
-    const { world } = walkedWorld(24)
+    const { world } = walkedWorld(26)
     world.drawnFirstRounds = {}
     const main = { ...world.rngMain }
     recordDrawnFirstRounds(world)
@@ -372,7 +381,7 @@ describe('round 35 #14 – the recorder', () => {
   })
 
   it('the prune keeps the week she is playing and drops what is behind her', () => {
-    const { world } = walkedWorld(24)
+    const { world } = walkedWorld(26)
     const thisWeek = world.season.find((e) => e.week === world.week)
     const past = world.season.find((e) => e.week === world.week - 1)
     const table = (world.drawnFirstRounds ??= {})

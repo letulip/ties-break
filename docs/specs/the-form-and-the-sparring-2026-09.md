@@ -1,9 +1,9 @@
 ---
 type: spec
-status: draft
+status: current
 area: engine/psychology
 canonical: false
-last-reviewed: 2026-09-13
+last-reviewed: 2026-09-16
 ---
 
 # The form and the sparring partner – the third way down, unparked
@@ -117,9 +117,27 @@ avoid.
   look like a first match back». Both his words, drafts.
 * **The money** (research anchor: $50–80k/yr + full travel): rungs **$500 / $900 / $1,400 a
   week** (proposals – a college hitter · a journeyman pro · a top-100's sparring partner), and
-  **he TRAVELS, always** – travelling is the job, so no travel switch and no remote mode; the
+  ~~**he TRAVELS, always** – travelling is the job, so no travel switch and no remote mode~~; the
   fare rides `staffSeatFareCents` asked once more (the round-22 rule: never a second travel
-  model). **No results share** – research and our union agree; `staffResultShareBps` stays
+  model).
+
+  ⭐⭐ **OVERRULED BY THE OWNER, 15.09.2026 – HE GETS THE SAME TRAVEL SWITCH AS EVERY OTHER SEAT.**
+  His words: «серьезно? даже выбора нет? а если семья в начале пути и на w15 не за что платить? мне
+  кажется это странно, тем более, что у остальных есть галочка "ездит"». He is right twice over.
+  ECONOMICALLY: a family on the w15 rungs cannot carry a second fare, and a seat that forces one is a
+  seat that career can never hire – which is not a design, it is an exclusion. AND IN THE FICTION: a
+  hitting partner at the home club is the ordinary shape of this job for a junior; the travelling
+  version is what a top-100 buys later. So the switch is the same `staffSeatFareCents` switch the
+  masseur already has, and it earns its keep rather than being symmetry for its own sake:
+
+  * **NOT travelling** – he covers the weeks she is at home, which is where most rust is made (an
+    off-season, a layoff, an empty stretch of calendar). Cheap, and it is the junior shape.
+  * **Travelling** – he covers the road weeks too, where a girl between matches at a two-week swing
+    otherwise goes cold. The expensive shape, and what the research's $50–80k + travel anchor prices.
+
+  ⚠ The rung multipliers above are therefore the CEILING of what he cuts, not a flat promise: a seat
+  that does not travel cannot cut the drift of a week it was not at. The bench measures BOTH stances
+  rather than one, and the owner's numbers land on that table. **No results share** – research and our union agree; `staffResultShareBps` stays
   `'coach' | 'masseur'`.
 * **The shape otherwise**: the masseur's twin – pro-career unlock (`activeLadderOf === 'wta'`,
   the ruled table's family), weekly salary in cents, suspend-not-cancel at college and family
@@ -191,3 +209,60 @@ parking condition is satisfied. F1 and F2 can be one branch if a single builder 
 
 **Done when:** O1–O8 are ruled, the scale arm's corridor is accepted, and the builder brief for
 F1 points here.
+
+⭐⭐ **RULED 16.09.2026 IN ONE PASS – «все по твоим рекомендациям».** Every recommendation in the
+table above is now the ruling, so this gate is OPEN and F1's builder brief may point here. The eight
+are restated in `docs/decisions.md` under 16.09 so they are findable from the dated log as well.
+
+⚠ **O1 keeps its shape rather than becoming a number.** What he ruled is the METHOD: the
+[0.5, 4] pp corridor is the ruling and `G` / `K` are its consequence, fitted by the scale arm. A
+builder that ships a constant without that arm has not implemented O1, it has skipped it.
+
+⭐ **AND THE ORDER IS NOW DEFENSIBLE RATHER THAN ASSERTED, on round 42 #34's measurement.** F1's only
+reader is `composureEff`. Before #34 composure was worth **0.4–0.6 pp** of match win rate per twenty
+points, so a ±6-point slump would have moved about **0.15 pp** – a slump nobody can feel, and the
+third decorative mechanic that round found. After #34 (+20 composure = **+4.1 pp**, measured against
+his ruled +4 pp target) the same ±6 points are worth several times that, and the slump becomes a
+thing the player fights. **#34 → F1 → F2.**
+
+## 9a. Does the psychologist travel? – the owner's 16.09 question, parked with an answer
+
+He refused the #46 copy draft on a fact and the correction is the better reading:
+
+> «психолог не ездит, но онлайн созвоны вполне может делать. Хотя, может и ездить он тоже может, но
+> тогда надо подумать, на что он может качественно влиять в поездке и нужно ли это делать.»
+
+**The engine already agrees with the first half.** `psychologistWorksThisWeek`'s own note says the
+retainer «runs on a tournament week exactly as the coach's does» and that he works through a layoff
+because «an injury is when the head needs the **call** most». There is no fare, no stand-down and no
+gap: this is the one seat whose work never pauses, which is a positive thing to say on screen rather
+than an absence to apologise for.
+
+**If a switch is ever added, there is exactly one thing it can honestly buy, and the fence already
+names it.** §4's fence sentence is **«the slump is the psychologist's patient, the rust is the
+sparring partner's»**. So a travelling psychologist would make a LOSS cost less form – he is in the
+room on the night it happens rather than five days later on a call.
+
+⭐ **That shape is worth writing down because it is the mirror of the seat next to it.** The masseur
+in the travelling state pays most on a DEEP RUN and nothing on a first-round exit; a travelling
+psychologist would pay most on a BAD WEEK and nothing when she wins. Two travelling seats paying on
+opposite outcomes is a thing a player can read without a manual, and it is the reason to prefer this
+over the obvious alternative.
+
+⚠⚠ **THE OBVIOUS ALTERNATIVE IS REFUSED, AND IT SHOULD BE REFUSED OUT LOUD.** The tempting design
+after round 42 #34 is a travelling psychologist who lifts composure ON THE DAY – straight into the
+pressure set #34 just built. It is refused because it would be **the first thing in this game that
+buys match odds directly with money**; every other travelling seat buys development or recovery and
+lets the odds follow. That is a fence worth keeping, and breaking it is a decision that deserves its
+own conversation rather than arriving inside a copy fix.
+
+**RECOMMENDATION: do not build the switch now.** Two reasons, one of them this round's own lesson:
+
+1. **It cannot be priced before `world.form` exists.** The effect is a discount on a number that does
+   not yet exist, so any rung price would be guessed – which is invariant 5's exact prohibition.
+2. ⚠ **A switch whose effect is invisible on a good week is the decorative-mechanic trap this round
+   has now found twice** (composure before #34; the slump itself before #34). The honest sequence is
+   F1 first, then measure how much form a loss actually costs, then price the seat against that
+   measurement. **So it belongs in F3 beside the psychologist's own slump focus, and not earlier.**
+
+Until then the copy says the true and positive thing: no fare, and the sessions follow her.

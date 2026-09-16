@@ -55,6 +55,11 @@ import { useDeviceFlag, useWatermark } from './composables/inboxCue'
 // The four tab "seen" marks and the four dots they decide – see the call below, and the module's own
 // header for what each one is keyed on.
 import { useTabSeen } from './composables/tabSeen'
+// ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway guard on the week press while her soft chip is
+// live: the first press asks one line, the second leaves. Module state with two askers (this shell
+// and the calendar's CTA, which runs its sweep BEFORE handing the press back) – the whole argument
+// is the composable's header.
+import { SOFT_LEAVE_LINE, useSoftLeaveGuard } from './composables/softLeave'
 // The trophy that flies to the Trophies tab. ⚠ WAVE B: its DOT went to composables/tabSeen.ts with
 // the other three; what the shell keeps is the flight itself, because the flying element is rendered
 // at the root of this component and nothing else can draw the whole path.
@@ -125,6 +130,9 @@ const game = useGameStore()
 // tests/round13-nav.test.ts are plain text searches, so this file must not name the crop
 // composable or the hint key even in a comment – which is the point.)
 const weekAction = useWeekAction()
+// ROUND 42 #20 – `asking` renders the one-line ask above the bar; `pass()` is consulted at the top
+// of `playWeek`, so both of the bar's buttons (the week and the span pill) meet one rule.
+const softLeave = useSoftLeaveGuard()
 
 onMounted(() => game.init())
 
@@ -799,6 +807,13 @@ async function playWeek(weeks: number): Promise<void> {
     tournamentHidden.value = false
     return
   }
+  // ⭐⭐ ROUND 42 #20 (ruled B) – THE LEAVE-ANYWAY GUARD, after the resume arm (re-opening a paused
+  // reveal leaves nobody) and BEFORE the calendar detour and the tick: while her soft chip is live,
+  // the first press shows one line (`SOFT_LEAVE_LINE`, above the bar) and spends nothing; the second
+  // press falls through. The calendar's own CTA asks the same guard before its sweep, and the
+  // sweep's hand-back re-enters here as the SAME logical press – `pass()` is idempotent per week,
+  // so the detour never asks twice. The chip stays missable: this costs one honest tap, not a block.
+  if (!softLeave.pass()) return
   // ⚠ THE PRESS GOES TO THE CALENDAR FIRST, AND THE WEEK PASSES THERE. «Жмем training week – видим
   // календарь и короткую анимацию как неделя проходит» (31.07). On a week with no tournament in it
   // the crossing-out sweep is what STANDS IN for a trip: it is the only thing that happens between
@@ -1620,6 +1635,13 @@ function reopenTour(): void {
       class="next-week-bar"
       :class="{ 'with-span': !!weekAction.multi }"
     >
+      <!-- ⭐⭐ ROUND 42 #20 (ruled B) – the leave-anyway ask, floated above the bar in the calendar
+           note's own visual vocabulary (`.cal-go-note`, the lightest of the knock-style surfaces).
+           The sentence is `SOFT_LEAVE_LINE`, declared once in composables/softLeave.ts and read by
+           both projections of the press – DRAFT, recorded in docs/rounds/round-42.md #20. Shown from
+           the consumed first press until the press that leaves; the second press goes through the
+           same button underneath it. -->
+      <p v-if="softLeave.asking.value" class="next-week-note">{{ SOFT_LEAVE_LINE }}</p>
       <!-- ⭐⭐ R2-13 PHASE 1 – THE SPAN, AND IT IS ABSENT FAR MORE OFTEN THAN IT IS HERE. The 28.07
            deletion of the old skip-4 stands as written ("a testing shortcut that offered to skip the
            thing the player came to play"); what makes this one a different button is `multi`, which

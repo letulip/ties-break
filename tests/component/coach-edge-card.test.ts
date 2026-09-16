@@ -58,6 +58,14 @@
 // 62px with `overflow: hidden` now, so growth downwards costs nothing sideways, and the browser
 // numbers above are the proof: the tallest card in the list has the same 12.00px as the shortest.
 //
+// ⚠⚠ EVERY «62.00px» AND «75.00px» ABOVE IS A 2026-08 READING AND ROUND 42 #3 MOVED BOTH – the strip
+// is 96px and the first ink 108px, because the owner reported the portraits cut on the phone and the
+// window had to hold the whole head («все картинки обрезаны сильно… надо сделать шире», 14.09). The
+// paragraphs are kept because what they ARGUE is unchanged and is still what §4 below measures: the
+// corridor is 12.00px on every card at every width, and it is a guarantee rather than a hope only
+// because the strip has a width of its own. The row heights quoted above moved with the card's own
+// text long before this round, and §4 reads them off the cascade rather than from this header.
+//
 // ⚠ MUTATION-VERIFIED – twelve mutations, EVERY ONE RE-RUN against this file as it stands now (the
 // §7 wave rewrote §2, §3 and §5, so the previous ledger's readings no longer described this file).
 // Nothing below passed against a broken build. Two separations are load-bearing and both hold: the
@@ -444,9 +452,14 @@ describe('the added lines clear the portrait', () => {
       // The literal is kept – not softened to "whatever the strip says" – because a strip that
       // silently went back to shrink-wrapping the image would then drag the corridor along with it
       // and this test would notice nothing.
+      // ⚠⚠ RE-AIMED AGAIN, ROUND 42 #3 – 78 BECOMES 112 AND 62 BECOMES 96 (the literals below), for
+      // the same reason and with the same claim untouched. The owner reported every portrait cut on
+      // the phone («все картинки обрезаны сильно»), the strip widened to hold the whole head, and
+      // `.cm-body` moved with it again. Nothing here is loosened: both literals are still literals,
+      // and both corridors are still asserted at 10-15 and at exactly 12.
       const art = current[0].find('.cm-art').element as HTMLElement
       const strip = px(getComputedStyle(art).width, '.cm-art width')
-      expect(strip, 'the hired row\'s strip has a width of its own').toBe(78)
+      expect(strip, 'the hired row\'s strip has a width of its own').toBe(112)
       expect(getComputedStyle(art).overflow, 'and clips the picture at it').toContain('hidden')
       expect(px(getComputedStyle(art).left, '.cm-art left'), 'starting at the column edge').toBe(0)
 
@@ -467,10 +480,11 @@ describe('the added lines clear the portrait', () => {
       // ⚠ AGAINST THEIR OWN STRIP, ROUND-21 #1. This line used to reuse `strip` – the HIRED row's
       // width – to judge an ORDINARY row's ink, which was harmless only while every row was 62px.
       // The corridor is a per-row property and is now read as one; that the two rows arrive at the
-      // same 12 from different pairs (62/74 and 78/90) is the point of the assertion.
+      // same 12 from different pairs (96/108 and 112/124 since round 42 #3, 62/74 and 78/90 before
+      // it) is the point of the assertion.
       const ordinary = rows.filter((r) => !r.classes().includes('current'))[0]
       const ordinaryStrip = px(getComputedStyle(ordinary.find('.cm-art').element).width, '.cm-art width')
-      expect(ordinaryStrip, 'an unhired row keeps the narrow window').toBe(62)
+      expect(ordinaryStrip, 'an unhired row keeps the narrower window').toBe(96)
       expect(inkLeft(ordinary, '.cm-edge') - ordinaryStrip).toBe(12)
 
       // ⚠ AND THE REVEALED CARD IS MEASURED TOO, which is what §7 added to this test. The plaque is

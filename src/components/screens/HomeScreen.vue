@@ -27,6 +27,9 @@
 import { computed, ref } from 'vue'
 import { useGameStore } from '../../stores/game'
 import type { PlayStyle, WorldEvent, WorldMatch } from '../../shared/protocol'
+// ⭐ ROUND 42 #28 – the ONE reading of the off-season psychologist marker, shared with the Coach
+// Market's Support-staff tab so the two entries on one path cannot disagree.
+import { psychologistFocusNudge } from '../../shared/protocol'
 import type { TierId } from '../../engine/season/types'
 import { weekLabel, weekRange } from '../../shared/dates'
 import { formatShortName } from '../../shared/format'
@@ -157,7 +160,12 @@ const {
   rankMovement,
   showKidHint,
   dismissKidHint,
+  // ⭐ ROUND 42 #29(b) – the avatar's mood ring. See the computed's own note for why it lives there.
+  moodRing,
 } = useKidIdentity()
+// ⭐ ROUND 42 #28 – is the off-season marker up this week? A plain read of two fields the wire
+// already carries, through the shared selector – NOT the trophies watermark, and nothing latched.
+const psychologistNudge = computed(() => psychologistFocusNudge(game.snapshot))
 function openKid(): void {
   dismissKidHint()
   emit('navigate', 'kid')
@@ -1286,9 +1294,16 @@ async function leaveCollege(): Promise<void> {
         <header class="diary-head">
           <!-- A2: the app header is gone; its avatar lives here, left of the date, and is still the
                door to her profile. The crop stays F45-1's age-only `norm` – chrome, not an
-               emotional surface; the emotion belongs to the big painting behind it. -->
+               emotional surface; the emotion belongs to the big painting behind it.
+               ⭐⭐ ROUND 42 #29(b) – AND THE RING AROUND IT IS WHERE HER MOOD LIVES NOW that the
+               painting behind it has gone back to results. One colour per rung of the Mood ladder,
+               no ring at the neutral rung, and NO new word on this screen: the ring is colour, and
+               the five words stay on the two Mood tiles that already print them. The band comes off
+               `useKidIdentity()`, so this avatar and the rail's copy cannot disagree; his own
+               sentence is quoted on that computed, where Cyrillic is allowed. -->
           <button
             class="diary-avatar-btn"
+            :class="moodRing ? ['has-mood-ring', `mood-${moodRing}`] : null"
             data-tour="kid-avatar"
             aria-label="Open her profile"
             @click="openKid"
@@ -1599,6 +1614,21 @@ async function leaveCollege(): Promise<void> {
           aria-label="Coach note - open the Coach Market"
           @click="emit('navigate', 'market')"
         >
+          <!-- ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER. The owner asked for a yellow dot on this
+               plate and on the Support-staff entry while the psychologist's next year of work can
+               still be chosen; his sentence is quoted on `psychologistFocusNudge`
+               (shared/protocol/snapshot.ts), where Cyrillic is allowed.
+               ⚠ THIS IS THE PLATE THE DOT BELONGS ON because it is the only door on Home into the
+               Coach Market, and the Support-staff tab lives on that screen. The card's own words are
+               untouched: a dot is not a sentence, and this round adds none.
+               ⚠ THE SAME `.note-dot` AS THE RECAP'S, in the attention flavour – same class, same 7px,
+               same corner. A bespoke marker wearing the shared vocabulary's clothes is the thing the
+               tab-bar dots' own note in src/style.css warns against. -->
+          <span
+            v-if="psychologistNudge"
+            class="note-dot is-attention"
+            data-nudge="psychologist-focus"
+          ></span>
           <div class="coach-art">
             <img :src="coachPhoto" alt="" />
           </div>
@@ -2379,6 +2409,24 @@ async function leaveCollege(): Promise<void> {
   font-family: var(--font-body);
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease;
+  /* ⭐⭐ ROUND 42 #20 (ruled B) – THE CHIP EARNS ATTENTION: a gentle contour pulse, the owner's own
+     ask («надо как-то к самой плашке внимание привлекать, она сейчас максимально незаметная» and
+     «сделать плавно пульсирующей по контуру», item 8). ONLY the border tint moves – border-color
+     costs no layout and no paint outside the card's own edge, so nothing under the finger shifts.
+     `--accent-soft` and not `--accent`: an invitation, not an alarm. The killswitch below keeps the
+     house reduced-motion policy and swaps the pulse for a STEADY soft-accent edge, so the chip is
+     still findable by a player who asked the system for less motion. */
+  animation: soft-beat-pulse 2.8s ease-in-out infinite;
+}
+
+@keyframes soft-beat-pulse {
+  0%,
+  100% {
+    border-color: var(--card-edge);
+  }
+  50% {
+    border-color: var(--accent-soft);
+  }
 }
 
 .soft-beat-card:hover:not(:disabled),
@@ -2399,6 +2447,10 @@ async function leaveCollege(): Promise<void> {
   .soft-beat-card:focus-visible {
     transition: none;
     transform: none;
+    /* ROUND 42 #20 – the pulse stands down with the rest of the motion; the attention the owner
+       asked for survives as a steady soft-accent contour rather than disappearing with it. */
+    animation: none;
+    border-color: var(--accent-soft);
   }
 }
 
@@ -2552,6 +2604,18 @@ button.note-card:active:not(:disabled) {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 8px rgba(var(--accent-rgb), 0.6);
+}
+
+/* ⭐ ROUND 42 #28 – THE SAME DOT, IN YELLOW. The owner asked for «маркер жёлтый» specifically, and
+   the app already has one yellow with a job: `--warning`, "this is a risk, and you may still take
+   it" (src/style.css names it). ⚠ IT IS NOT A WARNING AND THAT IS WHY THE TOKEN IS `--attention`
+   rather than `--warning` at the point of use: the off-season change window is an OPPORTUNITY with
+   a deadline, not a risk – the same distinction `--wildcard` was split out for one round ago. One
+   value, two names, and each name says what it is for. Geometry, position and glow are the shared
+   dot's, untouched: only the hue moves. */
+.note-dot.is-attention {
+  background: var(--attention);
+  box-shadow: 0 0 8px rgba(var(--attention-rgb), 0.6);
 }
 
 /* --- FAMILY BUDGET ------------------------------------------------------------------------------ */

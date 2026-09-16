@@ -40,6 +40,8 @@ import {
   callUpRubberId,
   collegeLeagueRevealMatches,
   collegeLeagueRevealOpen,
+  // ⭐ ROUND 42 #25 – her ramp's paused steps, for the kid-life view's own percentage.
+  collegePausedShareYears,
 } from './college'
 import { rngFromSeed } from '../rng'
 import { COLLEGE_LEAGUE, COLLEGE_LEAGUE_ROUNDS, wonTheLeague } from '../collegeLeague'
@@ -49,7 +51,7 @@ import { previewEvent, eventCrowd, eventTemperature, firstRoundDraw, ratedField,
 import { FRESH_KIT } from '../equipment'
 import type { EventPreview, RatedEntrant } from '../season/preview'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, isCountingResult, windowFromWeek, windowSlots, windowedBestSum } from '../season/ranking'
-import { isFieldProId, universeForTier } from '../season/fieldPros'
+import { isFieldProId, universeForTier, type FieldPro } from '../season/fieldPros'
 import { entrantNationAt, weekFieldExclusion, JUNIOR_TOUR } from '../season/tournament'
 import { rivalConditions } from '../season/rival'
 import { ratingOf } from '../match/rating'
@@ -761,7 +763,9 @@ export function computeCountingResults(world: WorldState, track: LadderTrack = '
   // player reads this list as a league table.
   //
   // ⚠⚠ AND THE WINDOW IS THE TRACK'S SINCE ROUND 23 (`WINDOW_BY_TRACK` – the owner's ruling on items
-  // 12/13 that the DOMESTIC table counts this season, not a rolling 52 weeks). The filter below used
+  // 12/13 that the DOMESTIC table counted this season, not a rolling 52 weeks. ⚠ ROUND 42 #7, 15.09,
+  // re-ruled that table BACK to the rolling window, so all three agree again – and the line below is
+  // byte-identical through both rulings, which is exactly why it reads the constant.) The filter used
   // to be `world.week - r.week <= RESULTS_WINDOW`, i.e. `windowFromWeek(week, 'rolling52')` spelled
   // out by hand – correct while all three tables shared one window and silently wrong the moment one
   // of them stopped. This is the function whose stated contract is that a "plain slice would show
@@ -870,8 +874,31 @@ export function computeStandings(world: WorldState, track: LadderTrack = 'itf'):
   // fallback below would otherwise print "fp-141" the day the Stats screen grows its World Tour
   // tab. The table itself stays windowed exactly as every table always was (top 10 + around the
   // kid, built a few lines down), so ~500 rows cost the snapshot nothing.
-  if (track === 'wta') {
-    for (const p of fieldProsOf(world)) meta.set(p.id, { name: p.name, nation: p.nation, ageYears: p.ageYears })
+  //
+  // ⭐⭐ ROUND 42 #14 – AND THE LOOKUP NO LONGER BRANCHES ON THE TRACK (the owner, third time of
+  // asking: «всё ещё некоторые игроки в общем рейтинге без флагов, я уже просил»). It used to be an
+  // eager pre-pass guarded by `if (track === 'wta')`, so an `fp-…` id arriving on ANY other table
+  // fell straight through to `nation: ''` two blocks down and `flagEmoji('')` drew nothing –
+  // `playerNation`'s own bug (round 41 #17) with the population and the surface swapped round.
+  //
+  // ⚠ MEASURED BEFORE IT WAS WRITTEN, AND IT MOVES NOTHING TODAY. `rankingFor` filters the domestic
+  // and ITF rosters to `cohortIds(world) + KID_ID` (world/ladder.ts), so as the code stands no `fp-`
+  // id can reach either table: 4 seeded careers x 420 weeks and the owner's own week-517 save print
+  // ZERO blank rows on all three tables, before and after this change. What it removes is the LATCH –
+  // the same class `tableSize` was caught by («a later step may never assume an earlier one's
+  // post-condition»): the day any non-W table admits a derived row, the flag is already there.
+  //
+  // ⚠ AND IT IS A LAZY MAP RATHER THAN A SECOND PRE-PASS, which is what makes generalising it free.
+  // `isFieldProId` is asked first, so the two junior tables never build it at all; the W table builds
+  // exactly one 1,600-entry map, where it used to write 1,600 entries into `meta`. `fieldProsOf` is
+  // season-stable and memoised (world/ladder.ts) and takes NO draw on any stream – the frozen MAIN
+  // capture (41550 / e6b0c709) cannot see this line.
+  let proRows: Map<string, FieldPro> | null = null
+  const proMeta = (id: string): { name: string; nation: string; ageYears?: number } | undefined => {
+    if (!isFieldProId(id)) return undefined
+    proRows ??= new Map(fieldProsOf(world).map((p) => [p.id, p]))
+    const p = proRows.get(id)
+    return p ? { name: p.name, nation: p.nation, ageYears: p.ageYears } : undefined
   }
   // Full name so the UI can render "V. Last" for the kid like everyone else (formatShortName).
   // ⚠ AND HER AGE IS `kidAgeAt`, THE ONE CLOCK (ruling of 09.08) – off her birth date, so a December
@@ -883,7 +910,7 @@ export function computeStandings(world: WorldState, track: LadderTrack = 'itf'):
     ageYears: kidAgeAt(world, world.week),
   })
   const enrich = (r: RankingRow, gapBefore: boolean): StandingRow => {
-    const m = meta.get(r.playerId) ?? { name: r.playerId, nation: '' }
+    const m = meta.get(r.playerId) ?? proMeta(r.playerId) ?? { name: r.playerId, nation: '' }
     return {
       ...r,
       name: m.name,
@@ -1109,12 +1136,15 @@ export function pendingView(world: WorldState): PendingView | undefined {
   // ranks her by. The earned-points guard exists to stop TIE-FLOOR ranks being printed for players
   // with nothing; a pro's standing row is never that, by construction (wtaPoints >= 1).
   // ⚠ THE GUARD MUST FOLD THE SAME TABLE `ranks` CAME FROM (round 23 #12/#13). `ranks` is built from
-  // `rankingFor(world, track)`, which counts the domestic table season-to-date now; folding the
-  // guard on the rolling window would print a NUMBER for an opponent the table itself has at the
-  // tie floor - "unranked is not rank one" arriving from the third side. `WINDOW_BY_TRACK[track]` is
-  // how the two stay one question. It does mean more Unranked opponents in the opening weeks of a
-  // domestic season, which is the table honestly saying the season's race has not started - measured
-  // in docs/rounds/round-23.md #12.
+  // `rankingFor(world, track)`, and folding the guard on a DIFFERENT window would print a NUMBER for
+  // an opponent the table itself has at the tie floor - "unranked is not rank one" arriving from the
+  // third side. `WINDOW_BY_TRACK[track]` is how the two stay one question.
+  // ⚠⚠ ROUND 42 #7 (15.09) – AND THE SECOND RULING CAME THROUGH THIS LINE WITHOUT TOUCHING IT. Round
+  // 23 made the domestic table season-to-date and this comment used to add "it does mean more
+  // Unranked opponents in the opening weeks of a domestic season". That cost is GONE with the season
+  // race: the domestic table is rolling-52 again, so its opening weeks carry last year's book like
+  // the other two and nobody arrives at a January table of zeroes. The code is unchanged in both
+  // directions, because the window it folds is the track's and never this file's.
   const oppRankIn = (id: string): number | null =>
     isFieldProId(id) ||
     windowedBestSum(world.results, world.week, id, BEST_N_BY_TRACK[track], inTrack(track), WINDOW_BY_TRACK[track]) > 0
@@ -2085,6 +2115,23 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // The app's ONE definition of a season's display year (shared/dates.ts), so the school-year
       // arithmetic can never disagree with the year the rest of the game prints.
       seasonYear: seasonYear(seasonIndexOf(world.week)),
+      // ⭐⭐ ROUND 42 #6 – WHO SHE WAS BORN AS, and the Personality tile's only input.
+      //
+      // ⚠⚠ `world.temperament` AND NEVER `expressedTemperamentOf(world)`. The tile is a VOICE site,
+      // and who-she-is §3's fence puts the voices on birth alone – a quiet girl behind walls still
+      // has a quiet girl's syntax, and the walls are a fact about how much of her reaches the parent
+      // rather than about who she is. Swapping this one line for the expressed read (or for anything
+      // of this week's mood) is the mutation arm the round-42 fence test is written against.
+      temperament: world.temperament,
+      // ⭐⭐⭐ ROUND 42 #37 – THE FIRST WORD OF THE SAME LINE, and it is a SKILL rather than a mood.
+      //
+      // ⚠⚠ `world.skills.composure` AND NEVER `world.spirit`. His re-cut of 15.09: «может быть эти
+      // два слова будут ИНОГДА меняться, как у Федерера… Я не хочу, чтобы это менялось с настроением
+      // и дублировало его, у нас уже есть поле с настроением». Composure grows a few points a season
+      // along her own rolled ceiling, so a band edge is crossed once or twice in a whole career;
+      // spirit moves every week and already owns the Mood tile one cell over. Swapping this line for
+      // the spirit read is the mutation arm #37's tests are written against, and it must redden them.
+      composure: world.skills.composure,
       playStyle: world.profile.playStyle,
       birthMonth: world.profile.birthMonth,
       injured: world.injury !== null,
@@ -2123,6 +2170,10 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
       // ⭐ ROUND-23 #18 – what her own account holds. `?? 0` for the hand-built probe worlds that
       // predate v54, the discipline every optional world field on this view already keeps.
       kidFundsCents: world.kidFundsCents ?? 0,
+      // ⭐⭐ ROUND 42 #25 – and how many of her ramp's steps college ate, so her page quotes the same
+      // percentage the till divides by. `collegePausedShareYears` is the one derivation of it; the
+      // edge snapshot -> college is the one already declared at the head of this file.
+      kidSharePausedYears: collegePausedShareYears(world),
       // ⭐⭐ ROUND 35 #9 – DOES THE BRAND RULE APPLY TO THIS FAMILY AT ALL. Asked of the till's own
       // arithmetic rather than of `world.assets` directly, so the page cannot say «the same share
       // comes off her brand» about a rung that is still on order and paying nothing:

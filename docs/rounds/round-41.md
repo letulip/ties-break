@@ -118,7 +118,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   attribute reddens the boat and the plane arms simultaneously (one template site, one mutation
   point, two families); reverted, both green.
 
-- [~] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answered: NOT changed, and
+- [x] **3. «Capstone изменили на 3 вместо 4 в итоге или нет?»** – **answered: NOT changed, and
   deliberately.** The LIFETIME letter went to 3 top-10 seasons («тогда окей и не вижу причин это
   не сделать»); the capstone stayed at 4 – «tenure without a title… the stricter bar» – and round
   39 parked «capstone left at 4?» as his open question (`round-39.md:248-251`; lowering it was a
@@ -126,7 +126,10 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   puts ≥4 top-10 seasons at 16.7% where the capstone was priced against 8% – the deal is no longer
   the top-decile letter it was priced as. One constant if he says the word.
 
-- [ ] **4. «В прологе проиграли первый турнир "The coach said the first one doesn't count" (или
+  ⭐ **CLOSED 14.09 by his word in round 42:** «не ждет, я уже говорил, что оставляем текущий» –
+  the capstone stays at 4; nothing was waiting after all.
+
+- [x] **4. «В прологе проиграли первый турнир "The coach said the first one doesn't count" (или
   что-то вроде того), выиграли второй, а потом снова вылетели в первом раунде 3го турнира, а фраза
   та же самая пишется, надо какой-то каунтер завести для этих трех турниров может быть и сделать эти
   фразочки более соответствующими. И в четвертом турнире пролога после вылета в полуфинале я тоже
@@ -135,7 +138,10 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   coach line becomes a deterministic function of (which Local Open this is by count, this result,
   what came before) – zero RNG. All new lines = DRAFT, listed here for his read.
 
-  **SHIPPED** on `round/41` (`fe6b4469`).
+  **SHIPPED** on `round/41` (`fe6b4469`). ⚠ The box above was ticked only on 15.09, by round 42's
+  audit of this ledger (items 21 + 30): the code shipped in August and the mark sat `[ ]` for weeks,
+  which is exactly how «часть правок не вижу» happens on a page that says so itself. The lesson is
+  the round's, not this item's – a ship without its mark is an unshipped item to everyone reading.
 
   **⚠⚠ HIS REPORT CARRIES TWO DIFFERENT DEFECTS, AND ONLY ONE OF THEM IS A COUNTER.**
   1. **REPETITION** – one string served every weekend, so a third first-round exit was told it was
@@ -1116,7 +1122,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   Full record: the two `docs/decisions.md` entries of 12.09 and `docs/specs/one-market-2026-09.md`;
   the whole build is in the P1 block of «The owner's second visit» below.
 
-- [?] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
+- [x] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
   hover/клике с суммой и датой?»** – **PARKED FOR v76, honestly, per the no-schema rule.** Purchase
   marks need `(week, amount)` per BUY and no persisted road exists: `boughtWeek` is first-buy-only,
   `paidCents` a blended net sum, the feed rows un-keyed prose capped 400/50 and prunable, the

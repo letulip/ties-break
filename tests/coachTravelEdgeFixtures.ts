@@ -66,6 +66,43 @@ import type { PlayerProfile } from '../src/shared/protocol'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-bench'
 
 // =================================================================================================
+// ⭐⭐⭐ RE-STAMPED 16.09.2026 – ROUND 42 #47, SECOND READING. FIFTY-SIX CELLS, AND THE STAMP IS A
+// REVERT RATHER THAN A CHANGE: the cameo's cheque went back to the flat `amountCents` band it had
+// before #47's first reading turned it into a fraction of the next unpayable trip's gap.
+// `rngMain` IS BYTE-IDENTICAL ON EVERY CAREER. THE FROZEN MAIN CAPTURE IS UNMOVED.
+// =================================================================================================
+//
+// WHAT MOVED THEM, and why a sizing revert reaches this far. The owner read #47's own ship note and
+// answered «вообще всё не так»: «60-80% закрытия» is a FREQUENCY – «помощь должна срабатывать в
+// 80% случаев» – and not a fraction of a sum; the size was never the broken part («механизм
+// нормально давал денег, нормальными суммами, просто смотрел только на кошелек»). So the cheque is
+// $500–1,500 again against a J trip's measured $1,100–3,600, where the gap fraction paid a median
+// $129 – and the trip probe stays as the GATE, which is the half that was right.
+//
+// ⚠⚠ PER-KEY PROTOCOL RUN FIRST, ON ALL THREE CAREERS, AND THE CONTROL WAS THIS TREE WITH THE
+// REVERT NEUTRALISED IN PLACE (`tools/frozen-key-diff.ts --preset N --policy M`, both arms, then the
+// B files copied back – never `git checkout --` under another agent's edits). Of **91 keys, 42 moved
+// and 49 held**, and the split is the whole reading:
+//
+//   MOVED    fundsCents and kidFundsCents, then everything the wallet steers – entries, results,
+//            seasonHistory, kidRank and its three registers, skills, condition, spirit, bond,
+//            careerTotals, trophiesByTier, offers, cohort. A J-series family with more money in the
+//            hardest years enters different tournaments, and the career diverges from there.
+//   ⭐ HELD  `rngMain`, `seed`, `schemaVersion`, `potential`, `temperament`, `profile`, `plan`,
+//            `coachId`, every seat key (`masseur*`, `psychologist*`, `sparring*`), `composureBonus`.
+//
+// ⭐⭐ `rngMain` HOLDING IS THE INVARIANT-2 PROOF FOR THIS CHANGE, TAKEN PER KEY RATHER THAN ASSERTED.
+// The cameo spends exactly one `rng()` on `seed:sponsor:cameo:gift:<week>` under BOTH readings –
+// `pickInt` spent one and the share draw spent one – so the sub-stream's shape never moved and MAIN
+// never saw the difference. A revert that changed a draw COUNT would have shown here first.
+//
+// ⚠ AND ONE HONEST NOTE ABOUT THE STAMP THIS ONE REPLACES. Bundle 15's fixture stamp was committed
+// under the #34 message (`fc856e17`), but the working tree already carried #47's gap fraction, so
+// that stamp silently baked in an economic change its commit message never mentioned. It is moot now
+// – this stamp supersedes it – but the split-by-pathspec habit does not protect a FIXTURE from a
+// change that is in the tree but not in the commit, and that is worth knowing before the next wave.
+//
+// =================================================================================================
 // ⭐⭐⭐ RE-STAMPED FOR WAVE 6's T1 (14.09.2026, SCHEMA v77) – ELEVEN CONSTANTS, AND **THE PROTOCOL'S
 // FIRST NESTED PEEL**: `careerHashAtSchema` now MAPS `loveEpisodes` AND RESTS EACH ROW, because for
 // the first time in seventy-seven versions a schema move widens a ROW INSIDE A LIST rather than the
@@ -140,6 +177,60 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // one wave down), and it makes a stamped diff on these cells a STOP rather than an expectation:
 // `schemaVersion`, `spotlightHabituation` and `eliteGrinder`'s `loveEpisodes` are the whole of what
 // v77 may move, and anything else is a real behavioural change wearing a pre-signed licence.
+
+// =================================================================================================
+// ⚠⚠ ROUND 42's ECONOMY BUNDLE (15.09.2026) – **TWO CELLS MOVED. NOT RE-STAMPED HERE.**
+// `rngMain` BYTE-IDENTICAL ON ALL FIVE. THE FROZEN MAIN CAPTURE UNMOVED (41550 / e6b0c709).
+// =================================================================================================
+//
+// TWO ENGINE CHANGES reach a bench walk, both the owner's own rulings of 15.09:
+//   #41  `ECONOMY.staffShare.coach` 1000/500/(0) -> **1000/1000/1000** – ten per cent of EVERY prize
+//        cheque at every finish («10% безусловных отчислений с любых призовых, независимо от глубины
+//        прохода»), `staffResultShareBps`' tail reading `everyBps` instead of returning a hard 0.
+//   #43  `ECONOMY.sponsor.seasonCap` **deleted** (constant and reader) and `cooldownWeeks` 6 -> **4**
+//        («сними потолок, а кулдаун давай 4»).
+// (#42 moves `coachMarket`'s `overBudgetCents` denominator, which no bench walk reads: `hireCoach`
+// never consults the budget. It cannot reach a frozen career and does not.)
+//
+// ⚠ PER-KEY DIFF TAKEN FIRST, as this file's protocol demands and never after the fact. Control =
+// **MY OWN CHANGE NEUTRALISED IN PLACE** – the three coach rates and the two sponsor dials edited back
+// by script and restored from a byte-copy afterwards, the two files' md5 checked back to pristine
+// (`ef123fec…` / `5971e7ce…`), never `git checkout --`. `tools/frozen-key-diff.ts` on all five cells,
+// each header read back against its invocation:
+//
+//   · 5/0 `FROZEN.middleGrinder`   – **0 keys of 87. Byte-identical.**
+//   · 8/0 `FROZEN.eliteGrinder`    – **0 keys of 86. Byte-identical.**
+//   · 6/1 `PRE_R28B.highPlayer`    – **0 keys of 86. Byte-identical.**
+//   · 0/1 `FROZEN.selfTravelling`  – **37 KEYS OF 88**: academy, bestFinishByTier, careerTotals,
+//     condition, drawnFirstRounds, entries, events, financeWeeks, fundsCents, gearRestWeeks,
+//     injuryHistory, internationalEntryWeeks, kidFundsCents, kidRank, kidRankWta, knockHistory,
+//     lastSeasonSummary, lifeLog, medicalWithdrawalWeek, milestones, nextEventId, offers,
+//     peakPhysical, prevKidRank, prevKidRankWta, proEntryWeeks, results, seasonEntries,
+//     seasonHistory, seasonLosses, seasonRecord, seasonStartRank, skills, spirit, trophiesByTier,
+//     vacations, walkoverWeek.
+//   · 5/1 `PRE_R28B.middlePlayer`  – **EXACTLY 5 KEYS OF 87**: careerTotals, events, financeWeeks,
+//     fundsCents, seasonHistory.
+//
+// ⭐⭐ AND THE TWO MOVES WERE ATTRIBUTED RATHER THAN LUMPED, with two further single-change arms:
+//
+//   · 0/1's 37 keys are **ALL #43 and NONE of #41** – the coach change alone moves 0 of its keys.
+//     Which is correct by construction: she is SELF-COACHED, so no coach share can ever touch her,
+//     and she is the WORKING family the local-sponsor cameo actually pays. More sponsor money in
+//     different weeks moves her entries, which moves her results, which moves everything.
+//   · 5/1's 5 keys are **ALL #41 and NONE of #43** – and they are money keys only. `results`,
+//     `skills`, `condition`, `bond` and `spirit` are byte-identical on that career: the coach's cut
+//     changed what the family banked and not one match she played.
+//
+// ⚠⚠ `rngMain` IS BYTE-IDENTICAL ON EVERY CELL AND IN EVERY ARM – `1dbff28caca2` (5/0 and 5/1),
+// `d84bcbf0c481` (0/1), the canonical fingerprints this file already records. Neither change takes a
+// draw: #41 is integer arithmetic at finalize on a decided cheque, and #43 REMOVES a branch that was
+// deliberately placed AFTER an unconditional `rng()` for exactly this reason. `tests/condition.test.ts`
+// is green on this tree and its capture is NOT re-pinned.
+//
+// ⚠ NO RE-STAMP IN THIS BUNDLE, BY THE BUILDER'S BRIEF. The two moved cells are `selfTravelling`
+// (19 red cases – the whole version ladder, v77 down to P5, across coach-travel-edge,
+// -mid-schemas and -older-schemas) and `PRE_R28B.middlePlayer` (1 red case). 28 red in all, zero
+// elsewhere in the unit project. The stamp is the architect's.
 
 // =================================================================================================
 // ⚠ WAVE 5's T13 (13.09.2026) – THE ELITE GATE WENT ON AND **NOT ONE CONSTANT IN THIS FILE MOVED.**
@@ -2053,6 +2144,100 @@ import { openCareer, stepCareerWeek, PRESETS, POLICIES } from '../tools/econ-ben
 // constants, and not one `eliteGrinder` or `selfTravelling` value in this file is touched. They
 // still reproduce, which is the property those constants exist to assert.
 
+/** ⭐⭐⭐ RE-STAMPED 15.09.2026 – ROUND 42 #5, THE LOCAL SPONSOR'S CADENCE, AND THE MOVE IS ONE CELL.
+ *
+ *  WHAT MOVED: `selfTravelling` (8k · self-coached · player) on ALL 28 asserted rungs – the live
+ *  `FROZEN`, `PRE_R28B`, `PRE_NAME_VERA` and every `PRE_V*` from 50 to 77 – plus the two window-rule
+ *  witnesses `PRE_R28B.highPlayer` and `.middlePlayer`. `middleGrinder` and `eliteGrinder` are
+ *  BYTE-IDENTICAL on every rung, and that asymmetry IS the measurement: the local sponsor's cameo is
+ *  a NEED gate, so it pays the working self-coached family and reaches no cell above it.
+ *
+ *  ⚠⚠ THE CONTROL WAS RUN FIRST AND IT IS WHAT LICENSES THIS STAMP. The protocol this file demands –
+ *  neutralise the change IN PLACE, never `git checkout --` in a shared worktree – was run by editing
+ *  `phaseFinance.ts`'s cameo block back to its shipped-before semantics (the MAIN roll decides, the
+ *  MAIN `pickInt` is the amount) and restoring it afterwards from a /tmp copy: **all three files, 30
+ *  of 30, GREEN**. So round 42 #5 is the whole cause and #25 (her share) and #26 (durable gifts)
+ *  move no frozen career – #25 is excluded by arithmetic anyway (the walk is 156 weeks, she is
+ *  14–17 throughout) and #26's durables live in the 19–21 band, which this walk never reaches.
+ *
+ *  ⚠ AND THE FIRST CONTROL WAS WRONG, WHICH IS WORTH THE LINE IT COSTS: replacing only the gate with
+ *  `true` left the hashes red, because #5 moved TWO things – the willingness AND the amount, which is
+ *  now derived (`sponsorCameoCents`) rather than drawn. A half-neutralised control reads as «my
+ *  change is not the cause», which is the exact false negative this protocol exists to prevent.
+ *
+ *  ⚠ THE MAIN STREAM IS UNMOVED and that is measured separately: the two MAIN draws the old hit test
+ *  took are still taken, unread (`phaseFinance.ts`'s own ⚠⚠ block says why), and
+ *  `tests/condition.test.ts` (41550 / `e6b0c709`) and `tests/rivals.test.ts` are green and unmodified.
+ *  A whole-world hash moving while the capture holds is exactly what a balance change looks like. */
+/** ⭐⭐⭐ RE-STAMPED AGAIN 15.09.2026 – ROUND 42 #41 AND #43, AND THE TWO MOVES ARE ATTRIBUTED CELL BY
+ *  CELL RATHER THAN LUMPED. The builder ran the per-key protocol FIRST, control = both changes
+ *  neutralised in place (md5 back to pristine, never `git checkout --`), then one further arm per
+ *  change to say which did what:
+ *
+ *    · `selfTravelling` (0/1) – 37 keys of 88 moved, and they are **all #43** (the cameo's cadence):
+ *      she is the self-coached working family the local sponsor pays, and #41 cannot reach her
+ *      because she has no coach to take a cut.
+ *    · `PRE_R28B.middlePlayer` (5/1) – exactly **5 keys of 87**, and they are **all #41**, MONEY KEYS
+ *      ONLY: `results`, `skills`, `condition`, `bond` and `spirit` are byte-identical, so the
+ *      every-cheque cut changed what the family banked and not one match she played. That is the
+ *      cleanest evidence this file has ever carried that a prize-split change is a prize-split change.
+ *    · 5/0, 8/0 and 6/1 – byte-identical on every rung. `middleGrinder` and `eliteGrinder` never move
+ *      here, which is the same asymmetry the 15.09 cameo stamp records one block down.
+ *
+ *  ⚠ `rngMain` is byte-identical on every cell in every arm and `tests/condition.test.ts` (41550 /
+ *  `e6b0c709`) is green – neither change took a die. What moved is money, which is what a balance
+ *  change is. */
+/** ⭐⭐⭐ RE-STAMPED 15.09.2026 – ROUND 42 #7, AND THIS TIME EVERY CELL MOVED. The domestic track took
+ *  the professional window (52 weeks, best 6, crawling) on the owner's own ruling, and a ranking
+ *  window is a whole-world fact: 43/87, 32/87, 43/87, 30/86 and 37/86 keys moved across the five
+ *  cells.
+ *
+ *  ⚠⚠ AND THE STOP CONDITION IS THE ONE THAT MATTERS: `rngMain` is BYTE-IDENTICAL on all five, as are
+ *  `schemaVersion`, `seed`, `week` and `profile`, and `tests/condition.test.ts`'s capture (41550 /
+ *  `e6b0c709`) did not move. The window is a READ – it changes which events she ENTERS, which is a
+ *  command and not a roll – so invariant 2 held through a change that moved half the world. That is
+ *  the distinction this file exists to make visible, and it has never been this clean.
+ *
+ *  ⚠ The staff-share guard below was re-aimed in the same pass and its old form is worth remembering:
+ *  «no staff share row in any frozen career» was true because a share needed a title or a final
+ *  (#41 removed that) and the player arms had no coach (the window-rule witnesses do). A guard whose
+ *  REASON dies is not a guard any more, whatever colour it prints. */
+/** ⭐⭐ RE-STAMPED 15.09.2026 – v78, AND THIS ONE IS THE NARROW KIND. Three customers rode one bump
+ *  (the psychologist's ceiling bonus, the fund chart's purchase rows, the sparring seat's two keys)
+ *  and the per-key protocol says exactly four lines move on every cell: `schemaVersion`, and the
+ *  three new keys APPEARING at their defaults – `composureBonus` 0, `sparringHired` false,
+ *  `sparringRung` 1. Key counts 87→90 / 86→89 / 87→90 / 86→89 / 87→90.
+ *
+ *  ⭐ `skills` is byte-identical on all five, as are `rngMain`, `potential`, `assets` and the wallet –
+ *  and that is the interesting part, because v78 is the first version whose new key ships WITH a live
+ *  reader. What makes it inert here is that no frozen career hires the psychologist, which
+ *  `walkFrozenCareer` asserts rather than assumes. `PRE_V78` was added and MEASURED: peeling the
+ *  three keys reproduces v77 byte for byte on all three ladder cells. */
+/** ⭐⭐ RE-STAMPED 16.09.2026 – ROUND 42 #15/#24, AND THE MOVE IS ONE LINE OF THE WORLD. The small-talk
+ *  exchange writes richer rows, so `lifeLog` moved on all three careers and NOTHING ELSE DID:
+ *  `rngMain`, `skills`, `potential`, `events`, `results`, the wallet and the body are byte-identical.
+ *  The ladder proves it twice over – exactly the five rungs that RETAIN `lifeLog` moved (v74…v78) and
+ *  both siblings that roll back past v73, where the field arrived, are green without a stamp.
+ *
+ *  ⚠ The builder declined to re-freeze and was right to: this file's own doctrine is that an agent
+ *  bakes in nobody else's unattributed movement. The stamp is the architect's, taken here with the
+ *  attribution above, and it is the LAST build bundle of the round – the measurement wave that follows
+ *  re-measures rather than re-writes. */
+/** ⭐⭐⭐ RE-STAMPED 16.09.2026 – ROUND 42 #34, THE PRICE OF NERVE, and this is the widest move this
+ *  file has ever recorded: 33–44 keys of 91 on every one of the nine careers the per-key control
+ *  walked. That is what a match-physics change looks like, and every moved key is downstream of a
+ *  played match.
+ *
+ *  ⚠⚠ AND THE STOP CONDITION HELD THROUGH IT: 42 of 91 keys never moved on any career, `rngMain`
+ *  byte-identical on all nine, and `tests/condition.test.ts`'s capture (41550 draws / `e6b0c709`)
+ *  GREEN AND UNTOUCHED. #34 changes what a drawn point is WORTH; it draws nothing new. Invariant 2
+ *  survived a change that moved half of every career in the game – which is the strongest statement
+ *  this fixture has been able to make about the discipline it exists to protect.
+ *
+ *  ⚠ The kid-rank reference constants in `condition` / `injuries` / `planner` moved 89 → 90 in the
+ *  same pass and are re-pinned there with the same reasoning: a re-dealt ITF field is a re-dealt
+ *  table, and that constant folds the table. Their own captures are asserted BEFORE the constant is
+ *  read, and they reproduce byte for byte. */
 export const FROZEN = {
   /** ⭐⭐⭐ RE-STAMPED 14.09.2026 – THE ELEVEN LIVE CONSTANTS, FOR THE SEVENTH v76 KEY (the owner's
    *  elite-gate ruling; state.ts's amendment note carries why the unshipped step could take it).
@@ -2514,7 +2699,7 @@ export const FROZEN = {
    *  unreadable by the other. The renumber moved all three parts together: the constant, the
    *  migration's PLACE in the append-only chain (it runs at `v === 64`, after the reveal), and the
    *  golden fixture – `v65.json`, with college's `v64.json` untouched beside it. */
-  middleGrinder: '28b59fd5812a0eb25b42918dee1d00f2dbf230bdc7945b966d9b80d765b5004b',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
+  middleGrinder: '54e2e78510c485fc00ed63d251da6e97561b03872b89fffc0521d3fd581fb35f',  /** PRESETS[8] · 120k wealthy family, elite coach · grinder policy (never travels)
    *
    *  ⭐⭐ RE-FROZEN FOR ROUND 28 #17-b (28.08) – AND ALONE, WHICH IS THE FINDING, exactly as the
    *  16.08 re-freeze below was alone for its own reason. The owner's ruling put a kit letter's
@@ -2643,7 +2828,7 @@ export const FROZEN = {
    *  NOT A CAREER MOVING TWICE: 8/0's inbox is character for character what it was
    *  (`kit-47`/`kit-99`/`kit-151`, all on slot 0), and the mover is round 41's own economy, already
    *  recorded in the three re-stamp blocks at the head of this file. */
-  eliteGrinder: '179fded1ccb4d79e0552102b68be60c1a859992ed44591f402635fbaa3455622',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
+  eliteGrinder: 'f88ce6f90ce341d84ca7742bcac9edbfcf7bf93510d1df98390381902ef22f56',  /** PRESETS[0] · 8k working family, SELF-COACHED · player policy (switch on, nobody to send)
    *
    *  ⭐⭐ RE-FROZEN A FIFTH TIME (16.08) – AND ALONE, WHICH IS THE FINDING. The owner's correction of
    *  that afternoon made the Junior Accelerator a reserved place instead of a ceiling, so a junior
@@ -2883,7 +3068,7 @@ export const FROZEN = {
    *  fork at nineteen is answered and gives the cohort a derived (never stored) decline spread, and a
    *  frozen career is 156 weeks old: she is 16.6 and no rival is over 22, so neither reader is
    *  reachable. That is the claim, and this is its measurement rather than its assertion. */
-  selfTravelling: 'f5003e91069dd0c7faefac57e3fa40b904422c12859cfcb5f2c4c3436d517c9a',}
+  selfTravelling: '14d1195a4acc78ce91511887d0c9c4e33080461b2f4ce408e6c3008010a726bd',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v66 – the identity that proves the v67 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 repeated: the
@@ -2995,9 +3180,75 @@ export const FROZEN = {
  *  `FROZEN.eliteGrinder` and `PRE_R28B.eliteGrinder` have been THE SAME STRING since v73 and this file
  *  has already lost that cell once to a positional pass (the T3 note at the head of this file). */
 export const PRE_V77 = {
-  middleGrinder: '787028a057e4bdbcb8f051587ec4bb09b5bc9b6a66135350fcf664e7784f56fd',
-  eliteGrinder: 'c861a2c98697f3a47606b6ba94ed3165ea04e4155772a61cba105f4f1ad36eb5',
-  selfTravelling: '18a3adc6edb2650f6c52b5b3c76dd43211b8d1b098a2a6fb3ed80112d8f5c2cb',}
+  middleGrinder: 'dd7d3b1ba8ec9fe74904254743b5c82b6a701932db6d84e72e967cffa1bbeee4',
+  eliteGrinder: 'cc3117bce0ea1187c8bd8645381b53a16a2b7e26dc8b87920586e0f3f5efe67c',
+  selfTravelling: 'ec5cdcaca6f60d0c99674ec73a8a45748f1d01829ae6f9a3573a9e1e59965007',}
+
+/** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v77 – the identity the v78 bundle rests on, and
+ *  the pattern `PRE_V77` directly above sets, one version up. These three values are the VERBATIM
+ *  v77 LIVE hashes, character for character, and they are reproduced by peeling exactly what v78
+ *  appends – the three world keys `composureBonus`, `sparringHired`, `sparringRung`, and
+ *  `entries` off every `OwnedAsset` row – and rolling the number back. So «nothing but those four
+ *  things moved» is an IDENTITY over the whole serialisation rather than a claim about a diff.
+ *
+ *  ⚠⚠ RUN AND NOT ASSUMED, and this time the control was a separate WORKTREE rather than a memory of
+ *  the old values. `careerHashAtSchema(p, po, 77)` was captured on a clean checkout of `697180be`
+ *  BEFORE the first edit and re-captured here afterwards; all three cells returned the same string
+ *  both times, and so did rung 76 (`PRE_V77` above reproduces unchanged), which is what says the peel
+ *  was inserted at the right end of the chain rather than merely somewhere in it.
+ *
+ *  ⚠ PER-KEY DIFF FIRST, as this file's protocol demands and never after the fact.
+ *  `tools/frozen-key-diff.ts` on all five cells, both arms, headers and key counts verified on all
+ *  ten captures. **EXACTLY FOUR LINES MOVE ON EVERY CELL, and they are the same four everywhere:**
+ *
+ *    · `schemaVersion`   `a88a7902cb4e` -> `349c41201b62`
+ *    · `composureBonus`  APPEARING with `5feceb66ffc8` – the sha256 of `JSON.stringify(0)`
+ *    · `sparringHired`   APPEARING with `fcbcf165908d` – the sha256 of `false`
+ *    · `sparringRung`    APPEARING with `6b86b273ff34` – the sha256 of `1`
+ *
+ *  Key counts 87->90 (5/0), 86->89 (0/1), 87->90 (8/0), 86->89 (5/1), 87->90 (6/1). Every other key
+ *  is byte-identical on every cell, `rngMain`, `results`, `events`, `potential`, `fundsCents` and
+ *  `assets` among them. ⚠ Every hex string in this block was COPIED OUT OF THE CAPTURE FILES, never
+ *  typed from memory – this file's v75 block records the one time that rule was broken.
+ *
+ *  ⭐⭐ AND `skills` IS BYTE-IDENTICAL ON ALL FIVE, WHICH IS THE ONE LINE THAT MATTERS HERE. v74, v75,
+ *  v76 and v77 could each say «the move is inert» cheaply, because each shipped a seat with NO READER
+ *  AT ALL. v78 cannot: `composureBonus` ships WITH its reader, and `growWeek` really does ask
+ *  `composureCeilingOf` for composure's ceiling on every week of every career. What makes it inert
+ *  HERE is a property of these careers rather than of the tree – the bonus can only move while the
+ *  psychologist works the `'coolhead'` focus, `walkFrozenCareer` asserts `psychologistHired === false`
+ *  on every one of them, so the bonus is 0, the effective ceiling is `potential.composure` to the bit
+ *  and her build is untouched. That is measured above and not argued: her `skills` hash did not move.
+ *  ⚠ A policy that started hiring him would go red at that assertion first, with a sentence, rather
+ *  than drifting five hashes for a reason nobody could name.
+ *
+ *  ⚠ `assets` IS BYTE-IDENTICAL TOO, AND FOR A DULLER REASON: it is `[]` on all five careers – 156
+ *  weeks, she is 16.6, and no bench policy buys a shop rung – so v78's nested peel maps an empty
+ *  array and proves nothing about itself here. THE CORPUS THAT WITNESSES IT IS THE GOLDEN SAVES,
+ *  where fourteen fixtures carry 75 real asset rows; `tests/round42-v78-schema.test.ts` carries the
+ *  crafted, mutation-verified one. Said plainly because v77's nested peel had exactly one witness in
+ *  this file and a reader could reasonably expect v78's to have some.
+ *
+ *  ⚠⚠ THE FROZEN MAIN CAPTURE IS UNMOVED AND NOT RE-PINNED: 41550 draws / hash `e6b0c709`,
+ *  tests/condition.test.ts, green on this tree. It holds BY CONSTRUCTION – nothing this bundle adds
+ *  takes a draw on any stream: `createWorld` writes three literals, `buyAsset` writes an object of
+ *  numbers it already had, the migration writes literals and an empty array, and
+ *  `composureBonusAfterWeek` is a constant, a clamp and a compare.
+ *
+ *  ⚠ ELEVEN LIVE CONSTANTS MOVED, the same eleven v76 and v77 cost and for the same arithmetic:
+ *  `careerHash`, `careerHashUnderTheWindowRule` and `careerHashUnderTheOldName` hash the LIVE world
+ *  with NO peel, so a bumped `schemaVersion` alone moves every value they produce. **THEY ARE NOT
+ *  RE-STAMPED HERE.** The bundle's brief left the stamp to the architect, so `FROZEN`, `PRE_R28B` and
+ *  `PRE_NAME_VERA` stand at their v77 values and the three `coach-travel-edge*` files are RED ON
+ *  PURPOSE, exactly as round 42 #7 left them a day earlier. The measured replacements are in that
+ *  bundle's report; whoever applies them applies them BY NAME, block-scoped, with each cell's old and
+ *  new value printed – `FROZEN.eliteGrinder` and `PRE_R28B.eliteGrinder` have been THE SAME STRING
+ *  since v73 and this file has already lost that cell once to a positional pass. */
+export const PRE_V78 = {
+  middleGrinder: 'fa2f485e3f1b5eec361dc9efdf04cd50a45a5c7d01c93afb61caac770d2d29e0',
+  eliteGrinder: '411f0ad083d142ff30c61e20111f246d3818a33d3565b1a3c3c78588f335b9e6',
+  selfTravelling: 'defe1961df476d0d4031b25d34c6d9897ac88e605f177e7f565563b4c50024ee',
+}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v75 – the identity the v76 re-freeze rests on,
  *  and the wave-4 pattern (`PRE_V75` directly below) repeated one version up. These three values are
@@ -3074,9 +3325,9 @@ export const PRE_V77 = {
  *  exactly what the union merge restored them for – and their two values differ from every other
  *  constant in this file, on this tree as on the last. */
 export const PRE_V76 = {
-  middleGrinder: 'aef1bdc72f43e55744f2cbfa13af2d72d2de35fc0c0409d2a66a7a00b5e7496b',
-  eliteGrinder: '060bb6c3f3b2bfb7026f19931673bd47cb0129012d291643b91fb30540d5ee55',
-  selfTravelling: '1764447171ec7e6d05c3ceecba1fb0b3fd9233e1df6d8b6cb64d2ee3969e8529',}
+  middleGrinder: 'c497a63f865dd1adde2c7070f7f85084ec941b490f6edd3f29c362ec6be217eb',
+  eliteGrinder: '86c600c0513bdaa22309032365407f39a2bce97d99de723ee77aa4e6ba3d4ae1',
+  selfTravelling: '545190593f2ef3c0b0a4167f047420ce89f71f308788b000f3163ac4e9ef5400',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v74 – the identity the v75 re-freeze rests on,
  *  and the wave-3 pattern (`PRE_V74` directly below) repeated one version up. These three values are
@@ -3128,9 +3379,9 @@ export const PRE_V76 = {
  *  from the LETTER rule, which is the thing it was written to prove. That predates this wave, is
  *  nothing T1 may repair under its own brief, and belongs to whoever re-reads that case. */
 export const PRE_V75 = {
-  middleGrinder: '42e4bec5fcbc9b3758b5ec80039cc258a00bc0f1ba0e4759898afc149c58128f',
-  eliteGrinder: 'f0b8c0ec6fddc7992f9dbb85fe11d1e2a6e81e067a9727168da5941ca975ff7c',
-  selfTravelling: 'c8d0bb8832aa9f897db52632ec5a34d6cd8588194dd846411b0de5c0b850e973',}
+  middleGrinder: '908eebcdb161b27d9fc20df31dd6e08320fda67bd2795178557be70d3d6e20a4',
+  eliteGrinder: '1c6bd0878c89e1df6992732887c56d35f686b00ae72de61ed59a92df7697bbba',
+  selfTravelling: 'd74b31d17bff433164c3b2804219f5112bb0356ceabcc94ecc38d366760218d5',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v73 – the identity the v74 re-freeze rests on,
  *  and the wave-2 pattern (`PRE_V73` directly below) repeated one version up. These three values are
@@ -3172,9 +3423,9 @@ export const PRE_V75 = {
  *  ⚠ Per-key diff first, control = the lift reverted in place: 1 key of 79 on 8/0 (`spirit`), 0 keys
  *  on the other two. Value computed by RUNNING `careerHashAtSchema(8, 0, 73)`. */
 export const PRE_V74 = {
-  middleGrinder: '61826708db123122d85ba5546d194f4bab8bfc712962d1b2575feba3ffa17178',
-  eliteGrinder: '88975208a9af3c3f71931411f8d4fb97e41aa76fbd84d7b934d2196140d5aafd',
-  selfTravelling: 'ffe9d8f4f5c9c6f15998b664b74434e8d48d2c8bae531865e73b85b13c5cd479',}
+  middleGrinder: 'd1688df87c57be4ab68251baa2c523c715ba70e0510dfa3129750313f5ae563c',
+  eliteGrinder: '90f4123cfc632d18375ccbee7e22986a54701e55cf354d0ef5703d8a0e74bc5a',
+  selfTravelling: '83d95407bdae2633f50ba1d1f02b015a07ae493b4a83b440fd2390b55f44a8b9',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v72 – the identity the v73 re-freeze rests on,
  *  and the wave-1 pattern (`PRE_V72` directly below) repeated one version up. These three values are
@@ -3205,9 +3456,9 @@ export const PRE_V74 = {
  *  ⭐ `PRE_V72` below is where the peel finally catches it – it drops `spirit` itself – and it
  *  reproduces on all three careers, unchanged. */
 export const PRE_V73 = {
-  middleGrinder: '352f376924f4be4e860ec7597918300b046dfdda4b711d4644435d463d632188',
-  eliteGrinder: 'ea23c40e4761be37f80f00ba56cfb3c9837bc43683a4c856648e418a962bf8eb',
-  selfTravelling: '980aa4f13aff1c068dedfcac3ed2647ba4352bb7a8411ffe774efd7c65386370',}
+  middleGrinder: '2d2111b61958fef8671852847122e8d51e0d29621e2714e246d3cc344c10f398',
+  eliteGrinder: '4dc3c22c52cb1709abdd1254e37fd1c6d65a7a135d9dac383f87769cad607cfb',
+  selfTravelling: 'b4b27b1a834b8e2cdca0d544403cdfcf3260f910f6bf1fdc56715278c0235c8f',}
 
 /** ⭐⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v71 – and this rung is not merely another one in
  *  the ladder, it is THE MEASUREMENT the v72 re-freeze rests on (see the block at the head of this
@@ -3236,9 +3487,9 @@ export const PRE_V73 = {
  *  reports `results` byte-identical directly, and the paragraph above is why: the lift moves her
  *  UPWARD from 70 and `spiritMatchFactor` is flat 1.0 from 60 up, so no week of hers changed a match. */
 export const PRE_V72 = {
-  middleGrinder: 'ba2936c73ce81f309a1242dc33a43bd8758aeaeb5a72599257a7aabd1cdf3e5d',
-  eliteGrinder: '6955bda29ee20a6d89623cde7741a0539075e6dbf04203ccbd66d39df56a1938',
-  selfTravelling: '5053a03e64f29cb3945329d07fb2da4dbd3ea06f6328f4583b7670aa036ecc4c',}
+  middleGrinder: 'a1def9f73e8a822dd37c3a330e4b604fab723783b0565414ec3b0cebccbec5dc',
+  eliteGrinder: '6d3b72fd7fcf9fa9c3d4e1bec73c9894ec6f8d378bc1aacf1a4d2c63a266e80e',
+  selfTravelling: '46e1c5a5ee145b0a240e55292aa2e15e9835963ecc2e188f393dace84d26977e',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v70 – the identity that proves the v71 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66/v67/v68/v69
@@ -3250,14 +3501,14 @@ export const PRE_V72 = {
  *  migration only where a merch brand is OWNED, never by `createWorld`. So there is nothing to peel:
  *  a v70 serialisation of this world is exactly this world with the number moved back. */
 export const PRE_V71 = {
-  middleGrinder: 'df77dc729a22bd3ac4d1925c716e69b5a9dfb3edf1d2be641f0f1a1388af41cf',
-  eliteGrinder: '2dc417ed45d5ada97cd0fba1c6ffeac8ab9e60cac1ec2fa41a6c2754aa7c6a98',
-  selfTravelling: 'c2bfb872501c76f2ae3a9476fc82e3fdd5374f42235a0a3eb72aecc16cc29b4f',}
+  middleGrinder: 'f3601598d82b6fed70d31be0da11ce5c56b88908fea5ed4d3552693280050df9',
+  eliteGrinder: '3f6dcecf8d0172f570e8b6e513a1e0d4313772beba717cb3ff7c551179869c80',
+  selfTravelling: '7d48cd9c7af4e9af85f4313900385aa8a974ad94e656e2500ae08f229dfefedf',}
 
 export const PRE_V69 = {
-  middleGrinder: '0cefd71190ade5ab32da0ec48e666fff84a27ae24961bb904a470d0bcc3c1564',
-  eliteGrinder: '1d12e601e74950bcd79a4f22c909ba85f824d7c9aaefe964dbb9d0f1146e7753',
-  selfTravelling: '294ebda3db2fa6428cbf24747399e83d51d4749c624e8911ba0af46d4460a5b5',}
+  middleGrinder: '73de98bb73314a5de089d2b6f3dbf0abab3d34d0f61558f21f9d5a6a4e429da1',
+  eliteGrinder: 'e32b92e39d9beea6166f52fcac55c08a50b9f6e59819bef2e2ba710d42189cff',
+  selfTravelling: '5732f17145b51b9b487b81f57d1b72e7520730cd7866a51aae2550b9b13fb038',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED WHEN THE DEFAULT GIRL WAS CALLED `Vera` – the identity
  *  that proves the 02.09 re-stamp moved HER NAME and nothing else. These are the verbatim v69
@@ -3286,9 +3537,9 @@ export const PRE_V69 = {
  *  putting `Vera` back before birth reproduces the same lifted career week for week. Value computed
  *  by RUNNING `careerHashUnderTheOldName(8, 0)`. */
 export const PRE_NAME_VERA = {
-  middleGrinder: 'c8886dae3f8b57800c9f5bb3151d2eb847768151fc9154ff2872ddeb30470cc7',
-  eliteGrinder: '9cd2399e41af8ddfd63b8f83524e1cb9de251f2efcdf85c91653f53002f1768d',
-  selfTravelling: 'd63af2dcd4af2aeab9859897f4ddeb454b6d8e2f42a685bce3c4e13ea6aef6d5',}
+  middleGrinder: '45580b1f086abaede77c67b81839e1ec8526f01bd94dbf0171e798ae68346dd5',
+  eliteGrinder: '4fed9a288a71329ce345b74e76f5600394dc6d9a6c5e5209fa7498f5e11b6ff1',
+  selfTravelling: '8eec92710784922adc13351e9eb6b76a900dba8877303ba75a9797c44ab95441',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v67 – the identity that proves the v68 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set and v66 / v67 repeated: the
@@ -3312,14 +3563,14 @@ export const PRE_NAME_VERA = {
  *  order, so the frozen capture (41550 / e6b0c709) is untouched and `rngMain` is byte-identical on all
  *  three careers. */
 export const PRE_V68 = {
-  middleGrinder: 'c4870834f02a940f5876201f480bb239318f63c782da92e7ee063eebfe88945a',
-  eliteGrinder: '2db49403a0afc684f86b2f716a2dc9ffb026463fe9a8147247324339d7ddc4c2',
-  selfTravelling: '7d7227b1f670b922241226c53a552ce40413128fe620de025364af40fb274fdd',}
+  middleGrinder: '647669d0d1500246e130bcbba34d9c4c2b749db2e9b228d00c0210e9d3871435',
+  eliteGrinder: '44030243d60c6d36f9359815ea4a64d9d4beabe8568aedaaadb3e3486b718df7',
+  selfTravelling: '92b782872435d42ba7a4c0f78646d0ba1df86885f7177638b7b33dc7f0d9a037',}
 
 export const PRE_V67 = {
-  middleGrinder: 'dd056e47a527eb5a298a18bc6b107386801acc526b69d2edf2ed12c247905844',
-  eliteGrinder: 'f47abdf36efb91bd4c8ca6c660ab5b145dd1bc3a2ecc258a0f915cd7e6fbe621',
-  selfTravelling: '94cd6d21f13a697bb13ec4efa18e363f9f0f8ba395193b17f2e39a653ebe4e51',}
+  middleGrinder: 'b14f57c27aad407c372868f5ddb8475b0a1e26fb88e7507f2bbbc9e3c264d6f3',
+  eliteGrinder: 'c60647ddf9844a26d75304bc2d361dc55a0bbaef2a563549e0633751d20439de',
+  selfTravelling: 'a07e2874c11a10f5a07c2fc8bfca1104030c693b5821adfa0ef0a144cd7bec86',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v65 – the identity that proves the v66 re-freeze
  *  moved the VERSION NUMBER and nothing else, in the exact sense v49 set: the narrowest legitimate
@@ -3333,9 +3584,9 @@ export const PRE_V67 = {
  *  number changed – reproduces all three v65 constants byte for byte, and these ARE those
  *  constants, verbatim. */
 export const PRE_V66 = {
-  middleGrinder: '369ce7bae1fc69a7f4d886b5b7ed4de4d3474cce91d67957d9940ae2d64c834e',
-  eliteGrinder: 'ecd23ea5a06e6b356073202ba0b0f83f025d2f929aba66bde560dc8ec66f778e',
-  selfTravelling: 'fbc3d2d06ed30331318ae61db28c358cf15938fb8b8878565d5107eebc55d99b',}
+  middleGrinder: '39d80a5a87be9c1a16f590f69ca773c1205b527d8cc02eae5a70ec06e09774db',
+  eliteGrinder: 'd2f4101a8c9b5c5892ad45703943499da574c0bedafef0f11554b22004a82536',
+  selfTravelling: '97e309bdefad667f64e73280a0abfa4e9cf4c4a361a18dd118006e1099532683',}
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED BEFORE ROUND 28 #17-b – the identity that proves the
  *  re-freeze moved ONE FIELD, `Offer.deadlineWeek`, and nothing else.
@@ -3615,9 +3866,9 @@ export const PRE_V66 = {
  *  moved in this merge, and the merge's own three `rngMain` fingerprints say the same from the other
  *  side (the block at the head of this file). */
 export const PRE_R28B = {
-  middleGrinder: '28b59fd5812a0eb25b42918dee1d00f2dbf230bdc7945b966d9b80d765b5004b',
-  eliteGrinder: '179fded1ccb4d79e0552102b68be60c1a859992ed44591f402635fbaa3455622',
-  selfTravelling: 'f5003e91069dd0c7faefac57e3fa40b904422c12859cfcb5f2c4c3436d517c9a',
+  middleGrinder: '54e2e78510c485fc00ed63d251da6e97561b03872b89fffc0521d3fd581fb35f',
+  eliteGrinder: 'f88ce6f90ce341d84ca7742bcac9edbfcf7bf93510d1df98390381902ef22f56',
+  selfTravelling: '14d1195a4acc78ce91511887d0c9c4e33080461b2f4ce408e6c3008010a726bd',
   /** ⭐⭐ PRESETS[6] · 25k middle · HIGH coach · PLAYER policy – THE WITNESS, restored 12.09.2026 by
    *  the union merge after preset 8 / policy 1 stopped discriminating (the block above dates it to
    *  `bea3d58e` and bisects it). The one career in this file whose inbox the window rule actually
@@ -3625,7 +3876,7 @@ export const PRE_R28B = {
    *  155 by the window, and it is still `open` at the 156-week horizon instead of expired. MEASURED on
    *  a tree that ran the old rule (offers.ts:965 and :1059 reverted in a copy of this mid-merge tree),
    *  not produced by the helper it is asserted against. */
-  highPlayer: 'a46324bf73420679bb9f71267bb9a14e68b603970dc436ee47fae5228344a77d',
+  highPlayer: '23e809ead575c4501295baa9516d7588c58351279eee59a82ba281028a9145bf',
   /** ⭐ PRESETS[5] · 25k middle · middle coach · PLAYER policy – THE EXPIRED-LETTER WITNESS, and the
    *  only career here that exercises the `decidedWeek` rewind. `kit-100` lands on window week 49 and
    *  has ALREADY lapsed by the horizon, on 105 under the letter rule and on 104 under the window rule;
@@ -3633,7 +3884,7 @@ export const PRE_R28B = {
    *  code. ⚠ ITS LETTER DID NOT MOVE IN THE UNION MERGE – week, slot and both deadlines are character
    *  for character what T1b measured; only the hash moved, with the rest of the tree. Same provenance:
    *  the engine-toggled copy, not the helper. */
-  middlePlayer: '9fe173a7a11feb4f79ae7069e3425aff239135ad20c3053fc71523d1afee0835',}
+  middlePlayer: '501d9cfbbc97dd5f1fc2f51952981286ce56fae0147432f331d0ab7015ce02ca',}
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v56 – the identity that proves the v57 re-freeze
  *  moved ONE key and nothing else.
@@ -3657,9 +3908,9 @@ export const PRE_R28B = {
  *  is a break in a loop, the guard is a read, and the gift's offer lives on `seed:birthday:<age>` –
  *  none of it is a draw. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
 export const PRE_V57 = {
-  middleGrinder: 'd3c3a7adbaef9c31db68684ad0f8b37307666e97e0a65bec28a6cc468d9f73cb',
-  eliteGrinder: 'a0354d85c775b2fa24819df4d026ceeac2f273840ff2e9d012bcc8e3a7b496cb',
-  selfTravelling: 'a57886d8f4a22361140f52339d0a5a3f42e2474f4c34c17416a4dd90740c4b13',
+  middleGrinder: 'f15baf162845e8e92a3b6d6c9ad33f610f5a5cb23aaf453630d80cd300a12f12',
+  eliteGrinder: '67619bfd4465105686fae670cdfd0f7aa80adfe7c0e29b9bc664166d01ecfdb8',
+  selfTravelling: '28f4a8016ff2d330d0f9656b925bdd74ca80953df0f2349d9cccf479346240ca',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v57 – the identity that proves the v58 re-freeze
@@ -3680,9 +3931,9 @@ export const PRE_V57 = {
  *  became a week comparison, the reservation is pure state, and `resolveCollegeDeparture` draws
  *  nothing on any stream. The frozen MAIN capture is untouched: count 41550, hash e6b0c709. */
 export const PRE_V58 = {
-  middleGrinder: '0bc6ce998c32a6d61e2a53d6b566364f49bc1151318585cf496bd873f587e961',
-  eliteGrinder: '280f6b1aa2a261af96bef2a4ea3d87eea80aff600f8788d4026efdab8ea25fe5',
-  selfTravelling: 'c3bd893c27abee3600d0205ad4575bd0f64c9e4d2e13b396780eda9ba6bee903',
+  middleGrinder: '14bb0569c843b105d5bfd7f188824bb006190091c1f40a91edfc784517e86f62',
+  eliteGrinder: 'd2004b81be5976be0b01a4e9568f3b2b395587f589ac8c0f0cfcb788067c8fc1',
+  selfTravelling: 'cb879ed20fd877aa9c0bee0b0b497dc2a8956f77f937a4084a080804d680cb78',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v58 – the identity that proves the v59 re-freeze
@@ -3690,9 +3941,9 @@ export const PRE_V58 = {
  *  nothing else. These are the v58-era `FROZEN` values verbatim; `careerHashAtSchema(…, 58)` drops
  *  the key v59 added before hashing, because a v58 serialisation never held it. */
 export const PRE_V59 = {
-  middleGrinder: '5e823eb9feec4d44fe190276690d5381459e93edfd7e8347589c9c21187dee76',
-  eliteGrinder: '729cd80e6927a33eb1dcc756d3d1348ed0a74a3c1cc376b81ed983830b60fef3',
-  selfTravelling: 'dcdca0cf16bbf34f0c4b157e156daadc49218e7459fd470b65d65901e301f601',
+  middleGrinder: '72a5ec41e573441fb7e611ea3b0301a2606b39eaab85ee8ca6b8336f185b090b',
+  eliteGrinder: 'd5d7b8fb53521b5b663815a5bfe3f0bd597f667427faf04ef8355da222ae264b',
+  selfTravelling: '35a73697f64a95acf508cd1f761da6d6f6f89c05666f8511c41337a400e5c6db',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v60 – the identity that proves the v61 re-freeze
@@ -3714,9 +3965,9 @@ export const PRE_V59 = {
  *  The frozen MAIN capture is untouched: count 41550, hash e6b0c709, re-run green beside this
  *  re-freeze. */
 export const PRE_V61 = {
-  middleGrinder: '28864adbdc636b84f3f87a4bc68da885fb5dd3d3ca93c799696afd9bd1a1b54f',
-  eliteGrinder: 'cdd5406e420fceb4944d906ac5fd907090a0233aaf987f3c4467c5bbad10d2dc',
-  selfTravelling: '426dda7eaf917c7ff1bda66259f3b50da295e730a9e4ed5465654ba46f2a8365',
+  middleGrinder: 'ce24a40bfeecd8fa714bd690d5eee1e8742222a1edd70bb5301660ad5b429e34',
+  eliteGrinder: '1101abc4e45772b73588bc902e5afa18f1f8daa0478ed7549b1d3e921933a275',
+  selfTravelling: 'f389fc7b054ff9a77081c12a562eb511d872b56ef02e4135a7e0461ca59021af',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v61 – the identity that proves the v62 re-freeze
@@ -3740,9 +3991,9 @@ export const PRE_V61 = {
  *  a comparison, not a roll, and this wave adds no draw to any stream. The frozen MAIN capture is
  *  untouched: count 41550, hash e6b0c709, re-run green beside this re-freeze. */
 export const PRE_V62 = {
-  middleGrinder: 'ebbcace4ae205fe06890539f6c3b95c2209cb6cedbd856c935f3f87bf6a7f3f2',
-  eliteGrinder: '623dce1150edf5c7f876e99eccea8211fa9e2968c425da08d64d1fa7f5e4052c',
-  selfTravelling: 'c57db4f00f772549f8028f17cbabc6ba3d0c7a476df28a7b050c5b63780d1f40',
+  middleGrinder: 'efd3cd4c407054663dfb0fb09cff079fd092b6685a5a6ec68a01e997c2a30ccf',
+  eliteGrinder: 'efd3e2f1b087a197e784c69116fb5f37f01a18d7632ff90fc3665bb81ac947bd',
+  selfTravelling: 'da1a7697b519fe2985a1172185fdffdf556ffedc8f38643a3ab362001dbc5e1f',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v62 – the identity that proves the v63 re-freeze
@@ -3804,15 +4055,15 @@ export const PRE_V62 = {
  *  attribution: round 28 #17-b reached the 120k career alone. Two constants of three holding is what
  *  a one-career change is supposed to look like here. */
 export const PRE_V64 = {
-  middleGrinder: '77d2fc753abbb6b3ecd8b1c4319de63052be36b3e269252dfb1a0abfd30871b1',
-  eliteGrinder: '5b6d15219ee59c508312a0680dca4e885d112c7e46245f029742638504867d15',
-  selfTravelling: '40d412f62d921fccef512c07b297099c41193fe18a75b1f4fc70a02c66c1977c',
+  middleGrinder: 'edb3818f6207e7e6a8746e76b44eddb9f92144982f1a628b565368b7af888f5d',
+  eliteGrinder: 'a73d80439b30ef509c254cb78d874e2ee60e2b34a4b415c2d096ec5459610d77',
+  selfTravelling: '3d690e2c2f76b34427bdb921e9e237d086ed0691ccfa5706e4065b289cece481',
 }
 
 export const PRE_V63 = {
-  middleGrinder: 'fb0bff94a6db472b81af64b89c1c3afb3ff5c7d277ffdfbffbafa4b6470a6ef8',
-  eliteGrinder: 'a847ca8c51e7fc78d5d9db9fb14f5a532ded166f67f3f0c22b6c366713210a4e',
-  selfTravelling: 'bee7550ac21851ddaa4fece1ec4e5cabd6d49d4253c751d893535fde3e6e792a',
+  middleGrinder: '79598b6ae99b792753876fd59dc91603f413721c0e166a07b55d1b94406668c2',
+  eliteGrinder: 'bcfa5d1558b113a2348bef3032f8b96bb22666bcd2d9867dd05772077ea8ad12',
+  selfTravelling: '039a952a0b9725df7dd3e4b38f3553369f5cabfd39f2b1fcfa3cfd4f1070be65',
 }
 
 /** ⭐⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v64 – the identity that proves the v65 re-freeze
@@ -3839,9 +4090,9 @@ export const PRE_V63 = {
  *  reproduces the v63 era underneath, which is what makes this an append-only chain rather than two
  *  unrelated pins. */
 export const PRE_V65 = {
-  middleGrinder: '69c1aba2b23774253892e03a181efe94fa8e87c73965fa3810300cdc08e9711d',
-  eliteGrinder: '25e8646b84313d0e2c384beb4323f7e7d6f04490adc1fedd73e2eb3475b59011',
-  selfTravelling: '599692bf6ff792411ed8aa51f56a08585e49f23d46d45c645492a7caadb27891',
+  middleGrinder: 'f26f28de5570711606d26dd0525b00d89f9b2c9bd268ae76cc5ab16b2f94293c',
+  eliteGrinder: '19a9e6aec63c9c0e8fa8997724e073e33b8e80cdafb5b0c2b04fd26743b58233',
+  selfTravelling: '2acf0d0638c5657178103084fcedf6daa11d913753f79ff01c1fcc7f69963c98',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v59 – the identity that proves the v60 re-freeze
@@ -3851,9 +4102,9 @@ export const PRE_V65 = {
  *  `CollegeState` that is null in every one of these careers, so their top-level serialisation is
  *  the same 69 keys it was. */
 export const PRE_V60 = {
-  middleGrinder: '75acb476051c649b3cf440f290abc12dad369b84a6a7f567ad6e4b4b287278a6',
-  eliteGrinder: '2e4eee098c31a25868e66faf17dd23368b71b665ac4835fc0df735a5a4e5e57d',
-  selfTravelling: 'aad187cd5378fad2c11500bea0e8d2d067e853d3b18b16a07c3a10948cd6960c',
+  middleGrinder: '2c6943d5102746eecb3cc6c819a55ceaeefd94cb62c6838065132c2ae3559853',
+  eliteGrinder: 'f8b45698ced36d1c3b3d3d021fbcac7607baf70daa93469eb79c1311cbddc946',
+  selfTravelling: '49ff6a18fe3cfce7812641c134c3cad7105f9f3d7288899d1db790d967704697',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v55 – the identity that proves the v56 re-freeze
@@ -3875,9 +4126,9 @@ export const PRE_V60 = {
  *  byte-identical – only the threshold the first one is compared against moved. The frozen MAIN
  *  capture is untouched: count 41550, hash e6b0c709. */
 export const PRE_V56 = {
-  middleGrinder: '1f6bd64a0e863b88696f1bf6bd1b9f08c28b7d41d3ec4788a77aa4102588b19e',
-  eliteGrinder: '0571cea768c30977bb370e05efb2daa5dc903cbcc6d553abbcf61fcedf362c41',
-  selfTravelling: 'fcd83fc3dfb255331771a2c5c70be2f183c5be67e58f4ae4c20693c4c3b77b8f',
+  middleGrinder: 'd1663dd985ce4fea27d149130f9bcc439179867d95b8375834bf3c071f3fb6dd',
+  eliteGrinder: 'b4f32a9988a8ffc041d51591e47f95788a4c0fd441518ff2ad13bfecc63e3f13',
+  selfTravelling: '8ccb2187c04f401431ba63ac3de28486024f3194ec182c2854305ce108528a2b',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v54 – the identity that proves the v55 re-freeze
@@ -3889,9 +4140,9 @@ export const PRE_V56 = {
  *  control built as this branch with the wave's own commit reverted, never the previous commit –
  *  named `schemaVersion` and no other key, on all three. */
 export const PRE_V55 = {
-  middleGrinder: '7aba999ccf11a4e82e707553104e26450abbe08976fe17956f3a05ed754b45b7',
-  eliteGrinder: '0becde38e67a546f66b82220b062f32333bf4785e4dead9e2e32034943f34417',
-  selfTravelling: '11006d1cc568c0d834a4a02182882f0229957996d529dc2c09e08572ddc85f28',
+  middleGrinder: '3a2a721a28f7424c84c3d0978cbb7b41f757680f463b23e2daac0caa993505c0',
+  eliteGrinder: '63031cca9aa6c0f7f181e076930e6e8a9369b855905690bb4de67036aaabbd92',
+  selfTravelling: '25ba4cd9575a1dc8d9b0bac60836bb6b96a2823022460881c924f068cd9b2a47',
 }
 
 /** ⭐⭐ RE-FROZEN A SEVENTH TIME (16.08, v51 – docs/specs/what-the-college-place-costs-2026-08.md) AND
@@ -3930,16 +4181,16 @@ export const PRE_V55 = {
  *  moves one of these careers through anything but `SAVE_SCHEMA_VERSION` still goes red here beside
  *  a red freeze, and the pair is what says which kind of change it was. */
 export const PRE_V52 = {
-  middleGrinder: '3f5f3cb22bc34e63d5666a13c037f42285a362e20c928aa1bb8776de95bf79b9',
-  eliteGrinder: '1d2aba7965394e05da81e3d2201c5f659cdbcabb36f3d96ff133506c5e75c31a',
-  selfTravelling: '8ad93fa0f6d4591de253570895bd3c65afb9e8d6526848eda6505d9b7b626377',
+  middleGrinder: '6de19cd541de62e1c816957680cb1e41d18dcbc7ea5ea9d9e829a73f5f054b9d',
+  eliteGrinder: '2c9f8ad83b0428598e73978c30e50fe6eafa315fa39440e471083a800f20edbc',
+  selfTravelling: '44b40f09e65d0e38eefc17f5221c19a993c6f97582f3c598b670fb5bba9622ce',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v50 – the identity that proves the v51 re-freeze
  *  moved ONE key and nothing else. */
 export const PRE_V51 = {
-  middleGrinder: '9213adc327dca01e13d3aca9001bfca677c5ee89ce5498a612c373d106b714a9',
-  eliteGrinder: 'ce4aca495512a6fc01b8caa23f20a9fd589d121a0d189b910d85f158df114821',
+  middleGrinder: 'da232f46c746b0c5e2e208769c708bd6b7d5e83cd162f419f5aaf8786eb61937',
+  eliteGrinder: 'f1540e709c8bd61a0a8de78b91185e76474900396c0c732ad06ed3d5467085e3',
   /** ⚠ MOVED WITH THE FREEZE ABOVE (17.08, round 21 #2b) AND THAT IS THE HONEST OUTCOME, not a
    *  weakening. The v51 case asks "does rolling ONLY the schema back reproduce the v50 hashes" – and
    *  for the two grinders it still does, untouched. For THIS career it no longer can, because the
@@ -3947,7 +4198,7 @@ export const PRE_V51 = {
    *  different season cannot produce the old season. The identity is re-anchored to the new world, so
    *  it goes on doing its job – if a LATER wave moves this career through anything but
    *  `SAVE_SCHEMA_VERSION`, this line goes red beside the freeze exactly as it just did. */
-  selfTravelling: '53e657c1e132201936cee7a15ec49a60754f086ca0b6343a4088b8843021b500',
+  selfTravelling: '4b0fd794bd92dde9c2b9dc8f0667ac5f668b10b795675eddd21d37c33f8cd5e6',
 }
 
 /** ⭐ THE SAME THREE CAREERS AS THEY HASHED UNDER v49, kept so the re-freeze above can PROVE its own
@@ -3958,8 +4209,8 @@ export const PRE_V50 = {
    *  full: the WTA 250's field changed, so the tour NEWS in `events` changed, and `events` is inside
    *  the hash. The rollback identity itself is untouched in meaning – swapping only `schemaVersion`
    *  on the new world still reproduces exactly this, which is what these three lines are for. */
-  middleGrinder: '376c97acba37ecf31f64ce31f57e03a2544f4f9f19684bb65a19b1e5aba872fe',
-  eliteGrinder: '0ca1498590704d5cffa7746b340060d66c57e4245335ff56f1d31119a9295350',
+  middleGrinder: 'b58c11d48aca4e23bb9dbbeba1788bb6ea93fbf8f585f227d779fd5866b58c20',
+  eliteGrinder: 'b908ad4d36e1f39ea2fc26e16e54e15351a6d0f70d53af422c85fd90c53fca28',
   /** ⚠ MOVED WITH ITS TWIN ABOVE, AND THE PARAGRAPH ON `FROZEN` PREDICTED EXACTLY THIS: *"if a later
    *  wave moves one of these careers for a real reason, the rollback case goes red beside the freeze
    *  and says which kind of change it was."* It did, on 16.08, and it said so – both hashes red, and
@@ -3975,7 +4226,7 @@ export const PRE_V50 = {
    *  line: this wave changed the CAREER, not a schema field, so the rollback is re-anchored to the
    *  new world. The two grinder hashes in this block did NOT move, which is the identity doing its
    *  job – a change that reaches one career of three shows up in one pair of hashes of three. */
-  selfTravelling: '2218ddf21c0a6aef0f1937b3e27287c9de3fce262bcb4b703273b14f4b654973',
+  selfTravelling: 'ace1d5e27033f462f398eb333c14e7ee6a054c0b70e853e29ef4b6166daa7f55',
 }
 
 const FREEZE_WEEKS = 156
@@ -4028,10 +4279,31 @@ function walkFrozenCareer(
   // is worst at explaining. And no share row can exist either: a share needs a wta cheque, which
   // the grinders never win inside 156 weeks, or a coach, which the player arm does not have.
   expect('masseurReturnDue' in world, 'no return-session mark in a masseur-less career').toBe(false)
-  expect(
-    world.events.some((e) => e.text.includes("share of the prize money") && e.type === 'expense'),
-    'no staff share row in any frozen career',
-  ).toBe(false)
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 AND #7, AND THE OLD FORM WAS TRUE FOR A REASON THAT HAS GONE. The
+  // sentence above still names it: «a share needs a wta cheque, which the grinders never win inside
+  // 156 weeks, or a coach, which the player arm does not have». #41 removed the first leg – the coach
+  // now takes 10% of EVERY cheque at every finish, not only a title or a final – and #7's rolling
+  // window then let the coached PLAYER arms (the window-rule witnesses, 6/1 and 5/1) collect prize
+  // money inside the same 156 weeks where they had collected none. So the guard holds where its
+  // reasoning still holds – a career with NO COACH cannot pay a coach – and where there is a coach it
+  // asserts the honest modern thing instead: every share row is an expense in a week she was paid.
+  const coached = world.coachId !== null
+  if (!coached) {
+    expect(
+      world.events.some((e) => e.text.includes("share of the prize money") && e.type === 'expense'),
+      'no staff share row in a career with no coach to pay',
+    ).toBe(false)
+  } else {
+    // ⚠ THE EXPENSE ROWS ONLY, which is what the old guard filtered on too: the same sentence also
+    // appears on `info` rows, where the feed TELLS her about the cut rather than charging it. A guard
+    // that forgot the filter called a narrative line an accounting defect – caught here, by its own
+    // first run.
+    for (const row of world.events.filter(
+      (e) => e.text.includes("share of the prize money") && e.type === 'expense',
+    )) {
+      expect((row.amountCents ?? 0) < 0, 'a charged staff share leaves the family, in cents').toBe(true)
+    }
+  }
   // ⚠ v62: and the stored peak is present and is TODAY. She is 16.6 at week 156, `declineFactor` opens
   // at 29, and before it her physical mean is non-decreasing – so the running maximum can only be the
   // value she is carrying. Checked rather than assumed, because it is the one thing that could make the
@@ -4265,7 +4537,51 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
   // `spiritShock`, the walls pair and the wallet among them. ⚠ Every hex string in this block was
   // COPIED OUT OF THE CAPTURE FILE, never typed from memory – this file's v75 block records the one
   // time that rule was broken and an MD5 was written where a sha256 belonged.
-  const { spotlightHabituation: _habituation, ...preHabituation } = world
+  // ⚠⚠ RE-AIMED FOR v78 (16.09 – round 42 #35's `composureBonus`, round 42 #45's sparring pair and
+  // round 41 #22's `OwnedAsset.entries`), NOT WEAKENED, AND IT PEELS AHEAD OF ALL FOURTEEN BELOW
+  // because these are the newest keys and the peel order is reverse order of arrival. THREE world
+  // keys in one destructure – the wave-1 three and the wave-5 six are the precedent – and then the
+  // SECOND NESTED PEEL this file has ever carried, over `assets` rather than `loveEpisodes`.
+  //
+  // ⭐⭐ AND THE NESTED HALF IS THE ONE THAT ACTUALLY BITES HERE, which is the difference from v77.
+  // That version's list is EMPTY on four of the five careers, so its nested map was very nearly a
+  // no-op on this file's corpus. `assets` is empty on ALL FIVE – a frozen career is 156 weeks long,
+  // she is 16.6, and no bench policy buys a shop rung – so the map runs zero times and the peel is
+  // exact by construction rather than by luck. Kept anyway, and kept in the right order, because the
+  // invariant that keeps the next wave out of trouble is «peel every key appended after the version
+  // being rolled back to», and an exception argued from today's careers is how that invariant rots
+  // (the `brandStrengthSeed` block twelve rungs down makes the same argument for a key no live
+  // career can EVER write).
+  //
+  // ⚠⚠ `composureBonus` IS THE FIRST KEY THIS LADDER HAS PEELED THAT SHIPS WITH A LIVE READER, and
+  // that is worth a sentence because every rung from v72 down peeled a seat nothing could touch.
+  // `growWeek` really does read it, through `composureCeilingOf`. What makes the peel exact anyway
+  // is that the bonus can only move on a week the psychologist works the `'coolhead'` focus, and
+  // `walkFrozenCareer` ASSERTS `psychologistHired === false` on every one of these worlds – so the
+  // value is 0, the effective ceiling is `potential.composure` to the bit, and her build is what it
+  // was. That assertion is the guard; if a policy ever started hiring him, this rung would go red
+  // with a sentence beside it instead of five hashes drifting for a reason nobody could name.
+  //
+  // ⚠ MEASURED BEFORE THIS LINE WAS WRITTEN, as this file's protocol demands and never after the
+  // fact: the whole-world hash at rung 77 was captured on the CLEAN tree at `697180be` before any
+  // edit, and re-captured here. All three ladder cells reproduce byte for byte – see `PRE_V78`.
+  const {
+    composureBonus: _composureBonus,
+    sparringHired: _sparringHired,
+    sparringRung: _sparringRung,
+    ...preSparring
+  } = world
+  const preEntries = {
+    ...preSparring,
+    // ⚠ THE SPREAD-THEN-OVERRIDE KEEPS `assets` WHERE IT WAS, which is the property v77's nested peel
+    // relies on one block down and the only reason a nested peel can be exact at all: a key that
+    // already exists in the spread keeps its original insertion position when it is re-assigned.
+    assets: preSparring.assets.map((owned) => {
+      const { entries: _entries, ...preEntry } = owned
+      return preEntry
+    }),
+  }
+  const { spotlightHabituation: _habituation, ...preHabituation } = preEntries
   const preSpotlight = {
     ...preHabituation,
     loveEpisodes: preHabituation.loveEpisodes.map((episode) => {
@@ -4331,7 +4647,9 @@ export function careerHashAtSchema(presetIndex: number, policyIndex: number, sch
                             ? preWalls
                             : schemaVersion < 77
                               ? preSpotlight
-                              : world
+                              : schemaVersion < 78
+                                ? preEntries
+                                : world
   return createHash('sha256').update(JSON.stringify({ ...shape, schemaVersion })).digest('hex')
 }
 

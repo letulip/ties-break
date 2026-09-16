@@ -26,11 +26,33 @@ describe('the rating predicts the match it labels', () => {
     expect(ratingOf(build('avg', 50), 'hard', 'wta')).toBe(RATING_BASE)
   })
 
+  // ⚠⚠ RE-AIMED BY ROUND 42 #34, AND THE MOVE IS THE ITEM RATHER THAN A DRIFT – BUT IT IS A REAL
+  // MOVE, SO THE NUMBER IS WRITTEN DOWN HERE RATHER THAN THE WALL QUIETLY WIDENED.
+  //
+  // The owner's ruling (15.09) was «raise the price of nerve in the point loop **and let the rating
+  // follow it, so a nerve talent rates like a talent**». `ratingOf` is derived from
+  // `calibratedPServe`, whose `COMPOSURE_K` was re-fitted 2.2e-5 → 2.2e-4 with the loop, so a build
+  // whose core is high in EVERY wing – which is what `build(core)` makes – now carries a composure
+  // edge worth ten times what it did. Measured, both arms, the same calls:
+  //
+  //     core 76.4 (the population's #1)        2214 → 2254   (+40)
+  //     composure 76.4 alone against core 50   1647 → 1688   (+4 rating → +45 – the ruling's sentence)
+  //     the ladder, core 20 → core 80          995–2291 → 949–2337
+  //
+  // ⚠ AND THE LADDER'S SLOPE MOVED TOWARD THE LIVE LIST, NOT AWAY FROM IT. `tools/skill-gap-odds.ts`
+  // §R grades our Elo per rank-doubling against the live 2026 curve: the #1→#1000 ratio was **×0.95**
+  // (5% too flat) and is now **×1.03** (3% too steep), with the exchange rate 20.9 → 22.5 Elo per
+  // core point, and the upset corridor's mean absolute miss over all 17 pairs 2.41 → 2.40 points.
+  //
+  // ⚠ WHAT THE UPPER WALL IS STILL FOR, and why it is 2290 rather than «whatever it reads». The live
+  // list's #1 is 2195, and THIS NUMBER IS ON THE CARD – a population whose #1 read 2400 would be
+  // quoting a player the sport does not have. 2290 leaves the measured 2254 inside with a seed's
+  // worth of room and refuses another +40.
   it("the world #1 of the shipped population reads about the live list's own number one", () => {
     // SKILL_LAW.top is 76.4 – the core the population puts at world #1; the live 2026 list's #1 is 2195.
     const r = ratingOf(build('no1', 76.4), 'hard', 'wta')
     expect(r).toBeGreaterThan(2150)
-    expect(r).toBeLessThan(2240)
+    expect(r).toBeLessThan(2290)
   })
 
   it('is monotone in skill', () => {

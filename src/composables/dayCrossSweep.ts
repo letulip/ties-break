@@ -132,9 +132,19 @@ export function useDayCrossSweep(options: DayCrossSweepOptions): DayCrossSweep {
    *  browser: the sweep reached seven struck-out days 5ms after the press, every time. On capture the
    *  order is inverted, so the first press sees `running: false` and falls through to the button, and
    *  every LATER press - anywhere, the button included - is a skip. No flag, no timer, no guessing at
-   *  which element was tapped. (The listener itself is still the screen's, on the shell it draws.) */
+   *  which element was tapped. (The listener itself is still the screen's, on the shell it draws.)
+   *
+   *  ⚠⚠ ROUND 42 #17(b) – AND IT GUARDS ON `skippable`, NOT ON `running` ALONE, which closes the
+   *  strongest of the owner's three double-advance mechanisms («иногда получается двойная перемотка
+   *  недели»). `running` stays true from the last stroke until the new snapshot lands - deliberately,
+   *  so the strokes stay drawn - and in that gap the old guard let a shell tap fall through to
+   *  `finishSweep` a SECOND time: the advance re-emitted, and the press bought two weeks. `skippable`
+   *  is the honest question («is there anything left to skip?») and its own docstring has said so all
+   *  along; once everything is struck out, a tap is not a skip and hands nothing to the shell.
+   *  Mutation arm: put `if (!running.value) return` back and
+   *  tests/component/calendar-sweep.test.ts's post-sweep-window case goes red with a second emit. */
   function skipSweep(): void {
-    if (!running.value) return
+    if (!skippable.value) return
     crossed.value = options.week()?.days.length ?? 0
     finishSweep()
   }

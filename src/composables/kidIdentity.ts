@@ -33,6 +33,9 @@ import { rankLabel } from '../shared/format'
 import { weekDateLine, weekSpan, weekYearLabel } from '../shared/dates'
 import { useHeaderAvatar } from './headerAvatar'
 import { readLocal, writeLocal } from './localStore'
+// ⭐ ROUND 42 #29(b) – the five rungs of the Mood ladder, type-only. The BAND arrives on the snapshot
+// (`diary.facts.moodBand`); nothing here reads a number, and nothing here derives a band.
+import type { SpiritBand } from '../engine/spirit'
 
 /** The long form, where a chip has no room: which table, and the one fact about it that matters.
  *  A TOTAL Record over LadderTrack (the LADDER_TIP discipline from Stats): a fourth table cannot
@@ -78,6 +81,10 @@ export interface KidIdentity {
   rankMovement: ComputedRef<{ dir: 'up' | 'down' | 'flat'; by: number }>
   showKidHint: Ref<boolean>
   dismissKidHint: () => void
+  /** ⭐⭐ ROUND 42 #29(b) – WHICH MOOD COLOUR THE GLOW RING WEARS, or `null` for no ring at all.
+   *  `null` at the neutral rung by the owner's own ruling, and `null` before the first snapshot, so
+   *  the shipped chrome (lime hairline, dark halo) is exactly what an unringed avatar still draws. */
+  moodRing: ComputedRef<SpiritBand | null>
 }
 
 export function useKidIdentity(): KidIdentity {
@@ -132,6 +139,28 @@ export function useKidIdentity(): KidIdentity {
   // access in the app (it lived in `HomeScreen.vue`'s own setup until P2-6 moved the block here);
   // `composables/localStore.ts` is the shared spelling of the guard the other eight readers each
   // wrote out by hand. The default is unchanged: no mark read means the callout is shown.
+  // ⭐⭐ ROUND 42 #29(b) – THE GLOW RING'S BAND, AND IT LIVES HERE FOR THE REASON THE FILE EXISTS.
+  //
+  // The owner, 14.09: «Делаем разноцветную светящуюся обводку вокруг аватарки, для каждого
+  // настроения свой цвет» – so the ring is a property of THE AVATAR, and the avatar is drawn twice
+  // (Home's photograph below 1024, the rail's strip above it). A ring computed in either template
+  // would be the same drift `headerAvatarUrl` and the rank chip are here to prevent: one width
+  // glowing and the other not, on one week.
+  //
+  // ⚠ NO RING AT THE NEUTRAL RUNG, by his own «для каждого настроения свой цвет» read against the
+  // ladder: `steady` is the rung the game is on most weeks, and a colour that is on all the time is
+  // not a signal. `null` is therefore the DEFAULT state and the shipped chrome is what it draws –
+  // which is also what makes this cheap to obey, because an avatar with no ring is byte-for-pixel
+  // the avatar that shipped.
+  //
+  // ⚠ AND IT SPEAKS NO WORD. The ring is colour; the five Mood WORDS stay on the two tiles that
+  // already print them (`diary.facts.moodWord`). Nothing on Home or the rail gained a sentence for
+  // this round – CLAUDE.md invariant 4, and the reason the ring needed no copy to ship.
+  const moodRing = computed<SpiritBand | null>(() => {
+    const band = game.snapshot?.diary.facts.moodBand ?? null
+    return band === null || band === 'steady' ? null : band
+  })
+
   if (!hintOpen) hintOpen = ref(!readLocal(KID_HINT_KEY))
   const showKidHint = hintOpen
   function dismissKidHint(): void {
@@ -156,6 +185,7 @@ export function useKidIdentity(): KidIdentity {
     rankMovement,
     showKidHint,
     dismissKidHint,
+    moodRing,
   }
 }
 

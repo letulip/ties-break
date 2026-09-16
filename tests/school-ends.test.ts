@@ -109,6 +109,10 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           week,
           ageYears: 14 + seasonIndex,
           seasonYear: seasonYear(seasonIndex),
+          // ⚠ ROUND 42 #6/#37 – the view names her temperament and her composure now; this file is
+          // about the School tile and asserts about neither.
+          temperament: 'quiet',
+          composure: 50,
           playStyle: 'all-court',
           birthMonth: bm,
           injured: false,
@@ -117,6 +121,9 @@ describe('W4-SCHOOL – school ends at the end of the school year, and never at 
           weeksSinceTitle: null,
           college: null,
           kidFundsCents: 0,
+          // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+          // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+          kidSharePausedYears: 0,
           ownsBrand: false,
         })
         // ⭐ ROUND-23 #6: "School finished" is gone – past the last grade the tile hands over to the
@@ -509,7 +516,11 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             week,
             ageYears: Math.floor(kidAgeExact(week, bm, 1)),
             seasonYear: seasonYear(Math.floor(week / WEEKS_PER_YEAR)),
-            playStyle: 'all-court',
+            // ⚠ ROUND 42 #6/#37 – the view names her temperament and her composure now; this file is
+          // about the School tile and asserts about neither.
+          temperament: 'quiet',
+          composure: 50,
+          playStyle: 'all-court',
             birthMonth: bm,
             injured: false,
             weeksAway: 0,
@@ -517,6 +528,9 @@ describe('round-21 #6 – the school clock reads her birth month, and the shift 
             weeksSinceTitle: null,
             college: null,
             kidFundsCents: 0,
+            // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+            // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+            kidSharePausedYears: 0,
             ownsBrand: false,
           })
           // Past her leaving week the tile has left the classroom (round 23 #6 – no grade, and the

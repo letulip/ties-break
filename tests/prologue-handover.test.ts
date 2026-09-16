@@ -734,10 +734,13 @@ describe('⭐⭐ what the nine years added – the base band, and it is the half
     expect(n.behind / total, 'behind').toBeCloseTo(0.2, 1)
     expect(n.level / total, 'level').toBeCloseTo(0.6, 1)
     expect(n.ahead / total, 'ahead').toBeCloseTo(0.2, 1)
-    // ⚠⚠ AND THE MIDDLE BAND HOLDS MORE THAN HALF, which is not a taste – it is what makes «She is
-    // where most girls her age are» a TRUE sentence. The tertiles were measured at 37.6% and rejected
-    // on exactly this when the arrival cuts were chosen; the same test binds the new pair.
-    expect(n.level / total, 'the middle sentence says «most», so it has to be most').toBeGreaterThan(0.5)
+    // ⚠⚠ AND THE MIDDLE BAND HOLDS MORE THAN HALF – the cuts' own shape (p20/60/20; tertiles were
+    // measured at 37.6% and rejected when they were chosen). ⭐ Re-worded by round 42 #31 (ruled A,
+    // 15.09): the level line used to SAY «most girls her age», so this pin also kept that sentence
+    // true; the comparative claim left the copy with the re-voice, and what remains pinned is the
+    // distribution the boring-middle doctrine promises – a tie reads as level, and level is the
+    // common answer about a child.
+    expect(n.level / total, 'the middle band stays the common answer – the cuts\' own shape').toBeGreaterThan(0.5)
   })
 
   // ⭐⭐⭐ THE ACCEPTANCE CRITERION, AND ROUND 40 #4 IS WHY IT IS NOW ABOUT EVERY SEED. Two childhoods,
@@ -952,15 +955,26 @@ describe('⭐⭐ what the nine years added – the base band, and it is the half
     }
   })
 
-  it('⭐⭐ `ahead` and `level` are byte-identical to what shipped – not one word moved with the band', () => {
+  // ⚠ RE-AIMED BY ROUND 42 #31 (RULED A, 15.09) – AND THE GUARD'S PURPOSE WAS FULFILLED, NOT
+  // DROPPED. This pin used to hold the upper two pairs BYTE-IDENTICAL to what shipped, because the
+  // round-40 re-cut deliberately left them speaking the old comparative register until the owner
+  // said whether they should follow his `behind` re-voice. His word came («31 - A»), the pairs
+  // re-voiced into the realisation register, and the pin moves WITH the ruling to hold the NEW
+  // drafts exactly – a wording change is still the one diff no other test catches, and these four
+  // lines are drafts under his вычитка that no agent may drift.
+  it('⭐⭐ `ahead` and `level` are the ruled re-voice, verbatim – and the old comparison is gone', () => {
     expect(COACH_BASE_READS.ahead).toEqual([
-      'She is ahead of most girls her age. Somebody did the work.',
-      'She is further along than the girls she will be playing.',
+      'The years added to what she was born with. Somebody did the work.',
+      'She brings more than she started with – the childhood built it.',
     ])
     expect(COACH_BASE_READS.level).toEqual([
-      'She is where most girls her age are.',
-      'She is level with the girls she will be playing.',
+      'She comes with what she was born with. The years neither added nor took.',
+      'The childhood held her level with what she brought.',
     ])
+    // The same population test his `behind` pair passes: no line claims to measure other girls.
+    for (const line of [...COACH_BASE_READS.ahead, ...COACH_BASE_READS.level]) {
+      expect(/most girls|girls her age|girls she will be playing/i.test(line), line).toBe(false)
+    }
   })
 
   it('⚠ NOT ONE BASE LINE CARRIES A NUMBER, AND NONE OF THEM NAMES A CEILING', () => {

@@ -467,7 +467,57 @@ import type { AcademySupport } from '../academy'
 //
 // Full move: this constant, the v76 -> v77 step in migrations.ts, tests/fixtures/saves/v77.json, and
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence.
-export const SAVE_SCHEMA_VERSION = 77
+// ⭐⭐⭐ v78 – ONE BUMP, THREE CUSTOMERS, which is the owner's own scheduling («41 #22 давай тоже в
+// v78 закинем», 15.09) and the whole economy of a schema move: the ritual costs a fixture, a peel
+// rung and ten e2e regenerations whether it carries one key or six, so three items that each need
+// one thing persisted ride it together. World `+composureBonus`, `+sparringHired`, `+sparringRung`;
+// the ROWS of `world.assets` gain `+entries`.
+//
+//   · round 42 #35 – `composureBonus`. THE ONLY QUANTITY IN THE GAME THAT LIVES ABOVE A ROLLED
+//     CEILING, earned by sustained psychologist work on the nerve focus and lost slowly without it.
+//     Its three numbers are the owner's, verbatim: «+5 потолок, по очку за сезон… 0.2пп за сезон
+//     без этой тренировки». It has to persist because it is earned over seasons and cannot be
+//     re-derived from anything the save already holds – weeks hired are not enough, since the focus
+//     can change under a standing hire, and `psychologistFocusSeason` is a STAMP rather than a
+//     tenure (its own docblock refuses exactly that proxy, one field group down).
+//   · round 41 #22 – `OwnedAsset.entries`. The fund chart's purchase marks; the field's own block in
+//     shared/protocol/profile.ts carries the argument, and it is the reason this version's step
+//     walks the ROWS of a list as well as the keys of the world.
+//   · round 42 #45 / item 19 – `sparringHired` and `sparringRung`. ⚠⚠ THE KEYS ONLY, AND NOTHING
+//     READS THEM ON THIS TREE, AND THE SEAT DID NOT LAND IN THIS ROUND EITHER. ⚠⚠ Round 42 bundle
+//     13 STOPPED on two missing things and was right to: `world.form` does not exist (the RHYTHM
+//     channel the seat's whole effect cuts ships in wave F1, which never shipped – `git grep
+//     rustAfterWeeks -- src` is empty), and the owner's 15.09 travel override needs a third key,
+//     `sparringTravels`, which v78 was scoped before he gave. So a seat built on these two would
+//     have cut a drift that does not drift. The keys stay because they are correct and append-only
+//     migrations are forever; the seat lands with F1 and with its travel key, in its own version.
+//
+// ⚠⚠ AND THE FOUR ARE THREE DIFFERENT KINDS OF THING, named so the next reader does not look for one
+// story: `composureBonus` is a FACT ABOUT HER that the parent's spending earned; `entries` is a
+// LEDGER OF WHAT THE FAMILY DID; the sparring pair is a STAFFING DECISION nobody can make yet. v76's
+// seat-plus-walls append is the precedent for riding one bump, for the identical reason.
+//
+// ⚠⚠ THE BACK-FILLS ARE EXACTLY TRUE AND NOT ONE IS A BARGAIN – v73/v74/v75/v76/v77's discipline one
+// rung on. `composureBonus = 0` – ⭐ ZERO IS THE IDENTITY AND NOT A PLACEHOLDER: the bonus is «how
+// far above her rolled ceiling the psychologist's years have carried her», and a career that
+// predates the mechanic has been carried nowhere, because there was no mechanic to carry it. At 0
+// the effective ceiling IS `potential.composure` and `growWeek` is byte-identical – see
+// `composureCeilingOf`. `sparringHired = false` – the seat did not exist, so nobody was hired into
+// it. `sparringRung = 1` – the DEFAULT rung, meaningless until hired, which is v59's masseur dial
+// and v76's psychologist rung quoted rather than re-argued. `entries = []` – «this career recorded
+// no purchases», which is what a save written before the road existed is.
+//
+// ⚠ ONE OF THE FOUR IS NOT INERT, AND THAT IS THE DIFFERENCE FROM v75/v76/v77. Those shipped seats
+// with no reader at all. `composureBonus` ships WITH its reader (`composureCeilingOf`,
+// `composureBonusAfterWeek`, and the two new `growWeek` arguments), because a bonus nobody can earn
+// is not a testable claim. What keeps the frozen careers honest instead is that the bonus can only
+// move on a week the psychologist is working the `'coolhead'` focus, and no frozen career ever hires
+// him – `walkFrozenCareer` already asserts `psychologistHired === false`. So the mechanic is
+// unreachable in every one of them, which is a property the peel rung MEASURES rather than assumes.
+//
+// Full move: this constant, the v77 -> v78 step in migrations.ts, tests/fixtures/saves/v78.json,
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e fixtures.
+export const SAVE_SCHEMA_VERSION = 78
 
 
 
@@ -1219,6 +1269,64 @@ export interface WorldState {
    *  made a mid-season hire wait for the next block's off-season – up to two years. The expression
    *  lives once, in `world/psychologist.ts`, and the guard compares against that same call. */
   psychologistFocusSeason: number | null
+  /** ⭐⭐⭐ v78, ROUND 42 #35 – HOW FAR ABOVE HER ROLLED CEILING THE PSYCHOLOGIST'S YEARS HAVE CARRIED
+   *  HER, in composure points, one decimal, `0 .. ECONOMY.psychologist.composureBonusCap`.
+   *
+   *  THE OWNER, 15.09: «может быть даже сделать какую-то возможность превосходить заложенную с сидом
+   *  выдержку с помощью психолога. Пусть и не сильно, но тем не менее», and the three numbers the
+   *  same day: «+5 потолок, по очку за сезон, постоянный (здесь не уверен, можно всё таки небольшой
+   *  откат сделать мне кажется, например 0.2пп за сезон без этой тренировки)».
+   *
+   *  ⚠⚠ IT IS HEADROOM AND NOT POINTS, WHICH IS THE ONE THING A LATER READER MUST NOT INVERT. This
+   *  number does not sit in her composure; it raises the ceiling composure is allowed to climb to
+   *  (`composureCeilingOf`), and ordinary development does the climbing on its own terms. So a bonus
+   *  point is EARNED TWICE – the seat buys the room, the training fills it – and nothing in the
+   *  engine ever adds to `skills.composure` behind `growWeek`'s back. The alternative, adding the
+   *  bonus onto her value at the read, is one line shorter and makes the wing jump on a week she did
+   *  nothing, which is the whole thing a ceiling exists to prevent.
+   *
+   *  ⚠⚠ AND THE DECAY IS SCOPED TO THIS QUANTITY ALONE – the owner's own clarification, 15.09, and
+   *  the one thing a builder can get wrong here: «чтобы у нас обычный естественный прирост тоже
+   *  работал, т.е. пока она растёт и без психолога у неё всё равно этот навык может тренироваться в
+   *  зависимости от сида». Below the rolled ceiling composure grows exactly as it always has,
+   *  seed-driven, psychologist or no psychologist. The −0.2 only ever eats what this field bought.
+   *  `growWeek`'s `composureEase` is bounded by `min(this week's fall, how far she is above the NEW
+   *  effective ceiling)`, so it can never reach a point training earned and it can never reach
+   *  `veteranPoise`'s own excess beyond one week's fall.
+   *
+   *  ⚠ A PERSISTED NUMBER AND NEVER A DRAW. It moves by a constant each week – up while the seat
+   *  works the `'coolhead'` focus, down while it does not – so `composureBonusAfterWeek` is pure,
+   *  total and RNG-free, and `tests/condition.test.ts`'s MAIN capture (41550 / e6b0c709) cannot see
+   *  it. It is also why the field has to exist at all: «how many seasons of nerve work has this
+   *  family paid for» is not recoverable from the save. `psychologistFocusSeason` is a stamp, not a
+   *  tenure – its own block above refuses that proxy for T4's receipt, for the same reason.
+   *
+   *  ⚠ THE RATE IS PER WEEK AND THE CONSTANTS ARE PER SEASON, which is `coolheadPerSeason`'s own
+   *  shape one field over and not a re-reading of his numbers: a whole season worked is exactly +1
+   *  and a whole season idle is exactly −0.2, and a season half worked is proportional instead of
+   *  needing an invented threshold for what «continuous» means. It matters, because the seat STANDS
+   *  DOWN by design on a college freeze and a booked family week (`psychologistWorksInWeek`) – a
+   *  season-boundary rule would have to decide whether a family holiday voids the year, and this one
+   *  simply charges it three weeks of accrual. */
+  composureBonus: number
+  /** ⭐⭐⭐ v78 – THE SPARRING SEAT, KEYS ONLY (round 42 #45, the owner's re-scope of item 19). Hired,
+   *  and at which rung of `the-form-and-the-sparring-2026-09.md` §4's three.
+   *
+   *  ⚠⚠ NOTHING ON THIS TREE READS EITHER, AND THAT IS DELIBERATE RATHER THAN UNFINISHED. The seat's
+   *  behaviour – «the slump is the psychologist's patient, the rust is the sparring partner's», the
+   *  RHYTHM channel's drift cut by rung – is this round's bundle 13. Two fields cannot justify a
+   *  schema move of their own, so they ride v78's bump with the two customers that can, and the
+   *  migration's own comment says so too. A reader who finds an unused key here is reading a
+   *  SCHEDULING decision, not a half-built feature.
+   *
+   *  ⚠ The back-fills and the fresh-career defaults are `false` and the middle rung `1`, which is
+   *  `masseurHired`/`masseurSessionsPerWeek` (v59) and `psychologistHired`/`psychologistRung` (v76)
+   *  quoted rather than re-argued: the seat did not exist so nobody was in it, and a rung has to
+   *  read something while being meaningless until hired. */
+  sparringHired: boolean
+  /** which rung of the sparring ladder the family is paying for – see `sparringHired` above for the
+   *  whole of why these two are here and nothing reads them. */
+  sparringRung: 0 | 1 | 2
   /** ⭐⭐⭐ v76 – HER WALLS AND HER REGULATION, the two §2a leanings (`docs/specs/who-she-is-2026-09.md`
    *  §2a verbatim, the 09.09 third-sitting re-cut). One decimal like `spirit`, both starting at 0.
    *

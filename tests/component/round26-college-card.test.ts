@@ -30,6 +30,7 @@
 // crossing vitest's 5 s default with zero assertion failures. 30 s is ~14x the solo cost, so it can
 // only fire on a genuine wedge. ⚠ If a case here ever takes tens of seconds ALONE, that is a real
 // regression and this ceiling must not be raised to hide it.
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from '../helpers/career'
@@ -47,7 +48,6 @@ import { setViewport, PHONE } from './fits'
 import { parseColor, contrastRatio, effectiveBackground, effectiveColor } from './contrast'
 import {
   answerFork,
-  chooseGift,
   closeTournament,
   createWorld,
   measureCollegeOffer,
@@ -215,7 +215,7 @@ function walkedCollegeSnapshot(): Snapshot {
   const { world, rng } = atCollege('r26-card-base')
   resumeFromCollege(world, rng)
   answerCollegeReveal(world)
-  if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
   const snap = toSnapshot(world)
   if (snap.ending === null || snap.ending.ending.type !== 'college' || snap.ending.college === null) {
     throw new Error('the walked career is not at college – the fixture under every case below is wrong')
@@ -276,7 +276,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       const view = toSnapshot(world).ending?.college ?? null
       rest.push({ yearsDone: view?.yearsDone ?? world.college!.years.length, latched: view !== null })
     }
@@ -315,7 +315,7 @@ describe('⭐⭐⭐ #13 – four years is four years, and the fourth is the last
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(world.college!.years).toHaveLength(ENDINGS.collegeYears)
     // The refusal is the engine's, at its own entry, and it is a THROW rather than a no-op – which

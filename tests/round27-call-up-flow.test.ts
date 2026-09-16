@@ -27,6 +27,7 @@
 //   3. THE FLOW TELLS THE TRUTH ABOUT IT – no table, no rung, no draw, and the amateur sentence is
 //      the SQUAD's rather than the student field's.
 //   4. THE TOAST IS GONE, and `friendly` is not.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect, beforeAll } from 'vitest'
 import {
   answerFork,
@@ -36,7 +37,6 @@ import {
   callUpRevealMatches,
   callUpRevealOpen,
   callUpRubbersOf,
-  chooseGift,
   closeTournament,
   createWorld,
   enterEvent,
@@ -112,7 +112,7 @@ function walkTheFreeze(world: WorldState, rng: Rng): void {
   for (let press = 0; press < 5 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
     resumeFromCollege(world, rng)
     answerAnyCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     drainLifeBeats(world)
   }
 }
@@ -125,7 +125,7 @@ function pressToTheTie(world: WorldState, rng: Rng): string[] {
     const stops = resumeFromCollege(world, rng)
     if (callUpRevealOpen(world)) return stops
     answerAnyCollegeReveal(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a Nations Cup tie')
@@ -486,7 +486,7 @@ describe('#6 the flow tells the truth about a week with no table, no rung and no
         resumeFromCollege(world, rng)
         if (world.college!.leagueReveal) break
         answerAnyCollegeReveal(world)
-        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+        if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       }
       expect(world.college!.leagueReveal, 'the walk really reached a championship').toBeTruthy()
       const p = toSnapshot(world).pending!
@@ -561,7 +561,7 @@ describe('#6 the college button names the tie, because the tie is now a stop', (
       if (tie) playedTie++
 
       answerAnyCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     // Not vacuous: the career really met ties, and the button really named them.
     expect(playedTie, 'the walked career really played ties').toBeGreaterThan(0)

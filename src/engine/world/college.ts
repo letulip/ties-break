@@ -24,7 +24,9 @@ import { coachFactor } from '../coach'
 import { SKILL_KEYS, type KidSkills } from '../development'
 import { ENDINGS } from '../ending'
 import { WEEKS_PER_YEAR } from '../season/calendar'
-import { parentIncomeForWeekCents } from '../economy'
+// ⭐ ROUND 42 #25 – `ECONOMY.kidShare.fromAgeYears` is the one place «the ramp starts at eighteen»
+// is written, and `collegePausedShareYears` reads it rather than repeating the number.
+import { ECONOMY, parentIncomeForWeekCents } from '../economy'
 import { NATIONAL_TEAM, callUpLine, callUpOpponent, rollCallUp, type CallUp, type CallUpOpponent } from '../nationalTeam'
 import {
   COLLEGE_LEAGUE,
@@ -167,6 +169,46 @@ export function resolveCollegeBill(world: WorldState): void {
  *  historical import still resolves – `world.ts` re-exports it under the same name. */
 export function inCollege(world: WorldState): boolean {
   return world.college !== null && world.week < world.college.untilWeek
+}
+
+/** ⭐⭐⭐ ROUND 42 #25 – HOW MANY OF HER PRIZE-SHARE STEPS COLLEGE HAS EATEN.
+ *
+ *  THE OWNER, 14.09, and it is the half of the ruling that is a mechanic rather than a number: the
+ *  ramp's steps count years ON TOUR – «пока она снова в тур не вернется». A birthday answered from a
+ *  dorm does not move her cut. `kidPrizeShareBps` takes this as `pausedYears`.
+ *
+ *  ⚠⚠ NO SCHEMA, AND THAT IS A FACT ABOUT THE RECORD RATHER THAN A SHORTCUT (`collegeBirthdayIndexOf`
+ *  is built on the same one). A career has at most ONE college era – `answerFork` is the only writer
+ *  of `world.college` and it writes the object once – and that object carries the span: `fromWeek`,
+ *  and `untilWeek`, which an early return moves BACK to the week she left, so the span is always the
+ *  years she actually spent there. Both fields have been on every save since v51.
+ *
+ *  ⚠ IT COUNTS BIRTHDAYS, NOT YEARS, AND IT DOES IT BY SUBTRACTING TWO AGES rather than by hunting
+ *  for birthday weeks. Her whole-year age on the LAST week inside the freeze, minus her whole-year
+ *  age on the FIRST, is exactly the number of birthdays the freeze contained – one expression, no
+ *  loop, and no second definition of «when is her birthday» to drift from `kidAgeYears`.
+ *
+ *  ⚠ THE `max(enter, fromAgeYears)` IS NOT DEFENSIVE, IT IS THE RULE. Only a birthday that would have
+ *  ADDED A STEP can be paused: a girl who somehow enrolled under eighteen climbs from eighteen either
+ *  way, and counting her eighteenth as «eaten» would push her below `startBps`, which is a share no
+ *  rule in this game states.
+ *
+ *  ⚠ THE LAST WEEK INSIDE THE FREEZE IS `untilWeek - 1` AND NOT `untilWeek`, because `inCollege` is
+ *  `week < untilWeek`. A birthday falling in the week she is back on tour is a TOUR birthday and
+ *  counts; the week before it is her last college one and does not. While she is still there the
+ *  freeze has not ended, so today is the last week inside it and this week's birthday is paused –
+ *  which is why the `min` is taken against `world.week` as well.
+ *
+ *  Zero draws, zero writes, no schema. */
+export function collegePausedShareYears(world: WorldState): number {
+  const college = world.college
+  if (college === null) return 0
+  const lastInside = Math.min(world.week, college.untilWeek - 1)
+  if (lastInside < college.fromWeek) return 0
+  const { birthMonth, birthDay } = world.profile
+  const enter = kidAgeYears(college.fromWeek, birthMonth, birthDay)
+  const leave = kidAgeYears(lastInside, birthMonth, birthDay)
+  return Math.max(0, leave - Math.max(enter, ECONOMY.kidShare.fromAgeYears))
 }
 
 /** Her build as one number, 0-100. The same fold `academy.ts`'s `ceilingOf` runs over the potentials

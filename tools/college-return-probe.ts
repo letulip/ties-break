@@ -19,8 +19,9 @@
 // other and with a rank band, never with a career that answered «continue» at the fork.
 //
 // ⚠ MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
+import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import { pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { COLLEGE_TIER_ORDER, canAfford } from '../src/engine/collegeOffer'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
@@ -115,7 +116,7 @@ function walkOneArm(
     // Round 24: the year pauses on her birthday week – press, answer, press again.
     for (let press = 0; press < 3 && at.world.college!.years.length === y && at.world.ending?.type === 'college'; press++) {
       resumeFromCollege(at.world, at.rng)
-      if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
+      if (pendingBirthday(at.world) !== null) answerBirthdayNeutral(at.world)
     }
     if (trace) traceYear(at.world, yearStart, trace)
   }

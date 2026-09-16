@@ -50,6 +50,15 @@
 //      -> **1 RED**, «the card explains the closed year with the engine's own sentence»: O1's
 //         one-choice-a-year is the only thing that closes the row, and this is the layer that watches
 //         the closing cross the wire.
+//   D. ⭐ 16.09, FOR `focusOption`'s RE-AIM (round 42 #18): the `.staff-focus-blurb` span dropped
+//      from the template – the picker stops explaining itself.
+//      -> **1 RED**, «Cool head is open to this career…», reported as **element(s) not found**: the
+//         option is still on the card and still enabled, and the locator will not take it without
+//         the sentence. That is the line that says the re-aim is not a loosening.
+//   E. ⭐ 16.09, THE OTHER HALF OF THE SAME RE-AIM: `SupportStaffTab`'s `open:` pinned to `false`.
+//      -> **1 RED**, same assertion, reported as **Expected: enabled / Received: disabled**. Two arms
+//         and two different messages is what makes the pair a diagnosis rather than a tripwire: D is
+//         a name that moved, E is a permission that closed, and this file can tell them apart.
 //
 // ⚠⚠ AND THE «UNABLE TO FAIL» FAMILY TOOK A TENTH COSTUME IN THIS FILE'S FIRST DRAFTING, caught by
 // the browser rather than by review. «The week advanced» was written
@@ -66,7 +75,7 @@
 // expectation, from the one layer that could have produced it – and a finding about four of the
 // wave's strings, carried to the architect as one.
 //
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { test, expect } from './careerAt'
 import { answerOpeningKnock, dismissTourBriefing, openMoney, onScreenWeek, weekButton } from './journey'
 import { navTab } from './stations'
@@ -107,6 +116,37 @@ const FOCUS_GROUP = 'Psychologist – the year\'s work'
  *  ⚠ AND THE COUNTS BELOW ARE `FOCUS_LABELS.length` RATHER THAN A LITERAL `4`, so the next focus
  *  costs one edit here instead of four scattered ones. */
 const FOCUS_LABELS = ['Cool head', 'Back on her feet', 'Learning to listen', 'Working on herself', 'The public life']
+
+/**
+ * ONE YEAR OF WORK ON THE CARD, BY THE NAME IT WEARS.
+ *
+ * ⚠⚠ RE-AIMED 16.09 BY ROUND 42 #18 – AN OPTION IS A NAME OVER A SENTENCE NOW, so every line that
+ * used `{ name: label, exact: true }` stopped matching anything and died with «element(s) not
+ * found». The owner asked for it: «в пунктах психолога на выбор немного расписать эффект от работы»,
+ * so each year carries `PSY_FOCUS_LINE`'s own sentence under its name and the accessible name folds
+ * the two together – «Cool head The year goes on the big points – the head she takes into them.»
+ * ⚠ ZERO NEW WORDING WAS INVOLVED, in the item and here: the sentences already existed and reached
+ * only the hired line's splice. What moved is where the words are, and therefore what this locator
+ * has to say.
+ *
+ * ⭐ THE CLAIM IS NOT WEAKENED, AND THE TWO ANCHORS ARE WHY. `^` pins the label to the START of the
+ * name, so this addresses exactly one option and can never drift onto a neighbour the way a bare
+ * substring could; ` .+` pins that the sentence is actually THERE, so a picker that lost its blurb
+ * reddens here rather than sliding past a looser locator.
+ *
+ * ⚠ AND THE FIVE SENTENCES ARE DELIBERATELY NOT RE-TYPED IN THIS FILE, which is the one place this
+ * file's own «no string is transcribed for convenience» rule points the other way. The component
+ * suite already owns them off the IMPORTED `PSY_FOCUS_LINE` (tests/component/psychologist-card.test.ts,
+ * «every option says what its year is FOR»), so a вычитка pass moves that pin WITH the screen; a
+ * second hand-typed copy here would move against it and would make five prose edits red two layers
+ * for one change. What this file owns is that the option is on the card, addressed by the year's
+ * name, and that pressing it is a real choice.
+ */
+function focusOption(focus: Locator, label: string): Locator {
+  // The labels are plain words today; escaping keeps that a fact about them rather than a bet.
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return focus.getByRole('radio', { name: new RegExp(`^${escaped} .+`) })
+}
 
 /** His own block on the Support-staff tab, addressed by the `data-staff` hook the card was given for
  *  exactly this (SupportStaffTab.vue's own note). Scoped rather than global because the tab is a LIST
@@ -241,7 +281,7 @@ test.describe('the psychologist takes the weekly call', () => {
     // bond down, THIS line names it instead of a click timing out three stations later.
     for (const label of FOCUS_LABELS) {
       await expect(
-        focus.getByRole('radio', { name: label, exact: true }),
+        focusOption(focus, label),
         `«${label}» is open to this career, so pressing it is a real choice`,
       ).toBeEnabled()
     }
@@ -252,9 +292,9 @@ test.describe('the psychologist takes the weekly call', () => {
       )
     }
 
-    await focus.getByRole('radio', { name: COOLHEAD_LABEL, exact: true }).click()
+    await focusOption(focus, COOLHEAD_LABEL).click()
     await expect(
-      focus.getByRole('radio', { name: COOLHEAD_LABEL, exact: true }),
+      focusOption(focus, COOLHEAD_LABEL),
       'the chosen year is the checked one, and the check came back off the snapshot',
     ).toHaveAttribute('aria-checked', 'true')
     // ⭐⭐ ...AND THE YEAR CLOSES BEHIND HIM, IN THE ENGINE'S OWN WORDS. The free pick is spent, this
@@ -280,7 +320,7 @@ test.describe('the psychologist takes the weekly call', () => {
     )
     for (const label of FOCUS_LABELS.filter((l) => l !== COOLHEAD_LABEL)) {
       await expect(
-        focus.getByRole('radio', { name: label, exact: true }),
+        focusOption(focus, label),
         `«${label}» is refused for the rest of this season, and the button says so by being dead`,
       ).toBeDisabled()
     }
@@ -345,10 +385,7 @@ test.describe('the psychologist takes the weekly call', () => {
     // way, the same day the splice shipped.
     await expect(seat, 'still on retainer a week later, wearing the running year').toContainText(RETAINER_YEAR_LINE)
     await expect(
-      seat.getByRole('radiogroup', { name: FOCUS_GROUP }).getByRole('radio', {
-        name: COOLHEAD_LABEL,
-        exact: true,
-      }),
+      focusOption(seat.getByRole('radiogroup', { name: FOCUS_GROUP }), COOLHEAD_LABEL),
       'and the year he was given is still the year he is working',
     ).toHaveAttribute('aria-checked', 'true')
 

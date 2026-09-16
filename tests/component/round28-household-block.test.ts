@@ -25,6 +25,11 @@
 //       household's weekly outgoing LARGER, and the strip names the shelf when it holds anything.
 //   §4  the coaching meter above it is UNTOUCHED – round-21 #12's claim is a different question and
 //       still has its own answer on the same screen.
+//       ⚠⚠⚠ ROUND 42 #42 (15.09) RE-AIMED §4 BY THE OWNER'S WORD («committed должен это и
+//       показывать»). The committed figure IS the payroll now; what §4 still guards is that the
+//       meter and the household strip stay two questions, and the tile-vs-engine agreement moved to
+//       `tests/component/round42-team-budget.test.ts` §3. Read §4's own block comment for the full
+//       account, including the assertion it used to make, quoted.
 //
 // ⚠ MUTATION-VERIFIED, four mutations, each applied alone and reverted. What each ACTUALLY
 // reddened, measured rather than predicted:
@@ -250,12 +255,26 @@ describe('§3 the shelf is in the household week', () => {
 // =================================================================================================
 // 4 – THE COACHING METER IS A DIFFERENT QUESTION AND STILL HAS ITS ANSWER
 // =================================================================================================
-describe('§4 the coaching budget above it is untouched', () => {
+// ⚠⚠⚠ RE-AIMED BY ROUND 42 #42 (15.09) – «committed должен это и показывать». THIS IS THE STANDING
+// GUARD THE ITEM NAMES, and it is moved by the owner's word, not by an agent's judgement. Its arm
+// read: «the committed figure is still the COACH's line and does not silently absorb the masseur»,
+// asserting `legend` contained the coach's own figure and NOT coach + masseur. It reddened a
+// bundle-7 arm that tried exactly this change, which is what a standing guard is for.
+//
+// ⚠ WHAT IT WAS PROTECTING IS NOT BEING GIVEN UP. Round-21 #12's cap and the engine's
+// `overBudgetCents` had to keep describing ONE budget, and item 42 kept them that way by moving the
+// engine too (`coachMarket` cuts every flag from `familyWeeklyIncomeCents −
+// supportPayrollWeeklyCents`). So the surviving claim here is the one this section always had – the
+// meter is still the COACHING DECISION's meter, it still draws against the week's income, and the
+// household strip is still a separate element saying a different thing – with the committed figure
+// now the payroll he asked for. The tile-vs-engine agreement itself is pinned where it belongs, in
+// `tests/component/round42-team-budget.test.ts` §3.
+describe('§4 the coaching budget above it is still its own question – ⚠ re-aimed by round 42 #42', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
   it('the meter still draws the coaching decision, and the household line sits under it', async () => {
     // ⚠ ROUND-21 #12 SHIPPED THE CAP ON THIS METER and its claim is "can this family afford THIS
-    // COACH". Overwriting it with the household total would have silently deleted a shipped answer
+    // COACH". Overwriting it with the household total would still silently delete a shipped answer
     // to a different question, so this is the guard that says two figures are two questions.
     const world = pro('r28-h-meter')
     hireMasseur(world, true)
@@ -266,10 +285,24 @@ describe('§4 the coaching budget above it is untouched', () => {
     expect(legend, 'the cap is still the week\'s income').toContain(
       `${formatCents(snap.coachBilling.weeklyIncomeCents)} weekly cap`,
     )
-    // The committed figure is still the COACH's line and does not silently absorb the masseur.
+    // ⭐⭐⭐ ROUND 42 #42 – the committed figure is the PAYROLL now, which is his sentence. The old
+    // assertion is one line up in the block comment; this is its replacement, built from the
+    // snapshot's own fields exactly as before.
     const current = snap.coachMarket.find((r) => r.current)
-    expect(legend).toContain(`${formatCents(current?.weeklyCents ?? 0)} committed`)
-    expect(legend).not.toContain(formatCents((current?.weeklyCents ?? 0) + snap.masseurSalaryCents))
+    const payroll =
+      (current?.weeklyCents ?? 0) +
+      (snap.masseurHired ? snap.masseurSalaryCents : 0) +
+      (snap.psychologistHired ? snap.psychologistSalaryCents : 0)
+    expect(snap.masseurSalaryCents, 'the arm needs a masseur salary for the claim to bite').toBeGreaterThan(0)
+    expect(legend).toContain(`${formatCents(payroll)} committed`)
+
+    // ⚠ AND THE METER IS STILL NOT THE HOUSEHOLD, which is what §4 has always really been about: the
+    // strip's OUT figure carries the shelf and the upkeep too, and the two must not become one
+    // number. A committed figure equal to the household's outgoing would be the round 28 #8 defect
+    // arriving from the other direction.
+    const out = snap.coachBilling.household.outgoingCents
+    expect(out, 'the household really outspends the payroll – the shelf and the upkeep are in it').toBeGreaterThan(0)
+    if (out !== payroll) expect(legend).not.toContain(`${formatCents(out)} committed`)
 
     // ...and the household strip is a SEPARATE element under it, not a rewrite of the legend.
     expect(wrapper.find('.budget-household').exists()).toBe(true)

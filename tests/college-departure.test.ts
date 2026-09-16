@@ -24,6 +24,7 @@
 // `seed:collegeoffer:<week>`, a sub-stream). The frozen MAIN capture (41550 / e6b0c709) is asserted
 // untouched in tests/condition.test.ts, and the pairwise input-independence arms live in
 // tests/ending.test.ts and tests/college-second-act.test.ts.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
@@ -34,7 +35,6 @@ import {
   tickWeek,
   enterEvent,
   answerFork,
-  chooseGift,
   pendingBirthday,
   resumeFromCollege,
   resolveCollegeDeparture,
@@ -294,7 +294,7 @@ describe('a v57 save already inside the freeze', () => {
     for (let press = 0; press < 4 && world.college!.years.length === yearsBefore; press++) {
       resumeFromCollege(world, rng)
       answerCollegeReveal(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(world.college!.years.length, 'one more year banked').toBe(yearsBefore + 1)
     expect(world.week, 'exactly fifty-two weeks later').toBe(from + WEEKS_PER_YEAR)
@@ -365,7 +365,7 @@ describe('G1\'s floor and E3\'s pause survive the new enrolment week', () => {
         world.fundsCents = Math.max(world.fundsCents, 500_000_00)
         resumeFromCollege(world, rng)
         answerCollegeReveal(world)
-        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+        if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       }
 
       // G1's floor: every full year holds its championship – enrolment at offset 34 puts the League

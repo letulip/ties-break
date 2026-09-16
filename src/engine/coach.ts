@@ -198,6 +198,53 @@ export function corridorBandFor(background: FamilyBackground, tier: CoachTier): 
   return corridorAppliesAt(tier) ? ECONOMY.wealthCorridor[background] : ECONOMY.uniformCorridor
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK (docs/specs/elite-retainer-2026-09.md)
+// =================================================================================================
+//
+// The constants, the owner's quote and the whole argument live on `ECONOMY.coach.retainerBandByRank`;
+// these two functions are the arithmetic and nothing else. Both are PURE - no world, no draw, no
+// date - which is what lets the market card, the budget meter and the till read one number.
+
+/** The retainer multiplier for a player standing at `wtaRank` in the professional table, or 1.0 when
+ *  she holds nothing in it.
+ *
+ *  ⚠ `null` IS THE COMMON CASE AND IT MUST RETURN THE IDENTITY. `kidLadderRank(world, 'wta')` is
+ *  null for every junior career and for every professional career that has not yet earned a counting
+ *  W result - which is most of the game - so this function's ordinary answer is 1, and 1 is what
+ *  makes the mid game byte-identical rather than approximately unchanged. */
+export function coachRetainerBand(wtaRank: number | null): number {
+  if (wtaRank === null) return 1
+  for (const row of ECONOMY.coach.retainerBandByRank) {
+    if (wtaRank <= row.atOrBetter) return row.factor
+  }
+  return 1
+}
+
+/** His hourly rate once the band has re-priced HIS LABOUR, with the court's share of that rate left
+ *  exactly where it was.
+ *
+ *  ⚠ THIS IS THE ONE PLACE THE BAND IS APPLIED, and it is applied to a RATE rather than to a bill so
+ *  that every existing price path keeps its shape: `coachWeeklyCents`, `weeklyBillSplit` and
+ *  `coachBillRangeCents` are untouched by this round and simply receive a different rate. The
+ *  alternative - a factor threaded through three signatures - would have put the multiply in three
+ *  places and given the split's `coach + facility === total` identity three chances to drift.
+ *
+ *  ⚠ AT `band === 1` IT IS THE IDENTITY ON THE INTEGERS: `court + Math.round(rate - court)` is
+ *  `rate` for any integer rate, so a career outside the tail bills the same cents it always did.
+ *  `Math.max(0, …)` is a floor and not a fix - every hired rung's band low is above its own court
+ *  (tests/split-the-bill.test.ts holds the whole table to it) - but a rate below its court would
+ *  otherwise turn a raise into a discount, which is worse than a clamp.
+ *
+ *  ⚠ THE PRACTICE-MATCH FEE IS DELIBERATELY NOT BANDED. `practiceCoachRateCents` quotes an extra
+ *  hour of the same man for one friendly; the research prices a RETAINER, «a fixed retainer paid
+ *  weekly/monthly regardless of results», and banding a one-off hour would be extending his figures
+ *  past what they say. */
+export function bandedRateCents(rateCents: number, ageYears: number, tier: CoachTier, band: number): number {
+  const court = facilityRateCents(ageYears, tier)
+  return court + Math.round(Math.max(0, rateCents - court) * band)
+}
+
 /** The middle of the corridor this rung is priced in - the number a QUOTE uses.
  *
  *  The engine bills through one roll mapped into `[lo, hi]` (see coachCorridorFactor), so a real

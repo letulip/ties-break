@@ -1189,17 +1189,25 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
       :label="pending.roundLabel"
       fill
     >
-      <div class="tf-scene-grid">
-        <div class="tf-scene-side">
-          <div class="tf-scene-name">{{ kidShort }} {{ kidFlag }}</div>
+      <!-- ⭐⭐⭐ ROUND 42 #36 – THE PLATE'S OWN VOCABULARY IS SHARED NOW (`.scene-*`, src/style.css).
+           Not one declaration moved: these classes were `.tf-scene-grid` / `-side` / `-name` / `-rank`
+           / `-vs` in this file's scoped block and PracticeFlow spelled the same five out again as
+           `.pf-*`. The prologue's weekend was about to be the third copy, which is the hole the owner
+           filed - his words are in tests/component/prologue-round42.test.ts, because THIS IS A
+           TEMPLATE and tests/template-copy-rules.test.ts bans Cyrillic inside one, comments included.
+           What is WRITTEN here is still this screen's own business - that is MatchScene's contract
+           and it is unchanged. -->
+      <div class="scene-grid">
+        <div class="scene-side">
+          <div class="scene-name">{{ kidShort }} {{ kidFlag }}</div>
           <!-- The pre-match card carries the age too - the same two facts as the splash, in the
                screen's own register. Both sides or neither; see `showAges`. -->
-          <div class="tf-scene-rank">{{ kidRankText }}<template v-if="showAges"> · Age {{ kidAge }}</template></div>
+          <div class="scene-rank">{{ kidRankText }}<template v-if="showAges"> · Age {{ kidAge }}</template></div>
         </div>
-        <div class="tf-scene-vs">vs</div>
-        <div class="tf-scene-side mirrored">
-          <div class="tf-scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
-          <div class="tf-scene-rank">
+        <div class="scene-vs">vs</div>
+        <div class="scene-side mirrored">
+          <div class="scene-name">{{ pending.opponent.name }} {{ flagEmoji(pending.opponent.nation) }}</div>
+          <div class="scene-rank">
             {{ pending.opponent.rank === null ? 'Unranked' : '#' + pending.opponent.rank
             }}<template v-if="showAges"> · Age {{ oppAge }}</template>
           </div>
@@ -1892,41 +1900,13 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
   content: none;
 }
 
-/* MatchScene owns the card, the painting and the glass plate; this is only what is written on it. */
-.tf-scene-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.tf-scene-side {
-  min-width: 0;
-}
-
-.tf-scene-side.mirrored {
-  text-align: right;
-}
-
-.tf-scene-name {
-  font-size: 14.5px;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.tf-scene-rank {
-  margin-top: 2px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--ink-soft);
-  font-variant-numeric: tabular-nums;
-}
-
-.tf-scene-vs {
-  font-size: 13px;
-  font-style: italic;
-  color: var(--ink-soft);
-}
+/* MatchScene owns the card, the painting and the glass plate; this is only what is written on it.
+   ⭐⭐⭐ ROUND 42 #36 – AND THE FIVE RULES THAT USED TO STAND HERE ARE IN `src/style.css` NOW, under
+   `.scene-grid` / `.scene-side` / `.scene-name` / `.scene-rank` / `.scene-vs`, unchanged declaration
+   for declaration. They were copied out again in PracticeFlow as `.pf-*` and had already drifted by
+   one line there; the prologue's weekend would have been the third copy. See the block beside
+   `.tf-actions` in the sheet for the argument. What stays scoped here is `.tf-scene`, which is where
+   THIS screen puts the card – full-bleed against `.tf-body`'s gutters – and is nobody else's. */
 
 /* --- L. Champion / M. Runner-up ---------------------------------------------------------------- */
 

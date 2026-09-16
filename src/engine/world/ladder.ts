@@ -172,10 +172,14 @@ function rankingForUncached(world: WorldState, track: LadderTrack): RankingRow[]
   //
   // ⚠ AND SINCE ROUND 23 THE WINDOW IS THE TRACK'S TOO (`WINDOW_BY_TRACK`, the owner's ruling on
   // items 12 and 13): the ITF and WTA tables stay on the rolling 52 weeks their real tours use, and
-  // the DOMESTIC table - which is our own invention - counts this season only. It rides the very
-  // same line as `BEST_N_BY_TRACK` for the very same reason: the two facts are one decision about
-  // one table, and a surface that could read one of them without the other is the drift this
-  // function exists to make unrepresentable.
+  // the DOMESTIC table - which is our own invention - counted this season only.
+  // ⚠⚠ ROUND 42 #7 (15.09) PUT IT BACK ON THE ROLLING WINDOW at the owner's own ruling, so all three
+  // tracks read the same rule again and this line answers one question for three tables rather than
+  // two. THE LINE ITSELF DID NOT MOVE, which is the point worth keeping: the window has been ruled
+  // twice in a month and neither ruling touched a call site, because it rides the very same line as
+  // `BEST_N_BY_TRACK` for the very same reason - the two facts are one decision about one table, and
+  // a surface that could read one of them without the other is the drift this function exists to
+  // make unrepresentable.
   const live = computeRanking(world.results, world.week, BEST_N_BY_TRACK[track], [...cohortIds(world), KID_ID], inTrack(track), WINDOW_BY_TRACK[track])
   // ⚠ THE W TABLE IS THE MERGED TABLE, everywhere it is read (living-field phase W, 01.08). The
   // professional table used to be ~199 zero rows and whatever the canonical W brackets had paid the
@@ -700,7 +704,10 @@ export function playDownBars(world: WorldState, tier: TierId): boolean {
   //
   // ⚠ WHY THE DOMESTIC RUNGS NEEDED IT AND THE SLIDING WINDOW COULD NOT REACH THEM. Both of their
   // ceilings are denominated in DOMESTIC points, a currency a world-tour player stops earning:
-  // `outgrewTier` reads a season-to-date total that is 0 for a professional, and `tierOutgrown`
+  // `outgrewTier` reads a total that is 0 for a professional (⚠ ROUND 42 #7: season-to-date when
+  // this was written, a rolling 52 weeks now – the CONCLUSION is unchanged, because a professional
+  // stops entering domestic events and a book she never adds to ages out to zero inside a year;
+  // what moved is how long it takes, not where it ends), and `tierOutgrown`
   // asks whether the rung THREE ABOVE is open - j30/j60/j300, which are U18 and therefore shut for
   // ever past eighteen, so its own age clause vetoes the closure. Measured on the owner's save at
   // 26, WTA #110: `Local Open` OPEN with `outgrown=n` and four of her twelve open slots, while

@@ -41,6 +41,12 @@ const MIN_POINTS = 150
 //   D. `rowLabel`'s locked arm dropped to the hire word.
 //      -> RED, 1 of 2, on the accessible name alone – the sighted half of the screen is untouched,
 //         which is exactly why the name is asserted separately from the action word.
+//   E. ⭐ 16.09, FOR §4's RE-AIM: `rowLabel`'s OVER-BUDGET arm put back – round 42 #42 undone.
+//      -> **RED, 1 of 3**, in the second test and naming the whole string it found:
+//         «an Elite row does not end in its weekly cost and the hire word: "Magda Prochazka, Elite
+//         tier, Great fit, $611 a week – over budget by $343"». The first and third cases stay
+//         GREEN, which is the separation that makes it a control: they are about the LOCK, and the
+//         lock is the refusal #42 deliberately kept.
 //
 // ⚠⚠ AND THE FIXTURE'S REACHABILITY IS ASSERTED BEFORE ANYTHING IS READ OFF THE SCREEN. Ruling O's
 // second blind spot, one layer up: «a fixture that cannot reach the case is a green that means
@@ -122,7 +128,10 @@ test.describe('the elite rung is locked until she has results', () => {
     expect(await anyLocked.count(), 'nothing below the top rung is gated').toBe(count)
   })
 
-  test('sinking: past the bar, the same screen locks nothing – the money is a separate refusal', async ({
+  // ⚠ RE-AIMED 16.09 BY ROUND 42 #42 – the title said «the money is a SEPARATE refusal» and the
+  // owner's ruling made it no refusal at all. The case's own claim is untouched: this screen refuses
+  // on money nowhere, and the points lock is a different thing. See §4.
+  test('sinking: past the bar, the same screen locks nothing – and the money refuses nothing either', async ({
     page,
     careerAt,
   }) => {
@@ -149,10 +158,60 @@ test.describe('the elite rung is locked until she has results', () => {
     await expect(page.getByRole('button', { name: /ranking points short/ })).toHaveCount(0)
     await expect(page.getByText(/pts short/)).toHaveCount(0)
 
-    // 4 – THE MONEY IS STILL A REFUSAL AND IT IS A DIFFERENT ONE. `sinking` is a working family under
-    // water, so the top rung is over budget – flagged, never gated (round 21 #12's own ruling). Two
-    // refusals, two sentences, and this is the career that proves they are not the same sentence.
-    await expect(page.getByRole('button', { name: /over budget by/ }).first()).toBeVisible()
+    // =============================================================================================
+    // 4 – ⚠⚠ RE-AIMED 16.09 BY ROUND 42 #42, AND THE CLAIM IS THE ONE THAT SURVIVED
+    // =============================================================================================
+    //
+    // THIS STEP USED TO WAIT FOR `getByRole('button', { name: /over budget by/ })`, and the phrase is
+    // gone from the screen on the owner's own ruling: «мы не можем запретить нанимать специалистов,
+    // если у них есть желание – они нанимают, просто в этом индикаторе мы покажем реальные затраты в
+    // неделю». The row used to swap «Hire ›» for a shortfall figure and take the refusal treatment
+    // while `hireCoach` never consulted the budget at all, so a perfectly legal hire READ as
+    // forbidden – and the accessible name told a listener the row was refused while a sighted player
+    // was invited to press it, which is the same defect in the channel the label exists to serve.
+    //
+    // ⭐ WHAT THIS CASE IS ABOUT DID NOT MOVE. It has always been «this screen refuses on MONEY
+    // nowhere, and the points lock is a separate thing»; §3 above is the lock's half and this is the
+    // money's. What changed is which sentence proves it: before #42 the money was a flag, and now
+    // there is no flag at all – so the assertion is the new contract. The row is PRESSABLE, it
+    // carries the week's real cost, and the money is said on the tile instead.
+    //
+    // ⚠⚠ AND IT IS NOT VACUOUS, WHICH IS THE WHOLE RISK OF RE-AIMING A REFUSAL INTO A PERMISSION: a
+    // pressable row on a rich career proves nothing. Both numbers are read OFF THE SCREEN – the
+    // tile's own weekly cap and the row's own price, in the accessible name – so a regeneration that
+    // moved `sinking` into comfort reddens here NAMING the two figures instead of leaving a green
+    // that means nothing. Measured at head: a $267 week against four Elite rungs of $611-$894.
+    const legend = (await page.locator('.budget-meter .budget-legend').innerText()).replace(/\s+/g, ' ')
+    const cap = /\$([\d,]+(?:\.\d+)?) weekly cap/.exec(legend)
+    expect(cap, `the Team budget tile prints no weekly cap – it read «${legend}»`).not.toBeNull()
+    const weekCarries = Number(cap![1].replace(/,/g, ''))
+
+    const eliteCount = await elite.count()
+    for (let i = 0; i < eliteCount; i++) {
+      const row = elite.nth(i)
+      const rowName = (await row.getAttribute('aria-label')) ?? ''
+      // ...the row's state word is the CALL TO ACTION and its price is in the name – #42's own two
+      // halves, in the one string a screen reader is handed.
+      const price = /, \$([\d,]+(?:\.\d+)?) a week – hire$/.exec(rowName)
+      expect(
+        price,
+        `an Elite row does not end in its weekly cost and the hire word: «${rowName}»`,
+      ).not.toBeNull()
+      // ...and the family genuinely cannot carry it, which is what makes the next line a claim.
+      expect(
+        Number(price![1].replace(/,/g, '')),
+        `«${rowName}» fits inside this family's $${weekCarries} week, so a pressable row proves nothing`,
+      ).toBeGreaterThan(weekCarries)
+      await expect(
+        row,
+        'a rung the week cannot carry is still a rung the family may press – the engine never ' +
+          'refused it, and after #42 the screen does not either',
+      ).toBeEnabled()
+    }
+
+    // ...and the old sentence is gone from EVERY control on the screen, not merely from the top rung.
+    // The positive half above could hold while some other row still carried the refusal wording.
+    await expect(page.getByRole('button', { name: /over budget/ })).toHaveCount(0)
   })
 
   test('⭐ junior: the market remembers – an empty window behind a banked peak locks nothing (14.09)', async ({

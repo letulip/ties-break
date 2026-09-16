@@ -11,6 +11,11 @@ import {
   // (`Partial<LoveEpisode>[]`) is what lets `??=` run on a required field, which is the same courtesy
   // v33's `terms` cast and v66's `{ id?: unknown }[]` cast take, one and eleven versions down.
   type LoveEpisode,
+  // ⚠ v78 (round 41 #22) – TYPE-ONLY, for the SECOND step in this ladder that back-fills a field on
+  // the rows of a list. `Partial<OwnedAsset>` for the same reason `Partial<LoveEpisode>` above:
+  // `entries` is REQUIRED on the shipped type, and `??=` on a required field is a compile error
+  // rather than a no-op.
+  type OwnedAsset,
   type Milestone,
   type SeasonHistoryEntry,
   type SessionKind,
@@ -2733,6 +2738,81 @@ export function migrateSave(raw: unknown): WorldState {
   //
   // So: **a step that writes into a row writes its own witness.** The corpus is not the check, and
   // the next author does not get to rediscover that.
+  //
+  // ⭐⭐ AND THE v78 STEP BELOW IS THE FIRST ANSWER TO THAT NOTE, WITH THE MEASUREMENT RE-RUN RATHER
+  // THAN THE CONCLUSION INHERITED. The note is about `loveEpisodes` and it is exactly right about
+  // `loveEpisodes`; it is NOT a property of row-level steps in general, and reading it as one would
+  // have cost v78 a false claim. The list v78 walks is `assets`, and FOURTEEN fixtures carry real
+  // rows – 75 in all – so the loop below really does execute on the corpus.
+  //
+  // ⚠⚠ AND «THE CORPUS REACHES IT» IS NOT «THE CORPUS CHECKS IT», WHICH IS THIS NOTE'S OWN CORRECTION
+  // AND WORTH MORE THAN THE FINDING ABOVE IT. The first draft of this block said a skipped row would
+  // be red in `goldenSaves.test.ts`; it would not have been, because that file asserted nothing about
+  // `assets` whatsoever. MEASURED: the mutation that makes this loop skip every save's first row came
+  // in at 3 RED, all three in the crafted file, with the whole 78-fixture corpus green beside them.
+  // The per-fixture walk now carries the assertion and the same arm is 16 RED. So the rule the v77
+  // note states survives in a sharper form: **a step that writes into a row writes its own witness,
+  // and «a fixture happens to hold one» is not a witness until something reads it.**
+
+  // ⭐⭐⭐ v78 – ONE BUMP, THREE CUSTOMERS (round 42 #35, round 41 #22, round 42 #45's sparring keys).
+  // The whole reading of this step is in `SAVE_SCHEMA_VERSION`'s own block in world/state.ts; what
+  // belongs HERE is why each literal is exactly true, and one warning about the third.
+  //
+  //   `composureBonus = 0`   – ⭐ ZERO IS THE IDENTITY AND NOT A PLACEHOLDER FOR ONE (v77's
+  //                            `spotlightHabituation` note, one rung down, in its own situation).
+  //                            The field is HEADROOM ABOVE her rolled ceiling, bought by seasons of
+  //                            psychologist work on the nerve focus. A career that predates the
+  //                            mechanic has been carried nowhere above its ceiling, because there
+  //                            was nothing that could carry it: at 0 `composureCeilingOf` returns
+  //                            `potential.composure` to the bit and `growWeek` is byte-identical to
+  //                            every week this engine has grown since v25. The migration is not «she
+  //                            acquires a bonus»; it is «nothing has ever taken her past her own
+  //                            ceiling», written down for the first time.
+  //   `sparringHired = false` – the seat did not exist, so nobody was ever hired into it.
+  //   `sparringRung = 1`      – the DEFAULT rung, MEANINGLESS UNTIL HIRED, which is v59's masseur
+  //                            dial and v76's psychologist rung quoted rather than re-argued: a dial
+  //                            has to read something, and the shipped default is the only answer
+  //                            that invents no decision the family never made.
+  //   `entries = []` per row  – «this career recorded no purchases». Exactly true, and the one
+  //                            back-fill in this step that had a tempting alternative: ONE entry
+  //                            reconstructed from `boughtWeek` + `paidCents`. Round 41 #22 refused
+  //                            it with the measurement in hand – `paidCents` is a blended net figure
+  //                            that a top-up adds to and a part sale scales down, so on any holding
+  //                            that ever moved, the reconstructed mark would print a sum the family
+  //                            never paid in any single week. An empty list draws no mark, and it
+  //                            draws none because there is none.
+  //
+  // ⚠⚠ AND THE SPARRING PAIR IS A SCHEDULING DECISION, NOT A HALF-BUILT FEATURE. Nothing on this
+  // tree reads `sparringHired` or `sparringRung`, and the seat did NOT land in this round: bundle 13
+  // stopped on two missing things and was right to. `world.form` does not exist – the RHYTHM channel
+  // the seat's whole effect cuts ships in wave F1, which never shipped – so a seat built here would
+  // cut a drift that does not drift; and the owner's 15.09 travel override («у остальных есть галочка
+  // ездит») needs a third key, `sparringTravels`, which this version was scoped before he gave it.
+  // The two keys stay because they are correct and a migration is forever. Said here as well as in
+  // state.ts because THIS is where the next reader of an unused key will be standing.
+  //
+  // ⚠ `??=` AND NEVER `||=`, v76's and v77's rule for the identical reason: `sparringHired ||= false`
+  // is a no-op that looks like a write, and `composureBonus ||= 0` would overwrite a live 0-shaped
+  // value. ⚠ AND `entries` TAKES A PLAIN `??=` ON A CAST ROW rather than an `Array.isArray` guard on
+  // the row's own field, because the field is REQUIRED on the shipped type – the `Partial<OwnedAsset>`
+  // cast is v77's `Partial<LoveEpisode>` and v33's `terms` cast, third time, same courtesy: it says
+  // «this row predates this field», which is precisely what a migration is looking at.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: three `??=` on world keys and one per asset row, gated on `v === 77`,
+  // writing literals and a fresh empty array. No sub-stream is reached on this path, so MAIN cannot
+  // move and the frozen capture (41550 / e6b0c709) is untouched by construction. Full move:
+  // `SAVE_SCHEMA_VERSION` in world/state.ts, this step, tests/fixtures/saves/v78.json, the e2e
+  // fixtures, and the mechanically-checked schema sentence in docs/context/saves-and-worker.md.
+  if (v === 77) {
+    save.composureBonus ??= 0
+    save.sparringHired ??= false
+    save.sparringRung ??= 1
+    for (const owned of Array.isArray(save.assets) ? (save.assets as Partial<OwnedAsset>[]) : []) {
+      if (!owned || typeof owned !== 'object') continue
+      owned.entries ??= []
+    }
+    v = 78
+  }
 
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)

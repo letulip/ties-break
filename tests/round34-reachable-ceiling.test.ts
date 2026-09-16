@@ -494,7 +494,15 @@ describe('bundle I: which band each rung reaches, walked through the real engine
       }
       walked.set(tier, { seen, peakRatio, pinnedWeeks, topAtAge, backwards })
     }
-  }, 50_000)
+    // ⚠⚠ RAISED 16.09.2026, 50s -> 120s, ON A MEASUREMENT RATHER THAN A HUNCH. This hook blew its
+    // 50s ceiling on round 42's PR runner while costing **16.58s** on an idle 10-core machine – a
+    // ratio above 3.1x, which is what `unit-bulk`'s shared pool does on two cores (the heavy tail's
+    // own 2.24x is for a file with its own process, and does not apply here). 120s is 7.2x the
+    // measured cost, and a `beforeAll` is not reported per test, so it is not bound by birpc's 60s
+    // window the way `testTimeout` is – see vite.config.ts's unit project for that boundary.
+    // ⚠ The job's own `timeout-minutes: 25` is what catches a genuine hang here. This number only
+    // has to be above what the walk really costs on the slowest machine that runs it.
+  }, 120_000)
 
   it('no rung flickers – the band never steps back on a career that is merely progressing', () => {
     // A band that stepped back and forth across a threshold would put two different sentences on

@@ -37,8 +37,66 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
 import { regionToLast } from './helpers/source'
+import { SMALL_TALK_SITUATIONS } from '../src/engine/world'
 
 const SRC = fileURLToPath(new URL('../src', import.meta.url))
+
+// =================================================================================================
+// ⚠⚠ THE ONE NAMED EXCEPTION, AND THIS FILE'S OWN HEADER ASKED FOR IT BY NAME (round 42 #15)
+// =================================================================================================
+//
+// The header above ends: «If a future feature introduces one - a named father, a male opponent's
+// parent - this test is where that conversation has to happen, which is the point of it being
+// strict.» Round 42 #15 introduced exactly that, in the owner's own copy: the `court-four` story
+// (docs/specs/the-small-talk-exchange-2026-09.md §8c, his 15.09 revision) is about a serve landing in
+// ANOTHER PLAYER'S FATHER'S COFFEE – «He just looked at it», «Ask what he did», «I couldn't look at
+// him.»
+//
+// ⚠⚠ THE RULE IS NOT WEAKENED BY THIS, BECAUSE THE RULE WAS NEVER ABOUT THIS PERSON. What R15-7
+// forbids is GUESSING a gender the sim holds a fact about but never decided – the coach, the doctor,
+// the psychologist, the masseur, every one of whom is drawn from a roster with women on it. The dad
+// on court four is not in the sim at all: he is invented BY HER, inside a story she is telling, and
+// the spec's §8d.5 is explicit that invented domestic detail is hers («the flat, the coffee, the dad
+// who put the lid back on»). The fog law keeps him there – nothing else in the engine reads him,
+// ever. There is no fact to be wrong about.
+//
+// ⚠ AND THE EXCEPTION IS ONE SITUATION WIDE AND COUNTED. It is derived from the engine's own
+// catalogue, filtered to `id === 'court-four'`, so a masculine pronoun ANYWHERE ELSE – in another
+// situation, in another pool, in another file – is still an offender. The count is pinned below, so
+// a fifth voice column of this very story reddens this file too, which is the conversation this
+// header demands happening again rather than being inherited.
+
+/** Every rendered string of the `court-four` story, from the engine's own catalogue. ⚠ THE DECODED
+ *  form: `literals` below returns source text with its backslashes intact, so the sweep compares an
+ *  unescaped copy of each literal against this set. */
+const COURT_FOUR_COPY = new Set(
+  SMALL_TALK_SITUATIONS.filter((s) => s.id === 'court-four').flatMap((s) =>
+    [
+      s.opener.roof,
+      s.opener.away,
+      s.shared,
+      ...Object.values(s.branches).flatMap((b) => [b.label, b.said]),
+    ].filter((line): line is string => line !== undefined),
+  ),
+)
+
+/** How many swept literals the exception actually covers – MEASURED, and pinned so it cannot grow
+ *  quietly. A new voice column of the story, or a new masculine sentence inside it, moves one of
+ *  these numbers and sends whoever moved it back to the header above.
+ *
+ *  ⚠ TEN OCCURRENCES, SEVEN DISTINCT SENTENCES, and the gap is not an error: «Ask what he did» is the
+ *  same invitation in all four voices (the branch is the same act; §8d.3's test is about how she
+ *  NOTICES, DISCLOSES and RESPONDS, and «not one shared phrase» is explicitly the wrong target). The
+ *  sweep counts literals in the source; the set counts strings. */
+const COURT_FOUR_MASCULINE = 10
+const COURT_FOUR_MASCULINE_DISTINCT = 7
+
+/** Source text → the string the player reads. Only `\'` and its siblings occur in this corpus, and
+ *  the direction of any error is safe: a literal this fails to decode simply is not matched by the
+ *  exception and stays an offender. */
+function decoded(raw: string): string {
+  return raw.replace(/\\(.)/g, '$1')
+}
 
 const MASCULINE = /\b(he|his|him|himself)\b/i
 
@@ -142,12 +200,40 @@ describe('R15-7 - no surface guesses a professional\'s gender', () => {
     // engine owns most of this game's copy - it is state, not template text - so a sweep that
     // stopped at the components would have missed seven of the nine surfaces this item found.
     const offenders: string[] = []
+    let excused = 0
     for (const f of files) {
       for (const s of literals(f.code)) {
-        if (MASCULINE.test(s)) offenders.push(`${f.name}: ${s.slice(0, 90)}`)
+        if (!MASCULINE.test(s)) continue
+        // ⚠ ROUND 42 #15 – the one named exception; see the block at the head of this file.
+        if (COURT_FOUR_COPY.has(decoded(s))) {
+          excused++
+          continue
+        }
+        offenders.push(`${f.name}: ${s.slice(0, 90)}`)
       }
     }
     expect(offenders).toEqual([])
+    // ⚠⚠ AND THE EXCEPTION IS EXACTLY THE SIZE IT WAS ARGUED FOR. Without this line the allowlist is
+    // a hole that can widen for free; with it, a new masculine sentence in the story is a red that
+    // names the header's own conversation.
+    expect(excused, 'the court-four story\'s masculine lines, counted').toBe(COURT_FOUR_MASCULINE)
+  })
+
+  it('⚠ the exception is not a hole – it is derived from one situation and it really is live', () => {
+    // ANTI-VACUITY, both directions. The set must be non-empty (an engine rename would have emptied
+    // it and quietly made the case above vacuous), and it must actually contain masculine copy (an
+    // exception that excuses nothing is a stale exception).
+    expect(COURT_FOUR_COPY.size, 'the story is still in the catalogue').toBeGreaterThan(0)
+    expect([...COURT_FOUR_COPY].filter((line) => MASCULINE.test(line)).length).toBe(COURT_FOUR_MASCULINE_DISTINCT)
+    // ...and it excuses NOTHING outside that one story: not one other situation's copy is in it.
+    const others = SMALL_TALK_SITUATIONS.filter((s) => s.id !== 'court-four').flatMap((s) =>
+      [s.opener.roof, s.opener.away, s.shared, ...Object.values(s.branches).flatMap((b) => [b.label, b.said])]
+        .filter((line): line is string => line !== undefined),
+    )
+    expect(others.filter((line) => COURT_FOUR_COPY.has(line)), 'the exception reaches one story only').toEqual([])
+    // ...and no OTHER situation in the catalogue needs one, which is what says the boundary is real
+    // rather than the first place a sweep happened to stop.
+    expect(others.filter((line) => MASCULINE.test(line)), 'no other situation guesses a gender').toEqual([])
   })
 
   it('...and the roster really does put women on every list, which is why the rule exists', () => {

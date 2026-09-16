@@ -293,13 +293,20 @@ describe('round 29 part two #13 §3 – the sentence is pinned to the rule', () 
 describe('round 29 part two #13 §4 – silent where the rule pays nothing', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  it('⭐ a semi-final pays no share, so there is no memo – his own «nothing below a final»', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #41 (15.09). It read «⭐ a semi-final pays no share, so there is no memo
+  // – his own «nothing below a final»» and asserted the ABSENCE of both the row and the memo. The
+  // coach takes ten per cent of every cheque now, so a semi-final pays him and the memo fires. ⚠ The
+  // section's own claim – «silent where the rule pays nothing» – is NOT weakened: the arm below it
+  // (a self-coached family) is the negative, and it is untouched. ⭐ This is also item 41's named
+  // side effect landing: «once the cut is on every cheque, item 11's memo line is almost never
+  // silent», which is the root answer to his «не вижу отчислений».
+  it('⭐⭐ ROUND 42 #41 – a semi-final now pays a share, so the memo fires there too', () => {
     const { world, snap } = weekOf('semi', 2)
     expect(
       world.events.some((e) => e.text.startsWith("Coach's share of the prize money")),
-      'the engine really wrote no coaching share',
-    ).toBe(false)
-    expect(recap(snap).find('.recap-memo-coach').exists(), 'and the card says nothing').toBe(false)
+      'the engine wrote a coaching share below a final',
+    ).toBe(true)
+    expect(recap(snap).find('.recap-memo-coach').exists(), 'and the card names it').toBe(true)
   })
 
   it('⭐ a self-coached family owes nothing, and the card is silent for them too', () => {

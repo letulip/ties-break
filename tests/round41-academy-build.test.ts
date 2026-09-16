@@ -275,8 +275,8 @@ describe('§4 the save – no schema move, and no career is stranded', () => {
     // left behind. A migration would have had to invent a delivery date for a thing that is standing.
     const w = shopper('r41-24-old')
     w.assets = [
-      { id: 'academy-land', boughtWeek: w.week - 200, paidCents: 2_000_000_00, valueCents: 2_000_000_00 },
-      { id: 'academy-courts', boughtWeek: w.week - 200, paidCents: 3_000_000_00, valueCents: 3_000_000_00 },
+      { id: 'academy-land', boughtWeek: w.week - 200, paidCents: 2_000_000_00, valueCents: 2_000_000_00, entries: [] },
+      { id: 'academy-courts', boughtWeek: w.week - 200, paidCents: 3_000_000_00, valueCents: 3_000_000_00, entries: [] },
     ]
     expect(assetDelivered(ownedOf(w, 'academy-courts')!), 'absent means delivered').toBe(true)
     expect(assetWeeklyIncomeCents(w, 'academy-courts'), 'and it is still teaching').toBeGreaterThan(0)

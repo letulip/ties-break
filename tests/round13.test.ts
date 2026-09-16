@@ -5,7 +5,8 @@ import { describe, it, expect } from 'vitest'
 import { diarySource } from './worldSource'
 import { readFileSync } from 'node:fs'
 import { ECONOMY, parentIncomeForWeekCents } from '../src/engine/economy'
-import { avatarEmotion } from '../src/shared/avatarEmotion'
+// ⚠ ROUND 42 #29(a): the READ and the hero's narrowing join the face here – see `facts()` below.
+import { avatarEmotion, avatarEmotionRead, heroFaceOf } from '../src/shared/avatarEmotion'
 import { DIARY_POOL, diaryLine } from '../src/engine/diary'
 import type { DiaryFacts } from '../src/shared/protocol'
 import { at, region } from './helpers/source'
@@ -57,6 +58,9 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     temperament: 'sunny',
     moodWord: null,
     moodRegister: 'level',
+    // ⚠ ROUND 42 #29(b) – the RUNG the register one line up is a collapse of, for the avatar's mood
+    // ring. `steady` is the same opening state the note above describes.
+    moodBand: 'steady',
     bondBand: 'steady',
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).
@@ -67,6 +71,9 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     ageYears: 14,
     lifeStage: 'school',
     emotion: 'sad', // recomputed below
+    // ⚠ ROUND 42 #29(a) – the HERO's narrower read. This fixture IS a fresh-result week
+    // (`resultFresh: true`), so the picture and the face are the same answer here.
+    heroEmotion: 'sad', // recomputed below, with the face
     resultFresh: true,
     won: false,
     lostFinal: false,
@@ -96,7 +103,10 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     freshMilestone: null,
     ...over,
   }
-  f.emotion = avatarEmotion({
+  // ⚠ ROUND 42 #29(a): one READ, two answers – `avatarEmotionRead` instead of `avatarEmotion`, so the
+  // hero's narrower picture comes off the same call the face does and the fixture cannot describe a
+  // week the engine could not produce.
+  const read = avatarEmotionRead({
     week: f.week,
     condition: f.condition,
     injured: f.injured !== null,
@@ -106,6 +116,8 @@ function lossFacts(over: Partial<DiaryFacts>): DiaryFacts {
     rankClimbed: f.rankClimbed,
     runPointsThisWeek: f.runPointsThisWeek,
   })
+  f.emotion = read.emotion
+  f.heroEmotion = heroFaceOf(read)
   return f
 }
 
@@ -347,6 +359,9 @@ describe('R13-10 — the ordinary-week pool', () => {
     temperament: 'sunny',
     moodWord: null,
     moodRegister: 'level',
+    // ⚠ ROUND 42 #29(b) – the RUNG the register one line up is a collapse of, for the avatar's mood
+    // ring. `steady` is the same opening state the note above describes.
+    moodBand: 'steady',
     bondBand: 'steady',
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).
@@ -357,6 +372,9 @@ describe('R13-10 — the ordinary-week pool', () => {
     ageYears: 14,
     lifeStage: 'school',
     emotion: 'norm',
+    // ⚠ ROUND 42 #29(a) – the HERO's narrower read: a quiet uninjured week with no fresh result
+    // wears the neutral portrait, which is what `emotion` says here too.
+    heroEmotion: 'norm',
     resultFresh: false,
     won: false,
     lostFinal: false,

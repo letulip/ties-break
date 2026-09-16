@@ -34,8 +34,9 @@
 // the population the question is about.
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
+import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS, mean, median } from './econ-bench'
-import {chooseGift, pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
+import { pendingBirthday, resumeFromCollege, skipTournament, closeTournament } from '../src/engine/world'
 import { collegeLeagueRevealOpen } from '../src/engine/world/college'
 import { answerFork } from '../src/engine/world/endings'
 // ⚠⚠ THE COLLEGE COLUMN BELOW IS A COUNTERFACTUAL SINCE 16.08.2026, NOT A READING OF THE SHIPPED
@@ -246,7 +247,7 @@ for (let p = 0; p < PRESETS.length; p++) {
       for (let press = 0; press < 3 * YEARS && at.world.ending?.type === 'college'; press++) {
         resumeFromCollege(at.world, at.rng)
           answerLeagueReveal(at.world)
-        if (pendingBirthday(at.world) !== null) chooseGift(at.world, 'day')
+        if (pendingBirthday(at.world) !== null) answerBirthdayNeutral(at.world)
       }
       // ⚠ THE ALARM THE OLD WALK DID NOT HAVE. A press budget that runs out is INDISTINGUISHABLE
       // from a career that finished, and that is how this file reported 0/n bankruptcies off a

@@ -30,8 +30,29 @@
 //
 // The value is a string rather than an index so a caller can switch on its own union (a round id, a
 // period id) instead of on a position it has to map back.
+// ⭐⭐ ROUND 42 #28 – AND A SEGMENT CAN NOW CARRY AN ACCENT DOT, which is the only thing this
+// component gained for the round. The owner asked for the off-season psychologist marker «на плашку
+// на home и на support stuff», and the Support-staff ENTRY is a segment of this row – the chapter
+// picker on the Coach Market screen. A dot rendered by the caller was not available: the segments are
+// this component's own `<button>`s and nothing outside can reach inside one.
+//
+// ⚠ OPTIONAL, AND EVERY EXISTING CALLER IS BYTE-FOR-BOX WHAT IT WAS. Eight rows use this component;
+// none of them passes `dot`, so none of them renders the span, and `.tab-pill` itself is untouched.
+//
+// ⚠ AND THE SEGMENT'S NAME DOES NOT MOVE WHEN THE DOT ARRIVES – D7's rule, borrowed from the tab
+// bar. The button already carries an explicit `aria-label` (`o.label`), which pins the accessible
+// name whatever descendants it grows, so `getByRole('button', { name: 'Support staff', exact: true })`
+// keeps working in both states. The dot itself carries no word: this round was not asked for one, and
+// CLAUDE.md invariant 4 says an unasked sentence is not a builder's to add.
 defineProps<{
-  options: readonly { value: string; label: string; short?: string; title?: string }[]
+  options: readonly {
+    value: string
+    label: string
+    short?: string
+    title?: string
+    /** ⭐ ROUND 42 #28: draw the accent dot on this segment. See the note above. */
+    dot?: boolean
+  }[]
   /** Bare, so the plate reads as a plate on a page background; `on-panel` inside a panel-toned card. */
   tone?: 'page' | 'on-panel'
   /** ⭐⭐ WHAT JOB THIS ROW IS DOING, which is a different question from `tone` (what it is sitting
@@ -91,6 +112,9 @@ const model = defineModel<string>({ required: true })
       @click="model = o.value"
     >
       {{ o.short ?? o.label }}
+      <!-- ⭐ ROUND 42 #28 – the accent dot, in the same attention flavour Home's plate wears. See
+           the script note for why it is silent and why the segment's name cannot move under it. -->
+      <span v-if="o.dot" class="tab-pill-dot" data-nudge="psychologist-focus"></span>
     </button>
   </div>
 </template>

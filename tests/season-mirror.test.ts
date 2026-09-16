@@ -199,7 +199,22 @@ describe('the season mirror – captured at entry, never reconstructed', () => {
     //
     // ⚠ IF A LATER SCAN FINDS EVERY SEED AT ZERO, do not hunt a ninth. That is the mechanism being
     // gone, and this file should go red and say so.
-    const { world, committed } = walk(102, 'mirror-c')
+    //
+    // ⚠⚠ RE-POINTED BY ROUND 42 #34, 'mirror-c' → 'mirror-x', AND BY THIS BLOCK'S OWN PROCEDURE.
+    // #34 re-priced composure in the point loop, so each of these careers now wins and loses
+    // different matches and stands on a different rung when it enters; 'mirror-c' fell to zero
+    // entries the ladder could not pay. Re-scanned by REPLICATING THIS TEST EXACTLY – running the
+    // whole file once per seed rather than a hand-rolled walk, which is the mistake the paragraph
+    // above records – five of the eight are alive and three are not:
+    //
+    //     ALIVE   mirror-real · mirror-d · **mirror-x** · mirror-y · golden-v45
+    //     ZERO    mirror-real-2 · mirror-b · mirror-c
+    //
+    // 'mirror-x' is taken because it was the strongest of the eight on the ORIGINAL scan (32/110)
+    // and is alive on this tree too, so the arm is not left sitting on a seed that squeaked through.
+    // ⭐ AND THE MECHANISM IS NOT GONE: five of eight is the opposite of the every-seed-zero case the
+    // paragraph above says to read as a defect.
+    const { world, committed } = walk(102, 'mirror-x')
     expect(committed.length).toBeGreaterThan(20)
     const summary = world.lastSeasonSummary
     expect(summary?.entryMirror).toBeDefined()

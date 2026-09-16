@@ -16,6 +16,7 @@
 //   5. A REAL CAREER           – `openCareer` / `stepCareerWeek` to age 33, the fork answered both
 //                                ways, so the claim is checked against the shipped tick and not only
 //                                against the two functions the first four arms call.
+import { answerBirthdayNeutral } from './_birthday'
 import {
   ageCurveOf,
   declineFactor,
@@ -36,7 +37,6 @@ import {
   answerFork,
   answerRetirement,
   callUpRevealOpen,
-  chooseGift,
   closeTournament,
   collegeLeagueRevealOpen,
   kidAgeExact,
@@ -241,7 +241,7 @@ for (let i = 0; i < CAREERS; i++) {
       // that has not cleared by then leaves the walk with its state named rather than hanging.
       for (let press = 0; press < 24 && world.ending?.type === 'college'; press++) {
         resumeFromCollege(world, rng)
-        if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+        if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
         // ⚠ AND THE FRESHMAN CHAMPIONSHIP AND THE NATIONS CUP TIE COME DOWN THE TOUR'S OWN FLOW
         // (rounds 26 #6 / 27 #6). `resumeFromCollege` RETURNS on either – nothing mutated, the same
         // press works once it is answered – so a bench that never answers one presses for ever

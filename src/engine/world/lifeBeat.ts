@@ -99,7 +99,20 @@ import { activeEpisode, endEpisode, loveEpisodesOf } from './loveEpisodes'
 // fork-opinion row and asks `pendingLifeBeat` before it will answer the fork), so an import back
 // into `endings.ts` would close a runtime loop. `constants.ts` is the bottom of the package's graph
 // and `endings.ts` re-exports the guard from there anyway, so nothing about the semantics moves.
-import { guardNotEndedForGood } from './constants'
+import { guardNotEndedForGood, KID_ID } from './constants'
+// ⭐⭐⭐ ROUND 42 #15/#24 – THE THREE READS THE FACTUAL BOUNDARY NEEDS (§8d.5), and all three are
+// leaves or near-leaves that do not import back here (checked module by module before they were
+// added). `weekMonth` is `shared/dates.ts`' week → real-month mapping and that file imports NOTHING
+// at all; `entryStatus` is `world/medical.ts`' own «pure state, ZERO RNG draws» verdict, and it is
+// the ONE spelling of «could she still enter this» – a second reading of that rule here would be the
+// tierState defect this repo has already paid for four times. `KID_ID` above is what tells her
+// matches from the field's in the event feed.
+// ⚠ NOT `multiWeek.ts`' `eventIsHers`, NOT `knock.ts`' `ordinaryTrainingWeek`, NOT `coachMarket.ts`:
+// every one of those imports this file back, directly or through `endings.ts`. The clauses they
+// would have supplied are field reads (`world.entries.includes`, `world.coachId !== null`) and are
+// spelled inline for that reason and no other.
+import { entryStatus } from './medical'
+import { weekMonth } from '../../shared/dates'
 // ⭐⭐⭐ v76 T6 – THE SEAT, ASKED DIRECTLY, WHICH IS THE MASSEUR'S OWN WAY (`world/medical.ts:62`
 // spends `masseurWorksThisWeek` inside `accrueCondition` exactly like this). `psychologistWorkingRung`
 // answers three questions in one – not hired · hired for a different year · stood down by a college
@@ -146,7 +159,7 @@ import { atOrAboveStageBar, boothPrivateLifeAt, newsStandingOf } from './spotlig
 import { awayVoice } from '../diary/words'
 import { diaryLifeStageFor } from '../diary/facts'
 import { schoolIsOver } from '../kidLife'
-import type { BondBand, DiaryLifeStage, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
+import type { BondBand, DiaryLifeStage, LifeBeatFollowUp, LifeBeatKind, LifeBeatPrompt, LifeBeatRecord, LoveEpisode, MoodRegister, SoftBeatInvite } from '../../shared/protocol/narrative'
 // ⚠ TYPE-ONLY, erased at compile time – §10's `airBoothMention` names the rung it is handed and
 // resolves nothing from the calendar itself (that is `atOrAboveStageBar`'s job, one leaf over).
 import type { TierId } from '../season/types'
@@ -711,6 +724,15 @@ const HER_CONTINUATION: Record<Temperament, Record<ForkWant, string>> = {
  *  a fourth radio. */
 const LISTEN_DONE_LABEL = 'Let her finish'
 
+/** ⭐⭐ ROUND 42 #8 – THE CONFIRM CONTROL under the answers, now that they only SELECT (owner:
+ *  «Надо сделать как на прологе "выбор + proceed"»). DRAFT under invariant 4, and the word is the
+ *  prologue's own shipped confirm vocabulary (`WALK_COPY.proceed`, round 41 #9: «наша желтая кнопка
+ *  proceed») rather than a new coinage – one word, no punctuation, the way on off a card whose
+ *  question is answered. ⚠ ONE STRING FOR EVERY BEAT KIND, small talk included, for the reason
+ *  `WALK_COPY.proceed` gives: a per-kind confirm would be more drafts for the owner to read and more
+ *  places for the same button to drift apart. */
+const CONFIRM_LABEL = 'Proceed'
+
 /** ⭐⭐ THE FLAT POOL – what a `strained` or `cold` home sounds like on the biggest question of her
  *  life (voice bibles §B). One to four words, the parent's own sentence carrying the rest, and no
  *  feature of any of the four voices surviving.
@@ -1087,6 +1109,14 @@ const MET_HEADING_HEADLINE = 'We read about it before she told us'
 // wave 2 built and adds NOTHING to it – the queue, the pause, the engine-side re-validation and the
 // dialog's whole contract are called, never re-implemented.
 //
+// ⭐⭐⭐ ROUND 42 #15/#24 REWROTE WHAT THIS BEAT IS **ABOUT** AND LEFT ITS MACHINERY ALONE. The three
+// subjects became six kinds of material (§2 of the spec), the ordinary week stopped resolving to
+// «I want to ask you something», and every answer now earns a second line of hers. The SITUATION
+// layer that does all of it is §3c-2 below; everything in §3c is the card as it shipped, and it is
+// still live – a career with no situation written for it, and every save raised before this round,
+// reads exactly these pools. Read §3c-2's banner for the design and for the five findings of the
+// owner's own review that bind it.
+//
 // ⚠⚠ RULED V2 (09.09): «TIER-1 REPLIES MOVE NOTHING – small talk is texture, never economy, and the
 // delta table stays the big beats'.» Every reply below is priced ZERO, and that is a design rule
 // rather than a coincidence of this draft: this is the FREQUENT beat (up to four a season), so a
@@ -1106,26 +1136,98 @@ const MET_HEADING_HEADLINE = 'We read about it before she told us'
 // question open and this is its stated default; `ANSWER_EVENT`'s `null` is where the decision lives,
 // and it is still a TOTAL record, so the next kind has to make the same decision out loud.
 
-/** WHAT SHE CAME WITH – who-she-is §5b's own triple («a worry ... a joy, a question»), and the whole
- *  of a `'small-talk'` row's `detail`. Machine-readable, never a rendered word, exactly as
- *  `'fork-opinion'`'s want is. */
-export const SMALL_TALK_SUBJECTS = ['worry', 'joy', 'question'] as const
+/** WHAT SHE CAME WITH, AS TIER 1 SHIPPED IT – who-she-is §5b's own triple («a worry ... a joy, a
+ *  question»). Machine-readable, never a rendered word, exactly as `'fork-opinion'`'s want is.
+ *
+ *  ⚠⚠ RENAMED `LEGACY_` BY ROUND 42 #24 AND KEPT WHOLE, WHICH IS A SAVE-COMPAT REQUIREMENT RATHER
+ *  THAN NOSTALGIA. A `'small-talk'` row's `detail` is PERSISTED, and a career loaded from a v78 save
+ *  can be holding a live soft row raised before this round – `'worry'`, `'joy'` or `'question'`,
+ *  with no situation behind it. That row still has to render, so this roster and the pool it keys
+ *  (`SMALL_TALK_LINE`) stay exactly where they are and keep serving it. There is NO MIGRATION to
+ *  write and no schema bump owed: new rows carry a different SHAPE of detail
+ *  (`'<subject>:<situation>'`), and the shape is what tells the two apart – `'fork-psy'`'s own
+ *  two-field detail, read the same way.
+ *
+ *  ⚠ AND THE LEGACY PATH IS STILL REACHABLE ON A NEW CAREER, which is the honest half. When no
+ *  situation is available for this girl, at this stage, on this career, `rollSmallTalk` raises a
+ *  legacy row and she opens with one of these twelve lines, exactly as she did before this round.
+ *  The catalogue below is thin on purpose (spec §10's delivery order: «a small real set first»), so
+ *  those cells are named in the handoff rather than hidden. */
+export const LEGACY_SMALL_TALK_SUBJECTS = ['worry', 'joy', 'question'] as const
+export type LegacySmallTalkSubject = (typeof LEGACY_SMALL_TALK_SUBJECTS)[number]
+
+/** ⭐⭐⭐ ROUND 42 #24 – THE SIX KINDS OF SMALL THING SHE MIGHT BRING (spec §2), and the taxonomy is
+ *  the fix rather than a re-labelling of the old one.
+ *
+ *  The owner: «Один и тот же диалог из раза в раз "I want to ask you something"… да, надо больше
+ *  разнообразия, это же наша главная фича». The spec found the root and it is in the old roster
+ *  itself: `worry` and `joy` name emotional MATERIAL, `question` names a SPEECH ACT. Because the
+ *  ordinary-mood week always resolved to `question`, the ordinary opener always collapsed to «I want
+ *  to ask you something» – and no amount of paraphrase fixes a taxonomy that puts a verb where the
+ *  other two put a feeling. So all six name material:
+ *
+ *      worry        something sitting wrong
+ *      good-news    something that went right
+ *      decision     a small choice she is turning over
+ *      curiosity    a question she actually wants answered
+ *      observation  a thing she noticed, no ask attached
+ *      story        something that happened, told for its own sake
+ *
+ *  ⚠ `good-news` AND `curiosity` ARE NOT `joy` AND `question` RENAMED. The legacy roster above is a
+ *  different set of three values living in the same field; nothing maps one onto the other, and
+ *  `SMALL_TALK_FRAME_REGISTER` – keyed on BOTH rosters – is the only place they meet. */
+export const SMALL_TALK_SUBJECTS = ['worry', 'good-news', 'decision', 'curiosity', 'observation', 'story'] as const
 export type SmallTalkSubject = (typeof SMALL_TALK_SUBJECTS)[number]
 
-/** ⭐ WHICH OF THE THREE, READ OFF HER WEEK AND NOT OFF A SECOND DRAW.
+/** ⭐ WHICH OF THE THREE LEGACY SUBJECTS, READ OFF HER WEEK AND NOT OFF A SECOND DRAW.
+ *
+ *  ⚠⚠ ROUND 42 #24 LEFT THIS FUNCTION ALONE, BYTE FOR BYTE, AND THE UNTOUCHED-NESS IS THE POINT. It
+ *  is no longer the road a situation-backed beat takes – `drawSmallTalkSubject` is – but it is still
+ *  the whole of the LEGACY raise, and the legacy card has to stay exactly the card it was. Its own
+ *  pin (`tests/wave3-small-talk.test.ts` §G) therefore stays green without a line moving, which is
+ *  what tells a reader the old path really is unchanged rather than merely asserted to be.
  *
  *  ⚠⚠ ZERO DRAWS, AND IT IS THE SPLIT-KEY LAW THAT MAKES IT SO RATHER THAN THRIFT. The wave owns
  *  FOUR stream keys (brief §3) and `seed:life:smalltalk:<week>` answers exactly one question –
  *  «does she come with something». A second, DIFFERENT fact read off the same key would be two
- *  facts sharing a key, which is the one thing the 09.09 stream law forbids; a key of its own would
- *  be a fifth stream this wave may not create. So the subject is DERIVED, and the fact it is derived
- *  from is §5b's composition rule read literally: SPIRIT owns the register of the moment, so the
- *  register is what decides which small thing she brings. A heavy week brings a worry, a bright one
- *  brings something good, and an ordinary one brings the question she has been meaning to ask. */
-export function smallTalkSubjectFor(register: MoodRegister): SmallTalkSubject {
+ *  facts sharing a key, which is the one thing the 09.09 stream law forbids. So the subject is
+ *  DERIVED, and the fact it is derived from is §5b's composition rule read literally: SPIRIT owns
+ *  the register of the moment, so the register is what decides which small thing she brings.
+ *  ⚠ ROUND 42 #24 DID create two more keys, for the situation layer, and they are their own
+ *  sub-streams with their own week – see `rollSmallTalk`. */
+export function smallTalkSubjectFor(register: MoodRegister): LegacySmallTalkSubject {
   if (register === 'low') return 'worry'
   if (register === 'bright') return 'joy'
   return 'question'
+}
+
+/** ⭐⭐ THE PARENT'S FRAME FOLLOWS THE SUBJECT, NOT THE WEEK – round 42 #24's one consequence for a
+ *  string nobody rewrote, and it is a correctness fix rather than a preference.
+ *
+ *  `SMALL_TALK_HEADING` has three rows and they are keyed on the Mood register, which was exactly
+ *  right while the subject WAS the register (`smallTalkSubjectFor` above, one-to-one). Spec §2 cuts
+ *  that link on purpose – «Mood sets the WEIGHTS, not the subject» – so a bright week can now bring
+ *  a worry, and a heading reading «She came to us with something good this week» over «Something's
+ *  wrong. I don't know what yet.» would be the card contradicting her in its own first line.
+ *
+ *  ⚠⚠ SO THE REGISTER THE HEADING READS IS DERIVED FROM THE SUBJECT, AND NOT ONE WORD OF HIS COPY
+ *  MOVED (invariant 4). The three shipped frames are exactly the three this returns a key for.
+ *
+ *  ⚠ AND ON A LEGACY ROW IT IS THE IDENTITY. `worry → low`, `joy → bright`, `question → level` is
+ *  `smallTalkSubjectFor` read backwards, so a pre-round-42 row gets back the very register it was
+ *  raised on and its card is BYTE-IDENTICAL to the one that shipped. That is the whole reason this
+ *  record is keyed on both rosters instead of only the new one. */
+const SMALL_TALK_FRAME_REGISTER: Record<SmallTalkSubject | LegacySmallTalkSubject, MoodRegister> = {
+  // the six
+  worry: 'low',
+  'good-news': 'bright',
+  decision: 'level',
+  curiosity: 'level',
+  observation: 'level',
+  story: 'level',
+  // ...and the two legacy values the six do not already contain (`worry` is shared)
+  joy: 'bright',
+  question: 'level',
 }
 
 /** ⭐⭐ HER OPENER, BY VOICE, BY SUBJECT – 12 drafts, and the THIRD thing in this file indexed by
@@ -1170,19 +1272,43 @@ export function smallTalkSubjectFor(register: MoodRegister): SmallTalkSubject {
  *  ⚠ THE QUOTED SPAN IS SHARED with the roof column, exactly as `MET_HER_LINE`'s is – see that
  *  pool's note for the contraction fold and for the law home it points at.
  *
- *  ⭐ PROVENANCE OF `sunny`/`joy`'s «Something went well. I'm pleased about it.», corrected 11.09:
- *  it is THE OWNER'S OWN WORD, carried on his P2 verdict list. It is absent from the 19-frame
- *  delivery for one reason only – that cell's frame is channel-neutral and SHARED, so there was no
- *  away row for it to appear in. The architect first recorded it as an inference and the owner
- *  corrected the record: one source, byte-for-byte agreement, chain of custody clean. */
-const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, PresenceCell>> = {
+ *  ⭐ PROVENANCE OF `sunny`/`joy`'s opener, corrected 11.09: it is THE OWNER'S OWN WORD, carried on
+ *  his P2 verdict list. It is absent from the 19-frame delivery for one reason only – that cell's
+ *  frame is channel-neutral and SHARED, so there was no away row for it to appear in. The architect
+ *  first recorded it as an inference and the owner corrected the record: one source, byte-for-byte
+ *  agreement, chain of custody clean.
+ *
+ *  ⭐⭐⭐ ROUND 42 #24 – NINE QUOTED SENTENCES REWRITTEN, AND ALL NINE ARE HIS OWN (spec §9, «his
+ *  proposed rewrites», applied verbatim). They land in six cells because two of the cells hold two
+ *  of the nine:
+ *
+ *      sunny/worry   «I've been worrying at something all week.» → «Something's been on my mind all week.»
+ *                    «I'd rather say it than carry it.»          → «I think I need to say it out loud.»
+ *      sunny/joy     «Something went well. I'm pleased about it.» → «Something went right this week. I'm still smiling about it.»
+ *      fiery/worry   «Something's bothering me. It's been bothering me for days.» → «Something's bothering me, and I can't leave it alone.»
+ *      fiery/joy     «Today was a good one. A really good one.»  → «Good day. Really good. I needed one.»
+ *      quiet/joy     «The morning went the way I wanted it to.»  → «Today went well.»
+ *      deep/worry    «Something is sitting wrong.»               → «Something's wrong. I don't know what yet.»
+ *                    «That is all I have.»                       → «That's as far as I've got.»
+ *      deep/joy      «Good week. I will take it.»                → «Good week. I needed that.»
+ *
+ *  ⚠ EACH REWRITE LANDS IN **BOTH** FRAMES OF ITS CELL, because the quoted span is shared by law and
+ *  `tests/wave3-presence.test.ts` §D asserts exactly that. The FRAMES – the narration outside the
+ *  quotation – were not touched by §9 and are not touched here.
+ *
+ *  ⚠ THE THREE `question` CELLS ARE UNCHANGED, INCLUDING «I want to ask you something.» – the very
+ *  sentence #24 is named after. §9 does not rewrite them, and the reason is the spec's own: the fix
+ *  for that cell is not a better paraphrase, it is the SITUATION layer below taking the ordinary
+ *  week off `question` altogether. A rewrite nobody asked for would be invariant 4 broken while
+ *  obeying it three lines up. */
+const SMALL_TALK_LINE: Record<Temperament, Record<LegacySmallTalkSubject, PresenceCell>> = {
   sunny: {
     worry: {
-      roof: 'She came and sat down without being asked to. "I\'ve been worrying at something all week. I\'d rather say it than carry it."',
-      away: 'She stayed on the line past the point of the call. "I\'ve been worrying at something all week. I\'d rather say it than carry it."',
+      roof: 'She came and sat down without being asked to. "Something\'s been on my mind all week. I think I need to say it out loud."',
+      away: 'She stayed on the line past the point of the call. "Something\'s been on my mind all week. I think I need to say it out loud."',
     },
     joy: {
-      roof: 'She said it before anyone had asked how the week went. "Something went well. I\'m pleased about it."',
+      roof: 'She said it before anyone had asked how the week went. "Something went right this week. I\'m still smiling about it."',
     },
     question: {
       roof: 'She asked it over dinner, with the context first. "Can I ask you something? It\'s not urgent, I just want to know."',
@@ -1191,12 +1317,12 @@ const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, PresenceCell
   },
   fiery: {
     worry: {
-      roof: 'She was through the door and straight into it. "Something\'s bothering me. It\'s been bothering me for days."',
-      away: 'She rang out of turn and went straight in. "Something\'s bothering me. It\'s been bothering me for days."',
+      roof: 'She was through the door and straight into it. "Something\'s bothering me, and I can\'t leave it alone."',
+      away: 'She rang out of turn and went straight in. "Something\'s bothering me, and I can\'t leave it alone."',
     },
     joy: {
-      roof: 'She was talking before she had put anything down. "Today was a good one. A really good one."',
-      away: 'Her voice note skipped hello entirely. "Today was a good one. A really good one."',
+      roof: 'She was talking before she had put anything down. "Good day. Really good. I needed one."',
+      away: 'Her voice note skipped hello entirely. "Good day. Really good. I needed one."',
     },
     question: {
       roof: 'She asked it the second she sat down. "I want to ask you something. And I want a straight answer."',
@@ -1209,8 +1335,8 @@ const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, PresenceCell
       away: 'She put it at the bottom of an ordinary message. "There\'s something I keep going back over."',
     },
     joy: {
-      roof: 'She put the kettle on and mentioned it while it filled. "The morning went the way I wanted it to."',
-      away: 'She mentioned it in the middle of a call about other things. "The morning went the way I wanted it to."',
+      roof: 'She put the kettle on and mentioned it while it filled. "Today went well."',
+      away: 'She mentioned it in the middle of a call about other things. "Today went well."',
     },
     question: {
       roof: 'She asked it while she was stacking the shelf, without looking round. "Can I ask you about something?"',
@@ -1219,12 +1345,12 @@ const SMALL_TALK_LINE: Record<Temperament, Record<SmallTalkSubject, PresenceCell
   },
   deep: {
     worry: {
-      roof: 'She waited until the room was quiet. "Something is sitting wrong. That is all I have."',
-      away: 'She called late, and took a while getting to it. "Something is sitting wrong. That is all I have."',
+      roof: 'She waited until the room was quiet. "Something\'s wrong. I don\'t know what yet. That\'s as far as I\'ve got."',
+      away: 'She called late, and took a while getting to it. "Something\'s wrong. I don\'t know what yet. That\'s as far as I\'ve got."',
     },
     joy: {
-      roof: 'She said it on her way past, and did not stop. "Good week. I will take it."',
-      away: 'Her message came and did not ask for a reply. "Good week. I will take it."',
+      roof: 'She said it on her way past, and did not stop. "Good week. I needed that."',
+      away: 'Her message came and did not ask for a reply. "Good week. I needed that."',
     },
     question: {
       roof: 'She waited for the room to empty first. "I want to ask you something."',
@@ -1265,6 +1391,623 @@ const SMALL_TALK_HEADING: Record<MoodRegister, string> = {
  *  false on two of them; the two-tier honesty law forbids the rest (no draw, no result, no place, no
  *  person, no plan, no number). What is left is the one thing the world actually holds: she came. */
 const SMALL_TALK_CARD = 'She came by with something small.'
+
+// =================================================================================================
+// 3c-2. ⭐⭐⭐ ROUND 42 #15/#24 – THE SITUATION, AND THE BEAT BECOMES AN EXCHANGE
+// =================================================================================================
+//
+// `docs/specs/the-small-talk-exchange-2026-09.md`, and the copy in this section is HIS – §8a–§8c are
+// eight exchanges he read line by line and revised on 15.09. What is drafted rather than his is
+// flagged where it stands, and only there.
+//
+// THE TWO COMPLAINTS THIS ANSWERS, in his own words:
+//
+//   #15 «выбрал пункт, чтобы она сказала больше, а попап закрылся… Сейчас выглядит как "сказала А,
+//        но никогда не сказала Б".»
+//   #24 «Один и тот же диалог из раза в раз "I want to ask you something"… да, надо больше
+//        разнообразия, это же наша главная фича.»
+//
+// THE SHAPE (spec §1): she opens with a CONCRETE subject; the parent invites more, responds, or
+// gives space; she answers. Invite earns a CONTINUATION, respond and give-space earn a REACTION. The
+// economy does not move – bond-neutral, non-blocking, missable, four a season – and none of the
+// three is marked correct.
+//
+// ⚠⚠ §8d's FIVE FINDINGS, WHICH ARE DESIGN AND OUTRANK THE LINE EDITS. Each one is load-bearing here
+// and each one is pinned:
+//
+//  1. A `respond` BRANCH MUST NAME THE PARENT'S ACTUAL OPINION. «Say how we see it» promises a view
+//     and then she answers an opinion the player never heard. So the `respond` label is per
+//     SITUATION, not per subject – «Say the travelling matters too», «Say a good coach explains what
+//     they're changing», «Ask whether she's been eating properly». More copy is the price and it is
+//     the point: a promise of content the game has not written is the defect this item exists to
+//     remove. (⚠ ONE EXCEPTION STANDS AND IS REPORTED RATHER THAN EDITED – see `line-call`.)
+//  2. A `story` IS TWO BEATS. The incident is a SHARED continuation every route hears; the branch is
+//     the aftermath; EVERY route finishes the story. `shared` below is that paragraph, and it is
+//     prepended to all three replies in `smallTalkFollowUps` – so a branch that left the player
+//     waiting for B cannot be assembled.
+//  3. THE VOICE TEST IS HIS, AND THE OBVIOUS ONE IS WRONG. «The same subject in two voices shares no
+//     sentence» proves nothing: different SITUATIONS produce different words by themselves. His
+//     test: **same event, same facts, same age, same parental choice → four different ways of
+//     noticing, disclosing and responding.** `court-four` is written in all four voices for exactly
+//     that test (`tests/round42-small-talk-exchange.test.ts` §E). ⭐ And «no shared phrase» is NOT a
+//     target – real people all say «Okay».
+//  4. UNGRADED ≠ EMOTIONALLY INTERCHANGEABLE. No bond, no score, no recommended branch – but the
+//     three branches may honestly produce relief, mild resistance, amusement, uncertainty, a
+//     boundary or a changed thought. What is forbidden is scoring, a recommendation cue and a
+//     consistently superior branch, not difference in feel.
+//  5. ⚠⚠ THE FACTUAL BOUNDARY, AND IT IS A LAW. Invented DOMESTIC detail is hers and must stay
+//     stable across an exchange (the flat, the coffee, the dad who put the lid back on). A
+//     COMPETITIVE claim – entering a tournament, a decision deadline, beating an opponent, four
+//     previous losses – NEEDS A REAL FACT IN THE SAVE BEHIND IT. She may interpret an outcome
+//     however she likes; she may not invent one. `fact` below is that line, and `SMALL_TALK_FACT`
+//     is where each claim is checked against the career.
+//
+// ⚠ TEXTURE ONLY, THE FOG LAW UNCHANGED (spec §11): nothing here writes a consequential fact. A
+// practice that felt easy is a mood, never a training gain; a name mentioned is a name, never a
+// relationship the rest of the engine has to honour.
+
+/** ⭐⭐ THE THREE STANCES (spec §3), AND THEY ARE ALWAYS THE SAME THREE SHAPES. Never one of them is
+ *  the right one. Named for what the parent DOES, because the words they wear are the situation's.
+ *
+ *  ⚠⚠ AND EACH ONE KEEPS ITS SHIPPED OPTION ID (`more` / `view` / `easy`, `LIFE_BEAT_OPTIONS`
+ *  below), which is a save-compat requirement rather than thrift: an option id is PERSISTED in
+ *  `LifeBeatRecord.answer`, so a new vocabulary on these three would make every answered small-talk
+ *  row in every shipped save unreadable and would owe a migration. The words on the buttons change;
+ *  the ids the world records do not. */
+export const SMALL_TALK_STANCES = ['invite', 'respond', 'space'] as const
+export type SmallTalkStance = (typeof SMALL_TALK_STANCES)[number]
+
+export const SMALL_TALK_STANCE_ID: Record<SmallTalkStance, string> = {
+  invite: 'more',
+  respond: 'view',
+  space: 'easy',
+}
+
+/** ⭐⭐⭐ §8d.5 – THE COMPETITIVE CLAIMS A SITUATION MAY ASSERT, each one a question about the
+ *  AUTHORITATIVE career rather than about her mood. A situation carrying one of these is UNREACHABLE
+ *  on a week where the answer is false, which is the whole of the factual boundary.
+ *
+ *  ⚠ THE ROSTER IS A UNION AND THE PREDICATES ARE A TOTAL RECORD, so a new claim cannot be added
+ *  without somebody writing the read that makes it true. */
+export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror'] as const
+export type SmallTalkFact = (typeof SMALL_TALK_FACTS)[number]
+
+/** How far back «today» may reach when she recounts a match. ⚠ TWO AND NOT ONE, because the row is
+ *  live for three weeks anyway (`smallTalkTtlWeeks`) and the tick raises the beat in the same phase
+ *  the week's result settled in – so an exact «this very week» would be a precision the surface
+ *  cannot keep. Two weeks is the honest window for «there was a call today». */
+const SMALL_TALK_FACT_WEEKS = 2
+
+/** The month a `decision` about «the March tournament» has to be about. ⚠ A REAL CALENDAR READ:
+ *  `weekMonth` is `shared/dates.ts`' own week → month mapping (the career's weeks land on real
+ *  dates), so the tournament she is turning over is one that genuinely falls in March. */
+const MARCH = 3
+
+/** Her competitive matches as the feed retains them, oldest first: week, opponent, and whether she
+ *  won. ⚠ FRIENDLIES EXCLUDED (`!e.friendly`) – a practice set is not a result she may claim.
+ *
+ *  ⚠⚠ AND IT IS A ROLLING WINDOW, NOT A CAREER. `world.events` is capped at `EVENTS_CAP` and
+ *  `pruneEvents` sacrifices her oldest match rows last but does sacrifice them – roughly the last
+ *  20–40 competitive matches on a busy career. That makes every count below a LOWER bound, which is
+ *  the safe direction for `beat-her-conqueror`: a gate that can only under-count can only refuse a
+ *  situation it should have offered, never offer one it should have refused. `coachMarket.ts`'
+ *  `matchesEverPlayed` records the same caveat for the same feed. */
+function kidMatchRows(world: WorldState): { week: number; opponent: string; won: boolean }[] {
+  const out: { week: number; opponent: string; won: boolean }[] = []
+  for (const e of world.events) {
+    const m = e.match
+    if (m === undefined || e.friendly === true) continue
+    if (m.aId !== KID_ID && m.bId !== KID_ID) continue
+    out.push({ week: e.week, opponent: m.aId === KID_ID ? m.bId : m.aId, won: m.winnerId === KID_ID })
+  }
+  return out
+}
+
+/** ⭐⭐⭐ §8d.5's FOUR READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE the
+ *  situation is drawn (`reachableSituations`), never after, so a false fact removes the situation
+ *  from the pool instead of being papered over in the copy.
+ *
+ *  ⚠ `march-entry-open` CARRIES THE DEADLINE CLAUSE HIS REVIEW ADDED IN THE GATE, not in the option
+ *  list. «Say there's time to decide – *only when the deadline actually permits it*» (§8c). Written
+ *  as a conditional OPTION it would have made the card sometimes show two stances and sometimes
+ *  three; written as part of the gate, the situation simply does not arise on a week where that
+ *  sentence would be false, and all three stances stay honest by construction.
+ *  ⚠ `world.week < e.deadlineWeek` AND NOT `<=`: the deadline is the END of that week, so equality
+ *  means «decide now», which is precisely when «there's time to decide» stops being true. */
+const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
+  'played-recently': (world) =>
+    kidMatchRows(world).some((r) => r.week > world.week - SMALL_TALK_FACT_WEEKS && r.week <= world.week),
+  'march-entry-open': (world) =>
+    world.season.some(
+      (e) =>
+        weekMonth(e.week) === MARCH &&
+        e.week > world.week &&
+        !world.entries.includes(e.id) &&
+        world.week < e.deadlineWeek &&
+        entryStatus(world, e).level !== 'blocked',
+    ),
+  'coach-employed': (world) => world.coachId !== null,
+  // ⚠⚠ «I beat someone I've never beaten» + «She's beaten me four times. Four!» – BOTH halves of his
+  // copy are checked, and the second is why this is the strictest gate in the record. A win in the
+  // window, against an opponent who has beaten her FOUR times in the retained feed and never lost to
+  // her. `=== 4` and not `>= 4`, because she says the number out loud: at five it is her miscounting,
+  // and the spec's own line is «she may interpret an outcome however she likes; she may not invent
+  // the outcome».
+  'beat-her-conqueror': (world) => {
+    const rows = kidMatchRows(world)
+    return rows.some((r) => {
+      if (!r.won || r.week <= world.week - SMALL_TALK_FACT_WEEKS || r.week > world.week) return false
+      const before = rows.filter((p) => p.opponent === r.opponent && p.week < r.week)
+      return before.length === 4 && before.every((p) => !p.won)
+    })
+  },
+}
+
+/** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.
+ *  ⚠ THE TWO TRAVEL TOGETHER, and §8d.1 is why: a label and a reaction written in different places
+ *  is how «Say how we see it» came to be answered by «I'll watch for that» – a reply to an opinion
+ *  nobody had voiced. Pairing them in one object makes the mismatch visible to whoever edits either. */
+export interface SmallTalkBranch {
+  label: string
+  said: string
+}
+
+/** ⭐⭐⭐ ONE SITUATION, IN ONE VOICE. The unit of the catalogue, and it is per-VOICE deliberately:
+ *  a `Partial<Record<Temperament, …>>` would have been a silent fallback between voices, which is the
+ *  one thing this file's completeness law forbids. A voice that has not been written a situation
+ *  simply does not reach it, and the legacy opener pool serves that cell instead.
+ *
+ *  ⚠ `id` IS PERSISTED (it is half of the row's `detail`), so the ids here are APPEND-ONLY: renaming
+ *  one makes a live soft row in a shipped save unrenderable. Adding a voice column to an existing id
+ *  is free; changing the id is a migration nobody wants to owe. */
+export interface SmallTalkSituation {
+  id: string
+  subject: SmallTalkSubject
+  voice: Temperament
+  /** ⭐ §5 – THE LIFE STAGE IS PART OF THE COPY KEY, and here it is a GATE rather than a variant
+   *  table: an eleven-year-old, a college student and a thirty-year-old professional do not share a
+   *  line, and the cleanest form of that is that they do not share a SITUATION. «I don't think I
+   *  like the new place much» is not a thing a girl living at home says. The other half of the key
+   *  is the delivery frame below, which `presenceOf(stage)` reads off the same stage. */
+  stages: readonly DiaryLifeStage[]
+  /** §8d.5 – `null` is invented DOMESTIC detail, hers to make up and hers to keep consistent. A
+   *  named fact is a COMPETITIVE claim and is checked against the career before this can be drawn. */
+  fact: SmallTalkFact | null
+  /** ⚠ BOTH FRAMES OPTIONAL AND NEITHER DEFAULTED. `presenceLine`'s `away ?? roof` is legal for the
+   *  legacy pool because the owner named the one cell it applies to; here a missing frame is a cell
+   *  nobody wrote, and falling back would put her at a kitchen table from a dormitory. `stages` is
+   *  what guarantees the frame exists, and the sweep in §A of the round-42 pin proves it. */
+  opener: { roof?: string; away?: string }
+  /** ⭐ §8d.2 – `story` ONLY: the incident itself, heard by every route before its own branch. */
+  shared?: string
+  branches: Record<SmallTalkStance, SmallTalkBranch>
+}
+
+/** ⭐⭐⭐ THE CATALOGUE. Spec §8a–§8c, his 15.09 revision, verbatim – plus three drafted voice columns
+ *  of `court-four` that his own voice test (§8d.3) cannot be built without.
+ *
+ *  ⚠⚠ WHAT IS HIS AND WHAT IS NOT, stated per entry rather than in one sweeping sentence, because
+ *  the difference decides whether a line may be edited: entries marked **HIS** are the spec's own
+ *  copy and are invariant 4 material; entries marked **DRAFT** were written for the build and are in
+ *  the handoff verbatim for his pass.
+ *
+ *  ⚠ THE CORPUS SHAPE RULES HOLD HERE TOO (one quoted span per opener, third person outside it, the
+ *  short dash, no number, no price) – with ONE named exception, `new-place`'s «A pause on the line,
+ *  longer than the others.», which does not contain `she` or `her`. It is HIS sentence and his own
+ *  verdict on the set was «the best scene»; it is recorded as the exception rather than edited, the
+ *  way the two `Her …` away frames were in the вычитка fold.
+ *
+ *  ⚠⚠ THE CATALOGUE IS THIN ON PURPOSE. Spec §10's delivery order is his and is adopted: «Expand the
+ *  situation catalogue only after the small set works.» The cells it does NOT cover fall back to the
+ *  legacy opener pool and are named in the handoff. */
+export const SMALL_TALK_SITUATIONS: readonly SmallTalkSituation[] = [
+  // ---------------------------------------------------------------------------------------------
+  // §8a – A PRACTICE THAT FINALLY CLICKED. **HIS**, and the one entry the spec gives both frames for.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'practice-clicked',
+    subject: 'good-news',
+    voice: 'deep',
+    stages: ['school', 'after-school', 'college', 'independent'],
+    // ⚠ DOMESTIC. §6's own ruling: «a practice that felt easy is a mood, never a training gain».
+    fact: null,
+    opener: {
+      roof: 'She put the kettle on. "Practice finally felt easy today."',
+      away: 'She mentioned it halfway through the call. "Practice finally felt easy today."',
+    },
+    branches: {
+      invite: {
+        label: 'Ask what made it good',
+        said: '"Nothing I can name. I just stopped fighting it. I wanted to tell someone who\'d know that\'s rare."',
+      },
+      respond: {
+        label: 'Tell her we\'re glad',
+        said: '"Maybe it doesn\'t sound like much. It felt like a lot."',
+      },
+      space: {
+        label: 'Let her enjoy it',
+        said: '"I will. I only wanted to say it out loud once."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8b – A LINE-CALL SHE CAN'T LET GO. **HIS** (14.09 pass).
+  // ⚠⚠ AND THE ONE ENTRY WHOSE `respond` LABEL IS THE GENERIC FORM §8d.1 FORBIDS. «Tell her what
+  // worries us» promises a view and her reply answers it – «I hear you» – without the player having
+  // heard what the worry was. §8d.1 names this exact string as one of the three defective labels,
+  // but his 15.09 revision rewrote the other two situations and not this one, so the sentence
+  // standing here is his most recent word on it. NOT EDITED: the copy is his (invariant 4), the fix
+  // is a wording change nobody asked for, and the collision is reported in the handoff with a draft
+  // beside it for his call.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'line-call',
+    subject: 'worry',
+    voice: 'fiery',
+    // ⚠ ROOF STAGES ONLY: the spec gives this scene at home and writes no call frame for it.
+    stages: ['school', 'after-school'],
+    fact: 'played-recently',
+    opener: {
+      roof: 'She was straight into it before her bag was down. "There was a call today that was just wrong."',
+    },
+    branches: {
+      invite: {
+        label: 'Let her keep going',
+        said: '"And I know I\'m supposed to move on. I replayed it the whole way home instead."',
+      },
+      respond: {
+        label: 'Tell her what worries us',
+        said: '"I hear you. I don\'t want it in my head for the next one either."',
+      },
+      space: {
+        label: 'Say she needn\'t solve it tonight',
+        said: '"Yeah. Okay. Tomorrow."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8c – THE MARCH TOURNAMENT. **HIS** 15.09 revision, including the `respond` label §8d.1 asked
+  // for («Say the travelling matters too» names the parent's actual position).
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'march-entry',
+    subject: 'decision',
+    voice: 'quiet',
+    stages: ['school', 'after-school'],
+    fact: 'march-entry-open',
+    opener: {
+      roof: 'She waited until the plates were cleared. "I\'m not sure about the March tournament."',
+    },
+    branches: {
+      invite: {
+        label: 'Ask what she\'s weighing',
+        said: '"It\'s a long trip. I\'d miss Tuesday training. I\'m not sure it\'s worth it."',
+      },
+      respond: {
+        label: 'Say the travelling matters too',
+        said: '"That\'s the bit I keep coming back to."',
+      },
+      // ⚠ «only when the deadline actually permits it» is enforced by `march-entry-open` above, not
+      // by hiding this row – see that predicate's note.
+      space: {
+        label: 'Say there\'s time to decide',
+        said: '"I\'ll look at it again on Sunday."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8c – A REAL COACH OR JUST A NICE ONE. **HIS** 15.09 revision.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'coach-real',
+    subject: 'curiosity',
+    voice: 'sunny',
+    stages: ['school', 'after-school'],
+    fact: 'coach-employed',
+    opener: {
+      roof: 'She came in still in her kit. "How do you know when you\'ve got a real coach and not just a nice one?"',
+    },
+    branches: {
+      invite: {
+        label: 'Ask what made her wonder',
+        said: '"Mine\'s lovely. Everyone\'s lovely. I can\'t tell if that\'s the same as good."',
+      },
+      respond: {
+        label: 'Say a good coach explains what they\'re changing',
+        said: '"Okay. I\'ll ask why next time, not just what."',
+      },
+      space: {
+        label: 'Say she doesn\'t have to work it out now',
+        said: '"Fine. But I\'m coming back to this one."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8c – THE PLAYERS SHE HAS BEEN WATCHING. **HIS** 15.09 revision, including his ruling that the
+  // hedge stays: «an adult capable of questioning her interpretation feels more human than one who
+  // always speaks in certainties». ⚠ A CALL, so away stages only.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'watching-players',
+    subject: 'observation',
+    voice: 'deep',
+    stages: ['college', 'independent'],
+    fact: null,
+    opener: {
+      away: 'Halfway through the call, she said, "The players I\'ve been watching barely talk about winning."',
+    },
+    branches: {
+      invite: {
+        label: 'Ask her to go on',
+        said: '"They talk about Tuesday. What they\'re working on next. I\'ve started noticing that."',
+      },
+      respond: {
+        label: 'Say we\'ve noticed it too',
+        said: '"You have? I thought I might be reading too much into it."',
+      },
+      space: {
+        label: 'Let the thought settle',
+        said: '"Mm. I\'ll keep watching."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8c – COURT FOUR. **HIS**, and the entry whose SHAPE changed: a `story` is two beats. The
+  // incident is shared by every route (`shared`), and the branch is the aftermath.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'court-four',
+    subject: 'story',
+    voice: 'fiery',
+    stages: ['school', 'after-school'],
+    fact: null,
+    opener: {
+      roof: 'Her bag was still on her shoulder. "You won\'t believe what happened on court four."',
+    },
+    shared:
+      '"She serves, the ball catches the net cord – and lands in a dad\'s coffee. Full cup. He just looked at it."',
+    branches: {
+      invite: {
+        label: 'Ask what he did',
+        said: '"Took the ball out. Put the lid on. Like that would stop the next one."',
+      },
+      respond: {
+        label: 'Laugh with her',
+        said: '"Exactly! And then I had to serve. I couldn\'t look at him."',
+      },
+      space: {
+        label: 'Let her finish',
+        said: '"Anyway, nobody wanted the ball back. That\'s the important part."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // ⚠⚠ COURT FOUR IN THE OTHER THREE VOICES – **DRAFT**, and the reason they exist is his own test.
+  //
+  // §8d.3: «Same event, same facts, same age, same parental choice – four different ways of noticing,
+  // disclosing and responding.» That test cannot be built out of the spec's eight, because no two of
+  // them share an event. So one event is written across all four voices, and it is the DOMESTIC one
+  // (no career fact behind it) so the test can pose a bare world.
+  //
+  // THE FACTS ARE DELIBERATELY IDENTICAL IN ALL FOUR – the net cord, the coffee, the full cup, the
+  // dad putting the lid back on, her having to serve next, nobody fetching the ball. §8d.5's stable
+  // invented detail, and the only axis left free is the voice. ⭐ And «not one shared phrase» is NOT
+  // the target: his own note says real people all say «Okay».
+  //
+  // The bibles each column is written to: `sunny` volunteers it and names the ordinary feeling;
+  // `quiet` says it around a household action and leaves herself out of it; `deep` gives the
+  // conclusion with nothing round it – and NOT by waiting for a room to go quiet, which §9 flags as
+  // a visible authorial tic.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'court-four',
+    subject: 'story',
+    voice: 'sunny',
+    stages: ['school', 'after-school'],
+    fact: null,
+    opener: {
+      roof: 'She was halfway out of her shoes and already telling it. "You have to hear what happened on court four."',
+    },
+    shared:
+      '"Someone\'s serve clipped the net cord and went straight into a dad\'s coffee. A full one. He just sat there holding it."',
+    branches: {
+      invite: {
+        label: 'Ask what he did',
+        said: '"Put the lid back on. Very carefully. Like the lid was the problem."',
+      },
+      respond: {
+        label: 'Laugh with her',
+        said: '"I know! And I had to serve after that. I was still going."',
+      },
+      space: {
+        label: 'Let her finish',
+        said: '"Anyway. Nobody asked for the ball back. That\'s my favourite part."',
+      },
+    },
+  },
+  {
+    id: 'court-four',
+    subject: 'story',
+    voice: 'quiet',
+    stages: ['school', 'after-school'],
+    fact: null,
+    opener: {
+      roof: 'She said it to the cupboard door, putting things away. "Something happened on court four today."',
+    },
+    shared: '"A serve caught the net cord and landed in someone\'s dad\'s coffee. A whole cup of it."',
+    branches: {
+      invite: {
+        label: 'Ask what he did',
+        said: '"He put the lid back on. Then he moved his chair. That was all."',
+      },
+      respond: {
+        label: 'Laugh with her',
+        said: '"It was quite funny. I didn\'t laugh at the time. I had to serve."',
+      },
+      space: {
+        label: 'Let her finish',
+        said: '"That\'s it, really. Nobody went to get the ball."',
+      },
+    },
+  },
+  {
+    id: 'court-four',
+    subject: 'story',
+    voice: 'deep',
+    stages: ['school', 'after-school'],
+    fact: null,
+    opener: {
+      roof: 'She started it in the doorway and finished it sitting down. "The best thing today had nothing to do with tennis."',
+    },
+    shared: '"A serve clipped the net cord and went into a dad\'s coffee. Full cup. He looked at it for a long time."',
+    branches: {
+      invite: {
+        label: 'Ask what he did',
+        said: '"Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."',
+      },
+      respond: {
+        label: 'Laugh with her',
+        said: '"I didn\'t laugh then. I had to serve next. I have been laughing about it since."',
+      },
+      space: {
+        label: 'Let her finish',
+        said: '"That\'s the whole of it. The ball is probably still there."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8c – THE NEW PLACE. **HIS**, and his own verdict: the best scene in the set. The `respond`
+  // branch ASKS something real instead of gesturing at an unheard opinion – §8d.1's fix, his words.
+  // ⚠ A CALL, and the STAGE is the fact: a girl who has not moved out has no new place.
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'new-place',
+    subject: 'worry',
+    voice: 'quiet',
+    stages: ['college', 'independent'],
+    fact: null,
+    opener: {
+      away: 'A pause on the line, longer than the others. "I don\'t think I like the new place much."',
+    },
+    branches: {
+      invite: {
+        label: 'Let her keep going',
+        said: '"It\'s fine. It\'s clean. I\'ve been eating standing up for a week. I only noticed tonight."',
+      },
+      respond: {
+        label: 'Ask whether she\'s been eating properly',
+        said: '"I have. Just not sitting down, apparently."',
+      },
+      space: {
+        label: 'Say she needn\'t solve it tonight',
+        said: '"Good. Tomorrow, then. Not tonight."',
+      },
+    },
+  },
+  // ---------------------------------------------------------------------------------------------
+  // §8c – SHE BEAT SOMEONE SHE HAD NEVER BEATEN. **HIS**, and the strictest gate in the catalogue:
+  // both halves of her claim are checked against the feed (see `beat-her-conqueror`).
+  // ⭐ His note on temperament rides on this one: the single «Four!» does not make her fiery –
+  // «temperament shapes the pattern, not the punctuation».
+  // ---------------------------------------------------------------------------------------------
+  {
+    id: 'beat-her-conqueror',
+    subject: 'good-news',
+    voice: 'sunny',
+    stages: ['school', 'after-school'],
+    fact: 'beat-her-conqueror',
+    opener: {
+      roof: 'She was smiling before the door had closed. "I beat someone I\'ve never beaten."',
+    },
+    branches: {
+      invite: {
+        label: 'Ask what made it good',
+        said: '"She\'s beaten me four times. Four! Today I got nervous – and kept playing."',
+      },
+      respond: {
+        label: 'Tell her we\'re glad',
+        said: '"I can tell. You\'re doing the face."',
+      },
+      space: {
+        label: 'Let her enjoy it',
+        said: '"Oh, I\'m going to. All evening."',
+      },
+    },
+  },
+]
+
+/** ⭐⭐ THE MOOD WEIGHTS (spec §2), AND THEY ARE WEIGHTS RATHER THAN A MAPPING – which is the whole
+ *  mechanical change of that section. «A heavy week leans toward `worry` but can still produce a
+ *  tired `observation` or a small `decision`; a bright week leans toward `good-news` or `story`; an
+ *  ordinary week leans toward `curiosity`, `decision` or `observation`.»
+ *
+ *  ⚠⚠ THE NUMBERS ARE A **DRAFT** AND SPEC §12.1 NAMES THEM AS NEEDING HIS WORD («the subject
+ *  taxonomy and the mood weights – the one mechanical choice»). The shape is his; the integers are
+ *  the build's, chosen to say exactly the three sentences above and nothing more. They are in this
+ *  file and not in `ECONOMY` on purpose: `ECONOMY` is the balance surface and invariant 5 governs it,
+ *  and this is narrative texture that moves no number a bench can measure.
+ *
+ *  ⚠ NO ZERO ANYWHERE, and that is the design rather than caution: a zero would be the hard mapping
+ *  back in one cell, and «can still produce» is what §2 asks for. */
+const SMALL_TALK_SUBJECT_WEIGHT: Record<MoodRegister, Record<SmallTalkSubject, number>> = {
+  low: { worry: 5, observation: 2, decision: 2, story: 1, curiosity: 1, 'good-news': 1 },
+  bright: { 'good-news': 5, story: 4, observation: 2, curiosity: 2, decision: 1, worry: 1 },
+  level: { curiosity: 3, decision: 3, observation: 3, story: 2, 'good-news': 2, worry: 1 },
+}
+
+/** ⭐⭐⭐ WHICH SITUATIONS THIS GIRL, AT THIS STAGE, ON THIS CAREER, COULD ACTUALLY BRING. The one
+ *  place the three gates meet, and the one road to a drawable situation.
+ *
+ *  ⚠⚠ THE FACT IS ASKED HERE AND NOWHERE ELSE, WHICH IS WHAT MAKES §8d.5 A PROPERTY. A situation
+ *  whose competitive claim is false is not in the returned list, so it cannot be drawn, so no code
+ *  path can render it – rather than being filtered at the draw and left renderable by a second
+ *  caller. `tests/round42-small-talk-exchange.test.ts` §D is the pin, and it mutates the gate away to
+ *  prove the pin bites.
+ *
+ *  ⚠ PURE AND ZERO-DRAW. Nothing here takes an `Rng`, so the frozen MAIN capture cannot see it. */
+export function reachableSituations(world: WorldState, voice: Temperament, stage: DiaryLifeStage): SmallTalkSituation[] {
+  return SMALL_TALK_SITUATIONS.filter(
+    (s) => s.voice === voice && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world)),
+  )
+}
+
+/** THE ROW'S OWN DETAIL, AND IT IS TWO FIELDS – `'fork-psy'`'s shape («`'<register>:<driver>'`») for
+ *  `'fork-psy'`'s reason: the row must stay reconstructible for the life of the career, and a
+ *  re-derivation from a later world could hand the parent a different small thing from the one she
+ *  came with. The subject half is what the card's frame reads; the situation half is the copy. */
+function smallTalkDetailFor(subject: SmallTalkSubject, id: string): string {
+  return `${subject}:${id}`
+}
+
+/** ⭐⭐ READING IT BACK. `null` is a LEGACY row – one of the three shipped subjects, no colon, no
+ *  situation – and the legacy pool is what renders it. That is the whole of the save-compat story:
+ *  no migration, no schema bump, the SHAPE of the string is the discriminator.
+ *
+ *  ⚠ IT TAKES THE VOICE BECAUSE A SITUATION IS PER-VOICE. The row records the subject and the id;
+ *  which of the (up to four) columns of that id is hers is her birth temperament, which is a fact of
+ *  the world and never of the row – exactly as `lifeBeatSaid` has always read the voice.
+ *
+ *  ⚠ A ROW NAMING A SITUATION THAT NO LONGER EXISTS THROWS, like every other unreadable detail in
+ *  this file. That is why the ids are append-only: see `SmallTalkSituation.id`. */
+function smallTalkSituationOf(detail: string, voice: Temperament): SmallTalkSituation | null {
+  const cut = detail.indexOf(':')
+  if (cut < 0) return null
+  const subject = detail.slice(0, cut)
+  const id = detail.slice(cut + 1)
+  const found = SMALL_TALK_SITUATIONS.find((s) => s.voice === voice && s.subject === subject && s.id === id)
+  if (found === undefined) throw new Error(`A small-talk row names no situation: ${detail} (${voice})`)
+  return found
+}
+
+/** HER OPENER FOR A SITUATION, in the frame the stage puts her in. ⚠ IT THROWS rather than falling
+ *  back on the other frame – see `SmallTalkSituation.opener`. */
+function smallTalkOpener(situation: SmallTalkSituation, presence: BeatPresence): string {
+  const line = presence === 'away' ? situation.opener.away : situation.opener.roof
+  if (line === undefined) {
+    throw new Error(`small-talk situation ${situation.subject}:${situation.id} has no ${presence} frame`)
+  }
+  return line
+}
 
 // =================================================================================================
 // 3e. `'ended'` – THE WEEK HE LEARNS IT IS OVER (wave 4, T4). EVERY WORD BELOW IS A DRAFT.
@@ -1950,8 +2693,27 @@ export function lifeBeatOptionsFor(
   kind: LifeBeatKind,
   wants: LoveEpisode['wants'],
   read: EndsRead = 'space',
+  // ⭐⭐⭐ ROUND 42 #15 – THE FOURTH IS A **LABEL** OVERLAY, AND IT IS THE THIRD'S OWN SHAPE POINTED AT
+  // THE OTHER HALF OF AN ANSWER. `MET_BOND_PRIVATE` and `ENDED_BOND_COMPANY` overlay the PRICE by
+  // option id; this overlays the WORDS by option id, and the function still grows rather than gaining
+  // a sibling (ruling G.3), so «what does this beat offer» keeps one reading.
+  //
+  // ⚠⚠ IT EXISTS FOR §8d.1 AND FOR NOTHING ELSE: «a `respond` branch must name the parent's actual
+  // opinion», which makes the words per SITUATION where the price stays per kind. `'small-talk'`'s
+  // three prices are literal zeroes under every overlay, so nothing here can move a number – the
+  // labels and the ledger are on opposite sides of the fence and this parameter is on the label side.
+  //
+  // ⚠ UNDEFINED IS THE BASE TABLE, which is the shipped reading and not a neutral stand-in: a legacy
+  // row (and every other kind) reads `LIFE_BEAT_OPTIONS` exactly as it always has. ⚠ AND AN ID THE
+  // OVERLAY DOES NOT NAME KEEPS ITS OWN LABEL, the price overlay's own `undefined` rule.
+  labels?: Readonly<Record<string, string | undefined>>,
 ): readonly LifeBeatAnswer[] {
-  const base = LIFE_BEAT_OPTIONS[kind]
+  const base = labels === undefined
+    ? LIFE_BEAT_OPTIONS[kind]
+    : LIFE_BEAT_OPTIONS[kind].map((option) => {
+        const worded = labels[option.id]
+        return worded === undefined ? option : { ...option, label: worded }
+      })
   const overlay = kind === 'met' && wants === 'private'
     ? MET_BOND_PRIVATE
     : kind === 'ended' && read === 'company'
@@ -2077,10 +2839,38 @@ function voiceOf(world: WorldState): Temperament {
  *  of the STAGE, which is the fact that matters: `diaryLifeStageFor` is still the one place the
  *  four stages are cut. */
 function lifeStageOf(world: WorldState): DiaryLifeStage {
+  return lifeStageAt(world, world.week)
+}
+
+/** ⭐⭐⭐ ROUND 42 #15 – THE SAME READ, AT AN ARBITRARY WEEK, AND IT IS A CRASH FIX RATHER THAN A
+ *  generalisation for its own sake.
+ *
+ *  ⚠⚠ THE BUG IT CLOSES, written down because it is subtle and it BRICKS A CAREER. A tier-1 row is
+ *  SOFT: it lives for three weeks and the card is re-assembled on every `toSnapshot` in that window.
+ *  The situation it names declares the stages it may be drawn at, and a roof-only scene («She was
+ *  straight into it before her bag was down») has no call frame at all. So a row raised in the last
+ *  weeks of school, left unanswered across the week `schoolIsOver` flips – or across the week college
+ *  opens – would be re-worded at a stage its own copy has no line for, and `smallTalkOpener` throws
+ *  inside the snapshot the whole app renders from. Rare, silent to write, and fatal to the save.
+ *
+ *  ⭐ AND THE FIX IS ALSO THE HONEST READING, which is what makes it the right one rather than a
+ *  guard. The beat is a SCENE, and the scene happened on the row's own week: a conversation that has
+ *  been waiting two weeks to be heard did not move house while it waited. `lifeBeatPromptFor` hands
+ *  in `row.week` for that reason, which is `'fork-counsel'`'s «stamped, never re-derived» argument
+ *  applied to the one fact that was still being re-derived.
+ *
+ *  ⚠ IT IS BEHAVIOUR-IDENTICAL FOR EVERY BLOCKING KIND, and that is checkable rather than hoped: a
+ *  blocking row stops the week (`advanceWeeks` and `answerFork` both refuse while one is unanswered),
+ *  so `row.week === world.week` on every one of them and this returns exactly what it always did.
+ *
+ *  ⚠ `fromWeek` JOINS THE COLLEGE TEST HERE and does not change today's answer either: at
+ *  `world.week` a live college freeze always satisfies it. It is needed because an EARLIER week may
+ *  be before the freeze began, and without it a row raised at `after-school` would read `college`. */
+function lifeStageAt(world: WorldState, week: number): DiaryLifeStage {
   return diaryLifeStageFor(
-    kidAgeExact(world.week, world.profile.birthMonth, world.profile.birthDay),
-    schoolIsOver(world.week, world.profile.birthMonth),
-    world.college !== null && world.week < world.college.untilWeek,
+    kidAgeExact(week, world.profile.birthMonth, world.profile.birthDay),
+    schoolIsOver(week, world.profile.birthMonth),
+    world.college !== null && week >= world.college.fromWeek && week < world.college.untilWeek,
   )
 }
 
@@ -2151,8 +2941,16 @@ export function lifeBeatSaid(
     // worry the line she would have said in a brighter week. ⚠ AND IT READS NO `bond`: the band
     // decides whether this beat exists at all (0 at strained/cold) and never how it sounds, so there
     // is no flat pool to select – see the §3c banner.
+    // ⭐⭐⭐ ROUND 42 #15/#24 – TWO ROADS, AND THE SHAPE OF THE DETAIL IS WHICH. A row raised since
+    // this round carries `'<subject>:<situation>'` and opens with the situation's own line; a row
+    // raised before it carries one of the three legacy subjects and opens with the pool that shipped.
+    // ⚠ THE LEGACY BRANCH IS NOT DEAD CODE AND IS NOT ONLY FOR OLD SAVES: `rollSmallTalk` still
+    // raises a legacy row on any week no situation is reachable for this girl at this stage, which
+    // is the catalogue being thin on purpose (spec §10).
     case 'small-talk': {
-      const subject = SMALL_TALK_SUBJECTS.find((s) => s === detail)
+      const situation = smallTalkSituationOf(detail, voice)
+      if (situation !== null) return smallTalkOpener(situation, presence)
+      const subject = LEGACY_SMALL_TALK_SUBJECTS.find((s) => s === detail)
       if (subject === undefined) throw new Error(`A small-talk row carries no subject: ${detail}`)
       return presenceLine(SMALL_TALK_LINE[voice][subject], presence)
     }
@@ -2293,10 +3091,16 @@ export function lifeBeatListenFollowUp(
   // fork «say nothing and let her talk» buys more of her, because she came to say something and has
   // more of it. `'met'` is news: its four answers are REACTIONS, one of which is saying nothing, and
   // a second panel promising more of her would be the fictional dishonesty the 10.09 ruling removed.
-  // ⚠ AND `'small-talk'` HAS NONE EITHER (v74 T8), for a reason of its own rather than `'met'`'s:
-  // she came with something SMALL and has said it. The three replies are the whole of the beat, one
-  // of which is letting it keep – a second panel promising more of her would be the same fictional
-  // dishonesty the 10.09 ruling removed from the fork.
+  // ⚠⚠ `'small-talk'` RETURNS NULL HERE AND THAT IS NO LONGER THE WHOLE STORY – RE-AIMED BY ROUND 42
+  // #15, and the note is kept rather than deleted because a reader has to be able to tell which half
+  // expired. WHAT THIS FUNCTION SAYS IS STILL TRUE: tier 1 has no `listen` DETOUR, because it has no
+  // `listen` answer – the fork's «say nothing, and let her talk» is not one of its three. WHAT
+  // EXPIRED IS THE REASON v74 T8 GAVE FOR IT: «she came with something SMALL and has said it… a
+  // second panel promising more of her would be the same fictional dishonesty the 10.09 ruling
+  // removed from the fork.» The owner read that panel's ABSENCE as exactly that dishonesty from the
+  // other side – «выбрал пункт, чтобы она сказала больше, а попап закрылся» – so tier 1 now answers
+  // EVERY stance with a second line of hers. It is assembled in `lifeBeatFollowUps` below, off the
+  // situation, and this function is not on that path at all.
   // ⚠ AND `'fork-counsel'` HAS NONE, for a third reason of its own (v74 T17): the listening detour is
   // «say nothing, and let HER talk», and the reward of it is more of her. The coach has given a
   // professional read and has no second half of it being withheld; a panel offering one would promise
@@ -2314,6 +3118,67 @@ export function lifeBeatListenFollowUp(
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
   return HER_CONTINUATION[voice][want]
+}
+
+/** ⭐⭐⭐ ROUND 42 #15 – WHAT SHE SAYS BACK TO EACH ANSWER, AS ONE LIST. The owner: «выбрал пункт,
+ *  чтобы она сказала больше, а попап закрылся… Сейчас выглядит как "сказала А, но никогда не сказала
+ *  Б"». That is exactly what tier 1 did: all three replies were bond-0 no-ops, `ANSWER_EVENT` wrote
+ *  nothing, and the card closed on the press.
+ *
+ *  ⚠⚠ IT IS THE `listen` DETOUR GENERALISED AND NOT A SECOND MECHANISM. The dialog already knew how
+ *  to hold an answer open, show a line of hers and record on a second control (10.09's ruling); the
+ *  only thing that was special about `listen` was that it was the only entry. So the fork keeps its
+ *  ONE entry, worded by the ONE function that has always worded it (`lifeBeatListenFollowUp` above –
+ *  not re-derived here), and tier 1 gets three.
+ *
+ *  ⚠ EVERY OTHER KIND RETURNS AN EMPTY LIST, and each one has its own reason written out on
+ *  `lifeBeatListenFollowUp`. Those reasons did not change: `'met'` is news and one of its four
+ *  answers IS saying nothing; the counsel and the psychologist have given a professional read with no
+ *  second half being withheld; an `'ended'` card already offers giving her room as an answer.
+ *
+ *  ⭐ §8d.2 – AND A `story` IS TWO PARAGRAPHS ON EVERY ROUTE. `shared` goes in front of all three
+ *  branches, so «every route delivers a complete little story» is a property of what is assembled
+ *  rather than a rule an editor has to remember.
+ *
+ *  ⚠ THE `done` LABELS ARE THE ENGINE'S TWO SHIPPED WORDS AND NOT NEW COPY (invariant 4): the
+ *  continuation closes on `LISTEN_DONE_LABEL` – the same control, the same meaning, the shape 10.09
+ *  shipped – and a reaction closes on `CONFIRM_LABEL`, the prologue's own way-on word that round 42
+ *  #8 already put on this card. Nothing was coined for this.
+ *
+ *  ⚠ PURE AND ZERO-DRAW, exactly like the two pool readers above it. */
+export function lifeBeatFollowUps(
+  kind: LifeBeatKind,
+  detail: string,
+  voice: Temperament,
+  bond: BondBand,
+): LifeBeatFollowUp[] {
+  if (kind === 'small-talk') {
+    const situation = smallTalkSituationOf(detail, voice)
+    // A LEGACY row has no situation and therefore no second line of hers – which is the shipped card,
+    // unchanged. It is named here rather than left to fall through, because «this cell is still the
+    // old beat» is a fact the handoff reports and a reader has to be able to find.
+    if (situation === null) return []
+    return SMALL_TALK_STANCES.map((stance) => ({
+      optionId: SMALL_TALK_STANCE_ID[stance],
+      said: situation.shared === undefined
+        ? [situation.branches[stance].said]
+        : [situation.shared, situation.branches[stance].said],
+      done: stance === 'invite' ? LISTEN_DONE_LABEL : CONFIRM_LABEL,
+    }))
+  }
+  const listen = lifeBeatListenFollowUp(kind, detail, voice, bond)
+  return listen === null ? [] : [{ optionId: 'listen', said: [listen], done: LISTEN_DONE_LABEL }]
+}
+
+/** ⭐ THE SITUATION'S OWN WORDS FOR THE THREE STANCES (§3 / §8d.1), as the label overlay
+ *  `lifeBeatOptionsFor` takes. `undefined` for a legacy row, which is the base table – the three
+ *  generic labels that shipped. */
+function smallTalkLabels(detail: string, voice: Temperament): Record<string, string> | undefined {
+  const situation = smallTalkSituationOf(detail, voice)
+  if (situation === null) return undefined
+  const out: Record<string, string> = {}
+  for (const stance of SMALL_TALK_STANCES) out[SMALL_TALK_STANCE_ID[stance]] = situation.branches[stance].label
+  return out
 }
 
 /** ⭐⭐ v74 T7 – WHAT SHE ASKED FOR, FOR THE ROW IN HAND. `'met'`'s `detail` is the episode id, so the
@@ -2522,7 +3387,18 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
   // ⚠ THE VOICE IS BIRTH – `voiceOf` above, «who she is, for the WORDING alone» (§0.2's fence): the
   // voices read `world.temperament` and never the expressed reading T7 builds.
   const heard: HeardRead | null = row.heard === true ? { voice, wants } : null
-  const followUp = lifeBeatListenFollowUp(row.kind, row.detail, voice, band)
+  // ⭐⭐⭐ ROUND 42 #15 – EVERY ANSWER THAT EARNS A SECOND LINE OF HERS, in one list. The fork still
+  // has exactly the one it always had; tier 1 has three since the small-talk exchange.
+  const followUps = lifeBeatFollowUps(row.kind, row.detail, voice, band)
+  // ⭐⭐ ROUND 42 #24 – THE FRAME'S REGISTER IS THE SUBJECT'S, NOT THE WEEK'S, ON TIER 1 AND NOWHERE
+  // ELSE. Spec §2 cut the one-to-one between the Mood register and the subject («mood sets the
+  // WEIGHTS»), so a bright week can bring a worry and the shipped bright heading would contradict her
+  // own first line. On a LEGACY row the mapping is the identity of what shipped, so that card is
+  // byte-identical – see `SMALL_TALK_FRAME_REGISTER`. Every other kind reads the week's register
+  // exactly as before.
+  const framed = row.kind === 'small-talk'
+    ? (SMALL_TALK_FRAME_REGISTER[row.detail.split(':')[0] as SmallTalkSubject] ?? register)
+    : register
   return {
     week: row.week,
     kind: row.kind,
@@ -2531,7 +3407,7 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // `listenFollowUp` are assembled from the same facts they always were, so a card raised by the
     // leak deep-equals an ordinary one except for this one frame. That equality is the brief's own
     // boundary and T6's pin asserts it directly rather than trusting this sentence.
-    heading: lifeBeatHeading(row.kind, register, band, endsRegister, read, heard, beatFromHeadline(world, row)),
+    heading: lifeBeatHeading(row.kind, framed, band, endsRegister, read, heard, beatFromHeadline(world, row)),
     // ⭐ v74 T17 – THE EIGHTH ARGUMENT IS THE DRIVER, AND IT IS THREADED EXACTLY AS `wants` AND
     // `stage` WERE: a parameter with a safe default (`'own'`, which is the shipped reading of a
     // `stop` line and not a neutral stand-in), so every pin wave 2 and wave 3 wrote keeps calling
@@ -2546,7 +3422,12 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
       register,
       band,
       wants,
-      lifeStageOf(world),
+      // ⭐⭐⭐ ROUND 42 #15 – THE ROW'S OWN WEEK AND NOT THIS ONE. See `lifeStageAt`: a soft row lives
+      // three weeks, and re-deriving the stage from the CURRENT week would re-word a waiting
+      // conversation into a room it was never in – and, for a situation with only one frame, into a
+      // room it has no line for at all, which throws inside `toSnapshot`. Byte-identical for every
+      // blocking kind, because a blocking row stops the week.
+      lifeStageAt(world, row.week),
       forkStopDriverOf(world.spirit ?? ECONOMY.spirit.baseline, world.bond ?? ECONOMY.bond.start),
       // ⭐ v75 T4 – THE NINTH IS THE ENDING'S REGISTER, threaded exactly as `wants`, `stage` and
       // `driver` were, and for the same reason: a parameter with a shipped default, so every pin
@@ -2558,8 +3439,21 @@ function lifeBeatPromptFor(world: WorldState, row: LifeBeatRecord): LifeBeatProm
     // ⚠ THE ROW'S OWN KIND PICKS THE ANSWER SET (v74). A flat list here would have offered a girl's
     // «there is someone» the fork's three buttons, which is the defect the per-kind record exists to
     // make impossible – and `answerLifeBeat` re-validates against THIS same reading.
-    options: lifeBeatOptionsFor(row.kind, wants, read).map((o) => ({ id: o.id, label: o.label })),
-    listenFollowUp: followUp === null ? null : { optionId: 'listen', said: followUp, done: LISTEN_DONE_LABEL },
+    // ⭐⭐⭐ ROUND 42 #15 – AND THE FOURTH ARGUMENT IS THE SITUATION'S OWN WORDS FOR THE THREE
+    // STANCES (§8d.1: «a `respond` branch must name the parent's actual opinion»). It is `undefined`
+    // for every other kind and for a legacy row, which is the base table – so this line hands back
+    // byte-identical options for every card that shipped before this round.
+    options: lifeBeatOptionsFor(
+      row.kind,
+      wants,
+      read,
+      row.kind === 'small-talk' ? smallTalkLabels(row.detail, voice) : undefined,
+    ).map((o) => ({ id: o.id, label: o.label })),
+    followUps,
+    // ⭐⭐ ROUND 42 #8 – the confirm control's word, engine-assembled like every other word on the
+    // card. One constant, both entrances (the blocking prompt and the soft invite ride this same
+    // assembler), so the two cards cannot drift apart.
+    confirm: CONFIRM_LABEL,
   }
 }
 
@@ -3519,10 +4413,69 @@ export function rollSmallTalk(world: WorldState): void {
   // rather than relying on it.)
   if (rngFromSeed(`${world.seed}:life:smalltalk:${world.week}`)() >= chance) return
   const register = moodRegisterOf(spiritBandOf(world.spirit ?? ECONOMY.spirit.baseline))
-  // ⚠ THE DETAIL IS THE SUBJECT – machine-readable, never a rendered sentence (`LifeBeatRecord`), and
-  // it is what `lifeBeatSaid` selects her opener with. The heading reads the register one line above
-  // it, so the card's frame and her line are about the same small thing BY CONSTRUCTION.
-  raiseLifeBeat(world, 'small-talk', smallTalkSubjectFor(register))
+  // ⭐⭐⭐ ROUND 42 #24 – WHAT SHE COMES WITH, DRAWN RATHER THAN DERIVED (spec §2), and it happens in
+  // THIS order for a reason: the situations she could honestly bring are found FIRST, and the subject
+  // is drawn over the subjects that survived. Drawing the subject first and then discovering it has
+  // no situation would leave the beat with a choice between a re-roll (a second read off one key) and
+  // a silent fall-through (a heading about a worry over an opener about a coach).
+  const reachable = reachableSituations(world, voiceOf(world), lifeStageOf(world))
+  if (reachable.length === 0) {
+    // ⚠ THE LEGACY ROW, AND IT IS THE SHIPPED BEAT RATHER THAN A DEGRADED ONE. No situation is
+    // written for this girl at this stage on this career, so she opens with the pool that has always
+    // served her and the card behaves exactly as it did before this round – three generic answers,
+    // no second line. ⚠ ZERO EXTRA KEYS ON THIS PATH: the two streams below are not derived at all,
+    // which is the same «the gate returns before the stream exists» discipline the hazard itself
+    // keeps, one level in.
+    raiseLifeBeat(world, 'small-talk', smallTalkSubjectFor(register))
+    return
+  }
+  // ⚠⚠ TWO NEW KEYS, EACH ANSWERING EXACTLY ONE QUESTION, EACH CARRYING ITS OWN WEEK – the 09.09
+  // split-key law. `:subject:` says WHICH SMALL THING and `:situation:` says WHICH ONE OF THAT KIND;
+  // reading both off `seed:life:smalltalk:<week>` would have been two facts sharing a key, which is
+  // the one thing that law forbids. ⚠ AND NEITHER IS MAIN: `rngFromSeed` is a purpose-scoped
+  // sub-stream re-derived at this call site and persisting nothing, so the frozen capture
+  // (41550 / e6b0c709) cannot see this function – `tests/condition.test.ts` does not move.
+  const subject = drawSmallTalkSubject(world.seed, world.week, register, reachable)
+  const pool = reachable.filter((s) => s.subject === subject)
+  const at = pickInt(rngFromSeed(`${world.seed}:life:smalltalk:situation:${world.week}`), 0, pool.length - 1)
+  // ⚠ THE DETAIL IS THE SUBJECT **AND THE SITUATION** – machine-readable, never a rendered sentence
+  // (`LifeBeatRecord`), and it is what `lifeBeatSaid`, the option labels and her replies are all
+  // selected with. STAMPED AND NEVER RE-DERIVED, `'fork-counsel'`'s own argument: the row is live for
+  // three weeks and is re-assembled on every `toSnapshot`, so a re-derivation could hand the parent a
+  // different small thing from the one she came with – and could hand him one whose competitive fact
+  // has since gone false.
+  raiseLifeBeat(world, 'small-talk', smallTalkDetailFor(pool[at].subject, pool[at].id))
+}
+
+/** ⭐⭐ WHICH SMALL THING, WEIGHTED BY THE WEEK'S REGISTER AND NARROWED TO WHAT SHE COULD HONESTLY
+ *  BRING (spec §2). `drawForkWant`'s own shape – weights, one uniform, a walk down the list – and its
+ *  own (seed, calendar) key discipline, so a player cannot manufacture a subject by playing the week
+ *  differently.
+ *
+ *  ⚠ THE ROSTER IT WALKS IS THE REACHABLE ONE, not `SMALL_TALK_SUBJECTS`. A subject with no situation
+ *  behind it this week has no mass at all, which is what keeps the two draws independent: the second
+ *  one always has something to pick.
+ *
+ *  ⚠ THE ORDER IS `SMALL_TALK_SUBJECTS`' OWN and not the reachable list's, so the walk is stable
+ *  under a re-ordering of the catalogue – the same seed and week give the same subject whatever order
+ *  the situations happen to sit in. */
+function drawSmallTalkSubject(
+  seed: string,
+  week: number,
+  register: MoodRegister,
+  reachable: readonly SmallTalkSituation[],
+): SmallTalkSubject {
+  const live = SMALL_TALK_SUBJECTS.filter((s) => reachable.some((r) => r.subject === s))
+  const weights = SMALL_TALK_SUBJECT_WEIGHT[register]
+  const total = live.reduce((sum, s) => sum + weights[s], 0)
+  let roll = rngFromSeed(`${seed}:life:smalltalk:subject:${week}`)() * total
+  for (const subject of live) {
+    roll -= weights[subject]
+    if (roll < 0) return subject
+  }
+  // Unreachable while every weight is positive; a total that floats a hair low lands on the last row
+  // rather than on `undefined` – `drawForkWant`'s own tail.
+  return live[live.length - 1]
 }
 
 // =================================================================================================

@@ -407,8 +407,8 @@ describe('§5 the family gate – no other rung can be priced off a reputation i
     const house = shopItem('house-first')!
     const land = shopItem('academy-land')!
     expect(house.annualRateBps, 'the two rungs really do share a rate').toBe(land.annualRateBps)
-    const asHouse = { id: house.id, boughtWeek: w.week, paidCents: 1_000_000_00, valueCents: 1_000_000_00 }
-    const asLand = { id: land.id, boughtWeek: w.week, paidCents: 1_000_000_00, valueCents: 1_000_000_00 }
+    const asHouse = { id: house.id, boughtWeek: w.week, paidCents: 1_000_000_00, valueCents: 1_000_000_00, entries: [] }
+    const asLand = { id: land.id, boughtWeek: w.week, paidCents: 1_000_000_00, valueCents: 1_000_000_00, entries: [] }
     const flat = assetValueCents(house, 1_000_000_00, span)
     expect(assetWorthCents(later, asHouse, house), 'a house gets the drift and no premium').toBe(flat)
     // ⚠⚠ RE-AIMED, ROUND 38 #16 (07.09) – WAS `toBe(Math.round(flat * premium))`, IS the same figure

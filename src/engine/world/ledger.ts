@@ -216,8 +216,21 @@ export function seasonStartWeek(week: number): number {
  *  aggregated per-category totals, so `netCents === incomeCents - expenseCents === Σ byCategory`. */
 export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): FinanceWindow {
   const byCategory: Partial<Record<WorldEventCategory, number>> = {}
+  // ⭐⭐ ROUND 42 #11 – AND THE COACH'S RESULT SHARE IS SUMMED ALONGSIDE, NEVER OUT OF, `byCategory`.
+  // The owner could not find the share anywhere («не вижу отчислений тренеру за победы на w серии
+  // нигде»), and the reason is that it is a plain `coaching` expense row: real money, correctly
+  // booked, with nothing on the Money screen naming it. `FinanceWeek.coachCut` is the memo the site
+  // that PAID him writes, and this is the same memo folded to the window the screen draws.
+  //
+  // ⚠⚠ IT IS NOT A TERM IN THE ARITHMETIC BELOW AND MUST NEVER BECOME ONE. The cents are already
+  // inside `byCategory.coaching`, therefore already inside `expenseCents` and `netCents`; a fold
+  // that added them again would charge the family twice for one cheque. This loop reads `coachCut`
+  // and the income/expense loop reads `byCategory`, which is what keeps the two provably separate –
+  // `FinanceWeek.kidShare`'s own «a sibling, never a key inside it» design, in its mirror image.
+  let coachCutCents = 0
   for (const w of financeWeeks) {
     if (w.week < fromWeek) continue
+    coachCutCents += w.coachCut?.cents ?? 0
     for (const [cat, amt] of Object.entries(w.byCategory) as [WorldEventCategory, number][]) {
       byCategory[cat] = (byCategory[cat] ?? 0) + amt
     }
@@ -228,7 +241,7 @@ export function financeWindow(financeWeeks: FinanceWeek[], fromWeek: number): Fi
     if ((amt ?? 0) > 0) incomeCents += amt!
     else expenseCents += -(amt ?? 0)
   }
-  return { startWeek: fromWeek, byCategory, incomeCents, expenseCents, netCents: incomeCents - expenseCents }
+  return { startWeek: fromWeek, byCategory, incomeCents, expenseCents, netCents: incomeCents - expenseCents, coachCutCents }
 }
 
 /** DENSE per-week income/expense over `[fromWeek, toWeek]` – the Home budget card's chart series.

@@ -65,7 +65,10 @@ import type { VueWrapper } from '@vue/test-utils'
 import '../../src/style.css'
 import MoneyScreen from '../../src/components/screens/MoneyScreen.vue'
 import { useGameStore } from '../../src/stores/game'
-import { buyAsset, createWorld, revalueAssets, sellAsset, toSnapshot, type WorldState } from '../../src/engine/world'
+import { buyAsset, createWorld, revalueAssets, sellAsset, shopItem, toSnapshot, type WorldState } from '../../src/engine/world'
+// ⚠ ROUND 42 #13 – the app's ONE money formatter, so the re-aimed minimum below is asked of the
+// catalogue rather than typed. See the pin in «one field, two controls, one line».
+import { formatCents } from '../../src/shared/money'
 import type { Snapshot } from '../../src/shared/protocol'
 import { PHONE, assertInlineRowFits, setViewport } from './fits'
 import { SHELF_TAB_LABELS, openShelfTab, shelfRow } from './shelf'
@@ -355,7 +358,16 @@ describe('⭐ #20/#12 – one field, two controls, one line', () => {
     // are gone – and an unlabelled number box driving two verbs is the one thing this layout could
     // genuinely lose. The name carries the engine's own figures, so it cannot go stale.
     const name = field.attributes('aria-label') ?? ''
-    expect(name, 'the minimum is still stated').toContain('$5,000')
+    // ⚠ RE-AIMED, ROUND 42 #13 – IT WAS THE LITERAL `'$5,000'`, AND THE LITERAL WAS THE PROBLEM.
+    // His «в индексный фонд можно только от 5к зайти, мне кажется это необосновано» dropped the
+    // fund's `entryCents` to the deposit's $1,000, and a pin that spells the old number out would
+    // have gone red for the screen telling the truth. The claim was never about five thousand
+    // dollars: it is that the field's accessible name STATES the minimum – so it is asked of the
+    // catalogue's own constant (`shopItem('index-fund').entryCents`, the very number `buyAsset`
+    // refuses under), and it moves with the next retune instead of arguing with it.
+    const fundEntry = shopItem('index-fund')?.entryCents ?? 0
+    expect(fundEntry, 'the fund is still an open rung with a floor to state').toBeGreaterThan(0)
+    expect(name, 'the minimum is still stated').toContain(formatCents(fundEntry))
     expect(name, 'and so is what an empty box means').toContain('blank')
     wrapper.unmount()
   })
@@ -410,7 +422,15 @@ describe('⭐ #20/#12 – one field, two controls, one line', () => {
     //   * «Sell» sells ALL of it (`sellCentsFor` returns null, the engine's `amountCents === undefined`).
     // Both are pressable on an empty box and they do different things, which is the honest reading
     // of a shared field and not an ambiguity.
-    expect(field.element.getAttribute('placeholder'), 'the box shows the minimum').toBe('5000')
+    // ⚠ RE-AIMED, ROUND 42 #13 – WAS THE LITERAL `'5000'`. His «в индексный фонд можно только от 5к
+    // зайти, мне кажется это необосновано» dropped the fund's floor to the deposit's $1,000, and the
+    // claim here was never about five thousand: it is that the placeholder NAMES the minimum «Add
+    // more» would add on an empty box. Asked of the catalogue's own constant, in the DOLLARS the
+    // template renders it in (`Math.round(entryCents / 100)`), so it moves with the next retune.
+    const fundEntry = shopItem('index-fund')?.entryCents ?? 0
+    expect(field.element.getAttribute('placeholder'), 'the box shows the minimum').toBe(
+      String(Math.round(fundEntry / 100)),
+    )
     expect(addMore.attributes('disabled'), 'an empty box adds the minimum the placeholder names').toBeUndefined()
     expect(sell.attributes('disabled'), 'an empty box still sells all of it').toBeUndefined()
     // A REAL FIGURE: both verbs read the SAME value out of the SAME box.

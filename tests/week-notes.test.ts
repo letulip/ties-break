@@ -84,6 +84,10 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     ageYears: 14,
     lifeStage: 'school',
     emotion: 'norm',
+    // ⚠ ROUND 42 #29(a) – the HERO's narrower read of the same week (a fresh result, the layoff
+    // painting, or the neutral portrait – never the mood or fatigue face). Unread by this suite;
+    // on an ordinary uninjured week with no fresh result the two answers agree anyway.
+    heroEmotion: 'norm',
     resultFresh: false,
     won: false,
     lostFinal: false,
@@ -103,6 +107,9 @@ function homeWeek(over: Partial<DiaryFacts>): DiaryFacts {
     temperament: 'sunny',
     moodWord: null,
     moodRegister: 'level',
+    // ⚠ ROUND 42 #29(b) – the RUNG the register one line up is a collapse of, for the avatar's mood
+    // ring. `steady` is the same opening state the note above describes.
+    moodBand: 'steady',
     bondBand: 'steady',
     // ⭐ v74 T6 – the parent knows of nobody, which is what every fixture in this file was
     // written about (see `DiaryFacts.partnerKnown`).

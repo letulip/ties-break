@@ -17,6 +17,7 @@
 // on the live Home shell: the takeover in the DOM, the college bar stood down, and the global week
 // bar's resume press on screen. If any of the three were false the career would stand in front of a
 // question with no way out.
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from '../helpers/career'
@@ -44,7 +45,6 @@ import TournamentFlow from '../../src/components/TournamentFlow.vue'
 import { useGameStore } from '../../src/stores/game'
 import {
   answerFork,
-  chooseGift,
   closeTournament,
   callUpRevealOpen,
   createWorld,
@@ -125,7 +125,7 @@ function walkToTheTie(seed: string): WorldState {
     if (callUpRevealOpen(world)) return world
     skipTournament(world)
     closeTournament(world)
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     if (world.ending?.type !== 'college') break
   }
   throw new Error('the walked career never reached a Nations Cup tie')
@@ -254,7 +254,7 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
       lastStops = resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
     expect(callUpRevealOpen(world), 'and the tie has NOT been played yet – this is before it').toBe(false)
@@ -292,7 +292,7 @@ describe('⭐⭐⭐ #6 – the tie takes the screen, on the live college shell',
       lastStops = resumeFromCollege(world, rng)
       skipTournament(world)
       closeTournament(world)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     expect(reached, 'the walk really reached a rest state with a tie ahead of it').toBe(true)
 

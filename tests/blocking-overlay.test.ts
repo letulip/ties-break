@@ -36,7 +36,7 @@ import {
   pendingBirthday,
   pendingKnock,
   pendingLifeBeat,
-  birthdayOffer,
+  birthdayOfferFor,
   tickWeek,
   toSnapshot,
 } from '../src/engine/world'
@@ -52,8 +52,12 @@ import { DEFAULT_PROFILE, type Snapshot } from '../src/shared/protocol'
  *  one this birthday offered – "nothing" is a button too, and any of the four will do here. */
 function answerBirthday(world: ReturnType<typeof createWorld>): void {
   const age = pendingBirthday(world)!
-  const given = world.birthdays.map((b) => b.given).filter((g): g is string => g !== null)
-  chooseGift(world, birthdayOffer(world.seed, age, given).options[0].id)
+  // ⚠ ROUND 42 #26 – RE-AIMED AT THE ENGINE'S OWN SEAM. This used to rebuild the offer from
+  // (seed, age, given), which is a SECOND derivation of it: once a given durable started leaving the
+  // card the two disagreed and `chooseGift` rejected the answer – the re-validation working, and
+  // exactly the hazard `tests/round23-kid-life.test.ts` wrote down under R2-18. `birthdayOfferFor` is
+  // what the dialog reads, so no future rule about which rows a card holds can make this wrong again.
+  chooseGift(world, birthdayOfferFor(world, age).options[0].id)
 }
 
 /** A career ticked to the week the fork opens, with every birthday before it answered.

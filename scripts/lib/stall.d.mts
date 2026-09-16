@@ -20,3 +20,8 @@ export declare function lateAckOnly(output: string): boolean
 
 /** The loud sentence for an accepted late ack – printed once per accepted shard. */
 export declare function lateAckNote(label: string, secs: string | number): string
+
+/** The loud sentence for a sim re-stall accepted as green – round 42 #33 (ruled A, 15.09):
+ *  `classify` can only say `stalled` with a zero-failed summary, so a second stall is proven green
+ *  twice and sim.mjs accepts it instead of failing the gate. */
+export declare function stalledTwiceNote(label: string, firstSecs: string | number, secs: string | number): string

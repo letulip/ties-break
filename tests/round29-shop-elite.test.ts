@@ -140,7 +140,7 @@ describe('§1 – the elite ladder is the spec table, and each rung carries THRE
     // view only for a family that owns one – so this world owns one, delivered, which is also the
     // tombstone's own claim being exercised: the row is still drawn and still quotes §3f's bill.
     // The other five stay unowned, so their rows quote off the PRICE exactly as before.
-    w.assets = [{ id: 'plane-long', boughtWeek: 0, paidCents: 38_000_000_00, valueCents: 38_000_000_00 }]
+    w.assets = [{ id: 'plane-long', boughtWeek: 0, paidCents: 38_000_000_00, valueCents: 38_000_000_00, entries: [] }]
     for (const [id, weekly] of spec) {
       // ⚠ OFF THE VIEW THE SCREEN READS, not off the catalogue: the number the player sees is the
       // claim, and `shopView` is where it is made.
@@ -599,7 +599,7 @@ describe('§6 – ⭐⭐ a week on the yacht is a seventh vacation package (§3f
     // The catalogue comment above `yacht` carries the full argument; this arm is what keeps a
     // future «it says yacht, wire the week» edit honest.
     const w = shopper('r29-p1-sail-grants-nothing')
-    w.assets = [{ id: 'boat-sail', boughtWeek: 0, paidCents: 2_400_000_00, valueCents: 2_400_000_00 }]
+    w.assets = [{ id: 'boat-sail', boughtWeek: 0, paidCents: 2_400_000_00, valueCents: 2_400_000_00, entries: [] }]
     expect(shopItem('boat-sail')!.label, 'the rung really is called a yacht').toBe('The small yacht')
     expect(shopItem('boat-sail')!.grantsVacationId, 'and it grants no package').toBeUndefined()
     expect(shopView(w).vacationIds, 'a delivered sailing yacht unlocks nothing').toEqual([])
@@ -657,7 +657,7 @@ describe('§7 – ⭐ round 29 part four P10: the long-range plane leaves the sh
     const w = shopper('r29-p10-owner')
     // The owning save, delivered – the state the tombstone exists for. Written directly: no career
     // can BUY one any more, which is exactly the point.
-    w.assets = [{ id: 'plane-long', boughtWeek: w.week - 52, paidCents: 38_000_000_00, valueCents: 38_000_000_00 }]
+    w.assets = [{ id: 'plane-long', boughtWeek: w.week - 52, paidCents: 38_000_000_00, valueCents: 38_000_000_00, entries: [] }]
     const row = shopView(w).rows.find((r) => r.id === 'plane-long')
     expect(row, 'the owner still sees the row').toBeDefined()
     expect(row!.upkeepCents, 'still billed §3f\'s own weekly figure').toBe(

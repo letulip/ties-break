@@ -339,9 +339,40 @@ export default defineConfig({
           // Raising the ceiling is the honest fix rather than the lazy one, because the thing the old
           // number measured was never this test's cost - it was how much CPU it happened to get. What
           // 5000ms actually enforced was "no test may be unlucky", and the sweeps here grow every time
-          // a note, an axis or a licence is added. 20s is far above the 1.2s real cost and still low
-          // enough to catch a genuine hang, which is the only thing a timeout is for.
-          testTimeout: 20_000,
+          // a note, an axis or a licence is added.
+          //
+          // ⭐⭐ RAISED AGAIN 16.09.2026, 20s -> 60s, AND THE NOTE ABOVE IS WHY RATHER THAN AN EXCUSE.
+          // Every sentence of it applies verbatim a second time: round 42's PR took `unit-bulk` red
+          // with THREE tests over budget out of 5,677, zero assertions moved, and the failing set
+          // DRIFTING between runs (`round34-reachable-ceiling`, `birthday-ask`, `coach-load`,
+          // `viz/commentary` on one run; different files on the next). That is the contention
+          // signature this block already names, not a defect.
+          //
+          // ⚠ WHAT EXPIRED IS THE PREMISE, NOT THE PRINCIPLE. The line above says 20s is "far above
+          // the 1.2s real cost". Measured 16.09 over the whole project (6,255 timed tests, verbose
+          // reporter, idle 10-core machine), the real cost is no longer 1.2s: the slowest test is
+          // **16.9s** (`coach-load`) and THIRTEEN tests across eight files sit above 8.9s. The suite
+          // grew; the ceiling did not.
+          //
+          // ⚠⚠ AND THE RUNNER MULTIPLIER FOR THIS POOL IS WORSE THAN THE ONE THE HEAVY TAIL USES.
+          // `scripts/heavy-tests.mjs` reasons at 2.24x, which is a file with its own PROCESS. Inside
+          // `unit-bulk`'s shared pool on two cores it is at least **3.1x**, measured on the same PR:
+          // `round34-reachable-ceiling`'s `beforeAll` costs 16.58s here and blew a 50s ceiling there.
+          // So 16.9s x 3.1 = 52s, and a 20s budget cannot hold it under any tuning of this suite.
+          //
+          // ⭐ WHY 60s EXACTLY, AND IT IS A BOUNDARY RATHER THAN A ROUND NUMBER: birpc's own RPC
+          // window is a hard, unraisable 60s. A per-test budget ABOVE it would convert a slow test
+          // from a readable "Test timed out" into an opaque `Timeout calling "onTaskUpdate"` stall,
+          // which is the failure mode that cost this repo a whole CI cycle on the same PR. So the
+          // ceiling is set AT the reporter's window: 3.6x the worst measured test, and never past the
+          // point where the failure stops being legible.
+          //
+          // ⚠ IF THIS COMES BACK, THE NEXT LEVER IS NOT A BIGGER NUMBER – it is the pool's WIDTH.
+          // `unit-bulk` runs 292 files in one pool and spends 229s of its 851s in `collect` alone,
+          // before any test logic. At that point the honest question is the one this file asks about
+          // the component project one block up: which files are spending seconds of CPU, and do they
+          // belong in a PR gate at all.
+          testTimeout: 60_000,
         },
       },
       {

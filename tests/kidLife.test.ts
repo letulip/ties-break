@@ -29,7 +29,10 @@ import {
   schoolYearIndex,
   lifeStageTile,
   friendsTile,
-  PERSONALITY,
+  COMPOSURE_BANDS,
+  TEMPERAMENT_WORD,
+  composureWord,
+  personalityLine,
   SCHOOL_CUTOFF_MONTH,
   SCHOOL_YEAR_TURNS_AT,
   TILE_LINE_MAX,
@@ -44,7 +47,7 @@ import {
   toSnapshot,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
   decideKnock,
 } from '../src/engine/world'
@@ -52,6 +55,9 @@ import { rngFromSeed } from '../src/engine/rng'
 import { seasonYear } from '../src/shared/dates'
 import { isExamWeek } from '../src/engine/season/calendar'
 import { ECONOMY } from '../src/engine/economy'
+// ⚠ ROUND 42 #6 – the four temperaments, walked by name rather than re-listed here. `TEMPERAMENTS`
+// is the engine's own array and the sweep below has to be total over it.
+import { TEMPERAMENTS } from '../src/engine/spirit'
 import { DEFAULT_PROFILE, type PlayStyle } from '../src/shared/protocol'
 
 const PLAY_STYLES: PlayStyle[] = ['aggressive', 'counterpuncher', 'serve-first', 'all-court']
@@ -64,6 +70,14 @@ function view(over: Partial<KidLifeWorldView> = {}): KidLifeWorldView {
     week,
     ageYears: 14 + Math.floor(week / 52),
     seasonYear: seasonYear(Math.floor(week / 52)),
+    // ⚠ ROUND 42 #6: the Personality tile is keyed on her TEMPERAMENT now and no longer on her play
+    // style. `quiet` is just the default girl – every pre-#6 case in this file asserts about School
+    // and Friends and does not care which of the four she is; §2's own cases set it explicitly.
+    temperament: 'quiet',
+    // ⚠ ROUND 42 #37 – and the FIRST word of that line is her composure band. 50 is an ordinary
+    // mid-career girl («Impatient»); §2's own cases set it explicitly, nothing else in this file
+    // asserts about the tile at all.
+    composure: 50,
     playStyle: 'all-court',
     birthMonth: 6,
     injured: false,
@@ -74,6 +88,9 @@ function view(over: Partial<KidLifeWorldView> = {}): KidLifeWorldView {
     // the defaults every pre-#6/#18 case in this file was written against.
     college: null,
     kidFundsCents: 0,
+    // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+    // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+    kidSharePausedYears: 0,
     ownsBrand: false,
     ...over,
   }
@@ -221,32 +238,96 @@ describe('school – the 1 September cut-off, and how it differs from the tennis
 })
 
 // ===========================================================================
-// 2 — PERSONALITY: her play style, read as a person
+// 2 — PERSONALITY: who she was born as, read by the parent who lives with her
 // ===========================================================================
-describe('personality – the play style, read as a girl rather than as a game', () => {
-  it('every play style has a reading, and no two are alike', () => {
-    const readings = PLAY_STYLES.map((s) => `${PERSONALITY[s].lead}|${PERSONALITY[s].note}`)
-    expect(new Set(readings).size).toBe(PLAY_STYLES.length)
-    for (const s of PLAY_STYLES) {
-      expect(PERSONALITY[s].lead.length, s).toBeGreaterThan(0)
-      expect(PERSONALITY[s].note.length, s).toBeGreaterThan(0)
+//
+// ⚠⚠ RE-AIMED BY ROUND 42 #6 (14.09), AND THE CLAIM IS THE OPPOSITE OF THE ONE IT REPLACES.
+// This block used to sweep `PERSONALITY`, a four-row table keyed on `playStyle` – so it proved that
+// four PLAY STYLES read as four different girls while every career that picked the same favourite
+// style got the same personality for twenty years. That is exactly what the owner found in play
+// («personality у всех девочек одинаковая… мы вроде бы делали дифференциацию?»), and his ruling is
+// the law the sweep now enforces: «всё, со слоем эмоций "всегда" кончились, теперь у нас
+// вариативность везде». The tile is keyed on TEMPERAMENT, and the fence below is the other half.
+//
+// ⚠⚠ RE-AIMED AGAIN BY ROUND 42 #37 (15.09), AND THE PAIR BECAME ONE LINE OF TWO ADJECTIVES. His
+// re-cut: «я хочу, чтобы эти две строки реально о ней говорили на основе её сида, а не Patient and
+// stubborn у всех… может быть эти два слова будут ИНОГДА меняться, как у Федерера… Я не хочу, чтобы
+// это менялось с настроением и дублировало его, у нас уже есть поле с настроением.» So #6's claim
+// survives intact as the SECOND word (birth, four readings) and a new one joins it as the FIRST:
+// her composure band, which is a skill and therefore moves once or twice in a whole career. The
+// sixteen readings are approved copy («строки я прочел - по ним тоже ок»); the band edges are DRAFT
+// and live in `COMPOSURE_BANDS`, which is why nothing below writes 45, 60 or 75 as a literal.
+describe('personality – one line, two adjectives: how steady she has become, and who she was born', () => {
+  it('every temperament has a word, every band has a word, and no two of either are alike', () => {
+    expect(new Set(TEMPERAMENTS.map((t) => TEMPERAMENT_WORD[t])).size).toBe(TEMPERAMENTS.length)
+    expect(new Set(COMPOSURE_BANDS.map((b) => b.word)).size).toBe(COMPOSURE_BANDS.length)
+    for (const t of TEMPERAMENTS) expect(TEMPERAMENT_WORD[t].length, t).toBeGreaterThan(0)
+    // ⚠ THE LADDER IS ORDERED HIGH TO LOW AND ENDS AT THE FLOOR – `composureWord` is a `find`, so a
+    // table that stopped above 0 would hand a girl born at 35 no word at all.
+    for (let i = 1; i < COMPOSURE_BANDS.length; i++) {
+      expect(COMPOSURE_BANDS[i].from, 'each edge is below the one above it').toBeLessThan(COMPOSURE_BANDS[i - 1].from)
+    }
+    expect(COMPOSURE_BANDS[COMPOSURE_BANDS.length - 1].from, 'and the last arm catches everybody').toBe(0)
+  })
+
+  it('⭐⭐⭐ #37 – SIXTEEN READINGS: four bands x four temperaments, and every one of them distinct', () => {
+    const readings = new Set<string>()
+    for (const band of COMPOSURE_BANDS) {
+      for (const temperament of TEMPERAMENTS) {
+        readings.add(buildKidLife(view({ temperament, composure: band.from })).personality)
+      }
+    }
+    expect(readings.size, 'the grid is full and nothing collides').toBe(COMPOSURE_BANDS.length * TEMPERAMENTS.length)
+  })
+
+  it('⭐⭐ #6 – FOUR CAREERS, FOUR GIRLS: the second word moves with her temperament and nothing else', () => {
+    // The item's own evidence, at the engine end: two views differing ONLY in temperament must not
+    // read alike. The play style is held constant precisely because it used to be the whole key.
+    const lines = TEMPERAMENTS.map((temperament) => buildKidLife(view({ temperament })).personality)
+    expect(new Set(lines).size).toBe(TEMPERAMENTS.length)
+    // ...and the play style, which used to decide this tile, now decides nothing about it.
+    for (const playStyle of PLAY_STYLES) {
+      expect(buildKidLife(view({ playStyle, temperament: 'deep', composure: 62 })).personality).toBe(
+        `${composureWord(62)} and ${TEMPERAMENT_WORD.deep}`,
+      )
     }
   })
 
-  it('NOT ONE LINE IS ABOUT TENNIS – the scrap two inches above already says the style', () => {
+  it('⭐⭐⭐ #37 – THE FIRST WORD IS HER COMPOSURE, and the same girl reads differently as it grows', () => {
+    // His Federer arc in our own numbers: one temperament, read at four points of one career.
+    const arc = COMPOSURE_BANDS.map((b) => buildKidLife(view({ temperament: 'deep', composure: b.from })).personality)
+    expect(new Set(arc).size, 'four bands, four readings').toBe(COMPOSURE_BANDS.length)
+    for (const line of arc) {
+      expect(line, 'and the second word never moved').toContain(TEMPERAMENT_WORD.deep)
+    }
+    // The edges themselves: one point under a band edge is the band below it.
+    for (const band of COMPOSURE_BANDS) {
+      if (band.from === 0) continue
+      expect(composureWord(band.from), `${band.from} is inside ${band.word}`).toBe(band.word)
+      expect(composureWord(band.from - 1), `${band.from - 1} is not`).not.toBe(band.word)
+    }
+  })
+
+  it('NOT ONE WORD IS ABOUT TENNIS – the scrap two inches above already says the style', () => {
     // The whole instruction for this tile. A counterpuncher who "returns everything" has told the
     // player nothing they cannot read off the hero's paper scrap.
     const forbidden = /serve|return|baseline|court|rally|ball|racquet|match|point|shot|net|volley|win/i
-    for (const s of PLAY_STYLES) {
-      expect(`${PERSONALITY[s].lead} ${PERSONALITY[s].note}`, s).not.toMatch(forbidden)
+    for (const band of COMPOSURE_BANDS) {
+      for (const t of TEMPERAMENTS) expect(personalityLine(band.from, t), t).not.toMatch(forbidden)
     }
   })
 
-  it('is fixed for the career – it is who she is, not how her week went', () => {
-    for (const playStyle of PLAY_STYLES) {
-      const early = buildKidLife(view({ playStyle, week: 0 })).personality
-      const late = buildKidLife(view({ playStyle, week: 240, injured: true, weeksAway: 9 })).personality
-      expect(late).toEqual(early)
+  it('⚠⚠ #6/#37 THE FENCE – it is who she IS, not how her week went', () => {
+    // who-she-is §3: the voices read BIRTH alone, and #37 adds a skill that grows over seasons.
+    // Neither is the week. A tile that drifts with her spirit is the defect, not the feature – the
+    // Mood tile one cell over is the surface that carries the week. Nothing about a hurt, travelled,
+    // losing season may touch this cell.
+    for (const temperament of TEMPERAMENTS) {
+      const early = buildKidLife(view({ temperament, composure: 58, week: 0 })).personality
+      const late = buildKidLife(
+        view({ temperament, composure: 58, week: 240, injured: true, weeksAway: 9, lossStreak: 6 }),
+      ).personality
+      expect(late).toBe(early)
     }
   })
 })
@@ -314,9 +395,14 @@ describe('the copy', () => {
    *  weeks and the whole fact space the licences read. */
   function everyLine(): string[] {
     const out: string[] = []
-    for (const playStyle of PLAY_STYLES) {
-      out.push(PERSONALITY[playStyle].lead, PERSONALITY[playStyle].note)
-    }
+    // ⚠⚠ ROUND 42 #37 – THE PERSONALITY LINE LEFT THIS SWEEP, and that is the item rather than a
+    // loosening. It used to be a pair of `nowrap` labels inside the 16-character cell; it is now ONE
+    // WRAPPING line («Unshakeable and single-minded», 29 characters) with its own rule in
+    // KidScreen.vue, so measuring it against a budget written for the cell's other tiles would fail
+    // the shipped design. Its own budget is the CELL, and the cell is measured where font metrics
+    // exist – the four-viewport sweep in tests/component/round42-kid-tile-and-account.test.ts. What
+    // this file still guards for it is the copy rules, one describe down (§4's ASCII/dash sweep runs
+    // over `personalityCopy()`).
     for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
       for (let birthMonth = 1; birthMonth <= 12; birthMonth++) {
         for (let week = 0; week < 52 * 6; week += 3) {
@@ -348,8 +434,18 @@ describe('the copy', () => {
     }
   })
 
+  /** ⭐ ROUND 42 #37 – the sixteen approved readings, as the module can produce them. Swept by the
+   *  copy rules below (which bind every player-facing string) and NOT by the cell budget above. */
+  function personalityCopy(): string[] {
+    const out: string[] = []
+    for (const band of COMPOSURE_BANDS) {
+      for (const t of TEMPERAMENTS) out.push(personalityLine(band.from, t))
+    }
+    return out
+  }
+
   it('short dash only, no Cyrillic, nothing outside plain ASCII', () => {
-    for (const line of everyLine()) {
+    for (const line of [...everyLine(), ...personalityCopy()]) {
       expect(line, line).not.toContain('—') // em dash
       expect(line, line).not.toMatch(/[Ѐ-ӿ]/)
       expect(line, line).toMatch(/^[\x20-\x7e]+$/)
@@ -397,7 +493,17 @@ describe('a real career', () => {
     const rng = rngFromSeed(seed)
     const at14 = toSnapshot(world).life
     expect(at14.school.lead).toBe('8th grade')
-    expect(at14.personality).toEqual(PERSONALITY['serve-first'])
+    // ⚠ RE-AIMED BY ROUND 42 #6: the end-to-end claim is unchanged – the snapshot carries the tile
+    // the engine composed – but the key is her temperament, so the expectation reads the world's own
+    // `temperament` rather than the profile's play style. Passing `world.temperament` through is the
+    // fence itself: a snapshot that handed the EXPRESSED read (or her mood) would fail here the
+    // moment a career's walls moved.
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 42 #37 – the line is «<composure band> and <temperament word>», and
+    // BOTH halves are asserted off the world rather than off the string: the second from
+    // `world.temperament` (birth, the fence above) and the first from `world.skills.composure`
+    // through the band table. A snapshot handing `world.spirit` where the composure goes reddens
+    // here as well as in §2.
+    expect(at14.personality).toBe(personalityLine(world.skills.composure, world.temperament))
     expect(at14.friends.lead.length).toBeGreaterThan(0)
 
     // Three seasons of a career that actually plays: enter whatever the gate allows, resolve every
@@ -434,7 +540,7 @@ describe('a real career', () => {
       // offered first: a gift moves no skill, no condition, no kit and no money, so it cannot reach
       // any of the three tiles this suite is about – it only lets time move.
       const turning = pendingBirthday(world)
-      if (turning !== null) chooseGift(world, birthdayOffer(world.seed, turning).options[0].id)
+      if (turning !== null) chooseGift(world, birthdayOfferFor(world, turning).options[0].id)
       if (world.pendingTournament) {
         skipTournament(world)
         closeTournament(world)
@@ -446,9 +552,17 @@ describe('a real career', () => {
     const final = toSnapshot(world)
     const at17 = final.life
     expect(final.ageYears).toBe(17)
-    // School has moved three years; personality has not moved at all; friends has moved a lot.
+    // School has moved three years; friends has moved a lot.
     expect(at17.school.lead).toBe('11th grade')
-    expect(at17.personality).toEqual(at14.personality)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #37, AND THE OLD LINE WOULD HAVE BEEN A LIE ABOUT THE ITEM. It read
+    // «personality has not moved at all», which was true of a tile keyed on birth alone. The first
+    // word is a composure BAND now and is meant to move «ИНОГДА» – so what is permanent is the
+    // SECOND word, and that is what this asserts. The first is asserted against the world's own
+    // composure at each end, which is stronger than «unchanged»: it pins the reading to the skill
+    // whether or not this particular career crossed an edge in three seasons.
+    expect(at14.personality.endsWith(TEMPERAMENT_WORD[world.temperament]), at14.personality).toBe(true)
+    expect(at17.personality.endsWith(TEMPERAMENT_WORD[world.temperament]), at17.personality).toBe(true)
+    expect(at17.personality).toBe(personalityLine(world.skills.composure, world.temperament))
     expect(at17.friends).not.toEqual(at14.friends)
     expect(seen.size).toBeGreaterThan(8)
   })

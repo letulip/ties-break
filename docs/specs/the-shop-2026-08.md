@@ -64,9 +64,18 @@ alone:
 | product | minimum | expected | ⚠ the catch |
 | --- | --- | --- | --- |
 | **deposit** | $1,000 | ~2%/yr | none – the floor, and the thing a cautious player can always do |
-| **index fund** | $5,000 | ~7%/yr, noisy | can be DOWN for a whole season and still be the right holding |
+| **index fund** | $1,000 ⚙ | ~7%/yr, noisy | can be DOWN for a whole season and still be the right holding |
 | **bonds** | $25,000 | ~4%/yr | **locked for N seasons** – the first taste of the freeze mechanic, but honest and stated up front |
 | **a stake in a club** | $250,000 | ~5%/yr + ⭐ | pays a return AND gives her a home venue (§10.1) – the family's money buying her tennis |
+
+⚙ **15.09, ROUND 42 #13 – THE FUND'S MINIMUM IS $1,000, WAS $5,000.** «в индексный фонд можно только
+от 5к зайти, мне кажется это необосновано» – and the record agrees with him: the deposit's $1,000
+carries an argument in `economy.ts` («the roundest possible price»), and the fund's $5,000 never
+carried one. It arrived with this ladder as a SHAPE – liquidity against return – and no bench, spec
+or ruling ever cited the number. One floor for both open rungs now: §5's «one minimum, not two» law
+already holds a top-up to the opening stake's floor, so top-ups drop with it. Nothing else moves –
+at `unitBaseCents` $4,000 a $1,000 entry buys 0.25 of a unit, and fractional units are round 30 #14's
+own arithmetic (`units = paidCents / price`, two decimals on screen).
 
 ⭐ **THE RETURN IS PAID WEEKLY INTO THE LEDGER, not accrued invisibly.** A line every week is the
 whole difference between owning something and having a number go up: the player should see the
@@ -661,8 +670,9 @@ about her or reaches her: §1's «the shelf belongs to the PARENT» is the whole
 two items that were about her were struck before slice 1 shipped, and every remaining effect is the
 family's – a car depreciating, a house owned, a boat's upkeep, the plane's fare cut and its kinder
 travelling week (`world/sponsors.ts`, `world/medical.ts`), the academy's stages. **Reachable at 14:**
-the deposit ($1,000) and, for a wealthy family, the index fund ($5,000) – which is exactly the pair
-ask 12b was about. **Visible and priced out:** the five cars, the houses, the boats, the planes and
+the deposit ($1,000) and, for a wealthy family, the index fund ($5,000 when this was measured, $1,000
+since round 42 #13 – so the fund is now reachable at 14 on the SAME floor as the deposit, which only
+widens what this paragraph checked) – which is exactly the pair ask 12b was about. **Visible and priced out:** the five cars, the houses, the boats, the planes and
 the four academy stages, which is §2's own «a shop window is a thing you look into before you can
 afford it». **Nothing breaks:** `requiresId` still orders the academy stages, `buildWeeks` still
 makes a boat a contract before it is a boat, and `guardNotEndedForGood` is still the one refusal.

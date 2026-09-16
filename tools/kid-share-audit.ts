@@ -28,10 +28,11 @@
 //
 // ⚠ MEASUREMENT ONLY. Nothing under `src/` is touched, no save is written, and a `--from` file is
 // opened read-only and never copied.
+import { answerBirthdayNeutral } from './_birthday'
 import { readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
-import {chooseGift, pendingBirthday, prizeCentsFor, resumeFromCollege } from '../src/engine/world'
+import { pendingBirthday, prizeCentsFor, resumeFromCollege } from '../src/engine/world'
 import { answerFork } from '../src/engine/world/endings'
 import { kidAgeYears } from '../src/engine/world/age'
 import { kidPrizeShareBps, kidPrizeShareCents, staffPrizeShareCents } from '../src/engine/economy'
@@ -149,7 +150,7 @@ function auditCareer(world: WorldState, rng: Rng, career: string, untilWeek: num
     }
     if (world.ending?.type === 'college') {
       resumeFromCollege(world, rng)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     } else if (world.ending) {
       endedAs = world.ending.type
       break

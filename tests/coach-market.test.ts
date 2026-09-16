@@ -25,17 +25,27 @@ describe('screen T renders what the design specified', () => {
     expect(market).toContain('HIREABLE_TIERS')
   })
 
-  it('carries the three action states, and says the shortfall in MONEY', () => {
-    // Design §T: доступен / текущий / не по бюджету. The last one shows "$20 over", never "expensive".
+  // ⚠⚠ RE-AIMED BY ROUND 42 #42 (15.09), AND THE THIRD STATE WAS RETIRED BY THE OWNER RATHER THAN BY
+  // AN AGENT. It read «carries the three action states, and says the shortfall in MONEY» over design
+  // §T's «доступен / текущий / не по бюджету», and asserted `is-over` plus
+  // `formatCents(r.overBudgetCents)` in the template. His ruling: «мы не можем запретить нанимать
+  // специалистов, если у них есть желание – они нанимают, просто в этом индикаторе мы покажем
+  // реальные затраты в неделю.» So «не по бюджету» stopped being an ACTION state – `hireCoach` never
+  // consulted the budget, and a row that swapped its call to action for a shortfall read as a
+  // refusal the engine would not have made.
+  //
+  // ⚠ WHAT THE DESIGN ASKED FOR IS STILL PINNED, in its two surviving states plus the one that
+  // replaced the third: an unaffordable row says what the week COSTS (`cm-price`, the engine's
+  // `weeklyCents`) beside a live «Hire». And `blocked` is pinned to the points lock alone – the gate
+  // the engine really enforces – so the dashed treatment cannot quietly go back to money.
+  it('carries the action states, and an unaffordable row says the week`s COST rather than a refusal', () => {
     expect(market).toContain('is-hire')
     expect(market).toContain('is-current')
-    expect(market).toContain('is-over')
-    expect(market).toContain('overBudgetCents')
-    // ⚠ RE-AIMED 01.08 (chore/w1-quick-wins): formatDollars died with the shared money module — the
-    // fact protected is unchanged (the shortfall is shown in MONEY, off overBudgetCents); only the
-    // formatter's name moved, to src/shared/money's formatCents.
-    expect(market).toContain('formatCents(r.overBudgetCents)')
-    // ...and the over-budget row is dashed and dimmed rather than hidden.
+    expect(market).toContain('is-locked')
+    expect(market, 'the shortfall chip is retired').not.toContain('is-over')
+    expect(market, 'and the row says the weekly price instead').toContain('formatCents(r.weeklyCents)')
+    // ...and the REFUSAL treatment belongs to the points lock, not to the budget.
+    expect(market).toContain('blocked: !r.current && r.lockedPoints !== null')
     expect(css).toContain('.cm-row.blocked')
     expect(css).toMatch(/\.cm-row\.blocked\s*\{[^}]*border-style: dashed/)
   })
@@ -116,10 +126,22 @@ describe('screen T, round 3', () => {
   it('gives the portrait the full-bleed strip treatment, not a square avatar', () => {
     // The Home card\'s reasoning (A2c/d), applied here: sized by HEIGHT so the whole frame shows
     // with no vertical crop, and masked into the card so the card\'s own gradient shows through.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #3 – `width: auto` BECOMES `object-fit: cover` AND THE RULING IS THE
+    // SAME ONE. The owner reported every portrait cut on this screen («все картинки обрезаны
+    // сильно… надо сделать шире», 14.09); the porthole widened to hold the whole head and the image
+    // now fills it under a `cover` with an `object-position`, which on a box NARROWER than the
+    // picture's own ratio scales by height and spends every overflowing pixel sideways – the same
+    // clip `overflow: hidden` was already making, with a say in which slice survives. A2c/d is
+    // therefore still what this line pins, in its new spelling: the height is still 100%, and the
+    // strip's own `min-height` floor (src/style.css, derived at 162/280) is what keeps the box on
+    // the narrow side of that line. The behavioural net is
+    // tests/component/round42-coach-portrait.test.ts, which measures it through a mounted cascade
+    // rather than through this file's source text.
     expect(css).toMatch(/\.cm-art\s*\{[^}]*position: absolute/)
     expect(css).toMatch(/\.cm-art\s*\{[^}]*mask-image: linear-gradient/)
     expect(css).toMatch(/\.cm-art img\s*\{[^}]*height: 100%/)
-    expect(css).toMatch(/\.cm-art img\s*\{[^}]*width: auto/)
+    expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-fit: cover/)
+    expect(css).toMatch(/\.cm-art img\s*\{[^}]*object-position: /)
     // ...and no fixed square is set on the image any more.
     expect(market).not.toContain('width="46"')
   })

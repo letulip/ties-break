@@ -14,6 +14,9 @@
 // re-imported here on a hunch: the ramp is the PRIZE money's rule (finalizeTournament) and sponsor
 // cash now pays a flat manager's fee. Two rates in one file is how the two would drift back together.
 import { ECONOMY, managerCommissionBps, managerCommissionCents } from '../economy'
+// ⭐ ROUND 42 #5 – the cameo's cadence is DERIVED from a purpose-scoped sub-stream rather than
+// remembered (see `cameoWillingWeeks`). MAIN is not reached from this file.
+import { pickInt, rngFromSeed } from '../rng'
 import { formatCents } from '../../shared/money'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
@@ -203,6 +206,124 @@ export function sponsorNeedMet(input: { fundsCents: number; courtCents: number; 
   if (COACH_TIERS.indexOf(input.tier) > COACH_TIERS.indexOf(s.maxCoachTier)) return false
   if (input.courtCents <= 0) return false
   return input.fundsCents < s.runwayWeeks * input.courtCents
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #5 – WHEN THE SHOP IS WILLING: A COOLDOWN, DERIVED AND NOT REMEMBERED
+// ⭐⭐⭐ ROUND 42 #43 – ...AND THE SEASON CAP THAT SHIPPED BESIDE IT IS GONE, by his word off the
+//                     printed table: «сними потолок, а кулдаун давай 4».
+// =================================================================================================
+//
+// THE OWNER, 15.09: «Спонсор деньгами реально засыпает рабочую раз в 3-4 недели». The number, the
+// measurement and the argument for 4 are on `ECONOMY.sponsor` beside the constant; this is the
+// mechanism, and the only thing worth explaining here is WHY IT IS A SCHEDULE.
+//
+// ⚠⚠ A COOLDOWN NEEDS A MEMORY, AND THIS CAREER HAS NOWHERE TO PUT ONE. The three roads were:
+//   (a) PERSIST the last cameo week – a save-schema move (invariant 3: bump, append-only migration,
+//       golden fixture), which this item was explicitly told not to make;
+//   (b) READ IT BACK off the record – `world.events` is capped at 400 rows and pruned oldest-first
+//       (`diary/travelHome.ts` already writes down that the feed «alone cannot answer this»), and
+//       `financeWeeks.byCategory.sponsor` cannot tell a cameo from a retainer or an ad cheque: FIVE
+//       call sites book that category. Both are guesses wearing a lookup;
+//   (c) DERIVE IT. A season's willing weeks are a pure function of (seed, season), so the chain can
+//       be re-walked from nothing every time it is asked. No state, no schema, no drift.
+// (c) is what ships.
+//
+// ⚠⚠ AND THE PRICE OF (c) IS PAID IN THE MAIN STREAM, OUT LOUD. The hit test used to BE the weekly
+// MAIN draw in `phaseFinance`, and a past MAIN draw cannot be re-derived – the whole point of the
+// persisted position (invariant 2) is that the stream moves forward and does not replay. So the test
+// moved onto a purpose-scoped sub-stream, and the two MAIN draws it used to be STAY EXACTLY WHERE
+// THEY WERE, unread. That is deliberate and it is the cheaper of two prices: leaving them costs a
+// wasted draw a week, and removing them would move the frozen capture (41550 / e6b0c709) and every
+// per-week draw count pinned in tests/condition.test.ts and tests/rivals.test.ts. See the block at
+// the cameo's site in `world/phaseFinance.ts`, which is written against the same constraint.
+//
+// ⚠ THE SEASON IS WHERE THE WALK STARTS, so the cost is O(52) and not O(week). ⚠ It started there
+// because a sub-stream has to be keyed on something bounded, NOT because the (now removed, #43) cap
+// counted seasons – the walk is unchanged by the cap's removal. The cooldown does not respect the
+// wrap – a cheque in week 51 must still silence week 2 – so the PREVIOUS season is walked first and
+// its last willing week is carried in.
+// ⚠ THAT CARRY IS EXACT TO ONE SEASON AND NOT TO THE WHOLE CAREER, which is a real and named
+// approximation: the previous season is walked with no carry of its own, so a cheque in the last
+// weeks of the season BEFORE it could in principle have pushed that season's first willing week
+// later than this walk thinks. It can only matter when the shifted chain also moves the LAST willing
+// week of the previous season to within `cooldownWeeks` of the wrap, which is a third-order case;
+// walking from week 0 instead would make every week O(week) for a guarantee nobody can see.
+//
+// ⚠ RNG DISCIPLINE (invariant 2). One sub-stream per (seed, season), drawn EXACTLY ONCE PER WEEK OF
+// THE SEASON IN ORDER whatever the branches do – so the draw at week `i` is the same number however
+// many cheques came before it, and the schedule is a pure function of its two inputs. MAIN is not
+// reached. Nothing is persisted: the stream is re-derived at the call site, which is the contract
+// every sub-stream in this engine has.
+/** The weeks of `season` on which a shop is willing, in order. `carry` is the last willing week of
+ *  the season before, for the cooldown that crosses the wrap – or null when there is none. */
+function cameoWillingWeeks(seed: string, season: number, carry: number | null): number[] {
+  const { rollChance, cooldownWeeks } = ECONOMY.sponsor
+  const rng = rngFromSeed(`${seed}:sponsor:cameo:${season}`)
+  const out: number[] = []
+  let last = carry
+  for (let i = 0; i < WEEKS_PER_YEAR; i++) {
+    // ⚠ DRAWN FIRST AND UNCONDITIONALLY – see the RNG note above. A draw taken inside the branches
+    // would make week `i`'s number depend on how many cheques preceded it, and the schedule would
+    // stop being a function of (seed, season).
+    //
+    // ⭐⭐⭐ ROUND 42 #43 – AND THE SEASON CAP THAT STOOD ON THE NEXT LINE IS GONE, by his ruling off
+    // the printed table: «сними потолок, а кулдаун давай 4». It read
+    // `if (out.length >= seasonCap) continue` and it was costing a further fifth of the cameo money
+    // on top of the cooldown (spec §3). ⚠ ITS REMOVAL CANNOT MOVE A DIE: the draw above is taken
+    // before every branch and always was, precisely so the walk's arithmetic and its dice are
+    // independent. The SEASON is still the unit the walk starts from – that is the cost argument in
+    // the block above (O(52) rather than O(week)) and never was a statement about the cap.
+    const roll = rng()
+    const week = season * WEEKS_PER_YEAR + i
+    if (last !== null && week - last < cooldownWeeks) continue
+    if (roll >= rollChance) continue
+    out.push(week)
+    last = week
+  }
+  return out
+}
+
+/** ⭐ IS A SHOP WILLING THIS WEEK? The cadence half of the cameo's gate – the NEED half is
+ *  `sponsorNeedMet` and the two are deliberately separate: one is about the shop, one about the
+ *  family, and a single predicate would hide which of them refused. Zero state, zero MAIN draws. */
+export function sponsorCameoWilling(seed: string, week: number): boolean {
+  const season = Math.floor(week / WEEKS_PER_YEAR)
+  const before = season > 0 ? cameoWillingWeeks(seed, season - 1, null) : []
+  const carry = before.length > 0 ? before[before.length - 1] : null
+  return cameoWillingWeeks(seed, season, carry).includes(week)
+}
+
+/** ⭐ WHAT THE SHOP PUTS IN, in whole cents. Its own per-week sub-stream for the same reason the
+ *  willingness is on one: the MAIN `pickInt` that used to draw this is still taken at the cameo's
+ *  site and is no longer read, and an amount drawn off a stream the schedule cannot see would make
+ *  the cheque's size depend on the rest of the week's dice.
+ *
+ *  ⭐⭐⭐ ROUND 42 #47, SECOND READING (16.09) – IT IS A FLAT DRAW AGAIN, AND THE FIRST READING OF
+ *  HIS RULING IS WHY IT STOPPED BEING ONE. #47 built `shortfall × U(0.60, 0.80)` because it read
+ *  «60-80% закрытия» as the size of the cheque. His correction: «фраза про закрытие 80% была
+ *  **не про сумму**, а про то, что помощь должна **срабатывать в 80% случаев** примерно» – a
+ *  frequency, not a fraction. And the size was never the broken part: «механизм нормально давал
+ *  денег, нормальными суммами, просто делал это без оглядки на общий бюджет семьи, а смотрел только
+ *  на кошелек».
+ *
+ *  ⚠ SO THE TRIP GATE SURVIVES AND ONLY THE SIZING IS REVERTED. `unpayableTrip` still decides
+ *  WHETHER a cheque is written, reading the family's whole reachable budget rather than the wallet –
+ *  which is the defect he actually named and the one thing #47 got right. What is gone is the idea
+ *  that the gap should also decide HOW MUCH: a gift is sized to what a J trip costs ($1,100–3,600
+ *  before staff fares), not to a residual, and the fraction paid a median $129.
+ *
+ *  ⚠ THE CADENCE HALF OF HIS RULING IS NOT IN THIS FUNCTION AND IS NOT DONE. Help reaches about 4%
+ *  of need cases against the 60–80% he asked for, and the binding constraint is the cooldown in
+ *  `sponsorCameoWilling`. Re-deriving it needs a bench and ships with the chemistry/sparring wave –
+ *  docs/specs/cameo-gap-closer-corrected-2026-09.md §3.
+ *
+ *  ⚠ ONE DRAW ON THE SAME STREAM, unchanged through both readings: `pickInt` spends one `rng()` on
+ *  the identical key, so the sub-stream's shape never moved and MAIN is untouched – the same
+ *  discipline #5 and #43 were built under. */
+export function sponsorCameoCents(seed: string, week: number): number {
+  const [lo, hi] = ECONOMY.sponsor.amountCents
+  return pickInt(rngFromSeed(`${seed}:sponsor:cameo:gift:${week}`), lo, hi)
 }
 
 /** How many tournaments she entered in the season that is finishing at `reviewWeek` – the count a kit

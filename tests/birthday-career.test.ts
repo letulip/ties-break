@@ -47,6 +47,26 @@ const DAY = BIRTHDAY_DAY_TOGETHER.id
 /** One record row, granted by default – the owner's own log shape (all 13 of his rows grant). */
 const row = (week: number, asked: string, given: string | null = asked): BirthdayGiven => ({ week, asked, given })
 
+/** ⚠⚠ ROUND 42 #26 – A MATERIAL ROW THAT WAS ASKED FOR AND NOT GIVEN, AND EVERY CONSTRUCTED CASE
+ *  BELOW NOW USES IT FOR ITS MATERIAL ROWS. His ruling – «Если мы уже дарили депозит на её
+ *  жилье, то его больше не надо вообще показывать» – takes a GIVEN durable off the card, so a
+ *  fixture that granted the three rows `materialOf` had just read was describing a card that no
+ *  longer exists: the three would be gone and three neighbours would stand in their place, each with
+ *  a fresh count, and every pool these cases construct would be the wrong pool.
+ *
+ *  ⚠ IT COSTS THE RULE UNDER TEST NOTHING, and that is why it is the right repair rather than a
+ *  convenience: `giftUse` bumps `asked` ALWAYS and bumps `given` only when it differs from the ask,
+ *  so `row(w, m)` and `askOnly(w, m)` produce the IDENTICAL appearance count and the identical
+ *  `lastWeek`. The career-scope ladder – 3 per career, 260 weeks apart, the relaxation order – sees
+ *  exactly what it saw before. What changes is only `alreadyGiven`, which is what the new rule reads.
+ *
+ *  ⚠ THE ONE CLAIM THAT DID NOT SURVIVE is named where it lived: the `lacks` tier inside
+ *  `leastUsed` preferred «a want she does not own» over one she does, and the fixtures forced it by
+ *  granting every material row on the card. That state is now UNREACHABLE for durables – a row she
+ *  owns is not on the card to be preferred against – so the arm that read it asserts the relaxation
+ *  ORDER, which is what it is named for, and no longer names the winning id. */
+const askOnly = (week: number, asked: string): BirthdayGiven => ({ week, asked, given: null })
+
 /** The engine's own derivation, mirrored: `alreadyGiven` is the givens and `lastAsked` the last
  *  row's ask – exactly what `birthdayOfferFor` reads off `world.birthdays`. One helper so the
  *  constructed cases below cannot pass a record and a spent-set that disagree. */
@@ -96,7 +116,7 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
     for (let s = 0; s < 40; s++) {
       const seed = `day-return-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
-      const record = [row(300, DAY), row(820, m1), row(850, m2), row(880, m3)]
+      const record = [row(300, DAY), askOnly(820, m1), askOnly(850, m2), askOnly(880, m3)]
       const { askedId, eased } = offerAt(seed, 28, record, 900)
       expect(askedId, `seed ${s}`).toBe(DAY)
       expect(eased).toBeNull()
@@ -108,7 +128,7 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
       const seed = `least-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
       // m1 twice, m2 once, the day once – every gap legal – and m3 never. Min-count is m3 alone.
-      const record = [row(0, m1), row(300, m1), row(560, m2), row(600, DAY)]
+      const record = [askOnly(0, m1), askOnly(300, m1), askOnly(560, m2), row(600, DAY)]
       const { askedId, eased } = offerAt(seed, 28, record, 900)
       expect(askedId, `seed ${s}`).toBe(m3)
       expect(eased).toBeNull()
@@ -119,7 +139,7 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
     for (let s = 0; s < 40; s++) {
       const seed = `third-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
-      const record = [row(0, m1), row(300, m1), row(500, m2), row(550, m3), row(600, DAY)]
+      const record = [askOnly(0, m1), askOnly(300, m1), askOnly(500, m2), askOnly(550, m3), row(600, DAY)]
       const { askedId, eased } = offerAt(seed, 28, record, 900)
       expect(askedId, `seed ${s}: ${m1} went to its third appearance past fresher wants`).not.toBe(m1)
       expect(eased).toBeNull()
@@ -150,10 +170,14 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
     for (let s = 0; s < 40; s++) {
       const seed = `ease-gap-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
-      const record = [row(820, DAY), row(850, m1), row(860, m2), row(870, m3)]
-      const { askedId, eased } = offerAt(seed, 28, record, 900)
+      const record = [row(820, DAY), askOnly(850, m1), askOnly(860, m2), askOnly(870, m3)]
+      const { options, askedId, eased } = offerAt(seed, 28, record, 900)
       expect(eased, `seed ${s}`).toBe('gap')
-      expect(askedId).toBe(DAY)
+      // ⚠ RE-AIMED BY ROUND 42 #26: this read `.toBe(DAY)`, which held because the fixture GRANTED
+      // the three material rows and the `lacks` tier then preferred the one want she did not own.
+      // A granted durable is off the card now, so that state cannot be built – see `askOnly`. The
+      // relaxation ORDER is what this arm is named for and it is what is asserted.
+      expect(options.map((o) => o.id), 'and the eased ask is still one of the four').toContain(askedId)
     }
   })
 
@@ -166,10 +190,10 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
       const seed = `ease-order-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
       const record = [
-        row(0, m1), row(270, m1), row(540, m1),
-        row(10, m2), row(280, m2), row(550, m2),
-        row(20, m3), row(290, m3), row(560, m3),
-        row(860, DAY), row(880, m1),
+        askOnly(0, m1), askOnly(270, m1), askOnly(540, m1),
+        askOnly(10, m2), askOnly(280, m2), askOnly(550, m2),
+        askOnly(20, m3), askOnly(290, m3), askOnly(560, m3),
+        row(860, DAY), askOnly(880, m1),
       ]
       const { askedId, eased } = offerAt(seed, 28, record, 900)
       expect(eased, `seed ${s}`).toBe('gap')
@@ -182,12 +206,12 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
       const seed = `ease-cap-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
       const record = [
-        row(0, m1), row(270, m1), row(540, m1),
-        row(10, m2), row(280, m2), row(550, m2),
-        row(20, m3), row(290, m3), row(560, m3),
+        askOnly(0, m1), askOnly(270, m1), askOnly(540, m1),
+        askOnly(10, m2), askOnly(280, m2), askOnly(550, m2),
+        askOnly(20, m3), askOnly(290, m3), askOnly(560, m3),
         row(30, DAY), row(300, DAY), row(600, DAY),
         // ...and the last ask on record is a material, so the round-27 cooldown is not what decides.
-        row(870, m1),
+        askOnly(870, m1),
       ]
       const { options, askedId, eased } = offerAt(seed, 28, record, 900)
       expect(eased, `seed ${s}`).toBe('cap')
@@ -204,9 +228,9 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
       const seed = `ease-cooldown-${s}`
       const [m1, m2, m3] = materialOf(seed, 28)
       const record = [
-        row(0, m1), row(270, m1), row(540, m1),
-        row(10, m2), row(280, m2), row(550, m2),
-        row(20, m3), row(290, m3), row(560, m3),
+        askOnly(0, m1), askOnly(270, m1), askOnly(540, m1),
+        askOnly(10, m2), askOnly(280, m2), askOnly(550, m2),
+        askOnly(20, m3), askOnly(290, m3), askOnly(560, m3),
         row(30, DAY), row(300, DAY), row(870, DAY),
       ]
       const { options, askedId, eased } = offerAt(seed, 28, record, 900)
@@ -284,12 +308,23 @@ describe('ROUND 39 #9 – at most three per career, never twice inside five year
       const dayAsks = byGift.get(DAY) ?? []
       expect(dayAsks.length, `${seedIndex}: the day was asked ${dayAsks.length} times`)
         .toBeLessThanOrEqual(GIFT_CAREER_CAP)
-      // ⚠ ANTI-VACUITY: the walk really does reach the age where wants repeat, or every gap
-      // assertion above compared nothing with nothing.
+      // ⚠⚠ ANTI-VACUITY, RE-AIMED BY ROUND 42 #26 (15.09), AND THE RE-AIM IS THE MEASUREMENT.
+      // This asserted that SOME gift was asked twice – «the walk really does reach the age where
+      // wants repeat» – and it is now FALSE on both walked careers: nothing repeats at all. That is
+      // his ruling arriving at the thing he actually complained about. A given durable leaves the
+      // card, so every card carries rows with a fresh count, and the least-used tiering takes one of
+      // those before it ever reaches a row that has appeared. The gap and cap loops above are a
+      // REGRESSION NET now rather than an exercised claim – they fire the day repeats come back –
+      // and the exercised claims live in tests/round42-birthday-durables.test.ts.
+      //
+      // ⚠ SO THE GUARD MOVES TO WHAT IS STILL TRUE AND STILL FALSIFIABLE: the walk really rotated
+      // through the catalogue rather than printing one card for twenty years.
       expect(
-        [...byGift.values()].some((rows) => rows.length >= 2),
-        `${seedIndex}: no gift was ever asked twice – the walk ended before repeats begin`,
-      ).toBe(true)
+        byGift.size,
+        `${seedIndex}: the walk met ${byGift.size} distinct gifts – too few to have rotated at all`,
+      ).toBeGreaterThanOrEqual(8)
+      expect([...byGift.values()].every((rows) => rows.length <= GIFT_CAREER_CAP),
+        `${seedIndex}: a gift was asked more than ${GIFT_CAREER_CAP} times`).toBe(true)
     }
   })
 })

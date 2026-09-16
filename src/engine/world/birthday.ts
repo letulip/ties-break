@@ -187,10 +187,16 @@ function askWeightFor(gift: BirthdayGift, temperament: Temperament | null): numb
  *  in the list that costs the parent something he actually has, which is why it has to read as one
  *  of the good choices rather than as the absence of one.
  *
- *  ⚠ ITS ASK NAMES ALL THREE UNITS (round-18 #10b) because the day is offered in EVERY band, so it
- *  sits beside the trip at eighteen and beside the week at home from twenty-two on. "One day, not a
- *  week, not a trip" is the whole discrimination, and it has to be in the ask rather than left to
- *  the row, because the row is what the player is choosing BETWEEN. */
+ *  ⚠ ITS ASK NAMES ALL THREE UNITS (round-18 #10b) because the day is offered in every band IT
+ *  REACHES, so it sits beside the trip at eighteen and beside the week at home from twenty-two on.
+ *  "One day, not a week, not a trip" is the whole discrimination, and it has to be in the ask
+ *  rather than left to the row, because the row is what the player is choosing BETWEEN.
+ *
+ *  ⭐ ROUND 42 #1 (RULED A, 15.09) NARROWS THE 11.08 ALWAYS-ON: the day-ask starts at SIXTEEN. The
+ *  owner, on his own 14-year-old's card: «на 14 лет девочка просит "всего 1 день вместе", мне
+ *  кажется это неуместно» – the sentence is written from tour-life scarcity, and a girl under
+ *  sixteen still lives at home; the younger bands offer a FOURTH material row instead, so the card
+ *  keeps its four rows and `seed:birthday:<age>` keeps its exactly-four draws at every age. */
 const DAY_TOGETHER: BirthdayGift = {
   id: 'day',
   label: 'Just the day together',
@@ -200,6 +206,10 @@ const DAY_TOGETHER: BirthdayGift = {
   ask: 'When we asked, she shook her head: no thing. One day – not a week, not a trip. One day, with nothing else in the calendar.',
   short: BIRTHDAY_DAY_NOUN,
 }
+
+/** The age the day-together ask reaches the card – round 42 #1 (ruled A, 15.09; the ⭐ note on
+ *  `DAY_TOGETHER` carries the owner's words). Read by `birthdayOffer` and by nothing else. */
+export const DAY_TOGETHER_FROM_AGE = 16
 
 /** One age band's gifts. `from`/`to` inclusive; the last band is open-ended. */
 interface Band {
@@ -913,11 +923,117 @@ function subsetsOf(gifts: readonly BirthdayGift[], k: number): BirthdayGift[][] 
 // ⚠ A CALLER WITH NO WORLD PASSES NOTHING and falls back to the age, so every catalogue sweep in the
 // tests asks the question it always did. The rotation applies to them too – it is a property of the
 // cycle, not of a career – so what they sweep is the real order.
-function materialFor(seed: string, band: Band, index: number): BirthdayGift[] {
-  const cycle = subsetsOf(band.gifts, MATERIAL_OPTIONS)
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #26 – A GIVEN DURABLE LEAVES THE CARD FOR GOOD (his word, overriding §5.2)
+// =================================================================================================
+//
+// THE OWNER, 15.09: «Если мы уже дарили депозит на её жилье, то его больше не надо вообще
+// показывать.» That revokes a RECORDED DESIGN rather than fixing a bug: `birthdayOptions`' own block
+// below calls the repeat «licensed» (spec §5.2, round-18 #10c), and the licence was his – «хотя
+// почему и нет, с другой стороны, но если так, то надо как-то обыграть». He has now withdrawn it for
+// the one-shot kind, and the argument is the row's own: a deposit towards her own place is not a
+// thing a family does twice, so offering it again is the card asking a question that has an answer.
+//
+// ⚠ DURABLE ONLY, AND THAT LINE IS ALREADY DRAWN. `repeat: 'repeatable'` is the game's own word for
+// a gift she may want every year of her life – a week at home, a trip, tickets, paints – and those
+// rows are UNTOUCHED, `again` line and all. What leaves is a possession: a car, a phone, a laptop,
+// a deposit. ⚠ THE DAY TOGETHER IS NOT A GIFT IN THIS LIST AT ALL (`DAY_TOGETHER` lives outside
+// every band), so his 11.08 ruling – the day is on every card, every year – cannot be touched here.
+//
+// ⚠ IT IS THE `given` SET AND NOT THE `asked` ONE. A want she voiced and never got is still a want;
+// what this refuses to re-offer is a present that is already in the house. Same reading round 17 #18
+// took of the same record, one derivation over.
+//
+// ⚠⚠ AND THE CARD MAY NEVER RENDER SHORT. Four rows at every age is spec §2a, and it is load-bearing
+// twice over: three material rows plus the day is what the shuffle on `seed:birthday:<age>` draws
+// THREE times over, and the ask is the fourth draw – the exactly-four law pinned in
+// tests/birthday-ask.test.ts. A filter that emptied a band would silently drop that to two draws and
+// move every ask in the career. So the shortfall is REFILLED, in a pinned order:
+//   1. THE NEIGHBOUR BANDS, nearest first, up to the size the band had before anything was given –
+//      not merely up to `rows`. Refilling only to three would leave C(3,3) = ONE dialog and undo
+//      round 26 #9b's whole arithmetic; refilling to the band's own size keeps the number of
+//      possible cards exactly what the catalogue was built to give.
+//   2. AND IF THE WHOLE CATALOGUE STILL CANNOT SEAT `rows`, the retired rows come back rather than
+//      the card losing one. That branch is unreachable on the shipped catalogue – 36 distinct
+//      material gifts against at most ~20 birthdays in a career, and a band never borrows from
+//      fewer than four neighbours – and it exists because «unreachable» is a measurement that can
+//      rot, while a three-row dialog is a defect worse than the one this item fixes.
+//
+// ⚠ THE WALK IS STILL A PURE FUNCTION OF ITS INPUTS, which is what keeps the offer immutable across
+// a reload: `given` is derived from `world.birthdays` and THIS birthday's row is not written until
+// `chooseGift` runs, so the set is fixed before the dialog opens and pressing reload cannot move it
+// (`birthdayOffer`'s own note). The cycle's sub-stream is unchanged in key and re-derived at the
+// call site; MAIN is not reached. And a caller with no world passes no set at all and walks the
+// identical cycle it always did – every catalogue sweep in tests/ and tools/ still asks its question.
+/** A gift that has been given and cannot arrive twice. */
+function retiredGift(gift: BirthdayGift, given: ReadonlySet<string>): boolean {
+  return gift.repeat === 'durable' && given.has(gift.id)
+}
+
+/** The bands a short pool borrows from, nearest first – the band above, then the one below, then
+ *  outward. An older girl's card tops up from the band she is growing INTO before the one she has
+ *  left, which is the direction her wants actually move.
+ *
+ *  ⚠ THE COLLEGE BAND IS ANCHORED ON 19-21 rather than on itself, because it is not in `BANDS` and
+ *  its `from: 0, to: 99` span is a routing trick (see `COLLEGE_BAND`), not an age. A girl in a dorm
+ *  is eighteen to twenty-two, so independence is her neighbourhood – and it is the first band tried
+ *  rather than skipped, since she is not IN it. */
+function borrowFrom(band: Band): Band[] {
+  const own = BANDS.indexOf(band)
+  const anchor = own >= 0 ? own : BANDS.findIndex((b) => b.from === 19 && b.to === 21)
+  const out: Band[] = []
+  for (let k = own >= 0 ? 1 : 0; k <= BANDS.length; k++) {
+    for (const i of k === 0 ? [anchor] : [anchor + k, anchor - k]) {
+      if (i >= 0 && i < BANDS.length && BANDS[i] !== band && !out.includes(BANDS[i])) out.push(BANDS[i])
+    }
+  }
+  return out
+}
+
+function materialFor(
+  seed: string,
+  band: Band,
+  index: number,
+  rows: number = MATERIAL_OPTIONS,
+  /** ⭐ ROUND 42 #26 – the durables already in the house. Empty for every caller with no world. */
+  given: ReadonlySet<string> = new Set<string>(),
+): BirthdayGift[] {
+  // ⭐ ROUND 42 #26 – the retirement, and the refill that keeps the card four rows tall. See the
+  // block above. ⚠ When nothing is retired this whole branch is skipped and `pool` IS `band.gifts`,
+  // so a career that has been given no durable walks a byte-identical cycle to the shipped one.
+  let pool = band.gifts.filter((g) => !retiredGift(g, given))
+  if (pool.length < band.gifts.length) {
+    const held = new Set(pool.map((g) => g.id))
+    for (const other of borrowFrom(band)) {
+      for (const g of other.gifts) {
+        if (pool.length >= band.gifts.length) break
+        if (held.has(g.id) || retiredGift(g, given)) continue
+        held.add(g.id)
+        pool.push(g)
+      }
+      if (pool.length >= band.gifts.length) break
+    }
+    // ⚠ STEP 2 – the never-short guard. A retired row is better than a missing one; see the block.
+    if (pool.length < rows) {
+      for (const g of [band, ...borrowFrom(band)].flatMap((b) => b.gifts)) {
+        if (pool.length >= rows) break
+        if (held.has(g.id)) continue
+        held.add(g.id)
+        pool.push(g)
+      }
+    }
+    // Total: the catalogue cannot get smaller than `rows` even with every durable retired, but a
+    // pool that somehow did would take the band's own rows back rather than print a short card.
+    if (pool.length < rows) pool = band.gifts.slice()
+  }
+  // ⭐ ROUND 42 #1: under sixteen the card holds FOUR material rows (no day-ask), so the caller may
+  // ask for 4. The cycle stays on its own `:birthday:cycle:` stream either way – the age stream's
+  // four-draw law is untouched by the subset size.
+  const cycle = subsetsOf(pool, rows)
   // Total: a band with fewer gifts than rows has no combination of that size. Every band has at
-  // least three (a sweep in tests/birthday-gifts.test.ts holds that), so this is a crash guard.
-  if (cycle.length === 0) return band.gifts.slice(0, MATERIAL_OPTIONS)
+  // least three (a sweep in tests/birthday-gifts.test.ts holds that), and the 15 band holds exactly
+  // four – C(4,4) = 1, one combination shuffled, which is fine for a band with one birthday in it.
+  if (cycle.length === 0) return pool.slice(0, rows)
   const order = shuffled(cycle, rngFromSeed(`${seed}:birthday:cycle:${bandKey(band)}`))
   if (band === COLLEGE_BAND) {
     // Total: `at` is -1 only if no combination holds the row, which cannot happen while the band
@@ -1143,14 +1259,28 @@ export function birthdayOffer(
   // ⚠ ROUND 26 #4 (second pass) CHANGED THE INDEX, NOT THE DRAW COUNT: at college the walk advances
   // per college birthday rather than per year of her life.
   const walkIndex = band === COLLEGE_BAND && collegeIndex !== null ? collegeIndex : age
-  const material = materialFor(seed, band, walkIndex)
-  const rng = rngFromSeed(`${seed}:birthday:${age}`)
-  const options = shuffled([...material, DAY_TOGETHER], rng)
+  // ⭐ ROUND 42 #1 (ruled A, 15.09): the day-ask reaches the card from sixteen; younger cards carry
+  // a fourth material row instead. BOTH arms hold four rows, so the shuffle below draws three and
+  // the ask draws one at every age – the exactly-four law on `seed:birthday:<age>` stands.
+  const dayOffered = age >= DAY_TOGETHER_FROM_AGE
   // ⚠ THE DAY TOGETHER IS NEVER SPENT. Every other option is a THING she now owns, and asking for it
   // twice is the bug; a day with her parents is not a possession and she may want one every year of
   // her life. Excluding it here would also make the best case the scene has (§2ab) unreachable for
   // any career that ever chose it.
+  // ⚠ ROUND 42 #26 MOVED THIS LINE FOUR ROWS UP, AND THE MOVE IS THE ITEM. `spent` used to be read
+  // only by the ASK; the OFFER now reads it too, because a durable already in the house leaves the
+  // card (see `materialFor`). Nothing about the set changed – it is still `given`, still derived
+  // before this birthday's own row exists, still immutable across a reload.
   const spent = new Set(alreadyGiven)
+  const material = materialFor(
+    seed,
+    band,
+    walkIndex,
+    dayOffered ? MATERIAL_OPTIONS : MATERIAL_OPTIONS + 1,
+    spent,
+  )
+  const rng = rngFromSeed(`${seed}:birthday:${age}`)
+  const options = shuffled(dayOffered ? [...material, DAY_TOGETHER] : [...material], rng)
   // ===============================================================================================
   // ⭐⭐⭐ ROUND 39 #9 – THE CAREER-SCOPE LADDER (and inside it, round 27's cooldown and round 17's
   // memory, each demoted from an absolute to the preference it always really was)
@@ -1486,12 +1616,28 @@ export function buildBirthdayPrompt(world: WorldState): BirthdayPrompt | null {
  *  exactly three material gifts, so removing one would ship a three-row dialog (spec §2a), and
  *  filtering before the shuffle would change how many times the sub-stream is drawn.
  *
+ *  ⚠⚠⚠ ROUND 42 #26 (15.09) – AND THAT PARAGRAPH IS NOW HALF WRONG, BY HIS WORD RATHER THAN BY A
+ *  DEFECT. «Если мы уже дарили депозит на её жилье, то его больше не надо вообще показывать.» So for
+ *  a DURABLE the offer does change: a given one leaves the rows for good, which is precisely the
+ *  «filtering the OFFER» candidate the paragraph above rejected. Both of its objections were real and
+ *  both are ANSWERED rather than overruled – `materialFor` refills a shortened band from its
+ *  neighbours up to the band's own size, so the dialog is still four rows and the sub-stream is still
+ *  drawn exactly as many times. Read that block before touching this one.
+ *
+ *  ⚠ WHAT SURVIVES INTACT IS THE REPEATABLE HALF, which is what this function is now mostly about.
+ *
  *  ⚠ AND `durable` VS `repeatable` IS THE WHOLE DISTINCTION. A week at home, a day, a trip, tickets,
  *  paints, another piece for the box – she can want those every year of her life, and the second
- *  time reads as a tradition. A car, a phone, a laptop, a deposit cannot arrive twice without
- *  somebody noticing, so their words say she has one. Neither version marks the ANSWER (spec §5.4):
- *  the ask never names a present she already holds, so a row that says "she has one" is removing a
- *  decoy the player himself created, not pointing at the one that is right.
+ *  time reads as a tradition, and `again` is the line that says so. A car, a phone, a laptop, a
+ *  deposit cannot arrive twice without somebody noticing – and since round 42 #26 they simply do not
+ *  come back, so a durable's `again` is no longer a line the game can print. ⚠ THE STRINGS STAY IN
+ *  THE CATALOGUE AND ARE NOT DELETED: they are the fallback the never-short guard in `materialFor`
+ *  would print if the whole catalogue ever ran dry under a career nobody has played yet, and on that
+ *  one path «she has one already» is the honest note rather than the first-time one. Deleting them
+ *  would also be a wording change nobody asked for (invariant 4) and would take `birthdayWords`'
+ *  third string with it. Neither version marks the ANSWER (spec §5.4): the ask never names a present
+ *  she already holds, so a row that says "she has one" is removing a decoy the player himself
+ *  created, not pointing at the one that is right.
  *
  *  ⚠ NOT APPENDED – REPLACED. A note plus an afterthought would grow the row and make a repeat
  *  visually taller than the others, which is a mark by accident. One line either way.

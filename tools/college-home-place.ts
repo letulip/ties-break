@@ -24,9 +24,9 @@
 // is byte-identical to what those benches walk, which is what makes it a control.
 //
 // MEASUREMENT ONLY: nothing is patched and no engine number is written from here.
+import { answerBirthdayNeutral } from './_birthday'
 import { stepCareerWeek, POLICIES, PRESETS, median } from './econ-bench'
 import {
-  chooseGift,
   closeTournament,
   collegeLeagueRevealOpen,
   createWorld,
@@ -151,7 +151,7 @@ for (const country of COUNTRIES) {
             continue
           }
           if (pendingBirthday(at.world) !== null) {
-            chooseGift(at.world, 'day')
+            answerBirthdayNeutral(at.world)
             continue
           }
           resumeFromCollege(at.world, at.rng)

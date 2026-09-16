@@ -30,6 +30,7 @@
 // slower case at ~9 s. 30 s is ~8x the measured wall cost, so it can only fire on a genuine wedge.
 // ⚠ If a case here ever takes tens of seconds ALONE that is a real regression, and this ceiling must
 // not be raised to hide it.
+import { answerBirthdayNeutral } from '../helpers/career'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain – a walked opener must pass a tier-1 row.
 import { drainLifeBeats } from '../helpers/career'
@@ -44,7 +45,6 @@ import { ENDINGS } from '../../src/engine/ending'
 import { setViewport, PHONE } from './fits'
 import {
   answerFork,
-  chooseGift,
   closeTournament,
   callUpRevealOpen,
   collegeLeagueRevealOpen,
@@ -131,7 +131,7 @@ function press(world: WorldState, rng: Rng): void {
     skipTournament(world)
     closeTournament(world)
   }
-  if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
 }
 
 async function openHome(world: WorldState) {

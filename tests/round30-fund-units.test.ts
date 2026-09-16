@@ -326,7 +326,7 @@ describe('round 30 #14 – ⭐⭐⭐ the two moves he is buying with this change
     // catalogue walks past it – and such a row can be a CAR, with no units. Writing `units` onto it
     // would hand it to `assetWorthCents`' unit branch and price a $110,000 car at nothing.
     const world = career('r30-orphan-row', 20)
-    world.assets = [{ id: 'a-rung-that-no-longer-exists', boughtWeek: 5, paidCents: 110_000_00, valueCents: 90_000_00 }]
+    world.assets = [{ id: 'a-rung-that-no-longer-exists', boughtWeek: 5, paidCents: 110_000_00, valueCents: 90_000_00, entries: [] }]
     sellAsset(world, 'a-rung-that-no-longer-exists', 30_000_00)
     const left = world.assets[0]
     expect(left.units, 'no units key was invented').toBeUndefined()
@@ -376,7 +376,7 @@ describe('round 30 #14 – what the screen is given, and the volatility that cam
     // null and not a division by nothing. Driven through `shopView`, because that is where it would
     // reach a person.
     const world = career('r30-zero-units', 12)
-    world.assets = [{ id: 'index-fund', boughtWeek: 2, paidCents: 50_000_00, valueCents: 0, units: 0 }]
+    world.assets = [{ id: 'index-fund', boughtWeek: 2, paidCents: 50_000_00, valueCents: 0, units: 0, entries: [] }]
     expect(avgUnitPriceCents(world.assets[0])).toBeNull()
     const row = shopView(world).rows.find((r) => r.id === 'index-fund')!
     expect(row.avgUnitPriceCents, 'no average, rather than Infinity dollars').toBeNull()

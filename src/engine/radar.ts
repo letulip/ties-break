@@ -45,8 +45,11 @@
 // dependency engine/diary.ts already has, and for the same reason.
 
 import { rngFromSeed } from './rng'
-import { SKILL_KEYS, type KidSkills, type SkillKey } from './development'
-import type { CoachTier, RadarAxis, WorldMatch } from '../shared/protocol'
+// ⭐ ROUND 42 #22 – `aimWeights` JOINS THE TWO TYPES THIS MODULE ALREADY TAKES FROM `development.ts`
+// and opens no new arrow: the edge was there, and the eye must score the week's aim with the SAME
+// function `growWeek` multiplies by rather than with a second count of its own.
+import { aimWeights, SKILL_KEYS, type KidSkills, type SkillKey } from './development'
+import type { CoachTier, RadarAxis, SessionKind, WorldMatch } from '../shared/protocol'
 
 // --- THE KNOBS ---------------------------------------------------------------------------------
 
@@ -145,6 +148,59 @@ export const NOTE_MIN_CONFIDENCE = 0.3
  *  will call it a weapon (or the job). A deliberately wide deadband: the notes must not flip every
  *  time a growth week nudges her over a line. */
 export const NOTE_EDGE = 4
+
+// =================================================================================================
+// ⭐⭐ ROUND 42 #22 – THE EYE LEARNS SATURATION, and it is the answer to «зачем тогда мне вообще
+// тренер»
+// =================================================================================================
+//
+// The owner, 14.09: «Я как видел в начале карьеры, что она подавать и возвращать не умеет, так и
+// вижу сейчас. По какому принципу тренер работает?» – and his reading of the line he was shown:
+// «"никто не учил" я читаю как "а зачем тогда мне вообще тренер"».
+//
+// The measurement behind the complaint, from his own w517 save: her serve stands at 65.1 of a
+// potential 66.7 and her return at 57.8 of 58.5 – she is 96% SATURATED on both, the per-skill
+// headroom was rolled at birth (`rollPotential`), and no plan and no coach can buy past it. The
+// model was working exactly as designed. What was broken was that the radar's own sentence –
+// «Nobody has really made her serve yet» – reads as headroom where there is none, so a wing with
+// 1.6 points left in it sounded like a wing nobody had started on. Five hundred weeks of the same
+// sentence is what he actually saw.
+//
+// ⭐ HIS RULING: «его слова о ней точно должны меняться на протяжении роста и карьеры» – the lines
+// become saturation-aware ACROSS the career, not one static sentence per skill.
+//
+// ⚠⚠ AND IT IS STILL THE EYE'S OWN BELIEF, NEVER THE TRUTH. `AxisRead` carries no true value by
+// construction (see its own note) and this changes nothing about that: `fill` is his SHOWN estimate
+// over his BELIEVED ceiling – the same two fogged numbers the picture draws – so a budget rung can
+// be confidently wrong about how much room is left, which is the fog doing its job. The haze never
+// narrows past `CEILING_FLOOR_HALF`, so «is she done» is a judgement to the very end and never an
+// arithmetic the player can invert.
+
+/** THE SATURATION LADDER, as the eye reads it: the share of his believed ceiling he thinks is
+ *  already in the bank. Four rungs, because a ladder with one rung is the defect this item is about.
+ *
+ *  ⚠ MEASURED, NOT CHOSEN. `rollPotential` deals each wing a room band of [4,26] points over a
+ *  starting build around 50, so a wing is born somewhere between 0.66 and 0.93 full and ends a lived
+ *  career around 0.96 – the whole dynamic range is the top third of the scale, and thresholds picked
+ *  by taste («half full») would have put every wing of every girl in one band for twenty years.
+ *
+ *  The numbers below were read off REAL CAREERS – `tests/radarFixtures.ts`'s own `runCareer` (enter
+ *  everything, resolve everything), four coach rungs x three seeds, sampled at weeks 26 / 52 / 104 /
+ *  156 / 208 / 312 / 416 – and are set so an ordinary wing crosses two or three of them in a career.
+ *  What that probe measured, over the readable axis-weeks (confidence at or above the note floor):
+ *  `done` 74%, `working` 14%, `nearly` 11%, `open` 1%; and of the sixty axis-tracks it walked, 35
+ *  crossed two rungs or more and 29 crossed three. The 25 that never moved are wings BORN full,
+ *  where «this is as far as it goes» is true from fifteen and is the honest thing to say. */
+export const NOTE_FILL_OPEN = 0.72
+export const NOTE_FILL_NEARLY = 0.85
+/** ⭐ HIS OWN NUMBER: «At >= 90% of potential the line says the honest thing». */
+export const NOTE_FILL_DONE = 0.9
+
+/** How far the week's aim has to point at a wing before the eye will call it out. `aimWeights`
+ *  renormalises to a mean of exactly 1, so anything above 1 is a week deliberately pointed there and
+ *  an all-general week is exactly 1 on every wing. A hair of slack so floating-point dust in the
+ *  renormalisation can never read as an aimed week. */
+export const NOTE_AIMED_AT = 1.0001
 
 /** WHAT THE AXES ARE CALLED, and the engine owns the words for the same reason it owns
  *  `COACH_TIER_LABEL` and `TIER_SHORT`: a second copy in a screen is a second chance for two
@@ -314,6 +370,15 @@ export interface RadarWorldView {
   /** her own match records still retained in the event log, oldest first. A ROLLING WINDOW: the
    *  event feed prunes at 400 rows, so this is roughly the last year and a half of her matches. */
   matches: readonly WorldMatch[]
+  /** ⭐ ROUND 42 #22 – THE WEEK'S SESSION MATRIX (`WeekPlan.week`), or absent.
+   *
+   *  ⚠ OPTIONAL FOR `WeekPlan.week`'S OWN REASON, one floor down: the field is optional on the plan
+   *  itself (a v46 save has no matrix and reads back as the ordinary all-general week every shipped
+   *  career ran), and forty-odd hand-built probe views in tests and benches would otherwise have to
+   *  grow a seven-day matrix to say "nothing in particular". Absent reads as the all-ones aim
+   *  vector, which is the same thing `aimWeights` says about an empty week - so a view that omits it
+   *  produces byte-identical notes to one built before this field existed. */
+  planWeek?: readonly (readonly SessionKind[])[]
 }
 
 // --- reading a scoreline -----------------------------------------------------------------------
@@ -559,6 +624,19 @@ export interface AxisRead {
   shownEdge: number
   /** competitive matches she has played in her career */
   matchesPlayed: number
+  /** ⭐⭐ ROUND 42 #22 – HOW FULL HE THINKS THE WING IS: his shown estimate over his believed ceiling,
+   *  0..1. See the saturation block above `NOTE_FILL_OPEN`.
+   *
+   *  ⚠ STILL NOT A TRUE VALUE. Both halves are the fogged numbers the picture already draws
+   *  (`shownSkill` and the `seed:ceil:*` haze centre), so this is the eye's OPINION of how much room
+   *  is left – wrong at a budget rung, close at an elite one, and never exact at any rung because
+   *  `CEILING_FLOOR_HALF` keeps the haze open for ever. */
+  fill: number
+  /** ⭐ ROUND 42 #22 – WHERE THE WEEK'S SESSIONS POINT, as `aimWeights` scores it: exactly 1 on every
+   *  wing of an all-general week, above 1 on a wing the plan is deliberately buying. It is a fact
+   *  about the PLAN, which is the family's own and the one thing on this object they can see
+   *  perfectly – so an eye that reads it leaks nothing about her. */
+  aim: number
 }
 
 interface NoteLine {
@@ -570,6 +648,34 @@ interface NoteLine {
    *  VERDICT and is silent until the family has earned one. */
   absence?: true
 }
+
+/** ⭐⭐ ROUND 42 #22 – WHICH RUNG OF THE SATURATION LADDER A READ STANDS ON. Four, and the point of
+ *  four rather than two is his complaint itself: a ladder whose words only change at the top still
+ *  says one thing for most of a career. */
+export type FillBand = 'open' | 'working' | 'nearly' | 'done'
+
+export function fillBandOf(fill: number): FillBand {
+  if (fill >= NOTE_FILL_DONE) return 'done'
+  if (fill >= NOTE_FILL_NEARLY) return 'nearly'
+  if (fill >= NOTE_FILL_OPEN) return 'working'
+  return 'open'
+}
+
+/** ⚠ THE CONFIDENCE FLOOR IS PART OF EVERY SATURATION LICENCE, INCLUDING THE ONES THAT SILENCE A
+ *  LINE. "How much room is left in her" is the strongest verdict a coach can reach, so a man who
+ *  cannot read her yet neither says it NOR gets to withdraw somebody else's sentence on the strength
+ *  of it: below the floor the absence lines keep speaking exactly as they always did. */
+const bandIs = (r: AxisRead, band: FillBand): boolean =>
+  r.confidence >= NOTE_MIN_CONFIDENCE && fillBandOf(r.fill) === band
+
+/** The eye can read her AND believes the wing is full. What this SILENCES is the half of the fix the
+ *  owner actually reported: «Nobody has really made her serve yet» beside a serve with a point and a
+ *  half left in it reads as headroom where there is none, and «the serve is the job this year» sends
+ *  a season at a wing that cannot answer. Both go quiet here; the `done` register speaks instead. */
+const isDone = (r: AxisRead): boolean => bandIs(r, 'done')
+
+/** ...and the week's sessions are deliberately pointed at this wing (`aimWeights` above 1). */
+const aimedHere = (r: AxisRead): boolean => r.aim >= NOTE_AIMED_AT
 
 // SAME VOICE AS THE HOME COACH NOTE (HomeScreen's COACH_QUOTES): his read on her, out loud, in the
 // first person plural, never a number and never a hedge he would not say to a parent's face. Player
@@ -584,153 +690,153 @@ const NOTE_POOL: readonly NoteLine[] = [
   {
     key: 'serve',
     text: 'Nobody has really made her serve yet.',
-    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX && !isDone(r),
     absence: true,
   },
   {
     key: 'serve',
     text: 'She has not met a returner who could hurt her yet.',
-    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX && !isDone(r),
     absence: true,
   },
   {
     key: 'serve',
     text: 'Her serve is her weapon – we build the rest around it.',
-    license: (r) => r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'serve',
     text: 'She holds serve in her sleep. That travels.',
-    license: (r) => r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'serve',
     text: 'The serve is the job this year.',
-    license: (r) => r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'serve',
     text: 'She gives away too many free points behind the second ball.',
-    license: (r) => r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'serve',
     text: 'The serve is honest. It will not win her matches on its own.',
-    license: (r) => Math.abs(r.shownEdge) < NOTE_EDGE,
+    license: (r) => !isDone(r) && Math.abs(r.shownEdge) < NOTE_EDGE,
   },
   // --- return -----------------------------------------------------------------------------------
   {
     key: 'ret',
     text: 'She has not faced a serve that troubled her yet.',
-    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX && !isDone(r),
     absence: true,
   },
   {
     key: 'ret',
     text: 'Nobody has served her off the court yet – so we do not know.',
-    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX && !isDone(r),
     absence: true,
   },
   {
     key: 'ret',
     text: 'She returns better than anyone her age I work with.',
-    license: (r) => r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'ret',
     text: 'Every serve comes back. That is a whole career on its own.',
-    license: (r) => r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'ret',
     text: 'The return is where the work is.',
-    license: (r) => r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'ret',
     text: 'Big serves still push her off the court.',
-    license: (r) => r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'ret',
     text: 'She gets the return in. Hurting people with it comes next.',
-    license: (r) => Math.abs(r.shownEdge) < NOTE_EDGE,
+    license: (r) => !isDone(r) && Math.abs(r.shownEdge) < NOTE_EDGE,
   },
   // --- composure --------------------------------------------------------------------------------
   {
     key: 'composure',
     text: 'Nobody knows yet how she holds up when it is tight.',
-    license: (r) => r.units === 0,
+    license: (r) => r.units === 0 && !isDone(r),
     absence: true,
   },
   {
     key: 'composure',
     text: 'She has not been in a close one yet. We will find out.',
-    license: (r) => r.units === 0,
+    license: (r) => r.units === 0 && !isDone(r),
     absence: true,
   },
   {
     key: 'composure',
     text: 'Tight sets do not frighten her.',
-    license: (r) => r.units > 0 && r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'composure',
     text: 'The bigger the point, the calmer she gets. You cannot teach that.',
-    license: (r) => r.units > 0 && r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'composure',
     text: 'The big points still get to her.',
-    license: (r) => r.units > 0 && r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'composure',
     text: 'She plays the occasion instead of the ball when it matters.',
-    license: (r) => r.units > 0 && r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'composure',
     text: 'She holds her nerve most days.',
-    license: (r) => r.units > 0 && Math.abs(r.shownEdge) < NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && Math.abs(r.shownEdge) < NOTE_EDGE,
   },
   // --- stamina ----------------------------------------------------------------------------------
   {
     key: 'stamina',
     text: 'Nobody knows yet how she holds up in a third set.',
-    license: (r) => r.units === 0,
+    license: (r) => r.units === 0 && !isDone(r),
     absence: true,
   },
   {
     key: 'stamina',
     text: 'She has never been taken the distance. That is still an open question.',
-    license: (r) => r.units === 0,
+    license: (r) => r.units === 0 && !isDone(r),
     absence: true,
   },
   {
     key: 'stamina',
     text: 'She is still fresh in a third set, and that is rare at her age.',
-    license: (r) => r.units > 0 && r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'stamina',
     text: 'Long matches suit her. The other girl tires first.',
-    license: (r) => r.units > 0 && r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'stamina',
     text: 'The legs go before the head does. We fix that in the gym.',
-    license: (r) => r.units > 0 && r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'stamina',
     text: 'A third set costs her more than it should.',
-    license: (r) => r.units > 0 && r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'stamina',
     text: 'She lasts. A long week still costs her.',
-    license: (r) => r.units > 0 && Math.abs(r.shownEdge) < NOTE_EDGE,
+    license: (r) => !isDone(r) && r.units > 0 && Math.abs(r.shownEdge) < NOTE_EDGE,
   },
   // --- groundstrokes (v25) ----------------------------------------------------------------------
   // The absence lines are licensed the way serve's and return's are - off `tested`, not off `units` -
@@ -740,40 +846,92 @@ const NOTE_POOL: readonly NoteLine[] = [
   {
     key: 'groundstrokes',
     text: 'Nobody has out-hit her yet. We do not know what she has.',
-    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX && !isDone(r),
     absence: true,
   },
   {
     key: 'groundstrokes',
     text: 'She has not met a girl who could hurt her from the back.',
-    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX,
+    license: (r) => r.matchesPlayed >= NOTE_UNTESTED_MIN_MATCHES && r.tested < NOTE_UNTESTED_MAX && !isDone(r),
     absence: true,
   },
   {
     key: 'groundstrokes',
     text: 'She hits through people. That ends points on its own.',
-    license: (r) => r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'groundstrokes',
     text: 'The forehand is a shot other girls are afraid of.',
-    license: (r) => r.shownEdge >= NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge >= NOTE_EDGE,
   },
   {
     key: 'groundstrokes',
     text: 'She cannot hurt anybody off the ground yet.',
-    license: (r) => r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'groundstrokes',
     text: 'The rally is where she loses matches. That is the work.',
-    license: (r) => r.shownEdge <= -NOTE_EDGE,
+    license: (r) => !isDone(r) && r.shownEdge <= -NOTE_EDGE,
   },
   {
     key: 'groundstrokes',
     text: 'She holds the rally. Winning it is the next thing.',
-    license: (r) => Math.abs(r.shownEdge) < NOTE_EDGE,
+    license: (r) => !isDone(r) && Math.abs(r.shownEdge) < NOTE_EDGE,
   },
+  // ===============================================================================================
+  // ⭐⭐ ROUND 42 #22 – THE SATURATION REGISTERS. His words about her change as she grows.
+  // ===============================================================================================
+  //
+  // Three of the four rungs speak here. The fourth - `working`, the long middle of an ordinary
+  // career - is deliberately SILENT in this block: that is where the pool above already has a
+  // verdict for every edge, and a fourth register saying "she is coming along" beside "the serve is
+  // the job this year" would be one sentence said twice. So the ladder a career walks is
+  //
+  //     open      there is a lot left in this wing
+  //     working   the shipped edge verdicts - weapon, job, honest
+  //     nearly    most of it is in the bank now
+  //     done      this is as far as it goes  (+ the flag, when the plan is still buying it)
+  //
+  // and the note RE-DRAWS at every rung crossing, because the band is in the key (see `axisNote`).
+  //
+  // ⚠ THE `done` ARMS ARE TOTAL AND MUTUALLY EXCLUSIVE, which is what makes the flag reliable: a
+  // saturated wing the week is NOT pointed at draws one of two plain lines; a saturated wing the week
+  // IS pointed at gets the flag every time rather than one draw in three. An eye telling a parent
+  // that the sessions he pays for have stopped paying him back is the coach-as-the-eye doctrine in
+  // one sentence, and it is the literal answer to «зачем тогда мне вообще тренер».
+  //
+  // --- serve -------------------------------------------------------------------------------------
+  { key: 'serve', text: 'That serve has a long way it can still go.', license: (r) => bandIs(r, 'open') },
+  { key: 'serve', text: 'Most of what she has on serve is in the bank.', license: (r) => bandIs(r, 'nearly') },
+  { key: 'serve', text: 'That serve is as good as it is going to get.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'serve', text: 'The serve is finished work. We protect it now.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'serve', text: 'We are drilling a serve that has nothing left to give.', license: (r) => isDone(r) && aimedHere(r) },
+  // --- return ------------------------------------------------------------------------------------
+  { key: 'ret', text: 'There is a lot more return to come out of her.', license: (r) => bandIs(r, 'open') },
+  { key: 'ret', text: 'The return is nearly all the way in now.', license: (r) => bandIs(r, 'nearly') },
+  { key: 'ret', text: 'The return is as far along as it will go.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'ret', text: 'We have taken the return as far as it goes.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'ret', text: 'Those return sessions are buying nothing now.', license: (r) => isDone(r) && aimedHere(r) },
+  // --- composure ---------------------------------------------------------------------------------
+  { key: 'composure', text: 'The head has plenty of growing left in it.', license: (r) => bandIs(r, 'open') },
+  { key: 'composure', text: 'Her nerve is close to everything it will be.', license: (r) => bandIs(r, 'nearly') },
+  { key: 'composure', text: 'She is as steady as she is ever going to be.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'composure', text: 'The head is where it is going to stay now.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'composure', text: 'Match play will not make her calmer than this.', license: (r) => isDone(r) && aimedHere(r) },
+  // --- stamina -----------------------------------------------------------------------------------
+  { key: 'stamina', text: 'The body has a lot more to give than this.', license: (r) => bandIs(r, 'open') },
+  { key: 'stamina', text: 'The legs are nearly all the way there.', license: (r) => bandIs(r, 'nearly') },
+  { key: 'stamina', text: 'The legs are as good as they are going to get.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'stamina', text: 'There is no more fitness left to find in her.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'stamina', text: 'The gym has stopped paying us back on those legs.', license: (r) => isDone(r) && aimedHere(r) },
+  // --- groundstrokes -----------------------------------------------------------------------------
+  { key: 'groundstrokes', text: 'There is a lot more ball in her than this.', license: (r) => bandIs(r, 'open') },
+  { key: 'groundstrokes', text: 'The ground game is nearly all of what it will be.', license: (r) => bandIs(r, 'nearly') },
+  { key: 'groundstrokes', text: 'Off the ground she is as far as she goes.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'groundstrokes', text: 'The ground game is finished. We keep it sharp.', license: (r) => isDone(r) && !aimedHere(r) },
+  { key: 'groundstrokes', text: 'Rally sessions are not adding to that any more.', license: (r) => isDone(r) && aimedHere(r) },
 ]
 
 /** The coach's sentence for one axis, or null when he has nothing to say yet.
@@ -783,7 +941,24 @@ const NOTE_POOL: readonly NoteLine[] = [
  *  the scoreline axes earn by their own emptiness.
  *
  *  Selected off `seed:radarnote:<axis>` - no week in the key, so the line is stable for the whole
- *  career and changes only when the LICENCE changes, i.e. when the read of her genuinely changes. */
+ *  career and changes only when the LICENCE changes, i.e. when the read of her genuinely changes.
+ *
+ *  ⚠⚠ ROUND 42 #22 TRIED TO PUT THE SATURATION BAND IN THIS KEY AND THE MEASUREMENT SAID NO. It is
+ *  recorded here because the argument for it is obvious and it is WRONG. The reasoning was: with the
+ *  band out of the key, a wing crossing a rung merely swaps one member of a short licensed list and
+ *  the career-fixed draw lands on the same index, so the crossing would be SILENT - and the owner's
+ *  whole complaint is that the words never change. Measured instead, over four coach rungs x four
+ *  seeds x 420 weeks sampled fortnightly, on the 121 real band crossings those careers contain:
+ *
+ *      band IN the key      85 crossings changed the sentence, 36 said the same thing
+ *      band OUT (shipped)  103 crossings changed the sentence, 18 said the same thing
+ *
+ *  It is WORSE on its own metric, because re-rolling among two or three candidates lands back on the
+ *  same line more often than a fixed index over a list whose MEMBERS have changed. So the key stays
+ *  exactly as it shipped: the licence change below is what carries «его слова о ней точно должны
+ *  меняться на протяжении роста и карьеры», and every career in flight keeps the line it already had
+ *  wherever the read has not moved - CLAUDE.md invariant 4's own corollary, that a string you did not
+ *  touch cannot regress. */
 export function axisNote(read: AxisRead, seed: string): string | null {
   const speaks = read.confidence >= NOTE_MIN_CONFIDENCE
   const licensed = NOTE_POOL.filter(
@@ -890,6 +1065,12 @@ export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axi
   }
 
   const shownTotal = SKILL_KEYS.reduce((sum, k) => sum + shown[k], 0)
+  // ⭐ ROUND 42 #22 – WHERE THE WEEK'S SESSIONS POINT, scored once for all five wings. `aimWeights`
+  // is the SAME function `growWeek` multiplies by, so the eye's "we are drilling that" and the
+  // engine's "this week is aimed there" can never be two different claims. A career with no plan
+  // matrix (every pre-v47 save, and every probe world hand-built in a test) reads the all-ones
+  // vector, which is exactly the ordinary week those careers have always run.
+  const aim = aimWeights(view.planWeek ?? [])
 
   return SKILL_KEYS.map((key) => {
     // The haze's own misreading, on its own sub-stream: without it the midpoint of [lo, hi] would BE
@@ -904,6 +1085,12 @@ export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axi
     const hi = clamp(Math.max(centre + half, shown[key]), 0, 100)
     const lo = clamp(centre - half, shown[key], hi)
     const others = (shownTotal - shown[key]) / (SKILL_KEYS.length - 1)
+    // ⭐⭐ ROUND 42 #22 – HOW FULL HE THINKS THE WING IS. The numerator is the contour he draws and the
+    // denominator is the centre of the haze he draws around it - the two numbers already on the
+    // picture, so the sentence and the drawing are one belief rather than two. ⚠ `centre` and NOT
+    // `hi`: the high edge is the optimistic wall of a region, and reading saturation off it would
+    // make every wing look emptier than he thinks it is, worst exactly where the haze is widest.
+    const fill = centre > 0 ? clamp01(shown[key] / centre) : 1
     return {
       key,
       shownValue: shown[key],
@@ -922,6 +1109,8 @@ export function buildRadar(view: RadarWorldView, readings: ReturnType<typeof axi
           shownValue: shown[key],
           shownEdge: shown[key] - others,
           matchesPlayed: view.matchesPlayed,
+          fill,
+          aim: aim[key],
         },
         view.seed,
       ),

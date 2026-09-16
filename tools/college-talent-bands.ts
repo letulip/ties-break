@@ -30,6 +30,7 @@
 // the B arm's cut and the identity checked rather than assumed (it is asserted below).
 //
 // ⚠ MEASUREMENT ONLY. Nothing is patched, no engine constant is written, and no career leaves here.
+import { answerBirthdayNeutral } from './_birthday'
 import {
   openCareer,
   stepCareerWeek,
@@ -38,7 +39,7 @@ import {
   median,
   type Preset,
 } from './econ-bench'
-import {answerFork, answerRetirement, chooseGift, kidAgeExact, pendingBirthday, resumeFromCollege } from '../src/engine/world'
+import {answerFork, answerRetirement, kidAgeExact, pendingBirthday, resumeFromCollege } from '../src/engine/world'
 import { ceilingOf } from '../src/engine/academy'
 // ⚠ FROM world/ladder, NOT world/snapshot (TB-07): kidLadderRank moved down to the ladder leaf so
 // world/college.ts could stop importing the aggregate projection layer. Same function.
@@ -233,7 +234,7 @@ function walkArm(preset: Preset, i: number, arm: Arm): Row | null {
     // Round 24: the year pauses on her birthday week – press, answer, press again.
     for (let press = 0; press < 3 * ENDINGS.collegeYears && world.ending?.type === 'college'; press++) {
       resumeFromCollege(world, rng)
-      if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     }
     graduated = world.ending === null
     endedInCollege = world.ending ? world.ending.type : null

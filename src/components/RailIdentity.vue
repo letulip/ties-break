@@ -51,6 +51,9 @@ const {
   rankMovement,
   showKidHint,
   dismissKidHint,
+  // ⭐ ROUND 42 #29(b) – the avatar's mood ring, off the SAME computed Home reads. Nothing is derived
+  // here, exactly as the header above promises.
+  moodRing,
 } = useKidIdentity()
 
 function openKid(): void {
@@ -65,7 +68,14 @@ function openKid(): void {
          its children, so «beside the round avatar» needs a row of its own and this is it. His
          sentence itself is in the script block above, where Cyrillic is allowed. -->
     <div class="rail-id-head">
-      <button class="diary-avatar-btn rail-id-avatar" aria-label="Open her profile" @click="openKid">
+      <!-- ⭐ ROUND 42 #29(b): the same mood ring Home's avatar wears, on the same band, because the
+           band is the composable's and not this file's. -->
+      <button
+        class="diary-avatar-btn rail-id-avatar"
+        :class="moodRing ? ['has-mood-ring', `mood-${moodRing}`] : null"
+        aria-label="Open her profile"
+        @click="openKid"
+      >
         <img class="diary-avatar" :src="headerAvatarUrl" alt="" />
       </button>
       <!-- ⚠ TWO ELEMENTS, NOT A WRAP: two lines must be two lines for a short week label as well as

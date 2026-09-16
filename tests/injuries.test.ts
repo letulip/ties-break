@@ -311,7 +311,16 @@ const REF = { //
 // arms (tests/coachTravelEdgeFixtures.ts carries the table for all three frozen careers).
 // Verified on BOTH arms: the control is this branch's start `8d0b6bf4` in a worktree, which
 // reproduces 90.
-  kidRank: 89 }
+// ⚠⚠ RE-PINNED 89 -> 90 BY ROUND 42 #34 (16.09, THE PRICE OF NERVE), and for the Nth time running
+// it is the same second-order mechanism and SHE DID NOTHING DIFFERENT. The wave widened the
+// pressure set and gave nerve a contested term, so AI-vs-AI matches in the ITF field resolve a
+// little differently; a re-dealt field is a re-dealt table, and this constant folds that table.
+//
+// THE CAPTURE IS UNTOUCHED AGAIN: count 41550, hash e6b0c709, head and tail reproduce byte for
+// byte and are asserted BEFORE this constant is read. #34 adds NO draw to any stream - it changes
+// what a drawn point is worth, never how many are drawn - which is why the hash could not move
+// and did not, and why planner.test.ts's input-independence halves still pass unchanged.
+  kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number

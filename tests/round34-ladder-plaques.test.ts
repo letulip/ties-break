@@ -170,40 +170,57 @@ describe('round 34 #6 – a locked rung can never quote a requirement of zero', 
   })
 })
 
-describe('round 34 #1 – the route to the Junior Tour names the window it is counted over', () => {
-  it('⭐⭐ J30\'s condition says the 250 is a SEASON race, because the domestic table is one', () => {
-    // His «совершенно непонятно как выйти в j уровень». The route to the J tour is J30's floor, and
-    // the number alone was only half the condition: the domestic total starts again every January,
-    // so 106 at week 51 is not 106 of the way to 250.
+// ⚠⚠ RE-AIMED AT ROUND 42 ITEM 7 (15.09.2026). This describe was round 34 #1's presentational half:
+// the domestic table was a season race, so «250 national pts» alone was half a condition and the
+// sentence had to say «in one season». Round 42 #7 re-ruled the window to rolling-52 on his own word
+// («тот же механизм — окно в 52 недели ... окно "ползет"»), so there is no season clause to add and
+// the two sentences are back to the shape they had before round 34.
+//
+// ⭐ WHAT THE FILE STILL GUARDS IS THE MECHANISM ROUND 34 BUILT, which is the durable half: both
+// sentences READ `WINDOW_BY_TRACK` rather than restating it. That is why this re-ruling cost the copy
+// nothing but a constant – and the arms below prove the reading in BOTH directions, so the next
+// ruling either way reaches the screens without anybody remembering these tests exist.
+describe('round 42 #7 – the route to the Junior Tour, with no season clause left to add', () => {
+  it('⭐⭐ J30\'s condition is its 250 national points and nothing about a season', () => {
+    // ⚠ RE-AIMED (was «the 250 is a SEASON race, because the domestic table is one»). His round-34
+    // «совершенно непонятно как выйти в j уровень» was answered by naming the window; his round-42
+    // ruling removes the thing that needed naming. The number is the whole condition again, and it
+    // stays true across a boundary now, which is what makes the plain sentence honest.
     const said = tierOpensWhen('j30')
     expect(said).toContain(`${TIERS.j30.enterPointBand[0]} national pts`)
-    expect(said, 'the half that was missing').toContain('in one season')
+    expect(said, 'the domestic table no longer restarts, so the clause must be gone').not.toContain('in one season')
   })
 
   it('⚠ it is DERIVED from `WINDOW_BY_TRACK`, so a re-ruling re-words the sentence', () => {
-    // The constant is a plain object precisely so `tools/domestic-season-to-date.ts` can patch it for
-    // an A/B arm, and a hardcoded clause would go on lying through such a run. Mutating it here is
-    // the cheapest proof that the sentence reads the gate rather than restating it.
+    // ⚠ THE MUTATION ARM, NOW POINTING THE OTHER WAY (round 42 #7). The constant is a plain object
+    // precisely so `tools/domestic-season-to-date.ts` can patch it for an A/B arm, and a hardcoded
+    // clause would go on lying through such a run. This is the proof that the sentence reads the gate
+    // rather than restating it – and with the shipped value now `'rolling52'`, the informative
+    // mutation is the OLD rule: patch it back and the clause must return, unprompted.
     const kept = WINDOW_BY_TRACK.domestic
     try {
-      WINDOW_BY_TRACK.domestic = 'rolling52'
-      expect(tierOpensWhen('j30')).not.toContain('in one season')
+      WINDOW_BY_TRACK.domestic = 'seasonToDate'
+      expect(tierOpensWhen('j30')).toContain('in one season')
       expect(tierOpensWhen('j30')).toContain('250 national pts')
     } finally {
       WINDOW_BY_TRACK.domestic = kept
     }
-    expect(tierOpensWhen('j30')).toContain('in one season')
+    expect(tierOpensWhen('j30')).not.toContain('in one season')
   })
 
-  it('the ITF-denominated threshold is NOT touched – that table genuinely rolls 52 weeks', () => {
-    // W15's band is ITF junior points, and `WINDOW_BY_TRACK.itf` is `'rolling52'`: those points do
-    // carry across a season boundary, so the clause must not appear there.
+  it('the ITF-denominated threshold reads the same rule and has always been rolling', () => {
+    // W15's band is ITF junior points, and `WINDOW_BY_TRACK.itf` has been `'rolling52'` through both
+    // rulings: those points carry across a boundary, so the clause must not appear there either.
     expect(WINDOW_BY_TRACK.itf).toBe('rolling52')
     expect(tierOpensWhen('w15')).toContain('120 international pts')
     expect(tierOpensWhen('w15')).not.toContain('in one season')
   })
 
-  it('and the lock\'s long form says the table starts again', () => {
+  it('and the lock\'s long form no longer says the table starts again', () => {
+    // ⚠ RE-AIMED (was «says the table starts again»). Same derivation as the clause above: the
+    // sentence is assembled from `WINDOW_BY_TRACK.domestic`, so the ruling edits it with no string
+    // touched. What the long form still owes the reader – where the missing points are EARNED – is
+    // unchanged and asserted here so this re-aim cannot quietly hollow the sentence out.
     const s = tierState('j30', {
       ...base,
       ageYears: 14,
@@ -212,7 +229,8 @@ describe('round 34 #1 – the route to the Junior Tour names the window it is co
       refusal: { reason: 'locked', detail: 'x', pointsToEnter: 250 },
     })
     expect(s.note).toBe('106 / 250 national pts')
-    expect(s.title).toContain('starts again each season')
+    expect(s.title).toContain('National points come from Local, Regional and National events')
+    expect(s.title).not.toContain('starts again each season')
   })
 
   it('⚠ the acceptance rungs say nothing of the kind – their gate is a position, not a total', () => {
@@ -227,10 +245,17 @@ describe('round 34 #1 – the route to the Junior Tour names the window it is co
 // ⚠⚠ THE MEASUREMENT ITSELF, PINNED – what the engine actually does across a season boundary.
 // =================================================================================================
 //
-// This is the arm that would go red if the domestic table stopped being a season race, or if the
-// domestic floors ever started latching. Both are decisions for the owner; what this file refuses to
-// let happen is either of them changing SILENTLY, because the sentences above are derived from the
-// first and the report in docs/rounds/round-34.md #1 is derived from the second.
+// ⭐⭐ IT WENT RED ON PURPOSE AT ROUND 42 #7, AND THAT IS THE TEST DOING ITS JOB. Its own header said
+// what it was for: "this is the arm that would go red if the domestic table stopped being a season
+// race, or if the domestic floors ever started latching ... what this file refuses to let happen is
+// either of them changing SILENTLY". The owner changed the first, twice asked («второй раз пишу»),
+// and the second followed from it without a latch – so the arms below are re-aimed at the new ruling
+// rather than deleted, and they now refuse to let THAT change in silence.
+//
+// The pin that used to read «they are RESET by the boundary» now reads «they age out of a rolling
+// window», and the pin that asserted a defect-shaped behaviour on purpose – Regional shut again on
+// week 0 – asserts its absence instead. Both are still the same measurement, taken on the same walk,
+// at the same week.
 
 /** Two seasons of a real career, entering whatever the ladder opens – the walk the probe makes.
  *  ⚠ THE WORLD COMES BACK AT THE BOUNDARY (week 52), not at the end: the fold comparison below has
@@ -278,40 +303,55 @@ function walkTwoSeasons(seed: string): {
   return { boundary, world }
 }
 
-describe('round 34 #1 – the measured behaviour, pinned so it cannot change in silence', () => {
-  it('⭐⭐ THE ANSWER TO HIS QUESTION: they are RESET by the boundary, not aged out of a rolling window', () => {
-    // ⚠ THE TWO HYPOTHESES ARE DISTINGUISHED BY FOLDING THE SAME LEDGER TWICE, which is the only
-    // reading that can tell them apart – «обнулились» and «выпали из окна» look identical on a chip.
-    // At week 52 her season-one results are all inside a rolling 52-week window and all outside a
-    // season-to-date one, so the two folds disagree by her whole first-season book.
+describe('round 42 #7 – the measured behaviour, pinned so it cannot change in silence', () => {
+  it('⭐⭐ THE ANSWER TO HIS QUESTION: her book CROSSES the boundary – nothing is reset by a calendar', () => {
+    // ⚠ RE-AIMED AT ROUND 42 #7 (was «they are RESET by the boundary, not aged out of a rolling
+    // window» – round 34 #1's finding, true of the rule that shipped then). The reading is unchanged
+    // and is the only one that can tell the two apart: FOLD THE SAME LEDGER TWICE. «обнулились» and
+    // «выпали из окна» look identical on a chip, and at week 52 her season-one results are all inside
+    // a rolling window and all outside a season-to-date one – so the two folds disagree by her whole
+    // first-season book, and which one the snapshot AGREES with is the ruling, measured.
     const { boundary, world } = walkTwoSeasons('r34-domestic-reset')
     const last = boundary.find((b) => b.week === WEEKS_PER_YEAR - 1)!
+    const first = boundary.find((b) => b.week === WEEKS_PER_YEAR)!
     expect(last, 'the walk reached the boundary').toBeDefined()
     expect(last.points, 'she earned a domestic book in season one').toBeGreaterThan(0)
 
     const fold = (window: 'rolling52' | 'seasonToDate') =>
       windowedBestSum(world.results, WEEKS_PER_YEAR, KID_ID, BEST_N_BY_TRACK.domestic, inTrack('domestic'), window)
-    expect(fold('rolling52'), 'a rolling window would still be carrying season one').toBeGreaterThan(0)
-    expect(fold('rolling52'), '...all of it – nothing has aged out at week 52').toBeGreaterThanOrEqual(last.points)
-    expect(fold('seasonToDate'), 'the shipped rule keeps only what season TWO has paid so far').toBeLessThan(
+    expect(fold('seasonToDate'), 'the OLD rule kept only what season TWO had paid so far').toBeLessThan(
       fold('rolling52'),
     )
+    // ⭐ AND THE SNAPSHOT SHE READS ON WEEK 52 IS THE ROLLING FOLD, to the point. This is the arm that
+    // was red under the old rule and is the whole of «каждый год заново надо набирать национальный
+    // ранг» answered: her chip on the first week of the season is her book, not a zero.
+    expect(first.points, 'week 0 of season two reads her season-one book').toBe(fold('rolling52'))
+    expect(first.points, '...all of it – nothing has aged out at week 52').toBeGreaterThanOrEqual(last.points)
     // The rule behind it, read rather than restated: this is the one line that makes the above true.
-    expect(WINDOW_BY_TRACK.domestic).toBe('seasonToDate')
+    expect(WINDOW_BY_TRACK.domestic).toBe('rolling52')
   })
 
-  it('⚠ AND THE DOMESTIC GATES RE-CLOSE WITH IT – his «мне снова закрылся регионарный»', () => {
-    // ⚠ THIS PIN ASSERTS A DEFECT-SHAPED BEHAVIOUR ON PURPOSE, and it is NOT an endorsement of it.
-    // `tierFloorOpen` reads the season-to-date total live, so a rung she cleared in September is shut
-    // again in January. The alternative – latching a cleared domestic floor the way `onRampCleared`
-    // latches the two on-ramps – is a BALANCE decision and the owner's to make (docs/rounds/
-    // round-34.md #1). Until he rules, this arm exists so that a change lands with a red test and a
-    // reader instead of quietly, and so the report in the ledger cannot go stale.
+  it('⭐⭐ AND THE DOMESTIC GATES NO LONGER RE-CLOSE – his «мне снова закрылся регионарный», fixed', () => {
+    // ⚠ RE-AIMED AT ROUND 42 #7 (was «AND THE DOMESTIC GATES RE-CLOSE WITH IT», a pin that asserted a
+    // defect-shaped behaviour on purpose and said so). Round 34 #1 left the fix as a BALANCE decision
+    // for the owner and offered him a latch on `peakDomesticPoints`; he ruled the mechanism instead,
+    // and the latch is WITHDRAWN because it is unnecessary: `tierFloorOpen` reads
+    // `kidPoints(world, 'domestic')` live, and a live total that no longer falls to zero holds the
+    // door open by arithmetic, with no persisted state and no schema move.
+    //
+    // ⭐ THIS IS THE SECOND JOB THE ONE RULING DOES, and it is asserted on a real career rather than
+    // argued from the constant: Regional's floor is 65 national points and National's is 150
+    // (`calendar.ts`), both read off a total that used to read 0 on week 0 of every season.
     const { boundary } = walkTwoSeasons('r34-domestic-reset')
     const last = boundary.find((b) => b.week === WEEKS_PER_YEAR - 1)!
     const first = boundary.find((b) => b.week === WEEKS_PER_YEAR)!
     expect(last.open.regional, 'Regional was hers at the end of season one').toBe(true)
-    expect(first.open.regional, 'and shut again on week 0 of season two').toBe(false)
+    expect(first.open.regional, 'and is STILL hers on week 0 of season two').toBe(true)
+    // The discriminator: a career whose book never reached the floor would pass the line above by
+    // having nothing to lose. Hers clears Regional's 65 at the boundary and keeps clearing it.
+    expect(first.points, 'her book on week 0 clears Regional\'s floor').toBeGreaterThanOrEqual(
+      TIERS.regional.enterPointBand[0],
+    )
   })
 
   it('⭐ the J door does NOT re-close, and that asymmetry is the whole answer to his last sentence', () => {

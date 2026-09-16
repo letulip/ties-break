@@ -25,11 +25,11 @@
 //   * `announceFieldIntake` early-returns               -> the intake arm.
 //   * the farewell rows written with `keep: true`       -> the "costs her nothing" arm.
 //   * the prize row back to «less her N% share» bare    -> the #5b arm.
+import { answerBirthdayNeutral } from './helpers/career'
 import { describe, it, expect } from 'vitest'
 import {
   KID_ID,
   campusDigestLine,
-  chooseGift,
   closeTournament,
   callUpRevealOpen,
   collegeLeagueRevealOpen,
@@ -338,7 +338,7 @@ function press(world: WorldState, rng: Rng): void {
     skipTournament(world)
     closeTournament(world)
   }
-  if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+  if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
 }
 
 const DIGEST = '🌍'

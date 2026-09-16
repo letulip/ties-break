@@ -120,8 +120,12 @@ export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRoomNote, eliteGateStandingOf, COACH_EDGE_REVEAL_WEEKS }
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+// ⭐⭐ ROUND 42 #42 – `supportPayrollWeeklyCents` joins the barrel: it is read by `coachMarket`'s own
+// affordability arithmetic and by `householdWeekly`, and the bench that priced the cap
+// (`tools/r42-team-budget-cap.ts`) asks it the same question the screens do rather than summing two
+// salaries a third time.
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. ⚠ `GEAR_CATEGORY_LINE` came back from equipment.ts to this
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
@@ -201,6 +205,8 @@ import {
   collegeEpilogueLine,
   collegeLeaguePlayedThisWeek,
   collegeLeagueRevealOpen,
+  // ⭐ ROUND 42 #25 – the paused-step count `finalizeTournament` reads before it splits a cheque.
+  collegePausedShareYears,
   leaveCollege as leaveCollegeState,
   openCollegeYear,
   revealCallUpRubber,
@@ -251,6 +257,7 @@ export {
   collegeNextStop,
   isCollegeLeagueWeek,
   collegeMatchesThisWeek,
+  collegePausedShareYears,
   collegeProgressOf,
   collegeRecruitViewOf,
   inCollege,
@@ -281,13 +288,16 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
 // ⭐ ROUND-28 #15 – the one splitter every sponsor cheque goes through, re-exported for the same
 // reason: a test that wants to know what her cut of a brand's money is must ask the shipped one.
 export { bankSponsorCheque }
+// ⭐ ROUND 42 #5 – the cameo's cadence half, re-exported beside its need half for the same reason
+// `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
+export { sponsorCameoWilling, sponsorCameoCents }
 export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
@@ -358,8 +368,8 @@ import { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kid
 export { START_AGE_YEARS, ageAtWeek, kidBirthYear, kidAgeExact, kidAgeYears, kidAgeAt, ageWindowStartWeek, birthdayWeek, birthdayTurning }
 // ⭐ v48 – THE BIRTHDAY POPUP AND THE GIFT (docs/specs/birthday-and-gifts.md). Re-exported under the
 // historical convention: 111 files import from `engine/world`, so a leaf's public API arrives here.
-import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER } from './world/birthday'
-export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER }
+import { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE } from './world/birthday'
+export { birthdayOffer, birthdayOfferFor, birthdayOptions, birthdayWords, birthdayHeading, collegeBirthdayIndexOf, pendingBirthday, buildBirthdayPrompt, chooseGift, birthdayHistory, giftNoun, BIRTHDAY_BANDS, BIRTHDAY_COLLEGE_BAND, BIRTHDAY_DAY_TOGETHER, BIRTHDAY_TIME_TOGETHER, DAY_TOGETHER_FROM_AGE }
 // ⭐ v74 (the private life, wave 3): `activeEpisode` and `loveEpisodesOf` arrive on the barrel too –
 // the ACTIVE attachment is a question asked of `loveEpisodes`, never a field, so every reader in the
 // repo has to arrive at it through this one function or the derivation acquires a second spelling.
@@ -427,8 +437,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject } from './world/lifeBeat'
-export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, reachableSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkBranch } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, reachableSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkBranch }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -773,8 +783,15 @@ function finalizeTournament(world: WorldState): void {
     //
     // ⚠ HER REAL AGE (`kidAgeYears`), never the band's – the one-clock ruling of 09.08. Zero draws:
     // this is integer arithmetic on a cheque that has already been decided.
+    //
+    // ⭐⭐⭐ ROUND 42 #25 – AND THE STEPS COUNT TOUR YEARS ONLY («пока она снова в тур не вернется»),
+    // so the ramp is read at (her age, the birthdays college ate). `collegePausedShareYears` is the
+    // ONE derivation of that count and the rate below, the sentence in the ledger row and the memo
+    // on the recap all go through this one `pausedShare` – two reads of it here would be two
+    // percentages on one cheque, which is the defect round 30 #21 exists to have ended.
     const ageNow = kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay)
-    const herShare = kidPrizeShareCents(prize, ageNow)
+    const pausedShare = collegePausedShareYears(world)
+    const herShare = kidPrizeShareCents(prize, ageNow, pausedShare)
     const familyShare = prize - herShare
     world.fundsCents += familyShare
     world.kidFundsCents = (world.kidFundsCents ?? 0) + herShare
@@ -798,7 +815,7 @@ function finalizeTournament(world: WorldState): void {
       // computation of it, so the two rows can never disagree.
       text:
         herShare > 0
-          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow) / 100}% share (${formatCents(herShare)})`
+          ? `${tier.label} prize money – ${finishLabel(kidFinish)}, less her ${kidPrizeShareBps(ageNow, pausedShare) / 100}% share (${formatCents(herShare)})`
           : `${tier.label} prize money – ${finishLabel(kidFinish)}`,
       amountCents: familyShare,
     })
@@ -839,7 +856,7 @@ function finalizeTournament(world: WorldState): void {
       // ⭐⭐⭐ ROUND 30 #21 – tagged `prize`, so the week recap can name HER RAMP («50% of every prize
       // cheque», the rule the budget screen states) instead of averaging it with a brand cheque that
       // splits under a different rule entirely. The rate handed in is unchanged.
-      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow), prize, 'prize')
+      accrueKidShare(world, world.week, herShare, kidPrizeShareBps(ageNow, pausedShare), prize, 'prize')
     }
     // ⭐⭐ ROUND-24 – AND THE TEAM IS PAID ON THE RESULT (owner 22.08, docs/plans/the-team-share.md
     // §3 as re-ruled). His model verbatim: «3млн призовые из них отчисляется процент дочери (скажем
@@ -855,6 +872,20 @@ function finalizeTournament(world: WorldState): void {
     // INDEPENDENT OF ANY TRAVEL SWITCH – «тренер может не ездить, но долю получать … вполне
     // может» – but only a FILLED seat: a self-coached family owes no coach share and an empty
     // table no masseur share.
+    //
+    // ⭐⭐⭐ ROUND 42 #41 (15.09) – AND THE FIRST OF THOSE SENTENCES NO LONGER DESCRIBES THE COACH.
+    // His ruling, off his own research: «10% безусловных отчислений с любых призовых, независимо от
+    // глубины прохода». The coach's `everyBps` is 1000, so `staffPrizeShareCents('coach', …)` is
+    // positive at EVERY finish and the `coaching` row below is written on a first-round cheque too.
+    // ⚠ NOT ONE LINE OF THE ARITHMETIC HERE CHANGED FOR IT, which is the point of the rates living on
+    // `ECONOMY`: the gates (pro tour, filled seat, travel-blind), the gross base, the single rounding
+    // and the family-keeps-the-remainder subtraction are all exactly what round 24 built.
+    // ⚠ THE MASSEUR KEEPS THE TITLE-AND-FINAL SHAPE (`everyBps: 0`), so his block below is still
+    // silent below a final – whether he follows the coach is the owner's open question, measured in
+    // docs/specs/coach-every-cheque-2026-09.md §5 and deliberately not decided here.
+    // ⚠ THE ORDER IS UNTOUCHED AND IT STILL CANNOT MATTER: her share comes off the GROSS above and
+    // both staff shares come off that same GROSS, so no hand shrinks another's base. That is round 41
+    // A1's pinned property and the every-cheque arm rides it rather than reopening it.
     //
     // ⚠ BOTH SHARES OFF THE GROSS, EACH ROUNDED ONCE, THE FAMILY KEEPS THE REMAINDER – the kid
     // ramp's own discipline, fourth and fifth hands on the same cheque: her share is untouched
@@ -1733,6 +1764,28 @@ export function createWorld(
     // ROWS, written at the one `loveEpisodes.push` in world/lifeBeat.ts, which is why that version is
     // the first this ladder has ever had to peel INSIDE a list.
     spotlightHabituation: 0,
+    // ⭐⭐⭐ v78 (round 42 #35 + #45): THE PSYCHOLOGIST HAS CARRIED HER NOWHERE YET, AND NOBODY IS IN
+    // THE SPARRING SEAT. Zero is the identity here in the plainest sense: `composureBonus` is
+    // HEADROOM above her rolled ceiling, and on week 0 nothing has bought her any – so
+    // `composureCeilingOf` returns `potential.composure` exactly and `growWeek` is byte-identical to
+    // every week this engine has ever grown. The sparring pair is `false` and the middle rung, which
+    // is `masseurHired`/`masseurSessionsPerWeek` and `psychologistHired`/`psychologistRung` above.
+    //
+    // ⚠ NOW THE LAST THREE KEYS OF THE LITERAL, and `spotlightHabituation` has stopped being the
+    // last – the same handover it took from `wallsFlipped`, the wave-5 six from `spiritShock`, and
+    // so on down. Appended in THIS order, which is the order `careerHashAtSchema` peels them off in
+    // (reverse, newest first). ⚠⚠ v78's FOURTH FIELD IS NOT HERE AND CANNOT BE: `entries` lives on
+    // `OwnedAsset` ROWS, written at the three `assets.push` sites in world/shop.ts, so this version
+    // is the second – after v77 – whose peel has to reach inside a list.
+    composureBonus: 0,
+    sparringHired: false,
+    // ⚠ THE LITERAL `1` AND NOT A CONSTANT, ON PURPOSE. Every other seat's default reads its own
+    // `ECONOMY` block (`ECONOMY.psychologist.defaultRung` two screens up), and the sparring seat has
+    // no block yet – it is bundle 13's, with the ladder and the prices. Borrowing the
+    // psychologist's dial to avoid a literal would tie two seats' defaults together for cosmetic
+    // reasons, and the next author would have to untie them. When §4's rungs land, this becomes
+    // `ECONOMY.sparring.defaultRung` and the migration's back-fill stays whatever it shipped as.
+    sparringRung: 1,
   }
   addEvent(world, {
     week: 0,

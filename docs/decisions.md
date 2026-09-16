@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 113 dated entries, newest 2026-09-14. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 114 dated entries, newest 2026-09-16. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -38,7 +38,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | general | 6 | [WAVE 6 IS BUILT AND GATED: THE SPOTLIGHT, AND EVERY NUMBER IN IT IS STILL A PROPOSAL](#14092026--wave-6-is-built-and-gated-the-spotlight-and-every-number-in-it-is-still-a-proposal) | 2026-09-14 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
-| life-and-morale | 12 | [THE PRIVATE LIFE'S SIXTEEN ANSWERED: EIGHT DECISIONS, AND THE NEWS BAR READS THE RANK](#14092026--the-private-lifes-sixteen-answered-eight-decisions-and-the-news-bar-reads-the-rank) | 2026-09-14 |
+| life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
@@ -4592,3 +4592,46 @@ eight decisions. The owner answered all eight in one pass, verbatim where they d
 
 The close: «закончи сам пожалуйста эту волну и заводи ПР по скиллу» – the architect implements
 the ruled package, gates, and assembles the PR; the round-42 work follows as its own second PR.
+
+## 16.09.2026 – THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL
+
+Round 42's close put two things to the owner: the copy item #46 asks for (what a travelling
+specialist actually buys, since the coach is the only seat whose answer is on screen) and the eight
+open questions of [the-form-and-the-sparring-2026-09](specs/the-form-and-the-sparring-2026-09.md),
+whose own «Done when» line names them as the gate on wave F1.
+
+**1. «слова массажиста ок» – the masseur's two lines are approved as drafted.** The travelling state
+says the thing that actually changes a decision and that no string has ever said: the relief is paid
+per night BETWEEN rounds, so a first-round exit buys nothing and a deep run buys the most.
+
+**2. ⭐ THE PSYCHOLOGIST'S LINE IS REFUSED ON A FACT, AND HIS CORRECTION IS THE BETTER READING.**
+The draft said the sessions are «weekly work at home, not tournament-side». His answer: «психолог не
+ездит, но **онлайн созвоны вполне может делать**». He is right, and the engine already agrees with
+him in its own comment – `psychologistWorksThisWeek`'s note says the retainer «runs on a tournament
+week exactly as the coach's does» and that he works through a layoff because «an injury is when the
+head needs the **call** most». So the seat has no fare, no stand-down and no gap: it is the one seat
+whose work never pauses, which is a positive thing to say rather than an absence to explain.
+
+**3. AND HE OPENED A DESIGN QUESTION RATHER THAN CLOSING ONE:** «может и ездить он тоже может, но
+тогда надо подумать, на что он может качественно влиять в поездке и нужно ли это делать». Parked
+with a named answer so it is not re-invented from nothing – see §9a of the form spec. The short of
+it: the only thing a travelling psychologist can honestly buy is the SLUMP, which is his patient by
+the spec's own fence sentence, so the switch cannot be priced before `world.form` exists.
+
+**4. O1–O8: «все по твоим рекомендациям».** Ruled in one pass, so wave F1's gate is open:
+
+| # | ruled |
+| --- | --- |
+| O1 | bench-first – the [0.5, 4] pp corridor is the ruling, the constants are its consequence |
+| O2 | form is visible nowhere beyond the coach's sentence and the match in v1 |
+| O3 | the radar shows MODULATED composure – it is the coach's read of today's her |
+| O4 | the slump is a deterministic ACCUMULATOR, not dice; `seed:form:<week>` stays reserved |
+| O5 | no direct injury→form link – the empty calendar already carries it, a link would double-charge |
+| O6 | rivals carry no form in v1; the population cost is measured at F3 and ruled then |
+| O7 | the sparring rungs and prices ship as proposals against his $50–80k/yr + travel research band |
+| O8 | F1–F3 run after the committed pipeline |
+
+⭐ **And round 42 #34 is what makes the order defensible rather than asserted.** F1's only reader is
+composure. Before #34 a ±6-point slump was worth about **0.15 pp** of match win rate – a slump nobody
+can feel, and the third decorative mechanic this round would have found. After #34 the same ±6 points
+are worth several times that. **#34 → F1 → F2**, on the round's own measurement.

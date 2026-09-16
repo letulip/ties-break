@@ -39,7 +39,7 @@ import {
   decideKnock,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
 } from '../../src/engine/world'
 import { MOOD_WORD, SPIRIT_BANDS, spiritBandOf } from '../../src/engine/spirit'
@@ -60,7 +60,10 @@ function careerAt(week: number, seed = 'wave1-mood'): WorldState {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
     const age = pendingBirthday(world)
-    if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    // ⚠ ROUND 42 #26 – THE ENGINE'S OWN SEAM, NOT A REBUILT OFFER. `birthdayOffer(world.seed, age)` is a
+    // SECOND derivation of the four rows and it diverges the moment a given durable leaves the card, so
+    // `chooseGift` refuses the answer – the R2-18 failure `tests/round23-kid-life.test.ts` wrote down.
+    if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
     tickWeek(world, rng)
     if (world.pendingTournament) {
       skipTournament(world)
@@ -107,6 +110,13 @@ describe('⭐⭐ v72 – the Mood word on the two tiles that have one', () => {
     const snap = snapshotAt(ECONOMY.spirit.mood.glowingFrom + 2)
     expect(snap.diary.facts.resultFresh, 'the arm has to be an ordinary week').toBe(false)
     expect(snap.diary.facts.moodWord).toBe('Glowing')
+    // ⚠ ROUND 42 #2/#29(a) – NOT ONE ASSERTION IN THIS FILE MOVED, AND THE NOTE IS HERE SO THE WORD
+    // «face» BELOW IS NOT READ AS «picture». Since round 42 the hero PAINTING is a narrower read
+    // (`facts.heroEmotion`: a fresh result, the layoff painting, or the neutral portrait) and on
+    // this very week it is `norm` – a glowing mood no longer puts a trophy in her hands. What
+    // `facts.emotion` still answers is which channel spoke, which is exactly what licenses the word
+    // this file is about, so every case here is byte-identical to the day it was written. The
+    // picture's own arms live in tests/component/round42-hero-and-ring.test.ts.
     expect(snap.diary.facts.emotion, 'the face reads the same decision').toBe('happy')
     expect(kidWord(kid(snap))).toBe('Glowing')
     expect(recapWord(recap(snap))).toBe('Glowing')

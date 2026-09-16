@@ -154,15 +154,21 @@ function close(): void {
     <!-- The VS card: the friendly is about to be played, exactly like a tournament round – which
          is why it is the same F scene, with the club's own label on it. -->
     <MatchScene v-if="phase === 'pre'" class="pf-scene" :stage="kidStage" emotion="serious" label="Friendly at the club">
-      <div class="pf-grid">
-        <div class="pf-side">
-          <div class="pf-name">{{ kidShort }}</div>
-          <div v-if="kidRank" class="pf-rank">#{{ kidRank }}</div>
+      <!-- ⭐⭐⭐ ROUND 42 #36 – THE PLATE'S VOCABULARY IS SHARED NOW (`.scene-*`, src/style.css) and
+           this was one of the two copies of it. It differed from the tournament's by exactly one
+           declaration – the rank line here carried no `font-variant-numeric: tabular-nums` – which
+           is what two copies of one treatment do while nobody is looking. The five rules moved to
+           the sheet unchanged; the friendly's rank line picks up the tabular figures the
+           tournament's already had. No word and no element moved. -->
+      <div class="scene-grid">
+        <div class="scene-side">
+          <div class="scene-name">{{ kidShort }}</div>
+          <div v-if="kidRank" class="scene-rank">#{{ kidRank }}</div>
         </div>
-        <div class="pf-vs">vs</div>
-        <div class="pf-side mirrored">
-          <div class="pf-name">{{ oppShort }}</div>
-          <div class="pf-rank">sparring partner</div>
+        <div class="scene-vs">vs</div>
+        <div class="scene-side mirrored">
+          <div class="scene-name">{{ oppShort }}</div>
+          <div class="scene-rank">sparring partner</div>
         </div>
       </div>
       <div class="controls pf-chips">
@@ -269,39 +275,11 @@ function close(): void {
   flex: none;
 }
 
-.pf-grid {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 10px;
-}
-
-.pf-side {
-  min-width: 0;
-}
-
-.pf-side.mirrored {
-  text-align: right;
-}
-
-.pf-name {
-  font-size: 14.5px;
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-
-.pf-rank {
-  margin-top: 2px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: var(--ink-soft);
-}
-
-.pf-vs {
-  font-size: 13px;
-  font-style: italic;
-  color: var(--ink-soft);
-}
+/* ⭐⭐⭐ ROUND 42 #36 – `.pf-grid` / `-side` / `-name` / `-rank` / `-vs` ARE IN `src/style.css` NOW,
+   under the `.scene-*` names MatchScene's own parts already use. They were a copy of
+   TournamentFlow's five, drifted by one declaration; see the block beside `.tf-actions` in the
+   sheet. `.pf-scene` and `.pf-chips` stay here – they are where THIS screen puts the card and its
+   own chip row, which is nobody else's business. */
 
 .pf-chips {
   justify-content: center;

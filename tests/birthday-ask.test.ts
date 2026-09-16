@@ -35,6 +35,7 @@ import {
   birthdayOptions,
   chooseGift,
   createWorld,
+  DAY_TOGETHER_FROM_AGE,
   decideKnock,
   giftNoun,
   pendingBirthday,
@@ -61,7 +62,7 @@ import type { BirthdayGift } from '../src/engine/world/birthdayGift'
 // answer while `'fork-opinion'` was the only kind; wave 3's `'met'` beat does not offer that id and
 // can be raised any week from her sixteenth on, so every hand-written call site threw. See
 // `drainLifeBeats`.
-import { drainLifeBeats } from './helpers/career'
+import { answerBirthdayNeutral, drainLifeBeats } from './helpers/career'
 
 /** Every gift that can be on screen together: a band's own list plus the day, which is offered in
  *  every band (spec §2a). Three of a band's gifts are drawn, so ANY pair of them can co-occur and
@@ -71,6 +72,9 @@ function poolOf(band: (typeof BIRTHDAY_BANDS)[number]): BirthdayGift[] {
 }
 
 const bandName = (b: (typeof BIRTHDAY_BANDS)[number]) => `band ${b.from}-${b.to}`
+
+// ⚠ `answerBirthdayNeutral` moved to its one home the same day it was written – 26 walks needed
+// it (tools/_birthday.ts; re-exported by tests/helpers/career.ts).
 
 // =================================================================================================
 // RULE 1 – A ROW NAMES A THING
@@ -346,7 +350,7 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
     for (const o of second) expect(Object.keys(o).sort()).toEqual(['id', 'label', 'note'])
   })
 
-  it('⭐ ON A REAL CAREER: the second car says it is the second, in the dialog he reads', () => {
+  it('⭐ ON A REAL CAREER: the car, once given, never comes back – and the card stays four rows', () => {
     // The owner's own sentence, made into a fixture: «чтобы мы новую машину не раз в год покупали».
     //
     // ⚠⚠ RE-AIMED BY ROUND 26 #9b, AND THE THING THAT MOVED IS THE FIXTURE'S PREMISE, NOT ITS CLAIM.
@@ -373,7 +377,7 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
       if (week < 0) break
       const age = pendingBirthday(world)!
       if (age >= 19) break
-      chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+      answerBirthdayNeutral(world)
       tickWeek(world, rng)
     }
     expect(pendingBirthday(world), 'the fixture has to reach the independence band').toBeGreaterThanOrEqual(19)
@@ -385,25 +389,22 @@ describe('a repeat is played, not silent – round-18 #10c', () => {
     chooseGift(world, 'car')
     tickWeek(world, rng)
 
-    // ...and offered again within the band's cycle, saying what it is.
-    let second: ReturnType<typeof toSnapshot>['birthdayPrompt'] = null
+    // ...and it is GONE. ⚠⚠ RE-AIMED BY ROUND 42 #26 (15.09) AND THE CLAIM IS INVERTED, BY HIS
+    // WORD RATHER THAN BY A DEFECT. It read «the second car says it is the second» – round-18 #10c's
+    // licensed repeat, which he granted («хотя почему и нет... надо как-то обыграть») and has now
+    // withdrawn: «Если мы уже дарили депозит на её жилье, то его больше не надо вообще показывать.» So
+    // the arm walks the SAME career and asserts the opposite, plus the thing that makes the
+    // opposite safe: the card is still four rows every one of those years.
     let nextYear: ReturnType<typeof toSnapshot>['birthdayPrompt'] = null
-    for (let year = 0; year < 6 && second === null; year++) {
+    for (let year = 0; year < 6; year++) {
       expect(runToBirthday(), 'and she has another birthday').toBeGreaterThan(0)
       const prompt = toSnapshot(world).birthdayPrompt!
       if (nextYear === null) nextYear = prompt
-      if (prompt.options.some((o) => o.id === 'car')) second = prompt
-      else {
-        chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
-        tickWeek(world, rng)
-      }
+      expect(prompt.options.map((o) => o.id), `year ${year}: the car is in the garage already`).not.toContain('car')
+      expect(prompt.options, `year ${year}: and the card never renders short`).toHaveLength(4)
+      chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+      tickWeek(world, rng)
     }
-    expect(second, 'the car comes back inside the cycle').not.toBeNull()
-    const carAgain = second!.options.find((o) => o.id === 'car')!
-    expect(carAgain.note, 'a second car does not arrive in silence').toMatch(/already/i)
-    expect(carAgain.note).not.toBe(carFirst.note)
-    // ...and she does not ASK for it either, which is round-17 #18 still holding.
-    expect(second!.ask).not.toBe(first.options.length ? carFirst.label : '')
     // ⭐ ROUND 26 #9b, AND IT IS THE ASSERTION THAT WAS INVERTED. This used to demand «the same four
     // rows, unchanged» – true then, and precisely the owner's complaint two rounds later. The very
     // next birthday must now differ from this one, which is the no-repeat window as a behaviour.
@@ -461,7 +462,11 @@ describe('⚠ the copy work costs the stream nothing', () => {
       // college band's own draw count load-bearing.
       const atCollege = band === BIRTHDAY_COLLEGE_BAND
       const age = Math.max(band.from, 14)
-      const population = combinations(band.gifts, 3)
+      // ROUND 42 #1: under sixteen the card is FOUR material rows and no day, so the mirror walks
+      // C(n,4); from sixteen it is the shipped C(n,3) + the day. Both arms still shuffle four rows
+      // and draw the ask, so the age stream's exactly-four law below holds at every age.
+      const rows = age >= DAY_TOGETHER_FROM_AGE ? 3 : 4
+      const population = combinations(band.gifts, rows)
 
       let cycleDraws = 0
       const cycleRng = rngFromSeed(`draws:birthday:cycle:${atCollege ? 'college' : `${band.from}-${band.to}`}`)
@@ -471,7 +476,7 @@ describe('⚠ the copy work costs the stream nothing', () => {
       }
       const order = shuffle(population, countedCycle)
       const material = order[age % order.length]
-      expect(cycleDraws, `${bandName(band)}: one Fisher-Yates over C(n,3) combinations`)
+      expect(cycleDraws, `${bandName(band)}: one Fisher-Yates over C(n,rows) combinations`)
         .toBe(population.length - 1)
 
       let draws = 0
@@ -480,7 +485,7 @@ describe('⚠ the copy work costs the stream nothing', () => {
         draws++
         return rng()
       }
-      const options = shuffle([...material, BIRTHDAY_DAY_TOGETHER], counted)
+      const options = shuffle(rows === 3 ? [...material, BIRTHDAY_DAY_TOGETHER] : [...material], counted)
       // ⚠ THE ASK IS REPLAYED TOO, AND THAT IS WHAT MAKES THE COUNT LOAD-BEARING. The first draft
       // compared only the four ids, so an extra `rng()` AFTER the shuffles moved the ask and nothing
       // noticed. The ask is the last draw on the stream: shift it by one and it lands elsewhere.
@@ -494,12 +499,25 @@ describe('⚠ the copy work costs the stream nothing', () => {
     }
   })
 
-  it('⚠ ...and a career with a long record is offered the identical four', () => {
+  it('⚠ ...and a record of REPEATABLES is offered the identical four', () => {
     // The repeat copy is chosen AFTER the draw (`birthdayOptions`), never inside it, so a record
-    // cannot move an option, a position or a dice. §5.2's licensed repeat is intact.
+    // cannot move an option, a position or a dice.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #26 (15.09), AND THE HALF THAT MOVED IS THE ONE HIS WORD MOVED.
+    // This read «a career with a long record is offered the identical four» and passed a record of
+    // DURABLES – car, deposit, home, laptop – which is exactly the §5.2 licence he has now revoked:
+    // «Если мы уже дарили депозит на её жилье, то его больше не надо вообще показывать.» A
+    // given durable leaves the card now, so the four rows DO move for it – and the claim that
+    // survives, and is the one this arm was really protecting, is that the record cannot move the
+    // draw for anything the rule does not name. Both halves are pinned, so the pair cannot drift.
     const fresh = birthdayOffer('long-record', 20)
-    const loaded = birthdayOffer('long-record', 20, ['car', 'deposit', 'home', 'day', 'laptop'])
-    expect(loaded.options.map((o) => o.id)).toEqual(fresh.options.map((o) => o.id))
+    const repeatables = birthdayOffer('long-record', 20, ['day', 'trip', 'tickets', 'familyweek'])
+    expect(repeatables.options.map((o) => o.id), 'a record of things she may want again moves nothing')
+      .toEqual(fresh.options.map((o) => o.id))
+    // ...and a DURABLE she owns is gone, which is round 42 #26 itself.
+    const held = fresh.options.find((o) => o.id !== 'day')!.id
+    expect(birthdayOffer('long-record', 20, [held]).options.map((o) => o.id), `${held} does not come back`)
+      .not.toContain(held)
   })
 })
 
@@ -787,7 +805,7 @@ describe('ROUND 26 #4 – the wish is licensed by what the family has', () => {
             const found = toSnapshot(world).birthdayPrompt!
             if (found.options.some((o) => o.id === 'neverbuy')) return found
           }
-          chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+          answerBirthdayNeutral(world)
         }
         tickWeek(world, rng)
       }
@@ -882,7 +900,12 @@ describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () 
     const failures: string[] = []
     for (let s = 0; s < 40; s++) {
       for (const atCollege of [false, true]) {
-        for (let age = 15; age <= 40; age++) {
+        // ROUND 42 #1 re-aim: the college arm sweeps from NINETEEN. College is an 18+ fact, so an
+        // under-16 college offer is a probe artifact - and at 14->15 it met the young four-row card
+        // over the college band's four gifts, whose C(4,4) single combination repeats by arithmetic.
+        // The non-college arm keeps its full sweep (its young pairs cross band boundaries anyway).
+        const fromAge = atCollege ? 19 : 15
+        for (let age = fromAge; age <= 40; age++) {
           const prev = birthdayOffer(`walk-${s}`, age - 1, [], atCollege)
           const now = birthdayOffer(`walk-${s}`, age, [], atCollege)
           const a = prev.options.map((o) => o.id).sort().join('|')
@@ -940,8 +963,12 @@ describe('ROUND 26 #9b – the offer walks the band instead of sampling it', () 
   it('⚠ the walk is immutable and cannot be re-rolled – it depends on the seed, the band and the age', () => {
     // The property the whole scene rests on (spec §2ab): reloading cannot move the offer, and what
     // the player chose last year cannot move it either.
+    // ⚠ RE-AIMED BY ROUND 42 #26: the given list is REPEATABLES now (it held `dog`, a durable, which
+    // his ruling takes off the card). The property under test is untouched – nothing the rule does
+    // not name can move the walk – and «immutable across a reload» is still true either way, because
+    // the record cannot change between the dialog opening and the answer landing.
     const a = birthdayOffer('immutable', 24, [])
-    const b = birthdayOffer('immutable', 24, ['familyweek', 'jewellery', 'dog', 'day'])
+    const b = birthdayOffer('immutable', 24, ['familyweek', 'jewellery', 'day'])
     expect(b.options.map((o) => o.id)).toEqual(a.options.map((o) => o.id))
     // ...and a different career gets a different walk, or the "population" is one global list
     const other = birthdayOffer('immutable-other', 24, [])
@@ -992,7 +1019,14 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
       if (birthdayOffer(`day-again-${s}`, 20, spentEverything).askedId === DAY) before++
       if (birthdayOffer(`day-again-${s}`, 20, spentEverything, false, null, DAY).askedId === DAY) after++
     }
-    expect(before, 'the mechanism: every material row owned and the day is the whole pool').toBe(200)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #26 (15.09), AND THE RE-AIM IS THE ITEM'S BEST NEWS. `before` was
+    // 200 – CERTAINTY – because every material row of the band was owned and the day was the whole
+    // pool. That collapse is now STRUCTURALLY IMPOSSIBLE: a given durable leaves the card and the
+    // band refills from its neighbours, so a card with four rows always carries material she does
+    // not own. Measured on this exact sweep: 50 of 200 instead of 200 of 200. Round 27's cooldown is
+    // still the thing under test and it still answers 0 – the two fixes stack rather than overlap.
+    expect(before, 'the day is still reachable as the ask when she owns the band').toBeGreaterThan(0)
+    expect(before, '...but it is no longer CERTAIN – round 42 #26 took the collapse out').toBeLessThan(200)
     expect(after, 'and asked last birthday, it is never the ask').toBe(0)
   })
 
@@ -1025,7 +1059,16 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
         expect(cold.options.map((o) => o.id), `${bandName(band)}: the offer moved`).toEqual(
           warm.options.map((o) => o.id),
         )
-        expect(cold.options.map((o) => o.id), 'the day left the card').toContain(DAY)
+        // RE-AIMED BY ROUND 42 #1 (ruled A, 15.09): the 11.08 always-on narrowed to sixteen-plus,
+        // by the owner's own word on his 14-year-old's card. From sixteen the cooldown still never
+        // touches the OFFER (the claim this case has always made); under sixteen the day is not on
+        // the card at all - asserted, so the gate cannot quietly widen back.
+        if (age >= DAY_TOGETHER_FROM_AGE) {
+          expect(cold.options.map((o) => o.id), 'the day left the card').toContain(DAY)
+        } else {
+          expect(cold.options.map((o) => o.id), 'the day reached a young card').not.toContain(DAY)
+          expect(cold.options, 'a young card still holds four rows').toHaveLength(4)
+        }
       }
     }
   })
@@ -1147,8 +1190,15 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
         const onCard = options.filter((o) => o.id !== DAY)
         if (!onCard.some((o) => kindOf.get(o.id) === 'repeatable')) continue
         checked++
-        expect(kindOf.get(askedId), `${bandName(band)}: a durable row was asked for over a repeatable one`)
-          .toBe('repeatable')
+        // ⚠⚠ RE-AIMED BY ROUND 42 #26, AND THE CLAIM IS NOW THE STRONGER ONE. This demanded the ask
+        // be a REPEATABLE row, because the fallback's only alternative was a durable she OWNED and
+        // whose ask asserts she lacks it (`campusbike`: «Everyone there has a bicycle», false the
+        // moment one is chained up outside). A given durable is off the card entirely now, so the
+        // card's material rows are things she does NOT hold – and the honest assertion is that
+        // sentence itself: the ask never names a possession already in the house. It covers the old
+        // claim and the new road both, and it is what round-17 #18 was always about.
+        expect(spentEverything.includes(askedId) && askedId !== DAY,
+          `${bandName(band)}: the ask named a present she already holds – ${askedId}`).toBe(false)
       }
     }
     // ...and the sweep really reached the branch, or it proves nothing.
@@ -1194,7 +1244,7 @@ describe('ROUND 27 #7 – the day cannot be VOICED two birthdays running', () =>
     const rng = rngFromSeed(world.seed)
     for (let i = 0; i < 700; i++) {
       if (pendingKnock(world)) decideKnock(world, 'rest')
-      if (pendingBirthday(world) !== null) chooseGift(world, BIRTHDAY_DAY_TOGETHER.id)
+      if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
       if (world.ending) break
       tickWeek(world, rng)
     }

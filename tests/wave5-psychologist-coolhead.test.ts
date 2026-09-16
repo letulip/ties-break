@@ -494,8 +494,18 @@ describe('wave 5 T5 D – with the seat empty, another year, or stood down, grow
     const worked = posed('t5-d-working', 260, { hired: true, rung: 2, focus: 'coolhead' })
     walkGrowth(control, 40)
     walkGrowth(worked, 40)
+    // ⚠ RE-AIMED BY ROUND 42 #35 (16.09, v78 – «past the ceiling»), NOT WEAKENED, and the extra key is
+    // the NEW mechanic showing up in exactly the arm that should see it. `composureBonus` is the
+    // headroom his year buys above her rolled ceiling; it moves on every week he works this focus and
+    // on no other week, so a positive control for «he worked» that did NOT list it would be missing
+    // half of what the seat now does. The claim is unchanged and still EXACT – a closed set, so a
+    // fourth key appearing is still red here.
     const moved = movedKeys(keyHashes(control), keyHashes(worked)).filter((k) => !k.startsWith('psychologist'))
-    expect(moved, 'her skills, and the events the receipt is written into').toEqual(['events', 'nextEventId', 'skills'])
+    expect(moved, 'her skills, the headroom his year bought, and the events the receipt is written into')
+      .toEqual(['composureBonus', 'events', 'nextEventId', 'skills'])
+    // ⚠ AND THE CONTROL ARM'S BONUS NEVER LEFT ZERO, which is the half that says the decay cannot run
+    // on a career that never bought anything: `max(0, 0 - step)` is 0, every week, for ever.
+    expect(control.composureBonus, 'a career that never hires him buys no headroom and loses none').toBe(0)
     expect(worked.skills.composure, 'a season of the top rung is worth about 3.5 points').toBeGreaterThan(
       control.skills.composure,
     )
@@ -638,13 +648,50 @@ describe('wave 5 T5 F – the sentence, and the crossing it is allowed to claim'
   })
 
   it('⭐⭐ at the ceiling the year buys nothing and says nothing – the two halves of the same bar', () => {
+    // ⚠⚠ RE-AIMED BY ROUND 42 #35 (16.09, v78 – «past the ceiling»), AND THIS IS THE ONE PLACE IN THE
+    // WAVE-5 SUITE THAT ITEM CHANGES RATHER THAN EXTENDS, so it is re-aimed with its old sentence
+    // still visible above. T5's bar was «zero at HER ROLLED CEILING»; the owner's 15.09 ruling
+    // («может быть даже сделать какую-то возможность превосходить заложенную с сидом выдержку с
+    // помощью психолога») moved the bar to her EFFECTIVE ceiling, which is the rolled one plus the
+    // headroom his years have bought. The bar itself is untouched – zero AT the ceiling, as a zero
+    // and not as a small number – and it is still asserted, one definition on.
     const world = posed('t5-f-ceiling', 260, { hired: true, rung: 2, focus: 'coolhead' })
-    world.skills = { ...world.skills, composure: world.potential.composure }
+    world.skills = { ...world.skills, composure: world.potential.composure + ECONOMY.psychologist.composureBonusCap }
+    world.composureBonus = ECONOMY.psychologist.composureBonusCap
     const before: KidSkills = { ...world.skills }
     walkGrowth(world, 20)
     expect(world.events.filter((e) => e.text === COOLHEAD_RECEIPT), 'no crossing, no claim').toEqual([])
     expect(world.skills.composure, 'and no walk either – training’s own headroom is zero too').toBe(
       before.composure,
     )
+    expect(world.composureBonus, 'and the cap is a cap – twenty more weeks of work buy nothing')
+      .toBe(ECONOMY.psychologist.composureBonusCap)
+  })
+
+  it('⭐⭐⭐ round 42 #35 – at her ROLLED ceiling a working year now DOES carry her past it', () => {
+    // ⚠ THE OTHER HALF OF THE RE-AIM ABOVE, and the case that says item 35 actually landed rather
+    // than merely compiling. Same fixture, same walk, the bonus at zero: under v76 this was the
+    // frozen arm and composure could not move by a thousandth. Under v78 the seat buys 1/52 of a
+    // point of HEADROOM a week and ordinary development climbs into it, so she ends the walk above
+    // the number the seed dealt her – which is the only thing in this game that is ever above it.
+    const world = posed('t5-f-past-ceiling', 260, { hired: true, rung: 2, focus: 'coolhead' })
+    world.skills = { ...world.skills, composure: world.potential.composure }
+    const ceiling = world.potential.composure
+    walkGrowth(world, 20)
+    expect(world.composureBonus, 'twenty weeks of work is twenty fifty-seconds of a point of room')
+      .toBeCloseTo((20 * ECONOMY.psychologist.composureBonusPerSeason) / WEEKS_IN_SEASON, 10)
+    expect(world.skills.composure, 'and she is past the ceiling the seed rolled for her')
+      .toBeGreaterThan(ceiling)
+    // ⚠ AND NOT BY MORE THAN THE ROOM THAT WAS BOUGHT, to within `coolheadGain`'s OWN DOCUMENTED
+    // RESIDUAL – which §B of this file already measures one section up and which this walk meets
+    // twenty times over rather than once. Every week the ceiling rises by 1/52 of a point, his term
+    // fills exactly that gap (`min(0.0673, 0.01923)`), and training's own gain then lands on top of
+    // a headroom that is already closed. MEASURED on this walk rather than bounded by a guess:
+    // 6.7e-5 of a point over twenty weeks, about 3.4e-6 a week. The bound is stated as a thousandth
+    // so the case reddens on a real leak and not on float dust.
+    const overshoot = world.skills.composure - (ceiling + world.composureBonus)
+    expect(overshoot, 'the residual is training\'s, it is positive, and it is dust').toBeLessThan(1e-3)
+    expect(overshoot, '...and it is the documented overshoot rather than a second source of points')
+      .toBeGreaterThan(0)
   })
 })

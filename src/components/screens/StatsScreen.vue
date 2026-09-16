@@ -30,8 +30,8 @@ import { useGameStore } from '../../stores/game'
 import { prefersReducedMotion } from '../../composables/reducedMotion'
 import { formatShortName, rankLabel } from '../../shared/format'
 import { LADDER_LABEL } from '../../shared/protocol'
-import { TIERS, TIER_SHORT, WEEKS_PER_YEAR } from '../../engine/season/calendar'
-import { BEST_N_BY_TRACK, RANKABLE_MIN, WINDOW_BY_TRACK } from '../../engine/season/ranking'
+import { TIERS, TIER_SHORT } from '../../engine/season/calendar'
+import { BEST_N_BY_TRACK, RANKABLE_MIN } from '../../engine/season/ranking'
 import { finishPhrase } from '../../composables/tierState'
 import type { LadderTrack } from '../../engine/season/types'
 import SegmentedRow from '../ui/SegmentedRow.vue'
@@ -152,17 +152,22 @@ const windowInfo = computed(() => {
   const cap = BEST_N_BY_TRACK[shown.value]
   const weakest = Math.min(...list.map((r) => r.points))
   const oldest = list.reduce((a, b) => (b.week < a.week ? b : a))
-  // ⚠ WHEN A RESULT DROPS DEPENDS ON THE TABLE NOW (round 23 #12/#13). The domestic table became
-  // SEASON-TO-DATE, so on that tab nothing ages out mid-season at all – EVERY row leaves together at
-  // the wrap, and the rolling arithmetic below would have promised the player a date that never
-  // comes. Read off `WINDOW_BY_TRACK` rather than re-deciding it here: the screen and the fold have
-  // to agree about which table she is looking at, and that is precisely the disagreement this whole
-  // round kept finding.
-  const dropInWeeks =
-    WINDOW_BY_TRACK[shown.value] === 'seasonToDate'
-      ? WEEKS_PER_YEAR - (snap.week % WEEKS_PER_YEAR)
-      : // rolling: windowedBestSum keeps a result while `week - r.week <= 52`, so it drops AT r.week + 53.
-        oldest.week + 53 - snap.week
+  // ⚠⚠ ROUND 42 #7 (15.09) – THE SEASON-TO-DATE ARM DIED HERE WITH THE RULING, and this block is
+  // one line of arithmetic again. Round 23 #12/#13 had made the domestic table SEASON-TO-DATE, so
+  // this computed carried a second answer: on that tab nothing aged out mid-season and the whole
+  // book left together at the wrap, which the rolling arithmetic below would have mis-dated. The
+  // owner's 15.09 ruling puts every table back on the one window – «тот же механизм — окно в 52
+  // недели ... окно "ползет"» – so there is one drop rule for three tables and his «сколько недель»
+  // line is true on all of them.
+  //
+  // ⚠ AND THE HAND-WRITTEN `+ 53` IS GUARDED RATHER THAN TRUSTED. `world/ladder.ts:bookClosedTo`
+  // records what a hand-spelled rolling filter cost the last time this constant moved – it read
+  // `world.week - r.week <= RESULTS_WINDOW` and was "wrong for the domestic one the day its table
+  // became season-to-date". `tests/season/domestic-season-to-date.test.ts` therefore pins all three
+  // tracks to `'rolling52'` NAMING THIS LINE, so the next ruling about a window reddens a test here
+  // rather than silently promising a date that never comes.
+  // rolling: windowedBestSum keeps a result while `week - r.week <= 52`, so it drops AT r.week + 53.
+  const dropInWeeks = oldest.week + 53 - snap.week
   const finish = oldest.tier ? TIERS[oldest.tier].points.indexOf(oldest.points) : -1
   const what =
     oldest.tier && finish >= 0

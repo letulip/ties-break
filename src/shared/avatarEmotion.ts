@@ -596,3 +596,41 @@ export function avatarEmotionRead({
 export function avatarEmotion(input: AvatarEmotionInput): PortraitEmotion {
   return avatarEmotionRead(input).emotion
 }
+
+// =================================================================================================
+// ⭐⭐ ROUND 42 #29(a) – THE PAINTING GOES BACK TO BEING ABOUT HER TENNIS
+// =================================================================================================
+//
+// The owner, 14.09, after a playtest: «не надо менять картинку на главной по любому поводу … а
+// картинки вернутся к изначальной логике только про победы и поражения». Round 42 #2 is the receipt:
+// at her fourteenth birthday the hero showed a girl holding a winner's cup on a career with ZERO
+// result rows – the guessed gift lifted bond, bond lifted spirit, spirit crossed into a bright band,
+// and `MOOD_FACE.bright` is `happy`, whose painting in this art set is a girl with a trophy. The
+// picture claimed a title that did not exist.
+//
+// ⚠⚠ AND THE FIX IS A SECOND READING, NOT A SMALLER `idleRead`. Deleting the mood arm above would
+// have carried a WORDING change out with it, which is CLAUDE.md invariant 4 and nobody's to make:
+// `DiaryFacts.moodWord` is licensed on `channel === 'mood'` and on nothing else, so a channel that
+// can no longer win would null the word on every week of every career and hand both Mood tiles back
+// to their own fallback maps – for ever, and identically, which is also the «always the same» defect
+// class the owner named in round 42 #6. So the CHANNEL reading is untouched (the word, the Mood
+// tiles' 36px face and the registers all read exactly what they read before this round), and the
+// HERO gets its own answer, derived from that same single decision so the two can never come apart.
+//
+// ⭐ REHAB STAYS, BY HIS OWN WORD («это ок», 14.09). An injury is a fact of the body, not a mood, so
+// «wins and losses» reads as «results and the big facts»: the layoff painting is the one thing on the
+// idle side of the ladder that is still ABOUT her career rather than about how her week felt.
+//
+// ⚠ EVERYTHING ELSE IDLE COLLAPSES TO `norm` – the neutral stage portrait. `tired` and `serious` are
+// the BODY channel, and the body is a mood by any reading he would recognise: a condition of 58
+// putting a serious face on a girl who won her first title last month is the same complaint one rung
+// quieter. His sentence is «только про победы и поражения», and the body is neither.
+
+/** WHICH PAINTING THE HERO WEARS, off the ONE decision `avatarEmotionRead` already made. Pure and
+ *  total over the channel union, so a new channel cannot be added without answering this question
+ *  for it. See the note above for why this is a second reading rather than a narrower `idleRead`. */
+export function heroFaceOf(read: { emotion: PortraitEmotion; channel: EmotionChannel }): PortraitEmotion {
+  if (read.channel === 'result') return read.emotion
+  if (read.channel === 'injury') return read.emotion
+  return 'norm'
+}

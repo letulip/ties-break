@@ -20,8 +20,9 @@
 // ⚠ HAPPY-DOM HAS NO LAYOUT ENGINE – `getBoundingClientRect` is zeros here, exactly as
 // `tests/component/coach-edge-card.test.ts` records at length. So §4 reads the CASCADE through
 // `getComputedStyle` on attached elements, in that file's own idiom and against its own two
-// browser-measured numbers (strip 62 unhired / 78 hired, 12px of air), and the dialog case computes
-// its boxes through `tests/component/fits.ts`, whose model is a deliberate FLOOR.
+// browser-measured numbers (strip 62 unhired / 78 hired, 12px of air – 96 and 112 since round 42 #3
+// widened the porthole to hold the whole head), and the dialog case computes its boxes through
+// `tests/component/fits.ts`, whose model is a deliberate FLOOR.
 //
 // ⚠ THE MOUNTED-DIALOG LAW, AND WHAT IT ACTUALLY BINDS HERE. CLAUDE.md's rule is «any dialog you add
 // or lengthen gets a mounted assertion that its dismiss control's box is inside a 375x667 viewport».
@@ -289,9 +290,14 @@ describe('wave 5 T12 §4 - what the phone can hold', () => {
       expect(current.length, 'the fixture has a coach hired').toBe(1)
       const ordinary = rows.filter((r) => !r.classes().includes('current'))[0]
 
+      // ⚠ RE-AIMED BY ROUND 42 #3 – 78/62 BECOME 112/96. The owner reported every coach portrait cut
+      // on this screen («все картинки обрезаны сильно… надо сделать шире», 14.09); the porthole
+      // widened to hold the whole head and `.cm-body` moved with it. T12's claim is untouched and is
+      // the one measured below: the profile line shares the text column and keeps the 10-15px
+      // corridor, whatever the strip happens to be.
       for (const [row, strip, what] of [
-        [current[0], 78, 'the hired card'],
-        [ordinary, 62, 'an ordinary card'],
+        [current[0], 112, 'the hired card'],
+        [ordinary, 96, 'an ordinary card'],
       ] as const) {
         const art = row.find('.cm-art').element as HTMLElement
         expect(px(getComputedStyle(art).width, '.cm-art width'), `${what} keeps its window`).toBe(strip)

@@ -412,7 +412,9 @@ export const HEAVY_UNIT_FILES = [
   // all three frozen files import rather than copy.
   'tests/coach-travel-edge.test.ts',
   'tests/coach-travel-edge-mid-schemas.test.ts',
+  'tests/coach-travel-edge-recent-schemas.test.ts',
   'tests/coach-travel-edge-older-schemas.test.ts',
+  'tests/coach-travel-edge-deepest-schemas.test.ts',
   // ⚠⚠ AN ORPHANED COMMENT LIVED HERE AND IT WAS MINE (corrected 27.08). It read «THE FROZEN MAIN
   // CAPTURE LIVES HERE NOW» – true when twelve files were promoted on 26.08, false four hours later
   // when the list was cut back to two and `tests/condition.test.ts` went out with the other nine.

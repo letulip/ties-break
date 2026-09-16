@@ -75,6 +75,15 @@
 //   3. ITS FINALE IS THE WRONG GIRL. `useKidEmotion()` reads the same store and hangs
 //      `finaleUrl(stage, emotion)` - the fourteen-year-old finale paintings. She is ten here, and
 //      this set has its own art, picked by the owner (`src/art/prologue.ts`).
+//      ⚠⚠ ROUND 42 #36 CORRECTS THE SECOND HALF OF THIS LINE AND LEAVES THE FIRST STANDING. What is
+//      unavailable here is `useKidEmotion()` - it reads the STORE, and there is no career. The ART
+//      is not the blocker and never was: `finaleUrl` IS `portraitUrl` (art/preload.ts says so in as
+//      many words), so it is BAND-SCOPED, and `portraitStage` answers `jun` below 11 and `young` at
+//      11-16 - i.e. it is total over every age a prologue weekend can be played at, with the files
+//      swept against disk by tests/portrait-bands.test.ts. Hand the band in and the career's own
+//      pre-match card draws the right girl, which is what the pre-match beat below now does. The
+//      RESULT scene keeps the owner's own three faces and this blocker: that one is a fourth
+//      painting he picked himself, not a band of the portrait set.
 //   4. ITS «Continue» ARMS `armTrophyFlight` ONTO THE TAB BAR, which `App.vue` renders and which does
 //      not exist during the prologue; and there is no cabinet entry for it to fly to, because a
 //      prologue weekend puts nothing in `trophiesByTier`.
@@ -94,14 +103,48 @@
 // `stageLabel` (its namer), `MatchViewer` (its viewer) and `LOCAL_OPEN_COPY`'s two borrowed labels.
 // The RESULT beat is deliberately not here: it is `localOpenCard`, on the owner's own three faces,
 // and it is where «а потом уже продолжаем наши прологовые карточки» starts.
+//
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #36 – THE PRE-MATCH BEAT IS THE CAREER'S OWN COMPONENT, NOT A SECOND DRAWING OF IT
+// =================================================================================================
+//
+// THE OWNER saw the symptom first – «в прологе во время турнира… экран "кто против кого" – в обычном
+// флоу там большая фото серьёзной девочки, а в прологе пустота» – and then corrected his own framing
+// in the same hour, and the correction IS the item: «я просто просил сделать флоу турнира таким же
+// до цента, т.е. переиспользовать текущий по максимуму, если он отличается где-то, значит наш DRY
+// дырявый в этом месте. Мне не нужно, чтобы вы что-то новое изобретали, у нас уже есть этот экран.
+// Нужно переиспользовать и сделать консистентно.» (His words are quoted here and in
+// tests/component/prologue-round42.test.ts rather than in the template – `tests/round13-nav.test.ts`
+// bans Cyrillic inside one, comments included.)
+//
+// SO THE EMPTY SCREEN WAS NOT THE BUG; THE SECOND IMPLEMENTATION BEHIND IT WAS. This beat used to be
+// a hand-written vs line and a button. It is `<MatchScene :stage emotion="serious" :label fill>` now
+// – the same call `TournamentFlow` and `PracticeFlow` make, on the component whose own header says it
+// exists to be «the one place the treatment is written down». A portrait hung on this screen by any
+// other means would have been a THIRD drawing of the same card, agreeing today and drifting again
+// next round, which is the thing he asked us not to do.
+//
+// ⚠ WHAT THE PROLOGUE CANNOT SUPPLY IS ABSENT BY DATA THROUGH THAT SAME COMPONENT, never by a second
+// one that does not draw it. The plate carries the two names and nothing else: there is no ranking in
+// this pool and there is not going to be one (pool.ts), so the career's rank line is simply not
+// written – the same shape `.scene-rank` takes on a friendly's sparring partner.
+//
+// ⚠ AND THE ROUND MOVED FROM THE HEADER ONTO THE PAINTING ON THIS BEAT ONLY – the SAME string, from
+// the same `stageLabel`, in the place the career puts it. `TournamentFlow`'s pre-match screen names
+// the TOURNAMENT in the header and the ROUND on the pill; leaving `.plo-stage` up would have printed
+// the round twice inside 60px of each other. No word changed; one already-drawn word changed seat on
+// one beat. The splash and the match keep the header exactly as they had it.
 import { computed, ref } from 'vue'
+import MatchScene from './MatchScene.vue'
 import MatchViewer from './MatchViewer.vue'
 import PrimaryPill from './ui/PrimaryPill.vue'
+import SurfaceMark from './ui/SurfaceMark.vue'
 import { simulateMatch } from '../engine/match/engine'
 import { annotateMatch } from '../engine/match/rally'
 import { JUNIOR_TOUR } from '../engine/season/tournament'
 import { stageLabel } from '../engine/world/labels'
 import { venueArtUrl } from '../art/venues'
+import { portraitStage, type PortraitStage } from '../shared/avatarEmotion'
 import { LOCAL_OPEN_COPY, localDrawLine } from '../prologue/cards'
 import { herMatches, LOCAL_POOL, type LocalOpen } from '../prologue/pool'
 import type { MatchOptions, MatchPlayer } from '../engine/match/types'
@@ -192,6 +235,23 @@ const venueUrl = computed(() =>
 /** How big the draw actually was, read off the bracket rather than off `LOCAL_POOL.size`. */
 const drawLine = computed(() => localDrawLine(2 ** props.open.rounds))
 
+/** ⭐⭐⭐ ROUND 42 #36 – HER BAND, WHICH IS THE ONE THING `MatchScene` NEEDS AND THE PROLOGUE HAS.
+ *
+ *  The career reads this off `useKidEmotion()`, which reads the store; there is no career here, so
+ *  the prologue answers the same question from the girl it was handed. `portraitStage` is the app's
+ *  ONE resolver for it (`jun` below 11, `young` at 11-16 – the boundary was set at 11 in July
+ *  precisely because «the childhood prologue is coming»), so this is not a second idea of what a band
+ *  is, it is the same function with a different source for the age.
+ *
+ *  ⚠ THE FALLBACK IS NAMED AND CANNOT BE TAKEN. `MatchPlayer.age` is optional only because frozen
+ *  pre-branch snapshots were saved without it (match/types.ts says so); a prologue entrant is built
+ *  by `prologueEntrant` here and now, from the age, and always carries it. `LOCAL_POOL.fromAge` is
+ *  the floor of the one band this weekend exists in – ten, the owner's «real tournaments FROM 10» –
+ *  so even the unreachable arm lands on `jun`, which is a painting that exists. Measured, not
+ *  assumed: tests/component/prologue-round42.test.ts hangs the URL off the real entrant at every age
+ *  the pool can play, and tests/portrait-bands.test.ts sweeps every band x emotion against disk. */
+const herStage = computed<PortraitStage>(() => portraitStage(props.kid.age ?? LOCAL_POOL.fromAge))
+
 /** The girl on the other side of the net, this round. */
 const opponent = computed(() => {
   const two = sides.value
@@ -226,9 +286,16 @@ function next(): void {
          to a screen rather than to a dialog. The way out has to be reachable on a 375x667 phone
          without scrolling past a 420px-tall court, so it sits above it and stays there. -->
     <header class="plo-head">
+      <!-- ⭐⭐⭐ ROUND 42 #36 – THE ROUND YIELDS THE HEADER TO THE PAINTING'S PILL ON THE PRE-MATCH
+           BEAT, AND ONLY THERE. The career's pre-match screen names the tournament in its header and
+           the round on `MatchScene`'s own pill; this header names the tournament in the kicker, so
+           keeping the round here as well would have printed one word twice within 60px on a phone.
+           It is the SAME string from the SAME `stageLabel` - it changes seat, not wording (house
+           invariant 4). The splash and the match beat are untouched: on the match the career puts the
+           round in its header too (`headlineBadge`), which is what this line is doing there. -->
       <div class="plo-titles">
         <p class="plo-kicker">{{ copy.kicker }}</p>
-        <p class="plo-stage">{{ stage }}</p>
+        <p v-if="beat !== 'round'" class="plo-stage">{{ stage }}</p>
       </div>
       <button class="link plo-skip" type="button" @click="emit('done')">{{ copy.skipRest }}</button>
     </header>
@@ -250,8 +317,15 @@ function next(): void {
       </div>
       <!-- The two facts the prologue's weekend actually has, in the flow's own words: the surface
            and the size of the draw. No points, no cheque and no crowd - see the blockers in the
-           script header for why those are absent rather than dashed. -->
-      <p class="plo-facts">{{ open.event.surface }} &middot; {{ drawLine }}</p>
+           script header for why those are absent rather than dashed.
+           ⭐ ROUND 42 #36 – AND THE SURFACE IS THE APP'S ONE MARK NOW, not a bare word. The owner's
+           own ruling on this object (30.07, quoted in ui/SurfaceMark.vue): «Surface type similar icon
+           across every screen - it means this icon is not a component». The career's brief draws its
+           surface through this component twice - the header's sub line at `size="sm"` and the facts
+           tile - and this line was the last place in the weekend flow still printing the name with no
+           ring beside it. THE WORD IS UNCHANGED: `SurfaceMark` prints `{{ surface }}` itself, and
+           `.plo-facts`'s `capitalize` still reaches it. -->
+      <p class="plo-facts"><SurfaceMark :surface="open.event.surface" size="sm" /> &middot; {{ drawLine }}</p>
       <div class="plo-vs">
         <span class="plo-vs-side">{{ kid.name }}</span>
         <span class="plo-vs-mid">vs</span>
@@ -265,15 +339,49 @@ function next(): void {
          tests/component/round35-prologue.test.ts, because Cyrillic may not appear in a template even
          in a comment (house law, and tests/round13-nav.test.ts is what enforces it). The round she
          is about to play, who is on the other side of the net, and one control - the main flow's
-         pre-match card is the same three things. -->
-    <section v-else-if="beat === 'round'" class="plo-round">
-      <div class="plo-vs">
-        <span class="plo-vs-side">{{ kid.name }}</span>
-        <span class="plo-vs-mid">vs</span>
-        <span class="plo-vs-side plo-vs-opp">{{ opponent?.name }}</span>
+         pre-match card is the same three things.
+
+         ⭐⭐⭐ ROUND 42 #36 - AND IT IS THAT CARD NOW, NOT A SECOND DRAWING OF IT. `MatchScene` is F
+         "Match Day", the portrait treatment, and its own header says it exists to be «the one place
+         the treatment is written down»; this screen was the one caller in the app that walked a
+         player up to a match without calling it. Same props as the career's pre-match beat, in the
+         same order: her band, `serious` (the owner's own word for a girl who is «not delighted and
+         not finished», which is exactly a match she has not played yet), the round on the pill, and
+         `fill` so the painting takes the column instead of sitting in its own square.
+
+         ⚠ THE PLATE CARRIES TWO NAMES AND NOTHING ELSE, and that is ABSENT BY DATA rather than a
+         second component: `.scene-rank` is simply not written on either side, because there is no
+         ranking in this pool and there is not going to be one (pool.ts's own header, and the same
+         reason `.plo-vs` on the splash prints none). The career writes a rank there; a friendly
+         writes «sparring partner»; this weekend has nothing true to put on that line.
+
+         ⚠ ONE CONTROL AND NOT THE CAREER'S TWO. Its row is `.tf-actions` - the shared one - and the
+         affirmative is this prologue's own `PrimaryPill variant="cta"`, which is the way on from the
+         first card of the childhood to the last. The career's second button, "Skip", resolves the
+         match engine-side and shows its box score; here the match must be SIMULATED to exist at all,
+         and the per-match escape the viewer already ships («Skip to the result») is what answers it.
+         A second control would need a word the owner has never written. -->
+    <MatchScene
+      v-else-if="beat === 'round'"
+      class="plo-round"
+      :stage="herStage"
+      emotion="serious"
+      :label="stage"
+      fill
+    >
+      <div class="scene-grid">
+        <div class="scene-side">
+          <div class="scene-name">{{ kid.name }}</div>
+        </div>
+        <div class="scene-vs">vs</div>
+        <div class="scene-side mirrored">
+          <div class="scene-name">{{ opponent?.name }}</div>
+        </div>
       </div>
-      <PrimaryPill variant="cta" class="plo-go" @click="watch()">{{ copy.watchMatch }}</PrimaryPill>
-    </section>
+      <div class="tf-actions">
+        <PrimaryPill variant="cta" class="plo-go" @click="watch()">{{ copy.watchMatch }}</PrimaryPill>
+      </div>
+    </MatchScene>
 
     <!-- The shipped viewer, with one new thing asked of it since round 39 #15a: the parent's own
          line for the moment she cannot continue (`hurt-note`), because a prologue weekend stores no
@@ -402,12 +510,56 @@ function next(): void {
 /* ══ ROUND 35 #1 – THE TOURNAMENT'S OWN SCREEN AND THE TRANSITION BEFORE EACH MATCH ══
    ⚠ EVERY COLOUR IS A DECLARED TOKEN WITH NO FALLBACK, exactly as the block above says: round-17 #3
    shipped `var(--ink, #1c1c1e)` and put near-white text on white at a measured 1.09:1. */
-.plo-splash,
-.plo-round {
+.plo-splash {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ⭐⭐⭐ ROUND 42 #36 – THE PRE-MATCH BEAT IS `MatchScene` ITSELF, so `.plo-round` is on the card
+   rather than on a wrapper around one, and what this rule owns is only WHERE THE CARD SITS – the
+   same division `.tf-scene` keeps in TournamentFlow and `.pf-scene` in PracticeFlow.
+
+   ⚠⚠ AND IT DECLARES NO HEIGHT ARITHMETIC, WHICH A MUTATION RUN IS WHAT TAUGHT. The first draft of
+   this rule carried `flex: 1 1 0; min-height: 0` – and removing those two lines reddened NOTHING,
+   because `.scene--fill` in MatchScene already declares exactly them on this same element. They were
+   a second copy of the component's own geometry, written in the file whose whole item is that there
+   should not be one. The `fill` PROP is what asks for it, the component is what owns it, and the
+   mounted arm is re-aimed at the prop: `.plo` is `position: fixed; inset: 0; display: flex; column`,
+   so the painting absorbs exactly the height the header leaves and the screen FITS BY CONSTRUCTION
+   rather than by counting sentences – the round-20 #3 property this takeover has always rested on.
+
+   FULL-BLEED ON `.plo`'s OWN 12px, which is `.plo-hero`'s idiom two rules down and not a new one –
+   the prologue has no backing plates and no frames (round 35 #2, the owner: «мне кажется в прологе
+   можно без подложек с рамкой делать флоу»), so `Card`'s hairline and corners come off exactly as
+   `.tf-scene` takes them off in the career. Doubled class beats `Card`'s own scoped `.tb-card` at
+   (0,3,0) vs (0,2,0) – the same tie `.tf-scene.tf-scene` documents.
+
+   ⚠ AND THE DOUBLED CLASS IS WHY THE 768 COLUMN HAS TO BE RESTATED. `.plo > *` caps every beat at
+   the cards' 420px column and centres it with `margin-inline: auto` at (0,1,0); the doubled class
+   here is (0,2,0) and its `margin: 0 -12px` therefore BEATS that centring on a tablet whatever the
+   source order. The cap still lands - nothing here touches `max-width` - so the query below only has
+   to give the centring back, and the painting stays on the prologue's own column past 768 exactly as
+   `.plo-splash` does (round 36 phase 4, measured there). */
+.plo-round.plo-round {
+  width: calc(100% + 24px);
+  margin: 0 -12px;
+  border: none;
+  border-radius: 0;
+}
+
+/* ⚠ `margin: 0 auto` AND NOT `margin-inline: auto`, which is the form `.plo > *` uses one rule up.
+   Two reasons and both are about not being clever: the physical shorthand plainly overrides the
+   `margin: 0 -12px` above it at the same specificity, with no logical-vs-physical cascade question
+   to reason about – and happy-dom does not expand `margin-inline` into its longhands, so a mounted
+   test measuring «is it centred» would have had to ask the shorthand instead of the property (round
+   36 phase 4's `isCentred` carries that finding). Same declaration `.tf-top` and `.tf-body` use. */
+@media (min-width: 768px) {
+  .plo-round.plo-round {
+    width: 100%;
+    margin: 0 auto;
+  }
 }
 
 /* ⭐⭐⭐ SQUARE, AND FULL WIDTH – the owner's rule for the whole prologue («я просил арты делать в

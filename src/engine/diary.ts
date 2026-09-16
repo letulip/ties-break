@@ -26,6 +26,7 @@
 
 import {
   avatarEmotionRead,
+  heroFaceOf,
   portraitStage,
   type PortraitStage,
 } from '../shared/avatarEmotion'
@@ -151,6 +152,13 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     ageYears: view.ageYears,
     lifeStage,
     emotion,
+    // ⭐⭐ ROUND 42 #29(a) – THE PICTURE, WHICH IS A NARROWER QUESTION THAN THE FACE. One reading, two
+    // answers: `emotion` above still carries whichever channel spoke (and with it the Mood tiles'
+    // word and their 36px face, both untouched by this round), while the HERO takes a fresh result,
+    // the layoff painting, or the neutral portrait – and nothing else. `heroFaceOf` is handed this
+    // exact `channel`, so the two can never come apart. The argument, and round 42 #2's receipt, are
+    // on the function in shared/avatarEmotion.ts.
+    heroEmotion: heroFaceOf({ emotion, channel }),
     resultFresh,
     won: resultFresh && lastResult.won,
     lostFinal: resultFresh && lastResult.lostFinal,
@@ -178,6 +186,11 @@ export function assembleDiaryFacts(view: DiaryWorldView): DiaryFacts {
     // weeks a drained body outranks a dimmed mood. Both come off the SAME `spiritBand` instead,
     // which is the stronger form of the same guarantee.
     moodRegister: moodRegisterOf(spiritBand),
+    // ⭐⭐ ROUND 42 #29(b) – THE RUNG ITSELF, for the avatar's glow ring (one colour per band, none at
+    // the neutral rung). The SAME `spiritBand` the word and the register are read from, carried
+    // rather than re-derived – a second `spiritBandOf` call here would be a second reading of one
+    // week. A band, never the number: the fog law is untouched.
+    moodBand: spiritBand,
     bondBand: bondBandOf(view.bond),
     // ⭐⭐ v74 (the private life, wave 3 – T6). Carried, not re-derived: the diary owns no reading of
     // `loveEpisodes` any more than it owns a calendar (`schoolOver`'s own rule one field family up),

@@ -100,8 +100,17 @@
 //       -> **1 RED**, «the hired line carries the year that was picked»: the card holds him for all
 //          52 weeks and says nothing about what the money is buying, which is the owner's Q9 ruling
 //          undone.
+//   D.  ⭐ 16.09, FOR `focusOption`'s RE-AIM (round 42 #18): the `.staff-focus-blurb` span dropped
+//       from the template – the picker stops explaining itself.
+//       -> **1 RED**, «The public life is open to this career…» reaching «Cool head» first, reported
+//          as **element(s) not found**: the five options are still on the card and still enabled, and
+//          the locator will not take one without its sentence.
+//   E.  ⭐ 16.09, THE OTHER HALF: `SupportStaffTab`'s `open:` pinned to `false`.
+//       -> **1 RED**, same assertion, reported as **Expected: enabled / Received: disabled** – so the
+//          re-aim still asserts that pressing the fifth year is a real choice, which is ruling O's
+//          hole and the reason this station exists.
 //
-import type { Page } from '@playwright/test'
+import type { Locator, Page } from '@playwright/test'
 import { test, expect } from './careerAt'
 import { answerOpeningKnock, dismissTourBriefing } from './journey'
 import { formatCents } from '../src/shared/money'
@@ -136,6 +145,35 @@ const FOCUS_GROUP = 'Psychologist – the year\'s work'
 /** ⚠ HAND-TYPED, five since wave 6's T5 – `psychologist.spec.ts`'s own note argues the duplication:
  *  the OUTSIDE view must not derive its expectation from the roster it is checking. */
 const FOCUS_LABELS = ['Cool head', 'Back on her feet', 'Learning to listen', 'Working on herself', 'The public life']
+
+/**
+ * ONE YEAR OF WORK ON THE CARD, BY THE NAME IT WEARS.
+ *
+ * ⚠⚠ RE-AIMED 16.09 BY ROUND 42 #18 – AN OPTION IS A NAME OVER A SENTENCE NOW, so `{ name: label,
+ * exact: true }` stopped matching anything and both lines below it died with «element(s) not found».
+ * The owner asked for it: «в пунктах психолога на выбор немного расписать эффект от работы», so each
+ * year carries `PSY_FOCUS_LINE`'s own sentence under its name and the accessible name folds the two
+ * together – «The public life The year goes on the weeks under the cameras – …». Zero new wording
+ * was involved: the sentences already existed and reached only the hired line's splice, which is
+ * `RETAINER_PUBLIC_LIFE_LINE` above and is untouched.
+ *
+ * ⭐ THE CLAIM IS NOT WEAKENED, AND THE TWO ANCHORS ARE WHY. `^` pins the label to the START of the
+ * name, so this addresses exactly one option and can never drift onto a neighbour the way a bare
+ * substring could; ` .+` pins that the sentence is actually THERE, so a picker that lost its blurb
+ * reddens here rather than sliding past a looser locator.
+ *
+ * ⚠ AND THE FIVE SENTENCES ARE NOT RE-TYPED HERE, which is the one place this file's «no string is
+ * imported» rule points the other way: the component suite owns them off the imported
+ * `PSY_FOCUS_LINE` (tests/component/psychologist-card.test.ts), so a вычитка pass moves that pin
+ * WITH the screen instead of against a hand-typed copy in two e2e files. What this file owns is that
+ * the fifth year is ON the card, addressed by its own name, and that pressing it is a real choice –
+ * which is ruling O's hole and the whole reason this station exists.
+ */
+function focusOption(focus: Locator, label: string): Locator {
+  // The labels are plain words today; escaping keeps that a fact about them rather than a bet.
+  const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return focus.getByRole('radio', { name: new RegExp(`^${escaped} .+`) })
+}
 
 /** His block on the Support-staff tab, by the `data-staff` hook the card was given for exactly this. */
 const SEAT = '[data-staff="psychologist"]'
@@ -272,12 +310,12 @@ test.describe('the spotlight reaches the player', () => {
       .toHaveCount(FOCUS_LABELS.length)
     for (const label of FOCUS_LABELS) {
       await expect(
-        focus.getByRole('radio', { name: label, exact: true }),
+        focusOption(focus, label),
         `«${label}» is open to this career, so pressing it is a real choice`,
       ).toBeEnabled()
     }
 
-    const publicLife = focus.getByRole('radio', { name: PUBLIC_LIFE_LABEL, exact: true })
+    const publicLife = focusOption(focus, PUBLIC_LIFE_LABEL)
     await expect(publicLife, 'the fifth year of work is on the card').toBeVisible()
     await expect(publicLife, 'and no year is running before one is chosen').toHaveAttribute('aria-checked', 'false')
     await publicLife.click()

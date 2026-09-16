@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createScore, awardPoint, contextOf, formatScore } from '../../src/engine/match/scoring'
+import { createScore, awardPoint, contextOf, decidingClose, DECIDER_CLOSE_FROM, formatScore } from '../../src/engine/match/scoring'
 import type { MatchScore, Side } from '../../src/engine/match/types'
 
 // Win one whole game for `side` starting from a fresh (0-0) game: 4 straight points.
@@ -341,5 +341,62 @@ describe('scoring — formatScore exact strings', () => {
       winner: null,
     }
     expect(formatScore(score)).toBe('6-4 6-6 TB 3-2')
+  })
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 42 #34 – THE DECIDING SET'S CLOSING GAMES, the fifth member of the pressure set
+// =================================================================================================
+//
+// The one pressure fact the other four cannot say: a 5-4 in a third set at 15-0 is not a break
+// point, not a set point and not a tiebreak, and it is the most nervous game in tennis. `scoring.ts`
+// owns it because it is a fact about the SCORE; `match/point.ts` decides what to do with it.
+//
+// ⚠ THE TESTS BUILD SCORES BY HAND rather than by walking points, because the interesting cells are
+// exactly the ones a walk reaches rarely (a 5-5 third set) and the claim is about the predicate.
+describe('scoring — round 42 #34: decidingClose', () => {
+  const at = (sets: { a: number; b: number }[], over: Partial<MatchScore> = {}): MatchScore => ({
+    sets,
+    game: { a: 0, b: 0 },
+    inTiebreak: false,
+    server: 0,
+    winner: null,
+    ...over,
+  })
+
+  it('is false in the first two sets, however late they get', () => {
+    expect(decidingClose(at([{ a: 5, b: 4 }]))).toBe(false)
+    expect(decidingClose(at([{ a: 6, b: 6 }], { inTiebreak: true }))).toBe(false)
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 5, b: 5 }]))).toBe(false)
+  })
+
+  it('is false early in a deciding set and true from the closing games on', () => {
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: 4, b: 4 }]))).toBe(false)
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: 5, b: 4 }]))).toBe(true)
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: 4, b: 5 }]))).toBe(true)
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: 6, b: 6 }], { inTiebreak: true }))).toBe(true)
+  })
+
+  it('⚠ the threshold is `DECIDER_CLOSE_FROM`, not a literal 5 – the constant is the rule', () => {
+    // A test that hard-coded 5 would go green on a build that had quietly moved the band. The point
+    // of the export is that the predicate and its size are the same decision.
+    const below = DECIDER_CLOSE_FROM - 1
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: below, b: below }]))).toBe(false)
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: DECIDER_CLOSE_FROM, b: below }]))).toBe(true)
+  })
+
+  it('is false once the match is decided – a finished match has no next point', () => {
+    expect(decidingClose(at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: 6, b: 4 }], { winner: 0 }))).toBe(false)
+  })
+
+  it('⭐ `contextOf` carries it, and carries it on a point none of the other four facts mark', () => {
+    // 5-4 in the third, 15-0 on serve: not a break point, not a game point, not a set point.
+    const score = at([{ a: 6, b: 4 }, { a: 3, b: 6 }, { a: 5, b: 4 }], { game: { a: 1, b: 0 } })
+    const ctx = contextOf(score, 200)
+    expect(ctx.breakPoint).toBe(false)
+    expect(ctx.setPointFor).toBe(null)
+    expect(ctx.matchPointFor).toBe(null)
+    expect(ctx.tiebreak).toBe(false)
+    expect(ctx.decidingClose, 'the fifth fact is the only one that marks this point').toBe(true)
   })
 })

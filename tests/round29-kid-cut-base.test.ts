@@ -271,7 +271,11 @@ describe('round 29 #10 – the fixture is the week he was looking at', () => {
     // here asks the engine for its expectation, which is correct for a retune and therefore BLIND
     // to one; these are the literals that see a rate move. ⚠ RE-AIMED BY P3: there are two rates to
     // watch now, and `kidShare.bps` is neither of them – it is the week's effective blend.
-    expect(ECONOMY.kidShare.capBps, 'the ramp still caps at half – his save says 5000').toBe(5000)
+    // ⚠ RE-AIMED BY ROUND 42 #25 (15.09): the cap moved 5000 -> 6000 at the owner's own ask. His
+    // w896 save was written under the old cap and the FIXTURE is a walked career rather than that
+    // save, so what this literal guards is unchanged – it is the tripwire that makes a rate move
+    // visible to a file whose every other assertion asks the engine for its expectation.
+    expect(ECONOMY.kidShare.capBps, 'the ramp caps where round 42 #25 put it').toBe(6000)
     expect(managerCommissionBps(), 'and the manager keeps the shipped 15%').toBe(1500)
     expect(kidPrizeShareBps(age)).toBe(ECONOMY.kidShare.capBps)
     // ⭐⭐ AND BOTH RULES ARE REALLY LIVE ON THIS ONE WEEK, which is the P3 fact and the arm that
@@ -351,13 +355,19 @@ describe('round 29 #10 – §1 the SPLIT, against the base the engine actually u
     const deal = world.offers.find((o) => o.kind === 'kit' && o.state === 'signed')
     const bonusShare = (deal?.terms as KitOfferTerms | undefined)?.bonusShare ?? 0
     expect(bonusShare, 'the fixture really carries a result bonus – his save is a tour deal').toBeGreaterThan(0)
+    // ⚠⚠ RE-AIMED BY ROUND 42 #25, AND THE OLD FORMULA WAS AN ACCIDENT OF THE 50% CAP. It read
+    // `1 + bonusShare x (1 - comm) / ramp`, whose leading `1` is really `ramp / (1 - ramp)` – the
+    // ratio of her cut to the family's NET prize row – and that term equals exactly 1 only while the
+    // cap is one half. At the 60% cap it is 1.5, and the same two rules now read 1.925. The general
+    // form is written out below, so the next cap move is arithmetic rather than a re-measurement.
     const ramp = kidPrizeShareBps(26) / 10_000
-    const expected = 1 + (bonusShare * (1 - managerCommissionBps() / 10_000)) / ramp
+    const expected = (ramp + bonusShare * (1 - managerCommissionBps() / 10_000)) / (1 - ramp)
     const ratio = row.kidShare!.cents / (row.byCategory.prize ?? 1)
     expect(ratio).toBeCloseTo(expected, 2)
     // ...and what that formula evaluates to on the shipped numbers, said out loud so the report and
-    // the code carry the same figure.
-    expect(expected).toBeCloseTo(1.34, 2)
+    // the code carry the same figure. ⚠ It was 1.34 under the round-23 cap, and his own 1.20 under
+    // the pre-P3 rules – both are the SAME formula read at their own constants.
+    expect(expected).toBeCloseTo(1.93, 2)
   })
 })
 

@@ -68,7 +68,7 @@
 // happens to be running, and both gates now answer it the same way.
 
 import { spawnSync } from 'node:child_process'
-import { classify, recoveredNote } from './lib/stall.mjs'
+import { classify, recoveredNote, stalledTwiceNote } from './lib/stall.mjs'
 // ⚠ IMPORTED, NOT REGEX-PARSED OUT OF vite.config.ts (round-22 review). This script used to read
 // the config's SOURCE TEXT and pull `HEAVY_SIM_FILES` out of it with two regexes, stripping the
 // `**/` off each entry to get a path back. It worked, and it was one rename away from silently
@@ -108,7 +108,7 @@ if (unknown.length) {
 const files = requested.length ? requested : HEAVY_SIM_FILES
 const started = Date.now()
 const failed = []
-const stalled = []
+const acceptedStall = []
 const recovered = []
 
 for (const [i, file] of files.entries()) {
@@ -127,8 +127,17 @@ for (const [i, file] of files.entries()) {
       continue
     }
     if (r.stalled) {
-      stalled.push({ file, output: r.output })
-      console.log(`STALLED TWICE (${r.secs}s) – runner, not tests`)
+      // ⭐ ROUND-42 #33, THE OWNER'S RULING A (15.09): a re-stall is ACCEPTED as green, not failed.
+      // `classify` returns `stalled` ONLY when vitest's own summary reported zero failed (a run that
+      // died before reporting reads as `failed`, never `stalled`), so a file that stalls twice is
+      // proven green both times – it simply ran past birpc's unraisable 60s reporter ceiling on this
+      // runner on both passes. The four heavy benches (econ-bench/reach/reach-pro, fatigue-planner)
+      // run 63-89s locally and 2.5-3.6m on the 2-core runner, which is the whole of why the weekly
+      // cron was chronically red. The retry stays – its job is to get a clean log when the runner has
+      // a good minute – but it is no longer the gate: only a retry that comes back FAILED (a real
+      // assertion) ends the run. Printed loud (the module's never-swallow-a-stall law).
+      acceptedStall.push({ file, firstSecs: first.secs, secs: r.secs })
+      console.log(`stalled twice (${r.secs}s, every test green both times) – accepted, runner not tests`)
       continue
     }
   }
@@ -147,17 +156,21 @@ const total = ((Date.now() - started) / 1000).toFixed(0)
 // stall would rebuild the same lie one level down: the gate would be quietly retrying a machine
 // that is falling over, and nobody would know until it stopped recovering.
 for (const r of recovered) console.error(recoveredNote(r.file, r.firstSecs))
+// The accepted re-stalls are printed whether or not they cost the run its exit code (they do not):
+// swallowing one would rebuild the same lie one level down – a gate quietly forgiving a machine on
+// the 60s wall. Loud, per the module's standing law.
+for (const r of acceptedStall) console.error(stalledTwiceNote(r.file, r.firstSecs, r.secs))
 
-if (failed.length === 0 && stalled.length === 0) {
-  const tail = recovered.length ? ` (${recovered.length} recovered after a stall)` : ''
+if (failed.length === 0) {
+  const notes = []
+  if (recovered.length) notes.push(`${recovered.length} recovered after a stall`)
+  if (acceptedStall.length) notes.push(`${acceptedStall.length} accepted after a second stall – runner, not tests`)
+  const tail = notes.length ? ` (${notes.join('; ')})` : ''
   console.log(`  sim: ${files.length} file${files.length === 1 ? '' : 's'} green in ${total}s${tail}`)
 } else {
-  for (const f of [...failed, ...stalled]) {
+  for (const f of failed) {
     console.error(`\n===== ${f.file} =====\n${f.output}`)
   }
-  const parts = []
-  if (failed.length) parts.push(`${failed.length} FAILED`)
-  if (stalled.length) parts.push(`${stalled.length} stalled twice (runner, not tests)`)
-  console.error(`  sim: ${parts.join(', ')} of ${files.length} files (${total}s)`)
+  console.error(`  sim: ${failed.length} FAILED of ${files.length} files (${total}s)`)
   process.exitCode = 1
 }

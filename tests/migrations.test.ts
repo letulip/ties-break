@@ -593,7 +593,17 @@ describe('save migrations', () => {
     // this chain that back-fills fields on the ROWS of a list rather than keys on the world, which
     // this line is not about either: a loop over `loveEpisodes` inside one `if (v === 76)` adds
     // exactly one rung to the walk, the same as a single `??=` does.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 77 – past the colliding 64, through 65').toBe(77)
+    // ⚠ RE-AIMED AT v78 (16.09, round 42 #35 + round 41 #22 + round 42 #45's sparring keys), NOT
+    // WEAKENED, for the THIRTEENTH time and with the claim unchanged once more. What moved is the
+    // LADDER'S HEAD and nothing else: 78 was taken by that bundle's own full move (bump, append-only
+    // v77 -> v78 step, golden fixture v78, e2e fixtures regenerated), the walk below is the same
+    // walk, and the claim this line makes – that the chain runs PAST the colliding 64 and through 65
+    // – now has one more rung to cross before it arrives. ⚠ v78 is the FIRST step in this chain
+    // whose new world key ships WITH a live reader (`composureBonus`, read by `composureCeilingOf`);
+    // every version since v72 shipped a seat nothing could touch. This line is not about that
+    // either: three `??=` on world keys plus one per asset row, inside one `if (v === 77)`, add
+    // exactly one rung to the walk, the same as a single `??=` does.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 78 – past the colliding 64, through 65').toBe(78)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

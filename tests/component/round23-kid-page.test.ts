@@ -32,7 +32,7 @@ import {
   decideKnock,
   pendingKnock,
   pendingBirthday,
-  birthdayOffer,
+  birthdayOfferFor,
   chooseGift,
 } from '../../src/engine/world'
 import { buildKidLife, STAGE_LABEL } from '../../src/engine/kidLife'
@@ -51,7 +51,7 @@ function careerAt(week: number, seed = 'round23-page'): Snapshot {
     world.fundsCents = Math.max(world.fundsCents, 500_000_00)
     if (pendingKnock(world)) decideKnock(world, 'rest')
     const age = pendingBirthday(world)
-    if (age !== null) chooseGift(world, birthdayOffer(world.seed, age).options[0].id)
+    if (age !== null) chooseGift(world, birthdayOfferFor(world, age).options[0].id)
     tickWeek(world, rng)
     if (world.pendingTournament) {
       skipTournament(world)
@@ -89,13 +89,18 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
     // world it builds («a balance she could only have from her own share», its own comment), and a
     // fourteen-year-old holding half a million of her own prize money is exactly the career his
     // ruling creates – so the page has to say so.
-    expect(w.find('.kid-note-account').exists(), 'a junior with a balance is told about it').toBe(true)
-    // ⚠ AND THE OTHER SIDE OF THE GATE, which is what keeps the note off a page that has nothing to
+    // ⚠⚠ RE-AIMED AGAIN BY ROUND 42 #10 (14.09): SAME CLAIM, NEW SURFACE. The owner asked for her
+    // account to be said the way the family budget says money («использовать то же, что и в family
+    // budget»), so the `.hint` paragraph is a `.kid-account` CARD of `StatRow` rows beside the
+    // counting results. What this case asserts is unchanged – a junior with a balance is told about
+    // it – and only the selector moved.
+    expect(w.find('.kid-account').exists(), 'a junior with a balance is told about it').toBe(true)
+    // ⚠ AND THE OTHER SIDE OF THE GATE, which is what keeps the card off a page that has nothing to
     // explain: the same age with an EMPTY account says nothing at all. Without this the arm above
     // would pass with the balance clause deleted.
     const empty = careerAt(30)
-    const w2 = mountKid({ ...empty, life: { ...empty.life, ownAccount: '' } })
-    expect(w2.find('.kid-note-account').exists(), 'an empty account is not a subject').toBe(false)
+    const w2 = mountKid({ ...empty, life: { ...empty.life, ownAccount: '', account: null } })
+    expect(w2.find('.kid-account').exists(), 'an empty account is not a subject').toBe(false)
     w.unmount()
   })
 
@@ -113,17 +118,25 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
 
   it('⭐⭐ #18 – HER OWN ACCOUNT IS ON HER OWN PAGE, with the balance and the rule', () => {
     const w = mountKid(careerAt(300))
-    const note = w.find('.kid-note-account')
-    expect(note.exists(), 'from eighteen the page says the transfers are happening').toBe(true)
-    const text = note.text()
+    // ⚠⚠ RE-AIMED BY ROUND 42 #10 (14.09) – the surface is a card of `StatRow` rows now, not a
+    // paragraph, and the three facts it carries are the three this case has always asked for: the
+    // balance, HER rate, and the manager's. The wording of two of them moved with the shape (a row
+    // is «label … figure», so «10% of every prize cheque» became «Her cut of a prize cheque · 10%»)
+    // – which is the item's own licence, not an agent's tidy-up – so the assertions read the FACTS
+    // rather than the old sentence's syntax. The load-bearing half of round 29 P3 survives
+    // literally: the sponsor money is hers less the manager's, said on its own row.
+    const card = w.find('.kid-account')
+    expect(card.exists(), 'from eighteen the page says the transfers are happening').toBe(true)
+    const text = card.text()
     expect(text).toContain('$512,835')
-    // ⚠ RE-AIMED BY ROUND 29 P3 – «prize» is load-bearing since the manager's commission gave
-    // sponsor money its own rule. The claim is unchanged: the rate on this page is a real rate the
-    // engine composed, never a literal in the template.
-    expect(text).toMatch(/\d+% of every prize cheque/)
-    expect(text, 'and P3\'s half is here too – the sponsor money is hers').toMatch(/less the manager's [\d.]+%/)
+    expect(text, 'her own rate, composed by the engine and never a literal in a template').toMatch(
+      /Her cut of a prize cheque\s*[\d.]+%/,
+    )
+    expect(text, "and P3's half is here too – the sponsor money is hers").toMatch(
+      /Manager's cut of a sponsor cheque\s*[\d.]+%/,
+    )
     expect(text, 'player copy: short dash only').not.toContain('—')
-    expect(text).toMatch(/^[\x20-\x7e–]+$/)
+    expect(text.replace(/\s+/g, ' ')).toMatch(/^[\x20-\x7e–]+$/)
     w.unmount()
   })
 
@@ -134,6 +147,12 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       week: base.week,
       ageYears: 20,
       seasonYear: seasonYear(Math.floor(base.week / 52)),
+      // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now. This file is about
+      // the School/College/account surfaces, so the career's own girl is the honest value to pass.
+      temperament: base.diary.facts.temperament,
+      // ⚠ ROUND 42 #37 – and her composure, the Personality line's first word. Nothing in this file
+      // asserts about that tile, so this is the default girl the view has to name.
+      composure: 50,
       playStyle: base.profile.playStyle,
       birthMonth: base.profile.birthMonth,
       injured: false,
@@ -142,6 +161,9 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       weeksSinceTitle: null,
       college: { studying: true, yearsDone: 1, totalYears: ENDINGS.collegeYears, tier: 'national' },
       kidFundsCents: 512_835_00,
+      // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+      // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+      kidSharePausedYears: 0,
       ownsBrand: false,
     })
     const w = mountKid({ ...base, life })
@@ -156,17 +178,30 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
     w.unmount()
   })
 
-  it('⚠ AND THE THREE NOTES ALL FIT A 375x667 PHONE, stacked, with the radar still under them', () => {
+  it('⚠ AND THE NOTES UNDER THE GRID ALL FIT A 375x667 PHONE, with the radar still under them', () => {
     // Round-20 #3: the dialog that grew one honest sentence at a time until its dismiss control left
-    // the screen. These are not a blocking overlay, but they are three paragraphs added to one
-    // scroll in one wave, so the same measurement is owed. The claim is the LAYOUT one that a
-    // character count cannot make: none of them is wider than the viewport.
+    // the screen. These are not a blocking overlay, but they are paragraphs added to one scroll in
+    // one wave, so the same measurement is owed. The claim is the LAYOUT one that a character count
+    // cannot make: none of them is wider than the viewport.
+    //
+    // ⚠⚠ RE-AIMED BY ROUND 42 #10: the account left this stack. It is a `.kid-account` CARD beside
+    // the counting results now, so the notes under the grid are the school and college lines, and
+    // the floor drops from two to one – a career like this one, out of school and in college, has
+    // exactly the college line (`schoolWhy` is silent the moment she is out). The account's own
+    // 375/768/900/1280 measurement lives in tests/component/round42-kid-tile-and-account.test.ts,
+    // where the card is, and it measures the row's box rather than a paragraph's wrap.
     const base = careerAt(300, 'round23-page-wide')
     const life = buildKidLife({
       seed: base.seed,
       week: base.week,
       ageYears: 20,
       seasonYear: seasonYear(Math.floor(base.week / 52)),
+      // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now. This file is about
+      // the School/College/account surfaces, so the career's own girl is the honest value to pass.
+      temperament: base.diary.facts.temperament,
+      // ⚠ ROUND 42 #37 – and her composure, the Personality line's first word. Nothing in this file
+      // asserts about that tile, so this is the default girl the view has to name.
+      composure: 50,
       playStyle: base.profile.playStyle,
       birthMonth: 12,
       injured: false,
@@ -175,11 +210,17 @@ describe('⭐⭐ ROUND-23 #6/#18 – her page, mounted', () => {
       weeksSinceTitle: null,
       college: { studying: true, yearsDone: 3, totalYears: ENDINGS.collegeYears, tier: 'private' },
       kidFundsCents: 8_909_415_00,
+      // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+      // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+      kidSharePausedYears: 0,
       ownsBrand: false,
     })
     const w = mountKid({ ...base, life })
     const notes = w.findAll('.kid-grid-note')
-    expect(notes.length, 'the college line and the account line are both up').toBeGreaterThanOrEqual(2)
+    expect(notes.length, 'the college line is up').toBeGreaterThanOrEqual(1)
+    expect(w.find('.kid-note-college').exists(), 'and it is the college one').toBe(true)
+    // ...and her account is on the page too, in its own card rather than in this stack.
+    expect(w.find('.kid-account').exists(), 'the account card is where round 42 #10 put it').toBe(true)
     for (const n of notes) {
       const el = n.element as HTMLElement
       // happy-dom reports 0-width boxes, so the honest layout check available here is that the

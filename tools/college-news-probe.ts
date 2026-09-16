@@ -16,9 +16,9 @@
 // CLAUDE.md asks for. `--budget` re-prints the cap arithmetic (`EVENTS_CAP`, `pruneEvents`).
 //
 // ⚠ MEASUREMENT ONLY. Nothing under `src/` is touched and no save is written.
+import { answerBirthdayNeutral } from './_birthday'
 import { openCareer, stepCareerWeek, POLICIES, PRESETS } from './econ-bench'
 import {
-  chooseGift,
   closeTournament,
   collegeLeagueRevealOpen,
   pendingBirthday,
@@ -288,7 +288,7 @@ function walkCollege(at: { world: WorldState; rng: Rng; label: string }): Freeze
       }
       console.log('')
     }
-    if (pendingBirthday(world) !== null) chooseGift(world, 'day')
+    if (pendingBirthday(world) !== null) answerBirthdayNeutral(world)
     answerLeagueReveal(world)
   }
   collect()

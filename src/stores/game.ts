@@ -319,7 +319,19 @@ export const useGameStore = defineStore('game', {
     },
     // ⚠ ROUND 29 #6: `1 | 4` widened to a plain count – the span the pill offers is now the length
     // of the actual quiet slot (`spanWeeksFor`), not the engine's historical step.
+    // ⭐⭐⭐ ROUND 42 #17(a) – THE IN-FLIGHT LATCH, at the narrowest honest point. The owner:
+    // «иногда получается двойная перемотка недели вместо одинарной». Measured mechanism: nothing on
+    // the press path ever asked `busy` – `playWeek` does not, `run()` has no re-entry check – and
+    // the worker's `baseRevision` refuses only CONCURRENT duplicates, so the second press of a
+    // double-tap landed as a fresh, valid command and spent a second week. This is the one place
+    // every advance press converges (Home's bar, the calendar sweep's hand-back, the span pill,
+    // SeasonScreen's «Play it and watch»), so the latch lives here and nowhere re-derives it: while
+    // ANY command is in flight a new advance is refused outright – no request, no error toast, the
+    // press simply does not exist. ⚠ Deliberately NOT inside `run()`: `run` serves every command,
+    // and refusing a save or an answer because a tick is in flight would be a different (and wrong)
+    // rule. Pinned in tests/round42-one-press.test.ts, mutation-proven.
     async advance(weeks: number) {
+      if (this.busy) return
       await this.run(async () => {
         const res = this.takeOk(await request({ type: 'advance', weeks, baseRevision: this.revision }))
         this.applySnapshot(res)

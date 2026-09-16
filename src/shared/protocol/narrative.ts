@@ -10,7 +10,7 @@ import type { SkillKey } from '../../engine/development'
 import type { TierId } from '../../engine/season/types'
 // ⭐ v72: WHO SHE IS, type-only – the four ids live beside the physics that reads them
 // (engine/spirit.ts) and are erased here at compile time, exactly like `TierId` above.
-import type { Temperament } from '../../engine/spirit'
+import type { SpiritBand, Temperament } from '../../engine/spirit'
 import type { AvatarEmotion, PortraitEmotion, PortraitStage } from '../avatarEmotion'
 import type { KnockChoice } from './health'
 
@@ -123,13 +123,28 @@ export interface LifeBeatPrompt {
   /** his possible responses, in the order to show them. Never her choices – the decision stays
    *  hers, and these are what the parent may say about it. */
   options: LifeBeatOption[]
-  /** ⭐ v73.1 – WHAT SHE SAYS WHEN HE ONLY LISTENS (the owner's 10.09 editorial ruling: «Say
+  /** ⭐ v73.1 – WHAT SHE SAYS AFTER HE HAS CHOSEN (the owner's 10.09 editorial ruling: «Say
    *  nothing, and let her talk» was fictionally dishonest while the dialog closed and she did not
-   *  talk). Non-null only while she speaks in her own voice: at `strained`/`cold` the flat pool has
-   *  nothing more to say, and THAT silence staying silent is the pool's whole point. `said` is her
-   *  continuation, `done` is the label of the one control that then records `listen` – both
-   *  engine-assembled, because this dialog owns no sentence. */
-  listenFollowUp: { optionId: string; said: string; done: string } | null
+   *  talk). One entry per answer that earns a second line of hers; an answer with no entry is an
+   *  ordinary radio that records on the Proceed.
+   *
+   *  ⭐⭐⭐ ROUND 42 #15/#24 – A **LIST** SINCE THE SMALL-TALK EXCHANGE, and the plural is the whole
+   *  of the fix. It was `listenFollowUp` – ONE entry, the fork's `listen` – because the fork is the
+   *  only beat where saying nothing buys more of her. The owner's #15 («выбрал пункт, чтобы она
+   *  сказала больше, а попап закрылся») is the same complaint pointed at tier 1, where EVERY stance
+   *  earns a reply: invite earns a continuation, respond and give-space earn a reaction. A second
+   *  field for those would have been two spellings of one fact, so the field grew instead.
+   *
+   *  ⚠ EMPTY IS «NO ANSWER ON THIS CARD EARNS A SECOND LINE», which is `'met'`, `'ended'`,
+   *  `'fork-counsel'`, `'fork-psy'` and a fork at `strained`/`cold` – where the flat pool has nothing
+   *  more to say and THAT silence staying silent is the pool's whole point. */
+  followUps: readonly LifeBeatFollowUp[]
+  /** ⭐⭐ ROUND 42 #8 – THE CONFIRM CONTROL'S LABEL (owner: «надо Proceed добавить», quoted in
+   *  docs/rounds/round-42.md). The answers became radios that only SELECT – his double-tap picked an
+   *  option before he could read – and this is the word on the one control that then dispatches.
+   *  ENGINE-assembled like every other word on the card, because the dialog owns no sentence; the
+   *  word itself is the prologue's own shipped confirm vocabulary (`WALK_COPY.proceed`, round 41 #9). */
+  confirm: string
 }
 
 /** One thing the parent may say back. `id` is what `answerLifeBeat` records, and the engine
@@ -137,6 +152,28 @@ export interface LifeBeatPrompt {
 export interface LifeBeatOption {
   id: string
   label: string
+}
+
+/** ⭐⭐⭐ ROUND 42 #15 – WHAT SHE SAYS BACK TO ONE ANSWER, and the shape that turns a beat into an
+ *  exchange. The parent selects an answer; if that answer has an entry here, her reply replaces the
+ *  answer column and the ONE control left (`done`) is what records the option and closes the beat.
+ *  Nothing is recorded by the selection itself – round 42 #8's law, kept.
+ *
+ *  ⚠⚠ `said` IS A LIST OF PARAGRAPHS, AND THE PLURAL IS §8d.2 OF THE SPEC MADE STRUCTURAL. A `story`
+ *  is two beats: the incident is a SHARED continuation every route hears, and the branch is the
+ *  aftermath. Carrying the shared paragraph inside EVERY route's own `said` is what makes «every
+ *  route delivers a complete little story» a property of the payload rather than a convention – a
+ *  branch that left the player waiting for B could not be assembled. Every other answer carries one
+ *  paragraph, which is the shipped shape with a length.
+ *
+ *  ⚠ EVERY STRING HERE IS THE ENGINE'S (`world/lifeBeat.ts`), because the dialog owns no sentence. */
+export interface LifeBeatFollowUp {
+  /** the answer this is a reply to – `answerLifeBeat` is called with exactly this id */
+  optionId: string
+  /** her reply, in the order to render it. One paragraph, or two for a `story`. */
+  said: readonly string[]
+  /** the label of the one control that then records `optionId` */
+  done: string
 }
 
 /** ⭐⭐⭐ v74 T15 – THE SOFT BEAT'S INVITATION (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment,
@@ -512,6 +549,21 @@ export interface DiaryFacts {
    *  `PortraitEmotion`, not `AvatarEmotion`: the decision can land on the painting-only `rehab`
    *  (R14-1 – the layoff is a state and wears its own picture), and nothing renders a crop of it. */
   emotion: PortraitEmotion
+  /** ⭐⭐ ROUND 42 #29(a) – WHICH PAINTING THE HERO WEARS, which is a NARROWER question than `emotion`
+   *  above and now has its own answer. The owner, 14.09: «не надо менять картинку на главной по
+   *  любому поводу … картинки вернутся к изначальной логике только про победы и поражения», with
+   *  `rehab` kept on the hero by his own «это ок» – an injury is a fact of the body, not a mood.
+   *
+   *  So: a fresh RESULT's face, or the layoff painting, or the neutral stage portrait. Never the
+   *  mood face, never the fatigue face. Round 42 #2 is what it fixes – a girl holding a winner's cup
+   *  on her fourteenth birthday, on a career with zero result rows.
+   *
+   *  ⚠ IT IS DERIVED FROM `emotion`'s OWN DECISION (`heroFaceOf`, shared/avatarEmotion.ts), never a
+   *  second walk: the picture and the word are still ONE reading of one week, which is the property
+   *  the whole diary system is built to keep. And `emotion` above is untouched, deliberately – it
+   *  licenses `moodWord` and the two Mood tiles' 36px face, and narrowing IT would have changed what
+   *  the tiles say, which is CLAUDE.md invariant 4. */
+  heroEmotion: PortraitEmotion
   /** a competitive result from THIS week is on her face (the emotion above is a result emotion) */
   resultFresh: boolean
   /** fresh result: she won her last match this week */
@@ -569,6 +621,20 @@ export interface DiaryFacts {
   /** ...and the same reading collapsed to three, for the line pools. Present on EVERY week, unlike
    *  `moodWord` – see `MoodRegister`. */
   moodRegister: MoodRegister
+  /** ⭐⭐ ROUND 42 #29(b) – THE RUNG ITSELF, because the ring has five colours and the register has
+   *  three. The owner, 14.09: «Делаем разноцветную светящуюся обводку вокруг аватарки, для каждого
+   *  настроения свой цвет» – one colour per band, and no ring at the neutral rung.
+   *
+   *  ⚠ IT IS A BAND AND NEVER THE NUMBER, so the fog law is untouched (`engine/spirit.ts` §2b: «a
+   *  band goes out, the number never does»). `moodRegister` one field up is this same reading
+   *  collapsed for the line pools, and neither is derived from the other in the UI – both come off
+   *  the one `spiritBandOf` call in `assembleDiaryFacts`.
+   *
+   *  ⚠ R2-18's LAW IS SATISFIED BY THE RING ITSELF: a fact ships only with the licence that consumes
+   *  it, in the same round. `composables/kidIdentity.ts` is that licence and the only reader, and it
+   *  prints no word – the ring is colour, and the WORDS stay on the two Mood tiles that already
+   *  have them (`moodWord` above). Nothing on any screen gained a sentence for this. */
+  moodBand: SpiritBand
   /** WHAT THE PARENT HAS BUILT WITH HER, as a band – the channel her voice arrives through, or does
    *  not. `close`/`steady` license her own four voices; `strained` collapses them into the shared
    *  flat pool; `cold` is silence, and the parent's own line stands alone under the painting. */
@@ -813,17 +879,31 @@ export interface DiarySnapshot {
 // exactly like `radar` and `coachMarket` – it persists nothing and bumps no schema.
 
 /** One tile: two short lines, as the design's cells are drawn. Both are `white-space: nowrap` on
- *  screen C, so both are written to a hard 17-character budget (see TILE_LINE_MAX). */
+ *  screen C, so both are written to a hard 17-character budget (see TILE_LINE_MAX).
+ *
+ *  ⚠ ROUND 42 #37 – THREE TILES WEAR THIS SHAPE NOW, not four: the Personality cell left it for one
+ *  wrapping line of two adjectives (see `KidLife.personality`), so the examples below are School's
+ *  and Friends' own. */
 export interface KidLifeTile {
-  /** the first line – the fact ("10th grade", "Patient", "Close to Sofia") */
+  /** the first line – the fact ("10th grade", "Close to Sofia") */
   lead: string
-  /** the second line – what it means or how it is going ("Oldest in class", "And stubborn") */
+  /** the second line – what it means or how it is going ("Oldest in class", "Still close") */
   note: string
 }
 
 export interface KidLife {
-  /** her play style, read as a person and never as tennis. Fixed for the career. */
-  personality: KidLifeTile
+  /** ⭐⭐⭐ ROUND 42 #37 – WHO SHE IS, in one line of two adjectives: «Patient and stubborn»,
+   *  «Unshakeable and single-minded», «Hot-headed and easy-going». Sixteen readings, and neither
+   *  half is about tennis – the paper scrap beside her photo already carries the play style.
+   *
+   *  ⚠ A STRING RATHER THAN A `KidLifeTile`, and the shape IS the item. The owner's re-cut of 15.09
+   *  is one line («эти два слова»), and the longest reading is 29 characters against the tile pair's
+   *  16-character `nowrap` budget – so the cell wraps one line instead of printing two.
+   *
+   *  ⚠⚠ THE FIRST WORD IS HER COMPOSURE BAND, THE SECOND HER TEMPERAMENT, AND NEITHER IS HER MOOD:
+   *  «я не хочу, чтобы это менялось с настроением и дублировало его, у нас уже есть поле с
+   *  настроением». The whole ruling is above `COMPOSURE_BANDS` in engine/kidLife.ts. */
+  personality: string
   /** ⭐⭐ ROUND-23 #6 – HER LIFE STAGE, and it keeps moving after the last bell.
    *
    *  At school: her grade, on a 1-September school year, plus her place in the class by age. Moves
@@ -870,9 +950,39 @@ export interface KidLife {
    *  `kidPrizeShareBps` – the same function the till divides by – so it cannot promise a percentage
    *  the engine is not transferring. */
   ownAccount: string
+  /** ⭐⭐ ROUND 42 #10 – THE SAME FACTS AS A FAMILY-BUDGET CARD, or null when there is no account to
+   *  show (exactly when `ownAccount` is '' – one gate, read twice, so the two can never disagree).
+   *
+   *  The owner, 14.09: «информация о ее аккаунте… использовать то же, что и в family budget, и
+   *  поставить либо перед, либо после counting results». So her page stops carrying a paragraph of
+   *  hint text and renders the Money screen's own vocabulary – `StatRow` rows inside a `Card` –
+   *  with the ramp left as one sentence under them.
+   *
+   *  ⚠ THE ROWS ARE THE ENGINE'S, FIGURES AND LABELS BOTH, for `ownAccountNote`'s own reason: the
+   *  percentages come back out of `kidPrizeShareBps` and `managerCommissionBps`, the two functions
+   *  the till itself divides by, so this card cannot promise a share the engine is not transferring.
+   *  Screen C derives no fact of its own – it picks the tone and nothing else. */
+  account: KidAccountView | null
   /** who she is closest to this school year, and how that is going this week. Deterministic
    *  (purpose-scoped sub-streams, never Math.random), and it moves with both clocks. */
   friends: KidLifeTile
+}
+
+/** One row of her account card: a name on the left, a figure on the right – `StatRow`'s own shape. */
+export interface KidAccountRow {
+  /** stable id for the `v-for` key and for a test to reach one row by name, never rendered */
+  key: 'balance' | 'prize' | 'manager'
+  label: string
+  value: string
+}
+
+/** ⭐⭐ ROUND 42 #10 – her account, as the page renders it. */
+export interface KidAccountView {
+  /** balance · her cut of a prize cheque · the manager's cut of a sponsor cheque */
+  rows: readonly KidAccountRow[]
+  /** the ramp (and the brand clause when the family holds one), or '' when there is nothing left to
+   *  add – a sentence under the rows, never a fourth row: it is prose and it wraps. */
+  note: string
 }
 
 // --- the skills radar (docs/specs/skills-radar.md, decisions.md #11) ----------

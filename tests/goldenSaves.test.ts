@@ -127,6 +127,19 @@ describe('golden saves corpus', () => {
         `${file}: rngMain.n implausible for week ${migrated.week}`,
       ).toBeLessThanOrEqual(maxMainDraws(migrated.week, migrated.cohort.length))
 
+      // ⭐⭐⭐ v78 (round 41 #22): EVERY ASSET ROW CARRIES ITS PURCHASE LIST, on every fixture however
+      // old. This is the corpus half of that version's per-row back-fill, and it is here rather than
+      // only in the crafted witness because – unlike v77's `loveEpisodes`, whose own note in
+      // `migrations.ts` says the corpus cannot see it – FOURTEEN fixtures DO carry asset rows: v65
+      // has two, v66 one, v67 through v78 six each, 75 rows in all. Without this loop the corpus would
+      // have executed the step and asserted nothing about it, which is the shape of a receipt for
+      // work nobody checked. ⚠ `Array.isArray` and not a truthiness test: `[]` is the back-fill and
+      // it is falsy-adjacent enough that a weaker check would pass on `undefined`.
+      expect(Array.isArray(migrated.assets), `${file}: the shelf is a list`).toBe(true)
+      for (const owned of migrated.assets) {
+        expect(Array.isArray(owned.entries), `${file}: ${owned.id} carries no purchase list`).toBe(true)
+      }
+
       // v14 season history (R10-9): an array, season-ascending, and every row is the tiny numeric
       // record – no strings, so a long career can't bloat the save.
       // v16: the ordering key is the SEASON INDEX, and it must be strictly increasing – the whole

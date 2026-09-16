@@ -22,6 +22,9 @@ import type { PlayerProfile, Snapshot } from '../../src/shared/protocol'
 // copies of a helper whose whole job is «do not move the number» is exactly the drift that lets one
 // of them start moving it.
 export { drainLifeBeats } from '../../tools/_lifeBeats'
+// ⚠ SAME ARRANGEMENT, ONE ROUND LATER (round 42 #1): the neutral birthday answer's body lives in
+// `tools/_birthday.ts` because the college probes walk the same warm-up birthdays the suites do.
+export { answerBirthdayNeutral } from '../../tools/_birthday'
 
 /**
  * A career on `seed`, ticked `weeks` weeks, as a `Snapshot`.

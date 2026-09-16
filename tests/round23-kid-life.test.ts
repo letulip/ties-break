@@ -107,6 +107,11 @@ function view(week: number, over: Partial<KidLifeWorldView> = {}): KidLifeWorldV
     week,
     ageYears: Math.floor(kidAgeExact(week, birthMonth, 15)),
     seasonYear: seasonYear(Math.floor(week / WEEKS_PER_YEAR)),
+    // ⚠ ROUND 42 #6 – the Personality tile is keyed on her temperament now; nothing in this file
+    // asserts about that tile, so this is just the default girl the view has to name.
+    temperament: 'quiet',
+    // ⚠ ROUND 42 #37 – the same tile's first word, off her composure. Nothing here asserts about it.
+    composure: 50,
     playStyle: 'all-court',
     birthMonth,
     injured: false,
@@ -115,6 +120,9 @@ function view(week: number, over: Partial<KidLifeWorldView> = {}): KidLifeWorldV
     weeksSinceTitle: null,
     college: null,
     kidFundsCents: 0,
+    // ⚠ ROUND 42 #25 – a hand-built view has no college era behind it, so no step of her
+    // ramp is paused. The real one comes from `collegePausedShareYears` at snapshot time.
+    kidSharePausedYears: 0,
     ownsBrand: false,
     ...over,
   }

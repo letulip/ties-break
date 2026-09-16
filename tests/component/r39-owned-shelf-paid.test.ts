@@ -89,8 +89,8 @@ function rich(seed: string, weeks = 20): WorldState {
 function fixture(): Snapshot {
   const w = rich('r39-4-shelf-paid')
   w.assets = [
-    { id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00 },
-    { id: 'plane-small', boughtWeek: 0, paidCents: 7_000_000_00, valueCents: 7_000_000_00 },
+    { id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00, entries: [] },
+    { id: 'plane-small', boughtWeek: 0, paidCents: 7_000_000_00, valueCents: 7_000_000_00, entries: [] },
   ]
   buyAsset(w, 'boat-launch')
   buyAsset(w, 'plane')

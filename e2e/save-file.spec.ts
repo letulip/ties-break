@@ -115,8 +115,10 @@ test('a career round-trips through a real file: out of the app, and back in', as
   // the import was started from, before anything has been navigated. Discovered the honest way: the
   // first draft of this spec was blocked by this very dialog, twice. It is answered because the tab
   // bar is behind it. (Same fixture dependency the canary in week-advance.spec.ts pins.)
-  await expect(page.getByRole('button', { name: /^Rest it/ })).toBeVisible()
-  await page.getByRole('button', { name: /^Rest it/ }).click()
+  // ⚠ ROUND 42 #8: the branches are radios that only select; the Proceed records.
+  await expect(page.getByRole('radio', { name: /^Rest it/ })).toBeVisible()
+  await page.getByRole('radio', { name: /^Rest it/ }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Proceed', exact: true }).click()
 
   await goHome(page)
   await expect(page.getByText(onScreenWeek(junior.facts.week))).toBeVisible()
