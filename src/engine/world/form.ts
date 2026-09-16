@@ -4,8 +4,9 @@
 // `engine/form.ts` is the MODEL (a leaf: `ECONOMY` and nothing else). This file is the one place
 // that turns a `WorldState` into the `FormWeek` that model consumes, and the ONE WRITER of
 // `world.form`. The split is `engine/chemistry.ts` / `phaseGrowth.ts`'s own shape one wave earlier,
-// and it is what lets `world/player.ts` and `engine/radar.ts` read the same arithmetic without
-// either of them pointing at the integration layer.
+// and it is what lets `world/player.ts` read the model's arithmetic without pointing at the
+// integration layer – and what would let `engine/radar.ts` read the SAME arithmetic when O3's reader
+// lands (see `engine/form.ts`'s header for why it has not).
 //
 // ⚠ DEPENDENCY DIRECTION. `WorldState` is a TYPE-ONLY import (erased at compile time). Everything
 // needed at runtime comes from the model, from `match/engine.ts` (a leaf – the scoring FSM, the

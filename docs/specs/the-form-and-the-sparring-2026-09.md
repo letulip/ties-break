@@ -398,6 +398,18 @@ for: `form` is the only key v80 appended and it is the last of `createWorld`'s l
 
 ### 10g. What was NOT built, and why
 
+* **O3 – THE RADAR'S MODULATED COMPOSURE, and it is the one ruling this wave did not take.** The
+  one-line implementation (`shownSkill` adding the composure delta on that axis) was built, measured
+  and REVERTED: it breaks four shipped honesty contracts of the radar's own geometry –
+  `|shownValue − skills| ≤ band`, `|startValue − born| ≤ band`, `startValue ≤ shownValue`, and
+  `ceilingLo ≥ shownValue`. Satisfying all four needs the composure axis's reported band widened by
+  the delta, BOTH contours shifted and the ceiling haze raised with them – which changes the shape of
+  a picture he has already approved and weakens four guarantees his own fog design rests on. **That
+  is a redesign rather than a ruling, and it is his call.** ⭐ The cheap version, if he wants the slump
+  visible on the radar at all, is the BAND alone: «the coach is less sure of her nerve when she is
+  out of form» is a true sentence, a one-number change, and it costs no contract.
+  `formComposureDelta` is exported and has exactly one caller, so the reader is one line whenever he
+  rules.
 * **§5's «Out of her head»** – the psychologist's slump focus is F3's by the spec's own wave table.
 * **O6, rivals** – no form on the cohort, ruled, and the population cost is F3's measurement.
 * **§9a's travelling psychologist** – refused here as it is there: it cannot be priced until form's

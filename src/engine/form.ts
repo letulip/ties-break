@@ -37,11 +37,24 @@
 //      than a season.
 //
 // ⚠ THE ONE READER IS COMPOSURE (§2, and `world/player.ts` is where it lands): `composureEff =
-// composure + form x K` at `MatchPlayer` build time. The radar, the box score, the live commentary
-// and the coach's read all INHERIT it with no new surfaces – her serve wobbling in a slump is the
-// same composure the commentary already knows how to talk about. `potential` and `skills` NEVER
-// move: form is STATE, so the monotone development contract, every fixture and every bench anchor
-// survive untouched.
+// composure + form x K` at `MatchPlayer` build time. The match itself, the box score and the live
+// commentary all INHERIT it with no new surfaces – every one of them reads the `MatchPlayer` frozen
+// into `WorldMatch.a/.b`, so her serve wobbling in a slump is the same composure the commentary
+// already knows how to talk about. `potential` and `skills` NEVER move: form is STATE, so the
+// monotone development contract, every fixture and every bench anchor survive untouched.
+//
+// ⚠⚠ THE RADAR IS **NOT** ONE OF THEM YET, AND O3 IS OPEN RATHER THAN DONE. §2 lists the radar in
+// that sentence and O3 ruled it MODULATED, and the one-line implementation (`shownSkill` adding this
+// delta on the composure axis) collides with FOUR shipped honesty contracts of the radar's own
+// geometry, measured on `tests/radar.test.ts` and `tests/radar-read.test.ts`:
+//   · `|shownValue − skills[key]| ≤ band`  – «the truth is always inside the bands»
+//   · `|startValue − born[key]| ≤ band`    – the same promise about where she began
+//   · `startValue ≤ shownValue`             – the start contour may never be drawn outside the now
+//   · `ceilingLo ≥ shownValue`              – the haze may never fall inside the contour
+// Satisfying all four needs the composure axis's reported `band` widened by |delta|, BOTH contours
+// shifted, and `ceilingLo` raised with them – which changes the shape of a picture the owner has
+// already approved, and weakens four guarantees his own fog design rests on. That is a redesign
+// rather than a ruling, so it is REPORTED and not taken: see the wave's hand-back.
 //
 // ⚠⚠ AND IT IS WORTH SOMETHING ONLY BECAUSE OF ROUND 42 #34, WHICH IS WHY THIS WAVE RUNS AFTER IT.
 // Before #34 composure was worth 0.4-0.6 pp of match win rate per twenty points, so a +-6-point
@@ -168,10 +181,11 @@ export function accrueForm(before: number, week: FormWeek): number {
  *  without a world, and every stored replay frozen before this shipped) is an EXACT 0, not «a girl
  *  at neutral»: 0 is the identity element for a sum, so those callers compose byte-identically.
  *
- *  ⚠ NOT A SECOND SPELLING ANYWHERE. `world/player.ts` and `radar.ts` both call THIS, so the
- *  composure the match is played at and the composure the coach draws on the radar can never be two
- *  different opinions of the same girl (O3: «modulated – the radar is the coach's read of TODAY's
- *  her»). */
+ *  ⚠ ONE CALLER TODAY, `world/player.ts`, and the function exists as a named export rather than as
+ *  three characters inline SO THAT there can never be a second SPELLING when O3's radar reader
+ *  lands: the composure the match is played at and the composure the coach draws would then be one
+ *  arithmetic rather than two opinions of the same girl. See this file's header for why that reader
+ *  is not here yet. */
 export function formComposureDelta(form: number | undefined): number {
   return form === undefined ? 0 : form * ECONOMY.form.reader
 }

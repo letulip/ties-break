@@ -396,6 +396,12 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   byte-identical on all three**. `PRE_V80` is the first rung in that ladder whose values are NOT the
   previous version's live constants, for a reason its own block states at length.
 
+  ⚠⚠ **O3 IS THE ONE RULING THIS WAVE DID NOT TAKE, and it is reported rather than forced.** The
+  radar's modulated composure was built, measured and reverted: it breaks four shipped honesty
+  contracts of the radar's own geometry, and satisfying all four means widening the drawn band,
+  shifting both contours and raising the ceiling haze – a redesign of a picture he has approved,
+  rather than a ruling. The spec's §10g carries the four contracts and the cheap alternative.
+
   ⚠⚠ **EVERY NEW PLAYER-FACING STRING IS A DRAFT and they are collected in the wave's hand-back for
   one pass.** Nine of them: two coach sentences, one receipt, and six on the seat's card and its
   ledger rows.
