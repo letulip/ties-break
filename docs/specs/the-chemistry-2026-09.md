@@ -90,44 +90,70 @@ why the effect below can be modest and still deliver what he asked for.
 
 ---
 
-## 1. The four corners – what «вариативность» has to mean in a save file
+## 1. The pairing matrix – what «вариативность» has to mean in a save file
 
-His examples are not colour; they are acceptance criteria. Each of these must be a REACHABLE career,
-and §10's census must be able to hand over a seed that produces it.
+⚠⚠ **THE FIRST DRAFT READ HIS SENTENCE AS AN «EITHER» AND IT WAS AN «AND».** He wrote that in some
+tiers there may be no coach who suits her «и по химии и по таланту», and the draft turned that into
+«no coach who suits her at all». His correction, 16.09:
 
-| corner | his words | what has to be true in the world for it |
+> «это было **одновременное условие, а не раздельное**. Т.е. может быть либо химия, либо талант, либо
+> химия+талант. А может быть вообще талант+**ПРОТИВОПОЛОЖНАЯ химия**, т.е. у них анти-метч вообще.»
+
+⭐⭐ **THAT LAST CLAUSE ADDS A MECHANIC THE DRAFT DID NOT HAVE: CHEMISTRY GOES NEGATIVE.** Not «slow to
+accrue» – actively wrong. The coach who is perfect on paper and cannot work with her is a real
+pairing, and it is the one that makes the question mark on an unworked-with card a RISK rather than
+merely an unknown.
+
+**So the space is two independent axes and it is a matrix, not a list.** TALENT is what he can do for
+her – his tier and how his game reads against hers (`styleFitBetween`, the shipped `fitFactor`).
+CHEMISTRY is how the two of them work, drawn per pair.
+
+| | **anti-chemistry** | ordinary (no click) | **the click** |
+| --- | --- | --- | --- |
+| **wrong talent** | the worst seat in the game – and cheap, which is the trap | an ordinary bad hire | ⭐ they get on and he still cannot teach her game |
+| **right talent** | ⭐⭐ **THE ANTI-MATCH** – exactly right on paper, and it does not work | the competent career (the majority) | ⭐⭐ **the jackpot**, and it can start at the bottom rung |
+
+**His corners, restated against that matrix – each one must be a REACHABLE career, and §11's census
+must hand over a seed that produces it:**
+
+| corner | his words | what has to be true |
 | --- | --- | --- |
-| **A · the entry-level coach is the answer** | «самый начальный тренер с хорошей химией обгонит зарплатами всех» | a budget slot draws a hot cell, the pair draws the click, and **he climbs tiers with her** (§4) until he is paid like the elite he became |
-| **B · nobody below the top fits** | «в других категориях вообще может не быть подходящего и по химии и по таланту специалиста» | the cheap rungs' manners all sit in cold cells for HER temperament, and their styles read `off` against HER game |
-| **C · only the top fits** | «не сложилось ни с кем, кроме элитного или высокого тира, и химия и специализация» | the same, inverted – and the family has to find the money, which is a real dilemma rather than a shopping list |
-| **D · the ordinary career** | (unstated, and it is the majority) | nobody clicks; she is developed by competence rather than by a relationship, and that has to be a fine career too |
+| **A · the entry-level coach is the answer** | «самый начальный тренер с хорошей химией обгонит зарплатами всех» | a budget slot lands bottom-right, and **he climbs tiers with her** (§4) until he is paid like the elite he became |
+| **B · no tier offers BOTH** | «в других категориях может не быть подходящего и по химии и по таланту» | every affordable coach sits in ONE of the two good cells and never both – the player has to choose which half to buy, which is a real dilemma rather than a shopping list |
+| **C · only the top offers both** | «не сложилось ни с кем, кроме элитного или высокого тира, и химия и специализация» | the same, inverted – and the family has to find the money |
+| **D · ⭐ THE ANTI-MATCH** | «талант+ПРОТИВОПОЛОЖНАЯ химия» | the best coach she can afford is the WRONG one for her, and the bill says nothing about it – only the seasons do |
+| **E · the ordinary career** | (unstated, and it is the majority) | nobody clicks, nobody repels; she is developed by competence |
 
 ⚠⚠ **AND TODAY NONE OF THEM CAN HAPPEN, WHICH IS THE ACTUAL DEFECT THIS WAVE FIXES.** Measured in the
 source rather than assumed: `buildCoachRoster` (`src/engine/coach.ts:531`) draws from
 `rngFromSeed(`${seed}:coaches`)` – **but only the NAMES.** `tier` and `style` are read straight off the
 constant `ECONOMY.coach.roster`, so **which tier plays which style is byte-identical in every career
-this game has ever run.** The market's SHAPE is a lookup table. Corner B is literally impossible: the
-same budget coach with the same style is on the shelf for every girl ever born.
+this game has ever run.** The market's SHAPE is a lookup table, and corners B, C and D are literally
+impossible: the same budget coach with the same style is on the shelf for every girl ever born.
 
-⭐ **So variability has THREE sources in this wave, not one**, and the first one is the cheapest fix in
-the document:
+⭐ **So variability has THREE sources in this wave**, and the first is the cheapest fix in the document:
 
 1. **THE ROSTER** – each slot's `manner` (and see C1a, its `style`) is drawn per career on the
    sub-stream that already exists, `${seed}:coaches`. One new draw on a stream that is already
-   purpose-scoped and already re-derived at the call site. This is what makes B and C possible at all.
-2. **THE PAIR** – the rate draw of §3, around the (temperament × manner) centre.
+   purpose-scoped and re-derived at the call site. This is what makes B, C and D possible at all.
+2. **THE PAIR** – the signed rate draw of §3, around the (temperament × manner) centre.
 3. **THE COACH HIMSELF** – §4, he grows with her results. This is what makes A finish.
 
 ---
 
 ## 2. The number
 
-**`chemistry`: 0–100, per PAIR (her and one coach), persisted, accrued weekly while that coach is
-hired.** Not a snapshot, not a roll at hire: a number with a history, which is the whole point.
+**`chemistry`: −100 … +100, per PAIR (her and one coach), persisted, accrued weekly while that coach
+is hired, starting at 0.** Not a snapshot, not a roll at hire: a number with a history, which is the
+whole point.
+
+⭐ **THE RANGE IS SIGNED BECAUSE OF HIS «ПРОТИВОПОЛОЖНАЯ химия» (§1).** Zero is the neutral working
+relationship – two professionals, nothing more – and it is where every pair starts. Positive is the
+click; **negative is the anti-match, and it makes her worse off than no relationship at all** (§5).
 
 **Accrual.** One weekly step, no draws:
 
-    chemistry += ratePerYear / 52        (while hired, clamped to [0, 100])
+    chemistry += ratePerYear / 52        (while hired, clamped to [-100, +100])
 
 `ratePerYear` is fixed for the pair the first time they work together and never moves again – see §2.
 So the rate IS the relationship and the level is only its integral, which is exactly his
@@ -152,9 +178,16 @@ every career – a strategy guide entry, not a story. So:
 
 | band | rate/yr | what it means | reads as |
 | --- | ---: | --- | --- |
+| ⭐ **the anti-match** | **−10 to −20%** | 5–10 seasons to the floor – it does not need to arrive to hurt | he is not the man for her, and the seasons say so before the bill does |
 | ordinary | **3–7%** | 14–33 seasons to 100 – she never gets there | «she is polite with him and nothing more» |
 | good | **10–15%** | 7–10 seasons – a long career reaches it | «they are finding each other» |
 | ⭐ the click | **30–35%** | **3 seasons to 100 – his own number** | the Borg/Bergelin pair |
+
+⚠ **THE ANTI-MATCH IS DELIBERATELY SLOWER THAN THE CLICK, and the asymmetry is the design.** A click
+has to be able to finish inside a career or it is not a story; an anti-match only has to be felt, and
+a relationship that collapsed in one season would read as an event rather than as a relationship. C10
+asks whether it should be rarer than the click as well as slower; the recommendation is **the same
+frequency** – a game where good luck is rare and bad luck is common is not variable, it is punishing.
 
 ⚠ **The top band is set by his own sentence and not chosen: «за 3 года 100%» is 33%/yr.** That is
 what makes the click worth chasing and what makes it rare.
@@ -264,8 +297,29 @@ different things and a player should be able to tell which one is paying. The re
 that the rarity gate is already doing the work. **Recommendation: keep it, because §4 removed what it
 was actually blocking.**
 
-⚠ `self` (no coach) has no pair and no chemistry. `elite` has no next tier: it takes a token
-`+0.04` – C3.
+### 5a. ⭐ Downward – what the anti-match costs
+
+Negative chemistry is **symmetric, toward the tier BELOW**:
+
+    effectiveDev = devFactor[tier] - (devFactor[tier] - devFactor[prevTier]) * (|chemistry| / 100)
+
+| pairing | at 0 | **at −100** |
+| --- | ---: | ---: |
+| elite coach, great fit | 1.4375 | **1.3875** (he develops her like a `high` coach) |
+| middle coach, good fit | 1.040 | **0.950** (like a `budget` coach) |
+| budget coach, good fit | 0.950 | **0.820 – like no coach at all** |
+
+⭐ **The bottom-left cell of §1's matrix is therefore a genuinely bad place to be, and it is CHEAP,
+which is the trap.** A family that hires the cheapest man on the shelf and draws an anti-match is
+paying for coaching that develops her exactly as well as coaching herself would.
+
+⚠ **AND IT MUST BE VISIBLE, OR IT IS A HIDDEN TAX.** The player never sees the number (§8), so the
+coach's seasonal line carries it, and it must be unmistakable rather than merely cool – this is the
+one place in the wave where the copy is load-bearing rather than decorative. DRAFT lines go to the
+owner with the wave; the mechanic does not ship before he has ruled them.
+
+⚠ `self` (no coach) has no pair and no chemistry. `elite` has no next tier: it takes a token `+0.04`
+upward (C3) and the full symmetric fall downward, because `high` is a real rung beneath it.
 
 ---
 
@@ -399,9 +453,14 @@ owner can read and a set of seeds a builder can load.
 | corner | predicted frequency, written before the run |
 | --- | ---: |
 | A · the entry-level coach ends up the best-paid on the team | **1 career in 15–30** |
-| B · nothing below high fits, by chemistry AND style | **1 in 8–15** |
-| C · only the top fits, and the family has to find the money | **1 in 8–15** |
-| D · the ordinary career, nobody clicks | **the majority – 55–75%** |
+| B · no affordable tier offers BOTH chemistry and talent | **1 in 6–12** |
+| C · only the top tier offers both, and the family has to find the money | **1 in 8–15** |
+| D · ⭐ the ANTI-MATCH – the best coach she can afford is the wrong one | **1 in 10–20 careers meets one; 1 in 25–40 HIRES one for a season or more** |
+| E · the ordinary career, nobody clicks and nobody repels | **the majority – 50–70%** |
+
+⚠ **B and D are the two the census exists for**, because both are impossible today and both are the
+ones a reader will disbelieve. D is reported as two numbers on purpose – meeting an anti-match is
+common, living with one is not, and a player who fires him in a season has played correctly.
 
 ⚠ **A CORNER AT ZERO IS A FAILED WAVE, not a tuning note.** If B never occurs, the roster draw is too
 narrow; if A never occurs, either the click is too rare or §4's thresholds are out of reach. **This
@@ -457,10 +516,12 @@ channel, and because two schema waves in flight at once is how an append-only mi
 | **C6** | the click's rate, 33%/yr | **his own «за 3 года 100%» taken literally** – let B1 tune the FREQUENCY, never the size |
 | **C7** | is chemistry visible on the coach's seasonal line from season one, or once a band is clear? | **once clear** – a sentence in week 3 about a relationship is noise |
 | **C8** | do rival girls carry chemistry, or coach growth? | **neither, ever** – both are modifiers on a career the player steers, and the rival cohort has no coach model to hang them on |
-| **C9** | ⚠ **can a coach DECLINE?** | **no** – recommend one direction only. A falling tier would punish a player for a bad season twice (results, then the coach) and turn the mechanic into a second injury. If he wants the fall, it belongs with F1's slump, not here |
+| **C9** | ⚠ **can a coach's TIER decline?** | **no** – one direction only. A falling tier would punish a player for a bad season twice (results, then the coach). ⚠ This is about §4's STANDING and not about §5a's chemistry, which is signed and does fall – two different numbers |
+| **C10** | is the anti-match as FREQUENT as the click, or rarer? | **the same frequency** – a game where good luck is rare and bad luck is common is not variable, it is punishing. It is already slower to arrive (§3), which is enough asymmetry |
+| **C11** | ⚠ does the §8 gauge show a NEGATIVE pairing, and how? | **yes, and it must** – a hidden penalty is a bug, not a mystery. Recommend the ring filling the other way in a warning colour rather than a second glyph, so one component carries both signs. ⚠ The three seasonal lines become FOUR (anti, ordinary, good, click) and the anti line is the load-bearing one |
 
-**Done when:** C1–C9 are ruled, B0's corner frequencies are accepted as a corridor, and the builder
-brief for C1 points here.
+**Done when:** C1–C11 are ruled, B0's corner frequencies are accepted as a corridor, the four seasonal
+DRAFT lines are ruled (§5a – the anti line especially), and the builder brief for C1 points here.
 
 ---
 
