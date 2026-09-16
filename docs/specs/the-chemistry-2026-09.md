@@ -25,6 +25,33 @@ and the thing it buys:
 > «может быть у неё будет за 3 года 100% метч с бюджетным тренером и он ей будет давать похожий буст
 > на high/elite тир вообще»
 
+**⭐⭐ AND THE GOVERNING RULE OF THE WHOLE WAVE, HIS OWN, 16.09 – EVERYTHING BELOW ANSWERS TO IT:**
+
+> «**Вариативность и неожиданность** – это наши два главных слова, они сделают каждую игру непохожей на
+> другую… Но при этом **математика и стабильность** – мы можем воспроизвести все вариации и подтвердить, что
+> они возможны.»
+
+That is not a mood; it is a specification, and it has two halves that this document is organised
+around. **Variability** means the corners in §1 must actually OCCUR – a career where the entry-level
+coach ends up the highest-paid person on the team, and a career where nobody below elite fits her at
+all. **Stability** means every one of those corners is reproducible from the seed and its frequency is
+MEASURED, so §10's bench does not report a median and call it a design – it names each corner, prints
+how often it happens, and hands over a seed that produces it.
+
+**⚠⚠ AND THE FIRST DRAFT OF THIS SPEC FAILED THAT RULE, WHICH IS WHY §3 IS WRITTEN THE WAY IT IS.**
+It capped chemistry's reach at one tier above the coach's own, to protect the coach economy. The
+owner struck it down on 16.09 and the correction is recorded here rather than quietly applied:
+
+> «я не просил такой потолок, это ты сам придумал… дешевый тренер может вполне стать и элитным,
+> особенно если будет просить прибавку регулярно… **у него от успехов спортсменки вполне и его навыки
+> тоже могут расти**… Тренер Соболенки её друг, которому просто предложили попробовать, и у Бублика похожая
+> история. И это как раз история про химию, а не рейтинг тренера на рынке.»
+
+⭐ **The ceiling is gone, and what replaces it is better than what it was protecting: the coach GROWS
+(§4).** A brake that says «this relationship may not go further» is a different thing from a brake that
+says «getting there takes a decade and a rare draw», and only the second one tells a story. The
+rarity is the gate. The ceiling was a second, redundant brake, and it was mine.
+
 **What this document is.** The buildable form of that design, plus the two items he grouped with it:
 the raise basket (#51) and the card marker (#52). Nothing here is built. It ends in numbered open
 questions with recommendations, the way
@@ -63,7 +90,37 @@ why the effect below can be modest and still deliver what he asked for.
 
 ---
 
-## 1. The number
+## 1. The four corners – what «вариативность» has to mean in a save file
+
+His examples are not colour; they are acceptance criteria. Each of these must be a REACHABLE career,
+and §10's census must be able to hand over a seed that produces it.
+
+| corner | his words | what has to be true in the world for it |
+| --- | --- | --- |
+| **A · the entry-level coach is the answer** | «самый начальный тренер с хорошей химией обгонит зарплатами всех» | a budget slot draws a hot cell, the pair draws the click, and **he climbs tiers with her** (§4) until he is paid like the elite he became |
+| **B · nobody below the top fits** | «в других категориях вообще может не быть подходящего и по химии и по таланту специалиста» | the cheap rungs' manners all sit in cold cells for HER temperament, and their styles read `off` against HER game |
+| **C · only the top fits** | «не сложилось ни с кем, кроме элитного или высокого тира, и химия и специализация» | the same, inverted – and the family has to find the money, which is a real dilemma rather than a shopping list |
+| **D · the ordinary career** | (unstated, and it is the majority) | nobody clicks; she is developed by competence rather than by a relationship, and that has to be a fine career too |
+
+⚠⚠ **AND TODAY NONE OF THEM CAN HAPPEN, WHICH IS THE ACTUAL DEFECT THIS WAVE FIXES.** Measured in the
+source rather than assumed: `buildCoachRoster` (`src/engine/coach.ts:531`) draws from
+`rngFromSeed(`${seed}:coaches`)` – **but only the NAMES.** `tier` and `style` are read straight off the
+constant `ECONOMY.coach.roster`, so **which tier plays which style is byte-identical in every career
+this game has ever run.** The market's SHAPE is a lookup table. Corner B is literally impossible: the
+same budget coach with the same style is on the shelf for every girl ever born.
+
+⭐ **So variability has THREE sources in this wave, not one**, and the first one is the cheapest fix in
+the document:
+
+1. **THE ROSTER** – each slot's `manner` (and see C1a, its `style`) is drawn per career on the
+   sub-stream that already exists, `${seed}:coaches`. One new draw on a stream that is already
+   purpose-scoped and already re-derived at the call site. This is what makes B and C possible at all.
+2. **THE PAIR** – the rate draw of §3, around the (temperament × manner) centre.
+3. **THE COACH HIMSELF** – §4, he grows with her results. This is what makes A finish.
+
+---
+
+## 2. The number
 
 **`chemistry`: 0–100, per PAIR (her and one coach), persisted, accrued weekly while that coach is
 hired.** Not a snapshot, not a roll at hire: a number with a history, which is the whole point.
@@ -80,7 +137,7 @@ So the rate IS the relationship and the level is only its integral, which is exa
 
 ---
 
-## 2. The rate – a DRAW, not a lookup
+## 3. The rate – a DRAW, not a lookup
 
 His sharpening is the design rule: «такое же редкое событие, как и prodigy девочка». A flat
 (temperament × manner) table would make «the cheap coach who clicks» true for the same pairing in
@@ -106,7 +163,7 @@ what makes the click worth chasing and what makes it rare.
 yardstick he named; the bench (§9) sets the click's tail frequency to the same ORDER as a maximal
 potential roll, so «as rare as a prodigy» is measured rather than asserted.
 
-### 2a. The manner – a new fact about the coach, orthogonal to his style
+### 3a. The manner – a new fact about the coach, orthogonal to his style
 
 Her four temperaments already exist and are already on the tile (round 42 #6/#37), and they have a
 clean 2×2 shape: **open/private × intense/steady** (`fiery` = open+intense, `deep` = private+intense,
@@ -133,40 +190,86 @@ is not measured, and it is the one thing in this document the owner should overr
 
 ---
 
-## 3. The one reader – development, and one tier is the ceiling
+## 4. ⭐⭐ THE COACH GROWS – his 16.09 addition, and it is what replaces the ceiling
 
-**Chemistry raises the effective development factor from the coach's own tier toward the NEXT tier's,
-in proportion:**
+> «у него от успехов спортсменки вполне и его навыки тоже могут расти»
 
-    effectiveDev = devFactor[tier] + (devFactor[nextTier] - devFactor[tier]) * (chemistry / 100)
+Bergelin did not coach the greatest player of his era because he was the best coach available in
+1971. He became that coach **by doing it**. Same for the friend Sabalenka was offered, same for
+Bublik's. **A career is a thing that happens to the coach too**, and nothing in this engine has ever
+said so: `tier` is dealt at the roster and is a constant for life.
 
-and `coachFactor` then multiplies by `fitFactor[fit]` exactly as it does today. **One line changes.**
+**`standing`: accrued per coach while employed, driven by HER results – and at thresholds his `tier`
+rises one rung.** The driver is #9's basket, which is the same basket the raise ask reads, because
+«what he achieved with her» is one question and should not have two answers:
 
-**What that buys, in his own case – a budget coach at 100%:**
+* **rank movement over the year** – what the market itself prices;
+* **realised development** – the share of her remaining headroom she actually took;
+* **titles weighted by tier**.
 
-| pairing | arithmetic | factor | against |
-| --- | --- | ---: | --- |
-| budget, 0% chemistry, great fit | 0.95 × 1.25 | 1.1875 | – |
-| **budget, 100% chemistry, great fit** | 1.04 × 1.25 | **1.30** | beats elite+good (1.15) by 13% |
-| elite, good fit | 1.15 × 1.00 | 1.15 | – |
-| elite, 100% chemistry, great fit | 1.19 × 1.25 | 1.4875 | still the top of the game |
+⚠ **The driver is HER RESULTS, not elapsed time, and that fence is the whole integrity of the
+mechanic.** A coach who sits on a plateau does not climb; hiring the cheapest man on the shelf and
+waiting ten years buys nothing. The owner named this trap himself one message before the design
+(««найми кого угодно и жди» – вот как раз мой поинт был в том, что … это такое же редкое событие»), and
+the answer is that BOTH gates are needed: the click has to be drawn AND she has to actually win.
 
-⭐ **This is his «похожий буст на high/elite» delivered, and money still matters.** A budget coach she
-clicks with and who suits her game lands at **1.30** – above every elite pairing except an elite who
-also clicks and also suits her. The right cheap coach beats the wrong expensive one; the right
-expensive one still wins. Borg/Bergelin, not «hire anyone and wait».
+⚠ **His price rises with him, and that is the point rather than the cost.** `coachRetainerBandOf`
+already reads HER rank; `tier` is the other half of the quote. So a coach who grew with her is
+expensive by the time he is good, which is exactly his sentence – «особенно если будет просить
+прибавку регулярно» – and it is how corner A pays for itself instead of breaking the economy.
 
-⚠ **Why the ceiling is one tier and not two.** Two tiers puts a budget coach at 1.11 × 1.25 = 1.39,
-within 7% of the best pairing in the game at a fifth of the price – and at that point the coach
-economy is a formality. ⭐ And it is not needed: §0's arithmetic shows the fit pill already carries
-most of the distance, so one tier is enough to make the story true.
+⚠ **Growth is NOT chemistry and the two must not be collapsed.** Chemistry is how well these two
+work together and it is drawn. Standing is how good he has become and it is EARNED. A coach can climb
+to elite while the pair stays ordinary – then the family owns an expensive coach and a polite
+relationship, which is a real and instructive outcome. C4 asks whether chemistry should give standing
+a tailwind; the recommendation is a small one, not a large one.
 
-⚠ `self` (no coach) has no pair and no chemistry. The ladder's top rung, `elite`, takes
-`devFactor.elite + (1.19 - 1.15) × chemistry/100` – C2 asks whether the top rung should accrue at all.
+⚠ **He does not grow while unemployed**, and he does not fall. A coach put down at rung 2 is still at
+rung 2 when she comes back – the same rule §7 gives the relationship, for the same reason.
 
 ---
 
-## 4. The fences – what chemistry must never touch
+## 5. The one reader – development, and the relationship's own reach
+
+**Chemistry raises the effective development factor from the coach's CURRENT tier toward the next
+one's, in proportion:**
+
+    effectiveDev = devFactor[tier] + (devFactor[nextTier] - devFactor[tier]) * (chemistry / 100)
+
+and `coachFactor` then multiplies by `fitFactor[fit]` exactly as today. **One line changes.**
+
+⭐⭐ **AND `tier` IS NO LONGER A CONSTANT, WHICH IS THE WHOLE DIFFERENCE FROM THE FIRST DRAFT.** §4
+lets it climb. So «one tier» is not a career ceiling any more – it is **what a RELATIONSHIP is worth
+on top of what a man can DO**, and the second half is now uncapped. The two compound over a decade:
+
+| season | his tier | chemistry | effectiveDev | × great fit |
+| --- | --- | ---: | ---: | ---: |
+| hired at 12 | budget | 0 | 0.950 | 1.188 |
+| after the click shows | budget | 60 | 1.004 | 1.255 |
+| he has climbed once | middle | 85 | **1.100** | **1.375** |
+| he has climbed twice, late career | high | 100 | **1.150** | **1.4375** |
+
+**The last row IS the elite pairing, to the third decimal** – an elite coach at 1.15 × 1.25. A budget
+coach and a girl who clicked with him arrive at the top of the game together, over a career, and he
+is paid like the elite coach he became. That is Bergelin, and nothing caps it.
+
+⚠ **What still bounds it is TIME and the DRAW, which is the right pair of brakes.** Getting there
+needs the click (rare by §3), her actual results (§4's gate), and roughly a decade. A player cannot
+shortcut it with money, and a player who tries «hire anyone and wait» gets nothing, because neither
+gate opens on patience alone.
+
+⚠ **The relationship's own reach stays at one tier, and C2 asks whether even that should go.** The
+reason to keep it is that it keeps the two mechanics legible as two – affection and competence are
+different things and a player should be able to tell which one is paying. The reason to drop it is
+that the rarity gate is already doing the work. **Recommendation: keep it, because §4 removed what it
+was actually blocking.**
+
+⚠ `self` (no coach) has no pair and no chemistry. `elite` has no next tier: it takes a token
+`+0.04` – C3.
+
+---
+
+## 6. The fences – what chemistry must never touch
 
 1. **STYLE keeps the match-day edge; CHEMISTRY takes development.** His own 16.09 approval («стиль
    нам не важен на элитных… может его вообще опустить?» → answered: it does not need dropping, it
@@ -182,7 +285,7 @@ most of the distance, so one tier is enough to make the story true.
 
 ---
 
-## 5. Leaving, and coming back
+## 7. Leaving, and coming back
 
 **Leaving resets nothing; it pauses.** The pair keeps both its rate and its accrued level; hiring the
 same coach again resumes from where it stopped.
@@ -197,7 +300,7 @@ cost anything at all; the recommendation is no.
 
 ---
 
-## 6. The marker on the card (#52)
+## 8. The marker on the card (#52)
 
 His design, with the icon handed over:
 
@@ -221,7 +324,7 @@ His design, with the icon handed over:
 
 ---
 
-## 7. The raise basket (#51)
+## 9. The raise basket (#51), and how a budget coach out-earns everyone
 
 > «может такое быть, что всего с 1 титулом в сезон (например w250/w500) тренер будет требовать 15%?
 > Кажется, что самого факта этого единственного титула маловато, нужна какая-то общая оценка
@@ -239,12 +342,23 @@ is already in the world:
 
 Corridor **5–15%** (his), ceiling = the rank band (#49a), refusal = he works out the season.
 
+⭐⭐ **AND THIS IS THE SAME BASKET §4 READS, ON PURPOSE.** «What he achieved with her» is one question
+and must not have two answers: the score that decides what he ASKS is the score that decides what he
+BECOMES. One computation, two readers.
+
+⭐ **So this is the mechanism behind his «обгонит зарплатами всех», and it needs no special
+case.** A budget coach who clicked and won climbs tiers (§4) and asks regularly (here); his quote is
+`bandedRateCents` of his CURRENT tier against HER rank, so by the time she is top-10 the man she hired
+at twelve for $200 a week is quoting like the elite coach he is – and he is the only one on the team
+whose price the family watched grow from nothing. ⚠ That is a story the player experiences as a bill,
+which is the best kind of story this game can tell.
+
 ⚠ **The fourth component is the best one and it needs F1**, so #51 can ship on three components and
-gain the fourth later, or wait. C4.
+gain the fourth later, or wait. C5.
 
 ---
 
-## 8. Schema and RNG
+## 10. Schema and RNG
 
 **v79, and chemistry is not its only customer** – `sparringTravels` (#48) has been waiting since his
 15.09 travel override. One bump, two customers.
@@ -252,7 +366,16 @@ gain the fourth later, or wait. C4.
 | key | shape | migration literal |
 | --- | --- | --- |
 | `coachChemistry` | `Record<coachId, number>` – accrued level per pair | `{}` – «she has worked with nobody» |
+| `coachStanding` | `Record<coachId, number>` – §4's earned score, from which his tier is derived | `{}` – «nobody has grown on her account» |
 | `sparringTravels` | `boolean` (#48) | `false` |
+
+⚠ **`coachStanding` stores the SCORE and not the tier**, so the tier is always a pure function of it
+and a threshold retune moves every save at once instead of stranding careers at a rung that no longer
+exists. Same discipline as the chemistry RATE, which is not persisted at all.
+
+⚠ **The roster's drawn `manner` is NOT persisted either** – `buildCoachRoster` is already a pure
+function of `(seed, ageYears)` and stays one. A career reproduces its market from its seed, which is
+what makes «every game different» and «every game reproducible» the same sentence rather than two.
 
 ⚠ **`{}` is exactly true and not a placeholder.** A career that predates the mechanic accrued nothing
 with anybody, because there was nothing to accrue. The RATE is not persisted at all: it is a pure
@@ -264,28 +387,56 @@ player hired him.
 
 ---
 
-## 9. The benches, predicted-first (invariant 5)
+## 11. The benches, predicted-first (invariant 5)
+
+⭐⭐ **B0 IS NEW AND IT IS THE ONE THAT ANSWERS HIS RULE.** «Мы можем воспроизвести все вариации и
+подтвердить, что они возможны» is not satisfied by a median. It is satisfied by a census.
+
+**B0 · THE CORNER CENSUS.** Walk N careers; for each, classify which of §1's corners it landed in;
+report the frequency of each **and print one reproducing seed per corner**. The output is a table the
+owner can read and a set of seeds a builder can load.
+
+| corner | predicted frequency, written before the run |
+| --- | ---: |
+| A · the entry-level coach ends up the best-paid on the team | **1 career in 15–30** |
+| B · nothing below high fits, by chemistry AND style | **1 in 8–15** |
+| C · only the top fits, and the family has to find the money | **1 in 8–15** |
+| D · the ordinary career, nobody clicks | **the majority – 55–75%** |
+
+⚠ **A CORNER AT ZERO IS A FAILED WAVE, not a tuning note.** If B never occurs, the roster draw is too
+narrow; if A never occurs, either the click is too rare or §4's thresholds are out of reach. **This
+bench can veto the wave**, and it is the reason it is numbered before the others.
 
 | # | claim | predicted, written before the run |
 | --- | --- | --- |
 | B1 | the click's frequency against the prodigy yardstick | tuned to the same ORDER as a maximal `rollPotential` roll – target 1 career in 12–20 sees one click with a coach she actually hires |
-| B2 | end-of-career skill, budget+click against elite+good | **+4 to +8 skill points**, i.e. visible but not a re-cut ladder |
-| B3 | does money stop mattering? median end rank by coach budget | the elite-hiring corridor stays **ahead** at every background; if it inverts, the ceiling is wrong |
-| B4 | time to 90% of ceiling (round 42 #38's clock) | the click moves it **1.5–3 years** earlier; anything past 4 says the effect is too big |
-| B5 | the loyalty cost | a player who never switches should not beat a player who switches well by more than **2 skill points** on the median |
+| B2 | end-of-career skill, corner A against a bought-elite career | **within ±3 skill points** – the two roads should ARRIVE together, which is the design; a large gap either way is a defect |
+| B3 | does money stop mattering? median end rank by coach budget | the elite-hiring corridor stays **ahead on the MEDIAN**, because corner A is rare; if it inverts, §4's thresholds are too cheap |
+| B4 | time to 90% of ceiling (round 42 #38's clock) | corner A moves it **1.5–3 years** earlier than an equivalent unbought career |
+| B5 | §4's own gate – does «hire cheap and wait» buy anything? | **zero tiers climbed** on a career with no results movement. This is the mutation arm: if a plateau career still climbs, the driver is reading time and not results |
+| B6 | the coach's bill at career end, corner A | **inside the elite band** – he became elite, so he is paid like it, and the family watched it happen |
 
-⚠ **B3 is the one that can veto the wave**, and it must be run on round 42 #38's own corpus so the
-two clocks agree.
+⚠ **B3 changed shape from the first draft and the change is the owner's correction.** It used to ask
+whether a cheap coach could ever match an expensive one – the answer is now deliberately YES, rarely.
+So the claim is about the MEDIAN career, where money must still buy development, and the corner is
+where it must not.
+
+⚠ B0 and B4 run on round 42 #38's own corpus so the two clocks agree.
 
 ---
 
-## 10. Waves, sized
+## 12. Waves, sized
 
 | wave | ships | size |
 | --- | --- | --- |
-| **C1** | `manner` on the roster, the rate draw, `coachChemistry` + v79, the one `coachFactor` line, the benches | **M** |
-| **C2** | the card re-lay (price/Hire to the top-right), the 36px gauge + icon, the question mark, the coach's three seasonal lines | **S–M** |
-| **C3** | the raise basket (#51) – three components now, the fourth when F1 lands | **S–M** |
+| **C1** | the roster's per-career `manner` draw, the pair's rate draw, `coachChemistry` + v79, the one `coachFactor` line, **B0's census** | **M** |
+| **C2** | §4 – `coachStanding`, the tier climb, the price that follows it, B5's mutation arm | **M** |
+| **C3** | the card re-lay (price/Hire to the top-right), the 36px gauge + icon, the question mark, the coach's seasonal lines | **S–M** |
+| **C4** | the raise basket (#51) – three components now, the fourth when F1 lands | **S–M** |
+
+⚠ **C1 and C2 are one schema wave** (both keys land in v79 together) but two builds, and C1 must be
+benched before C2 starts: B0's census is what says the roster draw produced corners at all, and §4's
+thresholds are meaningless until we know how often a click happens to begin with.
 
 ⚠ Order against the other open waves: **#34 (done) → F1 → chemistry → F2**. Chemistry does not depend
 on F1 mechanically; it is placed after it because #51's best component comes from F1's results
@@ -293,17 +444,32 @@ channel, and because two schema waves in flight at once is how an append-only mi
 
 ---
 
-## 11. Open questions for the owner – each with a recommendation
+## 13. Open questions for the owner – each with a recommendation
 
 | # | question | recommendation |
 | --- | --- | --- |
-| **C1** | the 4×4 (temperament × manner) centre table, and its principle («match on one axis, complement on the other») | **his to overrule freely** – it is the one unmeasured design claim here. Build the table as a data object so it is one edit, not a refactor |
-| **C2** | does the `elite` rung accrue chemistry at all, given it has no next tier? | **yes, at a token +0.04** – a flat zero would say the best coach cannot grow closer to her, which reads wrong; the number stays small because the rung is already the top |
-| **C3** | does a long absence cost accrued chemistry? | **no** – decay turns «go back to her first coach» into a punishment, and he named that move as the thing he wants |
-| **C4** | does #51 ship on three components now, or wait for F1's fourth? | **ship on three** – the ask is wrong TODAY, and the fourth component slots in without re-shaping the other three |
-| **C5** | the click's rate, 30–35%/yr | **his own «за 3 года 100%» = 33%** – recommend taking it literally and letting B1 tune only the FREQUENCY, not the size |
-| **C6** | is chemistry visible on the coach's seasonal line from season one, or only once a band is clear? | **once clear** – a sentence in week 3 about a relationship is noise; recommend the line appears at the first season end |
-| **C7** | do rival girls carry chemistry with their coaches? | **no, not ever** – it is a development modifier for a career the player steers, and the rival cohort has no coach model to hang it on |
+| **C1** | the 4×4 (temperament × manner) centre table, and its principle («match on one axis, complement on the other») | **his to overrule freely** – the one unmeasured design claim in this document. Build it as a data object so it is one edit, not a refactor |
+| **C1a** | does the roster draw `style` per career as well as `manner`? | **yes** – it is the other half of «не быть подходящего и по химии и по таланту», and corner B is weak without it. ⚠ Keep ONE coach of each style somewhere on the shelf so no career is unplayable; the variation is which TIER he sits at |
+| **C2** | does the relationship's own reach stay at one tier? | **keep it** – §4 removed what the old ceiling was actually blocking, and one tier keeps affection and competence legible as two different things. ⚠ If he disagrees this is one constant, not a redesign |
+| **C3** | does the `elite` rung accrue chemistry, having no next tier? | **yes, a token +0.04** – a flat zero would say the best coach cannot grow closer to her, which reads wrong |
+| **C4** | does chemistry give §4's standing a tailwind? | **a small one** – a coach learns more from a girl he understands. Recommend a modest multiplier, not a second driver, so B5's mutation arm stays interpretable |
+| **C5** | does #51 ship on three components now, or wait for F1's fourth? | **ship on three** – the ask is wrong TODAY and the fourth slots in without re-shaping the others |
+| **C6** | the click's rate, 33%/yr | **his own «за 3 года 100%» taken literally** – let B1 tune the FREQUENCY, never the size |
+| **C7** | is chemistry visible on the coach's seasonal line from season one, or once a band is clear? | **once clear** – a sentence in week 3 about a relationship is noise |
+| **C8** | do rival girls carry chemistry, or coach growth? | **neither, ever** – both are modifiers on a career the player steers, and the rival cohort has no coach model to hang them on |
+| **C9** | ⚠ **can a coach DECLINE?** | **no** – recommend one direction only. A falling tier would punish a player for a bad season twice (results, then the coach) and turn the mechanic into a second injury. If he wants the fall, it belongs with F1's slump, not here |
 
-**Done when:** C1–C7 are ruled, B1–B5's corridors are accepted, and the builder brief for C1 points
-here.
+**Done when:** C1–C9 are ruled, B0's corner frequencies are accepted as a corridor, and the builder
+brief for C1 points here.
+
+---
+
+## 14. ⚠ What this document does not claim
+
+* **The 4×4 table is not measured** and is flagged as such twice, on purpose.
+* **B0's predicted frequencies are guesses about a system that does not exist yet.** They are written
+  down so the run can embarrass them, which is the only reason to predict anything.
+* **Nothing here is built.** No constant moved, no engine file was touched, and the numbers in §5's
+  table are arithmetic on today's `ECONOMY.coach` rather than the output of a run.
+* **It says nothing about how the relationship FEELS in play**, which on a mechanic the player meets
+  through one sentence a season is most of the question, and is a playtest rather than a bench.
