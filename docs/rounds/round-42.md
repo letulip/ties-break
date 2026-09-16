@@ -2510,8 +2510,16 @@ its own acceptance bench does not ship because the round is ending.
   words the owner approved this round – without the game doing the predicting for him. Facts from us,
   the guess from him, the gauge reveals who was right. That is the loop the whole mechanic wants.
 
-  ⚠ **It needs a 375 measurement before it ships**, against the card round 42 #3 has just rebuilt: the
-  bottom-right corner sits over the 223px text column at that width, not over the 96px art strip, so a
-  36px ring plus an icon above it has to be proven not to collide with the price line or push the row
-  taller. The standing visual sweep (375/768/900/1280 on every host of a coach portrait) covers the
-  rest.
+  ⭐⭐ **AND HE RULED THE COLLISION AWAY RATHER THAN ASKING US TO SQUEEZE PAST IT (16.09):** «цену и
+  Hire поднять в правый верхний угол, тогда освободится низ на всех карточках». So the price and the
+  call to action move to the card's TOP-right and the bottom-right is free by construction – on every
+  row, worked-with or not, hired or not. That is the right shape for a second reason he did not have
+  to give: the two corners then read as two different kinds of fact – what he PAYS at the top, what she
+  HAS at the bottom.
+  ⚠ The row is one `<button>`, so this is placement and not behaviour: «Hire ›» keeps its meaning, the
+  whole row keeps taking the press, and round 42 #42's ruling (the cost shows, the hire is never
+  refused) is untouched.
+  ⚠ It still needs the 375 measurement, now of the rebuilt card in its new arrangement: round 42 #3
+  left the phone card at a 96px art strip and a 223px text column, and moving two elements out of the
+  text flow changes where its lines wrap. The standing sweep (375/768/900/1280 on every host of a coach
+  portrait) covers the rest.
