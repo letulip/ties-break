@@ -725,12 +725,12 @@ and «workable chemistry» A ≥ +0.25.
 
 | corner | predicted | **measured** | reproducing seed |
 | --- | --- | --- | --- |
-| **A** · a budget coach is both the right teacher and a click | 1 in 15–30 | **7.9% · 1 in 12.6** | `chem-0` (working, aggressive, quiet) |
-| **B** · nothing in reach offers both | 1 in 6–12 | **42.8% · 1 in 2.3** | `chem-2` (wealthy, aggressive, sunny) |
-| **C** · only above her reach offers both | 1 in 8–15 | **28.6% · 1 in 3.5** | `chem-3` (working, counterpuncher, fiery) |
-| **D** · the anti-match is on her shelf | 1 in 10–20 | **14.3% · 1 in 7.0** | `chem-1` (middle, aggressive, deep) |
-| **D** · ...and he is the coach she opens with | 1 in 25–40 | **7.1% · 1 in 14.0** | `chem-1` (middle, aggressive, deep) |
-| **E** · the ordinary career – her own coach is neither | the majority, 50–70% | **83.1%** | `chem-2` (wealthy, aggressive, sunny) |
+| **A** · a budget coach is both the right teacher and a click | 1 in 15–30 | **7.3% · 1 in 13.7** | `chem-0` (working, aggressive, quiet) |
+| **B** · nothing in reach offers both | 1 in 6–12 | **41.2% · 1 in 2.4** | `chem-2` (wealthy, aggressive, sunny) |
+| **C** · only above her reach offers both | 1 in 8–15 | **26.9% · 1 in 3.7** | `chem-3` (working, counterpuncher, fiery) |
+| **D** · the anti-match is on her shelf | 1 in 10–20 | **15.4% · 1 in 6.5** | `chem-6` (working, serve-first, quiet) |
+| **D** · ...and he is the coach she opens with | 1 in 25–40 | **8.1% · 1 in 12.4** | `chem-6` (working, serve-first, quiet) |
+| **E** · the ordinary career – her own coach is neither | the majority, 50–70% | **83.8%** | `chem-1` (middle, aggressive, deep) |
 
 ⚠ **Three of the six are commoner than predicted and one is much commoner.** B and C were guesses
 about a system that did not exist, and both turn on where «workable chemistry» is drawn – which is a
@@ -738,7 +738,9 @@ REPORTING threshold, not an engine constant. What matters is the shape: every co
 at zero, and the ordinary career is still the overwhelming majority.
 
 ⭐ **And C10 comes out right by construction rather than by tuning:** an opening coach is a click in
-8.3% of careers and an anti-match in 8.6%. «Согласен» – the same frequency.
+**8.1%** of careers and an anti-match in **8.1%**. «Согласен» – the same frequency, to the decimal,
+and nobody tuned it there: the table is a Latin square and the draw around it is symmetric, so the
+two tails are the same size by arithmetic.
 
 ⚠ **Corner A is measured as its PRECONDITION and not as its finish.** «The entry-level coach ends up
 the best-paid on the team» needs §4's tier climb, which is wave C2 – no coach's tier moves on this
@@ -753,8 +755,10 @@ top – the natural reading of «поражения». Measured over 12 careers 
 **−0.36** and wore its relationship down for no reason but arithmetic. ⚠ **In a knockout sport every
 event but one ends in a loss**, so any asymmetry there is a tax rather than a signal. The fix was to
 make the two weights exact mirrors and drop the exit term: `wins − losses` already IS the depth of a
-run (a title is +5 net, a semifinal +2, a first-round exit −1), a 50% season is exactly neutral, and
-the median career now ends 208 weeks at a phase of **+0.09**. ⚠ «A bad loss as FAVOURITE» is an
+run (a title is +5 net, a semifinal +2, a first-round exit −1), and a 50% season is exactly neutral.
+⭐ **The channel now DISCRIMINATES instead of taxing**: re-measured over 48 careers × 468 weeks, a
+corpus with a 4,691–3,587 record (57% of matches won) ends at a phase of **+0.20** – a winning career
+gains, which is what «победы и поражения» was always supposed to mean. ⚠ «A bad loss as FAVOURITE» is an
 EXPECTATION-relative read and is not built – C5 defers that residual to F1 itself, and this wave did
 not fake it.
 
@@ -798,8 +802,10 @@ C1a rules that the roster draws `style` per career as well as `manner`. It WAS b
 handed back, because it costs a shipped economic principle and buys almost nothing:
 
 * **what it bought** – corner B 41.3% → 42.8%, corner C 25.7% → 28.6%, and A, D and E unmoved to
-  within noise, over 3,000 careers on the same seeds. ⭐ **The corners are made by the CHEMISTRY
-  draw.** The style shuffle adds about one point and three points to two of them.
+  within noise, over 3,000 careers. ⚠ **The two arms were PAIRED on the same manner draws** and
+  differed only in whether `style` was read from the draw or from the constant, which is what isolates
+  the style variable rather than measuring it against the weather. ⭐ **The corners are made by the
+  CHEMISTRY draw.** The style shuffle adds about one point and three points to two of them.
 * **what it cost** – ⚠⚠ **a 4.7% COACHING DISCOUNT AT EVERY RUNG ABOVE BUDGET, in every career in the
   game.** `bestFitCoachAt` breaks a tie by PRICE, and a shuffled shelf creates ties: measured over
   4,000 careers a rung, 24% drew TWO great-fit coaches at the rung (the cheaper wins) and 25% drew
@@ -824,25 +830,33 @@ cannot be re-added silently.
 
 48 paired careers × 468 weeks, chemistry ON against **the same tree with the corridor neutralised in
 place** (every anchor to 0, so the level never leaves 0 and `coachFactor` is byte-identical to the
-shipped arithmetic). The neutralised arm accrued **exactly 0** on all 48 and the build moved on **48
-of 48** – the arm is real.
+shipped arithmetic – the control is this wave's own change reverted, never an older commit). The
+neutralised arm accrued **exactly 0** on all 48 and the build moved on **48 of 48** – the arm is real.
 
 | the hired pair | careers | end chemistry | end-skill delta |
 | --- | ---: | ---: | ---: |
-| click, A ≥ +0.60 | 5 | **+52.5** | +0.04 |
-| good, +0.25…+0.60 | 5 | +53.9 | +0.03 |
-| ordinary | 25 | −0.4 | −0.09 |
-| cooling | 8 | −24.8 | −0.18 |
-| anti-match, A ≤ −0.60 | 5 | **−28.7** | −0.34 |
+| click, A ≥ +0.60 | 2 | **+68.2** | +0.07 |
+| good, +0.25…+0.60 | 13 | +45.4 | +0.36 |
+| ordinary | 21 | −5.2 | +0.01 |
+| cooling | 9 | −10.6 | −0.15 |
+| anti-match, A ≤ −0.60 | 3 | **−27.6** | +0.19 |
 
-⚠ **THE LEVEL MOVES PROPERLY AND THE END-SKILL COLUMN IS ALMOST FLAT, AND THAT IS A BROKEN RULER
+Whole corpus: mean end chemistry **+9.2**, mean skill delta **+0.09**, best +3.81, worst −1.38, mean
+affinity of the hired pair **+0.02** – so the population is unbiased and the mechanic is not a silent
+nerf on the median career.
+
+⚠⚠ **THE LEVEL COLUMN IS THE SIGNAL AND THE SKILL COLUMN IS MOSTLY NOISE, AND THAT IS A BROKEN RULER
 RATHER THAN A BROKEN MECHANIC.** `growWeek` grows TOWARD `potential`: a faster rate does not raise the
-destination, it arrives sooner, and a girl nine years in is at or near her ceiling on both arms. §5's
-own table is the right way to read what C1 is worth – a budget pair at +52 chemistry develops at 1.005
-against 0.95 – and the number that compounds is the coach's own TIER, which is wave C2's.
-⭐ **The downside is the half that shows today**, because an anti-match pushes the rate below what
-reaching the ceiling needs: −0.34 skill points, worst case −1.56. Which is exactly why §5a says the
-anti-match must be VISIBLE.
+destination, it arrives sooner, and a girl nine years in is at or near her ceiling on both arms. The
+anti-match row reading **+0.19** on three careers says exactly that – it is three seeds, not an
+effect. ⚠ **Do not read a band under about ten careers off this table**; the honest statement it
+supports is the whole-corpus one above, plus the level column, which is clean: a click reaches +68 and
+an anti-match −28 over nine years, in the direction and roughly the magnitude §3's corridor predicts.
+
+⭐ §5's own table is the right way to read what C1 is WORTH – a budget pair at +52 chemistry develops
+at 1.005 against 0.95 – and the number that compounds is the coach's own TIER, which is wave C2's.
+**B2, B3 and B4 belong to C2 for that reason and were not run here**: until a coach can climb, the
+thing they measure does not exist yet.
 
 ### 15.6 The four seasonal lines – ⚠ DRAFT, and nothing renders them
 
