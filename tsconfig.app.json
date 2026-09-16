@@ -62,6 +62,7 @@
     "tools/season-mirror.ts",
     "tools/shop-probe.ts",
     "tools/skill-ceiling.ts",
+    "tools/small-talk-corpus-bench.ts",
     "tools/snapshot-bench.ts",
     "tools/spirit-bench.ts",
     "tools/spotlight-bench.ts",
