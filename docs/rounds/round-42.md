@@ -2484,3 +2484,34 @@ its own acceptance bench does not ship because the round is ending.
   its results channel already computes the residual against expectation, which is the fourth and best
   component: a coach who got more out of her than the odds said should ask for more.
   Corridor **5–15%** (his), ceiling = the rank band, refusal = he works out the season.
+
+- [ ] **52. THE CHEMISTRY MARKER ON THE COACH CARD (his 16.09, with the icon handed over).** «Визуальный
+  маркер на плашке тренера… наш уменьшенный гаудж (как на строящихся объектах), в правый нижний угол
+  карточки, а над ним жёлтую иконку химии. И это не отменяет текстовых результатов за сезон.»
+
+  **The gauge already exists and is already his size.** `ui/ProgressRing.vue` ships a **36px** variant
+  whose own doc line is «the build-progress ring on a shop tile's art corner, *чуть меньше размером,
+  чем на главной*» – his words, from round 41 #28. So the marker is that component at 36, in the card's
+  bottom-right corner, with the chemistry icon above it in `--accent`. The icon he handed over is kept
+  at `docs/assets/chemistry-icon-source.svg` (a flask, 32-unit viewBox, single path – it inlines as a
+  path like the rest of our marks rather than shipping as an `<img>`).
+
+  **Worked-with coaches carry the gauge; the rest carry a question.** ⚠ And the architect's
+  recommendation on the half he was unsure about – «прогнозный % под иконкой… или просто знак вопроса»
+  – is the **question mark**, for the reason he himself established one message earlier: he made the
+  rate a SEEDED DRAW so that a cheap coach who clicks is «такое же редкое событие, как и prodigy
+  девочка». A forecast corridor printed on an unworked card turns exactly that back into a shopping
+  list – the player reads the number and hires the best forecast, and the rare thing stops being
+  discovered.
+
+  ⭐ **But the question mark should not be empty, and the honest filling is the coach's MANNER.** Once
+  chemistry is keyed on (her temperament × his manner), stating his manner on the card gives the
+  player everything he needs to PREDICT – his daughter's temperament is already on her own tile, in the
+  words the owner approved this round – without the game doing the predicting for him. Facts from us,
+  the guess from him, the gauge reveals who was right. That is the loop the whole mechanic wants.
+
+  ⚠ **It needs a 375 measurement before it ships**, against the card round 42 #3 has just rebuilt: the
+  bottom-right corner sits over the 223px text column at that width, not over the 96px art strip, so a
+  36px ring plus an icon above it has to be proven not to collide with the price line or push the row
+  taller. The standing visual sweep (375/768/900/1280 on every host of a coach portrait) covers the
+  rest.
