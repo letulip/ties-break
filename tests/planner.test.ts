@@ -311,7 +311,16 @@ function hashOf(draws: number[]): string {
 // arms (tests/coachTravelEdgeFixtures.ts carries the table for all three frozen careers).
 // Verified on BOTH arms: the control is this branch's start `8d0b6bf4` in a worktree, which
 // reproduces 90.
-const REF = { kidRank: 89 }
+// ⚠⚠ RE-PINNED 89 -> 90 BY ROUND 42 #34 (16.09, THE PRICE OF NERVE), and for the Nth time running
+// it is the same second-order mechanism and SHE DID NOTHING DIFFERENT. The wave widened the
+// pressure set and gave nerve a contested term, so AI-vs-AI matches in the ITF field resolve a
+// little differently; a re-dealt field is a re-dealt table, and this constant folds that table.
+//
+// THE CAPTURE IS UNTOUCHED AGAIN: count 41550, hash e6b0c709, head and tail reproduce byte for
+// byte and are asserted BEFORE this constant is read. #34 adds NO draw to any stream - it changes
+// what a drawn point is worth, never how many are drawn - which is why the hash could not move
+// and did not, and why planner.test.ts's input-independence halves still pass unchanged.
+const REF = { kidRank: 90 }
 // ⚠ CHECKED AND HELD AT v25 (30.07, the fifth attribute), and the checking is the point - this
 // number was expected to move and did not. `count`/`hash`/`head`/`tail` cannot move by
 // construction: v25 adds no draw to any stream the weekly tick walks. Her build's fifth number
@@ -592,24 +601,64 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
         expect(gained[0], `${pkg.id} lands its catalogue gain`).toBe(
           40 + pkg.conditionGain + ECONOMY.condition.recoveryBase + 1,
         )
-        // ...and the free package aside, the QUOTE does vary: working < middle < wealthy
+        // ...and the free package aside, the QUOTE varies by background – EXCEPT on the rungs that
+        // have left the corridor, where it is one number for everybody.
         //
-        // ⚠ ROUND 42 #19 LOOKED AT THIS ARM AND LEFT IT ALONE. That item proposed taking the corridor
-        // off the `elite` rung (round 41 P1's ruling, for the owner's «элит рекавери… 2900»), which
-        // would have turned this loop's claim inside out for one row. The bench refused the change –
-        // 4 of 20 mid-careers moved, worst $178,701, against finding 3.2 – so every rung is still
-        // corridored and every rung is still asserted strictly. Recorded because the next reader of
-        // `ECONOMY.vacation`'s `uniformPrice` field will wonder why nothing sets it, and this is the
-        // other end of that note.
+        // ⚠⚠ RE-AIMED BY ROUND 42 #49(b), AND IT IS NOW TWO CLAIMS BECAUSE THE LADDER HAS TWO HALVES.
+        // #19 proposed taking the corridor off the `elite` rung (round 41 P1's ruling, for the
+        // owner's «элит рекавери… 2900») and was refused by its own bench – 4 of 20 mid-careers
+        // moved, worst $178,701, against finding 3.2. The owner ruled the other way on 16.09:
+        // «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка… пользуются
+        // этими восстановлениями уже когда деньги реально есть. Вряд ли семья с доходом 200-300 в
+        // неделю туда поедет, а если и поедет – это их выбор.» The reason the bench could not settle
+        // it is that its policy books a recovery week without judging whether a family like this one
+        // would ever choose to, so what it priced was the autopilot's choice.
+        //
+        // ⚠ BOTH HALVES ARE ASSERTED STRICTLY, which is what stops this re-aim from being a
+        // weakening: a corridored rung must still order working < middle < wealthy, and a uniform
+        // rung must quote the SAME cents to all three. A version that only checked the uniform half
+        // would go green on a build that had quietly taken the corridor off everything.
         if (pkg.priceCents[1] > 0) {
           const quotes = backgrounds.map((b) => vacationPriceCents('P3-corridor', 1, pkg.id, b))
-          expect(quotes[0], `${pkg.id} working < middle`).toBeLessThan(quotes[1])
-          expect(quotes[1], `${pkg.id} middle < wealthy`).toBeLessThan(quotes[2])
+          if (pkg.uniformPrice ?? false) {
+            expect(new Set(quotes).size, `${pkg.id} is a high tier – one price for every family`).toBe(1)
+          } else {
+            expect(quotes[0], `${pkg.id} working < middle`).toBeLessThan(quotes[1])
+            expect(quotes[1], `${pkg.id} middle < wealthy`).toBeLessThan(quotes[2])
+          }
         }
       }
     } finally {
       av.injuryBaseChance = savedBase
     }
+  })
+
+  // ⭐⭐ ROUND 42 #49(b) – WHICH RUNGS HAVE LEFT THE CORRIDOR, PINNED BY NAME.
+  //
+  // ⚠⚠ THE TEST ABOVE CANNOT DO THIS JOB AND THE MUTATION ARM PROVED IT. That loop branches ON
+  // `pkg.uniformPrice`, so a build that turned both flags off takes the corridored branch and passes
+  // – measured: 52/52 green with `uniformPrice` deleted from both rows. An adaptive assertion is not
+  // a pin. This is the pin, and it fails in BOTH directions: a rung that loses the flag and a rung
+  // that gains one it was never ruled for.
+  //
+  // The owner's sentence is the rule: «ВЫСОКИЕ тиры восстановлений». `seaside` ($600-1,000) is the
+  // family hotel a stretched family really does book, so the corridor is doing its job there; the
+  // ruling is about the top of the ladder, not about recovery in general.
+  it('⭐ round 42 #49(b): exactly the two high tiers are priced uniformly', () => {
+    const uniform = ECONOMY.vacation.packages.filter((p) => p.uniformPrice ?? false).map((p) => p.id)
+    expect(uniform.sort()).toEqual(['elite', 'resort'])
+    // ...and «high tier» is a fact about the ladder rather than a label: the band stops exactly
+    // above `seaside`, which is still corridored and is strictly cheaper than the cheapest uniform
+    // rung. Asked of the catalogue, so a re-priced rung cannot drift out of the claim in silence.
+    //
+    // ⚠ THE YACHT WEEK IS DELIBERATELY OUT OF THIS COMPARISON. It is priced at x1.4 of `elite` and is
+    // therefore the dearest row on the sheet, but it is a CHARTER the shelf can make free rather than
+    // a recovery rung, and his ruling was about «восстановления». A "dearest two" test would have
+    // named it and been wrong; this one asks the question the ruling actually asked.
+    const seaside = ECONOMY.vacation.packages.find((p) => p.id === 'seaside')!
+    const resort = ECONOMY.vacation.packages.find((p) => p.id === 'resort')!
+    expect(seaside.uniformPrice ?? false, 'the family hotel keeps its corridor').toBe(false)
+    expect(seaside.priceCents[1]).toBeLessThan(resort.priceCents[0])
   })
 
   // ⚠ W7 – EXACTLY ONE PACKAGE MAY QUOTE ZERO, and it is the one whose whole design is being free.

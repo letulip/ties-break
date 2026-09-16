@@ -12,11 +12,19 @@
  * entered the band and prints the A-vs-B wallet delta for the ones that never did. A single non-zero
  * cent there is a failure of the whole change, not a tuning note.
  *
+ * ⭐⭐ ROUND 42 #49(b) RE-OPENED IT. «высокие тиры восстановлений в одном ценовом коридоре
+ * независимо от достатка… пользуются этими восстановлениями уже когда деньги реально есть.» So the
+ * clinic arm that #19 refused now SHIPS, on both high tiers, and the fourth arm below is what ships.
+ * ⚠ §5's four-mid-careers number is not a verdict on it: this walk's policy books a recovery week
+ * without judging whether a family like this one would ever choose to, so what it prices is the
+ * autopilot's choice. The limit is printed under §5 and written out in the spec's §9.
+ *
  * THE ARMS, on identical seeds and presets:
- *   A · BEFORE     retainerBandByRank = []           – no band anywhere; today's shipped prices.
- *   B1 · BAND ONLY the shipped rows (4.5 / 2.0)      – what this item ships.
- *   B · + CLINIC   B1 plus `uniformPrice` on the elite recovery rung – a proposal the §5 row below
- *                  REFUSED: it moves 4 of 20 mid-careers. Kept so the refusal is re-runnable.
+ *   A · BEFORE     retainerBandByRank = [], no uniform rungs – the pre-#19, pre-#49(b) prices.
+ *   B1 · BAND ONLY the shipped rows (4.5 / 2.0)      – what #19 shipped.
+ *   B2 · + ELITE   B1 plus `uniformPrice` on the elite recovery rung alone – #19's refused arm,
+ *                  kept unchanged so the two readings sit on the same numbers.
+ *   B3 · + BOTH    B1 plus `uniformPrice` on `resort` AND `elite` – ⭐ WHAT SHIPS under #49(b).
  *   0 · ACTUATION  a single row {atOrBetter: 1e9, factor: 50} – an absurd band that reaches EVERY
  *                  career. If §5's «byte-identical» columns do not explode under this arm, the
  *                  instrument is not reading the thing it claims to read and every table above it is
@@ -78,30 +86,52 @@ interface Arm {
   label: string
   rows: Row[]
   /** ⚠ THE SECOND CHANGE IS ITS OWN AXIS, and it has to be, or §5 cannot attribute. A career that
-   *  never enters the rank band but DOES book an elite clinic week would move under a combined arm,
-   *  and the byte-identical claim would read as broken when what actually moved was a vacation. */
-  vacationUniform: boolean
+   *  never enters the rank band but DOES book a recovery week would move under a combined arm, and
+   *  the byte-identical claim would read as broken when what actually moved was a vacation.
+   *
+   *  ⭐ ROUND 42 #49(b) TURNED IT FROM A BOOLEAN INTO A LIST, because his ruling is plural
+   *  («высокие тиры») and the two rungs have to be separable: `resort` is booked far more often than
+   *  `elite`, so an arm that moved them together could not say which one the wallets felt. */
+  uniformRungs: string[]
 }
-const BEFORE: Arm = { label: 'A · BEFORE (nothing)', rows: [], vacationUniform: false }
-const BAND_ONLY: Arm = { label: 'B1 · BAND ONLY (4.5 / 2.0)', rows: SHIPPED, vacationUniform: false }
-/** ⚠⚠ THE CLINIC HALF OF THIS ARM IS A **REFUSED** PROPOSAL AND THE ARM IS THE RECEIPT. Nothing on
- *  the tree sets `uniformPrice`; this arm switches it on so the refusal can be re-measured rather
- *  than quoted. Its §5 row against B1's is the whole evidence: the rank band moves 0 of 20
- *  mid-careers, the band plus the clinic moves 4 of 20. */
-const AFTER: Arm = { label: 'B · band + clinic (clinic REFUSED)', rows: SHIPPED, vacationUniform: true }
+const BEFORE: Arm = { label: 'A · BEFORE (nothing)', rows: [], uniformRungs: [] }
+const BAND_ONLY: Arm = { label: 'B1 · BAND ONLY (4.5 / 2.0)', rows: SHIPPED, uniformRungs: [] }
+/** ⚠⚠ ROUND 42 #19 REFUSED THIS ARM AND #49(b) UN-REFUSED IT, and the arm is kept unchanged so the
+ *  two readings sit on the same numbers. #19's evidence was §5: the rank band moves 0 of 20
+ *  mid-careers, the band plus the clinic moves 4 of 20. #49(b)'s ruling is that those four are the
+ *  BENCH POLICY's bookings re-priced – `econ-bench` books the best package inside 10% of funds every
+ *  off-season and every rescue, with no view on whether a family like this would choose a clinic –
+ *  so what §5 priced was the autopilot's choice and not a player's. The number stands; the question
+ *  it answers changed. */
+const AFTER: Arm = { label: 'B2 · band + elite only', rows: SHIPPED, uniformRungs: ['elite'] }
+/** ⭐⭐ ROUND 42 #49(b) – WHAT ACTUALLY SHIPS: both high tiers, on his plural. */
+const SHIPPED_ARM: Arm = { label: 'B3 · band + BOTH high tiers (SHIPS)', rows: SHIPPED, uniformRungs: ['resort', 'elite'] }
 /** ⚠⚠ THE ACTUATION ARM REACHES EVERY RANKED CAREER ON PURPOSE. A band that only fires in the tail
  *  cannot prove that §5's untouched column is untouched BECAUSE of the gate rather than because the
  *  instrument reads nothing. */
-const ABSURD: Arm = { label: '0 · ACTUATION (x50, everyone)', rows: [{ atOrBetter: 1_000_000_000, factor: 50 }], vacationUniform: false }
+const ABSURD: Arm = { label: '0 · ACTUATION (x50, everyone)', rows: [{ atOrBetter: 1_000_000_000, factor: 50 }], uniformRungs: [] }
 
-/** ⚠ `ECONOMY` is `as const`; the elite package is reached through the same cast the rows are. */
-const ELITE_PKG = ECONOMY.vacation.packages.find((p) => p.id === 'elite') as unknown as { uniformPrice?: true }
+/** ⚠ `ECONOMY` is `as const`; the packages are reached through the same cast the rows are.
+ *
+ *  ⚠⚠ EVERY PRICED RUNG IS LISTED, NOT ONLY THE TWO THAT SHIP, AND THAT IS WHAT MAKES `A` A REAL
+ *  CONTROL. The tree now SETS the flag on `resort` and `elite`, so an arm that only knew how to
+ *  turn flags ON would leave the shipped ones standing in the "before" arm and measure nothing –
+ *  the shape of a null result whose arm does not contain the change. `setArm` clears all of them
+ *  first and then sets exactly the arm's list. */
+const PRICED_RUNGS = ['grandma', 'camping', 'seaside', 'resort', 'elite']
+const PKG_BY_ID = new Map(
+  PRICED_RUNGS.map((id) => {
+    const pkg = ECONOMY.vacation.packages.find((p) => p.id === id) as unknown as { uniformPrice?: true } | undefined
+    if (!pkg) throw new Error(`no vacation package "${id}" – the rung list has rotted`)
+    return [id, pkg] as const
+  }),
+)
 
 function setArm(arm: Arm): void {
   BANDS.length = 0
   for (const r of arm.rows) BANDS.push({ ...r })
-  if (arm.vacationUniform) ELITE_PKG.uniformPrice = true
-  else delete ELITE_PKG.uniformPrice
+  for (const pkg of PKG_BY_ID.values()) delete pkg.uniformPrice
+  for (const id of arm.uniformRungs) (PKG_BY_ID.get(id) as { uniformPrice?: true }).uniformPrice = true
 }
 
 // =================================================================================================
@@ -252,8 +282,9 @@ function main(): void {
   const before = walk(BEFORE)
   const bandOnly = walk(BAND_ONLY)
   const after = walk(AFTER)
+  const bothRungs = walk(SHIPPED_ARM)
   seasonTable(BEFORE.label, before)
-  seasonTable(AFTER.label, after)
+  seasonTable(SHIPPED_ARM.label, bothRungs)
 
   console.log('\n================================================================================')
   console.log('§3  WHO ACTUALLY BUYS A CLINIC WEEK – the elite recovery rung against finding 3.2')
@@ -296,22 +327,34 @@ function main(): void {
   console.log(`  partition: ${before.filter((b) => b.everInBand).length} careers ever inside the shipped band, ` +
     `${before.filter((b) => !b.everInBand).length} never.`)
   partition(bandOnly, 'B1 · BAND ONLY vs A')
-  partition(after, 'B · BAND + CLINIC vs A')
+  partition(after, 'B2 · + elite only vs A')
+  partition(bothRungs, 'B3 · + BOTH high tiers vs A')
   partition(absurd, '0 · ACTUATION vs A')
   console.log('  ⚠ the ACTUATION row must show a LARGE in-band move, or §5 is reading nothing.')
   console.log('  ⚠ B1\'s never-in-band column must be 0/0 moved – THAT is finding 3.2\'s constraint.')
-  console.log('  ⚠ B minus B1 on that column is the clinic rung\'s own reach, and is its own decision.')
+  console.log('  ⚠ B2 and B3 minus B1 on that column are the two recovery rungs\' own reach.')
+  console.log('  ⚠⚠ ROUND 42 #49(b): THAT COLUMN IS NOT A VERDICT ANY MORE, AND THE SPEC SAYS SO.')
+  console.log('     This walk books the best package inside 10% of funds every off-season and every')
+  console.log('     rescue, with no view on whether a family like this one would choose a clinic. So a')
+  console.log('     mid-career that "moved" is the AUTOPILOT\'s booking re-priced, not a player\'s, and')
+  console.log('     no arm here can tell the two apart. The owner ruled on the design; this prints the')
+  console.log('     cost he spent knowingly. docs/specs/elite-retainer-2026-09.md §9.')
 
   console.log('\n--- survival (P5) ---')
-  for (const [label, rows] of [[BEFORE.label, before], [BAND_ONLY.label, bandOnly], [AFTER.label, after], [ABSURD.label, absurd]] as [string, CareerRow[]][]) {
+  for (const [label, rows] of [[BEFORE.label, before], [BAND_ONLY.label, bandOnly], [AFTER.label, after], [SHIPPED_ARM.label, bothRungs], [ABSURD.label, absurd]] as [string, CareerRow[]][]) {
     console.log(`  ${padR(label, 32)} bankrupt ${rows.filter((r) => r.bankrupt).length}/${rows.length}   median end funds ${m(med(rows.map((r) => r.endFundsCents)))}`)
   }
 
-  // ⚠ RESTORE **TO THE SHIPPED STATE**, which is the band rows and NO clinic flag - not to `AFTER`,
-  // whose clinic half is a refused proposal. A bench that left the arm set would poison anything
-  // imported after it, and here it would also leave the tree describing a change nobody took.
-  setArm(BAND_ONLY)
-  console.log(`\n  (arm restored to shipped: ${JSON.stringify(BANDS)}; sanity: band at #5 = ${coachRetainerBand(5)}, #50 = ${coachRetainerBand(50)}, #500 = ${coachRetainerBand(500)}, unranked = ${coachRetainerBand(null)})`)
+  // ⚠ RESTORE **TO THE SHIPPED STATE**, which since round 42 #49(b) is the band rows AND the flag on
+  // both high tiers - `SHIPPED_ARM`, not `BAND_ONLY`. A bench that left the arm set would poison
+  // anything imported after it, and one that restored the pre-#49(b) state would leave the tree
+  // describing a change the owner did take. The line below prints what it restored, so the two
+  // cannot drift apart silently.
+  setArm(SHIPPED_ARM)
+  console.log(
+    `\n  (arm restored to shipped: ${JSON.stringify(BANDS)}, uniform rungs ${JSON.stringify(SHIPPED_ARM.uniformRungs)}; ` +
+      `sanity: band at #5 = ${coachRetainerBand(5)}, #50 = ${coachRetainerBand(50)}, #500 = ${coachRetainerBand(500)}, unranked = ${coachRetainerBand(null)})`,
+  )
 }
 
 main()

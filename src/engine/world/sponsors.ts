@@ -16,7 +16,7 @@
 import { ECONOMY, managerCommissionBps, managerCommissionCents } from '../economy'
 // ⭐ ROUND 42 #5 – the cameo's cadence is DERIVED from a purpose-scoped sub-stream rather than
 // remembered (see `cameoWillingWeeks`). MAIN is not reached from this file.
-import { pickInt, rngFromSeed } from '../rng'
+import { rngFromSeed } from '../rng'
 import { formatCents } from '../../shared/money'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
@@ -297,10 +297,30 @@ export function sponsorCameoWilling(seed: string, week: number): boolean {
 /** ⭐ WHAT THE SHOP PUTS IN, in whole cents. Its own per-week sub-stream for the same reason the
  *  willingness is on one: the MAIN `pickInt` that used to draw this is still taken at the cameo's
  *  site and is no longer read, and an amount drawn off a stream the schedule cannot see would make
- *  the cheque's size depend on the rest of the week's dice. */
-export function sponsorCameoCents(seed: string, week: number): number {
-  const [lo, hi] = ECONOMY.sponsor.amountCents
-  return pickInt(rngFromSeed(`${seed}:sponsor:cameo:gift:${week}`), lo, hi)
+ *  the cheque's size depend on the rest of the week's dice.
+ *
+ *  ⭐⭐⭐ ROUND 42 #47 – IT IS A FRACTION OF A REAL GAP NOW, NOT A FLAT DRAW. The owner's own memory
+ *  of what he first asked for («мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия
+ *  поездок, самый сложный этап J серия, там самые большие расходы»), and his number for it («давай
+ *  что-то вроде 60-80% закрытия попробуем сделать»). `shortfallCents` is what the next trip she
+ *  cannot pay for is short by – computed at the cameo's site, where the calendar and the entry gate
+ *  are readable – and the shop closes `ECONOMY.sponsor.gapShare` of it.
+ *
+ *  ⚠⚠ NEVER ALL OF IT, BY CONSTRUCTION: the band's ceiling is 0.8, so the cheque is strictly smaller
+ *  than the gap for every draw. The family finds the rest or the trip is missed, and that is the
+ *  design rather than a rounding artefact – «help is real, and a missed trip stays possible».
+ *
+ *  ⚠ ONE DRAW ON THE SAME STREAM THE FLAT GIFT USED. `pickInt` spent one `rng()` and so does this,
+ *  on the identical key, so the sub-stream's shape is unchanged and MAIN is untouched – the same
+ *  discipline #5 and #43 were built under.
+ *
+ *  ⚠ A NON-POSITIVE GAP IS NOT A GAP and pays nothing. The caller gates on the same quantity, so
+ *  this is belt and braces; it is here because a negative cheque would be a silent debit. */
+export function sponsorCameoCents(seed: string, week: number, shortfallCents: number): number {
+  if (shortfallCents <= 0) return 0
+  const [lo, hi] = ECONOMY.sponsor.gapShare
+  const share = lo + rngFromSeed(`${seed}:sponsor:cameo:gift:${week}`)() * (hi - lo)
+  return Math.round(shortfallCents * share)
 }
 
 /** How many tournaments she entered in the season that is finishing at `reviewWeek` – the count a kit

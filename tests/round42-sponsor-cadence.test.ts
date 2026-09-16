@@ -228,9 +228,13 @@ describe('§3 the cadence is a pure function of (seed, week)', () => {
     // Move MAIN off its opening position so a reset-to-zero could not pass this by accident.
     tickWeek(world, resumeMain(world.rngMain))
     const before = { ...world.rngMain }
+    // ⚠ RE-AIMED BY ROUND 42 #47 – the cheque is a fraction of a REAL GAP now, so the amount takes a
+    // shortfall. The claim is untouched and is the one that matters here: neither half of the cameo
+    // may reach MAIN. The gap is a plain number precisely so this test can still ask the question
+    // without building a calendar to be short of money for.
     for (let w = 0; w < 200; w++) {
       sponsorCameoWilling(world.seed, w)
-      sponsorCameoCents(world.seed, w)
+      sponsorCameoCents(world.seed, w, 1200_00)
     }
     expect(world.rngMain, 'the cameo derives on its own sub-streams – invariant 2').toEqual(before)
   })
@@ -248,15 +252,33 @@ describe('§3 the cadence is a pure function of (seed, week)', () => {
 // §4 – THE SHOP IS STILL A SHOP: THE RATE AND THE AMOUNT
 // =================================================================================================
 describe('§4 what the shop gives, and how often it is willing at all', () => {
-  it('⭐ the cheque is inside the band `ECONOMY.sponsor.amountCents` and is whole cents', () => {
-    const [lo, hi] = S.amountCents
+  // ⚠⚠ RE-AIMED BY ROUND 42 #47, AND THE CLAIM IS A DIFFERENT ONE BECAUSE THE MECHANIC IS. The
+  // cheque used to be `pickInt(ECONOMY.sponsor.amountCents)` and is now a SHARE of the gap the next
+  // unpayable trip leaves – his design and his number, «60-80% закрытия», never all of it. So the
+  // band this asserts is `gapShare`, applied to a gap, and the load-bearing half is the CEILING:
+  // a cheque that ever reached the whole shortfall would make a missed trip impossible, which is the
+  // one thing the design says must stay possible.
+  it('⭐ the cheque closes 60–80% of the gap, never all of it, and is whole cents', () => {
+    const [lo, hi] = S.gapShare
     for (const seed of SEEDS) {
       for (let w = 0; w < 120; w++) {
-        const cents = sponsorCameoCents(seed, w)
-        expect(cents, `${seed} week ${w}`).toBeGreaterThanOrEqual(lo)
-        expect(cents).toBeLessThanOrEqual(hi)
-        expect(Number.isInteger(cents)).toBe(true)
+        // Three gaps a J-series year really produces, so the rounding is exercised at both ends.
+        for (const gap of [420_00, 1_675_00, 9_940_00]) {
+          const cents = sponsorCameoCents(seed, w, gap)
+          expect(cents, `${seed} week ${w} gap ${gap}`).toBeGreaterThanOrEqual(Math.floor(gap * lo))
+          expect(cents, `${seed} week ${w} gap ${gap}`).toBeLessThanOrEqual(Math.ceil(gap * hi))
+          expect(cents, 'the family always finds the rest itself').toBeLessThan(gap)
+          expect(Number.isInteger(cents)).toBe(true)
+        }
       }
+    }
+  })
+
+  // ⚠ AND A NON-GAP PAYS NOTHING. The caller gates on the same quantity, so this is the belt to that
+  // braces – a negative cheque would be a silent debit rather than a refused gift.
+  it('⚠ a zero or negative shortfall is not a gap and buys no cheque', () => {
+    for (const gap of [0, -1, -50_000_00]) {
+      expect(sponsorCameoCents('cameo-nogap', 17, gap)).toBe(0)
     }
   })
 

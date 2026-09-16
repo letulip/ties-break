@@ -212,3 +212,75 @@ hundred**, and a median season inside it banks $330k. The corpus is elite-skewed
 most questions and fatal for any question of the form «what happens to the careers that do NOT get
 there». Any bench asking that needs the 312-week horizon or a stated partition, and this one only
 found out because its actuation arm was built before its conclusion was written.
+
+---
+
+# 9. Round 42 #49(b) – he ruled the other way, and here is what the bench can and cannot say
+
+**The ruling, 16.09, and it is the un-refusal of §7:**
+
+> «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка… пользуются этими
+> восстановлениями уже когда деньги реально есть. Вряд ли семья с доходом 200-300 в неделю туда
+> поедет, а если и поедет – это их выбор.»
+
+So `uniformPrice: true` is now SET, on **both** high tiers – he said «тиры» in the plural, and
+`resort` ($1,800–3,000) is no more reachable on «200-300 в неделю» than `elite` ($4,000–7,000) is.
+The band stops above `seaside` ($600–1,000), which is the family hotel a stretched family really does
+book. `tests/planner.test.ts` pins which rungs carry it, by name and in both directions.
+
+**What it does to a price**, arithmetic and exact: a WORKING family's quote rises out of its 0.7–0.8
+corridor onto 1.0 (elite ≈$2,900 → ≈$4,000 at the floor) and a WEALTHY family's falls out of 1.2–1.3
+(≈$6,875 → ≈$5,500). One price, as he asked.
+
+## 9.1 The re-measurement, and the heading it does NOT get to keep
+
+`tools/r42-elite-retainer.ts` gained a fourth arm (B3 · both high tiers) and its `vacationUniform`
+boolean became a list of rung ids, so `resort` and `elite` can be separated. Re-run on **item 19's
+own corpus** – 6 seeds × 9 presets, 14 → 20, the horizon that actually contains careers which never
+enter the rank band:
+
+| arm | never-in-band moved | worst | in-band moved | worst |
+| --- | ---: | ---: | ---: | ---: |
+| B1 · band only | **0 / 22** | $0 | 25 / 32 | $53,030 |
+| B2 · + elite only (§7's refused arm) | 7 / 22 | $17,843 | 32 / 32 | $1,871,745 |
+| **B3 · + BOTH high tiers (SHIPS)** | **10 / 22** | **$1,007,723** | 32 / 32 | $1,111,687 |
+| 0 · ACTUATION (×50, everyone) | 9 / 22 | $132,775 | 27 / 32 | $3,678,680 |
+
+Survival is unmoved: **1 bankruptcy of 54 in every arm but the actuation one** (which takes 8), and
+the shipped arm's median end funds sit between the before arm's and the elite-only arm's.
+
+## 9.2 ⚠⚠ THE TWO LIMITS, SAID OUT LOUD RATHER THAN QUOTED PAST
+
+**(a) The policy books without judging, so what §5 prices is the AUTOPILOT's choice.** `econ-bench`'s
+`planRecoveryWeek` books the best package inside 10% of current funds every off-season and on every
+rescue. It has no notion of «a family like this one would not go to a clinic» – which is precisely
+the judgement his ruling makes. No arm here can tell «a family that would never book this» from «a
+family whose autopilot books everything», and no refinement of the corpus can supply it: it is a
+statement about a player, and the bench has no player in it. **That is why §7's «4 of 20» was never
+an answer to the question he has now asked.**
+
+**(b) AND THE NUMBER ITSELF IS NOT RESOLVABLE, WHICH §7 DID NOT KNOW.** B3's worst never-in-band
+career moves **$1,007,723**. A re-priced clinic week cannot do that arithmetically: the change is
+about +$1,100 on an `elite` booking and +$660 on a `resort` one for a working family, so six seasons
+of bookings come to roughly $10k. The million is **path divergence** – a changed wallet changes an
+entry decision, a different tournament is played, and prize money is heavy-tailed enough for one
+career to own the column. The tell is in the table: the ACTUATION arm, which multiplies the coach's
+retainer ×50 for EVERY career, moves that same column by a *smaller* worst case ($132,775) than the
+shipped arm does. An instrument in which the absurd arm is gentler than the real one is not measuring
+the real one.
+
+⚠ **And the 600-week horizon cannot be used to escape (b).** Run there, the partition is **34 careers
+in the band and 2 never** – a denominator of two is not a measurement, and §8 of this spec already
+warned that this corpus is elite-skewed for exactly this reason.
+
+## 9.3 So what the bench is good for here, and what it is not
+
+* It **is** good for the direct price arithmetic (§9's second paragraph) and for survival: nobody new
+  goes bankrupt, at either horizon.
+* It **is not** a verdict on finding 3.2's constraint any more. The constraint was «the raise must
+  reach the elite tail and nothing else»; this change deliberately reaches a discretionary purchase a
+  mid-career family may make, and the owner has ruled that such a family «если и поедет – это их
+  выбор». That is a design decision with a stated reason, and the honest record is that **the bench
+  cannot price it, not that the bench priced it at 4 of 20.**
+* The cost he spent knowingly: a working family's recovery week at the top two rungs costs about a
+  third more than it did; a wealthy family's costs about a fifth less.

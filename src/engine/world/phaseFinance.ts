@@ -63,7 +63,22 @@ import { accrueKidShare, addEvent } from './ledger'
 import { ageAtWeek, kidAgeYears } from './age'
 import { vacationForWeek } from './bookings'
 import { collegePausedShareYears, inCollege, resolveCollegeBill } from './college'
-import { sponsorCameoCents, sponsorCameoWilling, sponsorNeedMet } from './sponsors'
+// ⭐ ROUND 42 #47 – the cameo now sizes itself off a real trip, so the till reads the two things a
+// trip costs: the fares (`travelCostFor` and the seats that travel with her, all from the one module
+// that owns what a journey costs once somebody else is helping pay) and the entry gate.
+import {
+  coachTravelFareFor,
+  masseurTravelFareFor,
+  sponsorCameoCents,
+  sponsorCameoWilling,
+  sponsorNeedMet,
+  travelCostFor,
+} from './sponsors'
+// ⚠ `entryStatus` IS THE GATE `enterEvent` ITSELF RE-VALIDATES AGAINST, which is why the shortfall
+// probe asks it rather than re-deriving eligibility. One-way edge: `medical.ts` imports leaves and
+// `WorldState` as a type, and reaches no phase.
+import { entryStatus } from './medical'
+import { TIERS } from '../season/calendar'
 // ⚠ THE LEAF, NOT `./shop` – `world/assets.ts` is the shelf's pure reads and imports nothing from
 // this package, which is what keeps the till free of the shop's command-side dependencies.
 import { assetHeldWeeks, assetUpkeepCents, deliveredAssets, reachableFundsCents } from './assets'
@@ -627,22 +642,106 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   // (one line up, unconditionally of everything below), and only the payout is discarded, so the
   // MAIN sequence cannot depend on a player's answer at the fork. That is invariant 2 - player
   // choices may never re-roll the world's dice.
+  // ⭐⭐⭐ ROUND 42 #47 – AND THE CHEQUE IS THE SIZE OF A GAP NOW, NOT A DRAW FROM A BAND. His own
+  // memory of what the cameo was first for supersedes #5/#43's cadence tuning: «мы не фиксируем эти
+  // разрывы, а выдаём в край нужды для закрытия поездок, самый сложный этап J серия, там самые
+  // большие расходы», closing «60-80%» of it and never all of it.
+  //
+  // ⚠ THE COOLDOWN AND THE NEED GATE STAY AS THE FLOOR UNDER IT, unchanged and in that order –
+  // «help every week» is the defect he reported in the first place, and wave-6 T12's reachable-money
+  // fix is what makes a need test honest at all. The gap is a FOURTH condition on top of them and
+  // never a replacement: a willing shop that finds no unpayable trip writes nothing, which is
+  // exactly the week the flat draw used to pay for no reason.
+  //
+  // ⚠ ZERO NEW DRAWS ON ANY STREAM. The two dead MAIN draws above keep their slots; the gift's own
+  // sub-stream (`seed:sponsor:cameo:gift:<week>`) is spent exactly once as it always was; and
+  // `unpayableTrip` is pure arithmetic over the calendar. The frozen capture
+  // (41550 / e6b0c709) cannot see this item either.
+  const gapCents = unpayableTrip(world)?.shortfallCents ?? 0
   if (
+    gapCents > 0 &&
     sponsorCameoWilling(world.seed, world.week) &&
     !inCollege(world) &&
     sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier })
   ) {
-    const gift = sponsorCameoCents(world.seed, world.week)
+    const gift = sponsorCameoCents(world.seed, world.week, gapCents)
     world.fundsCents += gift
     addEvent(world, {
       week: world.week,
       type: 'income',
       category: 'sponsor',
-      // ⚠ INVARIANT 4 – not one character of this line moved. Round 42 #5 is a cadence item.
+      // ⚠ INVARIANT 4 – not one character of this line moved. Round 42 #5 is a cadence item and #47
+      // is a sizing item; neither is a copy item, and neither asked for one.
       text: 'A local sponsor chipped in!',
       amountCents: gift,
     })
   }
+}
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #47 – THE TRIP SHE CANNOT PAY FOR, AND WHAT IT IS SHORT BY
+// =================================================================================================
+//
+// ⚠ IT IS THE SOONEST ONE, NOT THE DEAREST AND NOT THE CHEAPEST, because «край нужды» is a moment
+// rather than a price: the trip about to be missed is the one the shop is reacting to. Ties on the
+// week go to the CHEAPEST, so a week that stacks three rungs is answered by the gap the family is
+// actually closest to closing rather than by the biggest number on the calendar.
+//
+// ⚠⚠ IT ASKS `entryStatus`, WHICH IS THE ONE GATE `enterEvent` RE-VALIDATES AGAINST. Without it this
+// would price a Slam for a twelve-year-old and the shop would be «in need» every week of the career
+// – the gate is what makes «a trip she cannot pay for» mean a trip she could otherwise take. Only a
+// HARD block disqualifies, exactly as `enterEvent` does: fatigue is a warned choice, not a veto, and
+// a family short of money for a tiring week is still short of money.
+//
+// ⚠ THE BILL IS ENTRY + TRAVEL + THE SEATS THAT TRAVEL WITH HER, which is `econ-bench`'s own
+// affordability test one term wider (it counts entry + travel) and is what the week will really take:
+// `chargeTravel`, `chargeCoachTravel` and `chargeMasseurTravel` all land on the play week together.
+// `travelCostFor` is asked rather than `event.travelCostCents`, so an academy scholarship and a kit
+// brand's share are already off the number – a covered fare is not a gap.
+//
+// ⚠ IT MEASURES AGAINST `reachableFundsCents`, NOT THE WALLET, for T12's reason: a family that has
+// parked its money in a deposit has not stopped having it, and a need test that could not see the
+// deposit was the defect he reported in play («чтобы поддержка приходила реально тогда, когда вообще
+// уже край и денег нет, а не только кошельком мыслить»).
+//
+// ⚠ ZERO DRAWS. Every term is a lookup or arithmetic over state the week has already written.
+//
+// ⚠ IT RETURNS THE TRIP AND NOT JUST THE NUMBER, and the extra fields are the bench's, not the
+// engine's: `tools/r42-cameo-gap-closer.ts` has to follow the SAME event to its week to answer his
+// «how often the family closes the rest and goes, how often the trip is missed anyway». A bench that
+// re-derived which trip the engine meant would be a second implementation of this rule, which is
+// exactly how the liveProb rotation came apart. The engine reads `shortfallCents` and nothing else.
+export interface UnpayableTrip {
+  eventId: string
+  eventWeek: number
+  billCents: number
+  shortfallCents: number
+}
+
+export function unpayableTrip(world: WorldState): UnpayableTrip | null {
+  // She is not entering anything out of a college freeze, so there is no trip to close.
+  if (inCollege(world)) return null
+  const reachable = reachableFundsCents(world)
+  let best: UnpayableTrip | null = null
+  for (const event of world.season) {
+    if (event.week <= world.week) continue
+    if (world.week > event.deadlineWeek) continue
+    if (world.entries.includes(event.id)) continue
+    // One body, one week – the rule `enterEvent` states, so an event she is already committed to
+    // that week is not a trip she can take.
+    if (world.season.some((other) => other.week === event.week && world.entries.includes(other.id))) continue
+    if (entryStatus(world, event).level === 'blocked') continue
+    const billCents =
+      TIERS[event.tier].entryFeeCents +
+      travelCostFor(world, event) +
+      coachTravelFareFor(world, event) +
+      masseurTravelFareFor(world, event)
+    if (billCents <= reachable) continue
+    if (best === null || event.week < best.eventWeek || (event.week === best.eventWeek && billCents < best.billCents)) {
+      best = { eventId: event.id, eventWeek: event.week, billCents, shortfallCents: billCents - reachable }
+    }
+  }
+  return best
 }
 
 // Recurring gear line-items (round-7 a). Scheduled DETERMINISTICALLY off per-category

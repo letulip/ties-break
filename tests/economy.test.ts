@@ -661,10 +661,13 @@ describe('⚠ the local-sponsor cameo gates on NEED, not on the row in the profi
    *  (EVENTS_CAP, oldest-first), so a suffix read at the end would silently lose the early hits –
    *  the same ledger-cap family as the wallet bug. Rows for `world.week - 1` are this tick's own and
    *  cannot have been pruned yet, so this is exact. */
-  function cameoCentsOver(world: WorldState, weeks: number): number {
+  function cameoCentsOver(world: WorldState, weeks: number, before?: (w: WorldState) => void): number {
     const rng = rngFromSeed(world.seed)
     let total = 0
     for (let i = 0; i < weeks; i++) {
+      // ⭐ ROUND 42 #47 – an optional hook run BEFORE each tick, so a caller can hold a family in the
+      // state it is making a claim about. Absent for every caller that had one before this item.
+      before?.(world)
       tickWeek(world, rng)
       for (const e of world.events) {
         if (e.week !== world.week - 1) continue
@@ -760,11 +763,29 @@ describe('⚠ the local-sponsor cameo gates on NEED, not on the row in the profi
     // One career, one seed, two balances – so the ONLY thing that can differ is the gate. A `middle`
     // background, which under `eligible: ['working']` could never bank a cent of this however broke
     // it was.
+    // ⚠⚠ RE-AIMED BY ROUND 42 #47. «Scraping the floor» used to mean $1,000 in the wallet, and the
+    // gate was the RUNWAY test alone (`fundsCents < 62 × courtCents`), which $1,000 passes. #47 put a
+    // fourth condition under it – the owner's own «выдаём в край нужды для ЗАКРЫТИЯ ПОЕЗДОК» – so the
+    // shop now writes only when a trip she could TAKE is out of reach. Measured on this very career:
+    // over 104 weeks she never falls below the price of the only trips she is eligible for (local
+    // events at $87–$128) and in fact ENDS ON $14,967, because the parent's contribution outruns the
+    // bill. Zero unpayable trips in 104 weeks, so zero cheques – and the old fixture was passing on
+    // a family that was never short of anything it could buy.
+    //
+    // So the short arm is held at a real DEFICIT, week by week, which is the state `sponsorNeedMet`'s
+    // own note calls «deep need» and the only one the trip gate can see. The CLAIM is unchanged and
+    // is still the one the wave exists for: a `middle` background can bank this money when it is
+    // genuinely short, and cannot when it is rich.
     const short = createWorld('need-e2e', { ...DEFAULT_PROFILE, background: 'middle', coachTier: 'middle' })
     short.fundsCents = 1_000_00
     const flush = createWorld('need-e2e', { ...DEFAULT_PROFILE, background: 'middle', coachTier: 'middle' })
     flush.fundsCents = 5_000_000_00
-    expect(cameoCentsOver(short, 104), 'a middle family scraping the floor got nothing').toBeGreaterThan(0)
+    expect(
+      cameoCentsOver(short, 104, (w) => {
+        w.fundsCents = -500_00
+      }),
+      'a middle family in real deficit got nothing',
+    ).toBeGreaterThan(0)
     expect(cameoCentsOver(flush, 104), 'a family sitting on millions was handed charity').toBe(0)
   })
 

@@ -91,15 +91,19 @@ export interface VacationPackage {
   conditionGain: number
   /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
   buffFactor: number
-  /** ⭐⭐ ROUND 42 #19 – ONE PRICE FOR EVERY FAMILY on a rung that carries it (round 41 P1's ruling,
-   *  reaching the service ladder).
+  /** ⭐⭐ ROUND 42 #19 → #49(b) – ONE PRICE FOR EVERY FAMILY on a rung that carries it (round 41 P1's
+   *  ruling, reaching the service ladder).
    *
-   *  ⚠⚠ NOTHING SETS IT TODAY, ON PURPOSE AND WITH A BENCH BEHIND THE DECISION. It was built for the
-   *  `elite` recovery rung – the owner's «элит рекавери… 2900» – and refused by its own measurement:
-   *  4 of 20 mid-careers moved, worst $178,701, against finding 3.2's «the raise must hit ONLY the
-   *  elite tail». The full note is on the `elite` package itself; `tools/r42-elite-retainer.ts`'s
-   *  clinic arm is what switches it on to re-measure. Optional rather than `false` everywhere so
-   *  that turning it on is one line and turning it off is deleting one. */
+   *  ⚠ THE TWO HIGH TIERS SET IT SINCE #49(b) – `resort` and `elite`, on the owner's 16.09 word
+   *  «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка». It was built
+   *  under #19 and left unset then, refused by a bench (4 of 20 mid-careers moved, worst $178,701)
+   *  whose policy books a clinic week without judging affordability – so what it priced was the
+   *  autopilot's choice, not a player's. The full note, the cost he spent knowingly and the limit no
+   *  bench can pass are on the `elite` package itself and in
+   *  docs/specs/elite-retainer-2026-09.md §9.
+   *
+   *  Optional rather than `false` everywhere so that the four rungs it does NOT reach say so by
+   *  silence, which is what `seaside` and below mean. */
   uniformPrice?: true
   /** ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – A PACKAGE THE SHELF CAN MAKE FREE. It used to
    *  say «ask before offering me» (the row existed only for a family with a delivered yacht); his
@@ -811,7 +815,29 @@ export const ECONOMY = {
   // Measured in docs/specs/need-not-background-2026-08.md (tools/runway-probe.ts, tools/two-cells.ts).
   sponsor: {
     rollChance: 0.06,
+    /** ⚠⚠ NO LONGER THE CHEQUE, AND THE LINE THAT STILL READS IT IS A DEAD MAIN DRAW. Round 42 #47
+     *  re-shaped the cameo from a flat gift into a fraction of a real gap (`gapShare` below), so the
+     *  only remaining reader of this band is the deliberately-unread `pickInt` at the cameo's site in
+     *  `world/phaseFinance.ts`. ⚠ IT MUST NOT BE DELETED: that draw holds its exact slot in the
+     *  weekly MAIN sequence, and removing it would move the frozen capture (41550 / `e6b0c709`) and
+     *  every per-week draw count pinned in `tests/condition.test.ts` and `tests/rivals.test.ts`.
+     *  Taking a die is the one thing #5, #43 and #47 were each told not to do. */
     amountCents: [500_00, 1500_00] as [number, number],
+
+    /** ⭐⭐⭐ ROUND 42 #47 – HOW MUCH OF THE GAP THE SHOP CLOSES. His number and his design, 15.09:
+     *  «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный этап
+     *  J серия, там самые большие расходы» → «давай что-то вроде 60-80% закрытия попробуем сделать».
+     *
+     *  ⚠⚠ THE CEILING IS BELOW 1 ON PURPOSE AND THAT IS THE WHOLE DESIGN. The family still has to
+     *  find the last fifth to two fifths itself, so **help is real and a missed trip stays possible**
+     *  – which is what separates a sponsor from a safety net and keeps a J-series decision costing
+     *  something. A band that reached 1.00 would make every entry affordable the moment a shop was
+     *  willing, and the hardest stretch of the career would stop being a stretch.
+     *
+     *  Drawn on the cameo's own purpose-scoped sub-stream (`seed:sponsor:cameo:gift:<week>`), which
+     *  is where the flat `pickInt` used to be drawn – same stream, same one draw, a different
+     *  meaning. Zero MAIN draws either way. */
+    gapShare: [0.6, 0.8] as [number, number],
 
     // ===============================================================================================
     // ⭐⭐⭐ ROUND 42 #5 – THE CADENCE DIAL. PROPOSED NUMBERS, HIS TO CONFIRM OFF THE PRINTED TABLE.
@@ -5748,6 +5774,16 @@ export const ECONOMY = {
         priceCents: [1800_00, 3000_00],
         conditionGain: 40,
         buffFactor: 0.9,
+        // ⭐⭐ ROUND 42 #49(b) – THE SECOND OF THE TWO HIGH TIERS, and it is here because he said
+        // «тиры» in the plural: «высокие тиры восстановлений в одном ценовом коридоре независимо от
+        // достатка». The full ruling and its measurement are on the `elite` row below; this rung is
+        // the other half of the same sentence. $1,800-3,000 a week is not a rung a family on
+        // «200-300 в неделю» reaches either, which is the test his reasoning sets.
+        //
+        // ⚠ THE BAND STOPS HERE AND DOES NOT REACH `seaside` ($600-1,000). That row is the family
+        // hotel a stretched family really does book, so the corridor is doing its job there – the
+        // ruling is about the TOP of the ladder, not about recovery in general.
+        uniformPrice: true,
       },
       {
         id: 'elite',
@@ -5756,8 +5792,29 @@ export const ECONOMY = {
         priceCents: [4000_00, 7000_00],
         conditionGain: 48,
         buffFactor: 0.85,
-        // ⭐⭐ ROUND 42 #19 – HIS SECOND NAMED FIGURE, MEASURED AND THEN **NOT TAKEN**. The switch
-        // below is deliberately absent from this row, and this note is the reason.
+        // ⭐⭐ ROUND 42 #49(b) – **SET**, AND THE RULING IS WHAT THE BENCH COULD NOT SEE. His word,
+        // 16.09: «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка…
+        // пользуются этими восстановлениями уже когда деньги реально есть. Вряд ли семья с доходом
+        // 200-300 в неделю туда поедет, а если и поедет – это их выбор.» The #19 note below is kept
+        // VERBATIM underneath, because the measurement in it is still true and is still the cost of
+        // this line – what changed is not the number, it is the question the number answers.
+        //
+        // ⚠⚠ WHY THE 4-OF-20 REFUSAL DOES NOT BIND ANY MORE. `tools/r42-elite-retainer.ts` walks its
+        // corpus under `econ-bench`'s policy, and that policy books the best package inside 10% of
+        // current funds every off-season and every rescue – mechanically, with no view on whether a
+        // family like this one would ever choose a clinic. So the four mid-careers it moved are the
+        // AUTOPILOT's bookings re-priced, not a player's. His sentence is precisely the judgement the
+        // policy does not make, and no arm can supply it: no bench can tell «a family that would
+        // never book this» from «a family whose autopilot books everything». That limit is named in
+        // docs/specs/elite-retainer-2026-09.md §9 rather than quietly re-measured away.
+        //
+        // ⚠ AND THE COST IS STILL THE COST. The re-measurement under #49(b) is in that same §9: the
+        // mid-careers that never enter the rank band still move, because a discretionary week really
+        // did get dearer for them. He has spent it knowingly.
+        //
+        // ---------------------------------------------------------------------------------------
+        // ⭐⭐ ROUND 42 #19 – HIS SECOND NAMED FIGURE, MEASURED AND THEN **NOT TAKEN** (the state
+        // this row was in until #49(b), kept because the measurement is the price of the line above).
         //
         // «элитный стоит 830 в неделю… И то же про элит рекавери… 2900». $2,900 is this band's floor
         // times a WORKING family's 0.725 corridor, so «the clinic the pros use» quotes the poorest
@@ -5786,6 +5843,7 @@ export const ECONOMY = {
         // ⚠ ZERO DRAWS EITHER WAY when it is switched on: `corridorPrice` still spends its `pickInt`
         // and its `rng()` on a purpose-scoped sub-stream that persists nothing; only the multiply
         // after them changes.
+        uniformPrice: true,
       },
       // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG. docs/specs/the-shop-2026-08.md §3f, the owner's own
       // idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска,
@@ -6897,8 +6955,9 @@ export function vacationPriceCents(
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
   if (pkg.freeOnceGranted && grantedIds.includes(packageId)) return 0
-  // ⭐ ROUND 42 #19 – `uniformPrice` is the one row that opts out of the wealth corridor; see the
-  // `elite` package for the ruling and for why `resort` is deliberately not with it.
+  // ⭐ ROUND 42 #19 → #49(b) – `uniformPrice` is the flag that opts a rung out of the wealth
+  // corridor, and the two HIGH TIERS (`resort`, `elite`) carry it since his 16.09 ruling. See the
+  // `elite` package for the ruling, the measurement and the limit no bench can pass.
   return corridorPrice(
     rngFromSeed(`${seed}:vacation:${week}:${packageId}`),
     pkg.priceCents,

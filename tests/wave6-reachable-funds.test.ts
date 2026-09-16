@@ -205,20 +205,51 @@ describe('T12 – his repro, in both of the arms he named', () => {
   })
 })
 
-/** Park everything, hold it a while, then sell it and spend the proceeds for real. What is left is a
- *  family with no wallet and nothing to reach – the owner's «уже край». */
+// =================================================================================================
+// ⚠⚠ RE-AIMED BY ROUND 42 #47, AND THE PROMISE THIS ARM GUARDS IS NARROWER THAN IT WAS.
+// =================================================================================================
+//
+// T12's claim was «when the money is really gone the shop writes», and it was true of a family with
+// an empty WALLET. #47 is the owner's own recovery of what he first asked the cameo to be – «мы не
+// фиксируем эти разрывы, а выдаём в край нужды для ЗАКРЫТИЯ ПОЕЗДОК» – so the shop now writes when a
+// TRIP she could take is out of reach, and a willing week that finds no such trip writes nothing.
+//
+// ⚠ THE TWO PROMISES COME APART AT THE LOCAL RUNG, AND THAT IS WHY THIS FIXTURE HAD TO MOVE.
+// Measured on this very world: a thirteen-year-old who has entered nothing is eligible ONLY for
+// `local` events (112 of 128 upcoming cards are gate-blocked on ranking), and a local trip costs
+// **$87–$128**. The cameo is decided in phase 2, AFTER the parent's weekly contribution has landed,
+// so a family sitting on the old fixture's $200 has six or seven hundred dollars in hand at the
+// moment of the decision and can pay for every trip it is allowed to take. Over 300 broke weeks the
+// probe found **zero** unpayable trips – not because the gate is off, but because there was nothing
+// she could not afford.
+//
+// So «уже край» is expressed the way the engine can now see it: a real DEFICIT, which is the state
+// `sponsorNeedMet`'s own note calls «deep need». At −$500 the shop writes on 4 of six working
+// careers and 2 of six middle ones, and at $200 it writes on none of either – which is the arm, in
+// both directions, and is why the number below is negative.
+//
+// ⚠ THIS IS A NARROWING OF A SHIPPED GUARANTEE AND IT IS FLAGGED FOR THE OWNER rather than absorbed:
+// docs/specs/cameo-gap-closer-2026-09.md §the honest reading puts the question to him, because the
+// same measurement shows the channel is worth $51 a season against the flat draw's $1,125.
+
+/** Park everything, hold it a while, then sell it and spend MORE than the proceeds – the family is
+ *  not merely empty, it is behind. The owner's «уже край», in the only state the trip gate can see. */
 function brokeAfterSelling(background: FamilyBackground): number {
   let cameos = 0
   for (let s = 0; s < SEEDS; s++) {
     const world = familyWorld(background, `t12-broke-${background}-${s}`)
     buyAsset(world, DEPOSIT, world.fundsCents)
     cameos += walk(world, 60, (w, i) => {
-      if (i !== 10) return
-      sellAsset(w, DEPOSIT)
-      expect(ownedAssets(w).find((a) => a.id === DEPOSIT), 'the parking is gone, not merely ignored').toBeUndefined()
-      // The money is spent. There is no engine command for «the family had to pay for something
-      // that is not tennis», so the wallet is set the way the benches set it.
-      w.fundsCents = 200_00
+      if (i < 10) return
+      if (i === 10) {
+        sellAsset(w, DEPOSIT)
+        expect(ownedAssets(w).find((a) => a.id === DEPOSIT), 'the parking is gone, not merely ignored').toBeUndefined()
+      }
+      // The money is spent, and then some. There is no engine command for «the family had to pay for
+      // something that is not tennis», so the wallet is set the way the benches set it – and it is
+      // re-set EVERY week, because the parent's weekly contribution would otherwise lift her back
+      // over a $100 local entry inside a fortnight and the family would stop being short of a trip.
+      w.fundsCents = -500_00
     })
   }
   return cameos
