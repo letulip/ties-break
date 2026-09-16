@@ -144,6 +144,28 @@ describe('ROUND 42 #20 – the soft chip earns attention', () => {
     expect(style.animation, 'switched off explicitly, not left to a shorthand').toContain('none')
     unmount()
   })
+
+  // ⭐⭐ ROUND 43 #7 – THE GLOW, AND IT IS THE HALF THE KILLSWITCH MUST **NOT** TAKE AWAY. His ask,
+  // 16.09: the chip's frame should light at the edges like the avatar's mood ring, «чтобы тоже
+  // подсветка была по краям небольшая, а не только сама рамка».
+  //
+  // ⚠ WHAT THIS CAN AND CANNOT SEE. happy-dom resolves the cascade but does not run animations, so a
+  // KEYFRAME's box-shadow is not readable here – the pulse case above is asserted by the animation
+  // NAME for exactly that reason. What IS readable is the reduce-block's static shadow, and that is
+  // the case worth a net anyway: it is the one a well-meaning cleanup would delete along with the
+  // motion, taking the attention the owner asked for away from the player who most needs the chip
+  // easy to find. Motion is what the system asked to reduce; edge light is not motion.
+  //
+  // ⚠ MUTATION-CHECKED: removing the `box-shadow` from the reduce block fails this, and it survives
+  // the ARM 2 case above untouched – which is why they are two tests and not one.
+  it('⭐ ...and the reduced-motion chip keeps a STILL glow rather than going dark (ARM 3)', () => {
+    setReducedMotion(true)
+    const { el, unmount } = mountedChip()
+    const shadow = getComputedStyle(el).boxShadow
+    expect(shadow, 'the calm chip lost its edge light with the motion').toMatch(/rgba?\(/)
+    expect(shadow, 'the glow is drawn in the accent, not in a grey').toMatch(/207|cfe152/i)
+    unmount()
+  })
 })
 
 // =================================================================================================

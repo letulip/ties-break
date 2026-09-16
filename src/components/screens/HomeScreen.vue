@@ -2414,25 +2414,63 @@ async function leaveCollege(): Promise<void> {
      «сделать плавно пульсирующей по контуру», item 8). ONLY the border tint moves – border-color
      costs no layout and no paint outside the card's own edge, so nothing under the finger shifts.
      `--accent-soft` and not `--accent`: an invitation, not an alarm. The killswitch below keeps the
-     house reduced-motion policy and swaps the pulse for a STEADY soft-accent edge, so the chip is
-     still findable by a player who asked the system for less motion. */
+     house reduced-motion policy and swaps the pulse for a STEADY soft-accent edge AND GLOW, so the
+     chip is still findable by a player who asked the system for less motion.
+     ⚠⚠ AMENDED BY ROUND 43 #7 (16.09): this note used to end «and no paint outside the card's own
+     edge». It now paints a small glow there, at his ask. The half that still holds is the half that
+     mattered – a `box-shadow` paints outside the border box WITHOUT reflowing anything, so nothing
+     under the finger shifts even with the glow. */
   animation: soft-beat-pulse 2.8s ease-in-out infinite;
 }
 
+/* ⭐⭐ ROUND 43 #7 – THE CONTOUR NOW CARRIES A GLOW, and the pattern is HIS OWN from round 42 #29(b):
+   the avatar's mood ring (`src/style.css`, `.diary-avatar-btn.has-mood-ring .diary-avatar`). His ask,
+   16.09: «пульсирующую рамку… по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по краям
+   небольшая, а не только сама рамка».
+
+   ⭐ TWO PROPERTIES OF THAT RING ARE THE DESIGN AND ARE COPIED RATHER THAN RE-INVENTED:
+     * THE ORDER. The bloom is listed FIRST so it paints above the card's own drop shadow, which is
+       what makes it read as light coming off the edge instead of as a second shadow under it.
+     * ONLY THE BLOOM MOVES. Its radius and alpha breathe; the drop shadow is restated identically in
+       both frames, because a `box-shadow` list REPLACES rather than extends. The ring never goes out
+       and never changes colour mid-cycle, and neither does this.
+
+   ⚠ SMALLER NUMBERS THAN THE RING'S ON PURPOSE. The avatar is a 40px circle and blooms to 13px/3px;
+   this is a full-width card, where the same figures would be a halo round a poster. He asked for
+   «подсветка небольшая» and 6→12px at 0.16→0.30 is that.
+
+   ⚠⚠ AND THE COMMENT ON `.soft-beat-card` ABOVE HAD TO BE AMENDED RATHER THAN LEFT: it said the
+   pulse «costs no layout and no paint outside the card's own edge», and his ask deliberately reverses
+   the second half. The FIRST half still holds and is the sentence worth keeping – a `box-shadow`
+   paints outside the border box without reflowing anything, so nothing under the finger moves. */
 @keyframes soft-beat-pulse {
   0%,
   100% {
     border-color: var(--card-edge);
+    box-shadow:
+      0 0 6px 0 rgba(var(--accent-rgb), 0.16),
+      var(--shadow-card);
   }
   50% {
     border-color: var(--accent-soft);
+    box-shadow:
+      0 0 12px 2px rgba(var(--accent-rgb), 0.3),
+      var(--shadow-card);
   }
 }
 
+/* ⚠⚠ ROUND 43 #7 – THE LIFT HAS TO CARRY THE GLOW OR IT LOSES IT. A running animation wins over a
+   plain declaration, so `box-shadow: var(--shadow-card-lift)` alone would be overridden by the
+   keyframes while the chip pulses, and the hover would look identical to the resting state. Pausing
+   the animation on hover is the fix that keeps BOTH: the card settles at its brightest edge under the
+   finger, which is also the clearest read of «this is a control». */
 .soft-beat-card:hover:not(:disabled),
 .soft-beat-card:focus-visible {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-card-lift);
+  animation-play-state: paused;
+  box-shadow:
+    0 0 12px 2px rgba(var(--accent-rgb), 0.3),
+    var(--shadow-card-lift);
   border-color: var(--accent-soft);
 }
 
@@ -2451,6 +2489,12 @@ async function leaveCollege(): Promise<void> {
        asked for survives as a steady soft-accent contour rather than disappearing with it. */
     animation: none;
     border-color: var(--accent-soft);
+    /* ⚠ ROUND 43 #7 – the GLOW stands still rather than standing down. Motion is what the system
+       asked to reduce; the edge light is not motion, and removing it would take the attention the
+       owner asked for away from exactly the player who needs the chip easiest to find. */
+    box-shadow:
+      0 0 9px 1px rgba(var(--accent-rgb), 0.22),
+      var(--shadow-card);
   }
 }
 
