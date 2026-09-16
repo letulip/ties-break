@@ -2423,3 +2423,52 @@ its own acceptance bench does not ship because the round is ending.
   and a third decorative mechanic on top of the two this round found. Built AFTER #34 re-prices nerve,
   the same ±6 points are worth several times that and the slump becomes a thing the player fights.
   **So the honest sequence is #34 → F1 → F2**, and this round's measurement is what says so.
+
+- [ ] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
+  in sequence, each one better than the last: «химия между ребёнком и тренером, а не просто стиль-метч»
+  → «может как-то от её темперамента исходя» → ⭐ «эта самая химия может как-то нарабатываться с разной
+  динамикой – это может стать показателем, насколько ей комфортно с тренером».
+
+  **The shape, as he described it.** Chemistry is a number that ACCRUES while a coach is hired, and the
+  RATE is the signal: «если химия прибавляется по 3-5-7% в год, возможно, это не самый подходящий
+  тренер. А если 10-15 – то лучше, а если больше – вообще хорошо». At the top of it, «за 3 года 100%
+  метч с бюджетным тренером, и он будет давать похожий буст на high/elite» – the Borg/Bergelin case he
+  and the architect discussed before: not the biggest name, HIS coach for a whole career.
+
+  **Why it is worth a wave.** It converts a hidden static stat into a TRAJECTORY the player reads over
+  seasons rather than looks up; it gives loyalty the only mechanical reward this game has ever offered
+  (today switching costs nothing but money); and it rescues the early coach choice from «buy the best
+  you can afford», because a cheap coach she clicks with becomes a real strategy rather than a
+  consolation.
+
+  **Architect's proposal on the parts he left open:**
+  * **The rate is the (temperament × manner) cell.** Her four temperaments are already rolled at birth
+    and now visible on the tile; give each coach a MANNER (demanding · patient · analytical · warm) and
+    the 4×4 table IS the rate table, 3–15% a year as he says. So «this coach is wrong for her» stops
+    being a style mismatch and becomes a relationship, which is what he asked for.
+  * **The effect has a CEILING, one tier up.** Chemistry raises the effective development factor from
+    the coach's own tier toward the NEXT tier's – a budget coach at 100% works like a high one and
+    never like an elite. Without that ceiling money stops being a lever at all and the coach economy
+    collapses into «hire anyone and wait», which is not what he is asking for.
+  * **Two axes, two jobs, no double-count.** CHEMISTRY drives development (who she learns from); STYLE
+    drives the match-day edge (the specialist reads her game – his own 16.09 approval). That answers
+    «может стиль вообще опустить на элите»: it does not need dropping, it needs the job where it still
+    matters at the ceiling.
+  * **The old pairing is REMEMBERED.** Leaving resets the working number, but the pair keeps what it
+    had – so going back to her first coach is a real move rather than starting from nothing.
+  * **It is read, never printed.** A percentage on screen is a slider; the coach's own seasonal line is
+    the instrument this game already has («they are finding each other» / «she is polite with him and
+    nothing more»). Copy his, as ever.
+  ⚠ Needs persistence – chemistry per pair – so it is a **v79** customer, and it is a WAVE rather than a
+  round item. Order: #34 (nerve gets a price) → F1 (form) → chemistry → F2 (the sparring seat).
+
+- [ ] **51. THE ANNUAL RAISE NEEDS A BASKET, NOT A TITLE (his 16.09).** «может такое быть, что всего с
+  1 титулом в сезон (например w250/w500) тренер будет требовать 15%? Кажется, что самого факта такого
+  единственного титула маловато, нужна какая-то общая оценка прогресса». He is right, and the fix is to
+  make the ask read a PROGRESS SCORE rather than a single fact. The honest components, all of which the
+  world already holds: **rank movement over the year** (what the market itself prices), **realised
+  development** – how much of her remaining headroom she actually took, which is literally the coach's
+  job – and **titles weighted by tier**, as a component rather than the trigger. ⚠ And once F1 lands,
+  its results channel already computes the residual against expectation, which is the fourth and best
+  component: a coach who got more out of her than the odds said should ask for more.
+  Corridor **5–15%** (his), ceiling = the rank band, refusal = he works out the season.
