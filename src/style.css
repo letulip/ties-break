@@ -5896,11 +5896,19 @@ button.linkish:hover:not(:disabled) {
    sentence in the one case it most matters, and «мы ни за что не наказываем» is the law it would be
    contradicting. The soft accent is the app's own «here is something worth looking at» edge (round 42
    #20: an invitation, not an alarm). ⚠ It is a marker rather than text, so the 3:1 non-text contrast
-   rule is what binds it – `--accent-soft` is the token that already passes it on this card family. */
+   rule is what binds it – `--accent-soft` is the token that already passes it on this card family.
+
+   ⚠⚠ 3px IS THE HOUSE'S RAIL WEIGHT AND NOT A CHOICE MADE HERE. `tests/ui-control-system.test.ts`
+   pins the idiom: a single-side border of 2px or more IS a rail, a rail is always the LEFT edge, and
+   it is 3px – or 4px when it carries a result, which R10-15 made an accessibility decision so a win
+   and a loss are separable without hue. This row carries no result, so it is the plain weight. The
+   first draft of this rule shipped 2px and the pin caught it, which is the pin doing exactly what
+   its own header says it is for: «an idiom nobody has written down is how the app ended up with two
+   answers for a button radius». */
 .knock-why {
   margin: 0 0 16px;
   padding-left: 10px;
-  border-left: 2px solid var(--accent-soft);
+  border-left: 3px solid var(--accent-soft);
   color: var(--text);
   font-size: 12.5px;
   line-height: 1.45;

@@ -4206,11 +4206,21 @@ function shopRowCornerAction(row: ShopRowView): boolean {
    register deliberately: it is the same KIND of sentence – what this part of the shelf is, before
    the cards – and giving it a louder one would make a correction read as an alarm.
    ⚠ The left accent rule is the one difference, and it is there because the line is answering a
-   question the screen used to leave open rather than describing a family. */
+   question the screen used to leave open rather than describing a family.
+
+   ⚠⚠ ROUND 43 #11's BUNDLE REPAIRED THE WEIGHT AND CHANGED NOTHING ELSE: 2px -> 3px. This rail
+   shipped at 2px and turned `tests/ui-control-system.test.ts` RED on `round/43` itself – the file
+   this bundle never touched was the first offender the rule found, and the control (this bundle's
+   own rail removed, the pin still red on this line) is what said so. The house idiom is that a
+   single-side border of 2px or more IS a rail, that a rail is the LEFT edge, and that it is 3px – or
+   4px when it carries a result, which R10-15 made an accessibility decision. This line carries no
+   result, so it is the plain weight. ⚠ NOT ONE CHARACTER OF #5's SENTENCE MOVED, and nothing about
+   the ruling he gave on it («окей» to draft C) is touched: this is the app's own design system
+   correcting a width. */
 .shelf-share-line {
   margin: 8px 0 0;
   padding: 6px 0 6px 10px;
-  border-left: 2px solid var(--accent-soft);
+  border-left: 3px solid var(--accent-soft);
   font-size: 12px;
   line-height: 1.35;
   color: var(--ink-soft);
