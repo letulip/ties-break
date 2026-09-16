@@ -282,12 +282,16 @@ export function coachUrlFor(background: FamilyBackground): string {
  *  tab can ask for them. A warm here would resolve off the precache and do nothing – which is exactly
  *  what this module's own header now says about `warm()` generally.
  *
- *  ⚠ TWO OF THE FOUR FILES HAVE NO CALLER AND THAT IS CORRECT. `broker` is the owner's own parking
- *  («брокера пока не знаю»), and `sparring` has no seat to sit on: `sparringHired` / `sparringRung` /
- *  `sparringTravels` are reserved SAVE KEYS with no reader anywhere on this tree (world/state.ts
- *  v78/v79 – «THE KEYS ONLY, AND NOTHING READS THEM»), so there is no card to put a face on. This
- *  module's standing rule is «never preload what cannot be shown», and the same rule read the other
- *  way is why neither gets a URL here. */
+ *  ⚠ ONE OF THE FOUR FILES HAS NO CALLER AND THAT IS CORRECT: `broker` is the owner's own parking
+ *  («брокера пока не знаю») and has no surface to sit on. This module's standing rule is
+ *  «never preload what cannot be shown», and the same rule read the other way is why it gets no URL.
+ *
+ *  ⭐⭐ AND `sparring` HAS ITS SEAT NOW (v80, wave F2), WHICH IS WHY THIS NOTE USED TO SAY TWO. It
+ *  read: «`sparringHired` / `sparringRung` / `sparringTravels` are reserved SAVE KEYS with no reader
+ *  anywhere on this tree, so there is no card to put a face on» – three versions of scheduling, and
+ *  the wave that finally reads them is the wave that hangs the portrait. Nothing about this function
+ *  moved for it; the seat is one more entry in `SupportStaffTab`'s `members`, exactly as the
+ *  psychologist was. */
 export function supportPortraitUrl(stem: string): string {
   return `${base()}${SUPPORT_DIR}${stem}.webp`
 }

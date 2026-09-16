@@ -112,6 +112,8 @@ import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
+// ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
+import { sparringUnlocked, sparringWeeklyCents } from './sparring'
 import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView, reachableFundsCents } from './shop'
@@ -121,7 +123,7 @@ import { merchWeeklyIncomeCents } from './business'
 import { copyByTrack, copyTrophyLedger, emptySeasonRecord, seasonWrapDue } from './milestones'
 import { computeLossStreak, fallbackPlayer, flipScore, kidMatchesOf, kidMatchEvent } from './matchNews'
 import { coachLoadViewOf, pendingKnock, radarViewOf } from './knock'
-import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
+import { capstoneSeasonsOf, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, sponsorStandingOf, travelCostFor } from './sponsors'
 // Round 29 part four P7/P8 – the fame fold (zero draws, nothing persisted; see world/fame.ts).
 import { fameAt } from './fame'
 // ⭐⭐⭐ v77 (the spotlight – T7): the booth's packet, READ off the episode's stamps. A pure derivation
@@ -1844,6 +1846,36 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
         }
       }
       return { masseurTravelFareCents, masseurTravelTrips }
+    })(),
+    // ⭐⭐⭐ v80, WAVE F2 – the THIRD seat's card facts, all derived: the flag, the same one-way gate,
+    // the rung's flat weekly bill, the rung index, the travel stance, and what the booked trips would
+    // cost his seat (the same as-if trick the masseur's block above uses, and for its reason – a
+    // price the switch's row quotes must not change the moment the switch is flipped).
+    //
+    // ⚠ NO ROOM NOTE, and that is not a gap: the masseur's note says what his HANDS DID lately, and
+    // this seat's whole work is an ABSENCE – the drift that did not happen. The one week it has
+    // something visible to show is her first match back from a covered gap, and that is a feed
+    // receipt (`SPARRING_RECEIPT`) rather than a standing line. The psychologist's card made the same
+    // call one seat down for the same reason.
+    sparringHired: world.sparringHired ?? false,
+    sparringUnlocked: sparringUnlocked(world),
+    sparringSalaryCents: sparringWeeklyCents(world),
+    sparringRung: world.sparringRung ?? ECONOMY.sparring.defaultRung,
+    sparringTravels: world.sparringTravels ?? false,
+    ...(() => {
+      const asIf: WorldState = { ...world, sparringHired: true, sparringTravels: true }
+      let sparringTravelFareCents = 0
+      let sparringTravelTrips = 0
+      for (const id of world.entries) {
+        const e = eventById(world, id)
+        if (!e || e.week < world.week) continue
+        const fare = sparringTravelFareFor(asIf, e)
+        if (fare > 0) {
+          sparringTravelFareCents += fare
+          sparringTravelTrips++
+        }
+      }
+      return { sparringTravelFareCents, sparringTravelTrips }
     })(),
     // ⭐ v76, the psychologist's year (wave 5 T2) – the second seat's card facts, all derived, and
     // SHORTER THAN THE MASSEUR'S BY EXACTLY WHAT RULING Б REMOVED: no travel stance, no as-if fare,

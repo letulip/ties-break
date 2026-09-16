@@ -78,6 +78,10 @@ import {
   PSY_FOCUS_LABEL,
   PSY_FOCUS_LINE,
 } from '../engine/world/psychologist'
+// ⭐⭐⭐ v80, WAVE F2 – the third seat's refusal, from the engine that throws it (the R10-16 doctrine,
+// asked of one more seat). Nothing else of his is imported: his rung catalogue is `ECONOMY.sparring`
+// below, and every live fact is the snapshot's.
+import { SPARRING_LOCKED_DETAIL } from '../engine/world/sparring'
 import type { PsyFocus } from '../engine/world/state'
 // v59 step 2 - the dial's option table. A static market catalogue in the same register as
 // `COACH_TIER_LABEL` next door: labels and prices keyed on nothing the world decides, so reading it
@@ -381,11 +385,100 @@ const psychologist = computed<StaffMember>(() => ({
   },
 }))
 
-/** ⭐ THE LIST. Two entries since v76, and the psychologist arrived exactly as this line promised he
- *  would: one entry here, one computed block above, nothing else on the tab moved. ⚠ THE MASSEUR
- *  STAYS FIRST – he is the seat the owner commissioned, paid a wave for and then could not find, and
- *  the order on this screen is the one thing this chapter exists to get right. */
-const members = computed<StaffMember[]>(() => [masseur.value, psychologist.value])
+// --- the sparring partner (v80, wave F2) ---------------------------------------------------------
+// ⭐ THE THIRD SEAT, AND THE SECOND TIME THIS CHAPTER'S OWN PROMISE HAS BEEN KEPT: one entry in
+// `members`, one computed block, and nothing else on the tab moved for him. The header's paragraph
+// about the psychologist predicted its own ending correctly and so did this one.
+//
+// Every fact is the SNAPSHOT's, the masseur's rule two blocks up: the flag, the gate, the flat weekly
+// contract, the chosen rung and the stance all come off the wire, so the card cannot invent a number
+// the engine did not derive and every click is a command the worker re-validates (invariant 1).
+//
+// ⚠ NO ROOM NOTE, which is the psychologist's own absence for a DIFFERENT reason and worth the
+// sentence. His card is quiet because his effects had not shipped yet; this one is quiet because the
+// seat's whole work is an ABSENCE – the rust that did not happen – and a standing line claiming it
+// every week would be boasting about a counterfactual. The one week he has something to show is her
+// first match back from a gap he covered, and that is a feed receipt.
+const sparringHired = computed(() => game.snapshot?.sparringHired ?? false)
+const sparringUnlocked = computed(() => game.snapshot?.sparringUnlocked ?? false)
+const sparringSalary = computed(() => formatCents(game.snapshot?.sparringSalaryCents ?? 0))
+// The roster catalogue, read here for the same reason `MASSEUR_RUNGS` and `PSYCHOLOGIST_RUNGS` are:
+// it is STATIC – labels and prices keyed on nothing the world decides – so reading it on the screen
+// leaks no derivation the snapshot should own. The ACTIVE rung and the headline price are both the
+// snapshot's.
+const SPARRING_RUNGS = ECONOMY.sparring.rungs
+const sparringRung = computed(() => game.snapshot?.sparringRung ?? ECONOMY.sparring.defaultRung)
+async function setSparringRungIndex(rung: number): Promise<void> {
+  if (rung === sparringRung.value) return
+  await game.setSparringRung(rung)
+}
+const sparringRungLabel = computed(() => SPARRING_RUNGS[sparringRung.value]?.label ?? '')
+const sparringTravels = computed(() => game.snapshot?.sparringTravels ?? false)
+async function toggleSparringTravel(): Promise<void> {
+  await game.setSparringTravels(!sparringTravels.value)
+}
+// ⚠⚠ THE SUB-LINE SAYS WHICH SHAPE THE SWITCH BUYS AND WHICH IT DOES NOT, because round 42 #48
+// MEASURED the answer and it is the opposite of the obvious one: a tournament occupies one week, so
+// the weeks she is at home are where nearly all the rust is made and the stay-at-home seat already
+// reaches them. A row that sold travel as the valuable half would be the screen lying about a price.
+// ⚠ NO NUMBER FROM THE MEASUREMENT ON SCREEN – the 89.4% is a bench figure and would pin copy to a
+// dial. The sentence says the SHAPE, which stays true when the constant moves (round 42 #46's rule).
+const sparringTravelSub = computed(() => {
+  const rule =
+    'On the road too – one more fare on every trip to a paying event. Most rust is made at home, so this buys the weeks away and nothing else.'
+  const trips = game.snapshot?.sparringTravelTrips ?? 0
+  if (trips === 0) return rule
+  const t = trips === 1 ? '1 trip' : `${trips} trips`
+  return `${rule} ${formatCents(game.snapshot?.sparringTravelFareCents ?? 0)} over the ${t} booked.`
+})
+// The one line under his name, by state – the masseur's three-state shape exactly. LOCKED prints the
+// ENGINE's own refusal (SPARRING_LOCKED_DETAIL – the sentence `hireSparring` throws), the R10-16
+// doctrine. HIRED and UNHIRED both say what the contract IS, because that is all that is true of him.
+const sparringLine = computed(() => {
+  if (!sparringUnlocked.value) return SPARRING_LOCKED_DETAIL
+  if (sparringHired.value) return 'On the practice court – the weeks without a match dull her less.'
+  return 'Somebody across the net on the weeks she is not competing.'
+})
+const sparring = computed<StaffMember>(() => ({
+  id: 'sparring',
+  name: 'Hitting partner',
+  portrait: 'sparring',
+  unlocked: sparringUnlocked.value,
+  hired: sparringHired.value,
+  line: sparringLine.value,
+  priceLabel: sparringSalary.value,
+  // Both directions ask, the screen's own doctrine – see the masseur's pair above.
+  hireMessage: `Put a hitting partner on the payroll at ${sparringSalary.value} a week (${sparringRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
+  releaseMessage: 'Let the hitting partner go? The weekly salary stops, and the practice weeks are hers alone.',
+  setHired: (hire: boolean) => game.hireSparring(hire),
+  dial: {
+    label: 'Hitting partner – who is across the net',
+    active: sparringRung.value,
+    rungs: SPARRING_RUNGS.map((r, i) => ({
+      value: i,
+      label: r.label,
+      priceLabel: formatCents(r.weeklyCents),
+    })),
+    set: setSparringRungIndex,
+  },
+  travel: {
+    title: 'Hitting partner travels to tournaments',
+    sub: sparringTravelSub.value,
+    on: sparringTravels.value,
+    onLabel: 'Hitting partner travels to tournaments - on. Press to keep the practice court at home.',
+    offLabel:
+      'Hitting partner travels to tournaments - off. Press to buy one more fare on every trip, for a court on the road.',
+    toggle: toggleSparringTravel,
+  },
+}))
+
+/** ⭐ THE LIST. Three entries since v80, and the hitting partner arrived exactly as the psychologist
+ *  did and as this line promised twice: one entry here, one computed block above, nothing else on the
+ *  tab moved. ⚠ THE MASSEUR STAYS FIRST – he is the seat the owner commissioned, paid a wave for and
+ *  then could not find, and the order on this screen is the one thing this chapter exists to get
+ *  right. The newest seat goes LAST, which is the order the three arrived in and the order their
+ *  portraits were drawn in. */
+const members = computed<StaffMember[]>(() => [masseur.value, psychologist.value, sparring.value])
 
 // ⚠ ONE CONFIRM PER DIRECTION FOR THE WHOLE LIST, keyed on the member id rather than a boolean per
 // person: two seats would otherwise mean four flags and four dialogs in the template, which is the
