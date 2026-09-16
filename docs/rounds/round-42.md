@@ -2542,9 +2542,21 @@ its own acceptance bench does not ship because the round is ending.
   ⚠ The install-size gate had 480 KiB of headroom before this and the four take ~192 KB of it. Still
   green, and now worth watching – the gate runs on every check and will say so if a fifth arrives.
 
-  **The placement is the open half, and it is a layout job rather than a drop-in.** The Support-staff
-  tab draws NO portrait today and says so in its own comment; the coach card's strip (round 42 #3) is
-  built for a 162×264 cut-out figure. These are 448×624 and they are **scenes** – each shows the
-  specialist WITH HER, the girl's back in frame – which is right for a card about a working
-  relationship and wrong for anything that wants a face. The builder picks the crop and the box, and
-  the standing sweep applies at 375 / 768 / 900 / 1280 on every seat card.
+  ⚠ **AND THE ARCHITECT WAS WRONG A SECOND TIME, about the pictures themselves.** Having cut the
+  contact sheet, he carried its shape into the note and called these «scenes … the specialist WITH
+  HER, the girl's back in frame». They are not. His own word: «никаких сцен там нет, всё так же:
+  1 специалист и всё» – and the files bear it out: one figure, framed from the thigh up, looking off
+  camera, exactly the coach roster's own composition.
+
+  **So the placement is the coach strip's principle, not a new treatment** – his ruling: «вот это
+  используй пожалуйста, принцип похож, просто соотношение сторон будет немного другое». The seat card
+  gets the same shape the market row has since round 42 #3: a fixed-width strip, `object-fit: cover`
+  with an `object-position` that keeps the head whole, the body's own height driving the picture, and
+  the floor derived so the picture can never be narrower than its window.
+  ⚠ **The one number that changes is the ratio, and the floor is derived FROM it, never copied:** the
+  coach masters are 162×264 (0.614), these are **448×624 (0.718)** – a wider figure for the same
+  height. So `strip × 624/448` is the padding-box floor here, against `strip × 264/162` there, and
+  the round-42 #3 arithmetic must be re-run for this ratio rather than reused. Same for the head
+  measurement: #3's «the head spans 8–62% of the picture» was measured on the coach masters, and these
+  four want their own reading before an `object-position` is chosen.
+  The standing sweep applies at 375 / 768 / 900 / 1280 on every seat card.
