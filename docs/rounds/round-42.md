@@ -772,7 +772,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   and its `text-overflow` is not `ellipsis` at any width, which is the only state in which a 60-90
   character line inside half a phone would have been cut.
 
-- [ ] **19. «элитный стоит 830 в неделю, это 43к в год… за такие деньги их не существует. И то же
+- [~] **19. «элитный стоит 830 в неделю, это 43к в год… за такие деньги их не существует. И то же
   про элит рекавери… 2900»** – **measure → its own priced bundle (M), and the blueprint is his own
   research.** [team-economics-2026-09](../research/team-economics-2026-09.md) (his 13.09 numbers +
   our audit) prices reality: a top-100 player's coach ≈ **$90k/yr retainer**, top-10 $150–250k, a
@@ -2349,3 +2349,26 @@ its own acceptance bench does not ship because the round is ending.
   trip is missed anyway, and what the gift is WORTH in dollars a season against today's $1,125 – a
   percentage of a J-series travel bill may be larger or smaller than the flat draw it replaces, and
   nobody should be surprised by which. Belongs with the measurement wave (bundle 15).
+
+- [ ] **48. THE SPARRING SEAT CANNOT BE BUILT YET, and the stop is the finding (15.09).** Bundle 13
+  refused to build it and was right twice over:
+  * **`world.form` does not exist.** The seat's entire effect per its spec §4 is «cut the RHYTHM
+    channel's drift by rung» – and the rhythm channel ships in wave **F1**, which never shipped
+    (`git grep rustAfterWeeks -- src` is empty; there is no `form` key in `state.ts` or any
+    migration). A seat built now would cut a drift that does not drift.
+  * **`sparringTravels` does not exist.** The owner's 15.09 override gives the seat the same «ездит»
+    switch every other seat has, and every travelling seat PERSISTS its stance. v78 was scoped before
+    that override and carries only `sparringHired` / `sparringRung`.
+
+  ⭐ **It was PRICED instead of guessed, and the price inverts the spec's own proposal.** The rust
+  census over 36 careers × 11.5 seasons: **31.4 matchless weeks a season**, of which 7.9 are drifting
+  weeks, median longest gap 14 weeks. And the travel switch is nearly worthless in this engine: a
+  tournament occupies one week and writes its result that week, so the only «away and matchless» week
+  that exists is a WITHDRAWAL – the not-travelling seat covers **89.4% of the rust**, and travelling
+  costs **$60,604 a season** to buy the other **10.6%**. Against the research's $50–80k band, only the
+  not-travelling top rung ($72,800) fits at all.
+  ⚠ So when F1 lands, the seat's default stance should be «stays home» and the travel switch is the
+  luxury – the opposite of the spec's «travelling is the job», and now with a number behind it.
+  ⚠ The drift table is PREDICTED from the spec's constants against measured calendars, not measured –
+  the mechanic does not exist. «What a season of rust costs without him» is unanswerable today, and
+  the bundle refused to estimate it rather than print a number that would look like a finding.

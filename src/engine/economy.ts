@@ -91,6 +91,16 @@ export interface VacationPackage {
   conditionGain: number
   /** injury-tau multiplier carried for ECONOMY.vacation.buffWeeks weeks; 1 = no carry-over buff */
   buffFactor: number
+  /** ⭐⭐ ROUND 42 #19 – ONE PRICE FOR EVERY FAMILY on a rung that carries it (round 41 P1's ruling,
+   *  reaching the service ladder).
+   *
+   *  ⚠⚠ NOTHING SETS IT TODAY, ON PURPOSE AND WITH A BENCH BEHIND THE DECISION. It was built for the
+   *  `elite` recovery rung – the owner's «элит рекавери… 2900» – and refused by its own measurement:
+   *  4 of 20 mid-careers moved, worst $178,701, against finding 3.2's «the raise must hit ONLY the
+   *  elite tail». The full note is on the `elite` package itself; `tools/r42-elite-retainer.ts`'s
+   *  clinic arm is what switches it on to re-measure. Optional rather than `false` everywhere so
+   *  that turning it on is one line and turning it off is deleting one. */
+  uniformPrice?: true
   /** ⭐⭐ ROUND 29 #5 -> PART TWO #8, the-shop §3f – A PACKAGE THE SHELF CAN MAKE FREE. It used to
    *  say «ask before offering me» (the row existed only for a family with a delivered yacht); his
    *  part-two #8 put the row on EVERY family's sheet at a real charter price – «можно просто на
@@ -434,6 +444,55 @@ export const ECONOMY = {
       high: [[64_00, 96_00], [80_00, 120_00], [96_00, 144_00]],
       elite: [[120_00, 180_00], [160_00, 240_00], [200_00, 300_00]],
     } as Record<CoachTier, [number, number][]>,
+
+    // =============================================================================================
+    // ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK. Proposals; the predicted-vs-measured table
+    // is docs/specs/elite-retainer-2026-09.md.
+    // =============================================================================================
+    //
+    // THE OWNER: «элитный стоит 830 в неделю, это 43к в год… за такие деньги их не существует», and
+    // then the commission: «у нас есть исследование и бенч, надо просто цифры проверить и
+    // актуализировать». His research (docs/research/team-economics-2026-09.md §1) prices a head
+    // coach in two parts, and until this round only one of them was sized by anything: a retainer
+    // read off the TIER the parent chose and her AGE band, plus a prize share. Reality sizes the
+    // retainer off THE PLAYER'S RANK - top-100 ≈ $90k/yr, top-10 $150-250k - and re-prices the SAME
+    // man as she climbs. Ours never did, which is finding 3.1 in one sentence.
+    //
+    // ⚠⚠ THE WHOLE POINT OF A RANK GATE IS THAT IT CANNOT REACH THE MIDDLE. Finding 3.2 is explicit
+    // that mid-careers are priced right and that a blanket staff raise «would bankrupt the mid game
+    // the tiers ladder was built to save». A factor read off her live W ranking is 1.0 for every
+    // career that never enters the professional top hundred, so the middle is not measured to be
+    // unmoved - it is ARITHMETICALLY unmoved, `x * 1` on an integer, on every week of every career.
+    // The bench proves it anyway: a claim of «byte-identical» that nobody ran is exactly the null
+    // arm CLAUDE.md warns about.
+    //
+    // ⚠ WHY HER RANK AND NOT HER EARNINGS, when 3.2's own complaint is denominated in money: the
+    // research says rank in as many words («sized by the PLAYER'S RANK»), and a fee that tracked the
+    // wallet would re-price the coach on the week a sponsor cheque landed, which is neither the
+    // fiction nor anything a player could plan around. Measured, the two agree here anyway - a
+    // season inside our top hundred banks a median $330k and a season inside our top ten $2.24M,
+    // which is real top-tour scale (tools/r42-elite-retainer.ts §1).
+    //
+    // ⚠ THE BAND MULTIPLIES HIS LABOUR AND NEVER THE COURT (`bandedRateCents`). A top-ten player
+    // does not make the hall dearer, and keeping the court out of it is also what lets the whole
+    // change be one multiply on one number: `weeklyBillSplit`'s facility half is computed from
+    // `facilityRateCents`, so the coach half absorbs the raise exactly and `coach + facility ===
+    // total` survives untouched.
+    //
+    // ⚠ STEPS AND NOT A RAMP, deliberately. The research's own shape is a band table, and 3.1 asks
+    // for «renegotiation as a scene, not a slider» - a step is the thing a scene can be hung on
+    // later. What ships here is the arithmetic; the scene is its own item.
+    //
+    // ⚠ READ TOP-DOWN, FIRST MATCH WINS, so the rows stay ordered tightest-first. Anything outside
+    // the last row is 1.0 - the identity, and the reason a career below the tail is byte-identical
+    // rather than merely close.
+    retainerBandByRank: [
+      // #1-10. Research: $150-250k/yr. At the elite rung this lands his labour at $172k (17-22) /
+      // $225k (23+) a year, which brackets the research's own midpoint.
+      { atOrBetter: 10, factor: 4.5 },
+      // #11-100. Research: ≈$90k/yr. Lands at $76.5k (17-22) / $100k (23+) - the band around it.
+      { atOrBetter: 100, factor: 2.0 },
+    ] as { atOrBetter: number; factor: number }[],
 
     // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).
     //
@@ -5697,6 +5756,36 @@ export const ECONOMY = {
         priceCents: [4000_00, 7000_00],
         conditionGain: 48,
         buffFactor: 0.85,
+        // ⭐⭐ ROUND 42 #19 – HIS SECOND NAMED FIGURE, MEASURED AND THEN **NOT TAKEN**. The switch
+        // below is deliberately absent from this row, and this note is the reason.
+        //
+        // «элитный стоит 830 в неделю… И то же про элит рекавери… 2900». $2,900 is this band's floor
+        // times a WORKING family's 0.725 corridor, so «the clinic the pros use» quotes the poorest
+        // family in the game a third off - and round 41 P1 already ruled on that shape for coaching
+        // («в про карьере с большими чеками цены для всех должны быть равны»). Extending P1 to this
+        // rung is ONE LINE: `uniformPrice: true` here. It was built, it typechecks, and it is what
+        // `tools/r42-elite-retainer.ts`'s clinic arm switches on.
+        //
+        // ⚠⚠ IT WAS REFUSED BY ITS OWN MEASUREMENT, AND BY THE HARDEST CONSTRAINT THIS ITEM HAS.
+        // Finding 3.2 says the raise must reach the elite tail and nothing else, so the bench
+        // partitions its corpus by whether a career ever enters the rank band and reads the wallet
+        // delta for the ones that never do. Over 20 such mid-careers (14->20, 6 seeds x 9 presets):
+        //   the rank band alone     0 of 20 moved, worst $0        - the constraint, satisfied
+        //   the band + this rung    4 of 20 moved, worst $178,701  - the constraint, broken
+        // A clinic week is discretionary and one-off, so «only a rich family could buy it» sounded
+        // right and is not: a stretched family books one after an injury, and the corridor is what
+        // made it reachable. The clean rank gate has no such failure mode because a rank is not a
+        // decision the family can stretch for.
+        //
+        // ⚠ SO THE MECHANISM STAYS AND THE FLAG DOES NOT, and that is the same shape v78's own
+        // `sparringHired` note describes: a reader who finds an unused switch here is reading a
+        // DECISION with a bench behind it, not a half-built feature. The other reading of his $2,900
+        // is on the table too - `resort` at a WEALTHY corridor quotes $2,950, which is nearer his
+        // number than this rung's working-family quote - and which of the two he meant is one word.
+        //
+        // ⚠ ZERO DRAWS EITHER WAY when it is switched on: `corridorPrice` still spends its `pickInt`
+        // and its `rng()` on a purpose-scoped sub-stream that persists nothing; only the multiply
+        // after them changes.
       },
       // ⭐⭐ ROUND 29 #5 – THE SEVENTH RUNG. docs/specs/the-shop-2026-08.md §3f, the owner's own
       // idea: «а неделя на яхте (при наличии яхты) вполне может стать новой строкой отпуска,
@@ -6761,9 +6850,21 @@ export function gearHitsUpTo(
 /** One corridor-scaled price: draw the MIDDLE-anchored base from `band`, then map ONE uniform
  *  roll into the background's wealth corridor (same shape as medicalBillCents/travelBgFactor –
  *  same roll, disjoint corridors, so working < middle < wealthy per offer). */
-function corridorPrice(rng: Rng, band: readonly [number, number], background: FamilyBackground): number {
+function corridorPrice(
+  rng: Rng,
+  band: readonly [number, number],
+  background: FamilyBackground,
+  /** ⭐ ROUND 42 #19 – `false` prices this offer at ONE number for every family (`UNIFORM_CORRIDOR`),
+   *  which is round 41 P1's ruling for a top-of-the-market service. Defaults to the corridor every
+   *  caller has always had, so only the row that asks for it moves.
+   *
+   *  ⚠ BOTH DRAWS STILL HAPPEN. `pickInt` and the `rng()` below run whatever this resolves to, the
+   *  same discipline the coach's own corridor keeps: a sub-stream's POSITION may not depend on a
+   *  price decision, or two families would walk `seed:vacation:<week>:<id>` differently. */
+  corridored = true,
+): number {
   const base = pickInt(rng, band[0], band[1])
-  const [cLo, cHi] = WEALTH_CORRIDOR[background]
+  const [cLo, cHi] = corridored ? WEALTH_CORRIDOR[background] : UNIFORM_CORRIDOR
   const roll = rng()
   return Math.round(base * (cLo + roll * (cHi - cLo)))
 }
@@ -6796,7 +6897,14 @@ export function vacationPriceCents(
   const pkg = vacationPackage(packageId)
   if (!pkg) throw new Error(`Unknown vacation package "${packageId}"`)
   if (pkg.freeOnceGranted && grantedIds.includes(packageId)) return 0
-  return corridorPrice(rngFromSeed(`${seed}:vacation:${week}:${packageId}`), pkg.priceCents, background)
+  // ⭐ ROUND 42 #19 – `uniformPrice` is the one row that opts out of the wealth corridor; see the
+  // `elite` package for the ruling and for why `resort` is deliberately not with it.
+  return corridorPrice(
+    rngFromSeed(`${seed}:vacation:${week}:${packageId}`),
+    pkg.priceCents,
+    background,
+    !(pkg.uniformPrice ?? false),
+  )
 }
 
 /** THE vacation pre-highlight, as ONE pure rule (Wave-2 tuning, fatigue bench 26.07).

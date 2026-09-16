@@ -593,6 +593,14 @@ describe('P3 — vacation pricing (middle-anchored band × wealth corridor)', ()
           40 + pkg.conditionGain + ECONOMY.condition.recoveryBase + 1,
         )
         // ...and the free package aside, the QUOTE does vary: working < middle < wealthy
+        //
+        // ⚠ ROUND 42 #19 LOOKED AT THIS ARM AND LEFT IT ALONE. That item proposed taking the corridor
+        // off the `elite` rung (round 41 P1's ruling, for the owner's «элит рекавери… 2900»), which
+        // would have turned this loop's claim inside out for one row. The bench refused the change –
+        // 4 of 20 mid-careers moved, worst $178,701, against finding 3.2 – so every rung is still
+        // corridored and every rung is still asserted strictly. Recorded because the next reader of
+        // `ECONOMY.vacation`'s `uniformPrice` field will wonder why nothing sets it, and this is the
+        // other end of that note.
         if (pkg.priceCents[1] > 0) {
           const quotes = backgrounds.map((b) => vacationPriceCents('P3-corridor', 1, pkg.id, b))
           expect(quotes[0], `${pkg.id} working < middle`).toBeLessThan(quotes[1])

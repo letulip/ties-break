@@ -12,7 +12,7 @@
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 // ⚠ `coachFactor` AND `StyleFit` JOINED FOR T12's PROFILE (wave 5), and they are a READ of the two
 // shipped factor tables rather than a second home for them – see the profile block below.
-import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
+import { bandedRateCents, bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachRetainerBand, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
 import type { StyleFit } from '../coach'
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
@@ -72,7 +72,7 @@ import { ageAtWeek, kidAgeExact, START_AGE_YEARS } from './age'
 // the HEAD-STARTED build (`createWorld`), so subtracting anything else would bill the parent for her
 // birth month. See that function's own note.
 import { startingSkills, withHeadStart } from './player'
-import { activeLadderOf, bookClosedTo, hasOutgrown, kidPoints, tierOpenFor } from './ladder'
+import { activeLadderOf, bookClosedTo, hasOutgrown, kidLadderRank, kidPoints, tierOpenFor } from './ladder'
 import type { WorldState } from '../world'
 import { guardNotEnded } from './endings'
 
@@ -422,7 +422,11 @@ export function coachBilling(world: WorldState): {
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
-  const rate = coach ? coach.rateCents : facilityRateCents(age, tierOf(coach))
+  // ⭐ ROUND 42 #19 – the quote reads the SAME banded rate `resolveBaseCosts` bills at, so the card,
+  // the budget meter and the ledger cannot describe three different retainers. The identity at band 1
+  // is what keeps every career below the tail quoting the cents it always quoted.
+  const band = coachRetainerBandOf(world)
+  const rate = coach ? bandedRateCents(coach.rateCents, age, tierOf(coach), band) : facilityRateCents(age, tierOf(coach))
   // ⚠ THE RUNG, round 41 P1: the quote has to know whether the corridor still prices this week.
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background, tierOf(coach))
   const seasonStart = seasonStartWeek(world.week)
@@ -682,6 +686,21 @@ const RETAINERS_A_YEAR = 4
  *  a seat down on the LEDGER without it vanishing from the family's standing budget.
  *
  *  Pure: zero MAIN draws, derived at snapshot time. */
+/** ⭐⭐⭐ ROUND 42 #19 – HER PLACE IN THE PROFESSIONAL TABLE, AS A RETAINER MULTIPLIER, in ONE place.
+ *
+ *  The whole argument and the constants are on `ECONOMY.coach.retainerBandByRank`; this is the world
+ *  reader, and it exists so that the quote and the till ask the same question of the same field. It
+ *  is 1 for every junior career and for every professional career outside the top hundred, which is
+ *  the property that makes the middle arithmetically unmoved rather than merely close.
+ *
+ *  ⚠ `kidLadderRank` (the CACHE) and not `kidLadderRankFolded`: round 41 #26 moved only the
+ *  PROJECTION layer onto the fresh fold and left every engine reader on `world.kidRankWta`, «where a
+ *  rank is a DECISION the tick made and must not be re-folded underneath it». A bill is such a
+ *  decision. Zero draws. */
+export function coachRetainerBandOf(world: WorldState): number {
+  return coachRetainerBand(kidLadderRank(world, 'wta'))
+}
+
 export function supportPayrollWeeklyCents(world: WorldState): number {
   // ⭐ v76 – AND THE SECOND SEAT IS ONE MORE LINE, gated on the hire for the identical reason the
   // note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college freeze
@@ -819,6 +838,12 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // about the man on the card, so a row-by-row answer would be the same question asked sixteen times
   // with sixteen chances to disagree. See `edgeTravelPct` below for what it gates.
   const travels = coachTravelsWithHer(world)
+  // ⭐⭐⭐ ROUND 42 #19 – AND THE WHOLE MARKET IS PRICED AT HER BAND. Asked ONCE, for the same reason
+  // the travel stance one line up is: it is a fact about HER standing and not about the man on the
+  // card, so a row-by-row read would be the same question asked sixteen times. The market re-prices
+  // because reality's does - a top-ten player shopping for a coach is not quoted a junior's fee by
+  // anybody - and it keeps the card honest against the bill she will actually be charged.
+  const retainerBand = coachRetainerBandOf(world)
   return buildCoachRoster(world.seed, age).map((coach) => {
     const fit = coachFitFor(coach, world.profile.playStyle)
     const [upliftLo, upliftHi] = coachSeasonUplift({
@@ -837,7 +862,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       name: coach.name,
       style: coach.style,
       fit,
-      weeklyCents: coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier),
+      weeklyCents: coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier),
       current: world.coachId === coach.id,
       // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
       // one week of anything; what the family is actually deciding is whether this bill fits the
@@ -848,7 +873,7 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // ⭐⭐⭐ ROUND 42 #42: ...less what the OTHER SEATS already cost. See `coachBudgetCents` above.
       overBudgetCents: Math.max(
         0,
-        coachWeeklyCents(coach.rateCents, world.plan, world.profile.background, coach.tier) - coachBudgetCents,
+        coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier) - coachBudgetCents,
       ),
       lockedPoints: eliteGateShortfall(coach, points),
       upliftPct: [upliftLo, upliftHi] as [number, number],

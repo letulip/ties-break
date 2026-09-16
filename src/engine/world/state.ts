@@ -484,10 +484,13 @@ import type { AcademySupport } from '../academy'
 //     shared/protocol/profile.ts carries the argument, and it is the reason this version's step
 //     walks the ROWS of a list as well as the keys of the world.
 //   · round 42 #45 / item 19 – `sparringHired` and `sparringRung`. ⚠⚠ THE KEYS ONLY, AND NOTHING
-//     READS THEM ON THIS TREE. The sparring seat itself is this round's bundle 13; it needed a
-//     schema move and would otherwise have waited for v79 over two fields' worth of state, so the
-//     keys ride here and the behaviour lands later. Said in the migration's own comment too, so an
-//     unused key is never read as a half-built feature.
+//     READS THEM ON THIS TREE, AND THE SEAT DID NOT LAND IN THIS ROUND EITHER. ⚠⚠ Round 42 bundle
+//     13 STOPPED on two missing things and was right to: `world.form` does not exist (the RHYTHM
+//     channel the seat's whole effect cuts ships in wave F1, which never shipped – `git grep
+//     rustAfterWeeks -- src` is empty), and the owner's 15.09 travel override needs a third key,
+//     `sparringTravels`, which v78 was scoped before he gave. So a seat built on these two would
+//     have cut a drift that does not drift. The keys stay because they are correct and append-only
+//     migrations are forever; the seat lands with F1 and with its travel key, in its own version.
 //
 // ⚠⚠ AND THE FOUR ARE THREE DIFFERENT KINDS OF THING, named so the next reader does not look for one
 // story: `composureBonus` is a FACT ABOUT HER that the parent's spending earned; `entries` is a

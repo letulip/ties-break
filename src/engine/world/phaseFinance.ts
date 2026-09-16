@@ -40,13 +40,20 @@ import {
   parentIncomeForWeekCents,
 } from '../economy'
 import {
+  bandedRateCents,
   coachById,
   coachCorridorFactor,
   coachHoursForPlan,
+  coachRetainerBand,
   facilityRateCents,
   tierOf,
   weeklyBillSplit,
 } from '../coach'
+// ⭐ ROUND 42 #19 – the till reads her place in the PROFESSIONAL table to price the retainer.
+// `kidLadderRank` and not `kidLadderRankFolded`: the bill is a decision the tick makes, and round 41
+// #26's own ruling is that every ENGINE reader stays on the cache while only the projection layer
+// re-folds.
+import { kidLadderRank } from './ladder'
 import { activeKitDeal, lifetimeKitHouse } from '../offers'
 import { GEAR_CATEGORY_LINE } from '../equipment'
 import { schoolIsOver } from '../kidLife'
@@ -440,7 +447,17 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
   const tier = tierOf(coach)
-  const rate = coach ? coach.rateCents : facilityRateCents(age, tier)
+  // ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK, and this is the only line of the till that
+  // knows it. `bandedRateCents` is the identity at band 1 (`ECONOMY.coach.retainerBandByRank` carries
+  // the whole argument), so a career that never enters the professional top hundred - which is most
+  // of them - charges the same integer cents this line has always charged, on every week.
+  //
+  // ⚠ ZERO DRAWS ADDED. A rank is a look-up on state the tick has already written and the band is a
+  // post-draw multiply on the RATE, exactly like the corridor two lines down; the frozen MAIN capture
+  // cannot see it. ⚠ And it is read BEFORE the jitter rather than after, purely so the two draws in
+  // this function stay adjacent and countable.
+  const band = coachRetainerBand(kidLadderRank(world, 'wta'))
+  const rate = coach ? bandedRateCents(coach.rateCents, age, tier, band) : facilityRateCents(age, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   // ⚠ ROUND 41 P1 – THE RUNG DECIDES WHETHER THERE IS A CORRIDOR AT ALL. `high` and `elite` are

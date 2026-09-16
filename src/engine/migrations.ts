@@ -2783,9 +2783,12 @@ export function migrateSave(raw: unknown): WorldState {
   //                            draws none because there is none.
   //
   // ⚠⚠ AND THE SPARRING PAIR IS A SCHEDULING DECISION, NOT A HALF-BUILT FEATURE. Nothing on this
-  // tree reads `sparringHired` or `sparringRung` – the seat's behaviour (the RHYTHM channel's drift
-  // cut by rung) is this round's bundle 13. Two fields cannot justify a schema move of their own, so
-  // they ride the bump that two other customers were already paying for. Said here as well as in
+  // tree reads `sparringHired` or `sparringRung`, and the seat did NOT land in this round: bundle 13
+  // stopped on two missing things and was right to. `world.form` does not exist – the RHYTHM channel
+  // the seat's whole effect cuts ships in wave F1, which never shipped – so a seat built here would
+  // cut a drift that does not drift; and the owner's 15.09 travel override («у остальных есть галочка
+  // ездит») needs a third key, `sparringTravels`, which this version was scoped before he gave it.
+  // The two keys stay because they are correct and a migration is forever. Said here as well as in
   // state.ts because THIS is where the next reader of an unused key will be standing.
   //
   // ⚠ `??=` AND NEVER `||=`, v76's and v77's rule for the identical reason: `sparringHired ||= false`
