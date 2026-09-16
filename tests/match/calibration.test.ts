@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { simulateMatch, fastMatchProbability } from '../../src/engine/match/engine'
-import { basePServe } from '../../src/engine/match/point'
+import { basePServe, modifiedPServe } from '../../src/engine/match/point'
 import { pMatchBo3 } from '../../src/engine/match/closedForm'
-import type { MatchPlayer, MatchOptions, Tour, Surface, MatchResult } from '../../src/engine/match/types'
+import type { MatchPlayer, MatchOptions, PointContext, Tour, Surface, MatchResult } from '../../src/engine/match/types'
 
 // All Monte Carlo runs use fixed string seeds, so every number below is deterministic.
 
@@ -177,18 +177,91 @@ describe('calibration — momentum is bounded', () => {
   )
 })
 
+// =================================================================================================
+// ⚠⚠ RE-AIMED BY ROUND 42 #34 – THE PRICE OF NERVE, AND THE BAND MOVED BECAUSE THE OWNER MOVED IT.
+// =================================================================================================
+//
+// The band used to be (0.50, 0.60) and the measurement sat at 0.526. Round 42 #34 measured what that
+// meant on a build the game really deals – **+20 composure bought +0.4 pp of match win rate against
+// groundstrokes' +18.0 pp, forty times** – and the owner ruled (15.09): «надо поднять цену нервов…
+// у нас будет честно понятно, что каждый показатель влияет на что-то в игре», target **+4 pp**.
+//
+// This fixture is the widest composure gap the game can express (100 against 0 – five times the 20
+// points the price list is quoted over), so it moves by five times as much and lands at **0.734**.
+// The re-aim is the ITEM, not a regression: docs/specs/the-price-of-nerve-2026-09.md wrote 0.68–0.75
+// down as prediction P13 before a line of `src/` moved, and the measurement is inside it.
+//
+// ⚠ THE UPPER WALL IS STILL A WALL AND IS WHAT THIS TEST IS FOR. A wing worth more than a serve
+// point would decide careers off the seed draw, which is the complaint that started #34; 0.80 is
+// where composure would be buying more than `serve` does over the same span.
 describe('calibration — composure matters but is bounded', () => {
   it(
-    'composure 100 vs composure 0 (else mirror 50s) wins in (0.50, 0.60) over 20k',
+    'composure 100 vs composure 0 (else mirror 50s) wins in (0.65, 0.80) over 20k',
     () => {
       const composed = player({ id: 'a', composure: 100 })
       const nervy = player({ id: 'b', composure: 0 })
       const rate = winRateA(composed, nervy, 20000, {}, 'comp')
-      expect(rate).toBeGreaterThan(0.5)
-      expect(rate).toBeLessThan(0.6)
+      expect(rate).toBeGreaterThan(0.65)
+      expect(rate).toBeLessThan(0.8)
     },
     MC_TIMEOUT,
   )
+})
+
+// =================================================================================================
+// ⭐⭐ ROUND 42 #34 – AND THE OTHER HALF OF THE CHANGE: A PAIR LEVEL IN COMPOSURE IS BYTE-IDENTICAL.
+// =================================================================================================
+//
+// The new pressure term is `(receiver.composure − server.composure) / 100 × PRESSURE_NERVE_MAX`, a
+// DIFFERENCE, so it is exactly 0 between two players level in the wing – `x - 0 === x` for every
+// finite x. That is what lets the tour's hold rate, the fairness fixture above and the upset corridor
+// survive a change to a quarter of the points BY CONSTRUCTION rather than by luck, and it is why the
+// Klaassen–Magnus dock was left where it was instead of being re-shaped into the difference (that
+// dock is NOT zero for a level pair, so re-shaping it would have moved every hold rate in the game).
+//
+// ⚠ ASSERTED AGAINST `modifiedPServe` ITSELF AND NOT AGAINST A REMEMBERED NUMBER, on the same
+// reasoning tests/match/point.test.ts uses for `nerveAndLegs`: a pin holding a constant would go
+// green again the moment somebody re-tuned the constant, and the property is not about the constant.
+// MEASURED CONFIRMATION, for the record: with the term at 0.07 and at 0, the ATP hard hold rate over
+// 10,000 mirror matches is 0.78681362 both times, WTA 0.66370895, the fairness fixture 0.49955000 –
+// identical to eight decimal places, which is what "the term is not there" looks like from outside.
+describe('calibration — round 42 #34: the pressure term is invisible to a level pair', () => {
+  it('every pressure point is byte-identical for two players level in composure', () => {
+    const o = baseOpts({ tour: 'wta' })
+    // Deliberately NOT level in everything else: the claim is about composure alone, so the pair
+    // carries a serve gap, a return gap and a rally gap that the base form does read.
+    const a = player({ id: 'a', serve: 61, ret: 48, groundstrokes: 70, composure: 73, stamina: 55 })
+    const b = player({ id: 'b', serve: 52, ret: 66, groundstrokes: 44, composure: 73, stamina: 55 })
+    const base = basePServe(a, b, o)
+    // The five facts that make a point a pressure point, one at a time and then all at once.
+    const contexts: PointContext[] = [
+      { pointNumber: 7, server: 0, tiebreak: false, breakPoint: false, setPointFor: null, matchPointFor: null },
+      { pointNumber: 7, server: 0, tiebreak: false, breakPoint: true, setPointFor: null, matchPointFor: null },
+      { pointNumber: 7, server: 0, tiebreak: true, breakPoint: false, setPointFor: null, matchPointFor: null },
+      { pointNumber: 7, server: 0, tiebreak: false, breakPoint: false, setPointFor: 1, matchPointFor: null },
+      { pointNumber: 7, server: 0, tiebreak: false, breakPoint: false, setPointFor: 1, matchPointFor: 1 },
+      { pointNumber: 7, server: 0, tiebreak: false, breakPoint: false, setPointFor: null, matchPointFor: null, decidingClose: true },
+      { pointNumber: 7, server: 0, tiebreak: true, breakPoint: true, setPointFor: 0, matchPointFor: 0, decidingClose: true },
+    ]
+    for (const ctx of contexts) {
+      // The ONLY term that may act here is the break-point dock, which reads the server's composure
+      // alone and is untouched by #34. Anything else on the sheet would be the new term leaking.
+      const expected = base - (ctx.breakPoint ? (1 - a.composure / 100) * 0.03 : 0)
+      const got = modifiedPServe(base, a, b, ctx, null)
+      expect(got, `pressure ctx ${JSON.stringify(ctx)}`).toBe(expected)
+    }
+  })
+
+  it('...and it is NOT zero the moment the two are unlevel – the mutation arm for the test above', () => {
+    const o = baseOpts({ tour: 'wta' })
+    const a = player({ id: 'a', composure: 73 })
+    const b = player({ id: 'b', composure: 43 })
+    const base = basePServe(a, b, o)
+    const tb: PointContext = { pointNumber: 7, server: 0, tiebreak: true, breakPoint: false, setPointFor: null, matchPointFor: null }
+    // A tiebreak point carries no dock of its own, so the whole difference is the new term: a
+    // 30-point edge to the server, i.e. `0.30 × PRESSURE_NERVE_MAX` added to her p.
+    expect(modifiedPServe(base, a, b, tb, null) - base).toBeCloseTo(0.3 * 0.07, 12)
+  })
 })
 
 describe('calibration — performance', () => {

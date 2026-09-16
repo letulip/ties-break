@@ -71,8 +71,35 @@ export function contextOf(score: MatchScore, pointNumber: number): PointContext 
     }
   }
 
-  return { pointNumber, server, tiebreak, breakPoint, setPointFor, matchPointFor }
+  return { pointNumber, server, tiebreak, breakPoint, setPointFor, matchPointFor, decidingClose: decidingClose(score) }
 }
+
+/** ⭐ ROUND 42 #34 – IS THIS POINT IN THE CLOSING GAMES OF A DECIDING SET?
+ *
+ *  Best-of-3, so the deciding set is the third, i.e. the two completed sets were split. The array
+ *  holds completed sets plus the in-progress one, so a third set in progress is `sets.length === 3`
+ *  – and `completeSet` only pushes a new set when neither side has two, so reaching three IS the
+ *  split. A match already won is not a point context at all.
+ *
+ *  ⚠ THE ONE OWNER OF THIS PREDICATE. `simulateMatch`'s fast path skips the `structuredClone` probe
+ *  above on most points and must therefore build the same answer itself; it calls THIS function
+ *  rather than re-deriving the rule, which is the lesson `tiebreakServer` learned when liveProb kept
+ *  a byte-equivalent private copy of the rotation. */
+export function decidingClose(score: MatchScore): boolean {
+  if (score.winner !== null) return false
+  if (score.sets.length < 3) return false
+  const set = score.sets[score.sets.length - 1]
+  return Math.max(set.a, set.b) >= DECIDER_CLOSE_FROM
+}
+
+/** ⭐ HOW LATE A DECIDING SET HAS TO BE BEFORE ITS GAMES COUNT AS PRESSURE – games won by the leader.
+ *
+ *  5 rather than 4 or 6, and it is a size choice inside the pressure set rather than a rule of
+ *  tennis: at 5 the band is "serving to stay in the match / serving for it and the game before it",
+ *  which is the stretch a player describes as the tight one. It is also what keeps the widened set
+ *  near the ~25% of points `docs/specs/the-price-of-nerve-2026-09.md` sized the price against –
+ *  measured, and re-measured by `tools/pressure-set-census.ts` if it ever moves. */
+export const DECIDER_CLOSE_FROM = 5
 
 export function formatScore(score: MatchScore): string {
   const setsPart = score.sets.map((s) => `${s.a}-${s.b}`).join(' ')

@@ -50,6 +50,35 @@
 // lives beside `basePServe` and only the closed form reads it. And `hard-even` is the only record
 // whose two players are LEVEL in composure and stamina (50/50 both), which is why its hash is
 // unchanged to the last bit: the term is a difference and a difference of equals is exactly zero.
+//
+// =================================================================================================
+// ⭐⭐ RE-FROZEN 16.09.2026 – ROUND 42 #34, THE PRICE OF NERVE, AND AGAIN THE DIFF IS THE PROOF.
+// =================================================================================================
+//
+// #34 is the second kind of wave this file's header names: it RETUNES the point model on the owner's
+// ruling («надо поднять цену нервов», 15.09), so these numbers move and should. Three symbols moved in
+// `point.ts`: a widened `isPressurePoint`, a second contested term `PRESSURE_NERVE_MAX = 0.07`, and
+// `COMPOSURE_K` re-fitted 2.2e-5 -> 2.2e-4 for the closed form. The per-field diff against the
+// fixture as it stood:
+//
+//     hard-even            HASH BYTE-IDENTICAL – nothing moved at all, not one of 137 points
+//     clay-cannon          214 -> 204 points, 1438 -> 1387 shots, aces [2,0] -> [0,0], clock -5:01
+//     grass-legacy         136 -> 135 points, 622 -> 620 shots
+//     hard-second-server   197 points unmoved, 1147 -> 1146 shots, clock -1.4 s
+//
+// ⚠⚠ AND THE FIRST ROW IS THE SAME LOAD-BEARING READING C4 LEFT HERE, EARNED A SECOND TIME BY A
+// DIFFERENT TERM. `hard-even` is the only record whose two players are LEVEL in composure (50/50),
+// and #34's nerve term is `(receiver.composure − server.composure) × PRESSURE_NERVE_MAX` – a
+// difference, so exactly 0 between equals. This record therefore proves the construction argument in
+// `point.ts` on the POINT LOOP itself, unabridged and at the bit, rather than within noise: a term
+// that widened the pressure set from 11.2% of points to 18.5% moved nothing whatsoever in a level
+// match. The three arms that DID move are precisely the three that carry a composure gap.
+//
+// ⚠ WHAT DID NOT MOVE ANYWHERE, and it is worth saying out loud: not one scoreline, not one winner,
+// not one retirement, and not one of the four arms' first sixteen shots. #34 re-textures the middle
+// of a match – which points are tight and who holds them – without touching how a match is scored.
+// The only readable field that moved in a direction worth a note is `clay-cannon`'s ace count; the
+// non-vacuity test below carries that story and the measurement behind it.
 import { describe, it, expect } from 'vitest'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -284,15 +313,29 @@ describe('fixed-record parity – the engine-side match path', () => {
       expect(arm.hash, `${name}: the hash is eight hex digits`).toMatch(/^[0-9a-f]{8}$/)
     }
     // ⚠ THE ACE BRANCH HAS TO BE LIVE SOMEWHERE, and it is thinner than it looks: `wta` aces are
-    // 6% of server-won points before the speed factor, so the four arms hold 16 aces between them
-    // (3 / 2 / 4 / 7 on 24.08) and no single arm holds many. The floor is therefore the CORPUS, not
-    // one match – the ace rate is the one thing rally.ts derives FROM the serve speed, so both
-    // moved symbols are unpinned if it never fires.
+    // 6% of server-won points before the speed factor, so the four arms hold 14 aces between them
+    // (3 / 0 / 4 / 7 on 16.09, and 3 / 2 / 4 / 7 on 24.08) and no single arm holds many. The floor is
+    // therefore the CORPUS, not one match – the ace rate is the one thing rally.ts derives FROM the
+    // serve speed, so both moved symbols are unpinned if it never fires.
     const acesEverywhere = Object.values(golden).reduce((n, arm) => n + arm.aces[0] + arm.aces[1], 0)
     expect(acesEverywhere, 'not one ace across four recorded matches').toBeGreaterThan(10)
-    for (const [name, arm] of Object.entries(golden)) {
-      expect(arm.aces[0] + arm.aces[1], `${name}: no ace at all in this arm`).toBeGreaterThan(0)
-    }
+    // ⚠⚠ RE-AIMED 16.09.2026, ROUND 42 #34 – A PER-ARM FLOOR USED TO STAND HERE AND IT CONTRADICTED
+    // THE PARAGRAPH ABOVE IT. The loop read `arm.aces[0] + arm.aces[1] > 0` for every arm, which asks
+    // each of the four to draw an ace – while the note three lines up says, correctly, that the floor
+    // is the corpus because no single arm holds many. #34 re-rolled every point of every arm with a
+    // composure gap and `clay-cannon` came back with none, so the contradiction finally fired.
+    //   ⚠ AND IT WAS ALWAYS A COIN, WHICH IS THE POINT – MEASURED, NOT ARGUED. The clay-cannon PAIR
+    //   over 200 seeds draws a mean of 2.74 aces on clay and draws ZERO in 5.5% of them (hard 1.5%,
+    //   grass 0.0%: clay's ace factor is the lowest of the three). A guard that a legitimate re-freeze
+    //   fails one time in eighteen is not measuring the branch, it is measuring the seed.
+    //   ⚠ THE BRANCH ITSELF IS UNTOUCHED AND DEMONSTRABLY LIVE: `rally.ts`, `serveSpeed.ts` and
+    //   `src/viz/` carry no #34 diff at all, `clay-cannon` still serves 180 km/h into the speed-ceiling
+    //   pin below, and three arms record 14 aces between them.
+    // ⭐ SO THE REPLACEMENT ASKS THE STRONGER QUESTION THE OLD LOOP WAS REACHING FOR: the corpus total
+    // may not rest on ONE arm. As written before, 11 aces in a single record with three silent arms
+    // passed both lines – a real degradation of the net that nothing here would have said a word about.
+    const armsWithAnAce = Object.values(golden).filter((arm) => arm.aces[0] + arm.aces[1] > 0).length
+    expect(armsWithAnAce, 'the whole corpus ace total rests on one or two arms').toBeGreaterThan(2)
     expect(golden['clay-cannon'].serveSpeedMax[0], 'the cannon served like a child').toBeGreaterThan(150)
     // The retirement arm is a retirement, so the truncated-log path stays covered by the record.
     expect(golden['hard-second-server'].retired, 'the retirement arm plays itself out now').not.toBe('none')

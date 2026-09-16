@@ -140,6 +140,23 @@ export interface PointContext {
   breakPoint: boolean
   setPointFor: Side | null
   matchPointFor: Side | null
+  /** ⭐ ROUND 42 #34 – THIS POINT SITS IN THE CLOSING GAMES OF A DECIDING SET.
+   *
+   *  The fifth member of the pressure set (`isPressurePoint`, match/point.ts), and the only one the
+   *  other four fields cannot already say: a 5-4 in a third set is not a break point, not a set
+   *  point and not a tiebreak, and it is the most nervous game in tennis. Best-of-3, so "deciding"
+   *  means the third set; "closing" means a side has reached `DECIDER_CLOSE_FROM` games.
+   *
+   *  ⚠ IT IS A FACT ABOUT THE SCORE, NOT A PHYSICS TERM, which is why it lives here beside the
+   *  other four rather than inside `modifiedPServe`. The predicate that turns the five facts into a
+   *  pressure point is point.ts's, and it is the only place that decides what nerve is spent on.
+   *
+   *  OPTIONAL, AND ABSENT MEANS «no» – not «unknown». Every hand-built fixture and every context a
+   *  caller composes without a score therefore reads exactly as it did before this field existed,
+   *  which is what keeps the calibration corpus honest. Both of the engine's two construction sites
+   *  (`contextOf` and `simulateMatch`'s fast path) set it EXPLICITLY, so the equivalence test in
+   *  tests/match/engine.test.ts compares two booleans and never a boolean against `undefined`. */
+  decidingClose?: boolean
 }
 
 export interface PointLogEntry extends PointContext {

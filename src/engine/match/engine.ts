@@ -11,7 +11,7 @@ import type {
   PointLogEntry,
   Side,
 } from './types'
-import { createScore, awardPoint, contextOf, formatScore } from './scoring'
+import { createScore, awardPoint, contextOf, decidingClose, formatScore } from './scoring'
 import { basePServe, calibratedPServe, modifiedPServe, retireDurability, retireHazard, type Streak } from './point'
 import { pMatchBo3 } from './closedForm'
 import { rngFromSeed } from '../rng'
@@ -171,7 +171,20 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
       if (gamePoint && (set.a >= 5 || set.b >= 5)) {
         ctx = contextOf(score, pointNumber)
       } else {
-        ctx = { pointNumber, server, tiebreak: false, breakPoint, setPointFor: null, matchPointFor: null }
+        // ⚠ `decidingClose` IS READ OFF THE SAME PREDICATE `contextOf` USES, never re-derived here.
+        // It is the one pressure fact that is NOT implied by a game point – a 5-4 in a third set at
+        // 15-0 is neither a break point nor a set point and is exactly the stretch #34 is about – so
+        // the cheap branch has to answer it too, and answering it with a second copy of the rule is
+        // how the liveProb rotation bug happened.
+        ctx = {
+          pointNumber,
+          server,
+          tiebreak: false,
+          breakPoint,
+          setPointFor: null,
+          matchPointFor: null,
+          decidingClose: decidingClose(score),
+        }
       }
     }
 
@@ -198,6 +211,7 @@ export function simulateMatch(a: MatchPlayer, b: MatchPlayer, opts: MatchOptions
       breakPoint: ctx.breakPoint,
       setPointFor: ctx.setPointFor,
       matchPointFor: ctx.matchPointFor,
+      decidingClose: ctx.decidingClose,
       winner,
       pServe: p,
       scoreAfter: formatScore(score),

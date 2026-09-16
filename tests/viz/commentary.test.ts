@@ -772,9 +772,16 @@ describe('commentary – item 3: the log knows which rung she is playing on', ()
     // Read on the CLAIM (the beat's first sentence), which is the part the pools decide. The manner
     // clause after it is chosen by the rotor and cut by the budget, so a whole row is not the right
     // unit for a subset claim - see `pool` in the source for the monotonicity rule itself.
+    // ⚠ THE SAMPLE MOVED 120 → 200 UNDER ROUND 42 #34, AND THE CLAIM DID NOT MOVE WITH IT. The subset
+    // property is STRUCTURAL – it is `pool`'s monotonicity rule in the source – and this test only
+    // SAMPLES the pools, by narrating a corpus of simulated matches. #34 re-priced composure in the
+    // point loop, so the same 120 matches narrate differently and one storey-2 phrasing («{P} breaks
+    // back, and the set is level.») stopped turning up in the storey-4 sample at all. That is a
+    // coverage miss, not a lost phrasing: at 200 matches every kind is subset-complete again, and 200
+    // is the corpus size five other blocks in this file already use.
     const claims = (event: Parameters<typeof buildCommentary>[3], kind: Beat['kind']): Set<string> => {
       const out = new Set<string>()
-      for (const m of corpus(120)) {
+      for (const m of corpus(200)) {
         for (const b of buildCommentary(m, A.name, B.name, event)) {
           if (b.kind === kind) out.add(mould(`${b.text.split('. ')[0]}.`))
         }

@@ -649,7 +649,13 @@ describe('⭐⭐⭐ item 1 – the tournament`s own screen, the matches, and the
     }
     // 3. ...and the weekend ends where it always did, on the result scene the prologue's own cards
     //    draw – «И с результатами в конце … А потом уже продолжаем наши прологовые карточки».
-    expect(matches, 'she played fewer matches than the bracket gave her').toBe(open.wins + 1)
+    // ⚠ «wins + 1» IS ONLY RIGHT WHEN SHE LOST HER LAST ONE, and round 42 #34 is what found that out.
+    // The seed search above takes the first of sixty that gives her a win; #34 re-priced composure in
+    // the point loop, so it now lands on a seed she WINS OUTRIGHT – three wins in a three-round draw,
+    // where there is no fourth match and `wins + 1` was asserting a match the bracket does not
+    // contain. A champion has always been able to turn up here; the arithmetic simply never met one.
+    // The draw's own depth is the ceiling, and that is the law rather than a re-aimed number.
+    expect(matches, 'she played fewer matches than the bracket gave her').toBe(Math.min(open.wins + 1, open.rounds))
     expect(wrapper.emitted('done')?.length, 'the last match did not end the weekend').toBe(1)
     wrapper.unmount()
   })

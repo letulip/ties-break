@@ -413,10 +413,17 @@ if (DO_FIT) {
   // ⚠ THE RANGE IS DELIBERATELY WIDER THAN THE ANSWER. A search whose winner sits on the edge of
   // its own window is not a fit, it is a clamp – the first cut of this ran to 6e-5 and landed at
   // 6.33e-5 by creeping out of the box one refinement at a time.
+  // ⚠ ROUND 42 #34 WIDENED THE COMPOSURE AXIS, for exactly the reason the note above gives. The
+  // pressure set went from the break point alone to break/set/match/tiebreak/deciding-close and the
+  // loop's nerve term became contested, so the closed form's mirror of it was PREDICTED at
+  // 1.5–2.2e-4 – i.e. on or outside the old 2e-4 edge, where a winner would have been a clamp
+  // rather than a fit. The composure axis now runs to 6e-4. The STAMINA axis is deliberately left at
+  // 2e-4: #34 moved no fatigue constant, so the fit is expected to reproduce 7.0e-5, and that it
+  // still does is the check that the two axes have not traded against each other.
   let loS = 0
   let hiS = 2e-4
   let loC = 0
-  let hiC = 2e-4
+  let hiC = 6e-4
   for (let pass = 0; pass < 4; pass++) {
     const stepS = (hiS - loS) / 40
     const stepC = (hiC - loC) / 40

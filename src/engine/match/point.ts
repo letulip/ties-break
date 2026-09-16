@@ -54,6 +54,45 @@ const PACE_K = 0.00015
 const BASE_CLAMP: [number, number] = [0.42, 0.82]
 const FINAL_CLAMP: [number, number] = [0.3, 0.9]
 const BIG_POINT_MAX_PENALTY = 0.03
+
+/** ⭐⭐ ROUND 42 #34 – THE PRICE OF NERVE, and it is the owner's ruling rather than a tuning pass.
+ *
+ *  p swing at a 100-point composure gap, on any point of the PRESSURE SET (`isPressurePoint`). At a
+ *  20-point gap – the span `tools/composure-bench.ts` prices every wing over – it is 1.4 pp of serve
+ *  probability on a pressure point, and at the widest gap the game really deals (composure 20 against
+ *  90) it is 4.9 pp. Inside the existing clamps at every level, and it reads like tennis.
+ *
+ *  ⚠ WHY THE WING NEEDED A PRICE AT ALL. The bench measured +20 of composure at **+0.4 to +0.6 pp**
+ *  of match win rate against groundstrokes' +18.0 pp – forty times – and the owner ruled (15.09):
+ *  «мне кажется, что нам надо поднять цену нервов… у нас будет честно понятно, что каждый показатель
+ *  влияет на что-то в игре», with the target his own too: **+20 composure ≈ +4 pp**.
+ *
+ *  ⚠⚠ FITTED TO THAT TARGET BY THE BENCH THAT MEASURED THE COMPLAINT, NOT CHOSEN. The arithmetic
+ *  predicted 0.050–0.060 and MISSED, because the widened pressure set measures 18.5% of points rather
+ *  than the plan's «~25%» (`tools/pressure-set-census.ts`); 0.07 is where the acceptance run puts the
+ *  target. Every step of it is in docs/specs/the-price-of-nerve-2026-09.md.
+ *
+ *  ⚠⚠ A DIFFERENCE, AND THAT IS THE WHOLE REASON IT CAN BE ADDED TO A CALIBRATED MODEL. Nerve on a
+ *  big point is contested – the returner is as tight as the server – so `(receiver − server)` is the
+ *  honest shape and the term is **exactly 0 when the two are level**. `x - 0 === x` for every finite
+ *  x, so the WTA and ATP hold-rate bands, the fairness fixture, every symmetric calibration cell and
+ *  the upset corridor are untouched at the BIT rather than within noise (measured: the ATP hard hold
+ *  rate over 10,000 mirror matches reads 0.78681362 with the term at 0.07 and at 0, WTA 0.66370895,
+ *  the fairness fixture 0.49955000). The same property `RALLY_K`, `PACE_K` and `nerveAndLegs` are
+ *  built around.
+ *
+ *  ⚠ IT DOES NOT REPLACE THE KLAASSEN–MAGNUS DOCK BELOW, AND THE REASON IS THAT PROPERTY. The spec's
+ *  §the build proposed re-shaping `BIG_POINT_MAX_PENALTY` itself; that dock is
+ *  `(1 − server.composure/100) × 0.03`, which is NOT zero for a level pair (1.14 pp at composure 62),
+ *  so re-shaping it would have deleted a real absolute effect – servers do underperform on break
+ *  points, which is what the citation says – and moved the tour's hold rate in the very place the
+ *  construction argument was being made. The dock stays exactly where it was; this is a second term.
+ *
+ *  Re-measure with `npx vite-node tools/composure-bench.ts -- --sims 20000` before moving it, and
+ *  RE-FIT `COMPOSURE_K` after (`tools/r38-closed-form-residual.ts -- --fit`) – the closed form is a
+ *  mirror of this loop and the two must not be left describing different games. */
+const PRESSURE_NERVE_MAX = 0.07
+
 const MOMENTUM_BONUS = 0.015
 const MOMENTUM_MIN_STREAK = 3
 const FATIGUE_START = 120 // point number
@@ -138,21 +177,30 @@ export function paceAdvantage(server: MatchPlayer, receiver: MatchPlayer): numbe
 
 /** p per point of COMPOSURE ADVANTAGE, for the closed form only.
  *
- *  ⚠ FITTED, AND ITS PREDICTION WAS WRITTEN FIRST – then missed, by a third. `modifiedPServe` docks
- *  the server `(1 − composure/100) × BIG_POINT_MAX_PENALTY` on a break point, so the PAIR's per-point
- *  edge moves by `breakPointRate × 0.03 × (cA − cB) / 100`; a difference term moves it by
- *  `2K(cA − cB)`, so the prediction is `breakPointRate × 0.03 / 200`. At the MEASURED break-point rate
- *  of **11.23%** of served points that is **1.68e-5**, and the free fit over 315 cells landed on
- *  **2.22e-5** – **1.32x** the arithmetic.
+ *  ⚠⚠ RE-FITTED BY ROUND 42 #34, NOT RE-GUESSED – **2.2e-5 → 2.2e-4, exactly ten times** – because
+ *  the loop it mirrors moved. It is not a design knob: it is the closed form's fitted image of what
+ *  `modifiedPServe` does, and when the pressure set widens and the nerve term becomes contested, the
+ *  mirror is wrong until it is re-measured. `npx vite-node tools/r38-closed-form-residual.ts -- --fit`
+ *  is the one instrument, and #34's run (315 cells x 20,000 matches, the composure axis widened to
+ *  6e-4 so the winner could not sit on its own boundary) landed the free fit on **2.20575e-4**.
  *
- *  The gap is LEVERAGE, and it is the same effect `STAMINA_K` shows in a stronger form: a break point
- *  is not an average point. It is by definition a point that ends a game, and the games it ends are
- *  the ones that decide sets – so an edge that only exists there moves more matches than the same
- *  edge spread evenly. The prediction is a flat average and the match is not flat.
+ *  ⚠ THE OTHER AXIS IS THE CROSS-CHECK AND IT PASSED. The same joint fit returned `K_STAM` at
+ *  **6.933e-5** against the shipped 7.0e-5 – under one per cent – which is what says #34 moved no
+ *  fatigue constant and that the two axes have not traded against each other.
  *
- *  Re-fit with `npx vite-node tools/r38-closed-form-residual.ts -- --fit` if
- *  `BIG_POINT_MAX_PENALTY`, the scoring format or the hold rate ever move. */
-const COMPOSURE_K = 2.2e-5
+ *  ⚠ THE PRE-#34 NOTE, KEPT BECAUSE THE ARITHMETIC IS STILL HOW THIS CONSTANT IS REASONED ABOUT.
+ *  `modifiedPServe` docked the server `(1 − composure/100) × BIG_POINT_MAX_PENALTY` on a break point
+ *  and nowhere else, so the PAIR's per-point edge moved by `breakPointRate × 0.03 × (cA − cB) / 100`;
+ *  a difference term moves it by `2K(cA − cB)`, giving `breakPointRate × 0.03 / 200`. At the measured
+ *  break-point rate of **11.23%** of served points that was **1.68e-5** against a fitted **2.22e-5** –
+ *  **1.32x** the arithmetic, and the gap is LEVERAGE: a break point is by definition a point that
+ *  ends a game, and the games it ends are the ones that decide sets, so an edge that lives only there
+ *  moves more matches than the same edge spread evenly. Since #34 the loop spends nerve on the whole
+ *  pressure set as well (18.5% of points, contested), which is where the further factor of ten is.
+ *
+ *  Re-fit if `BIG_POINT_MAX_PENALTY`, `PRESSURE_NERVE_MAX`, `isPressurePoint`, the scoring format or
+ *  the hold rate ever move. */
+const COMPOSURE_K = 2.2e-4
 
 /** p per point of STAMINA ADVANTAGE, for the closed form only.
  *
@@ -204,17 +252,22 @@ export function nerveAndLegs(server: MatchPlayer, receiver: MatchPlayer): number
  *  Four readers, one model, and the card and the curve at 0-0 are the same number by construction.
  *
  *  MEASURED (`tools/r38-closed-form-residual.ts`, 315 cells x 20,000 matches, all three surfaces,
- *  three skill levels, stamina gaps ±60 and composure gaps ±50):
+ *  three skill levels, stamina gaps ±60 and composure gaps ±50). ⭐ THE COLUMN IS ROUND 42 #34's
+ *  RE-FIT, because #34 moved the loop and this form is its mirror – «uncorrected» is the same grid
+ *  read against `pMatchBo3(basePServe…)`, which is a bigger number now precisely because the loop
+ *  spends more nerve than it did:
  *
- *      residual against the point loop      rms 3.06 pp -> 0.36 pp     worst 6.11 pp -> 1.04 pp
+ *      residual against the point loop      rms 8.58 pp -> 0.40 pp     worst 16.08 pp -> 1.11 pp
  *      held-out cells that also carry a skill gap
- *                                           rms 1.98 pp -> 0.60 pp     worst 4.74 pp -> 1.21 pp
- *      stamina 30 against 90                     4.77 pp -> 0.58 pp
- *      composure 30 against 80                   1.68 pp -> 0.51 pp
+ *                                           rms 7.06 pp -> 0.65 pp     worst 15.02 pp -> 1.72 pp
+ *      stamina 30 against 90                     4.77 pp -> 0.56 pp
+ *      composure 30 against 80                  11.99 pp -> 0.75 pp
  *
- *  ⚠ 0.36 pp IS THE SAMPLING FLOOR, NOT A REMAINING DEFECT. One cell of 20,000 matches has a
+ *  ⚠ 0.40 pp IS THE SAMPLING FLOOR, NOT A REMAINING DEFECT. One cell of 20,000 matches has a
  *  standard error of 0.35 pp, so the worst of 315 cells is expected near 1.1 pp from noise alone –
- *  which is where it landed. Nothing is left on the table for a third constant to pick up. */
+ *  which is where it landed. Nothing is left on the table for a third constant to pick up. (Before
+ *  #34 the same line read 0.36 pp against the same floor; the re-fit gave back 0.04 pp of it, which
+ *  is the cost of describing a term that now acts on 18.5% of points rather than 11.2%.) */
 export function calibratedPServe(server: MatchPlayer, receiver: MatchPlayer, opts: MatchOptions): number {
   return clamp(basePServe(server, receiver, opts) + nerveAndLegs(server, receiver), BASE_CLAMP)
 }
@@ -357,6 +410,37 @@ export const RETIRE_DURABILITY_PIVOT = 79.8
  *  need a span of 0.07, at which arriving fresh buys x1.02 and nothing has been fixed. */
 export const RETIRE_DURABILITY_SPAN = 2.6
 
+/** ⭐⭐ THE PRESSURE SET – where a tennis player feels her nerve, and the first of round 42 #34's
+ *  three levers.
+ *
+ *  ⚠ WHY IT WIDENED. Until #34 nerve acted on ONE kind of point, the break point, which is a
+ *  measured **11.23%** of served points (`tools/r38-closed-form-residual.ts` §1b); everything else in
+ *  a match was nerve-blind. The honest way to make the wing matter more is to let it act where a
+ *  player actually feels it rather than to make one point monstrous – so: a break point, a set
+ *  point, a match point, EVERY point of a tiebreak, and the closing games of a deciding set.
+ *  MEASURED at **18.5%** of points by `tools/pressure-set-census.ts`, which is a 1.65x widening and
+ *  is below the «~25%» the spec's plan estimated; the miss is reported as a miss in that spec and it
+ *  is the reason `PRESSURE_NERVE_MAX` came out above its own prediction.
+ *
+ *  ⚠ THE FIVE FACTS ARE THE SCORE'S, NOT THIS FILE'S. Four of them `PointContext` has carried since
+ *  the scoring FSM was written; the fifth (`decidingClose`) was added for this and is computed by
+ *  `scoring.ts`, the one owner of what the score means. This function is only the physics' opinion
+ *  about which of them are tight.
+ *
+ *  ⚠ THE SET IS DELIBERATELY A UNION AND NOT A WEIGHTING. A match point that is also a break point
+ *  in a deciding-set tiebreak is ONE pressure point, priced the same as a set point in the first.
+ *  Stacking multipliers would put the largest nerve swings exactly where the clamp is nearest, and
+ *  would make the wing's price a function of the scoreline's shape rather than of the wing. */
+export function isPressurePoint(ctx: PointContext): boolean {
+  return (
+    ctx.breakPoint ||
+    ctx.tiebreak ||
+    ctx.setPointFor !== null ||
+    ctx.matchPointFor !== null ||
+    (ctx.decidingClose ?? false)
+  )
+}
+
 export function modifiedPServe(
   base: number,
   server: MatchPlayer,
@@ -374,6 +458,13 @@ export function modifiedPServe(
   // 2. Big point (Klaassen–Magnus): servers underperform on break points, more so with low composure.
   if (ctx.breakPoint) {
     p -= (1 - server.composure / 100) * BIG_POINT_MAX_PENALTY
+  }
+
+  // 2b. ⭐⭐ ROUND 42 #34 – NERVE, CONTESTED, ON THE WHOLE PRESSURE SET. See `PRESSURE_NERVE_MAX`
+  // and `isPressurePoint` for why the set is five facts rather than one, and why this is a SECOND
+  // term rather than a re-shaped first one. Exactly 0 between two players level in composure.
+  if (isPressurePoint(ctx)) {
+    p -= ((receiver.composure - server.composure) / 100) * PRESSURE_NERVE_MAX
   }
 
   // 3. Fatigue: past FATIGUE_START the server tires (subtract) while a tired returner helps (add).
