@@ -75,9 +75,46 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   > **B.** `Every week this shelf earns, she takes 60% and the family keeps 40%. The figures below are the family's net.`
   > **C.** `She takes 60% of what these earn; the figures below are the family's 40%. A holding's worth is the whole business.`
 
-  ⭐ **Architect recommends C.** A and B say «this is net» and leave the valuation puzzle exactly
-  where it was; C closes both halves – the split AND the fact that the worth is of the whole business
-  rather than of his share, which is the half that produced his 41×.
+  ⭐ **Architect recommended C, and ✅ HE RULED C (16.09, «окей»).** A and B say «this is net» and leave
+  the valuation puzzle exactly where it was; C closes both halves – the split AND the fact that the
+  worth is of the whole business rather than of his share, which is the half that produced his 41×.
+  So the line that ships is:
+
+  > `She takes 60% of what these earn; the figures below are the family's 40%. A holding's worth is the whole business.`
+
+  ⚠ **The two percentages are ENGINE-READ, not literals** – `kidPrizeShareBps` at her age today, with
+  `collegePausedShareYears` folded in exactly as the prize ramp reads it. A hard-coded 60/40 is a lie
+  to a nineteen-year-old, and this round's own #5 is about a screen that lies by omission.
+
+- [ ] **7. THE SOFT-BEAT CHIP GETS THE AVATAR'S GLOW (his 16.09).** «Пульсирующую рамку вокруг её
+  просьбы поговорить на home сделать по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по
+  краям небольшая, а не только сама рамка.»
+
+  **The pattern to copy is already in the repo and it is his own from round 42 #29(b)** –
+  `src/style.css:3159`, the avatar's mood ring:
+
+      box-shadow:
+        0 0 0 1.5px var(--mood-ring-halo),              /* the dark halo, the colour's neighbour */
+        0 0 9px 1px rgba(var(--mood-ring-rgb), 0.55),   /* the glow, blooming past it */
+        0 2px 10px rgba(0, 0, 0, 0.45);                 /* the drop shadow, restated */
+
+  ⭐ **Two properties of that ring are the design and must carry across**, because they are why it
+  reads as a glow rather than as a thick border: the SHADOW ORDER (the first paints on top, so the
+  halo sits between the colour and the bloom) and the fact that `mood-ring-breathe` moves **only the
+  bloom** – the hue, the hairline and the halo are constant, so the ring never disappears and never
+  changes colour mid-cycle. The chip's `soft-beat-pulse` should breathe the same way, in
+  `--accent-soft` rather than a mood hue: an invitation, not an alarm (round 42 #20's own ruling).
+
+  ⚠⚠ **AND THE CHIP'S OWN COMMENT BECOMES WRONG AND MUST BE AMENDED, NOT LEFT.** `HomeScreen.vue`
+  around the `soft-beat-card` rule says today: «ONLY the border tint moves … costs no layout and no
+  paint outside the card's own edge, so nothing under the finger shifts.» His ask deliberately
+  reverses the second half. The first half still holds and is worth keeping: a `box-shadow` paints
+  outside the border box without reflowing anything, so **nothing under the finger moves even with the
+  glow** – which is the sentence the amended note should make.
+
+  ⚠ The reduced-motion killswitch below it keeps its job: with less motion asked for, the chip takes
+  a STEADY soft-accent edge and glow rather than a breathing one. A player who asked for calm still
+  has to be able to find the chip.
 
 - [?] **6. THE MASSEUR'S OWN FIGURE IS STILL MISSING.** Item 4 fixes the SHAPE; it does not supply a
   target. `docs/research/team-economics-2026-09.md`'s audit row says «masseur/physio salaried, no
