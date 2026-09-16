@@ -123,6 +123,20 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
       <p class="knock-line">{{ prompt.line }}</p>
       <p class="hint knock-read">{{ prompt.read }}</p>
 
+      <!-- ⭐⭐⭐ ROUND 43 #10 – WHY. The owner asked the card to point at what might be behind it, or
+           at least at what to go and look at; his words are in engine/knock.ts, where the sentence
+           is chosen (`knockCause`), because no Cyrillic may sit inside markup.
+           ⚠ THE SENTENCE IS THE ENGINE'S AND NOT THIS FILE'S, the rule the rest of this card already
+           keeps: a line that lives in a template is decoration and a line that lives in the engine
+           can be tested, and this one is a DERIVATION from the same two terms `knockChance` reads.
+           ⚠ IT IS ALWAYS THERE, AND ONE OF ITS FOUR VOICES SAYS THAT NOTHING THE FAMILY DID CAUSED
+           IT - which is the rule the item could not ship without. No `v-if`: a card that sometimes
+           answered and sometimes went quiet would read as a shrug on exactly the weeks a careful
+           parent most deserves the answer.
+           ⚠ UNDER THE READ AND ABOVE THE BRANCHES, because it is context for the decision rather
+           than part of it. Nothing about the two choices moved. -->
+      <p class="knock-why">{{ prompt.cause }}</p>
+
       <!-- THE TWO COSTS, SIDE BY SIDE AND SPELLED OUT. This is the legibility requirement: the
            player has to be able to see what he traded, in the currency he traded it in, before he
            taps. The sentences are the engine's (`restCost` / `pushCost`) and vary with the repeat.

@@ -1880,7 +1880,9 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // `advanceWeeks` blocks on – so the dialog cannot be missing on a week the engine has stopped,
     // and cannot be up on a week it has not.
     knock: knockLive(world.knock, world.week) ? world.knock : null,
-    knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition) : null,
+    // ⭐ ROUND 43 #10 – `world.plan` joins the call because the prompt now names a CAUSE, and the
+    // load half of it is `plan.train` (the same pair `knockChance` reads). Nothing else moved.
+    knockPrompt: pendingKnock(world) ? buildKnockPrompt(world.knock!, world.seed, world.condition, world.plan) : null,
     // ⭐ v48: HER BIRTHDAY, AND THE QUESTION IT ASKS. Same contract as `knockPrompt` above and for the
     // same reason: non-null on exactly the weeks `pendingBirthday` is non-null, which is the predicate
     // `advanceWeeks` blocks on, so the dialog cannot be missing on a week the engine has stopped.

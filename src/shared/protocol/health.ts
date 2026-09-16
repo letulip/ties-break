@@ -185,6 +185,28 @@ export interface KnockPrompt {
   line: string
   /** what the coach makes of it */
   read: string
+  /** ⭐⭐⭐ ROUND 43 #10 – WHY, IN ONE NAMED CAUSE. The owner, 16.09: «мой первый вопрос – ПОЧЕМУ? мне
+   *  кажется, в этом окошке можно игроку подсветить, что может быть причиной… или хотя бы предложить,
+   *  на что посмотреть.»
+   *
+   *  ⚠⚠ «WHICH TERM IS BIGGEST» IS THE WRONG QUESTION AND WOULD LIE, which is the whole design and is
+   *  why this is derived by `knockCause` rather than read off `knockChance`. At a grinding operating
+   *  point (condition 60, train 85) the three terms are base .100, fatigue .088, load .060 – the BASE
+   *  is the largest single one, and yet «nothing you did» would be false there: the family's choices
+   *  put .148 on top of an irreducible floor, so most of that week's risk was theirs. The measure is
+   *  therefore HOW MUCH THE CHOICES ADDED, and which of them added more.
+   *
+   *  ⚠⚠ AND IT CAN SAY THAT NOTHING THEY DID CAUSED IT. That is the rule this field must not ship
+   *  without: a game that always names a fault teaches that there is always something to fix and
+   *  manufactures guilt where there is none, against «мы ни за что не наказываем». When the two terms
+   *  sum to nothing the sentence says so – ⭐ NOT as an absent field but as a GOOD answer, which is
+   *  why this is `string` and not `string | null`. A nullable field would mean a branch that renders
+   *  nothing, and «the careful week gets no explanation» is the same silence read as a shrug.
+   *
+   *  ⚠ NO NUMBER, EVER – `read`'s own fog rule, and tests/knock.test.ts asks it of this field too. A
+   *  named cause is what he asked for, and nothing hidden is revealed by it either: condition is on
+   *  screen and `plan.train` follows the sessions he sets, so the card only points at what he has. */
+  cause: string
   /** ⚠ THE LEGIBILITY REQUIREMENT: one plain sentence per branch, naming the currency he is
    *  spending. The player must be able to see what he traded. */
   restCost: string
