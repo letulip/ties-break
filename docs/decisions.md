@@ -4635,3 +4635,20 @@ the spec's own fence sentence, so the switch cannot be priced before `world.form
 composure. Before #34 a ±6-point slump was worth about **0.15 pp** of match win rate – a slump nobody
 can feel, and the third decorative mechanic this round would have found. After #34 the same ±6 points
 are worth several times that. **#34 → F1 → F2**, on the round's own measurement.
+
+**5. THE CHEMISTRY WAVE'S FIRST TWO ANSWERS, the same day the spec was written.**
+
+* **C10 – «согласен»: the anti-match is as FREQUENT as the click.** A game where good luck is rare
+  and bad luck is common is not variable, it is punishing. The asymmetry the design needs is already
+  there and it is in the SPEED – an anti-match accrues at −10 to −20%/yr against the click's +33%,
+  because a click has to be able to finish inside a career or it is not a story, while an anti-match
+  only has to be felt.
+* ⭐ **C11 – the gauge carries the SIGN, and as a GRADIENT.** His design: «в положительном направлении
+  заполнение от светло-зелёного до ярко-зелёного в градиенте, а для отрицательного от оранжевого до красного».
+  It is better than the architect's own recommendation (one warning hue, filling the other way):
+  a gradient carries TWO facts in one component – the direction is the hue family, the strength is the
+  position inside it – so «going wrong» and «gone wrong» read without a number or a legend.
+  ⚠ Three build constraints recorded with it, and they are accessibility rather than taste: the fill
+  FRACTION must carry the sign too (red/green is the commonest colour-vision confusion), the neutral
+  must read «nothing has happened yet» rather than «bad», and `--accent` stays the icon's so the two
+  never compete.

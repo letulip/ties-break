@@ -373,8 +373,37 @@ His design, with the icon handed over:
   corridor would either lie or leak the draw. A question mark is the honest glyph for «nobody knows
   until you work together», and it is the mechanic's own advertisement.
 * **No percentage anywhere.** A number on screen is a slider; the coach's seasonal sentence is the
-  instrument this game already has. Copy his, as ever – the wave ships DRAFT lines for the three
+  instrument this game already has. Copy his, as ever – the wave ships DRAFT lines for the FOUR
   bands and he rules them.
+
+### 8a. ⭐⭐ The gauge carries the SIGN, and the sign is a gradient – his ruling, 16.09
+
+> «предлагаю, чтобы в положительном направлении заполнение было от светло-зелёного до ярко-зелёного в
+> градиенте, а для отрицательного от оранжевого до красного, например. Что-то такое.»
+
+| direction | fill |
+| --- | --- |
+| **positive** | light green → bright green, as a gradient |
+| **negative** | orange → red, as a gradient |
+
+⭐ **THIS IS BETTER THAN THE ARCHITECT'S OWN PROPOSAL AND THE REASON IS WORTH KEEPING.** The
+recommendation it replaces was «the ring fills the other way in a warning colour» – one hue per sign.
+His gradient carries **two facts in one component**: the DIRECTION is the hue family and the STRENGTH
+is the position inside it. A pair at −15 is orange and a pair at −90 is red, and the player reads
+«going wrong» and «gone wrong» without a second glyph, a number or a legend.
+
+⚠ **Three things the build has to get right, and they are accessibility rather than taste:**
+* **Hue is not the only channel.** Red/green is the most common colour-vision confusion there is, so
+  the FILL FRACTION has to say it too – a negative pairing fills from the other end, so the ring's
+  shape differs even when its colour does not.
+* **The neutral is a real state, not an empty one.** Chemistry starts at 0 and most careers stay
+  ordinary (§1's corner E), so the gauge at rest must read «nothing has happened yet» rather than
+  «bad» – the unfilled track, not the first orange step.
+* **`--accent` stays the icon's.** The chemistry mark above the ring keeps the wave's accent yellow
+  (his round-42 #52 instruction); the gradient belongs to the ring alone, so the two never compete.
+
+⚠ And the unworked-with card still carries the QUESTION MARK rather than a forecast – a gradient
+that predicted a seeded draw would leak it.
 
 ---
 
@@ -517,11 +546,15 @@ channel, and because two schema waves in flight at once is how an append-only mi
 | **C7** | is chemistry visible on the coach's seasonal line from season one, or once a band is clear? | **once clear** – a sentence in week 3 about a relationship is noise |
 | **C8** | do rival girls carry chemistry, or coach growth? | **neither, ever** – both are modifiers on a career the player steers, and the rival cohort has no coach model to hang them on |
 | **C9** | ⚠ **can a coach's TIER decline?** | **no** – one direction only. A falling tier would punish a player for a bad season twice (results, then the coach). ⚠ This is about §4's STANDING and not about §5a's chemistry, which is signed and does fall – two different numbers |
-| **C10** | is the anti-match as FREQUENT as the click, or rarer? | **the same frequency** – a game where good luck is rare and bad luck is common is not variable, it is punishing. It is already slower to arrive (§3), which is enough asymmetry |
-| **C11** | ⚠ does the §8 gauge show a NEGATIVE pairing, and how? | **yes, and it must** – a hidden penalty is a bug, not a mystery. Recommend the ring filling the other way in a warning colour rather than a second glyph, so one component carries both signs. ⚠ The three seasonal lines become FOUR (anti, ordinary, good, click) and the anti line is the load-bearing one |
+| **C10** | is the anti-match as FREQUENT as the click, or rarer? | ✅ **RULED 16.09: the same frequency** («согласен»). A game where good luck is rare and bad luck is common is not variable, it is punishing. It is already slower to ARRIVE (§3), which is the only asymmetry the design needs |
+| **C11** | ⚠ does the §8 gauge show a NEGATIVE pairing, and how? | ✅ **RULED 16.09: yes, and by GRADIENT** – his design, and it is better than the recommendation it answers. See §8a |
 
 **Done when:** C1–C11 are ruled, B0's corner frequencies are accepted as a corridor, the four seasonal
 DRAFT lines are ruled (§5a – the anti line especially), and the builder brief for C1 points here.
+
+✅ **TWO ARE ALREADY RULED (16.09): C10** – the anti-match is as frequent as the click – **and C11** –
+the gauge carries the sign as a gradient, §8a. **Nine remain**, and C1 (the 4×4 table) is the one to
+read first because it is the document's only unmeasured design claim.
 
 ---
 
