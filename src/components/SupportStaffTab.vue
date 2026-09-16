@@ -563,6 +563,10 @@ async function doRelease(): Promise<void> {
   flex-direction: column;
   align-items: center;
   gap: 2px;
+  /* ⚠ ROUND 43 #3 – `min-width: 0` is the flex-overflow guard, not a tidy-up: a flex item defaults to
+     `min-width: auto`, so without this a wider price label widens the whole row instead of fitting
+     inside its third of it. */
+  min-width: 0;
   padding: 6px 4px;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
   border-radius: 8px;
@@ -574,9 +578,27 @@ async function doRelease(): Promise<void> {
   border-color: var(--accent, #4da3ff);
   color: var(--accent, #4da3ff);
 }
+/* ⭐⭐ ROUND 43 #3 – THE PRICE IS THE THING HE IS COMPARING, so it stopped being the smallest text
+   on the pill. His ask: «сами цены внутри опций этих специалистов надо сделать покрупнее и можно
+   пожирнее даже» (16.09). It was 10px at 0.75 opacity inside an 11px pill – SMALLER and fainter
+   than the label above it, which inverts what the row is for: the label says what a rung is, the
+   price says what it costs, and the second is the one being weighed against three others.
+   ⚠ TYPOGRAPHY ONLY – not one string moved, which is what makes it safe under invariant 4.
+   ⚠⚠ AND THE CONSTRAINT IS NOT THE 2x2 WRAP – that belongs to `.staff-focus` below, which is a
+   DIFFERENT element (four focus pills that wrap). This row is `.staff-dial` – `display: flex` with
+   `flex: 1` rungs, three across, and it does NOT wrap. Written down because the first draft of this
+   note borrowed the neighbour's reason, which is how a wrong constraint gets inherited.
+   ⚠ THE REAL RISK IS FLEX OVERFLOW: a flex item's default `min-width: auto` lets a wide child push
+   the item past its share, so a bigger price can widen the row rather than shrink to it. `min-width:
+   0` on the rung is the guard, and `tabular-nums` keeps every price the same width whatever the
+   digits – so the widest pill no longer depends on whether the number is $150 or $1,050.
+   Arithmetic at 375px: ~340px of card, three rungs and two 6px gaps leaves ~109px a pill, ~101px of
+   content after padding, against about 55px for «$525/wk» at 12px/600. */
 .staff-rung .rung-price {
-  font-size: 10px;
-  opacity: 0.75;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.9;
 }
 .staff-travel {
   margin-top: 8px;

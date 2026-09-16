@@ -166,6 +166,50 @@ describe('the masseur card on screen T', () => {
     wrapper.unmount()
   })
 
+  // ⭐⭐ ROUND 43 #3 – THE PRICE IS NOT THE SMALLEST TEXT ON THE PILL ANY MORE. His ask, 16.09:
+  // «сами цены внутри опций этих специалистов надо сделать покрупнее и можно пожирнее даже». It was 10px at
+  // 0.75 opacity under an 11px label, which inverts what the row is for.
+  //
+  // ⚠⚠ THIS READS THE CASCADE, NOT THE LAYOUT, and that is the only honest thing it can do here:
+  // happy-dom has no layout (`getBoundingClientRect` is zeros – tests/component/round18-coach.test.ts's
+  // header records it), so `getComputedStyle` on an ATTACHED element is the instrument, exactly as
+  // tests/component/coach-edge-card.test.ts uses it. What it CANNOT check is that the row still fits
+  // a phone – and it does not have to: `.staff-dial` is `flex: 1` three across and does not wrap, so
+  // the risk is flex OVERFLOW rather than a broken wrap, and the guard for that is `min-width: 0` on
+  // the rung, asserted below beside the size.
+  //
+  // ⚠ MUTATION-CHECKED: dropping the font-size back to 10px fails the first assertion, and removing
+  // `min-width: 0` fails the third. Neither is a tautology over the stylesheet.
+  it('§5b – ⭐ the rung price reads bigger and bolder than its own label, and cannot widen the row', async () => {
+    const { pro } = snapshots()
+    const wrapper = await mountCard({ ...pro, masseurSessionsPerWeek: 7 }, true)
+    const rung = wrapper.find('[data-staff="masseur"] .staff-rung').element as HTMLElement
+    const price = wrapper.find('[data-staff="masseur"] .staff-rung .rung-price').element as HTMLElement
+
+    const priceStyle = getComputedStyle(price)
+    const rungStyle = getComputedStyle(rung)
+
+    expect(parseFloat(priceStyle.fontSize), 'the price is at least 12px').toBeGreaterThanOrEqual(12)
+    expect(parseInt(priceStyle.fontWeight, 10), 'and bolder than body weight').toBeGreaterThanOrEqual(600)
+    // ⚠ THE OVERFLOW GUARD. A flex item defaults to `min-width: auto`, so without this a wider price
+    // widens the whole row instead of fitting inside its third of it.
+    // ⚠⚠ THE EXPLICIT VALUE, NOT A PARSED ONE. The first draft of this line read
+    // `parseFloat(rungStyle.minWidth) || 0` and PASSED on the broken version: with `min-width` unset
+    // the cascade answers `auto`, `parseFloat` gives NaN, and `NaN || 0` is 0. Caught by running the
+    // mutation instead of trusting the sentence – CLAUDE.md's «mutate the thing you think you are
+    // covering and watch it fail before you believe a green run», earned the hard way.
+    expect(
+      ['0', '0px'],
+      'the rung may not be pushed wider by its own price (min-width must be explicit)',
+    ).toContain(rungStyle.minWidth)
+    // ⭐ And the price is no longer SMALLER than the label it sits under, which was the actual defect.
+    expect(
+      parseFloat(priceStyle.fontSize),
+      'the price is not the smallest text on its own pill',
+    ).toBeGreaterThanOrEqual(parseFloat(rungStyle.fontSize))
+    wrapper.unmount()
+  })
+
   it('§6 – ⭐ the travel switch: hired only, aria state off the snapshot, the as-if fare quoted on the sub-line', async () => {
     const { pro, hired } = snapshots()
     const unhiredWrapper = await mountCard(pro)
