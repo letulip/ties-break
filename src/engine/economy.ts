@@ -815,29 +815,31 @@ export const ECONOMY = {
   // Measured in docs/specs/need-not-background-2026-08.md (tools/runway-probe.ts, tools/two-cells.ts).
   sponsor: {
     rollChance: 0.06,
-    /** ⚠⚠ NO LONGER THE CHEQUE, AND THE LINE THAT STILL READS IT IS A DEAD MAIN DRAW. Round 42 #47
-     *  re-shaped the cameo from a flat gift into a fraction of a real gap (`gapShare` below), so the
-     *  only remaining reader of this band is the deliberately-unread `pickInt` at the cameo's site in
-     *  `world/phaseFinance.ts`. ⚠ IT MUST NOT BE DELETED: that draw holds its exact slot in the
-     *  weekly MAIN sequence, and removing it would move the frozen capture (41550 / `e6b0c709`) and
-     *  every per-week draw count pinned in `tests/condition.test.ts` and `tests/rivals.test.ts`.
-     *  Taking a die is the one thing #5, #43 and #47 were each told not to do. */
+    /** ⭐⭐⭐ THE CHEQUE, AND IT IS THE CHEQUE AGAIN – ROUND 42 #47, SECOND READING (16.09).
+     *
+     *  ⚠⚠ THE FIRST READING OF HIS RULING WAS WRONG AND THIS BAND IS THE THING IT BROKE. #47 read
+     *  «давай что-то вроде 60-80% закрытия» as the SIZE of the cheque and replaced this band with
+     *  `shortfall × U(0.60, 0.80)`. He meant the FREQUENCY – «помощь должна срабатывать в 80%
+     *  случаев примерно» – and said so plainly on 16.09, along with what was actually broken:
+     *  «у нас был механизм, который нормально давал денег, нормальными суммами, просто делал это без оглядки
+     *  на общий бюджет семьи, а смотрел только на кошелек. Это надо было исправить.»
+     *
+     *  ⭐ WHY THIS BAND IS THE RIGHT SIZE, MEASURED RATHER THAN REMEMBERED. A J-series trip costs
+     *  **$1,100–3,600** before staff fares (`TIERS`, season/calendar.ts: j30 $200 + $900–2,000,
+     *  j60 $250 + $1,100–2,400, j300 $400 + $1,600–3,200), and the J years are the stretch he named
+     *  – «для семьи 8к самый сложный период это J серия, а там стоимость радикально другая». So this band
+     *  covers **a third to a half of one trip**, which is what «нормальные суммы» means; the gap
+     *  fraction paid a median **$129**, or 4–12% of a single trip.
+     *
+     *  ⚠ THE GAP IS STILL THE TRIGGER, IT IS JUST NOT THE SIZE. `unpayableTrip` gates whether a
+     *  cheque is written at all (`world/phaseFinance.ts`) – «в край нужды для закрытия поездок» is his
+     *  and it survives intact. And the cheque is deliberately NOT capped at the gap: a gift sized to
+     *  what a trip costs is the mechanic, and a residual is not.
+     *
+     *  ⚠ The remaining half of his ruling – 60–80% of NEED CASES receiving help, against about 4%
+     *  today – is a CADENCE question that needs a bench, and it ships with the chemistry/sparring
+     *  wave. See docs/specs/cameo-gap-closer-corrected-2026-09.md §3. */
     amountCents: [500_00, 1500_00] as [number, number],
-
-    /** ⭐⭐⭐ ROUND 42 #47 – HOW MUCH OF THE GAP THE SHOP CLOSES. His number and his design, 15.09:
-     *  «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный этап
-     *  J серия, там самые большие расходы» → «давай что-то вроде 60-80% закрытия попробуем сделать».
-     *
-     *  ⚠⚠ THE CEILING IS BELOW 1 ON PURPOSE AND THAT IS THE WHOLE DESIGN. The family still has to
-     *  find the last fifth to two fifths itself, so **help is real and a missed trip stays possible**
-     *  – which is what separates a sponsor from a safety net and keeps a J-series decision costing
-     *  something. A band that reached 1.00 would make every entry affordable the moment a shop was
-     *  willing, and the hardest stretch of the career would stop being a stretch.
-     *
-     *  Drawn on the cameo's own purpose-scoped sub-stream (`seed:sponsor:cameo:gift:<week>`), which
-     *  is where the flat `pickInt` used to be drawn – same stream, same one draw, a different
-     *  meaning. Zero MAIN draws either way. */
-    gapShare: [0.6, 0.8] as [number, number],
 
     // ===============================================================================================
     // ⭐⭐⭐ ROUND 42 #5 – THE CADENCE DIAL. PROPOSED NUMBERS, HIS TO CONFIRM OFF THE PRINTED TABLE.

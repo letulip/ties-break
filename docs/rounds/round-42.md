@@ -2566,7 +2566,43 @@ its own acceptance bench does not ship because the round is ending.
   #49(b): **no bench can tell «a family that would never take this trip» from «an autopilot that never
   takes it.**
 
-  ❓ **TWO QUESTIONS BACK TO YOU, and the first is the one to read.**
+  ⭐⭐⭐ **AND THEN HE READ THIS NOTE AND SAID «вообще всё не так» (16.09) – THE SIZING IS REVERTED IN
+  THIS SAME BRANCH.** The build above rests on a misreading of his own sentence, and the correction
+  ships beside it rather than waiting for the next wave, because the misread mechanic was worth $51 a
+  season against #43's $1,125 in his playtest build.
+
+  > «фраза про закрытие 80% была **не про сумму**, а про то, что помощь должна **срабатывать в 80%
+  > случаев** примерно» … «у нас был механизм, который нормально давал денег, нормальными суммами,
+  > просто делал это без оглядки на общий бюджет семьи, а смотрел только на кошелек. Это надо было исправить.»
+
+  ⚠⚠ **«60-80%» IS A FREQUENCY AND THIS ITEM READ IT AS A FRACTION OF A SUM.** Measured, the distance
+  is not subtle: help arrives in about **4%** of need cases against the 60–80% he asked for. And the
+  size was never the broken part – MEASURED off `TIERS`, one J trip costs **$1,100–3,600** before
+  staff fares (j30 $200 + $900–2,000 · j60 $250 + $1,100–2,400 · j300 $400 + $1,600–3,200), so #43's
+  flat $500–1,500 covered a third to a half of one trip, which is what «нормальные суммы» means. The
+  gap fraction paid a median **$129**.
+
+  ⭐ **WHAT SHIPS IN THIS BRANCH – and it is a DELETION, which is the tell that the first reading was
+  wrong** (a ruling that makes a mechanic simpler is usually his; one that makes it cleverer is
+  usually mine):
+  1. `shortfall × U(0.60, 0.80)` and `ECONOMY.sponsor.gapShare` are **deleted**, not retuned; the
+     cheque is `amountCents` again, one `pickInt` on the identical sub-stream key;
+  2. **`unpayableTrip` stays as the GATE** – «в край нужды для закрытия поездок» is his, and reading
+     the family's whole reachable budget rather than the wallet was the defect he actually named;
+  3. the band test is re-aimed at `amountCents` and gains a mutation-verified non-vacuity case (a
+     constant return fails it).
+
+  ⚠ **THE CADENCE HALF IS NOT DONE AND SAYS SO IN THE CODE.** 60–80% of need cases needs the cooldown
+  re-derived from a coverage target, which needs a bench; it ships with the chemistry/sparring wave.
+  [cameo-gap-closer-corrected-2026-09](../specs/cameo-gap-closer-corrected-2026-09.md) §3 and Q1–Q3.
+
+  ⚠ **FIFTY-SIX FROZEN-CAREER CELLS RE-STAMPED**, per-key protocol first, control = this tree with
+  the revert neutralised in place. Of 91 keys **42 moved and 49 held**, and `rngMain` is byte-identical
+  on all three careers – the invariant-2 proof taken per key rather than asserted, because the cameo
+  spends exactly one `rng()` on its own sub-stream under both readings.
+
+  ❓ **TWO QUESTIONS BACK TO YOU, SUPERSEDED BY THE ABOVE and kept as the record of how the misreading
+  was caught – the measurement was right, the reading of his sentence was not.**
   1. **The −95% has TWO causes and you only ruled on one.** You ruled the SIZE («60-80% закрытия»);
      the cheque also got rarer – 0.26 a season against 1.09 – because a gap exists in about 7 weeks of
      52 and the cooldown only lets the shop be willing about once a season, so the two rarely

@@ -1,12 +1,38 @@
 ---
 type: spec
-status: reference
+status: superseded
 area: simulation-and-balance
 canonical: false
 last-reviewed: 2026-09-16
+superseded-by: docs/specs/cameo-gap-closer-corrected-2026-09.md
 ---
 
 # The cameo closes a trip (round 42 #47)
+
+> ⚠⚠ **SUPERSEDED 16.09.2026, THE SAME DAY IT WAS WRITTEN – THE OWNER: «вообще всё не так».**
+>
+> **The misreading, in one line: «60-80% закрытия» IS A FREQUENCY AND THIS DOCUMENT READ IT AS A
+> FRACTION OF A SUM.** He meant the share of NEED CASES that get help; the build implemented
+> `shortfall × U(0.60, 0.80)` as the size of the cheque. Measured, the distance is not subtle: help
+> arrives in about **4%** of need cases against the **60–80%** he asked for.
+>
+> **And the size was never the broken part.** His words: the mechanism «normally gave money, in normal
+> amounts» – its one defect was that it read the WALLET rather than the family's whole budget. A
+> J-series trip costs **$1,100–3,600** before staff fares (`TIERS`: j30 $200 + $900–2,000; j60 $250 +
+> $1,100–2,400; j300 $400 + $1,600–3,200), so #43's flat $500–1,500 covered a third to a half of one
+> trip. The gap-fraction pays a median **$129**.
+>
+> **What survives this document:** every measurement in it, the `unpayableTrip` probe, the honest
+> need read, and §«the honest reading»'s refusal to quote Q4/Q5 as findings. **What does not:** the
+> sizing, and the conclusion that a −95% collapse was an acceptable consequence of his ruling.
+>
+> The corrected design is in round 42's ledger under #47 and ships with the chemistry/sparring wave:
+> the flat draw returns, the whole-budget need test stays, and the COOLDOWN is re-derived from a
+> 60–80% coverage target rather than left as the binding constraint.
+>
+> ⭐ **Kept rather than deleted, because the measurement was right and only the reading was wrong** –
+> and because a spec that records how a ruling was misread is worth more than one that quietly
+> disappears.
 
 The owner, 15.09, recovering what he first asked the local sponsor to be:
 

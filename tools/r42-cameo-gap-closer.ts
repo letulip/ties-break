@@ -26,7 +26,8 @@
  * WHICH trip is named (the bill does not move a deadline or a gate) and the §2/§3 columns – did she
  * go, or was it missed – are read off the world afterwards and are exact.
  *
- * ⚠ THE ARMS MUTATE `ECONOMY.sponsor.gapShare` IN PLACE, the house bench pattern
+ * ⚠⚠ THE ARMS NO LONGER ACTUATE ANYTHING – see `SHIPPED_SHARE`. They mutated `ECONOMY.sponsor.gapShare`
+ * in place (the house bench pattern) until #47's second reading deleted that constant on 16.09
  * (`tools/r42-elite-retainer.ts`, `tools/sponsor-cadence.ts`), so BOTH arms contain the reader and
  * only the constant differs – the arm-provenance rule stated the right way round.
  *
@@ -40,7 +41,9 @@
  *   npx vite-node tools/r42-cameo-gap-closer.ts
  *   npx vite-node tools/r42-cameo-gap-closer.ts -- --seeds 8 --weeks 312
  */
-import { ECONOMY } from '../src/engine/economy'
+// ⚠ `ECONOMY` was imported here only for the deleted `gapShare` dial (see `armShare`). The cameo's
+// band now lives in `ECONOMY.sponsor.amountCents` and the engine reads it directly; this bench does
+// not need to see it, and an unused import is how a dead arm hides.
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import { unpayableTrip } from '../src/engine/world/phaseFinance'
 import { openCareer, stepCareerWeek, PRESETS, POLICIES } from './econ-bench'
@@ -85,7 +88,18 @@ interface Arm {
   label: string
   share: [number, number]
 }
-const SHIPPED_SHARE: [number, number] = [...ECONOMY.sponsor.gapShare] as [number, number]
+/** ⚠⚠ RETIRED WITH ITS CONSTANT, 16.09.2026 – ROUND 42 #47's SECOND READING. `ECONOMY.sponsor.gapShare`
+ *  no longer exists: the owner's «60-80% закрытия» is a FREQUENCY and this instrument was built to
+ *  measure it as a fraction of a sum. The arms below therefore sweep a LOCAL number that nothing in
+ *  the engine reads, and every table this tool prints about cheque SIZE is now a historical record of
+ *  a mechanic that shipped for one day.
+ *
+ *  ⭐ WHAT STILL WORKS AND IS WORTH RE-RUNNING: the `unpayableTrip` probe, the need-week census and
+ *  the J-series split – those measure the GATE, which survived the correction intact and is the half
+ *  the next wave has to re-derive. The coverage question («60-80% of need cases receive help», about
+ *  4% today) is `docs/specs/cameo-gap-closer-corrected-2026-09.md` §3 and P1, and this harness is
+ *  where it should be measured. Do not delete this file; re-aim it when that bench is written. */
+const SHIPPED_SHARE: [number, number] = [0.6, 0.8]
 const ARMS: Arm[] = [
   /** ⚠⚠ THE ACTUATION ARM, AND IT IS THE FLOOR RATHER THAN A CEILING. A share of zero writes a
    *  cheque of zero on every week the gate opens, so §2/§3/§4 must collapse – if they do not, this
@@ -104,7 +118,13 @@ const ARMS: Arm[] = [
 ]
 
 /** ⚠ `ECONOMY` is `as const`; an arm reaches it through the cast the house benches already use. */
-const DIAL = ECONOMY.sponsor as unknown as { gapShare: [number, number] }
+/** ⚠⚠ THE DIAL IS GONE AND THE CAST THAT SURVIVED IT WAS A LIE WORTH DELETING. This read
+ *  `ECONOMY.sponsor as unknown as { gapShare }` – a cast, so it kept TYPECHECKING after the constant
+ *  was deleted, and every arm below went on WRITING a property no engine code reads. A bench whose
+ *  actuation is a no-op reports a null result that looks like a measurement, which is the exact
+ *  failure CLAUDE.md's «prove the arm contains both the change and its reader» rule exists to stop.
+ *  So the write is deleted rather than left casting, and the sweep is now explicitly local. */
+const armShare: { value: [number, number] } = { value: [...SHIPPED_SHARE] as [number, number] }
 
 // =================================================================================================
 // ONE CAREER
@@ -199,7 +219,8 @@ function runCareer(presetIndex: number, seedIndex: number): CareerRead {
 }
 
 function runArm(arm: Arm): CareerRead[] {
-  DIAL.gapShare = [...arm.share] as [number, number]
+  armShare.value = [...arm.share] as [number, number]
+  void armShare
   const out: CareerRead[] = []
   for (let p = 0; p < PRESETS.length; p++) {
     for (let s = 0; s < SEEDS; s++) out.push(runCareer(p, s))
@@ -337,10 +358,10 @@ function main(): void {
     console.log(`  ${padR(tier || '(gone)', 14)}${padL(String(row.n), 14)}${padL(String(row.went), 10)}${padL(pct(row.went, row.n), 10)}`)
   }
 
-  // ⚠ RESTORE THE SHIPPED DIAL. A bench that left an arm set would poison anything imported after
-  // it, and here it would leave the tree describing a share nobody ruled.
-  DIAL.gapShare = [...SHIPPED_SHARE] as [number, number]
-  console.log(`\n  (dial restored to shipped: [${ECONOMY.sponsor.gapShare[0]}, ${ECONOMY.sponsor.gapShare[1]}])`)
+  // ⚠ NOTHING TO RESTORE SINCE 16.09: the dial this bench swept was `ECONOMY.sponsor.gapShare`, and
+  // #47's second reading deleted it. The sweep is local-only now, so it cannot poison an importer –
+  // which is also why every SIZE table this tool prints is history rather than a measurement.
+  console.log(`\n  (no engine dial to restore – gapShare was deleted by #47's second reading, 16.09)`)
 }
 
 main()

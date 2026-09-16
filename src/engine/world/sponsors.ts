@@ -16,7 +16,7 @@
 import { ECONOMY, managerCommissionBps, managerCommissionCents } from '../economy'
 // ⭐ ROUND 42 #5 – the cameo's cadence is DERIVED from a purpose-scoped sub-stream rather than
 // remembered (see `cameoWillingWeeks`). MAIN is not reached from this file.
-import { rngFromSeed } from '../rng'
+import { pickInt, rngFromSeed } from '../rng'
 import { formatCents } from '../../shared/money'
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { netTravelCents, travelCoverShare } from '../academy'
@@ -299,28 +299,31 @@ export function sponsorCameoWilling(seed: string, week: number): boolean {
  *  site and is no longer read, and an amount drawn off a stream the schedule cannot see would make
  *  the cheque's size depend on the rest of the week's dice.
  *
- *  ⭐⭐⭐ ROUND 42 #47 – IT IS A FRACTION OF A REAL GAP NOW, NOT A FLAT DRAW. The owner's own memory
- *  of what he first asked for («мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия
- *  поездок, самый сложный этап J серия, там самые большие расходы»), and his number for it («давай
- *  что-то вроде 60-80% закрытия попробуем сделать»). `shortfallCents` is what the next trip she
- *  cannot pay for is short by – computed at the cameo's site, where the calendar and the entry gate
- *  are readable – and the shop closes `ECONOMY.sponsor.gapShare` of it.
+ *  ⭐⭐⭐ ROUND 42 #47, SECOND READING (16.09) – IT IS A FLAT DRAW AGAIN, AND THE FIRST READING OF
+ *  HIS RULING IS WHY IT STOPPED BEING ONE. #47 built `shortfall × U(0.60, 0.80)` because it read
+ *  «60-80% закрытия» as the size of the cheque. His correction: «фраза про закрытие 80% была
+ *  **не про сумму**, а про то, что помощь должна **срабатывать в 80% случаев** примерно» – a
+ *  frequency, not a fraction. And the size was never the broken part: «механизм нормально давал
+ *  денег, нормальными суммами, просто делал это без оглядки на общий бюджет семьи, а смотрел только
+ *  на кошелек».
  *
- *  ⚠⚠ NEVER ALL OF IT, BY CONSTRUCTION: the band's ceiling is 0.8, so the cheque is strictly smaller
- *  than the gap for every draw. The family finds the rest or the trip is missed, and that is the
- *  design rather than a rounding artefact – «help is real, and a missed trip stays possible».
+ *  ⚠ SO THE TRIP GATE SURVIVES AND ONLY THE SIZING IS REVERTED. `unpayableTrip` still decides
+ *  WHETHER a cheque is written, reading the family's whole reachable budget rather than the wallet –
+ *  which is the defect he actually named and the one thing #47 got right. What is gone is the idea
+ *  that the gap should also decide HOW MUCH: a gift is sized to what a J trip costs ($1,100–3,600
+ *  before staff fares), not to a residual, and the fraction paid a median $129.
  *
- *  ⚠ ONE DRAW ON THE SAME STREAM THE FLAT GIFT USED. `pickInt` spent one `rng()` and so does this,
- *  on the identical key, so the sub-stream's shape is unchanged and MAIN is untouched – the same
- *  discipline #5 and #43 were built under.
+ *  ⚠ THE CADENCE HALF OF HIS RULING IS NOT IN THIS FUNCTION AND IS NOT DONE. Help reaches about 4%
+ *  of need cases against the 60–80% he asked for, and the binding constraint is the cooldown in
+ *  `sponsorCameoWilling`. Re-deriving it needs a bench and ships with the chemistry/sparring wave –
+ *  docs/specs/cameo-gap-closer-corrected-2026-09.md §3.
  *
- *  ⚠ A NON-POSITIVE GAP IS NOT A GAP and pays nothing. The caller gates on the same quantity, so
- *  this is belt and braces; it is here because a negative cheque would be a silent debit. */
-export function sponsorCameoCents(seed: string, week: number, shortfallCents: number): number {
-  if (shortfallCents <= 0) return 0
-  const [lo, hi] = ECONOMY.sponsor.gapShare
-  const share = lo + rngFromSeed(`${seed}:sponsor:cameo:gift:${week}`)() * (hi - lo)
-  return Math.round(shortfallCents * share)
+ *  ⚠ ONE DRAW ON THE SAME STREAM, unchanged through both readings: `pickInt` spends one `rng()` on
+ *  the identical key, so the sub-stream's shape never moved and MAIN is untouched – the same
+ *  discipline #5 and #43 were built under. */
+export function sponsorCameoCents(seed: string, week: number): number {
+  const [lo, hi] = ECONOMY.sponsor.amountCents
+  return pickInt(rngFromSeed(`${seed}:sponsor:cameo:gift:${week}`), lo, hi)
 }
 
 /** How many tournaments she entered in the season that is finishing at `reviewWeek` – the count a kit

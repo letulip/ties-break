@@ -664,7 +664,7 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
     !inCollege(world) &&
     sponsorNeedMet({ fundsCents: reachableFundsCents(world), courtCents: split.facilityCents, tier })
   ) {
-    const gift = sponsorCameoCents(world.seed, world.week, gapCents)
+    const gift = sponsorCameoCents(world.seed, world.week)
     world.fundsCents += gift
     addEvent(world, {
       week: world.week,
