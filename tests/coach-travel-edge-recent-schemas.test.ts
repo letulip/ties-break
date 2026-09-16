@@ -1,4 +1,4 @@
-// THE FROZEN CAREERS, THE RUNGS AT THE TOP – v78 down to v71.
+// THE FROZEN CAREERS, THE RUNGS AT THE TOP – v79 down to v71.
 //
 // ⚠⚠ WHY THIS FILE EXISTS, AND IT IS THE THIRD TIME THIS FAMILY HAS BEEN CUT FOR THE SAME REASON.
 // birpc's RPC window is a hard 60 s and it is not raisable; a file whose tests cross it fails the job
@@ -35,9 +35,46 @@ import {
   PRE_V76,
   PRE_V77,
   PRE_V78,
+  PRE_V79,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v79: rolling the schema back to 78 – dropping `coachPairs` and `sparringTravels` – returns the v78 career ONLY where nobody was hired', () => {
+    // ⚠⚠ THE ONE RUNG IN THIS LADDER THAT IS AN IDENTITY ON ONE CAREER AND A RE-ANCHORING ON THE
+    // OTHER TWO, and the case name says so rather than promising a byte-identity it cannot deliver on
+    // all three. v79 appends TWO keys to `createWorld`'s literal – `sparringTravels`, then
+    // `coachPairs` – and the second of them ships WITH ITS READER, which is what makes this version
+    // different from every rung below it. `accrueCoachPair` writes a row on every week a coach is
+    // paid for and `coachFactor` takes the accrued level as a third argument, so a career that hires
+    // anybody develops at a rate that moved (the chemistry wave C1,
+    // `docs/specs/the-chemistry-2026-09.md`).
+    //
+    // ⭐⭐ SO READ THE THREE LINES BELOW AS TWO DIFFERENT CLAIMS. `selfTravelling` is the one career
+    // in this file with NO COACH, and on her the peel is EXACT: her constant is the VERBATIM v78
+    // value, character for character, because the per-key control says the whole of v79 on her is
+    // `schemaVersion` plus two keys appearing at `{}` and `false` – one key of 90 moved and 89 held.
+    // The two grinders both hire, so both are RE-ANCHORED to the new world: a peel that drops
+    // `coachPairs` cannot undo a development rate the remaining shape has already spent 156 weeks
+    // living at, and v70's `drawnFirstRounds` block set the precedent for exactly this – «not a
+    // schema field, but a change to what a career IS».
+    //
+    // ⚠⚠ AND WHAT MOVED THEM IS THE CHEMISTRY ALONE, which the per-key control says and no aggregate
+    // hash could: FOUR keys of 90 on each grinder – `skills`, `peakPhysical`, `events`,
+    // `schemaVersion` – with `coachId`, `results` and `fundsCents` BYTE-IDENTICAL. Both keep the man
+    // they always hired (`middle-1` and `elit-2`); only the rate he teaches her at moved. C1a also
+    // asked for `style` to be drawn per career, which WOULD have moved `coachId` here – it was
+    // measured out on the bench (a 4.7% coaching discount at every rung above budget) and handed back
+    // to the owner rather than shipped, so this rung carries no trace of it.
+    //
+    // ⚠ WHAT THIS CASE IS STILL FOR, then, and it now says one thing the ladder never could: if
+    // `selfTravelling` EVER goes red on this rung, something has reached a family that hired nobody.
+    // And if either grinder goes red beside a red freeze, a later wave moved a career and not just a
+    // schema.
+    expect(careerHashAtSchema(5, 0, 78), '25k · middle coach · grinder – RE-ANCHORED, she hires').toBe(PRE_V79.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 78), '120k · elite coach · grinder – RE-ANCHORED, she hires').toBe(PRE_V79.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 78), '8k · self-coached · player – THE VERBATIM v78 VALUE').toBe(PRE_V79.selfTravelling)
+  })
+
   it('⭐⭐⭐ v78: rolling the schema back to 77 – dropping the three world keys AND `entries` off every `assets` ROW – reproduces the v77 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE v78 BUNDLE DID TO A FROZEN CAREER, AS AN IDENTITY – the v77 case
     // directly below, repeated one version up. v78 appends THREE keys to `createWorld`'s literal
