@@ -264,3 +264,22 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   screen and `plan.train` is a slider he sets, so the window only points at what he already has.
 
   ⚠ The four lines are player-facing and therefore DRAFTS – written for his reading, not shipped.
+
+- [ ] **11. ⭐ A LETTER WHEN A BUILD FINISHES (his 16.09).** «Давай на почту присылать письмо про те
+  объекты, которые у нас строятся в магазине, в момент, когда они достроены.» His own word for it: a
+  cheap micro-idea.
+
+  **Why it is genuinely cheap:** the shelf already knows. A build-to-order rung carries its own weeks
+  and the build ring on the tile (round 41 #28) is drawn from that same count, so «it finished this
+  week» is a transition the world can already see – no new state and no new stream.
+
+  ⚠ **The thing to get right is WHICH week it fires.** The ring reaching full and the delivery are
+  not automatically the same instant, and a letter that arrives a week early or late about a thing
+  standing in the garden is worse than no letter. The build reads the delivery, not the ring.
+
+  ⚠ **Copy is his** – the letter is player-facing and arrives as a DRAFT.
+
+  ⚠ **And one question the build must answer rather than assume:** does it fire for EVERY delivered
+  rung, or only for the ones that actually took weeks? An index-fund purchase that lands the same
+  week would make the inbox noisy for no news. Recommendation: **only rungs with a build time**, which
+  is exactly the set the ring is drawn for.
