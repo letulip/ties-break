@@ -62,7 +62,7 @@ import { isCompetitionWeek } from './knock'
 import { accrueCondition, arrivalStatus, medicalClearance, withheldFreeWeekRecovery } from './medical'
 import { summerConditionCost } from './summer'
 import { inCollege } from './college'
-import { resolveMasseur, resolveMasseurReturn } from './masseur'
+import { resolveMasseur, resolveMasseurRaise, resolveMasseurReturn } from './masseur'
 import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 // ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
 // `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
@@ -810,6 +810,13 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // fare) the weekly bill stands down and finalize bills the week per match – the owner's «на
   // неделе выезда по-матчевая цена заменяет недельную». The walkover and medical arms above never
   // set the flag, so a trip that never happened is billed as the home week it really was.
+  // ⭐⭐ ROUND 43 #4 – AND ONCE A YEAR HE ASKS FOR MORE, IMMEDIATELY BEFORE THE BILL HE HAS JUST
+  // MOVED. His 16.09 ruling: «дальше он приходит и просит прибавку, либо (так как альтернативы нет)
+  // добавить денег, но убавить количество процедур». The rate is DERIVED from weeks served
+  // (`masseurSessionCents`), so this line raises no state – it writes the notice, and it is on this
+  // side of `resolveMasseur` so the week the ask lands is the week the new bill is charged and the
+  // ledger reads in the order it happened. Zero draws on any stream.
+  resolveMasseurRaise(world)
   resolveMasseur(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first

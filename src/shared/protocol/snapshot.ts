@@ -229,6 +229,17 @@ export interface Snapshot {
    *  × the professional session rate, no corridor, no jitter), so the card's quote IS the ledger's
    *  row. */
   masseurSalaryCents: number
+  /** ⭐⭐ ROUND 43 #4 – WHAT ONE SESSION COSTS **THIS CAREER**, in cents. `ECONOMY.masseur
+   *  .perSessionCents` is the OPENING price now and no longer the price: the masseur asks for a
+   *  rise once a year on the payroll, so a career six years in is paying more per session than a
+   *  career that hired him last week (`masseurSessionCents`, engine/world/masseur.ts).
+   *
+   *  ⚠⚠ IT IS ON THE SNAPSHOT BECAUSE THE SEAT'S CARD PRICES ITS OWN RUNGS. The three rung labels
+   *  read `sessions × the rate`, and a screen that read the constant instead would quote the entry
+   *  rung at the price the family stopped paying years ago while the ledger charged the real one –
+   *  and the card's own doctrine is that its quote IS the ledger's row. DERIVED, never persisted:
+   *  the save holds the employment history the rate is read off, not the rate. */
+  masseurPerSessionCents: number
   /** ⭐ v59 step 2 – THE DIAL (the owner's own idea): sessions a week on the table, one of the
    *  `ECONOMY.masseur.rungs` sessions values (2 / 4 / 7). The bill, the rehab cadence and the
    *  condition bonus all follow the rung. */

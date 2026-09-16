@@ -197,6 +197,16 @@ const masseurLine = computed(() => {
 //
 // «сами цены внутри опций этих специалистов надо сделать покрупнее и можно пожирнее даже» (16.09)
 const MASSEUR_RUNGS = ECONOMY.masseur.rungs
+// ⭐⭐ ROUND 43 #4 – AND THE SESSION RATE IS THE CAREER'S, NEVER THE CONSTANT. The masseur asks for a
+// rise once a year on the payroll, so `ECONOMY.masseur.perSessionCents` is the OPENING price and the
+// live one is on the snapshot. Two places below read it – the three rung prices and the travel
+// sub-line's per-match figure – and both would otherwise quote a price the family stopped paying,
+// beside a weekly total (`masseurSalaryCents`) that is already the real one. ⚠ NOT ONE WORD MOVED
+// for this: the sentences are the owner's, and only the number inside them changed source.
+// The `??` is the pre-snapshot frame, where the opening price is the honest answer.
+const masseurRateCents = computed(
+  () => game.snapshot?.masseurPerSessionCents ?? ECONOMY.masseur.perSessionCents,
+)
 const masseurSessions = computed(
   () => game.snapshot?.masseurSessionsPerWeek ?? ECONOMY.masseur.defaultSessions,
 )
@@ -220,7 +230,7 @@ const masseurTravelSub = computed(() => {
   // the session rate instead of the weekly figure above – the price READS off the card before the
   // switch is flipped, which is the whole legibility contract of this screen.
   const rule =
-    `Table work between rounds – one more fare on every trip to a paying event, and the week is billed per match there (${formatCents(ECONOMY.masseur.perSessionCents)} each) instead of the weekly rate.`
+    `Table work between rounds – one more fare on every trip to a paying event, and the week is billed per match there (${formatCents(masseurRateCents.value)} each) instead of the weekly rate.`
   const trips = game.snapshot?.masseurTravelTrips ?? 0
   if (trips === 0) return rule
   const t = trips === 1 ? '1 trip' : `${trips} trips`
@@ -245,7 +255,7 @@ const masseur = computed<StaffMember>(() => ({
     rungs: MASSEUR_RUNGS.map((r) => ({
       value: r.sessions,
       label: r.label,
-      priceLabel: formatCents(r.sessions * ECONOMY.masseur.perSessionCents),
+      priceLabel: formatCents(r.sessions * masseurRateCents.value),
     })),
     set: setMasseurRung,
   },

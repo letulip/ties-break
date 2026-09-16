@@ -66,7 +66,8 @@
     "test:e2e:ui": "node scripts/e2e.mjs --ui",
     "prepare": "git config core.hooksPath .githooks || true",
     "graph": "node scripts/graph.mjs",
-    "graph:check": "node scripts/graph.mjs --check"
+    "graph:check": "node scripts/graph.mjs --check",
+    "bench:masseurraise": "vite-node tools/masseur-raise-bench.ts"
   },
   "engines": {
     "node": ">=22"

@@ -8,24 +8,24 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-535 exported names across 52 owning modules.
+543 exported names across 52 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 71 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 73 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
+| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
 | `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 18 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 18 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
-| `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 16 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 16 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
@@ -155,6 +155,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `rollLeak` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
+- `SMALL_TALK_EXCLUDE_LAST` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_FACTS` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_SITUATIONS` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_STANCE_ID` – `src/engine/world/lifeBeat.ts`
@@ -169,6 +170,7 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `SmallTalkSubject` *(type)* – `src/engine/world/lifeBeat.ts`
 - `smallTalkSubjectFor` – `src/engine/world/lifeBeat.ts`
 - `smallTalkThisSeason` – `src/engine/world/lifeBeat.ts`
+- `withoutRecentSituations` – `src/engine/world/lifeBeat.ts`
 
 ### `src/engine/world/college.ts`
 
@@ -300,6 +302,33 @@ THE LADDER: where she stands, and what that standing opens.
 - `tierOpenFor` – `src/engine/world/ladder.ts`
 - `tierOutgrown` – `src/engine/world/ladder.ts`
 
+### `src/engine/world/masseur.ts`
+
+THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
+
+- `hireMasseur` – `src/engine/world/masseur.ts`
+- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
+- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
+- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
+- `masseurRaiseDue` – `src/engine/world/masseur.ts`
+- `masseurRoomNote` – `src/engine/world/masseur.ts`
+- `masseurRungOf` – `src/engine/world/masseur.ts`
+- `masseurSessionCents` – `src/engine/world/masseur.ts`
+- `masseurTourRelief` – `src/engine/world/masseur.ts`
+- `masseurTourWeekCents` – `src/engine/world/masseur.ts`
+- `masseurUnlocked` – `src/engine/world/masseur.ts`
+- `masseurWeeklyCents` – `src/engine/world/masseur.ts`
+- `masseurWeeksServed` – `src/engine/world/masseur.ts`
+- `masseurWeeksServedAt` – `src/engine/world/masseur.ts`
+- `masseurWorksInWeek` – `src/engine/world/masseur.ts`
+- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
+- `masseurYearsServed` – `src/engine/world/masseur.ts`
+- `resolveMasseur` – `src/engine/world/masseur.ts`
+- `resolveMasseurRaise` – `src/engine/world/masseur.ts`
+- `resolveMasseurReturn` – `src/engine/world/masseur.ts`
+- `setMasseurSessions` – `src/engine/world/masseur.ts`
+- `setMasseurTravels` – `src/engine/world/masseur.ts`
+
 ### `src/engine/world/medical.ts`
 
 THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all.
@@ -414,27 +443,6 @@ HER BIRTHDAY, AND WHAT YOU GIVE HER.
 - `DAY_TOGETHER_FROM_AGE` – `src/engine/world/birthday.ts`
 - `giftNoun` – `src/engine/world/birthday.ts`
 - `pendingBirthday` – `src/engine/world/birthday.ts`
-
-### `src/engine/world/masseur.ts`
-
-THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08).
-
-- `hireMasseur` – `src/engine/world/masseur.ts`
-- `MASSEUR_CHANGE_KEY` – `src/engine/world/masseur.ts`
-- `MASSEUR_LOCKED_DETAIL` – `src/engine/world/masseur.ts`
-- `MASSEUR_NOTE_WINDOW_WEEKS` – `src/engine/world/masseur.ts`
-- `masseurRoomNote` – `src/engine/world/masseur.ts`
-- `masseurRungOf` – `src/engine/world/masseur.ts`
-- `masseurTourRelief` – `src/engine/world/masseur.ts`
-- `masseurTourWeekCents` – `src/engine/world/masseur.ts`
-- `masseurUnlocked` – `src/engine/world/masseur.ts`
-- `masseurWeeklyCents` – `src/engine/world/masseur.ts`
-- `masseurWorksInWeek` – `src/engine/world/masseur.ts`
-- `masseurWorksThisWeek` – `src/engine/world/masseur.ts`
-- `resolveMasseur` – `src/engine/world/masseur.ts`
-- `resolveMasseurReturn` – `src/engine/world/masseur.ts`
-- `setMasseurSessions` – `src/engine/world/masseur.ts`
-- `setMasseurTravels` – `src/engine/world/masseur.ts`
 
 ### `src/engine/world/sponsors.ts`
 

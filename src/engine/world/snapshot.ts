@@ -111,7 +111,7 @@ import { eventById, vacationForWeek } from './bookings'
 import { kidMatchPlayerFor } from './player'
 import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
-import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurUnlocked, masseurWeeklyCents } from './masseur'
+import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView, reachableFundsCents } from './shop'
@@ -1826,6 +1826,7 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     masseurHired: world.masseurHired ?? false,
     masseurUnlocked: masseurUnlocked(world),
     masseurSalaryCents: masseurWeeklyCents(world),
+    masseurPerSessionCents: masseurSessionCents(world),
     masseurNote: masseurRoomNote(world),
     masseurSessionsPerWeek: masseurRungOf(world).sessions,
     masseurTravels: world.masseurTravels ?? false,

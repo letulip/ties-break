@@ -139,8 +139,8 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
-import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
-export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 // ⭐ v76, the psychologist's year (wave 5 T2): THE SECOND SALARIED SEAT, on the line above's own
 // pattern – the import list and the re-export list carry the SAME names, because hundreds of files
 // import from `engine/world` and that public API is what a leaf's move must not change. Shorter than
@@ -1058,7 +1058,7 @@ function finalizeTournament(world: WorldState): void {
   // the current hire – he made the trip whatever the family decided since (the round-21 #2
   // doctrine). Fare on top, exactly as at home. Zero draws.
   if (p.masseurThere ?? false) {
-    const tourBill = masseurTourWeekCents(runMatches.length)
+    const tourBill = masseurTourWeekCents(runMatches.length, masseurSessionCents(world))
     if (tourBill > 0) {
       world.fundsCents -= tourBill
       addEvent(world, {

@@ -5232,6 +5232,37 @@ export const ECONOMY = {
     // bill is flat per rung, and the ledger row is the number on the card (step 1's legibility
     // argument, moved one level up).
     perSessionCents: 75_00,
+    // ⭐⭐⭐ ROUND 43 #4 – AND IT IS THE OPENING PRICE NOW, NOT THE PRICE. His 16.09 ruling: «мы
+    // начинаем работать с массажистом по нашим текущим ценам, а дальше он приходит и просит
+    // прибавку, либо (так как альтернативы нет) добавить денег, но убавить количество процедур…
+    // может просить надбавок за свои часы ежегодно, может быть не так интенсивно как тренер». So
+    // the rate above is where every career starts and this is the drift away from it, compounded
+    // once per completed year on the payroll (`masseurSessionCents`, world/masseur.ts).
+    //
+    // ⚠⚠ THE YARDSTICK IS THE COACH AND NOT A MARKET, and that is a ruling rather than a shortcut.
+    // Round 43 #6 asked the research for a real-world masseur figure and was WITHDRAWN when he
+    // closed the design: an outside benchmark would only be needed to re-price him from scratch,
+    // which is not what was asked. «Не так интенсивно как тренер» is the whole constraint, the
+    // coach's own annual ask is a 5–15% corridor (round 42 #51, specified and not yet built), and
+    // 4% sits clearly under its floor.
+    //
+    // ⚠ MEASURED, NOT GUESSED (invariant 5) – `npm run bench:masseurraise`, the tables in
+    // docs/specs/the-masseurs-ask-2026-09.md. What 4%/yr buys over a career:
+    //
+    //     years served      1      4      8     12     16     20
+    //     the session     $78    $88   $103   $120   $140   $164
+    //     the entry rung $156   $176   $206   $240   $280   $328  a week
+    //
+    // The pressure he asked for is real and slow: at a constant spend the top rung (7 × the rate)
+    // buys one rung less after about fourteen years, which is «это может нам скомпенсировать все
+    // ранги» over a career rather than over a season. ⚠ AND THE ONE THING THE BENCH HAD TO PROVE:
+    // the ENTRY rung must never drift out of a modest family's reach, or the poor lose the seat to
+    // arithmetic instead of to a decision. See the spec's §4 for the measured wallet.
+    //
+    // ⚠ DETERMINISTIC – no corridor, no jitter, NO DRAW ON ANY STREAM. The file's own legibility
+    // rule («a salary is a negotiated number the player can read») is the reason: a rate that
+    // wobbled would make the card's quote and the ledger's row two different numbers.
+    raisePerYear: 0.04,
     // THE DIAL – how many times a week the table is hers, the owner's own idea. Three rungs, and
     // each must MEASURABLY beat the one below or the dial is decoration (the plan's §4 law); the
     // bench table in docs/specs/the-masseur-2026-08.md carries every cell.

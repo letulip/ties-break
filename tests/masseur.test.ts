@@ -628,17 +628,17 @@ const tourBillRows = (world: WorldState, week: number) =>
 
 describe('10. ⭐ per-match tour pricing – the travel week is billed per match, not per week', () => {
   it('the arithmetic and the draw table: a Slam title week is 7 × $75 = $525, exactly the daily rung`s home week', () => {
-    expect(masseurTourWeekCents(1)).toBe(75_00)
-    expect(masseurTourWeekCents(5)).toBe(375_00) // a 32-draw title
-    expect(masseurTourWeekCents(6)).toBe(450_00) // a wta1000 title
-    expect(masseurTourWeekCents(7)).toBe(525_00) // the Slam
-    expect(masseurTourWeekCents(0)).toBe(0)
+    expect(masseurTourWeekCents(1, ECONOMY.masseur.perSessionCents)).toBe(75_00)
+    expect(masseurTourWeekCents(5, ECONOMY.masseur.perSessionCents)).toBe(375_00) // a 32-draw title
+    expect(masseurTourWeekCents(6, ECONOMY.masseur.perSessionCents)).toBe(450_00) // a wta1000 title
+    expect(masseurTourWeekCents(7, ECONOMY.masseur.perSessionCents)).toBe(525_00) // the Slam
+    expect(masseurTourWeekCents(0, ECONOMY.masseur.perSessionCents)).toBe(0)
     // The table IS the calendar's: rounds = log2(drawSize), so the caps price themselves.
     expect(Math.log2(TIERS.slam.drawSize)).toBe(7)
     expect(Math.log2(TIERS.wta1000.drawSize)).toBe(6)
     expect(Math.log2(TIERS.wta250.drawSize)).toBe(5)
     // ...and the identity the owner's price rests on: a Slam title week = the daily home rate.
-    expect(masseurTourWeekCents(7)).toBe(7 * ECONOMY.masseur.perSessionCents)
+    expect(masseurTourWeekCents(7, ECONOMY.masseur.perSessionCents)).toBe(7 * ECONOMY.masseur.perSessionCents)
   })
 
   it('⭐ the week he boards: NO weekly bill at the tick, the per-match bill lands at finalize, fare on top', () => {

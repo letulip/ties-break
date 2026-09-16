@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-242 TypeScript files: **41 live**, **201 archival**.
+243 TypeScript files: **42 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -52,6 +52,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `ladder-floor.ts` | `npm run bench:floor` |
 | `life-arrival.ts` | `npm run bench:life-arrival` |
 | `load-bench.ts` | `npm run bench:load` |
+| `masseur-raise-bench.ts` | `npm run bench:masseurraise` |
 | `money-decomposition.ts` | `npm run bench:money` |
 | `outgrown-entry-probe.ts` | `npm run bench:outgrown` |
 | `points-economy.ts` | `npm run bench:points` |
