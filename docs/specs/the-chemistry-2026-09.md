@@ -546,6 +546,7 @@ channel, and because two schema waves in flight at once is how an append-only mi
 | **C7** | is chemistry visible on the coach's seasonal line from season one, or once a band is clear? | **once clear** – a sentence in week 3 about a relationship is noise |
 | **C8** | do rival girls carry chemistry, or coach growth? | **neither, ever** – both are modifiers on a career the player steers, and the rival cohort has no coach model to hang them on |
 | **C9** | ⚠ **can a coach's TIER decline?** | **no** – one direction only. A falling tier would punish a player for a bad season twice (results, then the coach). ⚠ This is about §4's STANDING and not about §5a's chemistry, which is signed and does fall – two different numbers |
+| **C12** | ⭐ **does the gauge show a FIGURE at all, and does it carry the minus?** (opened by his C11 answer: «у нас ещё же цифра внутри есть, можно и минус дописывать короткий») | ⚠ **CHECKED, AND IT BUILDS: `ui/ProgressRing.vue` renders `<b>{{ round(value*100) }}</b><i>%</i>` inside a `<slot>`, so the figure exists and is overridable – a `−` costs no new component.** But it collides with §8's own «no percentage anywhere», which this spec argued on the grounds that a number on screen is a slider the player optimises instead of a relationship he reads. ⭐ **Recommendation: the minus WITHOUT the number** – put the sign in the slot and nothing else, so the third channel arrives (shape + hue + glyph, which answers the colour-vision constraint outright) while the figure stays unsaid. If he wants the number too, it is one slot and the «no percentage» line is his to strike |
 | **C10** | is the anti-match as FREQUENT as the click, or rarer? | ✅ **RULED 16.09: the same frequency** («согласен»). A game where good luck is rare and bad luck is common is not variable, it is punishing. It is already slower to ARRIVE (§3), which is the only asymmetry the design needs |
 | **C11** | ⚠ does the §8 gauge show a NEGATIVE pairing, and how? | ✅ **RULED 16.09: yes, and by GRADIENT** – his design, and it is better than the recommendation it answers. See §8a |
 
@@ -553,8 +554,9 @@ channel, and because two schema waves in flight at once is how an append-only mi
 DRAFT lines are ruled (§5a – the anti line especially), and the builder brief for C1 points here.
 
 ✅ **TWO ARE ALREADY RULED (16.09): C10** – the anti-match is as frequent as the click – **and C11** –
-the gauge carries the sign as a gradient, §8a. **Nine remain**, and C1 (the 4×4 table) is the one to
-read first because it is the document's only unmeasured design claim.
+the gauge carries the sign as a gradient, §8a. **Eleven remain** (C1a counts as its own, and C12 was
+opened by his answer to C11), and **C1 is the one to read first** because it is the document's only
+unmeasured design claim.
 
 ---
 
