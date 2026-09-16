@@ -200,11 +200,17 @@ describe('round 42 v78 A – the three-part move', () => {
       expect(owned.entries, `${owned.id} records no purchase it cannot prove`).toEqual([])
     }
     // ⚠ AND THE FIXTURE IS THE REAL MIGRATION'S OWN OUTPUT, not a hand-written file beside it – the
-    // recipe every fixture since v25 uses. ⚠ This line is the one the NEXT bundle will have to
-    // re-aim, exactly as this one re-aimed v77's: `migrateSave` always walks to the LADDER'S HEAD, so
-    // the direct equality holds only while 78 IS the head. The re-aim is the converging form
-    // (compare against `v${SAVE_SCHEMA_VERSION}.json` and keep this rung on the path), not a deletion.
-    expect(JSON.parse(readFileSync(`${SAVES}/v78.json`, 'utf8'))).toEqual(migrated)
+    // recipe every fixture since v25 uses.
+    //
+    // ⚠⚠ RE-AIMED BY v79 INTO THE CONVERGING FORM THE PREVIOUS NOTE PRESCRIBED, WORD FOR WORD, and
+    // that is the whole of this change: «`migrateSave` always walks to the LADDER'S HEAD, so the
+    // direct equality holds only while 78 IS the head. The re-aim is the converging form (compare
+    // against `v${SAVE_SCHEMA_VERSION}.json` and keep this rung on the path), not a deletion.» The
+    // claim is unchanged and is if anything stronger: a v77 payload walked all the way up must come
+    // out byte-identical to the head's own golden fixture, so a rung anywhere above 78 that back-fills
+    // differently from its fixture is red here as well as in `goldenSaves`. ⚠ The v78 rung stays ON
+    // the path – the three lines above it still assert v78's own three literals by name.
+    expect(JSON.parse(readFileSync(`${SAVES}/v${SAVE_SCHEMA_VERSION}.json`, 'utf8'))).toEqual(migrated)
   })
 
   it('is idempotent, and never overwrites a bonus, a seat or a purchase list a save already has', () => {

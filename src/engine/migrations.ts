@@ -2814,6 +2814,58 @@ export function migrateSave(raw: unknown): WorldState {
     v = 78
   }
 
+  // ⭐⭐⭐ v79 – ONE BUMP, TWO CUSTOMERS (the chemistry wave C1, and round 42 #48's third sparring
+  // key). The whole reading of this step is in `SAVE_SCHEMA_VERSION`'s own block in world/state.ts;
+  // what belongs HERE is why each literal is exactly true, and one warning about this version that
+  // the four before it did not need.
+  //
+  //   `coachPairs = {}`          – ⭐ «SHE HAS WORKED WITH NOBODY», AND IT IS EXACTLY TRUE RATHER THAN
+  //                                A PLACEHOLDER. The map is SPARSE by design – a row is written on
+  //                                the first week she trains with that man and never before – so an
+  //                                empty map is not «no data about her relationships», it is the
+  //                                complete and correct statement that a career which predates the
+  //                                mechanic accrued nothing with anybody, because there was nothing
+  //                                to accrue. ⚠ AND THE TEMPTING ALTERNATIVE IS REFUSED FOR A REASON
+  //                                THE SPEC ARGUES ITSELF: a row could have been reconstructed for
+  //                                `coachId` with a chemistry back-dated from the weeks he has been
+  //                                hired. That would invent a history the save does not hold – the
+  //                                level is PATH-DEPENDENT on results and on her state, neither of
+  //                                which the weeks-hired count knows – and it would hand a loaded
+  //                                career a relationship it never lived through. An empty map costs
+  //                                the resumed career the seasons it never had, which is the honest
+  //                                half of the trade and the only one that is true.
+  //   `sparringTravels = false`  – the seat did not exist, so nobody was in it and nobody was
+  //                                travelling. `sparringHired`'s own v78 answer, quoted rather than
+  //                                re-argued.
+  //
+  // ⚠⚠ AND THIS IS THE FIRST VERSION SINCE v78 WHOSE MECHANIC IS REACHABLE IN A FROZEN CAREER, which
+  // is the warning. v75/v76/v77 shipped seats with no reader; v78 shipped one with a reader that no
+  // frozen career could reach (`walkFrozenCareer` already asserts `psychologistHired === false`).
+  // Chemistry is different in kind: EVERY frozen career hires a coach, so every one of them now has
+  // a relationship, and the eighteen constants move for a REASON rather than by a key append. The
+  // protocol in tests/coachTravelEdgeFixtures.ts's header governs and was followed – the per-key diff
+  // FIRST, the control built as this wave's own change neutralised IN PLACE, and the re-stamp
+  // carrying a dated note. A version that moves a frozen hash without that record is the one thing
+  // that apparatus exists to stop.
+  //
+  // ⚠ `??=` AND NEVER `||=`, v76's / v77's / v78's rule for the identical reason: `sparringTravels
+  // ||= false` is a no-op that looks like a write, and `coachPairs ||= {}` would overwrite a live
+  // empty-but-present map on a re-run. ⚠ AND THE MAP IS NOT WALKED, unlike v77's episodes and v78's
+  // asset rows: there is nothing inside it to back-fill, because on every save reaching this step
+  // there is nothing inside it at all.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: two `??=` on world keys, gated on `v === 78`, writing a literal and a
+  // fresh empty object. No sub-stream is reached on this path, so MAIN cannot move and the frozen
+  // capture (41550 / e6b0c709) is untouched by construction. Full move: `SAVE_SCHEMA_VERSION` in
+  // world/state.ts, this step, tests/fixtures/saves/v79.json, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 78) {
+    save.sparringTravels ??= false
+    save.coachPairs ??= {}
+    v = 79
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

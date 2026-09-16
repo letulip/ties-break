@@ -41,6 +41,10 @@ import { pickInt, rngFromSeed } from './rng'
 // imports `coachFactor` / `coachFitFor` / `tierOf` back from here – over a list of surnames that
 // depends on none of it. Same array, same draw; cohort re-exports it for older call sites.
 import { SURNAMES } from './season/names'
+// ⚠ ONE-WAY EDGE, AND IT MUST STAY ONE. `engine/chemistry.ts` is a LEAF – it imports `ECONOMY`, the
+// two rng helpers and two TYPES, and nothing from this file – so this arrow closes no cycle. The
+// roster needs the manner list to draw from and `coachFactor` needs nothing from over there at all.
+import { COACH_MANNERS, type CoachManner } from './chemistry'
 import type { CoachEdgePlacement, CoachTier, FamilyBackground, PlayStyle, WeekPlan } from '../shared/protocol'
 
 /** The ladder, cheapest first. Exported as an array so the UI, the bench and the tests iterate the
@@ -69,11 +73,16 @@ export interface Coach {
   /** stable id, and also the art stem: 'budget-1', 'elit-3'. Readable in a save. */
   id: string
   tier: CoachTier
-  /** the game HE plays, which is what makes him great / good / off for hers */
+  /** the game HE plays, which is what makes him great / good / off for hers.
+   *  ⚠ DRAWN PER CAREER since the chemistry wave (C1a) - see `buildCoachRoster`. */
   style: PlayStyle
   name: string
   /** his own hourly rate in cents, MIDDLE-corridor anchored (see coachWeeklyCents) */
   rateCents: number
+  /** ⭐⭐ HOW HE WORKS, drawn per career (the chemistry wave, C1). NOT `style`: that is the game he
+   *  PLAYED and it feeds the match-day edge; this is how he WORKS and it feeds development, through
+   *  the (temperament x manner) affinity in engine/chemistry.ts. Two facts, two jobs, no overlap. */
+  manner: CoachManner
 }
 
 // Adult first names for the roster. The junior pool in season/cohort.ts is girls' names by
@@ -441,9 +450,40 @@ export function coachFitFor(coach: Coach | null, kidStyle: PlayStyle): StyleFit 
  *  reads comes from the CHOICE becoming real rather than from a bigger ruler.
  *
  *  The steps between them shrink as they climb (+0.13, +0.09, +0.07, +0.04) while the price roughly
- *  doubles every two rungs. That asymmetry is the design: Elite is a luxury, not an optimisation. */
-export function coachFactor(tier: CoachTier, fit: StyleFit): number {
-  return ECONOMY.coach.developmentFactor[tier] * ECONOMY.coach.fitFactor[fit]
+ *  doubles every two rungs. That asymmetry is the design: Elite is a luxury, not an optimisation.
+ *
+ *  ⭐⭐ AND SINCE THE CHEMISTRY WAVE THE RUNG'S NUMBER MOVES WITH THE RELATIONSHIP (spec §5 / §5a).
+ *  Chemistry raises the effective development factor from the coach's CURRENT tier toward the NEXT
+ *  one's, in proportion, and lowers it toward the tier BELOW in exactly the same proportion. One
+ *  term, symmetric, and the fit pill then multiplies as it always has.
+ *
+ *  ⚠ WHAT THIS IS WORTH, AND WHY THAT IS THE RIGHT SIZE. The relationship's own reach is ONE TIER
+ *  (C2, ruled: keep it) - a click is worth what a rung is worth and no more, which keeps affection
+ *  and competence legible as two different things a player can tell apart. What is NOT capped is
+ *  where the pair ENDS UP, because wave C2 lets the coach's own tier climb with her results: a
+ *  budget coach at 100 chemistry who has climbed twice reaches 1.15, which IS the elite pairing to
+ *  the third decimal. The rarity of the draw and the decade it takes are the brakes; the old
+ *  one-tier CEILING was a second, redundant one, and the owner struck it down on 16.09.
+ *
+ *  ⚠ `self` HAS NO PAIR. The parent is not hired, there is no relationship to accrue, and every
+ *  caller that passes no chemistry gets today's arithmetic to the bit - which is what keeps every
+ *  read of this function outside the weekly growth path (the profile lens, the college rate,
+ *  `bestCoachedRate`) byte-identical.
+ *
+ *  ⚠ `elite` HAS NO NEXT TIER and takes a token step up (C3, ruled: «a flat zero would say the best
+ *  coach cannot grow closer to her, which reads wrong») and the FULL symmetric fall down, because
+ *  `high` is a real rung beneath it. */
+export function coachFactor(tier: CoachTier, fit: StyleFit, chemistry = 0): number {
+  const dev = ECONOMY.coach.developmentFactor
+  const rung = COACH_TIERS.indexOf(tier)
+  const neighbour =
+    chemistry >= 0
+      ? // up: the next rung's number, or elite's token step, which has no rung above it to read
+        (rung + 1 < COACH_TIERS.length ? dev[COACH_TIERS[rung + 1]] : dev[tier] + ECONOMY.chemistry.eliteUpStep)
+      : // down: the rung below, and `self` is the floor of the ladder as well as its no-pair case
+        dev[COACH_TIERS[Math.max(0, rung - 1)]]
+  const effective = dev[tier] + (neighbour - dev[tier]) * (Math.abs(chemistry) / 100)
+  return effective * ECONOMY.coach.fitFactor[fit]
 }
 
 /** Does this rung come with the physio relationship `physioActive` defaults to?
@@ -519,10 +559,36 @@ export function physioRecoveryFactor(tier: CoachTier): number {
  *  never drift away from the career that hired off it, and `coachById` can resolve a saved id years
  *  later without a migration. Drawn on `seed:coaches` - its own stream, never the weekly one.
  *
- *  Who these people ARE is fixed (portrait, tier, style, gender all come from ECONOMY.coach.roster,
- *  because the art is of specific people); what the seed draws is their names and their individual
- *  rates. Two careers on different seeds meet the same faces at different prices under different
- *  names, which is what a market looks like from one family's side of it.
+ *  Who these people ARE is fixed (portrait, tier, style and gender come from ECONOMY.coach.roster,
+ *  because the art is of specific people); what the seed draws is their names, their individual
+ *  rates and - since the chemistry wave - their MANNER.
+ *
+ *  ⚠⚠ C1a ASKED FOR `style` TO BE DRAWN PER CAREER TOO, AND THE BENCH SENT IT BACK. It is the one
+ *  item of the chemistry spec that is not built as written, and the reason is measured rather than
+ *  argued (tools/chemistry-bench.ts, 4,000 careers a rung):
+ *
+ *    · WHAT IT WAS FOR. «Which tier plays which style» is byte-identical in every career this game
+ *      has ever run, and C1a shuffles it so the owner's corners B, C and D can happen at all.
+ *    · WHAT IT BOUGHT. Corner B 41.3% -> 42.8%, corner C 25.7% -> 28.6%, and A, D and E unmoved to
+ *      within noise. The corners are made by the CHEMISTRY draw; the style shuffle adds ~1.5 and ~3
+ *      points to two of them.
+ *    · WHAT IT COST. A 4.7% COACHING DISCOUNT AT EVERY RUNG ABOVE BUDGET, in every career in the
+ *      game. `bestFitCoachAt` breaks a tie by PRICE, and a shuffled shelf creates ties: measured at
+ *      Middle/High/Elite, 24% of careers drew TWO great-fit coaches at the rung (the cheaper wins)
+ *      and 25% drew NONE (she falls to the cheapest good fit). The Elite opening rate went
+ *      $149.93/h -> $142.92/h, and `tests/economy-calibration.test.ts` went red on the wealthy cell:
+ *      an idle year flipped from a $2,970 BURN to break-even, which reverses round 7's «premium
+ *      everything must hurt» - an owner principle, not a tuning note.
+ *
+ *  ⭐ So the manner alone ships, the corners arrive anyway, and the economy is untouched. The style
+ *  draw is handed back to the owner with those three numbers, because trading a shipped economic
+ *  principle for three points of corner C is his call and not an agent's.
+ *
+ *  ⚠ THE NEW DRAW COMES AFTER EVERY LEGACY ONE, IN A SECOND PASS, and the order is the point: the
+ *  name and rate draws below are untouched in count, key and position, so every career that already
+ *  exists meets the same sixteen people at the same prices under the same names as it did before
+ *  this wave. What is new is what those people are LIKE. A per-slot manner draw inside the map would
+ *  have shifted the stream from slot 1 onward and moved every name in the game.
  *
  *  ⚠ The rate depends on her AGE, so a coach's price rises with her - the same person, the same
  *  POSITION in his tier's band, more money because what he is teaching has changed. The draw order
@@ -530,7 +596,7 @@ export function physioRecoveryFactor(tier: CoachTier): number {
  *  it: a coach who is dear for his rung at 14 is dear for it at 22. */
 export function buildCoachRoster(seed: string, ageYears: number): Coach[] {
   const rng = rngFromSeed(`${seed}:coaches`)
-  return ECONOMY.coach.roster.map((slot) => {
+  const people = ECONOMY.coach.roster.map((slot) => {
     const pool = slot.gender === 'm' ? COACH_FIRST_M : COACH_FIRST_F
     const first = pool[pickInt(rng, 0, pool.length - 1)]
     const last = SURNAMES[pickInt(rng, 0, SURNAMES.length - 1)]
@@ -543,6 +609,15 @@ export function buildCoachRoster(seed: string, ageYears: number): Coach[] {
       rateCents: pickInt(rng, lo, hi),
     }
   })
+  // THE MANNER, one draw a slot, uniform over the four. No constraint is wanted here: unlike style,
+  // a manner cannot make a career unplayable - every temperament has one manner that suits it and
+  // one that does not (ECONOMY.chemistry.affinityCentre's Latin square), so a shelf of four
+  // identical manners is a hard market rather than a broken one, and it is a market that should be
+  // able to happen.
+  return people.map((person) => ({
+    ...person,
+    manner: COACH_MANNERS[pickInt(rng, 0, COACH_MANNERS.length - 1)],
+  }))
 }
 
 /** THE BEST COACH AT ONE RUNG for the game she plays: best fit first, cheapest among equals.

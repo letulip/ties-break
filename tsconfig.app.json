@@ -32,6 +32,7 @@
     "tools/_lifeBeats.ts",
     "tools/_spotlight.ts",
     "tools/ad-shoot-bench.ts",
+    "tools/chemistry-bench.ts",
     "tools/childhood-bench.ts",
     "tools/dead-week-probe.ts",
     "tools/demo-save.ts",

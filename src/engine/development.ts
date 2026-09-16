@@ -969,6 +969,25 @@ export function growWeek(args: {
    *  week the focus IS being worked. See `composureEaseThisWeek` for both bounds and for why
    *  `veteranPoise` survives it. ZERO RNG IMPLICATIONS: a subtraction. */
   composureEase?: number
+  /** ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – HOW WELL THESE TWO WORK, `-100 .. +100`, for the coach she is
+   *  actually training with this week (`docs/specs/the-chemistry-2026-09.md` §5).
+   *
+   *  ⚠⚠ IT MOVES THE RUNG'S NUMBER AND NEVER THE FIT PILL, which is the fence that keeps the two
+   *  legible as two (spec §6, fence 3). `coachFactor` carries the whole arithmetic – toward the next
+   *  tier's `developmentFactor` going up and toward the rung below going down, symmetric – and the
+   *  pill keeps its own span untouched. Both still multiply exactly once, as today.
+   *
+   *  ⚠ ZERO EVERYWHERE ELSE, AND ZERO IS THE IDENTITY RATHER THAN A PLACEHOLDER: at chemistry 0
+   *  `coachFactor` returns `developmentFactor[tier] * fitFactor[fit]` to the bit, which is every week
+   *  this engine has grown since round 2. So a career that never hires anybody, a college freeze and
+   *  every call site outside the weekly growth path are byte-identical. `trainFactor`'s own promise
+   *  and this function's standing shape for a fact only some weeks have.
+   *
+   *  ⚠ AND IT IS HANDED IN RATHER THAN READ, for `coolheadRung`'s measured reason one field group up:
+   *  the pair lives on `world.coachPairs` and this module cannot import the world. ZERO RNG
+   *  IMPLICATIONS – a number, multiplied by another; the week's own draw is unchanged in count, key
+   *  and position. */
+  chemistry?: number
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
@@ -978,7 +997,8 @@ export function growWeek(args: {
     ageFactor(ageYears, bounds) *
     trainFactor(plan) *
     (args.loadFactor ?? 1) *
-    (args.coachFactorOverride ?? coachFactor(tierOf(coach), coachFitFor(coach, playStyle))) *
+    (args.coachFactorOverride ??
+      coachFactor(tierOf(coach), coachFitFor(coach, playStyle), args.chemistry ?? 0)) *
     (1 + Math.min(matchesThisWeek, d.matchBonusCap) * d.matchBonus)
 
   // One draw for the whole week, shared across the attributes: a good week is a good week, and four

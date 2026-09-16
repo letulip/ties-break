@@ -58,20 +58,35 @@ describe('the match bonus reaches growWeek', () => {
     const training = serveGainedInAWeek(0)
     const oneMatch = serveGainedInAWeek(1)
     expect(training).toBeGreaterThan(0)
-    // 1 + 1 x 0.18 = 1.18, and nothing else in the week differs.
-    expect(oneMatch / training).toBeCloseTo(1 + ECONOMY.development.matchBonus, 5)
+    // 1 + 1 x 0.18 = 1.18.
+    //
+    // ⚠ RE-AIMED FROM 5 DIGITS TO 4 BY THE CHEMISTRY WAVE (v79), NOT WEAKENED – AND THE REASON IS
+    //   THE POINT. This line used to read «and nothing else in the week differs», and since C1 that
+    //   sentence is no longer true: a match row is ALSO one of `spiritBandOf`'s three event channels
+    //   (`docs/specs/the-chemistry-2026-09.md` §3.4), so the win nudges the pair's phase, the phase
+    //   moves the week's chemistry, and chemistry moves `coachFactor`. The measured contamination is
+    //   7.4e-6 on a ratio of 1.18 – six parts per million – so 4 digits (a 5e-5 window) leaves the
+    //   claim with a margin of seven times the interference. What is asserted is unchanged: the
+    //   match bonus reaches `growWeek` and is worth `matchBonus` a match.
+    //
+    //   ⚠ AND THE MUTATION ARM IS STILL THE ARM. Putting `world.week` back in place of
+    //   `world.week - 1` in world/phaseGrowth.ts drives this ratio to 1.0, which is 0.18 away – four
+    //   thousand times the window this line now allows.
+    expect(oneMatch / training).toBeCloseTo(1 + ECONOMY.development.matchBonus, 4)
   })
 
   it('scales with the number of matches and stops at matchBonusCap', () => {
     const training = serveGainedInAWeek(0)
     const cap = ECONOMY.development.matchBonusCap
     for (let n = 1; n <= cap; n++) {
-      expect(serveGainedInAWeek(n) / training).toBeCloseTo(1 + n * ECONOMY.development.matchBonus, 5)
+      // ⚠ 4 DIGITS, for the reason the case above carries in full: a match row now pays into the
+      //   coach relationship as well as into this bonus, and the interference is parts per million.
+      expect(serveGainedInAWeek(n) / training).toBeCloseTo(1 + n * ECONOMY.development.matchBonus, 4)
     }
     // Past the cap a fourth match is fatigue, not education – the condition model charges for it.
     expect(serveGainedInAWeek(cap + 2) / training).toBeCloseTo(
       1 + cap * ECONOMY.development.matchBonus,
-      5,
+      4,
     )
   })
 

@@ -310,6 +310,27 @@ export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor 
 // with them because `WorldState.temperament` is declared in it.
 export { accrueSpirit, applyBondDelta, spiritMatchFactor, temperamentFor, temperamentIntensity, TEMPERAMENTS } from './spirit'
 export type { Temperament } from './spirit'
+// ⭐ v79: the chemistry leaf, beside the private life's and on the same line of reasoning – the
+// barrel is what the rest of the repo imports the engine through, and `CoachPair` travels with them
+// because `WorldState.coachPairs` is declared in it.
+export {
+  accrueChemistry,
+  affinityCentre,
+  affinityFor,
+  chemistryCeilingPerYear,
+  chemistryDriftPerYear,
+  chemistryEventNudge,
+  chemistryFloorPerYear,
+  chemistryWeeklyRate,
+  COACH_MANNERS,
+  freshCoachPair,
+  mannerFromAxes,
+  mannerPush,
+  mannerVoice,
+  nextChemistryPhase,
+  quietWeek,
+} from './chemistry'
+export type { ChemistryWeek, CoachManner, CoachPair } from './chemistry'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
 // W4-SCHOOL: the school calendar. Lives in kidLife.ts with `gradeOf`, whose arithmetic it is.
 import { schoolEndWeek, schoolIsOver, schoolIsOverForBand } from './kidLife'
@@ -1786,6 +1807,19 @@ export function createWorld(
     // reasons, and the next author would have to untie them. When §4's rungs land, this becomes
     // `ECONOMY.sparring.defaultRung` and the migration's back-fill stays whatever it shipped as.
     sparringRung: 1,
+    // ⭐⭐⭐ v79 (the chemistry wave C1 + round 42 #48): SHE HAS WORKED WITH NOBODY, AND NOBODY IS
+    // TRAVELLING. `{}` is exactly true on week 0 in the plainest possible sense - a row is written on
+    // the first week she trains with a man, and on week 0 she has trained with none of them. It is
+    // the same literal the migration back-fills with, and for the same reason rather than by
+    // coincidence: a career that predates the mechanic accrued nothing with anybody because there was
+    // nothing to accrue. `sparringTravels` is `false`, which is `sparringHired` above.
+    //
+    // ⚠ NOW THE LAST TWO KEYS OF THE LITERAL, and the sparring pair has stopped being last - the same
+    // handover `spotlightHabituation` took from `wallsFlipped` and the wave-5 six took from
+    // `spiritShock`. Appended in THIS order, which is the order `careerHashAtSchema` peels them off
+    // in (reverse, newest first).
+    sparringTravels: false,
+    coachPairs: {},
   }
   addEvent(world, {
     week: 0,

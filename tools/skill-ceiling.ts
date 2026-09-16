@@ -590,6 +590,10 @@ function section3(): { prodigy: KidSkills; ceiling: KidSkills; theoretical: KidS
     style: 'all-court',
     name: 'x',
     rateCents: 0,
+    // v79: the roster now carries a manner too. This fallback is unreachable (the elite rung always
+    // has an all-court coach) and the probe grows at chemistry 0 regardless, so the value is a
+    // placeholder in the same sense the id and the name above are.
+    manner: 'analytical',
   }
   let s: KidSkills = { ...ms }
   let bestMean = meanFive(s)

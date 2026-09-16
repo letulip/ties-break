@@ -691,3 +691,171 @@ and those are written by the build and ruled by him before the wave ships, not b
   table are arithmetic on today's `ECONOMY.coach` rather than the output of a run.
 * **It says nothing about how the relationship FEELS in play**, which on a mechanic the player meets
   through one sentence a season is most of the question, and is a playtest rather than a bench.
+
+---
+
+## 15. ⭐⭐ WAVE C1, BUILT AND MEASURED (16.09) – predicted against measured
+
+**What shipped.** `manner` on the coach roster, drawn per career on the existing `seed:coaches`
+sub-stream; affinity `A` ∈ [−1, +1] drawn once per pair around the (temperament × manner) cell; the
+corridor of §3.2; the weekly `phase` of §3.3; two of the three event channels of §3.4; schema **v79**
+(`coachPairs`, and `sparringTravels` riding with it); and one term in `coachFactor`.
+
+**Where it lives.** `src/engine/chemistry.ts` (the whole mechanic, a leaf), `ECONOMY.chemistry` (every
+knob – nothing reads a literal), `buildCoachRoster` and `coachFactor` in `src/engine/coach.ts`,
+`accrueCoachPair` in `src/engine/world/phaseGrowth.ts` (the one writer of `coachPairs`), the v78 → v79
+step in `src/engine/migrations.ts`, `tests/round43-chemistry.test.ts` (42 cases, ten measured mutation
+arms, ~1.0 s) and `tools/chemistry-bench.ts` (`npm run bench:chemistry`).
+
+### 15.1 The benches
+
+| # | predicted, written before the run | MEASURED | verdict |
+| --- | --- | --- | --- |
+| **B10** · the lookup test | within-cell variance dominates between-cell **by ≥ 2:1** | within 0.13, between 0.03, **ratio 3.9 : 1** | ✅ the draw dominates; the 4×4 is flavour, not a strategy guide |
+| **B11** · the balance check | every temperament has ≥ 1 warm manner and ≥ 1 cold one; no manner best for all four | a clean Latin square – each row has exactly one +0.26 and one −0.26, each manner is best for exactly one temperament | ✅ structural, by construction |
+| **B9** · do periods appear? | a perfect pair's weekly series shows **runs of 8+ weeks** on one side of its mean | 400 years: 2,270 runs, mean length **9.2 weeks**, longest 176; runs of 8+ hold **82.1% of all weeks** | ✅ §3.3 is built – this is not noise wearing a phase |
+| **B7** · the floor column | a PERFECT pair sees a down year **1 season in 8**; a NO-MATCH pair **more often than not** | perfect pair **1 in 67** on the weather alone; no-match pair **68.5%** | ⚠ half met – see 15.3 |
+| **B0** · the corner census | A 1 in 15–30 · B 1 in 6–12 · C 1 in 8–15 · D 1 in 10–20 met, 1 in 25–40 hired · E 50–70% | below | ✅ no corner at zero |
+
+**B0, 3,000 careers, with a reproducing seed for each corner.** The census definitions are the
+bench's own and are stated in its header: `affordable` is a tier proxy (working shops at budget,
+middle adds middle, wealthy adds high – elite is gated on results, which is what makes C «the family
+has to find the money»); `talent` is a GREAT style fit; `click` is A ≥ +0.60, `anti-match` A ≤ −0.60,
+and «workable chemistry» A ≥ +0.25.
+
+| corner | predicted | **measured** | reproducing seed |
+| --- | --- | --- | --- |
+| **A** · a budget coach is both the right teacher and a click | 1 in 15–30 | **7.9% · 1 in 12.6** | `chem-0` (working, aggressive, quiet) |
+| **B** · nothing in reach offers both | 1 in 6–12 | **42.8% · 1 in 2.3** | `chem-2` (wealthy, aggressive, sunny) |
+| **C** · only above her reach offers both | 1 in 8–15 | **28.6% · 1 in 3.5** | `chem-3` (working, counterpuncher, fiery) |
+| **D** · the anti-match is on her shelf | 1 in 10–20 | **14.3% · 1 in 7.0** | `chem-1` (middle, aggressive, deep) |
+| **D** · ...and he is the coach she opens with | 1 in 25–40 | **7.1% · 1 in 14.0** | `chem-1` (middle, aggressive, deep) |
+| **E** · the ordinary career – her own coach is neither | the majority, 50–70% | **83.1%** | `chem-2` (wealthy, aggressive, sunny) |
+
+⚠ **Three of the six are commoner than predicted and one is much commoner.** B and C were guesses
+about a system that did not exist, and both turn on where «workable chemistry» is drawn – which is a
+REPORTING threshold, not an engine constant. What matters is the shape: every corner occurs, none is
+at zero, and the ordinary career is still the overwhelming majority.
+
+⭐ **And C10 comes out right by construction rather than by tuning:** an opening coach is a click in
+8.3% of careers and an anti-match in 8.6%. «Согласен» – the same frequency.
+
+⚠ **Corner A is measured as its PRECONDITION and not as its finish.** «The entry-level coach ends up
+the best-paid on the team» needs §4's tier climb, which is wave C2 – no coach's tier moves on this
+tree. What C1 owns is the gate, and the gate opens 1 career in 12.6.
+
+### 15.2 Two things the bench sent back, and both were engine changes
+
+⚠⚠ **THE RESULTS CHANNEL WAS A FLAT TAX ON EVERY CAREER IN THE GAME, and only a real career found
+it.** The first build weighted a loss half again as heavily as a win and charged a first-round exit on
+top – the natural reading of «поражения». Measured over 12 careers × 208 weeks: 806 wins, 784 losses,
+14 titles and **454 first-round exits**, which drove the median career to a standing phase of
+**−0.36** and wore its relationship down for no reason but arithmetic. ⚠ **In a knockout sport every
+event but one ends in a loss**, so any asymmetry there is a tax rather than a signal. The fix was to
+make the two weights exact mirrors and drop the exit term: `wins − losses` already IS the depth of a
+run (a title is +5 net, a semifinal +2, a first-round exit −1), a 50% season is exactly neutral, and
+the median career now ends 208 weeks at a phase of **+0.09**. ⚠ «A bad loss as FAVOURITE» is an
+EXPECTATION-relative read and is not built – C5 defers that residual to F1 itself, and this wave did
+not fake it.
+
+⚠⚠ **AND `driftAtPerfect` MOVED, 22 → 12, BECAUSE B7 SAID «NEVER».** With the median year at +19 and
+the floor at −7, a down year needed the weather below −0.76 for a whole season – four standard
+deviations of the yearly mean – so a perfect pair could not have a bad year at all. At 12 the median
+year is +11 and the zero crossing is 1.9σ away, which also puts a perfect pair's climb to 100 at
+«roughly a decade», §5's own sentence.
+
+### 15.3 B7, honestly: the Borg year comes from the RESULTS, not from the dice
+
+The weather alone, 400 seasons per affinity, no events:
+
+| affinity | floor/yr | drift/yr | ceiling/yr | median year | best | worst | DOWN years |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| +1.00 | −7.0 | 12.0 | 33.0 | +11.4 | +27.6 | −1.8 | 1.5% (1 in 67) |
+| +0.60 | −12.2 | 7.2 | 21.8 | +6.3 | +17.3 | −5.4 | 9.8% (1 in 10.3) |
+| +0.25 | −16.8 | 3.0 | 12.0 | +1.6 | +9.0 | −12.0 | 35.8% |
+| 0.00 | −20.0 | 0.0 | 5.0 | −1.2 | +3.8 | −14.9 | **68.5%** |
+| −0.60 | −27.8 | −6.0 | 2.6 | −7.6 | +0.9 | −20.0 | 99.8% |
+| −1.00 | −33.0 | −10.0 | 1.0 | −11.3 | −1.8 | −28.2 | 100% |
+
+...and the same pairs under four result regimes (median season total):
+
+| affinity | quiet | ordinary | bad year | **disaster** |
+| ---: | ---: | ---: | ---: | ---: |
+| +1.00 | +12.3 | +12.6 | +3.1 | **−1.5** |
+| +0.60 | +6.4 | +7.0 | −1.5 | −6.8 |
+| 0.00 | −1.8 | −1.3 | −9.0 | −14.4 |
+
+⭐ **So B7's second half is met at 68.5%, and its first half is met by a different mechanism than the
+one it predicted.** A perfect pair sees a down year 1 season in 67 on the weather, 1 in 10 at A = +0.6,
+and reliably in a season where the results collapse. That is §3.4's own claim – «losses are the
+channel that makes a good pair's bad year possible» – measured rather than assumed. ⚠ The **ceiling**
+column was not touched: +33 and +5 are his and are pinned by name in
+`tests/round43-chemistry.test.ts`.
+
+### 15.4 ⚠⚠ C1a IS NOT BUILT, AND IT IS THE ONE THING IN THIS DOCUMENT THE WAVE DID NOT DO
+
+C1a rules that the roster draws `style` per career as well as `manner`. It WAS built, benched, and
+handed back, because it costs a shipped economic principle and buys almost nothing:
+
+* **what it bought** – corner B 41.3% → 42.8%, corner C 25.7% → 28.6%, and A, D and E unmoved to
+  within noise, over 3,000 careers on the same seeds. ⭐ **The corners are made by the CHEMISTRY
+  draw.** The style shuffle adds about one point and three points to two of them.
+* **what it cost** – ⚠⚠ **a 4.7% COACHING DISCOUNT AT EVERY RUNG ABOVE BUDGET, in every career in the
+  game.** `bestFitCoachAt` breaks a tie by PRICE, and a shuffled shelf creates ties: measured over
+  4,000 careers a rung, 24% drew TWO great-fit coaches at the rung (the cheaper wins) and 25% drew
+  NONE (she falls back to the cheapest good fit). Elite's opening rate went **$149.93/h → $142.92/h**,
+  Middle's $50.00 → $47.61, High's $80.12 → $76.33.
+* **what that broke** – `tests/economy-calibration.test.ts`'s wealthy cell went red: an idle year
+  flipped from a **$2,970 BURN to break-even**, which reverses round 7's «premium everything must
+  hurt». That is an owner principle, not a tuning note, and trading it for three points of corner C is
+  his call and not an agent's.
+
+⚠ **And he has already ruled the neighbouring question once**, on 30.07 («2 counterpancher budget,
+none big serve»): a play style is chosen ONCE, on screen R, before the player knows what coaching
+costs, and it is irreversible, so a rung with a hole in it taxes the family least able to buy its way
+out. A shuffled shelf re-opens that on one career in four.
+
+**So the question back to him is one line:** is «which tier plays which style» worth a 4.7% cut in
+what coaching costs, given that the corners arrive without it? If yes, C1a ships in C2 together with a
+re-pin of the three burn bands. `tests/round43-chemistry.test.ts` pins the current answer so the draw
+cannot be re-added silently.
+
+### 15.5 What C1 is worth, and why end-of-career skill is the wrong ruler
+
+48 paired careers × 468 weeks, chemistry ON against **the same tree with the corridor neutralised in
+place** (every anchor to 0, so the level never leaves 0 and `coachFactor` is byte-identical to the
+shipped arithmetic). The neutralised arm accrued **exactly 0** on all 48 and the build moved on **48
+of 48** – the arm is real.
+
+| the hired pair | careers | end chemistry | end-skill delta |
+| --- | ---: | ---: | ---: |
+| click, A ≥ +0.60 | 5 | **+52.5** | +0.04 |
+| good, +0.25…+0.60 | 5 | +53.9 | +0.03 |
+| ordinary | 25 | −0.4 | −0.09 |
+| cooling | 8 | −24.8 | −0.18 |
+| anti-match, A ≤ −0.60 | 5 | **−28.7** | −0.34 |
+
+⚠ **THE LEVEL MOVES PROPERLY AND THE END-SKILL COLUMN IS ALMOST FLAT, AND THAT IS A BROKEN RULER
+RATHER THAN A BROKEN MECHANIC.** `growWeek` grows TOWARD `potential`: a faster rate does not raise the
+destination, it arrives sooner, and a girl nine years in is at or near her ceiling on both arms. §5's
+own table is the right way to read what C1 is worth – a budget pair at +52 chemistry develops at 1.005
+against 0.95 – and the number that compounds is the coach's own TIER, which is wave C2's.
+⭐ **The downside is the half that shows today**, because an anti-match pushes the rate below what
+reaching the ceiling needs: −0.34 skill points, worst case −1.56. Which is exactly why §5a says the
+anti-match must be VISIBLE.
+
+### 15.6 The four seasonal lines – ⚠ DRAFT, and nothing renders them
+
+§5a asks for four and says the anti-match line is load-bearing, because a negative pairing that is
+invisible is a hidden tax. **These are DRAFTS for the owner to rule, cut or rewrite. C1 ships no
+player-facing string at all** – the seasonal line lands in C3 with the card and the gauge.
+
+| band | DRAFT line |
+| --- | --- |
+| **anti-match** | «A season with him, and she is further from her game than she started. Whatever he is saying, she is not hearing it.» |
+| **ordinary** | «They work well enough. He runs the sessions, she does them, and neither of them talks about it much.» |
+| **good** | «She listens to him now. Something in the way he explains a thing has started landing.» |
+| **the click** | «He knows what to say to her before she knows she needs it. This is the year it stopped being coaching and started being theirs.» |
+
+⚠ The anti-match line deliberately names the COST – further from her game – rather than the mood,
+because the player's only other channel is a bill that says nothing is wrong.
