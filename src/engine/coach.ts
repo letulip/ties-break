@@ -74,7 +74,8 @@ export interface Coach {
   id: string
   tier: CoachTier
   /** the game HE plays, which is what makes him great / good / off for hers.
-   *  ⚠ DRAWN PER CAREER since the chemistry wave (C1a) - see `buildCoachRoster`. */
+   *  ⚠ STILL THE ROSTER CONSTANT'S, and not drawn - C1a asked for a per-career draw and the bench
+   *  sent it back. `buildCoachRoster`'s header carries the three numbers and the hand-back. */
   style: PlayStyle
   name: string
   /** his own hourly rate in cents, MIDDLE-corridor anchored (see coachWeeklyCents) */
