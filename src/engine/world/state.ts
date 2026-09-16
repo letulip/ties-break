@@ -566,7 +566,35 @@ import type { AcademySupport } from '../academy'
 // Full move: this constant, the v78 -> v79 step in migrations.ts, tests/fixtures/saves/v79.json,
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
 // frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 79
+// ⭐⭐⭐ v80 – WAVE F1, `world.form`. `docs/specs/the-form-and-the-sparring-2026-09.md` §6: ONE key,
+// ONE customer, and the version the three sparring keys have been waiting for since v78.
+//
+//   · `form` – tenths, 0-centred, clamped [-10, +10], back-fill **0 = neutral**. 0 is the IDENTITY
+//     AND NOT A PLACEHOLDER FOR ONE (v77's `composureBonus` rule, quoted): at 0 `formComposureDelta`
+//     returns an exact 0, `kidMatchPlayerFor` takes its untouched early return, and every migrated
+//     career and every stored replay is byte-identical until something actually moves her.
+//
+// ⚠⚠ IT IS NOT INERT, AND SAYING SO IS HALF THE MOVE. v78 and v79 each shipped keys with no reader;
+// this one ships WITH its reader (the weekly pass in `world/phaseHerWeek.ts`, and `composureEff` at
+// `MatchPlayer` build time), because a slump nobody can feel is the decorative mechanic round 42
+// found twice. ⚠ SO THE FROZEN CAREERS MOVE, and they move for a REASON rather than by a key
+// append: every frozen career plays matches and has gaps, so every one of them now carries form into
+// its own results. That is a behaviour change, it was diffed per key before it was believed
+// (`tools/frozen-key-diff.ts`, control = this wave's own change neutralised in place), and the
+// constants are re-stamped with the dated note the protocol asks for.
+//
+// ⚠ AND THE SEAT'S THREE KEYS FINALLY GAIN THEIR READER IN THE SAME WAVE, with NO key of their own:
+// `sparringHired` / `sparringRung` (v78) and `sparringTravels` (v79) are read by `world/sparring.ts`
+// from this version on. F2 checked before it bumped and needed nothing – which is what those two
+// versions' «a reader who finds an unused key here is reading a SCHEDULING decision» was promising.
+//
+// ⚠ `seed:form:<week>` STAYS RESERVED AND UNUSED (O4). Zero draws anywhere in this wave, so the
+// frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+//
+// Full move: this constant, the v79 -> v80 step in migrations.ts, tests/fixtures/saves/v80.json,
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
+// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 80
 
 
 
@@ -1391,6 +1419,31 @@ export interface WorldState {
    *  answer quoted rather than re-argued: the seat did not exist, so nobody was in it and nobody was
    *  travelling. */
   sparringTravels: boolean
+  /** ⭐⭐⭐ v80, WAVE F1 – HER FORM. Tenths, 0-CENTRED, clamped `[-10, +10]`, and 0 is neutral in both
+   *  the back-fill and the fresh-career default (`docs/specs/the-form-and-the-sparring-2026-09.md`
+   *  §1). `src/engine/form.ts` holds the whole model; this is the one number it writes.
+   *
+   *  ⚠⚠ NOT A SECOND CONDITION AND NOT A SECOND SPIRIT, which is §3's first fence and the reason
+   *  this field can exist at all. `condition` is her BODY this week and has a dial, a doctor and a
+   *  screen; `spirit` is her LIFE this week and reaches a match through its own factor; `form` is her
+   *  TENNIS this week, driven ONLY by results and by rhythm, and steered by the parent through
+   *  ENTRIES and through nothing else. There is no form dial, no form screen and no form doctor, by
+   *  design rather than by omission.
+   *
+   *  ⚠⚠ AND NO SURFACE SHOWS IT (O2, the owner's 16.09 ruling: form is visible NOWHERE beyond the
+   *  coach's sentence and the match itself in v1). It does not cross the wire: there is no `form`
+   *  field on `Snapshot`, no number, no Mood word – that is `spirit`'s – and no diary line. The coach
+   *  is «the eye» and the match is the evidence; the fog rule owns the rest.
+   *
+   *  ⚠ ZERO 0 IS THE IDENTITY AND NOT A PLACEHOLDER FOR ONE (v77's `composureBonus` rule). At 0 the
+   *  reader adds an exact 0 and `kidMatchPlayerFor` takes the untouched early return it has always
+   *  taken, so every migrated career and every stored `WorldMatch` replay composes byte-identically
+   *  until a match or a gap actually moves her.
+   *
+   *  ⚠ ONE WRITER: the weekly pass in `world/phaseHerWeek.ts`, beside `accrueCondition`'s and
+   *  `accrueSpirit`'s. ⚠ ZERO DRAWS ON ANY STREAM (O4) – `seed:form:<week>` stays reserved and
+   *  unused, so the frozen MAIN capture cannot see this field. */
+  form: number
   /** ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – HOW SHE AND EACH COACH SHE HAS WORKED WITH ACTUALLY GET ON,
    *  keyed on the coach's id (`docs/specs/the-chemistry-2026-09.md` §10). The owner, 16.09: «эта
    *  самая химия может как-то нарабатываться с разной динамикой – это может стать показателем,

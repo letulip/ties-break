@@ -139,6 +139,13 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
+// ⭐⭐⭐ v80, WAVE F1 + F2 – her form and the third seat. Both modules import `WorldState` as a
+// TYPE-ONLY import, so the values come back here and are re-exported under their own names exactly
+// as every other extracted concern is.
+import { accrueFormWeek, coachFormNote, formMatchlessWeeks, formResidualsOf, herWeekForForm, sparringComebackGap } from './world/form'
+export { accrueFormWeek, coachFormNote, formMatchlessWeeks, formResidualsOf, herWeekForForm, sparringComebackGap }
+import { hireSparring, resolveSparring, setSparringRung, setSparringTravels, sparringRungOf, sparringRustCut, sparringUnlocked, sparringWeeklyCents, sparringWorksThisWeek, SPARRING_CHANGE_KEY, SPARRING_LOCKED_DETAIL, SPARRING_RECEIPT } from './world/sparring'
+export { hireSparring, resolveSparring, setSparringRung, setSparringTravels, sparringRungOf, sparringRustCut, sparringUnlocked, sparringWeeklyCents, sparringWorksThisWeek, SPARRING_CHANGE_KEY, SPARRING_LOCKED_DETAIL, SPARRING_RECEIPT }
 import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
 export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 // ⭐ v76, the psychologist's year (wave 5 T2): THE SECOND SALARIED SEAT, on the line above's own
@@ -288,7 +295,7 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
@@ -298,7 +305,7 @@ export { bankSponsorCheque }
 // ⭐ ROUND 42 #5 – the cameo's cadence half, re-exported beside its need half for the same reason
 // `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
 export { sponsorCameoWilling, sponsorCameoCents }
-export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -1814,12 +1821,22 @@ export function createWorld(
     // coincidence: a career that predates the mechanic accrued nothing with anybody because there was
     // nothing to accrue. `sparringTravels` is `false`, which is `sparringHired` above.
     //
-    // ⚠ NOW THE LAST TWO KEYS OF THE LITERAL, and the sparring pair has stopped being last - the same
-    // handover `spotlightHabituation` took from `wallsFlipped` and the wave-5 six took from
-    // `spiritShock`. Appended in THIS order, which is the order `careerHashAtSchema` peels them off
-    // in (reverse, newest first).
+    // ⚠ AND THESE TWO HAVE STOPPED BEING LAST IN THEIR TURN - the same handover `spotlightHabituation`
+    // took from `wallsFlipped` and the wave-5 six took from `spiritShock`. Appended in THIS order,
+    // which is the order `careerHashAtSchema` peels them off in (reverse, newest first).
     sparringTravels: false,
     coachPairs: {},
+    // ⭐⭐⭐ v80 (wave F1): SHE IS EXACTLY THE PLAYER HER RESULTS SAY SHE IS, which on week 0 is the
+    // only thing 0 can mean - she has no results. 0 is the IDENTITY for this number and not a
+    // placeholder for one (`composureBonus`'s own v78 rule, five keys up): `formComposureDelta(0)`
+    // is an exact 0 and `kidMatchPlayerFor` takes the early return it has always taken, so a fresh
+    // career and a migrated one are byte-identical here until a match or a gap moves her. It is the
+    // same literal the v79 -> v80 migration back-fills with, and for the same reason rather than by
+    // coincidence.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `coachPairs` has stopped being last. Same handover,
+    // same peel order (reverse, newest first), same line in `careerHashAtSchema`.
+    form: 0,
   }
   addEvent(world, {
     week: 0,

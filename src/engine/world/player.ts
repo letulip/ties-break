@@ -13,6 +13,12 @@ import { applyKit, kitWearAt, type KitWear } from '../equipment'
 import { kitFreshCap } from '../offers'
 import { conditionMatchFactor } from '../condition'
 import { spiritMatchFactor } from '../spirit'
+// ⭐⭐ v80, WAVE F1 – THE ONE READER OF `world.form`. `engine/form.ts` is a LEAF (it imports
+// `ECONOMY` and nothing else), so this arrow closes nothing, exactly as `../spirit`'s does one line
+// up. The arithmetic lives THERE and not here for the reason that module's own note gives: the radar
+// calls the same function, so the composure a match is played at and the composure the coach draws
+// can never be two different opinions of the same girl.
+import { formComposureDelta } from '../form'
 import { relativeAgeHeadStart, SKILL_KEYS, STARTING_SKILL_BAND, type KidSkills } from '../development'
 import { coachEdgePp } from '../coach'
 import type { MatchPlayer, Surface } from '../match/types'
@@ -220,6 +226,18 @@ export function kidMatchPlayerFor(
      *  ⚠ THE KID ONLY. Rivals have no private life and read nothing of this – their side of the
      *  cohort question is form-and-slump §4.4's, deferred with it. */
     spirit?: number
+    /** ⭐⭐⭐ v80 – HER FORM, THE NINTH optional field and still not a ninth term
+     *  (`docs/specs/the-form-and-the-sparring-2026-09.md` §2). Optional for exactly the reason
+     *  `spirit` one line up is, and it is the strongest form of that argument this file has: ABSENT
+     *  ⇒ `formComposureDelta` returns a literal 0, the sum below is `composure + edge` unchanged, and
+     *  every pure caller AND every stored `WorldMatch` replay composes byte-identically to what it
+     *  did before this shipped. A migrated career reads 0, which is the same 0, so it is
+     *  byte-identical too until a match or a gap actually moves her.
+     *
+     *  ⚠ THE KID ONLY, v1 (O6, the owner's 16.09 ruling). Rivals carry no form – the population cost
+     *  of 199 cohort rows plus the 1,600-strong professional scalar is measured at F3 and ruled
+     *  then, which is the parked spec's own caution kept. */
+    form?: number
   },
   surface: Surface,
   /** ⭐⭐ IS HE ON **THIS** TRIP – the owner's ruling, 15.08: «поездки С тренером открываются на w
@@ -325,12 +343,38 @@ export function kidMatchPlayerFor(
   // ⭐ THE STANCE IS NOT THE WEEK – see `onThisTrip` on the signature. `world.coachOnEventWeeks` is
   // the policy; whether he is standing at THIS court is a fact only the caller has.
   const edge = coachMatchEdge({ ...world, coachOnEventWeeks: onThisTrip ?? false })
-  if (edge === 0) return composed
+  // ⭐⭐⭐ v80, WAVE F1 – AND HOW SHE IS PLAYING, which is the SECOND additive reading and lands on
+  // ONE wing where the coach's lands on five. `composureEff = composure + form × K`, the parked
+  // spec's own choice kept verbatim, because it is the cheapest honest seam: the radar, the box
+  // score, the live commentary and the coach's read all INHERIT it with zero new surfaces, and her
+  // serve wobbling in a slump is the same composure the commentary already knows how to talk about.
+  //
+  // ⚠ ONE WING AND NOT FIVE, DELIBERATELY. The coach's edge is a flat delta on all five because that
+  // is what a coach is; form is NERVE, and spreading it would make a slump a worse SERVE, which is a
+  // claim about her technique rather than about her week. §2 of the spec names composure as the one
+  // reader and this line is the whole of it.
+  //
+  // ⚠ AFTER THE WHOLE COMPOSITION, beside the coach's edge and for its reason: the corridor is
+  // priced in COMPOSURE POINTS at the clamps (±6 at `K = 0.6`), and a term applied before
+  // `conditionMatchFactor` would be worth less to a tired girl than to a fresh one – form scaled by
+  // fatigue, which is two mechanics wearing one number.
+  const formDelta = formComposureDelta(world.form)
+  // ⚠ THE EARLY RETURN NOW ASKS BOTH QUESTIONS, and that is what keeps «a self-coached career is
+  // identical to the one it was before this shipped» literally true one wave on: a girl with nobody
+  // hired and form at neutral gets the composed object back UNTOUCHED, the same object byte for
+  // byte, not even an `x + 0`.
+  if (edge === 0 && formDelta === 0) return composed
   return {
     ...composed,
     serve: composed.serve + edge,
     ret: composed.ret + edge,
-    composure: composed.composure + edge,
+    // ⚠ THE FLOOR IS ON THE FORM PATH ONLY, and the ternary is how the no-form path stays PROVABLY
+    // byte-identical rather than merely equal in practice. `Math.max(0, x)` returns `x` for every
+    // positive `x`, so a clamp on both branches would be right too – and «right in practice» is
+    // exactly the claim a stored replay cannot afford. At `formDelta === 0` the expression is the
+    // one that shipped in v79, character for character.
+    composure:
+      formDelta === 0 ? composed.composure + edge : Math.max(0, composed.composure + edge + formDelta),
     stamina: composed.stamina + edge,
     groundstrokes: composed.groundstrokes + edge,
   }

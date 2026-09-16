@@ -5607,6 +5607,111 @@ export const ECONOMY = {
     publicLifeReceiptAt: 0.5,
   },
 
+  // --- HER FORM: the slump and the rust (docs/specs/the-form-and-the-sparring-2026-09.md §1-§3) ---
+  // The model is `src/engine/form.ts`; these are its seven numbers. ⚠ ZERO DRAWS anywhere they are
+  // spent – O4, the owner's 16.09 ruling («accumulator, deterministic, v1»), so `seed:form:<week>`
+  // stays reserved and unused.
+  form: {
+    /** §1a `G` – THE RESIDUAL GAIN. One match's worth, before the odds are applied: a win over a
+     *  girl the ring gave her no chance against is `+G`, a loss as a certainty is `-G`, and both
+     *  ends are unreachable because `p` is never 0 or 1.
+     *
+     *  ⚠ WHAT THIS DIAL SETS IS HOW FAR INTO THE CLAMPS A REAL CAREER TRAVELS, and it is the half
+     *  of O1 the corridor does NOT constrain – the corridor prices the clamps, this decides whether
+     *  anybody ever reaches them. Measured on the census arm of `tools/form-scale-bench.ts`; see
+     *  §7 of the spec for the predicted-vs-measured table. */
+    gain: 1.5,
+    /** §2 `K` – THE READER, in composure points per point of form. `+-10 x 0.6 = +-6 composure` at
+     *  the clamps.
+     *
+     *  ⚠⚠ THIS CONSTANT IS THE CONSEQUENCE AND THE CORRIDOR IS THE RULING (O1, 16.09: «what he
+     *  ruled is the METHOD»). The ruled corridor is **[0.5, 4] pp of realised match win rate at the
+     *  clamps** – it decides close matches, never a career – and this number is whatever puts the
+     *  clamps inside it on the post-#34 engine. A builder that moves it without re-running
+     *  `npm run bench:formscale` has skipped O1 rather than re-tuned it. */
+    reader: 0.6,
+    /** §1c – THE RETURN TO NEUTRAL, both signs, every week, applied FIRST. Half-life of a deep
+     *  slump is about a month of ordinary results: «a mood, not a season» unless the results keep
+     *  feeding it. A purple patch decays at the same honest rate, which is what keeps the number
+     *  0-centred rather than ratcheting. */
+    revertPerWeek: 0.5,
+    /** §1b – HOW LONG A GAP HAS TO BE BEFORE IT IS RUST. Three weeks is an off-week, a rest and a
+     *  travel week; the fourth is when a player stops being match-sharp. ⚠ STRICTLY GREATER than
+     *  this, so an ordinary three-week break costs exactly nothing. */
+    rustAfterWeeks: 3,
+    /** §1b – the drift per matchless week past the gap, before the sparring partner's cut. */
+    driftPerWeek: 0.4,
+    /** §1b – HOW FAR RUST ALONE CAN TAKE HER, and it is deliberately not the clamp: rust DULLS, it
+     *  does not destroy. A girl already below this from a run of bad results rusts by nothing at
+     *  all – her problem is not that she has stopped playing. */
+    rustFloor: -4,
+    /** The clamps. 0 is neutral and both backfills; `+-10` is «as well as she has ever felt» and
+     *  «nothing is going in». */
+    min: -10,
+    max: 10,
+    /** §3's ONE WINDOW – where the coach's eye starts saying she is striking it clean, and where it
+     *  starts saying she needs matches. ⚠ NOT SYMMETRICAL, because the two channels are not: the
+     *  rust line is ALSO gated on the gap that caused it (`coachFormNote`), so «she needs matches
+     *  under her» is never said about a girl who has been playing every week and losing – that girl
+     *  is in a slump, which is the psychologist's patient and not a thing a hitting session fixes.
+     *  ⚠ THE NUMBER NEVER REACHES A SURFACE, only the sentence does (O2). */
+    goodNoteAt: 3,
+    rustNoteAt: -2,
+    /** ⭐⭐ O1's RULING ITSELF, IN THE CONSTANTS FILE, because it is the thing `reader` above serves
+     *  and a corridor that lives only in a spec is a corridor a builder can forget. The realised
+     *  match win-rate swing at the clamps, in probability points: form decides close matches and
+     *  never a career (form-and-slump §1's bound, kept as law).
+     *
+     *  ⚠ IT IS READ BY THE BENCH AND BY NOTHING ELSE, deliberately: no engine path consults it, so
+     *  it cannot tune anything by accident. `npm run bench:form` §1 prints each opponent's worst
+     *  realised |pp| beside it and says «inside» or «OUTSIDE». */
+    corridorPp: [0.5, 4] as const,
+  },
+
+  // --- THE SPARRING PARTNER (docs/specs/the-form-and-the-sparring-2026-09.md §4) -------------------
+  // THE THIRD SALARIED SEAT, and the one with the narrowest job in the game. ⚠⚠ THE FENCE SENTENCE
+  // IS THE DESIGN: **the slump is the psychologist's patient, the rust is the sparring partner's.**
+  // He reaches `FormWeek.rustCut` and nothing else – not the results channel, not the reversion
+  // rate, not condition, not development. A slumping girl who plays every week gets NOTHING from
+  // him, and that is the seat working rather than the seat failing.
+  sparring: {
+    /** THE LADDER. `driftCut` is a MULTIPLIER ON THE DRIFT, not the share removed: x0.15 means the
+     *  top rung leaves 15% of a rusting week's drift standing. Strictly decreasing, or the rung is
+     *  re-priced – the masseur spec's §4 law.
+     *
+     *  ⚠ THE MONEY IS ANCHORED ON THE RESEARCH AND THE RUNGS ARE PROPOSALS (O7, 16.09): the band is
+     *  `docs/research/team-economics-2026-09.md` §4's **$50-80k/yr + travel** for a full-time
+     *  hitting partner, and round 42 #48 measured that only the NOT-travelling top rung ($72,800 a
+     *  season) lands inside it at all. The three labels are the ladder the band describes – a
+     *  college hitter, a journeyman pro, a top-100's partner.
+     *
+     *  ⚠⚠ THE THREE CUTS ARE **0.75 / 0.5 / 0.25** AND NOT §4's PROPOSED **0.6 / 0.35 / 0.15**, AND
+     *  THE REASON IS A MEASUREMENT RATHER THAN A TASTE. `world.form` is kept in TENTHS (§1, and
+     *  `accrueForm` rounds once at the end exactly as `accrueSpirit` does). At a base drift of
+     *  0.4/wk the proposed cuts give 0.24 / 0.14 / 0.06 a week – and the accumulated value is
+     *  rounded to a tenth every week, so 0.14 and 0.06 BOTH ratchet the number down by exactly one
+     *  tenth a week and the top two rungs become the same seat. `npm run bench:form` §3 measured
+     *  it: «A journeyman pro · home +0.312» and «A top-100 partner · home +0.312», identical to the
+     *  thousandth, which is the masseur spec's §4 law broken («each rung must MEASURABLY beat the
+     *  one below or the dial is decoration»).
+     *
+     *  ⭐ SO THE CUTS ARE CHOSEN TO BE EXACT IN THE UNIT THE NUMBER IS KEPT IN: 0.4 x 0.75 / 0.5 /
+     *  0.25 is **0.3 / 0.2 / 0.1 a week**, three drifts a tenth apart, none of them rounded at all.
+     *  The floor is then reached in 13 / 20 / 40 matchless weeks against 10 with nobody hired, which
+     *  is a ladder a player can feel rather than a table only the source can see. ⚠ THE TOP RUNG IS
+     *  therefore a WEAKER cut than §4 proposed (75% of the drift removed rather than 85%) and it is
+     *  the only rung that could have been kept as proposed – it was re-fitted anyway, because a
+     *  ladder whose top two rungs differ by a rounding artefact is worse than a shallower one. */
+    rungs: [
+      { label: 'A college hitter', weeklyCents: 500_00, driftCut: 0.75 },
+      { label: 'A journeyman pro', weeklyCents: 900_00, driftCut: 0.5 },
+      { label: 'A top-100 partner', weeklyCents: 1400_00, driftCut: 0.25 },
+    ],
+    /** The middle rung, and the masseur's own `defaultSessions` doctrine: MEANINGLESS UNTIL HIRED,
+     *  which is why v78 could back-fill it on a career that never hires the seat. */
+    defaultRung: 1,
+  },
+
   // --- The spotlight: the weight of being known (who-she-is §3c / §3c-bis, wave 6) ---------
   // ⚠⚠ THIS BLOCK READS FAME AND NEVER TUNES IT. `ECONOMY.fame` is fame-presence's ground
   // (docs/specs/fame-presence-2026-09.md) and the spotlight wave may not touch a number in it – the
