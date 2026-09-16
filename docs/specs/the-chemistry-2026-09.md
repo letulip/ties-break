@@ -141,6 +141,45 @@ impossible: the same budget coach with the same style is on the shelf for every 
 
 ---
 
+## 1a. ⭐⭐ Can the table be MEASURED? – his question, 16.09, and the honest answer has three parts
+
+> «сама идея мне нравится, можно как-то измерить? концептуально корректно звучит»
+
+**⚠⚠ THE PRINCIPLE ITSELF CANNOT BE VALIDATED, AND SAYING SO IS PART OF THE ANSWER.** «Two intense
+people burn out; two steady ones drift; the pair that shares a language and differs in temperature
+lasts» is a claim about human beings. There is no dataset of tennis coaches' manners against their
+players' temperaments, and a bench that «confirmed» it would only be confirming the table it was
+handed. Invariant 5 asks for measurement where measurement is possible; it does not license inventing
+a ground truth.
+
+**⭐ BUT THREE THINGS ABOUT THE TABLE ARE MEASURABLE, and together they are what a bench can honestly
+give here.**
+
+**1. Is it LOAD-BEARING, or decoration?** The actuation arm this repo always runs: flatten the table
+so every cell has the same centre, and re-run B0's corner census. If the corners barely move, the
+table is doing nothing and all the variation is coming from the draw – which would be worth knowing
+before anybody argues about a cell. (Round 42 caught a bench whose actuation arm was a no-op hiding
+behind a type cast; the arm is checked before the result is believed.)
+
+**2. Is it BALANCED?** A structural check, not a truth claim, and it is what stops a table that
+accidentally breaks the game: **every temperament must have at least one warm manner and at least one
+cold one, and no manner may be best for all four.** Otherwise a `fiery` girl is a dead end, or
+`analytical` is simply the right answer and the axis is a formality.
+
+**3. ⭐⭐ DOES KNOWING THE TABLE BUY YOU ANYTHING? – the LOOKUP TEST, and this is the one that
+matters**, because a legible table is exactly what he refused when he said the cheap coach who clicks
+must be «такое же редкое событие, как и prodigy девочка». The measure is precise: **the variance of
+realised affinity BETWEEN cells against the variance WITHIN a cell.** If the draw's spread dominates,
+a player who memorises the whole table still cannot predict a pairing – the table is flavour and the
+discovery stays a discovery. If the cell dominates, he has been handed a strategy guide. **That is
+B10**, and it is the bench that can veto the table's shape without anyone arguing about human nature.
+
+**⚠ AND THE FOURTH INSTRUMENT IS HIS PLAYTEST, which no bench replaces.** The principle is a claim
+about how a relationship FEELS over seasons. B10 can prove the table is not a lookup; only play can
+say whether «she and this man were never going to work» reads as true.
+
+---
+
 ## 2. The number
 
 **`chemistry`: −100 … +100, per PAIR (her and one coach), persisted, accrued weekly while that coach
@@ -572,6 +611,8 @@ bench can veto the wave**, and it is the reason it is numbered before the others
 | ⭐ B7 | §3.2's FLOOR column, which he was explicit about not being sure of | fit it so that a PERFECT pair sees a down year about **1 season in 8** at −5…−10%/yr (the Borg case, rare but real) and a NO-MATCH pair sees one **more often than not**. ⚠ The ceiling column is his and is not the bench's to move |
 | ⭐ B8 | the psychologist's SECOND road to development (§3.5) – spirit → chemistry → `coachFactor` | **under 1.5 skill points** over a career at the top rung, against his direct composure effect. If it is larger, the seat is buying development through a side door and the coupling needs damping |
 | B9 | do PERIODS actually appear, or is it noise? | a perfect pair's weekly series should show runs of **8+ weeks** on one side of its mean; a series that alternates every week is white noise wearing a phase and §3.3 has not been built |
+| ⭐⭐ B10 | §1a's LOOKUP TEST – variance of realised affinity BETWEEN cells against WITHIN a cell | **within-cell must dominate, by at least 2:1.** Below that the 4×4 is a strategy-guide entry and the discovery he asked for is gone. ⚠ This bench can veto the TABLE's shape without anyone having to argue about human nature, which is why §1a puts it first |
+| B11 | §1a's BALANCE check – structural, not statistical | every temperament has ≥1 warm manner and ≥1 cold one; no manner is best for all four. A failure here is a broken game, not a mis-tuned one |
 
 ⚠ **B3 changed shape from the first draft and the change is the owner's correction.** It used to ask
 whether a cheap coach could ever match an expensive one – the answer is now deliberately YES, rarely.
@@ -605,7 +646,7 @@ channel, and because two schema waves in flight at once is how an append-only mi
 
 | # | question | recommendation |
 | --- | --- | --- |
-| **C1** | the 4×4 (temperament × manner) centre table, and its principle («match on one axis, complement on the other») | **his to overrule freely** – the one unmeasured design claim in this document. Build it as a data object so it is one edit, not a refactor |
+| **C1** | the 4×4 (temperament × manner) centre table, and its principle («match on one axis, complement on the other») | ✅ **RULED 16.09: the principle stands** – «сама идея мне нравится… концептуально корректно звучит» – with the honest answer to «можно как-то измерить?» in §1a. Built as a data object so a retune is one edit |
 | **C1a** | does the roster draw `style` per career as well as `manner`? | ✅ **RULED 16.09: yes.** It is the other half of «не быть подходящего и по химии и по таланту», and corner B is weak without it. ⚠ ONE coach of each style stays somewhere on the shelf so no career is unplayable; what varies is which TIER he sits at |
 | **C2** | does the relationship's own reach stay at one tier? | **keep it** – §4 removed what the old ceiling was actually blocking, and one tier keeps affection and competence legible as two different things. ⚠ If he disagrees this is one constant, not a redesign |
 | **C3** | does the `elite` rung accrue chemistry, having no next tier? | **yes, a token +0.04** – a flat zero would say the best coach cannot grow closer to her, which reads wrong |
@@ -616,7 +657,7 @@ channel, and because two schema waves in flight at once is how an append-only mi
 | **C8** | do rival girls carry chemistry, or coach growth? | **neither, ever** – both are modifiers on a career the player steers, and the rival cohort has no coach model to hang them on |
 | **C9** | ⚠ **can a coach's TIER decline?** | **no** – one direction only. A falling tier would punish a player for a bad season twice (results, then the coach). ⚠ This is about §4's STANDING and not about §5a's chemistry, which is signed and does fall – two different numbers |
 | **C12** | ⭐ does the gauge show a FIGURE, and does it carry the minus? | ✅ **RULED 16.09: THE FIGURE STAYS, WITH THE SIGN** – and he struck my «no percentage anywhere» himself: «вполне можем оставить цифру как раз для тех, кто плохо считывает цвета или расположение шкалы… это инструмент всё-таки». See §8a |
-| **C13** | ⭐ **NEW, opened by §3.5: results now pay TWICE** – into §4's `standing` and into §3.4's phase. Is the second read damped? | **lightly damped, not fenced.** Winning together honestly does both things – he gets better AND they get closer – so a fence would delete a true effect. But a great career compounds on two axes at once, so the chemistry read takes a fraction of the standing read's weight and B0's corner A is what says whether that fraction is right |
+| **C13** | ⭐ results now pay TWICE – into §4's `standing` and into §3.4's `phase`. Is the second read damped? | ✅ **RULED 16.09: «окей, давай слегка» – lightly damped, not fenced.** Winning together honestly does both things, so a fence would delete a true effect; the chemistry read takes a fraction of the standing read's weight, and B0's corner A says whether the fraction is right |
 | **C10** | is the anti-match as FREQUENT as the click, or rarer? | ✅ **RULED 16.09: the same frequency** («согласен»). A game where good luck is rare and bad luck is common is not variable, it is punishing. It is already slower to ARRIVE (§3), which is the only asymmetry the design needs |
 | **C11** | ⚠ does the §8 gauge show a NEGATIVE pairing, and how? | ✅ **RULED 16.09: yes, and by GRADIENT** – his design, and it is better than the recommendation it answers. See §8a |
 
@@ -628,18 +669,16 @@ DRAFT lines are ruled (§5a – the anti line especially), and the builder brief
 anti-match is as frequent as the click; **C11** the gauge carries the sign as a gradient; **C12** the
 figure stays with it.
 
-**TWO REMAIN, and neither was ever in a list he answered:**
-* ⭐⭐ **C1 – the 4×4 (temperament × manner) table.** It was handed over ABOVE the table rather than
-  inside it, so «остальное ок» never reached it. It is the document's ONLY unmeasured design claim
-  and the thing every corner in §1 is drawn from – the wave's hinge, and still open.
-* **C13** – whether results, which now pay into both §4's `standing` and §3.4's `phase`, are damped on
-  the second read. It did not exist when he answered: his own C6 correction created it.
+✅✅ **AND THE LAST TWO CAME BACK 16.09 – C1–C13 ARE ALL RULED.**
 
-⚠ **AND THE BOOKKEEPING ERROR IS RECORDED RATHER THAN QUIETLY FIXED.** The previous revision of this
-line filed C1a as still open, riding with C1. It was not: C1a was a ROW in the table he answered, and
-he said so («по C1а я с твоей рекомендацией согласился»). A ruling counted as open is the same
-defect as a `[ ]` that shipped, running the other way – round 42 found two of those in its own ledger
-on the same day.
+* **C1** – «сама идея мне нравится… концептуально корректно звучит», with «можно как-то измерить?» answered in
+  §1a: the principle cannot be validated, three things about the table can, and B10's lookup test is
+  the one that can veto its shape.
+* **C13** – «окей, давай слегка»: the second read of results is lightly damped.
+
+⚠ **So the gate this document sets on itself is OPEN and the builder brief may point here.** What is
+still owed is not a ruling but the FOUR seasonal DRAFT lines (§5a – the anti-match line especially),
+and those are written by the build and ruled by him before the wave ships, not before it starts.
 
 ---
 
