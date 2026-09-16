@@ -109,7 +109,8 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   weekly contribution over twenty years. The constraint cannot be violated while `raisePerYear <
   incomeGrowthBand[0]`, **which also puts a hard ceiling of 5%/yr on this design that is his own
   earlier ruling rather than an architect's taste.** 12 paired careers × 728 weeks: zero extra
-  releases, zero extra bankruptcies, 18.5% more salary paid.
+  releases, zero extra bankruptcies (the one career that goes under does so in BOTH arms) and 18.5%
+  more salary paid.
 
   ⚠⚠ **AND A CORRECTION TO THIS ITEM'S OWN ILLUSTRATION, recorded because it would have set the
   number.** «Seven sessions a week bought at 22 are four by 26 on the same money» implies 7/4 = 1.75×
@@ -127,7 +128,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ **TWO DRAFT STRINGS, his to rule** (the second because a family on the entry rung has no rung to
   drop to, and offering one would be the screen lying about a choice – this round's own #5):
   > `The masseur asks for more – $78 a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`
-  > `The masseur asks for more – $78 a session from this week. There is no shorter week to drop him to.`
+  > `The masseur asks for more – $78 a session from this week. There is no shorter week to drop to.`
 
 - [x] **5. THE BUSINESS TAB DOES NOT SAY WHOSE MONEY IT IS SHOWING (his 16.09).** He asked whether
   Zoe's brand was correct: «13000 в неделю при стоимости бренда 28м+».
@@ -238,12 +239,13 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   behind it.
 
   **Measured, `npm run bench:smalltalk` (K1–K5, §P2.6's own list):** K2's acceptance – adjacent pairs
-  whose later draw HAD an alternative – goes **285/555 → 0/555** on a posed career and **196/386 →
-  0/386** on a bare one; K3 on draws with three to choose from, **5/13 → 0/13**. Careers with at
+  whose later draw HAD an alternative – goes **3129/5683 → 0/5683** on a posed career and **2118/4011
+  → 0/4011** on a bare one (240 careers per arm); K3 on draws with three to choose from,
+  **54/131 → 0/131**. Careers with at
   least one adjacent repeat fall 100% → 25%, and every survivor is a week whose reachable pool was
   ONE, where no exclusion can help and the degradation is doing its job.
   ⚠⚠ **AND K4 FAILS EVERY CELL, WHICH IS (b)'s HALF AND NOT A BUG IN (a).** On the shipped
-  eleven-situation catalogue a 40-conversation career meets **~2.5 distinct situations** and **15.6%
+  eleven-situation catalogue a 40-conversation career meets **~2.5 distinct situations** and **14.1%
   of her conversations fall through to the legacy generic opener**. K5 passes: all eleven are
   reachable. The mechanism is built and proven; the corpus is what is missing.
 

@@ -123,13 +123,20 @@ is present in both):
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | 8k · working · middle coach | A | 419 | 0.17 | $48,325 | $6,371,780 | $75 | 0 |
 | | B | 419 | 0.17 | $57,254 | $6,362,851 | $102 | 0 |
-| 25k · middle · middle coach | A | 418 | 0.58 | $49,200 | $4,443,920 | $75 | 0 |
-| | B | 419 | 0.58 | $58,204 | $4,434,984 | $102 | 0 |
+| 25k · middle · middle coach | A | 418 | 0.58 | $49,200 | $4,443,920 | $75 | 1 |
+| | B | 419 | 0.58 | $58,204 | $4,434,984 | $102 | 1 |
 
 Eight years of service, the rate at $102, **18.5% more salary paid over the career, zero extra
-releases and zero extra bankruptcies.** The arm is not a null arm: `--raise 0.40` moves these columns
-a long way (the run is in the handoff), which is the sanity check CLAUDE.md asks for before a null
-result is believed.
+releases and zero extra bankruptcies** – the one career that goes under on the 25k preset goes under
+in BOTH arms. The arm is not a null arm: `--raise 0.40` moves these columns a long way (the run is in
+the handoff), which is the sanity check CLAUDE.md asks for before a null result is believed.
+
+⚠ **AND THE BANKRUPTCY COLUMN WAS WRONG ON ITS FIRST RUN, which is why it is worth stating that it
+is now a measurement.** The bench read `world.ending?.kind` against `'bankrupt'`; the field is `type`
+and the value is `'bankruptcy'`, so the column could only ever print 0 – a check that always passes.
+`vue-tsc -b --force` inside `npm run check` caught the field name (`tools/` is typechecked); the
+VALUE would have survived that, and was found by asking why a column of zeroes never moved even at
+`--raise 0.40`. The numbers above are from the corrected run.
 
 ## 5. ⚠ A correction to the round-43 ledger's own illustration
 
@@ -179,7 +186,12 @@ be the screen lying about a choice:
 
 > `The masseur asks for more – $78 a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`
 
-> `The masseur asks for more – $78 a session from this week. There is no shorter week to drop him to.`
+> `The masseur asks for more – $78 a session from this week. There is no shorter week to drop to.`
+
+⚠ **Neither line carries a masculine pronoun, and that is R15-7 rather than style.** The first
+draft of the second line read «to drop him to» and `tests/coach-voice.test.ts` went red on it: the
+guard bans `he`/`his`/`him` from every engine literal a player can read, and `masseur.ts`'s own «the
+pronoun is safe here» note is about the NOUN, not about this.
 
 The figure is live. Nothing else on any screen changed: the seat card's rung prices and its
 per-match sentence now read the career's rate instead of the constant, and **not one word moved**.

@@ -671,16 +671,18 @@ so the null arm cannot quietly contain the change.
 nothing can stop her repeating it – and «fixing» that would mean the generic opener, which is worse.
 So the acceptance is asked of the pairs where an alternative existed:
 
+240 careers per arm, 40 conversations each:
+
 | reading | A · no exclusion | B · last-two excluded |
 | --- | ---: | ---: |
-| **K2 acceptance** – adjacent pairs, pool ≥ 2 at the later draw (posed career) | 285/555 | **0/555** |
-| the same, on a career with no coach and no matches | 196/386 | **0/386** |
+| **K2 acceptance** – adjacent pairs, pool ≥ 2 at the later draw (posed career) | 3129/5683 | **0/5683** |
+| the same, on a career with no coach and no matches | 2118/4011 | **0/4011** |
 | K2 – careers with at least one adjacent repeat (posed) | 100% | 25% |
-| **K3 acceptance** – draws with a pool of 3 or more | 5/13 | **0/13** |
+| **K3 acceptance** – draws with a pool of 3 or more | 54/131 | **0/131** |
 | K3 – careers with a repeat inside three | 100% | 100% |
 
 ⚠⚠ **AND THE TWO NUMBERS THIS SECTION EXISTS TO SURFACE, both measured on the SHIPPED eleven:**
-a 40-conversation career meets **~2.5 distinct situations**, and **15.6% of her conversations reach
+a 40-conversation career meets **~2.5 distinct situations**, and **14.1% of her conversations reach
 no situation at all** and fall through to the legacy generic opener. K4 fails every one of its 24
 cells and K5 passes – every shipped situation is reachable. **The mechanism is proven; the corpus is
 the hole, and this document is the hole's repair.**
