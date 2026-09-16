@@ -606,7 +606,7 @@ channel, and because two schema waves in flight at once is how an append-only mi
 | # | question | recommendation |
 | --- | --- | --- |
 | **C1** | the 4×4 (temperament × manner) centre table, and its principle («match on one axis, complement on the other») | **his to overrule freely** – the one unmeasured design claim in this document. Build it as a data object so it is one edit, not a refactor |
-| **C1a** | does the roster draw `style` per career as well as `manner`? | **yes** – it is the other half of «не быть подходящего и по химии и по таланту», and corner B is weak without it. ⚠ Keep ONE coach of each style somewhere on the shelf so no career is unplayable; the variation is which TIER he sits at |
+| **C1a** | does the roster draw `style` per career as well as `manner`? | ✅ **RULED 16.09: yes.** It is the other half of «не быть подходящего и по химии и по таланту», and corner B is weak without it. ⚠ ONE coach of each style stays somewhere on the shelf so no career is unplayable; what varies is which TIER he sits at |
 | **C2** | does the relationship's own reach stay at one tier? | **keep it** – §4 removed what the old ceiling was actually blocking, and one tier keeps affection and competence legible as two different things. ⚠ If he disagrees this is one constant, not a redesign |
 | **C3** | does the `elite` rung accrue chemistry, having no next tier? | **yes, a token +0.04** – a flat zero would say the best coach cannot grow closer to her, which reads wrong |
 | **C4** | does chemistry give §4's standing a tailwind? | **a small one** – a coach learns more from a girl he understands. Recommend a modest multiplier, not a second driver, so B5's mutation arm stays interpretable |
@@ -623,15 +623,23 @@ channel, and because two schema waves in flight at once is how an append-only mi
 **Done when:** C1–C11 are ruled, B0's corner frequencies are accepted as a corridor, the four seasonal
 DRAFT lines are ruled (§5a – the anti line especially), and the builder brief for C1 points here.
 
-✅ **RULED SO FAR (16.09): C2–C5, C7–C9 accepted as recommended** («остальное ок, оставляем твои
-рекомендации»), **C6 re-ruled** into §3's corridor, **C10** the anti-match is as frequent as the
-click, **C11** the gauge carries the sign as a gradient, **C12** the figure stays with its sign.
+✅ **RULED 16.09 – TEN OF TWELVE.** `C1a`, `C2`–`C5`, `C7`–`C9` accepted as recommended in one pass
+(«остальное ок, оставляем твои рекомендации»); **C6 re-ruled** into §3's corridor; **C10** the
+anti-match is as frequent as the click; **C11** the gauge carries the sign as a gradient; **C12** the
+figure stays with it.
 
-**TWO REMAIN, and one of them is the wave's own hinge:**
-* ⭐ **C1 – the 4×4 (temperament × manner) table.** The document's ONLY unmeasured design claim, and
-  the thing every corner in §1 is drawn from. ⚠ C1a rides with it.
-* **C13** – whether results, which now pay into both §4's standing and §3.4's phase, are damped on the
-  second read. Opened by his own correction rather than by him.
+**TWO REMAIN, and neither was ever in a list he answered:**
+* ⭐⭐ **C1 – the 4×4 (temperament × manner) table.** It was handed over ABOVE the table rather than
+  inside it, so «остальное ок» never reached it. It is the document's ONLY unmeasured design claim
+  and the thing every corner in §1 is drawn from – the wave's hinge, and still open.
+* **C13** – whether results, which now pay into both §4's `standing` and §3.4's `phase`, are damped on
+  the second read. It did not exist when he answered: his own C6 correction created it.
+
+⚠ **AND THE BOOKKEEPING ERROR IS RECORDED RATHER THAN QUIETLY FIXED.** The previous revision of this
+line filed C1a as still open, riding with C1. It was not: C1a was a ROW in the table he answered, and
+he said so («по C1а я с твоей рекомендацией согласился»). A ruling counted as open is the same
+defect as a `[ ]` that shipped, running the other way – round 42 found two of those in its own ledger
+on the same day.
 
 ---
 
