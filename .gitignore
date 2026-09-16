@@ -90,4 +90,11 @@ ms-playwright/
 
 # The owner promo workspace – GameJolt hero art and its compose script. 8.6 MB, referenced by
 # nothing in src/, vite.config.ts or package.json, and not part of the shipped app.
-art/
+#
+# ⚠⚠ ANCHORED 16.09.2026 (round 43). Unanchored, `art/` matches a directory of that name at ANY
+# depth – including `src/art/`, which is eleven tracked TypeScript modules the app imports. Nothing
+# was broken (a tracked file stays tracked whatever the ignore file says) but a NEW module added there
+# was silently unstaged, and `git add src/art/preload.ts` had to warn its way past this rule. The
+# leading slash pins the pattern to the repository root, which is where the promo workspace actually
+# lives. Found by a builder that hit the warning rather than by anything failing.
+/art/

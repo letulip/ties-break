@@ -16,26 +16,33 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
 
 ---
 
-- [>] **1. THE CHEMISTRY WAVE, C1.** Spec [the-chemistry-2026-09](../specs/the-chemistry-2026-09.md),
+- [x] **1. THE CHEMISTRY WAVE, C1.** Spec [the-chemistry-2026-09](../specs/the-chemistry-2026-09.md),
   all thirteen questions C1–C13 ruled by him on 16.09. C1 ships the roster's per-career `manner` and
   `style` draw, affinity, the weekly corridor and phase, the three event channels, `coachPairs` +
   v79, one line in `coachFactor`, and B0/B9/B10/B11 as acceptance. Builder in flight.
   ⚠ **It owes FOUR DRAFT seasonal lines** (anti-match / ordinary / good / click) and the anti-match
   one is load-bearing – a negative pairing nobody can see is a hidden tax. His to rule before ship.
 
-- [ ] **2. THE SUPPORT-SEAT PORTRAITS ARE NOT ON ANY SCREEN (his 16.09).** «Я не увидел в пришедшем
+- [x] **2. THE SUPPORT-SEAT PORTRAITS ARE NOT ON ANY SCREEN (his 16.09).** «Я не увидел в пришедшем
   обновлении картинок для support stuff, мне казалось, что мы их уже должны были сделать.»
   ⚠ **He is right and the record already said so.** Round 42 #53 shipped the CONVERSION and left the
   PLACEMENT open – its ledger line is `[~]`, not `[x]`. Verified rather than remembered:
   `git grep support-stuff -- src/` returns **nothing**; the four `.webp` are tracked and ship, and
   nothing renders them.
-  **What ships:** his four 448×624 portraits placed by the coach strip's principle (his own ruling of
+  ⚠⚠ **AND ONLY TWO OF THE FOUR ARE PLACEABLE, which this item said badly.** It read «his four
+  portraits placed» and then parked the broker, implying three. There is no third seat: the sparring
+  partner's keys (`sparringHired` / `sparringRung` / `sparringTravels`) are RESERVED in the schema with
+  **no reader anywhere on the tree** – nothing crosses the wire and `SupportStaffTab`'s `members` has
+  two entries. A face needs a card. The masseur and the psychologist ship; the sparring partner gets
+  his when **F2** builds the seat, and the broker stays on the shelf by the owner's own word.
+
+  **What ships:** the two placeable portraits, by the coach strip's principle (his own ruling of
   16.09: «тренерская полоска… принцип похож, просто соотношение сторон будет немного другое»), i.e.
   a fixed-width strip, `object-fit: cover`, an `object-position` that keeps the head whole, the body's
   height driving the picture, and the floor derived from **this** ratio – `strip × 624/448`, never the
   coach masters' `× 264/162`. The broker has no surface yet and stays on the shelf.
 
-- [ ] **3. THE PRICES INSIDE THE SEAT OPTIONS READ TOO SMALL (his 16.09).** «Сами цены внутри опций
+- [x] **3. THE PRICES INSIDE THE SEAT OPTIONS READ TOO SMALL (his 16.09).** «Сами цены внутри опций
   этих специалистов надо сделать покрупнее и можно пожирнее даже.» Typography only – **no string
   moves**, which is what makes it safe under invariant 4.
 
@@ -86,7 +93,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   built. So the masseur's would be the FIRST – and it is the simpler one, reading time rather than a
   basket. **Build it first and #51 inherits a tested mechanism** instead of the round inventing two.
 
-- [~] **5. THE BUSINESS TAB DOES NOT SAY WHOSE MONEY IT IS SHOWING (his 16.09).** He asked whether
+- [x] **5. THE BUSINESS TAB DOES NOT SAY WHOSE MONEY IT IS SHOWING (his 16.09).** He asked whether
   Zoe's brand was correct: «13000 в неделю при стоимости бренда 28м+».
   ⭐ **The numbers are right and the SCREEN is what is wrong.** `worth = weekly GROSS × 52 × multiple`
   and the multiple is hard-capped at `maxX: 20`, so $13k/wk of gross could never support $28M. But
@@ -127,7 +134,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ Recorded as withdrawn rather than deleted, because «the architect asked for a benchmark a design
   did not need» is the kind of wrong question worth being able to find again.
 
-- [ ] **7. THE SOFT-BEAT CHIP GETS THE AVATAR'S GLOW (his 16.09).** «Пульсирующую рамку вокруг её
+- [x] **7. THE SOFT-BEAT CHIP GETS THE AVATAR'S GLOW (his 16.09).** «Пульсирующую рамку вокруг её
   просьбы поговорить на home сделать по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по
   краям небольшая, а не только сама рамка.»
 
@@ -193,7 +200,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ New situations are new player-facing strings, so they are DRAFTS: the architect writes the
   document, he proofreads, nothing ships before he has.
 
-- [ ] **9. THE KNOCK CADENCE INTERRUPTS TOO OFTEN – round 42 #27's own parked signal has arrived.**
+- [~] **9. THE KNOCK CADENCE INTERRUPTS TOO OFTEN – round 42 #27's own parked signal has arrived.**
   «Мне всё ещё очень часто падают не травмы, а предупреждения, что ей надо отдохнуть.»
 
   ⭐ **The logic WAS checked – round 42 #27, off his own save** – and that item closed with exactly
@@ -229,7 +236,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ✅ **STOOD DOWN 16.09 – «по ноккам отбой тогда (гриндит – это объясняет всё)».** The cadence is
   the model doing its job at the operating point his career sits on. No tuning pass, no bench arm.
 
-- [ ] **10. ⭐⭐ THE KNOCK WINDOW SHOULD ANSWER «WHY?» – grown out of #9 rather than out of a complaint.**
+- [x] **10. ⭐⭐ THE KNOCK WINDOW SHOULD ANSWER «WHY?» – grown out of #9 rather than out of a complaint.**
   «Мой первый вопрос – ПОЧЕМУ? Мне кажется, в этом окошке можно игроку подсветить, что может быть причиной…
   или хотя бы предложить, на что посмотреть.»
 
@@ -265,7 +272,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
 
   ⚠ The four lines are player-facing and therefore DRAFTS – written for his reading, not shipped.
 
-- [ ] **11. ⭐ A LETTER WHEN A BUILD FINISHES (his 16.09).** «Давай на почту присылать письмо про те
+- [x] **11. ⭐ A LETTER WHEN A BUILD FINISHES (his 16.09).** «Давай на почту присылать письмо про те
   объекты, которые у нас строятся в магазине, в момент, когда они достроены.» His own word for it: a
   cheap micro-idea.
 
