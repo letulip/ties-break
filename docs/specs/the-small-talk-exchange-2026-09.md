@@ -457,3 +457,136 @@ draft's mistake.
    these are the writing, and they land here for his redaction pass as they are drafted. The first
    draft's 36-line "sample" was not enough real copy to review; §8 is the format the rest will take.
 4. The opener rewrites (§9) – his own drafts, to apply with the bundle.
+
+---
+
+## 13. WHAT WAS BUILT (round 42 #15/#24) – and every line in it that is NOT his
+
+Built against §1–§12 above, with §8d's five findings treated as binding. This section records two
+things only: where the machinery lives, and – verbatim – every sentence the build needed that this
+spec does not contain. Those are DRAFTS. They are marked as such in the source too.
+
+### What the build did NOT need
+
+No schema move. A `'small-talk'` row's `detail` carries two fields now (`'<subject>:<situation>'`,
+the shape `'fork-psy'` already uses), and a row with no colon is a pre-round-42 row that renders
+through the pool that shipped. No `SAVE_SCHEMA_VERSION` bump, no migration, no fixture.
+
+The three option ids (`more` / `view` / `easy`) are untouched, because an id is persisted in
+`LifeBeatRecord.answer`. Only the words on the buttons change.
+
+### §9's nine opener rewrites – applied verbatim, in both frames of each cell
+
+All nine are in `SMALL_TALK_LINE` (`src/engine/world/lifeBeat.ts` §3c). The quoted span is shared by
+law between the home frame and the call frame, so each rewrite lands twice. The three `question`
+cells – including «I want to ask you something», the sentence #24 is named after – are NOT rewritten,
+because §9 does not rewrite them and the fix for that cell is the situation layer, not a paraphrase.
+
+### The DRAFTS, in full
+
+**1. The mood weights (§2).** §12.1 names these as needing his word. The shape is his – «a heavy week
+leans toward `worry` but can still produce a tired `observation` or a small `decision`; a bright week
+leans toward `good-news` or `story`; an ordinary week leans toward `curiosity`, `decision` or
+`observation`» – and the integers say exactly that and nothing more. No zero anywhere: a zero would
+be the hard mapping back in one cell.
+
+| register | worry | good-news | decision | curiosity | observation | story |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| low | **5** | 1 | 2 | 1 | 2 | 1 |
+| bright | 1 | **5** | 1 | 2 | 2 | **4** |
+| level | 1 | 2 | **3** | **3** | **3** | 2 |
+
+**2. `court-four` in three more voices.** §8c writes the story in `fiery` only, and §8d.3's test –
+«same event, same facts, same age, same parental choice» – cannot be built out of eight situations no
+two of which share an event. So one event is written in all four voices. The facts are deliberately
+identical in every column (the net cord, the coffee, the full cup, the dad who put the lid back on,
+her having to serve next, nobody fetching the ball); the only axis left free is who she is.
+
+> **sunny** · She was halfway out of her shoes and already telling it. "You have to hear what happened on court four."
+> *shared* – "Someone's serve clipped the net cord and went straight into a dad's coffee. A full one. He just sat there holding it."
+> **Ask what he did** → "Put the lid back on. Very carefully. Like the lid was the problem."
+> **Laugh with her** → "I know! And I had to serve after that. I was still going."
+> **Let her finish** → "Anyway. Nobody asked for the ball back. That's my favourite part."
+
+> **quiet** · She said it to the cupboard door, putting things away. "Something happened on court four today."
+> *shared* – "A serve caught the net cord and landed in someone's dad's coffee. A whole cup of it."
+> **Ask what he did** → "He put the lid back on. Then he moved his chair. That was all."
+> **Laugh with her** → "It was quite funny. I didn't laugh at the time. I had to serve."
+> **Let her finish** → "That's it, really. Nobody went to get the ball."
+
+> **deep** · She started it in the doorway and finished it sitting down. "The best thing today had nothing to do with tennis."
+> *shared* – "A serve clipped the net cord and went into a dad's coffee. Full cup. He looked at it for a long time."
+> **Ask what he did** → "Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."
+> **Laugh with her** → "I didn't laugh then. I had to serve next. I have been laughing about it since."
+> **Let her finish** → "That's the whole of it. The ball is probably still there."
+
+`deep` deliberately does not wait for a room to go quiet – §9 flags that as a visible authorial tic.
+
+**3. No new word on the closing control.** The control that records after her reply reuses two
+strings that already ship: a CONTINUATION closes on «Let her finish» (`LISTEN_DONE_LABEL`, the fork's
+own detour control, same shape and same meaning) and a REACTION closes on «Proceed» (`CONFIRM_LABEL`,
+round 42 #8's own word). Nothing was coined. ⚠ `court-four`'s give-space ANSWER is also «Let her
+finish» – his sentence – so that phrase can appear as an answer on one phase and as the closing
+control on the other. Flagged rather than edited.
+
+### Two collisions his copy met, reported and NOT edited
+
+**a. §8b's `respond` label is the generic form §8d.1 forbids.** «Tell her what worries us» is one of
+the three strings §8d.1 names as defective, and her reply «I hear you. I don't want it in my head for
+the next one either.» answers a worry the player never heard. His 15.09 revision rewrote the other
+two and did not reach §8b, so the sentence standing there is his most recent word on it. Left alone
+(invariant 4) and pinned by name in `tests/round42-small-talk-exchange.test.ts` §G, which goes red the
+day a SECOND one appears. A draft for his call, if he wants one: **«Say the worry is it staying with
+her»**.
+
+**b. `new-place`'s frame names nobody.** «A pause on the line, longer than the others.» carries no
+`she` or `her`, which the corpus's shape rule asks for. It is his sentence and his own verdict on that
+scene was «the best in the set», so it is recorded as the ONE named exception rather than edited –
+the way the two «Her …» away frames were in the 11.09 вычитка fold.
+
+**c. The court-four story introduces a man, and R15-7's sweep caught it.** «a dad's coffee… He just
+looked at it», «Ask what he did». `tests/coach-voice.test.ts` forbids a masculine pronoun anywhere a
+player can read one – and its own header says: «If a future feature introduces one – a named father,
+a male opponent's parent – this test is where that conversation has to happen.» The conversation: the
+rule is about GUESSING a gender the sim holds but never decided (the coach, the doctor, drawn from
+rosters with women on them). The dad on court four is not in the sim at all – he is invented by her,
+inside a story, and §8d.5 is explicit that invented domestic detail is hers. The exception is derived
+from the catalogue, one situation wide, and its size is pinned, so a fifth column reopens the
+conversation instead of inheriting it.
+
+### What the catalogue does NOT cover yet
+
+§10.6 is his and is adopted: «Expand the situation catalogue only after the small set works.» Eleven
+voice-columns ship. Two cells fall back to the legacy card – **`sunny` and `fiery` at an away stage**
+(college / independent), because §8's away-framed scenes are `deep`'s and `quiet`'s. On those weeks
+she opens with the pool that shipped (with §9's rewrites) and the beat is the beat that shipped: three
+generic answers, no second line. Naming it here rather than hiding it.
+
+### ⚠⚠ ONE RED THIS ITEM LEAVES STANDING, WITH ITS RECEIPT: the frozen careers moved
+
+`tests/coach-travel-edge.test.ts` is red on five of its rungs – v74 through v78, which are exactly the
+schema rung-downs that RETAIN `lifeLog` (the field arrived in v73). Its two ladder siblings, which
+roll back past v73 and therefore drop the field, are green. That signature is the whole diagnosis: a
+small-talk row's `detail` is what changed, so a walked career's `lifeLog` serialises differently, so
+every hash of a rung that keeps the field moves.
+
+**The per-key diff the protocol demands, taken on all three careers this file freezes** (`npx
+vite-node tools/frozen-key-diff.ts`, 156 weeks, headers read against the invocation), control = this
+same tree with the work stashed:
+
+| career | keys | moved |
+| --- | ---: | --- |
+| preset 5 · policy 0 | 89 | **`lifeLog` only** (`57d26a584219` → `db76fb2c3468`) |
+| preset 8 · policy 0 | 89 | **`lifeLog` only** (`3c5d0e9449b8` → `7b7018942f03`) |
+| preset 0 · policy 1 | 90 | **`lifeLog` only** (`2e93031f62b9` → `a04152ae3c9c`) |
+
+`rngMain` is unmoved on all three – so is `skills`, `potential`, `events`, `results`, the wallet and
+the body. The frozen MAIN capture (41550 draws / `e6b0c709`, `tests/condition.test.ts`) is green,
+which is the same claim from the other side: the two new sub-streams are sub-streams.
+
+**NOT re-frozen here, deliberately, and the file's own doctrine is why.** Its ledger records the case
+exactly: «three agents in this wave moved these careers and each correctly declined to re-freeze
+rather than bake in the others' unattributed movement». Round 42 has further bundles to run against
+the same careers, so the narrow, attributable receipt above is worth more than a re-freeze that the
+next bundle would have to redo. Re-freeze once, at the end of the wave, with this table as the
+attribution for the `lifeLog` line of it.

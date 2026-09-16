@@ -123,13 +123,22 @@ export interface LifeBeatPrompt {
   /** his possible responses, in the order to show them. Never her choices – the decision stays
    *  hers, and these are what the parent may say about it. */
   options: LifeBeatOption[]
-  /** ⭐ v73.1 – WHAT SHE SAYS WHEN HE ONLY LISTENS (the owner's 10.09 editorial ruling: «Say
+  /** ⭐ v73.1 – WHAT SHE SAYS AFTER HE HAS CHOSEN (the owner's 10.09 editorial ruling: «Say
    *  nothing, and let her talk» was fictionally dishonest while the dialog closed and she did not
-   *  talk). Non-null only while she speaks in her own voice: at `strained`/`cold` the flat pool has
-   *  nothing more to say, and THAT silence staying silent is the pool's whole point. `said` is her
-   *  continuation, `done` is the label of the one control that then records `listen` – both
-   *  engine-assembled, because this dialog owns no sentence. */
-  listenFollowUp: { optionId: string; said: string; done: string } | null
+   *  talk). One entry per answer that earns a second line of hers; an answer with no entry is an
+   *  ordinary radio that records on the Proceed.
+   *
+   *  ⭐⭐⭐ ROUND 42 #15/#24 – A **LIST** SINCE THE SMALL-TALK EXCHANGE, and the plural is the whole
+   *  of the fix. It was `listenFollowUp` – ONE entry, the fork's `listen` – because the fork is the
+   *  only beat where saying nothing buys more of her. The owner's #15 («выбрал пункт, чтобы она
+   *  сказала больше, а попап закрылся») is the same complaint pointed at tier 1, where EVERY stance
+   *  earns a reply: invite earns a continuation, respond and give-space earn a reaction. A second
+   *  field for those would have been two spellings of one fact, so the field grew instead.
+   *
+   *  ⚠ EMPTY IS «NO ANSWER ON THIS CARD EARNS A SECOND LINE», which is `'met'`, `'ended'`,
+   *  `'fork-counsel'`, `'fork-psy'` and a fork at `strained`/`cold` – where the flat pool has nothing
+   *  more to say and THAT silence staying silent is the pool's whole point. */
+  followUps: readonly LifeBeatFollowUp[]
   /** ⭐⭐ ROUND 42 #8 – THE CONFIRM CONTROL'S LABEL (owner: «надо Proceed добавить», quoted in
    *  docs/rounds/round-42.md). The answers became radios that only SELECT – his double-tap picked an
    *  option before he could read – and this is the word on the one control that then dispatches.
@@ -143,6 +152,28 @@ export interface LifeBeatPrompt {
 export interface LifeBeatOption {
   id: string
   label: string
+}
+
+/** ⭐⭐⭐ ROUND 42 #15 – WHAT SHE SAYS BACK TO ONE ANSWER, and the shape that turns a beat into an
+ *  exchange. The parent selects an answer; if that answer has an entry here, her reply replaces the
+ *  answer column and the ONE control left (`done`) is what records the option and closes the beat.
+ *  Nothing is recorded by the selection itself – round 42 #8's law, kept.
+ *
+ *  ⚠⚠ `said` IS A LIST OF PARAGRAPHS, AND THE PLURAL IS §8d.2 OF THE SPEC MADE STRUCTURAL. A `story`
+ *  is two beats: the incident is a SHARED continuation every route hears, and the branch is the
+ *  aftermath. Carrying the shared paragraph inside EVERY route's own `said` is what makes «every
+ *  route delivers a complete little story» a property of the payload rather than a convention – a
+ *  branch that left the player waiting for B could not be assembled. Every other answer carries one
+ *  paragraph, which is the shipped shape with a length.
+ *
+ *  ⚠ EVERY STRING HERE IS THE ENGINE'S (`world/lifeBeat.ts`), because the dialog owns no sentence. */
+export interface LifeBeatFollowUp {
+  /** the answer this is a reply to – `answerLifeBeat` is called with exactly this id */
+  optionId: string
+  /** her reply, in the order to render it. One paragraph, or two for a `story`. */
+  said: readonly string[]
+  /** the label of the one control that then records `optionId` */
+  done: string
 }
 
 /** ⭐⭐⭐ v74 T15 – THE SOFT BEAT'S INVITATION (who-she-is §5b's «SOFT BLOCK CONCRETIZED» amendment,

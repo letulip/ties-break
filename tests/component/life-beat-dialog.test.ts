@@ -76,11 +76,22 @@ import { createPinia, setActivePinia } from 'pinia'
 // outright, and every colour and every box below would be vacuous.
 import '../../src/style.css'
 import { assertLegible, contrastRatio, effectiveBackground, parseColor } from './contrast'
-import { assertDismissReachable, measureDialog, setViewport, NARROW_PHONE, PHONE } from './fits'
+import { assertDismissReachable, measureDialog, setViewport, DESKTOP, NARROW_PHONE, PHONE, TABLET, type Viewport } from './fits'
 import LifeBeatDialog from '../../src/components/LifeBeatDialog.vue'
 import { useGameStore } from '../../src/stores/game'
 import { blockingOverlay } from '../../src/composables/blockingOverlay'
-import { buildLifeBeatPrompt, createWorld, deliverKnownPartner, toSnapshot } from '../../src/engine/world'
+import {
+  buildLifeBeatPrompt,
+  createWorld,
+  deliverKnownPartner,
+  lifeBeatFollowUps,
+  lifeBeatHeading,
+  toSnapshot,
+  SMALL_TALK_SITUATIONS,
+  SMALL_TALK_STANCES,
+  SMALL_TALK_STANCE_ID,
+  type SmallTalkSituation,
+} from '../../src/engine/world'
 import { DEFAULT_PROFILE, type LifeBeatPrompt, type Snapshot } from '../../src/shared/protocol'
 
 /** A fixture prompt. ⚠ NOT COPY – see the header. Built off the type so this file compiles against
@@ -97,11 +108,17 @@ const BEAT: LifeBeatPrompt = {
   ],
   // ⭐ 10.09 – the listening detour's fixture half. The `optionId` is deliberately NOT the engine's
   // `listen`: the component must follow the prompt's own binding, never its own guess.
-  listenFollowUp: {
-    optionId: 'say-nothing',
-    said: 'FIXTURE continuation, standing in for more of her once he stays quiet.',
-    done: 'FIXTURE let her finish',
-  },
+  // ⚠ RE-AIMED BY ROUND 42 #15/#24 – `listenFollowUp` (one entry) became `followUps` (a list), and
+  // `said` became a LIST OF PARAGRAPHS so a `story` can carry its shared incident in front of every
+  // branch (spec §8d.2). This fixture keeps ONE entry with ONE paragraph, which is the fork's shape
+  // exactly, so every assertion below is the one it was written as.
+  followUps: [
+    {
+      optionId: 'say-nothing',
+      said: ['FIXTURE continuation, standing in for more of her once he stays quiet.'],
+      done: 'FIXTURE let her finish',
+    },
+  ],
   // ⭐⭐ ROUND 42 #8 – the confirm control's label, a fixture like every string above: the component
   // must print the PROMPT's word on the Proceed, never one of its own.
   confirm: 'FIXTURE proceed',
@@ -628,11 +645,11 @@ describe('LifeBeatDialog – the listening detour', () => {
     store.answerLifeBeat = async (optionId: string) => { sent.push(optionId) }
     await pressListen(w)
     expect(sent, 'no command on the first tap').toHaveLength(0)
-    expect(w.text(), 'her continuation, verbatim, not one word more').toContain(BEAT.listenFollowUp!.said)
+    expect(w.text(), 'her continuation, verbatim, not one word more').toContain(BEAT.followUps[0]!.said[0])
     expect(w.find('[role="radiogroup"]').exists(), 'the answers made way for her').toBe(false)
     const done = w.find('.life-beat-listen-done')
     expect(done.exists(), 'the one control left').toBe(true)
-    expect(done.text(), 'the engine\'s own label').toBe(BEAT.listenFollowUp!.done)
+    expect(done.text(), 'the engine\'s own label').toBe(BEAT.followUps[0]!.done)
     // ARM 15: the detour condition dropped (`answer` sends on the first tap) – RED on `sent` above.
     w.unmount()
   })
@@ -647,7 +664,7 @@ describe('LifeBeatDialog – the listening detour', () => {
     }
     await pressListen(w)
     await w.find('.life-beat-listen-done').trigger('click')
-    expect(sent, 'one answer, the engine\'s binding, not a component guess').toEqual([BEAT.listenFollowUp!.optionId])
+    expect(sent, 'one answer, the engine\'s binding, not a component guess').toEqual([BEAT.followUps[0]!.optionId])
     expect(w.find('.dialog-overlay').exists(), 'the beat closed').toBe(false)
     // ARM 16: `finishListening` hard-coding `'listen'` – RED here (the fixture id is not `listen`).
     w.unmount()
@@ -658,7 +675,7 @@ describe('LifeBeatDialog – the listening detour', () => {
   // the flat pool's silence still stays silent (no continuation panel appears), it just takes the
   // same select+Proceed as its siblings.
   it('⚠ a beat with NO follow-up: the option is an ordinary radio – select, Proceed, recorded', async () => {
-    const w = mountDialog({ ...BEAT, listenFollowUp: null })
+    const w = mountDialog({ ...BEAT, followUps: [] })
     const store = useGameStore()
     const sent: string[] = []
     store.answerLifeBeat = async (optionId: string) => { sent.push(optionId) }
@@ -678,7 +695,7 @@ describe('LifeBeatDialog – the listening detour', () => {
     store.answerLifeBeat = async () => undefined
     await pressListen(w)
     await w.find('.life-beat-listen-done').trigger('click')
-    expect(w.text(), 'still listening').toContain(BEAT.listenFollowUp!.said)
+    expect(w.text(), 'still listening').toContain(BEAT.followUps[0]!.said[0])
     const done = w.find('.life-beat-listen-done')
     expect(done.exists() && !done.attributes('disabled'), 'live again for the retry').toBe(true)
     w.unmount()
@@ -815,4 +832,286 @@ describe('⚠⚠ v75 T4 – the ENDING fits a phone, and its last answer can be 
     )
     w.unmount()
   })
+})
+
+
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #15 – THE SMALL-TALK EXCHANGE, MEASURED ON A PHONE AND ON THE **REAL** COPY
+// =================================================================================================
+//
+// The owner: «выбрал пункт, чтобы она сказала больше, а попап закрылся». The fix gives every answer
+// on tier 1 a second line of hers, and a `story` two paragraphs of it – so this card grew, and
+// CLAUDE.md's round-20 law binds a card that grew exactly as it binds a card that is new: «any dialog
+// you add or lengthen gets a mounted assertion that its dismiss control's box is inside a 375x667
+// viewport, and prove it by mutating».
+//
+// ⚠⚠ THE FIXTURE IS THE ENGINE'S OWN CATALOGUE AND THE WORST CASE IS CHOSEN BY MEASUREMENT, not by
+// somebody picking the one they think is longest. «A dialog grows by one honest sentence at a time
+// and nothing objects until it is taller than a phone» – so the card under test is whichever
+// situation is longest TODAY, and the next situation somebody writes is measured the day it lands
+// without this file being edited.
+describe('⭐⭐⭐ round 42 #15 – the small-talk exchange fits a phone in BOTH phases', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  /** The card the engine assembles for one situation, on the prompt contract. ⚠ THE HEADING IS THE
+   *  ENGINE'S, asked for rather than transcribed – a copy of his sentence here would be a second
+   *  place it could be edited from, and the longest of the three is the honest one to measure. */
+  function cardFor(s: SmallTalkSituation): LifeBeatPrompt {
+    return {
+      week: 1,
+      kind: 'small-talk',
+      heading: lifeBeatHeading('small-talk', 'bright', 'close'),
+      said: s.opener.roof ?? s.opener.away!,
+      options: SMALL_TALK_STANCES.map((stance) => ({
+        id: SMALL_TALK_STANCE_ID[stance],
+        label: s.branches[stance].label,
+      })),
+      followUps: lifeBeatFollowUps('small-talk', `${s.subject}:${s.id}`, s.voice, 'close'),
+      confirm: 'Proceed',
+    }
+  }
+
+  /** The situation whose FIRST phase prints the most – her opener plus the three answers. */
+  const worstAsking = [...SMALL_TALK_SITUATIONS].sort(
+    (a, b) => printedLength(cardFor(b)) - printedLength(cardFor(a)),
+  )[0]
+
+  /** ...and the (situation, answer) pair whose SECOND phase prints the most – her opener plus every
+   *  paragraph of that route's reply. A `story` wins this by construction: it carries two. */
+  const worstReplying = SMALL_TALK_SITUATIONS.flatMap((s) =>
+    cardFor(s).followUps.map((f) => ({ s, optionId: f.optionId, size: (s.opener.roof ?? s.opener.away!).length + f.said.join(' ').length })),
+  ).sort((a, b) => b.size - a.size)[0]
+
+  function printedLength(prompt: LifeBeatPrompt): number {
+    return prompt.said.length + prompt.options.reduce((n, o) => n + o.label.length, 0)
+  }
+
+  it('the catalogue really is what is being measured (a fixture nobody wrote passes everything)', () => {
+    expect(SMALL_TALK_SITUATIONS.length, 'there are situations to measure').toBeGreaterThan(8)
+    expect(worstReplying.s.shared, 'the longest reply is a two-paragraph story, as designed').toBeTruthy()
+    expect(cardFor(worstReplying.s).followUps.length, 'and every stance earns a reply').toBe(3)
+  })
+
+  it('⭐⭐ PHASE 1 – her opener and the three answers, last answer inside a 375x667 phone', () => {
+    const { w, card } = mountAttached(cardFor(worstAsking))
+    const choices = card.querySelector('.life-beat-choices')!
+    expect(card.lastElementChild, 'the answers are the card\'s last element before a selection').toBe(choices)
+    const fit = assertDismissReachable(card, choices.lastElementChild!, PHONE, 'small talk (asking)')
+    expect(fit.cap, 'bounded by the room the scrim leaves').toBe(635)
+    w.unmount()
+  })
+
+  it('⭐⭐⭐ PHASE 2 – her REPLY is on screen and the control that closes the beat is reachable', async () => {
+    const { w, card } = mountAttached(cardFor(worstReplying.s))
+    const chosen = [...card.querySelectorAll('button')].find(
+      (b) => b.getAttribute('role') === 'radio' && b.textContent!.includes(
+        cardFor(worstReplying.s).options.find((o) => o.id === worstReplying.optionId)!.label,
+      ),
+    )!
+    chosen.click()
+    await w.vm.$nextTick()
+    const done = card.querySelector('.life-beat-listen-done')!
+    expect(done, 'phase 2 is up – nothing below is vacuous').toBeTruthy()
+    // ...and both of her paragraphs really are printed, which is what makes this the tall card.
+    const follow = cardFor(worstReplying.s).followUps.find((f) => f.optionId === worstReplying.optionId)!
+    for (const line of follow.said) expect(flat(card.textContent), 'her reply, verbatim').toContain(line)
+    expect(card.lastElementChild, 'and the close is the card\'s last element').toBe(done)
+    assertDismissReachable(card, done, PHONE, 'small talk (replying)')
+    w.unmount()
+  })
+
+  it('...and on the narrowest screen the app supports', async () => {
+    const { w, card } = mountAttached(cardFor(worstReplying.s), NARROW_PHONE)
+    ;(card.querySelectorAll('button')[0] as HTMLButtonElement).click()
+    await w.vm.$nextTick()
+    assertDismissReachable(card, card.querySelector('.life-beat-listen-done')!, NARROW_PHONE, 'small talk (320x568)')
+    w.unmount()
+  })
+
+  it('⚠⚠ MUTATION PROOF – a reply that outgrows the phone, with round-20 #3 put back, goes RED', async () => {
+    // The arm the law asks for. Her reply is padded until the card is genuinely taller than the
+    // screen (proved, not assumed), and then the cap and the scroller are removed – exactly the shape
+    // `TourBriefingDialog` shipped in. A test that cannot fail on the too-tall version is not this
+    // test.
+    const grown = cardFor(worstReplying.s)
+    const padded: LifeBeatPrompt = {
+      ...grown,
+      followUps: grown.followUps.map((f) => ({
+        ...f,
+        said: [...f.said, LONG_SENTENCE.repeat(14).trim()],
+      })),
+    }
+    const { w, card } = mountAttached(padded)
+    ;(card.querySelectorAll('button')[0] as HTMLButtonElement).click()
+    await w.vm.$nextTick()
+    const done = card.querySelector('.life-beat-listen-done')!
+    const before = measureDialog(card, done, PHONE)
+    expect(before.contentFloor, 'the grown reply really is taller than the phone').toBeGreaterThan(
+      before.available.height,
+    )
+    // ...and while the cap is on, it is still reachable.
+    assertDismissReachable(card, done, PHONE, 'small talk (grown, capped)')
+    ;(card as HTMLElement).style.maxHeight = 'none'
+    ;(card as HTMLElement).style.overflowY = 'visible'
+    expect(() => assertDismissReachable(card, done, PHONE, 'small talk (cap removed)')).toThrow(
+      /taller than the screen|outside the viewport/,
+    )
+    w.unmount()
+  })
+
+  it('⚠ the exchange records NOTHING until the second control – #8\'s law, on tier 1', async () => {
+    const prompt = cardFor(worstReplying.s)
+    useGameStore().snapshot = snapshotWith(prompt)
+    const w = mount(LifeBeatDialog, { global: { stubs: { teleport: true } } })
+    const store = useGameStore()
+    const sent: string[] = []
+    store.answerLifeBeat = async (optionId: string) => { sent.push(optionId) }
+    const radios = w.findAll('[role="radio"]')
+    expect(radios.length, 'her parent\'s three').toBe(3)
+    await radios[1]!.trigger('click')
+    expect(sent, 'the selection records nothing').toEqual([])
+    expect(w.find('[role="radiogroup"]').exists(), 'the answers made way for her').toBe(false)
+    expect(w.find('.life-beat-proceed').exists(), 'and no Proceed beside the reply\'s own control').toBe(false)
+    await w.find('.life-beat-listen-done').trigger('click')
+    expect(sent, 'the reply\'s control is what records, with the engine\'s own id').toEqual([
+      prompt.options[1]!.id,
+    ])
+    w.unmount()
+  })
+})
+
+
+// =================================================================================================
+// ⭐ ROUND 42 – THE VISUAL SWEEP, AT HIS OWN PARITY SET, IN ALL THREE PHASES
+// =================================================================================================
+//
+// The owner's standing process rule (round 42, 14.09): «визуальную проверку на всех экранах надо тоже
+// заложить в билдера в спеку при внесении правок» – a UI-touching bundle is checked across every
+// screen that renders the touched component, at 375 / 768 / 900 / 1280.
+//
+// ⚠⚠ `LifeBeatDialog` HAS TWO HOSTS AND ONE IMPLEMENTATION, which is what makes a sweep of the
+// COMPONENT a sweep of both screens: `App.vue` mounts it on `snapshot.lifeBeatPrompt` (the blocking
+// beat) and the Home hub mounts the same component with `soft` on `snapshot.softBeat.prompt`. The
+// only difference is which field the prop reads (see the component's own header), so a card measured
+// here is the card both screens draw.
+//
+// ⚠ AND THE THREE PHASES ARE THE THREE THE EXCHANGE HAS: the opener with its three answers, the
+// CONTINUATION (invite), and the REACTION (respond / give space). A sweep of the first only would
+// have measured the card this round did not change.
+describe('⭐ round 42 – the beat\'s card at 375 / 768 / 900 / 1280, in every phase', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    document.body.innerHTML = ''
+  })
+  afterEach(() => {
+    document.body.innerHTML = ''
+  })
+
+  /** His parity set. ⚠ 900 IS DECLARED HERE rather than in `fits.ts` because it is a WIDTH band
+   *  («768 как раз тоже можно до 900 тянуть вполне», docs/specs/responsive-2026-09.md) and the shared
+   *  module carries the three DEVICE frames; the height is a tablet's, so `vh` reads something real. */
+  const BAND_900: Viewport = { width: 900, height: 1200 }
+  const PARITY: [string, Viewport][] = [
+    ['375', PHONE],
+    ['768', TABLET],
+    ['900', BAND_900],
+    ['1280', DESKTOP],
+  ]
+
+  /** The longest card of each phase, chosen by measurement over the engine's own catalogue – the
+   *  same worst-case discipline the phase tests above use. */
+  const longestAsking = [...SMALL_TALK_SITUATIONS].sort(
+    (a, b) =>
+      (b.opener.roof ?? b.opener.away!).length +
+      SMALL_TALK_STANCES.reduce((n, st) => n + b.branches[st].label.length, 0) -
+      ((a.opener.roof ?? a.opener.away!).length +
+        SMALL_TALK_STANCES.reduce((n, st) => n + a.branches[st].label.length, 0)),
+  )[0]
+
+  function prompt(s: SmallTalkSituation): LifeBeatPrompt {
+    return {
+      week: 1,
+      kind: 'small-talk',
+      heading: lifeBeatHeading('small-talk', 'bright', 'close'),
+      said: s.opener.roof ?? s.opener.away!,
+      options: SMALL_TALK_STANCES.map((stance) => ({
+        id: SMALL_TALK_STANCE_ID[stance],
+        label: s.branches[stance].label,
+      })),
+      followUps: lifeBeatFollowUps('small-talk', `${s.subject}:${s.id}`, s.voice, 'close'),
+      confirm: 'Proceed',
+    }
+  }
+
+  /** The longest CONTINUATION and the longest REACTION in the catalogue, as (situation, optionId). */
+  function longestReplyOf(stances: readonly ('invite' | 'respond' | 'space')[]) {
+    return SMALL_TALK_SITUATIONS.flatMap((s) =>
+      stances.map((stance) => ({
+        s,
+        stance,
+        optionId: SMALL_TALK_STANCE_ID[stance],
+        size:
+          (s.opener.roof ?? s.opener.away!).length +
+          (s.shared?.length ?? 0) +
+          s.branches[stance].said.length,
+      })),
+    ).sort((a, b) => b.size - a.size)[0]
+  }
+
+  const longestContinuation = longestReplyOf(['invite'])
+  const longestReaction = longestReplyOf(['respond', 'space'])
+
+  it('the sweep is measuring the real thing (a set nobody filled passes every width)', () => {
+    expect(PARITY.map(([w]) => w)).toEqual(['375', '768', '900', '1280'])
+    expect(longestAsking, 'an opener to measure').toBeTruthy()
+    expect(longestContinuation.stance, 'a continuation to measure').toBe('invite')
+    expect(['respond', 'space'], 'a reaction to measure').toContain(longestReaction.stance)
+  })
+
+  for (const [name, vp] of PARITY) {
+    it(`PHASE 1 (opener + the three answers) at ${name}`, () => {
+      const { w, card } = mountAttached(prompt(longestAsking), vp)
+      const choices = card.querySelector('.life-beat-choices')!
+      expect(card.lastElementChild, 'the answers are the card\'s last element').toBe(choices)
+      const fit = assertDismissReachable(card, choices.lastElementChild!, vp, `small talk opener @${name}`)
+      // ⚠ AND THE CARD NEVER RUNS WIDER THAN THE ROOM THE SCRIM LEAVES – the horizontal half of the
+      // same law, which a height-only measurement would have missed at 375.
+      expect(fit.cardWidth, `${name}: the card is wider than the screen leaves`).toBeLessThanOrEqual(
+        fit.available.width,
+      )
+      w.unmount()
+    })
+
+    it(`PHASE 2 (her CONTINUATION, after «invite more») at ${name}`, async () => {
+      const p = prompt(longestContinuation.s)
+      const { w, card } = mountAttached(p, vp)
+      const label = p.options.find((o) => o.id === longestContinuation.optionId)!.label
+      ;([...card.querySelectorAll('button')].find((b) => b.textContent!.includes(label)) as HTMLButtonElement).click()
+      await w.vm.$nextTick()
+      const done = card.querySelector('.life-beat-listen-done')!
+      expect(done, `${name}: the continuation phase is up`).toBeTruthy()
+      const fit = assertDismissReachable(card, done, vp, `small talk continuation @${name}`)
+      expect(fit.cardWidth, `${name}: wider than the screen leaves`).toBeLessThanOrEqual(fit.available.width)
+      w.unmount()
+    })
+
+    it(`PHASE 3 (her REACTION, after «respond» / «give space») at ${name}`, async () => {
+      const p = prompt(longestReaction.s)
+      const { w, card } = mountAttached(p, vp)
+      const label = p.options.find((o) => o.id === longestReaction.optionId)!.label
+      ;([...card.querySelectorAll('button')].find((b) => b.textContent!.includes(label)) as HTMLButtonElement).click()
+      await w.vm.$nextTick()
+      const done = card.querySelector('.life-beat-listen-done')!
+      expect(done, `${name}: the reaction phase is up`).toBeTruthy()
+      const fit = assertDismissReachable(card, done, vp, `small talk reaction @${name}`)
+      expect(fit.cardWidth, `${name}: wider than the screen leaves`).toBeLessThanOrEqual(fit.available.width)
+      w.unmount()
+    })
+  }
 })

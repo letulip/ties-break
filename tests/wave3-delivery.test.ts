@@ -344,7 +344,9 @@ describe('wave 3 T6 C – a `met` answer set is not a fork-opinion answer set', 
     const world = aboutToBeTold('t6-no-detour', 900, 'close')
     world.week = 900
     deliverKnownPartner(world)
-    expect(buildLifeBeatPrompt(world)!.listenFollowUp, '⚠ no listen detour').toBeNull()
+    // ⚠ RE-AIMED BY ROUND 42 #15/#24: one nullable entry became a list, so «no detour» is «no
+    // entries». The claim is untouched.
+    expect(buildLifeBeatPrompt(world)!.followUps, '⚠ no listen detour').toEqual([])
     expect(lifeBeatListenFollowUp('met', 'p:1', 'sunny', 'close'), 'and the assembler says so directly').toBeNull()
     // The control: the fork's own beat DOES carry one at the same band, so the null above is about
     // this kind and not about the band or a broken fixture.

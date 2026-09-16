@@ -8,14 +8,14 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-505 exported names across 51 owning modules.
+517 exported names across 51 owning modules.
 
 ## Areas
 
 | owner module | area | symbols |
 | --- | --- | ---: |
 | `src/engine/world.ts` | THE INTEGRATION CORE: what the barrel itself still owns – career creation, the reveal/finalize trio, the advance and the college resume, and `tickWeek`, which is now the ordered recipe that calls the five phases in `world/phase*.ts` | 20 |
-| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 59 |
+| `src/engine/world/lifeBeat.ts` | THE LIFE BEAT – the week the game stops because SHE said something (the private life, wave 2) | 71 |
 | `src/engine/world/college.ts` | ⭐⭐ WHAT IS BEHIND THE DOOR – the college years, wired into the world (P5, 16.08.2026, docs/specs/college-as-a-second-act-2026-08.md) | 38 |
 | `src/engine/world/assets.ts` | ⭐⭐ WHAT THE FAMILY OWNS – the shelf's PURE READS, and nothing that spends money | 27 |
 | `src/engine/world/psychologist.ts` | THE PSYCHOLOGIST: the second seat of the travelling team, and the one that does not travel (docs/plans/the-travelling-team-2026-08.md §2, the owner's ruling Б – «массажист ездит, психолог работает дистанционно и стоит только зарплату»; the whole seat is specced in docs/specs/the-psychologists-year-2026-09.md and briefed in docs/plans/life-wave-5-builder-2026-09.md §2 T2) | 23 |
@@ -131,9 +131,12 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `leakEligible` – `src/engine/world/lifeBeat.ts`
 - `leakHazardFor` – `src/engine/world/lifeBeat.ts`
 - `leakWrongShareFor` – `src/engine/world/lifeBeat.ts`
+- `LEGACY_SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
+- `LegacySmallTalkSubject` *(type)* – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_BLOCKING` – `src/engine/world/lifeBeat.ts`
 - `LIFE_BEAT_OPTIONS` – `src/engine/world/lifeBeat.ts`
 - `LifeBeatAnswer` *(type)* – `src/engine/world/lifeBeat.ts`
+- `lifeBeatFollowUps` – `src/engine/world/lifeBeat.ts`
 - `lifeBeatHeading` – `src/engine/world/lifeBeat.ts`
 - `lifeBeatListenFollowUp` – `src/engine/world/lifeBeat.ts`
 - `lifeBeatOptionsFor` – `src/engine/world/lifeBeat.ts`
@@ -145,14 +148,23 @@ THE LIFE BEAT – the week the game stops because SHE said something (the privat
 - `pendingLifeBeat` – `src/engine/world/lifeBeat.ts`
 - `pendingLifeBeatOptions` – `src/engine/world/lifeBeat.ts`
 - `raiseLifeBeat` – `src/engine/world/lifeBeat.ts`
+- `reachableSituations` – `src/engine/world/lifeBeat.ts`
 - `rollArrival` – `src/engine/world/lifeBeat.ts`
 - `rollEnds` – `src/engine/world/lifeBeat.ts`
 - `rollLeak` – `src/engine/world/lifeBeat.ts`
 - `rollSmallTalk` – `src/engine/world/lifeBeat.ts`
 - `shaveLag` – `src/engine/world/lifeBeat.ts`
+- `SMALL_TALK_FACTS` – `src/engine/world/lifeBeat.ts`
+- `SMALL_TALK_SITUATIONS` – `src/engine/world/lifeBeat.ts`
+- `SMALL_TALK_STANCE_ID` – `src/engine/world/lifeBeat.ts`
+- `SMALL_TALK_STANCES` – `src/engine/world/lifeBeat.ts`
 - `SMALL_TALK_SUBJECTS` – `src/engine/world/lifeBeat.ts`
+- `SmallTalkBranch` *(type)* – `src/engine/world/lifeBeat.ts`
 - `smallTalkChanceFor` – `src/engine/world/lifeBeat.ts`
 - `smallTalkEligible` – `src/engine/world/lifeBeat.ts`
+- `SmallTalkFact` *(type)* – `src/engine/world/lifeBeat.ts`
+- `SmallTalkSituation` *(type)* – `src/engine/world/lifeBeat.ts`
+- `SmallTalkStance` *(type)* – `src/engine/world/lifeBeat.ts`
 - `SmallTalkSubject` *(type)* – `src/engine/world/lifeBeat.ts`
 - `smallTalkSubjectFor` – `src/engine/world/lifeBeat.ts`
 - `smallTalkThisSeason` – `src/engine/world/lifeBeat.ts`

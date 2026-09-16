@@ -54,6 +54,7 @@
 // answer – a held Enter arriving with the dialog presses nothing. The `listen` detour keeps its own
 // two-step shape (10.09's ruling below), so nothing about «Say nothing» got a third tap.
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
+import type { LifeBeatFollowUp } from '../shared/protocol'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
@@ -79,22 +80,36 @@ const prompt = computed(() =>
 )
 
 // ⭐⭐ 10.09 – «SAY NOTHING» BECAME HONEST (the owner's editorial ruling): choosing to listen no
-// longer records the answer on the first tap. While `listening`, her continuation (engine-assembled,
-// `prompt.listenFollowUp.said`) replaces the answer column, and the ONE control left – the engine's
-// own `done` label – is what records `listen` and closes the beat. So the reward of saying nothing
-// is more of her, the answer still cannot be given by accident, and walking away is still not a way
-// out: the week stays stopped until the second tap. ⚠ At `strained`/`cold` the prompt carries no
-// follow-up – she said one word because there is nothing more – and that option is an ordinary
-// radio: select, then Proceed, like every other answer (⚠ ROUND 42 #8 re-aimed this – it used to
-// record on the first tap, and «select never dispatches» now binds every option of every beat; the
-// flat pool's silence staying silent is untouched, it just takes the same two taps as its siblings).
-const listening = ref(false)
+// longer records the answer on the first tap. While a reply is open, her second line (engine-
+// assembled) replaces the answer column, and the ONE control left – the engine's own `done` label –
+// is what records the option and closes the beat. So the reward of choosing is more of her, the
+// answer still cannot be given by accident, and walking away is still not a way out: the week stays
+// stopped until the second tap. ⚠ An answer the engine gave NO follow-up is an ordinary radio:
+// select, then Proceed, like every other answer (⚠ ROUND 42 #8 re-aimed this – it used to record on
+// the first tap, and «select never dispatches» now binds every option of every beat; the flat pool's
+// silence staying silent is untouched, it just takes the same two taps as its siblings).
+//
+// ⭐⭐⭐ ROUND 42 #15 – AND SINCE THE SMALL-TALK EXCHANGE THIS IS NOT THE FORK'S DETOUR ANY MORE, IT
+// IS THE CARD'S SHAPE. The owner, on the deployed build: «выбрал пункт, чтобы она сказала больше, а
+// попап закрылся… Сейчас выглядит как "сказала А, но никогда не сказала Б"». So the prompt carries a
+// LIST of follow-ups (`prompt.followUps`) and this component asks one question of the answer that
+// was pressed – «did the engine write her a reply to this?» – instead of comparing the id against
+// the single `listen` the fork used to be the only owner of. Nothing else about the two-step moved:
+// select shows her, `done` records.
+const replying = ref<LifeBeatFollowUp | null>(null)
 watch(prompt, (p) => {
   if (p === null) {
-    listening.value = false
+    replying.value = null
     chosen.value = null
   }
 })
+
+/** ⚠ THE ENGINE'S BINDING AND NEVER THIS COMPONENT'S GUESS: which answer, if any, earns a second
+ *  line of hers. `undefined` is «this answer is an ordinary radio», which is most answers of most
+ *  beats. */
+function followUpFor(optionId: string): LifeBeatFollowUp | undefined {
+  return prompt.value?.followUps.find((f) => f.optionId === optionId)
+}
 
 // ⚠ AVAILABILITY IS DERIVED ON EVERY RENDER, NEVER LATCHED (round 40's third convention). Both
 // halves are live state read fresh each frame: `sending` guards the double-tap while the worker
@@ -117,20 +132,21 @@ const busy = computed(() => sending.value || game.busy)
  *  with his selection standing is exactly the state a retry wants. */
 const chosen = ref<string | null>(null)
 
-/** ⭐⭐⭐ ROUND 42 #8 – THE FIRST TAP: select. Recording is `confirm()`'s alone. The listening
- *  detour keeps its own two-step shape (select opens her continuation; the engine's `done` label is
- *  what records), so `listen` never meets the Proceed at all. */
+/** ⭐⭐⭐ ROUND 42 #8 – THE FIRST TAP: select. Recording is `confirm()`'s alone. An answer that
+ *  earns a reply keeps its own two-step shape (select opens her second line; the engine's `done`
+ *  label is what records), so such an answer never meets the Proceed at all. */
 function select(optionId: string): void {
   if (busy.value) return
-  // The listening detour: mark the choice, show her continuation, record NOTHING yet. The second
-  // tap (the engine's own `done` control) is the answer. Pure presentation – no command, no draw.
-  if (optionId === prompt.value?.listenFollowUp?.optionId && !listening.value) {
+  // The reply step: mark the choice, show her second line, record NOTHING yet. The second tap (the
+  // engine's own `done` control) is the answer. Pure presentation – no command, no draw.
+  const follow = followUpFor(optionId)
+  if (follow !== undefined && replying.value === null) {
     chosen.value = optionId
-    listening.value = true
+    replying.value = follow
     playSfx('clickSoft')
     // ⚠ ROUND 42 #8 – focus goes to the CARD, not to the `done` control. `done` records the answer,
-    // and a held Enter walking straight from the radio onto a focused `done` would record `listen`
-    // on the key repeat – the exact hazard «вот не надо нам там фокус» names, one phase in.
+    // and a held Enter walking straight from the radio onto a focused `done` would record the
+    // option on the key repeat – the exact hazard «вот не надо нам там фокус» names, one phase in.
     void nextTick(() => card.value?.focus({ preventScroll: true }))
     return
   }
@@ -154,11 +170,11 @@ async function confirm(): Promise<void> {
   }
 }
 
-/** The second tap of the listening detour – the one that actually answers. The id is the
- *  ENGINE'S binding (`prompt.listenFollowUp.optionId`), never this component's guess. */
-async function finishListening(): Promise<void> {
-  const follow = prompt.value?.listenFollowUp
-  if (follow === null || follow === undefined || busy.value) return
+/** The second tap of the reply step – the one that actually answers. The id is the ENGINE'S binding
+ *  (the follow-up's own `optionId`), never this component's guess. */
+async function finishReply(): Promise<void> {
+  const follow = replying.value
+  if (follow === null || busy.value) return
   sending.value = true
   try {
     await game.answerLifeBeat(follow.optionId)
@@ -215,11 +231,18 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            written – this template may not touch it, shorten it or wrap it in anything. -->
       <p id="life-beat-said" class="life-beat-said">{{ prompt.said }}</p>
 
-      <!-- ⭐ 10.09 – HER CONTINUATION, only while he is listening. The engine's words verbatim,
-           exactly like the line above; rendered as a second paragraph of the same voice, because it
-           IS one. -->
-      <p v-if="listening && prompt.listenFollowUp" class="life-beat-said life-beat-continued">
-        {{ prompt.listenFollowUp.said }}
+      <!-- ⭐ 10.09 – HER REPLY, only once he has chosen. The engine's words verbatim, exactly like
+           the line above; rendered as further paragraphs of the same voice, because they ARE.
+           ⭐⭐⭐ ROUND 42 #15 – AND THERE MAY BE TWO OF THEM, which is the spec's §8d.2 arriving on
+           the screen: a `story` is two beats, the incident is shared by every route and the branch
+           is the aftermath, so her reply is a LIST and every route renders the whole of it. A
+           v-for and not two slots: the count is the engine's. -->
+      <p
+        v-for="(line, i) in replying?.said ?? []"
+        :key="i"
+        class="life-beat-said life-beat-continued"
+      >
+        {{ line }}
       </p>
 
       <!-- ⭐⭐⭐ WHAT HE MAY SAY BACK – a real radio group, named by her line, because these controls
@@ -234,7 +257,7 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            `.dialog-card`, which carries the height cap and the scroller that round-20 #3 put there –
            so a beat whose words run long scrolls instead of pushing the last answer off the phone. -->
       <div
-        v-if="!listening"
+        v-if="replying === null"
         class="life-beat-choices"
         role="radiogroup"
         aria-labelledby="life-beat-said"
@@ -255,19 +278,19 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
         </button>
       </div>
 
-      <!-- ⭐ THE LISTENING PANEL'S ONE CONTROL – it ADVANCES (records `listen`, closes the beat),
-           so it wears the advance idiom, not a fourth radio. Label is the engine's. It replaces the
-           radiogroup rather than following it, so in either phase the LAST control in the card's
-           flow is the one `tests/component/fits.ts` measures – the 375x667 verdict stays honest in
-           both. -->
+      <!-- ⭐ THE REPLY PANEL'S ONE CONTROL – it ADVANCES (records the chosen option, closes the
+           beat), so it wears the advance idiom, not a fourth radio. Label is the engine's. It
+           replaces the radiogroup rather than following it, so in either phase the LAST control in
+           the card's flow is the one `tests/component/fits.ts` measures – the 375x667 verdict stays
+           honest in both. -->
       <button
-        v-else-if="prompt.listenFollowUp"
+        v-else
         class="life-beat-listen-done"
         type="button"
         :disabled="busy"
-        @click="finishListening()"
+        @click="finishReply()"
       >
-        {{ prompt.listenFollowUp.done }}
+        {{ replying.done }}
       </button>
 
       <!-- ⭐⭐⭐ ROUND 42 #8 – THE PROCEED, the prologue's round-41 #9 shape on the owner's own ask.
@@ -277,11 +300,11 @@ useDialogFocus(card, undefined, { focusOn: 'card', restore: false })
            sentence. ⚠ AFTER the radiogroup and never inside it: r40 #1's negative arm – what looks
            like a choice must BE one, and this advances. While it is rendered it is the card's last
            element, which is what `tests/component/fits.ts` measures the phone verdict off. The
-           listening phase never renders it (`!listening` here too): the detour's `done` is that
+           reply phase never renders it (`replying === null` here too): the reply's `done` is that
            phase's one recording control, and two recording controls on one screen would be two
            answers to one question. -->
       <button
-        v-if="!listening && chosen !== null"
+        v-if="replying === null && chosen !== null"
         class="life-beat-proceed"
         type="button"
         :disabled="busy"

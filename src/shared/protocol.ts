@@ -141,6 +141,7 @@ export type {
   BirthdayPrompt,
   BirthdayRecord,
   LifeBeatKind,
+  LifeBeatFollowUp,
   LifeBeatOption,
   LifeBeatPrompt,
   LifeBeatRecord,

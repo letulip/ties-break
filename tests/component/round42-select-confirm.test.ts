@@ -69,7 +69,10 @@ const BEAT: LifeBeatPrompt = {
     { id: 'back-her', label: 'FIXTURE answer one' },
     { id: 'press-other-way', label: 'FIXTURE answer two' },
   ],
-  listenFollowUp: null,
+  // ⚠ RE-AIMED BY ROUND 42 #15/#24: `listenFollowUp: null` became an empty `followUps` list – the
+  // same claim, that no answer on this fixture earns a second line, which is what keeps this file's
+  // subject (select + Proceed) the thing it is measuring.
+  followUps: [],
   confirm: 'FIXTURE proceed',
 }
 

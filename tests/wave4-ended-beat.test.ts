@@ -926,7 +926,8 @@ describe('wave 4 T4 G – the pools', () => {
     world.loveEpisodes = [episode(900, 1000, { endedWeek: 950 })]
     deliverKnownPartner(world)
     const prompt = buildLifeBeatPrompt(world)!
-    expect(prompt.listenFollowUp, 'giving her room is already one of the four').toBeNull()
+    // ⚠ RE-AIMED BY ROUND 42 #15/#24: one nullable entry became a list; «none» is now «empty».
+    expect(prompt.followUps, 'giving her room is already one of the four').toEqual([])
     expect(prompt.options, 'and there are four of them').toHaveLength(4)
   })
 })

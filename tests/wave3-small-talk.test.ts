@@ -187,7 +187,7 @@ import {
   smallTalkThisSeason,
   LIFE_BEAT_BLOCKING,
   LIFE_BEAT_OPTIONS,
-  SMALL_TALK_SUBJECTS,
+  LEGACY_SMALL_TALK_SUBJECTS,
   TEMPERAMENTS,
   type WorldState,
 } from '../src/engine/world'
@@ -405,16 +405,28 @@ describe('wave 3 T8 B – a silent home takes ZERO draws', () => {
     expect(lifeLogOf(world), 'and it really was a miss').toEqual([])
   })
 
-  it('⭐ a close home that HITS takes exactly one draw too – the subject is DERIVED, never drawn', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #24, AND THE OLD TITLE IS THE PART THAT EXPIRED. It read «exactly one
+  // draw too – the subject is DERIVED, never drawn», and spec §2 makes the subject a WEIGHTED DRAW on
+  // purpose («Mood sets the weights, not the subject»), with a second draw picking among the
+  // situations of that subject. So a hit on a week where a situation is reachable derives THREE keys.
+  // ⚠ WHAT THE CASE WAS WRITTEN TO HOLD IS UNTOUCHED AND IS STILL HERE: every key carries its own
+  // week, each answers exactly ONE question, and no key of a neighbouring section is touched. That is
+  // the 09.09 split-key law, which is what this describe block is actually about.
+  it('⭐ a close home that HITS derives its own three keys – one question each, all on this week', () => {
     const world = careerAt('zero-draw-hit', 0, 'close')
     const week = firstHit(world, 200)
     world.week = week
     world.lifeLog = []
     rngKeys.length = 0
     rollSmallTalk(world)
-    expect(lifeKeys(), 'one key on a hit, exactly as on a miss').toEqual([
+    expect(lifeKeys(), 'the hazard, the subject, the situation – in that order').toEqual([
       `${world.seed}:life:smalltalk:${week}`,
+      `${world.seed}:life:smalltalk:subject:${week}`,
+      `${world.seed}:life:smalltalk:situation:${week}`,
     ])
+    // ⭐ AND THE THREE ARE THREE DIFFERENT KEYS, which is the law stated rather than implied: a
+    // second fact read off the hazard's own key would have shown up here as a repeat.
+    expect(new Set(lifeKeys()).size, 'no two of them share a key').toBe(3)
     expect(lifeLogOf(world).length, 'and it really was a hit').toBe(1)
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:ends:*` is WAVE 4's and may not be
     // created early (brief §3); the arrival's three are the other file's.
@@ -728,18 +740,33 @@ describe('wave 3 T8 G – what she came with, and how the card is assembled', ()
     expect(smallTalkSubjectFor('bright'), 'a bright week brings something good').toBe(EXPECTED_SUBJECT.bright)
     expect(smallTalkSubjectFor('level'), 'an ordinary week brings the question').toBe(EXPECTED_SUBJECT.level)
     expect(new Set(REGISTERS.map(smallTalkSubjectFor)).size, 'three registers, three subjects').toBe(3)
-    expect([...SMALL_TALK_SUBJECTS].sort(), 'and the roster is total').toEqual(
+    // ⚠ RE-AIMED BY ROUND 42 #24, AND ONTO THE ROSTER IT WAS ALWAYS ABOUT. `SMALL_TALK_SUBJECTS` is
+    // the SIX now (spec §2's taxonomy); the three this derivation maps onto are
+    // `LEGACY_SMALL_TALK_SUBJECTS`, which is the roster `SMALL_TALK_LINE` is keyed on and the one a
+    // pre-round-42 row carries. The claim is the one it was: this function's image is exactly that
+    // roster, no more and no fewer.
+    expect([...LEGACY_SMALL_TALK_SUBJECTS].sort(), 'and the legacy roster is total').toEqual(
       [...new Set(REGISTERS.map(smallTalkSubjectFor))].sort(),
     )
   })
 
-  it('⭐ the row records the subject her week licensed, on each of the three registers', () => {
+  // ⚠⚠ RE-AIMED BY ROUND 42 #24, AND THE RE-AIM IS THE ITEM ITSELF. This case used to assert that a
+  // ROLLED row's detail equalled `EXPECTED_SUBJECT[register]` – the one-to-one between the Mood
+  // register and the subject, which spec §2 removes on purpose («Mood sets the WEIGHTS, not the
+  // subject»). What the case was really guarding is the two lines below it: that the card's frame and
+  // her line are assembled from the ROW rather than re-derived, and that the parent still gets his
+  // three. Both claims are kept and both are now asserted on a LEGACY row, posed directly – which is
+  // exactly what a career loaded from a v78 save is holding, so the case also became the save-compat
+  // net this round owes. The rolled path is §I's subject.
+  it('⭐ a LEGACY row – the shipped card, byte for byte, on each of the three registers', () => {
     for (const register of REGISTERS) {
       const world = careerAt(`subject-${register}`, 0, 'close', register)
-      const week = firstHit(world, 200)
-      world.week = week
+      world.week = 200
       world.lifeLog = []
-      rollSmallTalk(world)
+      // ⚠ RAISED BY HAND WITH THE PRE-ROUND-42 DETAIL – one of the three legacy subjects, no colon,
+      // no situation. `smallTalkSubjectFor` is the function that wrote it before this round, and it
+      // is still the function that writes it when no situation is reachable.
+      raiseLifeBeat(world, 'small-talk', smallTalkSubjectFor(register))
       const row = lifeLogOf(world)[0]
       expect(row.kind, `${register}: the kind`).toBe('small-talk')
       // ⚠ AGAINST THE LITERAL TABLE AND NOT AGAINST `smallTalkSubjectFor` – see `EXPECTED_SUBJECT`.
@@ -754,22 +781,30 @@ describe('wave 3 T8 G – what she came with, and how the card is assembled', ()
       const invite = buildSoftBeatInvite(world)!
       expect(invite.card, `${register}: the invitation is one line of the engine's`).toBeTruthy()
       const prompt = invite.prompt
+      // ⚠ AND THE FRAME IS STILL THE WEEK'S REGISTER ON A LEGACY ROW, which is round 42 #24's own
+      // claim about the old card: the subject→register map it now goes through is the IDENTITY of
+      // `smallTalkSubjectFor`, so this assertion is unchanged and passing is what says so.
       expect(prompt.heading, `${register}: the frame is the assembler's own`).toBe(
         lifeBeatHeading('small-talk', register, bondBandOf(world.bond!)),
       )
       expect(prompt.said, `${register}: and so is her line`).toBe(
         lifeBeatSaid('small-talk', row.detail, world.temperament!, register, bondBandOf(world.bond!)),
       )
-      expect(prompt.listenFollowUp, `${register}: no listen detour on tier 1`).toBeNull()
+      // ⚠ RE-AIMED BY ROUND 42 #15: one nullable entry became a list. A LEGACY row still earns no
+      // second line of hers – the shipped beat – and «none» is now «empty».
+      expect(prompt.followUps, `${register}: no second line on a legacy row`).toEqual([])
       expect(prompt.options.map((o) => o.id), `${register}: her parent's three`).toEqual(OPTIONS.map((o) => o.id))
+      expect(prompt.options.map((o) => o.label), `${register}: and the shipped three words`).toEqual(
+        OPTIONS.map((o) => o.label),
+      )
     }
   })
 
   it('⭐⭐ four voices x three subjects are twelve different lines – no silent fallback between them', () => {
     const lines = TEMPERAMENTS.flatMap((voice) =>
-      SMALL_TALK_SUBJECTS.map((subject) => lifeBeatSaid('small-talk', subject, voice, 'level', 'close')),
+      LEGACY_SMALL_TALK_SUBJECTS.map((subject) => lifeBeatSaid('small-talk', subject, voice, 'level', 'close')),
     )
-    expect(new Set(lines).size, 'twelve drafts, none of them shared').toBe(TEMPERAMENTS.length * SMALL_TALK_SUBJECTS.length)
+    expect(new Set(lines).size, 'twelve drafts, none of them shared').toBe(TEMPERAMENTS.length * LEGACY_SMALL_TALK_SUBJECTS.length)
     for (const line of lines) {
       // The two shape rules the week-note pins enforce for the whole corpus.
       expect((line.match(/"/g) ?? []).length, `one quoted span: ${line}`).toBe(2)
@@ -808,7 +843,7 @@ describe('wave 3 T8 G – what she came with, and how the card is assembled', ()
 
   it('⚠⚠ NO PRICE AND NO CENTS IN ANY WORD THE PLAYER SEES – rule 4, on every line of this step', () => {
     const words = [
-      ...TEMPERAMENTS.flatMap((v) => SMALL_TALK_SUBJECTS.map((s) => lifeBeatSaid('small-talk', s, v, 'level', 'close'))),
+      ...TEMPERAMENTS.flatMap((v) => LEGACY_SMALL_TALK_SUBJECTS.map((s) => lifeBeatSaid('small-talk', s, v, 'level', 'close'))),
       ...REGISTERS.map((r) => lifeBeatHeading('small-talk', r, 'close')),
       ...OPTIONS.map((o) => o.label),
     ]

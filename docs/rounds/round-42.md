@@ -603,7 +603,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   because a third fix aimed by inference would be the third one aimed at a surface nobody has
   confirmed. One screenshot settles it.
 
-- [ ] **15. «выбрал пункт, чтобы она сказала больше, а попап закрылся»** – **build.** Confirmed: the
+- [x] **15. «выбрал пункт, чтобы она сказала больше, а попап закрылся»** – **build.** Confirmed: the
   small-talk options `more/view/easy` are ALL bond-0, none is the listen detour
   (`lifeBeatListenFollowUp` returns null for small-talk, `lifeBeat.ts:2312`), and
   `ANSWER_EVENT['small-talk'] = null` – so «Ask her to say more» answers, closes, writes nothing:
@@ -977,7 +977,7 @@ Assets: deposit, index fund, merch brand, two houses, a car, the academy trio. I
   instead with the repo's own `fits.ts` model – 170 px of room against ~60 px of demand, and the arm
   is mutation-verified to redden («310px of a 170px row»).
 
-- [ ] **24. «Один и тот же диалог из раза в раз "I want to ask you something"»** – **build.**
+- [x] **24. «Один и тот же диалог из раза в раз "I want to ask you something"»** – **build.**
   Confirmed: intros are a FIXED lookup – voice × subject × presence, one string per cell, zero
   draws (`lifeBeat.ts:1178-1234, 2116-2157`) – a deep girl at home asking a question gets the SAME
   opener for 25 years. Fix: 2–3 variants per cell, drawn on `seed:life:smalltalk:line:<week>`

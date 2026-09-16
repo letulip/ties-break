@@ -249,7 +249,9 @@ describe('ROUND 42 #20 – a BLOCKING beat disables Proceed and says why (ARM 5)
     heading: 'FIXTURE heading',
     said: 'FIXTURE line.',
     options: [{ id: 'back-her', label: 'FIXTURE answer' }],
-    listenFollowUp: null,
+    // ⚠ RE-AIMED BY ROUND 42 #15/#24: the field is a LIST now (`followUps`), and an empty one is
+    // what `listenFollowUp: null` used to say – no answer on this card earns a second line of hers.
+    followUps: [],
     confirm: 'FIXTURE proceed',
   }
 
