@@ -225,3 +225,42 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   knock that is shrugged off still stopped the week. The question to rule is «how many times a season
   may the game interrupt a careful player», and the bench measures against his number rather than
   against the architect's taste.
+
+  ✅ **STOOD DOWN 16.09 – «по ноккам отбой тогда (гриндит – это объясняет всё)».** The cadence is
+  the model doing its job at the operating point his career sits on. No tuning pass, no bench arm.
+
+- [ ] **10. ⭐⭐ THE KNOCK WINDOW SHOULD ANSWER «WHY?» – grown out of #9 rather than out of a complaint.**
+  «Мой первый вопрос – ПОЧЕМУ? Мне кажется, в этом окошке можно игроку подсветить, что может быть причиной…
+  или хотя бы предложить, на что посмотреть.»
+
+  ⭐ **The place is free: `KnockPrompt` is DERIVED at snapshot time, no schema cost**, and it already
+  carries `repeat: boolean` – one of the causes is computed and simply never used to explain anything.
+
+  **The answer is arithmetic, not a guess.** `knockChance` is three terms:
+  `base 0.100 + fatigue (100−cond)×0.0022 + load (train−75)×0.006`.
+
+  ⚠⚠ **BUT «WHICH TERM IS BIGGEST» IS THE WRONG QUESTION AND WOULD LIE.** At his own grinding point
+  (cond 60, train 85) the terms are base **0.100**, fatigue 0.088, load 0.060 – the BASE is the largest
+  single term, yet «nothing you did» would be false: the family's choices added 0.148 on top of the
+  floor, so **60% of that week's risk was theirs**.
+
+  ⭐ **So the measure is HOW MUCH THE FAMILY'S CHOICES ADDED, and which of them added more:**
+
+  | week | base | fatigue | load | the honest line |
+  | --- | ---: | ---: | ---: | --- |
+  | grinding (60 / 85) | 0.100 | **0.088** | 0.060 | she went in tired |
+  | heavy plan, fresh legs | 0.100 | low | **high** | the week was a hard one |
+  | careful (90 / 70) | 0.100 | 0.022 | **−0.030** | **nothing you did – the light week was working** |
+  | `repeat` is true | – | – | – | you have sent her back out on this part before (×3.0) |
+
+  ⚠⚠ **AND THE HARD RULE WITHOUT WHICH THIS MUST NOT BE BUILT: the window has to be able to say
+  NOTHING.** A game that always offers a cause teaches that there is always something to fix, and
+  manufactures guilt where there is none – straight against his own «мы ни за что не наказываем».
+  The careful row is not a missing answer; it is a GOOD one: caution was working and the 10% floor is
+  irreducible.
+
+  ⚠ **No numbers on the card.** He asked for the cause named or «хотя бы предложить, на что
+  посмотреть», and a named cause is enough. ⭐ Nothing hidden is revealed either: condition is on
+  screen and `plan.train` is a slider he sets, so the window only points at what he already has.
+
+  ⚠ The four lines are player-facing and therefore DRAFTS – written for his reading, not shipped.
