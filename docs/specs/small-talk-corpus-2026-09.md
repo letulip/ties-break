@@ -198,8 +198,8 @@ responding.» So each row below is ONE evening, told four ways.
 
 ⚠ **The three branch labels are the PARENT's and do not change by voice** – he is the same person
 whichever daughter he got. What changes is what she says back, and those replies are written AFTER
-this document is cut and corrected, for the obvious reason: there is no point writing 180 replies to
-situations that may not survive the reading.
+this document is cut and corrected, for the obvious reason: there is no point writing **144** replies
+(12 × 4 × 3) to situations that may not survive the reading.
 
 ---
 
@@ -372,8 +372,8 @@ school, so the first tranche goes where the game is silent rather than where it 
 ## 7. What this document does not do
 
 * **It writes no replies.** Each situation shows the parent's three labels; what she says back to each
-  is written after he has cut and corrected the openers, because 180 replies to situations that may
-  not survive a reading is work spent on the wrong thing.
+  is written after he has cut and corrected the openers, because **144** replies (12 × 4 × 3) to situations
+  that may not survive a reading is work spent on the wrong thing.
 * **It ships nothing.** Every line here is a DRAFT under invariant 4.
 * **It does not fix the repeat.** That is round 43 #8(a) – the exclusion read off `world.lifeLog` –
   and it is architect's work with no schema and no copy. A bigger corpus makes a repeat rarer; only
