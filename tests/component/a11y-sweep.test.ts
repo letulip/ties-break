@@ -113,6 +113,9 @@ const PROMPT: KnockPrompt = {
   repeat: false,
   line: 'She came off court rubbing it.',
   read: 'Her coach thinks a week off would settle it.',
+  // ⭐ ROUND 43 #10 – the card answers «why» now. A fixture like the rest of this prompt: what the
+  // sentence says is tests/knock.test.ts §5b's business, and this file is about the modal contract.
+  cause: 'The week we set was a hard one.',
   restCost: 'Rest it: she loses the week’s training.',
   pushCost: 'Train through it: a real chance it becomes an injury.',
 }

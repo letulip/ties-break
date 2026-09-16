@@ -299,6 +299,8 @@ describe('ROUND 42 #20 – a BLOCKING beat disables Proceed and says why (ARM 5)
         repeat: false,
         line: 'FIXTURE',
         read: 'FIXTURE',
+        // ⭐ ROUND 43 #10 – the card's «why» row, a fixture like its four neighbours.
+        cause: 'FIXTURE',
         restCost: 'FIXTURE',
         pushCost: 'FIXTURE',
       },
