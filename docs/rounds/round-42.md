@@ -1491,7 +1491,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   bench's minutes are its statistical power and cannot be «cut». Safety invariant + the note pinned
   in `tests/units-stall-classifier.test.ts` (the new ROUND 42 #33 block).
 
-- [>] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
+- [x] **34. «давай бенч по composure заведём в раунд отдельным пунктом» (его слово, 15.09)** –
   **measure first, then his ruling.** Entered off item 32's audit, which priced the wing by accident
   and then could not see it work.
 
@@ -1592,6 +1592,72 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   Against serve's +14pp and groundstrokes' +18pp that makes nerve a real second-echelon wing without
   re-cutting the ladder's flow. It is the acceptance test: this bench re-run is what says the change
   landed.
+
+  ⭐⭐ **SHIPPED 16.09, AND THE TARGET WAS HIT ON ITS OWN ACCEPTANCE TEST.** Three symbols in
+  `src/engine/match/point.ts` and one new fact in the score:
+
+  * `isPressurePoint(ctx)` – a break point, a set point, a match point, EVERY point of a tiebreak, and
+    the closing games of a deciding set. The fifth fact (`PointContext.decidingClose`) is computed by
+    `scoring.ts`, which is the one owner of what a score means; the physics only says which of them
+    are tight.
+  * `PRESSURE_NERVE_MAX = 0.07` – a SECOND term, `(receiver.composure − server.composure) × 0.07`,
+    applied on the pressure set. **Contested, so exactly 0 between two level players.**
+    `BIG_POINT_MAX_PENALTY` is byte-identical: the Klaassen–Magnus dock is an absolute effect that a
+    level pair still pays, and re-shaping it would have deleted a real reading under cover of a fix.
+  * `COMPOSURE_K` **re-fitted 2.2e-5 → 2.2e-4**, not re-guessed – the closed form is a fitted mirror
+    of the loop, so when the loop moves the mirror is wrong until it is re-measured.
+    `tools/r38-closed-form-residual.ts -- --fit` over 315 cells × 20,000 matches landed the free fit
+    on **2.20575e-4**, and the joint fit's other axis came back at `K_STAM` **6.933e-5** against the
+    shipped 7.0e-5 – under one per cent, which is what says the two axes did not trade against each
+    other.
+
+  | acceptance row | ruled / predicted | **measured** |
+  | --- | --- | ---: |
+  | **+20 composure vs the standing at #20** | **+4pp (his number)** | **+4.1pp** big-shot · **+4.8pp** nerve build |
+  | composure 42 → 82, the 40 points a career can cover | – | **+1.1pp → +9.2pp** |
+  | groundstrokes 42 → 82, the same sweep | unmoved | **+44.1pp → +44.1pp, to the decimal** |
+  | the pressure set's share of points | «~25%» | **18.5%** – **MISS, narrower than the plan** |
+
+  **Forty times → 4.8 times.** That is the whole change in one line, and the miss above is why 0.07
+  came out ABOVE its own arithmetic rather than at it: a term that acts on 18.5% of points has to be
+  bigger than one priced for 25%. Reported as a miss in
+  [the-price-of-nerve-2026-09](../specs/the-price-of-nerve-2026-09.md), measured by
+  `tools/pressure-set-census.ts`.
+
+  ⭐ **THE RE-MEASUREMENT BESIDE THE CHANGE, because it is match physics** (⚠ and one of the five
+  results is better than predicted rather than merely tolerable):
+  * **the upset corridor** – moved **1.0–1.6pp** on the wide gaps against a predicted «under 0.5pp»,
+    and the fit to the published Elo curve got **BETTER**: mean absolute miss on his five rows
+    **4.02 → 3.74 points**. The prediction was wrong because it assumed the field's composure is flat.
+    It is not – `rivalMatchPlayer` composes a professional's nerve from her quality, so the favourite
+    in a wide-gap pair is also the calmer player. That is a fact about the cohort, not about #34.
+  * **`bench:radar`** – the fog table moves 0.02–0.26 skill points, every headline verdict unmoved.
+  * **the tour's own calibration** – untouched at the BIT, by construction rather than within noise:
+    ATP hard hold 0.78681362, WTA 0.66370895, the fairness fixture 0.49955000, identical with the term
+    at 0.07 and at 0.
+  * **`bench:econ`** – P12 missed and the miss belongs to the instrument; the table is in the spec.
+
+  ⭐⭐ **THE FROZEN CAPTURES THAT MOVED, AND WHAT EACH RE-PIN SAYS.** A physics change moves records,
+  and the house rule is that each one carries a ⚠ note naming what moved it:
+  * **the kid-rank REF, 89 → 90**, in `tests/condition.test.ts`, `tests/injuries.test.ts` and
+    `tests/planner.test.ts` – each with a note naming #34 and stating that the capture is asserted
+    BEFORE the constant is read, so the pin cannot launder a second change through the same number.
+  * **`tests/fixtures/match-parity/annotation-run.json` re-frozen**, and its diff is the proof rather
+    than the cost: **`hard-even` came back HASH BYTE-IDENTICAL** – not one of its 137 points moved –
+    because it is the only record whose two players are LEVEL in composure (50/50), and a difference
+    of equals is exactly zero. The construction argument is therefore proved on the POINT LOOP itself,
+    unabridged. The three arms that moved are precisely the three carrying a composure gap, and **not
+    one scoreline, winner, retirement or opening rally moved on any of them.**
+  * ⚠ **one guard re-aimed on the way, and it had been wrong since the day it was written.** The
+    parity record's non-vacuity test demanded an ace in EVERY arm while its own note three lines above
+    said the floor is the CORPUS because no single arm holds many. #34 re-rolled the points and
+    `clay-cannon` came back with none. Measured before touching it: that pair draws a mean of 2.74
+    aces on clay and draws **zero in 5.5% of 200 seeds** (hard 1.5%, grass 0.0%), so the guard failed
+    a legitimate re-freeze one time in eighteen – it was measuring the seed, not the branch. Replaced
+    with the stronger question the loop was reaching for: **the corpus total may not rest on one or
+    two arms** (as written, 11 aces in a single record with three silent arms passed both lines).
+    `rally.ts`, `serveSpeed.ts` and `src/viz/` carry no #34 diff at all, and the cannon still serves
+    180 km/h into the speed-ceiling pin.
 
 
 
@@ -1876,7 +1942,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   sweep ALONE: nothing else on the page can see a `white-space` rule, which is why that case is the
   measurement and «it reads well» is not.
 
-- [ ] **38. «может быть разные девочки в разное время к потолку приходят всё-таки? колледж или нет,
+- [~] **38. «может быть разные девочки в разное время к потолку приходят всё-таки? колледж или нет,
   тренер или нет, хорошо тренировали или нет» (15.09)** – **measure first, then decide.** Raised off
   item 22's finding that at the end of a career all five wings read the saturated register at once,
   which is monotone even though it is true. His question is the right one and it is measurable with
@@ -1886,6 +1952,30 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   copy simply needs to speak the ROUTE rather than the rung; if it is narrow, the model is telling
   every girl the same story and that is a development question, not a copy one.
   ⚠ Belongs with the nerve wave (#34): same family, same benches, same quiet machine.
+
+  ⭐⭐ **MEASURED 16.09 – THE ANSWER IS YES, AND WIDELY, BUT NOT WHERE YOU ASKED.** Instrument
+  `tools/r42-ceiling-clock.ts` (500 careers an arm, 1092 weeks each, 31 arms, 6 mutation arms);
+  spec [time-to-the-ceiling-2026-09](../specs/time-to-the-ceiling-2026-09.md). **No engine number was
+  written from it** – it is a measurement and your ruling comes after.
+
+  | the route you named | predicted | **measured** |
+  | --- | --- | ---: |
+  | **college against tour**, middle-coached | 0.0–0.3 yr | **0.00 yr, to two decimals, every wing** |
+  | college against tour, self-coached | 0.0–0.3 yr | **0.00 yr median** (p90 20.31 → 19.94) |
+  | ⭐ **the two realistic corners** – self-coached, thin plan vs elite-coached with a style fit | ~7 yr | **9.30 yr** (23.89 → 14.59) |
+  | the seed's own spread, p10–p90 at baseline | 5.0 yr | **4.54 yr** (13.85 → 18.39) |
+  | the five wings within ~0.5 yr of each other | yes | **yes – 16.41 to 16.61, a span of 0.20 yr** |
+
+  **Read the first and third rows together, because that is the finding.** The routes a player chooses
+  spread the arrival time by **9.3 years – twice what the birth dice deal (4.5)** – so the answer to
+  ·«разные девочки в разное время приходят»· is an emphatic yes. But the spread lives in the **PLAN and the
+  COACH-WITH-FIT**, and the **college fork is worth 0.00 years** – it is not mute because it is broken
+  (the mutation arm moves it), it is mute on THIS clock: the fork is answered at 19, by which age the
+  median wing has already arrived.
+  ⭐ And the last row is item 22's complaint, confirmed as the MODEL rather than as an artefact: the
+  five wings really do saturate within 0.20 years of each other, so a screen that reads them all at
+  once is telling the truth. Whether that truth should be told five times over is the copy question,
+  and it is yours.
 
 - [~] **39. «я вообще ничего не понял. Почему остальные контракты работают корректно, а этот нет? Это
   надо починить» (15.09, on item 16's answer)** – **the answer was muddled and the real finding is
@@ -1942,7 +2032,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   **36.3 px on a phone** – two lines – and **18.1 px** everywhere above it. It wraps as prose and is
   never cut (`white-space` not `nowrap`, `text-overflow` not `ellipsis`, read through the cascade).
 
-- [ ] **40. «юниорские годы тоже заведи пунктом» (15.09)** – **measure, then his number.** Out of item
+- [~] **40. «юниорские годы тоже заведи пунктом» (15.09)** – **measure, then his number.** Out of item
   16's paper trail: before eighteen his own career held three kit rungs paying **$2,000 · $3,000 ·
   $3,000 a season** and ONE advertising letter ($40,000 at 17.0) – and then the money explodes, five
   ad deals in the nineteenth year alone and $2.5M a year by twenty-two. His sentence «за всё время до
@@ -1957,7 +2047,33 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   are funded entirely by the parent, which is a design statement worth making on purpose rather than
   by omission. Numbers first, his ruling on the constants after, invariant 5 as ever.
 
-- [ ] **41. «я вообще не понял почему мы снова обсуждаем разные проценты, если уже есть исследование
+  ⭐⭐ **MEASURED 16.09 – AND THE PARENT IS RIGHT TO THINK NOBODY IS HELPING HIM.** 144 careers
+  (16 seeds × 9 background×coach presets); instrument `tools/r42-junior-coverage.ts`; spec
+  [junior-years-coverage-2026-09](../specs/junior-years-coverage-2026-09.md). **No constant moved and
+  no engine file was touched** – the numbers are here so you can rule with the arithmetic in front
+  of you.
+
+  > **The brands pay about 43% of the junior bill. The family sees about 9% of it.**
+
+  ⭐ **The gap between those two numbers is not the sponsors being small – it is
+  `ECONOMY.managerCommission.bps = 1500`.** Every junior letter (the advertising fee, the kit
+  retainer, the appearance fee, the result bonus) is split 15/85 by `bankSponsorCheque`, and **the 85
+  goes into HER account, not the family's.** The median junior career banks $91,001 for her while the
+  parent, who is paying the coach and the travel, sees a ninth of what the brands wrote.
+
+  ⚠ **Two corrections the measurement made to the brief before it ran.** There are **THREE** family
+  backgrounds and not four (`FamilyBackground` is `wealthy | middle | working`; the fourth was
+  probably the coach ladder, which is a separate axis – so the spec reports the nine presets
+  underneath, because the coach is the largest line in the junior bill and a background mean averages
+  over families that hired nobody). And the prediction MISSED, in one sentence: it priced the junior
+  band off the junior rungs and a junior career's sponsor money is not mostly junior rungs.
+
+  **So the design question is now a clean fork and it is yours.** Either the junior band is
+  deliberately quiet and the parent funds those years – which the game can then SAY rather than
+  imply – or the 15/85 split is wrong while she is a minor and the family's share is the constant to
+  move. Nothing is built until you say which.
+
+- [x] **41. «я вообще не понял почему мы снова обсуждаем разные проценты, если уже есть исследование
   на 10% безусловных отчислений с любых призовых, независимо от глубины прохода. И мы говорили, что
   это будет сделано» (15.09)** – **RULED: the every-cheque arm ships.** He is right and the receipt is
   his own research: [team-economics-2026-09](../research/team-economics-2026-09.md) §2 – «7–15%, most
@@ -1971,6 +2087,22 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   track – `staffResultShareBps` grows the every-cheque arm and joins `finalizeTournament`'s split
   ORDER beside the kid's share, where the pieces-re-add-to-the-cent discipline and the
   kid-share-never-shrinks-staff-cuts order are already pinned (round 41 A1).
+
+  ⭐⭐ **SHIPPED IN BUNDLE 9 – AND THE MARKER HERE WAS STALE UNTIL 16.09, WHICH IS WORTH RECORDING
+  RATHER THAN QUIETLY FIXING.** The work landed; the `[ ]` did not move. This is the exact defect the
+  round-29 audit went looking for in the other direction (a `[x]` that was false), and it is why the
+  PR's not-done block is read off the code rather than off my memory. Found by verifying all seven
+  open items against `src/` before answering his «7 открыто – что осталось?».
+
+  **The evidence, in one line:** `ECONOMY.staffShare.coach = { titleBps: 1000, finalBps: 1000,
+  everyBps: 1000 }` (`src/engine/economy.ts:1926`). All three numbers are 1000, so **a title, a lost
+  final and a first-round exit all pay the same 10%** – his research's «10% от любого заработка на
+  корте», exactly. `staffResultShareBps` reads `everyBps` off the object for every finish index past
+  1 rather than returning a hard 0, so the shape is now a RATE rather than an absence, and the
+  masseur keeps round 24's behaviour spelled out (`everyBps: 0`) instead of inherited from a branch.
+  Live in `finalizeTournament`'s split order and on three screens (`MoneyScreen`, `CoachMarketScreen`,
+  `WeekRecapCard`); pinned by `tests/component/round29-coach-share.test.ts`,
+  `round29p2-coach-cut-weekly.test.ts`, `round26-money-share.test.ts` and the frozen careers.
 
   ⚠ **It is a real balance change and it ships the way this round's others do:** predicted first,
   benched, the family corridor printed before and after, his numbers off the table. Two things the
@@ -2243,7 +2375,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
   `round23-kid-share`'s own account pins, which is right – they are about the percentages and the
   gate, not about this clause.
 
-- [ ] **45. HIS RULINGS OF 15.09 ON THE THREE OPEN ASKS** – recorded together because they arrived
+- [~] **45. HIS RULINGS OF 15.09 ON THE THREE OPEN ASKS** – recorded together because they arrived
   together.
 
   * **Round 41 #22 rides v78** («41 #22 давай тоже в v78 закинем»). The fund chart's purchase marks
@@ -2273,6 +2405,19 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
     the results channel not at all. Money anchor $50–80k/yr + full travel → $500 / $900 / $1,400 a
     week proposed, no results share. ⚠ It needs `sparringHired` / `sparringRung` persisted, so it is a
     THIRD v78 customer – or it waits for v79, and that is a scheduling call rather than a design one.
+
+  ⭐⭐ **ALL THREE RULINGS ARE RECORDED AND ACTED ON – the marker was stale here too (corrected
+  16.09).** This item is a RULINGS RECORD rather than a build, so `[~]` is its honest end state:
+  * **41 #22 rides v78 – SHIPPED.** The migration's own block names three customers in one bump
+    (`src/engine/migrations.ts:2757`): `composureBonus` for #35, `entries: []` per row for 41 #22, and
+    the sparring pair. ⚠ And #22's back-fill refused the tempting alternative with a measurement in
+    hand: one entry reconstructed from `boughtWeek` + `paidCents` would print a sum the family never
+    paid in any single week, because `paidCents` is a blended net figure a top-up adds to and a part
+    sale scales down. An empty list draws no mark, and it draws none because there is none.
+  * **#39b – WITHDRAWN on his own word**, nothing to build; only #39a ships.
+  * **#19 – UNPARKED**, and it became bundle 13. Its pricing half shipped (#49(a) is what is left of
+    it, one constant waiting on his word); its sparring half stopped on two missing things and that
+    stop is item **#48**, which is where the open work now lives rather than here.
 
 ---
 
@@ -2321,7 +2466,7 @@ its own acceptance bench does not ship because the round is ending.
   would pin copy to a dial. The sentence says the SHAPE («more the further she goes, nothing on a
   first-round exit»), which stays true when the constant moves.
 
-- [ ] **47. «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный
+- [x] **47. «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный
   этап J серия, там самые большие расходы» (15.09) – the cameo's ORIGINAL intent, recovered.** His
   memory of what he first asked for supersedes the cadence tuning of #5/#43: the local sponsor was
   never meant to be a weekly lottery with a spacing rule. It was meant to arrive **at the edge of
@@ -2350,6 +2495,58 @@ its own acceptance bench does not ship because the round is ending.
   percentage of a J-series travel bill may be larger or smaller than the flat draw it replaces, and
   nobody should be surprised by which. Belongs with the measurement wave (bundle 15).
 
+  ⭐⭐ **SHIPPED 16.09 TO YOUR NUMBER – AND THE BENCH SAYS IT COST 95% OF THE CAMEO'S MONEY.**
+  Spec [cameo-gap-closer-2026-09](../specs/cameo-gap-closer-2026-09.md), instrument
+  `tools/r42-cameo-gap-closer.ts` (54 careers an arm, six seasons from fourteen).
+
+  **What was built.** `unpayableTrip(world)` names the SOONEST event she could still enter and cannot
+  pay for (ties to the cheapest), priced at what the play week really takes – entry fee + travel +
+  the coach's and the masseur's fares, net of a scholarship and a kit brand's share, measured against
+  `reachableFundsCents` rather than the wallet for wave-6 T12's reason. It asks `entryStatus`, the one
+  gate `enterEvent` re-validates against, so the probe cannot price a Slam for a twelve-year-old. Then
+  `sponsorCameoCents(seed, week, shortfall)` = **`shortfall × U(0.60, 0.80)`** on the cameo's own
+  sub-stream. The cooldown, the college freeze and the need test are untouched and still come first.
+  ⚠ **Zero new draws on any stream** (the two deliberately dead MAIN draws keep their exact slots, so
+  the frozen capture is untouched) and **not one character of wording moved** – the feed line is still
+  `A local sponsor chipped in!`, byte for byte.
+
+  | the three prints you asked for | predicted | **measured** |
+  | --- | --- | ---: |
+  | the cheque | $400–900 | **median $129** (median gap $281) |
+  | **dollars a season** | $900–1,600 | **$51 – −95% against #43's $1,125** |
+  | cheques a season | 0.6–1.0 | **0.26** |
+  | she closed the rest and went | 30–60% | 7.2% – **not resolvable, see below** |
+  | the trip was missed anyway | 40–70% | 92.8% – **not resolvable, see below** |
+
+  ⭐ **It does land where you said it should:** the J-series block takes **70 of the 83 cheques**, at a
+  median gap of $280 against the professional years' $367. Working families get 0.38 cheques/season
+  and $83; wealthy families 0.01 and $1.
+
+  ⚠⚠ **TWO OF THOSE ROWS ARE NOT FINDINGS AND THE SPEC REFUSES TO QUOTE THEM AS ONE.** The money
+  column's arm is proven and monotone in the dial ($0 → $51 → $63 → $191); the «went» column's is
+  not – the shipped and the full-closure arms land on the wrong side of each other, which is what
+  noise looks like at 83 cheques. And the bench's policy is STRICTER than the engine's gate: it
+  applies an earned-points ranking rule before affordability, so a trip a wild card would open lands
+  in the «missed» column for a reason that has nothing to do with the sponsor. Same class of limit as
+  #49(b): **no bench can tell «a family that would never take this trip» from «an autopilot that never
+  takes it.**
+
+  ❓ **TWO QUESTIONS BACK TO YOU, and the first is the one to read.**
+  1. **The −95% has TWO causes and you only ruled on one.** You ruled the SIZE («60-80% закрытия»);
+     the cheque also got rarer – 0.26 a season against 1.09 – because a gap exists in about 7 weeks of
+     52 and the cooldown only lets the shop be willing about once a season, so the two rarely
+     coincide. Two dials, not a re-design: **which trip the probe names** (soonest-and-cheapest, as
+     built, against the strongest rung she could enter – which is where your «самые большие
+     расходы» points), and **whether a willing week with no gap should still write a small flat
+     cheque.**
+  2. **It narrows a promise already shipped.** Wave-6 T12 shipped your own sentence – «чтобы
+     поддержка приходила реально тогда, когда вообще уже край и денег нет» – as *when the money is
+     really gone, the shop still writes*. #47 narrows it to *…and a trip she could take is out of
+     reach*, and at the bottom of the ladder the two come apart: on T12's own fixture 112 of 128 cards
+     are gate-blocked on ranking, the only open rung is `local`, and a local trip costs $87–128 – so a
+     family whose money is genuinely gone can still find no nameable gap. Yours to rule: is the
+     narrowed promise the one you want, or should a truly empty wallet keep a floor under it?
+
 - [ ] **48. THE SPARRING SEAT CANNOT BE BUILT YET, and the stop is the finding (15.09).** Bundle 13
   refused to build it and was right twice over:
   * **`world.form` does not exist.** The seat's entire effect per its spec §4 is «cut the RHYTHM
@@ -2373,7 +2570,7 @@ its own acceptance bench does not ship because the round is ending.
   the mechanic does not exist. «What a season of rust costs without him» is unanswerable today, and
   the bundle refused to estimate it rather than print a number that would look like a finding.
 
-- [ ] **49. HIS THREE 16.09 RULINGS ON THE TEAM ECONOMY, and one of them un-refuses a bench verdict.**
+- [~] **49. HIS THREE 16.09 RULINGS ON THE TEAM ECONOMY, and one of them un-refuses a bench verdict.**
 
   **(a) «мой вопрос был относительно исследования: не маловато ли?» – the elite price was TOO LOW, and
   that is what #19 fixed.** His original «за такие деньги их не существует» reads as «you cannot get
@@ -2403,6 +2600,30 @@ its own acceptance bench does not ship because the round is ending.
   than quote the same number under a new heading.
   ⚠ And the honest limit of any bench here: no arm can tell «a family that would never book this» from
   «a family whose autopilot books everything». The design question is his and he has answered it.
+
+  ⭐⭐ **(b) SHIPPED 16.09 – `uniformPrice: true` ON BOTH HIGH TIERS.** He said «тиры» in the plural
+  and `resort` ($1,800–3,000) is no more reachable on «200-300 в неделю» than `elite` ($4,000–7,000),
+  so the band stops above `seaside` ($600–1,000) – the family hotel a stretched family really does
+  book. `tests/planner.test.ts` pins which rungs carry it, by name and in both directions. The price
+  arithmetic, exact: a WORKING family's elite quote rises out of its 0.7–0.8 corridor onto 1.0
+  (≈$2,900 → ≈$4,000) and a WEALTHY family's falls out of 1.2–1.3 (≈$6,875 → ≈$5,500). One price, as
+  he asked. Survival is unmoved: 1 bankruptcy of 54 in every arm.
+
+  ⚠⚠ **AND THE RE-MEASUREMENT REFUSES TO BE A VERDICT, which is the honest half of this item.**
+  §9 of [elite-retainer-2026-09](../specs/elite-retainer-2026-09.md) carries the four arms and two
+  limits. The second limit is the one that matters and §7 did not know it: the shipped arm's worst
+  never-in-band career moves **$1,007,723**, and a re-priced clinic week cannot do that arithmetically
+  (six seasons of bookings come to roughly $10k). That million is **path divergence** – a changed
+  wallet changes an entry decision, a different tournament is played, and prize money is heavy-tailed
+  enough for one career to own the column. ⭐ The tell: **the ×50 ACTUATION arm moves that column
+  LESS ($132,775) than the real change does.** An instrument whose absurd arm is gentler than its real
+  one is not measuring the real one – so the record says the bench **cannot price this**, rather than
+  that it priced it at «4 of 20».
+
+  ⭐ **(a) and (c) are NOT shipped and are not blocked on code.** (a) the star-name band (#1–3 ×7,
+  reaching $340k) is one constant and the same four proofs – it waits on his word rather than on
+  work; (c) the sparring seat waits on F1 (`world.form`), and #34 has now made the case for the order
+  rather than merely asserted it.
 
   **(c) «а в чём проблема? давай распишем» – the sparring seat's dependency, laid out.** It is not
   missing logic *around* the seat; the thing the seat acts on does not exist:
@@ -2524,7 +2745,7 @@ its own acceptance bench does not ship because the round is ending.
   text flow changes where its lines wrap. The standing sweep (375/768/900/1280 on every host of a coach
   portrait) covers the rest.
 
-- [ ] **53. FOUR NEW PORTRAITS, converted (his 16.09).** «Я добавил ещё 4 аватарки (массажист, психолог,
+- [~] **53. FOUR NEW PORTRAITS, converted (his 16.09).** «Я добавил ещё 4 аватарки (массажист, психолог,
   спарринг партнёр и брокер). Первых 3х точно можно разместить на соответствующих вкладках в разделе
   support stuff, а брокера пока не знаю… Все надо перевести в webp.»
 
