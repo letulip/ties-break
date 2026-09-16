@@ -2524,28 +2524,27 @@ its own acceptance bench does not ship because the round is ending.
   text flow changes where its lines wrap. The standing sweep (375/768/900/1280 on every host of a coach
   portrait) covers the rest.
 
-- [ ] **53. FOUR NEW PORTRAITS, converted and placed (his 16.09).** «Я добавил ещё 4 аватарки (массажист,
-  психолог, спарринг партнёр и брокер). Первых 3х точно можно разместить на соответствующих вкладках в
-  разделе support stuff, а брокера пока не знаю… Все надо перевести в webp.»
+- [ ] **53. FOUR NEW PORTRAITS, converted (his 16.09).** «Я добавил ещё 4 аватарки (массажист, психолог,
+  спарринг партнёр и брокер). Первых 3х точно можно разместить на соответствующих вкладках в разделе
+  support stuff, а брокера пока не знаю… Все надо перевести в webp.»
 
-  **Done by the architect's own hand, because it is asset work rather than design:** the sheet arrived
-  as ONE 1254×1254 PNG holding a 2×2 grid, so it was cropped into its four quadrants and each written
-  as a 512×512 webp at q82 – the prologue masters' own size and the coach masters' own format.
-  37–48 KB each against the coach roster's 10 KB, which is the price of a scene rather than a cut-out
-  figure and is worth stating before anyone is surprised by it.
+  ⚠⚠ **AND THE FIRST ATTEMPT AT THIS WAS WRONG, WHICH IS WHY THE RECORD SAYS SO.** The architect went
+  hunting in Downloads, found a 2×2 contact sheet, cut it into quadrants and shipped four 512×512
+  square SCENES. He had already placed the finished files – four separate **448×624 portraits** in
+  `public/images/support-stuff/` – and said so: «я положил в images/support stuff готовое». The cut
+  quadrants are deleted. The lesson is the cheap one: when he says he has added something, find what he
+  added before making it.
 
-  * `public/images/staff/masseur.webp` · `psychologist.webp` · `sparring.webp` – the three he placed.
-  * `docs/assets/broker-portrait-master.webp` – the broker, **deliberately NOT under `public/`**: he
-    has no home yet, and everything under `public/images` is precached by the service worker, so an
-    unplaced 37 KB would spend install budget on a picture nobody can see. It moves the day he has a
-    surface. ⚠ The install-size gate has 480 KiB of headroom today and the three placed files take
-    ~127 KB of it – green, but the margin is now worth watching.
+  **What ships:** his four files converted in place, `cwebp -q 82`, native 448×624 kept –
+  `public/images/support-stuff/{masseur,psychologist,sparring,broker}.webp`, 44–55 KB each against the
+  ~370 KB JPEGs they came from. The broker rides along because he asked for all four converted; he has
+  no surface yet and that is his call to make later.
+  ⚠ The install-size gate had 480 KiB of headroom before this and the four take ~192 KB of it. Still
+  green, and now worth watching – the gate runs on every check and will say so if a fifth arrives.
 
-  **What is left is the placement, and it is a real layout job rather than a drop-in.** The
-  Support-staff tab draws NO portrait today and says so in its own comment; the coach card's strip
-  (round 42 #3) is the only portrait treatment on that screen and it is built for a 162×264 cut-out
-  figure, not a square scene. So the builder decides the crop and the box, and the standing sweep
-  applies: 375 / 768 / 900 / 1280, measured, on every seat card.
-  ⚠ And a scene is not a portrait: each of these three shows the specialist WITH HER – the girl's back
-  is in frame. That is right for a card about a working relationship and wrong for anything that wants
-  a face, so nothing should reuse these as an avatar.
+  **The placement is the open half, and it is a layout job rather than a drop-in.** The Support-staff
+  tab draws NO portrait today and says so in its own comment; the coach card's strip (round 42 #3) is
+  built for a 162×264 cut-out figure. These are 448×624 and they are **scenes** – each shows the
+  specialist WITH HER, the girl's back in frame – which is right for a card about a working
+  relationship and wrong for anything that wants a face. The builder picks the crop and the box, and
+  the standing sweep applies at 375 / 768 / 900 / 1280 on every seat card.
