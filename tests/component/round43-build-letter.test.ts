@@ -93,15 +93,21 @@ describe('round 43 #11 – the sheet the delivery writes', () => {
   })
 
   it('the wait is stated in the letter`s own words across the whole ladder', () => {
-    // The shelf's build times run from 3 weeks (`academy-staff`) to 208 (`yacht-big`), so both ends
-    // of the wording ladder are reachable by a real career and both are asserted.
+    // ⚠ EVERY SPAN BELOW IS ONE A CAREER CAN REALLY PRODUCE, and that is the point of listing them:
+    // the shelf's ten build-time rungs are 3, 6, 12, 52, 52, 78, 104, 156, 156 and 208 weeks, and
+    // `deliverAssets` fires at `week >= readyWeek` so a multi-week skip can land past any of them.
+    // The `weeks <= 1` floor in `buildWaitWord` is NOT asserted here – it is unreachable through the
+    // shop, it is documented as a floor on the output rather than a guard, and a case for it would
+    // be this file claiming coverage of something no career can reach.
     const cases: Array<[number, string]> = [
       [3, '3 weeks'],
-      [1, 'a week'],
+      [6, '6 weeks'],
       [12, '3 months'],
       [52, 'a year'],
+      [104, '2 years'],
       [156, '3 years'],
       [208, '4 years'],
+      [215, '4 years'],
     ]
     for (const [weeks, said] of cases) {
       document.body.innerHTML = ''

@@ -230,11 +230,18 @@ const buildTerms = computed(() => props.offer.terms as BuildLetterTerms)
  *  ⚠ COMPUTED FROM THE TWO WEEKS ON THE PAPER, never from `ShopItem.buildWeeks`. The catalogue's
  *  figure is what the wait WAS MEANT to be the week it was quoted and this shelf is retuned; the
  *  order week and the arrival week are what actually happened, and a letter states what happened.
- *  ⚠ The shortest rung on the shelf is three weeks and the longest is two hundred and eight, so both
- *  ends of this ladder are reachable – `academy-staff` at 3 and `yacht-big` at 208. */
+ *
+ *  ⚠ WHICH RUNGS OF THIS LADDER A CAREER CAN REACH, written down because the repo keeps finding dead
+ *  guards and this function could easily grow one. The shelf's build times are 3, 6, 12, 52, 52, 78,
+ *  104, 156, 156 and 208 weeks, and `deliverAssets` fires at `week >= readyWeek`, so a real letter's
+ *  span is at least 3 and has no ceiling (a multi-week skip can overshoot). Every branch below is
+ *  therefore live – ⚠ EXCEPT `weeks <= 1`, which is not, and is kept ON PURPOSE for one reason: this
+ *  reads the PAPER and the paper is persisted, so a span this component never has to be right about
+ *  should still not render «0 weeks». It is a floor on the output, not a guard on a predicate. */
 const buildWaitWord = computed(() => {
   const weeks = Math.max(0, props.offer.week - buildTerms.value.orderedWeek)
-  if (weeks < 8) return weeks === 1 ? 'a week' : `${weeks} weeks`
+  if (weeks <= 1) return 'a week'
+  if (weeks < 8) return `${weeks} weeks`
   if (weeks < 52) return `${Math.round(weeks / 4.33)} months`
   const years = weeks / 52
   const rounded = Math.round(years * 2) / 2
