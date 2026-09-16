@@ -416,12 +416,30 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     // already had – and there is no second write of a value anywhere in this file.
     const price = unitPriceCents(world.seed, world.week, item)
     const units = (held?.units ?? 0) + paidCents / price
+    // ⭐⭐⭐ v78, ROUND 41 #22 – AND THIS PURCHASE IS WRITTEN DOWN. THIS week, THIS money, and the
+    // units THIS week's price bought – never the running totals three lines up, which is the whole
+    // difference between a mark and a lie. `held.units` and `held.paidCents` are the holding's
+    // blended state; `paidCents / price` is what the family put in today, and it is the only figure
+    // a mark on that week can honestly carry. See `AssetEntry` in shared/protocol/profile.ts.
+    const entry = { week: world.week, cents: paidCents, units: paidCents / price }
     if (held) {
       held.units = units
       held.paidCents += paidCents
       held.valueCents = Math.round(units * price)
+      // ⚠ APPENDED AND NEVER REWRITTEN, which is what makes «усредниться» readable as a history
+      // rather than as one restated number. The top-up is a SECOND mark beside the first, at its own
+      // week and its own price – the very thing round 29 #11's rebase destroyed in the act of adding
+      // to it (the `units` field's own block records that).
+      held.entries.push(entry)
     } else {
-      world.assets.push({ id: item.id, boughtWeek: world.week, paidCents, valueCents: Math.round(units * price), units })
+      world.assets.push({
+        id: item.id,
+        boughtWeek: world.week,
+        paidCents,
+        valueCents: Math.round(units * price),
+        units,
+        entries: [entry],
+      })
     }
   } else if (item.buildWeeks) {
     // ⭐⭐ ROUND 29 #5, §3f – COMMISSIONED. «The money leaves on order. The thing arrives N weeks
@@ -445,6 +463,13 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
       valueCents: paidCents,
       basisWeek: readyWeek,
       readyWeek,
+      // ⭐ v78 – THE ORDER WEEK AND NOT THE DELIVERY WEEK, because this entry records where the MONEY
+      // went, and on a commissioned thing the money leaves on order (§3f). `basisWeek` above is the
+      // separate question of when the VALUE clock starts, and the two deliberately disagree here.
+      // ⚠ NO `units` – a yacht is bought whole. `AssetEntry.units` is absent on every rung that
+      // carries no `unitBaseCents`, which is every car, house, boat, plane, academy stage and
+      // business; the branch above is the only one that has any.
+      entries: [{ week: world.week, cents: paidCents }],
     })
   } else {
     // ⭐⭐ ROUND 30 #9 – PRICED THE WEEK IT IS BOUGHT, not on the next tick. `revalueAssets` runs at
@@ -452,7 +477,15 @@ export function buyAsset(world: WorldState, itemId: string, stakeCents?: number,
     // rung this branch used to hold – `assetValueCents(item, paid, 0)` IS `paid`, to the cent, for a
     // car and a house – and would have been a visibly wrong figure on a BUSINESS, whose worth is not
     // what was paid for it. One function decides it, the same one `revalueAssets` will ask next week.
-    const row: OwnedAsset = { id: item.id, boughtWeek: world.week, paidCents, valueCents: paidCents }
+    // ⭐ v78 – and the one purchase this row will ever hold: a 'fixed' rung refuses a second copy,
+    // so this branch is the only one whose `entries` can never grow past one.
+    const row: OwnedAsset = {
+      id: item.id,
+      boughtWeek: world.week,
+      paidCents,
+      valueCents: paidCents,
+      entries: [{ week: world.week, cents: paidCents }],
+    }
     row.valueCents = assetWorthCents(world, row, item)
     world.assets.push(row)
   }
@@ -756,6 +789,27 @@ export function shopView(world: WorldState): ShopView {
       priceHistory: item.volBps
         ? unitPriceHistory(world.seed, world.week, item, Math.max(...SHOP_PRICE_RANGE_MONTHS))
         : null,
+      // ⭐⭐⭐ v78, ROUND 41 #22 – AND WHERE THE FAMILY BOUGHT. The row's own `entries`, copied onto
+      // the wire so the chart can put a mark on each one. `[]` on every rung nobody owns and on every
+      // holding that predates v78, which is the same sentence the save makes: no purchase was
+      // recorded, so no mark is drawn.
+      //
+      // ⚠ A COPY AND NOT THE ARRAY ITSELF – invariant 1's own hygiene. `Snapshot` is a projection and
+      // the worker owns the world; handing out the live array would put a mutable engine object on
+      // the wire, and a structured clone would hide the mistake rather than prevent it.
+      // ⚠ ROUNDED ONCE, HERE, and this view's own rule two fields up is why: the shelf's screen does
+      // no money arithmetic at all, so `cents / units` – the price ONE unit cost them that week –
+      // cannot be a division in a template. Null on a rung with no units, where the question has no
+      // answer. The entry itself is copied rather than handed out: `Snapshot` is a projection and the
+      // worker owns the world (invariant 1), so a live engine array may not cross this boundary.
+      purchases: mine
+        ? mine.entries.map((e) => ({
+            week: e.week,
+            cents: e.cents,
+            units: e.units ?? null,
+            unitPriceCents: e.units !== undefined && e.units > 0 ? Math.round(e.cents / e.units) : null,
+          }))
+        : [],
       unitsHeld: mine?.units ?? null,
       avgUnitPriceCents: mine ? roundOrNull(avgUnitPriceCents(mine)) : null,
       // ⚠ THE PRICE IS ON SCREEN EITHER WAY. This says whether the control is pressable, never

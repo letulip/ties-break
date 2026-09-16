@@ -306,8 +306,19 @@ describe('buying and selling', () => {
     // ...and it is on the finance ledger, which is what makes it visible on the Money breakdown.
     expect(financeWindow(world.financeWeeks, 0).byCategory.shop).toBe(-110_000_00)
     // No second currency: the asset is stored, the wallet is the wallet.
+    // ⚠ `entries` JOINS THE ROW AT v78 (round 41 #22) – one mark per purchase, so the fund's chart can
+    // say WHEN the family bought and WHAT they paid that week. A car is bought whole and bought once,
+    // so its list holds exactly one row and carries no `units`: this is the smallest possible witness
+    // of that field, and it is asserted rather than spread past, because a `toEqual` that stopped
+    // naming every key would stop being the «no second currency» pin it is here to be.
     expect(ownedAssets(world)).toEqual([
-      { id: 'car-good', boughtWeek: world.week, paidCents: 110_000_00, valueCents: 110_000_00 },
+      {
+        id: 'car-good',
+        boughtWeek: world.week,
+        paidCents: 110_000_00,
+        valueCents: 110_000_00,
+        entries: [{ week: world.week, cents: 110_000_00 }],
+      },
     ])
   })
 

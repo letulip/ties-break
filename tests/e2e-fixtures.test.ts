@@ -18,6 +18,10 @@ import {
   FORK_UNHEARD_REFUSAL,
 } from '../src/engine/world'
 import { mainStateConsistent, resumeMain } from '../src/engine/rng'
+// ⚠ The SAME helper `tools/e2e-fixtures.ts`' `belated` recipe uses in its look-ahead, and the same
+// press `e2e/journey.ts`' `answerOpeningKnock` gives in the browser – one implementation, three
+// callers, which is what stops the three drifting into three different opening weeks.
+import { drainKnock } from '../tools/_knocks'
 import { ECONOMY } from '../src/engine/economy'
 import { MOOD_WORD, SPIRIT_BANDS } from '../src/engine/spirit'
 import { ENDINGS } from '../src/engine/ending'
@@ -533,7 +537,28 @@ describe('e2e fixtures: each is the state its name promises', () => {
     const world = await decodeExportFile(readFixtureBytes('belated.tsave'))
     expect(world.ending, 'the belated fixture is meant to be a career still being played').toBeNull()
     expect(pendingLifeBeat(world), 'it is meant to boot with nothing to answer').toBeNull()
-    expect(advanceRefusal(world), 'and with nothing stopping the week').toBeNull()
+
+    // ⚠⚠ RE-AIMED 16.09 AT THE RECIPE'S OWN CLAUSE, AND THE MISMATCH WAS LATENT RATHER THAN NEW. This
+    // line read `expect(advanceRefusal(world)).toBeNull()`, copied from `breakup` a case up – and
+    // `breakup`'s recipe really does demand a career that boots with NOTHING in front of it, so there
+    // the copy is correct. `belated`'s recipe explicitly does NOT: its own ⚠ block argues at length
+    // that this state turns up on 1.9% of seeds, that half of the qualifying careers were being thrown
+    // away over an opening knock or an owed tour briefing, and that `e2e/journey.ts` walks through both
+    // (`answerOpeningKnock`, `dismissTourBriefing`) exactly as `junior` and `pro` have booted behind a
+    // knock since the corpus existed. So the recipe's own look-ahead answers the knock FIRST and asks
+    // «may time move» after – and this case must ask the same question at the same point, or it is
+    // measuring a week the browser never sits on.
+    //
+    // ⚠ IT WENT RED ON A REGENERATION AND NOT ON A CODE CHANGE, which is the part worth recording.
+    // Round 42 #7 put the domestic table on the rolling 52-week window, which changes which events she
+    // ENTERS and therefore moves every career in the corpus; the fixtures were not regenerated in that
+    // bundle, so `belated` still held `e2e-belated-671` – a career that happened to boot clean. The
+    // v78 bundle regenerated them (a schema bump must), the search landed on `e2e-belated-13`, and
+    // that one boots holding a knock the recipe is happy with and this line was not. CONTROLLED: the
+    // same regeneration run on a clean checkout of `697180be` produces the SAME seed and fails this
+    // same line, so nothing about v78 caused it.
+    drainKnock(world)
+    expect(advanceRefusal(world), 'and with nothing stopping the week once the knock is answered').toBeNull()
 
     // ⭐⭐⭐ THE STATE, IN THE SCHEMA'S OWN TERMS: a row that is ALREADY OVER, whose news is owed next
     // week, and which has never produced a beat of either kind. This is exactly the row

@@ -1764,6 +1764,28 @@ export function createWorld(
     // ROWS, written at the one `loveEpisodes.push` in world/lifeBeat.ts, which is why that version is
     // the first this ladder has ever had to peel INSIDE a list.
     spotlightHabituation: 0,
+    // ⭐⭐⭐ v78 (round 42 #35 + #45): THE PSYCHOLOGIST HAS CARRIED HER NOWHERE YET, AND NOBODY IS IN
+    // THE SPARRING SEAT. Zero is the identity here in the plainest sense: `composureBonus` is
+    // HEADROOM above her rolled ceiling, and on week 0 nothing has bought her any – so
+    // `composureCeilingOf` returns `potential.composure` exactly and `growWeek` is byte-identical to
+    // every week this engine has ever grown. The sparring pair is `false` and the middle rung, which
+    // is `masseurHired`/`masseurSessionsPerWeek` and `psychologistHired`/`psychologistRung` above.
+    //
+    // ⚠ NOW THE LAST THREE KEYS OF THE LITERAL, and `spotlightHabituation` has stopped being the
+    // last – the same handover it took from `wallsFlipped`, the wave-5 six from `spiritShock`, and
+    // so on down. Appended in THIS order, which is the order `careerHashAtSchema` peels them off in
+    // (reverse, newest first). ⚠⚠ v78's FOURTH FIELD IS NOT HERE AND CANNOT BE: `entries` lives on
+    // `OwnedAsset` ROWS, written at the three `assets.push` sites in world/shop.ts, so this version
+    // is the second – after v77 – whose peel has to reach inside a list.
+    composureBonus: 0,
+    sparringHired: false,
+    // ⚠ THE LITERAL `1` AND NOT A CONSTANT, ON PURPOSE. Every other seat's default reads its own
+    // `ECONOMY` block (`ECONOMY.psychologist.defaultRung` two screens up), and the sparring seat has
+    // no block yet – it is bundle 13's, with the ladder and the prices. Borrowing the
+    // psychologist's dial to avoid a literal would tie two seats' defaults together for cosmetic
+    // reasons, and the next author would have to untie them. When §4's rungs land, this becomes
+    // `ECONOMY.sparring.defaultRung` and the migration's back-fill stays whatever it shipped as.
+    sparringRung: 1,
   }
   addEvent(world, {
     week: 0,

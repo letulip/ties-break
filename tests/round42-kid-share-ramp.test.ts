@@ -245,7 +245,17 @@ describe('§4 nothing is persisted for any of it', () => {
   it('⭐⭐ the save schema does not move for round 42 #25', () => {
     // The ladder is three constants and the pause is a subtraction over v51 fields. If this item
     // ever needed a field it would need a migration and a golden fixture with it (invariant 3).
-    expect(SAVE_SCHEMA_VERSION, 'wave 6\'s number, untouched by this item').toBe(77)
+    //
+    // ⚠ RE-AIMED BY ROUND 42's v78 BUNDLE, NOT WEAKENED, AND THE RE-AIM IS THE CLAIM SAID PROPERLY.
+    // `toBe(77)` was never a statement about THIS item – it was «the ladder head is where wave 6 left
+    // it», which is a fact about somebody else's work that this file happened to be standing next to.
+    // Any later bundle taking a number of its own would have reddened it for a reason item 25 has no
+    // opinion about. What item 25 actually claims is that IT persists nothing, and that is asserted
+    // directly below: no key of this item's own appears on a fresh world, at any schema version.
+    const fresh = createWorld('r42-25-no-field') as unknown as Record<string, unknown>
+    expect(Object.keys(fresh).filter((k) => /kidShare|shareRamp|collegePaused/i.test(k)), 'item 25 stores nothing')
+      .toEqual([])
+    expect(SAVE_SCHEMA_VERSION, 'and the ladder has only ever gone forward since wave 6').toBeGreaterThanOrEqual(77)
   })
 
   it('⭐⭐ asking the question writes nothing', () => {

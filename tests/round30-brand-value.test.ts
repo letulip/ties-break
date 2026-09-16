@@ -170,7 +170,7 @@ describe('round 30 #9 §1 – the catalogue carries exactly one business valuati
     // academy stage handed a multiple by mistake must still be worth its floor and never the merch
     // dial – so the gate is repeated in `assetWorthCents`, and this is the arm that keeps it there.
     const land = shopItem('academy-land')!
-    const owned = { id: land.id, boughtWeek: 0, paidCents: land.entryCents, valueCents: land.entryCents }
+    const owned = { id: land.id, boughtWeek: 0, paidCents: land.entryCents, valueCents: land.entryCents, entries: [] }
     const mislabelled = { ...land, earningsMultipleX: shopItem(MERCH)!.earningsMultipleX }
     expect(assetWorthCents(w, owned, mislabelled), 'a non-earner priced on earnings is worth its floor')
       .toBe(Math.round(land.entryCents * ECONOMY.shop.businessValueFloorShare))
@@ -641,7 +641,7 @@ describe('round 30 #11 – what the engine does to the rungs that say they neith
       entryCents: 1_000_000_00,
       annualRateBps: 0,
     }
-    const owned = { id: flat.id, boughtWeek: 0, paidCents: flat.entryCents, valueCents: flat.entryCents }
+    const owned = { id: flat.id, boughtWeek: 0, paidCents: flat.entryCents, valueCents: flat.entryCents, entries: [] }
     for (const years of [1, 5, 15]) {
       const later = { ...w, week: years * WEEKS_PER_YEAR } as WorldState
       expect(assetWorthCents(later, owned, flat), `${flat.id} after ${years} seasons`).toBe(flat.entryCents)

@@ -1595,7 +1595,7 @@ once, quiet machine, exit codes from files; every DRAFT line lands in this file 
 
 
 
-- [ ] **35. «может быть даже сделать какую-то возможность превосходить заложенную с сидом выдержку с
+- [x] **35. «может быть даже сделать какую-то возможность превосходить заложенную с сидом выдержку с
   помощью психолога. Пусть и не сильно, но тем не менее» (15.09)** – **RULED the same day, all three
   numbers his.** Born out of #34's ruling: if nerve is going to be worth
   something, the seat that works on nerve should be able to move it – and his own example is the

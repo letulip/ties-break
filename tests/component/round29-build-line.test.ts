@@ -136,7 +136,13 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // migration, golden fixture v77, e2e fixtures regenerated), never by this line's item. The claim
     // above – «the BUILD-LINE wave moved no schema» – is untouched, and the pin still follows the
     // ladder's head so the sentence over it stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(77)
+    // ⚠ AND AGAIN AT v78 (16.09, round 42's three-customer bump – `composureBonus`, the sparring
+    // seat's two keys, and `entries` on every `OwnedAsset` row), NOT WEAKENED, for the THIRTEENTH
+    // time and for the reason verbatim: 78 was moved by that bundle with its full four-part move
+    // (bump, append-only migration, golden fixture v78, e2e fixtures regenerated, plus a spec),
+    // never by this line's item. The claim above – «the BUILD-LINE wave moved no schema» – is
+    // untouched, and the pin still follows the ladder's head so the sentence over it stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(78)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {

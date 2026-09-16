@@ -50,9 +50,40 @@ import {
   PRE_V75,
   PRE_V76,
   PRE_V77,
+  PRE_V78,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v78: rolling the schema back to 77 – dropping the three world keys AND `entries` off every `assets` ROW – reproduces the v77 hashes byte for byte', () => {
+    // ⚠⚠ THE WHOLE OF WHAT THE v78 BUNDLE DID TO A FROZEN CAREER, AS AN IDENTITY – the v77 case
+    // directly below, repeated one version up. v78 appends THREE keys to `createWorld`'s literal
+    // (`composureBonus`, `sparringHired`, `sparringRung`) and ONE field to the `OwnedAsset` ROW
+    // (`entries`). Peel the three, MAP `assets` and rest each row, roll the number back, and the
+    // ENTIRE serialisation returns byte for byte: `rngMain`, `results`, `events`, the wallet, the
+    // body, `skills`, `potential`, all ninety-odd.
+    //
+    // ⭐⭐⭐ AND THIS IS THE FIRST RUNG IN THE WHOLE LADDER WHOSE NEW KEY SHIPS WITH A LIVE READER,
+    // which changes what the case is worth and is worth saying out loud. v74, v75, v76 and v77 each
+    // shipped a seat NOTHING IN THE TREE COULD WRITE, so their identities were inert by construction
+    // and said so. `composureBonus` is read on every week of every career – `growWeek` asks
+    // `composureCeilingOf` for composure's ceiling – so this case is a real behavioural claim: these
+    // five careers never hire the psychologist (`walkFrozenCareer` ASSERTS `psychologistHired ===
+    // false`), the bonus can only move while he works the `'coolhead'` focus, so the effective
+    // ceiling is `potential.composure` to the bit and her build is untouched. The per-key control
+    // over `PRE_V78` measured exactly that: `skills` is byte-identical on all five cells.
+    //
+    // ⚠ THE NESTED HALF OF THIS PEEL HAS NO WITNESS IN THIS FILE, unlike v77's. `assets` is `[]` on
+    // all five careers – 156 weeks, she is 16.6, no bench policy buys a shop rung – so the map runs
+    // zero times here. What witnesses it is the golden corpus (fourteen fixtures, 75 asset rows) and
+    // the crafted world in tests/round42-v78-schema.test.ts. Named so nobody reads a green line here
+    // as coverage of `entries`.
+    //
+    // ⚠ IF THIS GOES RED BESIDE A RED FREEZE, the bundle moved a career and not just a schema.
+    expect(careerHashAtSchema(5, 0, 77), '25k · middle coach · grinder').toBe(PRE_V78.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 77), '120k · elite coach · grinder').toBe(PRE_V78.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 77), '8k · self-coached · player').toBe(PRE_V78.selfTravelling)
+  })
+
   it('⭐⭐⭐ v77: rolling the schema back to 76 – dropping the world key AND the four fields v77 put on every `loveEpisodes` ROW – reproduces the v76 hashes byte for byte', () => {
     // ⚠⚠ THE WHOLE OF WHAT THE SPOTLIGHT, STEP 1 DID TO A FROZEN CAREER, AS AN IDENTITY – the v76
     // case directly below, repeated one version up, except that this one is NOT the same shape as its

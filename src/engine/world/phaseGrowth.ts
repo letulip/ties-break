@@ -26,6 +26,9 @@ import {
   ageCurveOf,
   coolheadCrossedAPoint,
   coolheadGain,
+  composureBonusAfterWeek,
+  composureCeilingOf,
+  composureEaseThisWeek,
   growWeek,
   physicalMean,
   COOLHEAD_RECEIPT,
@@ -121,7 +124,39 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   //     re-spelling of it. ⚠ ZERO DRAWS – three reads and a multiply.
   const coolheadRung = psychologistWorkingRung(world, 'coolhead')
   const composureBefore = world.skills.composure
-  const coolhead = coolheadGain(composureBefore, world.potential.composure, coolheadRung)
+  // ⭐⭐⭐ v78 T35 – AND THE BONUS MOVES BEFORE THE WEEK IS GROWN. Up by 1/52 of a point of HEADROOM
+  //     while the seat works this focus, down by 0.2/52 while it does not, bounded at 0 and at +5:
+  //     `composureBonusAfterWeek` holds the whole rule and `ECONOMY.psychologist` holds the owner's
+  //     three numbers. See engine/development.ts's «PAST THE CEILING» block for the mechanism.
+  //
+  // ⚠⚠ BEFORE, NOT AFTER, AND THE ORDER IS A DECISION. The ceiling this week is the ceiling the
+  //     bonus SAYS this week – so the point a season of work buys is available to be climbed into on
+  //     the week it is bought, rather than a week late for ever. The alternative reads one week
+  //     stale at every step and compounds the lag over five seasons.
+  //
+  // ⚠⚠ THIS IS THE ONE WRITE OUTSIDE `growWeek`, AND IT IS NOT A WRITE TO `world.skills`. §3b-bis
+  //     below depends by name on `growWeek` being the only thing in the engine that moves her build,
+  //     and that stays literally true: the bonus is HEADROOM and lives on its own key, and the one
+  //     term that can lower composure (`composureEase`) is handed to `growWeek` to spend.
+  //
+  // ⚠ ZERO DRAWS ON ANY STREAM – a constant, a clamp, a compare. A career that never hires the seat
+  //     reaches `max(0, 0 - step)` = 0 every week for ever, so `composureBonus` stays 0, the
+  //     effective ceiling stays `potential.composure`, the ease stays 0, and the growth below is
+  //     byte-identical to every week this engine has grown since v25. The frozen capture
+  //     (41550 / e6b0c709) cannot see any of it.
+  const bonusBefore = world.composureBonus
+  world.composureBonus = composureBonusAfterWeek(bonusBefore, coolheadRung !== undefined)
+  const composureCeiling = composureCeilingOf(world.potential.composure, world.composureBonus)
+  const composureEase = composureEaseThisWeek(
+    composureBefore,
+    composureCeiling,
+    Math.max(0, bonusBefore - world.composureBonus),
+  )
+  // ⚠ v78 RE-AIMED THE RECEIPT'S OWN CLAMP TOO, and it had to: this local is the counterfactual the
+  //     feed line is decided against (3b-ter), so a ceiling here that differed from the one the loop
+  //     inside `growWeek` uses would make the receipt claim a point his term did not carry. One home,
+  //     one number, both calls.
+  const coolhead = coolheadGain(composureBefore, composureCeiling, coolheadRung)
   world.skills = growWeek({
     skills: world.skills,
     potential: world.potential,
@@ -192,6 +227,12 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     // ⚠ ZERO DRAW IMPLICATIONS – `growWeek` keeps `seed:growth:<week>`, one pull, in its own position
     // before the per-skill loop; the term is a summand written after it.
     coolheadRung,
+    // ⭐⭐⭐ v78 T35 – THE TWO FIELDS ROUND 42 #35 HANDS THIS PASS, and both are computed above rather
+    // than here so the RECEIPT at 3b-ter can be decided against exactly the numbers the loop spends.
+    // On every career with `composureBonus === 0` the ceiling IS `potential.composure` and the ease
+    // is 0, which is every career written before v78 and every career that never hires the seat.
+    composureCeiling,
+    composureEase,
   })
 
   // 3b-bis. ⭐⭐⭐ ...AND THE BEST HER BODY HAS EVER BEEN IS REMEMBERED (v62, the long goodbye step 1 –

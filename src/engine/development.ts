@@ -741,6 +741,95 @@ export function coolheadGain(composure: number, ceiling: number, rung: 0 | 1 | 2
   return Math.min(perSeason / WEEKS_IN_SEASON, Math.max(0, ceiling - composure))
 }
 
+// =================================================================================================
+// ⭐⭐⭐ PAST THE CEILING – ROUND 42 #35, v78's `composureBonus`
+// =================================================================================================
+//
+// THE OWNER, 15.09: «может быть даже сделать какую-то возможность превосходить заложенную с сидом
+// выдержку с помощью психолога. Пусть и не сильно, но тем не менее» – and the three numbers the same
+// day, all his: «+5 потолок, по очку за сезон… 0.2пп за сезон без этой тренировки».
+//
+// ⚠⚠ THE MECHANISM IS HEADROOM, NOT POINTS, and every line below exists to keep it that way. The
+// bonus raises the ceiling composure is allowed to climb to; ordinary development does the climbing,
+// on its own rate, its own luck and its own aim. A bonus point is therefore EARNED TWICE – the seat
+// buys the room, the training fills it – and `growWeek` stays the only thing in this engine that
+// moves `world.skills`, which is a property `phaseGrowth`'s §3b-bis depends on by name.
+//
+// ⚠⚠ AND THE DECAY IS SCOPED TO THE BONUS ALONE. The owner's clarification is the load-bearing half
+// of the item: «чтобы у нас обычный естественный прирост тоже работал, т.е. пока она растёт и без
+// психолога у неё всё равно этот навык может тренироваться в зависимости от сида». So below her
+// rolled ceiling NOTHING here is reachable – `composureBonus` is 0, `composureCeilingOf` returns
+// `potential.composure`, the ease is 0, and the week's arithmetic is byte-identical to every week
+// this engine has ever grown. Item 32's audit measured that natural growth taking 100% and 92% of
+// its room on the owner's own two careers; it does not need help and does not get any.
+//
+// ⚠⚠ THE ARCHITECT'S PROPOSAL SAID «the age-creep clamp that already exists eases her value down
+// with it», AND THERE IS NO SUCH CLAMP. Measured, not assumed: composure's `loss` is 0 by
+// `isPhysicalSkill` (literally `k !== 'composure'`), `gain`, `veteranPoise` and `coolhead` are all
+// ≥ 0, and `Math.max(d.floor, …)` is a FLOOR. Composure cannot fall anywhere in this file, which
+// `coolheadCrossedAPoint`'s own note states as a measured property. Left alone, a falling effective
+// ceiling would simply freeze her – the headroom clamps to 0 and the points the bonus bought would
+// stay in her build for ever, so «откат» would be a number in the save that never reached the
+// screen. The easing is therefore BUILT, and it is built narrow: see `composureEaseThisWeek`.
+
+/** HER EFFECTIVE COMPOSURE CEILING – the rolled one plus whatever the psychologist's years have
+ *  bought. The one home for «what is composure allowed to climb to», asked by `growWeek`'s headroom,
+ *  by `coolheadGain`'s clamp and by the ease below, so the three can never drift apart.
+ *
+ *  ⚠ AT `bonus = 0` IT IS `potential.composure` TO THE BIT, which is what makes every career that
+ *  never hires the seat – and every career that predates v78 – byte-identical. Pure, zero draws. */
+export function composureCeilingOf(potentialComposure: number, bonus: number): number {
+  return potentialComposure + bonus
+}
+
+/** WHAT THE BONUS IS WORTH AFTER ONE WEEK – up while the seat works the nerve focus, down while it
+ *  does not, bounded at 0 and at the cap.
+ *
+ *  ⚠ PER WEEK, OFF PER-SEASON CONSTANTS – `coolheadGain`'s own shape, and not a re-reading of his
+ *  numbers: a whole season worked is exactly `composureBonusPerSeason` and a whole season idle
+ *  exactly `composureBonusDecayPerSeason`. What the per-week form buys is that a PART season is
+ *  proportional rather than needing an invented threshold for «continuous», which matters because
+ *  the seat stands down by design on a college freeze and a booked family week – a season-boundary
+ *  rule would have had to decide whether a family holiday voids the year.
+ *
+ *  ⚠ THE FLOOR AT 0 IS WHY A CAREER THAT NEVER HIRES IS INERT: `max(0, 0 − step)` is 0, every week,
+ *  for ever, so the decay arm cannot run on a bonus that was never earned. Pure, total, ZERO draws –
+ *  a constant, a clamp and a compare. */
+export function composureBonusAfterWeek(bonus: number, workingCoolhead: boolean): number {
+  const p = ECONOMY.psychologist
+  const step = workingCoolhead
+    ? p.composureBonusPerSeason / WEEKS_IN_SEASON
+    : -p.composureBonusDecayPerSeason / WEEKS_IN_SEASON
+  return Math.min(p.composureBonusCap, Math.max(0, bonus + step))
+}
+
+/** ⭐⭐ HOW MUCH COMPOSURE THIS WEEK'S DECAY TAKES BACK – the «откат» made visible, and the one place
+ *  in this engine where composure can fall.
+ *
+ *  `min(this week's fall in the bonus, how far she is above the NEW effective ceiling)`, and BOTH
+ *  bounds are load-bearing:
+ *
+ *  ⚠⚠ THE SECOND BOUND IS WHAT SCOPES IT TO THE BONUS. A career that bought headroom and never
+ *  climbed into it – the seat hired, the training pointed elsewhere – sits BELOW the new ceiling,
+ *  the excess is 0, and nothing is taken: there is no banked point to slip back from, which is the
+ *  «earned twice» property running in reverse. Only a career that actually filled the room can lose
+ *  what filling it gained.
+ *
+ *  ⚠⚠ THE FIRST BOUND IS WHAT PROTECTS `veteranPoise`. Past `declineStart` composure legitimately
+ *  parks ABOVE its ceiling – `veteranPoise` is +0.004 a week and nothing clamps it, which
+ *  `coolheadGain`'s note has said since v76. Without the `fall` bound a decaying career would be
+ *  clamped flat onto the effective ceiling and a veteran's poise would be eaten whole. With it, the
+ *  most any week can take is the week's own decay step, so the two mechanics simply sum: an idling
+ *  veteran loses 0.2 a season here and gains 0.208 from poise, and her NUMBER barely moves while her
+ *  bonus unwinds. That is two honest terms adding up, and it is named here rather than discovered.
+ *
+ *  ⚠ ZERO WHENEVER THE BONUS IS NOT FALLING, so a career that never hires, and a career working the
+ *  focus today, both reach this for exactly 0. Pure, total, ZERO draws. */
+export function composureEaseThisWeek(composure: number, ceilingAfter: number, fall: number): number {
+  if (!(fall > 0)) return 0
+  return Math.min(fall, Math.max(0, composure - ceilingAfter))
+}
+
 /** ⭐⭐ DID HIS TERM CARRY HER OVER A WHOLE POINT THIS WEEK – the receipt's trigger, as one
  *  expression, exported so the caller reads the engine's own rule instead of re-typing it.
  *
@@ -853,6 +942,33 @@ export function growWeek(args: {
    *  a no-op default is this function's standing shape for a fact only some weeks have.
    *  ZERO RNG IMPLICATIONS: a roster position, drawn nowhere. */
   coolheadRung?: 0 | 1 | 2
+  /** ⭐⭐⭐ v78, ROUND 42 #35 – HER EFFECTIVE COMPOSURE CEILING: the rolled one plus whatever the
+   *  psychologist's years have bought (`composureCeilingOf`). It replaces `potential.composure` in
+   *  the headroom term AND in `coolheadGain`'s clamp, so ordinary development does the climbing into
+   *  the room the seat paid for – which is the whole mechanism, stated once in the «PAST THE
+   *  CEILING» block above.
+   *
+   *  ⚠⚠ COMPOSURE ONLY, AND THE PREDICATE IS ASKED RATHER THAN RE-SPELLED. `isPhysicalSkill` is
+   *  literally `k !== 'composure'` and its own note forbids a second home for that answer, so this
+   *  argument rides the same predicate `loss`, `veteranPoise` and `coolhead` already ride. No other
+   *  attribute has an effective ceiling and none ever should: the seed's ceiling binds every other
+   *  wing, which is what item 35 promises and what keeps `potential` the thing it has always been.
+   *
+   *  ⚠ UNDEFINED EVERYWHERE ELSE, and `?? potential.composure` is the default – so every existing
+   *  call site is byte-identical and no shipped career's growth moves. `trainFactor`'s own promise
+   *  and this function's standing shape. ZERO RNG IMPLICATIONS: a number, added to another. */
+  composureCeiling?: number
+  /** ⭐⭐⭐ v78, ROUND 42 #35 – WHAT THIS WEEK'S DECAY TAKES BACK, in composure points, already
+   *  bounded by `composureEaseThisWeek` before it arrives. The ONE term in this function that can
+   *  lower composure, and it is here rather than in the caller for a mechanical reason, not a tidy
+   *  one: `growWeek` is the ONLY thing in the engine that moves `world.skills`
+   *  (`world/phaseGrowth.ts`'s §3b-bis depends on that by name to keep `peakPhysical` honest), so
+   *  «she slipped back a little» has to be a summand here or that sentence stops being true.
+   *
+   *  ⚠ ZERO EVERYWHERE ELSE – on every week of every career that never hired the seat, and on every
+   *  week the focus IS being worked. See `composureEaseThisWeek` for both bounds and for why
+   *  `veteranPoise` survives it. ZERO RNG IMPLICATIONS: a subtraction. */
+  composureEase?: number
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
@@ -881,9 +997,16 @@ export function growWeek(args: {
   // out byte-identical. See `aimWeights`.
   const aim = aimWeights(planWeek(plan))
 
+  // ⭐⭐⭐ v78 T35 – WHAT COMPOSURE IS ALLOWED TO CLIMB TO THIS WEEK. `potential.composure` on every
+  // career that never hired the seat and on every save written before v78, so the loop below is
+  // byte-identical there; `potential.composure + composureBonus` once the psychologist's years have
+  // bought her room. ⚠ ONE HOME: the headroom term AND `coolheadGain`'s clamp both read THIS local,
+  // never `potential.composure` again, which is what stops the two drifting apart.
+  const composureCeiling = args.composureCeiling ?? potential.composure
   const out = {} as KidSkills
   for (const k of SKILL_KEYS) {
-    const headroom = Math.max(0, potential[k] - skills[k])
+    const ceiling = isPhysicalSkill(k) ? potential[k] : composureCeiling
+    const headroom = Math.max(0, ceiling - skills[k])
     const gain = rate * headroom * luck * aim[k]
     // Composure keeps rising past the peak – experience is the one thing that does not fade.
     // ⚠ THE PREDICATE, NOT A REPEAT OF IT (v62). These two lines used to spell `k !== 'composure'`
@@ -902,8 +1025,16 @@ export function growWeek(args: {
     // is ASKED here for the same reason `loss` and `veteranPoise` ask it one line up – one home for
     // "which attribute is the calm one" – and `coolheadGain` returns 0 whenever `coolheadRung` is
     // undefined, which is every week of every career the seat is not working this focus for.
-    const coolhead = isPhysicalSkill(k) ? 0 : coolheadGain(skills[k], potential[k], args.coolheadRung)
-    out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise + coolhead)
+    // ⚠ v78 RE-AIMED THE CLAMP AND NOT THE TERM. This read `potential[k]`; it now reads the
+    // EFFECTIVE ceiling, so his term fills the room his own years bought instead of stopping at a
+    // line the bonus has already moved. Identical on every career with `composureBonus === 0`,
+    // which is every career before v78 and every career that never hires him.
+    const coolhead = isPhysicalSkill(k) ? 0 : coolheadGain(skills[k], ceiling, args.coolheadRung)
+    // ⭐⭐⭐ v78 T35 – AND THE ONE TERM IN THIS ENGINE THAT LOWERS COMPOSURE: the «откат» of an idle
+    // season, already bounded twice by `composureEaseThisWeek` before it got here. 0 on every week
+    // of every career that never bought headroom, and 0 on every week the focus is being worked.
+    const ease = isPhysicalSkill(k) ? 0 : (args.composureEase ?? 0)
+    out[k] = Math.max(d.floor, skills[k] + gain - loss + veteranPoise + coolhead - ease)
   }
   return out
 }

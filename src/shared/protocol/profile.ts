@@ -364,6 +364,40 @@ export interface RecoveryBuff {
  *    3. THE SEAM IS KEPT WITHOUT THE STATE. `sellableAsset` in `world/shop.ts` is the predicate
  *       slice 4 widens, and slice 3's build wait is a second predicate beside it – neither needs a
  *       field to exist today, and both name the fields they will read when they do. */
+
+/** ⭐⭐⭐ v78, ROUND 41 #22 – ONE PURCHASE, REMEMBERED: the week the money left, what left, and what
+ *  it bought. A row of `OwnedAsset.entries`, appended and never rewritten.
+ *
+ *  THE OWNER, round 41 #22: «В index fund можем делать отметки на графике когда была покупка с микро
+ *  попап при hover/клике с суммой и датой?»
+ *
+ *  ⚠⚠ IT EXISTS BECAUSE NOTHING ELSE IN THE SAVE CAN ANSWER «WHEN, AND HOW MUCH», and round 41
+ *  measured that rather than assumed it: `boughtWeek` is the FIRST buy only, `paidCents` a blended
+ *  net sum that a top-up adds to and a part sale scales down, the feed rows un-keyed prose capped at
+ *  400/50 and prunable, the ledger weekly category totals that mix buys, sells and upkeep. The
+ *  degraded single-mark version – one mark at `boughtWeek` carrying `paidCents` – would print a
+ *  number the family never paid on any topped-up holding, and that is why the item waited a month
+ *  for a schema move instead of shipping a mark that lies.
+ *
+ *  ⚠ `units` IS ABSENT ON A RUNG THAT HAS NO UNITS, exactly as `OwnedAsset.units` is and for the
+ *  identical reason: a car, a house, a boat and an academy stage are bought whole, and a count of
+ *  shares on one of them would be a number with nothing behind it. Present on every unit-priced
+ *  purchase, where it is the fractional count that week's price bought.
+ *
+ *  ⚠⚠ THE SUM OF `cents` OVER THE ENTRIES IS **NOT** `paidCents`, AND NOBODY SHOULD MAKE IT ONE.
+ *  `paidCents` is «the cost of what is STILL HELD» – its own note says so, and a part sale takes the
+ *  cost of the units that left back out of it. These rows are what the family DID: a purchase that
+ *  happened stays on the chart after half the holding is sold, because it happened. A WHOLE sale
+ *  deletes the row and takes its entries with it, which is right – there is no chart left to mark. */
+export interface AssetEntry {
+  /** the week the money left the wallet. */
+  week: number
+  /** what left the wallet for THIS purchase, in cents, whole. */
+  cents: number
+  /** what it bought, in units, at that week's price – absent on a rung that carries no units. */
+  units?: number
+}
+
 export interface OwnedAsset {
   /** the `ECONOMY.shop.catalogue` id – one row per id, never two (see `WorldState.assets`). */
   id: string
@@ -512,4 +546,37 @@ export interface OwnedAsset {
    *  it arrived»), so no migration is owed and `SAVE_SCHEMA_VERSION` does not move. The spec named
    *  this field and this exact reasoning a slice in advance (§12a). */
   readyWeek?: number
+  /** ⭐⭐⭐ v78, ROUND 41 #22 – EVERY PURCHASE THE FAMILY MADE INTO THIS ROW, oldest first. Appended
+   *  by `buyAsset` and rewritten by nothing; `AssetEntry` above carries the shape and the argument.
+   *
+   *  ⚠⚠ REQUIRED, AND THAT IS THE WHOLE REASON v78 IS A SCHEMA MOVE RATHER THAN AN OPTIONAL KEY.
+   *  Four fields on this very interface (`realisedGainCents?`, `realisedCostCents?`, `basisWeek?`,
+   *  `readyWeek?`) shipped WITHOUT a bump, each under the rule the line above states: absence
+   *  already meant something true, so no career had to be told anything. That rule does not reach
+   *  here. Absence would mean «this row's purchases were never recorded» – true of every historical
+   *  row and FALSE of every row written from this version on – and a reader holding
+   *  `entries === undefined` cannot tell the two apart. So the field is required, the migration
+   *  walks every row of every save and writes the empty list, and «no marks on this chart» becomes a
+   *  fact the save STATES rather than a gap a reader has to interpret.
+   *
+   *  ⚠⚠ THE BACK-FILL IS `[]` AND IT IS EXACTLY TRUE, NOT A BARGAIN – v73/v74/v75/v76/v77's own
+   *  discipline one rung on. The tempting alternative is one reconstructed entry from `boughtWeek`
+   *  and `paidCents`, and round 41 #22 REFUSED it with the measurement in hand: on any holding that
+   *  was ever topped up or part-sold, `paidCents` is a blended net figure and the mark would print a
+   *  sum the family never paid on any single week. `[]` says «this career recorded no purchases»,
+   *  which is precisely what a save written before this version is – the road did not exist, so
+   *  nothing drove down it. The chart draws no mark, and it draws none because there is none.
+   *
+   *  ⭐ AND THE GOLDEN CORPUS CAN WITNESS THIS BACK-FILL, which `migrations.ts`'s standing note says
+   *  v77's could not. FOURTEEN fixtures carry real asset rows and 75 rows in all – v65 (2), v66 (1),
+   *  v67 through v78 (6 each) – so the per-row walk executes on the corpus instead of zero times.
+   *  ⚠ COUNT IT, DO NOT QUOTE IT (CLAUDE.md's own rule about a stale number surviving):
+   *  `node -e "…readdirSync('tests/fixtures/saves')… s.assets.length"`. ⚠⚠ AND CARRYING THE ROWS IS
+   *  NOT THE SAME AS WITNESSING THE WALK – measured, and the first draft of this note got it wrong.
+   *  `goldenSaves.test.ts` asserted nothing about `assets` at all, so the step ran on 75 rows and was
+   *  checked on none of them: a mutation that skipped every fixture's first row was invisible there
+   *  (3 RED, all of them in the crafted file). The per-fixture walk now carries the assertion, and
+   *  the same arm is 16 RED. The crafted witness in `tests/round42-v78-schema.test.ts` stays, because
+   *  it holds shapes the corpus does not: mixed rows, a row that already has entries, and key order. */
+  entries: AssetEntry[]
 }

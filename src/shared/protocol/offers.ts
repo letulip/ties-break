@@ -434,6 +434,32 @@ export const SHOP_PRICE_RANGE_MONTHS = [6, 12, 24, 60] as const
 
 /** One point of a rung's price chart: the career week the month opened on, and that month's AVERAGE
  *  unit price in WHOLE cents. Rounded once, in the engine – no screen divides a price. */
+/** ⭐⭐⭐ v78, ROUND 41 #22 – ONE MARK ON THE FUND'S CHART: when the family bought, what left the
+ *  wallet, and what a unit cost them that week.
+ *
+ *  ⚠⚠ IT IS A VIEW AND NOT THE PERSISTED `AssetEntry`, and the extra field is the whole reason.
+ *  `unitPriceCents` is `cents / units` – money arithmetic – and THE SHELF'S SCREEN DOES NOT PRICE
+ *  ANYTHING (`ShopRowView.unitPriceCents`'s own rule, and `MoneyScreen`'s: every figure is whole
+ *  cents the engine already rounded, and the chart geometry maps cents onto a viewBox and does no
+ *  money arithmetic at all). Rounded ONCE, in `shopView`, exactly as the row's own unit price is.
+ *  Storing it would have been the alternative and it is refused for the reason `avgUnitPriceCents`
+ *  is not stored either: it is derivable from two numbers the save already holds, to the cent.
+ *
+ *  ⚠ `units` AND `unitPriceCents` ARE BOTH NULL ON A RUNG WITH NO UNITS – a car, a house, a boat, an
+ *  academy stage. Those rungs carry no chart either, so nothing draws these marks today; the fields
+ *  are null rather than absent because a view is read by a template and `null` renders as a decision
+ *  while `undefined` renders as a bug. */
+export interface ShopPurchaseView {
+  /** the week the money left the wallet. */
+  week: number
+  /** what left the wallet for THIS purchase, in whole cents – never the holding's running total. */
+  cents: number
+  /** what it bought, in units, or null on a rung that has none. Fractional, like `unitsHeld`. */
+  units: number | null
+  /** what ONE unit cost them that week, in whole cents – `cents / units`, rounded once here. */
+  unitPriceCents: number | null
+}
+
 export interface ShopPricePoint {
   week: number
   cents: number
@@ -547,6 +573,26 @@ export interface ShopRowView {
    *  its first season has three points because three months have happened. Never longer than the
    *  largest of `SHOP_PRICE_RANGE_MONTHS`. */
   priceHistory: ShopPricePoint[] | null
+  /** ⭐⭐⭐ v78, ROUND 41 #22 – WHERE THE FAMILY BOUGHT, oldest first: one row per purchase into this
+   *  holding, each with its own week, its own money and the units that week's price bought.
+   *
+   *  THE OWNER, round 41 #22: «В index fund можем делать отметки на графике когда была покупка с
+   *  микро попап при hover/клике с суммой и датой?»
+   *
+   *  ⚠⚠ IT IS THE ROW'S `OwnedAsset.entries`, COPIED, and that field's own block carries the whole
+   *  argument for why it had to be persisted rather than derived – `boughtWeek` is the first buy
+   *  only, `paidCents` a blended net sum, the feed prunable, the ledger a weekly total. This is the
+   *  one thing on this view that a save written before v78 genuinely cannot supply.
+   *
+   *  ⚠ EMPTY ON EVERY RUNG NOBODY OWNS, and empty on every holding bought before v78 – which is the
+   *  same sentence the save makes rather than a gap: no purchase was recorded, so no mark is drawn.
+   *  Unlike `priceHistory` above it is never null, because «not owned» and «owned, nothing recorded»
+   *  are both honestly the empty list and a third state would be a distinction with no reader.
+   *
+   *  ⚠ THE SUM OF `cents` HERE IS NOT `paidCents` ON THIS SAME ROW once a part sale has happened,
+   *  and nobody should make it one: `paidCents` is the cost of what is STILL HELD, and these are what
+   *  the family DID. See `AssetEntry`. */
+  purchases: ShopPurchaseView[]
   /** can the family afford to open this rung THIS WEEK? False never hides the row and never draws a
    *  progress bar (§2: «never a locked row, a progress bar or a teaser») – the price stays on screen
    *  and the control is simply not pressable. */

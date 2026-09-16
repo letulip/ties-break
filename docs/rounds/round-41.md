@@ -1122,7 +1122,7 @@ of wave 3 was still in flight when the round opened, and the round must sit ON w
   Full record: the two `docs/decisions.md` entries of 12.09 and `docs/specs/one-market-2026-09.md`;
   the whole build is in the P1 block of «The owner's second visit» below.
 
-- [?] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
+- [x] **22. «В index fund можем делать отметки на графике когда была покупка с микро попап при
   hover/клике с суммой и датой?»** – **PARKED FOR v76, honestly, per the no-schema rule.** Purchase
   marks need `(week, amount)` per BUY and no persisted road exists: `boughtWeek` is first-buy-only,
   `paidCents` a blended net sum, the feed rows un-keyed prose capped 400/50 and prunable, the

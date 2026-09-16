@@ -24,7 +24,7 @@ import type { WorldState } from '../src/engine/world'
 function parkedWorld(): WorldState {
   const world = createWorld('w6-reachable-reads', { ...DEFAULT_PROFILE })
   world.fundsCents = -5_000_00
-  world.assets.push({ id: 'deposit', boughtWeek: 0, paidCents: 20_000_00, valueCents: 20_000_00, units: 20 })
+  world.assets.push({ id: 'deposit', boughtWeek: 0, paidCents: 20_000_00, valueCents: 20_000_00, units: 20, entries: [] })
   return world
 }
 

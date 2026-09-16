@@ -75,12 +75,15 @@ const game = useGameStore()
  *  ruling made true of them. The owner rules on the words (invariant 4); this is a DRAFT, reported
  *  verbatim in docs/rounds/round-42.md #7.
  *
- *  ⚠ ASK, NOT TAKEN: the shared bullet lower down still reads «On the International and Professional
- *  tables, results older than 52 weeks drop out» – an enumeration that EXCLUDES the National table
- *  and was true only while that table was a season race. Item 7 licensed this block's domestic copy
- *  and nothing else, so that sentence is left exactly as it is and its re-draft is an ask in the
- *  ledger. Until he rules, the card states the 52-week window in the National block and omits it from
- *  the bullet – incomplete rather than wrong, and named here so nobody reads it as an oversight. */
+ *  ⭐⭐ THE ASK WAS TAKEN, AND THE OWNER APPROVED THE REPLACEMENT VERBATIM (16.09). The shared bullet
+ *  lower down read «On the International and Professional tables, results older than 52 weeks drop
+ *  out» – an enumeration that EXCLUDED the National table and was true only while that table was a
+ *  season race. Item 7 put the domestic ladder on the same rolling window, so the enumeration had
+ *  become the sentence naming the wrong set. It now reads «On every table, results older than 52
+ *  weeks drop out – points must be defended.», which is his own wording and the only word on this
+ *  card that moved. ⚠ ONE SENTENCE AND NO OTHER: the three block lines above, the two bullets beside
+ *  it and every heading are exactly as he last read them (invariant 4 – a string nobody touched
+ *  cannot regress). */
 const LADDER_RULE: Record<LadderTrack, string> = {
   domestic: 'Her best 6 results from the last 52 weeks.',
   itf: 'Her best 6 Junior Tour results from the last 52 weeks.',
@@ -150,7 +153,7 @@ const blocks = computed(() =>
              they convert to open ones for a player who has never been in a Slam or a 1000 draw, which
              is every player this dialog is read by until she is inside the top 50. -->
         <li class="hint">A new result only raises the total if it beats the weakest counted one.</li>
-        <li class="hint">On the International and Professional tables, results older than 52 weeks drop out – points must be defended.</li>
+        <li class="hint">On every table, results older than 52 weeks drop out – points must be defended.</li>
         <li class="hint">National points are what open her next tier. The Junior Tour reads her international rank.</li>
       </ul>
     </div>

@@ -5138,6 +5138,38 @@ export const ECONOMY = {
      *  is `min(rate, headroom)`, so a higher rung is never worth less than a lower one on any week –
      *  the equality case is the ceiling, where all three are 0 and the focus is finished. */
     coolheadPerSeason: [1.5, 2.5, 3.5],
+    /** ⭐⭐⭐ ROUND 42 #35, v78 – PAST THE CEILING: THE THREE NUMBERS ARE THE OWNER'S OWN, RULED
+     *  15.09 and quoted rather than tuned. «+5 потолок, по очку за сезон, постоянный (здесь не
+     *  уверен, можно всё таки небольшой откат сделать мне кажется, например 0.2пп за сезон без этой
+     *  тренировки, мне кажется это вполне ок)».
+     *
+     *  `composureBonusCap` – how far above her rolled ceiling sustained work can carry her, in
+     *  composure points. Five is about a fifth of the biggest nerve draw the game deals
+     *  (`potentialBand` tops out at +26), so the seed still decides who she is and the seat decides
+     *  how much further than that a patient family can take her.
+     *
+     *  `composureBonusPerSeason` – a season of continuous work on the `'coolhead'` focus is worth
+     *  exactly one point of headroom, so the cap is a FIVE-SEASON project and nobody buys it inside
+     *  one wave. ⚠ IT IS FLAT ACROSS THE RUNGS, unlike `coolheadPerSeason` above, and that is the
+     *  design rather than an omission: the rung already prices how fast she CLIMBS to a ceiling, and
+     *  pricing how high the ceiling goes on the same dial would pay the top rung twice for one
+     *  purchase. The owner named one number, not three.
+     *
+     *  `composureBonusDecayPerSeason` – what an idle season costs. ⚠ HIS WORD IS «пп» AND THE BONUS
+     *  IS IN COMPOSURE POINTS, so this is READ as a fifth of a point per idle season – a fifth of
+     *  the earning rate, so a family that stops working keeps almost all of it and a full +5 takes
+     *  twenty-five idle seasons to unwind, which is longer than any career. That reading is written
+     *  down in round 42 #35 rather than assumed silently; if he meant a fifth of a percentage point
+     *  of match win rate, this constant is where the correction lands.
+     *
+     *  ⚠ ALL THREE ARE PER SEASON AND SPENT PER WEEK (`composureBonusAfterWeek` divides by
+     *  `WEEKS_IN_SEASON`), which is `coolheadPerSeason`'s own shape three lines up. A whole season
+     *  worked is exactly +1 and a whole season idle exactly −0.2; a part season is proportional,
+     *  which is what keeps «continuous» from needing an invented threshold on a seat that STANDS
+     *  DOWN by design for a college freeze and a booked family week. */
+    composureBonusCap: 5,
+    composureBonusPerSeason: 1,
+    composureBonusDecayPerSeason: 0.2,
     /** ⭐⭐⭐ «LEARNING TO LISTEN» – THE CHANCE THE PARENT READS HER PLAINLY, BY RUNG (v76, wave 5's
      *  T6). The spec's §2 row, verbatim: «the feed line's wording becomes legible with probability
      *  **0.6 / 0.8 / 0.95 per beat by rung** – a matched reaction becomes the parent's skill, never a

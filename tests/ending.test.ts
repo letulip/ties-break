@@ -1176,8 +1176,8 @@ describe('the album – seven pages, every career', () => {
   it('⭐ #10 – the ending view names the academy: stages standing, and what it earns', () => {
     const { world } = freshWorld('ending-academy')
     world.assets = [
-      { id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00 },
-      { id: 'academy-courts', boughtWeek: 120, paidCents: 3_000_000_00, valueCents: 3_000_000_00 },
+      { id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00, entries: [] },
+      { id: 'academy-courts', boughtWeek: 120, paidCents: 3_000_000_00, valueCents: 3_000_000_00, entries: [] },
     ]
     latchEnding(world, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
     const view = buildEndingView(world)!
@@ -1195,7 +1195,7 @@ describe('the album – seven pages, every career', () => {
     // Only the land: a field earns nothing (stageIncomeCents 0) and the sentence must be able to
     // say so – the view carries the honest 0 rather than hiding the stage.
     const { world } = freshWorld('ending-academy-land')
-    world.assets = [{ id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00 }]
+    world.assets = [{ id: 'academy-land', boughtWeek: 100, paidCents: 2_000_000_00, valueCents: 2_000_000_00, entries: [] }]
     latchEnding(world, { type: 'natural', week: 900, ageYears: 31, detail: 'x', resumesWeek: null })
     const landOnly = buildEndingView(world)!
     expect(landOnly.academy).not.toBeNull()

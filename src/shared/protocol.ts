@@ -53,6 +53,7 @@ export type {
   PracticeBooking,
   RecoveryBuff,
   OwnedAsset,
+  AssetEntry,
 } from './protocol/profile'
 export {
   DEFAULT_PROFILE,
@@ -184,6 +185,7 @@ export type {
   KitLineView,
   KitDealView,
   ShopPricePoint,
+  ShopPurchaseView,
   ShopRowView,
   ShopView,
   KitOfferTerms,

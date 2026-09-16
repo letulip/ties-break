@@ -80,6 +80,7 @@ import type {
   KitLine,
   KitLineView,
   ShopPricePoint,
+  ShopPurchaseView,
   ShopRowView,
   WorldEvent,
   WorldEventCategory,
@@ -1403,6 +1404,122 @@ function chartPlot(row: ShopRowView): { line: string; dots: { x: number; y: numb
   return { line: dots.map((d) => `${d.x.toFixed(1)},${d.y.toFixed(1)}`).join(' '), dots, low, high }
 }
 
+/** ⭐⭐⭐ v78, ROUND 41 #22 – WHERE THE FAMILY BOUGHT, AS GEOMETRY. One mark per purchase inside the
+ *  OPEN window, placed on the line the chart already draws.
+ *
+ *  The owner's words are in `shopMarksNote` below (no Cyrillic in a template, and none in a comment).
+ *
+ *  ⚠⚠ THE MARK SITS ON THE LINE AND NOT AT THE PRICE THEY PAID, which is a decision and not a
+ *  shortcut. The line is a MONTHLY MEAN – the engine averages the weeks of each month into one
+ *  figure – and a purchase happens in a WEEK, at that week's price, which can sit outside the
+ *  window's own low..high. A mark drawn at the true entry price would therefore float off the line,
+ *  or be clipped by the box, on exactly the volatile months the chart exists to show. So the mark
+ *  answers WHERE on this chart the purchase falls, and the popup carries what it actually cost –
+ *  which is also the split the owner asked for («отметки на графике» + «микро попап… с суммой и
+ *  датой»).
+ *
+ *  ⚠ A PURCHASE OLDER THAN THE OPEN WINDOW IS NOT DRAWN, rather than pinned to the left edge: a mark
+ *  at the edge of a six-month view would claim a week that view does not cover. Widen the window and
+ *  it appears. ⚠ AND `x` IS INTERPOLATED WITHIN THE MONTH, so two purchases in the same month are two
+ *  marks at two places rather than one mark on top of another.
+ *
+ *  ⚠ NO MONEY ARITHMETIC – the cents and the per-unit price arrive whole off the wire
+ *  (`ShopPurchaseView`), and this maps weeks and cents onto a viewBox exactly as `chartPlot` does. */
+function chartMarks(row: ShopRowView): { key: string; x: number; y: number; buy: ShopPurchaseView }[] {
+  const plot = chartPlot(row)
+  if (!plot) return []
+  const points = chartPoints(row)
+  const out: { key: string; x: number; y: number; buy: ShopPurchaseView }[] = []
+  for (const [i, buy] of row.purchases.entries()) {
+    if (buy.week < points[0].week) continue
+    let seg = points.length - 2
+    while (seg > 0 && points[seg].week > buy.week) seg -= 1
+    const span = Math.max(1, points[seg + 1].week - points[seg].week)
+    const within = Math.min(1, Math.max(0, (buy.week - points[seg].week) / span))
+    const a = plot.dots[seg]
+    const b = plot.dots[seg + 1]
+    out.push({
+      key: `${row.id}:${i}`,
+      x: ((seg + within) / (points.length - 1)) * CHART_W,
+      y: a.y + (b.y - a.y) * within,
+      buy,
+    })
+  }
+  return out
+}
+
+/** Which mark's popup is open, by `chartMarks` key, or null. ⚠ ONE REF FOR THE SCREEN, like
+ *  `chartMonths` above and for the same reason: exactly one rung has a chart, and two popups open at
+ *  once is not a state anybody wants. */
+const openMark = ref<string | null>(null)
+
+/** ⚠ HOVER **AND** TAP, which is the owner's own «при наведении/нажатии» and is not one behaviour
+ *  written twice. A phone has no hover at all, so a mark that only answered `mouseenter` would be
+ *  dead on the device this game is played on; a desktop that only answered `click` would feel broken
+ *  beside every other chart. Tap TOGGLES (a second tap closes it, which is the only way to dismiss
+ *  one on a touch screen); hover opens and leaving closes. Keyboard focus opens it too – the marks
+ *  are real buttons, so they are reachable by Tab and Escape closes. */
+function toggleMark(key: string): void {
+  openMark.value = openMark.value === key ? null : key
+}
+
+/** The mark whose bubble is open on THIS row, or null. ⚠ Asked of the row rather than read off
+ *  `openMark` directly, because the key is row-scoped and a second charted rung must not show one
+ *  row's popup over another's plot. */
+function openMarkOf(row: ShopRowView): { key: string; x: number; y: number; buy: ShopPurchaseView } | null {
+  return chartMarks(row).find((m) => m.key === openMark.value) ?? null
+}
+
+/** ⚠⚠ DRAFT (CLAUDE.md invariant 4) – what the mark ANNOUNCES to a screen reader, reported verbatim
+ *  in the bundle's handback and the owner's to change. The two figures are the two he named
+ *  («с суммой и датой») and the month is the chart's OWN axis spelling (`monthLabel`), so the bubble
+ *  and the strip under it cannot name a week two different ways. */
+function markLabel(buy: ShopPurchaseView): string {
+  return `Bought in ${monthLabel(buy.week)}, ${formatCents(buy.cents)}`
+}
+
+/** WHICH WAY THE BUBBLE LEANS – the left third of the plot pushes it right, the right third pushes
+ *  it left, and the middle centres it. Spent as `justify-content` on a full-width row rather than as
+ *  a `left` percentage on the bubble itself.
+ *
+ *  ⚠⚠ THIS SHAPE IS A FIX AND THE FIRST ONE WAS MEASURED WRONG, which is worth the paragraph because
+ *  the failure is round-20 #3's in miniature. The first draft did what a tooltip usually does –
+ *  `left: <mark>%` with `translateX(-50%)`, clamped to `[18%, 82%]` – and it read perfectly well at
+ *  1280. Measured against a 375x667 phone through the real cascade
+ *  (`tests/component/round41-fund-marks.test.ts` §C), the bubble's HALF-width came out at 77.6px
+ *  against an 18% margin of 62.8px: on the owner's own device the first and last marks would have had
+ *  their bubble CUT OFF by `.tb-card--photo`'s `overflow: hidden`. A percentage clamp cannot be
+ *  right, because the thing it has to clear is measured in px and the margin is measured in %.
+ *
+ *  ⭐ SO THE BUBBLE IS NEVER POSITIONED BY ITS CENTRE AT ALL. It is a child of a row that spans the
+ *  plot exactly, with `max-width: 100%`, so it CANNOT leave the box whatever it contains – the
+ *  geometry is clip-proof by construction rather than by a number that has to be re-checked every
+ *  time the copy or the font changes. What the lean buys is that a mark at the left edge still gets
+ *  its bubble over it rather than over the middle of the chart. */
+function markAlign(mark: { x: number }): 'flex-start' | 'center' | 'flex-end' {
+  const t = mark.x / CHART_W
+  if (t < 1 / 3) return 'flex-start'
+  if (t > 2 / 3) return 'flex-end'
+  return 'center'
+}
+
+// ⭐⭐⭐ ROUND 41 #22 – `shopMarksNote`, HIS WORDS, PARKED HERE for the reason the note above it gives:
+// Cyrillic may not appear in a template, in a string OR in a comment.
+//
+// «В index fund можем делать отметки на графике когда была покупка с микро попап при hover/клике с
+// суммой и датой?»
+//
+// ⚠⚠ THE ITEM WAITED A MONTH FOR A SCHEMA MOVE, AND THAT WAIT IS THE INTERESTING HALF. Round 41
+// measured that no persisted road existed for «when, and how much»: `boughtWeek` is the FIRST buy
+// only, `paidCents` a blended net sum a top-up adds to and a part sale scales down, the feed rows
+// un-keyed prose capped at 400/50 and prunable, the ledger weekly category totals mixing buys, sells
+// and upkeep. The degraded one-mark version would have printed a number the family never paid on any
+// topped-up holding, and it was REFUSED rather than shipped. v78's `OwnedAsset.entries` is the road.
+//
+// ⚠ SO A HOLDING BOUGHT BEFORE v78 CARRIES NO MARKS AT ALL, and that is the honest answer rather
+// than a padded one – the same shape `priceHistory`'s own note takes for a young career. The chart
+// draws no mark because there is none, and the next purchase starts the record.
+
 /** What the chart says, for somebody who cannot see it. ⚠ IT IS THE SAME THREE FACTS the axis under
  *  the plot prints, so the picture and its description cannot drift. */
 function chartSummary(row: ShopRowView): string {
@@ -2718,23 +2835,81 @@ function shopRowCornerAction(row: ShopRowView): boolean {
                 <!-- ⚠ TWO POINTS ARE THE FLOOR FOR A LINE, and a first-season career has fewer –
                      the series is as long as the months that have actually happened. The honest
                      sentence is drawn instead of an empty box, and nothing is back-filled. -->
-                <svg
-                  v-if="chartPlot(row)"
-                  class="fund-chart-plot"
-                  :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
-                  role="img"
-                  :aria-label="chartSummary(row)"
-                >
-                  <polyline class="fund-chart-line" :points="chartPlot(row)!.line" />
-                  <circle
-                    v-for="(dot, i) in chartPlot(row)!.dots"
-                    :key="i"
-                    class="fund-chart-dot"
-                    :cx="dot.x"
-                    :cy="dot.y"
-                    r="2"
-                  />
-                </svg>
+                <!-- ⭐⭐⭐ ROUND 41 #22 (v78) – THE PURCHASE MARKS AND THEIR MICRO-POPUP. His words
+                     and the geometry's own reasoning are in `shopMarksNote` and `chartMarks` in the
+                     script block (no Cyrillic in a template).
+                     ⚠ THE WRAPPER EXISTS FOR THE POPUP, which is absolutely positioned against it.
+                     `.tb-card--photo` sets `overflow: hidden`, so a bubble anchored any further out
+                     would be cut off by the card – see `markAlign` for the geometry that makes
+                     that impossible by construction rather than by a clamp. -->
+                <div v-if="chartPlot(row)" class="fund-chart-plot-wrap">
+                  <svg
+                    class="fund-chart-plot"
+                    :viewBox="`0 0 ${CHART_W} ${CHART_H}`"
+                    role="img"
+                    :aria-label="chartSummary(row)"
+                  >
+                    <polyline class="fund-chart-line" :points="chartPlot(row)!.line" />
+                    <circle
+                      v-for="(dot, i) in chartPlot(row)!.dots"
+                      :key="i"
+                      class="fund-chart-dot"
+                      :cx="dot.x"
+                      :cy="dot.y"
+                      r="2"
+                    />
+                    <!-- ⚠ THE RING IS DRAWN AND THE BUTTON IS NOT: an SVG `<circle>` is not focusable
+                         and is a 4px tap target, so the mark is PAINTED here and the control that
+                         opens it is a real HTML button below, sized for a thumb. -->
+                    <circle
+                      v-for="mark in chartMarks(row)"
+                      :key="mark.key"
+                      class="fund-chart-mark"
+                      :class="{ 'is-open': openMark === mark.key }"
+                      :cx="mark.x"
+                      :cy="mark.y"
+                      r="3.5"
+                    />
+                  </svg>
+                  <!-- ⚠ ONE BUTTON PER MARK, over the plot. `aria-expanded` says whether its bubble
+                       is open, which is what a screen reader needs from a disclosure. -->
+                  <button
+                    v-for="mark in chartMarks(row)"
+                    :key="mark.key"
+                    type="button"
+                    class="fund-chart-hit"
+                    :style="{ left: `${(mark.x / CHART_W) * 100}%`, top: `${(mark.y / CHART_H) * 100}%` }"
+                    :aria-expanded="openMark === mark.key"
+                    :aria-label="markLabel(mark.buy)"
+                    @click="toggleMark(mark.key)"
+                    @mouseenter="openMark = mark.key"
+                    @mouseleave="openMark = null"
+                    @focus="openMark = mark.key"
+                    @blur="openMark = null"
+                    @keydown.esc="openMark = null"
+                  ></button>
+                  <!-- ⚠ ONE BUBBLE, NOT ONE PER MARK. A `v-for` with `v-show` would leave a hidden
+                       node per purchase in the tree for a screen reader to walk past, and a career
+                       that has topped up thirty times would carry thirty of them. -->
+                  <div
+                    v-if="openMarkOf(row)"
+                    class="fund-chart-poprow"
+                    :style="{ justifyContent: markAlign(openMarkOf(row)!) }"
+                  >
+                  <div class="fund-chart-pop" role="status">
+                    <span class="fund-chart-pop-top">
+                      {{ monthLabel(openMarkOf(row)!.buy.week) }} &ndash; {{ formatCents(openMarkOf(row)!.buy.cents) }}
+                    </span>
+                    <span
+                      v-if="openMarkOf(row)!.buy.units !== null && openMarkOf(row)!.buy.unitPriceCents !== null"
+                      class="fund-chart-pop-sub"
+                    >
+                      {{ formatUnits(openMarkOf(row)!.buy.units!) }} units at
+                      {{ formatCents(openMarkOf(row)!.buy.unitPriceCents!) }} each
+                    </span>
+                  </div>
+                  </div>
+                </div>
                 <p v-else class="fund-chart-empty">One month of prices so far &ndash; the chart starts next month.</p>
                 <div v-if="chartPlot(row)" class="fund-chart-axis">
                   <span>{{ monthLabel(chartPoints(row)[0].week) }}</span>
@@ -4496,6 +4671,88 @@ function shopRowCornerAction(row: ShopRowView): boolean {
    month, which is the resolution he named. */
 .fund-chart-dot {
   fill: var(--accent);
+}
+
+/* ⭐⭐⭐ ROUND 41 #22 (v78) – THE PURCHASE MARKS. The wrapper is the popup's containing block and the
+   only reason it exists; the plot keeps its own rules above, unchanged. */
+.fund-chart-plot-wrap {
+  position: relative;
+}
+
+/* ⚠ RINGED AND NOT FILLED, so a purchase mark can never be mistaken for one of the monthly dots it
+   sits among – different shape, not merely a different colour, which is the one distinction that
+   survives a colour-blind reader and a screenshot. `non-scaling-stroke` for the reason the line
+   carries it: the viewBox is 300 wide and the card is ~351px, so a plain stroke would thicken. */
+.fund-chart-mark {
+  fill: var(--card-top);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+.fund-chart-mark.is-open {
+  fill: var(--ink);
+}
+
+/* ⚠⚠ THE TAP TARGET IS 30px AND THE PAINTED RING IS ~8px, which is the whole reason the control is
+   an HTML button over the SVG rather than the `<circle>` itself. A 4px target is not pressable with
+   a thumb, and an SVG shape cannot take keyboard focus. Transparent, centred on the mark, and it
+   reaches outside the plot's box on purpose – `.fund-chart-plot-wrap` does not clip. */
+.fund-chart-hit {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ⚠ NO `:focus-visible` RULE HERE, and its absence is the point: `src/style.css` declares the app's
+   ONE focus ring (`outline: var(--stroke-hair) solid var(--accent)`) and
+   `tests/ui-control-system.test.ts` enforces both halves of that – nothing outlined heavier than a
+   hairline, and exactly one ring in the whole app. This block shipped a 2px private ring in its first
+   draft and both cases went red on the first full run, which is the gate doing its job. */
+
+/* ⚠ THE MICRO-POPUP – «микро попап при hover/клике с суммой и датой». It sits at the TOP of the
+   plot, inside the wrapper, because `.tb-card--photo` clips: a bubble that floated above the chart
+   would be cut by the card edge on the one viewport that matters. The horizontal axis is handled by
+   the row above it rather than by a clamp – `markAlign` carries the measurement that decided it. */
+/* ⚠ THE ROW IS THE PLOT'S OWN WIDTH, and the bubble is a child of it with `max-width: 100%` – see
+   `markAlign` for why the bubble is never positioned by its centre. `pointer-events: none` on the row
+   so neither it nor the bubble can ever eat the hover that is keeping the bubble open. */
+.fund-chart-poprow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.fund-chart-pop {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card-top);
+  color: var(--ink);
+  font-size: 11.5px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.fund-chart-pop-top {
+  font-weight: 700;
+}
+
+.fund-chart-pop-sub {
+  color: var(--ink-soft);
 }
 
 .fund-chart-axis {

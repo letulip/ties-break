@@ -327,7 +327,7 @@ describe('§5 – ⭐⭐ the yacht week is a line of the vacation ladder – pri
     // means (shared/protocol/profile.ts), and walking 156 real weeks in a component suite whose
     // whole point is that it is fast would buy nothing this assertion needs. The three-year wait
     // itself is ticked for real in `tests/round29-shop-elite.test.ts`.
-    w.assets = [{ id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00 }]
+    w.assets = [{ id: 'yacht', boughtWeek: 0, paidCents: 12_000_000_00, valueCents: 12_000_000_00, entries: [] }]
     const snap = toSnapshot(w)
     expect(snap.shop.vacationIds, 'the engine granted it').toEqual(['yacht-week'])
     const wrapper = mountVacationTab(snap, w.week + 3)

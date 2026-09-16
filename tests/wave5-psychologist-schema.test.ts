@@ -365,8 +365,12 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     const added = Object.keys(after).filter((k) => !(k in before))
     expect(added.sort(), 'exactly v76\'s seven plus whatever the rungs above it add, and nothing else')
       .toEqual([...V76_KEYS, ...laterRungs].sort())
+    // ⚠ RE-AIMED BY ROUND 42's v78 BUNDLE (#35 + round 41 #22 + #45's sparring keys), NOT WEAKENED –
+    // the same maintenance the note above predicts for «every future wave», paid for the first time.
+    // The list is the ROSTER of what the ladder has added above v76 to date, so a rung that arrives
+    // without anybody noticing still goes red here; it is not a claim about v76 and never was.
     expect(laterRungs.sort(), 'and the rungs above v76 are the ones this wave knows about')
-      .toEqual(['spotlightHabituation'])
+      .toEqual(['composureBonus', 'sparringHired', 'sparringRung', 'spotlightHabituation'])
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 
     // ⚠ EVERY OTHER KEY BYTE-IDENTICAL, compared through `JSON.stringify` per key rather than through
@@ -376,8 +380,20 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     // deliberate: a later rung that MOVED a pre-existing key would go red here, which is exactly what
     // this case should do. v77 moves none – its own per-row walk touches `loveEpisodes`, and this
     // fixture carries `[]`.
+    //
+    // ⚠⚠ v78 IS THE FIRST RUNG ABOVE v76 THAT REALLY DOES MOVE ONE, and it is let through by NAME
+    // rather than by widening the loop (round 41 #22 – `OwnedAsset.entries`, back-filled `[]` on
+    // every row, and this fixture carries six of them). The exception is MEASURED, never listed: the
+    // same walk one rung up says which keys the tail of the ladder touches, so a v79 that moved
+    // something it should not still reddens this loop, and nothing here needs editing when it lands.
+    const movedAboveV76 = Object.keys(v76()).filter(
+      (k) => JSON.stringify((v76() as Record<string, unknown>)[k])
+        !== JSON.stringify((migrateSave(v76()) as unknown as Record<string, unknown>)[k]),
+    )
+    expect(movedAboveV76.sort(), 'and the only pre-existing key any rung above v76 moves is the asset list')
+      .toEqual(['assets', 'schemaVersion'])
     for (const key of Object.keys(before)) {
-      if (key === 'schemaVersion') continue
+      if (key === 'schemaVersion' || movedAboveV76.includes(key)) continue
       expect(JSON.stringify(after[key]), `${key} survives the step untouched`).toBe(JSON.stringify(before[key]))
     }
     expect(before.schemaVersion, 'the control really was a v75 payload').toBe(75)
