@@ -65,7 +65,8 @@ branches are written **per voice**. Then:
 | 44 situations written | ~11 reachable per career | **44 reachable per career** |
 | stage holes | must be filled four times | filled **once** |
 | `fiery`'s famine | needs its own 11 | impossible by construction |
-| texts to write | 44 | 176 |
+| voice records | 44 | 176 |
+| ⚠ **authored utterances** | 176 | **704** – each record is an opener plus three replies |
 
 ⭐ It costs four times the writing for the same situation count — and it is the only shape in which
 «44 ситуации» means 44 *to the player who is playing*. It also makes the four temperaments legible:
@@ -89,9 +90,93 @@ is feeling, and today it is 1–3. With four-voiced situations:
 | 30 | 30 | 1–2 times |
 | 20 | 20 | 2 times |
 
+⚠⚠ **THIS TABLE ASSUMES UNIFORM SELECTION AND THE ENGINE DOES NOT SELECT UNIFORMLY** – the subject is
+drawn first, weighted by the week's register, and the situation only after. So a bright week favours
+`story`, and this tranche has ONE adult story. His arithmetic on the corrected model: 44 uniform
+entries still leave a 40-conversation career a ~**59%** chance of one adjacent duplicate, 55 leaves
+~51%. **The corpus cannot solve adjacency; only the exclusion can.** The real target is §3b's per-cell
+floor, measured.
+
 ⭐ **Recommendation: 44, four-voiced, delivered in three tranches he can read in one sitting each.**
-Below is **tranche 1 – fifteen situations**, weighted to the holes: every one reaches `college` and
+Below is **tranche 1 – twelve situations**, weighted to the holes: every one reaches `college` and
 `independent`, because that is where two voices have nothing at all.
+
+⚠⚠ **AND §3a IS HIS REVIEW OF EXACTLY THESE TWELVE.** They are kept below as the record of what was
+written and why it did not pass; the rebuild follows §3b's architecture and every row here is either
+rebuilt, gated or moved. Read §3a first.
+
+---
+
+## 3a. ⚠⚠ HIS REVIEW OF THIS DOCUMENT (16.09) – WHAT IT FOUND, VERIFIED RATHER THAN ACCEPTED
+
+Every counting claim in his review was re-derived from this file by script before being believed.
+**All of them hold:**
+
+| his claim | the document said | the truth |
+| --- | --- | ---: |
+| §3's tranche size is stale | «fifteen situations» | **12** |
+| §5's after-school count | «eight» | **7** (S1, S4, S6, S7, S9, S10, S12) |
+| §6's grid is one high per voice | – | follows from the line above |
+| §7's reply budget | 180 | **144** (12 × 4 × 3) |
+| §2's copy budget understates 4× | «176 texts» | 176 voice RECORDS = **704 utterances** (44 × 4 × 4) |
+| the subject matrix is uneven | – | observation 3 · worry 3 · curiosity 3 · good-news 2 · **story 1** · **decision 0** |
+
+⚠ **AND THE THIRD COUNTING SLIP OF ONE DAY** – a duplicated ledger block, an empty test file from a
+cut script, and now «fifteen/eight». One family: **a number written and never checked against the
+thing it counts**, each catchable by a single line. The rule that follows: any number in a document
+that can be derived FROM that document is derived by script before the commit.
+
+⭐⭐ **THE FINDING THAT MATTERS MOST IS NOT A COUNT.** §4 sets the test – «one evening, told four
+ways» – and §5's own content does not meet it. S1's four voices describe four DIFFERENT events (one
+girl losing calmly · half the field not wanting it · a remembered Tuesday · four matches on court
+two), and S2–S12 repeat the fault. A row that shares a SUBJECT proves nothing about voice; only a row
+that shares an EVENT does.
+
+⚠ **AND ONE CLAIM OF MINE WAS SIMPLY WRONG.** §7 said the restructure has «nothing to measure». It
+has: with subject-weighted selection, 44 entries are not equiprobable, and even 44 UNIFORM entries
+leave a 40-conversation career about a **59%** chance of one adjacent duplicate (55 → ~51%). Corpus
+size cannot fix adjacency; only recency exclusion can. Invariant 5 wanted a corpus bench from the
+first draft and this document refused it.
+
+## 3b. The architecture the rebuild uses – his, adopted whole
+
+Every situation is documented as:
+
+    ID / Subject / Stages / Source
+    Shared event kernel:      the one thing that happened, in facts
+    Authoritative claims:     what it asserts about the career, and under which gate
+    Generated texture:        what it may invent
+    Roof / away availability
+    Sunny / Fiery / Deep / Quiet
+    Parent stances: invite / respond / space
+
+⚠ **THREE PROVENANCE CLASSES, because `fact: null` has been carrying far more than it licenses.**
+The draft marked as «null»: repeated match-start problems, exact historical counts, draw ages, crowd
+allegiance, flight costs, entry deadlines, training changes, shot success rates, arrival times and
+weeks of emotional history. Those can contradict the authoritative career.
+
+    type SituationSource =
+      | { kind: 'generated'; kernel: string }     // a coffee incident, an awkward meal, a conversation
+      | { kind: 'career-fact'; fact: SmallTalkFact }
+      | { kind: 'derived'; from: 'stage' | 'mood' | 'calendar' }
+
+A generated kernel may establish harmless domestic truth. It may **not** establish official results,
+skill improvement, money, scheduled entries or longitudinal history.
+
+**Six gates every row passes before a single reply is written:**
+1. same event and facts across all four voices;
+2. no unsupported competitive, medical or financial claim;
+3. natural at every declared stage – the money talk cannot be identical for a teenager at home and a
+   thirty-year-old professional, so stage variants where the premise moves;
+4. no stale «today» – a card can live for weeks, so «this week», «the other day» or a named Tuesday;
+5. no parent option promises gameplay that does not exist («we'll get it looked at» schedules nothing);
+6. voice difference comes from attention and disclosure, not from punctuation.
+
+⚠ **And the target is no longer a headline number.** It is: minimum situations per subject × stage
+(3–4), 6+ in heavily weighted cells such as bright/story, no subject with a single reachable adult
+situation, and a last-two exclusion whenever three or more are reachable – measured by a deterministic
+corpus bench that reports the weighted pool size, the adjacent-repeat rate and the
+repeat-within-last-three rate.
 
 ---
 
@@ -121,7 +206,7 @@ situations that may not survive the reading.
 ## 5. Tranche 1 – twelve situations, weighted to the empty cells
 
 ⭐ **Every one of the twelve reaches `college` and `independent`**, because that is where `sunny` and
-`fiery` have nothing at all today. Eight also reach `after-school`.
+`fiery` have nothing at all today. **Seven** also reach `after-school` (S1, S4, S6, S7, S9, S10, S12).
 
 ### 5.1 `observation` – what she has noticed about the game
 
