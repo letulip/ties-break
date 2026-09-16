@@ -2466,6 +2466,41 @@ its own acceptance bench does not ship because the round is ending.
   would pin copy to a dial. The sentence says the SHAPE («more the further she goes, nothing on a
   first-round exit»), which stays true when the constant moves.
 
+  ⭐⭐ **HIS 16.09 READ: THE MASSEUR'S TWO LINES ARE APPROVED, THE PSYCHOLOGIST'S IS REFUSED ON A FACT.**
+  «слова массажиста ок» – so these two ship as drafted:
+
+  > **46-a · the masseur, travelling:** `Travels with her: table work between rounds. The deeper the
+  > run, the more it buys – a first-round exit buys nothing.`
+  > **46-b · the masseur, staying home:** `Stays home on tournament weeks. One fare saved on every trip.`
+
+  ⚠ 46-b stands BESIDE his existing feed sentence («The masseur stays home on tournament weeks – the
+  table waits for her return»), never instead of it: that line is a one-off event row and this is the
+  standing line on the card.
+
+  ⭐ **AND THE PSYCHOLOGIST DRAFT WAS WRONG ON THE MECHANIC, WHICH IS THE GOOD KIND OF CORRECTION.** It
+  said the sessions are «weekly work at home, not tournament-side». His answer: «психолог не ездит,
+  но **онлайн созвоны вполне может делать» – and the engine already agrees with him in its own
+  comment: `psychologistWorksThisWeek` says the retainer «runs on a tournament week exactly as the
+  coach's does» and works through a layoff because «an injury is when the head needs the **call** most».
+  So the seat has no fare, no stand-down and no gap. That is a POSITIVE thing to say rather than an
+  absence to explain, and the re-draft says it:
+
+  > **46-c (v2) · the psychologist, in place of a switch:** `No fare to pay: the sessions follow her as
+  > calls – at home, on the road, and through a layoff.`
+
+  ❓ **And he opened a design question rather than closing one:** «может и ездить он тоже может, но
+  тогда надо подумать, на что он может качественно влиять в поездке и нужно ли это делать». Parked WITH an
+  answer so it is not re-invented from nothing – §9a of
+  [the-form-and-the-sparring-2026-09](../specs/the-form-and-the-sparring-2026-09.md). The short of it:
+  the only thing a travelling psychologist can honestly buy is the SLUMP (his patient by the spec's
+  own fence sentence), which makes him the exact mirror of the masseur – the masseur pays most on a
+  deep run and nothing on a first-round exit, the psychologist would pay most on a bad week and
+  nothing when she wins. ⚠ The obvious alternative – lifting composure on the day, straight into the
+  pressure set #34 just built – is refused out loud, because it would be **the first thing in this
+  game that buys match odds directly with money**. And the recommendation is to build neither yet: the
+  effect discounts a number (`world.form`) that does not exist, so any rung price would be guessed,
+  which is invariant 5's exact prohibition. It belongs in **F3**.
+
 - [x] **47. «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный
   этап J серия, там самые большие расходы» (15.09) – the cameo's ORIGINAL intent, recovered.** His
   memory of what he first asked for supersedes the cadence tuning of #5/#43: the local sponsor was
@@ -2637,6 +2672,15 @@ its own acceptance bench does not ship because the round is ending.
     zero new surfaces. Schema key + migration + fixture. Cost M.
   * **F2 – the seat itself**: engine leaf, money, card, receipts – and the third key his own override
     needs, `sparringTravels`.
+
+  ⭐⭐ **RULED 16.09 – «надо сделать», AND THE SPEC'S GATE IS NOW OPEN.** He answered all eight open
+  questions of [the-form-and-the-sparring-2026-09](../specs/the-form-and-the-sparring-2026-09.md) §9
+  in one pass – «все по твоим рекомендациям» – so that spec's own «Done when: O1–O8 are ruled» is
+  satisfied and F1's builder brief may point at it. The eight are restated in `docs/decisions.md`
+  under 16.09. ⚠ O1 keeps its SHAPE rather than becoming a number: what he ruled is the method, so a
+  builder that ships a constant without the scale arm has skipped O1 rather than implemented it.
+  ⚠ The seat still cannot be built before F1 – the ruling opens the wave, it does not skip it – and
+  `sparringTravels` still needs v79.
 
   ⭐⭐ **AND THE ORDER MATTERS, because of what this round just measured.** F1's whole reader is
   COMPOSURE – the wing #34 has just proved is worth 0.4–0.6pp per twenty points. So F1 built today
