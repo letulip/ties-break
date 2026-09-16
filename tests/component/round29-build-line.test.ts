@@ -142,7 +142,14 @@ describe('the build line renders at the foot of Settings, with the values the bu
     // (bump, append-only migration, golden fixture v78, e2e fixtures regenerated, plus a spec),
     // never by this line's item. The claim above – «the BUILD-LINE wave moved no schema» – is
     // untouched, and the pin still follows the ladder's head so the sentence over it stays checkable.
-    expect(SAVE_SCHEMA_VERSION).toBe(78)
+    // ⚠ AND AGAIN AT v79 (16.09, the chemistry wave C1 – `coachPairs`, plus round 42 #48's
+    // `sparringTravels` riding with it), NOT WEAKENED, for the FOURTEENTH time and for the reason
+    // verbatim: 79 was moved by that wave with its full move (bump, append-only migration, golden
+    // fixture v79, e2e fixtures regenerated, the frozen-career peel rung, plus the spec's own
+    // measured section), never by this line's item. The claim above – «the BUILD-LINE wave moved no
+    // schema» – is untouched, and the pin still follows the ladder's head so the sentence over it
+    // stays checkable.
+    expect(SAVE_SCHEMA_VERSION).toBe(79)
   })
 
   it('is one line at the FOOT of the screen, and it is there whichever tab is open', async () => {
