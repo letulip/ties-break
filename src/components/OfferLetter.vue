@@ -44,6 +44,7 @@ import { computed } from 'vue'
 import type {
   AcademyLetterTerms,
   AdOfferTerms,
+  BuildLetterTerms,
   CallUpLetterTerms,
   EntryLetterTerms,
   KitOfferTerms,
@@ -209,6 +210,36 @@ const callUpBecause = computed(() => {
   if (n === 1) return 'She reached the last four of the college championship'
   if (n === 2) return 'She played the final of the college championship'
   return 'She won the college championship'
+})
+// ⭐⭐ ROUND 43 #11 – THE BUILD THAT FINISHED. The owner: «давай на почту присылать письмо про те
+// объекты, которые у нас строятся в магазине, в момент, когда они достроены», and «только те, которые
+// имеют сроки построек».
+//
+// A NOTICE, the call-up's shape: no letterhead, no buttons, a foot that only says when it was filed.
+// No mark for the same reason the two desks and the academy print none - there is no rung and no
+// brand, and the ten build-time rungs are three different trades besides.
+//
+// ⚠ THE SHEET STATES THE WAIT AND NOT THE PRICE. The money left on the ORDER (shop's §3f, «the money
+// leaves on order, the thing arrives N weeks later»), so a figure here would read as a bill for
+// something already paid. What the paper is for is the only thing the family has been holding: the
+// span between the two weeks.
+const isBuild = computed(() => props.offer.kind === 'build')
+const buildTerms = computed(() => props.offer.terms as BuildLetterTerms)
+/** HOW LONG THEY WAITED, in the words a letter uses rather than in a count of weeks.
+ *
+ *  ⚠ COMPUTED FROM THE TWO WEEKS ON THE PAPER, never from `ShopItem.buildWeeks`. The catalogue's
+ *  figure is what the wait WAS MEANT to be the week it was quoted and this shelf is retuned; the
+ *  order week and the arrival week are what actually happened, and a letter states what happened.
+ *  ⚠ The shortest rung on the shelf is three weeks and the longest is two hundred and eight, so both
+ *  ends of this ladder are reachable – `academy-staff` at 3 and `yacht-big` at 208. */
+const buildWaitWord = computed(() => {
+  const weeks = Math.max(0, props.offer.week - buildTerms.value.orderedWeek)
+  if (weeks < 8) return weeks === 1 ? 'a week' : `${weeks} weeks`
+  if (weeks < 52) return `${Math.round(weeks / 4.33)} months`
+  const years = weeks / 52
+  const rounded = Math.round(years * 2) / 2
+  if (rounded === 1) return 'a year'
+  return `${rounded % 1 === 0 ? rounded : rounded.toFixed(1)} years`
 })
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
@@ -738,6 +769,37 @@ const settled = computed(() => {
         </li>
       </ul>
       <p class="offer-sign-off">– Her national federation</p>
+    </PaperNote>
+    <div class="offer-foot">
+      <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>
+    </div>
+  </article>
+
+  <!-- ⭐⭐ THE BUILD THAT FINISHED (round 43 #11) – the letter that ends a wait the family has been
+       carrying for up to four years. A NOTICE: no mark, no buttons, and a foot that only says when
+       it was filed, exactly as the squad's invitation above.
+       ⚠ NOTHING HERE IS ASSEMBLED PROSE ON THE PAPER ITSELF: the label, the order week and this
+       letter's own week are what the wire carries (`BuildLetterTerms`), and every sentence is rebuilt
+       from them each time the sheet is read - so a catalogue retune cannot leave an old letter
+       stating a rung that no longer exists.
+       ⚠ NO MONEY ON IT. The family paid on the order (the shop's §3f), so a figure here would read
+       as a bill for something already bought. What it names instead is the WAIT, which is the only
+       thing that has been running since. -->
+  <article v-else-if="isBuild" class="offer-letter">
+    <PaperNote class="offer-paper" size="letter" :tilt="0">
+      <p class="offer-body">
+        {{ buildTerms.label }} is ready. It was ordered {{ weekLabel(buildTerms.orderedWeek) }}, and
+        after {{ buildWaitWord }} it is the family's from this week.
+      </p>
+      <ul class="offer-terms">
+        <!-- Both bullets are facts the engine really enforces. `buyAsset` takes the money on the
+             order, and `deliverAssets` runs before `revalueAssets` and before the week's bills - so
+             the week a thing arrives is the first week it is worth something and the first week it
+             is charged for. -->
+        <li>There is nothing to pay here. It was paid for on the order.</li>
+        <li>It is on the family's books from this week, and so is what it costs to keep.</li>
+      </ul>
+      <p class="offer-sign-off">– The order desk</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>

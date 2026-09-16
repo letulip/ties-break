@@ -38,6 +38,7 @@ import { formatCents } from '../shared/money'
 import type {
   AcademyLetterTerms,
   AdOfferTerms,
+  BuildLetterTerms,
   CallUpLetterTerms,
   EntryLetterTerms,
   KitOfferTerms,
@@ -139,6 +140,13 @@ function senderOf(o: Offer): string {
   // HAS a brand, unlike the desks; what it lacks is a rung, so `rungOf` leaves it at -1 with the
   // rest of the non-kit post and the letter prints no mark (see OfferLetter's script).
   if (o.kind === 'ad') return (o.terms as AdOfferTerms).brand
+  // ⭐⭐ ROUND 43 #11 – the build signs like the two desks, the academy and the federation do: with
+  // what it IS, because it has no brand and can never be given one. The shelf's ten build-time rungs
+  // are three different trades – a boatyard, an aircraft works, and the crew putting up a clubhouse
+  // (plus the staff being hired into it) – and this union has ONE sender per kind, so a letterhead
+  // naming any of them would be wrong on the other two. What is true of all ten is that each was
+  // ORDERED, which is the ledger's own verb for them («Ordered: The yacht»). DRAFT copy.
+  if (o.kind === 'build') return 'The order desk'
   return (o.terms as KitOfferTerms).brand
 }
 
@@ -200,6 +208,12 @@ function subjectOf(o: Offer): string {
     return `Named in the squad – ${t.label}, ${weekLabel(t.tieWeek)}`
   }
   if (o.kind === 'ad') return `Her face in a campaign – ${formatCents((o.terms as AdOfferTerms).cashCents)}`
+  // ⭐⭐ ROUND 43 #11 – and the build's subject restates its own sheet's first sentence, this
+  // function's rule. The LABEL is the whole content: a family that has three things on order wants
+  // to know which one has arrived before it opens anything, and the shelf's labels already begin
+  // with their own article («The yacht», «The clubhouse»). ⚠ The label is the letter's OWN, frozen
+  // the week it was written, never today's catalogue – see `BuildLetterTerms.label`. DRAFT copy.
+  if (o.kind === 'build') return `${(o.terms as BuildLetterTerms).label} is ready`
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'
   // ⭐⭐⭐ ROUND 39 #17, WAVE G2 – THE APPAREL BOND'S LETTER IS A RENEWAL NOTICE (his ruling of

@@ -162,6 +162,14 @@ const KIT_ENDED = letter({
   id: 'kit-3', kind: 'kit',
   terms: { tier: 'tour', brand: 'Baseline Athletic', kitAllowanceCents: 500000, freshCap: 0.3, minEventsPerSeason: 14, covers: ['strings'], travelShare: 0.25, seasons: 2, ended: 'term' },
 })
+// ⭐⭐ ROUND 43 #11 – the build that finished, and its subject is the rung's LABEL because the label
+// is the whole content: a family with three things on order wants to know which one has arrived
+// before it opens anything. The label on the paper is frozen at the order, which is why a literal is
+// the honest fixture here – it is testing the branch, not the catalogue.
+const BUILD = letter({
+  id: 'build-yacht-w100', kind: 'build',
+  terms: { itemId: 'yacht', label: 'The yacht', orderedWeek: 144 },
+})
 
 /** Every subject line the sheet renders, in one array, off a career's real snapshot. */
 function subjects(offers: Offer[]): string[] {
@@ -242,6 +250,7 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     ['a kit deal offered', KIT_NEW, 'A kit deal for your daughter'],
     ['a kit deal renewed', KIT_RENEWAL, 'Another year in our kit'],
     ['a kit deal ending', KIT_ENDED, 'The kit deal has ended'],
+    ['a build that finished', BUILD, 'The yacht is ready'],
   ]
 
   for (const [what, offer, expected] of CASES) {
@@ -272,15 +281,17 @@ describe('Round 29 #16 – and every OTHER subject line in the inbox is pinned t
     expect(ECONOMY.advertising.categories.watches.feeCentsByBand[1]).toBe(200_000_00)
   })
 
-  it('⚠ THE WHOLE POST AT ONCE – thirteen letters, thirteen distinct subjects, none of them borrowed', () => {
+  it('⚠ THE WHOLE POST AT ONCE – fourteen letters, fourteen distinct subjects, none of them borrowed', () => {
+    // ⭐ ROUND 43 #11 made it fourteen. The count in this case's name is the point of it: a new kind
+    // that quietly fell through to somebody else's title would leave the pile one subject short.
     const all = subjects([
       ENTRY_IN, ENTRY_OUT_PARENT, ENTRY_OUT_DESK,
       dueLetter(), penaltyLetter(), seasonLetter(), suspensionLetter(),
       ACADEMY_IN, ACADEMY_REVIEW, ACADEMY_END,
-      CALL_UP, AD, KIT_NEW,
+      CALL_UP, AD, KIT_NEW, BUILD,
     ])
     // The career's own snapshot may carry letters of its own, so this is a floor and not an equality.
-    expect(all.length).toBeGreaterThanOrEqual(13)
+    expect(all.length).toBeGreaterThanOrEqual(14)
     // ...and NOTHING in the pile shares a subject with anything else in it. A fall-through shows up
     // here as a duplicate, which is the mechanical form of "the next one cannot be silent".
     const seen = new Map<string, number>()
