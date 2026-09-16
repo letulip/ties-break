@@ -151,50 +151,97 @@ whole point.
 relationship – two professionals, nothing more – and it is where every pair starts. Positive is the
 click; **negative is the anti-match, and it makes her worse off than no relationship at all** (§5).
 
-**Accrual.** One weekly step, no draws:
+**Accrual.** One weekly step:
 
-    chemistry += ratePerYear / 52        (while hired, clamped to [-100, +100])
+    chemistry += weeklyRate(A, phase, events)     (while hired, clamped to [-100, +100])
 
-`ratePerYear` is fixed for the pair the first time they work together and never moves again – see §2.
-So the rate IS the relationship and the level is only its integral, which is exactly his
-«показатель, насколько ей комфортно с тренером».
+What is fixed for the pair is **`A`, the affinity** – the CORRIDOR its weekly rate lives in (§3).
+The rate itself moves week to week, in periods, so the level is the integral of a relationship that
+has good stretches and bad ones. That is exactly his «показатель, насколько ей комфортно с тренером»
+read as a TRAJECTORY rather than a number.
 
 ⚠ **It does not decay while he is hired and it does not decay while he is not** – see §5.
 
 ---
 
-## 3. The rate – a DRAW, not a lookup
+## 3. The rate – a CORRIDOR that moves weekly, not a number per pair
 
-His sharpening is the design rule: «такое же редкое событие, как и prodigy девочка». A flat
-(temperament × manner) table would make «the cheap coach who clicks» true for the same pairing in
-every career – a strategy guide entry, not a story. So:
+⚠⚠ **THE FIRST DRAFT MADE THE RATE A CONSTANT AND THAT WAS TOO FLAT. His correction, 16.09:**
 
-1. **The (temperament × manner) cell sets the CENTRE** of the rate.
-2. **A seeded draw sets the pair's own number** around that centre:
-   `rngFromSeed(`${seed}:chemistry:${coachId}`)` – purpose-scoped, re-derived at the call site,
-   persisting nothing but the resulting rate.
+> «фразой «за 3 года 100%» я хотел сказать, что **такое тоже возможно**, % прироста может быть разный в
+> зависимости от химии. Здесь тоже нужна вариативность, а не плоская шкала… есть в периодах и плоские года, и взлёты и
+> падения даже. На это вполне могут влиять и победы и поражения и психологическое состояние ребёнка.»
 
-**The bands, his numbers** («3-5-7% в год… а если 10-15 – то лучше, а если больше – вообще хорошо»):
+⭐ **SO «33% A YEAR» IS A CEILING THAT A PERFECT PAIR CAN REACH, NOT A RATE IT RUNS AT** – and even a
+perfect pair can have a bad year, which is his own example: Borg's conflict at the fifth Slam.
 
-| band | rate/yr | what it means | reads as |
-| --- | ---: | --- | --- |
-| ⭐ **the anti-match** | **−10 to −20%** | 5–10 seasons to the floor – it does not need to arrive to hurt | he is not the man for her, and the seasons say so before the bill does |
-| ordinary | **3–7%** | 14–33 seasons to 100 – she never gets there | «she is polite with him and nothing more» |
-| good | **10–15%** | 7–10 seasons – a long career reaches it | «they are finding each other» |
-| ⭐ the click | **30–35%** | **3 seasons to 100 – his own number** | the Borg/Bergelin pair |
+### 3.1 The pair's permanent number is AFFINITY, not a rate
 
-⚠ **THE ANTI-MATCH IS DELIBERATELY SLOWER THAN THE CLICK, and the asymmetry is the design.** A click
-has to be able to finish inside a career or it is not a story; an anti-match only has to be felt, and
-a relationship that collapsed in one season would read as an event rather than as a relationship. C10
-asks whether it should be rarer than the click as well as slower; the recommendation is **the same
-frequency** – a game where good luck is rare and bad luck is common is not variable, it is punishing.
+**`A` ∈ [−1, +1], drawn once** from the (temperament × manner) cell on
+`rngFromSeed(`${seed}:chemistry:${coachId}`)`. It is the pair's disposition and it never moves. What
+it sets is not the speed – it is **the corridor the speed lives in**.
 
-⚠ **The top band is set by his own sentence and not chosen: «за 3 года 100%» is 33%/yr.** That is
-what makes the click worth chasing and what makes it rare.
+### 3.2 The corridor, anchored on his two ends
 
-**Rarity is calibrated to the prodigy draw rather than picked.** `rollPotential`'s [4, 26] band is the
-yardstick he named; the bench (§9) sets the click's tail frequency to the same ORDER as a maximal
-potential roll, so «as rare as a prodigy» is measured rather than asserted.
+| affinity | ceiling / yr | floor / yr | how often the year is a DOWN year |
+| --- | ---: | ---: | --- |
+| **+1 · the click** | **+33%** (his number) | **−5 to −10%** (his number) | rare – but REACHABLE, and that is the Borg case |
+| ~+0.4 · a good pair | lower ceiling | about the same floor | occasionally |
+| **0 · no match** | **+5%, and the ups are SHORT** (his) | deeper (his: «сильнее») | **more often** (his: «чаще») |
+| **−1 · the anti-match** | small and rare | deepest | most of the time |
+
+⚠ **WHICH HALF IS HIS AND WHICH IS MY INTERPOLATION, said out loud.** The ceiling row is his in both
+anchors (+33 at perfect, +5 at none) and he was explicit that it scales – «вверх точно». The FLOOR
+he was explicit about only at the two ends (−5…−10 at perfect, deeper and more often at none) and said
+so: «вниз не уверен». So the middle of the floor column is the BENCH's to fit, not the spec's to
+assert – B7 below.
+
+⭐ **TWO THINGS MOVE AS AFFINITY FALLS, NOT ONE**, and that is the whole shape of his sentence: the
+dips get **deeper** AND they get **more frequent**. A pair with no match is not «a slower version of a
+good pair» – it is a relationship that keeps almost breaking.
+
+### 3.3 It moves WEEKLY, and in PERIODS rather than noise
+
+> «и заполняться наш гаудж вполне может по недельному циклу, т.е. плавно и постепенно, а не раз в год»
+
+⚠⚠ **AND «PERIODS» IS THE LOAD-BEARING WORD – it is what separates this design from random noise.**
+White noise around a mean produces a wobbly line and no story; what he described is **flat years,
+surges and declines**, which requires the weekly step to be AUTOCORRELATED. So the pair carries a
+second number:
+
+**`phase` ∈ [−1, +1] – the season's own weather**, a slow bounded random walk on
+`rngFromSeed(`${seed}:chemistry:${coachId}:${week}`)` with strong persistence and mean reversion
+toward `A`. Weeks near each other share a phase; months apart do not. This is where a flat stretch or
+a long good run comes from, and it is one draw a week on a purpose-scoped sub-stream – **zero MAIN.**
+
+    weeklyRate = lerp(floor(A), ceiling(A), position(phase)) / 52 + events
+    chemistry  = clamp(chemistry + weeklyRate, -100, +100)
+
+### 3.4 The three event channels – his, exactly
+
+Events nudge `phase` rather than `chemistry` directly, so a single result cannot jolt the number: it
+bends the weather, and the weather moves the level.
+
+| channel | what pushes it | why it is the right channel |
+| --- | --- | --- |
+| **wins** | a title, a deep run, a result above the odds ring's expectation | winning together is how a pair finds each other |
+| **losses** | an early exit, a losing streak, a bad loss as favourite | his «поражения» – and it is the channel that makes a good pair's bad year possible |
+| **her state** | `spiritBandOf` – `heavy`/`dimmed` damps the climb and deepens the dip; `glowing`/`bright` helps | his «психологическое состояние ребёнка», and the world already has the five bands |
+
+### 3.5 ⚠⚠ Three consequences this correction has, and none of them is cosmetic
+
+1. **CHEMISTRY STOPS BEING A PURE FUNCTION OF (seed, coachId).** The level is now path-dependent, so
+   only `A` can be re-derived and the LEVEL and the PHASE must both be persisted (§10). The first
+   draft's «the rate is not persisted at all» is no longer true and is corrected there.
+2. **RESULTS NOW PAY TWICE AND THAT NEEDS NAMING.** §4's `standing` (the coach grows) reads results,
+   and §3.4 reads them again. Winning together genuinely should do both – he gets better AND they get
+   closer – but a great career compounds on both axes at once. ⚠ **C13 asks whether the second read
+   is damped**; the recommendation is a light damp rather than a fence, because the two effects are
+   honestly different things.
+3. **THE PSYCHOLOGIST NOW REACHES DEVELOPMENT BY A SECOND ROAD.** `spirit` is his patient, and spirit
+   moves chemistry, which moves `coachFactor`. That is thematically right – a girl in a better place
+   works better with her coach – but it is a NEW path from money to development and the bench has to
+   price it (B8), not discover it in play.
 
 ### 3a. The manner – a new fact about the coach, orthogonal to his style
 
@@ -392,10 +439,20 @@ His gradient carries **two facts in one component**: the DIRECTION is the hue fa
 is the position inside it. A pair at −15 is orange and a pair at −90 is red, and the player reads
 «going wrong» and «gone wrong» without a second glyph, a number or a legend.
 
+⭐⭐ **AND THE FIGURE STAYS, WITH ITS SIGN – his ruling, and he struck the spec's own line to make it.**
+§8 said «no percentage anywhere» on the grounds that a number is a slider; he answered: «вполне можем
+оставить цифру как раз для тех, кто плохо считывает цвета или расположение шкалы. Не вижу ничего плохого
+здесь – это **инструмент** всё-таки». He is right and the objection was the wrong shape: a figure is a
+slider when it is the ONLY thing on screen and the player has a dial for it; here the player has no
+dial for chemistry at all, so the number cannot be optimised – only read. And it is the one channel
+that works for a reader who sees neither the hue nor the fill.
+⚠ It costs no new component: `ui/ProgressRing.vue` already renders `<b>{{ round(value*100) }}</b>`
+inside a `<slot>`, so the sign is a caller's override and not a prop.
+
 ⚠ **Three things the build has to get right, and they are accessibility rather than taste:**
-* **Hue is not the only channel.** Red/green is the most common colour-vision confusion there is, so
-  the FILL FRACTION has to say it too – a negative pairing fills from the other end, so the ring's
-  shape differs even when its colour does not.
+* **Hue is not the only channel – and now there are THREE.** Red/green is the commonest colour-vision
+  confusion, so the FILL FRACTION says it too (a negative pairing fills from the other end, so the
+  ring's shape differs even when its colour does not) and the FIGURE says it outright with a `−`.
 * **The neutral is a real state, not an empty one.** Chemistry starts at 0 and most careers stay
   ordinary (§1's corner E), so the gauge at rest must read «nothing has happened yet» rather than
   «bad» – the unfilled track, not the first orange step.
@@ -448,17 +505,26 @@ gain the fourth later, or wait. C5.
 
 | key | shape | migration literal |
 | --- | --- | --- |
-| `coachChemistry` | `Record<coachId, number>` – accrued level per pair | `{}` – «she has worked with nobody» |
-| `coachStanding` | `Record<coachId, number>` – §4's earned score, from which his tier is derived | `{}` – «nobody has grown on her account» |
+| `coachPairs` | `Record<coachId, { chem: number; phase: number; standing: number }>` | `{}` – «she has worked with nobody» |
 | `sparringTravels` | `boolean` (#48) | `false` |
 
-⚠ **`coachStanding` stores the SCORE and not the tier**, so the tier is always a pure function of it
-and a threshold retune moves every save at once instead of stranding careers at a rung that no longer
-exists. Same discipline as the chemistry RATE, which is not persisted at all.
+⚠ **ONE KEY WITH THREE NUMBERS, NOT THREE PARALLEL MAPS.** All three are facts about one PAIR and
+all three are written on the same week by the same pass; three maps keyed on the same id would be
+three chances for them to disagree about who exists.
 
-⚠ **The roster's drawn `manner` is NOT persisted either** – `buildCoachRoster` is already a pure
-function of `(seed, ageYears)` and stays one. A career reproduces its market from its seed, which is
-what makes «every game different» and «every game reproducible» the same sentence rather than two.
+⚠ **`standing` stores the SCORE and not the tier**, so the tier is always a pure function of it and a
+threshold retune moves every save at once instead of stranding careers at a rung that no longer exists.
+
+⚠⚠ **AND `phase` HAS TO BE PERSISTED, WHICH THE FIRST DRAFT GOT WRONG.** That draft said «the RATE is
+not persisted at all: it is a pure function of `(seed, coachId)`». That stopped being true the moment
+the rate started moving with results and with her state (§3.5): the week's weather is path-dependent,
+so it cannot be re-derived from a seed alone. **`A` still can** – it is drawn from `(seed, coachId)`
+and nothing else – and that is the half which keeps «every variation reproducible» true: same seed,
+same player choices, same career, to the bit.
+
+⚠ **The roster's drawn `manner` is NOT persisted** – `buildCoachRoster` is already a pure function of
+`(seed, ageYears)` and stays one. A career reproduces its market from its seed, which is what makes
+«every game different» and «every game reproducible» the same sentence rather than two.
 
 ⚠ **`{}` is exactly true and not a placeholder.** A career that predates the mechanic accrued nothing
 with anybody, because there was nothing to accrue. The RATE is not persisted at all: it is a pure
@@ -503,6 +569,9 @@ bench can veto the wave**, and it is the reason it is numbered before the others
 | B4 | time to 90% of ceiling (round 42 #38's clock) | corner A moves it **1.5–3 years** earlier than an equivalent unbought career |
 | B5 | §4's own gate – does «hire cheap and wait» buy anything? | **zero tiers climbed** on a career with no results movement. This is the mutation arm: if a plateau career still climbs, the driver is reading time and not results |
 | B6 | the coach's bill at career end, corner A | **inside the elite band** – he became elite, so he is paid like it, and the family watched it happen |
+| ⭐ B7 | §3.2's FLOOR column, which he was explicit about not being sure of | fit it so that a PERFECT pair sees a down year about **1 season in 8** at −5…−10%/yr (the Borg case, rare but real) and a NO-MATCH pair sees one **more often than not**. ⚠ The ceiling column is his and is not the bench's to move |
+| ⭐ B8 | the psychologist's SECOND road to development (§3.5) – spirit → chemistry → `coachFactor` | **under 1.5 skill points** over a career at the top rung, against his direct composure effect. If it is larger, the seat is buying development through a side door and the coupling needs damping |
+| B9 | do PERIODS actually appear, or is it noise? | a perfect pair's weekly series should show runs of **8+ weeks** on one side of its mean; a series that alternates every week is white noise wearing a phase and §3.3 has not been built |
 
 ⚠ **B3 changed shape from the first draft and the change is the owner's correction.** It used to ask
 whether a cheap coach could ever match an expensive one – the answer is now deliberately YES, rarely.
@@ -542,21 +611,27 @@ channel, and because two schema waves in flight at once is how an append-only mi
 | **C3** | does the `elite` rung accrue chemistry, having no next tier? | **yes, a token +0.04** – a flat zero would say the best coach cannot grow closer to her, which reads wrong |
 | **C4** | does chemistry give §4's standing a tailwind? | **a small one** – a coach learns more from a girl he understands. Recommend a modest multiplier, not a second driver, so B5's mutation arm stays interpretable |
 | **C5** | does #51 ship on three components now, or wait for F1's fourth? | **ship on three** – the ask is wrong TODAY and the fourth slots in without re-shaping the others |
-| **C6** | the click's rate, 33%/yr | **his own «за 3 года 100%» taken literally** – let B1 tune the FREQUENCY, never the size |
+| **C6** | the click's rate, 33%/yr | ✅ **RE-RULED 16.09 AND THE ANSWER REPLACED THE QUESTION: 33% is a CEILING a perfect pair can reach, not a rate it runs at.** The corridor, the weekly period and the three event channels are §3, rewritten on his correction. B7 fits the floor column he was explicit about not being sure of |
 | **C7** | is chemistry visible on the coach's seasonal line from season one, or once a band is clear? | **once clear** – a sentence in week 3 about a relationship is noise |
 | **C8** | do rival girls carry chemistry, or coach growth? | **neither, ever** – both are modifiers on a career the player steers, and the rival cohort has no coach model to hang them on |
 | **C9** | ⚠ **can a coach's TIER decline?** | **no** – one direction only. A falling tier would punish a player for a bad season twice (results, then the coach). ⚠ This is about §4's STANDING and not about §5a's chemistry, which is signed and does fall – two different numbers |
-| **C12** | ⭐ **does the gauge show a FIGURE at all, and does it carry the minus?** (opened by his C11 answer: «у нас ещё же цифра внутри есть, можно и минус дописывать короткий») | ⚠ **CHECKED, AND IT BUILDS: `ui/ProgressRing.vue` renders `<b>{{ round(value*100) }}</b><i>%</i>` inside a `<slot>`, so the figure exists and is overridable – a `−` costs no new component.** But it collides with §8's own «no percentage anywhere», which this spec argued on the grounds that a number on screen is a slider the player optimises instead of a relationship he reads. ⭐ **Recommendation: the minus WITHOUT the number** – put the sign in the slot and nothing else, so the third channel arrives (shape + hue + glyph, which answers the colour-vision constraint outright) while the figure stays unsaid. If he wants the number too, it is one slot and the «no percentage» line is his to strike |
+| **C12** | ⭐ does the gauge show a FIGURE, and does it carry the minus? | ✅ **RULED 16.09: THE FIGURE STAYS, WITH THE SIGN** – and he struck my «no percentage anywhere» himself: «вполне можем оставить цифру как раз для тех, кто плохо считывает цвета или расположение шкалы… это инструмент всё-таки». See §8a |
+| **C13** | ⭐ **NEW, opened by §3.5: results now pay TWICE** – into §4's `standing` and into §3.4's phase. Is the second read damped? | **lightly damped, not fenced.** Winning together honestly does both things – he gets better AND they get closer – so a fence would delete a true effect. But a great career compounds on two axes at once, so the chemistry read takes a fraction of the standing read's weight and B0's corner A is what says whether that fraction is right |
 | **C10** | is the anti-match as FREQUENT as the click, or rarer? | ✅ **RULED 16.09: the same frequency** («согласен»). A game where good luck is rare and bad luck is common is not variable, it is punishing. It is already slower to ARRIVE (§3), which is the only asymmetry the design needs |
 | **C11** | ⚠ does the §8 gauge show a NEGATIVE pairing, and how? | ✅ **RULED 16.09: yes, and by GRADIENT** – his design, and it is better than the recommendation it answers. See §8a |
 
 **Done when:** C1–C11 are ruled, B0's corner frequencies are accepted as a corridor, the four seasonal
 DRAFT lines are ruled (§5a – the anti line especially), and the builder brief for C1 points here.
 
-✅ **TWO ARE ALREADY RULED (16.09): C10** – the anti-match is as frequent as the click – **and C11** –
-the gauge carries the sign as a gradient, §8a. **Eleven remain** (C1a counts as its own, and C12 was
-opened by his answer to C11), and **C1 is the one to read first** because it is the document's only
-unmeasured design claim.
+✅ **RULED SO FAR (16.09): C2–C5, C7–C9 accepted as recommended** («остальное ок, оставляем твои
+рекомендации»), **C6 re-ruled** into §3's corridor, **C10** the anti-match is as frequent as the
+click, **C11** the gauge carries the sign as a gradient, **C12** the figure stays with its sign.
+
+**TWO REMAIN, and one of them is the wave's own hinge:**
+* ⭐ **C1 – the 4×4 (temperament × manner) table.** The document's ONLY unmeasured design claim, and
+  the thing every corner in §1 is drawn from. ⚠ C1a rides with it.
+* **C13** – whether results, which now pay into both §4's standing and §3.4's phase, are damped on the
+  second read. Opened by his own correction rather than by him.
 
 ---
 
