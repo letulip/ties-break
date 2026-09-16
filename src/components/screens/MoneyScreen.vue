@@ -1799,6 +1799,18 @@ const adFromAgeYears = ECONOMY.advertising.fromAgeYears
 // because the switcher does not govern it. ⭐ Say the word and either one moves under a tab.
 
 type ShelfTab = 'invest' | 'cars' | 'property' | 'business' | 'water' | 'air'
+// ⭐⭐ ROUND 43 #5 – `shelfShareNote`, WHY THE BUSINESS TAB NOW NAMES THE SPLIT. Parked here for
+// this file's standing reason (no Cyrillic in markup), and it is a defect report rather than a
+// feature request: he asked whether Zoe's brand was right, because the two numbers on screen could
+// not be reconciled.
+//
+// «Наверху вкладки Business можно добавить строчку про ту долю, которая уходит в семью и ей
+// отдельно, сказав, что видимые суммы - это семейный чистый доход» (16.09)
+//
+// ⚠ THE ARITHMETIC WAS NEVER WRONG. `worth = weekly GROSS × 52 × multiple`, the multiple capped at
+// `value.maxX = 20`; his $13k/wk beside $28M reads as 41x and looks impossible. But $13k is the
+// FAMILY's cut after her prize-ramp share, so the gross is $32.5k/wk and the multiple is 16.6x –
+// inside the band. The screen put his 40% beside the whole business's worth and named neither.
 const shelfTab = ref<ShelfTab>('invest')
 // ⭐⭐ ROUND 34 #16 – BUSINESS SITS NEXT TO INVEST NOW, AND THE ORDER IS THE WHOLE ITEM.
 //
@@ -2719,6 +2731,22 @@ function shopRowCornerAction(row: ShopRowView): boolean {
         :options="SHELF_TAB_OPTIONS"
         group-label="Which part of the shelf"
       />
+
+      <!-- ⭐⭐ ROUND 43 #5 – WHOSE MONEY THE FIGURES BELOW ARE. His words, ruled 16.09 as variant C of
+           three, and his reason for asking is in `shelfShareNote` in the script block. The two
+           percentages are the SNAPSHOT's (`shop.kidBusinessSharePct`), never literals: her share
+           ramps with age, so a hard-coded pair would lie to a nineteen-year-old – which is the same
+           defect this line exists to remove.
+           ⚠ IT HIDES AT ZERO, and that is a fact rather than a guard: before the ramp opens she takes
+           nothing from the shelf, the family's figures ARE the whole income, and there is nothing to
+           explain. -->
+      <p
+        v-if="screenTab === 'shop' && shop && !shopHome && shelfTab === 'business' && shop.kidBusinessSharePct > 0"
+        class="shelf-share-line"
+      >
+        She takes {{ shop.kidBusinessSharePct }}% of what these earn; the figures below are the
+        family's {{ 100 - shop.kidBusinessSharePct }}%. A holding's worth is the whole business.
+      </p>
 
       <!-- ===================== 8b. THE SHELF ITSELF, CARD BY CARD =====================
            ⭐⭐ ROUND 30 #5 – "the cards lie with no shared backing, roughly as on the Season screen".
@@ -4168,6 +4196,21 @@ function shopRowCornerAction(row: ShopRowView): boolean {
 
 .shop-family-note {
   margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+/* ⭐ ROUND 43 #5 – THE SPLIT LINE, at the top of the Business shelf. It borrows the family note's
+   register deliberately: it is the same KIND of sentence – what this part of the shelf is, before
+   the cards – and giving it a louder one would make a correction read as an alarm.
+   ⚠ The left accent rule is the one difference, and it is there because the line is answering a
+   question the screen used to leave open rather than describing a family. */
+.shelf-share-line {
+  margin: 8px 0 0;
+  padding: 6px 0 6px 10px;
+  border-left: 2px solid var(--accent-soft);
   font-size: 12px;
   line-height: 1.35;
   color: var(--ink-soft);

@@ -171,6 +171,45 @@ describe('§2 the shop shelf carries the business family and quotes what it earn
     expect(earners).toContain(`Brings in ${formatCents(merchRow.incomeCents)} a week right now`)
   })
 
+  // ⭐⭐ ROUND 43 #5 – THE TAB NOW SAYS WHOSE MONEY IT IS SHOWING. He asked whether Zoe's brand was
+  // right – «13000 в неделю при стоимости бренда 28м+» – and it was: `worth = weekly GROSS × 52 ×
+  // multiple`, the multiple capped at 20, so $13k of GROSS could never support $28M. But $13k is the
+  // FAMILY's cut after her prize-ramp share, so the gross is $32.5k/wk and the multiple is 16.6x.
+  // The arithmetic was never wrong; the SCREEN put his 40% of the income beside the whole business's
+  // worth and named neither, so anyone dividing one by the other got 41x and concluded it was lying.
+  //
+  // ⚠ THE TWO PERCENTAGES ARE ASSERTED AGAINST THE SNAPSHOT, NOT AGAINST 60/40. Her share ramps with
+  // age, so a test that pinned the literal pair would pass on a build that hard-coded them – which is
+  // the very defect the line exists to remove.
+  it('⭐⭐ the Business shelf names the split, with the snapshot`s own percentages', async () => {
+    const snap = toSnapshot(businessWorld('p5a-share-line'))
+    expect(snap.shop.kidBusinessSharePct, 'the ramp is open on this fixture – nothing below is vacuous')
+      .toBeGreaterThan(0)
+    const wrapper = await mountMoneyTab(snap, 'Shop')
+    await openShelfTab(wrapper, 'Business')
+    const line = wrapper.find('.shelf-share-line')
+    expect(line.exists(), 'the Business shelf does not say whose money it shows').toBe(true)
+    const text = line.text().replace(/\s+/g, ' ')
+    expect(text).toContain(`She takes ${snap.shop.kidBusinessSharePct}% of what these earn`)
+    expect(text).toContain(`the family's ${100 - snap.shop.kidBusinessSharePct}%`)
+    expect(text, 'and the worth is named as the whole business, which is the other half of his 41x')
+      .toContain('whole business')
+    wrapper.unmount()
+  })
+
+  // ⚠ AND IT IS ABSENT BEFORE THE RAMP OPENS – a fact, not a guard. Under eighteen she takes nothing
+  // from the shelf, the family's figures ARE the whole income, and a line explaining a split that is
+  // not happening would be its own small lie.
+  it('⚠ ...and says nothing at all while her share is zero', async () => {
+    const snap = toSnapshot(businessWorld('p5a-share-line'))
+    const young = { ...snap, shop: { ...snap.shop, kidBusinessSharePct: 0 } }
+    const wrapper = await mountMoneyTab(young, 'Shop')
+    await openShelfTab(wrapper, 'Business')
+    expect(wrapper.find('.shelf-share-line').exists(), 'it explained a split that is not happening')
+      .toBe(false)
+    wrapper.unmount()
+  })
+
   it('⭐ every delivered academy stage quotes its own share, and the shares sum to the ledger\'s line', async () => {
     const world = businessWorld('p5a-shop-academy')
     const snap = toSnapshot(world)
