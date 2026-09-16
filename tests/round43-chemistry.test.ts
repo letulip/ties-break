@@ -47,10 +47,12 @@ import {
   quietWeek,
   SAVE_SCHEMA_VERSION,
   TEMPERAMENTS,
+  tickWeek,
   type CoachManner,
   type WorldState,
 } from '../src/engine/world'
 import { migrateSave } from '../src/engine/migrations'
+import { rngFromSeed } from '../src/engine/rng'
 import { buildCoachRoster, COACH_TIERS, coachFactor, HIREABLE_TIERS } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
 import { DEFAULT_PROFILE, type PlayStyle } from '../src/shared/protocol'
@@ -482,6 +484,29 @@ describe('C1 J – schema v79, the full move', () => {
     const world = createWorld('v79-fresh', { ...DEFAULT_PROFILE })
     expect(world.coachPairs, 'on week 0 she has trained with nobody').toEqual({})
     expect(world.sparringTravels).toBe(false)
+  })
+
+  it('⭐⭐ A SELF-COACHED CAREER WRITES NO ROW AND GROWS EXACTLY AS IT ALWAYS HAS', () => {
+    // ⚠ THE END-TO-END FORM OF THE «ZERO IS THE IDENTITY» CLAIM, across real ticks rather than at the
+    //   function boundary. `accrueCoachPair` is gated on `coachWorksThisWeek(world) && coachId`, so a
+    //   girl with no coach never reaches it – the map stays `{}` for the whole career and `growWeek`
+    //   is handed 0, which `coachFactor` returns unchanged.
+    const world = createWorld('v79-alone', { ...DEFAULT_PROFILE, coachTier: 'self' })
+    const rng = rngFromSeed(world.seed)
+    for (let i = 0; i < 60; i++) tickWeek(world, rng)
+    expect(Object.keys(world.coachPairs), 'sixty weeks alone, nothing to remember').toHaveLength(0)
+  })
+
+  it('...and a career WITH a coach writes exactly one row, for the man she actually trains with', () => {
+    const world = createWorld('v79-hired', { ...DEFAULT_PROFILE, coachTier: 'middle' })
+    const rng = rngFromSeed(world.seed)
+    expect(world.coachId, 'this career opens with somebody').not.toBeNull()
+    for (let i = 0; i < 60; i++) tickWeek(world, rng)
+    expect(Object.keys(world.coachPairs), 'one man, one row').toEqual([world.coachId])
+    const pair = world.coachPairs[world.coachId!]
+    expect(pair.chem, 'the level has moved off zero').not.toBe(0)
+    expect(Math.abs(pair.chem), 'and it is bounded').toBeLessThanOrEqual(100)
+    expect(pair.standing, '⚠ and C2\'s number is still untouched after sixty weeks').toBe(0)
   })
 
   it('⭐ the map is SPARSE – shopping the market writes no row', () => {
