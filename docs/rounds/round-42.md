@@ -2372,3 +2372,54 @@ its own acceptance bench does not ship because the round is ending.
   ⚠ The drift table is PREDICTED from the spec's constants against measured calendars, not measured –
   the mechanic does not exist. «What a season of rust costs without him» is unanswerable today, and
   the bundle refused to estimate it rather than print a number that would look like a finding.
+
+- [ ] **49. HIS THREE 16.09 RULINGS ON THE TEAM ECONOMY, and one of them un-refuses a bench verdict.**
+
+  **(a) «мой вопрос был относительно исследования: не маловато ли?» – the elite price was TOO LOW, and
+  that is what #19 fixed.** His original «за такие деньги их не существует» reads as «you cannot get
+  an elite coach for $43k a year», and the rank band raises exactly that. Where we stand after it,
+  against his own research's retainer rows:
+
+  | her rank | ours after the band | the research |
+  | --- | ---: | --- |
+  | #11–100 | $76.5k – $100k/yr | ≈ $90k for a top-100 player – **inside** |
+  | #1–10 | $172k – $225k/yr | $150–250k for a top-10 – **inside** |
+  | a STAR name | unreachable | $300–500k+ – **still out** |
+
+  So two of the three rows are now honest and the third is not modelled at all: our ladder tops out at
+  the tier the parent buys, and «a famous coach costs more than a good one» is a fourth band nobody
+  has asked for yet. ⚠ Worth his word rather than my guess: a #1–3 band at ×7 would reach $340k and
+  put the star row inside too – one constant, the same four proofs, and finding 3.2 untouched because
+  it only ever reaches the very top.
+
+  **(b) «высокие тиры восстановлений в одном ценовом коридоре независимо от достатка» – RULED, and it
+  un-refuses the bench.** His reasoning is the part the bench could not see: «пользуются этими
+  восстановлениями уже когда деньги реально есть. Вряд ли семья с доходом 200-300 в неделю туда
+  поедет, а если и поедет – это их выбор.» ⭐ The mechanism EXISTS already – bundle 13 built
+  `uniformPrice`, measured it, and left it unset because it moved 4 of 20 mid-careers by up to
+  $178,701. **That measurement is now known to be answering the wrong question:** the bench's own
+  policy books a clinic week without judging affordability, so what it priced was the AUTOPILOT's
+  choice, not a player's. Turning it on is one line; the re-measurement must say so out loud rather
+  than quote the same number under a new heading.
+  ⚠ And the honest limit of any bench here: no arm can tell «a family that would never book this» from
+  «a family whose autopilot books everything». The design question is his and he has answered it.
+
+  **(c) «а в чём проблема? давай распишем» – the sparring seat's dependency, laid out.** It is not
+  missing logic *around* the seat; the thing the seat acts on does not exist:
+
+  * **F1 – `world.form`** (spec §1): a persisted, 0-centred number in tenths, clamped [−10, +10], one
+    weekly update beside condition's and **zero draws** – an accumulator over facts the world already
+    holds. Three parts: the RESULTS channel (the slump – the residual against the odds ring's own
+    expectation), the RHYTHM channel (the rust – drift once a matchless gap passes three weeks), and
+    mean reversion to neutral. **One reader**: `composureEff = composure + form × K` at MatchPlayer
+    build time, so the radar, the box score, the commentary and the coach's read all inherit it with
+    zero new surfaces. Schema key + migration + fixture. Cost M.
+  * **F2 – the seat itself**: engine leaf, money, card, receipts – and the third key his own override
+    needs, `sparringTravels`.
+
+  ⭐⭐ **AND THE ORDER MATTERS, because of what this round just measured.** F1's whole reader is
+  COMPOSURE – the wing #34 has just proved is worth 0.4–0.6pp per twenty points. So F1 built today
+  would move ±6 composure points, i.e. **about 0.15pp of match win rate**: a slump nobody can feel,
+  and a third decorative mechanic on top of the two this round found. Built AFTER #34 re-prices nerve,
+  the same ±6 points are worth several times that and the slump becomes a thing the player fights.
+  **So the honest sequence is #34 → F1 → F2**, and this round's measurement is what says so.
