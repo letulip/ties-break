@@ -279,7 +279,11 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
 
   ⚠ **Copy is his** – the letter is player-facing and arrives as a DRAFT.
 
-  ⚠ **And one question the build must answer rather than assume:** does it fire for EVERY delivered
-  rung, or only for the ones that actually took weeks? An index-fund purchase that lands the same
-  week would make the inbox noisy for no news. Recommendation: **only rungs with a build time**, which
-  is exactly the set the ring is drawn for.
+  ✅ **RULED 16.09: only the rungs with build times.** «Всё верно, я так и сказал, только те, которые
+  имеют сроки построек.» So an index-fund purchase that lands the same week writes nothing – the
+  letter exists for the wait, and where there was no wait there is no news. That is exactly the set
+  round 41 #28's build ring is drawn for, so the two surfaces answer the same question about the same
+  rungs.
+
+  ⚠ **The remaining build question is the WEEK, and it is not a design choice:** the ring filling and
+  the delivery landing are not automatically the same instant. The letter reads the DELIVERY.
