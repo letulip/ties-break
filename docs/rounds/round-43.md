@@ -156,3 +156,72 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ The reduced-motion killswitch below it keeps its job: with less motion asked for, the chip takes
   a STEADY soft-accent edge and glow rather than a breathing one. A player who asked for calm still
   has to be able to find the chip.
+
+- [ ] **8. THE SMALL-TALK CORPUS IS TOO THIN, AND TWO OF THEM CAME BACK-TO-BACK (his 16.09).** «Она
+  пришла 2 раза подряд с the players I've been watching barely talk about winning. Мне кажется этих
+  микро диалогов должно быть много и они точно не должны так часто повторяться, иначе в чём смысл.»
+
+  ⚠⚠ **DIAGNOSED, AND IT IS A GUARANTEE RATHER THAN BAD LUCK.** His line is `id: 'watching-players'`,
+  subject **`observation`** – and `observation` holds **exactly one situation in the whole catalogue**.
+  Four of the six subjects are single-entry, so any repeat of those subjects is repeated VERBATIM:
+
+  | subject | situations |
+  | --- | ---: |
+  | `story` | 4 |
+  | `good-news` · `worry` | 2 each |
+  | **`observation` · `decision` · `curiosity`** | **1 each** |
+  | **total** | **11** |
+
+  ⚠ **And there is no memory at all.** `rollSmallTalk` draws the subject and the situation fresh every
+  week (`seed:life:smalltalk:<week>`) and excludes nothing that was said before.
+
+  ⭐ **The arithmetic says the catalogue is not the first defect.** `smallTalkPerWeek` is 0.08 at a
+  close bond, capped by `smallTalkCapPerSeason: 4` – so a season holds **four conversations against
+  eleven situations**. Four of eleven could easily have been four different ones; two identical in a
+  row is the worst outcome a pool that size can produce, and only a missing exclusion can produce it.
+
+  **(a) THE FIX, architect's, no schema and no copy:** `raiseLifeBeat` already pushes
+  `{ week, kind, detail }` into `world.lifeLog`, so the history is ALREADY STORED – read back recent
+  `small-talk` rows and exclude their situations from the draw.
+  ⚠ **It must degrade gracefully:** `reachableSituations` narrows by career facts, so the reachable
+  set can be three rather than eleven. Drop the OLDEST exclusions first and never empty the pool, or
+  the draw falls through to the generic subject line.
+
+  **(b) THE CORPUS, his:** ⭐ **RULED 16.09 – «давай сделаем 44 ситуации… или можно 55 для
+  уверенности».** At 40 conversations in a ten-season career, 44 situations put each line at **1–2
+  appearances** and leave some unseen in a playthrough, which is his own reasoning. 55 buys more.
+  ⚠ New situations are new player-facing strings, so they are DRAFTS: the architect writes the
+  document, he proofreads, nothing ships before he has.
+
+- [ ] **9. THE KNOCK CADENCE INTERRUPTS TOO OFTEN – round 42 #27's own parked signal has arrived.**
+  «Мне всё ещё очень часто падают не травмы, а предупреждения, что ей надо отдохнуть.»
+
+  ⭐ **The logic WAS checked – round 42 #27, off his own save** – and that item closed with exactly
+  this trigger: «if the FEEL stays wrong after this reading, the knock cadence becomes a tuning
+  question with a bench arm – his call». The signal is here, so the tuning pass is now owed.
+
+  **The model, in one line** (`knock.ts`): `0.1 + (100 − condition) × 0.0022 + (train − 75) × 0.006`,
+  rate-limited by `KNOCK_COOLDOWN_WEEKS = 4`.
+
+  | week | weekly chance | expected gap incl. cooldown |
+  | --- | ---: | ---: |
+  | rested, light (cond 100, train 60) | **1%** | ~104 wk |
+  | steady (cond 80, train 75) | **14.4%** | ~11 wk |
+  | working (cond 65, train 80) | **20.7%** | ~9 wk |
+  | grinding (cond 60, train 85) | **24.8%** | ~8 wk |
+
+  ⭐⭐ **THE STRUCTURAL FINDING: at the pivot the FATIGUE term is twice the base.** At condition 60 it
+  contributes 8.8 points against the base's 10, so «she needs rest» fires mostly because she IS
+  tired – the model is behaving correctly.
+  ⚠ **Which means the real question may not be the knock door at all, but whether a careful player
+  can hold condition high enough to stay off it.** If an ordinary working week sits at 60–65, then
+  20%/week is a CONSEQUENCE of the condition economy, and retuning `KNOCK_BASE_CHANCE` would be
+  treating a symptom.
+
+  **So the arm measures TWO things, not one:** the realised distribution of `condition` and
+  `plan.train` across a live career, and only then the realised knock cadence that falls out of it.
+
+  ⚠ **AND THE TARGET IS HIS, because the complaint is about INTERRUPTIONS rather than injuries** – a
+  knock that is shrugged off still stopped the week. The question to rule is «how many times a season
+  may the game interrupt a careful player», and the bench measures against his number rather than
+  against the architect's taste.
