@@ -380,3 +380,282 @@ school, so the first tranche goes where the game is silent rather than where it 
   the exclusion makes a BACK-TO-BACK repeat impossible.
 * **It proposes an engine change it has not measured**, because there is nothing to measure: the
   four-voice restructure is a data-shape change, and its whole effect is the grid table in §6.
+
+---
+
+# PASS 2 – the rebuilt tranche
+
+Written against §3b's architecture and his six gates. **Fourteen situations**, and the weighting is
+deliberate: `story` and `decision` were the starved cells (1 and 0 adult situations), so they take
+six and four. Every one reaches `college` and `independent`.
+
+⚠ **Every kernel below is `generated` unless a gate is named.** A generated kernel establishes
+harmless domestic truth – a kettle, a sock, a dinner table – and may not establish results, skill,
+money, entries or longitudinal history. Where a situation needs the career to be true, it names the
+gate.
+
+⚠ **No line says «today»** (gate 4): a card can live for weeks, so the wording is «this week», «the
+other day», or a named day that reads as a memory rather than as this morning.
+
+---
+
+## P2.1 `story` – six, because a bright week favours this cell and it held one
+
+### R1 · `the-kettle` · story · after-school, college, independent · generated
+**Kernel:** In the tournament hotel the kettle only boils while the switch is held down. She stood
+holding it for about four minutes to make tea, and a player she doesn't know came in and did the same
+without a word.
+**Authoritative claims:** none. **Texture allowed:** the hotel, the other player, the tea.
+**Frames:** away only (she is travelling).
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"You have to HOLD the kettle down in this place. For four minutes. Someone else came in and did exactly the same thing and we just stood there."` |
+| `fiery` | `"The kettle doesn't stay on. You hold it. Four minutes of my life. Then another girl came in and held hers too, so at least I'm not the idiot."` |
+| `deep` | `"I stood holding a kettle switch for four minutes. Someone came in and did it too. Neither of us said anything and it was the least alone I've felt this week."` |
+| `quiet` | `"The kettle in the room needs holding down. Takes about four minutes. Someone else came in and waited as well."` |
+
+**Parent:** *Ask who else was standing there* · *Say you'd have given up at two minutes* · *Laugh and let it go*
+
+### R2 · `the-labelled-fruit` · story · after-school, college, independent · generated
+**Kernel:** Someone she trains with writes her own name on every banana in the shared fridge.
+**Authoritative claims:** none – «someone she trains with» is deliberately not a named teammate and
+creates no persistent relationship. **Frames:** roof and away.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Someone writes her NAME on bananas. On every single one. Who is taking the bananas?"` |
+| `fiery` | `"She labels her fruit. Her fruit. I've said nothing for three weeks and I am running out of nothing."` |
+| `deep` | `"There's a woman who writes her name on bananas. I've decided not to ask why, because I think the answer might be sad."` |
+| `quiet` | `"There's a system in the fridge now. Names on things."` |
+
+**Parent:** *Ask whether anyone has ever taken one* · *Say people mark what they can't replace* · *Change the subject entirely*
+
+### R3 · `the-stranger's-sock` · story · after-school, college, independent · generated
+**Kernel:** The laundry came back one sock short and one sock over. The extra one isn't hers and she
+has kept it.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The laundry gave me back a sock that isn't mine and now I feel responsible for it."` |
+| `fiery` | `"Someone out there has my sock. They know they have it. That's the part I can't let go of."` |
+| `deep` | `"There's a sock in my bag that belongs to a stranger. I've moved it between three hotels now and I can't explain why."` |
+| `quiet` | `"Laundry came back one short and one over. I kept the spare."` |
+
+**Parent:** *Ask what the sock looks like* · *Say it's yours now* · *Say you have three of those at home*
+
+### R4 · `the-announcement` · story · college, independent · generated
+**Kernel:** An announcement at the airport gate went out in a language nobody around her understood,
+and the whole gate stood up at once anyway.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"They said something over the speaker, nobody understood a word, and the entire gate stood up together. Herd instinct!"` |
+| `fiery` | `"Not one person knew what was said. Not one. And we all stood up like sheep, me included, which is the bit that bothers me."` |
+| `deep` | `"An announcement went out that nobody understood, and the whole room stood. I've been thinking about how easily that worked."` |
+| `quiet` | `"The gate announcement wasn't in English. Everyone stood, so I did. We boarded fine."` |
+
+**Parent:** *Ask whether it was even the right flight* · *Say you'd have stood up too* · *Say she got there, which is the main thing*
+
+### R5 · `the-autograph-that-left` · story · college, independent · generated
+**Kernel:** A small child asked her to sign something after a match, then got shy and went back to a
+parent without taking it.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A little kid asked me to sign something and then panicked and ran off. I'm still holding the pen."` |
+| `fiery` | `"I got asked for an autograph! And then she LEFT. I had already started writing."` |
+| `deep` | `"A child asked me to sign something and changed her mind halfway. I think she'd been sent, and I think she worked that out."` |
+| `quiet` | `"Someone asked for a signature after the match. It didn't happen in the end."` |
+
+**Parent:** *Ask what she was going to write* · *Say the kid will tell that story for years* · *Say it's a strange thing to get used to*
+
+### R6 · `the-saved-seat` · story · college, independent · generated
+**Kernel:** At the players' dining table someone she barely knows had a bag on the chair beside them
+and moved it when she came in.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Someone saved me a seat at dinner. I've spoken to her maybe twice!"` |
+| `fiery` | `"She kept me a seat. I barely know her. I don't know what to do with that and it's been bothering me all evening."` |
+| `deep` | `"There was a bag on the chair beside hers and she moved it when I came in. I've been turning that over since."` |
+| `quiet` | `"I sat with someone at dinner. The seat was free."` |
+
+**Parent:** *Ask what they talked about* · *Say somebody noticed her* · *Say dinner is just dinner*
+
+---
+
+## P2.2 `decision` – four, because the cell held ZERO adult situations
+
+### R7 · `one-meal` · decision · college, independent · generated
+**Kernel:** She has learned to cook exactly one meal properly and is deciding whether to learn a
+second or keep eating that one.
+**Authoritative claims:** none. ⚠ **Stage note:** unreachable at `school`/`after-school` on purpose –
+a girl under a parent's roof is not deciding this.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I can make ONE thing now. Properly. I'm deciding whether to learn a second or just accept that this is who I am."` |
+| `fiery` | `"I can cook one meal. Either I learn another this week or I eat this one until I die. Those are the options."` |
+| `deep` | `"I've made the same meal eleven times. I'm trying to work out whether that's competence or hiding."` |
+| `quiet` | `"I've been eating the same thing most nights. It's fine. I might learn another one."` |
+
+**Parent:** *Ask what the meal is* · *Say one you can make beats three you can't* · *Say nobody is marking her on this*
+
+### R8 · `alone-or-with-them` · decision · college, independent · **fact: `march-entry-open`**
+**Kernel:** The group is travelling a day early for the next event; she could go with them or travel
+alone the morning after.
+⚠ **Gated deliberately:** it presumes an upcoming entry, which is a career fact, so it takes
+`march-entry-open` rather than inventing a schedule.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Everyone's going a day early. I could go with them or go on my own the morning after. I genuinely can't decide."` |
+| `fiery` | `"I'm going on my own. Probably. A whole day of sitting around with everyone would finish me before I started."` |
+| `deep` | `"A day early with them, or alone the next morning. I've picked it up and put it down about six times since lunch."` |
+| `quiet` | `"The group goes a day before. I could go after. Either works."` |
+
+**Parent:** *Ask which one she keeps coming back to* · *Say arriving rested is worth something* · *Say either is fine and she should pick the easy one*
+
+### R9 · `the-routine-she-dropped` · decision · after-school, college, independent · generated
+**Kernel:** There is a small pre-match routine she used to do and has stopped, and she only noticed
+this week that she had stopped.
+⚠ **Texture only:** the routine is a water bottle, not a technical or training change – nothing here
+touches development.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I've stopped doing the thing with the water bottle. I only just noticed I'd stopped!"` |
+| `fiery` | `"I dropped the bottle thing. It was superstition and I'm not superstitious. I think."` |
+| `deep` | `"There was a thing I did before matches. I stopped weeks ago and only worked out this week that I'd stopped."` |
+| `quiet` | `"I don't do the bottle thing any more. No particular reason."` |
+
+**Parent:** *Ask when she thinks she stopped* · *Say she can start again if she misses it* · *Say it clearly wasn't load-bearing*
+
+### R10 · `advice-she-did-not-ask-for` · decision · college, independent · generated
+**Kernel:** An older player she doesn't know told her, unprompted, to change something about how she
+stands to return.
+⚠ **It asserts no outcome** – whether the advice is good is never stated, and taking it changes
+nothing in the engine.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Someone I've never spoken to told me to change how I stand to return. Do I... do that?"` |
+| `fiery` | `"A woman I don't know told me how to return. I haven't decided whether that was kind or rude and I've had all week."` |
+| `deep` | `"Unasked-for advice, from someone with no reason to help me. I've been trying to work out what she wanted from it."` |
+| `quiet` | `"Somebody said something about my return. I wrote it down."` |
+
+**Parent:** *Ask what exactly she said* · *Say she can try it and drop it* · *Say she doesn't owe a stranger a change*
+
+---
+
+## P2.3 `good-news` – three ordinary competences
+
+### R11 · `five-coffees` · good-news · college, independent · generated
+**Kernel:** She did the coffee run for five people and got every order right without writing them down.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I remembered five coffee orders. FIVE. Including the complicated one."` |
+| `fiery` | `"Got every coffee right. Every one. Somebody should have been filming."` |
+| `deep` | `"I remembered all five without writing them down. It is a stupid thing to be pleased about and I am pleased about it."` |
+| `quiet` | `"I did the coffee run. Got them all right."` |
+
+**Parent:** *Ask what the complicated one was* · *Say that's a useful kind of memory* · *Laugh and say nothing else*
+
+### R12 · `the-grip-she-did-herself` · good-news · after-school, college, independent · generated
+**Kernel:** A grip came loose mid-practice and she re-wrapped it herself instead of asking anyone.
+⚠ **No performance claim** – it says nothing about how she played, only that the grip held.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"My grip came off and I just... did it. Myself. Badly, but myself."` |
+| `fiery` | `"I re-gripped it myself. Didn't ask, didn't need to, and it held."` |
+| `deep` | `"The grip went halfway through. I sat down and did it, and I've been thinking about how long I'd have waited for help a year ago."` |
+| `quiet` | `"Re-wrapped a grip this week. It held."` |
+
+**Parent:** *Ask how bad it looks* · *Say that's one less thing she needs anyone for* · *Say you still can't do it either*
+
+### R13 · `the-call-she-made` · good-news · college, independent · generated
+**Kernel:** She had to ring and change a booking in a language she is still learning, and it worked.
+⚠ **Not a money event** – what the booking cost is never named, so it asserts nothing about the
+ledger.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I made a phone call. In an actual other language. And the person understood me!"` |
+| `fiery` | `"I made the call myself. I'd been putting it off for a week and it took four minutes, which is the annoying part."` |
+| `deep` | `"I rang them and did it in their language. Badly. It worked, and I've been quietly pleased about it since."` |
+| `quiet` | `"The booking's changed. I called."` |
+
+**Parent:** *Ask how much of it she understood* · *Say the week of dreading it was the hard part* · *Say well done and leave it*
+
+---
+
+## P2.4 `observation` – R14 is S1 rebuilt, using his own example
+
+### R14 · `the-calm-loss` · observation · after-school, college, independent · **fact: `played-recently`**
+**Kernel:** After a match of her own, she watched another player lose, shake hands calmly, pack her
+bag and leave without visible upset.
+⚠ **Gated** because it presumes she was at a tournament. ⚠ **It says nothing about HER result** – the
+other player's loss is generated texture; her own match is only the reason she was there.
+⭐ **This row is his, written in his review as the worked example of a shared kernel**, and it is used
+as he wrote it.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A girl lost and was genuinely fine about it. Shook hands, packed up, left. Is that something you learn?"` |
+| `fiery` | `"She lost and just walked off. No argument, nothing. How?"` |
+| `deep` | `"She shook hands like losing was only Tuesday. I watched her pack, and I still don't understand it."` |
+| `quiet` | `"She shook hands, packed her bag and left. I stayed and watched the next one."` |
+
+**Parent:** *Ask what she'd have done* · *Say losing might get easier to carry* · *Say she doesn't have to have a view on it*
+
+---
+
+## P2.5 What the rebuilt tranche does to the grid – counted by script, not claimed
+
+Fourteen four-voiced situations reach every voice. Six of them also reach `after-school`; none lists
+plain `school`, deliberately, because every hole he is feeling is past it.
+
+| voice | school | after-school | college | independent |
+| --- | ---: | ---: | ---: | ---: |
+| `sunny` | 3 | 3 → **9** | 0 → **14** | 0 → **14** |
+| `deep` | 2 | 2 → **8** | 2 → **16** | 2 → **16** |
+| `fiery` | 1 | 1 → **7** | 0 → **14** | 0 → **14** |
+| `quiet` | 2 | 2 → **8** | 1 → **15** | 1 → **15** |
+
+**Against his per-cell floors:**
+
+| his floor | status |
+| --- | --- |
+| 3–4 reachable per subject at each active stage | `story` 6 · `decision` 4 · `good-news` 3 · `observation` 1+existing · **`worry` and `curiosity` still ride the old rows – tranche 3** |
+| 6+ in heavily weighted cells (bright/story) | ✅ `story` = 6 |
+| no subject with only ONE reachable adult situation | ✅ for `story`, `decision`, `good-news`; ⚠ `observation` is 1 rebuilt + 1 old |
+| last-two exclusion when ≥3 reachable | round 43 #8(a), architect's, no schema |
+
+⚠ **Two subjects are deliberately NOT in this tranche.** `worry` and `curiosity` in the old draft were
+where his heaviest gating findings landed – S4's medical claim, S5's draw ages, S6's money, S7's
+unlicensed loss, S9's coaching outcome. Rewriting them needs the gates decided first (which of them
+take `played-recently`, which need a new `lost-recently`, which move out of small talk entirely), so
+they are tranche 3 rather than hurried into this one.
+
+⭐ **And S8 («why tennis») is moved out of the corpus, not rebuilt.** His verdict: foundational
+agency is not disposable small talk, and «she keeps choosing it» can invalidate genuine doubt. It
+belongs to a larger beat and is filed as such.
+
+## P2.6 The corpus bench – what §7 wrongly said did not exist
+
+Deterministic, no engine change, reads the catalogue and the selection weights:
+
+| # | reports |
+| --- | --- |
+| K1 | the WEIGHTED pool size per (voice × stage × register) – not the raw count |
+| K2 | the adjacent-repeat rate over 40 conversations, with and without the exclusion |
+| K3 | the repeat-within-last-three rate |
+| K4 | the per-subject × stage floor, as a pass/fail table |
+| K5 | ⚠ the **unreachable set** – any situation no career can ever draw, which is how a gate typo hides |
+
+⭐ **K2 is the acceptance test and it is the one number his complaint is about.** His own arithmetic
+says 44 uniform entries still leave ~59% of careers one adjacent duplicate; the exclusion is what
+takes that to zero, and the bench is what proves it rather than asserting it.
