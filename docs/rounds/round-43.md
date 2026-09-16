@@ -50,8 +50,41 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ранги и будет справедливо». So the correction rides on HIS OWN LABOUR rather than on a wealth or
   rank corridor – the same shape the coach's annual ask has, at a lower intensity.
   ⚠ **The psychologist is explicitly out:** «Психолога не трогаем наверное.»
-  ⚠ Needs the intensity measured against the coach's, not chosen – it is a money change and invariant
-  5 binds.
+  ⭐⭐ **AND HIS 16.09 FOLLOW-UP CLOSES THE DESIGN – there is no missing number and the item that asked
+  for one is withdrawn.** «Мы начинаем работать с массажистом по нашим текущим ценам, а дальше он приходит и
+  просит прибавку, либо (так как альтернативы нет) добавить денег, но убавить количество процедур.»
+  ⚠ **The architect had filed #6 asking for a research figure. That was the wrong question:** today's
+  price IS the anchor, and the MECHANIC is the drift away from it. An external benchmark would only
+  be needed to re-price him from scratch, which is not what was asked.
+
+  **The shape, and it adds no new dial:**
+  * the ask moves **`perSessionCents`**, once a year;
+  * the family's answer is the rung dial (2 / 4 / 7) that already exists – **pay more for the same
+    hands, or hold the bill and drop a rung**. Both branches are his own words;
+  * ⚠ **there is no third «refuse» branch, and there must not be.** «Альтернативы нет» means refusal
+    cannot mean «he leaves and you hire another», and a punishment with no counterplay contradicts
+    «мы ни за что не наказываем». Two branches, neither of them losing.
+
+  **The driver is TIME SERVED, not her results.** The coach asks against a progress basket because
+  DEVELOPING her is his job; the masseur MAINTAINS her, and his value is his hours.
+  ⚠ Letting him read her titles would do two bad things at once: make him a second coach, and charge
+  her success twice – the exact C13 problem the chemistry wave has just had to damp.
+
+  ⭐ **The consequence is the one he wanted:** the rung dial stops being a one-time purchase and starts
+  ERODING. Seven sessions a week bought at 22 are four by 26 on the same money – a live pressure that
+  scales with the career and needs no new corridor, which is his «скомпенсировать все ранги» exactly.
+
+  ⚠ **Intensity is measured against the COACH, not against a market.** His «не так интенсивно как
+  тренер» is the yardstick: the coach's corridor is 5–15% (#51), so this sits clearly under it.
+  That is what invariant 5 binds here.
+
+  ⚠ **The one thing the bench must check:** the drift must never push the BOTTOM rung out of a modest
+  family's reach, or the poor lose the seat to arithmetic rather than to a decision.
+
+  ⭐⭐ **AND A SEQUENCING FINDING: there is no annual-ask machinery in this game at all.** `coach.ts`'s
+  `coachSeasonUplift` is a development projection, not a raise, and the coach's own ask (#51) is not
+  built. So the masseur's would be the FIRST – and it is the simpler one, reading time rather than a
+  basket. **Build it first and #51 inherits a tested mechanism** instead of the round inventing two.
 
 - [~] **5. THE BUSINESS TAB DOES NOT SAY WHOSE MONEY IT IS SHOWING (his 16.09).** He asked whether
   Zoe's brand was correct: «13000 в неделю при стоимости бренда 28м+».
@@ -85,6 +118,44 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ **The two percentages are ENGINE-READ, not literals** – `kidPrizeShareBps` at her age today, with
   `collegePausedShareYears` folded in exactly as the prize ramp reads it. A hard-coded 60/40 is a lie
   to a nineteen-year-old, and this round's own #5 is about a screen that lies by omission.
+
+- [ ] **7. THE SOFT-BEAT CHIP GETS THE AVATAR'S GLOW (his 16.09).** «Пульсирующую рамку вокруг её
+  просьбы поговорить на home сделать по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по
+  краям небольшая, а не только сама рамка.»
+
+  **The pattern to copy is already in the repo and it is his own from round 42 #29(b)** –
+  `src/style.css:3159`, the avatar's mood ring:
+
+      box-shadow:
+        0 0 0 1.5px var(--mood-ring-halo),              /* the dark halo, the colour's neighbour */
+        0 0 9px 1px rgba(var(--mood-ring-rgb), 0.55),   /* the glow, blooming past it */
+        0 2px 10px rgba(0, 0, 0, 0.45);                 /* the drop shadow, restated */
+
+  ⭐ **Two properties of that ring are the design and must carry across**, because they are why it
+  reads as a glow rather than as a thick border: the SHADOW ORDER (the first paints on top, so the
+  halo sits between the colour and the bloom) and the fact that `mood-ring-breathe` moves **only the
+  bloom** – the hue, the hairline and the halo are constant, so the ring never disappears and never
+  changes colour mid-cycle. The chip's `soft-beat-pulse` should breathe the same way, in
+  `--accent-soft` rather than a mood hue: an invitation, not an alarm (round 42 #20's own ruling).
+
+  ⚠⚠ **AND THE CHIP'S OWN COMMENT BECOMES WRONG AND MUST BE AMENDED, NOT LEFT.** `HomeScreen.vue`
+  around the `soft-beat-card` rule says today: «ONLY the border tint moves … costs no layout and no
+  paint outside the card's own edge, so nothing under the finger shifts.» His ask deliberately
+  reverses the second half. The first half still holds and is worth keeping: a `box-shadow` paints
+  outside the border box without reflowing anything, so **nothing under the finger moves even with the
+  glow** – which is the sentence the amended note should make.
+
+  ⚠ The reduced-motion killswitch below it keeps its job: with less motion asked for, the chip takes
+  a STEADY soft-accent edge and glow rather than a breathing one. A player who asked for calm still
+  has to be able to find the chip.
+
+- [~] **6. WITHDRAWN – THE MASSEUR NEEDED NO OUTSIDE FIGURE.** This item asked him to name a real-world
+  masseur price, or the round to run a research pass, because `team-economics-2026-09`'s audit row
+  gives none. ⭐ **His answer made the question unnecessary rather than answering it:** the seat starts
+  at today's prices and the mechanic is the DRIFT away from them, so the anchor is our own number and
+  the yardstick for the drift is the coach's ask. See #4.
+  ⚠ Recorded as withdrawn rather than deleted, because «the architect asked for a benchmark a design
+  did not need» is the kind of wrong question worth being able to find again.
 
 - [ ] **7. THE SOFT-BEAT CHIP GETS THE AVATAR'S GLOW (his 16.09).** «Пульсирующую рамку вокруг её
   просьбы поговорить на home сделать по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по
