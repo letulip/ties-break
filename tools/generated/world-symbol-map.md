@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,648 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,665 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-543 exported names across 52 owning modules.
+562 exported names across 54 owning modules.
 
 ## Areas
 
@@ -25,10 +25,11 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 18 |
 | `src/engine/world/coachMarket.ts` | THE COACH MARKET: who is available at her age and rung, what they cost, and what hiring one does | 18 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
+| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 17 |
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
-| `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 16 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
+| `src/engine/world/sparring.ts` | THE SPARRING PARTNER: the third seat of the travelling team, and the one with the narrowest job in the game | 12 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -44,6 +45,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/business.ts` | ⭐⭐ THE PARENT'S BUSINESSES – round 29 part four P7, parts two and three of his order: «нам нужен мерч, растущий от частоты и обилия рекламных контрактов, съемок, выступлений, титулов и прочего» and «нам нужна академия, которая зарабатывает» | 6 |
 | `src/engine/world/constants.ts` | THE SHARED IDS AND CAPS: the handful of constants more than one world module needs | 6 |
 | `src/engine/world/entries.ts` | THE ENTRY COMMANDS: putting her in a draw, and taking her back out | 6 |
+| `src/engine/world/form.ts` | HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts` | 6 |
 | `src/engine/world/milestones.ts` | WHAT THE FAMILY KEEPS: the moments that are never pruned, and the season they add up to | 6 |
 | `src/engine/world/shootClash.ts` | ⭐⭐ ROUND 29 #3 – THE SHOOT THAT LANDS ON A TOURNAMENT WEEK, AND THE FOUR ANSWERS TO IT | 6 |
 | `src/engine/world/means.ts` | WHAT THE FAMILY CAN AFFORD, AS ONE FACT – the licence a line of copy asks for before it may assume a wallet | 5 |
@@ -423,6 +425,28 @@ THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) 
 - `proSubCapUsage` – `src/engine/world/entryCaps.ts`
 - `yearEndJuniorRank` – `src/engine/world/entryCaps.ts`
 
+### `src/engine/world/sponsors.ts`
+
+THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
+
+- `acceptOffer` – `src/engine/world/sponsors.ts`
+- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
+- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
+- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
+- `declineOffer` – `src/engine/world/sponsors.ts`
+- `isRetainerWeek` – `src/engine/world/sponsors.ts`
+- `localSponsorCents` – `src/engine/world/sponsors.ts`
+- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
+- `resultBonusFor` – `src/engine/world/sponsors.ts`
+- `reviewAdOffer` – `src/engine/world/sponsors.ts`
+- `reviewSponsors` – `src/engine/world/sponsors.ts`
+- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
+- `sparringTravelFareFor` – `src/engine/world/sponsors.ts`
+- `sponsorCameoCents` – `src/engine/world/sponsors.ts`
+- `sponsorCameoWilling` – `src/engine/world/sponsors.ts`
+- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
+- `travelCostFor` – `src/engine/world/sponsors.ts`
+
 ### `src/engine/world/birthday.ts`
 
 HER BIRTHDAY, AND WHAT YOU GIVE HER.
@@ -443,27 +467,6 @@ HER BIRTHDAY, AND WHAT YOU GIVE HER.
 - `DAY_TOGETHER_FROM_AGE` – `src/engine/world/birthday.ts`
 - `giftNoun` – `src/engine/world/birthday.ts`
 - `pendingBirthday` – `src/engine/world/birthday.ts`
-
-### `src/engine/world/sponsors.ts`
-
-THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it.
-
-- `acceptOffer` – `src/engine/world/sponsors.ts`
-- `appearanceFeeFor` – `src/engine/world/sponsors.ts`
-- `bankSponsorCheque` – `src/engine/world/sponsors.ts`
-- `coachTravelFareFor` – `src/engine/world/sponsors.ts`
-- `declineOffer` – `src/engine/world/sponsors.ts`
-- `isRetainerWeek` – `src/engine/world/sponsors.ts`
-- `localSponsorCents` – `src/engine/world/sponsors.ts`
-- `masseurTravelFareFor` – `src/engine/world/sponsors.ts`
-- `resultBonusFor` – `src/engine/world/sponsors.ts`
-- `reviewAdOffer` – `src/engine/world/sponsors.ts`
-- `reviewSponsors` – `src/engine/world/sponsors.ts`
-- `rolloverKitAllowance` – `src/engine/world/sponsors.ts`
-- `sponsorCameoCents` – `src/engine/world/sponsors.ts`
-- `sponsorCameoWilling` – `src/engine/world/sponsors.ts`
-- `sponsorNeedMet` – `src/engine/world/sponsors.ts`
-- `travelCostFor` – `src/engine/world/sponsors.ts`
 
 ### `src/engine/world/endings.ts`
 
@@ -504,6 +507,23 @@ THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year f
 - `spanWeeksFor` – `src/engine/world/multiWeek.ts`
 - `spanWorthOffering` – `src/engine/world/multiWeek.ts`
 - `stoppableOfferWeek` – `src/engine/world/multiWeek.ts`
+
+### `src/engine/world/sparring.ts`
+
+THE SPARRING PARTNER: the third seat of the travelling team, and the one with the narrowest job in the game.
+
+- `hireSparring` – `src/engine/world/sparring.ts`
+- `resolveSparring` – `src/engine/world/sparring.ts`
+- `setSparringRung` – `src/engine/world/sparring.ts`
+- `setSparringTravels` – `src/engine/world/sparring.ts`
+- `SPARRING_CHANGE_KEY` – `src/engine/world/sparring.ts`
+- `SPARRING_LOCKED_DETAIL` – `src/engine/world/sparring.ts`
+- `SPARRING_RECEIPT` – `src/engine/world/sparring.ts`
+- `sparringRungOf` – `src/engine/world/sparring.ts`
+- `sparringRustCut` – `src/engine/world/sparring.ts`
+- `sparringUnlocked` – `src/engine/world/sparring.ts`
+- `sparringWeeklyCents` – `src/engine/world/sparring.ts`
+- `sparringWorksThisWeek` – `src/engine/world/sparring.ts`
 
 ### `src/engine/world/kit.ts`
 
@@ -694,6 +714,17 @@ THE ENTRY COMMANDS: putting her in a draw, and taking her back out.
 - `RELEASE_LINE_PREFIX` – `src/engine/world/entries.ts`
 - `releaseEntry` – `src/engine/world/entries.ts`
 - `withdrawEvent` – `src/engine/world/entries.ts`
+
+### `src/engine/world/form.ts`
+
+HER FORM, AS THE WORLD SEES IT – the world-reading half of `engine/form.ts`.
+
+- `accrueFormWeek` – `src/engine/world/form.ts`
+- `coachFormNote` – `src/engine/world/form.ts`
+- `formMatchlessWeeks` – `src/engine/world/form.ts`
+- `formResidualsOf` – `src/engine/world/form.ts`
+- `herWeekForForm` – `src/engine/world/form.ts`
+- `sparringComebackGap` – `src/engine/world/form.ts`
 
 ### `src/engine/world/milestones.ts`
 

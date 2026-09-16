@@ -67,7 +67,8 @@
     "prepare": "git config core.hooksPath .githooks || true",
     "graph": "node scripts/graph.mjs",
     "graph:check": "node scripts/graph.mjs --check",
-    "bench:masseurraise": "vite-node tools/masseur-raise-bench.ts"
+    "bench:masseurraise": "vite-node tools/masseur-raise-bench.ts",
+    "bench:form": "vite-node tools/form-bench.ts"
   },
   "engines": {
     "node": ">=22"

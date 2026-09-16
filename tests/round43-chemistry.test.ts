@@ -458,13 +458,21 @@ describe('C1 I – the ONE line in coachFactor (§5 / §5a)', () => {
 })
 
 describe('C1 J – schema v79, the full move', () => {
-  it('the ladder\'s head is 79', () => {
-    expect(SAVE_SCHEMA_VERSION).toBe(79)
+  it('the ladder\'s head is past 79 – this wave\'s rung is not the last one', () => {
+    // ⚠ RE-AIMED BY v80 (wave F1) AND DELIBERATELY NOT RE-PINNED TO A NUMBER. «Is 79 the head» was
+    // the right question on the day C1 landed and is the wrong one for ever after: an append-only
+    // ladder grows, and a case that has to be edited by every later wave is a case that teaches
+    // nothing. What C1 actually owes is that ITS rung is reachable and lands where it said – which
+    // is the case directly below.
+    expect(SAVE_SCHEMA_VERSION).toBeGreaterThanOrEqual(79)
   })
 
   it('the v78 -> v79 step back-fills «she has worked with nobody» and «nobody travels»', () => {
     const migrated = migrateSave(load('v78.json')) as WorldState
-    expect(migrated.schemaVersion).toBe(79)
+    // ⚠ THE HEAD OF THE LADDER AND NOT 79: `migrateSave` walks every rung, so a v78 save arrives at
+    // whatever the current version is. C1's claim is about the two KEYS the v78 -> v79 step writes,
+    // and those are asserted on the next two lines.
+    expect(migrated.schemaVersion).toBe(SAVE_SCHEMA_VERSION)
     expect(migrated.coachPairs, 'an empty map is exactly true, not a placeholder').toEqual({})
     expect(migrated.sparringTravels, 'round 42 #48, keys only').toBe(false)
   })

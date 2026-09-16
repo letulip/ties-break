@@ -36,9 +36,34 @@ import {
   PRE_V77,
   PRE_V78,
   PRE_V79,
+  PRE_V80,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v80: rolling the schema back to 79 – dropping `form` – returns the v79 SHAPE, and on no career the v79 CAREER', () => {
+    // ⚠⚠ THE FIRST RUNG IN THIS LADDER WHOSE THREE CELLS ARE NOT THE PREVIOUS VERSION'S LIVE
+    // CONSTANTS, and the case name says so rather than promising a byte-identity it cannot deliver on
+    // any career at all. v80 appends ONE key – `world.form`, wave F1 – and it ships WITH ITS READER:
+    // `composureEff = composure + form x K` at `MatchPlayer` build time. EVERY frozen career plays
+    // matches and has matchless weeks, so every one of them stepped on court at a composure that
+    // moved, and a peel that drops the key cannot undo the matches the remaining shape already
+    // played. v79's `coachPairs` set the precedent on two of three careers; this version is the one
+    // where it reaches all three.
+    //
+    // ⭐ SO WHAT THIS CASE ASSERTS IS THE SHAPE AND NOT THE HISTORY, which is still worth a rung:
+    // `form` is the ONLY key v80 appended and it is the LAST key of `createWorld`'s literal, so
+    // dropping it and rolling the number returns a serialisation a v79 build would accept, key order
+    // and all. If this ever goes red beside a green freeze, a later wave appended a key it did not
+    // declare or moved one out of last position.
+    //
+    // ⚠ THE PER-KEY CONTROL IS OVER `PRE_V80` IN tests/coachTravelEdgeFixtures.ts – 3 / 34 / 33 keys
+    // of 94 on the three cells, `rngMain` byte-identical on all three, and the narrow cell (5/0) is
+    // the coach's eye alone: one `info` row, no scoreline, no money.
+    expect(careerHashAtSchema(5, 0, 79), '25k · middle coach · grinder – RE-ANCHORED, she plays').toBe(PRE_V80.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 79), '120k · elite coach · grinder – RE-ANCHORED, she plays').toBe(PRE_V80.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 79), '8k · self-coached · player – RE-ANCHORED, she plays').toBe(PRE_V80.selfTravelling)
+  })
+
   it('⭐⭐⭐ v79: rolling the schema back to 78 – dropping `coachPairs` and `sparringTravels` – returns the v78 career ONLY where nobody was hired', () => {
     // ⚠⚠ THE ONE RUNG IN THIS LADDER THAT IS AN IDENTITY ON ONE CAREER AND A RE-ANCHORING ON THE
     // OTHER TWO, and the case name says so rather than promising a byte-identity it cannot deliver on

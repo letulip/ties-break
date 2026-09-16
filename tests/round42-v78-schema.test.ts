@@ -543,28 +543,49 @@ describe('round 42 v78 F – one row per purchase, appended and never rewritten'
 // G. THE SPARRING KEYS – present, and read by NOTHING
 // =================================================================================================
 describe('round 42 v78 G – the sparring seat is two keys and no behaviour', () => {
-  it('⭐⭐⭐ nothing under `src/` reads either key – the scheduling decision, made mechanical', () => {
-    // ⚠⚠ THIS IS THE CASE THAT STOPS AN UNUSED KEY BEING READ AS A HALF-BUILT FEATURE, and it is the
-    // case bundle 13 will DELETE when the seat lands. The keys ride v78 because two fields cannot
-    // justify a schema move of their own and two other customers were already paying for one; until
-    // the seat is built, a reader appearing anywhere in the tree is a defect and not a feature.
+  it('⭐⭐⭐ THE SEAT HAS LANDED (v80, wave F2) – and this case is the census that proves it did not sprawl', () => {
+    // ⚠⚠ THIS CASE USED TO ASSERT THE OPPOSITE, AND ITS OWN COMMENT PREDICTED ITS ENDING: «it is the
+    // case bundle 13 will DELETE when the seat lands». It is re-aimed rather than deleted, because
+    // the question it was really asking survives the seat – «is this key's reader set the one the
+    // design says it is, or has it leaked?» – and a census is worth more once there is something to
+    // count. v78 shipped the two keys with no reader at all; v80 reads them.
+    //
     // ⚠ Comments stripped first: the keys are NAMED in prose in several places (state.ts's own
     // docblocks, migrations.ts's step) and a census that counted those would be unarmable.
     const readers = srcFiles()
       .filter(([path]) => path !== 'engine/world/state.ts')
       .filter(([, source]) => /\bsparring(Hired|Rung)\b/.test(codeOnly(source)))
       .map(([path]) => path)
-    // `engine/world.ts` writes them once in `createWorld` and `engine/migrations.ts` once in the
-    // step – those two are the WRITERS the schema move owes, and they are named rather than excluded
-    // by a pattern, so a third writer appearing is red.
-    expect(readers.sort(), 'the two writers the schema move owes, and nobody else')
-      .toEqual(['engine/migrations.ts', 'engine/world.ts'])
+      .sort()
+    // ⭐ THE OWNER OF THE SEAT IS ONE MODULE. `world/sparring.ts` is the only file that DECIDES
+    // anything about these two fields; everything else either writes the literal the schema owes
+    // (`world.ts`'s `createWorld`, `migrations.ts`'s step), re-exports (`world.ts` again), declares
+    // the wire shape (`shared/protocol/snapshot.ts`), derives a card fact (`world/snapshot.ts`),
+    // prices a fare (`world/sponsors.ts`), totals the payroll (`world/coachMarket.ts`) or renders it
+    // (`SupportStaffTab.vue`). A file joining this list is a decision that leaked out of the leaf,
+    // which is exactly what this census is for.
+    //
+    // ⚠ `worker/sim.worker.ts` IS ABSENT AND THAT IS CORRECT: it names the three COMMANDS
+    // (`hireSparring`, `setSparringRung`, `setSparringTravels`) and never the two FIELDS, which is
+    // the invariant-1 seam working – the worker routes, the engine decides.
+    expect(readers, 'the seat`s whole footprint, named rather than pattern-excluded').toEqual([
+      'components/SupportStaffTab.vue',
+      'engine/migrations.ts',
+      'engine/world.ts',
+      'engine/world/coachMarket.ts',
+      'engine/world/snapshot.ts',
+      'engine/world/sparring.ts',
+      'engine/world/sponsors.ts',
+      'shared/protocol/snapshot.ts',
+    ])
   })
 
-  it('⭐ and a walked career never moves either of them', () => {
+  it('⭐ and a walked career still never moves either of them – a seat nobody hires is a seat nobody pays for', () => {
+    // Unchanged from v78 and still true one wave on, which is the point: the seat exists now, and a
+    // career that never hires into it is byte-identical to the career it always was.
     const world = posed('v78-g-sparring', 260, 'coolhead')
     walkGrowth(world, WEEKS_IN_SEASON)
-    expect(world.sparringHired, 'nobody can be hired into a seat with no command').toBe(false)
+    expect(world.sparringHired, 'nobody is hired by a tick').toBe(false)
     expect(world.sparringRung, 'and the dial cannot move either').toBe(1)
   })
 })

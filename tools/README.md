@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-243 TypeScript files: **42 live**, **201 archival**.
+244 TypeScript files: **43 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -46,6 +46,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `econ-bench.ts` | `npm run bench:econ` |
 | `endings-bench.ts` | `npm run bench:endings` |
 | `fatigue-bench.ts` | `npm run bench:fatigue` |
+| `form-bench.ts` | `npm run bench:form` |
 | `frozen-key-diff.ts` | diffs a frozen RNG capture against a live run – the instrument for "which draw moved?" when the pinned hash changes |
 | `injury-landscape.ts` | the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched |
 | `knock-rate.ts` | `npm run bench:knock` |

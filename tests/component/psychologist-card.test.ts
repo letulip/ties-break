@@ -97,10 +97,13 @@ describe('the psychologist card on screen T', () => {
   it('§0 – he is the SECOND seat on the tab, and the masseur is still the first', async () => {
     // The order is the one thing this chapter exists to get right: the owner commissioned the
     // masseur, paid a wave for him and then could not find him.
+    // ⚠ A THIRD SEAT JOINED AT v80 (wave F2) AND WENT LAST, which is the order the three arrived in.
+    // This case keeps asserting the WHOLE list rather than «he is at index 1», so a later seat
+    // inserted ahead of either of these two still reddens it.
     const { pro } = snapshots()
     const wrapper = await mountCard(pro)
     const ids = wrapper.findAll('.staff-block').map((b) => b.attributes('data-staff'))
-    expect(ids).toEqual(['masseur', 'psychologist'])
+    expect(ids).toEqual(['masseur', 'psychologist', 'sparring'])
     wrapper.unmount()
   })
 

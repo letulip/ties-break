@@ -374,6 +374,9 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
       .toEqual([
         'coachPairs',
         'composureBonus',
+        // ⭐ v80, wave F1 – the third time this roster is paid for, exactly as the note above
+        // predicted it would be for «every future wave».
+        'form',
         'sparringHired',
         'sparringRung',
         'sparringTravels',

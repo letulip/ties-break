@@ -140,7 +140,11 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
     const wrapper = await openStaff(hiredSnapshot())
 
     const blocks = wrapper.findAll('.staff-block')
-    expect(blocks.length, 'two seats today – the masseur and the psychologist').toBe(2)
+    // ⚠ THREE SINCE v80 (wave F2). This case shipped with TWO and its own ⚠⚠ below explained the
+    // absent third at length – «`sparring` has nothing to sit on». It has a seat now, so the number
+    // moves and the note under it is re-aimed rather than deleted: the BROKER is still parked, and
+    // «a portrait rendered for a seat the engine cannot fill» is still the thing this case refuses.
+    expect(blocks.length, 'three seats – the masseur, the psychologist and the hitting partner').toBe(3)
 
     const seen: string[] = []
     for (const block of blocks) {
@@ -158,17 +162,18 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
       expect(img.attributes('alt'), `the ${seat} portrait is decorative`).toBe('')
       seen.push(seat)
     }
-    expect(seen.sort()).toEqual(['masseur', 'psychologist'])
+    expect(seen.sort()).toEqual(['masseur', 'psychologist', 'sparring'])
 
-    // ⚠⚠ AND THE TWO FILES WITH NO SEAT ARE NOT ON THE SCREEN, which is a claim about the ITEM and
-    // not a tidy-up. `broker` is the owner's own parking («брокера пока не знаю»); `sparring` has
-    // nothing to sit on – `sparringHired` / `sparringRung` / `sparringTravels` are reserved SAVE KEYS
-    // with no reader anywhere on this tree (world/state.ts, v78/v79: «THE KEYS ONLY, AND NOTHING
-    // READS THEM ON THIS TREE»), so there is no card to put a face on. A portrait rendered for
-    // either would be a seat the engine cannot fill, advertised by its picture.
+    // ⚠⚠ AND THE ONE FILE WITH NO SEAT IS NOT ON THE SCREEN, which is a claim about the ITEM and not
+    // a tidy-up: a portrait rendered for a seat the engine cannot fill is a seat advertised by its
+    // picture. `broker` is the owner's own parking («брокера пока не знаю») and stays on the shelf.
+    //
+    // ⭐ IT USED TO BE TWO, AND THE SECOND WAS `sparring`: the three keys were reserved with no reader
+    // anywhere on the tree, so there was no card to put a face on. Wave F2 reads them, and the
+    // portrait that shipped in every install since round 42 #53 is on the screen above.
     const html = wrapper.html()
     expect(html, 'the broker has no surface and stays on the shelf').not.toContain('broker.webp')
-    expect(html, 'the sparring partner has no seat to sit on yet').not.toContain('sparring.webp')
+    expect(html, 'and the seat that WAS parked is now rendered').toContain('sparring.webp')
 
     wrapper.unmount()
   })
@@ -283,7 +288,7 @@ describe('round 43 #2 – the support seats wear their portraits', () => {
     const wrapper = await openStaff(lockedSnapshot())
 
     const blocks = wrapper.findAll('.staff-block')
-    expect(blocks.length).toBe(2)
+    expect(blocks.length, 'three since v80').toBe(3)
     for (const block of blocks) {
       const seat = block.attributes('data-staff')!
       expect(block.find('.staff-card').classes(), `${seat} is locked before the professional career`).toContain('locked')

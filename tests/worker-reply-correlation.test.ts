@@ -118,6 +118,12 @@ describe('every command answers with the arm REPLY_BY_COMMAND names for it', () 
       hireMasseur: { type: 'hireMasseur', hire: false, baseRevision: 0 },
       setMasseurSessions: { type: 'setMasseurSessions', sessions: 0, baseRevision: 0 },
       setMasseurTravels: { type: 'setMasseurTravels', on: false, baseRevision: 0 },
+      // ⭐⭐⭐ v80, wave F2 – the third salaried seat. Same shape as the masseur's trio above and the
+      // same reason the arguments are inert: this loop measures the REPLY contract, and a refusal is
+      // a legitimate arm (a junior career refuses the hire on the pro gate).
+      hireSparring: { type: 'hireSparring', hire: false, baseRevision: 0 },
+      setSparringRung: { type: 'setSparringRung', rung: 1, baseRevision: 0 },
+      setSparringTravels: { type: 'setSparringTravels', on: false, baseRevision: 0 },
       // v76, the psychologist's year – the second salaried seat. Same shape as the masseur's pair
       // above and the same reason the arguments are inert: this loop measures the REPLY contract,
       // and a refusal is a legitimate arm (a junior career refuses the hire on the pro gate).

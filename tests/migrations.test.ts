@@ -604,7 +604,16 @@ describe('save migrations', () => {
     // `composureBonus` needed a psychologist none of them hires. This line is not about that either:
     // two `??=` on world keys, inside one `if (v === 78)`, add exactly one rung to the walk, the
     // same as a single `??=` does.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 79 – past the colliding 64, through 65').toBe(79)
+    // ⚠ RE-AIMED AT v80 (16.09, wave F1 – `world.form`), NOT WEAKENED, for the FIFTEENTH time and
+    // with the claim unchanged once more. What moved is the LADDER'S HEAD and nothing else: 80 was
+    // taken by that wave's own full move (bump, append-only v79 -> v80 step, golden fixture v80, e2e
+    // fixtures regenerated, the doc-facts sentence and the frozen-career peel rung), the walk below
+    // is the same walk, and the claim this line makes – that the chain runs PAST the colliding 64
+    // and through 65 – now has one more rung to cross before it arrives.
+    // ⚠ v80's step is ONE `??=` on one world key, so it adds exactly one rung to the walk. Its
+    // reader IS reachable in a frozen career, as v79's is, which is why that file re-stamped again –
+    // and this line is not about that either.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 80 – past the colliding 64, through 65').toBe(80)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.
