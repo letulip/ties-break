@@ -119,36 +119,6 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   `collegePausedShareYears` folded in exactly as the prize ramp reads it. A hard-coded 60/40 is a lie
   to a nineteen-year-old, and this round's own #5 is about a screen that lies by omission.
 
-- [ ] **7. THE SOFT-BEAT CHIP GETS THE AVATAR'S GLOW (his 16.09).** «Пульсирующую рамку вокруг её
-  просьбы поговорить на home сделать по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по
-  краям небольшая, а не только сама рамка.»
-
-  **The pattern to copy is already in the repo and it is his own from round 42 #29(b)** –
-  `src/style.css:3159`, the avatar's mood ring:
-
-      box-shadow:
-        0 0 0 1.5px var(--mood-ring-halo),              /* the dark halo, the colour's neighbour */
-        0 0 9px 1px rgba(var(--mood-ring-rgb), 0.55),   /* the glow, blooming past it */
-        0 2px 10px rgba(0, 0, 0, 0.45);                 /* the drop shadow, restated */
-
-  ⭐ **Two properties of that ring are the design and must carry across**, because they are why it
-  reads as a glow rather than as a thick border: the SHADOW ORDER (the first paints on top, so the
-  halo sits between the colour and the bloom) and the fact that `mood-ring-breathe` moves **only the
-  bloom** – the hue, the hairline and the halo are constant, so the ring never disappears and never
-  changes colour mid-cycle. The chip's `soft-beat-pulse` should breathe the same way, in
-  `--accent-soft` rather than a mood hue: an invitation, not an alarm (round 42 #20's own ruling).
-
-  ⚠⚠ **AND THE CHIP'S OWN COMMENT BECOMES WRONG AND MUST BE AMENDED, NOT LEFT.** `HomeScreen.vue`
-  around the `soft-beat-card` rule says today: «ONLY the border tint moves … costs no layout and no
-  paint outside the card's own edge, so nothing under the finger shifts.» His ask deliberately
-  reverses the second half. The first half still holds and is worth keeping: a `box-shadow` paints
-  outside the border box without reflowing anything, so **nothing under the finger moves even with the
-  glow** – which is the sentence the amended note should make.
-
-  ⚠ The reduced-motion killswitch below it keeps its job: with less motion asked for, the chip takes
-  a STEADY soft-accent edge and glow rather than a breathing one. A player who asked for calm still
-  has to be able to find the chip.
-
 - [~] **6. WITHDRAWN – THE MASSEUR NEEDED NO OUTSIDE FIGURE.** This item asked him to name a real-world
   masseur price, or the round to run a research pass, because `team-economics-2026-09`'s audit row
   gives none. ⭐ **His answer made the question unnecessary rather than answering it:** the seat starts
@@ -186,8 +156,3 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ The reduced-motion killswitch below it keeps its job: with less motion asked for, the chip takes
   a STEADY soft-accent edge and glow rather than a breathing one. A player who asked for calm still
   has to be able to find the chip.
-
-- [?] **6. THE MASSEUR'S OWN FIGURE IS STILL MISSING.** Item 4 fixes the SHAPE; it does not supply a
-  target. `docs/research/team-economics-2026-09.md`'s audit row says «masseur/physio salaried, no
-  share» and gives no number, so either he names one or the round runs a research pass. Until then
-  the raise's intensity is fitted to the coach's rather than to reality.
