@@ -939,8 +939,40 @@ const windowRungs = computed<readonly TierId[]>(
  *  The lock labels were never the cause; the fifth chip is.
  *
  *  ⚠ THE CEILING IS NOT THE LEVER. 170 leaves ~21px of headroom by its own note, less than one
- *  wrapped row costs, and raising it would retire the only thing that has ever caught this row. */
-const STRIP_MAX_RUNGS = 4
+ *  wrapped row costs, and raising it would retire the only thing that has ever caught this row.
+ *
+ *  ⭐⭐⭐ 4 -> 3 ON 16.09 (round 43), AND THE CAP MOVED BECAUSE ITS CALIBRATION INPUT DID – re-measured
+ *  in the same browser, at the same 315px, by the same method.
+ *
+ *  ⚠⚠ READ THE SENTENCE ABOVE THAT NAMES THE INPUT: «the row it has to hold is **the e2e `junior`
+ *  fixture's**». That is the whole coupling, and it is why this constant is maintenance rather than a
+ *  decision taken once. The fixture drifted off that row – a regeneration put `junior` on the DOMESTIC
+ *  ladder, three short chips (Local/Regional/National), where any cap at all is slack – and the wave
+ *  that repaired the e2e corpus put her back on a Junior Tour one, because `e2e/elite-gate.spec.ts`'s
+ *  third case needs «an empty window behind a banked peak», and that state IS a junior-ladder career
+ *  whose domestic window has emptied behind her (the owner's 14.09 gate ruling, «это про КАРЬЕРУ, а
+ *  не про неделю»).
+ *
+ *  ⚠ AND WITH THE ROW BACK, CAP 4 NO LONGER DID WHAT THE TABLE ABOVE PREDICTED FOR IT. Her window is
+ *  {local, j30, j60, j300, w15} – five rungs like the measured one, but `local` where that one had
+ *  `w35` – and the table's «cap 4 -> 3 rows» does not survive the substitution. MEASURED at head, at
+ *  375px, through `e2e/responsive.spec.ts`'s own two bookends:
+ *
+ *      cap 4   5 rows   strip 110.78px   heading gap 178.28px   <- over the 170 ceiling
+ *      cap 3   3 rows   strip  81.39px   heading gap 148.89px   <- shipped
+ *
+ *  ⭐ 148.89 IS NOT A NEW NUMBER, WHICH IS THE CONFIRMATION RATHER THAN A COINCIDENCE. It is the
+ *  148.9 `e2e/responsive.spec.ts` names as the value its 170 ceiling was calibrated on – so cap 3 does
+ *  not buy headroom by shrinking the row past what the pin expects, it puts the row back exactly where
+ *  the pin was measured. The other two careers on that screen do not move at all (`sinking` 119.50,
+ *  `fresh` 118.89, both unchanged between the two caps): they stand on short domestic chips, where the
+ *  cap has never been the binding constraint.
+ *
+ *  ⚠ THE RUNG IS NOT DELETED, IT MOVES BEHIND THE ELLIPSIS – which is the owner's own ask quoted at
+ *  the top of this block («я просил спрятать вообще всё неактуальное кроме смежных турниров за
+ *  точечки, эта штука очень много места на экране занимает»), and the affordance it moves behind
+ *  already exists and already expands the row in place. No wording changes with this. */
+const STRIP_MAX_RUNGS = 3
 
 const stripVisible = computed<readonly number[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
