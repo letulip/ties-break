@@ -2442,7 +2442,19 @@ its own acceptance bench does not ship because the round is ending.
   consolation.
 
   **Architect's proposal on the parts he left open:**
-  * **The rate is the (temperament × manner) cell.** Her four temperaments are already rolled at birth
+  * ⭐⭐ **THE RATE IS A DRAW, NOT A LOOKUP – his sharpening, 16.09:** «самый дешёвый тренер может стать
+    идеальным метчем и дать конкуренцию элитному, но это такое же редкое событие, как и prodigy
+    девочка. Вот это я хочу показать.» That one sentence fixes the flaw in the architect's first
+    proposal: a flat 4×4 table would make «the cheap coach who clicks» a LOOKUP – true for the same
+    pairing in every career, and therefore a strategy rather than a story. It has to be **variance**.
+    So the (temperament × manner) cell sets the CENTRE of the rate and a seeded draw on
+    `(seed, coachId)` sets the pairing's own number: most pairs land ordinary (3–7% a year), some are
+    good (10–15%), and a RARE few draw the click that puts a budget coach on an elite curve. ⚠ And the
+    rarity has a yardstick already in the game – the prodigy draw itself: `rollPotential`'s [4, 26]
+    band, where a maximal roll is the thing his own Zoe got once in a career. The bench sets the tail
+    to that same order rather than to a chosen percentage, so «as rare as a prodigy» is measured
+    rather than asserted.
+  * **The (temperament × manner) cell is the centre of that draw.** Her four temperaments are already rolled at birth
     and now visible on the tile; give each coach a MANNER (demanding · patient · analytical · warm) and
     the 4×4 table IS the rate table, 3–15% a year as he says. So «this coach is wrong for her» stops
     being a style mismatch and becomes a relationship, which is what he asked for.
