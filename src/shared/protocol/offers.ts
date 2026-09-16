@@ -665,6 +665,26 @@ export interface ShopView {
    *  affordability guard still refuses a family that cannot pay it), never at the stale free one.
    *  A package that is not `freeOnceGranted` is never in here – it never needed granting. */
   vacationIds: string[]
+  /** ⭐⭐⭐ ROUND 43 #5 – HER SHARE OF WHAT THE BUSINESS SHELF EARNS, as WHOLE PERCENT, rounded ONCE
+   *  here at the snapshot boundary (`kidSharePct`'s rule, two files over, and for the same reason: a
+   *  component may not do money arithmetic).
+   *
+   *  ⚠⚠ IT EXISTS BECAUSE THE TAB WAS LYING BY OMISSION AND HE CAUGHT IT. He asked whether Zoe's
+   *  brand was right: «13000 в неделю при стоимости бренда 28м+». It was: `worth = weekly GROSS
+   *  × 52 × multiple` with the multiple hard-capped at `value.maxX = 20`, so $13k of GROSS could never
+   *  support $28M – but $13k is not gross. `familyWeeklyCents` hands the family
+   *  `assetWeeklyIncomeCents − assetKidShareCents`, and her share is the PRIZE ramp (10% from 18,
+   *  capped at 60% at 23). Unwound: $13,000/0.40 = $32,500/wk → $1.69M/yr → a multiple of 16.6×,
+   *  inside the band and near its top, which is right for a mature star. The arithmetic was never
+   *  wrong; the SCREEN put his 40% of the income beside the whole business's worth and named neither.
+   *
+   *  ⭐ SO THE LINE IS LIVE AND NOT A LITERAL. Her share ramps, and a hard-coded «60/40» would lie to
+   *  a nineteen-year-old – which would be the same defect this field exists to remove.
+   *
+   *  ⚠ ZERO BEFORE THE RAMP OPENS, and that is a fact rather than a placeholder: under eighteen she
+   *  takes nothing from the shelf, so the family's figures ARE the whole income and the line has
+   *  nothing to explain. */
+  kidBusinessSharePct: number
 }
 
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from

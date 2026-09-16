@@ -39,6 +39,9 @@ import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
 import { assetWeeklyFamilyIncomeCents } from './business'
+import { kidAgeYears } from './age'
+import { collegePausedShareYears } from './college'
+import { kidPrizeShareBps } from '../economy'
 // ⭐⭐⭐ ROUND 30 #23 – the shelf quotes the multiple the CAREER has earned, so it reads the same
 // function the valuation does rather than the catalogue's base. One arithmetic, many readers.
 import { brandMultipleX, brandSignalsOf } from './brand'
@@ -862,5 +865,15 @@ export function shopView(world: WorldState): ShopView {
     // the one function that answers them for the till as well (§3f).
     upkeepCents: weeklyAssetUpkeepCents(world),
     vacationIds: grantedVacationIds(world),
+    // ⭐⭐ ROUND 43 #5 – rounded ONCE here, at the snapshot boundary, because a component may not do
+    // money arithmetic (`kidSharePct`'s rule two files over). The ramp is the PRIZE ramp read whole,
+    // college pause included – round 42 #25's «как с призовых» is the rule and not an analogy, so
+    // this asks the same function `assetKidShareCents` asks rather than a second copy of the ladder.
+    kidBusinessSharePct: Math.round(
+      kidPrizeShareBps(
+        kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+        collegePausedShareYears(world),
+      ) / 100,
+    ),
   }
 }
