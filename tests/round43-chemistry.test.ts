@@ -547,3 +547,42 @@ describe('C1 K – the manner is not the style, and neither reads the other', ()
     }
   })
 })
+
+
+// =================================================================================================
+// ⭐⭐ C1a IS REFUSED, AND THIS IS WHAT MAKES THE REFUSAL SAFE (17.09)
+// =================================================================================================
+//
+// C1a proposed drawing each roster slot's `style` per career, so that «this tier has nobody for her
+// game» could happen. The owner refused it once the roster's real shape was put in front of him:
+// «у нас в каждом тире 4 тренера (по 1 на стиль), коридоры их цен вообще не должны были измениться.»
+//
+// ⚠⚠ THE ROSTER IS A 4×4 LATIN SQUARE AND THAT IS A GUARANTEE, NOT AN ARRANGEMENT. Every tier
+// offers every style, so a family's irreversible style choice on screen R can never be taxed by a
+// hole in the ladder – which is the same guarantee his 30.07 ruling defends from the other side
+// («2 контрпанчера бюджетных, ни одного бигсервера»).
+//
+// ⭐ AND IT IS WHY THE BENCHED C1a COST 4.7% OF COACHING. Drawing style independently per slot breaks
+// the square: 24% of careers drew TWO great fits at a rung and 25% drew NONE, which is arithmetically
+// impossible while it holds, and `bestFitCoachAt` breaks the resulting ties by PRICE. The discount was
+// the price of a broken invariant rather than the price of variability.
+//
+// ⚠ This case exists so the draw cannot be re-added silently. It is not a style-fit test and it is
+// not a pricing test – it asserts the SHAPE, which is the thing both of those rest on.
+describe('the coach roster is a Latin square – every tier offers every style (C1a refused)', () => {
+  it('⭐⭐ four coaches a tier, four distinct styles a tier, and every style in every tier', () => {
+    const byTier = new Map<string, string[]>()
+    for (const slot of ECONOMY.coach.roster) {
+      const row = byTier.get(slot.tier) ?? []
+      row.push(slot.style)
+      byTier.set(slot.tier, row)
+    }
+    expect(byTier.size, 'the ladder lost or gained a rung').toBe(4)
+    const styles = [...new Set(ECONOMY.coach.roster.map((s) => s.style))].sort()
+    expect(styles.length, 'the game no longer has four play styles').toBe(4)
+    for (const [tier, row] of byTier) {
+      expect(row.length, `${tier} does not carry four coaches`).toBe(4)
+      expect([...row].sort(), `${tier} does not offer every style exactly once`).toEqual(styles)
+    }
+  })
+})

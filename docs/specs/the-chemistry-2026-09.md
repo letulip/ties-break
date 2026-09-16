@@ -796,7 +796,50 @@ channel that makes a good pair's bad year possible» – measured rather than as
 column was not touched: +33 and +5 are his and are pinned by name in
 `tests/round43-chemistry.test.ts`.
 
-### 15.4 ⚠⚠ C1a IS NOT BUILT, AND IT IS THE ONE THING IN THIS DOCUMENT THE WAVE DID NOT DO
+### 15.4 ✅✅ C1a IS REFUSED, 17.09 – AND THE QUESTION IT WAS ASKED AS WAS THE WRONG QUESTION
+
+**The owner, reading the trade-off: «при чём тут вообще стили и цены? у нас в каждом тире 4 тренера (по 1
+на стиль), коридоры их цен вообще не должны были измениться.» He is right, and the premise of §15.4's
+first draft was wrong.**
+
+⚠⚠ **`ECONOMY.coach.roster` IS A 4×4 LATIN SQUARE BY CONSTRUCTION** – verified, not recalled:
+
+    budget   aggressive · all-court · counterpuncher · serve-first
+    middle   aggressive · all-court · counterpuncher · serve-first
+    high     aggressive · all-court · counterpuncher · serve-first
+    elite    aggressive · all-court · counterpuncher · serve-first
+
+**So «this tier has nobody for her game» is IMPOSSIBLE by construction** – her style is in every tier,
+always. The only way to make it possible is to **break the square**, and that is what the benched
+implementation did: it drew `style` independently per slot instead of permuting within the tier.
+The 4.7% coaching discount was the consequence – 24% of careers drew TWO great fits at a rung and 25%
+drew NONE, which is arithmetically impossible while the square holds. **The discount was the price of
+a broken invariant, not the price of variability.**
+
+⭐ **And the square-preserving version buys nothing.** Permuting which NAMED coach plays which style
+inside a tier leaves the tier offering all four styles, so no player can tell. There is no third
+option: either the square holds and C1a is a no-op, or it breaks and the ladder's prices move.
+
+⭐⭐ **The corners arrive without it, which is the other half of the refusal.** Measured over 3,000
+careers: the style shuffle moved corner B by ONE point and corner C by three; A, D and E were unmoved.
+§1's corners are made by the CHEMISTRY draw. C1a was never the source of the variability it was
+proposed for.
+
+⚠ **And his 30.07 ruling is the same guarantee seen from the other side** («2 контрпанчера
+бюджетных, ни одного бигсервера»): a play style is chosen ONCE, before the player knows what coaching
+costs, and it is irreversible – so a tier with a hole in it taxes the family least able to buy its way
+out. The Latin square is what makes that choice safe.
+
+**`tests/round43-chemistry.test.ts` pins the square by name, so the draw cannot be re-added silently.**
+
+⚠ **The architect's own error is recorded rather than edited away:** this section was first written
+as a TRADE – «three points of corner C against a 4.7% discount» – and put to him as a choice. It was
+not a choice. The right question was «do we break the one-coach-per-style guarantee», and he had
+already answered that on 30.07. A trade-off offered on a false premise is worse than no question.
+
+---
+
+### 15.4a The benched measurement, kept as the record of what breaking the square costs
 
 C1a rules that the roster draws `style` per career as well as `manner`. It WAS built, benched, and
 handed back, because it costs a shipped economic principle and buys almost nothing:

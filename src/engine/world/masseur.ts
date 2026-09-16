@@ -33,6 +33,7 @@
 // leaves – ledger, ladder, college, bookings, constants. Deliberately NOT from coachMarket.ts:
 // importing it here would close a runtime cycle through endings → entries → medical → this file.
 import { ECONOMY } from '../economy'
+import { formatCents } from '../../shared/money'
 import { clamp } from '../condition'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
@@ -254,17 +255,22 @@ export function resolveMasseurRaise(world: WorldState): void {
     week: world.week,
     type: 'info',
     text: bottom
-      ? `The masseur asks for more – ${dollars(rate)} a session from this week. There is no shorter week to drop to.`
-      : `The masseur asks for more – ${dollars(rate)} a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`,
+      ? `The masseur asks for more – ${formatCents(rate)} a session from this week. There is no shorter week to drop to.`
+      : `The masseur asks for more – ${formatCents(rate)} a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`,
   })
 }
 
 /** Whole dollars for the one row that quotes his rate. ⚠ NOT a formatter import: `shared/money.ts`
  *  is the UI's, and an engine leaf may not reach for it (invariant 1). The rate is rounded to whole
  *  dollars at its source, so there are never cents to lose here. */
-function dollars(cents: number): string {
-  return `$${Math.round(cents / 100)}`
-}
+/** ⚠⚠ REMOVED 17.09 – THIS FILE HAD ITS OWN MONEY FORMATTER AND IT WAS A SECOND IMPLEMENTATION OF A
+ *  HOUSE RULE. It read `` `$${Math.round(cents / 100)}` `` – no thousands separator and no sign – so a
+ *  four-figure rate printed `$1234` where every other surface in the game prints `$1,234`. Caught by
+ *  the owner's copy review of round 43's DRAFT strings («use the shared money formatter rather than
+ *  inserting a literal»), not by anything failing: the masseur's rate does not reach four figures
+ *  inside a normal career, so the divergence was real and invisible at once.
+ *  ⭐ `formatCents` from `shared/money` is the one formatter; `shop.ts` and `sponsors.ts` already
+ *  import it across the same boundary, so nothing about the engine's purity changes here. */
 
 /** WHAT A WEEK COSTS AT HER FAMILY'S CHOSEN RUNG – sessions × the professional session rate, flat.
  *  The coach's own shape (`coachWeeklyCents` = rate × hours), asked of a second seat: the rung is

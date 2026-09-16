@@ -350,6 +350,35 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ **The remaining build question is the WEEK, and it is not a design choice:** the ring filling and
   the delivery landing are not automatically the same instant. The letter reads the DELIVERY.
 
+- [~] **13. ✅ C1a REFUSED (his 17.09) – and the question had a false premise.** The wave benched the
+  per-career `style` draw and handed back a trade: three points of corner C against a 4.7% coaching
+  discount. He read it and asked the right question back: «при чём тут вообще стили и цены? у нас в каждом
+  тире 4 тренера (по 1 на стиль), коридоры их цен вообще не должны были измениться.»
+
+  ⚠⚠ **He is right and the roster proves it: it is a 4×4 LATIN SQUARE** – every tier carries four
+  coaches, one of each style. So «this tier has nobody for her game» is impossible by construction,
+  and the only way to make it possible is to BREAK the square, which is what the benched draw did
+  (independently per slot). The 4.7% discount was the price of a broken invariant, not of variability:
+  24% of careers drew two great fits at a rung and 25% drew none, both arithmetically impossible while
+  the square holds.
+  ⭐ And the square-preserving version buys nothing – permuting which named man plays which style
+  leaves the tier offering all four, so no player can tell. There is no third option.
+  ⭐ The corners arrive without it anyway: the style shuffle moved B by one point and C by three; A, D
+  and E were unmoved. §1's corners are made by the CHEMISTRY draw.
+  ⚠ **Pinned by shape**, mutation-verified: `tests/round43-chemistry.test.ts` asserts four coaches and
+  four distinct styles per tier, and duplicating one style reddens it.
+  ⚠ **The architect's own error is recorded rather than edited away:** the trade was put to him on a
+  false premise. The right question was «do we break the one-coach-per-style guarantee», and he had
+  answered that on 30.07. A trade-off offered on a false premise is worse than no question.
+
+- [~] **14. ⚠ THE MASSEUR'S OWN MONEY FORMATTER – a second implementation of a house rule, removed.**
+  Found by his copy review of round 43's DRAFT strings, not by anything failing: `masseur.ts` carried
+  its own `dollars()` reading `` `$${Math.round(cents / 100)}` `` – no thousands separator, no sign –
+  so a four-figure rate would print `$1234` where every other surface prints `$1,234`.
+  ⭐ **Real and invisible at once:** at 4%/yr the session rate does not reach four figures inside a
+  normal career, so nothing could ever have caught it. `formatCents` is the one formatter and
+  `shop.ts` and `sponsors.ts` already import it across the same boundary.
+
 - [x] **12. ⭐⭐⭐ WAVES F1 AND F2 – `world.form` AND THE SPARRING PARTNER'S SEAT.** Spec
   [the-form-and-the-sparring-2026-09](../specs/the-form-and-the-sparring-2026-09.md), whose eight open
   questions O1–O8 he ruled on 16.09 («все по твоим рекомендациям»), so its own «Done when» was
