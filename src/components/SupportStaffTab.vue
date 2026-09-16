@@ -170,6 +170,18 @@ const masseurLine = computed(() => {
 // услуги»). Three rungs off the market catalogue; the ACTIVE one is the snapshot's, the click is a
 // command the engine re-validates, and the card's headline price follows the snapshot because the
 // engine prices the rung – this screen sets a dial, it never computes a bill.
+// ⭐⭐ ROUND 43 #3 – `priceTypographyNote`, HIS OWN WORDS, PARKED HERE FOR THIS FILE'S STANDING
+// REASON: the markup and the styles below may carry no Cyrillic, and tests/round13-nav.test.ts cuts
+// this file at the opening markup tag and reads to its END – so the style block is inside the rule
+// too. The CSS that answers him points back at this note.
+//
+// ⚠⚠ AND DO NOT WRITE THAT TAG'S LITERAL NAME ANYWHERE ABOVE IT. The test cuts with the FIRST
+// occurrence of the literal, so a comment that merely mentions it moves the region UP and drags every
+// legitimate script-side Cyrillic quote in this file into the check. That is how this note failed on
+// its first draft: the marker did not rot, it was DUPLICATED, and the helpers throw on an ABSENT
+// marker but not on a second one.
+//
+// «сами цены внутри опций этих специалистов надо сделать покрупнее и можно пожирнее даже» (16.09)
 const MASSEUR_RUNGS = ECONOMY.masseur.rungs
 const masseurSessions = computed(
   () => game.snapshot?.masseurSessionsPerWeek ?? ECONOMY.masseur.defaultSessions,
@@ -579,10 +591,12 @@ async function doRelease(): Promise<void> {
   color: var(--accent, #4da3ff);
 }
 /* ⭐⭐ ROUND 43 #3 – THE PRICE IS THE THING HE IS COMPARING, so it stopped being the smallest text
-   on the pill. His ask: «сами цены внутри опций этих специалистов надо сделать покрупнее и можно
-   пожирнее даже» (16.09). It was 10px at 0.75 opacity inside an 11px pill – SMALLER and fainter
-   than the label above it, which inverts what the row is for: the label says what a rung is, the
-   price says what it costs, and the second is the one being weighed against three others.
+   on the pill. His ask of 16.09 is parked in `priceTypographyNote` in the script block above, for
+   this file's standing reason: the markup and these styles may carry no Cyrillic, and
+   tests/round13-nav.test.ts cuts the file at the opening markup tag and reads to its END.
+   It was 10px at 0.75 opacity inside an 11px pill – SMALLER and fainter than the label above it,
+   which inverts what the row is for: the label says what a rung is, the price says what it costs,
+   and the second is the one being weighed against two others.
    ⚠ TYPOGRAPHY ONLY – not one string moved, which is what makes it safe under invariant 4.
    ⚠⚠ AND THE CONSTRAINT IS NOT THE 2x2 WRAP – that belongs to `.staff-focus` below, which is a
    DIFFERENT element (four focus pills that wrap). This row is `.staff-dial` – `display: flex` with
