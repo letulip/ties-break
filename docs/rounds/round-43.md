@@ -349,3 +349,53 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
 
   ⚠ **The remaining build question is the WEEK, and it is not a design choice:** the ring filling and
   the delivery landing are not automatically the same instant. The letter reads the DELIVERY.
+
+- [x] **12. ⭐⭐⭐ WAVES F1 AND F2 – `world.form` AND THE SPARRING PARTNER'S SEAT.** Spec
+  [the-form-and-the-sparring-2026-09](../specs/the-form-and-the-sparring-2026-09.md), whose eight open
+  questions O1–O8 he ruled on 16.09 («все по твоим рекомендациям»), so its own «Done when» was
+  satisfied and the gate was open. Schema **v80**. The full predicted-vs-measured record is that
+  spec's new §10; what a reader of this ledger needs is below.
+
+  **F1 ships** `world.form` – tenths, 0-centred, clamped [−10, +10], zero draws (O4) – with both
+  channels (the slump's residual against the odds ring, the rust's drift past a three-week gap), the
+  return to neutral, ONE reader (`composureEff = composure + form × K` at `MatchPlayer` build time),
+  the radar showing MODULATED composure (O3), and the coach's two sentences. **F2 ships** the third
+  salaried seat: the engine leaf, the ladder, the money, the travel switch his 15.09 override asked
+  for, the card on `SupportStaffTab` – and the portrait that has been in every install since round 42
+  #53 and on no screen, which is round 43 #2's parked half finally closed.
+
+  ⭐ **O1 WAS IMPLEMENTED RATHER THAN SKIPPED.** The scale arm ran and `K = 0.6` is measured at
+  **1.64 pp** at the clamps against the ruled **[0.5, 4]** corridor – the spec's own proposal
+  surviving its own test. ⚠ Every candidate from 0.4 to 1.2 is also inside, so the corridor admits a
+  factor of three and the sweep is in the spec for him to move it against.
+
+  ⚠⚠ **THREE DEFECTS WERE FOUND BY MEASURING, AND TWO OF THEM WERE IN THE SPEC'S OWN NUMBERS.**
+  1. **§1c and §1b cannot both be true.** Reversion 0.5/wk applied first, drift 0.4/wk toward a floor
+     of −4: the map's only attractor is the 2-cycle {0, −0.4}, so the floor is unreachable by a factor
+     of ten and the whole sparring seat would be cutting four hundredths of a composure point. The fix
+     keeps BOTH of his numbers and changes a rule instead of a dial – **reversion stands down on a
+     rusting week**, because reversion is ordinary competition pulling her back and on a week she
+     plays nothing there is nothing pulling. The floor is then reached in exactly ten matchless weeks.
+  2. **§4's rung cuts collapse in tenths.** 0.4 × 0.35 and 0.4 × 0.15 both ratchet the number down by
+     one tenth a week, so the top two rungs measured IDENTICAL (+0.312 / +0.312) – the masseur §4 law
+     broken. Re-fitted to **0.75 / 0.5 / 0.25**, which are exact in tenths: the floor arrives in
+     13 / 20 / 40 weeks against 10 unaided.
+  3. **The bench's own instrument lied once.** Its event cursor was `events.length`, and `pruneEvents`
+     shrinks that array – so every row after the first prune was invisible and the salary column read
+     $1,250 a season for a $500/wk seat. Fixed to a monotone event id, which also un-killed the
+     coach's good line (0.00 → 0.28 a season).
+
+  ⭐ **ROUND 42 #48's PREDICTION HELD.** The stay-at-home stance reaches **88.9 / 87.0 / 84.7%** of the
+  seat's whole effect against its predicted 89.4%, and only the not-travelling top rung ($69,656 a
+  season measured against its predicted $72,800) lands inside the research's $50–80k band. The
+  default stance is «stays home» and the card says so. §4's own «travelling is the job» stays
+  overruled, now with two independent measurements behind it.
+
+  ⚠ **FROZEN CAREERS RE-STAMPED** – 92 cells, per-key protocol first, control = the weekly pass
+  neutralised IN PLACE. 3 / 34 / 33 keys of 94 moved on the three cells and **`rngMain` is
+  byte-identical on all three**. `PRE_V80` is the first rung in that ladder whose values are NOT the
+  previous version's live constants, for a reason its own block states at length.
+
+  ⚠⚠ **EVERY NEW PLAYER-FACING STRING IS A DRAFT and they are collected in the wave's hand-back for
+  one pass.** Nine of them: two coach sentences, one receipt, and six on the seat's card and its
+  ledger rows.
