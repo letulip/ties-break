@@ -659,3 +659,32 @@ Deterministic, no engine change, reads the catalogue and the selection weights:
 ⭐ **K2 is the acceptance test and it is the one number his complaint is about.** His own arithmetic
 says 44 uniform entries still leave ~59% of careers one adjacent duplicate; the exclusion is what
 takes that to zero, and the bench is what proves it rather than asserting it.
+
+✅ **BUILT AND RUN, 16.09 – `npm run bench:smalltalk` (`tools/small-talk-corpus-bench.ts`).** The two
+arms are the same engine: the B arm leaves each raised row as the engine wrote it, the A arm rewrites
+its `detail` to the subject half, which is exactly a pre-round-43 row to the draw. `assertArmA`
+re-asks the engine's own exclusion on every A-arm roll and fails the run if it ever narrows anything,
+so the null arm cannot quietly contain the change.
+
+⚠ **K2 had to be re-cut from «careers» to «adjacent pairs», and the re-cut is the honest form.**
+`withoutRecentSituations` never empties the pool, so on a week whose reachable set is ONE situation
+nothing can stop her repeating it – and «fixing» that would mean the generic opener, which is worse.
+So the acceptance is asked of the pairs where an alternative existed:
+
+| reading | A · no exclusion | B · last-two excluded |
+| --- | ---: | ---: |
+| **K2 acceptance** – adjacent pairs, pool ≥ 2 at the later draw (posed career) | 285/555 | **0/555** |
+| the same, on a career with no coach and no matches | 196/386 | **0/386** |
+| K2 – careers with at least one adjacent repeat (posed) | 100% | 25% |
+| **K3 acceptance** – draws with a pool of 3 or more | 5/13 | **0/13** |
+| K3 – careers with a repeat inside three | 100% | 100% |
+
+⚠⚠ **AND THE TWO NUMBERS THIS SECTION EXISTS TO SURFACE, both measured on the SHIPPED eleven:**
+a 40-conversation career meets **~2.5 distinct situations**, and **15.6% of her conversations reach
+no situation at all** and fall through to the legacy generic opener. K4 fails every one of its 24
+cells and K5 passes – every shipped situation is reachable. **The mechanism is proven; the corpus is
+the hole, and this document is the hole's repair.**
+
+⚠ K3's «careers with a repeat inside three» stays at 100% and cannot move on this catalogue: the
+reachable pool is 3 or more on **1.4%** of draws in a posed career and never in a bare one. That row
+is a measurement of the corpus, not of the exclusion.

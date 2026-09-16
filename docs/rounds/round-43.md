@@ -46,7 +46,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   этих специалистов надо сделать покрупнее и можно пожирнее даже.» Typography only – **no string
   moves**, which is what makes it safe under invariant 4.
 
-- [~] **4. THE MASSEUR ASKS FOR RAISES (his 16.09 ruling).** Raised by the architect's audit: the
+- [x] **4. THE MASSEUR ASKS FOR RAISES (his 16.09 ruling).** Raised by the architect's audit: the
   masseur is **$75/session × 2/4/7 a week = $150/$300/$525/wk = $7.8k/$15.6k/$27.3k a year**, a FLAT
   contract per rung with no corridor, no jitter and no draw – the one seat left whose price reads
   nothing about her. Round 42 #19 closed the coach's half of the research's own verdict that our top
@@ -92,6 +92,42 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   `coachSeasonUplift` is a development projection, not a raise, and the coach's own ask (#51) is not
   built. So the masseur's would be the FIRST – and it is the simpler one, reading time rather than a
   basket. **Build it first and #51 inherits a tested mechanism** instead of the round inventing two.
+
+  ✅ **SHIPPED 16.09, spec [the-masseurs-ask-2026-09](../specs/the-masseurs-ask-2026-09.md).**
+  `raisePerYear: 0.04`, compounding once per completed year on the payroll, rounded to whole dollars.
+  ⭐ **NO SCHEMA MOVED:** `hireMasseur` already writes one kept, tagged row per change of the
+  arrangement, so `masseurWeeksServedAt` sums the hired SPANS off the ledger – `coachSinceWeek`'s own
+  doctrine one seat over. The spans are summed rather than measured from the first hire because a
+  clock that restarted on a re-hire would be a free THIRD branch, and a dominant one.
+
+  **Predicted vs measured** (`npm run bench:masseurraise`): the drift is 1.04× / 1.37× / 2.19× at 1 /
+  8 / 20 years against the coach's 1.05×–1.15× / 1.48×–3.06× / 2.65×–16.37× – under the corridor's
+  floor at every horizon, as predicted.
+  ⭐⭐ **AND THE BOTTOM-RUNG FEAR WAS WRONG FOR A STRUCTURAL REASON.** The parents' own contribution
+  compounds **5–10% a season** (his round-12 ruling), so 4% LOSES to the slowest income ladder and
+  the entry rung gets cheaper against the household every year – 61% → 31% of a working family's
+  weekly contribution over twenty years. The constraint cannot be violated while `raisePerYear <
+  incomeGrowthBand[0]`, **which also puts a hard ceiling of 5%/yr on this design that is his own
+  earlier ruling rather than an architect's taste.** 12 paired careers × 728 weeks: zero extra
+  releases, zero extra bankruptcies, 18.5% more salary paid.
+
+  ⚠⚠ **AND A CORRECTION TO THIS ITEM'S OWN ILLUSTRATION, recorded because it would have set the
+  number.** «Seven sessions a week bought at 22 are four by 26 on the same money» implies 7/4 = 1.75×
+  in four years = **15%/yr, the coach's CEILING** – the opposite of «не так интенсивно». At 4% that
+  sentence takes fifteen years. It is also the wrong SHAPE: the dial sells 2/4/7 and nothing between,
+  so a constant spend stops covering its rung on the FIRST ask and the erosion is never gradual. What
+  the drift really does is price his two branches against each other annually – find 4% more, or save
+  43–50% by working him less. See the spec's §5.
+
+  ⚠ **Honestly small on a successful career** (§6): the household ends on $4–6M and 18.5% more
+  masseur salary is noise. That is the same arithmetic that makes the reachability guarantee hold, so
+  it is recorded rather than tuned around – **the lever for a sharper bite is the rung ladder, not
+  the drift.**
+
+  ⚠ **TWO DRAFT STRINGS, his to rule** (the second because a family on the entry rung has no rung to
+  drop to, and offering one would be the screen lying about a choice – this round's own #5):
+  > `The masseur asks for more – $78 a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`
+  > `The masseur asks for more – $78 a session from this week. There is no shorter week to drop him to.`
 
 - [x] **5. THE BUSINESS TAB DOES NOT SAY WHOSE MONEY IT IS SHOWING (his 16.09).** He asked whether
   Zoe's brand was correct: «13000 в неделю при стоимости бренда 28м+».
@@ -164,7 +200,7 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   a STEADY soft-accent edge and glow rather than a breathing one. A player who asked for calm still
   has to be able to find the chip.
 
-- [ ] **8. THE SMALL-TALK CORPUS IS TOO THIN, AND TWO OF THEM CAME BACK-TO-BACK (his 16.09).** «Она
+- [~] **8. THE SMALL-TALK CORPUS IS TOO THIN, AND TWO OF THEM CAME BACK-TO-BACK (his 16.09).** «Она
   пришла 2 раза подряд с the players I've been watching barely talk about winning. Мне кажется этих
   микро диалогов должно быть много и они точно не должны так часто повторяться, иначе в чём смысл.»
 
@@ -193,6 +229,23 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ **It must degrade gracefully:** `reachableSituations` narrows by career facts, so the reachable
   set can be three rather than eleven. Drop the OLDEST exclusions first and never empty the pool, or
   the draw falls through to the generic subject line.
+
+  ✅ **(a) SHIPPED 16.09** – `withoutRecentSituations` (`src/engine/world/lifeBeat.ts`), the last two
+  conversations taken off the table BEFORE the subject is drawn, degrading oldest-first and never
+  emptying the pool. No schema, no migration, no golden fixture, no copy: `world.lifeLog` already
+  stored every row. ⚠ **Before the subject draw and not after** – four of the six subjects hold one
+  situation, so a subject drawn over the unnarrowed set can win the weights and then have nothing
+  behind it.
+
+  **Measured, `npm run bench:smalltalk` (K1–K5, §P2.6's own list):** K2's acceptance – adjacent pairs
+  whose later draw HAD an alternative – goes **285/555 → 0/555** on a posed career and **196/386 →
+  0/386** on a bare one; K3 on draws with three to choose from, **5/13 → 0/13**. Careers with at
+  least one adjacent repeat fall 100% → 25%, and every survivor is a week whose reachable pool was
+  ONE, where no exclusion can help and the degradation is doing its job.
+  ⚠⚠ **AND K4 FAILS EVERY CELL, WHICH IS (b)'s HALF AND NOT A BUG IN (a).** On the shipped
+  eleven-situation catalogue a 40-conversation career meets **~2.5 distinct situations** and **15.6%
+  of her conversations fall through to the legacy generic opener**. K5 passes: all eleven are
+  reachable. The mechanism is built and proven; the corpus is what is missing.
 
   **(b) THE CORPUS, his:** ⭐ **RULED 16.09 – «давай сделаем 44 ситуации… или можно 55 для
   уверенности».** At 40 conversations in a ten-season career, 44 situations put each line at **1–2

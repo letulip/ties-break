@@ -50,7 +50,6 @@ import {
   SMALL_TALK_SUBJECTS,
   TEMPERAMENTS,
   type SmallTalkSituation,
-  type SmallTalkSubject,
   type Temperament,
   type WorldState,
 } from '../src/engine/world'
@@ -188,7 +187,17 @@ function poseCareerFacts(world: WorldState, weeks: number): void {
       week,
       type: 'match',
       text: 'a match',
-      match: { round: 0, aId: KID_ID, bId: opponent, winnerId: won ? KID_ID : opponent },
+      match: {
+        round: 0,
+        aId: KID_ID,
+        bId: opponent,
+        winnerId: won ? KID_ID : opponent,
+        eventId: `e-${week}`,
+        surface: 'hard',
+        oppName: 'Opp',
+        a: { id: KID_ID, name: KID_ID, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 },
+        b: { id: opponent, name: opponent, serve: 50, ret: 50, composure: 50, stamina: 50, groundstrokes: 50 },
+      },
     })
   }
   for (let w = 2; w < weeks; w += 2) push(w, `field-${w % 97}`, w % 3 !== 0)
