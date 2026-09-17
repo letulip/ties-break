@@ -169,6 +169,24 @@ interface StaffMember {
   setHired: (hire: boolean) => Promise<void>
   dial?: { label: string; active: number; rungs: StaffRung[]; set: (value: number) => Promise<void> }
   travel?: { title: string; sub: string; on: boolean; onLabel: string; offLabel: string; toggle: () => Promise<void> }
+  /** ⭐⭐ ROUND 42 #46 – WHAT THIS SEAT'S FARE BUYS, in one standing sentence at the foot of the card.
+   *
+   *  THE OWNER, 15.09: «можно как-то показывать игроку преимущества всех ездящих специалистов, что он
+   *  получает. С главным тренером понятно, а вот с остальными двумя не очень.» The travel switch is a
+   *  real price – a second fare, every event week – and the game stated what it bought for exactly one
+   *  seat, the coach's.
+   *
+   *  ⚠ OPTIONAL, AND THE TWO SEATS THAT CARRY NONE CARRY NONE FOR OPPOSITE REASONS. The hitting
+   *  partner's own travel sub-line already says which half the fare buys, in the owner's own 17.09
+   *  words, so a second sentence here would be a draft he never asked for beside an approved one he
+   *  did (invariant 4). The masseur has TWO states and the psychologist has NO switch at all, which is
+   *  why this is a plain sentence per state rather than a field on `travel`: the seat with the most to
+   *  say about a fare is the one that never pays one.
+   *
+   *  ⚠ NO NUMBER IN IT, BY ROUND 42 #46's OWN RULE. `tourRecoveryPerRound` is a tuning constant and
+   *  printing it would pin copy to a dial; the sentence says the SHAPE – more the further she goes,
+   *  nothing on a first-round exit – which stays true when the constant moves. */
+  fareLine?: string
   /** ⭐ v76 T3 – THE YEAR'S WORK, and the third optional control on a seat (the masseur has no such
    *  thing: his hands do one job). `chosen` is the snapshot's, `options` carry their own `open` flag
    *  straight off the engine's `psychologistFocusOpen`, and `note` is either the ENGINE's refusal
@@ -179,8 +197,12 @@ interface StaffMember {
     /** ⭐⭐ ROUND 42 #18 – EACH OPTION CARRIES ITS OWN SENTENCE NOW: «в пунктах психолога на выбор
      *  немного расписать эффект от работы». `line` is `PSY_FOCUS_LINE[value]` and nothing else – the
      *  same owner-gated catalogue the hired card splices – so the picker says what a year buys
-     *  BEFORE the choice, where the decision is actually taken. Zero new wording. */
-    options: { value: PsyFocus; label: string; line: string; open: boolean }[]
+     *  BEFORE the choice, where the decision is actually taken. Zero new wording.
+     *  ⭐⭐ 17.09 – AND EACH OPTION NOW CARRIES THE QUESTION ITS PRESS ASKS (`confirm`), because the
+     *  question names the option: a confirmation that did not say WHICH year was about to be bought
+     *  would not answer «вдруг человек промахнулся» at all. It rides on the option rather than on the
+     *  row for that reason, and it is composed once in `psychologistFocusConfirm`. */
+    options: { value: PsyFocus; label: string; line: string; open: boolean; confirm: string }[]
     note: string
     /** ⭐⭐ 17.09 – IS THE MARKER UP FOR THIS ROW. The shared `psychologistFocusNudge` and nothing
      *  else, so the block, Home's dot and the tab pill are three readings of ONE fact. It rides on
@@ -271,6 +293,21 @@ const masseurTravelSub = computed(() => {
   const t = trips === 1 ? '1 trip' : `${trips} trips`
   return `${rule} ${formatCents(game.snapshot?.masseurTravelFareCents ?? 0)} over the ${t} booked.`
 })
+// ⭐⭐ ROUND 42 #46 – WHAT HIS FARE BUYS, ONE SENTENCE PER STATE, and both are the owner's: he read
+// them on 16.09 and ruled «слова массажиста ок». They stand BESIDE the travel sub-line above rather
+// than replacing it – that one is the PRICE and the mechanic, this one is the benefit – and 46-b
+// stands beside his existing feed sentence («The masseur stays home on tournament weeks – the table
+// waits for her return») for the reason the item gives: that line is a one-off event row and this is
+// the standing line on the card.
+// ⚠ THE SHAPE IS THE TELLABLE PART AND IT IS TRUE OF THE ENGINE: the travelling masseur buys
+// `masseurTourRelief`, recovery BETWEEN ROUNDS, scaled by `tourRecoveryPerRound × (matchesPlayed − 1)`
+// and capped by the strain she is actually carrying. So it really does pay nothing on a first-round
+// exit and most on a deep run, which is what the sentence says and the only thing it says.
+const masseurFareLine = computed(() =>
+  masseurTravels.value
+    ? 'Travels with her: table work between rounds. The deeper the run, the more it buys – a first-round exit buys nothing.'
+    : 'Stays home on tournament weeks. One fare saved on every trip.',
+)
 const masseur = computed<StaffMember>(() => ({
   id: 'masseur',
   name: 'Masseur',
@@ -303,6 +340,7 @@ const masseur = computed<StaffMember>(() => ({
       'Masseur travels to tournaments – off. Press to buy one additional fare per trip, for table work between rounds.',
     toggle: toggleMasseurTravel,
   },
+  fareLine: masseurFareLine.value,
 }))
 
 // --- the psychologist (v76, the psychologist's year – wave 5 T2) ---------------------------------
@@ -351,9 +389,37 @@ const psychologistFocusNote = computed(() => {
   const chosen = psychologistFocus.value
   return chosen ? PSY_FOCUS_LINE[chosen] : ''
 })
+// ⭐⭐ 17.09 – AND THE SECOND HALF OF THE RE-AFFIRMATION DEFECT LIVED HERE, not in the engine.
+// `if (focus === psychologistFocus.value) return` stood at the top of this function and mirrored the
+// engine's own guard one layer down, so the owner's «same again this year» was swallowed twice over:
+// the screen never sent the command, and the command would not have stamped the season if it had.
+// `setPsychologistFocus`'s note in `engine/world/psychologist.ts` carries the whole diagnosis and the
+// reason the stamp is not part of the no-op.
+// ⚠ THE DIAL AND THE ROSTER KEEP THEIRS, and the difference is the commitment rather than a
+// preference: a rung is a price that can be changed any week, so re-pressing the one she is on really
+// is nothing. A focus LOCKS the row for the rest of the off-season, so re-pressing it is the year.
 async function setPsychologistFocusChoice(focus: PsyFocus): Promise<void> {
-  if (focus === psychologistFocus.value) return
   await game.setPsychologistFocus(focus)
+}
+/** ⭐⭐ 17.09 – THE ASK BEFORE THE YEAR IS SET, his own words: «вдруг человек промахнулся». The pick is
+ *  a season-long commitment taken by ONE press on a half-width card, and it closes the row for the
+ *  rest of the off-season the moment it lands (`PSYCHOLOGIST_FOCUS_SEASON_REFUSAL`), so a misfire
+ *  costs a year and there is no way back.
+ *
+ *  ⚠ THE EXISTING IDIOM, ASKED OF ONE MORE CONTROL – `hireMessage` / `releaseMessage` already drive
+ *  this tab's confirm for the two directions of a hire, and this is a third message through the same
+ *  `ConfirmDialog`, not a new component.
+ *
+ *  ⚠ DRAFT, and it is the only new player-facing sentence this repair adds (invariant 4). The
+ *  vocabulary is deliberately the engine's own refusal – «the year's work», «chosen … once a season»,
+ *  «the off-season» – so the ask and the sentence it will one day be refused by read as one story.
+ *  A confirmation's voice is COMPLETELY LITERAL, which is his rule and why this names the option and
+ *  the lock and nothing else. */
+function psychologistFocusConfirm(label: string): string {
+  return (
+    `Set the psychologist's work for this season to ${label}? ` +
+    'The year\'s work is chosen once a season, and the next choice comes in the next off-season.'
+  )
 }
 // ⭐⭐ 17.09 – THE MARKER, READ HERE EXACTLY AS IT IS READ ON THE OTHER TWO SURFACES: the shared
 // selector and nothing local. `HomeScreen.vue` and `CoachMarketScreen.vue` open with this same line,
@@ -415,11 +481,23 @@ const psychologist = computed<StaffMember>(() => ({
       // moves the picker and the retainer's line together and they cannot drift apart.
       line: PSY_FOCUS_LINE[f],
       open: psychologistFocusOpen.value.includes(f),
+      confirm: psychologistFocusConfirm(PSY_FOCUS_LABEL[f]),
     })),
     note: psychologistFocusNote.value,
     nudge: psychologistNudge.value,
     set: setPsychologistFocusChoice,
   },
+  // ⭐⭐ ROUND 42 #46 – AND THE SEAT WITH NO SWITCH GETS THE SENTENCE MOST, which is the correction the
+  // owner himself made to the first draft and the good kind: it had said the sessions are weekly work
+  // at home rather than tournament-side, and his answer was «психолог не ездит, но онлайн созвоны
+  // вполне может делать». The engine agrees with him in its own comment – `psychologistWorksThisWeek`
+  // says the retainer «runs on a tournament week exactly as the coach's does» and works through a
+  // layoff because «an injury is when the head needs the call most» – so the seat has no fare, no
+  // stand-down and no gap at all. That is a POSITIVE thing to say rather than an absence to explain,
+  // and without it a third seat on the payroll quietly reads as a third fare the player might be
+  // missing, which is the exact half of #46 he said he could not tell.
+  // ⚠ RE-DRAFT `46-c (v2)`, and it is the one string on this repair he has not yet read in play.
+  fareLine: 'No fare to pay: the sessions follow her as calls – at home, on the road, and through a layoff.',
 }))
 
 // --- the sparring partner (v80, wave F2) ---------------------------------------------------------
@@ -562,6 +640,10 @@ const members = computed<StaffMember[]>(() => [masseur.value, psychologist.value
 // per-member refactor this chapter is shaped to avoid. Null means nothing is being asked.
 const hiring = ref<string | null>(null)
 const releasing = ref<string | null>(null)
+// ⭐⭐ 17.09 – THE THIRD ASK, keyed on the member id AND the year pressed, because unlike the two
+// above this control has five answers and the question has to name the one. Null means nothing is
+// being asked, exactly as the two do.
+const focusing = ref<{ id: string; value: PsyFocus } | null>(null)
 // ⚠ THE TWO OPTIONAL CONTROLS ARE PRESSED THROUGH HERE AND NOT INLINE. The template's `v-if`
 // narrows `m.dial` / `m.travel` for the bindings it READS, but an inline handler is generated as its
 // own closure and the narrowing does not always reach inside it. A member without the control simply
@@ -572,11 +654,26 @@ async function pressRung(m: StaffMember, value: number): Promise<void> {
 async function pressTravel(m: StaffMember): Promise<void> {
   await m.travel?.toggle()
 }
-async function pressFocus(m: StaffMember, value: PsyFocus): Promise<void> {
-  await m.focus?.set(value)
+// ⚠⚠ THE PRESS ASKS, IT DOES NOT SET – 17.09, and the difference is a year of her life. The rung and
+// the travel switch above commit on the press because both are reversible the very next week; this
+// one closes the row until the next off-season, so it goes through the confirm the two hire
+// directions already use.
+function pressFocus(m: StaffMember, value: PsyFocus): void {
+  if (!m.focus) return
+  focusing.value = { id: m.id, value }
 }
 const hiringMember = computed(() => members.value.find((m) => m.id === hiring.value) ?? null)
 const releasingMember = computed(() => members.value.find((m) => m.id === releasing.value) ?? null)
+/** The member and the option being asked about, or null. ⚠ RESOLVED THROUGH `members` rather than
+ *  captured at the press, so the question a stale ask would print cannot outlive the option it names:
+ *  a seat let go with the dialog open finds no member and the card closes with it. */
+const focusingOption = computed(() => {
+  const asked = focusing.value
+  if (!asked) return null
+  const member = members.value.find((m) => m.id === asked.id)
+  const option = member?.focus?.options.find((o) => o.value === asked.value)
+  return member && option ? { member, option } : null
+})
 async function doHire(): Promise<void> {
   const m = hiringMember.value
   hiring.value = null
@@ -586,6 +683,11 @@ async function doRelease(): Promise<void> {
   const m = releasingMember.value
   releasing.value = null
   await m?.setHired(false)
+}
+async function doSetFocus(): Promise<void> {
+  const picked = focusingOption.value
+  focusing.value = null
+  await picked?.member.focus?.set(picked.option.value)
 }
 </script>
 
@@ -725,6 +827,17 @@ async function doRelease(): Promise<void> {
         <span class="cm-switch-knob"></span>
       </button>
     </section>
+    <!-- ROUND 42 #46: what this seat's fare buys, one standing sentence at the foot of the card.
+         The owner could tell what the head coach's second fare bought and not what the other two
+         seats bought, and the travel switch is a real price on every event week.
+         ONLY WHILE HIRED, the same predicate the dial, the year's work and the switch above all
+         use: a sentence about what a fare buys is a sentence about somebody already on the payroll,
+         and before the hire the card's own line is the pitch.
+         LAST IN THE BLOCK for both seats that carry one, which is what makes it read as one
+         question asked of the whole payroll - under the switch for the seat that has one, and at
+         the foot of the card for the seat whose answer is that there is no switch to pay for.
+         A seat with no sentence renders nothing at all - no empty element, no reserved line. -->
+    <p v-if="m.fareLine && m.hired" class="cm-load staff-fare">{{ m.fareLine }}</p>
   </section>
 
   <ConfirmDialog
@@ -740,6 +853,16 @@ async function doRelease(): Promise<void> {
     confirm-label="Let go"
     @confirm="doRelease"
     @cancel="releasing = null"
+  />
+  <!-- 17.09: the year's work asks before it is set. The pick locks the row for the rest of the
+       off-season, and it is taken by one press on a half-width card - so the same shell that fronts
+       the two hire directions fronts this one. Cancel leaves the year exactly as it was. -->
+  <ConfirmDialog
+    v-if="focusingOption"
+    :message="focusingOption.option.confirm"
+    confirm-label="Set it"
+    @confirm="doSetFocus"
+    @cancel="focusing = null"
   />
 </template>
 
@@ -959,6 +1082,12 @@ async function doRelease(): Promise<void> {
   overflow-wrap: anywhere;
 }
 .staff-travel {
+  margin-top: 8px;
+}
+/* ROUND 42 #46 - what the seat's fare buys. `.cm-load` carries the type, exactly as `.staff-line`
+   and `.staff-focus-note` do, so this rule owns nothing but the gap above it: the whole point of the
+   sentence is that it reads as the same voice as the rest of the card rather than as a new panel. */
+.staff-fare {
   margin-top: 8px;
 }
 /* ⭐ v76 T3 - the year's work. The dial's own pills, with ONE difference that is the content's and

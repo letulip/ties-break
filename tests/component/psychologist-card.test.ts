@@ -560,4 +560,136 @@ describe('the psychologist card on screen T', () => {
     assertDismissReachable(card, dismiss, PHONE, 'ConfirmDialog (psychologist release)')
     wrapper.unmount()
   })
+
+  // ===============================================================================================
+  // §9 – ⭐⭐⭐ 17.09: THE YEAR IS NOT SET BY ONE PRESS. His ask, and the defect beside it.
+  // ===============================================================================================
+  //
+  // HIS ASK: «вдруг человек промахнулся». The pick is a season-long commitment taken by ONE press on
+  // a half-width card, and it closes the row for the rest of the off-season the moment it lands
+  // (`PSYCHOLOGIST_FOCUS_SEASON_REFUSAL`), so a misfire costs a year with no way back. The tab
+  // already owned the idiom – `hireMessage` / `releaseMessage` drive the same `ConfirmDialog` – so
+  // this is that shell asked of a third control.
+  //
+  // ⚠⚠ AND §9b IS THE UI HALF OF THE RE-AFFIRMATION DEFECT, which lived in TWO layers. The engine's
+  // half is `tests/wave5-psychologist-focus.test.ts`; this is the screen's own
+  // `if (focus === psychologistFocus.value) return`, which meant the press on the year already
+  // running never became a command at all, whatever the engine did with it.
+  //
+  // ⚠ MUTATION ARMS – each applied alone against the real component, watched red, reverted. Counts
+  // READ OFF THE RUNS and recorded in the round's handoff, not predicted.
+  describe('§9 – the year asks before it is set', () => {
+    /** The off-season he was standing in: the seat filled, LAST season's year still running, and
+     *  every option open because the new season's choice has not been taken. ⚠ THE WIRE IS POSED
+     *  rather than walked – what the ENGINE opens in that week is `wave5-psychologist-focus.test.ts`'s
+     *  subject and is asserted there against the real `psychologistFocusOpen`; this file's subject is
+     *  what the CARD does with a wire in that shape, and walking 250 weeks to get one does not return
+     *  (see `round42-psych-marker.test.ts`'s own note on that). */
+    function offSeason(hired: Snapshot, chosen: (typeof PSY_FOCUSES)[number] | null): Snapshot {
+      return { ...hired, psychologistFocus: chosen, psychologistFocusOpen: [...PSY_FOCUSES] }
+    }
+
+    /** Mount the card with the store's own command replaced by a recorder, so a press that reaches
+     *  the worker is a countable fact rather than an inference from the rendered state. */
+    async function mountRecording(snapshot: Snapshot, attach = false) {
+      const store = useGameStore()
+      const sent: string[] = []
+      store.setPsychologistFocus = async (focus) => {
+        sent.push(focus)
+      }
+      const wrapper = await mountCard(snapshot, attach)
+      return { wrapper, sent }
+    }
+
+    const dialogButtons = (w: ReturnType<typeof mount>) =>
+      w.findAll('.dialog-card .dialog-actions button')
+
+    it('§9a – ⭐⭐⭐ the press ASKS and sends nothing; only the confirm sets the year', async () => {
+      const { hired } = snapshots()
+      const FIRST = PSY_FOCUSES[0]
+      const { wrapper, sent } = await mountRecording(offSeason(hired, null))
+
+      const options = wrapper.findAll(`${SEAT} .staff-focus-option`)
+      expect(options.length, 'the picker drew every year').toBe(PSY_FOCUSES.length)
+      await options[0].trigger('click')
+      await nextTick()
+      expect(sent, 'the tap that used to buy a season buys nothing now').toEqual([])
+
+      const card = wrapper.find('.dialog-card')
+      expect(card.exists(), 'the ask is up').toBe(true)
+      // ⚠ IT NAMES THE YEAR IT IS ABOUT. A confirmation that did not say which option was about to be
+      // bought would not answer «вдруг человек промахнулся» at all – that is the whole content of it.
+      expect(card.text(), 'the confirm names the year pressed').toContain(PSY_FOCUS_LABEL[FIRST])
+      expect(card.text(), 'and says what the press costs: the season').toContain('once a season')
+
+      const buttons = dialogButtons(wrapper)
+      expect(buttons.map((b) => b.text()), 'cancel first, the act second – the shell`s own order')
+        .toEqual(['Cancel', 'Set it'])
+      await buttons[1].trigger('click')
+      await nextTick()
+      expect(sent, 'the confirm sends the year that was named').toEqual([FIRST])
+      expect(wrapper.find('.dialog-card').exists(), 'and the ask closes behind it').toBe(false)
+      wrapper.unmount()
+    })
+
+    it('§9a2 – ⚠ ...and Cancel leaves the year exactly as it was', async () => {
+      const { hired } = snapshots()
+      const { wrapper, sent } = await mountRecording(offSeason(hired, null))
+      await wrapper.findAll(`${SEAT} .staff-focus-option`)[1].trigger('click')
+      await nextTick()
+      expect(wrapper.find('.dialog-card').exists(), 'the ask is up').toBe(true)
+      await dialogButtons(wrapper)[0].trigger('click')
+      await nextTick()
+      expect(sent, 'a misfire cancelled costs nothing').toEqual([])
+      expect(wrapper.find('.dialog-card').exists(), 'and the card is gone').toBe(false)
+      wrapper.unmount()
+    })
+
+    it('§9b – ⭐⭐⭐ re-affirming the year already running asks, and really sends it', async () => {
+      // HIS REPORT: «почему-то не выбирается повторно существующая». The option already chosen used
+      // to return on the spot on this screen, so the press was swallowed before it could become a
+      // command – and the engine would not have stamped the season if it had.
+      const { hired } = snapshots()
+      const RUNNING = PSY_FOCUSES[0]
+      const { wrapper, sent } = await mountRecording(offSeason(hired, RUNNING))
+
+      const option = wrapper.findAll(`${SEAT} .staff-focus-option`)[0]
+      expect(option.attributes('aria-checked'), 'the fixture really is the running year').toBe('true')
+      expect(option.attributes('disabled'), 'and the engine has it open, which is why the block glows')
+        .toBeUndefined()
+      await option.trigger('click')
+      await nextTick()
+      expect(wrapper.find('.dialog-card').exists(), 'the press was not swallowed – it asks').toBe(true)
+      expect(wrapper.find('.dialog-card').text()).toContain(PSY_FOCUS_LABEL[RUNNING])
+
+      await dialogButtons(wrapper)[1].trigger('click')
+      await nextTick()
+      expect(sent, '«same again this year» reaches the worker as a command').toEqual([RUNNING])
+      wrapper.unmount()
+    })
+
+    it('§9c – ⭐⭐ the ask`s dismiss control is inside a 375x667 phone', async () => {
+      // CLAUDE.md's standing rule, earned by `TourBriefingDialog` shipping 1078px of card into 635px
+      // of room on a BLOCKING overlay. ⚠ MUTATION-VERIFIED THE WAY `fits.ts` ASKS: the content model
+      // deliberately UNDER-counts, so a green verdict is only worth anything because of the CAP – and
+      // the cap arm below is the one that proves this measurement can fail at all.
+      setViewport(PHONE)
+      const { hired } = snapshots()
+      const { wrapper } = await mountRecording(offSeason(hired, null), true)
+      await wrapper.findAll(`${SEAT} .staff-focus-option`)[0].trigger('click')
+      await nextTick()
+      const card = document.querySelector('.dialog-overlay .dialog-card')!
+      const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
+      expect(card, 'the ask is up – nothing here is vacuous without it').toBeTruthy()
+      expect(card.textContent, 'and it is the year`s-work ask').toContain('once a season')
+      assertDismissReachable(card, dismiss, PHONE, 'ConfirmDialog (psychologist year)')
+
+      const el = card as HTMLElement
+      el.style.maxHeight = 'none'
+      expect(() => assertDismissReachable(card, dismiss, PHONE, 'ConfirmDialog (cap removed)')).toThrow(
+        /declares no height bound/,
+      )
+      wrapper.unmount()
+    })
+  })
 })
