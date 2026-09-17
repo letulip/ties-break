@@ -1166,7 +1166,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
         },
       },
       quiet: {
-        opener: '"I\'ve repacked a couple of times. It\'s fine now."',
+        opener: '"I\'ve repacked it three times. It\'s fine now."',
         branches: {
           invite: {
             label: 'Ask what she thinks is missing',
@@ -1338,9 +1338,9 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
       },
     },
   },
-  // R18 · the-loss-she-is-still-carrying
+  // R18 · the-match-she-is-still-carrying
   {
-    id: 'the-loss-she-is-still-carrying',
+    id: 'the-match-she-is-still-carrying',
     subject: 'worry',
     stages: ['after-school', 'college', 'independent'],
     fact: 'played-recently',

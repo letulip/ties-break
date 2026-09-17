@@ -358,3 +358,59 @@ defect – and it is the same question round 38 left open as C2.
 (`planner.ts:485` keeps only `week >= from`) and the feed is capped at 402 rows for a 777-week
 career, so the holidays he took are simply not in the file. Whether they did anything is a question
 for a bench arm, not for this save.
+
+
+---
+
+## ⭐⭐⭐ 9. HIS REVIEW OF THE 516 (17.09) – EIGHT FINDINGS, ALL EIGHT VERIFIED
+
+He read the extracted corpus and returned eight findings. **Every one was checked against the file
+before anything was touched, and every one is real** – no false positives. His verdict: «the voice
+work is good enough to preserve. I'd repair the factual seams rather than conduct another broad
+prose rewrite.»
+
+⚠ **They are all one family: a line that asserts more than its kernel licenses.** That is the law
+the corpus was rebuilt around, and it is the law it is still leaking at the seams.
+
+### Repaired immediately – mechanical, and one of them was time-critical
+
+- ⭐⭐ **R18's ID asserted the loss its gate refuses to assert.** `the-loss-she-is-still-carrying`
+  against a kernel that says only «a match she played is still in her head», gated on
+  `played-recently`, which licenses participation and not a result. **Renamed to
+  `the-match-she-is-still-carrying`.** ⚠⚠ **This was the last moment it could be done**: an id is
+  persisted into `lifeLog` and becomes append-only once a career has seen it, and the catalogue has
+  not merged yet. A day later it would have been permanent.
+- **R15 published two editions of one number.** The kernel says three repackings; `quiet` said «a
+  couple». Re-aligned to three – «same event, four voices» is the instrument, and a voice may
+  interpret the afternoon but not restate its arithmetic.
+
+### ⚠ The four he ruled must be resolved before the catalogue is trusted
+
+1. **[P1] R36 describes an ending she did not witness.** The kernel and two openers put her there «at
+   the end of it»; **all four `invite` replies say she left before it**, and `quiet`'s `respond` even
+   has them «walked off fine». One situation cannot hold both. His fix: the kernel becomes «when she
+   left, both were still moving properly», the two openers follow it, and «Ask who won it» is
+   replaced by something the row can answer.
+2. **[P2] R44 invents the calendar gap its own note says it does not name.** «Two quiet days
+   coming. Nothing planned» IS a calendar fact – R17's class exactly. ⭐ **And the fix is cheaper than
+   he proposed**: `clear-next-week` now EXISTS, built in round 43 at his own ask, so the row can be
+   GATED rather than made hypothetical. The line stays as written and becomes true.
+3. **[P2] R30 adds a result and a competitive history no `generated` kernel licenses.** `fiery`'s
+   «and then they called it off anyway» is an outcome the kernel does not hold; `deep`'s «people I've
+   shared a draw with for two years» is longitudinal competitive history.
+4. **[P2] R34 crosses the boundary its own note draws.** The note says the row asserts nothing about
+   her second serve; `invite` then establishes a persistent technical pattern – «Every time», «I've
+   never once just gone». `played-recently` licenses participation, never a playing habit. His
+   suggested label: ask what she notices immediately before the better players move.
+
+### ⚠ The rest, recorded and not yet repaired
+
+5. **[P2] Three rows manufacture ongoing relationships**, which the implementation contract forbids
+   («an invented name must not silently become a relationship the world must honour»): R16's «we've
+   shared a warm-up a few times» – in the row that was REPAIRED on 17.09 for exactly this; R29's «we
+   talk a bit more now»; R2's «I've said nothing for three weeks».
+6. **[P3] Two parent labels manufacture four similar non-answers.** R33 asks whether the behaviour
+   helped and R36 asks who won; neither kernel licenses an answer, so all four voices must decline –
+   honest once, a dodge four times, and it wastes the row's whole instrument. **The label is the
+   defect, not the reply**, which is the builder's own finding from the writing pass, independently
+   reached.

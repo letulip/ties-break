@@ -852,7 +852,7 @@ every `handed` in `src/engine` is the ordinary English word. A generated kernel 
 | `sunny` | `"I've packed this bag three times and I still think I've forgotten something."` |
 | `fiery` | `"Three times. I've packed it three times and it's still wrong somehow."` |
 | `deep` | `"I keep repacking. I don't think it's about the bag."` |
-| `quiet` | `"I've repacked a couple of times. It's fine now."` |
+| `quiet` | `"I've repacked it three times. It's fine now."` |
 
 **Parent:** *Ask what she thinks is missing* · *Say you do that before trips too* · *Say the bag is packed and she can stop*
 
@@ -942,7 +942,7 @@ been at. A calendar with nothing in it is not a gap in her season.
 - `deep` `"All right. I'll try it as rest and see what it turns into."`
 - `quiet` `"All right. Nothing in it, then."`
 
-### R18 · `the-loss-she-is-still-carrying` · worry · after-school, college, independent · **fact: `played-recently`**
+### R18 · `the-match-she-is-still-carrying` · worry · after-school, college, independent · **fact: `played-recently`**
 **Kernel:** A match she played is still in her head days later, and she cannot say which part of it.
 ⚠ **Gated** because it presumes a recent match. ⚠ **It does not say she LOST** – `played-recently`
 does not license that. ⚠ **And it no longer says WHEN.** «Four days» and «Tuesday» were durations the
