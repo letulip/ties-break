@@ -582,12 +582,13 @@ ship a body nobody can read.
 
 ### Still carried and NOT in the five steps above – his items, waiting on his priority
 
-- **#51** the coach's fee fixed at hire and he asks – ruled 17.09, needs a schema key.
-- **Re-affirming the psychologist's year does nothing** (`psychologist.ts:536`), and the confirm
-  dialog before the year is set.
-- **The hitting partner is missing from the team budget**, and `committedCents` is short by his
-  salary.
-- **#46** show what every travelling specialist buys.
+- **#51** the coach's fee fixed at hire and he asks – ruled 17.09, needs a schema key. **STILL OPEN**,
+  and deliberately: it is its own pass (§13's row d).
+- ✅ **Re-affirming the psychologist's year does nothing** (`psychologist.ts:536`), and the confirm
+  dialog before the year is set. **SHIPPED** – see «the leftovers pass» below.
+- ✅ **The hitting partner is missing from the team budget**, and `committedCents` is short by his
+  salary. **SHIPPED.**
+- ✅ **#46** show what every travelling specialist buys. **SHIPPED**, in his own approved words.
 ---
 
 ## ✅ WHAT BUILDER 2 DID – the eight moved, 21 voices written, six findings closed
@@ -730,13 +731,79 @@ the two doors work as specified and the third and fourth were never specified.
 
 ### The four, and why they are two builders
 
-| | item | size |
-| --- | --- | --- |
-| a | re-affirming the psychologist's year does nothing (`world/psychologist.ts`'s early return skips the season stamp) | one line + a test |
-| b | a confirmation before the year is set – the pick LOCKS the row for the rest of the off-season | existing dialog idiom |
-| c | the hitting partner is missing from `coachingBudget.ts`'s `seats`, so `committedCents` is short by his salary | one push + a test that counts against the snapshot |
-| d | **#51 – the coach's fee fixed at hire, and he ASKS** | ⚠⚠ **a schema move**: the agreed figure is stored nowhere today, so v81 → v82 and the six-part ritual |
-| e | #46 – show what each travelling specialist buys | UI |
+| | item | size | state |
+| --- | --- | --- | --- |
+| a | re-affirming the psychologist's year does nothing (`world/psychologist.ts`'s early return skips the season stamp) | one line + a test | ✅ |
+| b | a confirmation before the year is set – the pick LOCKS the row for the rest of the off-season | existing dialog idiom | ✅ |
+| c | the hitting partner is missing from `coachingBudget.ts`'s `seats`, so `committedCents` is short by his salary | one push + a test that counts against the snapshot | ✅ |
+| d | **#51 – the coach's fee fixed at hire, and he ASKS** | ⚠⚠ **a schema move**: the agreed figure is stored nowhere today, so v81 → v82 and the six-part ritual | open |
+| e | #46 – show what each travelling specialist buys | UI | ✅ |
 
 a, b, c and e go together; **d is its own pass**, because a schema move next to three unrelated
 repairs is how a bump gets half-done.
+
+---
+
+## ✅ THE LEFTOVERS PASS – a, b, c and e, on `round/44-leftovers`
+
+### a. The re-affirmation was swallowed in TWO layers, not one
+
+The brief named `world/psychologist.ts:536`. It was right, and it was half the defect: the SCREEN
+carried the same early return (`setPsychologistFocusChoice`'s `if (focus === psychologistFocus.value)
+return`), so the press never became a command at all and the engine's guard was never reached. Both
+are gone. The refusal read and the season stamp are now unconditional; the assignment is idempotent
+by being an assignment, which is the only half of the old guard that was ever about the feed.
+
+⚠ **What the trade costs, said rather than discovered:** a press that arrives after the window has
+closed is now REFUSED (`PSYCHOLOGIST_FOCUS_SEASON_REFUSAL`) where it used to return silently. That
+cannot happen from a live card – `psychologistFocusOpen` is empty there and every option is disabled –
+and it is the same sentence every other closed press already gets, which is the R10-16 doctrine
+rather than a new behaviour.
+
+⚠ **One pin moved, and it had been asserting the defect.** `tests/wave5-psychologist-focus.test.ts`'s
+«re-choosing the year already running is a NO-OP – not a refusal and not a re-stamp» is replaced by
+two cases, and its text is kept verbatim inside the new one, because the sentence was right about its
+purpose and wrong about its scope. Nothing was weakened: the silence half it protected (no feed row,
+no life-beat row, no charge) is now an assertion rather than a comment.
+
+### b. The ask before the year is set
+
+`ConfirmDialog`, the shell the two hire directions already use, asked of the picker. The press stores
+what was pressed; only the confirm sends the command; Cancel leaves the year as it was. **The
+confirmation names the year**, because a question that did not would not answer «вдруг человек
+промахнулся» at all.
+
+⚠ **ONE NEW PLAYER-FACING STRING, AND IT IS A DRAFT** (plus the `Set it` button label). Its vocabulary
+is deliberately the engine's own refusal – «the year's work», «once a season», «the off-season» – so
+the ask and the sentence it will one day be refused by read as one story.
+
+> `Set the psychologist's work for this season to <year>? The year's work is chosen once a season, and
+> the next choice comes in the next off-season.`
+
+⚠ **MEASURED AGAINST A PHONE** (round-20 #1's standing rule), `psychologist-card.test.ts` §9c: the
+dismiss control's box inside 375x667 through the real cascade, and the cap arm – `max-height` stripped
+off the real card – watched throwing, because a fit test that cannot fail on the unbounded version is
+not that test.
+
+### c. The hitting partner joins the payroll
+
+One clause in `coachingBudget.ts`'s `seats`, and the three figures that are summed off it stop being
+short by his salary. ⭐ **The comment that promised this could not happen is corrected where it
+stands** – «a fourth salaried seat added to the snapshot joins THIS array» was aspirational, and the
+guard that replaces the promise counts the tile's rows against the snapshot's own `*Hired` flags,
+discovered from the wire, so a FIFTH seat reddens it by existing.
+
+⚠ The membership half is asserted SORTED, on purpose: the wire's key order is the order somebody typed
+`toSnapshot`'s object literal in (`sparringHired` stands above `psychologistHired` there), which is a
+fact about a file and not about a payroll. The ORDER the tile draws is a separate claim with its own
+reason – the masseur stays first – and is asserted separately as a literal.
+
+### e. #46, in his own words and no others
+
+His 16.09 read is shipped verbatim: **46-a / 46-b** (the masseur's two states, «слова массажиста ок»)
+and **46-c v2** (the psychologist, the re-draft made after he corrected the mechanic). No number
+appears in any of them, which is #46's own rule.
+
+⭐ **The hitting partner gets nothing, and that is asserted as a decision.** His travel sub-line
+already says which half the fare buys, in his own 17.09 words, so a fourth sentence would be a draft
+he never asked for beside an approved one he did.

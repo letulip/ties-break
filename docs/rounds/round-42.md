@@ -2441,7 +2441,7 @@ earned again this round), and pushes. The round ends with its own PR through `/p
 bench lands late, and anything in bundle 15 the re-measurement refuses – a physics change that fails
 its own acceptance bench does not ship because the round is ending.
 
-- [ ] **46. «можно как-то показывать игроку преимущества всех ездящих специалистов, что он получает. С
+- [x] **46. «можно как-то показывать игроку преимущества всех ездящих специалистов, что он получает. С
   главным тренером понятно, а вот с остальными двумя не очень» (15.09)** – **build, and the facts are
   already in the engine.** The travel switch is a real price (a second fare, every event week) and the
   game states what it buys for exactly one seat.
@@ -2500,6 +2500,14 @@ its own acceptance bench does not ship because the round is ending.
   game that buys match odds directly with money**. And the recommendation is to build neither yet: the
   effect discounts a number (`world.form`) that does not exist, so any rung price would be guessed,
   which is invariant 5's exact prohibition. It belongs in **F3**.
+
+  ⭐⭐ **SHIPPED 17.09, IN ROUND 44's LEFTOVERS PASS**, on his «чини, я был уверен, что уже это всё
+  готово». The three sentences above are on the cards verbatim – `SupportStaffTab.vue`'s `fareLine`,
+  one standing line at the foot of each seat's block, gated on the hire like every other control there
+  – and `tests/component/round42-fare-lines.test.ts` is the mounted net. ⚠ **The hitting partner
+  deliberately got none**: his travel sub-line already answers the fare question in the owner's own
+  17.09 words, so a fourth draft would have stood beside an approved sentence saying the same thing.
+  That negative is asserted rather than assumed (§3 of that file).
 
 - [x] **47. «мы не фиксируем эти разрывы, а выдаём в край нужды для закрытия поездок, самый сложный
   этап J серия, там самые большие расходы» (15.09) – the cameo's ORIGINAL intent, recovered.** His
