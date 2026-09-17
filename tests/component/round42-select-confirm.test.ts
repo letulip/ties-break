@@ -57,6 +57,10 @@ const KNOCK: KnockPrompt = {
   read: 'FIXTURE – the coach thinks a week off would settle it.',
   restCost: 'FIXTURE rest cost sentence.',
   pushCost: 'FIXTURE push cost sentence.',
+  // ⭐ ROUND 43 #10 – the card answers «why» now. A FIXTURE like the four above: what the sentence
+  // says is `knockCause`'s business (tests/knock.test.ts §5b) and what it does to the card's HEIGHT
+  // is this file's, which is why the fit cases below re-run unchanged against a longer card.
+  cause: 'FIXTURE – the week we set was a hard one.',
 }
 
 /** A life-beat prompt – life-beat-dialog.test.ts's own fixture shape, `confirm` included. */

@@ -33,12 +33,17 @@
 // leaves – ledger, ladder, college, bookings, constants. Deliberately NOT from coachMarket.ts:
 // importing it here would close a runtime cycle through endings → entries → medical → this file.
 import { ECONOMY } from '../economy'
+import { formatCents } from '../../shared/money'
 import { clamp } from '../condition'
 import { addEvent } from './ledger'
 import { guardNotEnded } from './constants'
 import { activeLadderOf } from './ladder'
 import { inCollege } from './college'
 import { vacationForWeek } from './bookings'
+// ⚠ THE SEASON'S LENGTH, AND IT IS THE CALENDAR'S OWN (round 43 #4). `season/calendar.ts` is a leaf
+// with no runtime edge back into `world/` – `world/ledger.ts` reads the same constant for
+// `seasonIndexOf`, which is the definition of «this season» every money surface is cut on.
+import { WEEKS_PER_YEAR } from '../season/calendar'
 import type { WorldState } from '../world'
 
 /** THE GATE: he joins a professional operation (the plan's own ruling – «эти специалисты могут
@@ -52,7 +57,7 @@ export function masseurUnlocked(world: WorldState): boolean {
 /** The refusal, written once – the market card prints it and `hireMasseur` throws it, so the
  *  disabled state and the refused click can never tell two stories (the R10-16 doctrine). */
 export const MASSEUR_LOCKED_DETAIL =
-  'A masseur joins a professional operation – her first counting W-series result opens the door.'
+  'Her first counting W-series result opens a place for a masseur.'
 
 /** THE HIRE, the coach's own shape: no signing fee, no notice period, effective from the next
  *  weekly bill, and firing must always be allowed – a family that cannot pay has to be able to
@@ -83,7 +88,7 @@ export function hireMasseur(world: WorldState, hire: boolean): void {
     // and the plan's flagship line is the owner's own «the weeks his hands did not lose». The copy
     // below still avoids pronouns where it costs nothing.
     text: hire
-      ? 'A masseur is on the payroll now – table work at home, every week.'
+      ? 'A masseur joins the team – table work at home, every week.'
       : 'The masseur is let go – her body is back on the physio rota alone.',
   })
 }
@@ -106,11 +111,193 @@ export function masseurRungOf(world: WorldState) {
   )
 }
 
+// =================================================================================================
+// ROUND 43 #4 – THE ANNUAL ASK (his 16.09 ruling, complete)
+// =================================================================================================
+//
+// «Мы начинаем работать с массажистом по нашим текущим ценам, а дальше он приходит и просит
+// прибавку, либо (так как альтернативы нет) добавить денег, но убавить количество процедур…
+// может просить надбавок за свои часы ежегодно, может быть не так интенсивно как тренер.»
+//
+// ⭐⭐ IT ADDS NO NEW DIAL. The ask moves `perSessionCents` FOR THIS CAREER, once a year; the
+// family's answer is the rung dial (2 / 4 / 7) that has been on the card since round 24 – pay more
+// for the same hands, or hold the bill and drop a rung. Both branches are his own words.
+//
+// ⚠⚠ AND THERE IS NO THIRD «REFUSE» BRANCH, DELIBERATELY. «Альтернативы нет» means a refusal cannot
+// mean «he leaves and you hire another», and a punishment with no counterplay contradicts his
+// standing «мы ни за что не наказываем». Two branches, neither of them losing – the second one is
+// free, it just buys fewer hours.
+//
+// ⚠⚠ THE DRIVER IS TIME SERVED AND NEVER HER RESULTS. The coach asks against a progress basket
+// because DEVELOPING her is his job; the masseur MAINTAINS her, and his value is his hours. Letting
+// him read her titles would make him a second coach AND charge her success twice – the exact
+// double-count the chemistry wave's C13 had to damp.
+//
+// ⚠⚠ AND NOTHING IS PERSISTED FOR IT: `coachSinceWeek`'s own doctrine (world/coachMarket.ts – «the
+// radar's weeks together, derived rather than stored: no schema bump, no migration, no golden
+// save»). `hireMasseur` already writes ONE KEPT, TAGGED row per change of the arrangement
+// (`MASSEUR_CHANGE_KEY`, the week in the key) and `pruneEvents` never touches a kept row, so the
+// whole employment history is already in every save that has ever had a masseur in it.
+//
+// ⚠ RNG: STILL NOTHING HERE DRAWS. The drift is a deterministic function of weeks served, not a
+// corridor and not a jitter – the file's own legibility rule («a salary is a negotiated number the
+// player can read») held rather than broken, and the frozen MAIN capture still cannot see this file.
+
+/** ⭐⭐ EVERY WEEK THE MASSEUR HAS BEEN ON THIS FAMILY'S PAYROLL, AS AT `week`.
+ *
+ *  ⚠⚠ IT IS THE SUM OF THE HIRED SPANS AND NOT «WEEKS SINCE THE FIRST HIRE», and the difference is
+ *  the whole reason this walks the rows instead of taking a `max`. Weeks he was not employed are
+ *  weeks he did not work, which is «his value is his hours» taken literally. It also closes the one
+ *  exploit the design cannot survive: if the clock reset on a re-hire, a family could fire him for a
+ *  single week and buy back the entry price – a THIRD branch, free, and strictly better than either
+ *  of the two he named. Under the span sum a release costs the weeks it costs and resets nothing.
+ *
+ *  ⚠ THE ROWS ALTERNATE HIRE / RELEASE BY CONSTRUCTION, which is what makes the parity read sound:
+ *  `hireMasseur` is the only writer of this tag, it returns before writing when the flag is not
+ *  actually flipping, and `masseurHired` starts false – so the first tagged row of a career is
+ *  always a hire, the second always a release, and so on.
+ *
+ *  ⚠ A HAND-BUILT PROBE WORLD with `masseurHired: true` and no tagged row reads as ZERO weeks
+ *  served, not as a crash and not as «since week 0» – the identity element, which prices him at
+ *  today's rate. That is the same courtesy `masseurRungOf` extends to an unknown rung.
+ *
+ *  ⚠ COLLEGE AND BOOKED FAMILY WEEKS COUNT. They suspend the BILL, not the arrangement
+ *  (`masseurWorksThisWeek`'s own note: «suspends, does not cancel»), and the years he has been the
+ *  family's masseur pass while she is at a university. Pure read over the ledger, zero draws. */
+export function masseurWeeksServedAt(world: WorldState, week: number): number {
+  const marks: number[] = []
+  for (const e of world.events) {
+    if (e.milestoneKey?.startsWith(MASSEUR_CHANGE_KEY) && e.week <= week) marks.push(e.week)
+  }
+  marks.sort((a, b) => a - b)
+  let served = 0
+  for (let i = 0; i < marks.length; i += 2) {
+    // An odd tail is the span still running – it closes at the week being asked about.
+    const until = i + 1 < marks.length ? marks[i + 1] : week
+    served += Math.max(0, until - marks[i])
+  }
+  return served
+}
+
+/** ...as at today. The one form the bill, the card and the ask all read. */
+export function masseurWeeksServed(world: WorldState): number {
+  return masseurWeeksServedAt(world, world.week)
+}
+
+/** HOW MANY ANNUAL ASKS HE HAS EARNED – one per completed year on the payroll. `WEEKS_PER_YEAR` and
+ *  not a private 52: the same season the Money screen's window and the wrap-up are cut on. */
+export function masseurYearsServed(world: WorldState): number {
+  return Math.floor(masseurWeeksServed(world) / WEEKS_PER_YEAR)
+}
+
+/** ⭐⭐⭐ WHAT ONE SESSION COSTS THIS FAMILY TODAY – `ECONOMY.masseur.perSessionCents` drifted by the
+ *  years he has served them, and the ONE definition of his rate. The bill, the tour week, the rung
+ *  prices on the card and the ask's own sentence all read it, so the four can never disagree.
+ *
+ *  ⚠ COMPOUNDING, because that is what a rise IS – each year's ask is against what he is paid now,
+ *  not against what he was paid when he started. ⚠ AND ROUNDED TO WHOLE DOLLARS from the UNROUNDED
+ *  power, never year-on-year from the rounded one: the house prices this seat in whole dollars
+ *  (`75_00`), the card quotes `sessions × this`, and rounding once keeps the quote, the ledger row
+ *  and the arithmetic a player can do in his head all the same number.
+ *
+ *  ⚠ THE INTENSITY IS MEASURED AGAINST THE COACH AND NOT AGAINST A MARKET (his «не так интенсивно
+ *  как тренер», and round 43 #6 withdrew the item that asked for an outside figure): today's price
+ *  IS the anchor and the mechanic is the drift away from it. See `ECONOMY.masseur.raisePerYear`.
+ *
+ *  Pure integer arithmetic over the ledger, zero draws on any stream. */
+export function masseurSessionCents(world: WorldState): number {
+  const drifted = ECONOMY.masseur.perSessionCents * (1 + ECONOMY.masseur.raisePerYear) ** masseurYearsServed(world)
+  return Math.round(drifted / 100) * 100
+}
+
+/** IS THIS THE WEEK HE ASKS – the week his service count crosses a whole year.
+ *
+ *  ⚠⚠ IT ASKS LAST WEEK TOO, AND THAT SECOND READ IS NOT BELT-AND-BRACES. Without it the ask would
+ *  fire a second time on a RE-HIRE week whose running total happened to already sit on a multiple of
+ *  52: the count does not move on the week a span opens, so «divisible by 52» alone is true on that
+ *  week as well as on the anniversary it already announced. The honest question is whether the
+ *  counter INCREMENTED into a year this week. Pure, zero draws. */
+export function masseurRaiseDue(world: WorldState): boolean {
+  if (!(world.masseurHired ?? false)) return false
+  const served = masseurWeeksServed(world)
+  if (served <= 0 || served % WEEKS_PER_YEAR !== 0) return false
+  return masseurWeeksServedAt(world, world.week - 1) === served - 1
+}
+
+/** ⭐ THE ASK ITSELF – one kept-free `info` row on the anniversary week, and nothing else moves.
+ *  The new rate is already live (`masseurSessionCents` reads the same counter), so the row is a
+ *  NOTICE of a bill that has changed rather than an offer the player has to accept: the decision he
+ *  is being handed is the rung dial, which is where it already lives.
+ *
+ *  ⭐⭐ THE TWO SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW, AND THEY REPLACE THE BUILD'S DRAFTS.
+ *  His faults on what stood here, kept because they are the rule for the next line rather than a
+ *  list of typos: «asks for more» first reads as more SESSIONS rather than more money, which is
+ *  precisely the wrong idea on a row whose whole subject is the rate; and «the same hands» reduces a
+ *  person to a pair of hands. ⭐ The voice of this surface is a FEED ENTRY – a compact consequence –
+ *  which is why neither line is atmospheric: it states the new rate and the two answers.
+ *
+ *  ⚠⚠ AND ONE FACT IN HIS BOTTOM-RUNG SENTENCE WAS WRONG AND IS CORRECTED RATHER THAN SHIPPED. He
+ *  wrote «She is already down to one session a week»; `ECONOMY.masseur.rungs` opens at **2** and its
+ *  label is «Twice a week», so there is no one-session rung on this dial and never has been. The
+ *  sentence keeps his shape and his second clause exactly and names the real floor – a line that
+ *  told a family she was on one session while the card beside it said two would be the same class of
+ *  defect as offering a rung that is not there, which is what this branch exists to avoid. Reported
+ *  in the hand-back.
+ *  ⚠ IT MAY CARRY THE FIGURE, unlike `masseurRoomNote`: this is the row whose whole job is the new
+ *  price, and `setMasseurSessions` records the same split («the price change is on the next weekly
+ *  bill, which is the row that may carry figures»).
+ *  ⚠ NO MASCULINE PRONOUN IN EITHER LINE, which is R15-7's standing order and NOT covered by this
+ *  file's «the pronoun is safe here» note beside `hireMasseur`: that note is about the NOUN, and
+ *  `tests/coach-voice.test.ts` bans `he`/`his`/`him` from every engine literal a player can read.
+ *  The first draft of the bottom-rung line said «to drop him to» and went red there, which is the
+ *  guard doing exactly its job.
+ *
+ *  ⚠ AND THE SECOND SENTENCE TELLS THE TRUTH AT THE BOTTOM RUNG. A family already on two sessions a
+ *  week has no rung to drop to, and a line offering one would be the screen lying about a choice –
+ *  this round's own #5 is about exactly that failure one tab over.
+ *
+ *  Called from `world/phaseHerWeek.ts` immediately BEFORE `resolveMasseur`, so the week the ask
+ *  lands is the week the new bill is charged and the ledger reads in the order it happened.
+ *  ZERO draws on any stream. */
+export function resolveMasseurRaise(world: WorldState): void {
+  if (!masseurRaiseDue(world)) return
+  const rate = masseurSessionCents(world)
+  const rung = masseurRungOf(world)
+  const bottom = rung.sessions === ECONOMY.masseur.rungs[0].sessions
+  // ⚠⚠ THE FLOOR IS NAMED BY THE RUNG'S OWN LABEL AND NEVER BY A LITERAL, which is the whole lesson
+  // of the fact this sentence got wrong. «Twice a week» is what the card beside this row says, so
+  // the two can never disagree – and a wave that retunes `rungs[0]` moves the sentence with it
+  // instead of leaving a line that describes a schedule the dial no longer offers.
+  const lead = `The masseur's rate rises to ${formatCents(rate)} a session starting this week.`
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    text: bottom
+      ? `${lead} She is already down to ${rung.label.toLowerCase()}, so there is no shorter schedule to choose.`
+      : `${lead} Keep the current schedule at the higher rate, or book fewer sessions.`,
+  })
+}
+
+/** Whole dollars for the one row that quotes his rate. ⚠ NOT a formatter import: `shared/money.ts`
+ *  is the UI's, and an engine leaf may not reach for it (invariant 1). The rate is rounded to whole
+ *  dollars at its source, so there are never cents to lose here. */
+/** ⚠⚠ REMOVED 17.09 – THIS FILE HAD ITS OWN MONEY FORMATTER AND IT WAS A SECOND IMPLEMENTATION OF A
+ *  HOUSE RULE. It read `` `$${Math.round(cents / 100)}` `` – no thousands separator and no sign – so a
+ *  four-figure rate printed `$1234` where every other surface in the game prints `$1,234`. Caught by
+ *  the owner's copy review of round 43's DRAFT strings («use the shared money formatter rather than
+ *  inserting a literal»), not by anything failing: the masseur's rate does not reach four figures
+ *  inside a normal career, so the divergence was real and invisible at once.
+ *  ⭐ `formatCents` from `shared/money` is the one formatter; `shop.ts` and `sponsors.ts` already
+ *  import it across the same boundary, so nothing about the engine's purity changes here. */
+
 /** WHAT A WEEK COSTS AT HER FAMILY'S CHOSEN RUNG – sessions × the professional session rate, flat.
  *  The coach's own shape (`coachWeeklyCents` = rate × hours), asked of a second seat: the rung is
- *  chosen, the bill is flat per rung, and the card's quote IS the ledger's row. Zero draws. */
+ *  chosen, the bill is flat per rung, and the card's quote IS the ledger's row. Zero draws.
+ *  ⭐ ROUND 43 #4 – THE RATE IS THE CAREER'S OWN NOW (`masseurSessionCents`) rather than the
+ *  constant. Flat still means flat: no corridor, no jitter, no draw – it is simply a number that
+ *  has been renegotiated once a year, which is the whole of his ruling. */
 export function masseurWeeklyCents(world: WorldState): number {
-  return masseurRungOf(world).sessions * ECONOMY.masseur.perSessionCents
+  return masseurRungOf(world).sessions * masseurSessionCents(world)
 }
 
 /** THE DIAL (owner, round 24: «настройки сколько раз в неделю он дает свои услуги»). Sets the
@@ -152,7 +339,7 @@ export function setMasseurTravels(world: WorldState, on: boolean): void {
       week: world.week,
       type: 'info',
       text: on
-        ? 'The masseur travels to tournaments now – one more fare on every trip, and table work between rounds.'
+        ? 'The masseur travels to tournaments now – one additional fare per trip, and table work between rounds.'
         : 'The masseur stays home on tournament weeks – the table waits for her return.',
     })
   }
@@ -289,14 +476,20 @@ export function masseurRehabWeeksAhead(world: WorldState): number {
 }
 
 /** ⭐ WHAT A TOUR WEEK COSTS (owner 22.08: «на неделе выезда по-матчевая цена заменяет
- *  недельную») – matches played × the professional session rate, the same $75 every rung's home
- *  week is built from. The draw table prices itself: a Slam title week is 7 matches = $525 –
- *  exactly the daily rung's home week – a wta1000 up to 6 ($450), a 32-draw up to 5 ($375), and a
- *  first-round exit is one session's worth ($75). Billed at `finalizeTournament`, where the
- *  matches are known; the weekly rung bill stands down for that week (see `resolveMasseur`).
+ *  недельную») – matches played × the professional session rate, the same rate every rung's home
+ *  week is built from. The draw table prices itself: at the opening $75 a Slam title week is 7
+ *  matches = $525 – exactly the daily rung's home week – a wta1000 up to 6 ($450), a 32-draw up to
+ *  5 ($375), and a first-round exit is one session's worth ($75). Billed at `finalizeTournament`,
+ *  where the matches are known; the weekly rung bill stands down for that week (see
+ *  `resolveMasseur`).
+ *
+ *  ⚠ IT TAKES THE RATE RATHER THAN READING `ECONOMY` (round 43 #4), for `masseurWorksInWeek`'s own
+ *  reason one function up: the caller holds the world, this does not, and a second reader of the
+ *  constant would be a tour week still billed at the price the family stopped paying a year ago.
+ *  The four figures above are the OPENING table and drift with `masseurSessionCents`.
  *  Pure integer arithmetic, zero draws. */
-export function masseurTourWeekCents(matchesPlayed: number): number {
-  return Math.max(0, matchesPlayed) * ECONOMY.masseur.perSessionCents
+export function masseurTourWeekCents(matchesPlayed: number, sessionCents: number): number {
+  return Math.max(0, matchesPlayed) * sessionCents
 }
 
 /** WEEKLY SALARY (charged once per tick, after the play arm has decided the week's shape). A flat
@@ -324,7 +517,7 @@ export function resolveMasseur(world: WorldState): void {
     week: world.week,
     type: 'expense',
     category: 'staff',
-    text: 'Masseur – weekly salary',
+    text: 'Masseur – sessions this week',
     amountCents: -cost,
   })
 }

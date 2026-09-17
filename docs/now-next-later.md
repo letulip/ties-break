@@ -29,17 +29,20 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 42 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 43 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 42 is the w517 playtest** ([round-42.md](rounds/round-42.md), 14.09) – 33 items off his
-prologue-kbakekls career plus three screenshots and the red weekly sim cron, run strictly one
-bundle at a time on his own ruling («строго последовательно»). Shipped so far: the sim gate that
-stopped failing a proven-green re-stall (#33), the handover's upper pairs re-voiced into the
-realisation register (#31), the day-together ask starting at sixteen (#1), and the dialog-flow
-bundle – select + Proceed on every decision card, the three double-advance mechanisms closed, and
-her soft chip pulsing behind a leave-anyway guard (#8 / #17 / #20). Beside it: wave 6 «the
-spotlight» merged as PR #144, and the small-talk exchange waits on his copy tables.
+**Round 43 is the chemistry wave** ([round-43.md](rounds/round-43.md), 16.09) – opened the day round
+42 merged. Its spine is [the-chemistry-2026-09](specs/the-chemistry-2026-09.md), whose thirteen
+questions C1–C13 the owner ruled in one day: the coach relationship becomes a signed number that
+accrues weekly inside a corridor set by a drawn affinity, with periods rather than noise, and the
+coach himself grows with her results. Beside it the round carries the support seats' faces (round 42
+#53's open half), the seat prices' typography, the masseur's annual ask, and the Business tab finally
+saying whose money it is showing.
+
+**Round 42 shipped and merged 16.09** ([round-42.md](rounds/round-42.md), 14.09) – the w517 playtest,
+53 items, 33 shipped and 14 answered. Its one model change was #34, the price of nerve: +20 composure
+went from **+0.4pp** of match win rate to **+4.1pp** against his ruled +4pp target.
 
 **Round 41 was the long playtest** ([round-41.md](rounds/round-41.md), 12.09) – 27 items off two
 deployed careers: money (the ad gate that was our own inference, prize money that is «всё-таки её

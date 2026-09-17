@@ -1469,7 +1469,7 @@ export const SMALL_TALK_STANCE_ID: Record<SmallTalkStance, string> = {
  *
  *  ⚠ THE ROSTER IS A UNION AND THE PREDICATES ARE A TOTAL RECORD, so a new claim cannot be added
  *  without somebody writing the read that makes it true. */
-export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror'] as const
+export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week'] as const
 export type SmallTalkFact = (typeof SMALL_TALK_FACTS)[number]
 
 /** How far back «today» may reach when she recounts a match. ⚠ TWO AND NOT ONE, because the row is
@@ -1503,7 +1503,26 @@ function kidMatchRows(world: WorldState): { week: number; opponent: string; won:
   return out
 }
 
-/** ⭐⭐⭐ §8d.5's FOUR READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE the
+/** ⭐ §8d.5's FIFTH READ (his 17.09: «пиши гейт по R17, давай сделаем»). A clear week ahead is a
+ *  CALENDAR fact and no other claim carried one: `march-entry-open` asks whether a door is still
+ *  open, this asks whether the week behind it is empty.
+ *
+ *  ⚠⚠ TWO CLAUSES AND NOT ONE, AND THE SECOND IS THE HONEST HALF. The proposed gate was «the season
+ *  holds no event she is entered in next week», and that sentence is TRUE ALL WINTER – in the
+ *  off-season and inside the college freeze every week is empty, so «I've got a completely empty week
+ *  and I don't know what to do with myself» would stop being a worry and become a description of
+ *  February. The row's own kernel is «she has not decided whether that is rest or an ABSENCE», and an
+ *  absence needs something to be absent FROM. So the week must also HOLD an event she could have
+ *  been at; a calendar with nothing in it is not a gap in her season.
+ *
+ *  ⚠ `enteredScheduledThisWeek` (world/injury.ts) one week forward, on the same two fields, negated.
+ *  Pure and zero-draw like its four siblings, and asked BEFORE the situation is drawn. */
+export function nextWeekIsClear(world: WorldState): boolean {
+  const ahead = world.season.filter((e) => e.week === world.week + 1)
+  return ahead.length > 0 && !ahead.some((e) => world.entries.includes(e.id))
+}
+
+/** ⭐⭐⭐ §8d.5's FIVE READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE the
  *  situation is drawn (`reachableSituations`), never after, so a false fact removes the situation
  *  from the pool instead of being papered over in the copy.
  *
@@ -1541,6 +1560,7 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
       return before.length === 4 && before.every((p) => !p.won)
     })
   },
+  'clear-next-week': nextWeekIsClear,
 }
 
 /** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.
@@ -1949,7 +1969,12 @@ export const SMALL_TALK_SITUATIONS: readonly SmallTalkSituation[] = [
  *
  *  ⚠ NO ZERO ANYWHERE, and that is the design rather than caution: a zero would be the hard mapping
  *  back in one cell, and «can still produce» is what §2 asks for. */
-const SMALL_TALK_SUBJECT_WEIGHT: Record<MoodRegister, Record<SmallTalkSubject, number>> = {
+/* ⚠ EXPORTED FOR THE CORPUS BENCH AND FOR NOTHING ELSE (round 43 #8(a), the corpus spec's §P2.6:
+ *  «reads the catalogue and the selection weights»). K1 reports a WEIGHTED pool size per cell, which
+ *  is a property of these integers and of the catalogue together – a bench that re-typed them would
+ *  be measuring its own copy, which is the one way that number can be confidently wrong. Nothing in
+ *  `src/` reads it but the draw below. */
+export const SMALL_TALK_SUBJECT_WEIGHT: Record<MoodRegister, Record<SmallTalkSubject, number>> = {
   low: { worry: 5, observation: 2, decision: 2, story: 1, curiosity: 1, 'good-news': 1 },
   bright: { 'good-news': 5, story: 4, observation: 2, curiosity: 2, decision: 1, worry: 1 },
   level: { curiosity: 3, decision: 3, observation: 3, story: 2, 'good-news': 2, worry: 1 },
@@ -1969,6 +1994,61 @@ export function reachableSituations(world: WorldState, voice: Temperament, stage
   return SMALL_TALK_SITUATIONS.filter(
     (s) => s.voice === voice && s.stages.includes(stage) && (s.fact === null || SMALL_TALK_FACT[s.fact](world)),
   )
+}
+
+/** ⭐⭐ ROUND 43 #8(a) – HOW MANY OF HER LAST CONVERSATIONS ARE OFF THE TABLE. Two, and the number is
+ *  the corpus spec's own (`docs/specs/small-talk-corpus-2026-09.md` §P2.5, «last-two exclusion when
+ *  ≥3 reachable»): it is what makes «the same line twice running» impossible AND makes a repeat
+ *  inside the last three impossible, which is the pair the bench's K2 and K3 measure.
+ *
+ *  ⚠ IT IS A COUNT OF ROWS AND NOT A WINDOW OF WEEKS, deliberately. `smallTalkPerWeek` is 0.08 at a
+ *  close bond under a cap of four a season, so two conversations can sit a season apart – a window
+ *  wide enough to hold them would have to be a season wide, and a window that wide is just «the last
+ *  two» with an extra number in it that can rot. */
+export const SMALL_TALK_EXCLUDE_LAST = 2
+
+/** ⭐⭐⭐ ROUND 43 #8(a) – THE SITUATIONS SHE HAS JUST BROUGHT, TAKEN OUT OF THE POOL, AND **THE POOL
+ *  IS NEVER EMPTIED**.
+ *
+ *  ⚠⚠ THE DEGRADATION IS THE WHOLE OF THE CARE HERE, and it runs OLDEST-FIRST. `reachableSituations`
+ *  narrows by her VOICE and her STAGE and a career has one voice for life, so what a single girl can
+ *  reach is one row of a 4×4 grid – `deep` at college holds TWO situations against four conversations
+ *  a season. Excluding two of two would leave nothing, `rollSmallTalk` would fall through to the
+ *  legacy generic opener, and the fix would have made the card WORSE than the repeat it was written
+ *  to stop. So the exclusions are given up one at a time, the oldest going first, and the most recent
+ *  one – the one his complaint is actually about – is the last to be surrendered and is surrendered
+ *  only when it is the only thing she can reach at all.
+ *
+ *  ⚠ IT READS THE LOG AND WRITES NOTHING. `raiseLifeBeat` already stores `{ week, kind, detail }` and
+ *  the log is append-only and never pruned, so the history this needs is ALREADY IN EVERY SAVE: no
+ *  schema bump, no migration, no golden fixture, no new field. `coachSinceWeek`'s own doctrine
+ *  (world/coachMarket.ts), asked of a different question.
+ *
+ *  ⚠ THE MATCH IS ON THE STORED `detail` STRING, not on the id alone. `detail` is exactly what the
+ *  row holds (`smallTalkDetailFor` – `'<subject>:<id>'`), so nothing here re-derives a fact that
+ *  could have moved, and a LEGACY row (a bare subject, no colon) matches no situation and is simply
+ *  not an exclusion – which is right: it named no situation to repeat.
+ *
+ *  ⚠ PURE AND ZERO-DRAW. Nothing here takes an `Rng`, and it adds no stream key: the two keys
+ *  `rollSmallTalk` derives are unchanged in name, in number and in order. */
+export function withoutRecentSituations(
+  world: WorldState,
+  reachable: readonly SmallTalkSituation[],
+): SmallTalkSituation[] {
+  if (reachable.length === 0) return []
+  const recent: string[] = []
+  const log = lifeLogOf(world)
+  for (let i = log.length - 1; i >= 0 && recent.length < SMALL_TALK_EXCLUDE_LAST; i--) {
+    if (log[i].kind === 'small-talk') recent.push(log[i].detail)
+  }
+  // `recent` is newest-first, so popping the TAIL gives up the oldest exclusion first.
+  while (recent.length > 0) {
+    const banned = new Set(recent)
+    const kept = reachable.filter((s) => !banned.has(smallTalkDetailFor(s.subject, s.id)))
+    if (kept.length > 0) return kept
+    recent.pop()
+  }
+  return [...reachable]
 }
 
 /** THE ROW'S OWN DETAIL, AND IT IS TWO FIELDS – `'fork-psy'`'s shape («`'<register>:<driver>'`») for
@@ -4418,7 +4498,15 @@ export function rollSmallTalk(world: WorldState): void {
   // is drawn over the subjects that survived. Drawing the subject first and then discovering it has
   // no situation would leave the beat with a choice between a re-roll (a second read off one key) and
   // a silent fall-through (a heading about a worry over an opener about a coach).
-  const reachable = reachableSituations(world, voiceOf(world), lifeStageOf(world))
+  // ⭐⭐⭐ ROUND 43 #8(a) – AND WHAT SHE SAID LAST TIME IS TAKEN OFF THE TABLE FIRST. The owner got
+  // `watching-players` twice running («они точно не должны так часто повторяться, иначе в чём
+  // смысл»), and that was a GUARANTEE rather than bad luck: the draw excluded nothing said before,
+  // so a subject holding one situation repeated VERBATIM the moment the weights picked it twice.
+  // ⚠ IT NARROWS THE POOL BEFORE THE SUBJECT IS DRAWN, NOT AFTER. Drawing the subject over the full
+  // reachable set and then excluding inside it is the same defect `reachable` itself was built to
+  // avoid one paragraph up – a single-situation subject would win the weights and then have nothing
+  // left to offer, and the beat would owe a re-roll or a fall-through.
+  const reachable = withoutRecentSituations(world, reachableSituations(world, voiceOf(world), lifeStageOf(world)))
   if (reachable.length === 0) {
     // ⚠ THE LEGACY ROW, AND IT IS THE SHIPPED BEAT RATHER THAN A DEGRADED ONE. No situation is
     // written for this girl at this stage on this career, so she opens with the pool that has always

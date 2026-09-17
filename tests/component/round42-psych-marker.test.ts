@@ -308,10 +308,13 @@ describe('⭐⭐ round 42 #28 – the off-season psychologist marker', () => {
     onMarket.unmount()
 
     const onHome = homeOf(snap)
+    // ⚠ THE HYPHEN BECAME THE HOUSE SHORT DASH (his 17.09 sheet, typography only – «fix without
+    // asking»). Not one WORD moved, which is exactly what this case is about, so the pin moves with
+    // the character and the claim it makes is untouched.
     expect(
       onHome.find('.coach-card').attributes('aria-label'),
       'the Home plate was renamed by a dot arriving',
-    ).toBe('Coach note - open the Coach Market')
+    ).toBe('Coach note – open the Coach Market')
     expect(homeMarker(onHome).text().trim(), 'the marker says nothing').toBe('')
     onHome.unmount()
   })

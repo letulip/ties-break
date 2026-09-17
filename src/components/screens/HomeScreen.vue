@@ -939,8 +939,40 @@ const windowRungs = computed<readonly TierId[]>(
  *  The lock labels were never the cause; the fifth chip is.
  *
  *  ⚠ THE CEILING IS NOT THE LEVER. 170 leaves ~21px of headroom by its own note, less than one
- *  wrapped row costs, and raising it would retire the only thing that has ever caught this row. */
-const STRIP_MAX_RUNGS = 4
+ *  wrapped row costs, and raising it would retire the only thing that has ever caught this row.
+ *
+ *  ⭐⭐⭐ 4 -> 3 ON 16.09 (round 43), AND THE CAP MOVED BECAUSE ITS CALIBRATION INPUT DID – re-measured
+ *  in the same browser, at the same 315px, by the same method.
+ *
+ *  ⚠⚠ READ THE SENTENCE ABOVE THAT NAMES THE INPUT: «the row it has to hold is **the e2e `junior`
+ *  fixture's**». That is the whole coupling, and it is why this constant is maintenance rather than a
+ *  decision taken once. The fixture drifted off that row – a regeneration put `junior` on the DOMESTIC
+ *  ladder, three short chips (Local/Regional/National), where any cap at all is slack – and the wave
+ *  that repaired the e2e corpus put her back on a Junior Tour one, because `e2e/elite-gate.spec.ts`'s
+ *  third case needs «an empty window behind a banked peak», and that state IS a junior-ladder career
+ *  whose domestic window has emptied behind her (the owner's 14.09 gate ruling, «это про КАРЬЕРУ, а
+ *  не про неделю»).
+ *
+ *  ⚠ AND WITH THE ROW BACK, CAP 4 NO LONGER DID WHAT THE TABLE ABOVE PREDICTED FOR IT. Her window is
+ *  {local, j30, j60, j300, w15} – five rungs like the measured one, but `local` where that one had
+ *  `w35` – and the table's «cap 4 -> 3 rows» does not survive the substitution. MEASURED at head, at
+ *  375px, through `e2e/responsive.spec.ts`'s own two bookends:
+ *
+ *      cap 4   5 rows   strip 110.78px   heading gap 178.28px   <- over the 170 ceiling
+ *      cap 3   3 rows   strip  81.39px   heading gap 148.89px   <- shipped
+ *
+ *  ⭐ 148.89 IS NOT A NEW NUMBER, WHICH IS THE CONFIRMATION RATHER THAN A COINCIDENCE. It is the
+ *  148.9 `e2e/responsive.spec.ts` names as the value its 170 ceiling was calibrated on – so cap 3 does
+ *  not buy headroom by shrinking the row past what the pin expects, it puts the row back exactly where
+ *  the pin was measured. The other two careers on that screen do not move at all (`sinking` 119.50,
+ *  `fresh` 118.89, both unchanged between the two caps): they stand on short domestic chips, where the
+ *  cap has never been the binding constraint.
+ *
+ *  ⚠ THE RUNG IS NOT DELETED, IT MOVES BEHIND THE ELLIPSIS – which is the owner's own ask quoted at
+ *  the top of this block («я просил спрятать вообще всё неактуальное кроме смежных турниров за
+ *  точечки, эта штука очень много места на экране занимает»), and the affordance it moves behind
+ *  already exists and already expands the row in place. No wording changes with this. */
+const STRIP_MAX_RUNGS = 3
 
 const stripVisible = computed<readonly number[]>(() => {
   const last = SEASON_STRIP_TIERS.length - 1
@@ -1611,7 +1643,7 @@ async function leaveCollege(): Promise<void> {
         <Card
           as="button"
           class="note-card card-short coach-card"
-          aria-label="Coach note - open the Coach Market"
+          aria-label="Coach note – open the Coach Market"
           @click="emit('navigate', 'market')"
         >
           <!-- ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER. The owner asked for a yellow dot on this
@@ -2414,25 +2446,63 @@ async function leaveCollege(): Promise<void> {
      «сделать плавно пульсирующей по контуру», item 8). ONLY the border tint moves – border-color
      costs no layout and no paint outside the card's own edge, so nothing under the finger shifts.
      `--accent-soft` and not `--accent`: an invitation, not an alarm. The killswitch below keeps the
-     house reduced-motion policy and swaps the pulse for a STEADY soft-accent edge, so the chip is
-     still findable by a player who asked the system for less motion. */
+     house reduced-motion policy and swaps the pulse for a STEADY soft-accent edge AND GLOW, so the
+     chip is still findable by a player who asked the system for less motion.
+     ⚠⚠ AMENDED BY ROUND 43 #7 (16.09): this note used to end «and no paint outside the card's own
+     edge». It now paints a small glow there, at his ask. The half that still holds is the half that
+     mattered – a `box-shadow` paints outside the border box WITHOUT reflowing anything, so nothing
+     under the finger shifts even with the glow. */
   animation: soft-beat-pulse 2.8s ease-in-out infinite;
 }
 
+/* ⭐⭐ ROUND 43 #7 – THE CONTOUR NOW CARRIES A GLOW, and the pattern is HIS OWN from round 42 #29(b):
+   the avatar's mood ring (`src/style.css`, `.diary-avatar-btn.has-mood-ring .diary-avatar`). His ask,
+   16.09: «пульсирующую рамку… по аналогии с рамкой вокруг аватарки, чтобы тоже подсветка была по краям
+   небольшая, а не только сама рамка».
+
+   ⭐ TWO PROPERTIES OF THAT RING ARE THE DESIGN AND ARE COPIED RATHER THAN RE-INVENTED:
+     * THE ORDER. The bloom is listed FIRST so it paints above the card's own drop shadow, which is
+       what makes it read as light coming off the edge instead of as a second shadow under it.
+     * ONLY THE BLOOM MOVES. Its radius and alpha breathe; the drop shadow is restated identically in
+       both frames, because a `box-shadow` list REPLACES rather than extends. The ring never goes out
+       and never changes colour mid-cycle, and neither does this.
+
+   ⚠ SMALLER NUMBERS THAN THE RING'S ON PURPOSE. The avatar is a 40px circle and blooms to 13px/3px;
+   this is a full-width card, where the same figures would be a halo round a poster. He asked for
+   «подсветка небольшая» and 6→12px at 0.16→0.30 is that.
+
+   ⚠⚠ AND THE COMMENT ON `.soft-beat-card` ABOVE HAD TO BE AMENDED RATHER THAN LEFT: it said the
+   pulse «costs no layout and no paint outside the card's own edge», and his ask deliberately reverses
+   the second half. The FIRST half still holds and is the sentence worth keeping – a `box-shadow`
+   paints outside the border box without reflowing anything, so nothing under the finger moves. */
 @keyframes soft-beat-pulse {
   0%,
   100% {
     border-color: var(--card-edge);
+    box-shadow:
+      0 0 6px 0 rgba(var(--accent-rgb), 0.16),
+      var(--shadow-card);
   }
   50% {
     border-color: var(--accent-soft);
+    box-shadow:
+      0 0 12px 2px rgba(var(--accent-rgb), 0.3),
+      var(--shadow-card);
   }
 }
 
+/* ⚠⚠ ROUND 43 #7 – THE LIFT HAS TO CARRY THE GLOW OR IT LOSES IT. A running animation wins over a
+   plain declaration, so `box-shadow: var(--shadow-card-lift)` alone would be overridden by the
+   keyframes while the chip pulses, and the hover would look identical to the resting state. Pausing
+   the animation on hover is the fix that keeps BOTH: the card settles at its brightest edge under the
+   finger, which is also the clearest read of «this is a control». */
 .soft-beat-card:hover:not(:disabled),
 .soft-beat-card:focus-visible {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-card-lift);
+  animation-play-state: paused;
+  box-shadow:
+    0 0 12px 2px rgba(var(--accent-rgb), 0.3),
+    var(--shadow-card-lift);
   border-color: var(--accent-soft);
 }
 
@@ -2451,6 +2521,12 @@ async function leaveCollege(): Promise<void> {
        asked for survives as a steady soft-accent contour rather than disappearing with it. */
     animation: none;
     border-color: var(--accent-soft);
+    /* ⚠ ROUND 43 #7 – the GLOW stands still rather than standing down. Motion is what the system
+       asked to reduce; the edge light is not motion, and removing it would take the attention the
+       owner asked for away from exactly the player who needs the chip easiest to find. */
+    box-shadow:
+      0 0 9px 1px rgba(var(--accent-rgb), 0.22),
+      var(--shadow-card);
   }
 }
 

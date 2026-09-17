@@ -62,8 +62,14 @@ import { isCompetitionWeek } from './knock'
 import { accrueCondition, arrivalStatus, medicalClearance, withheldFreeWeekRecovery } from './medical'
 import { summerConditionCost } from './summer'
 import { inCollege } from './college'
-import { resolveMasseur, resolveMasseurReturn } from './masseur'
+import { resolveMasseur, resolveMasseurRaise, resolveMasseurReturn } from './masseur'
 import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
+// ⭐⭐⭐ v80, WAVE F1 + F2 – the form pass and the third salaried seat. Both are LEAVES in the sense
+// this phase needs (`world/form.ts` imports the model, the closed form and `world/sparring.ts`;
+// `world/sparring.ts` imports the same five siblings `masseur.ts` does), so neither arrow closes a
+// runtime cycle – the same measurement `./masseur` and `./psychologist` carry one line up.
+import { accrueFormWeek } from './form'
+import { resolveSparring } from './sparring'
 // ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
 // `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
 // import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
@@ -74,7 +80,7 @@ import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 // pressure it scales (`engine/spirit.ts`) while the GATE stays where it was derived. One arrow, two
 // facts, no new edge in the graph.
 import { exposureEventsOf, newsStandingOf } from './spotlight'
-import { chargeCoachTravel, chargeMasseurTravel, chargeTravel, coachTravelFareFor } from './sponsors'
+import { chargeCoachTravel, chargeMasseurTravel, chargeSparringTravel, chargeTravel, coachTravelFareFor } from './sponsors'
 
 // Compute the kid's full shadow tournament: same event-scoped RNG, same entrant selection, same
 // bracket. Emits NO events and awards NO points – that is deferred to reveal/finalize. Snapshots
@@ -569,6 +575,37 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        tests/spirit.test.ts precisely so the raw flag can never be handed down in the
   //        predicate's place (ruling J's own hole). Cheaper to ask twice than to weaken that pin.
   driftWalls(world, psychologistWorksThisWeek(world))
+  // ⭐⭐⭐ 1c-form (v80, wave F1): AND WHAT THE WEEK DID TO HER TENNIS.
+  //
+  //        `docs/specs/the-form-and-the-sparring-2026-09.md` §1: the RESULTS channel (the residual
+  //        against the odds ring's own expectation), the RHYTHM channel (the rust once a matchless
+  //        gap passes three weeks), and the return to neutral. `engine/form.ts` holds the model,
+  //        `world/form.ts` the world-reading half; this is the one call that writes the number.
+  //
+  // ⚠⚠ THIS PHASE AND NOT `growAndLive`, AND THE REASON IS THE TICK'S OWN ORDER. Form's one reader is
+  //        `composureEff` at `MatchPlayer` build time, and `playHerWeek` builds her at STEP 5 – two
+  //        phases after this one. A pass in phase 6 would move a number that this week's matches had
+  //        already been played against, so a slump would first be felt a week after it arrived and
+  //        the sparring partner would cut a drift she had already carried onto court. Beside
+  //        `accrueCondition` and `accrueSpirit` is therefore where the spec's «one weekly update
+  //        beside condition's» has to mean: the three numbers she plays this week's tennis at are
+  //        settled together, before she plays it.
+  //
+  // ⚠ AFTER `driftWalls` AND NOT BETWEEN IT AND `accrueSpirit`: wave 5's §H pins the statement list
+  //        between those two by total equality, and nothing here needs to sit inside it – form reads
+  //        results and a calendar, neither of which any pass in this phase writes.
+  //
+  // ⚠ `playedThisWeek` IS THREADED AND NEVER RE-ASKED, the phase's own rule at its head. It is «is
+  //        she at an event this week», which is the ONE fact the not-travelling sparring seat stands
+  //        down on (`sparringWorksThisWeek`), and `resolveSparring` at step 5 is handed the identical
+  //        local – so the week he is PAID for and the week he CUTS are the same week by construction
+  //        rather than by two agreeing derivations.
+  //
+  // ⚠ ZERO MAIN DRAWS, and zero draws on any stream at all (O4, the owner's 16.09 ruling): the pass
+  //        is a filter, a closed-form evaluation over snapshots the save already holds, a sum and a
+  //        clamp. `seed:form:<week>` stays reserved and unused, so the frozen capture
+  //        (41550 / e6b0c709) is untouched by construction.
+  accrueFormWeek(world, playedThisWeek)
   // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
   //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
   //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a
@@ -743,6 +780,13 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
     // recorded in the arm that paid, never re-derived from a stance that may have flipped since
     // (the round-21 #2 "asked once, carried" doctrine). Zero draws.
     const masseurFare = chargeMasseurTravel(world, enteredThisWeek)
+    // ⭐⭐ v80 WAVE F2 – AND THE THIRD SEAT, on the same line of reasoning and in the same arm. ⚠ IT
+    // RECORDS NOTHING ON THE PENDING RUN, unlike the masseur's fare one line up, and the asymmetry is
+    // the design rather than an omission: what the masseur's fare buys is applied AT FINALIZE (the
+    // between-rounds relief), so it has to be remembered; what this fare buys is applied in the
+    // WEEKLY PASS (`sparringWorksThisWeek` stops standing him down on an away week), which reads the
+    // live stance in the same tick and needs no carried fact.
+    chargeSparringTravel(world, enteredThisWeek)
     // ...and the WARNING BAND: cleared, but only just. She plays; the doctor goes on record. Emitted
     // after the travel charge so the week reads chronologically in the news feed (trip → the doctor
     // sees her → her matches). Type 'info' rather than 'injury': nothing has happened to her body,
@@ -810,6 +854,13 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // fare) the weekly bill stands down and finalize bills the week per match – the owner's «на
   // неделе выезда по-матчевая цена заменяет недельную». The walkover and medical arms above never
   // set the flag, so a trip that never happened is billed as the home week it really was.
+  // ⭐⭐ ROUND 43 #4 – AND ONCE A YEAR HE ASKS FOR MORE, IMMEDIATELY BEFORE THE BILL HE HAS JUST
+  // MOVED. His 16.09 ruling: «дальше он приходит и просит прибавку, либо (так как альтернативы нет)
+  // добавить денег, но убавить количество процедур». The rate is DERIVED from weeks served
+  // (`masseurSessionCents`), so this line raises no state – it writes the notice, and it is on this
+  // side of `resolveMasseur` so the week the ask lands is the week the new bill is charged and the
+  // ledger reads in the order it happened. Zero draws on any stream.
+  resolveMasseurRaise(world)
   resolveMasseur(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
@@ -835,4 +886,20 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // disagree is the «вы заплатили и не можете этого заметить» failure the travelling-team plan bans
   // specialists for.
   resolvePsychologist(world)
+  // 1c-sparring (v80, wave F2). THE THIRD SALARIED SEAT, settled beside the other two and for the
+  // same reasons: a flat weekly contract per rung on the family payroll, zero draws on any stream,
+  // suspended – not cancelled – at college and on booked family weeks (the SAME stand-down pair,
+  // mirrored rather than re-derived; see `sparringWorksThisWeek`).
+  //
+  // ⚠⚠ AND HE HAS A FOURTH STAND-DOWN THE OTHER TWO DO NOT, which is the whole of what his travel
+  // switch buys: a partner who does not travel is not paid for a week she is AWAY at an event,
+  // because he cannot hit with her there. That is the owner's 15.09 override («у остальных есть
+  // галочка "ездит"») made mechanical, and round 42 #48's measurement – the not-travelling seat
+  // reaches 89.4% of the rust – is a measurement of exactly this line.
+  //
+  // ⚠ `playedThisWeek` IS THE IDENTICAL LOCAL THE FORM PASS WAS HANDED at 1c-form, two phases up.
+  // Nothing between the two calls writes `sparringHired`, `inCollege` or the week's booking, so the
+  // week he is PAID for and the week he CUTS the drift of are one week by construction – «pay
+  // nothing and receive nothing», ruling J, taken as an identity rather than as a pair of rules.
+  resolveSparring(world, playedThisWeek)
 }

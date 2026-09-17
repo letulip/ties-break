@@ -26,6 +26,10 @@ import type { MainRngState } from '../rng'
 // ⭐ v72: `Temperament` is a type and this stays `import type`, so the leaf rule above holds – the
 // four ids and the derivation that picks between them live in `engine/spirit.ts`.
 import type { Temperament } from '../spirit'
+// ⭐ v79: `CoachPair` is a type and this stays `import type`, so the leaf rule above holds. The row
+// is declared beside the mechanic that owns it (engine/chemistry.ts) rather than here, because every
+// rule about what its three numbers MEAN is argued there and a second home would be a second truth.
+import type { CoachPair } from '../chemistry'
 import type {
   BirthdayRecord,
   CareerEnding,
@@ -517,7 +521,80 @@ import type { AcademySupport } from '../academy'
 //
 // Full move: this constant, the v77 -> v78 step in migrations.ts, tests/fixtures/saves/v78.json,
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence, and the e2e fixtures.
-export const SAVE_SCHEMA_VERSION = 78
+// ⭐⭐⭐ v79 – THE CHEMISTRY WAVE C1, AND THE KEY #48 HAS BEEN WAITING FOR SINCE v78 WAS SCOPED.
+// `docs/specs/the-chemistry-2026-09.md` §10: one bump, two customers. World `+coachPairs`,
+// `+sparringTravels`.
+//
+//   · the chemistry wave C1 – `coachPairs`. ⭐ ONE KEY WITH THREE NUMBERS AND NOT THREE PARALLEL
+//     MAPS, which is the spec's own §10 warning: all three are facts about one PAIR, written on the
+//     same week by the same pass, and three maps keyed on the same coach id would be three chances
+//     for them to disagree about who exists. The pair has to persist because it is PATH-DEPENDENT –
+//     the first draft of the spec said the rate «is not persisted at all: it is a pure function of
+//     (seed, coachId)» and that stopped being true the moment the rate started moving with results
+//     and with her state. ⚠ WHAT IS STILL PURE IS THE AFFINITY: `affinityFor` is drawn from
+//     `(seed, coachId)` and nothing else, so it is re-derived at every call site and stored nowhere,
+//     and that is the half which keeps «every variation reproducible» true. The roster's drawn
+//     `manner` and `style` are not persisted either, for the same reason – `buildCoachRoster` was a
+//     pure function of `(seed, ageYears)` before this wave and is still one after it.
+//   · round 42 #48 – `sparringTravels`. THE THIRD SPARRING KEY, and the one v78 was scoped before
+//     the owner gave it («у остальных есть галочка ездит», 15.09). v78's own block names its absence
+//     as one of the two reasons the seat did not land in that round; it rides here because it costs
+//     this version nothing – a boolean and a `??= false` – and because the alternative is a schema
+//     move of its own for one field. ⚠⚠ AND IT IS STILL KEYS-ONLY: nothing on this tree reads any of
+//     the three sparring fields, the seat lands with wave F1, and a reader who finds an unused key
+//     here is reading a SCHEDULING decision and not a half-built feature. v78 said that about two
+//     keys; this version says it about the third.
+//
+// ⚠⚠ ONE OF THE TWO IS NOT INERT, AND THE OTHER IS – the same split v78 had, named so the peel rung
+// is not asked to prove the wrong thing. `sparringTravels` has no reader at all. `coachPairs` ships
+// WITH its reader (`accrueChemistry` in the weekly tick, and `coachFactor`'s new third argument),
+// because a relationship nobody can accrue is not a testable claim. ⚠ SO THE FROZEN CAREERS MOVE,
+// and they move for a REASON rather than by a key append: every one of them hires a coach, so every
+// one of them now has a relationship. That is a behaviour change, it was diffed per key before it
+// was believed (`tools/frozen-key-diff.ts`, control = this wave's own change neutralised in place),
+// and the constants are re-stamped with the dated note the protocol asks for.
+//
+// ⚠ `standing` IS WRITTEN AND NEVER READ, which is v78's sparring pair one version on and is said
+// here for the same reason it was said there: it is wave C2's (spec §4 – the coach's own tier climbs
+// with her results), all three numbers are written by one pass on one week, and splitting the key to
+// keep an unread field out of it would have bought nothing and cost the guarantee above.
+//
+// ⚠ `standing` STORES THE SCORE AND NOT THE TIER (spec §10), so the rung is always a pure function
+// of it and a threshold retune moves every save at once instead of stranding careers at a rung that
+// no longer exists.
+//
+// Full move: this constant, the v78 -> v79 step in migrations.ts, tests/fixtures/saves/v79.json,
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
+// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
+// ⭐⭐⭐ v80 – WAVE F1, `world.form`. `docs/specs/the-form-and-the-sparring-2026-09.md` §6: ONE key,
+// ONE customer, and the version the three sparring keys have been waiting for since v78.
+//
+//   · `form` – tenths, 0-centred, clamped [-10, +10], back-fill **0 = neutral**. 0 is the IDENTITY
+//     AND NOT A PLACEHOLDER FOR ONE (v77's `composureBonus` rule, quoted): at 0 `formComposureDelta`
+//     returns an exact 0, `kidMatchPlayerFor` takes its untouched early return, and every migrated
+//     career and every stored replay is byte-identical until something actually moves her.
+//
+// ⚠⚠ IT IS NOT INERT, AND SAYING SO IS HALF THE MOVE. v78 and v79 each shipped keys with no reader;
+// this one ships WITH its reader (the weekly pass in `world/phaseHerWeek.ts`, and `composureEff` at
+// `MatchPlayer` build time), because a slump nobody can feel is the decorative mechanic round 42
+// found twice. ⚠ SO THE FROZEN CAREERS MOVE, and they move for a REASON rather than by a key
+// append: every frozen career plays matches and has gaps, so every one of them now carries form into
+// its own results. That is a behaviour change, it was diffed per key before it was believed
+// (`tools/frozen-key-diff.ts`, control = this wave's own change neutralised in place), and the
+// constants are re-stamped with the dated note the protocol asks for.
+//
+// ⚠ AND THE SEAT'S THREE KEYS FINALLY GAIN THEIR READER IN THE SAME WAVE, with NO key of their own:
+// `sparringHired` / `sparringRung` (v78) and `sparringTravels` (v79) are read by `world/sparring.ts`
+// from this version on. F2 checked before it bumped and needed nothing – which is what those two
+// versions' «a reader who finds an unused key here is reading a SCHEDULING decision» was promising.
+//
+// ⚠ `seed:form:<week>` STAYS RESERVED AND UNUSED (O4). Zero draws anywhere in this wave, so the
+// frozen MAIN capture (41550 / e6b0c709) is untouched by construction.
+//
+// Full move: this constant, the v79 -> v80 step in migrations.ts, tests/fixtures/saves/v80.json,
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
+// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 80
 
 
 
@@ -1327,6 +1404,71 @@ export interface WorldState {
   /** which rung of the sparring ladder the family is paying for – see `sparringHired` above for the
    *  whole of why these two are here and nothing reads them. */
   sparringRung: 0 | 1 | 2
+  /** ⭐⭐⭐ v79, ROUND 42 #48 – DOES THE SPARRING PARTNER TRAVEL WITH HER, the owner's 15.09 override
+   *  («у остальных есть галочка ездит»). The THIRD sparring key, and the one v78 was scoped before he
+   *  gave it – its own block names this field's absence as one of the two reasons the seat did not
+   *  land in that round.
+   *
+   *  ⚠ NOTHING READS IT EITHER, and that is the same SCHEDULING decision the two fields above carry,
+   *  not a half-built feature: the seat lands with wave F1, with the ladder, the prices and the
+   *  RHYTHM channel its whole effect cuts. It rides v79 because a boolean costs this version nothing
+   *  and a schema move of its own would have cost it a fixture, a peel rung and ten e2e
+   *  regenerations.
+   *
+   *  ⚠ `false` in both the back-fill and the fresh-career default, which is `sparringHired`'s own
+   *  answer quoted rather than re-argued: the seat did not exist, so nobody was in it and nobody was
+   *  travelling. */
+  sparringTravels: boolean
+  /** ⭐⭐⭐ v80, WAVE F1 – HER FORM. Tenths, 0-CENTRED, clamped `[-10, +10]`, and 0 is neutral in both
+   *  the back-fill and the fresh-career default (`docs/specs/the-form-and-the-sparring-2026-09.md`
+   *  §1). `src/engine/form.ts` holds the whole model; this is the one number it writes.
+   *
+   *  ⚠⚠ NOT A SECOND CONDITION AND NOT A SECOND SPIRIT, which is §3's first fence and the reason
+   *  this field can exist at all. `condition` is her BODY this week and has a dial, a doctor and a
+   *  screen; `spirit` is her LIFE this week and reaches a match through its own factor; `form` is her
+   *  TENNIS this week, driven ONLY by results and by rhythm, and steered by the parent through
+   *  ENTRIES and through nothing else. There is no form dial, no form screen and no form doctor, by
+   *  design rather than by omission.
+   *
+   *  ⚠⚠ AND NO SURFACE SHOWS IT (O2, the owner's 16.09 ruling: form is visible NOWHERE beyond the
+   *  coach's sentence and the match itself in v1). It does not cross the wire: there is no `form`
+   *  field on `Snapshot`, no number, no Mood word – that is `spirit`'s – and no diary line. The coach
+   *  is «the eye» and the match is the evidence; the fog rule owns the rest.
+   *
+   *  ⚠ ZERO 0 IS THE IDENTITY AND NOT A PLACEHOLDER FOR ONE (v77's `composureBonus` rule). At 0 the
+   *  reader adds an exact 0 and `kidMatchPlayerFor` takes the untouched early return it has always
+   *  taken, so every migrated career and every stored `WorldMatch` replay composes byte-identically
+   *  until a match or a gap actually moves her.
+   *
+   *  ⚠ ONE WRITER: the weekly pass in `world/phaseHerWeek.ts`, beside `accrueCondition`'s and
+   *  `accrueSpirit`'s. ⚠ ZERO DRAWS ON ANY STREAM (O4) – `seed:form:<week>` stays reserved and
+   *  unused, so the frozen MAIN capture cannot see this field. */
+  form: number
+  /** ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – HOW SHE AND EACH COACH SHE HAS WORKED WITH ACTUALLY GET ON,
+   *  keyed on the coach's id (`docs/specs/the-chemistry-2026-09.md` §10). The owner, 16.09: «эта
+   *  самая химия может как-то нарабатываться с разной динамикой – это может стать показателем,
+   *  насколько ей комфортно с тренером».
+   *
+   *  ⚠⚠ A NUMBER WITH A HISTORY, WHICH IS THE WHOLE POINT AND IS WHY IT NEEDS A KEY AT ALL. Chemistry
+   *  is not a roll at hire and not a snapshot: it is accrued weekly while that coach is hired, at a
+   *  rate that moves with the relationship's own weather and with her results, so it is PATH-DEPENDENT
+   *  and cannot be re-derived from the seed. ⚠ The AFFINITY can and is – `affinityFor` is a pure
+   *  function of `(seed, coachId)` and is stored nowhere – and that is the half which keeps «every
+   *  variation reproducible» true rather than aspirational.
+   *
+   *  ⚠ LEAVING PAUSES, IT DOES NOT RESET (spec §7, and it is the owner's own sentence: «"вернуться к
+   *  её первому тренеру" – вот именно об этом я и говорю»). A fired coach keeps his row; hiring him
+   *  again resumes from where it stopped. ⚠ And the pause is genuinely a pause and not slow decay – a
+   *  decaying number would make firing a good coach a permanent punishment and turn the mechanic into
+   *  a loyalty tax, which is C3's ruling, «no».
+   *
+   *  ⚠ THE MAP IS SPARSE AND «SHE HAS WORKED WITH NOBODY» IS `{}`. A row appears on the first week
+   *  she trains with that man and never before – the market can be shopped for a decade without
+   *  writing one – so the key's size is the number of coaches she has actually worked with.
+   *
+   *  ⚠ `standing` IS WAVE C2's AND NOTHING ON THIS TREE READS IT. See `SAVE_SCHEMA_VERSION`'s block
+   *  for why it is in this key a wave early rather than in a second map later. */
+  coachPairs: Record<string, CoachPair>
   /** ⭐⭐⭐ v76 – HER WALLS AND HER REGULATION, the two §2a leanings (`docs/specs/who-she-is-2026-09.md`
    *  §2a verbatim, the 09.09 third-sitting re-cut). One decimal like `spirit`, both starting at 0.
    *

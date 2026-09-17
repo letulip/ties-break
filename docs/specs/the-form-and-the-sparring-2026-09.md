@@ -3,7 +3,7 @@ type: spec
 status: current
 area: engine/psychology
 canonical: false
-last-reviewed: 2026-09-16
+last-reviewed: 2026-09-17
 ---
 
 # The form and the sparring partner – the third way down, unparked
@@ -95,7 +95,8 @@ same composure the commentary already knows how to talk about.
   own jobs – which is what the parked spec's §4.5 asked for, one story from two threads.
 * **No number on any surface** (the fog rule): form speaks only through the coach's sentence –
   he is «the eye», and `coachRoomNote`'s machinery already knows how to say a thing without
-  quoting it («She is striking the ball clean» / «She needs matches under her» – drafts, his) –
+  quoting it («She is striking the ball cleanly» / «She needs match play» – ruled 17.09, his own
+  words; the drafts they replace were «striking the ball clean» and «matches under her») –
   and through the match itself.
 
 ## 4. The sparring partner – the seat, and exactly one channel of the number
@@ -266,3 +267,242 @@ own conversation rather than arriving inside a copy fix.
    measurement. **So it belongs in F3 beside the psychologist's own slump focus, and not earlier.**
 
 Until then the copy says the true and positive thing: no fare, and the sessions follow her.
+
+---
+
+## 10. SHIPPED 16.09.2026 – F1 and F2, predicted vs measured
+
+Schema **v80** (`world.form`; the three sparring keys finally gain their reader and needed no key of
+their own). Instrument `tools/form-bench.ts` (`npm run bench:form`), 8,000 paired sims an arm for the
+match sections and 18 careers × 624 weeks (12 seasons) for the census and the rung table. Tests:
+`tests/round43-form.test.ts` (27 cases, eight mutation arms) and
+`tests/component/sparring-card.test.ts` (10 cases, two arms).
+
+### 10a. O1 – the corridor is the ruling, and `K` is its consequence
+
+The arm was proven before it was trusted: clamp-to-clamp **2.46 pp** on the shipped `K`, against
+**28.97 pp** on an absurd `K × 10`. Then the sweep, same opponents, same seeds, only `K` moving:
+
+| `K` | composure at the clamps | peer | #20 | #60 | #150 | worst | corridor |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 0.4 | ±4.0 | 1.27 | 1.11 | 0.74 | 0.77 | **1.27** | inside |
+| **0.6** | **±6.0** | 1.64 | 1.53 | 1.22 | 1.01 | **1.64** | **inside – shipped** |
+| 0.8 | ±8.0 | 2.25 | 2.19 | 1.71 | 1.24 | **2.25** | inside |
+| 1.0 | ±10.0 | 2.76 | 2.45 | 1.94 | 1.51 | **2.76** | inside |
+| 1.2 | ±12.0 | 3.12 | 3.01 | 2.47 | 1.84 | **3.12** | inside |
+
+⭐ **THE SPEC'S OWN PROPOSAL SURVIVED ITS OWN TEST, which is worth saying because it usually does
+not.** `K = 0.6` is shipped: it is inside the corridor against every opponent, and it is the value
+§2 proposed. ⚠ **AND EVERY ROW IS INSIDE**, so the corridor does not pick a single number – it
+admits a factor of three. The shipped value is the one that also agrees with round 42 #34's own
+measurement (+20 composure = +4.1 pp ⇒ ±6 points ≈ ±1.2 pp), which is the second constraint the
+corridor alone does not carry. **Moving it is one line and the sweep is the table to move it
+against.**
+
+⭐⭐ **AND #34's CASE FOR THE ORDER IS CONFIRMED RATHER THAN MERELY ASSERTED.** §9 predicted that
+before #34 a ±6-point slump would have moved «about 0.15 pp» and that after it the same points are
+worth «several times that». Measured: **1.64 pp**, eleven times the pre-#34 figure. The slump is a
+thing the player fights.
+
+### 10b. The census – where a career's form actually lives
+
+| | p1 | p5 | p25 | median | p75 | p95 | p99 | min | max |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| all weeks | −5.8 | −4.0 | −1.2 | −0.4 | 0.0 | +1.9 | +3.3 | −7.6 | +6.3 |
+
+18.2% of weeks are at exactly neutral · 18.2% in a slump (≤ −2) · 1.6% striking it clean (≥ +3) ·
+7.7% at or past the rust floor · **0.0% within one point of a clamp.**
+
+⚠ **SO THE CORRIDOR PRICES A PLACE NO CAREER VISITS, and that is the honest reading of §10a rather
+than a complaint about it.** `G = 1.5` puts the lived band at roughly [−4, +2] of a possible ±10, so
+the swing a real career feels is about **0.5–0.7 pp**, not 1.64. Two things follow and both are his
+to rule: the clamps are a safety rail rather than a destination, and **if the slump should bite
+harder the lever is `G`, not `K`** – `G` decides how far in she travels, `K` what a point is worth
+when she gets there.
+
+The coach's eye, per career per season: **0.28** «She is striking the ball cleanly.» and **0.52**
+«She needs match play.» – a remark rather than a subscription, which is O2's own ask. (⚠ The two
+sentences were re-worded by his copy review of 17.09; the FIRE RATES above are the mechanic's and did
+not move with them.)
+
+### 10c. O7 – the rung table, isolated
+
+⚠⚠ **THE OBVIOUS ARM WAS THE WRONG ARM AND THE BENCH RAN IT FIRST.** Hiring the seat on a LIVE career
+and comparing mean form made the number **worse** at every rung, monotonically in the price (−0.58
+with nobody → −3.69 at the top rung). The seat was not failing; the WALLET was. A salary on a
+junior-era family buys fewer tournaments, fewer tournaments are more matchless weeks, and more
+matchless weeks are more rust – `elite-retainer-2026-09` §9's path divergence, one wave on. **So the
+calendar is held fixed:** each career is walked once with nobody hired, the engine's own residuals
+and gaps are recorded, and every rung replays `accrueForm` over that same calendar. Only `rustCut`
+differs between rows.
+
+| arm | mean form | slump weeks | floor weeks | vs no seat | drift saved |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| no seat | −0.488 | 14.2% | 5.8% | – | – |
+| A college hitter · home | −0.392 | 11.8% | 4.6% | +0.096 | 19.7% |
+| A college hitter · travels | −0.380 | 11.4% | 4.3% | +0.108 | 22.1% |
+| A journeyman pro · home | −0.285 | 9.1% | 3.5% | +0.203 | 41.6% |
+| A journeyman pro · travels | −0.255 | 8.4% | 3.0% | +0.233 | 47.8% |
+| A top-100 partner · home | −0.176 | 7.0% | 2.2% | +0.312 | 63.9% |
+| A top-100 partner · travels | −0.120 | 5.7% | 1.4% | +0.368 | 75.4% |
+
+⚠⚠ **THE THREE CUTS ARE 0.75 / 0.5 / 0.25 AND NOT §4's 0.6 / 0.35 / 0.15, AND THE REASON IS A
+MEASUREMENT.** Form is kept in TENTHS. At a base drift of 0.4/wk the proposed cuts give 0.24 / 0.14 /
+0.06 a week, and the accumulated value is rounded to a tenth every week – so 0.14 and 0.06 **both**
+ratchet the number down by exactly one tenth and **the top two rungs were the same seat**, measured
+identical to the thousandth (+0.312 / +0.312). That is the masseur §4 law broken. The shipped cuts
+are exact in the unit the number is kept in (0.3 / 0.2 / 0.1 a week), so the floor is reached in
+**13 / 20 / 40** matchless weeks against **10** with nobody hired. ⚠ The top rung is therefore a
+weaker cut than §4 proposed; a ladder whose top two rungs differ by a rounding artefact is worse than
+a shallower one.
+
+### 10d. The travel arm, against round 42 #48's 89.4%
+
+| rung | home | travels | the home stance reaches | #48 predicted |
+| --- | ---: | ---: | ---: | ---: |
+| A college hitter | +0.096 | +0.108 | **88.9%** | 89.4% |
+| A journeyman pro | +0.203 | +0.233 | **87.0%** | 89.4% |
+| A top-100 partner | +0.312 | +0.368 | **84.7%** | 89.4% |
+
+⭐ **ROUND 42 #48's PREDICTION IS CONFIRMED and §4's own first draft stays overruled.** «Travelling is
+the job» would have been the expensive shape of a seat whose value is almost entirely at home. The
+default stance is **stays home**, the switch is the luxury, and the card says which.
+
+### 10e. What it costs – the live arm, where a price is honest
+
+| arm | salary/season | fares/season | total | research $50–80k | weeks billed of 52 |
+| --- | ---: | ---: | ---: | --- | ---: |
+| A college hitter · home | $21,137 | $0 | $21,137 | outside | 42.3 |
+| A college hitter · travels | $25,653 | $1,006 | $26,659 | outside | 51.3 |
+| A journeyman pro · home | $44,275 | $0 | $44,275 | outside | 49.2 |
+| A journeyman pro · travels | $46,542 | $144 | $46,686 | outside | 51.7 |
+| **A top-100 partner · home** | **$69,656** | $0 | **$69,656** | **inside** | 49.8 |
+| A top-100 partner · travels | $72,560 | $0 | $72,560 | **inside** | 51.8 |
+
+⭐ Round 42 #48 predicted the not-travelling top rung at **$72,800** and that it would be the only
+rung inside the band; measured **$69,656**, and the 2.2 weeks a season he is stood down for are the
+away weeks the switch exists to cover. ⚠ The fares column is small because a bench career reaches
+paying rungs late; it is not zero, and the switch's real bill on a long professional career is the
+number #48 quoted.
+
+### 10f. Invariant 2, and the frozen careers
+
+**`rngMain` is byte-identical on all three frozen careers** – `d84bcbf0c481` / `1dbff28caca2` /
+`aebc8101d6df`, the fingerprints this file's ladder has carried for fourteen waves. Zero draws on any
+stream (O4); `seed:form:<week>` stays reserved and unused; the frozen MAIN capture (41550 /
+e6b0c709) is untouched by construction. The per-key diff was taken FIRST, control = this tree with
+the weekly pass neutralised in place: **3 / 34 / 33 keys of 94 moved**, and the narrow cell (25k
+middle, grinder) moved `form`, `events` and `nextEventId` alone – the coach's eye and nothing else.
+
+⚠ **`PRE_V80` IS THE FIRST RUNG IN `coachTravelEdgeFixtures.ts` WHOSE THREE CELLS ARE NOT THE
+PREVIOUS VERSION'S LIVE CONSTANTS.** A peel drops a key; it cannot replay a career without the
+mechanic, and this mechanic reaches every career that plays a match. The rung still proves what it is
+for: `form` is the only key v80 appended and it is the last of `createWorld`'s literal.
+
+### 10g. What was NOT built, and why
+
+* **O3 – THE RADAR'S MODULATED COMPOSURE, and it is the one ruling this wave did not take.** The
+  one-line implementation (`shownSkill` adding the composure delta on that axis) was built, measured
+  and REVERTED: it breaks four shipped honesty contracts of the radar's own geometry –
+  `|shownValue − skills| ≤ band`, `|startValue − born| ≤ band`, `startValue ≤ shownValue`, and
+  `ceilingLo ≥ shownValue`. Satisfying all four needs the composure axis's reported band widened by
+  the delta, BOTH contours shifted and the ceiling haze raised with them – which changes the shape of
+  a picture he has already approved and weakens four guarantees his own fog design rests on. **That
+  is a redesign rather than a ruling, and it is his call.** ⭐ The cheap version, if he wants the slump
+  visible on the radar at all, is the BAND alone: «the coach is less sure of her nerve when she is
+  out of form» is a true sentence, a one-number change, and it costs no contract.
+  `formComposureDelta` is exported and has exactly one caller, so the reader is one line whenever he
+  rules.
+* **§5's «Out of her head»** – the psychologist's slump focus is F3's by the spec's own wave table.
+* **O6, rivals** – no form on the cohort, ruled, and the population cost is F3's measurement.
+* **§9a's travelling psychologist** – refused here as it is there: it cannot be priced until form's
+  loss cost is measured, which is now possible and is F3's.
+* **The receipt line's own fire rate** is unmeasured: `sparringComebackGap` reads the pruned results
+  ledger, so a comeback from a layoff longer than 52 weeks leaves one row and the sentence stays
+  silent. A receipt may under-fire; it must never over-claim.
+
+## 11. `G` SWEPT, 17.09 – and the shipped value is what the rule selects
+
+§10b ended on a finding and handed it to him: the corridor prices the clamps and **no career visits
+them** (p5/p95 of −4.0/+1.9 against ±10, 0.0% of weeks within a point of one, a lived swing of about
+0.5–0.7 pp against the 1.64 pp the mechanism can reach clamp-to-clamp), and «if the slump should bite
+harder the lever is `G`, not `K`». The owner: «что предлагаешь, давай попробуем. **Важно не
+переборщить**», and then «меряй».
+
+**Instrument:** `tools/form-g-sweep.ts` (`npm run bench:gsweep`), 18 careers × 624 weeks (12 seasons)
+per arm, no seat hired – §10b's own census, re-walked once per candidate `G`. `K` is READ and never
+swept: the [0.5, 4] pp corridor is the ruling (O1) and `K` is its fitted consequence. **Every figure
+here is LIVED** – read off the careers' own traces, never off ±10.
+
+⚠ **THE ARM WAS PROVEN BEFORE IT WAS TRUSTED** (CLAUDE.md: «set the constant to an absurd value and
+watch the output move»). At `G × 10 = 15` the lived band is [−10.0, +10.0] and **24.1% of all weeks
+sit at a clamp**, against 0.0% on the shipped arm – the dial moves the census by 14.1 points.
+
+⚠ **THE ARMS DIVERGE AND THAT IS THE POINT.** `G` moves form, form moves composure, composure moves
+results, so each arm walks its own careers from the same seeds. Unlike §10c's rung table there is no
+confound to hold fixed: `G` costs nothing, so no wallet moves between these rows.
+
+### 11a. Where a career lives, per candidate `G`
+
+| `G` | p1 | p5 | median | p95 | p99 | worst career | best career | weeks within 1 of a clamp | careers reaching a clamp |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| **1.50 – shipped** | −5.8 | **−4.0** | −0.4 | **+1.9** | +3.3 | −7.6 | +6.3 | 0.0% | **0 of 18** |
+| 1.75 | −6.4 | −4.2 | −0.4 | +2.5 | +4.5 | −8.5 | **+10.0** | 0.0% | 1 of 18 |
+| 2.00 | −6.9 | −4.9 | −0.5 | +3.2 | +5.6 | −9.7 | **+10.0** | 0.3% | 3 of 18 |
+| 2.25 | −7.7 | −5.4 | −0.6 | +3.6 | +6.1 | **−10.0** | **+10.0** | 0.5% | 4 of 18 |
+| 3.00 | −9.6 | −7.2 | −0.9 | +5.8 | +9.2 | **−10.0** | **+10.0** | 3.2% | 14 of 18 |
+| 4.00 | −10.0 | −8.8 | −1.3 | +7.0 | +9.6 | **−10.0** | **+10.0** | 6.7% | 18 of 18 |
+| 5.00 | −10.0 | −9.6 | −1.5 | +8.3 | +10.0 | **−10.0** | **+10.0** | 12.4% | 18 of 18 |
+
+⭐ The shipped row reproduces §10b's census exactly (p5 −4.0, p95 +1.9, 0.0% within a point of a
+clamp), which is the cheapest possible check that the two instruments are measuring the same thing.
+
+### 11b. What the lived band is worth – p5 to p95, against the field she really meets
+
+1,200 paired sims a cell, the same seeds down every column, so only the band moves.
+
+| `G` | lived band | composure span at `K = 0.6` | a peer | #20 | #60 | #150 | **widest** |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **1.50 – shipped** | [−4.0, +1.9] | 3.5 points | 0.42 | 0.83 | 1.42 | 0.50 | **1.42 pp** |
+| 1.75 | [−4.2, +2.5] | 4.0 points | 0.50 | 1.00 | 1.42 | 0.42 | **1.42 pp** |
+| 2.00 | [−4.9, +3.2] | 4.9 points | 0.92 | 1.58 | 1.67 | 0.50 | **1.67 pp** |
+| 2.25 | [−5.4, +3.6] | 5.4 points | 0.75 | 1.83 | 1.92 | 0.50 | **1.92 pp** |
+| 3.00 | [−7.2, +5.8] | 7.8 points | 1.33 | 2.50 | 2.50 | 0.83 | **2.50 pp** |
+| 4.00 | [−8.8, +7.0] | 9.5 points | 1.83 | 2.25 | 2.67 | 1.25 | **2.67 pp** |
+| 5.00 | [−9.6, +8.3] | 10.7 points | 2.33 | 2.58 | 2.75 | 1.50 | **2.75 pp** |
+
+⚠ **§10b's «0.5–0.7 pp» was an inference and this is the measurement: 1.42 pp at the widest
+opponent.** The lived swing is therefore already about 85% of the 1.64 pp the mechanism reaches
+clamp-to-clamp – the gap between «what form can do» and «what form does» is a good deal smaller than
+§10b estimated, because the p5-to-p95 band is not where the composure curve is flattest.
+
+### 11c. THE SELECTION RULE, APPLIED – and it keeps `G = 1.5`
+
+His «важно не переборщить», made measurable: **take the largest `G` at which NO career reaches a
+clamp.** Form pinned at a clamp stops being a signal and becomes a shelf – the clamps are a safety
+rail, not a destination.
+
+⭐⭐ **THE ANSWER IS THE SHIPPED VALUE, AND THERE IS NO HEADROOM ABOVE IT AT ALL.** `G = 1.75` – the
+smallest increase worth trying – already puts **one career of eighteen on the +10 clamp**, and every
+larger value puts more there. `G = 1.5` is the only swept point where no career reaches one.
+
+⚠ **THE HONEST READING OF WHY, because it is not «1.5 is optimal».** The shipped census's best career
+already reaches **+6.3** and its worst **−7.6**; the tails are within two and a half points of the
+rail. A dial that stretches the p95 from +1.9 to +2.5 stretches the TAIL from +6.3 through the clamp
+at the same time, and the tail is what the rule is about. So the sweep does not say «form is
+correctly scaled»; it says **`G` alone cannot be raised without shelving somebody**, which is a
+different and more useful finding.
+
+⚠ **AND THEREFORE A NOTE FOR HIM RATHER THAN A CHANGE, because the levers it implies are his.** If the
+slump should bite harder than 1.42 pp, the sweep says the move is not `G` on its own. Three shapes
+that raise the lived band without putting a career on a shelf, none of them taken here:
+* **widen the clamps** with `G` – the clamp is what binds, and ±10 is a rail rather than a ruling;
+* **raise `K`** – §10a measured every candidate from 0.4 to 1.2 INSIDE the corridor, so 0.8 buys
+  2.25 pp at the clamps with the lived band untouched and no career shelved. ⚠ It is the ruling's own
+  dial and moving it is his call, not a wave's;
+* **asymmetry** – the lived band is [−4.0, +1.9] and the tail that breaks first is the POSITIVE one,
+  which is a fact about the results channel (a purple patch compounds faster than a slump does
+  against a reversion that pulls both ways). A gain that differed by sign is a design question.
+
+⚠ **`K` WAS NOT MOVED AND `G` WAS NOT MOVED.** Nothing in the engine changed for this section: it is a
+measurement, and `ECONOMY.form.gain` is still 1.5.

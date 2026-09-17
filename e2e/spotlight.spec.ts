@@ -179,7 +179,7 @@ function focusOption(focus: Locator, label: string): Locator {
 const SEAT = '[data-staff="psychologist"]'
 
 /** Home's door to the Coach Market, by the accessible name `e2e/stations.ts` walks. */
-const COACH_NOTE = { name: 'Coach note - open the Coach Market' }
+const COACH_NOTE = { name: 'Coach note – open the Coach Market' }
 
 async function openSupportStaff(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Support staff', exact: true }).click()
@@ -285,8 +285,9 @@ test.describe('the spotlight reaches the player', () => {
     await hire.click()
     const confirm = page.getByRole('dialog')
     await expect(confirm).toHaveAccessibleName(
-      `Put a psychologist on the payroll at ${formatCents(DEFAULT_RUNG_CENTS)} a week ` +
-        `(${DEFAULT_RUNG_LABEL.toLowerCase()})? Cancellable any week, like the coach.`,
+      // ⚠ HIS 17.09 SHEET MOVED THIS SENTENCE – see e2e/psychologist.spec.ts's own note on it.
+      `Hire a psychologist for ${formatCents(DEFAULT_RUNG_CENTS)} a week ` +
+        `(${DEFAULT_RUNG_LABEL.toLowerCase()})? You can end the arrangement any week, like the coach.`,
     )
     await confirm.getByRole('button', { name: 'Hire', exact: true }).click()
     await expect(seat.getByRole('button', { name: 'Let go', exact: true })).toBeVisible()

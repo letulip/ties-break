@@ -105,9 +105,30 @@ describe('THE STROKE WEIGHT: one hairline, everywhere (owner 30.07)', () => {
         expect([3, 4], `${rel(path)}: rail weight`).toContain(px)
       }
     }
-    // anti-vacuity: the rails are really there, and there are not suddenly a dozen of them
+    // anti-vacuity: the rails are really there, and there are not suddenly a dozen of them.
+    //
+    // ⚠⚠ ROUND 43 MOVED THE CEILING 8 -> 12, AND IT IS A MEASUREMENT RATHER THAN A SHRUG. The idiom
+    // itself is untouched and unbroken – every rail in the app is a LEFT edge at 3px or 4px – what
+    // moved is only how many of them there are. Counted on this tree, nine:
+    //
+    //     ForkDialog.vue                 3px transparent
+    //     PrologueCard.vue               3px --accent-soft
+    //     PrologueHandover.vue           3px --accent-soft
+    //     screens/MoneyScreen.vue        3px --accent-soft   <- round 43 #5, the Business split line
+    //     screens/SeasonScreen.vue       3px --accent
+    //     screens/SeasonScreen.vue       4px --accent        <- R10-15's result pair
+    //     screens/SeasonScreen.vue       4px --danger        <-
+    //     style.css  .knock-…            3px --danger
+    //     style.css  .knock-why          3px --accent-soft   <- round 43 #10, the «why» row
+    //
+    // ⚠ THE EIGHTH WAS ALREADY OVER IT AND NOBODY SAW, which is the finding worth keeping. Round 43
+    // #5 shipped its rail at 2px, so the WEIGHT assertion above threw first and this line was never
+    // reached – the count had been failing silently behind a louder failure. Both are repaired in
+    // the same pass: #5's rail is 3px now, and this ceiling is the real number plus room.
+    // ⚠ 12 IS THE COMMENT'S OWN WORD read as a number («not suddenly a dozen»), so the rule still
+    // catches proliferation – three more rails and it speaks again.
     expect(seen.length).toBeGreaterThan(2)
-    expect(seen.length).toBeLessThan(8)
+    expect(seen.length).toBeLessThan(12)
   })
 
   it('the app declares exactly ONE focus ring, and src/style.css owns it', () => {

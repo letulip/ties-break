@@ -22,6 +22,9 @@ import {
   hireMasseur,
   setMasseurSessions,
   setMasseurTravels,
+  hireSparring,
+  setSparringRung,
+  setSparringTravels,
   hirePsychologist,
   setPsychologistRung,
   setPsychologistFocus,
@@ -424,6 +427,19 @@ async function handle(msg: ToWorker): Promise<ToUI> {
     case 'setMasseurTravels': {
       return mutate(msg.id, msg.baseRevision, (world) => setMasseurTravels(world, msg.on))
     }
+    case 'hireSparring': {
+      // v80 wave F2, the third seat. The pro-career gate and the college freeze both refuse inside
+      // `hireSparring` (guardNotEnded first), so a stale tab cannot hire past either – the masseur's
+      // own note three cases up, asked one seat over.
+      return mutate(msg.id, msg.baseRevision, (world) => hireSparring(world, msg.hire))
+    }
+    case 'setSparringRung': {
+      // `setSparringRung` refuses an index the market does not sell, and refuses inside the freeze.
+      return mutate(msg.id, msg.baseRevision, (world) => setSparringRung(world, msg.rung))
+    }
+    case 'setSparringTravels': {
+      return mutate(msg.id, msg.baseRevision, (world) => setSparringTravels(world, msg.on))
+    }
     case 'hirePsychologist': {
       // v76, the psychologist's year (wave 5 T2) – the masseur's own case one seat over. Re-validated
       // engine-side like every command: the pro-career gate and the college freeze both refuse inside
@@ -801,6 +817,9 @@ function errorMsg(id: number, err: unknown): ErrorReply {
 //   hireMasseur        mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setMasseurSessions mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setMasseurTravels  mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   hireSparring       mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setSparringRung    mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
+//   setSparringTravels mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   hirePsychologist   mutation     mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPsychologistRung mutation    mutates   autosave+meta (CAS)        +1, needs baseRevision
 //   setPsychologistFocus mutation   mutates   autosave+meta (CAS)        +1, needs baseRevision

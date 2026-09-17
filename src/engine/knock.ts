@@ -456,13 +456,89 @@ function knockReadFor(condition: number, repeat: boolean, pick: number): string 
   return pool[pick % pool.length]
 }
 
+/** ⭐⭐⭐ ROUND 43 #10 – WHY. One named cause, and the four sentences are the whole of it.
+ *
+ *  THE OWNER, 16.09: «мой первый вопрос – ПОЧЕМУ? мне кажется, в этом окошке можно игроку подсветить,
+ *  что может быть причиной… или хотя бы предложить, на что посмотреть.»
+ *
+ *  ⚠⚠ THE MEASURE IS WHAT THE FAMILY'S CHOICES ADDED, NEVER WHICH TERM IS BIGGEST. `knockChance` is
+ *  `base + fatigue + load`, and at the operating point his own career sits on (condition 60, train 85)
+ *  the terms are base .100, fatigue .088, load .060 – so «the biggest term» is the BASE, and a card
+ *  that answered with it would say «nothing you did» about a week in which the family's choices put
+ *  .148 on top of a .100 floor. Sixty per cent of that week's risk was theirs. So the sum of the two
+ *  choice terms is the question, and which of the two is larger is the answer.
+ *
+ *  ⚠⚠ AND IT MUST BE ABLE TO SAY THAT NOTHING THEY DID CAUSED IT. `fatigue + load <= 0` is exactly
+ *  «the plan you set added nothing to the floor», and it gets its own sentence rather than silence –
+ *  see `KnockPrompt.cause` for why that is a `string` and not a `null`.
+ *
+ *  ⚠ WHY `added <= 0` RATHER THAN «the load term is negative», which is the shorthand round 43's
+ *  ledger uses. The two agree on the ledger's own careful row (condition 90, train 70: fatigue .022,
+ *  load -.030, sum -.008) and they disagree on a tired kid having a light week – condition 55 at
+ *  train 65 is fatigue .099 against load -.060, a sum of +.039, and telling that family «nothing we
+ *  did» would be false in the one direction this card must never be false in. The ledger names the
+ *  MEASURE first and the load sign second; this is the measure.
+ *
+ *  ⚠ THE REPEAT COMES FIRST, and it is the one branch that is not ranked by magnitude because it
+ *  cannot be: `repeat` adds nothing to `knockChance` at all. What it does is decide WHERE a knock
+ *  lands (`KNOCK_REPEAT_CHANCE`, .55 of them) and what pushing through it COSTS (`KNOCK_REPEAT_TAU`,
+ *  x3.0 against `KNOCK_PUSH_TAU`'s x2.2) – so it is the only cause that is about the decision being
+ *  taken on this very card rather than about a dial two screens away. ⭐ It is also the one thing
+ *  here the snapshot ALREADY carried and never used to explain anything, which is round 43 #10's own
+ *  opening observation. ⚠ And putting it first is what stops the careful sentence ever being said to
+ *  a family that pushed this exact part before: they did do something, it was just not this week.
+ *
+ *  ⚠ NO NUMBER IN ANY OF THE FOUR – `knockReadFor`'s fog rule, asked of this too. Pure; zero draws on
+ *  any stream, and none of these sentences is persisted.
+ *
+ *  ⭐⭐ THE FOUR SENTENCES ARE HIS, WORD FOR WORD, FROM THE 17.09 COPY REVIEW, and the four they
+ *  replaced were all four rejected. His faults, recorded because they are the rule for the next
+ *  sentence that lands here rather than a list of typos: «on this part» is not idiomatic, «a body
+ *  brings up again» sounds translated, «picks things up» suggests infection rather than injury, and
+ *  «joints» is too specific unless every knock is a joint injury – which it is not, `KNOCK_PARTS`
+ *  carries a lower back and a foot.
+ *
+ *  ⭐ AND THE VOICE OF THIS SURFACE IS A REFLECTIVE PARENTAL OBSERVATION, which is his diagnosis of
+ *  the root cause and not a garnish: «trying to give every surface the same lyrical house voice is
+ *  what currently makes several lines feel AI-written». A confirmation is literal, a receipt is
+ *  restrained, and this window is a parent thinking about the week that has just happened.
+ *
+ *  ⚠⚠ THE FOURTH BRANCH IS A CORRECTNESS REQUIREMENT AND NOT A STYLE ONE. He: the line «tries too
+ *  hard to absolve the player». It may say there is NO IDENTIFIED PLAYER-CAUSED FACTOR; it may not
+ *  promise that nothing the family did contributed. «No single choice explains this one» is the
+ *  first claim and the old «Nothing we did – the care we have been taking was working» was the
+ *  second, which the branch's own arithmetic does not support: `fatigue + load <= 0` says the two
+ *  terms NETTED to nothing, not that neither existed.
+ *
+ *  ⚠ `part` IS A REQUIRED PARAMETER AND THE REPEAT LINE NAMES IT. He offered a vaguer line for a
+ *  surface with no body part to hand and the stronger one for a surface with it – and this one has
+ *  it: `buildKnockPrompt` is holding the whole `Knock`. «Do not use vague place language when the
+ *  real one is to hand.» Required rather than optional for `plan`'s own reason: a defaulted part
+ *  would let a forgetful call site ship a sentence with a hole in it. */
+export function knockCause(condition: number, plan: WeekPlan, repeat: boolean, part: string): string {
+  if (repeat) return `We sent her back out with a knock to her ${part} before. Now the same place is troubling her again.`
+  const fatigue = (100 - condition) * KNOCK_FATIGUE_SLOPE
+  const load = (plan.train - KNOCK_TRAIN_PIVOT) * KNOCK_TRAIN_SLOPE
+  // ⚠ SIGNED, AND THE SIGN IS THE WHOLE OF THE CAREFUL BRANCH. `KNOCK_TRAIN_SLOPE`'s own docblock
+  // says the term is «MINUS it below» Balanced, so a light week is a credit against her fatigue and
+  // the sum is what the family is actually responsible for.
+  if (fatigue + load <= 0) {
+    return 'No single choice explains this one. We had been careful. Bodies still have bad weeks.'
+  }
+  // ⚠ `>=` HANDS A TIE TO FATIGUE ON PURPOSE. A dead heat means she was as worn as the week was hard,
+  // and of the two that is the one a parent can act on this week: the rest slider moves tomorrow,
+  // whereas the week she has already trained is spent.
+  if (fatigue >= load) return 'She began the week already tired. Her body had less room for the work we asked of it.'
+  return 'We set a hard week. It asked more of her body than an ordinary one.'
+}
+
 /** Everything the dialog shows, assembled at SNAPSHOT time.
  *
  *  ⚠ ON ITS OWN SUB-STREAM, `seed:knockread:<sinceWeek>` - keyed on the knock's own week rather than
  *  on the current one, so the wording is fixed for as long as the knock is open. A key with the
  *  CURRENT week in it would reword the dialog underneath a player who left it up while he thought
  *  about it. Nothing here runs in the tick; zero MAIN draws. */
-export function buildKnockPrompt(knock: Knock, seed: string, condition: number): KnockPrompt {
+export function buildKnockPrompt(knock: Knock, seed: string, condition: number, plan: WeekPlan): KnockPrompt {
   const rng = rngFromSeed(`${seed}:knockread:${knock.sinceWeek}`)
   const linePick = Math.floor(rng() * 97)
   const readPick = Math.floor(rng() * 97)
@@ -471,6 +547,13 @@ export function buildKnockPrompt(knock: Knock, seed: string, condition: number):
     repeat: knock.repeat,
     line: knockLineFor(knock.part, knock.repeat, linePick),
     read: knockReadFor(condition, knock.repeat, readPick),
+    // ⭐⭐⭐ ROUND 43 #10 – WHY, and it is the same pair `knockChance` reads. ⚠ `plan` IS A REQUIRED
+    // PARAMETER AND NOT AN OPTIONAL ONE: a defaulted plan would make `knockCause` answer «nothing we
+    // did» at every call site that forgot to pass one, which is the single wrong answer this card
+    // must never give by accident. The compiler is what keeps every caller honest.
+    // ⚠ DERIVED, NOT DRAWN. Zero draws on any stream – the two `rng()` calls above are unchanged and
+    // in the same order, so a career's knock wording is byte-identical to what it was.
+    cause: knockCause(condition, plan, knock.repeat, knock.part),
     // THE TWO COSTS, and they are the deliverable. One sentence each, naming the currency and not
     // the number - "a week of work" is a thing a parent understands, "loadFactor 0.35" is not.
     //

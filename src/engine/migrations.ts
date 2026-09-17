@@ -2814,6 +2814,99 @@ export function migrateSave(raw: unknown): WorldState {
     v = 78
   }
 
+  // ⭐⭐⭐ v79 – ONE BUMP, TWO CUSTOMERS (the chemistry wave C1, and round 42 #48's third sparring
+  // key). The whole reading of this step is in `SAVE_SCHEMA_VERSION`'s own block in world/state.ts;
+  // what belongs HERE is why each literal is exactly true, and one warning about this version that
+  // the four before it did not need.
+  //
+  //   `coachPairs = {}`          – ⭐ «SHE HAS WORKED WITH NOBODY», AND IT IS EXACTLY TRUE RATHER THAN
+  //                                A PLACEHOLDER. The map is SPARSE by design – a row is written on
+  //                                the first week she trains with that man and never before – so an
+  //                                empty map is not «no data about her relationships», it is the
+  //                                complete and correct statement that a career which predates the
+  //                                mechanic accrued nothing with anybody, because there was nothing
+  //                                to accrue. ⚠ AND THE TEMPTING ALTERNATIVE IS REFUSED FOR A REASON
+  //                                THE SPEC ARGUES ITSELF: a row could have been reconstructed for
+  //                                `coachId` with a chemistry back-dated from the weeks he has been
+  //                                hired. That would invent a history the save does not hold – the
+  //                                level is PATH-DEPENDENT on results and on her state, neither of
+  //                                which the weeks-hired count knows – and it would hand a loaded
+  //                                career a relationship it never lived through. An empty map costs
+  //                                the resumed career the seasons it never had, which is the honest
+  //                                half of the trade and the only one that is true.
+  //   `sparringTravels = false`  – the seat did not exist, so nobody was in it and nobody was
+  //                                travelling. `sparringHired`'s own v78 answer, quoted rather than
+  //                                re-argued.
+  //
+  // ⚠⚠ AND THIS IS THE FIRST VERSION SINCE v78 WHOSE MECHANIC IS REACHABLE IN A FROZEN CAREER, which
+  // is the warning. v75/v76/v77 shipped seats with no reader; v78 shipped one with a reader that no
+  // frozen career could reach (`walkFrozenCareer` already asserts `psychologistHired === false`).
+  // Chemistry is different in kind: EVERY frozen career hires a coach, so every one of them now has
+  // a relationship, and the eighteen constants move for a REASON rather than by a key append. The
+  // protocol in tests/coachTravelEdgeFixtures.ts's header governs and was followed – the per-key diff
+  // FIRST, the control built as this wave's own change neutralised IN PLACE, and the re-stamp
+  // carrying a dated note. A version that moves a frozen hash without that record is the one thing
+  // that apparatus exists to stop.
+  //
+  // ⚠ `??=` AND NEVER `||=`, v76's / v77's / v78's rule for the identical reason: `sparringTravels
+  // ||= false` is a no-op that looks like a write, and `coachPairs ||= {}` would overwrite a live
+  // empty-but-present map on a re-run. ⚠ AND THE MAP IS NOT WALKED, unlike v77's episodes and v78's
+  // asset rows: there is nothing inside it to back-fill, because on every save reaching this step
+  // there is nothing inside it at all.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: two `??=` on world keys, gated on `v === 78`, writing a literal and a
+  // fresh empty object. No sub-stream is reached on this path, so MAIN cannot move and the frozen
+  // capture (41550 / e6b0c709) is untouched by construction. Full move: `SAVE_SCHEMA_VERSION` in
+  // world/state.ts, this step, tests/fixtures/saves/v79.json, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 78) {
+    save.sparringTravels ??= false
+    save.coachPairs ??= {}
+    v = 79
+  }
+
+  // ⭐⭐⭐ v79 -> v80: WAVE F1, HER FORM (docs/specs/the-form-and-the-sparring-2026-09.md §1 and §6).
+  // ONE key, ONE customer, and the narrowest step this ladder has taken since v70.
+  //
+  //   `form = 0`  – ⭐ NEUTRAL, AND IT IS THE IDENTITY RATHER THAN A PLACEHOLDER FOR ONE (v78's
+  //                 `composureBonus = 0` rule, quoted because the argument transfers exactly). 0 is
+  //                 not «we do not know how she is playing»: the number is 0-CENTRED, so 0 IS «she
+  //                 is exactly the player her results say she is», which is the true and complete
+  //                 statement about a career that predates the mechanic. At 0 `formComposureDelta`
+  //                 returns an exact 0 and `kidMatchPlayerFor` takes the untouched early return, so
+  //                 a resumed save plays byte-identically until a match or a gap moves her.
+  //
+  // ⚠⚠ AND THE TEMPTING ALTERNATIVE IS REFUSED FOR v79's OWN REASON, one version on: form could have
+  // been back-dated off the results ledger the save still holds. It could not, honestly – `results`
+  // prunes at 52 weeks, the residual needs the PRE-MATCH probability and therefore both players'
+  // snapshots, and the rhythm channel needs a gap history the pruned ledger cannot supply. A
+  // reconstruction would invent a slump the career never lived through. 0 costs the resumed career
+  // the form it never had, which is the honest half of the trade and the only one that is true.
+  //
+  // ⚠⚠ THE MECHANIC IS REACHABLE IN A FROZEN CAREER, exactly as v79's chemistry was and unlike
+  // v75-v78's seats: every frozen career plays matches and has matchless weeks, so every one of them
+  // now carries form into its own results and the constants move for a REASON rather than by a key
+  // append. The protocol in tests/coachTravelEdgeFixtures.ts's header governs and was followed – the
+  // per-key diff FIRST (`tools/frozen-key-diff.ts`), the control built as this wave's own change
+  // neutralised IN PLACE, and the re-stamp carrying a dated note.
+  //
+  // ⚠ `??=` AND NEVER `||=`, v76's / v77's / v78's / v79's rule for the identical reason, and this
+  // key is the sharpest case the rule has had: `form ||= 0` is not merely a no-op that looks like a
+  // write, it would silently overwrite a live 0 on a re-run – and 0 is the value MOST careers hold.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: one `??=` on one world key, gated on `v === 79`, writing a literal.
+  // No sub-stream is reached on this path, so MAIN cannot move and the frozen capture
+  // (41550 / e6b0c709) is untouched by construction. `seed:form:<week>` stays RESERVED and unused
+  // (O4). Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step,
+  // tests/fixtures/saves/v80.json, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 79) {
+    save.form ??= 0
+    v = 80
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

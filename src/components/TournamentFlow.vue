@@ -1040,7 +1040,7 @@ const matchMeta = computed(() => (stats.value ? matchStatMeta(stats.value) : nul
                  (`PendingView.coachTravelled` off `coachTravelsWithHer`); this screen only draws it,
                  which is why the flow, the live commentary and the week's story cannot disagree about
                  one trip. -->
-            <p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – a second fare on this trip.</p>
+            <p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – one additional fare on this trip.</p>
           </div>
           <div class="tf-brief-go">
             <p class="tf-brief-ring-label">Her condition</p>

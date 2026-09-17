@@ -103,7 +103,7 @@ export function markCoachTravelOpen(world: WorldState): void {
     world,
     COACH_TRAVEL_OPEN_KEY,
     // No pronoun names the coach (R15-7): a woman sits on every roster by construction.
-    'Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs twice the fare.',
+    'Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs one additional fare.',
   )
 }
 

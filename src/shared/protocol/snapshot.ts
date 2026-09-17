@@ -229,6 +229,17 @@ export interface Snapshot {
    *  × the professional session rate, no corridor, no jitter), so the card's quote IS the ledger's
    *  row. */
   masseurSalaryCents: number
+  /** ⭐⭐ ROUND 43 #4 – WHAT ONE SESSION COSTS **THIS CAREER**, in cents. `ECONOMY.masseur
+   *  .perSessionCents` is the OPENING price now and no longer the price: the masseur asks for a
+   *  rise once a year on the payroll, so a career six years in is paying more per session than a
+   *  career that hired him last week (`masseurSessionCents`, engine/world/masseur.ts).
+   *
+   *  ⚠⚠ IT IS ON THE SNAPSHOT BECAUSE THE SEAT'S CARD PRICES ITS OWN RUNGS. The three rung labels
+   *  read `sessions × the rate`, and a screen that read the constant instead would quote the entry
+   *  rung at the price the family stopped paying years ago while the ledger charged the real one –
+   *  and the card's own doctrine is that its quote IS the ledger's row. DERIVED, never persisted:
+   *  the save holds the employment history the rate is read off, not the rate. */
+  masseurPerSessionCents: number
   /** ⭐ v59 step 2 – THE DIAL (the owner's own idea): sessions a week on the table, one of the
    *  `ECONOMY.masseur.rungs` sessions values (2 / 4 / 7). The bill, the rehab cadence and the
    *  condition bonus all follow the rung. */
@@ -248,6 +259,42 @@ export interface Snapshot {
    *  hands did lately – the rehab he is working, the layoff that ended early, the quiet weeks –
    *  quoting no figure, '' when nobody is hired. See `masseurRoomNote`. */
   masseurNote: string
+  /** ⭐⭐⭐ v80, WAVE F2 – is the THIRD salaried seat on the payroll (the hitting partner). The
+   *  masseur's flag two seats over, and the same stand-down pair behind it – suspends (does not
+   *  cancel) at college and on booked family weeks – PLUS one the other two do not have: a partner
+   *  who does not travel stands down on a week she is away at an event, which is the whole of what
+   *  his travel switch buys. */
+  sparringHired: boolean
+  /** ...whether the hire is even on offer – the SAME one-way door the other two seats use (her
+   *  first counting W-series result). The card locks with `SPARRING_LOCKED_DETAIL` until this is
+   *  true, so the disabled state and the refused click can never tell two stories (R10-16). */
+  sparringUnlocked: boolean
+  /** ⭐⭐ ...AND WHETHER THE ARRANGEMENT IS STANDING DOWN THIS WEEK – hired, but the college freeze or
+   *  a booked family week has suspended it, so no salary is charged and no rust is cut. The owner's
+   *  17.09 copy review named this as a state the card was missing, and it was: the engine has had it
+   *  since the seat shipped and no screen said a word about it, so a family at a university watched a
+   *  salaried seat quietly charge nothing and were told neither half of that.
+   *  ⚠ THE AWAY-WEEK STAND-DOWN IS NOT IN THIS FLAG – see `sparringStoodDown` for why (it is what the
+   *  travel switch sells rather than a suspension, and it needs a fact a snapshot cannot honestly
+   *  hold). */
+  sparringStoodDown: boolean
+  /** ...the weekly bill at the family's chosen rung, in cents – a FLAT contract per rung, no
+   *  corridor, no jitter, no draw, so the card's quote IS the ledger's row. */
+  sparringSalaryCents: number
+  /** ⭐ THE ROSTER DIAL – which of the three hits with her: an INDEX into `ECONOMY.sparring.rungs`
+   *  (0 a college hitter · 1 a journeyman pro · 2 a top-100 partner), the psychologist's kind of dial
+   *  and not the masseur's count. */
+  sparringRung: number
+  /** ...AND THE TRAVEL STANCE, the owner's 15.09 override («у остальных есть галочка "ездит"»).
+   *  Default OFF, and here that default is a MEASUREMENT: round 42 #48 priced the switch at 10.6% of
+   *  the rust for $60,604 a season, so staying home is the shape a junior career buys. */
+  sparringTravels: boolean
+  /** What the booked trips would cost his seat – priced with the stance forced ON (the coach
+   *  billing's as-if rule: a price the switch's row quotes must not change when the switch is
+   *  flipped), summed over the entries currently held at paying rungs. */
+  sparringTravelFareCents: number
+  /** ...over how many booked trips. */
+  sparringTravelTrips: number
   /** ⭐ v76, the psychologist's year (wave 5 T2): is the SECOND salaried seat on the payroll. The
    *  masseur's flag one seat over, and the same stand-down pair behind it – suspends (does not
    *  cancel) at college and on booked family weeks. */

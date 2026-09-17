@@ -53,7 +53,7 @@ import { playLocalOpen, sheRetiredIn } from '../../src/prologue/pool'
 import { useGameStore } from '../../src/stores/game'
 import type { AnnotatedMatch } from '../../src/viz/types'
 import type { MatchOptions, MatchPlayer, Side } from '../../src/engine/match/types'
-import type { Snapshot } from '../../src/shared/protocol'
+import { WEEK_PLAN_PRESETS, type Snapshot } from '../../src/shared/protocol'
 
 const SKIP_LABEL = 'Skip to the result'
 
@@ -173,6 +173,9 @@ describe('#15b – the rest option carries the hug, and the cost is still legibl
       { part: 'ankle', sinceWeek: 8, repeat, choice: null, untilWeek: 8 },
       'r39-15b',
       80,
+      // ⭐ ROUND 43 #10 – the plan the cause reads. Balanced is `KNOCK_TRAIN_PIVOT`, so its load term
+      // is zero and nothing this file asserts about the two cost sentences can move with it.
+      WEEK_PLAN_PRESETS.balanced,
     )
     game.$patch({ snapshot: { week: 8, knockPrompt: prompt } as unknown as Snapshot })
     return { w: mount(KnockDialog), prompt }

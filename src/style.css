@@ -5877,6 +5877,42 @@ button.linkish:hover:not(:disabled) {
 .knock-read {
   margin: 0 0 16px;
 }
+/* ⭐⭐⭐ ROUND 43 #10 – WHY, AND IT IS A THIRD KIND OF SENTENCE ON THIS CARD, which is the only
+   reason it gets a rule of its own rather than another `.hint`. The three now read in a ladder and
+   each is a different speaker: `.knock-line` is the PARENT's own sentence about the week,
+   `.knock-read` is the COACH's opinion (`.hint`, muted, the fog rule), and this is the GAME stating
+   a fact it derived – what the family's own choices added, out of `knockCause`. A note that looked
+   exactly like the coach's opinion would be read as a fourth thing the coach said.
+
+   ⚠ A HAIRLINE AND NOT A HEADING, which is what keeps this item to one line of card. The owner asked
+   for a cause to be pointed at, not for a new section, and this is a BLOCKING overlay whose dismiss
+   control has to stay on a 375x667 phone (round-20 #3, and the mounted net in
+   tests/component/round42-select-confirm.test.ts measures it). A rule down the left edge marks the
+   sentence as an aside at the cost of no vertical space at all, where a «Why?» label would have cost
+   a line of type and a word this file is not allowed to coin (invariant 4).
+
+   ⚠ `--accent-soft` AND NOT `--warning`, and the difference is the ruling. One of the four sentences
+   says that nothing the family did caused this; a warning-coloured rule would contradict that
+   sentence in the one case it most matters, and «мы ни за что не наказываем» is the law it would be
+   contradicting. The soft accent is the app's own «here is something worth looking at» edge (round 42
+   #20: an invitation, not an alarm). ⚠ It is a marker rather than text, so the 3:1 non-text contrast
+   rule is what binds it – `--accent-soft` is the token that already passes it on this card family.
+
+   ⚠⚠ 3px IS THE HOUSE'S RAIL WEIGHT AND NOT A CHOICE MADE HERE. `tests/ui-control-system.test.ts`
+   pins the idiom: a single-side border of 2px or more IS a rail, a rail is always the LEFT edge, and
+   it is 3px – or 4px when it carries a result, which R10-15 made an accessibility decision so a win
+   and a loss are separable without hue. This row carries no result, so it is the plain weight. The
+   first draft of this rule shipped 2px and the pin caught it, which is the pin doing exactly what
+   its own header says it is for: «an idiom nobody has written down is how the app ended up with two
+   answers for a button radius». */
+.knock-why {
+  margin: 0 0 16px;
+  padding-left: 10px;
+  border-left: 3px solid var(--accent-soft);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
 
 /* The two branches, stacked rather than side by side. A row of two would give each about 150px on a
    375pt phone, and the cost sentence - which is the entire reason this dialog is legible rather than

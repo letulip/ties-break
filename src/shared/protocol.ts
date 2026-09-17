@@ -201,6 +201,7 @@ export type {
   ShootClashChoice,
   ShootClashPrompt,
   CallUpLetterTerms,
+  BuildLetterTerms,
   OfferTerms,
   Offer,
   CoachMarketRow,

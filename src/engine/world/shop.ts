@@ -39,6 +39,9 @@ import { guardNotEndedForGood } from './endings'
 import { addEvent } from './ledger'
 // Round 29 part four P7 – the businesses' one arithmetic; the till banks the same functions.
 import { assetWeeklyFamilyIncomeCents } from './business'
+import { kidAgeYears } from './age'
+import { collegePausedShareYears } from './college'
+import { kidPrizeShareBps } from '../economy'
 // ⭐⭐⭐ ROUND 30 #23 – the shelf quotes the multiple the CAREER has earned, so it reads the same
 // function the valuation does rather than the catalogue's base. One arithmetic, many readers.
 import { brandMultipleX, brandSignalsOf } from './brand'
@@ -46,6 +49,12 @@ import { brandMultipleX, brandSignalsOf } from './brand'
 // VALUE still flows through `assetWorthCents`; this is a question about the calendar, not a price.
 import { marketCrashFellIn } from './market'
 import { WEEKS_PER_YEAR } from '../season/calendar'
+// ⭐ ROUND 43 #11 – the letter the delivery writes. One raiser, in the module that owns the inbox.
+// ⚠ NOT A CYCLE, and checked rather than assumed – `offers.ts`'s own `seasonIndexOf` import makes
+// the same note one level down. At runtime `offers.ts` reaches only `./economy`, `./rng`,
+// `./season/calendar` and `./world/ledger`, and not one of those imports this file; everything else
+// it takes from here is a type. So shop -> offers is a leaf edge in both directions that matters.
+import { raiseBuildLetter } from '../offers'
 import { formatCents } from '../../shared/money'
 import { weekLabel } from '../../shared/dates'
 import type { OwnedAsset, ShopRowView, ShopView } from '../../shared/protocol'
@@ -219,16 +228,42 @@ export function revalueAssets(world: WorldState): void {
  *  own second row). No cash moves here – the money left on the order.
  *
  *  ⚠ IT RUNS BEFORE `revalueAssets`, and before the week's bills, so the week a boat arrives is the
- *  first week it depreciates and the first week it is charged for. ZERO DRAWS. */
+ *  first week it depreciates and the first week it is charged for. ZERO DRAWS.
+ *
+ *  ⭐⭐⭐ ROUND 43 #11 – AND IT WRITES A LETTER NOW (the owner: «давай на почту присылать письмо про
+ *  те объекты, которые у нас строятся в магазине, в момент, когда они достроены»). ⚠⚠ THIS FUNCTION
+ *  IS THE WHOLE REASON THE ITEM IS CHEAP AND THE ONLY PLACE THE LETTER COULD HONESTLY BE RAISED. The
+ *  ledger's own warning was that «the ring filling and the delivery landing are not automatically the
+ *  same instant» – and they are not: the `>=` above means a multi-week skip delivers on the week the
+ *  skip LANDS on rather than on the week the count ran out. Written here, «the letter arrived» and
+ *  «the family owns it» are one statement rather than two that have to agree.
+ *
+ *  ⚠ AND THE SET IS HIS RULING WITHOUT A LIST: «только те, которые имеют сроки построек». `readyWeek`
+ *  is written in exactly one branch of `buyAsset` – the `item.buildWeeks` one – so a rung with no
+ *  build time cannot reach this loop at all, and an index fund that lands the same week writes
+ *  nothing because there is no wait to report. */
 export function deliverAssets(world: WorldState): void {
   world.assets ??= []
   for (const owned of world.assets) {
     if (owned.readyWeek === undefined || world.week < owned.readyWeek) continue
     delete owned.readyWeek
+    const label = shopItem(owned.id)?.label ?? owned.id
     addEvent(world, {
       week: world.week,
       type: 'entry',
-      text: `Delivered: ${shopItem(owned.id)?.label ?? owned.id}`,
+      text: `Delivered: ${label}`,
+    })
+    // ⚠ THE FEED ROW ABOVE STAYS, AND THE LETTER IS NOT A SECOND COPY OF IT. `pruneEvents` throws
+    // `entry` rows away first, which is why a four-year wait could end and leave nothing findable a
+    // season later; `pruneEntryLetters` never touches a `build` letter, so the inbox is the durable
+    // half. The feed says it happened this week, the letter is the record.
+    // ⚠ `world.offers ??= []` for the hand-built probe worlds in tests that predate the field – the
+    // same courtesy `revalueAssets` extends to `world.assets` two functions down.
+    world.offers ??= []
+    raiseBuildLetter(world.offers, world.week, {
+      itemId: owned.id,
+      label,
+      orderedWeek: owned.boughtWeek,
     })
   }
 }
@@ -862,5 +897,15 @@ export function shopView(world: WorldState): ShopView {
     // the one function that answers them for the till as well (§3f).
     upkeepCents: weeklyAssetUpkeepCents(world),
     vacationIds: grantedVacationIds(world),
+    // ⭐⭐ ROUND 43 #5 – rounded ONCE here, at the snapshot boundary, because a component may not do
+    // money arithmetic (`kidSharePct`'s rule two files over). The ramp is the PRIZE ramp read whole,
+    // college pause included – round 42 #25's «как с призовых» is the rule and not an analogy, so
+    // this asks the same function `assetKidShareCents` asks rather than a second copy of the ladder.
+    kidBusinessSharePct: Math.round(
+      kidPrizeShareBps(
+        kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+        collegePausedShareYears(world),
+      ) / 100,
+    ),
   }
 }

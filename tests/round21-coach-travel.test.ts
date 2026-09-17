@@ -389,7 +389,13 @@ describe('§4 the travel notice, true at last', () => {
     const row = world.events.find((e) => e.milestoneKey === 'coach-travel-open')!
     expect(row.keep, 'the 400-row prune may never lose it').toBe(true)
     expect(row.text).toMatch(/travel/i)
-    expect(row.text, 'it names the price, so the decision can be taken from the notice').toMatch(/twice the fare/i)
+    // ⚠ THE PHRASE MOVED WITH HIS 17.09 SHEET AND THE CLAIM DID NOT: the travel cost is ONE
+    // ADDITIONAL FARE on every surface now, «twice the fare» being a multiple that stopped being
+    // true for a covered family (round-21 #2's own finding, one sentence over). What this case has
+    // always asserted is that the notice NAMES THE PRICE, and it still does.
+    expect(row.text, 'it names the price, so the decision can be taken from the notice').toMatch(
+      /one additional fare/i,
+    )
     // ⚠ BEFORE THE TRIP, NOT ON IT. A notice landing on the Monday she is already at the venue is a
     // receipt, not news - so it may only fire on a week that still has an entered event ahead of it.
     expect(hadTripAhead, 'the notice arrived with a trip still to come, so it can be acted on').toBe(true)

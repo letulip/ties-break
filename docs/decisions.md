@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 114 dated entries, newest 2026-09-16. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 115 dated entries, newest 2026-09-17. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -35,7 +35,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | coach-and-staff | 5 | [NO NEW COACH SEATS; PROFILES AND THE ELITE GATE JOIN WAVE 5; FORM IS UNPARKED](#13092026--no-new-coach-seats-profiles-and-the-elite-gate-join-wave-5-form-is-unparked) | 2026-09-13 |
 | college | 14 | [ROUND 27: THE COLLEGE MINI-ROUND, RULED FROM TWO AFTERNOONS OF PLAY](#27082026--round-27-the-college-mini-round-ruled-from-two-afternoons-of-play) | 2026-08-27 |
 | economy-and-money | 15 | [NEED MEANS THE MONEY SHE CAN REACH: THE DEPOSIT STOPS FOOLING THE CAMEO SPONSOR](#14092026--need-means-the-money-she-can-reach-the-deposit-stops-fooling-the-cameo-sponsor) | 2026-09-14 |
-| general | 6 | [WAVE 6 IS BUILT AND GATED: THE SPOTLIGHT, AND EVERY NUMBER IN IT IS STILL A PROPOSAL](#14092026--wave-6-is-built-and-gated-the-spotlight-and-every-number-in-it-is-still-a-proposal) | 2026-09-14 |
+| general | 7 | [THE SHEET HE WROTE IS APPLIED TO THE LETTERS ALREADY SHIPPED, AND THE CORPUS STAYS IN THIS ROUND](#17092026--the-sheet-he-wrote-is-applied-to-the-letters-already-shipped-and-the-corpus-stays-in-this-round) | 2026-09-17 |
 | injury-and-condition | 3 | [RECOVERY VARIANT C: THE PRO TOUR GRINDS HARDER, JUNIORS UNTOUCHED](#22082026--recovery-variant-c-the-pro-tour-grinds-harder-juniors-untouched) | 2026-08-22 |
 | kid-life-and-school | 1 | [School ends, and "training doubles" did not survive the check](#2026-08-05--school-ends-and-training-doubles-did-not-survive-the-check-featschool-ends-at-18) | 2026-08-05 |
 | life-and-morale | 13 | [THE FORM WAVE IS RULED IN ONE PASS (O1–O8), AND THE PSYCHOLOGIST TURNS OUT TO WORK BY CALL](#16092026--the-form-wave-is-ruled-in-one-pass-o1o8-and-the-psychologist-turns-out-to-work-by-call) | 2026-09-16 |
@@ -4635,3 +4635,136 @@ the spec's own fence sentence, so the switch cannot be priced before `world.form
 composure. Before #34 a ±6-point slump was worth about **0.15 pp** of match win rate – a slump nobody
 can feel, and the third decorative mechanic this round would have found. After #34 the same ±6 points
 are worth several times that. **#34 → F1 → F2**, on the round's own measurement.
+
+**5. THE CHEMISTRY WAVE'S FIRST TWO ANSWERS, the same day the spec was written.**
+
+* **C10 – «согласен»: the anti-match is as FREQUENT as the click.** A game where good luck is rare
+  and bad luck is common is not variable, it is punishing. The asymmetry the design needs is already
+  there and it is in the SPEED – an anti-match accrues at −10 to −20%/yr against the click's +33%,
+  because a click has to be able to finish inside a career or it is not a story, while an anti-match
+  only has to be felt.
+* ⭐ **C11 – the gauge carries the SIGN, and as a GRADIENT.** His design: «в положительном направлении
+  заполнение от светло-зелёного до ярко-зелёного в градиенте, а для отрицательного от оранжевого до красного».
+  It is better than the architect's own recommendation (one warning hue, filling the other way):
+  a gradient carries TWO facts in one component – the direction is the hue family, the strength is the
+  position inside it – so «going wrong» and «gone wrong» read without a number or a legend.
+  ⚠ Three build constraints recorded with it, and they are accessibility rather than taste: the fill
+  FRACTION must carry the sign too (red/green is the commonest colour-vision confusion), the neutral
+  must read «nothing has happened yet» rather than «bad», and `--accent` stays the icon's so the two
+  never compete.
+
+## 17.09.2026 – THE SHEET HE WROTE IS APPLIED TO THE LETTERS ALREADY SHIPPED, AND THE CORPUS STAYS IN THIS ROUND
+
+Fourteen rulings in one working day, most of them one line long. They are recorded together because
+several of them only make sense against each other: he refused a trade, ordered a measurement,
+wrote a terminology sheet, and then spent the rest of the day applying it to copy nobody had asked
+about.
+
+**1. C1a REFUSED, and the question had a false premise.** «При чём тут вообще стили и цены? у нас в
+каждом тире 4 тренера (по 1 на стиль), коридоры их цен вообще не должны были измениться.» He is
+right and the roster proves it: it is a **4×4 Latin square**, so «this tier has nobody for her game»
+is impossible by construction. The 4.7% discount the wave offered was the price of a broken
+invariant, not the price of variability. ⭐ The lesson is the architect's: a trade-off is only a
+trade-off once both arms have been checked against the data, and this one had not been.
+
+**2. F1: «меряй».** The shipped `G` was swept rather than argued, and the value the rule selects is
+the value that shipped. Invariant 5 working as written.
+
+**3. THE TERMINOLOGY SHEET, and it turned out to bind more than the strings it was written for.**
+His copy review of round 43's drafts closed with a small table – one wording per meaning, and a
+struck list: «avoid rotating between `professional operation`, `somebody across the net`,
+`practice court`, `payroll`, `court on the road`, and `practice weeks` merely for variety. In
+management copy, semantic consistency is more valuable than synonym variety.»
+
+⭐⭐ **He then opened it wider himself** – «на основе него можно пересмотреть и существующие наши
+письма может быть тоже» – and on being shown the sweep, ruled the repairs in: **«вроде ок»**, by
+rule rather than by string. A scripted sweep found **26 live strings** that failed the sheet:
+`professional operation` ×2, `payroll` ×6, the fare wording ×14, a hyphen where the house uses `–`
+×5. All 26 repaired; the same sweep now returns 0.
+
+⚠ **Two under-reports on the way there, both the architect's, both the same class.** The first list
+was assembled BY HAND from what the copy pass happened to walk past – nine strings, of which the
+sweep later found eighteen more. The first SCRIPTED sweep then under-reported in turn, because its
+pattern read `one more fare|a second fare` and missed «the second fare» and «twice the fare». ⭐ The
+fix that held: **write the rule from the sheet's POSITIVE wording** and flag everything that means
+it without saying it.
+
+**4. AND HIS CONDITIONAL WARNING CAME TRUE, in the direction he did not expect.** He had written:
+«make sure the economy really charges per session. Existing language such as `Masseur – weekly
+salary` would contradict this model if the underlying expense remains a flat weekly payment.» The
+check runs the other way. The expense is NOT flat – **this round's own #4 made the masseur
+per-session** – so the row misdescribes its model today. Both siblings are genuinely flat and their
+rows are correct. ⚠ **Left as shipped**: a replacement was drafted for him and his word has not
+arrived, and fixing something adjacent is not permission.
+
+**5. «Меня устраивает» – `masseur` STAYS.** He had preferred `massage therapist` as clearer
+contemporary English while scoping it himself («I would only change it project-wide, not in this
+isolated event»). Offered as a project-wide pass, he declined it. The word stays.
+
+**6. THE FIVE HYPHENS ARE TYPOGRAPHY – «да».** Repaired without per-string approval, because the
+words do not change, only the glyph. ⚠⚠ **And this is the ruling that found the gate's own blind
+spot.** Four Playwright locators matched an `aria-label` **by its hyphen**; `npm run check` does not
+run e2e, so a one-character fix he had approved would have shipped four broken locators behind a
+green `check`. Found by a manual sweep afterwards, which is exactly why the release rule runs e2e
+locally.
+
+**7. RUNG SET A, and the reason B lost is a rule from round 42.** Set B's three sentences carried the
+measured 13 / 20 / 40 matchless weeks; set A says «takes a quarter / half / three quarters off the
+rust». ⭐ A survives a re-tune of the ladder and B would have to be re-written with it – round 42
+#46's rule exists to stop exactly that. His «рекомендую A – ок».
+
+**8. R25's PRONOUN: «надо исправить», and the check ran opposite to the expectation.** His instinct:
+«у нас вроде есть разделение тренеров на he/she в соответствии с картинками.» It is real – and it is
+**HER** coach's: `ECONOMY.coach.roster` carries a `gender` per slot and `coach.ts` picks the first
+name from `COACH_FIRST_M` or `COACH_FIRST_F` by it. ⭐ But **no other player has a modelled coach
+anywhere** in `season/rival.ts` or `season/cohort.ts`, and R25's subject is another player's coach –
+a person who exists only inside the sentence. There was no gender to agree with, so the pronoun was
+a guess wearing agreement's clothes. Repaired with the neutral singular in the only two lines that
+held it. ⚠ Drawing a sex for the observed coach on a sub-stream was available and rejected: one word
+of texture against new randomness threaded through sixteen strings, for a stranger the row is
+deliberately vague about.
+
+**9. R17's GATE: «пиши гейт, давай сделаем, раз это возможно и дешево».** `SMALL_TALK_FACTS` held
+four claims and `SMALL_TALK_FACT` is a total record, so the row could not ship while it named a
+fifth nobody had written. ⚠⚠ **Two clauses and not the one the corpus proposed.** «The season holds
+no event she is entered in next week» is true ALL WINTER – every off-season and college-freeze week
+is empty by construction – so «I've got a completely empty week» would have been a worry in July and
+a description of February. The kernel says «rest or an ABSENCE», and an absence needs something to
+be absent from. ⭐ Inert on this branch and deliberately so: the engine ships 8 situations and the
+document holds 43, so the predicate is pinned by its own mutation-verified tests rather than by a
+caller.
+
+**10. THE SEVEN FLAGGED LINES: «оставляй, если соответствует ревью и нашему тон оф войс».** All seven
+stay. ⭐ The judgment he delegated was applied rather than waved through, and two are recorded with
+the concern intact: R29's `fiery` space is a constructed inversion, which is the shape his own review
+called AI-written, and R12's `space` converges across three of four voices in a corpus whose whole
+instrument is one event in four voices. The nine invented domestic details stay without reservation.
+
+**11. THE CORPUS LANDS IN ROUND 43, NOT 44 – «нет уж, доделываем здесь, дальше надо возвращаться к
+отношениям».** The architect had recommended a round boundary on size grounds. Overruled, and the
+plan is three steps with a gate between each.
+
+**12. THE FRAME POOL, WRITTEN BY HIM THE SAME DAY.** Sixteen lines, eight per presence, with stable
+ids – and **not** keyed on `subject`, which he settled by testing the most dangerous frame against a
+piece of good news, a worry and an observation. ⭐ He corrected one of his own shipped lines in the
+same pass: «already telling it» is not idiomatic, because one tells a story or tells someone
+something, never a universal «it».
+
+⚠ **`family-chat` stays open**, and the check made the reason sharper than the one he gave. He
+flagged the channel's publicity. But there is no second parent and no sibling anywhere in
+`WorldState` – the household this game models is the parent and her – so the phrase does not expose
+the line to somebody, it **implies a somebody who does not exist.** That is R25's class of defect.
+
+**13. AND HIS THIRD MECHANICAL RULING IS A SCHEMA MOVE.** «Живая карточка не должна поменять
+`call-middle` на `voice-note` после сохранения, перезагрузки или расширения массива.» A frame
+DERIVED from a purpose-scoped stream survives a reload perfectly – but a pool growing from 8 to 9
+re-derives a different member for a beat already on screen, which is the second half of what he
+ruled out. ⭐ So the chosen frame id must be **persisted** on `LifeBeatRecord`: v80 → v81 and the
+full six-part move. Named here before the wave starts rather than discovered inside it.
+
+**14. THE CATALOGUE IS 8 AND THE DOCUMENT IS 43, which he asked about directly** – «теперь
+реализован? Если нет – то надо сделать». It is not. The shape already supports it (four voices are
+four entries sharing an id, as `court-four` already does), so it is transcription rather than
+redesign – but the eight live situations cannot simply be retired: `lifeLog` is append-only and its
+`detail` re-renders from the pools, so a retired id leaves an old career's album unrenderable.
+`LEGACY_SMALL_TALK_SUBJECTS` is the precedent for how they stay readable.

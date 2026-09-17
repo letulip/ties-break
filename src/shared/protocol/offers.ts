@@ -37,13 +37,19 @@ import type { CoachTier, PlayStyle } from './profile'
  *  See `CallUpLetterTerms` for what it states and `settleCallUpLetter` for how a week that has not
  *  happened yet can be written about truthfully.
  *
+ *  ⭐⭐ `build` IS ROUND 43 #11 – THE LETTER THAT SAYS THE WAIT IS OVER. The owner: «давай на почту
+ *  присылать письмо про те объекты, которые у нас строятся в магазине, в момент, когда они
+ *  достроены», and his own ruling on the SET it covers: «только те, которые имеют сроки построек» –
+ *  so a fund bought and held the same week writes nothing, because the letter exists for the WAIT.
+ *  See `BuildLetterTerms`, and `deliverAssets` for why it is raised where it is.
+ *
  *  ⚠ THE WIDENING COSTS NO SCHEMA MOVE, and that is this union's own precedent rather than a
  *  shortcut taken here: commit 2763caa added the whole `entry` family – the kind, the terms shape
  *  and `cancelled` – and left `SAVE_SCHEMA_VERSION` at 36, because no save written before a kind
  *  exists can contain it, nothing is renamed and no existing shape gains a required field. There is
  *  nothing to migrate and nothing to back-fill; see `settleAcademyLetters` for the one thing an old
  *  career CAN have derived for it, which is derived in the engine rather than in a migration. */
-export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up'
+export type OfferKind = 'kit' | 'entry' | 'tour' | 'academy' | 'ad' | 'call-up' | 'build'
 
 /** WHICH RULE A PENALTY WAS (W3-ACT2, act2-pro-tour.md §6). A closed union, and it is closed on
  *  purpose: «мы ни за что не наказываем» means every charge has to be nameable, so a row that could
@@ -665,6 +671,26 @@ export interface ShopView {
    *  affordability guard still refuses a family that cannot pay it), never at the stale free one.
    *  A package that is not `freeOnceGranted` is never in here – it never needed granting. */
   vacationIds: string[]
+  /** ⭐⭐⭐ ROUND 43 #5 – HER SHARE OF WHAT THE BUSINESS SHELF EARNS, as WHOLE PERCENT, rounded ONCE
+   *  here at the snapshot boundary (`kidSharePct`'s rule, two files over, and for the same reason: a
+   *  component may not do money arithmetic).
+   *
+   *  ⚠⚠ IT EXISTS BECAUSE THE TAB WAS LYING BY OMISSION AND HE CAUGHT IT. He asked whether Zoe's
+   *  brand was right: «13000 в неделю при стоимости бренда 28м+». It was: `worth = weekly GROSS
+   *  × 52 × multiple` with the multiple hard-capped at `value.maxX = 20`, so $13k of GROSS could never
+   *  support $28M – but $13k is not gross. `familyWeeklyCents` hands the family
+   *  `assetWeeklyIncomeCents − assetKidShareCents`, and her share is the PRIZE ramp (10% from 18,
+   *  capped at 60% at 23). Unwound: $13,000/0.40 = $32,500/wk → $1.69M/yr → a multiple of 16.6×,
+   *  inside the band and near its top, which is right for a mature star. The arithmetic was never
+   *  wrong; the SCREEN put his 40% of the income beside the whole business's worth and named neither.
+   *
+   *  ⭐ SO THE LINE IS LIVE AND NOT A LITERAL. Her share ramps, and a hard-coded «60/40» would lie to
+   *  a nineteen-year-old – which would be the same defect this field exists to remove.
+   *
+   *  ⚠ ZERO BEFORE THE RAMP OPENS, and that is a fact rather than a placeholder: under eighteen she
+   *  takes nothing from the shelf, so the family's figures ARE the whole income and the line has
+   *  nothing to explain. */
+  kidBusinessSharePct: number
 }
 
 /** What a kit deal actually commits both sides to. FIXED AT ARRIVAL and never re-read from
@@ -1148,6 +1174,38 @@ export interface CallUpLetterTerms {
   leagueRoundsWon: number | null
 }
 
+/** ⭐⭐ ROUND 43 #11 – WHAT A BUILD LETTER SAYS. The owner, 16.09: «давай на почту присылать письмо
+ *  про те объекты, которые у нас строятся в магазине, в момент, когда они достроены», and «только те,
+ *  которые имеют сроки построек».
+ *
+ *  ⚠⚠ IT IS RAISED BY THE DELIVERY AND NEVER BY THE RING. The tile's progress ring (round 41 #28) and
+ *  the arrival are two different questions about the same row, and a letter a week early or late
+ *  about a thing standing in the garden is worse than no letter at all. `deliverAssets` is the ONE
+ *  remover of `OwnedAsset.readyWeek` and it is where this is written, so «the letter arrived» and
+ *  «the family owns it» are the same statement by construction rather than by agreement.
+ *
+ *  ⚠ THE SET IS DECIDED BY THE CATALOGUE AND NOT BY A LIST HERE. `readyWeek` is only ever written in
+ *  `buyAsset`'s `item.buildWeeks` branch, so «the rungs with build times» is not a rule this letter
+ *  has to enforce – it is the only kind of row that can ever reach the raiser. That is exactly the
+ *  set round 41 #28's ring is drawn for, so the two surfaces answer the same question about the same
+ *  rungs and cannot disagree about which ones they are.
+ *
+ *  ⚠ NUMBERS AND IDS, NEVER ASSEMBLED PROSE – `AcademyLetterTerms`' rule, and it binds here for the
+ *  same reason: `world.offers` is persisted, so a sentence frozen onto the paper would go on
+ *  describing a rung a later tune has changed. `OfferLetter.vue` rebuilds the words from these three
+ *  every time the letter is read. */
+export interface BuildLetterTerms {
+  /** the shop rung's id – `ShopItem.id`, which is also the art hook `src/art/shelf.ts` is keyed on */
+  itemId: string
+  /** its label AS THE LETTER WAS WRITTEN. ⚠ The same rule `TourLetterTerms.label` keeps: a persisted
+   *  letter must go on naming its own subject after a catalogue rename, and this shelf renames rungs
+   *  (round 35 #8 traded two boat labels over without moving a price). */
+  label: string
+  /** the week the order was placed and the money left – `OwnedAsset.boughtWeek`. With the letter's
+   *  own `week` this is the whole wait, so the sheet can state it without the world holding a span. */
+  orderedWeek: number
+}
+
 export type OfferTerms =
   | KitOfferTerms
   | EntryLetterTerms
@@ -1155,6 +1213,7 @@ export type OfferTerms =
   | AcademyLetterTerms
   | AdOfferTerms
   | CallUpLetterTerms
+  | BuildLetterTerms
 
 /** ONE LETTER IN THE INBOX. The spec's shape (§2) plus the two bookkeeping fields a signed deal
  *  needs to be honoured for a season and then reviewed. */

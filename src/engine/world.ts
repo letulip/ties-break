@@ -139,8 +139,15 @@ import { startingSkills, withHeadStart, kidMatchPlayer, kidMatchPlayerFor } from
 export { startingSkills, kidMatchPlayer, kidMatchPlayerFor }
 import { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury } from './world/injury'
 export { ageInjuryFactor, consecutivePlayFactor, playedWeeksInTrailing4, injuryTau, rollInjury, resolvePhysio, retirementInjury }
-import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
-export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
+// ⭐⭐⭐ v80, WAVE F1 + F2 – her form and the third seat. Both modules import `WorldState` as a
+// TYPE-ONLY import, so the values come back here and are re-exported under their own names exactly
+// as every other extracted concern is.
+import { accrueFormWeek, coachFormNote, formMatchlessWeeks, formResidualsOf, herWeekForForm, sparringComebackGap } from './world/form'
+export { accrueFormWeek, coachFormNote, formMatchlessWeeks, formResidualsOf, herWeekForForm, sparringComebackGap }
+import { hireSparring, resolveSparring, setSparringRung, setSparringTravels, sparringRungOf, sparringRustCut, sparringStoodDown, sparringUnlocked, sparringWeeklyCents, sparringWorksThisWeek, SPARRING_CHANGE_KEY, SPARRING_LOCKED_DETAIL, SPARRING_RECEIPT } from './world/sparring'
+export { hireSparring, resolveSparring, setSparringRung, setSparringTravels, sparringRungOf, sparringRustCut, sparringStoodDown, sparringUnlocked, sparringWeeklyCents, sparringWorksThisWeek, SPARRING_CHANGE_KEY, SPARRING_LOCKED_DETAIL, SPARRING_RECEIPT }
+import { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS } from './world/masseur'
+export { hireMasseur, masseurUnlocked, masseurWorksThisWeek, masseurWorksInWeek, masseurRoomNote, resolveMasseur, resolveMasseurReturn, masseurRungOf, masseurWeeklyCents, masseurSessionCents, masseurWeeksServed, masseurWeeksServedAt, masseurYearsServed, masseurRaiseDue, resolveMasseurRaise, masseurTourRelief, masseurTourWeekCents, setMasseurSessions, setMasseurTravels, MASSEUR_CHANGE_KEY, MASSEUR_LOCKED_DETAIL, MASSEUR_NOTE_WINDOW_WEEKS }
 // ⭐ v76, the psychologist's year (wave 5 T2): THE SECOND SALARIED SEAT, on the line above's own
 // pattern – the import list and the re-export list carry the SAME names, because hundreds of files
 // import from `engine/world` and that public API is what a leaf's move must not change. Shorter than
@@ -288,7 +295,7 @@ export {
   wasThereAChild,
 }
 export { buildAlbum, buildScroll } from './world/album'
-import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
+import { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, sponsorCameoWilling, sponsorCameoCents, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, academyCoverOf, appearanceFeeFor, resultBonusFor, isRetainerWeek, rolloverKitAllowance, bankSponsorCheque } from './world/sponsors'
 // W3-ACT2 §7 - the professional rungs' money, re-exported so the tools and the snapshot read one
 // implementation exactly as every other sponsor helper is.
 export { appearanceFeeFor, resultBonusFor, isRetainerWeek }
@@ -298,7 +305,7 @@ export { bankSponsorCheque }
 // ⭐ ROUND 42 #5 – the cameo's cadence half, re-exported beside its need half for the same reason
 // `sponsorNeedMet` is: the bench, the tests and the engine must all ask the one implementation.
 export { sponsorCameoWilling, sponsorCameoCents }
-export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, rolloverKitAllowance }
+export { localSponsorCents, reviewSponsors, reviewAdOffer, sponsorNeedMet, acceptOffer, declineOffer, travelCostFor, coachTravelFareFor, masseurTravelFareFor, sparringTravelFareFor, rolloverKitAllowance }
 import { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus } from './world/medical'
 export { restRecoveryBonus, recoveryBaseFor, recoveryAgeFade, accrueCondition, adShootHolds, withheldFreeWeekRecovery, medicalClearance, medicalBlock, layoffCovering, layoffCoversWeek, layoffBlock, availabilityStatus, entryStatus, arrivalStatus }
 export type { AvailabilityStatus, MedicalClearance, MedicalBlock, LayoffBlock, EntryStatus, ArrivalVerdict, ArrivalStatus } from './world/medical'
@@ -310,6 +317,27 @@ export { matchDrain, runFatigueExtra, tournamentRunStrain, conditionMatchFactor 
 // with them because `WorldState.temperament` is declared in it.
 export { accrueSpirit, applyBondDelta, spiritMatchFactor, temperamentFor, temperamentIntensity, TEMPERAMENTS } from './spirit'
 export type { Temperament } from './spirit'
+// ⭐ v79: the chemistry leaf, beside the private life's and on the same line of reasoning – the
+// barrel is what the rest of the repo imports the engine through, and `CoachPair` travels with them
+// because `WorldState.coachPairs` is declared in it.
+export {
+  accrueChemistry,
+  affinityCentre,
+  affinityFor,
+  chemistryCeilingPerYear,
+  chemistryDriftPerYear,
+  chemistryEventNudge,
+  chemistryFloorPerYear,
+  chemistryWeeklyRate,
+  COACH_MANNERS,
+  freshCoachPair,
+  mannerFromAxes,
+  mannerPush,
+  mannerVoice,
+  nextChemistryPhase,
+  quietWeek,
+} from './chemistry'
+export type { ChemistryWeek, CoachManner, CoachPair } from './chemistry'
 export { isExamWeek, isBlackoutWeek } from './season/calendar'
 // W4-SCHOOL: the school calendar. Lives in kidLife.ts with `gradeOf`, whose arithmetic it is.
 import { schoolEndWeek, schoolIsOver, schoolIsOverForBand } from './kidLife'
@@ -437,8 +465,8 @@ export { activeEpisode, endEpisode, knownPartner, loveEpisodesOf }
 // go stale on a union, exactly as `PARTNER_WANTS` does. ⚠ `lifeBeatOptionsFor` GREW A THIRD PARAMETER
 // RATHER THAN GAINING A SIBLING (ruling G.3) – it stays the ONE road to a priced answer set, so the
 // price `tools/_lifeBeats.ts` drains an `'ended'` row at is the price `answerLifeBeat` charges.
-import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, reachableSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkBranch } from './world/lifeBeat'
-export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, reachableSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkBranch }
+import { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkBranch } from './world/lifeBeat'
+export { airBoothMention, answerLifeBeat, arrivalEligible, arrivalHazardFor, buildLifeBeatPrompt, buildSoftBeatInvite, boothMentionDue, deliverKnownPartner, drawEndsRead, drawForkWant, drawListenHeard, drawPartnerWants, drawRawLag, forkStandingOf, forkStopDriverOf, forkWantOf, forkWantWeights, lifeBeatHeading, lifeBeatOptionsFor, lifeBeatSaid, lifeBeatListenFollowUp, lifeBeatFollowUps, metKeptRow, nextWeekIsClear, endedKeptRow, endsEligible, endsHazardFor, leakEligible, leakHazardFor, leakWrongShareFor, lifeLogOf, liveSoftBeat, pendingLifeBeat, pendingLifeBeatOptions, raiseLifeBeat, rollArrival, rollEnds, rollLeak, rollSmallTalk, shaveLag, smallTalkChanceFor, smallTalkEligible, smallTalkSubjectFor, smallTalkThisSeason, FORK_WANTS, FORK_WANT_ANSWER, FORK_WANT_TILT, LIFE_BEAT_BLOCKING, LIFE_BEAT_OPTIONS, PARTNER_WANTS, SMALL_TALK_SUBJECTS, LEGACY_SMALL_TALK_SUBJECTS, SMALL_TALK_STANCES, SMALL_TALK_STANCE_ID, SMALL_TALK_FACTS, SMALL_TALK_SITUATIONS, SMALL_TALK_EXCLUDE_LAST, reachableSituations, withoutRecentSituations, FORK_STOP_DRIVERS, ENDS_READS, ENDS_REGISTERS, type EndsRead, type EndsRegister, type HeardRead, type ForkStopDriver, type ForkWant, type LifeBeatAnswer, type SmallTalkSubject, type LegacySmallTalkSubject, type SmallTalkStance, type SmallTalkFact, type SmallTalkSituation, type SmallTalkBranch }
 // ⭐ ROUND 26 #4 – THE MEANS BAND, re-exported beside the birthday because the birthday is its first
 // reader and because a future copy surface should find it on the same barrel (world/means.ts).
 import { familyMeans, householdWalletCents, meansOfCents, MEANS_BANDS } from './world/means'
@@ -1037,7 +1065,7 @@ function finalizeTournament(world: WorldState): void {
   // the current hire – he made the trip whatever the family decided since (the round-21 #2
   // doctrine). Fare on top, exactly as at home. Zero draws.
   if (p.masseurThere ?? false) {
-    const tourBill = masseurTourWeekCents(runMatches.length)
+    const tourBill = masseurTourWeekCents(runMatches.length, masseurSessionCents(world))
     if (tourBill > 0) {
       world.fundsCents -= tourBill
       addEvent(world, {
@@ -1786,6 +1814,29 @@ export function createWorld(
     // reasons, and the next author would have to untie them. When §4's rungs land, this becomes
     // `ECONOMY.sparring.defaultRung` and the migration's back-fill stays whatever it shipped as.
     sparringRung: 1,
+    // ⭐⭐⭐ v79 (the chemistry wave C1 + round 42 #48): SHE HAS WORKED WITH NOBODY, AND NOBODY IS
+    // TRAVELLING. `{}` is exactly true on week 0 in the plainest possible sense - a row is written on
+    // the first week she trains with a man, and on week 0 she has trained with none of them. It is
+    // the same literal the migration back-fills with, and for the same reason rather than by
+    // coincidence: a career that predates the mechanic accrued nothing with anybody because there was
+    // nothing to accrue. `sparringTravels` is `false`, which is `sparringHired` above.
+    //
+    // ⚠ AND THESE TWO HAVE STOPPED BEING LAST IN THEIR TURN - the same handover `spotlightHabituation`
+    // took from `wallsFlipped` and the wave-5 six took from `spiritShock`. Appended in THIS order,
+    // which is the order `careerHashAtSchema` peels them off in (reverse, newest first).
+    sparringTravels: false,
+    coachPairs: {},
+    // ⭐⭐⭐ v80 (wave F1): SHE IS EXACTLY THE PLAYER HER RESULTS SAY SHE IS, which on week 0 is the
+    // only thing 0 can mean - she has no results. 0 is the IDENTITY for this number and not a
+    // placeholder for one (`composureBonus`'s own v78 rule, five keys up): `formComposureDelta(0)`
+    // is an exact 0 and `kidMatchPlayerFor` takes the early return it has always taken, so a fresh
+    // career and a migrated one are byte-identical here until a match or a gap moves her. It is the
+    // same literal the v79 -> v80 migration back-fills with, and for the same reason rather than by
+    // coincidence.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `coachPairs` has stopped being last. Same handover,
+    // same peel order (reverse, newest first), same line in `careerHashAtSchema`.
+    form: 0,
   }
   addEvent(world, {
     week: 0,

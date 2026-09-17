@@ -516,6 +516,33 @@ export const useGameStore = defineStore('game', {
         this.applySnapshot(res)
       })
     },
+    /** ⭐⭐⭐ v80, WAVE F2: the hitting partner on or off the payroll. The engine re-validates the
+     *  pro-career gate and the college freeze; this is a thin RPC like every other command. */
+    async hireSparring(hire: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(await request({ type: 'hireSparring', hire, baseRevision: this.revision }))
+        this.applySnapshot(res)
+      })
+    },
+    /** v80 wave F2: the roster dial – the engine refuses an index the market does not sell. */
+    async setSparringRung(rung: number) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setSparringRung', rung, baseRevision: this.revision }),
+        )
+        this.applySnapshot(res)
+      })
+    },
+    /** v80 wave F2: the travel stance – one more fare on every trip to a paying rung, and the seat
+     *  stops standing down on the weeks she is away. */
+    async setSparringTravels(on: boolean) {
+      await this.run(async () => {
+        const res = this.takeOk(
+          await request({ type: 'setSparringTravels', on, baseRevision: this.revision }),
+        )
+        this.applySnapshot(res)
+      })
+    },
     /** v76, the psychologist's year (wave 5 T2): the second salaried seat on or off the payroll. The
      *  engine re-validates the pro-career gate and the college freeze; this is a thin RPC like every
      *  other command. */

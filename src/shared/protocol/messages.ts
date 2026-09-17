@@ -212,6 +212,13 @@ export type ToWorker =
   // inside the freeze.
   | { id: number; type: 'setMasseurSessions'; sessions: number; baseRevision: number }
   | { id: number; type: 'setMasseurTravels'; on: boolean; baseRevision: number }
+  // ⭐⭐⭐ v80, WAVE F2 – the THIRD salaried seat, and the masseur's three commands asked one seat
+  // over. The engine re-validates every one of them (`hireSparring` refuses an unopened door,
+  // `setSparringRung` a rung the market does not sell, and all three `guardNotEnded` first, which is
+  // also the college-freeze refusal), so a stale screen cannot put somebody on the payroll.
+  | { id: number; type: 'hireSparring'; hire: boolean; baseRevision: number }
+  | { id: number; type: 'setSparringRung'; rung: number; baseRevision: number }
+  | { id: number; type: 'setSparringTravels'; on: boolean; baseRevision: number }
   // v76, the psychologist's year (wave 5 T2): the SECOND salaried seat on or off the payroll, and
   // which of the three takes the weekly call. The engine re-validates both – the same pro-career
   // gate and the same college freeze (`hirePsychologist` – guardNotEnded first), and
@@ -367,6 +374,9 @@ export const REPLY_BY_COMMAND = {
   hireMasseur: 'snapshot',
   setMasseurSessions: 'snapshot',
   setMasseurTravels: 'snapshot',
+  hireSparring: 'snapshot',
+  setSparringRung: 'snapshot',
+  setSparringTravels: 'snapshot',
   hirePsychologist: 'snapshot',
   setPsychologistRung: 'snapshot',
   setPsychologistFocus: 'snapshot',

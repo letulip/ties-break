@@ -89,7 +89,7 @@ import type { TierId } from './season/types'
 import type {
   // ⚠ `AdTier` left this list with `AD_TIERS` (E-08) – the type is still live and still exported by
   // shared/protocol; this module simply has nothing left that names it.
-  AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
+  AcademyLetterTerms, AdCategory, AdOfferTerms, AdTradeCategory, BuildLetterTerms, CallUpLetterTerms, EntryLetterTerms, EntryReleaseReason, KitEndReason,
   KitLine, KitOfferTerms, Offer, PenaltyReason, SponsorTier, TourLetterTerms,
 } from '../shared/protocol'
 
@@ -1681,6 +1681,64 @@ export function raiseAcademyLetter(offers: Offer[], week: number, terms: Academy
     kind: 'academy',
     week,
     // Informational letters never expire on their own; see `raiseKitEndLetter`.
+    deadlineWeek: week,
+    terms: { ...terms },
+    state: 'info',
+  }
+  offers.push(notice)
+  return notice
+}
+
+// --- the build that finished (round 43 #11) -----------------------------------------------------
+//
+// THE OWNER, 16.09: «давай на почту присылать письмо про те объекты, которые у нас строятся в
+// магазине, в момент, когда они достроены», and the ruling that sets its scope: «всё верно, я так и
+// сказал, только те, которые имеют сроки построек».
+//
+// ⚠⚠ THE SET NEEDS NO RULE HERE, AND THAT IS THE CHEAPEST PART OF THE ITEM. `OwnedAsset.readyWeek`
+// is written in exactly one place – `buyAsset`'s `item.buildWeeks` branch – so a rung with no build
+// time can never reach this function at all. An index fund bought and delivered the same week writes
+// nothing because there is nothing to deliver, which is his ruling enforced by construction rather
+// than by a list somebody has to keep in step with the catalogue.
+//
+// ⚠ AND IT IS RAISED FROM `deliverAssets` RATHER THAN FROM ANY VIEW OF THE TILE'S RING. The ring
+// filling and the thing arriving are not automatically the same instant – `deliverAssets` uses `>=`
+// so a multi-week skip delivers on the week the skip LANDS on, not on the week the count ran out –
+// and a letter that disagreed with the shelf by a week would be worse than none.
+
+/** ONE DELIVERY, ONE LETTER. Keyed on the rung and the week the ORDER was placed, never on the week
+ *  the letter arrives: two rows of the same rung are two different orders and must read as two, and
+ *  the order week is a fact that a replayed week, a reload or a re-migration all reproduce. (The
+ *  arrival week does not: `deliverAssets`'s `>=` means the same order delivers on whichever week a
+ *  multi-week skip lands on, so a key on that week could change under a career that pressed the
+ *  fast-forward differently. `callUpLetterId`'s own docblock makes this argument first.) */
+export function buildLetterId(itemId: string, orderedWeek: number): string {
+  return `build-${itemId}-w${orderedWeek}`
+}
+
+/** THE BUILD FINISHED. A NOTICE, the academy's shape exactly: `state: 'info'`, so there is nothing to
+ *  sign, nothing to refuse and `expireOffers` has nothing to lapse, and `deadlineWeek` is the arrival
+ *  week because an informational letter has no window (see `raiseAcademyLetter`).
+ *
+ *  ⚠ IT IS NEVER PRUNED, which is the half the feed could not do. `deliverAssets` already writes an
+ *  `entry` row saying «Delivered: …» and that row is exactly what `pruneEvents` throws away first –
+ *  on a purchase whose whole point was a four-year wait. `pruneEntryLetters` touches only `entry` and
+ *  `tour` letters, so this one is still in the inbox a season later when he goes looking.
+ *
+ *  ⚠ IDEMPOTENT ON ITS ID, like every other `raise*` in this file. Nothing here draws, and no cash
+ *  moves – the money left on the order (§3f). */
+export function raiseBuildLetter(
+  offers: Offer[],
+  week: number,
+  terms: BuildLetterTerms,
+): Offer {
+  const id = buildLetterId(terms.itemId, terms.orderedWeek)
+  const existing = offers.find((o) => o.id === id)
+  if (existing) return existing
+  const notice: Offer = {
+    id,
+    kind: 'build',
+    week,
     deadlineWeek: week,
     terms: { ...terms },
     state: 'info',

@@ -365,12 +365,23 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     const added = Object.keys(after).filter((k) => !(k in before))
     expect(added.sort(), 'exactly v76\'s seven plus whatever the rungs above it add, and nothing else')
       .toEqual([...V76_KEYS, ...laterRungs].sort())
-    // ⚠ RE-AIMED BY ROUND 42's v78 BUNDLE (#35 + round 41 #22 + #45's sparring keys), NOT WEAKENED –
-    // the same maintenance the note above predicts for «every future wave», paid for the first time.
-    // The list is the ROSTER of what the ladder has added above v76 to date, so a rung that arrives
-    // without anybody noticing still goes red here; it is not a claim about v76 and never was.
+    // ⚠ RE-AIMED BY ROUND 42's v78 BUNDLE (#35 + round 41 #22 + #45's sparring keys) AND AGAIN BY
+    // v79's (the chemistry wave C1 + round 42 #48's `sparringTravels`), NOT WEAKENED – the same
+    // maintenance the note above predicts for «every future wave», paid for the second time. The list
+    // is the ROSTER of what the ladder has added above v76 to date, so a rung that arrives without
+    // anybody noticing still goes red here; it is not a claim about v76 and never was.
     expect(laterRungs.sort(), 'and the rungs above v76 are the ones this wave knows about')
-      .toEqual(['composureBonus', 'sparringHired', 'sparringRung', 'spotlightHabituation'])
+      .toEqual([
+        'coachPairs',
+        'composureBonus',
+        // ⭐ v80, wave F1 – the third time this roster is paid for, exactly as the note above
+        // predicted it would be for «every future wave».
+        'form',
+        'sparringHired',
+        'sparringRung',
+        'sparringTravels',
+        'spotlightHabituation',
+      ])
     expect(Object.keys(before).every((k) => k in after), 'and not one key is dropped').toBe(true)
 
     // ⚠ EVERY OTHER KEY BYTE-IDENTICAL, compared through `JSON.stringify` per key rather than through

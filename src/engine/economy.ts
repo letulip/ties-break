@@ -798,6 +798,181 @@ export const ECONOMY = {
   // coach ladder replaces it with HOURS (ECONOMY.coach.sessionsAt60/85), which move the bill 2x
   // end to end, because hours are what a coach actually charges for.
 
+  // =============================================================================================
+  // CHEMISTRY – how these two WORK, as against what he can DO (docs/specs/the-chemistry-2026-09.md)
+  // =============================================================================================
+  //
+  // The owner, 16.09: «химия между ребёнком и тренером, а не просто стиль-метч» … «эта самая химия
+  // может как-то нарабатываться с разной динамикой – это может стать показателем, насколько ей
+  // комфортно с тренером» … «самый дешёвый тренер может стать идеальным метчем и дать конкуренцию
+  // элитному, но это такое же редкое событие, как и prodigy девочка».
+  //
+  // ⚠ EVERY NUMBER BELOW IS A KNOB AND NOTHING READS A LITERAL. The spec's C1 ruling is explicit
+  // that the 4x4 is «built as a DATA OBJECT so a retune is one edit, not a refactor», and the same
+  // rule is taken for the corridor and the walk – engine/chemistry.ts holds the arithmetic and not
+  // one of these values.
+  chemistry: {
+    // ⭐⭐ THE 4x4 CENTRES – the pair's disposition before the draw, C1's table (spec §3a).
+    //
+    // THE PRINCIPLE, and it is a DESIGN CLAIM rather than a measurement – the spec flags it as such
+    // twice and the owner ruled it «сама идея мне нравится… концептуально корректно звучит»: a pair
+    // MATCHES on one axis and COMPLEMENTS on the other. Two intense people burn; two steady people
+    // drift; the pair that shares a language and differs in temperature is the one that lasts.
+    //
+    // ⚠ WHICH OF HER AXES MEETS WHICH OF HIS, written down once and here, because the table is
+    // otherwise sixteen unexplained numbers:
+    //   · LANGUAGE – her openness (open/private) against what he TALKS TO (the person/the
+    //     technique). They MATCH: an open girl is reached through the person, a private one through
+    //     the third ball.
+    //   · TEMPERATURE – her intensity (steady/intense) against how hard he PUSHES (hot/cool). They
+    //     COMPLEMENT: the intense girl needs the cool head beside her, the steady one needs heat.
+    //
+    // So each row has exactly ONE best manner and ONE worst, and each manner is best for exactly one
+    // temperament – the Latin-square shape B11 checks structurally rather than statistically.
+    // `+1` is the good corner, `-1` the anti-match corner, 0 the two that split the difference (one
+    // axis right, one wrong).
+    //
+    // ⚠⚠ AND THE CENTRE IS DELIBERATELY SMALL AGAINST `spread` BELOW, WHICH IS B10's WHOLE POINT.
+    // A table a player can look up is «a strategy-guide entry», and the owner refused exactly that
+    // when he asked for the cheap coach who clicks to be «такое же редкое событие, как и prodigy
+    // девочка». The bench measures the variance of realised affinity BETWEEN cells against WITHIN a
+    // cell and requires the draw to dominate at 2:1 or better – see tools/chemistry-bench.ts, B10.
+    affinityCentre: {
+      // sunny = open + steady -> wants a PERSON voice and HEAT
+      sunny: { demanding: 1, warm: 0, analytical: -1, driving: 0 },
+      // fiery = open + intense -> wants a PERSON voice and a COOL head
+      fiery: { demanding: 0, warm: 1, analytical: 0, driving: -1 },
+      // quiet = private + steady -> wants a TECHNIQUE voice and HEAT
+      quiet: { demanding: 0, warm: -1, analytical: 0, driving: 1 },
+      // deep = private + intense -> wants a TECHNIQUE voice and a COOL head
+      deep: { demanding: -1, warm: 0, analytical: 1, driving: 0 },
+    } as Record<'sunny' | 'fiery' | 'quiet' | 'deep', Record<'demanding' | 'warm' | 'analytical' | 'driving', number>>,
+
+    /** what a cell's `+1` / `-1` is worth in affinity, before the draw. The table above is signed
+     *  UNITS so its shape is readable at a glance; this is the one number that scales it. */
+    centreScale: 0.26,
+
+    /** the half-width of the per-pair draw around that centre, on a TRIANGULAR shape (two uniforms,
+     *  so the middle is likelier than the ends and a corner pairing is genuinely rare).
+     *
+     *  ⚠ THIS IS THE B10 DIAL. Raising `centreScale` or lowering `spread` makes the table
+     *  predictable; the measured ratio is recorded in the spec's §15. */
+    spread: 0.9,
+
+    // --- THE CORRIDOR (spec §3.2) --------------------------------------------------------------
+    //
+    // ⚠⚠ THE CEILING COLUMN IS THE OWNER'S IN BOTH ANCHORS AND IS NOT AN AGENT'S TO MOVE: +33 a
+    // year at a perfect pair, +5 a year with «short ups» at no match. He was explicit that it
+    // scales – «вверх точно». The FLOOR he was explicit about NOT being sure of – «вниз не уверен» –
+    // so its middle is the bench's to fit (B7) and only its two ends are quoted from him.
+
+    /** chemistry points a year at the TOP of the corridor, at affinity +1. His number: «за 3 года
+     *  100% метч» is 33 a year, and it is a CEILING a perfect pair can REACH rather than a rate it
+     *  runs at (his 16.09 correction, which is why §3 is a corridor at all). */
+    ceilingAtPerfect: 33,
+    /** ...and at affinity 0. His «+5%, и взлёты короткие» – the whole positive half of a no-match
+     *  pair's corridor is five points wide, which is what makes its ups SHORT without a rule
+     *  saying so. */
+    ceilingAtNone: 5,
+    /** ...and at affinity -1: «small and rare». The anti-match can still have a good week; it
+     *  cannot have a good year. */
+    ceilingAtAnti: 1,
+
+    /** chemistry points a year at the BOTTOM of the corridor, at affinity +1. The middle of his
+     *  «-5 to -10»: this is the Borg year, and it is reachable rather than common. */
+    floorAtPerfect: -7,
+    /** ...at affinity 0. «Deeper» (his «сильнее»), and four times the positive half – so an ordinary
+     *  pair's weather spends more of its range losing than gaining, which is his «чаще» expressed as
+     *  a SHAPE instead of as a second frequency knob. */
+    floorAtNone: -20,
+    /** ...at affinity -1. Deepest. */
+    floorAtAnti: -33,
+
+    /** ⭐ the pair's EXPECTED annual rate at a perfect affinity – the corridor's centre, where the
+     *  weather sits when nothing is happening. Well below `ceilingAtPerfect` on purpose: a click that
+     *  ran at the ceiling would make «за 3 года 100%» the rule instead of the lucky run it is.
+     *
+     *  ⚠ FITTED BY B7 AND IT MOVED, WHICH IS THE ONE NUMBER IN THIS BLOCK THE BENCH CHANGED. The
+     *  first build set it at 22 and the run came back with «DOWN years at a perfect pair: NEVER»:
+     *  with the median year at +19 and the floor at -7, a down year needed the weather to sit below
+     *  -0.76 for a whole season, which is four standard deviations of the yearly mean. At 12 the
+     *  median year is +11, the zero crossing is 1.9 sigma away, and a bad SEASON puts it within one -
+     *  which is §3.4's own claim («losses are the channel that makes a good pair's bad year
+     *  possible»), measured instead of assumed. It also puts a perfect pair's climb to 100 at «roughly
+     *  a decade», which is §5's own sentence. */
+    driftAtPerfect: 12,
+    /** ...and the anti-match's, which is SMALLER in magnitude than the click's. C10 ruled the
+     *  anti-match as FREQUENT as the click («согласен») and named the one asymmetry the design
+     *  needs: it is slower to ARRIVE. This is that asymmetry and it is the only one. */
+    driftAtAnti: -10,
+
+    // --- THE WEEKLY WEATHER (spec §3.3) ---------------------------------------------------------
+    //
+    // ⚠⚠ «PERIODS» IS THE LOAD-BEARING WORD. White noise around a mean produces a wobbly line and no
+    // story; what he described is «есть в периодах и плоские года, и взлёты и падения даже», which
+    // requires the weekly step to be AUTOCORRELATED. B9 is the bench that can say it was built: a
+    // perfect pair's weekly series must show runs of 8+ weeks on one side of its mean.
+
+    /** how hard the walk is pulled back to 0 each week. The time constant is 1/this in weeks, so
+     *  0.05 is a twenty-week memory – weeks near each other share a phase, seasons apart do not. */
+    phaseRevert: 0.05,
+    /** the week's own shock, on a triangular draw in [-1, +1]. With `phaseRevert` above this settles
+     *  to a phase standard deviation near 0.39 – wide enough for a flat year, narrow enough that the
+     *  corridor's ends stay rare. */
+    phaseShock: 0.3,
+
+    // --- THE THREE EVENT CHANNELS (spec §3.4) ---------------------------------------------------
+    //
+    // Events nudge the PHASE and never the level, so a single result cannot jolt the number: it
+    // bends the weather, and the weather moves the level. And a downward phase does exactly what
+    // §3.4 asks of her state – it damps the climb AND deepens the dip – because the corridor is
+    // steeper below the drift than above it. The SHAPE does that work; no second rule is needed.
+
+    /** ⭐⭐ C13, RULED 16.09 – «окей, давай слегка». Results now pay TWICE: into §4's `standing` (the
+     *  coach grows, wave C2) and into the phase here. A fence would delete a true effect – winning
+     *  together honestly does both things – so the chemistry read takes a FRACTION of its own
+     *  natural weight instead. Every results nudge below is multiplied by this; her state is not. */
+    resultsDamp: 0.5,
+    /** a match won last week, before the damp – and its LOSS COUNTERPART IS EXACTLY ITS MIRROR, which
+     *  was measured into this block rather than chosen.
+     *
+     *  ⚠⚠ THE FIRST BUILD WEIGHTED A LOSS HALF AGAIN AS HEAVY AS A WIN AND CHARGED A FIRST-ROUND EXIT
+     *  ON TOP, AND THE BENCH CAUGHT IT AS A FLAT TAX ON EVERY CAREER IN THE GAME. Measured over 12
+     *  careers x 208 weeks: 806 wins, 784 losses, 14 titles and 454 first-round exits – so the median
+     *  career, at a 50% match record, was pushed to a standing phase of -0.36 and its relationship
+     *  wore down for no reason but arithmetic. ⚠ IN A KNOCKOUT SPORT EVERY EVENT BUT ONE ENDS IN A
+     *  LOSS, so any asymmetry here is a tax rather than a signal.
+     *
+     *  ⭐ AND THE SYMMETRIC PAIR ALREADY ENCODES DEPTH, which is why the exit term went rather than
+     *  being re-sized: `wins - losses` IS the run. A title is +5 net, a semifinal +2, a first-round
+     *  exit -1. So a deep run pays and an early exit costs, with no second term to keep in step - and
+     *  a 50% season is exactly neutral, which is what the median career should be. ⚠ «A bad loss as
+     *  FAVOURITE» (§3.4's third clause) is an EXPECTATION-relative read, and the spec defers that read
+     *  to F1's residual itself (C5); it is not built here and is not faked here. */
+    phasePerWin: 0.1,
+    /** ...and a match lost. The exact mirror – see `phasePerWin` for the measurement that made it so. */
+    phasePerLoss: -0.1,
+    /** ...and the title, on top of the wins that produced it. «Winning together is how a pair finds
+     *  each other», and a trophy is the week they both remember. Rare enough (0.3 a career-year,
+     *  measured) that it is a bonus and not a channel. */
+    phasePerTitle: 0.3,
+
+    /** HER STATE – the five Mood bands, as a weekly phase nudge. His «психологическое состояние
+     *  ребёнка», read through `spiritBandOf`, which is the world's one reading of that number.
+     *  ⚠ NOT damped by `resultsDamp`: spirit pays into no second ledger, so it is read once. */
+    phasePerBand: { glowing: 0.03, bright: 0.015, steady: 0, dimmed: -0.015, heavy: -0.03 } as Record<
+      'glowing' | 'bright' | 'steady' | 'dimmed' | 'heavy',
+      number
+    >,
+
+    // --- WHAT IT IS WORTH (spec §5 / §5a) -------------------------------------------------------
+
+    /** ⭐ C3, RULED: the `elite` rung HAS no next tier, and a flat zero would say the best coach in
+     *  the game cannot grow closer to her, which reads wrong. A token step up – and the FULL
+     *  symmetric fall downward, because `high` is a real rung beneath it. */
+    eliteUpStep: 0.04,
+  },
+
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout
   // NEED-BASED – for everyone else the roll result is ignored (no event), the draws still happen so
   // the main stream is background-independent. Amounts unchanged.
@@ -5057,6 +5232,37 @@ export const ECONOMY = {
     // bill is flat per rung, and the ledger row is the number on the card (step 1's legibility
     // argument, moved one level up).
     perSessionCents: 75_00,
+    // ⭐⭐⭐ ROUND 43 #4 – AND IT IS THE OPENING PRICE NOW, NOT THE PRICE. His 16.09 ruling: «мы
+    // начинаем работать с массажистом по нашим текущим ценам, а дальше он приходит и просит
+    // прибавку, либо (так как альтернативы нет) добавить денег, но убавить количество процедур…
+    // может просить надбавок за свои часы ежегодно, может быть не так интенсивно как тренер». So
+    // the rate above is where every career starts and this is the drift away from it, compounded
+    // once per completed year on the payroll (`masseurSessionCents`, world/masseur.ts).
+    //
+    // ⚠⚠ THE YARDSTICK IS THE COACH AND NOT A MARKET, and that is a ruling rather than a shortcut.
+    // Round 43 #6 asked the research for a real-world masseur figure and was WITHDRAWN when he
+    // closed the design: an outside benchmark would only be needed to re-price him from scratch,
+    // which is not what was asked. «Не так интенсивно как тренер» is the whole constraint, the
+    // coach's own annual ask is a 5–15% corridor (round 42 #51, specified and not yet built), and
+    // 4% sits clearly under its floor.
+    //
+    // ⚠ MEASURED, NOT GUESSED (invariant 5) – `npm run bench:masseurraise`, the tables in
+    // docs/specs/the-masseurs-ask-2026-09.md. What 4%/yr buys over a career:
+    //
+    //     years served      1      4      8     12     16     20
+    //     the session     $78    $88   $103   $120   $140   $164
+    //     the entry rung $156   $176   $206   $240   $280   $328  a week
+    //
+    // The pressure he asked for is real and slow: at a constant spend the top rung (7 × the rate)
+    // buys one rung less after fifteen years (M4, measured), which is «это может нам скомпенсировать все
+    // ранги» over a career rather than over a season. ⚠ AND THE ONE THING THE BENCH HAD TO PROVE:
+    // the ENTRY rung must never drift out of a modest family's reach, or the poor lose the seat to
+    // arithmetic instead of to a decision. See the spec's §4 for the measured wallet.
+    //
+    // ⚠ DETERMINISTIC – no corridor, no jitter, NO DRAW ON ANY STREAM. The file's own legibility
+    // rule («a salary is a negotiated number the player can read») is the reason: a rate that
+    // wobbled would make the card's quote and the ledger's row two different numbers.
+    raisePerYear: 0.04,
     // THE DIAL – how many times a week the table is hers, the owner's own idea. Three rungs, and
     // each must MEASURABLY beat the one below or the dial is decoration (the plan's §4 law); the
     // bench table in docs/specs/the-masseur-2026-08.md carries every cell.
@@ -5399,6 +5605,124 @@ export const ECONOMY = {
      *  never decays (v1's own law), so the crossing happens at most once per career and no schema
      *  field is spent on remembering it. ⚠ A PROPOSAL – the POINT is benchable, his word after. */
     publicLifeReceiptAt: 0.5,
+  },
+
+  // --- HER FORM: the slump and the rust (docs/specs/the-form-and-the-sparring-2026-09.md §1-§3) ---
+  // The model is `src/engine/form.ts`; these are its seven numbers. ⚠ ZERO DRAWS anywhere they are
+  // spent – O4, the owner's 16.09 ruling («accumulator, deterministic, v1»), so `seed:form:<week>`
+  // stays reserved and unused.
+  form: {
+    /** §1a `G` – THE RESIDUAL GAIN. One match's worth, before the odds are applied: a win over a
+     *  girl the ring gave her no chance against is `+G`, a loss as a certainty is `-G`, and both
+     *  ends are unreachable because `p` is never 0 or 1.
+     *
+     *  ⚠ WHAT THIS DIAL SETS IS HOW FAR INTO THE CLAMPS A REAL CAREER TRAVELS, and it is the half
+     *  of O1 the corridor does NOT constrain – the corridor prices the clamps, this decides whether
+     *  anybody ever reaches them. Measured on the census arm of `tools/form-scale-bench.ts`; see
+     *  §7 of the spec for the predicted-vs-measured table. */
+    gain: 1.5,
+    /** §2 `K` – THE READER, in composure points per point of form. `+-10 x 0.6 = +-6 composure` at
+     *  the clamps.
+     *
+     *  ⚠⚠ THIS CONSTANT IS THE CONSEQUENCE AND THE CORRIDOR IS THE RULING (O1, 16.09: «what he
+     *  ruled is the METHOD»). The ruled corridor is **[0.5, 4] pp of realised match win rate at the
+     *  clamps** – it decides close matches, never a career – and this number is whatever puts the
+     *  clamps inside it on the post-#34 engine. A builder that moves it without re-running
+     *  `npm run bench:formscale` has skipped O1 rather than re-tuned it. */
+    reader: 0.6,
+    /** §1c – THE RETURN TO NEUTRAL, both signs, every week, applied FIRST. Half-life of a deep
+     *  slump is about a month of ordinary results: «a mood, not a season» unless the results keep
+     *  feeding it. A purple patch decays at the same honest rate, which is what keeps the number
+     *  0-centred rather than ratcheting. */
+    revertPerWeek: 0.5,
+    /** §1b – HOW LONG A GAP HAS TO BE BEFORE IT IS RUST. Three weeks is an off-week, a rest and a
+     *  travel week; the fourth is when a player stops being match-sharp. ⚠ STRICTLY GREATER than
+     *  this, so an ordinary three-week break costs exactly nothing. */
+    rustAfterWeeks: 3,
+    /** §1b – the drift per matchless week past the gap, before the sparring partner's cut. */
+    driftPerWeek: 0.4,
+    /** §1b – HOW FAR RUST ALONE CAN TAKE HER, and it is deliberately not the clamp: rust DULLS, it
+     *  does not destroy. A girl already below this from a run of bad results rusts by nothing at
+     *  all – her problem is not that she has stopped playing. */
+    rustFloor: -4,
+    /** The clamps. 0 is neutral and both backfills; `+-10` is «as well as she has ever felt» and
+     *  «nothing is going in». */
+    min: -10,
+    max: 10,
+    /** §3's ONE WINDOW – where the coach's eye starts saying she is striking it clean, and where it
+     *  starts saying she needs matches. ⚠ NOT SYMMETRICAL, because the two channels are not: the
+     *  rust line is ALSO gated on the gap that caused it (`coachFormNote`), so «she needs matches
+     *  under her» is never said about a girl who has been playing every week and losing – that girl
+     *  is in a slump, which is the psychologist's patient and not a thing a hitting session fixes.
+     *  ⚠ THE NUMBER NEVER REACHES A SURFACE, only the sentence does (O2). */
+    goodNoteAt: 3,
+    rustNoteAt: -2,
+    /** ⭐⭐ O1's RULING ITSELF, IN THE CONSTANTS FILE, because it is the thing `reader` above serves
+     *  and a corridor that lives only in a spec is a corridor a builder can forget. The realised
+     *  match win-rate swing at the clamps, in probability points: form decides close matches and
+     *  never a career (form-and-slump §1's bound, kept as law).
+     *
+     *  ⚠ IT IS READ BY THE BENCH AND BY NOTHING ELSE, deliberately: no engine path consults it, so
+     *  it cannot tune anything by accident. `npm run bench:form` §1 prints each opponent's worst
+     *  realised |pp| beside it and says «inside» or «OUTSIDE». */
+    corridorPp: [0.5, 4] as const,
+  },
+
+  // --- THE SPARRING PARTNER (docs/specs/the-form-and-the-sparring-2026-09.md §4) -------------------
+  // THE THIRD SALARIED SEAT, and the one with the narrowest job in the game. ⚠⚠ THE FENCE SENTENCE
+  // IS THE DESIGN: **the slump is the psychologist's patient, the rust is the sparring partner's.**
+  // He reaches `FormWeek.rustCut` and nothing else – not the results channel, not the reversion
+  // rate, not condition, not development. A slumping girl who plays every week gets NOTHING from
+  // him, and that is the seat working rather than the seat failing.
+  sparring: {
+    /** THE LADDER. `driftCut` is a MULTIPLIER ON THE DRIFT, not the share removed: x0.15 means the
+     *  top rung leaves 15% of a rusting week's drift standing. Strictly decreasing, or the rung is
+     *  re-priced – the masseur spec's §4 law.
+     *
+     *  ⚠ THE MONEY IS ANCHORED ON THE RESEARCH AND THE RUNGS ARE PROPOSALS (O7, 16.09): the band is
+     *  `docs/research/team-economics-2026-09.md` §4's **$50-80k/yr + travel** for a full-time
+     *  hitting partner, and round 42 #48 measured that only the NOT-travelling top rung ($72,800 a
+     *  season) lands inside it at all. The three labels are the ladder the band describes – a
+     *  college hitter, a journeyman pro, a top-100's partner.
+     *
+     *  ⚠⚠ THE THREE CUTS ARE **0.75 / 0.5 / 0.25** AND NOT §4's PROPOSED **0.6 / 0.35 / 0.15**, AND
+     *  THE REASON IS A MEASUREMENT RATHER THAN A TASTE. `world.form` is kept in TENTHS (§1, and
+     *  `accrueForm` rounds once at the end exactly as `accrueSpirit` does). At a base drift of
+     *  0.4/wk the proposed cuts give 0.24 / 0.14 / 0.06 a week – and the accumulated value is
+     *  rounded to a tenth every week, so 0.14 and 0.06 BOTH ratchet the number down by exactly one
+     *  tenth a week and the top two rungs become the same seat. `npm run bench:form` §3 measured
+     *  it: «A journeyman pro · home +0.312» and «A top-100 partner · home +0.312», identical to the
+     *  thousandth, which is the masseur spec's §4 law broken («each rung must MEASURABLY beat the
+     *  one below or the dial is decoration»).
+     *
+     *  ⭐ SO THE CUTS ARE CHOSEN TO BE EXACT IN THE UNIT THE NUMBER IS KEPT IN: 0.4 x 0.75 / 0.5 /
+     *  0.25 is **0.3 / 0.2 / 0.1 a week**, three drifts a tenth apart, none of them rounded at all.
+     *  The floor is then reached in 13 / 20 / 40 matchless weeks against 10 with nobody hired, which
+     *  is a ladder a player can feel rather than a table only the source can see. ⚠ THE TOP RUNG IS
+     *  therefore a WEAKER cut than §4 proposed (75% of the drift removed rather than 85%) and it is
+     *  the only rung that could have been kept as proposed – it was re-fitted anyway, because a
+     *  ladder whose top two rungs differ by a rounding artefact is worse than a shallower one.
+     *
+     *  ⭐⭐ `note` IS THE RUNG'S OWN SENTENCE ON THE CARD (his 17.09 answer, «Рекомендую A - ок»), and
+     *  it is OPTIONAL on purpose: the masseur's and the psychologist's ladders have no such sentence
+     *  and he has not been shown drafts for them, so a REQUIRED field would force this seat's
+     *  vocabulary onto two seats he never ruled on. `SupportStaffTab.vue` prints it under the rung
+     *  label and renders nothing where it is absent.
+     *
+     *  ⚠ THE THREE SENTENCES ARE CHECKED AGAINST THE NUMBERS BESIDE THEM, because `driftCut` is a
+     *  multiplier on the drift and reads backwards to the eye: 0.75 LEAVES three quarters standing
+     *  and so takes A QUARTER off, 0.5 takes half, and 0.25 leaves a quarter standing and so takes
+     *  THREE QUARTERS off. The block above states the same arithmetic from the other side («the top
+     *  rung is a WEAKER cut than §4 proposed – 75% of the drift removed rather than 85%»), and the
+     *  two agree. A wave that re-fits a cut moves its sentence in the same edit or the card lies. */
+    rungs: [
+      { label: 'A college hitter', weeklyCents: 500_00, driftCut: 0.75, note: 'Takes a quarter off the rust of a week without a match.' },
+      { label: 'A journeyman pro', weeklyCents: 900_00, driftCut: 0.5, note: 'Takes half off the rust of a week without a match.' },
+      { label: 'A top-100 partner', weeklyCents: 1400_00, driftCut: 0.25, note: 'Takes three quarters off the rust of a week without a match.' },
+    ],
+    /** The middle rung, and the masseur's own `defaultSessions` doctrine: MEANINGLESS UNTIL HIRED,
+     *  which is why v78 could back-fill it on a career that never hires the seat. */
+    defaultRung: 1,
   },
 
   // --- The spotlight: the weight of being known (who-she-is §3c / §3c-bis, wave 6) ---------

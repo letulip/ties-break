@@ -51,7 +51,13 @@ import { psychologistWorkingRung } from './psychologist'
 // `careerTotals` directly: `weeksLostSoFar` is the max of the monotone v40 total and what the pruned
 // `injuryHistory` still holds, which is the reading the career-ending injury already judges her by.
 import { weeksLostSoFar } from '../ending'
-import { coachById } from '../coach'
+import { coachById, type Coach } from '../coach'
+// ⭐⭐ THE CHEMISTRY WAVE C1. `engine/chemistry.ts` is a LEAF – `ECONOMY`, two rng helpers and two
+// types – so both arrows below close nothing, and `spiritBandOf` is the world's ONE reading of her
+// spirit number, asked here rather than re-spelled (its own docblock refuses a second reader).
+import { accrueChemistry, affinityFor, freshCoachPair, type ChemistryWeek } from '../chemistry'
+import { spiritBandOf } from '../spirit'
+import { KID_ID } from './constants'
 import { KNOCK_REST_GROWTH, knockRestWeek } from '../knock'
 import { coachWorksThisWeek } from './phaseFinance'
 import { ageAtWeek, kidAgeExact, markBirthday } from './age'
@@ -157,6 +163,17 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   //     inside `growWeek` uses would make the receipt claim a point his term did not carry. One home,
   //     one number, both calls.
   const coolhead = coolheadGain(composureBefore, composureCeiling, coolheadRung)
+  // ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – THE RELATIONSHIP HAS A WEEK TOO
+  //     (`docs/specs/the-chemistry-2026-09.md` §3). The owner, 16.09: «эта самая химия может как-то
+  //     нарабатываться с разной динамикой – это может стать показателем, насколько ей комфортно с
+  //     тренером».
+  //
+  // ⚠ THE COACH IS HOISTED RATHER THAN COMPUTED TWICE. `growWeek`'s `coach:` line below used to
+  //     build him inline; the pair needs the same man, and two calls to `coachById` would be two
+  //     agreeing derivations rather than one – the argument `deriveWeekField` makes about the week.
+  //     The predicate is unchanged: he only coaches the weeks he is PAID for.
+  const coach = coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null
+  const chemistry = coach ? accrueCoachPair(world, coach) : 0
   world.skills = growWeek({
     skills: world.skills,
     potential: world.potential,
@@ -173,7 +190,7 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     //     is billed for is a week he is there, and a week it is not billed for develops at the
     //     self-coached rate. Same predicate the bill used at step 1, so the two can never disagree
     //     about whether he came - which is what made the R4 reversal a one-line change here.
-    coach: coachWorksThisWeek(world) ? coachById(world.seed, ageAtWeek(world.week), world.coachId) : null,
+    coach,
     playStyle: world.profile.playStyle,
     // ⭐⭐ AND AT COLLEGE THE MATCHES ARE THE SQUAD'S (17.08, docs/specs/the-college-choice-2026-08.md).
     //
@@ -233,6 +250,11 @@ export function growAndLive(world: WorldState, rng: Rng): void {
     // is 0, which is every career written before v78 and every career that never hires the seat.
     composureCeiling,
     composureEase,
+    // ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – HOW THESE TWO GET ON, this week, `-100 .. +100`. Computed
+    // above by `accrueCoachPair`, which is the ONE writer of `world.coachPairs`. ZERO on every week
+    // she has no coach, and 0 is `coachFactor`'s identity to the bit – so a self-coached career, a
+    // college freeze and a booked family week grow exactly as they always have.
+    chemistry,
   })
 
   // 3b-bis. ⭐⭐⭐ ...AND THE BEST HER BODY HAS EVER BEEN IS REMEMBERED (v62, the long goodbye step 1 –
@@ -354,4 +376,65 @@ export function growAndLive(world: WorldState, rng: Rng): void {
   //     while travel could never happen. It can now. Beside the two dates above for the same reasons
   //     they are beside each other: at most once per career, a comparison and a scan, zero draws.
   markCoachTravelOpen(world)
+}
+
+/** ⭐⭐⭐ v79, THE CHEMISTRY WAVE C1 – ONE WEEK OF THE RELATIONSHIP, and the ONE writer of
+ *  `world.coachPairs` (`docs/specs/the-chemistry-2026-09.md` §3). Returns the level this week's
+ *  development should be grown at.
+ *
+ *  ⚠ ONE WRITER, HERE, AND IT IS A PROPERTY THE NEXT WAVE DEPENDS ON. A search for `coachPairs[`
+ *  finds this function and nothing else, which is what lets wave C2 add `standing` to the same row
+ *  without two passes having to agree about who exists – the spec's §10 warning about three parallel
+ *  maps, applied to the code rather than to the schema.
+ *
+ *  ⚠ THE ROW IS WRITTEN ON THE FIRST WEEK SHE TRAINS WITH HIM AND NEVER BEFORE. Shopping the market
+ *  writes nothing and `coachById` resolving him writes nothing; only a week he is actually PAID for
+ *  does, because `coachWorksThisWeek` is what gated the call. So the map's size is the number of
+ *  coaches she has really worked with, and «she has worked with nobody» stays exactly `{}`.
+ *
+ *  ⚠ AND LEAVING PAUSES RATHER THAN RESETS (spec §7, his own «"вернуться к её первому тренеру"»): a
+ *  fired coach's row is simply not visited, so it is still there, at the number it stopped at, when
+ *  she comes back. That is a consequence of the shape and needs no rule of its own.
+ *
+ *  ⚠ HER BIRTH TEMPERAMENT AND NEVER THE EXPRESSED ONE. `expressedTemperamentOf` moves with v76's
+ *  walls, and the affinity must be a pure function of `(seed, coachId)` or §10's «every variation
+ *  reproducible» stops being true – a disposition that drifted with her walls could not be re-derived
+ *  at a call site. `world.temperament` is BIRTH, FOREVER, which is that field's own ⚠⚠ note.
+ *
+ *  ⚠ ZERO MAIN DRAWS. `affinityFor` and `nextChemistryPhase` each build their own `rngFromSeed`
+ *  generator from a string and throw it away; neither can reach the weekly stream, so the frozen
+ *  capture (41550 / e6b0c709) cannot see this pass. */
+function accrueCoachPair(world: WorldState, coach: Coach): number {
+  const before = world.coachPairs[coach.id] ?? freshCoachPair()
+  const affinity = affinityFor(world.seed, coach.id, world.temperament, coach.manner)
+  const after = accrueChemistry(before, affinity, world.seed, coach.id, world.week, herWeekForChemistry(world))
+  world.coachPairs[coach.id] = after
+  return after.chem
+}
+
+/** WHAT THE WEEK DID TO THEM, as the three channels of spec §3.4 read off the world.
+ *
+ *  ⚠ `world.week - 1`, WHICH IS `matchesThisWeek`'s OWN READ in the phase above and not a second
+ *  convention: `advanceWeeks` refuses to move while a reveal is open, so by the time this pass runs
+ *  the previous week's rows are complete and final. The sentence it tells is the true one – the
+ *  competition she played last week is what the two of them talked about this week.
+ *
+ *  ⚠ RANKED MATCHES ONLY. A practice friendly awards no points and is not a week the two of them went
+ *  through together; `friendly` is the flag the rest of the engine already reads for exactly that.
+ *
+ *  ⚠ THE TITLE IS COUNTED ON TOP OF THE WINS THAT PRODUCED IT, not instead of them, which is why
+ *  `phasePerTitle` is sized as a bonus rather than as a week's whole value. `finishIdx === 0` is the
+ *  champion, which is that field's own doc line. ⚠ AND THERE IS NO FIRST-ROUND-EXIT TERM: the bench
+ *  measured one as a flat tax on every career in the game, and `wins - losses` already encodes the
+ *  depth of a run (`ECONOMY.chemistry.phasePerWin` carries the numbers). ZERO DRAWS: three filters
+ *  and a band read. */
+function herWeekForChemistry(world: WorldState): ChemistryWeek {
+  const last = world.events.filter((e) => e.week === world.week - 1)
+  const matches = last.filter((e) => e.type === 'match' && !e.friendly && e.match)
+  return {
+    wins: matches.filter((e) => e.match?.winnerId === KID_ID).length,
+    losses: matches.filter((e) => e.match?.winnerId !== KID_ID).length,
+    titles: last.filter((e) => e.type === 'tournament' && e.finishIdx === 0).length,
+    band: spiritBandOf(world.spirit),
+  }
 }

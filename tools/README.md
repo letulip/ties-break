@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-240 TypeScript files: **39 live**, **201 archival**.
+245 TypeScript files: **44 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -36,6 +36,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `_lifeBeats.ts` | imported by the test suite |
 | `_spotlight.ts` | imported by a live tool |
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
+| `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
 | `demo-save.ts` | writes the demo career used for screenshots and manual playtests |
@@ -45,12 +46,15 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `econ-bench.ts` | `npm run bench:econ` |
 | `endings-bench.ts` | `npm run bench:endings` |
 | `fatigue-bench.ts` | `npm run bench:fatigue` |
+| `form-bench.ts` | `npm run bench:form` |
+| `form-g-sweep.ts` | `npm run bench:gsweep` |
 | `frozen-key-diff.ts` | diffs a frozen RNG capture against a live run – the instrument for "which draw moved?" when the pinned hash changes |
 | `injury-landscape.ts` | the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched |
 | `knock-rate.ts` | `npm run bench:knock` |
 | `ladder-floor.ts` | `npm run bench:floor` |
 | `life-arrival.ts` | `npm run bench:life-arrival` |
 | `load-bench.ts` | `npm run bench:load` |
+| `masseur-raise-bench.ts` | `npm run bench:masseurraise` |
 | `money-decomposition.ts` | `npm run bench:money` |
 | `outgrown-entry-probe.ts` | `npm run bench:outgrown` |
 | `points-economy.ts` | `npm run bench:points` |
@@ -65,6 +69,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `season-mirror.ts` | `npm run bench:mirror` |
 | `shop-probe.ts` | `npm run probe:shop` |
 | `skill-ceiling.ts` | `npm run bench:skill` |
+| `small-talk-corpus-bench.ts` | `npm run bench:smalltalk` |
 | `snapshot-bench.ts` | `npm run bench:snapshot` |
 | `spirit-bench.ts` | `npm run bench:spirit` |
 | `sponsor-window-bench.ts` | `npm run bench:sponsor` |

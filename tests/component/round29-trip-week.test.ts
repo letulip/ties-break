@@ -556,7 +556,10 @@ describe('round 29 P13 – the masseur works the match days', () => {
       const grid = gridOf(trip(tier, withMasseur(DAILY, true)))
       const sessions = countKind(grid, 'physio')
       expect(sessions, tier).toBe(tripRoundsFor(tier))
-      expect(masseurTourWeekCents(sessions), `${tier}: the picture and the bill are different sums`).toBe(
+      expect(
+        masseurTourWeekCents(sessions, ECONOMY.masseur.perSessionCents),
+        `${tier}: the picture and the bill are different sums`,
+      ).toBe(
         sessions * ECONOMY.masseur.perSessionCents,
       )
     }

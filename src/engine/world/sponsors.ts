@@ -1213,7 +1213,59 @@ export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): numb
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Your masseur travels to the ${TIERS[event.tier].label} – one more fare${payer}`,
+    text: `Masseur travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
+    amountCents: -fare,
+  })
+  return fare
+}
+
+/** ⭐⭐⭐ v80, WAVE F2 – WHAT THE SPARRING PARTNER'S SEAT COSTS, and it is `masseurTravelFareFor`'s
+ *  own rule asked for a THIRD seat (`staffSeatFareCents`), never a second implementation: the owner
+ *  refused a parallel travel model at round 22 and the same reasoning holds one seat on.
+ *
+ *  THE GATES ARE THE STANCE'S OWN: hired, and the family has switched the trips on
+ *  (`sparringTravels`, the owner's 15.09 override). He goes to the rungs that pay prize money and to
+ *  no others – the hire is pro-career gated in the first place, so no junior override is needed.
+ *
+ *  ⚠⚠ AND THE SWITCH IS THE LUXURY RATHER THAN THE JOB, which is the opposite of the spec's own
+ *  first draft and is a MEASUREMENT (round 42 #48): a tournament occupies one week and writes its
+ *  result that week, so the not-travelling seat already reaches 89.4% of the rust and this fare buys
+ *  the other 10.6% at $60,604 a season. The card says so; the default is off.
+ *
+ *  ⚠ WHAT THE FARE BUYS IS THE WEEK ITSELF and not a second effect: with the switch on, the seat no
+ *  longer stands down on an away week (`sparringWorksThisWeek`), so it is paid AND it cuts the drift
+ *  of the comeback week she would otherwise have walked onto court rusty for. Charged on the PLAY
+ *  week only, beside the coach's and the masseur's, so a walkover and a medical withdrawal never pay
+ *  it. Zero draws. */
+export function sparringTravelFareFor(world: WorldState, event: SeasonEvent): number {
+  if (!(world.sparringHired ?? false)) return 0
+  if (!(world.sparringTravels ?? false)) return 0
+  const paysPrizeMoney = TIERS[event.tier].prizeCents !== undefined
+  if (!paysPrizeMoney) return 0
+  return staffSeatFareCents(world, event, true)
+}
+
+/** THE CHARGE – `chargeMasseurTravel`'s shape for the seat after it: category `travel` (a fare moves
+ *  with the calendar, not with the week), its own line, the payer named on the line itself. No
+ *  pronoun names him (R15-7's standing order). Zero draws.
+ *
+ *  ⭐⭐ THE ROW IS HIS, FROM THE 17.09 COPY REVIEW. «Your hitting partner travels to the …» became
+ *  «Hitting partner travel to …»: a ledger row is a LABEL and not a sentence addressed to the reader,
+ *  and every other row in this feed is written that way («Hitting partner – weekly salary»). ⚠ AND
+ *  «one more fare» became ONE ADDITIONAL FARE, which is the terminology sheet's single wording for
+ *  the travel cost – the card's switch and the feed entries carry the same three words now. */
+export function chargeSparringTravel(world: WorldState, event: SeasonEvent): number {
+  const fare = sparringTravelFareFor(world, event)
+  if (fare <= 0) return 0
+  world.fundsCents -= fare
+  const share = fare < event.travelCostCents ? kitTravelShare(world.offers, world.week) : 0
+  const deal = share > 0 ? activeKitDeal(world.offers, world.week) : null
+  const payer = deal ? ` (${(deal.terms as KitOfferTerms).brand} covers ${Math.round(share * 100)}%)` : ''
+  addEvent(world, {
+    week: world.week,
+    type: 'expense',
+    category: 'travel',
+    text: `Hitting partner travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
     amountCents: -fare,
   })
   return fare
@@ -1245,7 +1297,7 @@ export function chargeCoachTravel(world: WorldState, event: SeasonEvent): void {
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Your coach travels to the ${TIERS[event.tier].label} – a second fare${payer}`,
+    text: `Coach travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
     amountCents: -fare,
   })
 }

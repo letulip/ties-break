@@ -128,7 +128,15 @@ describe('Home season strip – the row is the engine window, not the span acros
     // from the BOTTOM, so `Regional` moves behind the leading ellipsis with the rungs she has already
     // climbed – and this test's own subject, that a DEAD rung between two open ones is never printed,
     // is asserted above and is untouched by the width.
-    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['W35', 'W50', 'W75', 'W100'])
+    //
+    // ⚠ RE-AIMED AGAIN BY `STRIP_MAX_RUNGS` 4 -> 3 (16.09, round 43), BY THE SAME RULE AND FOR THE
+    // SAME KIND OF REASON. The cap is calibrated against the e2e `junior` fixture (HomeScreen.vue's
+    // own note says so), that fixture moved back onto the junior ladder to serve the owner's 14.09
+    // elite-gate ruling, and cap 4 then measured 178.28px against `e2e/responsive.spec.ts`'s 170
+    // ceiling – cap 3 puts it at 148.89, which is the 148.9 that pin was calibrated on. The cap still
+    // trims from the BOTTOM, so `W35` follows `Regional` behind the leading ellipsis. The claim is
+    // unchanged for the third time: what is asserted here is ladder order and the one rung above.
+    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['W50', 'W75', 'W100'])
     wrapper.unmount()
   })
 
@@ -145,11 +153,17 @@ describe('Home season strip – the row is the engine window, not the span acros
     // are different promises. Counted from the ladder, so the arithmetic is the code's: below is
     // {local}, the hole is {national, j30, j60, j300, w15}, above is {wta125, wta250, wta500,
     // wta1000, slam} - and the singular is a real case, not a rounding of it.
+    //
+    // ⚠ SEVEN -> EIGHT BY `STRIP_MAX_RUNGS` 4 -> 3 (16.09, round 43) – the first test in this file
+    // carries the measurement. One more rung trimmed off the bottom is one more rung the run below
+    // the row stands in for, and the run's far end moves with it: `W35` joins {local..w15}, so the
+    // range the affordance names runs Local to W35. Two runs, still one affordance each, which is
+    // the property this case is actually about.
     expect(gaps.map((g) => g.attributes('aria-label'))).toEqual([
-      'Show 7 more levels',
+      'Show 8 more levels',
       'Show 5 more levels',
     ])
-    expect(gaps[0].attributes('title')).toContain('(Local to W15)')
+    expect(gaps[0].attributes('title')).toContain('(Local to W35)')
     wrapper.unmount()
   })
 
@@ -165,8 +179,9 @@ describe('Home season strip – the row is the engine window, not the span acros
 
   it('tapping an ellipsis expands the WHOLE ladder in place – nothing is deleted', async () => {
     const wrapper = mountHome(withWindow(snapshotAfter(6), ['regional', 'w35', 'w50', 'w75']))
-    // FOUR since `STRIP_MAX_RUNGS` 5 -> 4 (16.08) – the collapsed row's width, measured.
-    expect(rungChips(wrapper).length).toBe(4)
+    // THREE since `STRIP_MAX_RUNGS` 4 -> 3 (16.09, round 43; FOUR since 5 -> 4, 16.08) – the
+    // collapsed row's width, measured each time. The first test in this file carries the numbers.
+    expect(rungChips(wrapper).length).toBe(3)
     await gapChips(wrapper)[0].trigger('click')
     expect(rungChips(wrapper).length).toBe(LADDER.length)
     // ...including the outgrown rungs, with their finishes intact - the objection the collapse had
@@ -175,15 +190,18 @@ describe('Home season strip – the row is the engine window, not the span acros
     // ...and the way back is offered.
     expect(gapChips(wrapper)).toHaveLength(1)
     await gapChips(wrapper)[0].trigger('click')
-    expect(rungChips(wrapper).length).toBe(4)
+    expect(rungChips(wrapper).length).toBe(3)
     wrapper.unmount()
   })
 
   it('a contiguous window is unchanged by the fix – no regression on the common case', () => {
     // The mid-career shape, which the span rule already rendered tightly. The set rule must not make
     // it worse, or the fix would be trading one screen for another.
+    // ⚠ THREE CHIPS SINCE `STRIP_MAX_RUNGS` 4 -> 3 (16.09, round 43) – see the first test in this
+    // file. The window here is already contiguous, so the cap is the only thing trimming it, and it
+    // trims from the bottom exactly as it does above.
     const wrapper = mountHome(withWindow(snapshotAfter(6), ['w35', 'w50', 'w75']))
-    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['W35', 'W50', 'W75', 'W100'])
+    expect(rungChips(wrapper).map((t) => t.split(' ·')[0])).toEqual(['W50', 'W75', 'W100'])
     wrapper.unmount()
   })
 

@@ -48,6 +48,9 @@ import {
   autoEndingViewOf,
   buildTourBriefing,
   createWorld,
+  eliteGateStandingOf,
+  finishLabel,
+  KID_ID,
   pendingBirthday,
   kidAgeYears,
   kidPoints,
@@ -68,7 +71,18 @@ import {
 // ⚠ THE MOOD LADDER IS READ OFF THE ENGINE'S OWN TABLE AND NEVER TRANSCRIBED HERE. `MOOD_WORD` is
 // the owner's five approved words (invariant 4) and `SPIRIT_BANDS` is the ladder top-down, so the
 // rung arithmetic in `moodRung` below moves with the spec instead of drifting away from it.
-import { MOOD_WORD, SPIRIT_BANDS } from '../src/engine/spirit'
+// ⚠ `EXPOSURE_ROW` JOINS THEM FOR THE SAME REASON THE MOOD LADDER IS HERE (round 43, 16.09): it is
+// the sentence `e2e/spotlight.spec.ts` reads off the feed, and the `pro` recipe now REQUIRES one on
+// the fixture's own week. Read off the engine's own export rather than transcribed, so a вычитка
+// moves the predicate with the string instead of silently making the clause unsatisfiable.
+import { EXPOSURE_ROW, MOOD_WORD, SPIRIT_BANDS } from '../src/engine/spirit'
+// ⚠ THE GATE'S BAR IS READ, NEVER TRANSCRIBED – the same rule the mood ladder above keeps. 150 is
+// written longhand in `e2e/elite-gate.spec.ts` because tsconfig.e2e.json forbids that project from
+// reaching the engine; this file has no such wall, so the predicate moves with the constant.
+import { ECONOMY } from '../src/engine/economy'
+// ⚠ THE SCREEN'S OWN FEED FILTER – see `feedStacksOf` for why a generator may import a composable and
+// why re-spelling this rule here would be the defect rather than the tidy thing.
+import { feedContext, feedShows } from '../src/composables/tierState'
 import { resumeMain, rngFromSeed, pickInt, type Rng } from '../src/engine/rng'
 import { decodeExportFile, encodeExportFile, sha256 } from '../src/engine/saveCodec'
 import { debtWeeks, ENDINGS } from '../src/engine/ending'
@@ -337,6 +351,34 @@ function moodRung(world: WorldState): number {
   return word === null ? -1 : SPIRIT_BANDS.findIndex((band) => MOOD_WORD[band] === word)
 }
 
+/** ⭐⭐ HOW MANY CARDS THE SEASON FEED WOULD STACK ON EACH WEEK – week number to visible card count.
+ *
+ *  ⚠⚠ THE FILTER IS THE SCREEN'S OWN AND IS NOT RE-SPELLED HERE, which is the same ruling `moodRung`
+ *  keeps one function up («it goes through `toSnapshot`, WHICH IS THE WIRE THE BROWSER ACTUALLY
+ *  READS»). A week's raw calendar is NOT what the player sees: `SeasonScreen.vue` filters `upcoming`
+ *  through `feedShows` against `feedContext`'s sliding rung window, and on the `sinking` career those
+ *  two differ by more than a factor of two – 29 raw rows against 14 visible. A generator that counted
+ *  the raw rows would reject good seeds and accept bad ones with equal confidence.
+ *
+ *  ⚠ A COMPOSABLE, IMPORTED INTO `tools/` ON PURPOSE. Invariant 1 forbids the ENGINE from importing
+ *  the UI; this is a generator, and its whole job is to predict what a screen will draw. Reading the
+ *  screen's own predicate is the accurate way to do that, and `composables/tierState.ts` is a pure
+ *  module – the one `vue` import on it is `computed` for its other export, which nothing here calls. */
+function feedStacksOf(world: WorldState): Map<number, number> {
+  const snap = toSnapshot(world)
+  const ctx = feedContext({
+    ageYears: snap.ageYears,
+    tierOpen: snap.tierOpen,
+    activeLadder: snap.activeLadder,
+    upcoming: snap.upcoming,
+  })
+  const perWeek = new Map<number, number>()
+  for (const e of snap.upcoming) {
+    if (feedShows(e, ctx)) perWeek.set(e.week, (perWeek.get(e.week) ?? 0) + 1)
+  }
+  return perWeek
+}
+
 const RECIPES: Recipe[] = [
   {
     name: 'fresh',
@@ -409,6 +451,88 @@ const RECIPES: Recipe[] = [
       const weekAhead = world.season.filter((e) => e.week === world.week + 1)
       if (!weekAhead.some((e) => world.entries.includes(e.id)))
         return 'not entered for the week ahead (tournament.spec + persistence.spec need a reveal)'
+      // ⭐⭐ THE ELITE GATE'S OWN CAREER – AN EMPTY LIVE WINDOW BEHIND A BANKED PEAK (round 43, 16.09).
+      //
+      // `e2e/elite-gate.spec.ts`'s third case is the e2e pin of the owner's 14.09 re-ruling, «это про
+      // КАРЬЕРУ, а не про неделю»: the market remembers what she once was, so a career whose domestic
+      // window has emptied behind her is still above the bar and nothing locks. That spec's own header
+      // records how the state was found – «probed off the fixture the day this case was written», a
+      // banked high-water of 251 on 0 live points – and probing is exactly the problem: it was a
+      // property of where the search stopped, and this wave moved it. Measured at head, `junior` holds
+      // **152 live domestic points and no ITF ranking at all**, so both of the case's manifest
+      // preconditions were false and it died before it reached a screen.
+      //
+      // ⚠ THIS IS A CONJUNCTION AND EACH HALF EARNS ITS PLACE. `domestic === 0` is «the live window is
+      // empty – the state the old gate refused»; `itf > 0` is «and she is a real ITF player, not a
+      // fresh career», which is what separates this case from the `fresh` one above it; and the
+      // STANDING clause is the half neither manifest fact can carry, because the peak is deliberately
+      // not a manifest fact (the spec says so, and says why). Asked through `eliteGateStandingOf`, which
+      // is the engine's own reading – the same number the worker hands the row – rather than a second
+      // spelling of it here.
+      //
+      // ⚠ IT SUBSUMES THE «a ranking on whatever table» CLAUSE ABOVE, which is left standing on
+      // purpose: it carries the 16.08 measurement and the P6 correction that a reader of this recipe
+      // needs, and a satisfied clause costs a comparison.
+      if (kidPoints(world, 'domestic') !== 0)
+        return `still holds ${kidPoints(world, 'domestic')} live domestic points (elite-gate.spec needs the window empty)`
+      if (kidPoints(world, 'itf') <= 0) return 'no ITF ranking (elite-gate.spec needs a real junior, not a fresh career)'
+      if (eliteGateStandingOf(world) < ECONOMY.coach.eliteGate.minPoints)
+        return `banked standing ${eliteGateStandingOf(world)} is below the gate's ${ECONOMY.coach.eliteGate.minPoints} (elite-gate.spec needs the peak to carry her)`
+      // ⭐⭐ AND HER RUN THE WEEK AHEAD ENDS SHORT OF THE FINAL (round 43, 16.09) – the SAME reveal the
+      // clause above demands, now asked what happens inside it.
+      //
+      // `e2e/r37-frame.spec.ts` item 13 is the only layer that can measure the owner's «кнопка Next
+      // round по прежнему очень широкая» fix, because the control it caps lives on the SPECTATE card –
+      // the one action row in the app with a single button in it. `TournamentFlow.vue`'s `next()`
+      // routes a champion and a runner-up straight to the finale («both are cases where she reached
+      // the Final so there's nothing left to spectate»), so the card only exists when she was beaten
+      // BEFORE the Final. The spec said as much in its own failure message – «her run has to end short
+      // of the Final, or there is nothing to measure» – and then trusted the seed for it. Measured at
+      // head she finishes **Runner-up** at `2-w121-regional`, which is the one finish adjacent to the
+      // case that skips it entirely.
+      //
+      // ⚠ THE LOOK-AHEAD IS EXACT AND MIRRORS THE BROWSER, the discipline `sinking`'s already keeps.
+      // The clone carries `rngMain`, so resuming MAIN from it walks the sequence the worker will walk;
+      // `drainKnock` presses `'rest'`, which is the same answer `e2e/journey.ts`'s `answerOpeningKnock`
+      // presses and the same one the spec walks in through; and `decideKnock` takes no generator, so
+      // answering cannot perturb the tick's draws. Nothing about the fixture's own world is touched.
+      //
+      // ⚠ `finishes[KID_ID] >= 2` IS «SHORT OF THE FINAL», SPELLED ENGINE-SIDE. The index is a finish
+      // into the tier's points table (`world/labels.ts`): 0 Champion, 1 Runner-up, 2 Semifinalist, and
+      // upward as the exit gets earlier. The component asks the same question as `kidExitRound <
+      // finalRound` over the bracket it was handed; on a knockout draw the two agree by construction,
+      // and this side is the one that can be asked before any bytes are written.
+      const runAhead = structuredClone(world)
+      drainKnock(runAhead)
+      tickWeek(runAhead, resumeMain(runAhead.rngMain))
+      const reveal = runAhead.pendingTournament
+      if (!reveal) return 'the week ahead opens no tournament reveal after the knock is answered'
+      const kidFinish = reveal.result.finishes[KID_ID]
+      if (kidFinish === undefined) return 'the reveal holds no finish for her (r37-frame item 13 walks her own run)'
+      if (kidFinish < 2)
+        return `she finishes ${finishLabel(kidFinish)} – she reached the Final, so there is no spectate card (r37-frame item 13)`
+      // ⚠⚠ AND THERE IS DELIBERATELY NO CLAUSE HERE ABOUT HOME'S SEASON STRIP, WHICH IS WORTH THE
+      // PARAGRAPH BECAUSE ONE WAS WRITTEN AND THEN MEASURED AWAY (round 43, 16.09).
+      //
+      // The elite-gate state above puts her on the ITF ladder, and an ITF ladder is a FIVE-rung window
+      // of long labels where the domestic one is three short ones – so `e2e/responsive.spec.ts`'s
+      // 375px pin on the Season card went red at 178.28px against its 170 ceiling. The first instinct
+      // was a clause here: reject a seed whose window is wider than three. TWO THINGS RETIRED IT.
+      //
+      //   1. IT IS UNSATISFIABLE, MEASURED. Of 180 seeds, exactly two reached this clause at all
+      //      (junior-19 and junior-171) and BOTH stood in a five-rung window – because the window
+      //      width is not independent of the state the clause above demands, it is that state's
+      //      consequence. A conjunct that no career can satisfy is a search that fails, not a fixture.
+      //   2. AND IT WAS AIMING AT THE WRONG FILE. `HomeScreen.vue`'s `STRIP_MAX_RUNGS` says in its own
+      //      note that «the row it has to hold is the e2e `junior` fixture's» – the constant is
+      //      CALIBRATED against this fixture – and that «THE CEILING IS NOT THE LEVER … raising it
+      //      would retire the only thing that has ever caught this row». The fixture is the input, the
+      //      cap is the lever, and the pin is the thing both of them are for. So the cap was
+      //      re-measured (4 -> 3) against this career and the row went back to 148.89px, which is the
+      //      148.9 the pin was calibrated on. That note carries the table.
+      //
+      // The rule this leaves behind: a fixture may not be bent to keep a LAYOUT constant true. What it
+      // owes the suite is a STATE, and every clause above is one.
       return null
     },
   },
@@ -433,6 +557,64 @@ const RECIPES: Recipe[] = [
       // already running that the money screen can show.
       const openLetters = world.offers.filter((o) => o.kind === 'kit' && o.state === 'open').length
       if (openLetters === 0 && activeKitDeal(world.offers, world.week) === null) return 'no kit letter and no live deal'
+      // ⭐⭐ AND THE POST IS **TWO** WAITING LETTERS, WHICH IS A CLAIM ONE LETTER CANNOT CARRY (round 43,
+      // 16.09). The clause above is satisfied by a single letter, and `e2e/sponsor-inbox.spec.ts`
+      // states in its own words why that is not enough: «it is the pre-state the whole test turns on:
+      // a career with ONE open letter could not show that signing closes the others». The spec then
+      // reads the COUNT off the manifest (`toHaveCount(facts.openKitLetters)`), so the fixture decides
+      // what it asserts – and nothing made the fixture keep the pre-state the assertion needs.
+      //
+      // ⚠ FOUND BY THIS WAVE'S OWN REPAIR RATHER THAN BY THE SUITE, which is the part worth recording:
+      // the first regenerated `pro` that satisfied the briefing and the cameras came back holding ONE
+      // letter, and the `signing closes the whole table` journey would have gone from a real claim to a
+      // vacuous one-row walk. Two specs also pin the literal 2 (`sponsor-inbox` and `seeded-careers`),
+      // and a floor that admitted three would redden them for nothing – so the fixture is asked for
+      // exactly the post those two read.
+      if (openLetters !== 2)
+        return `${openLetters} open kit ${openLetters === 1 ? 'letter' : 'letters'}, not 2 (sponsor-inbox.spec cannot show signing closing the others with one)`
+      // ⚠⚠ ...AND THEY ARE THE ONLY TWO THINGS WAITING ON HIM, WHICH IS THE OTHER HALF OF THE SAME
+      // CLAIM AND IS NOT THE SAME CLAUSE. `sponsor-inbox.spec.ts` counts what the SCREEN shows –
+      // `getByRole('button', { name: /Needs an answer/ })` – and compares it against the manifest's
+      // KIT count. The screen does not share that scope: `InboxSheet.vue`'s `live(o)` is
+      // `state === 'open' && week <= deadlineWeek` over letters of EVERY kind, so an ad, an academy
+      // note or a tour letter sitting open on the same week is a third waiting row the spec has no
+      // name for.
+      //
+      // ⚠ MEASURED, AND IT IS THE CLAUSE ABOVE THAT EXPOSED IT. The first `pro` this wave accepted
+      // with two kit letters ALSO held `ad-drinks-408` open, and the spec failed with «Expected: 2 /
+      // Received: 3» one line below the count it had just agreed with – the manifest fact was right
+      // and the screen had one more row than the fact describes.
+      const liveLetters = world.offers.filter((o) => o.state === 'open' && world.week <= o.deadlineWeek)
+      if (liveLetters.length !== openLetters)
+        return `${liveLetters.length} letters are waiting on him but only ${openLetters} are kit (sponsor-inbox.spec counts the screen's rows against the kit fact)`
+      // ⭐⭐ AND SHE BOOTS OWING THE TOUR BRIEFING – A REQUIREMENT OF THIS FIXTURE RATHER THAN A LUCKY
+      // PROPERTY OF IT (round 43, 16.09), and the same remedy the owner chose for `junior`'s knock.
+      //
+      // `e2e/a11y.spec.ts`'s OVERLAYS map names `pro` as the career that raises `TourBriefingDialog`
+      // – the blocking overlay of round 20 #3, and the only one in that map nobody can schedule.
+      // journey.ts had ALREADY written down where this drifts: «whether a given fixture's career is
+      // inside the top 50 is a property of where the search stopped and of the whole balance of the
+      // game». It drifted. This wave walked her out of the top 50 – measured at world **#64** against
+      // `ECONOMY.mandatory.maxRank` of 50 – and BOTH TourBriefingDialog stations died on «this overlay
+      // is not the one on screen», with no other fixture able to stand in: probed across the whole
+      // committed corpus, **zero of ten** careers owed a briefing.
+      //
+      // ⚠ THE ASYMMETRY IS WHAT MADE IT SILENT, AND IT IS WORTH NAMING. Five recipes below REJECT a
+      // seed that owes a briefing, so it cannot land over the card they are about; not one REQUIRED
+      // it. An overlay that everything avoids and nothing asks for loses its only doorway the first
+      // time the balance moves, and no unit test can see that happen.
+      if (buildTourBriefing(world) === null)
+        return 'boots outside the top 50, so no tour briefing (a11y.spec.ts raises TourBriefingDialog here)'
+      // ⭐⭐ AND THE CAMERAS WERE ON HER THE WEEK THE BROWSER ARRIVES ON (round 43, 16.09).
+      // `e2e/spotlight.spec.ts` §1 scopes its read to `News – ${weekLabel(facts.week)}` – the fixture's
+      // OWN week's news group – and asserts `EXPOSURE_ROW` is in it. That scoping is deliberate and its
+      // own note argues it, but it left the spec standing on a fact the generator never asked for.
+      // Measured at head: this career holds four exposure rows, at weeks 252, 263, 315 and 367, and
+      // NONE on week 412 – so the group the spec opens is real and the sentence is not in it. The row
+      // is asked for by the sentence a player reads, off the feed the browser will render, which is the
+      // same wire the spec looks at.
+      if (!world.events.some((e) => e.week === world.week && e.text === EXPOSURE_ROW))
+        return 'the cameras were not on her this week (spotlight.spec.ts reads this week\'s own news group)'
       return null
     },
   },
@@ -468,6 +650,61 @@ const RECIPES: Recipe[] = [
           const probe = structuredClone(world)
           tickWeek(probe, resumeMain(probe.rngMain))
           if (pendingKnock(probe)) return 'a knock lands on the very next week (the stop-notice journey needs a clean tick)'
+          // ⭐⭐ AND THE WEEK AFTER THIS ONE IS STILL SPENT UNDER WATER, WHICH IS THE WHOLE POINT OF
+          // THIS FIXTURE AND WAS NEVER ASKED FOR (round 43, 16.09).
+          //
+          // `e2e/week-advance.spec.ts` presses the week button once and reads the banner
+          // «Stopped: {debtWeeks + 1} weeks below zero – …». Both halves of that sentence are the
+          // NEXT week's, not this one's: `'funds'` is added by `world.fundsCents < 0` measured AFTER
+          // the tick (world.ts), and the count is the spell one week deeper. The recipe stopped at
+          // `debtWeeks === SINKING_DEBT_WEEKS` and then said nothing about what the next tick did with
+          // the money – so «under water with weeks in hand» was only ever half-enforced, and the half
+          // the spec actually reads was the missing one.
+          //
+          // ⚠ MEASURED, WHICH IS WHY THIS IS A TIGHTENING AND NOT A GUESS: at head the committed
+          // `sinking` career ticks from **−$344 to +$1,086** in one week and its spell resets to ZERO,
+          // so there is no funds stop to raise and the spec's own failure message was right about the
+          // cause («`sinking` no longer spends the week after it under water»).
+          //
+          // ⚠ THE COUNT IS PINNED, NOT MERELY THE SIGN. `fundsCents < 0` alone would admit a career
+          // whose spell had been broken and restarted – depth 1, not 7 – and the banner's number is
+          // the spell's, so the spec would read «Stopped: 1 weeks» against a fixture claiming 6. This
+          // asks for the one state the sentence is true of: the same spell, exactly one week deeper.
+          if (probe.ending !== null) return `the very next week ends the career (${probe.ending.type})`
+          if (debtWeeks(autoEndingViewOf(probe)) !== SINKING_DEBT_WEEKS + 1)
+            return `the week after does not deepen the spell to ${SINKING_DEBT_WEEKS + 1} (week-advance.spec reads that count off the banner)`
+          // ⭐⭐ AND THE SEASON FEED STACKS AT MOST TWO CARDS ON A WEEK (round 43, 16.09) – the SECOND
+          // job this fixture has been quietly doing, named at last.
+          //
+          // ⚠ IT IS NOT THIS FIXTURE'S PURPOSE AND THAT IS THE POINT. `sinking` exists for the money
+          // warning; `e2e/parity.spec.ts` and `e2e/responsive.spec.ts` borrowed it for the WEEK PAGER
+          // because it is «a career one week from a tournament it can enter» that «draws two stacked
+          // weeks» – parity's own note says so. Four cases across the two files read that shape, and
+          // nothing made the generator keep it.
+          //
+          // ⚠⚠ THE CEILING IS THE LOAD-BEARING HALF, WHICH IS THE OPPOSITE OF WHAT A READER EXPECTS.
+          // The owner's rule is a BICONDITIONAL – «показываем только если есть что листать» – so the
+          // pager suite needs a week that OVERFLOWS *and* a week that FITS WHOLE, and asserts both
+          // («no week fitted whole at any of the four widths, so his ruling was never tested»). A TWO
+          // card week does both by itself: it overflows at 375 and fills the desktop row exactly at
+          // 1280 (468 + 12 + 468 = 948). A THREE card week overflows at every width, so a corpus of
+          // them tests only half the ruling.
+          //
+          // ⚠ MEASURED, BOTH WAYS. The committed `sinking` showed weeks of 2/1/1/1/2 visible cards and
+          // the four cases were green. The first seed this wave's debt clause accepted showed
+          // 2/3/1/3/1/1/3 – three-card weeks – and all four went red at once, `responsive.spec` naming
+          // the overflow it should not have found («a two-card week fits whole at 1280»: received 309).
+          //
+          // ⚠ ASKED THROUGH THE SCREEN'S OWN FILTER, NEVER A RE-SPELLING OF IT. What a week STACKS is
+          // what survives `feedShows` against `feedContext` – the rung window, not the raw calendar,
+          // and the two differ by a factor of four here (29 raw rows, 14 visible). Re-deriving that
+          // rule in this file would be a second spelling of the one thing the fixture has to predict,
+          // so the composable the screen itself uses is the one asked.
+          const stacks = [...feedStacksOf(world).values()]
+          if (!stacks.some((n) => n === 2))
+            return 'no week in the feed stacks exactly two cards (the pager suite needs one that fits whole at 1280)'
+          if (stacks.some((n) => n > 2))
+            return `a week stacks ${Math.max(...stacks)} cards, which overflows at every width (parity.spec needs one that FITS to test the other half of the ruling)`
           return null
         }
       }

@@ -156,7 +156,7 @@ describe('round 29 #3 – a shoot week bills for the masseur, so it draws him', 
     const rng = resumeMain(world.rngMain)
     tickWeek(world, rng) // spends AT, landing the world ON the shoot week
     tickWeek(world, rng) // and spends the shoot week itself
-    const billed = world.events.filter((e) => e.week === SHOOT_WEEK && e.text.startsWith('Masseur – weekly salary'))
+    const billed = world.events.filter((e) => e.week === SHOOT_WEEK && e.text.startsWith('Masseur – sessions this week'))
     expect(billed, 'the engine charged nothing, so this whole item is about something else').toHaveLength(1)
     expect(billed[0].amountCents).toBeLessThan(0)
   })

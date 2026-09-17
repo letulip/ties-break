@@ -97,10 +97,13 @@ describe('the psychologist card on screen T', () => {
   it('§0 – he is the SECOND seat on the tab, and the masseur is still the first', async () => {
     // The order is the one thing this chapter exists to get right: the owner commissioned the
     // masseur, paid a wave for him and then could not find him.
+    // ⚠ A THIRD SEAT JOINED AT v80 (wave F2) AND WENT LAST, which is the order the three arrived in.
+    // This case keeps asserting the WHOLE list rather than «he is at index 1», so a later seat
+    // inserted ahead of either of these two still reddens it.
     const { pro } = snapshots()
     const wrapper = await mountCard(pro)
     const ids = wrapper.findAll('.staff-block').map((b) => b.attributes('data-staff'))
-    expect(ids).toEqual(['masseur', 'psychologist'])
+    expect(ids).toEqual(['masseur', 'psychologist', 'sparring'])
     wrapper.unmount()
   })
 
@@ -130,11 +133,18 @@ describe('the psychologist card on screen T', () => {
     )
     const hire = block.find('.staff-card').findAll('button').find((b) => b.text() === 'Hire')
     expect(hire, 'the Hire control is offered').toBeTruthy()
-    expect(wrapper.text()).not.toContain('Put a psychologist on the payroll')
+    // ⚠ THE MARKER MOVED WITH HIS 17.09 SHEET, the hitting partner's own rewrite asked of this seat:
+    // a confirmation's voice is COMPLETELY LITERAL, so «Put a psychologist on the payroll» became
+    // «Hire a psychologist for …» and «Cancellable any week» became «You can end the arrangement any
+    // week».
+    expect(wrapper.text()).not.toContain('Hire a psychologist for')
     await hire!.trigger('click')
     await nextTick()
     // Both directions ask – the tap opens a confirm, it does not spend.
-    expect(wrapper.text()).toContain('Put a psychologist on the payroll')
+    expect(wrapper.text()).toContain('Hire a psychologist for')
+    expect(wrapper.text(), 'and it says the arrangement can be ended').toContain(
+      'You can end the arrangement any week',
+    )
     wrapper.unmount()
   })
 
@@ -483,7 +493,7 @@ describe('the psychologist card on screen T', () => {
     const card = document.querySelector('.dialog-overlay .dialog-card')!
     const dismiss = document.querySelector('.dialog-overlay .dialog-actions')!
     expect(card, 'the confirm is up – nothing here is vacuous without it').toBeTruthy()
-    expect(card.textContent, 'and it is HIS confirm').toContain('Put a psychologist on the payroll')
+    expect(card.textContent, 'and it is HIS confirm').toContain('Hire a psychologist for')
     assertDismissReachable(card, dismiss, PHONE, 'ConfirmDialog (psychologist hire)')
 
     const el = card as HTMLElement

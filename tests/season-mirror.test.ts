@@ -214,7 +214,24 @@ describe('the season mirror – captured at entry, never reconstructed', () => {
     // and is alive on this tree too, so the arm is not left sitting on a seed that squeaked through.
     // ⭐ AND THE MECHANISM IS NOT GONE: five of eight is the opposite of the every-seed-zero case the
     // paragraph above says to read as a defect.
-    const { world, committed } = walk(102, 'mirror-x')
+    // ⚠⚠ RE-POINTED AGAIN BY THE CHEMISTRY WAVE C1 (v79), 'mirror-x' → 'mirror-real', AND BY THIS
+    // BLOCK'S OWN PROCEDURE FOR THE SECOND TIME. C1 makes the coach relationship move the weekly
+    // development rate, so each of these careers again wins and loses different matches and stands on
+    // a different rung when it enters; 'mirror-x' fell to zero. Re-scanned by REPLICATING THIS TEST
+    // EXACTLY – the whole file run once per seed, never a hand-rolled walk – and five of the eight
+    // are alive, which is the same five-of-eight the round-42 scan found rather than a thinning set:
+    //
+    //     ALIVE   **mirror-real** 18/89 · mirror-c 6/110 · mirror-d 6/103 · mirror-y 3/106 ·
+    //             golden-v45 7/99
+    //     ZERO    mirror-real-2 · mirror-b · mirror-x
+    //
+    // 'mirror-real' is taken by this block's own rule – it is the STRONGEST of the eight on this tree
+    // by a factor of two and a half, so the arm is not left sitting on a seed that squeaked through.
+    // ⭐ It is also the seed this file carried before round 42 re-pointed it, which is worth saying
+    // out loud: the seeds are not decaying one wave at a time, they are moving around a mechanism
+    // that is still there. ⭐ AND THE EVERY-SEED-ZERO CASE THE PARAGRAPH ABOVE SAYS TO READ AS A
+    // DEFECT DID NOT HAPPEN.
+    const { world, committed } = walk(102, 'mirror-real')
     expect(committed.length).toBeGreaterThan(20)
     const summary = world.lastSeasonSummary
     expect(summary?.entryMirror).toBeDefined()

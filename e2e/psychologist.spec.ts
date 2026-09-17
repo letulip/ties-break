@@ -154,7 +154,7 @@ function focusOption(focus: Locator, label: string): Locator {
 const SEAT = '[data-staff="psychologist"]'
 
 /** Home's door to the Coach Market, by the accessible name `e2e/stations.ts` walks. */
-const COACH_NOTE = { name: 'Coach note - open the Coach Market' }
+const COACH_NOTE = { name: 'Coach note – open the Coach Market' }
 
 /** Coach Market -> the third tab, which is where the seats live. */
 async function openSupportStaff(page: Page): Promise<void> {
@@ -257,8 +257,11 @@ test.describe('the psychologist takes the weekly call', () => {
     // The message is the dialog's accessible NAME (ConfirmDialog's own doctrine: a confirm can never
     // be announced as a generic "Confirm"), and it quotes back the price and the rung being bought.
     await expect(confirm).toHaveAccessibleName(
-      `Put a psychologist on the payroll at ${formatCents(DEFAULT_RUNG_CENTS)} a week ` +
-        `(${DEFAULT_RUNG_LABEL.toLowerCase()})? Cancellable any week, like the coach.`,
+      // ⚠ HIS 17.09 SHEET MOVED THIS SENTENCE, the hitting partner's rewrite asked of this seat:
+      // «Put … on the payroll at …? Cancellable any week» became «Hire … for …? You can end the
+      // arrangement any week». Same two facts, the literal voice a confirmation has to carry.
+      `Hire a psychologist for ${formatCents(DEFAULT_RUNG_CENTS)} a week ` +
+        `(${DEFAULT_RUNG_LABEL.toLowerCase()})? You can end the arrangement any week, like the coach.`,
     )
     await confirm.getByRole('button', { name: 'Hire', exact: true }).click()
 

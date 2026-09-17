@@ -50,6 +50,7 @@ import {
 import {
   buildKnockPrompt,
   drawKnock,
+  knockCause,
   knockChance,
   knockLive,
   knockRestWeek,
@@ -75,6 +76,14 @@ import { region, scriptCodeOf } from './helpers/source'
 import { fnv1a } from './helpers/hash'
 
 const read = (p: string) => readFileSync(new URL(p, import.meta.url), 'utf8')
+
+/** ⭐ ROUND 43 #10 – the plan `buildKnockPrompt` is asked for now. Balanced is the pivot
+ *  (`KNOCK_TRAIN_PIVOT` quotes its `train` as a number), so its load term is exactly zero and every
+ *  assertion in this file that predates the cause reads the same prompt it always did. */
+const BALANCED = WEEK_PLAN_PRESETS.balanced
+/** ...and the three the voice sweep runs over, because `cause` is the one field on this prompt that
+ *  branches on the plan: grind and light are the two signs of the load term, balanced is the zero. */
+const VOICE_PLANS: readonly WeekPlan[] = [WEEK_PLAN_PRESETS.grind, BALANCED, WEEK_PLAN_PRESETS.light]
 
 /** Comments stripped, so the module's own header may DOCUMENT the rules the pins below enforce.
  *
@@ -274,10 +283,10 @@ describe('W4 — ⚠ the knock adds NO main-stream draws (blocks merge)', () => 
     // ...and the dialog's wording is keyed on the knock's OWN week, not the current one, so it cannot
     // reword itself under a player who left it up while he thought about it.
     const k: Knock = { part: 'knee', sinceWeek: 12, repeat: false, choice: null, untilWeek: 12 }
-    const p12 = buildKnockPrompt(k, 'stable-1', 70)
-    expect(buildKnockPrompt(k, 'stable-1', 70)).toEqual(p12)
+    const p12 = buildKnockPrompt(k, 'stable-1', 70, BALANCED)
+    expect(buildKnockPrompt(k, 'stable-1', 70, BALANCED)).toEqual(p12)
     // A different career asks differently.
-    const bySeed = new Set(Array.from({ length: 40 }, (_, i) => buildKnockPrompt(k, `career-${i}`, 70).line))
+    const bySeed = new Set(Array.from({ length: 40 }, (_, i) => buildKnockPrompt(k, `career-${i}`, 70, BALANCED).line))
     expect(bySeed.size, 'a pool of one wearing a draw\'s clothes').toBeGreaterThan(1)
   })
 })
@@ -693,6 +702,223 @@ describe('W4 — the thread: a part he ignored is a part that comes back', () =>
 })
 
 // =================================================================================================
+// 5b. WHY – THE CAUSE (round 43 #10)
+// =================================================================================================
+//
+// The owner, 16.09: «мой первый вопрос – ПОЧЕМУ? мне кажется, в этом окошке можно игроку подсветить,
+// что может быть причиной… или хотя бы предложить, на что посмотреть.»
+//
+// ⚠⚠ THE TRAP THIS SECTION EXISTS TO HOLD SHUT is that «which term is biggest» is the obvious
+// implementation and it LIES. `knockChance` is base .100 + fatigue + load, and at the operating point
+// his own career sits on – condition 60, train 85 – the terms are .100 / .088 / .060: the BASE is the
+// largest, so «biggest term» answers «nothing you did» about a week in which the family put .148 on
+// top of an irreducible .100 floor. §5b-2 asserts exactly that case.
+//
+// ⚠⚠ AND THE OTHER HALF IS THE OWNER'S OWN LAW – «мы ни за что не наказываем». The card has to be
+// able to say that nothing the family did caused this, or it teaches that there is always something
+// to fix. §5b-3 is that branch, and §5b-5 is the sweep that says it is never said to a family whose
+// choices DID add something.
+//
+// ⚠ MUTATION-VERIFIED – the ARMS table at the foot of this section.
+describe('round 43 #10 — the knock window answers why, and can answer "no single choice"', () => {
+  const GRIND = WEEK_PLAN_PRESETS.grind // train 85, the load term at +.060
+  const LIGHT = WEEK_PLAN_PRESETS.light // train 60, the load term at -.090
+  /** ⚠ THE FOURTH ARGUMENT, ADDED 17.09 WITH HIS COPY REVIEW. The repeat line names the body part
+   *  now, because `buildKnockPrompt` is holding the whole `Knock` and he ruled that the vague form
+   *  is for surfaces without one. Every other branch ignores it, which §5b-8 asserts. */
+  const PART = 'shoulder'
+
+  /** The two choice terms, spelled the way `knockChance` spells them – so a retune of either slope
+   *  moves this file and the engine together instead of leaving a stale expectation behind. */
+  const fatigueOf = (condition: number) => (100 - condition) * 0.0022
+  const loadOf = (plan: WeekPlan) => (plan.train - 75) * 0.006
+
+  it('§5b-1 – the four rows of the ledger, and they are four different sentences', () => {
+    // The table round 43 #10 ruled, read back off the engine. Each row names the branch it is.
+    const grinding = knockCause(60, GRIND, false, PART)
+    const hardWeekFreshLegs = knockCause(95, GRIND, false, PART)
+    const careful = knockCause(90, LIGHT, false, PART)
+    const again = knockCause(60, GRIND, true, PART)
+
+    expect(grinding, 'condition 60 at train 85 – fatigue .088 beats load .060').toContain('already tired')
+    expect(hardWeekFreshLegs, 'condition 95 at train 85 – load .060 beats fatigue .011').toContain('We set a hard week')
+    expect(careful, 'condition 90 at train 70-ish – the choices added nothing').toContain('No single choice explains')
+    expect(again, 'the record is the cause when there is one').toContain('back out with a knock to her')
+
+    // ⚠ FOUR DISTINCT SENTENCES. A branch that fell through to a neighbour's line would still pass
+    // every `toContain` above if the two happened to share a word, and «the same answer for two
+    // different weeks» is the failure a player notices before a test does.
+    expect(new Set([grinding, hardWeekFreshLegs, careful, again]).size).toBe(4)
+  })
+
+  it('§5b-2 – ⚠⚠ the BASE is the biggest term at his own grinding point, and the card still blames the week', () => {
+    // The arithmetic that makes «which term is biggest» the wrong question, asserted rather than
+    // asserted about: if this stops being true the design note in knock.ts stops being true with it.
+    const base = KNOCK_BASE_CHANCE
+    const fatigue = fatigueOf(60)
+    const load = loadOf(GRIND)
+    expect(base, 'the floor is the largest single term here').toBeGreaterThan(fatigue)
+    expect(base).toBeGreaterThan(load)
+    // ...and yet the family's own choices are the majority of the week's risk.
+    expect(fatigue + load).toBeGreaterThan(base)
+    // So the card must NOT say «nothing we did» on this week. This is the assertion the obvious
+    // implementation fails.
+    expect(knockCause(60, GRIND, false, PART)).not.toContain('No single choice explains')
+  })
+
+  it('§5b-3 – ⚠⚠ it can say that nothing the family did caused it, which is the rule it cannot ship without', () => {
+    // «мы ни за что не наказываем»: a card that always names a fault manufactures guilt where there
+    // is none. The careful week is the branch that refuses to.
+    const careful = knockCause(90, LIGHT, false, PART)
+    expect(fatigueOf(90) + loadOf(LIGHT), 'the choices really did add nothing').toBeLessThanOrEqual(0)
+    expect(careful).toContain('No single choice explains')
+    // ⚠ AND IT IS A SENTENCE, NOT AN ABSENCE. `cause` is a `string`, never null or empty: a card that
+    // went quiet on the careful week would read as a shrug on exactly the week the player deserves
+    // the answer most. The ledger's own words: «the careful row is not a missing answer».
+    expect(careful.length, 'the careful week gets a real answer').toBeGreaterThan(20)
+  })
+
+  it('§5b-4 – the load term is SIGNED: a light week is a credit against her fatigue', () => {
+    // `KNOCK_TRAIN_SLOPE`'s own docblock – «MINUS it below» Balanced – and it is what makes the
+    // careful branch reachable at all. ONE body, two plans, two different answers: at condition 60
+    // her fatigue is .088, so a grinding week's +.060 leaves the family holding .148 and a light
+    // week's -.090 leaves them holding nothing at all.
+    expect(knockCause(60, GRIND, false, PART), 'a worn body on a hard week').toContain('already tired')
+    expect(knockCause(60, LIGHT, false, PART), 'the same body, a light week: the care was working').toContain('No single choice explains')
+    // ⚠ AND THE FATIGUE/LOAD COMPARISON IS A REAL ONE, not a rank the condition alone decides: the
+    // SAME grinding plan on a fresher body hands the answer to the week instead of to her legs,
+    // because .044 of fatigue at condition 80 is under the plan's own .060.
+    expect(knockCause(80, GRIND, false, PART), 'fresher legs, the same hard week').toContain('We set a hard week')
+    // ⚠ AND THE CREDIT IS NOT UNLIMITED, which is where this implementation parts company with the
+    // shorthand «say nothing when the load term is negative». A tired kid on a light week is still
+    // tired: fatigue .099 against a -.060 credit is a NET .039 the family put there.
+    expect(fatigueOf(55) + loadOf({ train: 65, rest: 35 })).toBeGreaterThan(0)
+    expect(knockCause(55, { train: 65, rest: 35 }, false, PART), 'a light week does not absolve a worn body').toContain('already tired')
+  })
+
+  it('§5b-5 – across every reachable week: "nothing we did" is said if and only if nothing was added', () => {
+    // The sweep, over the three plans `planTrainPct` can produce and the whole condition range. Two
+    // directions, and they are different failures: saying «nothing we did» to a family that ground
+    // her down is a lie that lets a mistake run, and NOT saying it to a careful one is the guilt the
+    // owner's law forbids.
+    let careful = 0
+    let blamed = 0
+    for (const plan of [GRIND, BALANCED, LIGHT]) {
+      for (let condition = 0; condition <= 100; condition++) {
+        const added = fatigueOf(condition) + loadOf(plan)
+        const cause = knockCause(condition, plan, false, PART)
+        if (added <= 0) {
+          expect(cause, `condition ${condition}, train ${plan.train}: added ${added.toFixed(4)}`).toContain('No single choice explains')
+          careful++
+        } else {
+          expect(cause, `condition ${condition}, train ${plan.train}: added ${added.toFixed(4)}`).not.toContain('No single choice explains')
+          blamed++
+        }
+      }
+    }
+    // Not vacuous in either direction – both arms of the biconditional were actually exercised.
+    expect(careful, 'careful weeks exist').toBeGreaterThan(20)
+    expect(blamed, 'and so do weeks the family added to').toBeGreaterThan(20)
+  })
+
+  it('§5b-6 – the record comes first, and a family that pushed this part before is never told "nothing we did"', () => {
+    // `repeat` cannot be ranked against the two terms – it adds nothing to `knockChance` at all – so
+    // it is a branch rather than a comparison. It wins because it is the only cause about the
+    // decision being taken on THIS card: KNOCK_REPEAT_TAU is x3.0 against KNOCK_PUSH_TAU's x2.2.
+    expect(KNOCK_REPEAT_TAU).toBeGreaterThan(KNOCK_PUSH_TAU)
+    for (const plan of [GRIND, BALANCED, LIGHT]) {
+      for (const condition of [0, 40, 80, 100]) {
+        const cause = knockCause(condition, plan, true, PART)
+        expect(cause, `repeat at condition ${condition}, train ${plan.train}`).toContain('back out with a knock to her')
+        // ⚠ THE HALF THAT MATTERS: the careful sentence must never reach a career that pushed this
+        // exact part before. They did do something – it was just not this week.
+        expect(cause).not.toContain('No single choice explains')
+      }
+    }
+  })
+
+  it('§5b-7 – the prompt carries it, and the two rng draws did not move', () => {
+    const knock: Knock = { part: 'knee', sinceWeek: 12, repeat: false, choice: null, untilWeek: 12 }
+    const grinding = buildKnockPrompt(knock, 'why-1', 60, GRIND)
+    const careful = buildKnockPrompt(knock, 'why-1', 90, LIGHT)
+    expect(grinding.cause).toBe(knockCause(60, GRIND, false, 'knee'))
+    expect(careful.cause).toBe(knockCause(90, LIGHT, false, 'knee'))
+    // ⚠ THE WORDING OF EVERYTHING ELSE IS UNTOUCHED BY THE PLAN. `line` and `read` are drawn off
+    // `seed:knockread:<sinceWeek>` in a fixed order, and the cause is DERIVED rather than drawn - so
+    // two prompts that differ only in the plan differ only in the cause. This is the assertion that
+    // fails if a draw is ever added for it.
+    expect(careful.line).toBe(grinding.line)
+    expect(careful.restCost).toBe(grinding.restCost)
+    expect(careful.pushCost).toBe(grinding.pushCost)
+    expect(careful.cause).not.toBe(grinding.cause)
+  })
+
+  it('§5b-8 – ⚠ the repeat line NAMES the part, and the other three never mention one', () => {
+    // His 17.09 review: the vague form («this same place») is for a surface with no body part to
+    // hand, and the stronger one is for a surface with it. This one has it – the whole `Knock` is a
+    // parameter of `buildKnockPrompt` – so «do not use vague place language when the real one is to
+    // hand» applies, and this is the case that says the variable really reaches the sentence.
+    for (const part of ['shoulder', 'lower back', 'wrist']) {
+      expect(knockCause(60, GRIND, true, part), `the repeat line names the ${part}`).toContain(part)
+      // ⚠ AND IT IS THE PART THAT MOVES, NOT A FIXED WORD THAT HAPPENS TO CONTAIN IT: a hard-coded
+      // «shoulder» would pass the line above for one of the three and fail for the other two.
+      expect(knockCause(60, GRIND, true, part)).not.toContain('this same place')
+    }
+    // ⚠ THE OTHER THREE BRANCHES ARE PART-BLIND, which is what makes the argument honest rather than
+    // decorative: an implementation that appended the part to every sentence would pass §5b-1 and
+    // tell a family «we set a hard week – her foot» on a week nothing was pushed.
+    for (const part of ['shoulder', 'lower back', 'wrist']) {
+      expect(knockCause(60, GRIND, false, part), 'the tired branch').not.toContain(part)
+      expect(knockCause(95, GRIND, false, part), 'the hard-week branch').not.toContain(part)
+      expect(knockCause(90, LIGHT, false, part), 'the careful branch').not.toContain(part)
+    }
+  })
+
+  it('§5b-9 – ⚠⚠ the careful branch reports NO IDENTIFIED CAUSE, and never promises innocence', () => {
+    // His 17.09 fault on this one branch, and he called it a correctness point rather than a style
+    // one: the old «Nothing we did – the care we have been taking was working» «tries too hard to
+    // absolve the player». The branch's own arithmetic does not support that claim – `fatigue +
+    // load <= 0` says the two terms NETTED to nothing, and at condition 60 on a light week her
+    // fatigue term is a real .088 that a -.090 credit merely covered.
+    const careful = knockCause(60, LIGHT, false, PART)
+    expect(fatigueOf(60), 'her fatigue term is not zero on this very week').toBeGreaterThan(0)
+    expect(fatigueOf(60) + loadOf(LIGHT), 'and yet the pair nets out').toBeLessThanOrEqual(0)
+    // What it may say: no ONE choice explains it.
+    expect(careful).toContain('No single choice explains')
+    // What it may not say: that nothing they did contributed at all.
+    expect(careful, 'no promise of innocence').not.toMatch(/nothing (we|you) did/i)
+  })
+})
+
+// ===========================================================================
+// THE ARMS for §5b. Each applied to src/engine/knock.ts, this file run, then reverted.
+//
+//   1. `knockCause` ranked the three terms of `knockChance` and returned the careful line when the
+//      BASE was largest -> §5b-2 (the grinding point is told nothing was its fault) and §5b-5.
+//   2. the careful branch deleted (fall through to the fatigue/load comparison)
+//      -> §5b-1 (three sentences, not four), §5b-3 (no «No single choice»), §5b-4, §5b-5, §5b-9.
+//   3. `fatigue + load <= 0` -> `load < 0` (the ledger's shorthand taken literally)
+//      -> §5b-4's last pair: condition 55 on a light week is told «No single choice» while its own
+//         arithmetic says the family added .039. ⭐ THIS IS THE ARM THE SECTION WAS WRITTEN FOR - the
+//         two readings agree on every example in the ledger and part company here.
+//   4. `if (repeat)` moved BELOW the careful branch
+//      -> §5b-6: a careful week on a previously-pushed part is told «No single choice».
+//   7. (17.09) the repeat line reverted to a part-free «this same place»
+//      -> §5b-8: the variable never reaches the sentence.
+//   8. (17.09) the part appended to every branch's sentence
+//      -> §5b-8's second half: three branches that have no business naming a part name one.
+//   9. (17.09) the careful line reverted to «Nothing we did – the care we have been taking was
+//      working» -> §5b-9 (the promise of innocence) and §5b-1/3/4/5 on the marker.
+//   5. `fatigue >= load` -> `fatigue > load`
+//      -> nothing red. ⚠ RECORDED RATHER THAN HIDDEN: a dead heat is reachable only where
+//         (100-c) x .0022 == (train-75) x .006 exactly, which over the integer condition range and
+//         the three plans `planTrainPct` produces never lands on equality. The `>=` is a documented
+//         choice about a case the engine cannot currently reach, not a guarded one.
+//   6. `cause` dropped from the returned prompt object -> the build fails (the field is required on
+//      `KnockPrompt`), which is the compiler doing this arm's job before a test can.
+// ===========================================================================
+
+// =================================================================================================
 // 6. THE VOICE, AND THE SCHEMA
 // =================================================================================================
 
@@ -704,12 +930,20 @@ describe('W4 — the copy is the parent and the coach, and it carries no numbers
       for (const repeat of [false, true]) {
         for (const condition of [20, 45, 75, 95]) {
           for (let sinceWeek = 1; sinceWeek < 40; sinceWeek++) {
-            const p = buildKnockPrompt(
-              { part, sinceWeek, repeat, choice: null, untilWeek: sinceWeek },
-              'voice-1',
-              condition,
-            )
-            out.push(p.line, p.read, p.restCost, p.pushCost)
+            for (const plan of VOICE_PLANS) {
+              const p = buildKnockPrompt(
+                { part, sinceWeek, repeat, choice: null, untilWeek: sinceWeek },
+                'voice-1',
+                condition,
+                plan,
+              )
+              // ⭐ ROUND 43 #10 – `cause` JOINS THE SWEEP, and the plan axis joins with it. The voice
+              // rules below (no digits, no em dash, no Cyrillic, never «you», under 110 characters)
+              // are what keep the four new sentences in the same register as the rest of the card,
+              // and `cause` is the only field on this prompt that branches on the PLAN – so a sweep
+              // that held the plan fixed would grade one of its four voices and miss three.
+              out.push(p.line, p.read, p.restCost, p.pushCost, p.cause)
+            }
           }
         }
       }
@@ -742,14 +976,15 @@ describe('W4 — the copy is the parent and the coach, and it carries no numbers
         { part: 'wrist', sinceWeek: 7, repeat, choice: null, untilWeek: 7 },
         'costs-1',
         70,
+        BALANCED,
       )
       expect(p.restCost.length).toBeGreaterThan(20)
       expect(p.pushCost.length).toBeGreaterThan(20)
       expect(p.restCost).not.toBe(p.pushCost)
     }
     // A repeat is warned differently – that is the thread showing up in the copy.
-    const first = buildKnockPrompt({ part: 'wrist', sinceWeek: 7, repeat: false, choice: null, untilWeek: 7 }, 'c', 70)
-    const again = buildKnockPrompt({ part: 'wrist', sinceWeek: 7, repeat: true, choice: null, untilWeek: 7 }, 'c', 70)
+    const first = buildKnockPrompt({ part: 'wrist', sinceWeek: 7, repeat: false, choice: null, untilWeek: 7 }, 'c', 70, BALANCED)
+    const again = buildKnockPrompt({ part: 'wrist', sinceWeek: 7, repeat: true, choice: null, untilWeek: 7 }, 'c', 70, BALANCED)
     expect(again.pushCost).not.toBe(first.pushCost)
     expect(again.pushCost).toContain('wrist')
   })

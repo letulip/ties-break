@@ -50,6 +50,9 @@ import { masseurWeeklyCents } from './masseur'
 // economy/ledger/constants/ladder/college/bookings and nothing from this file – so there is no
 // runtime cycle to make here either.
 import { psychologistWeeklyCents } from './psychologist'
+// ⭐⭐⭐ v80, WAVE F2 – the third seat's weekly quote, from the leaf that owns it (the masseur's and
+// the psychologist's own arrows, one seat on).
+import { sparringWeeklyCents } from './sparring'
 // ⚠ REPOINTED AT THE LEAF AT ROUND 29 #5 – same functions, same behaviour. `world/assets.ts` holds
 // the shelf's pure reads and `world/shop.ts` re-exports them, so this is a shorter path to the same
 // symbols and not a change: this file only ever asked the shelf questions.
@@ -256,7 +259,7 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
     type: 'info',
     // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see the note on `coachLoadNote` below for the ruling.
     text: on
-      ? 'Your coach travels to tournaments with her now – a second fare on every trip.'
+      ? 'Your coach travels to tournaments with her now – one additional fare per trip.'
       : 'Your coach no longer travels to tournaments – the work happens at home.',
   })
 }
@@ -286,8 +289,8 @@ export function setCoachOnJuniorEvents(world: WorldState, on: boolean): void {
     type: 'info',
     // ⚠ NO PRONOUN FOR THE COACH (R15-7) – the roster puts a woman on every list by construction.
     text: on
-      ? 'Your coach travels to junior and domestic tournaments too – a second fare on trips that pay no prize money.'
-      : 'Your coach stays home for junior and domestic tournaments – the second fare is for the events that pay.',
+      ? 'Your coach travels to junior and domestic tournaments too – one additional fare on trips that pay no prize money.'
+      : 'Your coach stays home for junior and domestic tournaments – the additional fare is for the events that pay.',
   })
 }
 
@@ -706,9 +709,16 @@ export function supportPayrollWeeklyCents(world: WorldState): number {
   // note above gives for the masseur: a standing QUOTE, not a per-week reading, so a college freeze
   // or a booked holiday stands him down on the LEDGER (`resolvePsychologist` charges nothing those
   // weeks) without him vanishing from the family's standing budget.
+  // ⭐⭐⭐ v80, WAVE F2 – AND THE THIRD SEAT IS ONE MORE LINE, on the identical rule: a standing
+  // QUOTE and not a per-week reading, so a college freeze, a booked holiday and – his own fourth
+  // stand-down – a week she is away all stand him down on the LEDGER (`resolveSparring` charges
+  // nothing those weeks) without him vanishing from the family's standing budget. This function is
+  // the answer to «what does the team cost a week», and the answer to that does not change because
+  // she happens to be at a tournament.
   return (
     ((world.masseurHired ?? false) ? masseurWeeklyCents(world) : 0) +
-    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0)
+    ((world.psychologistHired ?? false) ? psychologistWeeklyCents(world) : 0) +
+    ((world.sparringHired ?? false) ? sparringWeeklyCents(world) : 0)
   )
 }
 
