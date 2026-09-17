@@ -295,7 +295,23 @@ test.describe('the psychologist takes the weekly call', () => {
       )
     }
 
+    // ⭐⭐ 17.09 – AND THE PRESS ASKS BEFORE IT BUYS THE SEASON. The owner: «вдруг человек
+    // промахнулся». A year is a season-long commitment taken by one press on a half-width card and
+    // it closes the row the moment it lands, so the picker goes through the same `ConfirmDialog` the
+    // hire above does. ⚠ THIS STATION IS WHY THE CLICK IS NOT ENOUGH ANY MORE: a spec that still
+    // expected the year to land on the press is the only thing this change breaks, and it breaks it
+    // LOUDLY, which is the right way round.
     await focusOption(focus, COOLHEAD_LABEL).click()
+    const yearAsk = page.getByRole('dialog')
+    await expect(yearAsk, 'the press asks, and the question names the year').toHaveAccessibleName(
+      `Set the psychologist's work for this season to ${COOLHEAD_LABEL}? ` +
+        'The year\'s work is chosen once a season, and the next choice comes in the next off-season.',
+    )
+    await expect(
+      focusOption(focus, COOLHEAD_LABEL),
+      'and nothing is bought while the question is up',
+    ).toHaveAttribute('aria-checked', 'false')
+    await yearAsk.getByRole('button', { name: 'Set it', exact: true }).click()
     await expect(
       focusOption(focus, COOLHEAD_LABEL),
       'the chosen year is the checked one, and the check came back off the snapshot',

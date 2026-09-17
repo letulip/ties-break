@@ -319,7 +319,16 @@ test.describe('the spotlight reaches the player', () => {
     const publicLife = focusOption(focus, PUBLIC_LIFE_LABEL)
     await expect(publicLife, 'the fifth year of work is on the card').toBeVisible()
     await expect(publicLife, 'and no year is running before one is chosen').toHaveAttribute('aria-checked', 'false')
+    // ⭐⭐ 17.09 – THE PRESS ASKS BEFORE IT BUYS THE SEASON (his «вдруг человек промахнулся»), so the
+    // year is taken in two steps now: the press puts the question up, the confirm sends the command.
+    // `psychologist.spec.ts` owns the wording of that question; what THIS file needs from it is that
+    // the fifth year goes through the same door as the other four.
     await publicLife.click()
+    const yearAsk = page.getByRole('dialog')
+    await expect(yearAsk, 'the press asks, and the question names the fifth year').toHaveAccessibleName(
+      new RegExp(`^Set the psychologist's work for this season to ${PUBLIC_LIFE_LABEL}\\?`),
+    )
+    await yearAsk.getByRole('button', { name: 'Set it', exact: true }).click()
     await expect(
       publicLife,
       'the chosen year is the checked one, and the check came back off the snapshot',
