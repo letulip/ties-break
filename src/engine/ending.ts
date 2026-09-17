@@ -242,7 +242,18 @@ export const ENDINGS = {
    *
    *  PREDICTED vs MEASURED lives in docs/specs/the-two-more-doors-2026-09.md §6.5 and §10. */
   peakLeavingChance: 0.02,
-  fallLeavingChance: 0.02,
+  /** ⭐⭐⭐ HIS RULING, 17.09: 0.02 → **0.01**, and the reason is measured rather than tidy. At 0.02
+   *  the fall read **2.23%** of careers – outside the 1–2% band he set, and outside it for a
+   *  POPULATION reason rather than a loose door: un-partitioning the temperaments (§9's [P1]) took
+   *  this door's eligible careers from 37.5% to 76.4%, because it is now open to all four voices
+   *  instead of two. No threshold moved and none was tuned; the constant is what changed.
+   *
+   *  ⚠ The band is not a realism note, it is his design constraint – «это всё-таки событие, которое
+   *  принудительно заканчивает игру» – so a door over the ceiling is the game taking itself away more
+   *  often than he allowed. At 0.01 the sweep prices it at **1.12%**.
+   *
+   *  ⭐ He took the lower one on its own merit: «красивая цифра». */
+  fallLeavingChance: 0.01,
   /** ⚠ "AT THE TOP" IS A PLACE – §2's own warning about the four named cases. Barty (#1), Henin
    *  (#1), Bartoli (#7 and a Wimbledon title), Dementieva (inside the ten): the rank clause alone
    *  covers all four, and the title clause below only ever ADDS a case it would miss. */
