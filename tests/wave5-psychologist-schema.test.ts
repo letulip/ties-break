@@ -372,10 +372,15 @@ describe('wave 5 T1 B – what the step adds, and everything it leaves alone', (
     // anybody noticing still goes red here; it is not a claim about v76 and never was.
     expect(laterRungs.sort(), 'and the rungs above v76 are the ones this wave knows about')
       .toEqual([
+        // ⭐ v82, round 42 #51 – the FOURTH time this roster is paid for, exactly as the note above
+        // predicted it would be for «every future wave». `coachDeal` is the coach's agreed fee, fixed
+        // at hire (`docs/specs/the-coachs-raise-2026-09.md`). NOT WEAKENED: the assertion is still an
+        // exact `toEqual` over the whole set, so a rung that arrives without anybody noticing still
+        // goes red here.
+        'coachDeal',
         'coachPairs',
         'composureBonus',
-        // ⭐ v80, wave F1 – the third time this roster is paid for, exactly as the note above
-        // predicted it would be for «every future wave».
+        // ⭐ v80, wave F1 – the third time this roster is paid for.
         'form',
         'sparringHired',
         'sparringRung',

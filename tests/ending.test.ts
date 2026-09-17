@@ -77,6 +77,8 @@ import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
 // ⭐ THE LONG GOODBYE, STEP 2 – the walk (phase 4 of the tick) and the curve the threshold is read
 // against. See the describe block that spends them for why the walk is not a whole `tickWeek`.
 import { kidAgeExact, kidAgeYears } from '../src/engine/world'
+// ⭐ v82 – the walk below hears her out before it answers the fork; see the note at its loop.
+import { pendingLifeBeat } from '../src/engine/world'
 import { growAndLive } from '../src/engine/world/phaseGrowth'
 import { ageAtPhysicalShare } from '../src/engine/development'
 
@@ -1385,6 +1387,26 @@ describe('⚠ a career saved before this wave existed', () => {
     const openedAt = world.week
     // Play it. No entries, no commands - just the weeks, exactly as a fast-forward would.
     for (let i = 0; i < 1400 && world.ending === null; i++) {
+      // ⭐⭐ v82 – AND THE WALK HEARS HER OUT FIRST, which is a step a real player takes and this loop
+      //    never had. `answerFork` refuses while a BLOCKING beat is pending – «she has said what she
+      //    wants and nobody has answered her» – and that rule shipped long before this wave. The loop
+      //    answered the fork, the retirement offer and the tournament reveal, so a week that raised a
+      //    beat AND opened the fork threw.
+      //
+      // ⚠⚠ IT WENT RED ON ROUND 42 #51's ECONOMY CHANGE AND THE CAUSE IS TIMING, NOT A STALL,
+      //    measured rather than assumed: this file PASSES on the branch point with the three commits
+      //    neutralised in place. Fixing the coach's fee at hire moves what the family spends, which
+      //    moves her entries, which moves which week raises a beat – and on this v38 fixture it now
+      //    coincides with the fork. Nothing is unreachable in play: the screen surfaces the beat, the
+      //    player answers it, and the fork is then open. This line is that player.
+      //
+      // ⚠ `drainLifeBeats` AND NOT A HAND-ROLLED `answerLifeBeat(world, 'listen')` – v74 T6's own
+      //    ruling: `'listen'` is not an option on every kind, and every hand-written call site threw
+      //    when wave 3's `'met'` beat landed. One drain for every beat kind, in one place.
+      if (pendingLifeBeat(world) !== null) {
+        drainLifeBeats(world)
+        continue
+      }
       if (world.fork !== null && world.fork.answer === null) {
         answerFork(world, 'continue')
         continue
