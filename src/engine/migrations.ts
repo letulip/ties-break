@@ -2941,6 +2941,42 @@ export function migrateSave(raw: unknown): WorldState {
     v = 81
   }
 
+  // ⭐⭐⭐ v82 – ROUND 42 #51, RULED 17.09 IN ROUND 44: `coachDeal`, the agreed weekly figure written
+  // down (`docs/specs/the-coachs-raise-2026-09.md`). The owner, having watched his coach's price fall
+  // 2.2k -> 1.8k across a season that went well: «мне кажется это не корректно»; and on the fix:
+  // «"зафиксировать при найме и пусть просит, как массажист" – верно».
+  //
+  //   · `coachDeal` – the contract with the man on the payroll: his agreed LABOUR rate above the
+  //     court, the week it was struck, the marks the next annual ask is judged against, and the
+  //     residual banked since. `null` when nobody is hired.
+  //
+  // ⚠⚠ `null` IS THE BACK-FILL AND IT IS A LITERAL, which is this file's own standing rule kept
+  // rather than argued around: a shipped migration must never write a value derived from `ECONOMY`,
+  // because a later retune would then change what an old save is given. `null` is also TRUE of every
+  // save ever written – nobody has agreed a figure in writing, because until this version there was
+  // nowhere to write one.
+  //
+  // ⭐ AND THE FIRST TICK SETTLES IT, WHICH IS WHY THE LITERAL COSTS THE FAMILY NOTHING.
+  // `settleCoachDeal` runs inside `resolveBaseCosts` on every week; on the first week after this
+  // upgrade it meets a hired coach with no contract and writes one at the market's own quote – the
+  // exact cents that same till was about to charge, so the bill does not move on the upgrade week.
+  // ⚠ It dates the deal from `coachSinceWeek`, the ledger's own tagged record of when the
+  // arrangement began, so a family three years into a partnership keeps its anniversary rather than
+  // starting a new clock. The MARKS are taken at the settle week, because today is all a migrating
+  // save can honestly know, and the first ask after an upgrade therefore reads a short year. Stated
+  // here rather than left for a later reader to wonder at.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: gated on `v === 81`, writing one literal. No sub-stream is reached on
+  // this path, so MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched by
+  // construction. Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step,
+  // tests/fixtures/saves/v82.json, its row in tests/fixtures/saves/README.md, the e2e fixtures, the
+  // peel rung in tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 81) {
+    save.coachDeal ??= null
+    v = 82
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }

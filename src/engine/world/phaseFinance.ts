@@ -40,20 +40,23 @@ import {
   parentIncomeForWeekCents,
 } from '../economy'
 import {
-  bandedRateCents,
   coachById,
   coachCorridorFactor,
   coachHoursForPlan,
-  coachRetainerBand,
   facilityRateCents,
   tierOf,
   weeklyBillSplit,
 } from '../coach'
-// ⭐ ROUND 42 #19 – the till reads her place in the PROFESSIONAL table to price the retainer.
-// `kidLadderRank` and not `kidLadderRankFolded`: the bill is a decision the tick makes, and round 41
-// #26's own ruling is that every ENGINE reader stays on the cache while only the projection layer
-// re-folds.
-import { kidLadderRank } from './ladder'
+// ⭐ ROUND 42 #19 – the till read her place in the PROFESSIONAL table to price the retainer, through
+// `kidLadderRank` and not `kidLadderRankFolded` (round 41 #26: every ENGINE reader stays on the cache
+// while only the projection layer re-folds).
+// ⭐⭐ v82, ROUND 42 #51 – IT STILL DOES, one module over. `coachRetainerBandOf` inside
+// `coachMarket.ts` makes the same read on the same cache for the same reason; what moved is that the
+// answer is now the CEILING an ask may climb to rather than a multiply on this week's bill. The
+// import is gone from here because the arithmetic is, not because the rule changed.
+// ⚠ NO CYCLE: `coachMarket.ts` does not import this module (`coachWorksThisWeek` lives HERE, with
+// the bill that is its first reader – see this file's own note at the top), so the edge is one-way.
+import { coachRateCents, settleCoachDeal } from './coachMarket'
 import { activeKitDeal, lifetimeKitHouse } from '../offers'
 import { GEAR_CATEGORY_LINE } from '../equipment'
 import { schoolIsOver } from '../kidLife'
@@ -462,17 +465,27 @@ function resolveBaseCosts(world: WorldState, rng: Rng): void {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
   const tier = tierOf(coach)
-  // ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK, and this is the only line of the till that
-  // knows it. `bandedRateCents` is the identity at band 1 (`ECONOMY.coach.retainerBandByRank` carries
-  // the whole argument), so a career that never enters the professional top hundred - which is most
-  // of them - charges the same integer cents this line has always charged, on every week.
+  // ⭐⭐⭐ ROUND 42 #19 – THE RETAINER FOLLOWS HER RANK, and this used to be the only line of the till
+  // that knew it. `ECONOMY.coach.retainerBandByRank` carries the whole argument, and it was the
+  // identity at band 1, so a career that never entered the professional top hundred - which is most
+  // of them - charged the same integer cents this line had always charged, on every week.
   //
-  // ⚠ ZERO DRAWS ADDED. A rank is a look-up on state the tick has already written and the band is a
+  // ⚠ ZERO DRAWS. A rank is a look-up on state the tick has already written and the band was a
   // post-draw multiply on the RATE, exactly like the corridor two lines down; the frozen MAIN capture
-  // cannot see it. ⚠ And it is read BEFORE the jitter rather than after, purely so the two draws in
-  // this function stay adjacent and countable.
-  const band = coachRetainerBand(kidLadderRank(world, 'wta'))
-  const rate = coach ? bandedRateCents(coach.rateCents, age, tier, band) : facilityRateCents(age, tier)
+  // could not see it, and cannot see what replaced it either.
+  // ⭐⭐⭐ v82, ROUND 42 #51 – AND THE BAND STOPPED RE-PRICING A MAN ALREADY ON THE PAYROLL. The
+  // owner, 17.09, having watched his coach's weekly figure FALL across a season that went well:
+  // «мне кажется это не корректно». `settleCoachDeal` writes down what was agreed the first time
+  // this line meets a hired coach with no contract – which is a hire, or the first tick after the
+  // v81 -> v82 migration – and `coachRateCents` then bills the court at today's price plus that
+  // agreed labour. The band lives on as the CEILING an annual ask may climb to
+  // (`coachMarketLabourCents`), which is round 42 #19's own deferred «renegotiation as a scene».
+  //
+  // ⚠ ZERO DRAWS ADDED, still. Settling is a look-up and a write; the rate is integer arithmetic and
+  // a `Math.min`; both pickInts below run exactly where they always ran. The frozen MAIN capture
+  // cannot see any of it.
+  settleCoachDeal(world)
+  const rate = coach ? coachRateCents(world, coach) : facilityRateCents(age, tier)
   const [jLo, jHi] = ECONOMY.coach.weekJitterBps
   const jitter = pickInt(rng, jLo, jHi) / 10_000
   // ⚠ ROUND 41 P1 – THE RUNG DECIDES WHETHER THERE IS A CORRIDOR AT ALL. `high` and `elite` are

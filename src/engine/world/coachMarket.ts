@@ -12,8 +12,17 @@
 // ⚠ RNG: nothing here draws on MAIN. The market is a pure function of (seed, age).
 // ⚠ `coachFactor` AND `StyleFit` JOINED FOR T12's PROFILE (wave 5), and they are a READ of the two
 // shipped factor tables rather than a second home for them – see the profile block below.
-import { bandedRateCents, bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachRetainerBand, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
-import type { StyleFit } from '../coach'
+import { bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachRetainerBand, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
+import type { Coach, StyleFit } from '../coach'
+// ⭐⭐ v82 – THE TWO PURE HALVES OF THE AGREED FEE (round 42 #51). `coachLabourCents` is
+// `bandedRateCents`' own complement and `coachAskFraction` is the owner's corridor; both live in
+// `engine/coach.ts` with the rest of the price model, and this file is their world-reading half.
+import { coachAskFraction, coachLabourCents } from '../coach'
+// ⚠ THE ONE MONEY FORMATTER, across the same boundary `masseur.ts`, `shop.ts` and `sponsors.ts`
+// already cross: `shared/money` is a pure function of cents and reaches for nothing in the UI, so
+// invariant 1 is untouched. A hand-rolled `$` here would print `$1234` where the game prints
+// `$1,234` – the masseur's own 17.09 correction, kept rather than repeated.
+import { formatCents } from '../../shared/money'
 // ⭐⭐ ROUND 44 – THE WIRE FOR THE CHEMISTRY (spec §8b). A leaf import of the one derivation, exactly
 // as `coachEdgeCorridorPp` above is imported rather than re-implemented here: the card must paint the
 // same number `growWeek` grows her on, and one function is how that stays true.
@@ -157,6 +166,12 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
       milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
       text: 'You are coaching her yourself again. The weekly bill is court time only.',
     })
+    // ⭐ v82 – AND THE CONTRACT GOES WITH HIM. `settleCoachDeal` clears it when there is nobody on
+    // the payroll, so a re-hire strikes a new deal at today's market rather than silently inheriting
+    // the old man's figure. ⚠ The CHEMISTRY does not reset with it, deliberately and by its own
+    // ruling («leaving pauses, it does not reset») – what is forgotten here is a price, not a
+    // relationship.
+    settleCoachDeal(world)
     return
   }
   const coach = coachById(world.seed, ageAtWeek(world.week), coachId)
@@ -175,6 +190,9 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
   world.coachId = coach.id
   world.physioActive = coachIncludesPhysio(coach.tier)
   addEvent(world, {
+    // ⚠ THE EVENT IS WRITTEN BEFORE THE DEAL IS SETTLED, and the order is load-bearing rather than
+    // incidental: `settleCoachDeal` dates the contract from `coachSinceWeek`, which reads the tag
+    // this very row carries. Settling first would date the deal from the PREVIOUS arrangement.
     week: world.week,
     type: 'info',
     keep: true,
@@ -183,6 +201,12 @@ export function hireCoach(world: WorldState, coachId: string | null): void {
     milestoneKey: `${COACH_CHANGE_KEY}${world.week}`,
     text: `${coach.name} is her coach now – ${COACH_TIER_LABEL[coach.tier]} tier.`,
   })
+  // ⭐⭐ v82 – AND THE FIGURE IS WRITTEN DOWN (round 42 #51). It is the market's own quote at this
+  // moment, which is the number the card the player just pressed was showing – so the HIRE PRICE is
+  // unchanged by this item and round 42 #42's «the cost shows, the hire is never refused» is
+  // untouched. What changes is that from the next weekly bill onward it is a figure two parties
+  // agreed rather than one the till re-derives.
+  settleCoachDeal(world)
 }
 
 /** THE TAG ON A COACH-CHANGE EVENT, and the only thing that identifies one. `milestoneKey` already
@@ -208,6 +232,282 @@ export function coachSinceWeek(world: WorldState): number {
     if (e.milestoneKey?.startsWith(COACH_CHANGE_KEY) && e.week > since) since = e.week
   }
   return since
+}
+
+// =================================================================================================
+// ⭐⭐⭐ v82 – THE AGREED FEE, AND THE ANNUAL ASK (round 42 #51, ruled 17.09 in round 44)
+//     docs/specs/the-coachs-raise-2026-09.md
+// =================================================================================================
+//
+// THE OWNER'S TWO SENTENCES. On the silent re-pricing: «мне кажется это не корректно». On the fix:
+// «"зафиксировать при найме и пусть просит, как массажист" – верно». And on what the ask must read,
+// from #51 itself: «может такое быть, что всего с 1 титулом в сезон тренер будет требовать 15%?
+// Кажется, что самого факта такого единственного титула маловато, нужна какая-то общая оценка
+// прогресса».
+//
+// ⚠ THE MARKET GOES ON FLOATING AND THAT IS CORRECT – the task's own fence, and the design's. What a
+// NEW coach costs is a fact about the market and her standing, so every row of `coachMarket` below
+// still quotes `bandedRateCents`. What stops floating is the fee of a man ALREADY on the payroll,
+// and `coachMarket`'s `current: true` row reads the deal for exactly that reason: the card for the
+// man she has must not contradict the bill she is charged for him.
+
+/** THE SUM OF HER ATTRIBUTES, and of her ceilings – the two marks the development component measures
+ *  between. `SKILL_KEYS` and not `Object.values`, so a sixth attribute joins both sides at once or
+ *  neither. */
+function skillSum(of: Record<(typeof SKILL_KEYS)[number], number>): number {
+  return SKILL_KEYS.reduce((sum, k) => sum + of[k], 0)
+}
+
+/** WHAT HIS LABOUR WOULD COST TODAY IF SHE WERE HIRING HIM NOW – the market's own quote, and the
+ *  CEILING an ask may climb to.
+ *
+ *  ⭐⭐ THE OWNER'S «ceiling = the rank band», AND IT IS THE SCENE ROUND 42 #19 DEFERRED IN WRITING.
+ *  `retainerBandByRank`'s own comment says «what ships here is the arithmetic; the scene is its own
+ *  item» – so the band stops re-pricing a fee that is already agreed and becomes the room that fee
+ *  may be asked upward into as she climbs. Three things open room: her ranking crossing a band, her
+ *  AGE crossing one of `coachAgeBand`'s two steps (a coach of a nineteen-year-old professional is
+ *  paid more than a coach of a fifteen-year-old, and the rate table says so in three rows), and
+ *  nothing else.
+ *
+ *  ⚠ AND IT IS WHAT MAKES THE WHOLE CHANGE SAFE ON A LIVE SAVE: the billed rate is
+ *  `min(agreed, this)`, so it can never exceed what the shipped till was already charging. The fix
+ *  can lower a family's payroll and cannot raise it. Zero draws. */
+export function coachMarketLabourCents(world: WorldState, coach: Coach): number {
+  const age = ageAtWeek(world.week)
+  return coachLabourCents(coach.rateCents, age, coach.tier, coachRetainerBandOf(world))
+}
+
+/** THE HOURLY RATE THE TILL BILLS AND THE CARD QUOTES for the man she actually has – the court at
+ *  today's price plus the labour that was agreed.
+ *
+ *  ⚠ THE FALLBACK IS THE SHIPPED DERIVATION AND IT IS NOT DEAD CODE. A world with no deal yet (a
+ *  hand-built probe, a save between its migration and its first tick) bills exactly the cents it
+ *  always billed, which is what makes `settleCoachDeal` free to run late rather than urgently. The
+ *  same guard covers a deal left behind by a coach who is no longer hired.
+ *
+ *  ⚠ CLAMPED AT THE MARKET'S OWN QUOTE, so an agreed fee can never be dearer than hiring the same man
+ *  today would be – the ceiling stated once, here, rather than trusted to the ask alone. It is the
+ *  identity whenever the ask has done its clamping properly, and it is the thing that makes the
+ *  property above true of the BILL rather than only of the negotiation. Zero draws. */
+export function coachRateCents(world: WorldState, coach: Coach): number {
+  const age = ageAtWeek(world.week)
+  const court = facilityRateCents(age, coach.tier)
+  const market = coachMarketLabourCents(world, coach)
+  const deal = world.coachDeal
+  if (!deal || deal.coachId !== coach.id) return court + market
+  return court + Math.min(deal.labourCents, market)
+}
+
+/** ⭐ THE HANDSHAKE – write down what was agreed, and take the marks the next ask is judged against.
+ *
+ *  Idempotent and cheap: it returns immediately unless there is a coach with no matching deal, so
+ *  `hireCoach` and the weekly till can both call it without either having to know the other does.
+ *  `labour` is the market's own quote at this moment, which is the number the card showed the player
+ *  when he pressed – the hire price is UNCHANGED by this item, and that is deliberate: round 42 #42
+ *  ruled «the cost shows, the hire is never refused», and a card quoting one figure while the ledger
+ *  charged another would break it from the other side.
+ *
+ *  ⚠ `agreedWeek` IS `coachSinceWeek` AND NEVER `world.week`, which is the one line that lets a
+ *  MIGRATED career keep its history. A family that has had the same man for three years gets a deal
+ *  dated from the hire the ledger remembers, so his first anniversary arrives on the schedule it
+ *  always had rather than three years late. ⚠ The MARKS are today's, because today is all a
+ *  migrating save can honestly know – stated here rather than discovered by a later reader wondering
+ *  why the first ask after an upgrade reads a short year.
+ *
+ *  ZERO DRAWS on any stream. */
+export function settleCoachDeal(world: WorldState): void {
+  const coach = coachById(world.seed, ageAtWeek(world.week), world.coachId)
+  if (!coach) {
+    // ⚠ A RELEASE CLEARS THE CONTRACT. There is nobody to have one with, and a stale deal left
+    // lying about is how a re-hire would silently inherit a fee nobody agreed to for THIS man.
+    world.coachDeal = null
+    return
+  }
+  if (world.coachDeal?.coachId === coach.id) return
+  restampCoachDeal(world, coach, coachMarketLabourCents(world, coach), coachSinceWeek(world))
+}
+
+/** The write itself – the contract and the marks, together, because a fee agreed against last year's
+ *  marks would price the next ask on a year it was already paid for. Exported for the ask, which
+ *  re-strikes the same deal at a new figure. */
+function restampCoachDeal(world: WorldState, coach: Coach, labourCents: number, agreedWeek: number): void {
+  world.coachDeal = {
+    coachId: coach.id,
+    labourCents,
+    agreedWeek,
+    markWtaRank: kidLadderRank(world, 'wta'),
+    markSkills: skillSum(world.skills),
+    markPotential: skillSum(world.potential),
+    residualSince: 0,
+  }
+}
+
+/** ⭐ THE RESULTS CHANNEL, BANKED – wave F1's own per-match residual against the odds ring, summed
+ *  for as long as this fee has stood.
+ *
+ *  Called from `world/form.ts`'s weekly pass with the residuals it has ALREADY computed, so there is
+ *  one derivation of «what she did against expectation» in the engine and not two. ⚠ It is banked
+ *  rather than re-derived at the ask because `formResidualsOf` reads the event feed and the feed
+ *  prunes at 400 rows: a year of a busy career does not survive that window, so a derived answer
+ *  would shrink on exactly the careers this component is about.
+ *
+ *  ⚠ NO CLAMP AND NO DECAY, unlike `world.form` itself. Form is a STOCK that reverts to neutral, so
+ *  a girl who beat her odds all year reads 0 at the anniversary; this is the FLOW, and the flow is
+ *  what a year's work was worth. Zero draws. */
+export function bankCoachResidual(world: WorldState, residuals: readonly number[]): void {
+  if (residuals.length === 0) return
+  const deal = world.coachDeal
+  if (!deal || deal.coachId !== world.coachId) return
+  deal.residualSince += residuals.reduce((a, b) => a + b, 0)
+}
+
+/** ⭐⭐⭐ THE PROGRESS SCORE, `[0, 1]` – his own «общая оценка прогресса», and the four components are
+ *  #51's own list.
+ *
+ *  ⚠⚠ EVERY REFERENCE EACH COMPONENT DIVIDES BY IS A FIGURE THE GAME ALREADY STATES OUT LOUD, and
+ *  that is a design constraint rather than an accident. A component with a private normaliser is a
+ *  dial nobody can argue with, and four of those would have made the score untunable – so the only
+ *  fitted numbers in this mechanic are `ECONOMY.coach.raise.weights`, and the corridor's ends are the
+ *  owner's own.
+ *
+ *  Pure, and ZERO DRAWS on any stream. */
+export function coachProgressScore(world: WorldState): number {
+  const deal = world.coachDeal
+  if (!deal) return 0
+  const w = ECONOMY.coach.raise.weights
+  const clamp01 = (x: number): number => (Number.isFinite(x) ? Math.max(0, Math.min(1, x)) : 0)
+
+  // 1. RANK MOVEMENT – what the market itself prices (#51's own phrase).
+  //
+  // ⚠ MULTIPLICATIVE, because a ranking ladder is: #400 -> #200 and #20 -> #10 are the same year's
+  // work and a linear reading would hand the junior the whole component for free. `rankHalving = 2`
+  // is argued rather than fitted – there is no free parameter in «twice as good».
+  // ⚠ AND `null` IS NOT A ZERO ON EITHER SIDE. Unranked -> ranked is FULL MARKS: entering the
+  // professional table at all is a bigger move than any climb inside it, which is the same judgement
+  // `coachRetainerBand` makes when it returns the identity for `null`. Ranked -> unranked is 0, and
+  // it is 0 rather than negative because he never asks for less.
+  const rankNow = kidLadderRank(world, 'wta')
+  const rankPart =
+    deal.markWtaRank === null
+      ? rankNow === null
+        ? 0
+        : 1
+      : rankNow === null
+        ? 0
+        : clamp01(Math.log(deal.markWtaRank / rankNow) / Math.log(ECONOMY.coach.raise.rankHalving))
+
+  // 2. REALISED DEVELOPMENT AGAINST REMAINING HEADROOM – «literally the coach's job».
+  //
+  // ⭐⭐ THE REFERENCE IS HER OWN CLOCK AND NOT A CONSTANT. She has `declineStart - age` years in
+  // which her headroom can still be taken (`ageFactor` returns exactly 0 past it), so the share that
+  // is ON PACE for one of those years is `1 / yearsLeft` and anything above it is ahead of pace. A
+  // career whose decline has begun scores an exact 0 here, which is the honest reading rather than a
+  // harsh one: there is no development left to have realised, and `world/phaseGrowth` says so.
+  const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
+  const yearsLeft = Math.max(0, bounds.declineStart - ageAtWeek(world.week))
+  const headroomAtMark = Math.max(0, deal.markPotential - deal.markSkills)
+  const realised = headroomAtMark > 0 ? (skillSum(world.skills) - deal.markSkills) / headroomAtMark : 0
+  const devPart = yearsLeft <= 0 ? 0 : clamp01(realised * Math.max(1, yearsLeft))
+
+  // 3. TITLES, WEIGHTED BY TIER – «as a component rather than the trigger», which is the whole of his
+  // correction to the first draft.
+  //
+  // ⚠ THE WEIGHT IS THE RUNG'S OWN PLACE IN `TIER_LADDER` and never a second table: a Slam is 16/16
+  // and a J30 is 4/16, so a Slam is worth four J30s and the ratio moves with the ladder rather than
+  // with a constant somebody would have to remember to edit. `trophiesByTier` stores the WEEK each
+  // title was won, so the window is a filter and nothing has to be banked.
+  // ⚠ CAPPED AT 1 LIKE EVERY OTHER COMPONENT, and at weight 0.15 that caps ONE ordinary title's
+  // contribution at well under a point of the corridor – «одного титула маловато» made arithmetic.
+  let titleWeight = 0
+  for (const [tier, cabinet] of Object.entries(world.trophiesByTier)) {
+    const rung = TIER_LADDER.indexOf(tier as TierId)
+    if (rung < 0) continue
+    for (const week of cabinet?.titles ?? []) {
+      if (week > deal.agreedWeek) titleWeight += (rung + 1) / TIER_LADDER.length
+    }
+  }
+  const titlePart = clamp01(titleWeight)
+
+  // 4. ⭐ THE RESIDUAL AGAINST EXPECTATION – #51 calls it «the fourth and best», and the reason is
+  // its own: «a coach who got more out of her than the odds said is exactly the one who should ask».
+  // It is the only component that cannot be earned by a season that was always going to happen.
+  //
+  // ⚠ THE REFERENCE IS `ECONOMY.form.max` – the top of the scale the residuals are denominated on,
+  // so «a full form scale's worth of beating the ring, banked over the year» is full marks. Another
+  // figure the game already states.
+  const residualPart = clamp01(deal.residualSince / ECONOMY.form.max)
+
+  return clamp01(w.rank * rankPart + w.development * devPart + w.titles * titlePart + w.residual * residualPart)
+}
+
+/** IS THIS THE WEEK HE ASKS – the week the arrangement's own year turns.
+ *
+ *  `masseurRaiseDue`'s shape, asked of a seat whose clock is a persisted week rather than a sum over
+ *  ledger rows, which makes it the simpler of the two: the anniversary is exact arithmetic on
+ *  `agreedWeek` and there is no re-hire week that could double-fire. ⚠ Week 0 is not an anniversary –
+ *  `served > 0` – so a career that opens with a coach is not asked for a raise before it has played
+ *  a match. Pure, zero draws. */
+export function coachRaiseDue(world: WorldState): boolean {
+  const deal = world.coachDeal
+  if (!deal || deal.coachId !== world.coachId) return false
+  const served = world.week - deal.agreedWeek
+  return served > 0 && served % WEEKS_PER_YEAR === 0
+}
+
+/** ⭐⭐ THE ASK ITSELF – one `info` row on the anniversary week, and the fee it names is live from the
+ *  same week (`resolveBaseCosts` bills after this runs, exactly as `resolveMasseurRaise` sits on the
+ *  billing side of `resolveMasseur`).
+ *
+ *  ⚠⚠ HE NEVER ASKS FOR LESS, AND THIS FUNCTION IS WHERE THAT IS TRUE. `coachAskFraction` has a
+ *  FLOOR of 5% and no negative arm at all, and the write below is gated on `next > deal.labourCents`
+ *  – so the two ways a fee could fall (a bad year, and a ceiling that has dropped because she left a
+ *  band) both resolve to «nothing happens». The downward half of the old silent re-price is deleted
+ *  rather than lettered, which is the owner's ruling: a contract that falls because she had a quiet
+ *  season is the thing he called incorrect.
+ *
+ *  ⚠ NO ROOM MEANS NO LETTER. When the market's own quote for the same man has not moved, there is
+ *  nothing to ask for and nothing is written – no row, no state, no re-stamp. A feed row that
+ *  announced a raise of zero would be the screen inventing an event, and the anniversary simply comes
+ *  round again next year.
+ *
+ *  ⚠⚠ THE SENTENCE IS A **DRAFT** (invariant 4). The masseur's ask is the model for its SHAPE – a
+ *  compact feed consequence that states the new figure and the family's answer – and never for its
+ *  words. It carries no masculine pronoun, which is R15-7's standing order and what
+ *  `tests/coach-voice.test.ts` enforces on every engine literal a player can read.
+ *
+ *  ZERO DRAWS on any stream. */
+export function resolveCoachRaise(world: WorldState): void {
+  if (!coachRaiseDue(world)) return
+  const deal = world.coachDeal
+  if (!deal) return
+  const coach = coachById(world.seed, ageAtWeek(world.week), deal.coachId)
+  if (!coach) return
+  const ceiling = coachMarketLabourCents(world, coach)
+  const asked = Math.round(deal.labourCents * (1 + coachAskFraction(coachProgressScore(world))))
+  const next = Math.min(asked, ceiling)
+  // ⚠⚠ AND AN ASK SMALLER THAN HIS OWN FLOOR IS NOT AN ASK – the corridor's bottom end is a
+  // CONDITION on coming to the table and not merely a clamp on the arithmetic. Measured before this
+  // line existed: 14.4% of the asks that fired were under 5% because the ceiling had left less room
+  // than that, which is a letter announcing a raise of half a per cent and a corridor the owner named
+  // being missed on the low side by the feature's own model.
+  //
+  // ⭐ NOTHING IS LOST BY WAITING, which is the reason this is a gate rather than a rounding. The
+  // ceiling is `market labour at her standing`, it does not fall back when an ask is skipped, and the
+  // room it leaves ACCUMULATES – so a year that could only have bought 2% is followed by an
+  // anniversary that can buy more. He asks when there is something worth asking for.
+  if (next < Math.round(deal.labourCents * (1 + ECONOMY.coach.raise.askFloor))) return
+  const before = coachRateCents(world, coach)
+  restampCoachDeal(world, coach, next, world.week)
+  const after = coachRateCents(world, coach)
+  addEvent(world, {
+    week: world.week,
+    type: 'info',
+    // ⚠ THE FIGURE IS THE HOURLY RATE THE BILL IS BUILT FROM, not a weekly quote, because the weekly
+    // number depends on the training dial and would go stale the moment the parent moved it. Through
+    // `formatCents` – the one formatter (the masseur's own 17.09 correction: a hand-rolled `$` prints
+    // `$1234` where the rest of the game prints `$1,234`).
+    text: `${coach.name} has asked for more after a year together – ${formatCents(before)} an hour becomes ${formatCents(after)}. The rate stands until the next time it is agreed.`,
+  })
 }
 
 /** EVERY COMPETITIVE MATCH SHE HAS EVER PLAYED, off the two durable ledgers that already count them:
@@ -429,11 +729,15 @@ export function coachBilling(world: WorldState): {
 } {
   const age = ageAtWeek(world.week)
   const coach = coachById(world.seed, age, world.coachId)
-  // ⭐ ROUND 42 #19 – the quote reads the SAME banded rate `resolveBaseCosts` bills at, so the card,
-  // the budget meter and the ledger cannot describe three different retainers. The identity at band 1
-  // is what keeps every career below the tail quoting the cents it always quoted.
-  const band = coachRetainerBandOf(world)
-  const rate = coach ? bandedRateCents(coach.rateCents, age, tierOf(coach), band) : facilityRateCents(age, tierOf(coach))
+  // ⭐ ROUND 42 #19 – the quote reads the SAME rate `resolveBaseCosts` bills at, so the card, the
+  // budget meter and the ledger cannot describe three different retainers.
+  // ⭐⭐⭐ v82, ROUND 42 #51 – AND THAT RATE IS NOW THE AGREED ONE. `coachRateCents` is the court at
+  // today's price plus the labour the family and this man actually shook hands on; it falls back to
+  // the banded derivation when there is no deal yet, so the identity with the shipped quote holds on
+  // every world that has not settled one. The MARKET's rows below go on floating, and that is the
+  // fence: what a NEW coach costs is a fact about the market and her standing – what stops floating
+  // is the fee of a man already on the payroll.
+  const rate = coach ? coachRateCents(world, coach) : facilityRateCents(age, tierOf(coach))
   // ⚠ THE RUNG, round 41 P1: the quote has to know whether the corridor still prices this week.
   const weeklyCents = coachWeeklyCents(rate, world.plan, world.profile.background, tierOf(coach))
   const seasonStart = seasonStartWeek(world.week)
@@ -852,12 +1156,14 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // about the man on the card, so a row-by-row answer would be the same question asked sixteen times
   // with sixteen chances to disagree. See `edgeTravelPct` below for what it gates.
   const travels = coachTravelsWithHer(world)
-  // ⭐⭐⭐ ROUND 42 #19 – AND THE WHOLE MARKET IS PRICED AT HER BAND. Asked ONCE, for the same reason
-  // the travel stance one line up is: it is a fact about HER standing and not about the man on the
-  // card, so a row-by-row read would be the same question asked sixteen times. The market re-prices
-  // because reality's does - a top-ten player shopping for a coach is not quoted a junior's fee by
-  // anybody - and it keeps the card honest against the bill she will actually be charged.
-  const retainerBand = coachRetainerBandOf(world)
+  // ⭐⭐⭐ ROUND 42 #19 – AND THE WHOLE MARKET IS PRICED AT HER BAND. The market re-prices because
+  // reality's does: a top-ten player shopping for a coach is not quoted a junior's fee by anybody.
+  //
+  // ⭐⭐ v82, ROUND 42 #51 – AND THAT IS STILL TRUE, AND IS NOW THE FENCE. The band is read INSIDE
+  // `coachRateCents` per row rather than hoisted here, because the answer is no longer uniform across
+  // the shelf: fifteen rows are the market's floating quote at her standing, and the sixteenth – the
+  // man she already has – is the fee two parties agreed. The hoist that used to sit on this line was
+  // right while one answer served every row and would now be the thing making them disagree.
   // ⭐⭐⭐ ROUND 44 – HER OWN RESOLVED CURVE, FOR THE MAINTENANCE HALF OF THE SEASON BAND
   //     (`docs/specs/the-decline-and-the-seats-2026-09.md` §6e). `ageCurveOf` and not the shipped
   //     constant, for the reason this file's import block already gives: a career that answered the
@@ -889,13 +1195,23 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       trainFactor: trainFactor(world.plan),
       coachedWeeks,
     })
+    // ⭐⭐⭐ v82, ROUND 42 #51 – THE ROW FOR THE MAN SHE HAS QUOTES WHAT SHE PAYS HIM; every other row
+    // quotes the market. `coachRateCents` returns the banded market rate for a coach who is not
+    // hired, so this ONE expression serves both and there is no branch to keep in step: the deal
+    // only exists for the current man, and only his row can therefore read it.
+    //
+    // ⚠ IT HAD TO BE HIS ROW AND NOT A SECOND SURFACE. A market that quoted the floating figure over
+    // the coach she is being billed the agreed one for would be two numbers for one man on one
+    // screen – the exact defect `coachBilling`'s own note about «three different retainers» exists to
+    // prevent, arriving one card over.
+    const rowRate = coachRateCents(world, coach)
     return {
       id: coach.id,
       tier: coach.tier,
       name: coach.name,
       style: coach.style,
       fit,
-      weeklyCents: coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier),
+      weeklyCents: coachWeeklyCents(rowRate, world.plan, world.profile.background, coach.tier),
       current: world.coachId === coach.id,
       // AFFORDABLE MEANS "against the week's income", not "against the reserve". A reserve pays for
       // one week of anything; what the family is actually deciding is whether this bill fits the
@@ -904,9 +1220,11 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // parents' line alone. The ruling above is unchanged - the reserve is still not counted - it
       // is the week's income that was being under-read, by more than half on his own save.
       // ⭐⭐⭐ ROUND 42 #42: ...less what the OTHER SEATS already cost. See `coachBudgetCents` above.
+      // ⚠ v82 – OFF THE SAME `rowRate`, so «$X over» can never be measured against a different price
+      // from the one printed two lines up.
       overBudgetCents: Math.max(
         0,
-        coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier) - coachBudgetCents,
+        coachWeeklyCents(rowRate, world.plan, world.profile.background, coach.tier) - coachBudgetCents,
       ),
       lockedPoints: eliteGateShortfall(coach, points),
       // ⭐⭐⭐ ROUND 44 – AND THE SEASON BAND COUNTS WHAT THE RUNG HOLDS ON TO, not only what it adds

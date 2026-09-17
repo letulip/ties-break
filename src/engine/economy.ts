@@ -498,6 +498,70 @@ export const ECONOMY = {
       { atOrBetter: 100, factor: 2.0 },
     ] as { atOrBetter: number; factor: number }[],
 
+    // =============================================================================================
+    // ⭐⭐⭐ ROUND 42 #51 / ROUND 44 – THE ANNUAL ASK. docs/specs/the-coachs-raise-2026-09.md.
+    // =============================================================================================
+    //
+    // THE OWNER NAMED THE CORRIDOR AND THE CEILING HIMSELF (16.09, #51): «Коридор 5-15%, ceiling =
+    // the rank band». What he did NOT want is the trigger the first draft gave it: «может такое
+    // быть, что всего с 1 титулом в сезон (например w250/w500) тренер будет требовать 15%? Кажется,
+    // что самого факта такого единственного титула маловато, нужна какая-то общая оценка прогресса».
+    // So the position INSIDE the corridor is a weighted progress score and a title is one of its
+    // four components rather than its trigger.
+    //
+    // ⭐⭐ AND THE BAND ABOVE BECOMES THE CEILING, WHICH IS THE SCENE ITS OWN COMMENT DEFERRED. Round
+    // 42 #19 shipped `retainerBandByRank` as an arithmetic re-price and said so in as many words:
+    // «3.1 asks for "renegotiation as a scene, not a slider" - a step is the thing a scene can be
+    // hung on later. What ships here is the arithmetic; the scene is its own item.» This is that
+    // item. The band no longer moves a fee that is already agreed - it says how far an AGREED fee may
+    // be asked upward, and a man already on the payroll can never be priced above what the market
+    // would quote for him at her standing today.
+    //
+    // ⚠ WHICH IS ALSO THE SAFETY PROPERTY, and it is worth stating as one because it is what makes a
+    // live-save migration harmless: the stored fee is `min(agreed x (1 + ask)^n, today's market
+    // labour)`, so it can NEVER exceed what this same till was charging before the change. The fix
+    // can lower a family's payroll and cannot raise it.
+    //
+    // ⚠ THE WEIGHTS ARE THE ONLY FITTED NUMBERS HERE, and every REFERENCE the four components divide
+    // by is a figure the game already states out loud (the rank halving, the coach's own quoted
+    // season band, the tier ladder's own length, `ECONOMY.form.max`). That is deliberate: a component
+    // with a private normaliser is a dial nobody can argue with, and four of those would have made
+    // the score untunable. The measured corridor against his 5-15% is in the spec's §4.
+    raise: {
+      /** A FLAT YEAR IS STILL 5%, NEVER NOTHING AND NEVER LESS. His floor, and the one place «he
+       *  never asks for less» is enforced - the downward half of the old silent re-price is deleted
+       *  rather than lettered. ⚠ It also sits exactly where the masseur's ceiling was argued to:
+       *  `ECONOMY.masseur.raisePerYear` is 4% precisely so the second seat stays «не так интенсивно
+       *  как тренер», and the two numbers must not be retuned past each other. */
+      askFloor: 0.05,
+      /** His ceiling on ONE ask. Reached only by a score of 1 - every component at full marks in the
+       *  same year, which the bench measures as rare rather than assumes to be. */
+      askCeiling: 0.15,
+      /** ⭐ THE RANK COMPONENT'S REFERENCE: HALVING HER RANKING NUMBER IN A YEAR IS FULL MARKS.
+       *  #400 -> #200 and #20 -> #10 score the same, which is the honest shape - a ranking ladder is
+       *  multiplicative and a linear reading would hand a junior climbing out of the four hundreds
+       *  the same credit as a top-tenner defending a title. Argued rather than fitted: there is no
+       *  free parameter in «twice as good». */
+      rankHalving: 2,
+      /** The weights, summing to 1. ⭐ THE RESIDUAL IS THE HEAVIEST AND #51 SAYS WHY: «a coach who got
+       *  more out of her than the odds said is exactly the one who should ask» - it is the only
+       *  component that measures HER AGAINST EXPECTATION rather than against zero, so it cannot be
+       *  earned by a big season that was always going to happen. ⚠ TITLES ARE THE LIGHTEST, which is
+       *  his correction to the first draft made arithmetic: at 0.15 a single title cannot on its own
+       *  take the ask past 6.5% of the corridor, so «одного титула маловато» is true of the shipped
+       *  model and not merely of its prose. */
+      weights: {
+        /** her place in the professional table, against where it was when the fee was agreed */
+        rank: 0.25,
+        /** the share of her REMAINING HEADROOM she actually took - literally the coach's job */
+        development: 0.25,
+        /** what she won, weighted by the rung it was won on */
+        titles: 0.15,
+        /** ⭐ what she did against the odds ring's own expectation (wave F1's results channel) */
+        residual: 0.35,
+      } as Record<'rank' | 'development' | 'titles' | 'residual', number>,
+    },
+
     // THE VENUE, BY THE RUNG THAT TRAINS THERE (docs/specs/court-follows-the-coach-2026-08.md).
     //
     // ⚠ UNTIL 08.08 THE COURT TOOK NO RUNG ARGUMENT AT ALL, so an Elite coach worked on the same

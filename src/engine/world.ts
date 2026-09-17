@@ -120,12 +120,16 @@ export type { SpanWeek } from './world/multiWeek'
 import { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution } from './world/planner'
 export { bookVacation, cancelVacation, bookPractice, cancelPractice, consecutivePracticeWeeks, practiceCaution }
 export type { PracticeCaution } from './world/planner'
-import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
+import { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, bankCoachResidual, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS } from './world/coachMarket'
 // ⭐⭐ ROUND 42 #42 – `supportPayrollWeeklyCents` joins the barrel: it is read by `coachMarket`'s own
 // affordability arithmetic and by `householdWeekly`, and the bench that priced the cap
 // (`tools/r42-team-budget-cap.ts`) asks it the same question the screens do rather than summing two
 // salaries a third time.
-export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, COACH_EDGE_REVEAL_WEEKS }
+// ⭐⭐⭐ v82, ROUND 42 #51 – the seven halves of the agreed fee join the barrel. Every one of them is
+// read from outside this module (the bench, the pins, `world/form.ts`'s weekly bank and
+// `phaseHerWeek`'s anniversary), and the barrel's own rule is that the public API is what the rest of
+// the repo imports rather than what world.ts happens to use.
+export { openingCoachId, practiceCoachRateFor, hireCoach, coachSinceWeek, matchesEverPlayed, setCoachOnEventWeeks, setCoachOnJuniorEvents, coachTravelsWithHer, coachBilling, coachEdgeView, coachPlaqueLine, coachLadderNote, coachMarket, coachRetainerBandOf, coachRoomNote, eliteGateStandingOf, supportPayrollWeeklyCents, bankCoachResidual, coachMarketLabourCents, coachProgressScore, coachRateCents, coachRaiseDue, resolveCoachRaise, settleCoachDeal, COACH_EDGE_REVEAL_WEEKS }
 // W3-KIT: the till and the shop window. ⚠ `GEAR_CATEGORY_LINE` came back from equipment.ts to this
 // file until R2-10 step 2; it left with `resolveGear`, its only reader here, and is imported by
 // world/phaseFinance.ts now. See the note at `resolveGear` for why it was priced below world.ts.
@@ -1843,9 +1847,21 @@ export function createWorld(
     // same literal the v79 -> v80 migration back-fills with, and for the same reason rather than by
     // coincidence.
     //
-    // ⚠ NOW THE LAST KEY OF THE LITERAL, and `coachPairs` has stopped being last. Same handover,
-    // same peel order (reverse, newest first), same line in `careerHashAtSchema`.
+    // ⚠ AND IT HAS STOPPED BEING LAST IN ITS TURN – the same handover `coachPairs` made to it one
+    // version ago. Same peel order (reverse, newest first), same line in `careerHashAtSchema`.
     form: 0,
+    // ⭐⭐⭐ v82 (round 42 #51): NOTHING HAS BEEN AGREED YET, and `null` is exactly true on week 0
+    // whichever way the profile went – a self-coaching family has nobody to have a contract with,
+    // and a family that opens WITH a coach has one only from the moment the till first meets him.
+    //
+    // ⚠ IT IS NOT SETTLED HERE, AND THAT IS ONE WRITER RATHER THAN THREE. `settleCoachDeal` runs
+    // inside `resolveBaseCosts` on every week, so the opening hire, a mid-career hire and the first
+    // tick after the v81 -> v82 migration all get their contract written by the SAME line – and none
+    // of the three can be the one somebody forgets. A save exported before the first tick carries
+    // `null`, which is honest: the family has a coach and has not yet been billed for him.
+    //
+    // ⚠ NOW THE LAST KEY OF THE LITERAL. Same peel order, same line in `careerHashAtSchema`.
+    coachDeal: null,
   }
   addEvent(world, {
     week: 0,

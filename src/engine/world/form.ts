@@ -24,6 +24,10 @@ import { JUNIOR_TOUR } from '../season/tournament'
 import type { WorldState } from '../world'
 import { KID_ID } from './constants'
 import { sparringRustCut, sparringWorksThisWeek, SPARRING_RECEIPT } from './sparring'
+// ⚠ ONE-WAY EDGE: `coachMarket.ts` does not import this module, so banking the residual here adds no
+// cycle. It is the same direction `./sparring` above is imported in, and for the same reason – the
+// weekly pass is the one place that holds the facts every seat's own module needs.
+import { bankCoachResidual } from './coachMarket'
 import { addEvent } from './ledger'
 
 /** ⭐ HOW LONG SINCE SHE LAST FINISHED A COMPETITIVE MATCH, counted at the week that has just
@@ -153,7 +157,18 @@ export function sparringComebackGap(world: WorldState): number | null {
  *  a closed form. The frozen MAIN capture cannot see this call. */
 export function accrueFormWeek(world: WorldState, away: boolean): void {
   const before = world.form ?? 0
-  world.form = accrueForm(before, herWeekForForm(world, away))
+  const week = herWeekForForm(world, away)
+  world.form = accrueForm(before, week)
+  // ⭐⭐⭐ v82, ROUND 42 #51 – AND THE COACH'S CONTRACT BANKS THE SAME RESIDUALS, off the list this
+  // pass has ALREADY computed rather than a second read of the feed. #51 calls the residual against
+  // expectation «the fourth and best» component of the annual ask, «because a coach who got more out
+  // of her than the odds said is exactly the one who should ask» – and one derivation of «what she
+  // did against expectation» is what stops the coach's answer and her form's from drifting apart.
+  //
+  // ⚠ THE FLOW, NOT THE STOCK. `world.form` above is clamped and reverts to neutral, so a girl who
+  // beat her odds all year reads 0 at the anniversary; `bankCoachResidual` sums and keeps. See its
+  // own note for why the sum cannot be derived at the ask instead (the feed prunes at 400 rows).
+  bankCoachResidual(world, week.residuals)
   // ⭐ THE COACH'S EYE, decided against the two values this pass already holds and nothing else.
   const eye = coachFormNote(world, before, world.form)
   if (eye) addEvent(world, { week: world.week, type: 'info', text: eye })
