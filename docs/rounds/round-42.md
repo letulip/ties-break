@@ -2727,12 +2727,21 @@ its own acceptance bench does not ship because the round is ending.
   the same ±6 points are worth several times that and the slump becomes a thing the player fights.
   **So the honest sequence is #34 → F1 → F2**, and this round's measurement is what says so.
 
-- [x] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
+- [~] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
   in sequence, each one better than the last: «химия между ребёнком и тренером, а не просто стиль-метч»
   → «может как-то от её темперамента исходя» → ⭐ «эта самая химия может как-то нарабатываться с разной
   динамикой – это может стать показателем, насколько ей комфортно с тренером».
 
-  ✅ **SHIPPED IN round 43 item #1, wave C1 – `coachPairs` and the chemistry trajectory (v79), spec `the-chemistry-2026-09.md`.** ⚠ The box was ticked LATE, on 17.09, when an audit of this ledger found it still open – see round 44's note on why an older round's open items go quiet.
+  ⚠⚠ **HALF-SHIPPED, AND THE ARCHITECT'S OWN TICK ON 17.09 WAS TOO GENEROUS – CORRECTED THE SAME DAY.**
+  Round 43 item #1 built the ENGINE: `coachPairs`, the affinity, the phase walk and the three event
+  channels, at v79. **But `coachPairs` never crosses the wire** – `src/shared/protocol/` does not
+  carry it and `snapshot.ts` does not build it – so the number exists, moves development, and **the
+  player cannot see it at all.**
+
+  ⭐ **That is not a missing decoration, it is the design's own signal.** His description makes the
+  RATE the thing the player reads: «если химия прибавляется по 3-5-7% в год, возможно, это не самый
+  подходящий тренер. А если 10-15 – то лучше». A rate nobody can read is not a signal. The box goes
+  back to `[~]`: the mechanic is real and the item is not delivered.
 
   **The shape, as he described it.** Chemistry is a number that ACCRUES while a coach is hired, and the
   RATE is the signal: «если химия прибавляется по 3-5-7% в год, возможно, это не самый подходящий

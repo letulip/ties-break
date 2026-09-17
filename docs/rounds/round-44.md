@@ -505,3 +505,52 @@ situations including the worries, which is his own rule from the pool's rejected
 
 ⚠ **His own scope instruction governs: «I'd repair the factual seams rather than conduct another
 broad prose rewrite.»** A line not named above is not to be improved.
+
+
+---
+
+## ⭐⭐⭐ 11. WHERE THE CHEMISTRY WENT (his 17.09: «я не увидел её в игре нигде»)
+
+He is right, and the point of loss is nameable rather than vague.
+
+### ⚠⚠ THE MECHANIC RUNS AND THE NUMBER NEVER CROSSES THE WIRE
+
+`coachPairs` is read in **seven engine files** – `chemistry.ts`, `development.ts`, `phaseGrowth.ts`,
+`world/form.ts`, `world.ts`, `state.ts`, `migrations.ts` – so it is live and it moves her development
+every week. And **`src/shared/protocol/` does not carry it; `snapshot.ts` does not build it.** The
+UI cannot render a gauge for a number it is structurally unable to see.
+
+⭐ **So this is not «the card marker was not built». The PREREQUISITE for every visible half was
+never built, and nobody named it as owed** – not the spec, not the round-43 ledger, not the PR.
+
+### The chain, in order
+
+1. **16.09** – he raises three items: **#50** the chemistry design, **#51** the raise basket, **#52**
+   the card marker with the icon handed over.
+2. `the-chemistry-2026-09.md` is written as the buildable form of #50 **plus** #51 and #52, and says
+   of itself: «**Nothing here is built.** It ends in numbered open questions with recommendations».
+   §8a designs the gauge and **he ruled it**: C11 «yes, and by GRADIENT – his design, and it is better
+   than the recommendation it answers», C12 «the figure stays, with the sign», struck the architect's
+   own «no percentage anywhere» himself.
+3. **Round 43 builds C1 – the engine half only.** v79 ships.
+4. **#51 and #52 stay `[ ]` in ROUND 42's ledger.** `/pull-request`'s step 4c reads the CURRENT
+   round's ledger only, so neither appears in any PR that follows. Same mechanism that lost #51 and
+   that he caught this morning.
+5. **17.09 – the architect ticks #50 as shipped during the audit. Too generous, corrected the same
+   day to `[~]`**: his own design makes the RATE the signal the player reads («если химия прибавляется
+   по 3-5-7% в год, возможно, это не самый подходящий тренер»), and a rate nobody can read is not a
+   signal.
+
+### What is owed, and it is four things rather than one
+
+| | owed | state |
+| --- | --- | --- |
+| **the wire** | `coachPairs` → snapshot, as the shape the UI needs | **not built, never named** |
+| **the gauge** | §8a: gradient, light→bright green up, orange→red down; the FIGURE stays with its sign | designed, ruled 16.09, not built |
+| **the icon** | he handed one over | not in `public/` – to be re-sent |
+| **#52 the card** | marker in the bottom-right corner, price moves to the top-right | not built |
+
+⚠ **The accessibility constraints he set are part of the design and travel with it**: the fill
+FRACTION must carry the sign too, because red/green is the commonest colour-vision confusion; the
+neutral must read «nothing has happened yet» rather than «bad»; and `--accent` stays the icon's so
+the two never compete.
