@@ -53,7 +53,7 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { drainLifeBeats } from './_lifeBeats'
-import { ENDINGS, DOOR_BY_TEMPERAMENT, leavingDoorDue, peakLeavingDue } from '../src/engine/ending'
+import { ENDINGS, fallLeavingDue, peakLeavingDue } from '../src/engine/ending'
 import type { CareerEndingType } from '../src/shared/protocol'
 import type { Temperament } from '../src/engine/spirit'
 import { WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../src/engine/season/calendar'
@@ -83,12 +83,18 @@ export interface DoorOutcome {
   seed: string
   preset: string
   temperament: Temperament
-  door: 'peak' | 'fall'
   /** ARM A – what the shipped engine latched */
   ending: CareerEndingType | null
   endedAge: number | null
-  /** ARM B – the winters her gate opened on, draw ignored */
-  eligibleSeasons: number[]
+  /** ⚠⚠ ARM B, AND IT IS PER DOOR NOW RATHER THAN ONE LIST PER CAREER. Until 17.09 a career carried a
+   *  single `door` off `DOOR_BY_TEMPERAMENT` and one list of eligible winters, because her voice
+   *  decided which of the two she could ever be asked. He deleted that table, so **every career is a
+   *  candidate for both doors** and the denominator for each column is all of them. */
+  eligibleSeasons: { peak: number[]; fall: number[] }
+  /** ARM B – her age at the FIRST winter each gate opened on. His 17.09 ruling was read off exactly
+   *  this figure («медианный возраст первой подходящей недели у пика — 21»), so the bench prints it
+   *  rather than leaving the floor to be argued about. */
+  firstEligibleAge: { peak: number | null; fall: number | null }
   /** ARM B – the best season-end place she ever held on the PAID table, or null */
   bestWtaRank: number | null
   /** ARM B – how many professional winters she reached at all (the denominator behind the census) */
@@ -131,10 +137,10 @@ export function runCareer(preset: Preset, index: number, policy: Policy): DoorOu
     seed: world.seed,
     preset: preset.label,
     temperament: leavingViewOf(world).temperament,
-    door: DOOR_BY_TEMPERAMENT[leavingViewOf(world).temperament],
     ending: null,
     endedAge: null,
-    eligibleSeasons: [],
+    eligibleSeasons: { peak: [], fall: [] },
+    firstEligibleAge: { peak: null, fall: null },
     bestWtaRank: null,
     proWinters: 0,
     peakBand: Object.fromEntries(PEAK_BANDS.map((b) => [b, false])),
@@ -157,7 +163,13 @@ export function runCareer(preset: Preset, index: number, policy: Policy): DoorOu
         if (view.endRank !== null && (out.bestWtaRank === null || view.endRank < out.bestWtaRank)) {
           out.bestWtaRank = view.endRank
         }
-        if (leavingDoorDue(view) !== null) out.eligibleSeasons.push(view.seasonIndex)
+        // ⚠ BOTH GATES ARE ASKED ON EVERY PROFESSIONAL WINTER, not «her» one – see `eligibleSeasons`.
+        // Asked through the engine's own predicates, never re-derived here.
+        for (const door of ['peak', 'fall'] as const) {
+          if (!(door === 'peak' ? peakLeavingDue(view) : fallLeavingDue(view))) continue
+          out.eligibleSeasons[door].push(view.seasonIndex)
+          out.firstEligibleAge[door] ??= view.ageYears
+        }
         for (const band of PEAK_BANDS) if (peakLeavingDue(view, band)) out.peakBand[band] = true
         if (view.endRank !== null && view.prevEndRank !== null && view.prevPoints > 0) {
           out.fallCandidates.push({
@@ -206,8 +218,8 @@ function padEnd(s: string, w: number): string {
 /** 1 - Π(1 - p) over a career's eligible winters – what a chance of `p` should produce for THAT
  *  career. Averaged over the population it is the EXPECTED column, and it is the thing REALISED has
  *  to agree with for the wiring to be believed. */
-function expectedFor(o: DoorOutcome, chance: number): number {
-  return 1 - Math.pow(1 - chance, o.eligibleSeasons.length)
+function expectedFor(o: DoorOutcome, door: 'peak' | 'fall', chance: number): number {
+  return 1 - Math.pow(1 - chance, o.eligibleSeasons[door].length)
 }
 
 /** ⭐⭐ THE CHANCE, SWEPT WITHOUT RE-RUNNING – `sweepGrace`'s own trick in `endings-bench.ts`, and it
@@ -238,8 +250,8 @@ export function main(argv = process.argv.slice(2)): void {
   // in this report has an effective n of 24 rather than 72, and a rare event can read 0 for no
   // reason but that. (Verified, not inferred: `temperamentFor` over those 24 seeds gives
   // {deep 6, fiery 8, sunny 3, quiet 7}, and replication-weighted that is {19, 26, 7, 20} – the
-  // partition table below, career for career.) With `--spread` the careers and the distinct seeds
-  // are the same number, at the cost of holding the coach tier fixed inside each background.
+  // voice table below, career for career.) With `--spread` the careers and the distinct seeds are
+  // the same number, at the cost of holding the coach tier fixed inside each background.
   const spread = argv.includes('--spread')
   const oneEach = PRESETS.filter((p, i) => PRESETS.findIndex((q) => q.background === p.background) === i)
   const presets = spread ? oneEach : presetsArg >= 0 ? PRESETS.slice(0, Number(argv[presetsArg + 1])) : PRESETS
@@ -267,7 +279,7 @@ export function main(argv = process.argv.slice(2)): void {
     `  ${presets.length * seeds} careers, ${distinct} DISTINCT SEEDS – every seed-derived figure below has an effective n of ${distinct}`,
   )
   console.log(
-    `  peak: top ${ENDINGS.peakRankBand} on the paid table or a title at the top rung · chance ${(100 * ENDINGS.peakLeavingChance).toFixed(0)}% per eligible winter`,
+    `  peak: ${ENDINGS.peakMinAgeYears}+ AND (top ${ENDINGS.peakRankBand} on the paid table or a title at the top rung) · chance ${(100 * ENDINGS.peakLeavingChance).toFixed(0)}% per eligible winter`,
   )
   console.log(
     `  fall: points <= ${ENDINGS.fallPointsShare} of last season's (floor ${ENDINGS.fallPointsFloor}) AND the place at least x${ENDINGS.fallRankFactor} and +${ENDINGS.fallRankPlaces} · chance ${(100 * ENDINGS.fallLeavingChance).toFixed(0)}%`,
@@ -286,23 +298,32 @@ export function main(argv = process.argv.slice(2)): void {
   console.log('  ── THE TWO DOORS, as shares of ALL careers walked ──')
   console.log('')
   console.log(
-    `  ${padEnd('door', 8)}${'girls'.padStart(8)}${'ELIGIBLE'.padStart(10)}${'EXPECTED'.padStart(10)}${'REALISED'.padStart(10)}   median age`,
+    `  ${padEnd('door', 8)}${'girls'.padStart(8)}${'ELIGIBLE'.padStart(10)}${'EXPECTED'.padStart(10)}${'REALISED'.padStart(
+      10,
+    )}   median age   median age at 1st eligible`,
   )
   for (const door of ['peak', 'fall'] as const) {
-    const cen = census.filter((o) => o.door === door)
-    const shp = shipped.filter((o) => o.door === door)
-    const eligible = cen.filter((o) => o.eligibleSeasons.length > 0).length
+    // ⚠⚠ THE DENOMINATOR IS EVERY CAREER, ON BOTH ROWS. Until 17.09 it was the careers whose voice
+    // owned that door – half the corpus each – because `DOOR_BY_TEMPERAMENT` made the other half
+    // ineligible by construction. With the table deleted the two rows share one population.
+    const eligible = census.filter((o) => o.eligibleSeasons[door].length > 0).length
     const chance = door === 'peak' ? ENDINGS.peakLeavingChance : ENDINGS.fallLeavingChance
-    const expected = cen.length === 0 ? 0 : cen.reduce((s, o) => s + expectedFor(o, chance), 0) / cen.length
-    const left = shp.filter((o) => o.ending === door)
+    const expected =
+      census.length === 0 ? 0 : census.reduce((s, o) => s + expectedFor(o, door, chance), 0) / census.length
+    const left = shipped.filter((o) => o.ending === door)
     const ages = left.map((o) => o.endedAge ?? 0).sort((a, b) => a - b)
+    // ⭐ HIS OWN FIGURE, RE-MEASURED: the age at which the gate FIRST opens, which is what he read 21
+    // off and ruled 25+ on.
+    const firsts = census
+      .map((o) => o.firstEligibleAge[door])
+      .filter((a): a is number => a !== null)
+      .sort((a, b) => a - b)
     console.log(
-      `  ${padEnd(door, 8)}${String(cen.length).padStart(8)}${pct(eligible, census.length).padStart(10)}${`${(
-        (100 * expected * cen.length) /
-        Math.max(1, census.length)
-      ).toFixed(1)}%`.padStart(10)}${pct(left.length, shipped.length).padStart(10)}   ${
+      `  ${padEnd(door, 8)}${String(census.length).padStart(8)}${pct(eligible, census.length).padStart(10)}${`${(
+        100 * expected
+      ).toFixed(2)}%`.padStart(10)}${pct(left.length, shipped.length).padStart(10)}   ${
         ages.length ? median(ages).toFixed(0) : '–'
-      }`,
+      }            ${firsts.length ? `${median(firsts).toFixed(0)} (min ${firsts[0]}, n ${firsts.length})` : '–'}`,
     )
   }
   console.log('')
@@ -317,8 +338,7 @@ export function main(argv = process.argv.slice(2)): void {
   console.log(`  ${padEnd('chance', 9)}${'peak'.padStart(9)}${'fall'.padStart(9)}${'both'.padStart(9)}`)
   for (const p of CHANCE_CANDIDATES) {
     const cell = (door: 'peak' | 'fall') => {
-      const cen = census.filter((o) => o.door === door)
-      const sum = cen.reduce((s, o) => s + expectedFor(o, p), 0)
+      const sum = census.reduce((s, o) => s + expectedFor(o, door, p), 0)
       return (100 * sum) / Math.max(1, census.length)
     }
     const a = cell('peak')
@@ -334,17 +354,25 @@ export function main(argv = process.argv.slice(2)): void {
   }
   console.log('')
 
-  // --- THE TEMPERAMENT CENSUS: the partition, and it must be flat ---
-  console.log('  ── THE PARTITION: one door per girl, and the four should be a quarter each ──')
+  // --- THE VOICE CENSUS: BOTH DOORS, PER VOICE, AND THE TWO COLUMNS ARE THE WHOLE POINT ---
+  //
+  // ⚠⚠ THIS TABLE USED TO BE HEADED «THE PARTITION: one door per girl» AND PRINTING IT IS WHAT
+  // EXPOSED THE DEFECT. Each voice had one door and an eligibility number beside it, so nobody could
+  // read off the page that `peak` girls reached their door on 19.4% of careers while `fall` girls
+  // reached theirs on 40.3% – two voices about twice as likely to leave at all. Printed side by side,
+  // per voice, per door, the asymmetry is impossible to miss. Both columns should now be flat ACROSS
+  // voices: any spread here is sampling, because neither gate reads a temperament (a test pins that).
+  console.log('  ── EVERY VOICE REACHES BOTH DOORS: eligibility per voice, per door ──')
   console.log('')
+  console.log(`  ${padEnd('voice', 8)}${'girls'.padStart(8)}${'share'.padStart(8)}${'peak'.padStart(10)}${'fall'.padStart(10)}`)
   for (const t of ['sunny', 'fiery', 'quiet', 'deep'] as const) {
     const rows = census.filter((o) => o.temperament === t)
-    const eligible = rows.filter((o) => o.eligibleSeasons.length > 0).length
+    const open = (door: 'peak' | 'fall') => rows.filter((o) => o.eligibleSeasons[door].length > 0).length
     console.log(
-      `  ${padEnd(t, 8)}${'-> ' + padEnd(DOOR_BY_TEMPERAMENT[t], 6)}${String(rows.length).padStart(6)} girls ${pct(
-        rows.length,
-        census.length,
-      )}   eligible ${pct(eligible, Math.max(1, rows.length))}`,
+      `  ${padEnd(t, 8)}${String(rows.length).padStart(8)}${pct(rows.length, census.length)}${pct(
+        open('peak'),
+        Math.max(1, rows.length),
+      ).padStart(10)}${pct(open('fall'), Math.max(1, rows.length)).padStart(10)}`,
     )
   }
   console.log('')
@@ -352,7 +380,8 @@ export function main(argv = process.argv.slice(2)): void {
   // --- THE PEAK'S BAND, SWEPT IN ONE PASS ---
   console.log('  ── THE PEAK GATE: which top-N band would ever have opened ──')
   console.log('')
-  const peakGirls = census.filter((o) => o.door === 'peak')
+  // ⚠ EVERY CAREER IS A PEAK CANDIDATE NOW – see `eligibleSeasons`. The band sweep is over all of them.
+  const peakGirls = census
   const ranked = census.map((o) => o.bestWtaRank).filter((r): r is number => r !== null).sort((a, b) => a - b)
   console.log(
     `  ${census.filter((o) => o.proWinters > 0).length}/${census.length} careers reached a professional winter at all; ` +
@@ -361,7 +390,11 @@ export function main(argv = process.argv.slice(2)): void {
       }`,
   )
   console.log('')
-  console.log(`  ${padEnd('band', 8)}${'peak girls eligible'.padStart(22)}${'of ALL careers'.padStart(17)}`)
+  console.log(
+    `  ⚠ the band sweep runs the shipped floor of ${ENDINGS.peakMinAgeYears}+ with it – it is a clause of the same predicate.`,
+  )
+  console.log('')
+  console.log(`  ${padEnd('band', 8)}${'careers eligible'.padStart(22)}${'of ALL careers'.padStart(17)}`)
   for (const band of PEAK_BANDS) {
     const hit = peakGirls.filter((o) => o.peakBand[band]).length
     console.log(

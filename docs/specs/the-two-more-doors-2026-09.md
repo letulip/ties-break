@@ -16,6 +16,13 @@ is the build's own record – what was built, what was measured, and where the m
 with the prediction. **The copy is still a draft and is collected for him in one document:
 `docs/specs/the-two-doors-corpus-2026-09.md`.**
 
+⚠⚠ **HE REVIEWED THE BUILD THE NIGHT IT SHIPPED (§9) AND §10 IS THE REPAIR.** Read §6 as the record
+of what was built first, not as the description of what is in the tree: **§4's one-voice-one-door
+table, §6.1's «no age gate», §6.2 entirely, and every rate in §6.5 are SUPERSEDED BY §10.** They are
+kept because the mistake is the useful half – a partition defended as «not a career script» by an
+argument that its own measurement had already refuted is the kind of thing worth being able to read
+back.
+
 ## §1 The correction he asked for, first
 
 He wrote: «правда с нашими текущими модификациями это [обвал] может стать незначительным или даже
@@ -134,18 +141,22 @@ which is the same week the natural end's offer is raised on. `resolveLeaving` ru
 whether there is another year in this.* Behind a latch, and inside the college freeze, it does not
 run at all.
 
+⚠ **THE TABLE BELOW IS THE 17.09 BUILD, NOT THE TREE.** Its `voices` row and its `peak` gate are
+superseded by §10: every voice reaches both doors now, and the peak gate carries his 25+ floor.
+
 | | door #7 `peak` | door #8 `fall` |
 | --- | --- | --- |
-| voices | `deep`, `sunny` | `fiery`, `quiet` |
+| voices | `deep`, `sunny` – **superseded, §10: all four** | `fiery`, `quiet` – **superseded, §10: all four** |
 | table | the paid one, always (`activeLadderOf === 'wta'`) | the same |
 | gate | season-end place inside `peakRankBand` **or** a title at the ladder's top rung inside the season | points at most `fallPointsShare` of last season's, from a season of at least `fallPointsFloor`, **and** the place at least `fallRankFactor`× larger **and** at least `fallRankPlaces` places worse |
 | draw | `seed:ending:peak:<season>`, one value, `< peakLeavingChance` | `seed:ending:fall:<season>`, one value, `< fallLeavingChance` |
 | shipped knobs | `peakRankBand: 10`, `peakLeavingChance: 0.02` | `fallPointsShare: 0.5`, `fallPointsFloor: 200`, `fallRankFactor: 2`, `fallRankPlaces: 30`, `fallLeavingChance: 0.02` |
 | measured career rate (§6.5) | **1.89%** | **1.16%** |
 
-⚠ **No age gate on either, and the absence is §2's own instruction rather than an oversight** –
-«What they share is not an age». The place gate does the work an age floor would have done badly: a
-top-ten finish on the paid table is not something a career can hold without having been a career.
+⚠⚠ **«No age gate on either» WAS THIS BUILD'S READING OF §2 AND HE OVERTURNED IT (§9, §10).** What
+it said: «What they share is not an age», so the place gate does the work an age floor would have done
+badly. What the bench then measured: a median first eligible peak winter at **21**. His ruling: «я бы
+сказал 25+». `ENDINGS.peakMinAgeYears` is in the tree and §10 measures what it cost.
 
 ⚠ **Every fall threshold is anchored on his own worked example** (§1's table: #13 → #59, 4,008 points
 expiring against 1,584 replacing them). That case reads share **0.40**, factor **×4.54** and **46
@@ -153,6 +164,12 @@ places**, so it passes all three with room – which is the least a door can owe
 written for. `tests/two-doors.test.ts` §C pins it.
 
 ## §6.2 The temperament mapping, and why it is not a career script
+
+⚠⚠⚠ **THIS WHOLE SECTION IS WRONG AND IS KEPT AS THE RECORD OF HOW. `DOOR_BY_TEMPERAMENT` IS DELETED
+(§9, §10).** Its argument was that a partition cannot be a career script because «the same chance on
+both sides» – and the numbers that refute it are four paragraphs further down this same document
+(19.4% against 40.3% reachability). Below is what shipped, verbatim, so the shape of the error is
+readable rather than summarised.
 
 `DOOR_BY_TEMPERAMENT` in `engine/ending.ts` is §4's table, written once. Both predicates refuse on the
 wrong voice before they look at anything else, so **a girl can only ever be offered her own door** –
@@ -218,6 +235,12 @@ career is 156 weeks from age 14 and never reaches the paid table at all, so `lea
 where a draw IS derived, `rngFromSeed` opens a fresh sub-stream and consumes nothing from MAIN.
 
 ## §6.5 THE RATE – predicted against measured (invariant 5)
+
+⚠⚠ **EVERY RATE IN §6.5 WAS MEASURED ON THE PARTITIONED BUILD AND IS SUPERSEDED BY §10.4.** Its
+denominators are half the corpus per door, because half of the girls were ineligible for each door by
+construction. **What is NOT superseded, and is the reason to keep reading it:** the population
+argument (`player`, not `grinder`), the distinct-seed trap and `--spread`, the sweep's exactness, and
+the absurd-value arm. Those four are method rather than number, and §10 uses all of them again.
 
 `npm run bench:doors`, `tools/two-doors-bench.ts`. **9 presets × 8 seeds = 72 careers, `player`
 policy, fourteen to forty-four.**
@@ -371,6 +394,10 @@ all the way to the last offer.
 
 ## §6.6 What is open, and every one of them is his
 
+⚠ **ALL FOUR WERE ANSWERED ON 17.09 – see §9 for his words and §10.6 for what is left.** Items 2 and
+3 became rulings, item 1 became nine findings, and item 4 was half-taken (the peak's face moved; a
+per-voice face is still open). The list below is the question as the build asked it.
+
 None of these is a defect and none of them blocks the wave. They are the four places where the build
 reached a question only he can answer, listed so they are asked rather than decided quietly.
 
@@ -469,3 +496,233 @@ season is playable**, so the player never gets an entry opportunity to notice.
 ⭐ **What he approved**: the feed ordering matches the implementation, the headline family is
 coherent, `serious` is the safest shared fall face, and no line blames the parent, the body, the
 schedule or the money.
+
+---
+
+# §10 THE REPAIR (`round/44-doors-repair`, 17.09) – his nine findings, one by one
+
+Everything in this section supersedes the part of §6 it names. The two [P1]s about mechanics truth
+are §10.1 and §10.3; his 25+ ruling is §10.2; the copy is §10.5; the re-measurement is §10.4.
+
+## §10.1 THE PARTITION IS DELETED, and the note that replaces it is longer than the table was
+
+`DOOR_BY_TEMPERAMENT` is gone from `engine/ending.ts`, and both gates now read no temperament at all.
+`LeavingView.temperament` stays on the view for one purpose – `leavingLine`, the words – and the
+comment beside it says so.
+
+⭐ **HIS OPTION (b), TAKEN WHOLE: every temperament reaches both doors, and the temperament decides
+the VOICE and nothing else.** §4's own sentence is what makes this the design rather than a
+concession to it – «two players in identical careers leave differently because they are different
+people» is a claim about HOW she leaves, and a partition turned it into a claim about which exits
+exist for her.
+
+⚠⚠ **AND THE ARITHMETIC THE ORIGINAL DEFENCE GOT WRONG IS WORTH KEEPING, because it is a shape of
+error that will come back.** §6.2 argued the mapping could not be a career script because it was «a
+PARTITION and not a weight: two voices each, and the same chance on both sides». Equal coins are not
+equal likelihood when the gates are not equally REACHABLE – and the refutation was **four paragraphs
+further down the same document**, in the build's own measurement: the peak gate opened for 19.4% of
+careers and the fall's for 40.3%. Two voices were therefore about twice as likely to leave at all as
+the other two. The defence was checkable against a number the defender had already written down.
+
+**What went red in the tests, and what replaced it.** `tests/two-doors.test.ts` section A pinned the
+partition in three cases – the table itself, «the two doors split the four evenly», and «a girl can
+only ever be offered HER door». All three are **replaced rather than deleted**, and the section's own
+header names what stood there:
+
+| the assertion that was there | its successor |
+| --- | --- |
+| `DOOR_BY_TEMPERAMENT` equals §4's table | *(gone with the symbol)* |
+| «a girl can only ever be offered HER door» | **«all four voices reach both doors»** – the same collapse and the same peak, read for every voice, eight answers that all used to depend on her temperament |
+| «the two doors split the four evenly, so no temperament is likelier to leave than another» | **«neither gate reads her voice AT ALL»** – six views swept over all four voices, every answer identical. Strictly stronger: it is the property the even split was offered as evidence FOR |
+| *(nothing)* | **«the voice still decides which words she leaves in»** – four distinct lines at each door, and no voice says the same thing at both |
+
+⚠ **ONE ASSERTION WAS DROPPED WITHOUT A SUCCESSOR AND THAT IS DELIBERATE: `peakLeavingChance ===
+fallLeavingChance`.** Its stated reason was the partition («two halves of one partition at two
+different rates would be a career script»), and the partition is gone. The two knobs are still the
+same number, because the sweep puts both there, but nothing couples them any more and a pin that
+outlives its reason starts asserting something nobody decided.
+
+⚠ **AND ONE THING BECAME LOAD-BEARING THAT WAS NOT.** `leavingDoorDue` tests the peak first, and its
+old comment said the order was a reader's convenience because each girl was asked only one gate. With
+both doors open to everyone a single season can pass both – the peak's TITLE clause carries no rank,
+so a champion who still lost most of her points and thirty-odd places is through both. **Peak wins
+that season** (a year that ended with the top title in the sport is not a year she left after a
+collapse) and a case pins it. The peak's RANK clause cannot collide at all: a place inside the top
+ten and a fall of thirty places would need a rank above zero.
+
+## §10.2 THE PEAK DOOR OPENS AT 25+ (`ENDINGS.peakMinAgeYears`)
+
+His ruling, on the build's own measurement of a median first eligible winter at 21: «это вообще не
+очень по отношению к игроку, особенно на супер-талантливом сиде. Я бы сказал 25+.»
+
+⚠ **§2's «what they share is not an age» was about their SPREAD** – 25, 25, 28, 28 – and it licensed
+not inventing a narrow window around four cases that do not share one. It did not license taking the
+career away from a twenty-one-year-old who has just arrived. A floor is the bottom of his own four
+cases, not a fifth fact on top of them.
+
+Three things about how it is built:
+
+* **It is a FLOOR, not a gate.** It can only refuse a season the place or the title already opened,
+  so every other clause still says exactly what it said.
+* **It sits ABOVE the title clause.** The clause that exists to WIDEN the door may not be the clause
+  that steps around the floor: a girl who won the biggest tournament there is at twenty-one has more
+  career in front of her, not less.
+* **The fall has no floor and the asymmetry is a decision.** His ruling named the peak and its reason
+  does not transfer – the fall's own three terms already require a real season to have fallen FROM.
+  If he wants one there it is one line; this build will not invent it.
+
+`LeavingView` gained `ageYears`, read in `leavingViewOf` off `kidAgeYears` – the one clock that is
+hers (world/age.ts ruling 1, 09.08) – and `resolveLeaving` now stamps the ending with the SAME number
+the gate read, rather than calling the clock twice.
+
+## §10.3 THE PEAK RECORD CAN NO LONGER CONTRADICT ITSELF
+
+His [P1], confirmed in the code: the gate opens on a title ALONE, and `endingForLeaving` preferred
+the rank whenever it was non-null. A champion who finished the year at #15 latched a perfectly valid
+`peak` and then read:
+
+> «She left at the top – she was **#15** the week she said it.»
+
+**The detail now mirrors WHICH CLAUSE opened the door.** `peakRankClauseOpened` is one predicate with
+two readers – the gate asks it whether the door opens, the record asks it which fact to name – so the
+two cannot drift apart again by anybody forgetting. Her place is not wrong in that case; it is simply
+not the reason she is standing there.
+
+⭐ **The pin fails on the renderer that shipped**, which is the only way to know it is this test:
+with the old two-line ternary restored, `⚠⚠ the peak detail mirrors WHICH CLAUSE opened the door` is
+the one case that goes red. The same mutation check was run on the other two repairs – restoring the
+partition reddens three cases in sections A and C, deleting the floor reddens three in B and D.
+
+## §10.4 THE RE-MEASUREMENT – and one door misses his band
+
+`npm run bench:doors -- --spread --seeds 24`, **72 careers over 72 DISTINCT seeds**, `player` policy,
+fourteen to forty-four. Same instrument, same population and same flags as §6.5's shipped arm, so the
+two are comparable line for line. 69 of 72 reached a professional winter; best paid-table place ever
+held, median #12, best #1.
+
+### First, the reachability he asked about – per voice, per door
+
+⚠ **THE BENCH'S OWN TABLE CHANGED SHAPE HERE AND THAT IS PART OF THE FIX.** It used to print «THE
+PARTITION: one door per girl» – each voice, its one door, and one eligibility figure – which is a
+layout in which the defect is invisible. Both doors, per voice, side by side:
+
+| voice | girls | peak gate ever opened | fall gate ever opened |
+| --- | ---: | ---: | ---: |
+| `sunny` | 17 | 35.3% | 88.2% |
+| `fiery` | 19 | **15.8%** | 78.9% |
+| `quiet` | 16 | **37.5%** | 75.0% |
+| `deep` | 20 | 35.0% | 65.0% |
+
+⭐ **Every voice reaches both doors. A `fiery` girl's peak column was 0% by construction the day
+before this, and a `deep` girl's fall column was 0%.**
+
+⚠ **THE SPREAD INSIDE EACH COLUMN IS SAMPLING AND NOT A RESIDUAL PARTITION**, and it is worth saying
+why rather than hoping: **neither predicate can read a temperament at all** – there is no branch to
+carry one, and `tests/two-doors.test.ts` section A sweeps six views over all four voices and requires
+every answer to be identical. What is left is 16 to 20 careers per voice, in which one career is five
+to six percentage points. `fiery`'s 15.8% is three girls of nineteen.
+
+### The rates, at the shipped 2% per eligible winter
+
+| door | ELIGIBLE | **EXPECTED** | REALISED | median age at the door | median age at the FIRST eligible winter |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| peak | 30.6% | **1.72%** | 0.0% (0 careers) | – | **25** (min 25, n 22) |
+| fall | 76.4% | **2.23%** | 2.8% (2 careers) | 34 | 31 (min 20, n 55) |
+
+⚠⚠ **THE FALL DOOR IS OUTSIDE HIS BAND AT THE SHIPPED VALUE AND THE CONSTANT WAS NOT MOVED TO HIDE
+IT.** «У обоих не больше 1–2%» is a ceiling and 2.23% is over it. The peak is inside at 1.72%. The
+exact sweep, one pass over the same census:
+
+| chance per eligible winter | peak, % of all careers | fall, % of all careers | both |
+| ---: | ---: | ---: | ---: |
+| **1%** | **0.88%** | **1.12%** | 2.00% |
+| **2%** | **1.72%** | **2.23%** ⚠ over | 3.96% ← shipped |
+| 3% | 2.55% | 3.33% | 5.88% |
+| 5% | 4.12% | 5.51% | 9.63% |
+| 8% | 6.32% | 8.71% | 15.03% |
+| 12% | 8.95% | 12.86% | 21.81% |
+| 25% | 15.74% | 25.43% | 41.17% |
+
+**`fallLeavingChance: 0.01` prices the fall at 1.12% and is one line.** It is not taken here because
+the rate is his and because the shape of the miss matters to the decision: the un-partitioning roughly
+doubled the fall's eligible population (37.5% → 76.4% of careers) without touching a single threshold,
+so this is the same door meeting twice as many girls rather than a door that got looser. Whether that
+wants a smaller coin or a tighter gate is a design question, not an arithmetic one.
+
+⚠ **AND READ `EXPECTED` AS THE RATE, `REALISED` AS THE CONFIRMATION** – §6.5's own warning, and it
+applies harder here. The peak's REALISED 0.0% is **zero careers against an expectation of 1.24**,
+which is an ordinary outcome at this rate and not a dead door: the same run's ELIGIBLE column says the
+gate opened for 22 of the 72, and §6.5's absurd-value arm already showed REALISED equals ELIGIBLE
+exactly when the chance is 1. `EXPECTED` is computed over the whole census – **1,479 comparable
+professional winters** – rather than over three coin flips.
+
+⭐ **The mix, shipped arm**: `natural` 73.6%, `injury` 23.6%, `fall` 2.8%, `peak` 0.0%, nothing still
+playing.
+
+### What the age floor cost, isolated
+
+⚠ **A SECOND ARM, BECAUSE «THE MEDIAN MOVED FROM 21 TO 25» IS NOT BY ITSELF ATTRIBUTION** – the
+un-partitioning moved the population in the same run. One constant changed on the same tree,
+`peakMinAgeYears: 25 → 0`, same seeds, same flags. That is CLAUDE.md's own null-result discipline used
+forwards: if the output does not move, the floor is not doing what its comment says.
+
+| | no floor | shipped floor (25+) |
+| --- | ---: | ---: |
+| peak gate ever opened | 38.9% | **30.6%** |
+| peak EXPECTED at 2% | **3.21%** ⚠ over his band | **1.72%** |
+| median age at the FIRST eligible winter | **22** (min **18**) | **25** (min 25) |
+| top-10 band, careers eligible | 28/72 | 22/72 |
+
+⭐⭐ **THE FLOOR IS NOT COSMETIC AND THE ARM SAYS SO IN TWO WAYS AT ONCE.** Without it the peak door
+would open on an **eighteen-year-old** – six seasons younger than his youngest named case, and exactly
+the «супер-талантливый сид» his ruling is about. And it would fire at **3.21% of careers**, which is
+over his own rate ceiling. **His two rulings of 17.09 turn out to be one ruling: the age floor is what
+puts the peak door back inside the band the un-partitioning took it out of.**
+
+⚠ **THE ARM'S OWN CONTROL IS THE `fall` ROW, WHICH IS BYTE-IDENTICAL IN BOTH RUNS** (76.4% / 2.23% /
+31). A constant that moved the door it names and nothing else is an arm that contains its reader – the
+provenance check CLAUDE.md asks for before a measurement is believed, satisfied by the run rather
+than argued.
+
+⚠ And the per-voice peak column moves with it, which is the third confirmation: `sunny` 52.9% → 35.3%,
+`quiet` 50.0% → 37.5%, `fiery` 21.1% → 15.8%, `deep` 35.0% → 35.0%. `deep` is unchanged because the
+`deep` girls in this corpus who reach the top reach it after twenty-five anyway – a fact about seven
+careers, not a property of the voice.
+
+## §10.5 THE COPY – eight exits now, and every finding answered
+
+**The count doubled, and that is a consequence of §10.1 rather than a decision.** With one door per
+voice, one line was her whole exit. With both doors open to everyone, «she was not going to be watched
+losing it back» is a sentence about a bad year in a champion's mouth. `leavingLine` therefore takes
+**the door and the voice**: four voices × two doors = eight lines. They are in
+`docs/specs/the-two-doors-corpus-2026-09.md`, which is the one document he reads them in.
+
+⚠⚠ **ALL EIGHT ARE DRAFTS (invariant 4) and the pins are built so they stay drafts** – he can rewrite
+any of them without asking and without a test going red.
+
+| his finding | what changed |
+| --- | --- |
+| **[P1] the `quiet` exit contradicts itself and names an event the engine never sees** | rewritten. «There was never a conversation» / «when you finally asked» cannot both hold, and «she did not enter anything for next season» is unobservable – the career latches on the wrap week, before next season is playable. What survives is the part that was good: she says it as if he already knew |
+| **[P2] lines assert state `leavingLine` never receives** | all three cut. The function is told the door and the voice, so a line may say nothing else. Every one of the eight is now «She said …» – a claim about what she said, which is always licensed – or a statement about the door |
+| **[P2] the fall epilogue overstates the gate** | «the years in front of it» → «the season before it», which is what `fallLeavingDue` actually compares. It also lost «She did not enter the next one», the same unobservable event as the `quiet` exit |
+| **[P2] the `sunny` line says the opposite of the terminal event** | «She is not leaving tennis» is gone. The warmth moved onto what she is going towards |
+| **[P2] the peak face** | `EMOTION_BY_ENDING.peak`: `happy` → **`serious`**. With the partition gone all four voices reach the peak, so a face that fits `sunny` is wrong three times in four. `serious` is the face he approved on the fall for exactly this reason. A per-voice face is still open (§10.6) |
+| **[P2] the document overstates its own tests** | the corpus document now says plainly that section E is **a lexical safety net** – distinctness, a minimum length, a banned vocabulary, the house dash – and that the factual contract is enforced by reading. ⭐ The tests were NOT made stricter to match the claim: the claim was the error, and a test that pinned the sentences would have to move every time he edits a word |
+| **[P3] four plots, not yet four voices** | the `fiery` exits are the two shortest in the set – 14 and 17 words against `deep`'s 26 and 22 – and all eight are single sentences, so length carries the register the punctuation used to |
+
+## §10.6 WHAT IS STILL HIS
+
+1. ⚠⚠ **THE FALL DOOR SITS AT 2.23% AND HIS CEILING IS 2%.** The constant was left where he last saw
+   it rather than tuned down to make the table agree, because the rate is his ruling. Two lines are
+   available and they say different things about the door: `fallLeavingChance: 0.01` prices it at
+   **1.12%** and keeps the gate as written, or a tighter threshold keeps the coin and admits fewer
+   girls. The miss is a population effect – the un-partitioning doubled the fall's eligible careers
+   from 37.5% to 76.4% without touching a threshold – so it is a design question rather than an
+   arithmetic one. §10.4 has the full sweep.
+2. **All eight exits, both epilogue paragraphs, both headlines, both faces.** Nothing here is settled.
+3. **Should either face follow the VOICE rather than the ending?** `EMOTION_BY_ENDING` is keyed on the
+   ending and both doors are now shared by all four voices, so §6.6's item 4 is open at both doors
+   rather than one. Small engine change; nobody has asked for it.
+4. **Does the fall want an age floor too?** Not ruled, not invented. Its own three terms already need
+   a real season to have fallen from, and the bench says the fall's youngest first-eligible winter is
+   **20** against the peak's pre-floor **18**. One line either way.
