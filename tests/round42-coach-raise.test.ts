@@ -60,11 +60,11 @@ import {
   coachRateBandCents,
   coachRetainerBand,
   facilityRateCents,
-  type CoachTier,
 } from '../src/engine/coach'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR, TIER_LADDER } from '../src/engine/season/calendar'
-import { DEFAULT_PROFILE } from '../src/shared/protocol'
+// ⚠ `CoachTier` LIVES IN THE PROTOCOL – it is the rung the PROFILE chooses, declared beside it.
+import { DEFAULT_PROFILE, type CoachTier } from '../src/shared/protocol'
 import { KID_ID } from '../src/engine/world/constants'
 
 const RUNGS: CoachTier[] = ['budget', 'middle', 'high', 'elite']
@@ -339,7 +339,10 @@ describe('§E the progress score reads a basket, not a title', () => {
     // ...and falling OUT of it is zero rather than negative, because he never asks for less.
     world.coachDeal = { ...world.coachDeal!, markWtaRank: 60 }
     world.results = []
-    world.kidRankWta = null
+    // ⚠ `undefined` AND NOT `null`: `kidRankWta` is optional, so «she holds no place» is the field's
+    // ABSENCE. `kidLadderRank` refuses on the points anyway – the line above is what makes her
+    // unranked – but a `null` here would be a shape the save has never held.
+    world.kidRankWta = undefined
     expect(coachProgressScore(world), 'a fall is nothing, never a negative').toBe(0)
   })
 })

@@ -260,10 +260,52 @@ The prediction held on the direction: **every preset pays less than the floating
 year arrangement reaches ×1.04–×1.48 rather than the ×2.65–×16.37 a naive 5–15% compounding would
 give, because the ceiling binds.
 
-⚠ **The bankruptcy column is reported as measured and is NOT claimed as a finding.** Over 24 seeds it
-moves by ±3 careers per preset in both directions with no consistent sign, which is inside the noise
-of a 24-seed sample where a bankruptcy also truncates the career it happens in. If the seat's effect
-on ruin is ever the question, it needs its own arm with a far larger n.
+### The three arms, side by side
+
+| preset | arm | asks | end rate | end funds | bankrupt of 24 |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 8k · working · budget | S | – | $35 | $23,583 | 11 |
+| | A | 0.0 | $32 | $32,039 | 11 |
+| | **B** | 3.0 | $35 | $27,324 | **14** |
+| 8k · working · middle | S | – | $53 | $4,555 | 21 |
+| | A | 0.0 | $50 | $1,500 | 23 |
+| | **B** | 0.5 | $51 | $1,359 | **23** |
+| 25k · middle · budget | S | – | $39 | $159,658 | 2 |
+| | A | 0.0 | $34 | $176,602 | 1 |
+| | **B** | 5.0 | $38 | $121,911 | **3** |
+| 25k · middle · middle | S | – | $58 | $38,611 | 15 |
+| | A | 0.0 | $53 | $40,679 | 15 |
+| | **B** | 1.8 | $58 | $43,681 | **14** |
+| 25k · middle · high | S | – | $85 | $3,422 | 22 |
+| | A | 0.0 | $82 | $12,871 | 21 |
+| | **B** | 0.9 | $86 | $7,300 | **21** |
+| 120k · wealthy · high | S | – | $116 | $189,337 | 0 |
+| | A | 0.0 | $85 | $243,471 | 0 |
+| | **B** | 6.8 | $114 | $195,820 | **0** |
+| 120k · wealthy · elite | S | – | $202 | $165 | 23 |
+| | A | 0.0 | $157 | $22,711 | 22 |
+| | **B** | 1.8 | $174 | $11,041 | **22** |
+| **total** | S / A / **B** | | | | **94 / 93 / 97** |
+
+⭐ **The end-rate column is the whole item in one line.** At the top of the market the shipped till
+had reached **$202** an hour by the end of a fifteen-year arrangement, with nobody having agreed to
+any of it; the agreed fee reaches **$174** – and it got there by asking, twice, on two anniversaries
+the family could read.
+
+⚠ **The bankruptcy column is reported as measured and is NOT claimed as a finding.** The totals are
+94 / 93 / 97 of 168 careers, so the whole item costs about **three careers in a hundred and
+sixty-eight** against the shipped game – and the per-preset signs are inconsistent (two presets are
+*better* under B than under S). At n = 24 per preset, where a bankruptcy also truncates the career it
+happens in and so moves every other column with it, that is inside the noise. If the seat's effect on
+ruin is ever the question it needs its own arm with a far larger n, and this bench is not it.
+
+⚠ **The sanity check CLAUDE.md asks for was run, and its answer is more interesting than a shrug.**
+`--floor 0.40 --ceiling 0.40` is an absurd value and the flag exists so that it can be passed. The
+columns move a long way and in a direction that reads at first as backwards: asks per career collapse
+to **0.0–0.5** and the family pays as little as **83.2%** of the floating fee. That is the gate
+behaving exactly as designed – at a 40% floor almost no anniversary has room worth asking for, so the
+fee stays where it was struck. The arm is emphatically not a null arm, and the shape of its response
+is itself a check on the gate.
 
 ## 11. Where it lives
 

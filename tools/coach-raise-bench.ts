@@ -37,13 +37,7 @@
  * already written; the frozen MAIN capture (41550 / e6b0c709) cannot see it.
  */
 import { PRESETS, POLICIES, openCareer, stepCareerWeek } from './econ-bench'
-import {
-  ageAtWeek,
-  coachMarketLabourCents,
-  coachProgressScore,
-  coachRateCents,
-  type WorldState,
-} from '../src/engine/world'
+import { ageAtWeek, coachMarketLabourCents, coachProgressScore, coachRateCents } from '../src/engine/world'
 import {
   coachAgeBand,
   coachById,
@@ -53,11 +47,13 @@ import {
   coachRetainerBand,
   corridorBandFor,
   facilityRateCents,
-  type CoachTier,
 } from '../src/engine/coach'
+// ⚠ `CoachTier` LIVES IN THE PROTOCOL AND NOT IN `engine/coach.ts`, which is where the rung ladder is
+// declared for the profile that chooses it. `npm run check`'s `vue-tsc -b --force` is what said so –
+// a plain typecheck of `src/` alone never reaches this file.
+import type { CoachTier, FamilyBackground } from '../src/shared/protocol'
 import { ECONOMY } from '../src/engine/economy'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
-import type { FamilyBackground } from '../src/shared/protocol'
 
 const argOf = (name: string, fallback: number): number => {
   const at = process.argv.indexOf(`--${name}`)
@@ -229,10 +225,11 @@ interface Run {
  *  – the alternative (a worktree at an older commit) is the null arm CLAUDE.md's own note describes.
  */
 function walk(presetIndex: number, seedIndex: number, floor: number, ceiling: number, shipped = false): Run {
+  // ⚠ `Object.assign` AND NOT A FIELD WRITE – `ECONOMY` is declared readonly, and this is the idiom
+  // `tools/masseur-raise-bench.ts` already uses to swap an arm's constant for the length of a walk.
   const savedFloor = ECONOMY.coach.raise.askFloor
   const savedCeiling = ECONOMY.coach.raise.askCeiling
-  ECONOMY.coach.raise.askFloor = floor
-  ECONOMY.coach.raise.askCeiling = ceiling
+  Object.assign(ECONOMY.coach.raise, { askFloor: floor, askCeiling: ceiling })
   try {
     const { world, rng } = openCareer(PRESETS[presetIndex], seedIndex, POLICIES[0])
     const asks: Ask[] = []
@@ -301,8 +298,7 @@ function walk(presetIndex: number, seedIndex: number, floor: number, ceiling: nu
       releases,
     }
   } finally {
-    ECONOMY.coach.raise.askFloor = savedFloor
-    ECONOMY.coach.raise.askCeiling = savedCeiling
+    Object.assign(ECONOMY.coach.raise, { askFloor: savedFloor, askCeiling: savedCeiling })
   }
 }
 
