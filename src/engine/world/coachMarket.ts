@@ -20,7 +20,7 @@ import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
 // ⭐ ROUND 38 #7b – the decline read's four ingredients, every one of them already this engine's own:
 // her career's resolved curve (`ageCurveOf`, NOT the shipped constant), what a week past the peak
 // costs her (`declineFactor`), and the body-share the ending itself reads (`physicalMean`).
-import { ageCurveOf, ageFactor, declineFactor, physicalMean, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../development'
+import { ageCurveOf, ageFactor, coachMaintenanceSeasonPct, declineFactor, physicalMean, reachableHeadroomShare, SKILL_KEYS, trainFactor } from '../development'
 import type { AgeCurveBounds } from '../development'
 // ⚠ `ending.ts` IMPORTS ONLY `./kidLife` AND THE PROTOCOL'S TYPES, so this runs one way exactly as
 // `./masseur` and `./business` above do. `world/college.ts` reads the same constants the same way.
@@ -854,8 +854,27 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
   // because reality's does - a top-ten player shopping for a coach is not quoted a junior's fee by
   // anybody - and it keeps the card honest against the bill she will actually be charged.
   const retainerBand = coachRetainerBandOf(world)
+  // ⭐⭐⭐ ROUND 44 – HER OWN RESOLVED CURVE, FOR THE MAINTENANCE HALF OF THE SEASON BAND
+  //     (`docs/specs/the-decline-and-the-seats-2026-09.md` §6e). `ageCurveOf` and not the shipped
+  //     constant, for the reason this file's import block already gives: a career that answered the
+  //     fork carries its own `declineStart`, and a market quoting the table's would tell a girl whose
+  //     decline began at 24.7 the same thing it tells one whose began at 27.8.
+  //
+  // ⚠ ASKED ONCE, LIKE `travels` AND `retainerBand` ABOVE – it is a fact about HER body and not
+  //     about the man on the card, so a row-by-row read would be the same question asked sixteen
+  //     times with sixteen chances to disagree.
+  const bounds = ageCurveOf(world.ageCurve, world.careerTotals?.weeksLostToInjury ?? 0)
   return buildCoachRoster(world.seed, age).map((coach) => {
     const fit = coachFitFor(coach, world.profile.playStyle)
+    // ⚠ THE UNHIRED QUOTE CARRIES NO CHEMISTRY, and that is the same rate `coachSeasonUplift` one
+    //     line down prices the growth arm at: there is no relationship with a man nobody has hired,
+    //     so the two halves of one band are read off ONE number rather than two that agree.
+    const held = coachMaintenanceSeasonPct({
+      ageYears: age,
+      weeks: coachedWeeks,
+      coachRate: coachFactor(coach.tier, fit),
+      bounds,
+    })
     const [upliftLo, upliftHi] = coachSeasonUplift({
       skills: SKILL_KEYS.map((k) => world.skills[k]),
       potential: SKILL_KEYS.map((k) => world.potential[k]),
@@ -886,7 +905,22 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
         coachWeeklyCents(bandedRateCents(coach.rateCents, age, coach.tier, retainerBand), world.plan, world.profile.background, coach.tier) - coachBudgetCents,
       ),
       lockedPoints: eliteGateShortfall(coach, points),
-      upliftPct: [upliftLo, upliftHi] as [number, number],
+      // ⭐⭐⭐ ROUND 44 – AND THE SEASON BAND COUNTS WHAT THE RUNG HOLDS ON TO, not only what it adds
+      // (spec §6e). `coachSeasonUplift` is a share of remaining HEADROOM and `ageFactor` returns 0
+      // past `declineStart`, so both its arms were zero for a veteran and this card quoted an elite
+      // coach «+0.0-0.0% a season» to a twenty-nine-year-old. That was TRUE while
+      // `coachMaintenanceTop` was 0 and became false the week the row went live: the maintenance
+      // term is a real per-cent of her level over the same horizon, in the same unit, so it ADDS.
+      //
+      // ⚠ NO NEW STRING AND NO SECOND BAND. The card's sentence is untouched – invariant 4 – and
+      // §6e's draft second band («what this rung holds on to») is the owner's to rule on. What
+      // changed is the NUMBER inside the sentence the card already said, and it changed because the
+      // engine changed underneath it.
+      //
+      // ⚠ EXACTLY ZERO BEFORE HER OWN `declineStart`, so every junior card is byte-identical and the
+      // whole era this market is mostly used in cannot have moved. `tests/round44-decline-care.test.ts`
+      // asserts both ends of that.
+      upliftPct: [upliftLo + held, upliftHi + held] as [number, number],
       // ⚠ THE RUNG'S CORRIDOR, NEVER HIS OWN NUMBER (spec §4). A number on an unhired card turns the
       // market into a shop window with the prices written on the back: hire, read, fire, repeat until
       // the 0.7 budget coach turns up - and since the value is a property of the MAN, that search

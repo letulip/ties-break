@@ -151,8 +151,17 @@ describe('the peak never decreases', () => {
 })
 
 describe('what is LEFT of her, past the peak', () => {
+  // ⚠⚠ SELF-COACHED SINCE 17.09, AND THE TOLERANCE DID NOT MOVE TO PAY FOR IT (round 44, spec §7).
+  // `declineFactor` is the WHOLE weekly cost only for a career with nobody on the payroll: round 44
+  // charges `declineRate x ageWeightOf(k) x SHIELD x skills[k]`, and the shield is below 1 on every
+  // week a seat is working. The old arm was `middle`-coached, so once `coachMaintenanceTop` went
+  // live it lost 0.0060 a week against this line's 0.005 – the identity was not drifting, it was
+  // INCOMPLETE. MEASURED ON BOTH ARMS at the shipped constant: self-coached 0.0031 (which is the
+  // round-38 #6c figure, unchanged), middle-coached 0.0060. So the arm is the one the claim is
+  // about and the claim is exact again; what a PAID seat does to the same walk is the case two
+  // describes below («...but a PAID SEAT does change it»), where it is asserted rather than tolerated.
   it('falls every week, and by exactly the factor `declineFactor` implies', () => {
-    const { world, rng } = bornAt('peak-rate', 'middle', 'middle')
+    const { world, rng } = bornAt('peak-rate', 'middle', 'self')
     walkTo(world, rng, ECONOMY.development.ageCurve.declineStart)
     let prevShare = physicalMean(world.skills) / world.peakPhysical
     let weeks = 0
@@ -194,35 +203,127 @@ describe('what is LEFT of her, past the peak', () => {
     expect(prevShare).toBeLessThan(0.6)
   })
 
+  // ⚠⚠⚠ THESE TWO CASES WERE ONE CASE UNTIL 17.09, AND THE SPLIT IS A STRENGTHENING RATHER THAN A
+  // RELAXATION (docs/specs/the-decline-and-the-seats-2026-09.md §7, the owner's ruling). The old
+  // single case manufactured its three bodies with `bornAt(seed, background, coachTier)` and read
+  // them as three CLASSES – «a share threshold must not be a different rule for a rich girl than
+  // for a poor one». Round 44's coach maintenance row turned it red at the swept 0.08, and the
+  // fixture is what settled the argument: `bornAt` puts the tier in the PROFILE at creation and
+  // `walkTo` ticks growth weeks only, so NOTHING IN THAT WALK EVER HIRES ANYBODY. `share-a` was
+  // self-coached at 38 because the fixture never hired, not because a working family cannot afford
+  // a coach on the pro tour – and the 1.88pp it opened was a STAFFING difference wearing a class
+  // label. The owner, 17.09: «на про уровне они все имеют условно одинаковый доход… и здесь нет
+  // разницы в начальном сословии».
+  //
+  // ⭐ So the one claim the case had been carrying at once is now two, and each is stated on a
+  // fixture that can only be about the thing it names:
+  //
+  //   1. PROPORTIONALITY, ISOLATED – different ceilings, IDENTICAL staffing, same share.
+  //      What the old comment always said it tested («three careers with deliberately different
+  //      CEILINGS … must read the same share at 38 while their peaks differ»), with money unable
+  //      to contaminate it. It is 100x TIGHTER than the case it replaces and its three bodies are
+  //      6.6x further apart – see its own note.
+  //   2. THE SEATS, PINNED – same age, same LEVEL, different staffing, a DIFFERENT share.
+  //      The new fact gets a case of its own instead of being absorbed as slack in an old one.
+  //      ⭐ It is also the case that would have caught round 44's «the coach multiplies zero» years
+  //      earlier: nothing anywhere pinned that a paid seat changes anything at all about ageing,
+  //      which is exactly why the defect survived to be found by a player.
+  //
+  // ⚠ WHAT IS NOT CLAIMED, SAID OUT LOUD: the share is no longer a pure function of age, because
+  // staffing now enters it. The decline's SHAPE is still class-blind – `declineRate`, `declineAccel`,
+  // `ageWeight` and the drawn `declineStart` read nothing about the family – and case 1 is what
+  // holds that line.
   it('is the same share at the same age however good she got – which is why one number is enough', () => {
-    // ⭐⭐ THE PROPORTIONALITY CLAIM, MEASURED. §3b's whole design rests on it: the decline scales
-    // every physical attribute by one factor, so the share left is a function of AGE and not of
-    // level. Three careers with deliberately different ceilings – a self-coached working family and
-    // an elite-coached wealthy one are the widest gap the presets offer – must read the same share
-    // at 38 while their peaks differ. If they did not, a share threshold would be a different rule
-    // for a rich girl than for a poor one, and the spec's dial table would mean nothing.
+    // ⭐⭐ THE PROPORTIONALITY CLAIM, MEASURED, AND THE VARIABLE IS *LEVEL* AND NOTHING ELSE. §3b's
+    // whole design rests on it: the decline scales every physical attribute proportionally, so the
+    // share left is a function of AGE and not of how high she got. Three bodies, ONE seed – so the
+    // same coach at the same tier with the same fit and the same chemistry, i.e. identical staffing
+    // by construction rather than by inspection – and the CEILING written directly, which is the
+    // axis the claim is about. If they did not read the same share, a share threshold would mean a
+    // different thing for a great career than for a modest one and the spec's dial table would mean
+    // nothing.
+    //
+    // ⚠ THE CEILING IS SCALED RATHER THAN DRAWN, deliberately: a different SEED gives a different
+    // mix of the four as well as a different level, and `ageWeightOf` gives each attribute its own
+    // rate, so a re-mixed body legitimately reads a slightly different share (MEASURED: 0.59pp over
+    // a tilted trio). That is the round-38 #6c finding and it is not what this case is about.
     const shares: number[] = []
     const peaks: number[] = []
-    for (const [seed, bg, tier] of [
-      ['share-a', 'working', 'self'],
-      ['share-b', 'middle', 'middle'],
-      ['share-c', 'wealthy', 'elite'],
-    ] as const) {
-      const { world, rng } = bornAt(seed, bg, tier)
+    for (const ceiling of [0.82, 1.0, 1.18]) {
+      const { world, rng } = bornAt('share-iso', 'middle', 'middle')
+      for (const k of SKILL_KEYS) world.potential[k] = world.potential[k] * ceiling
       walkTo(world, rng, 38)
       shares.push(physicalMean(world.skills) / world.peakPhysical)
       peaks.push(world.peakPhysical)
     }
+    // ⭐ 6.6x THE OLD SPREAD. The bodies the class fixture produced were 3.37 points apart and the
+    // line under them read `> 3`; these are 22.22 apart (51.93 / 63.04 / 74.15), which is most of
+    // the range the engine can roll.
     expect(Math.max(...peaks) - Math.min(...peaks), 'the three careers really are different bodies')
-      .toBeGreaterThan(3)
-    // ⚠⚠ RE-AIMED, ROUND 38 #6c – WAS 3 DECIMALS, MEASURED SPREAD 0.0020 (0.2 of a percentage
-    // point). The claim above is UNCHANGED and still the point: a share threshold must not be a
-    // different rule for a rich girl than for a poor one. What ended is the EXACTNESS – four decline
-    // rates instead of one, so two differently-shaped bodies no longer hold an identical share. ⚠ The
-    // cost, stated rather than waved past: at 4.3% of her body a season, 0.2pp is about two and a
-    // half WEEKS of difference in when the last off-season offer arrives. Weeks, not seasons.
-    // MEASURED SPREAD ACROSS THE THREE: 0.00201.
-    for (const s of shares) expect(s).toBeCloseTo(shares[0], 2)
+      .toBeGreaterThan(15)
+    // ⭐⭐ AND 100x TIGHTER THAN THE CASE IT REPLACES – WAS 2 DECIMALS (0.5pp of slack, against a
+    // measured 0.20pp), NOW 4 (0.005pp of slack, against a MEASURED SPREAD OF 0.0011pp). Removing
+    // the staffing confound is what bought the exactness back: what was left over in the old case
+    // was money, not arithmetic. The residual is the `ageWeightOf` mixing that round 38 #6c found,
+    // and at one seed it is a rounding-scale number.
+    for (const s of shares) expect(s).toBeCloseTo(shares[0], 4)
+    // Anti-vacuity: three careers that never declined would satisfy every line above.
+    for (const s of shares) expect(s, 'she really did lose a lot of it by 38').toBeLessThan(0.8)
+  })
+
+  it('⭐ ...but a PAID SEAT does change it – same age, same LEVEL, a different payroll', () => {
+    // ⭐⭐⭐ THE OTHER HALF OF THE OLD CASE, AND THE PIN THAT DID NOT EXIST (round 44, spec §7).
+    // Nothing anywhere asserted that hiring anybody changes ageing at all, so `coachMaintenanceTop`
+    // could sit at 0 – «an elite coach multiplies zero past `declineStart`» – and every test in the
+    // repo stayed green while a family paid elite money for a twenty-eight-year-old and bought her
+    // tennis nothing. This case fails the day that is true again.
+    //
+    // ⚠ THE FORK IS WHAT MAKES «SAME LEVEL» A FACT RATHER THAN A HOPE. One seed is walked to
+    // `declineStart` three times identically and the payroll is set only THERE, so all three arms
+    // enter their thirties as the same body to the bit – the peak is attained at the door of the
+    // decline (the monotone case above proves it) and is asserted identical below. Age, level and
+    // seed are held; staffing is the only variable left.
+    const armAt38 = (setup: (w: WorldState) => void) => {
+      const { world, rng } = bornAt('share-fork', 'middle', 'elite')
+      walkTo(world, rng, ECONOMY.development.ageCurve.declineStart)
+      setup(world)
+      walkTo(world, rng, 38)
+      return { share: physicalMean(world.skills) / world.peakPhysical, peak: world.peakPhysical }
+    }
+    const nobody = armAt38((w) => {
+      w.coachId = null
+    })
+    const coachOnly = armAt38(() => {})
+    const team = armAt38((w) => {
+      w.masseurHired = true
+      w.masseurSessionsPerWeek = ECONOMY.masseur.rungs[ECONOMY.masseur.rungs.length - 1].sessions
+      w.masseurTravels = true
+      w.sparringHired = true
+      // ⚠ THE LITERAL IS THE PERSISTED TYPE'S – `sparringRung` is `0 | 1 | 2`, so a computed index
+      // does not narrow. The line under it is what stops the literal rotting if the ladder grows.
+      w.sparringRung = 2
+      w.sparringTravels = true
+    })
+    expect(ECONOMY.sparring.rungs.length, 'the partner ladder grew – rung 2 is no longer its top').toBe(3)
+    // SAME LEVEL, PROVEN: identical to the bit, so nothing below can be a difference in bodies.
+    expect(coachOnly.peak, 'the arms are not the same body').toBe(nobody.peak)
+    expect(team.peak, 'the arms are not the same body').toBe(nobody.peak)
+    // ⭐⭐ THE COACH ALONE IS WORTH SOMETHING, which is the sentence round 44 exists to make true.
+    // MEASURED at the shipped `coachMaintenanceTop`: +1.92pp of her peak over eleven seasons
+    // (71.39% -> 73.30%). ⚠ AT A HELD ROW IT IS EXACTLY +0.0000pp – this line is the tripwire.
+    expect(coachOnly.share, 'the elite coach is still multiplying zero past the peak')
+      .toBeGreaterThan(nobody.share)
+    expect(coachOnly.share - nobody.share, 'the coach\'s maintenance row is smaller than it was measured at')
+      .toBeGreaterThan(0.015)
+    // ...and the body seats are worth more again, on top of him. MEASURED: +4.91pp (71.39 -> 76.30).
+    expect(team.share, 'the masseur and the partner added nothing to a coached veteran')
+      .toBeGreaterThan(coachOnly.share)
+    expect(team.share - nobody.share, 'the whole payroll is worth less than it was measured at')
+      .toBeGreaterThan(0.04)
+    // ⚠ AND NO PAYROLL BUYS THE IMMORTALITY BUTTON – the spec's §4 Q1, at the level of a walked
+    // career rather than of the shield's arithmetic. She is thirty-eight and she has lost a quarter
+    // of her body with the best team in the game on the payroll.
+    expect(team.share, 'a fully staffed veteran stopped ageing').toBeLessThan(0.8)
   })
 })
 
@@ -284,9 +385,21 @@ describe('an interruption costs her the peak – it can never buy one', () => {
 
 describe('the v62 migration seeds an existing save at the peak it actually had', () => {
   /** A career walked to `age`, then handed back as the v61 save it would have been – the field
-   *  removed and the version rolled back, which is exactly the payload the loader meets. */
+   *  removed and the version rolled back, which is exactly the payload the loader meets.
+   *
+   *  ⚠⚠ SELF-COACHED SINCE 17.09, AND IT IS A CORRECTION TO THE FIXTURE'S PROVENANCE RATHER THAN A
+   *  CONCESSION (round 44, spec §7). `migrateSave` reconstructs the peak by multiplying `growWeek`'s
+   *  own weekly factors back out of today's mean, and those factors are the UNSHIELDED curve –
+   *  correctly, because **a v61 save is by definition a career walked before round 44 existed**, so
+   *  its decline really did run with no payroll in it. This helper was manufacturing its «v61» input
+   *  with TODAY's engine, which from the coach row onwards means a shielded walk the loader can
+   *  never actually meet: a save old enough to need this migration cannot have been shielded.
+   *  ⭐ NOT ONE NUMBER IN THIS DESCRIBE MOVED WHEN THE ARM WAS CORRECTED – the 2% bound, the two
+   *  anti-vacuity lines and the 0.8971 / 0.7102 / 0.5866 table all reproduce to the digit, and the
+   *  measured 0.015% / 0.50% / 1.37% drift is the same drift round 38 #6c recorded. That is the
+   *  check that says the arm was wrong and the pins were right, rather than the other way about. */
   function asV61(age: number, seed = 'migrate-arm') {
-    const { world, rng } = bornAt(seed, 'middle', 'middle')
+    const { world, rng } = bornAt(seed, 'middle', 'self')
     walkTo(world, rng, age)
     const tracked = world.peakPhysical
     const today = physicalMean(world.skills)

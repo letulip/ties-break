@@ -346,16 +346,15 @@ function isolatedGap(): void {
   console.log(`§2 WHAT EACH SEAT IS WORTH – shipped constants (masseur ${ECONOMY.development.declineCare.masseur.topRungShare} · partner ${ECONOMY.development.declineCare.sparring.topRungShare} · coach ${ECONOMY.development.declineCare.coachMaintenanceTop})`)
   console.log('='.repeat(100))
   if (ECONOMY.development.declineCare.coachMaintenanceTop === 0) {
-    // ⚠ THE COACH ROWS BELOW READ +0.00 ON PURPOSE AND IT IS NOT A WIRING FAULT. `coachMaintenanceTop`
-    // ships at 0: the sweep above chose 0.08 and the gate then found that 0.08 turns nine assertions
-    // red across `peak-physical`, `recovery-fade` and `ending`, all of them pinning that the share of
-    // her peak is a function of AGE ALONE («a share threshold must not be a different rule for a rich
-    // girl than for a poor one»). The row is built, measured and held for the owner's ruling – see
-    // docs/specs/the-decline-and-the-seats-2026-09.md §6g. §2s above is what it WOULD be worth.
+    // ⚠ THE COACH ROWS BELOW WOULD READ +0.00, AND SINCE 17.09 THAT WOULD BE A DEFECT RATHER THAN A
+    // DESIGN. The row was held at 0 for a day while the owner ruled on the collision §6g describes;
+    // he ruled (§7 – the pin was measuring STAFFING and not class), the pin was split into the two
+    // claims it had been carrying, and the sweep's own winner shipped. This branch survives as the
+    // tripwire for a tree that has somehow put the row back: if it prints, §2's coach rows below are
+    // measuring a held constant and the verdicts under them are about a feature that is switched off.
     console.log('')
-    console.log('  ⚠⚠ THE COACH ROW IS HELD AT 0 (spec §6g) – its rows below read +0.00 by design, not by defect.')
-    console.log('     The sweep chose 0.08; at 0.08 the gate goes red on nine assertions that pin «the share of')
-    console.log('     her peak is a function of AGE ALONE». That collision is the owner\'s to rule on.')
+    console.log('  ⚠⚠ THE COACH ROW IS AT 0 ON THIS TREE AND THE SHIPPED VALUE IS 0.08 (spec §7).')
+    console.log('     Its rows below therefore read +0.00 – that is a tree with the row turned off, not a design.')
   }
   for (const age of [29, 31, 33]) {
     console.log('')

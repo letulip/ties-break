@@ -172,7 +172,18 @@ describe('from declineStart the corridor closes, continuously, by the share of h
   // mean's path shifts very slightly. The weights are normalised to a mean of 1, which is why this is
   // hundredths rather than a re-balance. Shape unchanged: it still closes monotonically from
   // `declineStart`. See docs/specs/what-ages-first-2026-09.md §4.
-  it('⭐ it reproduces §4a’s corrected table – 5.00 / 4.46 / 4.11 / 3.51 / 2.89 at 29 / 33 / 35 / 38 / 41', () => {
+  // ⚠ RE-MEASURED, ROUND 44 (17.09) – 5.00 / 4.46 / 4.11 / 3.51 / 2.89 becomes
+  // 5.00 / 4.50 / 4.16 / 3.60 / 3.01, and THE TOLERANCE DID NOT MOVE TO PAY FOR IT (±0.02, as
+  // before). `coachMaintenanceTop` went live at the swept 0.08, `born()` walks the SHIPPED default
+  // profile – which is `coachTier: 'middle'`, a coached career – and the corridor reads
+  // `physicalMean / peakPhysical`, so a body a paid coach maintains ALSO RECOVERS BETTER. Same
+  // second-order consequence #3d recorded when `declineAccel` softened, one wave along and from a
+  // different cause. ⭐ THE SHAPE IS UNCHANGED AND IS WHAT THIS FILE GUARDS: it still closes,
+  // monotonically and continuously, from `declineStart` – the three cases around this one are the
+  // ones that say so and NOT ONE of them moved. What moved is a calibration of the shipped default
+  // career, re-read off the engine rather than adjusted until it passed. See
+  // docs/specs/the-decline-and-the-seats-2026-09.md §7.
+  it('⭐ it reproduces §4a’s corrected table – 5.00 / 4.50 / 4.16 / 3.60 / 3.01 at 29 / 33 / 35 / 38 / 41', () => {
     // ⚠ THE CORRECTED TABLE, NOT THE FIRST DRAFT. §4a's first version evaluated `declineFactor` once
     // a year and held it constant across the 52 weeks; the engine raises her age EVERY WEEK, so the
     // loss compounds against a continuously rising factor and the real curve is 2-3 points kinder at
@@ -181,10 +192,10 @@ describe('from declineStart the corridor closes, continuously, by the share of h
     turnPro(world)
     const table: [number, number][] = [
       [29, 5.0],
-      [33, 4.46],
-      [35, 4.11],
-      [38, 3.51],
-      [41, 2.89],
+      [33, 4.5],
+      [35, 4.16],
+      [38, 3.6],
+      [41, 3.01],
     ]
     for (const [age, expected] of table) {
       walkTo(world, rng, age)
@@ -290,10 +301,17 @@ describe('every reader of the helper inherits the fade – that is why it lives 
   // walks its OWN seed (`fade-accrue`), not the table's, and the per-attribute weights land it at
   // 3.5510 where the table's career reads 3.51. Two different bodies, two different numbers – which
   // is itself the point the weights introduce, and is why the two arms may not share a constant.
-  it('the accumulator pays the faded base on a free week – 3.55 + the slider, not 5 + the slider', () => {
+  // ⚠ RE-MEASURED AGAIN, ROUND 44 (17.09) – 3.55 -> 3.64, MEASURED 3.6371, tolerance unchanged at 2
+  // decimals. Same cause as the table above and the same reading: `born()` walks the shipped default
+  // profile, the default profile is coached, and `coachMaintenanceTop` now takes a share off her
+  // weekly loss – so this veteran's body is worth a little more at 38 than it was and the corridor
+  // says so. The CLAIM – that the accumulator spends the FADED base and not the un-faded one, which
+  // is the whole reason the fade lives inside the helper – is untouched, and the line below it is
+  // what carries it: `40 + faded + 2` to ten decimals, against a `proPhaseRecoveryBase` of 5.
+  it('the accumulator pays the faded base on a free week – 3.64 + the slider, not 5 + the slider', () => {
     const world = veteran('fade-accrue')
     const faded = recoveryBaseFor(world)
-    expect(faded).toBeCloseTo(3.55, 2)
+    expect(faded).toBeCloseTo(3.64, 2)
     world.condition = 40
     accrueCondition(world, false)
     expect(world.condition).toBeCloseTo(40 + faded + 2, 10)

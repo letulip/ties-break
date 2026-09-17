@@ -549,6 +549,62 @@ function clamp01(share: number): number {
   return Math.min(1 - 1e-9, share)
 }
 
+/** ⭐⭐⭐ WHAT A SEASON OF THIS COACHING HOLDS ON TO, as a percentage of her physical level today –
+ *  the MAINTENANCE half of the question `coachSeasonUplift` answers, and the reason the coach market
+ *  stopped quoting a veteran «+0.0-0.0% a season» (round 44, spec §6e).
+ *
+ *  ⚠⚠ THE CARD WAS NOT MERELY UNDERSTATING – IT WAS READING A TERM THAT NO LONGER EXISTS ALONE.
+ *  `coachSeasonUplift` prices a rung by the headroom it takes, and past `declineStart` `ageFactor`
+ *  returns 0, so BOTH its arms are zero and the band is zero however good the coach is. That was the
+ *  truth while `coachMaintenanceTop` was 0 and became a lie the week it went live: the rung is now
+ *  worth something to a thirty-year-old, and the card has to say what.
+ *
+ *  ⭐ IT IS THE SAME UNIT AS THE GROWTH BAND – per cent of her level over the horizon – so the two
+ *  ADD, and the sentence on the card is unchanged. What a rung is worth over a season is points
+ *  gained while she is climbing and points not lost once she is not, and the number says so without
+ *  a second band. ⚠ A SECOND BAND WOULD BE A NEW SENTENCE AND IS THE OWNER'S UNDER INVARIANT 4 –
+ *  §6e drafts one and nothing here presumes on it.
+ *
+ *  ⚠ ZERO BEFORE `declineStart`, EXACTLY, because `declineFactor` is – so every junior card and
+ *  every career that predates round 44 reads the number it always read, and this term is provably
+ *  inert on the whole era the market is mostly used in.
+ *
+ *  ⚠ IT IS THE SHIELD'S OWN FUNCTION AND NOT A SECOND SPELLING OF IT: `declineCareShieldOf` is asked
+ *  per attribute, so a wave that re-tunes the coach's row, the seat→attribute map or `ageWeightOf`
+ *  moves this quote with it and cannot leave the card quoting a rule the engine has stopped running.
+ *
+ *  ⚠ A WEEKLY LOOP RATHER THAN A CLOSED FORM, for `ageAtPhysicalShare`'s recorded reason one block
+ *  down: her age rises every week, so the loss compounds against a continuously rising factor.
+ *  Pure, total, ZERO draws on any stream. */
+export function coachMaintenanceSeasonPct(input: {
+  ageYears: number
+  /** how many of the horizon's weeks he is actually there for – the caller's `coachedWeeks`. */
+  weeks: number
+  /** `growWeek`'s own `coachFactor(tier, fit, chemistry)` for the rung being priced. */
+  coachRate: number
+  bounds?: AgeCurveBounds
+}): number {
+  const bounds = input.bounds ?? ECONOMY.development.ageCurve
+  const weeks = Math.max(0, Math.floor(input.weeks))
+  if (weeks === 0) return 0
+  const care: DeclineCare = { masseurConditionBonus: null, sparringDriftCut: null, coachRate: input.coachRate }
+  let held = 0
+  for (const k of PHYSICAL_SKILL_KEYS) {
+    const shield = declineCareShieldOf(k, care)
+    let bare = 1
+    let kept = 1
+    let age = input.ageYears
+    for (let w = 0; w < weeks; w++) {
+      const rate = declineFactor(age, bounds) * ageWeightOf(k)
+      bare *= 1 - rate
+      kept *= 1 - rate * shield
+      age += 1 / WEEKS_IN_SEASON
+    }
+    held += kept - bare
+  }
+  return (100 * held) / PHYSICAL_SKILL_KEYS.length
+}
+
 /** ⭐⭐ THE AGE AN UNDAMAGED BODY FALLS TO `share` OF ITS PEAK, walked off the curve above (the long
  *  goodbye, docs/specs/the-long-goodbye-2026-08.md §3a). 0.70 -> 37.81 · 0.55 -> 41.17 · 0.50 -> 42.31.
  *

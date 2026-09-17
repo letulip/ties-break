@@ -304,6 +304,12 @@ both ways). **§2's isolated arm is where the sizing is read off, precisely beca
 
 ## §6g ⚠⚠⚠ THE ONE ASK – the coach's row is built, measured, and held at zero for his ruling
 
+> ⚠⚠ **ANSWERED, 17.09 – HE RULED (§7) AND THE ROW IS LIVE AT 0.08 (§8).** This section is the
+> record of the ask and of the day the row was held; it is kept rather than rewritten, because the
+> escalation was the right move and the reasoning is what made §7 possible. **Everything below
+> describes a tree that existed for one day.** Its option (a) is broadly what happened, with one
+> correction §7 supplies: the pin was not measuring class, it was measuring STAFFING.
+
 **What ships:** the masseur's row and the hitting partner's row, at the derived values above.
 **What does not:** the coach's maintenance term, which sits at `coachMaintenanceTop: 0`. The whole
 mechanism is built and the constant is one edit from live.
@@ -411,3 +417,178 @@ is precisely why «the coach multiplies zero» survived to be found by a player.
 **Owed:** the re-aim, then the sweep re-run with the coach row live, then the constant chosen by
 measurement. Q2's floor is re-tested with it — the row was the missing term when the mean landed at
 0.87 of a season against a bar of one.
+
+---
+
+## §8 DONE (17.09) – the row is live at 0.08, and what it cost to get there
+
+> ⚠ §6 above is the record of the day the row was **held**, and it is left standing rather than
+> rewritten. Where §6c says «BORDERLINE AS SHIPPED», §6e says the coach market «is still the truth»
+> and §6g says «what ships today is 0», read this section instead: all three describe a tree that
+> existed for one day.
+
+### §8a The pin, re-aimed – one case became two, and both are stronger
+
+`tests/peak-physical.test.ts`, exactly as §7 specifies. **Nothing was weakened anywhere in this
+wave; no tolerance was relaxed to make anything pass.**
+
+| | **case 1 · proportionality, isolated** | **case 2 · the seats, pinned** |
+| --- | --- | --- |
+| how the bodies differ | the CEILING, written directly, on **one seed** | not at all – one career forked at `declineStart` |
+| staffing | identical by construction (same coach, tier, fit, chemistry) | the only variable: nobody / coach only / whole team |
+| peaks | 51.93 · 63.04 · 74.15 – **22.22 apart**, was 3.37 | **byte-identical**, asserted rather than assumed |
+| the assertion | shares agree to **4 decimals** (was 2) | the coach alone is worth **> 1.5pp** of her peak at 38 |
+| measured | spread **0.0011pp** (bound 0.005pp) | coach **+1.92pp**, whole team **+4.91pp** (71.39 → 76.30) |
+
+⭐ **6.6× the body spread and 100× the tolerance.** Removing the staffing confound is what bought
+the exactness back: what was left over in the old case was money, not arithmetic.
+
+⚠⚠ **Both were mutated and watched to fail, because a green run proves nothing about a new pin.**
+Case 1 against a decline made level-independent (`… * skills[k]` → `… * 60` in `growWeek`): spread
+**0.0372**, i.e. 744× its bound. Case 2 against `coachMaintenanceTop` back at **0**: the two shares
+come back **byte-identical** – `0.7138566613635324` against itself – under the message «the elite
+coach is still multiplying zero past the peak». That is the exact defect the row exists to close,
+failing on cue.
+
+### §8b The constant, chosen by measurement
+
+`npm run bench:decline` §2s, re-run on this tree, reproduces §6b's table to the decimal. At the
+**derived** seat scale the selection rule («the smallest that meets all four») still lands on
+**0.08** – 0.06 fails C4 at 0.40 of a season against a bar of 0.5, and 0.08 reads 0.54.
+
+⚠ **The grid is the spec's own and was not refined to shave the number.** C4 crosses its bar at
+about 0.074 under linear interpolation, so a finer sweep would select ~0.075; refining the grid
+after seeing the result is taste wearing a measurement's clothes, and 0.08 is the row the criteria
+picked.
+
+### §8c The two pass/fail questions, with the row live
+
+**Q1 · Does a fully-staffed career still decline? PASS, structurally.** At 33 she holds serve
+**88.9%** · return **82.1%** · stamina **79.0%** · groundstrokes **82.1%** of her own peak – every
+one below peak, best-preserved at 88.9%. The absurdity arm still falls at shares of 0.99.
+
+**Q2 · Is the gap something a player would feel? YES, and C2's floor is MET.**
+
+| attribute | unstaffed at 33 | fully staffed | gap |
+| --- | ---: | ---: | ---: |
+| serve | 58.06 | 58.66 | +0.60 |
+| return | 45.65 | 48.47 | **+2.82** |
+| stamina | 43.33 | 48.18 | **+4.85** |
+| groundstrokes | 50.88 | 51.75 | +0.88 |
+
+Mean **+2.29 points = 1.36 seasons** of ageing handed back, and **+2.19 pp** of match-win
+probability against the elite band (13.6% → 15.8%).
+
+⭐ **§6g's second cost is therefore paid.** The two seats alone landed at **0.87 of a season**,
+below the «at least one season» bar C2 was written against before the run, and it was reported as
+failed rather than moved. **The bar was not moved now either** – the coach row was the missing term,
+and 1.36 clears a bar of 1.00 that has not shifted by a hundredth since it was written.
+
+The live arm (`§3`, 8 careers through the shipped `tickWeek` to 33) reaches both arms: every bare
+career's retained share rose against the held-row run – `bench-wealthy-0` 87.4 / 76.4 / 69.8 / 79.9
+→ 88.2 / 77.7 / 71.4 / 81.0 – because in a live career **both** arms employ a coach. All 8 reached
+33, all 8 hired.
+
+### §8d The frozen careers did NOT move, and the null was given a positive's provenance check
+
+**Predicted:** nothing moves. The shield only multiplies inside the decline branch, `FREEZE_WEEKS`
+is 156, and a frozen career starts at fourteen – so she is **seventeen** and `declineFactor` is 0.
+The market quote is a **view**: `coachMarket` is reached only from `snapshot.ts` and writes no world
+key.
+
+**Measured,** `tools/frozen-key-diff.ts`, all five cells, both arms, headers checked against the
+invocation, **run as five explicit commands**:
+
+| cell | keys | moved |
+| --- | ---: | --- |
+| 5/0 (25k middle, grinder) | 93 | **0 – byte-identical** |
+| 8/0 (120k wealthy, elite, grinder) | 93 | **0 – byte-identical** |
+| 0/1 (8k working, self-coached) | 94 | **0 – byte-identical** |
+| 6/1 (25k middle, high, player) | 92 | **0 – byte-identical** |
+| 5/1 (25k middle, middle, player) | 93 | **0 – byte-identical** |
+
+`rngMain` reproduces the three canonical fingerprints – 5/0 `1dbff28caca2` · 8/0 `aebc8101d6df` ·
+0/1 `d84bcbf0c481`. **No constant in `tests/coachTravelEdgeFixtures.ts` was touched and none was
+owed.** The frozen MAIN capture (**41550 / `e6b0c709`**) is unmoved and not re-pinned: the wave
+spends no draw on any stream.
+
+⚠⚠ **The control was this tree with the change neutralised IN PLACE by reverse edit** – never a
+checkout, never the previous commit – and it was **proven dead before the diff was believed**: on
+the A arm case 2 fails with the two shares byte-identical, which is only possible if the shield is
+exactly 1. An A arm that still moved would have made the byte-identity meaningless.
+
+### §8e Every pin that moved, and why none of them is a loosening
+
+Ten assertions across four files. **Not one tolerance was relaxed.**
+
+| file · case | what moved | why it is not a weakening |
+| --- | --- | --- |
+| `peak-physical` · proportionality | split into two cases | §8a – 100× tighter, 6.6× the spread |
+| `peak-physical` · «falls by exactly the factor» | arm → **self-coached** | `declineFactor` is the whole weekly cost only with nobody on the payroll. Measured: self 0.0031 against the 0.005 bound (the round-38 #6c figure, unchanged); middle-coached 0.0060. The identity was not drifting, it was **incomplete** |
+| `peak-physical` · v62 migration | fixture arm → **self-coached** | a v61 save is **by definition** a career walked before round 44, so its decline really was unshielded. ⭐ **Not one number in that describe moved** – the 2% bound, both anti-vacuity lines and the 0.8971 / 0.7102 / 0.5866 table all reproduce to the digit |
+| `recovery-fade` · §4a table | 5.00 / 4.46 / 4.11 / 3.51 / 2.89 → **5.00 / 4.50 / 4.16 / 3.60 / 3.01** | re-measured at **±0.02, unchanged**. A body a coach maintains also recovers better – the same second-order consequence #3d recorded. The three shape cases beside it did not move |
+| `recovery-fade` · the accrual base | 3.55 → **3.64** (measured 3.6371, 2 dp unchanged) | same cause; the claim (the accumulator spends the FADED base) is untouched |
+| `ending` · 70% ⇔ 38 | arm → **self-coached**, plus a new companion case | see §8f – **read this one** |
+| `ending` · the last offer lands | arm → **self-coached** | `ageAtPhysicalShare` is payroll-blind by design (§6e). ⭐ **42 and 42.500 reproduce to the digit** |
+| `ending` · two bodies 25% apart | both arms **self-coached** | the pair had `wealthy`+`elite` against `working`+`self`, so the coach was one of the variables – §7's confound in a second file. Bodies still **22.5% apart** (69.37 / 56.61), and measured at every tier: ×1.2253 self · ×1.2143 middle · ×1.2101 elite |
+| `ending` · the epilogue prints her age | arm → **self-coached** | the coached body crosses later, so the walk reached 43 with no offer raised and the case was asserting about an empty list |
+| `round44-decline-care` · the shipped value | `toBe(0)` → **`toBe(0.08)`** | the gate now points at §7 and the sweep instead of §6g's ask |
+
+### §8f ⚠⚠ THE ONE THING TO READ RATHER THAN THE REASSURANCE – 70% ⇔ 38 is now a claim about an unstaffed body
+
+`tests/ending.test.ts`'s tripwire says the off-season a career first falls to 70% of her peak is the
+off-season she is first 38, and its own comment says that **if the line ever needs changing, the
+claim the change was sold on has stopped holding** – the claim that let `ENDINGS.stopAskingAgeYears`
+be deleted. It needed changing. Measured on its own seed:
+
+| staffing | first off-season at or below 70% | her share that winter |
+| --- | --- | ---: |
+| self-coached | **w1297, age 38** | 69.15% |
+| budget coach | **w1297, age 38** | 69.80% |
+| middle coach | w1349, age **39** | 70.33% at 38 |
+| elite coach | w1349, age **39** | 71.15% at 38 |
+
+⭐ **The dial still reproduces the deleted constant exactly, for the body it was derived from** –
+`ageAtPhysicalShare` walks `declineFactor` with no payroll in it, so the unstaffed career is the one
+the generalisation was ever about, and the case now says so instead of inheriting
+`DEFAULT_PROFILE`'s middle coach by accident. ⚠ **But the shipped default career is coached**, so on
+the default profile the last question now arrives **one winter later than the old age constant would
+have asked it.** That is the feature working – it is what «a seat softens the decline» has to mean
+when it reaches the endings – and it is the sentence in this wave the owner is most likely to want
+to overrule. It is **not** hidden inside a tolerance: the old claim is pinned on the unstaffed arm
+and the new one has a case of its own beside it («…and A MAINTAINED body is still above the line
+that winter»), which fails byte-identically if the row ever returns to zero.
+
+### §8g The coach market's «+0.0-0.0% a season», closed – and NO string was added
+
+§6e's warning landed: `coachSeasonUplift` prices a rung by the headroom it takes, `ageFactor`
+returns 0 past `declineStart`, so an elite coach was quoted to a twenty-nine-year-old at
+**«+0.0-0.0% a season»**. True while the row was 0; false the week it went live.
+
+**The fix is a number, not a sentence.** `coachMaintenanceSeasonPct` (engine/development.ts) walks
+the same horizon `coachedWeeks` already names, asks `declineCareShieldOf` per attribute, and returns
+what the rung **holds on to** as a percentage of her level – the same unit as the growth band, so
+the two simply add inside the sentence the card already said. The card's copy is **untouched**.
+
+⚠ **§6e's draft second band («what this rung holds on to») is NOT shipped and is not treated as
+approved** – it is a new sentence and therefore his, under invariant 4. What shipped is the
+arithmetic under the old sentence.
+
+Pinned in `tests/round44-decline-care.test.ts` section F and mutation-verified (four of its five
+cases redden at a held row): exactly zero while the whole horizon is short of her own
+`declineStart` – so **every junior card is byte-identical** – strictly positive past it, exactly
+zero for the parent on the court, monotone in the rung, and scaled by the weeks she actually buys.
+⭐ The first draft of that section asserted zero at `declineStart − 0.02` and **measured 0.153**: the
+code was right and the assertion was wrong, because the quote is over the next 52 weeks and a card
+read eleven months before the door is selling a season that mostly lies past it. There is now a case
+that says so on purpose.
+
+### §8h Still NOT delivered, and still not absorbed
+
+- **The LEVEL question (C2 in round 38's terms) is untouched**, exactly as §5 and §6e reserve it.
+  Her 38.0% at her own peak against the elite band is the same threshold effect and no constant in
+  this wave moves it. Named again so this wave cannot be credited with it.
+- **`seasonsOfBodyLeft` and `ageAtPhysicalShare` remain payroll-blind**, so the coach's «about N more
+  seasons» still understates a staffed career. §6e left that alone deliberately and this wave does
+  too – it is user-facing copy driven by a shipped rule, and re-aiming it is a change §4 did not ask
+  for. §8e's `ending` rows are where the consequence is now visible and measured.
