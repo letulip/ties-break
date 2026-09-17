@@ -690,3 +690,423 @@ the hole, and this document is the hole's repair.**
 ⚠ K3's «careers with a repeat inside three» stays at 100% and cannot move on this catalogue: the
 reachable pool is 3 or more on **1.4%** of draws in a posed career and never in a bare one. That row
 is a measurement of the corpus, not of the exclusion.
+
+---
+
+# PASS 3 – tranche 2, and the shape is his
+
+⭐ **He ruled the form on tranche 1, 17.09: «форма строк верна, дописывай остальные 30 и присылай на
+ревью».** So PASS 3 adds **thirty** on the same architecture and the same six gates, taking the corpus
+to **44** – his own target, measured now on the axis that matters (44 written = 44 reachable, because
+every situation carries all four voices).
+
+⚠ **The two subjects tranche 1 held back arrive here.** `worry` and `curiosity` were where his
+heaviest gating findings landed – the medical claim, the draw ages, the money, the unlicensed loss,
+the coaching outcome – so they were deferred until the gates were settled rather than hurried. Each
+one below either carries a career gate or asserts nothing the career could contradict.
+
+⚠ **And the copy review of 17.09 binds this tranche too**: no explanatory dashes where a full stop
+will do, no abstractions standing in for a thing, and the parent's stances are plain rather than
+aphoristic.
+
+---
+
+## P3.1 `worry` – six, all gated or generated-safe
+
+### R15 · `the-hand-that-aches` · worry · after-school, college, independent · generated
+**Kernel:** Her racket hand aches after practice in a way it did not last year, and she has been
+opening jars with the other hand for a week.
+⚠ **It asserts no injury and no diagnosis** – an ache she noticed, and a habit she changed. The engine
+owns injuries; this owns a jar.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I've been opening jars with my left hand all week and I only just noticed why."` |
+| `fiery` | `"My hand aches. It did not ache last year. That is all I am going to say about it."` |
+| `deep` | `"There is an ache in my hand that was not there a year ago. I have been avoiding using it and pretending I have not."` |
+| `quiet` | `"I have been using my left hand for the jars. It is easier that way at the moment."` |
+
+**Parent:** *Ask how long it has been going on* · *Say we should mention it to somebody* · *Say hands ache and she should tell you if it changes*
+
+### R16 · `the-one-who-stopped` · worry · college, independent · generated
+**Kernel:** A player she used to see at every event has stopped appearing, and nobody has said why.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"There is a girl I always used to see at these things and she just is not here any more."` |
+| `fiery` | `"She is gone. Nobody will say why. I hate that nobody will say why."` |
+| `deep` | `"I worked out this week that I have not seen her since the spring. Nobody has mentioned it once."` |
+| `quiet` | `"The draw is missing somebody I used to see a lot."` |
+
+**Parent:** *Ask whether she knew her well* · *Say people leave for ordinary reasons too* · *Say she does not have to find out*
+
+### R17 · `the-week-with-nothing-in-it` · worry · college, independent · generated
+**Kernel:** She has a week with no match and no travel, and she has not decided whether it is rest or
+an absence.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I have a completely empty week and I do not know what to do with myself."` |
+| `fiery` | `"An empty week. I will go mad. I already know I will go mad."` |
+| `deep` | `"There is nothing in next week at all. I keep looking at it and I cannot tell if I am relieved."` |
+| `quiet` | `"Next week is clear. I might catch up on some things."` |
+
+**Parent:** *Ask what she would do with it* · *Say an empty week is allowed to be empty* · *Say you will find her something if she wants*
+
+### R18 · `the-loss-she-is-still-carrying` · worry · after-school, college, independent · **fact: `played-recently`**
+**Kernel:** A match she played is still in her head days later, and she cannot say which part of it.
+⚠ **Gated** because it presumes a recent match. ⚠ **It does not say she LOST** – `played-recently`
+does not license that, and the kernel is deliberately about carrying a match rather than losing one.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I am still thinking about that match and I cannot work out which bit."` |
+| `fiery` | `"That match is still in my head. Four days. I want it out."` |
+| `deep` | `"I have replayed it enough times to know it is not one point I am stuck on. It is the shape of the whole thing."` |
+| `quiet` | `"I keep coming back to Tuesday's match. It is fine."` |
+
+**Parent:** *Ask which part she keeps returning to* · *Say some matches take a week to put down* · *Say you can talk about something else*
+
+### R19 · `the-name-she-heard` · worry · college, independent · generated
+**Kernel:** She overheard two people discussing her, could not hear what was said, and has been
+turning it over since.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Two people were talking about me and I could not hear a word. That is worse than hearing it."` |
+| `fiery` | `"They were talking about me. I should have walked over. I keep thinking about not walking over."` |
+| `deep` | `"I heard my own name across a room and nothing else. It has been sitting with me all week."` |
+| `quiet` | `"I heard my name in the corridor. Could not tell you what about."` |
+
+**Parent:** *Ask who it was* · *Say people talk about players, it is the job* · *Say you would not have heard it either*
+
+### R20 · `the-money-she-did-not-ask-about` · worry · college, independent · **fact: `march-entry-open`**
+**Kernel:** She knows an entry is open and has not brought it up, because she does not know what it
+costs.
+⚠ **Gated on a real open entry**, so the situation presumes no schedule of its own. ⚠ **It names no
+figure** – what the trip costs is the ledger's, not a conversation's.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I have not asked about the entry because I did not want to make it a whole thing."` |
+| `fiery` | `"I am not going to ask what it costs. I would rather not know and then I cannot argue about it."` |
+| `deep` | `"I have known the entry was open for four days and I have not mentioned it once. I have been working out why."` |
+| `quiet` | `"The entry is open. I have not put my name down."` |
+
+**Parent:** *Ask whether she wants to go* · *Say the money is a question for you, not her* · *Say she can put her name down and you will sort the rest*
+
+## P3.2 `curiosity` – six
+
+### R21 · `what-the-good-ones-do-first` · curiosity · college, independent · generated
+**Kernel:** She has started watching what other players do in the first ten minutes on court rather
+than during points.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I have started watching what people do before the match instead of during it. It is fascinating."` |
+| `fiery` | `"The good ones all do something in the first ten minutes. I want to know what it is."` |
+| `deep` | `"I stopped watching the points and started watching the warm-ups. There is more in them."` |
+| `quiet` | `"I have been getting to the courts earlier. You see different things."` |
+
+**Parent:** *Ask what they do* · *Say she is watching like a coach now* · *Say she can just watch the tennis*
+
+### R22 · `how-they-live` · curiosity · college, independent · generated
+**Kernel:** She has realised she has no idea what the other players do in the hours between matches.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"What does everybody DO all day? I genuinely do not know."` |
+| `fiery` | `"I have been here a week and I still do not know how anybody spends their afternoons."` |
+| `deep` | `"There are nine hours in a day here that I cannot account for in anybody's life, including mine."` |
+| `quiet` | `"The days are long between matches. I have been reading."` |
+
+**Parent:** *Ask what she does with hers* · *Say most of them are as bored as she is* · *Say the boring hours are part of it*
+
+### R23 · `the-word-she-keeps-hearing` · curiosity · after-school, college, independent · generated
+**Kernel:** A word the older players use about matches keeps coming up and she has not asked what it
+means.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Everybody keeps saying a word and I have been nodding along for a month."` |
+| `fiery` | `"I am going to ask what it means. I have decided. Probably."` |
+| `deep` | `"There is a word they all use and I have worked out three possible meanings and none of them fit."` |
+| `quiet` | `"I heard a word I did not know again. I looked it up this time."` |
+
+**Parent:** *Ask what the word is* · *Say asking is faster than guessing* · *Say she will pick it up*
+
+### R24 · `why-anyone-watches` · curiosity · college, independent · generated
+**Kernel:** A small crowd stayed to the end of a dead rubber and she cannot work out why.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"People stayed to the end of a match that did not matter. Why would you?"` |
+| `fiery` | `"Nine people sat through that. Nine. I would not have."` |
+| `deep` | `"The match had stopped mattering an hour before it finished and they stayed anyway. I have been thinking about what they were watching."` |
+| `quiet` | `"There were still people there at the end. Not many."` |
+
+**Parent:** *Ask if she would have stayed* · *Say some people just like tennis* · *Say she does not have to explain a crowd*
+
+### R25 · `the-coach-she-watched` · curiosity · college, independent · **fact: `coach-employed`**
+**Kernel:** She watched another player's coach work and noticed he says almost nothing.
+⚠ **Gated** because a girl with no coach has no comparison to make. ⚠ **It asserts nothing about HER
+coach's quality** – only what she noticed about a different one.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I watched somebody else's coach for an hour and he said about four words."` |
+| `fiery` | `"Four words. All session. And she was better at the end of it. Explain that to me."` |
+| `deep` | `"He barely spoke. I have been trying to work out whether that is confidence or whether they had already said it all."` |
+| `quiet` | `"I watched another session for a while. Quieter than ours."` |
+
+**Parent:** *Ask what the four words were* · *Say the talking is not the coaching* · *Say every pair finds its own way*
+
+### R26 · `what-she-would-be` · curiosity · college, independent · generated
+**Kernel:** Somebody asked her what she would be doing if not this, and she did not have an answer.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Someone asked what I would be doing otherwise and I just stood there."` |
+| `fiery` | `"I did not have an answer. I do not like not having an answer."` |
+| `deep` | `"I could not answer it, and I have been turning that over since, because the blank is the interesting part."` |
+| `quiet` | `"Somebody asked me a question at dinner I could not answer. It was not important."` |
+
+**Parent:** *Ask if she has an answer now* · *Say not having one is fine at her age* · *Say you could not answer it either*
+
+## P3.3 `story` – six more, taking the heaviest cell to twelve
+
+### R27 · `the-lift-that-stopped` · story · college, independent · generated
+**Kernel:** The hotel lift stopped between floors for ten minutes with her and two other players in it.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The lift stopped. Ten minutes. Three of us. We know each other very well now."` |
+| `fiery` | `"Stuck in a lift. Ten minutes. With two people who would not stop talking."` |
+| `deep` | `"Ten minutes in a stopped lift with two strangers. Nobody panicked and I found that oddly reassuring."` |
+| `quiet` | `"The lift stopped for a while. It started again."` |
+
+**Parent:** *Ask what they talked about* · *Say you would have hated that* · *Laugh and move on*
+
+### R28 · `the-wrong-order` · story · college, independent · generated
+**Kernel:** A café brought her somebody else's order and she ate it rather than say anything.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"They brought me the wrong lunch and I just ate it. It was quite good!"` |
+| `fiery` | `"Wrong order. I ate it anyway. I am still annoyed at myself about that."` |
+| `deep` | `"It was not what I ordered and I said nothing, which tells me something I am not sure I like."` |
+| `quiet` | `"Lunch was not what I ordered. It was fine."` |
+
+**Parent:** *Ask what she actually got* · *Say you do the same thing* · *Say she is allowed to send food back*
+
+### R29 · `the-borrowed-thing` · story · after-school, college, independent · generated
+**Kernel:** Somebody borrowed something small of hers and returned it in better condition than she
+lent it.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"She gave it back CLEANER than I lent it. Who does that?"` |
+| `fiery` | `"She cleaned it before giving it back. Now I feel like a slob and I did nothing wrong."` |
+| `deep` | `"It came back in better condition than it left. I have been thinking about what that says about her."` |
+| `quiet` | `"I got it back. Better than it was, actually."` |
+
+**Parent:** *Ask what it was* · *Say that is somebody worth knowing* · *Say she should lend her more things*
+
+### R30 · `the-rain-delay` · story · college, independent · generated
+**Kernel:** Rain stopped play for three hours and the players ended up playing cards in a corridor.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Three hours of rain and we ended up playing cards on the floor of a corridor. Best day."` |
+| `fiery` | `"Three hours. THREE. And then they called it off anyway."` |
+| `deep` | `"We sat in a corridor for three hours and I talked to people I have shared a draw with for two years."` |
+| `quiet` | `"Rain delay. We waited it out inside."` |
+
+**Parent:** *Ask who won the cards* · *Say the delays are where people meet* · *Say she should get some sleep*
+
+### R31 · `the-child-on-the-next-court` · story · after-school, college, independent · generated
+**Kernel:** A very small child on the next court hit one clean ball and celebrated as if it were a
+final.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A tiny kid hit ONE good ball and celebrated like she had won a Slam. I loved it."` |
+| `fiery` | `"One ball. She screamed. Honestly? Correct behaviour."` |
+| `deep` | `"A child hit one clean ball and celebrated it completely. I stood and watched and I could not tell you the last time I did that."` |
+| `quiet` | `"There was a kid on the next court. She was pleased with herself."` |
+
+**Parent:** *Ask what the shot was* · *Say she used to do exactly that* · *Say nothing and just laugh*
+
+### R32 · `the-song-in-the-gym` · story · college, independent · generated
+**Kernel:** The gym played a song she has not heard since she was small and she stopped what she was
+doing.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"They played a song I have not heard since I was about six and I completely stopped."` |
+| `fiery` | `"They put that song on in the gym and it ruined my whole session."` |
+| `deep` | `"A song came on that I had not heard since I was small, and I stood there until it finished."` |
+| `quiet` | `"They were playing old music in the gym. I stayed a bit longer."` |
+
+**Parent:** *Ask which song* · *Say you remember it* · *Say nothing and let her have it*
+
+## P3.4 `observation` – five more, because the cell that started this held ONE
+
+### R33 · `the-one-who-never-sits` · observation · college, independent · generated
+**Kernel:** She has noticed one player who never sits down at changeovers, all match.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"There is a girl who never sits down at changeovers. Not once, the whole match."` |
+| `fiery` | `"She does not sit down. Ever. It is either brilliant or a pose and I cannot decide which."` |
+| `deep` | `"She stood through every changeover. I counted eleven. I do not think it was for show."` |
+| `quiet` | `"One of them does not sit at the changeovers. I noticed it twice now."` |
+
+**Parent:** *Ask if it seemed to help her* · *Say players find odd things that work* · *Say she does not have to copy anyone*
+
+### R34 · `the-second-serve-everyone-attacks` · observation · college, independent · **fact: `played-recently`**
+**Kernel:** She has noticed that the better players move forward on a second serve without thinking
+about it.
+⚠ **Gated**, because it presumes she has been on a court where she could see it. ⚠ It asserts nothing
+about her own second serve.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The good ones just step in on a second serve. They do not even think about it."` |
+| `fiery` | `"They walk in on the second serve like it is owed to them. I want to do that."` |
+| `deep` | `"Nobody decides to step in. It is already decided before the ball is tossed, and that is the part I am missing."` |
+| `quiet` | `"They stand closer on the second serve. All of them."` |
+
+**Parent:** *Ask what she does on hers* · *Say that is a decision made in practice, not in a match* · *Say she is watching well*
+
+### R35 · `the-team-that-eats-together` · observation · college, independent · generated
+**Kernel:** She noticed one player travels with three people and they all eat together every night.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"One girl has THREE people with her and they all eat together every night. It looks lovely."` |
+| `fiery` | `"Three people. For one player. I do not know whether to be jealous or appalled."` |
+| `deep` | `"She has a table of her own people every evening. I have been sitting with that longer than I expected to."` |
+| `quiet` | `"Some of them travel with a group. They have dinner together."` |
+
+**Parent:** *Ask whether she would want that* · *Say a big team is not the same as a good one* · *Say you would come if she wanted*
+
+### R36 · `the-empty-side-of-the-draw` · observation · college, independent · generated
+**Kernel:** She noticed half the draw was decided in straight sets and half went the distance, and the
+same half keeps doing it.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Half the draw finishes in an hour and the other half takes three. Same half every time!"` |
+| `fiery` | `"One side of the draw is a bloodbath and the other is a stroll. It is not fair and I have said so."` |
+| `deep` | `"The same half of the draw keeps going to three sets. I have watched it happen twice now and I do not think it is chance."` |
+| `quiet` | `"The bottom half has been longer both weeks. Just something I noticed."` |
+
+**Parent:** *Ask which half she is in* · *Say draws have moods* · *Say she should not read too much into it*
+
+### R37 · `what-they-do-after` · observation · college, independent · generated
+**Kernel:** She has started noticing what players do in the ten minutes after a loss rather than
+during the match.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I have started watching what people do AFTER. It tells you more than the match does."` |
+| `fiery` | `"Some of them are fine in ten minutes. Ten. I am not built like that and I am not sure I want to be."` |
+| `deep` | `"The ten minutes after is where the real thing is. I have started staying to watch it."` |
+| `quiet` | `"I have been staying a bit longer after matches. Watching."` |
+
+**Parent:** *Ask what she has seen* · *Say that is the part nobody trains* · *Say she can leave when the match ends*
+
+## P3.5 `good-news` – four more
+
+### R38 · `the-warm-up-she-runs` · good-news · college, independent · generated
+**Kernel:** She led a group warm-up for the first time because nobody else started one.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Nobody started the warm-up so I did. And everybody just... followed me?"` |
+| `fiery` | `"I ran the warm-up. Somebody had to and nobody was moving."` |
+| `deep` | `"I started it because the silence was getting long, and then seven people did what I said."` |
+| `quiet` | `"I started the warm-up this week. It went fine."` |
+
+**Parent:** *Ask how it felt* · *Say people follow whoever moves first* · *Say well done and leave it*
+
+### R39 · `the-thing-she-fixed` · good-news · after-school, college, independent · generated
+**Kernel:** Something in her bag broke and she mended it herself with what she had.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"My bag strap went and I fixed it with a shoelace. It is holding!"` |
+| `fiery` | `"It broke, I fixed it, and it is better than it was. That is the whole story."` |
+| `deep` | `"I mended it with what was in the bag. It is ugly and it works and I have been quietly pleased all day."` |
+| `quiet` | `"Bag strap went. It is sorted."` |
+
+**Parent:** *Ask how bad it looks* · *Say that is a useful kind of stubborn* · *Say you would have bought a new one*
+
+### R40 · `the-junior-who-copied-her` · good-news · college, independent · generated
+**Kernel:** She caught a younger player copying her warm-up routine, badly.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"A younger girl was doing MY warm-up. Badly! But mine!"` |
+| `fiery` | `"She was copying me. I nearly went over and fixed her elbow, and then I thought better of it."` |
+| `deep` | `"She was doing my warm-up two courts away and getting it wrong, and I did not know where to put that."` |
+| `quiet` | `"One of the juniors has picked up my warm-up. Roughly."` |
+
+**Parent:** *Ask whether she said anything* · *Say that is what being watched looks like* · *Say she does not owe her a lesson*
+
+### R41 · `the-language-she-managed` · good-news · college, independent · generated
+**Kernel:** She got through a whole conversation in a language she barely has and the other person
+did not switch to English.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"We had a whole conversation and she never switched to English. Never!"` |
+| `fiery` | `"She did not switch. Most of them switch. That felt like a win."` |
+| `deep` | `"She let me be bad at it for ten minutes rather than making it easy, and I think that was a kindness."` |
+| `quiet` | `"I managed a conversation this week. In theirs, not ours."` |
+
+**Parent:** *Ask what it was about* · *Say people notice the trying* · *Say well done and change the subject*
+
+## P3.6 `decision` – three more
+
+### R42 · `the-invitation` · decision · college, independent · generated
+**Kernel:** A group has asked her to something on the evening before a practice day and she has not
+answered.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I have been invited to a thing the night before practice and I have not replied for two days."` |
+| `fiery` | `"I want to go. I should not go. I have been arguing with myself since Tuesday."` |
+| `deep` | `"They asked on Monday. It is Thursday. The not-answering has become its own answer and I would rather it did not."` |
+| `quiet` | `"There is something on Friday. I have not said either way."` |
+
+**Parent:** *Ask whether she wants to go* · *Say one late evening is not a career* · *Say she can say no without a reason*
+
+### R43 · `the-racket-she-is-not-sure-about` · decision · after-school, college, independent · generated
+**Kernel:** She has been offered a different racket setup to try and cannot decide whether to disturb
+what works.
+⚠ **It asserts no change to her equipment** – the engine owns that; this owns the hesitation.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Someone offered to set my racket up differently and now I cannot stop thinking about it."` |
+| `fiery` | `"I am not changing anything mid-season. Ask me again in December. Probably."` |
+| `deep` | `"It might be better. It might be four months of it not feeling like mine. I have not been able to get past that."` |
+| `quiet` | `"There is a different setup I could try. I have not."` |
+
+**Parent:** *Ask what would change* · *Say trying is not the same as switching* · *Say if it works, leave it*
+
+### R44 · `the-early-flight` · decision · college, independent · generated
+**Kernel:** She can fly home for two days between events or stay where she is, and the flights are the
+same price.
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I could come home for two days and it costs the same as staying. Two days!"` |
+| `fiery` | `"Two days at home or two days in a hotel. I know what I want and I am not sure it is what I should do."` |
+| `deep` | `"The cost is identical either way, which means it is only a question about what I need, and I cannot answer that one quickly."` |
+| `quiet` | `"I could come back for two days between them. Same price either way."` |
+
+**Parent:** *Ask what she would rather* · *Say the bed you know is worth something* · *Say either way you will be glad to see her*
+
+---
+
+## P3.7 The corpus at 44 – counted by script, not claimed
+
+| subject | situations | of 44 |
+| --- | ---: | ---: |
+| `story` | 12 | the heaviest cell, because a bright week favours it |
+| `decision` | 7 | was **zero** for adults |
+| `good-news` | 7 | |
+| `observation` | 6 | was **one**, and it is the cell that started this |
+| `worry` | 6 | held back from tranche 1 until the gates were settled |
+| `curiosity` | 6 | held back for the same reason |
+
+**Every one of the 44 reaches `college` and `independent`.** Six carry a career gate (R8, R14, R18,
+R20, R25, R34); the other 38 are `generated` kernels that assert nothing the career could contradict.
+No line anywhere says «today».
+
+⚠ **Against his per-cell floors:** 3–4 per subject at each active stage — **met** at 6–12 for adult
+stages. 6+ in the heavily weighted cell — **met** (`story` = 12). No subject with only ONE reachable
+adult situation — **met**, the thinnest is 6. The last-two exclusion — shipped as round 43 #8(a).
+
+⚠ **What is still measured as a hole:** `school` and `after-school`. Thirteen of the 44 reach
+`after-school`; **none** lists plain `school`, deliberately, because every hole he reported was past
+it. A school-years tranche is its own pass and its own reading.
+
+⭐ **What B0/K4 should now say.** Before this corpus, the bench measured a 40-conversation career
+meeting **~2.5 distinct situations** with **14.1% of conversations reaching none at all**. Re-run K1–K5
+against 44 four-voiced situations before shipping any of it — the corpus is the input to that bench,
+not a substitute for it.
