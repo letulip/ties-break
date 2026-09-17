@@ -709,3 +709,34 @@ not exist yet**, and §4a's recovery corridor is not it either.»
 
 ⚠ **This is a design question and not a defect**, and it is his. Nothing here is proposed as a fix;
 the two doors work as specified and the third and fourth were never specified.
+
+
+---
+
+## ⭐ 13. HIS CLOSING RULINGS (17.09) – what he took, what he parked, what he would not let slide
+
+- **The corpus drafts:** «посмотрим уже в игре». Not read line by line; he will meet them in play.
+- **The K5 arm:** «жаль, что не починил, но хорошо, что уже работает, добавь в беклог на следующую
+  волну». ✅ **BACKLOG, ROUND 45.** The rows ARE live – measured at 91% of college weeks – and it is
+  the instrument that cannot see them. ⚠ The most likely cause is named so the next pass does not
+  re-derive it: `tickWeek` alone does not advance a career, it stalls at every pending decision
+  (reveal, knock, birthday, life beat). Four of the architect's own probes died on exactly that and
+  the fifth worked only by copying a passing test's recipe. **If the bench's walk does the same, its
+  careers never reach the late stages and every gated row there looks unreachable.**
+- **Round 42's leftovers:** «чини, я был уверен, что уже это всё готово. Я просил это всё доделать.»
+  ⚠⚠ **He is right and the record shows it** – #51 has stood at `[ ]` since 16.09 with his own
+  corridor written into it, and the two items off his play were found on 17.09 and never built. They
+  ship in this wave.
+
+### The four, and why they are two builders
+
+| | item | size |
+| --- | --- | --- |
+| a | re-affirming the psychologist's year does nothing (`world/psychologist.ts`'s early return skips the season stamp) | one line + a test |
+| b | a confirmation before the year is set – the pick LOCKS the row for the rest of the off-season | existing dialog idiom |
+| c | the hitting partner is missing from `coachingBudget.ts`'s `seats`, so `committedCents` is short by his salary | one push + a test that counts against the snapshot |
+| d | **#51 – the coach's fee fixed at hire, and he ASKS** | ⚠⚠ **a schema move**: the agreed figure is stored nowhere today, so v81 → v82 and the six-part ritual |
+| e | #46 – show what each travelling specialist buys | UI |
+
+a, b, c and e go together; **d is its own pass**, because a schema move next to three unrelated
+repairs is how a bump gets half-done.
