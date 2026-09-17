@@ -66,6 +66,8 @@
     "tools/skill-ceiling.ts",
     "tools/masseur-raise-bench.ts",
     "tools/small-talk-corpus-bench.ts",
+    "tools/small-talk-corpus-emit.ts",
+    "tools/small-talk-corpus-parse.ts",
     "tools/snapshot-bench.ts",
     "tools/spirit-bench.ts",
     "tools/spotlight-bench.ts",

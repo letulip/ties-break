@@ -94,9 +94,12 @@ function walk(world: WorldState, voice: Temperament, weeks: number): Said[] {
   return out
 }
 
-/** The situations of one voice, which is the only slice a single career can ever reach. */
+/** The situations one voice can reach at all – the only slice a single career ever sees.
+ *  ⚠ ROUND 44 – «HAS HER COLUMN» RATHER THAN «IS HERS». A situation is written per voice now, so a
+ *  row belongs to up to four girls instead of one; the question the exclusion cares about is
+ *  unchanged (which rows are in HER pool) and only the way a row answers it moved. */
 function ofVoice(voice: Temperament): SmallTalkSituation[] {
-  return SMALL_TALK_SITUATIONS.filter((s) => s.voice === voice)
+  return SMALL_TALK_SITUATIONS.filter((s) => s.voices[voice] !== undefined)
 }
 
 function detailOf(s: SmallTalkSituation): string {
@@ -227,23 +230,32 @@ describe('round 43 #8(a) C – a pool of one still speaks', () => {
     expect(detailOf(kept[0])).toBe(detailOf(one[0]))
   })
 
-  it('⚠ and `rollSmallTalk` really does fall through when the pool IS empty – the thing §C is protecting against', () => {
-    // The `fiery` girl at `college` reaches nothing in the shipped catalogue, so her row is the
-    // legacy generic one. That is the state the degradation must never manufacture by exclusion.
-    const world = careerAt('r43-fallthrough', 'fiery')
-    expect(reachableSituations(world, 'fiery', 'college').length, 'the fixture is the empty cell it claims').toBe(0)
-    let legacy = 0
-    for (let w = 52 * 12; w < 52 * 16; w++) {
-      world.week = w
-      const before = lifeLogOf(world).length
-      rollSmallTalk(world)
-      const log = world.lifeLog ?? []
-      if (log.length === before) continue
-      const row = log[log.length - 1]
-      if (!row.detail.includes(':')) legacy++
-      row.answer = 'more'
+  it('⭐⭐⭐ ROUND 44 – there is no empty cell left to fall through FROM, which is the round\'s own headline', () => {
+    // ⚠⚠ THIS CASE USED TO POSE `fiery` AT `college` AS THE EMPTY CELL AND THAT FIXTURE IS NOW FALSE,
+    // which is a result rather than a breakage: the corpus spec opened on «a `fiery` girl has ONE
+    // situation in the entire game, and none at all after school», and this is where that stops being
+    // true. So the case asserts what replaced it – no (voice × stage) cell is empty on a BARE career,
+    // with no coach, no feed and no calendar, so every gated situation is refused.
+    //
+    // ⚠ THE LEGACY FALL-THROUGH IS NOT DELETED FROM THE ENGINE AND IS NOT CLAIMED DEAD. It is the
+    // branch `rollSmallTalk` takes when `reachable.length === 0`, and the guard below asserts the
+    // degradation cannot MANUFACTURE that state, which is §C's whole subject. What changed is only
+    // that no catalogue cell arrives in it.
+    const world = careerAt('r43-no-empty-cell', 'fiery')
+    world.events = []
+    world.coachId = null
+    world.season = []
+    world.entries = []
+    for (const voice of TEMPERAMENTS) {
+      for (const stage of ['school', 'after-school', 'college', 'independent'] as const) {
+        expect(
+          reachableSituations(world, voice, stage).length,
+          `${voice}/${stage}: an empty cell – she has nothing to bring`,
+        ).toBeGreaterThan(0)
+      }
     }
-    expect(legacy, 'an empty pool is the legacy opener – which is why the exclusion may not create one').toBeGreaterThan(0)
+    // ...and the empty-pool guard itself, asked directly, because that is the only way in now.
+    expect(withoutRecentSituations(world, []), 'an empty pool stays empty rather than being invented').toEqual([])
   })
 })
 

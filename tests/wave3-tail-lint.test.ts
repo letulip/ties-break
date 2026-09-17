@@ -19,7 +19,13 @@ import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { BANNED_TAILS, narrationOf } from './helpers/bannedTails'
 
-const SOURCE = 'src/engine/world/lifeBeat.ts'
+// ⚠⚠ TWO FILES SINCE ROUND 44, AND THE SECOND ONE IS WHY THIS IS A LIST. The ban is about the LIFE
+// LAYER's player-facing strings, and round 44 moved 817 of them into a generated module one file
+// over (`world/smallTalkCorpus.ts`, emitted from the corpus document). A lint scoped to one path
+// would have gone on passing while the corpus it cannot see grew – «a guard whose scope is narrower
+// than its sentence», the family `tests/worldSource.ts`' ruling-T note is named for and the one this
+// repo has now met twenty times. ⚠ A NEW POOL FILE BELONGS HERE THE DAY IT LANDS.
+const SOURCES = ['src/engine/world/lifeBeat.ts', 'src/engine/world/smallTalkCorpus.ts']
 
 /** Every single-quoted string literal in the file, comments stripped first.
  *  ⚠ COMMENTS MUST GO FIRST and not merely be skipped: this repo records owner rulings verbatim in
@@ -50,7 +56,7 @@ const KNOWN_VIOLATIONS: readonly string[] = []
 
 describe('the narrator-tail ban reaches every life pool, not just the week notes', () => {
   it('⭐⭐⭐ no banned tail survives in any life string, except the one on the owner\'s desk', () => {
-    const literals = literalsOf(readFileSync(SOURCE, 'utf8'))
+    const literals = SOURCES.flatMap((path) => literalsOf(readFileSync(path, 'utf8')))
     // ⚠ THE POSITIVE CONTROL COMES FIRST, because a sweep over an empty list passes forever and
     // that is exactly how the last eight dead tests in this wave died. If the extractor ever stops
     // finding literals - a quoting style changes, the pools move file - this goes red here rather

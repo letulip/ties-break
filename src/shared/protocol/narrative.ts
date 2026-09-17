@@ -342,6 +342,28 @@ export interface LifeBeatRecord {
    *  because the stamp is about a READ being missed or caught and his card carries none. The coin is
    *  for read-bearing beats; a beat of his own is not automatically one of them. */
   heard?: boolean
+  /** ⭐⭐⭐ ROUND 44 / v81 – WHICH DELIVERY FRAME SHE ARRIVED IN, on a `'small-talk'` row and on no
+   *  other kind. The id of a member of `SMALL_TALK_FRAMES[presence]` – `'kettle'`, `'call-late'` –
+   *  never the rendered sentence, exactly as `detail` is machine-readable and never a rendered one.
+   *
+   *  ⚠⚠ IT IS PERSISTED RATHER THAN DERIVED, AND THAT IS THE WHOLE REASON v81 EXISTS – the owner's
+   *  own rule, 17.09: **a frame may not change after a save, a reload, OR THE POOL GROWING.** A frame
+   *  drawn on a purpose-scoped stream keyed on the career week survives a save and a reload perfectly
+   *  (the key is reconstructible for the life of the career), and it CANNOT survive the third: a pool
+   *  that grows from nine lines to ten re-derives a different member for a beat already on screen.
+   *  The first two are what `heard` one field over could get away with; the third is what makes this
+   *  one state. ⚠ And the exclusion is the same argument from the other side – «the last two frames,
+   *  by id» is a fact about rows already written, so the rows have to hold it.
+   *
+   *  ⭐ THE FIELD IS OPTIONAL AND OLD ROWS FALL BACK, which is what keeps the migration trivial: a
+   *  row with no frame renders the FIRST line of its presence's pool, and `kettle` / `call-middle`
+   *  are exactly the two frames the shipped catalogue wrapped `practice-clicked` in – so a small-talk
+   *  row already in a save reads back byte-identically to what it showed on the week it was raised.
+   *
+   *  ⚠ ONLY `'small-talk'` EVER CARRIES IT. Every other kind words its own scene from its own pool
+   *  (`MET_HER_LINE`, `ENDED_HER_LINE`, the fork's registers), so the key is absent on all of them by
+   *  construction – the same shape `heard` has, one field over, for the mirror-image reason. */
+  frame?: string
 }
 
 /** ⭐⭐⭐ v74 – SOMEONE EXISTS. One row per attachment this career has lived, append-only and never

@@ -363,6 +363,17 @@ describe('wave 3 T8 B – a silent home takes ZERO draws', () => {
     return rngKeys.filter((k) => k.includes(':life:'))
   }
 
+  /** ⭐⭐⭐ ROUND 44 – EVERY KEY `rollSmallTalk` REACHED, FILTERED BY NOTHING BUT THE SEED.
+   *
+   *  ⚠⚠ THE FILTER ABOVE IS A SCOPE HOLE THE MOMENT A KEY OF THIS STEP IS NOT SPELLED `:life:`, and
+   *  round 44 made exactly that true: the frame draw is `seed:smalltalk:frame:<week>` – the frame-pool
+   *  spec's own spelling, carried rather than tidied – so `lifeKeys()` CANNOT SEE IT. A net that
+   *  cannot see a new draw is the «unable to fail» family this repo has met twenty times, so the
+   *  count case below reads THIS list and the `:life:` one keeps its own narrower claim. */
+  function allKeys(world: WorldState): string[] {
+    return rngKeys.filter((k) => k.startsWith(`${world.seed}:`))
+  }
+
   it('⭐⭐ a STRAINED home derives no stream at all – not one, not discarded', () => {
     const world = careerAt('zero-draw-strained', 200, 'strained')
     rngKeys.length = 0
@@ -412,21 +423,27 @@ describe('wave 3 T8 B – a silent home takes ZERO draws', () => {
   // ⚠ WHAT THE CASE WAS WRITTEN TO HOLD IS UNTOUCHED AND IS STILL HERE: every key carries its own
   // week, each answers exactly ONE question, and no key of a neighbouring section is touched. That is
   // the 09.09 split-key law, which is what this describe block is actually about.
-  it('⭐ a close home that HITS derives its own three keys – one question each, all on this week', () => {
+  it('⭐ a close home that HITS derives its own FOUR keys – one question each, all on this week', () => {
+    // ⚠ ROUND 44 ADDED THE FOURTH AND IT IS NAMED RATHER THAN COUNTED AWAY: the scene she says it in
+    // is a fact of its own, so it gets a key of its own (the 09.09 split-key law). It is spelled
+    // `:smalltalk:frame:` and NOT `:life:smalltalk:frame:` because the frame-pool spec writes it that
+    // way – his document's spelling, carried rather than tidied – which is exactly why the assertion
+    // below reads `allKeys` and not `lifeKeys`.
     const world = careerAt('zero-draw-hit', 0, 'close')
     const week = firstHit(world, 200)
     world.week = week
     world.lifeLog = []
     rngKeys.length = 0
     rollSmallTalk(world)
-    expect(lifeKeys(), 'the hazard, the subject, the situation – in that order').toEqual([
+    expect(allKeys(world), 'the hazard, the subject, the situation, the frame – in that order').toEqual([
       `${world.seed}:life:smalltalk:${week}`,
       `${world.seed}:life:smalltalk:subject:${week}`,
       `${world.seed}:life:smalltalk:situation:${week}`,
+      `${world.seed}:smalltalk:frame:${week}`,
     ])
-    // ⭐ AND THE THREE ARE THREE DIFFERENT KEYS, which is the law stated rather than implied: a
-    // second fact read off the hazard's own key would have shown up here as a repeat.
-    expect(new Set(lifeKeys()).size, 'no two of them share a key').toBe(3)
+    // ⭐ AND THE FOUR ARE FOUR DIFFERENT KEYS, which is the law stated rather than implied: a second
+    // fact read off the hazard's own key would have shown up here as a repeat.
+    expect(new Set(allKeys(world)).size, 'no two of them share a key').toBe(4)
     expect(lifeLogOf(world).length, 'and it really was a hit').toBe(1)
     // ⚠ AND NO OTHER `:life:` KEY EXISTS ON THIS TREE. `seed:life:ends:*` is WAVE 4's and may not be
     // created early (brief §3); the arrival's three are the other file's.
