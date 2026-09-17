@@ -260,6 +260,38 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠ New situations are new player-facing strings, so they are DRAFTS: the architect writes the
   document, he proofreads, nothing ships before he has.
 
+  ⭐⭐ **THE 516 REPLIES ARE WRITTEN (17.09), on his «ядра принимаю, пиши ответы».** 43 situations ×
+  3 parent stances × 4 voices, beneath each row's own opener table, each block headed by the stance
+  label read out of that row's `**Parent:**` line rather than retyped – so a label and its replies
+  cannot drift apart. **They are DRAFTS**: not a word of the 516 ships before he has read it.
+
+  ⭐ **Every count re-derived by an independent parse of the document**, not taken from the builder's
+  report – 43 situations · 516 replies · 129 per voice · average words 11.8 `sunny` / 11.5 `fiery` /
+  11.0 `deep` / 7.4 `quiet` · **0** exact duplicates · **0** empty · **0** label mismatches · **0**
+  uses of «today». All eight reproduce.
+
+  ⚠⚠ **Two findings that are about SHIPPING rather than wording, both confirmed against the code:**
+  - **R17 cannot ship at all.** Its career gate is `clear-next-week`, and `SMALL_TALK_FACTS` holds
+    exactly four keys – `played-recently`, `march-entry-open`, `coach-employed`, `beat-her-conqueror`.
+    The string appears nowhere in `src` or `tests`. **Seven rows name a gate; six of them can ship.**
+  - **R25 is a latent test failure.** Its kernel says another player's coach «**he** says almost
+    nothing», and `tests/coach-voice.test.ts` forbids a masculine pronoun a player can read – for a
+    COACH, the role the rule was written for. It does not fail today because that test reads `src/`
+    only, so it lands the day the corpus becomes code, against a pinned exception of 10 masculine
+    hits whose size the exchange spec fixed precisely so a new one reopens the question. Dropping the
+    pronoun costs one word – but it is a wording change to a kernel he has accepted, so it is his.
+
+  ⚠ **The largest body of invented fact in the pass is the builder's own, and it is flagged rather
+  than buried:** nine rows whose `invite` asks for a detail the kernel does not hold (R7's rice and
+  eggs, R11's coffee order, R23's word, R25's four words, R28, R29, R32, R41, R43). Legal under
+  `generated`, pinned identical across all four voices so no two editions disagree – and still new
+  fact that he did not write. Seven further lines are tabled in the document for his cut.
+
+  ⭐ **Four numbers the document itself had wrong were found by its own §3a rule** (any number
+  derivable FROM the document is derived by script before the commit): §P3.7 said 44 situations and
+  6 `curiosity` where the head of the same file said 43; «six carry a career gate» where seven rows
+  name one; «the other 38 are generated» where it is 36; §P3.2's heading said six where it is five.
+
 - [~] **9. THE KNOCK CADENCE INTERRUPTS TOO OFTEN – round 42 #27's own parked signal has arrived.**
   «Мне всё ещё очень часто падают не травмы, а предупреждения, что ей надо отдохнуть.»
 
