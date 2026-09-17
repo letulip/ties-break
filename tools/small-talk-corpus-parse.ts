@@ -16,6 +16,15 @@
 // a document defect into a missing situation nobody notices. A row this file cannot read is reported,
 // never patched around. ⚠ The marker-helper law (`tests/helpers/source.ts`) is the same rule one
 // layer over: a region cut with a raw `indexOf` widens silently when its marker rots.
+//
+// ⭐⭐ AND THE DOCUMENT IS NOW THE WHOLE CATALOGUE, not the part of it round 43 wrote. The EIGHT that
+// shipped before the corpus existed lived hand-written in `SMALL_TALK_SHIPPED`; they are rows
+// `R45`-`R52` of the same document since round 44, `SMALL_TALK_SHIPPED` is gone, and the arithmetic
+// this file re-derives on every read is **51 rows, 204 openers, 153 labels, 612 replies** plus the
+// one two-beat row's **4 shared** lines. ⚠ THE EIGHT SIT FIRST AND THEIR REF NUMBERS DO NOT: a ref
+// is an allocation name and the ORDER of this file is a live career's situation draw (`pickInt` over
+// the filtered pool reads position), so renumbering `R1`-`R44` to make the two agree would move every
+// shipped career's conversations to buy tidiness.
 
 import { readFileSync } from 'node:fs'
 
@@ -52,6 +61,12 @@ export interface CorpusRow {
   /** `null` where the heading says `generated`; otherwise the named competitive claim. */
   fact: string | null
   openers: Record<CorpusVoice, string>
+  /** ⭐ ROUND 44 – THE `story` SECOND BEAT, and it is `null` on all but one row. `court-four` is a
+   *  two-beat situation (§8d.2 of the exchange spec): the INCIDENT is heard by every route before
+   *  its own branch, and it is told in her own words, so it is per voice like everything else here.
+   *  ⚠ ALL FOUR OR NONE. A row with a `**shared**` block owes four lines, because a route that heard
+   *  the incident in three voices and not the fourth is a card that stops mid-story for one girl. */
+  shared: Record<CorpusVoice, string> | null
   stances: CorpusStanceBlock[]
 }
 
@@ -90,6 +105,11 @@ const FACT = /^\*\*fact: `([a-z-]+)`\*\*$/
 const OPENER_TABLE_HEAD = /^\| voice \| opener \|$/
 const OPENER_ROW = /^\| `(sunny|fiery|deep|quiet)` \| (.+) \|$/
 const PARENT_LINE = /^\*\*Parent:\*\* (.+)$/
+/** ⚠ NO GLOSS AFTER IT, DELIBERATELY. Every other header in this format carries its label on the
+ *  same line because the parser CHECKS that label against a second copy; a `**shared**` header has
+ *  nothing to check against, so a gloss there would be prose the parser skips – and prose the parser
+ *  skips is prose that can rot without going red. The explanation lives in the row's own note. */
+const SHARED_HEAD = /^\*\*shared\*\*$/
 const BLOCK_HEAD = /^\*\*(invite|respond|space)\*\* · (.+)$/
 const REPLY_LINE = /^- `(sunny|fiery|deep|quiet)` +(.+)$/
 const WITHDRAWN = /^### R\d+ · .*WITHDRAWN/
@@ -161,6 +181,28 @@ function parseRow(lines: string[], head: number, end: number): CorpusRow {
     fail(p, `${ref}'s **Parent:** line lists ${labels.length} labels, not ${CORPUS_STANCES.length}`)
   }
 
+  // ---- the optional `**shared**` second beat, which lives BETWEEN the openers and the labels -----
+  // ⚠ THE WINDOW IS CLOSED AT BOTH ENDS AND THAT IS WHAT KEEPS IT UNAMBIGUOUS: it may only appear
+  // after the opener table and before the `**Parent:**` line, so it can never be confused with a
+  // stance block (those are all below `p`) and a stray copy further down the row is not silently
+  // preferred. A row without one is the normal case – 50 of the 51 have no second beat.
+  let shared: Record<CorpusVoice, string> | null = null
+  for (let sh = t + 2 + CORPUS_VOICES.length; sh < p; sh++) {
+    if (!SHARED_HEAD.test(lines[sh])) continue
+    const told = {} as Record<CorpusVoice, string>
+    for (let v = 0; v < CORPUS_VOICES.length; v++) {
+      const at = sh + 1 + v
+      const r = REPLY_LINE.exec(lines[at] ?? '')
+      if (r === null) fail(at, `${ref}'s shared beat ${v + 1} is unreadable: ${lines[at]}`)
+      if (r[1] !== CORPUS_VOICES[v]) fail(at, `${ref}'s shared block is out of order: expected ${CORPUS_VOICES[v]}, found ${r[1]}`)
+      const beat = unticked(r[2], at, `${ref} shared ${r[1]} beat`)
+      if (beat.length === 0) fail(at, `${ref}'s shared ${r[1]} beat is empty`)
+      told[r[1] as CorpusVoice] = beat
+    }
+    shared = told
+    break
+  }
+
   // ---- the three stance blocks -----------------------------------------------------------------
   const stanceBlocks: CorpusStanceBlock[] = []
   let b = p + 1
@@ -191,7 +233,7 @@ function parseRow(lines: string[], head: number, end: number): CorpusRow {
     b = b + 1 + CORPUS_VOICES.length
   }
 
-  return { ref, id: corpusId(documentId), subject, stages, fact, openers, stances: stanceBlocks }
+  return { ref, id: corpusId(documentId), subject, stages, fact, openers, shared, stances: stanceBlocks }
 }
 
 /** The document off disk, parsed. One door, so the emitter and the pin cannot read two files. */
@@ -199,20 +241,29 @@ export function readCorpus(): CorpusRow[] {
   return parseCorpus(readFileSync(CORPUS_DOC, 'utf8'))
 }
 
-/** ⭐ WHAT THE ROUND OPENED ON, RE-ASSERTED ON EVERY READ: 43 rows, 172 openers, 129 labels, 516
- *  replies. ⚠ These four are DERIVED from the parse and compared against the document's own stated
- *  arithmetic – «any number in a document that can be derived FROM that document is derived by
- *  script before the commit», the corpus's own §3a rule. */
-export function corpusCounts(rows: readonly CorpusRow[]): { rows: number; openers: number; labels: number; replies: number } {
+/** ⭐ WHAT THE ROUND OPENED ON, RE-ASSERTED ON EVERY READ – 43 rows, 172 openers, 129 labels, 516
+ *  replies – and what it CLOSED on, after the eight that shipped first moved into the document:
+ *  51 rows, 204 openers, 153 labels, 612 replies and 4 shared second beats. ⚠ These five are DERIVED
+ *  from the parse and compared against the document's own stated arithmetic – «any number in a
+ *  document that can be derived FROM that document is derived by script before the commit», the
+ *  corpus's own §3a rule.
+ *
+ *  ⚠ `shared` IS COUNTED RATHER THAN ASSUMED TO BE FOUR, for the reason every other count here is
+ *  taken: a parser whose optional block silently failed to match would report zero, and zero would
+ *  look exactly like «no row has a second beat» – which was a true sentence about this document
+ *  right up until `court-four` moved into it. */
+export function corpusCounts(rows: readonly CorpusRow[]): { rows: number; openers: number; labels: number; replies: number; shared: number } {
   let openers = 0
   let labels = 0
   let replies = 0
+  let shared = 0
   for (const row of rows) {
     openers += Object.keys(row.openers).length
+    if (row.shared !== null) shared += Object.keys(row.shared).length
     for (const block of row.stances) {
       labels++
       replies += Object.keys(block.replies).length
     }
   }
-  return { rows: rows.length, openers, labels, replies }
+  return { rows: rows.length, openers, labels, replies, shared }
 }

@@ -938,6 +938,14 @@ describe('round 42 #15 G – the respond branch names the parent\'s actual opini
     // Changing it is a wording change nobody asked for (CLAUDE.md invariant 4), so the collision is
     // pinned HERE, by name, and carried to him in the handoff with a draft beside it. The day he
     // rules, this list goes to empty and the case becomes the flat law.
+    //
+    // ⚠⚠ ROUND 44 TOOK THE EXCEPTION FROM ONE COLUMN TO FOUR, AND THAT IS A REAL WIDENING RATHER THAN
+    // A PIN EDITED TO MATCH THE CODE. `line-call` had one voice and has four now, so his unrepaired
+    // label is answered by four girls instead of one and the defect §8d.1 names is on screen four
+    // times as often. **The label was not edited** – it is his, the round's brief was the eight
+    // brought up to strength rather than the eight re-worded, and «a string you did not touch cannot
+    // regress». So the list is allowed to grow and the growth is said out loud here, which is the
+    // whole purpose of pinning it by name. ⭐ The one ruling that empties it empties all four at once.
     const offenders = columns()
       .filter(({ c }) => GENERIC_RESPOND.includes(c.branches.respond.label))
       .map(({ name }) => name)
@@ -945,7 +953,12 @@ describe('round 42 #15 G – the respond branch names the parent\'s actual opini
     const named = columns()
       .filter(({ c }) => c.branches.respond.label === 'Tell her what worries us')
       .map(({ name }) => name)
-    expect(named, 'the one §8d.1 names that his revision did not reach').toEqual(['line-call/fiery'])
+    expect(named, 'the one §8d.1 names that his revision did not reach – now in all four voices').toEqual([
+      'line-call/sunny',
+      'line-call/fiery',
+      'line-call/quiet',
+      'line-call/deep',
+    ])
   })
 
   it('⚠ every respond label is a thing the parent SAYS – an imperative, not a category', () => {
