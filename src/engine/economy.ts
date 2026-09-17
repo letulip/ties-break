@@ -971,6 +971,33 @@ export const ECONOMY = {
      *  the game cannot grow closer to her, which reads wrong. A token step up – and the FULL
      *  symmetric fall downward, because `high` is a real rung beneath it. */
     eliteUpStep: 0.04,
+
+    // --- WHEN IT MAY BE SHOWN (spec §8b, ruling C7) ----------------------------------------------
+
+    /** ⭐⭐ C7, RULED 16.09 – «once clear», and this is the bar «clear» means. The question C7 asks
+     *  is whether chemistry surfaces «from season one, or once a band is clear», and his reason for
+     *  the second is quoted rather than paraphrased: «a sentence in week 3 about a relationship is
+     *  noise». Below this the card carries the question mark; at or beyond it, the gauge.
+     *
+     *  ⚠⚠ IT IS `ceilingAtNone` AND THAT IS THE DERIVATION, NOT A COINCIDENCE. Five points is, by
+     *  HIS own anchor in this same block, the WHOLE of what an ordinary pair's year can gain – so a
+     *  reading under five is inside one ordinary year's own noise and names no band at all, while a
+     *  reading past it is a year of relationship expressed in the units he set. A separate constant
+     *  would be an agent choosing a number where the owner had already provided one; this reads his.
+     *
+     *  ⚠ AND THE LEVEL IS THE CLOCK, WHICH IS WHY NO SECOND KEY IS OWED. `accrueCoachPair` runs only
+     *  on a week he is actually PAID for, so `chem` is literally the integral over weeks worked
+     *  together – three weeks in it cannot be large, however the dice fell. Gating on a stopwatch
+     *  instead would need a per-pair week count persisted, and `coachPairs` carries none.
+     *
+     *  MEASURED, predicted against measured (spec §8b): 240 pairs over 416 weeks each, on the
+     *  bench's own measured record (50%, roughly a match a week, a title every ~180 weeks). At this
+     *  bar the median pair first shows a gauge in week 62 – one season and a little, which is what
+     *  «not from season one» asks for – p90 in week 201, 5 of 240 never inside eight years, and the
+     *  marker returns to the question mark 0.25 times per career, because the relationship really
+     *  did go back to nothing. ⚠ NO PAIR OF THE 240 CROSSED IT INSIDE THREE WEEKS, which is C7's own
+     *  case: the median |chem| at week 13 is 1.05 and the largest of the 240 is 3.93. */
+    readableAt: 5,
   },
 
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout

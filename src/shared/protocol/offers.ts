@@ -1328,6 +1328,31 @@ export interface CoachMarketRow {
    *  small (a few injury weeks over four years), and printing "-2.7 weeks" would promise a precision the
    *  120-seed run does not support. */
   loadNote: string
+  /** ⭐⭐⭐ ROUND 44 – THE RELATIONSHIP, AS ONE SIGNED NUMBER (`docs/specs/the-chemistry-2026-09.md`
+   *  §8/§8a/§8b). `-100 .. +100`, her and this coach, or `null` while there is nothing to read.
+   *
+   *  ⚠⚠ THE FIELD THAT WAS OWED AND WAS NEVER NAMED. Wave C1 shipped the mechanic – `coachPairs` is
+   *  read in seven engine files and moves her development every week – and nothing carried it across
+   *  the boundary, so no screen could render it however the markup was written. The owner played a
+   *  whole round and reported «я не увидел её в игре нигде». This is the prerequisite; the gauge is
+   *  the half that gets seen.
+   *
+   *  ⚠ IT IS THE LEVEL AND NOTHING ELSE. `CoachPair` persists three numbers and only this one may be
+   *  shown: `phase` is the pair's weather and printing a draw is how a seeded relationship becomes a
+   *  forecast, and `standing` has no reader yet. `chemistryReading` in `engine/chemistry.ts` is the
+   *  one derivation and this field is its only customer, so the band the card paints and the number
+   *  the engine grows her on cannot be two arithmetics.
+   *
+   *  ⚠ `null` IS THE QUESTION MARK ON THE CARD AND IT MEANS ONE THING: nobody knows yet. Either she
+   *  has never worked with him, or they have and the reading has not cleared C7's bar
+   *  (`ECONOMY.chemistry.readableAt` – «a sentence in week 3 about a relationship is noise»).
+   *
+   *  ⚠ NOT A SECOND ANTI-SHOPPING LEAK. A stranger's card is `null` by construction: a pair with no
+   *  row has no level, so this column cannot be read by hire-look-fire any more than `edgePct` can.
+   *
+   *  ⚠ DERIVED AT SNAPSHOT TIME. `coachPairs` has been persisted since v79, so this owes no
+   *  migration and moves no `SAVE_SCHEMA_VERSION`. */
+  chemistry: number | null
 }
 
 /** Her academy scholarship as the UI needs it (schema v21). The engine keeps the level; the screens

@@ -14,6 +14,10 @@
 // shipped factor tables rather than a second home for them – see the profile block below.
 import { bandedRateCents, bestFitCoachAt, buildCoachRoster, coachBillRangeCents, coachById, coachEdgeCorridorPp, coachEdgePlacement, coachFactor, coachFitFor, coachIncludesPhysio, coachRetainerBand, coachSeasonUplift, coachTierById, coachWeeklyCents, COACH_TIER_LABEL, eliteGateShortfall, practiceCoachRateCents, facilityRateCents, tierOf, weeklyBillSplit } from '../coach'
 import type { StyleFit } from '../coach'
+// ⭐⭐ ROUND 44 – THE WIRE FOR THE CHEMISTRY (spec §8b). A leaf import of the one derivation, exactly
+// as `coachEdgeCorridorPp` above is imported rather than re-implemented here: the card must paint the
+// same number `growWeek` grows her on, and one function is how that stays true.
+import { chemistryReading } from '../chemistry'
 import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR } from '../season/calendar'
 import { ECONOMY } from '../economy'
 import type { LadderTrack, SeasonEvent, TierId } from '../season/types'
@@ -947,6 +951,20 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // card says «travelling with her» and not «doubled».
       edgeTravelPct: travels ? coachEdgeCorridorPp(coach.tier, true) : null,
       loadNote: coachLoadNote(coach.tier),
+      // ⭐⭐⭐ ROUND 44 – AND THE RELATIONSHIP CROSSES THE WIRE AT LAST (spec §8b). Read STRAIGHT off
+      // the persisted pair with no second arithmetic: `chemistryReading` decides both what the number
+      // is and whether there is one, so the gauge on the card and the factor in `growWeek` are the
+      // same `chem` to the bit.
+      //
+      // ⚠ PER ROW AND NOT PER CAREER, which is §7 («вернуться к её первому тренеру») made visible:
+      // the map keeps a paused row for every coach she has ever worked with, so a former coach's card
+      // still carries what the two of them had. A single snapshot field for «her coach's chemistry»
+      // would have thrown that away and made going back unreadable.
+      //
+      // ⚠ NO GATE OF ITS OWN HERE. `readableAt` is C7's bar and it lives in `chemistry.ts` beside the
+      // number it reads; a second condition on this line would be the two-arithmetics defect this
+      // file's other notes keep paying for.
+      chemistry: chemistryReading(world.coachPairs[coach.id]),
     }
   })
 }

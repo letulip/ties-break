@@ -334,6 +334,37 @@ export function accrueChemistry(
   }
 }
 
+// =================================================================================================
+// 5. THE READING – the one number that crosses the wire, and the one place that decides it
+// =================================================================================================
+
+/** ⭐⭐⭐ WHAT THE CARD IS ALLOWED TO SHOW ABOUT THIS PAIR: the level, signed, or `null` while there
+ *  is nothing to read (spec §8b, ruling C7).
+ *
+ *  ⚠⚠ THIS FUNCTION IS THE WHOLE OF WHY THE MECHANIC WAS INVISIBLE FOR A ROUND. `coachPairs` was
+ *  read in seven engine files and never crossed into `shared/protocol`, so the UI was structurally
+ *  unable to render a number it could not see – the owner played a career and reported «я не увидел
+ *  её в игре нигде». The fix is this one derivation plus one field on `CoachMarketRow`; the gauge is
+ *  the easy half and could not have existed before it.
+ *
+ *  ⚠ ONE NUMBER AND NOT THREE. `phase` is the pair's WEATHER – a draw the player must not be able to
+ *  read, because reading it would turn a seeded relationship into a forecast (§8's anti-shopping
+ *  argument, applied to this wave's own field) – and `standing` is wave C2's, written and not yet
+ *  read anywhere. Neither belongs on the wire, and a band NAME beside the level would be a second
+ *  spelling of one fact for the UI to disagree with.
+ *
+ *  ⚠ THE SIGN IS CARRIED BY THE NUMBER ITSELF, which is what lets the gauge answer C11 and C12 out
+ *  of one field: the hue family is `level < 0`, the fill is `|level| / 100`, and the figure is the
+ *  level printed with its own minus.
+ *
+ *  ⚠ `null` COVERS BOTH SILENCES AND THE CARD DRAWS ONE GLYPH FOR THEM, because they are the same
+ *  sentence: «nobody knows until you work together». She has never worked with him (no row at all),
+ *  or they have worked together and nothing has come of it yet (`ECONOMY.chemistry.readableAt`). */
+export function chemistryReading(pair: CoachPair | undefined): number | null {
+  if (!pair) return null
+  return Math.abs(pair.chem) >= ECONOMY.chemistry.readableAt ? pair.chem : null
+}
+
 // --- the two helpers, once ----------------------------------------------------------------------
 
 function clamp(x: number, lo: number, hi: number): number {

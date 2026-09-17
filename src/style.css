@@ -288,6 +288,29 @@
   --attention: var(--amber);
   --attention-rgb: 245, 185, 66;
 
+  /* --- ⭐⭐ ROUND 42 #52 / ROUND 44 – THE CHEMISTRY GAUGE'S TWO GRADIENTS (HIS RULING, 16.09) ------
+     The owner, on how the coach card's marker carries the SIGN: «предлагаю, чтобы в положительном
+     направлении заполнение было от светло-зелёного до ярко-зелёного в градиенте, а для отрицательного
+     от оранжевого до красного, например» (quoted here rather than in a template -
+     tests/template-copy-rules.test.ts bans Cyrillic inside one). Two stops per direction, and the
+     spec's own note on why it beat the recommendation it replaced: the DIRECTION is the hue family
+     and the STRENGTH is how far into the family the arc has got, so one component carries two facts.
+
+     ⚠⚠ THE DOWNWARD PAIR IS HIS TWO NAMED COLOURS AS ALIASES, NOT NEW HEXES - `--orange` and
+     `--danger` are already the app's orange and its red, and copying their values here would be the
+     drift `--accent-rgb`'s own note is about. The UPWARD pair is genuinely new, because this palette
+     has no true green: `--day-good` is a lime-yellow and `--accent` is the brand lime, and the one
+     colour the gauge may NOT use is the accent - §8a keeps `--accent` for the chemistry MARK above
+     the ring so the two never compete. So two greens, on the hue circle between the lime and the
+     ramp's own top (`readingColor` ends at hsl(120, 72%, 48%)), the light one at a lower saturation
+     so it reads as «a little» rather than as a weaker green.
+     ⚠ DRAFT FOR HIS EYE, exactly as `--wildcard` above is: he named the four colours in words and
+     these are the hexes; moving any of them is one line. */
+  --chem-up-from: #9ed17f;
+  --chem-up-to: #2fbe45;
+  --chem-down-from: var(--orange);
+  --chem-down-to: var(--danger);
+
   /* --- ⭐⭐ ROUND 42 #29(b) – THE MOOD RING, ONE COLOUR PER RUNG (DRAFT, HIS TO RULE) -------------
      The owner, 14.09: «не надо менять картинку на главной по любому поводу … Делаем разноцветную
      светящуюся обводку вокруг аватарки, для каждого настроения свой цвет» (quoted here rather than
@@ -5550,13 +5573,44 @@ tr.kid-row td {
   border-color: var(--fit-off-border);
   color: var(--muted);
 }
+/* ⭐⭐⭐ ROUND 42 #52 (16.09) – THE RIGHT COLUMN IS TWO CORNERS NOW. The owner: «цену и Hire поднять в
+   правый верхний угол, тогда освободится низ на всех карточках». `align-self: stretch` takes the
+   column off the row's centre line and `space-between` pins one group to each end, so the price
+   group rides the top and the chemistry marker the bottom, on every row, hired or not.
+
+   ⚠ `align-items: flex-end` AND `gap: 3px` STAY EXACTLY WHERE THEY WERE - they moved down into
+   `.cm-money`, which is the group that used to BE this element. The price keeps round 43 #3's
+   typography to the value; nothing about how it is set has changed, only where it sits. */
 .cm-right {
   position: relative;
   flex: none;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.cm-money {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 3px;
+}
+/* THE MARKER: the mark, then the gauge under it. Centred on the ring rather than right-aligned with
+   the price, because a 13px glyph hanging off the edge of a 36px circle reads as debris. */
+.cm-chem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+/* ⚠ THE ONE PLACE `--accent` IS SPENT ON THIS CORNER, AND IT IS A RULE RATHER THAN A PREFERENCE
+   (docs/specs/the-chemistry-2026-09.md §8a). The chemistry mark keeps the wave's accent yellow and
+   the ring's gradient belongs to the ring alone, so the two channels never compete: the mark says
+   WHICH reading this is, the gradient says WHAT it says. `AppIcon` paints itself in `currentColor`,
+   so this one declaration is the whole of it. */
+.cm-chem-mark {
+  color: var(--accent);
 }
 .cm-price {
   font-size: 14.5px;
