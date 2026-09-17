@@ -3553,39 +3553,48 @@ export const ECONOMY = {
        *  own word for this row – «a small maintenance term», «all four, slightly». So the criteria
        *  set the floor and the spec sets the direction; there is no step left for taste to take.
        *
-       *  ⚠⚠⚠ AND IT SHIPS AT **ZERO**, BECAUSE THE SWEEP'S WINNER COLLIDES WITH A STATED FAIRNESS
-       *  RULE AND THAT COLLISION IS THE OWNER'S TO RULE ON, NOT AN AGENT'S. At 0.08 this row turns
-       *  the whole `npm run check` suite red in nine places across three files, and every one of
-       *  them pins the SAME property: `physicalMean / peakPhysical` is a function of AGE ALONE.
-       *  `tests/peak-physical.test.ts` states why that matters in its own words – «a share threshold
-       *  must not be a different rule for a rich girl than for a poor one» – and round 38 #6c already
-       *  narrowed that pin once and priced the cost in weeks.
+       *  ⚠⚠⚠ IT WAS HELD AT **ZERO** FOR A DAY, AND THE REASON IS WORTH KEEPING BECAUSE THE FIXTURE
+       *  IS WHAT SETTLED IT. At 0.08 this row turned the suite red in nine places across three
+       *  files, every one of them pinning that `physicalMean / peakPhysical` is a function of AGE
+       *  ALONE, and `tests/peak-physical.test.ts` said why in its own words – «a share threshold must
+       *  not be a different rule for a rich girl than for a poor one». The previous builder held the
+       *  row and escalated rather than loosening a tolerance, which was right.
        *
-       *  ⚠⚠ MEASURED, on that test's own three careers walked to 38 (working/self · middle/middle ·
-       *  wealthy/elite), and the coach row is the SOLE cause – with it at 0 and both seat rows at
-       *  their shipped values, all 87 tests in the three files pass:
+       *  ⚠⚠ THE MEASUREMENT THAT LOOKED LIKE CLASS – on that test's own three careers walked to 38
+       *  (working/self · middle/middle · wealthy/elite):
        *
        *      coach term   working/self   middle/middle   wealthy/elite   spread    ≈ career
        *      0.00               71.47%          71.64%          71.49%   0.178pp    2 weeks
        *      0.08               71.47%          72.90%          73.35%   1.880pp   24 weeks
        *
-       *  **A 10.5x widening, ordered by the family's chequebook**, and half a season of extra
-       *  playing life bought by the coaching rung she has had since she was fourteen. It also spreads
-       *  on `fit`, which is a SEED draw rather than a purchase – two identical families with identical
-       *  budgets would age differently on a style-match roll.
+       *  ⭐⭐ ...AND IT WAS A **STAFFING** DIFFERENCE WEARING A CLASS LABEL. The owner, 17.09: «на про
+       *  уровне они все имеют условно одинаковый доход». `bornAt(seed, background, coachTier)` puts
+       *  the tier in the PROFILE at creation and the fixture's walk ticks growth weeks only –
+       *  NOTHING IN IT EVER HIRES ANYBODY – so the poorest arm read 71.47% because it was
+       *  self-coached, not because a working family cannot afford a coach on the pro tour. The case's
+       *  own comment says what it is for and it is not money: «three careers with deliberately
+       *  different CEILINGS … must read the same share at 38». The claim is PROPORTIONALITY.
        *
-       *  ⭐ THE TWO SEAT ROWS ABOVE DO NOT HAVE THIS PROBLEM IN THE SAME WAY, and the asymmetry is
-       *  the reason they ship and this does not: they unlock only at her first counting W-series
-       *  result, they are bought deliberately to look after a veteran's body, and a career that buys
-       *  nothing is byte-identical. This row fires for EVERY coached career, and nobody ever chose it.
+       *  ⭐ SO THE PIN WAS SPLIT INTO THE TWO CLAIMS IT HAD BEEN CARRYING AT ONCE, and both are
+       *  STRONGER than the one they replace – proportionality is now measured at identical staffing
+       *  and holds to 0.0011pp across bodies 22 points apart (it was 0.20pp across 3.4), and «a paid
+       *  seat changes the share» has a case of its own for the first time. See
+       *  docs/specs/the-decline-and-the-seats-2026-09.md §7 and §8.
        *
-       *  ⚠ WHAT IT COSTS TO HOLD IT, SAID OUT LOUD: §4's own ⭐ calls the veteran coach «close to a
-       *  defect» – past `declineStart` `ageFactor` returns 0, so an elite coach multiplies zero – and
-       *  at 0 that defect still stands. The two seats alone hand back **0.87 of a season** and
-       *  **+0.90 pp** of match-win probability at 33, which is below the «one season» floor the sweep
-       *  was run against. The mechanism is built, measured and one number from shipping. See
-       *  docs/specs/the-decline-and-the-seats-2026-09.md §6g for the ask. */
-      coachMaintenanceTop: 0,
+       *  ⚠ WHAT THE ROW IS WORTH, RE-MEASURED WITH IT LIVE (`npm run bench:decline`, 17.09): the
+       *  fully-staffed veteran at 33 holds serve 88.9% · ret 82.1% · stamina 79.0% · groundstrokes
+       *  82.1% – still falling on every one of the four, so Q1 passes structurally – and the payroll
+       *  hands back **+2.29 points = 1.36 SEASONS** of ageing and **+2.19 pp** of match-win
+       *  probability (13.6% -> 15.8%). ⭐ That clears C2's «at least one season» floor, which the two
+       *  seat rows alone MISSED at 0.87 – the coach row was the term the sweep said was missing and
+       *  the re-run says so from the other side.
+       *
+       *  ⚠ AND IT CLOSES §4's «close to a defect»: past `declineStart` `ageFactor` returns 0, so an
+       *  elite coach multiplied zero and a family paying elite money for a twenty-eight-year-old
+       *  bought her tennis nothing at all. `tests/round44-decline-care.test.ts` section F is the
+       *  other half of that – the coach MARKET quoted the same veteran «+0.0-0.0% a season», which
+       *  was true at 0 and would have been a lie the day this shipped. */
+      coachMaintenanceTop: 0.08,
       // ⚠ `skill` IS TYPED `string` FOR `ageWeight`'s OWN REASON, one concern up: `SkillKey` is
       // declared in `engine/development.ts`, which imports THIS file. The membership check a plain
       // string gives up is made mechanically instead – `tests/round44-decline-care.test.ts` asserts

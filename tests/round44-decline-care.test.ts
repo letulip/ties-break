@@ -32,6 +32,7 @@ import { describe, it, expect } from 'vitest'
 import { ECONOMY } from '../src/engine/economy'
 import {
   ageWeightOf,
+  coachMaintenanceSeasonPct,
   declineCareShieldOf,
   growWeek,
   isPhysicalSkill,
@@ -231,13 +232,12 @@ describe('round 44 D – the rung dial is not decoration on this channel either'
   })
 
   it('⭐⭐ the coach touches ALL FOUR and scales with the rung, self at exactly nothing', () => {
-    // ⚠⚠ RUN INSIDE `withCare` AT A NON-ZERO TERM, AND THAT IS LOAD-BEARING RATHER THAN TIDY.
-    // `coachMaintenanceTop` SHIPS AT 0 (the §6g collision – it turns nine assertions red across
-    // `peak-physical`, `recovery-fade` and `ending`, on a pin that says a share threshold «must not
-    // be a different rule for a rich girl than for a poor one»). At 0 every shield below is exactly
-    // 1, the monotone check passes trivially, and this test would guard NOTHING – a green run that
-    // could not tell a working ladder from a deleted one. The mechanism is built and one constant
-    // from live, so the mechanism is what is pinned; the shipped VALUE is asserted separately below.
+    // ⚠ RUN INSIDE `withCare` AT A FIXED TERM, which is now a matter of keeping the arithmetic below
+    // independent of the shipped dial rather than of reaching a held row at all. `coachMaintenanceTop`
+    // shipped at 0 until 17.09 and this block was the only thing that could tell a working ladder
+    // from a deleted one; the row is live since §7 and the probe stays, because `1 - PROBE` on the
+    // last line is an exact claim about the top of the scale and a retune of the constant should not
+    // be able to reach it. The shipped VALUE is asserted separately below.
     const PROBE = 0.08
     const ladder = [
       SELF_RATE,
@@ -260,15 +260,34 @@ describe('round 44 D – the rung dial is not decoration on this channel either'
     })
   })
 
-  it('⭐⭐⭐ ...and the SHIPPED value of that term is 0, which is §6g\'s held row, not an oversight', () => {
-    // ⚠ THE ONE PLACE A SHIPPED CONSTANT IS PINNED IN THIS FILE, and it is pinned at ZERO on purpose:
-    // the row is held for the owner's ruling (docs/specs/the-decline-and-the-seats-2026-09.md §6g),
-    // so a wave that quietly turns it on has to come through this line and read that section. It is
-    // NOT a claim that 0 is the right number – the sweep measured 0.08 – it is a claim that shipping
-    // anything else is HIS decision, because the nine red assertions it causes are a fairness pin.
-    expect(CARE.coachMaintenanceTop, 'see spec §6g before changing this').toBe(0)
+  it('⭐⭐⭐ ...and the SHIPPED value of that term is the swept 0.08, which is §7\'s ruling', () => {
+    // ⚠ THE ONE PLACE A SHIPPED CONSTANT IS PINNED IN THIS FILE, and it moved 0 -> 0.08 on 17.09.
+    // It was pinned at ZERO while the row was held for the owner's ruling, so that a wave could not
+    // quietly turn it on; he ruled (docs/specs/the-decline-and-the-seats-2026-09.md §7) and the
+    // sweep chose the number rather than anybody's taste – `npm run bench:decline` §2s, at the
+    // derived seat scale, takes the SMALLEST coach term meeting four criteria fixed before the run:
+    //
+    //     coach   absorbed   gap      seasons   coach alone   win prob.   verdict
+    //     0.04       14.7%   +1.87      1.11          0.27       +1.54 pp  C4 fails
+    //     0.06       16.3%   +2.08      1.24          0.40       +1.86 pp  C4 fails
+    //     0.08       17.9%   +2.29      1.36          0.54       +2.19 pp  ⭐ the smallest that meets all four
+    //     0.20       27.7%   +3.54      2.11          1.37       +4.30 pp  C3 fails
+    //
+    // ⚠ SO THIS LINE IS STILL A GATE AND NOT A RECORD: a wave that retunes it has to come past the
+    // sweep, because the four criteria are what chose it and «it felt about right» is not one of them.
+    expect(CARE.coachMaintenanceTop, 'see spec §7 and re-run `npm run bench:decline` before changing this').toBe(0.08)
+    // ⭐⭐ AND THE DEFECT §4 CALLED «CLOSE TO A DEFECT» IS CLOSED, ASSERTED THROUGH THE SHIPPED
+    // CONSTANT RATHER THAN THROUGH A PROBE: past `declineStart` `ageFactor` returns 0, so an elite
+    // coach used to multiply zero and a family paying elite money for a twenty-eight-year-old bought
+    // her tennis literally nothing. This is the line that says it buys something now.
     for (const k of PHYSICAL_SKILL_KEYS) {
-      expect(declineCareShieldOf(k, care({ coachRate: ELITE_RATE })), `${k}: an elite coach absorbs nothing today`).toBe(1)
+      expect(declineCareShieldOf(k, care({ coachRate: ELITE_RATE })), `${k}: an elite coach still absorbs nothing`)
+        .toBeLessThan(1)
+    }
+    // ...and the parent on the court still buys exactly nothing, which is the other end of the same
+    // scale and is what keeps the row a PAYROLL term rather than a free gift to every career.
+    for (const k of PHYSICAL_SKILL_KEYS) {
+      expect(declineCareShieldOf(k, care({ coachRate: SELF_RATE })), `${k}: the self-coached arm is not free of it`).toBe(1)
     }
   })
 })
@@ -358,5 +377,94 @@ describe('round 44 E – the bill and the shield are the same week', () => {
       return pulls
     }
     expect(count(true)).toBe(count(false))
+  })
+})
+
+// =================================================================================================
+// F. THE MARKET QUOTE – what the card says a rung is worth to a body past its peak
+// =================================================================================================
+//
+// ⚠⚠ THIS SECTION EXISTS BECAUSE THE ROW GOING LIVE TURNED A TRUE SENTENCE INTO A FALSE ONE, and
+// the previous builder named it in the spec before it could happen (§6e). `coachSeasonUplift` prices
+// a rung by the HEADROOM it takes, `ageFactor` returns 0 past `declineStart`, so both of its arms
+// are zero for a veteran and the coach market quoted an elite coach «+0.0-0.0% a season» to a
+// twenty-nine-year-old. While `coachMaintenanceTop` was 0 that was the truth. It is not any more:
+// the rung holds points she would otherwise lose, and `coachMaintenanceSeasonPct` is what the card
+// adds so that the number under the sentence it already said is the number the engine will pay.
+//
+// ⚠ NO STRING WAS ADDED AND NONE MAY BE (invariant 4). §6e drafts a second band – «what this rung
+// holds on to» – and that is a new sentence and the owner's call. What is pinned here is arithmetic.
+describe('round 44 F – the season quote stops calling a veteran\'s coach worthless', () => {
+  const quote = (over: { ageYears?: number; weeks?: number; coachRate?: number } = {}): number =>
+    coachMaintenanceSeasonPct({
+      ageYears: over.ageYears ?? 31,
+      weeks: over.weeks ?? 52,
+      coachRate: over.coachRate ?? ELITE_RATE,
+      bounds: BOUNDS,
+    })
+
+  it('⭐⭐ is EXACTLY zero while the whole horizon is short of her declineStart – junior cards cannot move', () => {
+    // The whole era this market is mostly used in, proven rather than reasoned about: `declineFactor`
+    // is 0 below the door and this term is its product, so the addition cannot move a junior quote by
+    // a float. Walked at the ages the card is actually read at.
+    // ⚠ THE LAST ROW IS THE BOUNDARY AND IT IS «A SEASON SHORT», NOT «A WEEK SHORT» – and that is a
+    // measured correction to this case's first draft, which asserted 0 at `declineStart - 0.02` and
+    // MEASURED 0.153. It was right and the assertion was wrong: the quote is over the NEXT 52 weeks,
+    // so a card read eleven months before the door is quoting a season that mostly lies past it. The
+    // case below is the one that says so on purpose.
+    for (const ageYears of [12, 16, 20, 24, BOUNDS.declineStart - 1.01]) {
+      expect(quote({ ageYears }), `age ${ageYears}: a junior card moved`).toBe(0)
+    }
+  })
+
+  it('⭐ ...and a card read in the last year before the door quotes only the part past it', () => {
+    // The consequence of quoting a HORIZON rather than an instant, asserted rather than left to be
+    // rediscovered: the season a twenty-eight-and-a-half-year-old is being sold is half a decline.
+    const straddling = quote({ ageYears: BOUNDS.declineStart - 0.5 })
+    expect(straddling, 'the horizon does not reach past the door at all').toBeGreaterThan(0)
+    expect(straddling, 'a straddling season is quoted at a whole one').toBeLessThan(quote({ ageYears: BOUNDS.declineStart }))
+  })
+
+  it('⭐⭐⭐ ...and is strictly positive past it, which is the «+0.0-0.0% a season» lie closed', () => {
+    expect(quote(), 'an elite coach is still worth nothing to a thirty-one-year-old').toBeGreaterThan(0)
+    // ⚠ AND IT IS A SHARE OF THE SEASON'S LOSS RATHER THAN A SECOND NUMBER INVENTED HERE. At a share
+    // of 0.99 the quote is very nearly the whole season's decline – that is the ceiling the shipped
+    // row is a small fraction of – so this line says the quote is READ OFF `declineCareShieldOf` and
+    // is bounded by the loss it shields. A term computed independently would not be.
+    const ceiling = withCare(CARE.masseur.topRungShare, CARE.sparring.topRungShare, 0.99, () => quote())
+    expect(quote(), 'the quote exceeds the whole of the loss it is a share of').toBeLessThan(ceiling)
+    expect(quote() / ceiling, 'the shipped row is not a SMALL share of the season').toBeLessThan(0.25)
+  })
+
+  it('⭐ the parent on the court is still quoted exactly nothing, at any age', () => {
+    // The other end of the same scale, and it is what keeps this a PAYROLL term: a self-coached
+    // career must not be handed a maintenance quote it is not paying anybody for.
+    for (const ageYears of [20, 31, 38]) {
+      expect(quote({ ageYears, coachRate: SELF_RATE }), `age ${ageYears}`).toBe(0)
+    }
+  })
+
+  it('⭐ the dial is not decoration on the quote either – a dearer rung quotes more', () => {
+    const ladder = [
+      coachFactor('budget', 'good'),
+      coachFactor('middle', 'good'),
+      coachFactor('high', 'good'),
+      coachFactor('elite', 'good'),
+      ELITE_RATE,
+    ]
+    const quotes = ladder.map((coachRate) => quote({ coachRate }))
+    for (let i = 1; i < quotes.length; i++) {
+      expect(quotes[i], `rung ${i} quotes less than rung ${i - 1}`).toBeGreaterThanOrEqual(quotes[i - 1])
+    }
+    expect(quotes[quotes.length - 1], 'the ladder really moved').toBeGreaterThan(quotes[0])
+  })
+
+  it('⭐ and it quotes the WEEKS she buys, exactly as the growth arm does', () => {
+    // `coachedWeeks` is the horizon less the weeks he stands down, and the owner's ruling of 08.08
+    // is that the quote follows it – «he was being shown a number the game had no intention of
+    // paying». Half a season of coaching may not be quoted at a season's worth.
+    expect(quote({ weeks: 26 }), 'a half season is quoted at a whole one').toBeLessThan(quote())
+    expect(quote({ weeks: 26 })).toBeGreaterThan(0)
+    expect(quote({ weeks: 0 })).toBe(0)
   })
 })
