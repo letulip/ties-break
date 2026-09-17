@@ -136,7 +136,7 @@ frozen-career re-stamp with it, exactly as round 43's two coach sentences did.
 | `voice-note` | `She sent it in a voice note.` |
 | `whole-message` | `She sent it as the whole message.` |
 | `other-message` | `She added it to a message about something else.` |
-| `family-chat` | `She put it in the family chat.` **– OPEN, see below** |
+| `mid-something` | `She said it in the middle of something else.` **– the architect's, DRAFT** |
 | `visit` | `She brought it up when she came by.` |
 
 ⭐ Four forms of distance rather than eight variations of one: **a live call, a voice note, text, and
@@ -150,16 +150,37 @@ sideways, and named the condition that makes it safe: **these frames may never b
 They are not. The pool is keyed on presence ALONE and the draw is independent of temperament, so the
 human variation stays variation instead of re-encoding `sunny` and `quiet` a second time.
 
-## ⚠⚠ `family-chat` – OPEN, and the reason is sharper than the one he gave
+## ✅ `family-chat` – REPLACED, and the reason was sharper than the one he gave
 
-He flagged it for publicity: «сказанное видит не только родитель». **The check makes it worse than
-that.** There is no second parent and no sibling anywhere in `WorldState` – the household this game
-models is the parent and her. So «the family chat» does not expose the line to somebody; it
-**implies a somebody who does not exist**, which is the R25 class of defect, not a privacy question.
+He flagged it for publicity: «сказанное видит не только родитель». **The check made it worse.** There
+is no second parent and no sibling anywhere in `WorldState` – the household this game models is the
+parent and her. So «the family chat» does not expose the line to somebody; it **implies a somebody
+who does not exist**, which is R25's class of defect rather than a privacy question.
 
-His own alternative – `She put it into a message without any lead-in.` – is clean but sits very close
-to `whole-message`. **His call**, and it is one line: take the alternative and accept the overlap, or
-write an eighth in a form the other seven do not already hold.
+⚠ **His own alternative was set aside on his instruction** («бери свою замену», 17.09). `She put it
+into a message without any lead-in.` is clean but sits very close to `whole-message`, which would
+have spent the eighth slot on a near-synonym.
+
+⭐ **THE REPLACEMENT IS THE ARCHITECT'S AND IS THEREFORE A DRAFT** – written on his explicit
+instruction, which is the only thing that makes an agent's sentence admissible here at all:
+
+> `mid-something` · **She said it in the middle of something else.**
+
+**Why this form and not another.** The `roof` pool has a SIDEWAYS frame – `cupboard`, where she says
+it without facing you, putting things away – and `away` had no equivalent: all seven of its lines
+place the utterance in a CHANNEL. This one places it in her attention instead, which is the axis the
+away pool was missing rather than a fifth way of saying «she sent a message».
+
+⚠ It is distinct from `other-message`, and the distinction is worth stating because the two look
+close: `other-message` is about the MESSAGE being about something else, this is about HER being in
+the middle of something else. One is content, the other is attention, and they can both be true at
+once.
+
+**Against his own five rules:** it says where she is rather than what she feels; it asserts nothing a
+situation could contradict (she is always doing something); it carries no time of day; it is
+channel-neutral, so it survives the call, the voice note and the text alike; and it is one clause of
+eight words. **Against his rejected list** it takes no intent, no struggle, no travel, no number and
+no joke.
 
 ## THE THREE MECHANICAL RULINGS, AND WHAT THE THIRD ONE COSTS
 

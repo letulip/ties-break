@@ -625,7 +625,7 @@ function playedTourWeek(prefix: string, travels: boolean, playWeek = 5) {
 }
 
 const weeklySalaryRows = (world: WorldState, week: number) =>
-  world.events.filter((e) => e.week === week && e.text === 'Masseur – weekly salary')
+  world.events.filter((e) => e.week === week && e.text === 'Masseur – sessions this week')
 const tourBillRows = (world: WorldState, week: number) =>
   world.events.filter((e) => e.week === week && e.text.startsWith('Masseur on tour'))
 

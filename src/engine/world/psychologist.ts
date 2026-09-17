@@ -273,8 +273,10 @@ export function resolvePsychologist(world: WorldState): void {
     week: world.week,
     type: 'expense',
     category: 'staff',
-    // DRAFT (invariant 4) – the brief's own proposed row, and the masseur's row one seat over is
-    // `Masseur – weekly salary`, so the two read as one payroll.
+    // ⭐ HIS, 17.09 – and the two rows deliberately no longer match. `weekly salary` is the sheet's
+    // word for a FLAT weekly cost, which this seat is (`psychologistRungOf(world).salaryCents`).
+    // The masseur's row one seat over says `sessions this week`, because #4 made THAT seat
+    // per-session and a row calling it a salary was describing the wrong model.
     text: 'Psychologist – weekly salary',
     amountCents: -cost,
   })

@@ -517,7 +517,7 @@ export function resolveMasseur(world: WorldState): void {
     week: world.week,
     type: 'expense',
     category: 'staff',
-    text: 'Masseur – weekly salary',
+    text: 'Masseur – sessions this week',
     amountCents: -cost,
   })
 }
