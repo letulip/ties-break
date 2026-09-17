@@ -70,7 +70,14 @@ const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   injury: 'injury',
   natural: 'serious',
   plateau: 'serious',
-  peak: 'happy',
+  // ⚠ ROUND 45, REPAIRED 17.09. The peak shipped as `happy` and he read it against the voices: «happy
+  // fits `sunny` and not `deep`… or `serious` is the safer shared one». The un-partitioning settles
+  // it – with `DOOR_BY_TEMPERAMENT` gone all four voices reach the peak, so a face that fits one of
+  // them is wrong three times in four. `serious` is the face he approved on the fall for exactly this
+  // reason (one door, two voices, neither told wrong by it), and it is the same argument here.
+  // ⚠ A PER-VOICE face is still open and still his – `EMOTION_BY_ENDING` is keyed on the ending, and
+  // making it per voice is a small engine change nobody has asked for yet (spec §6.6 item 4).
+  peak: 'serious',
   fall: 'serious',
 }
 

@@ -292,9 +292,17 @@ export function plateauViewOf(world: WorldState): PlateauView {
  *  still never learns WHICH table it is.
  *
  *  ⚠⚠ THE TEMPERAMENT IS **BIRTH** AND MAY NOT BE `expressedTemperamentOf` – the full argument is on
- *  `DOOR_BY_TEMPERAMENT` in `engine/ending.ts`. In one line: expression drifts with `wallsFlipped`,
- *  which the psychologist and the shape of the career move, so reading it would make the door a fact
- *  about the PARENT'S MANAGEMENT – and §4's whole point is that the ending is a fact about HER.
+ *  `LeavingView.temperament` in `engine/ending.ts`. In one line: expression drifts with
+ *  `wallsFlipped`, which the psychologist and the shape of the career move, so reading it would make
+ *  her own sentence a fact about the PARENT'S MANAGEMENT.
+ *
+ *  ⚠⚠ AND IT NOW REACHES NO GATE AT ALL. The shipped build read it through `DOOR_BY_TEMPERAMENT`,
+ *  which gave each voice one door for life; he deleted that on 17.09 as a career script. What is left
+ *  on the view is the VOICE, for `leavingLine`, and both gates are blind to it.
+ *
+ *  ⚠ `ageYears` IS HER CLOCK AND NOT THE BAND – `kidAgeYears`, the same function `resolveLeaving`
+ *  stamps the ending with, so the floor the peak door reads and the age the record prints cannot be a
+ *  birthday apart (world/age.ts, ruling 1 of 09.08: «there is ONE clock and it is hers»).
  *
  *  ⚠ THE PREVIOUS SEASON IS THE ONE IMMEDIATELY BEFORE, BY INDEX, AND NEVER "THE LAST ROW IN THE
  *  LIST". A season she spent at college, or one banked before v46 with no `byTrack` at all, is not a
@@ -314,6 +322,7 @@ export function leavingViewOf(world: WorldState): LeavingView {
   return {
     temperament: world.temperament ?? temperamentFor(world.seed),
     seasonIndex,
+    ageYears: kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
     professional: track === 'wta',
     endRank: now?.endRank ?? null,
     prevEndRank: before?.endRank ?? null,
@@ -502,9 +511,10 @@ export function resolveEndings(world: WorldState): void {
  *  ⚠ ONE DRAW, ON A PURPOSE-SCOPED SUB-STREAM, AND NOT ONE DRAW ON A SEASON THE GATE REFUSES.
  *  `seed:ending:<door>:<seasonIndex>` is re-derived at this call site, persists nothing and never
  *  touches MAIN (CLAUDE.md invariant 2) – the frozen capture (41550 / e6b0c709) is untouched by
- *  construction. The KEY carries the door, so a girl who is `peak` and a girl who is `fall` never
- *  share a number, and it carries the SEASON rather than the week, so the same winter always offers
- *  the same coin however the player reached it.
+ *  construction. The KEY carries the door, and since 17.09 that matters for a second reason: with
+ *  `DOOR_BY_TEMPERAMENT` deleted the SAME girl can be asked at both doors across a career, so a
+ *  shared key would have handed her winter the same coin twice. It carries the SEASON rather than
+ *  the week, so the same winter always offers the same coin however the player reached it.
  *
  *  ⚠ THE OFF-SEASON'S OWN WEEK AND NO OTHER – `isSponsorReviewWeek`'s week, the same one 7d uses, so
  *  it cannot fire twice in a season. And BELOW `maybeFireSeasonWrapUp` in the tick, which is what
@@ -533,17 +543,13 @@ export function resolveLeaving(world: WorldState): void {
     week: world.week,
     type: 'milestone',
     keep: true,
-    text: leavingLine(view.temperament),
+    // ⚠ THE DOOR **AND** THE VOICE. Four lines across two doors would have put the collapse's
+    // sentence in a champion's mouth the moment `DOOR_BY_TEMPERAMENT` was deleted (17.09).
+    text: leavingLine(door, view.temperament),
   })
-  latchEnding(
-    world,
-    endingForLeaving(
-      door,
-      view,
-      world.week,
-      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
-    ),
-  )
+  // ⚠ THE AGE IS THE ONE THE VIEW ALREADY READ, not a second call to `kidAgeYears` – the peak door's
+  // floor and the record's stamp are the same number by construction.
+  latchEnding(world, endingForLeaving(door, view, world.week, view.ageYears))
 }
 
 /** ⭐⭐⭐ v73 – THE PROVING BEAT: WHAT SHE WANTS, ON THE WEEK THE QUESTION OPENS (wave-2 runbook §3).
