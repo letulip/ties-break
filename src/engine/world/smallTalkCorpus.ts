@@ -3102,7 +3102,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
         },
       },
       quiet: {
-        opener: '"One of them doesn\'t sit at the changeovers. I noticed it twice now."',
+        opener: '"One of them doesn\'t sit at the changeovers. I noticed it early on."',
         branches: {
           invite: {
             label: 'Ask what she did instead of sitting',
@@ -3170,7 +3170,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
           },
           respond: {
             label: 'Say that is a decision made in practice, not in a match',
-            said: '"That\'s probably right. I\'ve been trying to decide it in the wrong place."',
+            said: '"That\'s probably right. It is not a thing to work out mid-point."',
           },
           space: {
             label: 'Say she is watching well',
@@ -3299,7 +3299,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
         },
       },
       fiery: {
-        opener: '"Three hours and neither of them was limping. I\'d have been on the floor."',
+        opener: '"Hours of it, and neither of them was limping. I\'d have been on the floor."',
         branches: {
           invite: {
             label: 'Ask how much of it she saw',

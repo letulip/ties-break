@@ -1816,7 +1816,7 @@ both point the same way here.
 | `sunny` | `"There's a girl who never sits down at changeovers. Not once, the whole match."` |
 | `fiery` | `"She doesn't sit down. Ever. It's either brilliant or a pose and I can't decide which."` |
 | `deep` | `"She stood through every changeover. I don't think it was for show."` |
-| `quiet` | `"One of them doesn't sit at the changeovers. I noticed it twice now."` |
+| `quiet` | `"One of them doesn't sit at the changeovers. I noticed it early on."` |
 
 **Parent:** *Ask what she did instead of sitting* · *Say players find odd things that work* · *Say she does not have to copy anyone*
 
@@ -1874,7 +1874,7 @@ this is a sentence for him rather than an edit.
 **respond** · *Say that is a decision made in practice, not in a match*
 - `sunny` `"That makes sense. I'd never have got there on my own."`
 - `fiery` `"Then I'll do it in practice until I stop thinking about it."`
-- `deep` `"That's probably right. I've been trying to decide it in the wrong place."`
+- `deep` `"That's probably right. It is not a thing to work out mid-point."`
 - `quiet` `"I'd not thought of it that way. It's practice, then."`
 
 **space** · *Say she is watching well*
@@ -1938,7 +1938,7 @@ it both players were still moving properly.
 | voice | opener |
 | --- | --- |
 | `sunny` | `"There was a match on court one that went on forever and they were both still fine when I left."` |
-| `fiery` | `"Three hours and neither of them was limping. I'd have been on the floor."` |
+| `fiery` | `"Hours of it, and neither of them was limping. I'd have been on the floor."` |
 | `deep` | `"It went far longer than anything else out there. They were both still moving properly when I left."` |
 | `quiet` | `"One of the matches ran very long. I watched some of it."` |
 
