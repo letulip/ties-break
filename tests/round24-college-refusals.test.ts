@@ -71,6 +71,11 @@ import {
   type WorldState,
 } from '../src/engine/world'
 import { resumeMain, type Rng } from '../src/engine/rng'
+// ⭐ ROUND 45 – the exhaustive runtime list of endings, and it is NOT a hand-written array. A union
+// has no runtime members, but `ENDING_TITLE` is a Record TOTAL over it, so its keys are exactly the
+// endings that exist and the compiler keeps them that way. A ninth ending joins this guard by
+// existing, which is what stopped round 45's two arriving without one.
+import { ENDING_TITLE } from '../src/engine/ending'
 import { DEFAULT_PROFILE, type CareerEndingType } from '../src/shared/protocol'
 // ⚠ v74 (wave 3, T8): the shared bond-NEUTRAL drain, so a walked opener can pass a tier-1 row.
 import { drainLifeBeats } from './helpers/career'
@@ -447,10 +452,15 @@ describe('the family may take back a booking it made before the fork', () => {
 // =================================================================================================
 // ⚠⚠ 3. THE GUARD OVER WHAT WAS NOT MEANT TO MOVE – a career that really ended
 // =================================================================================================
-const TERMINAL: CareerEndingType[] = ['stopped', 'bankruptcy', 'injury', 'natural', 'plateau']
+const TERMINAL = (Object.keys(ENDING_TITLE) as CareerEndingType[]).filter((t) => t !== 'college')
 
 describe('a career that has really ended still hears that it has ended', () => {
-  it('⭐⭐⭐ all five terminal endings refuse EVERY command with the unchanged sentence', () => {
+  it('⭐⭐⭐ every terminal ending refuses EVERY command with the unchanged sentence', () => {
+    // ⚠ ANTI-VACUITY: college is the only ending that resumes, so the list is every other one. A
+    // filter that emptied itself would pass this loop in silence.
+    expect(TERMINAL.length).toBe(Object.keys(ENDING_TITLE).length - 1)
+    expect(TERMINAL).toContain('peak')
+    expect(TERMINAL).toContain('fall')
     for (const type of TERMINAL) {
       const { world } = playedCareer(`e2-end-${type}`, 40)
       latchEnding(world, {

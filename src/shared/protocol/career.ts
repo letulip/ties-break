@@ -35,7 +35,28 @@ import type { CareerTotals, WorldMatch } from './events'
  *  and #290 after it** – she was already off the list the week she walked in, because at nineteen her
  *  professional results are too few for `RANKABLE_MIN`. The four years took nothing from her; what
  *  they cost is the ladder moving without her, and that is 121 places against the same seeds spent on
- *  tour. */
+ *  tour.
+ *
+ *  ⭐⭐⭐ ROUND 45 – TWO MORE DOORS, AND THEY ARE THE FIRST TWO NOBODY IS ASKED ABOUT
+ *  (`docs/specs/the-two-more-doors-2026-09.md`, his 17.09). The six above are four ANSWERS and two
+ *  facts; `'peak'` and `'fall'` are a third kind – **her decision**, taken and announced. Both
+ *  existing retirements ask the PARENT a question; these two are her telling him.
+ *
+ *    `'peak'`  she leaves AT the top – §2's four named cases (Barty at 25 as the reigning number
+ *              one, Henin as the ranked leader, Bartoli forty days after Wimbledon, Dementieva
+ *              inside the top ten). ⚠ What they share is NOT an age.
+ *    `'fall'`  she leaves after a collapse – the story `plateauReading` explicitly refuses to tell
+ *              and defers to in its own comment: «"No improvement" alone would fire on a career that
+ *              is FALLING APART – which is a different story and one the natural end should not be
+ *              telling.» This is that story.
+ *
+ *  ⚠⚠ WIDENING THIS UNION IS FREE FOR SAVES AND DELIBERATELY NOT FREE FOR CODE, and the second half
+ *  is the point. `engine/saveGuard.ts` does not mention `ending` and no migration touches
+ *  `ending.type`, so nothing validates the field on load and no old save can hold a new value – no
+ *  schema move. But three TOTAL records are keyed on this union – `ENDING_BLURB` and `ENDING_TITLE`
+ *  (`engine/ending.ts`) and `EMOTION_BY_ENDING` (`world/album.ts`) – so a seventh or eighth ending
+ *  goes RED until its blurb, its title and her face are written. ⭐ A new ending cannot ship
+ *  without its copy, enforced by the compiler rather than by anybody remembering. */
 export type CareerEndingType =
   | 'stopped'
   | 'college'
@@ -43,6 +64,8 @@ export type CareerEndingType =
   | 'injury'
   | 'natural'
   | 'plateau'
+  | 'peak'
+  | 'fall'
 
 export interface CareerEnding {
   type: CareerEndingType

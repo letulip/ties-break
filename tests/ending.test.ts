@@ -21,6 +21,9 @@ import {
   debtWeeks,
   detectEnding,
   endingForForkAnswer,
+  // ⭐ ROUND 45 – the two doors she decides herself. Imported for the `details` sweep below, whose
+  // record is TOTAL over `CareerEndingType` and therefore could not stay green through the widening.
+  endingForLeaving,
   endingForRetirement,
   forkDue,
   // ⭐ THE LONG GOODBYE, STEP 4 – her own last word, pinned through the engine's symbol rather than
@@ -33,6 +36,7 @@ import {
   type AutoEndingView,
   type PlateauView,
 } from '../src/engine/ending'
+import { leavingView } from './helpers/leavingView'
 import {
   closeTournament,
   callUpRevealOpen,
@@ -646,6 +650,16 @@ describe('⭐⭐ the last offer, read off a walked body', () => {
       injury: detectEnding(hurt)!.detail,
       natural: endingForRetirement({ askedWeek: 0, seasonIndex: 0, reason: 'age', final: true }, 1453, 41, 4).detail,
       plateau: endingForRetirement({ askedWeek: 0, seasonIndex: 0, reason: 'plateau', final: false }, 700, 26, 0).detail,
+      // ⭐ ROUND 45 – AND THIS RECORD IS WHERE THE WIDENING WAS FELT IN THE TESTS. It is TOTAL over
+      // `CareerEndingType` exactly as the three in `src/` are, so the two new doors could not be
+      // added to the union without arriving here with a real detail line off their real producer.
+      peak: endingForLeaving('peak', leavingView({ temperament: 'deep', endRank: 4 }), 1200, 25).detail,
+      fall: endingForLeaving(
+        'fall',
+        leavingView({ temperament: 'fiery', endRank: 59, prevEndRank: 13, points: 1584, prevPoints: 4008 }),
+        900,
+        22,
+      ).detail,
     }
     for (const type of Object.keys(details) as CareerEndingType[]) {
       const { world } = freshWorld(`epilogue-${type}`)

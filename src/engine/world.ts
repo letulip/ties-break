@@ -193,6 +193,12 @@ import {
   LAST_OFFER_NOT_A_QUESTION,
   plateauViewOf,
   autoEndingViewOf,
+  // ⭐ ROUND 45 – the two doors she decides herself. On the barrel for the reason `plateauViewOf` is:
+  // the bench and the tests must read the SHIPPED view and the SHIPPED step, never a second copy of
+  // either (`tools/two-doors-bench.ts`, and `weeksLostSoFar`'s own precedent in endings-bench).
+  leavingViewOf,
+  resolveLeaving,
+  wonTopTitleInSeason,
   resolveCollegeDeparture,
   resolveEndings,
   wasThereAChild,
@@ -290,6 +296,9 @@ export {
   LAST_OFFER_NOT_A_QUESTION,
   plateauViewOf,
   autoEndingViewOf,
+  leavingViewOf,
+  resolveLeaving,
+  wonTopTitleInSeason,
   resolveCollegeDeparture,
   resolveEndings,
   wasThereAChild,
