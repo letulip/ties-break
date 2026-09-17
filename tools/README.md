@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-247 TypeScript files: **46 live**, **201 archival**.
+248 TypeScript files: **47 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -63,6 +63,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `prologue-handover-bench.ts` | `npm run bench:handover` |
 | `psy-grid.ts` | `npm run bench:psy` |
 | `r31-age-curve.ts` | `npm run bench:agecurve` |
+| `r44-decline-seats.ts` | `npm run bench:decline` |
 | `radar-bench.ts` | `npm run bench:radar` |
 | `retired-college-rule.ts` | imported by a live tool |
 | `retirement-rate.ts` | `npm run bench:retire` |

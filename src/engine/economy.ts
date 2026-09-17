@@ -3451,6 +3451,147 @@ export const ECONOMY = {
       // `tests/r38-age-weights.test.ts` asserts every key here is in `SKILL_KEYS`, so a typo
       // reddens rather than reading 1 in silence.
     } as Record<string, number>,
+    /** ⭐⭐⭐ ROUND 44 – WHAT THE PAYROLL TAKES OFF THE DECLINE, AND NOTHING MORE THAN THAT.
+     *
+     *  THE OWNER, 17.09: «все эти специалисты должны его если не тормозить, то хотя бы сглаживать,
+     *  а может у кого-то и тормозить даже немного.» `docs/specs/the-decline-and-the-seats-2026-09.md`
+     *  §4 turns that shape into one rule: NO SEAT STOPS THE DECLINE; each softens the ONE attribute
+     *  it has a real-world claim on, and the coach maintains all four a little.
+     *
+     *  ⚠⚠ THESE ARE SHARES OF THE ORDINARY WEEKLY LOSS, NOT NEW RATES, and the difference is the
+     *  whole safety of the feature. `growWeek` charges `declineRate x ageWeightOf(k) x SHIELD x
+     *  skills[k]`, where the shield is `Π(1 - share)` over the seats that apply – a product of
+     *  factors each strictly inside [0, 1), so it is STRICTLY POSITIVE BY CONSTRUCTION and a fully
+     *  staffed veteran still ages. That is the spec's own first pass/fail question answered in the
+     *  shape of the arithmetic rather than in a measurement that could drift: there is no set of
+     *  numbers anybody can write here that buys immortality, only one that makes the shield small.
+     *
+     *  ⚠⚠ AND NOTHING HERE MOVES `declineStart`, `declineRate` OR `declineAccel`. Round 38 #3d
+     *  measured those and its own note warns the next reader off them; the spec's §5 rules them out
+     *  by name. What this block changes is how much of the SAME curve a paid team absorbs.
+     *
+     *  ⚠ COMPOSURE IS ABSENT AND WOULD BE INERT, exactly as in `ageWeight` above: `isPhysicalSkill`
+     *  keeps it out of the decline branch and it gains `veteranPoise` instead. So the psychologist
+     *  has NO row here – the spec's §4 table says «no change» for that seat, because he is already
+     *  aligned – and «all four» in the coach's row means the four PHYSICAL attributes.
+     *
+     *  Measured predicted-against-measured in docs/specs/the-decline-and-the-seats-2026-09.md §6. */
+    declineCare: {
+      /** ⭐ THE MASSEUR PROTECTS HER LEGS. Weekly body work is exactly what a veteran's endurance
+       *  runs on, and stamina is the fastest-ageing attribute in the table above (weight 1.6), so
+       *  it is both the honest claim and the one the player can feel.
+       *
+       *  ⚠ THE SHARE IS THE TOP RUNG'S. The rungs below it deliver a PROPORTION of it, derived from
+       *  the seat's own `conditionBonusPerWeek` ladder (1/2/3) rather than written down again –
+       *  see `declineCareShieldOf` in engine/development.ts. Without that, the cheapest rung would
+       *  buy the whole shield and a veteran's correct play would be to drop to it, which is the
+       *  farming hole the knock's rest branch already documents one module over.
+       *
+       *  ⭐⭐⭐ 0.25 IS DERIVED FROM THE `ageWeight` LADDER ABOVE AND IS NOT A FITTED NUMBER:
+       *  `1 - ageWeight.ret / ageWeight.stamina` = `1 - 1.2/1.6` EXACTLY. The sentence it spells is
+       *  «weekly body work makes her legs age like her RETURN, and never slower than that» – the
+       *  seat moves its attribute exactly ONE RUNG down the tuned ladder and stops.
+       *
+       *  ⚠⚠ THAT SHAPE IS SELF-LIMITING BY CONSTRUCTION, WHICH IS WHY IT BEAT A ROUND NUMBER: no
+       *  seat can ever make its attribute the SLOWEST-ageing one. The serve is the last thing to go
+       *  with or without a payroll – `ageWeight.serve`'s own row says «a serve is a career extender»
+       *  – and no amount of money reverses the order the tuned table puts the four in.
+       *  `tests/round44-decline-care.test.ts` asserts this equals the ladder step, so a wave that
+       *  retunes `ageWeight` reddens here and has to decide rather than drift. */
+      masseur: { skill: 'stamina', topRungShare: 0.25 },
+      /** ⭐ THE HITTING PARTNER PROTECTS HER RETURN. The return is reaction before it is technique
+       *  (the `ageWeight` row above says so in its own words) and reaction is what match-style
+       *  practice drills. Same top-rung doctrine, off this seat's own `driftCut` ladder.
+       *
+       *  ⭐⭐ AND THE SAME DERIVATION, ONE RUNG ALONG: `1 - ageWeight.groundstrokes / ageWeight.ret`
+       *  = `1 - 1.0/1.2` = 0.1667. «Match-style practice makes her return age like her RALLY, and
+       *  never slower than that.»
+       *
+       *  ⚠ SO THIS SEAT'S SHIELD IS SMALLER THAN THE MASSEUR'S WHILE ITS BILL IS LARGER, and that is
+       *  said out loud rather than smoothed over: the LADDER'S OWN STEPS ARE UNEVEN (1.6→1.2 is a
+       *  quarter, 1.2→1.0 is a sixth), the two seats are priced on their OTHER channels – the rust
+       *  cut and the recovery table – and re-pricing a seat is not this spec's to do. Round 42 #48
+       *  is where the hitting partner's money was measured; nothing here revisits it. */
+      sparring: { skill: 'ret', topRungShare: 0.1667 },
+      /** ⭐⭐ AND THE COACH MAINTAINS ALL FOUR, SLIGHTLY – the row that fixes something close to a
+       *  defect. Past `declineStart` `ageFactor` returns 0, so `growWeek`'s whole GAIN term is zero
+       *  and an elite coach multiplies nothing: a family paying elite money for a twenty-eight-year-
+       *  old is buying literally nothing, and no screen says so. An elite coach's job past the peak
+       *  is maintenance rather than growth, and this is the first term in the engine that says it.
+       *
+       *  ⚠ SCALED BY TIER AND FIT, AND THE SCALE IS DERIVED. `declineCareShieldOf` reads the week's
+       *  own `coachFactor(tier, fit, chemistry)` – the number `growWeek` already computed – and
+       *  places it between the self-coached rate and `coachFactor('elite', 'great')`. So the parent
+       *  on the court buys exactly 0, a badly-matched budget coach also buys 0 (his rate is BELOW
+       *  the parent's), and the ladder in between moves with `developmentFactor`, `fitFactor` and
+       *  the chemistry term by construction rather than by a second table kept in step by hand.
+       *
+       *  ⭐⭐⭐ 0.08 IS THE ONE FITTED NUMBER IN THIS BLOCK, AND IT WAS SWEPT RATHER THAN CHOSEN.
+       *  `npm run bench:decline` §2s moves it against four criteria written down BEFORE the run
+       *  (invariant 5's own shape – «written down so the run can embarrass them»):
+       *
+       *      C1  the whole team absorbs <= 1/3 of the decline to 33
+       *      C2  the staffed-vs-unstaffed gap is >= ONE season of ageing
+       *      C3  ...and <= TWO
+       *      C4  the coach ALONE is worth >= half a season, because §4's own ⭐ says a family paying
+       *          elite money for a twenty-eight-year-old is «buying nothing at all», and a row that
+       *          fixes that has to be visible on its own rather than only inside a full team
+       *
+       *  MEASURED, at the derived seat shares above (one season = 1.68 points, the whole decline to
+       *  33 = 51.1 points over the four):
+       *
+       *      coach   absorbed   gap      seasons   coach alone   win prob.   verdict
+       *      0.00       11.5%   +1.47      0.87          0.00       +0.90 pp  C2, C4 fail
+       *      0.04       14.7%   +1.87      1.11          0.27       +1.54 pp  C4 fails
+       *      0.06       16.3%   +2.08      1.24          0.40       +1.86 pp  C4 fails
+       *      **0.08**   17.9%   +2.29      1.36          0.54       +2.19 pp  ⭐ meets all four
+       *      0.10       19.5%   +2.49      1.48          0.68       +2.53 pp  meets all four
+       *      0.14       22.8%   +2.91      1.73          0.95       +3.22 pp  meets all four
+       *      0.20       27.7%   +3.54      2.11          1.37       +4.30 pp  C3 fails
+       *
+       *  ⭐ THE SELECTION RULE IS «THE SMALLEST THAT MEETS ALL FOUR», and «smallest» is the SPEC'S
+       *  own word for this row – «a small maintenance term», «all four, slightly». So the criteria
+       *  set the floor and the spec sets the direction; there is no step left for taste to take.
+       *
+       *  ⚠⚠⚠ AND IT SHIPS AT **ZERO**, BECAUSE THE SWEEP'S WINNER COLLIDES WITH A STATED FAIRNESS
+       *  RULE AND THAT COLLISION IS THE OWNER'S TO RULE ON, NOT AN AGENT'S. At 0.08 this row turns
+       *  the whole `npm run check` suite red in nine places across three files, and every one of
+       *  them pins the SAME property: `physicalMean / peakPhysical` is a function of AGE ALONE.
+       *  `tests/peak-physical.test.ts` states why that matters in its own words – «a share threshold
+       *  must not be a different rule for a rich girl than for a poor one» – and round 38 #6c already
+       *  narrowed that pin once and priced the cost in weeks.
+       *
+       *  ⚠⚠ MEASURED, on that test's own three careers walked to 38 (working/self · middle/middle ·
+       *  wealthy/elite), and the coach row is the SOLE cause – with it at 0 and both seat rows at
+       *  their shipped values, all 87 tests in the three files pass:
+       *
+       *      coach term   working/self   middle/middle   wealthy/elite   spread    ≈ career
+       *      0.00               71.47%          71.64%          71.49%   0.178pp    2 weeks
+       *      0.08               71.47%          72.90%          73.35%   1.880pp   24 weeks
+       *
+       *  **A 10.5x widening, ordered by the family's chequebook**, and half a season of extra
+       *  playing life bought by the coaching rung she has had since she was fourteen. It also spreads
+       *  on `fit`, which is a SEED draw rather than a purchase – two identical families with identical
+       *  budgets would age differently on a style-match roll.
+       *
+       *  ⭐ THE TWO SEAT ROWS ABOVE DO NOT HAVE THIS PROBLEM IN THE SAME WAY, and the asymmetry is
+       *  the reason they ship and this does not: they unlock only at her first counting W-series
+       *  result, they are bought deliberately to look after a veteran's body, and a career that buys
+       *  nothing is byte-identical. This row fires for EVERY coached career, and nobody ever chose it.
+       *
+       *  ⚠ WHAT IT COSTS TO HOLD IT, SAID OUT LOUD: §4's own ⭐ calls the veteran coach «close to a
+       *  defect» – past `declineStart` `ageFactor` returns 0, so an elite coach multiplies zero – and
+       *  at 0 that defect still stands. The two seats alone hand back **0.87 of a season** and
+       *  **+0.90 pp** of match-win probability at 33, which is below the «one season» floor the sweep
+       *  was run against. The mechanism is built, measured and one number from shipping. See
+       *  docs/specs/the-decline-and-the-seats-2026-09.md §6g for the ask. */
+      coachMaintenanceTop: 0,
+      // ⚠ `skill` IS TYPED `string` FOR `ageWeight`'s OWN REASON, one concern up: `SkillKey` is
+      // declared in `engine/development.ts`, which imports THIS file. The membership check a plain
+      // string gives up is made mechanically instead – `tests/round44-decline-care.test.ts` asserts
+      // both names are in `SKILL_KEYS` and are PHYSICAL, so a typo reddens rather than shielding an
+      // attribute that does not exist in silence.
+    } as { masseur: { skill: string; topRungShare: number }; sparring: { skill: string; topRungShare: number }; coachMaintenanceTop: number },
     /** ⭐⭐⭐ ROUND 31 #10 – THE FORK SHAPES THE CURVE, and until now it only priced it.
      *
      *  The owner supplied real WTA reference data and the round-31 ledger checked the engine against

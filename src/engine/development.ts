@@ -409,6 +409,146 @@ export function declineFactor(ageYears: number, bounds: AgeCurveBounds = ECONOMY
   return c.declineRate * (1 + (ageYears - bounds.declineStart) * c.declineAccel)
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 44 – WHAT THE PAYROLL TAKES OFF THE DECLINE
+// (docs/specs/the-decline-and-the-seats-2026-09.md §4)
+// =================================================================================================
+//
+// THE OWNER, 17.09: «все эти специалисты должны его если не тормозить, то хотя бы сглаживать, а
+// может у кого-то и тормозить даже немного.» One seat, one attribute it plausibly protects; the
+// coach maintains all four a little; the psychologist has no row, because composure is already out
+// of the decline branch and gains `veteranPoise` instead.
+//
+// ⚠⚠ IT IS A SHIELD ON THE LOSS AND NEVER A GAIN, and that is the one structural decision here. A
+// maintenance term written as GROWTH would raise `world.skills` past `world.peakPhysical`, and
+// three shipped readers take `physicalMean(skills) / peakPhysical` as «how much of her body is
+// left» – `ENDINGS.lastOfferPeakShare`, `recoveryAgeFade`, `realisedShare`. A veteran who grows
+// would push that ratio above 1 and each of them would have to learn a new bound. A shield cannot:
+// the loss shrinks, the maximum stays where it was, and the share stays a share.
+//
+// ⚠⚠ THE PRODUCT IS STRICTLY POSITIVE BY CONSTRUCTION, which is the spec's own first pass/fail
+// question answered in the shape of the arithmetic. Every factor is `1 - share` with `share` clamped
+// into [0, 1), so their product is > 0 for every set of numbers anybody can write in `declineCare` –
+// there is no immortality button to tune into existence, only a shield to make big or small.
+//
+// ⚠ AND IT DOES NOT TOUCH `ageWeightOf`. The weights' normalisation to a mean of exactly 1 is the
+// safety `ageWeightOf`'s own header describes, and it stays a property of the CONSTANT: this factor
+// multiplies the finished per-attribute rate for THIS career in THIS week and nothing here can make
+// the shipped table sum to something else.
+//
+// ⚠ ZERO DRAWS ON ANY STREAM. Three reads, two clamps and a multiply; the week's own luck draw is
+// unchanged in count, key and position, so the frozen MAIN capture (41550 / e6b0c709) cannot see
+// any of it. And a frozen career is 156 weeks from a fourteenth birthday – age 17 – so it never
+// reaches the decline branch at all and cannot move by a byte.
+
+/** WHO IS ON THE PAYROLL THIS WEEK, as the decline reads them. PRIMITIVES, never the world – this
+ *  module cannot import a seat (`world/masseur.ts` and `world/sparring.ts` both reach it), so the
+ *  facts travel as arguments exactly the way `coolheadRung` and `chemistry` already do.
+ *
+ *  ⚠ EACH SEAT'S FIELD IS ITS OWN LADDER'S NUMBER AND NOT AN INDEX, so the caller hands over the
+ *  rung object it already holds (`masseurRungOf`, `sparringRungOf`) and this module normalises. An
+ *  index would be a second spelling of «which rung», and `masseurRungOf` does not return one. */
+export interface DeclineCare {
+  /** `conditionBonusPerWeek` of the rung the masseur is WORKING at this week, or null when he is
+   *  not working it – not hired, inside the college freeze, or on a booked family week. */
+  masseurConditionBonus: number | null
+  /** `driftCut` of the rung the hitting partner is WORKING at this week, or null when he is not –
+   *  and that includes an away week for a partner the family did not pay a fare for. */
+  sparringDriftCut: number | null
+  /** what this week's coaching is worth: `growWeek`'s OWN `coachFactor(tier, fit, chemistry)` term,
+   *  hoisted rather than re-derived, so the rung that grows her and the rung that maintains her can
+   *  never be two different men. The college programme's override counts – she IS being coached. */
+  coachRate: number
+}
+
+/** ⭐ WHERE THIS RUNG SITS ON ITS OWN LADDER, 0..1, with the TOP rung at exactly 1 – so the
+ *  constant in `ECONOMY` means «what the top of this ladder buys» and every rung below it is
+ *  DERIVED. Retune a rung's own channel and its share of the decline shield moves with it; there is
+ *  no second table to keep in step, which is the discipline `ageWeightOf` is written in.
+ *
+ *  A ladder whose top is 0 or negative returns 0 rather than dividing – an identity element, never a
+ *  crash, the `masseurRungOf` fallback doctrine. Pure, total, zero draws. */
+function shareOnLadder(value: number, ladder: readonly number[]): number {
+  let top = 0
+  for (const v of ladder) if (v > top) top = v
+  if (!(top > 0)) return 0
+  return Math.max(0, Math.min(1, value / top))
+}
+
+/** ⭐⭐ HOW FAR UP THE COACHING LADDER THIS WEEK IS, 0..1 – the parent on the court at exactly 0 and
+ *  `coachFactor('elite', 'great')` at exactly 1.
+ *
+ *  ⚠⚠ THE TWO ENDS ARE READ, NEVER WRITTEN. `bestCoachedRate` below already proves why: a wave that
+ *  retunes `developmentFactor`, `fitFactor` or the chemistry step has to move every derived scale
+ *  with it, and the only way to make that automatic is to ask the same function the growth term
+ *  asks. A literal 1.4375 here would survive the retune in silence.
+ *
+ *  ⭐ A COACH WORSE THAN THE PARENT BUYS NOTHING, and the clamp at 0 is what says so rather than a
+ *  special case: a budget coach whose game reads `off` against hers is 0.95 x 0.75 = 0.7125 against
+ *  the parent's 0.82, so the numerator is negative and the maintenance term is zero. That is the
+ *  honest answer – she would be better off on her father's court – and it falls out of the
+ *  arithmetic instead of being asserted.
+ *
+ *  Pure, total, zero draws. */
+function coachMaintenanceStrength(coachRate: number): number {
+  const self = coachFactor('self', ECONOMY.coach.selfFit)
+  const best = coachFactor('elite', 'great')
+  const span = best - self
+  if (!(span > 0)) return 0
+  return Math.max(0, Math.min(1, (coachRate - self) / span))
+}
+
+/** ⭐⭐⭐ THE SHARE OF THIS ATTRIBUTE'S ORDINARY WEEKLY LOSS THAT STILL LANDS, 0 < shield <= 1.
+ *
+ *  `growWeek` spends it as `decline * ageWeightOf(k) * shield * skills[k]`, so 1 is «nobody is
+ *  absorbing anything» – every career with no seats working, every career that predates round 44,
+ *  and every call site that passes no `care` at all. ⚠ AND IT IS EXACTLY 1 AT `topRungShare = 0`,
+ *  which is what makes the bench's baseline arm provable rather than believed.
+ *
+ *  ⚠ THE SEAT→ATTRIBUTE MAP IS `ECONOMY`'S AND IS ASKED HERE, never re-spelled: «which attribute
+ *  does the masseur protect» is a design decision and it lives beside the number that prices it.
+ *
+ *  ⚠ `isPhysicalSkill` GATES THE WHOLE THING for the reason its own header gives – composure never
+ *  enters the decline branch, so a shield on it would be a term nothing multiplies. One home for
+ *  «which attributes does age take points off», and this reader asks it rather than assuming.
+ *
+ *  Pure, total, ZERO draws on any stream. */
+export function declineCareShieldOf(k: SkillKey, care: DeclineCare | undefined): number {
+  if (care === undefined || !isPhysicalSkill(k)) return 1
+  const c = ECONOMY.development.declineCare
+  let shield = 1
+  if (k === c.masseur.skill && care.masseurConditionBonus !== null) {
+    const rung = shareOnLadder(
+      care.masseurConditionBonus,
+      ECONOMY.masseur.rungs.map((r) => r.conditionBonusPerWeek),
+    )
+    shield *= 1 - clamp01(c.masseur.topRungShare) * rung
+  }
+  if (k === c.sparring.skill && care.sparringDriftCut !== null) {
+    // ⚠ `driftCut` READS BACKWARDS AND THE LADDER IS BUILT ON ITS COMPLEMENT, exactly as its own
+    // constant block warns: 0.75 LEAVES three quarters of the rust standing and so removes a
+    // quarter, and the TOP rung is 0.25. `1 - driftCut` is «what this rung takes off», which is the
+    // quantity that ascends with the price and therefore the one a share may be taken of.
+    const rung = shareOnLadder(
+      1 - care.sparringDriftCut,
+      ECONOMY.sparring.rungs.map((r) => 1 - r.driftCut),
+    )
+    shield *= 1 - clamp01(c.sparring.topRungShare) * rung
+  }
+  const coach = coachMaintenanceStrength(care.coachRate)
+  if (coach > 0) shield *= 1 - clamp01(c.coachMaintenanceTop) * coach
+  return shield
+}
+
+/** [0, 1) – the bound that makes the shield strictly positive whatever anybody writes in `ECONOMY`.
+ *  ⚠ THE OPEN TOP IS THE POINT: a share of exactly 1 would be a seat that stops ageing outright, and
+ *  the spec's own words for that are «an immortality button». The epsilon is the smallest step that
+ *  keeps the product above zero in floating point and is never reached by a tuned value. */
+function clamp01(share: number): number {
+  if (!(share > 0)) return 0
+  return Math.min(1 - 1e-9, share)
+}
+
 /** ⭐⭐ THE AGE AN UNDAMAGED BODY FALLS TO `share` OF ITS PEAK, walked off the curve above (the long
  *  goodbye, docs/specs/the-long-goodbye-2026-08.md §3a). 0.70 -> 37.81 · 0.55 -> 41.17 · 0.50 -> 42.31.
  *
@@ -988,17 +1128,46 @@ export function growWeek(args: {
    *  IMPLICATIONS – a number, multiplied by another; the week's own draw is unchanged in count, key
    *  and position. */
   chemistry?: number
+  /** ⭐⭐⭐ ROUND 44 – WHO IS ON THE PAYROLL THIS WEEK, as the DECLINE reads them
+   *  (`docs/specs/the-decline-and-the-seats-2026-09.md` §4). The masseur's rung, the hitting
+   *  partner's rung and – filled in below rather than by the caller – what this week's coaching is
+   *  worth. See `declineCareShieldOf` for the arithmetic and for why the product cannot reach zero.
+   *
+   *  ⚠⚠ THE TWO SEAT FIELDS ARE THE **WORKING** ANSWER AND NOT THE HIRE. `masseurWorksThisWeek` and
+   *  `sparringWorksThisWeek` are the predicates the BILL reads, so a week the family is not charged
+   *  for is a week nothing is absorbed – «you paid and you cannot tell» read backwards, and the fence
+   *  `world/sparring.ts` states in as many words («a week he is not paid for is a week he cuts
+   *  nothing»). The caller computes them; this module cannot import a seat.
+   *
+   *  ⚠ `coachRate` IS OVERWRITTEN HERE WITH THE TERM THE GROWTH RATE ITSELF SPENDS, whatever the
+   *  caller put in it, and that is deliberate rather than defensive: one derivation means the rung
+   *  that grows her and the rung that maintains her can never be two different men, and it makes the
+   *  college override count for free – she IS being coached inside the freeze.
+   *
+   *  ⚠ UNDEFINED EVERYWHERE ELSE, so every existing call site is byte-identical and no shipped
+   *  career's growth moves – `trainFactor`'s own promise and this function's standing shape for a
+   *  fact only some weeks have. ZERO RNG IMPLICATIONS: two lookups and a multiply, written after the
+   *  week's single draw. */
+  care?: DeclineCare
 }): KidSkills {
   const d = ECONOMY.development
   const { skills, potential, ageYears, plan, coach, playStyle, matchesThisWeek } = args
   const bounds = args.bounds ?? d.ageCurve
   const decline = declineFactor(ageYears, bounds)
+  // ⭐ HOISTED FOR ROUND 44 AND OTHERWISE UNCHANGED – the identical expression, named, so the decline
+  // shield below can read the SAME number the growth rate multiplies instead of deriving a second
+  // opinion about who is coaching her. `phaseGrowth`'s own `coach` hoist, one level down.
+  const coachRate =
+    args.coachFactorOverride ??
+    coachFactor(tierOf(coach), coachFitFor(coach, playStyle), args.chemistry ?? 0)
+  // ⚠ THE CARE, WITH ITS COACH TERM FILLED IN FROM THE LINE ABOVE. `undefined` on every call site
+  // outside the weekly growth path, which is what keeps them byte-identical.
+  const care = args.care === undefined ? undefined : { ...args.care, coachRate }
   const rate =
     ageFactor(ageYears, bounds) *
     trainFactor(plan) *
     (args.loadFactor ?? 1) *
-    (args.coachFactorOverride ??
-      coachFactor(tierOf(coach), coachFitFor(coach, playStyle), args.chemistry ?? 0)) *
+    coachRate *
     (1 + Math.min(matchesThisWeek, d.matchBonusCap) * d.matchBonus)
 
   // One draw for the whole week, shared across the attributes: a good week is a good week, and four
@@ -1037,7 +1206,15 @@ export function growWeek(args: {
     // ⭐⭐ ROUND 38 #6c – AND THE RATE IS NOW THE ATTRIBUTE'S OWN. `ageWeightOf` is normalised to a
     // mean of 1 over the physical keys, so the MEAN of the four still follows the curve it always
     // did; what changed is the shape underneath it. See `ageWeightOf` and `physicalMean`'s header.
-    const loss = decline > 0 && isPhysicalSkill(k) ? decline * ageWeightOf(k) * skills[k] : 0
+    // ⭐⭐⭐ ROUND 44 – AND THE PAYROLL ABSORBS A SHARE OF IT. `declineCareShieldOf` is exactly 1 on
+    // every career with no seat working, on every call site that passes no `care`, and on every
+    // career written before round 44 – so this multiply is the identity everywhere it has always
+    // been, and it is STRICTLY POSITIVE everywhere else, which is why no set of constants can stop
+    // her ageing. See the «WHAT THE PAYROLL TAKES OFF THE DECLINE» block above.
+    const loss =
+      decline > 0 && isPhysicalSkill(k)
+        ? decline * ageWeightOf(k) * declineCareShieldOf(k, care) * skills[k]
+        : 0
     const veteranPoise = decline > 0 && !isPhysicalSkill(k) ? d.veteranPoise : 0
     // ⭐⭐⭐ v76 T5 – AND THE PSYCHOLOGIST'S YEAR, WHEN IT IS THIS ONE. Its OWN named summand beside
     // the week's training, on the ONE non-physical skill, clamped at her own ceiling: see the
