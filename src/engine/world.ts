@@ -2058,7 +2058,12 @@ export function tickWeek(world: WorldState, rng: Rng): void {
   //    moved whole into world/phaseGrowth.ts and unchanged there. ⚠ `driftCohort`'s 4-per-rival is
   //    the tick's SECOND and last MAIN draw, in the same position it has always been: after her
   //    competition, before the canonical brackets below.
-  growAndLive(world, rng)
+  //    ⚠ `playedThisWeek` IS THREADED HERE TOO SINCE ROUND 44, for step 3's own reason one screen
+  //    up: the hitting partner's share of the decline stands down on an away week unless the family
+  //    paid a fare, and `sparringWorksThisWeek` has to be asked with the SAME answer the bill was
+  //    taken against at step 5. Re-asking `isCompetitionWeek` inside phase 6 would read the world
+  //    AFTER the medical arm of phase 3 removed her entry, which is exactly the weeks it matters on.
+  growAndLive(world, rng, playedThisWeek)
 
   // 7. THE REST OF THE WORLD PLAYS, AND THE WEEK CLOSES (R2-10 step 2, phase 5) – steps 4 to 7,
   //    moved whole into world/phaseAiWeek.ts. Event-scoped RNG only (`seed:aitour:<event.id>`):

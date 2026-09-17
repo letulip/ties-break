@@ -41,6 +41,7 @@
     "bench:handover": "vite-node tools/prologue-handover-bench.ts",
     "bench:money": "vite-node tools/money-decomposition.ts",
     "bench:deadweek": "vite-node tools/dead-week-probe.ts",
+    "bench:decline": "vite-node tools/r44-decline-seats.ts",
     "bench:outgrown": "vite-node tools/outgrown-entry-probe.ts",
     "bench:points": "vite-node tools/points-economy.ts",
     "bench:psy": "vite-node tools/psy-grid.ts",

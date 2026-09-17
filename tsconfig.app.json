@@ -58,6 +58,7 @@
     "tools/prologue-handover-bench.ts",
     "tools/psy-grid.ts",
     "tools/r31-age-curve.ts",
+    "tools/r44-decline-seats.ts",
     "tools/radar-bench.ts",
     "tools/retired-college-rule.ts",
     "tools/retirement-rate.ts",
