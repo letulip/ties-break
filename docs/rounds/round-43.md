@@ -761,7 +761,7 @@ The protocol block at the head of `tests/coachTravelEdgeFixtures.ts` carries the
 
   ⭐ **Three of his rules were checked against the existing letters and already hold** – worth
   recording, because a clean result is a result:
-  - **the recurring cost** – `weekly salary` is already the single spelling (8 live uses); «weekly
+  - **the recurring cost** – `weekly salary` is already the single spelling (6 live uses); «weekly
     fee» appears once, in `world/sparring.ts`'s binding comment naming the choice. His «choose one»
     is satisfied repo-wide, not just on the new seat.
   - **«counting»** – taught, per the reasoning above, so the short unlock line is right on the
@@ -769,6 +769,20 @@ The protocol block at the head of `tests/coachTravelEdgeFixtures.ts` carries the
   - **the dial labels** – `Masseur sessions per week`, `Psychologist – who takes the weekly call`,
     `Psychologist – the year's work` are already literal. His a11y finding was specific to
     «who is across the net» and does not extend to the siblings.
+
+  ⚠⚠ **AND HIS CONDITIONAL WARNING CAME TRUE – THIS ROUND MADE IT TRUE.** He wrote: «make sure the
+  economy really charges per session. Existing language such as `Masseur – weekly salary` would
+  contradict this model if the underlying expense remains a flat weekly payment.» The check runs the
+  other way round. The expense is NOT flat – #4 made the masseur per-session, and
+  `masseurWeeklyCents` is `rung.sessions * masseurSessionCents(world)`. Its two siblings ARE flat
+  (`psychologistRungOf(world).salaryCents`, `sparringRungOf(world).weeklyCents`), so their rows are
+  accurate. **The masseur's is not**: `world/masseur.ts:520` still bills a per-session arrangement as
+  > `Masseur – weekly salary`
+
+  ⭐ This is the one finding of the audit that round 43 CAUSED rather than inherited, and it is a
+  fact-about-the-model error rather than a register one – but it is still a player-facing string, so
+  it is his word like the other 26. The seat's own dial already says the true thing
+  (`Masseur – sessions per week`).
 
   ⚠ **One gap does extend to all three seats: the per-rung explanation.** No seat has a sentence per
   rung – not the masseur, not the psychologist, and not the hitting partner (the two candidate sets
