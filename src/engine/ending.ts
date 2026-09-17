@@ -11,12 +11,24 @@
 // function takes the narrow slice it needs, which is what lets the whole ending model be tested
 // without building a world, and what keeps `world.ts` free to call in.
 //
-// ⚠ RNG: NOTHING HERE DRAWS, on any stream. Every one of the six is deterministic – a counter, a
-// post-draw predicate over an injury the injury sub-stream has already rolled, an age comparison, or
-// a player's answer. So the frozen MAIN capture cannot notice this file exists, and a career that
-// goes bankrupt mid-replay keeps drawing identically to one that does not.
+// ⚠ RNG: NOTHING HERE DRAWS, on any stream, AND THAT SURVIVED ROUND 45 INTACT. Every one of the six
+// is deterministic – a counter, a post-draw predicate over an injury the injury sub-stream has
+// already rolled, an age comparison, or a player's answer. So the frozen MAIN capture cannot notice
+// this file exists, and a career that goes bankrupt mid-replay keeps drawing identically to one that
+// does not.
+//
+// ⚠⚠ THE TWO DOORS ADDED IN ROUND 45 (`peak`, `fall`) ARE THE FIRST ENDINGS WITH A COIN IN THEM, AND
+// THE COIN IS DELIBERATELY NOT HERE. `peakLeavingDue` / `fallLeavingDue` / `leavingDoorDue` answer
+// «could she» and nothing else; the draw that answers «does she» lives at the one call site, in
+// `world/endings.ts`'s `resolveLeaving`, on a purpose-scoped sub-stream. That is what keeps this
+// file testable without a world AND keeps the frozen capture blind to it.
 import { schoolIsOver } from './kidLife'
 import type { CareerEnding, CareerEndingType, ForkAnswer, RetirementOffer } from '../shared/protocol'
+// ⚠ A TYPE-ONLY IMPORT, ERASED AT COMPILE TIME, so the leaf stays a leaf at runtime – the same
+// discipline every `import type { WorldState } from '../world'` in `world/*.ts` keeps. `Temperament`
+// is a four-value union and nothing here calls into `spirit.ts`; round 45's two doors need the union
+// because the door she can take is a fact about WHO SHE IS (see `DOOR_BY_TEMPERAMENT`).
+import type { Temperament } from './spirit'
 
 /** THE KNOBS. Every number here is either measured (`tools/endings-bench.ts`) or anchored in the
  *  contract; none of them is a difficulty setting. */
@@ -170,6 +182,74 @@ export const ENDINGS = {
   plateauSeasons: 3,
   /** "flat" – how far her season-end rank may wander inside the window and still count as flat */
   plateauRankBand: 20,
+
+  // --- #7/#8 THE TWO SHE DECIDES HERSELF (round 45, the-two-more-doors-2026-09.md) --------------
+  /** ⚠⚠ THE RATE IS A DESIGN CONSTRAINT AND NOT A REALISM NOTE, and his own sentence is the reason:
+   *  «у обоих не больше 1–2%… это всё-таки событие, которое принудительно заканчивает игру». A door
+   *  that ends the career WITHOUT the player choosing it has to be rare enough to read as a story
+   *  rather than as the game being taken away.
+   *
+   *  ⚠⚠ AND HIS 1–2% IS OF **CAREERS**, NEVER OF SEASONS – the two are a decade apart and only the
+   *  first is what he said. These two numbers are the per-OFF-SEASON chance among the careers that
+   *  are ELIGIBLE at all (at a peak / in a collapse, with the matching temperament), which is a much
+   *  smaller population than "all careers". The conversion is the bench's job, not arithmetic's:
+   *  `tools/two-doors-bench.ts` reports the career rate, the eligibility rate and the realised rate
+   *  separately, precisely so a 0% can be told apart from an unreachable gate – the mistake
+   *  `injuryPriorWeeksOut` above records («It is not rare, it is impossible»).
+   *
+   *  ⭐⭐ 0.02 IS MEASURED AND NOT PICKED, AND THE FIRST GUESS WAS WRONG BY THREE TO FIVE TIMES – 0.12
+   *  was predicted to land inside his band and measured at **6.73% / 7.09% of careers**. The sweep
+   *  that corrected it is exact rather than a re-run, on `sweepGrace`'s own trick: the eligibility
+   *  census does not depend on the chance, so one pass prices every candidate. Below is the clean
+   *  population – `--spread --seeds 24`, **72 careers over 72 DISTINCT seeds**:
+   *
+   *      chance    peak     fall     both
+   *        1%     0.97%    0.58%    1.55%
+   *        2%     1.89%    1.16%    3.05%   <- shipped: the largest candidate with BOTH inside 1-2%
+   *        3%     2.76%    1.72%    4.49%
+   *       12%     8.78%    6.60%   15.37%
+   *
+   *  ⚠⚠ RUN IT WITH `--spread`, ALWAYS, AND THE REASON IS A TRAP THAT ALREADY CAUGHT THIS WAVE.
+   *  `openCareer` seeds on the BACKGROUND and the index and never on the coach tier, so the default
+   *  nine presets collapse onto three seed families: a 9 x 8 run walks 72 careers over **24 distinct
+   *  seeds**. Both coins and her temperament are seed-derived, so that run's peak read REALISED 0.0%
+   *  against EXPECTED 6.7% – a null produced by an effective n of nine distinct `peak` girls, not by
+   *  anything in this file. The bench prints its distinct-seed count for exactly this reason.
+   *
+   *  ⚠ THE PAIR IS EQUAL ON PURPOSE AND A TEST SAYS SO. Two halves of one partition at two different
+   *  rates would be the career script `DOOR_BY_TEMPERAMENT`'s own note refuses; equal halves at an
+   *  equal rate mean temperament moves WHICH story a leaving is and never HOW LIKELY one is.
+   *
+   *  ⚠ AND HIS SENTENCE HAS A SECOND READING THE SPEC LEAVES OPEN: «у обоих не больше 1–2%» reads
+   *  most naturally as EACH door, which is how this is built (1.55% / 1.24%). If he meant the two
+   *  TOGETHER, the value is 0.01 and the sweep prices that at 1.42% combined – one line.
+   *
+   *  PREDICTED vs MEASURED lives in docs/specs/the-two-more-doors-2026-09.md §6.5. */
+  peakLeavingChance: 0.02,
+  fallLeavingChance: 0.02,
+  /** ⚠ "AT THE TOP" IS A PLACE AND NOT AN AGE – §2's own warning about the four named cases. Barty
+   *  (#1), Henin (#1), Bartoli (#7 and a Wimbledon title), Dementieva (inside the ten): the rank
+   *  clause alone covers all four, and the title clause below only ever ADDS a case it would miss. */
+  peakRankBand: 10,
+  /** ⚠ A COLLAPSE IS A **RESULTS** EVENT, NOT A DECLINE EVENT (§1, and it is his correction to his
+   *  own worry that the round-44 seats might make a collapse unreachable). The seats soften skill
+   *  loss by a couple of points over years; they prevent no injury, no mid-match retirement and no
+   *  variance, so a collapse stays exactly as reachable as it was.
+   *
+   *  ⭐ EVERY THRESHOLD BELOW IS ANCHORED ON HIS OWN WORKED EXAMPLE – the fall from #13 to #59 with
+   *  4,008 points expiring against 1,584 replacing them. That career reads share 0.395 (inside 0.50),
+   *  factor 4.5x (past 2.0) and 46 places (past 30), so the case the door is FOR passes all three
+   *  with room. The three terms are a conjunction for `plateauReading`'s reason: any one of them
+   *  alone fires on a career that is merely having a bad year. */
+  fallPointsShare: 0.5,
+  /** ...and the season she fell FROM has to have been a real one, or "lost most of its points" is a
+   *  sentence about a girl who had none. In the paid table's own currency. */
+  fallPointsFloor: 200,
+  /** the rank has to at least DOUBLE – scale-free, so #13 -> #59 counts and #4 -> #8 does not... */
+  fallRankFactor: 2,
+  /** ...and it has to be a long way in absolute places too, so a fall at the very top of the table
+   *  (#2 -> #5 is a doubling) is a bad season rather than a collapse. */
+  fallRankPlaces: 30,
 
   // --- #4 THE CAREER-ENDING INJURY -------------------------------------------------------------
   /** ⚠ A POST-DRAW PREDICATE, NOT A NEW SEVERITY BAND. Re-mapping `severityBands` would change what
@@ -644,6 +724,216 @@ export function endingForRetirement(
   return { type, week, ageYears, detail, resumesWeek: null }
 }
 
+// --- #7 and #8: the two she decides herself -----------------------------------------------------
+
+/** ⭐⭐⭐ WHICH DOOR SHE CAN TAKE, AND IT IS THE ONLY THING IN THIS FILE THAT READS WHO SHE IS
+ *  (round 45 §4, his «Что у нас ещё темпераменты могут сказать?» answered with a table rather than
+ *  with four spellings of one sentence).
+ *
+ *  ⚠⚠ THE CONSEQUENCE IS THE WHOLE DESIGN, AND IT IS WHY THIS MAPPING EXISTS AT ALL: if her
+ *  temperament decides WHICH door she can take, **the ending is a fact about HER and not about the
+ *  parent's management**. That is the law `lastWordLine` above already obeys – «a line blaming a
+ *  body, a load or a decision would be a promise the engine does not keep» – applied one level up,
+ *  to the ending itself. Two players in identical careers leave differently because they are
+ *  different people, which is this game's whole argument.
+ *
+ *  ⚠⚠ AND IT IS **BIRTH** TEMPERAMENT, NEVER `expressedTemperamentOf`. Expression drifts with
+ *  `wallsFlipped`, which the psychologist and the shape of the career move – so reading expression
+ *  would make the door a fact about the PARENT'S MANAGEMENT, which is exactly the sentence above
+ *  refusing itself. `world.temperament` is immutable by construction («identity is IMMUTABLE – what
+ *  drifts is WALLS AND REGULATION»), so a career hashes the same girl at week 0 and at the door.
+ *  The seam (`leavingViewOf`) is where that read happens and it says so there too.
+ *
+ *  ⚠ THIS IS A NARROW OWNER OVERRIDE OF `drawForkWant`'s FENCE AND THE DIFFERENCE IS WORTH STATING,
+ *  because that fence is still standing everywhere else. It reads: «HER TEMPERAMENT DOES NOT AND MAY
+ *  NOT [weight the draw] … otherwise temperament becomes a career script.» Here it does not become
+ *  one either, and that is arithmetic rather than a promise: the mapping is a PARTITION, not a
+ *  weight. Every girl has exactly one door, the two gates are mutually exclusive by construction (a
+ *  season cannot be a peak and a collapse), and the per-off-season chance is the same number for
+ *  both – so temperament moves WHICH story a leaving is and never HOW LIKELY a leaving is. Nothing
+ *  here touches a career's outcome distribution; it selects among endings a career has already
+ *  earned the right to. */
+export const DOOR_BY_TEMPERAMENT: Record<Temperament, 'peak' | 'fall'> = {
+  // §4's table, verbatim in its reasons:
+  // she will not be seen losing – slams the door, at the moment it stops being bearable
+  fiery: 'fall',
+  // she does not announce it – she is simply not entered next season, «не выдержала», without a scene
+  quiet: 'fall',
+  // decided over a year and told when settled, not while deciding – Barty's shape exactly
+  deep: 'peak',
+  // she leaves on a good day, FOR a life rather than AGAINST tennis
+  sunny: 'peak',
+}
+
+/** What the two doors read, and all they read.
+ *
+ *  ⭐ EVERY FIGURE IN HERE IS ABOUT ONE TABLE, THE ONE SHE IS CURRENTLY ON – `PlateauView`'s own
+ *  doctrine, and for its reason: the two halves of a collapse (points and place) have to be spoken
+ *  of the same career or the rule is comparing a junior season with a professional one. The view is
+ *  built by `leavingViewOf` (engine/world/endings.ts), which resolves that table once through
+ *  `activeLadderOf` and reads every field below against it.
+ *
+ *  ⚠ THIS LEAF STILL NEVER LEARNS WHICH TABLE IT IS. It learns exactly one bit about it – whether it
+ *  is the PAID one – and it must, because #10 on a domestic ladder at fifteen is not a peak and a
+ *  junior points collapse is not the story §3 is about. One bit, resolved once, handed down. */
+export interface LeavingView {
+  /** ⚠ HER BIRTH TEMPERAMENT. See `DOOR_BY_TEMPERAMENT` for why it may not be the expressed one. */
+  temperament: Temperament
+  /** the season index that just closed */
+  seasonIndex: number
+  /** is the table she is on the PAID one – the only table either door is read on */
+  professional: boolean
+  /** her season-end rank in that table for the season that just closed, or null when she held no
+   *  counting result in it (the `SeasonTrackRow.endRank` contract: absent is not a place) */
+  endRank: number | null
+  /** ...and the same figure for the season immediately before it */
+  prevEndRank: number | null
+  /** ranking points earned IN THAT TABLE'S CURRENCY in the season that just closed... */
+  points: number
+  /** ...and in the season immediately before it */
+  prevPoints: number
+  /** did she win a title at the top rung of the sport inside the season that just closed */
+  topTitleThisSeason: boolean
+}
+
+/** #7 – SHE LEAVES AT THE PEAK. «She is AT the top when she goes, and the decision is HERS.»
+ *
+ *  ⚠ NO AGE GATE, AND THE ABSENCE IS DELIBERATE RATHER THAN AN OVERSIGHT – §2's own ⚠: «What they
+ *  share is not an age.» Barty went at 25, Bartoli and Dementieva at 28; an age floor would be a
+ *  fifth fact invented on top of four cases that do not share one. What stands in its place is the
+ *  gate itself: a season-end place inside the top ten OF THE PAID TABLE is not something a career
+ *  can hold without having been a career. The bench reports the age distribution the door actually
+ *  fires at, so if a floor is ever wanted it will be wanted on evidence.
+ *
+ *  ⚠ THE TITLE CLAUSE ONLY EVER ADDS. All four named cases pass on rank alone; this is the girl who
+ *  won the biggest tournament there is and finished the year at #15, which is a peak by any reading
+ *  the sport would accept and one the rank clause would miss. */
+export function peakLeavingDue(view: LeavingView, band: number = ENDINGS.peakRankBand): boolean {
+  if (!view.professional) return false
+  if (DOOR_BY_TEMPERAMENT[view.temperament] !== 'peak') return false
+  if (view.topTitleThisSeason) return true
+  return view.endRank !== null && view.endRank <= band
+}
+
+/** #8 – SHE LEAVES AFTER THE FALL. The story `plateauReading` above refuses to tell and defers to in
+ *  its own comment: «"No improvement" alone would fire on a career that is FALLING APART – which is
+ *  a different story and one the natural end should not be telling.» The plateau was right to refuse
+ *  it; this is the story it was deferring to.
+ *
+ *  THREE TERMS, ALL THREE LOAD-BEARING, and they are a conjunction for `plateauReading`'s reason –
+ *  any one of them alone fires on a career that is merely having a bad year:
+ *    1. THE SEASON SHE FELL FROM WAS REAL. Below `fallPointsFloor` there is nothing to lose.
+ *    2. MOST OF THE POINTS WENT. At most `fallPointsShare` of last season's, in the same currency.
+ *    3. AND THE PLACE WENT WITH THEM – at least doubled AND at least `fallRankPlaces` places, so
+ *       neither a fall at the very top (#2 -> #5 doubles) nor churn at the bottom (#300 -> #340 is
+ *       forty places) can pass on its own.
+ *
+ *  ⚠ IT IS NOT CERTAINTY AND MAY NEVER BECOME ONE – his own «абсолютное большинство выступают до тех
+ *  пор, пока позволяют здоровье, мотивация». Most players who fall keep playing; the draw at the
+ *  call site is what says so. This predicate answers «could she», never «does she».
+ *
+ *  ⚠ A SEASON WITH NO FIGURE ON HER TABLE IS NOT COMPARABLE, SO IT IS NOT COMPARED – the same
+ *  decline-to-fire `plateauReading`'s two guards make. `prevEndRank === null` means she held no
+ *  counting result in that table last season, and a fall has to be FROM somewhere. */
+export function fallLeavingDue(view: LeavingView): boolean {
+  if (!view.professional) return false
+  if (DOOR_BY_TEMPERAMENT[view.temperament] !== 'fall') return false
+  if (view.endRank === null || view.prevEndRank === null) return false
+  if (view.prevPoints < ENDINGS.fallPointsFloor) return false
+  if (view.points > ENDINGS.fallPointsShare * view.prevPoints) return false
+  if (view.endRank < view.prevEndRank * ENDINGS.fallRankFactor) return false
+  return view.endRank - view.prevEndRank >= ENDINGS.fallRankPlaces
+}
+
+/** Which door, if any, this season could open for this girl. Null on every season that is neither.
+ *
+ *  ⚠ THE TWO CANNOT BOTH ANSWER, and it is by construction rather than by this function's ordering:
+ *  `DOOR_BY_TEMPERAMENT` gives each girl exactly one of them, so at most one branch below is even
+ *  asked. The `peak` test runs first only because a reader expects the happier one first; swapping
+ *  the two lines cannot change an answer. ZERO DRAWS – the draw is the caller's, on its own
+ *  purpose-scoped sub-stream. */
+export function leavingDoorDue(view: LeavingView): 'peak' | 'fall' | null {
+  if (peakLeavingDue(view)) return 'peak'
+  if (fallLeavingDue(view)) return 'fall'
+  return null
+}
+
+/** ⭐⭐⭐ HER OWN WORDS FOR IT – FOUR EXITS, ONE PER VOICE, AND EACH IS A DIFFERENT LEAVING RATHER
+ *  THAN A DIFFERENT SENTENCE ABOUT THE SAME ONE (§4's table, and it is the part of the round the
+ *  owner called the best part of it).
+ *
+ *  ⚠⚠ EVERY ONE OF THESE FOUR IS A **DRAFT** UNTIL HE HAS READ IT – CLAUDE.md invariant 4, and the
+ *  round's brief says so in capitals. They are collected for his review in
+ *  `docs/specs/the-two-doors-corpus-2026-09.md`, which is the one document to read them in.
+ *
+ *  ⚠⚠ WHAT NONE OF THEM MAY SAY, and it is `lastWordLine`'s rule and the small-talk corpus's rule
+ *  arriving at the same place: **a line may not assert more than its situation licenses, and a
+ *  leaving may not blame a body, a load or a decision.** No tiredness (she opens her last seasons
+ *  BETTER – measured, see `LAST_WORD_OPENING`), no schedule, no coach, no money, and nothing the
+ *  parent did. What is left is her, saying it in her own register, about a season the player watched.
+ *
+ *  ⚠ AND NONE OF THEM GRADES HER (§6: «The game never tells you that you failed. It tells you what
+ *  happened.»). Two of the four are the hard door and neither consoles the player about it – a line
+ *  that reassures is a line that has quietly decided the ending was the wrong one.
+ *
+ *  ⚠ BIRTH TEMPERAMENT, exactly like every other voice site in this engine – «the voice bibles read
+ *  birth alone» (who-she-is §3). Nothing drawn, nothing stored: the same career prints the same
+ *  sentence every time this is called, so re-opening a screen cannot change a word of it (round 31
+ *  #4's defect, not to be re-shipped). */
+export function leavingLine(temperament: Temperament): string {
+  switch (temperament) {
+    // FIERY -> the fall. «Хлопнула дверью и ушла.» She will not be seen losing, and the line is as
+    // short as the decision was. It names what the season did – which the season really did – and
+    // stops; there is no second sentence in a door slamming.
+    case 'fiery':
+      return 'She said she was not going to stand out there and be watched losing it back. She said it once and she did not say it again.'
+    // QUIET -> the fall. «Не выдержала», without a scene. The mechanic IS the sentence: the career
+    // ends at the off-season, before next season's entries, so «she did not enter anything» is a
+    // literal description of the week rather than a figure of speech.
+    case 'quiet':
+      return 'There was never a conversation about it. She did not enter anything for next season, and when you finally asked she said she thought you already knew.'
+    // DEEP -> the peak. Told when settled, never while deciding – Barty's shape. It is HER claim
+    // about her own year, which is the one kind of thing a line is always licensed to say.
+    case 'deep':
+      return 'She had already decided, and she had decided a long time before she told you. She waited until the season was finished so it would be something she had done and not something she was thinking about.'
+    // SUNNY -> the peak. The only one of the four that is not a loss, and the hardest to write for
+    // exactly that reason: it has to be warm without congratulating the player.
+    case 'sunny':
+      return 'She said it on a good day and she meant it as a good thing. She is not leaving tennis, she said – she is going to go and have the rest of it.'
+  }
+}
+
+/** The ending itself, composed at the door. `detail` is a FRAGMENT by the house contract that
+ *  `latchEnding` composes («`${ENDING_TITLE[type]} – ${detail}.`»): no capital opening it, no full
+ *  stop of its own, no long dash.
+ *
+ *  ⚠ THE FACTS IN IT ARE THE ONES THE PLAYER JUST WATCHED and no others. The peak names where she
+ *  was standing; the fall names the two places, which is his own worked example's shape («#13 to
+ *  #59») and the plainest true sentence there is about a collapse. Neither says why. */
+export function endingForLeaving(
+  door: 'peak' | 'fall',
+  view: LeavingView,
+  week: number,
+  ageYears: number,
+): CareerEnding {
+  if (door === 'peak') {
+    const detail =
+      view.endRank !== null
+        ? `she was #${view.endRank} the week she said it`
+        : 'a title at the top of the sport, and she went the same season'
+    return { type: 'peak', week, ageYears, detail, resumesWeek: null }
+  }
+  // ⚠ BOTH PLACES ARE NON-NULL HERE BY `fallLeavingDue`'s OWN GUARD, and the `??` is the defensive
+  // read every hand-built probe view in this repo gets rather than a case play can reach.
+  return {
+    type: 'fall',
+    week,
+    ageYears,
+    detail: `#${view.prevEndRank ?? 0} to #${view.endRank ?? 0} in one season`,
+    resumesWeek: null,
+  }
+}
+
 // --- the copy -----------------------------------------------------------------------------------
 
 /** The headline of the epilogue. Six lines, and not one of them is a grade.
@@ -680,6 +970,17 @@ export const ENDING_BLURB: Record<CareerEndingType, string> = {
     'She was asked every off-season and for years she said one more. This year she did not.',
   plateau:
     'The rung above stayed where it was and so did she. Her own words for it were the plainest ones – she could not reach the top, so she went.',
+  // ⚠ ROUND 45, AND BOTH OF THESE ARE DRAFTS (invariant 4) – see
+  // docs/specs/the-two-doors-corpus-2026-09.md, which is where he reads them.
+  // ⚠ THE PEAK ONE MAY NOT CONGRATULATE. «None of these may console» is the rule on the record
+  // above, and its mirror is just as binding on the one ending that looks like a win: a blurb that
+  // cheers is the game grading her, which §6 forbids in both directions.
+  peak:
+    'She was at the top of the sport the season she stopped. Nobody put the question to her and nobody had to – it was decided before anybody else heard about it.',
+  // ⚠ AND THE FALL ONE MAY NOT CONSOLE, which is the harder half of the same rule. It states what
+  // the season did and what she did about it, and it offers the player nothing to feel better with.
+  fall:
+    'One season took most of what the years in front of it had built. She did not enter the next one. Nobody asked her to stop and nobody talked her out of it.',
 }
 
 export const ENDING_TITLE: Record<CareerEndingType, string> = {
@@ -689,4 +990,8 @@ export const ENDING_TITLE: Record<CareerEndingType, string> = {
   injury: 'The body stopped first',
   natural: 'She played until she was done',
   plateau: 'She had gone as far as she was going',
+  // ⚠ ROUND 45 – DRAFTS, both of them, and both are flat statements of what happened in the idiom
+  // the six above already keep: no adjective, no verdict, no consolation.
+  peak: 'She left at the top',
+  fall: 'She stopped after the fall',
 }

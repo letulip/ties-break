@@ -482,7 +482,11 @@ const BANDS: { label: string; lo: number; hi: number }[] = [
   { label: '#501+', lo: 501, hi: Number.MAX_SAFE_INTEGER },
 ]
 
-const ENDING_ORDER: (CareerEndingType | null)[] = ['bankruptcy', 'stopped', 'college', 'injury', 'natural', 'plateau', null]
+// ⚠ ROUND 45 – `peak` and `fall` join the list, at the end, because this order is a READING order
+// (the money story runs from the family that ran out to the family that did not) and appending is
+// what keeps every earlier table in this file's history comparable row for row. `null` stays last:
+// it is "no ending at all", not an ending.
+const ENDING_ORDER: (CareerEndingType | null)[] = ['bankruptcy', 'stopped', 'college', 'injury', 'natural', 'plateau', 'peak', 'fall', null]
 
 export function main(argv = process.argv.slice(2)): void {
   const seedsArg = argv.indexOf('--seeds')

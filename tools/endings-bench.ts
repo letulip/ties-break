@@ -44,7 +44,7 @@ import { drainLifeBeats } from './_lifeBeats'
 // fork card in 100% of careers. What this file prints is what the PRE-16.08 rule WOULD have done on
 // this population. `tools/retired-college-rule.ts` is the one definition of it.
 import { RETIRED_COLLEGE_RUNG, retiredCollegeDoorOpen } from './retired-college-rule'
-import { ENDINGS, bankruptcyDue, debtWeeks, plateauReading, weeksLostSoFar } from '../src/engine/ending'
+import { ENDINGS, ENDING_TITLE, bankruptcyDue, debtWeeks, plateauReading, weeksLostSoFar } from '../src/engine/ending'
 import { ageAtPhysicalShare } from '../src/engine/development'
 import { plateauViewOf, autoEndingViewOf } from '../src/engine/world'
 import type { CareerEndingType } from '../src/shared/protocol'
@@ -347,7 +347,11 @@ export function sweepGrace(
 
 // --- printing --------------------------------------------------------------------------------------
 
-const ENDING_ORDER: CareerEndingType[] = ['stopped', 'college', 'bankruptcy', 'injury', 'natural', 'plateau']
+/** ⭐ ROUND 45 – DERIVED FROM THE TOTAL RECORD RATHER THAN LISTED. `ENDING_TITLE` is a Record TOTAL
+ *  over `CareerEndingType`, so its keys are every ending there is, in the order the copy declares
+ *  them – which is the order this table already printed. A hand-written array is how a new ending
+ *  ends up missing from the very bench that measures how often endings happen. */
+const ENDING_ORDER = Object.keys(ENDING_TITLE) as CareerEndingType[]
 
 function pct(n: number, d: number): string {
   if (d === 0) return '   – '

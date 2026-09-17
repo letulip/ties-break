@@ -9,18 +9,28 @@
 // imports these values with no runtime cycle. `resumeFromCollege` is the one piece that stayed in
 // world.ts, because spending four years means calling `tickWeek` and that would be a real cycle.
 //
-// ⚠ RNG: NOTHING HERE DRAWS. Every ending is deterministic – a counter, a post-draw predicate over
-// an injury the `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
+// ⚠ RNG: SIX OF THE EIGHT ENDINGS DRAW NOTHING. Bankruptcy, the injury, the fork's two answers and
+// the natural end are deterministic – a counter, a post-draw predicate over an injury the
+// `seed:injury:<week>` stream has already rolled, an age comparison, or an answer.
+//
+// ⚠⚠ ROUND 45's TWO DOORS ARE THE EXCEPTION AND THEY TAKE THE HOUSE FORM: ONE draw each, on a
+// PURPOSE-SCOPED SUB-STREAM re-derived at the call site (`seed:ending:peak:<season>` /
+// `seed:ending:fall:<season>`), persisting nothing, MAIN untouched (CLAUDE.md invariant 2). The
+// frozen MAIN capture (41550 / e6b0c709) cannot see them, and a player who plays the season
+// differently cannot re-roll the winter she is offered. See `resolveLeaving`.
 import { TIERS, TIER_LADDER, WEEKS_PER_YEAR, OFF_SEASON_WEEKS } from '../season/calendar'
-import type { AutoEndingView, PlateauView } from '../ending'
+import type { AutoEndingView, LeavingView, PlateauView } from '../ending'
 import {
   ENDINGS,
   ENDING_TITLE,
   detectEnding,
   endingForForkAnswer,
+  endingForLeaving,
   endingForRetirement,
   forkDue,
   lastWordLine,
+  leavingDoorDue,
+  leavingLine,
   retirementDue,
   debtWeeks,
 } from '../ending'
@@ -31,7 +41,7 @@ import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView
 import { deliveredAssets, shopCatalogue } from './assets'
 import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
-import { addEvent, seasonIndexOf } from './ledger'
+import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
 import { activeLadderOf } from './ladder'
 import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer } from './college'
 // ⭐⭐ v73 – THE PRIVATE LIFE'S WAVE 2. The fork's opening tick raises her opinion of it, and
@@ -46,7 +56,12 @@ import { COLLEGE_OFFER, COLLEGE_TIER_ORDER, juniorRecordScore } from '../college
 // ⚠ THE TWO BASELINES ONLY, and both behind a `??` – the defensive read `accrueSpirit` uses for a
 // probe world hand-built before v72. `applyBondDelta` (engine/spirit.ts) stays the one WRITER.
 import { ECONOMY } from '../economy'
-import { applyBondDelta } from '../spirit'
+// ⚠ `temperamentFor` IS THE `??` COURTESY AND NOT A SECOND DERIVATION – the one spelling of
+// seed-to-girl, called here for the probe worlds hand-built before v72 exactly as
+// `world/lifeBeat.ts`'s private `temperamentOf` calls it. Every real world, created or migrated,
+// carries `world.temperament`, so the fallback branch is unreachable in play.
+import { applyBondDelta, temperamentFor } from '../spirit'
+import { rngFromSeed } from '../rng'
 import { nextAcademicYearStart } from '../kidLife'
 import { weekLabel } from '../../shared/dates'
 import { kidAgeYears } from './age'
@@ -265,6 +280,69 @@ export function plateauViewOf(world: WorldState): PlateauView {
   }
 }
 
+/** ⭐⭐⭐ ROUND 45 – WHAT THE TWO DOORS READ, BUILT OFF ONE READING OF ONE TABLE.
+ *
+ *  ⚠ THE TABLE IS RESOLVED ONCE AND HANDED DOWN, `plateauViewOf`'s own discipline and for its own
+ *  reason: the two halves of a collapse (the points and the place) must speak about the same career,
+ *  or the rule compares a junior season with a professional one – which is exactly round-19 #1's
+ *  defect, arriving through a new door.
+ *
+ *  ⚠ `professional` IS THE ONE BIT THE LEAF GETS ABOUT THAT TABLE, and it must have it: #10 on a
+ *  domestic ladder at fifteen is not a peak, and a junior points collapse is not §3's story. The leaf
+ *  still never learns WHICH table it is.
+ *
+ *  ⚠⚠ THE TEMPERAMENT IS **BIRTH** AND MAY NOT BE `expressedTemperamentOf` – the full argument is on
+ *  `DOOR_BY_TEMPERAMENT` in `engine/ending.ts`. In one line: expression drifts with `wallsFlipped`,
+ *  which the psychologist and the shape of the career move, so reading it would make the door a fact
+ *  about the PARENT'S MANAGEMENT – and §4's whole point is that the ending is a fact about HER.
+ *
+ *  ⚠ THE PREVIOUS SEASON IS THE ONE IMMEDIATELY BEFORE, BY INDEX, AND NEVER "THE LAST ROW IN THE
+ *  LIST". A season she spent at college, or one banked before v46 with no `byTrack` at all, is not a
+ *  season she fell FROM – it is a gap, and the row simply is not there. `find` on the index is what
+ *  makes the absence honest: the guards in `fallLeavingDue` then decline to fire, which is the same
+ *  refusal `plateauReading` makes on a short window.
+ *
+ *  ⚠ CALLED ON THE WRAP WEEK, WHICH IS AFTER `maybeFireSeasonWrapUp` HAS BANKED THE SEASON – both run
+ *  on `WEEKS_PER_YEAR - OFF_SEASON_WEEKS` and the wrap runs first (world/phaseAiWeek.ts). So the
+ *  "season that just closed" really is in `seasonHistory` by the time this reads for it. ZERO DRAWS. */
+export function leavingViewOf(world: WorldState): LeavingView {
+  const track = activeLadderOf(world)
+  const seasonIndex = seasonIndexOf(world.week)
+  const rowOf = (index: number) => world.seasonHistory.find((s) => s.seasonIndex === index)?.byTrack?.[track]
+  const now = rowOf(seasonIndex)
+  const before = rowOf(seasonIndex - 1)
+  return {
+    temperament: world.temperament ?? temperamentFor(world.seed),
+    seasonIndex,
+    professional: track === 'wta',
+    endRank: now?.endRank ?? null,
+    prevEndRank: before?.endRank ?? null,
+    points: now?.points ?? 0,
+    prevPoints: before?.points ?? 0,
+    topTitleThisSeason: wonTopTitleInSeason(world),
+  }
+}
+
+/** Did she win a title at the TOP RUNG OF THE SPORT inside the season that is closing?
+ *
+ *  ⚠ THE RUNG IS READ OFF THE LADDER'S LAST ENTRY RATHER THAN SPELLED `'slam'`, which is
+ *  `lastRungSeasonIndexOf`'s own argument one paragraph up: the ladder is the ladder, and it has
+ *  grown twice already. A wave that adds a rung above today's top moves this with it.
+ *
+ *  ⚠ THE WINDOW IS THE SEASON'S OWN 52-WEEK BLOCK UP TO AND INCLUDING THE WRAP WEEK –
+ *  `seasonStartWeek`, the engine's ONE definition of "this season" for money and for the wrap-up, so
+ *  a title cannot belong to two seasons or to neither.
+ *
+ *  ⚠ `?.` ON THE LEDGER AND ON THE SHELF, the `copyTrophyLedger` idiom: a save whose cabinet predates
+ *  a rung has no key for it. Pure read, zero draws. */
+export function wonTopTitleInSeason(world: WorldState): boolean {
+  const top = TIER_LADDER[TIER_LADDER.length - 1]
+  const shelf = world.trophiesByTier?.[top]
+  if (!shelf) return false
+  const from = seasonStartWeek(world.week)
+  return shelf.titles.some((w) => w >= from && w <= world.week)
+}
+
 // --- the latch ----------------------------------------------------------------------------------
 
 export function latchEnding(world: WorldState, ending: CareerEnding): void {
@@ -362,6 +440,13 @@ export function resolveEndings(world: WorldState): void {
   resolveCollegeDeparture(world)
   if (world.ending) return
 
+  // 7c″. ROUND 45 – THE TWO SHE DECIDES HERSELF, and they are the only endings in this function
+  //      that are not a question. It runs ABOVE 7d deliberately: a girl who has already decided is
+  //      not asked whether there is another year in this, and an offer raised in the same winter she
+  //      leaves would be the game asking a question she has just answered.
+  resolveLeaving(world)
+  if (world.ending) return
+
   // 7d. THE NATURAL END'S OFFER. Off-season only, once a year – `isSponsorReviewWeek`'s own week,
   //     which is the first off-season week and no other, so it cannot be raised twice in a season.
   //     ⚠ THE PLATEAU IS A READING OF THIS, NOT A SIXTH MECHANISM (§5.2): it puts the same question
@@ -397,6 +482,68 @@ export function resolveEndings(world: WorldState): void {
       })
     }
   }
+}
+
+/** ⭐⭐⭐ ROUND 45 – SHE DECIDES, AND NOBODY IS ASKED (`docs/specs/the-two-more-doors-2026-09.md`).
+ *
+ *  ⚠⚠ THIS IS THE FIRST ENDING IN THE GAME THAT IS NEITHER AN ANSWER NOR AN ACCIDENT. Four of the
+ *  six that came before are answers to a question the game put to the PARENT; the other two
+ *  (bankruptcy, the career-ending injury) are facts that had already happened by the time
+ *  `ending.ts` read them. These two are hers: she is at the top, or the year fell out from under
+ *  her, and she goes. The player is told, not asked.
+ *
+ *  ⚠⚠ WHICH IS PRECISELY WHY THE RATE IS THE FEATURE'S HARDEST CONSTRAINT, in his own words:
+ *  «у обоих не больше 1–2%… это всё-таки событие, которое принудительно заканчивает игру». A door
+ *  that ends a career without the player choosing it has to be rare enough to read as a story rather
+ *  than as the game being taken away. `ENDINGS.peakLeavingChance` / `fallLeavingChance` are the
+ *  per-eligible-off-season knobs, and the CAREER rate they produce is measured by
+ *  `tools/two-doors-bench.ts` and recorded predicted-against-measured in the spec's §6 (invariant 5).
+ *
+ *  ⚠ ONE DRAW, ON A PURPOSE-SCOPED SUB-STREAM, AND NOT ONE DRAW ON A SEASON THE GATE REFUSES.
+ *  `seed:ending:<door>:<seasonIndex>` is re-derived at this call site, persists nothing and never
+ *  touches MAIN (CLAUDE.md invariant 2) – the frozen capture (41550 / e6b0c709) is untouched by
+ *  construction. The KEY carries the door, so a girl who is `peak` and a girl who is `fall` never
+ *  share a number, and it carries the SEASON rather than the week, so the same winter always offers
+ *  the same coin however the player reached it.
+ *
+ *  ⚠ THE OFF-SEASON'S OWN WEEK AND NO OTHER – `isSponsorReviewWeek`'s week, the same one 7d uses, so
+ *  it cannot fire twice in a season. And BELOW `maybeFireSeasonWrapUp` in the tick, which is what
+ *  makes «the season that just closed» a row in `seasonHistory` rather than a season in progress.
+ *
+ *  ⚠ NOT WHILE SHE IS AT COLLEGE. The freeze is not a career she can leave from, and `inCollege` is
+ *  the same guard 7d keeps one block below for the same reason.
+ *
+ *  ⚠ TWO LEDGER ROWS AND THE ORDER IS THE POINT: HER SENTENCE FIRST, then the record. That is the
+ *  natural end's own shape (`lastWordLine` in the feed at the offer, the title row at the latch) and
+ *  it is what stops the player reading the game's summary of a leaving before they have read hers.
+ *
+ *  ⚠ THE LINE IS WRITTEN ONCE, IN `engine/ending.ts`, exactly like `LAST_WORD_OPENING` – so a test
+ *  pins the four voices through the symbol instead of through a spelling, and nothing can grow a
+ *  second copy of her words in a template. */
+export function resolveLeaving(world: WorldState): void {
+  if (world.ending !== null) return
+  if (world.week % WEEKS_PER_YEAR !== WEEKS_PER_YEAR - OFF_SEASON_WEEKS) return
+  if (inCollege(world)) return
+  const view = leavingViewOf(world)
+  const door = leavingDoorDue(view)
+  if (door === null) return
+  const chance = door === 'peak' ? ENDINGS.peakLeavingChance : ENDINGS.fallLeavingChance
+  if (rngFromSeed(`${world.seed}:ending:${door}:${view.seasonIndex}`)() >= chance) return
+  addEvent(world, {
+    week: world.week,
+    type: 'milestone',
+    keep: true,
+    text: leavingLine(view.temperament),
+  })
+  latchEnding(
+    world,
+    endingForLeaving(
+      door,
+      view,
+      world.week,
+      kidAgeYears(world.week, world.profile.birthMonth, world.profile.birthDay),
+    ),
+  )
 }
 
 /** ⭐⭐⭐ v73 – THE PROVING BEAT: WHAT SHE WANTS, ON THE WEEK THE QUESTION OPENS (wave-2 runbook §3).

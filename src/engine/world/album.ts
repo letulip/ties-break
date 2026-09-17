@@ -53,6 +53,16 @@ import type { WorldState } from '../world'
  *  docs/specs/endings-and-the-album.md §5. */
 export const SLOT6_EMPTY_WHY = 'The week the money turned – it never came, and for almost nobody does it'
 
+/** ⚠ ROUND 45 – THE COMPILER IS WHY THE TWO NEW DOORS ARRIVE WITH A FACE. This record is TOTAL over
+ *  `CareerEndingType`, so widening that union went red here until `peak` and `fall` were answered,
+ *  which is the spec's own point: a new ending cannot ship without its blurb, its title and her face.
+ *
+ *  ⚠ BOTH NEW FACES ARE DRAFTS (invariant 4, docs/specs/the-two-doors-corpus-2026-09.md §5).
+ *  `peak` is the only `happy` in the table and it is the one leaving that is not a loss – but it is
+ *  her face and not a verdict, exactly as `bankruptcy`'s `sad` is hers. `fall` takes `serious`
+ *  rather than `sad` or `angry` DELIBERATELY: the door has two voices, one of which slams it and one
+ *  of which says nothing at all, and a face that picked either of them would be telling a `quiet`
+ *  girl's story in a `fiery` girl's expression. `serious` is the one that is true of both. */
 const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   stopped: 'serious',
   college: 'norm',
@@ -60,6 +70,8 @@ const EMOTION_BY_ENDING: Record<CareerEndingType, AvatarEmotion> = {
   injury: 'injury',
   natural: 'serious',
   plateau: 'serious',
+  peak: 'happy',
+  fall: 'serious',
 }
 
 /** ⚠ THE GIRL, AND IT USED TO BE THE BAND – the defect this comment used to describe is now fixed
