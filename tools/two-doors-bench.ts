@@ -343,8 +343,15 @@ export function main(argv = process.argv.slice(2)): void {
     }
     const a = cell('peak')
     const b = cell('fall')
-    const shippedHere =
-      p === ENDINGS.peakLeavingChance && p === ENDINGS.fallLeavingChance ? '   <- shipped' : ''
+    // ⚠ THE SHIPPED CONFIGURATION IS NO LONGER UNIFORM, so no single row of a one-chance sweep is
+    // «the shipped one». His 17.09 ruling put the fall at 0.01 against the peak's 0.02, and marking
+    // one row as shipped would print a table that disagrees with `ENDINGS`. Each door is marked on
+    // its OWN row instead. (`vue-tsc` caught the old line as a comparison that can never hold –
+    // literal types 0.02 and 0.01 have no overlap – which is the check doing its job.)
+    const marks: string[] = []
+    if (p === (ENDINGS.peakLeavingChance as number)) marks.push('peak')
+    if (p === (ENDINGS.fallLeavingChance as number)) marks.push('fall')
+    const shippedHere = marks.length > 0 ? `   <- shipped ${marks.join(' + ')}` : ''
     const inBand = a <= 2 && b <= 2 ? '   both inside his 1-2%' : ''
     console.log(
       `  ${padEnd(`${(100 * p).toFixed(0)}%`, 9)}${`${a.toFixed(2)}%`.padStart(9)}${`${b.toFixed(2)}%`.padStart(
