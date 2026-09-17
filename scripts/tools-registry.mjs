@@ -51,6 +51,8 @@ const INSTRUMENTS = {
     'the whole-career injury census behind docs/specs/the-injury-landscape-2026-08.md; re-run whenever injury rates are touched',
   'demo-save.ts': 'writes the demo career used for screenshots and manual playtests',
   'e2e-fixtures.ts': 'generates the deterministic saves the Playwright suite loads',
+  'small-talk-corpus-emit.ts':
+    'writes src/engine/world/smallTalkCorpus.ts out of docs/specs/small-talk-corpus-2026-09.md – the ONLY legitimate way to change the 43, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec',
 }
 
 function relative(file) {

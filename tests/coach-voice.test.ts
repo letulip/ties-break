@@ -71,12 +71,13 @@ const SRC = fileURLToPath(new URL('../src', import.meta.url))
  *  unescaped copy of each literal against this set. */
 const COURT_FOUR_COPY = new Set(
   SMALL_TALK_SITUATIONS.filter((s) => s.id === 'court-four').flatMap((s) =>
-    [
-      s.opener.roof,
-      s.opener.away,
-      s.shared,
-      ...Object.values(s.branches).flatMap((b) => [b.label, b.said]),
-    ].filter((line): line is string => line !== undefined),
+    // ⚠ ROUND 44 – THE FOUR VOICES ARE COLUMNS OF ONE ROW NOW, not four rows, so the flat map runs
+    // one level deeper. The exception is unchanged in width: it is still exactly this one story.
+    Object.values(s.voices).flatMap((c) =>
+      [c.opener, c.shared, ...Object.values(c.branches).flatMap((b) => [b.label, b.said])].filter(
+        (line): line is string => line !== undefined,
+      ),
+    ),
   ),
 )
 
@@ -227,8 +228,11 @@ describe('R15-7 - no surface guesses a professional\'s gender', () => {
     expect([...COURT_FOUR_COPY].filter((line) => MASCULINE.test(line)).length).toBe(COURT_FOUR_MASCULINE_DISTINCT)
     // ...and it excuses NOTHING outside that one story: not one other situation's copy is in it.
     const others = SMALL_TALK_SITUATIONS.filter((s) => s.id !== 'court-four').flatMap((s) =>
-      [s.opener.roof, s.opener.away, s.shared, ...Object.values(s.branches).flatMap((b) => [b.label, b.said])]
-        .filter((line): line is string => line !== undefined),
+      Object.values(s.voices).flatMap((c) =>
+        [c.opener, c.shared, ...Object.values(c.branches).flatMap((b) => [b.label, b.said])].filter(
+          (line): line is string => line !== undefined,
+        ),
+      ),
     )
     expect(others.filter((line) => COURT_FOUR_COPY.has(line)), 'the exception reaches one story only').toEqual([])
     // ...and no OTHER situation in the catalogue needs one, which is what says the boundary is real

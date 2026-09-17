@@ -37,9 +37,37 @@ import {
   PRE_V78,
   PRE_V79,
   PRE_V80,
+  PRE_V81,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v81: rolling the schema back to 80 – dropping `frame` – returns the v80 CAREER on all three', () => {
+    // ⭐⭐ THE FIRST IDENTITY RUNG SINCE v78, AND THE CASE NAME SAYS SO because the two rungs under it
+    // could not. v81 appends ONE key – `LifeBeatRecord.frame`, round 44 – and it appends it to a ROW
+    // rather than to the world, so the peel is a nested one (`careerHashAtSchema`, the `preFrame`
+    // block). Dropping it and rolling the number returns a serialisation a v80 build would accept.
+    //
+    // ⚠⚠ AND THE ROUND WAS NOT SMALL, WHICH IS WHY THE IDENTITY IS WORTH EXPLAINING RATHER THAN
+    // CELEBRATING. Round 44 takes the small-talk catalogue from 8 situations to 51 – a real
+    // behaviour change, the kind that re-anchored every rung at v79 and v80. It does not reach these
+    // five careers because of a CALENDAR fact: **a frozen career is 156 weeks from its own start, so
+    // the girl in it never leaves `school`**, and every one of the 43 new situations declares
+    // `after-school`, `college` and `independent` with no `school` among them. Her pool did not grow
+    // by one row.
+    //
+    // ⚠ SO IF THIS GOES RED BESIDE A GREEN FREEZE, THE FIRST THING TO ASK IS NOT «WHAT BROKE» BUT
+    // «DID THE WALK GET LONGER». The day `FREEZE_WEEKS` reaches past school, or the day a corpus row
+    // is given a `school` stage, this rung stops being an identity and the eighty-four under it
+    // re-anchor with it – and that is correct rather than a regression.
+    //
+    // ⚠ THE PER-KEY CONTROL IS IN THE DATED BLOCK AT THE HEAD OF tests/coachTravelEdgeFixtures.ts –
+    // 2 keys of 93/94 on all five cells (`lifeLog`, `schemaVersion`), `rngMain` byte-identical, and
+    // the frozen MAIN capture unmoved.
+    expect(careerHashAtSchema(5, 0, 80), '25k · middle coach · grinder – the verbatim v80 value').toBe(PRE_V81.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 80), '120k · elite coach · grinder – the verbatim v80 value').toBe(PRE_V81.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 80), '8k · self-coached · player – the verbatim v80 value').toBe(PRE_V81.selfTravelling)
+  })
+
   it('⭐⭐⭐ v80: rolling the schema back to 79 – dropping `form` – returns the v79 SHAPE, and on no career the v79 CAREER', () => {
     // ⚠⚠ THE FIRST RUNG IN THIS LADDER WHOSE THREE CELLS ARE NOT THE PREVIOUS VERSION'S LIVE
     // CONSTANTS, and the case name says so rather than promising a byte-identity it cannot deliver on

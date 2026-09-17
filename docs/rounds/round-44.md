@@ -1,7 +1,7 @@
 ---
 type: round
 status: current
-area: process
+area: rounds
 last-reviewed: 2026-09-17
 ---
 

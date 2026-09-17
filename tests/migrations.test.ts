@@ -613,7 +613,10 @@ describe('save migrations', () => {
     // ⚠ v80's step is ONE `??=` on one world key, so it adds exactly one rung to the walk. Its
     // reader IS reachable in a frozen career, as v79's is, which is why that file re-stamped again –
     // and this line is not about that either.
-    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 80 – past the colliding 64, through 65').toBe(80)
+    // ⚠ v81's step writes NOTHING – round 44's `LifeBeatRecord.frame` is optional and never
+    // back-filled, so the walk gains a rung that changes no byte. The version still moves, because a
+    // frame that is read back rather than re-derived cannot survive the pool growing without one.
+    expect(SAVE_SCHEMA_VERSION, 'and the current schema is 81 – past the colliding 64, through 65').toBe(81)
 
     // v64's step ran: the reveal back-fills NULL, which is the TRUE value and not a placeholder – no
     // save written before it can be holding a question in front of the player.

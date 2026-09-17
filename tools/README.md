@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-245 TypeScript files: **44 live**, **201 archival**.
+247 TypeScript files: **46 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -70,6 +70,8 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `shop-probe.ts` | `npm run probe:shop` |
 | `skill-ceiling.ts` | `npm run bench:skill` |
 | `small-talk-corpus-bench.ts` | `npm run bench:smalltalk` |
+| `small-talk-corpus-emit.ts` | writes src/engine/world/smallTalkCorpus.ts out of docs/specs/small-talk-corpus-2026-09.md – the ONLY legitimate way to change the 43, because the catalogue is generated from the document and never retyped; re-run with --write after any owner edit to that spec |
+| `small-talk-corpus-parse.ts` | imported by the test suite |
 | `snapshot-bench.ts` | `npm run bench:snapshot` |
 | `spirit-bench.ts` | `npm run bench:spirit` |
 | `sponsor-window-bench.ts` | `npm run bench:sponsor` |

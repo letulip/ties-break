@@ -71,6 +71,14 @@
 //           **1 RED** · §B «⭐ the parent's frame agrees with the SUBJECT, not with the week».
 //   ARM 10  `line-call` given a `stages` entry its opener has no frame for (`college`).
 //           **1 RED** · §A «⭐⭐ every declared stage resolves to a frame this situation actually has».
+//           ⚠⚠ ROUND 44 RETIRED THIS ARM RATHER THAN MOVING IT, AND THE RETIREMENT IS THE POINT: a
+//           row carries no frame any more, so there is no per-row cell a widened `stages` could miss.
+//           What replaced it is ARM 13, which can still fail.
+//   ARM 13  `smallTalkFrameOf`'s pool lookup made to fall back on `pool[0]` for an UNKNOWN id instead
+//           of throwing (`?? pool[0]` in place of the `undefined` check).
+//           **1 RED** · §A «⚠ a frame id that names nothing is refused», and the red is the absence
+//           of the throw: a save carrying a retired frame id would silently render somebody else's
+//           scene rather than saying it cannot read the row.
 //   ARM 12  `lifeBeatPromptFor` re-deriving the stage from the CURRENT week again
 //           (`lifeStageAt(world, row.week)` → `lifeStageOf(world)`) – i.e. the defect put back.
 //           **1 RED** · §C «⭐⭐⭐ a soft row survives the week her STAGE changes under it», and the
@@ -104,12 +112,14 @@ import {
   kidAgeExact,
   KID_ID,
   LIFE_BEAT_OPTIONS,
+  SMALL_TALK_FRAMES,
   SMALL_TALK_SITUATIONS,
   SMALL_TALK_STANCES,
   SMALL_TALK_STANCE_ID,
   SMALL_TALK_SUBJECTS,
   TEMPERAMENTS,
   type SmallTalkSituation,
+  type SmallTalkVoiceEntry,
   type Temperament,
   type WorldState,
 } from '../src/engine/world'
@@ -180,7 +190,7 @@ function stageAt(world: WorldState, week: number): DiaryLifeStage {
 function poseableStage(s: SmallTalkSituation): DiaryLifeStage {
   const preferred: readonly DiaryLifeStage[] = ['school', 'after-school', 'independent']
   const found = preferred.find((stage) => s.stages.includes(stage))
-  if (found === undefined) throw new Error(`${s.id}/${s.voice} declares no stage this file can pose`)
+  if (found === undefined) throw new Error(`${s.id} declares no stage this file can pose`)
   return found
 }
 
@@ -207,24 +217,43 @@ function matchEvent(id: number, week: number, opponent: string, won: boolean): W
   }
 }
 
-/** Every rendered string of one situation – opener frames, the shared incident, and the six words of
- *  its three branches. Used by the shape sweep and by the voice test. */
-function linesOf(s: SmallTalkSituation): string[] {
+/** ⭐ ROUND 44 – EVERY (situation, voice) COLUMN OF THE CATALOGUE, as one flat list. The unit of a
+ *  sweep used to be a row, because a row WAS a voice; now a row carries up to four, so a sweep that
+ *  walked `SMALL_TALK_SITUATIONS` alone would read one situation once and miss three of its four
+ *  editions. ⚠ It throws nothing and skips nothing: a voice with no column is simply not a column,
+ *  which is exactly what `reachableSituations` reads. */
+function columns(): { s: SmallTalkSituation; voice: Temperament; c: SmallTalkVoiceEntry; name: string }[] {
+  const out: { s: SmallTalkSituation; voice: Temperament; c: SmallTalkVoiceEntry; name: string }[] = []
+  for (const s of SMALL_TALK_SITUATIONS) {
+    for (const voice of TEMPERAMENTS) {
+      const c = s.voices[voice]
+      if (c !== undefined) out.push({ s, voice, c, name: `${s.id}/${voice}` })
+    }
+  }
+  return out
+}
+
+/** Every rendered string of one voice column – her spoken payload, the shared incident, and the six
+ *  words of its three branches. ⚠ THE FRAME IS NOT HERE ANY MORE: it comes from `SMALL_TALK_FRAMES`
+ *  and is swept on its own, because one pool line wraps all 51 situations rather than belonging to
+ *  any one of them. */
+function linesOf(c: SmallTalkVoiceEntry): string[] {
   return [
-    s.opener.roof,
-    s.opener.away,
-    s.shared,
-    ...SMALL_TALK_STANCES.flatMap((stance) => [s.branches[stance].label, s.branches[stance].said]),
+    c.opener,
+    c.shared,
+    ...SMALL_TALK_STANCES.flatMap((stance) => [c.branches[stance].label, c.branches[stance].said]),
   ].filter((line): line is string => line !== undefined)
 }
 
 /** The four voice columns of one situation id, in `TEMPERAMENTS` order. Throws rather than skipping,
  *  because §E's whole claim is that all four exist. */
-function fourVoicesOf(id: string): SmallTalkSituation[] {
+function fourVoicesOf(id: string): { s: SmallTalkSituation; voice: Temperament; c: SmallTalkVoiceEntry }[] {
+  const s = SMALL_TALK_SITUATIONS.find((row) => row.id === id)
+  if (s === undefined) throw new Error(`no situation ${id}`)
   return TEMPERAMENTS.map((voice) => {
-    const found = SMALL_TALK_SITUATIONS.find((s) => s.id === id && s.voice === voice)
-    if (found === undefined) throw new Error(`${id} has no ${voice} column`)
-    return found
+    const c = s.voices[voice]
+    if (c === undefined) throw new Error(`${id} has no ${voice} column`)
+    return { s, voice, c }
   })
 }
 
@@ -235,35 +264,90 @@ describe('round 42 #24 A – the situation catalogue is total where it claims to
   it('the sweep has something to sweep (a guard that reads nothing passes everything)', () => {
     expect(SMALL_TALK_SITUATIONS.length).toBeGreaterThan(8)
     expect(new Set(SMALL_TALK_SITUATIONS.map((s) => s.id)).size, 'more than one situation').toBeGreaterThan(5)
+    // ⭐ ROUND 44 – AND THE SWEEPS BELOW WALK COLUMNS, NOT ROWS. A floor on the columns is what says
+    // the corpus landed four-voiced rather than one row per situation wearing a `voices` map.
+    expect(columns().length, 'the catalogue is swept per voice column').toBeGreaterThan(SMALL_TALK_SITUATIONS.length)
   })
 
-  it('⭐⭐ every declared stage resolves to a frame this situation actually has', () => {
-    // ARM 10's target. A situation whose `stages` reach a presence its opener has no line for would
-    // throw at render time, on a real career, weeks after the commit that widened it.
-    for (const s of SMALL_TALK_SITUATIONS) {
-      expect(s.stages.length, `${s.id}/${s.voice}: declares no stage at all`).toBeGreaterThan(0)
+  it('⭐⭐ every declared stage words through the assembler, at every frame in its presence pool', () => {
+    // ARM 10's target, RE-AIMED BY ROUND 44 AND STRENGTHENED RATHER THAN LOOSENED. The old form asked
+    // «does this row carry a line for the presence its stages reach», because a row held a frame per
+    // presence and a missing one threw at render time. There is no per-row frame left to be missing:
+    // the payload is one string and the scene is drawn from `SMALL_TALK_FRAMES`, which is total over
+    // presence. So the claim that replaces it is the one that can still fail – every declared stage,
+    // every voice column, every member of that presence's pool, assembled through the ENGINE.
+    for (const { s, voice, name } of columns()) {
+      expect(s.stages.length, `${name}: declares no stage at all`).toBeGreaterThan(0)
       for (const stage of s.stages) {
-        const roof = ROOF_STAGES.includes(stage)
-        const frame = roof ? s.opener.roof : s.opener.away
-        expect(frame, `${s.id}/${s.voice}: declares ${stage} and has no ${roof ? 'roof' : 'away'} frame`).toBeTruthy()
-      }
-      // ...and it really is assembled through the engine rather than read off the object here.
-      for (const stage of s.stages) {
-        expect(
-          lifeBeatSaid('small-talk', `${s.subject}:${s.id}`, s.voice, 'level', 'close', 'open', stage),
-          `${s.id}/${s.voice}/${stage}: the assembler could not word it`,
-        ).toBeTruthy()
+        const pool = SMALL_TALK_FRAMES[ROOF_STAGES.includes(stage) ? 'roof' : 'away']
+        expect(pool.length, `${name}/${stage}: the presence pool is empty`).toBeGreaterThan(0)
+        for (const frame of pool) {
+          expect(
+            lifeBeatSaid('small-talk', `${s.subject}:${s.id}`, voice, 'level', 'close', 'open', stage, 'own', 'told-now', frame.id),
+            `${name}/${stage}/${frame.id}: the assembler could not word it`,
+          ).toBeTruthy()
+        }
       }
     }
   })
 
+  it('⭐⭐⭐ ROUND 44 – the quoted span is IDENTICAL at both distances, and now by construction', () => {
+    // ⚠⚠ THE LAW ROUND 43 PINNED, CARRIED ONTO THE SITUATIONS. `tests/wave3-presence.test.ts` §D
+    // holds it over the LEGACY pool, where two hand-written strings had to agree; here there is one
+    // payload behind both presences, so the property cannot be broken by an edit to one side. It is
+    // asserted anyway, through the assembler, because «true by construction» is a claim about the
+    // code and this is the case that checks the code still says it.
+    for (const { s, voice, c, name } of columns()) {
+      const roof = lifeBeatSaid('small-talk', `${s.subject}:${s.id}`, voice, 'level', 'close', 'open', 'school')
+      const away = lifeBeatSaid('small-talk', `${s.subject}:${s.id}`, voice, 'level', 'close', 'open', 'college')
+      expect(roof.endsWith(c.opener), `${name}: the roof card does not end in her payload`).toBe(true)
+      expect(away.endsWith(c.opener), `${name}: the away card does not end in her payload`).toBe(true)
+      expect(roof, `${name}: presence changed the sentence and not the scene`).not.toBe(away)
+    }
+  })
+
+  it('⚠ the frame pool is nine a side, its ids are disjoint and unique, and each line is one clause', () => {
+    // His own arithmetic (`docs/specs/the-frame-pool-2026-09.md`): nine `roof`, nine `away`.
+    // ⚠⚠ DISJOINT IS LOAD-BEARING AND NOT TIDINESS: `recentFrames` reads which pool a STORED id came
+    // from in order to honour «roof remembers roof, away remembers away» off a `lifeLog` that holds
+    // no presence. An id in both pools would make one row count as a memory of both distances.
+    const roof = SMALL_TALK_FRAMES.roof
+    const away = SMALL_TALK_FRAMES.away
+    expect(roof.length, 'nine roof frames').toBe(9)
+    expect(away.length, 'nine away frames').toBe(9)
+    const ids = [...roof, ...away].map((f) => f.id)
+    expect(new Set(ids).size, 'every frame id is unique across both pools').toBe(ids.length)
+    for (const f of [...roof, ...away]) {
+      expect(f.line.length, `${f.id}: an empty frame`).toBeGreaterThan(8)
+      expect(f.line, `${f.id}: a frame carries no quotation – the words inside them are hers`).not.toContain('"')
+      expect(f.line, `${f.id}: no em-dash`).not.toContain('—')
+      expect(f.line, `${f.id}: a number in a frame`).not.toMatch(/[$€£]|\d/)
+      expect(f.line.split(/\s+/).length, `${f.id}: longer than his twelve words`).toBeLessThanOrEqual(12)
+    }
+  })
+
+  it('⚠ a frame id that names nothing is REFUSED, and an absent one falls back on the shipped scene', () => {
+    // ARM 13's target, and it replaces ARM 10 rather than joining it: a row carries no frame any
+    // more, so the cell a widened `stages` used to miss does not exist – and what CAN still go wrong
+    // is a save naming a frame the pool no longer holds. ⚠ THE IDS ARE APPEND-ONLY for that reason.
+    const s = SMALL_TALK_SITUATIONS.find((row) => row.voices.deep !== undefined)!
+    expect(
+      () => lifeBeatSaid('small-talk', `${s.subject}:${s.id}`, 'deep', 'level', 'close', 'open', 'school', 'own', 'told-now', 'no-such-frame'),
+      'a retired frame id renders somebody else\'s scene instead of saying it cannot read the row',
+    ).toThrow(/names no roof frame/)
+    // ...and an ABSENT frame is a row written before v81, which is not an error and is not a guess:
+    // it renders the FIRST line of the presence's pool, which is exactly the scene the shipped
+    // catalogue wrapped `practice-clicked` in.
+    const old = lifeBeatSaid('small-talk', 'good-news:practice-clicked', 'deep', 'level', 'close', 'open', 'school')
+    expect(old.startsWith(SMALL_TALK_FRAMES.roof[0].line), 'a pre-v81 roof row reads the first roof frame').toBe(true)
+    const oldAway = lifeBeatSaid('small-talk', 'good-news:practice-clicked', 'deep', 'level', 'close', 'open', 'college')
+    expect(oldAway.startsWith(SMALL_TALK_FRAMES.away[0].line), 'and a pre-v81 away row the first away one').toBe(true)
+  })
+
   it('⚠ the corpus shape rules hold – one quoted span, the short dash, no number, no price', () => {
-    for (const s of SMALL_TALK_SITUATIONS) {
-      for (const frame of [s.opener.roof, s.opener.away]) {
-        if (frame === undefined) continue
-        expect((frame.match(/"/g) ?? []).length, `one quoted span: ${frame}`).toBe(2)
-      }
-      for (const line of linesOf(s)) {
+    for (const { c, name } of columns()) {
+      expect((c.opener.match(/"/g) ?? []).length, `${name}: one quoted span: ${c.opener}`).toBe(2)
+      for (const line of linesOf(c)) {
         expect(line, `no em-dash: ${line}`).not.toContain('—')
         expect(line, `a price or a number in: ${line}`).not.toMatch(/[$€£]|\bcents?\b|\bdollars?\b|\d/)
         expect(line, `Cyrillic in: ${line}`).not.toMatch(/[Ѐ-ӿ]/)
@@ -271,25 +355,31 @@ describe('round 42 #24 A – the situation catalogue is total where it claims to
     }
   })
 
-  it('⚠ the narration outside the quotation names her – with the ONE exception he wrote himself', () => {
-    // The corpus rule since wave 1. ⚠ `new-place`'s «A pause on the line, longer than the others.» is
-    // HIS sentence and his own verdict on that scene was «the best in the set»; it names nobody, and
-    // it is recorded as the exception rather than edited – exactly as the two `Her …` away frames
-    // were in the вычитка fold. Naming it here is what keeps a SECOND one from arriving quietly.
+  it('⚠ the narration outside the quotation names her – and ROUND 44 MOVED IT ONTO THE POOL', () => {
+    // The corpus rule since wave 1, asked of the layer that now carries the narration. Until this
+    // round the lead-in lived on the row, so this case swept rows; the lead-in is a POOL LINE now and
+    // a situation's opener is pure quotation, so a sweep of the rows would find an empty narration
+    // every time and pass 172 times over nothing. The claim moved with the sentence it is about.
+    //
+    // ⚠ THE ONE EXCEPTION THAT USED TO BE NAMED HERE LEFT WITH IT. `new-place`'s «A pause on the
+    // line, longer than the others.» was HIS sentence and named nobody; it was a per-row lead-in, and
+    // per-row lead-ins no longer exist – the migration drops them and the pool supplies one. Nothing
+    // of his was edited: the quotation each one wrapped is carried whole.
     const unnamed: string[] = []
-    for (const s of SMALL_TALK_SITUATIONS) {
-      for (const frame of [s.opener.roof, s.opener.away]) {
-        if (frame === undefined) continue
+    for (const presence of ['roof', 'away'] as const) {
+      for (const frame of SMALL_TALK_FRAMES[presence]) {
         // ⚠ WORD BOUNDARIES AND NOT `includes`, WHICH IS A CORRECTION THIS CASE EARNED ON ITS FIRST
-        // RUN: «longer than the others» contains `her`, so a substring test called the one frame that
-        // names nobody compliant and the exception below could never have been reached.
-        const narration = frame.split('"')[0]
-        if (!/\b(she|her|hers|herself)\b/i.test(narration)) unnamed.push(`${s.id}/${s.voice}: ${frame}`)
+        // RUN: «longer than the others» contains `her`, so a substring test called a frame that names
+        // nobody compliant and the exception could never have been reached.
+        if (!/\b(she|her|hers|herself)\b/i.test(frame.line)) unnamed.push(`${presence}/${frame.id}`)
       }
     }
-    expect(unnamed.map((u) => u.split(':')[0]), 'exactly one frame names nobody, and it is his').toEqual([
-      'new-place/quiet',
-    ])
+    expect(unnamed, 'every frame in the pool names her').toEqual([])
+    // ...and a situation's opener really is payload-only now, which is what makes the move necessary
+    // rather than a matter of taste.
+    for (const { c, name } of columns()) {
+      expect(c.opener.startsWith('"'), `${name}: an opener still carries a lead-in: ${c.opener}`).toBe(true)
+    }
   })
 
   it('⚠ the three stances are total, and their ids are the three that shipped', () => {
@@ -298,10 +388,8 @@ describe('round 42 #24 A – the situation catalogue is total where it claims to
     expect(SMALL_TALK_STANCES.map((s) => SMALL_TALK_STANCE_ID[s]).sort()).toEqual(
       OPTIONS.map((o) => o.id).slice().sort(),
     )
-    for (const s of SMALL_TALK_SITUATIONS) {
-      expect(Object.keys(s.branches).sort(), `${s.id}/${s.voice}: a stance is missing`).toEqual(
-        [...SMALL_TALK_STANCES].sort(),
-      )
+    for (const { c, name } of columns()) {
+      expect(Object.keys(c.branches).sort(), `${name}: a stance is missing`).toEqual([...SMALL_TALK_STANCES].sort())
     }
   })
 
@@ -328,7 +416,7 @@ describe('round 42 #15 B – the beat is an exchange', () => {
 
   it('⭐⭐⭐ every answer earns a second line of hers – the whole of «сказала А, но никогда не сказала Б»', () => {
     const story = fourVoicesOf('court-four')[1]
-    const { prompt } = exchange('exchange-1', story.voice, story)
+    const { prompt } = exchange('exchange-1', story.voice, story.s)
     expect(prompt.followUps.map((f) => f.optionId), 'one reply per stance, in the card\'s own order').toEqual(
       OPTIONS.map((o) => o.id),
     )
@@ -343,10 +431,10 @@ describe('round 42 #15 B – the beat is an exchange', () => {
     // with the aftermath. A branch that leaves the player waiting for B is the shipped defect wearing
     // a new coat.»
     for (const story of fourVoicesOf('court-four')) {
-      const { prompt } = exchange(`story-${story.voice}`, story.voice, story)
+      const { prompt } = exchange(`story-${story.voice}`, story.voice, story.s)
       for (const follow of prompt.followUps) {
         expect(follow.said.length, `${story.voice}/${follow.optionId}: a story route with one beat`).toBe(2)
-        expect(follow.said[0], `${story.voice}/${follow.optionId}: the incident is not shared`).toBe(story.shared)
+        expect(follow.said[0], `${story.voice}/${follow.optionId}: the incident is not shared`).toBe(story.c.shared)
       }
       // ...and the three aftermaths really are three, so «shared» has not swallowed the branch.
       expect(new Set(prompt.followUps.map((f) => f.said[1])).size, `${story.voice}: three aftermaths`).toBe(3)
@@ -354,24 +442,22 @@ describe('round 42 #15 B – the beat is an exchange', () => {
   })
 
   it('⚠ a situation that is NOT a story carries one paragraph per route', () => {
-    const plain = SMALL_TALK_SITUATIONS.filter((s) => s.shared === undefined)
-    expect(plain.length, 'the anti-vacuity half – there are non-story situations').toBeGreaterThan(3)
-    for (const s of plain) {
-      const { prompt } = exchange(`plain-${s.id}-${s.voice}`, s.voice, s)
-      for (const follow of prompt.followUps) expect(follow.said.length, `${s.id}/${follow.optionId}`).toBe(1)
+    const plain = columns().filter(({ c }) => c.shared === undefined)
+    expect(plain.length, 'the anti-vacuity half – there are non-story columns').toBeGreaterThan(3)
+    for (const { s, voice, name } of plain) {
+      const { prompt } = exchange(`plain-${name}`, voice, s)
+      for (const follow of prompt.followUps) expect(follow.said.length, `${name}/${follow.optionId}`).toBe(1)
     }
   })
 
   it('⭐⭐ the three answers wear the SITUATION\'s words, not the generic three (§8d.1)', () => {
     // ARM 3's target. «Say how we see it» promises a view and then she answers an opinion the player
     // never heard; the fix is that the label names the position the parent is taking.
-    for (const s of SMALL_TALK_SITUATIONS) {
-      const { prompt } = exchange(`labels-${s.id}-${s.voice}`, s.voice, s)
-      expect(prompt.options.map((o) => o.id), `${s.id}/${s.voice}: the ids are the shipped three`).toEqual(
-        OPTIONS.map((o) => o.id),
-      )
-      expect(prompt.options.map((o) => o.label), `${s.id}/${s.voice}: the situation's own words`).toEqual(
-        SMALL_TALK_STANCES.map((stance) => s.branches[stance].label),
+    for (const { s, voice, c, name } of columns()) {
+      const { prompt } = exchange(`labels-${name}`, voice, s)
+      expect(prompt.options.map((o) => o.id), `${name}: the ids are the shipped three`).toEqual(OPTIONS.map((o) => o.id))
+      expect(prompt.options.map((o) => o.label), `${name}: the situation's own words`).toEqual(
+        SMALL_TALK_STANCES.map((stance) => c.branches[stance].label),
       )
     }
   })
@@ -390,9 +476,9 @@ describe('round 42 #15 B – the beat is an exchange', () => {
       observation: 'She came to us with something this week',
       story: 'She came to us with something this week',
     }
-    for (const s of SMALL_TALK_SITUATIONS) {
-      const { prompt } = exchange(`frame-${s.id}-${s.voice}`, s.voice, s)
-      expect(prompt.heading, `${s.id}/${s.voice}: the frame`).toBe(FRAME[s.subject])
+    for (const { s, voice, name } of columns()) {
+      const { prompt } = exchange(`frame-${name}`, voice, s)
+      expect(prompt.heading, `${name}: the frame`).toBe(FRAME[s.subject])
     }
     // ...and the three frames really are three, so the table above is not one string four times.
     expect(new Set(Object.values(FRAME)).size, 'three frames in the shipped pool').toBe(3)
@@ -411,7 +497,7 @@ describe('round 42 #15 B – the beat is an exchange', () => {
 
   it('⚠ the engine re-validates the answer, and an id the card never offered is refused', () => {
     const s = fourVoicesOf('court-four')[0]
-    const { world } = exchange('revalidate', s.voice, s)
+    const { world } = exchange('revalidate', s.voice, s.s)
     expect(() => answerLifeBeat(world, 'not-an-answer')).toThrow(/not one of the answers/)
     answerLifeBeat(world, SMALL_TALK_STANCE_ID.respond)
     expect(lifeLogOf(world)[0].answer, 'and the real one lands').toBe(SMALL_TALK_STANCE_ID.respond)
@@ -516,19 +602,27 @@ describe('round 42 #24 C – what she comes with is drawn, not decided', () => {
     const flip = away - 1
     expect(stageAt(world, flip), 'the week before really is a roof stage').toBe('after-school')
     expect(stageAt(world, away), 'and the week after really is an away one').toBe('independent')
-    // A roof-only situation, raised on the last roof week.
-    const roofOnly = SMALL_TALK_SITUATIONS.find((x) => x.opener.away === undefined && x.voice === 'quiet')!
+    // A ROOF-ONLY situation, raised on the last roof week. ⚠⚠ ROUND 44 MOVED WHAT «ROOF-ONLY» MEANS
+    // AND THE CASE SURVIVED THE MOVE INTACT, which is worth saying out loud: it used to mean «this
+    // row has no `away` string», and it now means «this row's `stages` never reach an away stage».
+    // The defect it guards is unchanged and is still the one that bricked a save – a soft row
+    // re-worded at a stage it was never in. What changed is only that the failure is no longer a
+    // THROW: with one payload and a pool total over presence the assembler can always word it, so the
+    // arm below asserts the SCENE moving rather than a crash, which is a strictly harder claim.
+    const roofOnly = SMALL_TALK_SITUATIONS.find(
+      (x) => x.voices.quiet !== undefined && !x.stages.some((st) => st === 'college' || st === 'independent'),
+    )!
+    expect(roofOnly, 'the fixture really is a roof-only situation with a quiet column').toBeTruthy()
     world.week = flip
     raiseLifeBeat(world, 'small-talk', `${roofOnly.subject}:${roofOnly.id}`)
     const atRaise = buildSoftBeatInvite(world)!.prompt.said
-    expect(atRaise, 'the raise week words it from the roof').toBe(roofOnly.opener.roof)
-    // ⚠ THE ARM IS REAL: asked at the stage she is in NEXT week, the assembler does refuse. That
-    // refusal is what used to reach the snapshot.
+    expect(atRaise.endsWith(roofOnly.voices.quiet!.opener), 'the raise week words her own payload').toBe(true)
+    // ⚠ THE ARM IS REAL: asked at the stage she is in NEXT week, the assembler words a DIFFERENT
+    // scene – a call rather than a kitchen. That re-wording is what used to reach the snapshot.
     expect(
-      () =>
-        lifeBeatSaid('small-talk', `${roofOnly.subject}:${roofOnly.id}`, 'quiet', 'level', 'close', 'open', 'independent'),
-      'the assembler really has no away frame for this scene',
-    ).toThrow(/has no away frame/)
+      lifeBeatSaid('small-talk', `${roofOnly.subject}:${roofOnly.id}`, 'quiet', 'level', 'close', 'open', 'independent'),
+      'the assembler really does put her somewhere else at the other distance',
+    ).not.toBe(atRaise)
     // ⭐ AND THE CARD CROSSES THE BOUNDARY WITHOUT THROWING AND WITHOUT MOVING HOUSE. The row is still
     // inside its three-week window on the far side of the flip, which is exactly the state that used
     // to brick the save.
@@ -666,13 +760,13 @@ describe('round 42 #15 D – a competitive claim is unreachable when the fact is
     world.coachId = null
     world.season = []
     world.entries = []
-    const domestic = SMALL_TALK_SITUATIONS.filter((s) => s.fact === null)
+    const domestic = columns().filter(({ s }) => s.fact === null)
     expect(domestic.length, 'there are domestic situations to be about').toBeGreaterThan(4)
-    for (const s of domestic) {
+    for (const { s, voice, name } of domestic) {
       for (const stage of s.stages) {
         expect(
-          reachableSituations(world, s.voice, stage).some((r) => r.id === s.id),
-          `${s.id}/${s.voice}/${stage} asked the career for permission it should not need`,
+          reachableSituations(world, voice, stage).some((r) => r.id === s.id),
+          `${name}/${stage} asked the career for permission it should not need`,
         ).toBe(true)
       }
     }
@@ -719,36 +813,40 @@ describe('round 42 #24 E – four voices, one event (the owner\'s own test)', ()
     // SAME EVENT: one id, one subject. SAME AGE: the same declared stages, so the comparison below is
     // never «a child against an adult». SAME FACTS: no career fact behind any of them, so the four
     // are posed on identical worlds.
-    expect(new Set(COURT.map((s) => s.subject)).size, 'one subject').toBe(1)
-    expect(new Set(COURT.map((s) => s.stages.join(','))).size, 'one set of stages').toBe(1)
-    expect(new Set(COURT.map((s) => s.fact)).size, 'one fact – and it is none').toBe(1)
-    expect(COURT.every((s) => s.fact === null), 'domestic, so the four worlds are identical').toBe(true)
-    expect(COURT.map((s) => s.voice), 'and all four voices are present').toEqual([...TEMPERAMENTS])
+    // ⭐ ROUND 44 MADE THREE QUARTERS OF THIS TRUE BY CONSTRUCTION: the four voices are columns of ONE
+    // row now, so «one subject, one set of stages, one fact» is the shape rather than a coincidence
+    // four rows kept. They are asserted anyway – the claim is about the four EDITIONS, and a shape
+    // that guarantees it today is still a shape that could be widened tomorrow.
+    expect(new Set(COURT.map(({ s }) => s.subject)).size, 'one subject').toBe(1)
+    expect(new Set(COURT.map(({ s }) => s.stages.join(','))).size, 'one set of stages').toBe(1)
+    expect(new Set(COURT.map(({ s }) => s.fact)).size, 'one fact – and it is none').toBe(1)
+    expect(COURT.every(({ s }) => s.fact === null), 'domestic, so the four worlds are identical').toBe(true)
+    expect(COURT.map(({ voice }) => voice), 'and all four voices are present').toEqual([...TEMPERAMENTS])
   })
 
   it('⭐ ...and they are the SAME event – the four share the facts, which is what stops this passing four strangers', () => {
     // ARM 7's target. Every voice's shared paragraph carries the same incident; every voice's
     // aftermath carries the same lid. A rewrite into four unrelated anecdotes reddens HERE, which is
     // the assertion his note asks for and the one a disjoint-vocabulary test would have got backwards.
-    for (const s of COURT) {
-      const shared = s.shared!
-      expect(shared.toLowerCase(), `${s.voice}: the net cord`).toContain('net cord')
-      expect(shared.toLowerCase(), `${s.voice}: the coffee`).toContain('coffee')
-      expect(shared.toLowerCase(), `${s.voice}: whose coffee`).toContain('dad')
-      expect(shared.toLowerCase(), `${s.voice}: a full cup`).toMatch(/full|whole/)
-      expect(s.branches.invite.said.toLowerCase(), `${s.voice}: the lid, in the aftermath`).toContain('lid')
-      expect(s.branches.respond.said.toLowerCase(), `${s.voice}: she had to serve next`).toContain('serve')
-      expect(s.branches.space.said.toLowerCase(), `${s.voice}: nobody fetched the ball`).toContain('ball')
+    for (const { voice, c } of COURT) {
+      const shared = c.shared!
+      expect(shared.toLowerCase(), `${voice}: the net cord`).toContain('net cord')
+      expect(shared.toLowerCase(), `${voice}: the coffee`).toContain('coffee')
+      expect(shared.toLowerCase(), `${voice}: whose coffee`).toContain('dad')
+      expect(shared.toLowerCase(), `${voice}: a full cup`).toMatch(/full|whole/)
+      expect(c.branches.invite.said.toLowerCase(), `${voice}: the lid, in the aftermath`).toContain('lid')
+      expect(c.branches.respond.said.toLowerCase(), `${voice}: she had to serve next`).toContain('serve')
+      expect(c.branches.space.said.toLowerCase(), `${voice}: nobody fetched the ball`).toContain('ball')
     }
   })
 
   it('⭐⭐⭐ four different ways of NOTICING – the opener', () => {
-    const openers = COURT.map((s) => s.opener.roof!)
+    const openers = COURT.map(({ c }) => c.opener)
     expect(new Set(openers).size, `four voices, four openings:\n${openers.join('\n')}`).toBe(4)
   })
 
   it('⭐⭐⭐ four different ways of DISCLOSING – the incident itself', () => {
-    const shared = COURT.map((s) => s.shared!)
+    const shared = COURT.map(({ c }) => c.shared!)
     expect(new Set(shared).size, `four voices, four tellings:\n${shared.join('\n')}`).toBe(4)
   })
 
@@ -756,7 +854,7 @@ describe('round 42 #24 E – four voices, one event (the owner\'s own test)', ()
     // ARM 6's target, and this is the half the obvious test could never have made: the PARENTAL
     // CHOICE is held fixed, so the only thing left free is who she is.
     for (const stance of SMALL_TALK_STANCES) {
-      const said = COURT.map((s) => s.branches[stance].said)
+      const said = COURT.map(({ c }) => c.branches[stance].said)
       expect(new Set(said).size, `${stance}: four voices, four answers:\n${said.join('\n')}`).toBe(4)
     }
   })
@@ -764,12 +862,12 @@ describe('round 42 #24 E – four voices, one event (the owner\'s own test)', ()
   it('⚠ and the difference survives the assembler – four prompts, four cards', () => {
     // Not a property of the table read back: four real worlds, identical but for her temperament, at
     // the same week and the same stage, answered with the same stance.
-    const cards = COURT.map((s) => {
-      const world = careerAt('voice-test', 200, s.voice)
+    const cards = COURT.map(({ s, voice }) => {
+      const world = careerAt('voice-test', 200, voice)
       raiseLifeBeat(world, 'small-talk', `${s.subject}:${s.id}`)
       const prompt = buildSoftBeatInvite(world)!.prompt
       return {
-        voice: s.voice,
+        voice,
         said: prompt.said,
         reply: prompt.followUps.find((f) => f.optionId === SMALL_TALK_STANCE_ID.respond)!.said.join(' '),
       }
@@ -790,7 +888,7 @@ describe('round 42 #15 F – the economy did not move', () => {
     for (const stance of SMALL_TALK_STANCES) {
       const s = fourVoicesOf('court-four')[2]
       const world = careerAt(`neutral-${stance}`, 200, s.voice)
-      raiseLifeBeat(world, 'small-talk', `${s.subject}:${s.id}`)
+      raiseLifeBeat(world, 'small-talk', `${s.s.subject}:${s.s.id}`)
       const before = world.bond
       answerLifeBeat(world, SMALL_TALK_STANCE_ID[stance])
       expect(world.bond, `${stance} moved the standing`).toBe(before)
@@ -803,7 +901,7 @@ describe('round 42 #15 F – the economy did not move', () => {
     // an option carries an id and a label and nothing else, so there is nowhere for a mark to live.
     const s = fourVoicesOf('court-four')[3]
     const world = careerAt('ungraded', 200, s.voice)
-    raiseLifeBeat(world, 'small-talk', `${s.subject}:${s.id}`)
+    raiseLifeBeat(world, 'small-talk', `${s.s.subject}:${s.s.id}`)
     const prompt = buildSoftBeatInvite(world)!.prompt
     for (const option of prompt.options) expect(Object.keys(option).sort()).toEqual(['id', 'label'])
   })
@@ -812,11 +910,11 @@ describe('round 42 #15 F – the economy did not move', () => {
     // The other half of §8d.4, and it is the half a neutrality pin usually forgets: «the three
     // branches may honestly produce relief, mild resistance, amusement, uncertainty, a boundary or a
     // changed thought.» Identical replies would be neutral AND empty.
-    for (const s of SMALL_TALK_SITUATIONS) {
-      const said = SMALL_TALK_STANCES.map((stance) => s.branches[stance].said)
-      expect(new Set(said).size, `${s.id}/${s.voice}: two branches say the same thing`).toBe(3)
-      const labels = SMALL_TALK_STANCES.map((stance) => s.branches[stance].label)
-      expect(new Set(labels).size, `${s.id}/${s.voice}: two answers wear the same words`).toBe(3)
+    for (const { c, name } of columns()) {
+      const said = SMALL_TALK_STANCES.map((stance) => c.branches[stance].said)
+      expect(new Set(said).size, `${name}: two branches say the same thing`).toBe(3)
+      const labels = SMALL_TALK_STANCES.map((stance) => c.branches[stance].label)
+      expect(new Set(labels).size, `${name}: two answers wear the same words`).toBe(3)
     }
   })
 })
@@ -840,11 +938,13 @@ describe('round 42 #15 G – the respond branch names the parent\'s actual opini
     // Changing it is a wording change nobody asked for (CLAUDE.md invariant 4), so the collision is
     // pinned HERE, by name, and carried to him in the handoff with a draft beside it. The day he
     // rules, this list goes to empty and the case becomes the flat law.
-    const offenders = SMALL_TALK_SITUATIONS.filter((s) => GENERIC_RESPOND.includes(s.branches.respond.label))
-      .map((s) => `${s.id}/${s.voice}`)
+    const offenders = columns()
+      .filter(({ c }) => GENERIC_RESPOND.includes(c.branches.respond.label))
+      .map(({ name }) => name)
     expect(offenders, 'a respond label promising an unheard view').toEqual([])
-    const named = SMALL_TALK_SITUATIONS.filter((s) => s.branches.respond.label === 'Tell her what worries us')
-      .map((s) => `${s.id}/${s.voice}`)
+    const named = columns()
+      .filter(({ c }) => c.branches.respond.label === 'Tell her what worries us')
+      .map(({ name }) => name)
     expect(named, 'the one §8d.1 names that his revision did not reach').toEqual(['line-call/fiery'])
   })
 
@@ -852,10 +952,8 @@ describe('round 42 #15 G – the respond branch names the parent\'s actual opini
     // The positive form of the same finding. «Say the travelling matters too», «Say a good coach
     // explains what they're changing», «Ask whether she's been eating properly» – each one is an act
     // with a content, which is what makes her answer to it answerable.
-    for (const s of SMALL_TALK_SITUATIONS) {
-      expect(s.branches.respond.label, `${s.id}/${s.voice}: ${s.branches.respond.label}`).toMatch(
-        /^(Say|Tell|Ask|Laugh)\b/,
-      )
+    for (const { c, name } of columns()) {
+      expect(c.branches.respond.label, `${name}: ${c.branches.respond.label}`).toMatch(/^(Say|Tell|Ask|Laugh)\b/)
     }
   })
 
@@ -868,19 +966,29 @@ describe('round 42 #15 G – the respond branch names the parent\'s actual opini
     // ⚠ PAIRS AND NEVER A JOINED STRING. `npm run pins:check` ratchets against a raw
     // `slice(indexOf(...))` for the reason CLAUDE.md records – it returns -1 on an absent marker and
     // widens silently – and a tuple needs no cutting at all.
+    // ⚠⚠ ROUND 44 RE-CUT THE COUNTING AND THE OLD FORM WOULD HAVE BEEN WRONG RATHER THAN MERELY
+    // BROKEN, which is why it is spelled out. A label is the PARENT's sentence and he says one thing,
+    // so a four-voiced row now carries the identical label in all four columns by design. The old
+    // «distinct replies === distinct situations» counted rows, so two situations sharing a label would
+    // have arrived as eight rows against two ids and demanded that eight replies collapse to two –
+    // the exact opposite of the claim. What §8d.1 was really saying is a DISJOINTNESS: no reply
+    // written for one situation may also be the reply for another under the same label.
     const byLabel = new Map<string, { id: string; said: string }[]>()
-    for (const s of SMALL_TALK_SITUATIONS) {
-      const key = s.branches.respond.label
-      byLabel.set(key, [...(byLabel.get(key) ?? []), { id: s.id, said: s.branches.respond.said }])
+    for (const { s, c } of columns()) {
+      const key = c.branches.respond.label
+      byLabel.set(key, [...(byLabel.get(key) ?? []), { id: s.id, said: c.branches.respond.said }])
     }
     const shared = [...byLabel.entries()].filter(([, rows]) => new Set(rows.map((r) => r.id)).size > 1)
     expect(shared.length, 'the anti-vacuity half – a label really is shared by two situations').toBeGreaterThan(0)
     for (const [label, rows] of shared) {
-      const distinctSituations = new Set(rows.map((r) => r.id)).size
-      const distinctReplies = new Set(rows.map((r) => r.said)).size
-      expect(distinctReplies, `«${label}» is answered identically by two different situations`).toBe(
-        distinctSituations,
-      )
+      // ⚠ PAIRS AND NEVER A JOINED STRING, the rule two paragraphs up, kept: one reply per (id, said)
+      // pair, de-duplicated on the PAIR, and then the disjointness asked of the replies alone.
+      const pairs: { id: string; said: string }[] = []
+      for (const r of rows) {
+        if (!pairs.some((q) => q.id === r.id && q.said === r.said)) pairs.push(r)
+      }
+      const said = pairs.map((q) => q.said)
+      expect(new Set(said).size, `«${label}» is answered identically by two different situations`).toBe(said.length)
     }
   })
 })
