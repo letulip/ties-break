@@ -727,16 +727,34 @@ is unmoved and not re-pinned.
 by running the exported helpers in a throw-away probe rather than transcribed from a failure message.
 The protocol block at the head of `tests/coachTravelEdgeFixtures.ts` carries the whole record.
 
-### Recorded and not acted on
+### His wider opening, ruled and DONE the same day
 
-- ⚠ **`masseur` → `massage therapist`.** He prefers it as clearer contemporary English and ruled the
-  scope himself: «I would only change it project-wide, though – not in this isolated event.» Open
-  question, his.
+- ✅ **`masseur` → `massage therapist` – DECLINED BY HIM.** He had preferred it as clearer
+  contemporary English while scoping it himself: «I would only change it project-wide, though – not
+  in this isolated event.» Offered as a project-wide pass on 17.09, he answered «меня устраивает».
+  **The word stays.** Closed, not open.
 - ⭐⭐ **HIS WIDER OPENING, AS A ROUND ITEM: «на основе него можно пересмотреть и существующие наши
-  письма может быть тоже».** The review could be applied to the game's EXISTING letters too.
-  **Deliberately not done here** – it is a large invariant-4 surface and needs its own pass with his
-  word per string. Its starting point is already written down: the per-surface voice table and the
-  terminology sheet at the head of this section.
+  письма может быть тоже» – AND HE RULED IT IN, so it was done in this round rather than deferred.**
+  Shown the swept list he answered **«вроде ок»**, by RULE rather than by string: `professional
+  operation` → his own unlock sentence, `payroll` → `hire` / `joins the team` / `leaves the team`,
+  the fare → `one additional fare per trip`, and the five hyphens as typography («да»). **All 26 are
+  repaired and the same sweep now returns 0.**
+
+  ⚠ **One replacement differs from the word he ticked, and it is flagged rather than folded in.** He
+  approved `the team` for `professional operation`; using it on the two UNLOCK lines would have made
+  `masseur.ts:60` and `:91` the same sentence, because his own sparring set already spends «joins the
+  team» on the HIRE. His review had written the unlock for this exact meaning one seat over, so that
+  shape was used: `Her first counting W-series result opens a place for a masseur.`
+
+  ⚠⚠ **AND THE GATE COULD NOT HAVE CAUGHT THE TYPOGRAPHY HALF.** Four Playwright locators matched
+  an `aria-label` by its HYPHEN. `npm run check` does not run e2e, so a one-character fix he had
+  approved would have shipped four broken locators behind a green `check`. Found by a manual sweep
+  afterwards – which is the whole reason the release rule runs e2e locally.
+
+  ⚠ **The 27th string is NOT repaired and that is deliberate**: `Masseur – weekly salary`
+  (`masseur.ts:520`). #4 made the seat per-session, so the row now bills per-session work as a
+  salary – his own conditional warning, come true in the direction he did not expect. A replacement
+  was drafted for him; his word has not arrived, and fixing something adjacent is not permission.
 
   ⭐ **THE FULL LIST, SWEPT BY SCRIPT – 26 live strings**, and the first version of this block was a
   hand-written nine. The nine were what this pass happened to walk past; a sweep over every string
