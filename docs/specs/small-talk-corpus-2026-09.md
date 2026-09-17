@@ -1727,15 +1727,18 @@ what works.
 - `deep` `"I know. I'd still like to have tried it once."`
 - `quiet` `"Probably. I'll leave it as it is."`
 
-### R44 · `the-two-quiet-days` · decision · college, independent · generated
+### R44 · `the-two-quiet-days` · decision · college, independent · **fact: `clear-next-week`**
 ⚠⚠ **REPLACED 17.09 – the row here was `the-early-flight` and it asserted four things at once:** a
 gap in the calendar, a home to fly to, a flight, and two fares costing the same. Calendar, residence,
 travel and money are all the engine's, and none of them is licensed by a generated kernel. The
 decision underneath was good, so the kernel keeps the decision and drops every claim.
 
 **Kernel:** She has two quiet days and cannot decide whether to fill them or leave them alone.
-**Authoritative claims:** none – no calendar gap is named, nowhere is travelled to, and no price is
-quoted. **Texture:** the two days and the hesitation.
+**Authoritative claims:** the calendar gap, and it is GATED rather than asserted (his 17.09:
+«загейти R44 на clear-next-week»). ⚠ The note here used to read «no calendar gap is named» while the
+kernel said she has two quiet days – his review caught it: that IS a calendar fact, R17's class
+exactly. Nowhere is travelled to and no price is quoted. **Texture:** the two days and the
+hesitation.
 
 | voice | opener |
 | --- | --- |

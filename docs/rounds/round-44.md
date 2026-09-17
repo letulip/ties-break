@@ -414,3 +414,26 @@ the corpus was rebuilt around, and it is the law it is still leaking at the seam
    honest once, a dodge four times, and it wastes the row's whole instrument. **The label is the
    defect, not the reply**, which is the builder's own finding from the writing pass, independently
    reached.
+
+
+### ⚠⚠ 10. FOUR GATED ROWS MAY BE UNREACHABLE, AND R44 JUST BECAME THE FOURTH
+
+R44 is gated on `clear-next-week` at his ask, which repairs the seam his review found. ⚠ **But it
+walks into a measured problem rather than away from one.** Builder 1's K5 run reported twelve voice
+columns never drawn in a 25-year walk, and named the rows: **`alone-or-with-them` (R8),
+`the-week-with-nothing-in-it` (R17) and `the-money-she-did-not-ask-about` (R20)** – every one gated,
+every one at `college` / `independent`. **R44 now joins them.**
+
+⭐ **The tell that this is NOT about the new predicate:** R8 and R20 are gated on
+`march-entry-open`, which has shipped for waves. If a long-standing gate is as unreachable as the
+new one, the fault is in the STAGE interaction – the college freeze – and not in
+`clear-next-week`'s two clauses.
+
+⚠ **The architect's own first probe of this was INVALID and is not evidence.** It set `world.week`
+by hand on a fresh `createWorld`, which never advances the life stage, so it reported `school` for
+all 2,700 weeks it walked. Recorded because a broken arm that produces a plausible number is exactly
+how a false null gets manufactured here. The standing finding is the BENCH's, which walked real
+careers.
+
+**Owed:** decide whether this is a bench-fixture limit or a real gate/stage mismatch, and say which
+by measurement. Until then four rows and twelve voice columns are written, shipped and never seen.

@@ -3268,7 +3268,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
     id: 'the-two-quiet-days',
     subject: 'decision',
     stages: ['college', 'independent'],
-    fact: null,
+    fact: 'clear-next-week',
     voices: {
       sunny: {
         opener: '"I\'ve got two quiet days and I can\'t work out whether to do something with them."',
