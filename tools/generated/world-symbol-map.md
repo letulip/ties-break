@@ -8,7 +8,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-562 exported names across 54 owning modules.
+563 exported names across 54 owning modules.
 
 ## Areas
 
@@ -29,7 +29,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/birthday.ts` | HER BIRTHDAY, AND WHAT YOU GIVE HER | 16 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 15 |
 | `src/engine/world/multiWeek.ts` | ⭐ R2-13 PHASE 1 – THE FOUR-WEEK ADVANCE, AND THE TWO FACTS A SECOND WEEK BUTTON NEEDS | 15 |
-| `src/engine/world/sparring.ts` | THE SPARRING PARTNER: the third seat of the travelling team, and the one with the narrowest job in the game | 12 |
+| `src/engine/world/sparring.ts` | THE SPARRING PARTNER: the third seat of the travelling team, and the one with the narrowest job in the game | 13 |
 | `src/engine/world/kit.ts` | THE KIT SHE PLAYS WITH, AS A DECISION - the till, and what the Money screen reads off it | 11 |
 | `src/engine/world/mandatory.ts` | THE MANDATORY REGIME AND THE PENALTY LEDGER (W3-ACT2, act2-pro-tour.md §6) | 11 |
 | `src/engine/world/age.ts` | HER AGE: the band and the girl, and the birthday that lands in the feed | 9 |
@@ -521,6 +521,7 @@ THE SPARRING PARTNER: the third seat of the travelling team, and the one with th
 - `SPARRING_RECEIPT` – `src/engine/world/sparring.ts`
 - `sparringRungOf` – `src/engine/world/sparring.ts`
 - `sparringRustCut` – `src/engine/world/sparring.ts`
+- `sparringStoodDown` – `src/engine/world/sparring.ts`
 - `sparringUnlocked` – `src/engine/world/sparring.ts`
 - `sparringWeeklyCents` – `src/engine/world/sparring.ts`
 - `sparringWorksThisWeek` – `src/engine/world/sparring.ts`

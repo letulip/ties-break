@@ -229,8 +229,20 @@ export function masseurRaiseDue(world: WorldState): boolean {
  *  NOTICE of a bill that has changed rather than an offer the player has to accept: the decision he
  *  is being handed is the rung dial, which is where it already lives.
  *
- *  ⚠⚠ EVERY WORD BELOW IS A **DRAFT** (invariant 4). The two branches are his design; the sentences
- *  are the build's and are in the handoff verbatim for his pass.
+ *  ⭐⭐ THE TWO SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW, AND THEY REPLACE THE BUILD'S DRAFTS.
+ *  His faults on what stood here, kept because they are the rule for the next line rather than a
+ *  list of typos: «asks for more» first reads as more SESSIONS rather than more money, which is
+ *  precisely the wrong idea on a row whose whole subject is the rate; and «the same hands» reduces a
+ *  person to a pair of hands. ⭐ The voice of this surface is a FEED ENTRY – a compact consequence –
+ *  which is why neither line is atmospheric: it states the new rate and the two answers.
+ *
+ *  ⚠⚠ AND ONE FACT IN HIS BOTTOM-RUNG SENTENCE WAS WRONG AND IS CORRECTED RATHER THAN SHIPPED. He
+ *  wrote «She is already down to one session a week»; `ECONOMY.masseur.rungs` opens at **2** and its
+ *  label is «Twice a week», so there is no one-session rung on this dial and never has been. The
+ *  sentence keeps his shape and his second clause exactly and names the real floor – a line that
+ *  told a family she was on one session while the card beside it said two would be the same class of
+ *  defect as offering a rung that is not there, which is what this branch exists to avoid. Reported
+ *  in the hand-back.
  *  ⚠ IT MAY CARRY THE FIGURE, unlike `masseurRoomNote`: this is the row whose whole job is the new
  *  price, and `setMasseurSessions` records the same split («the price change is on the next weekly
  *  bill, which is the row that may carry figures»).
@@ -250,13 +262,19 @@ export function masseurRaiseDue(world: WorldState): boolean {
 export function resolveMasseurRaise(world: WorldState): void {
   if (!masseurRaiseDue(world)) return
   const rate = masseurSessionCents(world)
-  const bottom = masseurRungOf(world).sessions === ECONOMY.masseur.rungs[0].sessions
+  const rung = masseurRungOf(world)
+  const bottom = rung.sessions === ECONOMY.masseur.rungs[0].sessions
+  // ⚠⚠ THE FLOOR IS NAMED BY THE RUNG'S OWN LABEL AND NEVER BY A LITERAL, which is the whole lesson
+  // of the fact this sentence got wrong. «Twice a week» is what the card beside this row says, so
+  // the two can never disagree – and a wave that retunes `rungs[0]` moves the sentence with it
+  // instead of leaving a line that describes a schedule the dial no longer offers.
+  const lead = `The masseur's rate rises to ${formatCents(rate)} a session starting this week.`
   addEvent(world, {
     week: world.week,
     type: 'info',
     text: bottom
-      ? `The masseur asks for more – ${formatCents(rate)} a session from this week. There is no shorter week to drop to.`
-      : `The masseur asks for more – ${formatCents(rate)} a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`,
+      ? `${lead} She is already down to ${rung.label.toLowerCase()}, so there is no shorter schedule to choose.`
+      : `${lead} Keep the current schedule at the higher rate, or book fewer sessions.`,
   })
 }
 

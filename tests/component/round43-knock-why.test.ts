@@ -76,16 +76,20 @@ describe('round 43 #10 – the card says why', () => {
   it('⚠⚠ the careful career is told that nothing it did caused this – and the grinding one is not', () => {
     // «мы ни за что не наказываем» – the rule this item could not ship without, asked of the
     // rendered card rather than of the pure function, because a template is free to drop a field.
+    // ⚠ THE MARKER MOVED WITH THE COPY (17.09, his review). The careful branch now opens «No single
+    // choice explains this one» – and the change is not cosmetic: he ruled that this branch may say
+    // there is no IDENTIFIED player-caused factor and may not promise that nothing the family did
+    // contributed, which is what «Nothing we did» read as. The rule the case asserts is unchanged.
     const careful = mountWith(PROMPTS.careful())
-    expect(careful.find('.knock-why').text(), 'the careful week').toContain('Nothing we did')
+    expect(careful.find('.knock-why').text(), 'the careful week').toContain('No single choice explains')
     careful.unmount()
     document.body.innerHTML = ''
     setActivePinia(createPinia())
 
     const grinding = mountWith(PROMPTS.grinding())
     const said = grinding.find('.knock-why').text()
-    expect(said, 'the grinding week names what the family added').toContain('tired')
-    expect(said, 'and does not absolve it').not.toContain('Nothing we did')
+    expect(said, 'the grinding week names what the family added').toContain('already tired')
+    expect(said, 'and does not absolve it').not.toContain('No single choice explains')
     grinding.unmount()
   })
 
@@ -167,7 +171,7 @@ describe('round 43 #10 – the card says why', () => {
 //         The shipped state before this item.
 //   2. the row hard-coded to a local string instead of `prompt.cause`
 //      -> RED [2]: the verbatim case, and «four weeks, four answers» (one constant, one entry).
-//   3. `v-if="!prompt.cause.startsWith('Nothing')"` added to the row (the shape a «say nothing by
+//   3. `v-if="!prompt.cause.startsWith('No single')"` added to the row (the shape a «say nothing by
 //      rendering nothing» reading of the rule would produce)
 //      -> RED [1]: the careful career finds no row at all. ⭐ RECORDED BECAUSE IT IS THE WRONG
 //         READING THE ITEM WARNS ABOUT, in the direction nobody expects: the ledger's «the window

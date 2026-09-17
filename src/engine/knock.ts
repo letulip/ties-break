@@ -489,22 +489,47 @@ function knockReadFor(condition: number, repeat: boolean, pick: number): string 
  *  a family that pushed this exact part before: they did do something, it was just not this week.
  *
  *  ⚠ NO NUMBER IN ANY OF THE FOUR – `knockReadFor`'s fog rule, asked of this too. Pure; zero draws on
- *  any stream, and none of these sentences is persisted. */
-export function knockCause(condition: number, plan: WeekPlan, repeat: boolean): string {
-  if (repeat) return 'We sent her back out on this part before, and that is the one a body brings up again.'
+ *  any stream, and none of these sentences is persisted.
+ *
+ *  ⭐⭐ THE FOUR SENTENCES ARE HIS, WORD FOR WORD, FROM THE 17.09 COPY REVIEW, and the four they
+ *  replaced were all four rejected. His faults, recorded because they are the rule for the next
+ *  sentence that lands here rather than a list of typos: «on this part» is not idiomatic, «a body
+ *  brings up again» sounds translated, «picks things up» suggests infection rather than injury, and
+ *  «joints» is too specific unless every knock is a joint injury – which it is not, `KNOCK_PARTS`
+ *  carries a lower back and a foot.
+ *
+ *  ⭐ AND THE VOICE OF THIS SURFACE IS A REFLECTIVE PARENTAL OBSERVATION, which is his diagnosis of
+ *  the root cause and not a garnish: «trying to give every surface the same lyrical house voice is
+ *  what currently makes several lines feel AI-written». A confirmation is literal, a receipt is
+ *  restrained, and this window is a parent thinking about the week that has just happened.
+ *
+ *  ⚠⚠ THE FOURTH BRANCH IS A CORRECTNESS REQUIREMENT AND NOT A STYLE ONE. He: the line «tries too
+ *  hard to absolve the player». It may say there is NO IDENTIFIED PLAYER-CAUSED FACTOR; it may not
+ *  promise that nothing the family did contributed. «No single choice explains this one» is the
+ *  first claim and the old «Nothing we did – the care we have been taking was working» was the
+ *  second, which the branch's own arithmetic does not support: `fatigue + load <= 0` says the two
+ *  terms NETTED to nothing, not that neither existed.
+ *
+ *  ⚠ `part` IS A REQUIRED PARAMETER AND THE REPEAT LINE NAMES IT. He offered a vaguer line for a
+ *  surface with no body part to hand and the stronger one for a surface with it – and this one has
+ *  it: `buildKnockPrompt` is holding the whole `Knock`. «Do not use vague place language when the
+ *  real one is to hand.» Required rather than optional for `plan`'s own reason: a defaulted part
+ *  would let a forgetful call site ship a sentence with a hole in it. */
+export function knockCause(condition: number, plan: WeekPlan, repeat: boolean, part: string): string {
+  if (repeat) return `We sent her back out with a knock to her ${part} before. Now the same place is troubling her again.`
   const fatigue = (100 - condition) * KNOCK_FATIGUE_SLOPE
   const load = (plan.train - KNOCK_TRAIN_PIVOT) * KNOCK_TRAIN_SLOPE
   // ⚠ SIGNED, AND THE SIGN IS THE WHOLE OF THE CAREFUL BRANCH. `KNOCK_TRAIN_SLOPE`'s own docblock
   // says the term is «MINUS it below» Balanced, so a light week is a credit against her fatigue and
   // the sum is what the family is actually responsible for.
   if (fatigue + load <= 0) {
-    return 'Nothing we did – the care we have been taking was working. Some weeks a body complains anyway.'
+    return 'No single choice explains this one. We had been careful. Bodies still have bad weeks.'
   }
   // ⚠ `>=` HANDS A TIE TO FATIGUE ON PURPOSE. A dead heat means she was as worn as the week was hard,
   // and of the two that is the one a parent can act on this week: the rest slider moves tomorrow,
   // whereas the week she has already trained is spent.
-  if (fatigue >= load) return 'She went into the week tired, and a worn body picks things up.'
-  return 'The week we set was a hard one, and a hard week asks more of her joints.'
+  if (fatigue >= load) return 'She began the week already tired. Her body had less room for the work we asked of it.'
+  return 'We set a hard week. It asked more of her body than an ordinary one.'
 }
 
 /** Everything the dialog shows, assembled at SNAPSHOT time.
@@ -528,7 +553,7 @@ export function buildKnockPrompt(knock: Knock, seed: string, condition: number, 
     // must never give by accident. The compiler is what keeps every caller honest.
     // ⚠ DERIVED, NOT DRAWN. Zero draws on any stream – the two `rng()` calls above are unchanged and
     // in the same order, so a career's knock wording is byte-identical to what it was.
-    cause: knockCause(condition, plan, knock.repeat),
+    cause: knockCause(condition, plan, knock.repeat, knock.part),
     // THE TWO COSTS, and they are the deliverable. One sentence each, naming the currency and not
     // the number - "a week of work" is a thing a parent understands, "loadFactor 0.35" is not.
     //

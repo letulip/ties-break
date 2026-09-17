@@ -40,6 +40,7 @@ import { rivalMatchPlayer } from '../src/engine/season/rival'
 import { ECONOMY } from '../src/engine/economy'
 import { accrueForm, formComposureDelta, idleFormWeek } from '../src/engine/form'
 import { formMatchlessWeeks, formResidualsOf } from '../src/engine/world/form'
+import { SPARRING_RECEIPT } from '../src/engine/world/sparring'
 import { KID_ID } from '../src/engine/world'
 import { WEEKS_PER_YEAR } from '../src/engine/season/calendar'
 import type { MatchOptions, MatchPlayer, Tour } from '../src/engine/match/types'
@@ -274,11 +275,16 @@ function walkCareer(
       if (ev.id <= seenId) continue
       if (ev.id > maxId) maxId = ev.id
       const t = ev.text
-      if (t === 'She is striking the ball clean.') goodNotes++
-      if (t === 'She needs matches under her.') rustNotes++
-      if (t === 'Her first match back did not look like a first match back.') receipts++
+      // ⚠ THE THREE LITERALS BELOW ARE COPIES OF ENGINE STRINGS AND THEY MOVED ON 17.09 WITH HIS
+      // COPY REVIEW. A bench that matches a sentence by value reads ZERO the day the sentence is
+      // reworded, and a zero here looks exactly like a finding – the same failure family as this
+      // loop's own `events.length` cursor note above. `SPARRING_RECEIPT` is imported rather than
+      // copied for that reason; the coach's two have no exported constant, so they are re-quoted.
+      if (t === 'She is striking the ball cleanly.') goodNotes++
+      if (t === 'She needs match play.') rustNotes++
+      if (t === SPARRING_RECEIPT) receipts++
       if (t === 'Hitting partner – weekly salary') salaryCents += -(ev.amountCents ?? 0)
-      if (t.startsWith('Your hitting partner travels')) fareCents += -(ev.amountCents ?? 0)
+      if (t.startsWith('Hitting partner travel to')) fareCents += -(ev.amountCents ?? 0)
     }
     seenId = maxId
     void fundsBefore
@@ -322,8 +328,8 @@ function sectionTwo(rows: CareerRead[]): void {
   console.log('')
   console.log('  THE COACH\'S EYE, per career per season (O2\'s one window – a remark, not a subscription):')
   const seasons = WEEKS / WEEKS_PER_YEAR
-  console.log(`    «She is striking the ball clean.»   ${(mean(rows.map((r) => r.goodNotes)) / seasons).toFixed(2)} a season`)
-  console.log(`    «She needs matches under her.»      ${(mean(rows.map((r) => r.rustNotes)) / seasons).toFixed(2)} a season`)
+  console.log(`    «She is striking the ball cleanly.»  ${(mean(rows.map((r) => r.goodNotes)) / seasons).toFixed(2)} a season`)
+  console.log(`    «She needs match play.»              ${(mean(rows.map((r) => r.rustNotes)) / seasons).toFixed(2)} a season`)
 }
 
 // =================================================================================================

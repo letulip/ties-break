@@ -269,6 +269,15 @@ export interface Snapshot {
    *  first counting W-series result). The card locks with `SPARRING_LOCKED_DETAIL` until this is
    *  true, so the disabled state and the refused click can never tell two stories (R10-16). */
   sparringUnlocked: boolean
+  /** ⭐⭐ ...AND WHETHER THE ARRANGEMENT IS STANDING DOWN THIS WEEK – hired, but the college freeze or
+   *  a booked family week has suspended it, so no salary is charged and no rust is cut. The owner's
+   *  17.09 copy review named this as a state the card was missing, and it was: the engine has had it
+   *  since the seat shipped and no screen said a word about it, so a family at a university watched a
+   *  salaried seat quietly charge nothing and were told neither half of that.
+   *  ⚠ THE AWAY-WEEK STAND-DOWN IS NOT IN THIS FLAG – see `sparringStoodDown` for why (it is what the
+   *  travel switch sells rather than a suspension, and it needs a fact a snapshot cannot honestly
+   *  hold). */
+  sparringStoodDown: boolean
   /** ...the weekly bill at the family's chosen rung, in cents – a FLAT contract per rung, no
    *  corridor, no jitter, no draw, so the card's quote IS the ledger's row. */
   sparringSalaryCents: number

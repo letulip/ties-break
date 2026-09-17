@@ -1247,7 +1247,13 @@ export function sparringTravelFareFor(world: WorldState, event: SeasonEvent): nu
 
 /** THE CHARGE – `chargeMasseurTravel`'s shape for the seat after it: category `travel` (a fare moves
  *  with the calendar, not with the week), its own line, the payer named on the line itself. No
- *  pronoun names him (R15-7's standing order). DRAFT copy, his to rule. Zero draws. */
+ *  pronoun names him (R15-7's standing order). Zero draws.
+ *
+ *  ⭐⭐ THE ROW IS HIS, FROM THE 17.09 COPY REVIEW. «Your hitting partner travels to the …» became
+ *  «Hitting partner travel to …»: a ledger row is a LABEL and not a sentence addressed to the reader,
+ *  and every other row in this feed is written that way («Hitting partner – weekly salary»). ⚠ AND
+ *  «one more fare» became ONE ADDITIONAL FARE, which is the terminology sheet's single wording for
+ *  the travel cost – the card's switch and the feed entries carry the same three words now. */
 export function chargeSparringTravel(world: WorldState, event: SeasonEvent): number {
   const fare = sparringTravelFareFor(world, event)
   if (fare <= 0) return 0
@@ -1259,7 +1265,7 @@ export function chargeSparringTravel(world: WorldState, event: SeasonEvent): num
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Your hitting partner travels to the ${TIERS[event.tier].label} – one more fare${payer}`,
+    text: `Hitting partner travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
     amountCents: -fare,
   })
   return fare

@@ -54,9 +54,22 @@ export function sparringUnlocked(world: WorldState): boolean {
 }
 
 /** The refusal, written once – the card prints it and `hireSparring` throws it, so the disabled
- *  state and the refused click can never tell two stories (the R10-16 doctrine). */
+ *  state and the refused click can never tell two stories (the R10-16 doctrine).
+ *
+ *  ⭐⭐ HIS SENTENCE, FROM THE 17.09 COPY REVIEW, AND «COUNTING» SURVIVED A CHECK HE ASKED FOR. He
+ *  offered a longer form for the case where «counting» is internal terminology the player has never
+ *  been taught – and it is not: `CountingResultsTable` is a real table on the Stats screen and on the
+ *  Kid screen, titled «… counting results» in the player's own vocabulary, and `world/mandatory.ts`
+ *  uses the phrase in a sentence the player reads. So the SHORT form ships.
+ *
+ *  ⚠⚠ AND THIS LINE NOW DIFFERS IN SHAPE FROM ITS TWO SIBLINGS, WHICH IS DELIBERATE AND IS REPORTED
+ *  RATHER THAN QUIETLY EVENED OUT. `world/masseur.ts` and `world/psychologist.ts` carry the same
+ *  sentence about joining «a professional operation», and his terminology sheet strikes that phrase –
+ *  but those two are SHIPPED copy from earlier rounds and invariant 4 forbids an agent touching them
+ *  on a task that did not ask. His own wider note («the review could be applied to our existing
+ *  letters too») is the pass that would even the three up, and it is his to open. */
 export const SPARRING_LOCKED_DETAIL =
-  'A hitting partner joins a professional operation – her first counting W-series result opens the door.'
+  'Her first counting W-series result opens a place for a hitting partner.'
 
 /** The tag on a sparring-change event – `MASSEUR_CHANGE_KEY`'s pattern, week in the key so two
  *  changes can never collide. Kept and tagged, so «when did this arrangement start» stays a read
@@ -80,10 +93,16 @@ export function hireSparring(world: WorldState, hire: boolean): void {
     keep: true,
     milestoneKey: `${SPARRING_CHANGE_KEY}${world.week}`,
     // ⚠ NO PRONOUN NAMES HIM (R15-7's standing order): «hitting partner» is the role and carries no
-    // gender, unlike the masseur's own noun. DRAFT copy, his to rule.
+    // gender, unlike the masseur's own noun.
+    // ⭐⭐ BOTH SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW. The voice of a feed entry is a COMPACT
+    // CONSEQUENCE, and both of the drafts these replace reached for the house's lyrical register
+    // instead – «somebody across the net» is the image he singled out as used often enough that it
+    // «begins to feel generated», and «the practice weeks are hers alone again» says nothing about
+    // what stopped. His terminology sheet is what makes the pair read as one arrangement: JOINS and
+    // LEAVES THE TEAM, and MATCH-STYLE PRACTICE for what the seat does.
     text: hire
-      ? 'A hitting partner is on the payroll now – practice weeks with somebody across the net.'
-      : 'The hitting partner is let go – the practice weeks are hers alone again.',
+      ? 'A hitting partner joins the team – regular match-style practice on weeks without a match.'
+      : 'The hitting partner leaves the team – regular match-style practice between events ends.',
   })
 }
 
@@ -113,8 +132,17 @@ export function setSparringRung(world: WorldState, rung: number): void {
       week: world.week,
       type: 'info',
       // The label, not a number: the price change is on the next weekly bill, which is the row that
-      // may carry figures. DRAFT copy, his to rule.
-      text: `A different hitting partner from the next bill – ${chosen.label.toLowerCase()}.`,
+      // may carry figures.
+      //
+      // ⭐⭐ HIS SENTENCE, AND IT IS THE SECOND OF THE TWO HE OFFERED, BECAUSE THE MODEL WAS CHECKED.
+      // He gave one line for «the game establishes a different person» and one for «only the service
+      // level changes», and warned that «a new hitting partner joins» «asserts a personnel change the
+      // model may not track». It does not track one. There is no identity here of any kind – no name,
+      // no id, nothing a later screen could refer back to – and the decisive fact is the LEDGER:
+      // `SPARRING_CHANGE_KEY` is written by `hireSparring` alone, so a rung change does not restart
+      // the arrangement and «when did this arrangement start» still answers with the original hire.
+      // The model holds ONE continuous arrangement whose level moves, and the sentence says that.
+      text: `The hitting-partner arrangement changes with the next bill – ${chosen.label.toLowerCase()}.`,
     })
   }
 }
@@ -132,10 +160,13 @@ export function setSparringTravels(world: WorldState, on: boolean): void {
     addEvent(world, {
       week: world.week,
       type: 'info',
-      // DRAFT copy, his to rule.
+      // ⭐⭐ BOTH SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW, and the terminology sheet is why the
+      // pair now mirror each other clause for clause: ON TOUR and THE HOME CLUB for the two places,
+      // ONE ADDITIONAL FARE PER TRIP for the cost, and a REGULAR PRACTICE OPPONENT for what the trip
+      // buys. «A court on the road» named the wrong thing – the seat buys a person, not a venue.
       text: on
-        ? 'The hitting partner travels now – one more fare on every trip, and a court on the road.'
-        : 'The hitting partner stays home – the practice court waits for her there.',
+        ? 'The hitting partner will travel from now on – one additional fare per trip, and a regular practice opponent on tour.'
+        : 'The hitting partner will stay at the home club – no additional fare, and no regular practice opponent on tour.',
     })
   }
 }
@@ -159,9 +190,33 @@ export function setSparringTravels(world: WorldState, on: boolean): void {
  *  zero draws. */
 export function sparringWorksThisWeek(world: WorldState, away: boolean): boolean {
   if (!(world.sparringHired ?? false)) return false
-  if (inCollege(world)) return false
-  if (vacationForWeek(world, world.week) !== undefined) return false
+  if (sparringStoodDown(world)) return false
   return (world.sparringTravels ?? false) || !away
+}
+
+/** ⭐⭐ RETAINED, BUT NOT WORKING THIS WEEK – the state his 17.09 review said was MISSING from the
+ *  card, and it turned out to exist in the engine with nothing on any screen saying so.
+ *
+ *  HIS WORDS: «if family/school weeks temporarily stop billing: *The hitting partner remains with the
+ *  team, but is not working this week. No salary is charged.*» Both halves are true here and both are
+ *  the masseur's own stand-down pair, quoted rather than re-argued: not while the college freeze owns
+ *  her tennis, and not on a week the family has booked off (ruling J – pay nothing and receive
+ *  nothing). The arrangement is NOT cancelled by either.
+ *
+ *  ⚠⚠ IT IS THE FAMILY/SCHOOL PAIR AND DELIBERATELY NOT THE THIRD STAND-DOWN. A partner who does not
+ *  travel also stands down on a week she is AWAY at an event – but that one is not a suspension the
+ *  card should announce, it is the exact shape the travel switch sells, and its own row already says
+ *  so in as many words («Home practice is already covered; this extends the arrangement to travel
+ *  weeks»). A second sentence claiming the same week was a suspension would be the screen telling two
+ *  stories about one fact. It is also the one of the three that needs `away`, which is a phase-local
+ *  fact a snapshot has no honest access to.
+ *
+ *  ⚠ ONE SPELLING, WHICH IS WHY `sparringWorksThisWeek` NOW CALLS THIS rather than repeating the two
+ *  guards. The card must never be able to say «no salary is charged» on a week the bill was taken;
+ *  the two answers come from one predicate, so it cannot. Pure state, zero draws. */
+export function sparringStoodDown(world: WorldState): boolean {
+  if (!(world.sparringHired ?? false)) return false
+  return inCollege(world) || vacationForWeek(world, world.week) !== undefined
 }
 
 /** ⭐⭐ THE SEAT'S ONE CHANNEL – the multiplier `accrueForm` applies to the rhythm channel's drift.
@@ -208,6 +263,9 @@ export function resolveSparring(world: WorldState, away: boolean): void {
     category: 'staff',
     // ⚠ THE SAME BUCKET THE MASSEUR AND THE PSYCHOLOGIST USE ('staff'), and for its own stated
     // reason: a salary the player cannot find on the breakdown is the academy's $20,879 mistake.
+    // ⭐ KEPT VERBATIM BY HIS 17.09 REVIEW, and it is the phrase his terminology sheet then made
+    // binding for the recurring cost: WEEKLY SALARY, everywhere, never «weekly fee» and never
+    // «payroll». The two confirmations on the card were re-worded onto it.
     text: 'Hitting partner – weekly salary',
     amountCents: -cost,
   })
@@ -227,5 +285,10 @@ export function resolveSparring(world: WorldState, away: boolean): void {
  *
  *  ⚠ A LIFE LINE IS NEVER A PURCHASE (the wave-3 brief §0.5): `addEvent` with NO `amountCents`, no
  *  category and no figure in the string – so it writes no money row and folds into no ledger.
- *  ZERO draws. DRAFT copy, his to rule. */
+ *  ZERO draws.
+ *
+ *  ⭐⭐⭐ THE ONE LINE OF THIS ROUND HE KEPT EXACTLY AS WRITTEN, AND HE SAID WHY: «the repetition gives
+ *  it rhythm and makes it feel like an observation rather than a tooltip» (17.09). ⚠ DO NOT TOUCH IT.
+ *  It is also the model for the voice of a RECEIPT – vivid but restrained observation – which is a
+ *  different voice from the feed entries two functions up and from the confirmations on the card. */
 export const SPARRING_RECEIPT = 'Her first match back did not look like a first match back.'

@@ -113,11 +113,16 @@ describe('the hitting partner`s card on screen T', () => {
     )
     const hire = block.find('.staff-card').findAll('button').find((b) => b.text() === 'Hire')
     expect(hire, 'the Hire control is offered').toBeTruthy()
-    expect(wrapper.text()).not.toContain('Put a hitting partner on the payroll')
+    // ⚠ THE MARKER MOVED WITH HIS 17.09 REWRITE: a confirmation's voice is COMPLETELY LITERAL, so
+    // «Put a hitting partner on the payroll» became «Hire a hitting partner for …».
+    expect(wrapper.text()).not.toContain('Hire a hitting partner for')
     await hire!.trigger('click')
     await nextTick()
     expect(wrapper.text(), 'the tap opens a confirm, it does not spend').toContain(
-      'Put a hitting partner on the payroll',
+      'Hire a hitting partner for',
+    )
+    expect(wrapper.text(), 'and it says the arrangement can be ended').toContain(
+      'You can end the arrangement any week',
     )
     wrapper.unmount()
   })
@@ -132,6 +137,10 @@ describe('the hitting partner`s card on screen T', () => {
     await release!.trigger('click')
     await nextTick()
     expect(wrapper.text()).toContain('Let the hitting partner go?')
+    // ⚠ AND IT NAMES WHAT STOPS. His rewrite replaced «the practice weeks are hers alone» – which
+    // says what she is left with – with the two things that actually end.
+    expect(wrapper.text()).toContain('The weekly salary stops')
+    expect(wrapper.text()).toContain('regular match-style practice between events ends')
     wrapper.unmount()
   })
 
@@ -170,9 +179,93 @@ describe('the hitting partner`s card on screen T', () => {
     // ⚠ AND THE SUB-LINE SAYS WHICH SHAPE IT BUYS AND CARRIES NO BENCH FIGURE – round 42 #46's rule:
     // the sentence states the SHAPE, which stays true when a constant moves.
     const sub = row.text()
-    expect(sub, 'it says what the fare is').toContain('one more fare on every trip')
-    expect(sub, 'and it says where the rust actually is').toContain('Most rust is made at home')
+    // ⚠ THE TWO MARKERS MOVED WITH HIS 17.09 REWRITE and the CLAIMS they assert did not: the fare is
+    // still named, and the sub-line still says the seat already covers the weeks where the rust is
+    // made. His terminology sheet fixes the wording of both – ONE ADDITIONAL FARE PER TRIP, ON TOUR.
+    expect(sub, 'it says what the fare is').toContain('one additional fare per trip')
+    expect(sub, 'and it says where the rust actually is').toContain('Home practice is already covered')
     expect(sub, 'no bench percentage on screen').not.toMatch(/\d+(\.\d+)?%/)
+    wrapper.unmount()
+  })
+
+  it('§5b – ⚠⚠ the travel switch announces exactly what pressing it does, in both states', async () => {
+    // HIS 17.09 RULE FOR THIS SURFACE, and it is the one he was most explicit about: «atmospheric but
+    // unsuitable as an accessibility label – a screen reader should announce exactly what the control
+    // changes». The old pair ended «for a court on the road», which names a venue the seat does not
+    // buy. ⚠ Each label must state the CURRENT state and the state a press produces; a label that
+    // said only one of the two is the failure this case exists to catch.
+    const { hired } = snapshots()
+    const off = await mountCard(hired)
+    const offLabel = off.find(`${SEAT} .staff-travel button`).attributes('aria-label') ?? ''
+    expect(offLabel, 'the state it is in').toContain('Hitting partner travel is off')
+    expect(offLabel, 'and what a press does').toContain('Press to bring the hitting partner on tour')
+    expect(offLabel, 'no image on a control label').not.toContain('court on the road')
+    off.unmount()
+
+    const on = await mountCard({ ...hired, sparringTravels: true })
+    const onLabel = on.find(`${SEAT} .staff-travel button`).attributes('aria-label') ?? ''
+    expect(onLabel, 'the state it is in').toContain('Hitting partner travel is on')
+    expect(onLabel, 'and what a press does').toContain('Press to keep the hitting partner at the home club')
+    // ⚠ THE TWO LABELS ARE NOT THE SAME STRING, which a `v-if` wired to the wrong flag would make
+    // them, and which no single-state assertion can see.
+    expect(onLabel).not.toBe(offLabel)
+    on.unmount()
+  })
+
+  it('§5c – ⚠ the dial label says what the control CHANGES, and no surface of this seat says "across the net"', async () => {
+    // Two of his 17.09 rulings in one case. The dial was labelled «Hitting partner – who is across
+    // the net», and he struck that image twice over: once as a control label that describes a scene
+    // rather than a setting, and once as a phrase «used often enough that it begins to feel
+    // generated». `ECONOMY.sparring.rungs` is a ladder of standing («A college hitter» … «A top-100
+    // partner»), so the label he gave for quality and experience is the one this dial takes.
+    const { hired } = snapshots()
+    const wrapper = await mountCard({ ...hired, sparringTravels: true })
+    const seat = wrapper.find(SEAT)
+    // ⚠ THE DIAL'S LABEL IS AN `aria-label` ON THE RADIOGROUP AND NOT VISIBLE TEXT, which puts it
+    // squarely under his «accessibility labels, where literal clarity matters» rather than under the
+    // card's prose – and is why the old «who is across the net» was the worst place of the four for
+    // that image to be sitting.
+    expect(seat.find('.staff-dial').attributes('aria-label'), 'the dial names what it sets').toBe(
+      'Hitting partner – experience level',
+    )
+    // ⚠ THE WHOLE SEAT, not just the dial – the image had reached four surfaces and a check on one
+    // of them would have let the other three through. `html()` rather than `text()`, because two of
+    // those four are attributes that no `text()` can see.
+    expect(seat.text(), 'nowhere on the card').not.toContain('across the net')
+    expect(seat.html(), 'and in no label or title either').not.toContain('across the net')
+    wrapper.unmount()
+  })
+
+  it('§5d – ⭐⭐ RETAINED BUT NOT WORKING: the first of the two states his 17.09 review said were missing', async () => {
+    // «The hitting partner remains with the team, but is not working this week. No salary is charged.»
+    // The state existed in the engine and on NO screen: the college freeze and a booked family week
+    // suspend the arrangement without cancelling it. ⚠ The flag is the ENGINE's (`sparringStoodDown`),
+    // so this case doctors the wire rather than the card.
+    const { hired } = snapshots()
+    expect(hired.sparringStoodDown, 'an ordinary hired week is not a stand-down').toBe(false)
+    const ordinary = await mountCard(hired)
+    expect(ordinary.find(SEAT).text()).toContain('Helps her keep her timing')
+    expect(ordinary.find(SEAT).text(), 'and it does not claim a free week').not.toContain('No salary is charged')
+    ordinary.unmount()
+
+    const standing = await mountCard({ ...hired, sparringStoodDown: true })
+    const said = standing.find(SEAT).text()
+    expect(said, 'it stays with the team').toContain('remains with the team, but is not working this week')
+    expect(said, 'and the bill stops').toContain('No salary is charged')
+    // ⚠ AND IT REPLACES THE BENEFIT LINE RATHER THAN SITTING BESIDE IT. A card that said «helps her
+    // keep her timing» on a week he is not there would be the screen claiming work nobody did.
+    expect(said, 'the hired line is not also shown').not.toContain('Helps her keep her timing')
+    standing.unmount()
+  })
+
+  it('§5e – ⚠ a stand-down on an UNHIRED seat changes nothing – the branch is gated on the hire', async () => {
+    // The flag cannot be true without a hire engine-side, but the card must not be the only thing
+    // standing between an odd wire and a sentence about a person nobody is paying.
+    const { pro } = snapshots()
+    const wrapper = await mountCard({ ...pro, sparringStoodDown: true })
+    const said = wrapper.find(SEAT).text()
+    expect(said, 'the unhired pitch still shows').toContain('A regular practice opponent')
+    expect(said).not.toContain('remains with the team')
     wrapper.unmount()
   })
 

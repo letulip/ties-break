@@ -52,7 +52,7 @@ import type {
   TourLetterTerms,
 } from '../shared/protocol'
 import { formatCents } from '../shared/money'
-import { weekLabel, weekRange } from '../shared/dates'
+import { WEEKS_IN_SEASON, weekLabel, weekRange } from '../shared/dates'
 import { adCampaignCutShort, apparelBondCost, dealUntilWeek, sponsorTierOfBrand } from '../engine/offers'
 import PaperNote from './ui/PaperNote.vue'
 
@@ -237,16 +237,35 @@ const buildTerms = computed(() => props.offer.terms as BuildLetterTerms)
  *  span is at least 3 and has no ceiling (a multi-week skip can overshoot). Every branch below is
  *  therefore live – ⚠ EXCEPT `weeks <= 1`, which is not, and is kept ON PURPOSE for one reason: this
  *  reads the PAPER and the paper is persisted, so a span this component never has to be right about
- *  should still not render «0 weeks». It is a floor on the output, not a guard on a predicate. */
+ *  should still not render «0 weeks». It is a floor on the output, not a guard on a predicate.
+ *
+ *  ⭐⭐ REWRITTEN 17.09 TO HIS REVIEW, AND THE CONSTRAINT HE GAVE IS WHAT PICKS THE RUNGS RATHER THAN
+ *  THE LIST HE SKETCHED. He asked for `N.5 years` to go – «it reads like a spreadsheet value rather
+ *  than correspondence» – and offered `a week / 6 weeks / 18 months / a year / 2 years / 2½ years`,
+ *  under a rule that outranks the list: «only convert weeks to months or years when the conversion
+ *  is genuinely how the game calendar presents time. An exact 78 weeks is better than a friendly but
+ *  inaccurate 18 months.»
+ *
+ *  ⚠ SO THIS GAME'S CALENDAR WAS CHECKED BEFORE ANYTHING WAS CONVERTED, and it answers cleanly in
+ *  both directions. A SEASON IS EXACTLY 52 CAREER WEEKS (`WEEKS_IN_SEASON`, «the only 52 in the
+ *  engine»), so a year is an exact conversion and one the player already reads everywhere – the week
+ *  label itself is `W14 '31`. A MONTH IS NOT A UNIT THIS GAME HAS: no duration anywhere in the app is
+ *  stated in months (`monthLabel` exists for one chart AXIS and names a calendar month, never a
+ *  span), and `weeks / 4.33` is a fabricated rate. The old ladder printed «3 months» for 12 weeks and
+ *  would have printed «18 months» for 78.
+ *
+ *  ⚠ THEREFORE: weeks below a season, and years only on an EXACT multiple of 52. 78 weeks says «78
+ *  weeks», which is his own worked example, and the half-year that produced `1.5 years` is gone
+ *  because there is no honest word for it here. ⭐ This DEPARTS from the list he sketched (no «18
+ *  months», no «2½ years») and it is reported in the hand-back for his ruling – the constraint was
+ *  the load-bearing half and it points the other way from the example rungs. */
 const buildWaitWord = computed(() => {
   const weeks = Math.max(0, props.offer.week - buildTerms.value.orderedWeek)
   if (weeks <= 1) return 'a week'
-  if (weeks < 8) return `${weeks} weeks`
-  if (weeks < 52) return `${Math.round(weeks / 4.33)} months`
-  const years = weeks / 52
-  const rounded = Math.round(years * 2) / 2
-  if (rounded === 1) return 'a year'
-  return `${rounded % 1 === 0 ? rounded : rounded.toFixed(1)} years`
+  if (weeks < WEEKS_IN_SEASON) return `${weeks} weeks`
+  const years = weeks / WEEKS_IN_SEASON
+  if (!Number.isInteger(years)) return `${weeks} weeks`
+  return years === 1 ? 'a year' : `${years} years`
 })
 const isAd = computed(() => props.offer.kind === 'ad')
 const adTerms = computed(() => props.offer.terms as AdOfferTerms)
@@ -791,22 +810,36 @@ const settled = computed(() => {
        stating a rung that no longer exists.
        ⚠ NO MONEY ON IT. The family paid on the order (the shop's §3f), so a figure here would read
        as a bill for something already bought. What it names instead is the WAIT, which is the only
-       thing that has been running since. -->
+       thing that has been running since.
+       ⭐⭐ THE THREE SENTENCES ARE HIS, WORD FOR WORD, FROM THE 17.09 COPY REVIEW, and the voice of
+       this surface is PLAIN PROFESSIONAL CORRESPONDENCE rather than the house's lyrical register -
+       his own diagnosis of why several of this round's lines read as written rather than said. His
+       faults on what stood here: «it is the family's» is unnatural; «paid for on the order» should
+       be «when the order was placed»; «so is what it costs to keep» is needlessly indirect.
+       ⚠ THE BULLETS WENT WITH THEM. Two clauses of one thought were split across two list items, and
+       a desk writing to a family writes a sentence. Every fact they carried is still here and is
+       still one the engine enforces: `buyAsset` takes the money on the order, and
+       `weeklyAssetUpkeepCents` charges DELIVERED rungs only, so the arrival week really is the first
+       week it costs anything to keep. -->
   <article v-else-if="isBuild" class="offer-letter">
     <PaperNote class="offer-paper" size="letter" :tilt="0">
       <p class="offer-body">
-        {{ buildTerms.label }} is ready. It was ordered {{ weekLabel(buildTerms.orderedWeek) }}, and
-        after {{ buildWaitWord }} it is the family's from this week.
+        {{ buildTerms.label }} is ready.
       </p>
-      <ul class="offer-terms">
-        <!-- Both bullets are facts the engine really enforces. `buyAsset` takes the money on the
-             order, and `deliverAssets` runs before `revalueAssets` and before the week's bills - so
-             the week a thing arrives is the first week it is worth something and the first week it
-             is charged for. -->
-        <li>There is nothing to pay here. It was paid for on the order.</li>
-        <li>It is on the family's books from this week, and so is what it costs to keep.</li>
-      </ul>
-      <p class="offer-sign-off">– The order desk</p>
+      <p class="offer-body">
+        The order was placed in {{ weekLabel(buildTerms.orderedWeek) }}. After {{ buildWaitWord }},
+        it now belongs to the family.
+      </p>
+      <p class="offer-body">
+        Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts
+        this week and will appear in the family accounts.
+      </p>
+      <!-- ⚠ THE SIGNATURE STAYS, AND HE MADE THAT CONDITIONAL ON THE SURFACE: «only if the interface
+           requires one; otherwise omit it, because the sender is already visible». On THIS surface it
+           is not. `InboxSheet` shows `senderOf` in the LIST; the moment a letter is opened the list is
+           replaced by the paper alone, so the signature is the only thing that says who wrote. All
+           seven letter arms in this file sign, and the build would be the only one that did not. -->
+      <p class="offer-sign-off">– Order desk</p>
     </PaperNote>
     <div class="offer-foot">
       <p class="offer-window settled">Filed {{ weekLabel(offer.week) }}.</p>

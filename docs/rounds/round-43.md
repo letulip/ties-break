@@ -125,10 +125,15 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   it is recorded rather than tuned around – **the lever for a sharper bite is the rung ladder, not
   the drift.**
 
-  ⚠ **TWO DRAFT STRINGS, his to rule** (the second because a family on the entry rung has no rung to
-  drop to, and offering one would be the screen lying about a choice – this round's own #5):
-  > `The masseur asks for more – $78 a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`
-  > `The masseur asks for more – $78 a session from this week. There is no shorter week to drop to.`
+  ⭐ **THE TWO STRINGS ARE RULED (17.09) and they are his** (the second because a family on the entry
+  rung has no rung to drop to, and offering one would be the screen lying about a choice – this
+  round's own #5):
+  > `The masseur's rate rises to $78 a session starting this week. Keep the current schedule at the higher rate, or book fewer sessions.`
+  > `The masseur's rate rises to $78 a session starting this week. She is already down to twice a week, so there is no shorter schedule to choose.`
+
+  ⚠⚠ **His own bottom-rung line said «already down to one session a week» and that rung does not
+  exist** – `ECONOMY.masseur.rungs` opens at **2** («Twice a week»). The sentence was corrected rather
+  than shipped, and it now reads the rung's own label instead of a literal. See the spec's §7.
 
 - [x] **5. THE BUSINESS TAB DOES NOT SAY WHOSE MONEY IT IS SHOWING (his 16.09).** He asked whether
   Zoe's brand was correct: «13000 в неделю при стоимости бренда 28м+».
@@ -434,3 +439,320 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   ⚠⚠ **EVERY NEW PLAYER-FACING STRING IS A DRAFT and they are collected in the wave's hand-back for
   one pass.** Nine of them: two coach sentences, one receipt, and six on the seat's card and its
   ledger rows.
+
+---
+
+## HIS COPY REVIEW OF ROUND 43'S NEW STRINGS (17.09) – applied
+
+He read every DRAFT string this round shipped and returned a diagnosis before he returned
+replacements. **The diagnosis is the part that has to survive**, because it is a rule for the next
+string rather than a list of corrections to twenty-one old ones:
+
+> «much of the wording currently sounds translated, procedural, or conspicuously *written*… too many
+> explanatory dashes; repeated abstractions such as "a body", "practice weeks", "somebody across the
+> net"; internal system language leaking into player-facing copy; poetic phrases appearing inside
+> confirmations and accessibility labels, where literal clarity matters; claims slightly broader or
+> narrower than the mechanic actually proves.»
+
+⭐⭐ **And the root cause he names, which is now built into the files rather than applied once:**
+«trying to give every surface the same lyrical house voice is what currently makes several lines feel
+AI-written». **The voices differ BY SURFACE**, and each file that owns one carries the table in its
+own docblock:
+
+| surface | voice |
+| --- | --- |
+| the knock window | reflective parental observation |
+| the coach's eye | terse tennis language |
+| the order letter | plain professional correspondence |
+| confirmations and accessibility labels | **completely literal** |
+| feed entries | compact consequences |
+| receipts | vivid but restrained observation |
+
+⭐ **One line was kept exactly as written**, and he said why: `Her first match back did not look like a
+first match back.` – «the repetition gives it rhythm and makes it feel like an observation rather
+than a tooltip». `tests/round43-form.test.ts` §7 pins it so that a later tidy-up cannot remove the
+one thing he praised.
+
+### The terminology sheet, and it is now a test
+
+«In management copy, semantic consistency is more valuable than synonym variety.» One wording per
+meaning, across every surface of the hitting-partner seat:
+
+| meaning | wording |
+| --- | --- |
+| role | hitting partner |
+| recruitment | hire |
+| departure | let go / leaves the team |
+| recurring cost | **weekly salary** (chosen; never «weekly fee», never «payroll») |
+| function | match-style practice |
+| home location | home club |
+| travel location | on tour |
+| travel cost | one additional fare per trip |
+| benefit | helps her keep her timing between matches |
+
+⚠⚠ **Before this pass not one of the seat's engine sentences was pinned by VALUE anywhere in the
+repo** – every case asserted the mechanic and would have stayed green under any wording at all, which
+is how five of these drifted into the register he objected to. `tests/round43-form.test.ts` §7 is the
+contract now: it gathers every sentence the engine owns off a real career and asserts the struck
+images are gone from **all** of them, which is a claim about the SET and cannot be checked one string
+at a time.
+
+### The three conditional choices he left open, and what decided each
+
+1. **«counting» – SHORT FORM TAKEN.** He offered a longer unlock line for the case where «counting»
+   is internal terminology the player has never been taught. It is taught: `CountingResultsTable` is
+   a real table on the Stats screen and on the Kid screen, titled «… counting results», and
+   `world/mandatory.ts` uses the phrase in a sentence the player reads.
+2. **The rung change – «THE ARRANGEMENT CHANGES», not «a new hitting partner joins».** He warned that
+   the personnel line «asserts a personnel change the model may not track», and it does not track
+   one: there is no identity of any kind on this seat, and the decisive fact is the ledger –
+   `SPARRING_CHANGE_KEY` is written by `hireSparring` **alone**, so a rung change does not restart the
+   arrangement and «when did this arrangement start» still answers with the original hire. The model
+   holds one continuous arrangement whose level moves. §7 asserts the tenure directly, so a future
+   wave that makes a rung change write its own tagged row will be told the sentence has become the
+   wrong one of the two.
+3. **The dial label – «Hitting partner – experience level».** `ECONOMY.sparring.rungs` is a ladder of
+   standing («A college hitter» · «A journeyman pro» · «A top-100 partner»), priced off the $50–80k/yr
+   band in `docs/research/team-economics-2026-09.md` §4 – quality and experience, not tier 1/2/3 of a
+   game system. ⚠ It is also an `aria-label` on the radiogroup rather than visible text, which puts it
+   squarely under his «accessibility labels, where literal clarity matters» rule and makes it the
+   worst of the four places «who is across the net» had been sitting.
+
+### Every string, before → after
+
+**The knock window** (`src/engine/knock.ts`, `knockCause`) – all four rejected; his faults: «on this
+part» is not idiomatic, «a body brings up again» sounds translated, «picks things up» suggests
+infection rather than injury, «joints» is too specific (`KNOCK_PARTS` carries a lower back and a
+foot), and the fourth «tries too hard to absolve the player».
+
+| | |
+| --- | --- |
+| – | `We sent her back out on this part before, and that is the one a body brings up again.` |
+| **+** | `We sent her back out with a knock to her {part} before. Now the same place is troubling her again.` |
+| – | `She went into the week tired, and a worn body picks things up.` |
+| **+** | `She began the week already tired. Her body had less room for the work we asked of it.` |
+| – | `The week we set was a hard one, and a hard week asks more of her joints.` |
+| **+** | `We set a hard week. It asked more of her body than an ordinary one.` |
+| – | `Nothing we did – the care we have been taking was working. Some weeks a body complains anyway.` |
+| **+** | `No single choice explains this one. We had been careful. Bodies still have bad weeks.` |
+
+⭐ **`part` WAS AVAILABLE, so the stronger first line ships.** `buildKnockPrompt` holds the whole
+`Knock`; `knockCause` gained a required fourth parameter and the repeat branch names the real place.
+⚠ **And the fourth branch was a CORRECTNESS fix, not a style one:** `fatigue + load <= 0` says the two
+terms NETTED to nothing, not that neither existed – at condition 60 on a light week her fatigue term
+is a real .088 that a −.090 credit merely covered. The line may report **no identified player-caused
+factor**; it may not promise innocence. `tests/knock.test.ts` §5b-9 asserts exactly that.
+
+**The build letter** (`src/components/OfferLetter.vue`, `InboxSheet.vue`) – his faults: «it is the
+family's» is unnatural, «paid for on the order» should be «when the order was placed», «so is what it
+costs to keep» is needlessly indirect, and a visible sender plus a signature repeats itself.
+
+| | |
+| --- | --- |
+| – | `{label} is ready. It was ordered {week}, and after {wait} it is the family's from this week.` + two bullets (`There is nothing to pay here. It was paid for on the order.` / `It is on the family's books from this week, and so is what it costs to keep.`) |
+| **+** | `{label} is ready.` / `The order was placed in {week}. After {wait}, it now belongs to the family.` / `Nothing is due on delivery; the full price was paid when the order was placed. Upkeep starts this week and will appear in the family accounts.` |
+| – | sender `The order desk`, signature `– The order desk` |
+| **+** | sender `Order desk`, signature `– Order desk` |
+
+⭐ **THE SIGNATURE STAYS, and he made that conditional on the surface** («only if the interface
+requires one; otherwise omit it, because the sender is already visible»). **On this surface it is
+not**: `InboxSheet` prints the sender on the LIST row, and opening a letter replaces the list with the
+paper alone. All seven letter arms sign; the build would have been the only unsigned one. The article
+went because the two other desks are `Tournament desk` and `Tour office` – it belongs to the senders
+that are institutions (`The academy`, `Her national federation`).
+
+⚠⚠ **THE WAIT LADDER WAS REBUILT ON HIS CONSTRAINT AND NOT ON HIS EXAMPLE LIST, and this needs his
+word.** He asked for `N.5 years` to go and sketched `a week / 6 weeks / 18 months / a year / 2 years /
+2½ years`, under a rule that outranks the list: «only convert weeks to months or years when the
+conversion is genuinely how the game calendar presents time. An exact 78 weeks is better than a
+friendly but inaccurate 18 months.» **This game's calendar answers cleanly in both directions.** A
+season is exactly 52 career weeks (`WEEKS_IN_SEASON`, «the only 52 in the engine»), so a **year** is an
+exact conversion the player already reads. A **month is not a unit this game has**: no duration
+anywhere in the app is stated in months (`monthLabel` exists for one chart axis and names a calendar
+month, never a span), and the old ladder's `weeks / 4.33` is a fabricated rate.
+
+| wait | was | now |
+| ---: | --- | --- |
+| 3 / 6 | `3 weeks` / `6 weeks` | unchanged |
+| 12 | `3 months` | `12 weeks` |
+| 52 | `a year` | unchanged |
+| 78 | `1.5 years` | `78 weeks` – ⭐ his own worked example |
+| 104 / 156 / 208 | `2 years` / `3 years` / `4 years` | unchanged |
+| 215 (a skip overshoot) | `4 years` | `215 weeks` |
+
+⭐ **So «18 months» and «2½ years» are NOT shipped**, and that is the one place this pass departs from
+a wording he wrote down. His constraint was the load-bearing half and it points the other way from
+the example rungs. The sweep in `tests/component/round43-build-letter.test.ts` walks every span from
+3 to 260 weeks and asserts no month and no fractional year ever reaches the paper – the per-rung
+table could not have caught the old ladder, which was wrong on spans nobody had listed.
+
+**The masseur's ask** – see item 4 above; both lines are his, and his bottom-rung sentence named a
+one-session rung that does not exist.
+
+**The hitting partner** (`src/engine/world/sparring.ts`, `world/form.ts`, `world/sponsors.ts`,
+`src/components/SupportStaffTab.vue`). He approved the title `Hitting partner` («authentic tennis
+language»).
+
+| surface | was | now |
+| --- | --- | --- |
+| coach's eye | `She is striking the ball clean.` | `She is striking the ball cleanly.` |
+| coach's eye | `She needs matches under her.` | `She needs match play.` |
+| receipt | `Her first match back did not look like a first match back.` | ⭐ **unchanged, his instruction** |
+| unlock | `A hitting partner joins a professional operation – her first counting W-series result opens the door.` | `Her first counting W-series result opens a place for a hitting partner.` |
+| hire | `A hitting partner is on the payroll now – practice weeks with somebody across the net.` | `A hitting partner joins the team – regular match-style practice on weeks without a match.` |
+| release | `The hitting partner is let go – the practice weeks are hers alone again.` | `The hitting partner leaves the team – regular match-style practice between events ends.` |
+| rung change | `A different hitting partner from the next bill – {rung}.` | `The hitting-partner arrangement changes with the next bill – {rung}.` |
+| travel on | `The hitting partner travels now – one more fare on every trip, and a court on the road.` | `The hitting partner will travel from now on – one additional fare per trip, and a regular practice opponent on tour.` |
+| travel off | `The hitting partner stays home – the practice court waits for her there.` | `The hitting partner will stay at the home club – no additional fare, and no regular practice opponent on tour.` |
+| expense | `Hitting partner – weekly salary` | unchanged |
+| travel expense | `Your hitting partner travels to the {tier} – one more fare{payer}` | `Hitting partner travel to {tier} – one additional fare{payer}` |
+| card, hired | `On the practice court – the weeks without a match dull her less.` | `Helps her keep her timing during weeks without a match.` |
+| card, unhired | `Somebody across the net on the weeks she is not competing.` | `A regular practice opponent for weeks when she is not competing.` |
+| hire confirm | `Put a hitting partner on the payroll at {price} a week ({rung})? Cancellable any week, like the coach.` | `Hire a hitting partner for {price} a week ({rung})? You can end the arrangement any week, like the coach.` |
+| release confirm | `Let the hitting partner go? The weekly salary stops, and the practice weeks are hers alone.` | `Let the hitting partner go? The weekly salary stops, and regular match-style practice between events ends.` |
+| dial label (a11y) | `Hitting partner – who is across the net` | `Hitting partner – experience level` |
+| toggle title | `Hitting partner travels to tournaments` | `Tournament travel` |
+| toggle description | `On the road too – one more fare on every trip to a paying event. Most rust is made at home, so this buys the weeks away and nothing else.` | `Bring the hitting partner on tour for one additional fare per trip. Home practice is already covered; this extends the arrangement to travel weeks.` |
+| toggle a11y, on | `Hitting partner travels to tournaments - on. Press to keep the practice court at home.` | `Hitting partner travel is on. Press to keep the hitting partner at the home club.` |
+| toggle a11y, off | `Hitting partner travels to tournaments - off. Press to buy one more fare on every trip, for a court on the road.` | `Hitting partner travel is off. Press to bring the hitting partner on tour; each trip adds one fare.` |
+
+⚠⚠ **THE UNLOCK LINE NOW DIFFERS IN SHAPE FROM ITS TWO SIBLINGS, DELIBERATELY.**
+`world/masseur.ts` and `world/psychologist.ts` carry the same «joins a professional operation»
+sentence and his terminology sheet strikes that phrase – but **those two are shipped copy from
+earlier rounds and invariant 4 forbids an agent touching them on a task that did not ask.** Evening
+the three up is exactly what his own wider note opens (below), and it is his to open.
+
+### The two states he said were missing
+
+1. ⭐ **RETAINED BUT SUSPENDED – IT EXISTED IN THE ENGINE AND ON NO SCREEN, so it was built.**
+   `sparringWorksThisWeek` has stood the seat down at the college freeze and on a booked family week
+   since it shipped, silently: a family at a university watched a salaried seat charge nothing and
+   was told neither half. The new `sparringStoodDown` predicate is what the BILL reads too (one
+   spelling), it crosses the wire, and the card prints his sentence verbatim:
+   > `The hitting partner remains with the team, but is not working this week. No salary is charged.`
+
+   ⚠ **The third stand-down is deliberately NOT in it.** A partner who does not travel also stands
+   down on a week she is away – but that is what the travel switch SELLS rather than a suspension,
+   its own row already says so, and it needs `away`, a phase-local fact a snapshot cannot honestly
+   hold. `tests/round43-form.test.ts` §8 asserts the exclusion and, more importantly, the
+   biconditional: **no week is ever both stood down and charged**, so the card cannot claim a free
+   week the ledger took money for.
+
+2. ⚠ **THE PER-RUNG EXPLANATION IS NOT SHIPPED – these are NEW strings and therefore DRAFTS.** His
+   ask: «a lowercased rung label tells the player what they selected but not what changes. Each rung
+   needs one short, mechanically accurate sentence.» Two candidate sets, both exact against
+   `driftCut` (0.75 / 0.5 / 0.25 on a base drift of 0.4 a week):
+
+   **A – the shape, which survives a re-tune of the cuts:**
+   > `A college hitter` · `Takes a quarter off the rust of a week without a match.`
+   > `A journeyman pro` · `Takes half off the rust of a week without a match.`
+   > `A top-100 partner` · `Takes three quarters off the rust of a week without a match.`
+
+   **B – the ladder a player can feel, which pins three constants to copy:**
+   > `A college hitter` · `Ten matchless weeks dull her fully on her own; this stretches it to thirteen.`
+   > `A journeyman pro` · `…to twenty.`
+   > `A top-100 partner` · `…to forty.`
+
+   ⭐ **A is the one to ship if he wants one**: B's three numbers are the measured 13 / 20 / 40, but a
+   wave that re-prices the ladder would have to re-write the copy with it, which is the failure round
+   42 #46's rule exists to prevent.
+
+### ⚠⚠ A LINE OF COPY IS PERSISTED STATE – the frozen careers were re-stamped for two sentences
+
+The gate went red on all five `coach-travel-edge-*` files, and the cause is worth carrying rather
+than just fixing: **the coach's eye is written into `world.events[].text`, `events` is serialised, and
+the frozen-career hashes are over that serialisation.** Re-wording «striking the ball clean» →
+«cleanly» and «matches under her» → «match play» is therefore a byte change on every career that ever
+saw either line. No constant moved, no predicate moved, no draw was taken and `SAVE_SCHEMA_VERSION`
+is still 80.
+
+⚠ **Per-key diff taken FIRST, control = this tree with the two sentences reverted in place** (a
+reverse edit, never a checkout), `tools/frozen-key-diff.ts` on all three cells:
+
+| cell | keys moved |
+| --- | --- |
+| 5/0 · 25k middle, grinder | **1 of 93 – `events`** |
+| 8/0 · 120k wealthy, elite, grinder | **1 of 93 – `events`** |
+| 0/1 · 8k working, self-coached | **0 of 94 – byte-identical** |
+
+⭐ The third cell is the proof rather than a convenience: `coachFormNote` returns `null` with nobody
+in the corner, so the self-coached career never saw either sentence – and **not one `selfTravelling`
+cell changed in the fixtures file**, which is what that reasoning predicts before the rewrite and
+what the diff counts after it. `rngMain` reproduces all three canonical fingerprints
+(`1dbff28caca2` / `aebc8101d6df` / `d84bcbf0c481`) and the frozen MAIN capture (41550 / `e6b0c709`)
+is unmoved and not re-pinned.
+
+**62 cells re-stamped of 93 visited**, every one of them `middleGrinder` or `eliteGrinder`, computed
+by running the exported helpers in a throw-away probe rather than transcribed from a failure message.
+The protocol block at the head of `tests/coachTravelEdgeFixtures.ts` carries the whole record.
+
+### Recorded and not acted on
+
+- ⚠ **`masseur` → `massage therapist`.** He prefers it as clearer contemporary English and ruled the
+  scope himself: «I would only change it project-wide, though – not in this isolated event.» Open
+  question, his.
+- ⭐⭐ **HIS WIDER OPENING, AS A ROUND ITEM: «на основе него можно пересмотреть и существующие наши
+  письма может быть тоже».** The review could be applied to the game's EXISTING letters too.
+  **Deliberately not done here** – it is a large invariant-4 surface and needs its own pass with his
+  word per string. Its starting point is already written down: the per-surface voice table and the
+  terminology sheet at the head of this section.
+
+  ⭐ **The candidates it would meet FIRST are already found**, because this pass ran into every one of
+  them and left them alone under invariant 4 – each fails a rule he wrote down this week:
+  | string | whose | which of his rules it fails |
+  | --- | --- | --- |
+  | `A masseur joins a professional operation – her first counting W-series result opens the door.` | `world/masseur.ts` | «professional operation» is struck by the terminology sheet |
+  | `A psychologist joins a professional operation – …` | `world/psychologist.ts` | the same |
+  | `A masseur is on the payroll now – table work at home, every week.` | `world/masseur.ts` | «payroll» is struck; «hire» is the word |
+  | `Put a masseur on the payroll at … Cancellable any week, like the coach.` | `SupportStaffTab.vue` | a confirmation must be completely literal – «Hire …», «you can end the arrangement any week» |
+  | `Put a psychologist on the payroll at … Cancellable any week, like the coach.` | `SupportStaffTab.vue` | the same |
+  | `The masseur travels to tournaments now – one more fare on every trip, …` | `world/masseur.ts` | «one additional fare per trip» is the sheet's wording |
+  | `Your coach travels to tournaments with her now – a second fare on every trip.` | `world/coachMarket.ts` | a ledger/feed row addressed to «your» reader; and the fare wording |
+  | `Masseur travels to tournaments - on. Press to keep the table work at home.` | `SupportStaffTab.vue` | an a11y label in the shape he rewrote for the hitting partner |
+  | `Coach travels to tournaments with her – on. Press to send the coach home …` | `CoachMarketScreen.vue` | the same |
+
+  ⚠ **Not one of them was touched**, and that is the item rather than an omission: they are shipped
+  copy from earlier rounds, the task did not ask for them, and invariant 4 is explicit that fixing
+  something adjacent is not permission.
+
+---
+
+## F1's `G`, SWEPT (17.09) – measured, and the shipped value is what the rule selects
+
+The owner, on §10b's finding that the corridor prices a place no career visits: «что предлагаешь,
+давай попробуем. **Важно не переборщить**», then «меряй». Swept, not chosen in advance.
+
+**Instrument:** `tools/form-g-sweep.ts` (`npm run bench:gsweep`), 18 careers × 624 weeks an arm –
+§10b's own census re-walked once per candidate. ⚠ `K` was READ and never swept: the [0.5, 4] pp
+corridor is his ruling and `K` is its consequence; `G` is how far form travels, `K` is what a point
+of it is worth. ⚠ The arm was proven first – at `G × 10` the lived band is [−10, +10] and 24.1% of all
+weeks sit at a clamp against 0.0% shipped.
+
+| `G` | lived p5 | lived p95 | weeks within 1 of a clamp | careers reaching a clamp | **lived pp swing** |
+| ---: | ---: | ---: | ---: | --- | ---: |
+| **1.50 – shipped** | **−4.0** | **+1.9** | 0.0% | **0 of 18** | **1.42 pp** |
+| 1.75 | −4.2 | +2.5 | 0.0% | 1 of 18 | 1.42 pp |
+| 2.00 | −4.9 | +3.2 | 0.3% | 3 of 18 | 1.67 pp |
+| 2.25 | −5.4 | +3.6 | 0.5% | 4 of 18 | 1.92 pp |
+| 3.00 | −7.2 | +5.8 | 3.2% | 14 of 18 | 2.50 pp |
+| 4.00 | −8.8 | +7.0 | 6.7% | 18 of 18 | 2.67 pp |
+| 5.00 | −9.6 | +8.3 | 12.4% | 18 of 18 | 2.75 pp |
+
+⭐⭐ **THE RULE – «the largest `G` at which NO career reaches a clamp» – KEEPS 1.5, AND THERE IS NO
+HEADROOM ABOVE IT AT ALL.** `G = 1.75`, the smallest increase worth trying, already shelves one career
+of eighteen at +10. **Nothing was changed: `ECONOMY.form.gain` is still 1.5.**
+
+⚠ **The honest reading is not «1.5 is optimal».** The shipped census's tails are already +6.3 / −7.6,
+within two and a half points of the rail; a dial that stretches p95 from +1.9 to +2.5 stretches the
+tail through the clamp at the same time. So the finding is **`G` alone cannot be raised without
+shelving somebody** – which is more useful than a number.
+
+⚠ **And §10b's «0.5–0.7 pp» was an inference; the measurement is 1.42 pp** at the widest opponent,
+about 85% of the 1.64 pp the mechanism reaches clamp-to-clamp. The gap between what form CAN do and
+what it DOES is much smaller than §10b estimated.
+
+⭐ **Three shapes that would raise the bite without shelving anybody, all of them his and none taken:**
+widen the clamps together with `G`; raise `K` (§10a measured 0.4–1.2 all INSIDE the corridor, so 0.8
+buys 2.25 pp at the clamps with the lived band untouched); or make the gain asymmetric by sign – the
+tail that breaks first is the POSITIVE one, because a purple patch compounds faster than a slump
+does against a reversion that pulls both ways. The full tables are in the spec's new **§11**.

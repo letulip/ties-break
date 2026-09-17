@@ -68,6 +68,12 @@ describe('round 43 #11 – the sheet the delivery writes', () => {
     // – the catalogue's figure is what the wait was MEANT to be, and a letter states what happened.
     expect(text, 'the wait, in years').toContain('4 years')
     expect(text, 'and it is filed on its arrival week').toContain(`Filed ${weekLabel(308)}`)
+    // ⚠ THREE PARAGRAPHS AND NOT ONE RUN-ON, which is a layout claim rather than a copy one and is
+    // why it is asserted here. His rewrite of 17.09 replaced a lead plus two list items with three
+    // sentences of correspondence; `.offer-body` carries `margin: 0` and the spacing between them is
+    // the PAPER's `gap: 10px`, so three sentences inside one `<p>` would render as a wall and every
+    // text assertion in this file would stay green.
+    expect(w.findAll('.offer-body').length, 'the letter is three blocks').toBe(3)
     w.unmount()
   })
 
@@ -88,7 +94,22 @@ describe('round 43 #11 – the sheet the delivery writes', () => {
     // would read as a bill for something bought four years ago, so the sheet says the opposite in
     // words instead.
     expect(text, 'no price anywhere on the paper').not.toMatch(/\$[\d,]/)
-    expect(text, 'and it says so').toContain('nothing to pay')
+    // ⚠ THE MARKER MOVED WITH HIS 17.09 REWRITE. The sheet used to split this across two bullets
+    // («There is nothing to pay here»); it is now one sentence of correspondence, and the fact it
+    // asserts – no money changes hands on delivery – is unchanged.
+    expect(text, 'and it says so').toContain('Nothing is due on delivery')
+    expect(text, 'and says where the money went').toContain('paid when the order was placed')
+    w.unmount()
+  })
+
+  it('⚠ it is SIGNED, because on this surface the sender is not otherwise on screen', () => {
+    // His 17.09 review made the signature conditional – «only if the interface requires one;
+    // otherwise omit it, because the sender is already visible» – and this surface requires one.
+    // `InboxSheet` prints `senderOf` on the LIST row; opening a letter replaces the list with the
+    // paper, so nothing but the signature says who wrote. Every other arm in `OfferLetter` signs.
+    const w = mountLetter(buildLetter())
+    expect(w.find('.offer-sign-off').exists(), 'the paper is signed').toBe(true)
+    expect(w.find('.offer-sign-off').text()).toContain('Order desk')
     w.unmount()
   })
 
@@ -99,20 +120,49 @@ describe('round 43 #11 – the sheet the delivery writes', () => {
     // The `weeks <= 1` floor in `buildWaitWord` is NOT asserted here – it is unreachable through the
     // shop, it is documented as a floor on the output rather than a guard, and a case for it would
     // be this file claiming coverage of something no career can reach.
+    //
+    // ⭐⭐ THE LADDER WAS REBUILT ON 17.09 TO HIS CONSTRAINT AND NOT TO HIS EXAMPLE LIST. He asked for
+    // `N.5 years` to go, and gave the rule that decides the rest: «only convert weeks to months or
+    // years when the conversion is genuinely how the game calendar presents time. An exact 78 weeks
+    // is better than a friendly but inaccurate 18 months.» A season here is exactly 52 career weeks,
+    // so a YEAR is exact and a MONTH is not a unit this game has at all – nothing in the app states a
+    // duration in months. So: weeks below a season, years only on an exact multiple of one.
     const cases: Array<[number, string]> = [
       [3, '3 weeks'],
       [6, '6 weeks'],
-      [12, '3 months'],
+      // ⚠ WAS «3 months», AND `weeks / 4.33` IS THE FABRICATED RATE THAT PRODUCED IT.
+      [12, '12 weeks'],
       [52, 'a year'],
+      // ⭐ HIS OWN WORKED EXAMPLE, and the rung that used to read «1.5 years».
+      [78, '78 weeks'],
       [104, '2 years'],
       [156, '3 years'],
       [208, '4 years'],
-      [215, '4 years'],
+      // ⚠ AN OVERSHOOT IS NOT A ROUND YEAR AND MAY NOT CLAIM TO BE. A multi-week skip delivers on the
+      // week it lands on, and 215 weeks used to print «4 years» – the same «friendly but inaccurate»
+      // the rule above forbids, seven weeks wide.
+      [215, '215 weeks'],
     ]
     for (const [weeks, said] of cases) {
       document.body.innerHTML = ''
       const w = mountLetter(buildLetter(100, 100 + weeks))
       expect(w.text().replace(/\s+/g, ' '), `${weeks} weeks reads as "${said}"`).toContain(said)
+      w.unmount()
+    }
+  })
+
+  it('⚠ no half-year and no month reaches the paper, across every span a career can produce', () => {
+    // The sweep behind the table above, and the one that would have caught the ladder this replaced:
+    // a single `toContain` per rung cannot see a unit the game does not own arriving on some OTHER
+    // span. `deliverAssets` fires at `week >= readyWeek`, so every integer from the shortest rung
+    // upward is reachable through a skip.
+    for (let weeks = 3; weeks <= 260; weeks++) {
+      document.body.innerHTML = ''
+      const w = mountLetter(buildLetter(100, 100 + weeks))
+      const text = w.text().replace(/\s+/g, ' ')
+      expect(text, `${weeks} weeks must not invent a month`).not.toMatch(/\bmonths?\b/)
+      expect(text, `${weeks} weeks must not print a spreadsheet year`).not.toMatch(/\d\.\d+ years/)
+      expect(text, `${weeks} weeks must not print a fractional year`).not.toMatch(/½/)
       w.unmount()
     }
   })
@@ -126,9 +176,22 @@ describe('round 43 #11 – the sheet the delivery writes', () => {
 //         nothing and the whole engine suite stays green, because nothing engine-side can see a
 //         template.
 //   2. `buildWaitWord` returning a raw week count
-//      -> RED [2]: the wait case, and the ladder sweep.
-//   3. the two bullets replaced with a price line (`formatCents`)
+//      -> RED [2]: the wait case, and the ladder sweep. ⚠ 17.09: still RED, and on fewer cases than
+//         before – a raw count is now the RIGHT answer on six of the nine rungs, and wrong on the
+//         four that are exact seasons. The `a year` / `4 years` rows carry this arm now.
+//   3. the three sentences replaced with a price line (`formatCents`)
 //      -> RED [1]: the no-money case.
+//   7. (17.09) `buildWaitWord`'s old ladder restored (`weeks / 4.33` months and `N.5 years`)
+//      -> RED [3]: the 12-week and 215-week rows, and the no-month/no-half-year sweep, which fires
+//         on every span from 8 to 51 and on every non-integer multiple of a season above it.
+//         ⭐ THE SWEEP IS THE ARM THAT MATTERS HERE and the per-rung table is not: the ladder this
+//         replaced was wrong on spans nobody had listed, which is exactly what a table of rungs
+//         cannot see.
+//   8. (17.09) the signature deleted from the arm (his «omit it if the sender is already visible»
+//      read without checking the surface)
+//      -> RED [1]: the signature case. The sender is visible in the LIST and the list is replaced by
+//         the paper when a letter opens, so an unsigned build letter is the only unsigned letter in
+//         the inbox.
 //   4. a Sign/Refuse foot copied onto the arm from the kit letter
 //      -> RED [1]: the notice case.
 //   5. `weekLabel(offer.week)` used in place of `weekLabel(terms.orderedWeek)` in the lead sentence

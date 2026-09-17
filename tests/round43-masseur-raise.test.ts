@@ -71,6 +71,10 @@ function servedFrom(at: number, week: number, seed = 'r43-raise'): WorldState {
 
 const OPENING = ECONOMY.masseur.perSessionCents
 const ENTRY = ECONOMY.masseur.rungs[0].sessions
+/** ⚠ THE OPENER THIS FILE FINDS THE ROW BY, and it moved with his 17.09 rewrite: «The masseur asks
+ *  for more» first reads as more SESSIONS rather than more money, which is the wrong idea on a row
+ *  whose subject is the rate. One constant, so the next rewording is one line here. */
+const RAISE_OPENER = "The masseur's rate rises to"
 const TOP = ECONOMY.masseur.rungs[ECONOMY.masseur.rungs.length - 1].sessions
 
 /** The rate the design says a career should be paying after `y` completed years, spelled out here
@@ -81,7 +85,7 @@ function expectedRate(y: number): number {
 }
 
 const raiseRows = (world: WorldState): string[] =>
-  world.events.filter((e) => e.text.startsWith('The masseur asks for more')).map((e) => e.text)
+  world.events.filter((e) => e.text.startsWith(RAISE_OPENER)).map((e) => e.text)
 
 // =================================================================================================
 // A. THE COUNTER
@@ -254,8 +258,12 @@ describe('round 43 #4 D – the week he asks', () => {
     expect(rows[0], 'the figure is the one the bill now uses').toContain(
       `$${Math.round(masseurSessionCents(world) / 100)} a session`,
     )
-    expect(rows[0], 'pay more for the same hands').toContain('higher bill')
-    expect(rows[0], '...or hold the bill and drop a rung').toContain('fewer visits')
+    // ⚠ THE MARKERS MOVED WITH HIS 17.09 REWRITE. «The same hands at a higher bill» became «Keep the
+    // current schedule at the higher rate» – he struck «the same hands» for reducing a person to a
+    // pair of hands – and «fewer visits» became «book fewer sessions», which is the terminology the
+    // dial itself uses. The two answers the row must offer are unchanged.
+    expect(rows[0], 'pay more, same schedule').toContain('Keep the current schedule at the higher rate')
+    expect(rows[0], '...or hold the bill and drop a rung').toContain('book fewer sessions')
   })
 
   it('⚠⚠ ...and at the BOTTOM rung it does not offer a rung that is not there', () => {
@@ -266,9 +274,17 @@ describe('round 43 #4 D – the week he asks', () => {
     const rows = raiseRows(world)
     expect(rows).toHaveLength(1)
     expect(rows[0], 'a screen that offers a choice nobody has is this round`s own #5 defect').toContain(
-      'no shorter week',
+      'no shorter schedule to choose',
     )
-    expect(rows[0]).not.toContain('fewer visits')
+    expect(rows[0]).not.toContain('book fewer sessions')
+    // ⚠⚠ AND IT NAMES THE REAL FLOOR. His review's own bottom-rung line said «She is already down to
+    // one session a week»; this dial opens at TWO and its label is «Twice a week», so the sentence
+    // was corrected rather than shipped. This is the assertion that would have caught it: the row
+    // must name the rung the family is actually on, and the rung's own label is where it gets it.
+    expect(rows[0], 'the schedule it names is the one the card names').toContain(
+      ECONOMY.masseur.rungs[0].label.toLowerCase(),
+    )
+    expect(rows[0], 'and it never invents a rung below the floor').not.toMatch(/one session a week/)
   })
 
   it('⚠ the row moves no money – it is a notice, and the bill it describes is charged by `resolveMasseur`', () => {
@@ -276,7 +292,7 @@ describe('round 43 #4 D – the week he asks', () => {
     const funds = world.fundsCents
     resolveMasseurRaise(world)
     expect(world.fundsCents).toBe(funds)
-    const row = world.events.find((e) => e.text.startsWith('The masseur asks for more'))
+    const row = world.events.find((e) => e.text.startsWith(RAISE_OPENER))
     expect(row?.amountCents, 'no figure on the ledger, only in the sentence').toBeUndefined()
   })
 })

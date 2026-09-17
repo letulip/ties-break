@@ -423,9 +423,13 @@ async function toggleSparringTravel(): Promise<void> {
 // reaches them. A row that sold travel as the valuable half would be the screen lying about a price.
 // ⚠ NO NUMBER FROM THE MEASUREMENT ON SCREEN – the 89.4% is a bench figure and would pin copy to a
 // dial. The sentence says the SHAPE, which stays true when the constant moves (round 42 #46's rule).
+// ⭐⭐ THE LEAD SENTENCE IS HIS, FROM THE 17.09 COPY REVIEW, and it says the same measured shape in
+// the terminology sheet's own words: ON TOUR for the place, ONE ADDITIONAL FARE PER TRIP for the
+// cost, and «home practice is already covered» for the half round 42 #48 measured. The booked-trips
+// clause below it is untouched – it is a figure, not a claim.
 const sparringTravelSub = computed(() => {
   const rule =
-    'On the road too – one more fare on every trip to a paying event. Most rust is made at home, so this buys the weeks away and nothing else.'
+    'Bring the hitting partner on tour for one additional fare per trip. Home practice is already covered; this extends the arrangement to travel weeks.'
   const trips = game.snapshot?.sparringTravelTrips ?? 0
   if (trips === 0) return rule
   const t = trips === 1 ? '1 trip' : `${trips} trips`
@@ -434,10 +438,25 @@ const sparringTravelSub = computed(() => {
 // The one line under his name, by state – the masseur's three-state shape exactly. LOCKED prints the
 // ENGINE's own refusal (SPARRING_LOCKED_DETAIL – the sentence `hireSparring` throws), the R10-16
 // doctrine. HIRED and UNHIRED both say what the contract IS, because that is all that is true of him.
+// ⭐⭐ BOTH LINES ARE HIS, FROM THE 17.09 COPY REVIEW. «Somebody across the net» is the image he
+// singled out as used often enough that it «begins to feel generated», and it is gone from every
+// surface of this seat but none: the terminology sheet's words are A REGULAR PRACTICE OPPONENT for
+// what he is and MATCH-STYLE PRACTICE for what he does. The hired line says the BENEFIT in the
+// sheet's own phrase – helping her keep her timing – rather than restating the mechanic.
+// ⭐⭐ AND THE STAND-DOWN LINE IS THE FIRST OF THE TWO STATES HIS 17.09 REVIEW SAID WERE MISSING, in
+// his own words. It existed in the engine and on no screen: the college freeze and a booked family
+// week suspend the arrangement without cancelling it, so a family at a university was watching a
+// salaried seat charge nothing and being told neither half. ⚠ THE FLAG IS THE ENGINE'S
+// (`sparringStoodDown`), not this file's OR of two other snapshot booleans – one predicate answers
+// the bill and the card, so the screen cannot claim a free week the ledger charged for.
+const sparringStoodDown = computed(() => game.snapshot?.sparringStoodDown ?? false)
 const sparringLine = computed(() => {
   if (!sparringUnlocked.value) return SPARRING_LOCKED_DETAIL
-  if (sparringHired.value) return 'On the practice court – the weeks without a match dull her less.'
-  return 'Somebody across the net on the weeks she is not competing.'
+  if (sparringHired.value && sparringStoodDown.value) {
+    return 'The hitting partner remains with the team, but is not working this week. No salary is charged.'
+  }
+  if (sparringHired.value) return 'Helps her keep her timing during weeks without a match.'
+  return 'A regular practice opponent for weeks when she is not competing.'
 })
 const sparring = computed<StaffMember>(() => ({
   id: 'sparring',
@@ -448,11 +467,23 @@ const sparring = computed<StaffMember>(() => ({
   line: sparringLine.value,
   priceLabel: sparringSalary.value,
   // Both directions ask, the screen's own doctrine – see the masseur's pair above.
-  hireMessage: `Put a hitting partner on the payroll at ${sparringSalary.value} a week (${sparringRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
-  releaseMessage: 'Let the hitting partner go? The weekly salary stops, and the practice weeks are hers alone.',
+  // ⭐⭐ BOTH CONFIRMATIONS ARE HIS, AND THE VOICE OF A CONFIRMATION IS **COMPLETELY LITERAL** – his
+  // own rule, and the reason these two read plainer than the seat's other lines: «poetic phrases
+  // appearing inside confirmations and accessibility labels, where literal clarity matters». HIRE is
+  // the verb («Put … on the payroll» is not one), «you can end the arrangement any week» says what
+  // «Cancellable» meant, and the release names what actually stops rather than what she is left with.
+  hireMessage: `Hire a hitting partner for ${sparringSalary.value} a week (${sparringRungLabel.value.toLowerCase()})? You can end the arrangement any week, like the coach.`,
+  releaseMessage: 'Let the hitting partner go? The weekly salary stops, and regular match-style practice between events ends.',
   setHired: (hire: boolean) => game.hireSparring(hire),
   dial: {
-    label: 'Hitting partner – who is across the net',
+    // ⭐⭐ HIS LABEL, AND IT IS THE SECOND OF THE TWO HE OFFERED, BECAUSE THE RUNGS WERE CHECKED. He
+    // gave «Hitting partner level» for a game-mechanical tier and «Hitting partner – experience
+    // level» for quality and experience. `ECONOMY.sparring.rungs` is the latter without ambiguity:
+    // the three labels are «A college hitter», «A journeyman pro» and «A top-100 partner» – a ladder
+    // of standing, priced off the $50–80k/yr band in `docs/research/team-economics-2026-09.md` §4,
+    // not tier 1/2/3 of a game system. ⚠ And the old label was the last «across the net» on this tab,
+    // which he ruled unsuitable for a control: a label must say what the control CHANGES.
+    label: 'Hitting partner – experience level',
     active: sparringRung.value,
     rungs: SPARRING_RUNGS.map((r, i) => ({
       value: i,
@@ -462,12 +493,16 @@ const sparring = computed<StaffMember>(() => ({
     set: setSparringRungIndex,
   },
   travel: {
-    title: 'Hitting partner travels to tournaments',
+    // ⭐⭐ THE TITLE AND BOTH SCREEN-READER LABELS ARE HIS. ⚠⚠ THE LABELS ARE THE HALF THAT MATTERS
+    // AND HIS RULE FOR THEM IS ABSOLUTE: «atmospheric but unsuitable as an accessibility label – a
+    // screen reader should announce exactly what the control changes». So each one states the state
+    // it is in and then the state pressing it produces, in the terminology sheet's words, and neither
+    // carries an image. «For a court on the road» is gone: the seat buys a person, not a venue.
+    title: 'Tournament travel',
     sub: sparringTravelSub.value,
     on: sparringTravels.value,
-    onLabel: 'Hitting partner travels to tournaments - on. Press to keep the practice court at home.',
-    offLabel:
-      'Hitting partner travels to tournaments - off. Press to buy one more fare on every trip, for a court on the road.',
+    onLabel: 'Hitting partner travel is on. Press to keep the hitting partner at the home club.',
+    offLabel: 'Hitting partner travel is off. Press to bring the hitting partner on tour; each trip adds one fare.',
     toggle: toggleSparringTravel,
   },
 }))

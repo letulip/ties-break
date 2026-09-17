@@ -180,21 +180,25 @@ export function accrueFormWeek(world: WorldState, away: boolean): void {
  *
  *  ⚠⚠ TWO SENTENCES, TWO BANDS, AND THE BANDS ARE NOT SYMMETRICAL, because the two channels are
  *  not. The RUST line is gated on the gap that caused it as well as on the number, so «she needs
- *  matches under her» is never said about a girl who has been playing every week and losing – that
+ *  match play» is never said about a girl who has been playing every week and losing – that
  *  girl is in a SLUMP, which is the psychologist's patient by §4's fence sentence and not a thing a
  *  hitting session fixes. The GOOD line has no gate but the number.
  *
  *  ⚠ A LIFE LINE IS NEVER A PURCHASE (the wave-3 brief §0.5): the caller writes it with NO
  *  `amountCents`, no category and no figure in the string.
  *
- *  ⚠ DRAFT COPY, HIS TO RULE. Both strings are the spec's §3 drafts, quoted from his own file
- *  verbatim, and they are collected in the wave's hand-back for one pass. */
+ *  ⭐⭐ BOTH SENTENCES ARE HIS, FROM THE 17.09 COPY REVIEW, AND THE VOICE OF THIS SURFACE IS TERSE
+ *  TENNIS LANGUAGE. That is the whole of the change and it is his own diagnosis of why the round read
+ *  as written rather than said: «trying to give every surface the same lyrical house voice is what
+ *  currently makes several lines feel AI-written». A coach does not compose; he remarks. «Clean» went
+ *  to «cleanly» because it is an adverb's job, and «matches under her» went to «match play», which is
+ *  what the thing is called on a court. */
 export function coachFormNote(world: WorldState, before: number, after: number): string | null {
   if (!world.coachId) return null
   const f = ECONOMY.form
-  if (before < f.goodNoteAt && after >= f.goodNoteAt) return 'She is striking the ball clean.'
+  if (before < f.goodNoteAt && after >= f.goodNoteAt) return 'She is striking the ball cleanly.'
   if (before > f.rustNoteAt && after <= f.rustNoteAt && formMatchlessWeeks(world) > f.rustAfterWeeks) {
-    return 'She needs matches under her.'
+    return 'She needs match play.'
   }
   return null
 }

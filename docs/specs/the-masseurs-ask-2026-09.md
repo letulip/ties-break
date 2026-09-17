@@ -179,14 +179,30 @@ This is recorded rather than tuned around, because tuning around it means going 
 guarantee are the same fact.** If a sharper bite is wanted later, the lever is the *rung ladder*
 (a fourth rung, or a wider gap), not the drift.
 
-## 7. The strings – ⚠ DRAFT, his to rule
+## 7. The strings – ⭐ RULED 17.09, and they are his
 
 Two, because a family already on the entry rung has no rung to drop to and a line offering one would
 be the screen lying about a choice:
 
-> `The masseur asks for more – $78 a session from this week. The same hands at a higher bill, or the same bill for fewer visits.`
+> `The masseur's rate rises to $78 a session starting this week. Keep the current schedule at the higher rate, or book fewer sessions.`
 
-> `The masseur asks for more – $78 a session from this week. There is no shorter week to drop to.`
+> `The masseur's rate rises to $78 a session starting this week. She is already down to twice a week, so there is no shorter schedule to choose.`
+
+⚠ **His faults on the drafts these replace**, recorded because they are the rule for the next line
+rather than a list of typos: «asks for more» first reads as more SESSIONS rather than more money,
+which is the wrong idea on a row whose whole subject is the rate; «the same hands» reduces a person
+to a pair of hands; and «There is no shorter week to drop to» is not natural English.
+
+⚠⚠ **ONE FACT IN HIS SECOND SENTENCE WAS WRONG AND WAS CORRECTED RATHER THAN SHIPPED.** He wrote
+«She is already down to **one session a week**»; `ECONOMY.masseur.rungs` opens at **2** and its label
+is «Twice a week», so there is no one-session rung on this dial and never has been. The shipped line
+keeps his shape and his second clause exactly and names the real floor – and it names it by reading
+`masseurRungOf(world).label`, never a literal, so the row and the card can never disagree about the
+schedule. `tests/round43-masseur-raise.test.ts` asserts both halves.
+
+⚠ **`masseur` → `massage therapist` is raised and NOT taken.** He prefers it as clearer contemporary
+English and said so explicitly: «I would only change it project-wide, though – not in this isolated
+event.» It is an open question for him, not a wave's to decide.
 
 ⚠ **Neither line carries a masculine pronoun, and that is R15-7 rather than style.** The first
 draft of the second line read «to drop him to» and `tests/coach-voice.test.ts` went red on it: the

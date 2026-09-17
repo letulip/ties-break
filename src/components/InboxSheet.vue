@@ -145,8 +145,12 @@ function senderOf(o: Offer): string {
   // are three different trades – a boatyard, an aircraft works, and the crew putting up a clubhouse
   // (plus the staff being hired into it) – and this union has ONE sender per kind, so a letterhead
   // naming any of them would be wrong on the other two. What is true of all ten is that each was
-  // ORDERED, which is the ledger's own verb for them («Ordered: The yacht»). DRAFT copy.
-  if (o.kind === 'build') return 'The order desk'
+  // ORDERED, which is the ledger's own verb for them («Ordered: The yacht»).
+  // ⭐ HIS 17.09 REVIEW WROTE IT WITHOUT THE ARTICLE («Sender: Order desk») AND IT IS THE HOUSE FORM
+  // ON THIS SURFACE: the two other desks are `Tournament desk` and `Tour office`, and the article
+  // belongs to the two senders that are institutions rather than desks («The academy», «Her national
+  // federation»). The letter's own signature moved with it.
+  if (o.kind === 'build') return 'Order desk'
   return (o.terms as KitOfferTerms).brand
 }
 
@@ -212,7 +216,8 @@ function subjectOf(o: Offer): string {
   // function's rule. The LABEL is the whole content: a family that has three things on order wants
   // to know which one has arrived before it opens anything, and the shelf's labels already begin
   // with their own article («The yacht», «The clubhouse»). ⚠ The label is the letter's OWN, frozen
-  // the week it was written, never today's catalogue – see `BuildLetterTerms.label`. DRAFT copy.
+  // the week it was written, never today's catalogue – see `BuildLetterTerms.label`.
+  // ⭐ KEPT VERBATIM BY HIS 17.09 REVIEW, which rewrote the sheet under it and left this line alone.
   if (o.kind === 'build') return `${(o.terms as BuildLetterTerms).label} is ready`
   const t = o.terms as KitOfferTerms
   if (t.ended) return 'The kit deal has ended'

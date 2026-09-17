@@ -113,7 +113,7 @@ import type { MatchPlayer } from '../match/types'
 import { coachBilling, coachDeclineNote, coachEdgeView, coachEntryLine, coachLadderNote, coachMarket, coachRoomNote, coachRoomShort, coachTravelsWithHer, handoverBaseBand, handoverRoomBand, lastWinterIn } from './coachMarket'
 import { masseurRehabWeeksAhead, masseurRoomNote, masseurRungOf, masseurSessionCents, masseurUnlocked, masseurWeeklyCents } from './masseur'
 // ⭐⭐⭐ v80, WAVE F2 – the third seat's two derivations, from the leaf that owns them.
-import { sparringUnlocked, sparringWeeklyCents } from './sparring'
+import { sparringStoodDown, sparringUnlocked, sparringWeeklyCents } from './sparring'
 import { psychologistUnlocked, psychologistWeeklyCents, psychologistFocusOpen, psychologistFocusDetailOf } from './psychologist'
 import { kitDealView, kitLineViews } from './kit'
 import { shopView, reachableFundsCents } from './shop'
@@ -1859,6 +1859,11 @@ export function toSnapshot(world: WorldState, stopReasons?: StopReason[]): Snaps
     // call one seat down for the same reason.
     sparringHired: world.sparringHired ?? false,
     sparringUnlocked: sparringUnlocked(world),
+    // ⭐⭐ RETAINED BUT NOT WORKING THIS WEEK (his 17.09 review's first missing state). Derived from
+    // the engine's own predicate rather than re-assembled here out of `inCollege` and `vacationWeek`,
+    // which the card could otherwise have done: the bill and the card then answer with one function,
+    // so a screen saying «no salary is charged» on a week the bill was taken is unspellable.
+    sparringStoodDown: sparringStoodDown(world),
     sparringSalaryCents: sparringWeeklyCents(world),
     sparringRung: world.sparringRung ?? ECONOMY.sparring.defaultRung,
     sparringTravels: world.sparringTravels ?? false,
