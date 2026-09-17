@@ -1,7 +1,7 @@
 ---
 type: round
-status: live
-area: life
+status: current
+area: process
 last-reviewed: 2026-09-17
 ---
 

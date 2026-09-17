@@ -29,11 +29,17 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 43 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 44 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
-**Round 43 is the chemistry wave** ([round-43.md](rounds/round-43.md), 16.09) – opened the day round
-42 merged. Its spine is [the-chemistry-2026-09](specs/the-chemistry-2026-09.md), whose thirteen
+**Round 44 makes the corpus the game** ([round-44.md](rounds/round-44.md), 17.09) – opened the day
+round 43 merged. Round 43 shipped the small-talk corpus as a DOCUMENT (43 situations, 172 voiced
+openers, 516 replies, and the frame pool he wrote the same day); the engine still runs the eleven
+entries it has run since wave 2. This round closes that gap, and on his ruling the eight live
+situations are tidied and brought up to four voices rather than retired – the pool becomes 51.
+
+**Round 43 was the chemistry wave** ([round-43.md](rounds/round-43.md), 16.09) – opened the day round
+42 merged, merged 17.09 as PR #146. Its spine is [the-chemistry-2026-09](specs/the-chemistry-2026-09.md), whose thirteen
 questions C1–C13 the owner ruled in one day: the coach relationship becomes a signed number that
 accrues weekly inside a corridor set by a drawn affinity, with periods rather than noise, and the
 coach himself grows with her results. Beside it the round carries the support seats' faces (round 42
