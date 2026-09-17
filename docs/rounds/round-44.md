@@ -582,8 +582,33 @@ ship a body nobody can read.
 
 ### Still carried and NOT in the five steps above – his items, waiting on his priority
 
-- **#51** the coach's fee fixed at hire and he asks – ruled 17.09, needs a schema key. **STILL OPEN**,
-  and deliberately: it is its own pass (§13's row d).
+- ✅ **#51** the coach's fee fixed at hire and he asks – ruled 17.09. **SHIPPED**, as its own pass
+  (§13's row d) on branch `round/44-coach-raise`. `docs/specs/the-coachs-raise-2026-09.md` carries the
+  model, the seven-part v81 → v82 move and the measured corridor.
+
+  **What he gets.** The labour half of the hourly rate is written down at the hire and stops floating;
+  the court half goes on floating, because no contract with a coach has ever fixed a club's rent. The
+  billed rate is `court + min(agreed, market labour)` – so it can never exceed what the shipped till
+  was charging, and once agreed it is **monotone non-decreasing** (5,508 cells swept, zero
+  violations). The fall he called incorrect is not discouraged; it is unreachable.
+
+  **The ask.** Once a year, on the anniversary of that contract, sized by a four-component progress
+  basket – the residual against expectation (0.35, #51's «fourth and best»), rank movement (0.25),
+  realised development against her own remaining years (0.25) and titles weighted by their rung
+  (0.15). Measured over 168 careers: **474 of 474 asks inside his 5–15%**, median 8.5%, 2.82 asks a
+  career. One Slam buys at most 6.5% – «одного титула маловато» made arithmetic.
+
+  ⚠ **«Refusal = he works out the season» is NOT built** and the spec's §8 says why: it needs a
+  world-initiated decision surface the game has none of, and every part of it is new player-facing
+  copy. The masseur's tested shape ships instead – the fee is live, one row names it, and the
+  family's answer is the market it already has.
+
+  ⚠ **The 2.2k → 1.8k is still unattributed, and the spec says so rather than claiming a cure.** His
+  save was not available to this build, so the bench enumerates every term of the shipped formula
+  instead. At a high or elite rung one fee's own week-to-week envelope is ×0.852 – not wide enough –
+  and the retainer band's fall is ×0.48–0.73 – too wide. What reaches ×0.82 there is **the training
+  dial** (6→5 sessions is ×0.833, 5→4 is ×0.80), which is a change the parent makes and which this
+  item does not touch.
 - ✅ **Re-affirming the psychologist's year does nothing** (`psychologist.ts:536`), and the confirm
   dialog before the year is set. **SHIPPED** – see «the leftovers pass» below.
 - ✅ **The hitting partner is missing from the team budget**, and `committedCents` is short by his
@@ -736,7 +761,7 @@ the two doors work as specified and the third and fourth were never specified.
 | a | re-affirming the psychologist's year does nothing (`world/psychologist.ts`'s early return skips the season stamp) | one line + a test | ✅ |
 | b | a confirmation before the year is set – the pick LOCKS the row for the rest of the off-season | existing dialog idiom | ✅ |
 | c | the hitting partner is missing from `coachingBudget.ts`'s `seats`, so `committedCents` is short by his salary | one push + a test that counts against the snapshot | ✅ |
-| d | **#51 – the coach's fee fixed at hire, and he ASKS** | ⚠⚠ **a schema move**: the agreed figure is stored nowhere today, so v81 → v82 and the six-part ritual | open |
+| d | **#51 – the coach's fee fixed at hire, and he ASKS** | ⚠⚠ **a schema move**: the agreed figure is stored nowhere today, so v81 → v82 and the six-part ritual | ✅ |
 | e | #46 – show what each travelling specialist buys | UI | ✅ |
 
 a, b, c and e go together; **d is its own pass**, because a schema move next to three unrelated

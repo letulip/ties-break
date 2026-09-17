@@ -37,7 +37,7 @@ import {
   toSnapshot,
   type WorldState,
 } from '../../src/engine/world'
-import { bandedRateCents, coachById, coachRateBandCents, coachRetainerBand, coachWeeklyCents, facilityRateCents, tierOf } from '../../src/engine/coach'
+import { bandedRateCents, coachById, coachLabourCents, coachRateBandCents, coachRetainerBand, coachWeeklyCents, facilityRateCents, tierOf } from '../../src/engine/coach'
 import { ageAtWeek } from '../../src/engine/world/age'
 import { rngFromSeed } from '../../src/engine/rng'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
@@ -93,14 +93,35 @@ describe('round 42 #19 – her rank re-prices her coach', () => {
       const coach = coachById(w.seed, age, w.coachId)!
       return coachWeeklyCents(bandedRateCents(coach.rateCents, age, tierOf(coach), band), w.plan, w.profile.background, tierOf(coach))
     }
-    expect(coachBilling(unranked).weeklyCents).toBe(quote(unranked, 1))
-    expect(coachBilling(hundred).weeklyCents).toBe(quote(hundred, 2))
-    expect(coachBilling(ten).weeklyCents).toBe(quote(ten, 4.5))
-
-    // Strictly ordered, and the court is why the steps are not exactly 2x and 4.5x: the band
-    // multiplies his LABOUR and the hall is charged at the same price to all three.
-    expect(coachBilling(hundred).weeklyCents).toBeGreaterThan(coachBilling(unranked).weeklyCents)
-    expect(coachBilling(ten).weeklyCents).toBeGreaterThan(coachBilling(hundred).weeklyCents)
+    // ⭐⭐⭐ RE-AIMED AT v82 (round 42 #51, ruled 17.09), AND IT IS THE ONE RE-AIM IN THIS FILE THAT
+    // CHANGES WHAT IS CLAIMED RATHER THAN WHERE IT IS READ. This arm used to assert that the man ON
+    // THE PAYROLL is re-priced by her ranking, and that is exactly what the owner called incorrect:
+    // «мне кажется это не корректно», on watching his own coach's weekly figure FALL 2.2k -> 1.8k
+    // across a season that went well. His ruling is «зафиксировать при найме и пусть просит» – the
+    // agreed labour is written down at the hire and stops floating.
+    //
+    // ⚠ SO THE THREE FIXTURES HIRE THEIR MAN WHILE SHE IS UNRANKED (`proCareer` ticks 40 weeks and
+    // `atRank` sets the ranking afterwards), and his agreed fee is therefore the band-1 one in all
+    // three. The BILL is identical across them, and that is the fix rather than a regression.
+    // ⚠⚠ NOTHING IS WEAKENED: what the band still does is asserted one `describe` down, on the MARKET
+    // – «the market's own quotes go on floating, and that is correct» (round 44, his own fence) – and
+    // the ceiling it now sets on an ask is pinned in `tests/round42-coach-raise.test.ts` §C.
+    for (const [name, world] of [['unranked', unranked], ['hundred', hundred], ['ten', ten]] as const) {
+      expect(coachBilling(world).weeklyCents, `${name}: the fee agreed at the hire, not her rank today`)
+        .toBe(quote(world, 1))
+    }
+    // ⚠⚠ AND THE FIRST DRAFT OF THIS RE-AIM ADDED «…so the three are now the SAME number» AND WAS
+    // WRONG, which is recorded because it is the kind of over-claim a green loop above it hides. The
+    // three fixtures are three SEEDS – `r42-19-unranked` / `-hundred` / `-ten` – so they hire three
+    // different men at three different drawn rates, and their bills are 70025 / 78515 / 80180. What
+    // v82 makes identical is the RULE each one is billed by, never the figure; the loop above is that
+    // rule and is the whole of the claim. Measured, not reasoned: the draft went red and a probe
+    // printed the three rates side by side.
+    //
+    // ⚠ AND THE BAND ITSELF IS UNTOUCHED – it is read, it is right, and it is what an ask may climb
+    // to. A wave that deleted `coachRetainerBand` would still go red on the three reads above.
+    expect(quote(ten, 4.5)).toBeGreaterThan(quote(ten, 2))
+    expect(quote(ten, 2)).toBeGreaterThan(quote(ten, 1))
   })
 
   it('⭐ the band multiplies HIS LABOUR and not the hall – the coach line is exactly 4.5x', () => {
@@ -114,11 +135,36 @@ describe('round 42 #19 – her rank re-prices her coach', () => {
     // thing. Measured: banding the WHOLE rate (court included) left that draft 8/8 green while it
     // overcharged an elite 23+ family by ~$1,000 a week. The ratio is what tells the two apart,
     // because a court that rode the band would push the coach line ABOVE 4.5x.
+    // ⭐⭐⭐ RE-AIMED AT v82 (round 42 #51) AND THE RATIO MOVED FROM 4.5 TO 1, for the reason the arm
+    // above states at length: a man already on the payroll is not re-priced by her ranking any more.
+    // The ORIGINAL claim – that the band multiplies his LABOUR and never the hall – is the thing that
+    // must not be lost, and it survives whole: it is now asserted on `coachLabourCents`, which is the
+    // pure arithmetic the band still runs through, rather than on a bill that no longer applies it.
+    //
+    // ⚠⚠ AND THE TAUTOLOGY THE NOTE ABOVE WARNS ABOUT IS STILL AVOIDED, which is the only reason this
+    // re-aim is safe. Banding the WHOLE rate (court included) would push `coachLabourCents` above
+    // 4.5x, and the case below is red on exactly that mutation – so the measurement that caught the
+    // 8/8-green draft still catches it, one function closer to the arithmetic.
     expect(ten.split.coachCents).toBeGreaterThan(0)
-    expect(ten.split.coachCents / unranked.split.coachCents).toBeCloseTo(4.5, 3)
+    expect(ten.split.coachCents / unranked.split.coachCents, 'the BILL no longer rides her ranking').toBe(1)
     expect(ten.split.facilityCents).toBe(unranked.split.facilityCents)
-    // …and the v44 identity survives the raise (tests/split-the-bill.test.ts is its home).
+    // …and the v44 identity survives (tests/split-the-bill.test.ts is its home).
     expect(ten.split.coachCents + ten.split.facilityCents).toBe(ten.split.totalCents)
+
+    // ⭐ THE ORIGINAL CLAIM, KEPT, on the arithmetic the band still runs through – what an ask may
+    // climb to. Exactly 4.5x on his labour, and the hall charged the same to both.
+    const age = ageAtWeek(proCareer('r42-19-split').week)
+    for (const tier of ['budget', 'middle', 'high', 'elite'] as const) {
+      const [, hi] = coachRateBandCents(tier, age)
+      const atOne = coachLabourCents(hi, age, tier, coachRetainerBand(null))
+      const atTen = coachLabourCents(hi, age, tier, coachRetainerBand(5))
+      expect(atOne, `${tier}: his labour is a real number to multiply`).toBeGreaterThan(0)
+      expect(atTen / atOne, `${tier}: the band multiplies his LABOUR, exactly 4.5x`).toBeCloseTo(4.5, 3)
+      expect(
+        bandedRateCents(hi, age, tier, coachRetainerBand(5)) - atTen,
+        `${tier}: …and the hall is charged at the same price whatever she is ranked`,
+      ).toBe(facilityRateCents(age, tier))
+    }
   })
 })
 
@@ -202,10 +248,32 @@ describe('round 42 #19 – the raise cannot reach the mid game', () => {
     // the previous assertion would pass for the wrong reason.
     const ten = atRank(proCareer('r42-19-below'), 5)
     const none = proCareer('r42-19-below')
-    const tenRows = toSnapshot(ten).coachMarket.map((r) => r.weeklyCents)
+    const tenSnap = toSnapshot(ten).coachMarket
+    const tenRows = tenSnap.map((r) => r.weeklyCents)
     const noneRows = toSnapshot(none).coachMarket.map((r) => r.weeklyCents)
     expect(tenRows).not.toEqual(noneRows)
-    for (let i = 0; i < tenRows.length; i++) expect(tenRows[i]).toBeGreaterThan(noneRows[i])
+    // ⭐⭐⭐ RE-AIMED AT v82 (round 42 #51), AND THE EXCEPTION IS THE FENCE ITSELF RATHER THAN A
+    // CONCESSION. Round 44, his ruling: «the market's own quotes go on floating, and that is correct
+    // – what a NEW coach costs is a fact about the market and her standing. What stops floating is
+    // the fee of a man ALREADY on the payroll.» So fifteen rows re-price and the sixteenth – the man
+    // she has – quotes the fee that was agreed. This loop used to demand all sixteen.
+    //
+    // ⚠ THE `current` ROW IS IDENTIFIED BY THE SNAPSHOT'S OWN FLAG and never by an index, so a roster
+    // that reorders cannot turn this exception into a hole. ⚠ And it is asserted EQUAL rather than
+    // skipped: «his row did not move» is the claim, and a row that moved would be red here.
+    let excepted = 0
+    for (let i = 0; i < tenRows.length; i++) {
+      if (tenSnap[i].current) {
+        excepted++
+        expect(tenRows[i], 'the man on the payroll keeps the fee that was agreed').toBe(noneRows[i])
+      } else {
+        expect(tenRows[i], `${tenSnap[i].id}: a NEW coach costs what the market says`).toBeGreaterThan(noneRows[i])
+      }
+    }
+    // ⚠ EXACTLY ONE EXCEPTION, NAMED. A career with no coach would except none and this arm would
+    // silently become the old one; a bug that flagged every row `current` would except sixteen and
+    // assert nothing at all. Both go red here.
+    expect(excepted, 'she has exactly one coach, and exactly his row is exempt').toBe(1)
   })
 })
 

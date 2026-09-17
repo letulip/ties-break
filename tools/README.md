@@ -11,7 +11,7 @@ last-reviewed: 2026-08-24
 when this page and the repository disagree, and it also asserts that `tsconfig.app.json` lists
 exactly the live set.
 
-249 TypeScript files: **48 live**, **201 archival**.
+250 TypeScript files: **49 live**, **201 archival**.
 
 ## Why the split exists
 
@@ -38,6 +38,7 @@ question comes back to one, run it, and if it answers again, give it a line in `
 | `ad-shoot-bench.ts` | `npm run bench:adshoot` |
 | `chemistry-bench.ts` | `npm run bench:chemistry` |
 | `childhood-bench.ts` | `npm run bench:childhood` |
+| `coach-raise-bench.ts` | `npm run bench:coachraise` |
 | `dead-week-probe.ts` | `npm run bench:deadweek` |
 | `demo-save.ts` | writes the demo career used for screenshots and manual playtests |
 | `dual-universe-bench.ts` | `npm run bench:dual` |

@@ -255,6 +255,90 @@ export function bandedRateCents(rateCents: number, ageYears: number, tier: Coach
   return court + Math.round(Math.max(0, rateCents - court) * band)
 }
 
+// =================================================================================================
+// ⭐⭐⭐ ROUND 42 #51 / ROUND 44 – THE FEE IS FIXED AT HIRE AND HE ASKS
+//     (docs/specs/the-coachs-raise-2026-09.md)
+// =================================================================================================
+//
+// THE OWNER, 17.09, on finding his coach's weekly figure had fallen 2.2k -> 1.8k across a season
+// that went well: «мне кажется это не корректно», and on the fix: «"зафиксировать при найме и пусть
+// просит, как массажист" – верно».
+//
+// ⚠⚠ THE PARTITION IS THE WHOLE FIX, AND IT IS THE ONE THE GAME ALREADY PRINTS IN TWO LINES.
+// `bandedRateCents` one screen up is `court + labour`: the COURT is the venue's rent, a fact about
+// the market that the family pays a club for, and the LABOUR is the man's own retainer, which is
+// what two parties shake hands on. So the labour half is agreed once and stops floating; the court
+// half goes on floating, because no coach's contract has ever fixed what a tennis club charges, and
+// `weeklyBillSplit` already shows the family which is which («нам нужно отдельной строчкой списывать
+// тренера, а отдельной рент залов и прочего», 08.08).
+//
+// ⭐ AND THE COURT CAN ONLY EVER RISE, which is what makes the partition a complete answer to his
+// complaint rather than a partial one. `facilityRateCents` is the middle of the `self` band at her
+// age band times a fixed per-rung factor, and `ECONOMY.coach.hourlyRateCents` ascends down every
+// column – so once the labour is pinned, the rate this family pays is MONOTONE NON-DECREASING for
+// the life of the arrangement. A fee that falls is not merely discouraged; it is unreachable.
+// `tests/round44-coach-raise.test.ts` §A sweeps the whole table to say so.
+
+/** THE CONTRACT WITH THE MAN ON THE PAYROLL (v82). Persisted; `WorldState.coachDeal`.
+ *
+ *  ⚠ THE OBJECT IS TWO THINGS AND THE FIELD NAMES SAY WHICH IS WHICH. `coachId` / `labourCents` /
+ *  `agreedWeek` are the CONTRACT – written once when hands are shaken and never touched until they
+ *  are shaken again. `mark*` and `residualSince` are the MARKS the next ask is judged against –
+ *  re-taken at the same moment, and `residualSince` accrued weekly in between. Keeping them in one
+ *  key rather than two is not tidiness: they are re-stamped together or the score would be measured
+ *  against a year the fee was not agreed in. */
+export interface CoachDeal {
+  /** WHOSE deal it is. ⚠ A deal cannot outlive its man: every reader checks this against
+   *  `world.coachId` and falls back to the market's own derivation when they disagree, so a save
+   *  hand-built in a test, or a coach released and replaced inside one week, can never bill the
+   *  previous man's fee. */
+  coachId: string
+  /** HIS AGREED HOURLY LABOUR, in cents, above the court (`coachLabourCents`). The one number this
+   *  whole item exists to store, and the one that stops floating. */
+  labourCents: number
+  /** the week the figure was agreed – a hire, or an ask that was taken */
+  agreedWeek: number
+  /** her place in the professional table that week, or `null` when she held none. ⚠ `null` is the
+   *  ordinary case and it is not a zero: an unranked girl who ranks at all has moved further than
+   *  any climb inside the table, and the score reads it that way. */
+  markWtaRank: number | null
+  /** the SUM of her skills that week – the floor the realised-development component measures from */
+  markSkills: number
+  /** the SUM of her potential that week. ⚠ STORED RATHER THAN RE-READ FROM `world.potential`, which
+   *  would agree today and stop agreeing the week a psychologist's `composureBonus` lifts a ceiling.
+   *  A figure that is right by coincidence is the kind that survives review. */
+  markPotential: number
+  /** ⭐ HER RESULTS AGAINST THE ODDS RING, SUMMED SINCE `agreedWeek` (wave F1's own residual, banked
+   *  rather than re-derived). ⚠ IT HAS TO BE BANKED: `formResidualsOf` reads the event feed, the feed
+   *  prunes at 400 rows, and a year of a busy career does not survive that window – so a derived
+   *  answer would quietly shrink on exactly the careers it matters most on. */
+  residualSince: number
+}
+
+/** HIS LABOUR – the part of an hourly rate that is the man and not the hall, in cents.
+ *
+ *  ⚠ THE EXACT COMPLEMENT OF `bandedRateCents`, expressed by subtraction rather than by a second
+ *  copy of the arithmetic, so `court + labour === rate` holds on the integers by construction and
+ *  can never drift the way two spellings of one formula do. That identity is what lets the agreed
+ *  figure be stored ALONE: the rate the till bills is this number plus whatever the court costs on
+ *  the week it bills it. */
+export function coachLabourCents(rateCents: number, ageYears: number, tier: CoachTier, band: number): number {
+  return bandedRateCents(rateCents, ageYears, tier, band) - facilityRateCents(ageYears, tier)
+}
+
+/** WHAT THE ASK IS WORTH THIS YEAR, as a fraction – the owner's corridor with the progress score
+ *  positioned inside it. A flat year is the FLOOR and never nothing, and never less: «he never asks
+ *  for less» is the ruling, and the floor is where that is enforced in one place.
+ *
+ *  `score` is `[0, 1]` and is clamped here rather than trusted, because the score is a weighted mean
+ *  of four components and a component added later that forgets to clamp itself would otherwise walk
+ *  the fee outside a corridor the owner named. Pure; zero draws. */
+export function coachAskFraction(score: number): number {
+  const { askFloor, askCeiling } = ECONOMY.coach.raise
+  const s = Math.max(0, Math.min(1, score))
+  return askFloor + (askCeiling - askFloor) * s
+}
+
 /** The middle of the corridor this rung is priced in - the number a QUOTE uses.
  *
  *  The engine bills through one roll mapped into `[lo, hi]` (see coachCorridorFactor), so a real

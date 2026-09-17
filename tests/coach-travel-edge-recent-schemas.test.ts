@@ -38,9 +38,45 @@ import {
   PRE_V79,
   PRE_V80,
   PRE_V81,
+  PRE_V82,
 } from './coachTravelEdgeFixtures'
 
 describe('the byte-identity of a career that does not travel', () => {
+  it('⭐⭐⭐ v82: rolling the schema back to 81 – dropping `coachDeal` – returns the v81 SHAPE, and on no coached career the v81 CAREER', () => {
+    // ⚠⚠ A RE-ANCHORING AND NOT AN IDENTITY, AND THE CASE NAME SAYS SO because v82 changes what a
+    // hired coach COSTS (round 42 #51, ruled 17.09). Until this version the man's hourly figure was
+    // stored nowhere and re-derived every week from her age band and her ranking; it is now the
+    // LABOUR that was agreed at hire plus the court at today's price. Dropping `coachDeal` gives back
+    // the v81 SHAPE and can never give back the v81 CAREER, because the money is different.
+    //
+    // ⚠⚠ AND THE BUILD PREDICTED AN IDENTITY HERE AND WAS WRONG BY ONE WEEK. The prediction: «156
+    // weeks ends inside `coachAgeBand` 0 with no WTA rank, so the agreed labour equals the market's,
+    // the ceiling leaves no room and no ask can fire». `ageAtWeek` returns WHOLE YEARS – 16 from week
+    // 104, 17 at week 156 exactly – and this walk's final tick runs AT 156, which is also `3 x 52`.
+    // So the last week is billed across an age-band step AND is an anniversary. The per-key diff
+    // caught it before a constant was touched, which is the only reason it is a sentence here rather
+    // than a re-freeze under a comment claiming a key append.
+    //
+    // ⭐ THE SELF-COACHED CELL IS THE CONTROL INSIDE THE CASE. It moves on `coachDeal` and
+    // `schemaVersion` alone – two keys of 94 – because there is no coach and therefore no fee to fix,
+    // and its value below is the VERBATIM v81 LIVE career – the `FROZEN.selfTravelling` this file
+    // carried before the wave, measured on the neutralised tree rather than read off the page. If that
+    // one cell ever stops reproducing while the other two move, something has reached a career with
+    // nobody in the corner.
+    // ⚠ «MEASURED RATHER THAN READ OFF THE PAGE» IS NOT A FLOURISH. A throw-away comparison script
+    // claimed this cell had moved, and the block it had actually read was `PRE_V78`'s – `FROZEN` is
+    // the one register in that file whose doc comment sits INSIDE the literal, so its cells are two
+    // hundred lines below its declaration. The full note is in the dated block at the head of
+    // tests/coachTravelEdgeFixtures.ts.
+    //
+    // ⚠ THE PER-KEY CONTROL is in the dated block at the head of tests/coachTravelEdgeFixtures.ts –
+    // 7 keys of 93 on the two grinder cells, 6 on the two player cells, 2 on the self-coached one,
+    // `rngMain` byte-identical on all five, and the frozen MAIN capture unmoved.
+    expect(careerHashAtSchema(5, 0, 81), '25k · middle coach · grinder – the v81 SHAPE, a different career').toBe(PRE_V82.middleGrinder)
+    expect(careerHashAtSchema(8, 0, 81), '120k · elite coach · grinder – the v81 SHAPE, a different career').toBe(PRE_V82.eliteGrinder)
+    expect(careerHashAtSchema(0, 1, 81), '8k · self-coached · player – no coach, so the VERBATIM v81 value').toBe(PRE_V82.selfTravelling)
+  })
+
   it('⭐⭐⭐ v81: rolling the schema back to 80 – dropping `frame` – returns the v80 CAREER on all three', () => {
     // ⭐⭐ THE FIRST IDENTITY RUNG SINCE v78, AND THE CASE NAME SAYS SO because the two rungs under it
     // could not. v81 appends ONE key – `LifeBeatRecord.frame`, round 44 – and it appends it to a ROW

@@ -70,6 +70,7 @@
     "graph": "node scripts/graph.mjs",
     "graph:check": "node scripts/graph.mjs --check",
     "bench:masseurraise": "vite-node tools/masseur-raise-bench.ts",
+    "bench:coachraise": "vite-node tools/coach-raise-bench.ts",
     "bench:form": "vite-node tools/form-bench.ts",
     "bench:gsweep": "vite-node tools/form-g-sweep.ts"
   },

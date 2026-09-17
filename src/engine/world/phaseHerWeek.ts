@@ -70,6 +70,11 @@ import { psychologistWorksThisWeek, resolvePsychologist } from './psychologist'
 // runtime cycle – the same measurement `./masseur` and `./psychologist` carry one line up.
 import { accrueFormWeek } from './form'
 import { resolveSparring } from './sparring'
+// ⭐⭐⭐ v82, ROUND 42 #51 – the coach's annual ask, beside the masseur's. ⚠ ONE-WAY ARROW, and
+// measured the same way the two above were: `world/coachMarket.ts` imports no phase at all
+// (`coachWorksThisWeek` deliberately lives in `phaseFinance.ts`, with the bill that is its first
+// reader), so this import closes no runtime loop.
+import { bankCoachResidual, resolveCoachRaise } from './coachMarket'
 // ⚠ ONE-WAY ARROW, AND MEASURED: `world/spotlight.ts` imports `../economy`, `../season/calendar`,
 // `./constants`, `./fame` and `./loveEpisodes` – never a phase and never `../spirit` – so this
 // import closes no runtime loop, the same shape `./lifeBeat` above already has. It is the VALUE side
@@ -605,7 +610,13 @@ export function resolveBodyAndPlanner(world: WorldState): boolean {
   //        is a filter, a closed-form evaluation over snapshots the save already holds, a sum and a
   //        clamp. `seed:form:<week>` stays reserved and unused, so the frozen capture
   //        (41550 / e6b0c709) is untouched by construction.
-  accrueFormWeek(world, playedThisWeek)
+  // ⭐⭐⭐ v82, ROUND 42 #51 – AND THE PHASE WIRES THE COACH'S CONTRACT TO THE SAME RESIDUALS, which
+  //        is why `accrueFormWeek` hands them back instead of banking them itself: `world/form.ts`
+  //        may not import `coachMarket.ts` (its own header names the runtime cycle that would close),
+  //        and a cross-concern wire belongs in the phase that already holds both. One derivation of
+  //        «what she did against expectation», read by her form and by the man who is paid to produce
+  //        it. Zero draws: a sum over a list this line already has.
+  bankCoachResidual(world, accrueFormWeek(world, playedThisWeek))
   // 1c-w4. W4: the REST branch's small credit, applied beside the other week-type gains rather than
   //        inside `accrueCondition` – whose arity-2, zero-RNG contract is pinned by B1 in
   //        tests/condition.test.ts (`expect(accrueCondition.length).toBe(2)`) and must not gain a
@@ -862,6 +873,21 @@ export function playHerWeek(world: WorldState, field: WeekField, playedThisWeek:
   // ledger reads in the order it happened. Zero draws on any stream.
   resolveMasseurRaise(world)
   resolveMasseur(world)
+  // ⭐⭐⭐ 1c-coach, v82 (ROUND 42 #51, ruled 17.09) – AND ONCE A YEAR THE COACH ASKS TOO, on the
+  // masseur's tested annual mechanism one line up. His ruling: «"зафиксировать при найме и пусть
+  // просит, как массажист" – верно».
+  //
+  // ⚠ BESIDE THE MASSEUR'S AND NOT INSIDE THE TILL, deliberately. `resolveBaseCosts` (phase 4) is
+  // where the coach's week is CHARGED, and this phase is where the seats' arrangements change – so
+  // the ask lands in the same slot the masseur's does, on the week its own anniversary turns, and
+  // the bill that follows is already the new one. ⚠ The two seats' models are different and that is
+  // by design, stated in `docs/specs/the-masseurs-ask-2026-09.md` §1: the masseur's driver is TIME
+  // SERVED because his value is his hours; the coach's is a PROGRESS BASKET because developing her
+  // is his job. Letting the masseur read her titles would charge her success twice.
+  //
+  // ⚠ ZERO DRAWS on any stream – a weighted mean over state the tick has already written, a clamp
+  // and an integer multiply. The frozen MAIN capture (41550 / e6b0c709) cannot see it.
+  resolveCoachRaise(world)
   // ⭐ ...AND THE RETURN-WEEK SESSION (owner 22.08: «довесить послетурнирное восстановление 1
   // сеанс массажа по возвращении»): when he was NOT flown to her last tournament, the first
   // non-played week after it gets one extra session's worth of recovery, receipt included.
