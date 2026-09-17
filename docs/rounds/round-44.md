@@ -554,3 +554,37 @@ never built, and nobody named it as owed** – not the spec, not the round-43 le
 FRACTION must carry the sign too, because red/green is the commonest colour-vision confusion; the
 neutral must read «nothing has happened yet» rather than «bad»; and `--accent` stays the icon's so
 the two never compete.
+
+
+---
+
+## THE WAVE'S REMAINING SEQUENCE (his 17.09: «добавляй в эту волну и продолжай пошагово»)
+
+One builder at a time, the architect's gate between each, one final gate over the whole wave.
+
+| # | step | state |
+| --- | --- | --- |
+| 1 | the corpus into the engine, generated and round-tripped | ✅ gated |
+| 2 | the decline bench and the four seats | ✅ gated, coach row held at 0 |
+| 3 | the eight into the document, 21 voices, his six findings | 🔨 running |
+| 4 | the fairness pin re-aimed, the sweep re-run with the coach row LIVE, the constant chosen by measurement, Q2's floor re-tested | queued |
+| 5 | the chemistry made VISIBLE: the wire first, then §8a's gauge, then #52's card marker | queued |
+
+⚠ **Step 5's order is not a preference.** The gauge cannot be built before the wire, because
+`coachPairs` does not reach the snapshot at all – that is the finding, and building the visible half
+first is how it stayed invisible for a whole round.
+
+⚠⚠ **AND THE WAVE IS NOW LARGE, WHICH IS SAID RATHER THAN DISCOVERED AT THE PR.** Round 43 shipped
+67 commits and its body needed a «what the round did not do» block to stay honest. This one already
+carries a schema move, an 817-string catalogue, a development-model change and two UI surfaces. If
+the final gate's diff stops being reviewable, the right answer is to say so and split the PR, not to
+ship a body nobody can read.
+
+### Still carried and NOT in the five steps above – his items, waiting on his priority
+
+- **#51** the coach's fee fixed at hire and he asks – ruled 17.09, needs a schema key.
+- **Re-affirming the psychologist's year does nothing** (`psychologist.ts:536`), and the confirm
+  dialog before the year is set.
+- **The hitting partner is missing from the team budget**, and `committedCents` is short by his
+  salary.
+- **#46** show what every travelling specialist buys.
