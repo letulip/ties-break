@@ -1919,7 +1919,7 @@ export const SMALL_TALK_CORPUS: readonly SmallTalkSituation[] = [
         },
       },
       deep: {
-        opener: '"He barely spoke. I can\'t tell if that\'s confidence or if it was all said already."',
+        opener: '"They barely spoke. I can\'t tell if that\'s confidence or if it was all said already."',
         branches: {
           invite: {
             label: 'Ask what the four words were',

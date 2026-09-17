@@ -1173,7 +1173,7 @@ which contradicted the row's own note. Repaired 17.09; the note was true and the
 | --- | --- |
 | `sunny` | `"I watched somebody else's coach for an hour and they said about four words."` |
 | `fiery` | `"Four words. All session. I'd like to know which four."` |
-| `deep` | `"He barely spoke. I can't tell if that's confidence or if it was all said already."` |
+| `deep` | `"They barely spoke. I can't tell if that's confidence or if it was all said already."` |
 | `quiet` | `"I watched another session for a bit. Quieter than ours."` |
 
 **Parent:** *Ask what the four words were* · *Say the talking is not the coaching* · *Say every pair finds its own way*
@@ -1938,8 +1938,18 @@ which is why it was worth running.** The he/she split is real and it is HER coac
 the sentence, so there is no gender to agree with; a pronoun there is a guess wearing agreement's
 clothes, which is the exact thing R15-7 exists to stop.
 
-**Repaired in the two lines that carried it** – the kernel and `sunny`'s opener – with the neutral
-singular, and no other voice or reply in R25 held one:
+⚠⚠ **THE FIRST REPAIR PASS MISSED A THIRD LINE, AND THE SENTENCE THAT SAID OTHERWISE WAS WRONG WHEN
+IT WAS WRITTEN.** It read «repaired in the two lines that carried it – the kernel and `sunny`'s
+opener – and no other voice or reply in R25 held one». `deep`'s opener held one: «**He** barely
+spoke.» The check behind that sentence was `grep -E "\\b(he|his|him)\\b"` – **case-sensitive**, and
+the quotation opens with a capital `He`, so the search could not see it. ⭐ It is this document's own
+named failure family, one rung worse: a claim written, asserted as verified, and never checked
+against the thing it counts. Found by the builder that emitted the catalogue, because
+`tests/coach-voice.test.ts` reads `src/` and the line had finally become code.
+
+**Repaired in all three lines that carried it** – the kernel, `sunny`'s opener and `deep`'s – with
+the neutral singular. A case-INSENSITIVE sweep of all 43×4 openers and all 516 replies confirms
+these were the only ones:
 > `"I watched somebody else's coach for an hour and they said about four words."`
 
 ⚠ The alternative was to draw a sex for the observed coach on a purpose-scoped sub-stream and splice

@@ -4719,10 +4719,10 @@ rust». ⭐ A survives a re-tune of the ladder and B would have to be re-written
 name from `COACH_FIRST_M` or `COACH_FIRST_F` by it. ⭐ But **no other player has a modelled coach
 anywhere** in `season/rival.ts` or `season/cohort.ts`, and R25's subject is another player's coach –
 a person who exists only inside the sentence. There was no gender to agree with, so the pronoun was
-a guess wearing agreement's clothes. Repaired with the neutral singular in the only two lines that
-held it. ⚠ Drawing a sex for the observed coach on a sub-stream was available and rejected: one word
-of texture against new randomness threaded through sixteen strings, for a stranger the row is
-deliberately vague about.
+a guess wearing agreement's clothes. ⚠⚠ **AND THE FIRST REPAIR MISSED A LINE – corrected 17.09, after the catalogue was emitted.** The
+entry first said «the only two lines that held it». `deep`'s opener held a third («He barely spoke»),
+and the check behind the claim was a CASE-SENSITIVE grep against a quotation that opens with a
+capital. All three are repaired now, and the sweep that confirms it is case-insensitive.
 
 **9. R17's GATE: «пиши гейт, давай сделаем, раз это возможно и дешево».** `SMALL_TALK_FACTS` held
 four claims and `SMALL_TALK_FACT` is a total record, so the row could not ship while it named a
