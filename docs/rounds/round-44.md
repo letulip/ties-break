@@ -505,3 +505,74 @@ situations including the worries, which is his own rule from the pool's rejected
 
 ⚠ **His own scope instruction governs: «I'd repair the factual seams rather than conduct another
 broad prose rewrite.»** A line not named above is not to be improved.
+
+---
+
+## ✅ WHAT BUILDER 2 DID – the eight moved, 21 voices written, six findings closed
+
+### The move, and the one thing it cost
+
+`SMALL_TALK_SHIPPED` is **deleted**. The eight are rows `R45`–`R52` of
+`docs/specs/small-talk-corpus-2026-09.md` and `SMALL_TALK_SITUATIONS` is now simply
+`SMALL_TALK_CORPUS`, so the catalogue has ONE source and the round-trip pin covers **51 rows instead
+of 43**: 204 openers, 153 labels, 612 replies and `court-four`'s 4 shared second beats.
+
+⚠ **The document format could not say one thing, and that is the whole of the machinery this needed.**
+A `story` has a SECOND BEAT – the incident every route hears before its own branch, told in her own
+words, so it is per voice. `court-four` is the only such row in the game. The parser, the emitter and
+the round-trip pin each learned an optional `**shared**` block: strict, all four voices or none, with
+its own count asserted so a block that silently stopped matching cannot read as «this row never had
+one». Two new mutation arms were RUN, not asserted – deleting the block from the document alone
+(**2 RED**, including the negative half) and renaming one of the eight ids in the document alone
+(**7 RED**).
+
+⚠⚠ **The eight ids are unchanged and are now pinned by name**, first in the array and first in the
+document, because `pickInt` over the filtered pool reads POSITION and a renamed id orphans a
+`lifeLog` row. Their refs run last (`R45`–`R52`) so `R1`–`R44` keep the numbers his review uses.
+Every ruling their banner comments carried moved into the rows' own prose.
+
+### The 21 – DRAFTS, marked NEW line by line beside the eleven marked HIS
+
+Checked by script against the law they are written under: **0 duplicate payloads across all 973
+authored strings, 0 masculine pronouns outside `court-four`** (whose seven remain pinned by count),
+0 digits, prices, em-dashes or Cyrillic, every opener a single quoted span. No new line asserts a
+result, a placing, a longitudinal history or an ongoing relationship; the gated rows say only what
+their fact licenses – `coach-real` asks about a coach's quality and never answers it, `line-call`
+never says she lost, `march-entry` never names a price, and `beat-her-conqueror`'s «four» is the one
+number in the document a gate actually checks.
+
+### His six findings
+
+1. **[P1] R36** – kernel, both openers, the label and **four** `invite` replies rewritten; `quiet`'s
+   «walked off fine» repaired. ⚠ **A fifth line carried the same claim and his inventory did not name
+   it** – `sunny`'s `respond` «still running at the end» – so it is repaired WITH them and reported
+   in the row, because leaving it would have left the row describing an ending she did not witness in
+   one voice of four. **His line to put back if he wants it.**
+2. **[P2] R30** – both openers: `fiery`'s outcome and `deep`'s two-year draw history.
+3. **[P2] R34** – his own suggested label, and four `invite` replies that describe the players she
+   watches rather than her own second serve.
+4. **[P2] R16 / R29 / R2** – the three manufactured relationships.
+5. **[P3] R33** – the label replaced and its four replies rewritten to answer it (R36's is finding 1).
+6. R15 and R18 were already repaired and were not touched.
+
+⚠ **Three lines his findings do NOT name are reported in the document and left exactly as they are**,
+on his own scope instruction: R36 `fiery`'s «three hours», R33 `quiet`'s «twice now», and R34's
+`respond` block, whose label invites her to talk about her own practice.
+
+### What it cost the frozen careers, and what it did not
+
+**35 cells of 98 moved; 63 held byte for byte. Exactly ONE key moved on every career: `lifeLog`.**
+No schema, no migration. ⭐ The block at the head of `tests/coachTravelEdgeFixtures.ts` **predicted
+this one in as many words** – «it will change for a reason that looks unrelated: a longer
+`FREEZE_WEEKS`, or one corpus row given a `school` stage» – and six of the eight declare `school`,
+which is the stage a 156-week career never leaves.
+
+⚠ **The frozen MAIN capture is unmoved: 41550 draws / `e6b0c709`, re-run green.** A bigger catalogue
+takes no draw – `rollSmallTalk` derives the same three keys in the same order whatever the pool holds
+– and `rngMain` is byte-identical between the arms on all five cells, reproducing the three canonical
+fingerprints.
+
+⚠ **`tests/round42-small-talk-exchange.test.ts` §G widened from one column to four and that is REAL,
+not a pin edited to match the code**: `line-call`'s «Tell her what worries us» is the §8d.1 label his
+15.09 revision never reached, it is still his, and it is now answered by four girls instead of one.
+Nothing was weakened; the growth is said out loud in the case itself.
