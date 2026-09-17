@@ -190,11 +190,27 @@ describe('Bills – the sponsor quota and the length of the contract', () => {
 describe('MoneyScreen – the coach quote is priced off the band the till charges', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
-  /** The bill exactly as `resolveBaseCosts` computes it, for a given age input. */
-  function billFor(snap: Snapshot, ageYears: number) {
+  /** The bill exactly as `resolveBaseCosts` computes it, for a given age input.
+   *
+   *  ⭐⭐⭐ RE-AIMED AT v82 (round 42 #51, ruled 17.09), NOT WEAKENED, AND THE CLAIM IS UNCHANGED. This
+   *  helper reconstructs the TILL, and the till stopped re-deriving a hired man's rate from her age
+   *  band: it now bills `facilityRateCents(age, tier) + the labour agreed at the hire`
+   *  (`coachRateCents`, `docs/specs/the-coachs-raise-2026-09.md`). Reading `coach.rateCents` here was
+   *  the v81 till and is now a different number from the one the screen shows.
+   *
+   *  ⚠⚠ THE GUARD ITSELF SURVIVES WHOLE, WHICH IS THE ONLY REASON THIS RE-AIM IS SAFE. Its subject is
+   *  the ONE-CLOCK rule – «the quote follows `ageAtWeek(week)`, not the age printed on the screen» –
+   *  and the COURT still steps with the band (`facilityRateCents` is the middle of the `self` band at
+   *  `coachAgeBand(age)`, x1.1 across the 16→17 step). So the two clocks still produce two different
+   *  bills and the case still has teeth; the `expect(misquoted).not.toBe(charged)` line two screens
+   *  down is what proves that rather than assumes it.
+   *
+   *  ⚠ `agreedLabourCents` IS PASSED IN because the deal is world state and does not cross the wire –
+   *  no `Snapshot` field was added for it, deliberately, since no screen needs one. */
+  function billFor(snap: Snapshot, ageYears: number, agreedLabourCents: number) {
     const coach = coachById(snap.seed, ageYears, snap.coachId)
     const tier = tierOf(coach)
-    const rate = coach ? coach.rateCents : facilityRateCents(ageYears, tier)
+    const rate = coach ? facilityRateCents(ageYears, tier) + agreedLabourCents : facilityRateCents(ageYears, tier)
     return weeklyBillSplit({
       rateCents: rate,
       ageYears,
@@ -223,8 +239,13 @@ describe('MoneyScreen – the coach quote is priced off the band the till charge
     const shown: Snapshot = { ...snap, ageYears: band - 1 }
     // The fixture must really cross a row, or this test would pass on a coincidence.
     expect(coachAgeBand(shown.ageYears)).not.toBe(coachAgeBand(band))
-    const charged = billFor(shown, band)
-    const misquoted = billFor(shown, shown.ageYears)
+    // ⭐ v82 – THE AGREED LABOUR, read off the world the snapshot was taken from. The till bills the
+    // court at today's price plus this; see `billFor`'s own note for why it is passed rather than
+    // derived, and why the one-clock guard below still has teeth with it in place.
+    const agreed = world.coachDeal?.labourCents ?? 0
+    expect(agreed, 'the fixture must really have a contract, or the two arms below collapse').toBeGreaterThan(0)
+    const charged = billFor(shown, band, agreed)
+    const misquoted = billFor(shown, shown.ageYears, agreed)
     expect(misquoted.totalCents).not.toBe(charged.totalCents)
 
     const store = useGameStore()
