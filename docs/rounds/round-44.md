@@ -102,3 +102,57 @@ typos that no test can catch, because the tests compare against what was typed.*
 - Four of the frame pool's eighteen lines are the architect's, marked DRAFT.
 - R29 `fiery` and R12's converging `space` stance are recorded with the architect's concern intact
   and his ruling to keep them.
+
+
+---
+
+## OFF HIS OWN PLAY, 17.09 – two items on the psychologist's year
+
+### 1. ⚠⚠ RE-CHOOSING THE YEAR'S WORK YOU ALREADY HAVE DOES NOTHING – a real defect, one line
+
+His report: «у меня в межсезонье мигает группа плашек выбора что делать с психологом, но почему-то
+не выбирается повторно существующая».
+
+**`world/psychologist.ts:536`:**
+```ts
+if ((world.psychologistFocus ?? null) === focus) return
+```
+
+That early return never reaches line 544, where the season is stamped
+(`world.psychologistFocusSeason = psychologistFocusSeasonFor(world.week)`). The sequence he hit:
+
+1. He reaches the off-season carrying LAST season's focus, so `psychologistFocusSeason` is last
+   season's, `psychologistFocusRefusal` returns `null` for every focus, every option is open, the
+   marker is up and (since round 43) the block glows.
+2. He presses **the one he already has** – «same again this year» – and the setter returns on the
+   spot. No stamp.
+3. `psychologistFocusOpen` is still non-empty, so the marker never clears and the block keeps
+   glowing. His choice was never recorded.
+
+⭐ **Choosing a different focus works**, which is exactly why his sentence names the existing one.
+
+⚠ **The guard is not wrong about what it was for** – not writing a feed row for a no-op change – but
+**the season stamp is not a no-op.** Confirming last year's work FOR THIS SEASON is a full decision
+and the model has nowhere to put it. The fix separates the two: the stamp (and the refusal it
+drives) is unconditional; the ledger row stays suppressed when the focus itself did not move.
+
+⚠ `psychologistFocusSeason` is persisted, so when it is written changes what a save holds – but the
+field already exists and no schema move is needed. It DOES want a test that a re-affirmation clears
+the marker, mutation-verified by restoring the early return and watching it go red.
+
+### 2. A CONFIRMATION BEFORE THE YEAR IS SET – his ask, "вдруг человек промахнулся"
+
+The pick is a season-long commitment that LOCKS once taken (`PSYCHOLOGIST_FOCUS_SEASON_REFUSAL`
+closes the row for the rest of the off-season), and it is taken by a single press on a small
+half-width card. A misfire costs a year.
+
+`SupportStaffTab.vue` already owns the idiom – `hireMessage` / `releaseMessage` drive the same
+confirm dialog for hiring and letting go – so this is the existing pattern asked of one more control,
+not a new component.
+
+⚠⚠ **AND THE DIALOG IS MEASURED AGAINST A PHONE BEFORE IT SHIPS** (round-20 #1's standing rule): a
+mounted assertion that its dismiss control's box is inside 375x667, proved by mutating to the
+too-tall version and watching the test fail. A blocking overlay taller than the screen is how a
+career once stopped dead.
+
+⚠ The confirmation's wording is NEW PLAYER-FACING COPY and therefore a DRAFT for him.
