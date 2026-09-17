@@ -544,7 +544,10 @@ describe('8. ⭐ the fare – the coach`s price rule asked for one more seat (st
     expect(before - world.fundsCents).toBe(fare)
     const row = world.events[world.events.length - 1]
     expect(row.category).toBe('travel')
-    expect(row.text).toContain('masseur travels')
+    // ⚠ THE ROW'S WORDING MOVED WITH HIS 17.09 SHEET and the claim did not: a ledger row is a LABEL
+    // rather than a sentence addressed to the reader, so «Your masseur travels to the …» became
+    // «Masseur travel to …» – the hitting partner's own row one seat over, already written that way.
+    expect(row.text).toContain('Masseur travel to')
     expect(row.amountCents).toBe(-fare)
     const homebody = proWorld('masseur-fare-charge-none')
     hireMasseur(homebody, true)
@@ -645,7 +648,8 @@ describe('10. ⭐ per-match tour pricing – the travel week is billed per match
     const { world, event } = playedTourWeek('tour-bill', true)
     expect(world.pendingTournament!.masseurThere, 'the fare was charged and recorded').toBe(true)
     expect(weeklySalaryRows(world, world.week), 'the weekly rung bill stood down').toHaveLength(0)
-    const fareRow = world.events.find((e) => e.week === world.week && e.text.includes('masseur travels'))
+    // ⚠ «Masseur travel to …» since his 17.09 sheet – see §8's note on the row's wording.
+    const fareRow = world.events.find((e) => e.week === world.week && e.text.includes('Masseur travel to'))
     expect(fareRow, 'the fare itself is charged exactly as before').toBeTruthy()
     expect(fareRow!.amountCents).toBe(-event.travelCostCents)
 

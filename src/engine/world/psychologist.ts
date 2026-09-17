@@ -71,9 +71,14 @@ export function psychologistUnlocked(world: WorldState): boolean {
 
 /** The refusal, written once – the staff card prints it and `hirePsychologist` throws it, so the
  *  disabled state and the refused click can never tell two stories (the R10-16 doctrine, and the
- *  masseur's own `MASSEUR_LOCKED_DETAIL` beside it). DRAFT (invariant 4). */
+ *  masseur's own `MASSEUR_LOCKED_DETAIL` beside it).
+ *
+ *  ⭐⭐ NOT A DRAFT ANY MORE – HIS, FROM THE 17.09 SHEET. It read «A psychologist joins a professional
+ *  operation – her first counting W-series result opens the door» and the sheet strikes that phrase;
+ *  the shape that replaced it is `SPARRING_LOCKED_DETAIL`'s, which is the unlock he wrote himself for
+ *  this exact meaning one seat over. So the three seats open with one sentence each in one shape. */
 export const PSYCHOLOGIST_LOCKED_DETAIL =
-  'A psychologist joins a professional operation – her first counting W-series result opens the door.'
+  'Her first counting W-series result opens a place for a psychologist.'
 
 /** The tag on a psychologist-change event – the coach's `COACH_CHANGE_KEY` pattern through the
  *  masseur's copy of it, week in the key so two changes can never collide. */
@@ -112,10 +117,11 @@ export function hirePsychologist(world: WorldState, hire: boolean): void {
     // ⚠ NO PRONOUN (R15-7's standing order). The masseur's own note explains why HIS copy may carry
     // one – "masseur" is the male word by its own grammar – and none of that transfers: a
     // psychologist is a psychologist whoever comes to the call, and the rung is literally about who
-    // that is. DRAFTS, both lines (invariant 4).
+    // that is. ⭐⭐ BOTH LINES ARE HIS SINCE THE 17.09 SHEET – «on the payroll» / «off the payroll»
+    // became JOINS THE TEAM and LEAVES THE TEAM, the hitting partner's own pair asked of this seat.
     text: hire
-      ? 'A psychologist is on the payroll now – one call a week, wherever she is.'
-      : 'The psychologist is off the payroll – the calls stop at the end of the week.',
+      ? 'A psychologist joins the team – one call a week, wherever she is.'
+      : 'The psychologist leaves the team – the calls stop at the end of the week.',
   })
 }
 
@@ -352,9 +358,11 @@ export const PSY_FOCUS_LINE: Record<PsyFocus, string> = {
   publicLife: 'The year goes on the weeks under the cameras – and what being looked at takes out of her.',
 }
 
-/** The stale-screen refusal: a year of work with nobody to work it. DRAFT. */
+/** The stale-screen refusal: a year of work with nobody to work it. ⭐ HIS SINCE THE 17.09 SHEET –
+ *  «somebody on the payroll first» became «somebody on the team first», the one word the sheet moves
+ *  in this sentence. */
 export const PSYCHOLOGIST_FOCUS_UNHIRED_REFUSAL =
-  'Nobody is taking the call – a year of work needs somebody on the payroll first.'
+  'Nobody is taking the call – a year of work needs somebody on the team first.'
 
 /** The roster refusal's twin for the focus id – `setPsychologistRung`'s own shape, so a stale screen
  *  can no more invent a year than it can invent a specialist. DRAFT.

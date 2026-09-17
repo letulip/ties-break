@@ -316,7 +316,7 @@ const travelSubLine = computed(() => {
     ? `Your sponsor pays ${byBrand}% of the second seat at the events that pay prize money – the rest is yours.`
     : covered
       ? 'The support does not pay for the second seat – hers is discounted, the coach travels at the full fare.'
-      : 'Twice the fare on every trip – a second seat beside hers.'
+      : 'One additional fare per trip – a second seat beside hers.'
   if (!b || b.travelTrips === 0) return rule
   const trips = b.travelTrips === 1 ? '1 trip' : `${b.travelTrips} trips`
   return covered || byBrand > 0
@@ -897,7 +897,7 @@ function scrollToTier(tier: CoachTier): void {
         :aria-label="
           travelsOnEventWeeks
             ? 'Coach travels to tournaments with her – on. Press to send the coach home for competition weeks.'
-            : 'Coach travels to tournaments with her – off. Press to buy the second fare on every trip.'
+            : 'Coach travels to tournaments with her – off. Press to buy one additional fare per trip.'
         "
         @click="toggleTravel"
       >
@@ -931,8 +931,8 @@ function scrollToTier(tier: CoachTier): void {
         :disabled="game.busy"
         :aria-label="
           travelsToJuniors
-            ? 'Coach travels to junior and domestic tournaments – on. Press to stop paying the second fare on the trips that pay no prize money.'
-            : 'Coach travels to junior and domestic tournaments – off. Press to buy the second fare on those trips too.'
+            ? 'Coach travels to junior and domestic tournaments – on. Press to stop paying the additional fare on the trips that pay no prize money.'
+            : 'Coach travels to junior and domestic tournaments – off. Press to buy the additional fare on those trips too.'
         "
         @click="toggleJuniors"
       >

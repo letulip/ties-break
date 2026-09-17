@@ -227,7 +227,10 @@ describe('§1 the row on screen T', () => {
     const w = await mountMarket(snap)
     const text = travelRow(w).sub.text()
     // The RULE is always said - it is what makes the decision legible without a booked season.
-    expect(text, 'the owner\'s own pricing, in four words').toMatch(/twice the fare/i)
+    // ⚠ THE PHRASE IS HIS 17.09 SHEET'S AND THE CLAIM IS UNCHANGED: the travel cost is ONE
+    // ADDITIONAL FARE on every surface now, so the four words this case was written about are four
+    // different words. It still asserts that the plain family reads the bare RULE.
+    expect(text, 'the owner\'s own pricing, in four words').toMatch(/one additional fare per trip/i)
     // ...and the MONEY comes off `coachBilling`, never out of the template's own arithmetic.
     expect(snap.coachBilling.travelTrips, 'the fixture has trips booked').toBeGreaterThan(0)
     expect(text).toMatch(new RegExp(`${snap.coachBilling.travelTrips} trips`))
@@ -261,8 +264,16 @@ describe('§1 the row on screen T', () => {
     // are the two words this screen is allowed.
     expect(text, 'the sentence the wave exists for').toMatch(/support does not pay|not covered/i)
     expect(text, 'and it says what he does pay').toMatch(/full fare/i)
-    // (b) IT NO LONGER QUOTES THE MULTIPLE, which is the half that was WRONG rather than missing.
-    expect(text, 'a bare multiple is false for a covered family').not.toMatch(/twice the fare/i)
+    // (b) IT NO LONGER QUOTES THE BARE RULE, which is the half that was WRONG rather than missing.
+    // ⚠ RE-POINTED, NOT WEAKENED (his 17.09 sheet). The multiple this line was written against is
+    // gone from the whole screen – «twice the fare» became «one additional fare per trip» everywhere
+    // – so asserting the ABSENCE of the multiple would now pass on every arm and prove nothing. The
+    // claim is and always was «the covered family does not read the plain family's sentence», so the
+    // negative is pointed at the plain family's CURRENT words. The paired case below holds the same
+    // discrimination from the other side, on two mounts of one season.
+    expect(text, 'the plain rule is not the true sentence for a covered family').not.toMatch(
+      /one additional fare per trip/i,
+    )
     // (c) AND BOTH FIGURES ARE THE ENGINE'S, interpolated - hers and his, over the trips he is on.
     expect(text).toContain(formatCents(b.travelHerFareCents))
     expect(text).toContain(formatCents(b.travelFareCents))
@@ -287,7 +298,7 @@ describe('§1 the row on screen T', () => {
     const covered = bookedSeason('row-covered', { scholarship: true })
     const coveredText = travelRow(await mountMarket(covered)).sub.text()
 
-    expect(plainText, 'nothing moved for a family paying full price').toMatch(/twice the fare/i)
+    expect(plainText, 'nothing moved for a family paying full price').toMatch(/one additional fare per trip/i)
     expect(coveredText, 'and everything moved for the one that is supported').not.toBe(plainText)
   })
 

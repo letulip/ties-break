@@ -138,7 +138,7 @@ export const STATIONS: Record<string, Station> = {
   },
 
   'CoachMarketScreen.vue': {
-    visit: (page) => page.getByRole('button', { name: 'Coach note - open the Coach Market' }).click(),
+    visit: (page) => page.getByRole('button', { name: 'Coach note – open the Coach Market' }).click(),
     arrived: (page) => page.getByRole('heading', { name: 'Coach Market', level: 2 }),
   },
 

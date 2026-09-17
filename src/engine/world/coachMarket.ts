@@ -259,7 +259,7 @@ export function setCoachOnEventWeeks(world: WorldState, on: boolean): void {
     type: 'info',
     // ⚠ NO PRONOUN FOR THE COACH (R15-7) – see the note on `coachLoadNote` below for the ruling.
     text: on
-      ? 'Your coach travels to tournaments with her now – a second fare on every trip.'
+      ? 'Your coach travels to tournaments with her now – one additional fare per trip.'
       : 'Your coach no longer travels to tournaments – the work happens at home.',
   })
 }
@@ -289,8 +289,8 @@ export function setCoachOnJuniorEvents(world: WorldState, on: boolean): void {
     type: 'info',
     // ⚠ NO PRONOUN FOR THE COACH (R15-7) – the roster puts a woman on every list by construction.
     text: on
-      ? 'Your coach travels to junior and domestic tournaments too – a second fare on trips that pay no prize money.'
-      : 'Your coach stays home for junior and domestic tournaments – the second fare is for the events that pay.',
+      ? 'Your coach travels to junior and domestic tournaments too – one additional fare on trips that pay no prize money.'
+      : 'Your coach stays home for junior and domestic tournaments – the additional fare is for the events that pay.',
   })
 }
 

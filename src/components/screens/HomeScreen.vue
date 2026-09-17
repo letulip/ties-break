@@ -1643,7 +1643,7 @@ async function leaveCollege(): Promise<void> {
         <Card
           as="button"
           class="note-card card-short coach-card"
-          aria-label="Coach note - open the Coach Market"
+          aria-label="Coach note – open the Coach Market"
           @click="emit('navigate', 'market')"
         >
           <!-- ⭐⭐ ROUND 42 #28 – THE OFF-SEASON MARKER. The owner asked for a yellow dot on this

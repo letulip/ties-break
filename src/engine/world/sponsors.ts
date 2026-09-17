@@ -1213,7 +1213,7 @@ export function chargeMasseurTravel(world: WorldState, event: SeasonEvent): numb
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Your masseur travels to the ${TIERS[event.tier].label} – one more fare${payer}`,
+    text: `Masseur travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
     amountCents: -fare,
   })
   return fare
@@ -1297,7 +1297,7 @@ export function chargeCoachTravel(world: WorldState, event: SeasonEvent): void {
     week: world.week,
     type: 'expense',
     category: 'travel',
-    text: `Your coach travels to the ${TIERS[event.tier].label} – a second fare${payer}`,
+    text: `Coach travel to ${TIERS[event.tier].label} – one additional fare${payer}`,
     amountCents: -fare,
   })
 }
