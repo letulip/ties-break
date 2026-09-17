@@ -56,8 +56,8 @@ feel unrepeated. **The mechanism is the cheaper half of the answer and it alread
 
 | pool | slots | note |
 | --- | --- | --- |
-| `roof` | 8 | the catalogue currently inlines 5, all usable as a starting point |
-| `away` | 8 | the catalogue inlines **one**, which is the whole of the gap |
+| `roof` | 8 → **9** | the catalogue inlined 5; he wrote 8, and took a ninth on 17.09 |
+| `away` | 8 → **9** | the catalogue inlined **one**, which was the whole of the gap |
 
 ## The five rules a frame has to pass
 
@@ -125,6 +125,7 @@ frozen-career re-stamp with it, exactly as round 43's two coach sentences did.
 | `table` | `She stopped beside the kitchen table and said it.` |
 | `sofa` | `She sat on the arm of the sofa and began.` |
 | `phone-counter` | `She set her phone on the counter and started talking.` |
+| `fridge` | `She talked at the open fridge for a while.` **– the architect's, DRAFT** |
 
 ## `away` – she lives somewhere else
 
@@ -138,6 +139,7 @@ frozen-career re-stamp with it, exactly as round 43's two coach sentences did.
 | `other-message` | `She added it to a message about something else.` |
 | `mid-something` | `She said it in the middle of something else.` **– the architect's, DRAFT** |
 | `visit` | `She brought it up when she came by.` |
+| `ceiling` | `She said it with the camera pointing at the ceiling.` **– the architect's, DRAFT** |
 
 ⭐ Four forms of distance rather than eight variations of one: **a live call, a voice note, text, and
 the rare visit.** `visit` is the one that keeps the model honest – `away` does not mean they never
@@ -181,6 +183,33 @@ situation could contradict (she is always doing something); it carries no time o
 channel-neutral, so it survives the call, the voice note and the text alike; and it is one clause of
 eight words. **Against his rejected list** it takes no intent, no struggle, no travel, no number and
 no joke.
+
+## ⭐ THE NINTH OF EACH, AND THE LINE BETWEEN DRY AND A GAG
+
+He asked for one on 17.09 – «ну может что-то добавишь? я за шутку =)» – and then took both: «бери
+обе». **Nine per presence.**
+
+> `fridge` · **She talked at the open fridge for a while.**
+> `ceiling` · **She said it with the camera pointing at the ceiling.**
+
+⚠ **They are the architect's and therefore DRAFTS**, admissible only because he asked.
+
+⚠⚠ **AND THE REASON A JOKE CANNOT LIVE IN A FRAME IS HIS OWN, written into the rejected list above:**
+`She dropped it into the conversation.` was struck as «слегка комедийное и слишком авторское». A frame
+wraps **all 43 situations, worries included**, and a constructed punchline around «I haven't asked
+about the entry because I didn't want to make it a whole thing» turns the narrator into someone
+laughing at her.
+
+⭐ **These two are funny because they are TRUE, not because they are built** – the ordinary chaos of a
+kitchen and of a video call, never a verdict on what she is saying. Tested against a worry exactly as
+he tested `whole-message` against three subjects, and they carry it. The version that would NOT pass
+is the one with a victim: `She said it and the call froze on her face.` is a laugh at her expense, and
+under a worry that is cruelty rather than warmth.
+
+⭐ **The place a joke DOES belong in this layer is inside the quotation marks, and it is already
+taken** – he kept R29's «I'm not running a laundry service in reverse» after it was flagged to him as
+the most constructed line in the 516. The voice may joke; the frame around somebody else's worry may
+not.
 
 ## THE THREE MECHANICAL RULINGS, AND WHAT THE THIRD ONE COSTS
 
