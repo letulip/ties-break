@@ -437,3 +437,71 @@ careers.
 
 **Owed:** decide whether this is a bench-fixture limit or a real gate/stage mismatch, and say which
 by measurement. Until then four rows and twelve voice columns are written, shipped and never seen.
+
+
+---
+
+## BUILDER 2's SPEC – the eight brought up to strength, and his six review findings
+
+One builder, both jobs, because they are the same prose in the same file and splitting them would
+re-stamp the frozen careers twice for one wave.
+
+### ⭐⭐ THE ARCHITECTURAL DECISION, TAKEN RATHER THAN DEFERRED
+
+The eight legacy situations are hand-written in `SMALL_TALK_SHIPPED` (`world/lifeBeat.ts`) while the
+43 are generated from the document – `SMALL_TALK_SITUATIONS = [...SHIPPED, ...CORPUS]`. **The eight
+move INTO the document and `SMALL_TALK_SHIPPED` disappears.** Reasons, in order:
+
+1. **One source of truth.** The round-trip test then covers all 51 instead of 43, and «fixed in the
+   code, document drifted» stops being possible.
+2. **His tidy-and-extend pass is ONE file he reads**, not two in different formats.
+3. The alternative – hand-writing 21 entries into a TypeScript literal – is exactly the 817-string
+   retyping hazard this round was built to abolish.
+
+⚠⚠ **TWO HARD CONSTRAINTS ON THE MOVE:**
+- **The eight ids MUST NOT CHANGE.** They are persisted in `lifeLog` and re-rendered by the album, so
+  a renamed key orphans an old career's record. `court-four`, `practice-clicked`, `line-call`,
+  `march-entry`, `coach-real`, `watching-players`, `new-place`, `beat-her-conqueror` – verbatim.
+- **Their banner comments carry owner rulings** and must survive as the document's prose, not be
+  dropped in the move. `court-four`'s four-voice note and `practice-clicked`'s «a practice that felt
+  easy is a mood, never a training gain» are rulings, not decoration.
+
+### The 21 missing voice-entries – DRAFTS, every one
+
+`court-four` already has four voices. The other seven have one each:
+
+| situation | subject | has | to write |
+| --- | --- | --- | --- |
+| `practice-clicked` | good-news | `deep` | sunny, fiery, quiet |
+| `line-call` | worry | `fiery` | sunny, deep, quiet |
+| `march-entry` | decision | `quiet` | sunny, fiery, deep |
+| `coach-real` | curiosity | `sunny` | fiery, deep, quiet |
+| `watching-players` | observation | `deep` | sunny, fiery, quiet |
+| `new-place` | worry | `quiet` | sunny, fiery, deep |
+| `beat-her-conqueror` | good-news | `sunny` | fiery, deep, quiet |
+
+⭐ **His 17.09 ruling travels with them: «добрый ситуативный юмор приветствуется»** – and it belongs
+INSIDE the quotation marks, where the voice carries it. Never in a frame: a frame wraps all 51
+situations including the worries, which is his own rule from the pool's rejected list.
+
+### His six review findings, in his own order of severity
+
+1. **[P1] R36 describes an ending she did not witness.** Kernel and two openers put her there «at the
+   end of it»; all four `invite` replies say she left before it; `quiet`'s `respond` has them «walked
+   off fine». His fix: the kernel becomes «when she left, both were still moving properly», the
+   openers follow, and «Ask who won it» is replaced by something the row can answer.
+2. **[P2] R30 asserts beyond its kernel** – `fiery`'s «and then they called it off anyway» is an
+   outcome the kernel does not hold; `deep`'s «people I've shared a draw with for two years» is
+   longitudinal competitive history.
+3. **[P2] R34 crosses its own stated boundary** – the note says the row asserts nothing about her
+   second serve and `invite` establishes a persistent technical pattern. His suggested label: ask
+   what she notices immediately before the better players move.
+4. **[P2] Three rows manufacture ongoing relationships** – R16's «we've shared a warm-up a few
+   times» (in the row repaired on 17.09 for exactly this), R29's «we talk a bit more now», R2's
+   «I've said nothing for three weeks».
+5. **[P3] Two labels manufacture four similar non-answers** – R33 «whether it seemed to help her»
+   and R36 «who won it». **The label is the defect, not the reply.**
+6. R15 and R18 are already repaired.
+
+⚠ **His own scope instruction governs: «I'd repair the factual seams rather than conduct another
+broad prose rewrite.»** A line not named above is not to be improved.
