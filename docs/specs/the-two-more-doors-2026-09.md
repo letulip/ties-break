@@ -88,14 +88,32 @@ people, which is this game's whole argument.
 
 ## §5 What is owed before any of this is built
 
-- **His ruling on the rates**, both doors.
-- **The `CareerEndingType` union widens** from six members to seven or eight. ⚠ It is persisted on
-  `CareerEnding`, so the save question needs answering before the build: a union widened
-  append-only is usually free (no old save holds the new value – `SmallTalkFact`'s fifth member is
-  the precedent), but it is CHECKED and not assumed.
-- **Every line a player reads is a DRAFT.** Four exits × four voices is a corpus of its own, and it
-  is his the way the small-talk corpus is his.
-- ⚠ **Scope.** Round 44 already carries a schema move, an 817-string catalogue, a development-model
-  change and two UI surfaces. This is a fifth substantial piece. **The architect's recommendation is
-  that it is its own wave**, built immediately after – not because it is less important, but because
-  a PR nobody can read is how a wave stops being reviewable. His call.
+- ✅ **THE RATES ARE RULED (his 17.09): «у обоих не больше 1–2%»** – and his reason is the design
+  constraint rather than a realism note: **«это всё-таки событие, которое принудительно заканчивает
+  игру».** ⚠⚠ That changes what the feature owes. A door that ENDS the career without the player
+  choosing it has to be rare enough that it reads as a story rather than as the game being taken
+  away, and the bench measures the rate against 1–2% of careers rather than of seasons – the two are
+  a decade apart and only the first is what he said.
+- ✅ **THE UNION WIDENING IS CHECKED (his «надо попробовать, но проверь, конечно») and the answer is
+  in two halves:**
+  - **Free for SAVES.** `src/engine/saveGuard.ts` does not mention `ending` at all and no migration
+    touches `ending.type`, so nothing validates the field on load and no old save can hold a new
+    value. No schema move.
+  - ⚠ **NOT free for CODE, and that is the good kind of failure.** Three TOTAL records are keyed on
+    the union – `ENDING_BLURB` and `ENDING_TITLE` (`engine/ending.ts`) and `EMOTION_BY_ENDING`
+    (`world/album.ts`) – so widening it goes red until all three are filled. ⭐ **A new ending
+    therefore cannot ship without its blurb, its title and her face**, enforced by the compiler
+    rather than by anybody remembering.
+- ✅ **THE COPY IS COMMISSIONED (his «всё готовь по нашим лекалам и присылай на вычитку»).** Four
+  exits × four voices, plus each ending's blurb, title and avatar emotion, written to the house
+  patterns and sent to him as one document the way the 516 were. **Every line is a DRAFT until he
+  has read it**, and the corpus's own law governs the writing: a line may not assert more than its
+  situation licenses, and a leaving may not blame a body, a load or a decision.
+- ✅ **SCOPE RULED (his 17.09: «может быть ты и прав»). THIS IS ROUND 45, built immediately after 44
+  merges.** Not because it matters less – it is the most interesting thing either of us has designed
+  this week – but because round 44 already carries a schema move, an 817-string catalogue, a
+  development-model change and two UI surfaces, and a PR nobody can read is how a wave stops being
+  reviewable.
+
+  ⭐ **The copy can be written and sent to him WHILE 44 is in his hands**, since it is a document and
+  not a diff. That is the one part of this spec with no reason to wait.
