@@ -1626,358 +1626,49 @@ export interface SmallTalkSituation {
   voices: Partial<Record<Temperament, SmallTalkVoiceEntry>>
 }
 
-/** ⭐⭐⭐ THE CATALOGUE. Spec §8a–§8c, his 15.09 revision, verbatim – plus three drafted voice columns
- *  of `court-four` that his own voice test (§8d.3) cannot be built without.
+/** ⭐⭐⭐ THE CATALOGUE, AS THE ENGINE SEES IT – **ALL FIFTY-ONE SITUATIONS, OUT OF ONE DOCUMENT.**
  *
- *  ⚠⚠ WHAT IS HIS AND WHAT IS NOT, stated per entry rather than in one sweeping sentence, because
- *  the difference decides whether a line may be edited: entries marked **HIS** are the spec's own
- *  copy and are invariant 4 material; entries marked **DRAFT** were written for the build and are in
- *  the handoff verbatim for his pass.
+ *  ⚠⚠ THIS FILE NO LONGER HOLDS A CATALOGUE OF ITS OWN, AND THAT IS ROUND 44's ARCHITECTURAL MOVE.
+ *  `SMALL_TALK_SHIPPED` – the eight situations hand-written here since wave 2 – is DELETED, and those
+ *  eight are rows `R45`–`R52` of `docs/specs/small-talk-corpus-2026-09.md`, brought up to four voices
+ *  each. The reason is not tidiness. With a hand-written half and a generated half the catalogue had
+ *  TWO SOURCES OF TRUTH IN TWO FORMATS, «fixed in the code, the document drifted» was one careless
+ *  edit away permanently, and the round-trip pin could only cover the half it could parse. It covers
+ *  all 51 now.
  *
- *  ⚠ THE CORPUS SHAPE RULES HOLD HERE TOO (one quoted span per opener, third person outside it, the
- *  short dash, no number, no price) – with ONE named exception, `new-place`'s «A pause on the line,
- *  longer than the others.», which does not contain `she` or `her`. It is HIS sentence and his own
- *  verdict on the set was «the best scene»; it is recorded as the exception rather than edited, the
- *  way the two `Her …` away frames were in the вычитка fold.
+ *  ⚠⚠ GENERATED AND NEVER HAND-EDITED. `world/smallTalkCorpus.ts` is written by
+ *  `tools/small-talk-corpus-emit.ts` out of the document, and `tests/round44-corpus-roundtrip.test.ts`
+ *  re-parses the document on every run and compares the committed module to it STRING FOR STRING.
+ *  Authored strings retyped by an agent produce typos no test can catch, because the test compares
+ *  against what was typed; generated, the document is the source of truth and a divergence is
+ *  impossible rather than merely unlikely.
  *
- *  ⚠⚠ THE CATALOGUE IS THIN ON PURPOSE. Spec §10's delivery order is his and is adopted: «Expand the
- *  situation catalogue only after the small set works.» The cells it does NOT cover fall back to the
- *  legacy opener pool and are named in the handoff. */
-const SMALL_TALK_SHIPPED: readonly SmallTalkSituation[] = [
-  // ---------------------------------------------------------------------------------------------
-  // §8a – A PRACTICE THAT FINALLY CLICKED. **HIS**, and the one entry the spec gives both frames for.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'practice-clicked',
-    subject: 'good-news',
-    stages: ['school', 'after-school', 'college', 'independent'],
-    fact: null,
-    voices: {
-      deep: {
-        opener: '"Practice finally felt easy today."',
-        branches: {
-          invite: {
-            label: 'Ask what made it good',
-            said: '"Nothing I can name. I just stopped fighting it. I wanted to tell someone who\'d know that\'s rare."',
-          },
-          respond: {
-            label: 'Tell her we\'re glad',
-            said: '"Maybe it doesn\'t sound like much. It felt like a lot."',
-          },
-          space: {
-            label: 'Let her enjoy it',
-            said: '"I will. I only wanted to say it out loud once."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8b – A LINE-CALL SHE CAN'T LET GO. **HIS** (14.09 pass).
-  // ⚠⚠ AND THE ONE ENTRY WHOSE `respond` LABEL IS THE GENERIC FORM §8d.1 FORBIDS. «Tell her what
-  // worries us» promises a view and her reply answers it – «I hear you» – without the player having
-  // heard what the worry was. §8d.1 names this exact string as one of the three defective labels,
-  // but his 15.09 revision rewrote the other two situations and not this one, so the sentence
-  // standing here is his most recent word on it. NOT EDITED: the copy is his (invariant 4), the fix
-  // is a wording change nobody asked for, and the collision is reported in the handoff with a draft
-  // beside it for his call.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'line-call',
-    subject: 'worry',
-    stages: ['school', 'after-school'],
-    fact: 'played-recently',
-    voices: {
-      fiery: {
-        opener: '"There was a call today that was just wrong."',
-        branches: {
-          invite: {
-            label: 'Let her keep going',
-            said: '"And I know I\'m supposed to move on. I replayed it the whole way home instead."',
-          },
-          respond: {
-            label: 'Tell her what worries us',
-            said: '"I hear you. I don\'t want it in my head for the next one either."',
-          },
-          space: {
-            label: 'Say she needn\'t solve it tonight',
-            said: '"Yeah. Okay. Tomorrow."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – THE MARCH TOURNAMENT. **HIS** 15.09 revision, including the `respond` label §8d.1 asked
-  // for («Say the travelling matters too» names the parent's actual position).
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'march-entry',
-    subject: 'decision',
-    stages: ['school', 'after-school'],
-    fact: 'march-entry-open',
-    voices: {
-      quiet: {
-        opener: '"I\'m not sure about the March tournament."',
-        branches: {
-          invite: {
-            label: 'Ask what she\'s weighing',
-            said: '"It\'s a long trip. I\'d miss Tuesday training. I\'m not sure it\'s worth it."',
-          },
-          respond: {
-            label: 'Say the travelling matters too',
-            said: '"That\'s the bit I keep coming back to."',
-          },
-          space: {
-            label: 'Say there\'s time to decide',
-            said: '"I\'ll look at it again on Sunday."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – A REAL COACH OR JUST A NICE ONE. **HIS** 15.09 revision.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'coach-real',
-    subject: 'curiosity',
-    stages: ['school', 'after-school'],
-    fact: 'coach-employed',
-    voices: {
-      sunny: {
-        opener: '"How do you know when you\'ve got a real coach and not just a nice one?"',
-        branches: {
-          invite: {
-            label: 'Ask what made her wonder',
-            said: '"Mine\'s lovely. Everyone\'s lovely. I can\'t tell if that\'s the same as good."',
-          },
-          respond: {
-            label: 'Say a good coach explains what they\'re changing',
-            said: '"Okay. I\'ll ask why next time, not just what."',
-          },
-          space: {
-            label: 'Say she doesn\'t have to work it out now',
-            said: '"Fine. But I\'m coming back to this one."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – THE PLAYERS SHE HAS BEEN WATCHING. **HIS** 15.09 revision, including his ruling that the
-  // hedge stays: «an adult capable of questioning her interpretation feels more human than one who
-  // always speaks in certainties». ⚠ A CALL, so away stages only.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'watching-players',
-    subject: 'observation',
-    stages: ['college', 'independent'],
-    fact: null,
-    voices: {
-      deep: {
-        opener: '"The players I\'ve been watching barely talk about winning."',
-        branches: {
-          invite: {
-            label: 'Ask her to go on',
-            said: '"They talk about Tuesday. What they\'re working on next. I\'ve started noticing that."',
-          },
-          respond: {
-            label: 'Say we\'ve noticed it too',
-            said: '"You have? I thought I might be reading too much into it."',
-          },
-          space: {
-            label: 'Let the thought settle',
-            said: '"Mm. I\'ll keep watching."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – COURT FOUR. **HIS**, and the entry whose SHAPE changed: a `story` is two beats. The
-  // incident is shared by every route (`shared`), and the branch is the aftermath.
-  // ---------------------------------------------------------------------------------------------
-  // ---------------------------------------------------------------------------------------------
-  // ⚠⚠ COURT FOUR IN THE OTHER THREE VOICES – **DRAFT**, and the reason they exist is his own test.
-  //
-  // §8d.3: «Same event, same facts, same age, same parental choice – four different ways of noticing,
-  // disclosing and responding.» That test cannot be built out of the spec's eight, because no two of
-  // them share an event. So one event is written across all four voices, and it is the DOMESTIC one
-  // (no career fact behind it) so the test can pose a bare world.
-  //
-  // THE FACTS ARE DELIBERATELY IDENTICAL IN ALL FOUR – the net cord, the coffee, the full cup, the
-  // dad putting the lid back on, her having to serve next, nobody fetching the ball. §8d.5's stable
-  // invented detail, and the only axis left free is the voice. ⭐ And «not one shared phrase» is NOT
-  // the target: his own note says real people all say «Okay».
-  //
-  // The bibles each column is written to: `sunny` volunteers it and names the ordinary feeling;
-  // `quiet` says it around a household action and leaves herself out of it; `deep` gives the
-  // conclusion with nothing round it – and NOT by waiting for a room to go quiet, which §9 flags as
-  // a visible authorial tic.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'court-four',
-    subject: 'story',
-    stages: ['school', 'after-school'],
-    fact: null,
-    voices: {
-      fiery: {
-        opener: '"You won\'t believe what happened on court four."',
-        shared: '"She serves, the ball catches the net cord – and lands in a dad\'s coffee. Full cup. He just looked at it."',
-        branches: {
-          invite: {
-            label: 'Ask what he did',
-            said: '"Took the ball out. Put the lid on. Like that would stop the next one."',
-          },
-          respond: {
-            label: 'Laugh with her',
-            said: '"Exactly! And then I had to serve. I couldn\'t look at him."',
-          },
-          space: {
-            label: 'Let her finish',
-            said: '"Anyway, nobody wanted the ball back. That\'s the important part."',
-          },
-        },
-      },
-      sunny: {
-        opener: '"You have to hear what happened on court four."',
-        shared: '"Someone\'s serve clipped the net cord and went straight into a dad\'s coffee. A full one. He just sat there holding it."',
-        branches: {
-          invite: {
-            label: 'Ask what he did',
-            said: '"Put the lid back on. Very carefully. Like the lid was the problem."',
-          },
-          respond: {
-            label: 'Laugh with her',
-            said: '"I know! And I had to serve after that. I was still going."',
-          },
-          space: {
-            label: 'Let her finish',
-            said: '"Anyway. Nobody asked for the ball back. That\'s my favourite part."',
-          },
-        },
-      },
-      quiet: {
-        opener: '"Something happened on court four today."',
-        shared: '"A serve caught the net cord and landed in someone\'s dad\'s coffee. A whole cup of it."',
-        branches: {
-          invite: {
-            label: 'Ask what he did',
-            said: '"He put the lid back on. Then he moved his chair. That was all."',
-          },
-          respond: {
-            label: 'Laugh with her',
-            said: '"It was quite funny. I didn\'t laugh at the time. I had to serve."',
-          },
-          space: {
-            label: 'Let her finish',
-            said: '"That\'s it, really. Nobody went to get the ball."',
-          },
-        },
-      },
-      deep: {
-        opener: '"The best thing today had nothing to do with tennis."',
-        shared: '"A serve clipped the net cord and went into a dad\'s coffee. Full cup. He looked at it for a long time."',
-        branches: {
-          invite: {
-            label: 'Ask what he did',
-            said: '"Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."',
-          },
-          respond: {
-            label: 'Laugh with her',
-            said: '"I didn\'t laugh then. I had to serve next. I have been laughing about it since."',
-          },
-          space: {
-            label: 'Let her finish',
-            said: '"That\'s the whole of it. The ball is probably still there."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – THE NEW PLACE. **HIS**, and his own verdict: the best scene in the set. The `respond`
-  // branch ASKS something real instead of gesturing at an unheard opinion – §8d.1's fix, his words.
-  // ⚠ A CALL, and the STAGE is the fact: a girl who has not moved out has no new place.
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'new-place',
-    subject: 'worry',
-    stages: ['college', 'independent'],
-    fact: null,
-    voices: {
-      quiet: {
-        opener: '"I don\'t think I like the new place much."',
-        branches: {
-          invite: {
-            label: 'Let her keep going',
-            said: '"It\'s fine. It\'s clean. I\'ve been eating standing up for a week. I only noticed tonight."',
-          },
-          respond: {
-            label: 'Ask whether she\'s been eating properly',
-            said: '"I have. Just not sitting down, apparently."',
-          },
-          space: {
-            label: 'Say she needn\'t solve it tonight',
-            said: '"Good. Tomorrow, then. Not tonight."',
-          },
-        },
-      },
-    },
-  },
-  // ---------------------------------------------------------------------------------------------
-  // §8c – SHE BEAT SOMEONE SHE HAD NEVER BEATEN. **HIS**, and the strictest gate in the catalogue:
-  // both halves of her claim are checked against the feed (see `beat-her-conqueror`).
-  // ⭐ His note on temperament rides on this one: the single «Four!» does not make her fiery –
-  // «temperament shapes the pattern, not the punctuation».
-  // ---------------------------------------------------------------------------------------------
-  {
-    id: 'beat-her-conqueror',
-    subject: 'good-news',
-    stages: ['school', 'after-school'],
-    fact: 'beat-her-conqueror',
-    voices: {
-      sunny: {
-        opener: '"I beat someone I\'ve never beaten."',
-        branches: {
-          invite: {
-            label: 'Ask what made it good',
-            said: '"She\'s beaten me four times. Four! Today I got nervous – and kept playing."',
-          },
-          respond: {
-            label: 'Tell her we\'re glad',
-            said: '"I can tell. You\'re doing the face."',
-          },
-          space: {
-            label: 'Let her enjoy it',
-            said: '"Oh, I\'m going to. All evening."',
-          },
-        },
-      },
-    },
-  },
-]
-
-/** ⭐⭐⭐ THE CATALOGUE, AS THE ENGINE SEES IT: the eight that shipped, then the 43 the owner wrote.
- *
- *  ⚠⚠ THE SECOND HALF IS GENERATED AND MUST NEVER BE HAND-EDITED. `world/smallTalkCorpus.ts` is
- *  written by `tools/small-talk-corpus-emit.ts` out of `docs/specs/small-talk-corpus-2026-09.md`,
- *  and `tests/round44-corpus-roundtrip.test.ts` re-parses the document on every run and compares the
- *  committed module to it STRING FOR STRING. 817 authored strings retyped by an agent produce typos
- *  no test can catch, because the test compares against what was typed; generated, the document is
- *  the source of truth and a divergence is impossible rather than merely unlikely.
- *
- *  ⚠ THE ORDER IS SHIPPED-FIRST AND IT IS NOT COSMETIC. `drawSmallTalkSubject` walks
+ *  ⚠ THE EIGHT COME FIRST IN THE DOCUMENT AND IT IS NOT COSMETIC. `drawSmallTalkSubject` walks
  *  `SMALL_TALK_SUBJECTS`' own order rather than this array's, so the SUBJECT is stable under a
  *  re-ordering – but the situation draw is `pickInt` over the filtered pool, and that one reads
- *  position. Appending rather than interleaving keeps every existing career's situation draw
- *  reproducible for the rows that were already there ahead of the new ones.
+ *  POSITION. Leaving the eight where they already were leaves every existing career's situation draw
+ *  where it already was, for the rows that were already there ahead of the corpus. Their document
+ *  refs run last (`R45`–`R52`) precisely because renumbering `R1`–`R44` to make refs and position
+ *  agree would move his own review's references to buy nothing.
  *
- *  ⚠ IDS ARE APPEND-ONLY ACROSS BOTH HALVES and are asserted unique below – the id is persisted as
- *  half of a `lifeLog` row's `detail`, so a collision between a shipped row and a corpus row would
- *  make two different conversations read back as one. */
-export const SMALL_TALK_SITUATIONS: readonly SmallTalkSituation[] = [...SMALL_TALK_SHIPPED, ...SMALL_TALK_CORPUS]
+ *  ⚠ IDS ARE APPEND-ONLY and are asserted unique – the id is persisted as half of a `lifeLog` row's
+ *  `detail`, so a renamed key orphans an old career's record of a conversation that really happened.
+ *  The eight kept theirs verbatim through the move: `practice-clicked`, `line-call`, `march-entry`,
+ *  `coach-real`, `watching-players`, `court-four`, `new-place`, `beat-her-conqueror`.
+ *
+ *  ⚠⚠ AND THE RULINGS THEIR BANNER COMMENTS CARRIED WENT WITH THEM, into each row's own prose in the
+ *  document rather than into a changelog: `court-four`'s four-voice test and its named masculine
+ *  exception, `practice-clicked`'s «a practice that felt easy is a MOOD, never a training gain»,
+ *  `line-call`'s UNREPAIRED §8d.1 label collision («Tell her what worries us» is his most recent word
+ *  and is not an agent's to edit), `new-place`'s lead-in that round 44 dropped with every other
+ *  per-row lead-in, and `beat-her-conqueror`'s «temperament shapes the pattern, not the punctuation».
+ *  A ruling deleted in a refactor is a ruling nobody can obey.
+ *
+ *  ⚠ SPEC §10's DELIVERY ORDER WAS HIS AND IS NOW SPENT: «Expand the situation catalogue only after
+ *  the small set works.» The small set worked for two waves, so this is the expansion it licensed –
+ *  recorded rather than dropped, because the sentence explains why the catalogue was thin and the
+ *  answer to «why is it not thin any more» is that its own condition was met. */
+export const SMALL_TALK_SITUATIONS: readonly SmallTalkSituation[] = SMALL_TALK_CORPUS
 
 // =================================================================================================
 // ⭐⭐⭐ ROUND 44 – THE FRAME POOL: THE SCENE SHE SAYS IT IN, WHICH IS NOT THE THING SHE SAYS

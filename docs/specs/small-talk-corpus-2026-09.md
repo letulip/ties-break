@@ -201,6 +201,23 @@ review.** It is now an exchange corpus, because he accepted the kernels on 17.09
 | parent option labels (43 × 3) | **129** |
 | daughter replies (43 × 4 voices × 3 stances) | **516** |
 
+⚠⚠ **THAT TABLE IS THE REPLIES PASS'S OWN ARITHMETIC AND IT IS STILL TRUE OF THE 43. IT IS NO LONGER
+THE WHOLE DOCUMENT.** Round 44 moved the EIGHT situations that shipped before this file existed into
+it (`R45`–`R52`, the section above PASS 2) and brought them to four voices each, so the totals a
+script derives from this file are now:
+
+| the whole document, since round 44 | count |
+| --- | ---: |
+| situations (43 + the eight that shipped first) | **51** |
+| daughter openers (51 × 4 voices) | **204** |
+| parent option labels (51 × 3) | **153** |
+| daughter replies (51 × 4 voices × 3 stances) | **612** |
+| ⭐ shared second beats (`court-four` alone, the one two-beat row) | **4** |
+
+⚠ Both tables are derived by `tools/small-talk-corpus-parse.ts` on every read, per §3a's rule, and
+`tests/round44-corpus-roundtrip.test.ts` asserts the five figures before it compares a single string –
+the anti-vacuity half, because a comparison of two empty lists passes.
+
 ⭐ **The replies waited on his instruction – «Replies should not be written until the factual and
 voice problems below are resolved» – and that instruction paid.** Three kernels were replaced and
 four repaired between the first draft and his acceptance; every one of them would have taken twelve
@@ -252,6 +269,378 @@ never satisfy all of them. The honest quantities are the ones the bench already 
 **weighted effective pool** per (voice × stage × register) and the **distinct situations actually
 encountered** over a career. K1 and K4 are those numbers; nothing in this document may quote a
 reachability figure the bench has not produced.
+
+---
+
+# THE EIGHT THAT SHIPPED BEFORE THIS DOCUMENT – brought into it, and brought up to four voices
+
+**Round 44, on his 17.09 ruling about the old catalogue:** «надо их причесать, актуализировать,
+дописать и использовать, я считаю. Больше вариативности – хорошо. И добрый ситуативный юмор
+приветствуется.»
+
+These eight are the situations the game has actually been running since wave 2. They were written
+into `SMALL_TALK_SHIPPED` in `src/engine/world/lifeBeat.ts` by hand while the 43 above were generated
+out of this file, so the catalogue had **two sources of truth in two formats** – and «fixed in the
+code, the document drifted» was one careless edit away the whole time. `SMALL_TALK_SHIPPED` is
+deleted; these are rows of this document like every other row, and the round-trip pin
+(`tests/round44-corpus-roundtrip.test.ts`) now covers all **51** instead of 43.
+
+⚠⚠ **THEIR IDS DID NOT CHANGE AND MAY NOT.** A situation id is PERSISTED into `lifeLog` as half of
+the row's `detail` and is read back by the album, so renaming one orphans an old career's record of a
+conversation that really happened. `practice-clicked` · `line-call` · `march-entry` · `coach-real` ·
+`watching-players` · `court-four` · `new-place` · `beat-her-conqueror`, verbatim.
+
+⚠⚠ **AND THEY SIT FIRST WHILE THEIR REF NUMBERS RUN LAST, WHICH IS DELIBERATE.** A ref (`R45`…) is an
+allocation name; the ORDER of this file is a live career's situation draw, because the situation is
+picked with `pickInt` over the filtered pool and `pickInt` reads position. Putting them where they
+already were keeps that draw where it already was. Renumbering `R1`–`R44` so the two agree would move
+every shipped career's conversations to buy tidiness, and his review names rows by number.
+
+⭐ **WHAT MOVED WITH THEM: THE RULINGS THEIR BANNER COMMENTS CARRIED.** Each row below repeats the
+one that governs it, because a ruling deleted in a refactor is a ruling nobody can obey. The fog law
+they all sit under, from `lifeBeat.ts`' own §8d.5 preamble: **a practice that felt easy is a MOOD,
+never a training gain; a name mentioned is a name, never a relationship the rest of the engine has to
+honour.**
+
+⚠⚠ **THE TWENTY-ONE NEW VOICE-ENTRIES ARE DRAFTS, EVERY ONE.** `court-four` already had four voices;
+the other seven had one each, so seven openers and sixty-three replies were written for this round.
+They are marked **NEW** in each table and each block. The lines marked **HIS** are his own copy,
+carried character for character out of the deleted array – invariant 4, and the reason this move is a
+transcription rather than a rewrite.
+
+⭐ **«Добрый ситуативный юмор приветствуется» is his, 17.09, and it lives INSIDE the quotation marks**
+where the voice carries it. Never in a frame: one frame wraps all 51 situations including the
+worries, which is his own rule from the frame pool's rejected list.
+
+⚠ **THREE OF THE EIGHT CARRY «today», WHICH THE 43 DO NOT.** Gate 4 («no stale today») was written
+after these shipped and they are his sentences, so they are left exactly as they are and the
+exception is recorded here rather than edited away. The new voices of those three rows follow the
+row's own register rather than the 43's, for the reason §4 gives: four voices must publish ONE
+edition of the same evening.
+
+### R45 · `practice-clicked` · good-news · school, after-school, college, independent · generated
+**Kernel:** A practice finally felt easy. Nothing she can name changed; she stopped fighting it.
+**Authoritative claims:** none. **Texture allowed:** the session, the ordinary feeling.
+⭐ **HIS RULING, CARRIED FROM THE DELETED BANNER:** this row is the fog law's own example – **a
+practice that felt easy is a MOOD, never a training gain.** No voice here may say she improved.
+⚠ `deep` is **HIS** (spec §8a, the one entry the spec gave both frames for). The other three are NEW.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"Practice was easy today. Properly easy. I've no idea why and I don't want to jinx it."` |
+| `fiery` | `"Practice was easy today and I'd like to know who to thank, because it wasn't me."` |
+| `deep` | `"Practice finally felt easy today."` |
+| `quiet` | `"Practice was easy today. I thought I'd mention it."` |
+
+**Parent:** *Ask what made it good* · *Tell her we're glad* · *Let her enjoy it*
+
+**invite** · *Ask what made it good*
+- `sunny` `"Nothing! That's the best part. It just went, and I'm not going to interrogate it."`
+- `fiery` `"Nothing changed. Same drills, same court, and this time it felt easy. I'd like to know why."`
+- `deep` `"Nothing I can name. I just stopped fighting it. I wanted to tell someone who'd know that's rare."`
+- `quiet` `"Nothing in particular. It just felt easier than usual."`
+
+**respond** · *Tell her we're glad*
+- `sunny` `"I knew you would be. I wanted to say it before it wore off."`
+- `fiery` `"Good. Somebody should be, because tomorrow it'll probably be awful again."`
+- `deep` `"Maybe it doesn't sound like much. It felt like a lot."`
+- `quiet` `"Thanks. It was a good one."`
+
+**space** · *Let her enjoy it*
+- `sunny` `"Don't worry. I'm keeping this one for a rainy day."`
+- `fiery` `"I intend to. And I'm writing down what I did, in case."`
+- `deep` `"I will. I only wanted to say it out loud once."`
+- `quiet` `"I will. It'll do for the week."`
+
+### R46 · `line-call` · worry · school, after-school · **fact: `played-recently`**
+**Kernel:** A call in a match went against her and she cannot put it down.
+⚠ **Gated**, because she has to have been on a court. The gate licenses that she played – **not that
+she lost, and not when.**
+⚠⚠ **HIS RULING, CARRIED FROM THE DELETED BANNER, AND IT IS A COLLISION LEFT STANDING.** This row's
+`respond` label «Tell her what worries us» is one of the three generic forms §8d.1 of the exchange
+spec names as defective – the label promises a view and her reply answers an opinion the player never
+heard. His 15.09 revision rewrote the other two situations and not this one, **so the sentence
+standing here is his most recent word on it and it is NOT edited** (invariant 4). The collision is
+pinned by name in `tests/round42-small-talk-exchange.test.ts` §G; the day he rules, that list goes
+empty and the case becomes the flat law.
+⚠ `fiery` is **HIS** (spec §8b, his 14.09 pass). The other three are NEW, and all four answer the
+same unheard-view label, which is the collision arriving in four voices instead of one.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"There was a call today that was wrong and I can't seem to put it down."` |
+| `fiery` | `"There was a call today that was just wrong."` |
+| `deep` | `"One call today was wrong, and I have replayed it more than anything else that happened."` |
+| `quiet` | `"There was a call today I didn't agree with. It's still there."` |
+
+**Parent:** *Let her keep going* · *Tell her what worries us* · *Say she needn't solve it tonight*
+
+**invite** · *Let her keep going*
+- `sunny` `"It was in. I saw it. Everyone near it saw it. And that's that, apparently."`
+- `fiery` `"And I know I'm supposed to move on. I replayed it the whole way home instead."`
+- `deep` `"I keep going back to the same second of it. Not the point. The second."`
+- `quiet` `"It was in. I've stopped saying so out loud."`
+
+**respond** · *Tell her what worries us*
+- `sunny` `"That's fair. I don't want to be the one who's still on about it next week."`
+- `fiery` `"I hear you. I don't want it in my head for the next one either."`
+- `deep` `"You're right, and knowing you're right is not the same as being able to stop."`
+- `quiet` `"I know. I'll put it down before the next one."`
+
+**space** · *Say she needn't solve it tonight*
+- `sunny` `"Good. I'll be annoyed about it in the morning instead."`
+- `fiery` `"Yeah. Okay. Tomorrow."`
+- `deep` `"No. I'd only take it apart again and find the same thing in it."`
+- `quiet` `"All right. I'll leave it where it is."`
+
+### R47 · `march-entry` · decision · school, after-school · **fact: `march-entry-open`**
+**Kernel:** A tournament in March is open, she has not entered, and she is turning it over.
+⚠ **Gated.** The gate licenses that an entry is open and there is time to decide – **not what it
+costs.** No voice here names a price or a fare.
+⭐ **HIS RULING, CARRIED FROM THE DELETED BANNER:** the `respond` label is his 15.09 revision and it
+is the form §8d.1 asked for – «Say the travelling matters too» names the parent's actual position
+instead of gesturing at an unheard one.
+⚠ `quiet` is **HIS**. The other three are NEW.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I'm not sure about the March tournament. Can we talk about it now, before I forget?"` |
+| `fiery` | `"I don't think I want to do the March tournament. Ask me again in an hour, obviously."` |
+| `deep` | `"I've been turning the March tournament over and I still cannot get to an answer."` |
+| `quiet` | `"I'm not sure about the March tournament."` |
+
+**Parent:** *Ask what she's weighing* · *Say the travelling matters too* · *Say there's time to decide*
+
+**invite** · *Ask what she's weighing*
+- `sunny` `"The travelling, mostly. And whether I'd rather be at training. It's not more complicated than that."`
+- `fiery` `"The trip. The training I'd miss. And everybody asking me what I've decided."`
+- `deep` `"The trip against the training, and the part where I don't know which answer I'd regret."`
+- `quiet` `"It's a long trip. I'd miss Tuesday training. I'm not sure it's worth it."`
+
+**respond** · *Say the travelling matters too*
+- `sunny` `"That helps, actually. I was only counting what I'd lose by going."`
+- `fiery` `"Fine. Then it's the travelling against the training and I still have to pick one."`
+- `deep` `"I hadn't put it on that side of the list. It changes the shape of it."`
+- `quiet` `"That's the bit I keep coming back to."`
+
+**space** · *Say there's time to decide*
+- `sunny` `"There is. I'll stop bringing it up at dinner, I promise."`
+- `fiery` `"There's time. I'd rather decide now and be wrong than carry it about."`
+- `deep` `"There is. I'm not sure more time makes it a different question."`
+- `quiet` `"I'll look at it again on Sunday."`
+
+### R48 · `coach-real` · curiosity · school, after-school · **fact: `coach-employed`**
+**Kernel:** She has started wondering how anyone tells a good coach from a kind one.
+⚠ **Gated.** The gate licenses that she HAS a coach – **nothing about that coach's quality, and no
+coaching outcome.** The row is her question, never an answer to it.
+⚠⚠ **AND NOT ONE LINE HERE CARRIES A MASCULINE PRONOUN.** `tests/coach-voice.test.ts` forbids one
+anywhere a player can read it, and the single exception in the whole game is `court-four`'s invented
+dad. Her coach's sex is real in the save (`ECONOMY.coach.roster` carries a `gender` per slot) and
+this row never names it, so the neutral singular is not squeamishness – it is the only form that
+cannot contradict the career.
+⚠ `sunny` is **HIS** 15.09 revision. The other three are NEW.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"How do you know when you've got a real coach and not just a nice one?"` |
+| `fiery` | `"I want to know whether my coach is actually good, and nobody will give me a straight answer."` |
+| `deep` | `"I've been working out the difference between a coach who is kind and one who is good."` |
+| `quiet` | `"How does anyone tell a good coach from a nice one?"` |
+
+**Parent:** *Ask what made her wonder* · *Say a good coach explains what they're changing* · *Say she doesn't have to work it out now*
+
+**invite** · *Ask what made her wonder*
+- `sunny` `"Mine's lovely. Everyone's lovely. I can't tell if that's the same as good."`
+- `fiery` `"Everybody's nice. Nice is easy. I'd like to know what I'm actually being taught."`
+- `deep` `"Nothing happened. I noticed I have no way of telling, and that bothered me."`
+- `quiet` `"No reason. It came up and stayed."`
+
+**respond** · *Say a good coach explains what they're changing*
+- `sunny` `"Okay. I'll ask why next time, not just what."`
+- `fiery` `"Right. Then I'm asking why on Tuesday and I'm not letting it go."`
+- `deep` `"That's something I can actually check. I hadn't thought of it as checkable."`
+- `quiet` `"That's useful. I'll listen for it."`
+
+**space** · *Say she doesn't have to work it out now*
+- `sunny` `"All right. I'll go back to enjoying the nice one for a bit."`
+- `fiery` `"Fine. But I'm coming back to this one."`
+- `deep` `"No. I'd still like to know, and I think I'll keep asking myself."`
+- `quiet` `"No. I'll see what happens at the next session."`
+### R49 · `watching-players` · observation · college, independent · generated
+**Kernel:** The players she has been watching hardly ever talk about winning. They talk about what
+they are working on next.
+**Authoritative claims:** none – it is what she has noticed, and no other player's result is named.
+⭐ **HIS RULING, CARRIED FROM THE DELETED BANNER:** the hedge in `deep`'s `respond` stays – «an adult
+capable of questioning her interpretation feels more human than one who always speaks in
+certainties». ⚠ `sunny` and `quiet` carry a hedge of their own for the same reason; `fiery` does NOT,
+and that is her temperament rather than an oversight – «the verdict arrives before the explanation,
+and she does not let go of it». A row where all four hedge would be one girl told four times.
+⚠ **A CALL**, so the away stages only: this is the row he reported the repeat on (round 43 #8).
+⚠ `deep` is **HIS** 15.09 revision. The other three are NEW.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"The players I've been watching hardly mention winning. I keep waiting for it and it never comes."` |
+| `fiery` | `"Nobody I've been watching talks about winning. Not one of them. I find that genuinely annoying."` |
+| `deep` | `"The players I've been watching barely talk about winning."` |
+| `quiet` | `"The players I've been watching talk about other things. Not winning."` |
+
+**Parent:** *Ask her to go on* · *Say we've noticed it too* · *Let the thought settle*
+
+**invite** · *Ask her to go on*
+- `sunny` `"They talk about what they're working on. Never the result. It's so odd once you hear it."`
+- `fiery` `"They talk about drills. Drills! Not one of them mentions the scoreboard."`
+- `deep` `"They talk about Tuesday. What they're working on next. I've started noticing that."`
+- `quiet` `"Mostly what's next. What they're fixing. That sort of thing."`
+
+**respond** · *Say we've noticed it too*
+- `sunny` `"Have you? Good. I'd started to think I was inventing the whole thing."`
+- `fiery` `"Then why does nobody say it out loud? Everyone acts like the score is the point."`
+- `deep` `"You have? I thought I might be reading too much into it."`
+- `quiet` `"You have? I wasn't sure it was a real thing."`
+
+**space** · *Let the thought settle*
+- `sunny` `"I will. I'll probably still be watching for it next week."`
+- `fiery` `"It's settled. I've decided they're right and everyone else has it backwards."`
+- `deep` `"Mm. I'll keep watching."`
+- `quiet` `"All right. I'll keep an eye on it."`
+
+### R50 · `court-four` · story · school, after-school · generated
+**Kernel:** A serve clipped the net cord and landed in a spectator's full cup of coffee. He put the
+lid back on. She had to serve next, and nobody went to fetch the ball.
+**Authoritative claims:** none – the dad exists only inside the sentence and nothing else in the
+engine reads him.
+⭐⭐ **HIS TEST IS WHAT THIS ROW IS FOR, AND THE BANNER SAID SO:** §8d.3 – «Same event, same facts,
+same age, same parental choice – four different ways of noticing, disclosing and responding.» That
+test could not be built out of the spec's eight, because no two of them shared an event, so ONE event
+was written across all four voices and it is the DOMESTIC one (no career fact behind it) **so the
+test can pose a bare world.** ⭐ And «not one shared phrase» is NOT the target: his own note says real
+people all say «Okay».
+⚠⚠ **THE FACTS ARE DELIBERATELY IDENTICAL IN ALL FOUR** – the net cord, the coffee, the full cup, the
+dad putting the lid back on, her having to serve next, nobody fetching the ball. §8d.5's stable
+invented detail, and the only axis left free is the voice.
+⚠⚠ **THE ONE MASCULINE EXCEPTION IN THE WHOLE GAME LIVES HERE**, counted and pinned at ten literals
+across seven distinct sentences (`tests/coach-voice.test.ts`). A fifth voice column of this story, or
+one new masculine sentence in it, reddens that file on purpose – the exception is argued each time,
+never inherited.
+⚠ **A `story` IS TWO BEATS**, which is why this is the one row in the document with a `**shared**`
+block: the incident is heard by every route before its own branch, and the branch is the aftermath.
+⚠ `fiery` is **HIS**; `sunny`, `quiet` and `deep` were drafted for the voice test and are carried
+here character for character.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"You have to hear what happened on court four."` |
+| `fiery` | `"You won't believe what happened on court four."` |
+| `deep` | `"The best thing today had nothing to do with tennis."` |
+| `quiet` | `"Something happened on court four today."` |
+
+**shared**
+- `sunny` `"Someone's serve clipped the net cord and went straight into a dad's coffee. A full one. He just sat there holding it."`
+- `fiery` `"She serves, the ball catches the net cord – and lands in a dad's coffee. Full cup. He just looked at it."`
+- `deep` `"A serve clipped the net cord and went into a dad's coffee. Full cup. He looked at it for a long time."`
+- `quiet` `"A serve caught the net cord and landed in someone's dad's coffee. A whole cup of it."`
+
+**Parent:** *Ask what he did* · *Laugh with her* · *Let her finish*
+
+**invite** · *Ask what he did*
+- `sunny` `"Put the lid back on. Very carefully. Like the lid was the problem."`
+- `fiery` `"Took the ball out. Put the lid on. Like that would stop the next one."`
+- `deep` `"Put the lid back on. I think he wanted the morning back and the lid was the nearest thing."`
+- `quiet` `"He put the lid back on. Then he moved his chair. That was all."`
+
+**respond** · *Laugh with her*
+- `sunny` `"I know! And I had to serve after that. I was still going."`
+- `fiery` `"Exactly! And then I had to serve. I couldn't look at him."`
+- `deep` `"I didn't laugh then. I had to serve next. I have been laughing about it since."`
+- `quiet` `"It was quite funny. I didn't laugh at the time. I had to serve."`
+
+**space** · *Let her finish*
+- `sunny` `"Anyway. Nobody asked for the ball back. That's my favourite part."`
+- `fiery` `"Anyway, nobody wanted the ball back. That's the important part."`
+- `deep` `"That's the whole of it. The ball is probably still there."`
+- `quiet` `"That's it, really. Nobody went to get the ball."`
+
+### R51 · `new-place` · worry · college, independent · generated
+**Kernel:** She has moved somewhere new and does not much like it. It is clean and it is fine and she
+has been eating standing up.
+**Authoritative claims:** none – **the STAGE is the fact.** A girl who has not moved out has no new
+place, which is why this row lists the two away stages and nothing else.
+⭐ **HIS RULING, CARRIED FROM THE DELETED BANNER, AND HIS OWN VERDICT ON THE SET:** «the best scene».
+The `respond` branch ASKS something real instead of gesturing at an unheard opinion – §8d.1's fix, in
+his words.
+⚠ **AND ONE SENTENCE OF HIS LEFT THIS ROW IN ROUND 44 WITHOUT BEING EDITED.** «A pause on the line,
+longer than the others.» was its per-row LEAD-IN, and per-row lead-ins no longer exist: the frame is
+drawn from `SMALL_TALK_FRAMES` now, because one scene wraps all 51 situations. It was the one
+exception to the rule that a narration names her, so its disappearance is recorded rather than
+assumed. The quotation it used to wrap is carried whole.
+⚠ `quiet` is **HIS**. The other three are NEW.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I don't think I like the new place much. There, I've said it out loud."` |
+| `fiery` | `"I don't like the new place. I've been trying to and I've stopped trying."` |
+| `deep` | `"I've worked out that I don't like the new place. It took me a week to notice."` |
+| `quiet` | `"I don't think I like the new place much."` |
+
+**Parent:** *Let her keep going* · *Ask whether she's been eating properly* · *Say she needn't solve it tonight*
+
+**invite** · *Let her keep going*
+- `sunny` `"It's fine! It's clean, it's warm, and I've not once sat down to eat in it."`
+- `fiery` `"It's clean. It's fine. And I've eaten standing up every night I've been here."`
+- `deep` `"Nothing is wrong with it. I have been eating standing up and calling that settling in."`
+- `quiet` `"It's fine. It's clean. I've been eating standing up for a week. I only noticed tonight."`
+
+**respond** · *Ask whether she's been eating properly*
+- `sunny` `"I have! Just never sitting down. I'm starting to think the flat has no chairs."`
+- `fiery` `"I've been eating. Standing at a counter like a horse, but eating."`
+- `deep` `"I have. It turns out that where you eat counts for more than I expected."`
+- `quiet` `"I have. Just not sitting down, apparently."`
+
+**space** · *Say she needn't solve it tonight*
+- `sunny` `"I know. I'll like it better once there's something of mine in it."`
+- `fiery` `"I'm not solving it tonight. I'm not pretending it's lovely either."`
+- `deep` `"No. I'd rather sit with not liking it than talk myself out of it."`
+- `quiet` `"Good. Tomorrow, then. Not tonight."`
+
+### R52 · `beat-her-conqueror` · good-news · school, after-school · **fact: `beat-her-conqueror`**
+**Kernel:** She beat an opponent who had beaten her four times and never lost to her.
+⚠⚠ **THE STRICTEST GATE IN THE CATALOGUE, AND BOTH HALVES OF HER CLAIM ARE CHECKED AGAINST THE FEED.**
+A win inside the window, against an opponent with exactly FOUR previous wins over her and no losses.
+`=== 4` and not `>= 4`, because **she says the number out loud**: at five it is her miscounting, and
+the spec's own line is «she may interpret an outcome however she likes; she may not invent the
+outcome». So «four» is licensed here and nowhere else in the document.
+⭐ **HIS NOTE ON TEMPERAMENT RIDES ON THIS ROW, CARRIED FROM THE DELETED BANNER:** the single «Four!»
+does not make her `fiery` – **«temperament shapes the pattern, not the punctuation»**. That is the
+whole reason a `sunny` girl may shout a number here and still be `sunny`.
+⚠ `sunny` is **HIS**. The other three are NEW.
+
+| voice | opener |
+| --- | --- |
+| `sunny` | `"I beat someone I've never beaten."` |
+| `fiery` | `"I beat her. I have never beaten her and today I beat her."` |
+| `deep` | `"I beat someone who has always beaten me, and I am still working out how I feel."` |
+| `quiet` | `"I won today. Against someone I've never won against."` |
+
+**Parent:** *Ask what made it good* · *Tell her we're glad* · *Let her enjoy it*
+
+**invite** · *Ask what made it good*
+- `sunny` `"She's beaten me four times. Four! Today I got nervous – and kept playing."`
+- `fiery` `"Four times she's beaten me. Four. I was nervous the whole way and it didn't matter."`
+- `deep` `"She has beaten me four times. The good part was noticing the nerves and going anyway."`
+- `quiet` `"She'd beaten me four times before. I didn't stop this time."`
+
+**respond** · *Tell her we're glad*
+- `sunny` `"I can tell. You're doing the face."`
+- `fiery` `"You should be! I'm going to be glad about this for a week."`
+- `deep` `"I know. I wanted to say it to someone who knew how many times it was."`
+- `quiet` `"Thanks. I'm still a bit surprised, honestly."`
+
+**space** · *Let her enjoy it*
+- `sunny` `"Oh, I'm going to. All evening."`
+- `fiery` `"I am enjoying it. I'll enjoy it again tomorrow, and probably on Friday."`
+- `deep` `"I will. I'd like to keep this one somewhere I can find it again."`
+- `quiet` `"I will. It's a nice thing to take upstairs."`
 
 ---
 
@@ -311,11 +700,15 @@ without a word.
 **Kernel:** Someone she trains with writes her own name on every banana in the shared fridge.
 **Authoritative claims:** none – «someone she trains with» is deliberately not a named teammate and
 creates no persistent relationship. **Frames:** roof and away.
+⚠ **REPAIRED IN ROUND 44 – HIS [P2], AND THE ROW'S OWN NOTE IS WHAT CONVICTS IT:** the line above
+says this row creates no persistent relationship, and `fiery`'s opener said «I've said nothing for
+three weeks», which is three weeks of a relationship with somebody the row will not name. The joke
+survives the repair intact, which is the test a repair of this kind has to pass.
 
 | voice | opener |
 | --- | --- |
 | `sunny` | `"Someone writes her NAME on bananas. On every single one. Who is taking the bananas?"` |
-| `fiery` | `"She labels her fruit. Her fruit. I've said nothing for three weeks and I am running out of nothing."` |
+| `fiery` | `"She labels her fruit. Her fruit. I've said nothing about it and I am running out of nothing."` |
 | `deep` | `"There's a woman who writes her name on bananas. I've decided not to ask why, because I think the answer might be sad."` |
 | `quiet` | `"There's a system in the fridge now. Names on things."` |
 
@@ -878,6 +1271,11 @@ every `handed` in `src/engine` is the ordinary English word. A generated kernel 
 **Kernel:** A name she looked for is not in this draw, and nobody has said why.
 ⚠ **Repaired 17.09:** the row said «at every event» and «since the spring» – longitudinal history a
 generated kernel cannot assert. One draw she can see is enough for the same feeling.
+⚠⚠ **AND REPAIRED AGAIN IN ROUND 44 – HIS [P2], IN THE ROW ALREADY REPAIRED FOR EXACTLY THIS.**
+`sunny`'s `invite` said «we've shared a warm-up a few times», which manufactures an ongoing
+relationship AND counts past occasions – the same class of claim the 17.09 pass took out of the
+openers, left standing one layer down in a reply. That is the finding worth keeping: **a repair
+applied to a row's kernels is not a repair of the row.**
 | voice | opener |
 | --- | --- |
 | `sunny` | `"There's a name I expected to see in the draw and it isn't there."` |
@@ -888,7 +1286,7 @@ generated kernel cannot assert. One draw she can see is enough for the same feel
 **Parent:** *Ask whether she knew her well* · *Say people leave for ordinary reasons too* · *Say she does not have to find out*
 
 **invite** · *Ask whether she knew her well*
-- `sunny` `"Not really. We've shared a warm-up a few times. That's about it."`
+- `sunny` `"Not really. I'd know her to look at and that's honestly the whole of it."`
 - `fiery` `"Not well. Well enough to notice she's gone, which is apparently not the same."`
 - `deep` `"Not well. I'd have said hello. I don't think I ever did."`
 - `quiet` `"Enough to say hello. Not much past that."`
@@ -1272,6 +1670,10 @@ Filed with `why-tennis` for the larger beat.
 ### R29 · `the-borrowed-thing` · story · after-school, college, independent · generated
 **Kernel:** Somebody borrowed something small of hers and returned it in better condition than she
 lent it.
+⚠ **REPAIRED IN ROUND 44 – HIS [P2]:** `quiet`'s `respond` said «we talk a bit more now», which
+manufactures an ongoing relationship out of one borrowed towel. A `generated` kernel holds the towel;
+it does not hold a friendship that has changed since.
+
 | voice | opener |
 | --- | --- |
 | `sunny` | `"She gave it back CLEANER than I lent it. Who does that?"` |
@@ -1291,7 +1693,7 @@ lent it.
 - `sunny` `"She is. I didn't really know her before this."`
 - `fiery` `"She is. It's still a lot of effort for a towel."`
 - `deep` `"I think so. It took her longer than borrowing it was worth."`
-- `quiet` `"She's all right. We talk a bit more now."`
+- `quiet` `"She might be. I said thank you and that was that."`
 
 **space** · *Say she should lend her more things*
 - `sunny` `"I might. I've got a whole bag of things that need washing."`
@@ -1301,11 +1703,18 @@ lent it.
 
 ### R30 · `the-rain-delay` · story · college, independent · generated
 **Kernel:** Rain stopped play for three hours and the players ended up playing cards in a corridor.
+⚠ **REPAIRED IN ROUND 44 – HIS [P2], TWO OPENERS, AND BOTH WERE THE SAME LAW LEAKING:** a line may
+not assert more than its kernel licenses. `fiery` said «and then they called it off anyway», which is
+an OUTCOME – whether play resumed is a scheduling fact a `generated` kernel does not hold. `deep` said
+«people I've shared a draw with for two years», which is competitive longitudinal history and is the
+sharpest of the two; PASS 4 below had already flagged it and left it, and his review is the ruling
+that lets it be repaired. The three hours stay: they are the kernel's own.
+
 | voice | opener |
 | --- | --- |
 | `sunny` | `"Three hours of rain and we ended up playing cards on the floor of a corridor. Best day."` |
-| `fiery` | `"Three hours. THREE. And then they called it off anyway."` |
-| `deep` | `"We sat in a corridor for three hours and I talked to people I've shared a draw with for two years."` |
+| `fiery` | `"Three hours. THREE. And the best thing that happened all day happened in a corridor."` |
+| `deep` | `"We sat in a corridor for three hours and I talked to people I have only ever nodded at."` |
 | `quiet` | `"Rain delay. We waited it out inside."` |
 
 **Parent:** *Ask who won the cards* · *Say you'd have been terrible at the cards* · *Say she should get some sleep*
@@ -1392,6 +1801,16 @@ doing.
 
 ### R33 · `the-one-who-never-sits` · observation · college, independent · generated
 **Kernel:** She has noticed one player who never sits down at changeovers, all match.
+⚠ **REPAIRED IN ROUND 44 – HIS [P3], AND HIS OWN SENTENCE IS THE DIAGNOSIS: «the label is the defect,
+not the reply».** «Ask if it seemed to help her» asks for an OUTCOME – whether another player's habit
+worked – which a `generated` kernel does not hold, so all four voices had to decline it («I couldn't
+tell», «No idea», «I can't say», «Hard to tell»). That reads true once and reads like a dodge four
+times in a row. The label now asks for the thing she actually watched, and the four replies answer it
+instead of refusing it.
+⚠ **`quiet`'s «twice now» IS NOT REPAIRED AND IS REPORTED.** It counts observations across matches,
+PASS 4's own list names it, and **his six findings do not.** Invariant 4 and his scope instruction
+both point the same way here.
+
 | voice | opener |
 | --- | --- |
 | `sunny` | `"There's a girl who never sits down at changeovers. Not once, the whole match."` |
@@ -1399,13 +1818,13 @@ doing.
 | `deep` | `"She stood through every changeover. I don't think it was for show."` |
 | `quiet` | `"One of them doesn't sit at the changeovers. I noticed it twice now."` |
 
-**Parent:** *Ask if it seemed to help her* · *Say players find odd things that work* · *Say she does not have to copy anyone*
+**Parent:** *Ask what she did instead of sitting* · *Say players find odd things that work* · *Say she does not have to copy anyone*
 
-**invite** · *Ask if it seemed to help her*
-- `sunny` `"I couldn't tell. She looked the same at the end as she did at the start."`
-- `fiery` `"No idea. She didn't look tired, which annoyed me more than it should have."`
-- `deep` `"I can't say. She never sat, and I watched her instead of the match."`
-- `quiet` `"Hard to tell. She kept doing it, so probably."`
+**invite** · *Ask what she did instead of sitting*
+- `sunny` `"Stood there. Bounced about a bit. Looked completely normal about the whole thing."`
+- `fiery` `"Stood. Faced the back fence. Like the chair had personally offended her."`
+- `deep` `"She stood with her back to the court and looked at her strings. Every single time."`
+- `quiet` `"Stood at the back. Same spot each time."`
 
 **respond** · *Say players find odd things that work*
 - `sunny` `"They do. I'd like one of my own, honestly."`
@@ -1424,6 +1843,19 @@ doing.
 about it.
 ⚠ **Gated**, because it presumes she has been on a court where she could see it. ⚠ It asserts nothing
 about her own second serve.
+⚠⚠ **REPAIRED IN ROUND 44 – HIS [P2], AND THE ROW WAS CROSSING ITS OWN STATED BOUNDARY.** The line
+directly above says this row asserts nothing about her own second serve, and then `invite` asked «Ask
+what she does on hers» and got four answers establishing a persistent technical pattern – «I stay
+back, mostly», «I've never once just gone». **His own suggested label is used:** ask what she notices
+immediately before the better players move. The four replies are rewritten to answer THAT, and they
+describe the players she is watching rather than her own tennis.
+⚠ **THE OTHER TWO STANCES ARE LEFT AS THEY ARE AND THE CONCERN IS REPORTED.** «Say that is a decision
+made in practice, not in a match» is his label and it invites her to talk about her own practice;
+`deep`'s answer to it («I've been trying to decide it in the wrong place») is the same class of claim
+the `invite` block was repaired for. **His six findings name `invite` and only `invite`**, and his
+scope instruction is «repair the factual seams rather than conduct another broad prose rewrite», so
+this is a sentence for him rather than an edit.
+
 | voice | opener |
 | --- | --- |
 | `sunny` | `"The good ones just step in on a second serve. They don't even think about it."` |
@@ -1431,13 +1863,13 @@ about her own second serve.
 | `deep` | `"Nobody decides to step in. It's already decided before the ball is tossed, and that's the part I'm missing."` |
 | `quiet` | `"They stand closer on the second serve. All of them."` |
 
-**Parent:** *Ask what she does on hers* · *Say that is a decision made in practice, not in a match* · *Say she is watching well*
+**Parent:** *Ask what she notices just before they move* · *Say that is a decision made in practice, not in a match* · *Say she is watching well*
 
-**invite** · *Ask what she does on hers*
-- `sunny` `"I think about it. That's the difference. By then the ball's gone past."`
-- `fiery` `"I think about it first. They don't. That's the bit I hate."`
-- `deep` `"I decide. Every time. I've never once just gone."`
-- `quiet` `"I stay back, mostly. I've been trying not to."`
+**invite** · *Ask what she notices just before they move*
+- `sunny` `"They're leaning in while the ball's still going up. Every one of them does it."`
+- `fiery` `"They move before the toss comes down. That's the whole trick and nobody hides it."`
+- `deep` `"Nothing changes in their feet. They are already there before the ball is."`
+- `quiet` `"They take a step in while she's still tossing it."`
 
 **respond** · *Say that is a decision made in practice, not in a match*
 - `sunny` `"That makes sense. I'd never have got there on my own."`
@@ -1484,30 +1916,45 @@ about her own second serve.
 ⚠⚠ **REPLACED 17.09 – the row here read patterns ACROSS HALVES OF MULTIPLE DRAWS** («the same half
 keeps doing it», «twice now»), which is competitive history and not generated texture. One match she
 watched carries the same noticing and asserts nothing.
+⚠⚠ **REPAIRED AGAIN IN ROUND 44 – HIS [P1], AND THE ONLY ONE OF HIS SIX FINDINGS THAT WAS A ROW
+CONTRADICTING ITSELF RATHER THAN OVERREACHING ITS KERNEL.** The kernel and two openers put her at the
+END of the match while all four `invite` replies said she had left before it. **His fix, applied as
+he wrote it:** the kernel becomes «when she left, both were still moving properly», the two openers
+follow, and «Ask who won it» is replaced – a winner is an authoritative claim a `generated` kernel
+does not hold, which is also his [P3] finding about this same label.
+⚠ **A FOURTH LINE CARRIED THE SAME CLAIM AND HIS INVENTORY DID NOT NAME IT**, so it is repaired WITH
+the three he did name and reported here rather than quietly: `sunny`'s `respond` said «they were both
+still running at the end». He named the kernel, the two openers and `quiet`'s «walked off fine»;
+leaving `sunny`'s would have left the row describing an ending she did not witness in one voice of
+four, which is the finding itself, unclosed. **It is his line to put back if he wants it.**
+⚠ **AND ONE FLAGGED LINE IS LEFT EXACTLY WHERE IT IS.** `fiery`'s «three hours» is a duration nothing
+licenses for a match she left in the middle of – PASS 4's own list names it – and **his six findings
+do not.** His scope instruction governs: «repair the factual seams rather than conduct another broad
+prose rewrite.»
 
-**Kernel:** A match on the next court ran far longer than anything else that day, and both players
-were still moving properly at the end of it.
+**Kernel:** A match on the next court ran far longer than anything else that day, and when she left
+it both players were still moving properly.
 
 | voice | opener |
 | --- | --- |
-| `sunny` | `"There was a match on court one that went on forever and they were both still fine at the end."` |
+| `sunny` | `"There was a match on court one that went on forever and they were both still fine when I left."` |
 | `fiery` | `"Three hours and neither of them was limping. I'd have been on the floor."` |
-| `deep` | `"It went far longer than anything else out there. They were both still moving properly at the end."` |
+| `deep` | `"It went far longer than anything else out there. They were both still moving properly when I left."` |
 | `quiet` | `"One of the matches ran very long. I watched some of it."` |
 
-**Parent:** *Ask who won it* · *Say that is a different kind of fitness* · *Say she does not have to measure herself against it*
+**Parent:** *Ask how much of it she saw* · *Say that is a different kind of fitness* · *Say she does not have to measure herself against it*
 
-**invite** · *Ask who won it*
-- `sunny` `"No idea. I left before the end. I keep meaning to look it up."`
-- `fiery` `"I don't know and nobody's said. That's what gets me about it."`
-- `deep` `"I never found out. I watched the middle and missed the end of it."`
-- `quiet` `"Didn't see the end. It was still going when I left."`
+**invite** · *Ask how much of it she saw*
+- `sunny` `"A good chunk of it. I kept meaning to leave and then not leaving."`
+- `fiery` `"Enough of it. And then I left in the middle, which I'm annoyed about."`
+- `deep` `"The middle of it. I left before the end and I have thought about that since."`
+- `quiet` `"Some of the middle. I left before it finished."`
 
 **respond** · *Say that is a different kind of fitness*
-- `sunny` `"It really is. They were both still running at the end."`
+- `sunny` `"It really is. They were still running when I gave up watching."`
 - `fiery` `"It is. I'd have been sitting down long before that."`
 - `deep` `"It is. Neither of them looked like they were surviving it."`
-- `quiet` `"It is. They both walked off fine."`
+- `quiet` `"It is. Neither of them had slowed down when I went."`
 
 **space** · *Say she does not have to measure herself against it*
 - `sunny` `"I know. I did a bit anyway, standing there."`
@@ -1770,7 +2217,7 @@ hesitation.
 
 ---
 
-## P3.7 The corpus at 43 – counted by script, not claimed
+## P3.7 The corpus at 43, and the whole document at 51 – counted by script, not claimed
 
 ⚠⚠ **THIS SECTION SAID 44 UNTIL THE REPLIES PASS RE-RAN ITS OWN COUNT, AND IT WAS THE DOCUMENT'S OWN
 RULE THAT CAUGHT IT.** §3a: «any number in a document that can be derived FROM that document is
@@ -1788,25 +2235,55 @@ and the first one the rule caught rather than the owner.**
 | `worry` | 6 | held back from tranche 1 until the gates were settled |
 | `curiosity` | 5 | held back for the same reason; `R26` withdrawn from it |
 
-**Every one of the 43 reaches `college` and `independent`.** **Seven** name a career gate – R8, R14,
-R17, R18, R20, R25, R34 – and **all seven can ship.** R17's `clear-next-week` was the one claim no
-`SmallTalkFact` carried; it was written on 17.09 at his ask and is now the fifth member of
-`SMALL_TALK_FACTS`.
-The other 36 are `generated` kernels that assert nothing the career could contradict. No line
-anywhere, opener or reply, says «today».
+**Every one of the 43 reaches `college` and `independent`.** **Eight** name a career gate – R8, R14,
+R17, R18, R20, R25, R34, R44 – and **all eight can ship.** R17's `clear-next-week` was the one claim
+no `SmallTalkFact` carried; it was written on 17.09 at his ask and is now the fifth member of
+`SMALL_TALK_FACTS`, and `R44` was gated on it the same day.
+The other 35 are `generated` kernels that assert nothing the career could contradict. No line
+**of the 43**, opener or reply, says «today».
 
-⚠ **Against his per-cell floors:** 3–4 per subject at each active stage – **met** at 5–12 for adult
-stages. 6+ in the heavily weighted cell – **met** (`story` = 12). No subject with only ONE reachable
-adult situation – **met**, the thinnest is 5. The last-two exclusion – shipped as round 43 #8(a).
+⚠⚠ **THAT SENTENCE SAID «SEVEN – R8, R14, R17, R18, R20, R25, R34» UNTIL ROUND 44 DERIVED IT AGAIN,
+AND THIS IS THE FIFTH SLIP OF THE FAMILY §3a IS NAMED FOR.** `R44` was gated on `clear-next-week` on
+17.09 at his own ask – «загейти R44 на clear-next-week» – its own row records the change, and this
+list was never re-run. **A number written and never checked against the thing it counts**, again, and
+again catchable in one line. The figures in this section are now derived by
+`tools/small-talk-corpus-parse.ts` rather than maintained.
 
-⚠ **What is still measured as a hole:** `school` and `after-school`. Thirteen of the 43 reach
-`after-school`; **none** lists plain `school`, deliberately, because every hole he reported was past
-it. A school-years tranche is its own pass and its own reading.
+⚠ **THE «no line anywhere says today» SENTENCE USED TO BE UNSCOPED AND ROUND 44 MADE IT FALSE, SO IT
+IS SCOPED RATHER THAN QUIETLY LEFT.** Three of the eight that shipped before this document DO say
+«today» – `practice-clicked`, `line-call` and `court-four`'s `quiet` column. Gate 4 was written after
+those shipped and they are his sentences (invariant 4), so the rows carry them and the exception is
+stated here rather than edited away.
+
+⭐ **THE WHOLE DOCUMENT, DERIVED RATHER THAN CARRIED FORWARD** (`51` rows; the eight are `R45`–`R52`):
+
+| subject | of 51 | of 43 | what the eight added |
+| --- | ---: | ---: | --- |
+| `story` | 13 | 12 | `court-four` |
+| `good-news` | 9 | 7 | `practice-clicked`, `beat-her-conqueror` |
+| `worry` | 8 | 6 | `line-call`, `new-place` |
+| `decision` | 8 | 7 | `march-entry` |
+| `observation` | 7 | 6 | `watching-players` |
+| `curiosity` | 6 | 5 | `coach-real` |
+
+**Twelve of the 51 name a career gate** – the eight above plus `line-call` (`played-recently`),
+`march-entry` (`march-entry-open`), `coach-real` (`coach-employed`) and `beat-her-conqueror`, whose
+own fact is the strictest in the game.
+
+⚠ **Against his per-cell floors:** 3–4 per subject at each active stage – **met** at 6–13 for adult
+stages. 6+ in the heavily weighted cell – **met** (`story` = 13). No subject with only ONE reachable
+adult situation – **met**, the thinnest is 6. The last-two exclusion – shipped as round 43 #8(a).
+
+⚠ **What is still measured as a hole:** `school`, and it is a SMALLER hole than this section used to
+describe. Nineteen of the 51 reach `after-school` and **six list plain `school`** – all six of them
+among the eight that shipped before this document, because those were written for the school years
+and the 43 were written for the holes he reported past them. A school-years tranche of the corpus's
+own standard is still its own pass and its own reading.
 
 ⭐ **What B0/K4 should now say.** Before this corpus, the bench measured a 40-conversation career
 meeting **~2.5 distinct situations** with **14.1% of conversations reaching none at all**. Re-run K1–K5
-against 43 four-voiced situations before shipping any of it – the corpus is the input to that bench,
-not a substitute for it.
+against **51** four-voiced situations before shipping any of it – the corpus is the input to that
+bench, not a substitute for it.
 
 ---
 
@@ -1814,6 +2291,13 @@ not a substitute for it.
 
 **516 written: 43 situations × 4 voices × 3 parent stances.** Every number below is derived from this
 file by script, per §3a's rule, and the script is the same one that derives the opener figures.
+
+⚠ **THE MEASUREMENTS IN THIS PASS ARE OF THE 43 AND ARE LEFT THAT WAY**, because they are the record
+of a pass that happened. Round 44's ninety-six added lines (the eight rows' 21 new voice-entries) move
+every average by a decimal place or two and change nothing they were arguing: over all 51 the
+contraction habit and the shape hold – openers 15.5 / 15.2 / 16.7 / 10.2 words, replies 11.9 / 11.7 /
+11.5 / 7.7, `deep` still shorter than `sunny` and `fiery` rather than longer, `quiet` still the
+shortest of the four by a wide margin.
 
 ## What was measured
 
@@ -1860,11 +2344,17 @@ meals). **No reply names a figure of money, a placing, a date or a result.**
 
 ## The three checks that found something
 
-1. ⚠ **Four labels ask for what their own kernel cannot license, so all four voices must decline.**
-   R30 «Ask who won the cards» is harmless; **R36 «Ask who won it» and R33 «Ask if it seemed to help
-   her» are not** – a winner and an outcome are authoritative claims, and a `generated` kernel holds
-   neither. The replies answer honestly («I never found out», «I can't say»), which reads true once
-   and reads like a dodge four times in a row. The label is the defect, not the reply.
+1. ✅ **REPAIRED IN ROUND 44 ON HIS [P3] – and the finding below is kept verbatim because it is the
+   reasoning the repair used.** ⚠ **Four labels ask for what their own kernel cannot license, so all
+   four voices must decline.** R30 «Ask who won the cards» is harmless; **R36 «Ask who won it» and
+   R33 «Ask if it seemed to help her» are not** – a winner and an outcome are authoritative claims,
+   and a `generated` kernel holds neither. The replies answer honestly («I never found out», «I can't
+   say»), which reads true once and reads like a dodge four times in a row. The label is the defect,
+   not the reply.
+   ⭐ **His review reached the same two labels and the same sentence** – «the label is the defect, not
+   the reply» – so both are replaced and their eight replies rewritten to answer the new question:
+   R36's becomes «Ask how much of it she saw» and R33's «Ask what she did instead of sitting». Neither
+   new label asks the row for anything the row does not hold.
 2. ⚠ **R17's `respond` and `space` say nearly the same thing** – «an empty week is allowed to be
    empty» and «she can have it as an empty week» – so two of its three columns had to be written
    apart by tone alone. R22 has a milder version of the same. Flagged, not edited: the labels are his.
@@ -1879,6 +2369,15 @@ meals). **No reply names a figure of money, a placing, a date or a result.**
    `fiery` says «three hours», in the row that was REPLACED on 17.09 for asserting exactly this class
    of fact. **They are his accepted kernels and are left alone** (invariant 4) – but **no reply uses
    any of them**, which is why several replies answer «when?» with «I can't find the day».
+   ⭐ **ROUND 44 SPLIT THOSE TWO APART, AND HIS REVIEW IS WHAT MADE THE DIFFERENCE LEGIBLE.** «Left
+   alone» was the right call while the only argument against them was an agent's; it stopped being
+   the right call for the ones HE named. `R30`'s `deep` is repaired on his [P2] (and `R30`'s `fiery`
+   with it, «and then they called it off anyway», an outcome the kernel does not hold). `R36`'s
+   «three hours» is NOT named in his six, so it stays exactly where it is – which is the whole of the
+   rule: **the owner's own list is the licence, and an agent's agreement with it is not.**
+   ⚠ R2's «three weeks» and R16's «a few times» were on this same left-alone list and are repaired for
+   the same reason: his [P2] names them. `R33`'s «twice now», `R6`'s «maybe twice», `R7`'s eleven
+   times and the rest are not named, and stay.
 
 ## «Space is not agreement», measured
 
@@ -1922,7 +2421,7 @@ publishing different editions of the same afternoon.
 | --- | --- | --- |
 | R2 `deep` invite | «I think somebody took something from her once, somewhere else.» | the only reply that invents a BACKSTORY for a person the row deliberately leaves unnamed. Hedged, and consistent with her own opener («I think the answer might be sad»), but it is invention. |
 | R24 `deep` invite | «I stayed. I've been telling it like I didn't.» | the only reply that takes a position the kernel leaves open – whether SHE stayed. It is the best reveal in the set and it sits next to `fiery`'s opener, «I wouldn't have». |
-| R34 all four invite | «I stay back, mostly», «By then the ball's gone past» | the closest the corpus comes to her describing her own tennis. No result and no skill claim – but the label «Ask what she does on hers» asks for one, and this is the row where that boundary is thinnest. |
+| ✅ R34 all four invite | «I stay back, mostly», «By then the ball's gone past» | the closest the corpus comes to her describing her own tennis. No result and no skill claim – but the label «Ask what she does on hers» asks for one, and this is the row where that boundary is thinnest. **CLOSED IN ROUND 44 ON HIS [P2]:** he read the same row the same way, the label is now «Ask what she notices just before they move», and the four replies describe the players she is watching. ⭐ The flag was right and the fix was his to authorise – which is exactly what putting it in front of him bought. |
 | R2 `fiery` space | «No. We're not moving on. Somebody has to acknowledge the bananas.» | the flattest refusal of a parent in the corpus. Funny at the table, possibly rude on a card. |
 | R29 `fiery` space | «I'm not running a laundry service in reverse.» | the most joke-shaped line in the 516 – nearest thing here to a written gag rather than a girl talking. |
 | R35 `sunny` space | «You'd be under the table by the pudding.» | teasing the parent. Warm in one reading, pert in another. |
@@ -1961,7 +2460,19 @@ threaded through sixteen strings, for a stranger the row is deliberately vague a
 
 ## What a script re-asserts on every read
 
-* 516 replies, 43 × 3 × 4, none missing and none empty;
+⚠⚠ **SINCE ROUND 44 THIS IS NOT A SCRIPT SOMEBODY REMEMBERS TO RUN – IT IS `tools/small-talk-corpus-parse.ts`,
+AND EVERY READ OF THIS DOCUMENT GOES THROUGH IT.** The emitter that wrote
+`src/engine/world/smallTalkCorpus.ts` used it, and `tests/round44-corpus-roundtrip.test.ts` re-parses
+this file on every test run and compares the committed catalogue to it STRING FOR STRING. An edit
+here that never reached the emitter is red; a hand-edit of the generated module is red.
+
+* **612 replies, 51 × 3 × 4**, none missing and none empty, and **204 openers, 153 labels** – the
+  parser refuses a short row rather than skipping it, so a count is a count and not a floor;
+* the one two-beat row (`court-four`) owes **4 shared** lines – all four voices or none;
 * every block header matches its row's own `**Parent:**` label, in order;
-* no exact duplicate anywhere in the 516;
-* no «today» in any opener or reply.
+* no exact duplicate anywhere in the 612 – **measured at 0** across all 973 authored strings
+  (openers, shared beats, labels and replies) after the eight joined;
+* no «today» in any opener or reply **of the 43** – and three of the eight that shipped before this
+  document carry his «today», which §P3.7 states as the exception rather than editing out;
+* ⚠ no masculine pronoun outside `court-four` – **measured at 0**, with `court-four`'s own seven
+  distinct sentences pinned by count in `tests/coach-voice.test.ts`.
