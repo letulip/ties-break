@@ -88,6 +88,19 @@ import type { PsyFocus } from '../engine/world/state'
 // here cannot leak a derivation the snapshot should own (the card's own price stays the
 // snapshot's `masseurSalaryCents`, asserted in tests/component/masseur-card.test.ts).
 import { ECONOMY } from '../engine/economy'
+// ⭐⭐ 17.09 – THE THIRD READER OF ROUND 42 #28's ONE SELECTOR, and it was always the missing rung.
+// `psychologistFocusNudge` is read on Home (the Coach-note plate's dot) and on the Coaches screen
+// (the Support-staff tab pill); the marker walks him here and then the block he was walked to looked
+// exactly as it looks on any other week. His ask: «всё-таки надо подсвечивать весь блок выбора работы
+// на год в межсезонье, когда мы приводим пользователя по маркеру с home».
+//
+// ⚠⚠ ONE DELIBERATE WIDENING, FLAGGED RATHER THAN HIDDEN. Driving the glow off the SHARED selector
+// means the block lights whenever the marker is up – including when he opens this tab himself instead
+// of following the dot. The alternative is an arrival state carried across two screens, which is a
+// second source of truth that can disagree with the dot, and round 42 #28 built this selector
+// precisely so the entries on one path cannot disagree. A third entry on that path should not be the
+// one that breaks it. If he wants it strictly on arrival that is a one-line change later.
+import { psychologistFocusNudge } from '../shared/protocol'
 import { formatCents } from '../shared/money'
 // ⭐⭐ ROUND 43 #2 – the seat's own face. One builder, in the module that already owns every other
 // portrait path, so the folder is spelled once (`src/art/preload.ts`).
@@ -108,6 +121,12 @@ interface StaffRung {
   value: number
   label: string
   priceLabel: string
+  /** ⭐⭐ 17.09 – WHAT THIS RUNG BUYS, in one sentence under its name, and OPTIONAL because exactly
+   *  one of the three seats has been given the sentences. `ECONOMY.sparring.rungs[n].note` is the
+   *  owner's own set A; the masseur's sessions dial and the psychologist's roster have no drafts he
+   *  has seen, so a required field would make this file invent two he never ruled on (invariant 4).
+   *  A rung without a note renders nothing at all – no empty element, no reserved line. */
+  note?: string
 }
 
 /** ⭐ ONE SEAT ON THE PAYROLL. Required: the lock, the sentence, the price and the two directions –
@@ -163,6 +182,11 @@ interface StaffMember {
      *  BEFORE the choice, where the decision is actually taken. Zero new wording. */
     options: { value: PsyFocus; label: string; line: string; open: boolean }[]
     note: string
+    /** ⭐⭐ 17.09 – IS THE MARKER UP FOR THIS ROW. The shared `psychologistFocusNudge` and nothing
+     *  else, so the block, Home's dot and the tab pill are three readings of ONE fact. It rides on
+     *  the descriptor rather than being read in the markup because this chapter renders `members`:
+     *  a seat that one day has a year's work of its own gets the glow by filling this field in. */
+    nudge: boolean
     set: (value: PsyFocus) => Promise<void>
   }
 }
@@ -200,6 +224,13 @@ const masseurLine = computed(() => {
 // marker but not on a second one.
 //
 // «сами цены внутри опций этих специалистов надо сделать покрупнее и можно пожирнее даже» (16.09)
+//
+// ⭐⭐ 17.09 – `focusPaddingNote`, HIS OWN WORDS, PARKED HERE FOR THE SAME STANDING REASON. The
+// year's-work cards were `padding: 6px 4px` – four pixels at the sides – and the rule that answers
+// him (`.staff-focus-option`, in the style block below) points back at this note.
+//
+// «у психолога в карточках варианта работы на сезон маловато внутренних отступов (тексту очень
+// тесно)» (17.09)
 const MASSEUR_RUNGS = ECONOMY.masseur.rungs
 // ⭐⭐ ROUND 43 #4 – AND THE SESSION RATE IS THE CAREER'S, NEVER THE CONSTANT. The masseur asks for a
 // rise once a year on the payroll, so `ECONOMY.masseur.perSessionCents` is the OPENING price and the
@@ -234,7 +265,7 @@ const masseurTravelSub = computed(() => {
   // the session rate instead of the weekly figure above – the price READS off the card before the
   // switch is flipped, which is the whole legibility contract of this screen.
   const rule =
-    `Table work between rounds – one more fare on every trip to a paying event, and the week is billed per match there (${formatCents(masseurRateCents.value)} each) instead of the weekly rate.`
+    `Table work between rounds – one additional fare per trip to a paying event, and the week is billed per match there (${formatCents(masseurRateCents.value)} each) instead of the weekly rate.`
   const trips = game.snapshot?.masseurTravelTrips ?? 0
   if (trips === 0) return rule
   const t = trips === 1 ? '1 trip' : `${trips} trips`
@@ -250,7 +281,7 @@ const masseur = computed<StaffMember>(() => ({
   priceLabel: masseurSalary.value,
   // Both directions ask, the screen's own doctrine (see the coach's `releasing` next door): a screen
   // that asks before it starts paying somebody and not before it stops is not neutral about the two.
-  hireMessage: `Put a masseur on the payroll at ${masseurSalary.value} a week (${masseurRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
+  hireMessage: `Hire a masseur for ${masseurSalary.value} a week (${masseurRungLabel.value.toLowerCase()})? You can end the arrangement any week, like the coach.`,
   releaseMessage: 'Let the masseur go? The weekly salary stops, and rehab goes back to the clinic alone.',
   setHired: (hire: boolean) => game.hireMasseur(hire),
   dial: {
@@ -267,9 +298,9 @@ const masseur = computed<StaffMember>(() => ({
     title: 'Masseur travels to tournaments',
     sub: masseurTravelSub.value,
     on: masseurTravels.value,
-    onLabel: 'Masseur travels to tournaments - on. Press to keep the table work at home.',
+    onLabel: 'Masseur travels to tournaments – on. Press to keep the table work at home.',
     offLabel:
-      'Masseur travels to tournaments - off. Press to buy one more fare on every trip, for table work between rounds.',
+      'Masseur travels to tournaments – off. Press to buy one additional fare per trip, for table work between rounds.',
     toggle: toggleMasseurTravel,
   },
 }))
@@ -324,6 +355,11 @@ async function setPsychologistFocusChoice(focus: PsyFocus): Promise<void> {
   if (focus === psychologistFocus.value) return
   await game.setPsychologistFocus(focus)
 }
+// ⭐⭐ 17.09 – THE MARKER, READ HERE EXACTLY AS IT IS READ ON THE OTHER TWO SURFACES: the shared
+// selector and nothing local. `HomeScreen.vue` and `CoachMarketScreen.vue` open with this same line,
+// which is what makes the dot, the tab pill and the block below three readings of ONE fact rather
+// than three predicates that can drift. Nothing about arrival is consulted – see the import's note.
+const psychologistNudge = computed(() => psychologistFocusNudge(game.snapshot))
 // The one line under his name, by state – the masseur's three-state shape exactly. LOCKED prints the
 // ENGINE's own refusal (PSYCHOLOGIST_LOCKED_DETAIL – the sentence `hirePsychologist` throws), the
 // R10-16 doctrine. HIRED and UNHIRED both print what the retainer IS, because that is all that is
@@ -355,7 +391,7 @@ const psychologist = computed<StaffMember>(() => ({
   line: psychologistLine.value,
   priceLabel: psychologistSalary.value,
   // Both directions ask, the screen's own doctrine – see the masseur's pair above.
-  hireMessage: `Put a psychologist on the payroll at ${psychologistSalary.value} a week (${psychologistRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.`,
+  hireMessage: `Hire a psychologist for ${psychologistSalary.value} a week (${psychologistRungLabel.value.toLowerCase()})? You can end the arrangement any week, like the coach.`,
   releaseMessage: 'Let the psychologist go? The weekly salary stops, and the calls end with the week.',
   setHired: (hire: boolean) => game.hirePsychologist(hire),
   dial: {
@@ -381,6 +417,7 @@ const psychologist = computed<StaffMember>(() => ({
       open: psychologistFocusOpen.value.includes(f),
     })),
     note: psychologistFocusNote.value,
+    nudge: psychologistNudge.value,
     set: setPsychologistFocusChoice,
   },
 }))
@@ -489,6 +526,11 @@ const sparring = computed<StaffMember>(() => ({
       value: i,
       label: r.label,
       priceLabel: formatCents(r.weeklyCents),
+      // ⭐⭐ 17.09 – HIS RUNG SET A, and the sentence is the CATALOGUE's rather than this file's, the
+      // rule every other string on this tab already obeys: `ECONOMY.sparring.rungs` owns the cut and
+      // now owns the sentence that describes it, so a re-fit moves both in one edit and the card can
+      // never quote a ladder the engine stopped running.
+      note: r.note,
     })),
     set: setSparringRungIndex,
   },
@@ -619,6 +661,10 @@ async function doRelease(): Promise<void> {
         @click="pressRung(m, r.value)"
       >
         <span class="rung-label">{{ r.label }}</span>
+        <!-- 17.09: the rung's own sentence, under the name it captions and above the price, and it
+             is rendered ONLY where the catalogue supplies one - a seat whose ladder has no approved
+             sentences shows no empty line where one would be. -->
+        <span v-if="r.note" class="rung-note">{{ r.note }}</span>
         <span class="rung-price">{{ r.priceLabel }}/wk</span>
       </button>
     </div>
@@ -637,7 +683,13 @@ async function doRelease(): Promise<void> {
          sentences already existed: `PSY_FOCUS_LINE` reached only the hired line's splice, which is
          read AFTER the decision rather than while it is being made. Zero new wording - the sub-line
          is the imported constant, the `.cm-blurb` treatment one tab over. -->
-    <div v-if="m.focus && m.hired" class="staff-focus" role="radiogroup" :aria-label="m.focus.label">
+    <div
+      v-if="m.focus && m.hired"
+      class="staff-focus"
+      :class="{ 'is-nudged': m.focus.nudge }"
+      role="radiogroup"
+      :aria-label="m.focus.label"
+    >
       <button
         v-for="f in m.focus.options"
         :key="f.value"
@@ -885,6 +937,27 @@ async function doRelease(): Promise<void> {
   font-variant-numeric: tabular-nums;
   opacity: 0.9;
 }
+/* ⭐⭐ 17.09 – WHAT THE RUNG BUYS, in `.staff-focus-blurb`'s treatment one control down (10.5px/1.35,
+   `--muted`): quiet prose under the name it captions, never competing with it and never with the
+   price. The two captions on this tab are deliberately the same object, because they answer the same
+   question about two different ladders.
+   ⚠ IT SITS BETWEEN THE NAME AND THE PRICE AND THAT DOES NOT UNDO ROUND 43 #3. That item was about
+   TYPOGRAPHY – the price had been 10px at 0.75 opacity, «smaller and fainter than the label above
+   it» – and the price is still the largest, boldest text on the pill. What moved is its row, not its
+   weight, and the three prices still line up across the dial because the pills stretch to one height.
+   ⚠ THE SENTENCES WRAP AS PROSE inside ~101px of pill (three rungs and two 6px gaps across ~340px of
+   card, less 2x4px of padding), the same bet `.staff-focus-blurb` already takes at half a phone: 55
+   characters in 101px is a slightly LOOSER fit per pixel than its own 90 in ~145px, so `nowrap` would
+   be the wrong rule here for the reason it is the wrong rule there. `overflow-wrap` is the guard
+   against the one word that cannot break - none of set A's words is close, and the rule costs
+   nothing on the day one is. */
+.staff-rung .rung-note {
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
 .staff-travel {
   margin-top: 8px;
 }
@@ -900,7 +973,19 @@ async function doRelease(): Promise<void> {
 }
 .staff-focus-option {
   flex: 1 1 calc(50% - 3px);
-  padding: 6px 4px;
+  /* ⭐⭐ 17.09 – HIS OWN COMPLAINT, MEASURED AND ANSWERED. His words are parked in
+     `focusPaddingNote` in the script block above, for this file's standing reason: the markup and
+     these styles may carry no Cyrillic, and tests/round13-nav.test.ts cuts the file at the opening
+     markup tag and reads to its END. It was `6px 4px` – FOUR pixels at the sides – under a 60-90
+     character sentence wrapping inside half a phone's width, which is the one place on this tab
+     where prose and a narrow box meet.
+     ⚠ 10px AND NOT MORE, BECAUSE THE TWO-UP WRAP IS THE CONSTRAINT AND IT IS NOT NEGOTIABLE. The
+     basis is `calc(50% - 3px)` and `box-sizing: border-box` is the app's global, so the padding eats
+     CONTENT width rather than widening the item: at 375px the card is ~340px, half a row is ~167px,
+     and 2x10px of padding plus 2x1px of border leaves ~145px for a sentence that used to have
+     ~157px. That is a wrap or two more, never a third column and never an overflow –
+     tests/component/round43-staff-focus-block.test.ts holds BOTH halves at 375x667. */
+  padding: 8px 10px;
   border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
   border-radius: 8px;
   background: none;
@@ -937,6 +1022,45 @@ async function doRelease(): Promise<void> {
 }
 .staff-focus-note {
   margin-top: 6px;
+}
+/* ⭐⭐ 17.09 – THE WHOLE BLOCK LIGHTS WHILE THE MARKER IS UP, at his ask, and the glow is the HOUSE's
+   rather than a new one: round 43 #7 built the soft-beat chip's ring out of the avatar's mood ring
+   (`.soft-beat-card` in HomeScreen.vue), and this is that ring asked of a third surface.
+   ⭐ THE TWO PROPERTIES THAT MAKE IT THAT RING ARE CARRIED, NOT RE-INVENTED:
+     * THE BLOOM IS LISTED FIRST. There is no drop shadow on this container today, so the bloom is
+       first by construction – and the rule is written down because the day one is added the bloom has
+       to stay ahead of it or the light reads as a second shadow underneath instead of coming off the
+       edge. A `box-shadow` list REPLACES rather than extends, so both frames must restate everything.
+     * ONLY THE BLOOM MOVES. Radius and alpha breathe; nothing else in the rule changes mid-cycle, and
+       the group never goes out.
+   ⚠ IT PAINTS AND IT DOES NOT REFLOW. No border, no padding and no margin are touched by the state,
+   so the 2x2 wrap and the pills' own boxes are byte-identical lit or unlit – a glow that moved the
+   controls under the finger would be a worse answer than no glow.
+   ⚠ THE CHIP'S OWN NUMBERS (6px/0.16 to 12px/2px/0.30) rather than the avatar's, because this is a
+   block the width of the card and not a 40px circle - the same reason round 43 #7 gave for shrinking
+   them once already. */
+.staff-focus.is-nudged {
+  border-radius: 10px;
+  animation: staff-focus-beat 2.8s ease-in-out infinite;
+}
+@keyframes staff-focus-beat {
+  0%,
+  100% {
+    box-shadow: 0 0 6px 0 rgba(var(--accent-rgb), 0.16);
+  }
+  50% {
+    box-shadow: 0 0 12px 2px rgba(var(--accent-rgb), 0.3);
+  }
+}
+/* ⚠ THE BREATHING STOPS AND THE LIGHT DOES NOT, which is the chip's own killswitch one screen over
+   and its stated reason: motion is what the system asked to reduce, the edge light is not motion, and
+   taking it away would remove the attention he asked for from exactly the player who most needs the
+   block easy to find. */
+@media (prefers-reduced-motion: reduce) {
+  .staff-focus.is-nudged {
+    animation: none;
+    box-shadow: 0 0 9px 1px rgba(var(--accent-rgb), 0.22);
+  }
 }
 /* ⭐ ROUND-28 #8's follow-up – the frame the household strip sits in at the head of this tab. It
    borrows `.budget-meter` (global) for the padding and the radius so the two tabs' strips are the

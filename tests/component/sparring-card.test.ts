@@ -157,6 +157,11 @@ describe('the hitting partner`s card on screen T', () => {
       expect(rungs[i].attributes('role')).toBe('radio')
       expect(rungs[i].text()).toContain(rung.label)
       expect(rungs[i].text()).toContain(formatCents(rung.weeklyCents))
+      // ⭐⭐ 17.09 – AND WHAT THE RUNG BUYS, his set A: «Рекомендую A - ок». The sentence is the
+      // CATALOGUE's, asserted through `ECONOMY.sparring.rungs[i].note` rather than retyped, so a
+      // re-fit of the ladder moves the expectation with the words and the two cannot drift.
+      expect(rung.note, `the catalogue carries a sentence for ${rung.label}`).toBeTruthy()
+      expect(rungs[i].find('.rung-note').text(), rung.label).toBe(rung.note)
       expect(rungs[i].attributes('aria-checked'), `active follows the snapshot (${rung.label})`).toBe(
         i === 2 ? 'true' : 'false',
       )

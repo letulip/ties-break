@@ -5701,11 +5701,24 @@ export const ECONOMY = {
      *  is a ladder a player can feel rather than a table only the source can see. ⚠ THE TOP RUNG IS
      *  therefore a WEAKER cut than §4 proposed (75% of the drift removed rather than 85%) and it is
      *  the only rung that could have been kept as proposed – it was re-fitted anyway, because a
-     *  ladder whose top two rungs differ by a rounding artefact is worse than a shallower one. */
+     *  ladder whose top two rungs differ by a rounding artefact is worse than a shallower one.
+     *
+     *  ⭐⭐ `note` IS THE RUNG'S OWN SENTENCE ON THE CARD (his 17.09 answer, «Рекомендую A - ок»), and
+     *  it is OPTIONAL on purpose: the masseur's and the psychologist's ladders have no such sentence
+     *  and he has not been shown drafts for them, so a REQUIRED field would force this seat's
+     *  vocabulary onto two seats he never ruled on. `SupportStaffTab.vue` prints it under the rung
+     *  label and renders nothing where it is absent.
+     *
+     *  ⚠ THE THREE SENTENCES ARE CHECKED AGAINST THE NUMBERS BESIDE THEM, because `driftCut` is a
+     *  multiplier on the drift and reads backwards to the eye: 0.75 LEAVES three quarters standing
+     *  and so takes A QUARTER off, 0.5 takes half, and 0.25 leaves a quarter standing and so takes
+     *  THREE QUARTERS off. The block above states the same arithmetic from the other side («the top
+     *  rung is a WEAKER cut than §4 proposed – 75% of the drift removed rather than 85%»), and the
+     *  two agree. A wave that re-fits a cut moves its sentence in the same edit or the card lies. */
     rungs: [
-      { label: 'A college hitter', weeklyCents: 500_00, driftCut: 0.75 },
-      { label: 'A journeyman pro', weeklyCents: 900_00, driftCut: 0.5 },
-      { label: 'A top-100 partner', weeklyCents: 1400_00, driftCut: 0.25 },
+      { label: 'A college hitter', weeklyCents: 500_00, driftCut: 0.75, note: 'Takes a quarter off the rust of a week without a match.' },
+      { label: 'A journeyman pro', weeklyCents: 900_00, driftCut: 0.5, note: 'Takes half off the rust of a week without a match.' },
+      { label: 'A top-100 partner', weeklyCents: 1400_00, driftCut: 0.25, note: 'Takes three quarters off the rust of a week without a match.' },
     ],
     /** The middle rung, and the masseur's own `defaultSessions` doctrine: MEANINGLESS UNTIL HIRED,
      *  which is why v78 could back-fill it on a career that never hires the seat. */

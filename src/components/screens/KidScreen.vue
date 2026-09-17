@@ -488,7 +488,7 @@ const radarAxes = computed<RadarAxis[]>(() => game.snapshot?.radar ?? [])
           as="button"
           class="kid-tile kid-tile-door"
           pad="11px 9px"
-          aria-label="Coach - open the Coach Market"
+          aria-label="Coach – open the Coach Market"
           @click="emit('navigate', 'market')"
         >
           <p class="kid-tile-label">Coach</p>

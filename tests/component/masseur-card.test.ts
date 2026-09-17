@@ -111,11 +111,17 @@ describe('the masseur card on screen T', () => {
     )
     const hire = block.findAll('button').find((b) => b.text() === 'Hire')
     expect(hire, 'the Hire control is offered').toBeTruthy()
-    expect(wrapper.text()).not.toContain('Put a masseur on the payroll')
+    // ⚠ THE MARKER MOVED WITH HIS 17.09 SHEET, the hitting partner's own rewrite asked of this seat:
+    // a confirmation's voice is COMPLETELY LITERAL, so «Put a masseur on the payroll» became «Hire a
+    // masseur for …» and «Cancellable any week» became «You can end the arrangement any week».
+    expect(wrapper.text()).not.toContain('Hire a masseur for')
     await hire!.trigger('click')
     await nextTick()
     // Both directions ask (the screen's own doctrine) – the tap opens a confirm, it does not spend.
-    expect(wrapper.text()).toContain('Put a masseur on the payroll')
+    expect(wrapper.text()).toContain('Hire a masseur for')
+    expect(wrapper.text(), 'and it says the arrangement can be ended').toContain(
+      'You can end the arrangement any week',
+    )
     wrapper.unmount()
   })
 

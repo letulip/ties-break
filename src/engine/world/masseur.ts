@@ -57,7 +57,7 @@ export function masseurUnlocked(world: WorldState): boolean {
 /** The refusal, written once – the market card prints it and `hireMasseur` throws it, so the
  *  disabled state and the refused click can never tell two stories (the R10-16 doctrine). */
 export const MASSEUR_LOCKED_DETAIL =
-  'A masseur joins a professional operation – her first counting W-series result opens the door.'
+  'Her first counting W-series result opens a place for a masseur.'
 
 /** THE HIRE, the coach's own shape: no signing fee, no notice period, effective from the next
  *  weekly bill, and firing must always be allowed – a family that cannot pay has to be able to
@@ -88,7 +88,7 @@ export function hireMasseur(world: WorldState, hire: boolean): void {
     // and the plan's flagship line is the owner's own «the weeks his hands did not lose». The copy
     // below still avoids pronouns where it costs nothing.
     text: hire
-      ? 'A masseur is on the payroll now – table work at home, every week.'
+      ? 'A masseur joins the team – table work at home, every week.'
       : 'The masseur is let go – her body is back on the physio rota alone.',
   })
 }
@@ -339,7 +339,7 @@ export function setMasseurTravels(world: WorldState, on: boolean): void {
       week: world.week,
       type: 'info',
       text: on
-        ? 'The masseur travels to tournaments now – one more fare on every trip, and table work between rounds.'
+        ? 'The masseur travels to tournaments now – one additional fare per trip, and table work between rounds.'
         : 'The masseur stays home on tournament weeks – the table waits for her return.',
     })
   }

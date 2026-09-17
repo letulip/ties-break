@@ -62,12 +62,14 @@ export function sparringUnlocked(world: WorldState): boolean {
  *  Kid screen, titled «… counting results» in the player's own vocabulary, and `world/mandatory.ts`
  *  uses the phrase in a sentence the player reads. So the SHORT form ships.
  *
- *  ⚠⚠ AND THIS LINE NOW DIFFERS IN SHAPE FROM ITS TWO SIBLINGS, WHICH IS DELIBERATE AND IS REPORTED
- *  RATHER THAN QUIETLY EVENED OUT. `world/masseur.ts` and `world/psychologist.ts` carry the same
- *  sentence about joining «a professional operation», and his terminology sheet strikes that phrase –
- *  but those two are SHIPPED copy from earlier rounds and invariant 4 forbids an agent touching them
- *  on a task that did not ask. His own wider note («the review could be applied to our existing
- *  letters too») is the pass that would even the three up, and it is his to open. */
+ *  ⭐⭐ AND THE TWO SIBLINGS ARE THIS SHAPE NOW TOO – HE OPENED THE PASS THE SAME DAY. This block used
+ *  to record the opposite and is kept as an amendment rather than deleted, because the sequence is
+ *  the point: the line shipped DIFFERENT from `world/masseur.ts` and `world/psychologist.ts`, which
+ *  both carried «joins a professional operation»; the difference was reported to him rather than
+ *  evened out by an agent, since invariant 4 forbids touching shipped copy on a task that did not
+ *  ask; and his own wider note («the review could be applied to our existing letters too») then
+ *  arrived as the ask. The three seats now open with one sentence each in one shape, and this one
+ *  was the pattern the other two were written to. */
 export const SPARRING_LOCKED_DETAIL =
   'Her first counting W-series result opens a place for a hitting partner.'
 

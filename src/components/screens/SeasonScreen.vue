@@ -1392,7 +1392,7 @@ function closeExhibition(): void {
              eight weeks and at most two rungs, so without this a sparse stretch reads as an empty
              career. Blank weeks are normal: a full season is roughly twenty events, one a
              fortnight, and there is always more on offer than she can take. -->
-        <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her - including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
+        <p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her – including the rare ones the eight-week feed cannot show. She can play one event a week at most, so the supply is always larger than the schedule.'">
           {{ supplyLine.total }} left to enter over {{ supplyLine.weeks }} weeks
           <span class="season-supply-tiers">{{ supplyLine.parts.join(' · ') }}</span>
           <!-- ⭐⭐ ROUND-21 #2b: the sentence that reconciles this count with the cards under it.

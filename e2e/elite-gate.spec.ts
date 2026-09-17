@@ -67,7 +67,7 @@ import { answerOpeningKnock, dismissTourBriefing } from './journey'
 
 /** The Coach Market's door on Home – the route a player uses, by role and accessible name (the same
  *  locator `e2e/stations.ts` walks). */
-const COACH_NOTE = { name: 'Coach note - open the Coach Market' }
+const COACH_NOTE = { name: 'Coach note – open the Coach Market' }
 
 /** The market list lives behind the screen's second tab.
  *
