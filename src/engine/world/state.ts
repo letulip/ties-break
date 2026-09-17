@@ -594,7 +594,40 @@ import type { AcademySupport } from '../academy'
 // Full move: this constant, the v79 -> v80 step in migrations.ts, tests/fixtures/saves/v80.json,
 // docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
 // frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
-export const SAVE_SCHEMA_VERSION = 80
+// ⭐⭐⭐ v81 – ROUND 44, `LifeBeatRecord.frame`. `docs/specs/the-frame-pool-2026-09.md`'s third
+// mechanical ruling, and it is the only one of the three that costs a schema version.
+//
+//   · `frame` – the id of the delivery frame a `'small-talk'` beat was raised in (`'kettle'`,
+//     `'call-late'`), on the ROW and not on the world. **Optional, never back-filled**, and the
+//     ABSENCE is a true statement about every older row: nothing drew a frame before this version.
+//
+// ⚠⚠ WHY IT IS STATE AT ALL, WHICH IS THE WHOLE ARGUMENT. His rule, 17.09: a frame may not change
+// after a save, a reload, **or the pool growing**. A frame DERIVED from a purpose-scoped stream keyed
+// on the career week survives a save and a reload perfectly – the key is reconstructible for the life
+// of the career – and it cannot survive the third: a pool that grows from nine lines to ten
+// re-derives a different member for a beat already on the screen. That third clause is the whole of
+// the difference between this key and `heard` one field over, which took no bump for exactly the
+// reason this one needs one.
+//
+// ⭐ AND THE FALLBACK IS WHAT KEEPS THE MIGRATION TRIVIAL. A row with no frame renders the FIRST line
+// of its presence's pool, and `kettle` / `call-middle` are exactly the two frames the shipped
+// catalogue wrapped `practice-clicked` in – so a small-talk row already sitting in a save reads back
+// byte-identically to what it showed on the week it was raised. Nothing historical is re-worded.
+//
+// ⚠⚠ THE FROZEN CAREERS MOVE, AND NOT BECAUSE OF THIS KEY. The round also lands the 43-situation
+// corpus, so the POOL a career draws from grows from 8 situations to 51 and every `lifeLog` row's
+// `detail` changes with it. That is a behaviour change, it was diffed per key before it was believed
+// (`tools/frozen-key-diff.ts`, control = this round's own change neutralised in place), and the
+// constants are re-stamped with the dated note the protocol asks for.
+//
+// ⚠ ZERO MAIN DRAWS. The frame is drawn on `seed:smalltalk:frame:<week>` – a purpose-scoped
+// sub-stream re-derived at the call site, persisting nothing – so the frozen MAIN capture
+// (41550 / e6b0c709) is untouched by construction.
+//
+// Full move: this constant, the v80 -> v81 step in migrations.ts, tests/fixtures/saves/v81.json,
+// docs/context/saves-and-worker.md's mechanically-checked schema sentence, the e2e fixtures, and the
+// frozen-career peel rung in tests/coachTravelEdgeFixtures.ts.
+export const SAVE_SCHEMA_VERSION = 81
 
 
 

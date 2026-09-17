@@ -2907,6 +2907,40 @@ export function migrateSave(raw: unknown): WorldState {
     v = 80
   }
 
+  // ⭐⭐⭐ v81 – ROUND 44, `LifeBeatRecord.frame`. `docs/specs/the-frame-pool-2026-09.md`'s third
+  // mechanical ruling: «the frame must not change after a save, a reload, or the array growing».
+  //
+  //   · `frame` – the id of the delivery frame a `'small-talk'` beat was raised in. ON THE ROW, not
+  //     on the world, and therefore **NOT BACK-FILLED**: there is no value this step could write that
+  //     would be true. Nothing drew a frame before this version, so the honest state of every
+  //     historical row is that it has none, and `smallTalkFrameOf` renders such a row with the FIRST
+  //     line of its presence's pool – `kettle` at home, `call-middle` on a call – which are exactly
+  //     the two frames the shipped catalogue wrapped `practice-clicked` in. A row already in a save
+  //     reads back byte-identically to what it showed him.
+  //
+  // ⚠⚠ SO THIS STEP WRITES NOTHING, AND THAT IS THE DESIGN RATHER THAN AN OVERSIGHT. The precedent is
+  // the house rule quoted on `LifeBeatRecord.heard` and on `pendingTournament.masseurThere?`: an
+  // optional key whose ABSENCE is a true statement about every older row needs no back-fill. What it
+  // needs – and what `heard` did not – is a VERSION, because a derived frame cannot survive the pool
+  // growing and this one is read back rather than re-derived. The bump is the whole of the move; the
+  // body is a no-op by construction and could not be otherwise without inventing a scene she was
+  // never in.
+  //
+  // ⚠ NO `??=` HERE BECAUSE THERE IS NO WORLD KEY TO DEFAULT. A loop over `save.lifeLog` writing
+  // `row.frame ??= 'kettle'` was the tempting alternative and is REFUSED: it would stamp a roof scene
+  // onto rows raised from a dormitory, turning «this row predates the pool» into a false claim about
+  // where she was standing. The read-side fallback knows the presence; a migration does not.
+  //
+  // ⚠ IDEMPOTENT AND DRAW-FREE: gated on `v === 80`, writing nothing at all. No sub-stream is reached
+  // on this path, so MAIN cannot move and the frozen capture (41550 / e6b0c709) is untouched by
+  // construction. Full move: `SAVE_SCHEMA_VERSION` in world/state.ts, this step,
+  // tests/fixtures/saves/v81.json, the e2e fixtures, the peel rung in
+  // tests/coachTravelEdgeFixtures.ts, and the mechanically-checked schema sentence in
+  // docs/context/saves-and-worker.md.
+  if (v === 80) {
+    v = 81
+  }
+
   if (v !== SAVE_SCHEMA_VERSION) {
     throw new Error(`Save schema ${v} is newer than supported ${SAVE_SCHEMA_VERSION}`)
   }
