@@ -18,7 +18,55 @@
 // all five callers passed the SAME expression, written out four separate times, on two different
 // input scales. They all call `readingColor` today. Nothing here changed: this component still takes
 // a plain string and still has no opinion about the ramp.
-import { computed } from 'vue'
+//
+// ⭐⭐ ROUND 44 – TWO OPTIONAL PROPS FOR §8a's CHEMISTRY GAUGE, AND NEITHER MOVES AN EXISTING CALLER.
+// The owner ruled the chemistry marker on 16.09 («в положительном направлении заполнение было от
+// светло-зелёного до ярко-зелёного в градиенте, а для отрицательного от оранжевого до красного») and
+// the spec's §8 answer is that the marker IS this component at 36px, so the two things his ruling
+// needs are added here rather than in a second ring:
+//
+//   `gradient`  paints the arc with a two-stop <linearGradient> instead of a flat `color`. The
+//               gradient runs DOWN the box in user space, so a short arc – which lives at the top of
+//               the circle – shows only the light end and a long one reaches the bright end. That is
+//               both halves of his sentence in one construction: the fill is literally a gradient,
+//               and the STRENGTH is where inside it the arc has got to.
+//   `mirrored`  sweeps the arc anticlockwise from twelve o'clock instead of clockwise. This is the
+//               accessibility half of §8a and not decoration: red/green is the commonest colour
+//               vision confusion, so «the fill fraction says it too – a negative pairing fills from
+//               the other end, so the ring's SHAPE differs even when its colour does not».
+//
+// ⚠ BOTH DEFAULT TO OFF and the five shipped callers pass neither, so the condition ring, the chance
+// ring and the build ring take the paths they always took.
+//
+// ⚠⚠ TWO THINGS DID CHANGE FOR EVERY CALLER, said here rather than discovered in a diff:
+//
+//   1. THE ROOT IS A `<span>` AND NOT A `<div>`, which is a content-model fact and not a style one.
+//      Round 44 puts this ring in the bottom-right corner of the coach market's row, and that row is
+//      one `<button>` - whose content model is PHRASING content, which a `<div>` is not. Every child
+//      of `.cm-row` is already a `<span>` for the same reason. Nothing renders differently: the
+//      `display: block` in the style block restores what a `<div>` had, and the ring's two other
+//      homes are a flex item and an absolutely positioned corner, both of which blockify a child
+//      anyway.
+//   2. AN ARC AT EXACTLY ZERO GETS A `butt` CAP so a zero-length dash cannot paint a dot - §8a's
+//      neutral rule, argued at the arc itself.
+//
+// ⚠⚠⚠ AND THE REASON THAT FIRST NOTE LIVES HERE RATHER THAN OVER THE TAG IT DESCRIBES IS A BUG THIS
+// COMPONENT SHIPPED FOR ABOUT AN HOUR, CAUGHT BY THE GATE. Written as an HTML comment at the top of
+// the template, ABOVE the root element, it made this component render a FRAGMENT - and a fragment
+// root turns off Vue's automatic attribute fallthrough. So `class="nt-ring field-ring"` on
+// `NextTournamentPanel`'s field ring silently stopped reaching the ring's own element, and
+// `tests/component/round29-next-tournament.test.ts` read the PARENT's classes (`nt-read`) instead.
+// The rule this leaves behind is general: the markup block's FIRST node must be the root element,
+// and a comment about the root goes on the script side, here.
+//
+// ⚠⚠ AND DO NOT WRITE THE OPENING MARKUP TAG'S LITERAL NAME ANYWHERE ABOVE IT - which is the SECOND
+// gate failure this one note caused, and `SupportStaffTab.vue` carries the same warning for the same
+// reason. `tests/template-copy-rules.test.ts` cuts the file at the FIRST occurrence of that literal,
+// so a comment that merely MENTIONS the tag moves the region up and drags every legitimate
+// script-side Cyrillic quote in this file into the check - here, the owner's «чуть меньше размером»
+// on the `size` prop, which has been sitting there untouched since round 41 #28. Name the tag in
+// words, as this paragraph does.
+import { computed, useId } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -29,13 +77,24 @@ const props = withDefaults(
     size?: 36 | 46 | 56
     /** The stroke colour of the arc. Anything CSS accepts; the ramp is the caller's decision. */
     color?: string
+    /** `[from, to]` – paints the arc with a two-stop gradient down the box instead of `color`. */
+    gradient?: [string, string] | null
+    /** sweep anticlockwise from twelve o'clock instead of clockwise – the SIGN, as a shape. */
+    mirrored?: boolean
     /** What the ring says out loud. A ring is a picture, so it must have one. */
     label: string
     /** Sitting ON a photograph: adds the drop shadow under the ring and the on-art text shadow. */
     onArt?: boolean
   }>(),
-  { size: 46, color: 'var(--accent)', onArt: false },
+  { size: 46, color: 'var(--accent)', gradient: null, mirrored: false, onArt: false },
 )
+
+/** ⚠ ONE GRADIENT ID PER MOUNTED RING, because `url(#id)` resolves to the FIRST match in the
+ *  document and the coach market draws sixteen of these at once. `useId` is Vue's own per-instance
+ *  id and is stable across a re-render, so the arc cannot lose its paint when the value moves. */
+const gradId = `tb-ring-grad-${useId()}`
+/** What the arc is painted with: the gradient when there is one, the flat colour otherwise. */
+const stroke = computed(() => (props.gradient ? `url(#${gradId})` : props.color))
 
 /** The export's geometry, for both sizes: a 3px stroke inset by half of it plus a hair. */
 const STROKE = 3
@@ -48,10 +107,20 @@ const offset = computed(() => {
   const pct = Math.max(0, Math.min(1, props.value))
   return Math.round(geom.value.c * (1 - pct) * 10) / 10
 })
+
+/** The arc's own transform. `rotate(-90)` puts the dash's start at twelve o'clock, as it always has;
+ *  `mirrored` adds a horizontal flip about the box's centre line, which turns the same sweep
+ *  anticlockwise without touching the dash arithmetic. The circle is centred, so the flip moves no
+ *  pixel of the track. */
+const arcTransform = computed(() => {
+  const box = geom.value.box
+  const spin = `rotate(-90 ${box / 2} ${box / 2})`
+  return props.mirrored ? `translate(${box} 0) scale(-1 1) ${spin}` : spin
+})
 </script>
 
 <template>
-  <div
+  <span
     class="tb-ring"
     :class="[`tb-ring--${size}`, { 'tb-ring--on-art': onArt }]"
     role="img"
@@ -64,18 +133,36 @@ const offset = computed(() => {
       fill="none"
       aria-hidden="true"
     >
+      <!-- `userSpaceOnUse` from the top of the box to the bottom: the ramp is a fact about WHERE ON
+           THE RING a point is, so a short arc reads the light end and a long one reaches the bright
+           end, whichever way it sweeps. In `objectBoundingBox` the stops would be relative to the
+           stroke's own bounds and a small arc would show the whole ramp inside itself. -->
+      <defs v-if="gradient">
+        <linearGradient :id="gradId" gradientUnits="userSpaceOnUse" :x1="0" :y1="0" :x2="0" :y2="geom.box">
+          <stop offset="0" :stop-color="gradient[0]" />
+          <stop offset="1" :stop-color="gradient[1]" />
+        </linearGradient>
+      </defs>
       <circle :cx="geom.box / 2" :cy="geom.box / 2" :r="geom.r" class="tb-ring-track" :stroke-width="STROKE" />
+      <!-- ⭐⭐ AT ZERO THERE IS NOTHING TO CAP, AND THAT IS §8a's NEUTRAL RULE MADE STRUCTURAL.
+           `stroke-dasharray="c"` with `dashoffset="c"` leaves a dash of length zero - and a
+           zero-length dash under a ROUND cap is exactly the trick that draws dotted lines, so the
+           ring at rest was able to paint a dot at twelve o'clock. The owner's constraint on the
+           chemistry gauge is that at rest it must read «nothing has happened yet» and never «the
+           first step of the bad colour»; a butt cap at zero is that sentence in one attribute. The
+           element stays rather than being `v-if`d away, so the arc's own transition survives a value
+           crossing zero. -->
       <circle
         :cx="geom.box / 2"
         :cy="geom.box / 2"
         :r="geom.r"
         class="tb-ring-arc"
-        :stroke="color"
+        :stroke="stroke"
         :stroke-width="STROKE"
-        stroke-linecap="round"
+        :stroke-linecap="value > 0 ? 'round' : 'butt'"
         :stroke-dasharray="geom.c"
         :stroke-dashoffset="offset"
-        :transform="`rotate(-90 ${geom.box / 2} ${geom.box / 2})`"
+        :transform="arcTransform"
       />
     </svg>
     <span class="tb-ring-value"
@@ -83,11 +170,12 @@ const offset = computed(() => {
         ><b>{{ Math.round(value * 100) }}</b><i>%</i></slot
       ></span
     >
-  </div>
+  </span>
 </template>
 
 <style scoped>
 .tb-ring {
+  display: block;
   position: relative;
   flex: none;
 }
