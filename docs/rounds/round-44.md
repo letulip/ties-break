@@ -277,3 +277,84 @@ a repair aimed at the wrong term is how a null result gets manufactured.
 
 ### 7. #52 – THE CHEMISTRY MARKER ON THE COACH CARD (his 16.09, icon handed over). Open: C1 shipped
 the mechanic in round 43 and the card still carries no marker.
+
+
+---
+
+## ⭐⭐⭐ 8. HIS CAREER, READ (17.09) – «это было максимально больно»
+
+Read through `decodeExportFile` alone; nothing copied into the repo, only derived figures leave.
+Week 777, age **28.76**, schema v81 on read.
+
+### What actually happened
+
+⚠ **The architect's first season table was off by one year** and the feed's own wrap-up milestones
+corrected it (`w673 = Season 2043 wrap`, `w725 = Season 2044 wrap`). The true shape:
+
+| season | W–L | points | end rank |
+| --- | --- | ---: | ---: |
+| 2043 | 36–20 | 2,764 | 22 |
+| **2044** | **42–18** | **4,008** | **13** |
+| **2045** | **26–23** | **1,584** | **59** |
+
+He is **literally right about the Slams**: both mid-match retirements were in 128-draws.
+**w710** (2044, Round of 16) and **w754** (2045, Round of 64).
+
+### ⭐⭐ The finding that explains the rest: HER GROWTH ENDED AT WEEK 633
+
+`ageFactor` returns **exactly 0** from `declineStart`, and hers is crossed. Computed with the
+engine's own helpers, not by hand:
+
+| | |
+| --- | --- |
+| `declineStart` drawn for this career | **26.41** |
+| 17 weeks lost to injury pull it earlier by | **−0.43 years** |
+| `declineStart` EFFECTIVE | **25.99** – crossed at **week 633** |
+| years in decline at w777 | **2.77** |
+| `ageFactor` (the growth term) now | **0.00000** |
+| loss per attribute per season | `0.00035 × (1 + 2.77 × 0.24) × 52` = **3.0%**, accelerating |
+
+⚠⚠ **And she still has headroom she can never reach.** serve −3.3, return −4.4, stamina −5.8,
+groundstrokes −4.3 below her own potential – `development.ts`'s own note says it: «whatever is still
+unfilled at that age is» gone.
+
+⭐⭐⭐ **THE ENGINE ALREADY PREDICTED THIS EXACT SHAPE FOR A PLAYER AT HER LEVEL.** `ECONOMY`'s
+`declineAccel` comment, round 38 #3d: «she is at 47 on four attributes where the tour's elite sit at
+**65–70** – so **any loss at all is decisive there**. This dial softens the slope; **the level is
+C2's question and it is still open.** Said out loud so the next reader does not credit this change
+with a fix it does not deliver.» Her four non-composure attributes are **54–63**. She was ranked #13
+on a below-elite skill set carried by composure 78 – and 3% a season off that base is a cliff.
+
+### The shoulder: four warnings, four pushes, one breakdown
+
+`knockHistory` – w676 `push`, w685 `push`, w699 `push`, **w709 `push` with `brokeDown: true`**. The
+2044 titles (w679, w694, w700) were won in the gaps between them; the retirement at w710 and the
+shoulder injury at w711 close the sequence. ⚠ **This is not a reproach**: the model did exactly what
+it says, and round 43 #9 stood the knock-cadence tuning down on his own «по ноккам отбой». It is
+recorded because the causal chain is legible in the save and answers «why at the Slam».
+
+### ⚠⚠ WHAT THE FOUR SEATS DO – AND NOT ONE OF THEM TOUCHES THE AGE CURVE
+
+This is the gap between what the seats promise and what a player buying all four expects.
+
+| seat | since | what it actually moves |
+| --- | --- | --- |
+| coach `elit-4` | – | development rate **while `ageFactor` > 0**. At 0 it multiplies zero. |
+| masseur | w222 | shortens layoffs (his w420 injury shows `weeksSaved: 1`) and rehab |
+| psychologist | w280 | `herself` focus – **`composureBonus` is 0** |
+| hitting partner | w673 | rust between matches (`world.form`) |
+
+⭐ **`composureBonus: 0` is worth his eye.** The +5 composure HEADROOM accrues only on the
+`'coolhead'` focus; his psychologist has been on `'herself'`. Both are legitimate, and nothing on
+screen says one of them is the only route to the ceiling lift.
+
+⚠⚠ **The honest summary: he bought four specialists against a decline, and not one of them is
+aimed at it.** The coach multiplies a growth term that is zero. That is a DESIGN question, not a
+defect – and it is the same question round 38 left open as C2.
+
+### ⚠ What could NOT be determined from the save, said rather than guessed
+
+**His «элитные отпуска» cannot be counted.** `world.vacations` is pruned
+(`planner.ts:485` keeps only `week >= from`) and the feed is capped at 402 rows for a 777-week
+career, so the holidays he took are simply not in the file. Whether they did anything is a question
+for a bench arm, not for this save.
