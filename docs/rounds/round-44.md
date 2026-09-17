@@ -658,3 +658,54 @@ fingerprints.
 not a pin edited to match the code**: `line-call`'s «Tell her what worries us» is the §8d.1 label his
 15.09 revision never reached, it is still his, and it is now answered by four girls instead of one.
 Nothing was weakened; the growth is said out loud in the case itself.
+
+
+---
+
+## ⭐⭐⭐ 12. WHO DECIDES TO LEAVE, AND WHEN – read out on his 17.09 question
+
+He asked the right question against the §8f finding: «+1 год сам по себе ок. Меня интересует
+ГРАДИЕНТ и вообще понимание кто когда собирается или уходит», with two cases – **Zoe, who fell forty
+places in a season**, and **someone who wants to stop at 25 at the peak of fame**.
+
+### The model has exactly TWO doors
+
+| door | opens | what it reads |
+| --- | --- | --- |
+| **plateau** | age **24** | no rung cleared for **3** seasons **AND** the rank flat – no season in the window beat her best from before it, and the window's ranks sit inside **20** places of each other |
+| **age** | age **29** | asked every off-season from there; becomes the LAST asking when her physical share falls to **55%** of peak (`lastOfferPeakShare`) |
+
+### ⚠⚠ ZOE HAS NO DOOR, AND THAT IS DELIBERATE RATHER THAN AN OVERSIGHT
+
+`plateauReading`'s own comment rules her out in advance:
+
+> «CONDITION 2 IS A CONJUNCTION AND BOTH HALVES ARE LOAD-BEARING. **«No improvement» alone would fire
+> on a career that is FALLING APART – which is a different story and one the natural end should not
+> be telling.**»
+
+A collapse is excluded ON PURPOSE, because the plateau means «she is where she is going to be» and a
+collapse means something else. ⭐ **But the story it defers to was never built.** His instinct is
+pointing at a THIRD door – «it went wrong, and she knows it» – and there is no code behind it.
+
+### ⚠ AND THE 25-YEAR-OLD LEAVING AT THE PEAK HAS NO DOOR EITHER
+
+The plateau needs three flat seasons with no rung cleared; a player at the peak of fame has just
+cleared rungs, so it cannot fire. The age door opens at 29. **Stopping while she is ahead is not
+expressible in the current model at all.**
+
+### ⭐ The engine already admits the gap, in its own voice
+
+`lastOfferPeakShare`'s note: the share is a function of AGE alone, four careers with peaks 31% apart
+read the same share to three decimals – «what a wrecked body loses is the LEVEL of the peak, which is
+real tennis and **no part of this trigger**. **Making the goodbye personal needs a mechanism that does
+not exist yet**, and §4a's recovery corridor is not it either.»
+
+### What the model answers today, and what it does not
+
+- ✅ «she is where she is going to be» (plateau)
+- ✅ «she is old» (age)
+- ❌ «it went wrong» – Zoe's case, deferred in a comment and never written
+- ❌ «she wants to stop while she is ahead» – his reference case, no door
+
+⚠ **This is a design question and not a defect**, and it is his. Nothing here is proposed as a fix;
+the two doors work as specified and the third and fourth were never specified.
