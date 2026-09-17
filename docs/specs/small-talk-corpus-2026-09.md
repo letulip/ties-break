@@ -2293,7 +2293,9 @@ bench, not a substitute for it.
 file by script, per §3a's rule, and the script is the same one that derives the opener figures.
 
 ⚠ **THE MEASUREMENTS IN THIS PASS ARE OF THE 43 AND ARE LEFT THAT WAY**, because they are the record
-of a pass that happened. Round 44's ninety-six added lines (the eight rows' 21 new voice-entries) move
+of a pass that happened. Round 44's **84** added lines – the eight rows' 21 new voice-entries, each an
+opener and three replies, so 21 openers and 63 replies; their 24 labels and 4 shared beats are his and
+were carried, not written – move
 every average by a decimal place or two and change nothing they were arguing: over all 51 the
 contraction habit and the shape hold – openers 15.5 / 15.2 / 16.7 / 10.2 words, replies 11.9 / 11.7 /
 11.5 / 7.7, `deep` still shorter than `sunny` and `fiery` rather than longer, `quiet` still the
