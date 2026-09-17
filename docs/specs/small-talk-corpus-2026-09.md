@@ -1160,14 +1160,14 @@ competition format this game does not have on tour. A one-sided match needs no f
 - `quiet` `"No. It was only a crowd."`
 
 ### R25 · `the-coach-she-watched` · curiosity · college, independent · **fact: `coach-employed`**
-**Kernel:** She watched another player's coach work and noticed he says almost nothing.
+**Kernel:** She watched another player's coach work and noticed they say almost nothing.
 ⚠ **Gated** because a girl with no coach has no comparison to make. ⚠ **It asserts nothing about HER
 coach's quality** – only what she noticed about a different one. ⚠⚠ **And `fiery` used to break that
 in its own line** («she was better at the end of it») – a coaching OUTCOME, which no gate licenses and
 which contradicted the row's own note. Repaired 17.09; the note was true and the line was not.
 | voice | opener |
 | --- | --- |
-| `sunny` | `"I watched somebody else's coach for an hour and he said about four words."` |
+| `sunny` | `"I watched somebody else's coach for an hour and they said about four words."` |
 | `fiery` | `"Four words. All session. I'd like to know which four."` |
 | `deep` | `"He barely spoke. I can't tell if that's confidence or if it was all said already."` |
 | `quiet` | `"I watched another session for a bit. Quieter than ours."` |
@@ -1891,6 +1891,25 @@ in the next one», «I'll say something next time».
 Written, kept, and flagged – because a line an agent quietly dropped is a line he never got to rule
 on, and a line he would have cut is cheaper to find here than in play.
 
+✅ **RULED 17.09: «оставляй, если соответствует ревью и нашему тон оф войс».** All seven stay, and
+the judgment he delegated was applied rather than waved through. Five need no argument. **Two are
+named here with the concern intact**, because agreeing with him is not the same as pretending the
+reading was unanimous:
+
+- **R29 `fiery` space** – «I'm not running a laundry service in reverse.» is a CONSTRUCTED INVERSION,
+  and «what currently makes several lines feel AI-written» is his own phrase for exactly that shape.
+  It is the one line in the 516 that reads written rather than spoken. Kept under his ruling; a
+  flatter «I'm not washing it twice» would be the same joke in her mouth.
+- **R12 `space`, three voices** – the concern is not any one line but CONVERGENCE: three of four
+  spend the stance telling the parent what he cannot do. The corpus's whole instrument is one event
+  in four voices, and here three of them arrive at the same move. One re-aim would restore it.
+
+⭐ **The nine invented details stay without reservation** (R7's rice and eggs, R11's coffee order,
+R23's «flat», R25's four words, R28's soup-for-sandwich, R29's towel, R32's «the one from the car»,
+R41's dog, R43's weight in the handle). They are small domestic specifics pinned identical across all
+four voices, which is the register the corpus is for and the discipline that keeps the voices from
+publishing different editions of the same afternoon.
+
 | where | the line | why it is flagged |
 | --- | --- | --- |
 | R2 `deep` invite | «I think somebody took something from her once, somewhere else.» | the only reply that invents a BACKSTORY for a person the row deliberately leaves unnamed. Hedged, and consistent with her own opener («I think the answer might be sad»), but it is invention. |
@@ -1901,15 +1920,26 @@ on, and a line he would have cut is cheaper to find here than in play.
 | R35 `sunny` space | «You'd be under the table by the pudding.» | teasing the parent. Warm in one reading, pert in another. |
 | R12 space, three voices | «You can't. I've watched you.» · «You've never tried.» · «You've never had to.» | three of the four spend the stance telling him what he cannot do. Each is fine alone; together they gang up. |
 
-⚠⚠ **AND ONE BUILD COLLISION THAT IS NOT A WORDING QUESTION.** `R25`'s kernel says «she watched
-another player's coach work and noticed **he** says almost nothing», and the replies keep that
-pronoun because the kernel holds it. `tests/coach-voice.test.ts` forbids a masculine pronoun anywhere
-a player can read one, and the exchange spec already records **one** named exception – `court-four`'s
-invented dad – with its size pinned so that «a fifth column reopens the conversation instead of
-inheriting it». **R25 is that reopening.** It differs from the dad in the way that matters: a coach is
-a role the sim actually holds and draws from a roster with women on it, which is precisely the
-guessing the rule exists to stop. The cheap fix is to drop the pronoun rather than the row – but it
-is a wording change to an accepted kernel, so it is his.
+✅ **THE ONE BUILD COLLISION, RULED AND CLOSED (his 17.09: «надо исправить»).** `R25`'s kernel said
+another player's coach «**he** says almost nothing». `tests/coach-voice.test.ts` forbids a masculine
+pronoun anywhere a player can read one, and the exchange spec pins the size of its single exception
+(`court-four`'s invented dad) precisely so a new one reopens the question instead of inheriting it.
+
+⭐ **His instinct was that the pronoun should follow the portrait – and the check ran the other way,
+which is why it was worth running.** The he/she split is real and it is HER coach's:
+`ECONOMY.coach.roster` carries a `gender` per slot and `coach.ts:601` picks the first name from
+`COACH_FIRST_M` or `COACH_FIRST_F` by it. **But no other player has a coach at all** – nothing in
+`season/rival.ts` or `season/cohort.ts` models one. R25's subject is a person who exists only inside
+the sentence, so there is no gender to agree with; a pronoun there is a guess wearing agreement's
+clothes, which is the exact thing R15-7 exists to stop.
+
+**Repaired in the two lines that carried it** – the kernel and `sunny`'s opener – with the neutral
+singular, and no other voice or reply in R25 held one:
+> `"I watched somebody else's coach for an hour and they said about four words."`
+
+⚠ The alternative was to draw a sex for the observed coach on a purpose-scoped sub-stream and splice
+it. Legal, and rejected: it buys one word of texture at the price of new randomness and a variable
+threaded through sixteen strings, for a stranger the row is deliberately vague about.
 
 ## What a script re-asserts on every read
 
