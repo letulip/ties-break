@@ -156,3 +156,59 @@ too-tall version and watching the test fail. A blocking overlay taller than the 
 career once stopped dead.
 
 ⚠ The confirmation's wording is NEW PLAYER-FACING COPY and therefore a DRAFT for him.
+
+
+### 3. ⚠⚠ THE HITTING PARTNER IS MISSING FROM THE TEAM BUDGET – and it is not cosmetic
+
+His report: «спарринг не учитывается в недельных расходах на верхней плашке на вкладке тренеров, его
+там просто нет».
+
+**`src/composables/coachingBudget.ts:156`** – `seats` pushes `coach`, `masseur`, `psychologist` and
+stops. The wire is complete (`sparringSalaryCents` crosses at `snapshot.ts:283`, written by
+`snapshot.ts:1867`); only the composable was never extended when F2 shipped the seat.
+
+⚠⚠ **AND `committedCents` IS SUMMED OFF `seats`** (line 142, «THE METER IS THE PAYROLL»). So a
+family with a hitting partner is not merely missing a row – **the bar, the «committed» figure and
+the «/week free» figure are all short by his salary.** The tile under-reports what the family has
+promised, which is the one thing that tile exists to get right.
+
+⭐ **The comment above the strip promised this could not happen**: «a fourth seat added later joins
+the list without either surface being edited (`seats`)». It was aspirational – `seats` is a
+hand-written push per seat, so a fourth does NOT join on its own. That promise is probably why
+nobody checked. The fix carries a test that counts seats against the snapshot's hired flags rather
+than against a literal, so a fifth seat cannot repeat this.
+
+### 4. THE COACH'S PRICE MOVED ON ITS OWN, AND HE NEVER ASKED FOR A RAISE
+
+His report: «я выбрал тренера за 2.2к в новом сезоне, сезон прошел хорошо, но во-первых, его цена в
+неделю упала до 1.8к, а во-вторых он не приходил за добавкой. Мы сделали письма и функционал этот?»
+
+**The second half answers first: no, that was never built.** The masseur's annual ask is round 43 #4
+(`ECONOMY.masseur.raisePerYear`); there is no coach equivalent anywhere in `ECONOMY.coach` or
+`world/coachMarket.ts`. He has never been asked for one and none was promised.
+
+⭐⭐ **But the first half is the interesting one, because the coach ALREADY gets raises – silently,
+and they can go DOWN.** His weekly price is not fixed at hire. It is re-derived every week:
+
+```
+bandedRateCents(rate, age, tier, band) = facilityRateCents(age, tier)
+                                       + round(max(0, rate - court) * band)
+```
+
+– the court's share moves with HER AGE, and `band` is `coachRetainerBand(wtaRank)`, a STEP function
+on her ranking: `≤ 10 → x4.5`, `≤ 100 → x2.0`, otherwise `x1`.
+
+⚠ **So a man on the payroll is silently re-priced by her results**, with no letter, no decision and
+no consent on either side – and a 2.2k → 1.8k fall is a **0.82x** move, which is not a band crossing
+(those are x2 and x2.25), so the cause is in the court share or the rate rather than the band, and
+naming it needs his actual career rather than a reading of the source.
+
+⚠⚠ **The design question underneath, and it is his:** the number already behaves like a raise, it
+just does so invisibly and in both directions. A coach whose fee DROPS because his player had a
+quiet season is the half no real coach would accept, and it is the half a letter would expose.
+Whether the fix is «fix the fee at hire and let him ASK, like the masseur» or «keep the float and
+letter it» is a design call, not a repair.
+
+⚠ **Next step is his save, read through `decodeExportFile` alone** – the standing protocol: nothing
+is copied into the repo and only derived statistics leave it. Without the career the 0.82x is a
+guess, and this round does not ship guesses.
