@@ -697,23 +697,83 @@ The protocol block at the head of `tests/coachTravelEdgeFixtures.ts` carries the
   word per string. Its starting point is already written down: the per-surface voice table and the
   terminology sheet at the head of this section.
 
-  ⭐ **The candidates it would meet FIRST are already found**, because this pass ran into every one of
-  them and left them alone under invariant 4 – each fails a rule he wrote down this week:
-  | string | whose | which of his rules it fails |
-  | --- | --- | --- |
-  | `A masseur joins a professional operation – her first counting W-series result opens the door.` | `world/masseur.ts` | «professional operation» is struck by the terminology sheet |
-  | `A psychologist joins a professional operation – …` | `world/psychologist.ts` | the same |
-  | `A masseur is on the payroll now – table work at home, every week.` | `world/masseur.ts` | «payroll» is struck; «hire» is the word |
-  | `Put a masseur on the payroll at … Cancellable any week, like the coach.` | `SupportStaffTab.vue` | a confirmation must be completely literal – «Hire …», «you can end the arrangement any week» |
-  | `Put a psychologist on the payroll at … Cancellable any week, like the coach.` | `SupportStaffTab.vue` | the same |
-  | `The masseur travels to tournaments now – one more fare on every trip, …` | `world/masseur.ts` | «one additional fare per trip» is the sheet's wording |
-  | `Your coach travels to tournaments with her now – a second fare on every trip.` | `world/coachMarket.ts` | a ledger/feed row addressed to «your» reader; and the fare wording |
-  | `Masseur travels to tournaments - on. Press to keep the table work at home.` | `SupportStaffTab.vue` | an a11y label in the shape he rewrote for the hitting partner |
-  | `Coach travels to tournaments with her – on. Press to send the coach home …` | `CoachMarketScreen.vue` | the same |
+  ⭐ **THE FULL LIST, SWEPT BY SCRIPT – 26 live strings**, and the first version of this block was a
+  hand-written nine. The nine were what this pass happened to walk past; a sweep over every string
+  literal and every `<template>` text node in `src/engine`, `src/components` and `src/shared` finds
+  **26**. Eight of the hand-written nine are in it; the ninth is `CoachMarketScreen.vue:899`, the
+  `on` half of a toggle pair whose `off` half IS flagged – so the sweep found **eighteen the hand
+  list had not**. ⚠ And the first SCRIPTED sweep under-reported too – its
+  fare pattern read `one more fare|a second fare` and so missed «the second fare» (four sites) and
+  «twice the fare» (two). Same missing-field class this session kept catching elsewhere; the fix was
+  to write the rule from his sheet's POSITIVE wording («one additional fare per trip») and flag
+  everything that means it and does not say it.
 
-  ⚠ **Not one of them was touched**, and that is the item rather than an omission: they are shipped
-  copy from earlier rounds, the task did not ask for them, and invariant 4 is explicit that fixing
-  something adjacent is not permission.
+**«professional operation» – struck by the sheet** – 2
+
+| string | where |
+| --- | --- |
+| `A masseur joins a professional operation – her first counting W-series result opens the door.` | `engine/world/masseur.ts:60` |
+| `A psychologist joins a professional operation – her first counting W-series result opens the door.` | `engine/world/psychologist.ts:76` |
+
+**«payroll» – struck; the sheet says «hire» and «weekly salary»** – 6
+
+| string | where |
+| --- | --- |
+| `Put a masseur on the payroll at ${masseurSalary.value} a week (${masseurRungLabel.value.toLowerCase()})? Cancellable any week, like the coach.` | `components/SupportStaffTab.vue:253` |
+| `Put a psychologist on the payroll at ${psychologistSalary.value} a week (${psychologistRungLabel.value.toLowerCase()})? Cancellable any week, like the coac` | `components/SupportStaffTab.vue:358` |
+| `A masseur is on the payroll now – table work at home, every week.` | `engine/world/masseur.ts:91` |
+| `A psychologist is on the payroll now – one call a week, wherever she is.` | `engine/world/psychologist.ts:117` |
+| `The psychologist is off the payroll – the calls stop at the end of the week.` | `engine/world/psychologist.ts:118` |
+| `Nobody is taking the call – a year of work needs somebody on the payroll first.` | `engine/world/psychologist.ts:357` |
+
+**the fare – the sheet's wording is «one additional fare per trip»** – 14
+
+| string | where |
+| --- | --- |
+| `Table work between rounds – one more fare on every trip to a paying event, and the week is billed per match there (${formatCents(masseurRateCents.value)} e` | `components/SupportStaffTab.vue:237` |
+| `Masseur travels to tournaments - off. Press to buy one more fare on every trip, for table work between rounds.` | `components/SupportStaffTab.vue:272` |
+| `<p v-if="pending?.coachTravelled" class="tf-brief-here">At the tournament with her this week – a second fare on this trip.</p>` | `components/TournamentFlow.vue:1043` |
+| `Twice the fare on every trip – a second seat beside hers.` | `components/screens/CoachMarketScreen.vue:319` |
+| `Coach travels to tournaments with her – off. Press to buy the second fare on every trip.` | `components/screens/CoachMarketScreen.vue:900` |
+| `Coach travels to junior and domestic tournaments – on. Press to stop paying the second fare on the trips that pay no prize money.` | `components/screens/CoachMarketScreen.vue:934` |
+| `Coach travels to junior and domestic tournaments – off. Press to buy the second fare on those trips too.` | `components/screens/CoachMarketScreen.vue:935` |
+| `Your coach travels to tournaments with her now – a second fare on every trip.` | `engine/world/coachMarket.ts:262` |
+| `Your coach travels to junior and domestic tournaments too – a second fare on trips that pay no prize money.` | `engine/world/coachMarket.ts:292` |
+| `Your coach stays home for junior and domestic tournaments – the second fare is for the events that pay.` | `engine/world/coachMarket.ts:293` |
+| `The masseur travels to tournaments now – one more fare on every trip, and table work between rounds.` | `engine/world/masseur.ts:342` |
+| `Your coach can travel to tournaments with her now – the switch is in the coach room, and a trip with the coach costs twice the fare.` | `engine/world/milestones.ts:106` |
+| `Your masseur travels to the ${TIERS[event.tier].label} – one more fare${payer}` | `engine/world/sponsors.ts:1216` |
+| `Your coach travels to the ${TIERS[event.tier].label} – a second fare${payer}` | `engine/world/sponsors.ts:1300` |
+
+**a hyphen where the house uses the short dash –** – 5
+
+| string | where |
+| --- | --- |
+| `Masseur travels to tournaments - on. Press to keep the table work at home.` | `components/SupportStaffTab.vue:270` |
+| `Masseur travels to tournaments - off. Press to buy one more fare on every trip, for table work between rounds.` | `components/SupportStaffTab.vue:272` |
+| `aria-label="Coach note - open the Coach Market` | `components/screens/HomeScreen.vue:1646` |
+| `aria-label="Coach - open the Coach Market` | `components/screens/KidScreen.vue:491` |
+| `<p v-if="supplyLine" class="season-supply" :title="'Tournaments you can still enter this season, counted across every level open to her - including the rar` | `components/screens/SeasonScreen.vue:1395` |
+
+  ⚠ **Not one of them is touched.** They are shipped copy from earlier rounds, the task did not ask
+  for them, and invariant 4 is explicit that fixing something adjacent is not permission. What each
+  becomes is his word, string by string.
+
+  ⭐ **Three of his rules were checked against the existing letters and already hold** – worth
+  recording, because a clean result is a result:
+  - **the recurring cost** – `weekly salary` is already the single spelling (8 live uses); «weekly
+    fee» appears once, in `world/sparring.ts`'s binding comment naming the choice. His «choose one»
+    is satisfied repo-wide, not just on the new seat.
+  - **«counting»** – taught, per the reasoning above, so the short unlock line is right on the
+    masseur and the psychologist as well as the hitting partner. Nothing to change.
+  - **the dial labels** – `Masseur sessions per week`, `Psychologist – who takes the weekly call`,
+    `Psychologist – the year's work` are already literal. His a11y finding was specific to
+    «who is across the net» and does not extend to the siblings.
+
+  ⚠ **One gap does extend to all three seats: the per-rung explanation.** No seat has a sentence per
+  rung – not the masseur, not the psychologist, and not the hitting partner (the two candidate sets
+  are drafted above and unshipped). His ask was general: «each rung needs one short, mechanically
+  accurate sentence.»
 
 ---
 
