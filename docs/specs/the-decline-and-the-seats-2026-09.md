@@ -357,3 +357,57 @@ coach row fires for **every coached career**, and nobody ever chose it.
   professional coach at all», independent of tier and fit. ⚠ This does **not** rescue the pin as
   written (the pin's poorest career is self-coached, so a flat coached/uncoached step still spreads
   it) but it removes the *ladder*, which is the half that reads as wealth. Needs its own sweep.
+
+
+---
+
+## §7 THE COACH ROW, RESOLVED (his 17.09) – and the pin was measuring something else
+
+The row was held at 0 because at 0.08 it reddened nine cases pinning that the physical share is a
+function of age alone, `peak-physical.test.ts` saying why: «a share threshold must not be a different
+rule for a rich girl than for a poor one». His answer separates two things the pin had welded
+together:
+
+> «спад у нас есть и он может быть разным у разных девушек… и вот на это всё сословие не влияет. Но
+> помимо этого у нас есть 4 специалиста, которые напрямую влияют на развитие до потолка, поддержание
+> на потолке и на всё, что связано со спадом. **Интенсивность влияния – вот что нам нужно
+> запрограммировать.** И здесь нет разницы в начальном сословии: на про уровне они все имеют условно
+> одинаковый доход… она заканчивается плюс-минус на уровне начала про карьеры и первых призовых.»
+
+⭐⭐ **AND THE FIXTURE PROVES HIM RIGHT RATHER THAN MERELY AGREEING WITH HIM.** Read the case:
+`bornAt(seed, background, coachTier)` sets the tier in the PROFILE at creation and `walkTo` ticks
+growth weeks only. **Nothing in that walk ever hires anybody.** So `share-a` is self-coached at 38
+because the fixture never hires, not because a working family cannot afford a coach on the pro tour —
+and the 1.88pp spread the bench measured is a **STAFFING** difference wearing a class label.
+
+⚠ The test's own comment says what it is really for, and it is not money: «three careers with
+deliberately different CEILINGS … must read the same share at 38 while their peaks differ». The
+claim is **PROPORTIONALITY** — the share left is a function of age and not of LEVEL. Background and
+tier are only how the fixture manufactures three different bodies.
+
+### What this licenses, and what it does not
+
+- ✅ **The decline's SHAPE stays class-blind.** `declineRate`, `declineAccel`, `ageWeight` and the
+  drawn `declineStart` are untouched by background, and nothing here proposes touching them. The
+  invariant he cares about is intact.
+- ⚠ **But the share stops being a pure function of age**, because staffing now enters it. That is a
+  REAL change to what the case asserts and it may not be smuggled in by loosening a tolerance.
+
+### The re-aim, and it is a STRENGTHENING
+
+Two cases where there was one:
+
+1. **Proportionality, isolated.** Three careers with different ceilings and **IDENTICAL staffing** —
+   same seats filled, same tier — must still read the same share at 38. That tests what the comment
+   says it tests, with money no longer able to contaminate it.
+2. **The seats, pinned.** Same age, same level, **different staffing** → a different share, by the
+   measured margin. The new fact gets its own case instead of being absorbed as slack in an old one.
+
+⚠⚠ **Neither case is weakened and the old claim is not dropped** — it is split into the two claims it
+had been carrying at once. ⭐ And the second case is the one that would have caught this whole thing
+earlier: there was no pin anywhere asserting that a paid seat changes anything about ageing, which
+is precisely why «the coach multiplies zero» survived to be found by a player.
+
+**Owed:** the re-aim, then the sweep re-run with the coach row live, then the constant chosen by
+measurement. Q2's floor is re-tested with it — the row was the missing term when the mean landed at
+0.87 of a season against a bar of one.
