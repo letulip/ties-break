@@ -401,3 +401,71 @@ reached a question only he can answer, listed so they are asked rather than deci
 * **No change to any existing ending.** The plateau, the natural end, the fork's two answers,
   bankruptcy and the career-ending injury are untouched, and step 7c″ sits above 7d rather than inside
   it.
+
+
+---
+
+## §9 HIS REVIEW OF THE BUILD AND THE COPY (17.09) – «I would not approve the copy yet»
+
+Two rulings and nine findings. **The two [P1]s are about MECHANICS TRUTH rather than wording**, and
+one of them is the architect's own design error.
+
+### His two rulings
+
+- ✅ **«не больше 1–2%» IS PER DOOR** – «верно». Built as each; the combined 3.05% stands.
+- ✅ **THE PEAK DOOR OPENS AT 25+.** «медианный возраст первой подходящей недели у пика — 21 … это
+  вообще не очень по отношению к игроку, особенно на супер-талантливом сиде. Я бы сказал 25+.»
+  ⚠ §2 had said «what they share is not an age, so none was invented» – that reasoning was about
+  their SPREAD (25/25/28/28), and it does not license taking the career away from a twenty-one-year-old
+  who has just arrived. An age floor goes in.
+
+### ⚠⚠ [P1] THE PARTITION IS A CAREER SCRIPT, AND THAT IS THE ARCHITECT'S ERROR
+
+His finding: «a `fiery` world #1 cannot leave at the peak, while a `deep` player cannot leave after a
+collapse. That is a temperament-driven career script.» And the arithmetic behind it: equal 2% coins
+do NOT give equal likelihood, because the gates are not equally reachable – **peak opens for 19.4% of
+eligible careers and fall for 40.3%** (the builder's own measurement).
+
+⭐ **§4 of this spec proposed the one-voice-one-door mapping and it was wrong.** Its own sentence was
+«two players in identical careers leave differently because they are different people» – which is a
+claim about HOW she leaves, not about which exits exist for her. A partition turns a colour into a
+cage.
+
+**Taken: his option (b).** Every temperament reaches BOTH doors; the temperament decides the VOICE
+and nothing else. That is what the design said it wanted, and it deletes the unequal-likelihood
+problem rather than documenting it.
+
+### ⚠⚠ [P1] A VALID PEAK ENDING CAN RENDER A SELF-CONTRADICTORY RECORD
+
+Confirmed in the code. The gate opens on a title ALONE (`if (view.topTitleThisSeason) return true`),
+and the renderer prefers the rank **whenever it is non-null**. So a champion who finished #15 reads:
+
+> «She left at the top – she was **#15** the week she said it.»
+
+**The detail must mirror WHICH CLAUSE opened the door**, not which field happens to be populated.
+
+### ⚠⚠ [P1] THE QUIET EXIT CONTRADICTS ITSELF AND NAMES AN EVENT THE ENGINE NEVER SEES
+
+«There was never a conversation» followed by «when you finally asked». And the literal fact it leans
+on – that she did not enter the next season – is not observable: **the career latches before the next
+season is playable**, so the player never gets an entry opportunity to notice.
+
+### The [P2]s, each verified in kind
+
+- **Lines assert state the copy function never receives.** `leavingLine` takes only the temperament,
+  yet the drafts claim the parent «finally asked», that `deep` decided «a long time before», and that
+  `sunny` said it «on a good day». Either her own reported account («She said she'd known for a
+  while») or nothing.
+- **The fall epilogue overstates the gate.** «the years in front of it» against a gate that compares
+  the closing season with the one before it and asks only 200 prior points.
+- **The sunny line says the opposite of the terminal event** – «She is not leaving tennis» in the week
+  the engine ends her tennis career.
+- **The peak face.** `happy` fits `sunny` and not `deep`; if the fall's faces are voice-specific the
+  peak's should be too, or `serious` is the safer shared one.
+- **The document overstates its own tests.** They check uniqueness, minimum length and banned words –
+  **a lexical safety net**, not enforcement of the factual contract.
+- **[P3] Four plots, not yet four voices.** The door-slamming `fiery` is 27 words in two sentences.
+
+⭐ **What he approved**: the feed ordering matches the implementation, the headline family is
+coherent, `serious` is the safest shared fall face, and no line blames the parent, the body, the
+schedule or the money.
