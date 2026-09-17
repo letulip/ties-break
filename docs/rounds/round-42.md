@@ -2618,7 +2618,7 @@ its own acceptance bench does not ship because the round is ending.
      family whose money is genuinely gone can still find no nameable gap. Yours to rule: is the
      narrowed promise the one you want, or should a truly empty wallet keep a floor under it?
 
-- [ ] **48. THE SPARRING SEAT CANNOT BE BUILT YET, and the stop is the finding (15.09).** Bundle 13
+- [x] **48. THE SPARRING SEAT CANNOT BE BUILT YET, and the stop is the finding (15.09).** Bundle 13
   refused to build it and was right twice over:
   * **`world.form` does not exist.** The seat's entire effect per its spec §4 is «cut the RHYTHM
     channel's drift by rung» – and the rhythm channel ships in wave **F1**, which never shipped
@@ -2627,6 +2627,8 @@ its own acceptance bench does not ship because the round is ending.
   * **`sparringTravels` does not exist.** The owner's 15.09 override gives the seat the same «ездит»
     switch every other seat has, and every travelling seat PERSISTS its stance. v78 was scoped before
     that override and carries only `sparringHired` / `sparringRung`.
+
+  ✅ **SHIPPED IN round 43 wave F2 – `src/engine/world/sparring.ts`, the seat with its rungs, travel and stand-down (v80).** ⚠ The box was ticked LATE, on 17.09, when an audit of this ledger found it still open – see round 44's note on why an older round's open items go quiet.
 
   ⭐ **It was PRICED instead of guessed, and the price inverts the spec's own proposal.** The rust
   census over 36 careers × 11.5 seasons: **31.4 matchless weeks a season**, of which 7.9 are drifting
@@ -2725,10 +2727,12 @@ its own acceptance bench does not ship because the round is ending.
   the same ±6 points are worth several times that and the slump becomes a thing the player fights.
   **So the honest sequence is #34 → F1 → F2**, and this round's measurement is what says so.
 
-- [ ] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
+- [x] **50. CHEMISTRY – his 16.09 design, and it is the best idea this round produced.** Three messages
   in sequence, each one better than the last: «химия между ребёнком и тренером, а не просто стиль-метч»
   → «может как-то от её темперамента исходя» → ⭐ «эта самая химия может как-то нарабатываться с разной
   динамикой – это может стать показателем, насколько ей комфортно с тренером».
+
+  ✅ **SHIPPED IN round 43 item #1, wave C1 – `coachPairs` and the chemistry trajectory (v79), spec `the-chemistry-2026-09.md`.** ⚠ The box was ticked LATE, on 17.09, when an audit of this ledger found it still open – see round 44's note on why an older round's open items go quiet.
 
   **The shape, as he described it.** Chemistry is a number that ACCRUES while a coach is hired, and the
   RATE is the signal: «если химия прибавляется по 3-5-7% в год, возможно, это не самый подходящий

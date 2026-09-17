@@ -212,3 +212,68 @@ letter it» is a design call, not a repair.
 ⚠ **Next step is his save, read through `decodeExportFile` alone** – the standing protocol: nothing
 is copied into the repo and only derived statistics leave it. Without the career the 0.82x is a
 guess, and this round does not ship guesses.
+
+
+---
+
+## ⚠⚠ INHERITED FROM ROUND 42, AND ONE OF THEM HE HAD BEEN WAITING FOR
+
+His 17.09, on the coach's raise: **«надо доделать, я ждал этого в предыдущей волне»**. He is right,
+and it is a process failure rather than a forgotten idea – **#51 is fully specified in round 42's
+ledger, with his own corridor, and has stood at `[ ]` since 16.09.** Round 43 even wrote the
+sequencing down: «there is no annual-ask machinery in this game at all … build the masseur's first
+and #51 inherits a tested mechanism». The masseur's shipped. Nobody came back.
+
+⭐⭐ **THE STRUCTURAL CAUSE, because this will happen again otherwise.** `/pull-request`'s step 4c
+exists precisely to stop items going quiet – it was added on round 29 #18, after an audit found a
+round-8 item open for 34 days. But **it reads the CURRENT round's ledger only.** An item left `[ ]`
+in an older ledger is invisible to every PR that follows, because no wave ever mentions it again.
+The rule that would have caught this: **a round opens by auditing the previous round's unticked
+items and either carrying them in or saying why not.**
+
+⚠ **And the audit found two boxes that were simply never ticked** – #48 (the sparring seat) and #50
+(chemistry) both SHIPPED in round 43 while their round-42 boxes stayed `[ ]`. A stale ledger is how
+three genuinely open items hid among five.
+
+**Genuinely open and carried in:**
+
+### 5. ⭐⭐ #51 – THE COACH'S FEE IS FIXED AT HIRE, AND HE ASKS. RULED 17.09.
+
+His two sentences settle both halves. On the silent re-pricing: **«мне кажется это не корректно»**.
+On the fix: **«"зафиксировать при найме и пусть просит, как массажист" – верно»**.
+
+**What is wrong today.** The hired man's weekly figure is not stored anywhere. It is re-derived every
+week as `facilityRateCents(her age, tier) + round(max(0, rate - court) * coachRetainerBand(her WTA
+rank))`, so the family's payroll moves with her results, her birthdays and nothing either party
+agreed to. It can fall, which is the half no real coach would accept, and it happened to him:
+2.2k → 1.8k across a season that went well.
+
+**The shape of the fix:**
+- **The agreed weekly figure is PERSISTED at hire** and does not float. ⚠ That is a new world key
+  and therefore a schema move – named here rather than discovered mid-build.
+- **He ASKS**, on the masseur's tested annual mechanism, and his ask reads a **PROGRESS SCORE**
+  rather than a single title – which is #51's own content and his own objection to the first
+  draft: «кажется, что самого факта такого единственного титула маловато, нужна какая-то общая
+  оценка прогресса». Components the world already holds: rank movement over the year, realised
+  development against remaining headroom, titles weighted by tier – and now that F1 has landed, the
+  **residual against expectation**, which is the best of the four, because a coach who got more out
+  of her than the odds said is exactly the one who should ask.
+- **Corridor 5–15%, ceiling the rank band, refusal = he works out the season.** All his, from #51.
+- ⭐ **And he never asks for less.** The downward half is deleted rather than lettered: a contract
+  that falls because she had a quiet season is the thing he called incorrect.
+
+⚠ **The market's own quotes go on floating, and that is correct** – what a NEW coach costs is a fact
+about the market and her standing. What stops floating is the fee of a man already on the payroll.
+
+⚠ **The letters are new player-facing copy and therefore DRAFTS.** The masseur's ask is the model
+for their shape, not their words.
+
+⚠ **His career is coming** – «карьеру пришлю чуть позже». The 2.2k → 1.8k is a 0.82× move and the
+band's steps are ×2 and ×2.25, so the cause is in the court share or the rate, not the band. That
+number gets named from the save through `decodeExportFile` alone before the fix is written, because
+a repair aimed at the wrong term is how a null result gets manufactured.
+
+### 6. #46 – SHOW THE PLAYER WHAT EVERY TRAVELLING SPECIALIST BUYS (his 15.09). Open, untouched.
+
+### 7. #52 – THE CHEMISTRY MARKER ON THE COACH CARD (his 16.09, icon handed over). Open: C1 shipped
+the mechanic in round 43 and the card still carries no marker.
