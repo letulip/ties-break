@@ -905,12 +905,16 @@ generated kernel cannot assert. One draw she can see is enough for the same feel
 - `deep` `"No. I'll keep looking for her name, though."`
 - `quiet` `"No. I'll notice if she's not in the next one."`
 
-### R17 · `the-week-with-nothing-in-it` · worry · college, independent · **fact: `clear-next-week` (NEW)**
+### R17 · `the-week-with-nothing-in-it` · worry · college, independent · **fact: `clear-next-week`**
 **Kernel:** Next week holds no match, and she has not decided whether that is rest or an absence.
-⚠⚠ **NEEDS A NEW GATE, and that is the finding rather than a wording fix.** A clear week is a CALENDAR
-fact and no existing `SmallTalkFact` carries it. `clear-next-week` is proposed: the season holds no
-event she is entered in next week. Until it exists this row does not ship – a situation that invents
-her calendar is worse than one that never fires.
+✅ **THE GATE IS WRITTEN (his 17.09: «пиши гейт по R17») and this row ships with the rest.**
+`clear-next-week` is `SMALL_TALK_FACTS`' fifth claim and `nextWeekIsClear` is its read
+(`world/lifeBeat.ts`), mutation-verified in `tests/round43-clear-next-week.test.ts`.
+⚠ **It is TWO clauses, not the one proposed here.** «The season holds no event she is entered in
+next week» is true all winter – every off-season and college-freeze week is empty by construction,
+and `sunny`'s «I've got a completely empty week» would be a worry in July and a description of
+February. The kernel says «rest or an ABSENCE», so the week must also HOLD an event she could have
+been at. A calendar with nothing in it is not a gap in her season.
 | voice | opener |
 | --- | --- |
 | `sunny` | `"I've got a completely empty week and I don't know what to do with myself."` |
@@ -1782,8 +1786,9 @@ and the first one the rule caught rather than the owner.**
 | `curiosity` | 5 | held back for the same reason; `R26` withdrawn from it |
 
 **Every one of the 43 reaches `college` and `independent`.** **Seven** name a career gate – R8, R14,
-R17, R18, R20, R25, R34 – and the seventh is the one that cannot ship: `R17` takes the proposed
-`clear-next-week`, which **does not exist in `SMALL_TALK_FACTS`**, so the shippable gated set is six.
+R17, R18, R20, R25, R34 – and **all seven can ship.** R17's `clear-next-week` was the one claim no
+`SmallTalkFact` carried; it was written on 17.09 at his ask and is now the fifth member of
+`SMALL_TALK_FACTS`.
 The other 36 are `generated` kernels that assert nothing the career could contradict. No line
 anywhere, opener or reply, says «today».
 

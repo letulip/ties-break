@@ -1469,7 +1469,7 @@ export const SMALL_TALK_STANCE_ID: Record<SmallTalkStance, string> = {
  *
  *  ⚠ THE ROSTER IS A UNION AND THE PREDICATES ARE A TOTAL RECORD, so a new claim cannot be added
  *  without somebody writing the read that makes it true. */
-export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror'] as const
+export const SMALL_TALK_FACTS = ['played-recently', 'march-entry-open', 'coach-employed', 'beat-her-conqueror', 'clear-next-week'] as const
 export type SmallTalkFact = (typeof SMALL_TALK_FACTS)[number]
 
 /** How far back «today» may reach when she recounts a match. ⚠ TWO AND NOT ONE, because the row is
@@ -1503,7 +1503,26 @@ function kidMatchRows(world: WorldState): { week: number; opponent: string; won:
   return out
 }
 
-/** ⭐⭐⭐ §8d.5's FOUR READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE the
+/** ⭐ §8d.5's FIFTH READ (his 17.09: «пиши гейт по R17, давай сделаем»). A clear week ahead is a
+ *  CALENDAR fact and no other claim carried one: `march-entry-open` asks whether a door is still
+ *  open, this asks whether the week behind it is empty.
+ *
+ *  ⚠⚠ TWO CLAUSES AND NOT ONE, AND THE SECOND IS THE HONEST HALF. The proposed gate was «the season
+ *  holds no event she is entered in next week», and that sentence is TRUE ALL WINTER – in the
+ *  off-season and inside the college freeze every week is empty, so «I've got a completely empty week
+ *  and I don't know what to do with myself» would stop being a worry and become a description of
+ *  February. The row's own kernel is «she has not decided whether that is rest or an ABSENCE», and an
+ *  absence needs something to be absent FROM. So the week must also HOLD an event she could have
+ *  been at; a calendar with nothing in it is not a gap in her season.
+ *
+ *  ⚠ `enteredScheduledThisWeek` (world/injury.ts) one week forward, on the same two fields, negated.
+ *  Pure and zero-draw like its four siblings, and asked BEFORE the situation is drawn. */
+export function nextWeekIsClear(world: WorldState): boolean {
+  const ahead = world.season.filter((e) => e.week === world.week + 1)
+  return ahead.length > 0 && !ahead.some((e) => world.entries.includes(e.id))
+}
+
+/** ⭐⭐⭐ §8d.5's FIVE READS, AND EVERY ONE OF THEM IS PURE AND ZERO-DRAW. They are asked BEFORE the
  *  situation is drawn (`reachableSituations`), never after, so a false fact removes the situation
  *  from the pool instead of being papered over in the copy.
  *
@@ -1541,6 +1560,7 @@ const SMALL_TALK_FACT: Record<SmallTalkFact, (world: WorldState) => boolean> = {
       return before.length === 4 && before.every((p) => !p.won)
     })
   },
+  'clear-next-week': nextWeekIsClear,
 }
 
 /** One branch of one exchange: what the PARENT may say, and what she says back to exactly that.

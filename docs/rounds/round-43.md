@@ -271,9 +271,18 @@ FILE pathspec, and the round ends with its own PR through `/pull-request`.
   uses of «today». All eight reproduce.
 
   ⚠⚠ **Two findings that are about SHIPPING rather than wording, both confirmed against the code:**
-  - **R17 cannot ship at all.** Its career gate is `clear-next-week`, and `SMALL_TALK_FACTS` holds
-    exactly four keys – `played-recently`, `march-entry-open`, `coach-employed`, `beat-her-conqueror`.
-    The string appears nowhere in `src` or `tests`. **Seven rows name a gate; six of them can ship.**
+  - **R17 could not ship, and now can – he asked for the gate and it is written** («пиши гейт по R17,
+    давай сделаем, раз это возможно и дешево», 17.09). `SMALL_TALK_FACTS` held exactly four keys and
+    `clear-next-week` was in none of them; it is now the fifth, read by `nextWeekIsClear`.
+    ⚠ **Two clauses, not the one the corpus proposed.** «The season holds no event she is entered in
+    next week» is true all winter – every off-season and college-freeze week is empty by
+    construction – so the row would have fired as a worry about February. The kernel says «rest or an
+    ABSENCE», so the week must also HOLD an event she could have been at.
+    ⚠ **Inert on this branch and that is deliberate**: the engine ships 8 situations, the document
+    holds 43, and none of the 8 names this claim. `reachableSituations` behaves identically today,
+    no draw moves, no schema moves – the predicate is pinned by its own mutation-verified tests
+    (`tests/round43-clear-next-week.test.ts`) rather than by a caller, and the corpus wave inherits
+    a gate instead of a blocker. **All seven gated rows can now ship.**
   - **R25 is a latent test failure.** Its kernel says another player's coach «**he** says almost
     nothing», and `tests/coach-voice.test.ts` forbids a masculine pronoun a player can read – for a
     COACH, the role the rule was written for. It does not fail today because that test reads `src/`
