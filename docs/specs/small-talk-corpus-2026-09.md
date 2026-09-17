@@ -339,7 +339,7 @@ creates no persistent relationship. **Frames:** roof and away.
 - `deep` `"All right. I brought it up for a reason and I've lost what it was."`
 - `quiet` `"Sure. What else is happening?"`
 
-### R3 · `the-stranger's-sock` · story · after-school, college, independent · generated
+### R3 · `the-strangers-sock` · story · after-school, college, independent · generated
 **Kernel:** The laundry came back one sock short and one sock over. The extra one isn't hers and she
 has kept it.
 
