@@ -651,12 +651,21 @@ import type { AcademySupport } from '../academy'
 // from `coachSinceWeek` - the ledger's own record of when the arrangement began - so a migrated
 // career's first anniversary arrives on the schedule it always had.
 //
-// ⚠ THE FROZEN CAREERS MOVE ON THIS KEY AND ON NOTHING ELSE, and that is a claim the round measured
-// rather than asserted. A 156-week walk ends at 16.6, inside `coachAgeBand` 0 and with no WTA rank
-// at all, so the court, the rate and the retainer band are all constant across it and the agreed
-// labour equals the market's - which leaves the ceiling exactly zero room and fires no ask. The
-// per-key diff (tools/frozen-key-diff.ts, control = this change neutralised in place) is in the
-// dated block at the head of tests/coachTravelEdgeFixtures.ts.
+// ⚠⚠ THE FROZEN CAREERS MOVE ON SEVEN KEYS AND NOT ONE, AND THE PREDICTION THAT SAID OTHERWISE WAS
+// WRONG AND IS RECORDED AS SUCH. The build predicted a pure key append – «156 weeks ends inside
+// `coachAgeBand` 0 with no WTA rank, so the agreed labour equals the market's and no ask can fire» –
+// and the per-key diff the protocol demands BEFORE the constants are touched said otherwise on four
+// of five cells. The prediction was off by ONE WEEK: `ageAtWeek` returns whole years, she turns 17 at
+// week 156 exactly, and `walkFrozenCareer`'s last tick runs AT 156. So the final week of every
+// coached frozen career crosses an age band – where the shipped till re-drew the man's rate from a
+// dearer row and this one does not – and week 156 is also `3 x 52`, an anniversary, so the ask fires
+// on it too. `careerTotals`, `events`, `financeWeeks`, `fundsCents` and `nextEventId` move with the
+// bill and the row; the self-coached cell moves on `coachDeal` and `schemaVersion` alone.
+//
+// ⭐ THE DIFF IS WHY THIS IS A SENTENCE RATHER THAN A SURPRISE. A re-stamp done on the prediction
+// would have re-frozen a BEHAVIOUR change under a comment claiming a key append, which is the exact
+// defect that file exists to catch. The full per-key table and `rngMain`'s three canonical
+// fingerprints (unmoved) are in the dated block at the head of tests/coachTravelEdgeFixtures.ts.
 //
 // ⚠ ZERO MAIN DRAWS. The ask is a weighted mean over state the tick has already written, the score
 // draws nothing, and the fee is integer arithmetic - so the frozen MAIN capture (41550 / e6b0c709)

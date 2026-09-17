@@ -2796,7 +2796,7 @@ its own acceptance bench does not ship because the round is ending.
   ⚠ Needs persistence – chemistry per pair – so it is a **v79** customer, and it is a WAVE rather than a
   round item. Order: #34 (nerve gets a price) → F1 (form) → chemistry → F2 (the sparring seat).
 
-- [ ] **51. THE ANNUAL RAISE NEEDS A BASKET, NOT A TITLE (his 16.09).** «может такое быть, что всего с
+- [x] **51. THE ANNUAL RAISE NEEDS A BASKET, NOT A TITLE (his 16.09).** ⭐ **SHIPPED 17.09** on `round/44-coach-raise`, with the fee fixed at hire (his 17.09 ruling) – `docs/specs/the-coachs-raise-2026-09.md`. The basket is the four components below, weighted 0.35 / 0.25 / 0.25 / 0.15 with the residual heaviest; the corridor measured 474 of 474 asks inside 5–15%; one Slam buys at most 6.5% of it. ⚠ The refusal branch is NOT built and the spec's §8 names the reason. «может такое быть, что всего с
   1 титулом в сезон (например w250/w500) тренер будет требовать 15%? Кажется, что самого факта такого
   единственного титула маловато, нужна какая-то общая оценка прогресса». He is right, and the fix is to
   make the ask read a PROGRESS SCORE rather than a single fact. The honest components, all of which the

@@ -24,10 +24,6 @@ import { JUNIOR_TOUR } from '../season/tournament'
 import type { WorldState } from '../world'
 import { KID_ID } from './constants'
 import { sparringRustCut, sparringWorksThisWeek, SPARRING_RECEIPT } from './sparring'
-// ⚠ ONE-WAY EDGE: `coachMarket.ts` does not import this module, so banking the residual here adds no
-// cycle. It is the same direction `./sparring` above is imported in, and for the same reason – the
-// weekly pass is the one place that holds the facts every seat's own module needs.
-import { bankCoachResidual } from './coachMarket'
 import { addEvent } from './ledger'
 
 /** ⭐ HOW LONG SINCE SHE LAST FINISHED A COMPETITIVE MATCH, counted at the week that has just
@@ -155,20 +151,10 @@ export function sparringComebackGap(world: WorldState): number | null {
  *
  *  ⚠ ZERO DRAWS (O4): `accrueForm` is a sum, a compare and a clamp; `formResidualsOf` is a filter and
  *  a closed form. The frozen MAIN capture cannot see this call. */
-export function accrueFormWeek(world: WorldState, away: boolean): void {
+export function accrueFormWeek(world: WorldState, away: boolean): readonly number[] {
   const before = world.form ?? 0
   const week = herWeekForForm(world, away)
   world.form = accrueForm(before, week)
-  // ⭐⭐⭐ v82, ROUND 42 #51 – AND THE COACH'S CONTRACT BANKS THE SAME RESIDUALS, off the list this
-  // pass has ALREADY computed rather than a second read of the feed. #51 calls the residual against
-  // expectation «the fourth and best» component of the annual ask, «because a coach who got more out
-  // of her than the odds said is exactly the one who should ask» – and one derivation of «what she
-  // did against expectation» is what stops the coach's answer and her form's from drifting apart.
-  //
-  // ⚠ THE FLOW, NOT THE STOCK. `world.form` above is clamped and reverts to neutral, so a girl who
-  // beat her odds all year reads 0 at the anniversary; `bankCoachResidual` sums and keeps. See its
-  // own note for why the sum cannot be derived at the ask instead (the feed prunes at 400 rows).
-  bankCoachResidual(world, week.residuals)
   // ⭐ THE COACH'S EYE, decided against the two values this pass already holds and nothing else.
   const eye = coachFormNote(world, before, world.form)
   if (eye) addEvent(world, { week: world.week, type: 'info', text: eye })
@@ -178,6 +164,20 @@ export function accrueFormWeek(world: WorldState, away: boolean): void {
   if (gap !== null && gap > ECONOMY.form.rustAfterWeeks && sparringWorksThisWeek(world, away)) {
     addEvent(world, { week: world.week, type: 'info', text: SPARRING_RECEIPT })
   }
+  // ⭐⭐⭐ v82, ROUND 42 #51 – AND THE WEEK'S RESIDUALS ARE HANDED BACK rather than banked here.
+  //
+  // ⚠⚠ THE RETURN TYPE IS THE FENCE AT THE TOP OF THIS FILE OBEYED. The coach's annual ask reads the
+  // same residuals (#51's «fourth and best» component), and the obvious spelling – importing
+  // `bankCoachResidual` from `coachMarket.ts` and calling it on this line – is EXACTLY what this
+  // file's own dependency note forbids: it would close a runtime cycle through endings -> entries ->
+  // medical -> the phase that calls this. So the pass returns what it computed and the PHASE wires
+  // the two concerns together, which is where a cross-concern wire belongs and is the same shape
+  // `playedThisWeek` is threaded in.
+  //
+  // ⚠ A LIST AND NOT A SUM, for `FormWeek.residuals`' own reason: a week with no matches is an empty
+  // array rather than a zero that could also mean «she drew level». Callers that want neither simply
+  // ignore the return, which is what every caller before v82 does.
+  return week.residuals
 }
 
 /** ⭐⭐ THE COACH'S EYE ON HER FORM – the ONE window §3's fog rule leaves open («form speaks only

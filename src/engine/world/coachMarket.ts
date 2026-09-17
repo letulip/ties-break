@@ -495,7 +495,14 @@ export function resolveCoachRaise(world: WorldState): void {
   // ceiling is `market labour at her standing`, it does not fall back when an ask is skipped, and the
   // room it leaves ACCUMULATES – so a year that could only have bought 2% is followed by an
   // anniversary that can buy more. He asks when there is something worth asking for.
-  if (next < Math.round(deal.labourCents * (1 + ECONOMY.coach.raise.askFloor))) return
+  //
+  // ⚠⚠ `Math.ceil` AND NOT `Math.round`, AND A TEST FOUND THE DIFFERENCE RATHER THAN A REVIEW.
+  // `Math.round(labour * 1.05)` is the nearest integer to the floor and can sit BELOW it: at
+  // `labour = 1109` it is 1164, and `1164 / 1109 - 1` is **4.9955%** – an ask outside the corridor the
+  // owner named, by a rounding, on a row that would have announced itself as a raise. The ceiling is
+  // the smallest integer that is genuinely at or above 5%, so the corridor holds on the cents rather
+  // than approximately. `tests/round42-coach-raise.test.ts` §F4 is the case that caught it.
+  if (next < Math.ceil(deal.labourCents * (1 + ECONOMY.coach.raise.askFloor))) return
   const before = coachRateCents(world, coach)
   restampCoachDeal(world, coach, next, world.week)
   const after = coachRateCents(world, coach)
