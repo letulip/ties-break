@@ -43,6 +43,7 @@
     "tools/endings-bench.ts",
     "tools/fatigue-bench.ts",
     "tools/form-bench.ts",
+    "tools/form-g-sweep.ts",
     "tools/frozen-key-diff.ts",
     "tools/injury-landscape.ts",
     "tools/knock-rate.ts",

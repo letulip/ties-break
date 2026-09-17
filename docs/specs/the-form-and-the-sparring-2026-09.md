@@ -3,7 +3,7 @@ type: spec
 status: current
 area: engine/psychology
 canonical: false
-last-reviewed: 2026-09-16
+last-reviewed: 2026-09-17
 ---
 
 # The form and the sparring partner – the third way down, unparked
@@ -95,7 +95,8 @@ same composure the commentary already knows how to talk about.
   own jobs – which is what the parked spec's §4.5 asked for, one story from two threads.
 * **No number on any surface** (the fog rule): form speaks only through the coach's sentence –
   he is «the eye», and `coachRoomNote`'s machinery already knows how to say a thing without
-  quoting it («She is striking the ball clean» / «She needs matches under her» – drafts, his) –
+  quoting it («She is striking the ball cleanly» / «She needs match play» – ruled 17.09, his own
+  words; the drafts they replace were «striking the ball clean» and «matches under her») –
   and through the match itself.
 
 ## 4. The sparring partner – the seat, and exactly one channel of the number
@@ -319,8 +320,10 @@ to rule: the clamps are a safety rail rather than a destination, and **if the sl
 harder the lever is `G`, not `K`** – `G` decides how far in she travels, `K` what a point is worth
 when she gets there.
 
-The coach's eye, per career per season: **0.28** «She is striking the ball clean.» and **0.52** «She
-needs matches under her.» – a remark rather than a subscription, which is O2's own ask.
+The coach's eye, per career per season: **0.28** «She is striking the ball cleanly.» and **0.52**
+«She needs match play.» – a remark rather than a subscription, which is O2's own ask. (⚠ The two
+sentences were re-worded by his copy review of 17.09; the FIRE RATES above are the mechanic's and did
+not move with them.)
 
 ### 10c. O7 – the rung table, isolated
 
@@ -417,3 +420,89 @@ for: `form` is the only key v80 appended and it is the last of `createWorld`'s l
 * **The receipt line's own fire rate** is unmeasured: `sparringComebackGap` reads the pruned results
   ledger, so a comeback from a layoff longer than 52 weeks leaves one row and the sentence stays
   silent. A receipt may under-fire; it must never over-claim.
+
+## 11. `G` SWEPT, 17.09 – and the shipped value is what the rule selects
+
+§10b ended on a finding and handed it to him: the corridor prices the clamps and **no career visits
+them** (p5/p95 of −4.0/+1.9 against ±10, 0.0% of weeks within a point of one, a lived swing of about
+0.5–0.7 pp against the 1.64 pp the mechanism can reach clamp-to-clamp), and «if the slump should bite
+harder the lever is `G`, not `K`». The owner: «что предлагаешь, давай попробуем. **Важно не
+переборщить**», and then «меряй».
+
+**Instrument:** `tools/form-g-sweep.ts` (`npm run bench:gsweep`), 18 careers × 624 weeks (12 seasons)
+per arm, no seat hired – §10b's own census, re-walked once per candidate `G`. `K` is READ and never
+swept: the [0.5, 4] pp corridor is the ruling (O1) and `K` is its fitted consequence. **Every figure
+here is LIVED** – read off the careers' own traces, never off ±10.
+
+⚠ **THE ARM WAS PROVEN BEFORE IT WAS TRUSTED** (CLAUDE.md: «set the constant to an absurd value and
+watch the output move»). At `G × 10 = 15` the lived band is [−10.0, +10.0] and **24.1% of all weeks
+sit at a clamp**, against 0.0% on the shipped arm – the dial moves the census by 14.1 points.
+
+⚠ **THE ARMS DIVERGE AND THAT IS THE POINT.** `G` moves form, form moves composure, composure moves
+results, so each arm walks its own careers from the same seeds. Unlike §10c's rung table there is no
+confound to hold fixed: `G` costs nothing, so no wallet moves between these rows.
+
+### 11a. Where a career lives, per candidate `G`
+
+| `G` | p1 | p5 | median | p95 | p99 | worst career | best career | weeks within 1 of a clamp | careers reaching a clamp |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| **1.50 – shipped** | −5.8 | **−4.0** | −0.4 | **+1.9** | +3.3 | −7.6 | +6.3 | 0.0% | **0 of 18** |
+| 1.75 | −6.4 | −4.2 | −0.4 | +2.5 | +4.5 | −8.5 | **+10.0** | 0.0% | 1 of 18 |
+| 2.00 | −6.9 | −4.9 | −0.5 | +3.2 | +5.6 | −9.7 | **+10.0** | 0.3% | 3 of 18 |
+| 2.25 | −7.7 | −5.4 | −0.6 | +3.6 | +6.1 | **−10.0** | **+10.0** | 0.5% | 4 of 18 |
+| 3.00 | −9.6 | −7.2 | −0.9 | +5.8 | +9.2 | **−10.0** | **+10.0** | 3.2% | 14 of 18 |
+| 4.00 | −10.0 | −8.8 | −1.3 | +7.0 | +9.6 | **−10.0** | **+10.0** | 6.7% | 18 of 18 |
+| 5.00 | −10.0 | −9.6 | −1.5 | +8.3 | +10.0 | **−10.0** | **+10.0** | 12.4% | 18 of 18 |
+
+⭐ The shipped row reproduces §10b's census exactly (p5 −4.0, p95 +1.9, 0.0% within a point of a
+clamp), which is the cheapest possible check that the two instruments are measuring the same thing.
+
+### 11b. What the lived band is worth – p5 to p95, against the field she really meets
+
+1,200 paired sims a cell, the same seeds down every column, so only the band moves.
+
+| `G` | lived band | composure span at `K = 0.6` | a peer | #20 | #60 | #150 | **widest** |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| **1.50 – shipped** | [−4.0, +1.9] | 3.5 points | 0.42 | 0.83 | 1.42 | 0.50 | **1.42 pp** |
+| 1.75 | [−4.2, +2.5] | 4.0 points | 0.50 | 1.00 | 1.42 | 0.42 | **1.42 pp** |
+| 2.00 | [−4.9, +3.2] | 4.9 points | 0.92 | 1.58 | 1.67 | 0.50 | **1.67 pp** |
+| 2.25 | [−5.4, +3.6] | 5.4 points | 0.75 | 1.83 | 1.92 | 0.50 | **1.92 pp** |
+| 3.00 | [−7.2, +5.8] | 7.8 points | 1.33 | 2.50 | 2.50 | 0.83 | **2.50 pp** |
+| 4.00 | [−8.8, +7.0] | 9.5 points | 1.83 | 2.25 | 2.67 | 1.25 | **2.67 pp** |
+| 5.00 | [−9.6, +8.3] | 10.7 points | 2.33 | 2.58 | 2.75 | 1.50 | **2.75 pp** |
+
+⚠ **§10b's «0.5–0.7 pp» was an inference and this is the measurement: 1.42 pp at the widest
+opponent.** The lived swing is therefore already about 85% of the 1.64 pp the mechanism reaches
+clamp-to-clamp – the gap between «what form can do» and «what form does» is a good deal smaller than
+§10b estimated, because the p5-to-p95 band is not where the composure curve is flattest.
+
+### 11c. THE SELECTION RULE, APPLIED – and it keeps `G = 1.5`
+
+His «важно не переборщить», made measurable: **take the largest `G` at which NO career reaches a
+clamp.** Form pinned at a clamp stops being a signal and becomes a shelf – the clamps are a safety
+rail, not a destination.
+
+⭐⭐ **THE ANSWER IS THE SHIPPED VALUE, AND THERE IS NO HEADROOM ABOVE IT AT ALL.** `G = 1.75` – the
+smallest increase worth trying – already puts **one career of eighteen on the +10 clamp**, and every
+larger value puts more there. `G = 1.5` is the only swept point where no career reaches one.
+
+⚠ **THE HONEST READING OF WHY, because it is not «1.5 is optimal».** The shipped census's best career
+already reaches **+6.3** and its worst **−7.6**; the tails are within two and a half points of the
+rail. A dial that stretches the p95 from +1.9 to +2.5 stretches the TAIL from +6.3 through the clamp
+at the same time, and the tail is what the rule is about. So the sweep does not say «form is
+correctly scaled»; it says **`G` alone cannot be raised without shelving somebody**, which is a
+different and more useful finding.
+
+⚠ **AND THEREFORE A NOTE FOR HIM RATHER THAN A CHANGE, because the levers it implies are his.** If the
+slump should bite harder than 1.42 pp, the sweep says the move is not `G` on its own. Three shapes
+that raise the lived band without putting a career on a shelf, none of them taken here:
+* **widen the clamps** with `G` – the clamp is what binds, and ±10 is a rail rather than a ruling;
+* **raise `K`** – §10a measured every candidate from 0.4 to 1.2 INSIDE the corridor, so 0.8 buys
+  2.25 pp at the clamps with the lived band untouched and no career shelved. ⚠ It is the ruling's own
+  dial and moving it is his call, not a wave's;
+* **asymmetry** – the lived band is [−4.0, +1.9] and the tail that breaks first is the POSITIVE one,
+  which is a fact about the results channel (a purple patch compounds faster than a slump does
+  against a reversion that pulls both ways). A gain that differed by sign is a design question.
+
+⚠ **`K` WAS NOT MOVED AND `G` WAS NOT MOVED.** Nothing in the engine changed for this section: it is a
+measurement, and `ECONOMY.form.gain` is still 1.5.
