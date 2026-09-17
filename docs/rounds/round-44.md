@@ -1,6 +1,6 @@
 ---
 type: round
-status: live
+status: current
 area: life
 last-reviewed: 2026-09-17
 ---

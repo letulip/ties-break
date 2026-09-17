@@ -29,7 +29,7 @@ last-reviewed: 2026-08-31
 
 ## Now
 
-⚙ THE LIVE WAVE IS ROUND 43 – this line is machine-checked against the newest ledger in
+⚙ THE LIVE WAVE IS ROUND 44 – this line is machine-checked against the newest ledger in
 `docs/rounds/` by `scripts/doc-facts.mjs`; edit the number only by shipping a ledger.
 
 **Round 43 is the chemistry wave** ([round-43.md](rounds/round-43.md), 16.09) – opened the day round
