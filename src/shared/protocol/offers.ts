@@ -1344,8 +1344,11 @@ export interface CoachMarketRow {
    *  the engine grows her on cannot be two arithmetics.
    *
    *  ⚠ `null` IS THE QUESTION MARK ON THE CARD AND IT MEANS ONE THING: nobody knows yet. Either she
-   *  has never worked with him, or they have and the reading has not cleared C7's bar
-   *  (`ECONOMY.chemistry.readableAt` – «a sentence in week 3 about a relationship is noise»).
+   *  has never worked with him, or they have and the reading has not cleared THIS PAIR'S OWN bar –
+   *  `chemistryReadableAt`, drawn per pair inside `ECONOMY.chemistry.readableFloor .. readableCeiling`
+   *  since 18.09 (spec §8d). ⚠ The threshold is therefore a fact about the CAREER and not a constant
+   *  of the game, which is why nothing about it crosses this boundary: the wire carries the answer,
+   *  never the bar it was measured against.
    *
    *  ⚠ NOT A SECOND ANTI-SHOPPING LEAK. A stranger's card is `null` by construction: a pair with no
    *  row has no level, so this column cannot be read by hire-look-fire any more than `edgePct` can.

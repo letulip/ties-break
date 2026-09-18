@@ -2,13 +2,13 @@
 
 # `engine/world` – area to owner
 
-The barrel `src/engine/world.ts` (2,695 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
+The barrel `src/engine/world.ts` (2,696 lines) re-exports the decomposed modules under their historical names, so every importer sees one flat surface. That is a COMPATIBILITY contract, not a discovery one – this file is the discovery half.
 
 Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --check` fails when it is stale, and CI runs that on every pull request.
 
 **Do not read this file to answer one question** – that is the habit it exists to replace. `node scripts/world-map.mjs <symbol>` prints the owner and the line, and a plain `grep <symbol> tools/generated/world-symbol-map.md` does the same for a partial name.
 
-592 exported names across 54 owning modules.
+593 exported names across 54 owning modules.
 
 ## Areas
 
@@ -23,7 +23,7 @@ Regenerate with `node scripts/world-map.mjs`; `node scripts/world-map.mjs --chec
 | `src/engine/world/ladder.ts` | THE LADDER: where she stands, and what that standing opens | 22 |
 | `src/engine/world/masseur.ts` | THE MASSEUR: the first seat of the travelling team (docs/plans/the-travelling-team-2026-08.md, step 1 – the owner's ruling Б, re-cut 22.08) | 22 |
 | `src/engine/world/medical.ts` | THE GATES: condition, the doctor's veto, the layoff, and whether she may enter at all | 21 |
-| `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 18 |
+| `src/engine/chemistry.ts` | CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2026-09.md, wave C1) | 19 |
 | `src/engine/world/endings.ts` | THE ENDINGS, WIRED INTO THE WORLD: the latch, the two questions, the four-year freeze and the guard that stops a stale screen mutating a career that has stopped | 18 |
 | `src/engine/world/entryCaps.ts` | THE ANNUAL ENTRY CAPS: the ITF junior allowance, the WTA professional one (AER) – and since P1 the JUNIOR ACCESS rules, which are the same family of rule from the same two rulebooks | 17 |
 | `src/engine/world/sponsors.ts` | THE MONEY FROM OUTSIDE THE FAMILY: sponsors, the offers they make, and what a trip costs once somebody else is helping pay for it | 17 |
@@ -417,6 +417,7 @@ CHEMISTRY – the coach relationship as a trajectory (docs/specs/the-chemistry-2
 - `chemistryDriftPerYear` – `src/engine/chemistry.ts`
 - `chemistryEventNudge` – `src/engine/chemistry.ts`
 - `chemistryFloorPerYear` – `src/engine/chemistry.ts`
+- `chemistryReadableAt` – `src/engine/chemistry.ts`
 - `ChemistryWeek` *(type)* – `src/engine/chemistry.ts`
 - `chemistryWeeklyRate` – `src/engine/chemistry.ts`
 - `COACH_MANNERS` – `src/engine/chemistry.ts`

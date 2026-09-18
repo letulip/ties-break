@@ -341,6 +341,7 @@ export {
   chemistryDriftPerYear,
   chemistryEventNudge,
   chemistryFloorPerYear,
+  chemistryReadableAt,
   chemistryWeeklyRate,
   COACH_MANNERS,
   freshCoachPair,

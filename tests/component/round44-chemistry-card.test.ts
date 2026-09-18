@@ -8,9 +8,10 @@
 //
 //   1. THE WIRE. `CoachMarketRow.chemistry` is the engine's own `chemistryReading` of the persisted
 //      pair – the same number `growWeek` grows her on – and it is `null` on a stranger's card.
-//   2. C7's GATE. «Once a band is clear», and the bar is `ECONOMY.chemistry.readableAt`: under it the
-//      card draws the question mark, at or past it the gauge. «A sentence in week 3 about a
-//      relationship is noise» is the case this exists for, and week 3 is measured rather than argued.
+//   2. C7's GATE. «Once a band is clear»: under the bar the card draws the question mark, at or past
+//      it the gauge. ⚠ SINCE 18.09 THE BAR IS PER PAIR (`chemistryReadableAt`, round 45 #4), so these
+//      cases ask the engine for THIS pair's own and the week-3 claim is pinned against the corridor's
+//      FLOOR - the lowest bar any career can draw. See the note on `barOf` below.
 //   3. THE GAUGE, against each of the THREE accessibility constraints §8a sets and calls
 //      accessibility rather than taste: the hue family is a gradient, the FILL fraction carries the
 //      sign by sweeping the other way, the FIGURE carries it outright, the neutral reads «nothing has
@@ -78,13 +79,27 @@ import CoachMarketScreen from '../../src/components/screens/CoachMarketScreen.vu
 import AppIcon from '../../src/components/ui/AppIcon.vue'
 import { useGameStore } from '../../src/stores/game'
 import { createWorld, toSnapshot, type WorldState } from '../../src/engine/world'
-import { accrueChemistry, affinityFor, chemistryReading, freshCoachPair } from '../../src/engine/chemistry'
+import {
+  accrueChemistry,
+  affinityFor,
+  chemistryReadableAt,
+  chemistryReading,
+  freshCoachPair,
+} from '../../src/engine/chemistry'
 import { buildCoachRoster } from '../../src/engine/coach'
 import { ECONOMY } from '../../src/engine/economy'
 import { DEFAULT_PROFILE, type Snapshot } from '../../src/shared/protocol'
 import { assertDismissReachable, availableWidth, boxOf, PHONE, setViewport } from './fits'
 
-const BAR = ECONOMY.chemistry.readableAt
+// ⚠⚠ RE-AIMED 18.09 BY ROUND 45 #4, AND THE CONSTANT IT REPLACES NO LONGER EXISTS. C7's bar was one
+// number for the whole game (`ECONOMY.chemistry.readableAt = 5`); the owner played it, found it slow
+// and ruled the threshold DRAWN per pair out of a corridor. So every case below that used to read the
+// constant now asks the ENGINE for THIS pair's own bar – which is also the stronger test, because a
+// screen or a test carrying its own copy of the threshold is exactly the two-arithmetics defect §8b
+// was built to avoid.
+function barOf(world: WorldState, coachId = world.coachId!): number {
+  return chemistryReadableAt(world.seed, coachId)
+}
 // ⚠ `__dirname` AND NOT `import.meta.url`: the component project runs under happy-dom, where
 // `import.meta.url` is not a `file:` URL and `fileURLToPath` throws at collection time.
 // `a11y-sweep.test.ts` reads a source file the same way.
@@ -171,7 +186,7 @@ describe('round 44 §1 - coachPairs reaches the snapshot', () => {
     expect(mine, 'her own coach is on the board').toBeTruthy()
     // ⚠ THE ENGINE'S FUNCTION AND NOT A NUMBER TYPED HERE: a test that re-implemented the derivation
     // would be the second arithmetic this whole item exists to avoid.
-    expect(mine!.chemistry).toBe(chemistryReading(world.coachPairs[world.coachId!]))
+    expect(mine!.chemistry).toBe(chemistryReading(world.coachPairs[world.coachId!], world.seed, world.coachId!))
     expect(mine!.chemistry).toBe(41.7)
 
     const strangers = snapshot.coachMarket.filter((r) => !r.current)
@@ -191,10 +206,18 @@ describe('round 44 §1 - coachPairs reaches the snapshot', () => {
     expect(row!.current, 'and he is not the coach she has').toBe(false)
   })
 
-  it('the level is the integral of weeks WORKED, which is why three weeks cannot clear the bar', () => {
+  it('the level is the integral of weeks WORKED, and three weeks still clears nobody\'s bar', () => {
     // C7's own case, measured rather than asserted. `accrueCoachPair` runs only on a week he is paid
     // for, so `chem` counts weeks together - three of them cannot be large however the dice fell, and
     // this walks the real accrual at the most extreme affinity the roster can produce.
+    //
+    // ⚠⚠ RE-AIMED 18.09 AND THE CLAIM IS NOW WEAKER ON PURPOSE, which is the owner overruling his own
+    // earlier ruling rather than a guard being loosened. C7 said «a sentence in week 3 about a
+    // relationship is noise» and the old bar of 5 made that structural; his 18.09 ruling is that small
+    // figures should be visible much sooner, and the corridor's FLOOR is what buys that. So the honest
+    // pin is against the floor - the lowest bar any pair in any career can draw - and if three weeks
+    // of the best week the game has cannot reach even that, then week 3 is still quiet for everybody.
+    // The bench measures the same thing on the real distribution: the earliest of 240 pairs is week 5.
     const world = hired()
     const roster = buildCoachRoster(world.seed, 8)
     let worst = 0
@@ -208,7 +231,28 @@ describe('round 44 §1 - coachPairs reaches the snapshot', () => {
         worst = Math.max(worst, Math.abs(pair.chem))
       }
     }
-    expect(worst, 'three weeks of the best week the game has cannot reach the bar').toBeLessThan(BAR)
+    // ⚠⚠ AND THE MEASURED ANSWER IS NOT THE ONE THIS CASE USED TO GIVE, SO IT IS WRITTEN DOWN RATHER
+    // THAN TUNED AWAY. The bound above is 1.399 – which is ABOVE the corridor's floor of 1. So C7's
+    // week-3 guarantee is no longer structural: a pair that drew the most extreme affinity on its
+    // roster AND a threshold in the bottom quarter of the corridor AND three consecutive best-possible
+    // weeks could show a «1%» in week 3. Three things keep that honest rather than alarming:
+    //   * the arm is a HARD UPPER BOUND and not a career – it feeds three wins AND a title AND a
+    //     glowing head into every one of the three weeks, which no real calendar produces;
+    //   * only the bottom (1.399 - 1) / (2.5 - 1) = 27% of the corridor is even reachable in three
+    //     weeks, so it is a minority of a minority;
+    //   * on the REAL distribution the bench measures the earliest of 240 pairs at week 5, not 3.
+    // Raising the floor would close it, and would also delete the «1%» first reading the owner asked
+    // for by name – `Math.round` turns any floor at or above 1.5 into a «2%», and his words were
+    // «1-2%». That is his trade to make, not an agent's, so it is a question in the round's report.
+    const FLOOR = ECONOMY.chemistry.readableFloor
+    const CEILING = ECONOMY.chemistry.readableCeiling
+    expect(worst, 'three weeks of the best week the game has, as a hard bound').toBeCloseTo(1.399, 2)
+    expect(worst, 'and it still cannot reach the slowest bar a pair can draw').toBeLessThan(CEILING)
+    expect(
+      (worst - FLOOR) / (CEILING - FLOOR),
+      'the share of the corridor that three impossible weeks could reach – a minority, and pinned so ' +
+        'a change to the accrual rate cannot quietly make week 3 loud',
+    ).toBeLessThan(0.35)
   })
 
   it('and the row\'s accessible name carries the figure when there is one, and says nothing when there is not', async () => {
@@ -235,6 +279,13 @@ describe('round 44 §2 - C7, once a band is clear', () => {
     // ⚠ A FRESH CAREER PER ARM AND ONE MOUNT AT A TIME – see `arcOf` below for the store-sharing
     // trap that makes two live boards in one test measure the same career twice.
     const name = currentName(hired())
+    // ⚠ ROUND 45 #4: THIS PAIR'S OWN BAR, asked of the engine. Every career draws a different one, so
+    // a literal here would be a second threshold for the card to disagree with.
+    const bar = barOf(hired())
+    expect(bar, 'the drawn bar is inside the corridor – otherwise the rows below are arbitrary').toBeGreaterThanOrEqual(
+      ECONOMY.chemistry.readableFloor,
+    )
+    expect(bar).toBeLessThanOrEqual(ECONOMY.chemistry.readableCeiling)
 
     // ⚠ RE-AIMED 18.09 BY ROUND 45 #3b: the drawn figure lost its PLUS on the owner's ruling («знак
     // плюс убрать. Минус короткий пусть останется при этом»), so the two readable rows below read
@@ -243,10 +294,10 @@ describe('round 44 §2 - C7, once a band is clear', () => {
     // moved, and `round45-ring-centring.test.ts` owns the sign itself.
     for (const [level, reads] of [
       [0, '?'],
-      [BAR - 0.01, '?'],
-      [-(BAR - 0.01), '?'],
-      [BAR, `${BAR}%`],
-      [-BAR, `-${BAR}%`],
+      [bar - 0.01, '?'],
+      [-(bar - 0.01), '?'],
+      [bar, `${Math.round(bar)}%`],
+      [-bar, `-${Math.round(bar)}%`],
     ] as const) {
       const wrapper = await mountCoaches(withChemistry(hired(), level))
       const mark = currentRow(wrapper, name).find('.cm-chem .tb-ring-value')
@@ -257,11 +308,12 @@ describe('round 44 §2 - C7, once a band is clear', () => {
   })
 
   it('and the gate is the ENGINE\'s - the wire is already null under the bar', () => {
-    const snapshot = withChemistry(hired(), BAR - 0.01)
+    const bar = barOf(hired())
+    const snapshot = withChemistry(hired(), bar - 0.01)
     expect(snapshot.coachMarket.find((r) => r.current)!.chemistry).toBeNull()
     // The screen has no threshold of its own to drift from this one.
-    const at = withChemistry(hired(), BAR)
-    expect(at.coachMarket.find((r) => r.current)!.chemistry).toBe(BAR)
+    const at = withChemistry(hired(), bar)
+    expect(at.coachMarket.find((r) => r.current)!.chemistry).toBe(bar)
   })
 })
 

@@ -1286,10 +1286,17 @@ export function coachMarket(world: WorldState): CoachMarketRow[] {
       // still carries what the two of them had. A single snapshot field for «her coach's chemistry»
       // would have thrown that away and made going back unreadable.
       //
-      // ⚠ NO GATE OF ITS OWN HERE. `readableAt` is C7's bar and it lives in `chemistry.ts` beside the
-      // number it reads; a second condition on this line would be the two-arithmetics defect this
-      // file's other notes keep paying for.
-      chemistry: chemistryReading(world.coachPairs[coach.id]),
+      // ⚠ NO GATE OF ITS OWN HERE. The bar lives in `chemistry.ts` beside the number it reads; a
+      // second condition on this line would be the two-arithmetics defect this file's other notes
+      // keep paying for.
+      //
+      // ⭐⭐ ROUND 45 #4 (18.09) – AND THE BAR IS PER PAIR NOW, WHICH IS WHY THE SEED AND THE ID ARE
+      // HANDED OVER. `chemistryReadableAt` draws this pair's own threshold out of a purpose-scoped
+      // sub-stream keyed on (career, coach), so every career sees its relationships surface on a
+      // different schedule and every one of those schedules is reproducible. Nothing is persisted and
+      // nothing is cached: the two values below are what identifies the pair, and they are what this
+      // line already had in its hands.
+      chemistry: chemistryReading(world.coachPairs[coach.id], world.seed, coach.id),
     }
   })
 }

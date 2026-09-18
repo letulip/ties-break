@@ -1036,32 +1036,53 @@ export const ECONOMY = {
      *  symmetric fall downward, because `high` is a real rung beneath it. */
     eliteUpStep: 0.04,
 
-    // --- WHEN IT MAY BE SHOWN (spec §8b, ruling C7) ----------------------------------------------
+    // --- WHEN IT MAY BE SHOWN (spec §8b, ruling C7; the corridor is §8d, ruled 18.09) ------------
 
-    /** ⭐⭐ C7, RULED 16.09 – «once clear», and this is the bar «clear» means. The question C7 asks
-     *  is whether chemistry surfaces «from season one, or once a band is clear», and his reason for
-     *  the second is quoted rather than paraphrased: «a sentence in week 3 about a relationship is
-     *  noise». Below this the card carries the question mark; at or beyond it, the gauge.
-     *
-     *  ⚠⚠ IT IS `ceilingAtNone` AND THAT IS THE DERIVATION, NOT A COINCIDENCE. Five points is, by
-     *  HIS own anchor in this same block, the WHOLE of what an ordinary pair's year can gain – so a
-     *  reading under five is inside one ordinary year's own noise and names no band at all, while a
-     *  reading past it is a year of relationship expressed in the units he set. A separate constant
-     *  would be an agent choosing a number where the owner had already provided one; this reads his.
-     *
-     *  ⚠ AND THE LEVEL IS THE CLOCK, WHICH IS WHY NO SECOND KEY IS OWED. `accrueCoachPair` runs only
-     *  on a week he is actually PAID for, so `chem` is literally the integral over weeks worked
-     *  together – three weeks in it cannot be large, however the dice fell. Gating on a stopwatch
-     *  instead would need a per-pair week count persisted, and `coachPairs` carries none.
-     *
-     *  MEASURED, predicted against measured (spec §8b): 240 pairs over 416 weeks each, on the
-     *  bench's own measured record (50%, roughly a match a week, a title every ~180 weeks). At this
-     *  bar the median pair first shows a gauge in week 62 – one season and a little, which is what
-     *  «not from season one» asks for – p90 in week 201, 5 of 240 never inside eight years, and the
-     *  marker returns to the question mark 0.25 times per career, because the relationship really
-     *  did go back to nothing. ⚠ NO PAIR OF THE 240 CROSSED IT INSIDE THREE WEEKS, which is C7's own
-     *  case: the median |chem| at week 13 is 1.05 and the largest of the 240 is 3.93. */
-    readableAt: 5,
+    // ⭐⭐ C7, RULED 16.09 – «once clear», and a single bar was what «clear» meant for one round. The
+    // question C7 asks is whether chemistry surfaces «from season one, or once a band is clear», and
+    // his reason for the second was quoted rather than paraphrased: «a sentence in week 3 about a
+    // relationship is noise». The bar was `readableAt: 5`, and it was `ceilingAtNone` by derivation:
+    // five points is, by his own anchor in this same block, the WHOLE of what an ordinary pair's year
+    // can gain, so a reading under five sat inside one ordinary year's own noise.
+    //
+    // MEASURED AT THAT BAR (spec §8b, kept here because it is the record the new corridor is measured
+    // against): 240 pairs x 416 weeks on the bench's own record – median first sighting week 62, p90
+    // week 201, 5 of 240 never inside eight years, the marker turning back off 0.25 times a career,
+    // and NO pair of the 240 crossing inside three weeks (median |chem| 1.05 at week 13, largest of
+    // the 240 3.93).
+    //
+    // ⭐⭐⭐ AND THAT IS WHAT HE THEN PLAYED AND RULED ON, 18.09: «мне кажется медленно, какие-то цифры,
+    // пусть и небольшие 1-2% мы всяко может раньше видеть. Но здесь тоже можно включить
+    // вариативность.» Two instructions in one sentence, and the second is the standing design law of
+    // this wave («вариативность… но при этом математика и стабильность – мы можем воспроизвести все
+    // вариации»). So the bar is not lowered – it is DRAWN, per pair, from the corridor below.
+    //
+    // ⚠⚠ THE CORRIDOR IS STILL HIS `ceilingAtNone` AND NOT AN AGENT'S TASTE, which is the same
+    // argument the single bar was built on, read at two more points. The floor is a FIFTH of what an
+    // ordinary pair's year can gain and the ceiling is a HALF of it; the old bar was the whole of it.
+    // So the three numbers are one anchor read at 1/5, 1/2 and 1/1, and «1-2%» – which is what he
+    // asked to be able to see – is exactly the band the floor opens.
+    //
+    // ⚠ NO SCHEMA KEY IS OWED AND NONE IS TAKEN. The threshold is RE-DERIVED at read from
+    // `${seed}:chemistry:readable:${coachId}` – a purpose-scoped sub-stream, one draw, persisting
+    // nothing and never touching MAIN – exactly as the pair's affinity is (`affinityFor`). Same seed,
+    // same career, same coach, same threshold, to the bit, for ever. `chemistryReadableAt` in
+    // engine/chemistry.ts is the ONE place it is spelled.
+    //
+    // ⚠⚠ AND C7'S WEEK-3 GUARANTEE IS DELIBERATELY SUPERSEDED AT THE LOW END, said out loud rather
+    // than discovered. At a threshold near the floor the fastest pairs on the roster can show a small
+    // figure inside the first weeks – which is not a regression against «a sentence in week 3 is
+    // noise», it is the owner overruling his own earlier ruling with a later one, and the figure he
+    // named («1-2%») is precisely the size that appears there. What the corridor protects is that
+    // this is a MINORITY of pairs rather than all of them; the measured share is in the spec's
+    // 18.09 addendum.
+
+    /** the lowest a pair's own readable threshold can be drawn – `ceilingAtNone / 5` */
+    readableFloor: 1,
+    /** ...and the highest – `ceilingAtNone / 2`. Small on purpose: the whole span is inside one
+     *  ordinary year's gain, so the SLOWEST pair still reads inside a season and the spread is felt
+     *  as «this pair took longer to show» rather than as two different games. */
+    readableCeiling: 2.5,
   },
 
   // Local sponsor cameo. The weekly ROLL is unchanged (draw count!), and round-7 b made the payout

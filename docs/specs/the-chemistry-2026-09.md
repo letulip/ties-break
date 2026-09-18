@@ -649,6 +649,79 @@ mark takes the bottom navigation's own icon size and its own icon-to-label gap, 
 stopped inheriting the line box its optical nudge was fitted against – inside a `<button>` host the
 figure sat 1.98px high, which is what he was seeing. Both are measured at their own code.
 
+### 8d. ⭐⭐ ADDENDUM 18.09 – the bar is not one number any more, it is drawn per pair
+
+> «мне кажется медленно, какие-то цифры, пусть и небольшие 1-2% мы всяко может раньше видеть. Но
+> здесь тоже можно включить вариативность.»
+
+He played the single bar of 5 and found it slow, and he asked for two things in one sentence: small
+figures much earlier, and variation in when they arrive. The second is this wave's own standing law –
+«вариативность и неожиданность… но при этом математика и стабильность – мы можем воспроизвести все
+вариации и подтвердить, что они возможны» – so the bar was not lowered. It was **drawn**.
+
+**The corridor, and why these two ends.** `ECONOMY.chemistry.readableFloor = 1`,
+`readableCeiling = 2.5`. Both are his own `ceilingAtNone` again, read at two more points: the old bar
+was the WHOLE of what an ordinary pair's year can gain, the ceiling is a HALF of it and the floor a
+FIFTH. Nothing here is an agent's taste, and `tests/round45-chemistry-readable.test.ts` pins the
+derivation so that tuning it to taste has to delete a line rather than edit a number.
+
+⭐ **The floor is 1 for a reason that belongs to the SCREEN and not to the model**: the card rounds
+the level to a whole number, so a bar under 0.5 would first be drawn as «0%» – and «0%» is the
+neutral's own sentence, «nothing has happened yet» (§8a). One is the lowest bar at which the card can
+say what he asked to see. The ceiling is small on purpose: the whole span sits inside one ordinary
+year's gain, so even the slowest pair reads inside a season and the spread is felt as «this pair took
+longer to show» rather than as two different games.
+
+**No schema key, no MAIN draw.** The threshold is re-derived at read from
+`${seed}:chemistry:readable:${coachId}` – a purpose-scoped sub-stream, one uniform draw, persisting
+nothing – exactly as the pair's affinity is. Uniform and not triangular, unlike the other two draws:
+those are triangular because a middling disposition and a middling week ought to be likelier than an
+extreme one, which is a claim about the thing being drawn. A threshold is not a thing that happens, it
+is the position of a line, and clustering the lines would cluster the first sightings – the opposite
+of the variation he asked for. `chemistryReadableAt` in `engine/chemistry.ts` is the one spelling, and
+`chemistryReading` – its only caller – grew the two arguments that identify the pair.
+
+**Predicted, before the run** (invariant 5): the corridor moves the median first sighting from week 62
+into the twenties, puts a small figure on a minority of cards inside the first month rather than on
+none or on all of them, and leaves nobody unread inside eight years.
+
+**Measured** – B12 in `tools/chemistry-bench.ts`, 240 pairs × 416 weeks. ⚠ **One walk, two rulers**:
+each pair is walked once through the real `accrueChemistry` and the two gates are read off the SAME
+series, so nothing here depends on a constant being swapped or a tree being checked out. The accrual
+is the engine's and the week stream is modelled – roughly a match a week at an even record, a title
+about every 180 weeks, a steady head – so these are real pairs and not played careers. The drawn
+thresholds came out min 1.01, median 1.74, max 2.49.
+
+| gate | earliest | p10 | median | p90 | by wk 4 | by wk 8 | by wk 13 | by wk 26 | never in 8 yrs | turn-offs per career |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| **before** – one bar at 5 | 13 | 25 | 58 | 188 | 0.0% | 0.0% | 0.4% | 11.7% | 2 / 240 | 0.25 |
+| **after** – drawn per pair | **5** | **8** | **21** | **78** | 0.0% | **10.4%** | **32.5%** | **59.2%** | **0 / 240** | 0.43 |
+
+…and the figure on the week it first appears: **1% × 65, 2% × 162, 3% × 13**. So 227 of 240 pairs
+first show exactly the «1-2%» he named, and the prediction held on every column it named.
+
+⚠ The «before» row's median is 58 against §8b's 62 for the same bar. That is the week stream, which
+this arm states and §8b's only described; it is not a change in the model.
+
+#### ⚠⚠ Three measured things that are NOT flattering, reported rather than tuned away
+
+1. **«By week 4» is 0.0% in both arms, and the gate is not what stops it.** The level simply cannot
+   reach 1.0 in four weeks – at week 13 the median |chem| is about 1. So «much earlier» arrived as
+   week 5 at the earliest and week 8 for the fastest tenth, not as week 2. Making the first month
+   speak would mean moving §3's corridor, which is **his** column and not an agent's.
+2. **The marker turns back off more often: 0.25 → 0.43 times per career.** A lower bar sits nearer the
+   noise, so a reading that has just appeared can go away again. It is still under once per career and
+   it is the same honest state §8b already argued for – the relationship really did go back to nothing
+   – but it is a real cost of the change and it is his to accept or not.
+3. **C7's week-3 guarantee is no longer structural.** A hard upper bound – the most extreme affinity
+   any roster produces, fed three wins AND a title AND a glowing head in each of three consecutive
+   weeks – reaches 1.399, which is above the floor of 1. Only the bottom 27% of the corridor is
+   reachable that way, no real calendar produces that week three times running, and on the real
+   distribution the earliest of 240 pairs is week 5 – but the guarantee itself is gone. It is his own
+   later ruling overruling his earlier one, so it is recorded rather than defended; raising the floor
+   would close it and would also delete the «1%» first reading, because `Math.round` turns any floor
+   at or above 1.5 into a «2%».
+
 ---
 
 ## 9. The raise basket (#51), and how a budget coach out-earns everyone
