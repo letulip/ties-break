@@ -427,3 +427,75 @@ the hard part – the fallback – not the decision.
 ⚠ **A6 also raises the question the whole item rests on**, and it is his reserved design rather
 than a wording call: at 19% coverage on an ordinary career, a FIXED wedding slot would be an empty
 face in seven albums out of eight. Fixed slots or a selected set – see the spec's §4 and §6.
+
+---
+
+## 10. ⭐⭐⭐ RULING D, 18.09 – the three capital blurbs are KEPT FOR REUSE (and were never lost)
+
+§8a recorded R47-3 as copy the route retired. He read that and ruled twice, in one breath:
+
+> «окей, есть пролог, кто захочет – пропустит»
+
+and then:
+
+> «а вот эти фразы можно использовать у нас где-то, например на экранах "мимо пролога", где есть этот
+> выбор. Или вообще в самом прологе.»
+
+**So the removal stands and the sentences are his to keep.** They are recorded here verbatim, under
+his own ruling, so that no future route change can take them out of the record.
+
+### 10a. The three sentences, verbatim
+
+| # | the label | the sentence, verbatim | |
+| ---: | --- | --- | --- |
+| D-1 | `Wealthy` | Top academies are within reach. | **KEPT FOR REUSE – his ruling, 18.09** |
+| D-2 | `Middle class` | Smart choices, steady progress. | **KEPT FOR REUSE – his ruling, 18.09** |
+| D-3 | `Working class` | Big dreams, hard mode. | **KEPT FOR REUSE – his ruling, 18.09** |
+
+### 10b. ⚠⚠ They are already ON the screen he named, and they never left it
+
+His example is «экраны "мимо пролога", где есть этот выбор» – **the screens that bypass the prologue
+and ask this question**. There is exactly one, the onboarding wizard's step 4 (`Family background`),
+reached only through the prologue's own skip (`App.vue` → `newGameRoute = 'wizard'`), and it carries
+these three sentences **as its own blurbs and always has**:
+
+```
+src/components/OnboardingWizard.vue:69-71
+  { id: 'wealthy', label: 'Wealthy', budget: '$120,000', blurb: 'Top academies are within reach.' },
+  { id: 'middle', label: 'Middle class', budget: '$25,000', blurb: 'Smart choices, steady progress.' },
+  { id: 'working', label: 'Working class', budget: '$8,000', blurb: 'Big dreams, hard mode.' },
+```
+
+What commit `73592132` deleted was a **second copy** of them on the epilogue's own capital fork –
+the same three sentences, the same three labels, without the money line. **Nothing was lost.** The
+sentence he wants reused is on the screen he suggested reusing it on, and it is the only executing
+copy in the tree.
+
+### 10c. The other surface HAS its own blurbs, so nothing was overwritten
+
+The childhood prologue's first card (`src/prologue/cards.ts:302-323`) asks the same question with a
+different set of words – **his**, not these:
+
+| id | label | note |
+| --- | --- | --- |
+| `working` | A small town, and you both work. | There is nothing spare. Everything after this is a real decision. |
+| `middle` | A city, and the bills are paid. | There is some room. Not a lot of it. |
+| `wealthy` | Money is not the question in this house. | You still have to decide where she goes and who teaches her. |
+
+⚠ **So «или вообще в самом прологе» was NOT taken, and the reason is invariant 4 read plainly.**
+Putting D-1/2/3 on that card means *replacing* the three notes above, which are also his and which
+nobody asked to have changed. It is also the one place the wizard's copy could not go unedited:
+`PrologueOption.note` carries a typed invariant that **no figure may appear in a note**, which is why
+the prologue shows no starting capital while the wizard shows `$120,000 / $25,000 / $8,000`.
+
+### 10d. Where they COULD go, if he wants them somewhere new
+
+1. **Nowhere – already done.** The screen he named is the wizard, and the wizard has them.
+2. **The prologue's origin card**, replacing its three notes. One word from him and it is three
+   lines; without it, it is an agent rewriting his copy.
+3. **Beside** the prologue's notes rather than instead of them – a second line per option. That is a
+   layout decision on a card that already carries a question line, three labels and three notes at
+   375px, and it is the only option here that adds a new visual element rather than moving words.
+
+⚠ **Nothing in 10d was built.** §10b is the whole of the ruling's practical content: the sentences
+survive, on the surface he named, untouched.

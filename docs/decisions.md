@@ -21,7 +21,7 @@ Owner decisions, newest last. Working agreements – revisit explicitly, don't s
 
 ## Where the current answer lives
 
-**Generated** by `npm run decisions` from the headings below – 117 dated entries, newest 2026-09-18. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
+**Generated** by `npm run decisions` from the headings below – 118 dated entries, newest 2026-09-18. Do not hand-edit this block; `npm run decisions:check` fails when it is stale.
 
 This is a ROUTE, not a ruling. "Current" means the newest entry in that area – open it and read the
 entry itself, which is the record. An entry can revise part of an earlier one without replacing it,
@@ -42,7 +42,7 @@ the owner made. Nothing below the block has been edited: the archive is append-o
 | narrative-and-endings | 2 | [The rose stops reading as a verdict](#2026-08-11--the-rose-stops-reading-as-a-verdict-waveflags-grant) | 2026-08-11 |
 | process-and-git | 18 | [WAVE B, THE THIRD EDITORIAL REVIEW: THE BIBLE RESTRUCTURED, AND THE ENGINE CORRECTS THE MATRIX](#11092026--wave-b-the-third-editorial-review-the-bible-restructured-and-the-engine-corrects-the-matrix) | 2026-09-11 |
 | product-and-scope | 7 | [W3-ONRAMP: the AI juniors get the kid's own door](#2026-08-04--w3-onramp-the-ai-juniors-get-the-kids-own-door) | 2026-08-04 |
-| ranking-and-ladder | 8 | [WAVE 3, THE NINE-POINT FOLD: THE LADDER'S OWN NUMBER CORRECTED THE CURE](#12092026--wave-3-the-nine-point-fold-the-ladders-own-number-corrected-the-cure) | 2026-09-12 |
+| ranking-and-ladder | 9 | [THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER](#18092026--the-reckoning-ruled-again-tennis-only-the-portfolio-on-its-own-line-and-the-best-rank-on-her-highest-ladder) ⚠ supersedes an earlier entry | 2026-09-18 |
 | saves-and-schema | 3 | [THE RECKONING, RULED: THE TOYS LEAVE «SPENT», THE BUSINESSES STAY, AND THE SCHEMA MOVE IS REFUSED](#18092026--the-reckoning-ruled-the-toys-leave-spent-the-businesses-stay-and-the-schema-move-is-refused) | 2026-09-18 |
 | simulation-and-balance | 5 | [WAVE 3 T6 + T6b: DELIVERY, AND A BENCH THAT EXITED 0 WHILE MEASURING NOTHING](#11092026--wave-3-t6--t6b-delivery-and-a-bench-that-exited-0-while-measuring-nothing) | 2026-09-11 |
 | ui-and-copy | 5 | [ROUND 33: THE SCREEN THAT WAS NEVER TWO SCREENS, AND THE STATS TILES CLOSED](#01092026--round-33-the-screen-that-was-never-two-screens-and-the-stats-tiles-closed) | 2026-09-01 |
@@ -4837,3 +4837,74 @@ And, from earlier the same day, on round 45 #3b's open question: **the spoken pl
 copy or layout he has not ruled on: the per-table best ranks his §4a sentence opens («можно даже все
 ранги перечислить из каждого уровня чемпионатов отдельно» – R46-4/5/6), and the career break-even's
 missing income term.
+
+---
+
+## 18.09.2026 – THE RECKONING RULED AGAIN: TENNIS ONLY, THE PORTFOLIO ON ITS OWN LINE, AND THE BEST RANK ON HER HIGHEST LADDER
+
+He read [the reckoning spec](specs/the-reckoning-2026-09.md) a second time the same day, after the
+six rulings above, and ruled four more. ⚠ **Ruling A of this sitting SUPERSEDES ruling 6 of the
+one above it** – the entry above is left exactly as written, because it is the record of what he
+said then.
+
+1. **⭐⭐⭐ RULING A – the reckoning is TENNIS ONLY, and the family's portfolio gets a line of its
+   own**: «давай оставим только расходы на теннис и призовые с тенниса тоже здесь. А отдельной
+   строчкой напишем целиковый срез портфеля семьи по деньгам в кошельке и всем магазине на круг –
+   это будет проще?»
+
+   It is simpler in exactly the way he suspected: a portfolio is a **point-in-time read**, not a
+   lifetime accumulation, so the persisted `careerTotals` field that held the career break-even at a
+   proposal (ruling 6, §6.5) **is not needed and is not owed**. No schema moves.
+
+   ⚠⚠ **«Spent» did not move one cent, and that is measured.** The brand and the academy were
+   already outside it: `heldCents` folds every `assets` row with no family filter, so an
+   enterprise's purchase has been excused by the same line that excuses a house since the fix
+   shipped. Walked on `tools/album-money-probe.ts`, both arms, before and after – $10,445,355 and
+   $9,997,902, unchanged. The one place ruling 6 was ever implemented is `captureBreakEven`'s WEEK
+   arm, and both of its halves left together there. §7 of the spec.
+
+   The new line is `fundsCents + holdingsCents` – the wallet plus every shelf row at value, the fund
+   and the deposit included. ⚠ **Her own account is deliberately NOT in it**: he asked for «портфель
+   **семьи**» and named two things, and `kidFundsCents` already has a row of its own. Flagged for
+   him in §7c – if he means the household's whole worth it is one term and the «Her account» row
+   goes. The label is a draft (R46-7, `Family's portfolio`).
+
+2. **⭐ RULING B – the epilogue's first label loses its article**: «давай Family's share напишем?»
+   He had ruled the rename this morning («да, пойдет» on R46-3) and spelled it himself later. So the
+   row is **`Family's share`**, the figure has never moved, and no other surface follows.
+
+3. **⭐⭐⭐ RULING C – the best rank is read on her HIGHEST ladder**: «делаем на высшей ступени из
+   тех, на которых она была, если ушла после J – значит это высшая, если ушла с W – значит эта
+   высшая. Остальные отдельно ниже можно написать или на отдельных слайдах до этого.»
+
+   `bestRankEver` chose its table with `activeLadderOf` – where she is **now**. The two differ on
+   exactly one shape of career: a girl who played the junior circuit, left it and never had a
+   counting W result reads `domestic` once her ITF book decays out of the 52-week window, so her
+   epilogue printed a NATIONAL standing over an international career. ⚠ `activeLadderOf` itself is
+   untouched – Home's chip, the Stats tabs and the wrap-up card ask it «which table is hers TODAY».
+   The album's page moved with the epilogue. His second sentence is **built in the engine**
+   (`bestRankOn(world, track)`, all three tables, one fold) and **not built on the page**: one `<dl>`
+   row becoming three is a layout decision at 375px and `Best rank` cannot survive the split without
+   new copy. Both are his; drafts R46-4/5/6 stand. §8 of the spec.
+
+4. **⭐⭐ RULING D – the capital cards' removal stands, and their three sentences are KEPT**: «окей,
+   есть пролог, кто захочет – пропустит», and «а вот эти фразы можно использовать у нас где-то,
+   например на экранах "мимо пролога", где есть этот выбор. Или вообще в самом прологе.»
+
+   ⚠ **They were never lost.** «Top academies are within reach.» / «Smart choices, steady
+   progress.» / «Big dreams, hard mode.» are the onboarding wizard's own blurbs and always have
+   been – and the wizard IS «the screen past the prologue where this choice exists», reached only
+   through the prologue's skip. What round 47 #12 deleted was a second copy of them on the
+   epilogue. ⚠ «Или вообще в самом прологе» was **not** taken: the prologue's origin card carries
+   three notes of his own, and replacing them is a wording change nobody asked for (and its typed
+   invariant forbids a figure in a note, which the wizard's copy sits beside). Recorded verbatim
+   under «kept for reuse» in [the strings table](plans/life-wave-7-strings-2026-09.md) §10.
+
+And one WIRING job from the same session, which is a picture rather than a ruling: **the painted
+bride is finally drawn.** `fem-euro-brunnet-adult-bride.webp` shipped with the art set, is the
+reason the wedding's 23+ minimum was ruled on 11.09, and was referenced by nothing in `src/`; the
+wedding's memory now draws it. ⚠ It joins a third union (`MemoryFace`), not `AvatarEmotion` – which
+`avatarCropPath` is total over and may never be made to name a file that is not on disk – and not
+`PortraitEmotion`, the five-band matrix, because the bride is painted for one band. The band
+fallback is explicit and tested. No schema moved, no map lost its totality, and no new string was
+written.
