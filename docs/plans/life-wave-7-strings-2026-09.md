@@ -221,6 +221,23 @@ the family for good rather than every cent that ever left the wallet (see
 | ---: | --- | --- | --- | --- |
 | R46-1 | `EndingScreen.vue` · the epilogue totals `<dl>` | on the album's last page, only when her own account ever received a cheque | Her account | `DRAFT – awaiting his pass` |
 | R46-2 | `EndingScreen.vue` · the same `<dl>` | on the album's last page, only when the family still owns something | Still owned | `DRAFT – awaiting his pass` |
+| R46-7 | `EndingScreen.vue` · the same `<dl>`, between `Still owned` and `Seasons` | on the album's last page, on **every** career – a family that owns nothing still has a wallet | Family's portfolio | `DRAFT – awaiting his pass` |
+
+⚠ **R46-7 is the row his ruling A of 18.09 asked for** – «А отдельной строчкой напишем целиковый срез
+портфеля семьи по деньгам в кошельке и всем магазине на круг». The figure is the wallet plus the
+whole shelf at value (`careerMoney.portfolioCents`); the reasoning and the measurement are in
+[the-reckoning-2026-09.md](../specs/the-reckoning-2026-09.md) §7c. Two things about the WORD, both
+his to move:
+
+* **the article is dropped to match R46-3**, the row he renamed four lines above it on the same day.
+  `The family's portfolio` is the other spelling and is equally available.
+* **«portfolio» is his own noun** («портфель»), chosen over an invented plainer word precisely
+  because picking his is the safest thing a draft can do. If he wants the page's plainer register –
+  `Spent`, `Seasons`, `Titles` – the one-word alternative is `All told`.
+
+⚠ **And one question the row raises rather than answers:** `Still owned` (R46-2) is now a strict
+subset of it – the two differ only by the wallet. Dropping R46-2 would be tidier and was **not**
+done, because nothing asked for it.
 
 ### 7a. The wording MISMATCH carried for him rather than fixed
 

@@ -26,6 +26,11 @@ export function moneyOf(totals: CareerTotals, over: Partial<CareerMoney> = {}): 
     upkeepCents: 0,
     outlayCents: totals.spentCents,
     holdingsCents: 0,
+    // ⭐ RULING A, 18.09 – the family's portfolio. Zero on the default family for the same reason
+    // every figure above it is: it owns nothing, and the helper's whole job is to keep a fixture
+    // written before a field byte-identical in meaning. An arm that is ABOUT the portfolio states
+    // it through `over`, exactly as the holdings arms already do.
+    portfolioCents: 0,
     ...over,
   }
 }

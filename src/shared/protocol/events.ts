@@ -902,10 +902,26 @@ export interface CareerMoney {
   upkeepCents: number
   /** `spentCents − heldCents − upkeepCents`, floored at zero: money that left the family for good
    *  AND was part of this life. THE number the word «spent» means – coaching, courts, fares,
-   *  entries, kit, physio, salaries, the weeks away, and the businesses the family built. */
+   *  entries, kit, physio, salaries, the weeks away, the vacations and the tuition.
+   *
+   *  ⚠ RULING A, 18.09 – IT IS THE TENNIS AND NOTHING ELSE, and this sentence used to end «and the
+   *  businesses the family built». It never did contain them: `heldCents` folds every `assets` row
+   *  with no family filter, so an enterprise's purchase has been excused by the same line that
+   *  excuses a house since the fix shipped. The prose is corrected to the arithmetic, which is what
+   *  his «оставим только расходы на теннис» asks for and what the figure already was. */
   outlayCents: number
   /** what those holdings are worth NOW, which is not what they cost. */
   holdingsCents: number
+  /** ⭐ RULING A, 18.09 – THE FAMILY'S PORTFOLIO, AS ONE LINE: «целиковый срез портфеля семьи по
+   *  деньгам в кошельке и всем магазине на круг». The wallet plus every shelf row at this week's
+   *  worth – `fundsCents + holdingsCents`, the fund and the deposit included, because an
+   *  `investment` rung is an ordinary holding.
+   *
+   *  ⚠ A POINT-IN-TIME READ AND NOT A LIFETIME ACCUMULATION, which is exactly why it costs no
+   *  schema: both terms are on the save today. ⚠ HER OWN ACCOUNT IS NOT IN IT – he asked for the
+   *  FAMILY's portfolio and named two things; `herAccountCents` is the third and has its own row.
+   *  ⚠ NOT FLOORED: a family under water reads negative, honestly. */
+  portfolioCents: number
 }
 
 /** THE DEBT SPELL, surfaced while she is under water – the WARNING PHASE bankruptcy wants before

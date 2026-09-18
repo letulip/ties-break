@@ -97,6 +97,57 @@ import type { WorldState } from '../world'
  *  – everything that came in, minus everything the reckoning calls spending, is the wallet's growth,
  *  the cash sunk in what it owns, her account, and the money the toys ate on the way.
  *
+ *  =================================================================================================
+ *  ⭐⭐⭐ AMENDED 18.09 – RULING A: THE RECKONING IS TENNIS ONLY, AND THE PORTFOLIO IS ITS OWN LINE
+ *  =================================================================================================
+ *
+ *  > «давай оставим только расходы на теннис и призовые с тенниса тоже здесь. А отдельной строчкой
+ *  > напишем целиковый срез портфеля семьи по деньгам в кошельке и всем магазине на круг – это будет
+ *  > проще?»
+ *
+ *  ⚠⚠ THIS SUPERSEDES RULING 6 (the brand and the academy on both sides, §6.5 of the spec). What
+ *  ruling 6 bought was a reading in which an enterprise's COST was charged and its INCOME credited;
+ *  ruling A says the reckoning is the TENNIS, so an enterprise is neither. The measured consequence
+ *  is that §6.5's unclosable asymmetry – the career arm could see the cost and never the income,
+ *  because no save carries a career total of `'business'` – simply stops being a question. **No
+ *  `careerTotals` field is owed and no schema moves**, which is the «проще» he suspected.
+ *
+ *  ⚠⚠ AND THE SPEND SIDE OF THIS FILE DID NOT MOVE ONE CENT, WHICH IS MEASURED RATHER THAN CLAIMED.
+ *  The brand and the academy were ALREADY outside «spent» before this ruling, and not by anybody's
+ *  intent: `heldCents` folds `assets[].paidCents` over EVERY row, with no family filter, so an
+ *  enterprise's purchase has been excused by the same line that excuses a house since the fix
+ *  shipped – ruling 6's own note above calls it «`heldCents`' one concession». Walked on
+ *  `tools/album-money-probe.ts`, both arms, before and after this ruling:
+ *
+ *      arm 0   outlayCents $10,445,355 -> $10,445,355   (enterprise held at cost:    $250,000)
+ *      arm 1   outlayCents  $9,997,902 ->  $9,997,902   (enterprise held at cost: $12,250,000)
+ *
+ *  So «spent» is already what he asks for: coaching, travel, entries, kit, physio, stringing, the
+ *  staff's wages, and – rulings 3 and 4, which stand – the vacations and the tuition. The ONE place
+ *  ruling 6 was ever implemented is `captureBreakEven`'s WEEK arm, and that arm is where ruling A
+ *  actually lands; see the note there.
+ *
+ *  ⚠ THE RESIDUAL IS THE SAME ONE, NAMED AGAIN RATHER THAN QUIETLY WIDENED: a brand that has been
+ *  SOLD leaves no row in `assets`, so its purchase falls back inside «spent», exactly as a sold
+ *  house's does under ruling 5. Closing that needs a persisted accumulator – a schema move, and not
+ *  an agent's – and the miss is in the conservative direction either way.
+ *
+ *  ⭐ `portfolioCents` IS A POINT-IN-TIME READ AND NOT A LIFETIME TOTAL, which is the whole reason it
+ *  costs nothing to add. «деньги в кошельке и всё в магазине на круг» is two things the save already
+ *  holds today: the wallet, and every shelf row at what it is worth this week. The fund and the
+ *  deposit are IN it without being named, because an `investment` rung is an ordinary `assets` row –
+ *  which is also why `holdingsCents` is the right term and a third fold would have been a second
+ *  spelling of it.
+ *
+ *  ⚠⚠ HER ACCOUNT IS DELIBERATELY OUT OF IT, AND THAT IS A READING OF HIS SENTENCE RATHER THAN AN
+ *  OMISSION. He asked for «портфель СЕМЬИ» and named exactly two things, the wallet and the shop;
+ *  `kidFundsCents` is neither – it is the money the tennis paid HER, it is the one figure this whole
+ *  round exists because he could not place, and the epilogue prints it on its own row two lines
+ *  down. Folding it in here would print the same cents twice on one list. ⚠ FLAGGED FOR HIM: if he
+ *  means the household's whole worth, this line becomes `+ herAccountCents` and the «Her account»
+ *  row goes – one term, his call. (The probe's own «HOUSEHOLD WORTH» is that wider figure, and the
+ *  two differ by her account exactly.)
+ *
  *  A pure read: no draw, no clock, no world mutation – the whole file's guarantee. */
 export function careerMoney(world: WorldState): CareerMoney {
   const totals = world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
@@ -118,5 +169,10 @@ export function careerMoney(world: WorldState): CareerMoney {
     upkeepCents,
     outlayCents: Math.max(0, totals.spentCents - heldCents - upkeepCents),
     holdingsCents,
+    // ⚠ NOT FLOORED, DELIBERATELY, and it is the one figure in this fold that may legitimately be
+    // negative: a family in debt with nothing on the shelf really is under water, and a zero there
+    // would be the reckoning telling a comfortable story about a career that did not have one.
+    // `outlayCents`' clamp exists for a migrated save's undercount, which is a different fact.
+    portfolioCents: world.fundsCents + holdingsCents,
   }
 }

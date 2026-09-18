@@ -200,6 +200,19 @@ async function resumeCollege(): Promise<void> {
           <div v-if="view.money.holdingsCents > 0">
             <dt>Still owned</dt><dd>{{ formatCents(view.money.holdingsCents) }}</dd>
           </div>
+          <!-- ⭐⭐⭐ RULING A, 18.09 – THE ONE LINE THE TWO FIGURES ABOVE IT CANNOT SAY. His ask is on
+               `careerMoney` in engine/world/reckoning.ts (no Cyrillic may appear in a template): the
+               reckoning stays TENNIS ONLY, and the family's whole portfolio – the wallet plus every
+               shelf row at what it is worth – gets a separate line of its own. A point-in-time read,
+               not a lifetime total, which is why it costs no schema.
+               ⚠ THE LABEL IS A DRAFT – docs/plans/life-wave-7-strings-2026-09.md, id R46-7. The
+               article is dropped to match the row he renamed four lines up, and both spellings are
+               his to move.
+               ⚠ IT RENDERS ALWAYS, unlike the two draft rows above it, because a family that owns
+               nothing and holds nothing still HAS a portfolio and the honest figure for it is the
+               wallet. A row that vanished on a poor career would answer his question for rich
+               careers only. -->
+          <div><dt>Family's portfolio</dt><dd>{{ formatCents(view.money.portfolioCents) }}</dd></div>
           <div><dt>Seasons</dt><dd>{{ view.seasonsPlayed }}</dd></div>
           <div><dt>Best rank</dt><dd>{{ view.bestRank === null ? '–' : `#${view.bestRank}` }}</dd></div>
           <div><dt>Titles</dt><dd>{{ view.titles }}</dd></div>

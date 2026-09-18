@@ -133,6 +133,37 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     w.unmount()
   })
 
+  it('⭐⭐⭐ RULING A, 18.09 – the family\'s portfolio gets its own row, and it renders on EVERY career', async () => {
+    // «А отдельной строчкой напишем целиковый срез портфеля семьи по деньгам в кошельке и всем
+    // магазине на круг» – the wallet plus the shelf at value, folded engine-side by `careerMoney`.
+    patch(endingView({}, { holdingsCents: 2_600_000_00, portfolioCents: 2_812_340_00 }))
+    const w = mount(EndingScreen)
+    await lastPage(w)
+    const totals = w.find('.ending-totals')
+    // ⚠⚠ THE ARM. Delete the row from the template and this goes red on its first assertion –
+    // measured 18.09, RED [1 test].
+    expect(totals.text(), 'the drafted label – R46-7').toContain("Family's portfolio")
+    expect(totals.text(), 'and the engine\'s own figure, not a sum done in the template').toContain(
+      formatCents(2_812_340_00),
+    )
+    // ...and it sits between what the family still owns and the three counting rows, so the pins
+    // below on his own five labels are untouched by it.
+    const labels = w.findAll('.ending-totals dt').map((d) => d.text())
+    expect(labels.indexOf("Family's portfolio")).toBeGreaterThan(labels.indexOf('Still owned'))
+    expect(labels.indexOf("Family's portfolio")).toBeLessThan(labels.indexOf('Seasons'))
+    w.unmount()
+
+    // ⚠ AND IT IS NOT CONDITIONAL, unlike the two draft rows above it. A family that owns nothing
+    // still HAS a portfolio – it is the wallet – and a row that vanished on a poor career would
+    // answer his question for rich careers only.
+    setActivePinia(createPinia())
+    patch(endingView({}, { portfolioCents: 1234_00 }))
+    const w2 = mount(EndingScreen)
+    await lastPage(w2)
+    expect(w2.find('.ending-totals').text(), 'the poor career gets the row too').toContain("Family's portfolio")
+    w2.unmount()
+  })
+
   it('⚠ the five labels are all still on the page, in his order, and the first is the one HE renamed', async () => {
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)

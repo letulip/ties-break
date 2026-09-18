@@ -328,21 +328,24 @@ describe('⭐⭐⭐ round 46 #9, ruling 5 – what the toys cost to keep is not 
 })
 
 // =================================================================================================
-// ⭐⭐⭐ RULING 6, 18.09 – BOTH SIDES OF THE BUSINESSES, IN THE ONE ARM THAT CAN SEE BOTH
+// ⭐⭐⭐ RULING A, 18.09 – THE RECKONING IS TENNIS ONLY, AND THAT IS WHERE RULING 6 WENT
 // =================================================================================================
 //
-// «А вот бренд и академия вполне могут быть и расходами и доходами, здесь не вижу противоречий.»
+// ⚠⚠ RE-AIMED 18.09 BY RULING A, WHICH SUPERSEDES RULING 6 OF THE SAME DAY. The block that stood
+// here was about «А вот бренд и академия вполне могут быть и расходами и доходами, здесь не вижу
+// противоречий» and pinned BOTH sides of the businesses inside the week arm. He then read the shape
+// it produced and ruled the other way:
 //
-// ⚠⚠ THE WEEK ARM CAN AND THE CAREER ARM CANNOT, and that asymmetry is the whole content of these
-// arms. The week arm reads a `FinanceWeek` row, which carries `'business'` income beside everything
-// else; the career arm has only `careerTotals`, which keeps earned, spent and prize and nothing per
-// category, so a career total of what the brand and the academy EARNED is on no save. Charging their
-// cost with no credit for their income is the ONE-SIDED reading he did not ask for – measured on
-// `tools/album-money-probe.ts --arm 1`, it takes «spent» from $9,997,902 to $22,247,902 against
-// $17,158,081 of prize money and stops the album's central page crossing at all, for a family whose
-// businesses had earned $34,087,161. So the career arm is held at a proposal (the spec's §6.5) and
-// arm 3 below is what pins that it really is unchanged.
-describe('⭐⭐⭐ round 46 #9, ruling 6 – the brand and the academy count on both sides', () => {
+// > «давай оставим только расходы на теннис и призовые с тенниса тоже здесь. А отдельной строчкой
+// > напишем целиковый срез портфеля семьи по деньгам в кошельке и всем магазине на круг – это будет
+// > проще?»
+//
+// ⚠ THE FIRST TWO ARMS BELOW ARE THE OLD TWO WITH THEIR SIGNS TURNED OVER, and they are kept rather
+// than deleted because the week arm has now been ruled TWICE in one day and a test that only knows
+// the second ruling cannot tell a future reader that the first one existed. The third arm did not
+// move at all: the career arm was never charging an enterprise, which is the measurement that made
+// ruling A cheap – see `careerMoney`'s own note and docs/specs/the-reckoning-2026-09.md §7.
+describe('⭐⭐⭐ round 46 #9, ruling A – the week arm asks about the tennis and nothing else', () => {
   /** A career five weeks in, with no break-even row and no ledger row for THIS week, so an arm can
    *  state the whole of the week it is testing. */
   function freshWeek(seed: string): WorldState {
@@ -356,40 +359,44 @@ describe('⭐⭐⭐ round 46 #9, ruling 6 – the brand and the academy count on
   const weekRows = (world: WorldState): number =>
     world.milestones.filter((m) => m.type === 'break-even' && m.kind === 'week').length
 
-  it('⭐⭐⭐ merch and academy money is the tennis paying for itself – it joins the week\'s prize', () => {
-    const world = freshWeek('r46-r6-week')
+  it('⭐⭐⭐ RE-AIMED BY RULING A – a merch cheque is NOT the tennis paying, so it cannot turn the week', () => {
+    const world = freshWeek('r46-rA-week')
     addEvent(world, { week: world.week, type: 'income', category: 'prize', text: 'A cheque', amountCents: 1_000_00 })
     addEvent(world, { week: world.week, type: 'expense', category: 'coaching', text: 'The coach', amountCents: -3_000_00 })
     captureBreakEven(world)
     expect(weekRows(world), 'the prize alone did not cover the week').toBe(0)
 
-    // ...and the same week with the brand's own cheque on it.
+    // ...and the same week with the brand's own cheque on it, five times the shortfall.
     addEvent(world, { week: world.week, type: 'income', category: 'business', text: 'Merch', amountCents: 5_000_00 })
     captureBreakEven(world)
-    // ⚠⚠ THE ARM. Drop `business` from the week arm's numerator – i.e. the pre-ruling behaviour –
-    // and this line goes red: measured 18.09, 1 assertion in 1 test.
-    expect(weekRows(world), 'her name on the shelves is the tennis paying, so the week turned').toBe(1)
+    // ⚠⚠ THE ARM, AND IT IS THE OLD ARM WITH ITS SIGN TURNED OVER. Put `business` back into the week
+    // arm's numerator – i.e. ruling 6's behaviour, which is what this line asserted until 18.09 – and
+    // this goes red: measured 18.09, RED [1 test, 1 assertion].
+    expect(weekRows(world), 'merch money is not prize money, so the week still did not turn').toBe(0)
+
+    // ...and the same week with the same money arriving as PRIZE does turn it, which is what says
+    // the arm is reading the category rather than refusing every large number.
+    addEvent(world, { week: world.week, type: 'income', category: 'prize', text: 'A bigger cheque', amountCents: 5_000_00 })
+    captureBreakEven(world)
+    expect(weekRows(world), 'the tennis paying for the tennis is the whole question').toBe(1)
   })
 
-  it('⭐⭐ ...and a stage of the academy bought that week is a COST of it, which is the other side', () => {
-    const world = freshWeek('r46-r6-cost')
+  it('⭐⭐ RE-AIMED BY RULING A – ...and founding the brand is not a cost of the week\'s tennis either', () => {
+    const world = freshWeek('r46-rA-cost')
     world.fundsCents += 3_000_000_00
     addEvent(world, { week: world.week, type: 'income', category: 'prize', text: 'A cheque', amountCents: 100_000_00 })
+    addEvent(world, { week: world.week, type: 'expense', category: 'coaching', text: 'The coach', amountCents: -1_000_00 })
     buyAsset(world, 'merch-brand')
     expect(world.assets[0].paidCents, 'the founding really did cost more than the week won').toBeGreaterThan(100_000_00)
     captureBreakEven(world)
-    // ⚠⚠ THE ARM. Delete the `enterprisePaidInWeekCents` line from the week arm and this goes red:
-    // the whole `'shop'` category is excused there, so founding a brand would be free to this
-    // question – which is exactly the concession ruling 6 refuses. Measured 18.09: 1 assertion.
-    expect(weekRows(world), 'founding the brand cost more than the week won, so the week did not turn').toBe(0)
-
-    // The same week, with the prize big enough to cover the founding as well as the tennis.
-    addEvent(world, { week: world.week, type: 'income', category: 'prize', text: 'A bigger one', amountCents: 300_000_00 })
-    captureBreakEven(world)
-    expect(weekRows(world), 'and once it does, it turns').toBe(1)
+    // ⚠⚠ THE ARM, THE OTHER SIGN TURNED OVER. Restore `costs += enterprisePaidInWeekCents(...)` – the
+    // line ruling 6 put in and ruling A took out – and this goes red: measured, RED [1 test,
+    // 1 assertion]. Both sides of ruling 6 left together, which is what keeps the arm coherent:
+    // charging a purchase while refusing its income is the one-sided reading nobody asked for.
+    expect(weekRows(world), 'the week\'s tennis was covered; what the family BOUGHT is a different question').toBe(1)
   })
 
-  it('⚠⚠ the CAREER arm is UNCHANGED, which is a decision and is measured rather than assumed', () => {
+  it('⚠⚠ the CAREER arm is UNCHANGED – it never charged an enterprise, which is why ruling A was cheap', () => {
     // A family that founded the brand and is still short of covering everything else. If the career
     // arm ever starts charging the enterprise, this career stops crossing – which is the regression
     // the measurement above forbids until the income can be set beside the cost.
@@ -404,5 +411,82 @@ describe('⭐⭐⭐ round 46 #9, ruling 6 – the brand and the academy count on
       'the brand is still a holding to this arm, so the turn still happened',
     ).toHaveLength(1)
     expect(careerMoney(world).outlayCents, 'and «spent» still excuses what it cost').toBe(500_00)
+  })
+})
+
+// =================================================================================================
+// ⭐⭐⭐ RULING A, 18.09 – THE PORTFOLIO IS ITS OWN LINE
+// =================================================================================================
+//
+// > «А отдельной строчкой напишем целиковый срез портфеля семьи по деньгам в кошельке и всем
+// > магазине на круг – это будет проще?»
+//
+// ⚠ IT IS A POINT-IN-TIME READ, which is the whole reason it needed no schema: the wallet and every
+// shelf row at value are both on the save today. These arms pin the composition, the two things that
+// are deliberately NOT in it, and the fact that «spent» did not move a cent under this ruling.
+describe('⭐⭐⭐ round 46 #9, ruling A – the family\'s portfolio, and the reckoning left tennis-only', () => {
+  it('⭐⭐⭐ is the wallet plus every shelf row AT VALUE – the fund included, without being named', () => {
+    const { world } = career('r46-portfolio-a', 40)
+    world.fundsCents += 500_000_00
+    buyAsset(world, 'index-fund', 400_000_00)
+    hold(world, 20, 'grow')
+
+    const m = careerMoney(world)
+    expect(m.holdingsCents, 'the fund is an ordinary holding and carries its own worth').toBeGreaterThan(0)
+    // ⚠⚠ THE ARM, BOTH HALVES, MEASURED 18.09. Return `world.fundsCents` alone (drop
+    // `+ holdingsCents`) and this line goes red by the whole fund – RED [1 test, 1 assertion].
+    // Return `holdingsCents` alone and the wallet goes missing from all three arms of this block –
+    // RED [3 tests, 3 assertions]. Both halves are load-bearing, which is what «кошелёк И магазин»
+    // says.
+    expect(m.portfolioCents, 'the wallet and the shelf, at this week\'s worth').toBe(
+      world.fundsCents + m.holdingsCents,
+    )
+    // ...and it is the WORTH and not the cost, which is the one thing that makes it a portfolio at
+    // all: a fund that has grown says so here while `heldCents` keeps saying what went in.
+    expect(m.portfolioCents, 'at value, never at cost').not.toBe(world.fundsCents + m.heldCents)
+  })
+
+  it('⚠⚠ HER account is NOT in it, and the two figures on the page are therefore distinct', () => {
+    const { world } = career('r46-portfolio-b', 40)
+    world.fundsCents += 200_000_00
+    world.kidFundsCents = 3_000_000_00
+    const m = careerMoney(world)
+    // He asked for the FAMILY's portfolio and named the wallet and the shop. Her account is the
+    // figure this whole round exists because he could not place it, and the epilogue gives it a row
+    // of its own – folding it in here would print the same cents twice on one list.
+    expect(m.herAccountCents).toBe(3_000_000_00)
+    expect(m.portfolioCents, 'the daughter\'s money is hers, not the family\'s portfolio').toBe(world.fundsCents)
+  })
+
+  it('⚠ a family under water reads NEGATIVE – the clamp above it is for a migrated save, not for tidiness', () => {
+    const { world } = career('r46-portfolio-c', 30)
+    world.fundsCents = -40_000_00
+    expect(world.assets, 'nothing on the shelf to soften it').toHaveLength(0)
+    // ⚠⚠ THE ARM. Wrap the term in `Math.max(0, …)` – the shape `outlayCents` uses – and this goes
+    // red: measured, RED [1 test, 1 assertion]. `outlayCents`' floor exists because the v38 -> v39
+    // step documents itself as an undercount; a debt is not an undercount, it is the answer.
+    expect(careerMoney(world).portfolioCents, 'a debt is a true reading of a portfolio').toBe(-40_000_00)
+  })
+
+  it('⭐⭐⭐ «spent» DID NOT MOVE under ruling A – the enterprise was never in it', () => {
+    // ⚠⚠ THIS IS THE ARM THAT MAKES RULING A A MEASUREMENT RATHER THAN A STORY. His sentence asks for
+    // the brand and the academy to leave «spent»; they had already left it, because `heldCents` folds
+    // EVERY `assets` row with no family filter and has done since the fix shipped (ruling 6's own
+    // note calls it «`heldCents`' one concession»). Walked on `tools/album-money-probe.ts`, both arms
+    // read the same `outlayCents` before and after – $10,445,355 and $9,997,902.
+    const world = createWorld('r46-rA-spent')
+    hold(world, 5, 'pre')
+    world.fundsCents += 3_000_000_00
+    addEvent(world, { week: world.week, type: 'income', category: 'income', text: 'A windfall', amountCents: 3_000_000_00 })
+    const spentBefore = world.careerTotals.spentCents
+    buyAsset(world, 'merch-brand')
+    const paid = world.assets[0].paidCents
+    expect(paid, 'the brand really did cost something').toBeGreaterThan(0)
+    expect(world.careerTotals.spentCents, 'and the raw accumulator counted it, as it always has').toBe(
+      spentBefore + paid,
+    )
+    const m = careerMoney(world)
+    expect(m.heldCents, 'the enterprise is a holding like any other – no family filter here').toBe(paid)
+    expect(m.outlayCents, 'so founding it never was inside «spent», before this ruling or after').toBe(spentBefore)
   })
 })

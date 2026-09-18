@@ -27,7 +27,9 @@ import {
 } from '../../shared/protocol'
 import { addEvent, financeWindow, isHoldingCategory, seasonIndexOf, seasonStartWeek } from './ledger'
 import { careerMoney } from './reckoning'
-import { enterprisePaidInWeekCents } from './assets'
+// ⚠ `enterprisePaidInWeekCents` was imported here for ruling 6's week arm and is not any more –
+// ruling A of 18.09 superseded it (see `captureBreakEven`). The import goes with the call: an unused
+// one would be a live edge on the import graph for a rule that is no longer implemented.
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
 import { activeLadderOf, entryCouldNotMove, kidPoints, rankIn } from './ladder'
@@ -130,16 +132,26 @@ export function captureBreakEven(world: WorldState): void {
   //     ledger, which is the only week guaranteed to still be in it.
   const thisWeek = world.financeWeeks.find((w) => w.week === world.week)
   if (thisWeek) {
-    const prize = thisWeek.byCategory.prize ?? 0
-    // ⭐⭐⭐ RULING 6, 18.09 – AND THE BRAND AND THE ACADEMY ARE ON THIS SIDE TOO. «А вот бренд и
-    // академия вполне могут быть и расходами и доходами, здесь не вижу противоречий.» Merch money
-    // is her name on the shelves and the campus earns off her reputation, so both are the tennis
-    // paying – and `'business'` is their own ledger category, on the very row this arm reads, so no
-    // derivation is needed and nothing is guessed. The `max(0, …)` is `financeSeries`' own rule for
-    // a netted category: a week whose business row is negative is a week the businesses COST money,
-    // and the loop below books it as the cost it is rather than as a negative income.
-    const business = Math.max(0, thisWeek.byCategory.business ?? 0)
-    const paidIn = prize + business
+    // ⭐⭐⭐ RULING A, 18.09 – THE PRIZE MONEY ALONE, BECAUSE THE RECKONING IS THE TENNIS.
+    //
+    // > «давай оставим только расходы на теннис и призовые с тенниса тоже здесь.»
+    //
+    // ⚠⚠ THIS SUPERSEDES RULING 6 OF THE SAME DAY («бренд и академия вполне могут быть и расходами и
+    // доходами»), AND THIS ARM IS THE ONLY PLACE RULING 6 WAS EVER IMPLEMENTED – `careerMoney`'s own
+    // «spent» never charged an enterprise, because `heldCents` folds every `assets` row and has no
+    // family filter (see world/reckoning.ts). So the whole of the change is here, and it is BOTH
+    // sides of the same sentence leaving together: `'business'` income is no longer added to the
+    // week's numerator four lines down, and the enterprise purchase is no longer added to its costs
+    // ten lines down. A merch cheque is not the tennis paying for itself and founding the brand is
+    // not a week's tennis costing money; the question this arm asks is the one it has always asked
+    // in its own header – «did the PRIZE MONEY cover the week».
+    //
+    // ⭐ WHAT IT ALSO RETIRES, which is worth saying because it was an open schema question: §6.5 of
+    // docs/specs/the-reckoning-2026-09.md held the CAREER arm at a proposal because it could see an
+    // enterprise's cost and never its income, and closing that needed a persisted `careerTotals`
+    // total of `'business'`. With the enterprise out of both arms, the two agree with no accumulator
+    // and no migration – the «проще» he asked about. ⚠ It is not to be re-proposed.
+    const paidIn = thisWeek.byCategory.prize ?? 0
     let costs = 0
     for (const [cat, amt] of Object.entries(thisWeek.byCategory) as [WorldEventCategory, number][]) {
       // ⭐ ROUND 46 #9 – A PURCHASE IS NOT A COST OF THE WEEK'S TENNIS. `isHoldingCategory` is the
@@ -156,12 +168,14 @@ export function captureBreakEven(world: WorldState): void {
       // which is what makes the two arms agree about it instead of agreeing by accident.
       if (cat !== 'prize' && !isHoldingCategory(cat) && amt < 0) costs += -amt
     }
-    // ⚠⚠ ...AND THE ONE THING `isHoldingCategory` EXCUSES THAT RULING 6 SAYS IT MUST NOT: a stage of
-    // the academy, or the brand, bought this week. The week's `'shop'` row cannot tell a clubhouse
-    // from a yacht (it is one netted figure), so the cents are read off the rows the purchase wrote
-    // instead – `enterprisePaidInWeekCents`, which carries why that is exact for one named week.
-    // Both sides of his ruling land in this arm together: the income four lines up, the cost here.
-    costs += enterprisePaidInWeekCents(world, world.week)
+    // ⚠⚠ ...AND THE LINE THAT STOOD HERE WENT WITH RULING 6, 18.09. It read
+    // `costs += enterprisePaidInWeekCents(world, world.week)` – the academy stage or the brand
+    // bought this week, added back because `isHoldingCategory` excuses the whole `'shop'` row and
+    // ruling 6 said an enterprise must not be excused. Ruling A of the same day supersedes it (the
+    // note over `paidIn`): the enterprise is out of BOTH sides, so there is nothing to add back and
+    // `isHoldingCategory`'s excuse is the whole rule again. `enterprisePaidInWeekCents` survives in
+    // world/assets.ts with its reasoning intact – it is exact for one named week and is what a
+    // future ruling would reach for – but nothing calls it today.
     if (paidIn > 0 && paidIn > costs) {
       captureMilestone(world, { type: 'break-even', week: world.week, kind: 'week' })
     }

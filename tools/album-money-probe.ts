@@ -346,6 +346,16 @@ console.log(`  SPENT for good  (careerMoney.outlayCents)  ${money(m.outlayCents)
 console.log(`  HELD            (Σ paidCents at cost)      ${money(m.heldCents)}`)
 console.log(`  UPKEEP          (not tennis – ruling 5)    ${money(m.upkeepCents)}`)
 console.log(`  CAME IN         (earnedCents + her account)${money(m.cameInCents)}`)
+// ⭐ RULING A, 18.09 – «целиковый срез портфеля семьи по деньгам в кошельке и всем магазине на круг».
+// Printed beside the engine's own figure and an independently summed control, so the composition is
+// measured rather than restated: the wallet plus every shelf row AT VALUE, her account deliberately
+// out of it (the line above `HOUSEHOLD WORTH` is what that wider reading would be).
+console.log(`  PORTFOLIO       (wallet + shelf at value)  ${money(m.portfolioCents)}`)
+console.log(
+  `    control: wallet ${money(world.fundsCents)} + assets ${money(assetValue)}` +
+    `   ${m.portfolioCents === world.fundsCents + assetValue ? 'EXACT' : 'MISMATCH'}`,
+)
+console.log(`    ...and her account, which is NOT in it       ${money(m.herAccountCents)}`)
 const lhs = m.cameInCents - m.outlayCents
 const rhs = world.fundsCents - 120_000_00 + m.heldCents + m.herAccountCents + m.upkeepCents
 console.log(`  identity: cameIn − spent = ${money(lhs)}  vs  growth + held + hers + upkeep = ${money(rhs)}  ${lhs === rhs ? 'OK' : 'MISMATCH'}`)

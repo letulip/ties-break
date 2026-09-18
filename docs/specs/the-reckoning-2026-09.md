@@ -448,3 +448,104 @@ which is exactly why arm 1 had to be built.
 
 ⚠ The replay reproducing the ledger's own $6,360,802 **to the cent** over 1,349 weeks and fourteen
 rungs is the measurement that makes ruling 5 a decomposition rather than an estimate.
+
+---
+
+## 7. ⭐⭐⭐ RULING A, 18.09 – the reckoning is TENNIS ONLY, and the portfolio is its own line
+
+He read §6 the same day and ruled again, on the shape all of it produced:
+
+> «давай оставим только расходы на теннис и призовые с тенниса тоже здесь. А отдельной строчкой
+> напишем целиковый срез портфеля семьи по деньгам в кошельке и всем магазине на круг – это будет
+> проще?»
+
+**This SUPERSEDES ruling 6** (§6.5, the brand and the academy on both sides). And it is simpler in
+exactly the way he suspected: a portfolio is a **point-in-time read** of what exists now, not a
+lifetime accumulation, so the persisted `careerTotals` field that §6.5 held the career arm at –
+a career total of `'business'` income – **is not needed and is not owed**. No schema moves.
+
+### 7a. ⚠⚠ The spend side did not move one cent, and that is measured
+
+The ruling asks for the brand's and the academy's costs to leave «spent». **They were never in it**,
+and not by anybody's intent: `heldCents` folds `assets[].paidCents` over **every** row with no family
+filter, so an enterprise's purchase has been excused by the very line that excuses a house since the
+fix shipped. Ruling 6's own note calls this «`heldCents`' one concession». Walked on
+`tools/album-money-probe.ts`, before and after this ruling:
+
+| | arm 0 (§1b's career) | arm 1 (the shelf of his own sentence) |
+| --- | --- | --- |
+| enterprise held at cost | $250,000 | $12,250,000 |
+| `outlayCents` BEFORE ruling A | $10,445,355 | $9,997,902 |
+| `outlayCents` AFTER ruling A | **$10,445,355** | **$9,997,902** |
+| `prizeCents` («Family's share») | $17,164,973 | $17,158,081 |
+| album slot 6 | unchanged | unchanged |
+| frozen MAIN capture | unmoved | unmoved |
+
+So «spent» already is what he asks for: coaching, travel, entries, kit, physio, stringing, the
+staff's wages and – rulings 3 and 4, which stand – the vacations and the tuition.
+`tests/round46-career-money.test.ts` pins this directly («spent» DID NOT MOVE under ruling A) rather
+than leaving it as a claim, because a null result is a claim like any other.
+
+⚠ **The residual, named again rather than quietly widened:** a brand that has been **sold** leaves no
+`assets` row, so its purchase falls back inside «spent» – exactly as a sold house's does under
+ruling 5. Closing it is a persisted accumulator, i.e. a schema move, and the miss is in the
+conservative direction either way.
+
+### 7b. Where ruling 6 actually lived, and what changed there
+
+The **only** place ruling 6 was implemented is `captureBreakEven`'s **week** arm, and both of its
+halves left together:
+
+| | under ruling 6 | under ruling A |
+| --- | --- | --- |
+| the week's numerator | `prize + max(0, business)` | **`prize`** |
+| the week's costs | non-holding categories **+ `enterprisePaidInWeekCents`** | non-holding categories |
+
+A merch cheque is not the tennis paying for itself and founding the brand is not a week's tennis
+costing money – which is the question that arm's own header has always asked. `enterprisePaidInWeekCents`
+survives in `world/assets.ts` with its reasoning intact (it is exact for one named week) and has no
+caller today.
+
+⚠ **This retires §6.5's open schema question.** With the enterprise out of both arms, the week arm and
+the career arm agree with no accumulator and no migration. **It is not to be re-proposed.**
+
+### 7c. The portfolio's composition, and the one question flagged for him
+
+`CareerMoney.portfolioCents` = **`fundsCents + holdingsCents`** – the wallet, plus every shelf row at
+this week's worth. The fund and the deposit are in it **without being named**, because an
+`investment` rung is an ordinary `assets` row; that is also why `holdingsCents` is the right term and
+a third fold would have been a second spelling of it.
+
+Measured on the two arms:
+
+| | arm 0 | arm 1 |
+| --- | --- | --- |
+| family wallet | $2,212,235 | $12,496,104 |
+| shelf at value | $39,327,362 | $45,861,814 |
+| **`portfolioCents`** | **$41,539,598** | **$58,357,918** |
+| her own account, deliberately NOT in it | $28,749,334 | $28,744,507 |
+| (the probe's «household worth», which IS the wider reading) | $70,288,932 | $87,102,425 |
+
+⚠⚠ **Her account is out, and it is a reading of his sentence rather than an omission.** He asked for
+«портфель **семьи**» and named exactly two things – the wallet and the shop. `kidFundsCents` is
+neither: it is the money the tennis paid **her**, it is the figure this whole round exists because he
+could not place it, and the epilogue already gives it a row of its own (R46-1). Folding it in would
+print the same cents twice on one list.
+
+> ⚠ **FLAGGED FOR HIM.** If «портфель семьи» means the household's whole worth, this is one term –
+> `+ herAccountCents` – and the «Her account» row goes. Both readings are honest; the narrower one is
+> the one his two nouns name.
+
+⚠ **`portfolioCents` is not floored.** A family under water reads negative, which is true.
+`outlayCents`' clamp exists for the v38 → v39 undercount, which is a different fact.
+
+### 7d. Strings
+
+One NEW row on the epilogue, a **draft**: `Family's portfolio`
+(`docs/plans/life-wave-7-strings-2026-09.md` R46-7). The article is dropped to match the row he
+renamed four lines above it (ruling B, §5b). It renders on **every** career, unlike R46-1 / R46-2 –
+a family that owns nothing still has a portfolio and it is the wallet.
+
+⚠ **Open, and his:** `Still owned` (R46-2, itself a draft) is now a strict subset of the portfolio
+row and the two differ only by the wallet. Dropping R46-2 would be tidier and is **not** done here,
+because nothing asked for it.
