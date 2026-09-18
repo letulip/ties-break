@@ -40,7 +40,7 @@
 // ⚠ THE PROCEED'S WORD IS NOT A NEW STRING. `Proceed` is the prologue's shipped confirm vocabulary
 // (round 41 #9, `WALK_COPY.proceed`), the same word KnockDialog's own Proceed carries and the same
 // one `lifeBeat.ts` hands the life beat. Invariant 4: reused verbatim, not coined.
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
 import { playSfx } from '../audio/sfx'
@@ -59,6 +59,16 @@ const sending = ref(false)
  *  owner's own rule about the ask, and a mark the player did not make would break it. It STAYS
  *  through a refused send: it is what he chose, not a claim the world took it. */
 const chosen = ref<string | null>(null)
+
+/** ⚠ AND IT IS CLEARED WHEN THE CARD GOES – `LifeBeatDialog`'s own watch, copied with the pattern
+ *  rather than left behind. `App.vue` mounts this dialog under a `v-if`, so today the instance is
+ *  destroyed between birthdays and this can never fire; it is here because the guarantee belongs to
+ *  the CARD and not to whoever mounts it. Without it, a card that outlived its prompt would open next
+ *  year with last year's present already marked and a Proceed standing under a question nobody has
+ *  answered – which is «случайные нажатия» arriving by a different door, a year later. */
+watch(prompt, (p) => {
+  if (p === null) chosen.value = null
+})
 
 /** The first tap: mark the present. Giving it is `confirm()`'s alone – «чтобы не было случайных
  *  нажатий», which is the whole of the item. */

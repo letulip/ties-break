@@ -267,6 +267,8 @@ describe('BirthdayDialog – the four presents', () => {
 //          case above counts a fifth button that is not a present.
 //   ARM 4  `.birthday-mark` dropped from the row -> RED [2]: the ball census and the 3:1 case.
 //   ARM 5  `.dialog-card`'s height cap stripped -> RED [1]: the selected-state phone fit.
+//   ARM 6  the `watch` that clears the selection when the prompt goes away, removed -> RED [1]: the
+//          card re-opens a year later with last year's present still marked.
 describe('ROUND 45 #1 – the birthday selects, and only the Proceed gives', () => {
   beforeEach(() => setActivePinia(createPinia()))
 
@@ -345,6 +347,34 @@ describe('ROUND 45 #1 – the birthday selects, and only the Proceed gives', () 
     )
     expect(shapes.size, 'one shape for all four rows, marks included').toBe(1)
     expect(snap.birthdayPrompt!.options.some((o) => o.id === askedId), 'and the answer is among them').toBe(true)
+    w.unmount()
+  })
+
+  it('⚠ THE SELECTION DIES WITH THE CARD – next year opens with nothing marked (ARM 6)', async () => {
+    // `App.vue` mounts this dialog under a `v-if`, so in the shipped app the instance is destroyed
+    // between birthdays and the reset can never fire. It is guarded anyway because the guarantee
+    // belongs to the CARD: a mount that outlived its prompt – which is exactly how every case in this
+    // file mounts it – would open next year with last year's present already marked and a Proceed
+    // standing under an unanswered question. That is «случайные нажатия» arriving by another door.
+    const { snap } = birthdaySnapshot()
+    const store = useGameStore()
+    store.snapshot = snap
+    const w = mount(BirthdayDialog, { global: { stubs: { teleport: true } } })
+    await w.findAll('button.birthday-choice')[0].trigger('click')
+    expect(w.find('.birthday-proceed').exists(), 'a present is marked').toBe(true)
+
+    // the birthday is answered and the week moves on...
+    store.snapshot = { ...snap, birthdayPrompt: null }
+    await nextTick()
+    expect(w.find('[role="dialog"]').exists(), 'the card is gone').toBe(false)
+
+    // ...and a year later the same card comes back, asking.
+    store.snapshot = snap
+    await nextTick()
+    expect(w.find('.birthday-proceed').exists(), 'no way on under a question nobody has answered').toBe(false)
+    for (const row of w.findAll('button.birthday-choice')) {
+      expect(row.attributes('aria-checked'), 'and last year\'s present is not marked').toBe('false')
+    }
     w.unmount()
   })
 
