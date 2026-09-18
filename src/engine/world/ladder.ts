@@ -16,7 +16,13 @@ import { ALTERNATES, alternatePlacesOpen } from '../season/tournament'
 import { WILD_CARD, hostNationOf, wildCardWindow } from '../season/tournament'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, computeRanking, isCountingResult, windowFromWeek, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
 import type { LadderTrack, RankingRow, TierId } from '../season/types'
-import type { SeasonEntryRow } from '../../shared/protocol'
+// ⚠ A VALUE IMPORT FROM THE PROTOCOL BARREL, and it is checked rather than assumed: every module
+// under `shared/protocol/` imports from the engine with `import type` only, so nothing here closes a
+// runtime edge (`tests/import-cycles.test.ts` is the machine that says so, and this wave has already
+// had a nine-hop cycle out of a value import). `world/coachMarket.ts` takes the same two symbols by
+// the same path. `LADDER_TRACKS` is the repo's ONE exhaustive list of tables – see
+// `highestLadderReached` for why walking it beats naming the three.
+import { LADDER_TRACKS, type SeasonEntryRow } from '../../shared/protocol'
 import { fieldProsFor, mergedWtaRanking, type FieldPro } from '../season/fieldPros'
 import { seasonIndexOf } from './ledger'
 import { kidAgeAt } from './age'
@@ -414,9 +420,26 @@ export { yearEndJuniorRank } from './entryCaps'
  *  finish paying zero means every finish did. Exact, for every save, however long ago it happened -
  *  no new persisted field, no schema bump. */
 export function wtaEverCounted(world: WorldState): boolean {
+  return everCountedOn(world, 'wta')
+}
+
+/** ⭐ THE SAME TEST FOR ANY TABLE (ruling C, 18.09) – `wtaEverCounted` generalised rather than
+ *  copied, which is the only way the three tables can be guaranteed to answer by one rule.
+ *
+ *  ⚠ THE EVIDENCE IS THE SAME NEVER-PRUNED MARK for exactly the same reason: `world.results` prunes
+ *  to 52 weeks, so a junior who left the J rungs three years ago would watch her own evidence delete
+ *  itself, which is the defect the WTA arm was already written around. `bestFinishByTier` is a
+ *  high-water mark written at finalize and never pruned, and a recorded finish whose points-table row
+ *  pays > 0 was a counting result the week it landed.
+ *
+ *  ⚠ AND A SCORELESS EXIT IS NOT EVIDENCE, which is a property and not an accident: a W15 first-round
+ *  loss pays a cheque and no points, and `tests/round41-kid-share-first-w.test.ts` pins that this
+ *  predicate says «she has never been there» about it. «Counting result» is the standard on all three
+ *  tables or on none. */
+export function everCountedOn(world: WorldState, track: LadderTrack): boolean {
   return (Object.keys(world.bestFinishByTier) as TierId[]).some((tier) => {
     const finish = world.bestFinishByTier[tier]
-    return finish !== undefined && TIERS[tier].track === 'wta' && TIERS[tier].points[finish] > 0
+    return finish !== undefined && TIERS[tier].track === track && TIERS[tier].points[finish] > 0
   })
 }
 
@@ -440,6 +463,47 @@ export function wtaEverCounted(world: WorldState): boolean {
 export function activeLadderOf(world: WorldState): LadderTrack {
   if (wtaEverCounted(world) || kidPoints(world, 'wta') > 0) return 'wta'
   return kidPoints(world, 'itf') > 0 ? 'itf' : 'domestic'
+}
+
+/** ⭐⭐⭐ RULING C, 18.09 – THE HIGHEST TABLE SHE WAS EVER ON, which is a DIFFERENT QUESTION from
+ *  `activeLadderOf` and now has its own name instead of borrowing that one's answer.
+ *
+ *  > «делаем на высшей ступени из тех, на которых она была, если ушла после J – значит это высшая,
+ *  > если ушла с W – значит эта высшая.»
+ *
+ *  ⚠⚠ WHERE THE TWO ANSWERS COME APART, because they agree on most careers and a rule that only ever
+ *  agreed would not be worth a function. `activeLadderOf`'s professional arm is a ONE-WAY DOOR and so
+ *  matches this rule already; its JUNIOR arm is a LIVE read – `kidPoints(itf) > 0` – and that is
+ *  deliberate there, because «which table is she competing in» is a question about now and «J is a
+ *  stage she passes through» (its own note). So a girl who played the junior circuit, aged out of it
+ *  and never reached a counting W result reads `'domestic'` from that function once her ITF book
+ *  decays out of the 52-week window – and her epilogue would then print her best NATIONAL standing
+ *  over a career whose high-water mark was international. That is exactly the career his sentence
+ *  names: «если ушла после J – значит это высшая».
+ *
+ *  ⚠ SO `activeLadderOf` IS NOT TOUCHED, and that is the load-bearing half of this change. Home's
+ *  chip, the Stats tabs, the wrap-up card and the album's own ladder all ask that function «which
+ *  table is hers TODAY», and answering it with a permanent high-water mark would have put a
+ *  thirty-year-old's professional chip on a woman who has not held a W point in eight years. Two
+ *  questions, two readers, one rule each – which is the same discipline the two-ladders spec exists
+ *  to keep.
+ *
+ *  ⚠ THE LIVE TERM STAYS IN THE OR, on the `latchOnRamps` discipline every predicate in this file
+ *  obeys: the fresh fact answers correctly on its own and the memory only ever adds, so no caller is
+ *  order-sensitive on when finalize last ran.
+ *
+ *  ⚠ AND IT WALKS `LADDER_TRACKS` BACKWARDS RATHER THAN NAMING THE THREE. That array is derived from
+ *  `LADDER_LABEL`, is documented «lowest first», and is the repo's one exhaustive list of tables – so
+ *  a fourth table joins this rule the day it gets a player-facing name, instead of being forgotten in
+ *  a hand-written chain of ternaries.
+ *
+ *  Pure read: no draw, no clock, no mutation. */
+export function highestLadderReached(world: WorldState): LadderTrack {
+  for (let i = LADDER_TRACKS.length - 1; i >= 0; i--) {
+    const track = LADDER_TRACKS[i]
+    if (everCountedOn(world, track) || kidPoints(world, track) > 0) return track
+  }
+  return 'domestic'
 }
 
 /** ⭐⭐⭐ ROUND 46 #10 – THE BEST RANK SHE EVER HELD, and it is ONE reader because there were two.
@@ -484,20 +548,67 @@ export function activeLadderOf(world: WorldState): LadderTrack {
  *  and ⚠ the running minimum is not to be proposed again – see docs/specs/the-reckoning-2026-09.md
  *  §4a, which keeps the refusal rather than deleting the proposal. His second sentence is a separate
  *  ask – list her best on EACH table instead of one number – and it needs nothing added to this
- *  file: `bestSeasonClose` below already takes the track, and every table already has a shipped
- *  player-facing name in `LADDER_LABEL`. What it needs is a page that has one row to have three,
- *  which is his layout call and his copy; it stops at a written proposal in §4b.
+ *  file: `bestRankOn` below takes the track, `bestSeasonClose` under it takes the track, and every
+ *  table already has a shipped player-facing name in `LADDER_LABEL`. What it needs is a page that has
+ *  one row to have three, which is his layout call and his copy; it stops at a written proposal in
+ *  §4b.
+ *
+ *  =================================================================================================
+ *  ⭐⭐⭐ AMENDED 18.09 – RULING C: THE TABLE IS THE HIGHEST SHE EVER REACHED, NOT THE ONE SHE IS ON
+ *  =================================================================================================
+ *
+ *  > «делаем на высшей ступени из тех, на которых она была, если ушла после J – значит это высшая,
+ *  > если ушла с W – значит эта высшая. Остальные отдельно ниже можно написать или на отдельных
+ *  > слайдах до этого.»
+ *
+ *  ⚠⚠ ONE WORD OF THE FOLD MOVED AND THE WHOLE PARAGRAPH ABOVE STILL HOLDS. The table is now
+ *  `highestLadderReached` instead of `activeLadderOf` – the note on that function carries the
+ *  argument and, more importantly, the reason `activeLadderOf` itself was NOT changed: «which table
+ *  is she competing in today» is a live question and its junior arm is deliberately a live read, so a
+ *  permanent high-water mark there would have put a professional chip on a woman eight years retired
+ *  from it. The careers where the two answers differ are exactly the ones his sentence is about: a
+ *  girl who left after the J rungs reads `'domestic'` from the live function once her ITF book decays
+ *  out of the 52-week window, and her epilogue then printed a national standing over an
+ *  international career.
+ *
+ *  ⚠ THE REFUSAL OF THE CROSS-TABLE MINIMUM IS UNCHANGED AND IS NOT WHAT THIS IS. «Highest table she
+ *  reached» is a choice of WHICH TABLE to read; it is not «the smallest number across all three»,
+ *  which `prevRankIn` and the wrap-up's movement arrow both refuse and which would say #3 at home at
+ *  fourteen beats #11 in the world at twenty-two.
+ *
+ *  ⚠ HIS SECOND SENTENCE – «остальные отдельно ниже … или на отдельных слайдах» – is what
+ *  `bestRankOn` exists for, and it is built rather than promised: all three tables are one call away
+ *  and the fold is written once. What has NOT shipped is the page, because turning one `<dl>` row
+ *  into three is a layout decision at 375px AND new copy («Best rank» cannot survive the split), and
+ *  both are his. Drafts R46-4/5/6 in docs/plans/life-wave-7-strings-2026-09.md §7c.
  *
  *  Pure read: no draw, no clock, no mutation. */
 export function bestRankEver(world: WorldState): { rank: number; track: LadderTrack } | null {
-  const track = activeLadderOf(world)
+  const track = highestLadderReached(world)
+  const rank = bestRankOn(world, track)
+  return rank === null ? null : { rank, track }
+}
+
+/** ⭐⭐ RULING C's SECOND SENTENCE, BUILT – the best rank she ever held on ONE NAMED TABLE.
+ *
+ *  ⚠ IT IS `bestRankEver`'s WHOLE FOLD with the table handed in rather than chosen, which is the
+ *  point: «остальные отдельно ниже можно написать» needs the same arithmetic three times and a second
+ *  copy of it is how the epilogue and the album came to disagree in the first place. Every recorded
+ *  close on that table, plus the rank she is standing on now – the live term being the only thing
+ *  that can see a final, partial season the wrap never reached, and asked only where she holds a
+ *  point in that table, because «unranked is not a number».
+ *
+ *  ⚠ A CAREER THAT NEVER TOUCHED THE TABLE ANSWERS `null`, not a floor – which is what lets a caller
+ *  render one row for a girl who never left the national ladder and three for a woman who went all
+ *  the way, with no branch of its own. */
+export function bestRankOn(world: WorldState, track: LadderTrack): number | null {
   const closed = bestSeasonClose(world, track)
   let best = closed?.rank ?? null
   if (kidPoints(world, track) > 0) {
     const live = rankIn(world, track)
     if (best === null || live < best) best = live
   }
-  return best === null ? null : { rank: best, track }
+  return best
 }
 
 /** ⭐⭐ ROUND 46 #10 – THE BEST SEASON SHE EVER CLOSED, on one named table, with the week it closed on.

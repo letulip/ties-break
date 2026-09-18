@@ -291,12 +291,23 @@ His refusal of the persisted running minimum came with a second sentence that is
 > «достаточно лучшего ранга по итогам сезона, они у нас все есть, **можно даже все ранги перечислить
 > из каждого уровня чемпионатов отдельно**.»
 
-**The engine needs nothing built.** `bestSeasonClose(world, track)` already takes the table as an
-argument, `SeasonHistoryEntry.byTrack` (v46) carries an `endRank` for each of the three, and every
-table already has a shipped player-facing name in `LADDER_LABEL` (`National`, `International`,
-`Professional`). What it needs is **one row on the epilogue becoming three**, which is a layout
-decision, and **labels that say these are BESTS** – because `Best rank` cannot survive being split
-three ways, and three rows named after the tables alone read as her CURRENT standings.
+⭐⭐⭐ **RULED AGAIN LATER THE SAME DAY (ruling C) – and the ENGINE HALF IS NOW BUILT.** His second
+sentence came back as «Остальные отдельно ниже можно написать или на отдельных слайдах до этого», and
+`bestRankOn(world, track)` ships: one fold, the table handed in, all three available, `null` for a
+table she never touched. The same ruling moved the PRIMARY row's table – it reads the highest ladder
+she ever reached now, not the one she is on ([the-reckoning-2026-09.md](../specs/the-reckoning-2026-09.md)
+§8) – and **no string moved for that**, because `Best rank` still prints one number.
+
+**The engine needs nothing built.** `bestRankOn(world, track)` and `bestSeasonClose(world, track)`
+both take the table as an argument, `SeasonHistoryEntry.byTrack` (v46) carries an `endRank` for each
+of the three, and every table already has a shipped player-facing name in `LADDER_LABEL` (`National`,
+`International`, `Professional`). What it needs is **one row on the epilogue becoming three**, which
+is a layout decision, and **labels that say these are BESTS** – because `Best rank` cannot survive
+being split three ways, and three rows named after the tables alone read as her CURRENT standings.
+
+⚠ **And the layout cost went UP this morning, which is why R46-4/5/6 still have not shipped.** The
+same `<dl>` gained R46-7 (the portfolio) under ruling A, so it now carries **eight** rows at 375px
+before any split. Three-for-one on top of that is a page decision, not a builder's.
 
 Both are his. Measured on the probe career, the three rows would read #10 / #14 / #12 – against the
 single #12 the page prints today, which says nothing about the child who was third in the country at

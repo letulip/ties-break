@@ -32,7 +32,9 @@ import { ENDING_TITLE } from '../ending'
 import { kidAgeAt } from './age'
 import { seasonIndexOf } from './ledger'
 import { careerMoney } from './reckoning'
-import { activeLadderOf, bestSeasonClose } from './ladder'
+// ⚠ `highestLadderReached`, NOT `activeLadderOf` – ruling C, 18.09. The import moved with the call
+// (see `slotBestWeek`): the two answer different questions and the album asks the historical one.
+import { bestSeasonClose, highestLadderReached } from './ladder'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
 
@@ -271,8 +273,15 @@ export function slotBestWeek(world: WorldState): AlbumPage {
   // ⭐⭐⭐ ROUND 46 #10 – OFF THE ONE READER, AND WHAT STOOD HERE WAS THE EPILOGUE'S OWN BUG IN A
   // SECOND COPY. It scanned the `season-rank` milestones, whose `rank` is written from
   // `world.kidRank` – the ITF one, always – so this page handed a career that had spent its life on
-  // the professional table its best JUNIOR year-end. `bestSeasonClose` asks `activeLadderOf` which
-  // table is hers, exactly as `bestRankEver` does for the epilogue.
+  // the professional table its best JUNIOR year-end. `bestSeasonClose` is asked which table is hers,
+  // exactly as `bestRankEver` asks for the epilogue.
+  //
+  // ⭐⭐⭐ RE-AIMED 18.09 BY RULING C, AND IT HAD TO MOVE WITH THE EPILOGUE OR THE TWO WOULD HAVE
+  // DIVERGED AGAIN – which is the whole defect this page was repaired for one ruling earlier. The
+  // table is `highestLadderReached` now, not `activeLadderOf`: «делаем на высшей ступени из тех, на
+  // которых она была, если ушла после J – значит это высшая». The two functions agree on every
+  // career that ended on its own peak and differ on exactly the one his sentence names – a girl who
+  // left after the junior rungs, whose ITF book has since decayed out of the 52-week window.
   //
   // ⚠ IT IS THE CLOSES AND NOT THE LIVE RANK, WHICH IS A DIFFERENCE FROM THE EPILOGUE AND IS THE
   // COPY'S DOING: this fact says «at the close of», so a mid-season standing folded in would make
@@ -281,7 +290,7 @@ export function slotBestWeek(world: WorldState): AlbumPage {
   //
   // ⚠ AND THE DATE DOES NOT MOVE FOR ANY CAREER THE OLD SCAN COULD SEE: the week it derives is the
   // wrap week, which is the very week the matching `season-rank` milestone carries.
-  const closed = bestSeasonClose(world, activeLadderOf(world))
+  const closed = bestSeasonClose(world, highestLadderReached(world))
   if (closed) {
     return page(
       world,

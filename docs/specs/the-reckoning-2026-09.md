@@ -274,6 +274,11 @@ which is the page it already has):
 | R46-5 | the same `<dl>` | `Best in the world` | `#14` |
 | R46-6 | the same `<dl>` | `Best as a professional` | `#12` |
 
+> ⭐⭐⭐ **RULED 18.09 (ruling C, §8): the engine half of this IS built now.** `bestRankOn(world,
+> track)` is the fold with the table handed in, so all three rows are one call away and there is one
+> fold rather than three. What still has not shipped is the PAGE, for the two reasons below, which
+> are unchanged and are still his.
+
 ⚠ These are **DRAFTS and nothing is built against them.** An alternative he may prefer, and which
 costs one row instead of three: keep `Best rank` exactly as it is and let its value carry the list
 (`#3 National · #8 International · #11 Professional`) – fewer rows, but a longer line and a
@@ -566,3 +571,69 @@ a family that owns nothing still has a portfolio and it is the wallet.
 ⚠ **Open, and his:** `Still owned` (R46-2, itself a draft) is now a strict subset of the portfolio
 row and the two differ only by the wallet. Dropping R46-2 would be tidier and is **not** done here,
 because nothing asked for it.
+
+---
+
+## 8. ⭐⭐⭐ RULING C, 18.09 – the best rank is read on her HIGHEST ladder
+
+> «делаем на высшей ступени из тех, на которых она была, если ушла после J – значит это высшая, если
+> ушла с W – значит эта высшая. Остальные отдельно ниже можно написать или на отдельных слайдах до
+> этого.»
+
+### 8a. What moved, and the one careers-shape it is about
+
+`bestRankEver` picked its table with `activeLadderOf` – **where she is now**. His rule is **the
+highest table she ever reached**, and the two answers come apart on exactly one shape of career:
+
+| | `activeLadderOf` | `highestLadderReached` |
+| --- | --- | --- |
+| never left the national ladder | `domestic` | `domestic` |
+| playing the junior circuit today | `itf` | `itf` |
+| **left after the J rungs, ITF book decayed out of the 52-week window** | **`domestic`** | **`itf`** |
+| ever had a counting W result | `wta` | `wta` |
+
+The third row is «если ушла после J». `activeLadderOf`'s professional arm is already a **one-way
+door** (`wtaEverCounted` over the never-pruned `bestFinishByTier`), so it already obeyed the second
+half of his sentence; its **junior** arm is a live read, deliberately – «J is a stage she passes
+through» – so a girl three years out of the game read `domestic`, and her epilogue printed her best
+NATIONAL standing over a career that had stood #22 in the world as a junior.
+
+⚠⚠ **`activeLadderOf` itself is NOT touched, and that is the load-bearing half.** Home's chip, the
+Stats tabs, the wrap-up card and the ladder views all ask that function «which table is hers
+**today**»; a permanent high-water mark there would put a professional chip on a woman eight years
+retired from the tour. Two questions, two readers, one rule each.
+
+**The evidence is the same never-pruned mark, generalised rather than copied.** `wtaEverCounted`
+became `everCountedOn(world, track)` and `wtaEverCounted` is its named wrapper, so the three tables
+cannot answer by three rules. A **scoreless** exit is still not evidence – a W15 first-round loss
+pays a cheque and no points, which `tests/round41-kid-share-first-w.test.ts` already pins – and the
+standard is now the same on all three tables or on none.
+
+⚠ **This is not the cross-table minimum, which stays refused.** «Highest table she reached» chooses
+*which table to read*; it is not «the smallest number across all three», which `prevRankIn` and the
+wrap-up's movement arrow both refuse and which would say #3 at home at fourteen beats #11 in the
+world at twenty-two.
+
+### 8b. The album moved with it – the one-reader discipline, again
+
+`slotBestWeek`'s fallback reads `bestSeasonClose(world, highestLadderReached(world))`. A page whose
+figure disagreed with the last page of the same album is the exact defect round 46 #10 was opened
+for; a ruling that moves the table has to move both copies or it re-creates it.
+
+### 8c. His second sentence: the reader is built, the page is not
+
+> «Остальные отдельно ниже можно написать или на отдельных слайдах до этого.»
+
+**Built:** `bestRankOn(world, track)` is `bestRankEver`'s whole fold with the table handed in, and
+`bestRankEver` is now one call to it. All three tables are available, folded once, and a table she
+never touched answers `null` rather than a floor – so a caller renders one row for the girl who
+stayed at home and three for the woman who went all the way, with no branch of its own.
+
+**Not built – and the reason is the one §4b already gave, now twice as true.** Turning the epilogue's
+single `Best rank` row into three is (1) a **layout decision at 375px**, on a `<dl>` that has grown
+*three* rows this wave (R46-1, R46-2 and now R46-7's portfolio line), and (2) **new copy**, because
+`Best rank` cannot survive the split and three rows named after the tables read as her *current*
+standings. Both are his. Drafts R46-4/5/6 stand exactly where they were.
+
+⚠ So the answer to «show the secondary ones only if that costs no layout decision» is: **it costs
+one**, measurably more than it did this morning, and the primary shipped alone.
