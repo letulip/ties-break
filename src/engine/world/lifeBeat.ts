@@ -4782,19 +4782,37 @@ export function endsHazardFor(temperament: Temperament): number {
  *  but it cannot be reached in that state from here – the gate above has already found the row. */
 export function rollEnds(world: WorldState): void {
   if (!endsEligible(world)) return
+  // ⭐ v75 T4 – THE ROW IS TAKEN **BEFORE** IT IS DATED, because after `endEpisode` runs
+  // `activeEpisode` is null by construction and there would be no id left to raise the beat about.
+  // ⭐ RE-AIMED BY v83 (the wedding, wave 7 – T4), NOT WEAKENED: the fetch moved ABOVE the draw,
+  // because the row now prices its own hazard – the latch below reads it – and the reason it was
+  // taken early at all (dated rows have no id left) holds one line further up unchanged.
+  const over = activeEpisode(world)!
   // ⚠⚠ EXPRESSION, NOT BIRTH – v76's T7, THE ARCHITECT'S RULING A. The hazard is EVALUATED NOW and
   // nothing about it is stored: what `endEpisode` writes is a DATE. So the multiplier is the one
   // belonging to the girl she is this week. ⚠ AND IT IS THE INTENSITY AXIS THAT OWNS THIS ONE
   // (who-she-is §1: «INTENSITY owns how hard things land and how long feelings hold – … an
   // attachment's end-hazard»), which is why a `reg` flip is the axis that moves it.
-  const hazard = endsHazardFor(expressedTemperamentOf(world))
+  //
+  // ⭐⭐⭐ v83 (the wedding, wave 7 – T4) – AND THE LATCH IS THE ONE SEAM THAT SCALES IT. A latched
+  // episode's ending hazard is wave-4's whole product × `ECONOMY.wedding.latchEndFactor` (drafted
+  // 0.15, measured in T8): marriage steadies the slot, which is its whole mechanical meaning at W1.
+  // ⚠ THE FACTOR LIVES HERE AND NOT IN `endsHazardFor`, DELIBERATELY – that function takes the
+  // TEMPERAMENT alone so the corridor tests and the census sweep the table directly (its own
+  // primitives doctrine), and the latch is a fact about the ROW, not about the girl. One seam, at
+  // the one caller, exactly where the brief pointed. ⚠ NOT ZERO AND NOT A GATE: a latched episode
+  // ending through this same hazard stays possible and rare – the divorce door the schema pre-paid
+  // – and everything downstream of the draw (the shock, the card, the kept row) is wave-4's
+  // machinery UNTOUCHED, no new shock kind anywhere in the wave. ⚠ ZERO RNG CHANGE: same one
+  // uniform, same key, same draw count on every week – only the THRESHOLD moves, so no stream
+  // shifts and input-independence cannot be touched.
+  const hazard =
+    endsHazardFor(expressedTemperamentOf(world)) *
+    (over.latchedWeek !== null ? ECONOMY.wedding.latchEndFactor : 1)
   // ⭐ ONE UNIFORM, ONE WEEK, ITS OWN KEY – and the key carries no temperament, so the four girls read
   // the SAME uniform against four different hazards. That is what makes the multiplier a pure scale
   // rather than four unrelated dice, and it is the property the nesting pin holds them to.
   if (rngFromSeed(`${world.seed}:life:ends:${world.week}`)() >= hazard) return
-  // ⭐ v75 T4 – THE ROW IS TAKEN **BEFORE** IT IS DATED, because after `endEpisode` runs
-  // `activeEpisode` is null by construction and there would be no id left to raise the beat about.
-  const over = activeEpisode(world)!
   endEpisode(world, world.week)
   // ⭐⭐⭐ v75 T3 – AND THE MARK IT LEAVES ON HER. A fact, never a number: what it costs is
   // `ECONOMY.spirit.shock.breakup` and `accrueSpirit` is the one place that reads it (see the note

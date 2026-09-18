@@ -24,6 +24,8 @@
 //          the second pass re-billed the family
 //   ARM 6  the name's `??=` flattened to `=`                     → 1 RED: §E's persistence case –
 //          a husband renamed on a re-walk, T1's law broken
+//   ARM 7  the latch seam removed from `rollEnds`                → 1 RED: §G's discriminating week –
+//          the marriage ended at the unlatched hazard
 
 // ⚠ A PASSTHROUGH RECORDER, NOT A STUB – wave 3's §B apparatus, verbatim and for its reason. Every
 // draw is the engine's own; the mock exists only so §B can COUNT the keys the gate reached.
@@ -45,11 +47,13 @@ import {
   answerLifeBeat,
   buildLifeBeatPrompt,
   createWorld,
+  endsHazardFor,
   kidAgeExact,
   lifeLogOf,
   pendingLifeBeat,
   landWedding,
   partnerNameFor,
+  rollEnds,
   rollWedding,
   weddingEligible,
   LIFE_BEAT_BLOCKING,
@@ -58,6 +62,7 @@ import {
 } from '../src/engine/world'
 import { rngFromSeed } from '../src/engine/rng'
 import { ECONOMY } from '../src/engine/economy'
+import { expressedTemperamentOf } from '../src/engine/spirit'
 import { drainLifeBeats, DRAIN_ANSWER, drainCostOf } from '../tools/_lifeBeats'
 import type { LoveEpisode } from '../src/shared/protocol'
 
@@ -448,5 +453,74 @@ describe('wave 7 T3 F – `landWedding`', () => {
     rngKeys.length = 0
     landWedding(world)
     expect(rngKeys, 'four gates and four writes, not one stream').toEqual([])
+  })
+})
+
+// =================================================================================================
+// G. THE LATCH'S CONSEQUENCE – wave 7 T4: the ending hazard drops hard, at one seam
+// =================================================================================================
+describe('wave 7 T4 G – `rollEnds` on a latched episode', () => {
+  /** Two worlds a byte apart: the same seed, the same week, the same episode – one married, one
+   *  not. What separates their fates is the seam alone. */
+  function pair(seed: string, week: number): { latched: WorldState; unlatched: WorldState } {
+    const build = (): WorldState => careerAt(seed, week, episode(week - 200))
+    const latched = build()
+    latched.loveEpisodes[0].latchedWeek = week - 100
+    return { latched, unlatched: build() }
+  }
+
+  /** The week's ends-uniform, read off the engine's own stream. */
+  const endsRoll = (seed: string, week: number): number => rngFromSeed(`${seed}:life:ends:${week}`)()
+
+  /** The unlatched hazard the engine would price this world at – its own reader, its own table. */
+  function hazardOf(world: WorldState): number {
+    return endsHazardFor(expressedTemperamentOf(world))
+  }
+
+  it('⭐⭐ the discriminating week: an ending the old hazard takes and the latch refuses', () => {
+    // Found on the engine's own stream: a week whose uniform lands INSIDE [hazard × factor, hazard)
+    // – big enough to end an unlatched episode, too big to end a married one. This is the seam
+    // biting, measured on the one week that can tell the two products apart.
+    const probe = careerAt('w7-latch', 1300, episode(1100))
+    const h = hazardOf(probe)
+    let week = -1
+    for (let w = 1300; w < 1300 + 20000; w++) {
+      const u = endsRoll(probe.seed, w)
+      if (u >= h * WEDDING.latchEndFactor && u < h) { week = w; break }
+    }
+    expect(week, 'the stream really holds such a week').toBeGreaterThan(0)
+    const { latched, unlatched } = pair('w7-latch', week)
+    rollEnds(unlatched)
+    rollEnds(latched)
+    expect(unlatched.loveEpisodes[0].endedWeek, 'the unlatched episode ends').toBe(week)
+    expect(latched.loveEpisodes[0].endedWeek, 'the married one holds').toBeNull()
+  })
+
+  it('⚠ and the door is NOT closed: a week under the scaled hazard ends a marriage too', () => {
+    // The divorce door the schema pre-paid – possible and rare, wave-4's machinery untouched: the
+    // date, the breakup shock, everything downstream exactly as an unlatched ending has it.
+    const probe = careerAt('w7-door', 1300, episode(1100))
+    const h = hazardOf(probe)
+    let week = -1
+    for (let w = 1300; w < 1300 + 200000; w++) {
+      if (endsRoll(probe.seed, w) < h * WEDDING.latchEndFactor) { week = w; break }
+    }
+    expect(week, 'the stream really holds such a week (rare, not impossible)').toBeGreaterThan(0)
+    const { latched } = pair('w7-door', week)
+    rollEnds(latched)
+    expect(latched.loveEpisodes[0].endedWeek, 'a latched episode can still end').toBe(week)
+    expect(latched.loveEpisodes[0].latchedWeek, 'and the marriage stays in the biography – nothing un-writes a wedding').toBe(week - 100)
+    expect(latched.spiritShock, 'wave-4\'s own mark, no new shock kind').toEqual({ week, kind: 'breakup' })
+  })
+
+  it('⚠⚠ zero RNG change: the same ONE key on a latched week as on an unlatched one', () => {
+    const { latched, unlatched } = pair('w7-keys', 1500)
+    rngKeys.length = 0
+    rollEnds(unlatched)
+    const unlatchedKeys = [...rngKeys]
+    rngKeys.length = 0
+    rollEnds(latched)
+    expect(rngKeys, 'only the THRESHOLD moves – the stream is byte-identical').toEqual(unlatchedKeys)
+    expect(rngKeys.filter((k) => k.includes(':life:ends:')), 'one uniform, one week, its own key').toEqual([`${latched.seed}:life:ends:1500`])
   })
 })
