@@ -164,6 +164,28 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     w2.unmount()
   })
 
+  it('⚠ an EIGHTH row cannot push the page sideways – the property the new row leans on', async () => {
+    // ⚠⚠ THE ONE LAYOUT CLAIM RULING A MAKES, CHECKED RATHER THAN ASSUMED. The epilogue's `<dl>` now
+    // carries up to eight cells and the longest label on it is the new one. What makes that safe is
+    // not taste, it is two declarations: the grid AUTO-FITS (so cells wrap to a new line instead of
+    // narrowing past 84px) and the label may WRAP (so a long word gives ground vertically). The page
+    // itself scrolls – `.ending` is `overflow-y: auto` – so vertical growth is free. ⚠ This is NOT
+    // the dialog rule: the epilogue is a scrolling takeover, not a blocking overlay with no
+    // max-height, which is the shape that ruling exists for.
+    // ⚠⚠ THE ARM. Put `white-space: nowrap` on `.ending-totals dt`, or pin the grid to a fixed column
+    // count, and this goes red – measured 18.09, RED [1 test, 1 assertion each].
+    patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00, portfolioCents: 2_812_340_00 }))
+    const w = mount(EndingScreen, { attachTo: document.body })
+    await lastPage(w)
+    const dl = document.querySelector('.ending-totals')!
+    expect(dl.querySelectorAll('dt')).toHaveLength(8)
+    expect(getComputedStyle(dl).gridTemplateColumns, 'the cells wrap rather than narrow').toContain('auto-fit')
+    const label = [...dl.querySelectorAll('dt')].find((d) => d.textContent === "Family's portfolio")!
+    expect(getComputedStyle(label).whiteSpace, 'the longest label may give ground vertically').not.toBe('nowrap')
+    w.unmount()
+    document.body.innerHTML = ''
+  })
+
   it('⚠ the five labels are all still on the page, in his order, and the first is the one HE renamed', async () => {
     patch(endingView({}, { herAccountCents: 900_000_00, holdingsCents: 2_600_000_00 }))
     const w = mount(EndingScreen)
