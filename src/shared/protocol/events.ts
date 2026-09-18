@@ -891,8 +891,18 @@ export interface CareerMoney {
   spentCents: number
   /** the part of `spentCents` that bought something the family STILL OWNS, at what it cost. */
   heldCents: number
-  /** `spentCents − heldCents`, floored at zero: money that left the family for good. THE number the
-   *  word «spent» means – coaching, courts, fares, entries, kit, physio, salaries, the weeks away. */
+  /** ⭐ RULING 5, 18.09 – what the family's own things have cost to KEEP over the whole career: the
+   *  crews, the berths, the insurance and the services of the cars, the boats and the planes.
+   *
+   *  ⚠ IT IS NOT HELD AND IT IS NOT «SPENT» EITHER, which is why it is a third figure rather than a
+   *  wider `heldCents`. The money is gone; the owner's ruling is that it is not the TENNIS – «вообще
+   *  не про теннис, мимо (машины, дома, яхты, самолеты)». Replayed rather than read, because no save
+   *  retains a career total of upkeep: see `careerAssetUpkeepCents` (engine/world/assets.ts) for the
+   *  replay's exactness and for the one residual it names (a thing already sold). */
+  upkeepCents: number
+  /** `spentCents − heldCents − upkeepCents`, floored at zero: money that left the family for good
+   *  AND was part of this life. THE number the word «spent» means – coaching, courts, fares,
+   *  entries, kit, physio, salaries, the weeks away, and the businesses the family built. */
   outlayCents: number
   /** what those holdings are worth NOW, which is not what they cost. */
   holdingsCents: number

@@ -1,6 +1,7 @@
 // THE ALBUM'S TWO NUMBERS, DECOMPOSED – round 46 items 9 and 10, measured rather than argued.
 //
 //   npx vite-node tools/album-money-probe.ts [--weeks N] [--preset i] [--index i] [--shop 0|1]
+//   npx vite-node tools/album-money-probe.ts --arm 1         # the shelf of his own sentence (§5)
 //   npx vite-node tools/album-money-probe.ts --census N      # the rank arm over N careers
 //
 // ⚠ WHY IT EXISTS. The owner finished a career holding $10M+ liquid, a $20M+ fund, houses, an
@@ -41,6 +42,8 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { activeLadderOf, rankIn } from '../src/engine/world/ladder'
+import { careerMoney } from '../src/engine/world/ledger'
+import { isEnterprise, isPersonalProperty } from '../src/engine/world/assets'
 import { buildAlbum } from '../src/engine/world/album'
 import { buildEndingView } from '../src/engine/world/endings'
 import { formatCents } from '../src/shared/money'
@@ -59,6 +62,7 @@ const PRESET_IX = argOf('preset', 8)
 const SEED_IX = argOf('index', 3)
 const SHOP_ON = argOf('shop', 1) === 1
 const CENSUS = argOf('census', 0)
+const ARM = argOf('arm', 0)
 
 /** The questions a walked career answers on its way past them – `tools/wedding-bench.ts`' own list,
  *  verbatim. ⚠ A career does NOT advance on `tickWeek` alone: it stalls at every pending decision. */
@@ -78,14 +82,48 @@ function answerWhateverIsOpen(world: WorldState): void {
 const LADDER = ['house-first', 'merch-brand', 'academy-land', 'academy-courts', 'academy-building', 'academy-staff', 'house-garden', 'house-villa']
 const FLOAT_CENTS = 2_000_000_00
 
+/** ⭐⭐ ARM 1 (18.09, the rulings of the same day) – THE SHELF HE ACTUALLY DESCRIBED, and it exists
+ *  because ARM 0 CANNOT MEASURE THE THING THE RULINGS ARE ABOUT. Walked, arm 0 buys exactly three
+ *  rows – a first house, the brand and $15,000,000 of index fund – because its own $1,000,000 fund
+ *  deposit fires at a $3,000,000 wallet while `academy-land` needs $4,000,000 to clear the float, so
+ *  the fund starves the ladder and the academy is never reached. And nothing on it has UPKEEP: a
+ *  house carries none (only `car`, `boat` and `plane` rungs declare `upkeepBps`), so the whole of
+ *  ruling 5's second half – «машины, дома, яхты, самолеты… вообще не про теннис» – measures zero on
+ *  arm 0 by construction.
+ *
+ *  So arm 1 buys the shelf of his own sentence – «все дома, вся академия, мощный бренд, яхты и
+ *  машины» – and parks nothing, which is what lets the wallet reach a boat at all. It is a
+ *  MEASUREMENT ARM and not a claim about how anybody plays; arm 0 is untouched so every figure in
+ *  docs/specs/the-reckoning-2026-09.md §1b still reproduces to the cent. */
+const LADDER_LUXURY = [
+  'house-first',
+  'merch-brand',
+  'car-sensible',
+  'academy-land',
+  'academy-courts',
+  'academy-building',
+  'academy-staff',
+  'car-good',
+  'house-garden',
+  'boat-launch',
+  'house-villa',
+  'boat-sail',
+  'car-unreasonable',
+  'plane-small',
+]
+const FLOAT_LUXURY_CENTS = 300_000_00
+
 function shopWeek(world: WorldState): void {
   if (world.ending) return
+  const luxury = ARM === 1
+  const ladder = luxury ? LADDER_LUXURY : LADDER
+  const floatCents = luxury ? FLOAT_LUXURY_CENTS : FLOAT_CENTS
   const held = new Set(ownedAssets(world).map((a) => a.id))
-  for (const id of LADDER) {
+  for (const id of ladder) {
     if (held.has(id)) continue
     const item = shopItem(id)
     if (!item) continue
-    if (world.fundsCents - item.entryCents < FLOAT_CENTS) break
+    if (world.fundsCents - item.entryCents < floatCents) break
     try {
       buyAsset(world, id)
     } catch {
@@ -93,7 +131,9 @@ function shopWeek(world: WorldState): void {
     }
     return
   }
-  if (world.fundsCents > FLOAT_CENTS + 1_000_000_00) {
+  // ⚠ ARM 1 PARKS NOTHING. The fund is what starves arm 0's ladder (see above), and a career that
+  // never reaches a boat cannot measure a boat's crew.
+  if (!luxury && world.fundsCents > FLOAT_CENTS + 1_000_000_00) {
     try {
       buyAsset(world, 'index-fund', 1_000_000_00)
     } catch {
@@ -265,14 +305,61 @@ console.log(`  assets at cost                        ${money(assetPaid)}`)
 console.log(`  delivered assets                      ${deliveredAssets(world).length} of ${shopCatalogue().length} rungs`)
 console.log(`  HOUSEHOLD WORTH                       ${money(world.fundsCents + (world.kidFundsCents ?? 0) + assetValue)}\n`)
 
-console.log('── THE PROPOSED TAXONOMY ──')
-const outlay = Math.max(0, t.spentCents - assetPaid)
-console.log(`  SPENT for good  (spentCents − Σ paidCents) ${money(outlay)}`)
-console.log(`  HELD            (Σ paidCents at cost)      ${money(assetPaid)}`)
-console.log(`  CAME IN         (earnedCents + her account)${money(t.earnedCents + (world.kidFundsCents ?? 0))}`)
-const lhs = t.earnedCents + (world.kidFundsCents ?? 0) - outlay
-const rhs = world.fundsCents - 120_000_00 + assetPaid + (world.kidFundsCents ?? 0)
-console.log(`  identity: cameIn − spent = ${money(lhs)}  vs  walletGrowth + held + hers = ${money(rhs)}  ${lhs === rhs ? 'OK' : 'MISMATCH'}\n`)
+// =================================================================================================
+// ⭐⭐⭐ THE TAXONOMY, AS THE ENGINE ACTUALLY FOLDS IT – rulings 5 and 6 of 18.09
+// =================================================================================================
+//
+// ⚠ IT ASKS `careerMoney` RATHER THAN RE-DERIVING, which is the opposite of what this block did
+// when the fix was a PROPOSAL: a probe that re-implements the thing under measurement measures its
+// own copy, and the copy is what drifts. The two lines this file still computes for itself are
+// there to CHECK the engine – the ledger's own upkeep total and the per-family split of what was
+// paid – so each of the engine's figures is set beside an independent one.
+console.log('── THE TAXONOMY THE ENGINE FOLDS (rulings 5 + 6, 18.09) ──')
+const m = careerMoney(world)
+// The ledger's own answer for upkeep: every cent that ever left under `'shop'`, less every cent that
+// is sitting in an asset at cost. Independent of the replay, and exact on a career that sells
+// nothing – which is what makes it the control for `careerAssetUpkeepCents`.
+const shopOut = gross.get('shop')?.out ?? 0
+const upkeepFromLedger = shopOut - assetPaid
+let personalPaid = 0
+let enterprisePaid = 0
+let investmentPaid = 0
+for (const a of ownedAssets(world)) {
+  const item = shopItem(a.id)
+  if (!item) continue
+  if (isPersonalProperty(item)) personalPaid += a.paidCents
+  else if (isEnterprise(item)) enterprisePaid += a.paidCents
+  else investmentPaid += a.paidCents
+}
+console.log(`  'shop' out, gross                          ${money(shopOut)}`)
+console.log(`    of it, paid for things still held        ${money(assetPaid)}`)
+console.log(`      personal  (car/house/boat/plane)       ${money(personalPaid)}`)
+console.log(`      enterprise (brand/academy)             ${money(enterprisePaid)}`)
+console.log(`      investment (deposit/fund)              ${money(investmentPaid)}`)
+console.log(`    of it, UPKEEP – ledger's own figure       ${money(upkeepFromLedger)}`)
+console.log(`    of it, UPKEEP – careerAssetUpkeepCents    ${money(m.upkeepCents)}`)
+console.log(
+  `    residual (ledger − replay)                ${money(upkeepFromLedger - m.upkeepCents)}` +
+    `   ${upkeepFromLedger === m.upkeepCents ? 'EXACT' : 'see careerAssetUpkeepCents on the sold-asset residual'}`,
+)
+console.log(`  SPENT for good  (careerMoney.outlayCents)  ${money(m.outlayCents)}`)
+console.log(`  HELD            (Σ paidCents at cost)      ${money(m.heldCents)}`)
+console.log(`  UPKEEP          (not tennis – ruling 5)    ${money(m.upkeepCents)}`)
+console.log(`  CAME IN         (earnedCents + her account)${money(m.cameInCents)}`)
+const lhs = m.cameInCents - m.outlayCents
+const rhs = world.fundsCents - 120_000_00 + m.heldCents + m.herAccountCents + m.upkeepCents
+console.log(`  identity: cameIn − spent = ${money(lhs)}  vs  growth + held + hers + upkeep = ${money(rhs)}  ${lhs === rhs ? 'OK' : 'MISMATCH'}`)
+// ⚠ RULING 6 IS MEASURED HERE AND NOT APPLIED IN THE ENGINE'S CAREER ARM – see `captureBreakEven`
+// and docs/specs/the-reckoning-2026-09.md §9.2. These two lines are the measurement that decision
+// rests on: what the businesses cost, beside what they earned, beside what charging one without the
+// other would do to the page.
+const businessIn = gross.get('business')?.in ?? 0
+console.log(`\n  RULING 6, measured: enterprise cost ${money(enterprisePaid)} · 'business' income ${money(businessIn)}`)
+console.log(`    career break-even today            ${money(m.prizeCents)} prize vs ${money(m.outlayCents)} spent  -> ${m.prizeCents > m.outlayCents ? 'CROSSES' : 'does not cross'}`)
+console.log(
+  `    ...if the cost alone were charged     ${money(m.prizeCents)} prize vs ${money(m.outlayCents + enterprisePaid)} spent  -> ` +
+    `${m.prizeCents > m.outlayCents + enterprisePaid ? 'CROSSES' : 'does not cross'}\n`,
+)
 
 console.log('── ITEM 10: BEST RANK ──')
 const view = buildEndingView(world)

@@ -15,6 +15,12 @@ import type {
   WorldEventCategory,
 } from '../../shared/protocol'
 import type { WorldState } from '../world'
+// ⚠ A VALUE IMPORT, AND IT IS NOT A CYCLE – checked rather than assumed. `world/assets.ts` answers
+// questions and never writes the world (its own header says so); nothing in its transitive closure
+// – economy.ts, season/calendar.ts, world/brand.ts, world/market.ts, world/fame.ts – imports this
+// file back. The career-long upkeep fold lives THERE because every other line of upkeep arithmetic
+// does, which is that file's own «one arithmetic, one writer» rule.
+import { careerAssetUpkeepCents } from './assets'
 
 export function addEvent(world: WorldState, e: Omit<WorldEvent, 'id'>): void {
   world.events.push({ id: world.nextEventId++, ...e })
@@ -105,6 +111,35 @@ export function isHoldingCategory(category: WorldEventCategory): boolean {
  *  old career can hold assets that cost more than its `spentCents` remembers. A negative outlay is
  *  not a number to print; zero is the honest floor and the holdings still say what was bought.
  *
+ *  =================================================================================================
+ *  ⭐⭐⭐ AMENDED 18.09 – RULING 5: THE UPKEEP GOES OUT WITH THE THING IT KEEPS
+ *  =================================================================================================
+ *
+ *  THE OWNER, on the version above, which took the PURCHASE out of «spent» and left the weekly bill
+ *  in – §2b of the spec called that «one imperfection, taken knowingly» and he read the note:
+ *
+ *  > «вообще не про теннис, мимо (машины, дома, яхты, самолеты). Мне кажется это уже не теннис,
+ *  > честно говоря. За уши можно притянуть, но лучше нет.»
+ *
+ *  ⚠⚠ SO THIS IS A THIRD TERM AND NOT A WIDER `heldCents`, BECAUSE THE UPKEEP IS NOT HELD. A yacht's
+ *  crew is paid and gone; what the ruling says about it is not «the family still has it» but «it is
+ *  not the tennis». Two different exclusions with two different reasons, and folding them into one
+ *  figure would make the identity below false – which is exactly how a reckoning stops being able to
+ *  prove itself. `careerAssetUpkeepCents` (world/assets.ts) carries the replay and its residual.
+ *
+ *  ⚠ AND THE BRAND AND THE ACADEMY ARE DELIBERATELY NOT IN EITHER EXCLUSION – ruling 6 of the same
+ *  day: «А вот бренд и академия вполне могут быть и расходами и доходами, здесь не вижу
+ *  противоречий.» Their COST is `heldCents`' one concession and their INCOME is already inside
+ *  `earnedCents` (and therefore `cameInCents`), which is the «both sides» he asked for on the
+ *  reckoning. What is NOT yet applied is their cost in the break-even GATE – see `captureBreakEven`
+ *  and docs/specs/the-reckoning-2026-09.md §6, where the measurement and the reason are recorded.
+ *
+ *  ⚠ THE IDENTITY GAINS ITS THIRD TERM AND IS STILL PROVED RATHER THAN CLAIMED:
+ *      cameInCents − outlayCents === (fundsCents − starting funds) + heldCents + herAccountCents
+ *                                   + upkeepCents
+ *  – everything that came in, minus everything the reckoning calls spending, is the wallet's growth,
+ *  the cash sunk in what it owns, her account, and the money the toys ate on the way.
+ *
  *  A pure read: no draw, no clock, no world mutation – the whole file's guarantee. */
 export function careerMoney(world: WorldState): CareerMoney {
   const totals = world.careerTotals ?? { earnedCents: 0, spentCents: 0, prizeCents: 0, weeksLostToInjury: 0 }
@@ -114,6 +149,7 @@ export function careerMoney(world: WorldState): CareerMoney {
     heldCents += owned.paidCents
     holdingsCents += owned.valueCents
   }
+  const upkeepCents = careerAssetUpkeepCents(world)
   const herAccountCents = world.kidFundsCents ?? 0
   return {
     earnedCents: totals.earnedCents,
@@ -122,7 +158,8 @@ export function careerMoney(world: WorldState): CareerMoney {
     cameInCents: totals.earnedCents + herAccountCents,
     spentCents: totals.spentCents,
     heldCents,
-    outlayCents: Math.max(0, totals.spentCents - heldCents),
+    upkeepCents,
+    outlayCents: Math.max(0, totals.spentCents - heldCents - upkeepCents),
     holdingsCents,
   }
 }

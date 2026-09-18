@@ -8,10 +8,11 @@
 // that stated its totals and its money separately could state two different careers and pass, and
 // the figure under test would then be proving nothing about the arithmetic it is named for.
 //
-// ⚠ THE DEFAULT IS A FAMILY THAT OWNS NOTHING AND A GIRL WITH NO ACCOUNT – `heldCents` 0, so
+// ⚠ THE DEFAULT IS A FAMILY THAT OWNS NOTHING AND A GIRL WITH NO ACCOUNT – `heldCents` 0 and, since
+// ruling 5 of 18.09, `upkeepCents` 0 with it (nothing owned is nothing to keep), so
 // `outlayCents === spentCents` exactly as the engine's own fold produces for an empty `assets`. That
-// keeps every fixture written before this field byte-identical in meaning. `over` is how an arm that
-// is ABOUT the holdings says so.
+// keeps every fixture written before these fields byte-identical in meaning. `over` is how an arm
+// that is ABOUT the holdings says so.
 import type { CareerMoney, CareerTotals } from '../../src/shared/protocol'
 
 export function moneyOf(totals: CareerTotals, over: Partial<CareerMoney> = {}): CareerMoney {
@@ -22,6 +23,7 @@ export function moneyOf(totals: CareerTotals, over: Partial<CareerMoney> = {}): 
     cameInCents: totals.earnedCents,
     spentCents: totals.spentCents,
     heldCents: 0,
+    upkeepCents: 0,
     outlayCents: totals.spentCents,
     holdingsCents: 0,
     ...over,

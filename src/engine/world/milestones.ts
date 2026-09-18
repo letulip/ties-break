@@ -26,6 +26,7 @@ import {
   type WorldEventCategory,
 } from '../../shared/protocol'
 import { addEvent, careerMoney, financeWindow, isHoldingCategory, seasonIndexOf, seasonStartWeek } from './ledger'
+import { enterprisePaidInWeekCents } from './assets'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
 import { activeLadderOf, entryCouldNotMove, kidPoints, rankIn } from './ladder'
@@ -129,23 +130,38 @@ export function captureBreakEven(world: WorldState): void {
   const thisWeek = world.financeWeeks.find((w) => w.week === world.week)
   if (thisWeek) {
     const prize = thisWeek.byCategory.prize ?? 0
+    // ⭐⭐⭐ RULING 6, 18.09 – AND THE BRAND AND THE ACADEMY ARE ON THIS SIDE TOO. «А вот бренд и
+    // академия вполне могут быть и расходами и доходами, здесь не вижу противоречий.» Merch money
+    // is her name on the shelves and the campus earns off her reputation, so both are the tennis
+    // paying – and `'business'` is their own ledger category, on the very row this arm reads, so no
+    // derivation is needed and nothing is guessed. The `max(0, …)` is `financeSeries`' own rule for
+    // a netted category: a week whose business row is negative is a week the businesses COST money,
+    // and the loop below books it as the cost it is rather than as a negative income.
+    const business = Math.max(0, thisWeek.byCategory.business ?? 0)
+    const paidIn = prize + business
     let costs = 0
     for (const [cat, amt] of Object.entries(thisWeek.byCategory) as [WorldEventCategory, number][]) {
       // ⭐ ROUND 46 #9 – A PURCHASE IS NOT A COST OF THE WEEK'S TENNIS. `isHoldingCategory` is the
       // one name for that distinction (world/ledger.ts) and the career arm below reads it too: a
       // family that bought a house on a title week did not fail to cover the week's tennis.
       //
-      // ⚠⚠ AND IT EXCUSES THE SHELF'S UPKEEP ALONG WITH THE PURCHASE, WHICH IS STATED RATHER THAN
-      // HIDDEN. `resolveAssetUpkeep` books a yacht's crew under `'shop'` too, and a week's
-      // `byCategory` row is one netted figure – so the two genuinely cannot be told apart HERE, and
-      // the career arm below, which subtracts `paidCents` rather than a category, keeps the upkeep
-      // in. Two imperfect options and the smaller error taken on purpose: a deposit is six figures
-      // and a week's upkeep is three, so counting the deposit destroyed the question while excusing
-      // the upkeep only nudges it. The reading it leaves is defensible in its own right – this arm
-      // asks whether the TENNIS paid for the tennis, and a boat's crew is not the tennis.
+      // ⭐⭐⭐ AND THE NOTE THAT STOOD HERE CALLED THE UPKEEP «one imperfection, taken knowingly»
+      // (docs/specs/the-reckoning-2026-09.md §2b). THE OWNER READ IT AND RULED IT CORRECT (18.09,
+      // ruling 5): «вообще не про теннис, мимо (машины, дома, яхты, самолеты)». `resolveAssetUpkeep`
+      // books a crew, a berth and an insurance premium under `'shop'`, and every rung that charges
+      // upkeep is one of his four families – only `car`, `boat` and `plane` declare `upkeepBps` at
+      // all – so what this line excuses along with the purchase is EXACTLY what he asked to have
+      // excused. The career arm now subtracts the same cents explicitly (`careerAssetUpkeepCents`),
+      // which is what makes the two arms agree about it instead of agreeing by accident.
       if (cat !== 'prize' && !isHoldingCategory(cat) && amt < 0) costs += -amt
     }
-    if (prize > 0 && prize > costs) {
+    // ⚠⚠ ...AND THE ONE THING `isHoldingCategory` EXCUSES THAT RULING 6 SAYS IT MUST NOT: a stage of
+    // the academy, or the brand, bought this week. The week's `'shop'` row cannot tell a clubhouse
+    // from a yacht (it is one netted figure), so the cents are read off the rows the purchase wrote
+    // instead – `enterprisePaidInWeekCents`, which carries why that is exact for one named week.
+    // Both sides of his ruling land in this arm together: the income four lines up, the cost here.
+    costs += enterprisePaidInWeekCents(world, world.week)
+    if (paidIn > 0 && paidIn > costs) {
       captureMilestone(world, { type: 'break-even', week: world.week, kind: 'week' })
     }
   }
@@ -157,9 +173,24 @@ export function captureBreakEven(world: WorldState): void {
   // banked, so the harder the tennis paid the further away the turn moved. `careerMoney` carries the
   // measurement and the owner's report.
   //
-  // ⚠ A CAREER THAT BUYS NOTHING IS BYTE-IDENTICAL – `assets` empty means `heldCents` 0 means
-  // `outlayCents === spentCents` – which is every frozen career, every bench in `tools/` and every
-  // career walked before the shelf opened. The rarity §9.2 measured (0 in 216) is untouched by this.
+  // ⚠ A CAREER THAT BUYS NOTHING IS BYTE-IDENTICAL – `assets` empty means `heldCents` 0, no upkeep
+  // and therefore `outlayCents === spentCents` – which is every frozen career, every bench in
+  // `tools/` and every career walked before the shelf opened. The rarity §9.2 measured (0 in 216) is
+  // untouched by this.
+  //
+  // ⚠⚠ RULING 6 IS NOT IN THIS LINE, AND THAT IS A DECISION WITH A MEASUREMENT BEHIND IT RATHER THAN
+  // AN OVERSIGHT. «Бренд и академия вполне могут быть и расходами и доходами» – both sides, which is
+  // the whole of why the week arm above could take it: that arm reads a ledger ROW, and the row
+  // carries the businesses' income (`'business'`) beside their cost. THIS arm cannot see the income:
+  // `careerTotals` keeps three figures – earned, spent and prize – and `financeWeeks`, the only
+  // place a category survives, prunes at sixty weeks, so a fifteen-season total of what the brand
+  // and the academy EARNED is on no save and cannot be derived from one. Counting their cost alone
+  // is the one-sided reading he did not ask for, and it is not a small error: measured on
+  // `tools/album-money-probe.ts --arm 1`, the enterprise cost $12,250,000 against the $34,087,161 of
+  // `'business'` income it produced, and charging the cost with no credit for the income takes
+  // «spent» from $9,997,903 to $22,247,903 and stops this page crossing AT ALL – for exactly the
+  // family he was describing. Closing it is a persisted accumulator, which is a schema move and
+  // therefore his call: docs/specs/the-reckoning-2026-09.md §9.2.
   const t = careerMoney(world)
   if (t.prizeCents <= t.outlayCents) return
   captureMilestone(world, { type: 'break-even', week: world.week, kind: 'career' })
