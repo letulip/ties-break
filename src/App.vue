@@ -372,6 +372,34 @@ function finishPrologue(): void {
   newGameRoute.value = 'in-game'
 }
 
+// ⭐⭐⭐ ROUND 47 #12 – «RAISE ANOTHER» GOES TO THE BEGINNING, AND THE BEGINNING IS THE PROLOGUE.
+//
+// The owner, 18.09, off his finished career: «Raise another» started her at thirteen straight away,
+// and it should simply send you to the start like everything else does. (His sentence is in
+// docs/plans/life-wave-7-strings-2026-09.md §8; no Cyrillic in a `.vue` file, comments included.)
+//
+// ⚠ THE TOUR AND THE PROLOGUE ARE TWO DIFFERENT THINGS THAT SHARE THIS ROUTE, AND ONLY ONE OF THEM
+// IS BEING RE-OFFERED HERE. The PROLOGUE is the nine cards of her childhood – it belongs to a
+// CAREER, it is walked again for every career that wants one, and it is what he asked for. The TOUR
+// is the coach marks that explain the interface, and it is «once, ever, per device» by his own
+// ruling (see `tourSeen` below): it is keyed on `TOUR_SEEN_KEY`, a device flag, which this function
+// deliberately does not touch. A player reaching this line has finished a career, so the flag is
+// already set – by `finishPrologue` above if they walked the childhood, by `dismissTour` if they
+// skipped to the wizard and met the marks – and `tourWanted` therefore stays false through the whole
+// of the next career. Marking it here would be wrong in the other direction (it would suppress the
+// tour for a device that had legitimately never seen it), so it is left exactly alone.
+//
+// ⚠ THE ROUTE IS SET EXPLICITLY RATHER THAN INHERITED FROM THE WATCHER. Dropping the snapshot flips
+// `showOnboarding`, and the watcher above would put the route on `prologue` by itself – measured, it
+// already did. Saying it here is not belt-and-braces: it is the line that makes the DESTINATION
+// readable at the call site, next to the sentence about which of the two onboardings it is.
+function raiseAnother(): void {
+  newGameRoute.value = 'prologue'
+  // The in-memory career only – nothing is deleted. This is More's own «New career» seam
+  // (`confirmNewCareer`), which has landed on the childhood since the prologue shipped.
+  game.$patch({ snapshot: null })
+}
+
 // A career appearing after onboarding must land on Home, not whatever tab was
 // active before the reset (e.g. More, where "New career" lives).
 //
@@ -1479,14 +1507,17 @@ function reopenTour(): void {
 
   <!-- W2-ENDINGS: THE EPILOGUE REPLACES THE APP SHELL. Branched here, beside the wizard, and not laid
        over the tab shell like the four overlays below - the story has no next week, so there is
-       nothing behind it to go back to. «Raise another» drops the in-memory career, which flips
-       `showOnboarding` above and hands the player to the wizard: exactly the seam MoreScreen's own
-       new-career flow uses, and exactly what §5.6 asks for - one tap, one question, nothing carried. -->
+       nothing behind it to go back to.
+       ⭐⭐⭐ ROUND 47 #12 - AND «Raise another» GOES TO THE CHILDHOOD, WHICH IS WHAT THIS COMMENT
+       USED TO GET WRONG. It said the seam «hands the player to the wizard»; measured, it handed them
+       straight into the game at thirteen, because the epilogue created the career itself before the
+       event could reach this line. `raiseAnother` in the script is the route and states the
+       prologue/tour distinction; EndingScreen.vue's own header states what it stopped doing. -->
   <!-- ⭐⭐ ROUND 24 #2b/#3: ...AND A COLLEGE WEEK IS NOT ONE OF THEM ANY MORE. `showEnding` excludes
        the enrolled college latch (see the script), so this branch falls through to the tab shell
        below and HomeScreen draws the year. Nothing about the engine moved: the latch is still on and
        `resumeFromCollege` is still the only way forward. -->
-  <EndingScreen v-else-if="showEnding" @new-career="game.$patch({ snapshot: null })" />
+  <EndingScreen v-else-if="showEnding" @new-career="raiseAnother" />
 
   <template v-else>
     <!-- epic/redesign-home slice A2 (owner, 28.07): THE APP HEADER IS GONE. It carried three

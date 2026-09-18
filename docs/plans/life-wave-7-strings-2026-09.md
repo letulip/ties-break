@@ -289,3 +289,49 @@ is and let its VALUE carry the list – `#3 National · #8 International · #11 
 rows, a longer line at 375px, and the separator is itself new copy. See
 [the-reckoning-2026-09.md](../specs/the-reckoning-2026-09.md) §4b for the measured table and the
 one content caveat (a save migrated from before v46 can answer for the International table only).
+
+---
+
+## 8. Round 47 item 12 – «Raise another» goes to the beginning (⚠ OUTSIDE §0's count)
+
+⚠ **No row here is an addition. This section exists because the item REMOVES copy, and invariant 4
+is why a removal is written down rather than assumed.** Same intake as §7 – his 18.09 report on the
+finished career – and the same reason for living here: this is where the wave's copy is read.
+
+His sentence, verbatim, and it is the authority for everything below:
+
+> «еще момент по финалу: Raise another стартует с 13 лет сразу, мне кажется там тоже надо просто на
+> начало отправлять и всё.»
+
+**What was measured first** (`tests/component/r47-raise-another-route.test.ts`, which mounts the whole
+shell): the epilogue's own handler called `game.newCareer(...)` and emitted afterwards. Creating the
+career published a snapshot with no `ending`, so `showEnding` went false and the takeover was
+unmounted before the event could reach `App.vue` – the shell was already drawing HomeScreen on a
+week-0, thirteen-year-old career, and the parent's handler never ran. The route was not «the wizard»
+that App.vue's own comment claimed; it was straight into the game, which is exactly what he saw.
+
+**The route now**: one press, no career created here, and the shell hands the player to the
+CHILDHOOD – the same beginning a first-ever launch gets. ⚠ The onboarding TOUR is a different thing
+that happens to share that route and is **not** re-offered: it is «once, ever, per device» by his own
+ruling, keyed on a device flag the new route deliberately does not touch.
+
+### 8a. The one label that stayed, and the copy the route retired
+
+| # | home (`file` · what) | the string, verbatim | |
+| ---: | --- | --- | --- |
+| R47-1 | `EndingScreen.vue` · the hand-off's control | `Raise another` | **UNMOVED – his, untouched.** One press now instead of two |
+
+| # | home | the string that is GONE, verbatim | why it could not survive the route | |
+| ---: | --- | --- | --- | --- |
+| R47-2 | `EndingScreen.vue` · the hand-off's lead | `Nothing carries over. A new daughter, and one question: what the family starts with.` | It promises ONE question and a generated daughter. The beginning asks the family's size on its first card and her name, her birthday and her country beside it, so the sentence is false the moment the press lands there | `REMOVED – his sentence is the authority; flagged for his pass` |
+| R47-3 | the three capital cards | `Wealthy` / `Top academies are within reach.` · `Middle class` / `Smart choices, steady progress.` · `Working class` / `Big dreams, hard mode.` | The prologue's first card has asked exactly this question (its three origins) since it shipped. Kept here it would be the same question asked twice, and the player's answer to the first would be overwritten by the second | `REMOVED – same authority; flagged for his pass` |
+
+⚠ **If he wants either back**, the cheapest shape is not a re-instatement: it is carrying the band he
+picks into the childhood as a preselected origin (a prop on `ChildhoodPrologue`, one line at the
+call site). That was considered and NOT built, because the lead sentence still could not say «one
+question» and a screen whose promise is false is worse than a screen with one control on it. His
+call.
+
+⚠ **Nothing else on the epilogue moved.** The five reckoning labels, «The whole record», the academy
+and lifetime-deal notes, `Another year –` on the college branch and every album page are byte
+identical – `tests/component/endings-ui.test.ts` still mounts and asserts them.

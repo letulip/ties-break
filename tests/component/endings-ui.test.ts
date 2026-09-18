@@ -165,20 +165,27 @@ describe('the album', () => {
     bare.unmount()
   })
 
-  it('⚠ the hand-off asks EXACTLY ONE question, and it is the capital fork', async () => {
+  // ⭐⭐⭐ RE-AIMED BY ROUND 47 #12, AND THE OLD CLAIM WAS THE DEFECT WRITTEN DOWN AS A GUARD. It
+  // read «the hand-off asks EXACTLY ONE question, and it is the capital fork»: it pressed the offer,
+  // counted the three capital cards, picked one and asserted `game.newCareer` had been called with
+  // that background. Every one of those assertions passed while the owner watched the press drop him
+  // into the game at thirteen – because creating the career here IS what took him there.
+  //
+  // The hand-off asks nothing now: it hands the player to the childhood, which asks the same
+  // question on its first card along with her name, her birthday and her country. So what is left to
+  // claim HERE is the epilogue's own half – one control, one event, and no career created by this
+  // screen. Where the press LANDS is a route and is pinned where routes can be seen, on the mounted
+  // shell in tests/component/r47-raise-another-route.test.ts.
+  it('⚠ the hand-off asks NOTHING – one control, one event, and no career made here', async () => {
     patchSnapshot({ ending: endingView() })
     const game = useGameStore()
     const spy = vi.spyOn(game, 'newCareer').mockResolvedValue(undefined)
     const w = mount(EndingScreen)
     for (let i = 0; i < 6; i++) await w.findAll('.album-arrow')[1].trigger('click')
     await w.findAll('.tb-pill')[0].trigger('click')
-    const options = w.findAll('.ending-fork-option')
-    expect(options).toHaveLength(3)
-    // ...and NOTHING else is asked: three cards, then a career.
-    await options[2].trigger('click')
-    expect(spy).toHaveBeenCalledTimes(1)
-    const profile = spy.mock.calls[0][1] as { background: string }
-    expect(profile.background).toBe('working')
+    expect(w.findAll('.ending-fork-option'), 'the capital fork is back').toHaveLength(0)
+    expect(w.emitted('newCareer')?.length, 'one press, one event').toBe(1)
+    expect(spy, 'the epilogue created a career of its own').not.toHaveBeenCalled()
     w.unmount()
   })
 
