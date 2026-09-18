@@ -16,6 +16,14 @@
 // ⚠⚠ WHAT IS STILL OUT OF REACH AND IS NOT BUILT HERE: nothing on any save retains the rank she held
 // in an ordinary week, so a peak that rose and fell inside one season cannot be seen by ANY reader.
 // Closing that is a persisted running minimum – a schema move, and therefore the owner's call.
+//
+// ⭐⭐⭐ HE CALLED IT ON 18.09 AND THE ANSWER WAS NO (ruling 1): «достаточно лучшего ранга по итогам
+// сезона, они у нас все есть, можно даже все ранги перечислить из каждого уровня чемпионатов
+// отдельно.» So the reader these arms pin is the FINAL one and the gap above is the gap he has
+// chosen to live with – ⚠ it is not to be re-proposed, and this file's arms are not a staging post
+// for a schema move. The paragraph above is left as written because it is the question he answered.
+// His second sentence is a separate, unbuilt ask about listing the tables separately; it stops at a
+// written proposal, docs/specs/the-reckoning-2026-09.md §4b, and touches nothing pinned here.
 import { describe, it, expect } from 'vitest'
 import { closeTournament, createWorld, skipTournament, tickWeek, KID_ID, type WorldState } from '../src/engine/world'
 import { bestRankEver, bestSeasonClose } from '../src/engine/world/ladder'

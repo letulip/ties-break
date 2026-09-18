@@ -478,6 +478,16 @@ export function activeLadderOf(world: WorldState): LadderTrack {
  *  one place (#12 read against a true #11); the defect this replaces was three places on the right
  *  table and read the wrong one.
  *
+ *  ⭐⭐⭐ HE MADE THAT CALL ON 18.09 AND REFUSED IT (ruling 1): «достаточно лучшего ранга по итогам
+ *  сезона, они у нас все есть, можно даже все ранги перечислить из каждого уровня чемпионатов
+ *  отдельно.» So THIS is the final reader, the one place of residual gap is the gap he has chosen,
+ *  and ⚠ the running minimum is not to be proposed again – see docs/specs/the-reckoning-2026-09.md
+ *  §4a, which keeps the refusal rather than deleting the proposal. His second sentence is a separate
+ *  ask – list her best on EACH table instead of one number – and it needs nothing added to this
+ *  file: `bestSeasonClose` below already takes the track, and every table already has a shipped
+ *  player-facing name in `LADDER_LABEL`. What it needs is a page that has one row to have three,
+ *  which is his layout call and his copy; it stops at a written proposal in §4b.
+ *
  *  Pure read: no draw, no clock, no mutation. */
 export function bestRankEver(world: WorldState): { rank: number; track: LadderTrack } | null {
   const track = activeLadderOf(world)
