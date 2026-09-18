@@ -26,6 +26,20 @@
 // THE COPY COMES OFF THE SNAPSHOT, NOT OUT OF THIS FILE – the same rule KnockDialog and KidScreen
 // keep. `birthdayPrompt` carries the ask and the four labelled rows, all assembled in
 // engine/world/birthday.ts where they can be tested. This template's own words are the kicker.
+//
+// ⭐⭐⭐ ROUND 45 #1 – THE PRESENTS SELECT, AND A PROCEED GIVES. The owner, on the deployed build:
+// «в попапе дня рождения надо такой же паттерн использовать, как и в других местах – выбрали ответ –
+// подтвердили кнопкой, чтобы не было случайных нажатий», and when the psychologist's ConfirmDialog
+// was offered as the donor he named a different one: «скорее попап смол тока здесь больше подойдет».
+// So the pattern here is the LIFE BEAT's, which KnockDialog already wears – round 42 #8's shape,
+// copied rather than re-invented: a press on a row only MARKS it (the round-40 ball, `role="radio"`,
+// `aria-checked`), and the Proceed that appears under the four is the one control that reaches
+// `chooseGift`. Nothing about the question moved: there are still exactly four answers, still no way
+// out that is not one of them, and the engine still re-validates the id it is handed.
+//
+// ⚠ THE PROCEED'S WORD IS NOT A NEW STRING. `Proceed` is the prologue's shipped confirm vocabulary
+// (round 41 #9, `WALK_COPY.proceed`), the same word KnockDialog's own Proceed carries and the same
+// one `lifeBeat.ts` hands the life beat. Invariant 4: reused verbatim, not coined.
 import { computed, ref, useTemplateRef } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useDialogFocus } from '../composables/dialogFocus'
@@ -39,8 +53,24 @@ const prompt = computed(() => game.snapshot?.birthdayPrompt ?? null)
 // on a birthday that is already answered, so without this a fast second press would surface an error
 // toast for a decision that actually succeeded.
 const sending = ref(false)
-async function choose(giftId: string): Promise<void> {
+
+/** ⭐ ROUND 45 #1 – WHICH PRESENT IS SELECTED, and it is the radio's `aria-checked`. Null on arrival,
+ *  because nothing on this card may point at an answer – «не помечай, пусть игрок читает» is the
+ *  owner's own rule about the ask, and a mark the player did not make would break it. It STAYS
+ *  through a refused send: it is what he chose, not a claim the world took it. */
+const chosen = ref<string | null>(null)
+
+/** The first tap: mark the present. Giving it is `confirm()`'s alone – «чтобы не было случайных
+ *  нажатий», which is the whole of the item. */
+function select(giftId: string): void {
   if (sending.value) return
+  chosen.value = giftId
+}
+
+/** The second tap: the Proceed, and the ONE control that reaches the engine. */
+async function confirm(): Promise<void> {
+  const giftId = chosen.value
+  if (giftId === null || sending.value) return
   sending.value = true
   try {
     await game.chooseGift(giftId)
@@ -51,6 +81,21 @@ async function choose(giftId: string): Promise<void> {
   } finally {
     sending.value = false
   }
+}
+
+/** ⭐ THE RADIO GROUP'S OWN KEYS – `LifeBeatDialog`'s handler and `KnockDialog`'s copy of it, with
+ *  the same documented variation: the arrows move FOCUS and do not select, because selecting on
+ *  focus would hand her a present with an arrow key. Space and Enter are the button's own. */
+function onGroupKey(event: KeyboardEvent): void {
+  const forward = event.key === 'ArrowDown' || event.key === 'ArrowRight'
+  const back = event.key === 'ArrowUp' || event.key === 'ArrowLeft'
+  if (!forward && !back) return
+  const group = event.currentTarget as HTMLElement
+  const items = [...group.querySelectorAll<HTMLButtonElement>('button:not([disabled])')]
+  const at = items.indexOf(document.activeElement as HTMLButtonElement)
+  if (at < 0) return
+  event.preventDefault()
+  items[(at + (forward ? 1 : items.length - 1)) % items.length]?.focus()
 }
 
 // FOUR ROWS, IN A COLUMN – the owner, 11.08: «в колонку ставь, там хватит места». Four stacked rows
@@ -82,25 +127,52 @@ useDialogFocus(card)
 
       <!-- ⭐ THE ASK, IN PROSE, AND NOTHING BELOW IT IS MARKED. One of the four rows answers this and
            three do not; the player reads. -->
-      <p class="birthday-ask">{{ prompt.ask }}</p>
+      <p id="birthday-ask" class="birthday-ask">{{ prompt.ask }}</p>
 
       <!-- FOUR ROWS IN A COLUMN, the owner's own ruling (quoted in full on the script side, where the
            house convention keeps his words and where the no-Cyrillic-in-a-template rule allows them).
            Four stacked rows fit on a 375px screen where four side-by-side buttons would not. The ORDER
            is the engine's and it is drawn, so no position carries information. Every row is the same
-           class: there is no modifier here that could single one out. -->
-      <div class="birthday-choices">
+           class: there is no modifier here that could single one out.
+
+           ⭐⭐⭐ ROUND 45 #1 – AND THEY SELECT NOW. A real radio group, named by the ask, exactly as
+           the life beat's and the knock's are: the first tap marks a present (the ball says so on
+           screen) and only the Proceed below gives it. No positional selector and no marked default
+           anywhere: the owner's do-not-mark ruling, quoted on the script side, binds the SELECTION
+           idiom as strictly as it bound the old rows. -->
+      <div class="birthday-choices" role="radiogroup" aria-labelledby="birthday-ask" @keydown="onGroupKey">
         <button
           v-for="option in prompt.options"
           :key="option.id"
           class="birthday-choice"
+          type="button"
+          role="radio"
+          :aria-checked="chosen === option.id"
           :disabled="sending"
-          @click="choose(option.id)"
+          @click="select(option.id)"
         >
-          <span class="birthday-choice-label">{{ option.label }}</span>
-          <span class="birthday-choice-note">{{ option.note }}</span>
+          <span class="birthday-mark" aria-hidden="true"></span>
+          <span class="birthday-choice-text">
+            <span class="birthday-choice-label">{{ option.label }}</span>
+            <span class="birthday-choice-note">{{ option.note }}</span>
+          </span>
         </button>
       </div>
+
+      <!-- ⭐⭐⭐ ROUND 45 #1 – THE PROCEED. It APPEARS when a present is selected and never before (a
+           way on drawn under an unanswered question would be offering to leave a card that is still
+           asking), it is the ONE control that reaches `chooseGift`, and its word is the prologue's
+           shipped confirm vocabulary rather than a coinage. While it is rendered it is the card's
+           LAST element, which is what the phone-fit measurement reads the way out off. -->
+      <button
+        v-if="chosen !== null"
+        class="birthday-proceed"
+        type="button"
+        :disabled="sending"
+        @click="confirm()"
+      >
+        Proceed
+      </button>
     </div>
   </div>
 </template>
@@ -139,11 +211,19 @@ useDialogFocus(card)
 
 /* ⚠ ONE RULE FOR ALL FOUR, AND NO `:first-child` / `:nth-child` ANYWHERE. Any positional selector
    here would be a mark by another name the moment the engine's shuffle put the answer somewhere
-   predictable, which is exactly what «не помечай» forbids. */
+   predictable, which is exactly what «не помечай» forbids.
+
+   ⭐⭐ ROUND 45 #1 – THE ROW GAINED THE BALL AND KEPT EVERYTHING ELSE. `.knock-choice`'s own shape,
+   because that card made exactly this move one round earlier: the box becomes a row so the mark can
+   sit left of a label/note column that is otherwise untouched. ⚠ THE TOKENS DO NOT MOVE. The wash and
+   the soft edge are the four rows' shipped colours (round-17 #3's fix, every colour a declared token
+   with no fallback) – converting a card to select-then-Proceed is not licence to repaint it, and the
+   knock kept its own two grounds through the same conversion. */
 .birthday-choice {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
   padding: 11px 13px;
   text-align: left;
@@ -152,6 +232,43 @@ useDialogFocus(card)
   background: var(--accent-wash);
   color: var(--text);
   cursor: pointer;
+}
+
+/* The label and its note, the column they always were – `min-width: 0` so a long present wraps
+   inside the box instead of pushing the row wider than the card. */
+.birthday-choice-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* THE MARK IS THE BALL – the round-40 selection idiom, byte-for-byte `.knock-mark`'s and
+   `.life-beat-mark`'s box, so a radio on this card and a radio in a life beat are one control. The
+   empty ring is the control being findable at all; the taken state is the ball itself. `aria-hidden`
+   because the state is on the button – a decorative circle that announced itself would say it twice.
+   Both states share a border box, so nothing on the row moves on a press. */
+.birthday-mark {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border-radius: 50%;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  background: transparent;
+}
+
+.birthday-choice[aria-checked='true'] .birthday-mark {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+/* ⚠ THE STATE IS THE MARK AND THE EDGE, NEVER A FILL – `.life-beat-choice`'s rule and `.knock-choice`'s
+   copy of it, kept so the selected present and the three unselected ones are read against the SAME
+   ground. A fill would be the card marking an answer, which is the one thing it may never do. */
+.birthday-choice[aria-checked='true'] {
+  border-color: var(--accent);
 }
 
 /* All four together, so the hover cannot become a mark either. */
@@ -174,5 +291,28 @@ useDialogFocus(card)
   font-size: 12.5px;
   line-height: 1.35;
   color: var(--muted);
+}
+
+/* ⭐ THE ADVANCE IDIOM for the one control that gives the present – the same declarations
+   `.knock-proceed` and `.life-beat-proceed` carry, with the rows' own box metrics so the card does
+   not jump when it appears. Every colour a declared token with no fallback (round-17 #3). */
+.birthday-proceed {
+  width: 100%;
+  margin-top: 8px;
+  padding: 11px 13px;
+  text-align: center;
+  border: var(--stroke-hair) solid var(--accent-soft);
+  border-radius: var(--radius-frame);
+  background: var(--accent-wash);
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.birthday-proceed:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 </style>
