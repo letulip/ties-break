@@ -67,6 +67,7 @@
     "tools/shop-probe.ts",
     "tools/skill-ceiling.ts",
     "tools/two-doors-bench.ts",
+    "tools/wedding-bench.ts",
     "tools/masseur-raise-bench.ts",
     "tools/small-talk-corpus-bench.ts",
     "tools/small-talk-corpus-emit.ts",
