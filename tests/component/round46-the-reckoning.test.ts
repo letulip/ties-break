@@ -1,9 +1,10 @@
-// ⭐⭐⭐ ROUND 46 #9 – THE EPILOGUE'S RECKONING, MOUNTED.
+// ⭐⭐⭐ ROUND 46 #9 + #10 – THE EPILOGUE'S RECKONING, MOUNTED.
 //
 // The owner finished a career holding $10M+ liquid, a $20M+ fund, houses, an academy and a brand,
-// and this page told him «$13M won against $83M spent». It is the LAST page of the game, so the
-// figure gets a mounted net rather than a source pin – the engine arms live in
-// `tests/round46-career-money.test.ts`, and this is about what the screen actually renders.
+// and this page told him «$13M won against $83M spent» and a best rank of #27 over a career that
+// touched #17. Both numbers are the LAST page of the game, so both get a mounted net rather than a
+// source pin – the engine arms live in `tests/round46-career-money.test.ts` and
+// `tests/round46-best-rank.test.ts`, and these are about what the screen actually renders.
 //
 // ⚠ THE WORDS ARE HIS AND NOTHING HERE ASKS THEM TO CHANGE (invariant 4). «Won», «Spent»,
 // «Seasons», «Best rank» and «Titles» are asserted present and unmoved; the two new rows are DRAFTS
@@ -52,6 +53,7 @@ function endingView(over: Partial<EndingView> = {}, money: Partial<CareerMoney> 
     money: moneyOf(TOTALS, money),
     seasonsPlayed: 15,
     bestRank: 17,
+    bestRankTrack: 'wta',
     titles: 9,
     oneMoreYearCount: 0,
     academy: null,
@@ -134,5 +136,25 @@ describe('⭐⭐⭐ round 46 #9 – what the epilogue prints for «Spent»', () 
     expect(labels[1]).toBe('Spent')
     expect(labels.slice(-3)).toEqual(['Seasons', 'Best rank', 'Titles'])
     w.unmount()
+  })
+})
+
+describe('⭐⭐ round 46 #10 – the best rank the epilogue prints', () => {
+  beforeEach(() => setActivePinia(createPinia()))
+
+  it('⭐⭐ prints the rank the engine hands it, and a dash when she never held one', async () => {
+    patch(endingView({ bestRank: 17, bestRankTrack: 'wta' }))
+    const w = mount(EndingScreen)
+    await lastPage(w)
+    expect(w.find('.ending-totals').text()).toContain('#17')
+    w.unmount()
+
+    setActivePinia(createPinia())
+    patch(endingView({ bestRank: null, bestRankTrack: null }))
+    const w2 = mount(EndingScreen)
+    await lastPage(w2)
+    const row = w2.findAll('.ending-totals div').find((d) => d.text().includes('Best rank'))
+    expect(row?.text(), 'a rank she never had is a dash, never a number').toContain('–')
+    w2.unmount()
   })
 })

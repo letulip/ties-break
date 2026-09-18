@@ -128,6 +128,7 @@ function endingView(type: CareerEndingType = 'natural', over: Partial<EndingView
     money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
     seasonsPlayed: 15,
     bestRank: 2,
+    bestRankTrack: 'wta',
     titles: 12,
     oneMoreYearCount: 0,
     academy: null,

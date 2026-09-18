@@ -47,6 +47,7 @@ function endingView(type: CareerEndingType = 'stopped', over: Partial<EndingView
     money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
     seasonsPlayed: 5,
     bestRank: 88,
+    bestRankTrack: 'wta',
     titles: 2,
     oneMoreYearCount: 0,
     // ⭐ round 29 part two #10: null unless the fixture built academy stages – the default career

@@ -42,7 +42,7 @@ import { deliveredAssets, shopCatalogue } from './assets'
 import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
 import { addEvent, careerMoney, seasonIndexOf, seasonStartWeek } from './ledger'
-import { activeLadderOf } from './ladder'
+import { activeLadderOf, bestRankEver } from './ladder'
 import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer } from './college'
 // ⭐⭐ v73 – THE PRIVATE LIFE'S WAVE 2. The fork's opening tick raises her opinion of it, and
 // `answerFork` will not run until it has been answered. `world/lifeBeat.ts` imports nothing from
@@ -929,8 +929,14 @@ export function answerRetirement(world: WorldState, retire: boolean): void {
 export function buildEndingView(world: WorldState): EndingView | null {
   const ending = world.ending
   if (!ending) return null
-  let bestRank: number | null = null
-  for (const s of world.seasonHistory) if (bestRank === null || s.endRank < bestRank) bestRank = s.endRank
+  // ⭐⭐⭐ ROUND 46 #10 – ONE READER, AND WHAT STOOD HERE WAS THE BUG. The fold was
+  // `min(seasonHistory[].endRank)` – season CLOSES only, and the ITF one on every row – so a career
+  // that spent twenty seasons on the professional table was handed its best JUNIOR year-end. The
+  // owner: «некорректный BEST RANK на финале (лучший 27)» over a career that touched #17. Measured
+  // over ten walked careers (`tools/album-money-probe.ts --census`), the old fold missed the rank
+  // she really held by a mean of 11.6 places and by as much as 20; this one misses by 2.6.
+  // `bestRankEver` carries the argument, the table rule and what is still out of reach.
+  const best = bestRankEver(world)
   let titles = 0
   for (const tier of Object.keys(world.trophiesByTier) as TierId[]) {
     titles += world.trophiesByTier[tier].titles.length
@@ -954,7 +960,8 @@ export function buildEndingView(world: WorldState): EndingView | null {
     // ⭐ ROUND 46 #9 – the honest reading of the same three counters, folded once (world/ledger.ts).
     money: careerMoney(world),
     seasonsPlayed: world.seasonHistory.length,
-    bestRank,
+    bestRank: best?.rank ?? null,
+    bestRankTrack: best?.track ?? null,
     titles,
     oneMoreYearCount: world.oneMoreYearCount,
     // ⭐ ROUND 29 PART TWO #10 – the academy line, settling the-shop §10.4 by his ruling («Эпилог…

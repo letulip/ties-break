@@ -313,6 +313,7 @@ describe('round 36 phase 4 – the epilogue gets a column', () => {
       money: moneyOf({ earnedCents: 100_00, spentCents: 50_000_00, prizeCents: 0, weeksLostToInjury: 0 }),
       seasonsPlayed: 5,
       bestRank: 88,
+      bestRankTrack: 'wta',
       titles: 2,
       oneMoreYearCount: 0,
       academy: null,

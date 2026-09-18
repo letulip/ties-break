@@ -31,6 +31,7 @@ import type {
 import { ENDING_TITLE } from '../ending'
 import { kidAgeAt } from './age'
 import { careerMoney, seasonIndexOf } from './ledger'
+import { activeLadderOf, bestSeasonClose } from './ladder'
 import { finishLabel } from './labels'
 import type { WorldState } from '../world'
 
@@ -264,19 +265,28 @@ export function slotBestWeek(world: WorldState): AlbumPage {
       'happy',
     )
   }
-  let bestRank: Milestone | null = null
-  for (const m of world.milestones) {
-    if (m.type !== 'season-rank' || m.rank === undefined) continue
-    if (bestRank === null || m.rank < bestRank.rank!) bestRank = m
-  }
-  if (bestRank) {
+  // ⭐⭐⭐ ROUND 46 #10 – OFF THE ONE READER, AND WHAT STOOD HERE WAS THE EPILOGUE'S OWN BUG IN A
+  // SECOND COPY. It scanned the `season-rank` milestones, whose `rank` is written from
+  // `world.kidRank` – the ITF one, always – so this page handed a career that had spent its life on
+  // the professional table its best JUNIOR year-end. `bestSeasonClose` asks `activeLadderOf` which
+  // table is hers, exactly as `bestRankEver` does for the epilogue.
+  //
+  // ⚠ IT IS THE CLOSES AND NOT THE LIVE RANK, WHICH IS A DIFFERENCE FROM THE EPILOGUE AND IS THE
+  // COPY'S DOING: this fact says «at the close of», so a mid-season standing folded in would make
+  // the sentence false. The narrower question is why the reader is split in two rather than shared
+  // whole – see `bestSeasonClose`.
+  //
+  // ⚠ AND THE DATE DOES NOT MOVE FOR ANY CAREER THE OLD SCAN COULD SEE: the week it derives is the
+  // wrap week, which is the very week the matching `season-rank` milestone carries.
+  const closed = bestSeasonClose(world, activeLadderOf(world))
+  if (closed) {
     return page(
       world,
       4,
       'She never won a title – this is the highest she ever stood',
-      'Number ' + bestRank.rank,
-      `#${bestRank.rank} at the close of ${seasonYear(bestRank.seasonIndex ?? 0)}`,
-      bestRank.week,
+      'Number ' + closed.rank,
+      `#${closed.rank} at the close of ${seasonYear(closed.seasonIndex)}`,
+      closed.week,
       'serious',
     )
   }

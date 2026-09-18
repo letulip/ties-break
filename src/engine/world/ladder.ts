@@ -11,7 +11,7 @@
 // imports these values with no runtime cycle. Nothing here draws on any RNG stream: ranks are folded
 // from the ledger, so the frozen MAIN capture cannot notice this file.
 
-import { TIERS, TIER_LADDER, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier, tierAgeBlock } from '../season/calendar'
+import { OFF_SEASON_WEEKS, TIERS, TIER_LADDER, WEEKS_PER_YEAR, hasAcceptanceList, isJuniorAge, isTierAgeOpen, isWSeriesTier, tierAgeBlock } from '../season/calendar'
 import { ALTERNATES, alternatePlacesOpen } from '../season/tournament'
 import { WILD_CARD, hostNationOf, wildCardWindow } from '../season/tournament'
 import { BEST_N_BY_TRACK, WINDOW_BY_TRACK, computeRanking, isCountingResult, windowFromWeek, windowSlots, windowedBestSum, type SeasonResult } from '../season/ranking'
@@ -440,6 +440,86 @@ export function wtaEverCounted(world: WorldState): boolean {
 export function activeLadderOf(world: WorldState): LadderTrack {
   if (wtaEverCounted(world) || kidPoints(world, 'wta') > 0) return 'wta'
   return kidPoints(world, 'itf') > 0 ? 'itf' : 'domestic'
+}
+
+/** ⭐⭐⭐ ROUND 46 #10 – THE BEST RANK SHE EVER HELD, and it is ONE reader because there were two.
+ *
+ *  THE OWNER, 18.09: «некорректный BEST RANK на финале (лучший 27)» – his career touched #17.
+ *
+ *  ⚠⚠ WHAT THE EPILOGUE ACTUALLY DID, AND IT WAS WRONG TWICE OVER. `buildEndingView` folded
+ *  `min(seasonHistory[].endRank)`, and that field is documented on `SeasonHistoryEntry.endRank` as
+ *  «⚠ THE ITF ONE, always – the wrap writes `world.kidRank`»:
+ *
+ *    (a) THE WRONG TABLE. A woman who spent twenty seasons on the professional tour was handed her
+ *        best JUNIOR year-end. Measured on the probe career (`tools/album-money-probe.ts`): the
+ *        epilogue printed #14, which is an ITF close, for a girl whose best professional standing
+ *        was #11 – and #14 is not even her best junior figure, which was #8.
+ *    (b) SEASON CLOSES ONLY. A peak reached in May and lost by December is invisible, and a career
+ *        that ends MID-season never wrote its last close at all (`maybeFireSeasonWrapUp` fires at
+ *        week 49 of a season and nowhere else), so her final year could not be seen from here.
+ *
+ *  ⚠ WHICH TABLE IS ASKED OF `activeLadderOf` AND NEVER DECIDED HERE – the engine's own one answer
+ *  to «which table is hers», the same one Home's chip, the Stats tabs and the wrap-up card read. Two
+ *  answers to that question is the defect the whole two-ladders spec exists to have ended, and a
+ *  «best» that took the smallest number across all three tables would be the cross-table comparison
+ *  `prevRankIn` and the wrap-up's movement arrow both refuse: #3 at home at fourteen is not a better
+ *  standing than #11 in the world at twenty-two.
+ *
+ *  ⚠ THE LIVE RANK IS IN THE FOLD, and that is what answers (b)'s second half: the rank she is
+ *  standing on at the moment of the read is the only evidence there is of a season the wrap never
+ *  reached. Asked only where she holds a point in that table – «unranked is not a number», the rule
+ *  every rank surface in this file obeys – because `rankIn` otherwise answers with the tie floor.
+ *
+ *  ⚠⚠ AND IT IS STILL NOT THE WEEKLY MINIMUM, WHICH IS STATED RATHER THAN SMUGGLED. Nothing on any
+ *  save retains the rank she held in an ordinary week: there is no rank history, and `prevKidRank*`
+ *  keeps one week. So a peak that rose and fell inside one season is beyond ANY reader, and closing
+ *  that last gap is a persisted running minimum – a schema move, and therefore the owner's call
+ *  rather than an agent's. Measured on the probe career, what is left of the gap after this fix is
+ *  one place (#12 read against a true #11); the defect this replaces was three places on the right
+ *  table and read the wrong one.
+ *
+ *  Pure read: no draw, no clock, no mutation. */
+export function bestRankEver(world: WorldState): { rank: number; track: LadderTrack } | null {
+  const track = activeLadderOf(world)
+  const closed = bestSeasonClose(world, track)
+  let best = closed?.rank ?? null
+  if (kidPoints(world, track) > 0) {
+    const live = rankIn(world, track)
+    if (best === null || live < best) best = live
+  }
+  return best === null ? null : { rank: best, track }
+}
+
+/** ⭐⭐ ROUND 46 #10 – THE BEST SEASON SHE EVER CLOSED, on one named table, with the week it closed on.
+ *
+ *  ⚠ THE SECOND HALF OF THE ONE READER, and it exists because the album's slot 4 asks a NARROWER
+ *  question than the epilogue does and its own copy says so: the fallback page reads «#N at the close
+ *  of YYYY», so a live mid-season rank folded into it would make that sentence false. Same track
+ *  rule, same fold, one sentence's worth of difference – which is what stops a third copy of «what is
+ *  her best rank» appearing the next time somebody needs one.
+ *
+ *  ⚠ THE WEEK IS THE WRAP'S OWN WEEK (`seasonWrapDue`'s test, read forwards), so this is the same
+ *  week the matching `season-rank` milestone carries and the page's date does not move for any career
+ *  whose table is the junior one – which is every career the old milestone scan could see at all. */
+export function bestSeasonClose(
+  world: WorldState,
+  track: LadderTrack,
+): { rank: number; seasonIndex: number; week: number } | null {
+  let best: { rank: number; seasonIndex: number; week: number } | null = null
+  for (const s of world.seasonHistory) {
+    // ⚠ `byTrack` IS v46 AND OPTIONAL, and the bare `endRank` is the ITF one – so a row banked
+    // before v46 can answer for the junior table and for neither of the others. That is «not
+    // recorded» rather than zero, the distinction `SeasonHistoryEntry.byTrack` was built around.
+    const closed = track === 'itf' ? (s.byTrack?.itf?.endRank ?? s.endRank) : s.byTrack?.[track]?.endRank
+    if (closed === undefined) continue
+    if (best !== null && closed >= best.rank) continue
+    best = {
+      rank: closed,
+      seasonIndex: s.seasonIndex,
+      week: s.seasonIndex * WEEKS_PER_YEAR + (WEEKS_PER_YEAR - OFF_SEASON_WEEKS),
+    }
+  }
+  return best
 }
 
 /** Pure eligibility check for a tier (Phase-4 "Season Life" slice 1, increment 2). A tier is a WINDOW
