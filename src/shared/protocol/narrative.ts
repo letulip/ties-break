@@ -289,8 +289,31 @@ export interface SoftBeatInvite {
  *  (+3 or −3 by her read) / fix-it (−1) / blame (−4 always), so no option costs zero under any
  *  reading – which is why `tools/_lifeBeats.ts` stopped hunting a zero one commit before this kind
  *  existed and reads a registry instead. `DRAIN_ANSWER['ended']` is `fix-it`, whose −1 is the same −1
- *  under every read: read-INDEPENDENT, which is what the drain law actually needed. */
-export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy'
+ *  under every read: read-INDEPENDENT, which is what the drain law actually needed.
+ *
+ *  ⭐⭐⭐ v83 (the wedding, wave 7 – T2) ADDS `'engaged'`: THE WEEK SHE SAYS SHE IS GETTING MARRIED.
+ *  Its `detail` is the `LoveEpisode.id`, exactly as `'met'`'s and `'ended'`'s are – machine-readable,
+ *  never a rendered sentence – and that id is what makes the beat fire exactly once per episode: the
+ *  record is the queue AND the receipt, `'met'`'s own doctrine, so a latched row can never be asked
+ *  again and a SECOND wedding is the same machinery on a LATER episode's own row.
+ *
+ *  ⚠⚠ SHE ANNOUNCES; THE PARENT REACTS (§4a's law at the layer's biggest ask so far). No parent menu
+ *  opens her decision – the hazard (`rollWedding`, gated 23+ and on the episode's own depth) decides
+ *  WHETHER, and the parent's three answers are the research digest's own triple – bless / keep
+ *  distance / oppose – priced on `bond` through the existing `answerLifeBeat` seam
+ *  (`ECONOMY.wedding.blessBond` / `distanceBond` / `opposeBond`).
+ *
+ *  ⚠⚠ IT BLOCKS, tier 2's own price: a wedding announcement is a week the parent must answer before
+ *  time may move, and a career that could tick past it would answer her by walking away. ⚠ AND NO
+ *  ANSWER STOPS THE WEDDING – opposing prices the bond and colours the diary, and the wedding lands
+ *  `ECONOMY.wedding.weeksAfterEngagement` weeks later regardless (T3's `landWedding`): SHE decided.
+ *
+ *  ⚠ THE SECOND KIND WITH NO FREE ANSWER (after `'ended'`), and read-INDEPENDENT by construction:
+ *  no overlay exists for this kind, so `DRAIN_ANSWER['engaged']` = `distance` charges −1 under every
+ *  reading and the harnesses can state their skew exactly. ⚠ It carries no `heard` stamp and no
+ *  listen detour – there is no read to be plain about and no second half being withheld: the fact is
+ *  the fact, and the three answers are the whole of what a parent can do with it. */
+export type LifeBeatKind = 'fork-opinion' | 'met' | 'small-talk' | 'fork-counsel' | 'ended' | 'fork-psy' | 'engaged'
 
 /** ⭐⭐ v73 – ONE ROW PER BEAT, AND THE ROW IS ALSO THE QUEUE. A row whose `answer` is null is
  *  pending; several beats in one week are answered one dialog at a time, in `lifeLog` order.

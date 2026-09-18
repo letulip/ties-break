@@ -103,6 +103,14 @@ export const DRAIN_ANSWER: Record<LifeBeatKind, string> = {
   'fork-counsel': 'heard',
   ended: 'fix-it',
   'fork-psy': 'straight',
+  // ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – `distance`, AT −1, THE SECOND COSTED ROW AND `'ended'`'s
+  // OWN CHOICE REPEATED: the kind has no zero (bless +2.5 / distance −1 / oppose −4, all in
+  // `ECONOMY.wedding` – a wedding announcement is not a card a parent can answer for free), so the
+  // registry names the mildest one, and it is read-independent BY CONSTRUCTION rather than by two
+  // absences – `lifeBeatOptionsFor` has no overlay for this kind at all, so `drainCostOf` prices the
+  // same object under every `wants` x every ends-read and returns −1 from a one-element spread.
+  // A walk that drains one states its skew exactly: −1 x count, `drainSkewLine`'s own arithmetic.
+  engaged: 'distance',
 }
 
 /** ⭐⭐ WHAT DRAINING ONE BEAT OF THIS KIND COSTS – **asked of the ENGINE**, never read off a table

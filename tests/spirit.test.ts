@@ -1149,9 +1149,18 @@ describe('the fence this step is judged by', () => {
     // in the same tick. NOTHING about this pin's claim moves and it is not weakened by a character:
     // it is still «the life calls sit between the body's pass and the spirit's, in THIS ORDER», it is
     // still an exact list with no wildcard, and a sixth call or a reordering is red here.
-    expect(code.slice(i + 1, j), 'only the private life\'s five weekly calls separate them').toEqual([
+    // ⚠⚠ RE-AIMED 18.09 BY WAVE 7's T2, AND THE SIXTH CALL IS HERE – the pin fired exactly as the
+    // sentence above promised, which is the pin working and not the pin rotting. `rollWedding` is a
+    // life call among its siblings (the wedding hazard, §11 of the same module), slotted THIRD:
+    // after `rollEnds` (an episode that ended this tick cannot be proposed into – the date is
+    // already written and the gate refuses) and after `rollArrival` (free there – a row born this
+    // tick is 0 weeks deep against a 52-week threshold – and beside its own hazard family), before
+    // the leak so the household hears her before the papers do. Still an exact list, still no
+    // wildcard, and a SEVENTH call or a reordering is red here.
+    expect(code.slice(i + 1, j), 'only the private life\'s six weekly calls separate them').toEqual([
       'rollEnds(world)',
       'rollArrival(world)',
+      'rollWedding(world)',
       'rollLeak(world)',
       'deliverKnownPartner(world)',
       'rollSmallTalk(world)',

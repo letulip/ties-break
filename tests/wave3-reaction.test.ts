@@ -576,6 +576,14 @@ const DRAIN_TODAY: Record<LifeBeatKind, { id: string; bond: number }> = {
   // reads `spiritShock` for the WORDING COLUMN of his card; `lifeBeatOptionsFor` carries no overlay
   // for this kind, so the priced list is the same object under every `wants` and every ends-read.
   'fork-psy': { id: 'straight', bond: 0 },
+  // ⚠ RE-AIMED 18.09 BY v83 (the wedding, wave 7 – T2), AND IT IS THE TOTAL RECORD DOING ITS JOB A
+  // THIRD TIME: the union grew by `'engaged'` and somebody had to type a number. WHAT MOVED: one
+  // row, at **−1** – the second costed drain answer after `'ended'`'s. WHAT DID NOT: the law, still
+  // «the SAME price under every reading». ⚠ THE NUMBER IS THE BRIEF'S DRAFTED LITERAL, transcribed
+  // from the wave-7 brief's T2 triple («bless / keep distance / oppose … +2.5 / −1 / −4») – never
+  // read off `ECONOMY.wedding`, this file's own ARM 2 story. Read-independent by construction:
+  // `lifeBeatOptionsFor` carries no overlay for this kind, `'fork-psy'`'s own strongest form.
+  engaged: { id: 'distance', bond: -1 },
 }
 
 /** A beat of any kind, raised on a career with nothing else waiting – the positive control's fixture.
@@ -592,6 +600,11 @@ function raised(seed: string, kind: LifeBeatKind, detail: string, wants: LoveEpi
   // sweep would then be pricing a row the engine can never produce – the fixture defect this
   // helper's own note warns about, one field further in.
   if (kind === 'ended') world.loveEpisodes = [{ ...episode(892, 896, wants), endedWeek: 899 }]
+  // ⚠ RE-AIMED BY v83 (wave 7 T2) – an `'engaged'` row is ABOUT an episode exactly as `'met'`'s is,
+  // so the fixture carries the row its detail names. Depth is not posed: the raise here is direct
+  // (the gate is §11's own concern, tested in wave7-wedding.test.ts), and neither the wording nor
+  // the price reads the episode's age.
+  if (kind === 'engaged') world.loveEpisodes = [episode(892, 900, wants)]
   raiseLifeBeat(world, kind, detail)
   return world
 }
@@ -610,6 +623,10 @@ const DETAIL_FOR: Record<LifeBeatKind, string> = {
   // register a career with no live `spiritShock` raises. ⚠ A row carrying a detail its kind cannot
   // read is a fixture defect dressed as a finding, which is this helper's own note one block up.
   'fork-psy': 'plain:own',
+  // ⚠ RE-AIMED BY v83 (wave 7 T2): the announcement's `detail` is the EPISODE ID, exactly as
+  // `'met'`'s and `'ended'`'s are – the same id `raised` above already builds for those two kinds,
+  // so the fixture stays the engine's own shape.
+  engaged: 'p:892',
 }
 
 /** ⭐⭐ EVERY WAY A GIRL CAN BE READ, AS A FLAT LIST – the cross product of her two independent reads.

@@ -222,6 +222,13 @@ export const LIFE_BEAT_BLOCKING: Record<LifeBeatKind, boolean> = {
   // have been heard, in the order they called. No new guard, no new ordering rule and no plumbing –
   // the reserved comment's own promise, kept by typing one word.
   'fork-psy': true,
+  // ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – TRUE, AND IT IS TIER 2's OWN PRICE AT THE LAYER'S BIGGEST
+  // ASK SO FAR. «She is getting married» is a week the parent must answer before time may move –
+  // `'met'`'s and `'ended'`'s one argument, at the moment the whole branch has been building toward –
+  // and a career that could tick past it would answer her by walking away. ⚠ BLOCKING THE WEEK IS
+  // NOT BLOCKING THE WEDDING: any answer releases time, and the wedding lands `weeksAfterEngagement`
+  // later whatever was said (T3) – SHE decided, and the fork machinery is the shape, not the power.
+  engaged: true,
 }
 
 /** The beat waiting to be answered, or null. The FIRST unanswered row in `lifeLog` order – so a week
@@ -2438,6 +2445,61 @@ function endedHeadingFor(endsRegister: EndsRegister, read: EndsRead, heard: Hear
     : ENDED_HEADING_HEARD[heard.voice][endsRegister][read]
 }
 
+// =================================================================================================
+// 3g. `'engaged'` – THE WEEK SHE SAYS SHE IS GETTING MARRIED (the wedding, wave 7: T2).
+//     ⚠ ⚠ DRAFT – EVERY WORD BELOW IS THE BUILDER'S DRAFT FOR THE OWNER (invariant 4; T7's table).
+// =================================================================================================
+//
+// SHE ANNOUNCES – §4a's law at the layer's biggest ask so far: no parent menu opened her decision,
+// and what the parent holds is a reaction. The pool is `ENDED_HER_LINE`'s shape one register
+// smaller: one cell per voice (no register axis – the announcement is one scene, and unlike an
+// ending it carries no told-now/told-late split, because `rollWedding` raises it the week she
+// decides and there is nothing to hear about late), in both presences, plus the dry card for a
+// `strained`/`cold` home and one heading.
+//
+// ⚠ THE QUOTED SPAN IS SHARED BETWEEN PRESENCES BY LAW (the вычитка's own rule): what presence
+// changes is the FRAME the parent is standing in, never the sentence she says inside the quotation
+// marks. ⚠ NO NAME AND NO GENDER in any line – the name is WRITTEN at this beat (T3's
+// `partnerNameFor`) but which surfaces SPEAK it is a later task's question, and a pool that jumped
+// ahead of that ruling would be taking a wording decision that is his.
+
+/** ⚠ ⚠ DRAFT – HER ANNOUNCEMENT, BY VOICE, in both presences. The voice bibles govern: `sunny` says
+ *  it evenly and names the feeling; `fiery` gives the verdict first, at speed, in absolutes;
+ *  `quiet` says the practical surface and leaves herself out; `deep` says one true thing, late,
+ *  stripped of its size, in full stops. */
+const ENGAGED_HER_LINE: Record<Temperament, PresenceCell> = {
+  sunny: {
+    roof: 'She sat us down at the table and could not keep it in past the kettle. "We are getting married. I wanted you to hear it from me first."',
+    away: 'She called before we had even asked about the week. "We are getting married. I wanted you to hear it from me first."',
+  },
+  fiery: {
+    roof: 'She came in already talking. "We are getting married. Yes, we are sure. No, we are not waiting."',
+    away: 'She rang, and led with it. "We are getting married. Yes, we are sure. No, we are not waiting."',
+  },
+  quiet: {
+    roof: 'She said it while she was clearing the table, as if it were about the schedule. "We are getting married. In a couple of months, probably."',
+    away: 'She sent the season\'s dates through, and this was at the top of the message. "We are getting married. In a couple of months, probably."',
+  },
+  deep: {
+    roof: 'She waited until the room had gone quiet and said it once. "We are getting married. I have thought about it. It is right."',
+    away: 'She let the call run almost to the end and said it before goodbye. "We are getting married. I have thought about it. It is right."',
+  },
+}
+
+/** ⚠ ⚠ DRAFT – `strained` / `cold`: the dry card, not one word of hers in it. `ENDED_DRY`'s shape
+ *  and doctrine: it states what the week HOLDS, and the distance is the whole content – by this
+ *  rung the parent was never the person it was told to. */
+const ENGAGED_DRY = 'She is getting married. The news reached this house second-hand.'
+
+/** ⚠ ⚠ DRAFT – the parent's frame over the card. ONE FRAME, KEYED ON NOTHING – `COUNSEL_HEADING`'s
+ *  shape rather than `MET_HEADING`'s ladder, because the one fact of this card is the same fact at
+ *  every distance and in every weather: she has decided, and the deciding is hers. The bond band
+ *  reaches the card through HER line (own voice against the dry card), never through the frame; a
+ *  heading that read the band would say the distance twice. ⚠ It recommends none of the three
+ *  answers – «she has made up her mind» is what the parent can see, and which of the three things
+ *  to say about it is his. */
+const ENGAGED_HEADING = 'A wedding is coming, and she has made up her mind'
+
 /** One answer on a life-beat card: the id the command carries, the sentence the button shows, and
  *  what saying it costs. ⚠ NAMED IN v74 T7 so `lifeBeatOptionsFor`'s signature can say what it hands
  *  back; the shape is the one `LIFE_BEAT_OPTIONS` has always had, spelled out rather than changed.
@@ -2585,6 +2647,30 @@ export const LIFE_BEAT_OPTIONS: Record<LifeBeatKind, readonly LifeBeatAnswer[]> 
     { id: 'company', label: 'Keep her company, and stay close this week', bond: ECONOMY.bond.delta.endedMismatched },
     { id: 'fix-it', label: 'Offer to help put it right', bond: ECONOMY.bond.delta.endedFixIt },
     { id: 'blame', label: 'Say they were never worth it', bond: ECONOMY.bond.delta.endedBlame },
+  ],
+  /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – THE THREE THE ANNOUNCEMENT OFFERS: the research digest's
+   *  own triple, bless / keep distance / oppose, priced in `ECONOMY.wedding` (drafted +2.5 / −1 /
+   *  −4, benched in T8, his word after the numbers).
+   *
+   *  ⚠ ⚠ DRAFT – every label below is the builder's draft for the owner's pass (invariant 4; the
+   *  wave's T7 strings table is where he reads them).
+   *
+   *  ⚠⚠ THE SECOND KIND WITH NO FREE ANSWER, and unlike `'ended'` it is read-independent BY
+   *  CONSTRUCTION rather than by two absences: no overlay in `lifeBeatOptionsFor` names this kind,
+   *  so the priced set is the same object under every `wants` and every ends-read, and
+   *  `DRAIN_ANSWER['engaged']` = `distance` drains at the one −1 a harness can state.
+   *
+   *  ⚠ THE LABELS NAME NO GENDER (them, it – the schema persists a NAME from this beat on, never a
+   *  gender), NO NUMBER, NO PRICE AND NO METER (the fence). And none of them promises to stop
+   *  anything: the wedding lands whatever is said (T3), so a button reading «forbid it» would be a
+   *  power the game does not hold – opposing is a thing said to her, not a veto. */
+  engaged: [
+    // ⚠ DRAFT
+    { id: 'bless', label: 'Give them our blessing', bond: ECONOMY.wedding.blessBond },
+    // ⚠ DRAFT
+    { id: 'distance', label: 'Say it is her decision, and step back', bond: ECONOMY.wedding.distanceBond },
+    // ⚠ DRAFT
+    { id: 'oppose', label: 'Tell her we think it is a mistake', bond: ECONOMY.wedding.opposeBond },
   ],
 }
 
@@ -2786,6 +2872,23 @@ const ANSWER_EVENT: Record<LifeBeatKind, Record<string, string> | null> = {
     'fix-it': 'Her relationship ended. We offered to help put it right.',
     blame: 'Her relationship ended. We said they were never worth it.',
   },
+  /** ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – AND THE ANNOUNCEMENT WRITES ONE, for `'ended'`'s reason
+   *  exactly: an engagement the parent blessed and one he opposed are two different biographies, and
+   *  only the row can tell them apart seasons later. Three lines, one per answer, opening on the
+   *  same clause – the `met`/`ended` pools' established parallel shape, kept deliberately.
+   *  ⚠ ⚠ DRAFT – every line below is the builder's draft for the owner's pass (invariant 4, T7's
+   *  table). ⚠ NO `amountCents` AND NO PRICE IN ANY WORD (rule 4) – the wedding's COST is T3's own
+   *  ledger event on the wedding week, never this row's; no name and no gender either, because at
+   *  the ANSWER the name is on the episode but which surfaces speak it is T5+/T7's question, and a
+   *  feed row that jumped ahead of that ruling would be a wording decision taken for him. */
+  engaged: {
+    // ⚠ DRAFT
+    bless: 'She said she is getting married. We gave them our blessing.',
+    // ⚠ DRAFT
+    distance: 'She said she is getting married. We said it is her decision, and stepped back.',
+    // ⚠ DRAFT
+    oppose: 'She said she is getting married. We told her we think it is a mistake.',
+  },
 }
 
 /** Who she is, for the WORDING alone. Defensive `?? temperamentFor(seed)` on the v72 field for the
@@ -2985,6 +3088,17 @@ export function lifeBeatSaid(
       return speaksInHerOwnVoice(bond)
         ? presenceLine(ENDED_HER_LINE[voice][endsRegister], presence)
         : ENDED_DRY[endsRegister]
+    // ⭐⭐⭐ v83 (the wedding, wave 7 – T2) – THE SEVENTH KIND. ⚠ IT READS NO `detail` AND NO
+    // `register`, for `'met'`'s own two reasons: its detail is an episode id (a machine value, never
+    // a rendered word) and the Mood ladder is not this card's axis – the announcement is her week's
+    // biggest fact whatever the weather. ⚠ AND NO REGISTER AXIS OF ITS OWN, unlike `'ended'`: there
+    // is no told-late wedding, because `rollWedding` raises the card on the week she decides and
+    // nothing about it can be learned late. What it reads is the bond's two-rung channel – her own
+    // voice against the dry card – which is `'ended'`'s shape one axis smaller.
+    case 'engaged':
+      return speaksInHerOwnVoice(bond)
+        ? presenceLine(ENGAGED_HER_LINE[voice], presence)
+        : ENGAGED_DRY
   }
 }
 
@@ -3049,6 +3163,11 @@ export function lifeBeatHeading(
     // card. ⚠ THIS IS THE ONE SURFACE THE READ REACHES AT EVERY BOND BAND – see the §3e banner.
     case 'ended':
       return endedHeadingFor(endsRegister, read, heard)
+    // ⭐ v83 (the wedding, wave 7 – T2) – ONE FRAME, KEYED ON NOTHING, `COUNSEL_HEADING`'s shape and
+    // `ENGAGED_HEADING`'s own note for why: the fact is the same fact at every distance, the bond
+    // reaches the card through her line, and a frame that also moved would say the distance twice.
+    case 'engaged':
+      return ENGAGED_HEADING
   }
 }
 
@@ -3088,7 +3207,11 @@ export function lifeBeatListenFollowUp(
   // detour is «say nothing, and let HER talk», and what it buys is more of her. A professional has
   // given a read and has no second half of it being withheld, so a panel offering one would promise
   // words nobody wrote. His two acknowledgments are the whole of the beat.
-  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy') return null
+  // ⚠ AND `'engaged'` HAS NONE (v83, wave 7 T2), for `'met'`'s reason at a bigger moment: the
+  // announcement is news, its three answers are REACTIONS, and none of them is `listen` – a panel
+  // promising more of her would promise words nobody wrote, about a decision she has already
+  // finished making.
+  if (kind === 'met' || kind === 'small-talk' || kind === 'fork-counsel' || kind === 'ended' || kind === 'fork-psy' || kind === 'engaged') return null
   const want = FORK_WANTS.find((w) => w === detail)
   if (want === undefined) throw new Error(`A fork-opinion row carries no want: ${detail}`)
   if (!speaksInHerOwnVoice(bond)) return null
@@ -5140,4 +5263,94 @@ export function airBoothMention(world: WorldState, tier: TierId): void {
   // is T3's (`EXPOSURE_ROW`, raised inside the spirit pass on the tick that prices this event), and
   // §3c's legibility law is «one row per week, not per event – the feed is not a ledger». A second
   // row here would print the same week twice, in two voices, one tick apart.
+}
+
+// =================================================================================================
+// 11. THE WEDDING – ⚠⚠ THE WEEK SHE DECIDES TO MARRY (the wedding, wave 7: T2)
+// =================================================================================================
+//
+// `docs/plans/life-wave-7-builder-2026-09.md` §2 T2, constants in `ECONOMY.wedding`. §5 decides
+// whether someone appears and §8 whether they are still there; this decides whether the episode
+// becomes a MARRIAGE, and it is the step the whole branch has been building toward since the slot
+// learned to latch. ⚠ It is §11 for §8's own stated reason: appended rather than renumbered.
+//
+// ⚠⚠ THE WAVE'S FIRST STREAM, RESERVED BY THE BRIEF'S §0 AND CREATED HERE:
+//
+//     seed:life:wedding:<week>              does she decide, this week
+//
+// (seed, calendar)-keyed like every sibling, so a player cannot conjure or dodge a wedding by
+// playing the week differently – input-independence is permanent law, and nothing here takes an
+// `Rng`, so MAIN is structurally out of reach and the frozen capture (41550 / e6b0c709) cannot see
+// this section. `seed:life:partner-name:<episodeId>` is T3's and `seed:life:spouse-view:<week>` is
+// T5's – neither exists on this tree and neither may be created early (§5's own reservation rule,
+// third use).
+//
+// ⚠⚠ ZERO DRAWS ON AN INELIGIBLE WEEK – the gate returns BEFORE the stream is derived, never
+// draw-and-discard, §5's load-bearing rule inherited whole. And the test for it is a KEY COUNT, not
+// an alignment comparison (wave 3's finding, the wave-4 brief's §0.1 law): every key carries its own
+// week, so tests/wave7-wedding.test.ts counts the keys the gate reaches, with a positive control.
+//
+// ⚠ SHE DECIDES; THE HAZARD IS THE DECIDING. No parent action opens or closes this – the gate reads
+// her age (RULED 23+, 11.09, art-driven), the slot (an active episode) and the episode's own DEPTH
+// (its age in weeks – derived, no new state). The parent's part arrives one screen later, as three
+// answers priced on `bond`, and none of them stops the wedding (T3).
+
+/** ⭐⭐ THE GATE – ALL FOUR, AND A FALSE HERE MEANS **ZERO DRAWS**, not a discarded one. A predicate
+ *  of its own for `arrivalEligible`'s stated reason: a reader must see, in one place, that the whole
+ *  of eligibility is decided before any stream exists. Pure, zero draws, no writes.
+ *
+ *  1. ⭐ TWENTY-THREE – RULED 11.09 («свадьба на 23+ – мне вполне ок»), art-driven: the bride lives
+ *     in the `adult` portrait set. Fractional (`kidAgeExact`), `life.ageGate`'s own reading, so she
+ *     turns eligible the week she turns 23 and not in the January of that year.
+ *  2. AN ACTIVE EPISODE – `activeEpisode`'s answer, never a second spelling of it. Nobody marries
+ *     out of an empty slot, and an episode that ended this very tick (`rollEnds` runs FIRST at the
+ *     call site) refuses here by construction.
+ *  3. THE DEPTH – the episode is at least `ECONOMY.wedding.minEpisodeWeeks` old, DERIVED from
+ *     `sinceWeek` (no new state; the brief's own «depth is derived» clause). ⚠ From `sinceWeek` and
+ *     never `knownWeek` – how long THEY have been together, not how long the parent has known; §8's
+ *     own clause-1 argument, pointed the other way. ⚠ And the threshold is what makes an `'engaged'`
+ *     beat on an UNDELIVERED episode unreachable on engine-born rows: the raw lag tops out at 12
+ *     weeks, far under 52, so by the time a row is deep enough to marry, `deliverKnownPartner` has
+ *     long since raised its `'met'` – she is not announcing a fiancé nobody has heard of.
+ *  4. THE RECEIPT – no `'engaged'` row exists for this episode yet (`hasBeatFor`, `'met'`'s own
+ *     once-per-episode doctrine: the record is the queue AND the receipt). This is also what makes a
+ *     SECOND wedding the same machinery on a LATER row: a latched episode necessarily carries the
+ *     receipt, so it can never be asked again, while a new episode's own row starts clean. */
+export function weddingEligible(world: WorldState): boolean {
+  const wedding = ECONOMY.wedding
+  if (kidAgeNow(world) < wedding.ageGate) return false
+  const episode = activeEpisode(world)
+  if (episode === null) return false
+  if (world.week - episode.sinceWeek < wedding.minEpisodeWeeks) return false
+  if (hasBeatFor(world, episode.id, ['engaged'])) return false
+  return true
+}
+
+/** ⭐⭐⭐ THE WEEKLY ROLL, and the ONE raise site of an `'engaged'` row.
+ *
+ *  ⚠⚠ THE GATE RUNS FIRST AND RETURNS BEFORE ANY STREAM IS DERIVED – an ineligible week takes ZERO
+ *  draws, never draw-and-discard. The line order below IS the rule (§5's own note, third time).
+ *
+ *  ⚠ `<` AND NOT `<=`, `rollArrival`'s own note: `rngFromSeed` can return exactly 0, and a hazard
+ *  of 0 must be impossible rather than merely unlikely.
+ *
+ *  ⚠ NO TEMPERAMENT TERM, AND THAT IS THE DRAFTED SHAPE RATHER THAN AN OVERSIGHT: `ECONOMY.wedding`
+ *  drafts one flat `perWeek` and no multiplier table – who she is already shaped WHICH episodes
+ *  exist and how long they last (the arrival and ends tables), so the decision-to-marry hazard
+ *  starts uniform and T8's census measures whether the two trajectories both reach it. A per-voice
+ *  column here would be a design decision wearing a constant (the `endsPerWeek` note's own law).
+ *
+ *  ⚠ IT RAISES THE BEAT AND WRITES NOTHING ELSE – no latch, no name, no feed row, no cents. The
+ *  latch and the cost are T3's, `weeksAfterEngagement` weeks after the answer; the name is written
+ *  at THIS beat but by T3's `partnerNameFor`, and until that task lands the row's `partnerName`
+ *  stays null and every reader keeps its unnamed phrasing. The raise stops the week by
+ *  `LIFE_BEAT_BLOCKING` alone – no new guard anywhere. */
+export function rollWedding(world: WorldState): void {
+  if (!weddingEligible(world)) return
+  if (rngFromSeed(`${world.seed}:life:wedding:${world.week}`)() >= ECONOMY.wedding.perWeek) return
+  // ⚠ THE ROW IS TAKEN AFTER THE DRAW AND IS THE GATE'S OWN – `weddingEligible` just proved it
+  // non-null, and `rollEnds` runs before this at the call site, so the episode the beat is about is
+  // the episode still standing this week.
+  const episode = activeEpisode(world)!
+  raiseLifeBeat(world, 'engaged', episode.id)
 }

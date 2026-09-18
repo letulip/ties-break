@@ -972,6 +972,9 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
     // `'fork-psy'` is the sixth kind (the psychologist's read on the same `stop`) and it declares
     // TRUE, which is the whole mechanism by which the fork waits for him. Tier 1 is still the only
     // `false` in the table, which is the claim this line has always made.
+    // ⚠ RE-AIMED A FOURTH TIME BY v83, WAVE 7 T2 (18.09), NOT WEAKENED: `'engaged'` is the seventh
+    // kind and declares TRUE (the announcement stops the week; the wedding it announces stops for
+    // nobody – T3). Tier 1 is STILL the only `false` in the table, which is this line's own claim.
     expect(LIFE_BEAT_BLOCKING, 'total by type: every kind declares, and tier 1 declares false').toEqual({
       'fork-opinion': true,
       met: true,
@@ -979,6 +982,7 @@ describe('wave 3 T8/T15 H – tier 1 is raised through the SOFT path and through
       'fork-counsel': true,
       ended: true,
       'fork-psy': true,
+      engaged: true,
     })
     // ...and the predicate really honours it, on a row the roll itself raised.
     const world = careerAt('soft-not-pending', 200, 'close')

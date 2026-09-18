@@ -209,6 +209,10 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
     // is the entire mechanism by which the fork waits for him (`answerFork` refuses on BLOCKING rows
     // and the queue answers in `lifeLog` order). A `'fork-psy': false` would leave the card
     // answerable from nowhere while the fork opened past it, and this line is what goes red.
+    // ⚠ RE-AIMED A FOURTH TIME BY v83, WAVE 7 T2 (18.09), NOT WEAKENED: `'engaged'` is the seventh
+    // kind – the week she says she is getting married – and it is TRUE, tier 2's own price at the
+    // layer's biggest ask so far. A career that could tick past the announcement would answer her by
+    // walking away; what blocking does NOT do is stop the wedding, which lands on any answer (T3).
     expect(LIFE_BEAT_BLOCKING, 'the ruled table: tier 2 blocks, tier 1 does not').toEqual({
       'fork-opinion': true,
       met: true,
@@ -216,6 +220,7 @@ describe('wave 3 T15 A – the blocking registry, and what the week waits for', 
       'fork-counsel': true,
       ended: true,
       'fork-psy': true,
+      engaged: true,
     })
   })
 
