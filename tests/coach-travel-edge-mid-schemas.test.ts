@@ -1,10 +1,11 @@
 // THE FROZEN CAREERS, THE RUNGS IN THE MIDDLE – v62 down to v69.
 //
-// ⚠ ONE THIRD OF ONE LADDER, NOT A THIRD LADDER. tests/coach-travel-edge.test.ts holds the live
-// hashes and the newest rungs (v71 – v74); this file holds v69 down to v62;
-// tests/coach-travel-edge-older-schemas.test.ts holds v61 down to P5/v49. All three read the same
-// `careerHashAtSchema` out of tests/coachTravelEdgeFixtures.ts, where the constants, the walk and
-// the per-key protocol live, and all three carry the ORIGINAL describe name deliberately unchanged –
+// ⚠ ONE PIECE OF ONE LADDER, NOT A LADDER OF ITS OWN (the file list, corrected 18.09 at the
+// fourth cut – this sentence had gone stale at the third). tests/coach-travel-edge.test.ts holds
+// the live hashes; -recent-schemas holds v82 down to v77; -prior-schemas holds v76 down to v71;
+// this file holds v69 down to v62; -older-schemas holds v61 down to P5/v49. All of them read the
+// same `careerHashAtSchema` out of tests/coachTravelEdgeFixtures.ts, where the constants, the walk
+// and the per-key protocol live, and all carry the ORIGINAL describe name deliberately unchanged –
 // a chain is only append-only if every rung below the top still reproduces, and these eight are
 // eight of those rungs.
 //
