@@ -219,7 +219,43 @@ const arcTransform = computed(() => {
    ⚠ THE NUDGE IS PROPORTIONAL, not a fixed 12px. It was a literal, tuned against the 46px ring -
    which put the figure visibly low inside the 56px one on screen C, the owner's «проценты кондишна
    надо выровнять по вертикали, как в других местах». A ring that comes in two sizes cannot carry a
-   one-size optical correction; 26% of the box is the same LOOK at both. */
+   one-size optical correction; 26% of the box is the same LOOK at both.
+
+   ⚠⚠⚠ ROUND 45 #3 – AND THE NUDGE ALONE WAS NEVER ENOUGH, BECAUSE IT SILENTLY DEPENDED ON THE HOST.
+   The owner, on the deployed build: «проверить выравнивание шрифта внутри гауджа – я вижу знак
+   вопроса и он стоит выше середины». He is right, and the question mark is not the cause - it is
+   simply the glyph that is alone in an empty ring, where a 2px error is unmissable.
+
+   WHAT WAS ACTUALLY WRONG. Where the figure lands inside this box is decided by three things: the
+   26% nudge, the glyph's own baseline, and THE LINE BOX THE GLYPH SITS IN - and until this commit
+   the third of those was inherited from whatever element happened to host the ring. Both of the
+   inherited halves come from `body` (`font: 15px/1.45 var(--font-body)`) and neither of them crosses
+   a `<button>`: the app's global `button` rule sets a colour, a border, a radius, a padding and a
+   size, and no `line-height` and no `font-family`, so inside a button both fall back to the user
+   agent's form-control defaults. Home, the Season card and the Calendar host their rings in ordinary
+   elements and were always right; the coach market's marker is in the bottom-right corner of a row
+   that IS one `<button>`, so its leading collapsed from 1.45 to `normal` and its type changed with
+   it - and the smaller line box lifts the baseline by half the difference.
+
+   MEASURED IN A REAL BROWSER against this sheet and these self-hosted faces, as the ink centre minus
+   the ring's centre in px - negative means the glyph sits HIGH. Each arm was applied and removed in
+   one clean-room page and the restored arm reproduced the shipped row exactly, so the toggle is real:
+
+       host                         36px ?   36px figure   46px figure   56px figure
+       an ordinary element           -0.04      +0.05         +0.06         -1.06
+       a button, as shipped          -1.98      -1.88            –             –
+       a button, leading declared    -0.48      -0.38            –             –
+       a button, leading AND face    -0.04      +0.05            –             –
+
+   So the defect is ~2px on a 36px ring, which is exactly what «выше середины» looks like; the leading
+   is three quarters of it and the face is the rest. The fix is to stop borrowing: the ring declares
+   the leading and the face the 26% nudge was fitted against, and is then the same picture in every
+   host. ⚠ THE RINGS THAT ARE ALREADY RIGHT DO NOT MOVE - the two declarations are exactly what they
+   were inheriting there, so the ordinary-element row above is byte-identical in all four arms.
+   ⚠ 1.45 IS `body`'s OWN LEADING, restated rather than chosen; `--font-body` likewise.
+   ⚠ AND THE 56px RING'S -1.06 IS NOT THIS ITEM'S and is deliberately left alone: it is the same
+   small size-to-size drift the ⚠ above describes, it is on a ring nobody complained about, and
+   moving it would be retuning a correction the owner has already approved on screen. */
 .tb-ring-value {
   position: absolute;
   inset: 0;
@@ -229,6 +265,8 @@ const arcTransform = computed(() => {
   gap: 0.5px;
   padding-top: 26%;
   color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.45;
   font-variant-numeric: tabular-nums;
 }
 
