@@ -85,7 +85,8 @@ import {
   SNAPSHOT_FINANCIAL_EVENTS,
   UPCOMING_WEEKS,
 } from './constants'
-import { careerMoney, financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
+import { financeWindow, financeSeries, seasonIndexOf, seasonStartWeek } from './ledger'
+import { careerMoney } from './reckoning'
 // ⚠ `START_AGE_YEARS` left this list with D-01: the diary was its last reader here, and the
 // band clock it opened is exactly what the finding removed.
 import { ageAtWeek, birthdayTurning, kidAgeAt, kidAgeYears } from './age'

@@ -42,7 +42,7 @@ import {
 } from '../src/engine/world'
 import { resumeMain } from '../src/engine/rng'
 import { activeLadderOf, rankIn } from '../src/engine/world/ladder'
-import { careerMoney } from '../src/engine/world/ledger'
+import { careerMoney } from '../src/engine/world/reckoning'
 import { isEnterprise, isPersonalProperty } from '../src/engine/world/assets'
 import { buildAlbum } from '../src/engine/world/album'
 import { buildEndingView } from '../src/engine/world/endings'

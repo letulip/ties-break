@@ -46,7 +46,8 @@ import {
   toSnapshot,
   type WorldState,
 } from '../src/engine/world'
-import { addEvent, careerMoney } from '../src/engine/world/ledger'
+import { addEvent } from '../src/engine/world/ledger'
+import { careerMoney } from '../src/engine/world/reckoning'
 import { careerAssetUpkeepCents, isEnterprise, isPersonalProperty, shopCatalogue } from '../src/engine/world/assets'
 import { slotTheTurn } from '../src/engine/world/album'
 import { rngFromSeed } from '../src/engine/rng'
@@ -339,7 +340,7 @@ describe('⭐⭐⭐ round 46 #9, ruling 5 – what the toys cost to keep is not 
 // cost with no credit for their income is the ONE-SIDED reading he did not ask for – measured on
 // `tools/album-money-probe.ts --arm 1`, it takes «spent» from $9,997,902 to $22,247,902 against
 // $17,158,081 of prize money and stops the album's central page crossing at all, for a family whose
-// businesses had earned $34,087,161. So the career arm is held at a proposal (the spec's §9.2) and
+// businesses had earned $34,087,161. So the career arm is held at a proposal (the spec's §6.5) and
 // arm 3 below is what pins that it really is unchanged.
 describe('⭐⭐⭐ round 46 #9, ruling 6 – the brand and the academy count on both sides', () => {
   /** A career five weeks in, with no break-even row and no ledger row for THIS week, so an arm can

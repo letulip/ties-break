@@ -41,7 +41,8 @@ import type { AcademyEpilogue, AdOfferTerms, CareerEnding, CollegeTier, DebtView
 import { deliveredAssets, shopCatalogue } from './assets'
 import { academyWeeklyIncomeCents } from './business'
 import type { LadderTrack, TierId } from '../season/types'
-import { addEvent, careerMoney, seasonIndexOf, seasonStartWeek } from './ledger'
+import { addEvent, seasonIndexOf, seasonStartWeek } from './ledger'
+import { careerMoney } from './reckoning'
 import { activeLadderOf, bestRankEver } from './ladder'
 import { collegeProgressOf, collegeRecruitViewOf, inCollege, measureCollegeOffer } from './college'
 // ⭐⭐ v73 – THE PRIVATE LIFE'S WAVE 2. The fork's opening tick raises her opinion of it, and

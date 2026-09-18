@@ -25,7 +25,8 @@ import {
   type TierTrophies,
   type WorldEventCategory,
 } from '../../shared/protocol'
-import { addEvent, careerMoney, financeWindow, isHoldingCategory, seasonIndexOf, seasonStartWeek } from './ledger'
+import { addEvent, financeWindow, isHoldingCategory, seasonIndexOf, seasonStartWeek } from './ledger'
+import { careerMoney } from './reckoning'
 import { enterprisePaidInWeekCents } from './assets'
 import { KID_ID } from './constants'
 import { finishLabel } from './labels'
@@ -190,7 +191,7 @@ export function captureBreakEven(world: WorldState): void {
   // `'business'` income it produced, and charging the cost with no credit for the income takes
   // «spent» from $9,997,903 to $22,247,903 and stops this page crossing AT ALL – for exactly the
   // family he was describing. Closing it is a persisted accumulator, which is a schema move and
-  // therefore his call: docs/specs/the-reckoning-2026-09.md §9.2.
+  // therefore his call: docs/specs/the-reckoning-2026-09.md §6.5.
   const t = careerMoney(world)
   if (t.prizeCents <= t.outlayCents) return
   captureMilestone(world, { type: 'break-even', week: world.week, kind: 'career' })
