@@ -5597,12 +5597,22 @@ tr.kid-row td {
   gap: 3px;
 }
 /* THE MARKER: the mark, then the gauge under it. Centred on the ring rather than right-aligned with
-   the price, because a 13px glyph hanging off the edge of a 36px circle reads as debris. */
+   the price, because a glyph hanging off the edge of a 36px circle reads as debris.
+
+   ⭐⭐ ROUND 45 #2 – THE MARK GREW TO THE BOTTOM BAR'S SIZE AND MOVED OFF THE GAUGE. The owner, on the
+   deployed build, asked for both halves in one sentence: «на плашках тренеров иконку химии сделать
+   крупнее, как в нижнем меню размером и чуть выше отодвинуть от гауджа». The size is `AppIcon`'s own default, 20,
+   which is `.tab-icon`'s 20px - the template stops overriding it rather than typing the number a
+   third time. The air is this gap, and it is the BOTTOM BAR'S OWN: `.tab-btn` sets `gap: 4px` between
+   its icon and its label, so the distance between a mark and the thing it marks is one number in this
+   app rather than two. Nothing widens - a 20px glyph is still narrower than the 36px ring, so
+   `.cm-right` is the width it was and the text column keeps every pixel (measured in
+   tests/component/round44-chemistry-card.test.ts §4, which re-runs against the grown mark). */
 .cm-chem {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 /* ⚠ THE ONE PLACE `--accent` IS SPENT ON THIS CORNER, AND IT IS A RULE RATHER THAN A PREFERENCE
    (docs/specs/the-chemistry-2026-09.md §8a). The chemistry mark keeps the wave's accent yellow and

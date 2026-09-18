@@ -1291,8 +1291,13 @@ function scrollToTier(tier: CoachTier): void {
                of this corner reads «nobody knows yet» and never «bad», which is the constraint he
                set on the neutral. The ring is the same component either way, at zero, so the corner
                never changes shape or size when a reading arrives. -->
+          <!-- ⭐⭐ ROUND 45 #2 – THE MARK IS THE TAB BAR'S SIZE NOW, and it is the DEFAULT rather than
+               a second number: `AppIcon`'s own `size` defaults to 20 «because it is the app's
+               commonest size», and that default IS `.tab-icon`'s 20px in the bottom navigation. His
+               ruling asked for exactly that size by name, so the honest edit is to stop overriding
+               it – a 20 typed here would be the tab bar's number copied into a third place. -->
           <span class="cm-chem">
-            <AppIcon name="chemistry" :size="13" class="cm-chem-mark" />
+            <AppIcon name="chemistry" class="cm-chem-mark" />
             <ProgressRing
               :size="36"
               :value="r.chemistry === null ? 0 : chemFill(r.chemistry)"
