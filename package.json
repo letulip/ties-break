@@ -54,6 +54,7 @@
     "bench:spirit": "vite-node tools/spirit-bench.ts",
     "bench:spotlight": "vite-node tools/spotlight-bench.ts",
     "bench:sponsor": "vite-node tools/sponsor-window-bench.ts",
+    "bench:wedding": "vite-node tools/wedding-bench.ts",
     "probe:shop": "vite-node tools/shop-probe.ts",
     "bench:world": "vite-node tools/world-turnover.ts",
     "e2e:fixtures": "vite-node tools/e2e-fixtures.ts",
